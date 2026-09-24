@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "lrc-avg-spike-s3": {
+      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "args": ["D:\\Developer\\LrC_Autonomous_Gateway\\spikes\\S3\\server.ts"]
+    }
+  }
+}

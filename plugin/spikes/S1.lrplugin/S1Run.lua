@@ -87,9 +87,15 @@ local function removeStaleOutputs(dir)
     end
 end
 
+-- Request objects whose callback had not fired when their wait ended. They are held here
+-- for the rest of the run, so a late callback is never lost by releasing the object early
+-- (LR_SDK_NOTES, LrPhoto requestJpegThumbnail: hold the request until its callback fires).
+-- Each entry: { calls = <that request's callback list> }; late callbacks are counted at the end.
+local unanswered = {}
+
 -- One requestJpegThumbnail call. Returns every callback { at, data, err } and the request
--- time. The request object is held until the callbacks have had their chance
--- (LR_SDK_NOTES, LrPhoto requestJpegThumbnail).
+-- time. Never throws: an SDK error becomes an error record, so the run always reaches its
+-- CSV write and the exposure restore.
 local function requestOnce(photo, size, timeoutMs)
     local calls = {}
     local function onThumb(data, err)
@@ -104,9 +110,12 @@ local function requestOnce(photo, size, timeoutMs)
         size.height = THUMB_WIDTH
         size.args = string.format("%dx%d (nil height rejected: %s)", THUMB_WIDTH, THUMB_WIDTH, tostring(requestOrErr))
         requestedAt = nowMs()
-        requestOrErr = photo:requestJpegThumbnail(THUMB_WIDTH, THUMB_WIDTH, onThumb)
-    elseif not ok then
-        error(requestOrErr)
+        ok, requestOrErr = LrTasks.pcall(function()
+            return photo:requestJpegThumbnail(THUMB_WIDTH, THUMB_WIDTH, onThumb)
+        end)
+    end
+    if not ok then
+        return { { at = nowMs(), data = nil, err = "requestJpegThumbnail threw: " .. tostring(requestOrErr) } }, requestedAt
     end
     local request = requestOrErr
 
@@ -122,6 +131,10 @@ local function requestOnce(photo, size, timeoutMs)
         while nowMs() < graceEnd do
             LrTasks.sleep(0.05)
         end
+    end
+    if #calls == 0 then
+        -- No callback yet: keep the request alive for the rest of the run.
+        table.insert(unanswered, { request = request, calls = calls })
     end
     request = nil
     return calls, requestedAt
@@ -265,13 +278,21 @@ LrFunctionContext.postAsyncTaskWithContext("AVG S1", function(context)
         LR_reimportExportedPhoto = false,
     }
     local tExport = nowMs()
-    local exportSession = LrExportSession { photosToExport = { photo }, exportSettings = exportSettings }
-    exportSession:doExportOnCurrentTask()
+    -- Protected like the thumbnail requests: an export failure is recorded, and the run still
+    -- writes its CSV and restores the exposure.
+    local exportOk, exportErr = LrTasks.pcall(function()
+        local exportSession = LrExportSession { photosToExport = { photo }, exportSettings = exportSettings }
+        exportSession:doExportOnCurrentTask()
+    end)
     local exportMs = nowMs() - tExport
 
     local expected = LrPathUtils.replaceExtension(LrPathUtils.child(dir, filename), "jpg")
     local exportFields = { index = 1 }
-    if LrFileUtils.exists(expected) == "file" then
+    if not exportOk then
+        failures = failures + 1
+        exportFields.error = "export threw: " .. tostring(exportErr)
+        table.insert(summary, "export: FAILED - " .. exportFields.error)
+    elseif LrFileUtils.exists(expected) == "file" then
         local final = LrPathUtils.child(dir, "s1_export.jpg")
         LrFileUtils.move(expected, final)
         exportFields.file = "s1_export.jpg"
@@ -291,6 +312,13 @@ LrFunctionContext.postAsyncTaskWithContext("AVG S1", function(context)
 
     local csvPath = LrPathUtils.child(dir, "s1_results.csv")
     writeBinary(csvPath, table.concat(rows, "\n") .. "\n")
+
+    local lateCallbacks = 0
+    for _, u in ipairs(unanswered) do
+        if #u.calls > 0 then lateCallbacks = lateCallbacks + 1 end
+    end
+    table.insert(summary, string.format("requests with no callback before their wait ended: %d (of which answered later: %d)",
+        #unanswered, lateCallbacks))
 
     local headline = (failures == 0) and "All steps returned a thumbnail." or
         string.format("ERRORS: %d item(s) FAILED - see the lines marked FAILED.", failures)

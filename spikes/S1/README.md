@@ -7,7 +7,7 @@
 
 On the selected photo:
 1. `n=0` baseline thumbnail, with no develop change.
-2. `n=1..5`: sets `Exposure2012` to current ±1.0 (History step **"AVG S1"**; alternating +1, −1, +1, −1, +1). Then it requests the thumbnail, and **re-requests every 50 ms until Lightroom returns image data** (at most 30 s per step). Run 1 showed that a request made right after a change fails at once with `error loading thumb`. The harness records the number of attempts, the first error, and `ready_ms` (time from the change to the first usable thumbnail).
+2. `n=1..5`: sets `Exposure2012` to current ±1.0 (History step **"AVG S1"**; alternating +1, −1, +1, −1, +1). Then it requests the thumbnail, and **re-requests every 50 ms until Lightroom returns image data** (at most 30 s per step). Run 1 showed that a request made right after a change fails at once with `error loading thumb` [handle: `docs\reports\phase0\S1.md`, "Observed (Jim)" run-1 output and "Run 1 analysis"; the `error` column of that run's `s1_results.csv`]. The harness records the number of attempts, the first error, and `ready_ms` (time from the change to the first usable thumbnail).
 3. One `LrExportSession` JPEG, 1600 px long edge, timed.
 4. Restores the original exposure (History step "AVG S1 restore").
 

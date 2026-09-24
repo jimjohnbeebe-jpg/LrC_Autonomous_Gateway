@@ -1,0 +1,18 @@
+{
+  "name": "lrc-avg-workspace",
+  "private": true,
+  "description": "LrC-AVG monorepo root: engine (Node/TS MCP server) and Phase 0 spike scripts.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "engine",
+    "spikes"
+  ],
+  "scripts": {
+    "build": "npm run build -w engine",
+    "test": "npm test -w engine",
+    "typecheck": "npm run typecheck -w engine && npm run typecheck -w spikes"
+  }
+}

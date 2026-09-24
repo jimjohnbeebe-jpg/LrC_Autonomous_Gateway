@@ -1,0 +1,19 @@
+{
+  "_comment": "SYNTHETIC test fixture. Not a Lightroom observation. Key names are deliberately fake so nobody mistakes them for pinned SDK keys.",
+  "meta": {
+    "spike": "S5",
+    "filename": "synthetic-a.NEF",
+    "lr_version": "synthetic",
+    "captured_at": "2026-09-23T00:00:00Z"
+  },
+  "settings": {
+    "SyntheticProcessVersion": "0.0",
+    "SyntheticNumber": 0.35,
+    "SyntheticInteger": 50,
+    "SyntheticString": "Synthetic Profile",
+    "SyntheticBoolean": true,
+    "SyntheticArray": [0, 0, 255, 255],
+    "SyntheticObject": { "nested": 1 },
+    "SyntheticNullable": null
+  }
+}

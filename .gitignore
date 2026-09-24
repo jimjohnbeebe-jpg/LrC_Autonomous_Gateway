@@ -1,0 +1,27 @@
+# Fixtures stay on disk, never in git (raw files + Lightroom sidecars)
+fixtures/*.NEF
+fixtures/*.dng
+fixtures/*.NEF.xmp
+# Lightroom-exported JPEGs Jim drops in for spike S3 (sharp cannot decode the NEFs)
+fixtures/*.jpg
+fixtures/*.jpeg
+
+# Dev session logs (keep the folder)
+logs/*
+!logs/.gitkeep
+
+# Node / build
+node_modules/
+dist/
+
+# Local environment and scratch
+.env
+*.tmp
+
+# Stack rule (no Python anywhere): the upstream Automaat snapshot ships a Python
+# skill script; it stays on disk unmodified (vendor is reference-only) but is
+# never tracked here. See docs/AUTOMAAT_SURVEY.md §8.
+vendor/automaat/**/*.py
+
+# Graphify per-repo knowledge graph (derived, machine-local; rebuild with `graphify update .`)
+graphify-out/

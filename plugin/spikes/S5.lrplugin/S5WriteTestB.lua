@@ -1,4 +1,4 @@
--- AVG-S5 optional write test B: applyDevelopSettings { LensProfileEnable = 1 }, read back.
+-- AVG-S5 write test B: applyDevelopSettings { LensProfileEnable = 1 }, read back.
 -- Why: Automaat allowlists "LensProfileEnable" (vendor\automaat\server\src\tool-contracts.ts:81)
 -- while LR_SDK_NOTES and the directive use "EnableLensCorrections"; both may exist with
 -- different meanings [unverified]. This isolates the second key.

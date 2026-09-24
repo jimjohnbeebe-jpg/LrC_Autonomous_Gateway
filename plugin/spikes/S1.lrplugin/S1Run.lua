@@ -1,12 +1,21 @@
 -- AVG-S1: preview freshness + latency after applyDevelopSettings.
 --
 -- On the target (active) photo:
---   n = 0      baseline requestJpegThumbnail, no develop change
+--   n = 0      baseline thumbnail, no develop change
 --   n = 1..5   applyDevelopSettings { Exposure2012 = current +/- 1.0 } (history "AVG S1"),
---              then requestJpegThumbnail(1600, nil, cb); every callback is timed and saved
+--              then request the thumbnail until Lightroom returns JPEG data
 --   export     one LrExportSession JPEG rendition at 1600 px long edge, timed
 --   restore    Exposure2012 back to the original value (history "AVG S1 restore")
--- Output in <temp>\LrC-AVG\: s1_results.csv, s1_<n>.jpg (s1_<n>_cb<k>.jpg for any extra
+--
+-- Run 1 (2026-09-23, docs\reports\phase0\S1.md) showed that a thumbnail requested right
+-- after applyDevelopSettings is answered within ~1 ms with no data and the error
+-- "error loading thumb". So each step now re-requests every RETRY_INTERVAL_S until data
+-- arrives or READY_TIMEOUT_MS passes, and records:
+--   attempts    requests made before data arrived
+--   first_error the error text of the first failed request
+--   ready_ms    ms from applyDevelopSettings returning to the first usable thumbnail
+--   request_ms  ms from the successful request to its callback
+-- Output in <temp>\LrC-AVG\: s1_results.csv, s1_<n>.jpg (s1_<n>_cb<k>.jpg for extra data
 -- callbacks), s1_export.jpg. spikes\S1\measure.ts turns these into the report numbers.
 
 local LrApplication = import 'LrApplication'
@@ -20,11 +29,12 @@ local LrTasks = import 'LrTasks'
 
 local STEPS = 5
 local THUMB_WIDTH = 1600
-local CALLBACK_TIMEOUT_MS = 60000
--- Keep listening this long after the first callback: if Lightroom calls back a second
--- time (e.g. a cached preview first, a fresh one later) we want to see it. [unverified
--- whether that ever happens; this is what the spike checks]
-local EXTRA_CALLBACK_GRACE_MS = 2000
+local READY_TIMEOUT_MS = 30000     -- give up on a step after this long
+local REQUEST_TIMEOUT_MS = 10000   -- longest wait for one request's callback
+local RETRY_INTERVAL_S = 0.05      -- pause between a failed request and the next
+-- After data arrives, keep listening this long in case Lightroom calls back again with a
+-- newer render. [unverified whether that ever happens; run 1 saw one callback per request]
+local EXTRA_CALLBACK_GRACE_MS = 1000
 local EXPORT_LONG_EDGE = 1600
 
 -- LrDate.currentTime() is seconds as a float; its resolution on Windows is [unverified].
@@ -77,39 +87,79 @@ local function removeStaleOutputs(dir)
     end
 end
 
--- Request a thumbnail and collect every callback. The request object must be held
--- until the callback fires (LR_SDK_NOTES, LrPhoto requestJpegThumbnail).
-local function requestThumbnail(photo)
+-- One requestJpegThumbnail call. Returns every callback { at, data, err } and the request
+-- time. The request object is held until the callbacks have had their chance
+-- (LR_SDK_NOTES, LrPhoto requestJpegThumbnail).
+local function requestOnce(photo, size)
     local calls = {}
-    local t0 = nowMs()
-    local sizeArgs = tostring(THUMB_WIDTH) .. "x(nil)"
     local function onThumb(data, err)
-        table.insert(calls, { ms = nowMs() - t0, data = data, err = err })
+        table.insert(calls, { at = nowMs(), data = data, err = err })
     end
-
+    local requestedAt = nowMs()
     local ok, requestOrErr = LrTasks.pcall(function()
-        return photo:requestJpegThumbnail(THUMB_WIDTH, nil, onThumb)
+        return photo:requestJpegThumbnail(THUMB_WIDTH, size.height, onThumb)
     end)
-    if not ok then
-        -- The directive specifies (1600, nil). If the SDK rejects a nil height, fall back and
-        -- say so in the CSV rather than hiding it.
-        sizeArgs = string.format("%dx%d (nil height rejected: %s)", THUMB_WIDTH, THUMB_WIDTH, tostring(requestOrErr))
-        t0 = nowMs()
+    if not ok and size.height == nil then
+        -- Run 1 showed (1600, nil) is accepted; keep the fallback visible in the CSV anyway.
+        size.height = THUMB_WIDTH
+        size.args = string.format("%dx%d (nil height rejected: %s)", THUMB_WIDTH, THUMB_WIDTH, tostring(requestOrErr))
+        requestedAt = nowMs()
         requestOrErr = photo:requestJpegThumbnail(THUMB_WIDTH, THUMB_WIDTH, onThumb)
+    elseif not ok then
+        error(requestOrErr)
     end
     local request = requestOrErr
 
-    while #calls == 0 and (nowMs() - t0) < CALLBACK_TIMEOUT_MS do
+    while #calls == 0 and (nowMs() - requestedAt) < REQUEST_TIMEOUT_MS do
         LrTasks.sleep(0.005)
     end
-    if #calls > 0 then
+    local gotData = false
+    for _, c in ipairs(calls) do
+        if c.data then gotData = true end
+    end
+    if gotData then
         local graceEnd = nowMs() + EXTRA_CALLBACK_GRACE_MS
         while nowMs() < graceEnd do
             LrTasks.sleep(0.05)
         end
     end
-    request = nil -- release only after the callbacks have had their chance
-    return calls, sizeArgs
+    request = nil
+    return calls, requestedAt
+end
+
+-- Re-request until Lightroom returns JPEG data or READY_TIMEOUT_MS passes.
+local function thumbnailWhenReady(photo, size)
+    local start = nowMs()
+    local attempts, firstError, lastError = 0, nil, nil
+    while true do
+        attempts = attempts + 1
+        local calls, requestedAt = requestOnce(photo, size)
+        local good = {}
+        for i, c in ipairs(calls) do
+            if c.data then
+                table.insert(good, { index = i, at = c.at, data = c.data })
+            else
+                firstError = firstError or tostring(c.err)
+                lastError = tostring(c.err)
+            end
+        end
+        if #calls == 0 then
+            local e = "no callback within " .. REQUEST_TIMEOUT_MS .. " ms"
+            firstError = firstError or e
+            lastError = e
+        end
+        if #good > 0 then
+            return {
+                ok = true, attempts = attempts, firstError = firstError,
+                readyMs = good[1].at - start, requestMs = good[1].at - requestedAt,
+                good = good, callbackCount = #calls,
+            }
+        end
+        if nowMs() - start >= READY_TIMEOUT_MS then
+            return { ok = false, attempts = attempts, firstError = firstError, lastError = lastError }
+        end
+        LrTasks.sleep(RETRY_INTERVAL_S)
+    end
 end
 
 LrFunctionContext.postAsyncTaskWithContext("AVG S1", function(context)
@@ -139,33 +189,38 @@ LrFunctionContext.postAsyncTaskWithContext("AVG S1", function(context)
     removeStaleOutputs(dir)
     local runId = LrDate.timeToUserFormat(LrDate.currentTime(), "%Y%m%d-%H%M%S")
     local lrVersion = LrApplication.versionString()
+    local size = { height = nil, args = tostring(THUMB_WIDTH) .. "x(nil)" }
     local rows = {
-        "run_id,lr_version,photo,n,kind,delta_ev,exposure_before,exposure_readback,apply_ms,size_args,callback_index,callback_count,ms,bytes,file,error",
+        "run_id,lr_version,photo,n,kind,delta_ev,exposure_before,exposure_readback,apply_ms,size_args,attempts,first_error,ready_ms,request_ms,callback_index,callback_count,bytes,file,error",
     }
     local summary = {}
+    local failures = 0
+
+    local function row(n, kind, delta, before, readback, applyMs, r, fields)
+        table.insert(rows, table.concat({
+            runId, csvCell(lrVersion), csvCell(filename), n, kind, delta, before, csvCell(readback), fmtMs(applyMs),
+            csvCell(size.args), r.attempts or "", csvCell(r.firstError), fmtMs(r.readyMs), fmtMs(r.requestMs),
+            fields.index or "", r.callbackCount or "", fields.bytes or "", fields.file or "", csvCell(fields.error),
+        }, ","))
+    end
 
     local function record(n, kind, delta, before, readback, applyMs)
-        local calls, sizeArgs = requestThumbnail(photo)
-        if #calls == 0 then
-            table.insert(rows, table.concat({ runId, csvCell(lrVersion), csvCell(filename), n, kind, delta, before, csvCell(readback),
-                fmtMs(applyMs), csvCell(sizeArgs), "", 0, "", "", "", "no callback within " .. CALLBACK_TIMEOUT_MS .. " ms" }, ","))
-            table.insert(summary, string.format("n=%d %s: NO CALLBACK", n, kind))
+        local r = thumbnailWhenReady(photo, size)
+        if not r.ok then
+            failures = failures + 1
+            local err = string.format("no thumbnail within %d ms after %d attempts; last error: %s", READY_TIMEOUT_MS, r.attempts, tostring(r.lastError))
+            row(n, kind, delta, before, readback, applyMs, r, { error = err })
+            table.insert(summary, string.format("n=%d %s %+.1f EV: FAILED - %s", n, kind, delta, err))
             return
         end
-        for k, call in ipairs(calls) do
-            local leaf = (k == 1) and string.format("s1_%d.jpg", n) or string.format("s1_%d_cb%d.jpg", n, k)
-            local bytes = ""
-            if call.data then
-                writeBinary(LrPathUtils.child(dir, leaf), call.data)
-                bytes = #call.data
-            else
-                leaf = ""
-            end
-            table.insert(rows, table.concat({ runId, csvCell(lrVersion), csvCell(filename), n, kind, delta, before, csvCell(readback),
-                fmtMs(applyMs), csvCell(sizeArgs), k, #calls, fmtMs(call.ms), bytes, leaf, csvCell(call.err) }, ","))
+        for k, g in ipairs(r.good) do
+            local leaf = (k == 1) and string.format("s1_%d.jpg", n) or string.format("s1_%d_cb%d.jpg", n, g.index)
+            writeBinary(LrPathUtils.child(dir, leaf), g.data)
+            row(n, kind, delta, before, readback, applyMs, r, { index = g.index, bytes = #g.data, file = leaf })
         end
-        table.insert(summary, string.format("n=%d %s %+.1f EV: first callback %.0f ms (%d callback%s)",
-            n, kind, delta, calls[1].ms, #calls, (#calls == 1) and "" or "s"))
+        local errNote = r.firstError and (", first error: " .. r.firstError) or ""
+        table.insert(summary, string.format("n=%d %s %+.1f EV: thumbnail after %.0f ms (%d attempt%s%s)",
+            n, kind, delta, r.readyMs, r.attempts, (r.attempts == 1) and "" or "s", errNote))
     end
 
     -- n = 0: baseline, no develop change.
@@ -187,7 +242,7 @@ LrFunctionContext.postAsyncTaskWithContext("AVG S1", function(context)
 
     -- One LrExportSession JPEG at 1600 px long edge. Settings follow Automaat's working
     -- export (HandlerExport.lua:71-104); LR_jpeg_quality range 0-1 is [unverified]
-    -- (Automaat passes 0-100 at HandlerExport.lua:75) - check the byte size in the report.
+    -- (Automaat passes 0-100 at HandlerExport.lua:75).
     local exportSettings = {
         LR_export_destinationType = "specificFolder",
         LR_export_destinationPathPrefix = dir,
@@ -210,18 +265,20 @@ LrFunctionContext.postAsyncTaskWithContext("AVG S1", function(context)
     local exportMs = nowMs() - tExport
 
     local expected = LrPathUtils.replaceExtension(LrPathUtils.child(dir, filename), "jpg")
-    local exportLeaf, exportBytes, exportErr = "", "", ""
+    local exportFields = { index = 1 }
     if LrFileUtils.exists(expected) == "file" then
         local final = LrPathUtils.child(dir, "s1_export.jpg")
         LrFileUtils.move(expected, final)
-        exportLeaf = "s1_export.jpg"
-        exportBytes = LrFileUtils.fileAttributes(final).fileSize or ""
+        exportFields.file = "s1_export.jpg"
+        exportFields.bytes = LrFileUtils.fileAttributes(final).fileSize
+        table.insert(summary, string.format("export: %.0f ms", exportMs))
     else
-        exportErr = "export file not found at " .. expected
+        failures = failures + 1
+        exportFields.error = "export file not found at " .. expected
+        table.insert(summary, "export: FAILED - " .. exportFields.error)
     end
-    table.insert(rows, table.concat({ runId, csvCell(lrVersion), csvCell(filename), STEPS + 1, "export", 0, current, csvCell(current),
-        "", csvCell(EXPORT_LONG_EDGE .. " long edge"), 1, 1, fmtMs(exportMs), exportBytes, exportLeaf, csvCell(exportErr) }, ","))
-    table.insert(summary, string.format("export: %.0f ms %s", exportMs, exportErr))
+    row(STEPS + 1, "export", 0, current, current, nil,
+        { attempts = 1, readyMs = exportMs, requestMs = exportMs, callbackCount = 1 }, exportFields)
 
     catalog:withWriteAccessDo("AVG S1 restore", function()
         photo:applyDevelopSettings({ Exposure2012 = original }, "AVG S1 restore")
@@ -230,9 +287,10 @@ LrFunctionContext.postAsyncTaskWithContext("AVG S1", function(context)
     local csvPath = LrPathUtils.child(dir, "s1_results.csv")
     writeBinary(csvPath, table.concat(rows, "\n") .. "\n")
 
+    local headline = (failures == 0) and "All steps returned a thumbnail." or
+        string.format("ERRORS: %d item(s) FAILED - see the lines marked FAILED.", failures)
     LrDialogs.message("AVG S1 done",
-        table.concat(summary, "\n") ..
+        headline .. "\n\n" .. table.concat(summary, "\n") ..
         "\n\nExposure2012 restored to " .. tostring(original) ..
-        ".\nResults: " .. csvPath ..
-        "\nNext: node spikes\\S1\\measure.ts \"" .. dir .. "\"", "info")
+        ".\nResults: " .. csvPath, (failures == 0) and "info" or "warning")
 end)

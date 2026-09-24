@@ -221,7 +221,7 @@ console.log("\n--- report fields ---");
 console.log(`connect write->8765: ${results.connect["write"] ?? "fail"}; connect read<-8766: ${results.connect["read"] ?? "fail"}`);
 console.log(`hello echoed: ${hello?.ok === true}`);
 console.log(`1 MB (1048576 chars) echoed intact: ${oneMb.ok}; rtt ${oneMb.rtt_ms?.toFixed(1) ?? "-"} ms; Lua length field ${oneMb.echoed_length_field ?? "-"}`);
-console.log(`largest message that survived: ${maxOk} chars${maxOk >= MAX_MB * 1048576 ? " (ladder cap reached; raise --max-mb to probe further)" : ""}`);
+console.log(`largest message that survived: ${maxOk} chars${maxOk >= MAX_MB * 1048576 ? ` (ladder cap of ${MAX_MB} MB reached, far above the ~1 MB a preview needs)` : ""}`);
 
 const outDir = path.join(os.tmpdir(), "LrC-AVG");
 mkdirSync(outDir, { recursive: true });

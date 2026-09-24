@@ -11,7 +11,7 @@ return {
     LrExportMenuItems = {
         { title = "AVG S5 - Dump develop settings of target photo", file = "S5Dump.lua" },
         { title = "AVG S5 - Write test (CameraProfile + EnableLensCorrections)", file = "S5WriteTest.lua" },
-        { title = "AVG S5 - Optional write test B (LensProfileEnable = 1)", file = "S5WriteTestB.lua" },
+        { title = "AVG S5 - Write test B (LensProfileEnable = 1)", file = "S5WriteTestB.lua" },
     },
     VERSION = { major = 0, minor = 0, revision = 1, build = 0 },
 }

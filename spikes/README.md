@@ -22,7 +22,7 @@ Throwaway harnesses that answer the feasibility questions in PHASES.md Phase 0. 
 
 ## One-time setup (already done on this machine)
 
-`npm install` was run in `D:\Developer\LrC_Autonomous_Gateway`, and Node is v24.11.1. Nothing to do.
+Nothing to do. `npm install` was run in `D:\Developer\LrC_Autonomous_Gateway` on 2026-09-23 [handle: `docs\DEPENDENCIES.md`: installed versions confirmed with `npm ls --depth=0 --all` after `npm install`, 0 vulnerabilities reported], and Node is v24.11.1 [handle: `node -v` → `v24.11.1`, `docs\PHASE0_HANDOVER.md` §1].
 
 ## Adding a spike plugin to Lightroom (each spike README says when)
 

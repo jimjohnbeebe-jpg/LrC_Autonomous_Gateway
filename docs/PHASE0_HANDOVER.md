@@ -131,7 +131,7 @@ The PR + Greptile triage rule is now in `.claude\rules\04-workflow.md` (rewritte
 
 ### Notes for Jim
 
-- The repo is public, so the Phase 0 docs are too. `docs\MCP_AVAILABILITY.md` lists this machine's local paths and the names of your claude.ai connectors (Gmail, Calendar, Drive, Notion, Figma, Tavily, Adobe, Process Street). No secrets were found, but if you'd rather not publish that list, trim it in a `fix/` PR. The commit author email in `git log` is your git config email.
+- The repo is public, so the Phase 0 docs are too. `docs\MCP_AVAILABILITY.md` originally listed this machine's local paths and the names of your claude.ai account connectors. No secrets were found. At Jim's request the connector names were trimmed from that doc and from this note (PR `fix/trim-connector-list`); earlier commits in the public history still contain them. The commit author email in `git log` is your git config email.
 - Next action is unchanged: **Jim runs S1–S6** per `spikes\README.md`. Report updates now also go through PRs.
 
 ### STOP (Phase 0b)

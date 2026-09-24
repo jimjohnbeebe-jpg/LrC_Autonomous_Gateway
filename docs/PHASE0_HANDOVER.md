@@ -90,3 +90,50 @@ Fill in "Observed", "Numbers" and "Verdict" in `docs\reports\phase0\S<n>.md`. Wh
 ## 8. STOP
 
 Phase 0 harness work is complete. **Phase 1 has not been started** and will not be until Jim has run S1–S6, the reports hold his observations, and he gives direction. PHASES.md Phase 0 acceptance still needs: six reports with measured numbers, the LR_SDK_NOTES "To record in Phase 0" section filled, and `LrC_AVG_STATE.md` next action set to Phase 1.
+
+---
+
+## Phase 0b — GitHub repo + review workflow (2026-09-23, 2026-09-24 UTC)
+
+> **Self-attribution.** This section was written by **Claude Code (Opus 5.5) in the Phase 0b session**, under the Phase 0b directive (GitHub repo + review workflow) that Jim pasted on 2026-09-23. Timestamps from GitHub are UTC. It records only what was observed up to the Greptile triage of PR #1. The merge of PR #1 happens after this text is written; its merge commit is recorded in the vault `LrC_AVG_STATE.md`.
+
+### GitHub CLI (Step A)
+
+`gh --version` → `gh version 2.100.0 (2026-09-03)`. `gh auth status` → logged in to github.com as `jimjohnbeebe-jpg` (keyring; token scopes `gist`, `read:org`, `repo`, `workflow`). The login was resolved with `gh api user --jq .login` → `jimjohnbeebe-jpg`; the account name is `Jim Beebe`.
+
+### Repository (Step B)
+
+- Created with `gh repo create jimjohnbeebe-jpg/LrC_Autonomous_Gateway --public --source . --remote origin --push --description "…"`. Automaat is vendored with attribution, not forked.
+- `gh repo view jimjohnbeebe-jpg/LrC_Autonomous_Gateway --json url,visibility,defaultBranchRef` →
+  `{"defaultBranchRef":{"name":"main"},"url":"https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway","visibility":"PUBLIC"}`
+- `git ls-files fixtures` → no output. The remote tree (`git/trees/main?recursive=1`, 231 paths, not truncated) contains 0 paths under `fixtures/` and 0 `.nef`/`.dng`/`.xmp` files.
+- Before the push, a scan of all tracked files for token-shaped strings (GitHub PAT/OAuth, `sk-`, AWS, Slack, Google API keys, private-key headers) found nothing.
+- **LICENSE: MIT**, Copyright (c) 2026 Jim Beebe (holder name from `gh api user`). Automaat's MIT license (`docs\AUTOMAAT_SURVEY.md` §2) only requires keeping its notice, so no STOP condition applied. GitHub detects the license as `MIT` (`gh api repos/jimjohnbeebe-jpg/LrC_Autonomous_Gateway --jq .license.spdx_id`). `README.md` carries the **NOTICE** section: upstream URL, commit `a160e7aa250b3264694d88e51418f7f512f417de`, MIT, Copyright (c) 2026 Marcin Skalski, and the license path `vendor/automaat/LICENSE`, matching the survey. Commit `63e9185` went directly to `main`, before protection was enabled; it is the last direct commit to `main`.
+
+### Branch protection (Step C)
+
+`gh api -X PUT repos/jimjohnbeebe-jpg/LrC_Autonomous_Gateway/branches/main/protection` was **accepted**. The directive's `[unverified]` "a public repo on a free plan should accept it" is now observed. The read-back from `gh api …/branches/main/protection`, reduced to the requested fields:
+`{"allow_deletions":false,"allow_force_pushes":false,"enforce_admins":false,"required_pull_request_reviews":{"dismiss_stale_reviews":false,"require_code_owner_reviews":false,"required_approving_review_count":0},"required_status_checks":null,"restrictions":null}`
+Because `enforce_admins` is false, an admin can still push to `main`. The Greptile gate is enforced by the workflow rule, not by GitHub.
+
+### Workflow rule (Step D)
+
+The PR + Greptile triage rule is now in `.claude\rules\04-workflow.md` (rewritten, rule steps in the directive's order), in `CLAUDE.md` (a new section) and in the vault `PHASES.md` ("Standing rules" bullet). `docs\REVIEW_WORKFLOW.md` summarises it. The rule edits went through their own PR (#1) rather than onto `main`.
+
+### Greptile (Step E): live
+
+- PR #1 (`fix/greptile-check`): https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway/pull/1
+- A check run named **"Greptile Review"** from app `greptile-apps` appeared on the PR head while the poll ran.
+- Review `5298925575` by `greptile-apps[bot]`, state `COMMENTED`, submitted `2026-09-24T02:16:05Z`, about 2 minutes after the PR opened (poll 2 of 5). "Confidence Score: 4/5".
+- **Where Greptile writes:** the summary goes into the **PR description** (between `<!-- greptile_comment -->` markers), not into an issue comment. Findings arrive as **inline review comments**. To find its output, poll `pulls/<n>/reviews` and `pulls/<n>/comments` and read the PR body; `issues/<n>/comments` stayed empty.
+- One finding: inline comment `4089137138`, P2, `docs/REVIEW_WORKFLOW.md:36`, "Handover record does not exist". Triaged as **fix**; this section is the fix. The triage table is posted as a PR comment on #1.
+- [unverified] Whether Greptile re-reviews every push automatically, and whether a repo-level Greptile config exists. `gh api user/installations` returns HTTP 403 with the gh OAuth token, so the app installation cannot be listed from the CLI.
+
+### Notes for Jim
+
+- The repo is public, so the Phase 0 docs are too. `docs\MCP_AVAILABILITY.md` lists this machine's local paths and the names of your claude.ai connectors (Gmail, Calendar, Drive, Notion, Figma, Tavily, Adobe, Process Street). No secrets were found, but if you'd rather not publish that list, trim it in a `fix/` PR. The commit author email in `git log` is your git config email.
+- Next action is unchanged: **Jim runs S1–S6** per `spikes\README.md`. Report updates now also go through PRs.
+
+### STOP (Phase 0b)
+
+Phase 0b is complete when PR #1 is merged after its triage. No Phase 1 work has started.

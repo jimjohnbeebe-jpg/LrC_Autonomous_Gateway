@@ -22,7 +22,29 @@ Throwaway harnesses that answer the feasibility questions in PHASES.md Phase 0. 
 
 ## One-time setup (already done on this machine)
 
-Nothing to do. `npm install` was run in `D:\Developer\LrC_Autonomous_Gateway` on 2026-09-23 [handle: `docs\DEPENDENCIES.md`: installed versions confirmed with `npm ls --depth=0 --all` after `npm install`, 0 vulnerabilities reported], and Node is v24.11.1 [handle: `node -v` → `v24.11.1`, `docs\PHASE0_HANDOVER.md` §1].
+Nothing to do: the dependencies are installed and Node is v24.11.1. Handle: these commands, run in `D:\Developer\LrC_Autonomous_Gateway` on 2026-09-24T03:14Z by Claude Code, printed:
+
+```
+> node -v
+v24.11.1
+> npm ls --depth=0 --all
+lrc-avg-workspace@ D:\Developer\LrC_Autonomous_Gateway
+├─┬ lrc-avg-spikes@0.0.0 -> .\spikes
+│ ├── @modelcontextprotocol/sdk@1.30.1
+│ ├── @types/node@24.13.6
+│ ├── sharp@0.35.4
+│ ├── typescript@7.0.2
+│ └── zod@4.6.5
+└─┬ lrc-avg@0.0.0 -> .\engine
+  ├── @modelcontextprotocol/sdk@1.30.1 deduped
+  ├── @types/node@24.13.6 deduped
+  ├── sharp@0.35.4 deduped
+  ├── typescript@7.0.2 deduped
+  ├── vitest@5.0.1
+  └── zod@4.6.5 deduped
+> npm audit
+found 0 vulnerabilities
+```
 
 ## Adding a spike plugin to Lightroom (each spike README says when)
 

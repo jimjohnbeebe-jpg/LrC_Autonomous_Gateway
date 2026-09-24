@@ -57,7 +57,7 @@ Fill in "Observed", "Numbers" and "Verdict" in `docs\reports\phase0\S<n>.md`. Wh
 2. **sharp 0.35.4 / libvips 8.18.6 cannot decode any Z8 NEF**, and decodes only a 258×172 thumbnail from the DxO DNG (the full-size SubIFD comes out black) [handle: `node spikes\S3\probe-decoders.ts`, output in `docs\reports\phase0\S3.md`]. Consequences: S3 needs a Lightroom-exported JPEG, and the `tests\golden\` previews planned for Phase 3 must be Lightroom renders, as ARCHITECTURE §9 already assumes.
 3. **Automaat has no image path**: tool results are text-only (`vendor\automaat\server\src\tool-handler.ts:11-15, 47-49`). It also never calls `requestJpegThumbnail`, `createVirtualCopies`, `createDevelopSnapshot`, `LrDevelopController` or `presentFloatingDialog` (grep over the plugin, `docs\AUTOMAAT_SURVEY.md` §4.6).
 4. **Its develop writes pass no History name** (`HandlerDevelop.lua:737, 771`) and **never `LrTasks.yield()`**. We must add both (PRD FR-4.4, NFR-1).
-5. **Lens key naming conflict:** Automaat allowlists `LensProfileEnable` (`tool-contracts.ts:81`); LR_SDK_NOTES and the directive say `EnableLensCorrections`. S5 reads back both and optionally writes the former.
+5. **Lens key naming conflict:** Automaat allowlists `LensProfileEnable` (`tool-contracts.ts:81`); LR_SDK_NOTES and the directive say `EnableLensCorrections`. S5 reads back both. Write test B attempts `LensProfileEnable = 1` only if the photo's live `getDevelopSettings()` read contains that key, and otherwise reports it as SKIPPED [handle: `plugin\spikes\S5.lrplugin\S5WriteTestB.lua`; which branch runs is unverified until Jim runs S5].
 6. **Find-by-local-id conflict:** LR_SDK_NOTES lists `catalog:getPhotoByLocalId` [community]; Automaat says there is no such lookup (`PhotoLookup.lua:37`). S6 probes for it.
 7. **Presets (PRD OQ-3):** Automaat's API route (`LrApplication.addDevelopPresetForPlugin`, `HandlerDevelop.lua:593`) produces plugin presets it reports as not visible in the Develop panel (`:600`) [upstream claim]. That leans OQ-3 toward the XMP-file route [inference]; the Phase 4 spike decides.
 8. **Automaat auto-installs its plugin** into `%APPDATA%\Adobe\Lightroom\Modules` on every server start (`server\src\index.ts:91`, `install-plugin.ts:119-132`). Do not inherit that behaviour.
@@ -83,7 +83,7 @@ Fill in "Observed", "Numbers" and "Verdict" in `docs\reports\phase0\S<n>.md`. Wh
 - `.gitignore` extras: `vendor/automaat/**/*.py` (stack rule), `graphify-out/` (derived), `fixtures/*.jpg|*.jpeg` (the S3 JPEG export must not enter git).
 - S1 also records a baseline thumbnail (n=0), every callback, per-step `applyDevelopSettings` ms, and restores the exposure afterwards. S2 adds 20 small-message pings and a size ladder (for "max message size that survives").
 - S3 adds `probe-decoders.ts`, `smoke-client.ts` and an `LRC_AVG_FIXTURES_DIR` override (used only by the smoke test).
-- S5 adds the `s5_profiles.log` accumulator and an optional write test B (`LensProfileEnable`, finding 5).
+- S5 adds the `s5_profiles.log` accumulator and write test B (`LensProfileEnable`, finding 5). It was optional at first; since 2026-09-23 it is a required step, following Jim's rule that a step is either needed or left out.
 - S6 makes three copies named "AVG S6 A/B/C" (PHASES.md says three copies; the directive's single name "AVG S6" would not distinguish them), re-selects the master before each call, and probes addressability.
 - Spike menu items are `LrExportMenuItems` (File > Plug-in Extras), so they are reachable from Develop.
 

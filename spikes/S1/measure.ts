@@ -8,6 +8,10 @@
 // sRGB-encoded values sharp decodes (Rec.709 luma weights, gamma-encoded, not
 // linear luminance). It is only used relatively: did the picture get brighter or
 // darker after a +/-1 EV step?
+//
+// Latency: `ready_ms` = ms from applyDevelopSettings returning to the first thumbnail
+// Lightroom actually delivered (the harness re-requests after "error loading thumb").
+// CSVs from the first harness version (column `ms`, no retries) are still readable.
 
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
@@ -22,9 +26,12 @@ interface Row {
   n: number;
   kind: string;
   delta: number;
+  attempts: number | undefined;
+  firstError: string;
+  readyMs: number | undefined;
+  requestMs: number | undefined;
   callbackIndex: number;
   callbackCount: number;
-  ms: number | undefined;
   file: string;
   error: string;
   sizeArgs: string;
@@ -53,16 +60,22 @@ function readRows(): Row[] {
   if (!existsSync(csvPath)) return [];
   const [header, ...lines] = readFileSync(csvPath, "utf8").trim().split(/\r?\n/);
   const cols = (header ?? "").split(",");
-  const at = (cells: string[], name: string): string => cells[cols.indexOf(name)] ?? "";
+  const at = (cells: string[], name: string): string => {
+    const i = cols.indexOf(name);
+    return i >= 0 ? (cells[i] ?? "") : "";
+  };
   return lines.map((line) => {
     const c = line.split(",");
     return {
       n: num(at(c, "n")) ?? -1,
       kind: at(c, "kind"),
       delta: num(at(c, "delta_ev")) ?? 0,
+      attempts: num(at(c, "attempts")),
+      firstError: at(c, "first_error"),
+      readyMs: num(at(c, "ready_ms")) ?? num(at(c, "ms")),
+      requestMs: num(at(c, "request_ms")),
       callbackIndex: num(at(c, "callback_index")) ?? 0,
       callbackCount: num(at(c, "callback_count")) ?? 0,
-      ms: num(at(c, "ms")),
       file: at(c, "file"),
       error: at(c, "error"),
       sizeArgs: at(c, "size_args"),
@@ -105,7 +118,7 @@ const rows = readRows();
 const jpegs = rows.length > 0
   ? rows.filter((r) => r.file !== "").map((r) => r.file)
   : readdirSync(dir).filter((f) => /^s1_.*\.jpg$/.test(f)).sort();
-if (jpegs.length === 0) {
+if (jpegs.length === 0 && rows.length === 0) {
   console.error(`No S1 output in ${dir}. Run "AVG S1" in Lightroom first.`);
   process.exit(1);
 }
@@ -115,24 +128,27 @@ for (const f of jpegs) info.set(f, await facts(path.join(dir, f)));
 
 console.log(`AVG-S1 measure — dir ${dir}`);
 console.log(`sharp ${sharp.versions.sharp} / libvips ${sharp.versions.vips} / node ${process.version}\n`);
-console.log("n  kind      delta  cb   ms        bytes     size        sha256[0:12]  mean_luma  icc");
-for (const r of rows.length > 0 ? rows : jpegs.map((f): Row => ({ n: -1, kind: "?", delta: 0, callbackIndex: 1, callbackCount: 1, ms: undefined, file: f, error: "", sizeArgs: "", applyMs: undefined }))) {
+console.log("n  kind      delta  tries  ready_ms  bytes     size        sha256[0:12]  mean_luma  icc");
+for (const r of rows) {
   const f = info.get(r.file);
-  console.log(
-    [
-      String(r.n).padEnd(2),
-      r.kind.padEnd(9),
-      (r.delta >= 0 ? "+" : "") + r.delta.toFixed(1).padEnd(5),
-      `${r.callbackIndex}/${r.callbackCount}`.padEnd(4),
-      (r.ms === undefined ? "-" : r.ms.toFixed(0)).padEnd(9),
-      String(f?.bytes ?? "-").padEnd(9),
-      (f ? `${f.width}x${f.height}` : "-").padEnd(11),
-      (f?.sha ?? "-").padEnd(13),
-      (f ? f.luma.toFixed(2) : "-").padEnd(10),
-      f?.icc ?? "",
-      r.error ? ` ERROR: ${r.error}` : "",
-    ].join(" "),
-  );
+  const line = [
+    String(r.n).padEnd(2),
+    r.kind.padEnd(9),
+    ((r.delta >= 0 ? "+" : "") + r.delta.toFixed(1)).padEnd(6),
+    String(r.attempts ?? "-").padEnd(6),
+    (r.readyMs === undefined ? "-" : r.readyMs.toFixed(0)).padEnd(9),
+    String(f?.bytes ?? "-").padEnd(9),
+    (f ? `${f.width}x${f.height}` : "-").padEnd(11),
+    (f?.sha ?? "-").padEnd(13),
+    (f ? f.luma.toFixed(2) : "-").padEnd(10),
+    f?.icc ?? "",
+  ].join(" ");
+  const notes = [
+    r.callbackIndex > 1 ? `extra callback #${r.callbackIndex}` : "",
+    r.firstError && r.file ? `first error before success: "${r.firstError}"` : "",
+    r.error ? `NO IMAGE: ${r.error}` : "",
+  ].filter(Boolean).join("; ");
+  console.log(notes ? `${line}  ${notes}` : line);
 }
 
 if (rows.length === 0) {
@@ -144,58 +160,77 @@ if (rows.length === 0) {
 // the next: the steps alternate between baseline exposure (offset 0) and baseline +/-1 EV.
 //   offset +/-1 EV -> fresh if luma moved from baseline by >= MOVED_LEVELS in that direction
 //   offset 0       -> fresh if luma is back within MOVED_LEVELS of baseline
-// The frame-to-previous-frame direction is printed as secondary information.
-const first = (n: number) => rows.find((r) => r.n === n && r.callbackIndex === 1);
+// A step with no image is "no image", never "stale".
+const first = (n: number) => rows.find((r) => r.n === n && (r.callbackIndex <= 1 || r.file === ""));
 const lumaSequence: string[] = [];
 let fresh = 0;
+let stale = 0;
+let noImage = 0;
+let unjudged = 0; // step has an image but there is no baseline image to judge it against
 let steps = 0;
 const base = first(0);
 const baseFacts = base ? info.get(base.file) : undefined;
-if (base) lumaSequence.push(`0:${baseFacts?.luma.toFixed(2) ?? "?"}`);
+lumaSequence.push(`0:${baseFacts?.luma.toFixed(2) ?? "?"}`);
 let offset = 0;
+console.log("");
 for (let n = 1; ; n++) {
   const cur = first(n);
   if (!cur || cur.kind !== "step") break;
   steps++;
   offset += cur.delta;
-  const prev = first(n - 1);
-  const a = prev ? info.get(prev.file) : undefined;
   const b = info.get(cur.file);
-  lumaSequence.push(`${n}:${b?.luma.toFixed(2) ?? "?"}`);
-  if (!b || !baseFacts) continue;
+  lumaSequence.push(`${n}:${b?.luma.toFixed(2) ?? "-"}`);
+  if (!b) {
+    noImage++;
+    console.log(`step ${n} (${cur.delta > 0 ? "+" : ""}${cur.delta} EV): NO IMAGE — ${cur.error || "no file"}`);
+    continue;
+  }
+  if (!baseFacts) {
+    unjudged++;
+    console.log(`step ${n}: NOT JUDGED — the baseline (n=0) has no image to compare against`);
+    continue;
+  }
   const fromBase = b.luma - baseFacts.luma;
   const ok = Math.abs(offset) < 1e-9
     ? Math.abs(fromBase) < MOVED_LEVELS
     : Math.sign(fromBase) === Math.sign(offset) && Math.abs(fromBase) >= MOVED_LEVELS;
   if (ok) fresh++;
-  const vsPrev = a ? `${b.luma - a.luma >= 0 ? "+" : ""}${(b.luma - a.luma).toFixed(2)} vs previous frame${a.sha === b.sha ? " (identical bytes)" : ""}` : "";
+  else stale++;
   console.log(
-    `step ${n} (${cur.delta > 0 ? "+" : ""}${cur.delta} EV, offset ${offset >= 0 ? "+" : ""}${offset} EV): luma ${b.luma.toFixed(2)}, ${fromBase >= 0 ? "+" : ""}${fromBase.toFixed(2)} vs baseline, ${vsPrev} -> ${ok ? "FRESH" : "STALE?"}`,
+    `step ${n} (${cur.delta > 0 ? "+" : ""}${cur.delta} EV, offset ${offset >= 0 ? "+" : ""}${offset} EV): luma ${b.luma.toFixed(2)}, ${fromBase >= 0 ? "+" : ""}${fromBase.toFixed(2)} vs baseline, ready after ${cur.readyMs?.toFixed(0) ?? "?"} ms / ${cur.attempts ?? "?"} attempt(s) -> ${ok ? "FRESH" : "STALE"}`,
   );
 }
 
-const extra = rows.filter((r) => r.callbackIndex > 1);
-const stepMs = rows.filter((r) => r.kind === "step" && r.callbackIndex === 1 && r.ms !== undefined).map((r) => r.ms as number);
-const applyMs = rows.filter((r) => r.kind === "step" && r.callbackIndex === 1 && r.applyMs !== undefined).map((r) => r.applyMs as number);
+const stepRows = rows.filter((r) => r.kind === "step" && r.file !== "" && r.callbackIndex <= 1);
+const readyMs = stepRows.filter((r) => r.readyMs !== undefined).map((r) => r.readyMs as number);
+const requestMs = stepRows.filter((r) => r.requestMs !== undefined).map((r) => r.requestMs as number);
+const applyMs = rows.filter((r) => r.kind === "step" && r.callbackIndex <= 1 && r.applyMs !== undefined).map((r) => r.applyMs as number);
+const extra = rows.filter((r) => r.callbackIndex > 1 && r.file !== "");
 const exportRow = rows.find((r) => r.kind === "export");
 const exportFacts = exportRow ? info.get(exportRow.file) : undefined;
+const errorsSeen = [...new Set(rows.map((r) => r.firstError).filter(Boolean))];
 
 console.log("\n--- report fields ---");
-console.log(`thumbnail ms (first callback, steps 1-${steps}): ${stats(stepMs)}`);
-console.log(`thumbnail ms per step: ${stepMs.map((m) => m.toFixed(0)).join(", ")}`);
-console.log(`baseline thumbnail ms (no develop change): ${base?.ms?.toFixed(0) ?? "n/a"}`);
+console.log(`thumbnail ready ms after each change (steps with an image): ${stats(readyMs)}`);
+console.log(`thumbnail ready ms per step: ${rows.filter((r) => r.kind === "step" && r.callbackIndex <= 1).map((r) => (r.file ? r.readyMs?.toFixed(0) : "none")).join(", ")}`);
+console.log(`attempts per step: ${rows.filter((r) => r.kind === "step" && r.callbackIndex <= 1).map((r) => r.attempts ?? "-").join(", ")}`);
+console.log(`successful request -> callback ms: ${stats(requestMs)}`);
+console.log(`errors returned before success: ${errorsSeen.length ? errorsSeen.map((e) => `"${e}"`).join(", ") : "none"}`);
+console.log(`baseline thumbnail ms (no develop change): ${base?.readyMs?.toFixed(0) ?? "n/a"}${baseFacts ? ` (${baseFacts.width}x${baseFacts.height})` : ""}`);
 console.log(`applyDevelopSettings ms per step: ${applyMs.map((m) => m.toFixed(0)).join(", ")}`);
-console.log(`export ms: ${exportRow?.ms?.toFixed(0) ?? "n/a"}  (${exportFacts ? `${exportFacts.width}x${exportFacts.height}, ${exportFacts.bytes} B` : exportRow?.error || "no file"})`);
+console.log(`export ms: ${exportRow?.readyMs?.toFixed(0) ?? "n/a"}  (${exportFacts ? `${exportFacts.width}x${exportFacts.height}, ${exportFacts.bytes} B, luma ${exportFacts.luma.toFixed(2)}` : exportRow?.error || "no file"})`);
 console.log(`luma sequence: ${lumaSequence.join("  ")}`);
-console.log(`fresh steps: ${fresh}/${steps}`);
-console.log(`extra callbacks: ${extra.length === 0 ? "none" : extra.map((r) => `n=${r.n} cb${r.callbackIndex} at ${r.ms?.toFixed(0)} ms (${info.get(r.file)?.sha ?? "?"})`).join("; ")}`);
+console.log(`fresh ${fresh}, stale ${stale}, no image ${noImage}, not judged ${unjudged} (of ${steps} steps)`);
+console.log(`extra callbacks with data: ${extra.length === 0 ? "none" : extra.map((r) => `n=${r.n} cb${r.callbackIndex} at ${r.readyMs?.toFixed(0)} ms (${info.get(r.file)?.sha ?? "?"})`).join("; ")}`);
 console.log(`size args used: ${[...new Set(rows.filter((r) => r.kind !== "export").map((r) => r.sizeArgs))].join(" | ")}`);
 
-const maxMs = stepMs.length ? Math.max(...stepMs) : Infinity;
+const maxMs = readyMs.length ? Math.max(...readyMs) : Infinity;
 let verdict: string;
 if (steps === 0) verdict = "incomplete (no step rows)";
-else if (fresh < steps) verdict = "no-go per PHASES.md rule (stale preview seen) — export path only; re-baseline the pass budget";
-else if (maxMs <= GO_MAX_MS) verdict = `go per PHASES.md rule (all fresh, max ${maxMs.toFixed(0)} ms <= ${GO_MAX_MS} ms)`;
-else verdict = `conditional per PHASES.md rule (all fresh, max ${maxMs.toFixed(0)} ms > ${GO_MAX_MS} ms) — export fallback becomes primary`;
+else if (noImage > 0) verdict = `incomplete — ${noImage} of ${steps} step(s) produced no thumbnail (see NO IMAGE lines); no verdict from this run`;
+else if (unjudged > 0) verdict = `incomplete — the baseline thumbnail is missing, so freshness of ${unjudged} step(s) was not judged; no verdict from this run`;
+else if (stale > 0) verdict = "no-go per PHASES.md rule (stale preview seen) — export path only; re-baseline the pass budget";
+else if (maxMs <= GO_MAX_MS) verdict = `go per PHASES.md rule (all fresh, max ready ${maxMs.toFixed(0)} ms <= ${GO_MAX_MS} ms)`;
+else verdict = `conditional per PHASES.md rule (all fresh, max ready ${maxMs.toFixed(0)} ms > ${GO_MAX_MS} ms) — export fallback becomes primary`;
 console.log(`suggested verdict: ${verdict}`);
 console.log("(Jim confirms the verdict in docs/reports/phase0/S1.md)");

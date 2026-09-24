@@ -32,6 +32,16 @@ Repo: https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway (public). `main
 - When a decision belongs to Jim (scope, a spec contradiction, a rule conflict, anything destructive or outward-facing), lay out the options with a recommendation and stop. Do not pick one and carry on.
 - Open decisions go in the handover or report under "Decisions for Jim".
 
+## Steps for Jim (decided by Jim 2026-09-23)
+
+Any procedure Jim carries out (spike runs, Lightroom actions, PowerShell commands, config edits) is written as a numbered checklist he can follow literally:
+
+- **Every step is required.** Never write "optional", "your call" or "if you want". If a step is not needed, leave it out. A conditional step is allowed only with a mechanical trigger ("If the dialog shows X, do Y").
+- Give exact menu paths, exact copy-paste commands, exact file names and save locations for screenshots, what Jim should see, and where the result gets pasted.
+- Put troubleshooting under a separate "If something goes wrong" heading, written as if/then rules.
+- Harness dialogs must state errors plainly, with a headline, so an error cannot pass as "no errors" (S1 run 1: the dialog hid `error loading thumb`).
+- Jim pastes results into the report file and does not commit. Claude Code carries his edits and screenshots onto a branch and through the PR workflow.
+
 ## Reports
 
 - Every phase and spike gets a report (format in `02-sourcing.md`).

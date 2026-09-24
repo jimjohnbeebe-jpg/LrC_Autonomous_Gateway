@@ -10,7 +10,7 @@ authored_by: Claude Code (Opus 5.5), Phase 0 session 2026-09-23
 
 ## 1. MCP servers attached to this Claude Code session
 
-Handle: `claude mcp list` run from `D:\Developer\LrC_Autonomous_Gateway` on 2026-09-23. The output is abridged: nine `claude.ai …` account-connector lines are omitted for privacy (this repo is public). None of them is a Graphify or filesystem server.
+Handle: `claude mcp list` run from `D:\Developer\LrC_Autonomous_Gateway` on 2026-09-23. The output is abridged: nine `claude.ai …` account-connector lines are omitted for privacy (this repo is public). None of them is a Graphify or filesystem server [handle: the unredacted output is in this file at commit `d3ff9c3`, `git show d3ff9c3:docs/MCP_AVAILABILITY.md`, §1].
 
 ```
 [9 × claude.ai <connector>: https://… - ✔ Connected | ! Needs authentication — redacted]

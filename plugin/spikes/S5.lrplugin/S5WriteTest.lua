@@ -47,7 +47,23 @@ LrFunctionContext.postAsyncTaskWithContext("AVG S5 write test", function(context
     }
     if choice ~= "ok" then return end
 
-    local requested = { CameraProfile = props.profile, EnableLensCorrections = true }
+    -- Write only keys the live getDevelopSettings() read contains (03-lightroom: key names
+    -- come only from a live dump). A missing key is reported as skipped, not written blind.
+    local wanted = { CameraProfile = props.profile, EnableLensCorrections = true }
+    local requested, skipped = {}, {}
+    for key, value in pairs(wanted) do
+        if before[key] ~= nil then
+            requested[key] = value
+        else
+            table.insert(skipped, key)
+        end
+    end
+    table.sort(skipped)
+    if next(requested) == nil then
+        LrDialogs.message("AVG S5 write test",
+            "Nothing written: none of the keys (" .. table.concat(skipped, ", ") .. ") is in this photo's live develop settings.", "warning")
+        return
+    end
     catalog:withWriteAccessDo("AVG S5 write test", function()
         photo:applyDevelopSettings(requested, "AVG S5 write test")
     end)
@@ -66,10 +82,12 @@ LrFunctionContext.postAsyncTaskWithContext("AVG S5 write test", function(context
     table.sort(changedKeys)
 
     local path = LrPathUtils.child(S5.outDir(), "s5_writetest_" .. S5.safeName(meta.filename) .. ".json")
-    S5.writeJson(path, { meta = meta, requested = requested, watched = watched, changed_keys = changes })
+    S5.writeJson(path, { meta = meta, requested = requested, skipped_not_in_live_dump = skipped, watched = watched, changed_keys = changes })
 
+    local skippedLine = (#skipped > 0)
+        and ("SKIPPED (not in live develop settings, not written): " .. table.concat(skipped, ", ") .. "\n\n") or ""
     LrDialogs.message("AVG S5 write test",
-        table.concat(lines, "\n") ..
+        skippedLine .. table.concat(lines, "\n") ..
         "\n\nKeys that changed (" .. #changedKeys .. "): " .. table.concat(changedKeys, ", ") ..
         "\n\nResult: " .. path .. "\nUndo via the History panel if wanted.", "info")
 end)

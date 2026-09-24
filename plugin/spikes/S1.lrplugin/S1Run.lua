@@ -90,7 +90,7 @@ end
 -- One requestJpegThumbnail call. Returns every callback { at, data, err } and the request
 -- time. The request object is held until the callbacks have had their chance
 -- (LR_SDK_NOTES, LrPhoto requestJpegThumbnail).
-local function requestOnce(photo, size)
+local function requestOnce(photo, size, timeoutMs)
     local calls = {}
     local function onThumb(data, err)
         table.insert(calls, { at = nowMs(), data = data, err = err })
@@ -110,7 +110,7 @@ local function requestOnce(photo, size)
     end
     local request = requestOrErr
 
-    while #calls == 0 and (nowMs() - requestedAt) < REQUEST_TIMEOUT_MS do
+    while #calls == 0 and (nowMs() - requestedAt) < timeoutMs do
         LrTasks.sleep(0.005)
     end
     local gotData = false
@@ -127,13 +127,16 @@ local function requestOnce(photo, size)
     return calls, requestedAt
 end
 
--- Re-request until Lightroom returns JPEG data or READY_TIMEOUT_MS passes.
+-- Re-request until Lightroom returns JPEG data or READY_TIMEOUT_MS passes. Each request's
+-- wait is capped by the time left, so a step never runs past READY_TIMEOUT_MS.
 local function thumbnailWhenReady(photo, size)
     local start = nowMs()
     local attempts, firstError, lastError = 0, nil, nil
     while true do
         attempts = attempts + 1
-        local calls, requestedAt = requestOnce(photo, size)
+        local remaining = READY_TIMEOUT_MS - (nowMs() - start)
+        local timeoutMs = math.max(1, math.min(REQUEST_TIMEOUT_MS, remaining))
+        local calls, requestedAt = requestOnce(photo, size, timeoutMs)
         local good = {}
         for i, c in ipairs(calls) do
             if c.data then
@@ -144,7 +147,7 @@ local function thumbnailWhenReady(photo, size)
             end
         end
         if #calls == 0 then
-            local e = "no callback within " .. REQUEST_TIMEOUT_MS .. " ms"
+            local e = string.format("no callback within %.0f ms", timeoutMs)
             firstError = firstError or e
             lastError = e
         end
@@ -156,7 +159,8 @@ local function thumbnailWhenReady(photo, size)
             }
         end
         if nowMs() - start >= READY_TIMEOUT_MS then
-            return { ok = false, attempts = attempts, firstError = firstError, lastError = lastError }
+            return { ok = false, attempts = attempts, firstError = firstError, lastError = lastError,
+                elapsedMs = nowMs() - start }
         end
         LrTasks.sleep(RETRY_INTERVAL_S)
     end
@@ -208,7 +212,8 @@ LrFunctionContext.postAsyncTaskWithContext("AVG S1", function(context)
         local r = thumbnailWhenReady(photo, size)
         if not r.ok then
             failures = failures + 1
-            local err = string.format("no thumbnail within %d ms after %d attempts; last error: %s", READY_TIMEOUT_MS, r.attempts, tostring(r.lastError))
+            local err = string.format("no thumbnail after %.0f ms (cap %d ms) and %d attempts; last error: %s",
+                r.elapsedMs, READY_TIMEOUT_MS, r.attempts, tostring(r.lastError))
             row(n, kind, delta, before, readback, applyMs, r, { error = err })
             table.insert(summary, string.format("n=%d %s %+.1f EV: FAILED - %s", n, kind, delta, err))
             return

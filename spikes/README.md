@@ -31,16 +31,21 @@ Throwaway harnesses that answer the feasibility questions in PHASES.md Phase 0. 
 3. Browse to the spike's folder, e.g. `D:\Developer\LrC_Autonomous_Gateway\plugin\spikes\S5.lrplugin`, select the folder itself, and click **Select Folder**.
 4. Check that the new entry shows **Enabled**, then click **Done**.
 
-Leave each spike plugin installed after its run; they don't conflict with each other. Their menu items are under **File > Plug-in Extras**.
+Leave each spike plugin installed after its run. They should not conflict with each other [inference: each plugin has its own `LrToolkitIdentifier` (`plugin\spikes\S<n>.lrplugin\Info.lua`) and its own menu items, and only S2 opens sockets, and only after its Start menu item]. Their menu items are under **File > Plug-in Extras** [inference: S1 run 1 was started from that menu path, as its README said].
 
-## How results get into the repo
+## How results get into the repo (every spike)
 
-- Paste each spike's output into its report, `docs\reports\phase0\S<n>.md`, under the heading the README names, and save.
-- Save screenshots in `D:\Developer\LrC_Autonomous_Gateway\docs\reports\phase0\`, named `S<n>-<what>.png`, as each README says.
-- Do not commit. Tell Claude Code the spike is done; it commits the report and screenshots through a Greptile-reviewed PR.
+1. Save each screenshot the spike README asks for in `D:\Developer\LrC_Autonomous_Gateway\docs\reports\phase0\`, using the exact file name it gives (`S<n>-<what>.png`).
+2. Open the spike's report, `docs\reports\phase0\S<n>.md`.
+3. Paste the output the README names under the heading it names, and save the file.
+4. Do not commit anything.
+5. Tell Claude Code "S<n> done". Claude Code commits the report and screenshots through a Greptile-reviewed PR.
 
 ## Verified here without Lightroom (Claude Code)
 
-- All Lua files parse as Lua 5.1 (`luaparse` 0.3.1, a scratch install, not a project dependency). That proves syntax only, not SDK behaviour.
-- `SpikeJson.lua` (S5) runs under fengari 0.1.4 (a Lua 5.3 VM); its output parses with Node's `JSON.parse` and passes 17/17 value checks.
-- `spikes\S1\measure.ts` (synthetic CSVs: retry success path, stale frame, and the run-1 error case), `spikes\S2\client.ts` (against a fake Node echo server), `spikes\S3\server.ts` (via `smoke-client.ts`), `spikes\S5\pin.ts --dry-run` (synthetic dumps). Details are in each report's "Pre-run findings".
+- All Lua files parse as Lua 5.1 [handle: Claude Code session 2026-09-23, scratch install `luaparse@0.3.1` (not a project dependency), `luaparse.parse(src, { luaVersion: "5.1" })` over `plugin\**\*.lua` → "20/20 Lua files parse as Lua 5.1"]. That proves syntax only, not SDK behaviour.
+- `SpikeJson.lua` (S5) runs under fengari 0.1.4 (a Lua 5.3 VM); its output parses with Node's `JSON.parse` and passes 17/17 value checks [handle: `docs\reports\phase0\S5.md` "Pre-run findings"].
+- `spikes\S1\measure.ts` was run on the run-1 CSV and on synthetic CSVs covering the retry success path and a stale frame [handle: `docs\reports\phase0\S1.md` "Pre-run findings" and "Run 1 analysis"].
+- `spikes\S2\client.ts` was run against a fake Node echo server [handle: `docs\reports\phase0\S2.md` "Pre-run findings"].
+- `spikes\S3\server.ts` was exercised via `node spikes\S3\smoke-client.ts` [handle: `docs\reports\phase0\S3.md` "Pre-run findings"].
+- `node spikes\S5\pin.ts engine\tests\fixtures\synthetic-s5-dump-a.json engine\tests\fixtures\synthetic-s5-dump-b.json --dry-run` was run [handle: `docs\reports\phase0\S5.md` "Pre-run findings"].

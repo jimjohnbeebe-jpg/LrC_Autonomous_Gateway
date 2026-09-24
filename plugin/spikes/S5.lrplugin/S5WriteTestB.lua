@@ -1,7 +1,8 @@
 -- AVG-S5 write test B: applyDevelopSettings { LensProfileEnable = 1 }, read back.
 -- Why: Automaat allowlists "LensProfileEnable" (vendor\automaat\server\src\tool-contracts.ts:81)
 -- while LR_SDK_NOTES and the directive use "EnableLensCorrections"; both may exist with
--- different meanings [unverified]. This isolates the second key.
+-- different meanings [unverified]. This isolates the second key, and writes it only if the
+-- live getDevelopSettings() read contains it.
 -- Result -> <temp>\LrC-AVG\s5_writetestB_<filename>.json. Undo via History ("AVG S5 write test B").
 
 local LrApplication = import 'LrApplication'
@@ -22,6 +23,15 @@ LrFunctionContext.postAsyncTaskWithContext("AVG S5 write test B", function(conte
     end
 
     local before, meta = S5.snapshot(catalog, photo)
+    -- The key name comes from Automaat, so write it only if the live getDevelopSettings()
+    -- read confirms it exists (03-lightroom: key names come only from a live dump).
+    if before.LensProfileEnable == nil then
+        local path = LrPathUtils.child(S5.outDir(), "s5_writetestB_" .. S5.safeName(meta.filename) .. ".json")
+        S5.writeJson(path, { meta = meta, requested = {}, skipped_not_in_live_dump = { "LensProfileEnable" } })
+        LrDialogs.message("AVG S5 write test B",
+            "SKIPPED: LensProfileEnable is not in this photo's live develop settings, so it was not written.\n\nResult: " .. path, "warning")
+        return
+    end
     local requested = { LensProfileEnable = 1 }
     catalog:withWriteAccessDo("AVG S5 write test B", function()
         photo:applyDevelopSettings(requested, "AVG S5 write test B")

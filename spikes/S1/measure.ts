@@ -166,6 +166,7 @@ const lumaSequence: string[] = [];
 let fresh = 0;
 let stale = 0;
 let noImage = 0;
+let unjudged = 0; // step has an image but there is no baseline image to judge it against
 let steps = 0;
 const base = first(0);
 const baseFacts = base ? info.get(base.file) : undefined;
@@ -185,7 +186,8 @@ for (let n = 1; ; n++) {
     continue;
   }
   if (!baseFacts) {
-    console.log(`step ${n}: cannot judge freshness, the baseline has no image`);
+    unjudged++;
+    console.log(`step ${n}: NOT JUDGED — the baseline (n=0) has no image to compare against`);
     continue;
   }
   const fromBase = b.luma - baseFacts.luma;
@@ -218,7 +220,7 @@ console.log(`baseline thumbnail ms (no develop change): ${base?.readyMs?.toFixed
 console.log(`applyDevelopSettings ms per step: ${applyMs.map((m) => m.toFixed(0)).join(", ")}`);
 console.log(`export ms: ${exportRow?.readyMs?.toFixed(0) ?? "n/a"}  (${exportFacts ? `${exportFacts.width}x${exportFacts.height}, ${exportFacts.bytes} B, luma ${exportFacts.luma.toFixed(2)}` : exportRow?.error || "no file"})`);
 console.log(`luma sequence: ${lumaSequence.join("  ")}`);
-console.log(`fresh ${fresh}, stale ${stale}, no image ${noImage} (of ${steps} steps)`);
+console.log(`fresh ${fresh}, stale ${stale}, no image ${noImage}, not judged ${unjudged} (of ${steps} steps)`);
 console.log(`extra callbacks with data: ${extra.length === 0 ? "none" : extra.map((r) => `n=${r.n} cb${r.callbackIndex} at ${r.readyMs?.toFixed(0)} ms (${info.get(r.file)?.sha ?? "?"})`).join("; ")}`);
 console.log(`size args used: ${[...new Set(rows.filter((r) => r.kind !== "export").map((r) => r.sizeArgs))].join(" | ")}`);
 
@@ -226,6 +228,7 @@ const maxMs = readyMs.length ? Math.max(...readyMs) : Infinity;
 let verdict: string;
 if (steps === 0) verdict = "incomplete (no step rows)";
 else if (noImage > 0) verdict = `incomplete — ${noImage} of ${steps} step(s) produced no thumbnail (see NO IMAGE lines); no verdict from this run`;
+else if (unjudged > 0) verdict = `incomplete — the baseline thumbnail is missing, so freshness of ${unjudged} step(s) was not judged; no verdict from this run`;
 else if (stale > 0) verdict = "no-go per PHASES.md rule (stale preview seen) — export path only; re-baseline the pass budget";
 else if (maxMs <= GO_MAX_MS) verdict = `go per PHASES.md rule (all fresh, max ready ${maxMs.toFixed(0)} ms <= ${GO_MAX_MS} ms)`;
 else verdict = `conditional per PHASES.md rule (all fresh, max ready ${maxMs.toFixed(0)} ms > ${GO_MAX_MS} ms) — export fallback becomes primary`;

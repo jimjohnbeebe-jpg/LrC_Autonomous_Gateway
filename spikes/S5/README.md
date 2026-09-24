@@ -8,6 +8,7 @@
 - **AVG S5 - Dump develop settings of target photo** writes `%TEMP%\LrC-AVG\s5_<filename>.json` and appends one line to `%TEMP%\LrC-AVG\s5_profiles.log` (the process version plus every key whose name contains "Profile"). Each dump of the same photo overwrites its JSON; the log keeps every line.
 - **AVG S5 - Write test (CameraProfile + EnableLensCorrections)** asks for a profile string, applies `{ CameraProfile = <string>, EnableLensCorrections = true }` (History "AVG S5 write test"), reads it back, and writes `s5_writetest_<filename>.json`.
 - **AVG S5 - Write test B (LensProfileEnable = 1)** applies `{ LensProfileEnable = 1 }` and reads it back (`s5_writetestB_<filename>.json`). It settles which lens key is which: Automaat uses `LensProfileEnable` (`vendor\automaat\server\src\tool-contracts.ts:81`), while our docs say `EnableLensCorrections`.
+- Both write tests write **only keys present in the photo's live develop settings**. A key missing from them is shown as **SKIPPED** in the dialog and not written, following the rule that key names come only from a live dump (`.claude\rules\03-lightroom.md`). A SKIPPED line is a result, not a failure; carry on with the next step.
 
 Known limit: `Info.lua` declares `LrSdkVersion = 13.0`. If Lightroom hides keys newer than a plugin's declared SDK level [unverified], keys from SDK 14/15 would be missing; the dump's `meta.declared_sdk_version` records the level used.
 

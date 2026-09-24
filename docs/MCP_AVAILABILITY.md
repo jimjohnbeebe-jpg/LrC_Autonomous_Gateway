@@ -10,18 +10,10 @@ authored_by: Claude Code (Opus 5.5), Phase 0 session 2026-09-23
 
 ## 1. MCP servers attached to this Claude Code session
 
-Handle: `claude mcp list` run from `D:\Developer\LrC_Autonomous_Gateway` on 2026-09-23:
+Handle: `claude mcp list` run from `D:\Developer\LrC_Autonomous_Gateway` on 2026-09-23. The output is abridged: nine `claude.ai …` account-connector lines are omitted for privacy (this repo is public). None of them is a Graphify or filesystem server [handle: the unredacted output is in this file at commit `d3ff9c3`, `git show d3ff9c3:docs/MCP_AVAILABILITY.md`, §1].
 
 ```
-claude.ai Claude Docs: https://api.anthropic.com/v1/pages/mcp - ✔ Connected
-claude.ai Notion: https://mcp.notion.com/mcp - ! Needs authentication
-claude.ai Figma: https://mcp.figma.com/mcp - ! Needs authentication
-claude.ai Tavily: https://mcp.tavily.com/mcp - ! Needs authentication
-claude.ai Adobe for creativity: https://adobe-creativity.adobe.io/mcp - ✔ Connected
-claude.ai Google Calendar: https://calendarmcp.googleapis.com/mcp/v1 - ✔ Connected
-claude.ai Gmail: https://gmailmcp.googleapis.com/mcp/v1 - ✔ Connected
-claude.ai Process Street: https://mcp.process.st - ✔ Connected
-claude.ai Google Drive: https://drivemcp.googleapis.com/mcp/v1 - ✔ Connected
+[9 × claude.ai <connector>: https://… - ✔ Connected | ! Needs authentication — redacted]
 plugin:desktop-commander:desktop-commander: npx -y @wonderwhy-er/desktop-commander@latest - ✔ Connected
 ```
 

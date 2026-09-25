@@ -2,7 +2,8 @@
 -- settings every POLL_S seconds and records every new combination of photo +
 -- CameraProfile + Look name, including the full Look table (needed to write an Adobe
 -- profile back in the write tests). Jim only clicks profiles in Lightroom; a bezel message
--- confirms each recording. Results: <repo>\docs\reports\phase0\S5\run2\s5_profiles_recorded.json
+-- confirms each recording. Results: <repo>\docs\reports\phase0\S5\run2\s5_profiles_recorded_<start time>.json,
+-- one file per recorder start so a later run never overwrites an earlier one
 -- (temp folder fallback, see S5Common.resultsDir). Captures are also kept in memory
 -- (_G.AVG_S5_REC) for S5WriteTests.lua in the same Lightroom session.
 
@@ -27,7 +28,7 @@ local R = _G.AVG_S5_REC
 
 local function save()
     local dir, where = S5.resultsDir("run2")
-    local path = LrPathUtils.child(dir, "s5_profiles_recorded.json")
+    local path = LrPathUtils.child(dir, "s5_profiles_recorded_" .. S5.safeName(R.startedAt) .. ".json")
     S5.writeJson(path, { recorder = "AVG S5 profile recorder", started_at = R.startedAt, captures = R.captures })
     return path, where
 end

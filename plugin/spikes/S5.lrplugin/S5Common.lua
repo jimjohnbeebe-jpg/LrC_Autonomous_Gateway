@@ -17,6 +17,36 @@ function S5.outDir()
     return dir
 end
 
+-- Results folder <temp>\LrC-AVG\S5\<sub>. Plugin output stays in the temp folder
+-- (.claude\rules\03-lightroom.md "Plugin hygiene"); Claude Code copies it into
+-- docs\reports\phase0\S5\ itself, so Jim never handles files.
+function S5.resultsDir(sub)
+    local dir = LrPathUtils.child(LrPathUtils.child(S5.outDir(), "S5"), sub)
+    LrFileUtils.createAllDirectories(dir)
+    return dir
+end
+
+-- Name of the applied Look (Adobe Raw and creative profiles are Looks over a base
+-- CameraProfile). Field names Name / UUID are as observed in the live dump
+-- docs\reports\phase0\S5\s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json ("Look").
+function S5.lookName(settings)
+    local look = settings.Look
+    if type(look) == "table" and type(look.Name) == "string" and look.Name ~= "" then return look.Name end
+    return nil
+end
+
+function S5.lookUuid(settings)
+    local look = settings.Look
+    if type(look) == "table" and type(look.UUID) == "string" then return look.UUID end
+    return nil
+end
+
+-- What the Profile field in Develop would show, in plain words.
+function S5.profileLabel(cameraProfile, lookName)
+    if lookName then return lookName .. " (base: " .. tostring(cameraProfile) .. ")" end
+    return tostring(cameraProfile)
+end
+
 function S5.safeName(s)
     return (tostring(s):gsub('[\\/:%*%?"<>|]', "_"))
 end

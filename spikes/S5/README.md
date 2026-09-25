@@ -1,67 +1,47 @@
-# AVG-S5 — develop-key dump, camera profiles, write/readback
+# AVG-S5 — develop settings, camera profiles, and whether they can be written
 
-**Question (PHASES.md):** what does `getDevelopSettings()` actually return on LrC 15.5.1 for a Z8 NEF and for the DxO DNG? What are the `CameraProfile` strings for each Adobe and Nikon profile? Are `CameraProfile` and the lens-correction toggle writable through `applyDevelopSettings`?
-**Why it matters:** the canonical parameter map must be generated from a live dump, never copied from docs, which contain typos (LR_SDK_NOTES; `.claude\rules\03-lightroom.md`). AVG-010 (camera profile as pass zero) depends on the profile being writable.
+**Question (PHASES.md):** what develop settings does Lightroom 15.5.1 report for a Z8 NEF and the DxO DNG? What are the camera-profile names? Can the profile and the lens-correction switches be changed by the plugin?
 
-## Menu items (`plugin\spikes\S5.lrplugin`)
+## Part 1: done (2026-09-23)
 
-- **AVG S5 - Dump develop settings of target photo** writes `%TEMP%\LrC-AVG\s5_<filename>.json` and appends one line to `%TEMP%\LrC-AVG\s5_profiles.log` (the process version plus every key whose name contains "Profile"). Each dump of the same photo overwrites its JSON; the log keeps every line.
-- **AVG S5 - Write test (CameraProfile + EnableLensCorrections)** asks for a profile string, applies `{ CameraProfile = <string>, EnableLensCorrections = true }` (History "AVG S5 write test"), reads it back, and writes `s5_writetest_<filename>.json`.
-- **AVG S5 - Write test B (LensProfileEnable = 1)** applies `{ LensProfileEnable = 1 }` and reads it back (`s5_writetestB_<filename>.json`). It settles which lens key is which: Automaat uses `LensProfileEnable` (`vendor\automaat\server\src\tool-contracts.ts:81`), while our docs say `EnableLensCorrections`.
-- Both write tests write **only keys present in the photo's live develop settings**. A key missing from them is shown as **SKIPPED** in the dialog and not written, following the rule that key names come only from a live dump (`.claude\rules\03-lightroom.md`). A SKIPPED line is a result, not a failure; carry on with the next step.
+The settings list is captured (178 settings, saved as `engine\src\params\sdk-keys.lrc15.json`), along with the Nikon (Camera Matching) profile names. Two gaps remain, found in part 1's results (`docs\reports\phase0\S5.md`, "Part 1 analysis"):
 
-Known limit: `Info.lua` declares `LrSdkVersion = 13.0`. If Lightroom hides keys newer than a plugin's declared SDK level [unverified], keys from SDK 14/15 would be missing; the dump's `meta.declared_sdk_version` records the level used.
+- **Adobe profiles** (Adobe Color, Adobe Landscape, …) are all reported as `Adobe Standard`; the actual profile is stored in a separate `Look` setting that part 1 did not record (source 1).
+- The write tests did not prove anything (source 1).
 
-## Steps for Jim
+## Part 2: what the plugin now does for you
 
-**A. Install**
+- **Profile recorder:** while it runs, it notes every profile you click, including the Adobe ones, and saves them by itself; Claude Code collects the results. A small message in the middle of the screen confirms every click: **"Recorded …"** for a new profile, **"Already recorded …"** for one it has already seen.
+- **Write tests (automatic):** one menu item. First it takes a Develop snapshot; if that fails, it stops without changing anything. Then it changes the photo's profile to a Nikon profile and to an Adobe profile, switches each lens correction off and on, and checks every change. Finally it puts the photo back from the snapshot and checks that every setting matches the start. It shows WORKED / PARTIAL / FAILED for each test and saves the results by itself; Claude Code collects them. Whether each of these steps works in Lightroom is exactly what the run finds out (source 2).
 
-1. Add the plugin folder `D:\Developer\LrC_Autonomous_Gateway\plugin\spikes\S5.lrplugin` (see "Adding a spike plugin" in `spikes\README.md`).
+There is nothing to type, copy, or paste.
 
-**B. Key dumps**
+## Part 2 — steps for Jim
 
-2. In **Library**, click `20260907-_OZ80093.NEF`. **File > Plug-in Extras > AVG S5 - Dump develop settings of target photo.** A dialog shows the key count and `CameraProfile`. Click **OK**.
-3. Click `20260110-_Z8A0138-DxO_DeepPRIME XD3.dng`. Run the same menu item. Click **OK**.
-4. In PowerShell, run this block exactly. It pins the keys and copies the two raw dumps into the repo as evidence:
-   ```powershell
-   cd D:\Developer\LrC_Autonomous_Gateway
-   node spikes\S5\pin.ts `
-     "$env:TEMP\LrC-AVG\s5_20260907-_OZ80093.NEF.json" `
-     "$env:TEMP\LrC-AVG\s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
-   New-Item -ItemType Directory -Force docs\reports\phase0\S5 | Out-Null
-   Copy-Item "$env:TEMP\LrC-AVG\s5_20260907-_OZ80093.NEF.json" docs\reports\phase0\S5\
-   Copy-Item "$env:TEMP\LrC-AVG\s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json" docs\reports\phase0\S5\
-   ```
-   Keep the PowerShell output; you paste it in step 18.
+Start only after Claude Code has told you that PR `phase-0/s5-part2` is merged.
 
-**C. Camera-profile strings: NEF**
-
-5. Click `20260907-_OZ80093.NEF` and press **D** for Develop.
-6. In the **Basic** panel, click the **Profile** drop-down → **Browse…**. The Profile Browser opens.
-7. Click the first profile in the **Adobe Raw** group.
-8. **File > Plug-in Extras > AVG S5 - Dump develop settings of target photo**, then click **OK**.
-9. Repeat steps 7–8 for every other profile in the **Adobe Raw** group, then for every profile in the **Camera Matching** group. Skip all other groups (Artistic, B&W, Modern, Vintage, Legacy). Each dump adds one line to `s5_profiles.log`.
-10. Click **Adobe Color** again, so the photo ends on its default profile.
-
-**D. Camera-profile strings: DNG**
-
-11. Press **G** for Grid, click `20260110-_Z8A0138-DxO_DeepPRIME XD3.dng`, and press **D**. Repeat steps 6–9 for this file: every profile in **Adobe Raw**, and every profile in **Camera Matching** if the browser shows that group for the DNG. If it doesn't, write `DNG: no Camera Matching group` in the report in step 17.
-
-**E. Write tests on the NEF**
-
-12. Click `20260907-_OZ80093.NEF` again (it shows Adobe Color from step 10).
-13. Open `%TEMP%\LrC-AVG\s5_profiles.log` in Notepad (Win+R, paste `%TEMP%\LrC-AVG\s5_profiles.log`, Enter). Find the NEF line recorded while **Adobe Landscape** was selected. Copy the text after `CameraProfile=` up to the next gap (tab).
-14. **File > Plug-in Extras > AVG S5 - Write test (CameraProfile + EnableLensCorrections).** In the dialog's text box, delete the current text, paste the text from step 13, and click **Apply**. Screenshot the result dialog as `docs\reports\phase0\S5-writetest.png`, then click **OK**.
-15. In Develop, expand the **Basic** and **Lens Corrections** panels. Screenshot both (**Win+Shift+S**) as `docs\reports\phase0\S5-develop-after-write.png`.
-16. **File > Plug-in Extras > AVG S5 - Write test B (LensProfileEnable = 1).** Screenshot the result dialog as `docs\reports\phase0\S5-writetestB.png`, then click **OK**.
-17. In the **History** panel (left side of Develop, newest entry at the top), click the entry directly **below** "AVG S5 write test". That is the state before both tests, and it restores the photo.
-
-**F. Report**
-
-18. Open `docs\reports\phase0\S5.md`. Under **"Observed (Jim)"**, paste the PowerShell output from step 4 and the entire contents of `s5_profiles.log`, then add the three screenshot paths from steps 14–16. Save. Do not commit.
-19. Tell Claude Code: **"S5 done."** Claude Code reads the write-test JSON files from `%TEMP%\LrC-AVG` itself and fills the tables.
+1. In Lightroom: **File > Exit**. Wait until Lightroom has closed, then start it again. This loads the new version of the S5 plugin.
+2. In **Library**, click `20260907-_OZ80093.NEF` and press **D** (Develop).
+3. **File > Plug-in Extras > AVG S5 - 1. Start profile recorder.** A message "profile recorder started" appears, then "Recorded 1: …" for the photo's current profile.
+4. In the **Basic** panel, open the Profile Browser (the four-squares icon at the right end of the **Profile** row).
+5. In the **Adobe Raw** group, click each profile once. After each click, wait for the message in the middle of the screen (**"Recorded …"** or **"Already recorded …"**) before clicking the next one.
+6. Click **Adobe Color** last (the message says "Already recorded …"), so the photo ends as it started. Close the Profile Browser.
+7. Press **G** (Grid), click `20260110-_Z8A0138-DxO_DeepPRIME XD3.dng`, and press **D**.
+8. Repeat steps 4–6 for this photo.
+9. **File > Plug-in Extras > AVG S5 - 2. Stop profile recorder.** A window lists everything recorded. Click **OK**.
+10. Press **G**, click `20260907-_OZ80093.NEF`, and press **D**.
+11. **File > Plug-in Extras > AVG S5 - 3. Run write tests (automatic).** After a few seconds, a window shows WORKED / FAILED for each test and whether the photo was put back. Click **OK**.
+12. Tell Claude Code: **"S5 part 2 done."**
 
 ## If something goes wrong
 
-- **`pin.ts` prints `Key "…" has type … but …`**: the NEF and DNG disagree on a key's type. Paste the message into the report and tell Claude Code; do not continue to step C until it answers.
-- **`pin.ts` says a file is not found**: the dump in step 2 or 3 did not run on that photo. Redo that step and then step 4.
+- **The last line of the step 11 window says "Photo put back to how it was: NO"**: don't change the photo. The window names a snapshot it kept for recovery. Tell Claude Code first.
+- **Step 11 shows "STOPPED - Nothing was changed"**: the safety snapshot could not be made. Tell Claude Code.
+- **A step 5 click shows no message within about 2 seconds**: click a different profile, then click the one you wanted again.
+- **Step 11 says "SKIPPED - no Adobe profile was recorded"**: Lightroom was restarted between step 9 and step 11. Repeat steps 3–6 on the NEF, then step 9, then step 11.
+- **A Lightroom error window appears**: take a screenshot (**Win+Shift+S**), save it as `D:\Developer\LrC_Autonomous_Gateway\docs\reports\phase0\S5-part2-error.png`, click OK, and tell Claude Code.
+
+## Sources
+
+1. Part 1 results: `docs\reports\phase0\S5.md` "Part 1 analysis", with evidence in `docs\reports\phase0\S5\` (the DNG dump's `Look` entry: `Name "Adobe Color"` over `CameraProfile "Adobe Standard"`) and `docs\reports\phase0\S5\part1\` (profile log, write-test results).
+2. Part 2 behaviour is what the harness is written to do (`plugin\spikes\S5.lrplugin\S5Recorder.lua`, `S5WriteTests.lua`). Whether Lightroom does each step (snapshot create/apply/delete, writing a `Look`, flipping the lens switches) is [unverified] until part 2 runs; the harness records the outcome of each.

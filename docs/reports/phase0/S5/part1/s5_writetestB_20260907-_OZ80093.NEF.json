@@ -1,0 +1,21 @@
+{
+  "changed_keys": [],
+  "meta": {
+    "camera_model": "NIKON Z 8",
+    "captured_at": "2026-09-24T19:37:34 (local time)",
+    "declared_sdk_version": 13,
+    "encoding_notes": "empty Lua tables are written as []; non-finite numbers as strings",
+    "file_format": "RAW",
+    "filename": "20260907-_OZ80093.NEF",
+    "is_virtual_copy": false,
+    "key_count": 178,
+    "lens": "Viltrox AF 16/1.8 Z",
+    "local_identifier": 3869533,
+    "lr_version": "15.5.1",
+    "spike": "S5",
+    "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9"
+  },
+  "requested": {
+    "LensProfileEnable": 1
+  }
+}

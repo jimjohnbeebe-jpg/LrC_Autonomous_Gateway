@@ -42,6 +42,7 @@ LrFunctionContext.postAsyncTaskWithContext("AVG S5 dump", function(context)
         tostring(meta.filename),
         "ProcessVersion=" .. tostring(settings.ProcessVersion),
         "keys=" .. tostring(meta.key_count),
+        "LookName=" .. tostring(S5.lookName(settings)),
         table.concat(profileFields, "\t"),
     }, "\t")
     local profilesPath = LrPathUtils.child(dir, "s5_profiles.log")

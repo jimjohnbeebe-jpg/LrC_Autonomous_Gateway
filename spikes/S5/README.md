@@ -11,8 +11,8 @@ The settings list is captured (178 settings, saved as `engine\src\params\sdk-key
 
 ## Part 2: what the plugin now does for you
 
-- **Profile recorder:** while it runs, it notes every profile you click, including the Adobe ones, and saves them into the project folder by itself. A small message in the middle of the screen confirms every click: **"Recorded …"** for a new profile, **"Already recorded …"** for one it has already seen.
-- **Write tests (automatic):** one menu item. First it takes a Develop snapshot; if that fails, it stops without changing anything. Then it changes the photo's profile to a Nikon profile and to an Adobe profile, switches each lens correction off and on, and checks every change. Finally it puts the photo back from the snapshot and checks that every setting matches the start. It shows WORKED / PARTIAL / FAILED for each test and saves the results into the project folder by itself. Whether each of these steps works in Lightroom is exactly what the run finds out (source 2).
+- **Profile recorder:** while it runs, it notes every profile you click, including the Adobe ones, and saves them by itself; Claude Code collects the results. A small message in the middle of the screen confirms every click: **"Recorded …"** for a new profile, **"Already recorded …"** for one it has already seen.
+- **Write tests (automatic):** one menu item. First it takes a Develop snapshot; if that fails, it stops without changing anything. Then it changes the photo's profile to a Nikon profile and to an Adobe profile, switches each lens correction off and on, and checks every change. Finally it puts the photo back from the snapshot and checks that every setting matches the start. It shows WORKED / PARTIAL / FAILED for each test and saves the results by itself; Claude Code collects them. Whether each of these steps works in Lightroom is exactly what the run finds out (source 2).
 
 There is nothing to type, copy, or paste.
 

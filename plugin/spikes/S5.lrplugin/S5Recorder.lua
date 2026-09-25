@@ -2,9 +2,9 @@
 -- settings every POLL_S seconds and records every new combination of photo +
 -- CameraProfile + Look name, including the full Look table (needed to write an Adobe
 -- profile back in the write tests). Jim only clicks profiles in Lightroom; a bezel message
--- confirms each recording. Results: <repo>\docs\reports\phase0\S5\run2\s5_profiles_recorded_<start time>.json,
--- one file per recorder start so a later run never overwrites an earlier one
--- (temp folder fallback, see S5Common.resultsDir). Captures are also kept in memory
+-- confirms each recording. Results: <temp>\LrC-AVG\S5\run2\s5_profiles_recorded_<start time>.json,
+-- one file per recorder start so a later run never overwrites an earlier one. Claude Code
+-- copies them into the repo; Jim never handles files. Captures are also kept in memory
 -- (_G.AVG_S5_REC) for S5WriteTests.lua in the same Lightroom session.
 
 local LrApplication = import 'LrApplication'
@@ -27,10 +27,10 @@ end
 local R = _G.AVG_S5_REC
 
 local function save()
-    local dir, where = S5.resultsDir("run2")
+    local dir = S5.resultsDir("run2")
     local path = LrPathUtils.child(dir, "s5_profiles_recorded_" .. S5.safeName(R.startedAt) .. ".json")
     S5.writeJson(path, { recorder = "AVG S5 profile recorder", started_at = R.startedAt, captures = R.captures })
-    return path, where
+    return path
 end
 
 function M.captures()
@@ -95,15 +95,14 @@ function M.stop()
         LrDialogs.message("AVG S5 recorder", "The recorder was not running, and nothing has been recorded in this Lightroom session.", "warning")
         return
     end
-    local path, where = save()
+    save()
     local lines = {}
     for i, c in ipairs(R.captures) do
         lines[i] = string.format("%d. %s: %s", i, tostring(c.filename), S5.profileLabel(c.camera_profile, c.look_name))
     end
     LrDialogs.message("AVG S5 recorder stopped",
-        string.format("Recorded %d profile setting(s):\n%s\n\nSaved automatically%s. Nothing to copy.",
-            #R.captures, table.concat(lines, "\n"),
-            (where == "repo") and " into the project folder" or (" to " .. path)),
+        string.format("Recorded %d profile setting(s):\n%s\n\nSaved automatically. Nothing to copy.",
+            #R.captures, table.concat(lines, "\n")),
         "info")
 end
 

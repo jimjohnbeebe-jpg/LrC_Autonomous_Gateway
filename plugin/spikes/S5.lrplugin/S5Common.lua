@@ -17,23 +17,13 @@ function S5.outDir()
     return dir
 end
 
--- Results folder inside the repo: <repo>\docs\reports\phase0\S5\<sub>, found from this
--- plugin's own folder (<repo>\plugin\spikes\S5.lrplugin), so Jim never copies files.
--- `_PLUGIN.path` is [unverified] on LrC 15.5.1; if the repo folder cannot be found, the temp
--- folder is used, and the caller reports which one was used.
+-- Results folder <temp>\LrC-AVG\S5\<sub>. Plugin output stays in the temp folder
+-- (.claude\rules\03-lightroom.md "Plugin hygiene"); Claude Code copies it into
+-- docs\reports\phase0\S5\ itself, so Jim never handles files.
 function S5.resultsDir(sub)
-    local ok, dir = pcall(function()
-        local repo = LrPathUtils.parent(LrPathUtils.parent(LrPathUtils.parent(_PLUGIN.path)))
-        local phase0 = LrPathUtils.child(LrPathUtils.child(LrPathUtils.child(repo, "docs"), "reports"), "phase0")
-        if LrFileUtils.exists(phase0) ~= "directory" then return nil end
-        local d = LrPathUtils.child(LrPathUtils.child(phase0, "S5"), sub)
-        LrFileUtils.createAllDirectories(d)
-        return d
-    end)
-    if ok and dir then return dir, "repo" end
-    local t = LrPathUtils.child(S5.outDir(), sub)
-    LrFileUtils.createAllDirectories(t)
-    return t, "temp"
+    local dir = LrPathUtils.child(LrPathUtils.child(S5.outDir(), "S5"), sub)
+    LrFileUtils.createAllDirectories(dir)
+    return dir
 end
 
 -- Name of the applied Look (Adobe Raw and creative profiles are Looks over a base

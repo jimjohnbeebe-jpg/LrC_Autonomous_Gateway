@@ -17,9 +17,9 @@
 --      [handle: https://lrc.mcor.dev/modules/LrPhoto.html]. So each call tries snapshotID,
 --      verifies the effect, falls back to id_global, and records which id worked.
 --      The snapshot is deleted only if the photo is fully restored; otherwise it is kept.
--- Every write is read back. Results: <repo>\docs\reports\phase0\S5\run2\
--- s5_writetests_<filename>_<run time>.json (one file per run, so a stopped rerun never overwrites
--- an earlier run; temp fallback), plus a plain-language dialog.
+-- Every write is read back. Results: <temp>\LrC-AVG\S5\run2\s5_writetests_<filename>_<run time>.json
+-- (one file per run, so a stopped rerun never overwrites an earlier run; Claude Code copies them
+-- into the repo), plus a plain-language dialog.
 
 local LrApplication = import 'LrApplication'
 local LrDialogs = import 'LrDialogs'
@@ -54,10 +54,10 @@ LrFunctionContext.postAsyncTaskWithContext("AVG S5 write tests", function(contex
     local start, meta = S5.snapshot(catalog, photo)
     local results = { meta = meta, snapshot = { name = SNAPSHOT_NAME }, tests = {} }
     local summary = {}
-    local dir, where = S5.resultsDir("run2")
+    local dir = S5.resultsDir("run2")
     local runStamp = S5.safeName(S5.now())
     local path = LrPathUtils.child(dir, "s5_writetests_" .. S5.safeName(meta.filename) .. "_" .. runStamp .. ".json")
-    local savedWhere = (where == "repo") and " into the project folder" or (" to " .. path)
+    local savedWhere = ""
 
     local function findSnapshot()
         local entry

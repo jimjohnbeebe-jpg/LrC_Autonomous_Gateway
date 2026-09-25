@@ -197,8 +197,11 @@ function S6.run(declaredView)
         elseif result.copies_selected_for_cleanup then
             cleanup = "The new copies (and nothing else) are now selected. To remove them: Photo > Remove Photos... > Remove."
         else
-            cleanup = "COULD NOT SELECT the new copies automatically. Do not use Remove Photos yet: " ..
-                "select only the new copies yourself (the ones with the folded-corner badge), then Photo > Remove Photos... > Remove."
+            -- No hand-selection fallback: the folded-corner badge does not tell this run's copies
+            -- apart from other virtual copies, so a manual pick could remove unrelated photos.
+            -- Leftover copies are harmless (they never touch the original file).
+            cleanup = "COULD NOT SELECT the new copies automatically. Don't remove anything - " ..
+                "the copies are harmless and can stay for now. Tell Claude Code."
         end
         local saveLine = saved and "Saved automatically - nothing to copy." or ("SAVE FAILED: " .. tostring(saveErr) .. " - tell Claude Code.")
         LrDialogs.message("AVG S6 (" .. declaredView .. ")", headline .. "\n\n" .. cleanup .. "\n\n" .. saveLine,

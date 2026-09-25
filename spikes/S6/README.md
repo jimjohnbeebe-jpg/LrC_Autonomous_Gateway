@@ -22,7 +22,7 @@ That is what the harness is written to do. Whether Lightroom creates the copies 
 
 **Grid run**
 
-6. Press **G** (Grid) and click `20260907-_OZ80093.NEF`.
+6. Press **G** (Grid) and click the original `20260907-_OZ80093.NEF`, the one **without** a folded-corner badge at its bottom-left.
 7. **File > Plug-in Extras > AVG S6 - Create 3 virtual copies (I am in GRID view).**
 8. Click **OK** in the result window.
 9. Remove the copies exactly as in step 5.
@@ -31,5 +31,5 @@ That is what the harness is written to do. Whether Lightroom creates the copies 
 ## If something goes wrong
 
 - **The result window says "PROBLEM: created N of 3"**: that is a result, not a failure of the run. Carry on with the next step.
-- **The result window says "COULD NOT SELECT the new copies"**: press **G** (Grid), click one photo with the folded-corner badge at the bottom-left, Ctrl+click each other one with that badge (never the original), then **Photo > Remove Photos…** > **Remove**.
+- **The result window says "COULD NOT SELECT the new copies"**: don't remove anything, and don't select copies by hand (the folded-corner badge doesn't tell this run's copies apart from any other virtual copies). The copies are harmless. Carry on with the next step, and mention it when you tell Claude Code.
 - **A Lightroom error window appears instead**: tell Claude Code its text.

@@ -5,67 +5,39 @@
 
 ## Why a JPEG export is needed
 
-sharp cannot decode the fixtures. Handle: `node spikes\S3\probe-decoders.ts`; the full output is in `docs\reports\phase0\S3.md`. All 5 NEFs fail with "unsupported image format", and the DxO DNG yields only a 258×172 thumbnail (the full-size image decodes as black). So the test photo has to come out of Lightroom as a JPEG.
+sharp cannot decode the fixtures: all 5 NEFs fail with "unsupported image format", and the DxO DNG yields only a 258×172 thumbnail [handle: `node spikes\S3\probe-decoders.ts`, output in `docs\reports\phase0\S3.md`]. So the test photo has to come out of Lightroom as a JPEG.
 
-## The server
+## What is prepared for you
 
-`spikes\S3\server.ts` is a minimal stdio MCP server with one tool, `get_fixture_preview { name }`. It renders `fixtures\<name>` to 1600 px long edge at q75 and returns an **image** block (`image/jpeg`) plus a **text** block with the byte size, dimensions and render time.
+- `spikes\S3\server.ts`: a small MCP server with one tool, `get_fixture_preview`, which returns a photo from `fixtures\` as a 1600 px JPEG image.
+- `spikes\S3\install-desktop-config.ts`: adds that server to Claude Desktop's settings file for you, after saving a backup of the file. There is no JSON to edit by hand.
 
 ## Steps for Jim
 
-**A. Export the test JPEG from Lightroom**
-
-1. In Lightroom **Library**, select `20260907-_OZ80093.NEF`.
-2. **File > Export…** and set:
+1. **Export the test JPEG.** In Lightroom **Library**, select `20260907-_OZ80093.NEF`, then **File > Export…** with:
    - Export To: **Specific folder** → **Choose…** → `D:\Developer\LrC_Autonomous_Gateway\fixtures`
    - Put in Subfolder: **unticked**
    - File Naming: **Rename To: Filename** (the file becomes `20260907-_OZ80093.jpg`)
    - Image Format: **JPEG**, Quality **90**, Color Space **sRGB**
    - Image Sizing: **Resize to Fit** ticked, **Long Edge**, **2048** pixels
-3. Click **Export** and wait for the progress bar to finish.
 
-**B. Check the server can read it**
-
-4. In PowerShell, run:
+   Click **Export** and wait for the progress bar to finish.
+2. **Connect the server to Claude Desktop.** In PowerShell, run:
    ```powershell
    cd D:\Developer\LrC_Autonomous_Gateway
-   node spikes\S3\smoke-client.ts 20260907-_OZ80093.jpg
+   node spikes\S3\install-desktop-config.ts
    ```
-   Expected: a line starting `image block: mimeType=image/jpeg` that ends with `jpeg_soi=true`. If you see `isError: true` instead, stop and tell Claude Code.
-
-**C. Claude Desktop**
-
-5. In Claude Desktop, open **Settings > Developer > Edit Config**. This opens the folder containing `claude_desktop_config.json`; open that file in a text editor.
-6. Inside `"mcpServers": { … }`, after the `graphify-autodocweb` entry, add a comma and then this entry (it is also in `spikes\S3\claude_desktop_config.snippet.json`):
-   ```json
-   "lrc-avg-spike-s3": {
-     "command": "C:\\Program Files\\nodejs\\node.exe",
-     "args": ["D:\\Developer\\LrC_Autonomous_Gateway\\spikes\\S3\\server.ts"]
-   }
-   ```
-   Save the file.
-7. Quit Claude Desktop completely: right-click its icon in the Windows system tray → **Quit**. Then start it again.
-8. Start a new chat and send exactly:
+   It ends with "Added …" (or "already set up").
+3. **Restart Claude Desktop.** Right-click the Claude icon in the Windows system tray → **Quit**, then start Claude Desktop again.
+4. **Ask Claude.** In Claude Desktop, start a new chat and send exactly:
    `Call get_fixture_preview with name 20260907-_OZ80093.jpg, then describe the photo: subject, light, colours, and anything technically wrong.`
-9. Screenshot the whole reply, including the tool result (**Win+Shift+S**), and save it as `D:\Developer\LrC_Autonomous_Gateway\docs\reports\phase0\S3-desktop.png`.
-10. Write down three answers: (a) was the image **shown** in the tool result, yes/no; (b) does Claude's description match the photo, yes/no/partly; (c) the `jpeg_bytes=` number from the tool's text result.
+5. **Tell Claude Code** (here in the chat) two things: was the **image shown** in Claude Desktop's answer (yes / no), and was the **description right** (yes / no / partly)?
 
-**D. Claude Code CLI**
+## Claude Code's own steps (not Jim's)
 
-11. In a **new** PowerShell window, run:
-    ```powershell
-    cd D:\Developer\LrC_Autonomous_Gateway
-    claude --mcp-config spikes\S3\claude-code.mcp.json
-    ```
-12. Send the same message as in step 8.
-13. Write down: (a) did Claude Code call the tool, yes/no; (b) does its description match the photo, yes/no/partly. Then type `/exit`.
-
-**E. Report**
-
-14. Open `docs\reports\phase0\S3.md`. Under **"Observed (Jim)"**, paste Claude Desktop's description verbatim, your step 10 answers, your step 13 answers, and the line `Screenshot: docs\reports\phase0\S3-desktop.png`. Save. Do not commit.
-15. Tell Claude Code: **"S3 done."** Leave the `lrc-avg-spike-s3` entry in the Desktop config; Phase 2 builds on it.
+After step 1, Claude Code runs the plumbing check `node spikes\S3\smoke-client.ts 20260907-_OZ80093.jpg` (expects an `image/jpeg` block). After step 5, it runs the same question through Claude Code CLI itself, using `spikes\S3\claude-code.mcp.json`, and records both results in `docs\reports\phase0\S3.md`.
 
 ## If something goes wrong
 
-- **Claude says it has no `get_fixture_preview` tool**: open `%LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\Claude\logs\mcp-server-lrc-avg-spike-s3.log` (that folder holds the other `mcp-server-*.log` files), copy its last 30 lines into the report, and tell Claude Code.
-- **Claude Desktop shows a config error on start**: the JSON from step 6 has a missing or extra comma. Tell Claude Code and paste the error text.
+- **Step 2 prints "FAILED: …"**: nothing was changed. Tell Claude Code what it says.
+- **In step 4, Claude says it has no `get_fixture_preview` tool**: tell Claude Code; it will read Claude Desktop's server log itself.

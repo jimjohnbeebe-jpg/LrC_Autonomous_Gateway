@@ -149,6 +149,15 @@ const results: { started: string; node: string; write_port: number; read_port: n
   connect: {},
 };
 
+// Results go to %TEMP%\LrC-AVG\S2\ next to the plugin's log; Claude Code collects them.
+const outDir = path.join(os.tmpdir(), "LrC-AVG", "S2");
+function saveResults(extra: Record<string, unknown>): string {
+  mkdirSync(outDir, { recursive: true });
+  const outFile = path.join(outDir, `s2_client_${results.started.replace(/[:.]/g, "-")}.json`);
+  writeFileSync(outFile, JSON.stringify({ ...results, ...extra }, null, 2));
+  return outFile;
+}
+
 let writer: net.Socket;
 let readSock: net.Socket;
 try {
@@ -158,8 +167,10 @@ try {
   readSock = await connect(READ_PORT, "read<-8766 (plugin send)", 15000);
   results.connect["read"] = "ok";
 } catch (err) {
-  console.error(String((err as Error).message));
-  console.error('Is Lightroom running with "AVG S2 - Start echo server" clicked?');
+  const message = String((err as Error).message);
+  saveResults({ error: message });
+  console.error(`FAILED to connect: ${message}`);
+  console.error('Is Lightroom running, with "AVG S2 - Start echo server" clicked first? Then run this command again.');
   process.exit(1);
 }
 readSock.setEncoding("utf8");
@@ -179,7 +190,7 @@ for (let attempt = 1; attempt <= 3; attempt++) {
   if (hello.ok) break;
 }
 if (!hello?.ok) {
-  console.error("hello never echoed; see the plugin's status dialog / %TEMP%\\LrC-AVG\\s2_log.txt");
+  console.error("hello never echoed; the plugin log (%TEMP%\\LrC-AVG\\S2\\s2_log.txt) will show why");
 }
 
 // 2. small-message RTT distribution.
@@ -223,11 +234,9 @@ console.log(`hello echoed: ${hello?.ok === true}`);
 console.log(`1 MB (1048576 chars) echoed intact: ${oneMb.ok}; rtt ${oneMb.rtt_ms?.toFixed(1) ?? "-"} ms; Lua length field ${oneMb.echoed_length_field ?? "-"}`);
 console.log(`largest message that survived: ${maxOk} chars${maxOk >= MAX_MB * 1048576 ? ` (ladder cap of ${MAX_MB} MB reached, far above the ~1 MB a preview needs)` : ""}`);
 
-const outDir = path.join(os.tmpdir(), "LrC-AVG");
-mkdirSync(outDir, { recursive: true });
-const outFile = path.join(outDir, `s2_client_${results.started.replace(/[:.]/g, "-")}.json`);
-writeFileSync(outFile, JSON.stringify({ ...results, max_ok_chars: maxOk }, null, 2));
-console.log(`results written to ${outFile}`);
+const outFile = saveResults({ max_ok_chars: maxOk });
+console.log(`\nDone. Results saved automatically (${outFile}) - nothing to copy.`);
+console.log('Next: in Lightroom, File > Plug-in Extras > "AVG S2 - Stop echo server".');
 
 writer.end();
 readSock.end();

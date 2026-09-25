@@ -1,0 +1,732 @@
+{
+  "captures": [
+    {
+      "camera_profile": "Adobe Standard",
+      "captured_at": "2026-09-24T20:53:22 (local time)",
+      "file_format": "RAW",
+      "filename": "20260907-_OZ80093.NEF",
+      "key_count": 178,
+      "local_identifier": 3869533,
+      "look": {
+        "Amount": 1,
+        "Copyright": "© 2018 Adobe Systems, Inc.",
+        "Group": {
+          "x-default": "Profiles"
+        },
+        "Name": "Adobe Color",
+        "Parameters": {
+          "AILook": [],
+          "CameraProfile": "Adobe Standard",
+          "ConvertToGrayscale": false,
+          "FilterList": [],
+          "LookTable": "E1095149FDB39D7A057BAB208837E2E1",
+          "PointColors": [],
+          "ProcessVersion": "15.4",
+          "ToneCurveName2012": "",
+          "ToneCurvePV2012": [
+            0,
+            0,
+            22,
+            16,
+            40,
+            35,
+            127,
+            127,
+            224,
+            230,
+            240,
+            246,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Blue": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Green": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Red": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "Version": "18.5.1"
+        },
+        "SupportsAmount": false,
+        "SupportsMonochrome": false,
+        "SupportsOutputReferred": false,
+        "UUID": "B952C231111CD8E0ECCF14B86BAA7077"
+      },
+      "look_name": "Adobe Color",
+      "look_uuid": "B952C231111CD8E0ECCF14B86BAA7077",
+      "process_version": "15.4"
+    },
+    {
+      "camera_profile": "Adobe Standard",
+      "captured_at": "2026-09-24T20:54:36 (local time)",
+      "file_format": "RAW",
+      "filename": "20260907-_OZ80093.NEF",
+      "key_count": 160,
+      "local_identifier": 3869533,
+      "look": {
+        "Amount": 1,
+        "Copyright": "© 2018 Adobe Systems, Inc.",
+        "Group": {
+          "x-default": "Profiles"
+        },
+        "Name": "Adobe Monochrome",
+        "Parameters": {
+          "AILook": [],
+          "CameraProfile": "Adobe Standard",
+          "Clarity2012": 8,
+          "ConvertToGrayscale": true,
+          "FilterList": [],
+          "LookTable": "73ED6C18DDE909DD7EA2D771F5AC282D",
+          "PointColors": [],
+          "ProcessVersion": "15.4",
+          "ToneCurveName2012": "",
+          "ToneCurvePV2012": [
+            0,
+            0,
+            64,
+            56,
+            128,
+            128,
+            192,
+            197,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Blue": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Green": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Red": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "Version": "18.5.1"
+        },
+        "SupportsAmount": false,
+        "SupportsMonochrome": false,
+        "SupportsOutputReferred": false,
+        "UUID": "0CFE8F8AB5F63B2A73CE0B0077D20817"
+      },
+      "look_name": "Adobe Monochrome",
+      "look_uuid": "0CFE8F8AB5F63B2A73CE0B0077D20817",
+      "process_version": "15.4"
+    },
+    {
+      "camera_profile": "Adobe Standard",
+      "captured_at": "2026-09-24T20:54:42 (local time)",
+      "file_format": "RAW",
+      "filename": "20260907-_OZ80093.NEF",
+      "key_count": 178,
+      "local_identifier": 3869533,
+      "look": {
+        "Amount": 1,
+        "Copyright": "© 2018 Adobe Systems, Inc.",
+        "Group": {
+          "x-default": "Profiles"
+        },
+        "Name": "Adobe Landscape",
+        "Parameters": {
+          "AILook": [],
+          "CameraProfile": "Adobe Standard",
+          "Clarity2012": 10,
+          "ConvertToGrayscale": false,
+          "FilterList": [],
+          "Highlights2012": -12,
+          "LookTable": "0B3BFB5CFB7DBF7FF175E98F24D316B0",
+          "PointColors": [],
+          "ProcessVersion": "15.4",
+          "Shadows2012": 12,
+          "ToneCurveName2012": "",
+          "ToneCurvePV2012": [
+            0,
+            0,
+            64,
+            60,
+            128,
+            128,
+            192,
+            196,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Blue": [],
+          "ToneCurvePV2012Green": [],
+          "ToneCurvePV2012Red": [],
+          "Version": "18.5.1"
+        },
+        "SupportsAmount": false,
+        "SupportsMonochrome": false,
+        "SupportsOutputReferred": false,
+        "UUID": "6F9C877E84273F4E8271E6B91BEB36A1"
+      },
+      "look_name": "Adobe Landscape",
+      "look_uuid": "6F9C877E84273F4E8271E6B91BEB36A1",
+      "process_version": "15.4"
+    },
+    {
+      "camera_profile": "Adobe Standard",
+      "captured_at": "2026-09-24T20:54:46 (local time)",
+      "file_format": "RAW",
+      "filename": "20260907-_OZ80093.NEF",
+      "key_count": 178,
+      "local_identifier": 3869533,
+      "look": {
+        "Amount": 1,
+        "Copyright": "© 2018 Adobe Systems, Inc.",
+        "Group": {
+          "x-default": "Profiles"
+        },
+        "Name": "Adobe Neutral",
+        "Parameters": {
+          "AILook": [],
+          "CameraProfile": "Adobe Standard",
+          "ConvertToGrayscale": false,
+          "FilterList": [],
+          "LookTable": "7740BB918B2F6D93D7B95A4DBB78DB23",
+          "PointColors": [],
+          "ProcessVersion": "15.4",
+          "ToneCurveName2012": "",
+          "ToneCurvePV2012": [
+            0,
+            0,
+            16,
+            24,
+            64,
+            72,
+            128,
+            128,
+            192,
+            176,
+            244,
+            234,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Blue": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Green": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Red": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "Version": "18.5.1"
+        },
+        "SupportsAmount": false,
+        "SupportsMonochrome": false,
+        "SupportsOutputReferred": false,
+        "UUID": "1E8E067A11CD44394A3C36A327BB34D1"
+      },
+      "look_name": "Adobe Neutral",
+      "look_uuid": "1E8E067A11CD44394A3C36A327BB34D1",
+      "process_version": "15.4"
+    },
+    {
+      "camera_profile": "Adobe Standard",
+      "captured_at": "2026-09-24T20:54:50 (local time)",
+      "file_format": "RAW",
+      "filename": "20260907-_OZ80093.NEF",
+      "key_count": 178,
+      "local_identifier": 3869533,
+      "look": {
+        "Amount": 1,
+        "Copyright": "© 2018 Adobe Systems, Inc.",
+        "Group": {
+          "x-default": "Profiles"
+        },
+        "Name": "Adobe Portrait",
+        "Parameters": {
+          "AILook": [],
+          "CameraProfile": "Adobe Standard",
+          "ConvertToGrayscale": false,
+          "FilterList": [],
+          "LookTable": "E5A76DBB8B3F132A04C01AF45DC2EF1B",
+          "PointColors": [],
+          "ProcessVersion": "15.4",
+          "ToneCurveName2012": "",
+          "ToneCurvePV2012": [
+            0,
+            0,
+            66,
+            64,
+            190,
+            192,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Blue": [],
+          "ToneCurvePV2012Green": [],
+          "ToneCurvePV2012Red": [],
+          "Version": "18.5.1"
+        },
+        "SupportsAmount": false,
+        "SupportsMonochrome": false,
+        "SupportsOutputReferred": false,
+        "UUID": "D6496412E06A83789C499DF9540AA616"
+      },
+      "look_name": "Adobe Portrait",
+      "look_uuid": "D6496412E06A83789C499DF9540AA616",
+      "process_version": "15.4"
+    },
+    {
+      "camera_profile": "Adobe Standard",
+      "captured_at": "2026-09-24T20:54:54 (local time)",
+      "file_format": "RAW",
+      "filename": "20260907-_OZ80093.NEF",
+      "key_count": 177,
+      "local_identifier": 3869533,
+      "process_version": "15.4"
+    },
+    {
+      "camera_profile": "Adobe Standard",
+      "captured_at": "2026-09-24T20:54:57 (local time)",
+      "file_format": "RAW",
+      "filename": "20260907-_OZ80093.NEF",
+      "key_count": 178,
+      "local_identifier": 3869533,
+      "look": {
+        "Amount": 1,
+        "Copyright": "© 2018 Adobe Systems, Inc.",
+        "Group": {
+          "x-default": "Profiles"
+        },
+        "Name": "Adobe Vivid",
+        "Parameters": {
+          "AILook": [],
+          "CameraProfile": "Adobe Standard",
+          "Clarity2012": 10,
+          "ConvertToGrayscale": false,
+          "FilterList": [],
+          "LookTable": "2FE663AB0D3CE5DA7B9F657BBCD66DFE",
+          "PointColors": [],
+          "ProcessVersion": "15.4",
+          "ToneCurveName2012": "",
+          "ToneCurvePV2012": [
+            0,
+            0,
+            32,
+            22,
+            64,
+            56,
+            128,
+            128,
+            224,
+            232,
+            240,
+            246,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Blue": [],
+          "ToneCurvePV2012Green": [],
+          "ToneCurvePV2012Red": [],
+          "Version": "18.5.1"
+        },
+        "SupportsAmount": false,
+        "SupportsMonochrome": false,
+        "SupportsOutputReferred": false,
+        "UUID": "EA1DE074F188405965EF399C72C221D9"
+      },
+      "look_name": "Adobe Vivid",
+      "look_uuid": "EA1DE074F188405965EF399C72C221D9",
+      "process_version": "15.4"
+    },
+    {
+      "camera_profile": "Adobe Standard",
+      "captured_at": "2026-09-24T20:55:29 (local time)",
+      "file_format": "DNG",
+      "filename": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+      "key_count": 173,
+      "local_identifier": 3869530,
+      "look": {
+        "Amount": 1,
+        "Copyright": "© 2018 Adobe Systems, Inc.",
+        "Group": {
+          "x-default": "Profiles"
+        },
+        "Name": "Adobe Color",
+        "Parameters": {
+          "AILook": [],
+          "CameraProfile": "Adobe Standard",
+          "ConvertToGrayscale": false,
+          "FilterList": [],
+          "LookTable": "E1095149FDB39D7A057BAB208837E2E1",
+          "PointColors": [],
+          "ProcessVersion": "15.4",
+          "ToneCurveName2012": "",
+          "ToneCurvePV2012": [
+            0,
+            0,
+            22,
+            16,
+            40,
+            35,
+            127,
+            127,
+            224,
+            230,
+            240,
+            246,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Blue": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Green": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Red": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "Version": "18.5.1"
+        },
+        "SupportsAmount": false,
+        "SupportsMonochrome": false,
+        "SupportsOutputReferred": false,
+        "UUID": "B952C231111CD8E0ECCF14B86BAA7077"
+      },
+      "look_name": "Adobe Color",
+      "look_uuid": "B952C231111CD8E0ECCF14B86BAA7077",
+      "process_version": "15.4"
+    },
+    {
+      "camera_profile": "Adobe Standard",
+      "captured_at": "2026-09-24T20:55:59 (local time)",
+      "file_format": "DNG",
+      "filename": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+      "key_count": 155,
+      "local_identifier": 3869530,
+      "look": {
+        "Amount": 1,
+        "Copyright": "© 2018 Adobe Systems, Inc.",
+        "Group": {
+          "x-default": "Profiles"
+        },
+        "Name": "Adobe Monochrome",
+        "Parameters": {
+          "AILook": [],
+          "CameraProfile": "Adobe Standard",
+          "Clarity2012": 8,
+          "ConvertToGrayscale": true,
+          "FilterList": [],
+          "LookTable": "73ED6C18DDE909DD7EA2D771F5AC282D",
+          "PointColors": [],
+          "ProcessVersion": "15.4",
+          "ToneCurveName2012": "",
+          "ToneCurvePV2012": [
+            0,
+            0,
+            64,
+            56,
+            128,
+            128,
+            192,
+            197,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Blue": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Green": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Red": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "Version": "18.5.1"
+        },
+        "SupportsAmount": false,
+        "SupportsMonochrome": false,
+        "SupportsOutputReferred": false,
+        "UUID": "0CFE8F8AB5F63B2A73CE0B0077D20817"
+      },
+      "look_name": "Adobe Monochrome",
+      "look_uuid": "0CFE8F8AB5F63B2A73CE0B0077D20817",
+      "process_version": "15.4"
+    },
+    {
+      "camera_profile": "Adobe Standard",
+      "captured_at": "2026-09-24T20:56:04 (local time)",
+      "file_format": "DNG",
+      "filename": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+      "key_count": 173,
+      "local_identifier": 3869530,
+      "look": {
+        "Amount": 1,
+        "Copyright": "© 2018 Adobe Systems, Inc.",
+        "Group": {
+          "x-default": "Profiles"
+        },
+        "Name": "Adobe Landscape",
+        "Parameters": {
+          "AILook": [],
+          "CameraProfile": "Adobe Standard",
+          "Clarity2012": 10,
+          "ConvertToGrayscale": false,
+          "FilterList": [],
+          "Highlights2012": -12,
+          "LookTable": "0B3BFB5CFB7DBF7FF175E98F24D316B0",
+          "PointColors": [],
+          "ProcessVersion": "15.4",
+          "Shadows2012": 12,
+          "ToneCurveName2012": "",
+          "ToneCurvePV2012": [
+            0,
+            0,
+            64,
+            60,
+            128,
+            128,
+            192,
+            196,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Blue": [],
+          "ToneCurvePV2012Green": [],
+          "ToneCurvePV2012Red": [],
+          "Version": "18.5.1"
+        },
+        "SupportsAmount": false,
+        "SupportsMonochrome": false,
+        "SupportsOutputReferred": false,
+        "UUID": "6F9C877E84273F4E8271E6B91BEB36A1"
+      },
+      "look_name": "Adobe Landscape",
+      "look_uuid": "6F9C877E84273F4E8271E6B91BEB36A1",
+      "process_version": "15.4"
+    },
+    {
+      "camera_profile": "Adobe Standard",
+      "captured_at": "2026-09-24T20:56:08 (local time)",
+      "file_format": "DNG",
+      "filename": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+      "key_count": 173,
+      "local_identifier": 3869530,
+      "look": {
+        "Amount": 1,
+        "Copyright": "© 2018 Adobe Systems, Inc.",
+        "Group": {
+          "x-default": "Profiles"
+        },
+        "Name": "Adobe Neutral",
+        "Parameters": {
+          "AILook": [],
+          "CameraProfile": "Adobe Standard",
+          "ConvertToGrayscale": false,
+          "FilterList": [],
+          "LookTable": "7740BB918B2F6D93D7B95A4DBB78DB23",
+          "PointColors": [],
+          "ProcessVersion": "15.4",
+          "ToneCurveName2012": "",
+          "ToneCurvePV2012": [
+            0,
+            0,
+            16,
+            24,
+            64,
+            72,
+            128,
+            128,
+            192,
+            176,
+            244,
+            234,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Blue": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Green": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Red": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "Version": "18.5.1"
+        },
+        "SupportsAmount": false,
+        "SupportsMonochrome": false,
+        "SupportsOutputReferred": false,
+        "UUID": "1E8E067A11CD44394A3C36A327BB34D1"
+      },
+      "look_name": "Adobe Neutral",
+      "look_uuid": "1E8E067A11CD44394A3C36A327BB34D1",
+      "process_version": "15.4"
+    },
+    {
+      "camera_profile": "Adobe Standard",
+      "captured_at": "2026-09-24T20:56:12 (local time)",
+      "file_format": "DNG",
+      "filename": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+      "key_count": 173,
+      "local_identifier": 3869530,
+      "look": {
+        "Amount": 1,
+        "Copyright": "© 2018 Adobe Systems, Inc.",
+        "Group": {
+          "x-default": "Profiles"
+        },
+        "Name": "Adobe Portrait",
+        "Parameters": {
+          "AILook": [],
+          "CameraProfile": "Adobe Standard",
+          "ConvertToGrayscale": false,
+          "FilterList": [],
+          "LookTable": "E5A76DBB8B3F132A04C01AF45DC2EF1B",
+          "PointColors": [],
+          "ProcessVersion": "15.4",
+          "ToneCurveName2012": "",
+          "ToneCurvePV2012": [
+            0,
+            0,
+            66,
+            64,
+            190,
+            192,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Blue": [],
+          "ToneCurvePV2012Green": [],
+          "ToneCurvePV2012Red": [],
+          "Version": "18.5.1"
+        },
+        "SupportsAmount": false,
+        "SupportsMonochrome": false,
+        "SupportsOutputReferred": false,
+        "UUID": "D6496412E06A83789C499DF9540AA616"
+      },
+      "look_name": "Adobe Portrait",
+      "look_uuid": "D6496412E06A83789C499DF9540AA616",
+      "process_version": "15.4"
+    },
+    {
+      "camera_profile": "Adobe Standard",
+      "captured_at": "2026-09-24T20:56:17 (local time)",
+      "file_format": "DNG",
+      "filename": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+      "key_count": 172,
+      "local_identifier": 3869530,
+      "process_version": "15.4"
+    },
+    {
+      "camera_profile": "Adobe Standard",
+      "captured_at": "2026-09-24T20:56:21 (local time)",
+      "file_format": "DNG",
+      "filename": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+      "key_count": 173,
+      "local_identifier": 3869530,
+      "look": {
+        "Amount": 1,
+        "Copyright": "© 2018 Adobe Systems, Inc.",
+        "Group": {
+          "x-default": "Profiles"
+        },
+        "Name": "Adobe Vivid",
+        "Parameters": {
+          "AILook": [],
+          "CameraProfile": "Adobe Standard",
+          "Clarity2012": 10,
+          "ConvertToGrayscale": false,
+          "FilterList": [],
+          "LookTable": "2FE663AB0D3CE5DA7B9F657BBCD66DFE",
+          "PointColors": [],
+          "ProcessVersion": "15.4",
+          "ToneCurveName2012": "",
+          "ToneCurvePV2012": [
+            0,
+            0,
+            32,
+            22,
+            64,
+            56,
+            128,
+            128,
+            224,
+            232,
+            240,
+            246,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Blue": [],
+          "ToneCurvePV2012Green": [],
+          "ToneCurvePV2012Red": [],
+          "Version": "18.5.1"
+        },
+        "SupportsAmount": false,
+        "SupportsMonochrome": false,
+        "SupportsOutputReferred": false,
+        "UUID": "EA1DE074F188405965EF399C72C221D9"
+      },
+      "look_name": "Adobe Vivid",
+      "look_uuid": "EA1DE074F188405965EF399C72C221D9",
+      "process_version": "15.4"
+    }
+  ],
+  "recorder": "AVG S5 profile recorder",
+  "started_at": "2026-09-24T20:53:22"
+}

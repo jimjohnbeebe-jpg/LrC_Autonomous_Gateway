@@ -12,7 +12,7 @@ The settings list is captured (178 settings, saved as `engine\src\params\sdk-key
 ## Part 2: what the plugin now does for you
 
 - **Profile recorder:** while it runs, it notes every profile you click, including the Adobe ones, and saves them by itself; Claude Code collects the results. A small message in the middle of the screen confirms every click: **"Recorded …"** for a new profile, **"Already recorded …"** for one it has already seen.
-- **Write tests (automatic):** one menu item. First it takes a Develop snapshot; if that fails, it stops without changing anything. Then it changes the photo's profile to a Nikon profile and to an Adobe profile, switches each lens correction off and on, and checks every change. Finally it puts the photo back from the snapshot and checks that every setting matches the start. It shows WORKED / PARTIAL / FAILED for each test and saves the results by itself; Claude Code collects them. Whether each of these steps works in Lightroom is exactly what the run finds out (source 2).
+- **Write tests (automatic):** one menu item. First it takes a Develop snapshot; if that fails, it stops without changing anything. Then it changes the photo's profile to a Nikon profile and to an Adobe profile, switches each lens correction to the opposite setting, and checks every change. Finally it puts the photo back from the snapshot and checks that every setting matches the start. It shows WORKED / PARTIAL / FAILED for each test and saves the results by itself; Claude Code collects them. Whether each of these steps works in Lightroom is exactly what the run finds out (source 2).
 
 There is nothing to type, copy, or paste.
 
@@ -38,7 +38,7 @@ Start only after Claude Code has told you that PR `phase-0/s5-part2` is merged.
 - **The last line of the step 11 window says "Photo put back to how it was: NO"**: don't change the photo. The window names a snapshot it kept for recovery. Tell Claude Code first.
 - **Step 11 shows "STOPPED - Nothing was changed"**: the safety snapshot could not be made. Tell Claude Code.
 - **A step 5 click shows no message within about 2 seconds**: click a different profile, then click the one you wanted again.
-- **Step 11 says "SKIPPED - no Adobe profile was recorded"**: Lightroom was restarted between step 9 and step 11. Repeat steps 3–6 on the NEF, then step 9, then step 11.
+- **Step 11 says "SKIPPED - no Adobe profile was recorded"**: repeat steps 3–6 on the NEF, then step 9, then step 11. (In the 2026-09-24 run this happened once without a Lightroom restart and the repeat fixed it; the cause is unknown, see `docs\reports\phase0\S5.md` "Part 2 analysis".)
 - **A Lightroom error window appears**: take a screenshot (**Win+Shift+S**), save it as `D:\Developer\LrC_Autonomous_Gateway\docs\reports\phase0\S5-part2-error.png`, click OK, and tell Claude Code.
 
 ## Sources

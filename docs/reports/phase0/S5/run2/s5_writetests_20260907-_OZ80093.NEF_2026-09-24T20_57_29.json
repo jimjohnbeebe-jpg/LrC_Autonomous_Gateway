@@ -1,0 +1,181 @@
+{
+  "meta": {
+    "camera_model": "NIKON Z 8",
+    "captured_at": "2026-09-24T20:57:29 (local time)",
+    "declared_sdk_version": 13,
+    "encoding_notes": "empty Lua tables are written as []; non-finite numbers as strings",
+    "file_format": "RAW",
+    "filename": "20260907-_OZ80093.NEF",
+    "is_virtual_copy": false,
+    "key_count": 178,
+    "lens": "Viltrox AF 16/1.8 Z",
+    "local_identifier": 3869533,
+    "lr_version": "15.5.1",
+    "spike": "S5",
+    "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9"
+  },
+  "restore": {
+    "attempts": [
+      {
+        "id_field": "snapshotID",
+        "ok": true,
+        "remaining_differences": 0
+      }
+    ],
+    "remaining_differences": [],
+    "restored": true,
+    "worked_with": "snapshotID"
+  },
+  "snapshot": {
+    "create_ok": true,
+    "create_returned": true,
+    "delete_attempts": [
+      {
+        "gone_afterwards": true,
+        "id_field": "snapshotID",
+        "ok": true
+      }
+    ],
+    "deleted": true,
+    "deleted_with": "snapshotID",
+    "found": true,
+    "id_global": "56DD1125-8240-49E3-A4CC-7FAF35FF00A2",
+    "kept_because_restore_incomplete": false,
+    "name": "AVG S5 before write tests 2026-09-24T20:57:29",
+    "snapshotID": "A5AC54D8-EA0E-426D-8429-1BC9428516F0"
+  },
+  "tests": [
+    {
+      "attempts": [
+        {
+          "after": {
+            "camera_profile": "Camera Landscape",
+            "look_name": "Adobe Color"
+          },
+          "changed_keys": {
+            "CameraProfile": {
+              "after": "Camera Landscape",
+              "before": "Adobe Standard"
+            }
+          },
+          "ok": true,
+          "requested": {
+            "CameraProfile": "Camera Landscape"
+          }
+        },
+        {
+          "after": {
+            "camera_profile": "Camera Landscape"
+          },
+          "changed_keys": {
+            "Look": {
+              "after": "<absent>",
+              "before": {
+                "Amount": 1,
+                "Copyright": "© 2018 Adobe Systems, Inc.",
+                "Group": {
+                  "x-default": "Profiles"
+                },
+                "Name": "Adobe Color",
+                "Parameters": {
+                  "AILook": [],
+                  "CameraProfile": "Adobe Standard",
+                  "ConvertToGrayscale": false,
+                  "FilterList": [],
+                  "LookTable": "E1095149FDB39D7A057BAB208837E2E1",
+                  "PointColors": [],
+                  "ProcessVersion": "15.4",
+                  "ToneCurveName2012": "",
+                  "ToneCurvePV2012": [
+                    0,
+                    0,
+                    22,
+                    16,
+                    40,
+                    35,
+                    127,
+                    127,
+                    224,
+                    230,
+                    240,
+                    246,
+                    255,
+                    255
+                  ],
+                  "ToneCurvePV2012Blue": [
+                    0,
+                    0,
+                    255,
+                    255
+                  ],
+                  "ToneCurvePV2012Green": [
+                    0,
+                    0,
+                    255,
+                    255
+                  ],
+                  "ToneCurvePV2012Red": [
+                    0,
+                    0,
+                    255,
+                    255
+                  ],
+                  "Version": "18.5.1"
+                },
+                "SupportsAmount": false,
+                "SupportsMonochrome": false,
+                "SupportsOutputReferred": false,
+                "UUID": "B952C231111CD8E0ECCF14B86BAA7077"
+              }
+            }
+          },
+          "ok": true,
+          "requested": {
+            "CameraProfile": "Camera Landscape",
+            "Look": "{} (empty)"
+          }
+        }
+      ],
+      "before": {
+        "camera_profile": "Adobe Standard",
+        "look_name": "Adobe Color"
+      },
+      "outcome": "worked",
+      "requested_camera_profile": "Camera Landscape",
+      "test": "nikon_camera_profile"
+    },
+    {
+      "outcome": "skipped",
+      "reason": "no recorded Adobe profile for this photo in this Lightroom session",
+      "test": "adobe_look"
+    },
+    {
+      "after": false,
+      "before": true,
+      "changed_keys": {
+        "EnableLensCorrections": {
+          "after": false,
+          "before": true
+        }
+      },
+      "key": "EnableLensCorrections",
+      "outcome": "worked",
+      "requested": false,
+      "test": "lens_enable_corrections"
+    },
+    {
+      "after": 0,
+      "before": 1,
+      "changed_keys": {
+        "LensProfileEnable": {
+          "after": 0,
+          "before": 1
+        }
+      },
+      "key": "LensProfileEnable",
+      "outcome": "worked",
+      "requested": 0,
+      "test": "lens_profile_enable"
+    }
+  ]
+}

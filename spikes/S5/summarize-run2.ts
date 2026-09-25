@@ -116,9 +116,13 @@ for (const { f, w } of writeRuns) {
     if (t.test === "adobe_look" && t.outcome !== "skipped") {
       const name = String(t["requested_look_name"]);
       const recorded = byName.get(name)?.[0]?.look;
-      const after = (t.changed_keys?.["Look"] as { after?: unknown } | undefined)?.after;
-      // Two missing tables would compare equal; report which one is missing instead.
-      const verdict = after === undefined || after === "<absent>" ? "no Look in the read-back"
+      const lookChange = t.changed_keys?.["Look"] as { after?: unknown } | undefined;
+      const after = lookChange?.after;
+      const afterName = (t["after"] as { look_name?: unknown } | undefined)?.look_name;
+      // Two missing tables would compare equal, so say which side is missing. S5.diff leaves an
+      // unchanged key out of changed_keys, so no Look entry means the write left the Look as it was.
+      const verdict = lookChange === undefined ? `Look not changed by the write (still ${afterName === undefined ? "no Look" : String(afterName)})`
+        : after === undefined || after === "<absent>" ? "no Look in the read-back"
         : recorded === undefined ? `no recorded '${name}' table to compare with`
         : String(same(after, recorded));
       console.log(`    before ${JSON.stringify(t["before"])} -> after ${JSON.stringify(t["after"])} | Look after the write == recorded '${name}' table: ${verdict}`);

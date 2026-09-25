@@ -1,0 +1,1672 @@
+{
+  "schema_version": 1,
+  "generated_by": "spikes/S5/pin.ts",
+  "generated_at": "2026-09-24T04:05:36.160Z",
+  "sources": [
+    {
+      "label": "s5_20260907-_OZ80093.NEF.json",
+      "filename": "20260907-_OZ80093.NEF",
+      "lr_version": "15.5.1",
+      "process_version": "15.4",
+      "camera_profile": "Camera Neutral"
+    },
+    {
+      "label": "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+      "filename": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+      "lr_version": "15.5.1",
+      "process_version": "15.4",
+      "camera_profile": "Group: Camera Standard"
+    }
+  ],
+  "keys": [
+    {
+      "key": "AILook",
+      "type": "array",
+      "sample": [],
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "AutoBrightness",
+      "type": "boolean",
+      "sample": false,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "AutoContrast",
+      "type": "boolean",
+      "sample": false,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "AutoExposure",
+      "type": "boolean",
+      "sample": false,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "AutoLateralCA",
+      "type": "number",
+      "sample": 1,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "AutoShadows",
+      "type": "boolean",
+      "sample": false,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "Blacks2012",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "BlueHue",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "BlueSaturation",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "Brightness",
+      "type": "number",
+      "sample": 50,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "CameraProfile",
+      "type": "string",
+      "sample": "Camera Neutral",
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ChromaticAberrationB",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ChromaticAberrationR",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "Clarity",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "Clarity2012",
+      "type": "number",
+      "sample": 2,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ColorGradeBlending",
+      "type": "number",
+      "sample": 50,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ColorGradeGlobalHue",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ColorGradeGlobalLum",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ColorGradeGlobalSat",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ColorGradeHighlightLum",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ColorGradeMidtoneHue",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ColorGradeMidtoneLum",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ColorGradeMidtoneSat",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ColorGradeShadowLum",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ColorNoiseReduction",
+      "type": "number",
+      "sample": 25,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ColorNoiseReductionDetail",
+      "type": "number",
+      "sample": 50,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ColorNoiseReductionSmoothness",
+      "type": "number",
+      "sample": 50,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "Contrast",
+      "type": "number",
+      "sample": 25,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "Contrast2012",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ConvertToGrayscale",
+      "type": "boolean",
+      "sample": false,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "CropAngle",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "CropBottom",
+      "type": "number",
+      "sample": 1,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "CropConstrainToUnitSquare",
+      "type": "number",
+      "sample": 1,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "CropConstrainToWarp",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "CropLeft",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "CropRight",
+      "type": "number",
+      "sample": 1,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "CropTop",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "CurveRefineSaturation",
+      "type": "number",
+      "sample": 100,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "Defringe",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "DefringeGreenAmount",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "DefringeGreenHueHi",
+      "type": "number",
+      "sample": 60,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "DefringeGreenHueLo",
+      "type": "number",
+      "sample": 40,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "DefringePurpleAmount",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "DefringePurpleHueHi",
+      "type": "number",
+      "sample": 70,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "DefringePurpleHueLo",
+      "type": "number",
+      "sample": 30,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "Dehaze",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "EnableCalibration",
+      "type": "boolean",
+      "sample": true,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "EnableColorAdjustments",
+      "type": "boolean",
+      "sample": true,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "EnableDetail",
+      "type": "boolean",
+      "sample": true,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "EnableDistractionRemoval",
+      "type": "boolean",
+      "sample": true,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "EnableEffects",
+      "type": "boolean",
+      "sample": true,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "EnableGrayscaleMix",
+      "type": "boolean",
+      "sample": true,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "EnableLensCorrections",
+      "type": "boolean",
+      "sample": true,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "EnableMaskGroupBasedCorrections",
+      "type": "boolean",
+      "sample": true,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "EnableRedEye",
+      "type": "boolean",
+      "sample": true,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "EnableRetouch",
+      "type": "boolean",
+      "sample": true,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "EnableSplitToning",
+      "type": "boolean",
+      "sample": true,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "EnableToneCurve",
+      "type": "boolean",
+      "sample": true,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "EnableTransform",
+      "type": "boolean",
+      "sample": true,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "Exposure",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "Exposure2012",
+      "type": "number",
+      "sample": 0.33,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "FillLight",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "FilterList",
+      "type": "array",
+      "sample": [],
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "GrainAmount",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "GrainFrequency",
+      "type": "number",
+      "sample": 50,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "GrainSize",
+      "type": "number",
+      "sample": 25,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "GreenHue",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "GreenSaturation",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "HDREditMode",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "HDRMaxValue",
+      "type": "number",
+      "sample": 2.3,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "HighlightRecovery",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "Highlights2012",
+      "type": "number",
+      "sample": -21,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "HueAdjustmentAqua",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "HueAdjustmentBlue",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "HueAdjustmentGreen",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "HueAdjustmentMagenta",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "HueAdjustmentOrange",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "HueAdjustmentPurple",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "HueAdjustmentRed",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "HueAdjustmentYellow",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "LensBlur",
+      "type": "array",
+      "sample": [],
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "LensManualDistortionAmount",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "LensProfileDigest",
+      "type": "string",
+      "sample": "BDFADD245438D5343CC1F5F75E7E8232",
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json"
+      ]
+    },
+    {
+      "key": "LensProfileDistortionScale",
+      "type": "number",
+      "sample": 100,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json"
+      ]
+    },
+    {
+      "key": "LensProfileEnable",
+      "type": "number",
+      "sample": 1,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "LensProfileIsEmbedded",
+      "type": "boolean",
+      "sample": true,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json"
+      ]
+    },
+    {
+      "key": "LensProfileName",
+      "type": "string",
+      "sample": "Camera Settings",
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json"
+      ]
+    },
+    {
+      "key": "LensProfileSetup",
+      "type": "string",
+      "sample": "LensDefaults",
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "LensProfileVignettingScale",
+      "type": "number",
+      "sample": 100,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json"
+      ]
+    },
+    {
+      "key": "Look",
+      "type": "object",
+      "sample": {
+        "Amount": 1,
+        "Name": "Adobe Color",
+        "Parameters": {
+          "AILook": [],
+          "CameraProfile": "Adobe Standard",
+          "ConvertToGrayscale": false,
+          "FilterList": [],
+          "LookTable": "E1095149FDB39D7A057BAB208837E2E1",
+          "ProcessVersion": "15.4",
+          "ToneCurveName2012": "",
+          "ToneCurvePV2012": [
+            0,
+            0,
+            22,
+            16,
+            40,
+            35,
+            127,
+            127,
+            224,
+            230,
+            240,
+            246,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Blue": [],
+          "ToneCurvePV2012Green": [],
+          "ToneCurvePV2012Red": [],
+          "Version": "18.5.1"
+        },
+        "UUID": "04FCF287E683E34103866891D7BC669D"
+      },
+      "seen_in": [
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "LuminanceAdjustmentAqua",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "LuminanceAdjustmentBlue",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "LuminanceAdjustmentGreen",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "LuminanceAdjustmentMagenta",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "LuminanceAdjustmentOrange",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "LuminanceAdjustmentPurple",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "LuminanceAdjustmentRed",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "LuminanceAdjustmentYellow",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "LuminanceNoiseReductionContrast",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "LuminanceNoiseReductionDetail",
+      "type": "number",
+      "sample": 75,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "LuminanceSmoothing",
+      "type": "number",
+      "sample": 48,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ParametricDarks",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ParametricHighlightSplit",
+      "type": "number",
+      "sample": 75,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ParametricHighlights",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ParametricLights",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ParametricMidtoneSplit",
+      "type": "number",
+      "sample": 50,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ParametricShadowSplit",
+      "type": "number",
+      "sample": 25,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ParametricShadows",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "PerspectiveAspect",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "PerspectiveHorizontal",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "PerspectiveRotate",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "PerspectiveScale",
+      "type": "number",
+      "sample": 100,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "PerspectiveUpright",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "PerspectiveVertical",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "PerspectiveX",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "PerspectiveY",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "PointColors",
+      "type": "array",
+      "sample": [],
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "PostCropVignetteAmount",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "PostCropVignetteFeather",
+      "type": "number",
+      "sample": 50,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "PostCropVignetteHighlightContrast",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "PostCropVignetteMidpoint",
+      "type": "number",
+      "sample": 50,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "PostCropVignetteRoundness",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "PostCropVignetteStyle",
+      "type": "number",
+      "sample": 1,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ProcessVersion",
+      "type": "string",
+      "sample": "15.4",
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "RedEyeInfo",
+      "type": "array",
+      "sample": [],
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "RedHue",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "RedSaturation",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "SDRBlend",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "SDRBrightness",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "SDRClarity",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "SDRContrast",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "SDRHighlights",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "SDRShadows",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "SDRWhites",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "Saturation",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "SaturationAdjustmentAqua",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "SaturationAdjustmentBlue",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "SaturationAdjustmentGreen",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "SaturationAdjustmentMagenta",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "SaturationAdjustmentOrange",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "SaturationAdjustmentPurple",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "SaturationAdjustmentRed",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "SaturationAdjustmentYellow",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ShadowTint",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "Shadows",
+      "type": "number",
+      "sample": 5,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "Shadows2012",
+      "type": "number",
+      "sample": 10,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "SharpenDetail",
+      "type": "number",
+      "sample": 25,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "SharpenEdgeMasking",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "SharpenRadius",
+      "type": "number",
+      "sample": 2,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "Sharpness",
+      "type": "number",
+      "sample": 24,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "SplitToningBalance",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "SplitToningHighlightHue",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "SplitToningHighlightSaturation",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "SplitToningShadowHue",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "SplitToningShadowSaturation",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "Temperature",
+      "type": "number",
+      "sample": 5500,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "Texture",
+      "type": "number",
+      "sample": 4,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "Tint",
+      "type": "number",
+      "sample": 6,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ToneCurveName2012",
+      "type": "string",
+      "sample": "Linear",
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ToneCurvePV2012",
+      "type": "array",
+      "sample": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ToneCurvePV2012Blue",
+      "type": "array",
+      "sample": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ToneCurvePV2012Green",
+      "type": "array",
+      "sample": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "ToneCurvePV2012Red",
+      "type": "array",
+      "sample": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "UprightCenterMode",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "UprightCenterNormX",
+      "type": "number",
+      "sample": 0.5,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "UprightCenterNormY",
+      "type": "number",
+      "sample": 0.5,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "UprightFocalLength35mm",
+      "type": "number",
+      "sample": 35,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "UprightFocalMode",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "UprightFourSegmentsCount",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "UprightPreview",
+      "type": "boolean",
+      "sample": false,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "UprightTransformCount",
+      "type": "number",
+      "sample": 6,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "UprightVersion",
+      "type": "number",
+      "sample": 151388160,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "Vibrance",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "VignetteAmount",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "VignetteMidpoint",
+      "type": "number",
+      "sample": 50,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "WhiteBalance",
+      "type": "string",
+      "sample": "As Shot",
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "Whites2012",
+      "type": "number",
+      "sample": 0,
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    },
+    {
+      "key": "orientation",
+      "type": "string",
+      "sample": "AB",
+      "seen_in": [
+        "s5_20260907-_OZ80093.NEF.json",
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+      ]
+    }
+  ]
+}

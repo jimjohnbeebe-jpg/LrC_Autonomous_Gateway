@@ -17,6 +17,46 @@ function S5.outDir()
     return dir
 end
 
+-- Results folder inside the repo: <repo>\docs\reports\phase0\S5\<sub>, found from this
+-- plugin's own folder (<repo>\plugin\spikes\S5.lrplugin), so Jim never copies files.
+-- `_PLUGIN.path` is [unverified] on LrC 15.5.1; if the repo folder cannot be found, the temp
+-- folder is used, and the caller reports which one was used.
+function S5.resultsDir(sub)
+    local ok, dir = pcall(function()
+        local repo = LrPathUtils.parent(LrPathUtils.parent(LrPathUtils.parent(_PLUGIN.path)))
+        local phase0 = LrPathUtils.child(LrPathUtils.child(LrPathUtils.child(repo, "docs"), "reports"), "phase0")
+        if LrFileUtils.exists(phase0) ~= "directory" then return nil end
+        local d = LrPathUtils.child(LrPathUtils.child(phase0, "S5"), sub)
+        LrFileUtils.createAllDirectories(d)
+        return d
+    end)
+    if ok and dir then return dir, "repo" end
+    local t = LrPathUtils.child(S5.outDir(), sub)
+    LrFileUtils.createAllDirectories(t)
+    return t, "temp"
+end
+
+-- Name of the applied Look (Adobe Raw and creative profiles are Looks over a base
+-- CameraProfile). Field names Name / UUID are as observed in the live dump
+-- docs\reports\phase0\S5\s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json ("Look").
+function S5.lookName(settings)
+    local look = settings.Look
+    if type(look) == "table" and type(look.Name) == "string" and look.Name ~= "" then return look.Name end
+    return nil
+end
+
+function S5.lookUuid(settings)
+    local look = settings.Look
+    if type(look) == "table" and type(look.UUID) == "string" then return look.UUID end
+    return nil
+end
+
+-- What the Profile field in Develop would show, in plain words.
+function S5.profileLabel(cameraProfile, lookName)
+    if lookName then return lookName .. " (base: " .. tostring(cameraProfile) .. ")" end
+    return tostring(cameraProfile)
+end
+
 function S5.safeName(s)
     return (tostring(s):gsub('[\\/:%*%?"<>|]', "_"))
 end

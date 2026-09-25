@@ -1,0 +1,39 @@
+{
+  "changed_keys": [],
+  "meta": {
+    "camera_model": "NIKON Z 8",
+    "captured_at": "2026-09-24T19:35:11 (local time)",
+    "declared_sdk_version": 13,
+    "encoding_notes": "empty Lua tables are written as []; non-finite numbers as strings",
+    "file_format": "RAW",
+    "filename": "20260907-_OZ80093.NEF",
+    "is_virtual_copy": false,
+    "key_count": 178,
+    "lens": "Viltrox AF 16/1.8 Z",
+    "local_identifier": 3869533,
+    "lr_version": "15.5.1",
+    "spike": "S5",
+    "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9"
+  },
+  "requested": {
+    "CameraProfile": "Camera Landscape\tLensProfileDigest=BDFADD245438D5343CC1F5F75E7E8232\tLensProfileDistortionScale=100\tLensProfileEnable=1\tLensProfileIsEmbedded=true\tLensProfileName=Camera Settings\tLensProfileSetup=LensDefaults\tLensProfileVignettingScale=100",
+    "EnableLensCorrections": true
+  },
+  "skipped_not_in_live_dump": [],
+  "watched": {
+    "CameraProfile": {
+      "after": "Adobe Standard",
+      "before": "Adobe Standard",
+      "requested": "Camera Landscape\tLensProfileDigest=BDFADD245438D5343CC1F5F75E7E8232\tLensProfileDistortionScale=100\tLensProfileEnable=1\tLensProfileIsEmbedded=true\tLensProfileName=Camera Settings\tLensProfileSetup=LensDefaults\tLensProfileVignettingScale=100"
+    },
+    "EnableLensCorrections": {
+      "after": true,
+      "before": true,
+      "requested": true
+    },
+    "LensProfileEnable": {
+      "after": 1,
+      "before": 1
+    }
+  }
+}

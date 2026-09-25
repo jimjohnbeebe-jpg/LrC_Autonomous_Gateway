@@ -44,7 +44,7 @@ function M.start()
     R.running = true
     R.gen = R.gen + 1
     local gen = R.gen
-    R.captures, R.seen, R.startedAt = {}, {}, S5.now()
+    R.captures, R.seen, R.startedAt, R.lastKey = {}, {}, S5.now(), nil
 
     LrFunctionContext.postAsyncTaskWithContext("AVG S5 recorder", function(context)
         LrDialogs.attachErrorDialogToFunctionContext(context)
@@ -56,7 +56,12 @@ function M.start()
                 local settings, meta = S5.snapshot(catalog, photo)
                 local lookName = S5.lookName(settings)
                 local key = tostring(meta.filename) .. "|" .. tostring(settings.CameraProfile) .. "|" .. tostring(lookName)
-                if not R.seen[key] then
+                local changed = (key ~= R.lastKey)
+                R.lastKey = key
+                if changed and R.seen[key] then
+                    -- Confirm every click, including a profile recorded earlier (e.g. Adobe Color again).
+                    LrDialogs.showBezel("Already recorded: " .. S5.profileLabel(settings.CameraProfile, lookName), 1.5)
+                elseif not R.seen[key] then
                     R.seen[key] = true
                     local c = {
                         captured_at = meta.captured_at,

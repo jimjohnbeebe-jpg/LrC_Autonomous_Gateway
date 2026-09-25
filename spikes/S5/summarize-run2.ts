@@ -117,7 +117,11 @@ for (const { f, w } of writeRuns) {
       const name = String(t["requested_look_name"]);
       const recorded = byName.get(name)?.[0]?.look;
       const after = (t.changed_keys?.["Look"] as { after?: unknown } | undefined)?.after;
-      console.log(`    before ${JSON.stringify(t["before"])} -> after ${JSON.stringify(t["after"])} | Look after the write == recorded '${name}' table: ${same(after, recorded)}`);
+      // Two missing tables would compare equal; report which one is missing instead.
+      const verdict = after === undefined || after === "<absent>" ? "no Look in the read-back"
+        : recorded === undefined ? `no recorded '${name}' table to compare with`
+        : String(same(after, recorded));
+      console.log(`    before ${JSON.stringify(t["before"])} -> after ${JSON.stringify(t["after"])} | Look after the write == recorded '${name}' table: ${verdict}`);
     }
     if (t.test.startsWith("lens_")) console.log(`    ${String(t["key"])}: ${String(t["before"])} -> ${String(t["after"])}`);
   }

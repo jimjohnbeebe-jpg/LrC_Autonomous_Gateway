@@ -199,9 +199,10 @@ function S6.run(declaredView)
         else
             -- No hand-selection fallback: the folded-corner badge does not tell this run's copies
             -- apart from other virtual copies, so a manual pick could remove unrelated photos.
-            -- Leftover copies are harmless (they never touch the original file).
+            -- Leftover copies should be harmless [inference: a virtual copy is a catalog entry
+            -- with no file of its own, so it never changes the original; unverified on 15.5.1].
             cleanup = "COULD NOT SELECT the new copies automatically. Don't remove anything - " ..
-                "the copies are harmless and can stay for now. Tell Claude Code."
+                "the copies can stay for now. Tell Claude Code."
         end
         local saveLine = saved and "Saved automatically - nothing to copy." or ("SAVE FAILED: " .. tostring(saveErr) .. " - tell Claude Code.")
         LrDialogs.message("AVG S6 (" .. declaredView .. ")", headline .. "\n\n" .. cleanup .. "\n\n" .. saveLine,

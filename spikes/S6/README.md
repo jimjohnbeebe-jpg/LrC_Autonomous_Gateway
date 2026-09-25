@@ -18,7 +18,7 @@ That is what the harness is written to do. Whether Lightroom creates the copies 
 2. In **Library**, click `20260907-_OZ80093.NEF` and press **E** (Loupe: the photo fills the middle).
 3. **File > Plug-in Extras > AVG S6 - Create 3 virtual copies (I am in LOUPE view).**
 4. A window says how many copies were created and whether they are now selected. Click **OK**.
-5. If the window said the new copies "are now selected": **Photo > Remove Photos…** and click **Remove**. This removes only those copies from the catalog; the NEF file is not touched. If it said "COULD NOT SELECT", follow "If something goes wrong" below.
+5. If the window said the new copies "are now selected": **Photo > Remove Photos…** and click **Remove**. This should remove only those copies' catalog entries and leave the NEF file alone [inference: a virtual copy has no file of its own; unverified on LrC 15.5.1]. If it said "COULD NOT SELECT", follow "If something goes wrong" below.
 
 **Grid run**
 
@@ -31,5 +31,5 @@ That is what the harness is written to do. Whether Lightroom creates the copies 
 ## If something goes wrong
 
 - **The result window says "PROBLEM: created N of 3"**: that is a result, not a failure of the run. Carry on with the next step.
-- **The result window says "COULD NOT SELECT the new copies"**: don't remove anything, and don't select copies by hand (the folded-corner badge doesn't tell this run's copies apart from any other virtual copies). The copies are harmless. Carry on with the next step, and mention it when you tell Claude Code.
+- **The result window says "COULD NOT SELECT the new copies"**: don't remove anything, and don't select copies by hand (the folded-corner badge doesn't tell this run's copies apart from any other virtual copies). Leaving the copies is safe for now [inference: a virtual copy is only a catalog entry and never changes the NEF file; unverified on LrC 15.5.1]. Carry on with the next step, and mention it when you tell Claude Code.
 - **A Lightroom error window appears instead**: tell Claude Code its text.

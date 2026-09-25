@@ -154,13 +154,27 @@ function S6.run(declaredView)
         end
         result.total_copies = #result.copies
 
-        -- Leave exactly the new copies selected, so cleanup is one menu command.
+        -- Leave exactly the new copies selected, so cleanup is one menu command. Lightroom may
+        -- ignore the request without an error (e.g. a copy outside the current view)
+        -- [unverified], so read the selection back and only call it selected when it holds
+        -- exactly the new copies and nothing else.
+        result.copies_selected_for_cleanup = false
         if #createdPhotos > 0 then
             local okSel, selErr = LrTasks.pcall(function()
                 catalog:setSelectedPhotos(createdPhotos[1], createdPhotos)
             end)
-            result.copies_selected_for_cleanup = okSel
             result.select_copies_error = (not okSel) and tostring(selErr) or nil
+            local selected = catalog:getTargetPhotos() or {} -- outside any gate (yields)
+            local wantIds, gotIds = {}, {}
+            for _, p in ipairs(createdPhotos) do wantIds[tostring(p.localIdentifier)] = true end
+            local exact = (#selected == #createdPhotos)
+            for _, p in ipairs(selected) do
+                local id = tostring(p.localIdentifier)
+                table.insert(gotIds, id)
+                if not wantIds[id] then exact = false end
+            end
+            result.selection_after = gotIds
+            result.copies_selected_for_cleanup = okSel and exact
         end
 
         -- Save: JSON result + a readable log line.
@@ -177,10 +191,15 @@ function S6.run(declaredView)
 
         local headline = (result.total_copies == 3) and "Created 3 of 3 virtual copies."
             or string.format("PROBLEM: created %d of 3 virtual copies.", result.total_copies)
-        local cleanup = (#createdPhotos > 0 and result.copies_selected_for_cleanup)
-            and "The new copies are now selected. To remove them: Photo > Remove Photos... > Remove."
-            or ((#createdPhotos > 0) and "Select the new copies yourself (the ones with the folded-corner badge), then Photo > Remove Photos... > Remove."
-                or "There is nothing to remove.")
+        local cleanup
+        if #createdPhotos == 0 then
+            cleanup = "There is nothing to remove."
+        elseif result.copies_selected_for_cleanup then
+            cleanup = "The new copies (and nothing else) are now selected. To remove them: Photo > Remove Photos... > Remove."
+        else
+            cleanup = "COULD NOT SELECT the new copies automatically. Do not use Remove Photos yet: " ..
+                "select only the new copies yourself (the ones with the folded-corner badge), then Photo > Remove Photos... > Remove."
+        end
         local saveLine = saved and "Saved automatically - nothing to copy." or ("SAVE FAILED: " .. tostring(saveErr) .. " - tell Claude Code.")
         LrDialogs.message("AVG S6 (" .. declaredView .. ")", headline .. "\n\n" .. cleanup .. "\n\n" .. saveLine,
             (result.total_copies == 3 and saved) and "info" or "warning")

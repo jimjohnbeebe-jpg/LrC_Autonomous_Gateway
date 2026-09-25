@@ -9,6 +9,8 @@
 //   Microsoft Store (MSIX) install: %LOCALAPPDATA%\Packages\Claude_<id>\LocalCache\Roaming\Claude\claude_desktop_config.json
 //     [handle: Jim's machine, %LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\...\claude_desktop_config.json, docs\MCP_AVAILABILITY.md §2]
 //   Classic install: %APPDATA%\Claude\claude_desktop_config.json [unverified on this machine: absent there]
+// If both exist, it refuses (it cannot tell which one Desktop reads) and changes nothing;
+// Claude Code then picks one with --config.
 // Behaviour: validates the file, writes a timestamped backup next to it before changing
 // anything, adds or updates only the one entry, and leaves every other server untouched.
 // Running it twice changes nothing the second time. It prints server names only, never
@@ -67,8 +69,11 @@ if (explicitConfig) {
   const found = findConfigs();
   if (found.length === 0) fail("could not find Claude Desktop's claude_desktop_config.json. Open Claude Desktop once, then run this again.");
   if (found.length > 1) {
-    console.log(`Found ${found.length} Claude Desktop config files; using the Microsoft Store one (listed first):`);
-    for (const f of found) console.log(`  ${f}`);
+    // Writing to the wrong one would "succeed" while Desktop keeps reading the other, so
+    // refuse and let Claude Code choose with --config.
+    console.error(`Found ${found.length} Claude Desktop config files, so it is not clear which one Claude Desktop uses:`);
+    for (const f of found) console.error(`  ${f}`);
+    fail("more than one config file; none was changed.");
   }
   configPath = found[0] as string;
 }

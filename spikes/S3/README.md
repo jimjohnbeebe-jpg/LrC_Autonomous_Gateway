@@ -39,5 +39,5 @@ After step 1, Claude Code runs the plumbing check `node spikes\S3\smoke-client.t
 
 ## If something goes wrong
 
-- **Step 2 prints "FAILED: …"**: nothing was changed. Tell Claude Code what it says.
+- **Step 2 prints "FAILED: …"** (for example "more than one config file"): nothing was changed. Tell Claude Code what it says.
 - **In step 4, Claude says it has no `get_fixture_preview` tool**: tell Claude Code; it will read Claude Desktop's server log itself.

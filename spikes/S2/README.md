@@ -10,6 +10,8 @@
 - `spikes\S2\client.ts`: connects to both ports, then sends `hello`, 20 small pings, a 1 MB message, and 2 → 16 MB messages until one fails. It checks every echo.
 - Everything is saved automatically to `%TEMP%\LrC-AVG\S2\`, and Claude Code collects it. There is nothing to copy, paste or screenshot.
 
+That is what the harness is written to do. Whether Lightroom's sockets behave this way is exactly what the run finds out; it is [unverified] until then (`plugin\spikes\S2.lrplugin\`, `spikes\S2\client.ts`).
+
 ## Steps for Jim
 
 1. Add the plugin folder `D:\Developer\LrC_Autonomous_Gateway\plugin\spikes\S2.lrplugin` (see "Adding a spike plugin" in `spikes\README.md`).

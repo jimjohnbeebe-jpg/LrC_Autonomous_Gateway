@@ -5,7 +5,9 @@
 
 ## What the harness does (`plugin\spikes\S6.lrplugin\S6Run.lua`)
 
-Each run makes three virtual copies of the selected photo ("AVG S6 A", "B", "C"), re-selecting the original before each one. It records what Lightroom returned, checks that each copy can be found again, and saves everything automatically to `%TEMP%\LrC-AVG\S6\`; Claude Code collects it. At the end it **leaves exactly the new copies selected**, so removing them is one menu command. There is nothing to count, copy, paste or screenshot.
+Each run asks Lightroom for three virtual copies of the selected photo ("AVG S6 A", "B", "C"), re-selecting the original before each one. It records what Lightroom returned, checks that each copy can be found again, and saves everything automatically to `%TEMP%\LrC-AVG\S6\`; Claude Code collects it. At the end it tries to **leave exactly the new copies selected**, reads the selection back, and says in its window whether that worked, so you know whether Remove Photos is safe. There is nothing to count, copy, paste or screenshot.
+
+That is what the harness is written to do. Whether Lightroom creates the copies and accepts the selection is [unverified] until this run, which records what actually happened (`plugin\spikes\S6.lrplugin\S6Run.lua`).
 
 ## Steps for Jim
 
@@ -15,19 +17,19 @@ Each run makes three virtual copies of the selected photo ("AVG S6 A", "B", "C")
 
 2. In **Library**, click `20260907-_OZ80093.NEF` and press **E** (Loupe: the photo fills the middle).
 3. **File > Plug-in Extras > AVG S6 - Create 3 virtual copies (I am in LOUPE view).**
-4. A window says "Created 3 of 3 virtual copies" (or a problem). Click **OK**.
-5. **Photo > Remove Photos…** and click **Remove**. This removes the three copies, which are already selected, from the catalog; the NEF file is not touched.
+4. A window says how many copies were created and whether they are now selected. Click **OK**.
+5. If the window said the new copies "are now selected": **Photo > Remove Photos…** and click **Remove**. This removes only those copies from the catalog; the NEF file is not touched. If it said "COULD NOT SELECT", follow "If something goes wrong" below.
 
 **Grid run**
 
 6. Press **G** (Grid) and click `20260907-_OZ80093.NEF`.
 7. **File > Plug-in Extras > AVG S6 - Create 3 virtual copies (I am in GRID view).**
 8. Click **OK** in the result window.
-9. **Photo > Remove Photos…** and click **Remove**.
+9. Remove the copies exactly as in step 5.
 10. Tell Claude Code: **"S6 done."**
 
 ## If something goes wrong
 
 - **The result window says "PROBLEM: created N of 3"**: that is a result, not a failure of the run. Carry on with the next step.
-- **The result window says "Select the new copies yourself"**: in Grid, Ctrl+click each photo with the folded-corner badge at the bottom-left (not the original), then do the Remove step.
+- **The result window says "COULD NOT SELECT the new copies"**: press **G** (Grid), click one photo with the folded-corner badge at the bottom-left, Ctrl+click each other one with that badge (never the original), then **Photo > Remove Photos…** > **Remove**.
 - **A Lightroom error window appears instead**: tell Claude Code its text.

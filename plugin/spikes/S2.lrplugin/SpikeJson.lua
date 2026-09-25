@@ -81,12 +81,16 @@ function SpikeJson.encode(value)
     return encodeValue(value, true, 0)
 end
 
--- Write `value` as JSON to `path`; returns true or false, error.
+-- Write `value` as JSON to `path`; returns true, or false and an error. Success means the
+-- open, the write and the close all succeeded (Lua 5.1: file:write returns nil, err and
+-- file:close returns nil, err on failure).
 function SpikeJson.writeFile(path, value)
-    local fh, err = io.open(path, "wb")
-    if not fh then return false, err end
-    fh:write(SpikeJson.encode(value), "\n")
-    fh:close()
+    local fh, openErr = io.open(path, "wb")
+    if not fh then return false, "open failed: " .. tostring(openErr) end
+    local wrote, writeErr = fh:write(SpikeJson.encode(value), "\n")
+    local closed, closeErr = fh:close()
+    if not wrote then return false, "write failed: " .. tostring(writeErr) end
+    if not closed then return false, "close failed: " .. tostring(closeErr) end
     return true
 end
 

@@ -11,6 +11,8 @@ It opens a small floating window, "AVG S4 HUD", whose two lines update once per 
 - asks you **five yes/no questions** about what you saw, as tick boxes;
 - saves your answers and its own timings automatically to `%TEMP%\LrC-AVG\S4\`. Claude Code collects them; there is nothing to copy, paste or screenshot.
 
+That is what the harness is written to do. Whether Lightroom shows the window this way and accepts the Exposure write-back is [unverified] until this run, which records what happened; step 11 tells you whether the Exposure was put back.
+
 ## Steps for Jim
 
 1. Add the plugin folder `D:\Developer\LrC_Autonomous_Gateway\plugin\spikes\S4.lrplugin` (see "Adding a spike plugin" in `spikes\README.md`).

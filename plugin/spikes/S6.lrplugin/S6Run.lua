@@ -1,14 +1,16 @@
 -- AVG-S6: catalog:createVirtualCopies(name) on the selected photo, three times (A, B, C),
--- re-selecting the master before each call. For each call it logs: how the call was made
+-- re-selecting the master before each call. For each call it records: how the call was made
 -- (outside or inside a write gate), what it returned (type, count), each returned copy's
--- localIdentifier / copyName / isVirtualCopy / master id, and what the selection is after.
+-- localIdentifier / copyName / isVirtualCopy / master id, and which photo is active after.
 -- Then it checks each copy is addressable by localIdentifier, via catalog:getPhotoByLocalId
 -- if that exists (LR_SDK_NOTES [community]) and via a getAllPhotos scan (Automaat
 -- PhotoLookup.lua:37 says there is no find-by-local-id).
 -- The view (Loupe / Grid) is what Jim declared by choosing the menu item; the harness also
--- logs the current module name. Output: <temp>\LrC-AVG\s6_log.txt + a summary dialog.
--- Copy names: "AVG S6 A|B|C" (PRD section 6.6 naming style) rather than a bare "AVG S6", so the three
--- copies are distinguishable. Cleanup (deleting the copies) is manual; see the README.
+-- records the current module name.
+-- Output: <temp>\LrC-AVG\S6\s6_<view>_<time>.json + s6_log.txt (rule 03-lightroom "Plugin
+-- hygiene"); Claude Code collects them, Jim copies nothing. At the end the harness selects
+-- exactly the copies it created, so cleanup is Photo > Remove Photos... > Remove.
+-- Copy names: "AVG S6 A|B|C" (PRD section 6.6 naming style) so the three copies are distinguishable.
 
 local LrApplication = import 'LrApplication'
 local LrApplicationView = import 'LrApplicationView'
@@ -19,12 +21,14 @@ local LrFunctionContext = import 'LrFunctionContext'
 local LrPathUtils = import 'LrPathUtils'
 local LrTasks = import 'LrTasks'
 
+local SpikeJson = require 'SpikeJson'
+
 local S6 = {}
 
-local function logPath()
-    local dir = LrPathUtils.child(LrPathUtils.getStandardFilePath("temp"), "LrC-AVG")
+local function outDir()
+    local dir = LrPathUtils.child(LrPathUtils.child(LrPathUtils.getStandardFilePath("temp"), "LrC-AVG"), "S6")
     LrFileUtils.createAllDirectories(dir)
-    return LrPathUtils.child(dir, "s6_log.txt")
+    return dir
 end
 
 local function describePhoto(catalog, photo)
@@ -37,21 +41,25 @@ local function describePhoto(catalog, photo)
         local master = photo:getRawMetadata("masterPhoto")
         d.master_local_id = master and master.localIdentifier or nil
     end)
-    return string.format("local_id=%s copy_name=%s is_virtual_copy=%s master_local_id=%s file=%s",
-        tostring(d.local_id), tostring(d.copy_name), tostring(d.is_virtual_copy),
-        tostring(d.master_local_id), tostring(d.file_name)), d
+    return d
 end
 
-local function createCopies(catalog, name, log)
+local function describeText(d)
+    return string.format("local_id=%s copy_name=%s is_virtual_copy=%s master_local_id=%s file=%s",
+        tostring(d.local_id), tostring(d.copy_name), tostring(d.is_virtual_copy),
+        tostring(d.master_local_id), tostring(d.file_name))
+end
+
+local function createCopies(catalog, name, call)
     -- Attempt 1: plain call (the community reports do not say it needs a write gate).
     local ok, result = LrTasks.pcall(function()
         return catalog:createVirtualCopies(name)
     end)
     if ok then
-        table.insert(log, "  call: outside write gate -> ok")
+        call.how = "outside write gate"
         return result
     end
-    table.insert(log, "  call: outside write gate -> error: " .. tostring(result))
+    call.outside_gate_error = tostring(result)
     -- Attempt 2: inside a write gate.
     local copies
     ok, result = LrTasks.pcall(function()
@@ -60,10 +68,11 @@ local function createCopies(catalog, name, log)
         end)
     end)
     if ok then
-        table.insert(log, "  call: inside withWriteAccessDo -> ok")
+        call.how = "inside withWriteAccessDo"
         return copies
     end
-    table.insert(log, "  call: inside withWriteAccessDo -> error: " .. tostring(result))
+    call.how = "failed both ways"
+    call.inside_gate_error = tostring(result)
     return nil
 end
 
@@ -74,78 +83,130 @@ function S6.run(declaredView)
         local catalog = LrApplication.activeCatalog()
         local master = catalog:getTargetPhoto() -- outside any gate (yields; Automaat HandlerSelection.lua:30-38)
         if not master then
-            LrDialogs.message("AVG S6", "Select one (master) photo first.", "warning")
+            LrDialogs.message("AVG S6", "Select the original photo first (click 20260907-_OZ80093.NEF).", "warning")
             return
         end
 
         local okModule, moduleName = LrTasks.pcall(function() return LrApplicationView.getCurrentModuleName() end)
-        local log = {
-            "=== AVG S6 run " .. LrDate.timeToUserFormat(LrDate.currentTime(), "%Y-%m-%d %H:%M:%S") .. " ===",
-            "LR " .. LrApplication.versionString(),
-            "declared view (menu item chosen by Jim): " .. declaredView,
-            "current module (LrApplicationView.getCurrentModuleName): " .. (okModule and tostring(moduleName) or ("error: " .. tostring(moduleName))),
+        local result = {
+            spike = "S6",
+            run_at = LrDate.timeToUserFormat(LrDate.currentTime(), "%Y-%m-%d %H:%M:%S") .. " (local time)",
+            lr_version = LrApplication.versionString(),
+            declared_view = declaredView,
+            current_module = okModule and tostring(moduleName) or ("error: " .. tostring(moduleName)),
+            master = describePhoto(catalog, master),
+            calls = {},
+            copies = {},
         }
-        local masterText = describePhoto(catalog, master)
-        table.insert(log, "master: " .. masterText)
 
-        local created = {}
+        local createdPhotos = {}
         for _, letter in ipairs({ "A", "B", "C" }) do
             local name = "AVG S6 " .. letter
-            table.insert(log, "-- " .. name)
+            local call = { name = name }
             -- Re-select the master so each call copies the master, not the previous copy.
             local okSel, selErr = LrTasks.pcall(function()
                 catalog:setSelectedPhotos(master, { master })
             end)
-            if not okSel then table.insert(log, "  re-select master failed: " .. tostring(selErr)) end
+            if not okSel then call.reselect_master_error = tostring(selErr) end
             local targetBefore = catalog:getTargetPhoto()
-            table.insert(log, "  target before call: local_id=" .. tostring(targetBefore and targetBefore.localIdentifier))
+            call.target_before_local_id = targetBefore and targetBefore.localIdentifier or nil
 
             local t0 = LrDate.currentTime()
-            local result = createCopies(catalog, name, log)
-            table.insert(log, string.format("  took %.0f ms; returned type=%s count=%s", (LrDate.currentTime() - t0) * 1000,
-                type(result), (type(result) == "table") and tostring(#result) or "n/a"))
-            if type(result) == "table" then
-                for i, copy in ipairs(result) do
-                    local text, d = describePhoto(catalog, copy)
-                    table.insert(log, string.format("  copy[%d]: %s", i, text))
-                    table.insert(created, d)
+            local returned = createCopies(catalog, name, call)
+            call.ms = (LrDate.currentTime() - t0) * 1000
+            call.returned_type = type(returned)
+            call.returned_count = (type(returned) == "table") and #returned or nil
+            call.returned = {}
+            if type(returned) == "table" then
+                for _, copy in ipairs(returned) do
+                    local d = describePhoto(catalog, copy)
+                    table.insert(call.returned, d)
+                    table.insert(result.copies, d)
+                    table.insert(createdPhotos, copy)
                 end
             end
             local targetAfter = catalog:getTargetPhoto()
-            table.insert(log, "  target after call: " .. (targetAfter and describePhoto(catalog, targetAfter) or "nil"))
+            call.target_after = targetAfter and describePhoto(catalog, targetAfter) or nil
+            table.insert(result.calls, call)
         end
 
         -- Addressability by localIdentifier.
-        table.insert(log, "-- addressability")
         local hasGetById = false
         local okProbe = LrTasks.pcall(function()
             hasGetById = type(catalog.getPhotoByLocalId) == "function"
         end)
-        table.insert(log, "  catalog.getPhotoByLocalId is a function: " .. tostring(okProbe and hasGetById))
+        result.get_photo_by_local_id_exists = okProbe and hasGetById
         local all
         catalog:withReadAccessDo(function() all = catalog:getAllPhotos() end)
-        for _, d in ipairs(created) do
-            local viaApi = "n/a"
+        for _, d in ipairs(result.copies) do
             if hasGetById then
                 local okGet, found = LrTasks.pcall(function() return catalog:getPhotoByLocalId(d.local_id) end)
-                viaApi = okGet and tostring(found ~= nil and found.localIdentifier == d.local_id) or ("error: " .. tostring(found))
+                if okGet then
+                    d.found_via_get_photo_by_local_id = (found ~= nil and found.localIdentifier == d.local_id)
+                else
+                    d.found_via_get_photo_by_local_id = "error: " .. tostring(found)
+                end
             end
-            local viaScan = false
+            d.found_via_get_all_photos_scan = false
             for _, p in ipairs(all) do
-                if p.localIdentifier == d.local_id then viaScan = true break end
+                if p.localIdentifier == d.local_id then d.found_via_get_all_photos_scan = true break end
             end
-            table.insert(log, string.format("  local_id=%s found via getPhotoByLocalId=%s via getAllPhotos scan=%s",
-                tostring(d.local_id), viaApi, tostring(viaScan)))
         end
-        table.insert(log, string.format("total copies returned: %d (expected 3)", #created))
+        result.total_copies = #result.copies
 
-        local path = logPath()
-        local fh = io.open(path, "a")
+        -- Leave exactly the new copies selected, so cleanup is one menu command. Lightroom may
+        -- ignore the request without an error (e.g. a copy outside the current view)
+        -- [unverified], so read the selection back and only call it selected when it holds
+        -- exactly the new copies and nothing else.
+        result.copies_selected_for_cleanup = false
+        if #createdPhotos > 0 then
+            local okSel, selErr = LrTasks.pcall(function()
+                catalog:setSelectedPhotos(createdPhotos[1], createdPhotos)
+            end)
+            result.select_copies_error = (not okSel) and tostring(selErr) or nil
+            local selected = catalog:getTargetPhotos() or {} -- outside any gate (yields)
+            local wantIds, gotIds = {}, {}
+            for _, p in ipairs(createdPhotos) do wantIds[tostring(p.localIdentifier)] = true end
+            local exact = (#selected == #createdPhotos)
+            for _, p in ipairs(selected) do
+                local id = tostring(p.localIdentifier)
+                table.insert(gotIds, id)
+                if not wantIds[id] then exact = false end
+            end
+            result.selection_after = gotIds
+            result.copies_selected_for_cleanup = okSel and exact
+        end
+
+        -- Save: JSON result + a readable log line.
+        local stamp = LrDate.timeToUserFormat(LrDate.currentTime(), "%Y-%m-%dT%H-%M-%S")
+        local jsonPath = LrPathUtils.child(outDir(), "s6_" .. declaredView:lower() .. "_" .. stamp .. ".json")
+        local saved, saveErr = SpikeJson.writeFile(jsonPath, result)
+        local fh = io.open(LrPathUtils.child(outDir(), "s6_log.txt"), "a")
         if fh then
-            fh:write(table.concat(log, "\n"), "\n\n")
+            local lines = { "=== AVG S6 " .. declaredView .. " run " .. result.run_at .. " ===", "master: " .. describeText(result.master) }
+            for _, d in ipairs(result.copies) do table.insert(lines, "copy: " .. describeText(d)) end
+            fh:write(table.concat(lines, "\n"), "\n\n")
             fh:close()
         end
-        LrDialogs.message("AVG S6 (" .. declaredView .. ")", table.concat(log, "\n") .. "\n\nLog: " .. path, "info")
+
+        local headline = (result.total_copies == 3) and "Created 3 of 3 virtual copies."
+            or string.format("PROBLEM: created %d of 3 virtual copies.", result.total_copies)
+        local cleanup
+        if #createdPhotos == 0 then
+            cleanup = "There is nothing to remove."
+        elseif result.copies_selected_for_cleanup then
+            cleanup = "The new copies (and nothing else) are now selected. To remove them: Photo > Remove Photos... > Remove."
+        else
+            -- No hand-selection fallback: the folded-corner badge does not tell this run's copies
+            -- apart from other virtual copies, so a manual pick could remove unrelated photos.
+            -- Leftover copies should be harmless [inference: a virtual copy is a catalog entry
+            -- with no file of its own, so it never changes the original; unverified on 15.5.1].
+            cleanup = "COULD NOT SELECT the new copies automatically. Don't remove anything - " ..
+                "the copies can stay for now. Tell Claude Code."
+        end
+        local saveLine = saved and "Saved automatically - nothing to copy." or ("SAVE FAILED: " .. tostring(saveErr) .. " - tell Claude Code.")
+        LrDialogs.message("AVG S6 (" .. declaredView .. ")", headline .. "\n\n" .. cleanup .. "\n\n" .. saveLine,
+            (result.total_copies == 3 and saved) and "info" or "warning")
     end)
 end
 

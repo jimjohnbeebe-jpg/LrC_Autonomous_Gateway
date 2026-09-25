@@ -27,13 +27,19 @@ if not _G.AVG_S2 then
 end
 local S = _G.AVG_S2
 
--- Resolved once, so socket callbacks only ever do a plain io.open/append.
-local LOG_PATH
+-- Output folder <temp>\LrC-AVG\S2\ (rule 03-lightroom "Plugin hygiene"); Claude Code
+-- collects it. Resolved once, so socket callbacks only ever do a plain io.open/append.
+local OUT_DIR, LOG_PATH
+function M.outDir()
+    if not OUT_DIR then
+        OUT_DIR = LrPathUtils.child(LrPathUtils.child(LrPathUtils.getStandardFilePath("temp"), "LrC-AVG"), "S2")
+        LrFileUtils.createAllDirectories(OUT_DIR)
+    end
+    return OUT_DIR
+end
 local function logPath()
     if not LOG_PATH then
-        local dir = LrPathUtils.child(LrPathUtils.getStandardFilePath("temp"), "LrC-AVG")
-        LrFileUtils.createAllDirectories(dir)
-        LOG_PATH = LrPathUtils.child(dir, "s2_log.txt")
+        LOG_PATH = LrPathUtils.child(M.outDir(), "s2_log.txt")
     end
     return LOG_PATH
 end
@@ -190,6 +196,23 @@ function M.statusText()
         table.insert(lines, "  " .. S.log[i])
     end
     return table.concat(lines, "\n")
+end
+
+-- Plain table for the results JSON written by S2Stop.lua.
+function M.status()
+    local log = {}
+    for i, line in ipairs(S.log) do log[i] = line end
+    return {
+        running = S.running,
+        receive_port = RECEIVE_PORT,
+        send_port = SEND_PORT,
+        receive_connected = S.receiveConnected == true,
+        send_connected = S.sendConnected == true,
+        messages_received = S.received,
+        messages_echoed = S.echoed,
+        log_file = logPath(),
+        log_tail = log,
+    }
 end
 
 return M

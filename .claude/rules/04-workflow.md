@@ -32,15 +32,17 @@ Repo: https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway (public). `main
 - When a decision belongs to Jim (scope, a spec contradiction, a rule conflict, anything destructive or outward-facing), lay out the options with a recommendation and stop. Do not pick one and carry on.
 - Open decisions go in the handover or report under "Decisions for Jim".
 
-## Steps for Jim (decided by Jim 2026-09-23)
+## Steps for Jim (decided by Jim 2026-09-23 and 2026-09-24)
 
-Any procedure Jim carries out (spike runs, Lightroom actions, PowerShell commands, config edits) is written as a numbered checklist he can follow literally:
+Any procedure Jim carries out (spike runs, Lightroom actions, PowerShell commands) is **automated first, then written as a short numbered checklist** he can follow literally:
 
+- **Automate first.** Jim clicks in Lightroom, runs at most one PowerShell command per spike, and says "done". Harnesses save their own results to `%TEMP%\LrC-AVG\<Sn>\` (plugin output stays in temp, see `03-lightroom.md`), and Claude Code collects them. Never ask Jim to open temp files, use Notepad, copy/paste strings or console output, edit JSON by hand, or take screenshots unless nothing else can capture the result. [stated: Jim, 2026-09-24: "eliminate the copy/paste, especially from temp files … simplified, toned down, and automated where possible"]
+- Anything only Jim can observe is asked by the harness in a Lightroom dialog (tick boxes / yes-no) and saved with the results.
 - **Every step is required.** Never write "optional", "your call" or "if you want". If a step is not needed, leave it out. A conditional step is allowed only with a mechanical trigger ("If the dialog shows X, do Y").
-- Give exact menu paths, exact copy-paste commands, exact file names and save locations for screenshots, what Jim should see, and where the result gets pasted.
+- Give exact menu paths, exact copy-paste commands and what Jim should see. Don't assume Jim knows what Claude Code knows (file formats, keys, logs).
 - Put troubleshooting under a separate "If something goes wrong" heading, written as if/then rules.
-- Harness dialogs must state errors plainly, with a headline, so an error cannot pass as "no errors" (S1 run 1: the dialog hid `error loading thumb`).
-- Jim pastes results into the report file and does not commit. Claude Code carries his edits and screenshots onto a branch and through the PR workflow.
+- Harness dialogs must state outcomes plainly, with a headline (WORKED / FAILED, "put back: YES/NO"), so an error cannot pass as "no errors" (S1 run 1: the dialog hid `error loading thumb`).
+- Jim does not commit. When Jim edits a report file by hand, Claude Code carries his edits onto a branch and through the PR workflow.
 
 ## Reports
 

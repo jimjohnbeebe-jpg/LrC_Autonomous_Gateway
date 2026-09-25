@@ -1,6 +1,6 @@
 # Phase 0 spikes (AVG-S1 … AVG-S6)
 
-Throwaway harnesses that answer the feasibility questions in PHASES.md Phase 0. Claude Code wrote the harnesses and the report templates. **Jim runs the Lightroom parts and pastes results into `docs\reports\phase0\S<n>.md`.**
+Throwaway harnesses that answer the feasibility questions in PHASES.md Phase 0. Claude Code wrote the harnesses and the report templates. **Jim runs the Lightroom parts and then tells Claude Code "S<n> done". The harnesses save their results themselves, and Claude Code collects them. Jim copies, pastes and screenshots nothing.**
 
 | Spike | Question | Lightroom plugin | Node script(s) | README |
 |---|---|---|---|---|
@@ -13,8 +13,8 @@ Throwaway harnesses that answer the feasibility questions in PHASES.md Phase 0. 
 
 ## Run order
 
-1. **S1 run 2** (the retry harness; run 1 was inconclusive)
-2. S5
+1. S1: done (report accepted, `docs\reports\phase0\S1.md`)
+2. S5: part 1 done; part 2 per `S5\README.md`
 3. S2
 4. S4
 5. S6
@@ -57,15 +57,16 @@ Leave each spike plugin installed after its run. They should not conflict with e
 
 ## How results get into the repo (every spike)
 
-1. Save each screenshot the spike README asks for in `D:\Developer\LrC_Autonomous_Gateway\docs\reports\phase0\`, using the exact file name it gives (`S<n>-<what>.png`).
-2. Open the spike's report, `docs\reports\phase0\S<n>.md`.
-3. Paste the output the README names under the heading it names, and save the file.
-4. Do not commit anything.
-5. Tell Claude Code "S<n> done". Claude Code commits the report and screenshots through a Greptile-reviewed PR.
+1. Each harness saves its results automatically to `%TEMP%\LrC-AVG\S<n>\`. Plugin output stays in the temp folder (`.claude\rules\03-lightroom.md` "Plugin hygiene").
+2. Anything only Jim can observe (did Lightroom freeze, did the HUD stay in front, …) the harness asks in a Lightroom window with tick boxes and saves with the rest. For S3, Jim answers two questions in the chat.
+3. Jim tells Claude Code "S<n> done".
+4. Claude Code copies the files into `docs\reports\phase0\S<n>\`, fills the report, and takes it through a Greptile-reviewed PR.
 
 ## Verified here without Lightroom (Claude Code)
 
-- All Lua files parse as Lua 5.1 [handle: Claude Code session 2026-09-23, scratch install `luaparse@0.3.1` (not a project dependency), `luaparse.parse(src, { luaVersion: "5.1" })` over `plugin\**\*.lua` → "20/20 Lua files parse as Lua 5.1"]. That proves syntax only, not SDK behaviour.
+- All Lua files parse as Lua 5.1 [handle: Claude Code, scratch install `luaparse@0.3.1` (not a project dependency), `luaparse.parse(src, { luaVersion: "5.1" })` over `plugin\**\*.lua` → "25/25 Lua files parse as Lua 5.1", run 2026-09-25 on branch `phase-0/spike-steps-automation`]. That proves syntax only, not SDK behaviour.
+- `spikes\S2\client.ts` (2026-09-25 version) was run against the fake echo server with `TEMP` pointed at a scratch folder: it saved `LrC-AVG\S2\s2_client_*.json` there, including on the connect-failure path ("FAILED to connect: … ECONNREFUSED") [handle: Claude Code session 2026-09-25; the real `%TEMP%\LrC-AVG\S2\` was not touched].
+- `spikes\S3\install-desktop-config.ts` was run only against synthetic configs in a scratch folder, never the real one [handle: Claude Code session 2026-09-25]. Results: MSIX-style discovery via a fake `LOCALAPPDATA` found the file; the entry was added with one timestamped backup; the other servers and settings were kept; a fake token in another server's `env` was not printed; a second run printed "already set up. Nothing changed."; missing config, invalid JSON and `--dry-run` all left the files untouched.
 - `SpikeJson.lua` (S5) runs under fengari 0.1.4 (a Lua 5.3 VM); its output parses with Node's `JSON.parse` and passes 17/17 value checks [handle: `docs\reports\phase0\S5.md` "Pre-run findings"].
 - `spikes\S1\measure.ts` was run on the run-1 CSV and on synthetic CSVs covering the retry success path and a stale frame [handle: `docs\reports\phase0\S1.md` "Pre-run findings" and "Run 1 analysis"].
 - `spikes\S2\client.ts` was run against a fake Node echo server [handle: `docs\reports\phase0\S2.md` "Pre-run findings"].

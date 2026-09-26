@@ -1,0 +1,43 @@
+{
+  "answered": true,
+  "blocked_until_closed": true,
+  "exposure_restore": {
+    "after_restore": 0.33,
+    "before_restore": -0.49,
+    "restored": true,
+    "start": 0.33
+  },
+  "log": [
+    "AVG S4 run at 09:56:27",
+    "updater finished at 09:56:58",
+    "presentFloatingDialog returned after 36.65 s (window open at return: false)",
+    "window closed or wait ended at 09:57:03"
+  ],
+  "observations": {
+    "backslash_toggled": {
+      "answer": true,
+      "statement": "Pressing \\ (backslash) switched Before/After while the HUD was open"
+    },
+    "hud_stayed_in_front": {
+      "answer": true,
+      "statement": "The HUD stayed in front when I clicked the main Lightroom window"
+    },
+    "hud_survived_module_switch": {
+      "answer": true,
+      "statement": "The HUD was still there after G then D (Library and back to Develop)"
+    },
+    "slider_draggable": {
+      "answer": true,
+      "statement": "I could drag the Exposure slider while the HUD was open"
+    },
+    "ticks_while_dragging": {
+      "answer": true,
+      "statement": "The Tick counter kept counting while I dragged the slider"
+    }
+  },
+  "photo": "20260907-_OZ80093.NEF",
+  "present_floating_dialog_returned_after_s": 36.650161504745,
+  "run_at": "2026-09-26T09-57-16 (local time)",
+  "spike": "S4",
+  "window_open_when_call_returned": false
+}

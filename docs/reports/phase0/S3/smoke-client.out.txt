@@ -1,0 +1,6 @@
+[s3] lrc-avg-spike-s3 ready on stdio; fixtures: D:\Developer\LrC_Autonomous_Gateway\fixtures
+tools: get_fixture_preview
+[s3] 20260907-_OZ80093.jpg -> 1600x1066 332604 B in 96 ms
+isError: false
+image block: mimeType=image/jpeg base64_chars=443472 decoded_bytes=332604 jpeg_soi=true
+text block: fixture=20260907-_OZ80093.jpg jpeg_bytes=332604 base64_chars=443472 size=1600x1066 quality=75 render_ms=96

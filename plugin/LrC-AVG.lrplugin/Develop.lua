@@ -58,9 +58,14 @@ end
 
 -- Metadata keys from LR_SDK_NOTES "LrPhoto", plus lens and cameraModel [unverified]. A key the SDK
 -- rejects is listed in metadata_errors instead of failing the whole command. Each read is guarded
--- with LrTasks.pcall: these calls yield, and plain pcall raised "Yielding is not allowed within a C
--- or metamethod call" for all 13 keys in Jim's first Phase 1 run
+-- with LrTasks.pcall, because a plain pcall around them raised "Yielding is not allowed within a C
+-- or metamethod call" for all 13 keys in Jim's Phase 1 runs 1-2
 -- [handle: docs\reports\phase1\P1\p1_check_2026-09-26T20-28-20-636Z.json photo.metadata_errors].
+-- The reads stay inside the read gate: the same calls, unwrapped and inside withReadAccessDo, ran on
+-- LrC 15.5.1 without a hang in spikes S5 and S6 [handle: plugin\spikes\S5.lrplugin\S5Common.lua:77-88,
+-- whose recorder files hold file_format "RAW"; plugin\spikes\S6.lrplugin\S6Run.lua:36-41] and for the
+-- uuid in runs 1-2. That is also the Automaat pattern rule 03 names (HandlerMetadata.lua:55-72). Rule
+-- 03's deadlock warning is about catalog queries such as getTargetPhoto, which stay outside (target()).
 local RAW_KEYS = {
     path = "path", file_format = "fileFormat", is_virtual_copy = "isVirtualCopy",
     iso = "isoSpeedRating", shutter = "shutterSpeed", aperture = "aperture", focal_length = "focalLength",

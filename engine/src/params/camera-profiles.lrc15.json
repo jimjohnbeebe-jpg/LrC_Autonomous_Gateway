@@ -1,0 +1,471 @@
+{
+  "schema_version": 1,
+  "generated_by": "spikes/S5/pin-profiles.ts",
+  "generated_at": "2026-09-26T19:01:15.678Z",
+  "camera_raw_version": "18.5.1",
+  "sources": [
+    "docs/reports/phase0/S5/run2/s5_profiles_recorded_2026-09-24T20_53_22.json",
+    "docs/reports/phase0/S5/run2/s5_profiles_recorded_2026-09-24T20_59_14.json",
+    "docs/reports/phase0/S5/part1/s5_profiles.log"
+  ],
+  "profiles": [
+    {
+      "name": "Adobe Color",
+      "family": "adobe",
+      "camera_profile": "Adobe Standard",
+      "look": {
+        "Amount": 1,
+        "Copyright": "© 2018 Adobe Systems, Inc.",
+        "Group": {
+          "x-default": "Profiles"
+        },
+        "Name": "Adobe Color",
+        "Parameters": {
+          "AILook": [],
+          "CameraProfile": "Adobe Standard",
+          "ConvertToGrayscale": false,
+          "FilterList": [],
+          "LookTable": "E1095149FDB39D7A057BAB208837E2E1",
+          "PointColors": [],
+          "ProcessVersion": "15.4",
+          "ToneCurveName2012": "",
+          "ToneCurvePV2012": [
+            0,
+            0,
+            22,
+            16,
+            40,
+            35,
+            127,
+            127,
+            224,
+            230,
+            240,
+            246,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Blue": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Green": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Red": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "Version": "18.5.1"
+        },
+        "SupportsAmount": false,
+        "SupportsMonochrome": false,
+        "SupportsOutputReferred": false,
+        "UUID": "B952C231111CD8E0ECCF14B86BAA7077"
+      },
+      "evidence": "docs/reports/phase0/S5/run2/s5_profiles_recorded_2026-09-24T20_53_22.json, docs/reports/phase0/S5/run2/s5_profiles_recorded_2026-09-24T20_59_14.json: 3 captures on 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng and 20260907-_OZ80093.NEF, identical",
+      "write_verified": null
+    },
+    {
+      "name": "Adobe Landscape",
+      "family": "adobe",
+      "camera_profile": "Adobe Standard",
+      "look": {
+        "Amount": 1,
+        "Copyright": "© 2018 Adobe Systems, Inc.",
+        "Group": {
+          "x-default": "Profiles"
+        },
+        "Name": "Adobe Landscape",
+        "Parameters": {
+          "AILook": [],
+          "CameraProfile": "Adobe Standard",
+          "Clarity2012": 10,
+          "ConvertToGrayscale": false,
+          "FilterList": [],
+          "Highlights2012": -12,
+          "LookTable": "0B3BFB5CFB7DBF7FF175E98F24D316B0",
+          "PointColors": [],
+          "ProcessVersion": "15.4",
+          "Shadows2012": 12,
+          "ToneCurveName2012": "",
+          "ToneCurvePV2012": [
+            0,
+            0,
+            64,
+            60,
+            128,
+            128,
+            192,
+            196,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Blue": [],
+          "ToneCurvePV2012Green": [],
+          "ToneCurvePV2012Red": [],
+          "Version": "18.5.1"
+        },
+        "SupportsAmount": false,
+        "SupportsMonochrome": false,
+        "SupportsOutputReferred": false,
+        "UUID": "6F9C877E84273F4E8271E6B91BEB36A1"
+      },
+      "evidence": "docs/reports/phase0/S5/run2/s5_profiles_recorded_2026-09-24T20_53_22.json, docs/reports/phase0/S5/run2/s5_profiles_recorded_2026-09-24T20_59_14.json: 3 captures on 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng and 20260907-_OZ80093.NEF, identical",
+      "write_verified": "docs/reports/phase0/S5/run2/s5_writetests_20260907-_OZ80093.NEF_2026-09-24T21_00_31.json test adobe_look"
+    },
+    {
+      "name": "Adobe Monochrome",
+      "family": "adobe",
+      "camera_profile": "Adobe Standard",
+      "look": {
+        "Amount": 1,
+        "Copyright": "© 2018 Adobe Systems, Inc.",
+        "Group": {
+          "x-default": "Profiles"
+        },
+        "Name": "Adobe Monochrome",
+        "Parameters": {
+          "AILook": [],
+          "CameraProfile": "Adobe Standard",
+          "Clarity2012": 8,
+          "ConvertToGrayscale": true,
+          "FilterList": [],
+          "LookTable": "73ED6C18DDE909DD7EA2D771F5AC282D",
+          "PointColors": [],
+          "ProcessVersion": "15.4",
+          "ToneCurveName2012": "",
+          "ToneCurvePV2012": [
+            0,
+            0,
+            64,
+            56,
+            128,
+            128,
+            192,
+            197,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Blue": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Green": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Red": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "Version": "18.5.1"
+        },
+        "SupportsAmount": false,
+        "SupportsMonochrome": false,
+        "SupportsOutputReferred": false,
+        "UUID": "0CFE8F8AB5F63B2A73CE0B0077D20817"
+      },
+      "evidence": "docs/reports/phase0/S5/run2/s5_profiles_recorded_2026-09-24T20_53_22.json, docs/reports/phase0/S5/run2/s5_profiles_recorded_2026-09-24T20_59_14.json: 3 captures on 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng and 20260907-_OZ80093.NEF, identical",
+      "write_verified": null
+    },
+    {
+      "name": "Adobe Neutral",
+      "family": "adobe",
+      "camera_profile": "Adobe Standard",
+      "look": {
+        "Amount": 1,
+        "Copyright": "© 2018 Adobe Systems, Inc.",
+        "Group": {
+          "x-default": "Profiles"
+        },
+        "Name": "Adobe Neutral",
+        "Parameters": {
+          "AILook": [],
+          "CameraProfile": "Adobe Standard",
+          "ConvertToGrayscale": false,
+          "FilterList": [],
+          "LookTable": "7740BB918B2F6D93D7B95A4DBB78DB23",
+          "PointColors": [],
+          "ProcessVersion": "15.4",
+          "ToneCurveName2012": "",
+          "ToneCurvePV2012": [
+            0,
+            0,
+            16,
+            24,
+            64,
+            72,
+            128,
+            128,
+            192,
+            176,
+            244,
+            234,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Blue": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Green": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Red": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "Version": "18.5.1"
+        },
+        "SupportsAmount": false,
+        "SupportsMonochrome": false,
+        "SupportsOutputReferred": false,
+        "UUID": "1E8E067A11CD44394A3C36A327BB34D1"
+      },
+      "evidence": "docs/reports/phase0/S5/run2/s5_profiles_recorded_2026-09-24T20_53_22.json, docs/reports/phase0/S5/run2/s5_profiles_recorded_2026-09-24T20_59_14.json: 3 captures on 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng and 20260907-_OZ80093.NEF, identical",
+      "write_verified": null
+    },
+    {
+      "name": "Adobe Portrait",
+      "family": "adobe",
+      "camera_profile": "Adobe Standard",
+      "look": {
+        "Amount": 1,
+        "Copyright": "© 2018 Adobe Systems, Inc.",
+        "Group": {
+          "x-default": "Profiles"
+        },
+        "Name": "Adobe Portrait",
+        "Parameters": {
+          "AILook": [],
+          "CameraProfile": "Adobe Standard",
+          "ConvertToGrayscale": false,
+          "FilterList": [],
+          "LookTable": "E5A76DBB8B3F132A04C01AF45DC2EF1B",
+          "PointColors": [],
+          "ProcessVersion": "15.4",
+          "ToneCurveName2012": "",
+          "ToneCurvePV2012": [
+            0,
+            0,
+            66,
+            64,
+            190,
+            192,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Blue": [],
+          "ToneCurvePV2012Green": [],
+          "ToneCurvePV2012Red": [],
+          "Version": "18.5.1"
+        },
+        "SupportsAmount": false,
+        "SupportsMonochrome": false,
+        "SupportsOutputReferred": false,
+        "UUID": "D6496412E06A83789C499DF9540AA616"
+      },
+      "evidence": "docs/reports/phase0/S5/run2/s5_profiles_recorded_2026-09-24T20_53_22.json, docs/reports/phase0/S5/run2/s5_profiles_recorded_2026-09-24T20_59_14.json: 3 captures on 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng and 20260907-_OZ80093.NEF, identical",
+      "write_verified": null
+    },
+    {
+      "name": "Adobe Standard",
+      "family": "adobe",
+      "camera_profile": "Adobe Standard",
+      "look": null,
+      "evidence": "docs/reports/phase0/S5/run2/s5_profiles_recorded_2026-09-24T20_53_22.json, docs/reports/phase0/S5/run2/s5_profiles_recorded_2026-09-24T20_59_14.json: 3 captures on 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng and 20260907-_OZ80093.NEF, identical; the capture without a Look is Adobe Standard [inference; S5.md Part 2 analysis]",
+      "write_verified": null
+    },
+    {
+      "name": "Adobe Vivid",
+      "family": "adobe",
+      "camera_profile": "Adobe Standard",
+      "look": {
+        "Amount": 1,
+        "Copyright": "© 2018 Adobe Systems, Inc.",
+        "Group": {
+          "x-default": "Profiles"
+        },
+        "Name": "Adobe Vivid",
+        "Parameters": {
+          "AILook": [],
+          "CameraProfile": "Adobe Standard",
+          "Clarity2012": 10,
+          "ConvertToGrayscale": false,
+          "FilterList": [],
+          "LookTable": "2FE663AB0D3CE5DA7B9F657BBCD66DFE",
+          "PointColors": [],
+          "ProcessVersion": "15.4",
+          "ToneCurveName2012": "",
+          "ToneCurvePV2012": [
+            0,
+            0,
+            32,
+            22,
+            64,
+            56,
+            128,
+            128,
+            224,
+            232,
+            240,
+            246,
+            255,
+            255
+          ],
+          "ToneCurvePV2012Blue": [],
+          "ToneCurvePV2012Green": [],
+          "ToneCurvePV2012Red": [],
+          "Version": "18.5.1"
+        },
+        "SupportsAmount": false,
+        "SupportsMonochrome": false,
+        "SupportsOutputReferred": false,
+        "UUID": "EA1DE074F188405965EF399C72C221D9"
+      },
+      "evidence": "docs/reports/phase0/S5/run2/s5_profiles_recorded_2026-09-24T20_53_22.json, docs/reports/phase0/S5/run2/s5_profiles_recorded_2026-09-24T20_59_14.json: 3 captures on 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng and 20260907-_OZ80093.NEF, identical",
+      "write_verified": null
+    },
+    {
+      "name": "Camera Deep Tone Monochrome",
+      "family": "nikon",
+      "camera_profile": "Camera Deep Tone Monochrome",
+      "look": null,
+      "evidence": "docs/reports/phase0/S5/part1/s5_profiles.log: logged for 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng and 20260907-_OZ80093.NEF; paired with Look = {} per S5.md Part 2 analysis",
+      "write_verified": null
+    },
+    {
+      "name": "Camera Flat Monochrome",
+      "family": "nikon",
+      "camera_profile": "Camera Flat Monochrome",
+      "look": null,
+      "evidence": "docs/reports/phase0/S5/part1/s5_profiles.log: logged for 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng and 20260907-_OZ80093.NEF; paired with Look = {} per S5.md Part 2 analysis",
+      "write_verified": null
+    },
+    {
+      "name": "Camera Flexible Color",
+      "family": "nikon",
+      "camera_profile": "Camera Flexible Color",
+      "look": null,
+      "evidence": "docs/reports/phase0/S5/part1/s5_profiles.log: logged for 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng and 20260907-_OZ80093.NEF; paired with Look = {} per S5.md Part 2 analysis",
+      "write_verified": null
+    },
+    {
+      "name": "Camera Landscape",
+      "family": "nikon",
+      "camera_profile": "Camera Landscape",
+      "look": null,
+      "evidence": "docs/reports/phase0/S5/part1/s5_profiles.log: logged for 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng and 20260907-_OZ80093.NEF; paired with Look = {} per S5.md Part 2 analysis",
+      "write_verified": "docs/reports/phase0/S5/run2/s5_writetests_20260907-_OZ80093.NEF_2026-09-24T21_00_31.json test nikon_camera_profile (second attempt, with Look = {})"
+    },
+    {
+      "name": "Camera Monochrome (Green Filter)",
+      "family": "nikon",
+      "camera_profile": "Camera Monochrome (Green Filter)",
+      "look": null,
+      "evidence": "docs/reports/phase0/S5/part1/s5_profiles.log: logged for 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng and 20260907-_OZ80093.NEF; paired with Look = {} per S5.md Part 2 analysis",
+      "write_verified": null
+    },
+    {
+      "name": "Camera Monochrome (Orange Filter)",
+      "family": "nikon",
+      "camera_profile": "Camera Monochrome (Orange Filter)",
+      "look": null,
+      "evidence": "docs/reports/phase0/S5/part1/s5_profiles.log: logged for 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng and 20260907-_OZ80093.NEF; paired with Look = {} per S5.md Part 2 analysis",
+      "write_verified": null
+    },
+    {
+      "name": "Camera Monochrome (Red Filter)",
+      "family": "nikon",
+      "camera_profile": "Camera Monochrome (Red Filter)",
+      "look": null,
+      "evidence": "docs/reports/phase0/S5/part1/s5_profiles.log: logged for 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng and 20260907-_OZ80093.NEF; paired with Look = {} per S5.md Part 2 analysis",
+      "write_verified": null
+    },
+    {
+      "name": "Camera Monochrome (Yellow Filter)",
+      "family": "nikon",
+      "camera_profile": "Camera Monochrome (Yellow Filter)",
+      "look": null,
+      "evidence": "docs/reports/phase0/S5/part1/s5_profiles.log: logged for 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng and 20260907-_OZ80093.NEF; paired with Look = {} per S5.md Part 2 analysis",
+      "write_verified": null
+    },
+    {
+      "name": "Camera Neutral",
+      "family": "nikon",
+      "camera_profile": "Camera Neutral",
+      "look": null,
+      "evidence": "docs/reports/phase0/S5/part1/s5_profiles.log: logged for 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng and 20260907-_OZ80093.NEF; paired with Look = {} per S5.md Part 2 analysis",
+      "write_verified": null
+    },
+    {
+      "name": "Camera Portrait",
+      "family": "nikon",
+      "camera_profile": "Camera Portrait",
+      "look": null,
+      "evidence": "docs/reports/phase0/S5/part1/s5_profiles.log: logged for 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng and 20260907-_OZ80093.NEF; paired with Look = {} per S5.md Part 2 analysis",
+      "write_verified": null
+    },
+    {
+      "name": "Camera Rich Tone Portrait",
+      "family": "nikon",
+      "camera_profile": "Camera Rich Tone Portrait",
+      "look": null,
+      "evidence": "docs/reports/phase0/S5/part1/s5_profiles.log: logged for 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng and 20260907-_OZ80093.NEF; paired with Look = {} per S5.md Part 2 analysis",
+      "write_verified": null
+    },
+    {
+      "name": "Camera Vivid",
+      "family": "nikon",
+      "camera_profile": "Camera Vivid",
+      "look": null,
+      "evidence": "docs/reports/phase0/S5/part1/s5_profiles.log: logged for 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng and 20260907-_OZ80093.NEF; paired with Look = {} per S5.md Part 2 analysis",
+      "write_verified": null
+    },
+    {
+      "name": "Camera Flat",
+      "family": "nikon",
+      "camera_profile": "Group: Camera Flat",
+      "look": null,
+      "evidence": "docs/reports/phase0/S5/part1/s5_profiles.log: logged for 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng and 20260907-_OZ80093.NEF; paired with Look = {} per S5.md Part 2 analysis",
+      "write_verified": null
+    },
+    {
+      "name": "Camera Monochrome",
+      "family": "nikon",
+      "camera_profile": "Group: Camera Monochrome",
+      "look": null,
+      "evidence": "docs/reports/phase0/S5/part1/s5_profiles.log: logged for 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng and 20260907-_OZ80093.NEF; paired with Look = {} per S5.md Part 2 analysis",
+      "write_verified": null
+    },
+    {
+      "name": "Camera Standard",
+      "family": "nikon",
+      "camera_profile": "Group: Camera Standard",
+      "look": null,
+      "evidence": "docs/reports/phase0/S5/part1/s5_profiles.log: logged for 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng and 20260907-_OZ80093.NEF; paired with Look = {} per S5.md Part 2 analysis",
+      "write_verified": null
+    }
+  ]
+}

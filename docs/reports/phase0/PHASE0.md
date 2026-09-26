@@ -2,7 +2,7 @@
 report: Phase 0 close-out (init + feasibility spikes)
 phase: 0
 status: accepted
-authored_by: "Claude Code (Opus 5.5), 2026-09-26, compiled from the six accepted spike reports. Decisions on each proposal and on closing Phase 0: Jim (2026-09-26: all 19 accepted, LR_SDK_NOTES draft approved, D-01 decided, Phase 0 closed)."
+authored_by: "Claude Code (Opus 5.5), 2026-09-26, compiled from the six accepted spike reports. Decisions on each proposal and on closing Phase 0: Jim (2026-09-26: all 19 accepted, LR_SDK_NOTES draft approved, D-01 decided, decision to close Phase 0)."
 date: 2026-09-26
 ---
 
@@ -16,7 +16,7 @@ PHASES.md, quoted (`PHASES.md:26`): "**Acceptance:** six spike reports in `Repor
 
 ## Harness
 
-This report has no harness of its own: it compiles the six spike reports and their evidence folders. Each spike's harness, run steps and raw files are in its own report: `docs\reports\phase0\S1.md` … `S6.md` (sections "Harness" and "Observed"), with evidence under `docs\reports\phase0\S<n>\`.
+This report has no harness of its own: it compiles the six spike reports and their evidence. Each spike's harness, run steps and raw files are in its own report: `docs\reports\phase0\S1.md` … `S6.md` (sections "Harness" and "Observed"). The evidence files are in `docs\reports\phase0\S2\` … `S6\`. S1 has no folder: its CSV figures are quoted in `S1.md`, and its screenshot is `docs\reports\phase0\S1-run2-dialog.png`. S5 also has screenshots at `docs\reports\phase0\S5-*.png`.
 
 ## Pre-run findings (Claude Code)
 
@@ -26,7 +26,7 @@ Checks Claude Code ran itself on 2026-09-26, before asking Jim to decide:
 |---|---|---|
 | Six spike reports in `Reports/` with measured numbers | **done** | `docs\reports\phase0\S1.md` … `S6.md`, each `status: accepted` with Jim's verdict; the vault copies under `Reports\Phase0\` are byte-identical [handle: `Get-FileHash` over all six pairs, run by Claude Code on 2026-09-26: 6 of 6 equal] |
 | LR_SDK_NOTES "To record in Phase 0" filled | **approved by Jim (2026-09-26); written into the vault once this PR merges** | the text is "Draft for LR_SDK_NOTES" below |
-| STATE next action set to Phase 1 | **set once this PR merges** (Jim closed Phase 0 on 2026-09-26) | `LrC_AVG_STATE.md` "Next action" |
+| STATE next action set to Phase 1 | **set once this PR merges** (Jim decided to close Phase 0 on 2026-09-26) | `LrC_AVG_STATE.md` "Next action" |
 
 Init items (`PHASES.md:15`) were done in the Phase 0 session of 2026-09-23 [handle: `docs\PHASE0_HANDOVER.md` §1–2: `node -v` → v24.11.1, git, `CLAUDE.md`, `.claude\rules`, MCP availability, Automaat survey, `.gitignore`].
 
@@ -164,7 +164,7 @@ Collected from the six reports; each stays open until the Phase named tests it.
 ## Verdict
 
 <!-- Jim: close Phase 0 (and which proposals are accepted), or not. -->
-**Phase 0 is closed** (Jim, 2026-09-26, chosen from the options Claude Code offered, which recommended closing) [stated].
+**Jim decided to close Phase 0** (2026-09-26, chosen from the options Claude Code offered, which recommended closing) [stated]. Phase 0 is **complete** only once its two remaining acceptance lines are done after this PR merges: LR_SDK_NOTES "To record in Phase 0" written into the vault, and STATE's "Next action" set to Phase 1 (`PHASES.md:26`; `.claude\rules\04-workflow.md` "Phase gating"). Until then it is decided but not complete.
 
 - Proposals P-01 … P-19: **all accepted** [stated].
 - LR_SDK_NOTES draft: **approved** for the vault [stated].

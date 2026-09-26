@@ -2,7 +2,7 @@
 document_type: handover
 project: LrC_Autonomous_Gateway
 phase: 0 (init + feasibility spikes)
-status: Phase 0 closed by Jim on 2026-09-26 (docs\reports\phase0\PHASE0.md Verdict); vault doc edits and STATE follow the close-out PR
+status: Jim decided to close Phase 0 on 2026-09-26 (docs\reports\phase0\PHASE0.md Verdict); complete only after the close-out PR merges and LR_SDK_NOTES and STATE are updated in the vault
 authored_by: Claude Code (Opus 5.5, model id claude-opus-5-5), Phase 0 session, 2026-09-23; close-out section by the Claude Code (Opus 5.5) session of 2026-09-26
 ---
 
@@ -152,8 +152,8 @@ Phase 0b is complete when PR #1 is merged after its triage. No Phase 1 work has 
   - S3: Conditional go.
   - Each report is `docs\reports\phase0\S<n>.md`, `status: accepted`, mirrored byte-identical to the vault `Reports\Phase0\` [handle: `Get-FileHash` over the six pairs, run by Claude Code on 2026-09-26].
 - **`docs\reports\phase0\PHASE0.md`** checks the Phase 0 acceptance line. It also lists every proposed spec change (P-01 … P-19), two open decisions (D-01 preview transport, D-02 removing variant copies), the draft for LR_SDK_NOTES "To record in Phase 0", and the consolidated [unverified] list by Phase.
-- **Jim's decisions (2026-09-26)** [stated; recorded in `PHASE0.md` "Observed (Jim)" and "Verdict"]: all 19 proposals accepted; the LR_SDK_NOTES draft approved; D-01 = the export's file path; **Phase 0 closed**. D-02 stays open for Phase 4.
-- **Still to do after the close-out PR merges:** write the accepted changes and the LR_SDK_NOTES text into the vault docs, add P-12 … P-19 and D-01/D-02 to PHASES.md under their Phases, mirror `PHASE0.md` to the vault, and set STATE's "Next action" to Phase 1.
+- **Jim's decisions (2026-09-26)** [stated; recorded in `PHASE0.md` "Observed (Jim)" and "Verdict"]: all 19 proposals accepted; the LR_SDK_NOTES draft approved; D-01 = the export's file path; **close Phase 0**. D-02 stays open for Phase 4.
+- **Phase 0 is decided but not yet complete.** Two acceptance lines (`PHASES.md:26`) remain, and a session must not treat Phase 0 as done until both are finished and recorded in the vault STATE. **Still to do after the close-out PR merges:** write the accepted changes and the LR_SDK_NOTES text into the vault docs, add P-12 … P-19 and D-01/D-02 to PHASES.md under their Phases, mirror `PHASE0.md` to the vault, and set STATE's "Next action" to Phase 1.
 - Main facts for Phase 1:
   - develop keys are pinned in `engine\src\params\sdk-keys.lrc15.json` (178) [handle: `S5.md` Part 1 analysis];
   - LrSocket dual socket works; rebind the send socket on each new client [handle: `S2.md` Analysis and Consequences];
@@ -161,4 +161,4 @@ Phase 0b is complete when PR #1 is merged after its triage. No Phase 1 work has 
   - a profile is a `CameraProfile` + `Look` pair [handle: `S5.md` Part 2 analysis];
   - snapshots restore by `snapshotID` [handle: `S5.md` Part 2 analysis].
 - **Section 5 above ("Unverified") is superseded** by `PHASE0.md` "Still [unverified] after Phase 0". Section 6's decisions are carried into `PHASE0.md` "Carried-over decisions".
-- **Phase 1 has not been started.** Jim has closed Phase 0. Phase 1 work starts when Jim gives the go, after STATE's "Next action" points to it.
+- **Phase 1 has not been started.** Phase 1 work starts when Jim gives the go, after the steps above are done and STATE's "Next action" points to Phase 1. The vault `LrC_AVG_STATE.md` records when that happened.

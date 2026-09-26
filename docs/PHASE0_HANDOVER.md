@@ -2,9 +2,11 @@
 document_type: handover
 project: LrC_Autonomous_Gateway
 phase: 0 (init + feasibility spikes)
-status: harnesses built; Lightroom-side runs pending (Jim)
-authored_by: Claude Code (Opus 5.5, model id claude-opus-5-5), Phase 0 session, 2026-09-23
+status: all six spikes run and accepted; Phase 0 close-out report awaiting Jim (2026-09-26)
+authored_by: Claude Code (Opus 5.5, model id claude-opus-5-5), Phase 0 session, 2026-09-23; close-out section by the Claude Code (Opus 5.5) session of 2026-09-26
 ---
+
+> **Update 2026-09-26 (read this first).** Sections 1–8 below are the record of the 2026-09-23 build session. Its "pending" and "unverified" statements about Lightroom have since been settled by Jim's spike runs. For the results, go to "Phase 0 close-out (2026-09-26)" at the end of this file and to `docs\reports\phase0\PHASE0.md`.
 
 # Phase 0 handover
 
@@ -137,3 +139,24 @@ The PR + Greptile triage rule is now in `.claude\rules\04-workflow.md` (rewritte
 ### STOP (Phase 0b)
 
 Phase 0b is complete when PR #1 is merged after its triage. No Phase 1 work has started.
+
+---
+
+## Phase 0 close-out (2026-09-26)
+
+> **Self-attribution.** Written by Claude Code (Opus 5.5) in the session of 2026-09-26, which collected S2, S4, S6 and S3 (PRs #8–#11) after the S1 and S5 results (PRs #3–#5, #7).
+
+- **All six spikes were run by Jim and carry his verdicts:**
+  - S1: no-go for thumbnails, so the export is the primary preview path.
+  - S2, S4, S5, S6: Go.
+  - S3: Conditional go.
+  - Each report is `docs\reports\phase0\S<n>.md`, `status: accepted`, mirrored byte-identical to the vault `Reports\Phase0\`.
+- **`docs\reports\phase0\PHASE0.md`** checks the Phase 0 acceptance line. It also lists every proposed spec change (P-01 … P-19), two open decisions (D-01 preview transport, D-02 removing variant copies), the draft for LR_SDK_NOTES "To record in Phase 0", and the consolidated [unverified] list by Phase. Jim decides on each; nothing in the vault spec docs has been edited.
+- Main facts for Phase 1:
+  - develop keys are pinned in `engine\src\params\sdk-keys.lrc15.json` (178);
+  - LrSocket dual socket works; rebind the send socket on each new client;
+  - read back every develop write;
+  - a profile is a `CameraProfile` + `Look` pair;
+  - snapshots restore by `snapshotID`.
+- **Section 5 above ("Unverified") is superseded** by `PHASE0.md` "Still [unverified] after Phase 0". Section 6's decisions are carried into `PHASE0.md` "Carried-over decisions".
+- **Phase 1 has not been started.** It starts when Jim accepts `PHASE0.md` and STATE's "Next action" is set to Phase 1.

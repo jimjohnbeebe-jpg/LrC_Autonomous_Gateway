@@ -66,6 +66,7 @@ npm test                    # vitest (engine)
 npm run typecheck           # engine src+tests, spikes
 node spikes\S1\measure.ts   # spike scripts run directly (Node type stripping)
 npm run phase1:check        # Phase 1 acceptance check against Lightroom (docs\reports\phase1\PHASE1.md)
+node engine\dist\mcp\main.js # the stdio MCP server (Claude Desktop starts it; tool log in $env:LRC_AVG_LOG_DIR or %LOCALAPPDATA%\LrC-AVG\logs)
 graphify query "How does X reach Y?"
 ```
 
@@ -73,5 +74,5 @@ graphify query "How does X reach Y?"
 
 - Jim's shell is PowerShell in VS Code. Write every user-facing command as PowerShell with Windows-native paths (`D:\Developer\...`, `$env:TEMP`, `$env:APPDATA`). Put long commands on several lines with backtick (`` ` ``) continuation.
 - Quote any path that contains spaces (`"C:\Users\jimbe\Documents\Obsidian Vault\..."`, `"...DxO_DeepPRIME XD3.dng"`).
-- Lightroom spike output goes to `$env:TEMP\LrC-AVG\` (Lua `LrPathUtils.getStandardFilePath("temp")`; that it matches `%TEMP%` is [unverified] until a spike runs).
+- Lightroom plugin and spike output goes to `$env:TEMP\LrC-AVG\` (Lua `LrPathUtils.getStandardFilePath("temp")` is `%TEMP%` [handle: `docs\reports\phase1\PHASE1.md` "Consequences", `plugin_log_copied` in the Phase 1 run files; LR_SDK_NOTES "Recorded in Phase 1"]). Engine previews pass through `$env:TEMP\LrC-AVG\previews\`.
 - Lightroom plugins are added through File > Plug-in Manager > Add, pointing at the `.lrplugin` folder in this repo. Never copy them into `%APPDATA%\Adobe\Lightroom\Modules` automatically.

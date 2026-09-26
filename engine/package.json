@@ -1,9 +1,12 @@
 {
   "name": "lrc-avg",
-  "version": "0.0.0",
+  "version": "0.2.0",
   "private": true,
   "description": "LrC-AVG engine: stdio MCP server, metrics, session state and Lightroom bridge.",
   "type": "module",
+  "bin": {
+    "lrc-avg": "dist/mcp/main.js"
+  },
   "engines": {
     "node": ">=22"
   },

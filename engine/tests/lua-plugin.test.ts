@@ -61,8 +61,10 @@ function codeOnly(source: string): string {
     if (c === '"' || c === "'") {
       let j = i + 1;
       while (j < source.length && source[j] !== c && source[j] !== "\n") j += source[j] === "\\" ? 2 : 1;
-      out += '""';
-      i = source[j] === c ? j + 1 : j; // an unterminated string stops at the line break
+      const end = source[j] === c ? j + 1 : j; // an unterminated string stops at the line break
+      // A backslash before a line break continues the string on the next line; keep that break.
+      out += `""${source.slice(i, end).replace(/[^\n]/g, "")}`;
+      i = end;
       continue;
     }
     out += c;
@@ -146,6 +148,13 @@ describe("lua: LrC-AVG.lrplugin", () => {
     expect(code[4]).toContain("pcall(g)");
     expect(code[7]).toContain("pcall(h)");
     expect(code.filter((l) => l.includes("[["))).toEqual([]);
+  });
+
+  it("keeps line numbers when a quoted string continues over an escaped line break", () => {
+    const source = ['local s = "first \\', 'second"', "x = pcall(f)"].join("\n");
+    const code = codeOnly(source).split("\n");
+    expect(code).toHaveLength(3);
+    expect(code[2]).toContain("pcall(f)");
   });
 
   it("passes a History name to every applyDevelopSettings call (rule 03-lightroom)", () => {

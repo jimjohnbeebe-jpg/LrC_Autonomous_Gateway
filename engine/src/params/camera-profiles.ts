@@ -86,6 +86,15 @@ function pairKey(cameraProfile: string, lookUuid: string | null): string {
   return `${cameraProfile}\u0000${lookUuid ?? ""}`;
 }
 
+/** Freeze an entry and everything inside it, so the pinned pairs cannot be changed through get(). */
+function deepFreeze<T>(value: T): T {
+  if (typeof value === "object" && value !== null && !Object.isFrozen(value)) {
+    Object.freeze(value);
+    for (const inner of Object.values(value)) deepFreeze(inner);
+  }
+  return value;
+}
+
 export class CameraProfiles {
   private readonly byName: ReadonlyMap<string, CameraProfileEntry>;
   private readonly byPair: ReadonlyMap<string, CameraProfileEntry>;
@@ -93,7 +102,7 @@ export class CameraProfiles {
   constructor(pinned: PinnedCameraProfiles) {
     const byName = new Map<string, CameraProfileEntry>();
     const byPair = new Map<string, CameraProfileEntry>();
-    for (const entry of pinned.profiles) {
+    for (const entry of pinned.profiles.map((p) => deepFreeze(structuredClone(p)))) {
       if (byName.has(entry.name)) throw new Error(`Duplicate camera profile name "${entry.name}"`);
       const key = pairKey(entry.camera_profile, entry.look?.UUID ?? null);
       const other = byPair.get(key);
@@ -109,8 +118,8 @@ export class CameraProfiles {
     return [...this.byName.keys()];
   }
 
-  /** Returns the pinned entry, or throws UnknownCameraProfileError. */
-  get(name: string): CameraProfileEntry {
+  /** Returns the pinned entry (deeply frozen), or throws UnknownCameraProfileError. */
+  get(name: string): Readonly<CameraProfileEntry> {
     const entry = this.byName.get(name);
     if (!entry) throw new UnknownCameraProfileError(name);
     return entry;

@@ -51,6 +51,19 @@ describe("params: pinned camera profile pairs (S5)", () => {
     expect(profiles.toSdk("Adobe Vivid").Look["Name"]).toBe("Adobe Vivid");
   });
 
+  it("hands out frozen entries from get(), down to the Look parameters", () => {
+    const entry = profiles.get("Adobe Landscape");
+    expect(Object.isFrozen(entry)).toBe(true);
+    expect(() => {
+      (entry as { camera_profile: string }).camera_profile = "Camera Vivid";
+    }).toThrow(TypeError);
+    const parameters = entry.look?.Parameters as Record<string, unknown>;
+    expect(() => {
+      parameters["Clarity2012"] = 99;
+    }).toThrow(TypeError);
+    expect(profiles.toSdk("Adobe Landscape").CameraProfile).toBe("Adobe Standard");
+  });
+
   it("marks only the two pairs a write test verified", () => {
     const verified = profiles.names().filter((n) => profiles.get(n).write_verified !== null);
     expect(verified.sort()).toEqual(["Adobe Landscape", "Camera Landscape"]);

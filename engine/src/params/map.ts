@@ -110,22 +110,29 @@ function validate(name: string, spec: ParamSpec, value: unknown): unknown {
   }
 }
 
-/** Equality for values that crossed Lua and JSON: an empty table can arrive as [] or {}. */
+function isTable(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+/**
+ * Equality for values that crossed Lua and JSON. The one allowance: an empty table can arrive as
+ * [] or {}. Inside tables every key must be present on both sides; a missing nested key is a mismatch.
+ */
 function sdkValuesEqual(written: unknown, readBack: unknown): boolean {
   if (typeof written === "number" && typeof readBack === "number") {
     return Math.abs(written - readBack) <= READBACK_TOLERANCE;
   }
-  const writtenIsTable = typeof written === "object" && written !== null;
-  const readIsTable = typeof readBack === "object" && readBack !== null;
-  if (writtenIsTable && isEmptyLook(written)) return readBack === undefined || (readIsTable && isEmptyLook(readBack));
-  if (writtenIsTable && readIsTable) {
+  if (isTable(written) && isTable(readBack)) {
+    const writtenEmpty = isEmptyLook(written);
+    const readEmpty = isEmptyLook(readBack);
+    if (writtenEmpty || readEmpty) return writtenEmpty && readEmpty;
     if (Array.isArray(written) !== Array.isArray(readBack)) return false;
-    const wKeys = Object.keys(written);
-    const rKeys = Object.keys(readBack);
-    if (wKeys.length !== rKeys.length) return false;
-    return wKeys.every((k) =>
-      sdkValuesEqual((written as Record<string, unknown>)[k], (readBack as Record<string, unknown>)[k]),
-    );
+    const keys = new Set([...Object.keys(written), ...Object.keys(readBack)]);
+    for (const k of keys) {
+      if (!(k in written) || !(k in readBack)) return false;
+      if (!sdkValuesEqual(written[k], readBack[k])) return false;
+    }
+    return true;
   }
   return isDeepStrictEqual(written, readBack);
 }
@@ -223,7 +230,12 @@ export class ParamMap {
     const mismatches: ReadbackMismatch[] = [];
     for (const [key, value] of Object.entries(written)) {
       const got = readBack[key];
-      if (!sdkValuesEqual(value, got)) mismatches.push({ sdk_key: key, written: value, read_back: got ?? null });
+      // Writing Look = {} clears the Look, and it then reads back absent
+      // [handle: docs/reports/phase0/S5.md "Part 2 analysis"]. Only this top-level Look may be absent.
+      const clearedLook = key === "Look" && got === undefined && isEmptyLook(value);
+      if (!clearedLook && !sdkValuesEqual(value, got)) {
+        mismatches.push({ sdk_key: key, written: value, read_back: got ?? null });
+      }
     }
     return mismatches;
   }

@@ -174,5 +174,20 @@ describe("params: canonical map", () => {
       const changed = { ...look, Parameters: { ...params, Clarity2012: 11 } };
       expect(map.verifyReadback({ Look: look }, { Look: changed })).toHaveLength(1);
     });
+
+    it("reports a nested empty field that is missing, even when another key makes the counts equal", () => {
+      const look = profiles.toSdk("Adobe Landscape").Look;
+      const { ToneCurvePV2012Blue: _missing, ...params } = look["Parameters"] as Record<string, unknown>;
+      expect(map.verifyReadback({ Look: look }, { Look: { ...look, Parameters: params } })).toHaveLength(1);
+      const swapped = { ...look, Parameters: { ...params, SomethingElse: [] } };
+      expect(map.verifyReadback({ Look: look }, { Look: swapped })).toHaveLength(1);
+    });
+
+    it("allows only the top-level Look to read back absent", () => {
+      expect(map.verifyReadback({ Look: {} }, {})).toEqual([]);
+      expect(map.verifyReadback({ ToneCurvePV2012Blue: [] }, {})).toEqual([
+        { sdk_key: "ToneCurvePV2012Blue", written: [], read_back: null },
+      ]);
+    });
   });
 });

@@ -13,6 +13,7 @@
   "scripts": {
     "build": "npm run build -w engine",
     "test": "npm test -w engine",
-    "typecheck": "npm run typecheck -w engine && npm run typecheck -w spikes"
+    "typecheck": "npm run typecheck -w engine && npm run typecheck -w spikes",
+    "phase1:check": "npm run build && node engine/dist/devtools/phase1-check-cli.js"
   }
 }

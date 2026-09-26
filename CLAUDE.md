@@ -48,7 +48,7 @@ Repo: https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway (public; `main`
 
 ```
 engine\                   Node/TS MCP server (src\{mcp,session,params,metrics,preview,intents,log,bridge}, tests\, intents\, schemas\)
-plugin\LrC-AVG.lrplugin\  Lua plugin (Phase 0: Info.lua stub only)
+plugin\LrC-AVG.lrplugin\  Lua plugin (Phase 1: bridge on 8765/8766 + Develop commands)
 plugin\spikes\S1-S6.lrplugin\  Phase 0 spike plugins (throwaway)
 spikes\S1-S6\             Phase 0 spike READMEs + Node scripts (throwaway)
 docs\                     survey, availability, dependencies, handover, reports\ (mirror of vault Reports\)
@@ -65,6 +65,7 @@ npm run build               # tsc -> engine\dist
 npm test                    # vitest (engine)
 npm run typecheck           # engine src+tests, spikes
 node spikes\S1\measure.ts   # spike scripts run directly (Node type stripping)
+npm run phase1:check        # Phase 1 acceptance check against Lightroom (docs\reports\phase1\PHASE1.md)
 graphify query "How does X reach Y?"
 ```
 

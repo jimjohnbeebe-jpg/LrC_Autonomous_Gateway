@@ -1,0 +1,71 @@
+// Static checks on the Lua plugins, since no Lua runtime runs in CI (rule 01-stack: Lightroom embeds
+// Lua 5.1, so no goto, no //, no utf8 library). luaparse parses each file as Lua 5.1.
+
+import { readdirSync, readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import luaparse from "luaparse";
+import { describe, expect, it } from "vitest";
+
+const pluginRoot = fileURLToPath(new URL("../../plugin/", import.meta.url));
+const avgPlugin = path.join(pluginRoot, "LrC-AVG.lrplugin");
+
+function luaFiles(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) return luaFiles(full);
+    return entry.name.endsWith(".lua") ? [full] : [];
+  });
+}
+
+// Code without comments and string contents, for the token checks below.
+function codeOnly(source: string): string {
+  return source
+    .replace(/--\[(=*)\[[\s\S]*?\]\1\]/g, "")
+    .replace(/--[^\n]*/g, "")
+    .replace(/"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'/g, '""');
+}
+
+const files = luaFiles(pluginRoot);
+
+describe("lua: every plugin file", () => {
+  it("finds the LrC-AVG plugin files", () => {
+    const names = files.filter((f) => f.startsWith(avgPlugin)).map((f) => path.basename(f)).sort();
+    expect(names).toEqual(["Bridge.lua", "Develop.lua", "Info.lua", "Json.lua", "Log.lua", "MenuStatus.lua", "PluginInit.lua"]);
+  });
+
+  it.each(files.map((f) => [path.relative(pluginRoot, f), f]))("%s parses as Lua 5.1", (_name, file) => {
+    expect(() => luaparse.parse(readFileSync(file, "utf8"), { luaVersion: "5.1" })).not.toThrow();
+  });
+
+  it.each(files.map((f) => [path.relative(pluginRoot, f), f]))("%s does not use the utf8 library", (_name, file) => {
+    expect(codeOnly(readFileSync(file, "utf8"))).not.toMatch(/\butf8\s*\./);
+  });
+});
+
+describe("lua: LrC-AVG.lrplugin", () => {
+  const own = new Set(readdirSync(avgPlugin).filter((f) => f.endsWith(".lua")).map((f) => f.slice(0, -4)));
+
+  it("requires only modules in its own folder (a .lrplugin cannot require outside it)", () => {
+    for (const file of files.filter((f) => f.startsWith(avgPlugin))) {
+      for (const [, name] of readFileSync(file, "utf8").matchAll(/\brequire\s*\(?\s*['"]([^'"]+)['"]/g)) {
+        expect(own.has(name as string), `${path.basename(file)} requires ${name}`).toBe(true);
+      }
+    }
+  });
+
+  it("names every file that Info.lua points at", () => {
+    const info = readFileSync(path.join(avgPlugin, "Info.lua"), "utf8");
+    for (const [, file] of info.matchAll(/(?:file|LrInitPlugin)\s*=\s*['"]([^'"]+\.lua)['"]/g)) {
+      expect(own.has((file as string).slice(0, -4)), file).toBe(true);
+    }
+  });
+
+  it("passes a History name to every applyDevelopSettings call (rule 03-lightroom)", () => {
+    for (const file of files.filter((f) => f.startsWith(avgPlugin))) {
+      for (const [call] of codeOnly(readFileSync(file, "utf8")).matchAll(/applyDevelopSettings\s*\(([^)]*)\)/g)) {
+        expect(call.split(",").length, `${path.basename(file)}: ${call}`).toBeGreaterThanOrEqual(2);
+      }
+    }
+  });
+});

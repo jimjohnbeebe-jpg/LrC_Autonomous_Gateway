@@ -15,6 +15,7 @@
 
 local LrApplication = import 'LrApplication'
 local LrDate = import 'LrDate'
+local LrTasks = import 'LrTasks'
 
 local Develop = {}
 
@@ -56,7 +57,10 @@ local function findSnapshots(catalog, photo, field, value)
 end
 
 -- Metadata keys from LR_SDK_NOTES "LrPhoto", plus lens and cameraModel [unverified]. A key the SDK
--- rejects is listed in metadata_errors instead of failing the whole command.
+-- rejects is listed in metadata_errors instead of failing the whole command. Each read is guarded
+-- with LrTasks.pcall: these calls yield, and plain pcall raised "Yielding is not allowed within a C
+-- or metamethod call" for all 13 keys in Jim's first Phase 1 run
+-- [handle: docs\reports\phase1\P1\p1_check_2026-09-26T20-28-20-636Z.json photo.metadata_errors].
 local RAW_KEYS = {
     path = "path", file_format = "fileFormat", is_virtual_copy = "isVirtualCopy",
     iso = "isoSpeedRating", shutter = "shutterSpeed", aperture = "aperture", focal_length = "focalLength",
@@ -71,11 +75,11 @@ function Develop.getContext(payload)
     local errors = {}
     catalog:withReadAccessDo(function()
         for field, key in pairs(RAW_KEYS) do
-            local ok, value = pcall(photo.getRawMetadata, photo, key)
+            local ok, value = LrTasks.pcall(photo.getRawMetadata, photo, key)
             if ok then ctx[field] = value else errors[#errors + 1] = key .. ": " .. tostring(value) end
         end
         for field, key in pairs(FORMATTED_KEYS) do
-            local ok, value = pcall(photo.getFormattedMetadata, photo, key)
+            local ok, value = LrTasks.pcall(photo.getFormattedMetadata, photo, key)
             if ok then ctx[field] = value else errors[#errors + 1] = key .. ": " .. tostring(value) end
         end
     end)

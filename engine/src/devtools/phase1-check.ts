@@ -184,6 +184,10 @@ export async function runPhase1Check(deps: Phase1Deps): Promise<{ accepted: bool
       key_count: Object.keys(start).length,
     };
     say(`Photo: ${String(context["filename"])} (${String(context["file_format"])}, process version ${view.process_version}, profile ${view.camera_profile.name ?? view.camera_profile.camera_profile})`);
+    if (context["file_format"] === undefined) {
+      const why = context.metadata_errors?.[0];
+      throw new Error(`the plugin could not read the photo's file format${why ? ` (${why})` : ""}; nothing was changed. Tell Claude Code`);
+    }
     if (context["file_format"] !== "RAW") {
       throw new Error(`the selected photo is ${String(context["file_format"])}, not a raw file: select 20260907-_OZ80093.NEF and run the command again`);
     }

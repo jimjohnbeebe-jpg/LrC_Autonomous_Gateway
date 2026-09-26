@@ -61,6 +61,20 @@ describe("lua: LrC-AVG.lrplugin", () => {
     }
   });
 
+  it("uses LrTasks.pcall, except where a plain pcall is marked as safe (rule 03-lightroom)", () => {
+    // Plain pcall cannot cross a yield: in Jim's first Phase 1 run it raised "Yielding is not allowed
+    // within a C or metamethod call" around getRawMetadata (docs/reports/phase1/PHASE1.md, run 1).
+    // A plain pcall is allowed only with a "-- plain pcall: <why>" comment on the same line.
+    for (const file of files.filter((f) => f.startsWith(avgPlugin))) {
+      readFileSync(file, "utf8").split(/\r?\n/).forEach((line, i) => {
+        const code = codeOnly(line);
+        if (/(?<![.\w])pcall\s*\(/.test(code)) {
+          expect(line, `${path.basename(file)}:${i + 1}`).toMatch(/--\s*plain pcall: \S/);
+        }
+      });
+    }
+  });
+
   it("passes a History name to every applyDevelopSettings call (rule 03-lightroom)", () => {
     for (const file of files.filter((f) => f.startsWith(avgPlugin))) {
       for (const [call] of codeOnly(readFileSync(file, "utf8")).matchAll(/applyDevelopSettings\s*\(([^)]*)\)/g)) {

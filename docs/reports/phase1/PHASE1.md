@@ -2,8 +2,8 @@
 report: Phase 1 — Bridge and Develop write path
 phase: 1
 status: template
-authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-09-26. Observed: Jim (pending). Numbers, Consequences: Claude Code after Jim's run. Verdict: Jim."
-date: 2026-09-26 (template)
+authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-09-26. Observed: Jim ran the check twice on 2026-09-26 (runs 1-2, both FAILED before any write); Claude Code collected the files and wrote the run 1-2 analysis. Run 3 pending. Numbers, Consequences: Claude Code after the passing run. Verdict: Jim."
+date: 2026-09-26 (template; runs 1-2)
 ---
 
 # Phase 1 — Bridge and Develop write path
@@ -95,6 +95,35 @@ Checks Claude Code ran on 2026-09-26, before Jim's run. None of them involve Lig
 
 <!-- Nothing to paste. The check saves everything to %TEMP%\LrC-AVG\P1\ (p1_check_<time>.json with Jim's two answers, p1_bridge_log_<time>.txt). Jim says "done"; Claude Code copies the files to docs\reports\phase1\P1\ and fills this section and Numbers from them. -->
 
+### Runs 1 and 2 (2026-09-26): FAILED before any write
+
+Jim ran the steps after PR #14 merged and reported "done (failed)" [stated]. The check ran twice: at 20:25:11Z, then at 20:28:20Z after a Lightroom restart. The plugin log shows a new start at 13:27:32 local time [handle: `P1\p1_bridge_log_2026-09-26T20-28-20-636Z.txt`]. Claude Code copied the files from `%TEMP%\LrC-AVG\` into `docs\reports\phase1\P1\`, replacing the Windows user folder with `%USERPROFILE%` in the three files that contained it (both bridge logs and the status file):
+
+| File | Written by | Content |
+|---|---|---|
+| `p1_check_2026-09-26T20-25-11-309Z.json` | the check, run 1 | results up to the failure |
+| `p1_bridge_log_2026-09-26T20-25-11-309Z.txt` | `Bridge.lua` (copied by the check) | plugin log for run 1 |
+| `p1_check_2026-09-26T20-28-20-636Z.json` | the check, run 2 | results up to the failure |
+| `p1_bridge_log_2026-09-26T20-28-20-636Z.txt` | `Bridge.lua` | plugin log, runs 1 and 2 |
+| `bridge_status_after_run2.json` | `Bridge.lua` status file, 20:30:01Z | bridge state after run 2 |
+
+**What worked in Lightroom** (same in both runs; figures from run 2, `p1_check_2026-09-26T20-28-20-636Z.json`):
+- The plugin started with Lightroom, wrote its token, and listened on 8765/8766 (`bridge: token written …`, `bridge: listening` in the log).
+- The engine found the token and connected in 511 ms. The plugin's `hello` reported protocol 1, plugin 0.1.0, Lightroom 15.5.1 (`hello`, `connect_ms`).
+- The non-ASCII nonce `AVG P1 é漢字 ✓` came back identical, and five requests in flight all came back correctly (`pings.utf8`, `pings.in_flight`).
+- 20 sequential pings: median 0.35 ms, min 0.28 ms, max 0.55 ms (`pings.rtt_ms`).
+- `get_settings` returned 177 keys, process version 15.4, all pinned; the params map named the profile **Camera Neutral** (`photo`).
+- The status file counted 29 commands handled and 0 failed (`bridge_status_after_run2.json`: hello, 26 pings, `get_context`, `get_settings`).
+
+**What failed:** `get_context` returned the uuid (`C19DDC67-…`) and `local_id` 3869533, but all 13 metadata reads raised **`Yielding is not allowed within a C or metamethod call`** (`photo.metadata_errors`). Without a file format, the check stopped ("not a raw file") before making the snapshot or writing anything: `steps` is empty, and neither log has a `create_snapshot` or `apply_settings` line. The photo was not changed, and no question was asked.
+
+**Cause:** `Develop.lua` wrapped each `getRawMetadata` / `getFormattedMetadata` call in a plain `pcall`. In Lua 5.1 a task cannot yield across a plain `pcall`, and these calls yield. The same `getRawMetadata("uuid")` call without a `pcall`, inside the same read gate, worked [inference from the two observations above]. Rule 03-lightroom already says to use `LrTasks.pcall` in task code; `Develop.lua` broke it. **Fix (`fix/p1-metadata-pcall`):**
+- `Develop.lua` uses `LrTasks.pcall`, and so do the socket `send()`/`close()` calls in the bridge task.
+- The plain `pcall`s that remain carry a `-- plain pcall: <why>` comment (pure-Lua JSON, the cleanup handler, the init script). `engine\tests\lua-plugin.test.ts` enforces this; it fails on the run-1 code at `Bridge.lua:134`.
+- The check now says when the plugin could not read the file format, instead of calling the photo "undefined, not a raw file".
+
+**Also seen:** after run 2 ended, the status file still had `send_connected: true` while `receive_connected` was false (`bridge_status_after_run2.json`). The send socket did not notice its client leaving, as in S2. The plugin rebinds it when the next engine connects (P-13).
+
 ## Numbers
 
 <!-- Filled by Claude Code from the collected results file. -->
@@ -134,6 +163,8 @@ Checks Claude Code ran on 2026-09-26, before Jim's run. None of them involve Lig
 | C-6 | The plugin shows the engine as disconnected after 6 s without a message (three 2 s heartbeats, FR-1.3), and rebinds both sockets after 20 s | Windows may not report a vanished client [upstream claim: `vendor\automaat\plugin\LightroomMCP.lrplugin\PluginInfoProvider.lua:558-560`]; the 20 s figure is [inference] |
 | C-7 | The plugin refuses an `apply_settings` whose History name does not start with `AVG ` | FR-4.4; rule 03-lightroom |
 | C-8 | Every command carries `token`: the plugin writes a random token to `%USERPROFILE%\.lrc-avg\bridge_token` at start and refuses other commands with `unauthorized`; the engine reads the file before each connection and reconnects on `unauthorized` | Without it any local program, or a web page posting to 127.0.0.1:8765, could send Develop commands (Greptile P1 on PR #14). Jim chose the token file on 2026-09-26 [stated]; pattern from Automaat [upstream claim: `PluginInfoProvider.lua:87-127, 313-319`] |
+
+**For LR_SDK_NOTES (proposed; the architect's doc, not edited here):** `photo:getRawMetadata(key)` and `photo:getFormattedMetadata(key)`, called from a task inside `catalog:withReadAccessDo` and wrapped in a plain `pcall`, raised "Yielding is not allowed within a C or metamethod call" for all 13 keys tried, on LrC 15.5.1; wrap them in `LrTasks.pcall` or call them unwrapped [handle: `docs\reports\phase1\P1\p1_check_2026-09-26T20-28-20-636Z.json` `photo.metadata_errors`]. Automaat's notes say only non-yielding per-photo metadata reads belong inside the read gate [upstream claim: `vendor\automaat\CLAUDE.md`, Architecture]; that these reads yield at all is Claude Code's reading of the error [inference]. `LrPathUtils.getStandardFilePath("temp")` is `%TEMP%`: the check found the plugin's `bridge.log` in `%TEMP%\LrC-AVG\` [handle: `plugin_log_copied` in both run files]. `LrPathUtils.getStandardFilePath("home")` and Node's `os.homedir()` are the same folder: the engine read the token the plugin wrote [handle: `hello` in both run files].
 
 **Open until Jim's run:** everything under "Pre-run findings" marked [unverified]; the real range limits (they replace the [unverified] slider limits in `engine\src\params\canonical.ts`); whether writing lens "on" works.
 

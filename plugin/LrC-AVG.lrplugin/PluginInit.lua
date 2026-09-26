@@ -8,7 +8,7 @@
 local Bridge = require 'Bridge'
 local Log = require 'Log'
 
-local ok, err = pcall(Bridge.start)
+local ok, err = pcall(Bridge.start) -- plain pcall: not a task, Bridge.start does not yield
 if not ok then
     Log.error("bridge start failed: " .. tostring(err))
 end

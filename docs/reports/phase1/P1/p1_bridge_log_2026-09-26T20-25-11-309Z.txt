@@ -1,0 +1,9 @@
+2026-09-26 13:24:24.354 INFO  bridge: starting generation 1 (receive 8765, send 8766)
+2026-09-26 13:24:31.838 INFO  bridge: token written to %USERPROFILE%\.lrc-avg\bridge_token
+2026-09-26 13:24:31.838 INFO  bridge: listening (generation 1)
+2026-09-26 13:25:11.320 INFO  bridge: receive: engine connected
+2026-09-26 13:25:11.832 INFO  bridge: send: engine connected
+2026-09-26 13:25:11.833 INFO  bridge: hello 1fcf721e-8117-4aa7-b110-8413dd5f671b
+2026-09-26 13:25:11.850 INFO  bridge: get_context dd0639a4-e4a9-4d73-81c6-c9e9d067d06a
+2026-09-26 13:25:11.854 INFO  bridge: get_settings c81c7747-6322-422f-b49f-4c88312d307c
+2026-09-26 13:25:11.859 INFO  bridge: receive: closed

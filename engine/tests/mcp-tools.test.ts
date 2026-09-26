@@ -2,7 +2,7 @@
 // plugin with a simulated Lightroom (tests/helpers/lightroom-sim.ts).
 
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import sharp from "sharp";
@@ -145,6 +145,19 @@ describe("mcp tools: lr_get_preview and lr_get_metrics", () => {
     expect(readFileSync(outside, "utf8")).toBe("not touched");
   });
 
+  it("refuses a path inside the previews folder that leads elsewhere through a link", async () => {
+    const outsideDir = path.join(tmp, "outside");
+    mkdirSync(outsideDir);
+    writeFileSync(path.join(outsideDir, "secret.jpg"), "not touched");
+    // A junction needs no administrator rights on Windows; elsewhere the type is ignored (a dir symlink).
+    symlinkSync(outsideDir, path.join(previewDir, "link"), "junction");
+    lr.exportPath = path.join(previewDir, "link", "secret.jpg");
+    const e = await failure(tools.getPreview());
+    expect(e.code).toBe("PREVIEW_PATH_REFUSED");
+    expect(e.message).toMatch(/resolves outside/);
+    expect(readFileSync(path.join(outsideDir, "secret.jpg"), "utf8")).toBe("not touched");
+  });
+
   it("answers lr_get_metrics from the last preview, without exporting again", async () => {
     expect((await failure(tools.getMetrics())).code).toBe("NO_PREVIEW_YET");
     const preview = await tools.getPreview();
@@ -183,6 +196,20 @@ describe("mcp tools: lr_set_settings", () => {
     expect(delta.luma_mean).toBeGreaterThan(15); // 0.5 EV = 20 grey levels in the simulation
     expect(json["timings"]).toMatchObject({ plugin_apply_ms: 25, plugin_read_ms: 300, plugin_command_ms: 330 });
     expect((json["timings"] as { total_ms: number }).total_ms).toBeGreaterThan(0);
+  });
+
+  it("still reports the write when only the render after it fails", async () => {
+    plugin.handlers.set("export_preview", () => ({ ok: false, error: { code: "export_failed", message: "the export wrote no JPEG", recoverable: true } }));
+    const { json, image } = await tools.setSettings({ uuid: "SIM-UUID", settings: { exposure: 0.83 } });
+    expect(image).toBeUndefined();
+    expect(json).toMatchObject({
+      ok: true,
+      history_name: "AVG test set 1",
+      changes: [{ name: "exposure", after: 0.83 }],
+      preview_error: { code: "EXPORT_FAILED", recoverable: true },
+    });
+    expect(json).not.toHaveProperty("preview_hash");
+    expect(logLines()[0]).toMatchObject({ tool: "lr_set_settings", ok: true, preview_error: { code: "EXPORT_FAILED" } });
   });
 
   it("numbers the History steps and skips the render when asked", async () => {

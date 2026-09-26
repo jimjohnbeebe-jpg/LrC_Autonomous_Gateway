@@ -22,7 +22,10 @@ export const DEFAULT_LONG_EDGE = 1600;
 export const MIN_LONG_EDGE = 800;
 export const MAX_LONG_EDGE = 1920;
 export const PREVIEW_QUALITY = 75;
-/** A write with its read-back took under 1 s in Phase 1 (PHASE1.md "Numbers"). */
+/**
+ * A write with its read-back took under 1 s in Phase 1 (0.45-1 s receipt to receipt)
+ * [handle: docs\reports\phase1\PHASE1.md "Numbers"]; 30 s leaves room for a busy Lightroom.
+ */
 const WRITE_TIMEOUT_MS = 30000;
 
 export type ToolOutput = {
@@ -44,8 +47,8 @@ export type LastRender = {
 export type SetSettingsArgs = {
   uuid: string;
   settings: Record<string, CanonicalValue>;
-  return_image?: "after" | "none";
-  long_edge?: number;
+  return_image?: "after" | "none" | undefined;
+  long_edge?: number | undefined;
 };
 
 export type ToolsDeps = {
@@ -134,7 +137,7 @@ export class Tools {
     });
   }
 
-  async getPreview(args: { long_edge?: number } = {}): Promise<ToolOutput> {
+  async getPreview(args: { long_edge?: number | undefined } = {}): Promise<ToolOutput> {
     return this.run("lr_get_preview", args, async () => {
       await this.deps.ensureBridge();
       const preview = await this.render(args.long_edge ?? DEFAULT_LONG_EDGE);
@@ -213,15 +216,22 @@ export class Tools {
       const json: Record<string, unknown> = { ok: true, uuid: res.uuid, history_name: historyName, changes, read_back: "as written" };
       let image: Buffer | undefined;
       if (args.return_image !== "none") {
+        // The write has happened by now. If only the render fails, the call still reports the write
+        // (ok, History name, changes) with `preview_error`, so it is not mistaken for a failed write
+        // and repeated (Greptile, PR #17).
         const previous = this.last?.uuid === res.uuid ? this.last : null;
-        const preview = await this.render(args.long_edge ?? DEFAULT_LONG_EDGE, res.uuid);
-        Object.assign(json, this.describe(preview), {
-          metrics: summarize(preview.metrics),
-          delta_metrics: previous ? deltaMetrics(previous.metrics, preview.metrics) : null,
-          ...(previous ? { delta_against: previous.preview_hash } : { delta_note: "no earlier preview of this photo in this engine run" }),
-        });
-        timings["preview"] = preview.timings;
-        image = preview.jpeg;
+        try {
+          const preview = await this.render(args.long_edge ?? DEFAULT_LONG_EDGE, res.uuid);
+          Object.assign(json, this.describe(preview), {
+            metrics: summarize(preview.metrics),
+            delta_metrics: previous ? deltaMetrics(previous.metrics, preview.metrics) : null,
+            ...(previous ? { delta_against: previous.preview_hash } : { delta_note: "no earlier preview of this photo in this engine run" }),
+          });
+          timings["preview"] = preview.timings;
+          image = preview.jpeg;
+        } catch (err) {
+          json["preview_error"] = toToolError(err).body();
+        }
       }
       timings["total_ms"] = ms(started);
       json["timings"] = timings;
@@ -234,10 +244,16 @@ export class Tools {
           changes,
           preview_hash: json["preview_hash"] ?? null,
           delta_metrics: json["delta_metrics"] ?? null,
+          ...(json["preview_error"] ? { preview_error: json["preview_error"] } : {}),
           timings,
         },
       };
     });
+  }
+
+  /** Log a call refused before it reached a tool (unknown tool, invalid arguments; server.ts). */
+  recordRejected(tool: string, args: unknown, error: ToolError): void {
+    this.deps.log?.append({ ts: this.now().toISOString(), tool, ok: false, duration_ms: 0, args, error: error.body() });
   }
 
   private async render(longEdge: number, targetUuid?: string): Promise<RenderedPreview> {

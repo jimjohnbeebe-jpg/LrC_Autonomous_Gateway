@@ -10,12 +10,15 @@
 //   4. hashes the JPEG that is sent on (SHA-256; the freshness record, ARCHITECTURE 6.3) and measures it.
 // Leftover files are purged when the engine starts and when it exits (PRD NFR-6).
 //
-// The previews folder is %TEMP%\LrC-AVG\previews: Lightroom's temp folder is %TEMP%
-// [handle: docs\reports\phase1\PHASE1.md "Consequences", plugin_log_copied in the three run files],
-// and Node's os.tmpdir() is %TEMP% on Windows.
+// The previews folder is <os.tmpdir()>\LrC-AVG\previews, the folder the plugin writes into
+// (<Lightroom temp>\LrC-AVG\previews, plugin\LrC-AVG.lrplugin\Preview.lua). The two temp folders are
+// the same: the Phase 1 check looked for the plugin's bridge.log under os.tmpdir() and found it
+// [handle: engine\src\devtools\phase1-check-cli.ts PLUGIN_LOG; plugin_log_copied in the three
+// docs\reports\phase1\P1\p1_check_*.json files], and os.tmpdir() equals %TEMP% [handle: Claude Code,
+// 2026-09-26, node -e "os.tmpdir() === process.env.TEMP" -> true on Node v24.11.1, win32].
 
 import { createHash } from "node:crypto";
-import { readdirSync, readFileSync, rmdirSync, rmSync, unlinkSync } from "node:fs";
+import { lstatSync, readdirSync, readFileSync, realpathSync, rmdirSync, rmSync, statSync, unlinkSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import sharp from "sharp";
@@ -163,12 +166,24 @@ export class PreviewService {
 
   /** Read the exported file and delete it (and its folder, when that is a now-empty subfolder). */
   private take(file: string): Buffer {
-    if (!isInside(this.previewDir, file) || !/\.jpe?g$/i.test(file)) {
-      throw new PreviewError("PREVIEW_PATH_REFUSED", `the plugin returned a preview path outside ${this.previewDir}: ${file}`, false);
+    const refuse = (why: string): never => {
+      throw new PreviewError("PREVIEW_PATH_REFUSED", `the plugin returned a preview path ${why}: ${file}`, false);
+    };
+    if (!isInside(this.previewDir, file) || !/\.jpe?g$/i.test(file)) refuse(`outside ${this.previewDir}`);
+    // The same check on the real paths, so a symbolic link inside the folder cannot lead the read
+    // to a file elsewhere (Greptile, PR #17); and only a regular file is read.
+    let real: string;
+    try {
+      real = realpathSync(file);
+      if (!isInside(realpathSync(this.previewDir), real)) refuse(`that resolves outside ${this.previewDir}`);
+      if (lstatSync(file).isSymbolicLink() || !statSync(real).isFile()) refuse("that is not a regular file");
+    } catch (err) {
+      if (err instanceof PreviewError) throw err;
+      throw new PreviewError("PREVIEW_UNREADABLE", `cannot read the exported preview: ${(err as Error).message}`, true);
     }
     let data: Buffer;
     try {
-      data = readFileSync(file);
+      data = readFileSync(real);
     } catch (err) {
       throw new PreviewError("PREVIEW_UNREADABLE", `cannot read the exported preview: ${(err as Error).message}`, true);
     }

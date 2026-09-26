@@ -1,75 +1,70 @@
 // One engine per Lightroom bridge. The plugin serves one client at a time and rebinds its send
 // socket for each new one (Phase 0, P-13), so a second engine (a second Claude Desktop server
-// process, or the Phase 2 check while Desktop runs) would take the bridge from the first. The lock
-// file holds the owner's PID; a lock whose PID is gone is stale and is replaced.
+// process, or the Phase 2 check while Desktop runs) would take the bridge from the first. Claude
+// Desktop has started a server twice within 2 s [handle: docs\reports\phase0\S3\desktop-mcp-log-excerpt.txt,
+// two "Server started" lines at 17:21:36 and 17:21:38].
 //
-// Derived from Automaat's server/src/instance-lock.ts (MIT, see engine/THIRD_PARTY_NOTICES.md).
-// Changes: the caller gets { ok: false, pid } instead of an exception, so the engine can keep
-// serving MCP and answer ENGINE_BUSY; it registers no signal handlers (main.ts owns shutdown).
+// The lock is a TCP listener on 127.0.0.1 (PRD NFR-4) at a fixed port, next to the bridge's two:
+// only one process can listen on it, and the OS frees it when the process ends, however it ends.
+// On Windows a second listen on the same port fails with EADDRINUSE [handle: Claude Code, 2026-09-26,
+// Node v24.11.1 on win32: two net.Server.listen calls on one 127.0.0.1 port -> "EADDRINUSE"].
+// This replaces a PID lock file (Automaat's server/src/instance-lock.ts pattern): two engines that
+// both found the same stale file could each break it and both take the bridge (Greptile, PR #17).
+// The listener answers a connection with its PID, so the engine that finds the lock taken can say
+// which process holds it.
 
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
+import net from "node:net";
 
-export type InstanceLock = { file: string; release: () => void };
-export type LockResult = { ok: true; lock: InstanceLock } | { ok: false; pid: number; file: string };
+/** 8767: the port after the bridge's 8765 (commands) and 8766 (events). */
+export const DEFAULT_LOCK_PORT = 8767;
+const HOST = "127.0.0.1";
+const PID_TIMEOUT_MS = 500;
 
-/** %USERPROFILE%\.lrc-avg\engine-<command port>-<event port>.lock, next to the bridge token. */
-export function defaultLockFile(commandPort = 8765, eventPort = 8766): string {
-  return path.join(os.homedir(), ".lrc-avg", `engine-${commandPort}-${eventPort}.lock`);
+/** release() frees the port; its promise settles once the listener has closed. */
+export type InstanceLock = { port: number; release: () => Promise<void> };
+export type LockResult = { ok: true; lock: InstanceLock } | { ok: false; port: number; pid: number | null };
+
+/** The PID the lock holder reports, or null if it does not answer in time. */
+function holderPid(port: number): Promise<number | null> {
+  return new Promise((resolve) => {
+    let text = "";
+    const socket = net.connect({ host: HOST, port });
+    const done = (pid: number | null): void => {
+      clearTimeout(timer);
+      socket.destroy();
+      resolve(pid);
+    };
+    const timer = setTimeout(() => done(null), PID_TIMEOUT_MS);
+    socket.setEncoding("utf8");
+    socket.on("data", (chunk: string) => (text += chunk));
+    socket.on("end", () => {
+      const pid = Number(text.trim());
+      done(Number.isInteger(pid) && pid > 0 ? pid : null);
+    });
+    socket.on("error", () => done(null));
+  });
 }
 
-function pidIsAlive(pid: number): boolean {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (err) {
-    return (err as NodeJS.ErrnoException).code === "EPERM";
-  }
-}
-
-function readPid(file: string): number | null {
-  try {
-    const parsed = Number(fs.readFileSync(file, "utf8").trim());
-    return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
-export function acquireInstanceLock(file: string = defaultLockFile(), isAlive: (pid: number) => boolean = pidIsAlive): LockResult {
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  for (;;) {
-    let fd: number | null = null;
-    try {
-      fd = fs.openSync(file, "wx");
-      fs.writeFileSync(fd, `${process.pid}\n`, "utf8");
-      break;
-    } catch (err) {
-      if ((err as NodeJS.ErrnoException).code !== "EEXIST") throw err;
-      const owner = readPid(file);
-      if (owner !== null && owner !== process.pid && isAlive(owner)) return { ok: false, pid: owner, file };
-      try {
-        fs.unlinkSync(file); // stale: its process is gone (or the file is unreadable)
-      } catch (unlinkErr) {
-        if ((unlinkErr as NodeJS.ErrnoException).code !== "ENOENT") throw unlinkErr;
-      }
-    } finally {
-      if (fd !== null) fs.closeSync(fd);
-    }
-  }
-
-  let released = false;
-  const release = (): void => {
-    if (released) return;
-    released = true;
-    process.off("exit", release);
-    try {
-      if (readPid(file) === process.pid) fs.unlinkSync(file);
-    } catch {
-      // Already gone.
-    }
-  };
-  process.once("exit", release);
-  return { ok: true, lock: { file, release } };
+export function acquireInstanceLock(port: number = DEFAULT_LOCK_PORT): Promise<LockResult> {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer((socket) => {
+      socket.on("error", () => {});
+      socket.end(`${process.pid}\n`);
+    });
+    server.once("error", (err: NodeJS.ErrnoException) => {
+      if (err.code !== "EADDRINUSE") return reject(err);
+      void holderPid(port).then((pid) => resolve({ ok: false, port, pid }));
+    });
+    server.listen({ host: HOST, port, exclusive: true }, () => {
+      server.unref(); // the lock alone does not keep the engine running
+      let closed: Promise<void> | null = null;
+      resolve({
+        ok: true,
+        lock: {
+          port,
+          release: () => (closed ??= new Promise<void>((done) => server.close(() => done()))),
+        },
+      });
+    });
+  });
 }

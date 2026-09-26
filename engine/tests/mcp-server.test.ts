@@ -1,7 +1,7 @@
 // The MCP server (src/mcp/server.ts) through a real MCP client over the SDK's in-memory transport:
 // tool list, argument validation, content blocks and structured errors (PRD NFR-7).
 
-import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -12,6 +12,7 @@ import { BridgeClient } from "../src/bridge/index.js";
 import { createServer, ENGINE_VERSION, Tools } from "../src/mcp/index.js";
 import { loadDefaultParamMap } from "../src/params/index.js";
 import { PreviewService } from "../src/preview/index.js";
+import { ToolLog } from "../src/log/index.js";
 import { FakePlugin } from "./helpers/fake-plugin.js";
 import { LightroomSim } from "./helpers/lightroom-sim.js";
 
@@ -21,10 +22,12 @@ let plugin: FakePlugin;
 let bridge: BridgeClient;
 let lr: LightroomSim;
 let tmp: string;
+let logDir: string;
 let mcp: Client;
 
 beforeEach(async () => {
   tmp = mkdtempSync(path.join(os.tmpdir(), "lrc-avg-mcp-"));
+  logDir = path.join(tmp, "logs");
   const previewDir = path.join(tmp, "previews");
   mkdirSync(previewDir);
   plugin = await FakePlugin.start();
@@ -38,6 +41,7 @@ beforeEach(async () => {
     previews: new PreviewService(bridge, { previewDir }),
     ensureBridge: () => bridge.waitConnected(2000).then(() => undefined),
     historyPrefix: "AVG test",
+    log: new ToolLog(logDir),
   });
   const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
   await createServer(tools).connect(serverSide);
@@ -98,12 +102,31 @@ describe("mcp server", () => {
     expect(String((body["error"] as { message: string }).message)).not.toMatch(/\n\s+at /); // no stack
   });
 
-  it("refuses invalid arguments before the tool runs", async () => {
+  it("refuses invalid arguments before the tool runs, with the structured error body, and logs them", async () => {
     const res = await mcp.callTool({ name: "lr_set_settings", arguments: { uuid: "SIM-UUID", settings: {} } });
     expect(res.isError).toBe(true);
-    expect(JSON.stringify(res.content)).toMatch(/at least one parameter/);
+    const body = textOf(res.content as Content);
+    expect(body).toMatchObject({ ok: false, error: { code: "INVALID_ARGUMENTS", recoverable: false } });
+    expect(String((body["error"] as { message: string }).message)).toMatch(/settings: settings must name at least one parameter/);
     const edge = await mcp.callTool({ name: "lr_get_preview", arguments: { long_edge: 5000 } });
-    expect(edge.isError).toBe(true);
+    expect(textOf(edge.content as Content)).toMatchObject({ ok: false, error: { code: "INVALID_ARGUMENTS" } });
     expect(plugin.received.filter((r) => r.name === "apply_settings" || r.name === "export_preview")).toEqual([]);
+    const logged = readdirSync(logDir).flatMap((f) => readFileSync(path.join(logDir, f), "utf8").trim().split("\n"));
+    expect(logged.map((l) => JSON.parse(l) as { tool: string; ok: boolean; error?: { code: string } })).toEqual([
+      expect.objectContaining({ tool: "lr_set_settings", ok: false, error: expect.objectContaining({ code: "INVALID_ARGUMENTS" }) }),
+      expect.objectContaining({ tool: "lr_get_preview", ok: false, error: expect.objectContaining({ code: "INVALID_ARGUMENTS" }) }),
+    ]);
+  });
+
+  it("answers an unknown tool with UNKNOWN_TOOL", async () => {
+    const res = await mcp.callTool({ name: "lr_step", arguments: {} });
+    expect(textOf(res.content as Content)).toMatchObject({ ok: false, error: { code: "UNKNOWN_TOOL" } });
+  });
+
+  it("advertises the argument limits it enforces", async () => {
+    const { tools } = await mcp.listTools();
+    const preview = tools.find((t) => t.name === "lr_get_preview");
+    expect(preview?.inputSchema.properties?.["long_edge"]).toMatchObject({ type: "integer", minimum: 800, maximum: 1920 });
+    expect(preview?.annotations).toMatchObject({ readOnlyHint: true });
   });
 });

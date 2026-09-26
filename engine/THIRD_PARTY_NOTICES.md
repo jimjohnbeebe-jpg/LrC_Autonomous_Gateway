@@ -5,7 +5,6 @@ Parts of the engine are derived from **Automaat/lightroom-mcp** (https://github.
 | File in the engine | Derived from | What was taken |
 |---|---|---|
 | `src/bridge/client.ts` | `server/src/plugin-socket.ts`, `server/src/dispatcher.ts` | The TCP client to the plugin's two listeners, with reconnect; the id-correlated table of pending requests, with per-request timeouts. |
-| `src/mcp/instance-lock.ts` | `server/src/instance-lock.ts` | The lock file holding the owner's PID, with the stale-PID check. |
 | `src/mcp/main.ts` | `server/src/index.ts` | Exiting when stdin ends, so an orphaned engine does not keep the plugin's sockets. |
 
 The plugin's derived files are listed in `plugin\LrC-AVG.lrplugin\THIRD_PARTY_NOTICES.md`.

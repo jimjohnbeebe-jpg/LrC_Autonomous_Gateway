@@ -144,8 +144,8 @@ The check's suggestion was `WORKED` (`summary.acceptance_suggestion`); the verdi
 - **Lens (P-16):** turning both switches off, then on, changed exactly `EnableLensCorrections` and `LensProfileEnable` each time and read back as sent (`steps[3]`, `steps[4]`). **Writing "on" works**; S5 had left this open.
 - **Write time:**
   - `applyDevelopSettings` inside the write gate took 23.4–41.5 ms over the nine writes (`steps[*].apply_ms`).
-  - The whole `apply_settings` command took **453–983 ms**, from the plugin receiving it to receiving the check's next command, write and read-back included [handle: timestamps in `p1_bridge_log_2026-09-26T21-06-50-295Z.txt`].
-  - The read-back after the write is most of that time [inference]. The two range-probe writes that touch 57 keys were the slowest (769 and 983 ms).
+  - From the plugin receiving each `apply_settings` to it receiving the check's next command, **453–983 ms** passed [handle: timestamps in `p1_bridge_log_2026-09-26T21-06-50-295Z.txt`]. This receipt-to-receipt interval is not the command's own duration. Besides the write and its `getDevelopSettings` read-back, it includes sending the response, the check's verification of it, and the check sending its next command. The command's completion was not timed separately.
+  - The read-back is probably most of that interval, since the write itself took 23–42 ms [inference]. The two range-probe writes that touch 57 keys had the longest intervals (769 and 983 ms).
 - **Start-up:** the plugin started with Lightroom, without any menu click (first log line, `bridge: starting generation 1`). `LrInitPlugin` with `LrForceInitPlugin` works on 15.5.1.
 
 **Range probe (Jim's choice), all 57 numeric parameters** (`range_probe`):
@@ -171,7 +171,7 @@ Run 3, from `docs\reports\phase1\P1\p1_check_2026-09-26T21-06-50-295Z.json` unle
 | Round trip, 20 pings (median, min, max) | 0.37 ms, 0.23 ms, 0.76 ms | `pings.rtt_ms` |
 | Exposure start → target → read back | 0.33 → 0.83 → 0.83 | `exposure` |
 | `applyDevelopSettings` time, exposure write (all nine writes) | 25.5 ms (23.4–41.5 ms) | `steps[0].apply_ms` (`steps[*].apply_ms`) |
-| Whole `apply_settings` command, write + read-back | 453–983 ms | timestamps in `p1_bridge_log_2026-09-26T21-06-50-295Z.txt` |
+| Plugin receives `apply_settings` → plugin receives the check's next command (receipt-to-receipt; includes write, read-back, response and the check's verification; command completion not timed separately) | 453–983 ms | timestamps in `p1_bridge_log_2026-09-26T21-06-50-295Z.txt` |
 | Other keys changed by the exposure write | none | `steps[0].changed_keys` |
 | Profile pairs read back and identified | Adobe Landscape: yes; Camera Landscape (`Look = {}`): yes | `steps[1..2]` |
 | Lens off / on read back | yes / yes (both keys each time) | `steps[3..4]` |
@@ -221,9 +221,9 @@ Jim's decisions on this report, the same day, each chosen from options Claude Co
 - Writing `EnableLensCorrections = true` and `LensProfileEnable = 1` works [handle: same file, `steps[4]`].
 - A camera-profile pair written through JSON (full Adobe Look table, or `Look = {}`) reads back identical [handle: same file, `steps[1..2]`].
 - `getRawMetadata` / `getFormattedMetadata` wrapped in `LrTasks.pcall` inside `withReadAccessDo` read all 13 keys, `lens` and `cameraModel` included [handle: same file, `photo.metadata_errors` empty].
-- `applyDevelopSettings` takes 23–42 ms; the whole write command with its `getDevelopSettings` read-back takes about 0.45–1 s [handle: `steps[*].apply_ms`; the run-3 log timestamps].
+- `applyDevelopSettings` takes 23–42 ms [handle: `steps[*].apply_ms`]. From the plugin receiving an `apply_settings` (write, then `getDevelopSettings` read-back) to it receiving the client's next command took 0.45–1 s. That interval is an upper bound for the command, not its measured duration [handle: the run-3 log timestamps].
 
-**Consequence for the pass budget (P-02, about 3 s per pass):** a write with its read-back costs about 0.5–1 s over the bridge, on top of the ~2.6 s export (S1). That may push a pass above 3 s. Phase 2 measures a whole pass; whether the read-back can be cheaper (for example, read only the written keys) is a Phase 2 question [inference].
+**Consequence for the pass budget (P-02, about 3 s per pass):** a write with its read-back may cost up to about 0.5–1 s over the bridge (the upper bound above), on top of the ~2.6 s export (S1). That may push a pass above 3 s. Phase 2 should time the write command itself and a whole pass; whether the read-back can be cheaper (for example, read only the written keys) is a Phase 2 question [inference].
 
 **Resolved by run 3:** the [unverified] items under "Pre-run findings":
 - all 13 metadata keys;

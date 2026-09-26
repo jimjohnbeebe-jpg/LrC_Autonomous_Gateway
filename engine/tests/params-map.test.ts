@@ -48,6 +48,45 @@ describe("params: canonical map", () => {
     expect(clamped).toEqual(["exposure", "sharpening.radius", "temperature", "tint"]);
   });
 
+  it("matches every numeric range, and its clamp label, to the committed probe record", () => {
+    // The run-3 results file cited in each rangeSource. A bound changed here without a new probe fails.
+    const probe = JSON.parse(readFileSync(here("../../docs/reports/phase1/P1/p1_check_2026-09-26T21-06-50-295Z.json"), "utf8")) as {
+      range_probe: {
+        per_parameter: Array<{
+          name: string;
+          sdk_key: string;
+          min: number;
+          max: number;
+          min_read: number;
+          max_read: number;
+          below_written: number;
+          below_read: number;
+          above_written: number;
+          above_read: number;
+        }>;
+      };
+    };
+    const records = new Map(probe.range_probe.per_parameter.map((r) => [r.name, r]));
+    const numeric = [...CANONICAL_PARAMS].filter(([, spec]) => spec.kind === "number") as Array<[string, ParamSpec & { kind: "number" }]>;
+    expect(records.size).toBe(numeric.length);
+    for (const [name, spec] of numeric) {
+      const r = records.get(name);
+      expect(r, name).toBeDefined();
+      if (!r) continue;
+      // The probe wrote exactly these bounds to exactly this key, and both read back as written.
+      expect([r.sdk_key, r.min, r.max], name).toEqual([spec.sdkKey, spec.min, spec.max]);
+      expect([r.min_read, r.max_read], name).toEqual([spec.min, spec.max]);
+      // Beyond the bounds: clamped to exactly the limit (PROBED_CLAMP), or not taken at all.
+      if (spec.rangeSource === PROBED_CLAMP) {
+        expect([r.below_read, r.above_read], name).toEqual([spec.min, spec.max]);
+      } else {
+        expect(r.below_read, name).not.toBe(r.below_written);
+        expect(r.above_read, name).not.toBe(r.above_written);
+        expect(r.above_read, name).not.toBe(spec.max);
+      }
+    }
+  });
+
   it("covers the FR-4.2 vocabulary", () => {
     const names = map.names();
     for (const n of [

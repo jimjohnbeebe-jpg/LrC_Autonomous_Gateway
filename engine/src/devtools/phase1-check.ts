@@ -185,7 +185,7 @@ export async function runPhase1Check(deps: Phase1Deps): Promise<{ accepted: bool
     };
     say(`Photo: ${String(context["filename"])} (${String(context["file_format"])}, process version ${view.process_version}, profile ${view.camera_profile.name ?? view.camera_profile.camera_profile})`);
     if (context["file_format"] === undefined) {
-      const why = context.metadata_errors?.[0];
+      const why = context.metadata_errors?.find((e) => e.startsWith("fileFormat: ")) ?? context.metadata_errors?.[0];
       throw new Error(`the plugin could not read the photo's file format${why ? ` (${why})` : ""}; nothing was changed. Tell Claude Code`);
     }
     if (context["file_format"] !== "RAW") {

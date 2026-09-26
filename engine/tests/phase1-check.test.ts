@@ -155,7 +155,12 @@ describe("devtools: Phase 1 check against a simulated plugin", () => {
         uuid: "SIM-UUID",
         local_id: 1,
         lrc_version: "15.5.1",
-        metadata_errors: ["fileFormat: Yielding is not allowed within a C or metamethod call"],
+        // In run 2 the list began with path; the message must still name fileFormat.
+        metadata_errors: [
+          "path: Yielding is not allowed within a C or metamethod call",
+          "shutterSpeed: Yielding is not allowed within a C or metamethod call",
+          "fileFormat: Yielding is not allowed within a C or metamethod call",
+        ],
       },
     }));
     const { accepted, results } = await run(["y", "y"]);

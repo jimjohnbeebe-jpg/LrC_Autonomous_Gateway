@@ -18,10 +18,13 @@ function luaFiles(dir: string): string[] {
   });
 }
 
-// Code without comments and string contents, for the token checks below.
+// Code without comments and string contents, for the token checks below. Block comments and long
+// strings keep their line breaks, so line numbers in the result match the source.
 function codeOnly(source: string): string {
+  const keepLines = (text: string) => text.replace(/[^\n]/g, "");
   return source
-    .replace(/--\[(=*)\[[\s\S]*?\]\1\]/g, "")
+    .replace(/--\[(=*)\[[\s\S]*?\]\1\]/g, keepLines)
+    .replace(/\[(=*)\[[\s\S]*?\]\1\]/g, (text) => `""${keepLines(text)}`)
     .replace(/--[^\n]*/g, "")
     .replace(/"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'/g, '""');
 }
@@ -66,13 +69,22 @@ describe("lua: LrC-AVG.lrplugin", () => {
     // within a C or metamethod call" around getRawMetadata (docs/reports/phase1/PHASE1.md, run 1).
     // A plain pcall is allowed only with a "-- plain pcall: <why>" comment on the same line.
     for (const file of files.filter((f) => f.startsWith(avgPlugin))) {
-      readFileSync(file, "utf8").split(/\r?\n/).forEach((line, i) => {
-        const code = codeOnly(line);
+      const source = readFileSync(file, "utf8");
+      const lines = source.split(/\r?\n/);
+      codeOnly(source).split(/\r?\n/).forEach((code, i) => {
         if (/(?<![.\w])pcall\s*\(/.test(code)) {
-          expect(line, `${path.basename(file)}:${i + 1}`).toMatch(/--\s*plain pcall: \S/);
+          expect(lines[i], `${path.basename(file)}:${i + 1}`).toMatch(/--\s*plain pcall: \S/);
         }
       });
     }
+  });
+
+  it("strips comments and strings from whole files without moving lines (helper for the checks above)", () => {
+    const source = ["local a = 1", "--[[ a block comment", "x = pcall(f)", "]]", "local s = [[", "pcall(", "]]", "y = pcall(g) -- plain pcall: test"].join("\n");
+    const code = codeOnly(source).split("\n");
+    expect(code).toHaveLength(8);
+    expect(code.slice(0, 7).some((l) => l.includes("pcall"))).toBe(false);
+    expect(code[7]).toContain("pcall(g)");
   });
 
   it("passes a History name to every applyDevelopSettings call (rule 03-lightroom)", () => {

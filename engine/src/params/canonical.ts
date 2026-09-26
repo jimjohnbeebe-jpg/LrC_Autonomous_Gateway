@@ -5,9 +5,11 @@
 // dump from spike S5, with a matching value type: ParamMap checks that when it is constructed,
 // and tests/params-map.test.ts asserts it. Nothing here is copied from SDK documentation.
 //
-// Ranges are Lightroom Classic's Develop slider limits as Claude Code knows them. They are
-// [unverified] until the Phase 1 range probe writes each limit, and one step beyond it, and reads
-// the result back (docs/reports/phase1/PHASE1.md). `rangeSource` says which applies.
+// Ranges: the Phase 1 range probe (Jim's run 3, LrC 15.5.1, the raw NEF fixture) wrote every
+// minimum and maximum below, then 1 % of the range beyond each, and read each back
+// (docs/reports/phase1/PHASE1.md, run 3). All 114 limits read back exactly as written. Beyond them,
+// four keys were clamped to exactly the limit; the other 53 did not take the value at all and read
+// back as they were before the check, silently. `rangeSource` gives the handle for each.
 //
 // Values are absolute settings, not per-pass deltas; step clamping and decay are session logic
 // (ARCHITECTURE section 4, Phase 3).
@@ -30,15 +32,19 @@ export const CAMERA_PROFILE_PARAM = "camera_profile";
  */
 export const SUPPORTED_PROCESS_VERSIONS: readonly string[] = ["15.4"];
 
-const UI_LIMIT = "[unverified] Lightroom Classic Develop slider limit; Phase 1 range probe pending";
+const RUN3 = "docs/reports/phase1/P1/p1_check_2026-09-26T21-06-50-295Z.json range_probe";
+/** The limits were taken as written; 1 % of the range beyond them was not taken. */
+const PROBED_EDGE = `[handle: ${RUN3}] min and max read back as written; 1 % beyond was not taken (read back as the value before the check)`;
+/** The limits were taken as written; 1 % beyond them was clamped to exactly the limit. */
+export const PROBED_CLAMP = `[handle: ${RUN3}] min and max read back as written; 1 % beyond was clamped to exactly the limit`;
 
-function num(sdkKey: string, min: number, max: number): NumberParam {
-  return { kind: "number", sdkKey, min, max, rangeSource: UI_LIMIT };
+function num(sdkKey: string, min: number, max: number, rangeSource: string = PROBED_EDGE): NumberParam {
+  return { kind: "number", sdkKey, min, max, rangeSource };
 }
 
 const entries: Array<[string, ParamSpec]> = [
   // Basic panel (PV 2012+ keys).
-  ["exposure", num("Exposure2012", -5, 5)],
+  ["exposure", num("Exposure2012", -5, 5, PROBED_CLAMP)],
   ["contrast", num("Contrast2012", -100, 100)],
   ["highlights", num("Highlights2012", -100, 100)],
   ["shadows", num("Shadows2012", -100, 100)],
@@ -49,14 +55,15 @@ const entries: Array<[string, ParamSpec]> = [
   ["dehaze", num("Dehaze", -100, 100)],
   ["vibrance", num("Vibrance", -100, 100)],
   ["saturation", num("Saturation", -100, 100)],
-  // White balance on the raw scale (Kelvin and tint). Both S5 fixtures are raw files; that
-  // rendered files (JPEG, TIFF) use a different -100..100 scale is [unverified] and not supported.
-  ["temperature", num("Temperature", 2000, 50000)],
-  ["tint", num("Tint", -150, 150)],
+  // White balance on the raw scale (Kelvin and tint), probed on the raw NEF. That rendered files
+  // (JPEG, TIFF) use a different -100..100 scale is [unverified] and not supported.
+  ["temperature", num("Temperature", 2000, 50000, PROBED_CLAMP)],
+  ["tint", num("Tint", -150, 150, PROBED_CLAMP)],
 
   // Color grading. The dump has ColorGrade* keys for midtones, global, blending and the shadow
   // and highlight luminance, but no ColorGrade hue/saturation keys for shadows and highlights.
-  // Mapping those four to the SplitToning* keys is [inference]; unverified until a render shows it.
+  // Mapping those four to the SplitToning* keys is [inference]: the probe showed the keys are writable
+  // with these limits, not that they drive the Color Grading wheels. Unverified until a render shows it.
   ["grading.shadows.hue", num("SplitToningShadowHue", 0, 360)],
   ["grading.shadows.sat", num("SplitToningShadowSaturation", 0, 100)],
   ["grading.shadows.lum", num("ColorGradeShadowLum", -100, 100)],
@@ -74,7 +81,7 @@ const entries: Array<[string, ParamSpec]> = [
 
   // Detail.
   ["sharpening.amount", num("Sharpness", 0, 150)],
-  ["sharpening.radius", num("SharpenRadius", 0.5, 3)],
+  ["sharpening.radius", num("SharpenRadius", 0.5, 3, PROBED_CLAMP)],
   ["sharpening.detail", num("SharpenDetail", 0, 100)],
   ["sharpening.masking", num("SharpenEdgeMasking", 0, 100)],
   ["noise.luminance", num("LuminanceSmoothing", 0, 100)],

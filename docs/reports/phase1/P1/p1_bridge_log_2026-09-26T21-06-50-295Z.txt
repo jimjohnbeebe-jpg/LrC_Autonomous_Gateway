@@ -1,0 +1,51 @@
+2026-09-26 13:24:24.354 INFO  bridge: starting generation 1 (receive 8765, send 8766)
+2026-09-26 13:24:31.838 INFO  bridge: token written to %USERPROFILE%\.lrc-avg\bridge_token
+2026-09-26 13:24:31.838 INFO  bridge: listening (generation 1)
+2026-09-26 13:25:11.320 INFO  bridge: receive: engine connected
+2026-09-26 13:25:11.832 INFO  bridge: send: engine connected
+2026-09-26 13:25:11.833 INFO  bridge: hello 1fcf721e-8117-4aa7-b110-8413dd5f671b
+2026-09-26 13:25:11.850 INFO  bridge: get_context dd0639a4-e4a9-4d73-81c6-c9e9d067d06a
+2026-09-26 13:25:11.854 INFO  bridge: get_settings c81c7747-6322-422f-b49f-4c88312d307c
+2026-09-26 13:25:11.859 INFO  bridge: receive: closed
+2026-09-26 13:26:57.946 INFO  bridge: receive: closed
+2026-09-26 13:27:07.432 INFO  bridge: send: closed
+2026-09-26 13:27:32.974 INFO  bridge: starting generation 1 (receive 8765, send 8766)
+2026-09-26 13:27:43.722 INFO  bridge: token written to %USERPROFILE%\.lrc-avg\bridge_token
+2026-09-26 13:27:43.723 INFO  bridge: listening (generation 1)
+2026-09-26 13:28:20.649 INFO  bridge: receive: engine connected
+2026-09-26 13:28:21.154 INFO  bridge: send: engine connected
+2026-09-26 13:28:21.155 INFO  bridge: hello e9957821-24ed-49cf-801f-83361fc05f24
+2026-09-26 13:28:21.169 INFO  bridge: get_context a301af1c-8ad1-4698-a848-baba6c97021e
+2026-09-26 13:28:21.173 INFO  bridge: get_settings 59f5e1d0-7656-409e-8c03-8d21db4296b2
+2026-09-26 13:28:21.181 INFO  bridge: receive: closed
+2026-09-26 14:06:07.025 INFO  bridge: send: closed
+2026-09-26 14:06:07.034 INFO  bridge: receive: closed
+2026-09-26 14:06:20.934 INFO  bridge: starting generation 1 (receive 8765, send 8766)
+2026-09-26 14:06:30.587 INFO  bridge: token written to %USERPROFILE%\.lrc-avg\bridge_token
+2026-09-26 14:06:30.588 INFO  bridge: listening (generation 1)
+2026-09-26 14:06:50.307 INFO  bridge: receive: engine connected
+2026-09-26 14:06:50.822 INFO  bridge: send: engine connected
+2026-09-26 14:06:50.824 INFO  bridge: hello ba7d0e0a-2e73-4009-84cb-422450a1a7f1
+2026-09-26 14:06:50.839 INFO  bridge: get_context 3aa3fa36-6d8f-41b0-81ea-b2be73a3a966
+2026-09-26 14:06:50.846 INFO  bridge: get_settings 1c1f4184-6f2e-459e-9da6-c8e1c8618761
+2026-09-26 14:06:50.911 INFO  bridge: create_snapshot 80b27658-71d0-47b4-a427-fbcbe6269771
+2026-09-26 14:06:50.984 INFO  bridge: get_settings ec30c837-e4d7-493c-ad75-94c15b499d7a
+2026-09-26 14:06:50.988 INFO  bridge: apply_settings 705fbbec-93a2-4329-86da-c7e258fd4466
+2026-09-26 14:06:51.541 INFO  bridge: get_settings 364a13f5-de3b-4b06-97a8-1231d8d34dcd
+2026-09-26 14:06:51.618 INFO  bridge: apply_settings 7fa3f9ba-a21c-4ec8-ad7c-157bec370913
+2026-09-26 14:06:52.074 INFO  bridge: get_settings 65e18b38-3c02-4f2a-9926-f0396051dade
+2026-09-26 14:06:52.152 INFO  bridge: apply_settings 4b89afd6-437a-43d5-a08c-94ebe6118d9c
+2026-09-26 14:06:52.605 INFO  bridge: get_settings 9c148a48-cc07-4dcc-bf8f-eb26075db934
+2026-09-26 14:06:52.676 INFO  bridge: apply_settings 0cf5f06b-2b29-4729-8dd3-e803efb6c2c6
+2026-09-26 14:06:53.171 INFO  bridge: get_settings d85c3971-56b0-42a7-91ed-90a00fc4fce4
+2026-09-26 14:06:53.239 INFO  bridge: apply_settings 3a505968-4344-4886-8520-6b248b9b88c7
+2026-09-26 14:06:53.707 INFO  bridge: get_settings 1205ef29-4daf-4368-b240-92a152602a37
+2026-09-26 14:06:53.773 INFO  bridge: apply_settings 335ed95c-896a-4e07-a909-2d106fc359a8
+2026-09-26 14:06:54.542 INFO  bridge: get_settings b809df63-b21d-4bf8-be24-8c303034386f
+2026-09-26 14:06:54.651 INFO  bridge: apply_settings 1496143c-083d-44e0-a048-f35ab4174fbb
+2026-09-26 14:06:55.634 INFO  bridge: get_settings 54f235d6-0df3-488c-b208-5b56b0c192f0
+2026-09-26 14:06:55.726 INFO  bridge: apply_settings f592ecdd-351b-4fcc-ba84-f836c483578e
+2026-09-26 14:06:56.242 INFO  bridge: get_settings 2f817bc4-a39c-48e4-9ce6-f0539ae720f3
+2026-09-26 14:06:56.258 INFO  bridge: apply_settings 0a1273fa-b3cd-4e96-818a-21408d3652ca
+2026-09-26 14:06:56.783 INFO  bridge: apply_snapshot 766f4bc6-c4f3-4988-ab21-0a069de04195
+2026-09-26 14:06:57.228 INFO  bridge: receive: closed

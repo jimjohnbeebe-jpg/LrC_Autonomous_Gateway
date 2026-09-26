@@ -1,0 +1,16 @@
+# Excerpt of Claude Desktop's MCP log for the S3 server, collected by Claude Code on 2026-09-26.
+# Source: %LOCALAPPDATA%\Claude\Logs\mcp-server-lrc-avg-spike-s3.log (Jim's machine; not committed: it also lists his PATH).
+# Filter: lines matching Server started|Message from|\[s3\] (Select-String), in file order.
+
+2026-09-26T17:21:36.712Z [lrc-avg-spike-s3] [info] Server started and connected successfully { metadata: undefined }
+2026-09-26T17:21:38.735Z [lrc-avg-spike-s3] [info] Server started and connected successfully { metadata: undefined }
+2026-09-26T17:21:38.736Z [lrc-avg-spike-s3] [info] Message from client: method="initialize" id=0 params { metadata: undefined }
+[s3] lrc-avg-spike-s3 ready on stdio; fixtures: D:\Developer\LrC_Autonomous_Gateway\fixtures
+[s3] lrc-avg-spike-s3 ready on stdio; fixtures: D:\Developer\LrC_Autonomous_Gateway\fixtures
+2026-09-26T17:21:39.890Z [lrc-avg-spike-s3] [info] Message from server: id=0 result { metadata: undefined }
+2026-09-26T17:21:39.957Z [lrc-avg-spike-s3] [info] Message from client: method="notifications/initialized" { metadata: undefined }
+2026-09-26T17:21:39.959Z [lrc-avg-spike-s3] [info] Message from client: method="tools/list" id=1 params { metadata: undefined }
+2026-09-26T17:21:39.963Z [lrc-avg-spike-s3] [info] Message from server: id=1 result { metadata: undefined }
+2026-09-26T17:22:21.384Z [lrc-avg-spike-s3] [info] Message from client: method="tools/call" id=2 params { metadata: undefined }
+[s3] 20260907-_OZ80093.jpg -> 1600x1066 332604 B in 102 ms
+2026-09-26T17:22:21.494Z [lrc-avg-spike-s3] [info] Message from server: id=2 result(2 blocks) { metadata: undefined }

@@ -25,9 +25,9 @@ PHASES.md gives Phase 1 no go / conditional / no-go rule beyond this acceptance 
 | Params map | `engine\src\params\` (PR #13): canonical names → SDK keys, camera-profile pairs, read-back comparison |
 | The check | `engine\src\devtools\phase1-check.ts` (the steps) and `phase1-check-cli.ts`; run with `npm run phase1:check` |
 
-What the check does, all on the selected photo and under one Develop snapshot (`engine\src\devtools\phase1-check.ts` header):
+What the check is written to do, all on the selected photo and under one Develop snapshot. This list describes the code [handle: `engine\src\devtools\phase1-check.ts` header and `runPhase1Check`; `plugin\LrC-AVG.lrplugin\Bridge.lua` `newToken` and `handleLine`], and it has run only against a simulated plugin (see "Pre-run findings"). Whether each step works against Lightroom is [unverified] until Jim's run.
 
-1. Reads the bridge token the plugin wrote to `%USERPROFILE%\.lrc-avg\bridge_token`, connects and exchanges `hello`. Pings with a non-ASCII text, five messages in flight at once, and 20 in a row for timing.
+1. Reads the bridge token the plugin is written to put in `%USERPROFILE%\.lrc-avg\bridge_token` at start [unverified in Lightroom], connects and exchanges `hello`. Pings with a non-ASCII text, five messages in flight at once, and 20 in a row for timing.
 2. Reads the photo's context and settings. It stops before any write unless the photo is raw, on process version 15.4, and has room for exposure +0.5 (below +4.5).
 3. Makes the snapshot `AVG P1 check <time>`.
 4. **Acceptance write:** exposure +0.5 with History name `AVG P1check pass 1/9`, read back. The nine writes of steps 4–7 are named `AVG P1check pass 1/9` to `pass 9/9` (the FR-4.4 form, rule 03-lightroom).
@@ -122,7 +122,7 @@ Checks Claude Code ran on 2026-09-26, before Jim's run. None of them involve Lig
 
 ## Consequences / open questions
 
-**Protocol details PR B settled that ARCHITECTURE §3 does not state.** Claude Code proposes them for Jim to accept in PR C [inference: each follows from the Phase 0 inputs or the design rule named].
+**Protocol details PR B settled that ARCHITECTURE §3 does not state.** Claude Code proposes them for Jim to accept in PR C [inference: each follows from the Phase 0 inputs or the design rule named]. Each row describes the code as written [handle: `plugin\LrC-AVG.lrplugin\Bridge.lua`, `Develop.lua`; `engine\src\bridge\client.ts`, `protocol.ts`]; its behaviour inside Lightroom is [unverified] until Jim's run.
 
 | # | Detail | Why |
 |---|---|---|

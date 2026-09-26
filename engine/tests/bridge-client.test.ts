@@ -12,7 +12,7 @@ let client: BridgeClient;
 
 beforeEach(async () => {
   plugin = await FakePlugin.start();
-  client = new BridgeClient({ ...FAST, commandPort: plugin.commandPort, eventPort: plugin.eventPort });
+  client = new BridgeClient({ ...FAST, commandPort: plugin.commandPort, eventPort: plugin.eventPort, readToken: () => plugin.token });
 });
 
 afterEach(async () => {
@@ -174,11 +174,38 @@ describe("bridge: client", () => {
     expect(client.getState()).not.toBe("connected");
   });
 
+  it("sends the token with every command", async () => {
+    await connected();
+    await client.request("ping", { nonce: "t" });
+    expect(plugin.received.map((r) => r.name)).toEqual(expect.arrayContaining(["hello", "ping"]));
+  });
+
+  it("is refused with a stale token, then reconnects once the token file has the plugin's new token", async () => {
+    let fileToken = "stale-token";
+    const c = new BridgeClient({ ...FAST, commandPort: plugin.commandPort, eventPort: plugin.eventPort, readToken: () => fileToken });
+    c.start();
+    await waitUntil(() => c.stats.drops >= 1);
+    expect(c.stats.last_drop_reason).toMatch(/token/);
+    expect(c.getState()).not.toBe("connected");
+    fileToken = plugin.token;
+    await c.waitConnected(2000);
+    c.stop();
+  });
+
+  it("does not connect while there is no token file", async () => {
+    const c = new BridgeClient({ ...FAST, commandPort: plugin.commandPort, eventPort: plugin.eventPort, readToken: () => null });
+    c.start();
+    await waitUntil(() => c.stats.connect_failures >= 2);
+    expect(c.stats.last_connect_error).toMatch(/no bridge token/);
+    expect(plugin.received).toEqual([]);
+    c.stop();
+  });
+
   it("retries quietly while nothing listens, then connects", async () => {
     const closed = await FakePlugin.start();
     const { commandPort, eventPort } = closed;
     await closed.close();
-    const lonely = new BridgeClient({ ...FAST, commandPort, eventPort });
+    const lonely = new BridgeClient({ ...FAST, commandPort, eventPort, readToken: () => "t" });
     lonely.start();
     await waitUntil(() => lonely.stats.connect_failures >= 2);
     expect(lonely.stats.drops).toBe(0);

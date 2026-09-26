@@ -27,15 +27,20 @@ export class LineSplitter {
     this.maxLineChars = maxLineChars;
   }
 
-  /** Feed one chunk; returns the complete, non-empty lines it finished (without "\n" or a trailing "\r"). */
+  /**
+   * Feed one chunk; returns the complete, non-empty lines it finished (without "\n" or a trailing "\r").
+   * Any line longer than the limit, finished or not, throws LineTooLongError and the buffer starts over.
+   */
   push(chunk: string): string[] {
     const lines: string[] = [];
     let start = 0;
     let newline: number;
     while ((newline = chunk.indexOf("\n", start)) !== -1) {
-      let line = chunk.slice(start, newline);
+      const piece = chunk.slice(start, newline);
+      this.checkLength(this.pendingChars + piece.length);
+      let line = piece;
       if (this.pieces.length > 0) {
-        this.pieces.push(line);
+        this.pieces.push(piece);
         line = this.pieces.join("");
         this.pieces = [];
         this.pendingChars = 0;
@@ -46,15 +51,18 @@ export class LineSplitter {
     }
     if (start < chunk.length) {
       const rest = chunk.slice(start);
+      this.checkLength(this.pendingChars + rest.length);
       this.pendingChars += rest.length;
-      if (this.pendingChars > this.maxLineChars) {
-        const chars = this.pendingChars;
-        this.reset();
-        throw new LineTooLongError(chars, this.maxLineChars);
-      }
       this.pieces.push(rest);
     }
     return lines;
+  }
+
+  private checkLength(chars: number): void {
+    if (chars > this.maxLineChars) {
+      this.reset();
+      throw new LineTooLongError(chars, this.maxLineChars);
+    }
   }
 
   /** Characters held for a line that has no newline yet. */

@@ -20,17 +20,17 @@ PHASES.md gives Phase 1 no go / conditional / no-go rule beyond this acceptance 
 
 | Part | Files |
 |---|---|
-| Lightroom plugin | `plugin\LrC-AVG.lrplugin\`: `Info.lua`, `PluginInit.lua` (starts the bridge when the plugin loads), `Bridge.lua` (receive 8765 / send 8766, JSON lines, monitor loop, status file), `Develop.lua` (`get_context`, `get_settings`, `apply_settings`, `create_snapshot`, `apply_snapshot`), `Json.lua`, `Log.lua`, `MenuStatus.lua` (File > Plug-in Extras > "LrC-AVG - Bridge status") |
+| Lightroom plugin | `plugin\LrC-AVG.lrplugin\`: `Info.lua`, `PluginInit.lua` (starts the bridge when the plugin loads), `Bridge.lua` (receive 8765 / send 8766, JSON lines, bridge token, monitor loop, status file), `Develop.lua` (`get_context`, `get_settings`, `apply_settings`, `create_snapshot`, `apply_snapshot`), `Json.lua`, `Log.lua`, `MenuStatus.lua` (File > Plug-in Extras > "LrC-AVG - Bridge status") |
 | Engine bridge | `engine\src\bridge\`: `protocol.ts` (zod schemas for every line), `lines.ts` (framing, P-14), `client.ts` (connect, hello, 2 s heartbeat, reconnect, request/response by id) |
 | Params map | `engine\src\params\` (PR #13): canonical names → SDK keys, camera-profile pairs, read-back comparison |
 | The check | `engine\src\devtools\phase1-check.ts` (the steps) and `phase1-check-cli.ts`; run with `npm run phase1:check` |
 
 What the check does, all on the selected photo and under one Develop snapshot (`engine\src\devtools\phase1-check.ts` header):
 
-1. Connects and exchanges `hello`. Pings with a non-ASCII text, five messages in flight at once, and 20 in a row for timing.
-2. Reads the photo's context and settings. It stops before any write unless the photo is raw and on process version 15.4.
+1. Reads the bridge token the plugin wrote to `%USERPROFILE%\.lrc-avg\bridge_token`, connects and exchanges `hello`. Pings with a non-ASCII text, five messages in flight at once, and 20 in a row for timing.
+2. Reads the photo's context and settings. It stops before any write unless the photo is raw, on process version 15.4, and has room for exposure +0.5 (below +4.5).
 3. Makes the snapshot `AVG P1 check <time>`.
-4. **Acceptance write:** exposure +0.5 with History name `AVG P1check pass 1/1`, read back.
+4. **Acceptance write:** exposure +0.5 with History name `AVG P1check pass 1/9`, read back. The nine writes of steps 4–7 are named `AVG P1check pass 1/9` to `pass 9/9` (the FR-4.4 form, rule 03-lightroom).
 5. Writes two camera-profile pairs through the params map (Adobe Landscape, then Camera Landscape with `Look = {}`), each read back (P-07, P-12, P-17).
 6. Turns both lens switches off, then on (P-16; writing "on" was unverified after S5).
 7. **Range probe:** all 57 numeric parameters at their minimum, at their maximum, then 1 % of the range below the minimum and above the maximum. Four writes, each read back.
@@ -54,17 +54,19 @@ Do these after Claude Code says PR B is merged.
 
    You should see `Connected`, then lines starting with `OK` or `DONE`, then `Photo put back to how it was: YES`. The photo in Lightroom changes several times while this runs and ends as it started.
 5. The command asks two questions. Look at Lightroom's Develop module, then type `y` or `n` and press Enter for each:
-   1. Is there a step named `AVG P1check pass 1/1` in the **History** panel (left side)?
+   1. Is there a step named `AVG P1check pass 1/9` in the **History** panel (left side)?
    2. Does the photo look the same as before the check?
 6. The last lines say `Phase 1 acceptance: WORKED` or `FAILED`, and `Results saved automatically`. Tell Claude Code "done".
 
 ### If something goes wrong
 
-- If the command prints `FAILED: could not connect to Lightroom`, choose **File > Plug-in Extras > LrC-AVG - Bridge status** in Lightroom.
+- If the command prints `Reason: no bridge token`, the plugin is not running: restart Lightroom (**File > Exit**, then start it) and run the command again.
+- If the command prints `FAILED: could not connect to Lightroom` with any other reason, choose **File > Plug-in Extras > LrC-AVG - Bridge status** in Lightroom.
   - If the dialog title says **NOT RUNNING**, restart Lightroom (**File > Exit**, then start it) and run the command again.
   - If it says **RUNNING, engine NOT connected**, run the command once more. If it fails again, tell Claude Code.
 - If **File > Plug-in Extras** has no "LrC-AVG - Bridge status" item, open **File > Plug-in Manager**, click LrC-AVG, and tell Claude Code what the status box on the right says.
 - If the command prints `not a raw file`, do step 3 again, then step 4.
+- If the command prints `+0.5 would pass +5`, tell Claude Code (the NEF's exposure was +0.33 in Phase 0, so this is not expected).
 - If the command prints `Photo put back to how it was: NO`, don't change the photo, and tell Claude Code. The snapshot `AVG P1 check …` is in the **Snapshots** panel (left side of Develop).
 - If Lightroom shows an error dialog, click OK and tell Claude Code.
 - If a Windows Firewall window appears, click **Cancel** and tell Claude Code. The bridge only uses connections inside this computer (127.0.0.1).
@@ -73,10 +75,10 @@ Do these after Claude Code says PR B is merged.
 
 Checks Claude Code ran on 2026-09-26, before Jim's run. None of them involve Lightroom.
 
-- **Engine tests pass: 138 of 138** [handle: `npm test` on branch `phase-1/bridge`, output "Test Files 8 passed (8), Tests 138 passed (138)"]. `npm run build` and `npm run typecheck` pass too. The new tests are:
-  - `engine\tests\bridge-client.test.ts` (15 tests): the client against a fake plugin, a Node stand-in for `Bridge.lua` that speaks the same line protocol. It covers the handshake, requests matched by id when answers come back out of order, five in flight at once, non-ASCII text, structured errors, timeouts and late answers, malformed lines, a reply split inside a UTF-8 character, events, a drop after three missed heartbeats with a reconnect, the event socket being closed, a protocol-version mismatch, and quiet retries while nothing listens. The client tests passed 8 runs out of 8 [handle: `npx -w engine vitest run tests/bridge-client.test.ts` ×8].
-  - `engine\tests\bridge-lines.test.ts` (6 tests): the line framing.
-  - `engine\tests\phase1-check.test.ts` (6 tests): the check itself against a **simulated plugin**. The simulation starts from the live S5 NEF dump (`docs\reports\phase0\S5\s5_20260907-_OZ80093.NEF.json`) and imitates snapshots, `Look = {}` clearing the Look, and `[]` for empty tables. Clamping one key and ignoring another are made up there to exercise the probe's categories. These are **Node numbers, not Lightroom's**.
+- **Engine tests pass: 145 of 145** [handle: `npm test` on branch `phase-1/bridge` after the Greptile round-1 fixes, output "Test Files 8 passed (8), Tests 145 passed (145)"]. `npm run build` and `npm run typecheck` pass too. The new tests are:
+  - `engine\tests\bridge-client.test.ts` (18 tests): the client against a fake plugin, a Node stand-in for `Bridge.lua` that speaks the same line protocol and checks the token. It covers the handshake, requests matched by id when answers come back out of order, five in flight at once, non-ASCII text, structured errors, timeouts and late answers, malformed lines, a reply split inside a UTF-8 character, events, a drop after three missed heartbeats with a reconnect, the event socket being closed, a protocol-version mismatch, a stale token (refused, then reconnected with the new one), no token file, and quiet retries while nothing listens. The client and check tests passed 6 runs out of 6 [handle: `npx -w engine vitest run tests/bridge-client.test.ts tests/phase1-check.test.ts` ×6].
+  - `engine\tests\bridge-lines.test.ts` (9 tests): the line framing, including the length limit on unfinished and on completed lines.
+  - `engine\tests\phase1-check.test.ts` (7 tests): the check itself against a **simulated plugin**. The simulation starts from the live S5 NEF dump (`docs\reports\phase0\S5\s5_20260907-_OZ80093.NEF.json`) and imitates snapshots, `Look = {}` clearing the Look, and `[]` for empty tables. Clamping one key and ignoring another are made up there to exercise the probe's categories. These are **Node numbers, not Lightroom's**.
   - `engine\tests\lua-plugin.test.ts`: every `.lua` file under `plugin\` parses as Lua 5.1 with `luaparse` 0.3.1. It also checks that no file uses the `utf8` library, that `LrC-AVG.lrplugin` requires only its own files, that `Info.lua` names files that exist, and that every `applyDevelopSettings` call passes a History name. `luaparse` in 5.1 mode rejects `//`, `goto` and labels [handle: a scratch probe run by Claude Code on 2026-09-26: `7 // 2`, `goto done` and `::label::` each raised a parse error].
 - **Dry runs of the command against a scratch simulated plugin** on ports 8765/8766 found three harness bugs, all fixed before this PR:
   - the summary was cut off because the script called `process.exit()` right after printing;
@@ -85,6 +87,7 @@ Checks Claude Code ran on 2026-09-26, before Jim's run. None of them involve Lig
   The failure paths print a plain FAILED headline and exit with code 1: no connection (after 20 s), and an answer of `n`.
 - **The Lua has not run inside Lightroom yet.** Its SDK calls follow patterns that ran in Phase 0: sockets in `plugin\spikes\S2.lrplugin\S2Server.lua`; `applyDevelopSettings`, snapshots and read-back in `plugin\spikes\S5.lrplugin\S5WriteTests.lua`. Everything Lightroom-side is [unverified] until Jim's run, including these:
   - the `getRawMetadata` / `getFormattedMetadata` keys in `get_context` (a key that fails is listed in `metadata_errors`);
+  - that `LrPathUtils.getStandardFilePath("home")` and Node's `os.homedir()` are the same folder, so both find `.lrc-avg\bridge_token` (Automaat relies on the same [upstream claim: `vendor\automaat\plugin\LightroomMCP.lrplugin\PluginInfoProvider.lua:87-93`, `vendor\automaat\server\src\token.ts:5-26`]);
   - that Lightroom's temp folder is `%TEMP%` (the check copies `bridge.log` from `%TEMP%\LrC-AVG\` if it is there);
   - the `LrForceInitPlugin` start-up.
 
@@ -130,6 +133,7 @@ Checks Claude Code ran on 2026-09-26, before Jim's run. None of them involve Lig
 | C-5 | The engine connects 8765, waits 500 ms, then connects 8766 | P-13: the plugin rebinds its send socket for a new client first |
 | C-6 | The plugin shows the engine as disconnected after 6 s without a message (three 2 s heartbeats, FR-1.3), and rebinds both sockets after 20 s | Windows may not report a vanished client [upstream claim: `vendor\automaat\plugin\LightroomMCP.lrplugin\PluginInfoProvider.lua:558-560`]; the 20 s figure is [inference] |
 | C-7 | The plugin refuses an `apply_settings` whose History name does not start with `AVG ` | FR-4.4; rule 03-lightroom |
+| C-8 | Every command carries `token`: the plugin writes a random token to `%USERPROFILE%\.lrc-avg\bridge_token` at start and refuses other commands with `unauthorized`; the engine reads the file before each connection and reconnects on `unauthorized` | Without it any local program, or a web page posting to 127.0.0.1:8765, could send Develop commands (Greptile P1 on PR #14). Jim chose the token file on 2026-09-26 [stated]; pattern from Automaat [upstream claim: `PluginInfoProvider.lua:87-127, 313-319`] |
 
 **Open until Jim's run:** everything under "Pre-run findings" marked [unverified]; the real range limits (they replace the [unverified] slider limits in `engine\src\params\canonical.ts`); whether writing lens "on" works.
 

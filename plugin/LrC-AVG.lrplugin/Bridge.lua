@@ -16,10 +16,19 @@
 --         scripts. The menu item reads the status file <temp>\LrC-AVG\bridge_status.json instead.
 -- onMessage runs in a non-yielding context, so it only hands the line to a new task
 -- [upstream claim: PluginInfoProvider.lua:419-426].
+--
+-- Token: every command must carry the token this bridge wrote at start to
+-- %USERPROFILE%\.lrc-avg\bridge_token; any other command is refused with "unauthorized". Without it,
+-- any local program, or a web page posting to 127.0.0.1:8765, could send Develop commands (Greptile,
+-- PR #14). The pattern and the home-folder location follow Automaat
+-- [upstream claim: PluginInfoProvider.lua:87-127, 313-319]; Jim chose it on 2026-09-26 [stated].
+-- A program running as the same Windows user can still read the file.
 
 local LrApplication = import 'LrApplication'
 local LrDate = import 'LrDate'
+local LrFileUtils = import 'LrFileUtils'
 local LrFunctionContext = import 'LrFunctionContext'
+local LrPathUtils = import 'LrPathUtils'
 local LrPrefs = import 'LrPrefs'
 local LrSocket = import 'LrSocket'
 local LrTasks = import 'LrTasks'
@@ -71,6 +80,27 @@ local function isoNow()
     return os.date("!%Y-%m-%dT%H:%M:%SZ")
 end
 
+function Bridge.tokenPath()
+    return LrPathUtils.child(LrPathUtils.child(LrPathUtils.getStandardFilePath("home"), ".lrc-avg"), "bridge_token")
+end
+
+-- A fresh 256-bit token (two UUIDs without dashes), written for the engine to read. Returns the
+-- token, or nil if the file cannot be written; then every command is refused.
+local function newToken()
+    local token = (LrUUID.generateUUID() .. LrUUID.generateUUID()):gsub("-", ""):lower()
+    local path = Bridge.tokenPath()
+    LrFileUtils.createAllDirectories(LrPathUtils.parent(path))
+    local fh, err = io.open(path, "w")
+    if not fh then
+        Log.error("bridge: cannot write the token file " .. path .. ": " .. tostring(err) .. "; every command will be refused")
+        return nil
+    end
+    fh:write(token)
+    fh:close()
+    Log.info("bridge: token written to " .. path)
+    return token
+end
+
 function Bridge.helloPayload(receivePort, sendPort)
     return {
         protocol = Bridge.PROTOCOL,
@@ -93,8 +123,9 @@ function Bridge.start()
         receiveConnected = false, sendConnected = false,
         receiveNeedsReconnect = false, sendNeedsReconnect = false,
         receiveNeedsRebind = false, sendNeedsRebind = false,
-        lastInbound = nil, handled = 0, failed = 0, malformed = 0,
+        lastInbound = nil, handled = 0, failed = 0, malformed = 0, unauthorized = 0,
         startedAt = isoNow(),
+        token = nil,
     }
     Log.info(string.format("bridge: starting generation %d (receive %d, send %d)", generation, receivePort, sendPort))
 
@@ -171,6 +202,13 @@ function Bridge.start()
                 if id then
                     respond(id, "?", false, { code = "bad_request", message = "not a valid command envelope", recoverable = false })
                 end
+                return
+            end
+            if S.token == nil or msg.token ~= S.token then
+                S.unauthorized = S.unauthorized + 1
+                Log.warn("bridge: refused " .. msg.name .. " " .. msg.id .. " (missing or wrong token)")
+                respond(msg.id, msg.name, false, { code = "unauthorized", recoverable = true,
+                    message = "missing or wrong bridge token; the engine reads it from " .. Bridge.tokenPath() })
                 return
             end
             local handler = HANDLERS[msg.name]
@@ -281,10 +319,12 @@ function Bridge.start()
 
         -- Close and bind again. The generation is bumped before close() so a callback fired during
         -- close sees itself as stale [upstream claim: PluginInfoProvider.lua:462-467, 520-526].
+        -- The old socket is dropped before binding, so a bind that raises leaves no socket and the
+        -- next tick binds again.
         local function rebindReceive()
             S.receiveGen = S.receiveGen + 1
             if S.receiveSocket then pcall(function() S.receiveSocket:close() end) end
-            S.receiveConnected = false
+            S.receiveSocket, S.receiveConnected = nil, false
             LrTasks.sleep(0.1)
             S.receiveSocket = bindReceive(S.receiveGen)
             S.receiveNeedsRebind, S.receiveNeedsReconnect = false, false
@@ -292,7 +332,7 @@ function Bridge.start()
         local function rebindSend()
             S.sendGen = S.sendGen + 1
             if S.sendSocket then pcall(function() S.sendSocket:close() end) end
-            S.sendConnected = false
+            S.sendSocket, S.sendConnected = nil, false
             LrTasks.sleep(0.1)
             S.sendSocket = bindSend(S.sendGen)
             S.sendNeedsRebind, S.sendNeedsReconnect = false, false
@@ -317,7 +357,10 @@ function Bridge.start()
                 seconds_since_last_message = quiet,
                 commands_handled = S.handled,
                 commands_failed = S.failed,
+                commands_unauthorized = S.unauthorized,
                 lines_malformed = S.malformed,
+                token_file = Bridge.tokenPath(),
+                token_written = S.token ~= nil,
                 log_tail = Log.tail(20),
             }
             local okEncode, text = pcall(Json.encode, status)
@@ -325,19 +368,23 @@ function Bridge.start()
             lastStatus = now
         end
 
-        -- A bind or reconnect that raises (e.g. the port is still held) is logged and retried on a
-        -- later tick instead of ending the bridge task.
+        -- A bind or re-arm that raises (e.g. the port is still held) is logged and retried on a later
+        -- tick instead of ending the bridge task. `onFail` puts back the work that must be retried.
         local retryAt = 0
-        local function safely(what, fn)
+        local function safely(what, fn, onFail)
             local ok, err = LrTasks.pcall(fn)
             if not ok then
                 Log.error("bridge: " .. what .. " failed: " .. tostring(err) .. "; retrying in 2 s")
                 retryAt = LrDate.currentTime() + 2
+                if onFail then onFail() end
             end
         end
 
         LrTasks.sleep(SETTLE_SECONDS)
         if not current() then return end
+        local okToken, tokenOrErr = LrTasks.pcall(newToken)
+        S.token = okToken and tokenOrErr or nil
+        if not okToken then Log.error("bridge: token failed: " .. tostring(tokenOrErr) .. "; every command will be refused") end
         Log.info("bridge: listening (generation " .. generation .. ")")
 
         while current() do
@@ -346,13 +393,16 @@ function Bridge.start()
                     safely("receive bind", rebindReceive)
                 elseif S.receiveNeedsReconnect then
                     S.receiveNeedsReconnect = false
-                    safely("receive re-arm", function() S.receiveSocket:reconnect() end)
+                    -- If re-arming fails, bind afresh on the next try rather than dropping the retry.
+                    safely("receive re-arm", function() S.receiveSocket:reconnect() end,
+                        function() S.receiveNeedsRebind = true end)
                 end
                 if S.sendNeedsRebind or not S.sendSocket then
                     safely("send bind", rebindSend)
                 elseif S.sendNeedsReconnect then
                     S.sendNeedsReconnect = false
-                    safely("send re-arm", function() S.sendSocket:reconnect() end)
+                    safely("send re-arm", function() S.sendSocket:reconnect() end,
+                        function() S.sendNeedsRebind = true end)
                 end
             end
             -- Windows may not report a vanished engine at all [upstream claim: PluginInfoProvider.lua:558-560].

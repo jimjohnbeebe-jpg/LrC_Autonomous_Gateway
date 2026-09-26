@@ -12,9 +12,16 @@
 // request table with timeouts. Automaat connects the request side first [upstream claim:
 // vendor/automaat/server/src/index.ts:143-157]; we also wait `connectGapMs` before the event socket,
 // so the plugin can rebind its send socket for the new client first (Phase 0, P-13).
+//
+// Every command carries the token the plugin writes at start (see protocol.ts). The client reads it
+// before each connection attempt, and a command refused as "unauthorized" (the plugin restarted and
+// made a new token) drops the connection so the next attempt reads the file again.
 
 import { randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
 import net from "node:net";
+import os from "node:os";
+import path from "node:path";
 import { LineSplitter, LineTooLongError } from "./lines.js";
 import {
   COMMANDS,
@@ -59,8 +66,24 @@ export type BridgeClientOptions = {
   /** Pause between connecting the command socket and the event socket. */
   connectGapMs?: number;
   engineVersion?: string;
+  /** Returns the plugin's current token, or null if there is none. Default: read defaultTokenPath(). */
+  readToken?: () => string | null;
   log?: (message: string) => void;
 };
+
+/** Where the plugin writes its token: %USERPROFILE%\.lrc-avg\bridge_token (plugin\LrC-AVG.lrplugin\Bridge.lua). */
+export function defaultTokenPath(): string {
+  return path.join(os.homedir(), ".lrc-avg", "bridge_token");
+}
+
+function readTokenFile(): string | null {
+  try {
+    const token = readFileSync(defaultTokenPath(), "utf8").trim();
+    return token.length > 0 ? token : null;
+  } catch {
+    return null;
+  }
+}
 
 export type BridgeStats = {
   connects: number;
@@ -119,8 +142,10 @@ function openSocket(host: string, port: number, timeoutMs: number): Promise<net.
 const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 export class BridgeClient {
-  private readonly opts: Required<Omit<BridgeClientOptions, "log">>;
+  private readonly opts: Required<Omit<BridgeClientOptions, "log" | "readToken">>;
   private readonly log: (message: string) => void;
+  private readonly readToken: () => string | null;
+  private token: string | null = null;
   private state: BridgeState = "stopped";
   private attempt = 0;
   private commandSocket: net.Socket | null = null;
@@ -144,9 +169,10 @@ export class BridgeClient {
   };
 
   constructor(options: BridgeClientOptions = {}) {
-    const { log, ...rest } = options;
+    const { log, readToken, ...rest } = options;
     this.opts = { ...DEFAULTS, ...rest };
     this.log = log ?? (() => {});
+    this.readToken = readToken ?? readTokenFile;
   }
 
   getState(): BridgeState {
@@ -217,7 +243,7 @@ export class BridgeClient {
     const socket = this.commandSocket;
     if (!socket) throw new BridgeError("not_connected", "no command socket", true, name);
     const id = randomUUID();
-    const line = JSON.stringify({ id, type: "cmd", name, ts: new Date().toISOString(), payload }) + "\n";
+    const line = JSON.stringify({ id, type: "cmd", name, ts: new Date().toISOString(), token: this.token, payload }) + "\n";
     const raw = await new Promise<unknown>((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pending.delete(id);
@@ -250,6 +276,10 @@ export class BridgeClient {
     const current = (): boolean => attempt === this.attempt;
     this.setState("connecting");
     try {
+      this.token = this.readToken();
+      if (this.token === null) {
+        throw new Error(`no bridge token at ${defaultTokenPath()} (is Lightroom running with the LrC-AVG plugin enabled?)`);
+      }
       const commandSocket = await openSocket(this.opts.host, this.opts.commandPort, this.opts.connectTimeoutMs);
       if (!current()) return void commandSocket.destroy();
       this.commandSocket = commandSocket;
@@ -343,6 +373,11 @@ export class BridgeClient {
         waiter.reject(
           new BridgeError(e?.code ?? "plugin_error", e?.message ?? "the plugin reported a failure", e?.recoverable ?? false, waiter.name),
         );
+        if (e?.code === "unauthorized") {
+          // The plugin has another token (it restarted): reconnect, reading the token file again.
+          this.drop("the plugin refused the bridge token");
+          return;
+        }
       }
     }
   }

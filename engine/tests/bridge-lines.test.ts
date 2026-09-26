@@ -40,10 +40,30 @@ describe("bridge: LineSplitter", () => {
     expect(lines).toEqual(['{"nonce":"é漢字 ✓"}']);
   });
 
-  it("refuses a line longer than the limit and starts over", () => {
+  it("refuses an unfinished line longer than the limit and starts over", () => {
     const s = new LineSplitter(10);
     expect(() => s.push("x".repeat(11))).toThrow(LineTooLongError);
     expect(s.buffered()).toBe(0);
     expect(s.push("ok\n")).toEqual(["ok"]);
+  });
+
+  it("refuses a too-long line that arrives complete in one chunk", () => {
+    const s = new LineSplitter(10);
+    expect(() => s.push(`${"x".repeat(11)}\n`)).toThrow(LineTooLongError);
+    expect(s.push("ok\n")).toEqual(["ok"]);
+  });
+
+  it("refuses a too-long line completed after earlier chunks were buffered", () => {
+    const s = new LineSplitter(10);
+    expect(s.push("x".repeat(8))).toEqual([]);
+    expect(() => s.push("xxx\n")).toThrow(LineTooLongError);
+    expect(s.buffered()).toBe(0);
+    expect(s.push("ok\n")).toEqual(["ok"]);
+  });
+
+  it("accepts a line of exactly the limit", () => {
+    const s = new LineSplitter(10);
+    expect(s.push("x".repeat(6))).toEqual([]);
+    expect(s.push(`${"x".repeat(4)}\n`)).toEqual(["x".repeat(10)]);
   });
 });

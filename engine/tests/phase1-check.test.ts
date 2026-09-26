@@ -70,7 +70,13 @@ beforeEach(async () => {
   plugin = await FakePlugin.start();
   lr = new SimulatedLightroom();
   lr.install(plugin);
-  client = new BridgeClient({ commandPort: plugin.commandPort, eventPort: plugin.eventPort, connectGapMs: 5, reconnectMs: 30 });
+  client = new BridgeClient({
+    commandPort: plugin.commandPort,
+    eventPort: plugin.eventPort,
+    connectGapMs: 5,
+    reconnectMs: 30,
+    readToken: () => plugin.token,
+  });
   said.length = 0;
 });
 
@@ -98,8 +104,8 @@ describe("devtools: Phase 1 check against a simulated plugin", () => {
     expect(results["exposure"]).toEqual({ start: 0.33, target: 0.83, read_back: 0.83 });
     expect(results["revert"]).toMatchObject({ ok: true, differing_keys: [] });
     expect(results["pings"]).toMatchObject({ utf8: { ok: true }, in_flight: { ok: true } });
-    expect(lr.history[0]).toBe("AVG P1check pass 1/1");
-    expect(lr.history.every((h) => h.startsWith("AVG "))).toBe(true);
+    // Every write is named in the FR-4.4 form "AVG <id> pass n/N" (rule 03-lightroom).
+    expect(lr.history).toEqual(Array.from({ length: 9 }, (_, i) => `AVG P1check pass ${i + 1}/9`));
     expect(lr.settings).toEqual(nefDump.settings);
   });
 
@@ -131,6 +137,15 @@ describe("devtools: Phase 1 check against a simulated plugin", () => {
     const { accepted, results } = await run(["y", "y"]);
     expect(accepted).toBe(false);
     expect(results["revert"]).toMatchObject({ ok: false, differing_keys: ["Texture"] });
+  });
+
+  it("refuses a photo whose exposure has no room for +0.5, instead of writing -0.5", async () => {
+    lr.settings["Exposure2012"] = 4.6;
+    const { accepted, results } = await run(["y", "y"]);
+    expect(accepted).toBe(false);
+    expect(lr.history).toEqual([]);
+    expect(lr.snapshots.size).toBe(0);
+    expect((results["errors"] as string[])[0]).toMatch(/\+0\.5 would pass \+5/);
   });
 
   it("refuses a photo that is not raw before writing anything, and asks nothing", async () => {

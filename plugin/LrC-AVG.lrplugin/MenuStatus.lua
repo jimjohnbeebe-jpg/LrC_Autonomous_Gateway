@@ -36,8 +36,10 @@ LrTasks.startAsyncTask(function()
     lines[#lines + 1] = string.format("Ports: receive %s, send %s", tostring(status.ports and status.ports.receive), tostring(status.ports and status.ports.send))
     lines[#lines + 1] = "Receive socket connected: " .. (status.receive_connected and "YES" or "NO")
     lines[#lines + 1] = "Send socket connected: " .. (status.send_connected and "YES" or "NO")
-    lines[#lines + 1] = string.format("Commands handled: %s, failed: %s, malformed lines: %s",
-        tostring(status.commands_handled), tostring(status.commands_failed), tostring(status.lines_malformed))
+    lines[#lines + 1] = string.format("Commands handled: %s, failed: %s, refused for a wrong token: %s, malformed lines: %s",
+        tostring(status.commands_handled), tostring(status.commands_failed), tostring(status.commands_unauthorized),
+        tostring(status.lines_malformed))
+    lines[#lines + 1] = "Token file written: " .. (status.token_written and "YES" or "NO") .. " (" .. tostring(status.token_file) .. ")"
     lines[#lines + 1] = "Plugin " .. tostring(status.plugin_version) .. " on Lightroom " .. tostring(status.lrc_version)
     lines[#lines + 1] = ""
     lines[#lines + 1] = "Recent log:"

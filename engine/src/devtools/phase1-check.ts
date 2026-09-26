@@ -8,7 +8,10 @@
 //   1. connect and hello; pings: a non-ASCII nonce, five in flight at once, 20 in a row for timing
 //   2. read the photo's context and settings; refuse anything but a raw file on a supported process version
 //   3. snapshot "AVG P1 check <time>"
-//   4. exposure +0.5, History "AVG P1check pass 1/1", read back (the PHASES.md acceptance write)
+//   4. exposure +0.5, History "AVG P1check pass 1/9", read back (the PHASES.md acceptance write);
+//      a photo whose exposure cannot go up by 0.5 is refused in step 2
+// Every write has a History name in the FR-4.4 form "AVG <id> pass n/N" (rule 03-lightroom), with
+// "P1check" as the id and the nine writes of steps 4-7 numbered 1/9 to 9/9.
 //   5. camera profile pairs through the params map: an Adobe Look, then a Nikon profile with Look = {}
 //   6. both lens switches off, then on (writing "on" was unverified after S5)
 //   7. range probe (Jim's choice): every numeric parameter at its minimum, its maximum, then one step
@@ -20,7 +23,13 @@ import { BridgeError, type BridgeClient } from "../bridge/index.js";
 import type { ParamMap, ReadbackMismatch, SdkSettings } from "../params/index.js";
 
 export const HISTORY = "AVG P1check";
+/** Writes in steps 4-7: exposure, two profiles, lens off, lens on, four range-probe writes. */
+export const TOTAL_WRITES = 9;
+/** History name of the PHASES.md acceptance write (the first write). */
+export const ACCEPTANCE_HISTORY_NAME = `${HISTORY} pass 1/${TOTAL_WRITES}`;
 const WRITE_TIMEOUT_MS = 30000;
+/** The exposure slider's upper limit; the acceptance write needs room for +0.5 below it. */
+const EXPOSURE_MAX = 5;
 
 export type Answer = "y" | "n" | "no answer";
 
@@ -91,6 +100,7 @@ export async function runPhase1Check(deps: Phase1Deps): Promise<{ accepted: bool
     results["summary"] = { acceptance_suggestion: "FAILED", connected: false };
     say("");
     say("FAILED: could not connect to Lightroom.");
+    say(`Reason: ${client.stats.last_drop_reason ?? client.stats.last_connect_error ?? describeError(err)}`);
     say("Check that Lightroom is open and that File > Plug-in Manager lists LrC-AVG as Enabled, then run the command again.");
     return { accepted: false, results };
   }
@@ -101,13 +111,15 @@ export async function runPhase1Check(deps: Phase1Deps): Promise<{ accepted: bool
   let start: SdkSettings | null = null;
   let reverted = false;
 
+  let pass = 0;
   const write = async (
     label: string,
-    historyName: string,
     requested: SdkSettings,
     options: { expectOnly?: string[]; probe?: boolean } = {},
   ): Promise<SdkSettings | null> => {
     const { expectOnly, probe = false } = options;
+    pass++;
+    const historyName = `${HISTORY} pass ${pass}/${TOTAL_WRITES}`;
     const step: Step = { label, history_name: historyName, requested, ok: false, ...(probe ? { probe } : {}) };
     steps.push(step);
     try {
@@ -175,6 +187,11 @@ export async function runPhase1Check(deps: Phase1Deps): Promise<{ accepted: bool
     if (context["file_format"] !== "RAW") {
       throw new Error(`the selected photo is ${String(context["file_format"])}, not a raw file: select 20260907-_OZ80093.NEF and run the command again`);
     }
+    // PHASES.md asks for exposure +0.5; refuse a photo that has no room for it rather than go down.
+    const exposureStart = view.settings["exposure"];
+    if (typeof exposureStart !== "number" || exposureStart + 0.5 > EXPOSURE_MAX) {
+      throw new Error(`the photo's exposure is ${String(exposureStart)}, so +0.5 would pass +${EXPOSURE_MAX}: set Exposure below +4.5 and run the command again`);
+    }
 
     // 3. Snapshot.
     const snapName = `AVG P1 check ${startedAt.toLocaleString("sv-SE").replace(",", "")}`;
@@ -183,11 +200,10 @@ export async function runPhase1Check(deps: Phase1Deps): Promise<{ accepted: bool
     results["snapshot"] = { name: snapName, snapshot_id: snap.snapshot_id, same_name_count: snap.same_name_count };
     say(`Snapshot "${snapName}" made. Writing:`);
 
-    // 4. Exposure +0.5 (the acceptance write).
-    const exposureStart = view.settings["exposure"] as number;
-    const exposureTarget = Math.round((exposureStart + (exposureStart + 0.5 <= 5 ? 0.5 : -0.5)) * 100) / 100;
+    // 4. Exposure +0.5 (the acceptance write, pass 1).
+    const exposureTarget = Math.round((exposureStart + 0.5) * 100) / 100;
     const exposureSdk = map.toSdk({ exposure: exposureTarget }, { processVersion: view.process_version });
-    const afterExposure = await write(`exposure ${exposureStart} -> ${exposureTarget}`, `${HISTORY} pass 1/1`, exposureSdk, {
+    const afterExposure = await write(`exposure ${exposureStart} -> ${exposureTarget}`, exposureSdk, {
       expectOnly: Object.keys(exposureSdk),
     });
     results["exposure"] = { start: exposureStart, target: exposureTarget, read_back: afterExposure ? map.fromSdk(afterExposure).settings["exposure"] : null };
@@ -196,7 +212,7 @@ export async function runPhase1Check(deps: Phase1Deps): Promise<{ accepted: bool
     const adobe = view.camera_profile.name === "Adobe Landscape" ? "Adobe Neutral" : "Adobe Landscape";
     for (const name of [adobe, "Camera Landscape"]) {
       const sdk = map.toSdk({ camera_profile: name }, { processVersion: view.process_version });
-      const rb = await write(`camera profile ${name}`, `${HISTORY} profile ${name}`, sdk, { expectOnly: ["CameraProfile", "Look"] });
+      const rb = await write(`camera profile ${name}`, sdk, { expectOnly: ["CameraProfile", "Look"] });
       const last = steps[steps.length - 1] as Step;
       const identified = rb ? map.fromSdk(rb).camera_profile.name : null;
       if (rb && identified !== name) {
@@ -206,9 +222,9 @@ export async function runPhase1Check(deps: Phase1Deps): Promise<{ accepted: bool
     }
 
     // 6. Lens switches off, then on (P-16).
-    await write("lens corrections off", `${HISTORY} lens off`,
+    await write("lens corrections off",
       map.toSdk({ "lens.corrections_enable": false, "lens.profile_enable": 0 }, { processVersion: view.process_version }));
-    await write("lens corrections on", `${HISTORY} lens on`,
+    await write("lens corrections on",
       map.toSdk({ "lens.corrections_enable": true, "lens.profile_enable": 1 }, { processVersion: view.process_version }));
 
     // 7. Range probe.
@@ -224,7 +240,7 @@ export async function runPhase1Check(deps: Phase1Deps): Promise<{ accepted: bool
     const readBacks: Array<SdkSettings | null> = [];
     for (let i = 0; i < 4; i++) {
       readBacks.push(await write(`range probe: all ${numeric.length} numeric parameters ${probeLabels[i]}`,
-        `${HISTORY} range ${probeLabels[i]}`, probeValues[i] as SdkSettings, { probe: i >= 2 }));
+        probeValues[i] as SdkSettings, { probe: i >= 2 }));
     }
     // What Lightroom did with a value one step beyond a limit: took it as written, clamped it to that
     // limit, ignored it (the value from the previous write stayed), or something else. When the
@@ -300,13 +316,13 @@ export async function runPhase1Check(deps: Phase1Deps): Promise<{ accepted: bool
   if (snapshotId) {
     say("");
     say("Two questions. Look at Lightroom's Develop module.");
-    const history = await ask(`1. In the History panel (left side), is there a step named "${HISTORY} pass 1/1"?`);
+    const history = await ask(`1. In the History panel (left side), is there a step named "${ACCEPTANCE_HISTORY_NAME}"?`);
     const restored = await ask("2. Does the photo look the same as before the check (same Exposure, same Profile)?");
     results["jim"] = { history_step_seen: history, photo_looks_restored: restored, asked_at: now().toISOString() };
     jimOk = history === "y" && restored === "y";
   }
 
-  const exposureStep = steps.find((s) => s.history_name === `${HISTORY} pass 1/1`);
+  const exposureStep = steps.find((s) => s.history_name === ACCEPTANCE_HISTORY_NAME);
   const accepted = Boolean(exposureStep?.ok) && reverted && jimOk;
   const extended = steps.filter((s) => s !== exposureStep && !s.probe);
   results["summary"] = {

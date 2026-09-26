@@ -23,6 +23,8 @@ export class FakePlugin {
   eventPort = 0;
   answerPings = true;
   helloProtocol = 1;
+  /** The token commands must carry, as Bridge.lua checks it. */
+  token = "fake-token";
   private readonly commandServer: net.Server;
   private readonly eventServer: net.Server;
   private readonly clients = new Set<net.Socket>();
@@ -78,9 +80,14 @@ export class FakePlugin {
   }
 
   private async handle(line: string): Promise<void> {
-    const msg = JSON.parse(line) as { id: string; name: string; payload?: Record<string, unknown> };
+    const msg = JSON.parse(line) as { id: string; name: string; token?: string; payload?: Record<string, unknown> };
     const payload = msg.payload ?? {};
     this.received.push({ name: msg.name, payload });
+    if (msg.token !== this.token) {
+      const error = { code: "unauthorized", message: "missing or wrong bridge token", recoverable: true };
+      this.send({ id: msg.id, type: "res", name: msg.name, ok: false, error });
+      return;
+    }
     const handler = this.handlers.get(msg.name);
     const reply: FakeReply = handler
       ? await handler(payload, msg.id)

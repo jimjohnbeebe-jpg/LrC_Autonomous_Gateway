@@ -1,7 +1,10 @@
 // Bridge protocol between the engine and the Lightroom plugin (ARCHITECTURE section 3).
 //
 // One JSON object per line, UTF-8, in both directions:
-//   engine -> plugin (port 8765, the plugin's receive socket): { id, type: "cmd", name, ts, payload }
+//   engine -> plugin (port 8765, the plugin's receive socket): { id, type: "cmd", name, ts, token, payload }
+//     `token` is the one the plugin writes at start to %USERPROFILE%\.lrc-avg\bridge_token; the plugin
+//     refuses any command without it ("unauthorized"). Chosen by Jim 2026-09-26 [stated] after
+//     Greptile's security finding on PR #14.
 //   plugin -> engine (port 8766, the plugin's send socket):
 //     { id, type: "res", name, ts, ok: true, payload }  or  { ..., ok: false, error: { code, message, recoverable } }
 //     { id, type: "evt", name, ts, payload }

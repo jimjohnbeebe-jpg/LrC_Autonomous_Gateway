@@ -5,7 +5,7 @@ Parts of this plugin are derived from **Automaat/lightroom-mcp** (https://github
 | File in this plugin | Derived from | What was taken |
 |---|---|---|
 | `Json.lua` | `plugin/LightroomMCP.lrplugin/JSON.lua` | The encoder/decoder structure, the UTF-8 code-point and surrogate handling. Escaping, number output and error handling changed; see the file header. |
-| `Bridge.lua` | `plugin/LightroomMCP.lrplugin/PluginInfoProvider.lua` (lines 384-589) | The dual `LrSocket` pattern: callbacks set flags and a monitor loop acts on them, the generation-guarded rebind of a socket, and the rebind of the send socket on a new receive-side client. |
+| `Bridge.lua` | `plugin/LightroomMCP.lrplugin/PluginInfoProvider.lua` (lines 87-127, 313-319, 384-589) | The dual `LrSocket` pattern: callbacks set flags and a monitor loop acts on them, the generation-guarded rebind of a socket, and the rebind of the send socket on a new receive-side client. The per-start token written to a file in the home folder and checked on every command. |
 | `PluginInit.lua` | `plugin/LightroomMCP.lrplugin/PluginInit.lua` | Starting the server in its own function context from the init script. |
 
 The engine's derived files are listed in `engine\THIRD_PARTY_NOTICES.md`.

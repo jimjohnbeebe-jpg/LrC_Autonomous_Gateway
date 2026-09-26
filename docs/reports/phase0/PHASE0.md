@@ -1,8 +1,8 @@
 ---
 report: Phase 0 close-out (init + feasibility spikes)
 phase: 0
-status: observed
-authored_by: "Claude Code (Opus 5.5), 2026-09-26, compiled from the six accepted spike reports. Decisions on each proposal and on closing Phase 0: Jim (pending)."
+status: accepted
+authored_by: "Claude Code (Opus 5.5), 2026-09-26, compiled from the six accepted spike reports. Decisions on each proposal and on closing Phase 0: Jim (2026-09-26: all 19 accepted, LR_SDK_NOTES draft approved, D-01 decided, Phase 0 closed)."
 date: 2026-09-26
 ---
 
@@ -19,8 +19,8 @@ PHASES.md, quoted (`PHASES.md:26`): "**Acceptance:** six spike reports in `Repor
 | Acceptance line | Status | Handle |
 |---|---|---|
 | Six spike reports in `Reports/` with measured numbers | **done** | `docs\reports\phase0\S1.md` … `S6.md`, each `status: accepted` with Jim's verdict; the vault copies under `Reports\Phase0\` are byte-identical [handle: `Get-FileHash` over all six pairs, run by Claude Code on 2026-09-26: 6 of 6 equal] |
-| LR_SDK_NOTES "To record in Phase 0" filled | **drafted, awaiting Jim** | the draft text is in "Draft for LR_SDK_NOTES" below; it goes into the vault doc once Jim approves it |
-| STATE next action set to Phase 1 | **pending** | set after Jim accepts this report |
+| LR_SDK_NOTES "To record in Phase 0" filled | **approved by Jim (2026-09-26); written into the vault once this PR merges** | the text is "Draft for LR_SDK_NOTES" below |
+| STATE next action set to Phase 1 | **set once this PR merges** (Jim closed Phase 0 on 2026-09-26) | `LrC_AVG_STATE.md` "Next action" |
 
 Init items (`PHASES.md:15`) were done in the Phase 0 session of 2026-09-23 [handle: `docs\PHASE0_HANDOVER.md` §1–2: `node -v` → v24.11.1, git, `CLAUDE.md`, `.claude\rules`, MCP availability, Automaat survey, `.gitignore`].
 
@@ -39,41 +39,41 @@ Every verdict is Jim's [stated, dated in each report's Verdict section].
 
 ## Proposed changes, for Jim to accept or reject
 
-Each row is a proposal from a spike report's "Consequences" section; the handle column says where. "Where it lands" names the vault doc to edit, or the Phase that implements it. **Decision** is Jim's: accept, reject, or change.
+Each row is a proposal from a spike report's "Consequences" section; the handle column says where. "Where it lands" names the vault doc to edit, or the Phase that implements it. **Decision** is Jim's: he accepted all 19 on 2026-09-26 [stated: "Accept all 19", chosen from the options Claude Code offered].
 
 ### Architecture and decisions
 
 | # | Where it lands | Proposed change | Handle | Decision |
 |---|---|---|---|---|
-| P-01 | ARCHITECTURE §6, PRD §6.8 | The `LrExportSession` export becomes the primary preview source. The `requestJpegThumbnail` "retry once, then export" path is dropped for post-change previews; `preview_source` is `export` in practice. | `S1.md` Consequences 1 | pending |
-| P-02 | PRD §2 goal, NFR-2 | Re-baseline the pass budget from "≤ 1.5 s per pass, 400 ms render" to **about 3 s per pass local** (~2.6 s export + 20–45 ms apply + metrics and transport). | `S1.md` Consequences 2 | pending |
-| P-03 | AVG-004 | Confirmed: LrSocket dual socket is the transport. The HTTP polling fallback is not needed. | `S2.md` Verdict + Consequences | pending |
-| P-04 | AVG-002 | Confirmed, with a condition: Claude Desktop stays the runtime client; previews are not shown inline in the answer, only in the expanded tool-call box. | `S3.md` Verdict | pending |
-| P-05 | AVG-005 | Confirmed: snapshots work as rollback. `applyDevelopSnapshot` / `deleteDevelopSnapshot` take the entry's `snapshotID`; the restore was exact over 178 keys, `Look` included. | `S5.md` Consequences | pending |
-| P-06 | AVG-008 | Confirmed: `createVirtualCopies` supports Variants mode on LrC 15.5.1 from Loupe and Grid. | `S6.md` Verdict + Consequences | pending |
-| P-07 | AVG-010, MCP_TOOLS intent `default_camera_profile` | A profile is a **pair**, not a string. Adobe Raw profile = `CameraProfile = "Adobe Standard"` + its full `Look` table; Nikon Camera Matching profile = `CameraProfile = "<string>"` + `Look = {}`. The intent names the profile ("Adobe Landscape", "Camera Landscape") and the params map produces the pair. | `S5.md` Consequences | pending |
+| P-01 | ARCHITECTURE §6, PRD §6.8 | The `LrExportSession` export becomes the primary preview source. The `requestJpegThumbnail` "retry once, then export" path is dropped for post-change previews; `preview_source` is `export` in practice. | `S1.md` Consequences 1 | **accepted** |
+| P-02 | PRD §2 goal, NFR-2 | Re-baseline the pass budget from "≤ 1.5 s per pass, 400 ms render" to **about 3 s per pass local** (~2.6 s export + 20–45 ms apply + metrics and transport). | `S1.md` Consequences 2 | **accepted** |
+| P-03 | AVG-004 | Confirmed: LrSocket dual socket is the transport. The HTTP polling fallback is not needed. | `S2.md` Verdict + Consequences | **accepted** |
+| P-04 | AVG-002 | Confirmed, with a condition: Claude Desktop stays the runtime client; previews are not shown inline in the answer, only in the expanded tool-call box. | `S3.md` Verdict | **accepted** |
+| P-05 | AVG-005 | Confirmed: snapshots work as rollback. `applyDevelopSnapshot` / `deleteDevelopSnapshot` take the entry's `snapshotID`; the restore was exact over 178 keys, `Look` included. | `S5.md` Consequences | **accepted** |
+| P-06 | AVG-008 | Confirmed: `createVirtualCopies` supports Variants mode on LrC 15.5.1 from Loupe and Grid. | `S6.md` Verdict + Consequences | **accepted** |
+| P-07 | AVG-010, MCP_TOOLS intent `default_camera_profile` | A profile is a **pair**, not a string. Adobe Raw profile = `CameraProfile = "Adobe Standard"` + its full `Look` table; Nikon Camera Matching profile = `CameraProfile = "<string>"` + `Look = {}`. The intent names the profile ("Adobe Landscape", "Camera Landscape") and the params map produces the pair. | `S5.md` Consequences | **accepted** |
 
 ### PRD wording
 
 | # | Where it lands | Proposed change | Handle | Decision |
 |---|---|---|---|---|
-| P-08 | PRD §6.3 | The floating, non-modal, live-bound HUD is feasible as designed. Its `[unverified: focus/refresh …]` can cite S4 for refresh and for focus during updates; focus at the moment it opens stays [unverified]. | `S4.md` Consequences | pending |
-| P-09 | PRD §6.6 step 1 | Variants flow: re-select the master before **each** `createVirtualCopies` call (the new copy becomes the active photo); use the call's return value; pass the copy name as the argument (it becomes `copyName`); no write gate around the call. | `S6.md` Consequences | pending |
-| P-10 | PRD §6.6 step 5 | Say that previews and the A/B/C contact sheet are not inline in the Desktop answer: Jim expands the tool-call box or compares the copies in Lightroom. The contact sheet itself is tested in Phase 4. | `S3.md` Consequences | pending |
-| P-11 | PRD goals (`PRD.md:33`, "Every edit visible on the native Develop sliders immediately") | Note that a pass-0 profile choice (an Adobe Look) carries its own clarity, highlights, shadows and tone curve that do not move the sliders; the goal holds for pass 1+ edits, and the profile shows only as its name [inference]. | `S5.md` Consequences (`S5.md:180`) | pending |
+| P-08 | PRD §6.3 | The floating, non-modal, live-bound HUD is feasible as designed. Its `[unverified: focus/refresh …]` can cite S4 for refresh and for focus during updates; focus at the moment it opens stays [unverified]. | `S4.md` Consequences | **accepted** |
+| P-09 | PRD §6.6 step 1 | Variants flow: re-select the master before **each** `createVirtualCopies` call (the new copy becomes the active photo); use the call's return value; pass the copy name as the argument (it becomes `copyName`); no write gate around the call. | `S6.md` Consequences | **accepted** |
+| P-10 | PRD §6.6 step 5 | Say that previews and the A/B/C contact sheet are not inline in the Desktop answer: Jim expands the tool-call box or compares the copies in Lightroom. The contact sheet itself is tested in Phase 4. | `S3.md` Consequences | **accepted** |
+| P-11 | PRD goals (`PRD.md:33`, "Every edit visible on the native Develop sliders immediately") | Note that a pass-0 profile choice (an Adobe Look) carries its own clarity, highlights, shadows and tone curve that do not move the sliders; the goal holds for pass 1+ edits, and the profile shows only as its name [inference]. | `S5.md` Consequences (`S5.md:180`) | **accepted** |
 
 ### Implementation rules (for the Phase that builds each part)
 
 | # | Phase | Proposed rule | Handle | Decision |
 |---|---|---|---|---|
-| P-12 | 1 | **Read back every develop write.** Lightroom silently ignored a malformed `CameraProfile` (no error, no change), and a successful `CameraProfile` write can still leave an unexpected Look applied. | `S5.md` Part 1 + Part 2 analysis | pending |
-| P-13 | 1 | Plugin bridge: re-arm listeners from a monitor loop (they cycle about every 10 s without a client); **rebind the send socket whenever a new client connects on the receive side** (its `onClosed` did not fire on disconnect); keep the heartbeat. | `S2.md` Consequences | pending |
-| P-14 | 1 | Engine socket reader: scan only newly arrived chunks for `\n` instead of rescanning the whole buffer. | `S2.md` Consequences [inference] | pending |
-| P-15 | 1 | Keep bridge state inside one long-running task or on disk, not in `_G` shared across menu-item scripts (once not visible across scripts, cause unknown). | `S5.md` Consequences | pending |
-| P-16 | 1 | Params map exposes `EnableLensCorrections` (boolean) and `LensProfileEnable` (0/1) as two independent keys. | `S5.md` Consequences | pending |
-| P-17 | 1 | Ship the six recorded Adobe Look tables with the params map (from `docs\reports\phase0\S5\run2\`); re-capture them when Camera Raw updates [inference]. Keep `Name`, `UUID` and `LookTable` for every Look until Look identity is settled. | `S5.md` Consequences | pending |
-| P-18 | 4 | Look copies up with `catalog:getPhotoByLocalId(id)`, and check identity before acting on a looked-up photo (`isVirtualCopy`, `masterPhoto`, `copyName`), above all before removing it. | `S6.md` Consequences | pending |
-| P-19 | 5 | Present the HUD from its own task (`blockTask = true` parks it until close) and keep its function context alive while it is open. | `S4.md` Consequences | pending |
+| P-12 | 1 | **Read back every develop write.** Lightroom silently ignored a malformed `CameraProfile` (no error, no change), and a successful `CameraProfile` write can still leave an unexpected Look applied. | `S5.md` Part 1 + Part 2 analysis | **accepted** |
+| P-13 | 1 | Plugin bridge: re-arm listeners from a monitor loop (they cycle about every 10 s without a client); **rebind the send socket whenever a new client connects on the receive side** (its `onClosed` did not fire on disconnect); keep the heartbeat. | `S2.md` Consequences | **accepted** |
+| P-14 | 1 | Engine socket reader: scan only newly arrived chunks for `\n` instead of rescanning the whole buffer. | `S2.md` Consequences [inference] | **accepted** |
+| P-15 | 1 | Keep bridge state inside one long-running task or on disk, not in `_G` shared across menu-item scripts (once not visible across scripts, cause unknown). | `S5.md` Consequences | **accepted** |
+| P-16 | 1 | Params map exposes `EnableLensCorrections` (boolean) and `LensProfileEnable` (0/1) as two independent keys. | `S5.md` Consequences | **accepted** |
+| P-17 | 1 | Ship the six recorded Adobe Look tables with the params map (from `docs\reports\phase0\S5\run2\`); re-capture them when Camera Raw updates [inference]. Keep `Name`, `UUID` and `LookTable` for every Look until Look identity is settled. | `S5.md` Consequences | **accepted** |
+| P-18 | 4 | Look copies up with `catalog:getPhotoByLocalId(id)`, and check identity before acting on a looked-up photo (`isVirtualCopy`, `masterPhoto`, `copyName`), above all before removing it. | `S6.md` Consequences | **accepted** |
+| P-19 | 5 | Present the HUD from its own task (`blockTask = true` parks it until close) and keep its function context alive while it is open. | `S4.md` Consequences | **accepted** |
 
 ### Decisions the spikes left open (not needed to close Phase 0)
 
@@ -84,7 +84,7 @@ Each row is a proposal from a spike report's "Consequences" section; the handle 
 
 ## Draft for LR_SDK_NOTES
 
-The vault doc is the architect's, so nothing below has been written into it. On Jim's approval, the six "To record in Phase 0" lines (`LR_SDK_NOTES.md:60-67`) are filled with this text, and the older entries it supersedes are marked as such.
+Jim approved this text on 2026-09-26 [stated: "Write it in"]. The vault doc is the architect's, so it is written in only after this PR merges: the six "To record in Phase 0" lines (`LR_SDK_NOTES.md:60-67`) are filled with this text, and the older entries it supersedes are marked as such.
 
 **To record in Phase 0 — recorded 2026-09-26 (LrC 15.5.1, Windows 11)**
 
@@ -139,11 +139,18 @@ Collected from the six reports; each stays open until the Phase named tests it.
 ## Verdict
 
 <!-- Jim: close Phase 0 (and which proposals are accepted), or not. -->
-Pending (Jim).
+**Phase 0 is closed** (Jim, 2026-09-26, chosen from the options Claude Code offered, which recommended closing) [stated].
+
+- Proposals P-01 … P-19: **all accepted** [stated].
+- LR_SDK_NOTES draft: **approved** for the vault [stated].
+- D-01: **(b), the export's file path**: the plugin returns the path of the JPEG Lightroom exported, and the engine reads it from disk [stated: "Export file path"]. D-02 stays open for Phase 4.
+- STATE's "Next action" becomes Phase 1. Phase 1 work starts only when Jim says so.
 
 ## Consequences / open questions
 
-On Jim's acceptance:
+Following Jim's decisions, after this PR merges:
 - the LR_SDK_NOTES draft above is written into the vault doc;
-- each accepted proposal is applied to the vault doc it names, or carried as a rule into the Phase it names;
+- D-01 changes ARCHITECTURE §3 (`ARCHITECTURE.md:64`): previews cross as the export's file path, not base64 in the JSON line;
+- P-01 … P-11 are applied to the vault docs they name. Each edit is marked "(Phase 0, P-nn, accepted by Jim 2026-09-26)" so it can be traced back here;
+- P-12 … P-19, D-01 and D-02 are added to PHASES.md under the Phase they name, as inputs for that Phase's plan;
 - `LrC_AVG_STATE.md` "Next action" becomes Phase 1 (`PHASES.md:28-32`), and the vault handover is updated.

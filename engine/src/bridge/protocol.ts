@@ -77,7 +77,23 @@ export const COMMANDS = {
   ping: z.object({ pong: z.literal(true), nonce: z.string().optional() }),
   get_context: contextResultSchema,
   get_settings: z.object({ ...targeted, settings: sdkSettingsSchema }),
-  apply_settings: z.object({ ...targeted, apply_ms: z.number(), read_back: sdkSettingsSchema }),
+  // apply_ms times applyDevelopSettings inside the write gate. read_ms (the getDevelopSettings
+  // read-back) and command_ms (the whole command in the plugin) come with the Phase 2 plugin; the
+  // Phase 1 plugin does not send them (PHASE1.md "Consequences": time the write command itself).
+  apply_settings: z.object({
+    ...targeted,
+    apply_ms: z.number(),
+    read_ms: z.number().optional(),
+    command_ms: z.number().optional(),
+    read_back: sdkSettingsSchema,
+  }),
+  // An LrExportSession JPEG of the target photo, written by the plugin under its temp folder
+  // (Phase 0, P-01 and D-01: the export is the only post-change preview, and it crosses as a path).
+  export_preview: z.object({
+    ...targeted,
+    path: z.string().min(1),
+    export_ms: z.number(),
+  }),
   create_snapshot: z.object({
     ...targeted,
     snapshot_id: z.string().min(1),
@@ -100,6 +116,8 @@ export type CommandPayloads = {
   get_context: Target;
   get_settings: Target;
   apply_settings: Target & { settings: Record<string, unknown>; history_name: string };
+  /** long_edge in pixels; quality 0-100 (the plugin converts it to the export setting's scale). */
+  export_preview: Target & { long_edge: number; quality: number };
   create_snapshot: Target & { name: string };
   apply_snapshot: Target & { snapshot_id: string };
 };

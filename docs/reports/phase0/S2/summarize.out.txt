@@ -1,0 +1,66 @@
+dir: D:\Developer\LrC_Autonomous_Gateway\docs\reports\phase0\S2
+files: s2_client_2026-09-26T15-58-56-532Z.json, s2_stop_2026-09-26T08-59-46.json, s2_log.txt
+
+== Client (spikes/S2/client.ts) ==
+started 2026-09-26T15:58:56.532Z (UTC), node v24.11.1
+connect write->8765 (plugin receive): ok; read<-8766 (plugin send): ok
+trials:
+  OK   hello#1  sent        5 chars | rtt    0.69 ms | Lua length 5 | payload identical true
+  OK   ping#0   sent        6 chars | rtt    0.46 ms | Lua length 6 | payload identical true
+  OK   ping#1   sent        6 chars | rtt    0.48 ms | Lua length 6 | payload identical true
+  OK   ping#2   sent        6 chars | rtt    0.68 ms | Lua length 6 | payload identical true
+  OK   ping#3   sent        6 chars | rtt    0.30 ms | Lua length 6 | payload identical true
+  OK   ping#4   sent        6 chars | rtt    7.30 ms | Lua length 6 | payload identical true
+  OK   ping#5   sent        6 chars | rtt    0.32 ms | Lua length 6 | payload identical true
+  OK   ping#6   sent        6 chars | rtt    0.28 ms | Lua length 6 | payload identical true
+  OK   ping#7   sent        6 chars | rtt    0.34 ms | Lua length 6 | payload identical true
+  OK   ping#8   sent        6 chars | rtt    0.30 ms | Lua length 6 | payload identical true
+  OK   ping#9   sent        6 chars | rtt    0.27 ms | Lua length 6 | payload identical true
+  OK   ping#10  sent        7 chars | rtt    0.33 ms | Lua length 7 | payload identical true
+  OK   ping#11  sent        7 chars | rtt    0.30 ms | Lua length 7 | payload identical true
+  OK   ping#12  sent        7 chars | rtt    0.30 ms | Lua length 7 | payload identical true
+  OK   ping#13  sent        7 chars | rtt    0.33 ms | Lua length 7 | payload identical true
+  OK   ping#14  sent        7 chars | rtt    0.34 ms | Lua length 7 | payload identical true
+  OK   ping#15  sent        7 chars | rtt    0.36 ms | Lua length 7 | payload identical true
+  OK   ping#16  sent        7 chars | rtt    0.30 ms | Lua length 7 | payload identical true
+  OK   ping#17  sent        7 chars | rtt    0.26 ms | Lua length 7 | payload identical true
+  OK   ping#18  sent        7 chars | rtt    0.38 ms | Lua length 7 | payload identical true
+  OK   ping#19  sent        7 chars | rtt    0.31 ms | Lua length 7 | payload identical true
+  OK   1MB      sent  1048576 chars | rtt   31.39 ms | Lua length 1048576 | payload identical true
+  OK   2MB      sent  2097152 chars | rtt   31.09 ms | Lua length 2097152 | payload identical true
+  OK   4MB      sent  4194304 chars | rtt   78.26 ms | Lua length 4194304 | payload identical true
+  OK   8MB      sent  8388608 chars | rtt  241.43 ms | Lua length 8388608 | payload identical true
+  OK   16MB     sent 16777216 chars | rtt  826.87 ms | Lua length 16777216 | payload identical true
+trials: 26, failed: 0, Lua length != sent length: 0
+hello echoed: true (hello#1, rtt 0.69 ms)
+small-message RTT over 20 pings: median 0.32 ms, min 0.26 ms, max 7.30 ms (ping#4); max without ping#4: 0.68 ms
+large messages (throughput = chars sent + chars echoed, over the round trip):
+  1MB    1 MiB | ok true | rtt 31.4 ms | 64 MiB/s
+  2MB    2 MiB | ok true | rtt 31.1 ms | 129 MiB/s
+  4MB    4 MiB | ok true | rtt 78.3 ms | 102 MiB/s
+  8MB    8 MiB | ok true | rtt 241.4 ms | 66 MiB/s
+  16MB  16 MiB | ok true | rtt 826.9 ms | 39 MiB/s
+largest message that survived: 16777216 chars (16 MiB); largest message sent: 16777216 chars; any large message failed: false
+
+== Plugin (s2_stop JSON, S2Stop.lua) ==
+stopped_at 2026-09-26T08-59-46 (local time); question answered: true; lightroom_froze: false
+messages received 26, echoed 26; at stop: running false, receive_connected false, send_connected true
+
+== Plugin log (s2_log.txt, local time) ==
+start -> first client connected: 39.888 s (08:58:16.648 -> 08:58:56.536); connected events: 08:58:56.536 receive: client connected; 08:58:56.538 send: client connected
+receive: 'listening' (onConnecting) 8x at 58:16.748, 58:26.855, 58:36.920, 58:47.126, 58:58.386, 59:08.405, 59:18.460, 59:28.645
+  intervals between successive 'listening' lines (ms): 10107, 10065, 10206, 11260, 10019, 10055, 10185
+  'closed' (onClosed) at: 08:58:58.312, 08:59:43.487; logged errors: 0
+send: 'listening' (onConnecting) 4x at 58:16.751, 58:26.859, 58:36.923, 58:47.129
+  intervals between successive 'listening' lines (ms): 10108, 10064, 10206
+  'closed' (onClosed) at: 08:59:43.487; logged errors: 0
+stop requested 08:59:43.432; 08:59:43.486 server loop exiting (received 26, echoed 26); 08:59:43.487 sockets closed (context cleanup)
+echo lines: 26; bytes match the client's trials in order: true
+plugin send() duration: max 4.5 ms; for the largest message 4.5 ms
+widest gap between successive small-message echo lines: 7 ms (before the echo at 08:58:57.064, the echo of ping#4, whose round trip was 7.30 ms)
+lower bound on time after send() returned (echo delivery to Node + Node's line parsing), large messages:
+  1MB   rtt 31.4 ms, echo-line spacing 11 ms -> >= 20 ms (65% of the round trip)
+  2MB   rtt 31.1 ms, echo-line spacing 40 ms -> no bound (spacing >= rtt)
+  4MB   rtt 78.3 ms, echo-line spacing 48 ms -> >= 30 ms (39% of the round trip)
+  8MB   rtt 241.4 ms, echo-line spacing 124 ms -> >= 117 ms (49% of the round trip)
+  16MB  rtt 826.9 ms, echo-line spacing 348 ms -> >= 479 ms (58% of the round trip)

@@ -14,6 +14,8 @@
     "build": "npm run build -w engine",
     "test": "npm test -w engine",
     "typecheck": "npm run typecheck -w engine && npm run typecheck -w spikes",
-    "phase1:check": "npm run build && node engine/dist/devtools/phase1-check-cli.js"
+    "phase1:check": "npm run build && node engine/dist/devtools/phase1-check-cli.js",
+    "desktop:install": "npm run build && node engine/dist/devtools/install-desktop-config-cli.js",
+    "phase2:check": "npm run build && node engine/dist/devtools/phase2-check-cli.js"
   }
 }

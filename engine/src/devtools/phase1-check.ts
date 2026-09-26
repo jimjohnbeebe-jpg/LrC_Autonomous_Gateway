@@ -63,13 +63,13 @@ export function describeError(err: unknown): string {
 }
 
 /** Keys whose value differs between two full settings tables, in either direction. */
-function differingKeys(map: ParamMap, before: SdkSettings, after: SdkSettings): string[] {
+export function differingKeys(map: ParamMap, before: SdkSettings, after: SdkSettings): string[] {
   const keys = new Set(map.verifyReadback(before, after).map((m) => m.sdk_key));
   for (const key of Object.keys(after)) if (!(key in before)) keys.add(key);
   return [...keys].sort();
 }
 
-function median(values: number[]): number {
+export function median(values: number[]): number {
   const s = [...values].sort((a, b) => a - b);
   return s[Math.floor(s.length / 2)] ?? Number.NaN;
 }

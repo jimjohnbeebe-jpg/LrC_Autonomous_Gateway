@@ -37,11 +37,12 @@ local LrUUID = import 'LrUUID'
 local Develop = require 'Develop'
 local Json = require 'Json'
 local Log = require 'Log'
+local Preview = require 'Preview'
 
 local Bridge = {}
 
 Bridge.PROTOCOL = 1
-Bridge.PLUGIN_VERSION = "0.1.0"
+Bridge.PLUGIN_VERSION = "0.2.0"
 Bridge.SDK_DECLARED = 13.0 -- Info.lua LrSdkVersion; the SDK version LrC 15.5.1 ships is [unverified]
 Bridge.DEFAULT_RECEIVE_PORT = 8765
 Bridge.DEFAULT_SEND_PORT = 8766
@@ -190,6 +191,7 @@ function Bridge.start()
             apply_settings = Develop.applySettings,
             create_snapshot = Develop.createSnapshot,
             apply_snapshot = Develop.applySnapshot,
+            export_preview = Preview.exportPreview,
         }
 
         -- Runs in its own task, one per line.

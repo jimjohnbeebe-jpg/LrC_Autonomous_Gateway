@@ -1,6 +1,8 @@
 // Entry point of the mcp module (the server's entry is main.ts).
 
 export { BridgeGate } from "./bridge-gate.js";
+export { devOverrides } from "./dev-overrides.js";
+export type { DevOverrides } from "./dev-overrides.js";
 export { ToolError, toToolError } from "./errors.js";
 export type { ToolErrorBody } from "./errors.js";
 export { DEFAULT_LOCK_PORT, acquireInstanceLock } from "./instance-lock.js";

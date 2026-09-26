@@ -112,7 +112,7 @@ for (const t of big) {
   const mbps = t.rtt_ms ? (2 * t.sent_chars) / MiB / (t.rtt_ms / 1000) : null;
   console.log(`  ${t.label.padEnd(5)} ${(t.sent_chars / MiB).toString().padStart(2)} MiB | ok ${t.ok} | rtt ${fmt(t.rtt_ms, 1)} ms | ${fmt(mbps, 0)} MiB/s`);
 }
-const largestSent = Math.max(...client.trials.map((t) => t.sent_chars));
+const largestSent = client.trials.length ? Math.max(...client.trials.map((t) => t.sent_chars)) : 0;
 console.log(`largest message that survived: ${client.max_ok_chars ?? "-"} chars (${fmt((client.max_ok_chars ?? 0) / MiB, 0)} MiB); largest message sent: ${largestSent} chars; any large message failed: ${big.some((t) => !t.ok)}`);
 
 console.log("\n== Plugin (s2_stop JSON, S2Stop.lua) ==");
@@ -144,23 +144,37 @@ const echoes = log.flatMap((l) => {
   const m = /^echo (\d+) bytes \(send\(\) returned after ([\d.]+) ms\)$/.exec(l.text);
   return m ? [{ ms: l.ms, time: l.time, bytes: Number(m[1]), sendMs: Number(m[2]) }] : [];
 });
-console.log(`echo lines: ${echoes.length}; bytes match the client's trials in order: ${echoes.length === client.trials.length && echoes.every((e, i) => e.bytes === client.trials[i]?.sent_chars)}`);
-console.log(`plugin send() duration: max ${fmt(Math.max(...echoes.map((e) => e.sendMs)), 1)} ms; for the largest message ${fmt(echoes.find((e) => e.bytes === largestSent)?.sendMs, 1)} ms`);
-const smallGaps = echoes.slice(1).map((e, i) => ({ gap: e.ms - (echoes[i] as { ms: number }).ms, e })).filter((g) => g.e.bytes < 100);
-const widest = smallGaps.reduce((a, b) => (b.gap > a.gap ? b : a), { gap: -1, e: echoes[0] as (typeof echoes)[number] });
-console.log(`widest gap between successive small-message echo lines: ${widest.gap} ms (before the echo at ${widest.e.time})`);
+// Echo line i belongs to trial i only when both lists hold the same messages in the same order;
+// a timed-out trial or a dropped echo shifts them. Everything below that pairs them needs this.
+const aligned = echoes.length === client.trials.length && echoes.every((e, i) => e.bytes === client.trials[i]?.sent_chars);
+console.log(`echo lines: ${echoes.length}; bytes match the client's trials in order: ${aligned}`);
+if (echoes.length === 0) {
+  console.log("no echo lines in the log: no plugin-side timings");
+} else {
+  console.log(`plugin send() duration: max ${fmt(Math.max(...echoes.map((e) => e.sendMs)), 1)} ms; for the largest message ${fmt(echoes.find((e) => e.bytes === largestSent)?.sendMs, 1)} ms`);
+  const smallGaps = echoes.slice(1).map((e, i) => ({ gap: e.ms - (echoes[i] as { ms: number }).ms, e, i: i + 1 })).filter((g) => g.e.bytes < 100);
+  const widest = smallGaps.reduce<(typeof smallGaps)[number] | undefined>((a, b) => (a === undefined || b.gap > a.gap ? b : a), undefined);
+  if (widest) {
+    const t = aligned ? client.trials[widest.i] : undefined;
+    console.log(`widest gap between successive small-message echo lines: ${widest.gap} ms (before the echo at ${widest.e.time}${t ? `, the echo of ${t.label}, whose round trip was ${fmt(t.rtt_ms, 2)} ms` : ""})`);
+  }
+}
 
 // Time from the plugin's send() returning to the client holding the whole echo. With E_k the
 // time of echo line k (logged right after send() returns) and RTT_k the client's round trip:
 //   E_k - E_(k-1) = down_(k-1) + gen_k + up_k + lua_k + send_k,  RTT_k = up_k + lua_k + send_k + down_k
 // so down_k = RTT_k - (E_k - E_(k-1)) + down_(k-1) + gen_k >= RTT_k - (E_k - E_(k-1)).
 // Log times have 1 ms resolution, so the bound is good to about +-1 ms.
-console.log("lower bound on time after send() returned (echo delivery to Node + Node's line parsing), large messages:");
-for (let i = 1; i < echoes.length; i++) {
-  const e = echoes[i] as (typeof echoes)[number];
-  const t = client.trials[i];
-  if (!t || e.bytes < MiB || t.rtt_ms === null) continue;
-  const spacing = e.ms - (echoes[i - 1] as { ms: number }).ms;
-  const bound = t.rtt_ms - spacing;
-  console.log(`  ${t.label.padEnd(5)} rtt ${fmt(t.rtt_ms, 1)} ms, echo-line spacing ${spacing} ms -> ${bound > 0 ? `>= ${fmt(bound, 0)} ms (${fmt((100 * bound) / t.rtt_ms, 0)}% of the round trip)` : "no bound (spacing >= rtt)"}`);
+if (!aligned) {
+  console.log("lower bound on time after send() returned: skipped (echo lines and trials do not line up)");
+} else {
+  console.log("lower bound on time after send() returned (echo delivery to Node + Node's line parsing), large messages:");
+  for (let i = 1; i < echoes.length; i++) {
+    const e = echoes[i] as (typeof echoes)[number];
+    const t = client.trials[i];
+    if (!t || e.bytes < MiB || t.rtt_ms === null) continue;
+    const spacing = e.ms - (echoes[i - 1] as { ms: number }).ms;
+    const bound = t.rtt_ms - spacing;
+    console.log(`  ${t.label.padEnd(5)} rtt ${fmt(t.rtt_ms, 1)} ms, echo-line spacing ${spacing} ms -> ${bound > 0 ? `>= ${fmt(bound, 0)} ms (${fmt((100 * bound) / t.rtt_ms, 0)}% of the round trip)` : "no bound (spacing >= rtt)"}`);
+  }
 }

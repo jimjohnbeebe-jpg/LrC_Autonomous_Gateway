@@ -57,7 +57,7 @@ send: 'listening' (onConnecting) 4x at 58:16.751, 58:26.859, 58:36.923, 58:47.12
 stop requested 08:59:43.432; 08:59:43.486 server loop exiting (received 26, echoed 26); 08:59:43.487 sockets closed (context cleanup)
 echo lines: 26; bytes match the client's trials in order: true
 plugin send() duration: max 4.5 ms; for the largest message 4.5 ms
-widest gap between successive small-message echo lines: 7 ms (before the echo at 08:58:57.064)
+widest gap between successive small-message echo lines: 7 ms (before the echo at 08:58:57.064, the echo of ping#4, whose round trip was 7.30 ms)
 lower bound on time after send() returned (echo delivery to Node + Node's line parsing), large messages:
   1MB   rtt 31.4 ms, echo-line spacing 11 ms -> >= 20 ms (65% of the round trip)
   2MB   rtt 31.1 ms, echo-line spacing 40 ms -> no bound (spacing >= rtt)

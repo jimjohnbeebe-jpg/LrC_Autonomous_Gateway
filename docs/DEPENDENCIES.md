@@ -20,6 +20,9 @@ Runtime this was built and tested on: Node `v24.11.1`, npm `11.19.1` (Windows 11
 | `vitest` | 5.0.1 | devDependency | MIT | `^22.12.0 \|\| ^24.0.0 \|\| >=26.0.0` | https://www.npmjs.com/package/vitest/v/5.0.1 |
 | `typescript` | 7.0.2 | devDependency | Apache-2.0 | `>=16.20.0` | https://www.npmjs.com/package/typescript/v/7.0.2 |
 | `@types/node` | 24.13.6 | devDependency | MIT | — | https://www.npmjs.com/package/@types/node/v/24.13.6 |
+| `luaparse` | 0.3.1 | devDependency | MIT | — | https://www.npmjs.com/package/luaparse/v/0.3.1 |
+
+`luaparse` was added in Phase 1 (2026-09-26) for `engine\tests\lua-plugin.test.ts`, which parses every plugin `.lua` file as Lua 5.1; no Lua runtime runs in the tests. 0.3.1 was the npm `latest` version and its licence is MIT [handle: `npm view luaparse version license` → `0.3.1`, `MIT`, 2026-09-26]. It ships no TypeScript types; `engine\tests\types\luaparse.d.ts` declares the one function the test uses. `npm install -D -E luaparse@0.3.1 -w engine` reported 0 vulnerabilities.
 
 ## spikes (`lrc-avg-spikes`, Phase 0 only)
 

@@ -1,0 +1,2039 @@
+{
+  "check": "phase1",
+  "started_at": "2026-09-26T21:06:50.304Z",
+  "steps": [
+    {
+      "label": "exposure 0.33 -> 0.83",
+      "history_name": "AVG P1check pass 1/9",
+      "requested": {
+        "Exposure2012": 0.83
+      },
+      "ok": true,
+      "apply_ms": 25.5,
+      "mismatches": [],
+      "changed_keys": [
+        "Exposure2012"
+      ]
+    },
+    {
+      "label": "camera profile Adobe Landscape",
+      "history_name": "AVG P1check pass 2/9",
+      "requested": {
+        "CameraProfile": "Adobe Standard",
+        "Look": {
+          "Name": "Adobe Landscape",
+          "UUID": "6F9C877E84273F4E8271E6B91BEB36A1",
+          "Parameters": {
+            "AILook": [],
+            "CameraProfile": "Adobe Standard",
+            "Clarity2012": 10,
+            "ConvertToGrayscale": false,
+            "FilterList": [],
+            "Highlights2012": -12,
+            "LookTable": "0B3BFB5CFB7DBF7FF175E98F24D316B0",
+            "PointColors": [],
+            "ProcessVersion": "15.4",
+            "Shadows2012": 12,
+            "ToneCurveName2012": "",
+            "ToneCurvePV2012": [
+              0,
+              0,
+              64,
+              60,
+              128,
+              128,
+              192,
+              196,
+              255,
+              255
+            ],
+            "ToneCurvePV2012Blue": [],
+            "ToneCurvePV2012Green": [],
+            "ToneCurvePV2012Red": [],
+            "Version": "18.5.1"
+          },
+          "Amount": 1,
+          "Copyright": "© 2018 Adobe Systems, Inc.",
+          "Group": {
+            "x-default": "Profiles"
+          },
+          "SupportsAmount": false,
+          "SupportsMonochrome": false,
+          "SupportsOutputReferred": false
+        }
+      },
+      "ok": true,
+      "apply_ms": 23.4,
+      "mismatches": [],
+      "changed_keys": [
+        "CameraProfile",
+        "Look"
+      ]
+    },
+    {
+      "label": "camera profile Camera Landscape",
+      "history_name": "AVG P1check pass 3/9",
+      "requested": {
+        "CameraProfile": "Camera Landscape",
+        "Look": {}
+      },
+      "ok": true,
+      "apply_ms": 41.5,
+      "mismatches": [],
+      "changed_keys": [
+        "CameraProfile",
+        "Look"
+      ]
+    },
+    {
+      "label": "lens corrections off",
+      "history_name": "AVG P1check pass 4/9",
+      "requested": {
+        "EnableLensCorrections": false,
+        "LensProfileEnable": 0
+      },
+      "ok": true,
+      "apply_ms": 28.6,
+      "mismatches": [],
+      "changed_keys": [
+        "EnableLensCorrections",
+        "LensProfileEnable"
+      ]
+    },
+    {
+      "label": "lens corrections on",
+      "history_name": "AVG P1check pass 5/9",
+      "requested": {
+        "EnableLensCorrections": true,
+        "LensProfileEnable": 1
+      },
+      "ok": true,
+      "apply_ms": 30.1,
+      "mismatches": [],
+      "changed_keys": [
+        "EnableLensCorrections",
+        "LensProfileEnable"
+      ]
+    },
+    {
+      "label": "range probe: all 57 numeric parameters at minimum",
+      "history_name": "AVG P1check pass 6/9",
+      "requested": {
+        "Exposure2012": -5,
+        "Contrast2012": -100,
+        "Highlights2012": -100,
+        "Shadows2012": -100,
+        "Whites2012": -100,
+        "Blacks2012": -100,
+        "Texture": -100,
+        "Clarity2012": -100,
+        "Dehaze": -100,
+        "Vibrance": -100,
+        "Saturation": -100,
+        "Temperature": 2000,
+        "Tint": -150,
+        "SplitToningShadowHue": 0,
+        "SplitToningShadowSaturation": 0,
+        "ColorGradeShadowLum": -100,
+        "ColorGradeMidtoneHue": 0,
+        "ColorGradeMidtoneSat": 0,
+        "ColorGradeMidtoneLum": -100,
+        "SplitToningHighlightHue": 0,
+        "SplitToningHighlightSaturation": 0,
+        "ColorGradeHighlightLum": -100,
+        "ColorGradeGlobalHue": 0,
+        "ColorGradeGlobalSat": 0,
+        "ColorGradeGlobalLum": -100,
+        "ColorGradeBlending": 0,
+        "SplitToningBalance": -100,
+        "Sharpness": 0,
+        "SharpenRadius": 0.5,
+        "SharpenDetail": 0,
+        "SharpenEdgeMasking": 0,
+        "LuminanceSmoothing": 0,
+        "ColorNoiseReduction": 0,
+        "HueAdjustmentRed": -100,
+        "SaturationAdjustmentRed": -100,
+        "LuminanceAdjustmentRed": -100,
+        "HueAdjustmentOrange": -100,
+        "SaturationAdjustmentOrange": -100,
+        "LuminanceAdjustmentOrange": -100,
+        "HueAdjustmentYellow": -100,
+        "SaturationAdjustmentYellow": -100,
+        "LuminanceAdjustmentYellow": -100,
+        "HueAdjustmentGreen": -100,
+        "SaturationAdjustmentGreen": -100,
+        "LuminanceAdjustmentGreen": -100,
+        "HueAdjustmentAqua": -100,
+        "SaturationAdjustmentAqua": -100,
+        "LuminanceAdjustmentAqua": -100,
+        "HueAdjustmentBlue": -100,
+        "SaturationAdjustmentBlue": -100,
+        "LuminanceAdjustmentBlue": -100,
+        "HueAdjustmentPurple": -100,
+        "SaturationAdjustmentPurple": -100,
+        "LuminanceAdjustmentPurple": -100,
+        "HueAdjustmentMagenta": -100,
+        "SaturationAdjustmentMagenta": -100,
+        "LuminanceAdjustmentMagenta": -100
+      },
+      "ok": true,
+      "apply_ms": 25.5,
+      "mismatches": [],
+      "changed_keys": [
+        "Blacks2012",
+        "Clarity2012",
+        "ColorGradeBlending",
+        "ColorGradeGlobalLum",
+        "ColorGradeHighlightLum",
+        "ColorGradeMidtoneLum",
+        "ColorGradeShadowLum",
+        "ColorNoiseReduction",
+        "Contrast2012",
+        "Dehaze",
+        "Exposure2012",
+        "Highlights2012",
+        "HueAdjustmentAqua",
+        "HueAdjustmentBlue",
+        "HueAdjustmentGreen",
+        "HueAdjustmentMagenta",
+        "HueAdjustmentOrange",
+        "HueAdjustmentPurple",
+        "HueAdjustmentRed",
+        "HueAdjustmentYellow",
+        "LuminanceAdjustmentAqua",
+        "LuminanceAdjustmentBlue",
+        "LuminanceAdjustmentGreen",
+        "LuminanceAdjustmentMagenta",
+        "LuminanceAdjustmentOrange",
+        "LuminanceAdjustmentPurple",
+        "LuminanceAdjustmentRed",
+        "LuminanceAdjustmentYellow",
+        "LuminanceSmoothing",
+        "Saturation",
+        "SaturationAdjustmentAqua",
+        "SaturationAdjustmentBlue",
+        "SaturationAdjustmentGreen",
+        "SaturationAdjustmentMagenta",
+        "SaturationAdjustmentOrange",
+        "SaturationAdjustmentPurple",
+        "SaturationAdjustmentRed",
+        "SaturationAdjustmentYellow",
+        "Shadows2012",
+        "SharpenDetail",
+        "SharpenRadius",
+        "Sharpness",
+        "SplitToningBalance",
+        "Temperature",
+        "Texture",
+        "Tint",
+        "Vibrance",
+        "Whites2012"
+      ]
+    },
+    {
+      "label": "range probe: all 57 numeric parameters at maximum",
+      "history_name": "AVG P1check pass 7/9",
+      "requested": {
+        "Exposure2012": 5,
+        "Contrast2012": 100,
+        "Highlights2012": 100,
+        "Shadows2012": 100,
+        "Whites2012": 100,
+        "Blacks2012": 100,
+        "Texture": 100,
+        "Clarity2012": 100,
+        "Dehaze": 100,
+        "Vibrance": 100,
+        "Saturation": 100,
+        "Temperature": 50000,
+        "Tint": 150,
+        "SplitToningShadowHue": 360,
+        "SplitToningShadowSaturation": 100,
+        "ColorGradeShadowLum": 100,
+        "ColorGradeMidtoneHue": 360,
+        "ColorGradeMidtoneSat": 100,
+        "ColorGradeMidtoneLum": 100,
+        "SplitToningHighlightHue": 360,
+        "SplitToningHighlightSaturation": 100,
+        "ColorGradeHighlightLum": 100,
+        "ColorGradeGlobalHue": 360,
+        "ColorGradeGlobalSat": 100,
+        "ColorGradeGlobalLum": 100,
+        "ColorGradeBlending": 100,
+        "SplitToningBalance": 100,
+        "Sharpness": 150,
+        "SharpenRadius": 3,
+        "SharpenDetail": 100,
+        "SharpenEdgeMasking": 100,
+        "LuminanceSmoothing": 100,
+        "ColorNoiseReduction": 100,
+        "HueAdjustmentRed": 100,
+        "SaturationAdjustmentRed": 100,
+        "LuminanceAdjustmentRed": 100,
+        "HueAdjustmentOrange": 100,
+        "SaturationAdjustmentOrange": 100,
+        "LuminanceAdjustmentOrange": 100,
+        "HueAdjustmentYellow": 100,
+        "SaturationAdjustmentYellow": 100,
+        "LuminanceAdjustmentYellow": 100,
+        "HueAdjustmentGreen": 100,
+        "SaturationAdjustmentGreen": 100,
+        "LuminanceAdjustmentGreen": 100,
+        "HueAdjustmentAqua": 100,
+        "SaturationAdjustmentAqua": 100,
+        "LuminanceAdjustmentAqua": 100,
+        "HueAdjustmentBlue": 100,
+        "SaturationAdjustmentBlue": 100,
+        "LuminanceAdjustmentBlue": 100,
+        "HueAdjustmentPurple": 100,
+        "SaturationAdjustmentPurple": 100,
+        "LuminanceAdjustmentPurple": 100,
+        "HueAdjustmentMagenta": 100,
+        "SaturationAdjustmentMagenta": 100,
+        "LuminanceAdjustmentMagenta": 100
+      },
+      "ok": true,
+      "apply_ms": 31.1,
+      "mismatches": [],
+      "changed_keys": [
+        "Blacks2012",
+        "Clarity2012",
+        "ColorGradeBlending",
+        "ColorGradeGlobalHue",
+        "ColorGradeGlobalLum",
+        "ColorGradeGlobalSat",
+        "ColorGradeHighlightLum",
+        "ColorGradeMidtoneHue",
+        "ColorGradeMidtoneLum",
+        "ColorGradeMidtoneSat",
+        "ColorGradeShadowLum",
+        "ColorNoiseReduction",
+        "Contrast2012",
+        "Dehaze",
+        "Exposure2012",
+        "Highlights2012",
+        "HueAdjustmentAqua",
+        "HueAdjustmentBlue",
+        "HueAdjustmentGreen",
+        "HueAdjustmentMagenta",
+        "HueAdjustmentOrange",
+        "HueAdjustmentPurple",
+        "HueAdjustmentRed",
+        "HueAdjustmentYellow",
+        "LuminanceAdjustmentAqua",
+        "LuminanceAdjustmentBlue",
+        "LuminanceAdjustmentGreen",
+        "LuminanceAdjustmentMagenta",
+        "LuminanceAdjustmentOrange",
+        "LuminanceAdjustmentPurple",
+        "LuminanceAdjustmentRed",
+        "LuminanceAdjustmentYellow",
+        "LuminanceSmoothing",
+        "Saturation",
+        "SaturationAdjustmentAqua",
+        "SaturationAdjustmentBlue",
+        "SaturationAdjustmentGreen",
+        "SaturationAdjustmentMagenta",
+        "SaturationAdjustmentOrange",
+        "SaturationAdjustmentPurple",
+        "SaturationAdjustmentRed",
+        "SaturationAdjustmentYellow",
+        "Shadows2012",
+        "SharpenDetail",
+        "SharpenEdgeMasking",
+        "SharpenRadius",
+        "Sharpness",
+        "SplitToningBalance",
+        "SplitToningHighlightHue",
+        "SplitToningHighlightSaturation",
+        "SplitToningShadowHue",
+        "SplitToningShadowSaturation",
+        "Temperature",
+        "Texture",
+        "Tint",
+        "Vibrance",
+        "Whites2012"
+      ]
+    },
+    {
+      "label": "range probe: all 57 numeric parameters 1 % below minimum",
+      "history_name": "AVG P1check pass 8/9",
+      "requested": {
+        "Exposure2012": -5.1,
+        "Contrast2012": -102,
+        "Highlights2012": -102,
+        "Shadows2012": -102,
+        "Whites2012": -102,
+        "Blacks2012": -102,
+        "Texture": -102,
+        "Clarity2012": -102,
+        "Dehaze": -102,
+        "Vibrance": -102,
+        "Saturation": -102,
+        "Temperature": 1520,
+        "Tint": -153,
+        "SplitToningShadowHue": -3.6,
+        "SplitToningShadowSaturation": -1,
+        "ColorGradeShadowLum": -102,
+        "ColorGradeMidtoneHue": -3.6,
+        "ColorGradeMidtoneSat": -1,
+        "ColorGradeMidtoneLum": -102,
+        "SplitToningHighlightHue": -3.6,
+        "SplitToningHighlightSaturation": -1,
+        "ColorGradeHighlightLum": -102,
+        "ColorGradeGlobalHue": -3.6,
+        "ColorGradeGlobalSat": -1,
+        "ColorGradeGlobalLum": -102,
+        "ColorGradeBlending": -1,
+        "SplitToningBalance": -102,
+        "Sharpness": -1.5,
+        "SharpenRadius": 0.475,
+        "SharpenDetail": -1,
+        "SharpenEdgeMasking": -1,
+        "LuminanceSmoothing": -1,
+        "ColorNoiseReduction": -1,
+        "HueAdjustmentRed": -102,
+        "SaturationAdjustmentRed": -102,
+        "LuminanceAdjustmentRed": -102,
+        "HueAdjustmentOrange": -102,
+        "SaturationAdjustmentOrange": -102,
+        "LuminanceAdjustmentOrange": -102,
+        "HueAdjustmentYellow": -102,
+        "SaturationAdjustmentYellow": -102,
+        "LuminanceAdjustmentYellow": -102,
+        "HueAdjustmentGreen": -102,
+        "SaturationAdjustmentGreen": -102,
+        "LuminanceAdjustmentGreen": -102,
+        "HueAdjustmentAqua": -102,
+        "SaturationAdjustmentAqua": -102,
+        "LuminanceAdjustmentAqua": -102,
+        "HueAdjustmentBlue": -102,
+        "SaturationAdjustmentBlue": -102,
+        "LuminanceAdjustmentBlue": -102,
+        "HueAdjustmentPurple": -102,
+        "SaturationAdjustmentPurple": -102,
+        "LuminanceAdjustmentPurple": -102,
+        "HueAdjustmentMagenta": -102,
+        "SaturationAdjustmentMagenta": -102,
+        "LuminanceAdjustmentMagenta": -102
+      },
+      "ok": true,
+      "probe": true,
+      "apply_ms": 30.6,
+      "mismatches": [
+        {
+          "sdk_key": "Exposure2012",
+          "written": -5.1,
+          "read_back": -5
+        },
+        {
+          "sdk_key": "Contrast2012",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "Highlights2012",
+          "written": -102,
+          "read_back": -21
+        },
+        {
+          "sdk_key": "Shadows2012",
+          "written": -102,
+          "read_back": 10
+        },
+        {
+          "sdk_key": "Whites2012",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "Blacks2012",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "Texture",
+          "written": -102,
+          "read_back": 4
+        },
+        {
+          "sdk_key": "Clarity2012",
+          "written": -102,
+          "read_back": 2
+        },
+        {
+          "sdk_key": "Dehaze",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "Vibrance",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "Saturation",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "Temperature",
+          "written": 1520,
+          "read_back": 2000
+        },
+        {
+          "sdk_key": "Tint",
+          "written": -153,
+          "read_back": -150
+        },
+        {
+          "sdk_key": "SplitToningShadowHue",
+          "written": -3.6,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "SplitToningShadowSaturation",
+          "written": -1,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "ColorGradeShadowLum",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "ColorGradeMidtoneHue",
+          "written": -3.6,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "ColorGradeMidtoneSat",
+          "written": -1,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "ColorGradeMidtoneLum",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "SplitToningHighlightHue",
+          "written": -3.6,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "SplitToningHighlightSaturation",
+          "written": -1,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "ColorGradeHighlightLum",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "ColorGradeGlobalHue",
+          "written": -3.6,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "ColorGradeGlobalSat",
+          "written": -1,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "ColorGradeGlobalLum",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "ColorGradeBlending",
+          "written": -1,
+          "read_back": 50
+        },
+        {
+          "sdk_key": "SplitToningBalance",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "Sharpness",
+          "written": -1.5,
+          "read_back": 24
+        },
+        {
+          "sdk_key": "SharpenRadius",
+          "written": 0.475,
+          "read_back": 0.5
+        },
+        {
+          "sdk_key": "SharpenDetail",
+          "written": -1,
+          "read_back": 25
+        },
+        {
+          "sdk_key": "SharpenEdgeMasking",
+          "written": -1,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "LuminanceSmoothing",
+          "written": -1,
+          "read_back": 48
+        },
+        {
+          "sdk_key": "ColorNoiseReduction",
+          "written": -1,
+          "read_back": 25
+        },
+        {
+          "sdk_key": "HueAdjustmentRed",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "SaturationAdjustmentRed",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "LuminanceAdjustmentRed",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "HueAdjustmentOrange",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "SaturationAdjustmentOrange",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "LuminanceAdjustmentOrange",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "HueAdjustmentYellow",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "SaturationAdjustmentYellow",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "LuminanceAdjustmentYellow",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "HueAdjustmentGreen",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "SaturationAdjustmentGreen",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "LuminanceAdjustmentGreen",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "HueAdjustmentAqua",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "SaturationAdjustmentAqua",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "LuminanceAdjustmentAqua",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "HueAdjustmentBlue",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "SaturationAdjustmentBlue",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "LuminanceAdjustmentBlue",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "HueAdjustmentPurple",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "SaturationAdjustmentPurple",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "LuminanceAdjustmentPurple",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "HueAdjustmentMagenta",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "SaturationAdjustmentMagenta",
+          "written": -102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "LuminanceAdjustmentMagenta",
+          "written": -102,
+          "read_back": 0
+        }
+      ],
+      "changed_keys": [
+        "Blacks2012",
+        "Clarity2012",
+        "ColorGradeBlending",
+        "ColorGradeGlobalHue",
+        "ColorGradeGlobalLum",
+        "ColorGradeGlobalSat",
+        "ColorGradeHighlightLum",
+        "ColorGradeMidtoneHue",
+        "ColorGradeMidtoneLum",
+        "ColorGradeMidtoneSat",
+        "ColorGradeShadowLum",
+        "ColorNoiseReduction",
+        "Contrast2012",
+        "Dehaze",
+        "Exposure2012",
+        "Highlights2012",
+        "HueAdjustmentAqua",
+        "HueAdjustmentBlue",
+        "HueAdjustmentGreen",
+        "HueAdjustmentMagenta",
+        "HueAdjustmentOrange",
+        "HueAdjustmentPurple",
+        "HueAdjustmentRed",
+        "HueAdjustmentYellow",
+        "LuminanceAdjustmentAqua",
+        "LuminanceAdjustmentBlue",
+        "LuminanceAdjustmentGreen",
+        "LuminanceAdjustmentMagenta",
+        "LuminanceAdjustmentOrange",
+        "LuminanceAdjustmentPurple",
+        "LuminanceAdjustmentRed",
+        "LuminanceAdjustmentYellow",
+        "LuminanceSmoothing",
+        "Saturation",
+        "SaturationAdjustmentAqua",
+        "SaturationAdjustmentBlue",
+        "SaturationAdjustmentGreen",
+        "SaturationAdjustmentMagenta",
+        "SaturationAdjustmentOrange",
+        "SaturationAdjustmentPurple",
+        "SaturationAdjustmentRed",
+        "SaturationAdjustmentYellow",
+        "Shadows2012",
+        "SharpenDetail",
+        "SharpenEdgeMasking",
+        "SharpenRadius",
+        "Sharpness",
+        "SplitToningBalance",
+        "SplitToningHighlightHue",
+        "SplitToningHighlightSaturation",
+        "SplitToningShadowHue",
+        "SplitToningShadowSaturation",
+        "Temperature",
+        "Texture",
+        "Tint",
+        "Vibrance",
+        "Whites2012"
+      ]
+    },
+    {
+      "label": "range probe: all 57 numeric parameters 1 % above maximum",
+      "history_name": "AVG P1check pass 9/9",
+      "requested": {
+        "Exposure2012": 5.1,
+        "Contrast2012": 102,
+        "Highlights2012": 102,
+        "Shadows2012": 102,
+        "Whites2012": 102,
+        "Blacks2012": 102,
+        "Texture": 102,
+        "Clarity2012": 102,
+        "Dehaze": 102,
+        "Vibrance": 102,
+        "Saturation": 102,
+        "Temperature": 50480,
+        "Tint": 153,
+        "SplitToningShadowHue": 363.6,
+        "SplitToningShadowSaturation": 101,
+        "ColorGradeShadowLum": 102,
+        "ColorGradeMidtoneHue": 363.6,
+        "ColorGradeMidtoneSat": 101,
+        "ColorGradeMidtoneLum": 102,
+        "SplitToningHighlightHue": 363.6,
+        "SplitToningHighlightSaturation": 101,
+        "ColorGradeHighlightLum": 102,
+        "ColorGradeGlobalHue": 363.6,
+        "ColorGradeGlobalSat": 101,
+        "ColorGradeGlobalLum": 102,
+        "ColorGradeBlending": 101,
+        "SplitToningBalance": 102,
+        "Sharpness": 151.5,
+        "SharpenRadius": 3.025,
+        "SharpenDetail": 101,
+        "SharpenEdgeMasking": 101,
+        "LuminanceSmoothing": 101,
+        "ColorNoiseReduction": 101,
+        "HueAdjustmentRed": 102,
+        "SaturationAdjustmentRed": 102,
+        "LuminanceAdjustmentRed": 102,
+        "HueAdjustmentOrange": 102,
+        "SaturationAdjustmentOrange": 102,
+        "LuminanceAdjustmentOrange": 102,
+        "HueAdjustmentYellow": 102,
+        "SaturationAdjustmentYellow": 102,
+        "LuminanceAdjustmentYellow": 102,
+        "HueAdjustmentGreen": 102,
+        "SaturationAdjustmentGreen": 102,
+        "LuminanceAdjustmentGreen": 102,
+        "HueAdjustmentAqua": 102,
+        "SaturationAdjustmentAqua": 102,
+        "LuminanceAdjustmentAqua": 102,
+        "HueAdjustmentBlue": 102,
+        "SaturationAdjustmentBlue": 102,
+        "LuminanceAdjustmentBlue": 102,
+        "HueAdjustmentPurple": 102,
+        "SaturationAdjustmentPurple": 102,
+        "LuminanceAdjustmentPurple": 102,
+        "HueAdjustmentMagenta": 102,
+        "SaturationAdjustmentMagenta": 102,
+        "LuminanceAdjustmentMagenta": 102
+      },
+      "ok": true,
+      "probe": true,
+      "apply_ms": 24,
+      "mismatches": [
+        {
+          "sdk_key": "Exposure2012",
+          "written": 5.1,
+          "read_back": 5
+        },
+        {
+          "sdk_key": "Contrast2012",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "Highlights2012",
+          "written": 102,
+          "read_back": -21
+        },
+        {
+          "sdk_key": "Shadows2012",
+          "written": 102,
+          "read_back": 10
+        },
+        {
+          "sdk_key": "Whites2012",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "Blacks2012",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "Texture",
+          "written": 102,
+          "read_back": 4
+        },
+        {
+          "sdk_key": "Clarity2012",
+          "written": 102,
+          "read_back": 2
+        },
+        {
+          "sdk_key": "Dehaze",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "Vibrance",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "Saturation",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "Temperature",
+          "written": 50480,
+          "read_back": 50000
+        },
+        {
+          "sdk_key": "Tint",
+          "written": 153,
+          "read_back": 150
+        },
+        {
+          "sdk_key": "SplitToningShadowHue",
+          "written": 363.6,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "SplitToningShadowSaturation",
+          "written": 101,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "ColorGradeShadowLum",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "ColorGradeMidtoneHue",
+          "written": 363.6,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "ColorGradeMidtoneSat",
+          "written": 101,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "ColorGradeMidtoneLum",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "SplitToningHighlightHue",
+          "written": 363.6,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "SplitToningHighlightSaturation",
+          "written": 101,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "ColorGradeHighlightLum",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "ColorGradeGlobalHue",
+          "written": 363.6,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "ColorGradeGlobalSat",
+          "written": 101,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "ColorGradeGlobalLum",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "ColorGradeBlending",
+          "written": 101,
+          "read_back": 50
+        },
+        {
+          "sdk_key": "SplitToningBalance",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "Sharpness",
+          "written": 151.5,
+          "read_back": 24
+        },
+        {
+          "sdk_key": "SharpenRadius",
+          "written": 3.025,
+          "read_back": 3
+        },
+        {
+          "sdk_key": "SharpenDetail",
+          "written": 101,
+          "read_back": 25
+        },
+        {
+          "sdk_key": "SharpenEdgeMasking",
+          "written": 101,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "LuminanceSmoothing",
+          "written": 101,
+          "read_back": 48
+        },
+        {
+          "sdk_key": "ColorNoiseReduction",
+          "written": 101,
+          "read_back": 25
+        },
+        {
+          "sdk_key": "HueAdjustmentRed",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "SaturationAdjustmentRed",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "LuminanceAdjustmentRed",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "HueAdjustmentOrange",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "SaturationAdjustmentOrange",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "LuminanceAdjustmentOrange",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "HueAdjustmentYellow",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "SaturationAdjustmentYellow",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "LuminanceAdjustmentYellow",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "HueAdjustmentGreen",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "SaturationAdjustmentGreen",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "LuminanceAdjustmentGreen",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "HueAdjustmentAqua",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "SaturationAdjustmentAqua",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "LuminanceAdjustmentAqua",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "HueAdjustmentBlue",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "SaturationAdjustmentBlue",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "LuminanceAdjustmentBlue",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "HueAdjustmentPurple",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "SaturationAdjustmentPurple",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "LuminanceAdjustmentPurple",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "HueAdjustmentMagenta",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "SaturationAdjustmentMagenta",
+          "written": 102,
+          "read_back": 0
+        },
+        {
+          "sdk_key": "LuminanceAdjustmentMagenta",
+          "written": 102,
+          "read_back": 0
+        }
+      ],
+      "changed_keys": [
+        "Exposure2012",
+        "SharpenRadius",
+        "Temperature",
+        "Tint"
+      ]
+    }
+  ],
+  "errors": [],
+  "hello": {
+    "protocol": 1,
+    "plugin_version": "0.1.0",
+    "lrc_version": "15.5.1",
+    "sdk_declared": 13,
+    "ports": {
+      "receive": 8765,
+      "send": 8766
+    }
+  },
+  "connect_ms": 521,
+  "pings": {
+    "utf8": {
+      "sent": "AVG P1 é漢字 ✓",
+      "echoed": "AVG P1 é漢字 ✓",
+      "ok": true
+    },
+    "in_flight": {
+      "count": 5,
+      "ok": true
+    },
+    "rtt_ms": {
+      "n": 20,
+      "median": 0.36800000000005184,
+      "min": 0.22950000000003,
+      "max": 0.7557999999999083
+    }
+  },
+  "photo": {
+    "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+    "local_id": 3869533,
+    "filename": "20260907-_OZ80093.NEF",
+    "file_format": "RAW",
+    "is_virtual_copy": false,
+    "lrc_version": "15.5.1",
+    "metadata_errors": [],
+    "process_version": "15.4",
+    "camera_profile": {
+      "name": "Camera Neutral",
+      "camera_profile": "Camera Neutral",
+      "look_name": null,
+      "look_uuid": null
+    },
+    "unpinned_keys": [],
+    "key_count": 177
+  },
+  "snapshot": {
+    "name": "AVG P1 check 2026-09-26 14:06:50",
+    "snapshot_id": "B2652D42-E24F-4CE8-9BBE-A78C217CDB01",
+    "same_name_count": 1
+  },
+  "exposure": {
+    "start": 0.33,
+    "target": 0.83,
+    "read_back": 0.83
+  },
+  "range_probe": {
+    "parameters": 57,
+    "min_accepted": 57,
+    "max_accepted": 57,
+    "below_min": {
+      "accepted": 0,
+      "clamped": 13,
+      "ignored": 0,
+      "clamped_or_ignored": 0,
+      "other": 44,
+      "missing": 0
+    },
+    "above_max": {
+      "accepted": 0,
+      "clamped": 4,
+      "ignored": 53,
+      "clamped_or_ignored": 0,
+      "other": 0,
+      "missing": 0
+    },
+    "per_parameter": [
+      {
+        "name": "exposure",
+        "sdk_key": "Exposure2012",
+        "min": -5,
+        "max": 5,
+        "min_read": -5,
+        "max_read": 5,
+        "below_written": -5.1,
+        "below_read": -5,
+        "below_outcome": "clamped",
+        "above_written": 5.1,
+        "above_read": 5,
+        "above_outcome": "clamped"
+      },
+      {
+        "name": "contrast",
+        "sdk_key": "Contrast2012",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "highlights",
+        "sdk_key": "Highlights2012",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": -21,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": -21,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "shadows",
+        "sdk_key": "Shadows2012",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 10,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 10,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "whites",
+        "sdk_key": "Whites2012",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "blacks",
+        "sdk_key": "Blacks2012",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "texture",
+        "sdk_key": "Texture",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 4,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 4,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "clarity",
+        "sdk_key": "Clarity2012",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 2,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 2,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "dehaze",
+        "sdk_key": "Dehaze",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "vibrance",
+        "sdk_key": "Vibrance",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "saturation",
+        "sdk_key": "Saturation",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "temperature",
+        "sdk_key": "Temperature",
+        "min": 2000,
+        "max": 50000,
+        "min_read": 2000,
+        "max_read": 50000,
+        "below_written": 1520,
+        "below_read": 2000,
+        "below_outcome": "clamped",
+        "above_written": 50480,
+        "above_read": 50000,
+        "above_outcome": "clamped"
+      },
+      {
+        "name": "tint",
+        "sdk_key": "Tint",
+        "min": -150,
+        "max": 150,
+        "min_read": -150,
+        "max_read": 150,
+        "below_written": -153,
+        "below_read": -150,
+        "below_outcome": "clamped",
+        "above_written": 153,
+        "above_read": 150,
+        "above_outcome": "clamped"
+      },
+      {
+        "name": "grading.shadows.hue",
+        "sdk_key": "SplitToningShadowHue",
+        "min": 0,
+        "max": 360,
+        "min_read": 0,
+        "max_read": 360,
+        "below_written": -3.6,
+        "below_read": 0,
+        "below_outcome": "clamped",
+        "above_written": 363.6,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "grading.shadows.sat",
+        "sdk_key": "SplitToningShadowSaturation",
+        "min": 0,
+        "max": 100,
+        "min_read": 0,
+        "max_read": 100,
+        "below_written": -1,
+        "below_read": 0,
+        "below_outcome": "clamped",
+        "above_written": 101,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "grading.shadows.lum",
+        "sdk_key": "ColorGradeShadowLum",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "grading.midtones.hue",
+        "sdk_key": "ColorGradeMidtoneHue",
+        "min": 0,
+        "max": 360,
+        "min_read": 0,
+        "max_read": 360,
+        "below_written": -3.6,
+        "below_read": 0,
+        "below_outcome": "clamped",
+        "above_written": 363.6,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "grading.midtones.sat",
+        "sdk_key": "ColorGradeMidtoneSat",
+        "min": 0,
+        "max": 100,
+        "min_read": 0,
+        "max_read": 100,
+        "below_written": -1,
+        "below_read": 0,
+        "below_outcome": "clamped",
+        "above_written": 101,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "grading.midtones.lum",
+        "sdk_key": "ColorGradeMidtoneLum",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "grading.highlights.hue",
+        "sdk_key": "SplitToningHighlightHue",
+        "min": 0,
+        "max": 360,
+        "min_read": 0,
+        "max_read": 360,
+        "below_written": -3.6,
+        "below_read": 0,
+        "below_outcome": "clamped",
+        "above_written": 363.6,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "grading.highlights.sat",
+        "sdk_key": "SplitToningHighlightSaturation",
+        "min": 0,
+        "max": 100,
+        "min_read": 0,
+        "max_read": 100,
+        "below_written": -1,
+        "below_read": 0,
+        "below_outcome": "clamped",
+        "above_written": 101,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "grading.highlights.lum",
+        "sdk_key": "ColorGradeHighlightLum",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "grading.global.hue",
+        "sdk_key": "ColorGradeGlobalHue",
+        "min": 0,
+        "max": 360,
+        "min_read": 0,
+        "max_read": 360,
+        "below_written": -3.6,
+        "below_read": 0,
+        "below_outcome": "clamped",
+        "above_written": 363.6,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "grading.global.sat",
+        "sdk_key": "ColorGradeGlobalSat",
+        "min": 0,
+        "max": 100,
+        "min_read": 0,
+        "max_read": 100,
+        "below_written": -1,
+        "below_read": 0,
+        "below_outcome": "clamped",
+        "above_written": 101,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "grading.global.lum",
+        "sdk_key": "ColorGradeGlobalLum",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "grading.blending",
+        "sdk_key": "ColorGradeBlending",
+        "min": 0,
+        "max": 100,
+        "min_read": 0,
+        "max_read": 100,
+        "below_written": -1,
+        "below_read": 50,
+        "below_outcome": "other",
+        "above_written": 101,
+        "above_read": 50,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "grading.balance",
+        "sdk_key": "SplitToningBalance",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "sharpening.amount",
+        "sdk_key": "Sharpness",
+        "min": 0,
+        "max": 150,
+        "min_read": 0,
+        "max_read": 150,
+        "below_written": -1.5,
+        "below_read": 24,
+        "below_outcome": "other",
+        "above_written": 151.5,
+        "above_read": 24,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "sharpening.radius",
+        "sdk_key": "SharpenRadius",
+        "min": 0.5,
+        "max": 3,
+        "min_read": 0.5,
+        "max_read": 3,
+        "below_written": 0.475,
+        "below_read": 0.5,
+        "below_outcome": "clamped",
+        "above_written": 3.025,
+        "above_read": 3,
+        "above_outcome": "clamped"
+      },
+      {
+        "name": "sharpening.detail",
+        "sdk_key": "SharpenDetail",
+        "min": 0,
+        "max": 100,
+        "min_read": 0,
+        "max_read": 100,
+        "below_written": -1,
+        "below_read": 25,
+        "below_outcome": "other",
+        "above_written": 101,
+        "above_read": 25,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "sharpening.masking",
+        "sdk_key": "SharpenEdgeMasking",
+        "min": 0,
+        "max": 100,
+        "min_read": 0,
+        "max_read": 100,
+        "below_written": -1,
+        "below_read": 0,
+        "below_outcome": "clamped",
+        "above_written": 101,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "noise.luminance",
+        "sdk_key": "LuminanceSmoothing",
+        "min": 0,
+        "max": 100,
+        "min_read": 0,
+        "max_read": 100,
+        "below_written": -1,
+        "below_read": 48,
+        "below_outcome": "other",
+        "above_written": 101,
+        "above_read": 48,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "noise.color",
+        "sdk_key": "ColorNoiseReduction",
+        "min": 0,
+        "max": 100,
+        "min_read": 0,
+        "max_read": 100,
+        "below_written": -1,
+        "below_read": 25,
+        "below_outcome": "other",
+        "above_written": 101,
+        "above_read": 25,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "hsl.red.hue",
+        "sdk_key": "HueAdjustmentRed",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "hsl.red.sat",
+        "sdk_key": "SaturationAdjustmentRed",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "hsl.red.lum",
+        "sdk_key": "LuminanceAdjustmentRed",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "hsl.orange.hue",
+        "sdk_key": "HueAdjustmentOrange",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "hsl.orange.sat",
+        "sdk_key": "SaturationAdjustmentOrange",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "hsl.orange.lum",
+        "sdk_key": "LuminanceAdjustmentOrange",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "hsl.yellow.hue",
+        "sdk_key": "HueAdjustmentYellow",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "hsl.yellow.sat",
+        "sdk_key": "SaturationAdjustmentYellow",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "hsl.yellow.lum",
+        "sdk_key": "LuminanceAdjustmentYellow",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "hsl.green.hue",
+        "sdk_key": "HueAdjustmentGreen",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "hsl.green.sat",
+        "sdk_key": "SaturationAdjustmentGreen",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "hsl.green.lum",
+        "sdk_key": "LuminanceAdjustmentGreen",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "hsl.aqua.hue",
+        "sdk_key": "HueAdjustmentAqua",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "hsl.aqua.sat",
+        "sdk_key": "SaturationAdjustmentAqua",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "hsl.aqua.lum",
+        "sdk_key": "LuminanceAdjustmentAqua",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "hsl.blue.hue",
+        "sdk_key": "HueAdjustmentBlue",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "hsl.blue.sat",
+        "sdk_key": "SaturationAdjustmentBlue",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "hsl.blue.lum",
+        "sdk_key": "LuminanceAdjustmentBlue",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "hsl.purple.hue",
+        "sdk_key": "HueAdjustmentPurple",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "hsl.purple.sat",
+        "sdk_key": "SaturationAdjustmentPurple",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "hsl.purple.lum",
+        "sdk_key": "LuminanceAdjustmentPurple",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "hsl.magenta.hue",
+        "sdk_key": "HueAdjustmentMagenta",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "hsl.magenta.sat",
+        "sdk_key": "SaturationAdjustmentMagenta",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      },
+      {
+        "name": "hsl.magenta.lum",
+        "sdk_key": "LuminanceAdjustmentMagenta",
+        "min": -100,
+        "max": 100,
+        "min_read": -100,
+        "max_read": 100,
+        "below_written": -102,
+        "below_read": 0,
+        "below_outcome": "other",
+        "above_written": 102,
+        "above_read": 0,
+        "above_outcome": "ignored"
+      }
+    ]
+  },
+  "revert": {
+    "ok": true,
+    "differing_keys": [],
+    "key_count": 177
+  },
+  "bridge_stats": {
+    "connects": 1,
+    "connect_failures": 0,
+    "last_connect_error": null,
+    "drops": 0,
+    "last_drop_reason": null,
+    "malformed_lines": 0,
+    "unknown_response_ids": 0
+  },
+  "jim": {
+    "history_step_seen": "y",
+    "photo_looks_restored": "y",
+    "asked_at": "2026-09-26T21:07:22.029Z"
+  },
+  "summary": {
+    "acceptance_suggestion": "WORKED",
+    "exposure_write_read_back": true,
+    "snapshot_revert_exact": true,
+    "jim_confirmed": true,
+    "extended_steps_ok": 6,
+    "extended_steps_total": 6
+  },
+  "finished_at": "2026-09-26T21:07:22.030Z",
+  "plugin_log_copied": "p1_bridge_log_2026-09-26T21-06-50-295Z.txt",
+  "node": "v24.11.1"
+}

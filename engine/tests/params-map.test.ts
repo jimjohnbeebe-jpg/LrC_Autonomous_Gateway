@@ -3,7 +3,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { CANONICAL_PARAMS, type ParamSpec } from "../src/params/canonical.js";
+import { CANONICAL_PARAMS, PROBED_CLAMP, type ParamSpec } from "../src/params/canonical.js";
 import { loadDefaultParamMap, ParamError, ParamMap, UnknownSdkKeyError } from "../src/params/index.js";
 import { readCameraProfilesFile } from "../src/params/camera-profiles.js";
 import { loadSdkKeys, readSdkKeysFile } from "../src/params/sdk-keys.js";
@@ -35,6 +35,17 @@ describe("params: canonical map", () => {
       expect(sdkKeys.has(spec.sdkKey), `${name} -> ${spec.sdkKey}`).toBe(true);
       expect(sdkKeys.get(spec.sdkKey).type, name).toBe(kinds[spec.kind]);
     }
+  });
+
+  it("sources every numeric range from the Phase 1 range probe (run 3)", () => {
+    const numeric = [...CANONICAL_PARAMS].filter(([, spec]) => spec.kind === "number") as Array<[string, ParamSpec & { kind: "number" }]>;
+    expect(numeric).toHaveLength(57);
+    for (const [name, spec] of numeric) {
+      expect(spec.rangeSource, name).toMatch(/^\[handle: docs\/reports\/phase1\/P1\/p1_check_2026-09-26T21-06-50-295Z\.json range_probe\]/);
+    }
+    // The four keys whose out-of-range values Lightroom clamped to exactly the limit.
+    const clamped = numeric.filter(([, spec]) => spec.rangeSource === PROBED_CLAMP).map(([name]) => name).sort();
+    expect(clamped).toEqual(["exposure", "sharpening.radius", "temperature", "tint"]);
   });
 
   it("covers the FR-4.2 vocabulary", () => {

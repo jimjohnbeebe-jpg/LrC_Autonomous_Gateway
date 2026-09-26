@@ -130,9 +130,11 @@ function Bridge.start()
     Log.info(string.format("bridge: starting generation %d (receive %d, send %d)", generation, receivePort, sendPort))
 
     LrFunctionContext.postAsyncTaskWithContext("LrC-AVG bridge", function(context)
+        -- Runs from the context's cleanup handler, which may not be a task, so it keeps the plain
+        -- pcall of spike S2 (plugin\spikes\S2.lrplugin\S2Server.lua:93-100).
         local function closeAll(reason)
-            if S.receiveSocket then pcall(function() S.receiveSocket:close() end) end
-            if S.sendSocket then pcall(function() S.sendSocket:close() end) end
+            if S.receiveSocket then pcall(function() S.receiveSocket:close() end) end -- plain pcall: cleanup handler
+            if S.sendSocket then pcall(function() S.sendSocket:close() end) end -- plain pcall: cleanup handler
             S.receiveSocket, S.sendSocket = nil, nil
             S.receiveConnected, S.sendConnected = false, false
             Log.info("bridge: sockets closed (" .. reason .. ")")
@@ -143,7 +145,7 @@ function Bridge.start()
         -- Returns true, or false plus "encode" (with the error) or "socket".
         local function send(envelope)
             envelope.ts = isoNow()
-            local okEncode, line = pcall(Json.encode, envelope)
+            local okEncode, line = pcall(Json.encode, envelope) -- plain pcall: pure Lua, no yield
             if not okEncode then
                 Log.error("bridge: cannot encode " .. tostring(envelope.name) .. ": " .. tostring(line))
                 return false, "encode", tostring(line)
@@ -157,7 +159,8 @@ function Bridge.start()
                 Log.warn("bridge: dropped " .. envelope.type .. " " .. tostring(envelope.name) .. " (send socket not connected)")
                 return false, "socket"
             end
-            local sent, err = pcall(function() S.sendSocket:send(line .. "\n") end)
+            -- LrTasks.pcall (rule 03): a plain pcall would turn a yield inside send() into a silent failure.
+            local sent, err = LrTasks.pcall(function() S.sendSocket:send(line .. "\n") end)
             if not sent then
                 Log.error("bridge: send failed: " .. tostring(err))
                 S.sendConnected = false
@@ -191,7 +194,7 @@ function Bridge.start()
 
         -- Runs in its own task, one per line.
         local function handleLine(line)
-            local okDecode, msg = pcall(Json.decode, line)
+            local okDecode, msg = pcall(Json.decode, line) -- plain pcall: pure Lua, no yield
             if not okDecode or type(msg) ~= "table" or msg.type ~= "cmd" or type(msg.id) ~= "string"
                 or type(msg.name) ~= "string" then
                 S.malformed = S.malformed + 1
@@ -323,7 +326,7 @@ function Bridge.start()
         -- next tick binds again.
         local function rebindReceive()
             S.receiveGen = S.receiveGen + 1
-            if S.receiveSocket then pcall(function() S.receiveSocket:close() end) end
+            if S.receiveSocket then LrTasks.pcall(function() S.receiveSocket:close() end) end
             S.receiveSocket, S.receiveConnected = nil, false
             LrTasks.sleep(0.1)
             S.receiveSocket = bindReceive(S.receiveGen)
@@ -331,7 +334,7 @@ function Bridge.start()
         end
         local function rebindSend()
             S.sendGen = S.sendGen + 1
-            if S.sendSocket then pcall(function() S.sendSocket:close() end) end
+            if S.sendSocket then LrTasks.pcall(function() S.sendSocket:close() end) end
             S.sendSocket, S.sendConnected = nil, false
             LrTasks.sleep(0.1)
             S.sendSocket = bindSend(S.sendGen)
@@ -363,7 +366,7 @@ function Bridge.start()
                 token_written = S.token ~= nil,
                 log_tail = Log.tail(20),
             }
-            local okEncode, text = pcall(Json.encode, status)
+            local okEncode, text = pcall(Json.encode, status) -- plain pcall: pure Lua, no yield
             if okEncode then Log.writeFile(Bridge.STATUS_FILE, text) end
             lastStatus = now
         end

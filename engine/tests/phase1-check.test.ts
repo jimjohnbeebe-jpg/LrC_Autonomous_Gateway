@@ -148,6 +148,28 @@ describe("devtools: Phase 1 check against a simulated plugin", () => {
     expect((results["errors"] as string[])[0]).toMatch(/\+0\.5 would pass \+5/);
   });
 
+  it("stops before any write when the plugin cannot read the file format (Jim's run 1)", async () => {
+    plugin.handlers.set("get_context", () => ({
+      ok: true,
+      payload: {
+        uuid: "SIM-UUID",
+        local_id: 1,
+        lrc_version: "15.5.1",
+        // In run 2 the list began with path; the message must still name fileFormat.
+        metadata_errors: [
+          "path: Yielding is not allowed within a C or metamethod call",
+          "shutterSpeed: Yielding is not allowed within a C or metamethod call",
+          "fileFormat: Yielding is not allowed within a C or metamethod call",
+        ],
+      },
+    }));
+    const { accepted, results } = await run(["y", "y"]);
+    expect(accepted).toBe(false);
+    expect(lr.history).toEqual([]);
+    expect(lr.snapshots.size).toBe(0);
+    expect((results["errors"] as string[])[0]).toMatch(/could not read the photo's file format \(fileFormat: Yielding/);
+  });
+
   it("refuses a photo that is not raw before writing anything, and asks nothing", async () => {
     lr.fileFormat = "JPG";
     const { accepted, results } = await run(["y", "y"]);

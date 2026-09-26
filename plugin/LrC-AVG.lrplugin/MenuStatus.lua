@@ -14,7 +14,7 @@ local STALE_SECONDS = 10 -- the bridge rewrites the file every 2 s; older means 
 LrTasks.startAsyncTask(function()
     local text = Log.readFile(Bridge.STATUS_FILE)
     local ok, status = false, nil
-    if text then ok, status = pcall(Json.decode, text) end
+    if text then ok, status = pcall(Json.decode, text) end -- plain pcall: pure Lua, no yield
     if not ok or type(status) ~= "table" then
         LrDialogs.message("LrC-AVG bridge: NOT RUNNING",
             "No bridge status file was found.\n\nRestart Lightroom (File > Exit, then open it again), then choose this menu item again.\n\nLog: " .. Log.path(),

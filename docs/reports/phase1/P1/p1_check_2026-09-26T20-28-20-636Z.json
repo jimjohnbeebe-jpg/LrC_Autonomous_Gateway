@@ -1,0 +1,88 @@
+{
+  "check": "phase1",
+  "started_at": "2026-09-26T20:28:20.645Z",
+  "steps": [],
+  "errors": [
+    "the selected photo is undefined, not a raw file: select 20260907-_OZ80093.NEF and run the command again"
+  ],
+  "hello": {
+    "protocol": 1,
+    "plugin_version": "0.1.0",
+    "lrc_version": "15.5.1",
+    "sdk_declared": 13,
+    "ports": {
+      "receive": 8765,
+      "send": 8766
+    }
+  },
+  "connect_ms": 511,
+  "pings": {
+    "utf8": {
+      "sent": "AVG P1 é漢字 ✓",
+      "echoed": "AVG P1 é漢字 ✓",
+      "ok": true
+    },
+    "in_flight": {
+      "count": 5,
+      "ok": true
+    },
+    "rtt_ms": {
+      "n": 20,
+      "median": 0.34540000000004056,
+      "min": 0.2785000000000082,
+      "max": 0.547800000000052
+    }
+  },
+  "photo": {
+    "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+    "local_id": 3869533,
+    "filename": null,
+    "file_format": null,
+    "is_virtual_copy": null,
+    "lrc_version": "15.5.1",
+    "metadata_errors": [
+      "path: Yielding is not allowed within a C or metamethod call",
+      "shutterSpeed: Yielding is not allowed within a C or metamethod call",
+      "aperture: Yielding is not allowed within a C or metamethod call",
+      "width: Yielding is not allowed within a C or metamethod call",
+      "isoSpeedRating: Yielding is not allowed within a C or metamethod call",
+      "focalLength: Yielding is not allowed within a C or metamethod call",
+      "height: Yielding is not allowed within a C or metamethod call",
+      "fileFormat: Yielding is not allowed within a C or metamethod call",
+      "isVirtualCopy: Yielding is not allowed within a C or metamethod call",
+      "cameraModel: Yielding is not allowed within a C or metamethod call",
+      "copyName: Yielding is not allowed within a C or metamethod call",
+      "fileName: Yielding is not allowed within a C or metamethod call",
+      "lens: Yielding is not allowed within a C or metamethod call"
+    ],
+    "process_version": "15.4",
+    "camera_profile": {
+      "name": "Camera Neutral",
+      "camera_profile": "Camera Neutral",
+      "look_name": null,
+      "look_uuid": null
+    },
+    "unpinned_keys": [],
+    "key_count": 177
+  },
+  "bridge_stats": {
+    "connects": 1,
+    "connect_failures": 0,
+    "last_connect_error": null,
+    "drops": 0,
+    "last_drop_reason": null,
+    "malformed_lines": 0,
+    "unknown_response_ids": 0
+  },
+  "summary": {
+    "acceptance_suggestion": "FAILED",
+    "exposure_write_read_back": false,
+    "snapshot_revert_exact": false,
+    "jim_confirmed": false,
+    "extended_steps_ok": 0,
+    "extended_steps_total": 0
+  },
+  "finished_at": "2026-09-26T20:28:21.182Z",
+  "plugin_log_copied": "p1_bridge_log_2026-09-26T20-28-20-636Z.txt",
+  "node": "v24.11.1"
+}

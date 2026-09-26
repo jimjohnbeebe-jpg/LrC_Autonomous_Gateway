@@ -1,0 +1,12 @@
+=== AVG S6 Loupe run 2026-09-26 10:11:32 (local time) ===
+master: local_id=3869533 copy_name=nil is_virtual_copy=false master_local_id=3869533 file=20260907-_OZ80093.NEF
+copy: local_id=3870730 copy_name=AVG S6 A is_virtual_copy=true master_local_id=3869533 file=20260907-_OZ80093.NEF
+copy: local_id=3870764 copy_name=AVG S6 B is_virtual_copy=true master_local_id=3869533 file=20260907-_OZ80093.NEF
+copy: local_id=3870795 copy_name=AVG S6 C is_virtual_copy=true master_local_id=3869533 file=20260907-_OZ80093.NEF
+
+=== AVG S6 Grid run 2026-09-26 10:12:47 (local time) ===
+master: local_id=3869533 copy_name=nil is_virtual_copy=false master_local_id=3869533 file=20260907-_OZ80093.NEF
+copy: local_id=3870826 copy_name=AVG S6 A is_virtual_copy=true master_local_id=3869533 file=20260907-_OZ80093.NEF
+copy: local_id=3870860 copy_name=AVG S6 B is_virtual_copy=true master_local_id=3869533 file=20260907-_OZ80093.NEF
+copy: local_id=3870891 copy_name=AVG S6 C is_virtual_copy=true master_local_id=3869533 file=20260907-_OZ80093.NEF
+

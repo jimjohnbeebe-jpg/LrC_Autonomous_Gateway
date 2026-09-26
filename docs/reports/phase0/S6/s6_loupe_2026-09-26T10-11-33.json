@@ -1,0 +1,130 @@
+{
+  "calls": [
+    {
+      "how": "outside write gate",
+      "ms": 1017.4559354782,
+      "name": "AVG S6 A",
+      "returned": [
+        {
+          "copy_name": "AVG S6 A",
+          "file_name": "20260907-_OZ80093.NEF",
+          "found_via_get_all_photos_scan": true,
+          "found_via_get_photo_by_local_id": true,
+          "is_virtual_copy": true,
+          "local_id": 3870730,
+          "master_local_id": 3869533
+        }
+      ],
+      "returned_count": 1,
+      "returned_type": "table",
+      "target_after": {
+        "copy_name": "AVG S6 A",
+        "file_name": "20260907-_OZ80093.NEF",
+        "is_virtual_copy": true,
+        "local_id": 3870730,
+        "master_local_id": 3869533
+      },
+      "target_before_local_id": 3869533
+    },
+    {
+      "how": "outside write gate",
+      "ms": 263.84317874908,
+      "name": "AVG S6 B",
+      "returned": [
+        {
+          "copy_name": "AVG S6 B",
+          "file_name": "20260907-_OZ80093.NEF",
+          "found_via_get_all_photos_scan": true,
+          "found_via_get_photo_by_local_id": true,
+          "is_virtual_copy": true,
+          "local_id": 3870764,
+          "master_local_id": 3869533
+        }
+      ],
+      "returned_count": 1,
+      "returned_type": "table",
+      "target_after": {
+        "copy_name": "AVG S6 B",
+        "file_name": "20260907-_OZ80093.NEF",
+        "is_virtual_copy": true,
+        "local_id": 3870764,
+        "master_local_id": 3869533
+      },
+      "target_before_local_id": 3869533
+    },
+    {
+      "how": "outside write gate",
+      "ms": 267.37761497498,
+      "name": "AVG S6 C",
+      "returned": [
+        {
+          "copy_name": "AVG S6 C",
+          "file_name": "20260907-_OZ80093.NEF",
+          "found_via_get_all_photos_scan": true,
+          "found_via_get_photo_by_local_id": true,
+          "is_virtual_copy": true,
+          "local_id": 3870795,
+          "master_local_id": 3869533
+        }
+      ],
+      "returned_count": 1,
+      "returned_type": "table",
+      "target_after": {
+        "copy_name": "AVG S6 C",
+        "file_name": "20260907-_OZ80093.NEF",
+        "is_virtual_copy": true,
+        "local_id": 3870795,
+        "master_local_id": 3869533
+      },
+      "target_before_local_id": 3869533
+    }
+  ],
+  "copies": [
+    {
+      "copy_name": "AVG S6 A",
+      "file_name": "20260907-_OZ80093.NEF",
+      "found_via_get_all_photos_scan": true,
+      "found_via_get_photo_by_local_id": true,
+      "is_virtual_copy": true,
+      "local_id": 3870730,
+      "master_local_id": 3869533
+    },
+    {
+      "copy_name": "AVG S6 B",
+      "file_name": "20260907-_OZ80093.NEF",
+      "found_via_get_all_photos_scan": true,
+      "found_via_get_photo_by_local_id": true,
+      "is_virtual_copy": true,
+      "local_id": 3870764,
+      "master_local_id": 3869533
+    },
+    {
+      "copy_name": "AVG S6 C",
+      "file_name": "20260907-_OZ80093.NEF",
+      "found_via_get_all_photos_scan": true,
+      "found_via_get_photo_by_local_id": true,
+      "is_virtual_copy": true,
+      "local_id": 3870795,
+      "master_local_id": 3869533
+    }
+  ],
+  "copies_selected_for_cleanup": true,
+  "current_module": "library",
+  "declared_view": "Loupe",
+  "get_photo_by_local_id_exists": true,
+  "lr_version": "15.5.1",
+  "master": {
+    "file_name": "20260907-_OZ80093.NEF",
+    "is_virtual_copy": false,
+    "local_id": 3869533,
+    "master_local_id": 3869533
+  },
+  "run_at": "2026-09-26 10:11:32 (local time)",
+  "selection_after": [
+    "3870795",
+    "3870764",
+    "3870730"
+  ],
+  "spike": "S6",
+  "total_copies": 3
+}

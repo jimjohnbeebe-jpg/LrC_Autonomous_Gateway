@@ -24,6 +24,20 @@ function localDay(d: Date): string {
   return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
 }
 
+/** Every local day from `from` to `to`, both included, as yyyymmdd (at most 366 days). */
+export function daysBetween(from: Date, to: Date): string[] {
+  const days: string[] = [];
+  const d = new Date(from.getFullYear(), from.getMonth(), from.getDate());
+  const last = localDay(to);
+  for (let i = 0; i < 366; i++) {
+    const day = localDay(d);
+    days.push(day);
+    if (day >= last) break;
+    d.setDate(d.getDate() + 1);
+  }
+  return days;
+}
+
 export function collectChatLogs(since: Date, paths: CollectPaths, now: Date = new Date()): ChatLogs {
   mkdirSync(paths.outDir, { recursive: true });
   const redact = (text: string) => redactHome(text, paths.home);
@@ -55,10 +69,11 @@ export function collectChatLogs(since: Date, paths: CollectPaths, now: Date = ne
     desktop = { found: true, saved_as: path.basename(saved), lines: kept.length };
   }
 
-  // The engine's tool log: one file per local day (log/tool-log.ts), records from the chat on.
+  // The engine's tool log: one file per local day (log/tool-log.ts), records from the chat on. Every
+  // day from the chat's start to now is read, in case the check was left open past midnight.
   const records: Array<Record<string, unknown>> = [];
   let found = false;
-  for (const day of new Set([localDay(since), localDay(now)])) {
+  for (const day of daysBetween(since, now)) {
     const file = path.join(paths.engineLogDir, `engine-${day}.jsonl`);
     if (!existsSync(file)) continue;
     found = true;

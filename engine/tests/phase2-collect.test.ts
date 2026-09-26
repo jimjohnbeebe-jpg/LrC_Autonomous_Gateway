@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { collectChatLogs, type CollectPaths } from "../src/devtools/phase2-collect.js";
+import { collectChatLogs, daysBetween, type CollectPaths } from "../src/devtools/phase2-collect.js";
 import { devOverrides } from "../src/mcp/index.js";
 
 let tmp: string;
@@ -72,6 +72,15 @@ describe("devtools: Phase 2 chat logs", () => {
     expect(saved).not.toMatch(/jim/i);
   });
 
+  it("reads every day's tool log between the chat's start and the collection", () => {
+    const start = new Date(2026, 8, 27, 23, 50); // local times
+    const end = new Date(2026, 8, 29, 0, 10);
+    expect(daysBetween(start, end)).toEqual(["20260927", "20260928", "20260929"]);
+    expect(daysBetween(start, start)).toEqual(["20260927"]);
+    writeFileSync(path.join(paths.engineLogDir, "engine-20260928.jsonl"), JSON.stringify({ ts: new Date(2026, 8, 28, 12).toISOString(), tool: "lr_set_settings", ok: true }) + "\n");
+    expect(collectChatLogs(start, paths, end).engine_log.records.map((r) => r["tool"])).toEqual(["lr_set_settings"]);
+  });
+
   it("reports missing logs as not found", () => {
     expect(collectChatLogs(since, paths)).toEqual({
       desktop_log: { found: false, saved_as: null, lines: 0 },
@@ -82,19 +91,27 @@ describe("devtools: Phase 2 chat logs", () => {
 
 describe("mcp: development overrides", () => {
   it("uses nothing when nothing is set", () => {
-    expect(devOverrides({})).toEqual({ bridge: {} });
+    expect(devOverrides({})).toEqual({ bridge: {}, lockPort: 8767 });
   });
 
   it("reads the ports and the token file", () => {
     const token = path.join(tmp, "token");
     writeFileSync(token, " abc \n");
-    const dev = devOverrides({ LRC_AVG_COMMAND_PORT: "18765", LRC_AVG_EVENT_PORT: "18766", LRC_AVG_LOCK_PORT: "18767", LRC_AVG_TOKEN_FILE: token });
+    const dev = devOverrides({ LRC_AVG_COMMAND_PORT: "18765", LRC_AVG_EVENT_PORT: "18766", LRC_AVG_TOKEN_FILE: token });
     expect(dev).toMatchObject({ bridge: { commandPort: 18765, eventPort: 18766 }, lockPort: 18767 });
     expect(dev.bridge.readToken?.()).toBe("abc");
     expect(devOverrides({ LRC_AVG_TOKEN_FILE: path.join(tmp, "missing") }).bridge.readToken?.()).toBeNull();
   });
 
   it("refuses a port that is not a port", () => {
-    expect(() => devOverrides({ LRC_AVG_LOCK_PORT: "99999" })).toThrow(/LRC_AVG_LOCK_PORT must be a port number/);
+    expect(() => devOverrides({ LRC_AVG_EVENT_PORT: "99999" })).toThrow(/LRC_AVG_EVENT_PORT must be a port number/);
+    expect(() => devOverrides({ LRC_AVG_EVENT_PORT: "65535" })).toThrow(/from 1 to 65534/);
+  });
+
+  it("ties the lock to the bridge: a lock port cannot be set on its own", () => {
+    // With only a lock-port variable, an engine would share the default bridge under another lock
+    // (Greptile, PR #18); the variable is not read, and the lock follows the event port.
+    expect(devOverrides({ LRC_AVG_LOCK_PORT: "18767" }).lockPort).toBe(8767);
+    expect(devOverrides({ LRC_AVG_EVENT_PORT: "18766" }).lockPort).toBe(18767);
   });
 });

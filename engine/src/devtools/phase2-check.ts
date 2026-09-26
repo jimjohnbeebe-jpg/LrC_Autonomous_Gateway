@@ -20,8 +20,9 @@
 // Part 2 is the PHASES.md acceptance line: Jim's chat in Claude Desktop, where Claude describes the
 // photo, raises exposure and describes the change. Claude Desktop's engine connects to the plugin
 // after this one left, in the same Lightroom session (open item P-13: the send-socket rebind on a
-// second engine connection). The check then asks three y/n questions and collects Claude Desktop's
-// MCP log and the engine's tool log from the time of the chat.
+// second engine connection). The check then asks three y/n questions, collects Claude Desktop's MCP
+// log and the engine's tool log from the time of the chat, has Jim click the snapshot to undo the
+// chat's change, and asks whether the photo is back.
 
 import type { BridgeClient } from "../bridge/index.js";
 import type { BridgeGate, Tools } from "../mcp/index.js";
@@ -336,6 +337,7 @@ export async function runPhase2Check(deps: Phase2Deps): Promise<{ accepted: bool
 
   // Part 2: the chat.
   let chatOk = false;
+  let putBackAfterChat = false;
   if (errors.length === 0 && passesOk && reverted) {
     say("");
     say("Part 2: the chat in Claude Desktop.");
@@ -368,8 +370,12 @@ export async function runPhase2Check(deps: Phase2Deps): Promise<{ accepted: bool
       chatOk = described === "y" && brighter === "y" && change === "y" && evaluation.saw_photo && evaluation.exposure_raised_by_half && evaluation.saw_change;
     }
     if (snapshot) {
+      // The chat changed the photo after the check's own revert, and the bridge is Claude Desktop's
+      // now, so Jim puts it back with the snapshot, and the check asks (Greptile, PR #18).
       say("");
       say(`Last step: in the Snapshots panel (left side of Develop), click "${snapshot.name}". That puts the photo back as it was before the check.`);
+      putBackAfterChat = (await ask(`6. Did you click "${snapshot.name}", and does the photo now look as before the check?`)) === "y";
+      results["jim_part2"] = { ...(results["jim_part2"] as object | undefined), photo_put_back_after_chat: putBackAfterChat ? "y" : "n" };
     }
   } else {
     say("");
@@ -377,19 +383,26 @@ export async function runPhase2Check(deps: Phase2Deps): Promise<{ accepted: bool
   }
 
   const passTotals = passes.map((p) => (p["timings"] as { total_ms?: number } | undefined)?.total_ms).filter((v): v is number => typeof v === "number");
-  const accepted = passesOk && reverted && part1Jim && chatOk;
+  const withinBudget = passTotals.filter((v) => v <= PASS_BUDGET_MS).length;
+  const accepted = passesOk && reverted && part1Jim && chatOk && putBackAfterChat;
   results["summary"] = {
     acceptance_suggestion: accepted ? "WORKED" : "FAILED",
     passes_ok: passesOk,
     snapshot_revert_exact: reverted,
     jim_part1_confirmed: part1Jim,
     chat_ok: chatOk,
+    photo_put_back_after_chat: putBackAfterChat,
     pass_total_ms: stats(passTotals),
-    passes_within_budget: passTotals.filter((v) => v <= PASS_BUDGET_MS).length,
+    passes_within_budget: withinBudget,
   };
   results["finished_at"] = now().toISOString();
   say("");
   say(`Phase 2 acceptance: ${accepted ? "WORKED" : "FAILED"} (passes: ${passesOk ? "YES" : "NO"}; photo put back exactly: ${reverted ? "YES" : "NO"}; ` +
-    `your answers in part 1: ${part1Jim ? "both yes" : "not both yes"}; chat: ${chatOk ? "YES" : "NO"})`);
+    `your answers in part 1: ${part1Jim ? "both yes" : "not both yes"}; chat: ${chatOk ? "YES" : "NO"}; ` +
+    `photo put back after the chat: ${putBackAfterChat ? "YES" : "NO"})`);
+  // The ~3 s budget (P-02) is a measurement Phase 2 takes, not part of its acceptance line
+  // (PHASES.md:64), so it has its own headline instead of deciding the one above.
+  say(`Pass budget: ${withinBudget} of ${passTotals.length} passes within ~${PASS_BUDGET_MS / 1000} s ` +
+    `(whole pass median ${stats(passTotals).median} ms).`);
   return { accepted, results };
 }

@@ -7,13 +7,13 @@
 //   p2_check_tools_<time>\              the check's own tool log
 //   p2_desktop_mcp_log_<time>.txt       Claude Desktop's lrc-avg log from the chat, user folder redacted
 //   p2_chat_tool_log_<time>.jsonl       the engine's tool log from the chat, user folder redacted
-//   p2_bridge_log_<time>.txt            a copy of the plugin's log
+//   p2_bridge_log_<time>.txt            a copy of the plugin's log, user folder redacted
 // Where Claude Desktop logs: %LOCALAPPDATA%\Claude\Logs\mcp-server-<server name>.log [handle:
 // docs\reports\phase0\S3\desktop-mcp-log-excerpt.txt header; the folder listing on Jim's machine,
 // 2026-09-26, shows mcp-server-*.log files there]. The engine's tool log is in the repo's logs\
 // folder, where the Claude Desktop entry points LRC_AVG_LOG_DIR (desktop-config.ts).
 
-import { copyFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { createInterface } from "node:readline";
@@ -49,8 +49,9 @@ function collectChat(since: Date): ChatLogs {
 function save(results: Record<string, unknown>): string {
   mkdirSync(OUT_DIR, { recursive: true });
   if (existsSync(PLUGIN_LOG)) {
+    // Redacted like everything else here: the plugin logs its token file's path in the home folder.
     const copy = path.join(OUT_DIR, `p2_bridge_log_${stamp}.txt`);
-    copyFileSync(PLUGIN_LOG, copy);
+    writeFileSync(copy, redact(readFileSync(PLUGIN_LOG, "utf8")));
     results["plugin_log_copied"] = path.basename(copy);
   } else {
     results["plugin_log_copied"] = null;

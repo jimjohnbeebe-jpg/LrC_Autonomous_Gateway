@@ -61,7 +61,8 @@ PHASES.md gives Phase 2 no go / conditional / no-go rule beyond this acceptance 
 1. Jim opens Claude Desktop and sends one fixed sentence. Claude Desktop's engine connects to the plugin after the check's engine has left.
 2. The check asks three y/n questions.
 3. It collects Claude Desktop's MCP log and the engine's tool log from the time of the chat, with the user folder redacted.
-4. It ends with the snapshot step.
+4. Jim clicks the snapshot to undo the chat's change. The check asks a sixth y/n question, whether the photo is back; WORKED needs a yes.
+5. The headline `Phase 2 acceptance: WORKED / FAILED` covers the passes, the revert, Jim's answers and the chat. A second line, `Pass budget: n of 3 passes within ~3 s`, reports the timing on its own: the budget (P-02) is a measurement Phase 2 takes, not part of its acceptance line (`PHASES.md:64`).
 
 Results go to `%TEMP%\LrC-AVG\P2\`:
 - `p2_check_<time>.json`;
@@ -106,8 +107,8 @@ Do these after Claude Code says PR B is merged.
    1. Did Claude describe the photo correctly?
    2. Is the photo in Lightroom now brighter, with Exposure 0.5 higher than before the chat?
    3. Did Claude describe the change correctly?
-9. The command says `Last step`: in the **Snapshots** panel (left side of Develop), click the snapshot it names (`AVG P2 check …`). That puts the photo back as it was.
-10. The last lines say `Phase 2 acceptance: WORKED` or `FAILED`, and `Results saved automatically`. Tell Claude Code "done".
+9. The command says `Last step`: in the **Snapshots** panel (left side of Develop), click the snapshot it names (`AVG P2 check …`). That puts the photo back as it was. Then answer its sixth question with `y` or `n`: did you click it, and does the photo look as before the check?
+10. The last lines say `Phase 2 acceptance: WORKED` or `FAILED`, `Pass budget: …`, and `Results saved automatically`. Tell Claude Code "done".
 
 ### If something goes wrong
 
@@ -126,7 +127,7 @@ Do these after Claude Code says PR B is merged.
 
 Checks Claude Code ran on 2026-09-26, before Jim's run. None of them involves a Lightroom Develop change.
 
-- **Engine tests: 213 pass** on branch `phase-2/preview-check` (PR #17 left 190) [handle: `npm test`, "Test Files 15 passed (15), Tests 213 passed (213)"]. `npm run build` and `npm run typecheck` pass too.
+- **Engine tests: 216 pass** on branch `phase-2/preview-check` (PR #17 left 190) [handle: `npm test` after the Greptile round-1 fixes on PR #18, "Test Files 15 passed (15), Tests 216 passed (216)"]. `npm run build` and `npm run typecheck` pass too.
   - `mcp-tools.test.ts`, `mcp-server.test.ts`, `mcp-lock.test.ts`: the tools and the MCP server, tested against the fake plugin with a **simulated Lightroom**, `engine\tests\helpers\lightroom-sim.ts`. The simulation starts from the live S5 NEF dump; its "export" is a grey-noise JPEG whose mean follows `Exposure2012`. The MCP server is reached through a real MCP client over the SDK's in-memory transport. These are **Node numbers, not Lightroom's.**
   - `metrics-basic.test.ts`: the metrics on hand-made pixel buffers.
   - `phase2-check.test.ts`: the whole check, with a second engine standing in for Claude Desktop's during Part 2.
@@ -172,7 +173,7 @@ Checks Claude Code ran on 2026-09-26, before Jim's run. None of them involves a 
 | Snapshot revert: settings that differ | | `revert.differing_keys` |
 | Jim, part 1: History steps seen / photo restored | | `jim_part1` |
 | Chat: tool calls; Claude looked / raised exposure by 0.5 / saw the result | | `chat` |
-| Jim, part 2: photo described / photo brighter / change described | | `jim_part2` |
+| Jim, part 2: photo described / photo brighter / change described / photo put back after the chat | | `jim_part2` |
 | Log paths | | `chat.desktop_log.saved_as`, `chat.engine_log.saved_as` |
 
 ## Verdict

@@ -5,7 +5,7 @@ export { devOverrides } from "./dev-overrides.js";
 export type { DevOverrides } from "./dev-overrides.js";
 export { ToolError, toToolError } from "./errors.js";
 export type { ToolErrorBody } from "./errors.js";
-export { DEFAULT_LOCK_PORT, acquireInstanceLock } from "./instance-lock.js";
+export { DEFAULT_LOCK_PORT, acquireInstanceLock, lockPortFor } from "./instance-lock.js";
 export type { InstanceLock, LockResult } from "./instance-lock.js";
 export { createServer } from "./server.js";
 export { DEFAULT_LONG_EDGE, MAX_LONG_EDGE, MIN_LONG_EDGE, PREVIEW_QUALITY, Tools } from "./tools.js";

@@ -103,9 +103,18 @@ function run(answers: Answer[], options: { busy?: boolean; chat?: () => Promise<
 
 describe("devtools: Phase 2 check against a simulated plugin", () => {
   it("passes when the passes read back, the snapshot restores, the chat raised exposure and Jim answers yes", async () => {
-    const { accepted, results } = await run(["y", "y", "y", "y", "y"]);
+    const { accepted, results } = await run(["y", "y", "y", "y", "y", "y"]);
     expect(accepted).toBe(true);
-    expect(results["summary"]).toMatchObject({ acceptance_suggestion: "WORKED", passes_ok: true, snapshot_revert_exact: true, chat_ok: true });
+    expect(results["summary"]).toMatchObject({
+      acceptance_suggestion: "WORKED",
+      passes_ok: true,
+      snapshot_revert_exact: true,
+      chat_ok: true,
+      photo_put_back_after_chat: true,
+      passes_within_budget: 3,
+    });
+    expect(results["jim_part2"]).toEqual({ photo_described: "y", photo_brighter: "y", change_described: "y", photo_put_back_after_chat: "y" });
+    expect(said.some((l) => /^Pass budget: 3 of 3 passes within ~3 s/.test(l))).toBe(true);
     const history = lr.history;
     expect(history.slice(0, 3)).toEqual(["AVG P2check set 1", "AVG P2check set 2", "AVG P2check set 3"]);
     expect(history[3]).toBe("AVG desk set 1"); // the simulated chat's write
@@ -122,9 +131,16 @@ describe("devtools: Phase 2 check against a simulated plugin", () => {
   });
 
   it("fails when the chat did not raise exposure by 0.5, even if Jim answers yes", async () => {
-    const { accepted, results } = await run(["y", "y", "y", "y", "y"], { chat: () => simulatedChat(0.2) });
+    const { accepted, results } = await run(["y", "y", "y", "y", "y", "y"], { chat: () => simulatedChat(0.2) });
     expect(accepted).toBe(false);
     expect(results["chat"]).toMatchObject({ saw_photo: true, exposure_raised_by_half: false });
+  });
+
+  it("fails when Jim does not confirm the photo is back after the chat", async () => {
+    const { accepted, results } = await run(["y", "y", "y", "y", "y", "n"]);
+    expect(accepted).toBe(false);
+    expect(results["summary"]).toMatchObject({ chat_ok: true, photo_put_back_after_chat: false });
+    expect(said.join("\n")).toMatch(/photo put back after the chat: NO/);
   });
 
   it("stops at once, and touches nothing, when another engine holds the lock", async () => {

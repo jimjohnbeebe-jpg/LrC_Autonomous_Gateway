@@ -2,7 +2,8 @@
 // S5 NEF dump and imitates the plugin's commands (plugin\LrC-AVG.lrplugin\Develop.lua):
 //   - the target_uuid check (C-2): a command naming another photo than the selected one is refused;
 //   - apply_settings: History name recorded, values taken, the settings read back;
-//   - export_preview: a flat grey JPEG whose level follows Exposure2012, written into the previews
+//   - create_snapshot / apply_snapshot: the settings stored and put back;
+//   - export_preview: a grey-noise JPEG whose mean level follows Exposure2012, written into the previews
 //     folder (one subfolder per request, like the plugin), path returned.
 // Keys in `ignored` are dropped silently, as Lightroom drops out-of-range values (PHASE1.md run 3).
 
@@ -37,6 +38,7 @@ export class LightroomSim {
   selected = "SIM-UUID";
   settings: Record<string, unknown> = structuredClone(nefDump.settings);
   readonly history: string[] = [];
+  readonly snapshots = new Map<string, Record<string, unknown>>();
   readonly ignored = new Set<string>();
   /** Export at this long edge instead of the requested one (to exercise the resize). */
   exportLongEdge: number | null = null;
@@ -55,6 +57,9 @@ export class LightroomSim {
       p["target_uuid"] !== undefined && p["target_uuid"] !== this.selected
         ? { ok: false, error: { code: "target_mismatch", message: `The selected photo (${this.selected}) is not the target (${String(p["target_uuid"])})`, recoverable: true } }
         : null;
+    plugin.handlers.set("hello", () =>
+      ok({ protocol: 1, plugin_version: "0.2.0", lrc_version: "15.5.1", sdk_declared: 13, ports: { receive: plugin.commandPort, send: plugin.eventPort } }),
+    );
     plugin.handlers.set("get_context", () =>
       ok({
         uuid: this.selected,
@@ -83,6 +88,19 @@ export class LightroomSim {
       }
       return ok({ uuid: this.selected, apply_ms: 25, read_ms: 300, command_ms: 330, read_back: luaize(this.settings) });
     });
+    plugin.handlers.set("create_snapshot", (p) => {
+      const refused = guard(p);
+      if (refused) return refused;
+      const id = `SNAP-${this.snapshots.size + 1}`;
+      this.snapshots.set(id, structuredClone(this.settings));
+      return ok({ uuid: this.selected, snapshot_id: id, id_global: "G", name: p["name"], same_name_count: 1 });
+    });
+    plugin.handlers.set("apply_snapshot", (p) => {
+      const refused = guard(p);
+      if (refused) return refused;
+      this.settings = structuredClone(this.snapshots.get(String(p["snapshot_id"])) ?? {});
+      return ok({ uuid: this.selected, read_back: luaize(this.settings) });
+    });
     plugin.handlers.set("export_preview", async (p, id) => {
       const refused = guard(p);
       if (refused) return refused;
@@ -92,7 +110,17 @@ export class LightroomSim {
       const dir = path.join(this.previewDir, id);
       mkdirSync(dir, { recursive: true });
       const file = path.join(dir, "20260907-_OZ80093.jpg");
-      await sharp({ create: { width: long, height: Math.round((long * 2) / 3), channels: 3, background: { r: level, g: level, b: level } } })
+      // Grey noise around the level: its mean follows exposure, and, unlike a flat image, its JPEG
+      // size follows the quality, as a photo's does.
+      await sharp({
+        create: {
+          width: long,
+          height: Math.round((long * 2) / 3),
+          channels: 3,
+          background: { r: level, g: level, b: level },
+          noise: { type: "gaussian", mean: level, sigma: 12 },
+        },
+      })
         .jpeg({ quality: Number(p["quality"]) })
         .toFile(file);
       return ok({ uuid: this.selected, path: this.exportPath ?? file, export_ms: 12 });

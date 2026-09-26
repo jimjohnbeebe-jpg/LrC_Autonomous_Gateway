@@ -15,8 +15,21 @@
 
 import net from "node:net";
 
+/** The bridge's default event port (the plugin's send socket, ARCHITECTURE section 3). */
+const DEFAULT_EVENT_PORT = 8766;
+
+/**
+ * The lock port of the bridge whose event port is given: the next port. Tying the lock to the
+ * bridge means two engines on one bridge always compete for one lock (Greptile, PR #18).
+ */
+export function lockPortFor(eventPort: number = DEFAULT_EVENT_PORT): number {
+  const port = eventPort + 1;
+  if (!Number.isInteger(port) || port < 2 || port > 65535) throw new Error(`no lock port for event port ${eventPort}`);
+  return port;
+}
+
 /** 8767: the port after the bridge's 8765 (commands) and 8766 (events). */
-export const DEFAULT_LOCK_PORT = 8767;
+export const DEFAULT_LOCK_PORT = lockPortFor();
 const HOST = "127.0.0.1";
 const PID_TIMEOUT_MS = 500;
 

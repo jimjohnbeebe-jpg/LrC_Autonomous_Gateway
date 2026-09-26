@@ -18,6 +18,7 @@ import { ToolLog, defaultLogDir } from "../log/index.js";
 import { loadDefaultParamMap } from "../params/index.js";
 import { PreviewService } from "../preview/index.js";
 import { BridgeGate } from "./bridge-gate.js";
+import { devOverrides } from "./dev-overrides.js";
 import { acquireInstanceLock } from "./instance-lock.js";
 import { createServer } from "./server.js";
 import { Tools } from "./tools.js";
@@ -25,10 +26,11 @@ import { ENGINE_VERSION } from "./version.js";
 
 const say = (message: string): void => console.error(`[lrc-avg] ${message}`);
 
-const client = new BridgeClient({ engineVersion: ENGINE_VERSION, log: say });
+const dev = devOverrides();
+const client = new BridgeClient({ engineVersion: ENGINE_VERSION, log: say, ...dev.bridge });
 const previews = new PreviewService(client);
 const toolLog = new ToolLog(defaultLogDir());
-const gate = new BridgeGate(client, () => acquireInstanceLock(), { onAcquire: () => previews.purge() });
+const gate = new BridgeGate(client, () => acquireInstanceLock(dev.lockPort), { onAcquire: () => previews.purge() });
 if (!(await gate.start())) say("another engine holds the Lightroom bridge; tools answer ENGINE_BUSY until it exits");
 
 const tools = new Tools({ client, map: loadDefaultParamMap(), previews, ensureBridge: () => gate.ready(), log: toolLog });

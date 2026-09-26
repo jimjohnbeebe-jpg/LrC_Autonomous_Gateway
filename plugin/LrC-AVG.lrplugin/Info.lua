@@ -1,7 +1,7 @@
 -- LrC-AVG plugin. Read LR_SDK_NOTES.md before changing anything here.
--- Phase 1: the bridge (Bridge.lua) starts when the plugin loads (PluginInit.lua) and serves the
--- engine's Develop commands (Develop.lua). The HUD, settings page and previews come in later phases
--- (ARCHITECTURE section 1).
+-- The bridge (Bridge.lua) starts when the plugin loads (PluginInit.lua) and serves the engine's
+-- Develop commands (Develop.lua, Phase 1) and preview exports (Preview.lua, Phase 2). The HUD and
+-- settings page come in later phases (ARCHITECTURE section 1).
 -- LrSdkVersion 13.0: the five Phase 0 spike plugins declared it and ran on LrC 15.5.1
 -- [handle: docs\reports\phase0\PHASE0.md "Draft for LR_SDK_NOTES", SDK version]; whether it hides
 -- newer develop keys is [unverified].
@@ -18,5 +18,5 @@ return {
     LrExportMenuItems = {
         { title = "LrC-AVG - Bridge status", file = "MenuStatus.lua" },
     },
-    VERSION = { major = 0, minor = 1, revision = 0, build = 0 },
+    VERSION = { major = 0, minor = 2, revision = 0, build = 0 },
 }

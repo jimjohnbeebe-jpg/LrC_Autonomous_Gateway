@@ -39,6 +39,8 @@ local function target(payload)
     end
     return catalog, photo, uuid, nil
 end
+-- Preview.lua exports the same target photo.
+Develop.target = target
 
 local function readSettings(catalog, photo)
     local settings
@@ -56,8 +58,11 @@ local function findSnapshots(catalog, photo, field, value)
     return matches
 end
 
--- Metadata keys from LR_SDK_NOTES "LrPhoto", plus lens and cameraModel [unverified]. A key the SDK
--- rejects is listed in metadata_errors instead of failing the whole command. Each read is guarded
+-- Metadata keys from LR_SDK_NOTES "LrPhoto", plus lens and cameraModel (all 13 read in Phase 1 run 3
+-- [handle: docs\reports\phase1\PHASE1.md "Numbers", metadata keys refused 0 of 13]), plus rating,
+-- pickStatus and colorNameForLabel for MCP_TOOLS' rating / pick / label (Phase 2) [unverified until
+-- npm run phase2:check reads them]. A key the SDK rejects is listed in metadata_errors instead of
+-- failing the whole command. Each read is guarded
 -- with LrTasks.pcall, because a plain pcall around them raised "Yielding is not allowed within a C
 -- or metamethod call" for all 13 keys in Jim's Phase 1 runs 1-2
 -- [handle: docs\reports\phase1\P1\p1_check_2026-09-26T20-28-20-636Z.json photo.metadata_errors].
@@ -70,6 +75,7 @@ local RAW_KEYS = {
     path = "path", file_format = "fileFormat", is_virtual_copy = "isVirtualCopy",
     iso = "isoSpeedRating", shutter = "shutterSpeed", aperture = "aperture", focal_length = "focalLength",
     width = "width", height = "height",
+    rating = "rating", pick = "pickStatus", label = "colorNameForLabel",
 }
 local FORMATTED_KEYS = { filename = "fileName", copy_name = "copyName", lens = "lens", camera = "cameraModel" }
 
@@ -106,14 +112,20 @@ function Develop.applySettings(payload)
     if type(historyName) ~= "string" or historyName:sub(1, 4) ~= "AVG " then
         return fail("bad_request", "history_name must start with 'AVG ' (PRD FR-4.4)")
     end
+    local tCommand = LrDate.currentTime()
     local catalog, photo, uuid, err = target(payload)
     if err then return nil, err end
     local t0 = LrDate.currentTime()
     catalog:withWriteAccessDo(historyName, function()
         photo:applyDevelopSettings(payload.settings, historyName)
     end)
-    local applyMs = (LrDate.currentTime() - t0) * 1000
-    return { uuid = uuid, apply_ms = applyMs, read_back = readSettings(catalog, photo) }
+    local t1 = LrDate.currentTime()
+    local readBack = readSettings(catalog, photo)
+    local t2 = LrDate.currentTime()
+    -- apply_ms: the write gate; read_ms: the read-back; command_ms: this whole handler (target check
+    -- included). PHASE1.md "Consequences" asks for the write command's own duration.
+    return { uuid = uuid, apply_ms = (t1 - t0) * 1000, read_ms = (t2 - t1) * 1000, command_ms = (t2 - tCommand) * 1000,
+        read_back = readBack }
 end
 
 function Develop.createSnapshot(payload)

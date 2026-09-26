@@ -66,6 +66,8 @@ npm test                    # vitest (engine)
 npm run typecheck           # engine src+tests, spikes
 node spikes\S1\measure.ts   # spike scripts run directly (Node type stripping)
 npm run phase1:check        # Phase 1 acceptance check against Lightroom (docs\reports\phase1\PHASE1.md)
+npm run desktop:install     # register the engine in Claude Desktop as lrc-avg (backup first; removes lrc-avg-spike-s3)
+npm run phase2:check        # Phase 2 acceptance check: Lightroom + the Claude Desktop chat (docs\reports\phase2\PHASE2.md)
 node engine\dist\mcp\main.js # the stdio MCP server (Claude Desktop starts it; tool log in $env:LRC_AVG_LOG_DIR or %LOCALAPPDATA%\LrC-AVG\logs)
 graphify query "How does X reach Y?"
 ```

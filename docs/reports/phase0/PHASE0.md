@@ -14,9 +14,15 @@ Check Phase 0 against its acceptance line and hand Jim, the architect, one list 
 
 PHASES.md, quoted (`PHASES.md:26`): "**Acceptance:** six spike reports in `Reports/` with measured numbers; `LR_SDK_NOTES` "To record in Phase 0" section filled; `STATE.md` next action set to Phase 1."
 
-## Acceptance check
+## Harness
 
-| Acceptance line | Status | Handle |
+This report has no harness of its own: it compiles the six spike reports and their evidence folders. Each spike's harness, run steps and raw files are in its own report: `docs\reports\phase0\S1.md` … `S6.md` (sections "Harness" and "Observed"), with evidence under `docs\reports\phase0\S<n>\`.
+
+## Pre-run findings (Claude Code)
+
+Checks Claude Code ran itself on 2026-09-26, before asking Jim to decide:
+
+| Acceptance line (`PHASES.md:26`) | Status | Handle |
 |---|---|---|
 | Six spike reports in `Reports/` with measured numbers | **done** | `docs\reports\phase0\S1.md` … `S6.md`, each `status: accepted` with Jim's verdict; the vault copies under `Reports\Phase0\` are byte-identical [handle: `Get-FileHash` over all six pairs, run by Claude Code on 2026-09-26: 6 of 6 equal] |
 | LR_SDK_NOTES "To record in Phase 0" filled | **approved by Jim (2026-09-26); written into the vault once this PR merges** | the text is "Draft for LR_SDK_NOTES" below |
@@ -24,18 +30,37 @@ PHASES.md, quoted (`PHASES.md:26`): "**Acceptance:** six spike reports in `Repor
 
 Init items (`PHASES.md:15`) were done in the Phase 0 session of 2026-09-23 [handle: `docs\PHASE0_HANDOVER.md` §1–2: `node -v` → v24.11.1, git, `CLAUDE.md`, `.claude\rules`, MCP availability, Automaat survey, `.gitignore`].
 
-## Spike results
+## Observed (Jim)
 
-| Spike | Question | Jim's verdict | Key numbers | Report |
-|---|---|---|---|---|
-| S1 | Is a thumbnail after `applyDevelopSettings` fresh within 1.5 s? | **No-go for thumbnails; export is the primary preview path** (2026-09-24) | no post-change thumbnail within 30 s (5/5 steps); 1600 px export fresh at ~2.6 s; `applyDevelopSettings` 20–45 ms | `S1.md` |
-| S2 | Do LrSocket `receive` + `send` binds work both ways with ≥ 1 MB messages? | **Go** (2026-09-26) | 26/26 echoes intact; small RTT median 0.32 ms; 1 MiB 31 ms; 16 MiB (client cap) passed | `S2.md` |
-| S3 | Does Claude Desktop show an MCP image result, and can Claude describe it? | **Conditional go** (2026-09-26) | 1600×1066 q75 JPEG (332,604 B) reached the model in Desktop and in Claude Code CLI; described correctly [stated]; Desktop shows it only in the expanded tool-call box | `S3.md` |
-| S4 | Is a floating HUD live, non-modal, and does it leave focus with Develop? | **Go** (2026-09-26) | all five checks ticked; `blockTask = true` blocked its task 36.65 s until close; focus at opening not tested | `S4.md` |
-| S5 | Key dump, profile strings, `CameraProfile` / lens writability | **Go** (2026-09-24) | 178 keys pinned; Adobe profiles are Looks over "Adobe Standard"; `Look = {}` clears; snapshot restore exact over 178 keys | `S5.md` |
-| S6 | Does `createVirtualCopies` work from Loupe and Grid, with copies addressable by id? | **Go** (2026-09-26) | 3 of 3 copies per view; no write gate; `getPhotoByLocalId` found all six | `S6.md` |
+**Spike verdicts.** Jim ran the Lightroom and Claude Desktop sides of every spike and gave each verdict. The observations themselves are in each report's "Observed" section.
 
-Every verdict is Jim's [stated, dated in each report's Verdict section].
+| Spike | Question | Jim's verdict | Handle |
+|---|---|---|---|
+| S1 | Is a thumbnail after `applyDevelopSettings` fresh within 1.5 s? | **No-go for thumbnails; export is the primary preview path** (2026-09-24) | `S1.md` Verdict [stated] |
+| S2 | Do LrSocket `receive` + `send` binds work both ways with ≥ 1 MB messages? | **Go** (2026-09-26) | `S2.md` Verdict [stated] |
+| S3 | Does Claude Desktop show an MCP image result, and can Claude describe it? | **Conditional go** (2026-09-26) | `S3.md` Verdict [stated] |
+| S4 | Is a floating HUD live, non-modal, and does it leave focus with Develop? | **Go** (2026-09-26) | `S4.md` Verdict [stated] |
+| S5 | Key dump, profile strings, `CameraProfile` / lens writability | **Go** (2026-09-24) | `S5.md` Verdict [stated] |
+| S6 | Does `createVirtualCopies` work from Loupe and Grid, with copies addressable by id? | **Go** (2026-09-26) | `S6.md` Verdict [stated] |
+
+**Close-out decisions**, given in the Claude Code session of 2026-09-26, each chosen from options Claude Code offered [stated]:
+- "Accept all 19 (Recommended)" for P-01 … P-19;
+- "Write it in (Recommended)" for the LR_SDK_NOTES draft;
+- "Export file path (Recommended)" for D-01;
+- "Close Phase 0 (Recommended)".
+
+## Numbers
+
+Key numbers per spike. Each figure's handle is the spike report named, in its "Numbers" section.
+
+| Spike | Key numbers | Report |
+|---|---|---|
+| S1 | no post-change thumbnail within 30 s (5/5 steps); 1600 px export fresh at ~2.6 s; `applyDevelopSettings` 20–45 ms | `S1.md` |
+| S2 | 26/26 echoes intact; small RTT median 0.32 ms; 1 MiB 31 ms; 16 MiB (client cap) passed | `S2.md` |
+| S3 | 1600×1066 q75 JPEG (332,604 B) reached the model in Desktop and in Claude Code CLI; described correctly [stated]; Desktop shows it only in the expanded tool-call box [stated] | `S3.md` |
+| S4 | all five checks ticked; `blockTask = true` blocked its task 36.65 s until close; focus at opening not tested | `S4.md` |
+| S5 | 178 keys pinned; Adobe profiles are Looks over "Adobe Standard"; `Look = {}` clears; snapshot restore exact over 178 keys | `S5.md` |
+| S6 | 3 of 3 copies per view; no write gate; `getPhotoByLocalId` found all six | `S6.md` |
 
 ## Proposed changes, for Jim to accept or reject
 

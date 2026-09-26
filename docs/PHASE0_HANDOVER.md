@@ -2,11 +2,11 @@
 document_type: handover
 project: LrC_Autonomous_Gateway
 phase: 0 (init + feasibility spikes)
-status: all six spikes run and accepted; Phase 0 close-out report awaiting Jim (2026-09-26)
+status: Phase 0 closed by Jim on 2026-09-26 (docs\reports\phase0\PHASE0.md Verdict); vault doc edits and STATE follow the close-out PR
 authored_by: Claude Code (Opus 5.5, model id claude-opus-5-5), Phase 0 session, 2026-09-23; close-out section by the Claude Code (Opus 5.5) session of 2026-09-26
 ---
 
-> **Update 2026-09-26 (read this first).** Sections 1–8 below are the record of the 2026-09-23 build session. Its "pending" and "unverified" statements about Lightroom have since been settled by Jim's spike runs. For the results, go to "Phase 0 close-out (2026-09-26)" at the end of this file and to `docs\reports\phase0\PHASE0.md`.
+> **Update 2026-09-26 (read this first).** Sections 1–8 below are the record of the 2026-09-23 build session. Jim's spike runs have since settled its "pending" and "unverified" statements about Lightroom. Each result is in its report's "Observed" and "Verdict" sections, `docs\reports\phase0\S1.md` … `S6.md` [handle]. Start with "Phase 0 close-out (2026-09-26)" at the end of this file and with `docs\reports\phase0\PHASE0.md`.
 
 # Phase 0 handover
 
@@ -146,17 +146,19 @@ Phase 0b is complete when PR #1 is merged after its triage. No Phase 1 work has 
 
 > **Self-attribution.** Written by Claude Code (Opus 5.5) in the session of 2026-09-26, which collected S2, S4, S6 and S3 (PRs #8–#11) after the S1 and S5 results (PRs #3–#5, #7).
 
-- **All six spikes were run by Jim and carry his verdicts:**
+- **All six spikes were run by Jim and carry his verdicts** [handle: each report's "Verdict" section, `docs\reports\phase0\S<n>.md`; PRs #4, #7, #8, #9, #10, #11]:
   - S1: no-go for thumbnails, so the export is the primary preview path.
   - S2, S4, S5, S6: Go.
   - S3: Conditional go.
-  - Each report is `docs\reports\phase0\S<n>.md`, `status: accepted`, mirrored byte-identical to the vault `Reports\Phase0\`.
-- **`docs\reports\phase0\PHASE0.md`** checks the Phase 0 acceptance line. It also lists every proposed spec change (P-01 … P-19), two open decisions (D-01 preview transport, D-02 removing variant copies), the draft for LR_SDK_NOTES "To record in Phase 0", and the consolidated [unverified] list by Phase. Jim decides on each; nothing in the vault spec docs has been edited.
+  - Each report is `docs\reports\phase0\S<n>.md`, `status: accepted`, mirrored byte-identical to the vault `Reports\Phase0\` [handle: `Get-FileHash` over the six pairs, run by Claude Code on 2026-09-26].
+- **`docs\reports\phase0\PHASE0.md`** checks the Phase 0 acceptance line. It also lists every proposed spec change (P-01 … P-19), two open decisions (D-01 preview transport, D-02 removing variant copies), the draft for LR_SDK_NOTES "To record in Phase 0", and the consolidated [unverified] list by Phase.
+- **Jim's decisions (2026-09-26)** [stated; recorded in `PHASE0.md` "Observed (Jim)" and "Verdict"]: all 19 proposals accepted; the LR_SDK_NOTES draft approved; D-01 = the export's file path; **Phase 0 closed**. D-02 stays open for Phase 4.
+- **Still to do after the close-out PR merges:** write the accepted changes and the LR_SDK_NOTES text into the vault docs, add P-12 … P-19 and D-01/D-02 to PHASES.md under their Phases, mirror `PHASE0.md` to the vault, and set STATE's "Next action" to Phase 1.
 - Main facts for Phase 1:
-  - develop keys are pinned in `engine\src\params\sdk-keys.lrc15.json` (178);
-  - LrSocket dual socket works; rebind the send socket on each new client;
-  - read back every develop write;
-  - a profile is a `CameraProfile` + `Look` pair;
-  - snapshots restore by `snapshotID`.
+  - develop keys are pinned in `engine\src\params\sdk-keys.lrc15.json` (178) [handle: `S5.md` Part 1 analysis];
+  - LrSocket dual socket works; rebind the send socket on each new client [handle: `S2.md` Analysis and Consequences];
+  - read back every develop write [handle: `S5.md` Part 1 analysis];
+  - a profile is a `CameraProfile` + `Look` pair [handle: `S5.md` Part 2 analysis];
+  - snapshots restore by `snapshotID` [handle: `S5.md` Part 2 analysis].
 - **Section 5 above ("Unverified") is superseded** by `PHASE0.md` "Still [unverified] after Phase 0". Section 6's decisions are carried into `PHASE0.md` "Carried-over decisions".
-- **Phase 1 has not been started.** It starts when Jim accepts `PHASE0.md` and STATE's "Next action" is set to Phase 1.
+- **Phase 1 has not been started.** Jim has closed Phase 0. Phase 1 work starts when Jim gives the go, after STATE's "Next action" points to it.

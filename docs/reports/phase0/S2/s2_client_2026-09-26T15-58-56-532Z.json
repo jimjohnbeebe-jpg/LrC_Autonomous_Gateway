@@ -1,0 +1,247 @@
+{
+  "started": "2026-09-26T15:58:56.532Z",
+  "node": "v24.11.1",
+  "write_port": 8765,
+  "read_port": 8766,
+  "trials": [
+    {
+      "label": "hello#1",
+      "sent_chars": 5,
+      "ok": true,
+      "rtt_ms": 0.6949000000000751,
+      "echoed_length_field": 5,
+      "payload_match": true,
+      "note": ""
+    },
+    {
+      "label": "ping#0",
+      "sent_chars": 6,
+      "ok": true,
+      "rtt_ms": 0.45860000000004675,
+      "echoed_length_field": 6,
+      "payload_match": true,
+      "note": ""
+    },
+    {
+      "label": "ping#1",
+      "sent_chars": 6,
+      "ok": true,
+      "rtt_ms": 0.4779999999999518,
+      "echoed_length_field": 6,
+      "payload_match": true,
+      "note": ""
+    },
+    {
+      "label": "ping#2",
+      "sent_chars": 6,
+      "ok": true,
+      "rtt_ms": 0.6794999999999618,
+      "echoed_length_field": 6,
+      "payload_match": true,
+      "note": ""
+    },
+    {
+      "label": "ping#3",
+      "sent_chars": 6,
+      "ok": true,
+      "rtt_ms": 0.2962999999999738,
+      "echoed_length_field": 6,
+      "payload_match": true,
+      "note": ""
+    },
+    {
+      "label": "ping#4",
+      "sent_chars": 6,
+      "ok": true,
+      "rtt_ms": 7.304699999999912,
+      "echoed_length_field": 6,
+      "payload_match": true,
+      "note": ""
+    },
+    {
+      "label": "ping#5",
+      "sent_chars": 6,
+      "ok": true,
+      "rtt_ms": 0.31939999999997326,
+      "echoed_length_field": 6,
+      "payload_match": true,
+      "note": ""
+    },
+    {
+      "label": "ping#6",
+      "sent_chars": 6,
+      "ok": true,
+      "rtt_ms": 0.2767000000000053,
+      "echoed_length_field": 6,
+      "payload_match": true,
+      "note": ""
+    },
+    {
+      "label": "ping#7",
+      "sent_chars": 6,
+      "ok": true,
+      "rtt_ms": 0.33749999999997726,
+      "echoed_length_field": 6,
+      "payload_match": true,
+      "note": ""
+    },
+    {
+      "label": "ping#8",
+      "sent_chars": 6,
+      "ok": true,
+      "rtt_ms": 0.30369999999993524,
+      "echoed_length_field": 6,
+      "payload_match": true,
+      "note": ""
+    },
+    {
+      "label": "ping#9",
+      "sent_chars": 6,
+      "ok": true,
+      "rtt_ms": 0.272199999999998,
+      "echoed_length_field": 6,
+      "payload_match": true,
+      "note": ""
+    },
+    {
+      "label": "ping#10",
+      "sent_chars": 7,
+      "ok": true,
+      "rtt_ms": 0.3281000000000631,
+      "echoed_length_field": 7,
+      "payload_match": true,
+      "note": ""
+    },
+    {
+      "label": "ping#11",
+      "sent_chars": 7,
+      "ok": true,
+      "rtt_ms": 0.29539999999997235,
+      "echoed_length_field": 7,
+      "payload_match": true,
+      "note": ""
+    },
+    {
+      "label": "ping#12",
+      "sent_chars": 7,
+      "ok": true,
+      "rtt_ms": 0.29579999999998563,
+      "echoed_length_field": 7,
+      "payload_match": true,
+      "note": ""
+    },
+    {
+      "label": "ping#13",
+      "sent_chars": 7,
+      "ok": true,
+      "rtt_ms": 0.3301000000000158,
+      "echoed_length_field": 7,
+      "payload_match": true,
+      "note": ""
+    },
+    {
+      "label": "ping#14",
+      "sent_chars": 7,
+      "ok": true,
+      "rtt_ms": 0.3361000000001013,
+      "echoed_length_field": 7,
+      "payload_match": true,
+      "note": ""
+    },
+    {
+      "label": "ping#15",
+      "sent_chars": 7,
+      "ok": true,
+      "rtt_ms": 0.3563000000000329,
+      "echoed_length_field": 7,
+      "payload_match": true,
+      "note": ""
+    },
+    {
+      "label": "ping#16",
+      "sent_chars": 7,
+      "ok": true,
+      "rtt_ms": 0.2963999999999487,
+      "echoed_length_field": 7,
+      "payload_match": true,
+      "note": ""
+    },
+    {
+      "label": "ping#17",
+      "sent_chars": 7,
+      "ok": true,
+      "rtt_ms": 0.26319999999998345,
+      "echoed_length_field": 7,
+      "payload_match": true,
+      "note": ""
+    },
+    {
+      "label": "ping#18",
+      "sent_chars": 7,
+      "ok": true,
+      "rtt_ms": 0.3828999999999496,
+      "echoed_length_field": 7,
+      "payload_match": true,
+      "note": ""
+    },
+    {
+      "label": "ping#19",
+      "sent_chars": 7,
+      "ok": true,
+      "rtt_ms": 0.3085000000000946,
+      "echoed_length_field": 7,
+      "payload_match": true,
+      "note": ""
+    },
+    {
+      "label": "1MB",
+      "sent_chars": 1048576,
+      "ok": true,
+      "rtt_ms": 31.393599999999992,
+      "echoed_length_field": 1048576,
+      "payload_match": true,
+      "note": ""
+    },
+    {
+      "label": "2MB",
+      "sent_chars": 2097152,
+      "ok": true,
+      "rtt_ms": 31.089500000000044,
+      "echoed_length_field": 2097152,
+      "payload_match": true,
+      "note": ""
+    },
+    {
+      "label": "4MB",
+      "sent_chars": 4194304,
+      "ok": true,
+      "rtt_ms": 78.26469999999995,
+      "echoed_length_field": 4194304,
+      "payload_match": true,
+      "note": ""
+    },
+    {
+      "label": "8MB",
+      "sent_chars": 8388608,
+      "ok": true,
+      "rtt_ms": 241.42809999999997,
+      "echoed_length_field": 8388608,
+      "payload_match": true,
+      "note": ""
+    },
+    {
+      "label": "16MB",
+      "sent_chars": 16777216,
+      "ok": true,
+      "rtt_ms": 826.8678,
+      "echoed_length_field": 16777216,
+      "payload_match": true,
+      "note": ""
+    }
+  ],
+  "connect": {
+    "write": "ok",
+    "read": "ok"
+  },
+  "max_ok_chars": 16777216
+}

@@ -27,6 +27,7 @@ local LrDate = import 'LrDate'
 local LrTasks = import 'LrTasks'
 
 local Develop = require 'Develop'
+local Log = require 'Log'
 
 local Catalog = {}
 
@@ -50,19 +51,43 @@ end
 -- start times, and with it none [handle: docs\reports\phase4\variants-plugin-smoke\smoke.txt "== Two
 -- commands at once"]. A click in Lightroom's own window is not held back by this; a copy of another
 -- photo then comes back with identity_ok false [inference].
-local holder = nil
+--
+-- A holder that never finishes must not block every later command until Lightroom restarts
+-- (Greptile, PR #33): a task stopped by a Reload Plug-in, or a call that never returns. So a lock
+-- taken under another bridge generation (Bridge.lua bumps _G.LrCAVG_BridgeGeneration on each start)
+-- or held longer than LOCK_MAX_HOLD_SECONDS counts as abandoned, and a holder releases only its own
+-- lock. Taking over an abandoned lock whose task is in fact still running reopens the race above
+-- for that one command [inference]; it is logged.
+-- S6's copies took 212-1017 ms each [handle: docs\reports\phase0\S6\s6_*.json calls[*].ms], so a
+-- 4-copy batch should take seconds; 60 s is a generous bound [inference: the figure].
+Catalog.LOCK_MAX_HOLD_SECONDS = 60
+local holder = nil -- { name, generation, since }
+
+local function abandoned(h)
+    if h.generation ~= _G.LrCAVG_BridgeGeneration then return "taken before the bridge restarted" end
+    if LrDate.currentTime() - h.since > Catalog.LOCK_MAX_HOLD_SECONDS then
+        return "held longer than " .. Catalog.LOCK_MAX_HOLD_SECONDS .. " s"
+    end
+    return nil
+end
 
 local function exclusive(name, fn)
     local t0 = LrDate.currentTime()
     while holder do
-        if LrDate.currentTime() - t0 >= Catalog.LOCK_WAIT_SECONDS then
-            return fail("busy", string.format("%s waited %d s for %s to finish", name, Catalog.LOCK_WAIT_SECONDS, holder), true)
+        local why = abandoned(holder)
+        if why then
+            Log.warn("catalog: " .. name .. " takes over the selection lock from " .. holder.name .. " (" .. why .. ")")
+            holder = nil
+        elseif LrDate.currentTime() - t0 >= Catalog.LOCK_WAIT_SECONDS then
+            return fail("busy", string.format("%s waited %d s for %s to finish", name, Catalog.LOCK_WAIT_SECONDS, holder.name), true)
+        else
+            LrTasks.sleep(0.05)
         end
-        LrTasks.sleep(0.05)
     end
-    holder = name
+    local mine = { name = name, generation = _G.LrCAVG_BridgeGeneration, since = LrDate.currentTime() }
+    holder = mine
     local ok, result, err = LrTasks.pcall(fn)
-    holder = nil
+    if holder == mine then holder = nil end
     if not ok then error(result, 0) end
     return result, err
 end

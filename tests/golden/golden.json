@@ -1,0 +1,331 @@
+{
+  "schema": "lrc-avg/goldens/1",
+  "created": "2026-09-27T14:15:13.325Z",
+  "source": "%TEMP%\\LrC-AVG\\P3\\golden_<time> (npm run phase3:check)",
+  "entries": [
+    {
+      "file": "20250413-_OZ81430.jpg",
+      "sha256": "8a3aa5ba2e0121ba70232a3d38c4f83d40ce6b382c0ae1168c51206856c14bfd",
+      "width": 1600,
+      "height": 1067,
+      "metrics": {
+        "luma_mean": 106.49,
+        "luma_std": 59.166,
+        "luma_percentiles": {
+          "p1": 4,
+          "p5": 9,
+          "p50": 110,
+          "p95": 216,
+          "p99": 243
+        },
+        "dynamic_range": 0.9373,
+        "channel_mean": {
+          "r": 120.164,
+          "g": 104.874,
+          "b": 82.229
+        },
+        "rb_ratio": 1.4613,
+        "clip_high_pct": 3.419,
+        "clip_low_pct": 0.1717,
+        "clip_high_pct_by_channel": {
+          "r": 3.3771,
+          "g": 0.3483,
+          "b": 0.224
+        },
+        "clip_low_pct_by_channel": {
+          "r": 0.2372,
+          "g": 0.499,
+          "b": 3.888
+        },
+        "saturation_mean": 36.213,
+        "chromatic_pct": 86.2979,
+        "hue_mean": 36.08,
+        "hue_histogram": [
+          0.0212,
+          96.6558,
+          3.3197,
+          0.0022,
+          0.0001,
+          0,
+          0,
+          0.0001,
+          0.0001,
+          0.0002,
+          0.0001,
+          0.0006
+        ],
+        "regions": []
+      }
+    },
+    {
+      "file": "20260110-_Z8A0138-DxO_DeepPRIME XD3.jpg",
+      "sha256": "eedba611e925351bc62aa42e526b2d687faa6c215185bf25c523ace702f48a84",
+      "width": 1600,
+      "height": 1067,
+      "metrics": {
+        "luma_mean": 39.394,
+        "luma_std": 37.325,
+        "luma_percentiles": {
+          "p1": 0,
+          "p5": 2,
+          "p50": 23,
+          "p95": 110,
+          "p99": 120
+        },
+        "dynamic_range": 0.4706,
+        "channel_mean": {
+          "r": 40.416,
+          "g": 38.994,
+          "b": 40.346
+        },
+        "rb_ratio": 1.0017,
+        "clip_high_pct": 0,
+        "clip_low_pct": 2.2037,
+        "clip_high_pct_by_channel": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "clip_low_pct_by_channel": {
+          "r": 2.2067,
+          "g": 9.6705,
+          "b": 8.2403
+        },
+        "saturation_mean": 19.16,
+        "chromatic_pct": 15.2489,
+        "hue_mean": 243.24,
+        "hue_histogram": [
+          1.7151,
+          22.2073,
+          1.243,
+          0.0061,
+          0,
+          0,
+          0.0012,
+          36.6002,
+          29.5933,
+          8.6218,
+          0.0058,
+          0.0061
+        ],
+        "regions": []
+      }
+    },
+    {
+      "file": "20260110-_Z8A0173.jpg",
+      "sha256": "b4ddb6b3817797984b19ff9f8e62905711e64dc896a36db7973368129bbcf1d4",
+      "width": 1600,
+      "height": 1067,
+      "metrics": {
+        "luma_mean": 118.474,
+        "luma_std": 65.877,
+        "luma_percentiles": {
+          "p1": 24,
+          "p5": 37,
+          "p50": 91,
+          "p95": 216,
+          "p99": 236
+        },
+        "dynamic_range": 0.8314,
+        "channel_mean": {
+          "r": 101.68,
+          "g": 121.824,
+          "b": 134.744
+        },
+        "rb_ratio": 0.7546,
+        "clip_high_pct": 4.0934,
+        "clip_low_pct": 0,
+        "clip_high_pct_by_channel": {
+          "r": 0,
+          "g": 0.0002,
+          "b": 4.0934
+        },
+        "clip_low_pct_by_channel": {
+          "r": 0.0105,
+          "g": 0.0001,
+          "b": 0.0059
+        },
+        "saturation_mean": 25.7,
+        "chromatic_pct": 97.6659,
+        "hue_mean": 198.9,
+        "hue_histogram": [
+          0.0504,
+          0.146,
+          0.4721,
+          0.9188,
+          0.8825,
+          1.1138,
+          25.9966,
+          69.7703,
+          0.5763,
+          0.041,
+          0.018,
+          0.0144
+        ],
+        "regions": []
+      }
+    },
+    {
+      "file": "20260906-_OZ80005.jpg",
+      "sha256": "2cb4a2e490d94347b36782cf4dd8e1256dbcd9720206f4fc98d610445fdfeb56",
+      "width": 1600,
+      "height": 1067,
+      "metrics": {
+        "luma_mean": 123.363,
+        "luma_std": 33.096,
+        "luma_percentiles": {
+          "p1": 64,
+          "p5": 71,
+          "p50": 125,
+          "p95": 178,
+          "p99": 210
+        },
+        "dynamic_range": 0.5725,
+        "channel_mean": {
+          "r": 127.131,
+          "g": 122.366,
+          "b": 122.147
+        },
+        "rb_ratio": 1.0408,
+        "clip_high_pct": 0.0008,
+        "clip_low_pct": 0,
+        "clip_high_pct_by_channel": {
+          "r": 0,
+          "g": 0.0001,
+          "b": 0.0008
+        },
+        "clip_low_pct_by_channel": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "saturation_mean": 20.611,
+        "chromatic_pct": 90.173,
+        "hue_mean": 18.85,
+        "hue_histogram": [
+          17.8316,
+          52.2612,
+          5.0624,
+          0.0174,
+          0,
+          0.0001,
+          0.0011,
+          22.8679,
+          1.5216,
+          0.0053,
+          0.0011,
+          0.4302
+        ],
+        "regions": []
+      }
+    },
+    {
+      "file": "20260907-_OZ80093.jpg",
+      "sha256": "2c67d59869842eb9257c4171138591564dcea74885f5d7ea96f464ce20475388",
+      "width": 1600,
+      "height": 1067,
+      "metrics": {
+        "luma_mean": 91.499,
+        "luma_std": 78.637,
+        "luma_percentiles": {
+          "p1": 2,
+          "p5": 5,
+          "p50": 60,
+          "p95": 215,
+          "p99": 251
+        },
+        "dynamic_range": 0.9765,
+        "channel_mean": {
+          "r": 79.573,
+          "g": 93.519,
+          "b": 106.607
+        },
+        "rb_ratio": 0.7464,
+        "clip_high_pct": 19.3307,
+        "clip_low_pct": 0.1608,
+        "clip_high_pct_by_channel": {
+          "r": 0.7125,
+          "g": 0.7077,
+          "b": 19.248
+        },
+        "clip_low_pct_by_channel": {
+          "r": 3.3724,
+          "g": 1.3685,
+          "b": 0.2653
+        },
+        "saturation_mean": 33.585,
+        "chromatic_pct": 52.1276,
+        "hue_mean": 209.23,
+        "hue_histogram": [
+          0.1282,
+          3.3805,
+          3.6589,
+          1.326,
+          0.4912,
+          0.9341,
+          2.7379,
+          80.9548,
+          6.129,
+          0.1918,
+          0.0403,
+          0.0274
+        ],
+        "regions": []
+      }
+    },
+    {
+      "file": "20260907-_OZ80099.jpg",
+      "sha256": "9a69ea6f0986f822d92dca3150f2c4af8158a0ee1a5fb9a765a2cc05f1028677",
+      "width": 1600,
+      "height": 1067,
+      "metrics": {
+        "luma_mean": 29.083,
+        "luma_std": 58.877,
+        "luma_percentiles": {
+          "p1": 0,
+          "p5": 1,
+          "p50": 2,
+          "p95": 182,
+          "p99": 244
+        },
+        "dynamic_range": 0.9569,
+        "channel_mean": {
+          "r": 25.785,
+          "g": 29.472,
+          "b": 34.94
+        },
+        "rb_ratio": 0.738,
+        "clip_high_pct": 4.4078,
+        "clip_low_pct": 16.2382,
+        "clip_high_pct_by_channel": {
+          "r": 0.0186,
+          "g": 0.0059,
+          "b": 4.3916
+        },
+        "clip_low_pct_by_channel": {
+          "r": 55.1464,
+          "g": 54.4815,
+          "b": 16.335
+        },
+        "saturation_mean": 36.104,
+        "chromatic_pct": 15.8432,
+        "hue_mean": 215.29,
+        "hue_histogram": [
+          0.3742,
+          5.5525,
+          4.3043,
+          0.4618,
+          0.4126,
+          0.5335,
+          1.2234,
+          72.908,
+          13.2219,
+          0.7993,
+          0.1338,
+          0.0747
+        ],
+        "regions": []
+      }
+    }
+  ]
+}

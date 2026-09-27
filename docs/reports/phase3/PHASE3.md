@@ -1,9 +1,9 @@
 ---
 report: Phase 3 — Session loop, metrics engine, guardrails, intents
 phase: 3
-status: template
-authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-09-26. Observed: Jim (not yet run). Verdict: Jim."
-date: 2026-09-26 (template)
+status: accepted
+authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-09-26. Observed: Jim ran npm run phase3:check on 2026-09-27 and answered its questions; Claude Code collected the files and wrote the analysis, Numbers and Consequences. Verdict and decisions: Jim (Phase 3 accepted, conditional on AC-4; all doc proposals accepted; 2026-09-27)."
+date: 2026-09-27 (run 1)
 ---
 
 # Phase 3 — Session loop, metrics engine, guardrails, intents
@@ -165,39 +165,111 @@ Checks Claude Code ran on 2026-09-26, before Jim's run. None of them involves Li
 
 ## Observed (Jim)
 
-<!-- Jim: run the steps above and say "done". Claude Code fills this section from the saved files. -->
+Jim ran the steps on 2026-09-27 and said "done" [stated]. The check saved its files to `%TEMP%\LrC-AVG\P3\`. Claude Code copied them to `docs\reports\phase3\P3\` with the user folder redacted to `%USERPROFILE%` (checked: 25 files, none holds the user name or the bridge token) [handle: Claude Code, 2026-09-27: `Get-ChildItem %TEMP%\LrC-AVG\P3 -Recurse` listed one run, `2026-09-27T14-00-37-507Z`; after the copy, each of the 25 files was scanned for the user-folder name and for the value in `%USERPROFILE%\.lrc-avg\bridge_token`: 0 files matched]. The copies are:
+- the results `p3_check_2026-09-27T14-00-37-507Z.json`;
+- the 12 session logs and 6 recipes, in `p3_sessions_…\`;
+- the check's tool log;
+- the chat's tool log and Claude Desktop's MCP log excerpt;
+- the bridge log;
+- the chat's own session log and recipe (from the repo's `logs\`), in `p3_chat_session\`.
+
+The golden JPEGs stayed on disk (decision 3): `npm run goldens` copied them to `tests\golden\` (gitignored) and wrote `tests\golden\golden.json` [handle: Claude Code, 2026-09-27, `npm run goldens` output "From p3_check_2026-09-27T14-00-37-507Z.json: … Wrote …\tests\golden\golden.json (6 entries)"; `git status` showed only `golden.json` as new; the six hashes match the run's `fixtures[*].golden.preview_hash`]. Times are local (UTC−7) unless marked Z. "The run" is `P3\p3_check_2026-09-27T14-00-37-507Z.json`.
+
+### Run 1 (07:00 → 07:12): FAILED on AC-4 only
+
+- **Connected** in 518 ms: plugin 0.2.0, protocol 1, LrC 15.5.1 [handle: the run `connect_ms`, `hello`].
+- **Part 1** took 07:00:37 → 07:08:07. All six photos were done, none skipped, and no error line [handle: the run `started_at` 14:00:37Z; the last session log `P3\p3_sessions_…\20260927-b9d5c7.json` written 07:08:07; `summary.fixtures_done` 6, `fixtures_skipped` [], `errors` []].
+  - The selection guard worked on the first photo. With another photo selected, the pass came back `TARGET_CHANGED` and nothing was written [handle: the run `fixtures[0].session_b.selection_guard`; bridge log 07:02:00.859 `get_settings failed: target_mismatch`].
+  - Jim answered y to both questions: the History steps were seen, and the six photos look as before [stated, via the check's questions].
+- **Part 2**, the chat, took 07:09:31 → 07:10:49 on `20260907-_OZ80093.NEF` [handle: `P3\p3_chat_tool_log_…jsonl`]. Claude:
+  - called `lr_list_intents`;
+  - began `landscape_golden_hour`;
+  - set two regions (sky, rocks; not preserved);
+  - made three passes with rationales drawn from the metrics (pass 1: "Rocks are dark (p50 25) and bluish (rb 0.83) for a golden-hour look; sky right p95 249 near clip. Warm WB, open shadows/blacks…");
+  - called `lr_get_metrics` and `lr_get_preview`;
+  - ended with accept.
+  - No step was refused or corrected. Jim answered y to all four questions: History steps seen, settings on the sliders, looks golden-hour, photo put back after the chat.
+- **The headline: `Phase 3 acceptance: FAILED`.** Every item was YES except AC-4 (`summary.ac4_clipping: false`).
+
+**AC-4, what happened.** Every pass that ended over a limit was on `20260907-_OZ80099.NEF`, and every one was shadow crush [handle: the session logs in `P3\p3_sessions_…\`, `passes[*].metrics_after`, `guardrail_actions`]:
+
+| Session | Pass | clip_low after the pass | History | What the guardrail did |
+|---|---|---|---|---|
+| A, `landscape_golden_hour` (`…c92f59`) | 0 | 2.2294 % | pass 0/4, baseline 1-3 | 9.98 % → 6.24 % → 2.57 % → 2.23 %, then `unmet` |
+| B, `neutral_technical_correction` (`…b9d5c7`) | 0 | 5.5416 % | pass 0/4, baseline 1-3 | three baseline corrections, then `unmet` |
+| B | 1 | 1.1604 % | pass 1/4, guard 1-3 | three corrections, then `unmet` |
+
+- As the check found it, this photo had 16.24 % of its pixels at or below 2 in all channels, and a mean luma of 29.1 [handle: the run `fixtures[5].golden.metrics`].
+- Each fixed correction lowered the crush. Three per pass were not enough. In session A, pass 1 (shadows +15, then one guard correction) brought it to 0.92 %, and it stayed under the limit afterwards [handle: `P3\p3_sessions_…\20260927-c92f59.json` `passes[0..4].guardrail_actions` and `metrics_after.clip_low_pct`: 0.9234, 0.9234, 0.8451, 0.826 after passes 1-4].
+- The check's own AC-4 counted session A only, so it reported one breach. Session B's two breaches are in its logs, and AC-4 says "no pass".
+- The other five photos, and the chat's session, stayed within 0.5 % / 1.0 % on every pass [handle: `passes[*].metrics_after` in the other ten session logs in `P3\p3_sessions_…\` and in `P3\p3_chat_session\20260927-d096a8.json`; Claude Code, 2026-09-27, compared with each log's `guardrails`: no other pass over].
 
 ## Numbers
 
 | Field | Value | Source field in `p3_check_*.json` |
 |---|---|---|
-| Connected, time to connect, plugin version | | `connect_ms`, `hello` |
-| Photos done / skipped | | `summary.fixtures_done`, `summary.fixtures_skipped` |
-| Per photo: process version, profile, context width × height | | `fixtures[*].photo` |
-| Per photo: golden JPEG size and hash | | `fixtures[*].golden` |
-| Per photo, session A: pass 0 applied, baseline actions | | `fixtures[*].session_a.pass0` |
-| Per photo, session A: passes done, History names, refusals, guardrail actions, convergence | | `fixtures[*].session_a.passes`, `history_names` |
-| AC-4: every pass within 0.5 % / 1.0 % | | `fixtures[*].ac4` |
-| AC-5: log valid, recipe valid, replay differing settings | | `fixtures[*].ac5` |
-| Photos put back after session A | | `fixtures[*].put_back` |
-| Probe: per-unit slopes of exposure and whites | | `fixtures[*].session_b.probe` |
-| AC-2: revert time and differing settings | | `fixtures[*].ac2` |
-| Selection guard (first photo) | | `fixtures[0].session_b.selection_guard` |
-| Region crop (first photo): export long edge, effective scale, export time | | `fixtures[0].region` |
-| Pass time: median, within ~3.5 s | | `summary.pass_ms` |
-| Jim, part 1: History steps seen / photos as before | | `jim_part1` |
-| Chat: session begun, intent, passes, ended | | `chat` |
-| Jim, part 2: History steps / sliders / looks golden hour / put back | | `jim_part2` |
-| Log paths | | `chat.desktop_log.saved_as`, `chat.engine_log.saved_as`, `fixtures[*].session_a.log_path` |
+| Connected, time to connect, plugin version | yes, 518 ms, plugin 0.2.0, protocol 1, LrC 15.5.1 | `connect_ms`, `hello` |
+| Photos done / skipped | 6 / none | `summary.fixtures_done`, `summary.fixtures_skipped` |
+| Per photo: process version, profile, context width × height | all 15.4; Camera Standard (`OZ81430`, `Z8A0173`), Adobe Color (the DxO DNG), Camera Neutral (`OZ80005`, `OZ80093`, `OZ80099`); all 8256 × 5504 | `fixtures[*].photo` |
+| Per photo: golden JPEG size, mean luma, clip high / low | `OZ81430` 342,694 B, 106.5, 3.42 / 0.17 %; DNG 136,243 B, 39.4, 0 / 2.20 %; `Z8A0173` 439,214 B, 118.5, 4.09 / 0 %; `OZ80005` 455,479 B, 123.4, 0.001 / 0 %; `OZ80093` 653,719 B, 91.5, 19.33 / 0.16 %; `OZ80099` 269,323 B, 29.1, 4.41 / 16.24 %. All 1600 × 1067 | `fixtures[*].golden` |
+| Session A, pass 0: baseline actions | `OZ81430` clip high: 1 correction; DNG clip low: 1; `OZ80099` clip low: 3, then unmet; the others none | `fixtures[*].session_a.pass0` |
+| Session A: passes; guardrail actions; convergence | 4 passes on every photo. Pass 2 (whites +40, exposure +0.5) was pulled back by the actual guardrail on 5 of 6 (the DNG did not clip). Pass 1 was corrected on `OZ81430` and `OZ80099`, pass 3 on `OZ80099`. No refusals. Converged by metrics on pass 4 on 5 of 6 (not `OZ80005`) | `fixtures[*].session_a.passes` |
+| AC-4: every pass within 0.5 % / 1.0 % | **no**: 3 passes over, all on `OZ80099` (table above); the check's own figure covered session A only | `fixtures[*].ac4`; session logs |
+| AC-5: log valid, recipe valid, replay | yes on all 6: both valid, the replay reads back with 0 settings differing | `fixtures[*].ac5` |
+| Photos put back after session A | yes on all 6, 0 settings differing | `fixtures[*].put_back` |
+| Probe: metric change per unit | exposure: luma +12.6 to +51.2 per EV, clip high 0 to +4.80 % per EV; whites: luma +0.03 to +0.17 per unit. Whole probe 3.5-6.7 s | `fixtures[*].session_b.probe` |
+| AC-2: revert time and differing settings | **yes**: 377-492 ms (median 402), 0 differing, on all 6 | `fixtures[*].ac2` |
+| Selection guard (first photo) | refused with `TARGET_CHANGED`, nothing written | `fixtures[0].session_b.selection_guard` |
+| Region crop (first photo) | export 4000 px in 3,084 ms, metrics 291 ms; crop 800 × 535 at scale 1; effective scale 0.4845 (4000 / 8256); context size 8256 × 5504 | `fixtures[0].region` |
+| Pass time | 24 scripted passes: median 3,155 ms; 14 within ~3.5 s. A plain pass took 2.1-3.7 s on the NEFs and ~1.5 s on the DNG; each guardrail correction added a render, so corrected passes took 6.2-9.4 s | `summary.pass_ms`; session logs `passes[*].duration_ms` |
+| Jim, part 1 | History steps seen: y; photos as before: y | `jim_part1` |
+| Chat | session begun on `landscape_golden_hour`, on `20260907-_OZ80093.NEF`; 3 passes (3.7, 3.7, 6.3 s); ended accept; clipping at most 0.091 % high / 0.145 % low on every pass | `chat`; `P3\p3_chat_session\20260927-d096a8.json` |
+| Jim, part 2 | History steps y; sliders y; looks golden-hour y; photo put back y | `jim_part2` |
+| Log paths | `P3\p3_desktop_mcp_log_…txt`, `P3\p3_chat_tool_log_…jsonl`, `P3\p3_chat_session\`, `P3\p3_sessions_…\`, `P3\p3_bridge_log_…txt` | `chat.*.saved_as` |
+| Golden JPEGs | 6, hashes as recorded; `engine\tests\golden.test.ts` passes on them (10 tests) | `tests\golden\golden.json` |
 
 ## Verdict
 
-<!-- Jim: is Phase 3 accepted? The check prints a suggestion (WORKED / FAILED); the verdict is Jim's. -->
+**Phase 3 accepted, conditional on AC-4** (Jim, 2026-09-27, chosen from the options Claude Code offered, which recommended fixing first and running again) [stated: "Conditional accept now"]. The check's suggestion was **FAILED**, on AC-4 only (see "Observed").
+
+The acceptance line (`PHASES.md:96`) against run 1:
+- **AC-1 (Phase 3 scope, decision 2):** met. Scripted sessions ran on all six fixtures, each with ≤ 4 passes and named History steps (Jim: y). The Claude Desktop chat ran a golden-hour session on `20260907-_OZ80093.NEF`, with 3 passes, accepted, and settings on the sliders (Jim: y).
+- **AC-2 (via `lr_end_session(revert)`):** met. Reverts were exact in 377-492 ms on all six.
+- **AC-4:** **not met on one photo.** Three passes on `20260907-_OZ80099.NEF` ended with shadow crush of 1.16-5.54 %. Five photos and the chat stayed within the limits on every pass.
+- **AC-5 (Phase 3 scope, decision 1):** met. Logs and recipes are valid, and the recipe replay was exact on all six.
+- Logs: `docs\reports\phase3\P3\`.
+
+**The condition:** the AC-4 fix is the first Phase 4 PR, and Phase 4's check verifies it:
+- the pass-0 baseline keeps correcting until the photo is within the limits (PRD 6.5, "until under"), with a render cap;
+- the check counts AC-4 on every session.
+
+Jim's decision on the proposals below, the same day: **"Accept all"** [stated]. They go into the vault docs after this PR merges, each marked "Phase 3".
 
 ## Consequences / open questions
 
-<!-- Filled after the run. Proposals already known, for Jim to accept or change:
-- MCP_TOOLS: the Phase 3 error codes (SESSION_NOT_ACTIVE, SESSION_ALREADY_ACTIVE, CONVERGED, CAP_REACHED, GUARDRAIL_REFUSED, NO_CHANGE, PROBE_NOT_ALLOWED, PROBE_NOT_PUT_BACK, SESSION_NOT_FOUND, INVALID_INTENT, INTENT_EXISTS, NOT_CONFIRMED); lr_save_intent `replace`; lr_step `refused[].by`, `metrics_refreshed`; lr_get_preview `export_retried`; the meaning of intent priors (a number is an offset).
-- ARCHITECTURE section 4: the numbers the docs left open (rules.ts).
-- PHASES.md: Phase 4 acceptance takes AC-5's virtual-copy replay; Phase 5 takes AC-1's HUD and six-fixture chat.
--->
+Proposed by Claude Code; **Jim decided both on 2026-09-27** [stated]: decision 1 as "Conditional accept now" (not the recommended fix-first), decision 2 as "Accept all". Each item follows from the handles above; the recommendations were [inference].
+
+**Decisions for Jim:**
+1. **AC-4.** The guardrail corrected in fixed steps, at most three per pass (an assumption accepted with the plan). That was too few for a photo starting with 16 % crushed shadows. PRD 6.5 says the pass-0 baseline runs "until under".
+   - **Recommended:** fix first, then run the check again (~12 minutes).
+     - The pass-0 baseline keeps stepping (blacks, shadows, exposure, repeating) until the photo is within the limits or no slider can move, at most 8 renders.
+     - The per-step corrections keep their cap of 3.
+     - The check counts AC-4 on every session (A, B and the chat), not only A.
+   - Or: accept Phase 3 now as conditional, with the fix as the first Phase 4 PR, verified by Phase 4's check.
+2. **The proposals below**, each marked "Phase 3" when applied to the vault:
+   - **MCP_TOOLS:**
+     - the Phase 3 error codes: `SESSION_NOT_ACTIVE`, `SESSION_ALREADY_ACTIVE`, `CONVERGED`, `CAP_REACHED`, `GUARDRAIL_REFUSED`, `NO_CHANGE`, `PROBE_NOT_ALLOWED`, `PROBE_NOT_PUT_BACK`, `SESSION_NOT_FOUND`, `INVALID_INTENT`, `INTENT_EXISTS`, `NOT_CONFIRMED`;
+     - `lr_save_intent` gains `replace`;
+     - `lr_step` gains `refused[].by` and `metrics_refreshed`;
+     - `lr_get_preview` gains `region` / `effective_scale` / `export_retried`;
+     - **a number in an intent's `priors` is an offset added to the photo's value** (the choice PR #22 flagged).
+   - **ARCHITECTURE section 4:** the numbers the docs left open (`engine\src\session\rules.ts`): base maxima for sharpening and noise, minimum steps, slider precision, the fixed corrections and their cap, and region preservation read as 8 points.
+   - **PHASES.md:** Phase 4's acceptance takes AC-5's replay through `lr_sync_series` onto a virtual copy (decision 1). Phase 5's takes AC-1's HUD part and the six-fixture chat (decision 2).
+   - **ARCHITECTURE section 6 / PRD NFR-2:** keep ~3.5 s for a plain pass; add that each guardrail correction costs one more render (~3 s).
+   - **LR_SDK_NOTES "Recorded in Phase 3"** (LrC 15.5.1):
+     - `apply_snapshot` restored exactly in 377-492 ms;
+     - a 4000 px export took 3.1 s;
+     - `getRawMetadata("width"/"height")` gave 8256 × 5504, the Z8's full size, on all six fixtures (whether it follows a crop is untested: none of the six is cropped [unverified]);
+     - the DxO DNG's passes took ~1.5 s against 2.1-3.7 s for the NEFs.
+
+**Still open:** whether the context's width/height follow a Lightroom crop [unverified]; `effective_scale` depends on it.

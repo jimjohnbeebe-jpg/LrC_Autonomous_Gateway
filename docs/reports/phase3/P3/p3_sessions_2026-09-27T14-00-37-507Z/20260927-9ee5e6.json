@@ -1,0 +1,1029 @@
+{
+  "schema": "lrc-avg/session-log/1",
+  "session_id": "9ee5e6ea-4c8e-466b-aa5a-c1a895d043b8",
+  "short_id": "9ee5e6",
+  "engine_version": "0.3.0",
+  "started": "2026-09-27T14:02:58.886Z",
+  "ended": "2026-09-27T14:03:10.034Z",
+  "outcome": "revert",
+  "intent": {
+    "id": "neutral_technical_correction",
+    "label": "Neutral technical correction",
+    "source": "bundled"
+  },
+  "mode": "converge",
+  "max_passes": 4,
+  "guardrails": {
+    "clip_high_pct": 0.5,
+    "clip_low_pct": 1
+  },
+  "decay": [
+    1,
+    0.6,
+    0.4,
+    0.25
+  ],
+  "notes": null,
+  "target": {
+    "uuid": "995935D6-F379-4DDE-A8DC-737465C4A52E",
+    "local_id": 3869530,
+    "filename": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+    "copy_name": null,
+    "process_version": "15.4",
+    "camera_profile": "Adobe Color"
+  },
+  "snapshot": {
+    "name": "AVG pre-session 2026-09-27T14:02:58.886Z",
+    "id": "22EE009E-53F7-4CD5-AD2D-A64B650B628E"
+  },
+  "regions": [],
+  "passes": [
+    {
+      "n": 0,
+      "kind": "pass0",
+      "target": "master",
+      "started": "2026-09-27T14:02:59.015Z",
+      "duration_ms": 5825.6,
+      "history_names": [
+        "AVG 9ee5e6 pass 0/4",
+        "AVG 9ee5e6 pass 0/4 baseline 1",
+        "AVG 9ee5e6 pass 0/4 baseline 2"
+      ],
+      "rationale": "engine: camera profile, lens corrections and intent priors, then the clipping baseline (PRD 6.5)",
+      "requested": {
+        "camera_profile": "Adobe Color",
+        "lens.profile_enable": 1,
+        "lens.ca_remove": 1
+      },
+      "changes": [
+        {
+          "name": "lens.profile_enable",
+          "before": 0,
+          "requested": 1,
+          "after": 1,
+          "delta": 1
+        },
+        {
+          "name": "lens.ca_remove",
+          "before": 0,
+          "requested": 1,
+          "after": 1,
+          "delta": 1
+        }
+      ],
+      "clamped": [],
+      "refused": [],
+      "unchanged": [],
+      "settings_before": {
+        "exposure": 0,
+        "contrast": 0,
+        "highlights": 0,
+        "shadows": 0,
+        "whites": 0,
+        "blacks": 0,
+        "texture": 8,
+        "clarity": 4,
+        "dehaze": 0,
+        "vibrance": 0,
+        "saturation": 0,
+        "temperature": 4750,
+        "tint": 1,
+        "grading.shadows.hue": 0,
+        "grading.shadows.sat": 0,
+        "grading.shadows.lum": 0,
+        "grading.midtones.hue": 0,
+        "grading.midtones.sat": 0,
+        "grading.midtones.lum": 0,
+        "grading.highlights.hue": 0,
+        "grading.highlights.sat": 0,
+        "grading.highlights.lum": 0,
+        "grading.global.hue": 0,
+        "grading.global.sat": 0,
+        "grading.global.lum": 0,
+        "grading.blending": 50,
+        "grading.balance": 0,
+        "sharpening.amount": 0,
+        "sharpening.radius": 2,
+        "sharpening.detail": 25,
+        "sharpening.masking": 0,
+        "noise.luminance": 0,
+        "noise.color": 0,
+        "lens.corrections_enable": true,
+        "lens.profile_enable": 0,
+        "lens.ca_remove": 0,
+        "tone_curve.master": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.red": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.green": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.blue": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "hsl.red.hue": 0,
+        "hsl.red.sat": 0,
+        "hsl.red.lum": 0,
+        "hsl.orange.hue": 0,
+        "hsl.orange.sat": 0,
+        "hsl.orange.lum": 0,
+        "hsl.yellow.hue": 0,
+        "hsl.yellow.sat": 0,
+        "hsl.yellow.lum": 0,
+        "hsl.green.hue": 0,
+        "hsl.green.sat": 0,
+        "hsl.green.lum": 0,
+        "hsl.aqua.hue": 0,
+        "hsl.aqua.sat": 0,
+        "hsl.aqua.lum": 0,
+        "hsl.blue.hue": 0,
+        "hsl.blue.sat": 0,
+        "hsl.blue.lum": 0,
+        "hsl.purple.hue": 0,
+        "hsl.purple.sat": 0,
+        "hsl.purple.lum": 0,
+        "hsl.magenta.hue": 0,
+        "hsl.magenta.sat": 0,
+        "hsl.magenta.lum": 0,
+        "camera_profile": "Adobe Color"
+      },
+      "settings_after": {
+        "exposure": 0,
+        "contrast": 0,
+        "highlights": 0,
+        "shadows": 30,
+        "whites": 0,
+        "blacks": 20,
+        "texture": 8,
+        "clarity": 4,
+        "dehaze": 0,
+        "vibrance": 0,
+        "saturation": 0,
+        "temperature": 4750,
+        "tint": 1,
+        "grading.shadows.hue": 0,
+        "grading.shadows.sat": 0,
+        "grading.shadows.lum": 0,
+        "grading.midtones.hue": 0,
+        "grading.midtones.sat": 0,
+        "grading.midtones.lum": 0,
+        "grading.highlights.hue": 0,
+        "grading.highlights.sat": 0,
+        "grading.highlights.lum": 0,
+        "grading.global.hue": 0,
+        "grading.global.sat": 0,
+        "grading.global.lum": 0,
+        "grading.blending": 50,
+        "grading.balance": 0,
+        "sharpening.amount": 0,
+        "sharpening.radius": 2,
+        "sharpening.detail": 25,
+        "sharpening.masking": 0,
+        "noise.luminance": 0,
+        "noise.color": 0,
+        "lens.corrections_enable": true,
+        "lens.profile_enable": 1,
+        "lens.ca_remove": 1,
+        "tone_curve.master": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.red": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.green": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.blue": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "hsl.red.hue": 0,
+        "hsl.red.sat": 0,
+        "hsl.red.lum": 0,
+        "hsl.orange.hue": 0,
+        "hsl.orange.sat": 0,
+        "hsl.orange.lum": 0,
+        "hsl.yellow.hue": 0,
+        "hsl.yellow.sat": 0,
+        "hsl.yellow.lum": 0,
+        "hsl.green.hue": 0,
+        "hsl.green.sat": 0,
+        "hsl.green.lum": 0,
+        "hsl.aqua.hue": 0,
+        "hsl.aqua.sat": 0,
+        "hsl.aqua.lum": 0,
+        "hsl.blue.hue": 0,
+        "hsl.blue.sat": 0,
+        "hsl.blue.lum": 0,
+        "hsl.purple.hue": 0,
+        "hsl.purple.sat": 0,
+        "hsl.purple.lum": 0,
+        "hsl.magenta.hue": 0,
+        "hsl.magenta.sat": 0,
+        "hsl.magenta.lum": 0,
+        "camera_profile": "Adobe Color"
+      },
+      "metrics_before": {
+        "luma_mean": 39.394,
+        "luma_std": 37.325,
+        "luma_percentiles": {
+          "p1": 0,
+          "p5": 2,
+          "p50": 23,
+          "p95": 110,
+          "p99": 120
+        },
+        "dynamic_range": 0.4706,
+        "channel_mean": {
+          "r": 40.416,
+          "g": 38.994,
+          "b": 40.346
+        },
+        "rb_ratio": 1.0017,
+        "clip_high_pct": 0,
+        "clip_low_pct": 2.2037,
+        "clip_high_pct_by_channel": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "clip_low_pct_by_channel": {
+          "r": 2.2067,
+          "g": 9.6705,
+          "b": 8.2403
+        },
+        "saturation_mean": 19.16,
+        "chromatic_pct": 15.2489,
+        "hue_mean": 243.24,
+        "hue_histogram": [
+          1.7151,
+          22.2073,
+          1.243,
+          0.0061,
+          0,
+          0,
+          0.0012,
+          36.6002,
+          29.5933,
+          8.6218,
+          0.0058,
+          0.0061
+        ],
+        "regions": []
+      },
+      "metrics_after": {
+        "luma_mean": 42.461,
+        "luma_std": 36.936,
+        "luma_percentiles": {
+          "p1": 1,
+          "p5": 4,
+          "p50": 28,
+          "p95": 112,
+          "p99": 121
+        },
+        "dynamic_range": 0.4706,
+        "channel_mean": {
+          "r": 43.721,
+          "g": 42.012,
+          "b": 43.198
+        },
+        "rb_ratio": 1.0121,
+        "clip_high_pct": 0,
+        "clip_low_pct": 0.7574,
+        "clip_high_pct_by_channel": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "clip_low_pct_by_channel": {
+          "r": 0.7599,
+          "g": 4.1717,
+          "b": 3.3235
+        },
+        "saturation_mean": 17.687,
+        "chromatic_pct": 16.001,
+        "hue_mean": 249.63,
+        "hue_histogram": [
+          5.1993,
+          22.027,
+          1.4562,
+          0.0084,
+          0.0004,
+          0,
+          0.0018,
+          33.4046,
+          28.1826,
+          9.6907,
+          0.0128,
+          0.0161
+        ],
+        "regions": []
+      },
+      "delta_metrics": {
+        "luma_mean": 3.067,
+        "luma_std": -0.389,
+        "luma_percentiles": {
+          "p1": 1,
+          "p5": 2,
+          "p50": 5,
+          "p95": 2,
+          "p99": 1
+        },
+        "dynamic_range": 0,
+        "channel_mean": {
+          "r": 3.305,
+          "g": 3.018,
+          "b": 2.852
+        },
+        "rb_ratio": 0.0104,
+        "clip_high_pct": 0,
+        "clip_low_pct": -1.4463,
+        "clip_high_pct_by_channel": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "clip_low_pct_by_channel": {
+          "r": -1.4468,
+          "g": -5.4988,
+          "b": -4.9168
+        },
+        "saturation_mean": -1.473,
+        "chromatic_pct": 0.7521,
+        "hue_mean": 6.39,
+        "regions": []
+      },
+      "preview_hash": "1f314542313301a4669c4eb131bc93dcd1e772dad35e4bc11541140e981bd51f",
+      "preview_source": "export",
+      "guardrail_actions": [
+        {
+          "kind": "corrected",
+          "limit": "clip_low",
+          "reason": "clip_low_pct was 2.1792 %, over the limit of 1 %",
+          "history_name": "AVG 9ee5e6 pass 0/4 baseline 1",
+          "changes": {
+            "blacks": 20
+          },
+          "metrics_after": {
+            "luma_mean": 41.077,
+            "luma_std": 37.656,
+            "luma_percentiles": {
+              "p1": 1,
+              "p5": 2,
+              "p50": 25,
+              "p95": 112,
+              "p99": 121
+            },
+            "dynamic_range": 0.4706,
+            "channel_mean": {
+              "r": 42.15,
+              "g": 40.667,
+              "b": 41.982
+            },
+            "rb_ratio": 1.004,
+            "clip_high_pct": 0,
+            "clip_low_pct": 1.3907,
+            "clip_high_pct_by_channel": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            },
+            "clip_low_pct_by_channel": {
+              "r": 1.3926,
+              "g": 6.9172,
+              "b": 5.6388
+            },
+            "saturation_mean": 18.127,
+            "chromatic_pct": 15.2044,
+            "hue_mean": 245.28,
+            "hue_histogram": [
+              2.3512,
+              22.0573,
+              1.4351,
+              0.0077,
+              0,
+              0,
+              0.0008,
+              35.0304,
+              29.2535,
+              9.849,
+              0.0085,
+              0.0065
+            ],
+            "regions": []
+          }
+        },
+        {
+          "kind": "corrected",
+          "limit": "clip_low",
+          "reason": "clip_low_pct was 1.3907 %, over the limit of 1 %",
+          "history_name": "AVG 9ee5e6 pass 0/4 baseline 2",
+          "changes": {
+            "shadows": 30
+          },
+          "metrics_after": {
+            "luma_mean": 42.461,
+            "luma_std": 36.936,
+            "luma_percentiles": {
+              "p1": 1,
+              "p5": 4,
+              "p50": 28,
+              "p95": 112,
+              "p99": 121
+            },
+            "dynamic_range": 0.4706,
+            "channel_mean": {
+              "r": 43.721,
+              "g": 42.012,
+              "b": 43.198
+            },
+            "rb_ratio": 1.0121,
+            "clip_high_pct": 0,
+            "clip_low_pct": 0.7574,
+            "clip_high_pct_by_channel": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            },
+            "clip_low_pct_by_channel": {
+              "r": 0.7599,
+              "g": 4.1717,
+              "b": 3.3235
+            },
+            "saturation_mean": 17.687,
+            "chromatic_pct": 16.001,
+            "hue_mean": 249.63,
+            "hue_histogram": [
+              5.1993,
+              22.027,
+              1.4562,
+              0.0084,
+              0.0004,
+              0,
+              0.0018,
+              33.4046,
+              28.1826,
+              9.6907,
+              0.0128,
+              0.0161
+            ],
+            "regions": []
+          }
+        }
+      ],
+      "converged_by_metrics": false
+    },
+    {
+      "n": 1,
+      "kind": "step",
+      "target": "master",
+      "started": "2026-09-27T14:03:08.086Z",
+      "duration_ms": 1565.9,
+      "history_names": [
+        "AVG 9ee5e6 pass 1/4"
+      ],
+      "rationale": "scripted pass before the revert",
+      "requested": {
+        "shadows": 10
+      },
+      "changes": [
+        {
+          "name": "shadows",
+          "before": 30,
+          "requested": 10,
+          "after": 40,
+          "delta": 10
+        }
+      ],
+      "clamped": [],
+      "refused": [],
+      "unchanged": [],
+      "settings_before": {
+        "exposure": 0,
+        "contrast": 0,
+        "highlights": 0,
+        "shadows": 30,
+        "whites": 0,
+        "blacks": 20,
+        "texture": 8,
+        "clarity": 4,
+        "dehaze": 0,
+        "vibrance": 0,
+        "saturation": 0,
+        "temperature": 4750,
+        "tint": 1,
+        "grading.shadows.hue": 0,
+        "grading.shadows.sat": 0,
+        "grading.shadows.lum": 0,
+        "grading.midtones.hue": 0,
+        "grading.midtones.sat": 0,
+        "grading.midtones.lum": 0,
+        "grading.highlights.hue": 0,
+        "grading.highlights.sat": 0,
+        "grading.highlights.lum": 0,
+        "grading.global.hue": 0,
+        "grading.global.sat": 0,
+        "grading.global.lum": 0,
+        "grading.blending": 50,
+        "grading.balance": 0,
+        "sharpening.amount": 0,
+        "sharpening.radius": 2,
+        "sharpening.detail": 25,
+        "sharpening.masking": 0,
+        "noise.luminance": 0,
+        "noise.color": 0,
+        "lens.corrections_enable": true,
+        "lens.profile_enable": 1,
+        "lens.ca_remove": 1,
+        "tone_curve.master": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.red": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.green": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.blue": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "hsl.red.hue": 0,
+        "hsl.red.sat": 0,
+        "hsl.red.lum": 0,
+        "hsl.orange.hue": 0,
+        "hsl.orange.sat": 0,
+        "hsl.orange.lum": 0,
+        "hsl.yellow.hue": 0,
+        "hsl.yellow.sat": 0,
+        "hsl.yellow.lum": 0,
+        "hsl.green.hue": 0,
+        "hsl.green.sat": 0,
+        "hsl.green.lum": 0,
+        "hsl.aqua.hue": 0,
+        "hsl.aqua.sat": 0,
+        "hsl.aqua.lum": 0,
+        "hsl.blue.hue": 0,
+        "hsl.blue.sat": 0,
+        "hsl.blue.lum": 0,
+        "hsl.purple.hue": 0,
+        "hsl.purple.sat": 0,
+        "hsl.purple.lum": 0,
+        "hsl.magenta.hue": 0,
+        "hsl.magenta.sat": 0,
+        "hsl.magenta.lum": 0,
+        "camera_profile": "Adobe Color"
+      },
+      "settings_after": {
+        "exposure": 0,
+        "contrast": 0,
+        "highlights": 0,
+        "shadows": 40,
+        "whites": 0,
+        "blacks": 20,
+        "texture": 8,
+        "clarity": 4,
+        "dehaze": 0,
+        "vibrance": 0,
+        "saturation": 0,
+        "temperature": 4750,
+        "tint": 1,
+        "grading.shadows.hue": 0,
+        "grading.shadows.sat": 0,
+        "grading.shadows.lum": 0,
+        "grading.midtones.hue": 0,
+        "grading.midtones.sat": 0,
+        "grading.midtones.lum": 0,
+        "grading.highlights.hue": 0,
+        "grading.highlights.sat": 0,
+        "grading.highlights.lum": 0,
+        "grading.global.hue": 0,
+        "grading.global.sat": 0,
+        "grading.global.lum": 0,
+        "grading.blending": 50,
+        "grading.balance": 0,
+        "sharpening.amount": 0,
+        "sharpening.radius": 2,
+        "sharpening.detail": 25,
+        "sharpening.masking": 0,
+        "noise.luminance": 0,
+        "noise.color": 0,
+        "lens.corrections_enable": true,
+        "lens.profile_enable": 1,
+        "lens.ca_remove": 1,
+        "tone_curve.master": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.red": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.green": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.blue": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "hsl.red.hue": 0,
+        "hsl.red.sat": 0,
+        "hsl.red.lum": 0,
+        "hsl.orange.hue": 0,
+        "hsl.orange.sat": 0,
+        "hsl.orange.lum": 0,
+        "hsl.yellow.hue": 0,
+        "hsl.yellow.sat": 0,
+        "hsl.yellow.lum": 0,
+        "hsl.green.hue": 0,
+        "hsl.green.sat": 0,
+        "hsl.green.lum": 0,
+        "hsl.aqua.hue": 0,
+        "hsl.aqua.sat": 0,
+        "hsl.aqua.lum": 0,
+        "hsl.blue.hue": 0,
+        "hsl.blue.sat": 0,
+        "hsl.blue.lum": 0,
+        "hsl.purple.hue": 0,
+        "hsl.purple.sat": 0,
+        "hsl.purple.lum": 0,
+        "hsl.magenta.hue": 0,
+        "hsl.magenta.sat": 0,
+        "hsl.magenta.lum": 0,
+        "camera_profile": "Adobe Color"
+      },
+      "metrics_before": {
+        "luma_mean": 42.461,
+        "luma_std": 36.936,
+        "luma_percentiles": {
+          "p1": 1,
+          "p5": 4,
+          "p50": 28,
+          "p95": 112,
+          "p99": 121
+        },
+        "dynamic_range": 0.4706,
+        "channel_mean": {
+          "r": 43.721,
+          "g": 42.012,
+          "b": 43.198
+        },
+        "rb_ratio": 1.0121,
+        "clip_high_pct": 0,
+        "clip_low_pct": 0.7574,
+        "clip_high_pct_by_channel": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "clip_low_pct_by_channel": {
+          "r": 0.7599,
+          "g": 4.1717,
+          "b": 3.3235
+        },
+        "saturation_mean": 17.687,
+        "chromatic_pct": 16.001,
+        "hue_mean": 249.63,
+        "hue_histogram": [
+          5.1993,
+          22.027,
+          1.4562,
+          0.0084,
+          0.0004,
+          0,
+          0.0018,
+          33.4046,
+          28.1826,
+          9.6907,
+          0.0128,
+          0.0161
+        ],
+        "regions": []
+      },
+      "metrics_after": {
+        "luma_mean": 42.975,
+        "luma_std": 36.656,
+        "luma_percentiles": {
+          "p1": 1,
+          "p5": 4,
+          "p50": 28,
+          "p95": 112,
+          "p99": 121
+        },
+        "dynamic_range": 0.4706,
+        "channel_mean": {
+          "r": 44.336,
+          "g": 42.501,
+          "b": 43.659
+        },
+        "rb_ratio": 1.0155,
+        "clip_high_pct": 0,
+        "clip_low_pct": 0.6125,
+        "clip_high_pct_by_channel": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "clip_low_pct_by_channel": {
+          "r": 0.6157,
+          "g": 3.3755,
+          "b": 2.7281
+        },
+        "saturation_mean": 17.65,
+        "chromatic_pct": 16.4922,
+        "hue_mean": 252.4,
+        "hue_histogram": [
+          6.7831,
+          22.1389,
+          1.3766,
+          0.0064,
+          0,
+          0,
+          0.0028,
+          32.4048,
+          27.659,
+          9.6003,
+          0.0096,
+          0.0185
+        ],
+        "regions": []
+      },
+      "delta_metrics": {
+        "luma_mean": 0.514,
+        "luma_std": -0.28,
+        "luma_percentiles": {
+          "p1": 0,
+          "p5": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "dynamic_range": 0,
+        "channel_mean": {
+          "r": 0.615,
+          "g": 0.489,
+          "b": 0.461
+        },
+        "rb_ratio": 0.0034,
+        "clip_high_pct": 0,
+        "clip_low_pct": -0.1449,
+        "clip_high_pct_by_channel": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "clip_low_pct_by_channel": {
+          "r": -0.1442,
+          "g": -0.7962,
+          "b": -0.5954
+        },
+        "saturation_mean": -0.037,
+        "chromatic_pct": 0.4912,
+        "hue_mean": 2.77,
+        "regions": []
+      },
+      "preview_hash": "a68e004879516bfefa37541a29d39d799f10a916005df80fa531591e665f6b2b",
+      "preview_source": "export",
+      "guardrail_actions": [],
+      "converged_by_metrics": false
+    }
+  ],
+  "probes": [
+    {
+      "started": "2026-09-27T14:03:04.657Z",
+      "duration_ms": 3476.9,
+      "magnitude": 0.5,
+      "history_names": [
+        "AVG 9ee5e6 probe exposure",
+        "AVG 9ee5e6 probe whites",
+        "AVG 9ee5e6 probe revert"
+      ],
+      "results": [
+        {
+          "name": "exposure",
+          "delta_applied": 0.5,
+          "delta_metrics": {
+            "luma_mean": 12.863,
+            "luma_std": 8.309,
+            "luma_percentiles": {
+              "p1": 1,
+              "p5": 2,
+              "p50": 12,
+              "p95": 27,
+              "p99": 28
+            },
+            "dynamic_range": 0.1059,
+            "channel_mean": {
+              "r": 13.234,
+              "g": 12.759,
+              "b": 12.802
+            },
+            "rb_ratio": 0.0049,
+            "clip_high_pct": 0,
+            "clip_low_pct": -0.3713,
+            "clip_high_pct_by_channel": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            },
+            "clip_low_pct_by_channel": {
+              "r": -0.3722,
+              "g": -1.9265,
+              "b": -1.5895
+            },
+            "saturation_mean": -0.635,
+            "chromatic_pct": 1.2865,
+            "hue_mean": 34.37,
+            "regions": []
+          },
+          "per_unit": {
+            "luma_mean": 25.726,
+            "clip_high_pct": 0,
+            "clip_low_pct": -0.7426
+          }
+        },
+        {
+          "name": "whites",
+          "delta_applied": 30,
+          "delta_metrics": {
+            "luma_mean": 3.025,
+            "luma_std": 3.779,
+            "luma_percentiles": {
+              "p1": 0,
+              "p5": 0,
+              "p50": 1,
+              "p95": 11,
+              "p99": 14
+            },
+            "dynamic_range": 0.0549,
+            "channel_mean": {
+              "r": 3.023,
+              "g": 3.015,
+              "b": 3.14
+            },
+            "rb_ratio": -0.0033,
+            "clip_high_pct": 0,
+            "clip_low_pct": -0.004,
+            "clip_high_pct_by_channel": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            },
+            "clip_low_pct_by_channel": {
+              "r": -0.0039,
+              "g": -0.028,
+              "b": -0.0361
+            },
+            "saturation_mean": 0.378,
+            "chromatic_pct": 1.7622,
+            "hue_mean": 0.86,
+            "regions": []
+          },
+          "per_unit": {
+            "luma_mean": 0.1008,
+            "clip_high_pct": 0,
+            "clip_low_pct": -0.0001
+          }
+        }
+      ]
+    }
+  ],
+  "failures": [],
+  "final_settings": {
+    "exposure": 0,
+    "contrast": 0,
+    "highlights": 0,
+    "shadows": 0,
+    "whites": 0,
+    "blacks": 0,
+    "texture": 8,
+    "clarity": 4,
+    "dehaze": 0,
+    "vibrance": 0,
+    "saturation": 0,
+    "temperature": 4750,
+    "tint": 1,
+    "grading.shadows.hue": 0,
+    "grading.shadows.sat": 0,
+    "grading.shadows.lum": 0,
+    "grading.midtones.hue": 0,
+    "grading.midtones.sat": 0,
+    "grading.midtones.lum": 0,
+    "grading.highlights.hue": 0,
+    "grading.highlights.sat": 0,
+    "grading.highlights.lum": 0,
+    "grading.global.hue": 0,
+    "grading.global.sat": 0,
+    "grading.global.lum": 0,
+    "grading.blending": 50,
+    "grading.balance": 0,
+    "sharpening.amount": 0,
+    "sharpening.radius": 2,
+    "sharpening.detail": 25,
+    "sharpening.masking": 0,
+    "noise.luminance": 0,
+    "noise.color": 0,
+    "lens.corrections_enable": true,
+    "lens.profile_enable": 0,
+    "lens.ca_remove": 0,
+    "tone_curve.master": [
+      0,
+      0,
+      255,
+      255
+    ],
+    "tone_curve.red": [
+      0,
+      0,
+      255,
+      255
+    ],
+    "tone_curve.green": [
+      0,
+      0,
+      255,
+      255
+    ],
+    "tone_curve.blue": [
+      0,
+      0,
+      255,
+      255
+    ],
+    "hsl.red.hue": 0,
+    "hsl.red.sat": 0,
+    "hsl.red.lum": 0,
+    "hsl.orange.hue": 0,
+    "hsl.orange.sat": 0,
+    "hsl.orange.lum": 0,
+    "hsl.yellow.hue": 0,
+    "hsl.yellow.sat": 0,
+    "hsl.yellow.lum": 0,
+    "hsl.green.hue": 0,
+    "hsl.green.sat": 0,
+    "hsl.green.lum": 0,
+    "hsl.aqua.hue": 0,
+    "hsl.aqua.sat": 0,
+    "hsl.aqua.lum": 0,
+    "hsl.blue.hue": 0,
+    "hsl.blue.sat": 0,
+    "hsl.blue.lum": 0,
+    "hsl.purple.hue": 0,
+    "hsl.purple.sat": 0,
+    "hsl.purple.lum": 0,
+    "hsl.magenta.hue": 0,
+    "hsl.magenta.sat": 0,
+    "hsl.magenta.lum": 0,
+    "camera_profile": "Adobe Color"
+  },
+  "recipe_path": null,
+  "revert": {
+    "ms": 380.4,
+    "differing": []
+  }
+}

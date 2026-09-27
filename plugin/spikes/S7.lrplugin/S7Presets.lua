@@ -1,4 +1,5 @@
 -- AVG-S7 item 1: two ways to make a Develop preset, for lr_create_preset_from_active (PRD 6.11, OQ-3).
+-- (Each run's two presets are named "AVG S7 plugin <run time>" and "AVG S7 xmp <run time>", Presets.names.)
 --   "AVG S7 plugin": LrApplication.addDevelopPresetForPlugin, which "adds a preset hidden within a
 --     plug-in ... stored in a special folder called 'Plugin Develop Presets'" [handle:
 --     https://lrc.mcor.dev/modules/LrApplication.html]. Automaat marks such presets not visible in
@@ -21,10 +22,14 @@ local Common = require 'S7Common'
 local Presets = {}
 
 Presets.REFERENCE = "AVG S7 reference"
-Presets.PLUGIN = "AVG S7 plugin"
-Presets.XMP = "AVG S7 xmp"
 -- Key names from engine\src\params\sdk-keys.lrc15.json; values inside canonical.ts's ranges.
 Presets.PLUGIN_VALUES = { Exposure2012 = 0.35, Vibrance = 17 }
+
+-- The two presets a run makes carry the run's time, so a second run never replaces or shadows the
+-- first run's presets (Greptile, PR #29), and every lookup is by the names in the state file.
+function Presets.names(tag)
+    return { plugin = "AVG S7 plugin " .. tag, xmp = "AVG S7 xmp " .. tag }
+end
 
 -- obj:method(), or "error: ..." when Lightroom refuses it.
 local function call(obj, method)
@@ -86,9 +91,9 @@ end
 
 -- Whether it needs a write gate is not documented: first without one (Automaat calls it outside
 -- any gate [upstream claim: HandlerDevelop.lua:593]), then inside one. Returns the preset or nil.
-function Presets.createPluginPreset(catalog, out)
+function Presets.createPluginPreset(catalog, name, out)
     local ok, preset = LrTasks.pcall(function()
-        return LrApplication.addDevelopPresetForPlugin(_PLUGIN, Presets.PLUGIN, Presets.PLUGIN_VALUES)
+        return LrApplication.addDevelopPresetForPlugin(_PLUGIN, name, Presets.PLUGIN_VALUES)
     end)
     out.how = "outside write gate"
     if not ok then
@@ -96,7 +101,7 @@ function Presets.createPluginPreset(catalog, out)
         local created
         ok, preset = LrTasks.pcall(function()
             catalog:withWriteAccessDo("AVG S7 plugin preset", function()
-                created = LrApplication.addDevelopPresetForPlugin(_PLUGIN, Presets.PLUGIN, Presets.PLUGIN_VALUES)
+                created = LrApplication.addDevelopPresetForPlugin(_PLUGIN, name, Presets.PLUGIN_VALUES)
             end)
         end)
         out.how = "inside withWriteAccessDo"
@@ -136,8 +141,9 @@ local function readFile(path)
     return text
 end
 
--- Write "AVG S7 xmp" next to the reference's file. Returns the path and the new uuid, or nil.
-function Presets.writeXmp(refPreset, out)
+-- Write the preset file `name` next to the reference's file, never over an existing file. Returns the
+-- path and the new uuid, or nil.
+function Presets.writeXmp(refPreset, name, out)
     local file, refUuid = call(refPreset, "getFile"), call(refPreset, "getUuid")
     out.reference_file = file
     out.reference_uuid = refUuid
@@ -148,10 +154,11 @@ function Presets.writeXmp(refPreset, out)
     local old, new = uuidPair(text, refUuid)
     if not old then out.error = "the reference file does not contain its uuid as text" return nil end
     local renamed, nUuid = replaceAll(text, old, new)
-    local final, nName = replaceAll(renamed, Presets.REFERENCE, Presets.XMP)
+    local final, nName = replaceAll(renamed, Presets.REFERENCE, name)
     out.uuid, out.uuid_replacements, out.name_replacements = new, nUuid, nName
     if nName < 1 then out.error = "the reference file does not contain its name as text" return nil end
-    local path = LrPathUtils.child(LrPathUtils.parent(file), Presets.XMP .. "." .. LrPathUtils.extension(file))
+    local path = LrPathUtils.child(LrPathUtils.parent(file), name .. "." .. LrPathUtils.extension(file))
+    if LrFileUtils.exists(path) then out.error = "a file is already there: " .. path return nil end
     local fh, openErr = io.open(path, "wb")
     if not fh then out.error = "could not write " .. path .. ": " .. tostring(openErr) return nil end
     fh:write(final)

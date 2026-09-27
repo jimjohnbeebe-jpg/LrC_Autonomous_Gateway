@@ -28,11 +28,14 @@ const destDir = path.resolve(process.argv[3] ?? path.join(repoRoot, "docs", "rep
 const Export = z.looseObject({ path: z.string().optional(), error: z.string().optional() });
 const Size = z.looseObject({ width: z.unknown().optional(), height: z.unknown().optional(), croppedDimensions: z.unknown().optional(), isCropped: z.unknown().optional() });
 const Run = z.looseObject({
+  run_at: z.string(),
   crop: z.looseObject({
     worked: z.boolean().optional(),
     error: z.string().optional(),
     crop_written: z.record(z.string(), z.number()).optional(),
+    crop_read_back: z.record(z.string(), z.unknown()).optional(),
     master_size: Size.optional(),
+    size_before_crop: Size.optional(),
     size_after_crop: Size.optional(),
     size_after_export: Size.optional(),
     export: Export.optional(),
@@ -46,7 +49,14 @@ const Run = z.looseObject({
   }),
 });
 const Jim = z.looseObject({ answered: z.boolean(), saw_reference: z.boolean().optional(), saw_plugin: z.boolean().optional(), saw_xmp: z.boolean().optional() });
-const Observe = z.looseObject({ jim: Jim, found: z.looseObject({ by_name: z.record(z.string(), z.unknown()) }), apply: z.unknown().optional(), cleanup: z.unknown().optional() });
+const Observe = z.looseObject({
+  state: z.looseObject({ run_at: z.string().optional() }),
+  jim: Jim,
+  found: z.record(z.string(), z.unknown()),
+  apply: z.unknown().optional(),
+  cleanup: z.unknown().optional(),
+});
+type Crop = z.infer<typeof Run>["crop"];
 
 const newest = (prefix: string): string | null => readdirSync(srcDir).filter((f) => f.startsWith(prefix) && f.endsWith(".json")).sort().at(-1) ?? null;
 const readJson = (file: string): unknown => JSON.parse(readFileSync(path.join(srcDir, file), "utf8"));
@@ -69,9 +79,23 @@ async function jpegSize(recorded: string | undefined): Promise<{ width: number; 
   return meta.width && meta.height ? { width: meta.width, height: meta.height } : null;
 }
 
+// Reasons the crop comparison cannot be read at face value (Greptile, PR #29): the crop fractions
+// are taken as fractions of the recorded width x height, which holds for an unrotated photo with no
+// angle [inference]. S7Photos.lua writes CropAngle 0 and reads orientation back; the fixture read "AB"
+// in S5 [handle: engine\src\params\sdk-keys.lrc15.json "orientation"].
+function cropCaveats(crop: Crop, W: number, H: number, exp: { width: number; height: number }): string[] {
+  const back = crop.crop_read_back ?? {};
+  const reasons: string[] = [];
+  if (back["orientation"] !== "AB") reasons.push(`orientation read back ${JSON.stringify(back["orientation"] ?? null)}, not "AB"`);
+  if (back["CropAngle"] !== 0) reasons.push(`CropAngle read back ${JSON.stringify(back["CropAngle"] ?? null)}, not 0`);
+  if (crop.size_before_crop?.isCropped === true) reasons.push("the copy was already cropped before the harness's crop");
+  if (W >= H !== exp.width >= exp.height) reasons.push("the export is portrait where width x height is landscape, or the reverse");
+  return reasons;
+}
+
 // Item 3: does the export follow the crop, do width/height or croppedDimensions, and what scale
 // would the engine report (export long edge / max(width, height), engine\src\mcp\tools-context.ts)?
-async function cropFindings(crop: z.infer<typeof Run>["crop"]) {
+async function cropFindings(crop: Crop) {
   const W = num(crop.master_size?.width), H = num(crop.master_size?.height);
   const c = crop.crop_written;
   const exp = await jpegSize(crop.export?.path);
@@ -83,8 +107,11 @@ async function cropFindings(crop: z.infer<typeof Run>["crop"]) {
   const cd = after?.croppedDimensions as { width?: unknown; height?: unknown } | undefined;
   const cdW = num(cd?.width), cdH = num(cd?.height);
   const close = (a: number | null, b: number): boolean => a !== null && Math.abs(a - b) <= 1;
+  const caveats = cropCaveats(crop, W, H, exp);
   return {
     complete: true,
+    conclusive: caveats.length === 0,
+    inconclusive_reasons: caveats,
     master: { width: W, height: H },
     expected_cropped: { width: round(cw), height: round(ch), aspect: round(cw / ch) },
     export: { ...exp, aspect: round(exp.width / exp.height) },
@@ -100,10 +127,16 @@ async function cropFindings(crop: z.infer<typeof Run>["crop"]) {
   };
 }
 
-function observeFindings(file: string | null) {
-  if (!file) return { file: null };
-  const o = Observe.parse(readJson(file));
-  return { file, jim: o.jim, lightroom_lists: o.found.by_name, apply: o.apply ?? null, cleanup: o.cleanup ?? null };
+// The newest observation file of this run (its state.run_at equals the run's run_at). Files from
+// other runs are counted and left out, so answers from two runs are never merged (Greptile, PR #29).
+function observed(prefix: string, runAt: string) {
+  const files = readdirSync(srcDir).filter((f) => f.startsWith(prefix) && f.endsWith(".json")).sort();
+  const mine = files.map((f) => ({ f, o: Observe.parse(readJson(f)) })).filter((x) => x.o.state.run_at === runAt);
+  const last = mine.at(-1);
+  const ignored = files.length - mine.length;
+  if (!last) return { file: null, note: "INCOMPLETE: no observation for this run", other_runs_ignored: ignored };
+  const o = last.o;
+  return { file: last.f, other_runs_ignored: ignored, jim: o.jim, lightroom: o.found, apply: o.apply ?? null, cleanup: o.cleanup ?? null };
 }
 
 // The user folder, as written raw, JSON-escaped, and with forward slashes, becomes %USERPROFILE%.
@@ -134,14 +167,16 @@ async function main(): Promise<void> {
   if (!runFile) throw new Error(`no s7_run_*.json in ${srcDir}`);
   const run = Run.parse(readJson(runFile));
   const p = run.presets;
+  const before = observed("s7_before_", run.run_at);
+  const after = observed("s7_after_", run.run_at);
   const summary = {
-    source: { run: runFile, before: newest("s7_before_"), after: newest("s7_after_") },
+    source: { run: runFile, run_at: run.run_at, before: before.file, after: after.file },
     item1_presets: {
       plugin: { created: p.plugin.preset !== undefined, how: p.plugin.how ?? null, error: p.plugin.error ?? null, group: p.plugin.preset?.parent ?? null, has_file: typeof p.plugin.preset?.file === "string" },
       plugin_applied_matches: p.plugin_apply?.matches ?? null,
       xmp: { written: p.xmp.path !== undefined, error: p.xmp.error ?? null },
-      before_restart: observeFindings(newest("s7_before_")),
-      after_restart: observeFindings(newest("s7_after_")),
+      before_restart: before,
+      after_restart: after,
     },
     item2_removal_probe: { undocumented_removal_names_found: run.removal_probe.found },
     item3_crop: { worked: run.crop.worked ?? false, error: run.crop.error ?? null, ...(await cropFindings(run.crop)) },

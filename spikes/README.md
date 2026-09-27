@@ -73,4 +73,4 @@ Leave each spike plugin installed after its run. They should not conflict with e
 - `spikes\S2\client.ts` was run against a fake Node echo server [handle: `docs\reports\phase0\S2.md` "Pre-run findings"].
 - `spikes\S3\server.ts` was exercised via `node spikes\S3\smoke-client.ts` [handle: `docs\reports\phase0\S3.md` "Pre-run findings"].
 - `node spikes\S5\pin.ts engine\tests\fixtures\synthetic-s5-dump-a.json engine\tests\fixtures\synthetic-s5-dump-b.json --dry-run` was run [handle: `docs\reports\phase0\S5.md` "Pre-run findings"].
-- S7: the Lua parses as Lua 5.1, the flow ran against a fake Lightroom under fengari in five scenarios, and `spikes\S7\summarize.ts` was dry-run on the fake run's files, redaction included [handle: `docs\reports\phase4\S7.md` "Pre-run findings"].
+- S7: the Lua parses as Lua 5.1, the flow ran against a fake Lightroom under fengari in seven scenarios, and `spikes\S7\summarize.ts` was dry-run on the fake run's files, redaction included [handle: `docs\reports\phase4\S7.md` "Pre-run findings"].

@@ -16,10 +16,13 @@ local S7Photos = {}
 S7Photos.CROP_COPY = "AVG S7 crop"
 S7Photos.UNSELECTED_COPY = "AVG S7 unselected"
 
--- Fractions of the photo; an uncropped photo reads CropLeft 0, CropTop 0, CropRight 1, CropBottom 1
--- [handle: engine\src\params\sdk-keys.lrc15.json "sample"]. Key names come from that pinned map (rule 03).
-local CROP = { CropLeft = 0.1, CropRight = 0.9, CropTop = 0.2, CropBottom = 0.8 }
-local CROP_KEYS = { "CropLeft", "CropRight", "CropTop", "CropBottom", "CropAngle" }
+-- Fractions of the photo; an uncropped photo reads CropLeft 0, CropTop 0, CropRight 1, CropBottom 1,
+-- CropAngle 0 [handle: engine\src\params\sdk-keys.lrc15.json "sample"]. Key names come from that
+-- pinned map (rule 03). All five are written, so a crop or angle the copy inherited is replaced.
+-- "orientation" is read back: the fixture read "AB" in S5 [handle: same file, "orientation"], and
+-- summarize.ts calls the crop comparison inconclusive for any other value (Greptile, PR #29).
+local CROP = { CropLeft = 0.1, CropRight = 0.9, CropTop = 0.2, CropBottom = 0.8, CropAngle = 0 }
+local CROP_KEYS = { "CropLeft", "CropRight", "CropTop", "CropBottom", "CropAngle", "orientation" }
 -- getRawMetadata keys listed on https://lrc.mcor.dev/modules/LrPhoto.html [handle].
 local SIZE_KEYS = { "width", "height", "dimensions", "croppedDimensions", "isCropped", "aspectRatio" }
 

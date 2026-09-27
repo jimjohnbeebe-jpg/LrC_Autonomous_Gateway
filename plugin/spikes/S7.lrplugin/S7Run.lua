@@ -29,14 +29,14 @@ local function precheck(catalog, master)
     return nil, ref
 end
 
-local function presets(catalog, ref, copy)
-    local out = { reference = (S7Presets.describe(ref.preset)), reference_group = ref.where, plugin = {}, xmp = {} }
-    local preset = S7Presets.createPluginPreset(catalog, out.plugin)
-    S7Presets.writeXmp(ref.preset, out.xmp)
+local function presets(catalog, ref, copy, names)
+    local out = { names = names, reference = (S7Presets.describe(ref.preset)), reference_group = ref.where, plugin = {}, xmp = {} }
+    local preset = S7Presets.createPluginPreset(catalog, names.plugin, out.plugin)
+    S7Presets.writeXmp(ref.preset, names.xmp, out.xmp)
     local listing, index = S7Presets.list()
     out.listed_after = listing
-    out.plugin_listed_as = index[S7Presets.PLUGIN] and index[S7Presets.PLUGIN].where or false
-    out.xmp_listed_as = index[S7Presets.XMP] and index[S7Presets.XMP].where or false
+    out.plugin_listed_as = index[names.plugin] and index[names.plugin].where or false
+    out.xmp_listed_as = index[names.xmp] and index[names.xmp].where or false
     if preset and copy then
         local ok, err = S7Presets.apply(catalog, copy, preset, true, "AVG S7 apply plugin preset")
         local back = Common.pick(Common.settings(catalog, copy), { "Exposure2012", "Vibrance" })
@@ -60,8 +60,10 @@ local function stateOf(result)
         unselected_copy_uuid = uuidOf(result.unselected.copy),
         reference_uuid = uuidOf(p.reference),
         reference_group = tostring(p.reference_group),
+        plugin_name = p.names.plugin,
         plugin_preset_uuid = uuidOf(p.plugin.preset),
         plugin_group = p.plugin.preset and tostring(p.plugin.preset.parent) or "",
+        xmp_name = p.names.xmp,
         xmp_uuid = p.xmp.uuid or "",
         xmp_path = p.xmp.path or "",
     }
@@ -88,8 +90,8 @@ local function summary(result)
         line("Crop on a virtual copy", c.worked, c.error or (c.export and c.export.error) or "the crop read back differently"),
         line("Write + export, photo not selected", u.worked, unselectedWhy(u)),
         "Removal probe: " .. (probe.found > 0 and (probe.found .. " undocumented removal-like name(s) found") or "no undocumented removal call found") .. " (nothing was called)",
-        "Plugin preset \"" .. S7Presets.PLUGIN .. "\": " .. (p.plugin.preset and "CREATED" or ("FAILED - " .. tostring(p.plugin.error))),
-        "Preset file \"" .. S7Presets.XMP .. "\": " .. (p.xmp.path and "WRITTEN" or ("NOT WRITTEN - " .. tostring(p.xmp.error))),
+        "Plugin preset \"" .. p.names.plugin .. "\": " .. (p.plugin.preset and "CREATED" or ("FAILED - " .. tostring(p.plugin.error))),
+        "Preset file \"" .. p.names.xmp .. "\": " .. (p.xmp.path and "WRITTEN" or ("NOT WRITTEN - " .. tostring(p.xmp.error))),
     }
     local all = c.worked and u.worked and p.plugin.preset ~= nil and p.xmp.path ~= nil
     return table.concat(lines, "\n"), all
@@ -98,9 +100,9 @@ end
 local function whereToLook(p)
     local pluginGroup = p.plugin.preset and p.plugin.preset.parent
     if type(pluginGroup) ~= "string" or pluginGroup:find("^error: ") or pluginGroup == "<nil>" then pluginGroup = "Plugin Develop Presets" end
-    return "Next: press D, and in the Presets panel (left) open these groups and look for the names:\n" ..
-        "  \"" .. S7Presets.REFERENCE .. "\" and \"" .. S7Presets.XMP .. "\" - group \"" .. tostring(p.reference_group) .. "\"\n" ..
-        "  \"" .. S7Presets.PLUGIN .. "\" - group \"" .. pluginGroup .. "\"\n" ..
+    return "Next: press D, and in the Presets panel (left) open these groups and look for these names:\n" ..
+        "  \"" .. S7Presets.REFERENCE .. "\" and \"" .. p.names.xmp .. "\" - group \"" .. tostring(p.reference_group) .. "\"\n" ..
+        "  \"" .. p.names.plugin .. "\" - group \"" .. pluginGroup .. "\"\n" ..
         "Then run \"AVG S7 - 2\" and tick what you saw."
 end
 
@@ -120,7 +122,7 @@ function S7Run.run()
         result.crop, cropCopy = S7Photos.crop(catalog, master)
         result.unselected, unselectedCopy = S7Photos.unselected(catalog, master)
         result.removal_probe = S7Probe.run(catalog, master)
-        result.presets = presets(catalog, ref, unselectedCopy or cropCopy)
+        result.presets = presets(catalog, ref, unselectedCopy or cropCopy, S7Presets.names(Common.runTag()))
         result.selection_at_end = Common.selection(catalog)
         local stateOk, stateErr = Common.saveState(stateOf(result))
         result.state_saved = stateOk or tostring(stateErr)

@@ -25,9 +25,10 @@ function Common.stamp()
     return LrDate.timeToUserFormat(LrDate.currentTime(), "%Y-%m-%dT%H-%M-%S")
 end
 
--- The run's time of day, HHMMSS: the suffix of the run's preset names (S7Presets.names).
+-- The run's date and time, YYYYMMDD-HHMMSS: the suffix of the run's preset names (S7Presets.names).
+-- The date is in it so a run on a later day at the same time gets other names (Greptile, PR #29).
 function Common.runTag()
-    return LrDate.timeToUserFormat(LrDate.currentTime(), "%H%M%S")
+    return LrDate.timeToUserFormat(LrDate.currentTime(), "%Y%m%d-%H%M%S")
 end
 
 function Common.localTime()

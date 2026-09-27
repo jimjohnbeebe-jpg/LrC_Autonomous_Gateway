@@ -1,5 +1,5 @@
 -- AVG-S7 item 1: two ways to make a Develop preset, for lr_create_preset_from_active (PRD 6.11, OQ-3).
--- (Each run's two presets are named "AVG S7 plugin <run time>" and "AVG S7 xmp <run time>", Presets.names.)
+-- (Each run's two presets are named "AVG S7 plugin <run date-time>" and "AVG S7 xmp <run date-time>", Presets.names.)
 --   "AVG S7 plugin": LrApplication.addDevelopPresetForPlugin, which "adds a preset hidden within a
 --     plug-in ... stored in a special folder called 'Plugin Develop Presets'" [handle:
 --     https://lrc.mcor.dev/modules/LrApplication.html]. Automaat marks such presets not visible in
@@ -25,7 +25,7 @@ Presets.REFERENCE = "AVG S7 reference"
 -- Key names from engine\src\params\sdk-keys.lrc15.json; values inside canonical.ts's ranges.
 Presets.PLUGIN_VALUES = { Exposure2012 = 0.35, Vibrance = 17 }
 
--- The two presets a run makes carry the run's time, so a second run never replaces or shadows the
+-- The two presets a run makes carry the run's date and time, so a second run never replaces or shadows the
 -- first run's presets (Greptile, PR #29), and every lookup is by the names in the state file.
 function Presets.names(tag)
     return { plugin = "AVG S7 plugin " .. tag, xmp = "AVG S7 xmp " .. tag }

@@ -12,7 +12,7 @@
 - makes a virtual copy **AVG S7 crop**, crops it, reads its size before and after, and exports it (1600 px);
 - makes a virtual copy **AVG S7 unselected**, selects the original again, finds the copy by its uuid, writes +0.5 EV to it and exports it, and records whether the selection or the original changed;
 - lists the function names it can see on the catalog and on a photo, looking for a removal call. **It never calls one**;
-- creates the plugin preset **AVG S7 plugin …**, writes the preset file **AVG S7 xmp …** (Lightroom's own file for AVG S7 reference, with a new name and id), and applies the plugin preset to the unselected copy. The "…" is the time of the run (for example `AVG S7 plugin 143205`), so a second run never replaces the first run's presets. The result window shows the exact names.
+- creates the plugin preset **AVG S7 plugin …**, writes the preset file **AVG S7 xmp …** (Lightroom's own file for AVG S7 reference, with a new name and id), and applies the plugin preset to the unselected copy. The "…" is the date and time of the run (for example `AVG S7 plugin 20260927-143205`), so a second run never replaces the first run's presets. The result window shows the exact names.
 
 **Menu items 2 and 3** list what Lightroom knows about the three presets and ask you, with tick boxes, which names you saw. Item 3 (after the restart) also applies each preset to the copy, then leaves exactly the two S7 copies selected, reads the selection back and says whether removing them is safe.
 
@@ -38,7 +38,7 @@ That is what the harness is written to do. What Lightroom actually does is [unve
 
 **Look at the Presets panel, before the restart**
 
-8. Press **D**. In the **Presets** panel, open the groups the window named (click the triangle next to each) and look for the three names it listed: **AVG S7 reference**, **AVG S7 plugin …** and **AVG S7 xmp …** (the last two end in the run's time). The tick boxes in the next step show the same names.
+8. Press **D**. In the **Presets** panel, open the groups the window named (click the triangle next to each) and look for the three names it listed: **AVG S7 reference**, **AVG S7 plugin …** and **AVG S7 xmp …** (the last two end in the run's date and time). The tick boxes in the next step show the same names.
 9. **File > Plug-in Extras > AVG S7 - 2. What the Presets panel shows (BEFORE restart).** Tick each name you saw, click **Save**, then **OK**.
 
 **Restart, and look again**
@@ -50,7 +50,7 @@ That is what the harness is written to do. What Lightroom actually does is [unve
 
 **Clean up**
 
-14. If the window said the copies "are now selected": **Photo > Remove Photos…** and click **Remove**. This removes only the two copies' catalog entries; the NEF stays (the same as in S6).
+14. If the window said the copies "are now selected": **Photo > Remove Photos…** and click **Remove**. In S6 this removed only the virtual copies, and the original NEF stayed in Library [stated: Jim, 2026-09-26; handle: `docs\reports\phase0\S6.md` "Observed"]. That it does the same here is [inference]: these are virtual copies too, made the same way.
 15. Press **D**. In **Presets**, right-click each preset you can see whose name starts with **AVG S7**, and choose **Delete**.
 16. Tell Claude Code: **"S7 done."**
 

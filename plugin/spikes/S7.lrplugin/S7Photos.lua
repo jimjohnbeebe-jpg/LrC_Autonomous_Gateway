@@ -29,6 +29,10 @@ local SIZE_KEYS = { "width", "height", "dimensions", "croppedDimensions", "isCro
 -- Re-select the master before creating a copy (P-09). createVirtualCopies acts on the selection,
 -- needs no write gate, returns the copy and makes it the active photo [handle: LR_SDK_NOTES "Also
 -- recorded in Phase 0", S6].
+-- No write gate here, although rule 03 asks for one around every catalog write: S6 called it outside
+-- a gate 6 of 6 times and never tried it inside one [handle: docs\reports\phase0\S6.md "Analysis",
+-- "No write gate needed"], so this spike keeps S6's observed call. Which way the plugin does it is for
+-- PHASE4_PLAN row 6 (Catalog.lua) to settle with Jim (Greptile, PR #29).
 local function createCopy(catalog, master, name, out)
     local okSel, selErr = LrTasks.pcall(function() catalog:setSelectedPhotos(master, { master }) end)
     if not okSel then

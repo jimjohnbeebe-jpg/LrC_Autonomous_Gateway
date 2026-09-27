@@ -326,6 +326,23 @@ describe("lr_probe and lr_set_regions", () => {
     lr.exportError = null;
   });
 
+  it("reports a probed slider changed in Lightroom after it was put back, without overwriting it (Greptile, PR #23)", async () => {
+    await manager.begin({ intent_id: "test_plain" });
+    const shadows = lr.settings["Shadows2012"];
+    const apply = plugin.handlers.get("apply_settings");
+    plugin.handlers.set("apply_settings", (p, id) => {
+      const reply = apply?.(p, id);
+      // The write that probes shadows also puts exposure back; then Jim drags Exposure.
+      if (String(p["history_name"]).endsWith("probe shadows")) lr.settings["Exposure2012"] = 0.77;
+      return reply ?? "silent";
+    });
+    const e = await fails(manager.probe({ session_id: ID, sliders: ["exposure", "shadows"] }));
+    expect(e.code).toBe("PROBE_NOT_PUT_BACK");
+    expect(e.details).toMatchObject({ differing: [{ name: "exposure", now: 0.77 }] });
+    expect(lr.settings["Exposure2012"]).toBe(0.77);
+    expect(lr.settings["Shadows2012"]).toBe(shadows);
+  });
+
   it("renders at the session's size again before a step that follows a preview at another size (Greptile, PR #23)", async () => {
     await manager.begin({ intent_id: "test_plain" });
     const small = await manager.preview(ID, 800);

@@ -175,7 +175,8 @@ export class SessionManager {
   /**
    * lr_get_preview with a session: render the session's photo at `longEdge` and make it the session's
    * last render, so lr_get_metrics and the next step's deltas describe the image just returned
-   * (Greptile, PR #23).
+   * (Greptile, PR #23) [handle: tests\mcp-tools.test.ts "says a session is open on the selected photo,
+   * and answers lr_get_metrics from the session's last render": the 800 px preview's hash and width].
    */
   preview(sessionId: string, longEdge: number): Promise<RenderedPreview> {
     return this.exclusive(async () => {
@@ -214,7 +215,8 @@ export class SessionManager {
 
     const now = this.now();
     // The log's name is <yyyymmdd>-<6 hex> (PRD 6.12): a new id when that name is taken, so a session
-    // never writes over another's log or recipe (Greptile, PR #23).
+    // never writes over another's log or recipe (Greptile, PR #23) [handle: tests\session.test.ts
+    // "picks a new session id when the log name for the day is taken"].
     let id = "";
     let short = "";
     let files: SessionLogFiles | null = null;
@@ -570,15 +572,26 @@ export class SessionManager {
         const back = await this.write(s, { [previous.name]: previous.before }, revertName);
         historyNames.push(revertName);
         for (const p of plan) if (back.settings[p.name] === p.before) outstanding.delete(p.name);
-        if (outstanding.size > 0) {
-          throw new ToolError("WRITE_NOT_TAKEN", `After the probe, ${[...outstanding.keys()].join(", ")} did not return to the value before it.`, false);
+        // Every probed slider is checked, not only those still marked for recovery: one put back
+        // earlier may have been changed in Lightroom since (Greptile, PR #23) [handle:
+        // tests\session.test.ts "reports a probed slider changed in Lightroom after it was put back"].
+        const differing = plan.filter((p) => back.settings[p.name] !== p.before).map((p) => ({ name: p.name, before: p.before, now: back.settings[p.name] ?? null }));
+        if (differing.length > 0) {
+          throw new ToolError(
+            "PROBE_NOT_PUT_BACK",
+            `After the probe, ${differing.map((d) => `${d.name} is ${String(d.now)}, not ${d.before}`).join("; ")}: changed in Lightroom during the probe, or not taken.`,
+            false,
+            { differing },
+          );
         }
       }
     } catch (err) {
       // Put back the sliders that may still hold a probe value, so a failed probe leaves no temporary
       // edit behind, and only those, so an edit made meanwhile to a slider the probe never reached
-      // is kept (Greptile, PR #23). If the write fails too, the next step renders the photo again
-      // before it plans (fresh()), because the settings then differ from the last render's.
+      // is kept (Greptile, PR #23) [handle: tests\session.test.ts "puts the probed sliders back when a
+      // probe fails half-way", "after a failed probe puts back only the sliders it changed"]. If the
+      // write fails too, the next step renders the photo again before it plans (fresh()), because
+      // the settings then differ from the last render's.
       if (outstanding.size > 0) {
         const back: Record<string, CanonicalValue> = Object.fromEntries(outstanding);
         const revertName = `AVG ${s.short} probe revert`;
@@ -829,15 +842,21 @@ export class SessionManager {
    *   - its settings are not the photo's now (an edit in Lightroom between calls, or a render after
    *     a write failed);
    *   - it is at another size than the session's (lr_get_preview with another long_edge), since
-   *     clipping and luma depend on the image size.
-   * The guardrails, deltas and convergence then compare like with like.
+   *     resizing averages pixels and so moves the clipping counts [inference].
+   * The guardrails, deltas and convergence then compare like with like [handle: tests\session.test.ts
+   * "renders again before a step when the photo was edited in Lightroom since the last render",
+   * "renders at the session's size again before a step that follows a preview at another size"].
    */
   private async fresh(s: Session, view: FromSdkResult): Promise<{ last: Rendered; refreshed: boolean }> {
     if (s.last && s.last.longEdge === s.longEdge && same(s.last.settings, view.settings)) return { last: s.last, refreshed: false };
     return { last: await this.render(s, view.settings), refreshed: true };
   }
 
-  /** Run session operations one at a time, in the order called (Greptile, PR #23: parallel steps shared a pass number). */
+  /**
+   * Run session operations one at a time, in the order called (Greptile, PR #23: parallel steps
+   * could share a pass number) [handle: tests\session.test.ts "runs steps sent at the same time one
+   * after the other, each with its own pass number"].
+   */
   private exclusive<T>(fn: () => Promise<T>): Promise<T> {
     const run = this.tail.then(fn, fn);
     this.tail = run.catch(() => undefined);
@@ -923,7 +942,8 @@ export class SessionManager {
       const m = metrics.regions.find((x) => x.label === r.label);
       if (!m) continue;
       // A region that had a hue and has none now (its pixels went below the chromatic threshold) has
-      // lost its colour: a breach, not zero drift (Greptile, PR #23).
+      // lost its colour: a breach, not zero drift (Greptile, PR #23) [handle: tests\session.test.ts
+      // "undoes a pass that takes a preserved region's hue away"].
       if (r.baseline.hue_mean !== null && m.hue_mean === null) {
         return `region "${r.label}" lost its hue (no pixel is colourful enough to measure one; it had ${r.baseline.hue_mean} degrees)`;
       }

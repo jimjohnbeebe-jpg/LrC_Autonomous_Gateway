@@ -189,7 +189,9 @@ export class Tools {
       const longEdge = args.long_edge ?? DEFAULT_LONG_EDGE;
       if (!args.region) {
         // With a session, the manager renders it and keeps it as the session's last render, so
-        // lr_get_metrics and the next step describe this image (Greptile, PR #23).
+        // lr_get_metrics and the next step describe this image (Greptile, PR #23) [handle:
+        // tests\mcp-tools.test.ts "says a session is open on the selected photo, and answers
+        // lr_get_metrics from the session's last render"].
         const preview = session ? await (this.sessions as SessionManager).preview(session.id, longEdge) : await this.render(longEdge, target, regions);
         const json = { ok: true, ...(session ? { session_id: session.id } : {}), ...this.describe(preview), metrics: summarize(preview.metrics), timings: preview.timings };
         return { json, image: preview.jpeg, log: { uuid: preview.uuid, preview_hash: preview.sha256, metrics: json.metrics, timings: preview.timings } };
@@ -204,7 +206,8 @@ export class Tools {
       const h = typeof ctx["height"] === "number" ? ctx["height"] : null;
       const photoWidth = w !== null && h !== null ? Math.max(w, h) : null;
       // The crop's longer side as a fraction of the export's long edge: on a 3:2 landscape a box's
-      // height counts 2/3 as much as its width (Greptile, PR #23: max(w, h) under-sized tall boxes).
+      // height counts 2/3 as much as its width (Greptile, PR #23: max(w, h) under-sized tall boxes)
+      // [handle: tests\mcp-tools.test.ts "sizes the export by the crop's longer side in pixels"].
       const fraction = w !== null && h !== null && photoWidth ? Math.max(args.region.w * (w / photoWidth), args.region.h * (h / photoWidth)) : Math.max(args.region.w, args.region.h);
       // The epsilon keeps 800 / 0.26666666666666666 (= 3000.0000000000005) at 3000.
       const edgeFor = (f: number): number => Math.min(REGION_EXPORT_MAX, Math.max(longEdge, Math.ceil(longEdge / f - 1e-6)));
@@ -212,8 +215,10 @@ export class Tools {
       let preview = await this.render(exportEdge, ctx.uuid, regions);
       let crop = await cropRegion(preview.jpeg, args.region, { longEdge, quality: PREVIEW_QUALITY });
       // A crop or rotation in Lightroom can give the export another aspect than the raw width and
-      // height (Greptile, PR #23). If the crop came out short, export once more at the size the
-      // export's own aspect needs.
+      // height (Greptile, PR #23) [inference: a Lightroom crop changes the exported image's shape; the
+      // raw width/height semantics are unverified, above]. If the crop came out short, export once
+      // more at the size the export's own aspect needs [handle: tests\mcp-tools.test.ts "exports once
+      // more when a crop in Lightroom gave the export another aspect"].
       let retried = false;
       if (Math.max(crop.width, crop.height) < longEdge && exportEdge < REGION_EXPORT_MAX) {
         const long = Math.max(preview.width, preview.height);

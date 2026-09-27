@@ -173,12 +173,12 @@ Jim ran the steps on 2026-09-27 and said "done" [stated]. The check saved its fi
 - the bridge log;
 - the chat's own session log and recipe (from the repo's `logs\`), in `p3_chat_session\`.
 
-The golden JPEGs stayed on disk (decision 3): `npm run goldens` copied them to `tests\golden\` (gitignored) and wrote `tests\golden\golden.json`. Times are local (UTC−7) unless marked Z. "The run" is `P3\p3_check_2026-09-27T14-00-37-507Z.json`.
+The golden JPEGs stayed on disk (decision 3): `npm run goldens` copied them to `tests\golden\` (gitignored) and wrote `tests\golden\golden.json` [handle: Claude Code, 2026-09-27, `npm run goldens` output "From p3_check_2026-09-27T14-00-37-507Z.json: … Wrote …\tests\golden\golden.json (6 entries)"; `git status` showed only `golden.json` as new; the six hashes match the run's `fixtures[*].golden.preview_hash`]. Times are local (UTC−7) unless marked Z. "The run" is `P3\p3_check_2026-09-27T14-00-37-507Z.json`.
 
 ### Run 1 (07:00 → 07:12): FAILED on AC-4 only
 
-- **Connected** in 518 ms: plugin 0.2.0, protocol 1, LrC 15.5.1.
-- **Part 1** took 07:00:37 → 07:08:07. All six photos were done, none skipped, and no error line.
+- **Connected** in 518 ms: plugin 0.2.0, protocol 1, LrC 15.5.1 [handle: the run `connect_ms`, `hello`].
+- **Part 1** took 07:00:37 → 07:08:07. All six photos were done, none skipped, and no error line [handle: the run `started_at` 14:00:37Z; the last session log `P3\p3_sessions_…\20260927-b9d5c7.json` written 07:08:07; `summary.fixtures_done` 6, `fixtures_skipped` [], `errors` []].
   - The selection guard worked on the first photo. With another photo selected, the pass came back `TARGET_CHANGED` and nothing was written [handle: the run `fixtures[0].session_b.selection_guard`; bridge log 07:02:00.859 `get_settings failed: target_mismatch`].
   - Jim answered y to both questions: the History steps were seen, and the six photos look as before [stated, via the check's questions].
 - **Part 2**, the chat, took 07:09:31 → 07:10:49 on `20260907-_OZ80093.NEF` [handle: `P3\p3_chat_tool_log_…jsonl`]. Claude:

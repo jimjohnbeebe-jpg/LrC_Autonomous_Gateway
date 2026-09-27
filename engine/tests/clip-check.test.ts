@@ -19,6 +19,11 @@ describe("devtools: AC-4 on every session", () => {
     expect(clipCheck(log)).toEqual({ ok: false, passes: [{ n: 0, clip_high_pct: 0.5, clip_low_pct: 1, ok: true }, { n: 1, clip_high_pct: 0.6, clip_low_pct: 0, ok: false }] });
   });
 
+  it("fails a log with no pass: nothing was measured (Greptile, PR #27)", () => {
+    const log = { guardrails: { clip_high_pct: 0.5, clip_low_pct: 1 }, passes: [] } as unknown as Parameters<typeof clipCheck>[0];
+    expect(clipCheck(log)).toEqual({ ok: false, passes: [] });
+  });
+
   it("fails a session whose log is missing or not a session log, and needs at least one session", () => {
     const tmp = mkdtempSync(path.join(os.tmpdir(), "lrc-avg-clip-"));
     try {

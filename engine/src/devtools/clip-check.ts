@@ -12,13 +12,18 @@ export type ClipResult = { ok: boolean; passes: ClipPass[] };
 export type SessionClip = ClipResult & { session: string; log_path: string; error?: string };
 export type ClipSummary = { ok: boolean; sessions: SessionClip[]; over: Array<{ session: string } & ClipPass> };
 
-/** AC-4 on every pass of a session log: clipping within the session's limits after the pass. */
+/**
+ * AC-4 on every pass of a session log: clipping within the session's limits after the pass. A log
+ * with no pass fails: nothing was measured (Greptile, PR #27). Such a log exists when pass 0 fails
+ * [handle: engine\src\session\begin.ts runPass0 saves the log before pass 0 runs;
+ * tests\session-begin.test.ts "keeps the session open when pass 0 fails after the snapshot ..."].
+ */
 export function clipCheck(log: SessionLogData): ClipResult {
   const passes = log.passes.map((p) => {
     const m = p.metrics_after;
     return { n: p.n, clip_high_pct: m.clip_high_pct, clip_low_pct: m.clip_low_pct, ok: m.clip_high_pct <= log.guardrails.clip_high_pct && m.clip_low_pct <= log.guardrails.clip_low_pct };
   });
-  return { ok: passes.every((p) => p.ok), passes };
+  return { ok: passes.length > 0 && passes.every((p) => p.ok), passes };
 }
 
 /** AC-4 on one session's log file. A log that cannot be read or is not a valid session log fails. */

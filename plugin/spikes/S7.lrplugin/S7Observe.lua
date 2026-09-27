@@ -4,6 +4,9 @@
 -- compares the result with the preset's own settings, then selects the two S7 copies for removal
 -- (the S6 pattern: it reads the selection back and says whether removing is safe).
 -- Saves s7_before_<time>.json / s7_after_<time>.json.
+-- Menu items 5 and 6 do the same for the preset-file re-run (item 4) with two presets, the reference
+-- and the file, and no copies: instead they compare the file preset's settings with the reference's
+-- and check the file on disk. They save s7_xmp_before_<time>.json / s7_xmp_after_<time>.json.
 
 local LrApplication = import 'LrApplication'
 local LrBinding = import 'LrBinding'
@@ -18,22 +21,34 @@ local S7Presets = require 'S7Presets'
 
 local S7Observe = {}
 
--- The three presets by role, with the names step 1 gave this run's presets (the state file).
-local function roles(state)
-    return {
-        { role = "reference", name = S7Presets.REFERENCE, uuid_key = "reference_uuid" },
-        { role = "plugin", name = state.plugin_name or "", uuid_key = "plugin_preset_uuid" },
-        { role = "xmp", name = state.xmp_name or "", uuid_key = "xmp_uuid" },
+-- run: after menu item 1. xmp: after the preset-file re-run, menu item 4.
+local KINDS = {
+    run = { state_file = Common.STATE_FILE, prefix = "s7_", first = "AVG S7 - 1", plugin = true, copies = true, done = "S7 done" },
+    xmp = { state_file = Common.XMP_STATE_FILE, prefix = "s7_xmp_", first = "AVG S7 - 4", plugin = false, copies = false, done = "S7 re-run done" },
+}
+
+-- The presets by role, with the names the run gave its presets (the state file). uuid_kind says
+-- which uuid was recorded: the SDK's (getUuid) or the one written in the preset file.
+local function roles(kind, state)
+    local all = {
+        { role = "reference", name = S7Presets.REFERENCE, uuid_key = "reference_uuid", uuid_kind = "sdk" },
+        { role = "plugin", name = state.plugin_name or "", uuid_key = "plugin_preset_uuid", uuid_kind = "sdk" },
+        { role = "xmp", name = state.xmp_name or "", uuid_key = "xmp_uuid", uuid_kind = "file" },
     }
+    local out = {}
+    for _, r in ipairs(all) do
+        if r.role ~= "plugin" or kind.plugin then table.insert(out, r) end
+    end
+    return out
 end
 
 -- For each role: the preset's name, the group Lightroom lists it in (or false), and whether
--- developPresetByUuid finds it by the uuid step 1 recorded.
-local function lookups(index, state)
+-- developPresetByUuid finds it by the uuid the run recorded.
+local function lookups(index, kind, state)
     local out = {}
-    for _, r in ipairs(roles(state)) do
+    for _, r in ipairs(roles(kind, state)) do
         local hit = index[r.name]
-        local entry = { name = r.name, listed_in = hit and hit.where or false }
+        local entry = { name = r.name, listed_in = hit and hit.where or false, uuid_kind = r.uuid_kind }
         local uuid = state[r.uuid_key]
         if uuid and uuid ~= "" then
             local ok, preset = LrTasks.pcall(function() return LrApplication.developPresetByUuid(uuid) end)
@@ -44,25 +59,27 @@ local function lookups(index, state)
     return out
 end
 
-local function ask(context, when, state)
+-- One tick box per role; the answers are saved as saw_<role>.
+local function ask(context, when, kind, state)
+    local rs = roles(kind, state)
     local props = LrBinding.makePropertyTable(context)
-    props.reference, props.plugin, props.xmp = false, false, false
     local f = LrView.osFactory()
+    local column = { bind_to_object = props, spacing = f:control_spacing(),
+        f:static_text { title = "In Develop > Presets, which of these names did you see?" } }
+    for _, r in ipairs(rs) do
+        props[r.role] = false
+        table.insert(column, f:checkbox { title = r.name, value = LrView.bind(r.role) })
+    end
+    table.insert(column, f:static_text { title = "Leave a name unticked if you did not see it.\nNot sure? Click Cancel, look again, and run this menu item again." })
     local choice = LrDialogs.presentModalDialog {
         title = "AVG S7 - the Presets panel, " .. (when == "before" and "BEFORE" or "AFTER") .. " the restart",
         actionVerb = "Save",
-        contents = f:column {
-            bind_to_object = props,
-            spacing = f:control_spacing(),
-            f:static_text { title = "In Develop > Presets, which of these names did you see?" },
-            f:checkbox { title = S7Presets.REFERENCE, value = LrView.bind("reference") },
-            f:checkbox { title = tostring(state.plugin_name), value = LrView.bind("plugin") },
-            f:checkbox { title = tostring(state.xmp_name), value = LrView.bind("xmp") },
-            f:static_text { title = "Leave a name unticked if you did not see it.\nNot sure? Click Cancel, look again, and run this menu item again." },
-        },
+        contents = f:column(column),
     }
     if choice ~= "ok" then return { answered = false } end
-    return { answered = true, saw_reference = props.reference == true, saw_plugin = props.plugin == true, saw_xmp = props.xmp == true }
+    local out = { answered = true }
+    for _, r in ipairs(rs) do out["saw_" .. r.role] = props[r.role] == true end
+    return out
 end
 
 -- The copy from the state file, checked by its name (P-18). Returns the photo or nil and why.
@@ -84,22 +101,55 @@ local function applyOne(catalog, copy, hit, isPluginPreset, historyName)
     return out
 end
 
+-- The file preset's settings as Lightroom read them, against the reference's (the file is a copy of
+-- the reference's with a new name and uuid). nil when either is not listed.
+local function versusReference(index, state)
+    local ref, xmp = index[S7Presets.REFERENCE], index[state.xmp_name]
+    if not (ref and xmp) then return nil end
+    local _, refSettings = S7Presets.describe(ref.preset)
+    local _, xmpSettings = S7Presets.describe(xmp.preset)
+    if not (refSettings and xmpSettings) then return nil end
+    local out = {}
+    out.differences, out.compared, out.skipped = S7Presets.compare(refSettings, xmpSettings)
+    return out
+end
+
 local function applyAll(catalog, state, index)
     local copy, err = copyFromState(catalog, state.unselected_copy_uuid, S7Photos.UNSELECTED_COPY)
     if not copy then return { error = err } end
-    local out = {
+    return {
         plugin = applyOne(catalog, copy, index[state.plugin_name], true, "AVG S7 apply plugin preset"),
         xmp = applyOne(catalog, copy, index[state.xmp_name], false, "AVG S7 apply xmp preset"),
+        xmp_vs_reference = versusReference(index, state),
     }
-    local ref, xmp = index[S7Presets.REFERENCE], index[state.xmp_name]
-    if ref and xmp then
-        local _, refSettings = S7Presets.describe(ref.preset)
-        local _, xmpSettings = S7Presets.describe(xmp.preset)
-        if refSettings and xmpSettings then
-            out.xmp_vs_reference = {}
-            out.xmp_vs_reference.differences, out.xmp_vs_reference.compared = S7Presets.compare(refSettings, xmpSettings)
-        end
+end
+
+-- The 1-based line on which two texts first differ.
+local function firstDifferentLine(a, b)
+    local line = 1
+    for i = 1, math.min(#a, #b) do
+        local c = a:byte(i)
+        if c ~= b:byte(i) then return line end
+        if c == 10 then line = line + 1 end
     end
+    return line
+end
+
+-- The preset file on disk now: still there, and byte for byte the copy menu item 4 kept of what it
+-- wrote (Greptile, PR #30), else the first line that differs; plus its size and uuid.
+local function onDisk(state)
+    if not state.xmp_path or state.xmp_path == "" then return { exists = false, note = "no file was written" } end
+    local text = Common.readFile(state.xmp_path)
+    if not text then return { exists = false } end
+    local out = { exists = true, bytes = #text, bytes_as_written = tonumber(state.xmp_bytes),
+        uuid_as_written = text:find('crs:UUID="' .. tostring(state.xmp_uuid) .. '"', 1, true) ~= nil }
+    local written = state.xmp_copy and state.xmp_copy ~= "" and Common.readFile(state.xmp_copy)
+    if not written then
+        out.same_as_written = "no copy of the written file"
+        return out
+    end
+    out.same_as_written = text == written
+    if not out.same_as_written then out.first_different_line = firstDifferentLine(text, written) end
     return out
 end
 
@@ -132,14 +182,21 @@ end
 
 local function yesNo(v) return v and "YES" or "NO" end
 
-local function message(result, when)
-    local f = result.found
+local function message(result, when, kind)
+    local listed = {}
+    for _, r in ipairs(roles(kind, result.state)) do
+        table.insert(listed, r.role .. " " .. yesNo(result.found[r.role].listed_in))
+    end
     local lines = {
         "Your answers: " .. (result.jim.answered and "SAVED" or "NOT ANSWERED - look again and run this menu item again"),
-        "Lightroom lists: reference " .. yesNo(f.reference.listed_in) .. ", plugin " .. yesNo(f.plugin.listed_in) .. ", xmp " .. yesNo(f.xmp.listed_in),
+        "Lightroom lists: " .. table.concat(listed, ", "),
     }
     if when == "before" then
         table.insert(lines, "\nNext: quit Lightroom (File > Exit), start it again, then follow the README.")
+        return table.concat(lines, "\n")
+    end
+    if not kind.copies then
+        table.insert(lines, "\nThen delete the AVG S7 presets as the README says, and tell Claude Code \"" .. kind.done .. "\".")
         return table.concat(lines, "\n")
     end
     local c = result.cleanup
@@ -150,33 +207,39 @@ local function message(result, when)
     else
         table.insert(lines, "\nCOULD NOT SELECT all " .. c.expected .. " S7 copies (found " .. c.count .. "). Don't remove anything - tell Claude Code.")
     end
-    table.insert(lines, "Then delete the AVG S7 presets as the README says, and tell Claude Code \"S7 done\".")
+    table.insert(lines, "Then delete the AVG S7 presets as the README says, and tell Claude Code \"" .. kind.done .. "\".")
     return table.concat(lines, "\n")
 end
 
--- when: "before" (menu item 2) or "after" (menu item 3).
-function S7Observe.run(when)
+local STEPS = { run = { before = "2-before-restart", after = "3-after-restart" }, xmp = { before = "5-xmp-before-restart", after = "6-xmp-after-restart" } }
+
+-- when: "before" or "after"; kindName: "run" (menu items 2 and 3, the default) or "xmp" (5 and 6).
+function S7Observe.run(when, kindName)
+    local kind = KINDS[kindName or "run"]
     LrFunctionContext.postAsyncTaskWithContext("AVG S7 presets " .. when, function(context)
         LrDialogs.attachErrorDialogToFunctionContext(context)
         local catalog = LrApplication.activeCatalog()
-        local state = Common.loadState()
+        local state = Common.loadState(kind.state_file)
         if not state then
-            LrDialogs.message("AVG S7 - nothing to check yet", "Run \"AVG S7 - 1\" first.", "warning")
+            LrDialogs.message("AVG S7 - nothing to check yet", "Run \"" .. kind.first .. "\" first.", "warning")
             return
         end
-        local result = { spike = "S7", step = when == "before" and "2-before-restart" or "3-after-restart",
+        local result = { spike = "S7", step = STEPS[kindName or "run"][when],
             run_at = Common.localTime(), lr_version = LrApplication.versionString(), state = state }
         local listing, index = S7Presets.list()
-        result.presets, result.found = listing, lookups(index, state)
-        result.jim = ask(context, when, state)
-        if when == "after" then
+        result.presets, result.found = listing, lookups(index, kind, state)
+        result.jim = ask(context, when, kind, state)
+        if not kind.copies then
+            result.xmp_vs_reference = versusReference(index, state)
+            result.file_on_disk = onDisk(state)
+        elseif when == "after" then
             result.apply = applyAll(catalog, state, index)
             result.cleanup = selectCopies(catalog, state)
         end
-        local ok, err = Common.save(when == "before" and "s7_before" or "s7_after", result)
+        local ok, err = Common.save(kind.prefix .. when, result)
         local cleanupProblem = result.cleanup and not result.cleanup.selected_for_removal and result.cleanup.expected > 0
         LrDialogs.message("AVG S7 - presets " .. (when == "before" and "BEFORE" or "AFTER") .. " the restart",
-            message(result, when) .. "\n\n" .. Common.saveLine(ok, err),
+            message(result, when, kind) .. "\n\n" .. Common.saveLine(ok, err),
             (ok and result.jim.answered and not cleanupProblem) and "info" or "warning")
     end)
 end

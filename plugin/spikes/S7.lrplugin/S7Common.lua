@@ -171,24 +171,29 @@ function Common.export(photo, label)
     return out
 end
 
--- The state file: key=value lines. Step 1 writes it; steps 2 and 3 read it after a restart.
-local function statePath()
-    return LrPathUtils.child(Common.outDir(), "s7_state.txt")
+-- The state files: key=value lines. Menu item 1 writes s7_state.txt, which items 2 and 3 read after a
+-- restart; the preset-file re-run (item 4) writes s7_xmp_state.txt, which items 5 and 6 read, so the
+-- re-run never overwrites the first run's state.
+Common.STATE_FILE = "s7_state.txt"
+Common.XMP_STATE_FILE = "s7_xmp_state.txt"
+
+local function statePath(file)
+    return LrPathUtils.child(Common.outDir(), file or Common.STATE_FILE)
 end
 
-function Common.saveState(state)
+function Common.saveState(state, file)
     local keys = {}
     for k in pairs(state) do table.insert(keys, k) end
     table.sort(keys)
-    local fh, err = io.open(statePath(), "wb")
+    local fh, err = io.open(statePath(file), "wb")
     if not fh then return false, tostring(err) end
     for _, k in ipairs(keys) do fh:write(k, "=", tostring(state[k]), "\n") end
     fh:close()
     return true
 end
 
-function Common.loadState()
-    local fh = io.open(statePath(), "rb")
+function Common.loadState(file)
+    local fh = io.open(statePath(file), "rb")
     if not fh then return nil end
     local state = {}
     for line in fh:lines() do
@@ -209,6 +214,27 @@ function Common.save(prefix, result)
         fh:close()
     end
     return ok, err
+end
+
+-- The whole file, or nil.
+function Common.readFile(path)
+    local fh = io.open(path, "rb")
+    if not fh then return nil end
+    local text = fh:read("*a")
+    fh:close()
+    return text
+end
+
+-- Write the whole file, bytes as given. Returns ok, err; a failed write or close is a failure
+-- (Greptile, PR #30).
+function Common.writeFile(path, text)
+    local fh, err = io.open(path, "wb")
+    if not fh then return false, tostring(err) end
+    local wrote, writeErr = fh:write(text)
+    local closed, closeErr = fh:close()
+    if not wrote then return false, "write failed: " .. tostring(writeErr) end
+    if not closed then return false, "close failed: " .. tostring(closeErr) end
+    return true
 end
 
 function Common.saveLine(ok, err)

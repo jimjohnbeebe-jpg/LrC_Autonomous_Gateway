@@ -8,7 +8,8 @@
 //     destDir default: docs\reports\phase4\S7
 //
 // - Reads the newest s7_run_*.json, s7_before_*.json and s7_after_*.json (written by S7Run.lua and
-//   S7Observe.lua).
+//   S7Observe.lua), and, when there is one, the preset-file re-run: the newest s7_xmp_run_*.json
+//   (S7XmpRun.lua) with its s7_xmp_before_*.json / s7_xmp_after_*.json.
 // - Measures the two exported JPEGs with sharp. They are NOT copied: they are renders of Jim's photo
 //   and the repo is public.
 // - Copies the JSON files, s7_log.txt and s7_state.txt with the user folder written as %USERPROFILE%.
@@ -48,6 +49,22 @@ const Run = z.looseObject({
     plugin_apply: z.looseObject({ matches: z.boolean().optional() }).optional(),
   }),
 });
+const XmpRun = z.looseObject({
+  run_at: z.string(),
+  presets: z.looseObject({
+    xmp: z.looseObject({
+      path: z.string().optional(),
+      error: z.string().optional(),
+      uuid: z.string().optional(),
+      reference_uuid: z.unknown().optional(),
+      reference_file_uuid: z.string().optional(),
+      sdk_uuid_is_file_uuid: z.boolean().optional(),
+      uuid_replacements: z.number().optional(),
+      name_replacements: z.number().optional(),
+    }),
+    xmp_listed_as: z.union([z.string(), z.literal(false)]).optional(),
+  }),
+});
 const Jim = z.looseObject({ answered: z.boolean(), saw_reference: z.boolean().optional(), saw_plugin: z.boolean().optional(), saw_xmp: z.boolean().optional() });
 const Observe = z.looseObject({
   state: z.looseObject({ run_at: z.string().optional() }),
@@ -55,6 +72,8 @@ const Observe = z.looseObject({
   found: z.record(z.string(), z.unknown()),
   apply: z.unknown().optional(),
   cleanup: z.unknown().optional(),
+  xmp_vs_reference: z.unknown().optional(),
+  file_on_disk: z.unknown().optional(),
 });
 type Crop = z.infer<typeof Run>["crop"];
 
@@ -136,7 +155,29 @@ function observed(prefix: string, runAt: string) {
   const ignored = files.length - mine.length;
   if (!last) return { file: null, note: "INCOMPLETE: no observation for this run", other_runs_ignored: ignored };
   const o = last.o;
-  return { file: last.f, other_runs_ignored: ignored, jim: o.jim, lightroom: o.found, apply: o.apply ?? null, cleanup: o.cleanup ?? null };
+  const rerun = o.xmp_vs_reference !== undefined || o.file_on_disk !== undefined
+    ? { xmp_vs_reference: o.xmp_vs_reference ?? null, file_on_disk: o.file_on_disk ?? null } : {};
+  return { file: last.f, other_runs_ignored: ignored, jim: o.jim, lightroom: o.found, apply: o.apply ?? null, cleanup: o.cleanup ?? null, ...rerun };
+}
+
+// The preset-file re-run (menu items 4-6), or null when there is none: the newest s7_xmp_run_*.json
+// and the observations paired with it by run_at, as for run 1.
+function xmpRerun() {
+  const file = newest("s7_xmp_run_");
+  if (!file) return null;
+  const r = XmpRun.parse(readJson(file));
+  const x = r.presets.xmp;
+  return {
+    source: { run: file, run_at: r.run_at },
+    written: x.path !== undefined,
+    error: x.error ?? null,
+    path: x.path ?? null,
+    uuid: { sdk_reference: x.reference_uuid ?? null, file_reference: x.reference_file_uuid ?? null, sdk_is_file: x.sdk_uuid_is_file_uuid ?? null, written: x.uuid ?? null },
+    replacements: { uuid: x.uuid_replacements ?? null, name: x.name_replacements ?? null },
+    listed_right_after_writing: r.presets.xmp_listed_as ?? false,
+    before_restart: observed("s7_xmp_before_", r.run_at),
+    after_restart: observed("s7_xmp_after_", r.run_at),
+  };
 }
 
 // The user folder, as written raw, JSON-escaped, and with forward slashes, becomes %USERPROFILE%.
@@ -177,6 +218,7 @@ async function main(): Promise<void> {
       xmp: { written: p.xmp.path !== undefined, error: p.xmp.error ?? null },
       before_restart: before,
       after_restart: after,
+      xmp_rerun: xmpRerun(),
     },
     item2_removal_probe: { undocumented_removal_names_found: run.removal_probe.found },
     item3_crop: { worked: run.crop.worked ?? false, error: run.crop.error ?? null, ...(await cropFindings(run.crop)) },

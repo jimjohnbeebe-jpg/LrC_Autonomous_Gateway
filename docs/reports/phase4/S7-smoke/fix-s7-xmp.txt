@@ -1,0 +1,710 @@
+fix/s7-xmp smoke transcript (PR #30) - Claude Code (Opus 5.5), 2026-09-27
+Plugin under test: plugin\spikes\S7.lrplugin at commit e3c299c (branch fix/s7-xmp). "main" = 88bb4b6.
+Node v24.11.1; fengari 0.1.4 (Lua 5.3 VM) and luaparse 0.3.1, scratch installs, not project dependencies.
+The fake Lightroom (fake-lr.lua) and the runner (run-fake2.cjs) are reproduced at the end. The stub's behaviour is
+Claude Code's invention, modelled on S7 run 1 where noted: this shows the plugin's Lua runs and records what it is
+given, and NOTHING about Lightroom. The reference preset text fed to the fake is Jim's real
+"AVG S7 reference.xmp" from run 1 (only its two changed lines are shown below).
+User folder written as %USERPROFILE%.
+
+== 1. Syntax ==
+$ node parse.cjs <plugin folder>
+15/15 Lua files parse as Lua 5.1
+[exit 0]
+
+== 2. main reproduces run 1 (the fake's SDK uuid is not the file's crs:UUID, as in Lightroom) ==
+$ S7_PLUGIN=<main checkout plugin> node run-fake2.cjs ok   (main = 88bb4b6)
+[warning] AVG S7 - checks run
+Crop on a virtual copy: WORKED
+Write + export, photo not selected: WORKED
+Removal probe: no undocumented removal call found (nothing was called)
+Plugin preset "AVG S7 plugin 2026-09-27T10-00-08": CREATED
+Preset file "AVG S7 xmp 2026-09-27T10-00-08": NOT WRITTEN - the reference file does not contain its uuid as text
+
+Next: press D, and in the Presets panel (left) open these groups and look for these names:
+  "AVG S7 reference" and "AVG S7 xmp 2026-09-27T10-00-08" - group "User Presets"
+  "AVG S7 plugin 2026-09-27T10-00-08" - group "Plugin Develop Presets"
+Then run "AVG S7 - 2" and tick what you saw.
+
+Saved automatically - nothing to copy.
+-----
+[info] AVG S7 - presets BEFORE the restart
+Your answers: SAVED
+Lightroom lists: reference YES, plugin YES, xmp NO
+
+Next: quit Lightroom (File > Exit), start it again, then follow the README.
+
+Saved automatically - nothing to copy.
+-----
+[info] AVG S7 - presets AFTER the restart
+Your answers: SAVED
+Lightroom lists: reference YES, plugin YES, xmp NO
+
+The 2 S7 copies (and nothing else) are now selected. To remove them: Photo > Remove Photos... > Remove.
+Then delete the AVG S7 presets as the README says, and tell Claude Code "S7 done".
+
+Saved automatically - nothing to copy.
+
+8 files in the fake FS
+[exit 0]
+
+== 3. Scenarios on the fix ==
+$ node run-fake2.cjs ok <outDir>
+[info] AVG S7 - checks run
+Crop on a virtual copy: WORKED
+Write + export, photo not selected: WORKED
+Removal probe: no undocumented removal call found (nothing was called)
+Plugin preset "AVG S7 plugin 2026-09-27T10-00-08": CREATED
+Preset file "AVG S7 xmp 2026-09-27T10-00-08": WRITTEN
+
+Next: press D, and in the Presets panel (left) open these groups and look for these names:
+  "AVG S7 reference" and "AVG S7 xmp 2026-09-27T10-00-08" - group "User Presets"
+  "AVG S7 plugin 2026-09-27T10-00-08" - group "Plugin Develop Presets"
+Then run "AVG S7 - 2" and tick what you saw.
+
+Saved automatically - nothing to copy.
+-----
+[info] AVG S7 - presets BEFORE the restart
+Your answers: SAVED
+Lightroom lists: reference YES, plugin YES, xmp NO
+
+Next: quit Lightroom (File > Exit), start it again, then follow the README.
+
+Saved automatically - nothing to copy.
+-----
+[info] AVG S7 - presets AFTER the restart
+Your answers: SAVED
+Lightroom lists: reference YES, plugin YES, xmp YES
+
+The 2 S7 copies (and nothing else) are now selected. To remove them: Photo > Remove Photos... > Remove.
+Then delete the AVG S7 presets as the README says, and tell Claude Code "S7 done".
+
+Saved automatically - nothing to copy.
+
+10 files in the fake FS
+[exit 0]
+
+$ node run-fake2.cjs xmp <outDir>
+[info] AVG S7 - preset file
+Preset file "AVG S7 xmp 2026-09-27T10-00-01": WRITTEN
+Lightroom lists it right now: NO
+
+Next: press D, and in the Presets panel (left) open the group "User Presets" and look for "AVG S7 reference" and "AVG S7 xmp 2026-09-27T10-00-01".
+Then run "AVG S7 - 5" and tick what you saw.
+
+Saved automatically - nothing to copy.
+-----
+[info] AVG S7 - presets BEFORE the restart
+Your answers: SAVED
+Lightroom lists: reference YES, xmp NO
+
+Next: quit Lightroom (File > Exit), start it again, then follow the README.
+
+Saved automatically - nothing to copy.
+-----
+[info] AVG S7 - presets AFTER the restart
+Your answers: SAVED
+Lightroom lists: reference YES, xmp YES
+
+Then delete the AVG S7 presets as the README says, and tell Claude Code "S7 re-run done".
+
+Saved automatically - nothing to copy.
+
+8 files in the fake FS
+[exit 0]
+
+$ node run-fake2.cjs run1_then_xmp <outDir>
+[info] AVG S7 - checks run
+Crop on a virtual copy: WORKED
+Write + export, photo not selected: WORKED
+Removal probe: no undocumented removal call found (nothing was called)
+Plugin preset "AVG S7 plugin 2026-09-27T10-00-08": CREATED
+Preset file "AVG S7 xmp 2026-09-27T10-00-08": WRITTEN
+
+Next: press D, and in the Presets panel (left) open these groups and look for these names:
+  "AVG S7 reference" and "AVG S7 xmp 2026-09-27T10-00-08" - group "User Presets"
+  "AVG S7 plugin 2026-09-27T10-00-08" - group "Plugin Develop Presets"
+Then run "AVG S7 - 2" and tick what you saw.
+
+Saved automatically - nothing to copy.
+-----
+[info] AVG S7 - presets BEFORE the restart
+Your answers: SAVED
+Lightroom lists: reference YES, plugin YES, xmp NO
+
+Next: quit Lightroom (File > Exit), start it again, then follow the README.
+
+Saved automatically - nothing to copy.
+-----
+[info] AVG S7 - presets AFTER the restart
+Your answers: SAVED
+Lightroom lists: reference YES, plugin YES, xmp YES
+
+The 2 S7 copies (and nothing else) are now selected. To remove them: Photo > Remove Photos... > Remove.
+Then delete the AVG S7 presets as the README says, and tell Claude Code "S7 done".
+
+Saved automatically - nothing to copy.
+-----
+[info] AVG S7 - preset file
+Preset file "AVG S7 xmp 2026-09-27T10-00-15": WRITTEN
+Lightroom lists it right now: NO
+
+Next: press D, and in the Presets panel (left) open the group "User Presets" and look for "AVG S7 reference" and "AVG S7 xmp 2026-09-27T10-00-15".
+Then run "AVG S7 - 5" and tick what you saw.
+
+Saved automatically - nothing to copy.
+-----
+[info] AVG S7 - presets BEFORE the restart
+Your answers: SAVED
+Lightroom lists: reference YES, xmp NO
+
+Next: quit Lightroom (File > Exit), start it again, then follow the README.
+
+Saved automatically - nothing to copy.
+-----
+[info] AVG S7 - presets AFTER the restart
+Your answers: SAVED
+Lightroom lists: reference YES, xmp YES
+
+Then delete the AVG S7 presets as the README says, and tell Claude Code "S7 re-run done".
+
+Saved automatically - nothing to copy.
+
+16 files in the fake FS
+[exit 0]
+
+$ node run-fake2.cjs xmp_rewritten <outDir>
+[info] AVG S7 - preset file
+Preset file "AVG S7 xmp 2026-09-27T10-00-01": WRITTEN
+Lightroom lists it right now: NO
+
+Next: press D, and in the Presets panel (left) open the group "User Presets" and look for "AVG S7 reference" and "AVG S7 xmp 2026-09-27T10-00-01".
+Then run "AVG S7 - 5" and tick what you saw.
+
+Saved automatically - nothing to copy.
+-----
+[info] AVG S7 - presets BEFORE the restart
+Your answers: SAVED
+Lightroom lists: reference YES, xmp NO
+
+Next: quit Lightroom (File > Exit), start it again, then follow the README.
+
+Saved automatically - nothing to copy.
+-----
+[info] AVG S7 - presets AFTER the restart
+Your answers: SAVED
+Lightroom lists: reference YES, xmp YES
+
+Then delete the AVG S7 presets as the README says, and tell Claude Code "S7 re-run done".
+
+Saved automatically - nothing to copy.
+
+8 files in the fake FS
+[exit 0]
+
+$ node run-fake2.cjs two_uuids <outDir>
+[warning] AVG S7 - preset file
+Preset file "AVG S7 xmp 2026-09-27T10-00-01": NOT WRITTEN - the reference file has 2 crs:UUID attributes, not 1
+
+Stop here and tell Claude Code.
+
+Saved automatically - nothing to copy.
+-----
+[info] AVG S7 - presets BEFORE the restart
+Your answers: SAVED
+Lightroom lists: reference YES, xmp NO
+
+Next: quit Lightroom (File > Exit), start it again, then follow the README.
+
+Saved automatically - nothing to copy.
+-----
+[info] AVG S7 - presets AFTER the restart
+Your answers: SAVED
+Lightroom lists: reference YES, xmp NO
+
+Then delete the AVG S7 presets as the README says, and tell Claude Code "S7 re-run done".
+
+Saved automatically - nothing to copy.
+
+6 files in the fake FS
+[exit 0]
+
+$ node run-fake2.cjs write_fails <outDir>
+[warning] AVG S7 - preset file
+Preset file "AVG S7 xmp 2026-09-27T10-00-01": NOT WRITTEN - could not write C:\fake\Settings\AVG S7 xmp 2026-09-27T10-00-01.xmp: write failed: No space left on device (fake)
+
+Stop here and tell Claude Code.
+
+Saved automatically - nothing to copy.
+-----
+[info] AVG S7 - presets BEFORE the restart
+Your answers: SAVED
+Lightroom lists: reference YES, xmp NO
+
+Next: quit Lightroom (File > Exit), start it again, then follow the README.
+
+Saved automatically - nothing to copy.
+-----
+[info] AVG S7 - presets AFTER the restart
+Your answers: SAVED
+Lightroom lists: reference YES, xmp NO
+
+Then delete the AVG S7 presets as the README says, and tell Claude Code "S7 re-run done".
+
+Saved automatically - nothing to copy.
+
+7 files in the fake FS
+[exit 0]
+
+$ node run-fake2.cjs no_reference <outDir>
+[warning] AVG S7 - stopped before changing anything
+There is no preset named "AVG S7 reference". Create it as spikes\S7\README.md says, then run this again.
+-----
+[warning] AVG S7 - nothing to check yet
+Run "AVG S7 - 4" first.
+-----
+[warning] AVG S7 - nothing to check yet
+Run "AVG S7 - 4" first.
+
+1 files in the fake FS
+[exit 0]
+
+$ node run-fake2.cjs xmp_cancel <outDir>
+[info] AVG S7 - preset file
+Preset file "AVG S7 xmp 2026-09-27T10-00-01": WRITTEN
+Lightroom lists it right now: NO
+
+Next: press D, and in the Presets panel (left) open the group "User Presets" and look for "AVG S7 reference" and "AVG S7 xmp 2026-09-27T10-00-01".
+Then run "AVG S7 - 5" and tick what you saw.
+
+Saved automatically - nothing to copy.
+-----
+[warning] AVG S7 - presets BEFORE the restart
+Your answers: NOT ANSWERED - look again and run this menu item again
+Lightroom lists: reference YES, xmp NO
+
+Next: quit Lightroom (File > Exit), start it again, then follow the README.
+
+Saved automatically - nothing to copy.
+-----
+[info] AVG S7 - presets AFTER the restart
+Your answers: SAVED
+Lightroom lists: reference YES, xmp YES
+
+Then delete the AVG S7 presets as the README says, and tell Claude Code "S7 re-run done".
+
+Saved automatically - nothing to copy.
+
+8 files in the fake FS
+[exit 0]
+
+$ node run-fake2.cjs fake_ref <outDir>
+[info] AVG S7 - checks run
+Crop on a virtual copy: WORKED
+Write + export, photo not selected: WORKED
+Removal probe: no undocumented removal call found (nothing was called)
+Plugin preset "AVG S7 plugin 2026-09-27T10-00-08": CREATED
+Preset file "AVG S7 xmp 2026-09-27T10-00-08": WRITTEN
+
+Next: press D, and in the Presets panel (left) open these groups and look for these names:
+  "AVG S7 reference" and "AVG S7 xmp 2026-09-27T10-00-08" - group "User Presets"
+  "AVG S7 plugin 2026-09-27T10-00-08" - group "Plugin Develop Presets"
+Then run "AVG S7 - 2" and tick what you saw.
+
+Saved automatically - nothing to copy.
+-----
+[info] AVG S7 - presets BEFORE the restart
+Your answers: SAVED
+Lightroom lists: reference YES, plugin YES, xmp NO
+
+Next: quit Lightroom (File > Exit), start it again, then follow the README.
+
+Saved automatically - nothing to copy.
+-----
+[info] AVG S7 - presets AFTER the restart
+Your answers: SAVED
+Lightroom lists: reference YES, plugin YES, xmp YES
+
+The 2 S7 copies (and nothing else) are now selected. To remove them: Photo > Remove Photos... > Remove.
+Then delete the AVG S7 presets as the README says, and tell Claude Code "S7 done".
+
+Saved automatically - nothing to copy.
+
+10 files in the fake FS
+[exit 0]
+
+$ node run-fake2.cjs vc_fails <outDir>
+[warning] AVG S7 - checks run
+Crop on a virtual copy: FAILED - createVirtualCopies: ...ers/%USERNAME%/.claude/jobs/03fc6ef3/tmp/luatools/fake-lr.lua:111: createVirtualCopies: fake failure
+Write + export, photo not selected: FAILED - createVirtualCopies: ...ers/%USERNAME%/.claude/jobs/03fc6ef3/tmp/luatools/fake-lr.lua:111: createVirtualCopies: fake failure
+Removal probe: no undocumented removal call found (nothing was called)
+Plugin preset "AVG S7 plugin 2026-09-27T10-00-02": CREATED
+Preset file "AVG S7 xmp 2026-09-27T10-00-02": WRITTEN
+
+Next: press D, and in the Presets panel (left) open these groups and look for these names:
+  "AVG S7 reference" and "AVG S7 xmp 2026-09-27T10-00-02" - group "User Presets"
+  "AVG S7 plugin 2026-09-27T10-00-02" - group "Plugin Develop Presets"
+Then run "AVG S7 - 2" and tick what you saw.
+
+Saved automatically - nothing to copy.
+-----
+[info] AVG S7 - presets BEFORE the restart
+Your answers: SAVED
+Lightroom lists: reference YES, plugin YES, xmp NO
+
+Next: quit Lightroom (File > Exit), start it again, then follow the README.
+
+Saved automatically - nothing to copy.
+-----
+[info] AVG S7 - presets AFTER the restart
+Your answers: SAVED
+Lightroom lists: reference YES, plugin YES, xmp YES
+
+Step 1 made no S7 copies, so there is nothing to remove.
+Then delete the AVG S7 presets as the README says, and tell Claude Code "S7 done".
+
+Saved automatically - nothing to copy.
+
+8 files in the fake FS
+[exit 0]
+
+$ node run-fake2.cjs plugin_needs_gate <outDir>
+[info] AVG S7 - checks run
+Crop on a virtual copy: WORKED
+Write + export, photo not selected: WORKED
+Removal probe: no undocumented removal call found (nothing was called)
+Plugin preset "AVG S7 plugin 2026-09-27T10-00-08": CREATED
+Preset file "AVG S7 xmp 2026-09-27T10-00-08": WRITTEN
+
+Next: press D, and in the Presets panel (left) open these groups and look for these names:
+  "AVG S7 reference" and "AVG S7 xmp 2026-09-27T10-00-08" - group "User Presets"
+  "AVG S7 plugin 2026-09-27T10-00-08" - group "Plugin Develop Presets"
+Then run "AVG S7 - 2" and tick what you saw.
+
+Saved automatically - nothing to copy.
+-----
+[info] AVG S7 - presets BEFORE the restart
+Your answers: SAVED
+Lightroom lists: reference YES, plugin YES, xmp NO
+
+Next: quit Lightroom (File > Exit), start it again, then follow the README.
+
+Saved automatically - nothing to copy.
+-----
+[info] AVG S7 - presets AFTER the restart
+Your answers: SAVED
+Lightroom lists: reference YES, plugin YES, xmp YES
+
+The 2 S7 copies (and nothing else) are now selected. To remove them: Photo > Remove Photos... > Remove.
+Then delete the AVG S7 presets as the README says, and tell Claude Code "S7 done".
+
+Saved automatically - nothing to copy.
+
+10 files in the fake FS
+[exit 0]
+
+== 4. The written preset file against Jim's reference (scenario xmp) ==
+$ line-by-line compare: "AVG S7 reference.xmp" vs "AVG S7 xmp 2026-09-27T10-00-01.xmp"
+lines: 237 vs 237
+line 7:
+  < crs:UUID="94B7E167ED8FC14591B3B0CF685F6019"
+  > crs:UUID="1234ABCD000040008000000000000001"
+line 118:
+  < <rdf:li xml:lang="x-default">AVG S7 reference</rdf:li>
+  > <rdf:li xml:lang="x-default">AVG S7 xmp 2026-09-27T10-00-01</rdf:li>
+
+== 5. file_on_disk as items 5 and 6 recorded it ==
+xmp s7_xmp_after_2026-09-27T10-00-08.json: {"bytes":7928,"bytes_as_written":7928,"exists":true,"same_as_written":true,"uuid_as_written":true}
+xmp s7_xmp_before_2026-09-27T10-00-06.json: {"bytes":7928,"bytes_as_written":7928,"exists":true,"same_as_written":true,"uuid_as_written":true}
+xmp_rewritten s7_xmp_after_2026-09-27T10-00-08.json: {"bytes":7928,"bytes_as_written":7928,"exists":true,"first_different_line":26,"same_as_written":false,"uuid_as_written":true}
+xmp_rewritten s7_xmp_before_2026-09-27T10-00-06.json: {"bytes":7928,"bytes_as_written":7928,"exists":true,"same_as_written":true,"uuid_as_written":true}
+
+== 6. summarize.ts ==
+$ node spikes\S7\summarize.ts <run1_then_xmp temp-S7> <scratch>
+Wrote %USERPROFILE%\.claude\jobs\03fc6ef3\tmp\capture\sum-run1_then_xmp\s7_summary.json; copied 9 files (JPEGs not copied).
+[exit 0]
+
+run 1 pairing: {"run":"s7_run_2026-09-27T10-00-10.json","before":{"file":"s7_before_2026-09-27T10-00-12.json","other_runs_ignored":0,"jim":{"answered":true,"saw_reference":true,"saw_plugin":false,"saw_xmp":false}},"after":{"file":"s7_after_2026-09-27T10-00-14.json","other_runs_ignored":0,"jim":{"answered":true,"saw_reference":true,"saw_plugin":false,"saw_xmp":true}}}
+re-run pairing: {"run":"s7_xmp_run_2026-09-27T10-00-18.json","before":{"file":"s7_xmp_before_2026-09-27T10-00-20.json","other_runs_ignored":0,"jim":{"answered":true,"saw_reference":true,"saw_xmp":false}},"after":{"file":"s7_xmp_after_2026-09-27T10-00-22.json","other_runs_ignored":0,"jim":{"answered":true,"saw_reference":true,"saw_xmp":true}}}
+copied: ["s7_after_2026-09-27T10-00-14.json","s7_before_2026-09-27T10-00-12.json","s7_log.txt","s7_run_2026-09-27T10-00-10.json","s7_state.txt","s7_xmp_after_2026-09-27T10-00-22.json","s7_xmp_before_2026-09-27T10-00-20.json","s7_xmp_run_2026-09-27T10-00-18.json","s7_xmp_state.txt"]
+
+$ node spikes\S7\summarize.ts %TEMP%\LrC-AVG\S7 <scratch>   (Jim's real run-1 files, read-only)
+Wrote %USERPROFILE%\.claude\jobs\03fc6ef3\tmp\capture\sum-real\s7_summary.json; copied 6 files (JPEGs not copied).
+[exit 0]
+
+xmp_rerun: null
+files among the 7 written that still contain the user name: 0
+
+== Appendix A: fake-lr.lua ==
+-- A fake Lightroom for a smoke run of plugin\spikes\S7.lrplugin under fengari. Not in the repo.
+-- FLAGS (global, set by the runner): no_reference, vc_fails, plugin_needs_gate, restart.
+
+FS = FS or {}
+DIALOGS = DIALOGS or {}
+FLAGS = FLAGS or {}
+KNOWN_AT_START = KNOWN_AT_START or {} -- preset files Lightroom read at its last (simulated) start
+
+-- io shim over FS
+local function fileObj(path, mode)
+    local buf, pos = (mode:sub(1, 1) == "a") and (FS[path] or "") or "", 1
+    if mode:sub(1, 1) == "r" then buf = FS[path] end
+    local f = {}
+    function f:write(...)
+        if FLAGS.write_fails and path:find("AVG S7 xmp", 1, true) then return nil, "No space left on device (fake)" end
+        for _, s in ipairs({ ... }) do buf = buf .. tostring(s) end FS[path] = buf return self
+    end
+    function f:read(fmt) return buf end
+    function f:lines()
+        local lines = {}
+        for l in (buf .. "\n"):gmatch("(.-)\n") do table.insert(lines, l) end
+        if lines[#lines] == "" then table.remove(lines) end
+        local i = 0
+        return function() i = i + 1 return lines[i] end
+    end
+    function f:close() if mode:sub(1, 1) ~= "r" then FS[path] = buf end return true end
+    return f
+end
+io.open = function(path, mode)
+    mode = mode or "r"
+    if mode:sub(1, 1) == "r" and FS[path] == nil then return nil, path .. ": No such file" end
+    if mode:sub(1, 1) == "w" then FS[path] = "" end
+    return fileObj(path, mode)
+end
+
+local clock = 0
+local function sep(p) return p end
+
+local LrPathUtils = {
+    child = function(a, b) return a .. "\\" .. b end,
+    parent = function(p) return p:match("^(.*)\\[^\\]*$") end,
+    extension = function(p) return p:match("%.([^%.\\]+)$") or "" end,
+    getStandardFilePath = function(k) return "C:\\fake\\Temp" end,
+}
+local LrFileUtils = {
+    createAllDirectories = function() return true end,
+    exists = function(p) return FS[p] and "file" or false end,
+    files = function(dir)
+        local list = {}
+        for p in pairs(FS) do if LrPathUtils.parent(p) == dir then table.insert(list, p) end end
+        local i = 0
+        return function() i = i + 1 return list[i] end
+    end,
+}
+local LrDate = {
+    currentTime = function() clock = clock + 1 return clock end,
+    timeToUserFormat = function(t, fmt) return "2026-09-27T10-00-" .. string.format("%02d", t % 60) end,
+}
+local LrTasks = { pcall = pcall, yield = function() end }
+local uuidN = 0
+local LrUUID = { generateUUID = function() uuidN = uuidN + 1 return string.format("1234abcd-0000-4000-8000-%012d", uuidN) end }
+
+-- photos
+local nextId = 1000
+local photos = {}
+local Photo = {}
+Photo.__index = Photo
+local function newPhoto(fields)
+    nextId = nextId + 1
+    local p = setmetatable({ localIdentifier = nextId, settings = { Exposure2012 = 0, Vibrance = 0, CropLeft = 0, CropRight = 1, CropTop = 0, CropBottom = 1, CropAngle = 0, orientation = "AB" } }, Photo)
+    for k, v in pairs(fields) do p[k] = v end
+    p.uuid = p.uuid or LrUUID.generateUUID():upper()
+    photos[p.uuid] = p
+    return p
+end
+function Photo:getRawMetadata(key)
+    local s = self.settings
+    local w, h = 8256, 5504
+    local cw, ch = math.floor(w * (s.CropRight - s.CropLeft) + 0.5), math.floor(h * (s.CropBottom - s.CropTop) + 0.5)
+    local t = { uuid = self.uuid, isVirtualCopy = self.master ~= nil, masterPhoto = self.master or self,
+        width = w, height = h, dimensions = { width = w, height = h }, croppedDimensions = { width = cw, height = ch },
+        isCropped = cw ~= w or ch ~= h, aspectRatio = w / h }
+    return t[key]
+end
+function Photo:getFormattedMetadata(key)
+    if key == "copyName" then return self.copyName end
+    if key == "fileName" then return "20260907-_OZ80093.NEF" end
+end
+function Photo:getDevelopSettings()
+    local c = {}
+    for k, v in pairs(self.settings) do c[k] = v end
+    return c
+end
+function Photo:applyDevelopSettings(s, name)
+    assert(WRITE_GATE, "applyDevelopSettings outside a write gate")
+    for k, v in pairs(s) do self.settings[k] = v end
+end
+function Photo:applyDevelopPreset(preset, plugin)
+    assert(WRITE_GATE, "applyDevelopPreset outside a write gate")
+    for k, v in pairs(preset:getSetting()) do self.settings[k] = v end
+end
+
+local master = newPhoto({ uuid = "MASTER-UUID" })
+local selection = { active = master, all = { master } }
+
+local catalog = {}
+function catalog:getTargetPhoto() return selection.active end
+function catalog:getTargetPhotos() return selection.all end
+function catalog:setSelectedPhotos(a, all) selection = { active = a, all = all } end
+function catalog:createVirtualCopies(name)
+    if FLAGS.vc_fails then error("createVirtualCopies: fake failure") end
+    local c = newPhoto({ master = selection.active, copyName = name })
+    selection = { active = c, all = { c } }
+    return { c }
+end
+function catalog:findPhotoByUuid(u) return photos[u] end
+function catalog:getPhotoByLocalId(id) return nil end
+function catalog:deleteAllEmptyMasks() end
+function catalog:withReadAccessDo(fn) return fn() end
+function catalog:withWriteAccessDo(name, fn) WRITE_GATE = true local ok, e = pcall(fn) WRITE_GATE = false if not ok then error(e) end end
+
+-- presets. As in LrC 15.5.1 (S7 run 1), a file preset's SDK uuid is not the crs:UUID in its file.
+local function sdkUuid(fileUuid) return fileUuid and ("5D" .. fileUuid:reverse()):sub(1, 32) or nil end
+local function newPreset(name, uuid, file, parent, settings)
+    return { getName = function() return name end, getUuid = function() return uuid end, getFile = function() return file end,
+        getParent = function() return parent end, getSetting = function() return settings end }
+end
+local userFolder = { getName = function() return "User Presets" end, getPath = function() return "C:\\fake\\Settings" end }
+local refFile = "C:\\fake\\Settings\\AVG S7 reference.xmp"
+local REF_UUID = "0A1B2C3D4E5F60718293A4B5C6D7E8F9"
+if not FLAGS.no_reference then
+    FS[refFile] = FS[refFile] or REF_TEXT or ('<x:xmpmeta><rdf:Description crs:UUID="' .. REF_UUID .. '" crs:Exposure2012="+0.20">' ..
+        '<crs:Name><rdf:Alt><rdf:li xml:lang="x-default">AVG S7 reference</rdf:li></rdf:Alt></crs:Name></rdf:Description></x:xmpmeta>')
+    if FLAGS.two_uuids then FS[refFile] = FS[refFile]:gsub("<crs:Name>", '<crs:Look crs:UUID="FFFF0000FFFF0000FFFF0000FFFF0000"/><crs:Name>', 1) end
+end
+local pluginPresets = PLUGIN_PRESETS or {}
+PLUGIN_PRESETS = pluginPresets
+local pluginFolder = { getName = function() return "Plugin Develop Presets" end, getPath = function() return "" end }
+function userFolder.getDevelopPresets()
+    local list = {}
+    for p, text in pairs(FS) do
+        if LrPathUtils.parent(p) == "C:\\fake\\Settings" and p:match("%.xmp$") and (KNOWN_AT_START[p] or p == refFile) then
+            local name = text:match('x%-default">([^<]+)<')
+            local uuid = sdkUuid(text:match('crs:UUID="([^"]+)"'))
+            table.insert(list, newPreset(name, uuid, p, userFolder, { Exposure2012 = 0.2 }))
+        end
+    end
+    return list
+end
+
+local LrApplication = {
+    activeCatalog = function() return catalog end,
+    versionString = function() return "15.5.1" end,
+    developPresetFolders = function() return { userFolder } end,
+    getDevelopPresetsForPlugin = function(plugin, uuid) return pluginPresets end,
+    addDevelopPresetForPlugin = function(plugin, name, values)
+        if FLAGS.plugin_needs_gate and not WRITE_GATE then error("needs write access") end
+        local p = newPreset(name, "PLUGINPRESET-1", nil, pluginFolder, values)
+        table.insert(pluginPresets, p)
+        return p
+    end,
+    developPresetByUuid = function(u)
+        for _, p in ipairs(userFolder.getDevelopPresets()) do if p:getUuid() == u then return p end end
+        for _, p in ipairs(pluginPresets) do if p:getUuid() == u then return p end end
+        return nil
+    end,
+}
+
+local LrExportSession = function(args)
+    return { doExportOnCurrentTask = function()
+        local dir = args.exportSettings.LR_export_destinationPathPrefix
+        FS[dir .. "\\20260907-_OZ80093.jpg"] = "JPEG"
+    end }
+end
+
+local LrDialogs = {
+    attachErrorDialogToFunctionContext = function() end,
+    message = function(title, text, kind) table.insert(DIALOGS, "[" .. tostring(kind) .. "] " .. title .. "\n" .. text) end,
+    presentModalDialog = function(args)
+        local props = args.contents.bind_to_object
+        for k, v in pairs(JIM_TICKS or {}) do props[k] = v end
+        return MODAL_ANSWER or "ok"
+    end,
+}
+local LrBinding = { makePropertyTable = function() return PROPS or {} end }
+local viewFactory = setmetatable({}, { __index = function(_, k) return function(_, t) return t or {} end end })
+local LrView = { osFactory = function() return viewFactory end, bind = function(k) return k end }
+local LrFunctionContext = { postAsyncTaskWithContext = function(name, fn)
+    local ok, e = pcall(fn, {})
+    if not ok then table.insert(DIALOGS, "[LUA ERROR] " .. tostring(e)) end
+end }
+
+local modules = { LrApplication = LrApplication, LrDate = LrDate, LrDialogs = LrDialogs, LrExportSession = LrExportSession,
+    LrFileUtils = LrFileUtils, LrFunctionContext = LrFunctionContext, LrPathUtils = LrPathUtils, LrTasks = LrTasks,
+    LrUUID = LrUUID, LrBinding = LrBinding, LrView = LrView, LrApplicationView = {} }
+function import(name) return assert(modules[name], "no fake for " .. name) end
+_PLUGIN = { id = "com.lrcavg.spike.s7" }
+FAKE = { catalog = catalog, master = master, photos = photos }
+
+== Appendix B: run-fake2.cjs ==
+// Smoke run of the fix/s7-xmp worktree's plugin\spikes\S7.lrplugin against fake-lr.lua under fengari.
+// Usage: node run-fake2.cjs <scenario> [outDir]
+// Flows: "run1" = menu items 1, 2, restart, 3. "xmp" = menu items 4, 5, restart, 6.
+// Scenarios: ok (run1) | xmp | run1_then_xmp | two_uuids (xmp) | no_reference (xmp) | xmp_cancel |
+//            fake_ref (run1 with the old stub reference text) | vc_fails | plugin_needs_gate (run1)
+// The reference file text is Jim's real "AVG S7 reference.xmp" unless the scenario is fake_ref.
+const fs = require("fs");
+const path = require("path");
+const { lua, lauxlib, lualib, to_luastring } = require("fengari");
+const wt = "D:/Developer/LrC_Autonomous_Gateway/.claude/worktrees/fix-s7-xmp";
+const sharp = require(require.resolve("sharp", { paths: [wt + "/spikes"] }));
+
+const [scenario = "ok", outDir] = process.argv.slice(2);
+const plugin = process.env.S7_PLUGIN || wt + "/plugin/spikes/S7.lrplugin";
+const L = lauxlib.luaL_newstate();
+lualib.luaL_openlibs(L);
+function run(code) {
+  if (lauxlib.luaL_dostring(L, to_luastring(code)) !== 0) {
+    console.log("LUA ERROR:", lua.lua_tojsstring(L, -1));
+    process.exit(1);
+  }
+}
+if (scenario !== "fake_ref") {
+  const ref = path.join(process.env.APPDATA, "Adobe", "CameraRaw", "Settings", "AVG S7 reference.xmp");
+  lua.lua_pushstring(L, to_luastring(fs.readFileSync(ref, "latin1")));
+  lua.lua_setglobal(L, to_luastring("REF_TEXT"));
+}
+const flagged = { two_uuids: "two_uuids", no_reference: "no_reference", vc_fails: "vc_fails", plugin_needs_gate: "plugin_needs_gate", write_fails: "write_fails" };
+run(`FLAGS = {} ${flagged[scenario] ? `FLAGS.${flagged[scenario]} = true` : ""} package.path = "${plugin}/?.lua" dofile("${__dirname.replace(/\\/g, "/")}/fake-lr.lua")`);
+const restart = () => run(`for p in pairs(FS) do KNOWN_AT_START[p] = true end
+  for k in pairs(package.loaded) do if k:match("^S7") then package.loaded[k] = nil end end`);
+function run1() {
+  run(`JIM_TICKS = { reference = true, plugin = false, xmp = false } dofile("${plugin}/S7Step1.lua")`);
+  run(`dofile("${plugin}/S7Step2.lua")`);
+  restart();
+  run(`JIM_TICKS = { reference = true, plugin = false, xmp = true } dofile("${plugin}/S7Step3.lua")`);
+}
+function xmp(cancel) {
+  run(`dofile("${plugin}/S7Step4.lua")`);
+  if (cancel) run(`MODAL_ANSWER = "cancel"`);
+  run(`JIM_TICKS = { reference = true, xmp = false } dofile("${plugin}/S7Step5.lua")`);
+  restart();
+  if (scenario === "xmp_rewritten") {
+    // Lightroom rewrites one setting at the restart: same length, same uuid.
+    run(`for p, t in pairs(FS) do if p:find("Settings", 1, true) and p:find("AVG S7 xmp", 1, true) then
+           FS[p] = (t:gsub('crs:Exposure2012="%+0%.33"', 'crs:Exposure2012="+0.34"')) end end`);
+  }
+  run(`MODAL_ANSWER = nil JIM_TICKS = { reference = true, xmp = true } dofile("${plugin}/S7Step6.lua")`);
+}
+if (["ok", "fake_ref", "vc_fails", "plugin_needs_gate"].includes(scenario)) run1();
+else if (scenario === "run1_then_xmp") { run1(); xmp(false); }
+else xmp(scenario === "xmp_cancel");
+
+run(`OUT_DIALOGS = table.concat(DIALOGS, "\\n-----\\n")
+     local files = {} for p, t in pairs(FS) do table.insert(files, p .. "\\0" .. t) end OUT_FILES = table.concat(files, "\\1")`);
+lua.lua_getglobal(L, to_luastring("OUT_DIALOGS"));
+console.log(lua.lua_tojsstring(L, -1));
+lua.lua_getglobal(L, to_luastring("OUT_FILES"));
+const files = lua.lua_tojsstring(L, -1).split("\u0001").map((e) => e.split("\u0000"));
+const prefix = "C:\\fake\\Temp\\LrC-AVG\\S7\\";
+(async () => {
+  for (const [p, text] of files) {
+    if (!outDir || text === undefined) continue;
+    const dest = p.startsWith(prefix) ? path.join(outDir, "temp-S7", ...p.slice(prefix.length).split("\\")) : path.join(outDir, "other", path.basename(p.replace(/\\/g, "/")));
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    if (p.endsWith(".jpg")) {
+      const crop = p.includes("export_crop_");
+      await sharp({ create: { width: 1600, height: crop ? 800 : 1067, channels: 3, background: { r: 90, g: 90, b: 90 } } }).jpeg().toFile(dest);
+    } else fs.writeFileSync(dest, text, "latin1");
+  }
+  console.log(`\n${files.length} files in the fake FS`);
+})();

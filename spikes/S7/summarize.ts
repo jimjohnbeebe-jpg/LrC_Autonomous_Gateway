@@ -3,9 +3,12 @@
 // one command. Claude Code runs it after Jim says "S7 done"; Jim runs nothing here.
 //
 // Run (PowerShell, from the repo root):
-//   node spikes\S7\summarize.ts [srcDir] [destDir]
+//   node spikes\S7\summarize.ts [srcDir] [destDir] [runFile]
 //     srcDir  default: $env:TEMP\LrC-AVG\S7   (LrPathUtils "temp" is %TEMP% [handle: LR_SDK_NOTES "Recorded in Phase 1"])
 //     destDir default: docs\reports\phase4\S7
+//     runFile default: the newest s7_run_*.json, summarised to s7_summary.json. Given (e.g.
+//             s7_run_2026-09-27T11-22-33.json), that run is summarised to s7_summary_<its time>.json,
+//             so each of several runs gets its own summary.
 //
 // - Reads the newest s7_run_*.json, s7_before_*.json and s7_after_*.json (written by S7Run.lua and
 //   S7Observe.lua), and, when there is one, the preset-file re-run: the newest s7_xmp_run_*.json
@@ -13,7 +16,8 @@
 // - Measures the two exported JPEGs with sharp. They are NOT copied: they are renders of Jim's photo
 //   and the repo is public.
 // - Copies the JSON files, s7_log.txt and s7_state.txt with the user folder written as %USERPROFILE%.
-// - Writes s7_summary.json to destDir and prints it.
+// - Writes s7_summary.json to destDir and prints it. Its `evidence` sorts the copied files into this
+//   run's, other runs' and shared (s7_log.txt).
 
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
@@ -25,6 +29,7 @@ import { z } from "zod";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const srcDir = path.resolve(process.argv[2] ?? path.join(os.tmpdir(), "LrC-AVG", "S7"));
 const destDir = path.resolve(process.argv[3] ?? path.join(repoRoot, "docs", "reports", "phase4", "S7"));
+const runArg = process.argv[4];
 
 const Export = z.looseObject({ path: z.string().optional(), error: z.string().optional() });
 const Size = z.looseObject({ width: z.unknown().optional(), height: z.unknown().optional(), croppedDimensions: z.unknown().optional(), isCropped: z.unknown().optional() });
@@ -160,10 +165,18 @@ function observed(prefix: string, runAt: string) {
   return { file: last.f, other_runs_ignored: ignored, jim: o.jim, lightroom: o.found, apply: o.apply ?? null, cleanup: o.cleanup ?? null, ...rerun };
 }
 
-// The preset-file re-run (menu items 4-6), or null when there is none: the newest s7_xmp_run_*.json
-// and the observations paired with it by run_at, as for run 1.
-function xmpRerun() {
-  const file = newest("s7_xmp_run_");
+// The preset-file re-run (menu items 4-6) that followed this run, or null: the newest
+// s7_xmp_run_*.json made after this run and before the next run of menu item 1, with the observations
+// paired with it by run_at. A summary never takes another run's re-run as its own (Greptile, PR #31).
+// Every run_at is "YYYY-MM-DD HH:MM:SS (local time)", so it compares as text [handle: the one writer,
+// plugin\spikes\S7.lrplugin\S7Common.lua:34-35 (LrDate.timeToUserFormat "%Y-%m-%d %H:%M:%S");
+// observed: docs\reports\phase4\S7\s7_run_2026-09-27T11-22-33.json run_at "2026-09-27 11:22:23 (local time)"].
+function xmpRerun(runAt: string) {
+  const runAts = (prefix: string) => readdirSync(srcDir).filter((f) => f.startsWith(prefix) && f.endsWith(".json"))
+    .map((f) => ({ f, at: z.looseObject({ run_at: z.string() }).parse(readJson(f)).run_at }));
+  const next = runAts("s7_run_").map((x) => x.at).filter((at) => at > runAt).sort()[0];
+  const mine = runAts("s7_xmp_run_").filter((x) => x.at > runAt && (next === undefined || x.at < next)).sort((a, b) => a.at.localeCompare(b.at));
+  const file = mine.at(-1)?.f;
   if (!file) return null;
   const r = XmpRun.parse(readJson(file));
   const x = r.presets.xmp;
@@ -203,13 +216,41 @@ function copyRedacted(): string[] {
   return copied;
 }
 
+// The run a saved file belongs to: a run file's or state file's own run_at, the observed run's
+// run_at for a before/after file (it saves the state it read: S7Observe.lua:228), or null for
+// s7_log.txt, which has every run's lines (S7Common.lua:211 appends to it, "a").
+function runAtOf(f: string): string | null {
+  const text = readFileSync(path.join(srcDir, f), "utf8");
+  if (f.endsWith(".txt")) return text.match(/^run_at=(.*)$/m)?.[1]?.trim() ?? null;
+  const o = JSON.parse(text) as { run_at?: unknown; state?: { run_at?: unknown } };
+  const at = /^s7_(xmp_)?(before|after)_/.test(f) ? o.state?.run_at : o.run_at;
+  return typeof at === "string" ? at : null;
+}
+
+// The copied files split by run, so each summary names only its own run's evidence as its own
+// (Greptile, PR #31). s7_state.txt holds only the latest run's state [handle: S7Common.lua:188 opens it
+// "wb" on every run of menu item 1; observed: docs\reports\phase4\S7\s7_state.txt run_at is run 2's,
+// "2026-09-27 12:52:56 (local time)"]. The files of the preset-file re-run reported under xmp_rerun
+// (rerunAt) are this summary's evidence too, listed apart (Greptile, PR #31).
+function evidence(copied: string[], runAt: string, rerunAt: string | null) {
+  const out = { this_run: [] as string[], rerun: [] as string[], other_runs: [] as string[], shared: [] as string[] };
+  for (const f of copied) {
+    const at = runAtOf(f);
+    (at === null ? out.shared : at === runAt ? out.this_run : at === rerunAt ? out.rerun : out.other_runs).push(f);
+  }
+  return out;
+}
+
 async function main(): Promise<void> {
-  const runFile = newest("s7_run_");
+  const runFile = runArg ?? newest("s7_run_");
   if (!runFile) throw new Error(`no s7_run_*.json in ${srcDir}`);
+  if (!/^s7_run_.*\.json$/.test(runFile) || !existsSync(path.join(srcDir, runFile))) throw new Error(`not an s7_run_*.json in ${srcDir}: ${runFile}`);
+  const summaryName = runArg ? `s7_summary_${runFile.slice("s7_run_".length, -".json".length)}.json` : "s7_summary.json";
   const run = Run.parse(readJson(runFile));
   const p = run.presets;
   const before = observed("s7_before_", run.run_at);
   const after = observed("s7_after_", run.run_at);
+  const rerun = xmpRerun(run.run_at);
   const summary = {
     source: { run: runFile, run_at: run.run_at, before: before.file, after: after.file },
     item1_presets: {
@@ -218,17 +259,17 @@ async function main(): Promise<void> {
       xmp: { written: p.xmp.path !== undefined, error: p.xmp.error ?? null },
       before_restart: before,
       after_restart: after,
-      xmp_rerun: xmpRerun(),
+      xmp_rerun: rerun,
     },
     item2_removal_probe: { undocumented_removal_names_found: run.removal_probe.found },
     item3_crop: { worked: run.crop.worked ?? false, error: run.crop.error ?? null, ...(await cropFindings(run.crop)) },
     item4_unselected: { worked: run.unselected.worked ?? false, error: run.unselected.error ?? null, export: await jpegSize(run.unselected.export?.path) },
   };
   const copied = copyRedacted();
-  const text = redact(JSON.stringify({ ...summary, copied }, null, 2));
-  writeFileSync(path.join(destDir, "s7_summary.json"), text + "\n");
+  const text = redact(JSON.stringify({ ...summary, evidence: evidence(copied, run.run_at, rerun?.source.run_at ?? null) }, null, 2));
+  writeFileSync(path.join(destDir, summaryName), text + "\n");
   console.log(text);
-  console.log(`\nWrote ${path.join(destDir, "s7_summary.json")}; copied ${copied.length} files (JPEGs not copied).`);
+  console.log(`\nWrote ${path.join(destDir, summaryName)}; copied ${copied.length} files (JPEGs not copied).`);
 }
 
 await main();

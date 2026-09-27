@@ -1,0 +1,319 @@
+{
+  "found": {
+    "plugin": {
+      "found_by_uuid": false,
+      "listed_in": "getDevelopPresetsForPlugin",
+      "name": "AVG S7 plugin 20260927-112233"
+    },
+    "reference": {
+      "found_by_uuid": true,
+      "listed_in": "User Presets",
+      "name": "AVG S7 reference"
+    },
+    "xmp": {
+      "listed_in": false,
+      "name": "AVG S7 xmp 20260927-112233"
+    }
+  },
+  "jim": {
+    "answered": false
+  },
+  "lr_version": "15.5.1",
+  "presets": {
+    "folders": [
+      {
+        "avg_s7": [
+          {
+            "file": "%USERPROFILE%/AppData/Roaming/Adobe/CameraRaw/Settings/AVG S7 reference.xmp",
+            "name": "AVG S7 reference",
+            "parent": "User Presets",
+            "setting_count": 97,
+            "settings_sample": {
+              "Exposure2012": 0.33,
+              "Vibrance": 0
+            },
+            "uuid": "221C89F4724E30813B7A73553BD53357"
+          }
+        ],
+        "count": 4,
+        "name": "User Presets",
+        "path": "%USERPROFILE%\\AppData\\Roaming\\Adobe\\CameraRaw\\ImportedSettings"
+      },
+      {
+        "avg_s7": [],
+        "count": 2,
+        "name": "Zephyr",
+        "path": "%USERPROFILE%\\AppData\\Roaming\\Adobe\\CameraRaw\\ImportedSettings"
+      },
+      {
+        "avg_s7": [],
+        "count": 12,
+        "name": "Adaptive: Portrait",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Adaptive - Portrait"
+      },
+      {
+        "avg_s7": [],
+        "count": 9,
+        "name": "Adaptive: Sky",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Adaptive - Sky"
+      },
+      {
+        "avg_s7": [],
+        "count": 9,
+        "name": "Adaptive: Subject",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Adaptive - Subject"
+      },
+      {
+        "avg_s7": [],
+        "count": 8,
+        "name": "Adaptive: Landscape",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Adaptive - Landscape"
+      },
+      {
+        "avg_s7": [],
+        "count": 13,
+        "name": "Adaptive: Blur Background",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Adaptive - Blur Background"
+      },
+      {
+        "avg_s7": [],
+        "count": 15,
+        "name": "Portraits: Deep Skin",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Portraits - Deep Skin"
+      },
+      {
+        "avg_s7": [],
+        "count": 11,
+        "name": "Portraits: Medium Skin",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Portraits - Medium Skin"
+      },
+      {
+        "avg_s7": [],
+        "count": 11,
+        "name": "Portraits: Light Skin",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Portraits - Light Skin"
+      },
+      {
+        "avg_s7": [],
+        "count": 12,
+        "name": "Portraits: Black & White",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Portraits - Black and White"
+      },
+      {
+        "avg_s7": [],
+        "count": 12,
+        "name": "Portraits: Edgy",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Portraits - Edgy"
+      },
+      {
+        "avg_s7": [],
+        "count": 8,
+        "name": "Portraits: Group",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Portraits - Group"
+      },
+      {
+        "avg_s7": [],
+        "count": 11,
+        "name": "Auto+: Retro",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Auto+ - Retro"
+      },
+      {
+        "avg_s7": [],
+        "count": 12,
+        "name": "Seasons: Spring",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Seasons - Spring"
+      },
+      {
+        "avg_s7": [],
+        "count": 11,
+        "name": "Seasons: Summer",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Seasons - Summer"
+      },
+      {
+        "avg_s7": [],
+        "count": 12,
+        "name": "Seasons: Autumn",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Seasons - Autumn"
+      },
+      {
+        "avg_s7": [],
+        "count": 10,
+        "name": "Seasons: Winter",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Seasons - Winter"
+      },
+      {
+        "avg_s7": [],
+        "count": 12,
+        "name": "Style: Black & White",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Style - Black & White"
+      },
+      {
+        "avg_s7": [],
+        "count": 10,
+        "name": "Style: Cinematic",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Style - Cinematic"
+      },
+      {
+        "avg_s7": [],
+        "count": 8,
+        "name": "Style: Cinematic II",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Style - Cinematic II"
+      },
+      {
+        "avg_s7": [],
+        "count": 12,
+        "name": "Style: Film-Inspired",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Style - Film\\Presets"
+      },
+      {
+        "avg_s7": [],
+        "count": 12,
+        "name": "Style: Futuristic",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Style - Futuristic"
+      },
+      {
+        "avg_s7": [],
+        "count": 11,
+        "name": "Style: Vintage",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Style - Vintage"
+      },
+      {
+        "avg_s7": [],
+        "count": 11,
+        "name": "Subject: Concerts",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Subject - Concerts"
+      },
+      {
+        "avg_s7": [],
+        "count": 11,
+        "name": "Subject: Food",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Subject - Food"
+      },
+      {
+        "avg_s7": [],
+        "count": 10,
+        "name": "Subject: Landscape",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Subject - Landscape"
+      },
+      {
+        "avg_s7": [],
+        "count": 8,
+        "name": "Subject: Lifestyle",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Subject - Lifestyle"
+      },
+      {
+        "avg_s7": [],
+        "count": 10,
+        "name": "Subject: Travel",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Subject - Travel"
+      },
+      {
+        "avg_s7": [],
+        "count": 8,
+        "name": "Subject: Travel II",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Subject - Travel II"
+      },
+      {
+        "avg_s7": [],
+        "count": 10,
+        "name": "Subject: Urban Architecture",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Subject - Urban Architecture"
+      },
+      {
+        "avg_s7": [],
+        "count": 12,
+        "name": "Video: Creative",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Premium\\Video - Creative"
+      },
+      {
+        "avg_s7": [],
+        "count": 6,
+        "name": "Color",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Adobe\\Presets\\Color"
+      },
+      {
+        "avg_s7": [],
+        "count": 13,
+        "name": "Creative",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Adobe\\Presets\\Creative"
+      },
+      {
+        "avg_s7": [],
+        "count": 10,
+        "name": "B&W",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Adobe\\Presets\\B&W"
+      },
+      {
+        "avg_s7": [],
+        "count": 13,
+        "name": "Portraits",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Adobe\\Presets\\Portraits"
+      },
+      {
+        "avg_s7": [],
+        "count": 10,
+        "name": "Defaults",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Adobe\\Presets\\Defaults"
+      },
+      {
+        "avg_s7": [],
+        "count": 5,
+        "name": "Curve",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Adobe\\Presets\\Curve"
+      },
+      {
+        "avg_s7": [],
+        "count": 4,
+        "name": "Grain",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Adobe\\Presets\\Grain"
+      },
+      {
+        "avg_s7": [],
+        "count": 3,
+        "name": "Optics",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Adobe\\Presets\\Optics"
+      },
+      {
+        "avg_s7": [],
+        "count": 4,
+        "name": "Sharpening",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Adobe\\Presets\\Sharpening"
+      },
+      {
+        "avg_s7": [],
+        "count": 4,
+        "name": "Vignetting",
+        "path": "C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Resources\\Settings\\Adobe\\Presets\\Vignetting"
+      }
+    ],
+    "plugin_presets": [
+      {
+        "file": "%USERPROFILE%\\AppData\\Roaming\\Adobe\\Lightroom\\Plugin Develop Presets\\com.lrcavg.spike.s7\\AVG S7 plugin 20260927-112233.lrtemplate",
+        "name": "AVG S7 plugin 20260927-112233",
+        "setting_count": 2,
+        "settings_sample": {
+          "Exposure2012": 0.35,
+          "Vibrance": 17
+        },
+        "uuid": "8CBF58B5-C3FF-417E-A365-402658407E1B"
+      }
+    ]
+  },
+  "run_at": "2026-09-27 11:25:32 (local time)",
+  "spike": "S7",
+  "state": {
+    "crop_copy_uuid": "1D7A6E55-5F49-4752-9E02-99F21D9A1DE3",
+    "master_uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+    "plugin_group": "nil",
+    "plugin_name": "AVG S7 plugin 20260927-112233",
+    "plugin_preset_uuid": "8CBF58B5-C3FF-417E-A365-402658407E1B",
+    "reference_group": "User Presets",
+    "reference_uuid": "221C89F4724E30813B7A73553BD53357",
+    "run_at": "2026-09-27 11:22:23 (local time)",
+    "unselected_copy_uuid": "E96C4E73-7F74-436E-A2AA-67295CAECEA4",
+    "xmp_name": "AVG S7 xmp 20260927-112233",
+    "xmp_path": "",
+    "xmp_uuid": ""
+  },
+  "step": "2-before-restart"
+}

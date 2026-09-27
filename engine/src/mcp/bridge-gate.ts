@@ -1,7 +1,14 @@
-// The engine talks to Lightroom only while it holds the instance lock (instance-lock.ts). The gate
-// tries the lock when the engine starts and again on each tool call, so an engine that started
-// second takes over once the first one exits. Without the lock, tools answer ENGINE_BUSY, and the
-// engine leaves the shared previews folder alone (`onAcquire` runs only once the lock is held).
+// The engine talks to Lightroom only while it holds the instance lock (instance-lock.ts). Without
+// the lock, tools answer ENGINE_BUSY, and the engine leaves the shared previews folder alone
+// (`onAcquire` runs only once the lock is held).
+//
+// The lock is taken on the first tool call that needs the bridge, not when the engine starts, and
+// (with `idleReleaseMs`) given back after that long without a tool call. Claude Desktop started two
+// lrc-avg engines in the same second and sent every tool call to the one that did not hold the
+// lock, because the other took it at start-up and was never called [handle: Jim's Phase 2 run,
+// 2026-09-26: PIDs 2304 and 12632, both main.js children of claude.exe 10416 created 16:55:50 local;
+// %LOCALAPPDATA%\Claude\Logs\mcp-server-lrc-avg.log, tool calls id 2-4 answered ENGINE_BUSY naming
+// 2304; logs\engine-20260926.jsonl]. Why Desktop keeps two engines is [unverified].
 
 import { BridgeError, type BridgeClient } from "../bridge/index.js";
 import { ToolError } from "./errors.js";
@@ -18,19 +25,50 @@ export class BridgeGate {
   private readonly acquire: () => Promise<LockResult>;
   private readonly waitMs: number;
   private readonly onAcquire: () => void;
+  private readonly idleReleaseMs: number | null;
+  private readonly onIdleRelease: () => void;
   private lock: InstanceLock | null = null;
   private starting: Promise<boolean> | null = null;
   private lastBusy: { port: number; pid: number | null } | null = null;
+  private active = 0;
+  private idleTimer: NodeJS.Timeout | null = null;
 
   constructor(
     client: BridgeClient,
     acquire: () => Promise<LockResult>,
-    options: { waitMs?: number; onAcquire?: () => void } = {},
+    options: { waitMs?: number; onAcquire?: () => void; idleReleaseMs?: number; onIdleRelease?: () => void } = {},
   ) {
     this.client = client;
     this.acquire = acquire;
     this.waitMs = options.waitMs ?? DEFAULT_WAIT_MS;
     this.onAcquire = options.onAcquire ?? (() => {});
+    this.idleReleaseMs = options.idleReleaseMs ?? null;
+    this.onIdleRelease = options.onIdleRelease ?? (() => {});
+  }
+
+  /** A tool call begins: no idle release while any call runs. */
+  beginUse(): void {
+    this.active++;
+    this.clearIdle();
+  }
+
+  /** A tool call ended: when none is left, give the lock back after `idleReleaseMs` without a new one. */
+  endUse(): void {
+    this.active = Math.max(0, this.active - 1);
+    if (this.active > 0 || this.idleReleaseMs === null || !this.lock) return;
+    this.clearIdle();
+    this.idleTimer = setTimeout(() => {
+      this.idleTimer = null;
+      if (this.active > 0 || !this.lock) return;
+      this.onIdleRelease();
+      void this.release();
+    }, this.idleReleaseMs);
+    this.idleTimer.unref();
+  }
+
+  private clearIdle(): void {
+    if (this.idleTimer) clearTimeout(this.idleTimer);
+    this.idleTimer = null;
   }
 
   /** Take the lock if it is free and start connecting. Resolves with whether this engine holds it. */
@@ -84,6 +122,7 @@ export class BridgeGate {
 
   /** Stop the bridge and give the lock back; resolves once the lock port is free. */
   async release(): Promise<void> {
+    this.clearIdle();
     this.client.stop();
     const lock = this.lock;
     this.lock = null;

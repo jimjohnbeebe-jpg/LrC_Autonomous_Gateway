@@ -60,6 +60,9 @@ export type ToolsDeps = {
   log?: ToolLog;
   /** History names are "<prefix> set <n>"; they must start with "AVG " (PRD FR-4.4, C-7). */
   historyPrefix?: string;
+  /** Called when a tool call begins and ends (the gate's idle release, bridge-gate.ts). */
+  onCallStart?: () => void;
+  onCallEnd?: () => void;
   now?: () => Date;
 };
 
@@ -288,6 +291,7 @@ export class Tools {
   private async run(tool: string, args: unknown, fn: () => Promise<ToolOutput>): Promise<ToolOutput> {
     const ts = this.now().toISOString();
     const started = performance.now();
+    this.deps.onCallStart?.();
     try {
       const out = await fn();
       this.deps.log?.append({ ts, tool, ok: true, duration_ms: ms(started), args, ...out.log });
@@ -296,6 +300,8 @@ export class Tools {
       const error = toToolError(err);
       this.deps.log?.append({ ts, tool, ok: false, duration_ms: ms(started), args, error: error.body() });
       throw error;
+    } finally {
+      this.deps.onCallEnd?.();
     }
   }
 }

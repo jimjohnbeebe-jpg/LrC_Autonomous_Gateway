@@ -165,7 +165,7 @@ Checks Claude Code ran on 2026-09-26, before Jim's run. None of them involves Li
 
 ## Observed (Jim)
 
-Jim ran the steps on 2026-09-27 and said "done" [stated]. The check saved its files to `%TEMP%\LrC-AVG\P3\`. Claude Code copied them to `docs\reports\phase3\P3\` with the user folder redacted to `%USERPROFILE%` (checked: 25 files, none holds the user name or the bridge token). The copies are:
+Jim ran the steps on 2026-09-27 and said "done" [stated]. The check saved its files to `%TEMP%\LrC-AVG\P3\`. Claude Code copied them to `docs\reports\phase3\P3\` with the user folder redacted to `%USERPROFILE%` (checked: 25 files, none holds the user name or the bridge token) [handle: Claude Code, 2026-09-27: `Get-ChildItem %TEMP%\LrC-AVG\P3 -Recurse` listed one run, `2026-09-27T14-00-37-507Z`; after the copy, each of the 25 files was scanned for the user-folder name and for the value in `%USERPROFILE%\.lrc-avg\bridge_token`: 0 files matched]. The copies are:
 - the results `p3_check_2026-09-27T14-00-37-507Z.json`;
 - the 12 session logs and 6 recipes, in `p3_sessions_…\`;
 - the check's tool log;
@@ -200,9 +200,9 @@ The golden JPEGs stayed on disk (decision 3): `npm run goldens` copied them to `
 | B | 1 | 1.1604 % | pass 1/4, guard 1-3 | three corrections, then `unmet` |
 
 - As the check found it, this photo had 16.24 % of its pixels at or below 2 in all channels, and a mean luma of 29.1 [handle: the run `fixtures[5].golden.metrics`].
-- Each fixed correction lowered the crush. Three per pass were not enough. In session A, pass 1 (shadows +15, then one guard correction) brought it to 0.92 %, and it stayed under the limit afterwards.
+- Each fixed correction lowered the crush. Three per pass were not enough. In session A, pass 1 (shadows +15, then one guard correction) brought it to 0.92 %, and it stayed under the limit afterwards [handle: `P3\p3_sessions_…\20260927-c92f59.json` `passes[0..4].guardrail_actions` and `metrics_after.clip_low_pct`: 0.9234, 0.9234, 0.8451, 0.826 after passes 1-4].
 - The check's own AC-4 counted session A only, so it reported one breach. Session B's two breaches are in its logs, and AC-4 says "no pass".
-- The other five photos, and the chat's session, stayed within 0.5 % / 1.0 % on every pass.
+- The other five photos, and the chat's session, stayed within 0.5 % / 1.0 % on every pass [handle: `passes[*].metrics_after` in the other ten session logs in `P3\p3_sessions_…\` and in `P3\p3_chat_session\20260927-d096a8.json`; Claude Code, 2026-09-27, compared with each log's `guardrails`: no other pass over].
 
 ## Numbers
 

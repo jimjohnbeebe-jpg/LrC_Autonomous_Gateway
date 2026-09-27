@@ -1,8 +1,10 @@
 // A 5 x 7 pixel font for the labels on composites (ARCHITECTURE section 6.5).
 //
 // Labels are drawn from this table rather than with sharp's SVG or Pango text, so they do not depend
-// on the fonts installed on the machine and every render of the same label is the same bytes
-// [inference: sharp's text rendering goes through the system's fontconfig; not tested here].
+// on the fonts installed on the machine [inference: sharp's text rendering goes through the
+// system's fontconfig; not tested here]. The same labels give the same composite bytes [handle:
+// tests\preview-composite.test.ts "takes three panels (A / B / C) and gives the same bytes for the
+// same input", on this machine; across machines is not tested].
 // Letters are upper case; a character without a glyph is drawn as "?".
 
 const GLYPHS: Readonly<Record<string, string>> = {

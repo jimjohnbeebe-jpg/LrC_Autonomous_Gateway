@@ -2,7 +2,8 @@
 //
 // A box is { x, y, w, h } in 0-1 of the image's width and height, from the top-left corner, so the
 // same box names the same part of the photo at any preview size. boxToRect turns it into whole
-// pixels of one image: the rectangle covers every pixel the box touches, and at least one pixel.
+// pixels of one image: the rectangle covers every pixel the box touches, and at least one pixel
+// [handle: tests\metrics.test.ts "turns a normalised box into the pixels it touches, at least one"].
 
 export type RegionBox = { x: number; y: number; w: number; h: number };
 export type Region = { label: string; box: RegionBox };

@@ -154,11 +154,14 @@ function Presets.writeXmp(refPreset, name, out)
     if nName < 1 then out.error = "the reference file does not contain its name as text" return nil end
     local path = LrPathUtils.child(LrPathUtils.parent(file), name .. "." .. LrPathUtils.extension(file))
     if LrFileUtils.exists(path) then out.error = "a file is already there: " .. path return nil end
-    local fh, openErr = io.open(path, "wb")
-    if not fh then out.error = "could not write " .. path .. ": " .. tostring(openErr) return nil end
-    fh:write(final)
-    fh:close()
+    local ok, writeErr = Common.writeFile(path, final)
+    if not ok then out.error = "could not write " .. path .. ": " .. tostring(writeErr) return nil end
     out.path, out.bytes = path, #final
+    -- A byte-exact copy in the S7 output folder, so menu items 5 and 6 can tell whether Lightroom
+    -- rewrote the file (Greptile, PR #30). summarize.ts copies only .json/.txt, so it stays in temp.
+    local copy = LrPathUtils.child(Common.outDir(), "s7_xmp_as_written_" .. Common.stamp() .. ".xmp")
+    local okCopy, copyErr = Common.writeFile(copy, final)
+    if okCopy then out.copy_path = copy else out.copy_error = copyErr end
     return path, new
 end
 

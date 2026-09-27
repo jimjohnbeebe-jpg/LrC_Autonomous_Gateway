@@ -124,14 +124,33 @@ local function applyAll(catalog, state, index)
     }
 end
 
--- The preset file on disk now: still there, as many bytes as written, and still carrying the uuid it
--- was written with (so whether Lightroom rewrote it).
+-- The 1-based line on which two texts first differ.
+local function firstDifferentLine(a, b)
+    local line = 1
+    for i = 1, math.min(#a, #b) do
+        local c = a:byte(i)
+        if c ~= b:byte(i) then return line end
+        if c == 10 then line = line + 1 end
+    end
+    return line
+end
+
+-- The preset file on disk now: still there, and byte for byte the copy menu item 4 kept of what it
+-- wrote (Greptile, PR #30), else the first line that differs; plus its size and uuid.
 local function onDisk(state)
     if not state.xmp_path or state.xmp_path == "" then return { exists = false, note = "no file was written" } end
     local text = Common.readFile(state.xmp_path)
     if not text then return { exists = false } end
-    return { exists = true, bytes = #text, bytes_as_written = tonumber(state.xmp_bytes),
+    local out = { exists = true, bytes = #text, bytes_as_written = tonumber(state.xmp_bytes),
         uuid_as_written = text:find('crs:UUID="' .. tostring(state.xmp_uuid) .. '"', 1, true) ~= nil }
+    local written = state.xmp_copy and state.xmp_copy ~= "" and Common.readFile(state.xmp_copy)
+    if not written then
+        out.same_as_written = "no copy of the written file"
+        return out
+    end
+    out.same_as_written = text == written
+    if not out.same_as_written then out.first_different_line = firstDifferentLine(text, written) end
+    return out
 end
 
 -- Leave exactly the S7 copies selected (S6 pattern) and read the selection back. Removal is called

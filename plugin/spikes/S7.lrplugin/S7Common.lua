@@ -225,6 +225,15 @@ function Common.readFile(path)
     return text
 end
 
+-- Write the whole file, bytes as given. Returns ok, err.
+function Common.writeFile(path, text)
+    local fh, err = io.open(path, "wb")
+    if not fh then return false, tostring(err) end
+    fh:write(text)
+    fh:close()
+    return true
+end
+
 function Common.saveLine(ok, err)
     if ok then return "Saved automatically - nothing to copy." end
     return "SAVE FAILED: " .. tostring(err) .. " - tell Claude Code."

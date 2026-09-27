@@ -23,6 +23,7 @@ local function stateOf(result)
         xmp_uuid = p.xmp.uuid or "",
         xmp_path = p.xmp.path or "",
         xmp_bytes = p.xmp.bytes or "",
+        xmp_copy = p.xmp.copy_path or "",
     }
 end
 

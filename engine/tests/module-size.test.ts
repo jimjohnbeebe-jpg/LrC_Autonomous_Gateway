@@ -15,7 +15,6 @@ const MAX_LINES = 400;
 
 /** Files over MAX_LINES when the rule came in (wc -l, main 6e36453, 2026-09-27), at that size. */
 const OVERSIZE: Record<string, number> = {
-  "engine/src/mcp/tools.ts": 528,
   "engine/src/bridge/client.ts": 430,
   "plugin/LrC-AVG.lrplugin/Bridge.lua": 427,
   "engine/src/devtools/phase2-check.ts": 408,

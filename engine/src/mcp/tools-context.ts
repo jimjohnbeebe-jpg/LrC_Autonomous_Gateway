@@ -1,0 +1,185 @@
+// The context tools (Phase 2; Phase 3 added `session_id` and `region`): lr_get_active_photo_context,
+// lr_get_preview, lr_get_metrics. They change nothing in Lightroom.
+
+import { boxProblem, summarize, type Region, type RegionBox } from "../metrics/index.js";
+import { ParamError, type FromSdkResult } from "../params/index.js";
+import { cropRegion } from "../preview/index.js";
+import type { SessionManager } from "../session/index.js";
+import { ToolError, toToolError } from "./errors.js";
+import { DEFAULT_LONG_EDGE, PREVIEW_QUALITY, describe, openSession, render, run, type ToolContext, type ToolOutput } from "./tools-shared.js";
+
+/**
+ * The largest export a region crop asks for: the plugin refuses a long edge above 4096
+ * [handle: plugin\LrC-AVG.lrplugin\Preview.lua:29, Preview.MAX_LONG_EDGE].
+ */
+export const REGION_EXPORT_MAX = 4096;
+
+export type PreviewArgs = { long_edge?: number | undefined; session_id?: string | undefined; region?: RegionBox | undefined };
+export type MetricsArgs = { session_id?: string | undefined };
+
+export async function getActivePhotoContext(ctx: ToolContext): Promise<ToolOutput> {
+  return run(ctx, "lr_get_active_photo_context", {}, async () => {
+    const { client, map } = ctx.deps;
+    await ctx.deps.ensureBridge();
+    const photo = await client.request("get_context", {});
+    const sdk = (await client.request("get_settings", { target_uuid: photo.uuid })).settings;
+    let view: FromSdkResult | null = null;
+    let settingsError: Record<string, unknown> | null = null;
+    try {
+      view = map.fromSdk(sdk);
+    } catch (err) {
+      if (!(err instanceof ParamError)) throw err;
+      settingsError = toToolError(err).body(); // e.g. a legacy process version: the rest still helps
+    }
+    const field = (key: string): unknown => photo[key] ?? null;
+    const json: Record<string, unknown> = {
+      ok: true,
+      uuid: photo.uuid,
+      local_id: photo.local_id,
+      filename: field("filename"),
+      path: field("path"),
+      copy_name: field("copy_name"),
+      is_virtual_copy: field("is_virtual_copy"),
+      file_format: field("file_format"),
+      width: field("width"),
+      height: field("height"),
+      exif: {
+        iso: field("iso"),
+        shutter: field("shutter"),
+        aperture: field("aperture"),
+        focal_length: field("focal_length"),
+        lens: field("lens"),
+        camera: field("camera"),
+      },
+      rating: field("rating"),
+      label: field("label"),
+      pick: field("pick"),
+      process_version: view?.process_version ?? (typeof sdk["ProcessVersion"] === "string" ? sdk["ProcessVersion"] : null),
+      camera_profile: view ? (view.camera_profile.name ?? view.camera_profile.camera_profile) : null,
+      camera_profile_detail: view?.camera_profile ?? null,
+      lens_profile_enabled: view ? view.settings["lens.profile_enable"] === 1 : null,
+      settings: view?.settings ?? null,
+      session_active: ctx.sessions?.current()?.uuid === photo.uuid,
+      ...(ctx.sessions?.current() ? { open_session: { session_id: ctx.sessions.current()?.id, uuid: ctx.sessions.current()?.uuid, pass: ctx.sessions.current()?.pass } } : {}),
+      ...(settingsError ? { settings_error: settingsError } : {}),
+      ...(photo.metadata_errors?.length ? { metadata_errors: photo.metadata_errors } : {}),
+    };
+    return {
+      json,
+      log: { uuid: photo.uuid, filename: json["filename"], process_version: json["process_version"], camera_profile: json["camera_profile"] },
+    };
+  });
+}
+
+/**
+ * A preview of the selected photo, or with `session_id` of the session's photo (refused if another
+ * photo is selected, C-2), with the session's region metrics. With `region`, a crop of that box
+ * (regionPreview).
+ */
+export async function getPreview(ctx: ToolContext, args: PreviewArgs = {}): Promise<ToolOutput> {
+  return run(ctx, "lr_get_preview", args, async () => {
+    await ctx.deps.ensureBridge();
+    const session = args.session_id !== undefined ? openSession(ctx, args.session_id) : null;
+    const target = session?.uuid;
+    const regions = session ? (ctx.sessions as SessionManager).regionsOf(session.id) : [];
+    const longEdge = args.long_edge ?? DEFAULT_LONG_EDGE;
+    if (!args.region) {
+      // With a session, the manager renders it and keeps it as the session's last render, so
+      // lr_get_metrics and the next step describe this image (Greptile, PR #23) [handle:
+      // tests\mcp-tools.test.ts "says a session is open on the selected photo, and answers
+      // lr_get_metrics from the session's last render"].
+      const preview = session ? await (ctx.sessions as SessionManager).preview(session.id, longEdge) : await render(ctx, longEdge, target, regions);
+      const json = { ok: true, ...(session ? { session_id: session.id } : {}), ...describe(preview), metrics: summarize(preview.metrics), timings: preview.timings };
+      return { json, image: preview.jpeg, log: { uuid: preview.uuid, preview_hash: preview.sha256, metrics: json.metrics, timings: preview.timings } };
+    }
+    return regionPreview(ctx, session, regions, longEdge, args.region);
+  });
+}
+
+/**
+ * A crop of `region`: the photo is exported large enough for the crop to fill `long_edge` (up to
+ * REGION_EXPORT_MAX), the crop is never enlarged, and `effective_scale` says how many output pixels
+ * it has per pixel of the photo (1 = 100 %).
+ */
+async function regionPreview(ctx: ToolContext, session: { id: string; uuid: string } | null, regions: Region[], longEdge: number, region: RegionBox): Promise<ToolOutput> {
+  const problem = boxProblem(region);
+  if (problem) throw new ToolError("INVALID_ARGUMENTS", `region: ${problem}`, false);
+  const target = session?.uuid;
+  const photo = await ctx.deps.client.request("get_context", target !== undefined ? { target_uuid: target } : {});
+  // The photo's size is getRawMetadata("width"/"height") (Develop.lua RAW_KEYS); whether that is
+  // the whole sensor or the cropped size is [unverified], so effective_scale is too until a check
+  // records both.
+  const w = typeof photo["width"] === "number" ? photo["width"] : null;
+  const h = typeof photo["height"] === "number" ? photo["height"] : null;
+  const photoWidth = w !== null && h !== null ? Math.max(w, h) : null;
+  // The crop's longer side as a fraction of the export's long edge: on a 3:2 landscape a box's
+  // height counts 2/3 as much as its width (Greptile, PR #23: max(w, h) under-sized tall boxes)
+  // [handle: tests\mcp-tools.test.ts "sizes the export by the crop's longer side in pixels"].
+  const fraction = w !== null && h !== null && photoWidth ? Math.max(region.w * (w / photoWidth), region.h * (h / photoWidth)) : Math.max(region.w, region.h);
+  // The epsilon keeps 800 / 0.26666666666666666 (= 3000.0000000000005) at 3000.
+  const edgeFor = (f: number): number => Math.min(REGION_EXPORT_MAX, Math.max(longEdge, Math.ceil(longEdge / f - 1e-6)));
+  let exportEdge = edgeFor(fraction);
+  let preview = await render(ctx, exportEdge, photo.uuid, regions);
+  let crop = await cropRegion(preview.jpeg, region, { longEdge, quality: PREVIEW_QUALITY });
+  // A crop or rotation in Lightroom can give the export another aspect than the raw width and
+  // height (Greptile, PR #23) [inference: a Lightroom crop changes the exported image's shape; the
+  // raw width/height semantics are unverified, above]. If the crop came out short, export once
+  // more at the size the export's own aspect needs [handle: tests\mcp-tools.test.ts "exports once
+  // more when a crop in Lightroom gave the export another aspect"].
+  let retried = false;
+  if (Math.max(crop.width, crop.height) < longEdge && exportEdge < REGION_EXPORT_MAX) {
+    const long = Math.max(preview.width, preview.height);
+    const needed = edgeFor(Math.max(region.w * (preview.width / long), region.h * (preview.height / long)));
+    if (needed > exportEdge) {
+      exportEdge = needed;
+      preview = await render(ctx, exportEdge, photo.uuid, regions);
+      crop = await cropRegion(preview.jpeg, region, { longEdge, quality: PREVIEW_QUALITY });
+      retried = true;
+    }
+  }
+  const previewLong = Math.max(preview.width, preview.height);
+  const effectiveScale = photoWidth ? Math.round(crop.scale * (previewLong / photoWidth) * 10000) / 10000 : null;
+  const json = {
+    ok: true,
+    ...(session ? { session_id: session.id } : {}),
+    uuid: preview.uuid,
+    region,
+    width: crop.width,
+    height: crop.height,
+    rect_in_export: crop.rect,
+    export_long_edge: previewLong,
+    ...(retried ? { export_retried: "the first export's aspect differed from the photo's size, so it was exported again larger" } : {}),
+    effective_scale: effectiveScale,
+    ...(effectiveScale === null ? { effective_scale_note: "the photo's size was not in the context; scale is per export pixel" } : {}),
+    scale_in_export: crop.scale,
+    preview_source: preview.source,
+    preview_hash: preview.sha256,
+    metrics: summarize(preview.metrics),
+    timings: preview.timings,
+  };
+  return { json, image: crop.jpeg, log: { uuid: preview.uuid, region, effective_scale: effectiveScale, timings: preview.timings } };
+}
+
+/** Metrics of the last preview: the session's with `session_id` (or while a session is open), else this engine's. */
+export async function getMetrics(ctx: ToolContext, args: MetricsArgs = {}): Promise<ToolOutput> {
+  return run(ctx, "lr_get_metrics", args, { usesBridge: false }, async () => {
+    const open = ctx.sessions?.current() ?? null;
+    if (args.session_id !== undefined) openSession(ctx, args.session_id);
+    if (open?.last) {
+      const json = { ok: true, session_id: open.id, uuid: open.uuid, preview_hash: open.last.hash, width: open.last.width, height: open.last.height, metrics: open.last.metrics };
+      return { json, log: { session_id: open.id, preview_hash: open.last.hash } };
+    }
+    const last = ctx.last;
+    if (!last) throw new ToolError("NO_PREVIEW_YET", "No preview has been rendered yet in this engine run; call lr_get_preview first.", false);
+    const json = {
+      ok: true,
+      uuid: last.uuid,
+      preview_hash: last.preview_hash,
+      rendered_at: last.rendered_at,
+      width: last.width,
+      height: last.height,
+      metrics: last.metrics,
+    };
+    return { json, log: { uuid: last.uuid, preview_hash: last.preview_hash } };
+  });
+}

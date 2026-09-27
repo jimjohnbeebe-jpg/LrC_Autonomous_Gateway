@@ -230,12 +230,13 @@ function runAtOf(f: string): string | null {
 // The copied files split by run, so each summary names only its own run's evidence as its own
 // (Greptile, PR #31). s7_state.txt holds only the latest run's state [handle: S7Common.lua:188 opens it
 // "wb" on every run of menu item 1; observed: docs\reports\phase4\S7\s7_state.txt run_at is run 2's,
-// "2026-09-27 12:52:56 (local time)"].
-function evidence(copied: string[], runAt: string) {
-  const out = { this_run: [] as string[], other_runs: [] as string[], shared: [] as string[] };
+// "2026-09-27 12:52:56 (local time)"]. The files of the preset-file re-run reported under xmp_rerun
+// (rerunAt) are this summary's evidence too, listed apart (Greptile, PR #31).
+function evidence(copied: string[], runAt: string, rerunAt: string | null) {
+  const out = { this_run: [] as string[], rerun: [] as string[], other_runs: [] as string[], shared: [] as string[] };
   for (const f of copied) {
     const at = runAtOf(f);
-    (at === null ? out.shared : at === runAt ? out.this_run : out.other_runs).push(f);
+    (at === null ? out.shared : at === runAt ? out.this_run : at === rerunAt ? out.rerun : out.other_runs).push(f);
   }
   return out;
 }
@@ -249,6 +250,7 @@ async function main(): Promise<void> {
   const p = run.presets;
   const before = observed("s7_before_", run.run_at);
   const after = observed("s7_after_", run.run_at);
+  const rerun = xmpRerun(run.run_at);
   const summary = {
     source: { run: runFile, run_at: run.run_at, before: before.file, after: after.file },
     item1_presets: {
@@ -257,14 +259,14 @@ async function main(): Promise<void> {
       xmp: { written: p.xmp.path !== undefined, error: p.xmp.error ?? null },
       before_restart: before,
       after_restart: after,
-      xmp_rerun: xmpRerun(run.run_at),
+      xmp_rerun: rerun,
     },
     item2_removal_probe: { undocumented_removal_names_found: run.removal_probe.found },
     item3_crop: { worked: run.crop.worked ?? false, error: run.crop.error ?? null, ...(await cropFindings(run.crop)) },
     item4_unselected: { worked: run.unselected.worked ?? false, error: run.unselected.error ?? null, export: await jpegSize(run.unselected.export?.path) },
   };
   const copied = copyRedacted();
-  const text = redact(JSON.stringify({ ...summary, evidence: evidence(copied, run.run_at) }, null, 2));
+  const text = redact(JSON.stringify({ ...summary, evidence: evidence(copied, run.run_at, rerun?.source.run_at ?? null) }, null, 2));
   writeFileSync(path.join(destDir, summaryName), text + "\n");
   console.log(text);
   console.log(`\nWrote ${path.join(destDir, summaryName)}; copied ${copied.length} files (JPEGs not copied).`);

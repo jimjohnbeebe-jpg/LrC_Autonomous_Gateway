@@ -3,7 +3,7 @@
 // session; Jim answers y/n; then he puts the photo back with the session's snapshot.
 // The chat's AC-4 (clip-check.ts, PHASE4_PLAN decision 1) reads the session log that the
 // lr_begin_session record of the tool log names in `log_path` [handle: engine\src\session\begin.ts
-// runPass0 puts `log_path` in the call's log record, engine\src\mcp\tools.ts:518 appends it to the
+// runPass0 puts `log_path` in the call's log record, engine\src\mcp\tools-shared.ts:163 appends it to the
 // tool log; seen in docs\reports\phase3\P3\p3_chat_tool_log_2026-09-27T14-00-37-507Z.jsonl, the
 // lr_begin_session record; tests\phase3-check.test.ts "counts AC-4 on the chat's session ..."].
 

@@ -1,8 +1,8 @@
 ---
 report: Phase 2 — MCP server, preview and vision
 phase: 2
-status: observed
-authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-09-26. Observed: Jim ran npm run phase2:check on 2026-09-26 (run 1 could not connect; run 2 Part 1 worked, Part 2 was blocked by ENGINE_BUSY until fix PR #19, then worked) and answered its six questions; Claude Code collected the files and wrote the analysis, Numbers and Consequences. Verdict: Jim's (pending)."
+status: accepted
+authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-09-26. Observed: Jim ran npm run phase2:check on 2026-09-26 (run 1 could not connect; run 2 Part 1 worked, Part 2 was blocked by ENGINE_BUSY until fix PR #19, then worked) and answered its six questions; Claude Code collected the files and wrote the analysis, Numbers and Consequences. Verdict and decisions: Jim (Phase 2 accepted, pass budget ~3.5 s, all doc proposals accepted; 2026-09-26)."
 date: 2026-09-26 (runs 1-2)
 ---
 
@@ -181,7 +181,7 @@ The check stopped before any command: `could not connect to Lightroom (127.0.0.1
 - **Jim:** Claude described the photo correctly; the photo was brighter with Exposure 0.5 higher; Claude described the change correctly; after the snapshot click the photo looked as before the check [stated: `jim_part2` y / y / y / y].
 - The check printed `Phase 2 acceptance: WORKED` and `Pass budget: 0 of 3 passes within ~3 s` (`summary`).
 
-**Not explained:** exposure was **0.89** when the chat began, not the 0.33 the check's revert left at 16:55:47. The plugin received no `apply_settings` between 16:55:47 and the chat's write at 18:51:48 [handle: bridge log lines 91-118], so the change did not come through the bridge. Its source is not recorded; a question for Jim.
+**Exposure 0.89 before the chat:** the check's revert left 0.33 at 16:55:47, and the plugin received no `apply_settings` between then and the chat's write at 18:51:48 [handle: bridge log lines 91-118]. Jim changed it himself in Lightroom [stated: "Yes, I changed it", 2026-09-26].
 
 ## Numbers
 
@@ -205,7 +205,7 @@ The check stopped before any command: `could not connect to Lightroom (127.0.0.1
 ## Verdict
 
 <!-- Jim: is Phase 2 accepted? The check printed "Phase 2 acceptance: WORKED" (a suggestion); the verdict is Jim's. -->
-**Pending Jim's decision.** The check's suggestion is **WORKED**. The acceptance line (`PHASES.md:64`) is met by run 2, Part 2 (see "Observed"):
+**Phase 2 accepted** (Jim, 2026-09-26, chosen from the options Claude Code offered, which recommended accepting) [stated: "Accept Phase 2"]. The check's suggestion was **WORKED**. The acceptance line (`PHASES.md:64`) is met by run 2, Part 2 (see "Observed"):
 - Claude described the photo;
 - Claude changed exposure by +0.5 through `lr_set_settings`, read back;
 - Claude described the change;
@@ -213,9 +213,13 @@ The check stopped before any command: `could not connect to Lightroom (127.0.0.1
 
 It needed fix PR #19 on the way.
 
+Jim's decisions on this report, the same day, each chosen from options Claude Code offered [stated]:
+- **"Re-baseline to ~3.5 s"** for the pass budget (decision 1 below).
+- **"Accept all"** for decisions 2-6 below. They go into the vault docs after this PR merges, each marked "Phase 2".
+
 ## Consequences / open questions
 
-Proposed by Claude Code for Jim to accept; the vault docs are the architect's and are not edited here. Each item follows from the handles above; the recommendations are [inference].
+Proposed by Claude Code; **all six decisions below were accepted by Jim on 2026-09-26** (decision 1 as recommended, ~3.5 s) [stated]. Each item follows from the handles above; the recommendations were [inference]. The vault docs are changed after this PR merges.
 
 **Resolved open items** (`PHASES.md:52-56, 69`):
 - **Export time at smaller long edges:** there is no gain. The export takes ~2.6 s at 800, 1200 and 1600 px alike (medians 2,605 / 2,578 / 2,576 ms).
@@ -231,8 +235,8 @@ Proposed by Claude Code for Jim to accept; the vault docs are the architect's an
   - the `apply_settings` timings;
   - Claude Desktop starting `lrc-avg` from the MSIX config (desktop log).
 
-**Decisions for Jim:**
-1. **Pass budget (P-02, about 3 s).** 0 of 3 passes were within 3 s; whole passes took 3,097–3,641 ms, and the chat's pass 3,129 ms.
+**Decisions for Jim** (all accepted, 2026-09-26):
+1. **Pass budget (P-02, about 3 s)**; Jim chose ~3.5 s. 0 of 3 passes were within 3 s; whole passes took 3,097–3,641 ms, and the chat's pass 3,129 ms.
    - The export is 2.57–3.08 s of each pass, about 83%, and does not shrink with a smaller preview. The write command is ~0.39 s, of which the read-back P-12 requires is ~0.31 s.
    - **Recommendation:** re-baseline P-02 to **about 3.5 s per pass** (PRD NFR-2, ARCHITECTURE §6), rather than chase savings that the numbers show are small.
 2. **MCP_TOOLS:**
@@ -254,6 +258,4 @@ Proposed by Claude Code for Jim to accept; the vault docs are the architect's an
 - The engine waits 5 s for the bridge, but the plugin needs ~10 s from start to listening. A call right after a Lightroom restart can therefore fail once, as at 18:50:45. Waiting up to 15 s on the first connection would cover it [inference].
 - The previews are larger than the PRD assumed (item 5), which is worth watching for the contact sheets.
 
-**Still open:**
-- Why Claude Desktop keeps two engines [unverified].
-- Where the exposure of 0.89 before the chat came from: not the bridge (see "Observed"). A question for Jim.
+**Still open:** why Claude Desktop keeps two engines [unverified]. The engine does not depend on the answer since PR #19.

@@ -1,10 +1,12 @@
 // Golden JPEGs (PHASES.md Phase 3: "Unit tests on golden JPEGs of the six fixtures"; ARCHITECTURE
-// section 9). The Phase 3 check saves a 1600 px render of each fixture, as Lightroom exported it,
-// to %TEMP%\LrC-AVG\P3\golden\ and records each file's SHA-256 in its results. `npm run goldens`
-// copies the files that run recorded (and only those, hash checked, so a render left from an earlier
-// run is never taken; Greptile, PR #24) to the repo's tests\golden\, the folder CLAUDE.md names for
-// them, and writes tests\golden\golden.json: each file's SHA-256 and the metrics the engine
-// measures on it. engine\tests\golden.test.ts then checks that the engine still measures exactly those.
+// section 9). Each run of the Phase 3 check saves a 1600 px render of each fixture, as Lightroom
+// exported it, in its own folder %TEMP%\LrC-AVG\P3\golden_<time>\, and records each file and its
+// SHA-256 in its results. `npm run goldens` takes the newest run that captured all six fixtures, so a
+// partial or failed run never replaces a complete set, and a new run never deletes an earlier one's
+// (Greptile, PR #24). It copies those files, hash checked, to the repo's tests\golden\ (the folder
+// CLAUDE.md names for them) and writes tests\golden\golden.json: each file's SHA-256 and the metrics
+// the engine measures on it. engine\tests\golden.test.ts then checks that the engine still measures
+// exactly those.
 //
 // Decision 3 (Jim, 2026-09-26) [stated: "go with recommendations"]: the JPEGs are renders of Jim's
 // photos and the repo is public, so they stay on disk (.gitignore: tests/golden/*.jpg); only
@@ -20,8 +22,8 @@ export const GOLDEN_SCHEMA_ID = "lrc-avg/goldens/1";
 
 export type GoldenEntry = { file: string; sha256: string; width: number; height: number; metrics: MetricsSummary };
 export type GoldenFile = { schema: typeof GOLDEN_SCHEMA_ID; created: string; source: string; entries: GoldenEntry[] };
-/** A golden JPEG a check run saved: its file name and the hash the run recorded. */
-export type RecordedGolden = { file: string; sha256: string };
+/** A golden JPEG a check run saved: its path relative to the check's output folder, and the hash it recorded. */
+export type RecordedGolden = { saved_as: string; sha256: string };
 
 /** The repo's tests\golden\ (this file is <repo>\engine\{src,dist}\devtools\goldens.*). */
 export function goldenDir(): string {
@@ -31,6 +33,13 @@ export function goldenDir(): string {
 export function sha256(data: Buffer): string {
   return createHash("sha256").update(data).digest("hex");
 }
+
+/** The golden file name of a fixture: its base name with .jpg. */
+export function goldenName(fixture: string): string {
+  return `${path.parse(fixture).name}.jpg`;
+}
+
+const baseName = (savedAs: string): string => path.basename(savedAs.replace(/\\/g, "/"));
 
 /** Measure one golden JPEG as the engine would. */
 export async function goldenEntry(file: string): Promise<GoldenEntry> {
@@ -46,37 +55,59 @@ export function recordedGoldens(results: unknown): RecordedGolden[] {
   const out: RecordedGolden[] = [];
   for (const f of fixtures) {
     const golden = (f as { golden?: { saved_as?: unknown; preview_hash?: unknown } }).golden;
-    if (typeof golden?.saved_as === "string" && typeof golden.preview_hash === "string") {
-      out.push({ file: path.basename(golden.saved_as.replace(/\\/g, "/")), sha256: golden.preview_hash });
-    }
+    if (typeof golden?.saved_as === "string" && typeof golden.preview_hash === "string") out.push({ saved_as: golden.saved_as, sha256: golden.preview_hash });
   }
   return out;
 }
 
-/** The newest p3_check_*.json in `dir`, or null. */
-export function newestResults(dir: string): string | null {
-  if (!existsSync(dir)) return null;
-  const files = readdirSync(dir).filter((f) => /^p3_check_.*\.json$/.test(f)).sort();
-  return files.length ? path.join(dir, files[files.length - 1] as string) : null;
+/** Whether the recorded goldens cover every fixture, one file each. */
+export function coversAll(recorded: readonly RecordedGolden[], fixtures: readonly string[]): boolean {
+  const names = new Set(recorded.map((r) => baseName(r.saved_as)));
+  return names.size === recorded.length && fixtures.every((f) => names.has(goldenName(f)));
 }
 
 /**
- * Copy the recorded golden JPEGs from `from` to `to`, refusing a file whose hash is not the one the
- * run recorded, and write `to`\golden.json describing them.
+ * The newest p3_check_*.json in `dir` whose run captured all `fixtures`, with its recorded goldens;
+ * null when no run did (a partial run is passed over, so it cannot replace a complete set).
+ */
+export function newestCompleteRun(dir: string, fixtures: readonly string[]): { results: string; recorded: RecordedGolden[] } | null {
+  if (!existsSync(dir)) return null;
+  const files = readdirSync(dir).filter((f) => /^p3_check_.*\.json$/.test(f)).sort().reverse();
+  for (const f of files) {
+    let recorded: RecordedGolden[];
+    try {
+      recorded = recordedGoldens(JSON.parse(readFileSync(path.join(dir, f), "utf8")));
+    } catch {
+      continue; // an unreadable results file is passed over too
+    }
+    if (coversAll(recorded, fixtures)) return { results: path.join(dir, f), recorded };
+  }
+  return null;
+}
+
+/**
+ * Copy the recorded golden JPEGs (paths relative to `from`) to `to`, refusing a file whose hash is
+ * not the one the run recorded, and write `to`\golden.json describing them.
  */
 export async function writeGoldens(from: string, to: string, recorded: readonly RecordedGolden[], now: Date = new Date()): Promise<GoldenFile> {
   if (recorded.length === 0) throw new Error("the check's results record no golden JPEG; run npm run phase3:check first");
-  mkdirSync(to, { recursive: true });
   const entries: GoldenEntry[] = [];
-  for (const r of [...recorded].sort((a, b) => a.file.localeCompare(b.file))) {
-    const source = path.join(from, r.file);
-    if (!existsSync(source)) throw new Error(`${r.file} is recorded by the check but missing from ${from}`);
+  const checked: Array<{ source: string; name: string }> = [];
+  for (const r of [...recorded].sort((a, b) => baseName(a.saved_as).localeCompare(baseName(b.saved_as)))) {
+    const source = path.join(from, r.saved_as.replace(/\\/g, "/"));
+    const name = baseName(r.saved_as);
+    if (!existsSync(source)) throw new Error(`${r.saved_as} is recorded by the check but missing from ${from}`);
     const hash = sha256(readFileSync(source));
-    if (hash !== r.sha256) throw new Error(`${r.file} in ${from} is not the render the check recorded (sha256 ${hash.slice(0, 12)}…, recorded ${r.sha256.slice(0, 12)}…)`);
-    copyFileSync(source, path.join(to, r.file));
-    entries.push(await goldenEntry(path.join(to, r.file)));
+    if (hash !== r.sha256) throw new Error(`${r.saved_as} is not the render the check recorded (sha256 ${hash.slice(0, 12)}…, recorded ${r.sha256.slice(0, 12)}…)`);
+    checked.push({ source, name });
   }
-  const golden: GoldenFile = { schema: GOLDEN_SCHEMA_ID, created: now.toISOString(), source: "%TEMP%\\LrC-AVG\\P3\\golden (npm run phase3:check)", entries };
+  // Every file is checked before any is copied, so a bad set leaves tests\golden\ as it was.
+  mkdirSync(to, { recursive: true });
+  for (const c of checked) {
+    copyFileSync(c.source, path.join(to, c.name));
+    entries.push(await goldenEntry(path.join(to, c.name)));
+  }
+  const golden: GoldenFile = { schema: GOLDEN_SCHEMA_ID, created: now.toISOString(), source: "%TEMP%\\LrC-AVG\\P3\\golden_<time> (npm run phase3:check)", entries };
   writeFileSync(path.join(to, "golden.json"), `${JSON.stringify(golden, null, 2)}\n`, "utf8");
   return golden;
 }

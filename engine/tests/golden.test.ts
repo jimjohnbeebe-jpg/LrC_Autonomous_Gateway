@@ -9,7 +9,7 @@ import os from "node:os";
 import path from "node:path";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
-import { GOLDEN_SCHEMA_ID, goldenDir, goldenEntry, newestResults, recordedGoldens, sha256, writeGoldens, type GoldenFile } from "../src/devtools/goldens.js";
+import { GOLDEN_SCHEMA_ID, coversAll, goldenDir, goldenEntry, goldenName, newestCompleteRun, recordedGoldens, sha256, writeGoldens, type GoldenFile } from "../src/devtools/goldens.js";
 
 const dir = goldenDir();
 const indexFile = path.join(dir, "golden.json");
@@ -46,37 +46,44 @@ describe("golden JPEGs", () => {
 
 describe("golden JPEGs: the writer", () => {
   const jpeg = (r: number) => sharp({ create: { width: 30, height: 20, channels: 3, background: { r, g: 120, b: 40 } } }).jpeg().toBuffer();
+  const SIX = ["a.NEF", "b.NEF", "c.NEF", "d.NEF", "e.NEF", "f.dng"];
 
   it("copies only the JPEGs the check recorded, hash checked, and records their metrics", async () => {
     const tmp = mkdtempSync(path.join(os.tmpdir(), "lrc-avg-golden-"));
     try {
-      const from = path.join(tmp, "from");
-      mkdirSync(from);
+      mkdirSync(path.join(tmp, "golden_1"));
       const a = await jpeg(200);
-      writeFileSync(path.join(from, "a.jpg"), a);
-      writeFileSync(path.join(from, "old.jpg"), await jpeg(10)); // left from an earlier run: not recorded
-      const golden = await writeGoldens(from, path.join(tmp, "to"), [{ file: "a.jpg", sha256: sha256(a) }], new Date("2026-09-26T00:00:00Z"));
+      writeFileSync(path.join(tmp, "golden_1", "a.jpg"), a);
+      writeFileSync(path.join(tmp, "golden_1", "old.jpg"), await jpeg(10)); // not recorded by this run
+      const golden = await writeGoldens(tmp, path.join(tmp, "to"), [{ saved_as: "golden_1\\a.jpg", sha256: sha256(a) }], new Date("2026-09-26T00:00:00Z"));
       expect(golden.entries.map((e) => [e.file, e.width, e.height])).toEqual([["a.jpg", 30, 20]]);
       expect(existsSync(path.join(tmp, "to", "a.jpg"))).toBe(true);
       expect(existsSync(path.join(tmp, "to", "old.jpg"))).toBe(false);
       expect(JSON.parse(readFileSync(path.join(tmp, "to", "golden.json"), "utf8"))).toEqual(golden);
-      // A file whose hash is not the recorded one (a stale render; Greptile, PR #24) is refused.
-      await expect(writeGoldens(from, path.join(tmp, "x"), [{ file: "old.jpg", sha256: sha256(a) }])).rejects.toThrow(/not the render the check recorded/);
-      await expect(writeGoldens(from, path.join(tmp, "x"), [])).rejects.toThrow(/record no golden/);
+      // A file whose hash is not the recorded one is refused, and nothing is written.
+      await expect(writeGoldens(tmp, path.join(tmp, "x"), [{ saved_as: "golden_1\\old.jpg", sha256: sha256(a) }])).rejects.toThrow(/not the render the check recorded/);
+      expect(existsSync(path.join(tmp, "x"))).toBe(false);
+      await expect(writeGoldens(tmp, path.join(tmp, "x"), [])).rejects.toThrow(/record no golden/);
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }
   });
 
-  it("reads the recorded goldens from the newest check results", () => {
+  it("takes the newest run that captured all six fixtures, passing over a newer partial one (Greptile, PR #24)", () => {
     const tmp = mkdtempSync(path.join(os.tmpdir(), "lrc-avg-golden-"));
     try {
-      writeFileSync(path.join(tmp, "p3_check_2026-09-26T01-00-00-000Z.json"), "{}");
-      writeFileSync(path.join(tmp, "p3_check_2026-09-26T02-00-00-000Z.json"), "{}");
-      expect(path.basename(newestResults(tmp) ?? "")).toBe("p3_check_2026-09-26T02-00-00-000Z.json");
-      const results = { fixtures: [{ golden: { saved_as: "golden\\a.jpg", preview_hash: "h1" } }, { status: "skipped" }] };
-      expect(recordedGoldens(results)).toEqual([{ file: "a.jpg", sha256: "h1" }]);
-      expect(newestResults(path.join(tmp, "none"))).toBeNull();
+      const run = (names: string[], folder: string) => ({ fixtures: names.map((n) => ({ name: n, golden: { saved_as: `${folder}\\${goldenName(n)}`, preview_hash: "h" } })) });
+      writeFileSync(path.join(tmp, "p3_check_2026-09-26T01-00-00-000Z.json"), JSON.stringify(run(SIX, "golden_1")));
+      writeFileSync(path.join(tmp, "p3_check_2026-09-26T02-00-00-000Z.json"), JSON.stringify(run(SIX.slice(0, 2), "golden_2"))); // stopped early
+      writeFileSync(path.join(tmp, "p3_check_2026-09-26T03-00-00-000Z.json"), "{ cut off");
+      const found = newestCompleteRun(tmp, SIX);
+      expect(path.basename(found?.results ?? "")).toBe("p3_check_2026-09-26T01-00-00-000Z.json");
+      expect(found?.recorded).toHaveLength(6);
+      expect(found?.recorded[0]).toEqual({ saved_as: "golden_1\\a.jpg", sha256: "h" });
+      expect(newestCompleteRun(tmp, [...SIX, "g.NEF"])).toBeNull();
+      expect(newestCompleteRun(path.join(tmp, "none"), SIX)).toBeNull();
+      expect(coversAll(recordedGoldens(run(SIX, "g")), SIX)).toBe(true);
+      expect(recordedGoldens({ fixtures: [{ status: "skipped" }] })).toEqual([]);
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }

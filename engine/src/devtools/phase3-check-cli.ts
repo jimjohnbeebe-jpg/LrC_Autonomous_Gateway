@@ -6,13 +6,13 @@
 //   p3_check_<time>.json                the results
 //   p3_check_tools_<time>\              the check's own tool log
 //   p3_sessions_<time>\                 the check's session logs and recipes
-//   golden\<fixture>.jpg                the golden JPEGs (decision 3: they stay on disk)
+//   golden_<time>\<fixture>.jpg         this run's golden JPEGs (decision 3: they stay on disk)
 //   p3_desktop_mcp_log_<time>.txt       Claude Desktop's lrc-avg log from the chat, user folder redacted
 //   p3_chat_tool_log_<time>.jsonl       the engine's tool log from the chat, user folder redacted
 //   p3_bridge_log_<time>.txt            a copy of the plugin's log, user folder redacted
 // Where the logs are: as in phase2-check-cli.ts.
 
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { createInterface } from "node:readline";
@@ -26,6 +26,7 @@ import { PreviewService } from "../preview/index.js";
 import { SERVER_NAME } from "./desktop-config.js";
 import { describeError } from "./phase1-check.js";
 import { redactHome } from "./phase2-check.js";
+import { goldenName } from "./goldens.js";
 import { collectChatLogs } from "./phase2-collect.js";
 import { runPhase3Check, type Answer } from "./phase3-check.js";
 
@@ -85,10 +86,11 @@ async function main(): Promise<number> {
     ensureBridge: () => gate.ready(),
     log: new ToolLog(path.join(OUT_DIR, `p3_check_tools_${stamp}`)),
   });
-  const goldenDir = path.join(OUT_DIR, "golden");
-  // Start with an empty golden folder, so no render from an earlier run is mistaken for this run's
-  // (Greptile, PR #24); `npm run goldens` also takes only the files this run records, hash checked.
-  rmSync(goldenDir, { recursive: true, force: true });
+  // This run's own golden folder: no render from another run can be mistaken for this run's, and an
+  // earlier run's complete set survives if this one stops early (Greptile, PR #24). `npm run goldens`
+  // takes the newest run that captured all six (goldens.ts).
+  const goldenFolder = `golden_${stamp}`;
+  const goldenDir = path.join(OUT_DIR, goldenFolder);
   const { accepted, results } = await runPhase3Check({
     client,
     gate,
@@ -110,9 +112,9 @@ async function main(): Promise<number> {
       }),
     saveGolden: (fixture, jpeg) => {
       mkdirSync(goldenDir, { recursive: true });
-      const file = path.join(goldenDir, `${path.parse(fixture).name}.jpg`);
+      const file = path.join(goldenDir, goldenName(fixture));
       writeFileSync(file, jpeg);
-      return `golden\\${path.basename(file)}`;
+      return `${goldenFolder}\\${path.basename(file)}`;
     },
   });
   rl.close();

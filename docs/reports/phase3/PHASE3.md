@@ -90,11 +90,11 @@ Values are compared within the read-back tolerance (1e-6), as every write is. Th
 Results go to `%TEMP%\LrC-AVG\P3\`:
 - `p3_check_<time>.json`;
 - `p3_sessions_<time>\` (the session logs and recipes);
-- `golden\` (the six golden JPEGs);
+- `golden_<time>\` (this run's golden JPEGs; each run has its own folder, so an earlier complete set is never deleted);
 - `p3_desktop_mcp_log_<time>.txt`, `p3_chat_tool_log_<time>.jsonl`;
 - `p3_check_tools_<time>\`, `p3_bridge_log_<time>.txt`.
 
-Claude Code collects them. `npm run goldens` copies the golden JPEGs to `tests\golden\`, on disk only (decision 3), and writes `tests\golden\golden.json` (their hashes and the metrics the engine measures on them), which is committed; `engine\tests\golden.test.ts` then checks the engine against it.
+Claude Code collects them. `npm run goldens` takes the newest run that captured all six photos and copies its golden JPEGs, hash checked, to `tests\golden\`, on disk only (decision 3), and writes `tests\golden\golden.json` (their hashes and the metrics the engine measures on them), which is committed; `engine\tests\golden.test.ts` then checks the engine against it.
 
 ### Steps for Jim
 

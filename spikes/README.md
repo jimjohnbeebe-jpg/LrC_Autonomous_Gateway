@@ -1,6 +1,6 @@
-# Phase 0 spikes (AVG-S1 … AVG-S6)
+# Spikes (AVG-S1 … AVG-S6 for Phase 0, AVG-S7 for Phase 4)
 
-Throwaway harnesses that answer the feasibility questions in PHASES.md Phase 0. Claude Code wrote the harnesses and the report templates. **Jim runs the Lightroom parts and then tells Claude Code "S<n> done". The harnesses save their results themselves, and Claude Code collects them. Jim copies, pastes and screenshots nothing.**
+Throwaway harnesses that answer the feasibility questions in PHASES.md Phase 0, and S7 for Phase 4 (`PHASE4_PLAN.md` row 4). Claude Code wrote the harnesses and the report templates. **Jim runs the Lightroom parts and then tells Claude Code "S<n> done". The harnesses save their results themselves, and Claude Code collects them. Jim copies, pastes and screenshots nothing.**
 
 | Spike | Question | Lightroom plugin | Node script(s) | README |
 |---|---|---|---|---|
@@ -10,6 +10,7 @@ Throwaway harnesses that answer the feasibility questions in PHASES.md Phase 0. 
 | S4 | Is a floating dialog non-modal, live-updating, and polite about focus? | `plugin\spikes\S4.lrplugin` | — | [S4](S4/README.md) |
 | S5 | What are the real develop-setting keys and CameraProfile strings? Are profile + lens toggles writable? | `plugin\spikes\S5.lrplugin` | `spikes\S5\pin.ts` | [S5](S5/README.md) |
 | S6 | Does `createVirtualCopies` work from Loupe and Grid, and are the copies addressable? | `plugin\spikes\S6.lrplugin` | — | [S6](S6/README.md) |
+| S7 (Phase 4) | Plugin preset vs preset file in the Presets panel (before/after restart)? An undocumented removal call? Do width/height follow a crop? Write + export an unselected photo? | `plugin\spikes\S7.lrplugin` | `spikes\S7\summarize.ts` | [S7](S7/README.md) |
 
 ## Run order
 
@@ -60,7 +61,7 @@ Leave each spike plugin installed after its run. They should not conflict with e
 1. Each harness saves its results automatically to `%TEMP%\LrC-AVG\S<n>\`. Plugin output stays in the temp folder (`.claude\rules\03-lightroom.md` "Plugin hygiene").
 2. Anything only Jim can observe (did Lightroom freeze, did the HUD stay in front, …) the harness asks in a Lightroom window with tick boxes and saves with the rest. For S3, Jim answers two questions in the chat.
 3. Jim tells Claude Code "S<n> done".
-4. Claude Code copies the files into `docs\reports\phase0\S<n>\`, fills the report, and takes it through a Greptile-reviewed PR.
+4. Claude Code copies the files into `docs\reports\phase0\S<n>\`, fills the report, and takes it through a Greptile-reviewed PR. For S7: `node spikes\S7\summarize.ts` copies them into `docs\reports\phase4\S7\` (user folder written as `%USERPROFILE%`, exported JPEGs not copied).
 
 ## Verified here without Lightroom (Claude Code)
 
@@ -72,3 +73,4 @@ Leave each spike plugin installed after its run. They should not conflict with e
 - `spikes\S2\client.ts` was run against a fake Node echo server [handle: `docs\reports\phase0\S2.md` "Pre-run findings"].
 - `spikes\S3\server.ts` was exercised via `node spikes\S3\smoke-client.ts` [handle: `docs\reports\phase0\S3.md` "Pre-run findings"].
 - `node spikes\S5\pin.ts engine\tests\fixtures\synthetic-s5-dump-a.json engine\tests\fixtures\synthetic-s5-dump-b.json --dry-run` was run [handle: `docs\reports\phase0\S5.md` "Pre-run findings"].
+- S7: the Lua parses as Lua 5.1, the flow ran against a fake Lightroom under fengari in five scenarios, and `spikes\S7\summarize.ts` was dry-run on the fake run's files, redaction included [handle: `docs\reports\phase4\S7.md` "Pre-run findings"].

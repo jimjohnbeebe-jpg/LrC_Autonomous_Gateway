@@ -4,7 +4,10 @@
 //   - apply_settings: History name recorded, values taken, the settings read back;
 //   - create_snapshot / apply_snapshot: the settings stored and put back;
 //   - export_preview: a grey-noise JPEG whose mean level follows Exposure2012, written into the previews
-//     folder (one subfolder per request, like the plugin), path returned.
+//     folder (one subfolder per request, like the plugin), path returned. With renderModel "tonal"
+//     (Phase 3 session tests), a gradient whose ends clip and whose colour responds to the Basic
+//     panel and white balance instead (tonalLevel below): a made-up model, only good for testing
+//     the engine's rules, not a claim about Lightroom's rendering.
 // Keys in `ignored` are dropped silently, as Lightroom drops out-of-range values (PHASE1.md run 3).
 
 import { mkdirSync, readFileSync } from "node:fs";
@@ -32,6 +35,24 @@ export function simulatedLevel(exposure: number): number {
   return Math.max(0, Math.min(255, Math.round(118 + 40 * exposure)));
 }
 
+/**
+ * The "tonal" model's level for a gradient position t (0 at the left edge, 1 at the right): each
+ * Basic-panel slider moves its part of the range (whites and highlights the bright end, blacks and
+ * shadows the dark end, exposure all, contrast both ends apart). Not clamped.
+ */
+export function tonalLevel(t: number, s: Record<string, unknown>): number {
+  const v = (key: string): number => (typeof s[key] === "number" ? (s[key] as number) : 0);
+  return (
+    255 * t +
+    40 * v("Exposure2012") +
+    60 * (v("Whites2012") / 100) * t * t +
+    40 * (v("Highlights2012") / 100) * t ** 4 +
+    40 * (v("Shadows2012") / 100) * (1 - t) ** 4 +
+    60 * (v("Blacks2012") / 100) * (1 - t) ** 2 +
+    40 * (v("Contrast2012") / 100) * (t - 0.5)
+  );
+}
+
 export class LightroomSim {
   readonly uuid = "SIM-UUID";
   /** The uuid of the photo selected in the simulated Lightroom. */
@@ -45,7 +66,15 @@ export class LightroomSim {
   /** Return this path instead of the file written (to exercise the path check). */
   exportPath: string | null = null;
   exports = 0;
+  /** "grey": noise around a level set by exposure (Phase 2); "tonal": the gradient of tonalLevel(). */
+  renderModel: "grey" | "tonal" = "grey";
+  /** Answer export_preview with this error instead (to exercise failures mid-session). */
+  exportError: string | null = null;
+  /** The photo's pixel size in get_context (getRawMetadata width/height); a made-up 3:2 size. */
+  photoSize = { width: 8000, height: 5333 };
   readonly previewDir: string;
+  /** White balance the tonal model treats as neutral: the dump's own. */
+  private readonly neutralTemperature = Number(nefDump.settings["Temperature"]);
 
   constructor(previewDir: string) {
     this.previewDir = previewDir;
@@ -68,6 +97,8 @@ export class LightroomSim {
         filename: "20260907-_OZ80093.NEF",
         file_format: "RAW",
         is_virtual_copy: false,
+        width: this.photoSize.width,
+        height: this.photoSize.height,
         iso: 64,
         shutter: 0.004,
         aperture: 8,
@@ -104,12 +135,17 @@ export class LightroomSim {
     plugin.handlers.set("export_preview", async (p, id) => {
       const refused = guard(p);
       if (refused) return refused;
+      if (this.exportError) return { ok: false, error: { code: "export_failed", message: this.exportError, recoverable: true } };
       this.exports++;
       const long = this.exportLongEdge ?? Number(p["long_edge"]);
       const level = simulatedLevel(Number(this.settings["Exposure2012"]));
       const dir = path.join(this.previewDir, id);
       mkdirSync(dir, { recursive: true });
       const file = path.join(dir, "20260907-_OZ80093.jpg");
+      if (this.renderModel === "tonal") {
+        await this.tonal(long, Math.round((long * 2) / 3)).jpeg({ quality: Number(p["quality"]) }).toFile(file);
+        return ok({ uuid: this.selected, path: this.exportPath ?? file, export_ms: 12 });
+      }
       // Grey noise around the level: its mean follows exposure, and, unlike a flat image, its JPEG
       // size follows the quality, as a photo's does.
       await sharp({
@@ -125,5 +161,34 @@ export class LightroomSim {
         .toFile(file);
       return ok({ uuid: this.selected, path: this.exportPath ?? file, export_ms: 12 });
     });
+  }
+
+  /**
+   * The tonal model's image: the top half grey, the bottom half orange (hue 30 degrees), both
+   * following tonalLevel() left to right; white balance warms (red up, blue down) as Temperature
+   * rises above the dump's value.
+   */
+  private tonal(width: number, height: number): ReturnType<typeof sharp> {
+    const data = new Uint8Array(width * height * 3);
+    const warm = (Number(this.settings["Temperature"]) - this.neutralTemperature) / 2000;
+    const clamp = (x: number): number => Math.max(0, Math.min(255, Math.round(x)));
+    const rows: Array<[number, number, number]> = [];
+    for (let x = 0; x < width; x++) {
+      const level = tonalLevel(width === 1 ? 0 : x / (width - 1), this.settings);
+      rows.push([level, level, level]);
+    }
+    for (let y = 0; y < height; y++) {
+      const orange = y >= height / 2;
+      for (let x = 0; x < width; x++) {
+        const level = (rows[x] as [number, number, number])[0];
+        const g = orange ? level * 0.7 : level;
+        const b = orange ? level * 0.4 : level;
+        const i = (y * width + x) * 3;
+        data[i] = clamp(level * (1 + 0.3 * warm));
+        data[i + 1] = clamp(g);
+        data[i + 2] = clamp(b * (1 - 0.3 * warm));
+      }
+    }
+    return sharp(data, { raw: { width, height, channels: 3 } });
   }
 }

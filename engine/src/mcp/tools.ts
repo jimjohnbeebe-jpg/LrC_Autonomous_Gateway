@@ -1,21 +1,22 @@
-// The Phase 2 tools (PHASES.md Phase 2; contracts in MCP_TOOLS; plan approved by Jim 2026-09-26):
-//   lr_get_active_photo_context, lr_get_preview, lr_get_metrics, and lr_set_settings, a temporary
-//   "lr_step-lite" that Phase 3's lr_step replaces.
-// Jim's decisions for Phase 2 (2026-09-26) [stated: "go with recommendations"]:
-//   1. lr_set_settings takes absolute values; deltas, decay and guardrails come with lr_step (Phase 3).
-//   2. lr_get_preview has no region crop yet; it comes with lr_set_regions (Phase 3).
-//   3. lr_set_settings names the photo by the uuid of an earlier result, and the plugin refuses the
-//      write if another photo is selected (ARCHITECTURE section 3, C-2).
-// This class does not depend on the MCP SDK: server.ts wraps it, and the Phase 2 check calls it
-// directly, so both go through the same code. Every call is written to the tool log.
+// The engine's tools (contracts in MCP_TOOLS):
+//   Phase 2: lr_get_active_photo_context, lr_get_preview, lr_get_metrics.
+//   Phase 3: the intent tools, and the session tools (session\manager.ts): lr_begin_session,
+//            lr_step, lr_probe, lr_set_regions, lr_end_session, lr_get_session_log;
+//            lr_get_preview gains `session_id` and `region`, lr_get_metrics `session_id`.
+// lr_set_settings, Phase 2's temporary "lr_step-lite", is no longer offered over MCP: lr_step
+// replaces it (PHASES.md Phase 2, "Inputs for Phase 3"). setSettings() stays for the Phase 2 check
+// (devtools\phase2-check.ts), which calls this class directly.
+// This class does not depend on the MCP SDK: server.ts wraps it, and the checks call it directly, so
+// both go through the same code. Every call is written to the tool log.
 
 import { randomUUID } from "node:crypto";
 import type { BridgeClient } from "../bridge/index.js";
 import type { IntentLibrary } from "../intents/index.js";
 import type { ToolLog } from "../log/index.js";
-import { deltaMetrics, summarize, type Metrics } from "../metrics/index.js";
+import { boxProblem, deltaMetrics, summarize, type Metrics, type Region, type RegionBox } from "../metrics/index.js";
 import { ParamError, type CanonicalValue, type FromSdkResult, type ParamMap } from "../params/index.js";
-import type { PreviewService, RenderedPreview } from "../preview/index.js";
+import { cropRegion, type PreviewService, type RenderedPreview } from "../preview/index.js";
+import { SessionManager, type BeginArgs, type EndArgs, type ProbeArgs, type RegionArgs, type StepArgs } from "../session/index.js";
 import { ToolError, toToolError } from "./errors.js";
 
 /** Preview long edge and JPEG quality: PRD section 6.2 defaults and range (the settings page is Phase 5). */
@@ -28,6 +29,11 @@ export const PREVIEW_QUALITY = 75;
  * [handle: docs\reports\phase1\PHASE1.md "Numbers"]; 30 s leaves room for a busy Lightroom.
  */
 const WRITE_TIMEOUT_MS = 30000;
+/**
+ * The largest export a region crop asks for: the plugin refuses a long edge above 4096
+ * [handle: plugin\LrC-AVG.lrplugin\Preview.lua:29, Preview.MAX_LONG_EDGE].
+ */
+export const REGION_EXPORT_MAX = 4096;
 
 export type ToolOutput = {
   json: Record<string, unknown>;
@@ -58,8 +64,11 @@ export type ToolsDeps = {
   client: BridgeClient;
   map: ParamMap;
   previews: PreviewService;
-  /** The intent library (Phase 3); the intent tools refuse without it. */
+  /** The intent library (Phase 3); the intent and session tools refuse without it. */
   intents?: IntentLibrary;
+  /** The folder of the session logs and recipes (log\session-log.ts); the session tools refuse without it. */
+  sessionLogDir?: string;
+  engineVersion?: string;
   /** Resolves when the bridge is connected (bridge-gate.ts), or throws. */
   ensureBridge: () => Promise<void>;
   log?: ToolLog;
@@ -79,12 +88,30 @@ export class Tools {
   private readonly now: () => Date;
   private writes = 0;
   private last: LastRender | null = null;
+  private readonly sessions: SessionManager | null;
 
   constructor(deps: ToolsDeps) {
     this.deps = deps;
     this.historyPrefix = deps.historyPrefix ?? `AVG ${randomUUID().slice(0, 4)}`;
     if (!this.historyPrefix.startsWith("AVG ")) throw new Error(`history prefix must start with "AVG ": ${this.historyPrefix}`);
     this.now = deps.now ?? (() => new Date());
+    this.sessions =
+      deps.intents && deps.sessionLogDir
+        ? new SessionManager({
+            client: deps.client,
+            map: deps.map,
+            intents: deps.intents,
+            render: (r) => this.render(r.longEdge, r.targetUuid, r.regions, r.quality),
+            logDir: deps.sessionLogDir,
+            engineVersion: deps.engineVersion ?? "unknown",
+            now: this.now,
+          })
+        : null;
+  }
+
+  /** The session manager (for the checks); null when the engine was started without intents or a log folder. */
+  sessionManager(): SessionManager | null {
+    return this.sessions;
   }
 
   /** The last preview this engine rendered, if any. */
@@ -134,7 +161,8 @@ export class Tools {
         camera_profile_detail: view?.camera_profile ?? null,
         lens_profile_enabled: view ? view.settings["lens.profile_enable"] === 1 : null,
         settings: view?.settings ?? null,
-        session_active: false,
+        session_active: this.sessions?.current()?.uuid === ctx.uuid,
+        ...(this.sessions?.current() ? { open_session: { session_id: this.sessions.current()?.id, uuid: this.sessions.current()?.uuid, pass: this.sessions.current()?.pass } } : {}),
         ...(settingsError ? { settings_error: settingsError } : {}),
         ...(ctx.metadata_errors?.length ? { metadata_errors: ctx.metadata_errors } : {}),
       };
@@ -145,17 +173,67 @@ export class Tools {
     });
   }
 
-  async getPreview(args: { long_edge?: number | undefined } = {}): Promise<ToolOutput> {
+  /**
+   * A preview of the selected photo, or with `session_id` of the session's photo (refused if another
+   * photo is selected, C-2), with the session's region metrics. With `region`, a crop of that box:
+   * the photo is exported large enough for the crop to fill `long_edge` (up to REGION_EXPORT_MAX),
+   * the crop is never enlarged, and `effective_scale` says how many output pixels it has per pixel
+   * of the photo (1 = 100 %).
+   */
+  async getPreview(args: { long_edge?: number | undefined; session_id?: string | undefined; region?: RegionBox | undefined } = {}): Promise<ToolOutput> {
     return this.run("lr_get_preview", args, async () => {
       await this.deps.ensureBridge();
-      const preview = await this.render(args.long_edge ?? DEFAULT_LONG_EDGE);
-      const json = { ok: true, ...this.describe(preview), metrics: summarize(preview.metrics), timings: preview.timings };
-      return { json, image: preview.jpeg, log: { uuid: preview.uuid, preview_hash: preview.sha256, metrics: json.metrics, timings: preview.timings } };
+      const session = args.session_id !== undefined ? this.openSession(args.session_id) : null;
+      const target = session?.uuid;
+      const regions = session ? (this.sessions as SessionManager).regionsOf(session.id) : [];
+      const longEdge = args.long_edge ?? DEFAULT_LONG_EDGE;
+      if (!args.region) {
+        const preview = await this.render(longEdge, target, regions);
+        const json = { ok: true, ...(session ? { session_id: session.id } : {}), ...this.describe(preview), metrics: summarize(preview.metrics), timings: preview.timings };
+        return { json, image: preview.jpeg, log: { uuid: preview.uuid, preview_hash: preview.sha256, metrics: json.metrics, timings: preview.timings } };
+      }
+      const problem = boxProblem(args.region);
+      if (problem) throw new ToolError("INVALID_ARGUMENTS", `region: ${problem}`, false);
+      const ctx = await this.deps.client.request("get_context", target !== undefined ? { target_uuid: target } : {});
+      const exportEdge = Math.min(REGION_EXPORT_MAX, Math.max(longEdge, Math.ceil(longEdge / Math.max(args.region.w, args.region.h))));
+      const preview = await this.render(exportEdge, ctx.uuid, regions);
+      const crop = await cropRegion(preview.jpeg, args.region, { longEdge, quality: PREVIEW_QUALITY });
+      // The photo's size is getRawMetadata("width"/"height") (Develop.lua RAW_KEYS); whether that is
+      // the whole sensor or the cropped size is [unverified], so effective_scale is too until a check
+      // records both.
+      const photoWidth = typeof ctx["width"] === "number" && typeof ctx["height"] === "number" ? Math.max(ctx["width"], ctx["height"]) : null;
+      const previewLong = Math.max(preview.width, preview.height);
+      const effectiveScale = photoWidth ? Math.round(crop.scale * (previewLong / photoWidth) * 10000) / 10000 : null;
+      const json = {
+        ok: true,
+        ...(session ? { session_id: session.id } : {}),
+        uuid: preview.uuid,
+        region: args.region,
+        width: crop.width,
+        height: crop.height,
+        rect_in_export: crop.rect,
+        export_long_edge: previewLong,
+        effective_scale: effectiveScale,
+        ...(effectiveScale === null ? { effective_scale_note: "the photo's size was not in the context; scale is per export pixel" } : {}),
+        scale_in_export: crop.scale,
+        preview_source: preview.source,
+        preview_hash: preview.sha256,
+        metrics: summarize(preview.metrics),
+        timings: preview.timings,
+      };
+      return { json, image: crop.jpeg, log: { uuid: preview.uuid, region: args.region, effective_scale: effectiveScale, timings: preview.timings } };
     });
   }
 
-  async getMetrics(): Promise<ToolOutput> {
-    return this.run("lr_get_metrics", {}, async () => {
+  /** Metrics of the last preview: the session's with `session_id` (or while a session is open), else this engine's. */
+  async getMetrics(args: { session_id?: string | undefined } = {}): Promise<ToolOutput> {
+    return this.run("lr_get_metrics", args, { usesBridge: false }, async () => {
+      const open = this.sessions?.current() ?? null;
+      if (args.session_id !== undefined) this.openSession(args.session_id);
+      if (open?.last) {
+        const json = { ok: true, session_id: open.id, uuid: open.uuid, preview_hash: open.last.hash, width: open.last.width, height: open.last.height, metrics: open.last.metrics };
+        return { json, log: { session_id: open.id, preview_hash: open.last.hash } };
+      }
       const last = this.last;
       if (!last) throw new ToolError("NO_PREVIEW_YET", "No preview has been rendered yet in this engine run; call lr_get_preview first.", false);
       const json = {
@@ -169,6 +247,62 @@ export class Tools {
       };
       return { json, log: { uuid: last.uuid, preview_hash: last.preview_hash } };
     });
+  }
+
+  // --- Sessions (Phase 3; session\manager.ts).
+
+  async beginSession(args: BeginArgs): Promise<ToolOutput> {
+    return this.run("lr_begin_session", args, async () => {
+      const sessions = this.sessionTools();
+      await this.deps.ensureBridge();
+      return sessions.begin(args);
+    });
+  }
+
+  async step(args: StepArgs): Promise<ToolOutput> {
+    return this.run("lr_step", args, async () => {
+      const sessions = this.sessionTools();
+      await this.deps.ensureBridge();
+      return sessions.step(args);
+    });
+  }
+
+  async probe(args: ProbeArgs): Promise<ToolOutput> {
+    return this.run("lr_probe", args, async () => {
+      const sessions = this.sessionTools();
+      await this.deps.ensureBridge();
+      return sessions.probe(args);
+    });
+  }
+
+  async setRegions(args: RegionArgs): Promise<ToolOutput> {
+    return this.run("lr_set_regions", args, { usesBridge: false }, async () => this.sessionTools().setRegions(args));
+  }
+
+  async endSession(args: EndArgs): Promise<ToolOutput> {
+    return this.run("lr_end_session", args, async () => {
+      const sessions = this.sessionTools();
+      await this.deps.ensureBridge();
+      return sessions.end(args);
+    });
+  }
+
+  async getSessionLog(args: { session_id: string }): Promise<ToolOutput> {
+    return this.run("lr_get_session_log", args, { usesBridge: false }, async () => this.sessionTools().getLog(args));
+  }
+
+  private sessionTools(): SessionManager {
+    if (!this.sessions) throw new ToolError("INTERNAL_ERROR", "This engine was started without the intent library or a session log folder.", false);
+    return this.sessions;
+  }
+
+  /** The open session with this id, or SESSION_NOT_ACTIVE. */
+  private openSession(sessionId: string): { id: string; uuid: string } {
+    const open = this.sessions?.current() ?? null;
+    if (!open || open.id !== sessionId) {
+      throw new ToolError("SESSION_NOT_ACTIVE", open ? `Session ${sessionId} is not the open one (${open.id}).` : `No session is open (asked for ${sessionId}).`, false);
+    }
+    return open;
   }
 
   async setSettings(args: SetSettingsArgs): Promise<ToolOutput> {
@@ -300,10 +434,11 @@ export class Tools {
     this.deps.log?.append({ ts: this.now().toISOString(), tool, ok: false, duration_ms: 0, args, error: error.body() });
   }
 
-  private async render(longEdge: number, targetUuid?: string): Promise<RenderedPreview> {
+  private async render(longEdge: number, targetUuid?: string, regions: readonly Region[] = [], quality = PREVIEW_QUALITY): Promise<RenderedPreview> {
     const preview = await this.deps.previews.render({
       longEdge,
-      quality: PREVIEW_QUALITY,
+      quality,
+      regions,
       ...(targetUuid !== undefined ? { targetUuid } : {}),
     });
     this.last = {

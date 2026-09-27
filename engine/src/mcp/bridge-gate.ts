@@ -16,9 +16,13 @@ import type { InstanceLock, LockResult } from "./instance-lock.js";
 
 /**
  * How long a tool call waits for the bridge. Connecting took 521 ms in Phase 1 run 3
- * [handle: docs\reports\phase1\PHASE1.md "Numbers", connect_ms].
+ * [handle: docs\reports\phase1\PHASE1.md "Numbers", connect_ms], but the plugin listens only ~10 s
+ * after Lightroom starts [handle: docs\reports\phase2\PHASE2.md "Consequences", LR_SDK_NOTES
+ * "Recorded in Phase 2": bridge log 16:54:50 -> 16:55:00, 17:44:57 -> 17:45:07, 18:50:58 -> 18:51:07],
+ * and a call at 18:50:45 failed after the old 5 s wait. 15 s covers that (PHASES.md Phase 2, "Inputs
+ * for Phase 3"). A call when Lightroom is closed waits the full 15 s before BRIDGE_DISCONNECTED.
  */
-const DEFAULT_WAIT_MS = 5000;
+const DEFAULT_WAIT_MS = 15000;
 
 export class BridgeGate {
   private readonly client: BridgeClient;

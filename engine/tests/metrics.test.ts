@@ -131,6 +131,9 @@ describe("metrics: regions", () => {
     expect(boxToRect({ x: 0.7, y: 0.5, w: 0.3, h: 0.5 }, 10, 10)).toEqual({ left: 7, top: 5, width: 3, height: 5 });
     expect(boxToRect({ x: 0.25, y: 0.25, w: 0.0001, h: 0.0001 }, 8, 8)).toEqual({ left: 2, top: 2, width: 1, height: 1 });
     expect(boxToRect({ x: 0.1, y: 0.1, w: 0.2, h: 0.2 }, 15, 15)).toEqual({ left: 1, top: 1, width: 4, height: 4 }); // 1.5 to 4.5
+    // 0.4 + 0.2 = 0.6000000000000001 and 0.29 * 100 = 28.999999999999996: no extra or missing pixel.
+    expect(boxToRect({ x: 0.4, y: 0.4, w: 0.2, h: 0.2 }, 4000, 2667)).toMatchObject({ left: 1600, width: 800 });
+    expect(boxToRect({ x: 0.29, y: 0, w: 0.5, h: 1 }, 100, 10)).toMatchObject({ left: 29, width: 50 });
   });
 
   it("refuses boxes outside the image or without area", () => {

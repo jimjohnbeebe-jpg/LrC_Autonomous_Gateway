@@ -8,6 +8,7 @@ import path from "node:path";
 import sharp from "sharp";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { BridgeClient } from "../src/bridge/index.js";
+import { IntentLibrary } from "../src/intents/index.js";
 import { ToolLog } from "../src/log/index.js";
 import { Tools, ToolError } from "../src/mcp/index.js";
 import { loadDefaultParamMap } from "../src/params/index.js";
@@ -261,8 +262,50 @@ describe("mcp tools: lr_set_settings", () => {
   });
 });
 
+describe("mcp tools: Phase 3 additions", () => {
+  const withSessions = (): Tools =>
+    new Tools({
+      client,
+      map: loadDefaultParamMap(),
+      previews: new PreviewService(client, { previewDir }),
+      intents: new IntentLibrary({ map: loadDefaultParamMap(), userDir: path.join(tmp, "intents") }),
+      sessionLogDir: path.join(tmp, "sessions"),
+      engineVersion: "test",
+      ensureBridge: () => client.waitConnected(2000).then(() => undefined),
+    });
+
+  it("crops a region from an export large enough to fill the long edge, and reports the effective scale", async () => {
+    const out = await tools.getPreview({ long_edge: 800, region: { x: 0.4, y: 0.4, w: 0.2, h: 0.2 } });
+    expect(plugin.received.filter((r) => r.name === "export_preview").at(-1)?.payload).toMatchObject({ long_edge: 4000 });
+    expect(out.json).toMatchObject({ export_long_edge: 4000, width: 800, scale_in_export: 1, effective_scale: 0.5 });
+    const meta = await sharp(out.image as Buffer).metadata();
+    expect(meta.width).toBe(800);
+    const small = await tools.getPreview({ long_edge: 800, region: { x: 0, y: 0, w: 0.1, h: 0.1 } });
+    expect(plugin.received.filter((r) => r.name === "export_preview").at(-1)?.payload).toMatchObject({ long_edge: 4096 }); // the plugin's maximum
+    expect(small.json["effective_scale"]).toBe(0.512);
+    expect((await failure(tools.getPreview({ region: { x: 0.9, y: 0, w: 0.5, h: 0.5 } }))).code).toBe("INVALID_ARGUMENTS");
+  });
+
+  it("says a session is open on the selected photo, and answers lr_get_metrics from the session's last render", async () => {
+    const t = withSessions();
+    const begin = await t.beginSession({ intent_id: "neutral_technical_correction" });
+    const id = String(begin.json["session_id"]);
+    expect((await t.getActivePhotoContext()).json).toMatchObject({ session_active: true, open_session: { session_id: id, pass: "0/4" } });
+    expect((await t.getMetrics()).json).toMatchObject({ session_id: id, preview_hash: begin.json["preview_hash"] });
+    expect((await failure(t.getMetrics({ session_id: "other" }))).code).toBe("SESSION_NOT_ACTIVE");
+    const preview = await t.getPreview({ session_id: id });
+    expect(preview.json["session_id"]).toBe(id);
+    lr.selected = "OTHER";
+    expect((await failure(t.getPreview({ session_id: id }))).code).toBe("TARGET_CHANGED");
+  });
+
+  it("refuses the session tools on an engine started without intents or a log folder", async () => {
+    expect((await failure(tools.beginSession({ intent_id: "x" }))).code).toBe("INTERNAL_ERROR");
+  });
+});
+
 describe("mcp tools: call bracketing", () => {
-  it("reports the start and end of every call, failed ones included", async () => {
+  it("reports the start and end of every call that uses Lightroom, failed ones included", async () => {
     const events: string[] = [];
     const bracketed = new Tools({
       client,
@@ -274,6 +317,8 @@ describe("mcp tools: call bracketing", () => {
       onCallEnd: () => events.push("end"),
     });
     await bracketed.getActivePhotoContext();
+    await failure(bracketed.setSettings({ uuid: "SIM-UUID", settings: { exposure: 99 } }));
+    // lr_get_metrics reads the engine's memory only, so it leaves the bridge gate alone (Phase 3).
     await failure(bracketed.getMetrics());
     expect(events).toEqual(["start", "end", "start", "end"]);
   });

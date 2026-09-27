@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lrc-avg/recipe.schema.json",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "lrc-avg/recipe/1"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "created": {
+      "type": "string"
+    },
+    "intent_id": {
+      "type": "string"
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string"
+        },
+        "filename": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "uuid",
+        "filename"
+      ],
+      "additionalProperties": false
+    },
+    "process_version": {
+      "type": "string"
+    },
+    "settings": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "string"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "session_id",
+    "created",
+    "intent_id",
+    "source",
+    "process_version",
+    "settings"
+  ],
+  "additionalProperties": false,
+  "description": "LrC-AVG recipe: a session's final settings under canonical names, schema v1"
+}

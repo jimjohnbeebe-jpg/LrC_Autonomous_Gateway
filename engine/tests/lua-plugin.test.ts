@@ -6,8 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import luaparse from "luaparse";
 import { describe, expect, it } from "vitest";
-import { COMMANDS } from "../src/bridge/index.js";
-import { REQUIRED_PLUGIN_VERSION } from "../src/devtools/phase2-check.js";
+import { COMMANDS, PLUGIN_VERSION } from "../src/bridge/index.js";
 
 const pluginRoot = fileURLToPath(new URL("../../plugin/", import.meta.url));
 const avgPlugin = path.join(pluginRoot, "LrC-AVG.lrplugin");
@@ -80,7 +79,10 @@ const files = luaFiles(pluginRoot);
 describe("lua: every plugin file", () => {
   it("finds the LrC-AVG plugin files", () => {
     const names = files.filter((f) => f.startsWith(avgPlugin)).map((f) => path.basename(f)).sort();
-    expect(names).toEqual(["Bridge.lua", "Develop.lua", "Info.lua", "Json.lua", "Log.lua", "MenuStatus.lua", "PluginInit.lua", "Preview.lua"]);
+    expect(names).toEqual([
+      "Bridge.lua", "Catalog.lua", "Develop.lua", "Dispatch.lua", "Info.lua", "Json.lua", "Log.lua", "MenuStatus.lua",
+      "PluginInit.lua", "Preview.lua", "Sockets.lua",
+    ]);
   });
 
   it.each(files.map((f) => [path.relative(pluginRoot, f), f]))("%s parses as Lua 5.1", (_name, file) => {
@@ -167,14 +169,17 @@ describe("lua: LrC-AVG.lrplugin", () => {
     }
   });
 
-  it("reports the plugin version the Phase 2 check requires", () => {
+  it("reports the plugin version the engine's bridge matches, in Bridge.lua and Info.lua", () => {
     const bridge = readFileSync(path.join(avgPlugin, "Bridge.lua"), "utf8");
-    expect(bridge.match(/Bridge\.PLUGIN_VERSION = "([^"]+)"/)?.[1]).toBe(REQUIRED_PLUGIN_VERSION);
+    expect(bridge.match(/Bridge\.PLUGIN_VERSION = "([^"]+)"/)?.[1]).toBe(PLUGIN_VERSION);
+    const info = readFileSync(path.join(avgPlugin, "Info.lua"), "utf8");
+    const v = info.match(/VERSION = \{ major = (\d+), minor = (\d+), revision = (\d+)/);
+    expect(v?.slice(1, 4).join(".")).toBe(PLUGIN_VERSION);
   });
 
   it("handles every command the engine sends (engine\\src\\bridge\\protocol.ts COMMANDS)", () => {
-    const bridge = codeOnly(readFileSync(path.join(avgPlugin, "Bridge.lua"), "utf8"));
-    const table = bridge.match(/local HANDLERS = \{([\s\S]*?)\n\s*\}/)?.[1] ?? "";
+    const dispatch = codeOnly(readFileSync(path.join(avgPlugin, "Dispatch.lua"), "utf8"));
+    const table = dispatch.match(/local HANDLERS = \{([\s\S]*?)\n\s*\}/)?.[1] ?? "";
     const handled = [...table.matchAll(/^\s*(\w+)\s*=/gm)].map((m) => m[1]).sort();
     expect(handled).toEqual(Object.keys(COMMANDS).sort());
   });

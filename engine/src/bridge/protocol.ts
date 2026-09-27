@@ -9,7 +9,8 @@
 //     { id, type: "res", name, ts, ok: true, payload }  or  { ..., ok: false, error: { code, message, recoverable } }
 //     { id, type: "evt", name, ts, payload }
 // Every inbound line is validated here with zod before the engine acts on it (rule 01-stack).
-// The plugin side is plugin\LrC-AVG.lrplugin\Bridge.lua and Develop.lua.
+// The plugin side is plugin\LrC-AVG.lrplugin\Bridge.lua, Dispatch.lua (the handler table),
+// Develop.lua, Preview.lua and Catalog.lua.
 //
 // Lua cannot tell an empty array from an empty object, and the plugin's Json.lua writes every empty
 // table as []. Payload schemas below never require a non-empty table to be an object.
@@ -72,6 +73,18 @@ export const contextResultSchema = z.looseObject({
   metadata_errors: z.array(z.string()).optional(),
 });
 
+/**
+ * A photo as Catalog.lua describes it. A photo that is not a virtual copy has no copy_name, and its
+ * master_local_id is its own local_id [handle: docs\reports\phase4\S7\s7_run_2026-09-27T12-53-05.json
+ * "master"]. A metadata read that fails leaves its field out.
+ */
+const photoIdentity = {
+  local_id: z.number(),
+  is_virtual_copy: z.boolean().optional(),
+  master_local_id: z.number().optional(),
+  copy_name: z.string().optional(),
+};
+
 export const COMMANDS = {
   hello: helloResultSchema,
   ping: z.object({ pong: z.literal(true), nonce: z.string().optional() }),
@@ -102,6 +115,20 @@ export const COMMANDS = {
     same_name_count: z.number(),
   }),
   apply_snapshot: z.object({ ...targeted, read_back: sdkSettingsSchema }),
+  // Plugin 0.3.0 (Catalog.lua). `uuid` and `local_id` are the master's. Once a copy exists the
+  // plugin answers ok, so `copies` lists every copy it made; `failure` says why it stopped before
+  // `requested`. Only copies with identity_ok are copies of the master with the asked name (P-18).
+  create_virtual_copies: z.object({
+    ...targeted,
+    local_id: z.number(),
+    requested: z.number(),
+    copies: z.array(z.object({ ...photoIdentity, uuid: z.string().optional(), identity_ok: z.boolean() })),
+    failure: z.object({ code: z.string().min(1), message: z.string() }).optional(),
+    master_selected: z.boolean(),
+    master_select_error: z.string().optional(),
+  }),
+  // The photo found by uuid, checked against `expect`, and now the only selected photo.
+  select_photo: z.object({ ...targeted, ...photoIdentity }),
 } as const;
 
 export type CommandName = keyof typeof COMMANDS;
@@ -120,4 +147,8 @@ export type CommandPayloads = {
   export_preview: Target & { long_edge: number; quality: number };
   create_snapshot: Target & { name: string };
   apply_snapshot: Target & { snapshot_id: string };
+  /** target_uuid is required here: the selected photo must be the master (PRD section 6.6 step 1). 2-4 names, each "AVG …". */
+  create_virtual_copies: { target_uuid: string; names: string[] };
+  /** Refused with identity_mismatch when the photo found differs from a field given in `expect`. */
+  select_photo: { uuid: string; expect?: { copy_name?: string; master_local_id?: number; is_virtual_copy?: boolean } };
 };

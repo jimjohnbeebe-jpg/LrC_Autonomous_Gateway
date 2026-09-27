@@ -5,6 +5,7 @@
 ## Tasks and catalog access
 
 - Every catalog write runs inside `catalog:withWriteAccessDo(name, fn)`, called from an async task (`LrTasks.startAsyncTask` or `LrFunctionContext.postAsyncTaskWithContext`), never from a UI callback directly.
+  - **One exception: `catalog:createVirtualCopies(name)` runs outside a write gate**, as PRD §6.6 (Phase 0, P-09) records. It worked outside a gate 10 of 10 times, and a gate around it was never tried [handle: `docs\reports\phase0\S6.md` "Analysis" (6 of 6), `docs\reports\phase4\S7.md` "Consequences" (4 of 4)]. Decided by Jim 2026-09-27 for plugin 0.3.0 (`plugin\LrC-AVG.lrplugin\Catalog.lua`) [stated: "go with recommendations"].
 - `photo:getDevelopSettings()` must run in a task (LR_SDK_NOTES, LrPhoto). Read develop settings inside `catalog:withReadAccessDo` (the Automaat pattern, `vendor\automaat\plugin\LightroomMCP.lrplugin\HandlerMetadata.lua:55-72`).
 - **Keep yielding catalog queries outside the read gate** (`getTargetPhoto(s)`, `findPhotos`, `setSelectedPhotos`). Nesting them inside it deadlocks on Windows [upstream claim: `HandlerSelection.lua:30-38`, `HandlerSearch.lua:102-114`].
 - In batch operations, call `LrTasks.yield()` between photos (PRD NFR-1). Automaat does not; we do.

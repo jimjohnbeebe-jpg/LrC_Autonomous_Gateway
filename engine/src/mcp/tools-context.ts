@@ -1,6 +1,7 @@
 // The context tools (Phase 2; Phase 3 added `session_id` and `region`): lr_get_active_photo_context,
 // lr_get_preview, lr_get_metrics. They change nothing in Lightroom.
 
+import { z } from "zod";
 import { boxProblem, summarize, type Region, type RegionBox } from "../metrics/index.js";
 import { ParamError, type FromSdkResult } from "../params/index.js";
 import { cropRegion } from "../preview/index.js";
@@ -16,6 +17,26 @@ export const REGION_EXPORT_MAX = 4096;
 
 export type PreviewArgs = { long_edge?: number | undefined; session_id?: string | undefined; region?: RegionBox | undefined };
 export type MetricsArgs = { session_id?: string | undefined };
+
+const sizeSchema = z.object({ width: z.number().positive(), height: z.number().positive() });
+export type PhotoSize = { width: number; height: number; from: "croppedDimensions" | "width/height" };
+
+/**
+ * The photo's size in pixels, as far as the context gives it: `cropped_dimensions`
+ * (getRawMetadata("croppedDimensions"), which follows a Lightroom crop and is the full size when
+ * uncropped), else `width`/`height`, which stay at the full size after a crop [handle:
+ * docs\reports\phase4\S7.md Verdict 3, 6605 x 3302 against 8256 x 5504 in both runs]. The fallback
+ * covers a plugin loaded before fix/effective-scale-crop, and a key the SDK refused, which the
+ * plugin lists in metadata_errors instead of sending [handle: plugin\LrC-AVG.lrplugin\Develop.lua
+ * Develop.getContext; tests\mcp-tools.test.ts "exports once more when a crop in Lightroom gave the
+ * export another aspect"].
+ */
+export function photoSize(photo: Record<string, unknown>): PhotoSize | null {
+  const cropped = sizeSchema.safeParse(photo["cropped_dimensions"]);
+  if (cropped.success) return { ...cropped.data, from: "croppedDimensions" };
+  const full = sizeSchema.safeParse({ width: photo["width"], height: photo["height"] });
+  return full.success ? { ...full.data, from: "width/height" } : null;
+}
 
 export async function getActivePhotoContext(ctx: ToolContext): Promise<ToolOutput> {
   return run(ctx, "lr_get_active_photo_context", {}, async () => {
@@ -106,26 +127,26 @@ async function regionPreview(ctx: ToolContext, session: { id: string; uuid: stri
   if (problem) throw new ToolError("INVALID_ARGUMENTS", `region: ${problem}`, false);
   const target = session?.uuid;
   const photo = await ctx.deps.client.request("get_context", target !== undefined ? { target_uuid: target } : {});
-  // The photo's size is getRawMetadata("width"/"height") (Develop.lua RAW_KEYS); whether that is
-  // the whole sensor or the cropped size is [unverified], so effective_scale is too until a check
-  // records both.
-  const w = typeof photo["width"] === "number" ? photo["width"] : null;
-  const h = typeof photo["height"] === "number" ? photo["height"] : null;
-  const photoWidth = w !== null && h !== null ? Math.max(w, h) : null;
+  // The cropped size when the plugin sent it, so a crop in Lightroom does not lower effective_scale
+  // [handle: tests\mcp-tools.test.ts "takes the photo's size from croppedDimensions"].
+  const size = photoSize(photo);
+  const photoWidth = size ? Math.max(size.width, size.height) : null;
   // The crop's longer side as a fraction of the export's long edge: on a 3:2 landscape a box's
   // height counts 2/3 as much as its width (Greptile, PR #23: max(w, h) under-sized tall boxes)
   // [handle: tests\mcp-tools.test.ts "sizes the export by the crop's longer side in pixels"].
-  const fraction = w !== null && h !== null && photoWidth ? Math.max(region.w * (w / photoWidth), region.h * (h / photoWidth)) : Math.max(region.w, region.h);
+  const fraction = size && photoWidth ? Math.max(region.w * (size.width / photoWidth), region.h * (size.height / photoWidth)) : Math.max(region.w, region.h);
   // The epsilon keeps 800 / 0.26666666666666666 (= 3000.0000000000005) at 3000.
   const edgeFor = (f: number): number => Math.min(REGION_EXPORT_MAX, Math.max(longEdge, Math.ceil(longEdge / f - 1e-6)));
   let exportEdge = edgeFor(fraction);
   let preview = await render(ctx, exportEdge, photo.uuid, regions);
   let crop = await cropRegion(preview.jpeg, region, { longEdge, quality: PREVIEW_QUALITY });
-  // A crop or rotation in Lightroom can give the export another aspect than the raw width and
-  // height (Greptile, PR #23) [inference: a Lightroom crop changes the exported image's shape; the
-  // raw width/height semantics are unverified, above]. If the crop came out short, export once
-  // more at the size the export's own aspect needs [handle: tests\mcp-tools.test.ts "exports once
-  // more when a crop in Lightroom gave the export another aspect"].
+  // The export follows a Lightroom crop, as croppedDimensions does [handle: docs\reports\phase4\S7.md
+  // Numbers, item 3: export 1600 x 800, aspect 2.0, both runs]. The export can still have another
+  // aspect than the context's size (Greptile, PR #23): after a crop, when the size came from
+  // width/height (the fallback in photoSize), and possibly after a rotation, since S7 only tested
+  // orientation "AB" [unverified: whether croppedDimensions follows a rotation]. If the crop came
+  // out short, export once more at the size the export's own aspect needs [handle:
+  // tests\mcp-tools.test.ts "exports once more when a crop in Lightroom gave the export another aspect"].
   let retried = false;
   if (Math.max(crop.width, crop.height) < longEdge && exportEdge < REGION_EXPORT_MAX) {
     const long = Math.max(preview.width, preview.height);
@@ -139,6 +160,11 @@ async function regionPreview(ctx: ToolContext, session: { id: string; uuid: stri
   }
   const previewLong = Math.max(preview.width, preview.height);
   const effectiveScale = photoWidth ? Math.round(crop.scale * (previewLong / photoWidth) * 10000) / 10000 : null;
+  const note = !size
+    ? "the photo's size was not in the context; scale is per export pixel"
+    : size.from === "width/height"
+      ? "the photo's cropped size was not in the context, so the scale is per pixel of the uncropped photo and reads low if the photo is cropped in Lightroom"
+      : null;
   const json = {
     ok: true,
     ...(session ? { session_id: session.id } : {}),
@@ -150,14 +176,14 @@ async function regionPreview(ctx: ToolContext, session: { id: string; uuid: stri
     export_long_edge: previewLong,
     ...(retried ? { export_retried: "the first export's aspect differed from the photo's size, so it was exported again larger" } : {}),
     effective_scale: effectiveScale,
-    ...(effectiveScale === null ? { effective_scale_note: "the photo's size was not in the context; scale is per export pixel" } : {}),
+    ...(note ? { effective_scale_note: note } : {}),
     scale_in_export: crop.scale,
     preview_source: preview.source,
     preview_hash: preview.sha256,
     metrics: summarize(preview.metrics),
     timings: preview.timings,
   };
-  return { json, image: crop.jpeg, log: { uuid: preview.uuid, region, effective_scale: effectiveScale, timings: preview.timings } };
+  return { json, image: crop.jpeg, log: { uuid: preview.uuid, region, effective_scale: effectiveScale, photo_size: size, timings: preview.timings } };
 }
 
 /** Metrics of the last preview: the session's with `session_id` (or while a session is open), else this engine's. */

@@ -294,12 +294,29 @@ describe("mcp tools: Phase 3 additions", () => {
   });
 
   it("exports once more when a crop in Lightroom gave the export another aspect than the photo's size (Greptile, PR #23)", async () => {
-    lr.photoSize = { width: 4000, height: 4000 }; // the context says square; the export is 3:2
+    // A plugin that sends no croppedDimensions: the context says square; the export is 3:2.
+    lr.photoSize = { width: 4000, height: 4000 };
+    lr.croppedSize = undefined;
     const out = await tools.getPreview({ long_edge: 800, region: { x: 0.1, y: 0.1, w: 0.1, h: 0.4 } });
     const edges = plugin.received.filter((r) => r.name === "export_preview").map((r) => r.payload["long_edge"]);
     // 2000 px from the square estimate; then from the export's own 2000 x 1333: 800 / (0.4 x 1333/2000) = 3001.
     expect(edges).toEqual([2000, 3001]);
     expect(out.json).toMatchObject({ height: 800, export_long_edge: 3001, export_retried: expect.any(String) });
+    expect(out.json["effective_scale_note"]).toContain("uncropped photo");
+  });
+
+  it("takes the photo's size from croppedDimensions, so a crop in Lightroom does not lower effective_scale (S7.md Verdict 3)", async () => {
+    // S7's sizes: full 8256 x 5504, cropped 6605 x 3302 (aspect 2.0); the export follows the crop
+    // [handle: docs\reports\phase4\S7.md Numbers, item 3].
+    lr.photoSize = { width: 8256, height: 5504 };
+    lr.croppedSize = { width: 6605, height: 3302 };
+    const out = await tools.getPreview({ long_edge: 800, region: { x: 0.4, y: 0.4, w: 0.2, h: 0.2 } });
+    const edges = plugin.received.filter((r) => r.name === "export_preview").map((r) => r.payload["long_edge"]);
+    expect(edges).toEqual([4000]); // the first export already has the crop's aspect
+    // 800 px of a 4000 px export: 4000 / 6605 = 0.6056 per photo pixel; from the full width, 4000 / 8256 = 0.4845.
+    expect(out.json).toMatchObject({ export_long_edge: 4000, width: 800, height: 400, scale_in_export: 1, effective_scale: 0.6056 });
+    expect(out.json).not.toHaveProperty("effective_scale_note");
+    expect(out.json).not.toHaveProperty("export_retried");
   });
 
   it("says a session is open on the selected photo, and answers lr_get_metrics from the session's last render", async () => {

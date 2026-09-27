@@ -74,6 +74,14 @@ export class LightroomSim {
   filename = "20260907-_OZ80093.NEF";
   /** The photo's pixel size in get_context (getRawMetadata width/height); a made-up 3:2 size. */
   photoSize = { width: 6000, height: 4000 };
+  /**
+   * getRawMetadata("croppedDimensions") in get_context: the size after a Lightroom crop, the full
+   * size when uncropped [handle: docs\reports\phase4\S7\s7_run_2026-09-27T12-53-05.json
+   * crop.master_size, crop.size_after_crop]. The export's aspect follows it, as Lightroom's export
+   * follows a crop [handle: docs\reports\phase4\S7.md Numbers, item 3]. undefined: the key is
+   * absent, as from a plugin loaded before fix/effective-scale-crop, and the export is 3:2.
+   */
+  croppedSize: { width: number; height: number } | undefined = { width: 6000, height: 4000 };
   readonly previewDir: string;
   /** White balance the tonal model treats as neutral: the dump's own. */
   private readonly neutralTemperature = Number(nefDump.settings["Temperature"]);
@@ -101,6 +109,7 @@ export class LightroomSim {
         is_virtual_copy: false,
         width: this.photoSize.width,
         height: this.photoSize.height,
+        ...(this.croppedSize ? { cropped_dimensions: this.croppedSize } : {}),
         iso: 64,
         shutter: 0.004,
         aperture: 8,
@@ -140,20 +149,26 @@ export class LightroomSim {
       if (this.exportError) return { ok: false, error: { code: "export_failed", message: this.exportError, recoverable: true } };
       this.exports++;
       const long = this.exportLongEdge ?? Number(p["long_edge"]);
+      // The requested edge goes on the longer side: the plugin asks Lightroom for LR_size_resizeType
+      // "longEdge" with both maximums at that edge [handle: plugin\LrC-AVG.lrplugin\Preview.lua:66-70],
+      // and a wide crop exported at 1600 x 800 for 1600 [handle: docs\reports\phase4\S7.md Numbers,
+      // item 3]. A tall crop's export, height at the edge, is [inference: not observed] (Greptile, PR #32).
+      const shape = this.croppedSize ?? { width: 3, height: 2 };
+      const [width, height] = shape.width >= shape.height ? [long, Math.round((long * shape.height) / shape.width)] : [Math.round((long * shape.width) / shape.height), long];
       const level = simulatedLevel(Number(this.settings["Exposure2012"]));
       const dir = path.join(this.previewDir, id);
       mkdirSync(dir, { recursive: true });
       const file = path.join(dir, "20260907-_OZ80093.jpg");
       if (this.renderModel === "tonal") {
-        await this.tonal(long, Math.round((long * 2) / 3)).jpeg({ quality: Number(p["quality"]) }).toFile(file);
+        await this.tonal(width, height).jpeg({ quality: Number(p["quality"]) }).toFile(file);
         return ok({ uuid: this.selected, path: this.exportPath ?? file, export_ms: 12 });
       }
       // Grey noise around the level: its mean follows exposure, and, unlike a flat image, its JPEG
       // size follows the quality, as a photo's does.
       await sharp({
         create: {
-          width: long,
-          height: Math.round((long * 2) / 3),
+          width,
+          height,
           channels: 3,
           background: { r: level, g: level, b: level },
           noise: { type: "gaussian", mean: level, sigma: 12 },

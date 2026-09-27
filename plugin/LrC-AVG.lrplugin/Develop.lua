@@ -71,10 +71,14 @@ end
 -- whose recorder files hold file_format "RAW"; plugin\spikes\S6.lrplugin\S6Run.lua:36-41] and for the
 -- uuid in runs 1-2. That is also the Automaat pattern rule 03 names (HandlerMetadata.lua:55-72). Rule
 -- 03's deadlock warning is about catalog queries such as getTargetPhoto, which stay outside (target()).
+-- croppedDimensions ({ width, height }) is the size after a Lightroom crop, and the full size when
+-- uncropped; width and height stay at the full size after a crop [handle: docs\reports\phase4\S7.md
+-- Verdict 3; S7\s7_run_2026-09-27T12-53-05.json crop.master_size, crop.size_after_crop]. The engine's
+-- region preview takes the photo's size from it (engine\src\mcp\tools-context.ts photoSize).
 local RAW_KEYS = {
     path = "path", file_format = "fileFormat", is_virtual_copy = "isVirtualCopy",
     iso = "isoSpeedRating", shutter = "shutterSpeed", aperture = "aperture", focal_length = "focalLength",
-    width = "width", height = "height",
+    width = "width", height = "height", cropped_dimensions = "croppedDimensions",
     rating = "rating", pick = "pickStatus", label = "colorNameForLabel",
 }
 local FORMATTED_KEYS = { filename = "fileName", copy_name = "copyName", lens = "lens", camera = "cameraModel" }

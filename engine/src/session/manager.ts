@@ -107,6 +107,8 @@ type Rendered = {
   height: number;
   timings: RenderedPreview["timings"];
   settings: CanonicalSettings;
+  /** The long edge the render was asked for (a session preview may use another than the session's). */
+  longEdge: number;
   preview: RenderedPreview;
 };
 
@@ -540,13 +542,17 @@ export class SessionManager {
     const probeStarted = this.now().toISOString();
     const historyNames: string[] = [];
     const results: Array<{ name: string; delta_applied: number; delta_metrics: ReturnType<typeof deltaMetrics>; per_unit: Slope }> = [];
+    /** Sliders that may hold a probe value now, with the value to put back. */
+    const outstanding = new Map<string, number>();
     try {
       let previous: { name: string; before: number } | null = null;
       for (const p of plan) {
         const values: Record<string, CanonicalValue> = { [p.name]: roundForSlider(p.name, p.before + p.delta) };
         if (previous) values[previous.name] = previous.before;
         const name = `AVG ${s.short} probe ${p.name}`;
+        outstanding.set(p.name, p.before); // before the write: a failed write may still have changed it
         const probedView = await this.write(s, values, name);
+        if (previous) outstanding.delete(previous.name); // this write put the previous slider back
         historyNames.push(name);
         const probed = await this.render(s, probedView.settings, { keep: false });
         const d = deltaMetrics(base.metrics, probed.metrics);
@@ -563,15 +569,18 @@ export class SessionManager {
         const revertName = `AVG ${s.short} probe revert`;
         const back = await this.write(s, { [previous.name]: previous.before }, revertName);
         historyNames.push(revertName);
-        const notBack = plan.filter((p) => back.settings[p.name] !== p.before).map((p) => p.name);
-        if (notBack.length > 0) throw new ToolError("WRITE_NOT_TAKEN", `After the probe, ${notBack.join(", ")} did not return to the value before it.`, false);
+        for (const p of plan) if (back.settings[p.name] === p.before) outstanding.delete(p.name);
+        if (outstanding.size > 0) {
+          throw new ToolError("WRITE_NOT_TAKEN", `After the probe, ${[...outstanding.keys()].join(", ")} did not return to the value before it.`, false);
+        }
       }
     } catch (err) {
-      // Put every probed slider back, so a failed probe leaves no temporary edit behind (Greptile,
-      // PR #23). If that write fails too, the next step renders the photo again before it plans
-      // (fresh()), because the settings then differ from the last render's.
-      if (historyNames.length > 0) {
-        const back: Record<string, CanonicalValue> = Object.fromEntries(plan.map((p) => [p.name, p.before]));
+      // Put back the sliders that may still hold a probe value, so a failed probe leaves no temporary
+      // edit behind, and only those, so an edit made meanwhile to a slider the probe never reached
+      // is kept (Greptile, PR #23). If the write fails too, the next step renders the photo again
+      // before it plans (fresh()), because the settings then differ from the last render's.
+      if (outstanding.size > 0) {
+        const back: Record<string, CanonicalValue> = Object.fromEntries(outstanding);
         const revertName = `AVG ${s.short} probe revert`;
         try {
           await this.write(s, back, revertName);
@@ -790,9 +799,10 @@ export class SessionManager {
    * shows (the last read-back). `keep: false` leaves the session's last render alone (probes).
    */
   private async render(s: Session, settings: CanonicalSettings, options: { keep?: boolean; longEdge?: number } = {}): Promise<Rendered> {
+    const longEdge = options.longEdge ?? s.longEdge;
     const preview = await this.bridge(s, () =>
       this.deps.render({
-        longEdge: options.longEdge ?? s.longEdge,
+        longEdge,
         quality: s.quality,
         targetUuid: s.target.uuid,
         regions: s.regions.map((r) => ({ label: r.label, box: r.box })),
@@ -806,6 +816,7 @@ export class SessionManager {
       height: preview.height,
       timings: preview.timings,
       settings,
+      longEdge,
       preview,
     };
     if (options.keep !== false) s.last = rendered;
@@ -813,12 +824,16 @@ export class SessionManager {
   }
 
   /**
-   * The last render, rendered again first when the photo's settings are no longer the ones it
-   * shows: the photo was edited in Lightroom between calls, or a render after a write failed
-   * (Greptile, PR #23). The guardrails and deltas then work from the photo as it is.
+   * The last render, rendered again first when it no longer stands for the photo as the session
+   * measures it (Greptile, PR #23):
+   *   - its settings are not the photo's now (an edit in Lightroom between calls, or a render after
+   *     a write failed);
+   *   - it is at another size than the session's (lr_get_preview with another long_edge), since
+   *     clipping and luma depend on the image size.
+   * The guardrails, deltas and convergence then compare like with like.
    */
   private async fresh(s: Session, view: FromSdkResult): Promise<{ last: Rendered; refreshed: boolean }> {
-    if (s.last && same(s.last.settings, view.settings)) return { last: s.last, refreshed: false };
+    if (s.last && s.last.longEdge === s.longEdge && same(s.last.settings, view.settings)) return { last: s.last, refreshed: false };
     return { last: await this.render(s, view.settings), refreshed: true };
   }
 

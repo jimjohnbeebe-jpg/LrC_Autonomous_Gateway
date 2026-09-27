@@ -293,6 +293,15 @@ describe("mcp tools: Phase 3 additions", () => {
     expect(out.json).toMatchObject({ height: 800, scale_in_export: 1 });
   });
 
+  it("exports once more when a crop in Lightroom gave the export another aspect than the photo's size (Greptile, PR #23)", async () => {
+    lr.photoSize = { width: 4000, height: 4000 }; // the context says square; the export is 3:2
+    const out = await tools.getPreview({ long_edge: 800, region: { x: 0.1, y: 0.1, w: 0.1, h: 0.4 } });
+    const edges = plugin.received.filter((r) => r.name === "export_preview").map((r) => r.payload["long_edge"]);
+    // 2000 px from the square estimate; then from the export's own 2000 x 1333: 800 / (0.4 x 1333/2000) = 3001.
+    expect(edges).toEqual([2000, 3001]);
+    expect(out.json).toMatchObject({ height: 800, export_long_edge: 3001, export_retried: expect.any(String) });
+  });
+
   it("says a session is open on the selected photo, and answers lr_get_metrics from the session's last render", async () => {
     const t = withSessions();
     const begin = await t.beginSession({ intent_id: "neutral_technical_correction" });

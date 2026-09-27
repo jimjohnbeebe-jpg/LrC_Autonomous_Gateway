@@ -207,9 +207,24 @@ export class Tools {
       // height counts 2/3 as much as its width (Greptile, PR #23: max(w, h) under-sized tall boxes).
       const fraction = w !== null && h !== null && photoWidth ? Math.max(args.region.w * (w / photoWidth), args.region.h * (h / photoWidth)) : Math.max(args.region.w, args.region.h);
       // The epsilon keeps 800 / 0.26666666666666666 (= 3000.0000000000005) at 3000.
-      const exportEdge = Math.min(REGION_EXPORT_MAX, Math.max(longEdge, Math.ceil(longEdge / fraction - 1e-6)));
-      const preview = await this.render(exportEdge, ctx.uuid, regions);
-      const crop = await cropRegion(preview.jpeg, args.region, { longEdge, quality: PREVIEW_QUALITY });
+      const edgeFor = (f: number): number => Math.min(REGION_EXPORT_MAX, Math.max(longEdge, Math.ceil(longEdge / f - 1e-6)));
+      let exportEdge = edgeFor(fraction);
+      let preview = await this.render(exportEdge, ctx.uuid, regions);
+      let crop = await cropRegion(preview.jpeg, args.region, { longEdge, quality: PREVIEW_QUALITY });
+      // A crop or rotation in Lightroom can give the export another aspect than the raw width and
+      // height (Greptile, PR #23). If the crop came out short, export once more at the size the
+      // export's own aspect needs.
+      let retried = false;
+      if (Math.max(crop.width, crop.height) < longEdge && exportEdge < REGION_EXPORT_MAX) {
+        const long = Math.max(preview.width, preview.height);
+        const needed = edgeFor(Math.max(args.region.w * (preview.width / long), args.region.h * (preview.height / long)));
+        if (needed > exportEdge) {
+          exportEdge = needed;
+          preview = await this.render(exportEdge, ctx.uuid, regions);
+          crop = await cropRegion(preview.jpeg, args.region, { longEdge, quality: PREVIEW_QUALITY });
+          retried = true;
+        }
+      }
       const previewLong = Math.max(preview.width, preview.height);
       const effectiveScale = photoWidth ? Math.round(crop.scale * (previewLong / photoWidth) * 10000) / 10000 : null;
       const json = {
@@ -221,6 +236,7 @@ export class Tools {
         height: crop.height,
         rect_in_export: crop.rect,
         export_long_edge: previewLong,
+        ...(retried ? { export_retried: "the first export's aspect differed from the photo's size, so it was exported again larger" } : {}),
         effective_scale: effectiveScale,
         ...(effectiveScale === null ? { effective_scale_note: "the photo's size was not in the context; scale is per export pixel" } : {}),
         scale_in_export: crop.scale,

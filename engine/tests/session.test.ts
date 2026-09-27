@@ -308,6 +308,34 @@ describe("lr_probe and lr_set_regions", () => {
     expect(readLog().failures.map((f) => f.stage)).toEqual(["probe"]);
   });
 
+  it("after a failed probe puts back only the sliders it changed, keeping an edit made meanwhile (Greptile, PR #23)", async () => {
+    await manager.begin({ intent_id: "test_plain" });
+    const exposure = lr.settings["Exposure2012"];
+    const apply = plugin.handlers.get("apply_settings");
+    plugin.handlers.set("apply_settings", (p, id) => {
+      const reply = apply?.(p, id);
+      if (String(p["history_name"]).endsWith("probe exposure")) {
+        lr.settings["Shadows2012"] = 42; // Jim drags Shadows while the probe runs
+        lr.exportError = "disk full"; // and the probe's render fails
+      }
+      return reply ?? "silent";
+    });
+    await fails(manager.probe({ session_id: ID, sliders: ["exposure", "shadows"] }));
+    expect(lr.settings["Exposure2012"]).toBe(exposure);
+    expect(lr.settings["Shadows2012"]).toBe(42);
+    lr.exportError = null;
+  });
+
+  it("renders at the session's size again before a step that follows a preview at another size (Greptile, PR #23)", async () => {
+    await manager.begin({ intent_id: "test_plain" });
+    const small = await manager.preview(ID, 800);
+    expect(small.width).toBe(800);
+    const out = await manager.step({ session_id: ID, settings: { shadows: 10 }, rationale: "r" });
+    expect(out.json["metrics_refreshed"]).toBeDefined();
+    expect(readLog().passes[1]?.metrics_before).toBeDefined();
+    expect(out.json["width"]).toBe(1600);
+  });
+
   it("refuses to probe when the intent does not allow it", async () => {
     await manager.begin({ intent_id: "test_prior" });
     expect((await fails(manager.probe({ session_id: ID, sliders: ["exposure"] }))).code).toBe("PROBE_NOT_ALLOWED");

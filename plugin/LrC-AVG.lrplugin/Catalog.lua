@@ -57,9 +57,16 @@ end
 -- taken under another bridge generation (Bridge.lua bumps _G.LrCAVG_BridgeGeneration on each start)
 -- or held longer than LOCK_MAX_HOLD_SECONDS counts as abandoned, and a holder releases only its own
 -- lock [handle: docs\reports\phase4\variants-plugin-smoke\smoke.txt "== A lock whose holder never
--- finishes": against the fake, both takeovers, and a mutant releasing any lock caught]. Taking over
--- an abandoned lock whose task is in fact still running reopens the race above for that one command
--- [inference]; it is logged.
+-- finishes": against the fake, both takeovers, and a mutant releasing any lock caught]. The task of
+-- an abandoned lock may in fact still be running, so a command checks that it still holds the lock
+-- (`owns`) right before each selection change and each createVirtualCopies call, and stops with
+-- lock_lost when it does not (Greptile, PR #33 round 3). No other task runs between that check and
+-- the call, since tasks are coroutines that switch only where one yields [handle: LR_SDK_NOTES
+-- "LrTasks"]. A call already inside createVirtualCopies when its lock is taken over is the window
+-- no lock here can close: against the fake it copied whatever was selected when it read the
+-- selection, and the other command then reported select_failed; otherwise no copy of another photo
+-- was made [handle: docs\reports\phase4\variants-plugin-smoke\smoke.txt "taken over while running"].
+-- Whether Lightroom's own call yields inside is [unverified].
 -- S6's copies took 212-1017 ms each [handle: docs\reports\phase0\S6\s6_*.json calls[*].ms], so a
 -- 4-copy batch should take seconds; 60 s is a generous bound [inference: the figure].
 Catalog.LOCK_MAX_HOLD_SECONDS = 60
@@ -88,7 +95,7 @@ local function exclusive(name, fn)
     end
     local mine = { name = name, generation = _G.LrCAVG_BridgeGeneration, since = LrDate.currentTime() }
     holder = mine
-    local ok, result, err = LrTasks.pcall(fn)
+    local ok, result, err = LrTasks.pcall(fn, function() return holder == mine end)
     if holder == mine then holder = nil end
     if not ok then error(result, 0) end
     return result, err
@@ -139,10 +146,16 @@ local function validNames(names)
     return true
 end
 
+local LOCK_LOST = "another command took over the selection lock (the bridge restarted, or this one ran over " ..
+    Catalog.LOCK_MAX_HOLD_SECONDS .. " s)"
+
 -- One copy of the master named `name`. Returns the copy's description, or nil plus a failure.
-local function copyOnce(catalog, master, masterInfo, name)
+-- `owns()` tells whether this command still holds the selection lock.
+local function copyOnce(catalog, master, masterInfo, name, owns)
+    if not owns() then return nil, { code = "lock_lost", message = LOCK_LOST .. "; stopped before selecting the master" } end
     local selected, selectErr = selectOnly(catalog, master)
     if not selected then return nil, { code = "select_failed", message = selectErr } end
+    if not owns() then return nil, { code = "lock_lost", message = LOCK_LOST .. "; stopped before copying" } end
     local ok, returned = LrTasks.pcall(function() return catalog:createVirtualCopies(name) end)
     if not ok then return nil, { code = "copy_failed", message = "createVirtualCopies: " .. tostring(returned) } end
     if type(returned) ~= "table" or #returned ~= 1 or returned[1] == nil then
@@ -158,7 +171,7 @@ local function copyOnce(catalog, master, masterInfo, name)
     return copy, nil
 end
 
-local function createCopies(payload)
+local function createCopies(payload, owns)
     if type(payload.target_uuid) ~= "string" or payload.target_uuid == "" then
         return fail("bad_request", "target_uuid must name the master photo")
     end
@@ -175,14 +188,16 @@ local function createCopies(payload)
     local copies, failure = {}, nil
     for i, name in ipairs(payload.names) do
         if i > 1 then LrTasks.yield() end -- PRD NFR-1: yield between photos
-        local copy, why = copyOnce(catalog, master, masterInfo, name)
+        local copy, why = copyOnce(catalog, master, masterInfo, name, owns)
         if copy then copies[#copies + 1] = copy end
         if why then
             failure = why
             break
         end
     end
-    local masterSelected, selectErr = selectOnly(catalog, master)
+    -- Put the master back, unless another command now holds the selection.
+    local masterSelected, selectErr = false, LOCK_LOST .. "; the selection was left to it"
+    if owns() then masterSelected, selectErr = selectOnly(catalog, master) end
     return { uuid = masterUuid, local_id = masterInfo.local_id, requested = #payload.names, copies = copies,
         failure = failure, master_selected = masterSelected, master_select_error = selectErr }
 end
@@ -198,7 +213,7 @@ local function mismatch(d, uuid, expect)
     return nil
 end
 
-local function selectPhoto(payload)
+local function selectPhoto(payload, owns)
     local uuid, expect = payload.uuid, payload.expect
     if type(uuid) ~= "string" or uuid == "" then return fail("bad_request", "uuid must be a non-empty string") end
     if expect == nil then expect = {} end
@@ -210,17 +225,18 @@ local function selectPhoto(payload)
     local d = describe(catalog, photo)
     local wrong = mismatch(d, uuid, expect)
     if wrong then return fail("identity_mismatch", "the photo with uuid " .. uuid .. " has " .. wrong) end
+    if not owns() then return fail("lock_lost", LOCK_LOST .. "; nothing was selected", true) end
     local selected, selectErr = selectOnly(catalog, photo)
     if not selected then return fail("select_failed", selectErr, true) end
     return d
 end
 
 function Catalog.createVirtualCopies(payload)
-    return exclusive("create_virtual_copies", function() return createCopies(payload) end)
+    return exclusive("create_virtual_copies", function(owns) return createCopies(payload, owns) end)
 end
 
 function Catalog.selectPhoto(payload)
-    return exclusive("select_photo", function() return selectPhoto(payload) end)
+    return exclusive("select_photo", function(owns) return selectPhoto(payload, owns) end)
 end
 
 return Catalog

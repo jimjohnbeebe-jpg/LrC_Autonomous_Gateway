@@ -170,15 +170,21 @@
       "height": 1067
     }
   },
-  "copied": [
-    "s7_after_2026-09-27T11-28-19.json",
-    "s7_after_2026-09-27T12-56-30.json",
-    "s7_before_2026-09-27T11-25-49.json",
-    "s7_before_2026-09-27T11-26-12.json",
-    "s7_before_2026-09-27T12-54-57.json",
-    "s7_log.txt",
-    "s7_run_2026-09-27T11-22-33.json",
-    "s7_run_2026-09-27T12-53-05.json",
-    "s7_state.txt"
-  ]
+  "evidence": {
+    "this_run": [
+      "s7_after_2026-09-27T12-56-30.json",
+      "s7_before_2026-09-27T12-54-57.json",
+      "s7_run_2026-09-27T12-53-05.json",
+      "s7_state.txt"
+    ],
+    "other_runs": [
+      "s7_after_2026-09-27T11-28-19.json",
+      "s7_before_2026-09-27T11-25-49.json",
+      "s7_before_2026-09-27T11-26-12.json",
+      "s7_run_2026-09-27T11-22-33.json"
+    ],
+    "shared": [
+      "s7_log.txt"
+    ]
+  }
 }

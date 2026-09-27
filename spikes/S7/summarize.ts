@@ -16,7 +16,8 @@
 // - Measures the two exported JPEGs with sharp. They are NOT copied: they are renders of Jim's photo
 //   and the repo is public.
 // - Copies the JSON files, s7_log.txt and s7_state.txt with the user folder written as %USERPROFILE%.
-// - Writes s7_summary.json to destDir and prints it.
+// - Writes s7_summary.json to destDir and prints it. Its `evidence` sorts the copied files into this
+//   run's, other runs' and shared (s7_log.txt).
 
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
@@ -207,6 +208,27 @@ function copyRedacted(): string[] {
   return copied;
 }
 
+// The run a saved file belongs to: a run file's or state file's own run_at, the observed run's
+// run_at for a before/after file, or null for s7_log.txt, which has every run's lines.
+function runAtOf(f: string): string | null {
+  const text = readFileSync(path.join(srcDir, f), "utf8");
+  if (f.endsWith(".txt")) return text.match(/^run_at=(.*)$/m)?.[1]?.trim() ?? null;
+  const o = JSON.parse(text) as { run_at?: unknown; state?: { run_at?: unknown } };
+  const at = /^s7_(xmp_)?(before|after)_/.test(f) ? o.state?.run_at : o.run_at;
+  return typeof at === "string" ? at : null;
+}
+
+// The copied files split by run, so each summary names only its own run's evidence as its own
+// (Greptile, PR #31): s7_state.txt holds only the latest run's state.
+function evidence(copied: string[], runAt: string) {
+  const out = { this_run: [] as string[], other_runs: [] as string[], shared: [] as string[] };
+  for (const f of copied) {
+    const at = runAtOf(f);
+    (at === null ? out.shared : at === runAt ? out.this_run : out.other_runs).push(f);
+  }
+  return out;
+}
+
 async function main(): Promise<void> {
   const runFile = runArg ?? newest("s7_run_");
   if (!runFile) throw new Error(`no s7_run_*.json in ${srcDir}`);
@@ -231,7 +253,7 @@ async function main(): Promise<void> {
     item4_unselected: { worked: run.unselected.worked ?? false, error: run.unselected.error ?? null, export: await jpegSize(run.unselected.export?.path) },
   };
   const copied = copyRedacted();
-  const text = redact(JSON.stringify({ ...summary, copied }, null, 2));
+  const text = redact(JSON.stringify({ ...summary, evidence: evidence(copied, run.run_at) }, null, 2));
   writeFileSync(path.join(destDir, summaryName), text + "\n");
   console.log(text);
   console.log(`\nWrote ${path.join(destDir, summaryName)}; copied ${copied.length} files (JPEGs not copied).`);

@@ -158,6 +158,14 @@ describe("intents: saving", () => {
     expect(library.save(minimal("bw_conversion")).overrides_bundled).toBe(true);
   });
 
+  it("keeps a user file the loader skipped: it is replaced only with replace: true (Greptile, PR #22)", () => {
+    writeUser("kept.json", "{ the user's half-finished edit");
+    expect(() => library.save(minimal("kept"))).toThrow(/already exists/);
+    expect(readFileSync(path.join(userDir, "kept.json"), "utf8")).toBe("{ the user's half-finished edit");
+    expect(library.save(minimal("kept"), { replace: true }).replaced).toBe(true);
+    expect(library.get("kept").source).toBe("user");
+  });
+
   it("writes nothing when the intent is invalid", () => {
     expect(() => library.save(minimal("bad", { priors: { exposure: 99 } }))).toThrow(IntentError);
     expect(existsSync(path.join(userDir, "bad.json"))).toBe(false);
@@ -165,7 +173,8 @@ describe("intents: saving", () => {
 });
 
 describe("intents: tools", () => {
-  // The intent tools never touch the bridge or previews.
+  // The intent tools never touch the bridge, the previews or the bridge gate's call count.
+  let gateCalls = 0;
   const tools = (): Tools =>
     new Tools({
       client: {} as BridgeClient,
@@ -173,7 +182,18 @@ describe("intents: tools", () => {
       previews: {} as PreviewService,
       intents: library,
       ensureBridge: () => Promise.reject(new Error("the intent tools must not need Lightroom")),
+      onCallStart: () => gateCalls++,
+      onCallEnd: () => gateCalls++,
     });
+
+  it("leaves the bridge gate alone, so intent calls do not hold a bridge lock open (Greptile, PR #22)", async () => {
+    gateCalls = 0;
+    const t = tools();
+    await t.listIntents();
+    await t.getIntent({ id: "bw_conversion" });
+    await t.saveIntent({ intent: minimal("gate_check"), confirmed: true });
+    expect(gateCalls).toBe(0);
+  });
   const fails = async (p: Promise<ToolOutput>): Promise<{ code: string; details?: unknown }> => {
     try {
       await p;

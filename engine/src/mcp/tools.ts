@@ -262,7 +262,7 @@ export class Tools {
   // --- Intents (Phase 3; ARCHITECTURE section 7). They read files only and never need Lightroom.
 
   async listIntents(): Promise<ToolOutput> {
-    return this.run("lr_list_intents", {}, async () => {
+    return this.run("lr_list_intents", {}, { usesBridge: false }, async () => {
       const library = this.library();
       const { intents, warnings } = library.list();
       const json: Record<string, unknown> = { ok: true, intents, folders: library.directories(), ...(warnings.length ? { warnings } : {}) };
@@ -271,7 +271,7 @@ export class Tools {
   }
 
   async getIntent(args: { id: string }): Promise<ToolOutput> {
-    return this.run("lr_get_intent", args, async () => {
+    return this.run("lr_get_intent", args, { usesBridge: false }, async () => {
       const found = this.library().get(args.id);
       const json = { ok: true, source: found.source, path: found.path, overrides_bundled: found.overrides_bundled, intent: found.intent };
       return { json, log: { id: args.id, source: found.source } };
@@ -279,8 +279,8 @@ export class Tools {
   }
 
   async saveIntent(args: SaveIntentArgs): Promise<ToolOutput> {
-    return this.run("lr_save_intent", args, async () => {
-      // The tool's schema already requires `confirmed: true`; this guards direct callers too.
+    return this.run("lr_save_intent", args, { usesBridge: false }, async () => {
+      // The tool's schema requires `confirmed` to be a boolean; false is refused here.
       if (args.confirmed !== true) {
         throw new ToolError("NOT_CONFIRMED", "Ask the user to approve this intent in the chat first, then call again with confirmed: true.", false);
       }
@@ -329,10 +329,24 @@ export class Tools {
     };
   }
 
-  private async run(tool: string, args: unknown, fn: () => Promise<ToolOutput>): Promise<ToolOutput> {
+  /**
+   * Run a tool: log it, and tell the bridge gate a call is in progress. A tool that never uses
+   * Lightroom (`usesBridge: false`, the intent tools) leaves the gate alone, so it does not restart
+   * the idle release of a bridge lock this engine holds (Greptile, PR #22).
+   */
+  private run(tool: string, args: unknown, fn: () => Promise<ToolOutput>): Promise<ToolOutput>;
+  private run(tool: string, args: unknown, options: { usesBridge: boolean }, fn: () => Promise<ToolOutput>): Promise<ToolOutput>;
+  private async run(
+    tool: string,
+    args: unknown,
+    optionsOrFn: { usesBridge: boolean } | (() => Promise<ToolOutput>),
+    maybeFn?: () => Promise<ToolOutput>,
+  ): Promise<ToolOutput> {
+    const fn = typeof optionsOrFn === "function" ? optionsOrFn : (maybeFn as () => Promise<ToolOutput>);
+    const usesBridge = typeof optionsOrFn === "function" ? true : optionsOrFn.usesBridge;
     const ts = this.now().toISOString();
     const started = performance.now();
-    this.deps.onCallStart?.();
+    if (usesBridge) this.deps.onCallStart?.();
     try {
       const out = await fn();
       this.deps.log?.append({ ts, tool, ok: true, duration_ms: ms(started), args, ...out.log });
@@ -342,7 +356,7 @@ export class Tools {
       this.deps.log?.append({ ts, tool, ok: false, duration_ms: ms(started), args, error: error.body() });
       throw error;
     } finally {
-      this.deps.onCallEnd?.();
+      if (usesBridge) this.deps.onCallEnd?.();
     }
   }
 }

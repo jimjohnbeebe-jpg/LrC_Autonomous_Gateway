@@ -19,7 +19,7 @@
 // Claude-proposed intents are written only through save(), which the lr_save_intent tool calls
 // after Jim approves in chat (the tool also requires `confirmed: true`).
 
-import { mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -121,19 +121,22 @@ export class IntentLibrary {
    */
   save(candidate: unknown, options: { replace?: boolean } = {}): { path: string; replaced: boolean; overrides_bundled: boolean } {
     const intent = this.check(candidate);
-    const { intents } = this.load();
-    const existing = intents.get(intent.id);
-    const replaced = existing?.source === "user";
+    const file = `${intent.id}.json`;
+    const target = path.join(this.userDir, file);
+    // The file on disk counts, valid or not: a user file the loader skipped is still the user's
+    // (Greptile, PR #22).
+    const replaced = existsSync(target);
     if (replaced && !options.replace) {
-      throw new IntentError("intent_exists", `A user intent "${intent.id}" already exists (${existing?.path ?? this.userDir}); pass replace: true to replace it.`);
+      throw new IntentError("intent_exists", `A user intent file ${target} already exists; pass replace: true to replace it.`);
     }
     mkdirSync(this.userDir, { recursive: true });
-    const target = path.join(this.userDir, `${intent.id}.json`);
-    // Write a temporary file and rename it, so a crash never leaves half a file for the loader.
+    // Write a temporary file and rename it over the target, so the loader does not read a file that
+    // is still being written [inference: a rename within one folder swaps the file in one step; the
+    // behaviour on a crash mid-write is not tested]. The loader ignores the .tmp name.
     const temporary = `${target}.${process.pid}.tmp`;
     writeFileSync(temporary, `${JSON.stringify(intent, null, 2)}\n`, "utf8");
     renameSync(temporary, target);
-    return { path: target, replaced, overrides_bundled: existing?.source === "bundled" || (existing?.overrides_bundled ?? false) };
+    return { path: target, replaced, overrides_bundled: existsSync(path.join(this.bundledDir, file)) };
   }
 
   /** Parse and validate the text of an intent file. */

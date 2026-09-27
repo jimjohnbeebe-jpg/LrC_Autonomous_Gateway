@@ -125,7 +125,9 @@ describe("mcp server", () => {
     const missing = await mcp.callTool({ name: "lr_get_intent", arguments: { id: "no_such_intent" } });
     expect(textOf(missing.content as Content)).toMatchObject({ ok: false, error: { code: "INTENT_NOT_FOUND", recoverable: false } });
     const unconfirmed = await mcp.callTool({ name: "lr_save_intent", arguments: { intent: { id: "x" }, confirmed: false } });
-    expect(textOf(unconfirmed.content as Content)).toMatchObject({ ok: false, error: { code: "INVALID_ARGUMENTS" } });
+    expect(textOf(unconfirmed.content as Content)).toMatchObject({ ok: false, error: { code: "NOT_CONFIRMED" } });
+    const noFlag = await mcp.callTool({ name: "lr_save_intent", arguments: { intent: { id: "x" } } });
+    expect(textOf(noFlag.content as Content)).toMatchObject({ ok: false, error: { code: "INVALID_ARGUMENTS" } });
     expect(plugin.received.filter((r) => r.name !== "hello" && r.name !== "ping")).toEqual([]);
   });
 

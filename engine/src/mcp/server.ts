@@ -48,7 +48,9 @@ const setSettingsArgs = z.object({
 const getIntentArgs = z.object({ id: z.string().min(1).describe("the intent's id, from lr_list_intents") });
 const saveIntentArgs = z.object({
   intent: z.record(z.string(), z.unknown()).describe("the whole intent object (schema v1; see lr_get_intent for an example)"),
-  confirmed: z.literal(true).describe("true only after the user approved this exact intent in the chat"),
+  // A boolean rather than literal(true), so that false reaches the tool and gets NOT_CONFIRMED
+  // rather than a generic INVALID_ARGUMENTS (Greptile, PR #22).
+  confirmed: z.boolean().describe("true only after the user approved this exact intent in the chat"),
   replace: z.boolean().optional().describe("true to replace an existing user intent with the same id"),
 });
 

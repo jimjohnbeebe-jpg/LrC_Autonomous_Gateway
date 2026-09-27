@@ -3,8 +3,10 @@
 //
 // Each panel gets an 18 px label strip above it; panels are 4 px apart. They go side by side (a row)
 // or one above the other (a column), whichever shows the panels larger, and the whole composite
-// fits inside `longEdge`. Nothing is enlarged. The composite is encoded once, at `quality`, so the
-// panels are not compressed twice before that.
+// fits inside `longEdge`. Nothing is enlarged: planLayout caps a panel at its own size [handle:
+// tests\preview-composite.test.ts "never enlarges a panel"]. The panels are decoded to raw pixels
+// and the composite is encoded as JPEG once, at `quality` (the single .jpeg() call in composite()
+// below), so they are not compressed twice.
 
 import sharp from "sharp";
 import { drawText, GLYPH_HEIGHT, type Rgb } from "./font.js";

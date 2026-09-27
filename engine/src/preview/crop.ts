@@ -1,7 +1,9 @@
 // Region crops of a preview (lr_get_preview with `region`, MCP_TOOLS; PRD section 6.8).
 //
-// The crop is cut from the preview as rendered and never enlarged: a crop smaller than `longEdge`
-// is returned at the preview's own pixels, a larger one is shrunk to fit. `scale` is output pixels
+// The crop is cut from the preview as rendered and never enlarged (sharp's `withoutEnlargement`):
+// a crop smaller than `longEdge` is returned at the preview's own pixels, a larger one is shrunk to
+// fit [handle: tests\preview-composite.test.ts "cuts the box at the preview's own pixels" (scale 1)
+// and "shrinks a crop larger than the long edge" (scale 0.25)]. `scale` is output pixels
 // per preview pixel (1 when not shrunk); the tool multiplies it by the preview's scale against the
 // photo to report `effective_scale`.
 

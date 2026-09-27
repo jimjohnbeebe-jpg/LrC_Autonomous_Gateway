@@ -2,7 +2,8 @@
 // histogram and clipping only).
 //
 // Everything is measured on the preview as it is sent to Claude: 8-bit sRGB pixels as Lightroom
-// rendered them, not the raw file's headroom (ARCHITECTURE section 6). Definitions:
+// exported them, not the raw file's headroom (ARCHITECTURE section 6; the preview is the export's
+// JPEG, preview\service.ts). Definitions:
 //   luma              Rec. 709 weights on the 8-bit sRGB values [inference: the choice of weights is
 //                     ours; PRD 6.7 names luma without a formula]; its histogram bins the rounded value
 //   luma_percentiles  p1, p5, p50, p95, p99 by nearest rank on the 256-bin luma histogram: the lowest
@@ -22,8 +23,9 @@
 //                     on i * 30 degrees (0 red, 60 yellow, 120 green, 180 cyan, 240 blue, 300 magenta)
 //   hue_mean          circular mean hue of the chromatic pixels, degrees 0-360; null when there are none
 // Percentages are 0-100. Hue is counted in 1-degree bins (each taken at its centre) before the
-// 12-bin histogram and the circular mean are formed from them, which moves hue_mean by at most 0.5
-// degree. Regions (lr_set_regions) get the same set, measured inside their box.
+// 12-bin histogram and the circular mean are formed from them [inference: each hue moves by less
+// than 0.5 degree to its bin centre, so their circular mean moves by less than 0.5 degree too].
+// Regions (lr_set_regions) get the same set, measured inside their box.
 
 import sharp from "sharp";
 import { boxToRect, type PixelRect, type Region, type RegionBox } from "./regions.js";

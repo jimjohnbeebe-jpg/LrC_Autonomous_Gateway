@@ -1,0 +1,595 @@
+phase-4/variants-plugin smoke transcript (PHASE4_PLAN row 6) - Claude Code (Opus 5.5), 2026-09-27
+Plugin under test: plugin\LrC-AVG.lrplugin at commit 6d5a8c4 (branch phase-4/variants-plugin).
+"main" = plugin\LrC-AVG.lrplugin at 263fbd9 (Bridge.lua, Develop.lua, Json.lua, Log.lua, Preview.lua copied
+to <scratch>\old with git show). Schemas: engine\dist\bridge\protocol.js from npm run build at 6d5a8c4.
+Node v24.11.1; fengari 0.1.4 (a Lua 5.3 VM in JavaScript), a scratch install, not a project dependency.
+The fake Lightroom (fake-lr.lua), the two scenario scripts and the runner are reproduced at the end.
+The fake's behaviour is Claude Code's invention, modelled on spikes S6 and S7 where its comments say so:
+this shows that the plugin's Lua runs, what it does with what it is given, and that main's and this
+branch's bridge do the same things; it shows NOTHING about Lightroom itself. Lua 5.1 syntax of every
+plugin file is checked separately by engine\tests\lua-plugin.test.ts (npm test).
+Error messages carry Lua chunk names; they are shortened to the file name below.
+
+To reproduce: npm run build; in an empty folder with these four files, npm install fengari@0.1.4, copy
+main's five files into old\, then:
+$ node run.mjs <repo>
+== Catalog.lua handlers (catalog-cases.lua) ==
+PASS  no task raised ([])
+--  three copies: ok schema ok; copies 3/3 [AVG landscape_golden_hour A:true, AVG landscape_golden_hour B:true, AVG landscape_golden_hour C:true]; master_selected true
+    calls: select 3869534 | createVirtualCopies AVG landscape_golden_hour A on {3869534} gate=0 | select 3869534 | createVirtualCopies AVG landscape_golden_hour B on {3869534} gate=0 | select 3869534 | createVirtualCopies AVG landscape_golden_hour C on {3869534} gate=0 | select 3869534; yields 2; active after 3869534, selected 1
+--  two copies: ok schema ok; copies 2/2 [AVG landscape_golden_hour A:true, AVG landscape_golden_hour B:true]; master_selected true
+    calls: select 3869534 | createVirtualCopies AVG landscape_golden_hour A on {3869534} gate=0 | select 3869534 | createVirtualCopies AVG landscape_golden_hour B on {3869534} gate=0 | select 3869534; yields 1; active after 3869534, selected 1
+--  another photo selected: error target_mismatch (recoverable true): The selected photo (OTHER-UUID) is not the target (CF12AF60-0858-4181-9562-376D16B89126)
+    calls: ; yields 0; active after 3869533, selected 1
+--  a virtual copy selected as the master: error bad_target (recoverable true): the selected photo is a virtual copy (or unreadable); select the master photo
+    calls: ; yields 0; active after 3869600, selected 1
+--  one name: error bad_request (recoverable false): names must be 2-4 different strings, each starting with 'AVG '
+    calls: ; yields 0; active after 3869534, selected 1
+--  five names: error bad_request (recoverable false): names must be 2-4 different strings, each starting with 'AVG '
+    calls: ; yields 0; active after 3869534, selected 1
+--  the same name twice: error bad_request (recoverable false): names must be 2-4 different strings, each starting with 'AVG '
+    calls: ; yields 0; active after 3869534, selected 1
+--  a name without AVG: error bad_request (recoverable false): names must be 2-4 different strings, each starting with 'AVG '
+    calls: ; yields 0; active after 3869534, selected 1
+--  no target_uuid: error bad_request (recoverable false): target_uuid must name the master photo
+    calls: ; yields 0; active after 3869534, selected 1
+--  the second copy fails: ok schema ok; copies 1/3 [AVG landscape_golden_hour A:true] failure copy_failed: createVirtualCopies: fake-lr.lua:159: createVirtualCopies: simulated failure; master_selected true
+    calls: select 3869534 | createVirtualCopies AVG landscape_golden_hour A on {3869534} gate=0 | select 3869534 | createVirtualCopies AVG landscape_golden_hour B on {3869534} gate=0 | select 3869534; yields 1; active after 3869534, selected 1
+--  Lightroom ignores the re-selection: ok schema ok; copies 1/3 [AVG landscape_golden_hour A:true] failure select_failed: Lightroom did not select photo 3869534 (active photo 5007, 1 selected); master_selected false
+    calls: select 3869534 | createVirtualCopies AVG landscape_golden_hour A on {3869534} gate=0 | select 3869534 | select 3869534; yields 1; active after 5007, selected 1
+--  the copy comes back with another name: ok schema ok; copies 1/3 [Copy 2:false] failure identity_mismatch: the new photo is not a virtual copy of the master named AVG landscape_golden_hour A; master_selected true
+    calls: select 3869534 | createVirtualCopies AVG landscape_golden_hour A on {3869534} gate=0 | select 3869534; yields 0; active after 3869534, selected 1
+--  select a copy, identity as expected: ok schema ok; selected 3869600 copy_name Copy 1
+    calls: find OLD-COPY-UUID | select 3869600; yields 0; active after 3869600, selected 1
+--  select the master, no expect: ok schema ok; selected 3869534 copy_name (none)
+    calls: find CF12AF60-0858-4181-9562-376D16B89126 | select 3869534; yields 0; active after 3869534, selected 1
+--  unknown uuid: error unknown_photo (recoverable false): no photo in the catalog has uuid NO-SUCH-UUID
+    calls: find NO-SUCH-UUID; yields 0; active after 3869534, selected 1
+--  copy name differs from expect: error identity_mismatch (recoverable false): the photo with uuid OLD-COPY-UUID has copy_name Copy 1, expected AVG x B
+    calls: find OLD-COPY-UUID; yields 0; active after 3869534, selected 1
+--  master differs from expect: error identity_mismatch (recoverable false): the photo with uuid OLD-COPY-UUID has master_local_id 3869534, expected 1
+    calls: find OLD-COPY-UUID; yields 0; active after 3869534, selected 1
+--  Lightroom ignores the selection: error select_failed (recoverable true): Lightroom did not select photo 3869600 (active photo 3869534, 1 selected)
+    calls: find OLD-COPY-UUID | select 3869600; yields 0; active after 3869534, selected 1
+--  uuid not a string: error bad_request (recoverable false): uuid must be a non-empty string
+    calls: ; yields 0; active after 3869534, selected 1
+--  expect not an object: error bad_request (recoverable false): expect must be an object
+    calls: ; yields 0; active after 3869534, selected 1
+PASS  three copies made, each a copy of the master with its name
+PASS  the master is selected before each of the 3 calls and again at the end (P-09)
+PASS  each call copies only the master, outside a write gate
+PASS  yields between copies (NFR-1) and leaves the master selected
+PASS  another photo selected -> target_mismatch
+PASS  a virtual copy selected as the master -> bad_target
+PASS  one name -> bad_request
+PASS  five names -> bad_request
+PASS  the same name twice -> bad_request
+PASS  a name without AVG -> bad_request
+PASS  no target_uuid -> bad_request
+PASS  unknown uuid -> unknown_photo
+PASS  copy name differs from expect -> identity_mismatch
+PASS  master differs from expect -> identity_mismatch
+PASS  Lightroom ignores the selection -> select_failed
+PASS  uuid not a string -> bad_request
+PASS  expect not an object -> bad_request
+PASS  no copy is made when the request is refused
+PASS  second call raises: ok with 1 copy and failure copy_failed, master selected again
+PASS  re-selection ignored: stops after 1 copy with select_failed, reports the master not selected
+PASS  a copy with another name: identity_ok false, stops with identity_mismatch
+PASS  select_photo selects the copy found by uuid
+PASS  select_photo on a master: no copy_name, master is itself
+
+== Bridge (bridge-cases.lua): main's plugin vs this branch ==
+PASS  main: no task raised ([])
+-- main steps: started: settle, token, first bind of both sockets [binds 2]; engine connected on both sockets [binds 2]; commands answered [binds 2]; receive closed: re-armed with reconnect() [binds 2]; send error: send socket rebound [binds 4]; silent 20 s: both sockets rebound [binds 6]; generation 2 started [binds 8]; generation 1 cleanup handler ran [binds 8]
+PASS  branch: no task raised ([])
+-- branch steps: started: settle, token, first bind of both sockets [binds 2]; engine connected on both sockets [binds 2]; commands answered [binds 2]; receive closed: re-armed with reconnect() [binds 2]; send error: send socket rebound [binds 4]; silent 20 s: both sockets rebound [binds 6]; generation 2 started [binds 8]; generation 1 cleanup handler ran [binds 8]
+PASS  main answers c11 and c12 with unknown_command
+PASS  same 12 envelopes sent for the common commands (plugin_version aside)
+    sent: {"id":"UUID-0003-AAAA-BBBB","type":"evt","name":"hello","payload":{"protocol":1,"plugin_version":"0.3.0","lrc_version":"15.5.1","sdk_declared":13,"ports":{"receive":8765,"send":8766}}}
+    sent: {"id":"c1","type":"res","name":"hello","ok":true,"payload":{"protocol":1,"plugin_version":"0.3.0","lrc_version":"15.5.1","sdk_declared":13,"ports":{"receive":8765,"send":8766}}}
+    sent: {"id":"c2","type":"res","name":"ping","ok":true,"payload":{"pong":true,"nonce":"n1"}}
+    sent: {"id":"c3","type":"res","name":"ping","ok":false,"error":{"code":"unauthorized","recoverable":true,"message":"missing or wrong bridge token; the engine reads it from C:\\Users\\U\\.lrc-avg\\bridge_token"}}
+    sent: {"id":"c5","type":"res","name":"?","ok":false,"error":{"code":"bad_request","message":"not a valid command envelope","recoverable":false}}
+    sent: {"id":"c6","type":"res","name":"frobnicate","ok":false,"error":{"code":"unknown_command","message":"unknown command frobnicate","recoverable":false}}
+    sent: {"id":"c7","type":"res","name":"get_settings","ok":false,"error":{"code":"target_mismatch","recoverable":true,"message":"The selected photo (CF12AF60-0858-4181-9562-376D16B89126) is not the target (OTHER-UUID)"}}
+    sent: {"id":"c8","type":"res","name":"get_context","ok":true,"payload":{"uuid":"CF12AF60-0858-4181-9562-376D16B89126","local_id":3869534,"lrc_version":"15.5.1","is_virtual_copy":false,"filename":"20260907-_OZ80099.NEF"}}
+    sent: Develop.lua:124: attempt to call a nil value (method 'applyDevelopSettings')","recoverable":false}}
+    sent: {"id":"c10","type":"res","name":"apply_settings","ok":false,"error":{"code":"bad_request","message":"history_name must start with 'AVG ' (PRD FR-4.4)","recoverable":false}}
+    sent: {"id":"c11","type":"res","name":"create_virtual_copies","ok":true,"payload":{"uuid":"CF12AF60-0858-4181-9562-376D16B89126","local_id":3869534,"requested":3,"copies":[{"local_id":5001,"uuid":"COPY-5001","is_virtual_copy":true,"master_local_id":3869534,"copy_name":"AVG s A","identity_ok":true},{"local_id":5002,"uuid":"COPY-5002","is_virtual_copy":true,"master_local_id":3869534,"copy_name":
+    sent: {"id":"c12","type":"res","name":"select_photo","ok":true,"payload":{"local_id":3869600,"uuid":"OLD-COPY-UUID","is_virtual_copy":true,"master_local_id":3869534,"copy_name":"Copy 1"}}
+    sent: {"id":"c13","type":"res","name":"ping","ok":true,"payload":{"pong":true,"nonce":"n3"}}
+    sent: {"id":"UUID-0004-AAAA-BBBB","type":"evt","name":"hello","payload":{"protocol":1,"plugin_version":"0.3.0","lrc_version":"15.5.1","sdk_declared":13,"ports":{"receive":8765,"send":8766}}}
+PASS  same 26 log lines for the common commands
+    log: INFO  bridge: starting generation 1 (receive 8765, send 8766)
+    log: INFO  bridge: token written to C:\Users\U\.lrc-avg\bridge_token
+    log: INFO  bridge: listening (generation 1)
+    log: INFO  bridge: receive: engine connected
+    log: INFO  bridge: send: engine connected
+    log: INFO  bridge: hello c1
+    log: WARN  bridge: refused ping c3 (missing or wrong token)
+    log: WARN  bridge: ignored a line that is not a command (16 bytes): Json.lua:210: Json.decode: unexpected 't' at 1
+    log: WARN  bridge: ignored a line that is not a command (35 bytes)
+    log: INFO  bridge: get_settings c7
+    log: WARN  bridge: get_settings failed: target_mismatch The selected photo (CF12AF60-0858-4181-9562-376D16B89126) is not the target (OTHER-UUID)
+    log: INFO  bridge: get_context c8
+    log: INFO  bridge: apply_settings c9
+    log: ERROR bridge: apply_settings raised: Develop.lua:124: attempt to call a nil value (method 'applyDevelopSettings')
+    log: INFO  bridge: apply_settings c10
+    log: WARN  bridge: apply_settings failed: bad_request history_name must start with 'AVG ' (PRD FR-4.4)
+    log: INFO  bridge: create_virtual_copies c11
+    log: INFO  bridge: select_photo c12
+    log: INFO  bridge: receive: closed
+    log: INFO  bridge: receive: engine connected
+    log: WARN  bridge: send: error connection reset
+    log: INFO  bridge: send: engine connected
+    log: WARN  bridge: no message for 20 s; rebinding both sockets
+    log: INFO  bridge: starting generation 2 (receive 8765, send 8766)
+    log: INFO  bridge: generation 1 replaced; loop exiting
+    log: INFO  bridge: token written to C:\Users\U\.lrc-avg\bridge_token
+    log: INFO  bridge: listening (generation 2)
+    log: INFO  bridge: sockets closed (task ended)
+PASS  same socket binds and clock at every step
+PASS  same socket history (6 binds: closed / reconnect() / lines sent)
+PASS  status file: handled 3 -> 5 (+2 new commands), failed 6 -> 4, unauthorized 1, malformed 2
+PASS  status file otherwise identical
+PASS  status file reports plugin 0.3.0
+PASS  c1 hello through the bridge: ok, schema ok
+PASS  c11 create_virtual_copies through the bridge: ok, schema ok
+PASS  c12 select_photo through the bridge: ok, schema ok
+PASS  refusals: unauthorized, bad_request, unknown_command, target_mismatch, plugin_error, bad_request
+
+ALL PASS
+[exit 0]
+
+===== fake-lr.lua =====
+-- A stubbed Lightroom SDK for smoke-running plugin Lua under fengari (no Lightroom). It imitates only
+-- what the LrC-AVG plugin calls, with the behaviour observed in the spikes (S6, S7) where there is
+-- one, and records what the plugin did so the scenarios can check it. It also enforces two plugin
+-- rules: yielding catalog queries never run inside a read gate (rule 03), and getRawMetadata /
+-- getFormattedMetadata / getDevelopSettings only run inside one.
+
+F = { clock = 1000, tasks = {}, files = {}, errors = {}, yields = 0, inRead = 0, inWrite = 0,
+      calls = {}, binds = {}, uuidN = 0, nextLocalId = 5000 }
+
+local function record(what) F.calls[#F.calls + 1] = what end
+
+-- In-memory files (fengari has no io.open).
+io = io or {}
+io.open = function(path, mode)
+    mode = mode or "r"
+    if mode:sub(1, 1) == "r" then
+        if F.files[path] == nil then return nil, path .. ": No such file" end
+        local text = F.files[path]
+        return { read = function() return text end, close = function() end }
+    end
+    if mode:sub(1, 1) == "w" then F.files[path] = "" end
+    if F.files[path] == nil then F.files[path] = "" end
+    return {
+        write = function(self, ...) for _, s in ipairs({ ... }) do F.files[path] = F.files[path] .. tostring(s) end end,
+        close = function() end,
+    }
+end
+
+-- A tiny cooperative scheduler: every task is a coroutine; sleep and yield hand control back.
+function F.spawn(name, fn)
+    F.tasks[#F.tasks + 1] = { name = name, co = coroutine.create(fn) }
+end
+function F.run(rounds)
+    for _ = 1, rounds or 1 do
+        local live = {}
+        for _, t in ipairs(F.tasks) do
+            if coroutine.status(t.co) == "suspended" then
+                local ok, err = coroutine.resume(t.co)
+                if not ok then F.errors[#F.errors + 1] = t.name .. ": " .. tostring(err) end
+            end
+            if coroutine.status(t.co) ~= "dead" then live[#live + 1] = t end
+        end
+        F.tasks = live
+    end
+end
+-- Run fn in a task until it ends; returns what it returned.
+function F.runTask(fn)
+    local out
+    F.spawn("runTask", function() out = table.pack(fn()) end)
+    for _ = 1, 1000 do
+        if #F.tasks == 0 then break end
+        F.run(1)
+    end
+    if not out then return nil end
+    return table.unpack(out, 1, out.n)
+end
+
+local M = {}
+
+M.LrTasks = {
+    pcall = pcall,
+    yield = function() F.yields = F.yields + 1; coroutine.yield() end,
+    sleep = function(s) F.clock = F.clock + (s or 0); coroutine.yield() end,
+    startAsyncTask = function(fn) F.spawn("async", fn) end,
+}
+M.LrDate = {
+    currentTime = function() return F.clock end,
+    timeToUserFormat = function(t, fmt) return "2026-09-27 12:00:00" end,
+}
+M.LrUUID = { generateUUID = function() F.uuidN = F.uuidN + 1; return string.format("UUID-%04d-AAAA-BBBB", F.uuidN) end }
+M.LrPathUtils = {
+    child = function(a, b) return a .. "\\" .. b end,
+    parent = function(p) return (p:gsub("\\[^\\]*$", "")) end,
+    getStandardFilePath = function(which) return which == "home" and "C:\\Users\\U" or "C:\\T" end,
+}
+M.LrFileUtils = {
+    createAllDirectories = function() end,
+    fileAttributes = function() return nil end,
+    delete = function() end,
+    files = function() return function() return nil end end,
+}
+M.LrPrefs = { prefsForPlugin = function() return {} end }
+M.LrExportSession = function() error("export not stubbed") end
+
+-- Sockets: each bind returns a socket object; the scenario drives its callbacks.
+M.LrSocket = {
+    bind = function(spec)
+        local sock = { spec = spec, sent = {}, closed = false, reconnects = 0 }
+        function sock:send(line) self.sent[#self.sent + 1] = line end
+        function sock:close() self.closed = true end
+        function sock:reconnect() self.reconnects = self.reconnects + 1 end
+        F.binds[#F.binds + 1] = sock
+        F.last = F.last or {}
+        F.last[spec.mode] = sock
+        return sock
+    end,
+}
+M.LrFunctionContext = {
+    postAsyncTaskWithContext = function(name, fn)
+        local ctx = { cleanups = {} }
+        function ctx:addCleanupHandler(h) self.cleanups[#self.cleanups + 1] = h end
+        F.contexts = F.contexts or {}
+        F.contexts[#F.contexts + 1] = ctx
+        F.spawn(name, function() fn(ctx) end)
+    end,
+}
+
+-- Photos and the catalog.
+F.photos, F.byUuid = {}, {}
+function F.newPhoto(t)
+    local p = { localIdentifier = t.local_id }
+    p._t = t
+    function p:getRawMetadata(key)
+        assert(F.inRead > 0, "getRawMetadata outside a read gate")
+        if key == "uuid" then return t.uuid end
+        if key == "isVirtualCopy" then return t.is_vc == true end
+        if key == "masterPhoto" then return t.master or p end
+        return t[key]
+    end
+    function p:getFormattedMetadata(key)
+        assert(F.inRead > 0, "getFormattedMetadata outside a read gate")
+        if key == "copyName" then return t.copy_name end
+        if key == "fileName" then return t.file_name end
+        return nil
+    end
+    function p:getDevelopSettings()
+        assert(F.inRead > 0, "getDevelopSettings outside a read gate")
+        return { Exposure2012 = 0 }
+    end
+    F.photos[t.local_id] = p
+    F.byUuid[t.uuid] = p
+    return p
+end
+
+local function noQueryInGate(what)
+    assert(F.inRead == 0, what .. " inside a read gate (rule 03: deadlocks on Windows)")
+end
+
+F.catalog = {
+    withReadAccessDo = function(self, fn) F.inRead = F.inRead + 1; fn(); F.inRead = F.inRead - 1 end,
+    withWriteAccessDo = function(self, name, fn) F.inWrite = F.inWrite + 1; record("write gate " .. name); fn(); F.inWrite = F.inWrite - 1 end,
+    getTargetPhoto = function(self) noQueryInGate("getTargetPhoto"); return F.active end,
+    getTargetPhotos = function(self) noQueryInGate("getTargetPhotos"); return F.selected or {} end,
+    setSelectedPhotos = function(self, active, list)
+        noQueryInGate("setSelectedPhotos")
+        record("select " .. tostring(active.localIdentifier))
+        if F.ignoreSelect then return end
+        F.active, F.selected = active, list
+    end,
+    findPhotoByUuid = function(self, uuid) noQueryInGate("findPhotoByUuid"); record("find " .. uuid); return F.byUuid[uuid] end,
+    -- S6: acts on the selection, returns the copies, names them, makes the new copy active,
+    -- needs no write gate [handle: docs\reports\phase0\S6.md "Analysis"].
+    createVirtualCopies = function(self, name)
+        noQueryInGate("createVirtualCopies")
+        F.copyCalls = (F.copyCalls or 0) + 1
+        local sel = {}
+        for _, p in ipairs(F.selected or {}) do sel[#sel + 1] = p.localIdentifier end
+        record("createVirtualCopies " .. name .. " on {" .. table.concat(sel, ",") .. "} gate=" .. F.inWrite)
+        if F.failCopyAt == F.copyCalls then error("createVirtualCopies: simulated failure") end
+        local out = {}
+        for _, src in ipairs(F.selected or {}) do
+            F.nextLocalId = F.nextLocalId + 1
+            local master = src._t.master or src
+            local copy = F.newPhoto({ local_id = F.nextLocalId, uuid = "COPY-" .. F.nextLocalId, is_vc = true, master = master,
+                copy_name = F.wrongName or name, file_name = src._t.file_name })
+            out[#out + 1] = copy
+        end
+        if out[#out] then F.active, F.selected = out[#out], { out[#out] } end
+        return out
+    end,
+}
+M.LrApplication = {
+    activeCatalog = function() return F.catalog end,
+    versionString = function() return "15.5.1" end,
+}
+
+function import(name)
+    local m = M[name]
+    if m == nil then error("fake-lr: no stub for " .. name) end
+    return m
+end
+_PLUGIN = { id = "com.lrcavg.gateway" }
+
+-- Reset the photo world between scenarios.
+function F.world()
+    F.photos, F.byUuid, F.calls = {}, {}, {}
+    F.ignoreSelect, F.failCopyAt, F.wrongName, F.copyCalls = nil, nil, nil, 0
+    local master = F.newPhoto({ local_id = 3869534, uuid = "CF12AF60-0858-4181-9562-376D16B89126", file_name = "20260907-_OZ80099.NEF" })
+    local other = F.newPhoto({ local_id = 3869533, uuid = "OTHER-UUID", file_name = "20260907-_OZ80093.NEF" })
+    local vc = F.newPhoto({ local_id = 3869600, uuid = "OLD-COPY-UUID", is_vc = true, master = master, copy_name = "Copy 1" })
+    F.active, F.selected = master, { master }
+    return master, other, vc
+end
+
+===== catalog-cases.lua =====
+-- Catalog.lua's two handlers, called directly in a task against fake-lr.lua. Returns a JSON string
+-- (via the plugin's own Json.lua): one entry per case with the result or the error, and what the
+-- handler did to the fake catalog.
+
+local Catalog = require 'Catalog'
+local Json = require 'Json'
+
+local MASTER_UUID = "CF12AF60-0858-4181-9562-376D16B89126"
+local NAMES = { "AVG landscape_golden_hour A", "AVG landscape_golden_hour B", "AVG landscape_golden_hour C" }
+local out = {}
+
+local function case(name, command, setup, payload)
+    local master, other, vc = F.world()
+    F.yields = 0
+    if setup then setup(master, other, vc) end
+    F.calls = {}
+    local handler = command == "create_virtual_copies" and Catalog.createVirtualCopies or Catalog.selectPhoto
+    local result, err = F.runTask(function() return handler(payload) end)
+    out[#out + 1] = {
+        case = name, command = command, result = result, error = err, calls = F.calls, yields = F.yields,
+        active_after = F.active and F.active.localIdentifier, selected_after = #(F.selected or {}),
+    }
+end
+
+local function selectPhoto(p) F.active, F.selected = p, { p } end
+
+case("three copies", "create_virtual_copies", nil, { target_uuid = MASTER_UUID, names = NAMES })
+case("two copies", "create_virtual_copies", nil, { target_uuid = MASTER_UUID, names = { NAMES[1], NAMES[2] } })
+case("another photo selected", "create_virtual_copies", function(_, other) selectPhoto(other) end,
+    { target_uuid = MASTER_UUID, names = NAMES })
+case("a virtual copy selected as the master", "create_virtual_copies", function(_, _, vc) selectPhoto(vc) end,
+    { target_uuid = "OLD-COPY-UUID", names = NAMES })
+case("one name", "create_virtual_copies", nil, { target_uuid = MASTER_UUID, names = { NAMES[1] } })
+case("five names", "create_virtual_copies", nil,
+    { target_uuid = MASTER_UUID, names = { "AVG a", "AVG b", "AVG c", "AVG d", "AVG e" } })
+case("the same name twice", "create_virtual_copies", nil, { target_uuid = MASTER_UUID, names = { NAMES[1], NAMES[1] } })
+case("a name without AVG", "create_virtual_copies", nil, { target_uuid = MASTER_UUID, names = { "landscape A", NAMES[2] } })
+case("no target_uuid", "create_virtual_copies", nil, { names = NAMES })
+case("the second copy fails", "create_virtual_copies", function() F.failCopyAt = 2 end,
+    { target_uuid = MASTER_UUID, names = NAMES })
+case("Lightroom ignores the re-selection", "create_virtual_copies", function() F.ignoreSelect = true end,
+    { target_uuid = MASTER_UUID, names = NAMES })
+case("the copy comes back with another name", "create_virtual_copies", function() F.wrongName = "Copy 2" end,
+    { target_uuid = MASTER_UUID, names = NAMES })
+
+case("select a copy, identity as expected", "select_photo", nil,
+    { uuid = "OLD-COPY-UUID", expect = { copy_name = "Copy 1", master_local_id = 3869534, is_virtual_copy = true } })
+case("select the master, no expect", "select_photo", function(_, other) selectPhoto(other) end, { uuid = MASTER_UUID })
+case("unknown uuid", "select_photo", nil, { uuid = "NO-SUCH-UUID" })
+case("copy name differs from expect", "select_photo", nil, { uuid = "OLD-COPY-UUID", expect = { copy_name = "AVG x B" } })
+case("master differs from expect", "select_photo", nil, { uuid = "OLD-COPY-UUID", expect = { master_local_id = 1 } })
+case("Lightroom ignores the selection", "select_photo", function() F.ignoreSelect = true end, { uuid = "OLD-COPY-UUID" })
+case("uuid not a string", "select_photo", nil, { uuid = 42 })
+case("expect not an object", "select_photo", nil, { uuid = "OLD-COPY-UUID", expect = "x" })
+
+return Json.encode({ cases = out, errors = F.errors })
+
+===== bridge-cases.lua =====
+-- The whole bridge (Bridge.start, its monitor loop, the sockets and the dispatch) against
+-- fake-lr.lua, driven through the socket callbacks the way an engine would. Runs the same script on
+-- main's Bridge.lua and on the split one (on main, c11 and c12 are unknown commands). Returns a JSON string.
+
+local Bridge = require 'Bridge'
+local Json = require 'Json'
+
+local TOKEN_FILE = "C:\\Users\\U\\.lrc-avg\\bridge_token"
+local LOG_FILE = "C:\\T\\LrC-AVG\\bridge.log"
+local STATUS_FILE = "C:\\T\\LrC-AVG\\bridge_status.json"
+local steps = {}
+
+local function step(what) steps[#steps + 1] = { step = what, binds = #F.binds, clock = F.clock } end
+local function command(id, name, payload, token)
+    F.last.receive.spec.onMessage(nil, Json.encode({ id = id, type = "cmd", name = name, token = token or F.files[TOKEN_FILE], payload = payload }))
+    F.run(5)
+end
+
+F.world()
+Bridge.start()
+F.run(8)
+step("started: settle, token, first bind of both sockets")
+-- The engine connects the command (receive) socket first, then the event (send) socket (C-5).
+F.last.receive.spec.onConnected()
+F.run(3)
+F.last.send.spec.onConnected()
+F.run(3)
+step("engine connected on both sockets")
+
+command("c1", "hello", { protocol = 1, engine_version = "smoke" })
+command("c2", "ping", { nonce = "n1" })
+command("c3", "ping", { nonce = "n2" }, "wrong-token")
+F.last.receive.spec.onMessage(nil, "this is not json")
+F.run(3)
+F.last.receive.spec.onMessage(nil, '{"id":"c5","type":"res","name":"x"}')
+F.run(3)
+command("c6", "frobnicate", {})
+command("c7", "get_settings", { target_uuid = "OTHER-UUID" })
+command("c8", "get_context", {})
+command("c9", "apply_settings", { settings = { Exposure2012 = 1 }, history_name = "AVG smoke" }) -- applyDevelopSettings is not stubbed: raises
+command("c10", "apply_settings", { settings = { Exposure2012 = 1 }, history_name = "no prefix" })
+-- On main's plugin these two are unknown commands; the same rounds run either way.
+command("c11", "create_virtual_copies", { target_uuid = "CF12AF60-0858-4181-9562-376D16B89126", names = { "AVG s A", "AVG s B", "AVG s C" } })
+command("c12", "select_photo", { uuid = "OLD-COPY-UUID", expect = { copy_name = "Copy 1" } })
+step("commands answered")
+F.run(5)
+local statusMid = F.files[STATUS_FILE]
+
+F.last.receive.spec.onError(nil, "timeout") -- no-client timeout while connected: ignored
+F.last.receive.spec.onClosed()
+F.run(3)
+step("receive closed: re-armed with reconnect()")
+F.last.receive.spec.onConnected()
+command("c13", "ping", { nonce = "n3" })
+F.last.send.spec.onError(nil, "connection reset")
+F.run(3)
+step("send error: send socket rebound")
+F.last.send.spec.onConnected()
+F.run(3)
+F.run(130) -- 26 s of 0.2 s ticks without a message
+step("silent 20 s: both sockets rebound")
+local reconnects = {}
+for i, s in ipairs(F.binds) do reconnects[i] = { mode = s.spec.mode, closed = s.closed, reconnects = s.reconnects, sent = #s.sent } end
+
+Bridge.start() -- a Reload Plug-in: generation 2 replaces generation 1
+F.run(10)
+step("generation 2 started")
+F.contexts[1].cleanups[1]()
+step("generation 1 cleanup handler ran")
+
+local sent = {}
+for _, s in ipairs(F.binds) do
+    if s.spec.mode == "send" then
+        for _, line in ipairs(s.sent) do sent[#sent + 1] = line end
+    end
+end
+return Json.encode({ sent = sent, log = F.files[LOG_FILE], status_mid = statusMid, steps = steps,
+    sockets = reconnects, errors = F.errors, token = F.files[TOKEN_FILE], calls = F.calls })
+
+===== run.mjs =====
+// Smoke-runs plugin Lua under fengari 0.1.4 against fake-lr.lua (no Lightroom), and checks the
+// results against the engine's zod schemas (engine\dist\bridge\protocol.js, built by npm run build).
+// Usage: node run.mjs <repo root>
+import fengari from "fengari";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+
+const { lua, lauxlib, lualib, to_luastring } = fengari;
+const here = path.dirname(new URL(import.meta.url).pathname).replace(/^\/([A-Za-z]:)/, "$1");
+const repo = process.argv[2];
+const newDir = path.join(repo, "plugin", "LrC-AVG.lrplugin").replaceAll("\\", "/");
+const oldDir = path.join(here, "old").replaceAll("\\", "/");
+const { COMMANDS } = await import(pathToFileURL(path.join(repo, "engine", "dist", "bridge", "protocol.js")).href);
+
+function runLua(pluginDir, script, globals = "") {
+  const L = lauxlib.luaL_newstate();
+  lualib.luaL_openlibs(L);
+  const setup = `package.path = [[${pluginDir}/?.lua;${here.replaceAll("\\", "/")}/?.lua]]\n${globals}\ndofile([[${here.replaceAll("\\", "/")}/fake-lr.lua]])`;
+  if (lauxlib.luaL_dostring(L, to_luastring(setup)) !== lua.LUA_OK) throw new Error(lua.lua_tojsstring(L, -1));
+  if (lauxlib.luaL_dofile(L, to_luastring(path.join(here, script).replaceAll("\\", "/"))) !== lua.LUA_OK) {
+    throw new Error(`${script}: ${lua.lua_tojsstring(L, -1)}`);
+  }
+  return JSON.parse(lua.lua_tojsstring(L, -1));
+}
+
+let failures = 0;
+const check = (ok, what) => {
+  console.log(`${ok ? "PASS" : "FAIL"}  ${what}`);
+  if (!ok) failures++;
+};
+
+// 1. Catalog.lua's handlers, each result through the engine's schema.
+console.log("== Catalog.lua handlers (catalog-cases.lua) ==");
+const cat = runLua(newDir, "catalog-cases.lua");
+check(cat.errors.length === 0, `no task raised (${JSON.stringify(cat.errors)})`);
+for (const c of cat.cases) {
+  let schema = "";
+  if (c.result) {
+    const parsed = COMMANDS[c.command].safeParse(c.result);
+    schema = parsed.success ? "schema ok" : `SCHEMA REJECTED: ${parsed.error.message}`;
+    if (!parsed.success) failures++;
+  }
+  const summary = c.error
+    ? `error ${c.error.code} (recoverable ${c.error.recoverable}): ${c.error.message}`
+    : `ok ${schema}; ${c.command === "create_virtual_copies"
+        ? `copies ${c.result.copies.length}/${c.result.requested} [${c.result.copies.map((x) => `${x.copy_name}:${x.identity_ok}`).join(", ")}]` +
+          `${c.result.failure ? ` failure ${c.result.failure.code}: ${c.result.failure.message}` : ""}; master_selected ${c.result.master_selected}`
+        : `selected ${c.result.local_id} copy_name ${c.result.copy_name ?? "(none)"}`}`;
+  console.log(`--  ${c.case}: ${summary}`);
+  console.log(`    calls: ${(c.calls ?? []).join(" | ")}; yields ${c.yields}; active after ${c.active_after}, selected ${c.selected_after}`);
+}
+const byCase = Object.fromEntries(cat.cases.map((c) => [c.case, c]));
+const three = byCase["three copies"];
+check(three.result?.copies.length === 3 && three.result.copies.every((x) => x.identity_ok) && !three.result.failure, "three copies made, each a copy of the master with its name");
+check(three.calls.filter((x) => x.startsWith("select 3869534")).length === 4, "the master is selected before each of the 3 calls and again at the end (P-09)");
+check(three.calls.filter((x) => x.startsWith("createVirtualCopies")).every((x) => x.includes("on {3869534}") && x.endsWith("gate=0")), "each call copies only the master, outside a write gate");
+check(three.yields === 2 && three.active_after === 3869534, "yields between copies (NFR-1) and leaves the master selected");
+const expectErr = { "another photo selected": "target_mismatch", "a virtual copy selected as the master": "bad_target", "one name": "bad_request", "five names": "bad_request", "the same name twice": "bad_request", "a name without AVG": "bad_request", "no target_uuid": "bad_request", "unknown uuid": "unknown_photo", "copy name differs from expect": "identity_mismatch", "master differs from expect": "identity_mismatch", "Lightroom ignores the selection": "select_failed", "uuid not a string": "bad_request", "expect not an object": "bad_request" };
+for (const [name, code] of Object.entries(expectErr)) check(byCase[name]?.error?.code === code, `${name} -> ${code}`);
+check(Object.keys(expectErr).filter((n) => byCase[n].command === "create_virtual_copies").every((n) => !byCase[n].calls.some((x) => x.startsWith("createVirtualCopies"))), "no copy is made when the request is refused");
+const fails = byCase["the second copy fails"].result;
+check(fails?.copies.length === 1 && fails.failure?.code === "copy_failed" && fails.master_selected, "second call raises: ok with 1 copy and failure copy_failed, master selected again");
+const ignored = byCase["Lightroom ignores the re-selection"].result;
+check(ignored?.copies.length === 1 && ignored.failure?.code === "select_failed" && ignored.master_selected === false && ignored.master_select_error, "re-selection ignored: stops after 1 copy with select_failed, reports the master not selected");
+const wrong = byCase["the copy comes back with another name"].result;
+check(wrong?.copies.length === 1 && wrong.copies[0].identity_ok === false && wrong.failure?.code === "identity_mismatch", "a copy with another name: identity_ok false, stops with identity_mismatch");
+check(byCase["select a copy, identity as expected"].result?.copy_name === "Copy 1" && byCase["select a copy, identity as expected"].active_after === 3869600, "select_photo selects the copy found by uuid");
+check(byCase["select the master, no expect"].result?.copy_name === undefined && byCase["select the master, no expect"].result?.master_local_id === 3869534, "select_photo on a master: no copy_name, master is itself");
+
+// 2. The whole bridge, main's Bridge.lua against the split one.
+console.log("\n== Bridge (bridge-cases.lua): main's plugin vs this branch ==");
+// Error messages carry the chunk name, which differs between the two plugin folders: keep the file name.
+const unpath = (s) => s.replace(/\S*\/(\w+\.lua):/g, "$1:");
+const strip = (s) => (s ?? "").split("\n").filter(Boolean).map((l) => unpath(l.replace(/^\S+ \S+ /, "")));
+const envelopes = (lines) => lines.map((l) => { const e = JSON.parse(l); delete e.ts; return e; });
+const oldRun = runLua(oldDir, "bridge-cases.lua");
+const newRun = runLua(newDir, "bridge-cases.lua");
+for (const [label, run] of [["main", oldRun], ["branch", newRun]]) {
+  check(run.errors.length === 0, `${label}: no task raised (${JSON.stringify(run.errors)})`);
+  console.log(`-- ${label} steps: ${run.steps.map((s) => `${s.step} [binds ${s.binds}]`).join("; ")}`);
+}
+const oldSent = envelopes(oldRun.sent);
+const newSent = envelopes(newRun.sent);
+const newOnly = new Set(["c11", "c12"]);
+const newCommon = newSent.filter((e) => !newOnly.has(e.id));
+const oldCommon = oldSent.filter((e) => !newOnly.has(e.id));
+check(oldSent.filter((e) => newOnly.has(e.id)).every((e) => e.error?.code === "unknown_command"), "main answers c11 and c12 with unknown_command");
+const norm = (list) => JSON.stringify(list, (k, v) => (k === "plugin_version" ? "<version>" : typeof v === "string" ? unpath(v) : v));
+check(norm(oldCommon) === norm(newCommon), `same ${oldCommon.length} envelopes sent for the common commands (plugin_version aside)`);
+for (const e of newSent) console.log(`    sent: ${JSON.stringify(e)}`.slice(0, 400));
+const oldLog = strip(oldRun.log);
+const newLog = strip(newRun.log).filter((l) => !/c11|c12|create_virtual_copies|select_photo/.test(l));
+check(JSON.stringify(oldLog) === JSON.stringify(newLog), `same ${oldLog.length} log lines for the common commands`);
+if (JSON.stringify(oldLog) !== JSON.stringify(newLog)) {
+  for (let i = 0; i < Math.max(oldLog.length, newLog.length); i++) if (oldLog[i] !== newLog[i]) console.log(`    log ${i}: main "${oldLog[i]}" / branch "${newLog[i]}"`);
+}
+for (const l of strip(newRun.log)) console.log(`    log: ${l}`);
+check(JSON.stringify(oldRun.steps) === JSON.stringify(newRun.steps), "same socket binds and clock at every step");
+check(JSON.stringify(oldRun.sockets) === JSON.stringify(newRun.sockets), `same socket history (${newRun.sockets.length} binds: closed / reconnect() / lines sent)`);
+const so = JSON.parse(oldRun.status_mid);
+const sn = JSON.parse(newRun.status_mid);
+for (const s of [so, sn]) { delete s.log_tail; delete s.updated_at; delete s.plugin_version; }
+check(sn.commands_handled === so.commands_handled + 2 && sn.commands_failed === so.commands_failed - 2, `status file: handled ${so.commands_handled} -> ${sn.commands_handled} (+2 new commands), failed ${so.commands_failed} -> ${sn.commands_failed}, unauthorized ${sn.commands_unauthorized}, malformed ${sn.lines_malformed}`);
+delete so.commands_handled; delete sn.commands_handled; delete so.commands_failed; delete sn.commands_failed;
+check(JSON.stringify(so) === JSON.stringify(sn), "status file otherwise identical");
+check(JSON.parse(newRun.status_mid).plugin_version === "0.3.0", "status file reports plugin 0.3.0");
+const byId = Object.fromEntries(newSent.filter((e) => e.type === "res").map((e) => [e.id, e]));
+for (const [id, name] of [["c1", "hello"], ["c11", "create_virtual_copies"], ["c12", "select_photo"]]) {
+  const p = COMMANDS[name].safeParse(byId[id]?.payload);
+  check(byId[id]?.ok === true && p.success, `${id} ${name} through the bridge: ok, schema ${p.success ? "ok" : p.error.message}`);
+}
+check(byId["c3"]?.error?.code === "unauthorized" && byId["c5"]?.error?.code === "bad_request" && byId["c6"]?.error?.code === "unknown_command" &&
+  byId["c7"]?.error?.code === "target_mismatch" && byId["c9"]?.error?.code === "plugin_error" && byId["c10"]?.error?.code === "bad_request",
+  "refusals: unauthorized, bad_request, unknown_command, target_mismatch, plugin_error, bad_request");
+
+console.log(`\n${failures === 0 ? "ALL PASS" : `${failures} FAILED`}`);
+process.exit(failures === 0 ? 0 : 1);

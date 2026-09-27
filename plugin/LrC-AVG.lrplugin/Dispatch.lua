@@ -1,6 +1,8 @@
 -- Bridge command dispatch (ARCHITECTURE section 3): the table of command handlers, and one line
--- from the engine decoded, its token checked (C-8) and its handler run. Moved out of Bridge.lua
--- unchanged in PHASE4_PLAN row 6; Bridge.lua owns the sockets and the counters in its state `S`.
+-- from the engine decoded, its token checked (C-8) and its handler run. Moved out of Bridge.lua in
+-- PHASE4_PLAN row 6; Bridge.lua owns the sockets and the counters in its state `S`. Against a fake
+-- Lightroom, main's bridge and this one sent the same replies and wrote the same log for the same
+-- commands [handle: docs\reports\phase4\variants-plugin-smoke\smoke.txt "== Bridge"].
 --
 -- Handlers return a result table, or nil plus an error table { code, message, recoverable }
 -- (PRD NFR-7). engine\tests\lua-plugin.test.ts checks that HANDLERS names exactly the commands in

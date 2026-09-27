@@ -1,5 +1,7 @@
--- The bridge's two LrSocket listeners (ARCHITECTURE section 3, AVG-004), moved out of Bridge.lua
--- unchanged in PHASE4_PLAN row 6:
+-- The bridge's two LrSocket listeners (ARCHITECTURE section 3, AVG-004), moved out of Bridge.lua in
+-- PHASE4_PLAN row 6. Against a fake Lightroom, main's bridge and this one bound, re-armed and rebound
+-- their sockets at the same steps [handle: docs\reports\phase4\variants-plugin-smoke\smoke.txt
+-- "== Bridge", "same socket history"]:
 --   receive socket (8765): commands from the engine; each line is handed to a new task
 --   send socket    (8766): responses and events to the engine
 -- The rules they follow (P-13 re-arm and rebind, generation counters) are described at the top of

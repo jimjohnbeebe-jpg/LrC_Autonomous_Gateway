@@ -9,11 +9,12 @@ import os from "node:os";
 import path from "node:path";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
-import { GOLDEN_SCHEMA_ID, coversAll, goldenDir, goldenEntry, goldenName, newestCompleteRun, recordedGoldens, sha256, writeGoldens, type GoldenFile } from "../src/devtools/goldens.js";
+import { GOLDEN_SCHEMA_ID, coversAll, goldenDir, goldenEntry, goldenName, newestCompleteRun, readGoldenFile, recordedGoldens, sha256, writeGoldens, type GoldenFile } from "../src/devtools/goldens.js";
 
 const dir = goldenDir();
 const indexFile = path.join(dir, "golden.json");
-const index: GoldenFile | null = existsSync(indexFile) ? (JSON.parse(readFileSync(indexFile, "utf8")) as GoldenFile) : null;
+// Validated like every JSON file the engine reads (rule 01-stack; Greptile, PR #24).
+const index: GoldenFile | null = existsSync(indexFile) ? readGoldenFile(indexFile) : null;
 const entries = index?.entries ?? [];
 const missing = entries.filter((e) => !existsSync(path.join(dir, e.file))).map((e) => e.file);
 
@@ -97,6 +98,13 @@ describe("golden JPEGs: the writer", () => {
       expect(newestCompleteRun(path.join(tmp, "none"), SIX)).toBeNull();
       expect(coversAll(recordedGoldens(older), SIX)).toBe(true);
       expect(recordedGoldens({ fixtures: [{ status: "skipped" }] })).toEqual([]);
+      // Validated (Greptile, PR #24): a path out of its run's folder, or a malformed hash, records nothing.
+      const h = "a".repeat(64);
+      expect(recordedGoldens({ fixtures: [{ golden: { saved_as: "golden_1\\..\\..\\x.jpg", preview_hash: h } }] })).toEqual([]);
+      expect(recordedGoldens({ fixtures: [{ golden: { saved_as: "golden_1\\x.jpg", preview_hash: "short" } }] })).toEqual([]);
+      expect(recordedGoldens("not results")).toEqual([]);
+      writeFileSync(path.join(tmp, "bad.json"), JSON.stringify({ schema: GOLDEN_SCHEMA_ID, created: "x", source: "x", entries: [{ file: "../x.jpg" }] }));
+      expect(() => readGoldenFile(path.join(tmp, "bad.json"))).toThrow(/not a valid golden manifest/);
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }

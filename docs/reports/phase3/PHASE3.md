@@ -85,7 +85,7 @@ The headline `Phase 3 acceptance: WORKED / FAILED` covers:
 - the other checks the harness runs: the probes, the region crop, the selection guard;
 - the photos put back, and Jim's answers.
 
-Values are compared within the read-back tolerance (1e-6), as every write is [handle: `engine\src\params\map.ts` `READBACK_TOLERANCE`, used by `verifyReadback` for every write and by `differingSettings` for these comparisons; tests `engine\tests\params-map.test.ts` "passes a read-back equal to what was written" (0.83 vs 0.8300000000000001) and "ignores float noise within READBACK_TOLERANCE"]. The question "does it look like a golden-hour edit" is recorded but does not decide it. A separate line reports the pass budget (~3.5 s), a measurement.
+The check compares settings (the recipe replay, the photo put back after each session, the revert's differences) with `differingSettings`, within the same tolerance (1e-6) the engine's `apply_settings` writes are read back with (`verifyReadback`); the snapshot applies themselves are checked only through those comparisons [handle: `engine\src\params\map.ts` `READBACK_TOLERANCE`, `verifyReadback`, `differingSettings`; `engine\src\devtools\phase3-check.ts` `runFixture`; tests `engine\tests\params-map.test.ts` "passes a read-back equal to what was written" (0.83 vs 0.8300000000000001) and "ignores float noise within READBACK_TOLERANCE"]. The question "does it look like a golden-hour edit" is recorded but does not decide it. A separate line reports the pass budget (~3.5 s), a measurement.
 
 Results go to `%TEMP%\LrC-AVG\P3\`:
 - `p3_check_<time>.json`;

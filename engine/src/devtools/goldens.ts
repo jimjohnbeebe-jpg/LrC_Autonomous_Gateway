@@ -16,14 +16,47 @@ import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { z } from "zod";
+import { metricsSummarySchema } from "../log/index.js";
 import { measureImage, summarize, type MetricsSummary } from "../metrics/index.js";
 
 export const GOLDEN_SCHEMA_ID = "lrc-avg/goldens/1";
+
+// The JSON files read here are validated with zod at the boundary (rule 01-stack; Greptile, PR #24).
+const SHA256 = z.string().regex(/^[0-9a-f]{64}$/);
+/** A run's golden JPEG: `golden_<time>\<name>.jpg`, one folder deep, so it cannot point outside the check's folder. */
+const SAVED_AS = z.string().regex(/^golden_[^\\/]+[\\/][^\\/]+\.jpg$/);
+
+/** The part of a p3_check_*.json that `npm run goldens` reads. */
+export const checkResultsGoldensSchema = z.looseObject({
+  fixtures: z.array(z.looseObject({ golden: z.looseObject({ saved_as: SAVED_AS, preview_hash: SHA256 }).optional() })),
+});
+
+export const goldenEntrySchema = z.strictObject({
+  file: z.string().regex(/^[^\\/]+\.jpg$/),
+  sha256: SHA256,
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+  metrics: metricsSummarySchema,
+});
+export const goldenFileSchema = z.strictObject({
+  schema: z.literal(GOLDEN_SCHEMA_ID),
+  created: z.string(),
+  source: z.string(),
+  entries: z.array(goldenEntrySchema),
+});
 
 export type GoldenEntry = { file: string; sha256: string; width: number; height: number; metrics: MetricsSummary };
 export type GoldenFile = { schema: typeof GOLDEN_SCHEMA_ID; created: string; source: string; entries: GoldenEntry[] };
 /** A golden JPEG a check run saved: its path relative to the check's output folder, and the hash it recorded. */
 export type RecordedGolden = { saved_as: string; sha256: string };
+
+/** Read and validate tests\golden\golden.json (or any golden manifest); throws with the problems. */
+export function readGoldenFile(file: string): GoldenFile {
+  const parsed = goldenFileSchema.safeParse(JSON.parse(readFileSync(file, "utf8")));
+  if (!parsed.success) throw new Error(`${file} is not a valid golden manifest: ${parsed.error.issues.slice(0, 5).map((i) => `${i.path.join(".")}: ${i.message}`).join("; ")}`);
+  return parsed.data as GoldenFile;
+}
 
 /** The repo's tests\golden\ (this file is <repo>\engine\{src,dist}\devtools\goldens.*). */
 export function goldenDir(): string {
@@ -48,16 +81,14 @@ export async function goldenEntry(file: string): Promise<GoldenEntry> {
   return { file: path.basename(file), sha256: sha256(data), width: metrics.width, height: metrics.height, metrics: summarize(metrics) };
 }
 
-/** The golden JPEGs a p3_check_*.json recorded (fixtures[*].golden: saved_as and preview_hash). */
+/**
+ * The golden JPEGs a p3_check_*.json recorded (fixtures[*].golden: saved_as and preview_hash),
+ * validated; results that do not match the schema record none.
+ */
 export function recordedGoldens(results: unknown): RecordedGolden[] {
-  const fixtures = (results as { fixtures?: unknown }).fixtures;
-  if (!Array.isArray(fixtures)) return [];
-  const out: RecordedGolden[] = [];
-  for (const f of fixtures) {
-    const golden = (f as { golden?: { saved_as?: unknown; preview_hash?: unknown } }).golden;
-    if (typeof golden?.saved_as === "string" && typeof golden.preview_hash === "string") out.push({ saved_as: golden.saved_as, sha256: golden.preview_hash });
-  }
-  return out;
+  const parsed = checkResultsGoldensSchema.safeParse(results);
+  if (!parsed.success) return [];
+  return parsed.data.fixtures.flatMap((f) => (f.golden ? [{ saved_as: f.golden.saved_as, sha256: f.golden.preview_hash }] : []));
 }
 
 /** Whether the recorded goldens cover every fixture, one file each. */

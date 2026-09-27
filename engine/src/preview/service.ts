@@ -23,7 +23,7 @@ import os from "node:os";
 import path from "node:path";
 import sharp from "sharp";
 import type { BridgeClient } from "../bridge/index.js";
-import { measureImage, type BasicMetrics } from "../metrics/index.js";
+import { measureImage, type Metrics } from "../metrics/index.js";
 
 export const PREVIEW_SOURCE = "export";
 /** An export took ~2.6 s at 1600 px in S1 [handle: docs\reports\phase0\S1.md]; allow for a slow first one. */
@@ -58,7 +58,7 @@ export type RenderedPreview = {
   /** False when the export was passed on as Lightroom wrote it. */
   reencoded: boolean;
   source: typeof PREVIEW_SOURCE;
-  metrics: BasicMetrics;
+  metrics: Metrics;
   rendered_at: string;
   timings: {
     /** The export inside the plugin (LrExportSession). */

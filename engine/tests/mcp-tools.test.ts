@@ -165,8 +165,8 @@ describe("mcp tools: lr_get_preview and lr_get_metrics", () => {
     const { json } = await tools.getMetrics();
     expect(lr.exports).toBe(exports);
     expect(json["preview_hash"]).toBe(preview.json["preview_hash"]);
-    const metrics = json["metrics"] as { luma: { histogram: number[] }; pixels: number };
-    expect(metrics.luma.histogram).toHaveLength(256);
+    const metrics = json["metrics"] as { histograms: { luma: number[] }; pixels: number };
+    expect(metrics.histograms.luma).toHaveLength(256);
     expect(metrics.pixels).toBe(1600 * 1067);
   });
 

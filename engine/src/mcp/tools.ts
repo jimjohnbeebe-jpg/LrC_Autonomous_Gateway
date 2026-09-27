@@ -12,7 +12,7 @@
 import { randomUUID } from "node:crypto";
 import type { BridgeClient } from "../bridge/index.js";
 import type { ToolLog } from "../log/index.js";
-import { deltaMetrics, summarize, type BasicMetrics } from "../metrics/index.js";
+import { deltaMetrics, summarize, type Metrics } from "../metrics/index.js";
 import { ParamError, type CanonicalValue, type FromSdkResult, type ParamMap } from "../params/index.js";
 import type { PreviewService, RenderedPreview } from "../preview/index.js";
 import { ToolError, toToolError } from "./errors.js";
@@ -41,7 +41,7 @@ export type LastRender = {
   rendered_at: string;
   width: number;
   height: number;
-  metrics: BasicMetrics;
+  metrics: Metrics;
 };
 
 export type SetSettingsArgs = {

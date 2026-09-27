@@ -23,7 +23,11 @@ const MEASURED =
   "Metrics are measured on the rendered preview (8-bit sRGB, as Lightroom exported it), not on the raw file: " +
   "clipping here can often be recovered from the raw data with highlights/whites or shadows/blacks. " +
   "clip_high_pct = % of pixels with any channel >= 253; clip_low_pct = % of pixels with all channels <= 2; " +
-  "luma = Rec. 709 weights on the 8-bit values.";
+  "luma = Rec. 709 weights on the 8-bit values (0-255); luma_percentiles p1-p99 by nearest rank; " +
+  "dynamic_range = (p99 - p1) / 255; rb_ratio = mean red / mean blue (a white-balance proxy); " +
+  "saturation_mean = mean HSV saturation, 0-100; hue_histogram = 12 bins of 30 degrees (bin i centred on i*30: " +
+  "0 red, 60 yellow, 120 green, 180 cyan, 240 blue, 300 magenta), % of the chromatic pixels (HSV saturation and value " +
+  ">= 0.1, chromatic_pct of all); hue_mean = their circular mean hue in degrees. Percentages are 0-100.";
 
 const longEdge = z
   .number()
@@ -95,7 +99,7 @@ function definitions(tools: Tools): ToolDef[] {
       title: "Preview of the active photo",
       description:
         `Render the photo selected in Lightroom with its current Develop settings (a JPEG export, quality ${PREVIEW_QUALITY}, ` +
-        "which takes about 3 seconds) and return it as an image, with its uuid, SHA-256 hash, size, basic metrics and timings. " +
+        "which takes about 3 seconds) and return it as an image, with its uuid, SHA-256 hash, size, metrics and timings. " +
         "Changes nothing. " +
         MEASURED,
       schema: previewArgs,
@@ -106,8 +110,8 @@ function definitions(tools: Tools): ToolDef[] {
       name: "lr_get_metrics",
       title: "Metrics of the last preview",
       description:
-        "Return the full metrics of the last preview this engine rendered (luma mean and 256-bin luma histogram, " +
-        "clipping overall and per channel), without rendering again. Call lr_get_preview first. " +
+        "Return the full metrics of the last preview this engine rendered (the metrics lr_get_preview returns, plus " +
+        "256-bin luma, red, green and blue histograms), without rendering again. Call lr_get_preview first. " +
         MEASURED,
       schema: noArgs,
       annotations: { readOnlyHint: true, openWorldHint: false },

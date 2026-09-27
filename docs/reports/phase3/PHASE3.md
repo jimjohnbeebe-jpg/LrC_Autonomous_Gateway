@@ -85,7 +85,7 @@ The headline `Phase 3 acceptance: WORKED / FAILED` covers:
 - the other checks the harness runs: the probes, the region crop, the selection guard;
 - the photos put back, and Jim's answers.
 
-Values are compared within the read-back tolerance (1e-6), as every write is. The question "does it look like a golden-hour edit" is recorded but does not decide it. A separate line reports the pass budget (~3.5 s), a measurement.
+Values are compared within the read-back tolerance (1e-6), as every write is [handle: `engine\src\params\map.ts` `READBACK_TOLERANCE`, used by `verifyReadback` for every write and by `differingSettings` for these comparisons; tests `engine\tests\params-map.test.ts` "passes a read-back equal to what was written" (0.83 vs 0.8300000000000001) and "ignores float noise within READBACK_TOLERANCE"]. The question "does it look like a golden-hour edit" is recorded but does not decide it. A separate line reports the pass budget (~3.5 s), a measurement.
 
 Results go to `%TEMP%\LrC-AVG\P3\`:
 - `p3_check_<time>.json`;
@@ -145,7 +145,7 @@ Do these after Claude Code says PR D is merged. Allow about 10 minutes for Part 
 
 Checks Claude Code ran on 2026-09-26, before Jim's run. None of them involves Lightroom.
 
-- **Engine tests: 328 pass, 1 skipped** on the PR D branch [handle: `npm test`, "Tests 328 passed | 1 skipped (329)"]; the skipped one is the golden-JPEG test, waiting for `golden.json` from Jim's run. `npm run build` and `npm run typecheck` pass too. They run against the fake plugin and a **simulated Lightroom** (`engine\tests\helpers\lightroom-sim.ts`). Its "tonal" model is a gradient whose ends clip and whose colour follows white balance and saturation. It is made up for testing the engine's rules: **Node numbers, not Lightroom's.**
+- **Engine tests: 329 pass, 1 skipped** on the PR D branch [handle: `npm test`, "Tests 329 passed | 1 skipped (330)"]; the skipped one is the golden-JPEG test, waiting for `golden.json` from Jim's run. `npm run build` and `npm run typecheck` pass too. They run against the fake plugin and a **simulated Lightroom** (`engine\tests\helpers\lightroom-sim.ts`). Its "tonal" model is a gradient whose ends clip and whose colour follows white balance and saturation. It is made up for testing the engine's rules: **Node numbers, not Lightroom's.**
   - `metrics.test.ts`, `preview-composite.test.ts`: the metrics, regions, crops and composites (PR #21).
   - `intents.test.ts`: the loader, the 11 starters, saving, the generated schemas (PR #22).
   - `session-plan.test.ts`, `session.test.ts`, `mcp-tools.test.ts`, `mcp-server.test.ts`: the session loop (PR #23).

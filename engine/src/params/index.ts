@@ -10,7 +10,7 @@ export { CAMERA_PROFILE_PARAM, CANONICAL_PARAMS, SUPPORTED_PROCESS_VERSIONS } fr
 export type { ParamSpec } from "./canonical.js";
 export { CameraProfiles, UnknownCameraProfileError, isEmptyLook } from "./camera-profiles.js";
 export type { CameraProfileEntry, ProfileIdentity } from "./camera-profiles.js";
-export { ParamError, ParamMap, READBACK_TOLERANCE } from "./map.js";
+export { ParamError, ParamMap, READBACK_TOLERANCE, canonicalValuesEqual, differingSettings } from "./map.js";
 export type { CanonicalSettings, CanonicalValue, FromSdkResult, ReadbackMismatch, SdkSettings } from "./map.js";
 export { SdkKeyMap, UnknownSdkKeyError } from "./sdk-keys.js";
 

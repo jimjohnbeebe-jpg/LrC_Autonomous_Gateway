@@ -30,7 +30,7 @@ import {
 } from "../log/index.js";
 import { ToolError, toToolError } from "../mcp/errors.js";
 import { boxProblem, deltaMetrics, measureImage, summarize, type Metrics, type Region, type RegionBox } from "../metrics/index.js";
-import type { CanonicalSettings, CanonicalValue, FromSdkResult, ParamMap } from "../params/index.js";
+import { canonicalValuesEqual, differingSettings, type CanonicalSettings, type CanonicalValue, type FromSdkResult, type ParamMap } from "../params/index.js";
 import { composite, type RenderedPreview } from "../preview/index.js";
 import {
   applyProjectedGuardrail,
@@ -136,7 +136,6 @@ type Session = {
 
 const ms = (since: number): number => Math.round((performance.now() - since) * 10) / 10;
 const text = (v: unknown): string | null => (typeof v === "string" ? v : null);
-const same = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
 
 export class SessionManager {
   private readonly deps: SessionDeps;
@@ -361,7 +360,7 @@ export class SessionManager {
       return {
         json,
         ...(image ? { image } : {}),
-        log: { session_id: id, intent_id: loaded.intent.id, snapshot: s.snapshot, log_path: s.files.logPath, history_names: historyNames, metrics: this.brief(rendered.metrics), guardrail_actions: corrected.actions.length },
+        log: { session_id: id, intent_id: loaded.intent.id, target: { uuid: s.target.uuid, filename: s.target.filename }, snapshot: s.snapshot, log_path: s.files.logPath, history_names: historyNames, metrics: this.brief(rendered.metrics), guardrail_actions: corrected.actions.length },
       };
     } catch (err) {
       throw this.failed(s, "begin", err);
@@ -430,7 +429,7 @@ export class SessionManager {
       const drift = this.regionDrift(s, rendered.metrics);
       if (drift) {
         const back: Record<string, CanonicalValue> = {};
-        for (const [key, value] of Object.entries(beforeView.settings)) if (!same(current.settings[key], value)) back[key] = value;
+        for (const [key, value] of Object.entries(beforeView.settings)) if (!canonicalValuesEqual(current.settings[key], value)) back[key] = value;
         if (Object.keys(back).length > 0) {
           const revertName = this.historyName(s, n, "region revert");
           current = await this.write(s, back, revertName);
@@ -704,8 +703,7 @@ export class SessionManager {
         const res = await this.bridge(s, () => client.request("apply_snapshot", { target_uuid: s.target.uuid, snapshot_id: s.snapshot.id }, { timeoutMs: WRITE_TIMEOUT_MS }));
         const revertMs = ms(t);
         finalSettings = map.fromSdk(res.read_back).settings;
-        const keys = new Set([...Object.keys(finalSettings), ...Object.keys(s.startSettings)]);
-        const differing = [...keys].filter((k) => !same(finalSettings[k], s.startSettings[k])).sort();
+        const differing = differingSettings(finalSettings, s.startSettings);
         revert = { ms: revertMs, differing };
       }
     } catch (err) {
@@ -852,7 +850,7 @@ export class SessionManager {
    * "renders at the session's size again before a step that follows a preview at another size"].
    */
   private async fresh(s: Session, view: FromSdkResult): Promise<{ last: Rendered; refreshed: boolean }> {
-    if (s.last && s.last.longEdge === s.longEdge && same(s.last.settings, view.settings)) return { last: s.last, refreshed: false };
+    if (s.last && s.last.longEdge === s.longEdge && differingSettings(s.last.settings, view.settings).length === 0) return { last: s.last, refreshed: false };
     return { last: await this.render(s, view.settings), refreshed: true };
   }
 
@@ -972,7 +970,7 @@ export class SessionManager {
         if (typeof before !== "number" || typeof value !== "number") continue; // e.g. dropped by a monochrome profile
         const after = roundForSlider(name, Math.min(spec.max, Math.max(spec.min, before + value)));
         if (after !== before) out[name] = after;
-      } else if (!same(current[name], value)) {
+      } else if (!canonicalValuesEqual(current[name], value)) {
         out[name] = value as CanonicalValue;
       }
     }

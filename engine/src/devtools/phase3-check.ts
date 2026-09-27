@@ -26,7 +26,7 @@ import type { BridgeClient } from "../bridge/index.js";
 import { recipeSchema, sessionLogSchema, type SessionLogData } from "../log/index.js";
 import type { BridgeGate, Tools } from "../mcp/index.js";
 import { ToolError } from "../mcp/index.js";
-import type { ParamMap } from "../params/index.js";
+import { differingSettings, type ParamMap } from "../params/index.js";
 import type { Answer } from "./phase1-check.js";
 import { describeError, median } from "./phase1-check.js";
 import type { ChatLogs } from "./phase2-check.js";
@@ -88,7 +88,6 @@ export type Phase3Deps = {
 };
 
 type Json = Record<string, unknown>;
-const same = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
 const errorBody = (err: unknown): Json => (err instanceof ToolError ? err.body() : { message: describeError(err) });
 
 /** AC-4 on every pass of a session log: clipping within the session's limits after the pass. */
@@ -108,6 +107,8 @@ export function evaluateChat(records: Array<Record<string, unknown>>): {
   passes: number;
   session_ended: string | null;
   snapshot_name: string | null;
+  /** The photo the session edited (the begin record's target), to check it is the chat's fixture. */
+  target_filename: string | null;
 } {
   const tool_calls = records.map((r) => ({
     ts: r["ts"],
@@ -120,7 +121,9 @@ export function evaluateChat(records: Array<Record<string, unknown>>): {
   const steps = records.filter((r) => r["tool"] === "lr_step" && r["ok"] === true && r["session_id"] === sessionId);
   const end = records.find((r) => r["tool"] === "lr_end_session" && r["ok"] === true && r["session_id"] === sessionId);
   const snapshot = begin?.["snapshot"] as { name?: unknown } | undefined;
+  const target = begin?.["target"] as { filename?: unknown } | undefined;
   return {
+    target_filename: typeof target?.filename === "string" ? target.filename : null,
     tool_calls,
     session_begun: begin !== undefined,
     intent_id: typeof begin?.["intent_id"] === "string" ? begin["intent_id"] : null,
@@ -220,6 +223,13 @@ export async function runPhase3Check(deps: Phase3Deps): Promise<{ accepted: bool
   const scripted = all<{ ok: boolean }>("session_a", (v) => v?.ok === true);
   const putBack = all<{ ok: boolean }>("put_back", (v) => v?.ok === true);
   const allSix = done.length === FIXTURES.length;
+  // The other checks the harness runs count too, so a failed one cannot hide behind WORKED
+  // (Greptile, PR #24): the probe on every photo; the region crop and selection guard on the first.
+  const probes = all<Json | undefined>("session_b", (v) => v !== undefined && typeof v["probe"] === "object" && v["probe"] !== null && !("error" in (v["probe"] as Json)));
+  const firstPhoto = done[0];
+  const region = firstPhoto !== undefined && typeof firstPhoto["region"] === "object" && firstPhoto["region"] !== null && !("error" in (firstPhoto["region"] as Json));
+  const guard = firstPhoto !== undefined && ((firstPhoto["session_b"] as Json | undefined)?.["selection_guard"] as Json | undefined)?.["ok"] === true;
+  const extras = probes && region && guard;
 
   // Part 2: the chat.
   let chatOk = false;
@@ -252,10 +262,12 @@ export async function runPhase3Check(deps: Phase3Deps): Promise<{ accepted: bool
       };
       say(`Chat log: Claude Desktop's MCP log ${logs.desktop_log.found ? `found (${logs.desktop_log.lines} lines)` : "NOT found"}; ` +
         `engine tool log ${logs.engine_log.found ? `found (${logs.engine_log.records.length} calls)` : "NOT found"}.`);
-      say(`  session begun: ${evaluation.session_begun ? `YES (${String(evaluation.intent_id)})` : "NO"}; passes: ${evaluation.passes}; ended: ${evaluation.session_ended ?? "NO"}`);
+      say(`  session begun: ${evaluation.session_begun ? `YES (${String(evaluation.intent_id)} on ${String(evaluation.target_filename)})` : "NO"}; ` +
+        `passes: ${evaluation.passes}; ended: ${evaluation.session_ended ?? "NO"}`);
+      // The session must be on the chat's fixture, not on whatever photo was selected (Greptile, PR #24).
       chatOk =
         steps === "y" && sliders === "y" && evaluation.session_begun && evaluation.intent_id === INTENT_A &&
-        evaluation.passes >= 1 && evaluation.passes <= 4 && evaluation.session_ended === "accept";
+        evaluation.target_filename === CHAT_FIXTURE && evaluation.passes >= 1 && evaluation.passes <= 4 && evaluation.session_ended === "accept";
       const snapshotName = evaluation.snapshot_name ?? "AVG pre-session ... (the newest one)";
       say("");
       say(`Last step: in the Snapshots panel (left side of Develop), click "${snapshotName}". That puts the photo back as it was before the chat.`);
@@ -269,7 +281,7 @@ export async function runPhase3Check(deps: Phase3Deps): Promise<{ accepted: bool
 
   const within = passDurations.filter((d) => d <= PASS_BUDGET_MS).length;
   const ac1 = scripted && allSix && part1Jim && chatOk;
-  const accepted = ac1 && ac2 && ac4 && ac5 && putBack && chatPutBack;
+  const accepted = ac1 && ac2 && ac4 && ac5 && putBack && chatPutBack && extras;
   results["summary"] = {
     acceptance_suggestion: accepted ? "WORKED" : "FAILED",
     fixtures_done: done.length,
@@ -279,6 +291,9 @@ export async function runPhase3Check(deps: Phase3Deps): Promise<{ accepted: bool
     ac2_revert: ac2,
     ac4_clipping: ac4,
     ac5_log_and_replay: ac5,
+    probes_ok: probes,
+    region_crop_ok: region,
+    selection_guard_ok: guard,
     photos_put_back: putBack,
     jim_part1_confirmed: part1Jim,
     photo_put_back_after_chat: chatPutBack,
@@ -290,8 +305,8 @@ export async function runPhase3Check(deps: Phase3Deps): Promise<{ accepted: bool
   say(`Phase 3 acceptance: ${accepted ? "WORKED" : "FAILED"}`);
   say(`  photos done: ${done.length} of ${FIXTURES.length}; scripted sessions: ${yn(scripted)}; AC-2 revert within 1 s and exact: ${yn(ac2)}; ` +
     `AC-4 clipping within limits on every pass: ${yn(ac4)}; AC-5 log, recipe and replay: ${yn(ac5)}`);
-  say(`  photos put back after the check: ${yn(putBack)}; your answers in part 1: ${part1Jim ? "both yes" : "not both yes"}; ` +
-    `chat (AC-1): ${yn(chatOk)}; photo put back after the chat: ${yn(chatPutBack)}`);
+  say(`  probes: ${yn(probes)}; region crop: ${yn(region)}; selection guard: ${yn(guard)}; photos put back after the check: ${yn(putBack)}; ` +
+    `your answers in part 1: ${part1Jim ? "both yes" : "not both yes"}; chat (AC-1): ${yn(chatOk)}; photo put back after the chat: ${yn(chatPutBack)}`);
   // The pass budget is a measurement, not part of the acceptance lines, so it has its own headline.
   say(`Pass budget: ${within} of ${passDurations.length} passes within ~${PASS_BUDGET_MS / 1000} s (median ${Math.round(median(passDurations))} ms).`);
   return { accepted, results };
@@ -411,47 +426,59 @@ async function runFixture(deps: Phase3Deps, name: string, fx: Json, first: boole
   const recipePath = String(end.json["recipe_path"]);
   a["log_path"] = logPath;
   a["recipe_path"] = recipePath;
-
-  // The log and the recipe against their schemas; AC-4 on every pass; the pass times.
-  const parsedLog = sessionLogSchema.safeParse(readJson(logPath));
-  const parsedRecipe = recipeSchema.safeParse(readJson(recipePath));
-  const stepsDone = parsedLog.success ? parsedLog.data.passes.filter((p) => p.kind === "step").length : 0;
-  a["ok"] = parsedLog.success && stepsDone >= 1 && stepsDone <= 4;
-  a["steps_done"] = stepsDone;
-  const ac4 = parsedLog.success ? clipCheck(parsedLog.data) : { ok: false, passes: [] };
-  fx["ac4"] = ac4;
-  if (parsedLog.success) for (const p of parsedLog.data.passes) if (p.kind === "step") passDurations.push(p.duration_ms);
-  say(`  Session A accepted: log valid ${parsedLog.success ? "YES" : "NO"}, recipe valid ${parsedRecipe.success ? "YES" : "NO"}; AC-4 on every pass: ${ac4.ok ? "YES" : "NO"}`);
-
-  // AC-5 (decision 1): the pre-session snapshot, then the recipe as one write, read back.
-  const ac5: Json = { ok: false, log_valid: parsedLog.success, recipe_valid: parsedRecipe.success };
-  fx["ac5"] = ac5;
-  if (!parsedLog.success) ac5["log_issues"] = parsedLog.error.issues.slice(0, 5).map((i) => `${i.path.join(".")}: ${i.message}`);
-  if (!parsedRecipe.success) ac5["recipe_issues"] = parsedRecipe.error.issues.slice(0, 5).map((i) => `${i.path.join(".")}: ${i.message}`);
-  const putBack: Json = { ok: false };
+  // Session A is closed now, so an error from here on would leave the accepted edit (or the replay)
+  // on the photo: the pre-session snapshot is applied in `finally`, whatever happens before it
+  // (Greptile, PR #24). Its id and name come from lr_begin_session's result, not from the log.
+  const snapshot = (begin.json["snapshot"] ?? {}) as { id?: unknown; name?: unknown };
+  const snapshotId = String(snapshot.id ?? "");
+  const snapshotName = String(snapshot.name ?? "AVG pre-session ...");
+  const putBack: Json = { ok: false, snapshot: snapshotName };
   fx["put_back"] = putBack;
-  // The session's snapshot from lr_begin_session's result, so the photo is put back even when the
-  // log does not validate.
-  const snapshotId = String((begin.json["snapshot"] as { id?: unknown } | undefined)?.id ?? "");
-  if (parsedLog.success && parsedRecipe.success) {
-    const recipe = parsedRecipe.data;
-    await client.request("apply_snapshot", { target_uuid: uuid, snapshot_id: snapshotId }, { timeoutMs: WRITE_TIMEOUT_MS });
-    const sdk = map.toSdk(recipe.settings, { processVersion: recipe.process_version });
-    const replayed = await client.request("apply_settings", { target_uuid: uuid, settings: sdk, history_name: REPLAY_HISTORY_NAME }, { timeoutMs: WRITE_TIMEOUT_MS });
-    history.push(REPLAY_HISTORY_NAME);
-    const view = map.fromSdk(replayed.read_back).settings;
-    const keys = new Set([...Object.keys(view), ...Object.keys(recipe.settings)]);
-    const differing = [...keys].filter((k) => !same(view[k], recipe.settings[k])).sort();
-    Object.assign(ac5, { replay_differing: differing, readback_mismatches: map.verifyReadback(sdk, replayed.read_back).map((m) => m.sdk_key), ok: differing.length === 0 });
-    say(`  AC-5 replay of the recipe after the snapshot: ${differing.length === 0 ? "exact" : `${differing.length} setting(s) differ: ${differing.join(", ")}`}`);
+  const ac5: Json = { ok: false };
+  fx["ac5"] = ac5;
+  try {
+    // The log and the recipe against their schemas; AC-4 on every pass; the pass times.
+    const parsedLog = sessionLogSchema.safeParse(readJson(logPath));
+    const parsedRecipe = recipeSchema.safeParse(readJson(recipePath));
+    const stepsDone = parsedLog.success ? parsedLog.data.passes.filter((p) => p.kind === "step").length : 0;
+    a["ok"] = parsedLog.success && stepsDone >= 1 && stepsDone <= 4;
+    a["steps_done"] = stepsDone;
+    const ac4 = parsedLog.success ? clipCheck(parsedLog.data) : { ok: false, passes: [] };
+    fx["ac4"] = ac4;
+    if (parsedLog.success) for (const p of parsedLog.data.passes) if (p.kind === "step") passDurations.push(p.duration_ms);
+    say(`  Session A accepted: log valid ${parsedLog.success ? "YES" : "NO"}, recipe valid ${parsedRecipe.success ? "YES" : "NO"}; AC-4 on every pass: ${ac4.ok ? "YES" : "NO"}`);
+
+    // AC-5 (decision 1): the pre-session snapshot, then the recipe as one write, read back. Values are
+    // compared within the read-back tolerance, as every write is (Greptile, PR #24).
+    Object.assign(ac5, { log_valid: parsedLog.success, recipe_valid: parsedRecipe.success });
+    if (!parsedLog.success) ac5["log_issues"] = parsedLog.error.issues.slice(0, 5).map((i) => `${i.path.join(".")}: ${i.message}`);
+    if (!parsedRecipe.success) ac5["recipe_issues"] = parsedRecipe.error.issues.slice(0, 5).map((i) => `${i.path.join(".")}: ${i.message}`);
+    if (parsedLog.success && parsedRecipe.success) {
+      const recipe = parsedRecipe.data;
+      await client.request("apply_snapshot", { target_uuid: uuid, snapshot_id: snapshotId }, { timeoutMs: WRITE_TIMEOUT_MS });
+      const sdk = map.toSdk(recipe.settings, { processVersion: recipe.process_version });
+      const replayed = await client.request("apply_settings", { target_uuid: uuid, settings: sdk, history_name: REPLAY_HISTORY_NAME }, { timeoutMs: WRITE_TIMEOUT_MS });
+      history.push(REPLAY_HISTORY_NAME);
+      const differing = differingSettings(map.fromSdk(replayed.read_back).settings, recipe.settings);
+      Object.assign(ac5, { replay_differing: differing, readback_mismatches: map.verifyReadback(sdk, replayed.read_back).map((m) => m.sdk_key), ok: differing.length === 0 });
+      say(`  AC-5 replay of the recipe after the snapshot: ${differing.length === 0 ? "exact" : `${differing.length} setting(s) differ: ${differing.join(", ")}`}`);
+    }
+  } catch (err) {
+    ac5["error"] = errorBody(err);
+    throw err;
+  } finally {
+    // Leave the photo as it was: the pre-session snapshot again, compared with the settings read
+    // before the check.
+    try {
+      const back = await client.request("apply_snapshot", { target_uuid: uuid, snapshot_id: snapshotId }, { timeoutMs: WRITE_TIMEOUT_MS });
+      const off = differingSettings(map.fromSdk(back.read_back).settings, (fx["start_settings"] ?? {}) as Record<string, unknown>);
+      Object.assign(putBack, { ok: off.length === 0, differing: off });
+      if (off.length > 0) say(`  The photo is NOT as before the check (${off.join(", ")} differ). In the Snapshots panel, click "${snapshotName}".`);
+    } catch (err) {
+      Object.assign(putBack, { ok: false, error: errorBody(err) });
+      say(`  The photo was NOT put back (${describeError(err)}). In the Snapshots panel, click "${snapshotName}".`);
+    }
   }
-  // Leave the photo as it was: the pre-session snapshot again, compared with the settings before pass 0.
-  const back = await client.request("apply_snapshot", { target_uuid: uuid, snapshot_id: snapshotId }, { timeoutMs: WRITE_TIMEOUT_MS });
-  const start = (fx["start_settings"] ?? {}) as Record<string, unknown>;
-  const now = map.fromSdk(back.read_back).settings;
-  const all = new Set([...Object.keys(now), ...Object.keys(start)]);
-  const off = [...all].filter((k) => !same(now[k], start[k])).sort();
-  Object.assign(putBack, { ok: off.length === 0, differing: off });
 
   // First fixture: a region crop, with the context's size.
   if (first) {

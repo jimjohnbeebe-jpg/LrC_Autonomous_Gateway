@@ -10,7 +10,7 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { BridgeClient } from "../src/bridge/index.js";
 import type { ChatLogs } from "../src/devtools/phase2-check.js";
-import { FIXTURES, clipCheck, evaluateChat, runPhase3Check, type Answer } from "../src/devtools/phase3-check.js";
+import { CHAT_FIXTURE, FIXTURES, clipCheck, evaluateChat, runPhase3Check, type Answer } from "../src/devtools/phase3-check.js";
 import { IntentLibrary } from "../src/intents/index.js";
 import { ToolLog, sessionLogSchema } from "../src/log/index.js";
 import { BridgeGate, Tools } from "../src/mcp/index.js";
@@ -28,6 +28,8 @@ let chatLogDir: string;
 const clients: BridgeClient[] = [];
 const said: string[] = [];
 const goldens: string[] = [];
+/** The photo Jim has selected when he starts the chat (Part 2, step 1). */
+let chatPhoto: string = CHAT_FIXTURE;
 
 const newClient = (): BridgeClient => {
   const c = new BridgeClient({ commandPort: plugin.commandPort, eventPort: plugin.eventPort, connectGapMs: 5, reconnectMs: 30, readToken: () => plugin.token });
@@ -46,6 +48,7 @@ beforeEach(async () => {
   lr.install(plugin);
   said.length = 0;
   goldens.length = 0;
+  chatPhoto = CHAT_FIXTURE;
 });
 
 afterEach(async () => {
@@ -56,6 +59,8 @@ afterEach(async () => {
 
 /** Claude Desktop's engine in the chat: a golden-hour session with one pass, accepted. */
 async function simulatedChat(): Promise<void> {
+  lr.filename = chatPhoto; // Part 2, step 1: Jim clicks the chat's photo
+  lr.selected = lr.uuid;
   const client = newClient();
   client.start();
   const desktop = new Tools({
@@ -178,6 +183,38 @@ describe("devtools: Phase 3 check against a simulated plugin", () => {
     expect(said.join("\n")).toMatch(/Part 2 \(the chat\) was skipped/);
   });
 
+  it("fails when the chat's session was on another photo than the chat fixture (Greptile, PR #24)", { timeout: 120000 }, async () => {
+    chatPhoto = FIXTURES[0]; // Jim left another photo selected for the chat
+    const { accepted, results } = await run(["y", "y", "y", "y", "y", "y"]);
+    expect(accepted).toBe(false);
+    expect(results["chat"]).toMatchObject({ session_begun: true, target_filename: FIXTURES[0] });
+    expect(results["summary"]).toMatchObject({ ac1_chat: false });
+  });
+
+  it("fails when a region crop fails, although the acceptance lines pass (Greptile, PR #24)", { timeout: 120000 }, async () => {
+    const exportPreview = plugin.handlers.get("export_preview");
+    plugin.handlers.set("export_preview", (p, id) =>
+      Number(p["long_edge"]) > 1920 ? { ok: false, error: { code: "export_failed", message: "too big", recoverable: true } } : (exportPreview?.(p, id) ?? "silent"),
+    );
+    const { accepted, results } = await run(["y", "y", "y", "y", "y", "y"]);
+    expect(results["summary"]).toMatchObject({ ac2_revert: true, ac4_clipping: true, ac5_log_and_replay: true, region_crop_ok: false, acceptance_suggestion: "FAILED" });
+    expect(accepted).toBe(false);
+  });
+
+  it("puts the photo back when the recipe replay fails after session A was accepted (Greptile, PR #24)", { timeout: 120000 }, async () => {
+    const start = structuredClone(lr.settings);
+    const apply = plugin.handlers.get("apply_settings");
+    plugin.handlers.set("apply_settings", (p, id) =>
+      p["history_name"] === "AVG P3check replay" ? { ok: false, error: { code: "write_failed", message: "no", recoverable: false } } : (apply?.(p, id) ?? "silent"),
+    );
+    const { accepted, results } = await run(["y", "y"]);
+    expect(accepted).toBe(false);
+    const first = (results["fixtures"] as Array<Record<string, unknown>>)[0] as Record<string, unknown>;
+    expect(first["status"]).toBe("error");
+    expect(first["put_back"]).toMatchObject({ ok: true, differing: [] });
+    expect(map.fromSdk(lr.settings).settings).toEqual(map.fromSdk(start).settings);
+  });
+
   it("stops at once when another engine holds the bridge", async () => {
     const { accepted, results } = await run([], { busy: true });
     expect(accepted).toBe(false);
@@ -189,13 +226,13 @@ describe("devtools: Phase 3 check helpers", () => {
   it("reads the chat's session from the engine's tool log", () => {
     const records = [
       { ts: "t", tool: "lr_list_intents", ok: true },
-      { ts: "t", tool: "lr_begin_session", ok: true, session_id: "s1", intent_id: "landscape_golden_hour", snapshot: { name: "AVG pre-session x", id: "1" } },
+      { ts: "t", tool: "lr_begin_session", ok: true, session_id: "s1", intent_id: "landscape_golden_hour", target: { uuid: "u", filename: "20260907-_OZ80093.NEF" }, snapshot: { name: "AVG pre-session x", id: "1" } },
       { ts: "t", tool: "lr_step", ok: true, session_id: "s1" },
       { ts: "t", tool: "lr_step", ok: false, error: { code: "GUARDRAIL_REFUSED" } },
       { ts: "t", tool: "lr_step", ok: true, session_id: "s1" },
       { ts: "t", tool: "lr_end_session", ok: true, session_id: "s1", outcome: "accept" },
     ];
-    expect(evaluateChat(records)).toMatchObject({ session_begun: true, intent_id: "landscape_golden_hour", passes: 2, session_ended: "accept", snapshot_name: "AVG pre-session x" });
+    expect(evaluateChat(records)).toMatchObject({ session_begun: true, intent_id: "landscape_golden_hour", target_filename: "20260907-_OZ80093.NEF", passes: 2, session_ended: "accept", snapshot_name: "AVG pre-session x" });
     expect(evaluateChat([])).toMatchObject({ session_begun: false, passes: 0, session_ended: null });
   });
 

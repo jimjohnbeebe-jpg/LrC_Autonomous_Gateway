@@ -10,6 +10,8 @@ fixtures/*.jpeg
 # Jim 2026-09-26). Their hashes and expected metrics are committed instead.
 tests/golden/*.jpg
 tests/golden/*.jpeg
+engine/tests/golden/*.jpg
+engine/tests/golden/*.jpeg
 
 # Dev session logs (keep the folder)
 logs/*

@@ -75,10 +75,17 @@ Then two y/n questions.
 
 *Part 2*, AC-1's chat:
 1. Jim starts Claude Desktop and sends `Tune the active photo for golden hour landscape.` on `20260907-_OZ80093.NEF`.
-2. The check reads the engine's tool log: a session on `landscape_golden_hour`, 1-4 passes, accepted.
+2. The check reads the engine's tool log: a session on `landscape_golden_hour`, on that photo, 1-4 passes, accepted.
 3. Three y/n questions; then Jim clicks the session's snapshot to put the photo back, and a sixth question.
 
-The headline `Phase 3 acceptance: WORKED / FAILED` covers all six photos, AC-1 (scripted and chat), AC-2, AC-4, AC-5, the photos put back and Jim's answers. The question "does it look like a golden-hour edit" is recorded but does not decide it. A separate line reports the pass budget (~3.5 s), a measurement.
+The headline `Phase 3 acceptance: WORKED / FAILED` covers:
+- all six photos;
+- AC-1: the scripted sessions, and the chat's session, which must be on `20260907-_OZ80093.NEF`;
+- AC-2, AC-4, AC-5;
+- the other checks the harness runs: the probes, the region crop, the selection guard;
+- the photos put back, and Jim's answers.
+
+Values are compared within the read-back tolerance (1e-6), as every write is. The question "does it look like a golden-hour edit" is recorded but does not decide it. A separate line reports the pass budget (~3.5 s), a measurement.
 
 Results go to `%TEMP%\LrC-AVG\P3\`:
 - `p3_check_<time>.json`;
@@ -94,7 +101,7 @@ Claude Code collects them. `npm run goldens` copies the golden JPEGs to `tests\g
 Do these after Claude Code says PR D is merged. Part 1 takes about 10 minutes: each photo gets about 15 renders of ~3.5 s.
 
 1. Right-click the Claude icon in the Windows system tray → **Quit**.
-2. In Lightroom Classic, make sure all six test photos are in the catalog: choose **File > Import Photos and Video**. Under **Source** (left side), go to `D:\Developer\LrC_Autonomous_Gateway\fixtures`. At the top, click **Add** (not Copy or Move). Click **Import**. Photos already in the catalog are greyed out and are not imported again.
+2. In Lightroom Classic, make sure all six test photos are in the catalog: choose **File > Import Photos and Video**. Under **Source** (left side), go to `D:\Developer\LrC_Autonomous_Gateway\fixtures`. At the top, click **Add** (not Copy or Move). Click **Import**. If Lightroom says there is nothing to import, all six are already in the catalog; that is fine. (How Lightroom shows photos already in the catalog is [unverified]; **Add** leaves the files where they are.)
 3. In the **Library** module's **Folders** panel (left side), click the `fixtures` folder, so the six photos show in the Filmstrip at the bottom. Press **D** to open the Develop module.
 4. In VS Code's PowerShell terminal, at `D:\Developer\LrC_Autonomous_Gateway`, run:
 
@@ -127,7 +134,8 @@ Do these after Claude Code says PR D is merged. Part 1 takes about 10 minutes: e
 - If it prints `could not connect to Lightroom`, check that Lightroom is open and that **File > Plug-in Manager** lists LrC-AVG as **Enabled**, then run step 4 again. If it still fails, choose **File > Plug-in Extras > LrC-AVG - Bridge status** and tell Claude Code what the dialog title says.
 - If it says `The selected photo is …, not …`, click the photo it names and press Enter again.
 - If a photo it names is not in the Filmstrip, do step 2 and step 3 again; if it is still missing, type `skip` and press Enter, and tell Claude Code which one.
-- If it prints `FAILED: <photo>: …`, let the command carry on (it puts that photo back and goes to the next), and tell Claude Code what the line says.
+- If it prints `FAILED: <photo>: …`, let the command carry on, and tell Claude Code what the line says. The command is written to put that photo back before it goes to the next: it ends an open session with revert, and after session A it applies the session's snapshot whatever failed. This ran in the dry runs only [handle: `engine\tests\phase3-check.test.ts` "puts the photo back when the recipe replay fails after session A was accepted"; in Lightroom [unverified]].
+- If it prints `The photo was NOT put back` or `The photo is NOT as before the check`, click the snapshot it names in that photo's **Snapshots** panel, and tell Claude Code.
 - If step 6's second answer is `n`, don't change the photos, and tell Claude Code which photo looks different. Each session's snapshot `AVG pre-session …` is in that photo's **Snapshots** panel.
 - If in step 7 Claude says it has no Lightroom or lrc-avg tools, finish the steps (answer `n`) and tell Claude Code; it reads Claude Desktop's log itself.
 - If Lightroom shows an error dialog, click OK and tell Claude Code.
@@ -137,7 +145,7 @@ Do these after Claude Code says PR D is merged. Part 1 takes about 10 minutes: e
 
 Checks Claude Code ran on 2026-09-26, before Jim's run. None of them involves Lightroom.
 
-- **Engine tests: 323 pass, 1 skipped** on the PR D branch [handle: `npm test`, "Tests 323 passed | 1 skipped (324)"]; the skipped one is the golden-JPEG test, waiting for `golden.json` from Jim's run. `npm run build` and `npm run typecheck` pass too. They run against the fake plugin and a **simulated Lightroom** (`engine\tests\helpers\lightroom-sim.ts`). Its "tonal" model is a gradient whose ends clip and whose colour follows white balance and saturation. It is made up for testing the engine's rules: **Node numbers, not Lightroom's.**
+- **Engine tests: 328 pass, 1 skipped** on the PR D branch [handle: `npm test`, "Tests 328 passed | 1 skipped (329)"]; the skipped one is the golden-JPEG test, waiting for `golden.json` from Jim's run. `npm run build` and `npm run typecheck` pass too. They run against the fake plugin and a **simulated Lightroom** (`engine\tests\helpers\lightroom-sim.ts`). Its "tonal" model is a gradient whose ends clip and whose colour follows white balance and saturation. It is made up for testing the engine's rules: **Node numbers, not Lightroom's.**
   - `metrics.test.ts`, `preview-composite.test.ts`: the metrics, regions, crops and composites (PR #21).
   - `intents.test.ts`: the loader, the 11 starters, saving, the generated schemas (PR #22).
   - `session-plan.test.ts`, `session.test.ts`, `mcp-tools.test.ts`, `mcp-server.test.ts`: the session loop (PR #23).

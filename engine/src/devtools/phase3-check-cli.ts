@@ -12,7 +12,7 @@
 //   p3_bridge_log_<time>.txt            a copy of the plugin's log, user folder redacted
 // Where the logs are: as in phase2-check-cli.ts.
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { createInterface } from "node:readline";
@@ -86,6 +86,9 @@ async function main(): Promise<number> {
     log: new ToolLog(path.join(OUT_DIR, `p3_check_tools_${stamp}`)),
   });
   const goldenDir = path.join(OUT_DIR, "golden");
+  // Start with an empty golden folder, so no render from an earlier run is mistaken for this run's
+  // (Greptile, PR #24); `npm run goldens` also takes only the files this run records, hash checked.
+  rmSync(goldenDir, { recursive: true, force: true });
   const { accepted, results } = await runPhase3Check({
     client,
     gate,

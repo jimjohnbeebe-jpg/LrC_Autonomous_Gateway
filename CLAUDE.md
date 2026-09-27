@@ -69,6 +69,8 @@ npm run phase1:check        # Phase 1 acceptance check against Lightroom (docs\r
 npm run desktop:install     # register the engine in Claude Desktop as lrc-avg (backup first; removes lrc-avg-spike-s3)
 npm run phase2:check        # Phase 2 acceptance check: Lightroom + the Claude Desktop chat (docs\reports\phase2\PHASE2.md)
 npm run schemas             # regenerate engine\schemas\*.schema.json from the zod schemas (a test fails when stale)
+npm run phase3:check        # Phase 3 acceptance check: six fixtures + one Claude Desktop chat (docs\reports\phase3\PHASE3.md)
+npm run goldens             # after the check: golden JPEGs to tests\golden\ (gitignored) + golden.json (committed)
 node engine\dist\mcp\main.js # the stdio MCP server (Claude Desktop starts it; tool log in $env:LRC_AVG_LOG_DIR or %LOCALAPPDATA%\LrC-AVG\logs)
 graphify query "How does X reach Y?"
 ```

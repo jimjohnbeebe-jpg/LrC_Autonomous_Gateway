@@ -137,6 +137,22 @@ function sdkValuesEqual(written: unknown, readBack: unknown): boolean {
   return isDeepStrictEqual(written, readBack);
 }
 
+/**
+ * Equality of two canonical values, numbers (also inside curves) within READBACK_TOLERANCE, so float
+ * noise such as 0.83 vs 0.8300000000000001 is not a difference (Greptile, PR #24).
+ */
+export function canonicalValuesEqual(a: unknown, b: unknown): boolean {
+  if (typeof a === "number" && typeof b === "number") return Math.abs(a - b) <= READBACK_TOLERANCE;
+  if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((v, i) => canonicalValuesEqual(v, b[i]));
+  return isDeepStrictEqual(a, b);
+}
+
+/** The canonical names whose values differ between two settings tables (a name missing on one side differs). */
+export function differingSettings(a: Readonly<Record<string, unknown>>, b: Readonly<Record<string, unknown>>): string[] {
+  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+  return [...keys].filter((k) => !canonicalValuesEqual(a[k], b[k])).sort();
+}
+
 export class ParamMap {
   private readonly sdkKeys: SdkKeyMap;
   private readonly profiles: CameraProfiles;

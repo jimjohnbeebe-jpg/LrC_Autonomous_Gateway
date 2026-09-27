@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { CANONICAL_PARAMS, PROBED_CLAMP, type ParamSpec } from "../src/params/canonical.js";
-import { loadDefaultParamMap, ParamError, ParamMap, UnknownSdkKeyError } from "../src/params/index.js";
+import { canonicalValuesEqual, differingSettings, loadDefaultParamMap, ParamError, ParamMap, READBACK_TOLERANCE, UnknownSdkKeyError } from "../src/params/index.js";
 import { readCameraProfilesFile } from "../src/params/camera-profiles.js";
 import { loadSdkKeys, readSdkKeysFile } from "../src/params/sdk-keys.js";
 
@@ -191,6 +191,17 @@ describe("params: canonical map", () => {
       const { settings } = map.fromSdk(nefDump.settings);
       const sdk = map.toSdk(settings, PV);
       expect(map.verifyReadback(sdk, nefDump.settings)).toEqual([]);
+    });
+  });
+
+  describe("differingSettings (canonical comparison within the read-back tolerance)", () => {
+    it("ignores float noise within READBACK_TOLERANCE, also inside curves, and names real differences", () => {
+      const a = { exposure: 0.83, contrast: 10, camera_profile: "Adobe Color", "tone_curve.master": [0, 0, 255, 255] };
+      const b = { exposure: 0.8300000000000001, contrast: 10, camera_profile: "Adobe Color", "tone_curve.master": [0, 0, 255, 255.0000000001] };
+      expect(differingSettings(a, b)).toEqual([]);
+      expect(canonicalValuesEqual(0.83, 0.83 + READBACK_TOLERANCE * 2)).toBe(false);
+      expect(differingSettings(a, { ...b, contrast: 11, vibrance: 5 })).toEqual(["contrast", "vibrance"]);
+      expect(differingSettings(a, { ...b, "tone_curve.master": [0, 0, 255] })).toEqual(["tone_curve.master"]);
     });
   });
 

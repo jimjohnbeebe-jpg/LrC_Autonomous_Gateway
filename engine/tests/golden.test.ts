@@ -1,0 +1,112 @@
+// Golden JPEGs of the six fixtures (PHASES.md Phase 3; src/devtools/goldens.ts): the engine must
+// measure each one exactly as recorded in tests/golden/golden.json. The JPEGs are renders of Jim's
+// photos and stay on disk only (decision 3), so on a machine without them these tests skip and say
+// why; golden.json itself is committed.
+
+import { execFileSync } from "node:child_process";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import sharp from "sharp";
+import { describe, expect, it } from "vitest";
+import { GOLDEN_SCHEMA_ID, coversAll, goldenDir, goldenEntry, goldenName, newestCompleteRun, readGoldenFile, recordedGoldens, sha256, writeGoldens, type GoldenFile } from "../src/devtools/goldens.js";
+
+const dir = goldenDir();
+const indexFile = path.join(dir, "golden.json");
+// Validated like every JSON file the engine reads (rule 01-stack; Greptile, PR #24).
+const index: GoldenFile | null = existsSync(indexFile) ? readGoldenFile(indexFile) : null;
+const entries = index?.entries ?? [];
+const missing = entries.filter((e) => !existsSync(path.join(dir, e.file))).map((e) => e.file);
+
+if (!index) console.warn("[golden] tests/golden/golden.json does not exist yet: run npm run phase3:check, then npm run goldens.");
+else if (missing.length > 0) console.warn(`[golden] ${missing.length} golden JPEG(s) are not on this machine (they are not in git): ${missing.join(", ")}. Those tests are skipped.`);
+
+describe("golden JPEGs", () => {
+  it("live in the repo's tests/golden, where git ignores JPEGs (they are renders of Jim's photos; Greptile, PR #24)", () => {
+    const repo = path.resolve(dir, "..", "..");
+    expect(path.relative(repo, dir).replace(/\\/g, "/")).toBe("tests/golden");
+    // git check-ignore exits 0 when the path is ignored.
+    expect(() => execFileSync("git", ["check-ignore", "-q", "tests/golden/20260907-_OZ80093.jpg"], { cwd: repo })).not.toThrow();
+    expect(() => execFileSync("git", ["check-ignore", "-q", "engine/tests/golden/x.jpg"], { cwd: repo })).not.toThrow();
+    expect(() => execFileSync("git", ["check-ignore", "-q", "tests/golden/golden.json"], { cwd: repo })).toThrow(); // committed
+  });
+
+  it.skipIf(index === null)("golden.json lists the six fixtures", () => {
+    expect(index?.schema).toBe(GOLDEN_SCHEMA_ID);
+    expect(entries).toHaveLength(6);
+  });
+
+  for (const entry of entries) {
+    it.skipIf(missing.includes(entry.file))(`measures ${entry.file} as recorded`, async () => {
+      const measured = await goldenEntry(path.join(dir, entry.file));
+      expect(measured.sha256).toBe(entry.sha256);
+      expect(measured).toEqual(entry);
+    });
+  }
+});
+
+describe("golden JPEGs: the writer", () => {
+  const jpeg = (r: number) => sharp({ create: { width: 30, height: 20, channels: 3, background: { r, g: 120, b: 40 } } }).jpeg().toBuffer();
+  const SIX = ["a.NEF", "b.NEF", "c.NEF", "d.NEF", "e.NEF", "f.dng"];
+
+  it("copies only the JPEGs the check recorded, hash checked, and records their metrics", async () => {
+    const tmp = mkdtempSync(path.join(os.tmpdir(), "lrc-avg-golden-"));
+    try {
+      mkdirSync(path.join(tmp, "golden_1"));
+      const a = await jpeg(200);
+      writeFileSync(path.join(tmp, "golden_1", "a.jpg"), a);
+      writeFileSync(path.join(tmp, "golden_1", "old.jpg"), await jpeg(10)); // not recorded by this run
+      const golden = await writeGoldens(tmp, path.join(tmp, "to"), [{ saved_as: "golden_1\\a.jpg", sha256: sha256(a) }], new Date("2026-09-26T00:00:00Z"));
+      expect(golden.entries.map((e) => [e.file, e.width, e.height])).toEqual([["a.jpg", 30, 20]]);
+      expect(existsSync(path.join(tmp, "to", "a.jpg"))).toBe(true);
+      expect(existsSync(path.join(tmp, "to", "old.jpg"))).toBe(false);
+      expect(JSON.parse(readFileSync(path.join(tmp, "to", "golden.json"), "utf8"))).toEqual(golden);
+      // A file whose hash is not the recorded one is refused, and nothing is written.
+      await expect(writeGoldens(tmp, path.join(tmp, "x"), [{ saved_as: "golden_1\\old.jpg", sha256: sha256(a) }])).rejects.toThrow(/not the render the check recorded/);
+      expect(existsSync(path.join(tmp, "x"))).toBe(false);
+      await expect(writeGoldens(tmp, path.join(tmp, "x"), [])).rejects.toThrow(/record no golden/);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("takes the newest usable run: all six captured, files still there (Greptile, PR #24)", async () => {
+    const tmp = mkdtempSync(path.join(os.tmpdir(), "lrc-avg-golden-"));
+    try {
+      // A run's golden folder with a JPEG per fixture, and its results recording their hashes.
+      const run = async (stamp: string, names: string[]) => {
+        const folder = `golden_${stamp}`;
+        mkdirSync(path.join(tmp, folder));
+        const fixtures = [];
+        for (const [i, n] of names.entries()) {
+          const data = await jpeg(20 * i);
+          writeFileSync(path.join(tmp, folder, goldenName(n)), data);
+          fixtures.push({ name: n, golden: { saved_as: `${folder}\\${goldenName(n)}`, preview_hash: sha256(data) } });
+        }
+        writeFileSync(path.join(tmp, `p3_check_${stamp}.json`), JSON.stringify({ fixtures }));
+        return { fixtures };
+      };
+      const older = await run("2026-09-26T01-00-00-000Z", SIX);
+      await run("2026-09-26T02-00-00-000Z", SIX.slice(0, 2)); // stopped early
+      await run("2026-09-26T03-00-00-000Z", SIX);
+      rmSync(path.join(tmp, "golden_2026-09-26T03-00-00-000Z", "c.jpg")); // a file removed since
+      writeFileSync(path.join(tmp, "p3_check_2026-09-26T04-00-00-000Z.json"), "{ cut off");
+      const found = newestCompleteRun(tmp, SIX);
+      expect(path.basename(found?.results ?? "")).toBe("p3_check_2026-09-26T01-00-00-000Z.json");
+      expect(found?.recorded).toEqual(recordedGoldens(older));
+      expect(newestCompleteRun(tmp, [...SIX, "g.NEF"])).toBeNull();
+      expect(newestCompleteRun(path.join(tmp, "none"), SIX)).toBeNull();
+      expect(coversAll(recordedGoldens(older), SIX)).toBe(true);
+      expect(recordedGoldens({ fixtures: [{ status: "skipped" }] })).toEqual([]);
+      // Validated (Greptile, PR #24): a path out of its run's folder, or a malformed hash, records nothing.
+      const h = "a".repeat(64);
+      expect(recordedGoldens({ fixtures: [{ golden: { saved_as: "golden_1\\..\\..\\x.jpg", preview_hash: h } }] })).toEqual([]);
+      expect(recordedGoldens({ fixtures: [{ golden: { saved_as: "golden_1\\x.jpg", preview_hash: "short" } }] })).toEqual([]);
+      expect(recordedGoldens("not results")).toEqual([]);
+      writeFileSync(path.join(tmp, "bad.json"), JSON.stringify({ schema: GOLDEN_SCHEMA_ID, created: "x", source: "x", entries: [{ file: "../x.jpg" }] }));
+      expect(() => readGoldenFile(path.join(tmp, "bad.json"))).toThrow(/not a valid golden manifest/);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+});

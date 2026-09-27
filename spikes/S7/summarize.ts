@@ -168,7 +168,9 @@ function observed(prefix: string, runAt: string) {
 // The preset-file re-run (menu items 4-6) that followed this run, or null: the newest
 // s7_xmp_run_*.json made after this run and before the next run of menu item 1, with the observations
 // paired with it by run_at. A summary never takes another run's re-run as its own (Greptile, PR #31).
-// run_at is "YYYY-MM-DD HH:MM:SS (local time)" everywhere (S7Common.localTime), so it compares as text.
+// Every run_at is "YYYY-MM-DD HH:MM:SS (local time)", so it compares as text [handle: the one writer,
+// plugin\spikes\S7.lrplugin\S7Common.lua:34-35 (LrDate.timeToUserFormat "%Y-%m-%d %H:%M:%S");
+// observed: docs\reports\phase4\S7\s7_run_2026-09-27T11-22-33.json run_at "2026-09-27 11:22:23 (local time)"].
 function xmpRerun(runAt: string) {
   const runAts = (prefix: string) => readdirSync(srcDir).filter((f) => f.startsWith(prefix) && f.endsWith(".json"))
     .map((f) => ({ f, at: z.looseObject({ run_at: z.string() }).parse(readJson(f)).run_at }));
@@ -215,7 +217,8 @@ function copyRedacted(): string[] {
 }
 
 // The run a saved file belongs to: a run file's or state file's own run_at, the observed run's
-// run_at for a before/after file, or null for s7_log.txt, which has every run's lines.
+// run_at for a before/after file (it saves the state it read: S7Observe.lua:228), or null for
+// s7_log.txt, which has every run's lines (S7Common.lua:211 appends to it, "a").
 function runAtOf(f: string): string | null {
   const text = readFileSync(path.join(srcDir, f), "utf8");
   if (f.endsWith(".txt")) return text.match(/^run_at=(.*)$/m)?.[1]?.trim() ?? null;
@@ -225,7 +228,9 @@ function runAtOf(f: string): string | null {
 }
 
 // The copied files split by run, so each summary names only its own run's evidence as its own
-// (Greptile, PR #31): s7_state.txt holds only the latest run's state.
+// (Greptile, PR #31). s7_state.txt holds only the latest run's state [handle: S7Common.lua:188 opens it
+// "wb" on every run of menu item 1; observed: docs\reports\phase4\S7\s7_state.txt run_at is run 2's,
+// "2026-09-27 12:52:56 (local time)"].
 function evidence(copied: string[], runAt: string) {
   const out = { this_run: [] as string[], other_runs: [] as string[], shared: [] as string[] };
   for (const f of copied) {

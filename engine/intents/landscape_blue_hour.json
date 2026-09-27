@@ -1,0 +1,19 @@
+{
+  "id": "landscape_blue_hour",
+  "label": "Landscape — blue hour",
+  "category": "landscape",
+  "brief": "Cool, even twilight. Keep the blue of the sky deep and clean, neither cyan nor purple. Artificial lights may glow warm against the blue; let small light sources clip rather than dulling the whole scene to save them. Lift shadows gently and watch for noise in the sky.",
+  "default_camera_profile": "Adobe Landscape",
+  "priors": { "lens.profile_enable": 1, "lens.ca_remove": 1, "shadows": 15, "blacks": -5, "vibrance": 10 },
+  "variants": {
+    "A": { "label": "natural", "priors": {} },
+    "B": { "label": "dramatic", "priors": { "contrast": 15, "dehaze": 10, "blacks": -10 } },
+    "C": { "label": "soft", "priors": { "contrast": -10, "shadows": 15 } }
+  },
+  "guardrail_overrides": { "clip_high_pct": 1.0 },
+  "regions_expected": ["sky"],
+  "convergence_hints": [
+    "stop when the sky is a clean, deep blue and only small light sources are clipped"
+  ],
+  "allow_probe": false
+}

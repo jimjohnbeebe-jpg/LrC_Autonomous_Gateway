@@ -1,0 +1,18 @@
+{
+  "id": "pet_fur_detail",
+  "label": "Pet — fur detail",
+  "category": "pet",
+  "brief": "An animal with fur. Bring out the fur's texture (texture first, then a little clarity) without halos. Black fur stays black with visible strands; white fur stays white without clipping. The eyes should be sharp with their catchlight; keep the background calm.",
+  "default_camera_profile": "Adobe Color",
+  "priors": { "lens.profile_enable": 1, "lens.ca_remove": 1, "texture": 20, "clarity": 5, "shadows": 15 },
+  "variants": {
+    "A": { "label": "natural", "priors": {} },
+    "B": { "label": "dramatic", "priors": { "contrast": 15, "clarity": 10, "blacks": -10 } },
+    "C": { "label": "soft", "priors": { "contrast": -10, "texture": -10, "shadows": 10 } }
+  },
+  "regions_expected": ["fur"],
+  "convergence_hints": [
+    "stop when the fur shows strands in both its brightest and darkest areas"
+  ],
+  "allow_probe": false
+}

@@ -1,9 +1,11 @@
 // Every failure reaches Claude as { code, message, recoverable } (PRD NFR-7), never as a stack.
 // Codes follow MCP_TOOLS where it names one (BRIDGE_DISCONNECTED, NO_ACTIVE_PHOTO, TARGET_CHANGED,
-// UNKNOWN_PARAMETER, OUT_OF_RANGE, LEGACY_PROCESS_VERSION); the others are Phase 2's own.
+// UNKNOWN_PARAMETER, OUT_OF_RANGE, LEGACY_PROCESS_VERSION, INTENT_NOT_FOUND); the others are the
+// engine's own (Phase 2 and 3).
 // `recoverable` means the same call may work later without changing it (e.g. once Lightroom is back).
 
 import { BridgeError } from "../bridge/index.js";
+import { IntentError } from "../intents/index.js";
 import { ParamError, UnknownCameraProfileError } from "../params/index.js";
 import { PreviewError } from "../preview/index.js";
 
@@ -77,5 +79,10 @@ export function toToolError(err: unknown): ToolError {
     return new ToolError("UNKNOWN_CAMERA_PROFILE", err.message, false, { profile: err.profile });
   }
   if (err instanceof PreviewError) return new ToolError(err.code, err.message, err.recoverable);
+  if (err instanceof IntentError) {
+    // INTENT_NOT_FOUND is MCP_TOOLS' code; INVALID_INTENT and INTENT_EXISTS are Phase 3's own.
+    const codes: Record<IntentError["code"], string> = { intent_not_found: "INTENT_NOT_FOUND", invalid_intent: "INVALID_INTENT", intent_exists: "INTENT_EXISTS" };
+    return new ToolError(codes[err.code], err.message, false, err.problems.length ? { problems: err.problems } : undefined);
+  }
   return new ToolError("INTERNAL_ERROR", err instanceof Error ? err.message : String(err), false);
 }

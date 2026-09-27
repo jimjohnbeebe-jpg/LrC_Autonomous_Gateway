@@ -16,6 +16,7 @@
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { BridgeClient } from "../bridge/index.js";
+import { IntentLibrary } from "../intents/index.js";
 import { ToolLog, defaultLogDir } from "../log/index.js";
 import { loadDefaultParamMap } from "../params/index.js";
 import { PreviewService } from "../preview/index.js";
@@ -47,10 +48,12 @@ const gate = new BridgeGate(client, () => acquireInstanceLock(dev.lockPort), {
   onIdleRelease: () => say(`no tool call for ${IDLE_RELEASE_MS / 1000} s; gave the Lightroom bridge back`),
 });
 
+const map = loadDefaultParamMap();
 const tools = new Tools({
   client,
-  map: loadDefaultParamMap(),
+  map,
   previews,
+  intents: new IntentLibrary({ map }),
   ensureBridge: () => gate.ready(),
   log: toolLog,
   onCallStart: () => gate.beginUse(),

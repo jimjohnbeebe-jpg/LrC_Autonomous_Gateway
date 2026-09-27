@@ -1,0 +1,18 @@
+{
+  "id": "landscape_overcast_flat",
+  "label": "Landscape — overcast, flat light",
+  "category": "landscape",
+  "brief": "Soft light and low contrast. Add depth with midtone and local contrast rather than by crushing blacks. Recover detail in a bright grey sky with highlights instead of darkening the whole image. Keep colours natural, a little richer than the camera rendered them, not saturated.",
+  "default_camera_profile": "Adobe Landscape",
+  "priors": { "lens.profile_enable": 1, "lens.ca_remove": 1, "contrast": 15, "highlights": -15, "clarity": 10, "dehaze": 10, "vibrance": 15 },
+  "variants": {
+    "A": { "label": "natural", "priors": {} },
+    "B": { "label": "dramatic", "priors": { "contrast": 15, "dehaze": 15, "blacks": -10, "clarity": 10 } },
+    "C": { "label": "soft", "priors": { "contrast": -5, "shadows": 10 } }
+  },
+  "regions_expected": ["sky"],
+  "convergence_hints": [
+    "stop when the scene has depth without halos along the horizon and the sky shows some tone"
+  ],
+  "allow_probe": false
+}

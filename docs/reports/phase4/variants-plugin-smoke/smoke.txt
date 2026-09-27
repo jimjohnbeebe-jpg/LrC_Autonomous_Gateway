@@ -1,21 +1,25 @@
 phase-4/variants-plugin smoke transcript (PHASE4_PLAN row 6) - Claude Code (Opus 5.5), 2026-09-27
-Plugin under test: plugin\LrC-AVG.lrplugin at commit 2572be4 (branch phase-4/variants-plugin).
+Plugin under test: plugin\LrC-AVG.lrplugin at commit 80cd470 (branch phase-4/variants-plugin).
 "main" = plugin\LrC-AVG.lrplugin at 263fbd9 (Bridge.lua, Develop.lua, Json.lua, Log.lua, Preview.lua copied
-to <scratch>\old with git show). "BEFORE the lock" = Catalog.lua at 7b9dd7a, copied to <scratch>\prefix,
-with the rest of the plugin from 2572be4. Schemas: engine\dist\bridge\protocol.js from npm run build at 2572be4.
+to <scratch>\old with git show). "BEFORE the lock" = Catalog.lua at 7b9dd7a, copied to <scratch>\prefix;
+"BEFORE the takeover" = Catalog.lua at 4d7e47b, copied to <scratch>\prefix2; the runner writes the mutant
+to <scratch>\mutant itself. Each runs with the rest of the plugin from 80cd470.
+Schemas: engine\dist\bridge\protocol.js from npm run build at 80cd470.
 Node v24.11.1; fengari 0.1.4 (a Lua 5.3 VM in JavaScript), a scratch install, not a project dependency.
 The fake Lightroom (fake-lr.lua), the two scenario scripts and the runner are reproduced at the end.
 The fake's behaviour is Claude Code's invention, modelled on spikes S6 and S7 where its comments say so:
 this shows that the plugin's Lua runs, what it does with what it is given, and that main's and this
 branch's bridge do the same things; it shows NOTHING about Lightroom itself. In "Two commands at once"
-the fake's catalog queries yield and each createVirtualCopies call yields once before it reads the
-selection; whether Lightroom's own call yields there is not known.
+and "A lock whose holder never finishes" the fake's catalog queries yield and createVirtualCopies
+calls yield before they read the selection; whether Lightroom's own call yields there is not known.
+A task "stopped by a reload" is one the fake scheduler drops; what a Reload Plug-in does to running
+tasks is not known either.
 Lua 5.1 syntax of every plugin file is checked separately by engine\tests\lua-plugin.test.ts (npm test).
 Error messages carry Lua chunk names; they are shortened to the file name below.
 
 To reproduce: npm run build; in an empty folder with these four files, npm install fengari@0.1.4, copy
-main's five files into old\ and the pre-lock Catalog.lua into prefix\, then:
-$ PREFIX_COMMIT=7b9dd7a node run.mjs <repo>
+main's five files into old\, and the two earlier Catalog.lua files into prefix\ and prefix2\, then:
+$ PREFIX_COMMIT=7b9dd7a PREFIX2_COMMIT=4d7e47b node run.mjs <repo>
 == Catalog.lua handlers (catalog-cases.lua) ==
 PASS  no task raised ([])
 --  three copies: ok schema ok; copies 3/3 [AVG landscape_golden_hour A:true, AVG landscape_golden_hour B:true, AVG landscape_golden_hour C:true]; master_selected true
@@ -36,7 +40,7 @@ PASS  no task raised ([])
     calls: ; yields 0; active after 3869534, selected 1
 --  no target_uuid: error bad_request (recoverable false): target_uuid must name the master photo
     calls: ; yields 0; active after 3869534, selected 1
---  the second copy fails: ok schema ok; copies 1/3 [AVG landscape_golden_hour A:true] failure copy_failed: createVirtualCopies: fake-lr.lua:164: createVirtualCopies: simulated failure; master_selected true
+--  the second copy fails: ok schema ok; copies 1/3 [AVG landscape_golden_hour A:true] failure copy_failed: createVirtualCopies: fake-lr.lua:166: createVirtualCopies: simulated failure; master_selected true
     calls: select 3869534 | createVirtualCopies AVG landscape_golden_hour A on {3869534} gate=0 | select 3869534 | createVirtualCopies AVG landscape_golden_hour B on {3869534} gate=0 | select 3869534; yields 1; active after 3869534, selected 1
 --  Lightroom ignores the re-selection: ok schema ok; copies 1/3 [AVG landscape_golden_hour A:true] failure select_failed: Lightroom did not select photo 3869534 (active photo 5007, 1 selected); master_selected false
     calls: select 3869534 | createVirtualCopies AVG landscape_golden_hour A on {3869534} gate=0 | select 3869534 | select 3869534; yields 1; active after 5007, selected 1
@@ -115,6 +119,30 @@ PASS  with the lock, at every start time: 3 copies of the master, then select_ph
 PASS  with the lock: all 3 copies are copies of the master
 PASS  with the lock: select_photo runs after the batch has put the master back, then selects its photo
 PASS  a batch longer than 10 s: select_photo is refused as busy (recoverable) without touching the catalog; the copies are all right
+
+== A lock whose holder never finishes (catalog-cases.lua, lock) ==
+--  BEFORE the takeover (Catalog.lua at 4d7e47b), a lock left by a task the reload stopped:
+    select_photo error busy: select_photo waited 10 s for create_virtual_copies to finish after 10.05 s
+PASS  before the takeover: the next select_photo is refused as busy (Greptile's case)
+--  a lock left by a task the reload stopped:
+    select_photo ok (selected 3869533) after 0.00 s
+    log: WARN  catalog: select_photo takes over the selection lock from create_virtual_copies (taken before the bridge restarted)
+    calls: select 3869534 | find OTHER-UUID | select 3869533
+--  a lock held longer than 60 s:
+    select_photo ok (selected 3869533) after 5.00 s
+    log: WARN  catalog: select_photo takes over the selection lock from create_virtual_copies (held longer than 60 s)
+    calls: select 3869534 | find OTHER-UUID | select 3869533
+--  a late holder leaves the new holder's lock alone:
+    A ok (0/3 copies, stopped: copy_failed); B ok (3/3 copies); select_photo ok (selected 3869533)
+    log: WARN  catalog: create_virtual_copies takes over the selection lock from create_virtual_copies (taken before the bridge restarted)
+    calls: select 3869534 | select 3869534 | createVirtualCopies AVG a A on {3869534} gate=0 | select 3869534 | createVirtualCopies AVG b A on {3869534} gate=0 | select 3869534 | createVirtualCopies AVG b B on {3869534} gate=0 | select 3869534 | createVirtualCopies AVG b C on {3869534} gate=0 | select 3869534 | find OTHER-UUID | select 3869533
+PASS  after a reload: select_photo takes over the abandoned lock at once, and says so in the log
+PASS  a holder hung for more than 60 s: select_photo takes over, and says so in the log
+--  the same case on a mutant that releases any lock:
+    B ok (2/3 copies, stopped: identity_mismatch); select_photo error select_failed: Lightroom did not select photo 3869533 (active photo 3869533, 1 selected)
+    calls: select 3869534 | select 3869534 | createVirtualCopies AVG a A on {3869534} gate=0 | select 3869534 | createVirtualCopies AVG b A on {3869534} gate=0 | select 3869534 | find OTHER-UUID | select 3869533 | createVirtualCopies AVG b B on {3869533} gate=0 | select 3869534
+PASS  the case catches the mutant: there, select_photo C gets in before B's last copy
+PASS  A ending late does not release B's lock: select_photo C runs only after B's last copy
 
 == Bridge (bridge-cases.lua): main's plugin vs this branch ==
 PASS  main: no task raised ([])
@@ -339,7 +367,9 @@ F.catalog = {
         F.copyCalls = (F.copyCalls or 0) + 1
         -- With F.copyYields = n, the call takes n seconds and lets other tasks run before it reads
         -- the selection: a model of a call that yields inside [the fake's assumption, not observed].
-        for _ = 1, F.copyYields or 0 do F.clock = F.clock + 1; coroutine.yield() end
+        -- A table gives each call (1st, 2nd, ...) its own count.
+        local n = type(F.copyYields) == "table" and (F.copyYields[F.copyCalls] or 0) or (F.copyYields or 0)
+        for _ = 1, n do F.clock = F.clock + 1; coroutine.yield() end
         local sel = {}
         for _, p in ipairs(F.selected or {}) do sel[#sel + 1] = p.localIdentifier end
         record("createVirtualCopies " .. name .. " on {" .. table.concat(sel, ",") .. "} gate=" .. F.inWrite)
@@ -466,6 +496,97 @@ overlap("select_photo sent while copies are made", 1)
 overlap("select_photo waits longer than the lock allows", 5)
 for delay = 0, 12 do overlap("sweep", 1, delay) end
 
+-- A lock whose holder never finishes (Greptile, PR #33 round 2). `start` runs a command as its own
+-- task after `delay` rounds; F.kill stops a task for good, as a Reload Plug-in may.
+local LOG_FILE = "C:\\T\\LrC-AVG\\bridge.log"
+local function start(results, label, delay, fn)
+    F.spawn(label, function()
+        for _ = 1, delay or 0 do coroutine.yield() end
+        results[label] = table.pack(fn())
+        results[label .. "_at"] = F.clock
+    end)
+end
+local function runAll()
+    for _ = 1, 5000 do
+        if #F.tasks == 0 then break end
+        F.run(1)
+    end
+end
+function F.kill(label)
+    local keep = {}
+    for _, t in ipairs(F.tasks) do if t.name ~= label then keep[#keep + 1] = t end end
+    F.tasks = keep
+end
+local function takeovers()
+    local lines = {}
+    for line in (F.files[LOG_FILE] or ""):gmatch("[^\n]+") do
+        if line:find("takes over", 1, true) then lines[#lines + 1] = line:gsub("^%S+ %S+ ", "") end
+    end
+    return lines
+end
+local function outcome(r, label)
+    local p = r[label]
+    return p and { result = p[1], error = p[2], at = r[label .. "_at"] } or { unfinished = true }
+end
+local function copyNames(prefix) return { prefix .. " A", prefix .. " B", prefix .. " C" } end
+
+-- 1. The holder's task is stopped by a reload: the next command, under the new generation, goes ahead.
+do
+    F.world()
+    F.files[LOG_FILE] = nil
+    F.yieldQueries, F.copyYields, F.calls = true, 1000, {}
+    _G.LrCAVG_BridgeGeneration = 1
+    local r = {}
+    start(r, "create", 0, function() return Catalog.createVirtualCopies({ target_uuid = MASTER_UUID, names = NAMES }) end)
+    F.run(10) -- it holds the lock, stuck inside createVirtualCopies
+    F.kill("create")
+    _G.LrCAVG_BridgeGeneration = 2
+    local t0 = F.clock
+    start(r, "select", 0, function() return Catalog.selectPhoto({ uuid = "OTHER-UUID" }) end)
+    runAll()
+    out[#out + 1] = { case = "a lock left by a task the reload stopped", command = "lock", select = outcome(r, "select"),
+        waited = (r.select_at or F.clock) - t0, takeovers = takeovers(), calls = F.calls }
+end
+
+-- 2. The holder hangs for more than 60 s in the same generation: the next command takes over.
+do
+    F.world()
+    F.files[LOG_FILE] = nil
+    F.yieldQueries, F.copyYields, F.calls = true, 1000, {}
+    _G.LrCAVG_BridgeGeneration = 1
+    local r = {}
+    start(r, "create", 0, function() return Catalog.createVirtualCopies({ target_uuid = MASTER_UUID, names = NAMES }) end)
+    F.run(75) -- 1 s per round inside createVirtualCopies
+    local t0 = F.clock
+    start(r, "select", 0, function() return Catalog.selectPhoto({ uuid = "OTHER-UUID" }) end)
+    for _ = 1, 50 do F.run(1) end
+    F.kill("create")
+    runAll()
+    out[#out + 1] = { case = "a lock held longer than 60 s", command = "lock", select = outcome(r, "select"),
+        waited = (r.select_at or F.clock) - t0, takeovers = takeovers(), calls = F.calls }
+end
+
+-- 3. After a reload, batch B takes over from A, whose task is in fact still running: its one
+-- createVirtualCopies call hangs for 6 s, then raises, so A stops and puts the master back. When A
+-- ends it must not release B's lock: select_photo C, sent just after B, has to wait for B's copies.
+do
+    F.world()
+    F.files[LOG_FILE] = nil
+    F.yieldQueries, F.calls = true, {}
+    F.copyYields, F.failCopyAt = { 6, 1, 1, 1 }, 1
+    _G.LrCAVG_BridgeGeneration = 1
+    local r = {}
+    start(r, "A", 0, function() return Catalog.createVirtualCopies({ target_uuid = MASTER_UUID, names = copyNames("AVG a") }) end)
+    F.run(6) -- A is inside its hanging createVirtualCopies call
+    _G.LrCAVG_BridgeGeneration = 2
+    start(r, "B", 0, function() return Catalog.createVirtualCopies({ target_uuid = MASTER_UUID, names = copyNames("AVG b") }) end)
+    start(r, "C", 2, function() return Catalog.selectPhoto({ uuid = "OTHER-UUID" }) end)
+    runAll()
+    out[#out + 1] = { case = "a late holder leaves the new holder's lock alone", command = "lock", A = outcome(r, "A"),
+        B = outcome(r, "B"), select = outcome(r, "C"), takeovers = takeovers(), calls = F.calls }
+end
+_G.LrCAVG_BridgeGeneration = nil
+
 return Json.encode({ cases = out, errors = F.errors })
 
 ===== bridge-cases.lua =====
@@ -553,6 +674,7 @@ return Json.encode({ sent = sent, log = F.files[LOG_FILE], status_mid = statusMi
 // results against the engine's zod schemas (engine\dist\bridge\protocol.js, built by npm run build).
 // Usage: node run.mjs <repo root>
 import fengari from "fengari";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -586,7 +708,7 @@ const check = (ok, what) => {
 console.log("== Catalog.lua handlers (catalog-cases.lua) ==");
 const cat = runLua(newDir, "catalog-cases.lua");
 check(cat.errors.length === 0, `no task raised (${JSON.stringify(cat.errors)})`);
-for (const c of cat.cases.filter((x) => x.command !== "overlap")) {
+for (const c of cat.cases.filter((x) => x.command !== "overlap" && x.command !== "lock")) {
   let schema = "";
   if (c.result) {
     const parsed = COMMANDS[c.command].safeParse(c.result);
@@ -660,6 +782,43 @@ for (const c of [during, long]) {
   }
 }
 
+// 1c. A lock whose holder never finishes (Greptile, PR #33 round 2). On the Catalog.lua of round 1
+// (prefix2\, from PREFIX2_COMMIT: the lock without the takeover) and on this one.
+console.log("\n== A lock whose holder never finishes (catalog-cases.lua, lock) ==");
+const res = (o) => (o.unfinished ? "did not finish" : o.result ? `ok (${o.result.copies ? `${o.result.copies.length}/${o.result.requested} copies${o.result.failure ? `, stopped: ${o.result.failure.code}` : ""}` : `selected ${o.result.local_id}`})` : `error ${o.error.code}: ${o.error.message}`);
+const prefix2Dir = path.join(here, "prefix2").replaceAll("\\", "/");
+const round1 = runLua(`${prefix2Dir};${newDir}`, "catalog-cases.lua").cases.find((c) => c.case === "a lock left by a task the reload stopped");
+console.log(`--  BEFORE the takeover (Catalog.lua at ${process.env.PREFIX2_COMMIT ?? "prefix2"}), a lock left by a task the reload stopped:\n    select_photo ${res(round1.select)} after ${round1.waited.toFixed(2)} s`);
+check(round1.select.error?.code === "busy", "before the takeover: the next select_photo is refused as busy (Greptile's case)");
+const lockCase = (name) => byCase[name];
+const reload = lockCase("a lock left by a task the reload stopped");
+const hung = lockCase("a lock held longer than 60 s");
+const late = lockCase("a late holder leaves the new holder's lock alone");
+for (const c of [reload, hung, late]) {
+  console.log(`--  ${c.case}:\n    ${c.A ? `A ${res(c.A)}; B ${res(c.B)}; ` : ""}select_photo ${res(c.select)}${c.waited !== undefined ? ` after ${c.waited.toFixed(2)} s` : ""}`);
+  for (const l of c.takeovers) console.log(`    log: ${l}`);
+  console.log(`    calls: ${c.calls.join(" | ")}`);
+}
+check(reload.select.result?.local_id === 3869533 && reload.waited < 1 && reload.takeovers.some((l) => l.includes("taken before the bridge restarted")),
+  "after a reload: select_photo takes over the abandoned lock at once, and says so in the log");
+check(hung.select.result?.local_id === 3869533 && hung.takeovers.some((l) => l.includes("held longer than 60 s")),
+  "a holder hung for more than 60 s: select_photo takes over, and says so in the log");
+// Case 3 must catch a holder that releases any lock: run it on a mutant of this Catalog.lua whose
+// `if holder == mine then holder = nil end` is `holder = nil`, written to <scratch>\mutant.
+const source = readFileSync(path.join(newDir, "Catalog.lua"), "utf8");
+const mutated = source.replace("if holder == mine then holder = nil end", "holder = nil -- MUTANT");
+mkdirSync(path.join(here, "mutant"), { recursive: true });
+writeFileSync(path.join(here, "mutant", "Catalog.lua"), mutated);
+const mutant = runLua(`${path.join(here, "mutant").replaceAll("\\", "/")};${newDir}`, "catalog-cases.lua").cases.find((c) => c.case === "a late holder leaves the new holder's lock alone");
+const mLast = mutant.calls.findLastIndex((x) => x.startsWith("createVirtualCopies AVG b"));
+console.log(`--  the same case on a mutant that releases any lock:\n    B ${res(mutant.B)}; select_photo ${res(mutant.select)}\n    calls: ${mutant.calls.join(" | ")}`);
+check(mutated !== source && mutant.calls.indexOf("find OTHER-UUID") < mLast, "the case catches the mutant: there, select_photo C gets in before B's last copy");
+const bLast = late.calls.findLastIndex((x) => x.startsWith("createVirtualCopies AVG b"));
+const cFind = late.calls.indexOf("find OTHER-UUID");
+check(late.A.result?.failure?.code === "copy_failed" && late.B.result?.copies.length === 3 && late.B.result.copies.every((x) => x.identity_ok) && !late.B.result.failure &&
+  late.select.result?.local_id === 3869533 && late.select.at > late.A.at && bLast >= 0 && cFind > bLast,
+  "A ending late does not release B's lock: select_photo C runs only after B's last copy");
+
 // 2. The whole bridge, main's Bridge.lua against the split one.
 console.log("\n== Bridge (bridge-cases.lua): main's plugin vs this branch ==");
 // Error messages carry the chunk name, which differs between the two plugin folders: keep the file name.
@@ -692,10 +851,12 @@ check(JSON.stringify(oldRun.steps) === JSON.stringify(newRun.steps), "same socke
 check(JSON.stringify(oldRun.sockets) === JSON.stringify(newRun.sockets), `same socket history (${newRun.sockets.length} binds: closed / reconnect() / lines sent)`);
 const so = JSON.parse(oldRun.status_mid);
 const sn = JSON.parse(newRun.status_mid);
-for (const s of [so, sn]) { delete s.log_tail; delete s.updated_at; delete s.plugin_version; }
+// updated_at, updated_epoch and started_at come from the real clock (os.date, os.time), not the fake one.
+for (const s of [so, sn]) { delete s.log_tail; delete s.updated_at; delete s.updated_epoch; delete s.started_at; delete s.plugin_version; }
 check(sn.commands_handled === so.commands_handled + 2 && sn.commands_failed === so.commands_failed - 2, `status file: handled ${so.commands_handled} -> ${sn.commands_handled} (+2 new commands), failed ${so.commands_failed} -> ${sn.commands_failed}, unauthorized ${sn.commands_unauthorized}, malformed ${sn.lines_malformed}`);
 delete so.commands_handled; delete sn.commands_handled; delete so.commands_failed; delete sn.commands_failed;
 check(JSON.stringify(so) === JSON.stringify(sn), "status file otherwise identical");
+if (JSON.stringify(so) !== JSON.stringify(sn)) for (const k of new Set([...Object.keys(so), ...Object.keys(sn)])) if (JSON.stringify(so[k]) !== JSON.stringify(sn[k])) console.log(`    status ${k}: main ${JSON.stringify(so[k])} / branch ${JSON.stringify(sn[k])}`);
 check(JSON.parse(newRun.status_mid).plugin_version === "0.3.0", "status file reports plugin 0.3.0");
 const byId = Object.fromEntries(newSent.filter((e) => e.type === "res").map((e) => [e.id, e]));
 for (const [id, name] of [["c1", "hello"], ["c11", "create_virtual_copies"], ["c12", "select_photo"]]) {

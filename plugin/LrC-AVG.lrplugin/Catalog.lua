@@ -56,8 +56,10 @@ end
 -- (Greptile, PR #33): a task stopped by a Reload Plug-in, or a call that never returns. So a lock
 -- taken under another bridge generation (Bridge.lua bumps _G.LrCAVG_BridgeGeneration on each start)
 -- or held longer than LOCK_MAX_HOLD_SECONDS counts as abandoned, and a holder releases only its own
--- lock. Taking over an abandoned lock whose task is in fact still running reopens the race above
--- for that one command [inference]; it is logged.
+-- lock [handle: docs\reports\phase4\variants-plugin-smoke\smoke.txt "== A lock whose holder never
+-- finishes": against the fake, both takeovers, and a mutant releasing any lock caught]. Taking over
+-- an abandoned lock whose task is in fact still running reopens the race above for that one command
+-- [inference]; it is logged.
 -- S6's copies took 212-1017 ms each [handle: docs\reports\phase0\S6\s6_*.json calls[*].ms], so a
 -- 4-copy batch should take seconds; 60 s is a generous bound [inference: the figure].
 Catalog.LOCK_MAX_HOLD_SECONDS = 60

@@ -1,5 +1,6 @@
 // lr_step (src/session/step.ts, guardrail.ts) against the simulated Lightroom in its "tonal" model
-// (tests/helpers/session-harness.ts): decay, both guardrails, convergence, the pass cap, a changed
+// (tests/helpers/session-harness.ts): decay, both guardrails, the undo of a step still over a
+// clipping limit, convergence, the pass cap, a changed
 // selection, the before/after image, the operation queue, a render made stale by an edit in
 // Lightroom, and the session id when the day's log name is taken.
 
@@ -56,7 +57,43 @@ describe("lr_step", () => {
       ["corrected", { exposure: 0 }],
     ]);
     expect((out.json["metrics"] as { clip_high_pct: number }).clip_high_pct).toBeLessThanOrEqual(0.5);
+    expect(out.json["undone"]).toBeUndefined();
     expect(readLog().passes[1]?.guardrail_actions).toHaveLength(2);
+  });
+
+  it("undoes a step still over a limit after its 3 corrections when the photo was within it before (PHASE4_PLAN decision 1)", async () => {
+    lr.settings["Whites2012"] = -10; // bright, but within the limits
+    await manager.begin({ intent_id: "test_plain" });
+    const before = structuredClone(lr.settings);
+    // Warming clips the red channel in the tonal model; temperature is not a slider the pull-back
+    // knows, and the three fixed steps do not bring it back under.
+    const out = await manager.step({ session_id: ID, settings: { temperature: 1500 }, rationale: "much warmer" });
+    expect(lr.history).toEqual([`AVG ${SHORT} pass 1/4`, ...[1, 2, 3].map((k) => `AVG ${SHORT} pass 1/4 guard ${k}`), `AVG ${SHORT} pass 1/4 clip revert`]);
+    const actions = out.json["guardrail_actions"] as Array<{ kind: string; limit: string; reason: string }>;
+    expect(actions.map((a) => [a.kind, a.limit])).toEqual([
+      ["corrected", "clip_high"],
+      ["corrected", "clip_high"],
+      ["corrected", "clip_high"],
+      ["unmet", "clip_high"],
+      ["reverted", "clip_high"],
+    ]);
+    expect(actions[4]?.reason).toMatch(/before the pass/);
+    expect(out.json["undone"]).toMatchObject({ limit: "clip_high", reason: actions[4]?.reason }); // Greptile, PR #27
+    for (const key of ["Temperature", "Whites2012", "Highlights2012", "Exposure2012"]) expect(lr.settings[key]).toBe(before[key]);
+    expect((out.json["metrics"] as { clip_high_pct: number }).clip_high_pct).toBeLessThanOrEqual(0.5);
+    const log = readLog();
+    expect(log.passes[1]?.metrics_after.clip_high_pct).toBeLessThanOrEqual(0.5);
+    expect(out.json["pass"]).toBe("1/4");
+  });
+
+  it("does not undo a step when the photo was already over the limit before it", async () => {
+    lr.settings["Exposure2012"] = -5; // neither pass 0 nor the step can lift it under the shadow limit
+    await manager.begin({ intent_id: "test_plain" });
+    const out = await manager.step({ session_id: ID, settings: { temperature: 500 }, rationale: "warmer" });
+    const actions = out.json["guardrail_actions"] as Array<{ kind: string; limit: string }>;
+    expect(actions.map((a) => [a.kind, a.limit]).at(-1)).toEqual(["unmet", "clip_low"]);
+    expect(actions.some((a) => a.kind === "reverted")).toBe(false);
+    expect(lr.history.at(-1)).not.toMatch(/revert/);
   });
 
   it("reports converged_by_metrics after a step too small to move the metrics, then refuses further steps", async () => {

@@ -1,12 +1,13 @@
 // lr_step: a change per slider, capped by decay and range, checked against the projected
 // guardrail, written as one History step, rendered and measured; then the actual guardrail
-// (corrections), region preservation and convergence.
+// (corrections), the undo of a pass that still breaches a limit or moves a preserved region, and
+// convergence.
 
 import type { GuardrailAction } from "../log/index.js";
 import { ToolError } from "../mcp/errors.js";
 import { deltaMetrics, summarize, type MetricsDelta } from "../metrics/index.js";
-import { canonicalValuesEqual, type CanonicalValue, type FromSdkResult } from "../params/index.js";
-import { correct, regionDrift } from "./guardrail.js";
+import type { CanonicalValue, FromSdkResult } from "../params/index.js";
+import { clipBreach, correct, regionDrift, undo } from "./guardrail.js";
 import { brief, describe, failed, fresh, historyName, image, ms, read, recordPass, render, write } from "./io.js";
 import { applyProjectedGuardrail, convergedByMetrics, planStep, type StepPlan } from "./plan.js";
 import type { Rendered, Session, SessionContext, SessionOutput, StepArgs } from "./types.js";
@@ -32,7 +33,7 @@ export async function step(ctx: SessionContext, s: Session, args: StepArgs): Pro
 
   try {
     const beforeRender = baseline.last;
-    const done = await apply(ctx, s, n, plan, beforeView);
+    const done = await apply(ctx, s, n, plan, beforeView, beforeRender);
     const delta = deltaMetrics(beforeRender.metrics, done.rendered.metrics);
     const converged = convergedByMetrics(delta, plan.changes);
     s.passes = n;
@@ -76,6 +77,7 @@ export async function step(ctx: SessionContext, s: Session, args: StepArgs): Pro
         metrics: brief(done.rendered.metrics),
         converged,
         ...(baseline.refreshed ? { metrics_refreshed: true } : {}),
+        ...(json["undone"] ? { undone: (json["undone"] as { limit: string }).limit } : {}),
       },
     };
   } catch (err) {
@@ -111,36 +113,32 @@ function refuseEmpty(s: Session, plan: StepPlan): never {
   );
 }
 
-/** Write the plan as one History step, render it, then the corrections and region preservation. */
-async function apply(ctx: SessionContext, s: Session, n: number, plan: StepPlan, beforeView: FromSdkResult): Promise<Applied> {
+/**
+ * Write the plan as one History step, render it, then the corrections. The pass is undone when
+ * clipping is still over a limit the photo was within before it, or a preserved region drifted
+ * too far.
+ */
+async function apply(ctx: SessionContext, s: Session, n: number, plan: StepPlan, beforeView: FromSdkResult, before: Rendered): Promise<Applied> {
   const historyNames: string[] = [];
   const name = historyName(s, n);
   const values: Record<string, CanonicalValue> = Object.fromEntries(plan.changes.map((c) => [c.name, c.after]));
-  let current = await write(ctx, s, values, name);
+  const written = await write(ctx, s, values, name);
   historyNames.push(name);
-  let rendered = await render(ctx, s, current.settings);
-  const corrected = await correct(ctx, s, n, plan.changes, current, rendered, historyNames);
-  current = corrected.view;
-  rendered = corrected.rendered;
+  const corrected = await correct(ctx, s, n, plan.changes, written, await render(ctx, s, written.settings), historyNames);
   const actions = [...corrected.actions];
 
-  // Region preservation: a preserved region whose hue or saturation drifted too far undoes the pass.
-  const drift = regionDrift(s, rendered.metrics);
-  if (drift) {
-    const back: Record<string, CanonicalValue> = {};
-    for (const [key, value] of Object.entries(beforeView.settings)) if (!canonicalValuesEqual(current.settings[key], value)) back[key] = value;
-    if (Object.keys(back).length > 0) {
-      const revertName = historyName(s, n, "region revert");
-      current = await write(ctx, s, back, revertName);
-      historyNames.push(revertName);
-      rendered = await render(ctx, s, current.settings);
-      actions.push({ kind: "reverted", limit: "region", reason: drift, history_name: revertName, changes: numericOnly(back), metrics_after: summarize(rendered.metrics) });
-    }
-  }
-  return { view: current, rendered, actions, historyNames };
+  const drift = regionDrift(s, corrected.rendered.metrics);
+  const breach = clipBreach(s, before.metrics, corrected.rendered.metrics) ?? (drift ? { limit: "region" as const, reason: drift } : null);
+  const undone = breach ? await undo(ctx, s, n, beforeView, corrected.view, breach, historyNames) : null;
+  if (!undone) return { view: corrected.view, rendered: corrected.rendered, actions, historyNames };
+  actions.push(undone.action);
+  return { view: undone.view, rendered: undone.rendered, actions, historyNames };
 }
 
 function stepJson(s: Session, n: number, plan: StepPlan, done: Applied, delta: MetricsDelta, converged: boolean, refreshed: boolean, started: number): Record<string, unknown> {
+  // An undone pass says so at the top level: `applied` stays the record of what was written
+  // (Greptile, PR #27: a reverted pass read as applied).
+  const undone = done.actions.find((a) => a.kind === "reverted");
   return {
     ok: true,
     session_id: s.id,
@@ -158,11 +156,8 @@ function stepJson(s: Session, n: number, plan: StepPlan, done: Applied, delta: M
     cap_reached: s.endReason === "cap_reached",
     passes_left: s.endReason ? 0 : s.maxPasses - n,
     ...(refreshed ? { metrics_refreshed: "the photo's settings had changed since the last render, so it was rendered again before this step" } : {}),
+    ...(undone ? { undone: { limit: undone.limit, reason: undone.reason, note: "the changes in `applied` were written, then undone: `settings` are as before this pass" } } : {}),
     ...describe(done.rendered),
     timings: { total_ms: ms(started) },
   };
-}
-
-function numericOnly(values: Record<string, CanonicalValue>): Record<string, number> {
-  return Object.fromEntries(Object.entries(values).filter((e): e is [string, number] => typeof e[1] === "number"));
 }

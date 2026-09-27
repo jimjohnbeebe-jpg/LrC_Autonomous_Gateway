@@ -225,12 +225,15 @@ function Common.readFile(path)
     return text
 end
 
--- Write the whole file, bytes as given. Returns ok, err.
+-- Write the whole file, bytes as given. Returns ok, err; a failed write or close is a failure
+-- (Greptile, PR #30).
 function Common.writeFile(path, text)
     local fh, err = io.open(path, "wb")
     if not fh then return false, tostring(err) end
-    fh:write(text)
-    fh:close()
+    local wrote, writeErr = fh:write(text)
+    local closed, closeErr = fh:close()
+    if not wrote then return false, "write failed: " .. tostring(writeErr) end
+    if not closed then return false, "close failed: " .. tostring(closeErr) end
     return true
 end
 

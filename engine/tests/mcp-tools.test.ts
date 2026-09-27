@@ -317,8 +317,10 @@ describe("mcp tools: Phase 3 additions", () => {
     expect(out.json).toMatchObject({ export_long_edge: 4000, width: 800, height: 400, scale_in_export: 1, effective_scale: 0.6056 });
     expect(out.json).not.toHaveProperty("effective_scale_note");
     expect(out.json).not.toHaveProperty("export_retried");
-    // A tall crop: the export's long side is its height (Greptile, PR #32). An export larger than
-    // asked would be shrunk and re-encoded (src\preview\service.ts), so the plain preview checks size.
+    // A tall crop, as the sim models it: the export's long side is its height [inference: see
+    // tests\helpers\lightroom-sim.ts export_preview] (Greptile, PR #32). An export larger than asked
+    // would be shrunk and re-encoded [handle: src\preview\service.ts:136-146], so the plain preview
+    // checks the size.
     lr.croppedSize = { width: 3302, height: 6605 };
     expect((await tools.getPreview({ long_edge: 800 })).json).toMatchObject({ width: 400, height: 800, reencoded: false });
     const tall = await tools.getPreview({ long_edge: 800, region: { x: 0.4, y: 0.4, w: 0.2, h: 0.2 } });

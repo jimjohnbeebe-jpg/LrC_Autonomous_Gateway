@@ -149,7 +149,10 @@ export class LightroomSim {
       if (this.exportError) return { ok: false, error: { code: "export_failed", message: this.exportError, recoverable: true } };
       this.exports++;
       const long = this.exportLongEdge ?? Number(p["long_edge"]);
-      // The requested edge is the longer side, the width or, for a tall crop, the height (Greptile, PR #32).
+      // The requested edge goes on the longer side: the plugin asks Lightroom for LR_size_resizeType
+      // "longEdge" with both maximums at that edge [handle: plugin\LrC-AVG.lrplugin\Preview.lua:66-70],
+      // and a wide crop exported at 1600 x 800 for 1600 [handle: docs\reports\phase4\S7.md Numbers,
+      // item 3]. A tall crop's export, height at the edge, is [inference: not observed] (Greptile, PR #32).
       const shape = this.croppedSize ?? { width: 3, height: 2 };
       const [width, height] = shape.width >= shape.height ? [long, Math.round((long * shape.height) / shape.width)] : [Math.round((long * shape.width) / shape.height), long];
       const level = simulatedLevel(Number(this.settings["Exposure2012"]));

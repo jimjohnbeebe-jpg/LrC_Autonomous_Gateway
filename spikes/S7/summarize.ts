@@ -165,10 +165,16 @@ function observed(prefix: string, runAt: string) {
   return { file: last.f, other_runs_ignored: ignored, jim: o.jim, lightroom: o.found, apply: o.apply ?? null, cleanup: o.cleanup ?? null, ...rerun };
 }
 
-// The preset-file re-run (menu items 4-6), or null when there is none: the newest s7_xmp_run_*.json
-// and the observations paired with it by run_at, as for run 1.
-function xmpRerun() {
-  const file = newest("s7_xmp_run_");
+// The preset-file re-run (menu items 4-6) that followed this run, or null: the newest
+// s7_xmp_run_*.json made after this run and before the next run of menu item 1, with the observations
+// paired with it by run_at. A summary never takes another run's re-run as its own (Greptile, PR #31).
+// run_at is "YYYY-MM-DD HH:MM:SS (local time)" everywhere (S7Common.localTime), so it compares as text.
+function xmpRerun(runAt: string) {
+  const runAts = (prefix: string) => readdirSync(srcDir).filter((f) => f.startsWith(prefix) && f.endsWith(".json"))
+    .map((f) => ({ f, at: z.looseObject({ run_at: z.string() }).parse(readJson(f)).run_at }));
+  const next = runAts("s7_run_").map((x) => x.at).filter((at) => at > runAt).sort()[0];
+  const mine = runAts("s7_xmp_run_").filter((x) => x.at > runAt && (next === undefined || x.at < next)).sort((a, b) => a.at.localeCompare(b.at));
+  const file = mine.at(-1)?.f;
   if (!file) return null;
   const r = XmpRun.parse(readJson(file));
   const x = r.presets.xmp;
@@ -246,7 +252,7 @@ async function main(): Promise<void> {
       xmp: { written: p.xmp.path !== undefined, error: p.xmp.error ?? null },
       before_restart: before,
       after_restart: after,
-      xmp_rerun: xmpRerun(),
+      xmp_rerun: xmpRerun(run.run_at),
     },
     item2_removal_probe: { undocumented_removal_names_found: run.removal_probe.found },
     item3_crop: { worked: run.crop.worked ?? false, error: run.crop.error ?? null, ...(await cropFindings(run.crop)) },

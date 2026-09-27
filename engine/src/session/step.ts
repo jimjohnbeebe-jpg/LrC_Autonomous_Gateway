@@ -77,6 +77,7 @@ export async function step(ctx: SessionContext, s: Session, args: StepArgs): Pro
         metrics: brief(done.rendered.metrics),
         converged,
         ...(baseline.refreshed ? { metrics_refreshed: true } : {}),
+        ...(json["undone"] ? { undone: (json["undone"] as { limit: string }).limit } : {}),
       },
     };
   } catch (err) {
@@ -135,6 +136,9 @@ async function apply(ctx: SessionContext, s: Session, n: number, plan: StepPlan,
 }
 
 function stepJson(s: Session, n: number, plan: StepPlan, done: Applied, delta: MetricsDelta, converged: boolean, refreshed: boolean, started: number): Record<string, unknown> {
+  // An undone pass says so at the top level: `applied` stays the record of what was written
+  // (Greptile, PR #27: a reverted pass read as applied).
+  const undone = done.actions.find((a) => a.kind === "reverted");
   return {
     ok: true,
     session_id: s.id,
@@ -152,6 +156,7 @@ function stepJson(s: Session, n: number, plan: StepPlan, done: Applied, delta: M
     cap_reached: s.endReason === "cap_reached",
     passes_left: s.endReason ? 0 : s.maxPasses - n,
     ...(refreshed ? { metrics_refreshed: "the photo's settings had changed since the last render, so it was rendered again before this step" } : {}),
+    ...(undone ? { undone: { limit: undone.limit, reason: undone.reason, note: "the changes in `applied` were written, then undone: `settings` are as before this pass" } } : {}),
     ...describe(done.rendered),
     timings: { total_ms: ms(started) },
   };

@@ -206,8 +206,9 @@ function definitions(tools: Tools): ToolDef[] {
         "A change that would push further into a clipping limit already reached is refused (`refused`); the rest is written as " +
         "one History step \"AVG <id> pass n/N\", read back, rendered and measured. If clipping then exceeds a limit, the engine " +
         "pulls back the sliders that caused it, else takes fixed steps, at most 3 (\"… guard k\", in `guardrail_actions`). The pass " +
-        "is undone (\"… clip revert\" / \"… region revert\", a `reverted` action; the pass still counts) when clipping is still over " +
-        "a limit the photo was within before the pass, or a preserved region drifts. Returns the applied changes, full settings, " +
+        "is undone (\"… clip revert\" / \"… region revert\", a `reverted` action and `undone` in the result; the pass still counts) " +
+        "when clipping is still over a limit the photo was within before the pass, or a preserved region drifts; `applied` then " +
+        "lists what was written before the undo. Returns the applied changes, full settings, " +
         "metrics, delta_metrics against the previous pass, and the image. " +
         "`converged_by_metrics` (the metrics stopped moving) or `cap_reached` end the passes: then call lr_end_session. " +
         "Unknown names or wrong types are refused before anything is written. " +

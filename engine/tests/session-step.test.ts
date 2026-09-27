@@ -57,6 +57,7 @@ describe("lr_step", () => {
       ["corrected", { exposure: 0 }],
     ]);
     expect((out.json["metrics"] as { clip_high_pct: number }).clip_high_pct).toBeLessThanOrEqual(0.5);
+    expect(out.json["undone"]).toBeUndefined();
     expect(readLog().passes[1]?.guardrail_actions).toHaveLength(2);
   });
 
@@ -77,6 +78,7 @@ describe("lr_step", () => {
       ["reverted", "clip_high"],
     ]);
     expect(actions[4]?.reason).toMatch(/before the pass/);
+    expect(out.json["undone"]).toMatchObject({ limit: "clip_high", reason: actions[4]?.reason }); // Greptile, PR #27
     for (const key of ["Temperature", "Whites2012", "Highlights2012", "Exposure2012"]) expect(lr.settings[key]).toBe(before[key]);
     expect((out.json["metrics"] as { clip_high_pct: number }).clip_high_pct).toBeLessThanOrEqual(0.5);
     const log = readLog();

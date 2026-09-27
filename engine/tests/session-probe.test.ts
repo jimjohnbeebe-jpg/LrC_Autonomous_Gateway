@@ -97,6 +97,7 @@ describe("lr_probe and lr_set_regions", () => {
     const actions = out.json["guardrail_actions"] as Array<{ kind: string; limit: string; reason: string }>;
     expect(actions.at(-1)).toMatchObject({ kind: "reverted", limit: "region" });
     expect(actions.at(-1)?.reason).toMatch(/region "orange" drifted/);
+    expect(out.json["undone"]).toMatchObject({ limit: "region" }); // Greptile, PR #27
     expect(lr.settings["Temperature"]).toBe(5500);
     expect(lr.history.at(-1)).toBe(`AVG ${SHORT} pass 2/4 region revert`);
     expect(readLog().regions[0]).toMatchObject({ label: "orange", preserve: true, baseline: { hue_mean: expect.any(Number) } });

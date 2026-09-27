@@ -149,22 +149,23 @@ export class LightroomSim {
       if (this.exportError) return { ok: false, error: { code: "export_failed", message: this.exportError, recoverable: true } };
       this.exports++;
       const long = this.exportLongEdge ?? Number(p["long_edge"]);
-      const aspect = this.croppedSize ? this.croppedSize.height / this.croppedSize.width : 2 / 3;
-      const short = Math.round(long * aspect);
+      // The requested edge is the longer side, the width or, for a tall crop, the height (Greptile, PR #32).
+      const shape = this.croppedSize ?? { width: 3, height: 2 };
+      const [width, height] = shape.width >= shape.height ? [long, Math.round((long * shape.height) / shape.width)] : [Math.round((long * shape.width) / shape.height), long];
       const level = simulatedLevel(Number(this.settings["Exposure2012"]));
       const dir = path.join(this.previewDir, id);
       mkdirSync(dir, { recursive: true });
       const file = path.join(dir, "20260907-_OZ80093.jpg");
       if (this.renderModel === "tonal") {
-        await this.tonal(long, short).jpeg({ quality: Number(p["quality"]) }).toFile(file);
+        await this.tonal(width, height).jpeg({ quality: Number(p["quality"]) }).toFile(file);
         return ok({ uuid: this.selected, path: this.exportPath ?? file, export_ms: 12 });
       }
       // Grey noise around the level: its mean follows exposure, and, unlike a flat image, its JPEG
       // size follows the quality, as a photo's does.
       await sharp({
         create: {
-          width: long,
-          height: short,
+          width,
+          height,
           channels: 3,
           background: { r: level, g: level, b: level },
           noise: { type: "gaussian", mean: level, sigma: 12 },

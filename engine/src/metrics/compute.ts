@@ -189,7 +189,8 @@ function hueStats(hue: Float64Array, chromatic: number): { mean: number | null; 
   }
   // Hues spread evenly round the circle have no mean direction.
   const resultant = Math.hypot(x, y) / chromatic;
-  const mean = resultant < 1e-9 ? null : round((((Math.atan2(y, x) * 180) / Math.PI) + 360) % 360, 2);
+  // The second % 360: rounding can turn 359.997 into 360, which must read as 0 (Greptile, PR #21).
+  const mean = resultant < 1e-9 ? null : round((((Math.atan2(y, x) * 180) / Math.PI) + 360) % 360, 2) % 360;
   return { mean, histogram: histogram.map((count) => round((count / chromatic) * 100)) };
 }
 

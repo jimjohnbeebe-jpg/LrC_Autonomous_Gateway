@@ -28,7 +28,13 @@ export type Composite = {
 
 type Size = { width: number; height: number };
 
-/** The displayed size: EXIF orientations 5-8 turn the image a quarter. */
+/**
+ * The displayed size. EXIF orientations 5-8 include a quarter turn, so width and height swap
+ * [handle: EXIF 2.32 (CIPA DC-008-2019) tag 0x0112 Orientation, values 5-8; sharp's rotate() applies
+ * the tag, https://sharp.pixelplumbing.com/api-operation#rotate; observed with sharp 0.35.4 in
+ * tests\preview-composite.test.ts: a 200 x 100 JPEG tagged 6 crops as 100 x 200, and composites as a
+ * portrait panel].
+ */
 async function displayedSize(image: Buffer): Promise<Size> {
   const meta = await sharp(image).metadata();
   const turned = meta.orientation !== undefined && meta.orientation >= 5;

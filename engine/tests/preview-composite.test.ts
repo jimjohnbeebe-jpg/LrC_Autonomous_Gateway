@@ -84,6 +84,14 @@ describe("composite: image", () => {
     expect(one.jpeg.equals(two.jpeg)).toBe(true);
   });
 
+  it("lays out a panel by its displayed size when the JPEG carries a quarter-turn orientation tag", async () => {
+    // 200 x 100 as stored, tagged 6: displayed as 100 x 200 (portrait), so the panels go side by side.
+    const tagged = await sharp(await solid(200, 100, RED)).withMetadata({ orientation: 6 }).jpeg().toBuffer();
+    const out = await composite([{ image: tagged, label: "A" }, { image: tagged, label: "B" }], { longEdge: 800, quality: 75 });
+    expect(out.layout).toBe("row");
+    expect(out.panels[0]).toMatchObject({ width: 100, height: 200 });
+  });
+
   it("refuses fewer than two or more than four panels", async () => {
     const img = await solid(10, 10, RED);
     await expect(composite([{ image: img, label: "x" }], { longEdge: 800, quality: 75 })).rejects.toThrow(RangeError);

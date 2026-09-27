@@ -104,6 +104,12 @@ describe("metrics: saturation and hue", () => {
     expect(m.hue_mean).toBe(0);
     expect(m.hue_histogram[0]).toBe(100);
   });
+
+  it("reports a mean just below 360 degrees that rounds up as 0, never 360 (Greptile, PR #21)", () => {
+    // 101 pixels in the 359-degree bin (b = 1) and 100 in the 0-degree bin (g = 1): 359.9975 degrees.
+    const pixels: Px[] = [...Array.from({ length: 101 }, (): Px => [255, 0, 1]), ...Array.from({ length: 100 }, (): Px => [255, 1, 0])];
+    expect(row(...pixels).hue_mean).toBe(0);
+  });
 });
 
 describe("metrics: regions", () => {

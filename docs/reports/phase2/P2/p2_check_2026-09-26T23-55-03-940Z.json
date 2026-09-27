@@ -1,0 +1,391 @@
+{
+  "check": "phase2",
+  "started_at": "2026-09-26T23:55:03.958Z",
+  "errors": [],
+  "hello": {
+    "protocol": 1,
+    "plugin_version": "0.2.0",
+    "lrc_version": "15.5.1",
+    "sdk_declared": 13,
+    "ports": {
+      "receive": 8765,
+      "send": 8766
+    }
+  },
+  "connect_ms": 523,
+  "passes": [
+    {
+      "n": 1,
+      "exposure": 0.83,
+      "ok": true,
+      "history_name": "AVG P2check set 1",
+      "changes": [
+        {
+          "name": "exposure",
+          "before": 0.33,
+          "requested": 0.83,
+          "after": 0.83
+        }
+      ],
+      "delta_luma_mean": 13.772,
+      "preview_error": null,
+      "timings": {
+        "get_settings_ms": 3.9,
+        "write_ms": 399.7,
+        "plugin_apply_ms": 21,
+        "plugin_read_ms": 321.9,
+        "plugin_command_ms": 396.6,
+        "export_ms": 2573.6,
+        "preview_command_ms": 2650.2,
+        "file_ms": 2.8,
+        "metrics_ms": 38.6,
+        "total_ms": 3096.8
+      }
+    },
+    {
+      "n": 2,
+      "exposure": 1.33,
+      "ok": true,
+      "history_name": "AVG P2check set 2",
+      "changes": [
+        {
+          "name": "exposure",
+          "before": 0.83,
+          "requested": 1.33,
+          "after": 1.33
+        }
+      ],
+      "delta_luma_mean": 14.59,
+      "preview_error": null,
+      "timings": {
+        "get_settings_ms": 32.1,
+        "write_ms": 387.5,
+        "plugin_apply_ms": 22.2,
+        "plugin_read_ms": 307.6,
+        "plugin_command_ms": 385.8,
+        "export_ms": 2584.4,
+        "preview_command_ms": 2663.7,
+        "file_ms": 3,
+        "metrics_ms": 42,
+        "total_ms": 3128.9
+      }
+    },
+    {
+      "n": 3,
+      "exposure": 0.33,
+      "ok": true,
+      "history_name": "AVG P2check set 3",
+      "changes": [
+        {
+          "name": "exposure",
+          "before": 1.33,
+          "requested": 0.33,
+          "after": 0.33
+        }
+      ],
+      "delta_luma_mean": -28.362,
+      "preview_error": null,
+      "timings": {
+        "get_settings_ms": 35.1,
+        "write_ms": 385.7,
+        "plugin_apply_ms": 24,
+        "plugin_read_ms": 305.8,
+        "plugin_command_ms": 383.8,
+        "export_ms": 3083.6,
+        "preview_command_ms": 3170.7,
+        "file_ms": 2.6,
+        "metrics_ms": 46.2,
+        "total_ms": 3641.1
+      }
+    }
+  ],
+  "photo": {
+    "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+    "filename": "20260907-_OZ80093.NEF",
+    "file_format": "RAW",
+    "process_version": "15.4",
+    "camera_profile": "Camera Neutral",
+    "rating": null,
+    "label": "gray",
+    "pick": 0,
+    "metadata_errors": []
+  },
+  "snapshot": {
+    "name": "AVG P2 check 2026-09-26 16:55:03",
+    "snapshot_id": "AB2AC270-D8CD-432D-BFE0-1869987A8F00"
+  },
+  "exports": {
+    "800": {
+      "export_ms": {
+        "n": 3,
+        "median": 2604.7,
+        "min": 2601.2,
+        "max": 3153.9
+      },
+      "total_ms": {
+        "n": 3,
+        "median": 2704.9,
+        "min": 2690,
+        "max": 3193.7
+      },
+      "runs": [
+        {
+          "width": 800,
+          "height": 533,
+          "bytes": 219517,
+          "reencoded": false,
+          "export_ms": 3153.9,
+          "command_ms": 3157.9,
+          "file_ms": 7,
+          "metrics_ms": 28,
+          "total_ms": 3193.7
+        },
+        {
+          "width": 800,
+          "height": 533,
+          "bytes": 219517,
+          "reencoded": false,
+          "export_ms": 2601.2,
+          "command_ms": 2660.8,
+          "file_ms": 7.8,
+          "metrics_ms": 21.2,
+          "total_ms": 2690
+        },
+        {
+          "width": 800,
+          "height": 533,
+          "bytes": 219517,
+          "reencoded": false,
+          "export_ms": 2604.7,
+          "command_ms": 2679.8,
+          "file_ms": 3.7,
+          "metrics_ms": 21,
+          "total_ms": 2704.9
+        }
+      ]
+    },
+    "1200": {
+      "export_ms": {
+        "n": 3,
+        "median": 2578.1,
+        "min": 2302.9,
+        "max": 3092
+      },
+      "total_ms": {
+        "n": 3,
+        "median": 2668.8,
+        "min": 2391.1,
+        "max": 3186.3
+      },
+      "runs": [
+        {
+          "width": 1200,
+          "height": 800,
+          "bytes": 409511,
+          "reencoded": false,
+          "export_ms": 3092,
+          "command_ms": 3155.6,
+          "file_ms": 2.6,
+          "metrics_ms": 27.8,
+          "total_ms": 3186.3
+        },
+        {
+          "width": 1200,
+          "height": 800,
+          "bytes": 409513,
+          "reencoded": false,
+          "export_ms": 2302.9,
+          "command_ms": 2358.1,
+          "file_ms": 2.7,
+          "metrics_ms": 29.9,
+          "total_ms": 2391.1
+        },
+        {
+          "width": 1200,
+          "height": 800,
+          "bytes": 409513,
+          "reencoded": false,
+          "export_ms": 2578.1,
+          "command_ms": 2636.6,
+          "file_ms": 2.8,
+          "metrics_ms": 29,
+          "total_ms": 2668.8
+        }
+      ]
+    },
+    "1600": {
+      "export_ms": {
+        "n": 3,
+        "median": 2575.6,
+        "min": 2575.4,
+        "max": 2579.1
+      },
+      "total_ms": {
+        "n": 3,
+        "median": 2661.3,
+        "min": 2656.5,
+        "max": 2671.1
+      },
+      "runs": [
+        {
+          "width": 1600,
+          "height": 1067,
+          "bytes": 653719,
+          "reencoded": false,
+          "export_ms": 2575.6,
+          "command_ms": 2629.8,
+          "file_ms": 2.6,
+          "metrics_ms": 38.3,
+          "total_ms": 2671.1
+        },
+        {
+          "width": 1600,
+          "height": 1067,
+          "bytes": 653719,
+          "reencoded": false,
+          "export_ms": 2579.1,
+          "command_ms": 2617.8,
+          "file_ms": 2.9,
+          "metrics_ms": 40.1,
+          "total_ms": 2661.3
+        },
+        {
+          "width": 1600,
+          "height": 1067,
+          "bytes": 653720,
+          "reencoded": false,
+          "export_ms": 2575.4,
+          "command_ms": 2614.1,
+          "file_ms": 2.4,
+          "metrics_ms": 39.4,
+          "total_ms": 2656.5
+        }
+      ]
+    }
+  },
+  "quality": {
+    "60": {
+      "bytes": 421691,
+      "export_ms": 2583.4,
+      "reencoded": false
+    },
+    "90": {
+      "bytes": 1123095,
+      "export_ms": 2564.8,
+      "reencoded": false
+    },
+    "size_follows_quality": true,
+    "ratio": 2.66
+  },
+  "pings_during_export": {
+    "export_ms": 2575.4,
+    "rtt_ms": {
+      "n": 13,
+      "median": 1,
+      "min": 0.7,
+      "max": 24.7
+    },
+    "errors": 0,
+    "bridge_drops": 0
+  },
+  "revert": {
+    "ok": true,
+    "differing_keys": [],
+    "key_count": 177
+  },
+  "bridge_stats": {
+    "connects": 1,
+    "connect_failures": 0,
+    "last_connect_error": null,
+    "drops": 0,
+    "last_drop_reason": null,
+    "malformed_lines": 0,
+    "unknown_response_ids": 0
+  },
+  "jim_part1": {
+    "history_steps_seen": "y",
+    "photo_looks_restored": "y"
+  },
+  "chat_started_at": "2026-09-26T23:56:17.243Z",
+  "jim_part2": {
+    "photo_described": "y",
+    "photo_brighter": "y",
+    "change_described": "y",
+    "photo_put_back_after_chat": "y"
+  },
+  "chat": {
+    "desktop_log": {
+      "found": true,
+      "saved_as": "p2_desktop_mcp_log_2026-09-26T23-55-03-940Z.txt",
+      "lines": 40
+    },
+    "engine_log": {
+      "found": true,
+      "saved_as": "p2_chat_tool_log_2026-09-26T23-55-03-940Z.jsonl",
+      "records": 7
+    },
+    "tool_calls": [
+      {
+        "ts": "2026-09-26T23:57:01.183Z",
+        "tool": "lr_get_active_photo_context",
+        "ok": false,
+        "error_code": "ENGINE_BUSY"
+      },
+      {
+        "ts": "2026-09-26T23:57:03.409Z",
+        "tool": "lr_get_active_photo_context",
+        "ok": false,
+        "error_code": "ENGINE_BUSY"
+      },
+      {
+        "ts": "2026-09-27T00:45:09.504Z",
+        "tool": "lr_get_active_photo_context",
+        "ok": false,
+        "error_code": "ENGINE_BUSY"
+      },
+      {
+        "ts": "2026-09-27T01:50:45.855Z",
+        "tool": "lr_get_active_photo_context",
+        "ok": false,
+        "error_code": "BRIDGE_DISCONNECTED"
+      },
+      {
+        "ts": "2026-09-27T01:51:23.620Z",
+        "tool": "lr_get_active_photo_context",
+        "ok": true
+      },
+      {
+        "ts": "2026-09-27T01:51:29.151Z",
+        "tool": "lr_get_preview",
+        "ok": true
+      },
+      {
+        "ts": "2026-09-27T01:51:48.381Z",
+        "tool": "lr_set_settings",
+        "ok": true
+      }
+    ],
+    "saw_photo": true,
+    "exposure_raised_by_half": true,
+    "saw_change": true
+  },
+  "summary": {
+    "acceptance_suggestion": "WORKED",
+    "passes_ok": true,
+    "snapshot_revert_exact": true,
+    "jim_part1_confirmed": true,
+    "chat_ok": true,
+    "photo_put_back_after_chat": true,
+    "pass_total_ms": {
+      "n": 3,
+      "median": 3128.9,
+      "min": 3096.8,
+      "max": 3641.1
+    },
+    "passes_within_budget": 0
+  },
+  "finished_at": "2026-09-27T01:53:23.033Z",
+  "plugin_log_copied": "p2_bridge_log_2026-09-26T23-55-03-940Z.txt",
+  "node": "v24.11.1",
+  "engine_version": "0.2.0"
+}

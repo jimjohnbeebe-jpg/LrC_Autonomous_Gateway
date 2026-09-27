@@ -16,7 +16,7 @@
 // The log is rewritten after every pass (log\session-log.ts).
 
 import { randomUUID } from "node:crypto";
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import type { BridgeClient } from "../bridge/index.js";
 import type { IntentLibrary, LoadedIntent } from "../intents/index.js";
@@ -98,7 +98,17 @@ const WRITE_TIMEOUT_MS = 30000;
 export const MAX_REGIONS = 8;
 
 type RegionState = { kind: RegionKind; label: string; box: RegionBox; preserve: boolean; baseline: { hue_mean: number | null; saturation_mean: number } | null };
-type Rendered = { metrics: Metrics; jpeg: Buffer; hash: string; width: number; height: number; timings: RenderedPreview["timings"] };
+/** A render of the session's photo, with the settings it shows (to tell when the photo changed outside the session). */
+type Rendered = {
+  metrics: Metrics;
+  jpeg: Buffer;
+  hash: string;
+  width: number;
+  height: number;
+  timings: RenderedPreview["timings"];
+  settings: CanonicalSettings;
+  preview: RenderedPreview;
+};
 
 type Session = {
   id: string;
@@ -133,6 +143,8 @@ export class SessionManager {
   private session: Session | null = null;
   /** Log files of sessions that ended in this engine run, by id. */
   private readonly ended = new Map<string, string>();
+  /** The end of the queue of session operations (exclusive()). */
+  private tail: Promise<unknown> = Promise.resolve();
 
   constructor(deps: SessionDeps) {
     this.deps = deps;
@@ -158,10 +170,27 @@ export class SessionManager {
     return this.require(sessionId).regions.map((r) => ({ label: r.label, box: r.box }));
   }
 
+  /**
+   * lr_get_preview with a session: render the session's photo at `longEdge` and make it the session's
+   * last render, so lr_get_metrics and the next step's deltas describe the image just returned
+   * (Greptile, PR #23).
+   */
+  preview(sessionId: string, longEdge: number): Promise<RenderedPreview> {
+    return this.exclusive(async () => {
+      const s = this.require(sessionId);
+      const view = await this.read(s);
+      return (await this.render(s, view.settings, { longEdge })).preview;
+    });
+  }
+
   // ---------------------------------------------------------------------------------------------
   // lr_begin_session
 
-  async begin(args: BeginArgs): Promise<SessionOutput> {
+  begin(args: BeginArgs): Promise<SessionOutput> {
+    return this.exclusive(() => this.beginNow(args));
+  }
+
+  private async beginNow(args: BeginArgs): Promise<SessionOutput> {
     const started = performance.now();
     if (this.session) {
       throw new ToolError(
@@ -182,8 +211,18 @@ export class SessionManager {
     const view = map.fromSdk((await client.request("get_settings", { target_uuid: ctx.uuid })).settings); // LEGACY_PROCESS_VERSION
 
     const now = this.now();
-    const id = this.newId();
-    const short = id.replace(/-/g, "").slice(0, 6);
+    // The log's name is <yyyymmdd>-<6 hex> (PRD 6.12): a new id when that name is taken, so a session
+    // never writes over another's log or recipe (Greptile, PR #23).
+    let id = "";
+    let short = "";
+    let files: SessionLogFiles | null = null;
+    for (let attempt = 0; attempt < 5 && !files; attempt++) {
+      id = this.newId();
+      short = id.replace(/-/g, "").slice(0, 6);
+      const candidate = new SessionLogFiles(this.deps.logDir, now, short);
+      if (!existsSync(candidate.logPath) && !existsSync(candidate.recipePath)) files = candidate;
+    }
+    if (!files) throw new ToolError("INTERNAL_ERROR", `No free session log name in ${this.deps.logDir} after 5 tries.`, false);
     const snapshotName = `AVG pre-session ${now.toISOString()}`;
     const snap = await client.request("create_snapshot", { target_uuid: ctx.uuid, name: snapshotName });
     const overrides = loaded.intent.guardrail_overrides ?? {};
@@ -215,7 +254,7 @@ export class SessionManager {
       last: null,
       regions: [],
       slopes: new Map(),
-      files: new SessionLogFiles(this.deps.logDir, now, short),
+      files,
       log: {} as SessionLogData,
     };
     s.log = {
@@ -248,7 +287,7 @@ export class SessionManager {
     // From here on the session is open: a failure leaves it open, so Claude can end it with revert.
     try {
       const passStarted = this.now().toISOString();
-      const original = await this.render(s);
+      const original = await this.render(s, view.settings);
       const changes = this.pass0Changes(loaded, view.settings);
       const historyNames: string[] = [];
       let current = view;
@@ -257,7 +296,7 @@ export class SessionManager {
         const name = this.historyName(s, 0);
         current = await this.write(s, changes, name);
         historyNames.push(name);
-        rendered = await this.render(s);
+        rendered = await this.render(s, current.settings);
       }
       const corrected = await this.correct(s, 0, null, current, rendered, historyNames);
       current = corrected.view;
@@ -324,7 +363,11 @@ export class SessionManager {
   // ---------------------------------------------------------------------------------------------
   // lr_step
 
-  async step(args: StepArgs): Promise<SessionOutput> {
+  step(args: StepArgs): Promise<SessionOutput> {
+    return this.exclusive(() => this.stepNow(args));
+  }
+
+  private async stepNow(args: StepArgs): Promise<SessionOutput> {
     const started = performance.now();
     const s = this.require(args.session_id);
     if (args.target !== undefined && args.target !== "master") {
@@ -341,7 +384,13 @@ export class SessionManager {
     const passStarted = this.now().toISOString();
     const beforeView = await this.read(s);
     const plan = planStep(args.settings, beforeView.settings, n, this.deps.map, s.decay); // ParamError: nothing written
-    applyProjectedGuardrail(plan, s.last ? summarize(s.last.metrics) : null, s.limits, s.slopes);
+    let baseline: { last: Rendered; refreshed: boolean };
+    try {
+      baseline = await this.fresh(s, beforeView);
+    } catch (err) {
+      throw this.failed(s, `step ${n} (render before the step)`, err);
+    }
+    applyProjectedGuardrail(plan, summarize(baseline.last.metrics), s.limits, s.slopes);
     if (plan.changes.length === 0) {
       const details = { session_id: s.id, refused: plan.refused, clamped: plan.clamped, unchanged: plan.unchanged };
       const listed = plan.refused.map((r) => `${r.name}: ${r.reason}`).join("; ");
@@ -357,13 +406,13 @@ export class SessionManager {
     }
 
     try {
-      const beforeRender = s.last;
+      const beforeRender = baseline.last;
       const historyNames: string[] = [];
       const name = this.historyName(s, n);
       const values: Record<string, CanonicalValue> = Object.fromEntries(plan.changes.map((c) => [c.name, c.after]));
       let current = await this.write(s, values, name);
       historyNames.push(name);
-      let rendered = await this.render(s);
+      let rendered = await this.render(s, current.settings);
       const corrected = await this.correct(s, n, plan.changes, current, rendered, historyNames);
       current = corrected.view;
       rendered = corrected.rendered;
@@ -378,12 +427,12 @@ export class SessionManager {
           const revertName = this.historyName(s, n, "region revert");
           current = await this.write(s, back, revertName);
           historyNames.push(revertName);
-          rendered = await this.render(s);
+          rendered = await this.render(s, current.settings);
           actions.push({ kind: "reverted", limit: "region", reason: drift, history_name: revertName, changes: numericOnly(back), metrics_after: summarize(rendered.metrics) });
         }
       }
 
-      const delta = beforeRender ? deltaMetrics(beforeRender.metrics, rendered.metrics) : null;
+      const delta = deltaMetrics(beforeRender.metrics, rendered.metrics);
       const converged = convergedByMetrics(delta, plan.changes);
       s.passes = n;
       if (converged) s.endReason = "converged";
@@ -403,7 +452,7 @@ export class SessionManager {
         unchanged: plan.unchanged,
         settings_before: beforeView.settings,
         settings_after: current.settings,
-        metrics_before: beforeRender ? summarize(beforeRender.metrics) : null,
+        metrics_before: summarize(beforeRender.metrics),
         metrics_after: summarize(rendered.metrics),
         delta_metrics: delta,
         preview_hash: rendered.hash,
@@ -427,14 +476,25 @@ export class SessionManager {
         converged_by_metrics: converged,
         cap_reached: s.endReason === "cap_reached",
         passes_left: s.endReason ? 0 : s.maxPasses - n,
+        ...(baseline.refreshed ? { metrics_refreshed: "the photo's settings had changed since the last render, so it was rendered again before this step" } : {}),
         ...this.describe(rendered),
         timings: { total_ms: ms(started) },
       };
-      const image = beforeRender ? await this.image(s, args.return_image ?? "after", beforeRender, rendered, `pass ${n - 1}`, `pass ${n}`) : rendered.jpeg;
+      const image = await this.image(s, args.return_image ?? "after", beforeRender, rendered, `pass ${n - 1}`, `pass ${n}`);
       return {
         json,
         ...(image ? { image } : {}),
-        log: { session_id: s.id, pass: json["pass"], history_names: historyNames, changes: plan.changes.length, refused: plan.refused.length, guardrail_actions: actions.length, metrics: this.brief(rendered.metrics), converged },
+        log: {
+          session_id: s.id,
+          pass: json["pass"],
+          history_names: historyNames,
+          changes: plan.changes.length,
+          refused: plan.refused.length,
+          guardrail_actions: actions.length,
+          metrics: this.brief(rendered.metrics),
+          converged,
+          ...(baseline.refreshed ? { metrics_refreshed: true } : {}),
+        },
       };
     } catch (err) {
       throw this.failed(s, `step ${n}`, err);
@@ -444,16 +504,24 @@ export class SessionManager {
   // ---------------------------------------------------------------------------------------------
   // lr_probe
 
-  async probe(args: ProbeArgs): Promise<SessionOutput> {
+  probe(args: ProbeArgs): Promise<SessionOutput> {
+    return this.exclusive(() => this.probeNow(args));
+  }
+
+  private async probeNow(args: ProbeArgs): Promise<SessionOutput> {
     const started = performance.now();
     const s = this.require(args.session_id);
     if (s.intent.intent.allow_probe !== true) {
       throw new ToolError("PROBE_NOT_ALLOWED", `The intent "${s.intent.intent.id}" does not allow lr_probe (allow_probe is not true); probing is off in autonomous mode otherwise.`, false);
     }
-    const base = s.last;
-    if (!base) throw new ToolError("NO_PREVIEW_YET", "The session has no preview to compare against yet.", true);
     const magnitude = args.magnitude ?? 0.5;
     const view = await this.read(s);
+    let base: Rendered;
+    try {
+      base = (await this.fresh(s, view)).last; // the photo as it is now, not a stale render
+    } catch (err) {
+      throw this.failed(s, "probe (render before the probe)", err);
+    }
     const { map } = this.deps;
     const plan: Array<{ name: string; before: number; delta: number }> = [];
     for (const name of args.sliders) {
@@ -478,9 +546,9 @@ export class SessionManager {
         const values: Record<string, CanonicalValue> = { [p.name]: roundForSlider(p.name, p.before + p.delta) };
         if (previous) values[previous.name] = previous.before;
         const name = `AVG ${s.short} probe ${p.name}`;
-        await this.write(s, values, name);
+        const probedView = await this.write(s, values, name);
         historyNames.push(name);
-        const probed = await this.render(s, { keep: false });
+        const probed = await this.render(s, probedView.settings, { keep: false });
         const d = deltaMetrics(base.metrics, probed.metrics);
         const perUnit: Slope = {
           luma_mean: Math.round((d.luma_mean / p.delta) * 10000) / 10000,
@@ -499,6 +567,19 @@ export class SessionManager {
         if (notBack.length > 0) throw new ToolError("WRITE_NOT_TAKEN", `After the probe, ${notBack.join(", ")} did not return to the value before it.`, false);
       }
     } catch (err) {
+      // Put every probed slider back, so a failed probe leaves no temporary edit behind (Greptile,
+      // PR #23). If that write fails too, the next step renders the photo again before it plans
+      // (fresh()), because the settings then differ from the last render's.
+      if (historyNames.length > 0) {
+        const back: Record<string, CanonicalValue> = Object.fromEntries(plan.map((p) => [p.name, p.before]));
+        const revertName = `AVG ${s.short} probe revert`;
+        try {
+          await this.write(s, back, revertName);
+          historyNames.push(revertName);
+        } catch (restoreErr) {
+          s.log.failures.push({ at: this.now().toISOString(), stage: "probe (put back)", error: toToolError(restoreErr).body() });
+        }
+      }
       throw this.failed(s, "probe", err);
     }
     s.log.probes.push({ started: probeStarted, duration_ms: ms(started), magnitude, history_names: historyNames, results });
@@ -520,7 +601,11 @@ export class SessionManager {
   // ---------------------------------------------------------------------------------------------
   // lr_set_regions (no Lightroom call: the regions are measured on the last preview)
 
-  async setRegions(args: RegionArgs): Promise<SessionOutput> {
+  setRegions(args: RegionArgs): Promise<SessionOutput> {
+    return this.exclusive(() => this.setRegionsNow(args));
+  }
+
+  private async setRegionsNow(args: RegionArgs): Promise<SessionOutput> {
     const s = this.require(args.session_id);
     if (args.regions.length > MAX_REGIONS) throw new ToolError("INVALID_ARGUMENTS", `At most ${MAX_REGIONS} regions.`, false);
     const labels = new Set<string>();
@@ -564,7 +649,11 @@ export class SessionManager {
   // ---------------------------------------------------------------------------------------------
   // lr_end_session
 
-  async end(args: EndArgs): Promise<SessionOutput> {
+  end(args: EndArgs): Promise<SessionOutput> {
+    return this.exclusive(() => this.endNow(args));
+  }
+
+  private async endNow(args: EndArgs): Promise<SessionOutput> {
     const started = performance.now();
     const s = this.require(args.session_id);
     const { client, map } = this.deps;
@@ -696,14 +785,48 @@ export class SessionManager {
     return map.fromSdk(res.read_back);
   }
 
-  /** Render the session's photo, measuring its regions; `keep: false` leaves the session's last render alone (probes). */
-  private async render(s: Session, options: { keep: boolean } = { keep: true }): Promise<Rendered> {
+  /**
+   * Render the session's photo, measuring its regions. `settings` are the settings the render
+   * shows (the last read-back). `keep: false` leaves the session's last render alone (probes).
+   */
+  private async render(s: Session, settings: CanonicalSettings, options: { keep?: boolean; longEdge?: number } = {}): Promise<Rendered> {
     const preview = await this.bridge(s, () =>
-      this.deps.render({ longEdge: s.longEdge, quality: s.quality, targetUuid: s.target.uuid, regions: s.regions.map((r) => ({ label: r.label, box: r.box })) }),
+      this.deps.render({
+        longEdge: options.longEdge ?? s.longEdge,
+        quality: s.quality,
+        targetUuid: s.target.uuid,
+        regions: s.regions.map((r) => ({ label: r.label, box: r.box })),
+      }),
     );
-    const rendered: Rendered = { metrics: preview.metrics, jpeg: preview.jpeg, hash: preview.sha256, width: preview.width, height: preview.height, timings: preview.timings };
-    if (options.keep) s.last = rendered;
+    const rendered: Rendered = {
+      metrics: preview.metrics,
+      jpeg: preview.jpeg,
+      hash: preview.sha256,
+      width: preview.width,
+      height: preview.height,
+      timings: preview.timings,
+      settings,
+      preview,
+    };
+    if (options.keep !== false) s.last = rendered;
     return rendered;
+  }
+
+  /**
+   * The last render, rendered again first when the photo's settings are no longer the ones it
+   * shows: the photo was edited in Lightroom between calls, or a render after a write failed
+   * (Greptile, PR #23). The guardrails and deltas then work from the photo as it is.
+   */
+  private async fresh(s: Session, view: FromSdkResult): Promise<{ last: Rendered; refreshed: boolean }> {
+    if (s.last && same(s.last.settings, view.settings)) return { last: s.last, refreshed: false };
+    return { last: await this.render(s, view.settings), refreshed: true };
+  }
+
+  /** Run session operations one at a time, in the order called (Greptile, PR #23: parallel steps shared a pass number). */
+  private exclusive<T>(fn: () => Promise<T>): Promise<T> {
+    const run = this.tail.then(fn, fn);
+    this.tail = run.catch(() => undefined);
+    return run;
   }
 
   /**
@@ -746,7 +869,7 @@ export class SessionManager {
       const name = this.historyName(s, n, n === 0 ? `baseline ${round}` : `guard ${round}`);
       current = await this.write(s, fix, name);
       historyNames.push(name);
-      now = await this.render(s);
+      now = await this.render(s, current.settings);
       for (const kind of breached) {
         const was = kind === "high" ? m.clip_high_pct : m.clip_low_pct;
         const limit = kind === "high" ? s.limits.clipHighPct : s.limits.clipLowPct;
@@ -784,6 +907,11 @@ export class SessionManager {
       if (!r.preserve || !r.baseline) continue;
       const m = metrics.regions.find((x) => x.label === r.label);
       if (!m) continue;
+      // A region that had a hue and has none now (its pixels went below the chromatic threshold) has
+      // lost its colour: a breach, not zero drift (Greptile, PR #23).
+      if (r.baseline.hue_mean !== null && m.hue_mean === null) {
+        return `region "${r.label}" lost its hue (no pixel is colourful enough to measure one; it had ${r.baseline.hue_mean} degrees)`;
+      }
       const hue = r.baseline.hue_mean !== null && m.hue_mean !== null ? hueDistance(r.baseline.hue_mean, m.hue_mean) : 0;
       const sat = Math.abs(m.saturation_mean - r.baseline.saturation_mean);
       if (hue > REGION_PRESERVE.hueDegrees || sat > REGION_PRESERVE.saturationPoints) {

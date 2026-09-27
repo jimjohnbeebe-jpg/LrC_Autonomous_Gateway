@@ -188,20 +188,28 @@ export class Tools {
       const regions = session ? (this.sessions as SessionManager).regionsOf(session.id) : [];
       const longEdge = args.long_edge ?? DEFAULT_LONG_EDGE;
       if (!args.region) {
-        const preview = await this.render(longEdge, target, regions);
+        // With a session, the manager renders it and keeps it as the session's last render, so
+        // lr_get_metrics and the next step describe this image (Greptile, PR #23).
+        const preview = session ? await (this.sessions as SessionManager).preview(session.id, longEdge) : await this.render(longEdge, target, regions);
         const json = { ok: true, ...(session ? { session_id: session.id } : {}), ...this.describe(preview), metrics: summarize(preview.metrics), timings: preview.timings };
         return { json, image: preview.jpeg, log: { uuid: preview.uuid, preview_hash: preview.sha256, metrics: json.metrics, timings: preview.timings } };
       }
       const problem = boxProblem(args.region);
       if (problem) throw new ToolError("INVALID_ARGUMENTS", `region: ${problem}`, false);
       const ctx = await this.deps.client.request("get_context", target !== undefined ? { target_uuid: target } : {});
-      const exportEdge = Math.min(REGION_EXPORT_MAX, Math.max(longEdge, Math.ceil(longEdge / Math.max(args.region.w, args.region.h))));
-      const preview = await this.render(exportEdge, ctx.uuid, regions);
-      const crop = await cropRegion(preview.jpeg, args.region, { longEdge, quality: PREVIEW_QUALITY });
       // The photo's size is getRawMetadata("width"/"height") (Develop.lua RAW_KEYS); whether that is
       // the whole sensor or the cropped size is [unverified], so effective_scale is too until a check
       // records both.
-      const photoWidth = typeof ctx["width"] === "number" && typeof ctx["height"] === "number" ? Math.max(ctx["width"], ctx["height"]) : null;
+      const w = typeof ctx["width"] === "number" ? ctx["width"] : null;
+      const h = typeof ctx["height"] === "number" ? ctx["height"] : null;
+      const photoWidth = w !== null && h !== null ? Math.max(w, h) : null;
+      // The crop's longer side as a fraction of the export's long edge: on a 3:2 landscape a box's
+      // height counts 2/3 as much as its width (Greptile, PR #23: max(w, h) under-sized tall boxes).
+      const fraction = w !== null && h !== null && photoWidth ? Math.max(args.region.w * (w / photoWidth), args.region.h * (h / photoWidth)) : Math.max(args.region.w, args.region.h);
+      // The epsilon keeps 800 / 0.26666666666666666 (= 3000.0000000000005) at 3000.
+      const exportEdge = Math.min(REGION_EXPORT_MAX, Math.max(longEdge, Math.ceil(longEdge / fraction - 1e-6)));
+      const preview = await this.render(exportEdge, ctx.uuid, regions);
+      const crop = await cropRegion(preview.jpeg, args.region, { longEdge, quality: PREVIEW_QUALITY });
       const previewLong = Math.max(preview.width, preview.height);
       const effectiveScale = photoWidth ? Math.round(crop.scale * (previewLong / photoWidth) * 10000) / 10000 : null;
       const json = {

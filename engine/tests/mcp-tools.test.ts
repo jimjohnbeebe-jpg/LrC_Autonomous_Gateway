@@ -277,13 +277,20 @@ describe("mcp tools: Phase 3 additions", () => {
   it("crops a region from an export large enough to fill the long edge, and reports the effective scale", async () => {
     const out = await tools.getPreview({ long_edge: 800, region: { x: 0.4, y: 0.4, w: 0.2, h: 0.2 } });
     expect(plugin.received.filter((r) => r.name === "export_preview").at(-1)?.payload).toMatchObject({ long_edge: 4000 });
-    expect(out.json).toMatchObject({ export_long_edge: 4000, width: 800, scale_in_export: 1, effective_scale: 0.5 });
+    expect(out.json).toMatchObject({ export_long_edge: 4000, width: 800, scale_in_export: 1, effective_scale: 0.6667 }); // 4000 of 6000 px
     const meta = await sharp(out.image as Buffer).metadata();
     expect(meta.width).toBe(800);
     const small = await tools.getPreview({ long_edge: 800, region: { x: 0, y: 0, w: 0.1, h: 0.1 } });
     expect(plugin.received.filter((r) => r.name === "export_preview").at(-1)?.payload).toMatchObject({ long_edge: 4096 }); // the plugin's maximum
-    expect(small.json["effective_scale"]).toBe(0.512);
+    expect(small.json["effective_scale"]).toBe(0.6827); // 4096 of 6000 px
     expect((await failure(tools.getPreview({ region: { x: 0.9, y: 0, w: 0.5, h: 0.5 } }))).code).toBe("INVALID_ARGUMENTS");
+  });
+
+  it("sizes the export by the crop's longer side in pixels, so a tall box on a landscape photo fills the long edge (Greptile, PR #23)", async () => {
+    // 3:2 photo; a box 0.1 wide and 0.4 high is 0.1 x 0.267 of the long edge: export 3000 px, crop 300 x 800.
+    const out = await tools.getPreview({ long_edge: 800, region: { x: 0.1, y: 0.1, w: 0.1, h: 0.4 } });
+    expect(plugin.received.filter((r) => r.name === "export_preview").at(-1)?.payload).toMatchObject({ long_edge: 3000 });
+    expect(out.json).toMatchObject({ height: 800, scale_in_export: 1 });
   });
 
   it("says a session is open on the selected photo, and answers lr_get_metrics from the session's last render", async () => {
@@ -295,6 +302,10 @@ describe("mcp tools: Phase 3 additions", () => {
     expect((await failure(t.getMetrics({ session_id: "other" }))).code).toBe("SESSION_NOT_ACTIVE");
     const preview = await t.getPreview({ session_id: id });
     expect(preview.json["session_id"]).toBe(id);
+    // The session's metrics describe the preview just returned (Greptile, PR #23), also at another size.
+    lr.settings["Exposure2012"] = 1.5;
+    const small = await t.getPreview({ session_id: id, long_edge: 800 });
+    expect((await t.getMetrics({ session_id: id })).json).toMatchObject({ preview_hash: small.json["preview_hash"], width: 800 });
     lr.selected = "OTHER";
     expect((await failure(t.getPreview({ session_id: id }))).code).toBe("TARGET_CHANGED");
   });

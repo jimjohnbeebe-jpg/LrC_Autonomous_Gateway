@@ -233,6 +233,48 @@ describe("lr_step", () => {
     expect(none.image).toBeUndefined();
   });
 
+  it("runs steps sent at the same time one after the other, each with its own pass number (Greptile, PR #23)", async () => {
+    await manager.begin({ intent_id: "test_plain" });
+    const [a, b] = await Promise.all([
+      manager.step({ session_id: ID, settings: { shadows: 10 }, rationale: "one" }),
+      manager.step({ session_id: ID, settings: { shadows: 10 }, rationale: "two" }),
+    ]);
+    expect([a.json["pass"], b.json["pass"]]).toEqual(["1/4", "2/4"]);
+    expect(lr.history).toEqual([`AVG ${SHORT} pass 1/4`, `AVG ${SHORT} pass 2/4`]);
+    expect(lr.settings["Shadows2012"]).toBe(20);
+  });
+
+  it("renders again before a step when the photo was edited in Lightroom since the last render (Greptile, PR #23)", async () => {
+    await manager.begin({ intent_id: "test_plain" });
+    lr.settings["Exposure2012"] = 1; // Jim drags Exposure: the right end now clips
+    const out = await manager.step({ session_id: ID, settings: { exposure: 0.3, shadows: 10 }, rationale: "r" });
+    expect(out.json["metrics_refreshed"]).toMatch(/rendered again/);
+    expect(out.json["refused"]).toEqual([expect.objectContaining({ name: "exposure", by: "guardrail" })]);
+    // The pass's "before" is the refreshed render (clipping), not pass 0's (none).
+    const log = readLog();
+    expect(log.passes[0]?.metrics_after.clip_high_pct).toBeLessThanOrEqual(0.5);
+    expect(log.passes[1]?.metrics_before?.clip_high_pct).toBeGreaterThan(0.5);
+  });
+
+  it("picks a new session id when the log name for the day is taken (Greptile, PR #23)", async () => {
+    mkdirSync(logDir, { recursive: true });
+    writeFileSync(logFile(), "{}", "utf8"); // another session's log with the same 6 hex digits
+    const ids = [ID, "123456ab-0000-0000-0000-000000000000"];
+    const previews = new PreviewService(client, { previewDir: path.join(tmp, "previews") });
+    const other = new SessionManager({
+      client,
+      map,
+      intents: new IntentLibrary({ map, userDir }),
+      render: (r) => previews.render({ longEdge: r.longEdge, quality: r.quality, targetUuid: r.targetUuid, regions: r.regions }),
+      logDir,
+      engineVersion: "test",
+      newId: () => ids.shift() ?? "ffffffff-0000-0000-0000-000000000000",
+    });
+    const out = await other.begin({ intent_id: "test_plain" });
+    expect(out.json["session_id"]).toBe("123456ab-0000-0000-0000-000000000000");
+    expect(readFileSync(logFile(), "utf8")).toBe("{}");
+  });
+
   it("refuses a session id that is not the open one", async () => {
     expect((await fails(manager.step({ session_id: "nope", settings: { shadows: 1 }, rationale: "r" }))).code).toBe("SESSION_NOT_ACTIVE");
   });
@@ -252,6 +294,18 @@ describe("lr_probe and lr_set_regions", () => {
     expect(results.map((r) => [r.name, r.delta_applied])).toEqual([["exposure", 0.5], ["shadows", 30]]);
     expect(results[0]?.per_unit.luma_mean).toBeGreaterThan(20); // the model adds 40 levels per EV, less the clipped end
     expect(readLog().probes).toHaveLength(1);
+  });
+
+  it("puts the probed sliders back when a probe fails half-way (Greptile, PR #23)", async () => {
+    await manager.begin({ intent_id: "test_plain" });
+    const before = lr.settings["Exposure2012"];
+    lr.exportError = "disk full";
+    const e = await fails(manager.probe({ session_id: ID, sliders: ["exposure", "shadows"] }));
+    expect(e.message).toMatch(/still open/);
+    expect(lr.settings["Exposure2012"]).toBe(before);
+    expect(lr.history).toEqual([`AVG ${SHORT} probe exposure`, `AVG ${SHORT} probe revert`]);
+    lr.exportError = null;
+    expect(readLog().failures.map((f) => f.stage)).toEqual(["probe"]);
   });
 
   it("refuses to probe when the intent does not allow it", async () => {
@@ -274,6 +328,17 @@ describe("lr_probe and lr_set_regions", () => {
     expect(lr.settings["Temperature"]).toBe(5500);
     expect(lr.history.at(-1)).toBe(`AVG ${SHORT} pass 2/4 region revert`);
     expect(readLog().regions[0]).toMatchObject({ label: "orange", preserve: true, baseline: { hue_mean: expect.any(Number) } });
+  });
+
+  it("undoes a pass that takes a preserved region's hue away, even when its saturation moved little (Greptile, PR #23)", async () => {
+    lr.settings["Saturation"] = -70; // the orange half is pale but still has a hue; -30 more makes it grey
+    await manager.begin({ intent_id: "test_plain" });
+    await manager.setRegions({ session_id: ID, regions: [{ kind: "custom", label: "pale", box: { x: 0, y: 0.5, w: 1, h: 0.5 }, preserve: true }] });
+    const out = await manager.step({ session_id: ID, settings: { saturation: -30 }, rationale: "desaturate" });
+    const actions = out.json["guardrail_actions"] as Array<{ kind: string; reason: string }>;
+    expect(actions.at(-1)).toMatchObject({ kind: "reverted" });
+    expect(actions.at(-1)?.reason).toMatch(/lost its hue/);
+    expect(lr.settings["Saturation"]).toBe(-70);
   });
 
   it("refuses bad or duplicate region boxes", async () => {

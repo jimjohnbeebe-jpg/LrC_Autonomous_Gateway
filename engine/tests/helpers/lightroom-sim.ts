@@ -71,7 +71,7 @@ export class LightroomSim {
   /** Answer export_preview with this error instead (to exercise failures mid-session). */
   exportError: string | null = null;
   /** The photo's pixel size in get_context (getRawMetadata width/height); a made-up 3:2 size. */
-  photoSize = { width: 8000, height: 5333 };
+  photoSize = { width: 6000, height: 4000 };
   readonly previewDir: string;
   /** White balance the tonal model treats as neutral: the dump's own. */
   private readonly neutralTemperature = Number(nefDump.settings["Temperature"]);
@@ -171,6 +171,8 @@ export class LightroomSim {
   private tonal(width: number, height: number): ReturnType<typeof sharp> {
     const data = new Uint8Array(width * height * 3);
     const warm = (Number(this.settings["Temperature"]) - this.neutralTemperature) / 2000;
+    // Saturation -100 turns the orange half grey; 0 leaves it as it is.
+    const colour = Math.max(0, 1 + Number(this.settings["Saturation"] ?? 0) / 100);
     const clamp = (x: number): number => Math.max(0, Math.min(255, Math.round(x)));
     const rows: Array<[number, number, number]> = [];
     for (let x = 0; x < width; x++) {
@@ -181,8 +183,8 @@ export class LightroomSim {
       const orange = y >= height / 2;
       for (let x = 0; x < width; x++) {
         const level = (rows[x] as [number, number, number])[0];
-        const g = orange ? level * 0.7 : level;
-        const b = orange ? level * 0.4 : level;
+        const g = orange ? level * (1 - 0.3 * colour) : level;
+        const b = orange ? level * (1 - 0.6 * colour) : level;
         const i = (y * width + x) * 3;
         data[i] = clamp(level * (1 + 0.3 * warm));
         data[i + 1] = clamp(g);

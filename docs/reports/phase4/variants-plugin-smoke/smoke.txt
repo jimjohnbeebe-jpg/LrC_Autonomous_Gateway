@@ -1,18 +1,21 @@
 phase-4/variants-plugin smoke transcript (PHASE4_PLAN row 6) - Claude Code (Opus 5.5), 2026-09-27
-Plugin under test: plugin\LrC-AVG.lrplugin at commit 6d5a8c4 (branch phase-4/variants-plugin).
+Plugin under test: plugin\LrC-AVG.lrplugin at commit 2572be4 (branch phase-4/variants-plugin).
 "main" = plugin\LrC-AVG.lrplugin at 263fbd9 (Bridge.lua, Develop.lua, Json.lua, Log.lua, Preview.lua copied
-to <scratch>\old with git show). Schemas: engine\dist\bridge\protocol.js from npm run build at 6d5a8c4.
+to <scratch>\old with git show). "BEFORE the lock" = Catalog.lua at 7b9dd7a, copied to <scratch>\prefix,
+with the rest of the plugin from 2572be4. Schemas: engine\dist\bridge\protocol.js from npm run build at 2572be4.
 Node v24.11.1; fengari 0.1.4 (a Lua 5.3 VM in JavaScript), a scratch install, not a project dependency.
 The fake Lightroom (fake-lr.lua), the two scenario scripts and the runner are reproduced at the end.
 The fake's behaviour is Claude Code's invention, modelled on spikes S6 and S7 where its comments say so:
 this shows that the plugin's Lua runs, what it does with what it is given, and that main's and this
-branch's bridge do the same things; it shows NOTHING about Lightroom itself. Lua 5.1 syntax of every
-plugin file is checked separately by engine\tests\lua-plugin.test.ts (npm test).
+branch's bridge do the same things; it shows NOTHING about Lightroom itself. In "Two commands at once"
+the fake's catalog queries yield and each createVirtualCopies call yields once before it reads the
+selection; whether Lightroom's own call yields there is not known.
+Lua 5.1 syntax of every plugin file is checked separately by engine\tests\lua-plugin.test.ts (npm test).
 Error messages carry Lua chunk names; they are shortened to the file name below.
 
 To reproduce: npm run build; in an empty folder with these four files, npm install fengari@0.1.4, copy
-main's five files into old\, then:
-$ node run.mjs <repo>
+main's five files into old\ and the pre-lock Catalog.lua into prefix\, then:
+$ PREFIX_COMMIT=7b9dd7a node run.mjs <repo>
 == Catalog.lua handlers (catalog-cases.lua) ==
 PASS  no task raised ([])
 --  three copies: ok schema ok; copies 3/3 [AVG landscape_golden_hour A:true, AVG landscape_golden_hour B:true, AVG landscape_golden_hour C:true]; master_selected true
@@ -33,7 +36,7 @@ PASS  no task raised ([])
     calls: ; yields 0; active after 3869534, selected 1
 --  no target_uuid: error bad_request (recoverable false): target_uuid must name the master photo
     calls: ; yields 0; active after 3869534, selected 1
---  the second copy fails: ok schema ok; copies 1/3 [AVG landscape_golden_hour A:true] failure copy_failed: createVirtualCopies: fake-lr.lua:159: createVirtualCopies: simulated failure; master_selected true
+--  the second copy fails: ok schema ok; copies 1/3 [AVG landscape_golden_hour A:true] failure copy_failed: createVirtualCopies: fake-lr.lua:164: createVirtualCopies: simulated failure; master_selected true
     calls: select 3869534 | createVirtualCopies AVG landscape_golden_hour A on {3869534} gate=0 | select 3869534 | createVirtualCopies AVG landscape_golden_hour B on {3869534} gate=0 | select 3869534; yields 1; active after 3869534, selected 1
 --  Lightroom ignores the re-selection: ok schema ok; copies 1/3 [AVG landscape_golden_hour A:true] failure select_failed: Lightroom did not select photo 3869534 (active photo 5007, 1 selected); master_selected false
     calls: select 3869534 | createVirtualCopies AVG landscape_golden_hour A on {3869534} gate=0 | select 3869534 | select 3869534; yields 1; active after 5007, selected 1
@@ -78,6 +81,40 @@ PASS  re-selection ignored: stops after 1 copy with select_failed, reports the m
 PASS  a copy with another name: identity_ok false, stops with identity_mismatch
 PASS  select_photo selects the copy found by uuid
 PASS  select_photo on a master: no copy_name, master is itself
+
+== Two commands at once (catalog-cases.lua, overlap) ==
+--  BEFORE the lock (Catalog.lua at 7b9dd7a), select_photo sent while copies are made:
+    create: copies 0/3 [] failure select_failed: Lightroom did not select photo 3869534 (active photo 3869533, 1 selected)
+    select_photo: selected 3869533
+    calls: find OTHER-UUID | select 3869534 | select 3869533 | select 3869534; active after 3869534
+PASS  before the lock the race shows: the select_photo lands inside the batch and a copy is not of the master, or the batch stops
+--  sweep, select_photo started N rounds later: BEFORE the lock | with the lock
+    N=0: 0/3 copies, stopped: select_failed; select_photo ok | 3/3 copies; select_photo ok
+    N=1: 0/3 copies, stopped: select_failed; select_photo select_failed | 3/3 copies; select_photo ok
+    N=2: 1/3 copies, 1 NOT of the master, stopped: identity_mismatch; select_photo select_failed | 3/3 copies; select_photo ok
+    N=3: 1/3 copies, 1 NOT of the master, stopped: identity_mismatch; select_photo select_failed | 3/3 copies; select_photo ok
+    N=4: 3/3 copies; select_photo select_failed | 3/3 copies; select_photo ok
+    N=5: 3/3 copies; select_photo select_failed | 3/3 copies; select_photo ok
+    N=6: 1/3 copies, stopped: select_failed; select_photo ok | 3/3 copies; select_photo ok
+    N=7: 1/3 copies, stopped: select_failed; select_photo select_failed | 3/3 copies; select_photo ok
+    N=8: 2/3 copies, 1 NOT of the master, stopped: identity_mismatch; select_photo select_failed | 3/3 copies; select_photo ok
+    N=9: 2/3 copies, 1 NOT of the master, stopped: identity_mismatch; select_photo select_failed | 3/3 copies; select_photo ok
+    N=10: 3/3 copies; select_photo select_failed | 3/3 copies; select_photo ok
+    N=11: 3/3 copies; select_photo select_failed | 3/3 copies; select_photo ok
+    N=12: 2/3 copies, stopped: select_failed; select_photo ok | 3/3 copies; select_photo ok
+PASS  before the lock, some start time gives a copy of the OTHER photo (Greptile's case)
+PASS  with the lock, at every start time: 3 copies of the master, then select_photo selects its photo
+--  select_photo sent while copies are made:
+    create: copies 3/3 [AVG landscape_golden_hour A:true, AVG landscape_golden_hour B:true, AVG landscape_golden_hour C:true]
+    select_photo: selected 3869533
+    calls: select 3869534 | createVirtualCopies AVG landscape_golden_hour A on {3869534} gate=0 | select 3869534 | createVirtualCopies AVG landscape_golden_hour B on {3869534} gate=0 | select 3869534 | createVirtualCopies AVG landscape_golden_hour C on {3869534} gate=0 | select 3869534 | find OTHER-UUID | select 3869533; active after 3869533
+--  select_photo waits longer than the lock allows:
+    create: copies 3/3 [AVG landscape_golden_hour A:true, AVG landscape_golden_hour B:true, AVG landscape_golden_hour C:true]
+    select_photo: error busy: select_photo waited 10 s for create_virtual_copies to finish
+    calls: select 3869534 | createVirtualCopies AVG landscape_golden_hour A on {3869534} gate=0 | select 3869534 | createVirtualCopies AVG landscape_golden_hour B on {3869534} gate=0 | select 3869534 | createVirtualCopies AVG landscape_golden_hour C on {3869534} gate=0 | select 3869534; active after 3869534
+PASS  with the lock: all 3 copies are copies of the master
+PASS  with the lock: select_photo runs after the batch has put the master back, then selects its photo
+PASS  a batch longer than 10 s: select_photo is refused as busy (recoverable) without touching the catalog; the copies are all right
 
 == Bridge (bridge-cases.lua): main's plugin vs this branch ==
 PASS  main: no task raised ([])
@@ -279,6 +316,8 @@ end
 
 local function noQueryInGate(what)
     assert(F.inRead == 0, what .. " inside a read gate (rule 03: deadlocks on Windows)")
+    -- With F.yieldQueries, a catalog query hands control to other tasks, as a yielding query would.
+    if F.yieldQueries and coroutine.isyieldable() then coroutine.yield() end
 end
 
 F.catalog = {
@@ -298,6 +337,9 @@ F.catalog = {
     createVirtualCopies = function(self, name)
         noQueryInGate("createVirtualCopies")
         F.copyCalls = (F.copyCalls or 0) + 1
+        -- With F.copyYields = n, the call takes n seconds and lets other tasks run before it reads
+        -- the selection: a model of a call that yields inside [the fake's assumption, not observed].
+        for _ = 1, F.copyYields or 0 do F.clock = F.clock + 1; coroutine.yield() end
         local sel = {}
         for _, p in ipairs(F.selected or {}) do sel[#sel + 1] = p.localIdentifier end
         record("createVirtualCopies " .. name .. " on {" .. table.concat(sel, ",") .. "} gate=" .. F.inWrite)
@@ -330,6 +372,7 @@ _PLUGIN = { id = "com.lrcavg.gateway" }
 function F.world()
     F.photos, F.byUuid, F.calls = {}, {}, {}
     F.ignoreSelect, F.failCopyAt, F.wrongName, F.copyCalls = nil, nil, nil, 0
+    F.yieldQueries, F.copyYields = nil, nil
     local master = F.newPhoto({ local_id = 3869534, uuid = "CF12AF60-0858-4181-9562-376D16B89126", file_name = "20260907-_OZ80099.NEF" })
     local other = F.newPhoto({ local_id = 3869533, uuid = "OTHER-UUID", file_name = "20260907-_OZ80093.NEF" })
     local vc = F.newPhoto({ local_id = 3869600, uuid = "OLD-COPY-UUID", is_vc = true, master = master, copy_name = "Copy 1" })
@@ -392,6 +435,36 @@ case("master differs from expect", "select_photo", nil, { uuid = "OLD-COPY-UUID"
 case("Lightroom ignores the selection", "select_photo", function() F.ignoreSelect = true end, { uuid = "OLD-COPY-UUID" })
 case("uuid not a string", "select_photo", nil, { uuid = 42 })
 case("expect not an object", "select_photo", nil, { uuid = "OLD-COPY-UUID", expect = "x" })
+
+-- Two commands at once, as two bridge tasks would run them (Greptile, PR #33): create_virtual_copies
+-- for the master, and a select_photo of another photo sent right after it. Catalog queries yield
+-- here, and each createVirtualCopies call yields `copyYields` times (1 s each) before it reads the
+-- selection.
+-- `delay`: scheduler rounds before the select_photo task starts.
+local function overlap(name, copyYields, delay)
+    F.world()
+    F.yieldQueries, F.copyYields = true, copyYields
+    F.calls = {}
+    local first, second
+    F.spawn("create", function() first = table.pack(Catalog.createVirtualCopies({ target_uuid = MASTER_UUID, names = NAMES })) end)
+    F.spawn("select", function()
+        for _ = 1, delay or 0 do coroutine.yield() end
+        second = table.pack(Catalog.selectPhoto({ uuid = "OTHER-UUID" }))
+    end)
+    for _ = 1, 5000 do
+        if #F.tasks == 0 then break end
+        F.run(1)
+    end
+    out[#out + 1] = {
+        case = name, command = "overlap", delay = delay or 0, calls = F.calls, active_after = F.active and F.active.localIdentifier,
+        create = { result = first and first[1], error = first and first[2] },
+        select = { result = second and second[1], error = second and second[2] },
+    }
+end
+
+overlap("select_photo sent while copies are made", 1)
+overlap("select_photo waits longer than the lock allows", 5)
+for delay = 0, 12 do overlap("sweep", 1, delay) end
 
 return Json.encode({ cases = out, errors = F.errors })
 
@@ -490,10 +563,12 @@ const newDir = path.join(repo, "plugin", "LrC-AVG.lrplugin").replaceAll("\\", "/
 const oldDir = path.join(here, "old").replaceAll("\\", "/");
 const { COMMANDS } = await import(pathToFileURL(path.join(repo, "engine", "dist", "bridge", "protocol.js")).href);
 
+// `pluginDir` may list several folders (;-separated), searched in order.
 function runLua(pluginDir, script, globals = "") {
   const L = lauxlib.luaL_newstate();
   lualib.luaL_openlibs(L);
-  const setup = `package.path = [[${pluginDir}/?.lua;${here.replaceAll("\\", "/")}/?.lua]]\n${globals}\ndofile([[${here.replaceAll("\\", "/")}/fake-lr.lua]])`;
+  const dirs = pluginDir.split(";").map((d) => `${d}/?.lua`).join(";");
+  const setup = `package.path = [[${dirs};${here.replaceAll("\\", "/")}/?.lua]]\n${globals}\ndofile([[${here.replaceAll("\\", "/")}/fake-lr.lua]])`;
   if (lauxlib.luaL_dostring(L, to_luastring(setup)) !== lua.LUA_OK) throw new Error(lua.lua_tojsstring(L, -1));
   if (lauxlib.luaL_dofile(L, to_luastring(path.join(here, script).replaceAll("\\", "/"))) !== lua.LUA_OK) {
     throw new Error(`${script}: ${lua.lua_tojsstring(L, -1)}`);
@@ -511,7 +586,7 @@ const check = (ok, what) => {
 console.log("== Catalog.lua handlers (catalog-cases.lua) ==");
 const cat = runLua(newDir, "catalog-cases.lua");
 check(cat.errors.length === 0, `no task raised (${JSON.stringify(cat.errors)})`);
-for (const c of cat.cases) {
+for (const c of cat.cases.filter((x) => x.command !== "overlap")) {
   let schema = "";
   if (c.result) {
     const parsed = COMMANDS[c.command].safeParse(c.result);
@@ -544,6 +619,46 @@ const wrong = byCase["the copy comes back with another name"].result;
 check(wrong?.copies.length === 1 && wrong.copies[0].identity_ok === false && wrong.failure?.code === "identity_mismatch", "a copy with another name: identity_ok false, stops with identity_mismatch");
 check(byCase["select a copy, identity as expected"].result?.copy_name === "Copy 1" && byCase["select a copy, identity as expected"].active_after === 3869600, "select_photo selects the copy found by uuid");
 check(byCase["select the master, no expect"].result?.copy_name === undefined && byCase["select the master, no expect"].result?.master_local_id === 3869534, "select_photo on a master: no copy_name, master is itself");
+
+// 1b. Two commands at once (Greptile, PR #33): create_virtual_copies, and a select_photo of another
+// photo sent right after it. On the Catalog.lua before the lock (prefix\, from PREFIX_COMMIT) and on this one.
+console.log("\n== Two commands at once (catalog-cases.lua, overlap) ==");
+const describeOverlap = (c) => {
+  const cr = c.create.result;
+  const created = cr ? `copies ${cr.copies.length}/${cr.requested} [${cr.copies.map((x) => `${x.copy_name}:${x.identity_ok}${x.master_local_id !== 3869534 ? ` (master ${x.master_local_id})` : ""}`).join(", ")}]${cr.failure ? ` failure ${cr.failure.code}: ${cr.failure.message}` : ""}` : `error ${c.create.error?.code}`;
+  const sel = c.select.result ? `selected ${c.select.result.local_id}` : `error ${c.select.error?.code}: ${c.select.error?.message}`;
+  return `create: ${created}\n    select_photo: ${sel}\n    calls: ${c.calls.join(" | ")}; active after ${c.active_after}`;
+};
+const prefixDir = path.join(here, "prefix").replaceAll("\\", "/");
+const pre = runLua(`${prefixDir};${newDir}`, "catalog-cases.lua").cases.find((c) => c.case === "select_photo sent while copies are made");
+console.log(`--  BEFORE the lock (Catalog.lua at ${process.env.PREFIX_COMMIT ?? "prefix"}), select_photo sent while copies are made:\n    ${describeOverlap(pre)}`);
+const preCopies = pre.create.result?.copies ?? [];
+check(preCopies.some((x) => x.master_local_id !== 3869534 || !x.identity_ok) || !!pre.create.result?.failure,
+  "before the lock the race shows: the select_photo lands inside the batch and a copy is not of the master, or the batch stops");
+// The same two commands with the select_photo started 0-12 scheduler rounds later.
+const outcome = (c) => { const cr = c.create.result; if (!cr) return "create refused"; const bad = cr.copies.filter((x) => !x.identity_ok || x.master_local_id !== 3869534).length; return `${cr.copies.length}/3 copies${bad ? `, ${bad} NOT of the master` : ""}${cr.failure ? `, stopped: ${cr.failure.code}` : ""}; select_photo ${c.select.result ? "ok" : c.select.error?.code}`; };
+const preSweep = runLua(`${prefixDir};${newDir}`, "catalog-cases.lua").cases.filter((c) => c.case === "sweep");
+const sweep = cat.cases.filter((c) => c.case === "sweep");
+console.log("--  sweep, select_photo started N rounds later: BEFORE the lock | with the lock");
+for (let i = 0; i < sweep.length; i++) console.log(`    N=${sweep[i].delay}: ${outcome(preSweep[i])} | ${outcome(sweep[i])}`);
+check(preSweep.some((c) => (c.create.result?.copies ?? []).some((x) => x.master_local_id !== 3869534)), "before the lock, some start time gives a copy of the OTHER photo (Greptile's case)");
+check(sweep.every((c) => c.create.result?.copies.length === 3 && c.create.result.copies.every((x) => x.identity_ok && x.master_local_id === 3869534) && !c.create.result.failure && c.select.result?.local_id === 3869533),
+  "with the lock, at every start time: 3 copies of the master, then select_photo selects its photo");
+for (const c of cat.cases.filter((x) => x.command === "overlap" && x.case !== "sweep")) console.log(`--  ${c.case}:\n    ${describeOverlap(c)}`);
+const during = byCase["select_photo sent while copies are made"];
+const lastCreate = during.calls.findLastIndex((x) => x.startsWith("select 3869534"));
+check(during.create.result?.copies.length === 3 && during.create.result.copies.every((x) => x.identity_ok && x.master_local_id === 3869534) && !during.create.result.failure,
+  "with the lock: all 3 copies are copies of the master");
+check(during.select.result?.local_id === 3869533 && during.calls.indexOf("find OTHER-UUID") > lastCreate && during.active_after === 3869533,
+  "with the lock: select_photo runs after the batch has put the master back, then selects its photo");
+const long = byCase["select_photo waits longer than the lock allows"];
+check(long.create.result?.copies.length === 3 && long.create.result.copies.every((x) => x.identity_ok) && long.select.error?.code === "busy" && long.select.error.recoverable === true && !long.calls.includes("find OTHER-UUID"),
+  "a batch longer than 10 s: select_photo is refused as busy (recoverable) without touching the catalog; the copies are all right");
+for (const c of [during, long]) {
+  for (const [cmd, r] of [["create_virtual_copies", c.create.result], ["select_photo", c.select.result]]) {
+    if (r && !COMMANDS[cmd].safeParse(r).success) check(false, `${c.case}: ${cmd} result fails the schema`);
+  }
+}
 
 // 2. The whole bridge, main's Bridge.lua against the split one.
 console.log("\n== Bridge (bridge-cases.lua): main's plugin vs this branch ==");

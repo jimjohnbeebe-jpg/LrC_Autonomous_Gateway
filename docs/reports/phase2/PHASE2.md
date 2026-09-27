@@ -1,9 +1,9 @@
 ---
 report: Phase 2 — MCP server, preview and vision
 phase: 2
-status: template
-authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-09-26. Observed, Numbers, Verdict: after Jim's run."
-date: 2026-09-26 (template)
+status: observed
+authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-09-26. Observed: Jim ran npm run phase2:check on 2026-09-26 (run 1 could not connect; run 2 Part 1 worked, Part 2 was blocked by ENGINE_BUSY until fix PR #19, then worked) and answered its six questions; Claude Code collected the files and wrote the analysis, Numbers and Consequences. Verdict: Jim's (pending)."
+date: 2026-09-26 (runs 1-2)
 ---
 
 # Phase 2 — MCP server, preview and vision
@@ -36,7 +36,7 @@ PHASES.md gives Phase 2 no go / conditional / no-go rule beyond this acceptance 
 
 | Part | Files |
 |---|---|
-| MCP server (PR #17) | `engine\src\mcp\`: `main.ts` (stdio entry, `engine\dist\mcp\main.js`), `server.ts` (tool list, zod validation, content blocks), `tools.ts` (the four tools), `errors.ts` (`{code, message, recoverable}`), `bridge-gate.ts` and `instance-lock.ts` (one engine per bridge: a listener on 127.0.0.1:8767), `dev-overrides.ts` (ports and token file for scratch runs) |
+| MCP server (PR #17; fix PR #19) | `engine\src\mcp\`: `main.ts` (stdio entry, `engine\dist\mcp\main.js`), `server.ts` (tool list, zod validation, content blocks), `tools.ts` (the four tools), `errors.ts` (`{code, message, recoverable}`), `bridge-gate.ts` and `instance-lock.ts` (one engine per bridge: a listener on 127.0.0.1:8767; since PR #19 taken on the first tool call and given back after 60 s without one), `dev-overrides.ts` (ports and token file for scratch runs) |
 | Preview and metrics (PR #17) | `engine\src\preview\service.ts` (export path → read, delete, hash; only inside `%TEMP%\LrC-AVG\previews`), `engine\src\metrics\basic.ts` (luma histogram and mean, clipping overall and per channel), `engine\src\log\tool-log.ts` (one JSON line per tool call) |
 | Plugin (PR B) | `plugin\LrC-AVG.lrplugin\Preview.lua` (`export_preview`: an `LrExportSession` JPEG, the S1 settings), `Develop.lua` (rating, pick and label in `get_context`; `read_ms` and `command_ms` in `apply_settings`), `Bridge.lua` (plugin 0.2.0) |
 | Claude Desktop | `engine\src\devtools\desktop-config.ts` and `install-desktop-config-cli.ts`, run with `npm run desktop:install` |
@@ -155,37 +155,105 @@ Checks Claude Code ran on 2026-09-26, before Jim's run. None of them involves a 
 
 ## Observed (Jim)
 
-<!-- Nothing to paste. The check saves everything to %TEMP%\LrC-AVG\P2\ (the results with Jim's five answers, the chat's logs, the plugin's log). Jim says "done"; Claude Code copies the files to docs\reports\phase2\P2\ and fills this section and Numbers from them. -->
+Jim ran the steps on 2026-09-26 and said "done" [stated]. The check saved its files to `%TEMP%\LrC-AVG\P2\`; Claude Code copied them, already redacted, to `docs\reports\phase2\P2\` (checked: no file holds the user name or the token value). Times below are local (UTC−7) unless marked Z. `P2\…` means that folder; "run 2" is `P2\p2_check_2026-09-26T23-55-03-940Z.json`.
+
+### Run 1 (16:54): could not connect
+
+The check stopped before any command: `could not connect to Lightroom (127.0.0.1:8765: ECONNREFUSED)` [handle: `P2\p2_check_2026-09-26T23-54-25-650Z.json` `errors`]. Lightroom was still starting: the plugin began at 16:54:50 and listened from 16:55:00 [handle: `P2\p2_bridge_log_2026-09-26T23-55-03-940Z.txt` lines 60-62]. Nothing was written.
+
+### Run 2 (16:55 → 18:53): WORKED, after fix PR #19
+
+**Part 1 (16:55:03 → 16:55:47): worked.**
+- Connected in 523 ms to plugin 0.2.0 on LrC 15.5.1 (`hello`, `connect_ms`).
+- 9 exports, 2 quality exports and an export with pings during it all worked. The three passes `AVG P2check set 1-3` read back as written, each with its preview; the snapshot then restored all 177 settings exactly (`passes`, `revert`).
+- Jim: the three History steps were there, and the photo looked as before [stated: `jim_part1` y / y].
+
+**Part 2 (the chat): blocked, fixed, then worked.**
+- **Blocked by `ENGINE_BUSY`.** At 16:55:50 Claude Desktop started two lrc-avg engines, PIDs 2304 and 12632, both children of `claude.exe` 10416. Engine 2304 took the engine lock at start-up but was never called; every chat call went to 12632 and was answered `ENGINE_BUSY` (16:57:01, 16:57:03, 17:45:09) [handle: `P2\p2_chat_tool_log_…jsonl` lines 1-3; `P2\p2_desktop_mcp_log_…txt`; the process list Claude Code read with `Get-CimInstance Win32_Process`]. Nothing was read or written.
+- Lightroom was restarted at 17:44:57 and 18:50:58 [handle: bridge log lines 100, 108]. That Jim restarted it while troubleshooting is [inference].
+- **Jim chose "fix first"** [stated]. Fix PR #19 (`06e72d9`): an engine takes the lock on its first tool call and gives it back after 60 s without one. Jim quit and reopened Claude Desktop, which again started a short-lived engine and then two engines (01:50:03Z-01:50:05Z) [handle: `P2\p2_desktop_mcp_log_…txt`, two "ready" lines].
+- **18:50:45: the first call failed `BRIDGE_DISCONNECTED`** after its 5 s wait, `ECONNREFUSED` on 8765. Lightroom had just restarted, and the plugin listened only from 18:51:07 [handle: chat tool log line 4; bridge log lines 108-110]. Claude retried.
+- **18:51:23 → 18:51:51: the acceptance chat.**
+  - `lr_get_active_photo_context` worked;
+  - `lr_get_preview` returned the 1600 px image (export 3,622 ms);
+  - `lr_set_settings` set exposure 0.89 → 1.39 and read it back, with History step `AVG debf set 1`, a new preview, mean luma +14.6 and a whole pass of 3,129 ms [handle: chat tool log lines 5-7].
+  - The called engine took the lock on that first call and gave the bridge back after 60 s idle, as PR #19 intends [handle: desktop log, last lines].
+- **Jim:** Claude described the photo correctly; the photo was brighter with Exposure 0.5 higher; Claude described the change correctly; after the snapshot click the photo looked as before the check [stated: `jim_part2` y / y / y / y].
+- The check printed `Phase 2 acceptance: WORKED` and `Pass budget: 0 of 3 passes within ~3 s` (`summary`).
+
+**Not explained:** exposure was **0.89** when the chat began, not the 0.33 the check's revert left at 16:55:47. The plugin received no `apply_settings` between 16:55:47 and the chat's write at 18:51:48 [handle: bridge log lines 91-118], so the change did not come through the bridge. Its source is not recorded; a question for Jim.
 
 ## Numbers
 
 | Field | Value | Source field in `p2_check_*.json` |
 |---|---|---|
-| Connected, time to connect, plugin version | | `connect_ms`, `hello` |
-| Photo, process version, profile; rating / label / pick read | | `photo` |
-| Export time by long edge, median (min–max): 800 / 1200 / 1600 px | | `exports.<edge>.export_ms` |
-| Preview size by long edge (px, bytes) | | `exports.<edge>.runs` |
-| File size at quality 60 / 90; size follows quality | | `quality` |
-| Pings during an export: answered, median, max, failed, bridge drops | | `pings_during_export` |
-| Pass 1–3: write command (engine round trip / plugin `command_ms` / `apply_ms` / `read_ms`) | | `passes[*].timings` |
-| Pass 1–3: export, metrics, whole pass; within ~3 s | | `passes[*].timings`, `summary.passes_within_budget` |
-| Pass 1–3: mean-luma change | | `passes[*].delta_luma_mean` |
-| Snapshot revert: settings that differ | | `revert.differing_keys` |
-| Jim, part 1: History steps seen / photo restored | | `jim_part1` |
-| Chat: tool calls; Claude looked / raised exposure by 0.5 / saw the result | | `chat` |
-| Jim, part 2: photo described / photo brighter / change described / photo put back after the chat | | `jim_part2` |
-| Log paths | | `chat.desktop_log.saved_as`, `chat.engine_log.saved_as` |
+| Connected, time to connect, plugin version | yes, 523 ms, plugin 0.2.0, protocol 1, LrC 15.5.1 | `connect_ms`, `hello` |
+| Photo, process version, profile; rating / label / pick read | `20260907-_OZ80093.NEF`, RAW, 15.4, Camera Neutral; rating `null`, label `"gray"`, pick `0`; no key refused | `photo` |
+| Export time by long edge, median (min–max): 800 / 1200 / 1600 px | 2,605 (2,601–3,154) / 2,578 (2,303–3,092) / 2,576 (2,575–2,579) ms | `exports.<edge>.export_ms` |
+| Preview size by long edge (px, bytes) | 800×533, 219,517 B / 1200×800, 409,511–409,513 B / 1600×1067, 653,719–653,720 B; passed on unchanged | `exports.<edge>.runs` |
+| File size at quality 60 / 90 (1600 px); size follows quality | 421,691 B / 1,123,095 B (×2.66); yes | `quality` |
+| Pings during an export: answered, median, max, failed, bridge drops | 13, 1.0 ms, 24.7 ms, 0, 0 (export 2,575 ms) | `pings_during_export` |
+| Pass 1–3: write command (engine round trip / plugin `command_ms` / `apply_ms` / `read_ms`) | 400 / 397 / 21 / 322 ms; 388 / 386 / 22 / 308 ms; 386 / 384 / 24 / 306 ms | `passes[*].timings` |
+| Pass 1–3: export, metrics, whole pass; within ~3 s | 2,574 ms, 39 ms, 3,097 ms; 2,584 ms, 42 ms, 3,129 ms; 3,084 ms, 46 ms, 3,641 ms; 0 of 3 within ~3 s | `passes[*].timings`, `summary.passes_within_budget` |
+| Pass 1–3: exposure, mean-luma change | 0.33 → 0.83, +13.8; → 1.33, +14.6; → 0.33, −28.4 | `passes[*].exposure`, `delta_luma_mean` |
+| Snapshot revert: settings that differ | 0 of 177 | `revert.differing_keys` |
+| Jim, part 1: History steps seen / photo restored | y / y | `jim_part1` |
+| Chat: tool calls; Claude looked / raised exposure by 0.5 / saw the result | 7 calls: 3 `ENGINE_BUSY` (before PR #19), 1 `BRIDGE_DISCONNECTED` (Lightroom restarting), then context, preview, `lr_set_settings` 0.89 → 1.39 (whole pass 3,129 ms); yes / yes / yes | `chat` |
+| Jim, part 2: photo described / photo brighter / change described / photo put back after the chat | y / y / y / y | `jim_part2` |
+| Log paths | `P2\p2_desktop_mcp_log_2026-09-26T23-55-03-940Z.txt` (40 lines), `P2\p2_chat_tool_log_2026-09-26T23-55-03-940Z.jsonl` (7 records); also `P2\p2_bridge_log_…txt`, `P2\p2_check_tools_…jsonl` | `chat.desktop_log.saved_as`, `chat.engine_log.saved_as` |
 
 ## Verdict
 
-<!-- Jim: is Phase 2 accepted? The check prints a suggestion ("WORKED" / "FAILED"); the verdict is Jim's. -->
+<!-- Jim: is Phase 2 accepted? The check printed "Phase 2 acceptance: WORKED" (a suggestion); the verdict is Jim's. -->
+**Pending Jim's decision.** The check's suggestion is **WORKED**. The acceptance line (`PHASES.md:64`) is met by run 2, Part 2 (see "Observed"):
+- Claude described the photo;
+- Claude changed exposure by +0.5 through `lr_set_settings`, read back;
+- Claude described the change;
+- log paths are in "Numbers".
+
+It needed fix PR #19 on the way.
 
 ## Consequences / open questions
 
-<!-- Filled after the run. Proposed so far (for Jim to accept in PR C; the vault docs are the architect's): -->
-- **MCP_TOOLS** gains three changes:
-  - the temporary `lr_set_settings` contract (absolute values, `uuid`, `return_image`, `preview_error`);
-  - the Phase 2 error codes (`ENGINE_BUSY`, `INVALID_ARGUMENTS`, `UNKNOWN_TOOL`, `WRITE_NOT_TAKEN`, `NO_PREVIEW_YET`, `PREVIEW_PATH_REFUSED`, `PREVIEW_UNREADABLE`, `BRIDGE_TIMEOUT`, `UNKNOWN_CAMERA_PROFILE`, `WRONG_TYPE`);
-  - `lr_get_preview` without `region` until Phase 3 (Jim's decision 2).
-- **ARCHITECTURE §1–2 and PRD §6.2:** the engine's instance lock on 127.0.0.1:8767, next to the bridge's 8765/8766, and the previews folder `%TEMP%\LrC-AVG\previews`.
-- **ARCHITECTURE §3:** the `export_preview {long_edge, quality}` → `{path, export_ms}` command, and `apply_settings`' `read_ms` / `command_ms`.
+Proposed by Claude Code for Jim to accept; the vault docs are the architect's and are not edited here. Each item follows from the handles above; the recommendations are [inference].
+
+**Resolved open items** (`PHASES.md:52-56, 69`):
+- **Export time at smaller long edges:** there is no gain. The export takes ~2.6 s at 800, 1200 and 1600 px alike (medians 2,605 / 2,578 / 2,576 ms).
+- **The export's embedded ICC profile:** pixels are identical with and without it (pre-run finding); the engine passes the export on unchanged.
+- **The `LR_jpeg_quality` range:** the 0–1 scale works. Quality 0.60 gives 421,691 B and 0.90 gives 1,123,095 B at 1600 px.
+- **The write command's own duration:** 384–397 ms in the plugin. Of that, 306–322 ms is the `getDevelopSettings` read-back and 21–24 ms the write.
+- **Round trips while Lightroom exports:** the bridge stays responsive (13 pings, median 1.0 ms, max 24.7 ms, no failure, no drop).
+- **The send-socket rebind on a second engine connection** (P-13): it works. After the check's engine left, Claude Desktop's engine connected in the same Lightroom session and got `hello` at 16:55:51 [handle: bridge log lines 92-97].
+- **Resolved by run 2**, the pre-run `[unverified]` items:
+  - `Preview.lua`'s export and finding the JPEG with `LrFileUtils.files` (15 exports in Part 1, 2 in the chat);
+  - `LR_jpeg_quality = quality / 100`;
+  - the three metadata keys;
+  - the `apply_settings` timings;
+  - Claude Desktop starting `lrc-avg` from the MSIX config (desktop log).
+
+**Decisions for Jim:**
+1. **Pass budget (P-02, about 3 s).** 0 of 3 passes were within 3 s; whole passes took 3,097–3,641 ms, and the chat's pass 3,129 ms.
+   - The export is 2.57–3.08 s of each pass, about 83%, and does not shrink with a smaller preview. The write command is ~0.39 s, of which the read-back P-12 requires is ~0.31 s.
+   - **Recommendation:** re-baseline P-02 to **about 3.5 s per pass** (PRD NFR-2, ARCHITECTURE §6), rather than chase savings that the numbers show are small.
+2. **MCP_TOOLS:**
+   - add the temporary `lr_set_settings` contract (absolute values, `uuid`, `return_image`, `preview_error`);
+   - add the Phase 2 error codes (`ENGINE_BUSY`, `INVALID_ARGUMENTS`, `UNKNOWN_TOOL`, `WRITE_NOT_TAKEN`, `NO_PREVIEW_YET`, `PREVIEW_PATH_REFUSED`, `PREVIEW_UNREADABLE`, `BRIDGE_TIMEOUT`, `UNKNOWN_CAMERA_PROFILE`, `WRONG_TYPE`);
+   - `lr_get_preview` has no `region` until Phase 3 (Jim's decision 2).
+3. **ARCHITECTURE §2 (process lifecycle).** Claude Desktop starts a short-lived engine and then two long-lived ones per launch, and calls only one [handle: `P2\p2_desktop_mcp_log_…txt`; the process list in "Observed"]. The engine therefore takes its lock (127.0.0.1:8767) on the first tool call and gives it back after 60 s without one (PR #19). Why Desktop keeps two engines is [unverified].
+4. **ARCHITECTURE §3:** the command `export_preview {long_edge, quality}` → `{path, export_ms}` (the preview in `<temp>\LrC-AVG\previews\<id>\`), and `apply_settings`' `read_ms` / `command_ms`.
+5. **PRD §6.8:** a 1600 px q75 preview of the NEF is 653,719 B, not the "≈ 150–300 KB" the PRD estimates. The image token cost follows the pixel size, not the bytes [inference].
+6. **LR_SDK_NOTES, "Recorded in Phase 2"** (LrC 15.5.1):
+   - The `LrExportSession` JPEG export takes ~2.6 s at 800, 1200 and 1600 px alike [handle: run 2 `exports`].
+   - `LR_jpeg_quality` takes 0–1 [handle: run 2 `quality`].
+   - `getRawMetadata("rating")` returned nil, `"pickStatus"` returned 0 and `"colorNameForLabel"` returned `"gray"` for the NEF; no key was refused [handle: run 2 `photo`]. That "gray" means "no label" is [unverified].
+   - The plugin answers pings while it exports [handle: run 2 `pings_during_export`].
+   - A second engine in the same Lightroom session connects and handshakes [handle: bridge log lines 92-97].
+   - The plugin listens about 10 s after it starts (16:54:50 → 16:55:00, 17:44:57 → 17:45:07, 18:50:58 → 18:51:07) [handle: bridge log].
+
+**For Phase 3 (Claude Code's proposal):**
+- The engine waits 5 s for the bridge, but the plugin needs ~10 s from start to listening. A call right after a Lightroom restart can therefore fail once, as at 18:50:45. Waiting up to 15 s on the first connection would cover it [inference].
+- The previews are larger than the PRD assumed (item 5), which is worth watching for the contact sheets.
+
+**Still open:**
+- Why Claude Desktop keeps two engines [unverified].
+- Where the exposure of 0.89 before the chat came from: not the bridge (see "Observed"). A question for Jim.

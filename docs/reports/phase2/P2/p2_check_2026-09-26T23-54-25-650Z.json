@@ -1,0 +1,23 @@
+{
+  "check": "phase2",
+  "started_at": "2026-09-26T23:54:25.659Z",
+  "errors": [
+    "could not connect to Lightroom (127.0.0.1:8765: ECONNREFUSED). Check that Lightroom is open and that File > Plug-in Manager lists LrC-AVG as Enabled, then run the command again."
+  ],
+  "bridge_stats": {
+    "connects": 0,
+    "connect_failures": 10,
+    "last_connect_error": "127.0.0.1:8765: ECONNREFUSED",
+    "drops": 0,
+    "last_drop_reason": null,
+    "malformed_lines": 0,
+    "unknown_response_ids": 0
+  },
+  "summary": {
+    "acceptance_suggestion": "FAILED",
+    "connected": false
+  },
+  "plugin_log_copied": "p2_bridge_log_2026-09-26T23-54-25-650Z.txt",
+  "node": "v24.11.1",
+  "engine_version": "0.2.0"
+}

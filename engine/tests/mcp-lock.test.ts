@@ -74,6 +74,52 @@ describe("mcp: bridge gate", () => {
     }
   });
 
+  it("takes nothing until the first call, and gives the bridge back after the idle time", async () => {
+    const plugin = await FakePlugin.start();
+    const client = new BridgeClient({ commandPort: plugin.commandPort, eventPort: plugin.eventPort, connectGapMs: 5, reconnectMs: 30, readToken: () => plugin.token });
+    let acquires = 0;
+    let released = 0;
+    let idleReleases = 0;
+    const gate = new BridgeGate(
+      client,
+      async () => {
+        acquires++;
+        return { ok: true, lock: { port: 1, release: async () => void released++ } };
+      },
+      { waitMs: 2000, idleReleaseMs: 60, onIdleRelease: () => idleReleases++ },
+    );
+    try {
+      // An engine nobody calls (Claude Desktop's second engine in Jim's Phase 2 run) holds nothing.
+      await new Promise((r) => setTimeout(r, 30));
+      expect([acquires, client.getState(), gate.holdsLock()]).toEqual([0, "stopped", false]);
+
+      gate.beginUse();
+      await gate.ready();
+      expect([acquires, client.getState()]).toEqual([1, "connected"]);
+      // While a call runs, the idle time does not count.
+      await new Promise((r) => setTimeout(r, 120));
+      expect(gate.holdsLock()).toBe(true);
+      gate.endUse();
+      // A new call within the idle time keeps the lock.
+      await new Promise((r) => setTimeout(r, 30));
+      gate.beginUse();
+      await new Promise((r) => setTimeout(r, 60));
+      gate.endUse();
+      expect(gate.holdsLock()).toBe(true);
+      // Then a whole idle time without a call: the bridge goes back.
+      await new Promise((r) => setTimeout(r, 120));
+      expect([gate.holdsLock(), client.getState(), released, idleReleases]).toEqual([false, "stopped", 1, 1]);
+      // The next call takes it again.
+      gate.beginUse();
+      await gate.ready();
+      gate.endUse();
+      expect([acquires, client.getState()]).toEqual([2, "connected"]);
+    } finally {
+      await gate.release();
+      await plugin.close();
+    }
+  });
+
   it("says why the bridge is not there when Lightroom does not answer", async () => {
     const client = new BridgeClient({ commandPort: 1, eventPort: 2, reconnectMs: 20, connectTimeoutMs: 100, readToken: () => null });
     const gate = new BridgeGate(client, async () => ({ ok: true, lock: { port: 1, release: async () => {} } }), { waitMs: 150 });

@@ -261,6 +261,24 @@ describe("mcp tools: lr_set_settings", () => {
   });
 });
 
+describe("mcp tools: call bracketing", () => {
+  it("reports the start and end of every call, failed ones included", async () => {
+    const events: string[] = [];
+    const bracketed = new Tools({
+      client,
+      map: loadDefaultParamMap(),
+      previews: new PreviewService(client, { previewDir }),
+      ensureBridge: () => client.waitConnected(2000).then(() => undefined),
+      historyPrefix: "AVG test",
+      onCallStart: () => events.push("start"),
+      onCallEnd: () => events.push("end"),
+    });
+    await bracketed.getActivePhotoContext();
+    await failure(bracketed.getMetrics());
+    expect(events).toEqual(["start", "end", "start", "end"]);
+  });
+});
+
 describe("mcp tools: tool log", () => {
   it("writes one JSON line per call, with outcome, arguments and timings, and no image data", async () => {
     await tools.getPreview();

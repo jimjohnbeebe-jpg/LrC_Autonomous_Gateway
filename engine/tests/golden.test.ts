@@ -69,20 +69,33 @@ describe("golden JPEGs: the writer", () => {
     }
   });
 
-  it("takes the newest run that captured all six fixtures, passing over a newer partial one (Greptile, PR #24)", () => {
+  it("takes the newest usable run: all six captured, files still there (Greptile, PR #24)", async () => {
     const tmp = mkdtempSync(path.join(os.tmpdir(), "lrc-avg-golden-"));
     try {
-      const run = (names: string[], folder: string) => ({ fixtures: names.map((n) => ({ name: n, golden: { saved_as: `${folder}\\${goldenName(n)}`, preview_hash: "h" } })) });
-      writeFileSync(path.join(tmp, "p3_check_2026-09-26T01-00-00-000Z.json"), JSON.stringify(run(SIX, "golden_1")));
-      writeFileSync(path.join(tmp, "p3_check_2026-09-26T02-00-00-000Z.json"), JSON.stringify(run(SIX.slice(0, 2), "golden_2"))); // stopped early
-      writeFileSync(path.join(tmp, "p3_check_2026-09-26T03-00-00-000Z.json"), "{ cut off");
+      // A run's golden folder with a JPEG per fixture, and its results recording their hashes.
+      const run = async (stamp: string, names: string[]) => {
+        const folder = `golden_${stamp}`;
+        mkdirSync(path.join(tmp, folder));
+        const fixtures = [];
+        for (const [i, n] of names.entries()) {
+          const data = await jpeg(20 * i);
+          writeFileSync(path.join(tmp, folder, goldenName(n)), data);
+          fixtures.push({ name: n, golden: { saved_as: `${folder}\\${goldenName(n)}`, preview_hash: sha256(data) } });
+        }
+        writeFileSync(path.join(tmp, `p3_check_${stamp}.json`), JSON.stringify({ fixtures }));
+        return { fixtures };
+      };
+      const older = await run("2026-09-26T01-00-00-000Z", SIX);
+      await run("2026-09-26T02-00-00-000Z", SIX.slice(0, 2)); // stopped early
+      await run("2026-09-26T03-00-00-000Z", SIX);
+      rmSync(path.join(tmp, "golden_2026-09-26T03-00-00-000Z", "c.jpg")); // a file removed since
+      writeFileSync(path.join(tmp, "p3_check_2026-09-26T04-00-00-000Z.json"), "{ cut off");
       const found = newestCompleteRun(tmp, SIX);
       expect(path.basename(found?.results ?? "")).toBe("p3_check_2026-09-26T01-00-00-000Z.json");
-      expect(found?.recorded).toHaveLength(6);
-      expect(found?.recorded[0]).toEqual({ saved_as: "golden_1\\a.jpg", sha256: "h" });
+      expect(found?.recorded).toEqual(recordedGoldens(older));
       expect(newestCompleteRun(tmp, [...SIX, "g.NEF"])).toBeNull();
       expect(newestCompleteRun(path.join(tmp, "none"), SIX)).toBeNull();
-      expect(coversAll(recordedGoldens(run(SIX, "g")), SIX)).toBe(true);
+      expect(coversAll(recordedGoldens(older), SIX)).toBe(true);
       expect(recordedGoldens({ fixtures: [{ status: "skipped" }] })).toEqual([]);
     } finally {
       rmSync(tmp, { recursive: true, force: true });

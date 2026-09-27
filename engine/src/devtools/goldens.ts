@@ -66,9 +66,18 @@ export function coversAll(recorded: readonly RecordedGolden[], fixtures: readonl
   return names.size === recorded.length && fixtures.every((f) => names.has(goldenName(f)));
 }
 
+/** Whether every recorded file is still in `dir` with the recorded hash. */
+function available(dir: string, recorded: readonly RecordedGolden[]): boolean {
+  return recorded.every((r) => {
+    const file = path.join(dir, r.saved_as.replace(/\\/g, "/"));
+    return existsSync(file) && sha256(readFileSync(file)) === r.sha256;
+  });
+}
+
 /**
- * The newest p3_check_*.json in `dir` whose run captured all `fixtures`, with its recorded goldens;
- * null when no run did (a partial run is passed over, so it cannot replace a complete set).
+ * The newest p3_check_*.json in `dir` whose run captured all `fixtures` and whose files are all still
+ * there, unchanged, with its recorded goldens; null when no run qualifies. A partial run, or one whose
+ * files were removed since, is passed over for an older usable one (Greptile, PR #24).
  */
 export function newestCompleteRun(dir: string, fixtures: readonly string[]): { results: string; recorded: RecordedGolden[] } | null {
   if (!existsSync(dir)) return null;
@@ -80,7 +89,7 @@ export function newestCompleteRun(dir: string, fixtures: readonly string[]): { r
     } catch {
       continue; // an unreadable results file is passed over too
     }
-    if (coversAll(recorded, fixtures)) return { results: path.join(dir, f), recorded };
+    if (coversAll(recorded, fixtures) && available(dir, recorded)) return { results: path.join(dir, f), recorded };
   }
   return null;
 }

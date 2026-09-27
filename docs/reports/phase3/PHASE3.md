@@ -98,7 +98,7 @@ Claude Code collects them. `npm run goldens` takes the newest run that captured 
 
 ### Steps for Jim
 
-Do these after Claude Code says PR D is merged. Part 1 takes about 10 minutes: each photo gets about 15 renders of ~3.5 s.
+Do these after Claude Code says PR D is merged. Allow about 10 minutes for Part 1 [inference: the check's dry run made 73 exports for the six photos, about 12 per photo (Claude Code, 2026-09-26, `logs\scratch-p3-dryrun.mjs` export count); at the ~2.6 s per export Phase 2 measured (`docs\reports\phase2\PHASE2.md` "Numbers") that is 3-4 minutes of exports, plus the writes and your clicks; Lightroom's time is unmeasured until this run].
 
 1. Right-click the Claude icon in the Windows system tray → **Quit**.
 2. In Lightroom Classic, make sure all six test photos are in the catalog: choose **File > Import Photos and Video**. Under **Source** (left side), go to `D:\Developer\LrC_Autonomous_Gateway\fixtures`. At the top, click **Add** (not Copy or Move). Click **Import**. If Lightroom says there is nothing to import, all six are already in the catalog; that is fine. (How Lightroom shows photos already in the catalog is [unverified]; **Add** leaves the files where they are.)
@@ -109,8 +109,8 @@ Do these after Claude Code says PR D is merged. Part 1 takes about 10 minutes: e
    npm run phase3:check
    ```
 
-   You should see `Connected (… ms, plugin 0.2.0)`.
-5. For each of the six photos, the command says `Photo n of 6: <name>` and asks you to click it. Click that photo in the Filmstrip, then press Enter in the terminal. The photo changes several times while its sessions run and ends as it started. On the **first** photo, the command also asks you to click any **other** photo and press Enter, then to click the first photo again and press Enter.
+   You should see `Connected (… ms, plugin 0.2.0)` (the line the check prints once the plugin answers; plugin 0.2.0 is the version installed for Phase 2, `plugin\LrC-AVG.lrplugin\Bridge.lua` PLUGIN_VERSION).
+5. For each of the six photos, the command says `Photo n of 6: <name>` and asks you to click it. Click that photo in the Filmstrip, then press Enter in the terminal. The photo changes several times while its sessions run; the check is written to leave it as it started, and confirms that by reading its settings back (in the dry runs only so far; in Lightroom [unverified] until this run). On the **first** photo, the command also asks you to click any **other** photo and press Enter, then to click the first photo again and press Enter.
 6. The command asks two questions. Type `y` or `n` and press Enter for each:
    1. In the **History** panel (left side) of the photo on screen, are there steps named like `AVG 1a2b3c pass 1/4`, `… pass 2/4`?
    2. Click through the six photos in the Filmstrip. Does each look as it did before the check?

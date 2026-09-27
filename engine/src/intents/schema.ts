@@ -2,8 +2,10 @@
 //
 // This zod schema is the validator the engine uses. engine\schemas\intent.schema.json is generated
 // from it (`npm run schemas`), and a test fails when the two differ, so the published JSON Schema
-// cannot drift from what the engine accepts. Objects are strict: an unknown field, such as a
-// misspelt "prior", is an error rather than silently ignored.
+// cannot drift from what the engine accepts [handle: tests\intents.test.ts "checks in
+// engine\schemas\*.schema.json exactly as generated"]. Objects are strict: an unknown field, such as
+// a misspelt "prior", is an error rather than silently ignored [handle: tests\intents.test.ts "skips
+// invalid files", shape.json].
 //
 // Beyond the shape, the loader checks every prior against the params map (names, types, ranges)
 // and the camera profile against the pinned profile names (loader.ts).

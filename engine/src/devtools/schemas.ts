@@ -1,6 +1,6 @@
 // The JSON Schema files in engine\schemas\, generated from the engine's zod schemas so they cannot
-// drift from what the engine accepts. `npm run schemas` writes them; tests\schemas.test.ts fails
-// when a checked-in file differs from what would be generated.
+// drift from what the engine accepts. `npm run schemas` writes them; the "schemas" tests in
+// tests\intents.test.ts fail when a checked-in file differs from what would be generated.
 
 import path from "node:path";
 import { fileURLToPath } from "node:url";

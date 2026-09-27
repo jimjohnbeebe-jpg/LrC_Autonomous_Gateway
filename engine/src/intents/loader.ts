@@ -6,6 +6,9 @@
 //   2. user: %LOCALAPPDATA%\LrC-AVG\intents\ (PRD section 6.2), or LRC_AVG_INTENTS_DIR when set.
 // A user file with the same id replaces the bundled intent. A file that fails validation is
 // skipped and reported as a warning, from either folder, so one bad file cannot stop the engine.
+// [handle: tests\intents.test.ts "adds a user intent with a new id" (written after the library was
+// created), "lets a user intent with the same id replace the bundled one", "skips invalid files with
+// a warning each and keeps the rest"]
 // Copying the bundled set into the user folder on first run is packaging work (PHASES.md Phase 6).
 //
 // Validation: the file must be <id>.json and match the schema (schema.ts); every prior must name a
@@ -124,10 +127,11 @@ export class IntentLibrary {
     const file = `${intent.id}.json`;
     const target = path.join(this.userDir, file);
     // The file on disk counts, valid or not: a user file the loader skipped is still the user's
-    // (Greptile, PR #22).
+    // (Greptile, PR #22) [handle: tests\intents.test.ts "keeps a user file the loader skipped"].
     const replaced = existsSync(target);
     // Overriding counts only a bundled intent the loader accepts, as get() reports it afterwards
-    // (Greptile, PR #22): an invalid bundled file is not an intent.
+    // (Greptile, PR #22): an invalid bundled file is not an intent [handle: tests\intents.test.ts
+    // "reports overriding a bundled intent only when the bundled file is a valid intent"].
     const current = this.load().intents.get(intent.id);
     const overridesBundled = current?.source === "bundled" || current?.overrides_bundled === true;
     if (replaced && !options.replace) {

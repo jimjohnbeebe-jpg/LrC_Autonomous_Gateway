@@ -1,0 +1,248 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lrc-avg/intent.schema.json",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_]{0,63}$",
+      "description": "lower case letters, digits and _; the file is <id>.json"
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "category": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+    },
+    "brief": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000,
+      "description": "prose instructions to Claude"
+    },
+    "default_camera_profile": {
+      "description": "a profile name such as \"Adobe Landscape\" or \"Camera Standard\"",
+      "type": "string",
+      "minLength": 1
+    },
+    "priors": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1
+      },
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          {
+            "type": "string"
+          }
+        ]
+      },
+      "description": "canonical parameter name -> value, applied at pass 0: a number is added to the photo's current value; a switch, boolean or curve is set as given (camera_profile goes in default_camera_profile)"
+    },
+    "variants": {
+      "description": "three named prior sets for Variants mode (Phase 4)",
+      "type": "object",
+      "properties": {
+        "A": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            },
+            "priors": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string",
+                "minLength": 1
+              },
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "description": "canonical parameter name -> value, applied at pass 0: a number is added to the photo's current value; a switch, boolean or curve is set as given (camera_profile goes in default_camera_profile)"
+            }
+          },
+          "required": [
+            "label",
+            "priors"
+          ],
+          "additionalProperties": false
+        },
+        "B": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            },
+            "priors": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string",
+                "minLength": 1
+              },
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "description": "canonical parameter name -> value, applied at pass 0: a number is added to the photo's current value; a switch, boolean or curve is set as given (camera_profile goes in default_camera_profile)"
+            }
+          },
+          "required": [
+            "label",
+            "priors"
+          ],
+          "additionalProperties": false
+        },
+        "C": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            },
+            "priors": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string",
+                "minLength": 1
+              },
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "description": "canonical parameter name -> value, applied at pass 0: a number is added to the photo's current value; a switch, boolean or curve is set as given (camera_profile goes in default_camera_profile)"
+            }
+          },
+          "required": [
+            "label",
+            "priors"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "A",
+        "B",
+        "C"
+      ],
+      "additionalProperties": false
+    },
+    "guardrail_overrides": {
+      "description": "replaces the default clipping limits (0.5 % high, 1.0 % low; AVG-009) for this intent",
+      "type": "object",
+      "properties": {
+        "clip_high_pct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "clip_low_pct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        }
+      },
+      "additionalProperties": false
+    },
+    "regions_expected": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "skin",
+          "fur",
+          "sky",
+          "custom"
+        ]
+      }
+    },
+    "convergence_hints": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 300
+      }
+    },
+    "allow_probe": {
+      "description": "lr_probe is off in autonomous mode unless this is true",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "id",
+    "label",
+    "category",
+    "brief",
+    "priors"
+  ],
+  "additionalProperties": false,
+  "description": "LrC-AVG intent, schema v1"
+}

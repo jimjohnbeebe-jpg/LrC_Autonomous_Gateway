@@ -9,6 +9,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { BridgeClient } from "../src/bridge/index.js";
+import { IntentLibrary } from "../src/intents/index.js";
 import { createServer, ENGINE_VERSION, Tools } from "../src/mcp/index.js";
 import { loadDefaultParamMap } from "../src/params/index.js";
 import { PreviewService } from "../src/preview/index.js";
@@ -39,6 +40,7 @@ beforeEach(async () => {
     client: bridge,
     map: loadDefaultParamMap(),
     previews: new PreviewService(bridge, { previewDir }),
+    intents: new IntentLibrary({ map: loadDefaultParamMap(), userDir: path.join(tmp, "intents") }),
     ensureBridge: () => bridge.waitConnected(2000).then(() => undefined),
     historyPrefix: "AVG test",
     log: new ToolLog(logDir),
@@ -68,9 +70,20 @@ describe("mcp server", () => {
     expect(mcp.getServerVersion()).toMatchObject({ name: "lrc-avg", version: ENGINE_VERSION });
   });
 
-  it("lists the four Phase 2 tools", async () => {
+  it("lists the Phase 2 tools and the intent tools", async () => {
     const { tools } = await mcp.listTools();
-    expect(tools.map((t) => t.name).sort()).toEqual(["lr_get_active_photo_context", "lr_get_metrics", "lr_get_preview", "lr_set_settings"]);
+    expect(tools.map((t) => t.name).sort()).toEqual([
+      "lr_get_active_photo_context",
+      "lr_get_intent",
+      "lr_get_metrics",
+      "lr_get_preview",
+      "lr_list_intents",
+      "lr_save_intent",
+      "lr_set_settings",
+    ]);
+    const save = tools.find((t) => t.name === "lr_save_intent");
+    expect(save?.inputSchema.required).toEqual(["intent", "confirmed"]);
+    expect(save?.description).toMatch(/ONLY call this after the user has explicitly approved/);
     const set = tools.find((t) => t.name === "lr_set_settings");
     expect(set?.inputSchema.required).toEqual(["uuid", "settings"]);
     expect(set?.description).toMatch(/ABSOLUTE values/);
@@ -100,6 +113,20 @@ describe("mcp server", () => {
     expect(body["ok"]).toBe(false);
     expect(body["error"]).toMatchObject({ code: "OUT_OF_RANGE", recoverable: false });
     expect(String((body["error"] as { message: string }).message)).not.toMatch(/\n\s+at /); // no stack
+  });
+
+  it("lists and returns the bundled intents without Lightroom, and refuses an unconfirmed save", async () => {
+    const list = await mcp.callTool({ name: "lr_list_intents", arguments: {} });
+    const listed = textOf(list.content as Content) as { intents: Array<{ id: string; source: string }> };
+    expect(listed.intents).toHaveLength(11);
+    expect(listed.intents.every((i) => i.source === "bundled")).toBe(true);
+    const got = await mcp.callTool({ name: "lr_get_intent", arguments: { id: "landscape_golden_hour" } });
+    expect(textOf(got.content as Content)).toMatchObject({ ok: true, source: "bundled", intent: { default_camera_profile: "Adobe Landscape" } });
+    const missing = await mcp.callTool({ name: "lr_get_intent", arguments: { id: "no_such_intent" } });
+    expect(textOf(missing.content as Content)).toMatchObject({ ok: false, error: { code: "INTENT_NOT_FOUND", recoverable: false } });
+    const unconfirmed = await mcp.callTool({ name: "lr_save_intent", arguments: { intent: { id: "x" }, confirmed: false } });
+    expect(textOf(unconfirmed.content as Content)).toMatchObject({ ok: false, error: { code: "INVALID_ARGUMENTS" } });
+    expect(plugin.received.filter((r) => r.name !== "hello" && r.name !== "ping")).toEqual([]);
   });
 
   it("refuses invalid arguments before the tool runs, with the structured error body, and logs them", async () => {

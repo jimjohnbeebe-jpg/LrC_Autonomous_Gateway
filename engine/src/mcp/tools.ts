@@ -11,6 +11,7 @@
 
 import { randomUUID } from "node:crypto";
 import type { BridgeClient } from "../bridge/index.js";
+import type { IntentLibrary } from "../intents/index.js";
 import type { ToolLog } from "../log/index.js";
 import { deltaMetrics, summarize, type BasicMetrics } from "../metrics/index.js";
 import { ParamError, type CanonicalValue, type FromSdkResult, type ParamMap } from "../params/index.js";
@@ -51,10 +52,14 @@ export type SetSettingsArgs = {
   long_edge?: number | undefined;
 };
 
+export type SaveIntentArgs = { intent: unknown; confirmed: boolean; replace?: boolean | undefined };
+
 export type ToolsDeps = {
   client: BridgeClient;
   map: ParamMap;
   previews: PreviewService;
+  /** The intent library (Phase 3); the intent tools refuse without it. */
+  intents?: IntentLibrary;
   /** Resolves when the bridge is connected (bridge-gate.ts), or throws. */
   ensureBridge: () => Promise<void>;
   log?: ToolLog;
@@ -252,6 +257,42 @@ export class Tools {
         },
       };
     });
+  }
+
+  // --- Intents (Phase 3; ARCHITECTURE section 7). They read files only and never need Lightroom.
+
+  async listIntents(): Promise<ToolOutput> {
+    return this.run("lr_list_intents", {}, async () => {
+      const library = this.library();
+      const { intents, warnings } = library.list();
+      const json: Record<string, unknown> = { ok: true, intents, folders: library.directories(), ...(warnings.length ? { warnings } : {}) };
+      return { json, log: { count: intents.length, warnings } };
+    });
+  }
+
+  async getIntent(args: { id: string }): Promise<ToolOutput> {
+    return this.run("lr_get_intent", args, async () => {
+      const found = this.library().get(args.id);
+      const json = { ok: true, source: found.source, path: found.path, overrides_bundled: found.overrides_bundled, intent: found.intent };
+      return { json, log: { id: args.id, source: found.source } };
+    });
+  }
+
+  async saveIntent(args: SaveIntentArgs): Promise<ToolOutput> {
+    return this.run("lr_save_intent", args, async () => {
+      // The tool's schema already requires `confirmed: true`; this guards direct callers too.
+      if (args.confirmed !== true) {
+        throw new ToolError("NOT_CONFIRMED", "Ask the user to approve this intent in the chat first, then call again with confirmed: true.", false);
+      }
+      const saved = this.library().save(args.intent, { replace: args.replace === true });
+      const id = (args.intent as { id?: unknown }).id;
+      return { json: { ok: true, id, ...saved }, log: { id, ...saved } };
+    });
+  }
+
+  private library(): IntentLibrary {
+    if (!this.deps.intents) throw new ToolError("INTERNAL_ERROR", "This engine was started without the intent library.", false);
+    return this.deps.intents;
   }
 
   /** Log a call refused before it reached a tool (unknown tool, invalid arguments; server.ts). */

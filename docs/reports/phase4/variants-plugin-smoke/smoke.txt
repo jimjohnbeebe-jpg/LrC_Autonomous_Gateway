@@ -1,10 +1,11 @@
 phase-4/variants-plugin smoke transcript (PHASE4_PLAN row 6) - Claude Code (Opus 5.5), 2026-09-27
-Plugin under test: plugin\LrC-AVG.lrplugin at commit 80cd470 (branch phase-4/variants-plugin).
+Plugin under test: plugin\LrC-AVG.lrplugin at commit c0afa0c (branch phase-4/variants-plugin).
 "main" = plugin\LrC-AVG.lrplugin at 263fbd9 (Bridge.lua, Develop.lua, Json.lua, Log.lua, Preview.lua copied
 to <scratch>\old with git show). "BEFORE the lock" = Catalog.lua at 7b9dd7a, copied to <scratch>\prefix;
-"BEFORE the takeover" = Catalog.lua at 4d7e47b, copied to <scratch>\prefix2; the runner writes the mutant
-to <scratch>\mutant itself. Each runs with the rest of the plugin from 80cd470.
-Schemas: engine\dist\bridge\protocol.js from npm run build at 80cd470.
+"BEFORE the takeover" = Catalog.lua at 4d7e47b, copied to <scratch>\prefix2; "BEFORE the ownership checks"
+= Catalog.lua at 80cd470, copied to <scratch>\prefix3; the runner writes the mutant
+to <scratch>\mutant itself. Each runs with the rest of the plugin from c0afa0c.
+Schemas: engine\dist\bridge\protocol.js from npm run build at c0afa0c.
 Node v24.11.1; fengari 0.1.4 (a Lua 5.3 VM in JavaScript), a scratch install, not a project dependency.
 The fake Lightroom (fake-lr.lua), the two scenario scripts and the runner are reproduced at the end.
 The fake's behaviour is Claude Code's invention, modelled on spikes S6 and S7 where its comments say so:
@@ -18,8 +19,8 @@ Lua 5.1 syntax of every plugin file is checked separately by engine\tests\lua-pl
 Error messages carry Lua chunk names; they are shortened to the file name below.
 
 To reproduce: npm run build; in an empty folder with these four files, npm install fengari@0.1.4, copy
-main's five files into old\, and the two earlier Catalog.lua files into prefix\ and prefix2\, then:
-$ PREFIX_COMMIT=7b9dd7a PREFIX2_COMMIT=4d7e47b node run.mjs <repo>
+main's five files into old\, and the three earlier Catalog.lua files into prefix\, prefix2\ and prefix3\, then:
+$ PREFIX_COMMIT=7b9dd7a PREFIX2_COMMIT=4d7e47b PREFIX3_COMMIT=80cd470 node run.mjs <repo>
 == Catalog.lua handlers (catalog-cases.lua) ==
 PASS  no task raised ([])
 --  three copies: ok schema ok; copies 3/3 [AVG landscape_golden_hour A:true, AVG landscape_golden_hour B:true, AVG landscape_golden_hour C:true]; master_selected true
@@ -40,7 +41,7 @@ PASS  no task raised ([])
     calls: ; yields 0; active after 3869534, selected 1
 --  no target_uuid: error bad_request (recoverable false): target_uuid must name the master photo
     calls: ; yields 0; active after 3869534, selected 1
---  the second copy fails: ok schema ok; copies 1/3 [AVG landscape_golden_hour A:true] failure copy_failed: createVirtualCopies: fake-lr.lua:166: createVirtualCopies: simulated failure; master_selected true
+--  the second copy fails: ok schema ok; copies 1/3 [AVG landscape_golden_hour A:true] failure copy_failed: createVirtualCopies: fake-lr.lua:167: createVirtualCopies: simulated failure; master_selected true
     calls: select 3869534 | createVirtualCopies AVG landscape_golden_hour A on {3869534} gate=0 | select 3869534 | createVirtualCopies AVG landscape_golden_hour B on {3869534} gate=0 | select 3869534; yields 1; active after 3869534, selected 1
 --  Lightroom ignores the re-selection: ok schema ok; copies 1/3 [AVG landscape_golden_hour A:true] failure select_failed: Lightroom did not select photo 3869534 (active photo 5007, 1 selected); master_selected false
     calls: select 3869534 | createVirtualCopies AVG landscape_golden_hour A on {3869534} gate=0 | select 3869534 | select 3869534; yields 1; active after 5007, selected 1
@@ -111,11 +112,11 @@ PASS  with the lock, at every start time: 3 copies of the master, then select_ph
 --  select_photo sent while copies are made:
     create: copies 3/3 [AVG landscape_golden_hour A:true, AVG landscape_golden_hour B:true, AVG landscape_golden_hour C:true]
     select_photo: selected 3869533
-    calls: select 3869534 | createVirtualCopies AVG landscape_golden_hour A on {3869534} gate=0 | select 3869534 | createVirtualCopies AVG landscape_golden_hour B on {3869534} gate=0 | select 3869534 | createVirtualCopies AVG landscape_golden_hour C on {3869534} gate=0 | select 3869534 | find OTHER-UUID | select 3869533; active after 3869533
+    calls: select 3869534 | enter createVirtualCopies AVG landscape_golden_hour A | createVirtualCopies AVG landscape_golden_hour A on {3869534} gate=0 | select 3869534 | enter createVirtualCopies AVG landscape_golden_hour B | createVirtualCopies AVG landscape_golden_hour B on {3869534} gate=0 | select 3869534 | enter createVirtualCopies AVG landscape_golden_hour C | createVirtualCopies AVG landscape_golden_hour C on {3869534} gate=0 | select 3869534 | find OTHER-UUID | select 3869533; active after 3869533
 --  select_photo waits longer than the lock allows:
     create: copies 3/3 [AVG landscape_golden_hour A:true, AVG landscape_golden_hour B:true, AVG landscape_golden_hour C:true]
     select_photo: error busy: select_photo waited 10 s for create_virtual_copies to finish
-    calls: select 3869534 | createVirtualCopies AVG landscape_golden_hour A on {3869534} gate=0 | select 3869534 | createVirtualCopies AVG landscape_golden_hour B on {3869534} gate=0 | select 3869534 | createVirtualCopies AVG landscape_golden_hour C on {3869534} gate=0 | select 3869534; active after 3869534
+    calls: select 3869534 | enter createVirtualCopies AVG landscape_golden_hour A | createVirtualCopies AVG landscape_golden_hour A on {3869534} gate=0 | select 3869534 | enter createVirtualCopies AVG landscape_golden_hour B | createVirtualCopies AVG landscape_golden_hour B on {3869534} gate=0 | select 3869534 | enter createVirtualCopies AVG landscape_golden_hour C | createVirtualCopies AVG landscape_golden_hour C on {3869534} gate=0 | select 3869534; active after 3869534
 PASS  with the lock: all 3 copies are copies of the master
 PASS  with the lock: select_photo runs after the batch has put the master back, then selects its photo
 PASS  a batch longer than 10 s: select_photo is refused as busy (recoverable) without touching the catalog; the copies are all right
@@ -124,24 +125,59 @@ PASS  a batch longer than 10 s: select_photo is refused as busy (recoverable) wi
 --  BEFORE the takeover (Catalog.lua at 4d7e47b), a lock left by a task the reload stopped:
     select_photo error busy: select_photo waited 10 s for create_virtual_copies to finish after 10.05 s
 PASS  before the takeover: the next select_photo is refused as busy (Greptile's case)
+--  taken over while running, reload at round N: BEFORE the ownership checks (Catalog.lua at 80cd470) | with them
+    N=4: A ok (1/3 copies, stopped: identity_mismatch), 1 of the other photo (0 begun after C took over); C error select_failed: Lightroom did not select photo 3869533 (active photo 5057, 1 selected); ends on 3869534
+          | A ok (1/3 copies, stopped: identity_mismatch), 1 of the other photo (0 begun after C took over); C error select_failed: Lightroom did not select photo 3869533 (active photo 5057, 1 selected); ends on 5057
+    N=5: A ok (3/3 copies); C error select_failed: Lightroom did not select photo 3869533 (active photo 3869533, 1 selected); ends on 3869534
+          | A ok (1/3 copies, stopped: lock_lost); C ok (selected 3869533); ends on 3869533
+    N=6: A ok (3/3 copies); C error select_failed: Lightroom did not select photo 3869533 (active photo 3869534, 1 selected); ends on 3869534
+          | A ok (1/3 copies, stopped: lock_lost); C ok (selected 3869533); ends on 3869533
+    N=7: A ok (1/3 copies, stopped: select_failed); C ok (selected 3869533); ends on 3869534
+          | A ok (1/3 copies, stopped: lock_lost); C ok (selected 3869533); ends on 3869533
+    N=8: A ok (1/3 copies, stopped: select_failed); C error select_failed: Lightroom did not select photo 3869533 (active photo 3869533, 1 selected); ends on 3869534
+          | A ok (1/3 copies, stopped: select_failed); C ok (selected 3869533); ends on 3869533
+    N=9: A ok (2/3 copies, stopped: identity_mismatch), 1 of the other photo (1 begun after C took over); C ok (selected 3869533); ends on 3869534
+          | A ok (1/3 copies, stopped: lock_lost); C ok (selected 3869533); ends on 3869533
+    N=10: A ok (2/3 copies, stopped: identity_mismatch), 1 of the other photo (1 begun after C took over); C error select_failed: Lightroom did not select photo 3869533 (active photo 3869533, 1 selected); ends on 3869534
+          | A ok (1/3 copies, stopped: lock_lost); C ok (selected 3869533); ends on 3869533
+    N=11: A ok (2/3 copies, stopped: identity_mismatch), 1 of the other photo (0 begun after C took over); C error select_failed: Lightroom did not select photo 3869533 (active photo 5071, 1 selected); ends on 3869534
+          | A ok (2/3 copies, stopped: identity_mismatch), 1 of the other photo (0 begun after C took over); C error select_failed: Lightroom did not select photo 3869533 (active photo 5065, 1 selected); ends on 5065
+    N=12: A ok (3/3 copies); C error select_failed: Lightroom did not select photo 3869533 (active photo 3869533, 1 selected); ends on 3869534
+          | A ok (2/3 copies, stopped: lock_lost); C ok (selected 3869533); ends on 3869533
+    N=13: A ok (3/3 copies); C error select_failed: Lightroom did not select photo 3869533 (active photo 3869534, 1 selected); ends on 3869534
+          | A ok (2/3 copies, stopped: lock_lost); C ok (selected 3869533); ends on 3869533
+    N=14: A ok (2/3 copies, stopped: select_failed); C ok (selected 3869533); ends on 3869534
+          | A ok (2/3 copies, stopped: lock_lost); C ok (selected 3869533); ends on 3869533
+    N=15: A ok (2/3 copies, stopped: select_failed); C error select_failed: Lightroom did not select photo 3869533 (active photo 3869533, 1 selected); ends on 3869534
+          | A ok (2/3 copies, stopped: select_failed); C ok (selected 3869533); ends on 3869533
+    N=16: A ok (3/3 copies, stopped: identity_mismatch), 1 of the other photo (1 begun after C took over); C ok (selected 3869533); ends on 3869534
+          | A ok (2/3 copies, stopped: lock_lost); C ok (selected 3869533); ends on 3869533
+PASS  before the checks, some reload moment gives a copy begun after the takeover, or A puts the master back over C's selection (Greptile's case)
+    N=4: A's createVirtualCopies call was already running when C took over
+    N=5: A's createVirtualCopies call was already running when C took over
+    N=11: A's createVirtualCopies call was already running when C took over
+    N=12: A's createVirtualCopies call was already running when C took over
+PASS  with the checks, at every moment: no copy begun after the takeover is of the other photo, the master is never put back over C's selection, and C selects its photo - or, only when A's call was already running at the takeover, C reports select_failed (recoverable)
+PASS  with the checks, whenever no call of A was running at the takeover: no copy of the other photo, and C's selection stands
+PASS  with the checks, A stops with lock_lost when it notices the takeover
 --  a lock left by a task the reload stopped:
     select_photo ok (selected 3869533) after 0.00 s
     log: WARN  catalog: select_photo takes over the selection lock from create_virtual_copies (taken before the bridge restarted)
-    calls: select 3869534 | find OTHER-UUID | select 3869533
+    calls: select 3869534 | enter createVirtualCopies AVG landscape_golden_hour A | find OTHER-UUID | select 3869533
 --  a lock held longer than 60 s:
     select_photo ok (selected 3869533) after 5.00 s
     log: WARN  catalog: select_photo takes over the selection lock from create_virtual_copies (held longer than 60 s)
-    calls: select 3869534 | find OTHER-UUID | select 3869533
+    calls: select 3869534 | enter createVirtualCopies AVG landscape_golden_hour A | find OTHER-UUID | select 3869533
 --  a late holder leaves the new holder's lock alone:
     A ok (0/3 copies, stopped: copy_failed); B ok (3/3 copies); select_photo ok (selected 3869533)
     log: WARN  catalog: create_virtual_copies takes over the selection lock from create_virtual_copies (taken before the bridge restarted)
-    calls: select 3869534 | select 3869534 | createVirtualCopies AVG a A on {3869534} gate=0 | select 3869534 | createVirtualCopies AVG b A on {3869534} gate=0 | select 3869534 | createVirtualCopies AVG b B on {3869534} gate=0 | select 3869534 | createVirtualCopies AVG b C on {3869534} gate=0 | select 3869534 | find OTHER-UUID | select 3869533
+    calls: select 3869534 | enter createVirtualCopies AVG a A | select 3869534 | createVirtualCopies AVG a A on {3869534} gate=0 | enter createVirtualCopies AVG b A | createVirtualCopies AVG b A on {3869534} gate=0 | select 3869534 | enter createVirtualCopies AVG b B | createVirtualCopies AVG b B on {3869534} gate=0 | select 3869534 | enter createVirtualCopies AVG b C | createVirtualCopies AVG b C on {3869534} gate=0 | select 3869534 | find OTHER-UUID | select 3869533
 PASS  after a reload: select_photo takes over the abandoned lock at once, and says so in the log
 PASS  a holder hung for more than 60 s: select_photo takes over, and says so in the log
 --  the same case on a mutant that releases any lock:
-    B ok (2/3 copies, stopped: identity_mismatch); select_photo error select_failed: Lightroom did not select photo 3869533 (active photo 3869533, 1 selected)
-    calls: select 3869534 | select 3869534 | createVirtualCopies AVG a A on {3869534} gate=0 | select 3869534 | createVirtualCopies AVG b A on {3869534} gate=0 | select 3869534 | find OTHER-UUID | select 3869533 | createVirtualCopies AVG b B on {3869533} gate=0 | select 3869534
-PASS  the case catches the mutant: there, select_photo C gets in before B's last copy
+    B ok (1/3 copies, stopped: lock_lost); select_photo ok (selected 3869533)
+    calls: select 3869534 | enter createVirtualCopies AVG a A | select 3869534 | createVirtualCopies AVG a A on {3869534} gate=0 | enter createVirtualCopies AVG b A | createVirtualCopies AVG b A on {3869534} gate=0 | find OTHER-UUID | select 3869533
+PASS  the case catches the mutant: there, B loses its lock to C and does not make its 3 copies
 PASS  A ending late does not release B's lock: select_photo C runs only after B's last copy
 
 == Bridge (bridge-cases.lua): main's plugin vs this branch ==
@@ -369,6 +405,7 @@ F.catalog = {
         -- the selection: a model of a call that yields inside [the fake's assumption, not observed].
         -- A table gives each call (1st, 2nd, ...) its own count.
         local n = type(F.copyYields) == "table" and (F.copyYields[F.copyCalls] or 0) or (F.copyYields or 0)
+        if n > 0 then record("enter createVirtualCopies " .. name) end
         for _ = 1, n do F.clock = F.clock + 1; coroutine.yield() end
         local sel = {}
         for _, p in ipairs(F.selected or {}) do sel[#sel + 1] = p.localIdentifier end
@@ -585,6 +622,24 @@ do
     out[#out + 1] = { case = "a late holder leaves the new holder's lock alone", command = "lock", A = outcome(r, "A"),
         B = outcome(r, "B"), select = outcome(r, "C"), takeovers = takeovers(), calls = F.calls }
 end
+-- 4. Batch A's lock is taken over while A is still running (Greptile, PR #33 round 3): after a
+-- reload, select_photo C takes over. Swept over the round at which the reload happens. A's copy
+-- calls each take 2 s and yield before they read the selection.
+for bump = 4, 16 do
+    F.world()
+    F.files[LOG_FILE] = nil
+    F.yieldQueries, F.copyYields, F.calls = true, { 2, 2, 2 }, {}
+    _G.LrCAVG_BridgeGeneration = 1
+    local r = {}
+    start(r, "A", 0, function() return Catalog.createVirtualCopies({ target_uuid = MASTER_UUID, names = NAMES }) end)
+    F.run(bump)
+    _G.LrCAVG_BridgeGeneration = 2
+    start(r, "C", 0, function() return Catalog.selectPhoto({ uuid = "OTHER-UUID" }) end)
+    runAll()
+    out[#out + 1] = { case = "taken over while running", command = "lock", bump = bump, A = outcome(r, "A"),
+        select = outcome(r, "C"), takeovers = takeovers(), calls = F.calls, active_after = F.active and F.active.localIdentifier }
+end
+
 _G.LrCAVG_BridgeGeneration = nil
 
 return Json.encode({ cases = out, errors = F.errors })
@@ -790,6 +845,43 @@ const prefix2Dir = path.join(here, "prefix2").replaceAll("\\", "/");
 const round1 = runLua(`${prefix2Dir};${newDir}`, "catalog-cases.lua").cases.find((c) => c.case === "a lock left by a task the reload stopped");
 console.log(`--  BEFORE the takeover (Catalog.lua at ${process.env.PREFIX2_COMMIT ?? "prefix2"}), a lock left by a task the reload stopped:\n    select_photo ${res(round1.select)} after ${round1.waited.toFixed(2)} s`);
 check(round1.select.error?.code === "busy", "before the takeover: the next select_photo is refused as busy (Greptile's case)");
+// Round 3: A's lock taken over while A runs. A wrong copy the lock can still not prevent is one whose
+// createVirtualCopies call had started ("enter") before C took over (C's first call is its find).
+const takenOver = (cases) => cases.filter((c) => c.case === "taken over while running");
+const wrongCopies = (c) => (c.A.result?.copies ?? []).filter((x) => x.master_local_id !== 3869534);
+const avoidable = (c) => {
+  const cFind = c.calls.indexOf("find OTHER-UUID");
+  return wrongCopies(c).filter((x) => { const e = c.calls.indexOf(`enter createVirtualCopies ${x.copy_name}`); return e === -1 || cFind === -1 || e > cFind; }).length;
+};
+const summary = (c) => `A ${res(c.A)}${wrongCopies(c).length ? `, ${wrongCopies(c).length} of the other photo (${avoidable(c)} begun after C took over)` : ""}; C ${res(c.select)}; ends on ${c.active_after}`;
+const prefix3Dir = path.join(here, "prefix3").replaceAll("\\", "/");
+const r3pre = takenOver(runLua(`${prefix3Dir};${newDir}`, "catalog-cases.lua").cases);
+const r3 = takenOver(cat.cases);
+console.log(`--  taken over while running, reload at round N: BEFORE the ownership checks (Catalog.lua at ${process.env.PREFIX3_COMMIT ?? "prefix3"}) | with them`);
+for (let i = 0; i < r3.length; i++) console.log(`    N=${r3[i].bump}: ${summary(r3pre[i])}
+          | ${summary(r3[i])}`);
+check(r3pre.some((c) => avoidable(c) > 0 || (c.select.result && c.active_after === 3869534)),
+  "before the checks, some reload moment gives a copy begun after the takeover, or A puts the master back over C's selection (Greptile's case)");
+// A's call already inside createVirtualCopies when C took over: "enter" before C's find, the call's
+// read of the selection after it. That call copies whatever is selected then and moves the selection
+// to its copy; no lock reaches inside the SDK call.
+const A_NAMES = ["A", "B", "C"].map((l) => `AVG landscape_golden_hour ${l}`);
+const inFlight = (c) => {
+  const cFind = c.calls.indexOf("find OTHER-UUID");
+  return A_NAMES.some((n) => {
+    const e = c.calls.indexOf(`enter createVirtualCopies ${n}`);
+    const d = c.calls.findIndex((x) => x.startsWith(`createVirtualCopies ${n} on`));
+    return e !== -1 && e < cFind && d > cFind;
+  });
+};
+for (const c of r3.filter(inFlight)) console.log(`    N=${c.bump}: A's createVirtualCopies call was already running when C took over`);
+const r3ok = (c) => avoidable(c) === 0 && !(c.select.result && c.active_after !== 3869533) &&
+  (c.select.result?.local_id === 3869533 || (c.select.error?.code === "select_failed" && c.select.error.recoverable === true && inFlight(c)));
+check(r3.every(r3ok),
+  "with the checks, at every moment: no copy begun after the takeover is of the other photo, the master is never put back over C's selection, and C selects its photo - or, only when A's call was already running at the takeover, C reports select_failed (recoverable)");
+check(r3.filter((c) => !inFlight(c)).every((c) => c.select.result?.local_id === 3869533 && c.active_after === 3869533 && wrongCopies(c).length === 0),
+  "with the checks, whenever no call of A was running at the takeover: no copy of the other photo, and C's selection stands");
+check(r3.some((c) => c.A.result?.failure?.code === "lock_lost"), "with the checks, A stops with lock_lost when it notices the takeover");
 const lockCase = (name) => byCase[name];
 const reload = lockCase("a lock left by a task the reload stopped");
 const hung = lockCase("a lock held longer than 60 s");
@@ -812,7 +904,8 @@ writeFileSync(path.join(here, "mutant", "Catalog.lua"), mutated);
 const mutant = runLua(`${path.join(here, "mutant").replaceAll("\\", "/")};${newDir}`, "catalog-cases.lua").cases.find((c) => c.case === "a late holder leaves the new holder's lock alone");
 const mLast = mutant.calls.findLastIndex((x) => x.startsWith("createVirtualCopies AVG b"));
 console.log(`--  the same case on a mutant that releases any lock:\n    B ${res(mutant.B)}; select_photo ${res(mutant.select)}\n    calls: ${mutant.calls.join(" | ")}`);
-check(mutated !== source && mutant.calls.indexOf("find OTHER-UUID") < mLast, "the case catches the mutant: there, select_photo C gets in before B's last copy");
+check(mutated !== source && (mutant.calls.indexOf("find OTHER-UUID") < mLast || (mutant.B.result?.copies.length ?? 0) < 3),
+  "the case catches the mutant: there, B loses its lock to C and does not make its 3 copies");
 const bLast = late.calls.findLastIndex((x) => x.startsWith("createVirtualCopies AVG b"));
 const cFind = late.calls.indexOf("find OTHER-UUID");
 check(late.A.result?.failure?.code === "copy_failed" && late.B.result?.copies.length === 3 && late.B.result.copies.every((x) => x.identity_ok) && !late.B.result.failure &&

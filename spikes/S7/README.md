@@ -16,6 +16,8 @@
 
 **Menu items 2 and 3** list what Lightroom knows about the three presets and ask you, with tick boxes, which names you saw. Item 3 (after the restart) also applies each preset to the copy, then leaves exactly the two S7 copies selected, reads the selection back and says whether removing them is safe.
 
+**Menu items 4-6 re-run the preset file alone** (see "Re-run" below). They need no selected photo, make no copies and change no photo.
+
 Everything is saved automatically to `%TEMP%\LrC-AVG\S7\`; Claude Code collects it with `node spikes\S7\summarize.ts`. There is nothing to copy, paste or screenshot.
 
 That is what the harness is written to do. What Lightroom actually does is [unverified] until this run.
@@ -62,4 +64,33 @@ That is what the harness is written to do. What Lightroom actually does is [unve
 - **You are not sure what you saw at step 9 or 13**: click **Cancel**, look again, and run the same menu item again.
 - **The step-13 window says "COULD NOT SELECT …"**: don't remove anything and don't select copies by hand. Skip step 14 and mention it when you tell Claude Code.
 - **A preset at step 15 is not in the panel, or will not delete**: leave it and mention it when you tell Claude Code.
+- **A Lightroom error window appears instead**: tell Claude Code its text.
+
+## Re-run: the preset file only (menu items 4-6)
+
+**Why.** Run 1 (2026-09-27 11:22) wrote no preset file, because of a harness bug. The harness looked for the uuid that Lightroom reports for "AVG S7 reference" (`221C89F4…3357`) inside the preset's file. The file carries a different uuid (`crs:UUID="94B7E167…6019"`) [handle: `%TEMP%\LrC-AVG\S7\s7_run_2026-09-27T11-22-33.json` `presets.xmp`, and line 7 of `%APPDATA%\Adobe\CameraRaw\Settings\AVG S7 reference.xmp`]. The fix (`fix/s7-xmp`) takes the uuid from the file itself. Run 1's other answers (removal probe, crop, unselected photo, plugin preset) stand; only question 1's preset file is re-run.
+
+**Menu item 4** checks that the preset **AVG S7 reference** exists, then writes **AVG S7 xmp …** next to it: the same file with a new name and uuid. It says whether the file was WRITTEN and whether Lightroom lists it straight away. **Items 5 and 6** ask, with tick boxes, which of the two names you saw before and after a restart. They also record what Lightroom lists, whether the new preset's settings match the reference's, and whether the file is still on disk as written. Everything saves itself to `%TEMP%\LrC-AVG\S7\` as `s7_xmp_*`; run 1's files are left as they are.
+
+What Lightroom does with a preset file written by a plugin is [unverified] until this re-run.
+
+### Steps for Jim (re-run)
+
+1. If Lightroom Classic is open, **File > Exit**. Start Lightroom Classic again and wait until the photos show. This loads the updated S7 plugin with its three new menu items.
+2. **File > Plug-in Extras > AVG S7 - 4. Re-run: write the preset file only.** The window says whether the preset file was **WRITTEN** and gives its name, **AVG S7 xmp** followed by the date and time. Click **OK**.
+3. Press **D** (Develop). In the **Presets** panel on the left, open **User Presets** (click the triangle) and look for **AVG S7 reference** and the **AVG S7 xmp …** name from the window.
+4. **File > Plug-in Extras > AVG S7 - 5. Re-run: what the Presets panel shows (BEFORE restart).** Tick each name you saw, click **Save**, then **OK**.
+5. **File > Exit**. Start Lightroom Classic again and wait until the photos show.
+6. Press **D**, open **User Presets** in **Presets** again, and look for the same two names.
+7. **File > Plug-in Extras > AVG S7 - 6. Re-run: what the Presets panel shows (AFTER restart).** Tick each name you saw, click **Save**, then **OK**.
+8. In **Presets**, right-click each preset you can see whose name starts with **AVG S7**, and choose **Delete**.
+9. Tell Claude Code: **"S7 re-run done."**
+
+### If something goes wrong (re-run)
+
+- **File > Plug-in Extras has no "AVG S7 - 4"**: open **File > Plug-in Manager**. If "LrC-AVG Spike S7" is not in the list, add it as in step 1 of the first run. If it is listed but not **Enabled**, click **Enable**. Click **Done**, then do step 1 again.
+- **The window at step 2 says "stopped before changing anything"**: the preset AVG S7 reference is gone. In **Library**, click the original `20260907-_OZ80093.NEF` and press **E**, make the preset as in steps 3-4 of the first run, then do step 2 again.
+- **The window at step 2 says NOT WRITTEN**: stop there and tell Claude Code (the window says so too).
+- **You are not sure what you saw at step 4 or 7**: click **Cancel**, look again, and run the same menu item again.
+- **A preset at step 8 will not delete**: leave it and mention it when you tell Claude Code.
 - **A Lightroom error window appears instead**: tell Claude Code its text.

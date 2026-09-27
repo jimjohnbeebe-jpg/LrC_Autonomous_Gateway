@@ -118,42 +118,37 @@ local function replaceAll(text, old, new)
     return text:gsub(escaped, (new:gsub("%%", "%%%%")))
 end
 
--- The reference's uuid as it is written in its file (as given, upper case, or upper case without
--- dashes), and a new uuid in the same form.
-local function uuidPair(text, refUuid)
-    local forms = { refUuid, refUuid:upper(), (refUuid:gsub("-", "")):upper() }
-    for _, form in ipairs(forms) do
-        if text:find(form, 1, true) then
-            local new = LrUUID.generateUUID()
-            if not form:find("-", 1, true) then new = new:gsub("-", "") end
-            if form == form:upper() then new = new:upper() end
-            return form, new
-        end
-    end
-    return nil
+-- The preset's uuid as its own file writes it: the one crs:UUID attribute. It is not the uuid the SDK
+-- reports: in S7 run 1, getUuid() gave 221C89F4724E30813B7A73553BD53357 for "AVG S7 reference" while
+-- its file says crs:UUID="94B7E167ED8FC14591B3B0CF685F6019", so run 1 wrote no file [handle:
+-- %TEMP%\LrC-AVG\S7\s7_run_2026-09-27T11-22-33.json presets.xmp, and line 7 of the reference file].
+-- Returns the file's uuid and a new one in the same form (hex digits, same length and case), or nil
+-- and why.
+local function fileUuid(text)
+    local count = select(2, text:gsub('crs:UUID="', ""))
+    if count ~= 1 then return nil, nil, "the reference file has " .. count .. " crs:UUID attributes, not 1" end
+    local old = text:match('crs:UUID="(%x+)"')
+    if not old then return nil, nil, "the reference file's crs:UUID is not hexadecimal" end
+    local new = (LrUUID.generateUUID():gsub("-", ""))
+    if old == old:upper() then new = new:upper() else new = new:lower() end
+    if #new ~= #old or not new:match("^%x+$") then return nil, nil, "LrUUID.generateUUID gave " .. new .. ", not the file's form" end
+    return old, new
 end
 
-local function readFile(path)
-    local fh = io.open(path, "rb")
-    if not fh then return nil end
-    local text = fh:read("*a")
-    fh:close()
-    return text
-end
-
--- Write the preset file `name` next to the reference's file, never over an existing file. Returns the
--- path and the new uuid, or nil.
+-- Write the preset file `name` next to the reference's file, never over an existing file: the
+-- reference's text with a new crs:UUID and name. Returns the path and the new uuid, or nil.
 function Presets.writeXmp(refPreset, name, out)
-    local file, refUuid = call(refPreset, "getFile"), call(refPreset, "getUuid")
+    local file = call(refPreset, "getFile")
     out.reference_file = file
-    out.reference_uuid = refUuid
+    out.reference_uuid = call(refPreset, "getUuid") -- the SDK's uuid, recorded, not used
     if type(file) ~= "string" or LrFileUtils.exists(file) ~= "file" then out.error = "the reference preset has no file" return nil end
-    if type(refUuid) ~= "string" or refUuid == "" or refUuid:find("^error: ") then out.error = "the reference preset has no uuid" return nil end
-    local text = readFile(file)
+    local text = Common.readFile(file)
     if not text then out.error = "could not read " .. file return nil end
-    local old, new = uuidPair(text, refUuid)
-    if not old then out.error = "the reference file does not contain its uuid as text" return nil end
-    local renamed, nUuid = replaceAll(text, old, new)
+    local old, new, why = fileUuid(text)
+    if not old then out.error = why return nil end
+    out.reference_file_uuid = old
+    out.sdk_uuid_is_file_uuid = type(out.reference_uuid) == "string" and (out.reference_uuid:gsub("-", "")):upper() == old:upper()
+    local renamed, nUuid = replaceAll(text, 'crs:UUID="' .. old .. '"', 'crs:UUID="' .. new .. '"')
     local final, nName = replaceAll(renamed, Presets.REFERENCE, name)
     out.uuid, out.uuid_replacements, out.name_replacements = new, nUuid, nName
     if nName < 1 then out.error = "the reference file does not contain its name as text" return nil end

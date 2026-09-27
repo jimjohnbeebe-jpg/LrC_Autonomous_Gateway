@@ -166,6 +166,18 @@ describe("intents: saving", () => {
     expect(library.get("kept").source).toBe("user");
   });
 
+  it("reports overriding a bundled intent only when the bundled file is a valid intent (Greptile, PR #22)", () => {
+    const bundledDir = path.join(tmp, "bundled");
+    mkdirSync(bundledDir);
+    writeFileSync(path.join(bundledDir, "broken_bundled.json"), "{ not json", "utf8");
+    writeFileSync(path.join(bundledDir, "good_bundled.json"), JSON.stringify(minimal("good_bundled")), "utf8");
+    const lib = new IntentLibrary({ map, bundledDir, userDir });
+    expect(lib.save(minimal("broken_bundled")).overrides_bundled).toBe(false);
+    expect(lib.get("broken_bundled").overrides_bundled).toBe(false);
+    expect(lib.save(minimal("good_bundled")).overrides_bundled).toBe(true);
+    expect(lib.get("good_bundled").overrides_bundled).toBe(true);
+  });
+
   it("writes nothing when the intent is invalid", () => {
     expect(() => library.save(minimal("bad", { priors: { exposure: 99 } }))).toThrow(IntentError);
     expect(existsSync(path.join(userDir, "bad.json"))).toBe(false);

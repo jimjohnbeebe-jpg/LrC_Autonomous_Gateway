@@ -332,7 +332,9 @@ export class Tools {
   /**
    * Run a tool: log it, and tell the bridge gate a call is in progress. A tool that never uses
    * Lightroom (`usesBridge: false`, the intent tools) leaves the gate alone, so it does not restart
-   * the idle release of a bridge lock this engine holds (Greptile, PR #22).
+   * the idle release of a bridge lock this engine holds (Greptile, PR #22) [handle: the gate's idle
+   * timer is cleared and restarted only in beginUse/endUse, engine\src\mcp\bridge-gate.ts; test
+   * tests\intents.test.ts "leaves the bridge gate alone": three intent calls, 0 gate calls].
    */
   private run(tool: string, args: unknown, fn: () => Promise<ToolOutput>): Promise<ToolOutput>;
   private run(tool: string, args: unknown, options: { usesBridge: boolean }, fn: () => Promise<ToolOutput>): Promise<ToolOutput>;

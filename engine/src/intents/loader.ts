@@ -126,6 +126,10 @@ export class IntentLibrary {
     // The file on disk counts, valid or not: a user file the loader skipped is still the user's
     // (Greptile, PR #22).
     const replaced = existsSync(target);
+    // Overriding counts only a bundled intent the loader accepts, as get() reports it afterwards
+    // (Greptile, PR #22): an invalid bundled file is not an intent.
+    const current = this.load().intents.get(intent.id);
+    const overridesBundled = current?.source === "bundled" || current?.overrides_bundled === true;
     if (replaced && !options.replace) {
       throw new IntentError("intent_exists", `A user intent file ${target} already exists; pass replace: true to replace it.`);
     }
@@ -136,7 +140,7 @@ export class IntentLibrary {
     const temporary = `${target}.${process.pid}.tmp`;
     writeFileSync(temporary, `${JSON.stringify(intent, null, 2)}\n`, "utf8");
     renameSync(temporary, target);
-    return { path: target, replaced, overrides_bundled: existsSync(path.join(this.bundledDir, file)) };
+    return { path: target, replaced, overrides_bundled: overridesBundled };
   }
 
   /** Parse and validate the text of an intent file. */

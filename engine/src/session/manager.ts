@@ -358,7 +358,11 @@ export class SessionManager {
         timings: { total_ms: ms(started) },
       };
       const image = await this.image(s, args.return_image ?? "after", original, rendered, "before", "pass 0");
-      return { json, ...(image ? { image } : {}), log: { session_id: id, intent_id: loaded.intent.id, history_names: historyNames, metrics: this.brief(rendered.metrics), guardrail_actions: corrected.actions.length } };
+      return {
+        json,
+        ...(image ? { image } : {}),
+        log: { session_id: id, intent_id: loaded.intent.id, snapshot: s.snapshot, log_path: s.files.logPath, history_names: historyNames, metrics: this.brief(rendered.metrics), guardrail_actions: corrected.actions.length },
+      };
     } catch (err) {
       throw this.failed(s, "begin", err);
     }

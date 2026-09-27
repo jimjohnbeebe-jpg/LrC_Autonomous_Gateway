@@ -17,6 +17,8 @@
     "phase1:check": "npm run build && node engine/dist/devtools/phase1-check-cli.js",
     "desktop:install": "npm run build && node engine/dist/devtools/install-desktop-config-cli.js",
     "phase2:check": "npm run build && node engine/dist/devtools/phase2-check-cli.js",
-    "schemas": "npm run build && node engine/dist/devtools/write-schemas-cli.js"
+    "schemas": "npm run build && node engine/dist/devtools/write-schemas-cli.js",
+    "phase3:check": "npm run build && node engine/dist/devtools/phase3-check-cli.js",
+    "goldens": "npm run build && node engine/dist/devtools/goldens-cli.js"
   }
 }

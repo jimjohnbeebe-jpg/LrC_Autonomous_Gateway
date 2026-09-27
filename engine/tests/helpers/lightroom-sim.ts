@@ -70,6 +70,8 @@ export class LightroomSim {
   renderModel: "grey" | "tonal" = "grey";
   /** Answer export_preview with this error instead (to exercise failures mid-session). */
   exportError: string | null = null;
+  /** The selected photo's file name in get_context (the Phase 3 check asks for each fixture by name). */
+  filename = "20260907-_OZ80093.NEF";
   /** The photo's pixel size in get_context (getRawMetadata width/height); a made-up 3:2 size. */
   photoSize = { width: 6000, height: 4000 };
   readonly previewDir: string;
@@ -94,7 +96,7 @@ export class LightroomSim {
         uuid: this.selected,
         local_id: 1,
         lrc_version: "15.5.1",
-        filename: "20260907-_OZ80093.NEF",
+        filename: this.filename,
         file_format: "RAW",
         is_virtual_copy: false,
         width: this.photoSize.width,

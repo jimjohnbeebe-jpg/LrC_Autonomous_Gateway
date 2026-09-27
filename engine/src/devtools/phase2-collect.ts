@@ -16,6 +16,9 @@ export type CollectPaths = {
   stamp: string;
   home: string;
   serverName: string;
+  /** File-name prefix and the check named in the excerpt's header (default: p2, npm run phase2:check). */
+  prefix?: string;
+  checkName?: string;
 };
 
 const ISO_AT_START = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z)/;
@@ -58,9 +61,9 @@ export function collectChatLogs(since: Date, paths: CollectPaths, now: Date = ne
         kept.push(line);
       }
     }
-    const saved = path.join(paths.outDir, `p2_desktop_mcp_log_${paths.stamp}.txt`);
+    const saved = path.join(paths.outDir, `${paths.prefix ?? "p2"}_desktop_mcp_log_${paths.stamp}.txt`);
     const header = [
-      `# Excerpt of Claude Desktop's MCP log for the ${paths.serverName} server, collected by npm run phase2:check.`,
+      `# Excerpt of Claude Desktop's MCP log for the ${paths.serverName} server, collected by npm run ${paths.checkName ?? "phase2:check"}.`,
       `# Source: %LOCALAPPDATA%\\Claude\\Logs\\${path.basename(paths.desktopLog)}, lines from ${since.toISOString()} on.`,
       `# Filter: timestamped lines matching Server started|Message from|[error]|[warn], and the engine's [${paths.serverName}] lines; user folder redacted.`,
       "",
@@ -89,7 +92,7 @@ export function collectChatLogs(since: Date, paths: CollectPaths, now: Date = ne
   }
   let savedAs: string | null = null;
   if (found) {
-    const saved = path.join(paths.outDir, `p2_chat_tool_log_${paths.stamp}.jsonl`);
+    const saved = path.join(paths.outDir, `${paths.prefix ?? "p2"}_chat_tool_log_${paths.stamp}.jsonl`);
     writeFileSync(saved, records.map((r) => redact(JSON.stringify(r)) + "\n").join(""));
     savedAs = path.basename(saved);
   }

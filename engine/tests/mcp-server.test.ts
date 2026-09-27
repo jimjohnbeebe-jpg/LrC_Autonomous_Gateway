@@ -41,6 +41,8 @@ beforeEach(async () => {
     map: loadDefaultParamMap(),
     previews: new PreviewService(bridge, { previewDir }),
     intents: new IntentLibrary({ map: loadDefaultParamMap(), userDir: path.join(tmp, "intents") }),
+    sessionLogDir: path.join(tmp, "sessions"),
+    engineVersion: ENGINE_VERSION,
     ensureBridge: () => bridge.waitConnected(2000).then(() => undefined),
     historyPrefix: "AVG test",
     log: new ToolLog(logDir),
@@ -70,23 +72,28 @@ describe("mcp server", () => {
     expect(mcp.getServerVersion()).toMatchObject({ name: "lrc-avg", version: ENGINE_VERSION });
   });
 
-  it("lists the Phase 2 tools and the intent tools", async () => {
+  it("lists the Phase 3 tools, without the temporary lr_set_settings", async () => {
     const { tools } = await mcp.listTools();
     expect(tools.map((t) => t.name).sort()).toEqual([
+      "lr_begin_session",
+      "lr_end_session",
       "lr_get_active_photo_context",
       "lr_get_intent",
       "lr_get_metrics",
       "lr_get_preview",
+      "lr_get_session_log",
       "lr_list_intents",
+      "lr_probe",
       "lr_save_intent",
-      "lr_set_settings",
+      "lr_set_regions",
+      "lr_step",
     ]);
     const save = tools.find((t) => t.name === "lr_save_intent");
     expect(save?.inputSchema.required).toEqual(["intent", "confirmed"]);
     expect(save?.description).toMatch(/ONLY call this after the user has explicitly approved/);
-    const set = tools.find((t) => t.name === "lr_set_settings");
-    expect(set?.inputSchema.required).toEqual(["uuid", "settings"]);
-    expect(set?.description).toMatch(/ABSOLUTE values/);
+    const step = tools.find((t) => t.name === "lr_step");
+    expect(step?.inputSchema.required).toEqual(["session_id", "settings", "rationale"]);
+    expect(step?.description).toMatch(/CHANGE for numeric sliders/);
   });
 
   it("returns the preview as an image block followed by the JSON text block", async () => {
@@ -99,19 +106,30 @@ describe("mcp server", () => {
     expect(textOf(content)).toMatchObject({ ok: true, uuid: "SIM-UUID", preview_source: "export" });
   });
 
-  it("changes a setting through lr_set_settings", async () => {
-    const res = await mcp.callTool({ name: "lr_set_settings", arguments: { uuid: "SIM-UUID", settings: { exposure: 0.83 } } });
-    expect(res.isError).toBeFalsy();
-    expect(textOf(res.content as Content)).toMatchObject({ ok: true, history_name: "AVG test set 1" });
-    expect(lr.settings["Exposure2012"]).toBe(0.83);
+  it("runs a session over MCP: begin, one step, end with revert", async () => {
+    const exposure = lr.settings["Exposure2012"];
+    const begin = await mcp.callTool({ name: "lr_begin_session", arguments: { intent_id: "neutral_technical_correction", max_passes: 2 } });
+    expect(begin.isError).toBeFalsy();
+    const started = textOf(begin.content as Content) as { session_id: string; pass: string };
+    expect(started.pass).toBe("0/2");
+    expect((begin.content as Content).map((c) => c.type)).toEqual(["image", "text"]);
+    const step = await mcp.callTool({
+      name: "lr_step",
+      arguments: { session_id: started.session_id, settings: { exposure: 0.3 }, rationale: "a little brighter", return_image: "before_after" },
+    });
+    expect(step.isError).toBeFalsy();
+    expect(textOf(step.content as Content)).toMatchObject({ ok: true, pass: "1/2", applied: [expect.objectContaining({ name: "exposure", delta: 0.3 })] });
+    const end = await mcp.callTool({ name: "lr_end_session", arguments: { session_id: started.session_id, outcome: "revert" } });
+    expect(textOf(end.content as Content)).toMatchObject({ ok: true, outcome: "revert", revert: { differing: [] } });
+    expect(lr.settings["Exposure2012"]).toBe(exposure);
   });
 
   it("returns tool failures as isError with {code, message, recoverable}", async () => {
-    const res = await mcp.callTool({ name: "lr_set_settings", arguments: { uuid: "SIM-UUID", settings: { exposure: 9 } } });
+    const res = await mcp.callTool({ name: "lr_step", arguments: { session_id: "nope", settings: { exposure: 0.1 }, rationale: "x" } });
     expect(res.isError).toBe(true);
     const body = textOf(res.content as Content);
     expect(body["ok"]).toBe(false);
-    expect(body["error"]).toMatchObject({ code: "OUT_OF_RANGE", recoverable: false });
+    expect(body["error"]).toMatchObject({ code: "SESSION_NOT_ACTIVE", recoverable: false });
     expect(String((body["error"] as { message: string }).message)).not.toMatch(/\n\s+at /); // no stack
   });
 
@@ -132,7 +150,7 @@ describe("mcp server", () => {
   });
 
   it("refuses invalid arguments before the tool runs, with the structured error body, and logs them", async () => {
-    const res = await mcp.callTool({ name: "lr_set_settings", arguments: { uuid: "SIM-UUID", settings: {} } });
+    const res = await mcp.callTool({ name: "lr_step", arguments: { session_id: "s", settings: {}, rationale: "x" } });
     expect(res.isError).toBe(true);
     const body = textOf(res.content as Content);
     expect(body).toMatchObject({ ok: false, error: { code: "INVALID_ARGUMENTS", recoverable: false } });
@@ -142,13 +160,13 @@ describe("mcp server", () => {
     expect(plugin.received.filter((r) => r.name === "apply_settings" || r.name === "export_preview")).toEqual([]);
     const logged = readdirSync(logDir).flatMap((f) => readFileSync(path.join(logDir, f), "utf8").trim().split("\n"));
     expect(logged.map((l) => JSON.parse(l) as { tool: string; ok: boolean; error?: { code: string } })).toEqual([
-      expect.objectContaining({ tool: "lr_set_settings", ok: false, error: expect.objectContaining({ code: "INVALID_ARGUMENTS" }) }),
+      expect.objectContaining({ tool: "lr_step", ok: false, error: expect.objectContaining({ code: "INVALID_ARGUMENTS" }) }),
       expect.objectContaining({ tool: "lr_get_preview", ok: false, error: expect.objectContaining({ code: "INVALID_ARGUMENTS" }) }),
     ]);
   });
 
-  it("answers an unknown tool with UNKNOWN_TOOL", async () => {
-    const res = await mcp.callTool({ name: "lr_step", arguments: {} });
+  it("answers an unknown tool, lr_set_settings included now, with UNKNOWN_TOOL", async () => {
+    const res = await mcp.callTool({ name: "lr_set_settings", arguments: {} });
     expect(textOf(res.content as Content)).toMatchObject({ ok: false, error: { code: "UNKNOWN_TOOL" } });
   });
 

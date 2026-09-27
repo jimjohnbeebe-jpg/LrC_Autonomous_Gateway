@@ -7,7 +7,7 @@
 // tool call that needs them, and given back after IDLE_RELEASE_MS without a call (bridge-gate.ts):
 // Claude Desktop kept a second engine that it never called, and that one must not hold the bridge
 // [handle: Jim's Phase 2 run, 2026-09-26, PIDs 2304 and 12632; the details are in bridge-gate.ts;
-// why Desktop keeps two engines is unverified]. A call waits up to 5 s for the connection. Old previews are purged when this engine takes
+// why Desktop keeps two engines is unverified]. A call waits up to 15 s for the connection (bridge-gate.ts). Old previews are purged when this engine takes
 // the lock (PRD NFR-6), and again at shutdown if it holds it: an engine without the lock never
 // touches the shared previews folder, where the engine that holds it may have a preview waiting.
 // Shutdown: when stdin ends. On Windows the parent often dies without a signal, and an orphaned
@@ -54,6 +54,8 @@ const tools = new Tools({
   map,
   previews,
   intents: new IntentLibrary({ map }),
+  sessionLogDir: defaultLogDir(),
+  engineVersion: ENGINE_VERSION,
   ensureBridge: () => gate.ready(),
   log: toolLog,
   onCallStart: () => gate.beginUse(),

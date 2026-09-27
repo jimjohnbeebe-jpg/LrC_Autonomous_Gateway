@@ -11,6 +11,8 @@ export type PixelRect = { left: number; top: number; width: number; height: numb
 
 /** Slack for boxes whose edge is computed, e.g. x = 0.7 and w = 0.3 adding up to 1.0000000000000002. */
 const EDGE_SLACK = 1e-9;
+/** Slack, in pixels, for box edges that land on a pixel boundary up to floating-point noise. */
+const PIXEL_SLACK = 1e-6;
 
 /** Why the box is not a valid normalised box, or null when it is. */
 export function boxProblem(box: RegionBox): string | null {
@@ -29,9 +31,11 @@ export function boxToRect(box: RegionBox, width: number, height: number): PixelR
   if (!Number.isInteger(width) || !Number.isInteger(height) || width <= 0 || height <= 0) {
     throw new RangeError(`bad image size ${width}x${height}`);
   }
-  const left = Math.min(width - 1, Math.floor(box.x * width));
-  const top = Math.min(height - 1, Math.floor(box.y * height));
-  const right = Math.min(width, Math.max(left + 1, Math.ceil((box.x + box.w) * width)));
-  const bottom = Math.min(height, Math.max(top + 1, Math.ceil((box.y + box.h) * height)));
+  // PIXEL_SLACK keeps floating-point noise from adding a pixel: 0.4 + 0.2 is 0.6000000000000001, and
+  // ceil(0.6000000000000001 * 4000) would be 2401, not 2400.
+  const left = Math.min(width - 1, Math.floor(box.x * width + PIXEL_SLACK));
+  const top = Math.min(height - 1, Math.floor(box.y * height + PIXEL_SLACK));
+  const right = Math.min(width, Math.max(left + 1, Math.ceil((box.x + box.w) * width - PIXEL_SLACK)));
+  const bottom = Math.min(height, Math.max(top + 1, Math.ceil((box.y + box.h) * height - PIXEL_SLACK)));
   return { left, top, width: right - left, height: bottom - top };
 }

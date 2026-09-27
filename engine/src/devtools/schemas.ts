@@ -4,7 +4,9 @@
 
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { z } from "zod";
 import { intentJsonSchema } from "../intents/index.js";
+import { recipeSchema, sessionLogSchema } from "../log/index.js";
 
 /** engine\schemas\ (this file is <engine>\{src,dist}\devtools\schemas.*). */
 export function schemasDir(): string {
@@ -17,5 +19,11 @@ export function generatedSchemas(): Map<string, string> {
     const { $schema, ...rest } = schema;
     return { $schema, $id: id, ...rest };
   };
-  return new Map([["intent.schema.json", `${JSON.stringify(withId("lrc-avg/intent.schema.json", intentJsonSchema()), null, 2)}\n`]]);
+  const json = (id: string, schema: Record<string, unknown>): string => `${JSON.stringify(withId(id, schema), null, 2)}\n`;
+  const fromZod = (schema: z.ZodType): Record<string, unknown> => z.toJSONSchema(schema, { io: "input" }) as Record<string, unknown>;
+  return new Map([
+    ["intent.schema.json", json("lrc-avg/intent.schema.json", intentJsonSchema())],
+    ["session-log.schema.json", json("lrc-avg/session-log.schema.json", fromZod(sessionLogSchema))],
+    ["recipe.schema.json", json("lrc-avg/recipe.schema.json", fromZod(recipeSchema))],
+  ]);
 }

@@ -2,7 +2,8 @@
 // JPEG; session A (pass 0, the scripted passes, accept) with its log, recipe and AC-5 replay, and
 // the put-back; on the first photo the region crop; session B (a probe, on the first photo the
 // selection guard, one pass, revert: AC-2). AC-4 counts every pass of sessions A and B
-// (clip-check.ts, PHASE4_PLAN decision 1).
+// (clip-check.ts, PHASE4_PLAN decision 1) [handle: tests\phase3-check.test.ts "counts AC-4 on
+// session B too, not only session A (PHASE4_PLAN decision 1)"].
 
 import { readFileSync } from "node:fs";
 import { recipeSchema, sessionLogSchema, type Recipe } from "../log/index.js";

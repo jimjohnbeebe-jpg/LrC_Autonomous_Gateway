@@ -19,7 +19,9 @@
 // Two y/n questions (Jim's choice for Phases 1-2: y/n in this window).
 // Part 2 is AC-1's chat on one fixture (phase3-chat.ts).
 // AC-4 counts every pass of every session: A and B on each photo, and the chat's (clip-check.ts,
-// PHASE4_PLAN decision 1; until Phase 4 session 2 it counted session A only).
+// PHASE4_PLAN decision 1) [handle: tests\phase3-check.test.ts "counts AC-4 on session B too ..."
+// and "counts AC-4 on the chat's session ..."]. Until Phase 4 session 2 it counted session A only
+// [handle: docs\reports\phase3\PHASE3.md "AC-4, what happened"].
 
 import type { SessionClip } from "./clip-check.js";
 import { describeError, median } from "./phase1-check.js";

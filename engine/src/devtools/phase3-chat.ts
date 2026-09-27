@@ -1,7 +1,11 @@
 // Part 2 of the Phase 3 check (phase3-check.ts): AC-1's chat on one fixture (decision 2: one chat
 // now; the HUD and the six-fixture chat part close in Phase 5). The engine's tool log shows the
-// session, and the session log it names gives the chat's AC-4 (clip-check.ts, PHASE4_PLAN
-// decision 1); Jim answers y/n; then he puts the photo back with the session's snapshot.
+// session; Jim answers y/n; then he puts the photo back with the session's snapshot.
+// The chat's AC-4 (clip-check.ts, PHASE4_PLAN decision 1) reads the session log that the
+// lr_begin_session record of the tool log names in `log_path` [handle: engine\src\session\begin.ts
+// runPass0 puts `log_path` in the call's log record, engine\src\mcp\tools.ts:518 appends it to the
+// tool log; seen in docs\reports\phase3\P3\p3_chat_tool_log_2026-09-27T14-00-37-507Z.jsonl, the
+// lr_begin_session record; tests\phase3-check.test.ts "counts AC-4 on the chat's session ..."].
 
 import { clipCheckAll, clipCheckFile, describeClip, type SessionClip } from "./clip-check.js";
 import { CHAT_FIXTURE, CHAT_PROMPT, INTENT_A, type Json, type Phase3Deps } from "./phase3-config.js";

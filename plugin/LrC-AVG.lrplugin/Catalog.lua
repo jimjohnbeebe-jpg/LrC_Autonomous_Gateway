@@ -23,6 +23,7 @@
 -- reads run inside a read gate with LrTasks.pcall, as in Develop.lua getContext.
 
 local LrApplication = import 'LrApplication'
+local LrDate = import 'LrDate'
 local LrTasks = import 'LrTasks'
 
 local Develop = require 'Develop'
@@ -32,9 +33,38 @@ local Catalog = {}
 -- PRD section 6 settings: "Variant count 3, 2-4".
 Catalog.MIN_COPIES = 2
 Catalog.MAX_COPIES = 4
+-- How long a command waits for another selection command to finish. Below the engine's default
+-- 15 s request timeout (engine\src\bridge\client.ts DEFAULTS), so a command the engine has given up
+-- on does not run later [inference: the figure].
+Catalog.LOCK_WAIT_SECONDS = 10
 
 local function fail(code, message, recoverable)
     return nil, { code = code, message = message, recoverable = recoverable == true }
+end
+
+-- One selection command at a time (Greptile, PR #33). Every bridge line runs in its own task
+-- (Sockets.lua onMessage), and the selection queries yield [upstream claim: rule 03,
+-- HandlerSelection.lua:30-38], so without this a select_photo could change the selection between
+-- create_virtual_copies' check of the master and its createVirtualCopies call. Against a fake
+-- Lightroom whose queries yield, the code before this lock made a copy of the other photo at 4 of 13
+-- start times, and with it none [handle: docs\reports\phase4\variants-plugin-smoke\smoke.txt "== Two
+-- commands at once"]. A click in Lightroom's own window is not held back by this; a copy of another
+-- photo then comes back with identity_ok false [inference].
+local holder = nil
+
+local function exclusive(name, fn)
+    local t0 = LrDate.currentTime()
+    while holder do
+        if LrDate.currentTime() - t0 >= Catalog.LOCK_WAIT_SECONDS then
+            return fail("busy", string.format("%s waited %d s for %s to finish", name, Catalog.LOCK_WAIT_SECONDS, holder), true)
+        end
+        LrTasks.sleep(0.05)
+    end
+    holder = name
+    local ok, result, err = LrTasks.pcall(fn)
+    holder = nil
+    if not ok then error(result, 0) end
+    return result, err
 end
 
 local function read(photo, method, key)
@@ -101,7 +131,7 @@ local function copyOnce(catalog, master, masterInfo, name)
     return copy, nil
 end
 
-function Catalog.createVirtualCopies(payload)
+local function createCopies(payload)
     if type(payload.target_uuid) ~= "string" or payload.target_uuid == "" then
         return fail("bad_request", "target_uuid must name the master photo")
     end
@@ -141,7 +171,7 @@ local function mismatch(d, uuid, expect)
     return nil
 end
 
-function Catalog.selectPhoto(payload)
+local function selectPhoto(payload)
     local uuid, expect = payload.uuid, payload.expect
     if type(uuid) ~= "string" or uuid == "" then return fail("bad_request", "uuid must be a non-empty string") end
     if expect == nil then expect = {} end
@@ -156,6 +186,14 @@ function Catalog.selectPhoto(payload)
     local selected, selectErr = selectOnly(catalog, photo)
     if not selected then return fail("select_failed", selectErr, true) end
     return d
+end
+
+function Catalog.createVirtualCopies(payload)
+    return exclusive("create_virtual_copies", function() return createCopies(payload) end)
+end
+
+function Catalog.selectPhoto(payload)
+    return exclusive("select_photo", function() return selectPhoto(payload) end)
 end
 
 return Catalog

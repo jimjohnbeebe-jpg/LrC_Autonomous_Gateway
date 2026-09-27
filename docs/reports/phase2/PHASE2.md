@@ -159,7 +159,7 @@ Jim ran the steps on 2026-09-26 and said "done" [stated]. The check saved its fi
 
 ### Run 1 (16:54): could not connect
 
-The check stopped before any command: `could not connect to Lightroom (127.0.0.1:8765: ECONNREFUSED)` [handle: `P2\p2_check_2026-09-26T23-54-25-650Z.json` `errors`]. Lightroom was still starting: the plugin began at 16:54:50 and listened from 16:55:00 [handle: `P2\p2_bridge_log_2026-09-26T23-55-03-940Z.txt` lines 60-62]. Nothing was written.
+The check stopped before any command: `could not connect to Lightroom (127.0.0.1:8765: ECONNREFUSED)` [handle: `P2\p2_check_2026-09-26T23-54-25-650Z.json` `errors`; its plugin-log copy is `P2\p2_bridge_log_2026-09-26T23-54-25-650Z.txt`]. Lightroom was still starting: the plugin began at 16:54:50 and listened from 16:55:00 [handle: `P2\p2_bridge_log_2026-09-26T23-55-03-940Z.txt` lines 60-62]. Nothing was written.
 
 ### Run 2 (16:55 → 18:53): WORKED, after fix PR #19
 
@@ -222,11 +222,11 @@ Jim's decisions on this report, the same day, each chosen from options Claude Co
 Proposed by Claude Code; **all six decisions below were accepted by Jim on 2026-09-26** (decision 1 as recommended, ~3.5 s) [stated]. Each item follows from the handles above; the recommendations were [inference]. The vault docs are changed after this PR merges.
 
 **Resolved open items** (`PHASES.md:52-56, 69`):
-- **Export time at smaller long edges:** there is no gain. The export takes ~2.6 s at 800, 1200 and 1600 px alike (medians 2,605 / 2,578 / 2,576 ms).
-- **The export's embedded ICC profile:** pixels are identical with and without it (pre-run finding); the engine passes the export on unchanged.
-- **The `LR_jpeg_quality` range:** the 0–1 scale works. Quality 0.60 gives 421,691 B and 0.90 gives 1,123,095 B at 1600 px.
-- **The write command's own duration:** 384–397 ms in the plugin. Of that, 306–322 ms is the `getDevelopSettings` read-back and 21–24 ms the write.
-- **Round trips while Lightroom exports:** the bridge stays responsive (13 pings, median 1.0 ms, max 24.7 ms, no failure, no drop).
+- **Export time at smaller long edges:** there is no gain. The export takes ~2.6 s at 800, 1200 and 1600 px alike (medians 2,605 / 2,578 / 2,576 ms) [handle: run 2 `exports.<edge>.export_ms`].
+- **The export's embedded ICC profile:** pixels are identical with and without it [handle: "Pre-run findings", ICC profile: Claude Code, sharp 0.35.4, `raw()` vs `raw()` with `ignoreIcc` on `fixtures\20260907-_OZ80093.jpg`, 0 of 8,386,560 bytes differ]. The engine passes the export on unchanged: all 9 timed exports have `reencoded: false` [handle: run 2 `exports.<edge>.runs`].
+- **The `LR_jpeg_quality` range:** the 0–1 scale works. Quality 0.60 gives 421,691 B and 0.90 gives 1,123,095 B at 1600 px [handle: run 2 `quality`].
+- **The write command's own duration:** 384–397 ms in the plugin. Of that, 306–322 ms is the `getDevelopSettings` read-back and 21–24 ms the write [handle: run 2 `passes[*].timings.plugin_command_ms`, `plugin_read_ms`, `plugin_apply_ms`].
+- **Round trips while Lightroom exports:** the bridge stays responsive (13 pings, median 1.0 ms, max 24.7 ms, no failure, no drop) [handle: run 2 `pings_during_export`].
 - **The send-socket rebind on a second engine connection** (P-13): it works. After the check's engine left, Claude Desktop's engine connected in the same Lightroom session and got `hello` at 16:55:51 [handle: bridge log lines 92-97].
 - **Resolved by run 2**, the pre-run `[unverified]` items:
   - `Preview.lua`'s export and finding the JPEG with `LrFileUtils.files` (15 exports in Part 1, 2 in the chat);
@@ -236,8 +236,8 @@ Proposed by Claude Code; **all six decisions below were accepted by Jim on 2026-
   - Claude Desktop starting `lrc-avg` from the MSIX config (desktop log).
 
 **Decisions for Jim** (all accepted, 2026-09-26):
-1. **Pass budget (P-02, about 3 s)**; Jim chose ~3.5 s. 0 of 3 passes were within 3 s; whole passes took 3,097–3,641 ms, and the chat's pass 3,129 ms.
-   - The export is 2.57–3.08 s of each pass, about 83%, and does not shrink with a smaller preview. The write command is ~0.39 s, of which the read-back P-12 requires is ~0.31 s.
+1. **Pass budget (P-02, about 3 s)**; Jim chose ~3.5 s. 0 of 3 passes were within 3 s; whole passes took 3,097–3,641 ms, and the chat's pass 3,129 ms [handle: run 2 `summary.passes_within_budget`, `passes[*].timings.total_ms`; `P2\p2_chat_tool_log_…jsonl` line 7 `timings.total_ms`].
+   - The export is 2.57–3.08 s of each pass, about 83%, and does not shrink with a smaller preview. The write command is ~0.39 s, of which the read-back P-12 requires is ~0.31 s [handle: run 2 `passes[*].timings`, `exports`].
    - **Recommendation:** re-baseline P-02 to **about 3.5 s per pass** (PRD NFR-2, ARCHITECTURE §6), rather than chase savings that the numbers show are small.
 2. **MCP_TOOLS:**
    - add the temporary `lr_set_settings` contract (absolute values, `uuid`, `return_image`, `preview_error`);

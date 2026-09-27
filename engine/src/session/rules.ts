@@ -100,12 +100,17 @@ export const CRUSHES_SHADOWS: Readonly<Record<string, 1 | -1>> = {
 
 /**
  * Fixed correction steps when the clipping limit is breached and no slider of the step is to
- * blame (pass 0's baseline, PRD 6.5: whites then highlights, blacks then shadows), one per render,
- * at most three per pass [inference: the step sizes and the exposure fallback].
+ * blame (pass 0's baseline, PRD 6.5: whites then highlights, blacks then shadows), one per render
+ * [inference: the step sizes and the exposure fallback]. A step uses each row once, at most
+ * MAX_CORRECTIONS renders. Pass 0 corrects "until under" (PRD 6.5): its table starts again from the
+ * top, at most MAX_BASELINE_CORRECTIONS renders [stated: Jim, 2026-09-27, PHASE4_PLAN decision 1;
+ * the repeat is Claude Code's reading of "in fixed steps until under", approved with the session 2
+ * plan].
  */
 export const HIGH_CORRECTIONS: ReadonlyArray<Readonly<Record<string, number>>> = [{ whites: -20 }, { highlights: -30 }, { exposure: -0.3 }];
 export const LOW_CORRECTIONS: ReadonlyArray<Readonly<Record<string, number>>> = [{ blacks: 20 }, { shadows: 30 }, { exposure: 0.3 }];
 export const MAX_CORRECTIONS = 3;
+export const MAX_BASELINE_CORRECTIONS = 8;
 
 /** Convergence by metrics (PRD 6.5, AVG-009): mean luma moved < 1/255 of the range, clipping < 0.1 point. */
 export const CONVERGENCE = { lumaMean: 1, clipPct: 0.1 } as const;

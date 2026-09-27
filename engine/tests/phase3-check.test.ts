@@ -4,15 +4,17 @@
 // selects it back. Part 2's chat is a second engine (standing in for Claude Desktop's) that runs a
 // golden-hour session, writing its own tool log, which collectChat then reads.
 
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { BridgeClient } from "../src/bridge/index.js";
 import type { ChatLogs } from "../src/devtools/phase2-check.js";
-import { CHAT_FIXTURE, FIXTURES, clipCheck, evaluateChat, runPhase3Check, type Answer } from "../src/devtools/phase3-check.js";
+import { evaluateChat } from "../src/devtools/phase3-chat.js";
+import { runPhase3Check, type Answer } from "../src/devtools/phase3-check.js";
+import { CHAT_FIXTURE, FIXTURES } from "../src/devtools/phase3-config.js";
 import { IntentLibrary } from "../src/intents/index.js";
-import { ToolLog, sessionLogSchema } from "../src/log/index.js";
+import { ToolLog } from "../src/log/index.js";
 import { BridgeGate, Tools } from "../src/mcp/index.js";
 import { loadDefaultParamMap } from "../src/params/index.js";
 import { PreviewService } from "../src/preview/index.js";
@@ -30,6 +32,15 @@ const said: string[] = [];
 const goldens: string[] = [];
 /** The photo Jim has selected when he starts the chat (Part 2, step 1). */
 let chatPhoto: string = CHAT_FIXTURE;
+/** Make the chat's session log show its last pass over the shadow limit. */
+let chatOverLimit = false;
+
+/** Rewrite a session log so its last pass ends with 5 % crushed shadows (the limit is 1 %). */
+function pushLastPassOver(logPath: string): void {
+  const log = JSON.parse(readFileSync(logPath, "utf8")) as { passes: Array<{ metrics_after: { clip_low_pct: number } }> };
+  (log.passes.at(-1) as { metrics_after: { clip_low_pct: number } }).metrics_after.clip_low_pct = 5;
+  writeFileSync(logPath, JSON.stringify(log), "utf8");
+}
 
 const newClient = (): BridgeClient => {
   const c = new BridgeClient({ commandPort: plugin.commandPort, eventPort: plugin.eventPort, connectGapMs: 5, reconnectMs: 30, readToken: () => plugin.token });
@@ -49,6 +60,7 @@ beforeEach(async () => {
   said.length = 0;
   goldens.length = 0;
   chatPhoto = CHAT_FIXTURE;
+  chatOverLimit = false;
 });
 
 afterEach(async () => {
@@ -76,7 +88,8 @@ async function simulatedChat(): Promise<void> {
   const begin = await desktop.beginSession({ intent_id: "landscape_golden_hour" });
   const id = String(begin.json["session_id"]);
   await desktop.step({ session_id: id, settings: { shadows: 5 }, rationale: "open the foreground" });
-  await desktop.endSession({ session_id: id, outcome: "accept" });
+  const end = await desktop.endSession({ session_id: id, outcome: "accept" });
+  if (chatOverLimit) pushLastPassOver(String(end.json["log_path"]));
   client.stop();
 }
 
@@ -114,7 +127,7 @@ function jim(skip: readonly string[] = []) {
   };
 }
 
-function run(answers: Answer[], options: { skip?: readonly string[]; busy?: boolean } = {}) {
+function run(answers: Answer[], options: { skip?: readonly string[]; busy?: boolean; tamper?: (tools: Tools) => void } = {}) {
   const queue = [...answers];
   const client = newClient();
   const previews = new PreviewService(client, { previewDir });
@@ -132,6 +145,7 @@ function run(answers: Answer[], options: { skip?: readonly string[]; busy?: bool
     engineVersion: "test",
     ensureBridge: () => gate.ready(),
   });
+  options.tamper?.(tools);
   return runPhase3Check({
     client,
     gate,
@@ -160,10 +174,13 @@ describe("devtools: Phase 3 check against a simulated plugin", () => {
       ac1_chat: true,
       ac2_revert: true,
       ac4_clipping: true,
+      ac4_chat_session: true,
       ac5_log_and_replay: true,
       photos_put_back: true,
     });
     expect(accepted).toBe(true);
+    const ac4 = ((results["fixtures"] as Array<Record<string, unknown>>)[0] as { ac4: { sessions: Array<{ session: string }> } }).ac4;
+    expect(ac4.sessions.map((x) => x.session)).toEqual(["A", "B"]);
     expect(goldens).toEqual([...FIXTURES]);
     const first = (results["fixtures"] as Array<Record<string, unknown>>)[0] as Record<string, Record<string, unknown>>;
     expect(first["region"]).toMatchObject({ export_long_edge: 4000, effective_scale: 0.6667 });
@@ -173,6 +190,32 @@ describe("devtools: Phase 3 check against a simulated plugin", () => {
     expect(said).toContain("Phase 3 acceptance: WORKED");
     // The photo is left as it was.
     expect(lr.settings["Exposure2012"]).toBe(0.33);
+  });
+
+  it("counts AC-4 on session B too, not only session A (PHASE4_PLAN decision 1)", { timeout: 120000 }, async () => {
+    const { accepted, results } = await run(["y", "y", "y", "y", "y", "y"], {
+      tamper: (tools) => {
+        const endSession = tools.endSession.bind(tools);
+        tools.endSession = async (args) => {
+          const out = await endSession(args);
+          if (args.outcome === "revert") pushLastPassOver(String(out.json["log_path"])); // session B ends with revert
+          return out;
+        };
+      },
+    });
+    expect(accepted).toBe(false);
+    expect(results["summary"]).toMatchObject({ ac4_clipping: false, ac2_revert: true, ac5_log_and_replay: true, ac1_chat: true, acceptance_suggestion: "FAILED" });
+    const first = (results["fixtures"] as Array<Record<string, unknown>>)[0] as { ac4: { over: Array<{ session: string }> } };
+    expect(first.ac4.over.map((p) => p.session)).toEqual(["B"]);
+    expect(said.some((l) => /sessions A and B: NO \(session B pass \d+: /.test(l))).toBe(true);
+  });
+
+  it("counts AC-4 on the chat's session, from the log its begin record names (PHASE4_PLAN decision 1)", { timeout: 120000 }, async () => {
+    chatOverLimit = true;
+    const { accepted, results } = await run(["y", "y", "y", "y", "y", "y"]);
+    expect(accepted).toBe(false);
+    expect(results["summary"]).toMatchObject({ ac4_clipping: false, ac4_chat_session: false, ac1_chat: true, acceptance_suggestion: "FAILED" });
+    expect(results["chat"]).toMatchObject({ log_path: expect.stringMatching(/\.json$/), ac4: { session: "chat", ok: false } });
   });
 
   it("fails, and skips the chat, when a fixture is skipped", { timeout: 120000 }, async () => {
@@ -234,12 +277,5 @@ describe("devtools: Phase 3 check helpers", () => {
     ];
     expect(evaluateChat(records)).toMatchObject({ session_begun: true, intent_id: "landscape_golden_hour", target_filename: "20260907-_OZ80093.NEF", passes: 2, session_ended: "accept", snapshot_name: "AVG pre-session x" });
     expect(evaluateChat([])).toMatchObject({ session_begun: false, passes: 0, session_ended: null });
-  });
-
-  it("checks AC-4 on every pass against the session's limits", () => {
-    const pass = (n: number, high: number, low: number) => ({ n, metrics_after: { clip_high_pct: high, clip_low_pct: low } });
-    const log = { guardrails: { clip_high_pct: 0.5, clip_low_pct: 1 }, passes: [pass(0, 0.5, 1), pass(1, 0.6, 0)] } as unknown as Parameters<typeof clipCheck>[0];
-    expect(clipCheck(log)).toEqual({ ok: false, passes: [{ n: 0, clip_high_pct: 0.5, clip_low_pct: 1, ok: true }, { n: 1, clip_high_pct: 0.6, clip_low_pct: 0, ok: false }] });
-    expect(sessionLogSchema).toBeDefined();
   });
 });

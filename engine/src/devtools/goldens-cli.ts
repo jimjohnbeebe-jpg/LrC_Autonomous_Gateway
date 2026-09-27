@@ -5,7 +5,7 @@
 import os from "node:os";
 import path from "node:path";
 import { goldenDir, newestCompleteRun, writeGoldens } from "./goldens.js";
-import { FIXTURES } from "./phase3-check.js";
+import { FIXTURES } from "./phase3-config.js";
 
 const outDir = path.join(os.tmpdir(), "LrC-AVG", "P3");
 

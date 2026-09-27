@@ -1,6 +1,6 @@
 // lr_begin_session (src/session/begin.ts) against the simulated Lightroom in its "tonal" model
-// (tests/helpers/session-harness.ts): the snapshot, pass 0, the clipping baseline, guardrail
-// overrides, and a failed pass 0 that leaves the session open.
+// (tests/helpers/session-harness.ts): the snapshot, pass 0, the clipping baseline ("until under",
+// at most 8 corrections), guardrail overrides, and a failed pass 0 that leaves the session open.
 
 import { describe, expect, it } from "vitest";
 import { ID, SHORT, clean, fails, intent, lr, manager, map, readLog, useSessionHarness } from "./helpers/session-harness.js";
@@ -42,6 +42,40 @@ describe("lr_begin_session", () => {
     const metrics = out.json["metrics"] as { clip_high_pct: number; clip_low_pct: number };
     expect(metrics.clip_high_pct).toBeLessThanOrEqual(0.5);
     expect(metrics.clip_low_pct).toBeLessThanOrEqual(1);
+  });
+
+  it("keeps correcting in pass 0 until under, going round each end's fixed table again (PHASE4_PLAN decision 1)", async () => {
+    clean();
+    Object.assign(lr.settings, { Blacks2012: -60, Shadows2012: -60 }); // crushed shadows three fixed steps do not lift
+    const out = await manager.begin({ intent_id: "test_plain" });
+    expect(lr.history).toEqual([1, 2, 3, 4, 5, 6, 7].map((k) => `AVG ${SHORT} pass 0/4 baseline ${k}`));
+    const actions = out.json["guardrail_actions"] as Array<{ kind: string; limit: string; changes: Record<string, number> }>;
+    // Shadows: blacks, shadows, exposure, then round again. The exposure steps push the highlights
+    // over, which get their own table (whites, then highlights), in the same write when both breach.
+    expect(actions.map((a) => [a.kind, a.limit, a.changes])).toEqual([
+      ["corrected", "clip_low", { blacks: -40 }],
+      ["corrected", "clip_low", { shadows: -30 }],
+      ["corrected", "clip_low", { exposure: 0.3 }],
+      ["corrected", "clip_high", { whites: -40, blacks: -20 }],
+      ["corrected", "clip_low", { whites: -40, blacks: -20 }],
+      ["corrected", "clip_low", { shadows: 0 }],
+      ["corrected", "clip_low", { exposure: 0.6 }],
+      ["corrected", "clip_high", { highlights: -30 }],
+    ]);
+    const metrics = out.json["metrics"] as { clip_high_pct: number; clip_low_pct: number };
+    expect(metrics.clip_high_pct).toBeLessThanOrEqual(0.5);
+    expect(metrics.clip_low_pct).toBeLessThanOrEqual(1);
+  });
+
+  it("stops pass 0 after 8 corrections and reports the limit unmet", async () => {
+    clean();
+    lr.settings["Exposure2012"] = -3; // far too dark for 8 fixed steps
+    const out = await manager.begin({ intent_id: "test_plain" });
+    expect(lr.history).toEqual([1, 2, 3, 4, 5, 6, 7, 8].map((k) => `AVG ${SHORT} pass 0/4 baseline ${k}`));
+    const actions = out.json["guardrail_actions"] as Array<{ kind: string; limit: string }>;
+    expect(actions).toHaveLength(9);
+    expect(actions[8]).toMatchObject({ kind: "unmet", limit: "clip_low" });
+    expect(readLog().passes[0]?.guardrail_actions).toHaveLength(9);
   });
 
   it("uses the intent's guardrail overrides unless the call sets its own", async () => {

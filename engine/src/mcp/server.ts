@@ -184,8 +184,9 @@ function definitions(tools: Tools): ToolDef[] {
         "Start an editing session on the photo selected in Lightroom, following an intent (lr_list_intents). The engine: " +
         "creates a Develop snapshot \"AVG pre-session …\" (lr_end_session revert returns to it); renders the photo as it is; " +
         "runs pass 0, one History step \"AVG <id> pass 0/N\" with the intent's camera profile, lens corrections and priors " +
-        "(a numeric prior is added to the photo's value); then, if clipping is over a limit, pulls whites/highlights or " +
-        "blacks/shadows back in fixed steps (\"… baseline k\"). Returns session_id, the intent's brief (follow it), the " +
+        "(a numeric prior is added to the photo's value); then, while clipping is over a limit, pulls whites/highlights/exposure or " +
+        "blacks/shadows/exposure back in fixed steps until under, at most 8 (\"… baseline k\"; a limit still over is `unmet` in " +
+        "guardrail_actions). Returns session_id, the intent's brief (follow it), the " +
         "guardrails, pass0_applied, the full settings, metrics, and the preview. Then call lr_step for each pass. " +
         "One session at a time; the session stays open until lr_end_session. " +
         MEASURED,
@@ -204,8 +205,10 @@ function definitions(tools: Tools): ToolDef[] {
         "vibrance/saturation 30, temperature 1500 K, tint 30, HSL 40, grading 30) and at the slider's range (`clamped`). " +
         "A change that would push further into a clipping limit already reached is refused (`refused`); the rest is written as " +
         "one History step \"AVG <id> pass n/N\", read back, rendered and measured. If clipping then exceeds a limit, the engine " +
-        "pulls back the sliders that caused it (\"… guard k\", in `guardrail_actions`); if a preserved region drifts, the pass is " +
-        "undone. Returns the applied changes, full settings, metrics, delta_metrics against the previous pass, and the image. " +
+        "pulls back the sliders that caused it, else takes fixed steps, at most 3 (\"… guard k\", in `guardrail_actions`). The pass " +
+        "is undone (\"… clip revert\" / \"… region revert\", a `reverted` action; the pass still counts) when clipping is still over " +
+        "a limit the photo was within before the pass, or a preserved region drifts. Returns the applied changes, full settings, " +
+        "metrics, delta_metrics against the previous pass, and the image. " +
         "`converged_by_metrics` (the metrics stopped moving) or `cap_reached` end the passes: then call lr_end_session. " +
         "Unknown names or wrong types are refused before anything is written. " +
         MEASURED,

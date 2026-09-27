@@ -3,9 +3,12 @@
 // one command. Claude Code runs it after Jim says "S7 done"; Jim runs nothing here.
 //
 // Run (PowerShell, from the repo root):
-//   node spikes\S7\summarize.ts [srcDir] [destDir]
+//   node spikes\S7\summarize.ts [srcDir] [destDir] [runFile]
 //     srcDir  default: $env:TEMP\LrC-AVG\S7   (LrPathUtils "temp" is %TEMP% [handle: LR_SDK_NOTES "Recorded in Phase 1"])
 //     destDir default: docs\reports\phase4\S7
+//     runFile default: the newest s7_run_*.json, summarised to s7_summary.json. Given (e.g.
+//             s7_run_2026-09-27T11-22-33.json), that run is summarised to s7_summary_<its time>.json,
+//             so each of several runs gets its own summary.
 //
 // - Reads the newest s7_run_*.json, s7_before_*.json and s7_after_*.json (written by S7Run.lua and
 //   S7Observe.lua), and, when there is one, the preset-file re-run: the newest s7_xmp_run_*.json
@@ -25,6 +28,7 @@ import { z } from "zod";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const srcDir = path.resolve(process.argv[2] ?? path.join(os.tmpdir(), "LrC-AVG", "S7"));
 const destDir = path.resolve(process.argv[3] ?? path.join(repoRoot, "docs", "reports", "phase4", "S7"));
+const runArg = process.argv[4];
 
 const Export = z.looseObject({ path: z.string().optional(), error: z.string().optional() });
 const Size = z.looseObject({ width: z.unknown().optional(), height: z.unknown().optional(), croppedDimensions: z.unknown().optional(), isCropped: z.unknown().optional() });
@@ -204,8 +208,10 @@ function copyRedacted(): string[] {
 }
 
 async function main(): Promise<void> {
-  const runFile = newest("s7_run_");
+  const runFile = runArg ?? newest("s7_run_");
   if (!runFile) throw new Error(`no s7_run_*.json in ${srcDir}`);
+  if (!/^s7_run_.*\.json$/.test(runFile) || !existsSync(path.join(srcDir, runFile))) throw new Error(`not an s7_run_*.json in ${srcDir}: ${runFile}`);
+  const summaryName = runArg ? `s7_summary_${runFile.slice("s7_run_".length, -".json".length)}.json` : "s7_summary.json";
   const run = Run.parse(readJson(runFile));
   const p = run.presets;
   const before = observed("s7_before_", run.run_at);
@@ -226,9 +232,9 @@ async function main(): Promise<void> {
   };
   const copied = copyRedacted();
   const text = redact(JSON.stringify({ ...summary, copied }, null, 2));
-  writeFileSync(path.join(destDir, "s7_summary.json"), text + "\n");
+  writeFileSync(path.join(destDir, summaryName), text + "\n");
   console.log(text);
-  console.log(`\nWrote ${path.join(destDir, "s7_summary.json")}; copied ${copied.length} files (JPEGs not copied).`);
+  console.log(`\nWrote ${path.join(destDir, summaryName)}; copied ${copied.length} files (JPEGs not copied).`);
 }
 
 await main();

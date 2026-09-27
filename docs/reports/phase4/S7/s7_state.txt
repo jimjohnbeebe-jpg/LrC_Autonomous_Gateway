@@ -1,0 +1,12 @@
+crop_copy_uuid=51F85B6A-72DC-47E4-BE19-6A2D784F2EBB
+master_uuid=CF12AF60-0858-4181-9562-376D16B89126
+plugin_group=nil
+plugin_name=AVG S7 plugin 20260927-125304
+plugin_preset_uuid=9187E946-DDF2-482D-9D2B-44168270E68B
+reference_group=User Presets
+reference_uuid=221C89F4724E30813B7A73553BD53357
+run_at=2026-09-27 12:52:56 (local time)
+unselected_copy_uuid=E74D0C2C-C005-4EFD-8D96-05FB1031290F
+xmp_name=AVG S7 xmp 20260927-125304
+xmp_path=%USERPROFILE%\AppData\Roaming\Adobe\CameraRaw\Settings\AVG S7 xmp 20260927-125304.xmp
+xmp_uuid=9052DAFB3A344F479FAFDF9468436EE1

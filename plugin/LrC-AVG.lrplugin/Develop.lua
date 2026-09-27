@@ -1,5 +1,5 @@
 -- Bridge commands that read and write the target photo's Develop settings (ARCHITECTURE section 3).
--- Each handler runs in its own task (Bridge.lua) and returns a result table, or nil plus an error
+-- Each handler runs in its own task (Dispatch.lua) and returns a result table, or nil plus an error
 -- table { code, message, recoverable } (PRD NFR-7).
 --
 -- Catalog rules (.claude\rules\03-lightroom.md):

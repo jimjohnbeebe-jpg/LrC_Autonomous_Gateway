@@ -23,10 +23,11 @@
 // and "counts AC-4 on the chat's session ..."]. Until Phase 4 session 2 it counted session A only
 // [handle: docs\reports\phase3\PHASE3.md "AC-4, what happened"].
 
+import { pluginVersionAtLeast } from "../bridge/version.js";
 import type { SessionClip } from "./clip-check.js";
 import { describeError, median } from "./phase1-check.js";
 import { runChat, type ChatOutcome } from "./phase3-chat.js";
-import { FIXTURES, PASS_BUDGET_MS, REQUIRED_PLUGIN_VERSION, errorBody, yn, type Json, type Phase3Deps } from "./phase3-config.js";
+import { FIXTURES, MIN_PLUGIN_VERSION, PASS_BUDGET_MS, errorBody, yn, type Json, type Phase3Deps } from "./phase3-config.js";
 import { runFixture } from "./phase3-fixture.js";
 
 export type { Answer, Phase3Deps } from "./phase3-config.js";
@@ -85,13 +86,13 @@ async function connect(deps: Phase3Deps, run: Run): Promise<boolean> {
     return false;
   }
   const pluginVersion = (run.results["hello"] as { plugin_version?: unknown }).plugin_version;
-  if (pluginVersion !== REQUIRED_PLUGIN_VERSION) {
+  if (!pluginVersionAtLeast(pluginVersion, MIN_PLUGIN_VERSION)) {
     await gate.release();
     run.results["summary"] = { acceptance_suggestion: "FAILED", plugin_version: pluginVersion };
-    run.fail(`Lightroom is running LrC-AVG plugin ${String(pluginVersion)}, not ${REQUIRED_PLUGIN_VERSION}. Restart Lightroom and run the command again.`);
+    run.fail(`Lightroom is running LrC-AVG plugin ${String(pluginVersion)}, not ${MIN_PLUGIN_VERSION} or later. Restart Lightroom and run the command again.`);
     return false;
   }
-  say(`Connected (${String(run.results["connect_ms"])} ms, plugin ${REQUIRED_PLUGIN_VERSION}).`);
+  say(`Connected (${String(run.results["connect_ms"])} ms, plugin ${String(pluginVersion)}).`);
   return true;
 }
 

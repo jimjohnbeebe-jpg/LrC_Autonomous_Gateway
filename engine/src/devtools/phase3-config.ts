@@ -30,8 +30,11 @@ export const CHAT_PROMPT = "Tune the active photo for golden hour landscape.";
 export const INTENT_A = "landscape_golden_hour";
 export const INTENT_B = "neutral_technical_correction";
 export const REPLAY_HISTORY_NAME = "AVG P3check replay";
-/** The plugin Phase 3 needs: Phase 2's, unchanged (Bridge.lua PLUGIN_VERSION). */
-export const REQUIRED_PLUGIN_VERSION = "0.2.0";
+/**
+ * The oldest plugin Phase 3's check runs on: Phase 2's. Plugin 0.3.0 (Phase 4) only adds commands
+ * (plugin\LrC-AVG.lrplugin\Catalog.lua), so the check also runs on it.
+ */
+export const MIN_PLUGIN_VERSION = "0.2.0";
 /** AC-2: the snapshot restores within 1 s. */
 export const REVERT_BUDGET_MS = 1000;
 /** About 3.5 s per pass (Jim, 2026-09-26) [handle: docs\reports\phase2\PHASE2.md "Verdict"]. */

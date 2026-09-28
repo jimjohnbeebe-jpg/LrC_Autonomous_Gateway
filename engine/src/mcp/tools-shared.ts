@@ -7,7 +7,7 @@ import type { BridgeClient } from "../bridge/index.js";
 import type { IntentLibrary } from "../intents/index.js";
 import type { ToolLog } from "../log/index.js";
 import type { Metrics, Region } from "../metrics/index.js";
-import type { ParamMap } from "../params/index.js";
+import type { ParamMap, PresetFormat } from "../params/index.js";
 import type { PreviewRequest, PreviewService, RenderedPreview } from "../preview/index.js";
 import { SessionManager } from "../session/index.js";
 import { ToolError, toToolError } from "./errors.js";
@@ -42,6 +42,10 @@ export type ToolsDeps = {
   intents?: IntentLibrary;
   /** The folder of the session logs and recipes (log\session-log.ts); the session tools refuse without it. */
   sessionLogDir?: string;
+  /** Lightroom's preset folder (presets\folder.ts defaultPresetDir); lr_create_preset_from_active refuses without it. */
+  presetDir?: string | undefined;
+  /** How preset files are written; the pinned format (params\preset-format.lrc15.json) when absent. */
+  presetFormat?: PresetFormat;
   engineVersion?: string;
   /** Resolves when the bridge is connected (bridge-gate.ts), or throws. */
   ensureBridge: () => Promise<void>;

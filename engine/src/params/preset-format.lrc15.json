@@ -1,0 +1,682 @@
+{
+  "schema_version": 1,
+  "generated_by": "engine/src/devtools/preset-pin.ts (npm run preset:pin)",
+  "sources": [
+    "engine/tests/fixtures/presets/reference-2.lrc15.xmp",
+    "engine/tests/fixtures/presets/reference.lrc15.xmp"
+  ],
+  "xmptk": "Adobe XMP Core 7.0-c000 1.000000, 0000/00/00-00:00:00        ",
+  "envelope": [
+    [
+      "PresetType",
+      "Normal"
+    ],
+    [
+      "Cluster",
+      ""
+    ],
+    [
+      "UUID",
+      ""
+    ],
+    [
+      "SupportsAmount2",
+      "True"
+    ],
+    [
+      "SupportsAmount",
+      "True"
+    ],
+    [
+      "SupportsColor",
+      "True"
+    ],
+    [
+      "SupportsMonochrome",
+      "True"
+    ],
+    [
+      "SupportsHighDynamicRange",
+      "True"
+    ],
+    [
+      "SupportsNormalDynamicRange",
+      "True"
+    ],
+    [
+      "SupportsSceneReferred",
+      "True"
+    ],
+    [
+      "SupportsOutputReferred",
+      "True"
+    ],
+    [
+      "RequiresRGBTables",
+      "False"
+    ],
+    [
+      "ShowInPresets",
+      "True"
+    ],
+    [
+      "ShowInQuickActions",
+      "False"
+    ],
+    [
+      "CameraModelRestriction",
+      ""
+    ],
+    [
+      "Copyright",
+      ""
+    ],
+    [
+      "ContactInfo",
+      ""
+    ],
+    [
+      "Version",
+      "18.5.1"
+    ],
+    [
+      "CompatibleVersion",
+      "285212672"
+    ]
+  ],
+  "trailer": [
+    [
+      "HasSettings",
+      "True"
+    ]
+  ],
+  "order": [
+    "ProcessVersion",
+    "WhiteBalance",
+    "Exposure2012",
+    "Contrast2012",
+    "Highlights2012",
+    "Shadows2012",
+    "Whites2012",
+    "Blacks2012",
+    "Texture",
+    "Clarity2012",
+    "Dehaze",
+    "Vibrance",
+    "Saturation",
+    "ParametricShadows",
+    "ParametricDarks",
+    "ParametricLights",
+    "ParametricHighlights",
+    "ParametricShadowSplit",
+    "ParametricMidtoneSplit",
+    "ParametricHighlightSplit",
+    "Sharpness",
+    "SharpenRadius",
+    "SharpenDetail",
+    "SharpenEdgeMasking",
+    "LuminanceSmoothing",
+    "LuminanceNoiseReductionDetail",
+    "LuminanceNoiseReductionContrast",
+    "ColorNoiseReduction",
+    "ColorNoiseReductionDetail",
+    "ColorNoiseReductionSmoothness",
+    "HueAdjustmentRed",
+    "HueAdjustmentOrange",
+    "HueAdjustmentYellow",
+    "HueAdjustmentGreen",
+    "HueAdjustmentAqua",
+    "HueAdjustmentBlue",
+    "HueAdjustmentPurple",
+    "HueAdjustmentMagenta",
+    "SaturationAdjustmentRed",
+    "SaturationAdjustmentOrange",
+    "SaturationAdjustmentYellow",
+    "SaturationAdjustmentGreen",
+    "SaturationAdjustmentAqua",
+    "SaturationAdjustmentBlue",
+    "SaturationAdjustmentPurple",
+    "SaturationAdjustmentMagenta",
+    "LuminanceAdjustmentRed",
+    "LuminanceAdjustmentOrange",
+    "LuminanceAdjustmentYellow",
+    "LuminanceAdjustmentGreen",
+    "LuminanceAdjustmentAqua",
+    "LuminanceAdjustmentBlue",
+    "LuminanceAdjustmentPurple",
+    "LuminanceAdjustmentMagenta",
+    "SplitToningShadowHue",
+    "SplitToningShadowSaturation",
+    "SplitToningHighlightHue",
+    "SplitToningHighlightSaturation",
+    "SplitToningBalance",
+    "ColorGradeMidtoneHue",
+    "ColorGradeMidtoneSat",
+    "ColorGradeShadowLum",
+    "ColorGradeMidtoneLum",
+    "ColorGradeHighlightLum",
+    "ColorGradeBlending",
+    "ColorGradeGlobalHue",
+    "ColorGradeGlobalSat",
+    "ColorGradeGlobalLum",
+    "AutoLateralCA",
+    "LensProfileEnable",
+    "LensManualDistortionAmount",
+    "VignetteAmount",
+    "DefringePurpleAmount",
+    "DefringePurpleHueLo",
+    "DefringePurpleHueHi",
+    "DefringeGreenAmount",
+    "DefringeGreenHueLo",
+    "DefringeGreenHueHi",
+    "PerspectiveUpright",
+    "PerspectiveVertical",
+    "PerspectiveHorizontal",
+    "PerspectiveRotate",
+    "PerspectiveAspect",
+    "PerspectiveScale",
+    "PerspectiveX",
+    "PerspectiveY",
+    "GrainAmount",
+    "PostCropVignetteAmount",
+    "ShadowTint",
+    "RedHue",
+    "RedSaturation",
+    "GreenHue",
+    "GreenSaturation",
+    "BlueHue",
+    "BlueSaturation",
+    "HDREditMode",
+    "ConvertToGrayscale",
+    "OverrideLookVignette",
+    "ToneCurveName2012",
+    "CameraProfile",
+    "CameraProfileDigest",
+    "LensProfileSetup",
+    "Table_CD611670FD9CF45A09C006978250C355",
+    "Table_648AD176F4D7EAB7F882D32B85CF6E17",
+    "Table_A0A2D0A20E78EADE2EBB69ADCCDA8E23",
+    "AllowFilters",
+    "CropConstrainToWarp"
+  ],
+  "numbers": {
+    "Exposure2012": {
+      "signed": true,
+      "decimals": 2,
+      "observed": [
+        "+0.33",
+        "0.00"
+      ],
+      "basis": "observed"
+    },
+    "Contrast2012": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "Highlights2012": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "-21",
+        "0"
+      ],
+      "basis": "inference: only -21, 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "Shadows2012": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "+10",
+        "0"
+      ],
+      "basis": "observed"
+    },
+    "Whites2012": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "Blacks2012": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "Texture": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "+4",
+        "+8"
+      ],
+      "basis": "observed"
+    },
+    "Clarity2012": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "+2",
+        "+4"
+      ],
+      "basis": "observed"
+    },
+    "Dehaze": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "Vibrance": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "Saturation": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "Temperature": {
+      "signed": false,
+      "decimals": 0,
+      "observed": [],
+      "basis": "inference: not observed; range 2000..50000, signed when it goes below 0"
+    },
+    "Tint": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [],
+      "basis": "inference: not observed; range -150..150, signed when it goes below 0"
+    },
+    "SplitToningShadowHue": {
+      "signed": false,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range 0..360, signed when it goes below 0"
+    },
+    "SplitToningShadowSaturation": {
+      "signed": false,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range 0..100, signed when it goes below 0"
+    },
+    "ColorGradeShadowLum": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "ColorGradeMidtoneHue": {
+      "signed": false,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range 0..360, signed when it goes below 0"
+    },
+    "ColorGradeMidtoneSat": {
+      "signed": false,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range 0..100, signed when it goes below 0"
+    },
+    "ColorGradeMidtoneLum": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "SplitToningHighlightHue": {
+      "signed": false,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range 0..360, signed when it goes below 0"
+    },
+    "SplitToningHighlightSaturation": {
+      "signed": false,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range 0..100, signed when it goes below 0"
+    },
+    "ColorGradeHighlightLum": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "ColorGradeGlobalHue": {
+      "signed": false,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range 0..360, signed when it goes below 0"
+    },
+    "ColorGradeGlobalSat": {
+      "signed": false,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range 0..100, signed when it goes below 0"
+    },
+    "ColorGradeGlobalLum": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "ColorGradeBlending": {
+      "signed": false,
+      "decimals": 0,
+      "observed": [
+        "50"
+      ],
+      "basis": "observed"
+    },
+    "SplitToningBalance": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "Sharpness": {
+      "signed": false,
+      "decimals": 0,
+      "observed": [
+        "24",
+        "0"
+      ],
+      "basis": "observed"
+    },
+    "SharpenRadius": {
+      "signed": true,
+      "decimals": 1,
+      "observed": [
+        "+2.0"
+      ],
+      "basis": "observed"
+    },
+    "SharpenDetail": {
+      "signed": false,
+      "decimals": 0,
+      "observed": [
+        "25"
+      ],
+      "basis": "observed"
+    },
+    "SharpenEdgeMasking": {
+      "signed": false,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range 0..100, signed when it goes below 0"
+    },
+    "LuminanceSmoothing": {
+      "signed": false,
+      "decimals": 0,
+      "observed": [
+        "48",
+        "0"
+      ],
+      "basis": "observed"
+    },
+    "ColorNoiseReduction": {
+      "signed": false,
+      "decimals": 0,
+      "observed": [
+        "25",
+        "0"
+      ],
+      "basis": "observed"
+    },
+    "LensProfileEnable": {
+      "signed": false,
+      "decimals": 0,
+      "observed": [
+        "1",
+        "0"
+      ],
+      "basis": "observed"
+    },
+    "AutoLateralCA": {
+      "signed": false,
+      "decimals": 0,
+      "observed": [
+        "1",
+        "0"
+      ],
+      "basis": "observed"
+    },
+    "HueAdjustmentRed": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "SaturationAdjustmentRed": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "LuminanceAdjustmentRed": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "HueAdjustmentOrange": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "SaturationAdjustmentOrange": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "LuminanceAdjustmentOrange": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "HueAdjustmentYellow": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "SaturationAdjustmentYellow": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "LuminanceAdjustmentYellow": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "HueAdjustmentGreen": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "SaturationAdjustmentGreen": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "LuminanceAdjustmentGreen": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "HueAdjustmentAqua": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "SaturationAdjustmentAqua": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "LuminanceAdjustmentAqua": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "HueAdjustmentBlue": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "SaturationAdjustmentBlue": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "LuminanceAdjustmentBlue": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "HueAdjustmentPurple": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "SaturationAdjustmentPurple": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "LuminanceAdjustmentPurple": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "HueAdjustmentMagenta": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "SaturationAdjustmentMagenta": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "LuminanceAdjustmentMagenta": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    }
+  }
+}

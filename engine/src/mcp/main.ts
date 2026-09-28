@@ -19,6 +19,7 @@ import { BridgeClient } from "../bridge/index.js";
 import { IntentLibrary } from "../intents/index.js";
 import { ToolLog, defaultLogDir } from "../log/index.js";
 import { loadDefaultParamMap } from "../params/index.js";
+import { defaultPresetDir } from "../presets/index.js";
 import { PreviewService } from "../preview/index.js";
 import { BridgeGate } from "./bridge-gate.js";
 import { devOverrides } from "./dev-overrides.js";
@@ -55,6 +56,7 @@ const tools = new Tools({
   previews,
   intents: new IntentLibrary({ map }),
   sessionLogDir: defaultLogDir(),
+  presetDir: defaultPresetDir() ?? undefined,
   engineVersion: ENGINE_VERSION,
   ensureBridge: () => gate.ready(),
   log: toolLog,

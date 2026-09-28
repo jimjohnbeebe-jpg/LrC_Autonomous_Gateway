@@ -1,0 +1,3 @@
+# Lightroom's own preset files, kept byte for byte as Lightroom wrote them (LF endings), so the
+# engine's writer is compared with exactly what Lightroom wrote (engine\tests\presets-reference.test.ts).
+engine/tests/fixtures/presets/*.xmp -text

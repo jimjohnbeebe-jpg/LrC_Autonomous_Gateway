@@ -1,6 +1,7 @@
-// The MCP definitions of the propagation tools (tools-propagation.ts).
+// The MCP definitions of the propagation tools (tools-propagation.ts): lr_sync_series and lr_create_preset_from_active.
 
 import { z } from "zod";
+import { DEFAULT_GROUP, MAX_NAME_LENGTH } from "../presets/index.js";
 import { MASK_GROUPS, MAX_ADAPTIVE_TARGETS, MAX_TARGETS } from "../sync/index.js";
 import { longEdge, type ToolDef } from "./defs-shared.js";
 
@@ -41,6 +42,17 @@ const syncArgs = z.object({
   long_edge: longEdge,
 });
 
+const presetArgs = z.object({
+  name: z.string().min(1).max(MAX_NAME_LENGTH).describe("the preset's name in the Develop Presets panel; also its file name, so none of < > : \" / \\ | ? *"),
+  folder: z.string().min(1).max(MAX_NAME_LENGTH).optional().describe(`the preset group it is listed under (default "${DEFAULT_GROUP}")`),
+  categories: z
+    .array(z.enum(MASK_GROUPS))
+    .min(1)
+    .refine(distinct, "categories must differ")
+    .optional()
+    .describe("the setting groups the preset carries (default: all), as in lr_sync_series' parameter_mask: basic_tone, white_balance, tone_curve, hsl, grading, detail, lens, camera_profile"),
+});
+
 export const PROPAGATION_DEFS: ToolDef[] = [
   {
     name: "lr_sync_series",
@@ -61,5 +73,20 @@ export const PROPAGATION_DEFS: ToolDef[] = [
     schema: syncArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     run: (tools, args) => tools.syncSeries(args as z.infer<typeof syncArgs>),
+  },
+  {
+    name: "lr_create_preset_from_active",
+    title: "Save the photo's settings as a Develop preset",
+    description:
+      "Save the selected photo's current Develop settings as a Lightroom Develop preset: an .xmp preset file in Lightroom's preset " +
+      `folder, listed under the group \`folder\` (default "${DEFAULT_GROUP}"). Nothing in Lightroom changes. Lightroom shows the new ` +
+      "preset only after it restarts: tell the user to quit Lightroom (File > Exit) and start it again. `categories` limits which " +
+      "setting groups the preset carries. Settings Lightroom's own presets leave out are left out too, and listed in `left_out` with " +
+      "the reason (e.g. temperature and tint when white balance is As Shot; an Adobe camera profile, whose preset form has not been " +
+      "observed). A name another preset already has is refused (PRESET_EXISTS). Returns the file's path, the group, the settings " +
+      "written and left out, and the source photo. Not while a session is open.",
+    schema: presetArgs,
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    run: (tools, args) => tools.createPresetFromActive(args as z.infer<typeof presetArgs>),
   },
 ];

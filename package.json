@@ -19,6 +19,8 @@
     "phase2:check": "npm run build && node engine/dist/devtools/phase2-check-cli.js",
     "schemas": "npm run build && node engine/dist/devtools/write-schemas-cli.js",
     "phase3:check": "npm run build && node engine/dist/devtools/phase3-check-cli.js",
-    "goldens": "npm run build && node engine/dist/devtools/goldens-cli.js"
+    "goldens": "npm run build && node engine/dist/devtools/goldens-cli.js",
+    "preset:capture": "npm run build && node engine/dist/devtools/preset-capture-cli.js",
+    "preset:pin": "npm run build && node engine/dist/devtools/preset-pin-cli.js"
   }
 }

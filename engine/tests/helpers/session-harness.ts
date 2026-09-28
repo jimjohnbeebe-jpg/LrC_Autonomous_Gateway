@@ -15,7 +15,7 @@ import { dayStamp, sessionLogSchema } from "../../src/log/index.js";
 import { toToolError, type ToolError } from "../../src/mcp/errors.js";
 import { loadDefaultParamMap } from "../../src/params/index.js";
 import { PreviewService } from "../../src/preview/index.js";
-import { SessionManager, type SessionOutput } from "../../src/session/index.js";
+import { SessionManager, type SessionDeps, type SessionOutput } from "../../src/session/index.js";
 import { FakePlugin } from "./fake-plugin.js";
 import { LightroomSim } from "./lightroom-sim.js";
 
@@ -51,7 +51,7 @@ export const fails = async (p: Promise<SessionOutput>): Promise<ToolError> => {
   throw new Error("expected the call to fail");
 };
 
-export const newManager = (): SessionManager => {
+export const newManager = (extra: Partial<SessionDeps> = {}): SessionManager => {
   const previews = new PreviewService(client, { previewDir: path.join(tmp, "previews") });
   return new SessionManager({
     client,
@@ -61,6 +61,7 @@ export const newManager = (): SessionManager => {
     logDir,
     engineVersion: "test",
     newId: () => ID,
+    ...extra,
   });
 };
 
@@ -80,6 +81,16 @@ export function useSessionHarness(): void {
     await client.waitConnected(2000);
     intent("test_plain", { allow_probe: true });
     intent("test_prior", { default_camera_profile: "Adobe Color", priors: { exposure: 0.2, "lens.ca_remove": 0 } });
+    // Variants mode: B adds to the intent's exposure prior, C's exposure clips the highlights (tonal model).
+    intent("test_variants", {
+      allow_probe: true,
+      priors: { exposure: 0.1, "lens.ca_remove": 1 },
+      variants: {
+        A: { label: "natural", priors: {} },
+        B: { label: "dramatic", priors: { exposure: 0.1, contrast: 20 } },
+        C: { label: "bright", priors: { exposure: 1.0, "lens.ca_remove": 0 } },
+      },
+    });
     manager = newManager();
   });
 

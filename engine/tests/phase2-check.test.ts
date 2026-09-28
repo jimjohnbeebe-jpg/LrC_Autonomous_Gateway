@@ -37,6 +37,7 @@ beforeEach(async () => {
   mkdirSync(previewDir);
   plugin = await FakePlugin.start();
   lr = new LightroomSim(previewDir);
+  lr.pluginVersion = "0.2.0"; // the Phase 2 check requires exactly 0.2.0 (phase2-check.ts REQUIRED_PLUGIN_VERSION)
   lr.install(plugin);
   said.length = 0;
 });

@@ -7,7 +7,7 @@ import { canonicalValuesEqual, type CanonicalSettings, type CanonicalValue, type
 import { historyName, render, write } from "./io.js";
 import { fixedCorrection, hueDistance, pullBack, type Change, type Limits } from "./plan.js";
 import { HIGH_CORRECTIONS, LOW_CORRECTIONS, MAX_BASELINE_CORRECTIONS, MAX_CORRECTIONS, REGION_PRESERVE } from "./rules.js";
-import type { Rendered, Session, SessionContext } from "./types.js";
+import type { Rendered, Session, SessionContext, Target } from "./types.js";
 
 type End = "high" | "low";
 /** Per end of the histogram: pull-backs used, and the next row of its fixed correction table. */
@@ -19,7 +19,7 @@ const clipOf = (m: Metrics, end: End): number => (end === "high" ? m.clip_high_p
 const limitOf = (limits: Limits, end: End): number => (end === "high" ? limits.clipHighPct : limits.clipLowPct);
 
 /**
- * The actual guardrail (ARCHITECTURE section 4): while clipping is over a limit, up to
+ * The actual guardrail (ARCHITECTURE section 4) on photo `t`: while clipping is over a limit, up to
  * MAX_CORRECTIONS renders in a step, MAX_BASELINE_CORRECTIONS in pass 0 (n = 0, "until under",
  * PRD 6.5). With a step's changes, first pull back half, then all, of the sliders that pushed
  * towards the breach; otherwise, or when none did, the fixed steps (PRD 6.5).
@@ -27,6 +27,7 @@ const limitOf = (limits: Limits, end: End): number => (end === "high" ? limits.c
 export async function correct(
   ctx: SessionContext,
   s: Session,
+  t: Target,
   n: number,
   changes: readonly Change[] | null,
   view: FromSdkResult,
@@ -44,10 +45,10 @@ export async function correct(
     if (breached.length === 0) break;
     const fix = nextFix(breached, state, changes, current.settings, ctx.deps.map, baseline);
     if (Object.keys(fix).length === 0) break;
-    const name = historyName(s, n, baseline ? `baseline ${round}` : `guard ${round}`);
-    current = await write(ctx, s, fix, name);
+    const name = historyName(s, t, n, baseline ? `baseline ${round}` : `guard ${round}`);
+    current = await write(ctx, s, t, fix, name);
     historyNames.push(name);
-    now = await render(ctx, s, current.settings);
+    now = await render(ctx, s, t, current.settings);
     for (const end of breached) {
       actions.push({
         kind: "corrected",
@@ -133,20 +134,21 @@ export function clipBreach(s: Session, before: Metrics, after: Metrics): Breach 
   return null;
 }
 
-/** The first preserved region that drifted past REGION_PRESERVE, described; null when none did. */
-export function regionDrift(s: Session, metrics: Metrics): string | null {
+/** The first preserved region of photo `t` that drifted past REGION_PRESERVE, described; null when none did. */
+export function regionDrift(s: Session, t: Target, metrics: Metrics): string | null {
   for (const r of s.regions) {
-    if (!r.preserve || !r.baseline) continue;
+    const baseline = r.baselines[t.id];
+    if (!r.preserve || !baseline) continue;
     const m = metrics.regions.find((x) => x.label === r.label);
     if (!m) continue;
     // A region that had a hue and has none now (its pixels went below the chromatic threshold) has
     // lost its colour: a breach, not zero drift (Greptile, PR #23) [handle: tests\session-probe.test.ts
     // "undoes a pass that takes a preserved region's hue away"].
-    if (r.baseline.hue_mean !== null && m.hue_mean === null) {
-      return `region "${r.label}" lost its hue (no pixel is colourful enough to measure one; it had ${r.baseline.hue_mean} degrees)`;
+    if (baseline.hue_mean !== null && m.hue_mean === null) {
+      return `region "${r.label}" lost its hue (no pixel is colourful enough to measure one; it had ${baseline.hue_mean} degrees)`;
     }
-    const hue = r.baseline.hue_mean !== null && m.hue_mean !== null ? hueDistance(r.baseline.hue_mean, m.hue_mean) : 0;
-    const sat = Math.abs(m.saturation_mean - r.baseline.saturation_mean);
+    const hue = baseline.hue_mean !== null && m.hue_mean !== null ? hueDistance(baseline.hue_mean, m.hue_mean) : 0;
+    const sat = Math.abs(m.saturation_mean - baseline.saturation_mean);
     if (hue > REGION_PRESERVE.hueDegrees || sat > REGION_PRESERVE.saturationPoints) {
       return `region "${r.label}" drifted ${Math.round(hue * 10) / 10} degrees in hue and ${Math.round(sat * 10) / 10} points in saturation (limits ${REGION_PRESERVE.hueDegrees} and ${REGION_PRESERVE.saturationPoints})`;
     }
@@ -155,13 +157,14 @@ export function regionDrift(s: Session, metrics: Metrics): string | null {
 }
 
 /**
- * Undo pass n: write back the settings from before it as one History step ("… clip revert" or
- * "… region revert"), render again, and describe it as a "reverted" action. Null when no setting
- * differs.
+ * Undo pass n of photo `t`: write back the settings from before it as one History step ("… clip
+ * revert" or "… region revert"), render again, and describe it as a "reverted" action. Null when no
+ * setting differs.
  */
 export async function undo(
   ctx: SessionContext,
   s: Session,
+  t: Target,
   n: number,
   beforeView: FromSdkResult,
   current: FromSdkResult,
@@ -171,10 +174,10 @@ export async function undo(
   const back: Record<string, CanonicalValue> = {};
   for (const [key, value] of Object.entries(beforeView.settings)) if (!canonicalValuesEqual(current.settings[key], value)) back[key] = value;
   if (Object.keys(back).length === 0) return null;
-  const name = historyName(s, n, breach.limit === "region" ? "region revert" : "clip revert");
-  const view = await write(ctx, s, back, name);
+  const name = historyName(s, t, n, breach.limit === "region" ? "region revert" : "clip revert");
+  const view = await write(ctx, s, t, back, name);
   historyNames.push(name);
-  const rendered = await render(ctx, s, view.settings);
+  const rendered = await render(ctx, s, t, view.settings);
   const changes = Object.fromEntries(Object.entries(back).filter((e): e is [string, number] => typeof e[1] === "number"));
   return { view, rendered, action: { kind: "reverted", limit: breach.limit, reason: breach.reason, history_name: name, changes, metrics_after: summarize(rendered.metrics) } };
 }

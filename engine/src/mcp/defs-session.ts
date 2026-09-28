@@ -1,7 +1,7 @@
 // The MCP definitions of the session tools (tools-session.ts).
 
 import { z } from "zod";
-import { MEASURED, box, longEdge, sessionId, type ToolDef } from "./defs-shared.js";
+import { MEASURED, box, longEdge, sessionId, target, type ToolDef } from "./defs-shared.js";
 
 const returnImage = z
   .enum(["after", "before_after", "none"])
@@ -9,7 +9,17 @@ const returnImage = z
   .describe('"after" (default): the new preview; "before_after": the previous and the new preview in one labelled image; "none": no image');
 const beginArgs = z.object({
   intent_id: z.string().min(1).describe("an intent id from lr_list_intents, e.g. landscape_golden_hour"),
-  mode: z.enum(["converge"]).optional().describe('"converge" (the default and, until Phase 4, the only mode)'),
+  mode: z
+    .enum(["converge", "variants"])
+    .optional()
+    .describe('"converge" (default): edit the selected photo; "variants": make virtual copies A, B (and C) with the intent\'s variant looks, then the user picks one'),
+  variant_count: z
+    .number()
+    .int()
+    .min(2)
+    .max(3)
+    .optional()
+    .describe('mode "variants" only: how many copies, 2-3 (default 3); A, B, C take the intent\'s variants of those letters'),
   max_passes: z.number().int().min(1).max(8).optional().describe("passes after pass 0, 1-8 (default 4)"),
   guardrails: z
     .object({ clip_high_pct: z.number().min(0).max(100).optional(), clip_low_pct: z.number().min(0).max(100).optional() })
@@ -21,7 +31,7 @@ const beginArgs = z.object({
 });
 const stepArgs = z.object({
   session_id: sessionId,
-  target: z.enum(["master"]).optional().describe('"master" (the only target until Variants mode, Phase 4)'),
+  target: target.describe('Variants mode: the copy, "A", "B" or "C" (after lr_select_variant, the pick; it may be left out). Converge mode: "master" or left out'),
   settings: z
     .record(z.string(), z.union([z.number(), z.boolean(), z.string(), z.array(z.number())]))
     .refine((s) => Object.keys(s).length > 0, "settings must name at least one parameter")
@@ -31,6 +41,7 @@ const stepArgs = z.object({
 });
 const probeArgs = z.object({
   session_id: sessionId,
+  target: target.describe('Variants mode: the copy to probe, as for lr_step. Converge mode: "master" or left out'),
   sliders: z.array(z.string().min(1)).min(1).max(3).refine((s) => new Set(s).size === s.length, "sliders must differ").describe("1-3 numeric sliders, e.g. [\"exposure\", \"whites\"]"),
   magnitude: z.number().min(0.1).max(1).optional().describe("the probe's size as a fraction of the slider's per-pass maximum (default 0.5)"),
 });
@@ -52,6 +63,10 @@ const endArgs = z.object({
   session_id: sessionId,
   outcome: z.enum(["accept", "revert"]).describe('"accept" keeps the edit and writes the recipe; "revert" applies the pre-session snapshot'),
 });
+const selectArgs = z.object({
+  session_id: sessionId,
+  variant: z.enum(["A", "B", "C"]).describe("the copy the user picked"),
+});
 const sessionLogArgs = z.object({ session_id: sessionId });
 
 export const SESSION_DEFS: ToolDef[] = [
@@ -66,6 +81,11 @@ export const SESSION_DEFS: ToolDef[] = [
       "blacks/shadows/exposure back in fixed steps until under, at most 8 (\"… baseline k\"; a limit still over is `unmet` in " +
       "guardrail_actions). Returns session_id, the intent's brief (follow it), the " +
       "guardrails, pass0_applied, the full settings, metrics, and the preview. Then call lr_step for each pass. " +
+      "mode \"variants\" (an intent with variants; select the master, not a virtual copy): instead of editing the photo, the engine " +
+      "makes virtual copies \"AVG <intent> A\", \"… B\", \"… C\" and runs pass 0 on each with the intent's priors plus that " +
+      "variant's (History \"AVG <id> A pass 0/N\"); it returns `variants` (each copy's settings and metrics) and a contact sheet " +
+      "of the copies side by side as the image, and leaves the master as it is. Then one lr_step per copy (target \"A\", …), " +
+      "then the user picks with lr_select_variant, and the remaining passes go to the pick. " +
       "One session at a time; the session stays open until lr_end_session. " +
       MEASURED,
     schema: beginArgs,
@@ -90,6 +110,9 @@ export const SESSION_DEFS: ToolDef[] = [
       "metrics, delta_metrics against the previous pass, and the image. " +
       "`converged_by_metrics` (the metrics stopped moving) or `cap_reached` end the passes: then call lr_end_session. " +
       "Unknown names or wrong types are refused before anything is written. " +
+      "Variants mode: name the copy with `target`; each copy takes ONE pass before the pick (a second is refused with " +
+      "AWAITING_PICK), and the step that gives the last copy its pass returns `awaiting_pick: true` and the contact sheet: " +
+      "then ask the user to pick (lr_select_variant). After the pick, steps go to the pick, whose pass count carries on. " +
       MEASURED,
     schema: stepArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
@@ -120,12 +143,26 @@ export const SESSION_DEFS: ToolDef[] = [
     run: (tools, args) => tools.setRegions(args as z.infer<typeof regionsArgs>),
   },
   {
+    name: "lr_select_variant",
+    title: "Pick a variant",
+    description:
+      "Variants mode: continue the session on the copy the user picked (ask the user; do not pick for them). The copy is selected " +
+      "in Lightroom, later lr_step calls go to it, and its pass count carries on from its own passes. The other copies stay in the " +
+      "catalog as they are; the user removes them in Lightroom when they want. Returns the pick, its passes left and its last preview. " +
+      "Also accepted before every copy has had its refined pass. Does not render.",
+    schema: selectArgs,
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    run: (tools, args) => tools.selectVariant(args as z.infer<typeof selectArgs>),
+  },
+  {
     name: "lr_end_session",
     title: "End the editing session",
     description:
       "End the session. \"accept\": keep the edit; the log is finalised and a recipe (the final settings under canonical names) " +
       "is written next to it. \"revert\": apply the pre-session snapshot, putting every setting back as it was before " +
-      "lr_begin_session (the result lists any setting that still differs). Returns the log and recipe paths and the final settings.",
+      "lr_begin_session (the result lists any setting that still differs). Returns the log and recipe paths and the final settings. " +
+      "Variants mode: \"accept\" needs a pick and keeps the pick's edit (the recipe is the pick's); \"revert\" puts the master back. " +
+      "Either way the copies stay in the catalog, listed in `copies`.",
     schema: endArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     run: (tools, args) => tools.endSession(args as z.infer<typeof endArgs>),

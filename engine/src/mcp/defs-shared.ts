@@ -34,6 +34,8 @@ export const longEdge = z
   .describe(`Preview long edge in pixels, ${MIN_LONG_EDGE}-${MAX_LONG_EDGE} (default ${DEFAULT_LONG_EDGE}).`);
 
 export const noArgs = z.object({});
+/** A session photo: the master, or a copy of a Variants session. */
+export const target = z.enum(["master", "A", "B", "C"]).optional();
 export const sessionId = z.string().min(1).describe("the session_id from lr_begin_session");
 export const box = z
   .object({ x: z.number(), y: z.number(), w: z.number(), h: z.number() })

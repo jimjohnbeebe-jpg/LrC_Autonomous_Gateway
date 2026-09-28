@@ -1,4 +1,7 @@
 // lr_end_session (accept: log and recipe; revert: the pre-session snapshot) and lr_get_session_log.
+// In Variants mode, accept takes the recipe from the pick, and revert puts the master back; the
+// copies stay in the catalog either way, named in the result [stated: Jim, 2026-09-27, PHASE4_PLAN
+// decision 4: the SDK has no call that removes a photo].
 
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
@@ -6,31 +9,47 @@ import { RECIPE_SCHEMA_ID } from "../log/index.js";
 import { ToolError } from "../mcp/errors.js";
 import { differingSettings, type CanonicalSettings } from "../params/index.js";
 import { bridge, failed, ms, read, saveLog } from "./io.js";
-import { WRITE_TIMEOUT_MS, type EndArgs, type Session, type SessionContext, type SessionOutput } from "./types.js";
+import { focus, variant } from "./targets.js";
+import { WRITE_TIMEOUT_MS, type EndArgs, type Session, type SessionContext, type SessionOutput, type Target } from "./types.js";
+
+/** The photo whose settings an accept keeps: the master, or in Variants mode the pick (refused before one). */
+function acceptTarget(s: Session): Target {
+  if (s.mode === "converge") return s.master;
+  const pick = s.picked ? variant(s, s.picked) : null;
+  if (pick) return pick;
+  throw new ToolError(
+    "AWAITING_PICK",
+    "No copy is picked yet: accept keeps the pick's edit. Call lr_select_variant with the user's pick first, or end with revert.",
+    false,
+    { session_id: s.id },
+  );
+}
 
 /** Finish the session's log (and the recipe on accept). The caller then closes the session. */
 export async function endSession(ctx: SessionContext, s: Session, args: EndArgs): Promise<SessionOutput> {
   const started = performance.now();
   const { client, map } = ctx.deps;
+  const kept = args.outcome === "accept" ? acceptTarget(s) : s.master;
   let finalSettings: CanonicalSettings;
   let recipePath: string | null = null;
   let revert: { ms: number; differing: string[] } | null = null;
   try {
+    await focus(ctx, s, kept);
     if (args.outcome === "accept") {
-      finalSettings = (await read(ctx, s)).settings;
+      finalSettings = (await read(ctx, s, kept)).settings;
       s.files.writeRecipe({
         schema: RECIPE_SCHEMA_ID,
         session_id: s.id,
         created: ctx.now().toISOString(),
         intent_id: s.intent.intent.id,
-        source: { uuid: s.target.uuid, filename: s.target.filename },
-        process_version: s.target.process_version,
+        source: { uuid: kept.uuid, filename: kept.filename },
+        process_version: kept.process_version,
         settings: finalSettings,
       });
       recipePath = s.files.recipePath;
     } else {
       const t = performance.now();
-      const res = await bridge(s, () => client.request("apply_snapshot", { target_uuid: s.target.uuid, snapshot_id: s.snapshot.id }, { timeoutMs: WRITE_TIMEOUT_MS }));
+      const res = await bridge(s, s.master, () => client.request("apply_snapshot", { target_uuid: s.master.uuid, snapshot_id: s.snapshot.id }, { timeoutMs: WRITE_TIMEOUT_MS }));
       const revertMs = ms(t);
       finalSettings = map.fromSdk(res.read_back).settings;
       const differing = differingSettings(finalSettings, s.startSettings);
@@ -45,20 +64,33 @@ export async function endSession(ctx: SessionContext, s: Session, args: EndArgs)
   s.log.recipe_path = recipePath;
   s.log.revert = revert;
   saveLog(s);
+  const copies = s.mode === "variants" ? copiesJson(s, args.outcome) : {};
   return {
     json: {
       ok: true,
       session_id: s.id,
       outcome: args.outcome,
-      passes: `${s.passes}/${s.maxPasses}`,
+      ...(s.mode === "variants" ? { photo: kept.id } : {}),
+      passes: `${kept.passes}/${s.maxPasses}`,
       log_path: s.files.logPath,
       recipe_path: recipePath,
       final_settings: finalSettings,
       ...(revert ? { revert } : {}),
+      ...copies,
       timings: { total_ms: ms(started) },
     },
-    log: { session_id: s.id, outcome: args.outcome, log_path: s.files.logPath, recipe_path: recipePath, ...(revert ? { revert } : {}) },
+    log: { session_id: s.id, outcome: args.outcome, log_path: s.files.logPath, recipe_path: recipePath, ...(revert ? { revert } : {}), ...(s.mode === "variants" ? { photo: kept.id } : {}) },
   };
+}
+
+/** The copies a Variants session leaves in the catalog, and what the user can do with them. */
+function copiesJson(s: Session, outcome: EndArgs["outcome"]): Record<string, unknown> {
+  const copies = s.variants.map((v) => ({ id: v.id, label: v.label, uuid: v.uuid, copy_name: v.copy_name, picked: v.id === s.picked }));
+  const note =
+    outcome === "accept"
+      ? `The edit is kept on copy ${s.picked ?? "?"}. The other copies stay in the catalog as they are; the user removes them in Lightroom when they want.`
+      : "The master is back as it was before the session. The copies stay in the catalog with their edits; the user removes them in Lightroom when they want.";
+  return { copies, copies_note: note };
 }
 
 /** A session's log: the open session's, one that ended in this engine run, or one found in the log folder. */

@@ -1,15 +1,19 @@
 // The MCP definitions of the context tools (tools-context.ts).
 
 import { z } from "zod";
-import { MEASURED, box, longEdge, noArgs, sessionId, type ToolDef } from "./defs-shared.js";
+import { MEASURED, box, longEdge, noArgs, sessionId, target, type ToolDef } from "./defs-shared.js";
 import { PREVIEW_QUALITY } from "./tools-shared.js";
 
+const sessionTarget = target.describe(
+  'with session_id, in Variants mode: the photo, "A", "B", "C" or "master" (default: the photo the last session call worked on, the pick once there is one)',
+);
 const previewArgs = z.object({
   long_edge: longEdge,
   session_id: sessionId.optional().describe("render the session's photo, with its region metrics; refused if another photo is selected"),
+  target: sessionTarget,
   region: box.optional().describe("return a crop of this box, exported large enough to show it at up to 100 %; see effective_scale"),
 });
-const metricsArgs = z.object({ session_id: sessionId.optional() });
+const metricsArgs = z.object({ session_id: sessionId.optional(), target: sessionTarget });
 
 export const CONTEXT_DEFS: ToolDef[] = [
   {
@@ -29,7 +33,8 @@ export const CONTEXT_DEFS: ToolDef[] = [
     description:
       `Render the photo selected in Lightroom with its current Develop settings (a JPEG export, quality ${PREVIEW_QUALITY}, ` +
       "which takes about 3 seconds) and return it as an image, with its uuid, SHA-256 hash, size, metrics and timings. " +
-      "With `session_id`: the session's photo (refused with TARGET_CHANGED if another photo is selected) and its region metrics. " +
+      "With `session_id`: the session's photo (refused with TARGET_CHANGED if another photo is selected) and its region metrics; " +
+      "in Variants mode `target` names the copy, which is selected in Lightroom first. " +
       "With `region`: a crop of that box for judging sharpness, noise or fringing; the photo is exported larger (up to 4096 px) " +
       "so the crop fills `long_edge`, never enlarged; `effective_scale` = output pixels per photo pixel (1 = 100 %). Changes nothing. " +
       MEASURED,
@@ -41,7 +46,7 @@ export const CONTEXT_DEFS: ToolDef[] = [
     name: "lr_get_metrics",
     title: "Metrics of the last preview",
     description:
-      "Return the full metrics of the last preview (the open session's, or else this engine's last render): the metrics " +
+      "Return the full metrics of the last preview (the open session's, of `target` in Variants mode, or else this engine's last render): the metrics " +
       "lr_get_preview returns plus 256-bin luma, red, green and blue histograms, without rendering again. " +
       MEASURED,
     schema: metricsArgs,

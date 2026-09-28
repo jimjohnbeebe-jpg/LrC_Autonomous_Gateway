@@ -5,7 +5,7 @@
   "properties": {
     "schema": {
       "type": "string",
-      "const": "lrc-avg/session-log/1"
+      "const": "lrc-avg/session-log/2"
     },
     "session_id": {
       "type": "string"
@@ -65,7 +65,22 @@
     },
     "mode": {
       "type": "string",
-      "const": "converge"
+      "enum": [
+        "converge",
+        "variants"
+      ]
+    },
+    "variant_count": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "max_passes": {
       "type": "integer",
@@ -157,6 +172,61 @@
       ],
       "additionalProperties": false
     },
+    "variants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "A",
+              "B",
+              "C"
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "uuid": {
+            "type": "string"
+          },
+          "local_id": {
+            "type": "number"
+          },
+          "copy_name": {
+            "type": "string"
+          },
+          "picked": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "uuid",
+          "local_id",
+          "copy_name",
+          "picked"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "picked": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "A",
+            "B",
+            "C"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "regions": {
       "type": "array",
       "items": {
@@ -201,31 +271,36 @@
           "preserve": {
             "type": "boolean"
           },
-          "baseline": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "hue_mean": {
-                    "type": [
-                      "number",
-                      "null"
-                    ]
-                  },
-                  "saturation_mean": {
-                    "type": "number"
-                  }
+          "baselines": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "enum": [
+                "master",
+                "A",
+                "B",
+                "C"
+              ]
+            },
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "hue_mean": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
                 },
-                "required": [
-                  "hue_mean",
-                  "saturation_mean"
-                ],
-                "additionalProperties": false
+                "saturation_mean": {
+                  "type": "number"
+                }
               },
-              {
-                "type": "null"
-              }
-            ]
+              "required": [
+                "hue_mean",
+                "saturation_mean"
+              ],
+              "additionalProperties": false
+            }
           }
         },
         "required": [
@@ -233,7 +308,7 @@
           "label",
           "box",
           "preserve",
-          "baseline"
+          "baselines"
         ],
         "additionalProperties": false
       }
@@ -257,7 +332,12 @@
           },
           "target": {
             "type": "string",
-            "const": "master"
+            "enum": [
+              "master",
+              "A",
+              "B",
+              "C"
+            ]
           },
           "started": {
             "type": "string"
@@ -2452,12 +2532,15 @@
     "outcome",
     "intent",
     "mode",
+    "variant_count",
     "max_passes",
     "guardrails",
     "decay",
     "notes",
     "target",
     "snapshot",
+    "variants",
+    "picked",
     "regions",
     "passes",
     "probes",
@@ -2467,5 +2550,5 @@
     "revert"
   ],
   "additionalProperties": false,
-  "description": "LrC-AVG session log, schema v1"
+  "description": "LrC-AVG session log, schema v2"
 }

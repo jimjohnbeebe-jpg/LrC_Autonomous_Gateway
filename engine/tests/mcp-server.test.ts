@@ -72,7 +72,7 @@ describe("mcp server", () => {
     expect(mcp.getServerVersion()).toMatchObject({ name: "lrc-avg", version: ENGINE_VERSION });
   });
 
-  it("lists the Phase 3 tools, without the temporary lr_set_settings", async () => {
+  it("lists the Phase 3 tools and lr_select_variant, without the temporary lr_set_settings", async () => {
     const { tools } = await mcp.listTools();
     expect(tools.map((t) => t.name).sort()).toEqual([
       "lr_begin_session",
@@ -85,6 +85,7 @@ describe("mcp server", () => {
       "lr_list_intents",
       "lr_probe",
       "lr_save_intent",
+      "lr_select_variant",
       "lr_set_regions",
       "lr_step",
     ]);

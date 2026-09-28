@@ -1,5 +1,5 @@
 // The provenance log of a session and its recipe (ARCHITECTURE section 8, PRD section 6.12,
-// MCP_TOOLS "Session log schema (v1)").
+// MCP_TOOLS "Session log schema (v1)"; v2 adds Variants mode, PHASE4_PLAN row 7).
 //
 // One JSON file per session, <yyyymmdd>-<short id>.json, rewritten after every pass so that a crash
 // leaves the passes so far; and, when a session is accepted, <yyyymmdd>-<short id>.recipe.json with
@@ -9,12 +9,15 @@
 // The zod schemas below are the definition: engine\schemas\session-log.schema.json and
 // recipe.schema.json are generated from them (`npm run schemas`), and AC-5 validates a log against
 // them. Metrics are the summaries the tools return (no histograms), so a log stays small.
+// Schema v2 (engine 0.4.0) adds `mode` "variants", the copies (`variants`, `picked`), each pass's
+// photo (`target` A/B/C) and region baselines per photo. v1 logs (engine 0.3.x, the Phase 3 run)
+// are read with session-log-v1.ts.
 
 import { mkdirSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { z } from "zod";
 
-export const SESSION_LOG_SCHEMA_ID = "lrc-avg/session-log/1";
+export const SESSION_LOG_SCHEMA_ID = "lrc-avg/session-log/2";
 export const RECIPE_SCHEMA_ID = "lrc-avg/recipe/1";
 
 const perChannel = z.strictObject({ r: z.number(), g: z.number(), b: z.number() });
@@ -70,10 +73,15 @@ export const guardrailActionSchema = z.strictObject({
   metrics_after: metricsSummarySchema.nullable(),
 });
 
+/** The photo a pass edited: the master (Converge mode) or a copy (Variants mode). */
+export const targetIdSchema = z.enum(["master", "A", "B", "C"]);
+export const variantIdSchema = z.enum(["A", "B", "C"]);
+
 export const passSchema = z.strictObject({
+  /** The pass number of its photo: each copy counts its own passes (MCP_TOOLS lr_select_variant). */
   n: z.number().int().min(0),
   kind: z.enum(["pass0", "step"]),
-  target: z.literal("master"),
+  target: targetIdSchema,
   started: z.string(),
   duration_ms: z.number(),
   history_names: z.array(z.string()),
@@ -109,12 +117,23 @@ export const probeSchema = z.strictObject({
   ),
 });
 
+export const regionBaselineSchema = z.strictObject({ hue_mean: z.number().nullable(), saturation_mean: z.number() });
 export const regionEntrySchema = z.strictObject({
   kind: z.enum(["skin", "fur", "sky", "custom"]),
   label: z.string(),
   box,
   preserve: z.boolean(),
-  baseline: z.strictObject({ hue_mean: z.number().nullable(), saturation_mean: z.number() }).nullable(),
+  /** A preserved region's values when it was set, per photo it was measured on. */
+  baselines: z.partialRecord(targetIdSchema, regionBaselineSchema),
+});
+
+export const variantEntrySchema = z.strictObject({
+  id: variantIdSchema,
+  label: z.string(),
+  uuid: z.string(),
+  local_id: z.number(),
+  copy_name: z.string(),
+  picked: z.boolean(),
 });
 
 export const sessionLogSchema = z
@@ -127,7 +146,9 @@ export const sessionLogSchema = z
     ended: z.string().nullable(),
     outcome: z.enum(["accept", "revert"]).nullable(),
     intent: z.strictObject({ id: z.string(), label: z.string(), source: z.enum(["bundled", "user"]) }),
-    mode: z.literal("converge"),
+    mode: z.enum(["converge", "variants"]),
+    /** Variants mode: the copies asked for; null in Converge mode. */
+    variant_count: z.number().int().nullable(),
     max_passes: z.number().int(),
     guardrails: z.strictObject({ clip_high_pct: z.number(), clip_low_pct: z.number() }),
     decay: z.array(z.number()),
@@ -141,6 +162,9 @@ export const sessionLogSchema = z
       camera_profile: z.string().nullable(),
     }),
     snapshot: z.strictObject({ name: z.string(), id: z.string() }),
+    /** Variants mode: the copies made, A first. */
+    variants: z.array(variantEntrySchema),
+    picked: variantIdSchema.nullable(),
     regions: z.array(regionEntrySchema),
     passes: z.array(passSchema),
     probes: z.array(probeSchema),
@@ -149,7 +173,7 @@ export const sessionLogSchema = z
     recipe_path: z.string().nullable(),
     revert: z.strictObject({ ms: z.number(), differing: z.array(z.string()) }).nullable(),
   })
-  .describe("LrC-AVG session log, schema v1");
+  .describe("LrC-AVG session log, schema v2");
 
 export const recipeSchema = z
   .strictObject({
@@ -167,6 +191,7 @@ export type SessionLogData = z.infer<typeof sessionLogSchema>;
 export type PassEntry = z.infer<typeof passSchema>;
 export type ProbeEntry = z.infer<typeof probeSchema>;
 export type GuardrailAction = z.infer<typeof guardrailActionSchema>;
+export type VariantEntry = z.infer<typeof variantEntrySchema>;
 export type Recipe = z.infer<typeof recipeSchema>;
 
 /** Local date as yyyymmdd, the prefix of a session's files. */

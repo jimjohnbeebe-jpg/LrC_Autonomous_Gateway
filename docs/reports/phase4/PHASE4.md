@@ -1,8 +1,8 @@
 ---
 report: Phase 4 — Variants, series sync, presets
 phase: 4
-status: observed
-authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-09-27 (PHASE4_PLAN row 10). Observed: Jim ran npm run phase4:check on 2026-09-27 and answered its questions; Claude Code collected the files and wrote the analysis, Numbers and Consequences (2026-09-28, PHASE4_PLAN row 11). Verdict: Jim."
+status: accepted
+authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-09-27 (PHASE4_PLAN row 10). Observed: Jim ran npm run phase4:check on 2026-09-27 and answered its questions; Claude Code collected the files and wrote the analysis, Numbers and Consequences (2026-09-28, PHASE4_PLAN row 11). Verdict and decisions: Jim (Phase 4 accepted, go; a white-balance fix PR before Phase 5; all other proposals accepted; 2026-09-28)."
 date: 2026-09-27 (run), 2026-09-28 (report)
 ---
 
@@ -307,7 +307,7 @@ Filled by Claude Code from the run's files. "Source" names a field of the run un
 
 ## Verdict
 
-*Jim decides: go / conditional / no-go.* The check's suggestion is **WORKED** (see "Observed").
+**Phase 4 accepted: go** (Jim, 2026-09-28, the option Claude Code recommended) [stated: "Go (Recommended)"]. The check's suggestion was **WORKED** (see "Observed").
 
 The acceptance line (`PHASES.md:112-128`, quoted in "Purpose") against the run. Each item's handles are in "Observed" and "Numbers":
 - **AC-3:** met in Phase 4's scope (decision 3: the pick in chat, the HUD pick in Phase 5). Three copies from one command, visibly different (Jim: y), picked, and convergence continued on the pick, scripted and in the chat.
@@ -319,7 +319,7 @@ The acceptance line (`PHASES.md:112-128`, quoted in "Purpose") against the run. 
 
 ## Consequences / open questions
 
-Proposed by Claude Code for Jim to decide. Each item follows from the handles above; the recommendations are [inference].
+Proposed by Claude Code; **Jim decided all five on 2026-09-28**, each as recommended [stated]: 1 "Go (Recommended)", 2 "Fix PR before Phase 5 (Recommended)", 3-5 "Accept all (Recommended)". Each item follows from the handles above; the recommendations were [inference].
 
 **Decisions for Jim:**
 1. **The verdict.** Recommended: **go**. Every acceptance line is met with a handle. The stray preset came from Lightroom's own apply after Jim's click: the engine wrote nothing to the original then ("The preset also reached the original"). The cleanup found it, and it is put back exactly.
@@ -335,7 +335,7 @@ Proposed by Claude Code for Jim to decide. Each item follows from the handles ab
    - Claude Desktop did not time out on the 73.6 s call [handle: `P4\p4_chat_tool_log_…jsonl`, every call `ok`; `P4\p4_desktop_mcp_log_…txt` holds no error line].
    - The pass-0 cap held on this photo with no margin. Copy B needed all 8 baseline corrections, and copy C's refined pass ended at 0.99 % crush against the 1 % limit [handle: `P4\p4_sessions_…\20260927-a0a799.json`; the run `variants.ac4`].
 5. **The vault updates** at the Phase 4 close. These are the items listed in PHASE4_PLAN "Vault updates at the Phase 4 close" (the vault; from rows 1-10), plus from this run:
-   - **PHASES:** Phase 4 status. Phase 5 inputs: the HUD pick (decision 3), items 3 and 4 above, item 2 if Jim chooses record-only, and the [unverified] list below.
+   - **PHASES:** Phase 4 status. Phase 5 inputs: the HUD pick (decision 3), items 3 and 4 above, and the [unverified] list below. Before Phase 5: the `fix/white-balance-custom` PR (item 2).
    - **ARCHITECTURE section 6 / PRD NFR-2:** a Variants begin took ~2.4 min on this dark photo, one write and one export per pass-0 correction.
    - **LR_SDK_NOTES "Recorded in Phase 4":** the text below, for Jim's approval.
 

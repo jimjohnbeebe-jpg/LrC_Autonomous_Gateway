@@ -22,6 +22,7 @@
     "phase4:check": "npm run build && node engine/dist/devtools/phase4-check-cli.js",
     "goldens": "npm run build && node engine/dist/devtools/goldens-cli.js",
     "preset:capture": "npm run build && node engine/dist/devtools/preset-capture-cli.js",
-    "preset:pin": "npm run build && node engine/dist/devtools/preset-pin-cli.js"
+    "preset:pin": "npm run build && node engine/dist/devtools/preset-pin-cli.js",
+    "wb:check": "npm run build && node engine/dist/devtools/wb-check-cli.js"
   }
 }

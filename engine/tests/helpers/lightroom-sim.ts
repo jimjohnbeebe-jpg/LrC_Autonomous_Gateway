@@ -1,7 +1,9 @@
 // A simulated Lightroom behind the fake plugin, for the Phase 2 tool tests. It starts from the live
 // S5 NEF dump and imitates the plugin's commands (plugin\LrC-AVG.lrplugin\Develop.lua):
 //   - the target_uuid check (C-2): a command naming another photo than the selected one is refused;
-//   - apply_settings: History name recorded, values taken, the settings read back;
+//   - apply_settings: History name recorded, values taken, the settings read back. WhiteBalance changes
+//     only when written: Lightroom kept "As Shot" after a Temperature written alone, and took "Custom"
+//     written with it [handle: docs\reports\phase4\WB\wb_check_2026-09-28T12-19-08-508Z.json];
 //   - create_snapshot / apply_snapshot: the settings stored and put back;
 //   - export_preview: a grey-noise JPEG whose mean level follows Exposure2012, written into the previews
 //     folder (one subfolder per request, like the plugin), path returned. With renderModel "tonal"
@@ -88,12 +90,6 @@ export class LightroomSim {
   renderModel: "grey" | "tonal" = "grey";
   /** Answer export_preview with this error instead (to exercise failures mid-session). */
   exportError: string | null = null;
-  /**
-   * A write of Temperature or Tint without WhiteBalance also sets WhiteBalance to "Custom", as
-   * Lightroom's Temp slider does in the Develop panel [inference]. Whether applyDevelopSettings does
-   * the same is [unverified]; the Phase 4 check records it (preset.source_prepared.white_balance_after).
-   */
-  customWhiteBalanceOnTemperature = false;
   /** The selected photo's file name in get_context (the Phase 3 check asks for each fixture by name). */
   filename = "20260907-_OZ80093.NEF";
   /** The photo's pixel size in get_context (getRawMetadata width/height); a made-up 3:2 size. */
@@ -165,7 +161,6 @@ export class LightroomSim {
           if (k === "Look" && (Array.isArray(v) ? v.length === 0 : Object.keys(v as object).length === 0)) delete settings["Look"];
           else settings[k] = structuredClone(v);
         }
-        if (this.customWhiteBalanceOnTemperature && ("Temperature" in written || "Tint" in written) && !("WhiteBalance" in written)) settings["WhiteBalance"] = "Custom";
         return ok({ uuid: u, apply_ms: 25, read_ms: 300, command_ms: 330, read_back: luaize(settings) });
       }),
     );

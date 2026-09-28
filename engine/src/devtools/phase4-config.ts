@@ -37,8 +37,9 @@ export const PICK_STEP = { settings: { vibrance: 5 }, rationale: "scripted pass 
 export const ORIGINAL_NUDGE = 5;
 /**
  * The preset's photo gets a custom white balance first, so the preset carries Temperature/Tint
- * (row 9 left "Temperature/Tint with a Custom white balance" [unverified]), and a Nikon profile
- * (phase4-preset.ts prepareSource).
+ * (row 9 left "Temperature/Tint with a Custom white balance" [unverified]; Lightroom takes "Custom"
+ * written with the temperature, which toSdk does from engine 0.6.1 [handle: docs\reports\phase4\WB.md
+ * "Observed"]), and a Nikon profile (phase4-preset.ts prepareSource).
  */
 export const WB_SHIFT = 300;
 export const PREPARE_HISTORY_NAME = "AVG P4check preset source";

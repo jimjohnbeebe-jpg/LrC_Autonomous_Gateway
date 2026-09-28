@@ -1,0 +1,114 @@
+{
+  "check": "wb",
+  "started_at": "2026-09-28T12:19:08.528Z",
+  "photo_name": "20260907-_OZ80099.NEF",
+  "errors": [],
+  "hello": {
+    "protocol": 1,
+    "plugin_version": "0.4.0",
+    "lrc_version": "15.5.1",
+    "sdk_declared": 13,
+    "ports": {
+      "receive": 8765,
+      "send": 8766
+    }
+  },
+  "photo": {
+    "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+    "process_version": "15.4",
+    "white_balance": "As Shot",
+    "temperature": 4900,
+    "tint": 11
+  },
+  "snapshot": {
+    "name": "AVG WBcheck before 2026-09-28T12-19-08-508Z",
+    "id": "973DA3DF-D0BD-40D9-94C7-947B8BE69D47"
+  },
+  "temperature_alone": {
+    "written": {
+      "Temperature": 5200
+    },
+    "white_balance": "As Shot",
+    "temperature": 5200,
+    "temperature_taken": true,
+    "jim": {
+      "panel_as_shot": true,
+      "panel_custom": null,
+      "temp_slider_moved": true
+    }
+  },
+  "temperature_custom": {
+    "written": {
+      "Temperature": 5500,
+      "WhiteBalance": "Custom"
+    },
+    "white_balance": "Custom",
+    "temperature": 5500,
+    "custom_taken": true,
+    "temperature_taken": true,
+    "mismatches": [],
+    "jim": {
+      "panel_custom": true
+    }
+  },
+  "tint_custom": {
+    "reset_to_as_shot": true,
+    "written": {
+      "Tint": 16,
+      "WhiteBalance": "Custom"
+    },
+    "white_balance": "Custom",
+    "tint": 16,
+    "temperature": 4900,
+    "custom_taken": true,
+    "tint_taken": true,
+    "temperature_kept": true,
+    "mismatches": []
+  },
+  "preset": {
+    "after_temperature_alone": {
+      "temperature_carried": false,
+      "tint_carried": false,
+      "also_written": {
+        "ProcessVersion": "15.4",
+        "WhiteBalance": "As Shot"
+      },
+      "left_out": [
+        {
+          "name": "temperature",
+          "reason": "white balance is \"As Shot\": the preset says so and, like Lightroom's two, carries no temperature or tint"
+        },
+        {
+          "name": "tint",
+          "reason": "white balance is \"As Shot\": the preset says so and, like Lightroom's two, carries no temperature or tint"
+        }
+      ]
+    },
+    "after_custom": {
+      "temperature_carried": true,
+      "tint_carried": true,
+      "also_written": {
+        "ProcessVersion": "15.4",
+        "WhiteBalance": "Custom"
+      },
+      "left_out": []
+    }
+  },
+  "put_back": {
+    "ok": true,
+    "differing": [],
+    "compared": 177
+  },
+  "summary": {
+    "suggestion": "WORKED",
+    "white_balance_after_temperature_alone": "As Shot",
+    "custom_taken_with_temperature": true,
+    "custom_taken_with_tint": true,
+    "preset_carries_temperature_after_custom": true,
+    "put_back": true
+  },
+  "finished_at": "2026-09-28T12:20:45.247Z",
+  "plugin_log_copied": "wb_bridge_log_2026-09-28T12-19-08-508Z.txt",
+  "node": "v24.11.1",
+  "engine_version": "0.6.0"
+}

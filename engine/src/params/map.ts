@@ -16,6 +16,7 @@ import {
   SUPPORTED_PROCESS_VERSIONS,
   type ParamSpec,
 } from "./canonical.js";
+import { CUSTOM_WHITE_BALANCE, WHITE_BALANCE_KEY } from "./preset-keys.js";
 import type { SdkKeyMap, SdkValueType } from "./sdk-keys.js";
 
 export type CanonicalValue = number | boolean | string | number[];
@@ -55,6 +56,15 @@ export type ReadbackMismatch = { sdk_key: string; written: unknown; read_back: u
 
 /** Largest difference between a written and a read-back number that still counts as equal. */
 export const READBACK_TOLERANCE = 1e-6;
+
+/**
+ * Canonical names whose write also sets the white balance mode to "Custom". Lightroom keeps "As Shot"
+ * after a Temperature written alone, so a preset of the photo then leaves its white balance out;
+ * written with Temperature or with Tint, "Custom" is taken, the values too, and a Tint write keeps
+ * the As Shot temperature [handle: docs\reports\phase4\WB.md "Observed";
+ * docs\reports\phase4\WB\wb_check_2026-09-28T12-19-08-508Z.json temperature_alone, temperature_custom, tint_custom].
+ */
+export const CUSTOM_WHITE_BALANCE_PARAMS: readonly string[] = ["temperature", "tint"];
 
 const EXPECTED_SDK_TYPE: Record<ParamSpec["kind"], SdkValueType> = {
   number: "number",
@@ -170,7 +180,7 @@ export class ParamMap {
       if (other) throw new Error(`${other} and ${name} both map to ${spec.sdkKey}`);
       seen.set(spec.sdkKey, name);
     }
-    for (const key of ["CameraProfile", "Look", "ProcessVersion"]) sdkKeys.get(key);
+    for (const key of ["CameraProfile", "Look", "ProcessVersion", WHITE_BALANCE_KEY]) sdkKeys.get(key);
     this.sdkKeys = sdkKeys;
     this.profiles = profiles;
     this.params = params;
@@ -190,7 +200,10 @@ export class ParamMap {
     return this.profiles;
   }
 
-  /** Validate canonical settings and return the SDK table to write. */
+  /**
+   * Validate canonical settings and return the SDK table to write. A temperature or tint also writes
+   * WhiteBalance "Custom" (CUSTOM_WHITE_BALANCE_PARAMS), read back like every other key.
+   */
   toSdk(settings: Readonly<Record<string, unknown>>, context: { processVersion: string }): SdkSettings {
     this.checkProcessVersion(context.processVersion);
     const out: SdkSettings = {};
@@ -204,6 +217,7 @@ export class ParamMap {
       if (!spec) throw new ParamError("unknown_parameter", `Unknown parameter "${name}"`, name);
       out[spec.sdkKey] = validate(name, spec, value);
     }
+    if (CUSTOM_WHITE_BALANCE_PARAMS.some((name) => name in settings)) out[WHITE_BALANCE_KEY] = CUSTOM_WHITE_BALANCE;
     return out;
   }
 

@@ -8,6 +8,7 @@
 // is not recorded]. Each rule below reads two files: it is [inference] beyond them.
 
 import {
+  AS_SHOT_WHITE_BALANCE,
   CAMERA_PROFILE_KEY,
   CAMERA_PROFILE_PARAM,
   PROCESS_VERSION_KEY,
@@ -25,13 +26,12 @@ export type LeftOut = { name: string; reason: string };
 /** `written`: the canonical names written; `also_written`: the other keys written with them (the process version, modes). */
 export type PresetSelection = { entries: PresetEntry[]; written: string[]; also_written: Record<string, string>; left_out: LeftOut[]; process_version: string };
 
-const AS_SHOT = "As Shot";
 const SHARPEN_DETAILS = ["sharpening.radius", "sharpening.detail", "sharpening.masking"];
 
 /** Why a chosen setting is not written, or null when it is. */
 function leaveOut(map: ParamMap, name: string, value: CanonicalValue, sdk: SdkSettings, copied: CanonicalSettings): string | null {
   if (name === "lens.corrections_enable") return "Lightroom's own presets do not carry it: neither reference file has it";
-  if ((name === "temperature" || name === "tint") && sdk[WHITE_BALANCE_KEY] === AS_SHOT) {
+  if ((name === "temperature" || name === "tint") && sdk[WHITE_BALANCE_KEY] === AS_SHOT_WHITE_BALANCE) {
     return 'white balance is "As Shot": the preset says so and, like Lightroom\'s two, carries no temperature or tint';
   }
   if (SHARPEN_DETAILS.includes(name) && copied["sharpening.amount"] === 0) {

@@ -7,6 +7,7 @@ import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
 import { describe, expect, it, vi } from "vitest";
+import { BridgeError } from "../src/bridge/index.js";
 import { recipeSchema } from "../src/log/index.js";
 import { toToolError } from "../src/mcp/index.js";
 import type { SyncSeriesArgs } from "../src/mcp/tools-propagation.js";
@@ -175,6 +176,28 @@ describe("lr_sync_series: targets", () => {
     });
     expect(e?.message).toMatch(/may still write "AVG sync [0-9a-f]{4}"/);
     expect(sent("get_context").map((p) => p["photo_uuid"])).toEqual([a, b]);
+  });
+
+  it("says a write or snapshot that was never sent was not written (Greptile, PR #35 round 2)", async () => {
+    clean();
+    const [a, b] = [addCopy(1), addCopy(2)];
+    const real = client.request.bind(client);
+    // The client refuses before sending when it is not connected (src/bridge/client.ts request()).
+    const refuseFor = (command: string) =>
+      vi.spyOn(client, "request").mockImplementation(((name: string, payload: Record<string, unknown>, options?: { timeoutMs?: number }) =>
+        name === command && payload["photo_uuid"] === b ? Promise.reject(new BridgeError("not_connected", "bridge is reconnecting", true, name)) : real(name as never, payload as never, options)) as never);
+    let spy = refuseFor("apply_settings");
+    const write = await syncFails({ source: { settings: { contrast: 15 } }, targets: { uuids: [a, b] }, ...quiet });
+    spy.mockRestore();
+    expect(write).toMatchObject({ code: "BRIDGE_DISCONNECTED", details: { synced: [a], stopped_at: b, snapshot: { name: expect.stringMatching(/^AVG pre-sync /) }, history_names: [] } });
+    expect(write.details).not.toHaveProperty("maybe_written");
+    expect(write.message).not.toMatch(/may still/);
+    spy = refuseFor("create_snapshot");
+    const snapshot = await syncFails({ source: { settings: { contrast: 15 } }, targets: { uuids: [a, b] }, ...quiet });
+    spy.mockRestore();
+    expect(snapshot.details).toMatchObject({ synced: [a], stopped_at: b, history_names: [] });
+    expect(snapshot.details).not.toHaveProperty("snapshot_name");
+    expect(snapshot.message).toMatch(/Nothing was written to this photo/);
   });
 
   it("skips a target that fails and syncs the others; one that failed after its snapshot names it", async () => {

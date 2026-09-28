@@ -6,6 +6,7 @@
 // an original is [unverified] until PHASE4_PLAN row 10. Against the Lightroom sim [handle:
 // tests\sync.test.ts "writes to photos by uuid and leaves the selection alone"].
 
+import { BridgeError } from "../bridge/index.js";
 import { ToolError, toToolError } from "../mcp/errors.js";
 import { differingSettings, type CanonicalValue, type FromSdkResult } from "../params/index.js";
 import type { RenderedPreview } from "../preview/index.js";
@@ -22,6 +23,18 @@ export const WRITE_TIMEOUT_MS = 30000;
  * (plugin\LrC-AVG.lrplugin\Sockets.lua:50)].
  */
 export const UNANSWERED = new Set(["BRIDGE_TIMEOUT", "BRIDGE_DISCONNECTED"]);
+
+/**
+ * True for a command that never left the engine: the client refuses with `not_connected` before it
+ * writes the line [handle: engine\src\bridge\client.ts request() and send(), the two `not_connected`
+ * refusals]; every other refusal comes after the line was sent (Greptile, PR #35 round 2).
+ */
+function neverSent(err: unknown): boolean {
+  return err instanceof BridgeError && err.code === "not_connected";
+}
+
+/** A command with no answer that may still have reached Lightroom. */
+const mayHaveLanded = (err: unknown): boolean => UNANSWERED.has(toToolError(err).code) && !neverSent(err);
 
 type Photo = { uuid: string; filename: string | null; copy_name: string | null };
 const text = (v: unknown): string | null => (typeof v === "string" ? v : null);
@@ -48,7 +61,7 @@ async function write(run: SyncRun, uuid: string, values: Record<string, Canonica
     res = await client.request("apply_settings", { photo_uuid: uuid, settings: sdk, history_name: historyName }, { timeoutMs: run.deps.writeTimeoutMs ?? WRITE_TIMEOUT_MS });
   } catch (err) {
     const error = toToolError(err);
-    if (!UNANSWERED.has(error.code)) throw error;
+    if (!mayHaveLanded(err)) throw error;
     throw new ToolError(error.code, `${error.message} Lightroom may still write "${historyName}" to this photo.`, error.recoverable, { maybe_written: historyName });
   }
   names.push(historyName);
@@ -103,15 +116,16 @@ async function adapt(run: SyncRun, uuid: string, view: FromSdkResult, names: str
 function failedAfterSnapshot(err: unknown, photo: Photo, snapshotName: string, snapshot: { name: string; id: string } | null, names: string[]): ToolError {
   const error = toToolError(err);
   const details = typeof error.details === "object" && error.details !== null ? error.details : {};
+  const maybeSnapshot = !snapshot && mayHaveLanded(err);
   const undo = snapshot
     ? ` The snapshot "${snapshotName}" on this photo puts it back as it was.`
-    : UNANSWERED.has(error.code)
+    : maybeSnapshot
       ? ` Lightroom may still make the snapshot "${snapshotName}" on this photo; nothing else was sent to it.`
       : " Nothing was written to this photo.";
   return new ToolError(error.code, `${error.message}${undo}`, error.recoverable, {
     ...details,
     filename: photo.filename,
-    ...(snapshot ? { snapshot } : { snapshot_name: snapshotName }),
+    ...(snapshot ? { snapshot } : maybeSnapshot ? { snapshot_name: snapshotName } : {}),
     history_names: names,
   });
 }

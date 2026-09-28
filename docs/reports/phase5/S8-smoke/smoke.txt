@@ -1,6 +1,6 @@
 BUILD: every run as expected.
 S8 smoke transcript (Claude Code, Opus 5.5, 2026-09-28, branch phase-5/spike-s8; regenerated after the
-fixes for Greptile's rounds 1 and 2 on PR #40).
+fixes for Greptile's rounds 1-3 on PR #40).
 What it shows: the S8 harness's own logic, run against a fake Lightroom; NOT Lightroom's behaviour.
 Kit: a scratch folder outside the repo with npm fengari@0.1.4 (a Lua 5.3 VM in JavaScript) and luaparse@0.3.1,
 neither a project dependency. Its five files (this transcript's builder included) are reproduced verbatim in the
@@ -295,7 +295,7 @@ PASS a close with no HUD is recorded by the loop
 
 --- mutant 1 (round 1): the window's closing time alone decides 'closed by code'
 --- in S8Hud.lua: replaced "if not answered then return \"unclear\"" with "if true then return \"yes\", \"timing only\" end\n        if not answered then return \"unclear\""
-=== scenario x_after_call on the mutant (expected: fail; failed, as expected)
+=== scenario x_after_call on the mutant (expected: fail exactly ["X 1 s after a call that did nothing, Jim: not by itself -> no"]; failed, as expected)
 > node <scratch>\run-smoke.cjs <scratch>\mutant x_after_call
 PASS the settings section renders with a title
 PASS settings BEFORE saved
@@ -341,7 +341,7 @@ EXIT NON-ZERO
 
 --- mutant 2 (round 1): a close request does not cancel an open still waiting out its 5 s
 --- in S8Loop.lua: replaced "            if L.openAt then" with "            if false then"
-=== scenario close_during_delay on the mutant (expected: fail; failed, as expected)
+=== scenario close_during_delay on the mutant (expected: fail exactly ["no HUD after a close during the 5 s delay","the loop recorded the cancelled open as not open"]; failed, as expected)
 > node <scratch>\run-smoke.cjs <scratch>\mutant close_during_delay
 FAIL no HUD after a close during the 5 s delay
 FAIL the loop recorded the cancelled open as not open
@@ -356,7 +356,7 @@ EXIT NON-ZERO
 
 --- mutant 3 (round 2): Jim's answer counts only within 3 s of the call, not the 10 s he watches
 --- in S8Hud.lua: replaced "local WATCH_S = 10" with "local WATCH_S = 3"
-=== scenario late_close_6s on the mutant (expected: fail; failed, as expected)
+=== scenario late_close_6s on the mutant (expected: fail exactly ["closed 6 s after the call (within the 10 s watch) + Jim ticked it: yes"]; failed, as expected)
 > node <scratch>\run-smoke.cjs <scratch>\mutant late_close_6s
 PASS the settings section renders with a title
 PASS settings BEFORE saved
@@ -2192,8 +2192,9 @@ process.exit(bad ? 1 : 0);
 === assemble.mts
 // Builds docs\reports\phase5\S8-smoke\smoke.txt: the commands, their output, and the smoke kit's
 // source verbatim, with the user folder written as %USERPROFILE% and the scratch folder as <scratch>.
-// Every run has an expected outcome (pass, or fail for a mutant). If any run differs, the transcript
-// still gets written, headed "BUILD FAILED", and this script exits 1 (Greptile, PR #40 round 2).
+// Every run has an expected outcome (pass, or for a mutant: fail exactly the checks named). If any
+// run differs, the transcript still gets written, headed "BUILD FAILED", and this script exits 1
+// (Greptile, PR #40 rounds 2 and 3).
 import { execFileSync } from "node:child_process";
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
@@ -2215,7 +2216,13 @@ function redact(text: string): string {
   return t;
 }
 
-function run(label: string, args: string[], expect: "pass" | "fail"): string {
+/**
+ * Runs one command. `expect` "pass": it must exit 0. `expect` a list of check names: it must exit
+ * non-zero with exactly those "FAIL <name>" lines and no Lua or task error, so a mutant that fails
+ * for another reason (it does not load, another check breaks) is not taken as caught (Greptile,
+ * PR #40 round 3).
+ */
+function run(label: string, args: string[], expect: "pass" | readonly string[]): string {
   let text: string;
   let ok = true;
   try {
@@ -2224,9 +2231,19 @@ function run(label: string, args: string[], expect: "pass" | "fail"): string {
     ok = false;
     text = String((err as { stdout?: string }).stdout ?? "") + "\nEXIT NON-ZERO";
   }
-  const as = ok === (expect === "pass") ? "as expected" : "UNEXPECTED";
-  if (as === "UNEXPECTED") unexpected.push(label);
-  return `\n=== ${label} (expected: ${expect}; ${ok ? "passed" : "failed"}, ${as})\n> node ${args.join(" ")}\n${text.trimEnd()}\n`;
+  let as: string;
+  if (expect === "pass") {
+    as = ok ? "as expected" : "UNEXPECTED";
+  } else {
+    const failed = text.split("\n").filter((l) => l.startsWith("FAIL ")).map((l) => l.slice(5).trim()).sort();
+    const wanted = [...expect].sort();
+    const errored = /LUA ERROR|TASK ERROR/.test(text);
+    const same = failed.length === wanted.length && failed.every((f, i) => f === wanted[i]);
+    as = !ok && same && !errored ? "as expected" : `UNEXPECTED (failed checks: ${JSON.stringify(failed)}${errored ? ", with a Lua or task error" : ""})`;
+  }
+  if (as !== "as expected") unexpected.push(label);
+  const wantText = expect === "pass" ? "pass" : `fail exactly ${JSON.stringify(expect)}`;
+  return `\n=== ${label} (expected: ${wantText}; ${ok ? "passed" : "failed"}, ${as})\n> node ${args.join(" ")}\n${text.trimEnd()}\n`;
 }
 
 const parts: string[] = [];
@@ -2241,9 +2258,12 @@ for (const sc of SCENARIOS) {
 // that covers it must fail.
 parts.push("\n##### Mutation check (each must FAIL)");
 const MUTANTS = [
-  { label: "mutant 1 (round 1): the window's closing time alone decides 'closed by code'", file: "S8Hud.lua", from: 'if not answered then return "unclear"', to: 'if true then return "yes", "timing only" end\n        if not answered then return "unclear"', scenario: "x_after_call" },
-  { label: "mutant 2 (round 1): a close request does not cancel an open still waiting out its 5 s", file: "S8Loop.lua", from: "            if L.openAt then", to: "            if false then", scenario: "close_during_delay" },
-  { label: "mutant 3 (round 2): Jim's answer counts only within 3 s of the call, not the 10 s he watches", file: "S8Hud.lua", from: "local WATCH_S = 10", to: "local WATCH_S = 3", scenario: "late_close_6s" },
+  { label: "mutant 1 (round 1): the window's closing time alone decides 'closed by code'", file: "S8Hud.lua", from: 'if not answered then return "unclear"', to: 'if true then return "yes", "timing only" end\n        if not answered then return "unclear"', scenario: "x_after_call",
+    failing: ["X 1 s after a call that did nothing, Jim: not by itself -> no"] },
+  { label: "mutant 2 (round 1): a close request does not cancel an open still waiting out its 5 s", file: "S8Loop.lua", from: "            if L.openAt then", to: "            if false then", scenario: "close_during_delay",
+    failing: ["no HUD after a close during the 5 s delay", "the loop recorded the cancelled open as not open"] },
+  { label: "mutant 3 (round 2): Jim's answer counts only within 3 s of the call, not the 10 s he watches", file: "S8Hud.lua", from: "local WATCH_S = 10", to: "local WATCH_S = 3", scenario: "late_close_6s",
+    failing: ["closed 6 s after the call (within the 10 s watch) + Jim ticked it: yes"] },
 ];
 for (const m of MUTANTS) {
   const dir = path.join(kit, "mutant");
@@ -2252,7 +2272,7 @@ for (const m of MUTANTS) {
   const src = readFileSync(path.join(dir, m.file), "utf8");
   if (!src.includes(m.from)) throw new Error(`${m.label}: text to replace not found`);
   writeFileSync(path.join(dir, m.file), src.replace(m.from, m.to));
-  parts.push(`\n--- ${m.label}\n--- in ${m.file}: replaced ${JSON.stringify(m.from)} with ${JSON.stringify(m.to)}` + run(`scenario ${m.scenario} on the mutant`, [path.join(kit, "run-smoke.cjs"), dir, m.scenario], "fail"));
+  parts.push(`\n--- ${m.label}\n--- in ${m.file}: replaced ${JSON.stringify(m.from)} with ${JSON.stringify(m.to)}` + run(`scenario ${m.scenario} on the mutant`, [path.join(kit, "run-smoke.cjs"), dir, m.scenario], m.failing));
   rmSync(dir, { recursive: true, force: true });
 }
 
@@ -2269,7 +2289,7 @@ for (const f of ["fake-lr.lua", "main.lua", "run-smoke.cjs", "parse.cjs", "assem
 const header = [
   unexpected.length === 0 ? "BUILD: every run as expected." : `BUILD FAILED: ${unexpected.length} run(s) not as expected: ${unexpected.join("; ")}`,
   "S8 smoke transcript (Claude Code, Opus 5.5, 2026-09-28, branch phase-5/spike-s8; regenerated after the",
-  "fixes for Greptile's rounds 1 and 2 on PR #40).",
+  "fixes for Greptile's rounds 1-3 on PR #40).",
   "What it shows: the S8 harness's own logic, run against a fake Lightroom; NOT Lightroom's behaviour.",
   "Kit: a scratch folder outside the repo with npm fengari@0.1.4 (a Lua 5.3 VM in JavaScript) and luaparse@0.3.1,",
   "neither a project dependency. Its five files (this transcript's builder included) are reproduced verbatim in the",

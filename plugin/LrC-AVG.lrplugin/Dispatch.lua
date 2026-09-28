@@ -31,6 +31,7 @@ function Dispatch.handlers(hello)
         export_preview = Preview.exportPreview,
         create_virtual_copies = Catalog.createVirtualCopies,
         select_photo = Catalog.selectPhoto,
+        get_selection = Catalog.getSelection,
     }
     return HANDLERS
 end

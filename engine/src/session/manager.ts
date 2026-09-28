@@ -159,6 +159,28 @@ export class SessionManager {
     return readSessionLog(this.ctx.deps.logDir, this.session, this.ended, args.session_id);
   }
 
+  /**
+   * Run `fn` in the session queue while no session is open (lr_sync_series, PHASE4_PLAN row 8): it
+   * is refused with SESSION_ALREADY_ACTIVE when one is, and no session can begin, nor any other
+   * session call run, until it ends [stated: Jim, 2026-09-27, "go with recommendations" on the row 8
+   * plan, decision 6; handle: tests\sync.test.ts "refuses while a session is open, and a session
+   * begun during a sync waits for it"].
+   */
+  whenIdle<T>(tool: string, fn: () => Promise<T>): Promise<T> {
+    return this.exclusive(async () => {
+      const s = this.session;
+      if (s) {
+        throw new ToolError(
+          "SESSION_ALREADY_ACTIVE",
+          `A session is open on "${s.master.filename ?? s.master.uuid}" (${s.id}); ${tool} runs only between sessions. End it with lr_end_session first.`,
+          false,
+          { session_id: s.id },
+        );
+      }
+      return fn();
+    });
+  }
+
   private view(s: Session, id: TargetId): SessionView {
     const t = allTargets(s).find((x) => x.id === id) ?? s.active;
     return {

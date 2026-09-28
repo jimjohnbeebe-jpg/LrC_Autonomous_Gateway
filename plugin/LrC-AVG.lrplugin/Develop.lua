@@ -5,6 +5,7 @@
 -- Catalog rules (.claude\rules\03-lightroom.md):
 --   * catalog:getTargetPhoto() is a yielding query and runs outside any read gate: nesting it
 --     inside one deadlocks on Windows [upstream claim: vendor\automaat\plugin\LightroomMCP.lrplugin\HandlerSelection.lua:30-38].
+--     findPhotoByUuid (Photos.lua) runs outside a gate too.
 --   * getDevelopSettings() runs inside withReadAccessDo; writes run inside withWriteAccessDo.
 --   * Every applyDevelopSettings call passes a History name, and the name starts with "AVG " (PRD FR-4.4).
 --   * Writes are read back and the read-back is returned, so the engine can verify them (Phase 0, P-12):
@@ -17,16 +18,33 @@ local LrApplication = import 'LrApplication'
 local LrDate = import 'LrDate'
 local LrTasks = import 'LrTasks'
 
+local Photos = require 'Photos'
+
 local Develop = {}
 
 local function fail(code, message, recoverable)
     return nil, { code = code, message = message, recoverable = recoverable == true }
 end
 
--- The photo Lightroom is acting on, and its uuid. With payload.target_uuid set, a different
--- selected photo is refused, so a change of selection can never redirect a write.
+-- The photo a command acts on, and its uuid:
+--   * payload.photo_uuid set (plugin 0.4.0, PHASE4_PLAN row 8): that photo, found by uuid and
+--     checked against payload.expect (Photos.lua), selected or not; the selection is not touched.
+--     S7 wrote to and exported a photo found this way without selecting it, and the selection did
+--     not change [handle: docs\reports\phase4\S7.md Verdict 4]; on virtual copies only, so the same
+--     on an original is [unverified].
+--   * else the selected photo. With payload.target_uuid set, a different selected photo is refused,
+--     so a change of selection can never redirect a write.
 local function target(payload)
     local catalog = LrApplication.activeCatalog()
+    if payload.photo_uuid ~= nil then
+        if payload.target_uuid ~= nil then
+            return nil, nil, nil, { code = "bad_request", recoverable = false,
+                message = "name the photo with photo_uuid or target_uuid, not both" }
+        end
+        local photo, found = Photos.find(catalog, payload.photo_uuid, payload.expect)
+        if not photo then return nil, nil, nil, found end
+        return catalog, photo, found.uuid, nil
+    end
     local photo = catalog:getTargetPhoto()
     if not photo then
         return nil, nil, nil, { code = "no_target_photo", message = "No photo is selected in Lightroom", recoverable = true }

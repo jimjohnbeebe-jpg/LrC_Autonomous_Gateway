@@ -13,14 +13,16 @@
 --   never tried inside one [handle: docs\reports\phase0\S6.md "Analysis", 6 of 6;
 --   docs\reports\phase4\S7.md "Consequences", 4 of 4].
 -- select_photo { uuid, expect }: find a photo by uuid, check it is the photo the engine means
---   (Phase 0, P-18), select it and read the selection back. findPhotoByUuid found S7's copies and
---   its identity check passed [handle: docs\reports\phase4\S7.md "Numbers"]. A uuid is the photo's
---   own id; whether Lightroom reuses a localIdentifier is [unverified] (S6.md "Consequences").
+--   (Phase 0, P-18; Photos.lua), select it and read the selection back. A uuid is the photo's own
+--   id; whether Lightroom reuses a localIdentifier is [unverified] (S6.md "Consequences").
+-- get_selection { max }: the selected photos, described (PHASE4_PLAN row 8, lr_sync_series targets
+--   "selected"). With no photo selected, getTargetPhotos returns "the entire list of photos in the
+--   filmstrip" [handle: https://lrc.mcor.dev/modules/LrCatalog.html getTargetPhotos], so it refuses
+--   when getTargetPhoto, "nil if no photos are selected" [handle: same page], has no photo.
 --
 -- The catalog queries (getTargetPhoto(s), setSelectedPhotos, findPhotoByUuid) run outside any read
--- gate, as rule 03 asks of yielding queries; whether findPhotoByUuid yields is [unverified], and S7
--- ran it outside a gate too [handle: plugin\spikes\S7.lrplugin\S7Common.lua:122-131]. Metadata
--- reads run inside a read gate with LrTasks.pcall, as in Develop.lua getContext.
+-- gate, as rule 03 asks of yielding queries (Photos.lua has findPhotoByUuid). Metadata reads run
+-- inside a read gate with LrTasks.pcall, as in Develop.lua getContext.
 
 local LrApplication = import 'LrApplication'
 local LrDate = import 'LrDate'
@@ -28,6 +30,7 @@ local LrTasks = import 'LrTasks'
 
 local Develop = require 'Develop'
 local Log = require 'Log'
+local Photos = require 'Photos'
 
 local Catalog = {}
 
@@ -101,25 +104,7 @@ local function exclusive(name, fn)
     return result, err
 end
 
-local function read(photo, method, key)
-    local ok, value = LrTasks.pcall(method, photo, key)
-    if ok then return value end
-    return nil
-end
-
--- A photo's identity. For a photo that is not a virtual copy, masterPhoto is the photo itself and
--- copyName is nil [handle: docs\reports\phase4\S7\s7_run_2026-09-27T12-53-05.json "master"].
-local function describe(catalog, photo)
-    local d = { local_id = photo.localIdentifier }
-    catalog:withReadAccessDo(function()
-        d.uuid = read(photo, photo.getRawMetadata, "uuid")
-        d.is_virtual_copy = read(photo, photo.getRawMetadata, "isVirtualCopy")
-        local master = read(photo, photo.getRawMetadata, "masterPhoto")
-        if type(master) ~= "string" and master ~= nil then d.master_local_id = master.localIdentifier end
-        d.copy_name = read(photo, photo.getFormattedMetadata, "copyName")
-    end)
-    return d
-end
+local describe = Photos.describe
 
 -- Select `photo` alone, then read the selection back: Lightroom may not select a photo, for
 -- example one outside the current view [unverified], and reports no error then [inference].
@@ -202,33 +187,47 @@ local function createCopies(payload, owns)
         failure = failure, master_selected = masterSelected, master_select_error = selectErr }
 end
 
--- The first way `d` differs from what the engine expects, or nil.
-local function mismatch(d, uuid, expect)
-    if d.uuid ~= uuid then return "uuid " .. tostring(d.uuid) end
-    for _, field in ipairs({ "copy_name", "master_local_id", "is_virtual_copy" }) do
-        if expect[field] ~= nil and d[field] ~= expect[field] then
-            return field .. " " .. tostring(d[field]) .. ", expected " .. tostring(expect[field])
-        end
-    end
-    return nil
-end
-
 local function selectPhoto(payload, owns)
-    local uuid, expect = payload.uuid, payload.expect
-    if type(uuid) ~= "string" or uuid == "" then return fail("bad_request", "uuid must be a non-empty string") end
-    if expect == nil then expect = {} end
-    if type(expect) ~= "table" then return fail("bad_request", "expect must be an object") end
     local catalog = LrApplication.activeCatalog()
-    local ok, photo = LrTasks.pcall(function() return catalog:findPhotoByUuid(uuid) end)
-    if not ok then return fail("lookup_failed", "findPhotoByUuid: " .. tostring(photo), true) end
-    if not photo then return fail("unknown_photo", "no photo in the catalog has uuid " .. uuid) end
-    local d = describe(catalog, photo)
-    local wrong = mismatch(d, uuid, expect)
-    if wrong then return fail("identity_mismatch", "the photo with uuid " .. uuid .. " has " .. wrong) end
+    local photo, d = Photos.find(catalog, payload.uuid, payload.expect)
+    if not photo then return nil, d end
     if not owns() then return fail("lock_lost", LOCK_LOST .. "; nothing was selected", true) end
     local selected, selectErr = selectOnly(catalog, photo)
     if not selected then return fail("select_failed", selectErr, true) end
     return d
+end
+
+-- Largest `max` get_selection takes; the engine asks for fewer [inference: the figure].
+Catalog.MAX_DESCRIBED = 500
+
+-- The selected photos, the active one first, at most `max` of them described; `count` is how many
+-- are selected. Under the selection lock, so it never reads the selection halfway through a
+-- create_virtual_copies batch, which selects the master before each copy and each new copy becomes
+-- the active photo [handle: docs\reports\phase0\S6.md "Analysis"]. Against a fake Lightroom whose
+-- queries yield, a get_selection without the lock read a new copy as the selection at 6 of 13 start
+-- times, and with it none [handle: docs\reports\phase4\sync-plugin-smoke\smoke.txt "get_selection
+-- while copies are made"].
+local function getSelection(payload)
+    local max = payload.max
+    if max == nil then max = 100 end
+    if type(max) ~= "number" or max ~= math.floor(max) or max < 1 or max > Catalog.MAX_DESCRIBED then
+        return fail("bad_request", "max must be a whole number from 1 to " .. Catalog.MAX_DESCRIBED)
+    end
+    local catalog = LrApplication.activeCatalog()
+    local active = catalog:getTargetPhoto()
+    if not active then return fail("no_target_photo", "No photo is selected in Lightroom", true) end
+    local selected = catalog:getTargetPhotos() or {}
+    local ordered = { active }
+    for _, photo in ipairs(selected) do
+        if photo.localIdentifier ~= active.localIdentifier then ordered[#ordered + 1] = photo end
+    end
+    local photos = {}
+    for i, photo in ipairs(ordered) do
+        if i > max then break end
+        if i > 1 then LrTasks.yield() end -- PRD NFR-1: yield between photos
+        photos[#photos + 1] = describe(catalog, photo)
+    end
+    return { count = #ordered, photos = photos }
 end
 
 function Catalog.createVirtualCopies(payload)
@@ -237,6 +236,10 @@ end
 
 function Catalog.selectPhoto(payload)
     return exclusive("select_photo", function(owns) return selectPhoto(payload, owns) end)
+end
+
+function Catalog.getSelection(payload)
+    return exclusive("get_selection", function() return getSelection(payload) end)
 end
 
 return Catalog

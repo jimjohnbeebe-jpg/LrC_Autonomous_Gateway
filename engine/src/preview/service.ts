@@ -22,7 +22,7 @@ import { lstatSync, readdirSync, readFileSync, realpathSync, rmdirSync, rmSync, 
 import os from "node:os";
 import path from "node:path";
 import sharp from "sharp";
-import type { BridgeClient } from "../bridge/index.js";
+import type { BridgeClient, CommandPayloads } from "../bridge/index.js";
 import { measureImage, type Metrics, type Region } from "../metrics/index.js";
 
 export const PREVIEW_SOURCE = "export";
@@ -46,8 +46,12 @@ export class PreviewError extends Error {
   }
 }
 
-/** `regions` are measured too (metrics.regions), for a session's lr_set_regions. */
-export type PreviewRequest = { longEdge: number; quality: number; targetUuid?: string; regions?: readonly Region[] };
+/**
+ * `regions` are measured too (metrics.regions), for a session's lr_set_regions. `targetUuid` guards
+ * the selected photo; `photoUuid` (plugin 0.4.0, lr_sync_series) exports the photo with that uuid,
+ * selected or not, and leaves the selection alone (engine\src\bridge\protocol.ts Target). Not both.
+ */
+export type PreviewRequest = { longEdge: number; quality: number; targetUuid?: string; photoUuid?: string; regions?: readonly Region[] };
 
 export type RenderedPreview = {
   uuid: string;
@@ -114,11 +118,12 @@ export class PreviewService {
 
   async render(request: PreviewRequest): Promise<RenderedPreview> {
     const started = performance.now();
-    const payload = {
-      long_edge: request.longEdge,
-      quality: request.quality,
-      ...(request.targetUuid !== undefined ? { target_uuid: request.targetUuid } : {}),
-    };
+    if (request.photoUuid !== undefined && request.targetUuid !== undefined) throw new RangeError("a preview names its photo with photoUuid or targetUuid, not both");
+    const size = { long_edge: request.longEdge, quality: request.quality };
+    const payload: CommandPayloads["export_preview"] =
+      request.photoUuid !== undefined
+        ? { ...size, photo_uuid: request.photoUuid }
+        : { ...size, ...(request.targetUuid !== undefined ? { target_uuid: request.targetUuid } : {}) };
     const res = await this.client.request("export_preview", payload, { timeoutMs: this.exportTimeoutMs });
     const commandMs = ms(started);
 

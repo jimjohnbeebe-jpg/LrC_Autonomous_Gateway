@@ -2,14 +2,16 @@
 //
 // Converge mode edits the master, the photo selected at lr_begin_session; every command names it
 // and the plugin refuses one when another photo is selected (C-2). Variants mode edits virtual
-// copies A, B, C of it. Plugin 0.3.0 acts only on the selected photo; `target_uuid` only guards
-// [handle: plugin\LrC-AVG.lrplugin\Develop.lua:26-38, target()], so each call first selects its
-// copy with select_photo, whose identity check refuses a photo that is not that copy of the master
-// (Phase 0, P-18) [handle: plugin\LrC-AVG.lrplugin\Catalog.lua selectPhoto]. A click elsewhere in
+// copies A, B, C of it. The session names its photo with `target_uuid`, which only guards the
+// selected photo [handle: plugin\LrC-AVG.lrplugin\Develop.lua target()], so each call first selects
+// its copy with select_photo, whose identity check refuses a photo that is not that copy of the
+// master (Phase 0, P-18) [handle: plugin\LrC-AVG.lrplugin\Photos.lua find]. A click elsewhere in
 // Lightroom between two calls is overridden by the next call [handle: tests\session-variants.test.ts
 // "selects each copy before working on it, with its identity as the plugin checks it", against the
-// Lightroom sim; in Lightroom [unverified] until PHASE4_PLAN row 10], until PHASE4_PLAN row 8 lets the
-// plugin work on a photo that is not selected [handle: docs\reports\phase4\S7.md Verdict 4].
+// Lightroom sim; in Lightroom [unverified] until PHASE4_PLAN row 10]. Plugin 0.4.0 can also act on a
+// photo that is not selected (`photo_uuid`, PHASE4_PLAN row 8); Variants mode keeps selecting each
+// copy, so the user sees in Lightroom which copy is being edited [stated: Jim, 2026-09-27, "go with
+// recommendations" on the row 8 plan, decision 7].
 
 import { ToolError, toToolError } from "../mcp/errors.js";
 import { photoName } from "./io.js";

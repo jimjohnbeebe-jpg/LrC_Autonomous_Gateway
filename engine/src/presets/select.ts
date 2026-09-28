@@ -22,7 +22,8 @@ import { applyMask, type MaskGroup } from "../sync/mask.js";
 
 export type PresetEntry = { key: string; value: number | string | number[] };
 export type LeftOut = { name: string; reason: string };
-export type PresetSelection = { entries: PresetEntry[]; written: string[]; left_out: LeftOut[]; process_version: string };
+/** `written`: the canonical names written; `also_written`: the other keys written with them (the process version, modes). */
+export type PresetSelection = { entries: PresetEntry[]; written: string[]; also_written: Record<string, string>; left_out: LeftOut[]; process_version: string };
 
 const AS_SHOT = "As Shot";
 const SHARPEN_DETAILS = ["sharpening.radius", "sharpening.detail", "sharpening.masking"];
@@ -67,7 +68,8 @@ function companions(sdk: SdkSettings, groups: readonly MaskGroup[]): PresetEntry
 export function selectPresetSettings(map: ParamMap, sdk: SdkSettings, groups: readonly MaskGroup[]): PresetSelection {
   const read = map.fromSdk(sdk);
   const { copied } = applyMask(read.settings, groups);
-  const entries: PresetEntry[] = [{ key: PROCESS_VERSION_KEY, value: read.process_version }, ...companions(sdk, groups)];
+  const extra: PresetEntry[] = [{ key: PROCESS_VERSION_KEY, value: read.process_version }, ...companions(sdk, groups)];
+  const entries: PresetEntry[] = [...extra];
   const written: string[] = [];
   const left_out: LeftOut[] = [];
   if (groups.includes("camera_profile") && !(CAMERA_PROFILE_PARAM in copied)) {
@@ -81,5 +83,6 @@ export function selectPresetSettings(map: ParamMap, sdk: SdkSettings, groups: re
       written.push(name);
     }
   }
-  return { entries, written: written.sort(), left_out, process_version: read.process_version };
+  const also_written = Object.fromEntries(extra.map((e) => [e.key, String(e.value)]));
+  return { entries, written: written.sort(), also_written, left_out, process_version: read.process_version };
 }

@@ -42,7 +42,8 @@ export async function createPreset(deps: CreatePresetDeps, args: CreatePresetArg
   const { settings } = await deps.client.request("get_settings", { target_uuid: context.uuid });
   const filename = typeof context["filename"] === "string" ? context["filename"] : null;
   const selection = selectPresetSettings(deps.map, settings, categories);
-  if (selection.written.length === 0) {
+  // The process version alone is no preset; a white balance mode alone ("As Shot") is one.
+  if (selection.entries.length <= 1) {
     throw new ToolError("NOTHING_TO_WRITE", `None of the photo's settings in ${categories.join(", ")} can go into a preset; nothing was written.`, false, { left_out: selection.left_out });
   }
 
@@ -57,6 +58,7 @@ export async function createPreset(deps: CreatePresetDeps, args: CreatePresetArg
     categories,
     source: { uuid: context.uuid, filename, process_version: selection.process_version },
     written: selection.written,
+    also_written: selection.also_written,
     left_out: selection.left_out,
     restart_required: true,
     note: RESTART_NOTE,

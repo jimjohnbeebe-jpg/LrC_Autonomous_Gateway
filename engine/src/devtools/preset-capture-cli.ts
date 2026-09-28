@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 import { BridgeClient } from "../bridge/index.js";
 import { acquireInstanceLock, BridgeGate, devOverrides, ENGINE_VERSION } from "../mcp/index.js";
 import { loadDefaultParamMap } from "../params/index.js";
+import { defaultPresetDir } from "../presets/index.js";
 import { describeError } from "./phase1-check.js";
 import { redactHome } from "./phase2-check.js";
 import { capturePreset, REFERENCES, type Capture, type ReferenceSpec } from "./preset-capture.js";
@@ -18,10 +19,12 @@ import { capturePreset, REFERENCES, type Capture, type ReferenceSpec } from "./p
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 const FIXTURE_DIR = path.join(repoRoot, "engine", "tests", "fixtures", "presets");
 const OUT_DIR = path.join(os.tmpdir(), "LrC-AVG", "presets");
-const SETTINGS_DIR = path.join(process.env["APPDATA"] ?? "", "Adobe", "CameraRaw", "Settings");
+const SETTINGS_DIR = defaultPresetDir();
 const redact = (text: string): string => redactHome(text, os.homedir());
 
 async function capture(precheck: boolean, spec: ReferenceSpec): Promise<Capture> {
+  if (SETTINGS_DIR === null) throw new Error("no preset folder: %APPDATA% is not set, nor LRC_AVG_PRESET_DIR");
+  const settingsDir = SETTINGS_DIR;
   const dev = devOverrides();
   const client = new BridgeClient({ engineVersion: ENGINE_VERSION, log: () => {}, ...dev.bridge });
   const gate = new BridgeGate(client, () => acquireInstanceLock(dev.lockPort));
@@ -34,7 +37,7 @@ async function capture(precheck: boolean, spec: ReferenceSpec): Promise<Capture>
           return { uuid: context.uuid, filename: typeof context["filename"] === "string" ? context["filename"] : null, lrc_version: context.lrc_version };
         },
         settings: async (uuid) => (await client.request("get_settings", { target_uuid: uuid })).settings,
-        settingsDir: SETTINGS_DIR,
+        settingsDir,
         save: (file, text) => {
           mkdirSync(FIXTURE_DIR, { recursive: true });
           writeFileSync(path.join(FIXTURE_DIR, file), redact(text));

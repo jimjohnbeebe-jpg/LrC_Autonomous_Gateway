@@ -77,6 +77,16 @@ describe("lr_create_preset_from_active", () => {
     expect(text).not.toContain("crs:HueAdjustmentRed");
   });
 
+  it("writes a white balance mode alone: an As Shot preset is a preset", async () => {
+    const out = await presets.createPresetFromActive({ name: "As shot", categories: ["white_balance"] });
+    expect(out.json).toMatchObject({ written: [], also_written: { ProcessVersion: "15.4", WhiteBalance: "As Shot" } });
+    expect(out.json["left_out"]).toEqual([
+      { name: "temperature", reason: expect.stringContaining("As Shot") },
+      { name: "tint", reason: expect.stringContaining("As Shot") },
+    ]);
+    expect(readFileSync(path.join(dir, "As shot.xmp"), "utf8")).toContain('crs:WhiteBalance="As Shot"');
+  });
+
   it("refuses a name another preset has, before asking Lightroom anything", async () => {
     mkdirSync(path.join(dir, "Other"));
     await presets.createPresetFromActive({ name: "Taken" });

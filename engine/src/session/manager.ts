@@ -44,8 +44,8 @@ export type SessionView = {
   target: TargetId;
   uuid: string;
   filename: string | null;
-  /** Every photo of the session, the master first. */
-  uuids: string[];
+  /** Every photo of the session, the master first, with its pass. */
+  photos: Array<{ target: TargetId; uuid: string; pass: string }>;
   pass: string;
   last: { metrics: Metrics; hash: string; width: number; height: number } | null;
 };
@@ -95,13 +95,17 @@ export class SessionManager {
     });
   }
 
-  /** Select a session photo for a render outside the manager (a region preview), and name it. */
-  focus(sessionId: string, target?: TargetId): Promise<{ target: TargetId; uuid: string }> {
+  /**
+   * Select a session photo and run `fn` on it (a region preview, rendered outside the manager), in
+   * the session's queue: in Variants mode no other session call can select another copy between the
+   * selection and `fn`'s renders.
+   */
+  withPhoto<T>(sessionId: string, target: TargetId | undefined, fn: (photo: { target: TargetId; uuid: string }) => Promise<T>): Promise<T> {
     return this.exclusive(async () => {
       const s = this.require(sessionId);
       const t = resolveTarget(s, target, "read");
       await focus(this.ctx, s, t);
-      return { target: t.id, uuid: t.uuid };
+      return fn({ target: t.id, uuid: t.uuid });
     });
   }
 
@@ -161,7 +165,7 @@ export class SessionManager {
       target: t.id,
       uuid: t.uuid,
       filename: t.filename,
-      uuids: allTargets(s).map((x) => x.uuid),
+      photos: allTargets(s).map((x) => ({ target: x.id, uuid: x.uuid, pass: `${x.passes}/${s.maxPasses}` })),
       pass: `${t.passes}/${s.maxPasses}`,
       last: t.last ? { metrics: t.last.metrics, hash: t.last.hash, width: t.last.width, height: t.last.height } : null,
     };

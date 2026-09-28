@@ -103,6 +103,8 @@ export const passSchema = z.strictObject({
 });
 
 export const probeSchema = z.strictObject({
+  /** The photo probed (Greptile, PR #34: several copies can be probed). */
+  target: targetIdSchema,
   started: z.string(),
   duration_ms: z.number(),
   magnitude: z.number(),

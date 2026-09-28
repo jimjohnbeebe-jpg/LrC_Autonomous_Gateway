@@ -41,7 +41,7 @@ export async function probe(ctx: SessionContext, s: Session, args: ProbeArgs): P
     await putBack(ctx, s, t, outstanding, historyNames);
     throw failed(ctx, s, "probe", err);
   }
-  s.log.probes.push({ started: probeStarted, duration_ms: ms(started), magnitude, history_names: historyNames, results });
+  s.log.probes.push({ target: t.id, started: probeStarted, duration_ms: ms(started), magnitude, history_names: historyNames, results });
   saveLog(s);
   return {
     json: {

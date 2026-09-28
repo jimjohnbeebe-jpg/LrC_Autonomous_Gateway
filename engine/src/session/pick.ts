@@ -52,7 +52,6 @@ export function checkVariantStep(s: Session, t: Target): void {
   }
 }
 
-
 /** lr_select_variant: the pick becomes the session's photo, selected in Lightroom; its own pass count carries on. */
 export async function selectVariant(ctx: SessionContext, s: Session, args: SelectArgs): Promise<SessionOutput> {
   if (s.mode !== "variants") throw new ToolError("INVALID_ARGUMENTS", "lr_select_variant is for a Variants session (lr_begin_session mode \"variants\").", false);

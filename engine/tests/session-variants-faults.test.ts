@@ -126,6 +126,7 @@ describe("Variants mode: regions and probes on the copies", () => {
     expect(out.json).toMatchObject({ target: "B", results: [{ name: "exposure" }] });
     expect(lr.history.slice(-2)).toEqual([`AVG ${SHORT} B probe exposure`, `AVG ${SHORT} B probe revert`]);
     expect(lr.copies.get("SIM-COPY-2")?.settings["Exposure2012"]).toBe(before);
+    expect(readLog().probes.map((p) => p.target)).toEqual(["B"]);
     expect((await fails(manager.probe({ session_id: ID(), sliders: ["exposure"] }))).code).toBe("INVALID_ARGUMENTS");
   });
 });
@@ -157,6 +158,35 @@ describe("Variants mode: the context tools' target", () => {
     expect(region.json).toMatchObject({ target: "A", uuid: "SIM-COPY-1" });
     const context = await t.getActivePhotoContext();
     expect(context.json).toMatchObject({ uuid: "SIM-COPY-1", is_virtual_copy: true, session_active: true, open_session: { mode: "variants", target: "A" } });
+    // The user clicks copy C in Lightroom: the context describes C, not A that the session last worked on (Greptile, PR #34).
+    lr.selected = "SIM-COPY-3";
+    const clicked = await t.getActivePhotoContext();
+    expect(clicked.json).toMatchObject({ uuid: "SIM-COPY-3", session_active: true, open_session: { target: "C", uuid: "SIM-COPY-3", pass: "0/4", describes: "the selected photo" } });
+    lr.selected = "OTHER-UUID";
+    expect((await t.getActivePhotoContext()).json).toMatchObject({ session_active: false, open_session: { target: "A", describes: "the photo the session last worked on" } });
     await expect(t.getPreview({ target: "A" })).rejects.toMatchObject({ code: "INVALID_ARGUMENTS" });
+  });
+
+  it("says a copy has no preview yet rather than answer with another photo's metrics", async () => {
+    clean();
+    lr.selectFault = "Lightroom did not select photo 101"; // lr_begin_session stops after making the copies
+    const t = tools();
+    await expect(t.beginSession({ intent_id: "test_variants", mode: "variants", return_image: "none" })).rejects.toMatchObject({ code: "SELECT_FAILED" });
+    const id = t.sessionManager()?.current()?.id as string;
+    expect(t.lastRender()).not.toBeNull(); // the master's render, from before the copies
+    await expect(t.getMetrics({ session_id: id, target: "A" })).rejects.toMatchObject({ code: "NO_PREVIEW_YET", message: expect.stringMatching(/copy A/) });
+    expect((await t.getMetrics({ session_id: id, target: "master" })).json).toMatchObject({ target: "master", uuid: "SIM-UUID" });
+  });
+
+  it("runs a region preview of one copy and a step on another sent at the same time one after the other", async () => {
+    clean();
+    const t = tools();
+    const id = (await t.beginSession({ intent_id: "test_variants", mode: "variants", return_image: "none" })).json["session_id"] as string;
+    const [region, stepped] = await Promise.all([
+      t.getPreview({ session_id: id, target: "A", region: { x: 0, y: 0, w: 0.5, h: 0.5 }, long_edge: 800 }),
+      t.step({ session_id: id, target: "B", settings: { contrast: 5 }, rationale: "x", return_image: "none" }),
+    ]);
+    expect(region.json).toMatchObject({ target: "A", uuid: "SIM-COPY-1" });
+    expect(stepped.json).toMatchObject({ target: "B", pass: "1/4" });
   });
 });

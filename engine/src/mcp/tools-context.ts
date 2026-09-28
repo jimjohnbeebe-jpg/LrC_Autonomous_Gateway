@@ -5,7 +5,7 @@ import { z } from "zod";
 import { boxProblem, summarize, type Region, type RegionBox } from "../metrics/index.js";
 import { ParamError, type FromSdkResult } from "../params/index.js";
 import { cropRegion } from "../preview/index.js";
-import type { SessionManager, TargetId } from "../session/index.js";
+import type { SessionManager, SessionView, TargetId } from "../session/index.js";
 import { ToolError, toToolError } from "./errors.js";
 import { DEFAULT_LONG_EDGE, PREVIEW_QUALITY, describe, openSession, render, run, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
@@ -88,8 +88,8 @@ export async function getActivePhotoContext(ctx: ToolContext): Promise<ToolOutpu
       camera_profile_detail: view?.camera_profile ?? null,
       lens_profile_enabled: view ? view.settings["lens.profile_enable"] === 1 : null,
       settings: view?.settings ?? null,
-      session_active: open?.uuids.includes(photo.uuid) ?? false,
-      ...(open ? { open_session: { session_id: open.id, mode: open.mode, target: open.target, uuid: open.uuid, pass: open.pass } } : {}),
+      session_active: open?.photos.some((p) => p.uuid === photo.uuid) ?? false,
+      ...(open ? { open_session: openSessionJson(open, photo.uuid) } : {}),
       ...(settingsError ? { settings_error: settingsError } : {}),
       ...(photo.metadata_errors?.length ? { metadata_errors: photo.metadata_errors } : {}),
     };
@@ -101,9 +101,25 @@ export async function getActivePhotoContext(ctx: ToolContext): Promise<ToolOutpu
 }
 
 /**
+ * The open session as lr_get_active_photo_context shows it: the selected photo's pass when it is
+ * one of the session's photos (in Variants mode, a copy), else the photo the session last worked
+ * on (Greptile, PR #34) [handle: tests\session-variants-faults.test.ts "previews and measures a
+ * named copy, and says a copy is a session photo"].
+ */
+function openSessionJson(open: SessionView, selectedUuid: string): Record<string, unknown> {
+  const selected = open.photos.find((p) => p.uuid === selectedUuid);
+  const photo = selected ?? { target: open.target, uuid: open.uuid, pass: open.pass };
+  return { session_id: open.id, mode: open.mode, ...photo, describes: selected ? "the selected photo" : "the photo the session last worked on" };
+}
+
+/**
  * A preview of the selected photo, or with `session_id` of a session photo (refused if another
- * photo is selected, C-2; in Variants mode `target`'s copy is selected first), with the session's
- * region metrics. With `region`, a crop of that box (regionPreview).
+ * photo is selected, C-2), with the session's region metrics. In Variants mode the manager selects
+ * `target`'s copy first [handle: engine\src\session\targets.ts focus(); tests\session-variants-faults.test.ts
+ * "previews and measures a named copy, and says a copy is a session photo": the sim's selection
+ * is the copy afterwards]. With `region`, a crop of that box (regionPreview), rendered in the
+ * session's queue with its selection [handle: tests\session-variants-faults.test.ts "runs a region
+ * preview of one copy and a step on another sent at the same time one after the other"].
  */
 export async function getPreview(ctx: ToolContext, args: PreviewArgs = {}): Promise<ToolOutput> {
   return run(ctx, "lr_get_preview", args, async () => {
@@ -123,8 +139,9 @@ export async function getPreview(ctx: ToolContext, args: PreviewArgs = {}): Prom
       const json = { ok: true, ...(session ? { session_id: session.id } : {}), ...photo, ...describe(preview), metrics: summarize(preview.metrics), timings: preview.timings };
       return { json, image: preview.jpeg, log: { uuid: preview.uuid, preview_hash: preview.sha256, metrics: json.metrics, timings: preview.timings } };
     }
-    const focused = session ? await manager.focus(session.id, args.target) : null;
-    return regionPreview(ctx, session && focused ? { id: session.id, ...focused } : null, regions, longEdge, args.region);
+    const region = args.region;
+    if (!session) return regionPreview(ctx, null, regions, longEdge, region);
+    return manager.withPhoto(session.id, args.target, (photo) => regionPreview(ctx, { id: session.id, ...photo }, regions, longEdge, region));
   });
 }
 
@@ -198,8 +215,9 @@ async function regionPreview(ctx: ToolContext, session: { id: string; target: Ta
 }
 
 /**
- * Metrics of the last preview: the session's with `session_id` (or while a session is open; in
- * Variants mode of `target`, else of the photo the last call worked on), else this engine's.
+ * Metrics of the last preview: while a session is open, of the session's photo (in Variants mode
+ * `target`'s, else the photo the last call worked on), and NO_PREVIEW_YET when that photo has none,
+ * never another photo's (Greptile, PR #34); with no session open, this engine's last render.
  */
 export async function getMetrics(ctx: ToolContext, args: MetricsArgs = {}): Promise<ToolOutput> {
   return run(ctx, "lr_get_metrics", args, { usesBridge: false }, async () => {
@@ -207,7 +225,10 @@ export async function getMetrics(ctx: ToolContext, args: MetricsArgs = {}): Prom
     const current = ctx.sessions?.current() ?? null;
     if (args.session_id !== undefined) openSession(ctx, args.session_id);
     const open = current ? (ctx.sessions as SessionManager).viewOf(current.id, args.target) : null;
-    if (open?.last) {
+    if (open) {
+      if (!open.last) {
+        throw new ToolError("NO_PREVIEW_YET", `The session's photo ${open.target === "master" ? "" : `(copy ${open.target}) `}has no preview yet; call lr_get_preview with session_id.`, false);
+      }
       const json = { ok: true, session_id: open.id, target: open.target, uuid: open.uuid, preview_hash: open.last.hash, width: open.last.width, height: open.last.height, metrics: open.last.metrics };
       return { json, log: { session_id: open.id, preview_hash: open.last.hash } };
     }

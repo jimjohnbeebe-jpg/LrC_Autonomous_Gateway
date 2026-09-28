@@ -1,0 +1,148 @@
+phase-4/presets live transcript (PHASE4_PLAN row 9) - Claude Code (Opus 5.5), 2026-09-28 (times UTC)
+Engine at branch phase-4/presets (built with `npm run build`); Lightroom Classic 15.5.1 running with
+plugin 0.4.0; Claude Desktop not using LrC-AVG (each step takes the engine's instance lock).
+What these steps did to Lightroom: nothing was written to any photo. `select_photo` (steps 3 and 5)
+changed which photo is selected, so that Jim's reference presets were made from a chosen photo.
+Jim made the two reference presets by hand; everything else below is Claude Code's.
+User folder written as %USERPROFILE%. The scratch scripts are in the appendix.
+
+== 1. Read-only photo check of the photo selected at the start ==
+$ node engine\dist\devtools\preset-capture-cli.js --precheck
+Photo check: FAILED
+  problem: the photo's profile has no Look: pick a photo with an Adobe profile (e.g. Adobe Color)
+Report: %USERPROFILE%\AppData\Local\Temp\LrC-AVG\presets\capture_2026-09-28T02-05-53-545Z.json
+  (report: photo 20260110-_Z8A0173.NEF, profile "Camera Standard" = CameraProfile "Group: Camera
+  Standard", no Look, 12 non-zero numbers, process version 15.4)
+
+== 2. Profiles of the photos named in the session logs, by uuid (read-only, get_settings photo_uuid) ==
+$ node profiles.mjs
+20260907-_OZ80093.NEF | Camera Neutral | look: null | nonzero: 15 | curves:  | WB: As Shot
+20250413-_OZ81430.NEF | Camera Standard | look: null | nonzero: 17 | curves:  | WB: As Shot
+20260907-_OZ80099.NEF | Camera Neutral | look: null | nonzero: 15 | curves:  | WB: As Shot
+20260906-_OZ80005.NEF | Camera Neutral | look: null | nonzero: 15 | curves:  | WB: As Shot
+20260110-_Z8A0138-DxO_DeepPRIME XD3.dng | Adobe Color | look: Adobe Color | nonzero: 7 | curves:  | WB: As Shot
+
+== 3. Select the DNG (the only one with an Adobe profile's Look), then check it ==
+$ node select-dng.mjs 995935D6-F379-4DDE-A8DC-737465C4A52E
+before: {"count":1,"photos":[{"local_id":3869531,"is_virtual_copy":false,"master_local_id":3869531,"filename":"20260110-_Z8A0173.NEF","uuid":"4C1ADCA6-1BC5-442D-B5AE-4B2CCD7BCE67"}]}
+select_photo: {"uuid":"995935D6-F379-4DDE-A8DC-737465C4A52E","local_id":3869530,"is_virtual_copy":false,"master_local_id":3869530,"filename":"20260110-_Z8A0138-DxO_DeepPRIME XD3.dng"}
+after: {"count":1,"photos":[{"local_id":3869530,"is_virtual_copy":false,"master_local_id":3869530,"filename":"20260110-_Z8A0138-DxO_DeepPRIME XD3.dng","uuid":"995935D6-F379-4DDE-A8DC-737465C4A52E"}]}
+$ node engine\dist\devtools\preset-capture-cli.js --precheck
+Photo check: WORKED
+Report: %USERPROFILE%\AppData\Local\Temp\LrC-AVG\presets\capture_2026-09-28T02-06-44-086Z.json
+
+== 4. Jim made "AVG preset reference" (group LrC-AVG, Check All): "reference made" ==
+$ npm run preset:capture
+Preset capture: WORKED
+  finding: the preset file has no Temperature, Tint (group white_balance)
+  finding: the preset file has no SharpenRadius, SharpenDetail, SharpenEdgeMasking (group detail)
+  finding: the preset file has no EnableLensCorrections (group lens)
+  finding: the preset file has no CameraProfile, Look (group camera_profile)
+Report: %USERPROFILE%\AppData\Local\Temp\LrC-AVG\presets\capture_2026-09-28T02-09-14-321Z.json
+  (report: found [{"file":"AVG preset reference.xmp","group":"LrC-AVG"}]; differ: [] - every value the
+  file holds equals the photo's; saved engine\tests\fixtures\presets\reference.lrc15.xmp (228 lines,
+  7,637 B) and reference-settings.lrc15.json)
+
+Jim was asked how v1 presets handle the camera profile, which the first file did not hold; he chose
+"One more reference" [stated].
+
+== 5. Select 20260907-_OZ80093.NEF (Camera Neutral, not the default profile), then check it ==
+$ node select-dng.mjs C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9
+before: {"count":1,"photos":[{"local_id":3869532,"is_virtual_copy":false,"master_local_id":3869532,"filename":"20260906-_OZ80005.NEF","uuid":"B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39"}]}
+select_photo: {"uuid":"C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9","local_id":3869533,"is_virtual_copy":false,"master_local_id":3869533,"filename":"20260907-_OZ80093.NEF"}
+after: {"count":1,"photos":[{"local_id":3869533,"is_virtual_copy":false,"master_local_id":3869533,"filename":"20260907-_OZ80093.NEF","uuid":"C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9"}]}
+$ node engine\dist\devtools\preset-capture-cli.js --precheck --second
+Photo check ("AVG preset reference 2"): WORKED
+Report: %USERPROFILE%\AppData\Local\Temp\LrC-AVG\presets\capture_2026-09-28T02-12-55-405Z.json
+
+== 6. Jim made "AVG preset reference 2" (group LrC-AVG, Check All, Profile ticked): "reference 2 made" ==
+$ node engine\dist\devtools\preset-capture-cli.js --second
+Preset capture ("AVG preset reference 2"): WORKED
+  finding: the preset file has no Temperature, Tint (group white_balance)
+  finding: the preset file has no EnableLensCorrections (group lens)
+  finding: the preset file has no Look (group camera_profile)
+Report: %USERPROFILE%\AppData\Local\Temp\LrC-AVG\presets\capture_2026-09-28T02-13-49-114Z.json
+  (report: found [{"file":"AVG preset reference 2.xmp","group":"LrC-AVG"}]; differ: []; saved
+  engine\tests\fixtures\presets\reference-2.lrc15.xmp (319 lines, 10,937 B) and
+  reference-2-settings.lrc15.json. This file also holds crs:CameraProfile="Camera Neutral" with a
+  crs:CameraProfileDigest, and the Transform, Grain, post-crop vignette and Treatment keys that the
+  first file lacks.)
+
+== 7. Pin the format ==
+$ npm run preset:pin
+Wrote engine\src\params\preset-format.lrc15.json: 107 settings in order, 59 number formats (47 by the range rule).
+
+== 8. The tool, live on the selected photo (_OZ80093, reference 2's photo), into a scratch folder ==
+The preset folder is a scratch folder, never Lightroom's: nothing was written to CameraRaw\Settings.
+$ node live-preset.mjs <scratch>
+ms 556
+{
+ "ok": true,
+ "path": "AVG live smoke.xmp",
+ "name": "AVG live smoke",
+ "group": "LrC-AVG",
+ "uuid": "06EF5775F2624784B7EA9C98CFCC0FB0",
+ "categories": ["basic_tone", "white_balance", "tone_curve", "hsl", "grading", "detail", "lens", "camera_profile"],
+ "source": { "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9", "filename": "20260907-_OZ80093.NEF", "process_version": "15.4" },
+ "written": [62 canonical names: every name of the eight groups but the three below],
+ "left_out": [
+  { "name": "temperature", "reason": "white balance is \"As Shot\": the preset says so and, like Lightroom's two, carries no temperature or tint" },
+  { "name": "tint", "reason": "white balance is \"As Shot\": the preset says so and, like Lightroom's two, carries no temperature or tint" },
+  { "name": "lens.corrections_enable", "reason": "Lightroom's own presets do not carry it: neither reference file has it" }
+ ],
+ "restart_required": true,
+ "note": "Lightroom lists a new preset file only after it restarts (S7): quit Lightroom (File > Exit) and start it again, then the preset is in the Develop Presets panel under its group."
+}
+attributes 83 differ from Lightroom's reference 2: none
+  (the 83 crs: attributes of the engine's file, UUID aside, each equal to the same attribute in
+  Lightroom's reference-2.lrc15.xmp, text for text)
+
+== Appendix A: profiles.mjs ==
+// Read-only: each candidate photo's camera profile and edit count, by uuid (plugin 0.4.0 photo_uuid).
+import { BridgeClient } from "<repo>/engine/dist/bridge/index.js";
+import { acquireInstanceLock, BridgeGate, devOverrides, ENGINE_VERSION } from "<repo>/engine/dist/mcp/index.js";
+import { loadDefaultParamMap } from "<repo>/engine/dist/params/index.js";
+const uuids = { /* the five uuid -> file name pairs of step 2, from the Phase 3 session logs */ };
+const dev = devOverrides();
+const client = new BridgeClient({ engineVersion: ENGINE_VERSION, log: () => {}, ...dev.bridge });
+const gate = new BridgeGate(client, () => acquireInstanceLock(dev.lockPort));
+const map = loadDefaultParamMap();
+try {
+  await gate.ready();
+  for (const [uuid, name] of Object.entries(uuids)) {
+    const r = await client.request("get_settings", { photo_uuid: uuid });
+    const read = map.fromSdk(r.settings);
+    const nz = Object.entries(read.settings).filter(([, v]) => typeof v === "number" && v !== 0).map(([k]) => k);
+    const curves = Object.entries(read.settings).filter(([k, v]) => k.startsWith("tone_curve.") && Array.isArray(v) && v.length > 4).map(([k]) => k);
+    console.log(name, "|", read.camera_profile.name, "| look:", read.camera_profile.look_name, "| nonzero:", nz.length, "| curves:", curves.join(","), "| WB:", r.settings.WhiteBalance);
+  }
+} finally {
+  await gate.release();
+}
+
+== Appendix B: select-dng.mjs ==
+// Select a photo by uuid, then confirm with get_selection.
+(same imports and gate as Appendix A)
+const UUID = process.argv[2];
+try {
+  await gate.ready();
+  console.log("before:", JSON.stringify(await client.request("get_selection", { max: 5 })));
+  const r = await client.request("select_photo", { uuid: UUID, expect: { is_virtual_copy: false } });
+  console.log("select_photo:", JSON.stringify(r));
+  console.log("after:", JSON.stringify(await client.request("get_selection", { max: 5 })));
+} finally {
+  await gate.release();
+}
+
+== Appendix C: live-preset.mjs ==
+// Live, read-only on Lightroom: lr_create_preset_from_active through Tools, with the preset folder a
+// scratch folder (never Lightroom's). Then compares the file with Lightroom's reference 2.
+(same imports and gate as Appendix A, plus Tools, IntentLibrary, PreviewService, parseXml, presetDescription)
+const dir = path.join(process.argv[2], "Settings"); // emptied and made first
+const tools = new Tools({ client, map, previews: new PreviewService(client), intents: new IntentLibrary({ map }),
+  sessionLogDir: path.join(process.argv[2], "logs"), presetDir: dir, engineVersion: ENGINE_VERSION, ensureBridge: () => gate.ready() });
+const r = await tools.createPresetFromActive({ name: "AVG live smoke" });
+const ours = presetDescription(parseXml(readFileSync(r.json.path, "utf8")));
+const theirs = presetDescription(parseXml(readFileSync("<repo>/engine/tests/fixtures/presets/reference-2.lrc15.xmp", "utf8")));
+const differ = [...ours.attrs].filter(([k, v]) => k !== "crs:UUID" && theirs.attrs.get(k) !== v);
+console.log("attributes", ours.attrs.size, "differ from Lightroom's reference 2:", differ.length ? differ : "none");

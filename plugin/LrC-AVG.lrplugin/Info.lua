@@ -1,7 +1,8 @@
 -- LrC-AVG plugin. Read LR_SDK_NOTES.md before changing anything here.
 -- The bridge (Bridge.lua) starts when the plugin loads (PluginInit.lua) and serves the engine's
--- Develop commands (Develop.lua, Phase 1), preview exports (Preview.lua, Phase 2) and virtual copies
--- and selection (Catalog.lua, Phase 4); Dispatch.lua routes them. The HUD and
+-- Develop commands (Develop.lua, Phase 1), preview exports (Preview.lua, Phase 2), virtual copies
+-- and selection (Catalog.lua, Phase 4) and photos named by uuid (Photos.lua, Phase 4); Dispatch.lua
+-- routes them. The HUD and
 -- settings page come in later phases (ARCHITECTURE section 1).
 -- LrSdkVersion 13.0: the five Phase 0 spike plugins declared it and ran on LrC 15.5.1
 -- [handle: docs\reports\phase0\PHASE0.md "Draft for LR_SDK_NOTES", SDK version]; whether it hides
@@ -19,5 +20,5 @@ return {
     LrExportMenuItems = {
         { title = "LrC-AVG - Bridge status", file = "MenuStatus.lua" },
     },
-    VERSION = { major = 0, minor = 3, revision = 0, build = 0 },
+    VERSION = { major = 0, minor = 4, revision = 0, build = 0 },
 }

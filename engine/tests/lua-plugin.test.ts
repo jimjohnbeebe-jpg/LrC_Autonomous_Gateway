@@ -81,7 +81,7 @@ describe("lua: every plugin file", () => {
     const names = files.filter((f) => f.startsWith(avgPlugin)).map((f) => path.basename(f)).sort();
     expect(names).toEqual([
       "Bridge.lua", "Catalog.lua", "Develop.lua", "Dispatch.lua", "Info.lua", "Json.lua", "Log.lua", "MenuStatus.lua",
-      "PluginInit.lua", "Preview.lua", "Sockets.lua",
+      "Photos.lua", "PluginInit.lua", "Preview.lua", "Sockets.lua",
     ]);
   });
 

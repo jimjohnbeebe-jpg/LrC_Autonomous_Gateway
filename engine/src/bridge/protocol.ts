@@ -10,7 +10,7 @@
 //     { id, type: "evt", name, ts, payload }
 // Every inbound line is validated here with zod before the engine acts on it (rule 01-stack).
 // The plugin side is plugin\LrC-AVG.lrplugin\Bridge.lua, Dispatch.lua (the handler table),
-// Develop.lua, Preview.lua and Catalog.lua.
+// Develop.lua, Preview.lua, Catalog.lua and Photos.lua.
 //
 // Lua cannot tell an empty array from an empty object, and the plugin's Json.lua writes every empty
 // table as []. Payload schemas below never require a non-empty table to be an object.
@@ -83,6 +83,8 @@ const photoIdentity = {
   is_virtual_copy: z.boolean().optional(),
   master_local_id: z.number().optional(),
   copy_name: z.string().optional(),
+  /** Plugin 0.4.0 (Photos.lua describe). */
+  filename: z.string().optional(),
 };
 
 export const COMMANDS = {
@@ -129,13 +131,26 @@ export const COMMANDS = {
   }),
   // The photo found by uuid, checked against `expect`, and now the only selected photo.
   select_photo: z.object({ ...targeted, ...photoIdentity }),
+  // Plugin 0.4.0 (Catalog.lua): the selected photos, the active one first; `count` is how many are
+  // selected, `photos` at most the `max` asked for. A photo whose uuid could not be read has none.
+  get_selection: z.object({
+    count: z.number(),
+    photos: z.array(z.object({ ...photoIdentity, uuid: z.string().optional() })),
+  }),
 } as const;
 
 export type CommandName = keyof typeof COMMANDS;
 export type CommandResult<N extends CommandName> = z.infer<(typeof COMMANDS)[N]>;
 
-/** Optional guard: the plugin refuses the command if the selected photo has another uuid. */
-type Target = { target_uuid?: string };
+/** What the plugin checks a photo found by uuid against (Photos.lua); each field optional. */
+export type PhotoExpect = { copy_name?: string; master_local_id?: number; is_virtual_copy?: boolean };
+
+/**
+ * The photo a command acts on. `target_uuid`: the selected photo, refused if another is selected.
+ * `photo_uuid` (plugin 0.4.0): the photo with that uuid, selected or not, checked against `expect`;
+ * the selection is not touched (Develop.lua target()). Not both.
+ */
+type Target = { target_uuid?: string; photo_uuid?: never; expect?: never } | { photo_uuid: string; expect?: PhotoExpect; target_uuid?: never };
 
 export type CommandPayloads = {
   hello: { protocol: number; engine_version: string };
@@ -150,5 +165,7 @@ export type CommandPayloads = {
   /** target_uuid is required here: the selected photo must be the master (PRD section 6.6 step 1). 2-4 names, each "AVG …". */
   create_virtual_copies: { target_uuid: string; names: string[] };
   /** Refused with identity_mismatch when the photo found differs from a field given in `expect`. */
-  select_photo: { uuid: string; expect?: { copy_name?: string; master_local_id?: number; is_virtual_copy?: boolean } };
+  select_photo: { uuid: string; expect?: PhotoExpect };
+  /** max: how many photos to describe, 1-500 (the plugin's default 100). Refused with no_target_photo when none is selected. */
+  get_selection: { max?: number };
 };

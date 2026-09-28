@@ -8,7 +8,7 @@ import type { IntentLibrary } from "../intents/index.js";
 import type { ToolLog } from "../log/index.js";
 import type { Metrics, Region } from "../metrics/index.js";
 import type { ParamMap } from "../params/index.js";
-import type { PreviewService, RenderedPreview } from "../preview/index.js";
+import type { PreviewRequest, PreviewService, RenderedPreview } from "../preview/index.js";
 import { SessionManager } from "../session/index.js";
 import { ToolError, toToolError } from "./errors.js";
 
@@ -108,12 +108,17 @@ export function library(ctx: ToolContext): IntentLibrary {
 }
 
 export async function render(ctx: ToolContext, longEdge: number, targetUuid?: string, regions: readonly Region[] = [], quality = PREVIEW_QUALITY): Promise<RenderedPreview> {
-  const preview = await ctx.deps.previews.render({
+  return renderRequest(ctx, {
     longEdge,
     quality,
     regions,
     ...(targetUuid !== undefined ? { targetUuid } : {}),
   });
+}
+
+/** Render any preview request (lr_sync_series names its photos with photoUuid) and keep it as the last render. */
+export async function renderRequest(ctx: ToolContext, request: PreviewRequest): Promise<RenderedPreview> {
+  const preview = await ctx.deps.previews.render(request);
   ctx.last = {
     uuid: preview.uuid,
     preview_hash: preview.sha256,

@@ -42,7 +42,7 @@ local Sockets = require 'Sockets'
 local Bridge = {}
 
 Bridge.PROTOCOL = 1
-Bridge.PLUGIN_VERSION = "0.3.0"
+Bridge.PLUGIN_VERSION = "0.4.0"
 Bridge.SDK_DECLARED = 13.0 -- Info.lua LrSdkVersion; the SDK version LrC 15.5.1 ships is [unverified]
 Bridge.DEFAULT_RECEIVE_PORT = 8765
 Bridge.DEFAULT_SEND_PORT = 8766

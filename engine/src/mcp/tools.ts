@@ -4,6 +4,7 @@
 //   session  (tools-session.ts): lr_begin_session, lr_step, lr_probe, lr_set_regions, lr_end_session,
 //            lr_get_session_log (Phase 3; the loop is session\manager.ts); lr_select_variant (Phase 4).
 //   intents  (tools-intents.ts): lr_list_intents, lr_get_intent, lr_save_intent (Phase 3).
+//   propagation (tools-propagation.ts): lr_sync_series (Phase 4; the sync is sync\sync.ts).
 //   write    (tools-write.ts): setSettings, Phase 2's lr_set_settings, for the Phase 2 check only.
 // What they share is in tools-shared.ts. The MCP definitions are the defs-*.ts modules, by the same
 // groups.
@@ -14,6 +15,7 @@ import type { BeginArgs, EndArgs, ProbeArgs, RegionArgs, SelectArgs, SessionMana
 import type { ToolError } from "./errors.js";
 import { getActivePhotoContext, getMetrics, getPreview, type MetricsArgs, type PreviewArgs } from "./tools-context.js";
 import { getIntent, listIntents, saveIntent, type SaveIntentArgs } from "./tools-intents.js";
+import { syncSeries, type SyncSeriesArgs } from "./tools-propagation.js";
 import { beginSession, endSession, getSessionLog, probe, selectVariant, setRegions, step } from "./tools-session.js";
 import { createContext, type LastRender, type ToolContext, type ToolOutput, type ToolsDeps } from "./tools-shared.js";
 import { setSettings, type SetSettingsArgs } from "./tools-write.js";
@@ -96,6 +98,12 @@ export class Tools {
 
   saveIntent(args: SaveIntentArgs): Promise<ToolOutput> {
     return saveIntent(this.ctx, args);
+  }
+
+  // --- Propagation.
+
+  syncSeries(args: SyncSeriesArgs): Promise<ToolOutput> {
+    return syncSeries(this.ctx, args);
   }
 
   // --- Phase 2's write, for the Phase 2 check (not offered over MCP).

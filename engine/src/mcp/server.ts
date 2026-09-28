@@ -17,6 +17,7 @@ import { CallToolRequestSchema, ListToolsRequestSchema, type CallToolResult, typ
 import { z } from "zod";
 import { CONTEXT_DEFS } from "./defs-context.js";
 import { INTENT_DEFS } from "./defs-intents.js";
+import { PROPAGATION_DEFS } from "./defs-propagation.js";
 import { SESSION_DEFS } from "./defs-session.js";
 import type { ToolDef } from "./defs-shared.js";
 import { ToolError, toToolError } from "./errors.js";
@@ -25,7 +26,7 @@ import type { ToolOutput } from "./tools-shared.js";
 import { ENGINE_VERSION } from "./version.js";
 
 /** The tool groups, in the order the server lists them. */
-const DEFS: ToolDef[] = [...CONTEXT_DEFS, ...SESSION_DEFS, ...INTENT_DEFS];
+const DEFS: ToolDef[] = [...CONTEXT_DEFS, ...SESSION_DEFS, ...INTENT_DEFS, ...PROPAGATION_DEFS];
 
 /** The advertised JSON Schema of a tool's arguments, from the same zod schema that validates them. */
 function inputSchema(schema: z.ZodObject): Tool["inputSchema"] {

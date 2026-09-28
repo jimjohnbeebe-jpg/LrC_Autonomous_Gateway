@@ -1,0 +1,101 @@
+// lr_sync_series' source (MCP_TOOLS lr_sync_series): the recipe of an accepted session, a recipe
+// file, or canonical settings. A session's recipe is the file lr_end_session "accept" writes next to
+// its log, <yyyymmdd>-<short id>.recipe.json (log\session-log.ts SessionLogFiles); in Variants mode
+// it is the pick's (session\end.ts). A recipe path must name a .recipe.json file inside the log
+// folder, as the preview reader only reads inside its own folder (preview\service.ts take())
+// [inference: the engine reads no file a tool argument names elsewhere]. Settings are validated
+// against the params map before anything is written.
+
+import { readdirSync, readFileSync, realpathSync } from "node:fs";
+import path from "node:path";
+import { recipeSchema, type Recipe } from "../log/index.js";
+import { ToolError } from "../mcp/errors.js";
+import { SUPPORTED_PROCESS_VERSIONS, type CanonicalSettings, type ParamMap } from "../params/index.js";
+
+export type SyncSource = { session_id: string } | { recipe_path: string } | { settings: Record<string, unknown> };
+
+export type ResolvedSource = {
+  kind: "session" | "recipe" | "settings";
+  settings: CanonicalSettings;
+  /** The photo a recipe was taken from; null for bare settings. */
+  photo: { uuid: string; filename: string | null } | null;
+  session_id: string | null;
+  recipe_path: string | null;
+};
+
+const RECIPE_SUFFIX = ".recipe.json";
+
+/** Refuse unknown names, wrong types and out-of-range values now, before any target is touched. */
+function validated(map: ParamMap, settings: Record<string, unknown>): CanonicalSettings {
+  map.toSdk(settings, { processVersion: SUPPORTED_PROCESS_VERSIONS[0] as string });
+  return settings as CanonicalSettings;
+}
+
+function parseRecipe(file: string): Recipe {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(readFileSync(file, "utf8"));
+  } catch (err) {
+    throw new ToolError("INVALID_RECIPE", `Cannot read the recipe ${file}: ${(err as Error).message}`, false);
+  }
+  const parsed = recipeSchema.safeParse(raw);
+  if (!parsed.success) throw new ToolError("INVALID_RECIPE", `${file} is not an LrC-AVG recipe: ${parsed.error.issues[0]?.message ?? "invalid"}`, false);
+  return parsed.data;
+}
+
+/** The recipe lr_end_session "accept" wrote for this session (same file naming as session\end.ts readSessionLog). */
+function findRecipe(logDir: string, sessionId: string): { file: string; recipe: Recipe } {
+  const short = sessionId.replace(/-/g, "").slice(0, 6);
+  let names: string[] = [];
+  try {
+    names = readdirSync(logDir).filter((f) => f.endsWith(`-${short}${RECIPE_SUFFIX}`));
+  } catch {
+    // no log folder yet
+  }
+  for (const name of names) {
+    const file = path.join(logDir, name);
+    const recipe = parseRecipe(file);
+    if (recipe.session_id === sessionId) return { file, recipe };
+  }
+  throw new ToolError(
+    "RECIPE_NOT_FOUND",
+    `No recipe for session ${sessionId} in ${logDir}. A session writes its recipe only when it ends with lr_end_session outcome "accept".`,
+    false,
+  );
+}
+
+function isInside(dir: string, file: string): boolean {
+  const rel = path.relative(dir, file);
+  return rel !== "" && !rel.startsWith("..") && !path.isAbsolute(rel);
+}
+
+/** A recipe file named by path: a .recipe.json inside the log folder, also once links are resolved. */
+function readRecipe(logDir: string, recipePath: string): { file: string; recipe: Recipe } {
+  const file = path.resolve(logDir, recipePath);
+  const refuse = (why: string): never => {
+    throw new ToolError("RECIPE_PATH_REFUSED", `recipe_path ${why}: ${recipePath}. Recipes are read only from the log folder ${logDir}.`, false);
+  };
+  if (!file.toLowerCase().endsWith(RECIPE_SUFFIX) || !isInside(path.resolve(logDir), file)) refuse("is not a .recipe.json file in the log folder");
+  let real: string;
+  try {
+    real = realpathSync(file);
+  } catch {
+    throw new ToolError("RECIPE_NOT_FOUND", `There is no recipe file ${file}.`, false);
+  }
+  if (!isInside(realpathSync(logDir), real)) refuse("resolves outside the log folder");
+  return { file, recipe: parseRecipe(real) };
+}
+
+export function resolveSource(logDir: string, map: ParamMap, source: SyncSource): ResolvedSource {
+  if ("settings" in source) {
+    return { kind: "settings", settings: validated(map, source.settings), photo: null, session_id: null, recipe_path: null };
+  }
+  const { file, recipe } = "session_id" in source ? findRecipe(logDir, source.session_id) : readRecipe(logDir, source.recipe_path);
+  return {
+    kind: "session_id" in source ? "session" : "recipe",
+    settings: validated(map, recipe.settings),
+    photo: recipe.source,
+    session_id: recipe.session_id,
+    recipe_path: file,
+  };
+}

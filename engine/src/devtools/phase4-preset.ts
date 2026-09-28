@@ -74,8 +74,10 @@ export async function makePreset(deps: Phase4Deps, run: Run, photo: Photo, pick:
 }
 
 /**
- * The pick's profile set to PRESET_PROFILE and its temperature moved by WB_SHIFT, so white balance
- * is no longer As Shot [unverified: that Lightroom then reports "Custom"; `white_balance_after` records it].
+ * The pick's profile set to PRESET_PROFILE and its temperature moved by WB_SHIFT. In the Phase 4 run
+ * the temperature went alone and Lightroom kept "As Shot" [handle: docs\reports\phase4\PHASE4.md
+ * "Numbers", the preset row]; from engine 0.6.1 toSdk writes WhiteBalance "Custom" with it, which
+ * Lightroom takes [handle: docs\reports\phase4\WB.md "Observed"]. `white_balance_after` records it.
  */
 async function prepareSource(deps: Phase4Deps, photo: Photo, pick: Picked): Promise<Json> {
   const now = (await settingsOf(deps, pick.uuid)).settings;

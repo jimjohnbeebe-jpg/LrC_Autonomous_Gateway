@@ -40,7 +40,8 @@ export type SimOptions = {
   noRestart: boolean;
   presetClickIgnored: boolean;
   keepCopy: string | null;
-  customWhiteBalance: boolean;
+  /** Lightroom refuses WhiteBalance "Custom" (the sim drops the key), so white balance stays As Shot. */
+  refuseCustomWhiteBalance: boolean;
   /** The chat: the copies refined before the pick, the passes after it, and a first Variants session ended with revert. */
   chatRefines: ReadonlyArray<"A" | "B" | "C">;
   chatStepsAfterPick: number;
@@ -48,7 +49,7 @@ export type SimOptions = {
   /** Claude Desktop keeps the bridge after the chat, so the check cannot take it back. */
   lockBusyAfterChat: boolean;
 };
-export const DEFAULTS: SimOptions = { pick: "B", noRestart: false, presetClickIgnored: false, keepCopy: null, customWhiteBalance: true, chatRefines: ["A", "B", "C"], chatStepsAfterPick: 1, chatTwice: false, lockBusyAfterChat: false };
+export const DEFAULTS: SimOptions = { pick: "B", noRestart: false, presetClickIgnored: false, keepCopy: null, refuseCustomWhiteBalance: false, chatRefines: ["A", "B", "C"], chatStepsAfterPick: 1, chatTwice: false, lockBusyAfterChat: false };
 
 export const h = {
   plugin: null as unknown as FakePlugin,
@@ -152,7 +153,7 @@ async function jim(text: string): Promise<string | null> {
 /** One run of the check against the sim, with Jim's y/n answers in order ("no answer" once they run out). */
 export function runCheck(answers: Answer[], options: { busy?: boolean; restartTimeoutMs?: number; copiesTimeoutMs?: number; tamper?: (tools: Tools) => void } = {}) {
   const queue = [...answers];
-  h.lr.customWhiteBalanceOnTemperature = h.sim.customWhiteBalance;
+  if (h.sim.refuseCustomWhiteBalance) h.lr.ignored.add("WhiteBalance");
   const client = newClient();
   const previews = new PreviewService(client, { previewDir: dir("previews") });
   const busy = (): boolean => options.busy === true || (h.sim.lockBusyAfterChat && h.chatDone);

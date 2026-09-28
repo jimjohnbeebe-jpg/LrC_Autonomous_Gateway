@@ -100,6 +100,18 @@ describe("lr_create_preset_from_active", () => {
     expect(readFileSync(path.join(dir, "As shot.xmp"), "utf8")).toContain('crs:WhiteBalance="As Shot"');
   });
 
+  it('carries the temperature after a session moved it: the step wrote WhiteBalance "Custom" (docs\\reports\\phase4\\WB.md)', async () => {
+    const begin = await presets.beginSession({ intent_id: "test_plain", return_image: "none" });
+    const id = String(begin.json["session_id"]);
+    await presets.step({ session_id: id, settings: { temperature: 300 }, rationale: "warmer", return_image: "none" });
+    await presets.endSession({ session_id: id, outcome: "accept" });
+    const step = sent("apply_settings").find((p) => String(p["history_name"]).includes("pass 1/")) as Record<string, unknown>;
+    expect(step["settings"]).toMatchObject({ Temperature: 5800, WhiteBalance: "Custom" });
+    const out = await presets.createPresetFromActive({ name: "Warm", categories: ["white_balance"] });
+    expect(out.json).toMatchObject({ written: ["temperature", "tint"], also_written: { WhiteBalance: "Custom" }, left_out: [] });
+    expect(readFileSync(path.join(dir, "Warm.xmp"), "utf8")).toContain('crs:Temperature="5800"');
+  });
+
   it("refuses a name another preset has, before asking Lightroom anything", async () => {
     mkdirSync(path.join(dir, "Other"));
     await presets.createPresetFromActive({ name: "Taken" });

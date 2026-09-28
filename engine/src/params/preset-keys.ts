@@ -15,11 +15,16 @@ export const PROFILE_KEYS: readonly string[] = [CAMERA_PROFILE_KEY, "Look"];
 export const PROCESS_VERSION_KEY = "ProcessVersion";
 /** Lightroom writes the white balance mode ("As Shot", …) with the White Balance setting. */
 export const WHITE_BALANCE_KEY = "WhiteBalance";
-/** The white balance mode of a raw photo not yet edited: the pinned dump's value (sdk-keys.lrc15.json "WhiteBalance"). */
+/**
+ * The white balance mode of a raw photo whose white balance was not edited [handle: sdk-keys.lrc15.json
+ * "WhiteBalance" sample, both S5 dumps; docs\reports\phase4\WB\wb_check_2026-09-28T12-19-08-508Z.json photo].
+ */
 export const AS_SHOT_WHITE_BALANCE = "As Shot";
 /**
- * The white balance mode for a Temperature or Tint of the engine's own [unverified: the pinned dump
- * shows only "As Shot"; `npm run wb:check` (devtools\wb-check.ts) checks whether Lightroom takes it].
+ * The white balance mode the engine writes with a Temperature or Tint (map.ts toSdk). Lightroom took
+ * it through applyDevelopSettings and read it back [handle: docs\reports\phase4\WB\wb_check_2026-09-28T12-19-08-508Z.json
+ * temperature_custom.custom_taken, tint_custom.custom_taken], and its Basic panel then read "Custom"
+ * [stated: Jim, in the same run, temperature_custom.jim.panel_custom].
  */
 export const CUSTOM_WHITE_BALANCE = "Custom";
 /** Lightroom writes the point curve's name ("Linear", …) with the point curves. */

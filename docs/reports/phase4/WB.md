@@ -1,8 +1,8 @@
 ---
 report: WB — does Lightroom take WhiteBalance "Custom"?
 phase: 4 (fix before Phase 5)
-status: template
-authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-09-28 (fix/white-balance-custom). Observed: Jim (to come). Verdict: Jim (to come)."
+status: accepted
+authored_by: "Template, harness, pre-run findings, analysis, Numbers and Consequences: Claude Code (Opus 5.5), 2026-09-28 (fix/white-balance-custom). Observed: Jim ran npm run wb:check on 2026-09-28 and answered its questions. Verdict: Jim (go, 2026-09-28)."
 date: 2026-09-28
 ---
 
@@ -89,31 +89,74 @@ Checks Claude Code ran on 2026-09-28 on the branch, before Jim's run. None of th
   - a shift that would pass a slider's maximum goes the other way.
 - **Mutation check:** with both temperature steps made to report "Custom" taken whatever the read-back, 1 test failed; with the put-back made to ignore differences, 1 test failed. The file was restored byte-identical afterwards [handle: Claude Code, 2026-09-28, `npx vitest run tests/wb-check.test.ts`: "Tests 1 failed | 8 passed (9)" for each; then "Tests 9 passed (9)"].
 - **Dry run of the built CLI** against a scratch plugin (Jim's Lightroom not touched): once taking every key, once dropping WhiteBalance. Both printed `White balance check: WORKED` and `PUT BACK: YES` and exited 0. The first reported "Custom" taken YES and the preset carrying the temperature YES; the second reported NO for both [handle: `docs\reports\phase4\wb-dryrun\dryrun.txt`, sections 1 and 2].
-- **Not yet run inside Lightroom** [unverified until Jim's run]: every Lightroom answer above.
+- **Not yet run inside Lightroom** at the time [unverified until Jim's run; his run answered them, see "Observed"]: every Lightroom answer above.
 
 ## Observed (Jim)
 
-*To be filled after Jim's run: the results file's fields, Jim's y/n answers, the plugin log's lines for the check.*
+Jim ran the steps on 2026-09-28 and said "done" [stated]. The check saved its files to `%TEMP%\LrC-AVG\WB\`, which held one run, `2026-09-28T12-19-08-508Z`. Claude Code copied them to `docs\reports\phase4\WB\`:
+- the results, `wb_check_2026-09-28T12-19-08-508Z.json`, verbatim;
+- the plugin log's lines for the check, `wb_bridge_log_2026-09-28T12-19-08-508Z_excerpt.txt`: lines 889-903 of the check's own copy of the log (903 lines, user folder already written as `%USERPROFILE%`), from the plugin's start to the check's last command.
+
+Neither file holds the user-folder name or the bridge token [handle: Claude Code, 2026-09-28, `grep -rl` for both over `docs\reports\phase4\WB\`: no match].
+
+Times are local (UTC−7) unless marked Z. "The run" is the results file; "the log" is the excerpt.
+
+### The run (05:19 → 05:20): WORKED
+
+- **The plugin** started at 05:18:18.209 and was listening 11.5 s later (05:18:29.749); the check connected at 05:19:08.563 with plugin 0.4.0 on LrC 15.5.1 [handle: the log; the run `hello`].
+- **The photo**, `20260907-_OZ80099.NEF` (process version 15.4), started at white balance **"As Shot"**, Temperature **4900**, Tint **11** [handle: the run `photo`]. Jim's click and Enter came at 05:20:09 (`get_context`), and the snapshot `AVG WBcheck before 2026-09-28T12-19-08-508Z` followed [handle: the log, 05:20:09.397-05:20:09.476; the run `snapshot`].
+- **Step 1, Temperature alone** (4900 → 5200, 05:20:09.564): Lightroom took the temperature and kept white balance **"As Shot"**, as in the Phase 4 check [handle: the run `temperature_alone`]. Jim: the Basic panel's WB read **"As Shot"** (y), and the Temp slider read **5200** (y) [stated, via the check; the run `temperature_alone.jim`]. So the panel showed "As Shot" beside a moved Temp slider.
+- **Step 2, Temperature with "Custom"** (5200 → 5500, 05:20:33.106): Lightroom took both. It read back white balance **"Custom"** and Temperature 5500, with no mismatch [handle: the run `temperature_custom`]. Jim: WB read **"Custom"** (y) [stated, via the check; the run `temperature_custom.jim`]. The fallback (Jim's slider drag) was not needed.
+- **Step 3, Tint with "Custom"** from the start again: the snapshot put white balance back to "As Shot" (05:20:43.634). Then Tint 11 → 16 with "Custom" (05:20:44.272) read back white balance **"Custom"** and Tint 16, with Temperature still **4900**, the As Shot value. No mismatch [handle: the run `tint_custom`; the log].
+- **Step 4, the preset selection** (white balance group, no file): after step 2 a preset carries **temperature and tint**, with `WhiteBalance = "Custom"`; after step 1 it carries neither, both left out as "As Shot" [handle: the run `preset`].
+- **Put back** (05:20:44.758): 177 settings compared with the start, **0 differing** [handle: the run `put_back`; the log].
+- **The headline: `White balance check: WORKED`**, `PUT BACK: YES`, no error [handle: the run `summary`, `errors`].
 
 ## Numbers
 
 | Field | Value | Source |
 |---|---|---|
-| Photo, white balance at the start, Temperature, Tint | | `photo` |
-| Step 1: white balance after Temperature alone; temperature as written | | `temperature_alone` |
-| Step 1: the panel reads As Shot / Custom; the Temp slider moved (Jim) | | `temperature_alone.jim` |
-| Step 2: "Custom" taken; temperature as written; mismatches | | `temperature_custom` |
-| Step 2: the panel reads Custom (Jim) | | `temperature_custom.jim` |
-| Step 2 fallback: white balance after Jim's drag (only if "Custom" was not taken) | | `temperature_custom.by_hand` |
-| Step 3: back to As Shot; "Custom" taken with Tint; tint as written; Temperature kept | | `tint_custom` |
-| Step 4: a preset carries the temperature, after step 2 / after step 1 | | `preset` |
-| Put back: settings compared, differing | | `put_back` |
-| Headline | | `summary` |
+| Photo, white balance at the start, Temperature, Tint | `20260907-_OZ80099.NEF`, PV 15.4; **"As Shot"**, 4900, 11 | `photo` |
+| Step 1: white balance after Temperature alone; temperature as written | 4900 → 5200: **"As Shot"**; **YES** | `temperature_alone` |
+| Step 1: the panel reads As Shot / Custom; the Temp slider moved (Jim) | **y** / not asked; **y** (5200) | `temperature_alone.jim` |
+| Step 2: "Custom" taken; temperature as written; mismatches | 5200 → 5500: **YES**; **YES**; none | `temperature_custom` |
+| Step 2: the panel reads Custom (Jim) | **y** | `temperature_custom.jim` |
+| Step 2 fallback: white balance after Jim's drag (only if "Custom" was not taken) | not needed | `temperature_custom` (no `by_hand`) |
+| Step 3: back to As Shot; "Custom" taken with Tint; tint as written; Temperature kept | **YES**; **YES** (11 → 16); **YES**; **YES** (4900) | `tint_custom` |
+| Step 4: a preset carries the temperature, after step 2 / after step 1 | **YES** (and the tint) / **NO** (both left out, As Shot) | `preset` |
+| Put back: settings compared, differing | 177; **0** | `put_back` |
+| Headline | **WORKED**, PUT BACK: YES; the run 12:19:08Z → 12:20:45Z | `summary`, `started_at`, `finished_at` |
 
 ## Verdict
 
-*Jim's, after the run. The check's line is a suggestion.*
+**Go** (Jim, 2026-09-28, the option Claude Code recommended) [stated: "Go (Recommended)"]: make the engine change in this PR. The check's suggestion was **WORKED**, and the proposed rule in "Purpose" is met: steps 2 and 3 read back "Custom", and PUT BACK is YES.
 
 ## Consequences / open questions
 
-*After the run: on go, the engine change in this PR (`ParamMap.toSdk` writes `WhiteBalance = "Custom"` with Temperature/Tint; engine 0.6.1), and LR_SDK_NOTES "Recorded in Phase 4". On no-go, options for Jim.*
+**The engine change, in this PR (engine 0.6.1)** [handle: `engine\src\params\map.ts` `CUSTOM_WHITE_BALANCE_PARAMS` and `toSdk`]:
+- Whenever `toSdk` writes `temperature` or `tint`, it also writes `WhiteBalance = "Custom"`, which is read back like every other key. The map refuses to build over a key file without `WhiteBalance`.
+- Every engine write goes through `toSdk`: session steps, pass 0, syncs and recipe replays.
+- The plan's decision 3 [stated: "go with recommendations"]: "Custom" goes with every temperature or tint write. A sync or recipe replay that writes an As Shot photo's own temperature therefore sets "Custom" at the same values [handle: `engine\tests\params-map.test.ts` "round-trips through toSdk, the white balance mode then \"Custom\" at the same values"].
+- Tests against the simulated plugin, which now changes WhiteBalance only when it is written (`engine\tests\helpers\lightroom-sim.ts`, from step 1 of this run):
+  - the map: "Custom" with a temperature or a tint and not otherwise; the key required; a read-back of "As Shot" reported (`params-map.test.ts`);
+  - a session's temperature step writes "Custom", and a preset then carries the temperature and tint (`presets-tool.test.ts`);
+  - a sync of the white balance group writes "Custom", and the target reads it back (`sync.test.ts`);
+  - a Lightroom that refused "Custom" would now fail the syncs loudly with the preset step recording "As Shot" (`phase4-check-faults.test.ts`; this replaces the Phase 4 test in which As Shot passed silently).
+  - With the one line in `toSdk` removed, 7 of these tests failed; the file was restored byte-identical afterwards [handle: Claude Code, 2026-09-28, `npx vitest run tests/params-map.test.ts tests/presets-tool.test.ts tests/sync.test.ts tests/phase4-check.test.ts tests/phase4-check-faults.test.ts`: "Tests 7 failed | 71 passed | 1 skipped (79)"].
+- All engine tests: 552 pass, 1 skipped; `npm run build` and `npm run typecheck` pass [handle: `npm test`, "Tests 552 passed | 1 skipped (553)", 2026-09-28].
+- `lr_create_preset_from_active`'s description now says every temperature or tint the engine writes sets the white balance to Custom (`engine\src\mcp\defs-propagation.ts`).
+- **For Jim after the merge:** restart Claude Desktop so it loads engine 0.6.1. Lightroom needs no restart: the plugin is unchanged.
+
+**Proposed for LR_SDK_NOTES "Recorded in Phase 4"** (LrC 15.5.1, Windows 11), each from this run [handle: `WB\wb_check_2026-09-28T12-19-08-508Z.json`]:
+- `applyDevelopSettings { Temperature }` alone keeps `WhiteBalance` "As Shot" (step 1, as in the Phase 4 check). The Basic panel's WB menu then reads "As Shot" while the Temp slider shows the new value [stated: Jim, via the check]. This answers PHASE4.md's "What Lightroom's panel shows after a Temperature write that leaves As Shot".
+- `applyDevelopSettings { Temperature, WhiteBalance = "Custom" }` is taken: both read back, and the panel's WB reads "Custom" [stated: Jim, via the check].
+- `applyDevelopSettings { Tint, WhiteBalance = "Custom" }` is taken too, and Temperature keeps the As Shot value (4900 on this photo).
+- `applyDevelopSnapshot` puts `WhiteBalance` back to "As Shot" (step 3's reset and the put-back).
+
+**Still [unverified]:**
+- the other white balance modes (Auto, Daylight, …) and their strings;
+- whether the render differs between "As Shot" and "Custom" at the same Temperature/Tint (not measured);
+- a preset written by the tool that carries Temperature/Tint, applied in Lightroom: the Phase 4 preset carried neither (`PHASE4.md` "Numbers");
+- a Tint write alone, without "Custom" (not written).
+
+**At the merge** (vault, per rule 04): mirror this report to `Reports\Phase4\WB.md`; add the LR_SDK_NOTES lines above; mark PHASES Phase 5's "Before Phase 5" input done; STATE "Next action" → the Phase 5 plan, on Jim's go.

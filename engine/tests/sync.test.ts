@@ -61,6 +61,15 @@ describe("lr_sync_series: writes", () => {
     expect(out.json["not_copied"]).toEqual(expect.arrayContaining(["contrast", "exposure", "temperature"]));
   });
 
+  it('copies the white balance group with WhiteBalance "Custom", which the target reads back (docs\\reports\\phase4\\WB.md)', async () => {
+    clean();
+    const { id } = await acceptedSession([{ temperature: 400 }]);
+    const a = addCopy(1, { Temperature: 4000, WhiteBalance: "As Shot" });
+    await sync({ source: { session_id: id }, targets: { uuids: [a] }, parameter_mask: ["white_balance"], ...quiet });
+    expect(sent("apply_settings").at(-1)?.["settings"]).toEqual({ Temperature: 5900, Tint: 6, WhiteBalance: "Custom" });
+    expect([settingsOf(a)["Temperature"], settingsOf(a)["WhiteBalance"]]).toEqual([5900, "Custom"]);
+  });
+
   it("replays an accepted session's recipe onto a virtual copy: it reads back as the final settings (AC-5, second half)", async () => {
     clean();
     const before = structuredClone(lr.settings);

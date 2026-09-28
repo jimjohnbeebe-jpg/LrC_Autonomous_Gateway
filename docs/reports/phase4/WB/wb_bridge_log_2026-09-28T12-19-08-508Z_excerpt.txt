@@ -1,0 +1,15 @@
+2026-09-28 05:18:18.209 INFO  bridge: starting generation 1 (receive 8765, send 8766)
+2026-09-28 05:18:29.749 INFO  bridge: token written to %USERPROFILE%\.lrc-avg\bridge_token
+2026-09-28 05:18:29.749 INFO  bridge: listening (generation 1)
+2026-09-28 05:19:08.563 INFO  bridge: receive: engine connected
+2026-09-28 05:19:09.087 INFO  bridge: send: engine connected
+2026-09-28 05:19:09.090 INFO  bridge: hello 95e19cb1-3946-4ae3-baf8-0e3817c1a030
+2026-09-28 05:20:09.397 INFO  bridge: get_context bd9cbedd-33f2-4973-bbca-cfbea68b59ca
+2026-09-28 05:20:09.406 INFO  bridge: get_settings a063ad7c-4608-4d4a-8fd0-2d720631c03d
+2026-09-28 05:20:09.476 INFO  bridge: create_snapshot 874ed5ad-3270-4bab-ae9d-3edbeb355b23
+2026-09-28 05:20:09.564 INFO  bridge: apply_settings 22fad160-3a5d-47dc-8abd-18d5555f3376
+2026-09-28 05:20:33.106 INFO  bridge: apply_settings 0e0d5921-3b71-4863-80ce-d57086e976d5
+2026-09-28 05:20:43.634 INFO  bridge: apply_snapshot 0319a776-4790-4c4f-a00b-3aa6664d37fe
+2026-09-28 05:20:44.272 INFO  bridge: apply_settings c71b14d6-30a4-4060-bbe2-334711c2f50c
+2026-09-28 05:20:44.758 INFO  bridge: apply_snapshot 72665021-3c5f-4dde-a998-ed018eb515b2
+2026-09-28 05:20:45.224 INFO  bridge: get_settings f899dcf1-b1dc-4191-82c3-c558c8f2906c

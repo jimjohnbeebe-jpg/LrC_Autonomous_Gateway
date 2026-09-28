@@ -5,8 +5,10 @@
 // The question: does Lightroom take WhiteBalance "Custom" through applyDevelopSettings? The Phase 4
 // check wrote Temperature alone and Lightroom kept "As Shot" [handle:
 // docs\reports\phase4\P4\p4_check_2026-09-28T04-18-17-511Z.json preset.source_prepared], so a preset
-// leaves the white balance out (presets\select.ts). "Custom" itself is [unverified]: the pinned dump
-// shows only "As Shot" (params\sdk-keys.lrc15.json). On the photo Jim selects, written by uuid with
+// leaves the white balance out (presets\select.ts). "Custom" itself was [unverified] before the
+// check: the pinned dump shows only "As Shot" (params\sdk-keys.lrc15.json). Jim's run answered it:
+// Lightroom takes it [handle: docs\reports\phase4\WB.md "Observed"]. Step 1 writes its table by hand,
+// since toSdk now adds "Custom" to any temperature. On the photo Jim selects, written by uuid with
 // the selection untouched (plugin 0.4.0):
 //   0. a snapshot, which puts the photo back at the end, also after an error;
 //   1. Temperature +300 K alone: the white balance read back, and the Basic panel (Jim, y/n);

@@ -1,7 +1,7 @@
 // The Phase 4 check (src/devtools/phase4-check.ts) when a part fails, against the simulated plugin
 // (tests\helpers\phase4-harness.ts): each failure shows as FAILED on its own line, and the photo,
-// the copies and the presets are still cleaned up. A cleanup that leaves something behind, and a
-// white balance that stays As Shot, are recorded without failing the acceptance.
+// the copies and the presets are still cleaned up. A cleanup that leaves something behind is
+// recorded without failing the acceptance.
 
 import { readdirSync } from "node:fs";
 import sharp from "sharp";
@@ -105,6 +105,19 @@ describe("devtools: Phase 4 check, failures", () => {
     expect(summaryOf(results)).toMatchObject({ ac5_log_and_sync_replay: true, unselected_original_write: true, photo_put_back: true, ac3_variants_scripted: true });
     expect(map.fromSdk(h.lr.settings).settings).toEqual(start);
   });
+
+  it('fails the syncs when Lightroom refuses WhiteBalance "Custom"; the preset step records As Shot and carries no temperature', { timeout: 120000 }, async () => {
+    // Lightroom took "Custom" in the WB check (docs\reports\phase4\WB.md); this models a Lightroom that does not.
+    h.sim.refuseCustomWhiteBalance = true;
+    const { accepted, results } = await runCheck(YES);
+    expect(accepted).toBe(false);
+    // The sync writes the source's temperature, so the white balance is read back and not taken.
+    expect(results["errors"]).toEqual([expect.stringContaining("the burst sync did not match"), expect.stringContaining("AC-5: the recipe synced onto the replay copy")]);
+    expect(summaryOf(results)).toMatchObject({ sync_burst_within_2: false, ac5_log_and_sync_replay: false, photo_put_back: true });
+    const preset = results["preset"] as J;
+    expect(preset).toMatchObject({ temperature_written: false, camera_profile_written: true, source_prepared: { white_balance_after: "As Shot" } });
+    expect(preset["left_out"]).toEqual(expect.arrayContaining([expect.objectContaining({ name: "temperature" })]));
+  });
 });
 
 describe("devtools: Phase 4 check, a Variants begin that fails part-way", () => {
@@ -133,14 +146,5 @@ describe("devtools: Phase 4 check, recorded without failing", () => {
     expect(summaryOf(results)).toMatchObject({ cleanup: { copies: 10, copiesGone: 9 } });
     expect(h.said.filter((l) => l.includes("Copies removed: 9 of 10")).length).toBe(3);
     expect(h.said.join("\n")).toMatch(/Cleanup: copies removed 9 of 10/);
-  });
-
-  it("records a white balance that stays As Shot: the preset then carries no temperature, and still applies", { timeout: 120000 }, async () => {
-    h.sim.customWhiteBalance = false;
-    const { accepted, results } = await runCheck(YES);
-    expect(accepted).toBe(true);
-    const preset = results["preset"] as J;
-    expect(preset).toMatchObject({ temperature_written: false, camera_profile_written: true, source_prepared: { white_balance_after: "As Shot" } });
-    expect(preset["left_out"]).toEqual(expect.arrayContaining([expect.objectContaining({ name: "temperature" })]));
   });
 });

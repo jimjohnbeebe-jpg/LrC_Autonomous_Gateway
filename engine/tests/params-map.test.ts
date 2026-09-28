@@ -106,6 +106,12 @@ describe("params: canonical map", () => {
     expect(() => new ParamMap(loadSdkKeys(pinned), profiles)).toThrow(UnknownSdkKeyError);
   });
 
+  it("refuses to build over a key file that lacks WhiteBalance, which a temperature write also sets", () => {
+    const pinned = JSON.parse(readFileSync(here("../src/params/sdk-keys.lrc15.json"), "utf8")) as { keys: Array<{ key: string }> };
+    pinned.keys = pinned.keys.filter((k) => k.key !== "WhiteBalance");
+    expect(() => new ParamMap(loadSdkKeys(pinned), profiles)).toThrow(UnknownSdkKeyError);
+  });
+
   describe("toSdk", () => {
     it("writes each canonical value under its SDK key", () => {
       expect(map.toSdk({ exposure: 0.83, "hsl.orange.sat": 10, "lens.corrections_enable": false }, PV)).toEqual({
@@ -143,6 +149,14 @@ describe("params: canonical map", () => {
       expect(codeOf(() => map.toSdk({ "tone_curve.master": [0, 0, 255] }, PV))).toBe("wrong_type");
       expect(codeOf(() => map.toSdk({ "tone_curve.master": [0, 0, 256, 255] }, PV))).toBe("out_of_range");
       expect(codeOf(() => map.toSdk({ "tone_curve.master": [0, 0, 128, 128, 128, 200] }, PV))).toBe("wrong_type");
+    });
+
+    it('writes WhiteBalance "Custom" with a temperature or a tint, and not otherwise (docs\\reports\\phase4\\WB.md)', () => {
+      expect(map.toSdk({ temperature: 5200 }, PV)).toEqual({ Temperature: 5200, WhiteBalance: "Custom" });
+      expect(map.toSdk({ tint: 16 }, PV)).toEqual({ Tint: 16, WhiteBalance: "Custom" });
+      expect(map.toSdk({ temperature: 5200, tint: 16, exposure: 0.5 }, PV)).toEqual({ Temperature: 5200, Tint: 16, Exposure2012: 0.5, WhiteBalance: "Custom" });
+      expect(map.toSdk({ exposure: 0.5, camera_profile: "Camera Neutral" }, PV)).not.toHaveProperty("WhiteBalance");
+      expect(codeOf(() => map.toSdk({ temperature: 60000 }, PV))).toBe("out_of_range"); // validated before anything is added
     });
 
     it("refuses a process version that was not observed", () => {
@@ -187,10 +201,12 @@ describe("params: canonical map", () => {
       expect(codeOf(() => map.fromSdk({ ...nefDump.settings, Exposure2012: "0.33" }))).toBe("wrong_type");
     });
 
-    it("round-trips through toSdk", () => {
+    it('round-trips through toSdk, the white balance mode then "Custom" at the same values', () => {
       const { settings } = map.fromSdk(nefDump.settings);
       const sdk = map.toSdk(settings, PV);
-      expect(map.verifyReadback(sdk, nefDump.settings)).toEqual([]);
+      expect(map.verifyReadback(sdk, { ...nefDump.settings, WhiteBalance: "Custom" })).toEqual([]);
+      // The dump is As Shot: the settings carry its temperature, so writing them sets "Custom" (plan decision 3).
+      expect(map.verifyReadback(sdk, nefDump.settings)).toEqual([{ sdk_key: "WhiteBalance", written: "Custom", read_back: "As Shot" }]);
     });
   });
 
@@ -218,6 +234,11 @@ describe("params: canonical map", () => {
       expect(map.verifyReadback({ CameraProfile: "Camera Landscape" }, {})).toEqual([
         { sdk_key: "CameraProfile", written: "Camera Landscape", read_back: null },
       ]);
+    });
+
+    it('reports WhiteBalance when Lightroom keeps "As Shot" after a temperature write', () => {
+      const sdk = map.toSdk({ temperature: 5200 }, PV);
+      expect(map.verifyReadback(sdk, { ...nefDump.settings, Temperature: 5200 })).toEqual([{ sdk_key: "WhiteBalance", written: "Custom", read_back: "As Shot" }]);
     });
 
     it("treats Look = {} as taken when the Look reads back absent, [] or {}", () => {

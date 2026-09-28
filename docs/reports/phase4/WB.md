@@ -38,7 +38,12 @@ When the engine writes Temperature, does Lightroom Classic take `WhiteBalance = 
    - Added after Jim's run (Greptile, PR #39): all settings are compared with the start after the reset. If any differs, the check fails and the tint is not written [handle: `engine\tests\wb-check.test.ts` "fails step 3 when the reset restores the white balance but not every other setting"]. In Jim's run the reset put white balance back to "As Shot" [handle: the run `tint_custom.reset_to_as_shot`], and the final put-back, the same snapshot, matched all 177 settings (`put_back`). The run did not record the full comparison after the reset itself.
 4. **The preset selection** (`presets\select.ts`, the white balance group) of step 1's and step 2's settings: is the temperature carried? No preset file is written.
 5. **Put back:** the snapshot is applied and every setting is compared with the start. The last lines say `White balance check: WORKED` or `FAILED` and `PUT BACK: YES` or `NO`.
-   - Added after Jim's run (Greptile, PR #39 round 2): a step that did not run reads `not run` in the summary and the last lines, never NO [handle: `engine\tests\wb-check.test.ts` "puts the photo back after a write fails", "fails step 3 without writing the tint …"]. Every step of Jim's run ran (`summary`).
+   - Added after Jim's run (Greptile, PR #39 rounds 2-3): a step reads NO only when Lightroom answered NO. Otherwise the summary and the last lines say one of:
+     - `not run`: nothing was sent;
+     - `write failed`: Lightroom answered with an error;
+     - `unknown (sent, no answer)`: Lightroom may still have applied the write, and the step's entry names it as `maybe_written`.
+     
+     The summary and the last lines are in `engine\src\devtools\wb-check-summary.ts` [handle: `engine\tests\wb-check.test.ts` "puts the photo back after a write fails", "reports a write that got no answer as unknown …", "reports a write refused before it was sent …", "fails step 3 without writing the tint …"]. Every step of Jim's run ran and got an answer (`summary`).
 
 The key names come from the params module only (`.claude\rules\03-lightroom.md`). The check leaves three History steps and the snapshot on the photo, as the phase checks did.
 
@@ -145,7 +150,7 @@ Times are local (UTC−7) unless marked Z. "The run" is the results file; "the l
   - a sync of the white balance group writes "Custom", and the target reads it back (`sync.test.ts`);
   - a Lightroom that refused "Custom" would now fail the syncs loudly with the preset step recording "As Shot" (`phase4-check-faults.test.ts`; this replaces the Phase 4 test in which As Shot passed silently).
   - With the one line in `toSdk` removed, 7 of these tests failed; the file was restored byte-identical afterwards [handle: Claude Code, 2026-09-28, `npx vitest run tests/params-map.test.ts tests/presets-tool.test.ts tests/sync.test.ts tests/phase4-check.test.ts tests/phase4-check-faults.test.ts`: "Tests 7 failed | 71 passed | 1 skipped (79)"].
-- All engine tests: 553 pass, 1 skipped; `npm run build` and `npm run typecheck` pass [handle: `npm test`, "Tests 553 passed | 1 skipped (554)", 2026-09-28, after Greptile's round 1].
+- All engine tests: 555 pass, 1 skipped; `npm run build` and `npm run typecheck` pass [handle: `npm test`, "Tests 555 passed | 1 skipped (556)", 2026-09-28, after Greptile's round 3].
 - `lr_create_preset_from_active`'s description now says every temperature or tint the engine writes sets the white balance to Custom (`engine\src\mcp\defs-propagation.ts`).
 - **For Jim after the merge:** restart Claude Desktop so it loads engine 0.6.1. Claude Desktop runs the engine from `engine\dist\mcp\main.js`, started when Claude Desktop starts [handle: `engine\src\devtools\desktop-config.ts:33`; Phase 4's engine updates each needed a Claude Desktop restart, vault `LrC_AVG_STATE.md` sessions 8-9]. Lightroom needs no restart: this PR changes no plugin file [handle: `git diff main --stat -- plugin` on the branch prints nothing, 2026-09-28], and a Lightroom restart only loads a changed plugin [inference].
 

@@ -7,8 +7,8 @@
 import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { BridgeClient } from "../src/bridge/index.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { BridgeClient, BridgeError } from "../src/bridge/index.js";
 import type { Answer } from "../src/devtools/phase1-check.js";
 import { PHOTO } from "../src/devtools/phase4-config.js";
 import { HISTORY, runWbCheck, shifted, snapshotName } from "../src/devtools/wb-check.js";
@@ -49,11 +49,12 @@ async function jim(text: string): Promise<string | null> {
   return "";
 }
 
-function run(answers: Answer[], options: { busy?: boolean } = {}) {
+function run(answers: Answer[], options: { busy?: boolean; writeTimeoutMs?: number; tamper?: (c: BridgeClient) => void } = {}) {
   const queue = [...answers];
   client = new BridgeClient({ commandPort: plugin.commandPort, eventPort: plugin.eventPort, connectGapMs: 5, reconnectMs: 30, readToken: () => plugin.token });
+  options.tamper?.(client);
   const gate = new BridgeGate(client, async () => (options.busy ? { ok: false, port: 8767, pid: 4242 } : { ok: true, lock: { port: 8767, release: async () => {} } }), { waitMs: 2000 });
-  return runWbCheck({ client, gate, map, ask: async () => queue.shift() ?? "no answer", prompt: jim, say: (l) => said.push(l), stamp: "2026-09-28T12-00-00-000Z", connectTimeoutMs: 2000 });
+  return runWbCheck({ client, gate, map, ask: async () => queue.shift() ?? "no answer", prompt: jim, say: (l) => said.push(l), stamp: "2026-09-28T12-00-00-000Z", connectTimeoutMs: 2000, ...(options.writeTimeoutMs !== undefined ? { writeTimeoutMs: options.writeTimeoutMs } : {}) });
 }
 
 type J = Record<string, unknown>;
@@ -133,9 +134,41 @@ describe("npm run wb:check", () => {
     expect(results["put_back"]).toMatchObject({ ok: true, differing: [] });
     expect(lr.settings).toEqual(nefDump.settings);
     expect(said).toContain("White balance check: FAILED");
-    // Steps 2-4 did not run: their results read "not run", never NO.
-    expect(results["summary"]).toMatchObject({ white_balance_after_temperature_alone: "As Shot", custom_taken_with_temperature: null, custom_taken_with_tint: null, preset_carries_temperature_after_custom: null, put_back: true });
-    expect(said).toContain('  Lightroom took "Custom" with a temperature: not run; with a tint: not run; a preset then carries the temperature: not run');
+    // Step 2 was refused by Lightroom ("write failed"); steps 3-4 did not run. Neither reads as NO.
+    expect(results["temperature_custom"]).toEqual({ written: { Temperature: 6100, WhiteBalance: "Custom" }, error: expect.objectContaining({ code: "APPLY_FAILED" }) });
+    expect(results["summary"]).toMatchObject({ white_balance_after_temperature_alone: "As Shot", custom_taken_with_temperature: "failed", custom_taken_with_tint: null, preset_carries_temperature_after_custom: null, put_back: true });
+    expect(said).toContain('  Lightroom took "Custom" with a temperature: write failed; with a tint: not run; a preset then carries the temperature: not run');
+  });
+
+  it("reports a write that got no answer as unknown, names it, and still puts the photo back (Greptile, PR #39 round 3)", async () => {
+    const apply = plugin.handlers.get("apply_settings") as NonNullable<ReturnType<typeof plugin.handlers.get>>;
+    plugin.handlers.set("apply_settings", async (p, id) => {
+      const reply = await apply(p, id); // Lightroom applies it...
+      return p["history_name"] === HISTORY.custom ? "silent" : reply; // ...but the answer never comes
+    });
+    const { worked, results } = await run(["y", "y", "y"], { writeTimeoutMs: 200 });
+    expect(worked).toBe(false);
+    expect(results["temperature_custom"]).toMatchObject({ written: { Temperature: 6100, WhiteBalance: "Custom" }, maybe_written: HISTORY.custom, error: { code: "BRIDGE_TIMEOUT" } });
+    expect(results["summary"]).toMatchObject({ custom_taken_with_temperature: "unknown", custom_taken_with_tint: null, put_back: true });
+    expect(said).toContain('  Lightroom took "Custom" with a temperature: unknown (sent, no answer); with a tint: not run; a preset then carries the temperature: not run');
+    expect(lr.settings).toEqual(nefDump.settings);
+  });
+
+  it("reports a write refused before it was sent (bridge not connected) as not run", async () => {
+    // The client refuses before sending when it is not connected (src/bridge/client.ts request()), as in tests\sync.test.ts.
+    const tamper = (c: BridgeClient): void => {
+      const real = c.request.bind(c);
+      vi.spyOn(c, "request").mockImplementation(((name: string, payload: Record<string, unknown>, options?: { timeoutMs?: number }) =>
+        name === "apply_settings" && payload["history_name"] === HISTORY.custom
+          ? Promise.reject(new BridgeError("not_connected", "bridge is reconnecting", true, name))
+          : real(name as never, payload as never, options)) as never);
+    };
+    const { worked, results } = await run(["y", "y", "y"], { tamper });
+    expect(worked).toBe(false);
+    // The error body shows not_connected as BRIDGE_DISCONNECTED (src/mcp/errors.ts toToolError); it was never sent, so no maybe_written.
+    expect(results["temperature_custom"]).toMatchObject({ written: null, error: { code: "BRIDGE_DISCONNECTED" } });
+    expect(results["temperature_custom"]).not.toHaveProperty("maybe_written");
+    expect(results["summary"]).toMatchObject({ white_balance_after_temperature_alone: "As Shot", custom_taken_with_temperature: null });
   });
 
   it("fails step 3 without writing the tint, and says PUT BACK: NO, when the snapshot does not put the photo back (Greptile, PR #39)", async () => {

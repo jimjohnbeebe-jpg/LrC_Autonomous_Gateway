@@ -17,16 +17,18 @@
 //   3. from the snapshot again, Tint +5 with "Custom": read back, and whether Temperature stayed;
 //   4. whether a preset of steps 1 and 2's settings carries the temperature (no file is written);
 //   5. the snapshot applied, every setting compared with the start: PUT BACK YES/NO.
-// SDK key names come from the params module only (.claude\rules\03-lightroom.md).
+// SDK key names come from the params module only (.claude\rules\03-lightroom.md). The summary and
+// the last lines are in wb-check-summary.ts.
 
-import type { BridgeClient } from "../bridge/index.js";
+import { BridgeError, type BridgeClient } from "../bridge/index.js";
 import { pluginVersionAtLeast } from "../bridge/version.js";
 import type { BridgeGate } from "../mcp/index.js";
 import { AS_SHOT_WHITE_BALANCE, CUSTOM_WHITE_BALANCE, READBACK_TOLERANCE, WHITE_BALANCE_KEY, type ParamMap, type SdkSettings } from "../params/index.js";
 import { selectPresetSettings } from "../presets/index.js";
 import { describeError, differingKeys, type Answer } from "./phase1-check.js";
 import { yn, type Json } from "./phase3-config.js";
-import { errorBody, PHOTO, WRITE_TIMEOUT_MS } from "./phase4-config.js";
+import { errorBody, mayHaveLanded, PHOTO, WRITE_TIMEOUT_MS } from "./phase4-config.js";
+import { summarize } from "./wb-check-summary.js";
 
 /**
  * Plugin 0.4.0 writes to a photo by uuid without touching the selection [handle:
@@ -54,6 +56,8 @@ export type WbDeps = {
   say: (line: string) => void;
   stamp: string;
   connectTimeoutMs?: number;
+  /** How long a write or snapshot may take (WRITE_TIMEOUT_MS; tests shorten it). */
+  writeTimeoutMs?: number;
   now?: () => Date;
 };
 
@@ -86,7 +90,7 @@ export async function runWbCheck(deps: WbDeps): Promise<{ worked: boolean; resul
     deps.say(`FAILED: ${m}`);
   } };
   deps.say("LrC-AVG white balance check");
-  if (!(await connect(ctx))) return finish(ctx, now);
+  if (!(await connect(ctx))) return summarize(results, errors, deps.say, now);
   let photo: Photo | null = null;
   let snapshot: string | null = null;
   try {
@@ -98,7 +102,7 @@ export async function runWbCheck(deps: WbDeps): Promise<{ worked: boolean; resul
   }
   if (photo && snapshot) await putBack(ctx, photo, snapshot);
   await deps.gate.release();
-  return finish(ctx, now);
+  return summarize(results, errors, deps.say, now);
 }
 
 async function runSteps(ctx: Ctx, photo: Photo, snapshot: string): Promise<void> {
@@ -172,10 +176,21 @@ async function takeSnapshot(ctx: Ctx, photo: Photo): Promise<string | null> {
   }
 }
 
-/** One write by uuid; its read-back. */
-async function write(ctx: Ctx, photo: Photo, settings: SdkSettings, historyName: string): Promise<SdkSettings> {
-  const res = await ctx.deps.client.request("apply_settings", { photo_uuid: photo.uuid, settings, history_name: historyName }, { timeoutMs: WRITE_TIMEOUT_MS });
-  return res.read_back;
+/**
+ * One write by uuid for step `name`; its read-back. A write that fails leaves the step's entry saying
+ * how (Greptile, PR #39 round 3): never sent (`written: null`, "not run"), answered with an error
+ * ("failed"), or sent with no answer, which Lightroom may still have applied (`maybe_written`,
+ * "unknown"; the rule of phase4-config.ts mayHaveLanded).
+ */
+async function write(ctx: Ctx, photo: Photo, name: string, settings: SdkSettings, historyName: string): Promise<SdkSettings> {
+  try {
+    const res = await ctx.deps.client.request("apply_settings", { photo_uuid: photo.uuid, settings, history_name: historyName }, { timeoutMs: ctx.deps.writeTimeoutMs ?? WRITE_TIMEOUT_MS });
+    return res.read_back;
+  } catch (err) {
+    const sent = !(err instanceof BridgeError && err.code === "not_connected");
+    ctx.results[name] = { written: sent ? settings : null, error: errorBody(err), ...(mayHaveLanded(err) ? { maybe_written: historyName } : {}) };
+    throw err;
+  }
 }
 
 /** Step 1: Temperature alone, as the Phase 4 check wrote it. */
@@ -183,7 +198,7 @@ async function temperatureAlone(ctx: Ctx, photo: Photo): Promise<Written> {
   const { map, ask, say } = ctx.deps;
   const key = sdkKey(map, "temperature");
   const to = shifted(map, "temperature", photo.temperature, TEMPERATURE_SHIFT);
-  const readBack = await write(ctx, photo, { [key]: to }, HISTORY.temperature);
+  const readBack = await write(ctx, photo, "temperature_alone", { [key]: to }, HISTORY.temperature);
   const done: Written = { readBack, customTaken: readBack[WHITE_BALANCE_KEY] === CUSTOM_WHITE_BALANCE, valueTaken: same(readBack[key], to) };
   const out: Json = { written: { [key]: to }, white_balance: readBack[WHITE_BALANCE_KEY] ?? null, temperature: readBack[key] ?? null, temperature_taken: done.valueTaken };
   ctx.results["temperature_alone"] = out;
@@ -201,7 +216,7 @@ async function temperatureCustom(ctx: Ctx, photo: Photo, from: number): Promise<
   const key = sdkKey(map, "temperature");
   const to = shifted(map, "temperature", from, TEMPERATURE_SHIFT);
   const settings = { [key]: to, [WHITE_BALANCE_KEY]: CUSTOM_WHITE_BALANCE };
-  const readBack = await write(ctx, photo, settings, HISTORY.custom);
+  const readBack = await write(ctx, photo, "temperature_custom", settings, HISTORY.custom);
   const done: Written = { readBack, customTaken: readBack[WHITE_BALANCE_KEY] === CUSTOM_WHITE_BALANCE, valueTaken: same(readBack[key], to) };
   const out: Json = { written: settings, white_balance: readBack[WHITE_BALANCE_KEY] ?? null, temperature: readBack[key] ?? null, custom_taken: done.customTaken, temperature_taken: done.valueTaken, mismatches: map.verifyReadback(settings, readBack) };
   ctx.results["temperature_custom"] = out;
@@ -227,7 +242,7 @@ async function byHand(ctx: Ctx, photo: Photo, key: string): Promise<Json> {
  */
 async function tintCustom(ctx: Ctx, photo: Photo, snapshot: string): Promise<void> {
   const { client, map, say } = ctx.deps;
-  const back = await client.request("apply_snapshot", { photo_uuid: photo.uuid, snapshot_id: snapshot }, { timeoutMs: WRITE_TIMEOUT_MS });
+  const back = await client.request("apply_snapshot", { photo_uuid: photo.uuid, snapshot_id: snapshot }, { timeoutMs: ctx.deps.writeTimeoutMs ?? WRITE_TIMEOUT_MS });
   const resetDiffering = differingKeys(map, photo.start, back.read_back);
   if (resetDiffering.length > 0) {
     ctx.results["tint_custom"] = { reset_to_as_shot: back.read_back[WHITE_BALANCE_KEY] === AS_SHOT_WHITE_BALANCE, reset_differing: resetDiffering, written: null };
@@ -237,7 +252,7 @@ async function tintCustom(ctx: Ctx, photo: Photo, snapshot: string): Promise<voi
   const [tKey, tempKey] = [sdkKey(map, "tint"), sdkKey(map, "temperature")];
   const to = shifted(map, "tint", photo.tint, TINT_SHIFT);
   const settings = { [tKey]: to, [WHITE_BALANCE_KEY]: CUSTOM_WHITE_BALANCE };
-  const readBack = await write(ctx, photo, settings, HISTORY.tint);
+  const readBack = await write(ctx, photo, "tint_custom", settings, HISTORY.tint);
   const out = {
     reset_to_as_shot: back.read_back[WHITE_BALANCE_KEY] === AS_SHOT_WHITE_BALANCE,
     reset_differing: resetDiffering,
@@ -270,7 +285,7 @@ async function putBack(ctx: Ctx, photo: Photo, snapshot: string): Promise<void> 
   const out: Json = { ok: false };
   ctx.results["put_back"] = out;
   try {
-    await ctx.deps.client.request("apply_snapshot", { photo_uuid: photo.uuid, snapshot_id: snapshot }, { timeoutMs: WRITE_TIMEOUT_MS });
+    await ctx.deps.client.request("apply_snapshot", { photo_uuid: photo.uuid, snapshot_id: snapshot }, { timeoutMs: ctx.deps.writeTimeoutMs ?? WRITE_TIMEOUT_MS });
     const now = (await ctx.deps.client.request("get_settings", { photo_uuid: photo.uuid })).settings;
     const differing = differingKeys(ctx.deps.map, photo.start, now);
     Object.assign(out, { ok: differing.length === 0, differing, compared: Object.keys(photo.start).length });
@@ -279,37 +294,4 @@ async function putBack(ctx: Ctx, photo: Photo, snapshot: string): Promise<void> 
     out["error"] = errorBody(err);
     ctx.fail(`putting the photo back: ${describeError(err)}. Tell Claude Code.`);
   }
-}
-
-const step = (results: Json, name: string): Json | null => {
-  const s = results[name] as Json | undefined;
-  return s === undefined || s["written"] === null ? null : s; // null: the step did not write (not run)
-};
-/** A step's yes/no field, or null when the step did not run, so a skipped step never reads as NO (Greptile, PR #39). */
-const field = (s: Json | null, name: string): boolean | null => (s === null ? null : s[name] === true);
-const ynr = (v: boolean | null): string => (v === null ? "not run" : yn(v));
-
-/** The summary in the results and the headlines in the window. */
-function finish(ctx: Ctx, now: () => Date): { worked: boolean; results: Json } {
-  const { results, errors, deps } = ctx;
-  const putBackOk = results["put_back"] !== undefined && (results["put_back"] as Json)["ok"] === true;
-  const worked = errors.length === 0 && putBackOk;
-  const preset = results["preset"] as Json | undefined;
-  const summary = {
-    suggestion: worked ? "WORKED" : "FAILED",
-    white_balance_after_temperature_alone: step(results, "temperature_alone")?.["white_balance"] ?? null,
-    custom_taken_with_temperature: field(step(results, "temperature_custom"), "custom_taken"),
-    custom_taken_with_tint: field(step(results, "tint_custom"), "custom_taken"),
-    preset_carries_temperature_after_custom: preset ? field(preset["after_custom"] as Json, "temperature_carried") : null,
-    put_back: putBackOk,
-  };
-  results["summary"] = summary;
-  results["finished_at"] = now().toISOString();
-  deps.say("");
-  deps.say(`White balance check: ${summary.suggestion}`);
-  const alone = summary.white_balance_after_temperature_alone;
-  deps.say(`  Temperature alone left white balance: ${alone === null ? "not run" : `"${String(alone)}"`}`);
-  deps.say(`  Lightroom took "${CUSTOM_WHITE_BALANCE}" with a temperature: ${ynr(summary.custom_taken_with_temperature)}; with a tint: ${ynr(summary.custom_taken_with_tint)}; a preset then carries the temperature: ${ynr(summary.preset_carries_temperature_after_custom)}`);
-  deps.say(`  PUT BACK: ${results["put_back"] === undefined ? "not run (nothing was written)" : yn(putBackOk)}`);
-  return { worked, results };
 }

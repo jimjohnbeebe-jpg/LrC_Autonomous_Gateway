@@ -1,5 +1,6 @@
+BUILD: every run as expected.
 S8 smoke transcript (Claude Code, Opus 5.5, 2026-09-28, branch phase-5/spike-s8; regenerated after the
-fixes for Greptile's round 1 on PR #40).
+fixes for Greptile's rounds 1 and 2 on PR #40).
 What it shows: the S8 harness's own logic, run against a fake Lightroom; NOT Lightroom's behaviour.
 Kit: a scratch folder outside the repo with npm fengari@0.1.4 (a Lua 5.3 VM in JavaScript) and luaparse@0.3.1,
 neither a project dependency. Its five files (this transcript's builder included) are reproduced verbatim in the
@@ -7,14 +8,14 @@ appendix below.
 Node v24.11.1. Paths: the user folder is written as %USERPROFILE%, the scratch folder as <scratch>.
 
 ##### Parse
-=== Lua 5.1 parse of every S8 Lua file
+=== Lua 5.1 parse of every S8 Lua file (expected: pass; passed, as expected)
 > node <scratch>\parse.cjs D:\Developer\LrC_Autonomous_Gateway\plugin\spikes\S8.lrplugin
 14/14 Lua files parse as Lua 5.1
 
 
 ##### Scenarios
 
-=== scenario normal
+=== scenario normal (expected: pass; passed, as expected)
 > node <scratch>\run-smoke.cjs D:\Developer\LrC_Autonomous_Gateway\plugin\spikes\S8.lrplugin normal
 PASS the settings section renders with a title
 PASS settings BEFORE saved
@@ -52,12 +53,12 @@ PASS after: panel saw the new init mark
 [  27.25] HUD CLOSED by closeFloatingDialogsForPlugin
 [  28.75] MODAL: AVG S8 - what did you see in the HUD?
 [  28.75] MESSAGE: AVG S8 HUD test: SAVED
-[ 101.00] MODAL: AVG S8 - what did the settings page show?
-[ 101.00] MESSAGE: AVG S8 settings: SAVED
+[ 107.00] MODAL: AVG S8 - what did the settings page show?
+[ 107.00] MESSAGE: AVG S8 settings: SAVED
 ===RESULT ALL PASS
 
 
-=== scenario no_close
+=== scenario no_close (expected: pass; passed, as expected)
 > node <scratch>\run-smoke.cjs D:\Developer\LrC_Autonomous_Gateway\plugin\spikes\S8.lrplugin no_close
 PASS the settings section renders with a title
 PASS settings BEFORE saved
@@ -79,7 +80,7 @@ PASS click tasks read the photo
 PASS appeared about 5 s after the request
 PASS clicks 5 incl. the greyed Pick B
 PASS greyed clicks counted 1
-PASS closed_by_code no
+PASS closed_by_code no although every tick box is ticked (the call does not exist)
 PASS close call recorded as missing
 PASS settings AFTER saved
 PASS after: mode kept
@@ -97,12 +98,12 @@ PASS after: panel not opened since the start -> inconclusive
 [  34.00] HUD CLOSED by the X, 7 s after the call
 [  35.25] MODAL: AVG S8 - what did you see in the HUD?
 [  35.25] MESSAGE: AVG S8 HUD test: SAVED
-[ 108.00] MODAL: AVG S8 - what did the settings page show?
-[ 108.00] MESSAGE: AVG S8 settings: SAVED
+[ 114.00] MODAL: AVG S8 - what did the settings page show?
+[ 114.00] MESSAGE: AVG S8 settings: SAVED
 ===RESULT ALL PASS
 
 
-=== scenario late_close
+=== scenario late_close (expected: pass; passed, as expected)
 > node <scratch>\run-smoke.cjs D:\Developer\LrC_Autonomous_Gateway\plugin\spikes\S8.lrplugin late_close
 PASS the settings section renders with a title
 PASS settings BEFORE saved
@@ -139,13 +140,54 @@ PASS after: panel saw the new init mark
 [  28.25] HUD CLOSED by closeFloatingDialogsForPlugin, 1 s later
 [  29.25] MODAL: AVG S8 - what did you see in the HUD?
 [  29.25] MESSAGE: AVG S8 HUD test: SAVED
-[ 101.00] MODAL: AVG S8 - what did the settings page show?
-[ 101.00] MESSAGE: AVG S8 settings: SAVED
+[ 107.00] MODAL: AVG S8 - what did the settings page show?
+[ 107.00] MESSAGE: AVG S8 settings: SAVED
 ===RESULT ALL PASS
 (run-smoke: s8_loop_view.json cut to half its length for the collector dry run)
 
 
-=== scenario x_after_call
+=== scenario late_close_6s (expected: pass; passed, as expected)
+> node <scratch>\run-smoke.cjs D:\Developer\LrC_Autonomous_Gateway\plugin\spikes\S8.lrplugin late_close_6s
+PASS the settings section renders with a title
+PASS settings BEFORE saved
+PASS before: mode saved
+PASS before: 12 recorded by the observer
+PASS before: menu sees the init mark (fake shares state)
+PASS before: loop saw the menu mark
+PASS before: loop view copy saved
+PASS before: panel saw the init mark
+PASS HUD not open 2 s after menu 1
+PASS HUD open 7 s after menu 1
+PASS stage line ticking
+PASS last click shows Abort
+PASS picks enabled after Approve
+PASS HUD result saved
+PASS selection change seen
+PASS click tasks read the photo
+PASS appeared about 5 s after the request
+PASS closed 6 s after the call (within the 10 s watch) + Jim ticked it: yes
+PASS settings AFTER saved
+PASS after: mode kept
+PASS after: loop running
+PASS after: panel saw the new init mark
+===LOG
+[   8.00] MODAL: AVG S8 - what did the settings page show?
+[   8.00] MESSAGE: AVG S8 settings: SAVED
+[  16.25] HUD SHOWN: AVG S8 HUD
+[  21.00] CLICK Abort
+[  22.00] CLICK Pick B ignored (disabled)
+[  23.00] CLICK Approve
+[  24.00] CLICK Pick B
+[  25.00] CLICK Accept
+[  33.25] HUD CLOSED by closeFloatingDialogsForPlugin, 6 s later
+[  34.25] MODAL: AVG S8 - what did you see in the HUD?
+[  34.25] MESSAGE: AVG S8 HUD test: SAVED
+[ 107.00] MODAL: AVG S8 - what did the settings page show?
+[ 107.00] MESSAGE: AVG S8 settings: SAVED
+===RESULT ALL PASS
+
+
+=== scenario x_after_call (expected: pass; passed, as expected)
 > node <scratch>\run-smoke.cjs D:\Developer\LrC_Autonomous_Gateway\plugin\spikes\S8.lrplugin x_after_call
 PASS the settings section renders with a title
 PASS settings BEFORE saved
@@ -181,12 +223,53 @@ PASS after: panel saw the new init mark
 [  28.00] HUD CLOSED by the X, 1 s after the call
 [  29.25] MODAL: AVG S8 - what did you see in the HUD?
 [  29.25] MESSAGE: AVG S8 HUD test: SAVED
-[ 102.00] MODAL: AVG S8 - what did the settings page show?
-[ 102.00] MESSAGE: AVG S8 settings: SAVED
+[ 108.00] MODAL: AVG S8 - what did the settings page show?
+[ 108.00] MESSAGE: AVG S8 settings: SAVED
 ===RESULT ALL PASS
 
 
-=== scenario close_during_delay
+=== scenario x_after_watch (expected: pass; passed, as expected)
+> node <scratch>\run-smoke.cjs D:\Developer\LrC_Autonomous_Gateway\plugin\spikes\S8.lrplugin x_after_watch
+PASS the settings section renders with a title
+PASS settings BEFORE saved
+PASS before: mode saved
+PASS before: 12 recorded by the observer
+PASS before: menu sees the init mark (fake shares state)
+PASS before: loop saw the menu mark
+PASS before: loop view copy saved
+PASS before: panel saw the init mark
+PASS HUD not open 2 s after menu 1
+PASS HUD open 7 s after menu 1
+PASS stage line ticking
+PASS last click shows Abort
+PASS picks enabled after Approve
+PASS HUD result saved
+PASS selection change seen
+PASS click tasks read the photo
+PASS appeared about 5 s after the request
+PASS closed 12 s after the call, Jim ticked 'by itself': unclear
+PASS settings AFTER saved
+PASS after: mode kept
+PASS after: loop running
+PASS after: panel saw the new init mark
+===LOG
+[   8.00] MODAL: AVG S8 - what did the settings page show?
+[   8.00] MESSAGE: AVG S8 settings: SAVED
+[  16.25] HUD SHOWN: AVG S8 HUD
+[  21.00] CLICK Abort
+[  22.00] CLICK Pick B ignored (disabled)
+[  23.00] CLICK Approve
+[  24.00] CLICK Pick B
+[  25.00] CLICK Accept
+[  39.00] HUD CLOSED by the X, 12 s after the call
+[  40.25] MODAL: AVG S8 - what did you see in the HUD?
+[  40.25] MESSAGE: AVG S8 HUD test: SAVED
+[ 119.00] MODAL: AVG S8 - what did the settings page show?
+[ 119.00] MESSAGE: AVG S8 settings: SAVED
+===RESULT ALL PASS
+
+
+=== scenario close_during_delay (expected: pass; passed, as expected)
 > node <scratch>\run-smoke.cjs D:\Developer\LrC_Autonomous_Gateway\plugin\spikes\S8.lrplugin close_during_delay
 PASS no HUD after a close during the 5 s delay
 PASS the loop recorded the cancelled open as not open
@@ -196,7 +279,7 @@ PASS a later menu 1 still opens the HUD
 ===RESULT ALL PASS
 
 
-=== scenario not_started
+=== scenario not_started (expected: pass; passed, as expected)
 > node <scratch>\run-smoke.cjs D:\Developer\LrC_Autonomous_Gateway\plugin\spikes\S8.lrplugin not_started
 PASS menu 1 without the loop says NOT STARTED
 PASS menu 1 without a photo says NOT STARTED - no photo
@@ -210,9 +293,9 @@ PASS a close with no HUD is recorded by the loop
 
 ##### Mutation check (each must FAIL)
 
---- mutant 1: the window's closing time alone decides 'closed by code' (the code before the fix)
---- in S8Hud.lua: replaced "if not answered then return \"unclear\"" with "if true then return \"yes\", \"timing only\" end\n    if not answered then return \"unclear\""
-=== scenario x_after_call on the mutant
+--- mutant 1 (round 1): the window's closing time alone decides 'closed by code'
+--- in S8Hud.lua: replaced "if not answered then return \"unclear\"" with "if true then return \"yes\", \"timing only\" end\n        if not answered then return \"unclear\""
+=== scenario x_after_call on the mutant (expected: fail; failed, as expected)
 > node <scratch>\run-smoke.cjs <scratch>\mutant x_after_call
 PASS the settings section renders with a title
 PASS settings BEFORE saved
@@ -248,14 +331,17 @@ PASS after: panel saw the new init mark
 [  28.00] HUD CLOSED by the X, 1 s after the call
 [  29.25] MODAL: AVG S8 - what did you see in the HUD?
 [  29.25] MESSAGE: AVG S8 HUD test: SAVED
-[ 102.00] MODAL: AVG S8 - what did the settings page show?
-[ 102.00] MESSAGE: AVG S8 settings: SAVED
+[ 108.00] MODAL: AVG S8 - what did the settings page show?
+[ 108.00] MESSAGE: AVG S8 settings: SAVED
 ===RESULT FAILED: X 1 s after a call that did nothing, Jim: not by itself -> no
 
 
---- mutant 2: a close request does not cancel an open still waiting out its 5 s
+EXIT NON-ZERO
+
+
+--- mutant 2 (round 1): a close request does not cancel an open still waiting out its 5 s
 --- in S8Loop.lua: replaced "            if L.openAt then" with "            if false then"
-=== scenario close_during_delay on the mutant
+=== scenario close_during_delay on the mutant (expected: fail; failed, as expected)
 > node <scratch>\run-smoke.cjs <scratch>\mutant close_during_delay
 FAIL no HUD after a close during the 5 s delay
 FAIL the loop recorded the cancelled open as not open
@@ -265,9 +351,58 @@ PASS a later menu 1 still opens the HUD
 ===RESULT FAILED: no HUD after a close during the 5 s delay; the loop recorded the cancelled open as not open
 
 
+EXIT NON-ZERO
+
+
+--- mutant 3 (round 2): Jim's answer counts only within 3 s of the call, not the 10 s he watches
+--- in S8Hud.lua: replaced "local WATCH_S = 10" with "local WATCH_S = 3"
+=== scenario late_close_6s on the mutant (expected: fail; failed, as expected)
+> node <scratch>\run-smoke.cjs <scratch>\mutant late_close_6s
+PASS the settings section renders with a title
+PASS settings BEFORE saved
+PASS before: mode saved
+PASS before: 12 recorded by the observer
+PASS before: menu sees the init mark (fake shares state)
+PASS before: loop saw the menu mark
+PASS before: loop view copy saved
+PASS before: panel saw the init mark
+PASS HUD not open 2 s after menu 1
+PASS HUD open 7 s after menu 1
+PASS stage line ticking
+PASS last click shows Abort
+PASS picks enabled after Approve
+PASS HUD result saved
+PASS selection change seen
+PASS click tasks read the photo
+PASS appeared about 5 s after the request
+FAIL closed 6 s after the call (within the 10 s watch) + Jim ticked it: yes
+PASS settings AFTER saved
+PASS after: mode kept
+PASS after: loop running
+PASS after: panel saw the new init mark
+===LOG
+[   8.00] MODAL: AVG S8 - what did the settings page show?
+[   8.00] MESSAGE: AVG S8 settings: SAVED
+[  16.25] HUD SHOWN: AVG S8 HUD
+[  21.00] CLICK Abort
+[  22.00] CLICK Pick B ignored (disabled)
+[  23.00] CLICK Approve
+[  24.00] CLICK Pick B
+[  25.00] CLICK Accept
+[  33.25] HUD CLOSED by closeFloatingDialogsForPlugin, 6 s later
+[  34.25] MODAL: AVG S8 - what did you see in the HUD?
+[  34.25] MESSAGE: AVG S8 HUD test: SAVED
+[ 107.00] MODAL: AVG S8 - what did the settings page show?
+[ 107.00] MESSAGE: AVG S8 settings: SAVED
+===RESULT FAILED: closed 6 s after the call (within the 10 s watch) + Jim ticked it: yes
+
+
+EXIT NON-ZERO
+
+
 ##### Collector dry run
 
-=== collect.ts on scenario normal
+=== collect.ts on scenario normal (expected: pass; passed, as expected)
 > node D:\Developer\LrC_Autonomous_Gateway\spikes\S8\collect.ts <scratch>\out\normal <scratch>\collected\normal
 {
   "source": "%USERPROFILE%\\AppData\\Local\\Temp\\claude\\D--Developer-LrC-Autonomous-Gateway\\f51ed01b-4238-4d11-9bfb-fbbec733c2e2\\scratchpad\\s8smoke\\out\\normal",
@@ -411,8 +546,8 @@ PASS a later menu 1 still opens the HUD
       }
     },
     "after_restart": {
-      "file": "s8_settings_after_restart_T101.00.json",
-      "run_at": "T96.00 (local time)",
+      "file": "s8_settings_after_restart_T107.00.json",
+      "run_at": "T102.00 (local time)",
       "settings": {
         "mode": "approve_each_pass",
         "maxPasses": 12,
@@ -433,13 +568,13 @@ PASS a later menu 1 still opens the HUD
         "menu_sees_init_mark_on_G": "init-UUID-0005",
         "menu_to_loop_via_G": true,
         "menu_to_loop_via_module": true,
-        "panel_rendered_at": "T96.00 (local time)"
+        "panel_rendered_at": "T102.00 (local time)"
       },
       "loop_saw_the_same_settings": true,
       "loop_view_error": null,
       "loop_prefs_changes": [
         {
-          "seen_at": "T93.00 (local time)",
+          "seen_at": "T99.00 (local time)",
           "mode": "approve_each_pass",
           "maxPasses": 12,
           "clipHighPct": 0.3,
@@ -462,10 +597,10 @@ PASS a later menu 1 still opens the HUD
     "s8_hud_T28.75.json",
     "s8_log.txt",
     "s8_loop_view.json",
-    "s8_loop_view_after_restart_T101.00.json",
+    "s8_loop_view_after_restart_T107.00.json",
     "s8_loop_view_before_restart_T8.00.json",
     "s8_panel_view.json",
-    "s8_settings_after_restart_T101.00.json",
+    "s8_settings_after_restart_T107.00.json",
     "s8_settings_before_restart_T8.00.json"
   ],
   "skipped": []
@@ -474,7 +609,7 @@ PASS a later menu 1 still opens the HUD
 Wrote <scratch>\collected\normal\s8_summary.json; copied 8 files, skipped 0.
 
 
-=== collect.ts on scenario no_close
+=== collect.ts on scenario no_close (expected: pass; passed, as expected)
 > node D:\Developer\LrC_Autonomous_Gateway\spikes\S8\collect.ts <scratch>\out\no_close <scratch>\collected\no_close
 {
   "source": "%USERPROFILE%\\AppData\\Local\\Temp\\claude\\D--Developer-LrC-Autonomous-Gateway\\f51ed01b-4238-4d11-9bfb-fbbec733c2e2\\scratchpad\\s8smoke\\out\\no_close",
@@ -507,7 +642,7 @@ Wrote <scratch>\collected\normal\s8_summary.json; copied 8 files, skipped 0.
         "Pick B",
         "Accept"
       ],
-      "closed_by_code_because": "the window did not close within 3 s of the call"
+      "closed_by_code_because": "closeFloatingDialogsForPlugin does not exist"
     },
     "clicks": [
       {
@@ -622,8 +757,8 @@ Wrote <scratch>\collected\normal\s8_summary.json; copied 8 files, skipped 0.
       }
     },
     "after_restart": {
-      "file": "s8_settings_after_restart_T108.00.json",
-      "run_at": "T103.00 (local time)",
+      "file": "s8_settings_after_restart_T114.00.json",
+      "run_at": "T109.00 (local time)",
       "settings": {
         "mode": "approve_each_pass",
         "maxPasses": 12,
@@ -649,7 +784,7 @@ Wrote <scratch>\collected\normal\s8_summary.json; copied 8 files, skipped 0.
       "loop_view_error": null,
       "loop_prefs_changes": [
         {
-          "seen_at": "T100.00 (local time)",
+          "seen_at": "T106.00 (local time)",
           "mode": "approve_each_pass",
           "maxPasses": 12,
           "clipHighPct": 0.3,
@@ -672,10 +807,10 @@ Wrote <scratch>\collected\normal\s8_summary.json; copied 8 files, skipped 0.
     "s8_hud_T35.25.json",
     "s8_log.txt",
     "s8_loop_view.json",
-    "s8_loop_view_after_restart_T108.00.json",
+    "s8_loop_view_after_restart_T114.00.json",
     "s8_loop_view_before_restart_T8.00.json",
     "s8_panel_view.json",
-    "s8_settings_after_restart_T108.00.json",
+    "s8_settings_after_restart_T114.00.json",
     "s8_settings_before_restart_T8.00.json"
   ],
   "skipped": []
@@ -684,7 +819,7 @@ Wrote <scratch>\collected\normal\s8_summary.json; copied 8 files, skipped 0.
 Wrote <scratch>\collected\no_close\s8_summary.json; copied 8 files, skipped 0.
 
 
-=== collect.ts on scenario late_close
+=== collect.ts on scenario late_close (expected: pass; passed, as expected)
 > node D:\Developer\LrC_Autonomous_Gateway\spikes\S8\collect.ts <scratch>\out\late_close <scratch>\collected\late_close
 {
   "source": "%USERPROFILE%\\AppData\\Local\\Temp\\claude\\D--Developer-LrC-Autonomous-Gateway\\f51ed01b-4238-4d11-9bfb-fbbec733c2e2\\scratchpad\\s8smoke\\out\\late_close",
@@ -716,7 +851,7 @@ Wrote <scratch>\collected\no_close\s8_summary.json; copied 8 files, skipped 0.
         "Pick B",
         "Accept"
       ],
-      "closed_by_code_because": "closed soon after the call returned; Jim's answer decides"
+      "closed_by_code_because": "closed 1.0 s after the call returned; Jim's answer decides"
     },
     "clicks": [
       {
@@ -827,8 +962,8 @@ Wrote <scratch>\collected\no_close\s8_summary.json; copied 8 files, skipped 0.
       }
     },
     "after_restart": {
-      "file": "s8_settings_after_restart_T101.00.json",
-      "run_at": "T96.00 (local time)",
+      "file": "s8_settings_after_restart_T107.00.json",
+      "run_at": "T102.00 (local time)",
       "settings": {
         "mode": "approve_each_pass",
         "maxPasses": 12,
@@ -849,20 +984,20 @@ Wrote <scratch>\collected\no_close\s8_summary.json; copied 8 files, skipped 0.
         "menu_sees_init_mark_on_G": "init-UUID-0005",
         "menu_to_loop_via_G": true,
         "menu_to_loop_via_module": true,
-        "panel_rendered_at": "T96.00 (local time)"
+        "panel_rendered_at": "T102.00 (local time)"
       },
       "loop_saw_the_same_settings": true,
       "loop_view_error": null,
       "loop_prefs_changes": [
         {
-          "seen_at": "T93.00 (local time)",
+          "seen_at": "T99.00 (local time)",
           "mode": "approve_each_pass",
           "maxPasses": 12,
           "clipHighPct": 0.3,
           "logFolder": "C:\\S8-test"
         },
         {
-          "seen_at": "T96.25 (local time)",
+          "seen_at": "T102.25 (local time)",
           "mode": "approve_each_pass",
           "maxPasses": 12,
           "clipHighPct": 0.3,
@@ -884,10 +1019,10 @@ Wrote <scratch>\collected\no_close\s8_summary.json; copied 8 files, skipped 0.
   "copied": [
     "s8_hud_T29.25.json",
     "s8_log.txt",
-    "s8_loop_view_after_restart_T101.00.json",
+    "s8_loop_view_after_restart_T107.00.json",
     "s8_loop_view_before_restart_T8.00.json",
     "s8_panel_view.json",
-    "s8_settings_after_restart_T101.00.json",
+    "s8_settings_after_restart_T107.00.json",
     "s8_settings_before_restart_T8.00.json"
   ],
   "skipped": [
@@ -898,7 +1033,214 @@ Wrote <scratch>\collected\no_close\s8_summary.json; copied 8 files, skipped 0.
 Wrote <scratch>\collected\late_close\s8_summary.json; copied 7 files, skipped 1.
 
 
-=== collect.ts on scenario x_after_call
+=== collect.ts on scenario late_close_6s (expected: pass; passed, as expected)
+> node D:\Developer\LrC_Autonomous_Gateway\spikes\S8\collect.ts <scratch>\out\late_close_6s <scratch>\collected\late_close_6s
+{
+  "source": "%USERPROFILE%\\AppData\\Local\\Temp\\claude\\D--Developer-LrC-Autonomous-Gateway\\f51ed01b-4238-4d11-9bfb-fbbec733c2e2\\scratchpad\\s8smoke\\out\\late_close_6s",
+  "hud": {
+    "file": "s8_hud_T34.25.json",
+    "run_at": "T16.25 (local time)",
+    "lr_version": "15.5.1-fake",
+    "answered": true,
+    "jim": {
+      "approve_label_blank": true,
+      "approve_label_changed": true,
+      "closed_by_itself": true,
+      "focus_backslash": true,
+      "hud_appeared": true,
+      "last_click_shown": true,
+      "picks_enabled_after_approve": true,
+      "picks_greyed": true,
+      "stage_updated": true
+    },
+    "findings": {
+      "clicks": 4,
+      "clicks_on_greyed_picks": 0,
+      "closed_by_code": "unclear",
+      "selection_changes_seen": 1,
+      "appeared_after_request_s": 5,
+      "buttons": [
+        "Abort",
+        "Approve",
+        "Pick B",
+        "Accept"
+      ],
+      "closed_by_code_because": "closed 6.0 s after the call returned, later than the 3 s watch; Jim says it closed by itself"
+    },
+    "clicks": [
+      {
+        "button": "Abort",
+        "at": "T21.00",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": false,
+        "task_started_ms": 0,
+        "task_read_ok": true,
+        "task_error": null
+      },
+      {
+        "button": "Approve",
+        "at": "T23.00",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": false,
+        "task_started_ms": 0,
+        "task_read_ok": true,
+        "task_error": null
+      },
+      {
+        "button": "Pick B",
+        "at": "T24.00",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": true,
+        "task_started_ms": 0,
+        "task_read_ok": true,
+        "task_error": null
+      },
+      {
+        "button": "Accept",
+        "at": "T25.00",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": true,
+        "task_started_ms": 0,
+        "task_read_ok": true,
+        "task_error": null
+      }
+    ],
+    "close_call": {
+      "exists": true,
+      "tries": [
+        {
+          "argument": "_PLUGIN",
+          "ok": true
+        }
+      ],
+      "at": "T27.25",
+      "closed_during_call": false,
+      "epoch": 1027.25,
+      "hud_open_before_call": true
+    },
+    "present": {
+      "error": null,
+      "returned_after_s": 17,
+      "open_when_returned": false
+    },
+    "ticks": 17
+  },
+  "settings": {
+    "before_restart": {
+      "file": "s8_settings_before_restart_T8.00.json",
+      "run_at": "T3.00 (local time)",
+      "settings": {
+        "mode": "approve_each_pass",
+        "maxPasses": 12,
+        "clipHighPct": 0.3,
+        "logFolder": "C:\\S8-test"
+      },
+      "observed_log": "mode=approve_each_pass (string) at T3.00; maxPasses=6 (number) at T3.00; clipHighPct=0.3 (number) at T3.00; logFolder=C:\\S8-test (string) at T3.00; maxPasses=12 (number) at T3.00",
+      "marks": {
+        "init_to_menu_via_G": true,
+        "init_to_menu_via_module": true,
+        "init_to_panel_via_G": true,
+        "init_to_panel_via_module": true,
+        "loop_init_mark": "init-UUID-0001",
+        "loop_running": true,
+        "loop_view_age_s": 1,
+        "menu_mark": "menu-UUID-0002",
+        "menu_sees_init_mark_in_module": "init-UUID-0001",
+        "menu_sees_init_mark_on_G": "init-UUID-0001",
+        "menu_to_loop_via_G": true,
+        "menu_to_loop_via_module": true,
+        "panel_rendered_at": "T3.00 (local time)"
+      },
+      "loop_saw_the_same_settings": true,
+      "loop_view_error": null,
+      "loop_prefs_changes": [
+        {
+          "seen_at": "T0.00 (local time)",
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
+        },
+        {
+          "seen_at": "T3.25 (local time)",
+          "mode": "approve_each_pass",
+          "maxPasses": 12,
+          "clipHighPct": 0.3,
+          "logFolder": "C:\\S8-test"
+        }
+      ],
+      "answered": true,
+      "jim": {
+        "field_kept_12": true,
+        "page_showed_fields": true,
+        "warning_on_12": true
+      }
+    },
+    "after_restart": {
+      "file": "s8_settings_after_restart_T107.00.json",
+      "run_at": "T102.00 (local time)",
+      "settings": {
+        "mode": "approve_each_pass",
+        "maxPasses": 12,
+        "clipHighPct": 0.3,
+        "logFolder": "C:\\S8-test"
+      },
+      "observed_log": "mode=approve_each_pass (string) at T3.00; maxPasses=6 (number) at T3.00; clipHighPct=0.3 (number) at T3.00; logFolder=C:\\S8-test (string) at T3.00; maxPasses=12 (number) at T3.00",
+      "marks": {
+        "init_to_menu_via_G": true,
+        "init_to_menu_via_module": true,
+        "init_to_panel_via_G": true,
+        "init_to_panel_via_module": true,
+        "loop_init_mark": "init-UUID-0005",
+        "loop_running": true,
+        "loop_view_age_s": 1,
+        "menu_mark": "menu-UUID-0006",
+        "menu_sees_init_mark_in_module": "init-UUID-0005",
+        "menu_sees_init_mark_on_G": "init-UUID-0005",
+        "menu_to_loop_via_G": true,
+        "menu_to_loop_via_module": true,
+        "panel_rendered_at": "T102.00 (local time)"
+      },
+      "loop_saw_the_same_settings": true,
+      "loop_view_error": null,
+      "loop_prefs_changes": [
+        {
+          "seen_at": "T99.00 (local time)",
+          "mode": "approve_each_pass",
+          "maxPasses": 12,
+          "clipHighPct": 0.3,
+          "logFolder": "C:\\S8-test"
+        }
+      ],
+      "answered": true,
+      "jim": {
+        "page_kept_values": true
+      }
+    },
+    "kept_across_restart": {
+      "mode": true,
+      "maxPasses": true,
+      "clipHighPct": true,
+      "logFolder": true
+    }
+  },
+  "copied": [
+    "s8_hud_T34.25.json",
+    "s8_log.txt",
+    "s8_loop_view.json",
+    "s8_loop_view_after_restart_T107.00.json",
+    "s8_loop_view_before_restart_T8.00.json",
+    "s8_panel_view.json",
+    "s8_settings_after_restart_T107.00.json",
+    "s8_settings_before_restart_T8.00.json"
+  ],
+  "skipped": []
+}
+
+Wrote <scratch>\collected\late_close_6s\s8_summary.json; copied 8 files, skipped 0.
+
+
+=== collect.ts on scenario x_after_call (expected: pass; passed, as expected)
 > node D:\Developer\LrC_Autonomous_Gateway\spikes\S8\collect.ts <scratch>\out\x_after_call <scratch>\collected\x_after_call
 {
   "source": "%USERPROFILE%\\AppData\\Local\\Temp\\claude\\D--Developer-LrC-Autonomous-Gateway\\f51ed01b-4238-4d11-9bfb-fbbec733c2e2\\scratchpad\\s8smoke\\out\\x_after_call",
@@ -1042,8 +1384,8 @@ Wrote <scratch>\collected\late_close\s8_summary.json; copied 7 files, skipped 1.
       }
     },
     "after_restart": {
-      "file": "s8_settings_after_restart_T102.00.json",
-      "run_at": "T97.00 (local time)",
+      "file": "s8_settings_after_restart_T108.00.json",
+      "run_at": "T103.00 (local time)",
       "settings": {
         "mode": "approve_each_pass",
         "maxPasses": 12,
@@ -1064,13 +1406,13 @@ Wrote <scratch>\collected\late_close\s8_summary.json; copied 7 files, skipped 1.
         "menu_sees_init_mark_on_G": "init-UUID-0005",
         "menu_to_loop_via_G": true,
         "menu_to_loop_via_module": true,
-        "panel_rendered_at": "T97.00 (local time)"
+        "panel_rendered_at": "T103.00 (local time)"
       },
       "loop_saw_the_same_settings": true,
       "loop_view_error": null,
       "loop_prefs_changes": [
         {
-          "seen_at": "T94.00 (local time)",
+          "seen_at": "T100.00 (local time)",
           "mode": "approve_each_pass",
           "maxPasses": 12,
           "clipHighPct": 0.3,
@@ -1093,10 +1435,10 @@ Wrote <scratch>\collected\late_close\s8_summary.json; copied 7 files, skipped 1.
     "s8_hud_T29.25.json",
     "s8_log.txt",
     "s8_loop_view.json",
-    "s8_loop_view_after_restart_T102.00.json",
+    "s8_loop_view_after_restart_T108.00.json",
     "s8_loop_view_before_restart_T8.00.json",
     "s8_panel_view.json",
-    "s8_settings_after_restart_T102.00.json",
+    "s8_settings_after_restart_T108.00.json",
     "s8_settings_before_restart_T8.00.json"
   ],
   "skipped": []
@@ -1105,7 +1447,214 @@ Wrote <scratch>\collected\late_close\s8_summary.json; copied 7 files, skipped 1.
 Wrote <scratch>\collected\x_after_call\s8_summary.json; copied 8 files, skipped 0.
 
 
-=== collect.ts on scenario close_during_delay
+=== collect.ts on scenario x_after_watch (expected: pass; passed, as expected)
+> node D:\Developer\LrC_Autonomous_Gateway\spikes\S8\collect.ts <scratch>\out\x_after_watch <scratch>\collected\x_after_watch
+{
+  "source": "%USERPROFILE%\\AppData\\Local\\Temp\\claude\\D--Developer-LrC-Autonomous-Gateway\\f51ed01b-4238-4d11-9bfb-fbbec733c2e2\\scratchpad\\s8smoke\\out\\x_after_watch",
+  "hud": {
+    "file": "s8_hud_T40.25.json",
+    "run_at": "T16.25 (local time)",
+    "lr_version": "15.5.1-fake",
+    "answered": true,
+    "jim": {
+      "approve_label_blank": true,
+      "approve_label_changed": true,
+      "closed_by_itself": true,
+      "focus_backslash": true,
+      "hud_appeared": true,
+      "last_click_shown": true,
+      "picks_enabled_after_approve": true,
+      "picks_greyed": true,
+      "stage_updated": true
+    },
+    "findings": {
+      "clicks": 4,
+      "clicks_on_greyed_picks": 0,
+      "closed_by_code": "unclear",
+      "selection_changes_seen": 1,
+      "appeared_after_request_s": 5,
+      "buttons": [
+        "Abort",
+        "Approve",
+        "Pick B",
+        "Accept"
+      ],
+      "closed_by_code_because": "closed 11.8 s after the call returned, later than the 10 s watch; Jim says it closed by itself"
+    },
+    "clicks": [
+      {
+        "button": "Abort",
+        "at": "T21.00",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": false,
+        "task_started_ms": 0,
+        "task_read_ok": true,
+        "task_error": null
+      },
+      {
+        "button": "Approve",
+        "at": "T23.00",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": false,
+        "task_started_ms": 0,
+        "task_read_ok": true,
+        "task_error": null
+      },
+      {
+        "button": "Pick B",
+        "at": "T24.00",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": true,
+        "task_started_ms": 0,
+        "task_read_ok": true,
+        "task_error": null
+      },
+      {
+        "button": "Accept",
+        "at": "T25.00",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": true,
+        "task_started_ms": 0,
+        "task_read_ok": true,
+        "task_error": null
+      }
+    ],
+    "close_call": {
+      "exists": true,
+      "tries": [
+        {
+          "argument": "_PLUGIN",
+          "ok": true
+        }
+      ],
+      "at": "T27.25",
+      "closed_during_call": false,
+      "epoch": 1027.25,
+      "hud_open_before_call": true
+    },
+    "present": {
+      "error": null,
+      "returned_after_s": 23,
+      "open_when_returned": false
+    },
+    "ticks": 23
+  },
+  "settings": {
+    "before_restart": {
+      "file": "s8_settings_before_restart_T8.00.json",
+      "run_at": "T3.00 (local time)",
+      "settings": {
+        "mode": "approve_each_pass",
+        "maxPasses": 12,
+        "clipHighPct": 0.3,
+        "logFolder": "C:\\S8-test"
+      },
+      "observed_log": "mode=approve_each_pass (string) at T3.00; maxPasses=6 (number) at T3.00; clipHighPct=0.3 (number) at T3.00; logFolder=C:\\S8-test (string) at T3.00; maxPasses=12 (number) at T3.00",
+      "marks": {
+        "init_to_menu_via_G": true,
+        "init_to_menu_via_module": true,
+        "init_to_panel_via_G": true,
+        "init_to_panel_via_module": true,
+        "loop_init_mark": "init-UUID-0001",
+        "loop_running": true,
+        "loop_view_age_s": 1,
+        "menu_mark": "menu-UUID-0002",
+        "menu_sees_init_mark_in_module": "init-UUID-0001",
+        "menu_sees_init_mark_on_G": "init-UUID-0001",
+        "menu_to_loop_via_G": true,
+        "menu_to_loop_via_module": true,
+        "panel_rendered_at": "T3.00 (local time)"
+      },
+      "loop_saw_the_same_settings": true,
+      "loop_view_error": null,
+      "loop_prefs_changes": [
+        {
+          "seen_at": "T0.00 (local time)",
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
+        },
+        {
+          "seen_at": "T3.25 (local time)",
+          "mode": "approve_each_pass",
+          "maxPasses": 12,
+          "clipHighPct": 0.3,
+          "logFolder": "C:\\S8-test"
+        }
+      ],
+      "answered": true,
+      "jim": {
+        "field_kept_12": true,
+        "page_showed_fields": true,
+        "warning_on_12": true
+      }
+    },
+    "after_restart": {
+      "file": "s8_settings_after_restart_T119.00.json",
+      "run_at": "T114.00 (local time)",
+      "settings": {
+        "mode": "approve_each_pass",
+        "maxPasses": 12,
+        "clipHighPct": 0.3,
+        "logFolder": "C:\\S8-test"
+      },
+      "observed_log": "mode=approve_each_pass (string) at T3.00; maxPasses=6 (number) at T3.00; clipHighPct=0.3 (number) at T3.00; logFolder=C:\\S8-test (string) at T3.00; maxPasses=12 (number) at T3.00",
+      "marks": {
+        "init_to_menu_via_G": true,
+        "init_to_menu_via_module": true,
+        "init_to_panel_via_G": true,
+        "init_to_panel_via_module": true,
+        "loop_init_mark": "init-UUID-0005",
+        "loop_running": true,
+        "loop_view_age_s": 1,
+        "menu_mark": "menu-UUID-0006",
+        "menu_sees_init_mark_in_module": "init-UUID-0005",
+        "menu_sees_init_mark_on_G": "init-UUID-0005",
+        "menu_to_loop_via_G": true,
+        "menu_to_loop_via_module": true,
+        "panel_rendered_at": "T114.00 (local time)"
+      },
+      "loop_saw_the_same_settings": true,
+      "loop_view_error": null,
+      "loop_prefs_changes": [
+        {
+          "seen_at": "T111.00 (local time)",
+          "mode": "approve_each_pass",
+          "maxPasses": 12,
+          "clipHighPct": 0.3,
+          "logFolder": "C:\\S8-test"
+        }
+      ],
+      "answered": true,
+      "jim": {
+        "page_kept_values": true
+      }
+    },
+    "kept_across_restart": {
+      "mode": true,
+      "maxPasses": true,
+      "clipHighPct": true,
+      "logFolder": true
+    }
+  },
+  "copied": [
+    "s8_hud_T40.25.json",
+    "s8_log.txt",
+    "s8_loop_view.json",
+    "s8_loop_view_after_restart_T119.00.json",
+    "s8_loop_view_before_restart_T8.00.json",
+    "s8_panel_view.json",
+    "s8_settings_after_restart_T119.00.json",
+    "s8_settings_before_restart_T8.00.json"
+  ],
+  "skipped": []
+}
+
+Wrote <scratch>\collected\x_after_watch\s8_summary.json; copied 8 files, skipped 0.
+
+
+=== collect.ts on scenario close_during_delay (expected: pass; passed, as expected)
 > node D:\Developer\LrC_Autonomous_Gateway\spikes\S8\collect.ts <scratch>\out\close_during_delay <scratch>\collected\close_during_delay
 {
   "source": "%USERPROFILE%\\AppData\\Local\\Temp\\claude\\D--Developer-LrC-Autonomous-Gateway\\f51ed01b-4238-4d11-9bfb-fbbec733c2e2\\scratchpad\\s8smoke\\out\\close_during_delay",
@@ -1131,7 +1680,7 @@ Wrote <scratch>\collected\x_after_call\s8_summary.json; copied 8 files, skipped 
 Wrote <scratch>\collected\close_during_delay\s8_summary.json; copied 1 files, skipped 0.
 
 
-=== collect.ts on scenario not_started
+=== collect.ts on scenario not_started (expected: pass; passed, as expected)
 > node D:\Developer\LrC_Autonomous_Gateway\spikes\S8\collect.ts <scratch>\out\not_started <scratch>\collected\not_started
 {
   "source": "%USERPROFILE%\\AppData\\Local\\Temp\\claude\\D--Developer-LrC-Autonomous-Gateway\\f51ed01b-4238-4d11-9bfb-fbbec733c2e2\\scratchpad\\s8smoke\\out\\not_started",
@@ -1350,14 +1899,17 @@ function FAKE.closeHud(how)
         if FAKE.hud.args.windowWillClose then FAKE.hud.args.windowWillClose() end
     end
 end
--- FAKE.close_mode: "sync" closes inside the call; "async" closes 1 s after it returns; "noop" does nothing.
+-- FAKE.close_mode: "sync" closes inside the call; "async" closes FAKE.close_delay s after it returns;
+-- "noop" does nothing.
 FAKE.close_mode = "sync"
+FAKE.close_delay = 1
 M.LrDialogs.closeFloatingDialogsForPlugin = function(plugin)
     if plugin == nil then error("expected a plugin") end
     if FAKE.close_mode == "sync" then
         FAKE.closeHud("closeFloatingDialogsForPlugin")
     elseif FAKE.close_mode == "async" then
-        spawn(function() sleep(1); FAKE.closeHud("closeFloatingDialogsForPlugin, 1 s later") end, "async close")
+        local d = FAKE.close_delay
+        spawn(function() sleep(d); FAKE.closeHud("closeFloatingDialogsForPlugin, " .. d .. " s later") end, "async close")
     end
 end
 
@@ -1454,7 +2006,8 @@ local function hudFlow(closeHow)
         at(2); check("HUD still open 2 s after menu 2", FAKE.hud.open)
         at(5); FAKE.closeHud("the X, 7 s after the call")
     end
-    at(6)
+    if closeHow == "x_after_12s" then at(12); FAKE.closeHud("the X, 12 s after the call") end
+    at(12)
     local hud = fileLike("s8_hud_")
     check("HUD result saved", hud ~= nil and lastMessage().title == "AVG S8 HUD test: SAVED")
     check("selection change seen", has(hud, '"selection_changes_seen": 1'))
@@ -1519,18 +2072,26 @@ else
         hud = hudFlow("x_after_7s")
         check("clicks 5 incl. the greyed Pick B", has(hud, '"clicks": 5'))
         check("greyed clicks counted 1", has(hud, '"clicks_on_greyed_picks": 1'))
-        check("closed_by_code no", has(hud, '"closed_by_code": "no"'))
+        check("closed_by_code no although every tick box is ticked (the call does not exist)", has(hud, '"closed_by_code": "no"') and has(hud, "does not exist"))
         check("close call recorded as missing", has(hud, '"exists": false'))
     elseif SCENARIO == "late_close" then
         FAKE.close_mode = "async"
         hud = hudFlow("async")
         check("closed 1 s after the call + Jim ticked it: yes", has(hud, '"closed_by_code": "yes"') and has(hud, "Jim's answer decides"))
         check("not counted as closed inside the call", has(hud, '"closed_during_call": false'))
+    elseif SCENARIO == "late_close_6s" then
+        FAKE.close_mode = "async"; FAKE.close_delay = 6
+        hud = hudFlow("async")
+        check("closed 6 s after the call (within the 10 s watch) + Jim ticked it: yes", has(hud, '"closed_by_code": "yes"') and has(hud, "closed 6.0 s after the call returned; Jim's answer decides"))
     elseif SCENARIO == "x_after_call" then
         FAKE.close_mode = "noop"
         FAKE.modal_overrides = { closed_by_itself = false }
         hud = hudFlow("x_after_1s")
         check("X 1 s after a call that did nothing, Jim: not by itself -> no", has(hud, '"closed_by_code": "no"') and has(hud, "Jim's answer decides"))
+    elseif SCENARIO == "x_after_watch" then
+        FAKE.close_mode = "noop"
+        hud = hudFlow("x_after_12s")
+        check("closed 12 s after the call, Jim ticked 'by itself': unclear", has(hud, '"closed_by_code": "unclear"') and has(hud, "later than the 10 s watch"))
     end
 
     -- Steps 21-23: restart, the page (not in no_close), menu item 4.
@@ -1603,6 +2164,8 @@ if (scenario === "late_close") {
   report.push("(run-smoke: s8_loop_view.json cut to half its length for the collector dry run)\n");
 }
 origLog(report.join(""));
+// A failed check fails the run, so the transcript builder can tell (Greptile, PR #40 round 2).
+if (!/^===RESULT ALL PASS/m.test(out)) process.exit(1);
 
 
 === parse.cjs
@@ -1629,6 +2192,8 @@ process.exit(bad ? 1 : 0);
 === assemble.mts
 // Builds docs\reports\phase5\S8-smoke\smoke.txt: the commands, their output, and the smoke kit's
 // source verbatim, with the user folder written as %USERPROFILE% and the scratch folder as <scratch>.
+// Every run has an expected outcome (pass, or fail for a mutant). If any run differs, the transcript
+// still gets written, headed "BUILD FAILED", and this script exits 1 (Greptile, PR #40 round 2).
 import { execFileSync } from "node:child_process";
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
@@ -1638,6 +2203,7 @@ const kit = import.meta.dirname;
 const repo = "D:\\Developer\\LrC_Autonomous_Gateway";
 const plugin = path.join(repo, "plugin", "spikes", "S8.lrplugin");
 const out = path.join(repo, "docs", "reports", "phase5", "S8-smoke", "smoke.txt");
+const unexpected: string[] = [];
 
 function redact(text: string): string {
   let t = text;
@@ -1649,41 +2215,35 @@ function redact(text: string): string {
   return t;
 }
 
-function run(label: string, args: string[]): string {
+function run(label: string, args: string[], expect: "pass" | "fail"): string {
   let text: string;
+  let ok = true;
   try {
     text = execFileSync("node", args, { cwd: repo, encoding: "utf8" });
   } catch (err) {
+    ok = false;
     text = String((err as { stdout?: string }).stdout ?? "") + "\nEXIT NON-ZERO";
   }
-  return `\n=== ${label}\n> node ${args.join(" ")}\n${text.trimEnd()}\n`;
+  const as = ok === (expect === "pass") ? "as expected" : "UNEXPECTED";
+  if (as === "UNEXPECTED") unexpected.push(label);
+  return `\n=== ${label} (expected: ${expect}; ${ok ? "passed" : "failed"}, ${as})\n> node ${args.join(" ")}\n${text.trimEnd()}\n`;
 }
 
 const parts: string[] = [];
-parts.push(
-  [
-    "S8 smoke transcript (Claude Code, Opus 5.5, 2026-09-28, branch phase-5/spike-s8; regenerated after the",
-    "fixes for Greptile's round 1 on PR #40).",
-    "What it shows: the S8 harness's own logic, run against a fake Lightroom; NOT Lightroom's behaviour.",
-    "Kit: a scratch folder outside the repo with npm fengari@0.1.4 (a Lua 5.3 VM in JavaScript) and luaparse@0.3.1,",
-    "neither a project dependency. Its five files (this transcript's builder included) are reproduced verbatim in the",
-    "appendix below.",
-    `Node ${process.version}. Paths: the user folder is written as %USERPROFILE%, the scratch folder as <scratch>.`,
-  ].join("\n"),
-);
-parts.push("\n##### Parse" + run("Lua 5.1 parse of every S8 Lua file", [path.join(kit, "parse.cjs"), plugin]));
-const SCENARIOS = ["normal", "no_close", "late_close", "x_after_call", "close_during_delay", "not_started"];
+parts.push("\n##### Parse" + run("Lua 5.1 parse of every S8 Lua file", [path.join(kit, "parse.cjs"), plugin], "pass"));
+const SCENARIOS = ["normal", "no_close", "late_close", "late_close_6s", "x_after_call", "x_after_watch", "close_during_delay", "not_started"];
 parts.push("\n##### Scenarios");
 for (const sc of SCENARIOS) {
-  parts.push(run(`scenario ${sc}`, [path.join(kit, "run-smoke.cjs"), plugin, sc]));
+  parts.push(run(`scenario ${sc}`, [path.join(kit, "run-smoke.cjs"), plugin, sc], "pass"));
 }
 
-// Each mutant puts back one bug Greptile found on PR #40 (round 1), in a copy of the plugin; the
-// scenario that covers it must fail.
+// Each mutant puts back one bug Greptile found on PR #40, in a copy of the plugin; the scenario
+// that covers it must fail.
 parts.push("\n##### Mutation check (each must FAIL)");
 const MUTANTS = [
-  { label: "mutant 1: the window's closing time alone decides 'closed by code' (the code before the fix)", file: "S8Hud.lua", from: 'if not answered then return "unclear"', to: 'if true then return "yes", "timing only" end\n    if not answered then return "unclear"', scenario: "x_after_call" },
-  { label: "mutant 2: a close request does not cancel an open still waiting out its 5 s", file: "S8Loop.lua", from: "            if L.openAt then", to: "            if false then", scenario: "close_during_delay" },
+  { label: "mutant 1 (round 1): the window's closing time alone decides 'closed by code'", file: "S8Hud.lua", from: 'if not answered then return "unclear"', to: 'if true then return "yes", "timing only" end\n        if not answered then return "unclear"', scenario: "x_after_call" },
+  { label: "mutant 2 (round 1): a close request does not cancel an open still waiting out its 5 s", file: "S8Loop.lua", from: "            if L.openAt then", to: "            if false then", scenario: "close_during_delay" },
+  { label: "mutant 3 (round 2): Jim's answer counts only within 3 s of the call, not the 10 s he watches", file: "S8Hud.lua", from: "local WATCH_S = 10", to: "local WATCH_S = 3", scenario: "late_close_6s" },
 ];
 for (const m of MUTANTS) {
   const dir = path.join(kit, "mutant");
@@ -1692,20 +2252,33 @@ for (const m of MUTANTS) {
   const src = readFileSync(path.join(dir, m.file), "utf8");
   if (!src.includes(m.from)) throw new Error(`${m.label}: text to replace not found`);
   writeFileSync(path.join(dir, m.file), src.replace(m.from, m.to));
-  parts.push(`\n--- ${m.label}\n--- in ${m.file}: replaced ${JSON.stringify(m.from)} with ${JSON.stringify(m.to)}` + run(`scenario ${m.scenario} on the mutant`, [path.join(kit, "run-smoke.cjs"), dir, m.scenario]));
+  parts.push(`\n--- ${m.label}\n--- in ${m.file}: replaced ${JSON.stringify(m.from)} with ${JSON.stringify(m.to)}` + run(`scenario ${m.scenario} on the mutant`, [path.join(kit, "run-smoke.cjs"), dir, m.scenario], "fail"));
   rmSync(dir, { recursive: true, force: true });
 }
 
+// The collector needs each scenario's files, which the scenarios above wrote to <scratch>\out\.
 parts.push("\n##### Collector dry run");
 for (const sc of SCENARIOS) {
-  parts.push(run(`collect.ts on scenario ${sc}`, [path.join(repo, "spikes", "S8", "collect.ts"), path.join(kit, "out", sc), path.join(kit, "collected", sc)]));
+  parts.push(run(`collect.ts on scenario ${sc}`, [path.join(repo, "spikes", "S8", "collect.ts"), path.join(kit, "out", sc), path.join(kit, "collected", sc)], "pass"));
 }
 parts.push("\n##### Appendix: the smoke kit, verbatim");
 for (const f of ["fake-lr.lua", "main.lua", "run-smoke.cjs", "parse.cjs", "assemble.mts"]) {
   parts.push(`\n=== ${f}\n${readFileSync(path.join(kit, f), "utf8").trimEnd()}\n`);
 }
+
+const header = [
+  unexpected.length === 0 ? "BUILD: every run as expected." : `BUILD FAILED: ${unexpected.length} run(s) not as expected: ${unexpected.join("; ")}`,
+  "S8 smoke transcript (Claude Code, Opus 5.5, 2026-09-28, branch phase-5/spike-s8; regenerated after the",
+  "fixes for Greptile's rounds 1 and 2 on PR #40).",
+  "What it shows: the S8 harness's own logic, run against a fake Lightroom; NOT Lightroom's behaviour.",
+  "Kit: a scratch folder outside the repo with npm fengari@0.1.4 (a Lua 5.3 VM in JavaScript) and luaparse@0.3.1,",
+  "neither a project dependency. Its five files (this transcript's builder included) are reproduced verbatim in the",
+  "appendix below.",
+  `Node ${process.version}. Paths: the user folder is written as %USERPROFILE%, the scratch folder as <scratch>.`,
+].join("\n");
 mkdirSync(path.dirname(out), { recursive: true });
-const text = redact(parts.join("\n"));
+const text = redact([header, ...parts].join("\n"));
 if (text.toLowerCase().includes(os.homedir().toLowerCase())) throw new Error("user folder still present");
 writeFileSync(out, text);
-console.log(`wrote ${out} (${text.split("\n").length} lines)`);
+console.log(`wrote ${out} (${text.split("\n").length} lines); ${unexpected.length === 0 ? "every run as expected" : "BUILD FAILED: " + unexpected.join("; ")}`);
+if (unexpected.length > 0) process.exit(1);

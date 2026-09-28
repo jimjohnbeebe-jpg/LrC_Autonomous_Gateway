@@ -28,7 +28,7 @@ local Common = require 'S8Common'
 local Hud = {}
 
 local MAX_TICKS = 900 -- the ticker stops after 15 min
-local CLOSED_BY_CODE_WITHIN_S = 3
+local WATCH_S = 10 -- README step 19: Jim watches the HUD this long before he uses the X
 
 local QUESTIONS = {
     { key = "hud_appeared", text = "The HUD appeared by itself a few seconds after menu item 1" },
@@ -144,17 +144,28 @@ end
 
 -- Closed from code: "yes" when the window closed inside the call (S8Loop.tryClose). When it closed
 -- only after the call returned, the window's time cannot tell the call from Jim's X (Greptile,
--- PR #40): within CLOSED_BY_CODE_WITHIN_S of the call, Jim's answer decides ("unclear" without one);
--- later, "no". The README has Jim wait 10 s before using the X.
+-- PR #40). The README has Jim watch for WATCH_S before he uses the X, so:
+--   - closed within WATCH_S of the call: Jim's tick "closed by itself" decides ("unclear" without an
+--     answer), since only the call can have closed it unless Jim used the X early;
+--   - closed later: "no", unless Jim ticked "closed by itself", then "unclear" (a very late close
+--     from code and Jim's X cannot be told apart).
 local function closedByCode(run, answered, observations)
     local close = run.close
     if not close then return "not tried", "menu item 2 was not used" end
     if close.closed_during_call then return "yes", "the window closed inside the call" end
-    local soon = run.closed_epoch ~= nil and run.closed_epoch >= close.epoch - 0.01 and run.closed_epoch - close.epoch <= CLOSED_BY_CODE_WITHIN_S
-    if not soon then return "no", "the window did not close within " .. CLOSED_BY_CODE_WITHIN_S .. " s of the call" end
-    if not answered then return "unclear", "closed soon after the call returned; no answer from Jim" end
-    local jim = observations.closed_by_itself and observations.closed_by_itself.answer
-    return jim and "yes" or "no", "closed soon after the call returned; Jim's answer decides"
+    if not close.exists then return "no", "closeFloatingDialogsForPlugin does not exist" end
+    local called = false
+    for _, try in ipairs(close.tries or {}) do called = called or try.ok end
+    if not called then return "no", "every call of closeFloatingDialogsForPlugin raised an error" end
+    if not run.closed_epoch or run.closed_epoch < close.epoch - 0.01 then return "no", "the window did not close after the call" end
+    local jim = answered and observations.closed_by_itself and observations.closed_by_itself.answer
+    local after = string.format("closed %.1f s after the call returned", run.closed_epoch - close.epoch)
+    if run.closed_epoch - close.epoch <= WATCH_S then
+        if not answered then return "unclear", after .. "; no answer from Jim" end
+        return jim and "yes" or "no", after .. "; Jim's answer decides"
+    end
+    if jim then return "unclear", after .. ", later than the " .. WATCH_S .. " s watch; Jim says it closed by itself" end
+    return "no", after .. ", later than the " .. WATCH_S .. " s watch"
 end
 
 local function findings(run, answered, observations)

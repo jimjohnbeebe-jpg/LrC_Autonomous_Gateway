@@ -1,9 +1,13 @@
 phase-4/presets live transcript (PHASE4_PLAN row 9) - Claude Code (Opus 5.5), 2026-09-28 (times UTC)
 Engine at branch phase-4/presets (built with `npm run build`); Lightroom Classic 15.5.1 running with
 plugin 0.4.0; Claude Desktop not using LrC-AVG (each step takes the engine's instance lock).
-What these steps did to Lightroom: nothing was written to any photo. `select_photo` (steps 3 and 5)
-changed which photo is selected, so that Jim's reference presets were made from a chosen photo.
-Jim made the two reference presets by hand; everything else below is Claude Code's.
+What these steps did to Lightroom: nothing was written to any photo. The plugin received only
+get_context, get_settings, get_selection and select_photo, and no write command (apply_settings,
+create_snapshot, apply_snapshot, create_virtual_copies) [handle: section 9, the plugin's own log of
+these steps]. `select_photo` (steps 3 and 5) changed which photo is selected, so that Jim's
+reference presets were made from a chosen photo [handle: the "before" and "after" get_selection
+lines in steps 3 and 5]. Jim made the two reference presets by hand [stated: "reference made",
+"reference 2 made"]; everything else below is Claude Code's.
 User folder written as %USERPROFILE%. The scratch scripts are in the appendix.
 
 == 1. Read-only photo check of the photo selected at the start ==
@@ -96,6 +100,47 @@ ms 556
 attributes 83 differ from Lightroom's reference 2: none
   (the 83 crs: attributes of the engine's file, UUID aside, each equal to the same attribute in
   Lightroom's reference-2.lrc15.xmp, text for text)
+
+== 9. The plugin's log of steps 1-8 ==
+From %TEMP%\LrC-AVG\bridge.log (local time, UTC-7), every line from the first connection of step 1
+to the last command of step 8, request ids cut, user folder written as %USERPROFILE%. Only the
+connect/close lines are left out. The window holds no WARN or ERROR line.
+2026-09-27 19:05:53.512 INFO  bridge: hello                  (step 1)
+2026-09-27 19:05:53.524 INFO  bridge: get_context
+2026-09-27 19:05:53.536 INFO  bridge: get_settings
+2026-09-27 19:06:16.370 INFO  bridge: hello                  (step 2)
+2026-09-27 19:06:16.376 INFO  bridge: get_settings
+2026-09-27 19:06:16.388 INFO  bridge: get_settings
+2026-09-27 19:06:16.399 INFO  bridge: get_settings
+2026-09-27 19:06:16.410 INFO  bridge: get_settings
+2026-09-27 19:06:16.421 INFO  bridge: get_settings
+2026-09-27 19:06:39.315 INFO  bridge: hello                  (step 3)
+2026-09-27 19:06:39.321 INFO  bridge: get_selection
+2026-09-27 19:06:39.325 INFO  bridge: select_photo
+2026-09-27 19:06:39.379 INFO  bridge: get_selection
+2026-09-27 19:06:44.061 INFO  bridge: hello
+2026-09-27 19:06:44.070 INFO  bridge: get_context
+2026-09-27 19:06:44.080 INFO  bridge: get_settings
+2026-09-27 19:07:43.738 INFO  bridge: token written to %USERPROFILE%\.lrc-avg\bridge_token
+2026-09-27 19:09:14.275 INFO  bridge: hello                  (step 4)
+2026-09-27 19:09:14.287 INFO  bridge: get_context
+2026-09-27 19:09:14.304 INFO  bridge: get_settings
+2026-09-27 19:12:49.814 INFO  bridge: hello                  (step 5)
+2026-09-27 19:12:49.822 INFO  bridge: get_selection
+2026-09-27 19:12:49.827 INFO  bridge: select_photo
+2026-09-27 19:12:50.429 INFO  bridge: get_selection
+2026-09-27 19:12:55.347 INFO  bridge: hello
+2026-09-27 19:12:55.375 INFO  bridge: get_context
+2026-09-27 19:12:55.398 INFO  bridge: get_settings
+2026-09-27 19:13:49.081 INFO  bridge: hello                  (step 6)
+2026-09-27 19:13:49.091 INFO  bridge: get_context
+2026-09-27 19:13:49.100 INFO  bridge: get_settings
+2026-09-27 19:28:01.036 INFO  bridge: hello                  (step 8)
+2026-09-27 19:28:01.042 INFO  bridge: get_context
+2026-09-27 19:28:01.052 INFO  bridge: get_settings
+Totals: get_context 6, get_settings 11, get_selection 4, select_photo 2; no other command.
+(Step 7 does not talk to Lightroom. The "token written" line at 19:07:43 is the plugin writing its
+bridge token; why it did so between steps 3 and 4 is [unverified].)
 
 == Appendix A: profiles.mjs ==
 // Read-only: each candidate photo's camera profile and edit count, by uuid (plugin 0.4.0 photo_uuid).

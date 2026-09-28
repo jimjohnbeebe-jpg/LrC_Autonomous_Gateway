@@ -50,38 +50,43 @@ export function checkPresetName(name: string, what: "name" | "folder"): string {
 export type PresetFile = { file: string; group: string | null; unreadable?: true };
 
 /**
- * Whether a file this reader cannot parse may be a preset of that name: it holds the name as text,
- * as is or XML-escaped, or it cannot be read at all. An unreadable file never counts as proof that
- * a name is free (Greptile, PR #36). A name written with numeric character references would be
- * missed [inference: Lightroom's two files use none, engine\tests\fixtures\presets\].
+ * A file's text, or null for what cannot be a preset Lightroom lists: a folder, a link to nothing,
+ * a file that cannot be read (Greptile, PR #36 round 2: a dangling link stopped every call)
+ * [inference: Lightroom, running as the same user, cannot read such a file either].
  */
-function mayHoldName(file: string, name: string): boolean {
-  let text: string;
+export function presetText(file: string): string | null {
   try {
-    text = readFileSync(file, "utf8");
+    return statSync(file).isFile() ? readFileSync(file, "utf8") : null;
   } catch {
-    return true;
+    return null;
   }
-  return text.includes(name) || text.includes(escapeXml(name));
 }
+
+/**
+ * Whether a file this reader cannot parse may be a preset of that name: it holds the name as text,
+ * as is or XML-escaped. A file that does not parse never counts as proof that a name is free
+ * (Greptile, PR #36). A name written with numeric character references would be missed
+ * [inference: Lightroom's two files use none, engine\tests\fixtures\presets\].
+ */
+const mayHoldName = (text: string, name: string): boolean => text.includes(name) || text.includes(escapeXml(name));
 
 /** Every preset file under `dir` whose crs:Name is `name` (or may be), as paths relative to `dir`, with its group. */
 export function findPresetFiles(dir: string, name: string): PresetFile[] {
   const found: PresetFile[] = [];
   for (const rel of readdirSync(dir, { recursive: true, encoding: "utf8" })) {
-    const file = path.join(dir, rel);
-    if (!rel.toLowerCase().endsWith(".xmp") || !statSync(file).isFile()) continue;
+    const text = rel.toLowerCase().endsWith(".xmp") ? presetText(path.join(dir, rel)) : null;
+    if (text === null) continue;
     try {
-      const id = presetIdentity(readFileSync(file, "utf8"));
+      const id = presetIdentity(text);
       if (id.name === name) found.push({ file: rel, group: id.group });
     } catch {
-      if (mayHoldName(file, name)) found.push({ file: rel, group: null, unreadable: true });
+      if (mayHoldName(text, name)) found.push({ file: rel, group: null, unreadable: true });
     }
   }
   return found.sort((a, b) => a.file.localeCompare(b.file));
 }
 
-const describeTaken = (t: PresetFile): string => (t.unreadable ? `${t.file}, which this engine cannot read and which may hold the name` : `${t.file}, group ${t.group ?? "User Presets"}`);
+const describeTaken = (t: PresetFile): string => (t.unreadable ? `${t.file}, which this engine cannot parse and which holds the name` : `${t.file}, group ${t.group ?? "User Presets"}`);
 
 /** Refuse before anything is read from Lightroom: no folder, or the name is taken. */
 export function checkFree(dir: string, name: string): void {

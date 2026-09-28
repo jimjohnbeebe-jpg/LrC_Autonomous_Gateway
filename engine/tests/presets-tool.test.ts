@@ -3,13 +3,14 @@
 // that it writes nothing there), and its refusals. The preset folder is a temp folder, never
 // Lightroom's.
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 import { IntentLibrary } from "../src/intents/index.js";
 import { Tools, toToolError, type ToolError } from "../src/mcp/index.js";
 import type { CreatePresetArgs } from "../src/mcp/tools-propagation.js";
-import { presetIdentity, RESTART_NOTE } from "../src/presets/index.js";
+import { presetIdentity, presetText, RESTART_NOTE } from "../src/presets/index.js";
 import { PreviewService } from "../src/preview/index.js";
 import { client, lr, map, plugin, sent, tmp, useSyncHarness } from "./helpers/sync-harness.js";
 
@@ -46,6 +47,18 @@ async function fails(args: CreatePresetArgs, tools: Tools = presets): Promise<To
 }
 
 const WRITES = ["apply_settings", "create_snapshot", "apply_snapshot", "select_photo", "create_virtual_copies"];
+
+/** Windows refuses symlinks without Developer Mode (EPERM on Claude Code's machine, 2026-09-28): the link test then skips. */
+function canSymlink(): boolean {
+  const probe = path.join(os.tmpdir(), `lrc-avg-link-${process.pid}.xmp`);
+  try {
+    symlinkSync(path.join(os.tmpdir(), "nowhere.xmp"), probe, "file");
+    rmSync(probe);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 describe("lr_create_preset_from_active", () => {
   it("writes <name>.xmp in the preset folder, reads the selected photo and writes nothing to Lightroom", async () => {
@@ -108,6 +121,21 @@ describe("lr_create_preset_from_active", () => {
     expect(error.details).toEqual({ files: [{ file: "other file.xmp", group: null, unreadable: true }] });
     writeFileSync(path.join(dir, "other file.xmp"), "<x:xmpmeta crs:Name='Someone else'>");
     await presets.createPresetFromActive({ name: "Tom & Jerry 2" });
+  });
+
+  it("skips a folder named .xmp and what it cannot read, so neither blocks a free name (Greptile, PR #36 round 2)", async () => {
+    mkdirSync(path.join(dir, "folder.xmp"));
+    expect(presetText(path.join(dir, "folder.xmp"))).toBeNull();
+    // A link to nothing fails the same stat call as a path that does not exist.
+    expect(presetText(path.join(dir, "gone.xmp"))).toBeNull();
+    await presets.createPresetFromActive({ name: "Free" });
+    expect(existsSync(path.join(dir, "Free.xmp"))).toBe(true);
+  });
+
+  it.skipIf(!canSymlink())("skips a dangling .xmp link", async () => {
+    symlinkSync(path.join(dir, "nowhere.xmp"), path.join(dir, "dangling.xmp"), "file");
+    await presets.createPresetFromActive({ name: "Free too" });
+    expect(existsSync(path.join(dir, "Free too.xmp"))).toBe(true);
   });
 
   it("never writes over a file of that name, preset or not", async () => {

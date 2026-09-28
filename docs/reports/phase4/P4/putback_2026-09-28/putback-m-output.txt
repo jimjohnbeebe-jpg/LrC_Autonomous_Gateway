@@ -1,0 +1,5 @@
+connected: plugin 0.4.0
+photo: 20260907-_OZ80099.NEF, virtual copy: false
+before: differing from the start: blacks, clarity, exposure, highlights, shadows, vibrance
+after apply_snapshot: differing from the start: (none)
+PUT BACK: YES

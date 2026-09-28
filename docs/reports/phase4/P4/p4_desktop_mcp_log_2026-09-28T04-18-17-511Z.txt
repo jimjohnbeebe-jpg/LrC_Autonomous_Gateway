@@ -1,0 +1,53 @@
+# Excerpt of Claude Desktop's MCP log for the lrc-avg server, collected by npm run phase4:check.
+# Source: %LOCALAPPDATA%\Claude\Logs\mcp-server-lrc-avg.log, lines from 2026-09-28T04:30:01.601Z on.
+# Filter: timestamped lines matching Server started|Message from|[error]|[warn], and the engine's [lrc-avg] lines; user folder redacted.
+
+2026-09-28T04:30:27.617Z [lrc-avg] [info] Server started and connected successfully { metadata: undefined }
+[lrc-avg] engine 0.6.0 ready on stdio (node v24.11.1); tool log: D:\Developer\LrC_Autonomous_Gateway\logs\engine-20260927.jsonl; previews: %USERPROFILE%\AppData\Local\Temp\LrC-AVG\previews
+[lrc-avg] shutting down: stdin ended (the client exited)
+2026-09-28T04:30:28.598Z [lrc-avg] [info] Server started and connected successfully { metadata: undefined }
+2026-09-28T04:30:28.605Z [lrc-avg] [info] Message from client: method="initialize" id=0 params { metadata: undefined }
+[lrc-avg] engine 0.6.0 ready on stdio (node v24.11.1); tool log: D:\Developer\LrC_Autonomous_Gateway\logs\engine-20260927.jsonl; previews: %USERPROFILE%\AppData\Local\Temp\LrC-AVG\previews
+[lrc-avg] engine 0.6.0 ready on stdio (node v24.11.1); tool log: D:\Developer\LrC_Autonomous_Gateway\logs\engine-20260927.jsonl; previews: %USERPROFILE%\AppData\Local\Temp\LrC-AVG\previews
+2026-09-28T04:30:30.011Z [lrc-avg] [info] Message from server: id=0 result { metadata: undefined }
+2026-09-28T04:30:30.013Z [lrc-avg] [info] Message from client: method="notifications/initialized" { metadata: undefined }
+2026-09-28T04:30:30.022Z [lrc-avg] [info] Message from client: method="tools/list" id=1 params { metadata: undefined }
+2026-09-28T04:30:30.038Z [lrc-avg] [info] Message from server: id=1 result { metadata: undefined }
+2026-09-28T04:31:40.480Z [lrc-avg] [info] Message from client: method="tools/call" id=2 params { metadata: undefined }
+[lrc-avg] took the Lightroom bridge lock
+[lrc-avg] bridge: connecting
+[lrc-avg] bridge: handshaking
+[lrc-avg] bridge: connected
+2026-09-28T04:31:41.028Z [lrc-avg] [info] Message from server: id=2 result(1 blocks) { metadata: undefined }
+2026-09-28T04:31:46.208Z [lrc-avg] [info] Message from client: method="tools/call" id=3 params { metadata: undefined }
+2026-09-28T04:31:46.218Z [lrc-avg] [info] Message from server: id=3 result(1 blocks) { metadata: undefined }
+2026-09-28T04:31:51.512Z [lrc-avg] [info] Message from client: method="tools/call" id=4 params { metadata: undefined }
+2026-09-28T04:33:05.170Z [lrc-avg] [info] Message from server: id=4 result(2 blocks) { metadata: undefined }
+2026-09-28T04:33:24.107Z [lrc-avg] [info] Message from client: method="tools/call" id=5 params { metadata: undefined }
+2026-09-28T04:33:36.013Z [lrc-avg] [info] Message from server: id=5 result(1 blocks) { metadata: undefined }
+2026-09-28T04:33:40.133Z [lrc-avg] [info] Message from client: method="tools/call" id=6 params { metadata: undefined }
+2026-09-28T04:33:52.291Z [lrc-avg] [info] Message from server: id=6 result(1 blocks) { metadata: undefined }
+2026-09-28T04:33:57.216Z [lrc-avg] [info] Message from client: method="tools/call" id=7 params { metadata: undefined }
+2026-09-28T04:34:05.991Z [lrc-avg] [info] Message from server: id=7 result(2 blocks) { metadata: undefined }
+[lrc-avg] no tool call for 60 s; gave the Lightroom bridge back
+[lrc-avg] bridge: stopped
+2026-09-28T04:35:42.236Z [lrc-avg] [info] Message from client: method="tools/call" id=8 params { metadata: undefined }
+[lrc-avg] took the Lightroom bridge lock
+[lrc-avg] bridge: connecting
+[lrc-avg] bridge: handshaking
+[lrc-avg] bridge: connected
+2026-09-28T04:35:42.805Z [lrc-avg] [info] Message from server: id=8 result(2 blocks) { metadata: undefined }
+2026-09-28T04:35:49.255Z [lrc-avg] [info] Message from client: method="tools/call" id=9 params { metadata: undefined }
+2026-09-28T04:35:54.143Z [lrc-avg] [info] Message from server: id=9 result(2 blocks) { metadata: undefined }
+2026-09-28T04:35:59.425Z [lrc-avg] [info] Message from client: method="tools/call" id=10 params { metadata: undefined }
+2026-09-28T04:36:03.335Z [lrc-avg] [info] Message from server: id=10 result(2 blocks) { metadata: undefined }
+[lrc-avg] no tool call for 60 s; gave the Lightroom bridge back
+[lrc-avg] bridge: stopped
+2026-09-28T04:37:11.591Z [lrc-avg] [info] Message from client: method="tools/call" id=11 params { metadata: undefined }
+[lrc-avg] took the Lightroom bridge lock
+[lrc-avg] bridge: connecting
+[lrc-avg] bridge: handshaking
+[lrc-avg] bridge: connected
+2026-09-28T04:37:12.121Z [lrc-avg] [info] Message from server: id=11 result(1 blocks) { metadata: undefined }
+[lrc-avg] no tool call for 60 s; gave the Lightroom bridge back
+[lrc-avg] bridge: stopped

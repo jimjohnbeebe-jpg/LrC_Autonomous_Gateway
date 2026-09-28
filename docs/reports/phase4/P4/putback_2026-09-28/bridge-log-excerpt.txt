@@ -1,0 +1,15 @@
+# Lines 874-886 of %TEMP%\LrC-AVG\bridge.log (the plugin log), copied by Claude Code on 2026-09-28: the two runs of putback-m.mjs,
+# first read-only (04:11:10), then with --apply (04:11:22). Times are local (UTC-7). No other line of the log is in this range.
+2026-09-28 04:11:10.092 INFO  bridge: receive: engine connected
+2026-09-28 04:11:10.599 INFO  bridge: send: engine connected
+2026-09-28 04:11:10.602 INFO  bridge: hello 96252f74-93ee-4609-950f-53c536507f78
+2026-09-28 04:11:10.614 INFO  bridge: get_context 6ddc2ef4-9522-41fa-8f8b-5d241123697e
+2026-09-28 04:11:10.624 INFO  bridge: get_settings 891ede6d-edb5-4759-bb01-077a348ac492
+2026-09-28 04:11:10.641 INFO  bridge: receive: closed
+2026-09-28 04:11:21.578 INFO  bridge: receive: engine connected
+2026-09-28 04:11:22.084 INFO  bridge: send: engine connected
+2026-09-28 04:11:22.086 INFO  bridge: hello 57ab5129-a296-469f-9bd5-591bf9296172
+2026-09-28 04:11:22.095 INFO  bridge: get_context a39ddb10-cdfc-4fcb-b884-9e8b04fc7d6d
+2026-09-28 04:11:22.107 INFO  bridge: get_settings 8ff10b73-9c57-40d9-8a3c-5d03d282cd0c
+2026-09-28 04:11:22.114 INFO  bridge: apply_snapshot d16aebbb-b83d-4089-815d-d3da2f227502
+2026-09-28 04:11:22.772 INFO  bridge: receive: closed

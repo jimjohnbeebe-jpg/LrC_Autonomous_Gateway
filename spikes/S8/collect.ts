@@ -142,18 +142,53 @@ function redact(text: string): string {
   return out;
 }
 
-function copyRedacted(): string[] {
+/** The loop rewrites this file every 2 s while Lightroom runs (S8Loop.lua writeView). */
+const LIVE_FILE = "s8_loop_view.json";
+const READ_TRIES = 5;
+const RETRY_MS = 300;
+
+/**
+ * A JSON file's text once it parses. A file being rewritten can be read half-written (Greptile,
+ * PR #40), so a failed parse is read again after RETRY_MS, READ_TRIES times. Returns null if it
+ * never parses.
+ */
+function readSettled(file: string): string | null {
+  for (let i = 0; i < READ_TRIES; i++) {
+    const text = readFileSync(path.join(srcDir, file), "utf8");
+    try {
+      JSON.parse(text);
+      return text;
+    } catch {
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, RETRY_MS);
+    }
+  }
+  return null;
+}
+
+/**
+ * Copies the saved files. The live file is skipped, with a note, if it never parses: the settings
+ * steps saved stable copies of it (s8_loop_view_<step>_<time>.json). Any other file is written once
+ * by the plugin, so a file that does not parse stops the collection.
+ */
+function copyRedacted(): { copied: string[]; skipped: string[] } {
   mkdirSync(destDir, { recursive: true });
   const copied: string[] = [];
+  const skipped: string[] = [];
   for (const f of readdirSync(srcDir)) {
     if (!/^s8_.*\.(json|txt)$/.test(f) || f === "s8_request.txt") continue;
-    const text = redact(readFileSync(path.join(srcDir, f), "utf8"));
+    const raw = f.endsWith(".json") ? readSettled(f) : readFileSync(path.join(srcDir, f), "utf8");
+    if (raw === null) {
+      if (f !== LIVE_FILE) throw new Error(`${f}: not valid JSON after ${READ_TRIES} reads`);
+      skipped.push(`${f}: not valid JSON after ${READ_TRIES} reads (the loop was rewriting it); the settings steps' copies stand for it`);
+      continue;
+    }
+    const text = redact(raw);
     if (f.endsWith(".json")) JSON.parse(text); // still valid JSON after redaction
     if (text.toLowerCase().includes(os.homedir().toLowerCase())) throw new Error(`${f}: user folder still present after redaction`);
     writeFileSync(path.join(destDir, f), text);
     copied.push(f);
   }
-  return copied;
+  return { copied, skipped };
 }
 
 function main(): void {
@@ -169,11 +204,11 @@ function main(): void {
       kept_across_restart: kept,
     },
   };
-  const copied = copyRedacted();
-  const text = redact(JSON.stringify({ ...summary, copied }, null, 2));
+  const { copied, skipped } = copyRedacted();
+  const text = redact(JSON.stringify({ ...summary, copied, skipped }, null, 2));
   writeFileSync(path.join(destDir, "s8_summary.json"), text + "\n");
   console.log(text);
-  console.log(`\nWrote ${path.join(destDir, "s8_summary.json")}; copied ${copied.length} files.`);
+  console.log(`\nWrote ${path.join(destDir, "s8_summary.json")}; copied ${copied.length} files, skipped ${skipped.length}.`);
 }
 
 main();

@@ -46,7 +46,7 @@ That is what the harness is written to do. What Lightroom actually does is [unve
 16. Click **Pick B** again.
 17. Click **Accept**.
 18. In the filmstrip at the bottom of the screen, click another photo, then click the first photo again.
-19. **File > Plug-in Extras > AVG S8 - 2. Close the HUD from code.** Watch whether the HUD closes by itself.
+19. **File > Plug-in Extras > AVG S8 - 2. Close the HUD from code.** Watch the HUD for 10 seconds without touching it: does it close by itself?
 20. A window **AVG S8 - what did you see in the HUD?** appears. Tick each statement that is true and click **Save**. A window headed **AVG S8 HUD test: SAVED** lists the clicks it recorded. Click **OK**.
 
 **Restart, and look at the settings again**
@@ -64,7 +64,7 @@ There is nothing to clean up. Leave the S8 plugin installed, like the other spik
 - **A window says "NOT STARTED - no photo selected"**: click a photo, press **D**, and choose the menu item again.
 - **The HUD has not appeared 15 seconds after step 11**: choose the menu item again once. If it still does not appear, tell Claude Code.
 - **A button does nothing when you click it**: that is a result, not a failure of the run. Carry on with the next step.
-- **The HUD is still open 5 seconds after step 19**: close it with the **X** in its title bar. The tick-box window of step 20 then appears.
+- **The HUD is still open 10 seconds after step 19**: close it with the **X** in its title bar. The tick-box window of step 20 then appears.
 - **You clicked Cancel in a tick-box window by mistake**: at step 9 or 23, choose the same menu item again. At step 20, do steps 10-20 again.
 - **The AVG S8 settings test section is missing in Plug-in Manager, or looks different**: carry on. The tick boxes record it.
 - **A Lightroom error window appears instead**: tell Claude Code its text.

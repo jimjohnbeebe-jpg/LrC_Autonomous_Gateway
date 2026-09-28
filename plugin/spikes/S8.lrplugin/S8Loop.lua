@@ -4,7 +4,8 @@
 --   "open"  -> 5 s later it presents the HUD (S8Hud.lua) from a task of its own, as the bridge would
 --              at lr_begin_session (PHASE5_PLAN decision 6). The delay lets Jim click into the main
 --              window first, for the focus question.
---   "close" -> it calls LrDialogs.closeFloatingDialogsForPlugin. That call is not on the SDK reference
+--   "close" -> it cancels an open still waiting out its 5 s, and calls
+--              LrDialogs.closeFloatingDialogsForPlugin. That call is not on the SDK reference
 --              page (https://lrc.mcor.dev/modules/LrDialogs.html, read 2026-09-28); it is listed among
 --              the LR5 additions [community: LR_SDK_NOTES "LrDialogs / LrView"]. Its argument is
 --              [unverified]: the loop tries (_PLUGIN), then no argument, and records both.
@@ -30,9 +31,13 @@ local VIEW_EVERY_SECONDS = 2
 local OPEN_DELAY_SECONDS = 5
 local MAX_HISTORY = 50
 
-local function tryClose()
+-- `run` is the open HUD's record, or nil. `closed_during_call` is true when the HUD's
+-- windowWillClose fired inside the call itself: then nothing but the call can have closed it
+-- (Greptile, PR #40: a close with the X soon after the call must not count as a close from code).
+local function tryClose(run)
     local fn = LrDialogs.closeFloatingDialogsForPlugin
-    local rec = { exists = type(fn) == "function", at = Common.clock(), epoch = LrDate.currentTime(), tries = {} }
+    local rec = { exists = type(fn) == "function", at = Common.clock(), epoch = LrDate.currentTime(), tries = {},
+        hud_open_before_call = run ~= nil and run.open == true }
     if not rec.exists then return rec end
     local ok, err = LrTasks.pcall(fn, _PLUGIN)
     table.insert(rec.tries, { argument = "_PLUGIN", ok = ok, error = (not ok) and tostring(err) or nil })
@@ -40,6 +45,7 @@ local function tryClose()
         local ok2, err2 = LrTasks.pcall(fn)
         table.insert(rec.tries, { argument = "none", ok = ok2, error = (not ok2) and tostring(err2) or nil })
     end
+    rec.closed_during_call = rec.hud_open_before_call and run.open == false
     return rec
 end
 
@@ -66,7 +72,13 @@ local function tick(L)
                 L.openAt = LrDate.currentTime() + OPEN_DELAY_SECONDS
             end
         elseif action == "close" then
-            local rec = tryClose()
+            if L.openAt then
+                -- A close during the 5 s delay: the HUD must not appear afterwards (Greptile, PR #40).
+                L.openAt = nil
+                L.run.open = false
+                L.run.open_cancelled_by_close = Common.clock()
+            end
+            local rec = tryClose(L.run)
             if L.run then L.run.close = rec else L.closeWithoutHud = rec end
         end
     end
@@ -89,6 +101,7 @@ local function writeView(L)
         generation = L.generation,
         init_mark = L.mark,
         started_at = L.startedAt,
+        started_epoch = L.startedEpoch,
         updated_at = Common.localTime(),
         updated_epoch = os.time(),
         loop_sees = {
@@ -107,7 +120,7 @@ end
 
 function Loop.run(generation, mark)
     local L = {
-        generation = generation, mark = mark, startedAt = Common.localTime(),
+        generation = generation, mark = mark, startedAt = Common.localTime(), startedEpoch = os.time(),
         lastId = Common.readRequest(), requests = {}, prefsHistory = {}, errors = {},
         lastView = 0,
     }

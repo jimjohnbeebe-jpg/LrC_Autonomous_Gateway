@@ -34,6 +34,23 @@ local QUESTIONS = {
     },
 }
 
+-- Why the panel's marks cannot be compared, or nil: no loop mark, the panel file was not written
+-- (S8InfoProvider keeps the error in prefs), or the panel has not rendered since this Lightroom
+-- start, so its file holds an earlier start's marks (Greptile, PR #40).
+local function panelInconclusive(viewText)
+    if not Common.field(viewText, "init_mark") then return "the loop's mark could not be read" end
+    local err = Common.prefsTable().s8_panel_view_error
+    if err then return "the panel view was not written: " .. tostring(err) end
+    local panel = Common.readFile(Common.path(Common.PANEL_VIEW_FILE))
+    if not panel then return "no panel view file (Plug-in Manager not opened)" end
+    local rendered = tonumber(panel:match('"rendered_epoch": (%d+)'))
+    local started = tonumber(viewText:match('"started_epoch": (%d+)'))
+    if not rendered or not started or rendered < started then
+        return "Plug-in Manager not opened since Lightroom started"
+    end
+    return nil
+end
+
 local function marks()
     local viewText, age = Common.loopView()
     local loopMark = Common.field(viewText, "init_mark")
@@ -54,10 +71,15 @@ local function marks()
     local after = Common.loopView()
     m.menu_to_loop_via_G = Common.field(after, "menu_mark_on_G") == menuMark
     m.menu_to_loop_via_module = Common.field(after, "menu_mark_in_module") == menuMark
-    local panel = Common.readFile(Common.path(Common.PANEL_VIEW_FILE))
-    m.panel_rendered_at = Common.field(panel, "rendered_at")
-    m.init_to_panel_via_G = loopMark ~= nil and Common.field(panel, "init_mark_on_G") == loopMark
-    m.init_to_panel_via_module = loopMark ~= nil and Common.field(panel, "init_mark_in_module") == loopMark
+    local why = panelInconclusive(viewText)
+    if why then
+        m.init_to_panel_via_G, m.init_to_panel_via_module = "inconclusive: " .. why, "inconclusive: " .. why
+    else
+        local panel = Common.readFile(Common.path(Common.PANEL_VIEW_FILE))
+        m.panel_rendered_at = Common.field(panel, "rendered_at")
+        m.init_to_panel_via_G = Common.field(panel, "init_mark_on_G") == loopMark
+        m.init_to_panel_via_module = Common.field(panel, "init_mark_in_module") == loopMark
+    end
     return m, after
 end
 

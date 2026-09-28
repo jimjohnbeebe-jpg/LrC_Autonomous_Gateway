@@ -36,7 +36,7 @@ local function note(prefs, key, value)
 end
 
 local function recordPanelView()
-    SpikeJson.writeFile(Common.path(Common.PANEL_VIEW_FILE), {
+    return SpikeJson.writeFile(Common.path(Common.PANEL_VIEW_FILE), {
         spike = "S8",
         rendered_at = Common.localTime(),
         rendered_epoch = os.time(),
@@ -56,7 +56,14 @@ end
 
 function Provider.sectionsForTopOfDialog(f, propertyTable)
     local prefs = LrPrefs.prefsForPlugin()
-    pcall(recordPanelView) -- plain pcall: the panel render is not a task, and a file write does not yield [inference]
+    -- A failed write is kept in prefs.s8_panel_view_error, so S8Settings reports the panel's marks
+    -- as inconclusive rather than "not shared" (Greptile, PR #40).
+    local ranOk, written, writeErr = pcall(recordPanelView) -- plain pcall: the panel render is not a task, and a file write does not yield [inference]
+    if ranOk and written then
+        prefs.s8_panel_view_error = nil
+    else
+        prefs.s8_panel_view_error = tostring(ranOk and writeErr or written) .. " at " .. Common.clock()
+    end
     for _, key in ipairs(FIELDS) do
         if prefs[key] == nil then prefs[key] = DEFAULTS[key] end
         propertyTable[key] = prefs[key]

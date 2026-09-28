@@ -28,7 +28,7 @@ local Common = require 'S8Common'
 local Hud = {}
 
 local MAX_TICKS = 900 -- the ticker stops after 15 min
-local CLOSED_BY_CODE_WITHIN_S = 5
+local CLOSED_BY_CODE_WITHIN_S = 3
 
 local QUESTIONS = {
     { key = "hud_appeared", text = "The HUD appeared by itself a few seconds after menu item 1" },
@@ -142,21 +142,29 @@ local function present(run, props)
     if run.open ~= false then run.open = false end
 end
 
-local function findings(run)
+-- Closed from code: "yes" when the window closed inside the call (S8Loop.tryClose). When it closed
+-- only after the call returned, the window's time cannot tell the call from Jim's X (Greptile,
+-- PR #40): within CLOSED_BY_CODE_WITHIN_S of the call, Jim's answer decides ("unclear" without one);
+-- later, "no". The README has Jim wait 10 s before using the X.
+local function closedByCode(run, answered, observations)
+    local close = run.close
+    if not close then return "not tried", "menu item 2 was not used" end
+    if close.closed_during_call then return "yes", "the window closed inside the call" end
+    local soon = run.closed_epoch ~= nil and run.closed_epoch >= close.epoch - 0.01 and run.closed_epoch - close.epoch <= CLOSED_BY_CODE_WITHIN_S
+    if not soon then return "no", "the window did not close within " .. CLOSED_BY_CODE_WITHIN_S .. " s of the call" end
+    if not answered then return "unclear", "closed soon after the call returned; no answer from Jim" end
+    local jim = observations.closed_by_itself and observations.closed_by_itself.answer
+    return jim and "yes" or "no", "closed soon after the call returned; Jim's answer decides"
+end
+
+local function findings(run, answered, observations)
     local out = { clicks = #run.clicks, clicks_on_greyed_picks = 0, buttons = {} }
     for _, c in ipairs(run.clicks) do
         table.insert(out.buttons, c.button)
         if c.button:find("^Pick") and not c.picks_enabled_at_click then out.clicks_on_greyed_picks = out.clicks_on_greyed_picks + 1 end
     end
     if run.shown_epoch then out.appeared_after_request_s = run.shown_epoch - run.requested_epoch end
-    local close = run.close
-    if not close then
-        out.closed_by_code = "not tried"
-    elseif run.closed_epoch and run.closed_epoch >= close.epoch - 0.01 and run.closed_epoch - close.epoch <= CLOSED_BY_CODE_WITHIN_S then
-        out.closed_by_code = "yes"
-    else
-        out.closed_by_code = "no"
-    end
+    out.closed_by_code, out.closed_by_code_because = closedByCode(run, answered, observations)
     out.selection_changes_seen = #run.selection_change_times
     return out
 end
@@ -173,8 +181,8 @@ function Hud.run(context, run)
     startTicker(run, props)
     present(run, props)
     LrTasks.sleep(1) -- let the last click's task finish
-    local found = findings(run)
     local answered, observations = Ask.ticks(context, "AVG S8 - what did you see in the HUD?", QUESTIONS)
+    local found = findings(run, answered, observations)
     local ok, err = Common.save("s8_hud", {
         spike = "S8", step = "hud", run_at = run.run_at, lr_version = LrApplication.versionString(),
         run = run, findings = found, answered = answered, observations = observations,
@@ -182,7 +190,7 @@ function Hud.run(context, run)
     local lines = {
         string.format("Buttons: %d clicks recorded (%s).", found.clicks, table.concat(found.buttons, ", ")),
         string.format("Clicks on a greyed-out Pick button that still counted: %d.", found.clicks_on_greyed_picks),
-        "Closed from code: " .. string.upper(found.closed_by_code) .. ".",
+        "Closed from code: " .. string.upper(found.closed_by_code) .. " (" .. found.closed_by_code_because .. ").",
         "",
         Common.saveLine(ok, err),
         "Next: README step 11.",

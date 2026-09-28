@@ -1,0 +1,83 @@
+Put-back of 20260907-_OZ80099.NEF after the Phase 4 check (PHASE4_PLAN row 11) - Claude Code (Opus 5.5), 2026-09-28
+Times are local (UTC-7).
+
+What this is: the record of what Claude Code ran once, on 2026-09-28, to put the photo back after Jim's run of
+npm run phase4:check found it changed (docs\reports\phase4\PHASE4.md, "The preset also reached the original").
+Jim asked for it [stated: "Claude Code does it"]. It is not a tool to run again: the script in the appendix is
+kept exactly as it ran, including its import path, which is the checkout it ran from
+(D:\Developer\LrC_Autonomous_Gateway, engine\dist). To put a photo back by hand, click the snapshot "AVG pre-session ..." in the
+photo's Snapshots panel (PHASE4.md, "If something goes wrong").
+
+The script ran twice from a scratch folder, with the check's results file as its argument [handle: section 2,
+two connections]: first without --apply (read-only: get_context and get_settings only), then with --apply.
+The saved output (section 1) is the second run's; the first run's output was not saved.
+
+== 1. Output of the run with --apply (saved as putback-m-output.txt)
+
+connected: plugin 0.4.0
+photo: 20260907-_OZ80099.NEF, virtual copy: false
+before: differing from the start: blacks, clarity, exposure, highlights, shadows, vibrance
+after apply_snapshot: differing from the start: (none)
+PUT BACK: YES
+
+== 2. The plugin's own log of both runs: lines 874-886 of %TEMP%\LrC-AVG\bridge.log, copied on 2026-09-28
+   (no other line of the log is in this range)
+
+2026-09-28 04:11:10.092 INFO  bridge: receive: engine connected
+2026-09-28 04:11:10.599 INFO  bridge: send: engine connected
+2026-09-28 04:11:10.602 INFO  bridge: hello 96252f74-93ee-4609-950f-53c536507f78
+2026-09-28 04:11:10.614 INFO  bridge: get_context 6ddc2ef4-9522-41fa-8f8b-5d241123697e
+2026-09-28 04:11:10.624 INFO  bridge: get_settings 891ede6d-edb5-4759-bb01-077a348ac492
+2026-09-28 04:11:10.641 INFO  bridge: receive: closed
+2026-09-28 04:11:21.578 INFO  bridge: receive: engine connected
+2026-09-28 04:11:22.084 INFO  bridge: send: engine connected
+2026-09-28 04:11:22.086 INFO  bridge: hello 57ab5129-a296-469f-9bd5-591bf9296172
+2026-09-28 04:11:22.095 INFO  bridge: get_context a39ddb10-cdfc-4fcb-b884-9e8b04fc7d6d
+2026-09-28 04:11:22.107 INFO  bridge: get_settings 8ff10b73-9c57-40d9-8a3c-5d03d282cd0c
+2026-09-28 04:11:22.114 INFO  bridge: apply_snapshot d16aebbb-b83d-4089-815d-d3da2f227502
+2026-09-28 04:11:22.772 INFO  bridge: receive: closed
+
+== Appendix: the script, verbatim (putback-m.mjs, a one-off scratch script outside the repo)
+
+// SCRATCH: put 20260907-_OZ80099.NEF back after the Phase 4 check (Jim's approval, 2026-09-28:
+// "Claude Code does it"): apply session A's pre-session snapshot by photo_uuid, read back, compare
+// with the photo's settings before the check (from the check's results file). Takes the engine's
+// instance lock, so Claude Desktop must not be using LrC-AVG. Usage: node putback-m.mjs <results.json>
+import { readFileSync } from "node:fs";
+const E = "file:///D:/Developer/LrC_Autonomous_Gateway/engine/dist/";
+const { BridgeClient } = await import(E + "bridge/index.js");
+const { acquireInstanceLock, ENGINE_VERSION } = await import(E + "mcp/index.js");
+const { loadDefaultParamMap, differingSettings } = await import(E + "params/index.js");
+
+const results = JSON.parse(readFileSync(process.argv[2], "utf8"));
+const uuid = results.photo.uuid;
+const start = results.photo.start_settings;
+const SNAPSHOT_ID = "3943F429-F18A-4254-99B5-9D0649E2E113"; // "AVG pre-session 2026-09-28T04:20:17.408Z" (session A)
+const lock = await acquireInstanceLock();
+if (!lock.ok) {
+  console.log(`BUSY: another engine holds the bridge (pid ${lock.pid ?? "?"}). Quit Claude Desktop and run again.`);
+  process.exit(2);
+}
+const client = new BridgeClient({ engineVersion: ENGINE_VERSION, log: () => {} });
+client.start();
+try {
+  const hello = await client.waitConnected(20000);
+  console.log(`connected: plugin ${hello.plugin_version}`);
+  const map = loadDefaultParamMap();
+  const ctx = await client.request("get_context", { photo_uuid: uuid });
+  console.log(`photo: ${ctx.filename}, virtual copy: ${ctx.is_virtual_copy}`);
+  if (ctx.filename !== "20260907-_OZ80099.NEF" || ctx.is_virtual_copy === true) throw new Error("not the original photo; nothing written");
+  const before = map.fromSdk((await client.request("get_settings", { photo_uuid: uuid })).settings).settings;
+  console.log(`before: differing from the start: ${differingSettings(before, start).join(", ") || "(none)"}`);
+  if (process.argv[3] !== "--apply") {
+    console.log("read-only run: nothing written (add --apply to put the photo back)");
+  } else {
+    const back = await client.request("apply_snapshot", { photo_uuid: uuid, snapshot_id: SNAPSHOT_ID }, { timeoutMs: 30000 });
+    const after = differingSettings(map.fromSdk(back.read_back).settings, start);
+    console.log(`after apply_snapshot: differing from the start: ${after.join(", ") || "(none)"}`);
+    console.log(after.length === 0 ? "PUT BACK: YES" : "PUT BACK: NO");
+  }
+} finally {
+  client.stop();
+  await lock.lock.release();
+}

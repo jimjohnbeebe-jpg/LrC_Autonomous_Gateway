@@ -1,0 +1,1618 @@
+{
+  "check": "phase4",
+  "started_at": "2026-09-28T04:18:17.523Z",
+  "photo_name": "20260907-_OZ80099.NEF",
+  "errors": [],
+  "hello": {
+    "protocol": 1,
+    "plugin_version": "0.4.0",
+    "lrc_version": "15.5.1",
+    "sdk_declared": 13,
+    "ports": {
+      "receive": 8765,
+      "send": 8766
+    }
+  },
+  "connect_ms": 518,
+  "photo": {
+    "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+    "local_id": 3869534,
+    "process_version": "15.4",
+    "camera_profile": {
+      "name": "Camera Neutral",
+      "camera_profile": "Camera Neutral",
+      "look_name": null,
+      "look_uuid": null
+    },
+    "start_settings": {
+      "exposure": 0.33,
+      "contrast": 0,
+      "highlights": -21,
+      "shadows": 10,
+      "whites": 0,
+      "blacks": 0,
+      "texture": 4,
+      "clarity": 2,
+      "dehaze": 0,
+      "vibrance": 0,
+      "saturation": 0,
+      "temperature": 4900,
+      "tint": 11,
+      "grading.shadows.hue": 0,
+      "grading.shadows.sat": 0,
+      "grading.shadows.lum": 0,
+      "grading.midtones.hue": 0,
+      "grading.midtones.sat": 0,
+      "grading.midtones.lum": 0,
+      "grading.highlights.hue": 0,
+      "grading.highlights.sat": 0,
+      "grading.highlights.lum": 0,
+      "grading.global.hue": 0,
+      "grading.global.sat": 0,
+      "grading.global.lum": 0,
+      "grading.blending": 50,
+      "grading.balance": 0,
+      "sharpening.amount": 24,
+      "sharpening.radius": 2,
+      "sharpening.detail": 25,
+      "sharpening.masking": 0,
+      "noise.luminance": 48,
+      "noise.color": 25,
+      "lens.corrections_enable": true,
+      "lens.profile_enable": 1,
+      "lens.ca_remove": 1,
+      "tone_curve.master": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "tone_curve.red": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "tone_curve.green": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "tone_curve.blue": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "hsl.red.hue": 0,
+      "hsl.red.sat": 0,
+      "hsl.red.lum": 0,
+      "hsl.orange.hue": 0,
+      "hsl.orange.sat": 0,
+      "hsl.orange.lum": 0,
+      "hsl.yellow.hue": 0,
+      "hsl.yellow.sat": 0,
+      "hsl.yellow.lum": 0,
+      "hsl.green.hue": 0,
+      "hsl.green.sat": 0,
+      "hsl.green.lum": 0,
+      "hsl.aqua.hue": 0,
+      "hsl.aqua.sat": 0,
+      "hsl.aqua.lum": 0,
+      "hsl.blue.hue": 0,
+      "hsl.blue.sat": 0,
+      "hsl.blue.lum": 0,
+      "hsl.purple.hue": 0,
+      "hsl.purple.sat": 0,
+      "hsl.purple.lum": 0,
+      "hsl.magenta.hue": 0,
+      "hsl.magenta.sat": 0,
+      "hsl.magenta.lum": 0,
+      "camera_profile": "Camera Neutral"
+    }
+  },
+  "copies": {
+    "names": [
+      "AVG P4check sync 1",
+      "AVG P4check sync 2",
+      "AVG P4check sync 3",
+      "AVG P4check replay"
+    ],
+    "ms": 10797,
+    "made": [
+      {
+        "local_id": 3872150,
+        "is_virtual_copy": true,
+        "master_local_id": 3869534,
+        "copy_name": "AVG P4check sync 1",
+        "filename": "20260907-_OZ80099.NEF",
+        "uuid": "B4840018-8B8D-4038-AEB0-28414E0CD989",
+        "identity_ok": true
+      },
+      {
+        "local_id": 3872184,
+        "is_virtual_copy": true,
+        "master_local_id": 3869534,
+        "copy_name": "AVG P4check sync 2",
+        "filename": "20260907-_OZ80099.NEF",
+        "uuid": "4C4BD0B8-FADB-4595-B3D0-EF4957347310",
+        "identity_ok": true
+      },
+      {
+        "local_id": 3872215,
+        "is_virtual_copy": true,
+        "master_local_id": 3869534,
+        "copy_name": "AVG P4check sync 3",
+        "filename": "20260907-_OZ80099.NEF",
+        "uuid": "6A064362-3957-4DAB-9134-CD3756BC0B2B",
+        "identity_ok": true
+      },
+      {
+        "local_id": 3872246,
+        "is_virtual_copy": true,
+        "master_local_id": 3869534,
+        "copy_name": "AVG P4check replay",
+        "filename": "20260907-_OZ80099.NEF",
+        "uuid": "75514712-7586-42B3-B397-88350DB4361D",
+        "identity_ok": true
+      }
+    ],
+    "failure": null,
+    "master_selected": true,
+    "start_as_master": {
+      "ok": true,
+      "copies": [
+        {
+          "uuid": "B4840018-8B8D-4038-AEB0-28414E0CD989",
+          "differing": []
+        },
+        {
+          "uuid": "4C4BD0B8-FADB-4595-B3D0-EF4957347310",
+          "differing": []
+        },
+        {
+          "uuid": "6A064362-3957-4DAB-9134-CD3756BC0B2B",
+          "differing": []
+        },
+        {
+          "uuid": "75514712-7586-42B3-B397-88350DB4361D",
+          "differing": []
+        }
+      ]
+    }
+  },
+  "converge": {
+    "session_a": {
+      "ok": true,
+      "passes": [
+        {
+          "requested": {
+            "exposure": 0.3,
+            "shadows": 15
+          },
+          "pass": "1/4",
+          "history_names": [
+            "AVG cd6883 pass 1/4"
+          ],
+          "applied": [
+            {
+              "name": "exposure",
+              "before": 0.63,
+              "requested": 0.3,
+              "after": 0.93,
+              "delta": 0.3
+            },
+            {
+              "name": "shadows",
+              "before": 80,
+              "requested": 15,
+              "after": 95,
+              "delta": 15
+            }
+          ],
+          "clamped": [],
+          "refused": [],
+          "guardrail_actions": [],
+          "converged_by_metrics": false,
+          "cap_reached": false,
+          "metrics": {
+            "luma_mean": 72.844,
+            "clip_high_pct": 0.1287,
+            "clip_low_pct": 0.114
+          },
+          "total_ms": 8799.2
+        },
+        {
+          "requested": {
+            "whites": 40,
+            "exposure": 0.5
+          },
+          "pass": "2/4",
+          "history_names": [
+            "AVG cd6883 pass 2/4",
+            "AVG cd6883 pass 2/4 guard 1",
+            "AVG cd6883 pass 2/4 guard 2"
+          ],
+          "applied": [
+            {
+              "name": "whites",
+              "before": 0,
+              "requested": 40,
+              "after": 36,
+              "delta": 36
+            },
+            {
+              "name": "exposure",
+              "before": 0.93,
+              "requested": 0.5,
+              "after": 1.43,
+              "delta": 0.5
+            }
+          ],
+          "clamped": [
+            {
+              "name": "whites",
+              "requested": 40,
+              "applied": 36,
+              "reason": "pass 2 allows at most ±36 (60 x decay 0.6)"
+            }
+          ],
+          "refused": [],
+          "guardrail_actions": [
+            {
+              "kind": "corrected",
+              "limit": "clip_high",
+              "reason": "clip_high_pct was 5.9701 %, over the limit of 0.5 %",
+              "history_name": "AVG cd6883 pass 2/4 guard 1",
+              "changes": {
+                "whites": 18,
+                "exposure": 1.18
+              },
+              "metrics_after": {
+                "luma_mean": 80.521,
+                "luma_std": 61.372,
+                "luma_percentiles": {
+                  "p1": 4,
+                  "p5": 13,
+                  "p50": 63,
+                  "p95": 222,
+                  "p99": 250
+                },
+                "dynamic_range": 0.9647,
+                "channel_mean": {
+                  "r": 57.985,
+                  "g": 85.564,
+                  "b": 96.92
+                },
+                "rb_ratio": 0.5983,
+                "clip_high_pct": 0.9656,
+                "clip_low_pct": 0.0347,
+                "clip_high_pct_by_channel": {
+                  "r": 0.2769,
+                  "g": 0.2632,
+                  "b": 0.8858
+                },
+                "clip_low_pct_by_channel": {
+                  "r": 19.7397,
+                  "g": 0.1664,
+                  "b": 0.1576
+                },
+                "saturation_mean": 56.573,
+                "chromatic_pct": 83.8887,
+                "hue_mean": 195.9,
+                "hue_histogram": [
+                  0.1397,
+                  2.1264,
+                  0.7036,
+                  0.2204,
+                  0.3295,
+                  1.8449,
+                  38.3085,
+                  55.4567,
+                  0.7538,
+                  0.0709,
+                  0.0177,
+                  0.0279
+                ],
+                "regions": []
+              }
+            },
+            {
+              "kind": "corrected",
+              "limit": "clip_high",
+              "reason": "clip_high_pct was 0.9656 %, over the limit of 0.5 %",
+              "history_name": "AVG cd6883 pass 2/4 guard 2",
+              "changes": {
+                "whites": 0,
+                "exposure": 0.93
+              },
+              "metrics_after": {
+                "luma_mean": 72.844,
+                "luma_std": 58.83,
+                "luma_percentiles": {
+                  "p1": 3,
+                  "p5": 11,
+                  "p50": 55,
+                  "p95": 212,
+                  "p99": 245
+                },
+                "dynamic_range": 0.949,
+                "channel_mean": {
+                  "r": 52.592,
+                  "g": 77.33,
+                  "b": 88.043
+                },
+                "rb_ratio": 0.5973,
+                "clip_high_pct": 0.1287,
+                "clip_low_pct": 0.114,
+                "clip_high_pct_by_channel": {
+                  "r": 0.0172,
+                  "g": 0.0088,
+                  "b": 0.114
+                },
+                "clip_low_pct_by_channel": {
+                  "r": 19.8114,
+                  "g": 0.3944,
+                  "b": 0.2897
+                },
+                "saturation_mean": 56.82,
+                "chromatic_pct": 82.6279,
+                "hue_mean": 196.22,
+                "hue_histogram": [
+                  0.1701,
+                  2.2558,
+                  0.7349,
+                  0.2258,
+                  0.3418,
+                  1.8411,
+                  36.5851,
+                  56.8509,
+                  0.8459,
+                  0.0882,
+                  0.0247,
+                  0.0358
+                ],
+                "regions": []
+              }
+            }
+          ],
+          "converged_by_metrics": false,
+          "cap_reached": false,
+          "metrics": {
+            "luma_mean": 72.844,
+            "clip_high_pct": 0.1287,
+            "clip_low_pct": 0.114
+          },
+          "total_ms": 13062.7
+        },
+        {
+          "requested": {
+            "vibrance": 10,
+            "clarity": 5
+          },
+          "pass": "3/4",
+          "history_names": [
+            "AVG cd6883 pass 3/4"
+          ],
+          "applied": [
+            {
+              "name": "vibrance",
+              "before": 10,
+              "requested": 10,
+              "after": 20,
+              "delta": 10
+            },
+            {
+              "name": "clarity",
+              "before": 2,
+              "requested": 5,
+              "after": 7,
+              "delta": 5
+            }
+          ],
+          "clamped": [],
+          "refused": [],
+          "guardrail_actions": [],
+          "converged_by_metrics": false,
+          "cap_reached": false,
+          "metrics": {
+            "luma_mean": 72.732,
+            "clip_high_pct": 0.1434,
+            "clip_low_pct": 0.2144
+          },
+          "total_ms": 3611.8
+        },
+        {
+          "requested": {
+            "exposure": 0.02
+          },
+          "pass": "4/4",
+          "history_names": [
+            "AVG cd6883 pass 4/4"
+          ],
+          "applied": [
+            {
+              "name": "exposure",
+              "before": 0.93,
+              "requested": 0.02,
+              "after": 0.95,
+              "delta": 0.02
+            }
+          ],
+          "clamped": [],
+          "refused": [],
+          "guardrail_actions": [],
+          "converged_by_metrics": true,
+          "cap_reached": false,
+          "metrics": {
+            "luma_mean": 73.288,
+            "clip_high_pct": 0.1509,
+            "clip_low_pct": 0.2144
+          },
+          "total_ms": 3078.3
+        }
+      ],
+      "session_id": "cd6883ba-47d3-4227-9bb0-1e81c3ebd51f",
+      "pass0": {
+        "history_names": [
+          "AVG cd6883 pass 0/4",
+          "AVG cd6883 pass 0/4 baseline 1",
+          "AVG cd6883 pass 0/4 baseline 2",
+          "AVG cd6883 pass 0/4 baseline 3",
+          "AVG cd6883 pass 0/4 baseline 4",
+          "AVG cd6883 pass 0/4 baseline 5"
+        ],
+        "applied": [
+          {
+            "name": "camera_profile",
+            "before": "Camera Neutral",
+            "requested": "Adobe Landscape",
+            "after": "Adobe Landscape",
+            "delta": null
+          },
+          {
+            "name": "highlights",
+            "before": -21,
+            "requested": -41,
+            "after": -41,
+            "delta": -20
+          },
+          {
+            "name": "shadows",
+            "before": 10,
+            "requested": 20,
+            "after": 20,
+            "delta": 10
+          },
+          {
+            "name": "vibrance",
+            "before": 0,
+            "requested": 10,
+            "after": 10,
+            "delta": 10
+          }
+        ],
+        "guardrail_actions": [
+          {
+            "kind": "corrected",
+            "limit": "clip_low",
+            "reason": "clip_low_pct was 9.98 %, over the limit of 1 %",
+            "history_name": "AVG cd6883 pass 0/4 baseline 1",
+            "changes": {
+              "blacks": 20
+            },
+            "metrics_after": {
+              "luma_mean": 24.014,
+              "luma_std": 44.143,
+              "luma_percentiles": {
+                "p1": 0,
+                "p5": 1,
+                "p50": 4,
+                "p95": 127,
+                "p99": 206
+              },
+              "dynamic_range": 0.8078,
+              "channel_mean": {
+                "r": 18.507,
+                "g": 24.957,
+                "b": 30.894
+              },
+              "rb_ratio": 0.5991,
+              "clip_high_pct": 0.0006,
+              "clip_low_pct": 6.2488,
+              "clip_high_pct_by_channel": {
+                "r": 0.0001,
+                "g": 0,
+                "b": 0.0006
+              },
+              "clip_low_pct_by_channel": {
+                "r": 44.0228,
+                "g": 29.9119,
+                "b": 6.8516
+              },
+              "saturation_mean": 50.585,
+              "chromatic_pct": 18.5742,
+              "hue_mean": 209.95,
+              "hue_histogram": [
+                1.3217,
+                8.6475,
+                2.3425,
+                0.3327,
+                0.3879,
+                0.5465,
+                1.5408,
+                78.0598,
+                5.5737,
+                0.8363,
+                0.2116,
+                0.199
+              ],
+              "regions": []
+            }
+          },
+          {
+            "kind": "corrected",
+            "limit": "clip_low",
+            "reason": "clip_low_pct was 6.2488 %, over the limit of 1 %",
+            "history_name": "AVG cd6883 pass 0/4 baseline 2",
+            "changes": {
+              "shadows": 50
+            },
+            "metrics_after": {
+              "luma_mean": 33.767,
+              "luma_std": 51.373,
+              "luma_percentiles": {
+                "p1": 0,
+                "p5": 2,
+                "p50": 12,
+                "p95": 160,
+                "p99": 228
+              },
+              "dynamic_range": 0.8941,
+              "channel_mean": {
+                "r": 26.696,
+                "g": 35.065,
+                "b": 41.728
+              },
+              "rb_ratio": 0.6398,
+              "clip_high_pct": 0.0076,
+              "clip_low_pct": 2.586,
+              "clip_high_pct_by_channel": {
+                "r": 0.0014,
+                "g": 0.0008,
+                "b": 0.0069
+              },
+              "clip_low_pct_by_channel": {
+                "r": 25.0068,
+                "g": 7.5655,
+                "b": 2.8247
+              },
+              "saturation_mean": 53.726,
+              "chromatic_pct": 24.414,
+              "hue_mean": 208.86,
+              "hue_histogram": [
+                1.1744,
+                7.7319,
+                2.7176,
+                0.434,
+                0.477,
+                0.708,
+                2.9604,
+                78.0045,
+                4.7227,
+                0.6835,
+                0.2104,
+                0.1754
+              ],
+              "regions": []
+            }
+          },
+          {
+            "kind": "corrected",
+            "limit": "clip_low",
+            "reason": "clip_low_pct was 2.586 %, over the limit of 1 %",
+            "history_name": "AVG cd6883 pass 0/4 baseline 3",
+            "changes": {
+              "exposure": 0.63
+            },
+            "metrics_after": {
+              "luma_mean": 38.295,
+              "luma_std": 55.668,
+              "luma_percentiles": {
+                "p1": 1,
+                "p5": 2,
+                "p50": 14,
+                "p95": 177,
+                "p99": 235
+              },
+              "dynamic_range": 0.9176,
+              "channel_mean": {
+                "r": 30.858,
+                "g": 39.688,
+                "b": 46.392
+              },
+              "rb_ratio": 0.6652,
+              "clip_high_pct": 0.0232,
+              "clip_low_pct": 2.2371,
+              "clip_high_pct_by_channel": {
+                "r": 0.0032,
+                "g": 0.0016,
+                "b": 0.0213
+              },
+              "clip_low_pct_by_channel": {
+                "r": 22.523,
+                "g": 5.9292,
+                "b": 2.433
+              },
+              "saturation_mean": 53.75,
+              "chromatic_pct": 28.9162,
+              "hue_mean": 207.06,
+              "hue_histogram": [
+                0.9041,
+                6.639,
+                2.5283,
+                0.4418,
+                0.5688,
+                1.0625,
+                5.0744,
+                77.9965,
+                3.9191,
+                0.5326,
+                0.177,
+                0.156
+              ],
+              "regions": []
+            }
+          },
+          {
+            "kind": "corrected",
+            "limit": "clip_low",
+            "reason": "clip_low_pct was 2.2371 %, over the limit of 1 %",
+            "history_name": "AVG cd6883 pass 0/4 baseline 4",
+            "changes": {
+              "blacks": 40
+            },
+            "metrics_after": {
+              "luma_mean": 40.602,
+              "luma_std": 55.948,
+              "luma_percentiles": {
+                "p1": 1,
+                "p5": 3,
+                "p50": 16,
+                "p95": 179,
+                "p99": 235
+              },
+              "dynamic_range": 0.9176,
+              "channel_mean": {
+                "r": 32.594,
+                "g": 42.132,
+                "b": 49.016
+              },
+              "rb_ratio": 0.665,
+              "clip_high_pct": 0.0238,
+              "clip_low_pct": 1.5976,
+              "clip_high_pct_by_channel": {
+                "r": 0.0037,
+                "g": 0.0015,
+                "b": 0.0216
+              },
+              "clip_low_pct_by_channel": {
+                "r": 19.3328,
+                "g": 4.1249,
+                "b": 1.8202
+              },
+              "saturation_mean": 53.07,
+              "chromatic_pct": 34.0877,
+              "hue_mean": 205.61,
+              "hue_histogram": [
+                0.7172,
+                5.7349,
+                2.1875,
+                0.3961,
+                0.5676,
+                1.2565,
+                6.9312,
+                78.0943,
+                3.4136,
+                0.4152,
+                0.1521,
+                0.1339
+              ],
+              "regions": []
+            }
+          },
+          {
+            "kind": "corrected",
+            "limit": "clip_low",
+            "reason": "clip_low_pct was 1.5976 %, over the limit of 1 %",
+            "history_name": "AVG cd6883 pass 0/4 baseline 5",
+            "changes": {
+              "shadows": 80
+            },
+            "metrics_after": {
+              "luma_mean": 56.164,
+              "luma_std": 56.876,
+              "luma_percentiles": {
+                "p1": 2,
+                "p5": 6,
+                "p50": 35,
+                "p95": 195,
+                "p99": 240
+              },
+              "dynamic_range": 0.9333,
+              "channel_mean": {
+                "r": 42.036,
+                "g": 59.174,
+                "b": 67.948
+              },
+              "rb_ratio": 0.6187,
+              "clip_high_pct": 0.0526,
+              "clip_low_pct": 0.7997,
+              "clip_high_pct_by_channel": {
+                "r": 0.0068,
+                "g": 0.0035,
+                "b": 0.0483
+              },
+              "clip_low_pct_by_channel": {
+                "r": 18.6676,
+                "g": 1.7618,
+                "b": 1.0397
+              },
+              "saturation_mean": 56.302,
+              "chromatic_pct": 72.0786,
+              "hue_mean": 197.83,
+              "hue_histogram": [
+                0.2414,
+                2.765,
+                0.9128,
+                0.2631,
+                0.3649,
+                1.7563,
+                28.1034,
+                64.1452,
+                1.2021,
+                0.147,
+                0.0442,
+                0.0546
+              ],
+              "regions": []
+            }
+          }
+        ],
+        "metrics": {
+          "luma_mean": 56.164,
+          "clip_high_pct": 0.0526,
+          "clip_low_pct": 0.7997
+        }
+      },
+      "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\P4\\p4_sessions_2026-09-28T04-18-17-511Z\\20260927-cd6883.json",
+      "recipe_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\P4\\p4_sessions_2026-09-28T04-18-17-511Z\\20260927-cd6883.recipe.json",
+      "log_valid": true,
+      "recipe_valid": true,
+      "steps_done": 4
+    },
+    "ac4": {
+      "session": "A",
+      "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\P4\\p4_sessions_2026-09-28T04-18-17-511Z\\20260927-cd6883.json",
+      "ok": true,
+      "passes": [
+        {
+          "n": 0,
+          "clip_high_pct": 0.0526,
+          "clip_low_pct": 0.7997,
+          "ok": true
+        },
+        {
+          "n": 1,
+          "clip_high_pct": 0.1287,
+          "clip_low_pct": 0.114,
+          "ok": true
+        },
+        {
+          "n": 2,
+          "clip_high_pct": 0.1287,
+          "clip_low_pct": 0.114,
+          "ok": true
+        },
+        {
+          "n": 3,
+          "clip_high_pct": 0.1434,
+          "clip_low_pct": 0.2144,
+          "ok": true
+        },
+        {
+          "n": 4,
+          "clip_high_pct": 0.1509,
+          "clip_low_pct": 0.2144,
+          "ok": true
+        }
+      ]
+    }
+  },
+  "sync_burst": {
+    "ok": true,
+    "start_exposures": [
+      -1,
+      0.5,
+      1
+    ],
+    "applied": 3,
+    "skipped": [],
+    "source_luma": 73.288,
+    "offsets": {
+      "B4840018-8B8D-4038-AEB0-28414E0CD989": -0.02,
+      "4C4BD0B8-FADB-4595-B3D0-EF4957347310": -0.01,
+      "6A064362-3957-4DAB-9134-CD3756BC0B2B": 0.05
+    },
+    "targets": [
+      {
+        "uuid": "B4840018-8B8D-4038-AEB0-28414E0CD989",
+        "filename": "20260907-_OZ80099.NEF",
+        "copy_name": "AVG P4check sync 1",
+        "snapshot": {
+          "name": "AVG pre-sync f1a4",
+          "id": "582C95C9-F90E-41B5-AABC-460121D72588"
+        },
+        "history_names": [
+          "AVG sync f1a4",
+          "AVG sync f1a4 exposure 1",
+          "AVG sync f1a4 exposure 2",
+          "AVG sync f1a4 exposure 3"
+        ],
+        "changed": [
+          "blacks",
+          "camera_profile",
+          "clarity",
+          "exposure",
+          "highlights",
+          "shadows",
+          "vibrance"
+        ],
+        "exposure": {
+          "start": -1,
+          "final": 0.93,
+          "offset": -0.02
+        },
+        "luma": {
+          "goal": 73.288,
+          "start": 31.373,
+          "final": 72.732,
+          "renders": 4,
+          "met": true,
+          "tries": [
+            {
+              "exposure": -1,
+              "luma": 31.373
+            },
+            {
+              "exposure": 1.69,
+              "luma": 95.629
+            },
+            {
+              "exposure": 0.75,
+              "luma": 67.891
+            },
+            {
+              "exposure": 0.93,
+              "luma": 72.732
+            }
+          ]
+        }
+      },
+      {
+        "uuid": "4C4BD0B8-FADB-4595-B3D0-EF4957347310",
+        "filename": "20260907-_OZ80099.NEF",
+        "copy_name": "AVG P4check sync 2",
+        "snapshot": {
+          "name": "AVG pre-sync f1a4",
+          "id": "55F4700C-FDFF-4B57-9375-B5EB99008253"
+        },
+        "history_names": [
+          "AVG sync f1a4",
+          "AVG sync f1a4 exposure 1",
+          "AVG sync f1a4 exposure 2"
+        ],
+        "changed": [
+          "blacks",
+          "camera_profile",
+          "clarity",
+          "exposure",
+          "highlights",
+          "shadows",
+          "vibrance"
+        ],
+        "exposure": {
+          "start": 0.5,
+          "final": 0.94,
+          "offset": -0.01
+        },
+        "luma": {
+          "goal": 73.288,
+          "start": 61.504,
+          "final": 73.011,
+          "renders": 3,
+          "met": true,
+          "tries": [
+            {
+              "exposure": 0.5,
+              "luma": 61.504
+            },
+            {
+              "exposure": 1.06,
+              "luma": 76.371
+            },
+            {
+              "exposure": 0.94,
+              "luma": 73.011
+            }
+          ]
+        }
+      },
+      {
+        "uuid": "6A064362-3957-4DAB-9134-CD3756BC0B2B",
+        "filename": "20260907-_OZ80099.NEF",
+        "copy_name": "AVG P4check sync 3",
+        "snapshot": {
+          "name": "AVG pre-sync f1a4",
+          "id": "873F2CD7-FD0A-4A80-9E34-2EA5FB96735E"
+        },
+        "history_names": [
+          "AVG sync f1a4"
+        ],
+        "changed": [
+          "blacks",
+          "camera_profile",
+          "clarity",
+          "highlights",
+          "shadows",
+          "vibrance"
+        ],
+        "exposure": {
+          "start": 1,
+          "final": 1,
+          "offset": 0.05
+        },
+        "luma": {
+          "goal": 73.288,
+          "start": 74.678,
+          "final": 74.678,
+          "renders": 1,
+          "met": true,
+          "tries": [
+            {
+              "exposure": 1,
+              "luma": 74.678
+            }
+          ]
+        }
+      }
+    ],
+    "measured": {
+      "within": true,
+      "source_luma": 73.288,
+      "copies": [
+        {
+          "uuid": "B4840018-8B8D-4038-AEB0-28414E0CD989",
+          "luma": 72.732,
+          "difference": -0.56
+        },
+        {
+          "uuid": "4C4BD0B8-FADB-4595-B3D0-EF4957347310",
+          "luma": 73.011,
+          "difference": -0.28
+        },
+        {
+          "uuid": "6A064362-3957-4DAB-9134-CD3756BC0B2B",
+          "luma": 74.678,
+          "difference": 1.39
+        }
+      ]
+    },
+    "selection_kept": true,
+    "total_ms": 26815.4
+  },
+  "ac5_sync": {
+    "ok": true,
+    "applied": 1,
+    "skipped": [],
+    "history_names": [
+      "AVG sync e631"
+    ],
+    "differing": []
+  },
+  "unselected_original": {
+    "ok": true,
+    "vibrance": 25,
+    "written": true,
+    "selection_kept": true,
+    "history_names": [
+      "AVG sync e112"
+    ],
+    "snapshot": {
+      "name": "AVG pre-sync e112",
+      "id": "5E883081-C22E-44CD-8C5B-F4E47B15CF18"
+    },
+    "undo_differing": []
+  },
+  "put_back": {
+    "ok": true,
+    "snapshot": "AVG pre-session 2026-09-28T04:20:17.408Z",
+    "differing": []
+  },
+  "variants": {
+    "ok": true,
+    "begin": {
+      "session_id": "a0a799e8-2a4a-477a-87b6-abecc7a008a5",
+      "total_ms": 142880.1,
+      "variants": [
+        {
+          "id": "A",
+          "label": "natural",
+          "uuid": "69D14AF1-9EB6-4F1D-B06F-65323DE8C615",
+          "copy_name": "AVG landscape_golden_hour A",
+          "metrics": {
+            "luma_mean": 56.164,
+            "clip_high_pct": 0.0526,
+            "clip_low_pct": 0.7997
+          },
+          "guardrail_actions": 5
+        },
+        {
+          "id": "B",
+          "label": "dramatic",
+          "uuid": "FCC84050-9DF0-4B7D-8BDA-F33138F6AAE4",
+          "copy_name": "AVG landscape_golden_hour B",
+          "metrics": {
+            "luma_mean": 72.817,
+            "clip_high_pct": 0.2071,
+            "clip_low_pct": 0.7623
+          },
+          "guardrail_actions": 8
+        },
+        {
+          "id": "C",
+          "label": "soft",
+          "uuid": "34FD3E28-7512-4275-AC7F-5B7D2A463853",
+          "copy_name": "AVG landscape_golden_hour C",
+          "metrics": {
+            "luma_mean": 41.511,
+            "clip_high_pct": 0.0014,
+            "clip_low_pct": 0.9066
+          },
+          "guardrail_actions": 4
+        }
+      ]
+    },
+    "refined": [
+      {
+        "target": "A",
+        "pass": "1/4",
+        "undone": null,
+        "awaiting_pick": false,
+        "metrics": {
+          "luma_mean": 56.545,
+          "clip_high_pct": 0.053,
+          "clip_low_pct": 0.8715
+        }
+      },
+      {
+        "target": "B",
+        "pass": "1/4",
+        "undone": null,
+        "awaiting_pick": false,
+        "metrics": {
+          "luma_mean": 73.275,
+          "clip_high_pct": 0.2156,
+          "clip_low_pct": 0.8578
+        }
+      },
+      {
+        "target": "C",
+        "pass": "1/4",
+        "undone": null,
+        "awaiting_pick": true,
+        "metrics": {
+          "luma_mean": 41.77,
+          "clip_high_pct": 0.0015,
+          "clip_low_pct": 0.9915
+        }
+      }
+    ],
+    "jim": {
+      "visibly_different": "y",
+      "pick": "A"
+    },
+    "picked": {
+      "id": "A",
+      "uuid": "69D14AF1-9EB6-4F1D-B06F-65323DE8C615",
+      "pass": "1/4"
+    },
+    "pass_after_pick": "2/4",
+    "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\P4\\p4_sessions_2026-09-28T04-18-17-511Z\\20260927-a0a799.json",
+    "verified": {
+      "ok": true,
+      "log_picked": "A",
+      "steps_on_pick": 2,
+      "last_step_on_pick": true,
+      "recipe_photo": "69D14AF1-9EB6-4F1D-B06F-65323DE8C615",
+      "master_differing": []
+    },
+    "ac4": {
+      "session": "variants",
+      "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\P4\\p4_sessions_2026-09-28T04-18-17-511Z\\20260927-a0a799.json",
+      "ok": true,
+      "passes": [
+        {
+          "n": 0,
+          "target": "A",
+          "clip_high_pct": 0.0526,
+          "clip_low_pct": 0.7997,
+          "ok": true
+        },
+        {
+          "n": 0,
+          "target": "B",
+          "clip_high_pct": 0.2071,
+          "clip_low_pct": 0.7623,
+          "ok": true
+        },
+        {
+          "n": 0,
+          "target": "C",
+          "clip_high_pct": 0.0014,
+          "clip_low_pct": 0.9066,
+          "ok": true
+        },
+        {
+          "n": 1,
+          "target": "A",
+          "clip_high_pct": 0.053,
+          "clip_low_pct": 0.8715,
+          "ok": true
+        },
+        {
+          "n": 1,
+          "target": "B",
+          "clip_high_pct": 0.2156,
+          "clip_low_pct": 0.8578,
+          "ok": true
+        },
+        {
+          "n": 1,
+          "target": "C",
+          "clip_high_pct": 0.0015,
+          "clip_low_pct": 0.9915,
+          "ok": true
+        },
+        {
+          "n": 2,
+          "target": "A",
+          "clip_high_pct": 0.0563,
+          "clip_low_pct": 0.8645,
+          "ok": true
+        }
+      ]
+    }
+  },
+  "preset": {
+    "ok": true,
+    "source_prepared": {
+      "camera_profile": {
+        "from": "Adobe Landscape",
+        "to": "Camera Neutral"
+      },
+      "temperature": {
+        "from": 4900,
+        "to": 5200
+      },
+      "white_balance_after": "As Shot"
+    },
+    "name": "AVG P4check 2026-09-28T04-18-17-511Z",
+    "path": "%USERPROFILE%\\AppData\\Roaming\\Adobe\\CameraRaw\\Settings\\AVG P4check 2026-09-28T04-18-17-511Z.xmp",
+    "group": "LrC-AVG",
+    "written": [
+      "blacks",
+      "camera_profile",
+      "clarity",
+      "contrast",
+      "dehaze",
+      "exposure",
+      "grading.balance",
+      "grading.blending",
+      "grading.global.hue",
+      "grading.global.lum",
+      "grading.global.sat",
+      "grading.highlights.hue",
+      "grading.highlights.lum",
+      "grading.highlights.sat",
+      "grading.midtones.hue",
+      "grading.midtones.lum",
+      "grading.midtones.sat",
+      "grading.shadows.hue",
+      "grading.shadows.lum",
+      "grading.shadows.sat",
+      "highlights",
+      "hsl.aqua.hue",
+      "hsl.aqua.lum",
+      "hsl.aqua.sat",
+      "hsl.blue.hue",
+      "hsl.blue.lum",
+      "hsl.blue.sat",
+      "hsl.green.hue",
+      "hsl.green.lum",
+      "hsl.green.sat",
+      "hsl.magenta.hue",
+      "hsl.magenta.lum",
+      "hsl.magenta.sat",
+      "hsl.orange.hue",
+      "hsl.orange.lum",
+      "hsl.orange.sat",
+      "hsl.purple.hue",
+      "hsl.purple.lum",
+      "hsl.purple.sat",
+      "hsl.red.hue",
+      "hsl.red.lum",
+      "hsl.red.sat",
+      "hsl.yellow.hue",
+      "hsl.yellow.lum",
+      "hsl.yellow.sat",
+      "lens.ca_remove",
+      "lens.profile_enable",
+      "noise.color",
+      "noise.luminance",
+      "saturation",
+      "shadows",
+      "sharpening.amount",
+      "sharpening.detail",
+      "sharpening.masking",
+      "sharpening.radius",
+      "texture",
+      "tone_curve.blue",
+      "tone_curve.green",
+      "tone_curve.master",
+      "tone_curve.red",
+      "vibrance",
+      "whites"
+    ],
+    "left_out": [
+      {
+        "name": "temperature",
+        "reason": "white balance is \"As Shot\": the preset says so and, like Lightroom's two, carries no temperature or tint"
+      },
+      {
+        "name": "tint",
+        "reason": "white balance is \"As Shot\": the preset says so and, like Lightroom's two, carries no temperature or tint"
+      },
+      {
+        "name": "lens.corrections_enable",
+        "reason": "Lightroom's own presets do not carry it: neither reference file has it"
+      }
+    ],
+    "camera_profile_written": true,
+    "temperature_written": false,
+    "listed_after_restart": "y",
+    "apply": {
+      "ok": true,
+      "target": {
+        "uuid": "B4840018-8B8D-4038-AEB0-28414E0CD989",
+        "copy_name": "AVG P4check sync 1"
+      },
+      "profile_moved": {
+        "to": "Camera Landscape",
+        "preset": "Camera Neutral"
+      },
+      "differed_before": [
+        "camera_profile",
+        "exposure",
+        "shadows",
+        "vibrance"
+      ],
+      "differing": []
+    }
+  },
+  "restart": {
+    "ok": true,
+    "connects_before": 1,
+    "connects_after": 2,
+    "wait_ms": 263,
+    "plugin_version": "0.4.0"
+  },
+  "bridge_stats": {
+    "connects": 2,
+    "connect_failures": 15,
+    "last_connect_error": "127.0.0.1:8765: ECONNREFUSED",
+    "drops": 1,
+    "last_drop_reason": "event socket closed",
+    "malformed_lines": 0,
+    "unknown_response_ids": 0
+  },
+  "chat_started_at": "2026-09-28T04:30:01.601Z",
+  "jim_chat": {
+    "contact_sheet_seen": "y",
+    "letters_readable": "y",
+    "pick_asked_and_followed": "y"
+  },
+  "chat": {
+    "desktop_log": {
+      "found": true,
+      "saved_as": "p4_desktop_mcp_log_2026-09-28T04-18-17-511Z.txt",
+      "lines": 49
+    },
+    "engine_log": {
+      "found": true,
+      "saved_as": "p4_chat_tool_log_2026-09-28T04-18-17-511Z.jsonl",
+      "records": 10
+    },
+    "tool_calls": [
+      {
+        "ts": "2026-09-28T04:31:40.483Z",
+        "tool": "lr_get_active_photo_context",
+        "ok": true
+      },
+      {
+        "ts": "2026-09-28T04:31:46.209Z",
+        "tool": "lr_get_intent",
+        "ok": true
+      },
+      {
+        "ts": "2026-09-28T04:31:51.514Z",
+        "tool": "lr_begin_session",
+        "ok": true
+      },
+      {
+        "ts": "2026-09-28T04:33:24.109Z",
+        "tool": "lr_step",
+        "ok": true
+      },
+      {
+        "ts": "2026-09-28T04:33:40.133Z",
+        "tool": "lr_step",
+        "ok": true
+      },
+      {
+        "ts": "2026-09-28T04:33:57.217Z",
+        "tool": "lr_step",
+        "ok": true
+      },
+      {
+        "ts": "2026-09-28T04:35:42.237Z",
+        "tool": "lr_select_variant",
+        "ok": true
+      },
+      {
+        "ts": "2026-09-28T04:35:49.256Z",
+        "tool": "lr_step",
+        "ok": true
+      },
+      {
+        "ts": "2026-09-28T04:35:59.425Z",
+        "tool": "lr_step",
+        "ok": true
+      },
+      {
+        "ts": "2026-09-28T04:37:11.592Z",
+        "tool": "lr_end_session",
+        "ok": true
+      }
+    ],
+    "session_begun": true,
+    "session_id": "26ecc498-aebc-4a60-a6f7-866423e28819",
+    "mode": "variants",
+    "intent_id": "landscape_golden_hour",
+    "target_filename": "20260907-_OZ80099.NEF",
+    "copies": [
+      {
+        "id": "A",
+        "uuid": "9C2239DE-2AED-45B5-9B3D-AF065BF5D477"
+      },
+      {
+        "id": "B",
+        "uuid": "5CB96F07-B915-45A6-B178-4DFCC7926F6C"
+      },
+      {
+        "id": "C",
+        "uuid": "2FBC99F3-DEAD-454B-88D4-05F59F2A1FA6"
+      }
+    ],
+    "refined_before_pick": [
+      "A",
+      "B",
+      "C"
+    ],
+    "picked": "A",
+    "steps_after_pick": 2,
+    "session_ended": "accept",
+    "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20260927-26ecc4.json",
+    "ac4": {
+      "session": "chat",
+      "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20260927-26ecc4.json",
+      "ok": true,
+      "passes": [
+        {
+          "n": 0,
+          "target": "A",
+          "clip_high_pct": 0.0032,
+          "clip_low_pct": 0.7907,
+          "ok": true
+        },
+        {
+          "n": 0,
+          "target": "B",
+          "clip_high_pct": 0.0351,
+          "clip_low_pct": 0.9401,
+          "ok": true
+        },
+        {
+          "n": 0,
+          "target": "C",
+          "clip_high_pct": 0.0001,
+          "clip_low_pct": 0.3769,
+          "ok": true
+        },
+        {
+          "n": 1,
+          "target": "A",
+          "clip_high_pct": 0.0066,
+          "clip_low_pct": 0.8461,
+          "ok": true
+        },
+        {
+          "n": 1,
+          "target": "B",
+          "clip_high_pct": 0.0595,
+          "clip_low_pct": 0.9062,
+          "ok": true
+        },
+        {
+          "n": 1,
+          "target": "C",
+          "clip_high_pct": 0.0002,
+          "clip_low_pct": 0.2228,
+          "ok": true
+        },
+        {
+          "n": 2,
+          "target": "A",
+          "clip_high_pct": 0.0336,
+          "clip_low_pct": 0.8295,
+          "ok": true
+        },
+        {
+          "n": 3,
+          "target": "A",
+          "clip_high_pct": 0.0241,
+          "clip_low_pct": 0.8407,
+          "ok": true
+        }
+      ]
+    }
+  },
+  "cleanup": {
+    "copies": [
+      {
+        "uuid": "B4840018-8B8D-4038-AEB0-28414E0CD989",
+        "copy_name": "AVG P4check sync 1",
+        "made_by": "check",
+        "state": "gone"
+      },
+      {
+        "uuid": "4C4BD0B8-FADB-4595-B3D0-EF4957347310",
+        "copy_name": "AVG P4check sync 2",
+        "made_by": "check",
+        "state": "gone"
+      },
+      {
+        "uuid": "6A064362-3957-4DAB-9134-CD3756BC0B2B",
+        "copy_name": "AVG P4check sync 3",
+        "made_by": "check",
+        "state": "gone"
+      },
+      {
+        "uuid": "75514712-7586-42B3-B397-88350DB4361D",
+        "copy_name": "AVG P4check replay",
+        "made_by": "check",
+        "state": "gone"
+      },
+      {
+        "uuid": "69D14AF1-9EB6-4F1D-B06F-65323DE8C615",
+        "copy_name": "AVG landscape_golden_hour A",
+        "made_by": "variants",
+        "state": "gone"
+      },
+      {
+        "uuid": "FCC84050-9DF0-4B7D-8BDA-F33138F6AAE4",
+        "copy_name": "AVG landscape_golden_hour B",
+        "made_by": "variants",
+        "state": "gone"
+      },
+      {
+        "uuid": "34FD3E28-7512-4275-AC7F-5B7D2A463853",
+        "copy_name": "AVG landscape_golden_hour C",
+        "made_by": "variants",
+        "state": "gone"
+      },
+      {
+        "uuid": "9C2239DE-2AED-45B5-9B3D-AF065BF5D477",
+        "copy_name": "AVG landscape_golden_hour A",
+        "made_by": "chat",
+        "state": "gone"
+      },
+      {
+        "uuid": "5CB96F07-B915-45A6-B178-4DFCC7926F6C",
+        "copy_name": "AVG landscape_golden_hour B",
+        "made_by": "chat",
+        "state": "gone"
+      },
+      {
+        "uuid": "2FBC99F3-DEAD-454B-88D4-05F59F2A1FA6",
+        "copy_name": "AVG landscape_golden_hour C",
+        "made_by": "chat",
+        "state": "gone"
+      }
+    ],
+    "presets": [
+      {
+        "name": "AVG preset reference",
+        "files": 0
+      },
+      {
+        "name": "AVG preset reference 2",
+        "files": 0
+      },
+      {
+        "name": "AVG P4check 2026-09-28T04-18-17-511Z",
+        "files": 0
+      }
+    ],
+    "master_differing": [
+      "blacks",
+      "clarity",
+      "exposure",
+      "highlights",
+      "shadows",
+      "vibrance"
+    ]
+  },
+  "bridge_stats_end": {
+    "connects": 3,
+    "connect_failures": 15,
+    "last_connect_error": "127.0.0.1:8765: ECONNREFUSED",
+    "drops": 1,
+    "last_drop_reason": "event socket closed",
+    "malformed_lines": 0,
+    "unknown_response_ids": 0
+  },
+  "summary": {
+    "acceptance_suggestion": "WORKED",
+    "ac3_variants_scripted": true,
+    "ac3_chat": true,
+    "sync_burst_within_2": true,
+    "ac5_log_and_sync_replay": true,
+    "ac4_clipping": true,
+    "preset_listed_after_restart": true,
+    "preset_applies": true,
+    "unselected_original_write": true,
+    "photo_put_back": true,
+    "ac4_sessions": [
+      "A",
+      "variants",
+      "chat"
+    ],
+    "copies_start_as_master": true,
+    "contact_sheet_letters_readable": true,
+    "cleanup": {
+      "copiesGone": 10,
+      "copies": 10,
+      "unconfirmed": [],
+      "verified": true,
+      "presetsGone": 3,
+      "presets": 3,
+      "masterAsBefore": false
+    }
+  },
+  "finished_at": "2026-09-28T04:39:54.972Z",
+  "plugin_log_copied": "p4_bridge_log_2026-09-28T04-18-17-511Z.txt",
+  "node": "v24.11.1",
+  "engine_version": "0.6.0"
+}

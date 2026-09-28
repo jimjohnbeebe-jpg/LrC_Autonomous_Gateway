@@ -1,0 +1,950 @@
+S8 smoke transcript (Claude Code, Opus 5.5, 2026-09-28, branch phase-5/spike-s8).
+What it shows: the S8 harness's own logic, run against a fake Lightroom; NOT Lightroom's behaviour.
+Kit: a scratch folder outside the repo with npm fengari@0.1.4 (a Lua 5.3 VM in JavaScript) and luaparse@0.3.1,
+neither a project dependency. Its four files are reproduced verbatim in the appendix below.
+Node v24.11.1. Paths: the user folder is written as %USERPROFILE%, the scratch folder as <scratch>.
+
+##### Parse
+=== Lua 5.1 parse of every S8 Lua file
+> node <scratch>\parse.cjs D:\Developer\LrC_Autonomous_Gateway\plugin\spikes\S8.lrplugin
+14/14 Lua files parse as Lua 5.1
+
+
+##### Scenarios
+
+=== scenario normal
+> node <scratch>\run-smoke.cjs D:\Developer\LrC_Autonomous_Gateway\plugin\spikes\S8.lrplugin normal
+PASS the settings section renders with a title
+PASS settings BEFORE saved
+PASS before: mode saved
+PASS before: 12 recorded by the observer
+PASS before: menu sees the init mark (fake shares state)
+PASS before: loop saw the menu mark
+PASS before: loop view copy saved
+PASS HUD not open 2 s after menu 1
+PASS HUD open 7 s after menu 1
+PASS stage line ticking
+PASS last click shows Abort
+PASS picks enabled after Approve
+PASS HUD result saved
+PASS clicks 4 (greyed Pick B ignored)
+PASS greyed clicks 0
+PASS closed_by_code yes
+PASS selection change seen
+PASS click tasks read the photo
+PASS appeared about 5 s after the request
+PASS settings AFTER saved
+PASS after: mode kept
+PASS after: loop running
+PASS after: panel saw the new init mark
+===LOG
+[   8.00] MODAL: AVG S8 - what did the settings page show?
+[   8.00] MESSAGE: AVG S8 settings: SAVED
+[  16.25] HUD SHOWN: AVG S8 HUD
+[  21.00] CLICK Abort
+[  22.00] CLICK Pick B ignored (disabled)
+[  23.00] CLICK Approve
+[  24.00] CLICK Pick B
+[  25.00] CLICK Accept
+[  27.25] HUD CLOSED by closeFloatingDialogsForPlugin
+[  28.75] MODAL: AVG S8 - what did you see in the HUD?
+[  28.75] MESSAGE: AVG S8 HUD test: SAVED
+[  42.00] MODAL: AVG S8 - what did the settings page show?
+[  42.00] MESSAGE: AVG S8 settings: SAVED
+===RESULT ALL PASS
+
+
+=== scenario no_close
+> node <scratch>\run-smoke.cjs D:\Developer\LrC_Autonomous_Gateway\plugin\spikes\S8.lrplugin no_close
+PASS the settings section renders with a title
+PASS settings BEFORE saved
+PASS before: mode saved
+PASS before: 12 recorded by the observer
+PASS before: menu sees the init mark (fake shares state)
+PASS before: loop saw the menu mark
+PASS before: loop view copy saved
+PASS HUD not open 2 s after menu 1
+PASS HUD open 7 s after menu 1
+PASS stage line ticking
+PASS last click shows Abort
+PASS picks enabled after Approve
+PASS HUD still open without closeFloatingDialogsForPlugin
+PASS HUD result saved
+PASS clicks 5 incl. the greyed Pick B
+PASS greyed clicks counted 1
+PASS closed_by_code no
+PASS close call recorded as missing
+PASS selection change seen
+PASS click tasks read the photo
+PASS appeared about 5 s after the request
+PASS settings AFTER saved
+PASS after: mode kept
+PASS after: loop running
+PASS after: panel saw the new init mark
+===LOG
+[   8.00] MODAL: AVG S8 - what did the settings page show?
+[   8.00] MESSAGE: AVG S8 settings: SAVED
+[  16.25] HUD SHOWN: AVG S8 HUD
+[  21.00] CLICK Abort
+[  22.00] CLICK Pick B
+[  23.00] CLICK Approve
+[  24.00] CLICK Pick B
+[  25.00] CLICK Accept
+[  34.00] HUD CLOSED by the X
+[  35.25] MODAL: AVG S8 - what did you see in the HUD?
+[  35.25] MESSAGE: AVG S8 HUD test: SAVED
+[  47.00] MODAL: AVG S8 - what did the settings page show?
+[  47.00] MESSAGE: AVG S8 settings: SAVED
+===RESULT ALL PASS
+
+
+=== scenario not_started
+> node <scratch>\run-smoke.cjs D:\Developer\LrC_Autonomous_Gateway\plugin\spikes\S8.lrplugin not_started
+PASS menu 1 without the loop says NOT STARTED
+PASS menu 1 without a photo says NOT STARTED - no photo
+PASS no HUD opened
+PASS a close with no HUD is recorded by the loop
+===LOG
+[   0.00] MESSAGE: AVG S8: NOT STARTED - the S8 loop is not running
+[   4.00] MESSAGE: AVG S8: NOT STARTED - no photo selected
+===RESULT ALL PASS
+
+
+##### Collector dry run
+
+=== collect.ts on scenario normal
+> node D:\Developer\LrC_Autonomous_Gateway\spikes\S8\collect.ts <scratch>\out\normal <scratch>\collected\normal
+{
+  "source": "%USERPROFILE%\\AppData\\Local\\Temp\\claude\\D--Developer-LrC-Autonomous-Gateway\\f51ed01b-4238-4d11-9bfb-fbbec733c2e2\\scratchpad\\s8smoke\\out\\normal",
+  "hud": {
+    "file": "s8_hud_T28.75.json",
+    "run_at": "T16.25 (local time)",
+    "lr_version": "15.5.1-fake",
+    "answered": true,
+    "jim": {
+      "approve_label_blank": true,
+      "approve_label_changed": true,
+      "closed_by_itself": true,
+      "focus_backslash": true,
+      "hud_appeared": true,
+      "last_click_shown": true,
+      "picks_enabled_after_approve": true,
+      "picks_greyed": true,
+      "stage_updated": true
+    },
+    "findings": {
+      "clicks": 4,
+      "clicks_on_greyed_picks": 0,
+      "closed_by_code": "yes",
+      "selection_changes_seen": 1,
+      "appeared_after_request_s": 5,
+      "buttons": [
+        "Abort",
+        "Approve",
+        "Pick B",
+        "Accept"
+      ]
+    },
+    "clicks": [
+      {
+        "button": "Abort",
+        "at": "T21.00",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": false,
+        "task_started_ms": 0,
+        "task_read_ok": true,
+        "task_error": null
+      },
+      {
+        "button": "Approve",
+        "at": "T23.00",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": false,
+        "task_started_ms": 0,
+        "task_read_ok": true,
+        "task_error": null
+      },
+      {
+        "button": "Pick B",
+        "at": "T24.00",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": true,
+        "task_started_ms": 0,
+        "task_read_ok": true,
+        "task_error": null
+      },
+      {
+        "button": "Accept",
+        "at": "T25.00",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": true,
+        "task_started_ms": 0,
+        "task_read_ok": true,
+        "task_error": null
+      }
+    ],
+    "close_call": {
+      "exists": true,
+      "tries": [
+        {
+          "argument": "_PLUGIN",
+          "ok": true
+        }
+      ],
+      "at": "T27.25",
+      "epoch": 1027.25
+    },
+    "present": {
+      "error": null,
+      "returned_after_s": 11.5,
+      "open_when_returned": false
+    },
+    "ticks": 12
+  },
+  "settings": {
+    "before_restart": {
+      "file": "s8_settings_before_restart_T8.00.json",
+      "run_at": "T3.00 (local time)",
+      "settings": {
+        "mode": "approve_each_pass",
+        "maxPasses": 12,
+        "clipHighPct": 0.3,
+        "logFolder": "C:\\S8-test"
+      },
+      "observed_log": "mode=approve_each_pass (string) at T3.00; maxPasses=6 (number) at T3.00; clipHighPct=0.3 (number) at T3.00; logFolder=C:\\S8-test (string) at T3.00; maxPasses=12 (number) at T3.00",
+      "marks": {
+        "init_to_menu_via_G": true,
+        "init_to_menu_via_module": true,
+        "init_to_panel_via_G": true,
+        "init_to_panel_via_module": true,
+        "loop_init_mark": "init-UUID-0001",
+        "loop_running": true,
+        "loop_view_age_s": 0,
+        "menu_mark": "menu-UUID-0002",
+        "menu_sees_init_mark_in_module": "init-UUID-0001",
+        "menu_sees_init_mark_on_G": "init-UUID-0001",
+        "menu_to_loop_via_G": true,
+        "menu_to_loop_via_module": true,
+        "panel_rendered_at": "T3.00 (local time)"
+      },
+      "loop_saw_the_same_settings": true,
+      "loop_view_error": null,
+      "loop_prefs_changes": [
+        {
+          "seen_at": "T0.00 (local time)",
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
+        },
+        {
+          "seen_at": "T3.25 (local time)",
+          "mode": "approve_each_pass",
+          "maxPasses": 12,
+          "clipHighPct": 0.3,
+          "logFolder": "C:\\S8-test"
+        }
+      ],
+      "answered": true,
+      "jim": {
+        "field_kept_12": true,
+        "page_showed_fields": true,
+        "warning_on_12": true
+      }
+    },
+    "after_restart": {
+      "file": "s8_settings_after_restart_T42.00.json",
+      "run_at": "T37.00 (local time)",
+      "settings": {
+        "mode": "approve_each_pass",
+        "maxPasses": 12,
+        "clipHighPct": 0.3,
+        "logFolder": "C:\\S8-test"
+      },
+      "observed_log": "mode=approve_each_pass (string) at T3.00; maxPasses=6 (number) at T3.00; clipHighPct=0.3 (number) at T3.00; logFolder=C:\\S8-test (string) at T3.00; maxPasses=12 (number) at T3.00",
+      "marks": {
+        "init_to_menu_via_G": true,
+        "init_to_menu_via_module": true,
+        "init_to_panel_via_G": true,
+        "init_to_panel_via_module": true,
+        "loop_init_mark": "init-UUID-0005",
+        "loop_running": true,
+        "loop_view_age_s": 0,
+        "menu_mark": "menu-UUID-0006",
+        "menu_sees_init_mark_in_module": "init-UUID-0005",
+        "menu_sees_init_mark_on_G": "init-UUID-0005",
+        "menu_to_loop_via_G": true,
+        "menu_to_loop_via_module": true,
+        "panel_rendered_at": "T37.00 (local time)"
+      },
+      "loop_saw_the_same_settings": true,
+      "loop_view_error": null,
+      "loop_prefs_changes": [
+        {
+          "seen_at": "T34.00 (local time)",
+          "mode": "approve_each_pass",
+          "maxPasses": 12,
+          "clipHighPct": 0.3,
+          "logFolder": "C:\\S8-test"
+        }
+      ],
+      "answered": true,
+      "jim": {
+        "page_kept_values": true
+      }
+    },
+    "kept_across_restart": {
+      "mode": true,
+      "maxPasses": true,
+      "clipHighPct": true,
+      "logFolder": true
+    }
+  },
+  "copied": [
+    "s8_hud_T28.75.json",
+    "s8_log.txt",
+    "s8_loop_view.json",
+    "s8_loop_view_after_restart_T42.00.json",
+    "s8_loop_view_before_restart_T8.00.json",
+    "s8_panel_view.json",
+    "s8_settings_after_restart_T42.00.json",
+    "s8_settings_before_restart_T8.00.json"
+  ]
+}
+
+Wrote <scratch>\collected\normal\s8_summary.json; copied 8 files.
+
+
+=== collect.ts on scenario no_close
+> node D:\Developer\LrC_Autonomous_Gateway\spikes\S8\collect.ts <scratch>\out\no_close <scratch>\collected\no_close
+{
+  "source": "%USERPROFILE%\\AppData\\Local\\Temp\\claude\\D--Developer-LrC-Autonomous-Gateway\\f51ed01b-4238-4d11-9bfb-fbbec733c2e2\\scratchpad\\s8smoke\\out\\no_close",
+  "hud": {
+    "file": "s8_hud_T35.25.json",
+    "run_at": "T16.25 (local time)",
+    "lr_version": "15.5.1-fake",
+    "answered": true,
+    "jim": {
+      "approve_label_blank": true,
+      "approve_label_changed": true,
+      "closed_by_itself": true,
+      "focus_backslash": true,
+      "hud_appeared": true,
+      "last_click_shown": true,
+      "picks_enabled_after_approve": true,
+      "picks_greyed": true,
+      "stage_updated": true
+    },
+    "findings": {
+      "clicks": 5,
+      "clicks_on_greyed_picks": 1,
+      "closed_by_code": "no",
+      "selection_changes_seen": 1,
+      "appeared_after_request_s": 5,
+      "buttons": [
+        "Abort",
+        "Pick B",
+        "Approve",
+        "Pick B",
+        "Accept"
+      ]
+    },
+    "clicks": [
+      {
+        "button": "Abort",
+        "at": "T21.00",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": false,
+        "task_started_ms": 0,
+        "task_read_ok": true,
+        "task_error": null
+      },
+      {
+        "button": "Pick B",
+        "at": "T22.00",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": false,
+        "task_started_ms": 0,
+        "task_read_ok": true,
+        "task_error": null
+      },
+      {
+        "button": "Approve",
+        "at": "T23.00",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": false,
+        "task_started_ms": 0,
+        "task_read_ok": true,
+        "task_error": null
+      },
+      {
+        "button": "Pick B",
+        "at": "T24.00",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": true,
+        "task_started_ms": 0,
+        "task_read_ok": true,
+        "task_error": null
+      },
+      {
+        "button": "Accept",
+        "at": "T25.00",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": true,
+        "task_started_ms": 0,
+        "task_read_ok": true,
+        "task_error": null
+      }
+    ],
+    "close_call": {
+      "exists": false,
+      "tries": [],
+      "at": "T27.25",
+      "epoch": 1027.25
+    },
+    "present": {
+      "error": null,
+      "returned_after_s": 18,
+      "open_when_returned": false
+    },
+    "ticks": 18
+  },
+  "settings": {
+    "before_restart": {
+      "file": "s8_settings_before_restart_T8.00.json",
+      "run_at": "T3.00 (local time)",
+      "settings": {
+        "mode": "approve_each_pass",
+        "maxPasses": 12,
+        "clipHighPct": 0.3,
+        "logFolder": "C:\\S8-test"
+      },
+      "observed_log": "mode=approve_each_pass (string) at T3.00; maxPasses=6 (number) at T3.00; clipHighPct=0.3 (number) at T3.00; logFolder=C:\\S8-test (string) at T3.00; maxPasses=12 (number) at T3.00",
+      "marks": {
+        "init_to_menu_via_G": true,
+        "init_to_menu_via_module": true,
+        "init_to_panel_via_G": true,
+        "init_to_panel_via_module": true,
+        "loop_init_mark": "init-UUID-0001",
+        "loop_running": true,
+        "loop_view_age_s": 0,
+        "menu_mark": "menu-UUID-0002",
+        "menu_sees_init_mark_in_module": "init-UUID-0001",
+        "menu_sees_init_mark_on_G": "init-UUID-0001",
+        "menu_to_loop_via_G": true,
+        "menu_to_loop_via_module": true,
+        "panel_rendered_at": "T3.00 (local time)"
+      },
+      "loop_saw_the_same_settings": true,
+      "loop_view_error": null,
+      "loop_prefs_changes": [
+        {
+          "seen_at": "T0.00 (local time)",
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
+        },
+        {
+          "seen_at": "T3.25 (local time)",
+          "mode": "approve_each_pass",
+          "maxPasses": 12,
+          "clipHighPct": 0.3,
+          "logFolder": "C:\\S8-test"
+        }
+      ],
+      "answered": true,
+      "jim": {
+        "field_kept_12": true,
+        "page_showed_fields": true,
+        "warning_on_12": true
+      }
+    },
+    "after_restart": {
+      "file": "s8_settings_after_restart_T47.00.json",
+      "run_at": "T42.00 (local time)",
+      "settings": {
+        "mode": "approve_each_pass",
+        "maxPasses": 12,
+        "clipHighPct": 0.3,
+        "logFolder": "C:\\S8-test"
+      },
+      "observed_log": "mode=approve_each_pass (string) at T3.00; maxPasses=6 (number) at T3.00; clipHighPct=0.3 (number) at T3.00; logFolder=C:\\S8-test (string) at T3.00; maxPasses=12 (number) at T3.00",
+      "marks": {
+        "init_to_menu_via_G": true,
+        "init_to_menu_via_module": true,
+        "init_to_panel_via_G": true,
+        "init_to_panel_via_module": true,
+        "loop_init_mark": "init-UUID-0005",
+        "loop_running": true,
+        "loop_view_age_s": 0,
+        "menu_mark": "menu-UUID-0006",
+        "menu_sees_init_mark_in_module": "init-UUID-0005",
+        "menu_sees_init_mark_on_G": "init-UUID-0005",
+        "menu_to_loop_via_G": true,
+        "menu_to_loop_via_module": true,
+        "panel_rendered_at": "T42.00 (local time)"
+      },
+      "loop_saw_the_same_settings": true,
+      "loop_view_error": null,
+      "loop_prefs_changes": [
+        {
+          "seen_at": "T39.00 (local time)",
+          "mode": "approve_each_pass",
+          "maxPasses": 12,
+          "clipHighPct": 0.3,
+          "logFolder": "C:\\S8-test"
+        }
+      ],
+      "answered": true,
+      "jim": {
+        "page_kept_values": true
+      }
+    },
+    "kept_across_restart": {
+      "mode": true,
+      "maxPasses": true,
+      "clipHighPct": true,
+      "logFolder": true
+    }
+  },
+  "copied": [
+    "s8_hud_T35.25.json",
+    "s8_log.txt",
+    "s8_loop_view.json",
+    "s8_loop_view_after_restart_T47.00.json",
+    "s8_loop_view_before_restart_T8.00.json",
+    "s8_panel_view.json",
+    "s8_settings_after_restart_T47.00.json",
+    "s8_settings_before_restart_T8.00.json"
+  ]
+}
+
+Wrote <scratch>\collected\no_close\s8_summary.json; copied 8 files.
+
+
+=== collect.ts on scenario not_started
+> node D:\Developer\LrC_Autonomous_Gateway\spikes\S8\collect.ts <scratch>\out\not_started <scratch>\collected\not_started
+{
+  "source": "%USERPROFILE%\\AppData\\Local\\Temp\\claude\\D--Developer-LrC-Autonomous-Gateway\\f51ed01b-4238-4d11-9bfb-fbbec733c2e2\\scratchpad\\s8smoke\\out\\not_started",
+  "hud": {
+    "file": null,
+    "status": "NOT RUN"
+  },
+  "settings": {
+    "before_restart": {
+      "status": "NOT RUN"
+    },
+    "after_restart": {
+      "status": "NOT RUN"
+    },
+    "kept_across_restart": null
+  },
+  "copied": [
+    "s8_loop_view.json"
+  ]
+}
+
+Wrote <scratch>\collected\not_started\s8_summary.json; copied 1 files.
+
+
+##### Appendix: the smoke kit, verbatim
+
+=== fake-lr.lua
+-- A fake Lightroom SDK for smoke-running plugin\spikes\S8.lrplugin under fengari (Lua 5.3).
+-- Tasks are coroutines on a virtual clock; files live in memory (fengari has no io.open);
+-- views are plain tables; dialogs are driven by the scenario script.
+
+FAKE = { now = 1000, tasks = {}, files = {}, messages = {}, hud = nil, modal_answers = true,
+    close_exists = true, honour_enabled = true, target = true, log = {} }
+
+local function flog(s) table.insert(FAKE.log, string.format("[%7.2f] %s", FAKE.now - 1000, s)) end
+FAKE.flog = flog
+
+-- io shim --------------------------------------------------------------------------------------
+local function fileHandle(path, mode)
+    local h = { path = path, mode = mode, buf = {} }
+    if mode:find("a") then h.buf[1] = FAKE.files[path] or "" end
+    function h:write(...)
+        for _, s in ipairs({ ... }) do table.insert(self.buf, tostring(s)) end
+        return self
+    end
+    function h:read(fmt) local t = FAKE.files[self.path]; self.consumed = true; return t end
+    function h:lines()
+        local t = FAKE.files[self.path] or ""
+        return t:gmatch("([^\n]*)\n?")
+    end
+    function h:close()
+        if self.mode:find("[wa]") then FAKE.files[self.path] = table.concat(self.buf) end
+        return true
+    end
+    return h
+end
+io = io or {}
+io.open = function(path, mode)
+    mode = mode or "r"
+    if mode:find("r") and FAKE.files[path] == nil then return nil, path .. ": No such file" end
+    return fileHandle(path, mode)
+end
+
+-- scheduler ------------------------------------------------------------------------------------
+local nextSeq
+local function spawn(fn, name)
+    local co = coroutine.create(fn)
+    table.insert(FAKE.tasks, { co = co, wake = FAKE.now, seq = nextSeq(), name = name or "task" })
+end
+FAKE.spawn = spawn
+
+local seq = 0
+nextSeq = function() seq = seq + 1; return seq end
+
+function FAKE.run(untilTime)
+    while true do
+        for i = #FAKE.tasks, 1, -1 do
+            if coroutine.status(FAKE.tasks[i].co) == "dead" then table.remove(FAKE.tasks, i) end
+        end
+        local best
+        for i, t in ipairs(FAKE.tasks) do
+            local b = best and FAKE.tasks[best]
+            if not b or t.wake < b.wake or (t.wake == b.wake and t.seq < b.seq) then best = i end
+        end
+        if not best or FAKE.tasks[best].wake > untilTime then
+            if untilTime > FAKE.now then FAKE.now = untilTime end
+            return
+        end
+        local t = FAKE.tasks[best]
+        if t.wake > FAKE.now then FAKE.now = t.wake end
+        local ok, err = coroutine.resume(t.co)
+        if not ok then flog("TASK ERROR in " .. t.name .. ": " .. tostring(err)); error("task error in " .. t.name .. ": " .. tostring(err)) end
+    end
+end
+
+local function sleep(s)
+    local me
+    for _, t in ipairs(FAKE.tasks) do if t.co == coroutine.running() then me = t end end
+    if not me then error("sleep outside a task") end
+    me.wake = FAKE.now + s
+    me.seq = nextSeq()
+    coroutine.yield()
+end
+
+-- SDK modules ----------------------------------------------------------------------------------
+local M = {}
+M.LrTasks = {
+    startAsyncTask = function(fn, name) spawn(fn, name) end,
+    sleep = sleep,
+    yield = function() sleep(0) end,
+    pcall = pcall,
+    canYield = function() return coroutine.isyieldable() end,
+}
+M.LrFunctionContext = {
+    postAsyncTaskWithContext = function(name, fn) spawn(function() fn({ name = name }) end, name) end,
+}
+M.LrDate = {
+    currentTime = function() return FAKE.now end,
+    timeToUserFormat = function(t, fmt) return string.format("T%.2f", t - 1000) end,
+}
+M.LrPathUtils = {
+    child = function(a, b) return a .. "\\" .. b end,
+    getStandardFilePath = function(k) return "%USERPROFILE%\\AppData\\Local\\Temp" end,
+    parent = function(p) return p:match("^(.*)\\") end,
+}
+M.LrFileUtils = { createAllDirectories = function() return true end }
+local uuidN = 0
+M.LrUUID = { generateUUID = function() uuidN = uuidN + 1; return string.format("UUID-%04d", uuidN) end }
+
+FAKE.prefsData = {}
+local prefsObj = setmetatable({}, {
+    __index = function(_, k)
+        if k == "pairs" then return function() return next, FAKE.prefsData, nil end end
+        return FAKE.prefsData[k]
+    end,
+    __newindex = function(_, k, v) FAKE.prefsData[k] = v end,
+})
+M.LrPrefs = { prefsForPlugin = function() return prefsObj end }
+
+local photo = {}
+function photo:getDevelopSettings() return { Exposure2012 = 0.33 } end
+function photo:getFormattedMetadata(k) return "20260907-_OZ80093.NEF" end
+local catalog = {
+    getTargetPhoto = function() return FAKE.target and photo or nil end,
+    withReadAccessDo = function(_, fn) return fn() end,
+}
+M.LrApplication = { activeCatalog = function() return catalog end, versionString = function() return "15.5.1-fake" end }
+
+function M_makeProps()
+    local data, observers = {}, {}
+    return setmetatable({}, {
+        __index = function(_, k)
+            if k == "addObserver" then return function(_, key, fn) observers[key] = observers[key] or {}; table.insert(observers[key], fn) end end
+            return data[k]
+        end,
+        __newindex = function(self, k, v)
+            data[k] = v
+            for _, fn in ipairs(observers[k] or {}) do fn(self, k, v) end
+        end,
+    })
+end
+M.LrBinding = { makePropertyTable = function() return M_makeProps() end }
+
+FAKE.buttons = {}
+local factory = setmetatable({}, { __index = function(_, kind)
+    return function(_, spec)
+        local node = { kind = kind, spec = spec }
+        if kind == "push_button" then table.insert(FAKE.buttons, node) end
+        return node
+    end
+end })
+M.LrView = {
+    osFactory = function() return factory end,
+    bind = function(key) return { bind = key } end,
+}
+
+M.LrDialogs = {
+    message = function(title, text, kind)
+        table.insert(FAKE.messages, { title = title, text = text })
+        flog("MESSAGE: " .. title)
+    end,
+    presentModalDialog = function(args)
+        local obj = args.contents.spec.bind_to_object
+        for _, row in ipairs(args.contents.spec) do
+            if type(row) == "table" and row.kind == "checkbox" then obj[row.spec.value.bind] = FAKE.modal_answers end
+        end
+        flog("MODAL: " .. args.title)
+        return "ok"
+    end,
+    presentFloatingDialog = function(plugin, args)
+        -- the buttons were registered by the factory while the contents were built
+        FAKE.hudButtons = FAKE.buttons
+        FAKE.buttons = {}
+        FAKE.hud = { args = args, open = true, props = args.contents.spec.bind_to_object }
+        flog("HUD SHOWN: " .. args.title)
+        if args.onShow then args.onShow() end
+        while FAKE.hud and FAKE.hud.open do sleep(0.5) end
+        return nil
+    end,
+}
+function FAKE.closeHud(how)
+    if FAKE.hud and FAKE.hud.open then
+        FAKE.hud.open = false
+        flog("HUD CLOSED by " .. how)
+        if FAKE.hud.args.windowWillClose then FAKE.hud.args.windowWillClose() end
+    end
+end
+M.LrDialogs.closeFloatingDialogsForPlugin = function(plugin)
+    if plugin == nil then error("expected a plugin") end
+    FAKE.closeHud("closeFloatingDialogsForPlugin")
+end
+
+function FAKE.click(title)
+    local props = FAKE.hud and FAKE.hud.props
+    for _, b in ipairs(FAKE.hudButtons or {}) do
+        local t = b.spec.title
+        if type(t) == "table" then t = props[t.bind] end
+        if t == title or (title == "Approve" and type(b.spec.title) == "table") then
+            local en = b.spec.enabled
+            if type(en) == "table" and FAKE.honour_enabled and not props[en.bind] then
+                flog("CLICK " .. title .. " ignored (disabled)")
+                return
+            end
+            flog("CLICK " .. title)
+            b.spec.action()
+            return
+        end
+    end
+    error("no button " .. title)
+end
+
+import = function(name)
+    local m = M[name]
+    if not m then error("fake import: no " .. name) end
+    return m
+end
+_PLUGIN = { id = "com.lrcavg.spike.s8" }
+
+function FAKE.withoutClose()
+    FAKE.saved_close = M.LrDialogs.closeFloatingDialogsForPlugin
+    M.LrDialogs.closeFloatingDialogsForPlugin = nil
+end
+
+
+=== main.lua
+-- Smoke scenarios for plugin\spikes\S8.lrplugin against fake-lr.lua. SCENARIO and PLUGIN_DIR are
+-- set by run-smoke.cjs. Each scenario plays README "Steps for Jim" on the virtual clock.
+dofile(FAKE_DIR .. "/fake-lr.lua")
+package.path = PLUGIN_DIR .. "/?.lua;" .. package.path
+
+local failures = {}
+local function check(name, cond) if not cond then table.insert(failures, name) end print((cond and "PASS " or "FAIL ") .. name) end
+local function menu(n) dofile(PLUGIN_DIR .. "/S8Step" .. n .. ".lua") end
+local function at(t) FAKE.run(FAKE.now + t) end
+local function lastMessage() return FAKE.messages[#FAKE.messages] or { title = "" } end
+local function fileLike(pat)
+    local names = {}
+    for p in pairs(FAKE.files) do if p:find(pat) then table.insert(names, p) end end
+    table.sort(names)
+    return FAKE.files[names[#names]], names[#names]
+end
+local function startLightroom()
+    dofile(PLUGIN_DIR .. "/S8Init.lua")
+    at(3)
+end
+local function restartLightroom()
+    FAKE.tasks = {}
+    FAKE.hud = nil
+    for name in pairs(package.loaded) do if name:find("^S8") or name == "SpikeJson" then package.loaded[name] = nil end end
+    _G.S8_generation, _G.S8_initMark, _G.S8_menuMark = nil, nil, nil
+    startLightroom()
+end
+local function pluginManager(edits)
+    local P = require 'S8InfoProvider'
+    local pt = M_makeProps()
+    local sections = P.sectionsForTopOfDialog(import('LrView').osFactory(), pt)
+    for _, e in ipairs(edits or {}) do pt[e[1]] = e[2] end
+    return sections
+end
+
+if SCENARIO == "not_started" then
+    -- Menu item 1 before the loop ever ran, and with no photo selected.
+    menu(1); at(1)
+    check("menu 1 without the loop says NOT STARTED", lastMessage().title:find("NOT STARTED") ~= nil and lastMessage().title:find("loop") ~= nil)
+    startLightroom()
+    FAKE.target = false
+    menu(1); at(1)
+    check("menu 1 without a photo says NOT STARTED - no photo", lastMessage().title:find("no photo") ~= nil)
+    check("no HUD opened", FAKE.hud == nil)
+    menu(2); at(1)
+    at(10)
+    check("a close with no HUD is recorded by the loop", (FAKE.files["%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\S8\\s8_loop_view.json"] or ""):find('"close_without_hud"') ~= nil)
+else
+    startLightroom()
+    -- Steps 1-9: the settings page, then menu item 3.
+    local sections = pluginManager({ { "mode", "approve_each_pass" }, { "maxPasses", 6 }, { "clipHighPct", 0.3 }, { "logFolder", "C:\\S8-test" }, { "maxPasses", 12 } })
+    check("the settings section renders with a title", sections[1].title == "AVG S8 settings test")
+    menu(3); at(8)
+    local before = fileLike("s8_settings_before_restart_")
+    check("settings BEFORE saved", before ~= nil and lastMessage().title == "AVG S8 settings: SAVED")
+    check("before: mode saved", before and before:find('"mode": "approve_each_pass"') ~= nil)
+    check("before: 12 recorded by the observer", before and before:find("maxPasses=12") ~= nil)
+    check("before: menu sees the init mark (fake shares state)", before and before:find('"init_to_menu_via_module": true') ~= nil)
+    check("before: loop saw the menu mark", before and before:find('"menu_to_loop_via_module": true') ~= nil)
+    check("before: loop view copy saved", fileLike("s8_loop_view_before_restart_") ~= nil)
+
+    -- Steps 10-20: the HUD.
+    if SCENARIO == "no_close" then FAKE.withoutClose(); FAKE.honour_enabled = false end
+    menu(1); at(2)
+    check("HUD not open 2 s after menu 1", FAKE.hud == nil)
+    at(5)
+    check("HUD open 7 s after menu 1", FAKE.hud ~= nil and FAKE.hud.open)
+    at(3)
+    local props = FAKE.hud.props
+    check("stage line ticking", props.stage and props.stage:find("tick") ~= nil)
+    FAKE.click("Abort"); at(1)
+    check("last click shows Abort", props.lastClick:find("Abort") ~= nil)
+    FAKE.click("Pick B"); at(1)
+    FAKE.click("Approve"); at(1)
+    check("picks enabled after Approve", props.picksEnabled == true and props.approveTitle == "Approve pass 2")
+    FAKE.click("Pick B"); at(1)
+    FAKE.click("Accept"); at(1)
+    FAKE.hud.args.selectionChangeObserver(); at(1)
+    menu(2); at(2)
+    if SCENARIO == "no_close" then
+        check("HUD still open without closeFloatingDialogsForPlugin", FAKE.hud.open)
+        at(5); FAKE.closeHud("the X")
+    end
+    at(5)
+    local hud = fileLike("s8_hud_")
+    check("HUD result saved", hud ~= nil and lastMessage().title == "AVG S8 HUD test: SAVED")
+    if SCENARIO == "no_close" then
+        check("clicks 5 incl. the greyed Pick B", hud and hud:find('"clicks": 5') ~= nil)
+        check("greyed clicks counted 1", hud and hud:find('"clicks_on_greyed_picks": 1') ~= nil)
+        check("closed_by_code no", hud and hud:find('"closed_by_code": "no"') ~= nil)
+        check("close call recorded as missing", hud and hud:find('"exists": false') ~= nil)
+    else
+        check("clicks 4 (greyed Pick B ignored)", hud and hud:find('"clicks": 4') ~= nil)
+        check("greyed clicks 0", hud and hud:find('"clicks_on_greyed_picks": 0') ~= nil)
+        check("closed_by_code yes", hud and hud:find('"closed_by_code": "yes"') ~= nil)
+    end
+    check("selection change seen", hud and hud:find('"selection_changes_seen": 1') ~= nil)
+    check("click tasks read the photo", hud and hud:find('"task_read_ok": true') ~= nil)
+    check("appeared about 5 s after the request", hud and hud:find('"appeared_after_request_s": 5') ~= nil)
+
+    -- Steps 21-23: restart, the page, menu item 4.
+    restartLightroom()
+    pluginManager({})
+    menu(4); at(8)
+    local after = fileLike("s8_settings_after_restart_")
+    check("settings AFTER saved", after ~= nil and lastMessage().title == "AVG S8 settings: SAVED")
+    check("after: mode kept", after and after:find('"mode": "approve_each_pass"') ~= nil)
+    check("after: loop running", after and after:find('"loop_running": true') ~= nil)
+    check("after: panel saw the new init mark", after and after:find('"init_to_panel_via_module": true') ~= nil)
+end
+
+print("===LOG")
+for _, l in ipairs(FAKE.log) do print(l) end
+for path, text in pairs(FAKE.files) do
+    local name = path:match("([^\\]+)$")
+    print("===FILE " .. name)
+    print(text)
+end
+print("===RESULT " .. (#failures == 0 and "ALL PASS" or ("FAILED: " .. table.concat(failures, "; "))))
+
+
+=== run-smoke.cjs
+// Runs main.lua under fengari for one scenario; writes the fake's files to out/<scenario>/ and
+// prints the checks. Usage: node run-smoke.cjs <pluginDir> <scenario>
+const fs = require("fs");
+const path = require("path");
+const { lua, lauxlib, lualib, to_luastring } = require("fengari");
+
+const [pluginDir, scenario] = process.argv.slice(2);
+const here = __dirname.replaceAll("\\", "/");
+const L = lauxlib.luaL_newstate();
+lualib.luaL_openlibs(L);
+const prelude = `PLUGIN_DIR = ${JSON.stringify(pluginDir.replaceAll("\\", "/"))}; FAKE_DIR = ${JSON.stringify(here)}; SCENARIO = ${JSON.stringify(scenario)}`;
+const code = prelude + "\n" + fs.readFileSync(path.join(__dirname, "main.lua"), "utf8");
+let out = "";
+const origLog = console.log;
+const origWrite = process.stdout.write.bind(process.stdout);
+process.stdout.write = (s) => { out += s; return true; };
+let status = lauxlib.luaL_loadbuffer(L, to_luastring(code), null, to_luastring("main"));
+if (status === lua.LUA_OK) status = lua.lua_pcall(L, 0, 0, 0);
+process.stdout.write = origWrite;
+if (status !== lua.LUA_OK) {
+  origLog(out);
+  origLog("LUA ERROR: " + lua.lua_tojsstring(L, -1));
+  process.exit(2);
+}
+const outDir = path.join(__dirname, "out", scenario);
+fs.rmSync(outDir, { recursive: true, force: true });
+fs.mkdirSync(outDir, { recursive: true });
+const parts = out.split(/^===/m);
+const report = [];
+for (const p of parts) {
+  if (p.startsWith("FILE ")) {
+    const nl = p.indexOf("\n");
+    fs.writeFileSync(path.join(outDir, p.slice(5, nl).trim()), p.slice(nl + 1).replace(/\n$/, ""));
+  } else report.push(p.startsWith("LOG") || p.startsWith("RESULT") ? "===" + p : p);
+}
+origLog(report.join(""));
+
+
+=== parse.cjs
+// Parse every .lua under the given folders as Lua 5.1 (syntax only).
+const fs = require("fs");
+const path = require("path");
+const luaparse = require("luaparse");
+let ok = 0, bad = 0;
+function walk(dir) {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) walk(p);
+    else if (p.endsWith(".lua")) {
+      try { luaparse.parse(fs.readFileSync(p, "utf8"), { luaVersion: "5.1" }); ok++; }
+      catch (err) { bad++; console.log("FAIL", p, err.message); }
+    }
+  }
+}
+for (const d of process.argv.slice(2)) walk(d);
+console.log(`${ok}/${ok + bad} Lua files parse as Lua 5.1`);
+process.exit(bad ? 1 : 0);

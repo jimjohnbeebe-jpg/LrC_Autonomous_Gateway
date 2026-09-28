@@ -26,7 +26,7 @@ When the engine writes Temperature, does Lightroom Classic take `WhiteBalance = 
 
 | Part | Files |
 |---|---|
-| The check | `engine\src\devtools\wb-check.ts` (the steps, the summary), `wb-check-cli.ts` (`npm run wb:check`) |
+| The check | `engine\src\devtools\wb-check.ts` (the steps), `wb-check-summary.ts` (the summary and last lines, split out after Jim's run), `wb-check-cli.ts` (`npm run wb:check`) |
 | Tests | `engine\tests\wb-check.test.ts`, against the simulated plugin (`engine\tests\helpers\lightroom-sim.ts`) |
 | Dry run | `docs\reports\phase4\wb-dryrun\dryrun.txt` (the built CLI against a scratch plugin; the driver verbatim in its appendix) |
 

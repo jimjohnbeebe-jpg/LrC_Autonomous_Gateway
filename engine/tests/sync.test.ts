@@ -8,8 +8,11 @@ import path from "node:path";
 import sharp from "sharp";
 import { describe, expect, it, vi } from "vitest";
 import { recipeSchema } from "../src/log/index.js";
+import { toToolError } from "../src/mcp/index.js";
 import type { SyncSeriesArgs } from "../src/mcp/tools-propagation.js";
 import { differingSettings } from "../src/params/index.js";
+import { PreviewService, type PreviewRequest } from "../src/preview/index.js";
+import { syncSeries, type SyncArgs } from "../src/sync/index.js";
 import { acceptedSession, addCopy, clean, client, logDir, lr, map, plugin, sent, sync, syncFails, tmp, tools, useSyncHarness } from "./helpers/sync-harness.js";
 
 useSyncHarness();
@@ -111,6 +114,15 @@ describe("lr_sync_series: refused before anything is written", () => {
     expect((await syncFails({ source: { session_id: id }, targets: "selected", ...quiet })).code).toBe("NO_TARGETS");
     lr.alsoSelected = Array.from({ length: 21 }, (_, i) => addCopy(i + 1));
     expect((await syncFails({ source: { session_id: id }, targets: "selected", ...quiet })).code).toBe("TOO_MANY_TARGETS");
+    // More selected than the plugin described: the rest would be neither synced nor skipped.
+    lr.alsoSelected = [addCopy(30)];
+    const original = plugin.handlers.get("get_selection") as NonNullable<ReturnType<typeof plugin.handlers.get>>;
+    plugin.handlers.set("get_selection", async (p, rid) => {
+      const reply = await original(p, rid);
+      if (reply !== "silent" && reply.ok) (reply.payload as { count: number }).count = 150;
+      return reply;
+    });
+    expect(await syncFails({ source: { session_id: id }, targets: "selected", ...quiet })).toMatchObject({ code: "TOO_MANY_TARGETS", message: expect.stringMatching(/^150 photos are selected/) });
     expect(lr.writes.length).toBe(n0);
   });
 });
@@ -123,11 +135,46 @@ describe("lr_sync_series: targets", () => {
     lr.selected = a;
     lr.alsoSelected = ["SIM-UUID", b];
     const out = await sync({ source: { session_id: id }, targets: "selected", ...quiet });
-    expect(sent("get_selection")).toEqual([{ max: 21 }]);
+    expect(sent("get_selection")).toEqual([{ max: 100 }]);
     expect(out.json["skipped"]).toEqual([{ uuid: "SIM-UUID", filename: null, code: "SOURCE", reason: "the source photo is not synced to itself" }]);
     expect(targetsOf(out).map((t) => t["uuid"])).toEqual([a, b]);
     expect([settingsOf(a)["Contrast2012"], settingsOf(b)["Contrast2012"]]).toEqual([20, 20]);
     expect([lr.selected, lr.alsoSelected]).toEqual([a, ["SIM-UUID", b]]);
+  });
+
+  it('"selected": a photo without a uuid is skipped and does not count toward the cap (Greptile, PR #35)', async () => {
+    clean();
+    const { id } = await acceptedSession();
+    const [a, b, c, d] = [1, 2, 3, 9].map((n) => addCopy(n));
+    lr.selected = a as string;
+    lr.alsoSelected = [b as string, c as string, d as string];
+    const original = plugin.handlers.get("get_selection") as NonNullable<ReturnType<typeof plugin.handlers.get>>;
+    plugin.handlers.set("get_selection", async (p, rid) => {
+      const reply = await original(p, rid);
+      if (reply !== "silent" && reply.ok) for (const photo of (reply.payload as { photos: Array<Record<string, unknown>> }).photos) if (photo["uuid"] === d) delete photo["uuid"];
+      return reply;
+    });
+    const out = await sync({ source: { session_id: id }, targets: "selected", adaptive_exposure: true, return_image: "none" });
+    expect(out.json["applied"]).toBe(3);
+    expect(out.json["skipped"]).toEqual([{ uuid: null, filename: "20260907-_OZ80093.NEF", code: "NO_UUID", reason: "Lightroom gave no uuid for photo 109" }]);
+  });
+
+  it("stops when a write gets no answer in time: the step may still land, and the error says so (Greptile, PR #35)", async () => {
+    clean();
+    const [a, b, c] = [addCopy(1), addCopy(2), addCopy(3)];
+    const original = plugin.handlers.get("apply_settings") as NonNullable<ReturnType<typeof plugin.handlers.get>>;
+    plugin.handlers.set("apply_settings", (p, rid) => (p["photo_uuid"] === b ? "silent" : original(p, rid)));
+    const previews = new PreviewService(client, { previewDir: path.join(tmp, "previews") });
+    const deps = { client, map, logDir, render: (r: PreviewRequest) => previews.render(r), writeTimeoutMs: 150 };
+    const args: SyncArgs = { source: { settings: { contrast: 15 } }, targets: { uuids: [a, b, c] }, adaptive_exposure: false, return_image: "none", long_edge: 1600, quality: 75 };
+    const e = await syncSeries(deps, args).then(() => null, (err: unknown) => toToolError(err));
+    expect(e).toMatchObject({
+      code: "BRIDGE_TIMEOUT",
+      recoverable: true,
+      details: { synced: [a], stopped_at: b, snapshot: { name: expect.stringMatching(/^AVG pre-sync /) }, history_names: [], maybe_written: expect.stringMatching(/^AVG sync [0-9a-f]{4}$/) },
+    });
+    expect(e?.message).toMatch(/may still write "AVG sync [0-9a-f]{4}"/);
+    expect(sent("get_context").map((p) => p["photo_uuid"])).toEqual([a, b]);
   });
 
   it("skips a target that fails and syncs the others; one that failed after its snapshot names it", async () => {

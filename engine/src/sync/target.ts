@@ -14,7 +14,14 @@ import { solveExposure } from "./exposure.js";
 import type { SyncRun, TargetResult } from "./types.js";
 
 /** A write with its read-back took ~0.39 s in Phase 2 [handle: docs\reports\phase2\PHASE2.md:240]; 30 s, as session\types.ts. */
-const WRITE_TIMEOUT_MS = 30000;
+export const WRITE_TIMEOUT_MS = 30000;
+/**
+ * A command that got no answer (timeout, lost bridge) may still be carried out by Lightroom
+ * [inference: on a timeout the engine only stops waiting and tells the plugin nothing
+ * (engine\src\bridge\client.ts send(), the timer), and the plugin runs each command in its own task
+ * (plugin\LrC-AVG.lrplugin\Sockets.lua:50)].
+ */
+export const UNANSWERED = new Set(["BRIDGE_TIMEOUT", "BRIDGE_DISCONNECTED"]);
 
 type Photo = { uuid: string; filename: string | null; copy_name: string | null };
 const text = (v: unknown): string | null => (typeof v === "string" ? v : null);
@@ -28,12 +35,22 @@ async function identify(run: SyncRun, uuid: string): Promise<Photo> {
 
 /**
  * Write canonical values as one History step and check the read-back. The step's name joins `names`
- * once Lightroom answered, also when the read-back then shows a value it did not take.
+ * once Lightroom answered, also when the read-back then shows a value it did not take. With no
+ * answer, Lightroom may still make the step after the engine stopped waiting (Greptile, PR #35): the
+ * error names it as `maybe_written` [handle: tests\sync.test.ts "stops when a write gets no answer
+ * in time"].
  */
 async function write(run: SyncRun, uuid: string, values: Record<string, CanonicalValue>, historyName: string, processVersion: string, names: string[]): Promise<FromSdkResult> {
   const { client, map } = run.deps;
   const sdk = map.toSdk(values, { processVersion });
-  const res = await client.request("apply_settings", { photo_uuid: uuid, settings: sdk, history_name: historyName }, { timeoutMs: WRITE_TIMEOUT_MS });
+  let res;
+  try {
+    res = await client.request("apply_settings", { photo_uuid: uuid, settings: sdk, history_name: historyName }, { timeoutMs: run.deps.writeTimeoutMs ?? WRITE_TIMEOUT_MS });
+  } catch (err) {
+    const error = toToolError(err);
+    if (!UNANSWERED.has(error.code)) throw error;
+    throw new ToolError(error.code, `${error.message} Lightroom may still write "${historyName}" to this photo.`, error.recoverable, { maybe_written: historyName });
+  }
   names.push(historyName);
   const mismatches = map.verifyReadback(sdk, res.read_back);
   if (mismatches.length > 0) {
@@ -79,18 +96,37 @@ async function adapt(run: SyncRun, uuid: string, view: FromSdkResult, names: str
 }
 
 /**
- * Sync one target. A failure after the snapshot says which snapshot puts the photo back and which
- * History steps were written (in the error's details).
+ * A failure once the target's snapshot was asked for: the error says what puts the photo back, and
+ * its details the snapshot (or, with no answer, the name it may have), the History steps written and
+ * `maybe_written`.
  */
+function failedAfterSnapshot(err: unknown, photo: Photo, snapshotName: string, snapshot: { name: string; id: string } | null, names: string[]): ToolError {
+  const error = toToolError(err);
+  const details = typeof error.details === "object" && error.details !== null ? error.details : {};
+  const undo = snapshot
+    ? ` The snapshot "${snapshotName}" on this photo puts it back as it was.`
+    : UNANSWERED.has(error.code)
+      ? ` Lightroom may still make the snapshot "${snapshotName}" on this photo; nothing else was sent to it.`
+      : " Nothing was written to this photo.";
+  return new ToolError(error.code, `${error.message}${undo}`, error.recoverable, {
+    ...details,
+    filename: photo.filename,
+    ...(snapshot ? { snapshot } : { snapshot_name: snapshotName }),
+    history_names: names,
+  });
+}
+
+/** Sync one target. A failure after its snapshot was asked for is described by failedAfterSnapshot(). */
 export async function syncTarget(run: SyncRun, uuid: string): Promise<TargetResult> {
   const { client, map } = run.deps;
   const photo = await identify(run, uuid);
   const before = map.fromSdk((await client.request("get_settings", { photo_uuid: uuid })).settings);
   const snapshotName = `AVG pre-sync ${run.short}`;
-  const snap = await client.request("create_snapshot", { photo_uuid: uuid, name: snapshotName }, { timeoutMs: WRITE_TIMEOUT_MS });
-  const snapshot = { name: snapshotName, id: snap.snapshot_id };
+  let snapshot: { name: string; id: string } | null = null;
   const names: string[] = [];
   try {
+    const snap = await client.request("create_snapshot", { photo_uuid: uuid, name: snapshotName }, { timeoutMs: run.deps.writeTimeoutMs ?? WRITE_TIMEOUT_MS });
+    snapshot = { name: snapshotName, id: snap.snapshot_id };
     let now = before;
     if (Object.keys(run.copied).length > 0) now = await write(run, uuid, run.copied, `AVG sync ${run.short}`, before.process_version, names);
     const adapted = run.goal ? await adapt(run, uuid, now, names) : null;
@@ -98,13 +134,6 @@ export async function syncTarget(run: SyncRun, uuid: string): Promise<TargetResu
     const changed = differingSettings(before.settings, now.settings);
     return { ...photo, snapshot, history_names: names, changed, exposure: adapted?.exposure ?? null, luma: adapted?.luma ?? null, render: adapted?.render ?? null };
   } catch (err) {
-    const error = toToolError(err);
-    const details = typeof error.details === "object" && error.details !== null ? error.details : {};
-    throw new ToolError(error.code, `${error.message} The snapshot "${snapshotName}" on this photo puts it back as it was.`, error.recoverable, {
-      ...details,
-      filename: photo.filename,
-      snapshot,
-      history_names: names,
-    });
+    throw failedAfterSnapshot(err, photo, snapshotName, snapshot, names);
   }
 }

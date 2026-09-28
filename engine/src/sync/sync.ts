@@ -16,12 +16,12 @@
 import { randomUUID } from "node:crypto";
 import { pluginVersionAtLeast } from "../bridge/index.js";
 import { ToolError, toToolError } from "../mcp/errors.js";
-import { canonicalValuesEqual } from "../params/index.js";
+import { differingSettings } from "../params/index.js";
 import { composite, type Panel, type RenderedPreview } from "../preview/index.js";
 import { MASK_GROUPS, applyMask } from "./mask.js";
 import { resolveSource, type ResolvedSource } from "./source.js";
-import { syncTarget } from "./target.js";
-import { resolveTargets, type Skip } from "./targets.js";
+import { UNANSWERED, syncTarget } from "./target.js";
+import { resolveTargets, type FailureDetails, type Skip } from "./targets.js";
 import { MAX_ADAPTIVE_TARGETS, MAX_TARGETS, SHEET_TARGETS, SYNC_PLUGIN, type SyncArgs, type SyncDeps, type SyncOutput, type SyncRun, type TargetResult } from "./types.js";
 
 const ms = (since: number): number => Math.round((performance.now() - since) * 10) / 10;
@@ -38,11 +38,18 @@ function checkPlugin(deps: SyncDeps): void {
 
 type Reference = { luma: number; exposure: number | null; render: RenderedPreview };
 
-/** Adaptive exposure's goal: the source photo as it is, which must still hold the recipe's settings. */
+/**
+ * Adaptive exposure's goal: the source photo as it is, which must still hold the recipe's settings.
+ * Every canonical name on either side is compared, so a camera profile the recipe could not name
+ * (fromSdk leaves out a pair that is not pinned) and the photo now can is a change too (Greptile,
+ * PR #35) [handle: tests\sync-adaptive.test.ts "refuses when the source photo's camera profile
+ * changed and the recipe named none"]. A change between two profiles neither names cannot be seen
+ * from a canonical recipe [inference: recipe schema v1 keeps no CameraProfile/Look pair].
+ */
 async function measureSource(deps: SyncDeps, args: SyncArgs, source: ResolvedSource): Promise<Reference> {
   const photo = source.photo as NonNullable<ResolvedSource["photo"]>;
   const now = deps.map.fromSdk((await deps.client.request("get_settings", { photo_uuid: photo.uuid })).settings);
-  const differing = Object.keys(source.settings).filter((k) => !canonicalValuesEqual(source.settings[k], now.settings[k])).sort();
+  const differing = differingSettings(source.settings, now.settings);
   if (differing.length > 0) {
     throw new ToolError(
       "SOURCE_CHANGED",
@@ -57,7 +64,12 @@ async function measureSource(deps: SyncDeps, args: SyncArgs, source: ResolvedSou
   return { luma: render.metrics.luma_mean, exposure: typeof exposure === "number" ? exposure : null, render };
 }
 
-/** Sync each target in turn; a target that fails is skipped, but a lost bridge stops the call. */
+/**
+ * Sync each target in turn. A target that fails is skipped. A command that got no answer (timeout,
+ * lost bridge) stops the call: Lightroom may still carry it out, so the error names what may have
+ * been written and no more is sent to a Lightroom that is not answering (Greptile, PR #35) [handle:
+ * tests\sync.test.ts "stops when a write gets no answer in time", "stops when the bridge is lost"].
+ */
 async function syncAll(run: SyncRun, uuids: readonly string[], skipped: Skip[]): Promise<TargetResult[]> {
   const results: TargetResult[] = [];
   for (const [i, uuid] of uuids.entries()) {
@@ -65,13 +77,15 @@ async function syncAll(run: SyncRun, uuids: readonly string[], skipped: Skip[]):
       results.push(await syncTarget(run, uuid));
     } catch (err) {
       const error = toToolError(err);
-      const d = (typeof error.details === "object" && error.details !== null ? error.details : {}) as Partial<Skip>;
-      if (error.code === "BRIDGE_DISCONNECTED") {
-        throw new ToolError(error.code, `${error.message} The sync stopped at target ${i + 1} of ${uuids.length}; the targets synced before it keep their settings.`, true, {
-          synced: results.map((r) => r.uuid),
-          stopped_at: uuid,
-          ...(d.snapshot ? { snapshot: d.snapshot } : {}),
-        });
+      const d = (typeof error.details === "object" && error.details !== null ? error.details : {}) as FailureDetails;
+      if (UNANSWERED.has(error.code)) {
+        const { filename: _f, ...written } = d;
+        throw new ToolError(
+          error.code,
+          `${error.message} The sync stopped at target ${i + 1} of ${uuids.length}, and sent nothing more; the targets synced before it keep their settings.`,
+          true,
+          { synced: results.map((r) => r.uuid), stopped_at: uuid, ...written },
+        );
       }
       skipped.push({ uuid, filename: d.filename ?? null, code: error.code, reason: error.message, ...(d.snapshot ? { snapshot: d.snapshot, history_names: d.history_names ?? [] } : {}) });
     }

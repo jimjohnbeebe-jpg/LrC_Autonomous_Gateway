@@ -2,11 +2,13 @@
 // row 8 and decision 5) against the simulated Lightroom's "tonal" model: a made-up render, good for
 // testing the search and the writes, not for claims about Lightroom's rendering.
 
+import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
+import { RECIPE_SCHEMA_ID } from "../src/log/index.js";
 import { PreviewService } from "../src/preview/index.js";
-import { acceptedSession, addCopy, clean, client, lr, plugin, sync, syncFails, tmp, useSyncHarness } from "./helpers/sync-harness.js";
+import { acceptedSession, addCopy, clean, client, logDir, lr, map, plugin, sync, syncFails, tmp, useSyncHarness } from "./helpers/sync-harness.js";
 
 useSyncHarness();
 
@@ -54,6 +56,19 @@ describe("lr_sync_series: adaptive exposure", () => {
     expect([lr.writes.length, lr.snapshots.size]).toEqual([n0, 1]); // the session's own snapshot only
     const plain = await sync({ source: { session_id: id }, targets: { uuids: [a] }, adaptive_exposure: false, return_image: "none" });
     expect(plain.json["applied"]).toBe(1);
+  });
+
+  it("refuses when the source photo's camera profile changed and the recipe named none (Greptile, PR #35)", async () => {
+    clean();
+    // A recipe whose profile the map could not name has no camera_profile; the photo's is pinned.
+    const { camera_profile: profile, ...settings } = map.fromSdk(lr.settings).settings;
+    expect(profile).toBe("Camera Neutral");
+    mkdirSync(logDir, { recursive: true });
+    const recipe = { schema: RECIPE_SCHEMA_ID, session_id: "abc12300-0000-0000-0000-000000000000", created: "2026-09-27T00:00:00.000Z", intent_id: "test_plain", source: { uuid: "SIM-UUID", filename: null }, process_version: "15.4", settings };
+    writeFileSync(path.join(logDir, "20260927-abc123.recipe.json"), JSON.stringify(recipe), "utf8");
+    const a = addCopy(1);
+    expect(await syncFails({ source: { recipe_path: "20260927-abc123.recipe.json" }, targets: { uuids: [a] }, ...adaptive })).toMatchObject({ code: "SOURCE_CHANGED", details: { differing: ["camera_profile"] } });
+    expect(lr.writes).toEqual([]);
   });
 
   it("refuses more than three targets", async () => {

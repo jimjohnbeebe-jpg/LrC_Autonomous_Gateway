@@ -55,7 +55,8 @@ export const PROPAGATION_DEFS: ToolDef[] = [
       "2/255 of the source photo's; the source photo must still hold the recipe's settings (else SOURCE_CHANGED). " +
       `At most ${MAX_TARGETS} targets per call, ${MAX_ADAPTIVE_TARGETS} with adaptive_exposure: sync more in several calls. ` +
       "Tell the user which photos will change before calling. A target that fails is listed in `skipped` with the reason, and the " +
-      "others still sync. Returns applied, skipped, per_target_exposure_offsets (target exposure minus the source's), each target's " +
+      "others still sync; if Lightroom stops answering, the call stops and the error names the photo it stopped at and any step " +
+      "that may still have been written (`maybe_written`). Returns applied, skipped, per_target_exposure_offsets (target exposure minus the source's), each target's " +
       "History steps and snapshot, and a contact sheet. Not while a session is open.",
     schema: syncArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },

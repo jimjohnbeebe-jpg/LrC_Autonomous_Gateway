@@ -28,6 +28,8 @@ export type SyncDeps = {
   /** Where session recipes are (log\session-log.ts). */
   logDir: string;
   newId?: () => string;
+  /** How long a snapshot or a write may take (tests shorten it); target.ts WRITE_TIMEOUT_MS by default. */
+  writeTimeoutMs?: number;
 };
 
 export type SyncArgs = {

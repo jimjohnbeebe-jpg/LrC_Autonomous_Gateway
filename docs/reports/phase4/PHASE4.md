@@ -226,7 +226,7 @@ Jim ran the steps on 2026-09-27 and said "done" [stated]. The check saved its fi
 - the chat's tool log and Claude Desktop's MCP log excerpt;
 - the bridge log;
 - the chat's own session log and recipe (from the repo's `logs\`), in `p4_chat_session\`;
-- the script Claude Code used to put the photo back after the run, its output and the plugin log's lines for it, in `putback_2026-09-28\` (see "The preset also reached the original").
+- the transcript of how Claude Code put the photo back after the run, `putback_2026-09-28\putback.txt`: the output, the plugin log's lines for it, and the scratch script verbatim in its appendix (see "The preset also reached the original").
 
 The check keeps no images. Times are local (UTC−7) unless marked Z. "The run" is `P4\p4_check_2026-09-28T04-18-17-511Z.json`, and "the bridge log" is `P4\p4_bridge_log_2026-09-28T04-18-17-511Z.txt`.
 
@@ -275,7 +275,7 @@ The check keeps no images. Times are local (UTC−7) unless marked Z. "The run" 
 - Jim clicked the preset once [stated: Jim, 2026-09-28, "clicked once only"].
 - **How one click also reached the original is [unverified].** Jim chose to leave it there rather than read the History times from a copy of his catalog [stated: "Go with A"].
 - It changed the chat's starting point. The chat's copies began from the preset's values, so their pass 0 needed 0, 3 and 0 corrections, against 5, 8 and 4 in the scripted Variants session [handle: `P4\p4_chat_session\20260927-26ecc4.json` and `P4\p4_sessions_…\20260927-a0a799.json`, `passes[n=0].guardrail_actions`]. That is why the chat's begin took 73.6 s against 142.9 s [inference].
-- Claude Code put the photo back with session A's pre-session snapshot, at Jim's request [stated: Jim, 2026-09-28, "Claude Code does it"]. `PUT BACK: YES`, nothing differing from the start [handle: `P4\putback_2026-09-28\putback-m-output.txt` and `putback-m.mjs`; `P4\putback_2026-09-28\bridge-log-excerpt.txt`, `apply_snapshot` 2026-09-28 04:11:22].
+- Claude Code put the photo back with session A's pre-session snapshot, at Jim's request [stated: Jim, 2026-09-28, "Claude Code does it"]. `PUT BACK: YES`, nothing differing from the start [handle: `P4\putback_2026-09-28\putback.txt`, section 1 (the output) and section 2 (the plugin log, `apply_snapshot` 2026-09-28 04:11:22)].
 
 ## Numbers
 
@@ -302,7 +302,7 @@ Filled by Claude Code from the run's files. "Source" names a field of the run un
 | Chat: Variants session, copies, pick, passes after the pick, end | **YES**: Variants on `20260907-_OZ80099.NEF`, 3 copies, refined A, B and C before the pick, pick A, 2 passes after it, accept. 10 tool calls, 21:31:40-21:37:11; the begin 73.6 s (pass-0 corrections 0, 3, 0) | `chat`; `P4\p4_chat_tool_log_…jsonl`; `P4\p4_chat_session\20260927-26ecc4.json` |
 | Chat: contact sheet seen, letters readable, pick followed (Jim) | **y, y, y** | `jim_chat` |
 | AC-4, chat session | **YES**: 8 passes, highest clip 0.06 % (B, pass 1), highest crush 0.94 % (B, pass 0) | `chat.ac4` |
-| Cleanup: copies gone, presets gone, photo as before | **10 of 10**; **3 of 3**; **NO**: 6 settings differed (the preset had reached the original, see "Observed"); put back by Claude Code on 2026-09-28: **YES** | `cleanup`; `P4\putback_2026-09-28\` |
+| Cleanup: copies gone, presets gone, photo as before | **10 of 10**; **3 of 3**; **NO**: 6 settings differed (the preset had reached the original, see "Observed"); put back by Claude Code on 2026-09-28: **YES** | `cleanup`; `P4\putback_2026-09-28\putback.txt` |
 | The whole run | 21:18:17 → 21:39:55 (21.6 min); no error line; the engine's bridge client counted 15 refused connection attempts and 1 dropped connection, all before the chat (the drop is the restart) | `started_at`, `finished_at`, `errors`, `bridge_stats` |
 
 ## Verdict

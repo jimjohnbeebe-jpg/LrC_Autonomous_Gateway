@@ -100,7 +100,7 @@ describe("lr_probe and lr_set_regions", () => {
     expect(out.json["undone"]).toMatchObject({ limit: "region" }); // Greptile, PR #27
     expect(lr.settings["Temperature"]).toBe(5500);
     expect(lr.history.at(-1)).toBe(`AVG ${SHORT} pass 2/4 region revert`);
-    expect(readLog().regions[0]).toMatchObject({ label: "orange", preserve: true, baseline: { hue_mean: expect.any(Number) } });
+    expect(readLog().regions[0]).toMatchObject({ label: "orange", preserve: true, baselines: { master: { hue_mean: expect.any(Number) } } });
   });
 
   it("undoes a pass that takes a preserved region's hue away, even when its saturation moved little (Greptile, PR #23)", async () => {

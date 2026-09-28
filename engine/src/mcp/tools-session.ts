@@ -1,7 +1,8 @@
 // The session tools (Phase 3; the loop itself is session\manager.ts): lr_begin_session, lr_step,
-// lr_probe, lr_set_regions, lr_end_session, lr_get_session_log.
+// lr_probe, lr_set_regions, lr_end_session, lr_get_session_log; and Variants mode's
+// lr_select_variant (Phase 4).
 
-import type { BeginArgs, EndArgs, ProbeArgs, RegionArgs, StepArgs } from "../session/index.js";
+import type { BeginArgs, EndArgs, ProbeArgs, RegionArgs, SelectArgs, StepArgs } from "../session/index.js";
 import { run, sessionTools, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
 export async function beginSession(ctx: ToolContext, args: BeginArgs): Promise<ToolOutput> {
@@ -17,6 +18,14 @@ export async function step(ctx: ToolContext, args: StepArgs): Promise<ToolOutput
     const sessions = sessionTools(ctx);
     await ctx.deps.ensureBridge();
     return sessions.step(args);
+  });
+}
+
+export async function selectVariant(ctx: ToolContext, args: SelectArgs): Promise<ToolOutput> {
+  return run(ctx, "lr_select_variant", args, async () => {
+    const sessions = sessionTools(ctx);
+    await ctx.deps.ensureBridge();
+    return sessions.selectVariant(args);
   });
 }
 

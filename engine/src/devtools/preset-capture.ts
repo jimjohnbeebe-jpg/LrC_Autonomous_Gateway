@@ -99,7 +99,6 @@ function findingLines(group: string | null, check: ReturnType<typeof checkRefere
   const lines: string[] = [];
   if (group !== REFERENCE_GROUP) lines.push(`the preset is in group "${group ?? "(none)"}", not "${REFERENCE_GROUP}"`);
   for (const [name, keys] of Object.entries(check.missing)) lines.push(`the preset file has no ${keys.join(", ")} (group ${name})`);
-  if (check.differ.length > 0) lines.push(`the preset's values differ from the photo's for ${check.differ.join(", ")}`);
   return lines;
 }
 
@@ -115,12 +114,19 @@ export async function capturePreset(io: CaptureIo, map: ParamMap, options: { pre
   report["found"] = found;
   const only = found.length === 1 ? found[0] : undefined;
   if (!only) problems.push(`found ${found.length} preset files named "${spec.name}", need exactly 1 (${found.map((f) => f.file).join(", ") || "none"})`);
+  else if (only.unreadable) problems.push(`${only.file} may be "${spec.name}", but this reader cannot parse it`);
   if (problems.length > 0 || !only) return { worked: false, problems, findings: [], report };
 
   const xmp = readFileSync(path.join(io.settingsDir, only.file), "utf8");
   const check = checkReference(map, xmp, sdk);
-  const findings = findingLines(only.group, check);
   Object.assign(report, { missing: check.missing, differ: check.differ });
+  // A value that differs means the preset was made from another photo, or the photo changed since:
+  // saving would pair the file with the wrong settings (Greptile, PR #36).
+  if (check.differ.length > 0) {
+    problems.push(`the preset's values differ from the selected photo's for ${check.differ.join(", ")}: select the photo the preset was made from, unchanged, or make the preset again`);
+    return { worked: false, problems, findings: [], report };
+  }
+  const findings = findingLines(only.group, check);
 
   io.save(fixtureXmp(spec), xmp);
   const fixture = {

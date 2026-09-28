@@ -43,10 +43,20 @@ describe("capturePreset", () => {
     expect(fixture).toMatchObject({ captured_at: "2026-09-28T02:00:00.000Z", photo: { filename: "photo.NEF" }, reference: { file: "AVG preset reference 2.xmp", group: "LrC-AVG" } });
   });
 
-  it("says when the preset's values differ from the photo's", async () => {
-    const { io: fake } = io({ ...settingsOf("reference-2"), Contrast2012: 7 }, { "AVG preset reference 2.xmp": read("reference-2.lrc15.xmp") });
+  it("fails, saving nothing, when the preset's values differ from the selected photo's (Greptile, PR #36)", async () => {
+    const { io: fake, saved } = io({ ...settingsOf("reference-2"), Contrast2012: 7 }, { "AVG preset reference 2.xmp": read("reference-2.lrc15.xmp") });
     const out = await capturePreset(fake, map, { precheck: false, spec: REFERENCES.second });
-    expect(out.findings).toContain("the preset's values differ from the photo's for Contrast2012");
+    expect(out.worked).toBe(false);
+    expect(out.problems).toEqual([expect.stringMatching(/^the preset's values differ from the selected photo's for Contrast2012: /)]);
+    expect(saved.size).toBe(0);
+  });
+
+  it("fails on a reference file its reader cannot parse", async () => {
+    const singleQuoted = read("reference-2.lrc15.xmp").replace('crs:PresetType="Normal"', "crs:PresetType='Normal'");
+    const { io: fake, saved } = io(settingsOf("reference-2"), { "AVG preset reference 2.xmp": singleQuoted });
+    const out = await capturePreset(fake, map, { precheck: false, spec: REFERENCES.second });
+    expect(out.problems).toEqual(['AVG preset reference 2.xmp may be "AVG preset reference 2", but this reader cannot parse it']);
+    expect(saved.size).toBe(0);
   });
 
   it("fails without exactly one reference file, and saves nothing", async () => {

@@ -98,6 +98,18 @@ describe("lr_create_preset_from_active", () => {
     expect(plugin.received.length).toBe(before);
   });
 
+  it("counts a preset file it cannot parse as taken when it holds the name (Greptile, PR #36)", async () => {
+    await presets.createPresetFromActive({ name: "Tom & Jerry" });
+    const text = readFileSync(path.join(dir, "Tom & Jerry.xmp"), "utf8").replace('crs:PresetType="Normal"', "crs:PresetType='Normal'");
+    writeFileSync(path.join(dir, "other file.xmp"), text);
+    writeFileSync(path.join(dir, "Tom & Jerry.xmp"), "moved away");
+    const error = await fails({ name: "Tom & Jerry" });
+    expect(error.code).toBe("PRESET_EXISTS");
+    expect(error.details).toEqual({ files: [{ file: "other file.xmp", group: null, unreadable: true }] });
+    writeFileSync(path.join(dir, "other file.xmp"), "<x:xmpmeta crs:Name='Someone else'>");
+    await presets.createPresetFromActive({ name: "Tom & Jerry 2" });
+  });
+
   it("never writes over a file of that name, preset or not", async () => {
     writeFileSync(path.join(dir, "Plain.xmp"), "not a preset");
     expect((await fails({ name: "Plain" })).code).toBe("PRESET_EXISTS");

@@ -5,10 +5,11 @@
 // reference.xmp", group "LrC-AVG"]. LRC_AVG_PRESET_DIR overrides the folder (tests, dry runs).
 // A preset is never written over another file, and never under a name another preset already has.
 
-import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { ToolError } from "../mcp/errors.js";
 import { presetIdentity } from "./xmp-parse.js";
+import { escapeXml } from "./xmp-write.js";
 
 /** The group presets go in unless the call names another [stated: Jim, 2026-09-28, plan decision 4]. */
 export const DEFAULT_GROUP = "LrC-AVG";
@@ -45,27 +46,49 @@ export function checkPresetName(name: string, what: "name" | "folder"): string {
   return name;
 }
 
-/** Every preset file under `dir` whose crs:Name is `name`, as paths relative to `dir`, with its group. */
-export function findPresetFiles(dir: string, name: string): Array<{ file: string; group: string | null }> {
-  const found: Array<{ file: string; group: string | null }> = [];
+/** A preset file that holds the name; `unreadable`: the reader could not parse it, so its name is not known for sure. */
+export type PresetFile = { file: string; group: string | null; unreadable?: true };
+
+/**
+ * Whether a file this reader cannot parse may be a preset of that name: it holds the name as text,
+ * as is or XML-escaped, or it cannot be read at all. An unreadable file never counts as proof that
+ * a name is free (Greptile, PR #36). A name written with numeric character references would be
+ * missed [inference: Lightroom's two files use none, engine\tests\fixtures\presets\].
+ */
+function mayHoldName(file: string, name: string): boolean {
+  let text: string;
+  try {
+    text = readFileSync(file, "utf8");
+  } catch {
+    return true;
+  }
+  return text.includes(name) || text.includes(escapeXml(name));
+}
+
+/** Every preset file under `dir` whose crs:Name is `name` (or may be), as paths relative to `dir`, with its group. */
+export function findPresetFiles(dir: string, name: string): PresetFile[] {
+  const found: PresetFile[] = [];
   for (const rel of readdirSync(dir, { recursive: true, encoding: "utf8" })) {
-    if (!rel.toLowerCase().endsWith(".xmp")) continue;
+    const file = path.join(dir, rel);
+    if (!rel.toLowerCase().endsWith(".xmp") || !statSync(file).isFile()) continue;
     try {
-      const id = presetIdentity(readFileSync(path.join(dir, rel), "utf8"));
+      const id = presetIdentity(readFileSync(file, "utf8"));
       if (id.name === name) found.push({ file: rel, group: id.group });
     } catch {
-      // a file this reader does not understand (e.g. a folder named .xmp): not a preset of that name
+      if (mayHoldName(file, name)) found.push({ file: rel, group: null, unreadable: true });
     }
   }
   return found.sort((a, b) => a.file.localeCompare(b.file));
 }
+
+const describeTaken = (t: PresetFile): string => (t.unreadable ? `${t.file}, which this engine cannot read and which may hold the name` : `${t.file}, group ${t.group ?? "User Presets"}`);
 
 /** Refuse before anything is read from Lightroom: no folder, or the name is taken. */
 export function checkFree(dir: string, name: string): void {
   if (!existsSync(dir)) throw new ToolError("PRESET_FOLDER_MISSING", `Lightroom's preset folder ${dir} does not exist.`, false);
   const taken = findPresetFiles(dir, name);
   if (taken.length > 0) {
-    throw new ToolError("PRESET_EXISTS", `A preset named "${name}" already exists (${taken.map((t) => `${t.file}, group ${t.group ?? "User Presets"}`).join("; ")}). Choose another name.`, false, { files: taken });
+    throw new ToolError("PRESET_EXISTS", `A preset named "${name}" already exists (${taken.map(describeTaken).join("; ")}). Choose another name.`, false, { files: taken });
   }
 }
 

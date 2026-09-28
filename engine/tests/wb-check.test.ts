@@ -78,7 +78,7 @@ describe("npm run wb:check", () => {
     expect(results["temperature_alone"]).toMatchObject({ written: { Temperature: 5800 }, white_balance: "As Shot", temperature_taken: true, jim: { panel_as_shot: true, panel_custom: null, temp_slider_moved: true } });
     expect(results["temperature_custom"]).toMatchObject({ written: { Temperature: 6100, WhiteBalance: "Custom" }, custom_taken: true, temperature_taken: true, mismatches: [], jim: { panel_custom: true } });
     expect(results["temperature_custom"]).not.toHaveProperty("by_hand");
-    expect(results["tint_custom"]).toMatchObject({ reset_to_as_shot: true, written: { Tint: 11, WhiteBalance: "Custom" }, custom_taken: true, tint_taken: true, temperature_kept: true });
+    expect(results["tint_custom"]).toMatchObject({ reset_to_as_shot: true, reset_differing: [], written: { Tint: 11, WhiteBalance: "Custom" }, custom_taken: true, tint_taken: true, temperature_kept: true });
     expect(results["preset"]).toMatchObject({ after_temperature_alone: { temperature_carried: false }, after_custom: { temperature_carried: true, tint_carried: true, also_written: { WhiteBalance: "Custom" } } });
     expect(results["snapshot"]).toMatchObject({ name: snapshotName("2026-09-28T12-00-00-000Z") });
     expect(lr.settings).toEqual(nefDump.settings);
@@ -132,14 +132,33 @@ describe("npm run wb:check", () => {
     expect(said).toContain("White balance check: FAILED");
   });
 
-  it("says PUT BACK: NO, naming the settings, when the snapshot does not put the photo back", async () => {
+  it("fails step 3 without writing the tint, and says PUT BACK: NO, when the snapshot does not put the photo back (Greptile, PR #39)", async () => {
     plugin.handlers.set("apply_snapshot", (p) => ({ ok: true, payload: { uuid: lr.uuid, read_back: lr.settingsOf(String(p["photo_uuid"])) } }));
     const { worked, results } = await run(["y", "y", "y"]);
     expect(worked).toBe(false);
-    expect(results["tint_custom"]).toMatchObject({ reset_to_as_shot: false });
-    expect(results["put_back"]).toMatchObject({ ok: false, differing: ["Temperature", "Tint", "WhiteBalance"] });
-    expect(results["errors"]).toEqual(["the photo is not as before the check: Temperature, Tint, WhiteBalance differ. Tell Claude Code."]);
+    expect(results["tint_custom"]).toEqual({ reset_to_as_shot: false, reset_differing: ["Temperature", "WhiteBalance"], written: null });
+    expect(lr.history).toEqual([HISTORY.temperature, HISTORY.custom]);
+    expect(results["put_back"]).toMatchObject({ ok: false, differing: ["Temperature", "WhiteBalance"] });
+    expect(results["errors"]).toEqual([
+      "step 3: the snapshot did not put the photo back to its start (Temperature, WhiteBalance differ), so the tint was not written",
+      "the photo is not as before the check: Temperature, WhiteBalance differ. Tell Claude Code.",
+    ]);
     expect(said).toContain("  PUT BACK: NO");
+    expect(said).toContain("White balance check: FAILED");
+  });
+
+  it("fails step 3 when the reset restores the white balance but not every other setting", async () => {
+    const apply = plugin.handlers.get("apply_snapshot") as NonNullable<ReturnType<typeof plugin.handlers.get>>;
+    let calls = 0;
+    plugin.handlers.set("apply_snapshot", async (p, id) => {
+      const reply = await apply(p, id);
+      if (++calls === 1) lr.settings["Exposure2012"] = 1.5; // step 3's reset leaves one setting off
+      return reply === "silent" || !reply.ok ? reply : { ok: true, payload: { uuid: lr.uuid, read_back: structuredClone(lr.settings) } };
+    });
+    const { worked, results } = await run(["y", "y", "y"]);
+    expect(worked).toBe(false);
+    expect(results["tint_custom"]).toEqual({ reset_to_as_shot: true, reset_differing: ["Exposure2012"], written: null });
+    expect(results["put_back"]).toMatchObject({ ok: true, differing: [] });
   });
 
   it("stops when another engine holds the bridge", async () => {

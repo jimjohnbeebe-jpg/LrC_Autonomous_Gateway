@@ -28,7 +28,11 @@ import { describeError, differingKeys, type Answer } from "./phase1-check.js";
 import { yn, type Json } from "./phase3-config.js";
 import { errorBody, PHOTO, WRITE_TIMEOUT_MS } from "./phase4-config.js";
 
-/** Plugin 0.4.0 writes to a photo by uuid (Develop.lua target()), so Jim's selection is not needed after the start. */
+/**
+ * Plugin 0.4.0 writes to a photo by uuid without touching the selection [handle:
+ * plugin\LrC-AVG.lrplugin\Develop.lua target(); in Lightroom, docs\reports\phase4\PHASE4.md "Numbers",
+ * the unselected-original row], so Jim's selection is not needed after the start.
+ */
 export const MIN_PLUGIN_VERSION = "0.4.0";
 /** The Phase 4 check's shift (phase4-config.ts WB_SHIFT), so step 1 repeats what it saw. */
 export const TEMPERATURE_SHIFT = 300;
@@ -216,16 +220,27 @@ async function byHand(ctx: Ctx, photo: Photo, key: string): Promise<Json> {
   return { read: true, white_balance: now[WHITE_BALANCE_KEY] ?? null, temperature: now[key] ?? null };
 }
 
-/** Step 3: back to the start, then Tint with WhiteBalance "Custom"; does Temperature stay the As Shot value? */
+/**
+ * Step 3: back to the start, then Tint with WhiteBalance "Custom"; does Temperature stay the As Shot
+ * value? A reset that leaves any setting unlike the start fails the check, and the tint is not
+ * written: it would not start from the As Shot photo (Greptile, PR #39).
+ */
 async function tintCustom(ctx: Ctx, photo: Photo, snapshot: string): Promise<void> {
   const { client, map, say } = ctx.deps;
   const back = await client.request("apply_snapshot", { photo_uuid: photo.uuid, snapshot_id: snapshot }, { timeoutMs: WRITE_TIMEOUT_MS });
+  const resetDiffering = differingKeys(map, photo.start, back.read_back);
+  if (resetDiffering.length > 0) {
+    ctx.results["tint_custom"] = { reset_to_as_shot: back.read_back[WHITE_BALANCE_KEY] === AS_SHOT_WHITE_BALANCE, reset_differing: resetDiffering, written: null };
+    ctx.fail(`step 3: the snapshot did not put the photo back to its start (${resetDiffering.join(", ")} differ), so the tint was not written`);
+    return;
+  }
   const [tKey, tempKey] = [sdkKey(map, "tint"), sdkKey(map, "temperature")];
   const to = shifted(map, "tint", photo.tint, TINT_SHIFT);
   const settings = { [tKey]: to, [WHITE_BALANCE_KEY]: CUSTOM_WHITE_BALANCE };
   const readBack = await write(ctx, photo, settings, HISTORY.tint);
   const out = {
     reset_to_as_shot: back.read_back[WHITE_BALANCE_KEY] === AS_SHOT_WHITE_BALANCE,
+    reset_differing: resetDiffering,
     written: settings,
     white_balance: readBack[WHITE_BALANCE_KEY] ?? null,
     tint: readBack[tKey] ?? null,

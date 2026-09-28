@@ -38,6 +38,7 @@ When the engine writes Temperature, does Lightroom Classic take `WhiteBalance = 
    - Added after Jim's run (Greptile, PR #39): all settings are compared with the start after the reset. If any differs, the check fails and the tint is not written [handle: `engine\tests\wb-check.test.ts` "fails step 3 when the reset restores the white balance but not every other setting"]. In Jim's run the reset put white balance back to "As Shot" [handle: the run `tint_custom.reset_to_as_shot`], and the final put-back, the same snapshot, matched all 177 settings (`put_back`). The run did not record the full comparison after the reset itself.
 4. **The preset selection** (`presets\select.ts`, the white balance group) of step 1's and step 2's settings: is the temperature carried? No preset file is written.
 5. **Put back:** the snapshot is applied and every setting is compared with the start. The last lines say `White balance check: WORKED` or `FAILED` and `PUT BACK: YES` or `NO`.
+   - Added after Jim's run (Greptile, PR #39 round 2): a step that did not run reads `not run` in the summary and the last lines, never NO [handle: `engine\tests\wb-check.test.ts` "puts the photo back after a write fails", "fails step 3 without writing the tint …"]. Every step of Jim's run ran (`summary`).
 
 The key names come from the params module only (`.claude\rules\03-lightroom.md`). The check leaves three History steps and the snapshot on the photo, as the phase checks did.
 

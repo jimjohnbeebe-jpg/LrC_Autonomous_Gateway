@@ -281,27 +281,35 @@ async function putBack(ctx: Ctx, photo: Photo, snapshot: string): Promise<void> 
   }
 }
 
-const step = (results: Json, name: string): Json => (results[name] as Json | undefined) ?? {};
+const step = (results: Json, name: string): Json | null => {
+  const s = results[name] as Json | undefined;
+  return s === undefined || s["written"] === null ? null : s; // null: the step did not write (not run)
+};
+/** A step's yes/no field, or null when the step did not run, so a skipped step never reads as NO (Greptile, PR #39). */
+const field = (s: Json | null, name: string): boolean | null => (s === null ? null : s[name] === true);
+const ynr = (v: boolean | null): string => (v === null ? "not run" : yn(v));
 
 /** The summary in the results and the headlines in the window. */
 function finish(ctx: Ctx, now: () => Date): { worked: boolean; results: Json } {
   const { results, errors, deps } = ctx;
-  const putBackOk = step(results, "put_back")["ok"] === true;
+  const putBackOk = results["put_back"] !== undefined && (results["put_back"] as Json)["ok"] === true;
   const worked = errors.length === 0 && putBackOk;
+  const preset = results["preset"] as Json | undefined;
   const summary = {
     suggestion: worked ? "WORKED" : "FAILED",
-    white_balance_after_temperature_alone: step(results, "temperature_alone")["white_balance"] ?? null,
-    custom_taken_with_temperature: step(results, "temperature_custom")["custom_taken"] === true,
-    custom_taken_with_tint: step(results, "tint_custom")["custom_taken"] === true,
-    preset_carries_temperature_after_custom: (step(results, "preset")["after_custom"] as Json | undefined)?.["temperature_carried"] === true,
+    white_balance_after_temperature_alone: step(results, "temperature_alone")?.["white_balance"] ?? null,
+    custom_taken_with_temperature: field(step(results, "temperature_custom"), "custom_taken"),
+    custom_taken_with_tint: field(step(results, "tint_custom"), "custom_taken"),
+    preset_carries_temperature_after_custom: preset ? field(preset["after_custom"] as Json, "temperature_carried") : null,
     put_back: putBackOk,
   };
   results["summary"] = summary;
   results["finished_at"] = now().toISOString();
   deps.say("");
   deps.say(`White balance check: ${summary.suggestion}`);
-  deps.say(`  Temperature alone left white balance: "${String(summary.white_balance_after_temperature_alone)}"`);
-  deps.say(`  Lightroom took "${CUSTOM_WHITE_BALANCE}" with a temperature: ${yn(summary.custom_taken_with_temperature)}; with a tint: ${yn(summary.custom_taken_with_tint)}; a preset then carries the temperature: ${yn(summary.preset_carries_temperature_after_custom)}`);
-  deps.say(`  PUT BACK: ${yn(putBackOk)}`);
+  const alone = summary.white_balance_after_temperature_alone;
+  deps.say(`  Temperature alone left white balance: ${alone === null ? "not run" : `"${String(alone)}"`}`);
+  deps.say(`  Lightroom took "${CUSTOM_WHITE_BALANCE}" with a temperature: ${ynr(summary.custom_taken_with_temperature)}; with a tint: ${ynr(summary.custom_taken_with_tint)}; a preset then carries the temperature: ${ynr(summary.preset_carries_temperature_after_custom)}`);
+  deps.say(`  PUT BACK: ${results["put_back"] === undefined ? "not run (nothing was written)" : yn(putBackOk)}`);
   return { worked, results };
 }

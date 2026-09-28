@@ -108,6 +108,9 @@ describe("npm run wb:check", () => {
     expect(results["errors"]).toEqual([expect.stringContaining('white balance is "Custom", not "As Shot"')]);
     expect(plugin.received.filter((r) => r.name === "apply_settings" || r.name === "create_snapshot")).toEqual([]);
     expect(results).not.toHaveProperty("put_back");
+    expect(results["summary"]).toMatchObject({ white_balance_after_temperature_alone: null, custom_taken_with_temperature: null, custom_taken_with_tint: null, preset_carries_temperature_after_custom: null, put_back: false });
+    expect(said).toContain("  Temperature alone left white balance: not run");
+    expect(said).toContain("  PUT BACK: not run (nothing was written)");
   });
 
   it("writes nothing when another photo stays selected", async () => {
@@ -130,6 +133,9 @@ describe("npm run wb:check", () => {
     expect(results["put_back"]).toMatchObject({ ok: true, differing: [] });
     expect(lr.settings).toEqual(nefDump.settings);
     expect(said).toContain("White balance check: FAILED");
+    // Steps 2-4 did not run: their results read "not run", never NO.
+    expect(results["summary"]).toMatchObject({ white_balance_after_temperature_alone: "As Shot", custom_taken_with_temperature: null, custom_taken_with_tint: null, preset_carries_temperature_after_custom: null, put_back: true });
+    expect(said).toContain('  Lightroom took "Custom" with a temperature: not run; with a tint: not run; a preset then carries the temperature: not run');
   });
 
   it("fails step 3 without writing the tint, and says PUT BACK: NO, when the snapshot does not put the photo back (Greptile, PR #39)", async () => {
@@ -145,6 +151,9 @@ describe("npm run wb:check", () => {
     ]);
     expect(said).toContain("  PUT BACK: NO");
     expect(said).toContain("White balance check: FAILED");
+    // The tint trial was skipped: "not run", not NO (Greptile, PR #39 round 2).
+    expect(results["summary"]).toMatchObject({ custom_taken_with_temperature: true, custom_taken_with_tint: null, put_back: false });
+    expect(said).toContain('  Lightroom took "Custom" with a temperature: YES; with a tint: not run; a preset then carries the temperature: YES'); // step 4 reads step 2's settings
   });
 
   it("fails step 3 when the reset restores the white balance but not every other setting", async () => {

@@ -1,0 +1,938 @@
+phase-4/sync smoke transcript (PHASE4_PLAN row 8) - Claude Code (Opus 5.5), 2026-09-27
+Plugin under test: plugin\LrC-AVG.lrplugin at commit a987b48 (branch phase-4/sync, plugin 0.4.0).
+"main" = plugin\LrC-AVG.lrplugin at 2425e52 (plugin 0.3.0: Bridge.lua, Catalog.lua, Develop.lua,
+Dispatch.lua, Json.lua, Log.lua, Preview.lua, Sockets.lua copied to <scratch>\old with git show).
+Schemas: engine\dist\bridge\protocol.js from npm run build at a987b48.
+Node v24.11.1; fengari 0.1.4 (a Lua 5.3 VM in JavaScript), a scratch install, not a project dependency.
+The fake Lightroom (fake-lr.lua: row 6's, docs\reports\phase4\variants-plugin-smoke\smoke.txt, with the
+row 8 additions its header lists), the scenario scripts and the runner are reproduced at the end;
+catalog-cases.lua is row 6's, unchanged.
+The fake's behaviour is Claude Code's invention, modelled on spikes S6 and S7 and the SDK reference where
+its comments say so: this shows that the plugin's Lua runs, what it does with what it is given, and that
+main's and this branch's plugin do the same on the paths this row did not mean to change; it shows
+NOTHING about Lightroom itself. In "get_selection while copies are made" the fake's catalog queries
+yield and each createVirtualCopies call yields once before it reads the selection; whether
+Lightroom's own calls yield there is not known.
+Lua 5.1 syntax of every plugin file is checked separately by engine\tests\lua-plugin.test.ts (npm test).
+Error messages carry Lua chunk names; they are shortened to the file name below.
+
+To reproduce: npm run build; in an empty folder with these five files, npm install fengari@0.1.4, copy
+main's eight files into old\, then:
+$ node run-sync.mjs <repo>
+== photo_uuid and get_selection (sync-cases.lua) ==
+PASS  no task raised ([])
+--  get_context of an unselected photo: ok schema ok; {"uuid":"OTHER-UUID","local_id":3869533,"lrc_version":"15.5.1","is_virtual_copy":false,"filename":"20260907-_OZ80093.NEF"}
+    calls: find OTHER-UUID; active after 3869534; selected [3869534] -> [3869534]; exposure master 0, other 0
+--  get_settings of an unselected photo: ok schema ok; {"uuid":"OTHER-UUID","settings":{"Exposure2012":0,"Contrast2012":0,"ProcessVersion":"15.4"}}
+    calls: find OTHER-UUID; active after 3869534; selected [3869534] -> [3869534]; exposure master 0, other 0
+--  apply_settings to an unselected photo: ok schema ok; {"uuid":"OTHER-UUID","apply_ms":0,"read_ms":0,"command_ms":0,"read_back":{"Exposure2012":0.5,"Contrast2012":0,"ProcessVersion":"15.4"}}
+    calls: find OTHER-UUID | write gate AVG sync ab12 | apply 3869533 AVG sync ab12; active after 3869534; selected [3869534] -> [3869534]; exposure master 0, other 0.5
+--  create_snapshot on an unselected photo: ok schema ok; {"uuid":"OTHER-UUID","snapshot_id":"SNAP-3869533-1","id_global":"G","name":"AVG pre-sync ab12","same_name_count":1}
+    calls: find OTHER-UUID | write gate AVG snapshot | snapshot 3869533 AVG pre-sync ab12; active after 3869534; selected [3869534] -> [3869534]; exposure master 0, other 0
+--  apply_snapshot on an unselected photo: ok schema ok; {"uuid":"OTHER-UUID","read_back":{"Exposure2012":0.2,"Contrast2012":0,"ProcessVersion":"15.4"}}
+    calls: find OTHER-UUID | write gate AVG restore snapshot | restore 3869533 SNAP-OTHER-1; active after 3869534; selected [3869534] -> [3869534]; exposure master 0, other 0.2
+--  export_preview of an unselected photo: ok schema ok; {"uuid":"OTHER-UUID","path":"C:\\T\\LrC-AVG\\previews\\UUID-0001-AAAA-BBBB\\20260907-_OZ80093.NEF.jpg","export_ms":0}
+    calls: find OTHER-UUID | export 3869533 at 1600; active after 3869534; selected [3869534] -> [3869534]; exposure master 0, other 0
+--  a virtual copy by uuid, identity as expected: ok schema ok; {"uuid":"OLD-COPY-UUID","settings":{"Exposure2012":0,"Contrast2012":0,"ProcessVersion":"15.4"}}
+    calls: find OLD-COPY-UUID; active after 3869534; selected [3869534] -> [3869534]; exposure master 0, other 0
+--  no photo selected: photo_uuid still works: ok schema ok; {"uuid":"OTHER-UUID","apply_ms":0,"read_ms":0,"command_ms":0,"read_back":{"Exposure2012":0.5,"Contrast2012":0,"ProcessVersion":"15.4"}}
+    calls: find OTHER-UUID | write gate AVG sync ab12 | apply 3869533 AVG sync ab12; active after none; selected [] -> []; exposure master 0, other 0.5
+--  identity differs from expect: error identity_mismatch (recoverable false): the photo with uuid OLD-COPY-UUID has copy_name Copy 1, expected AVG x
+    calls: find OLD-COPY-UUID; active after 3869534; selected [3869534] -> [3869534]; exposure master 0, other 0
+--  unknown uuid: error unknown_photo (recoverable false): no photo in the catalog has uuid NO-SUCH-UUID
+    calls: find NO-SUCH-UUID; active after 3869534; selected [3869534] -> [3869534]; exposure master 0, other 0
+--  photo_uuid and target_uuid together: error bad_request (recoverable false): name the photo with photo_uuid or target_uuid, not both
+    calls: ; active after 3869534; selected [3869534] -> [3869534]; exposure master 0, other 0
+--  photo_uuid not a string: error bad_request (recoverable false): uuid must be a non-empty string
+    calls: ; active after 3869534; selected [3869534] -> [3869534]; exposure master 0, other 0
+--  expect not an object: error bad_request (recoverable false): expect must be an object
+    calls: ; active after 3869534; selected [3869534] -> [3869534]; exposure master 0, other 0
+--  the selected photo by target_uuid: ok schema ok; {"uuid":"CF12AF60-0858-4181-9562-376D16B89126","apply_ms":0,"read_ms":0,"command_ms":0,"read_back":{"Exposure2012":0.5,"Contrast2012":0,"ProcessVersion":"15.4"}
+    calls: write gate AVG sync ab12 | apply 3869534 AVG sync ab12; active after 3869534; selected [3869534] -> [3869534]; exposure master 0.5, other 0
+--  target_uuid of an unselected photo is still refused: error target_mismatch (recoverable true): The selected photo (CF12AF60-0858-4181-9562-376D16B89126) is not the target (OTHER-UUID)
+    calls: ; active after 3869534; selected [3869534] -> [3869534]; exposure master 0, other 0
+--  get_selection, one photo: ok schema ok; {"count":1,"photos":[{"local_id":3869534,"uuid":"CF12AF60-0858-4181-9562-376D16B89126","is_virtual_copy":false,"master_local_id":3869534,"filename":"20260907-_O
+    calls: ; active after 3869534; selected [3869534] -> [3869534]; exposure master 0, other 0
+--  get_selection, three selected: the active one first: ok schema ok; {"count":3,"photos":[{"local_id":3869600,"uuid":"OLD-COPY-UUID","is_virtual_copy":true,"master_local_id":3869534,"copy_name":"Copy 1"},{"local_id":3869534,"uuid
+    calls: ; active after 3869600; selected [3869534,3869533,3869600] -> [3869534,3869533,3869600]; exposure master 0, other 0
+--  get_selection, 2 of 3 described: ok schema ok; {"count":3,"photos":[{"local_id":3869600,"uuid":"OLD-COPY-UUID","is_virtual_copy":true,"master_local_id":3869534,"copy_name":"Copy 1"},{"local_id":3869534,"uuid
+    calls: ; active after 3869600; selected [3869534,3869533,3869600] -> [3869534,3869533,3869600]; exposure master 0, other 0
+--  get_selection with nothing selected: error no_target_photo (recoverable true): No photo is selected in Lightroom
+    calls: ; active after none; selected [] -> []; exposure master 0, other 0
+--  get_selection max 0: error bad_request (recoverable false): max must be a whole number from 1 to 500
+    calls: ; active after 3869534; selected [3869534] -> [3869534]; exposure master 0, other 0
+--  get_selection max 501: error bad_request (recoverable false): max must be a whole number from 1 to 500
+    calls: ; active after 3869534; selected [3869534] -> [3869534]; exposure master 0, other 0
+--  get_selection max 1.5: error bad_request (recoverable false): max must be a whole number from 1 to 500
+    calls: ; active after 3869534; selected [3869534] -> [3869534]; exposure master 0, other 0
+PASS  no command changed the selection or called setSelectedPhotos
+PASS  get_context by photo_uuid: the unselected photo's context; the master stays selected
+PASS  get_settings by photo_uuid: the unselected photo's settings
+PASS  apply_settings by photo_uuid: found by uuid, written in a write gate with its History name, read back; the master untouched
+PASS  create_snapshot by photo_uuid: on the unselected photo
+PASS  apply_snapshot by photo_uuid: restores the unselected photo
+PASS  export_preview by photo_uuid: exports the unselected photo
+PASS  a virtual copy by uuid with its identity as expected
+PASS  with no photo selected, a write by photo_uuid still works and selects nothing
+PASS  identity differs from expect -> identity_mismatch, nothing written
+PASS  unknown uuid -> unknown_photo, nothing written
+PASS  photo_uuid and target_uuid together -> bad_request, nothing written
+PASS  photo_uuid not a string -> bad_request, nothing written
+PASS  expect not an object -> bad_request, nothing written
+PASS  photo_uuid with target_uuid is refused before any lookup
+PASS  target_uuid works as before: writes the selected photo, refuses another
+
+== get_selection ==
+--  get_selection, one photo: count 1, photos [[3869534,"CF12AF60-0858-4181-9562-376D16B89126","20260907-_OZ80099.NEF",null]]; schema ok; yields 0
+    calls: ; active after 3869534
+--  get_selection, three selected: the active one first: count 3, photos [[3869600,"OLD-COPY-UUID",null,"Copy 1"],[3869534,"CF12AF60-0858-4181-9562-376D16B89126","20260907-_OZ80099.NEF",null],[3869533,"OTHER-UUID","20260907-_OZ80093.NEF",null]]; schema ok; yields 2
+    calls: ; active after 3869600
+--  get_selection, 2 of 3 described: count 3, photos [[3869600,"OLD-COPY-UUID",null,"Copy 1"],[3869534,"CF12AF60-0858-4181-9562-376D16B89126","20260907-_OZ80099.NEF",null]]; schema ok; yields 1
+    calls: ; active after 3869600
+--  get_selection with nothing selected: error no_target_photo (recoverable true): No photo is selected in Lightroom; yields 0
+    calls: ; active after none
+--  get_selection max 0: error bad_request (recoverable false): max must be a whole number from 1 to 500; yields 0
+    calls: ; active after 3869534
+--  get_selection max 501: error bad_request (recoverable false): max must be a whole number from 1 to 500; yields 0
+    calls: ; active after 3869534
+--  get_selection max 1.5: error bad_request (recoverable false): max must be a whole number from 1 to 500; yields 0
+    calls: ; active after 3869534
+PASS  one photo selected: that photo, with its uuid and file name
+PASS  three selected: the active photo first, then the others; yields between photos (NFR-1)
+PASS  max 2 of 3: count 3, two described
+PASS  nothing selected: no_target_photo (recoverable), not the filmstrip getTargetPhotos would give
+PASS  get_selection max 0 -> bad_request
+PASS  get_selection max 501 -> bad_request
+PASS  get_selection max 1.5 -> bad_request
+
+== get_selection while copies are made (sync-cases.lua, overlap) ==
+--  get_selection started N rounds after the batch: WITHOUT the lock (mutant) | with the lock (this branch); photos seen
+    N=0: [3869534] | [3869534]; copies made 3
+    N=1: [3869534] | [3869534]; copies made 3
+    N=2: [3869534] | [3869534]; copies made 3
+    N=3: [3869534] | [3869534]; copies made 3
+    N=4: [3869534,5013] | [3869534]; copies made 3
+    N=5: [5016] | [3869534]; copies made 3
+    N=6: [5019,3869534] | [3869534]; copies made 3
+    N=7: [3869534] | [3869534]; copies made 3
+    N=8: [3869534] | [3869534]; copies made 3
+    N=9: [3869534] | [3869534]; copies made 3
+    N=10: [3869534,5032] | [3869534]; copies made 3
+    N=11: [5035] | [3869534]; copies made 3
+    N=12: [5038,3869534] | [3869534]; copies made 3
+PASS  without the lock, some start time reads a new copy as the selection, mid-batch
+PASS  with the lock, at every start time: the master alone, after the batch's 3 copies
+
+== Through Dispatch.handleLine ==
+--  d1 get_selection: ok true; {"count":1,"photos":[{"local_id":3869534,"uuid":"CF12AF60-0858-4181-9562-376D16B89126","is_virtual_copy":false,"master_local_id":3869534,"filename":"20260907-_OZ80099.NEF"}]}
+--  d2 apply_settings: ok true; {"uuid":"OTHER-UUID","apply_ms":0,"read_ms":0,"command_ms":0,"read_back":{"Exposure2012":0.5,"Contrast2012":0,"ProcessVersion":"15.4"}}
+--  d3 export_preview: ok true; {"uuid":"OTHER-UUID","path":"C:\\T\\LrC-AVG\\previews\\UUID-0002-AAAA-BBBB\\20260907-_OZ80093.NEF.jpg","export_ms":0}
+    calls: find OTHER-UUID | write gate AVG sync ab12 | apply 3869533 AVG sync ab12 | find OTHER-UUID | export 3869533 at 1200
+PASS  get_selection, a write and an export by photo_uuid go through the dispatch table; the master stays selected
+
+== The selected-photo path: main's plugin vs this branch (regress-cases.lua) ==
+PASS  no task raised on either
+--  get_context: ok; calls: 
+--  get_context, target_uuid of the selected photo: ok; calls: 
+--  get_settings: ok; calls: 
+--  get_settings, another photo selected: error target_mismatch: The selected photo (CF12AF60-0858-4181-9562-376D16B89126) is not the target (OTHER-UUID); calls: 
+--  apply_settings: ok; calls: write gate AVG x pass 1/4 | apply 3869534 AVG x pass 1/4
+--  apply_settings without target_uuid: ok; calls: write gate AVG x pass 1/4 | apply 3869534 AVG x pass 1/4
+--  apply_settings, History name without AVG: error bad_request: history_name must start with 'AVG ' (PRD FR-4.4); calls: 
+--  apply_settings, no settings: error bad_request: settings must be a non-empty object; calls: 
+--  create_snapshot: ok; calls: write gate AVG snapshot | snapshot 3869534 AVG pre-session x
+--  create_snapshot, name without AVG: error bad_request: name must start with 'AVG '; calls: 
+--  apply_snapshot: ok; calls: write gate AVG restore snapshot | restore 3869534 SNAP-M-1
+--  apply_snapshot, unknown id: error unknown_snapshot: the target photo has no snapshot with id NOPE; calls: 
+--  export_preview: ok; calls: export 3869534 at 1600
+--  export_preview, long_edge too big: error bad_request: long_edge must be a whole number from 200 to 4096; calls: 
+--  nothing selected: error no_target_photo: No photo is selected in Lightroom; calls: 
+PASS  same results, calls and settings in all 15 cases
+
+== create_virtual_copies and select_photo: main's plugin vs this branch (row 6's catalog-cases.lua) ==
+PASS  no task raised on either
+PASS  same results and calls in all 51 cases, the new filename field aside
+PASS  this branch adds the file name to a photo's description (select_photo), main has none
+
+ALL PASS
+[exit 0]
+
+===== fake-lr.lua =====
+-- A stubbed Lightroom SDK for smoke-running plugin Lua under fengari (no Lightroom). It imitates only
+-- what the LrC-AVG plugin calls, with the behaviour observed in the spikes (S6, S7) where there is
+-- one, and records what the plugin did so the scenarios can check it. It also enforces two plugin
+-- rules: yielding catalog queries never run inside a read gate (rule 03), and getRawMetadata /
+-- getFormattedMetadata / getDevelopSettings only run inside one.
+-- Added for PHASE4_PLAN row 8 (the fake of row 6 otherwise unchanged): each photo has its own Develop
+-- settings and snapshots; applyDevelopSettings, createDevelopSnapshot and applyDevelopSnapshot must run
+-- inside a write gate and are recorded; getTargetPhotos with no photo selected gives the whole
+-- filmstrip, as the SDK reference says; LrExportSession writes one file per photo and records it.
+
+F = { clock = 1000, tasks = {}, files = {}, errors = {}, yields = 0, inRead = 0, inWrite = 0,
+      calls = {}, binds = {}, uuidN = 0, nextLocalId = 5000 }
+
+local function record(what) F.calls[#F.calls + 1] = what end
+
+-- In-memory files (fengari has no io.open).
+io = io or {}
+io.open = function(path, mode)
+    mode = mode or "r"
+    if mode:sub(1, 1) == "r" then
+        if F.files[path] == nil then return nil, path .. ": No such file" end
+        local text = F.files[path]
+        return { read = function() return text end, close = function() end }
+    end
+    if mode:sub(1, 1) == "w" then F.files[path] = "" end
+    if F.files[path] == nil then F.files[path] = "" end
+    return {
+        write = function(self, ...) for _, s in ipairs({ ... }) do F.files[path] = F.files[path] .. tostring(s) end end,
+        close = function() end,
+    }
+end
+
+-- A tiny cooperative scheduler: every task is a coroutine; sleep and yield hand control back.
+function F.spawn(name, fn)
+    F.tasks[#F.tasks + 1] = { name = name, co = coroutine.create(fn) }
+end
+function F.run(rounds)
+    for _ = 1, rounds or 1 do
+        local live = {}
+        for _, t in ipairs(F.tasks) do
+            if coroutine.status(t.co) == "suspended" then
+                local ok, err = coroutine.resume(t.co)
+                if not ok then F.errors[#F.errors + 1] = t.name .. ": " .. tostring(err) end
+            end
+            if coroutine.status(t.co) ~= "dead" then live[#live + 1] = t end
+        end
+        F.tasks = live
+    end
+end
+-- Run fn in a task until it ends; returns what it returned.
+function F.runTask(fn)
+    local out
+    F.spawn("runTask", function() out = table.pack(fn()) end)
+    for _ = 1, 1000 do
+        if #F.tasks == 0 then break end
+        F.run(1)
+    end
+    if not out then return nil end
+    return table.unpack(out, 1, out.n)
+end
+
+local M = {}
+
+M.LrTasks = {
+    pcall = pcall,
+    yield = function() F.yields = F.yields + 1; coroutine.yield() end,
+    sleep = function(s) F.clock = F.clock + (s or 0); coroutine.yield() end,
+    startAsyncTask = function(fn) F.spawn("async", fn) end,
+}
+M.LrDate = {
+    currentTime = function() return F.clock end,
+    timeToUserFormat = function(t, fmt) return "2026-09-27 12:00:00" end,
+}
+M.LrUUID = { generateUUID = function() F.uuidN = F.uuidN + 1; return string.format("UUID-%04d-AAAA-BBBB", F.uuidN) end }
+M.LrPathUtils = {
+    child = function(a, b) return a .. "\\" .. b end,
+    parent = function(p) return (p:gsub("\\[^\\]*$", "")) end,
+    getStandardFilePath = function(which) return which == "home" and "C:\\Users\\U" or "C:\\T" end,
+}
+M.LrFileUtils = {
+    createAllDirectories = function() end,
+    fileAttributes = function() return nil end,
+    delete = function() end,
+    -- Row 8: the files an export wrote into `dir`.
+    files = function(dir)
+        local list, i = F.exported and F.exported[dir] or {}, 0
+        return function() i = i + 1; return list[i] end
+    end,
+}
+M.LrPrefs = { prefsForPlugin = function() return {} end }
+-- Row 8: an export writes one JPEG per photo into the destination folder and records which photo.
+M.LrExportSession = function(spec)
+    local s = {}
+    function s:doExportOnCurrentTask()
+        local dir = spec.exportSettings.LR_export_destinationPathPrefix
+        F.exported = F.exported or {}
+        F.exported[dir] = F.exported[dir] or {}
+        for _, photo in ipairs(spec.photosToExport) do
+            record("export " .. tostring(photo.localIdentifier) .. " at " .. tostring(spec.exportSettings.LR_size_maxWidth))
+            F.exported[dir][#F.exported[dir] + 1] = dir .. "\\" .. tostring(photo._t.file_name or "photo") .. ".jpg"
+        end
+    end
+    return s
+end
+
+-- Sockets: each bind returns a socket object; the scenario drives its callbacks.
+M.LrSocket = {
+    bind = function(spec)
+        local sock = { spec = spec, sent = {}, closed = false, reconnects = 0 }
+        function sock:send(line) self.sent[#self.sent + 1] = line end
+        function sock:close() self.closed = true end
+        function sock:reconnect() self.reconnects = self.reconnects + 1 end
+        F.binds[#F.binds + 1] = sock
+        F.last = F.last or {}
+        F.last[spec.mode] = sock
+        return sock
+    end,
+}
+M.LrFunctionContext = {
+    postAsyncTaskWithContext = function(name, fn)
+        local ctx = { cleanups = {} }
+        function ctx:addCleanupHandler(h) self.cleanups[#self.cleanups + 1] = h end
+        F.contexts = F.contexts or {}
+        F.contexts[#F.contexts + 1] = ctx
+        F.spawn(name, function() fn(ctx) end)
+    end,
+}
+
+-- Photos and the catalog.
+F.photos, F.byUuid = {}, {}
+function F.newPhoto(t)
+    local p = { localIdentifier = t.local_id }
+    p._t = t
+    function p:getRawMetadata(key)
+        assert(F.inRead > 0, "getRawMetadata outside a read gate")
+        if key == "uuid" then return t.uuid end
+        if key == "isVirtualCopy" then return t.is_vc == true end
+        if key == "masterPhoto" then return t.master or p end
+        return t[key]
+    end
+    function p:getFormattedMetadata(key)
+        assert(F.inRead > 0, "getFormattedMetadata outside a read gate")
+        if key == "copyName" then return t.copy_name end
+        if key == "fileName" then return t.file_name end
+        return nil
+    end
+    -- Row 8: each photo has its own settings and snapshots; writes must be inside a write gate.
+    t.settings = t.settings or { Exposure2012 = 0, Contrast2012 = 0, ProcessVersion = "15.4" }
+    t.snapshots = t.snapshots or {}
+    function p:getDevelopSettings()
+        assert(F.inRead > 0, "getDevelopSettings outside a read gate")
+        local copy = {}
+        for k, v in pairs(t.settings) do copy[k] = v end
+        return copy
+    end
+    function p:applyDevelopSettings(settings, name)
+        assert(F.inWrite > 0, "applyDevelopSettings outside a write gate")
+        record("apply " .. tostring(t.local_id) .. " " .. tostring(name))
+        for k, v in pairs(settings) do t.settings[k] = v end
+    end
+    function p:createDevelopSnapshot(name, updateInPlace)
+        assert(F.inWrite > 0, "createDevelopSnapshot outside a write gate")
+        record("snapshot " .. tostring(t.local_id) .. " " .. tostring(name))
+        local copy = {}
+        for k, v in pairs(t.settings) do copy[k] = v end
+        t.snapshots[#t.snapshots + 1] = { snapshotID = "SNAP-" .. t.local_id .. "-" .. (#t.snapshots + 1), name = name, id_global = "G", settings = copy }
+        return true
+    end
+    function p:getDevelopSnapshots()
+        assert(F.inRead > 0, "getDevelopSnapshots outside a read gate")
+        local list = {}
+        for i, s in ipairs(t.snapshots) do list[i] = { snapshotID = s.snapshotID, name = s.name, id_global = s.id_global } end
+        return list
+    end
+    function p:applyDevelopSnapshot(id)
+        assert(F.inWrite > 0, "applyDevelopSnapshot outside a write gate")
+        record("restore " .. tostring(t.local_id) .. " " .. tostring(id))
+        for _, s in ipairs(t.snapshots) do
+            if s.snapshotID == id then
+                t.settings = {}
+                for k, v in pairs(s.settings) do t.settings[k] = v end
+            end
+        end
+    end
+    F.photos[t.local_id] = p
+    F.byUuid[t.uuid] = p
+    return p
+end
+
+local function noQueryInGate(what)
+    assert(F.inRead == 0, what .. " inside a read gate (rule 03: deadlocks on Windows)")
+    -- With F.yieldQueries, a catalog query hands control to other tasks, as a yielding query would.
+    if F.yieldQueries and coroutine.isyieldable() then coroutine.yield() end
+end
+
+F.catalog = {
+    withReadAccessDo = function(self, fn) F.inRead = F.inRead + 1; fn(); F.inRead = F.inRead - 1 end,
+    withWriteAccessDo = function(self, name, fn) F.inWrite = F.inWrite + 1; record("write gate " .. name); fn(); F.inWrite = F.inWrite - 1 end,
+    getTargetPhoto = function(self) noQueryInGate("getTargetPhoto"); return F.active end,
+    -- With no photo selected, "the entire list of photos in the filmstrip"
+    -- [handle: https://lrc.mcor.dev/modules/LrCatalog.html getTargetPhotos].
+    getTargetPhotos = function(self)
+        noQueryInGate("getTargetPhotos")
+        if F.active == nil then return F.filmstrip or {} end
+        return F.selected or {}
+    end,
+    setSelectedPhotos = function(self, active, list)
+        noQueryInGate("setSelectedPhotos")
+        record("select " .. tostring(active.localIdentifier))
+        if F.ignoreSelect then return end
+        F.active, F.selected = active, list
+    end,
+    findPhotoByUuid = function(self, uuid) noQueryInGate("findPhotoByUuid"); record("find " .. uuid); return F.byUuid[uuid] end,
+    -- S6: acts on the selection, returns the copies, names them, makes the new copy active,
+    -- needs no write gate [handle: docs\reports\phase0\S6.md "Analysis"].
+    createVirtualCopies = function(self, name)
+        noQueryInGate("createVirtualCopies")
+        F.copyCalls = (F.copyCalls or 0) + 1
+        -- With F.copyYields = n, the call takes n seconds and lets other tasks run before it reads
+        -- the selection: a model of a call that yields inside [the fake's assumption, not observed].
+        -- A table gives each call (1st, 2nd, ...) its own count.
+        local n = type(F.copyYields) == "table" and (F.copyYields[F.copyCalls] or 0) or (F.copyYields or 0)
+        if n > 0 then record("enter createVirtualCopies " .. name) end
+        for _ = 1, n do F.clock = F.clock + 1; coroutine.yield() end
+        local sel = {}
+        for _, p in ipairs(F.selected or {}) do sel[#sel + 1] = p.localIdentifier end
+        record("createVirtualCopies " .. name .. " on {" .. table.concat(sel, ",") .. "} gate=" .. F.inWrite)
+        if F.failCopyAt == F.copyCalls then error("createVirtualCopies: simulated failure") end
+        local out = {}
+        for _, src in ipairs(F.selected or {}) do
+            F.nextLocalId = F.nextLocalId + 1
+            local master = src._t.master or src
+            local copy = F.newPhoto({ local_id = F.nextLocalId, uuid = "COPY-" .. F.nextLocalId, is_vc = true, master = master,
+                copy_name = F.wrongName or name, file_name = src._t.file_name })
+            out[#out + 1] = copy
+        end
+        if out[#out] then F.active, F.selected = out[#out], { out[#out] } end
+        return out
+    end,
+}
+M.LrApplication = {
+    activeCatalog = function() return F.catalog end,
+    versionString = function() return "15.5.1" end,
+}
+
+function import(name)
+    local m = M[name]
+    if m == nil then error("fake-lr: no stub for " .. name) end
+    return m
+end
+_PLUGIN = { id = "com.lrcavg.gateway" }
+
+-- Reset the photo world between scenarios.
+function F.world()
+    F.photos, F.byUuid, F.calls = {}, {}, {}
+    F.ignoreSelect, F.failCopyAt, F.wrongName, F.copyCalls = nil, nil, nil, 0
+    F.yieldQueries, F.copyYields = nil, nil
+    local master = F.newPhoto({ local_id = 3869534, uuid = "CF12AF60-0858-4181-9562-376D16B89126", file_name = "20260907-_OZ80099.NEF" })
+    local other = F.newPhoto({ local_id = 3869533, uuid = "OTHER-UUID", file_name = "20260907-_OZ80093.NEF" })
+    local vc = F.newPhoto({ local_id = 3869600, uuid = "OLD-COPY-UUID", is_vc = true, master = master, copy_name = "Copy 1" })
+    F.active, F.selected = master, { master }
+    F.filmstrip, F.exported = { master, other, vc }, {}
+    return master, other, vc
+end
+
+===== sync-cases.lua =====
+-- PHASE4_PLAN row 8: Develop.lua and Preview.lua commands naming a photo with photo_uuid, and
+-- Catalog.lua's get_selection, called directly in a task against fake-lr.lua; then the same through
+-- Dispatch.handleLine. Returns a JSON string (via the plugin's own Json.lua): one entry per case with
+-- the result or the error, what the handler did to the fake catalog, and the selection after it.
+
+local Catalog = require 'Catalog'
+local Develop = require 'Develop'
+local Dispatch = require 'Dispatch'
+local Json = require 'Json'
+local Preview = require 'Preview'
+
+local MASTER = "CF12AF60-0858-4181-9562-376D16B89126"
+local OTHER = "OTHER-UUID"
+local HANDLERS = {
+    get_context = Develop.getContext, get_settings = Develop.getSettings, apply_settings = Develop.applySettings,
+    create_snapshot = Develop.createSnapshot, apply_snapshot = Develop.applySnapshot, export_preview = Preview.exportPreview,
+    get_selection = Catalog.getSelection,
+}
+local out = {}
+
+local function ids(list)
+    local r = {}
+    for i, p in ipairs(list or {}) do r[i] = p.localIdentifier end
+    return r
+end
+
+local function case(name, command, setup, payload)
+    local master, other = F.world()
+    F.yields = 0
+    if setup then setup(master, other) end
+    local before = ids(F.selected)
+    F.calls = {}
+    local result, err = F.runTask(function() return HANDLERS[command](payload) end)
+    out[#out + 1] = {
+        case = name, command = command, result = result, error = err, calls = F.calls, yields = F.yields,
+        active_after = F.active and F.active.localIdentifier or "none", selected_before = before, selected_after = ids(F.selected),
+        master_exposure = master._t.settings.Exposure2012, other_exposure = other._t.settings.Exposure2012,
+    }
+end
+
+local write = { settings = { Exposure2012 = 0.5 }, history_name = "AVG sync ab12" }
+local function with(extra)
+    local p = {}
+    for k, v in pairs(write) do p[k] = v end
+    for k, v in pairs(extra) do p[k] = v end
+    return p
+end
+local function snapshotOnOther(_, other)
+    other._t.settings.Exposure2012 = 0.9
+    other._t.snapshots = { { snapshotID = "SNAP-OTHER-1", name = "AVG pre-sync ab12", id_global = "G", settings = { Exposure2012 = 0.2, Contrast2012 = 0, ProcessVersion = "15.4" } } }
+end
+local function noSelection() F.active, F.selected = nil, {} end
+
+-- A photo that is not selected, by uuid: the selection stays on the master.
+case("get_context of an unselected photo", "get_context", nil, { photo_uuid = OTHER })
+case("get_settings of an unselected photo", "get_settings", nil, { photo_uuid = OTHER })
+case("apply_settings to an unselected photo", "apply_settings", nil, with({ photo_uuid = OTHER }))
+case("create_snapshot on an unselected photo", "create_snapshot", nil, { photo_uuid = OTHER, name = "AVG pre-sync ab12" })
+case("apply_snapshot on an unselected photo", "apply_snapshot", snapshotOnOther, { photo_uuid = OTHER, snapshot_id = "SNAP-OTHER-1" })
+case("export_preview of an unselected photo", "export_preview", nil, { photo_uuid = OTHER, long_edge = 1600, quality = 75 })
+case("a virtual copy by uuid, identity as expected", "get_settings", nil,
+    { photo_uuid = "OLD-COPY-UUID", expect = { copy_name = "Copy 1", is_virtual_copy = true, master_local_id = 3869534 } })
+case("no photo selected: photo_uuid still works", "apply_settings", noSelection, with({ photo_uuid = OTHER }))
+-- Refused, nothing written.
+case("identity differs from expect", "apply_settings", nil, with({ photo_uuid = "OLD-COPY-UUID", expect = { copy_name = "AVG x" } }))
+case("unknown uuid", "apply_settings", nil, with({ photo_uuid = "NO-SUCH-UUID" }))
+case("photo_uuid and target_uuid together", "apply_settings", nil, with({ photo_uuid = OTHER, target_uuid = MASTER }))
+case("photo_uuid not a string", "get_settings", nil, { photo_uuid = 42 })
+case("expect not an object", "get_settings", nil, { photo_uuid = OTHER, expect = "x" })
+-- The selected photo, as before.
+case("the selected photo by target_uuid", "apply_settings", nil, with({ target_uuid = MASTER }))
+case("target_uuid of an unselected photo is still refused", "get_settings", nil, { target_uuid = OTHER })
+
+-- get_selection.
+local function three(master, other) F.active, F.selected = F.byUuid["OLD-COPY-UUID"], { master, other, F.byUuid["OLD-COPY-UUID"] } end
+case("get_selection, one photo", "get_selection", nil, {})
+case("get_selection, three selected: the active one first", "get_selection", three, { max = 21 })
+case("get_selection, 2 of 3 described", "get_selection", three, { max = 2 })
+case("get_selection with nothing selected", "get_selection", noSelection, {})
+case("get_selection max 0", "get_selection", nil, { max = 0 })
+case("get_selection max 501", "get_selection", nil, { max = 501 })
+case("get_selection max 1.5", "get_selection", nil, { max = 1.5 })
+
+-- get_selection while a create_virtual_copies batch runs (it selects the master and each new copy in
+-- turn). Catalog queries yield here, and each createVirtualCopies call yields once before it reads
+-- the selection; `delay` is the scheduler rounds before get_selection starts.
+local function overlap(delay)
+    F.world()
+    F.yieldQueries, F.copyYields = true, 1
+    F.calls = {}
+    local first, second
+    F.spawn("create", function()
+        first = table.pack(Catalog.createVirtualCopies({ target_uuid = MASTER, names = { "AVG s A", "AVG s B", "AVG s C" } }))
+    end)
+    F.spawn("selection", function()
+        for _ = 1, delay do coroutine.yield() end
+        second = table.pack(Catalog.getSelection({}))
+    end)
+    for _ = 1, 5000 do
+        if #F.tasks == 0 then break end
+        F.run(1)
+    end
+    local photos = second and second[1] and second[1].photos or {}
+    out[#out + 1] = { case = "overlap", command = "get_selection", delay = delay, calls = F.calls,
+        copies = first and first[1] and #first[1].copies or 0, error = second and second[2],
+        seen = ids((function() local r = {} for i, p in ipairs(photos) do r[i] = { localIdentifier = p.local_id } end return r end)()) }
+end
+for delay = 0, 12 do overlap(delay) end
+
+-- Through the bridge's dispatch (Dispatch.handleLine), as a line from the engine arrives.
+do
+    F.world()
+    F.calls = {}
+    local S = { token = "T", tokenFile = "C:\\Users\\U\\.lrc-avg\\bridge_token", malformed = 0, unauthorized = 0, failed = 0, handled = 0 }
+    local handlers = Dispatch.handlers(function() return { protocol = 1 } end)
+    local sent = {}
+    local function respond(id, name, ok, body) sent[#sent + 1] = { id = id, name = name, ok = ok, body = body } end
+    local function line(id, name, payload) return Json.encode({ id = id, type = "cmd", name = name, token = "T", payload = payload }) end
+    F.runTask(function()
+        Dispatch.handleLine(S, handlers, respond, line("d1", "get_selection", { max = 5 }))
+        Dispatch.handleLine(S, handlers, respond, line("d2", "apply_settings", with({ photo_uuid = OTHER })))
+        Dispatch.handleLine(S, handlers, respond, line("d3", "export_preview", { photo_uuid = OTHER, long_edge = 1200, quality = 75 }))
+    end)
+    out[#out + 1] = { case = "dispatch", command = "dispatch", sent = sent, calls = F.calls, handled = S.handled, failed = S.failed,
+        active_after = F.active and F.active.localIdentifier }
+end
+
+return Json.encode({ cases = out, errors = F.errors })
+
+===== regress-cases.lua =====
+-- PHASE4_PLAN row 8 regression: the Develop.lua and Preview.lua commands on the SELECTED photo (no
+-- photo_uuid), the path every Phase 1-4 caller uses. Run on main's plugin and on this branch; the
+-- runner compares the two. Returns a JSON string.
+
+local Develop = require 'Develop'
+local Json = require 'Json'
+local Preview = require 'Preview'
+
+local MASTER = "CF12AF60-0858-4181-9562-376D16B89126"
+local HANDLERS = {
+    get_context = Develop.getContext, get_settings = Develop.getSettings, apply_settings = Develop.applySettings,
+    create_snapshot = Develop.createSnapshot, apply_snapshot = Develop.applySnapshot, export_preview = Preview.exportPreview,
+}
+local out = {}
+
+local function case(name, command, setup, payload)
+    local master, other = F.world()
+    if setup then setup(master, other) end
+    F.calls = {}
+    local result, err = F.runTask(function() return HANDLERS[command](payload) end)
+    out[#out + 1] = { case = name, command = command, result = result, error = err, calls = F.calls,
+        active_after = F.active and F.active.localIdentifier or "none", master_settings = master._t.settings, other_settings = other._t.settings }
+end
+
+local function snapshotOnMaster(master)
+    master._t.snapshots = { { snapshotID = "SNAP-M-1", name = "AVG pre-session x", id_global = "G", settings = { Exposure2012 = 0.2, Contrast2012 = 0, ProcessVersion = "15.4" } } }
+end
+
+case("get_context", "get_context", nil, {})
+case("get_context, target_uuid of the selected photo", "get_context", nil, { target_uuid = MASTER })
+case("get_settings", "get_settings", nil, { target_uuid = MASTER })
+case("get_settings, another photo selected", "get_settings", nil, { target_uuid = "OTHER-UUID" })
+case("apply_settings", "apply_settings", nil, { target_uuid = MASTER, settings = { Exposure2012 = 0.5 }, history_name = "AVG x pass 1/4" })
+case("apply_settings without target_uuid", "apply_settings", nil, { settings = { Contrast2012 = 10 }, history_name = "AVG x pass 1/4" })
+case("apply_settings, History name without AVG", "apply_settings", nil, { target_uuid = MASTER, settings = { Exposure2012 = 0.5 }, history_name = "x" })
+case("apply_settings, no settings", "apply_settings", nil, { target_uuid = MASTER, settings = {}, history_name = "AVG x" })
+case("create_snapshot", "create_snapshot", nil, { target_uuid = MASTER, name = "AVG pre-session x" })
+case("create_snapshot, name without AVG", "create_snapshot", nil, { target_uuid = MASTER, name = "x" })
+case("apply_snapshot", "apply_snapshot", snapshotOnMaster, { target_uuid = MASTER, snapshot_id = "SNAP-M-1" })
+case("apply_snapshot, unknown id", "apply_snapshot", nil, { target_uuid = MASTER, snapshot_id = "NOPE" })
+case("export_preview", "export_preview", nil, { long_edge = 1600, quality = 75 })
+case("export_preview, long_edge too big", "export_preview", nil, { long_edge = 5000, quality = 75 })
+case("nothing selected", "get_settings", function() F.active, F.selected = nil, {} end, {})
+
+return Json.encode({ cases = out, errors = F.errors })
+
+===== catalog-cases.lua =====
+-- Catalog.lua's two handlers, called directly in a task against fake-lr.lua. Returns a JSON string
+-- (via the plugin's own Json.lua): one entry per case with the result or the error, and what the
+-- handler did to the fake catalog.
+
+local Catalog = require 'Catalog'
+local Json = require 'Json'
+
+local MASTER_UUID = "CF12AF60-0858-4181-9562-376D16B89126"
+local NAMES = { "AVG landscape_golden_hour A", "AVG landscape_golden_hour B", "AVG landscape_golden_hour C" }
+local out = {}
+
+local function case(name, command, setup, payload)
+    local master, other, vc = F.world()
+    F.yields = 0
+    if setup then setup(master, other, vc) end
+    F.calls = {}
+    local handler = command == "create_virtual_copies" and Catalog.createVirtualCopies or Catalog.selectPhoto
+    local result, err = F.runTask(function() return handler(payload) end)
+    out[#out + 1] = {
+        case = name, command = command, result = result, error = err, calls = F.calls, yields = F.yields,
+        active_after = F.active and F.active.localIdentifier, selected_after = #(F.selected or {}),
+    }
+end
+
+local function selectPhoto(p) F.active, F.selected = p, { p } end
+
+case("three copies", "create_virtual_copies", nil, { target_uuid = MASTER_UUID, names = NAMES })
+case("two copies", "create_virtual_copies", nil, { target_uuid = MASTER_UUID, names = { NAMES[1], NAMES[2] } })
+case("another photo selected", "create_virtual_copies", function(_, other) selectPhoto(other) end,
+    { target_uuid = MASTER_UUID, names = NAMES })
+case("a virtual copy selected as the master", "create_virtual_copies", function(_, _, vc) selectPhoto(vc) end,
+    { target_uuid = "OLD-COPY-UUID", names = NAMES })
+case("one name", "create_virtual_copies", nil, { target_uuid = MASTER_UUID, names = { NAMES[1] } })
+case("five names", "create_virtual_copies", nil,
+    { target_uuid = MASTER_UUID, names = { "AVG a", "AVG b", "AVG c", "AVG d", "AVG e" } })
+case("the same name twice", "create_virtual_copies", nil, { target_uuid = MASTER_UUID, names = { NAMES[1], NAMES[1] } })
+case("a name without AVG", "create_virtual_copies", nil, { target_uuid = MASTER_UUID, names = { "landscape A", NAMES[2] } })
+case("no target_uuid", "create_virtual_copies", nil, { names = NAMES })
+case("the second copy fails", "create_virtual_copies", function() F.failCopyAt = 2 end,
+    { target_uuid = MASTER_UUID, names = NAMES })
+case("Lightroom ignores the re-selection", "create_virtual_copies", function() F.ignoreSelect = true end,
+    { target_uuid = MASTER_UUID, names = NAMES })
+case("the copy comes back with another name", "create_virtual_copies", function() F.wrongName = "Copy 2" end,
+    { target_uuid = MASTER_UUID, names = NAMES })
+
+case("select a copy, identity as expected", "select_photo", nil,
+    { uuid = "OLD-COPY-UUID", expect = { copy_name = "Copy 1", master_local_id = 3869534, is_virtual_copy = true } })
+case("select the master, no expect", "select_photo", function(_, other) selectPhoto(other) end, { uuid = MASTER_UUID })
+case("unknown uuid", "select_photo", nil, { uuid = "NO-SUCH-UUID" })
+case("copy name differs from expect", "select_photo", nil, { uuid = "OLD-COPY-UUID", expect = { copy_name = "AVG x B" } })
+case("master differs from expect", "select_photo", nil, { uuid = "OLD-COPY-UUID", expect = { master_local_id = 1 } })
+case("Lightroom ignores the selection", "select_photo", function() F.ignoreSelect = true end, { uuid = "OLD-COPY-UUID" })
+case("uuid not a string", "select_photo", nil, { uuid = 42 })
+case("expect not an object", "select_photo", nil, { uuid = "OLD-COPY-UUID", expect = "x" })
+
+-- Two commands at once, as two bridge tasks would run them (Greptile, PR #33): create_virtual_copies
+-- for the master, and a select_photo of another photo sent right after it. Catalog queries yield
+-- here, and each createVirtualCopies call yields `copyYields` times (1 s each) before it reads the
+-- selection.
+-- `delay`: scheduler rounds before the select_photo task starts.
+local function overlap(name, copyYields, delay)
+    F.world()
+    F.yieldQueries, F.copyYields = true, copyYields
+    F.calls = {}
+    local first, second
+    F.spawn("create", function() first = table.pack(Catalog.createVirtualCopies({ target_uuid = MASTER_UUID, names = NAMES })) end)
+    F.spawn("select", function()
+        for _ = 1, delay or 0 do coroutine.yield() end
+        second = table.pack(Catalog.selectPhoto({ uuid = "OTHER-UUID" }))
+    end)
+    for _ = 1, 5000 do
+        if #F.tasks == 0 then break end
+        F.run(1)
+    end
+    out[#out + 1] = {
+        case = name, command = "overlap", delay = delay or 0, calls = F.calls, active_after = F.active and F.active.localIdentifier,
+        create = { result = first and first[1], error = first and first[2] },
+        select = { result = second and second[1], error = second and second[2] },
+    }
+end
+
+overlap("select_photo sent while copies are made", 1)
+overlap("select_photo waits longer than the lock allows", 5)
+for delay = 0, 12 do overlap("sweep", 1, delay) end
+
+-- A lock whose holder never finishes (Greptile, PR #33 round 2). `start` runs a command as its own
+-- task after `delay` rounds; F.kill stops a task for good, as a Reload Plug-in may.
+local LOG_FILE = "C:\\T\\LrC-AVG\\bridge.log"
+local function start(results, label, delay, fn)
+    F.spawn(label, function()
+        for _ = 1, delay or 0 do coroutine.yield() end
+        results[label] = table.pack(fn())
+        results[label .. "_at"] = F.clock
+    end)
+end
+local function runAll()
+    for _ = 1, 5000 do
+        if #F.tasks == 0 then break end
+        F.run(1)
+    end
+end
+function F.kill(label)
+    local keep = {}
+    for _, t in ipairs(F.tasks) do if t.name ~= label then keep[#keep + 1] = t end end
+    F.tasks = keep
+end
+local function takeovers()
+    local lines = {}
+    for line in (F.files[LOG_FILE] or ""):gmatch("[^\n]+") do
+        if line:find("takes over", 1, true) then lines[#lines + 1] = line:gsub("^%S+ %S+ ", "") end
+    end
+    return lines
+end
+local function outcome(r, label)
+    local p = r[label]
+    return p and { result = p[1], error = p[2], at = r[label .. "_at"] } or { unfinished = true }
+end
+local function copyNames(prefix) return { prefix .. " A", prefix .. " B", prefix .. " C" } end
+
+-- 1. The holder's task is stopped by a reload: the next command, under the new generation, goes ahead.
+do
+    F.world()
+    F.files[LOG_FILE] = nil
+    F.yieldQueries, F.copyYields, F.calls = true, 1000, {}
+    _G.LrCAVG_BridgeGeneration = 1
+    local r = {}
+    start(r, "create", 0, function() return Catalog.createVirtualCopies({ target_uuid = MASTER_UUID, names = NAMES }) end)
+    F.run(10) -- it holds the lock, stuck inside createVirtualCopies
+    F.kill("create")
+    _G.LrCAVG_BridgeGeneration = 2
+    local t0 = F.clock
+    start(r, "select", 0, function() return Catalog.selectPhoto({ uuid = "OTHER-UUID" }) end)
+    runAll()
+    out[#out + 1] = { case = "a lock left by a task the reload stopped", command = "lock", select = outcome(r, "select"),
+        waited = (r.select_at or F.clock) - t0, takeovers = takeovers(), calls = F.calls }
+end
+
+-- 2. The holder hangs for more than 60 s in the same generation: the next command takes over.
+do
+    F.world()
+    F.files[LOG_FILE] = nil
+    F.yieldQueries, F.copyYields, F.calls = true, 1000, {}
+    _G.LrCAVG_BridgeGeneration = 1
+    local r = {}
+    start(r, "create", 0, function() return Catalog.createVirtualCopies({ target_uuid = MASTER_UUID, names = NAMES }) end)
+    F.run(75) -- 1 s per round inside createVirtualCopies
+    local t0 = F.clock
+    start(r, "select", 0, function() return Catalog.selectPhoto({ uuid = "OTHER-UUID" }) end)
+    for _ = 1, 50 do F.run(1) end
+    F.kill("create")
+    runAll()
+    out[#out + 1] = { case = "a lock held longer than 60 s", command = "lock", select = outcome(r, "select"),
+        waited = (r.select_at or F.clock) - t0, takeovers = takeovers(), calls = F.calls }
+end
+
+-- 3. After a reload, batch B takes over from A, whose task is in fact still running: its one
+-- createVirtualCopies call hangs for 6 s, then raises, so A stops and puts the master back. When A
+-- ends it must not release B's lock: select_photo C, sent just after B, has to wait for B's copies.
+do
+    F.world()
+    F.files[LOG_FILE] = nil
+    F.yieldQueries, F.calls = true, {}
+    F.copyYields, F.failCopyAt = { 6, 1, 1, 1 }, 1
+    _G.LrCAVG_BridgeGeneration = 1
+    local r = {}
+    start(r, "A", 0, function() return Catalog.createVirtualCopies({ target_uuid = MASTER_UUID, names = copyNames("AVG a") }) end)
+    F.run(6) -- A is inside its hanging createVirtualCopies call
+    _G.LrCAVG_BridgeGeneration = 2
+    start(r, "B", 0, function() return Catalog.createVirtualCopies({ target_uuid = MASTER_UUID, names = copyNames("AVG b") }) end)
+    start(r, "C", 2, function() return Catalog.selectPhoto({ uuid = "OTHER-UUID" }) end)
+    runAll()
+    out[#out + 1] = { case = "a late holder leaves the new holder's lock alone", command = "lock", A = outcome(r, "A"),
+        B = outcome(r, "B"), select = outcome(r, "C"), takeovers = takeovers(), calls = F.calls }
+end
+-- 4. Batch A's lock is taken over while A is still running (Greptile, PR #33 round 3): after a
+-- reload, select_photo C takes over. Swept over the round at which the reload happens. A's copy
+-- calls each take 2 s and yield before they read the selection.
+for bump = 4, 16 do
+    F.world()
+    F.files[LOG_FILE] = nil
+    F.yieldQueries, F.copyYields, F.calls = true, { 2, 2, 2 }, {}
+    _G.LrCAVG_BridgeGeneration = 1
+    local r = {}
+    start(r, "A", 0, function() return Catalog.createVirtualCopies({ target_uuid = MASTER_UUID, names = NAMES }) end)
+    F.run(bump)
+    _G.LrCAVG_BridgeGeneration = 2
+    start(r, "C", 0, function() return Catalog.selectPhoto({ uuid = "OTHER-UUID" }) end)
+    runAll()
+    out[#out + 1] = { case = "taken over while running", command = "lock", bump = bump, A = outcome(r, "A"),
+        select = outcome(r, "C"), takeovers = takeovers(), calls = F.calls, active_after = F.active and F.active.localIdentifier }
+end
+
+_G.LrCAVG_BridgeGeneration = nil
+
+return Json.encode({ cases = out, errors = F.errors })
+
+===== run-sync.mjs =====
+// Smoke-runs plugin Lua under fengari 0.1.4 against fake-lr.lua (no Lightroom), PHASE4_PLAN row 8,
+// and checks the results against the engine's zod schemas (engine\dist\bridge\protocol.js, built by
+// npm run build). Usage: node run-sync.mjs <repo root>
+import fengari from "fengari";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+
+const { lua, lauxlib, lualib, to_luastring } = fengari;
+const here = path.dirname(new URL(import.meta.url).pathname).replace(/^\/([A-Za-z]:)/, "$1");
+const repo = process.argv[2];
+const newDir = path.join(repo, "plugin", "LrC-AVG.lrplugin").replaceAll("\\", "/");
+const oldDir = path.join(here, "old").replaceAll("\\", "/");
+const { COMMANDS } = await import(pathToFileURL(path.join(repo, "engine", "dist", "bridge", "protocol.js")).href);
+
+// `pluginDir` may list several folders (;-separated), searched in order.
+function runLua(pluginDir, script) {
+  const L = lauxlib.luaL_newstate();
+  lualib.luaL_openlibs(L);
+  const dirs = pluginDir.split(";").map((d) => `${d}/?.lua`).join(";");
+  const setup = `package.path = [[${dirs};${here.replaceAll("\\", "/")}/?.lua]]\ndofile([[${here.replaceAll("\\", "/")}/fake-lr.lua]])`;
+  if (lauxlib.luaL_dostring(L, to_luastring(setup)) !== lua.LUA_OK) throw new Error(lua.lua_tojsstring(L, -1));
+  if (lauxlib.luaL_dofile(L, to_luastring(path.join(here, script).replaceAll("\\", "/"))) !== lua.LUA_OK) {
+    throw new Error(`${script}: ${lua.lua_tojsstring(L, -1)}`);
+  }
+  return JSON.parse(lua.lua_tojsstring(L, -1));
+}
+
+let failures = 0;
+const check = (ok, what) => {
+  console.log(`${ok ? "PASS" : "FAIL"}  ${what}`);
+  if (!ok) failures++;
+};
+const MASTER = 3869534, OTHER = 3869533, VC = 3869600;
+
+// 1. The new behaviour, on this branch.
+console.log("== photo_uuid and get_selection (sync-cases.lua) ==");
+const run = runLua(newDir, "sync-cases.lua");
+check(run.errors.length === 0, `no task raised (${JSON.stringify(run.errors)})`);
+const plain = run.cases.filter((c) => c.command !== "get_selection" || c.case !== "overlap").filter((c) => c.command !== "dispatch" && c.case !== "overlap");
+for (const c of plain) {
+  let schema = "";
+  if (c.result) {
+    const parsed = COMMANDS[c.command].safeParse(c.result);
+    schema = parsed.success ? "schema ok" : `SCHEMA REJECTED: ${parsed.error.message}`;
+    if (!parsed.success) failures++;
+  }
+  const what = c.error ? `error ${c.error.code} (recoverable ${c.error.recoverable}): ${c.error.message}` : `ok ${schema}; ${JSON.stringify(c.result).slice(0, 160)}`;
+  console.log(`--  ${c.case}: ${what}`);
+  console.log(`    calls: ${c.calls.join(" | ")}; active after ${c.active_after}; selected ${JSON.stringify(c.selected_before)} -> ${JSON.stringify(c.selected_after)}; exposure master ${c.master_exposure}, other ${c.other_exposure}`);
+}
+const by = Object.fromEntries(run.cases.map((c) => [c.case, c]));
+const same = (c) => JSON.stringify(c.selected_before) === JSON.stringify(c.selected_after) && !c.calls.some((x) => x.startsWith("select "));
+check(plain.every(same), "no command changed the selection or called setSelectedPhotos");
+check(by["get_context of an unselected photo"].result?.uuid === "OTHER-UUID" && by["get_context of an unselected photo"].result?.filename === "20260907-_OZ80093.NEF" && by["get_context of an unselected photo"].active_after === MASTER,
+  "get_context by photo_uuid: the unselected photo's context; the master stays selected");
+check(by["get_settings of an unselected photo"].result?.uuid === "OTHER-UUID", "get_settings by photo_uuid: the unselected photo's settings");
+const w = by["apply_settings to an unselected photo"];
+check(w.result?.read_back?.Exposure2012 === 0.5 && w.other_exposure === 0.5 && w.master_exposure === 0 &&
+  JSON.stringify(w.calls) === JSON.stringify(["find OTHER-UUID", "write gate AVG sync ab12", `apply ${OTHER} AVG sync ab12`]),
+  "apply_settings by photo_uuid: found by uuid, written in a write gate with its History name, read back; the master untouched");
+check(by["create_snapshot on an unselected photo"].calls.includes(`snapshot ${OTHER} AVG pre-sync ab12`) && by["create_snapshot on an unselected photo"].result?.snapshot_id === `SNAP-${OTHER}-1`,
+  "create_snapshot by photo_uuid: on the unselected photo");
+check(by["apply_snapshot on an unselected photo"].result?.read_back?.Exposure2012 === 0.2 && by["apply_snapshot on an unselected photo"].calls.includes(`restore ${OTHER} SNAP-OTHER-1`),
+  "apply_snapshot by photo_uuid: restores the unselected photo");
+const ex = by["export_preview of an unselected photo"];
+check(ex.calls.includes(`export ${OTHER} at 1600`) && /20260907-_OZ80093\.NEF\.jpg$/.test(ex.result?.path ?? ""), "export_preview by photo_uuid: exports the unselected photo");
+check(by["a virtual copy by uuid, identity as expected"].result?.uuid === "OLD-COPY-UUID", "a virtual copy by uuid with its identity as expected");
+const none = by["no photo selected: photo_uuid still works"];
+check(none.result?.uuid === "OTHER-UUID" && none.other_exposure === 0.5 && none.active_after === "none", "with no photo selected, a write by photo_uuid still works and selects nothing");
+const refusals = { "identity differs from expect": "identity_mismatch", "unknown uuid": "unknown_photo", "photo_uuid and target_uuid together": "bad_request", "photo_uuid not a string": "bad_request", "expect not an object": "bad_request" };
+for (const [name, code] of Object.entries(refusals)) check(by[name]?.error?.code === code && !by[name].calls.some((x) => x.startsWith("apply ")), `${name} -> ${code}, nothing written`);
+check(!by["photo_uuid and target_uuid together"].calls.some((x) => x.startsWith("find ")), "photo_uuid with target_uuid is refused before any lookup");
+check(by["the selected photo by target_uuid"].master_exposure === 0.5 && by["target_uuid of an unselected photo is still refused"].error?.code === "target_mismatch",
+  "target_uuid works as before: writes the selected photo, refuses another");
+
+console.log("\n== get_selection ==");
+for (const c of run.cases.filter((x) => x.command === "get_selection" && x.case !== "overlap")) {
+  const r = c.result;
+  const parsed = r ? COMMANDS.get_selection.safeParse(r) : null;
+  if (parsed && !parsed.success) failures++;
+  console.log(`--  ${c.case}: ${c.error ? `error ${c.error.code} (recoverable ${c.error.recoverable}): ${c.error.message}` : `count ${r.count}, photos ${JSON.stringify(r.photos.map((p) => [p.local_id, p.uuid, p.filename ?? null, p.copy_name ?? null]))}; schema ${parsed.success ? "ok" : "REJECTED"}`}; yields ${c.yields}`);
+  console.log(`    calls: ${c.calls.join(" | ")}; active after ${c.active_after}`);
+}
+const one = by["get_selection, one photo"].result;
+check(one?.count === 1 && one.photos[0].uuid === "CF12AF60-0858-4181-9562-376D16B89126" && one.photos[0].filename === "20260907-_OZ80099.NEF", "one photo selected: that photo, with its uuid and file name");
+const three = by["get_selection, three selected: the active one first"];
+check(three.result?.count === 3 && JSON.stringify(three.result.photos.map((p) => p.local_id)) === JSON.stringify([VC, MASTER, OTHER]) && three.yields === 2,
+  "three selected: the active photo first, then the others; yields between photos (NFR-1)");
+check(by["get_selection, 2 of 3 described"].result?.count === 3 && by["get_selection, 2 of 3 described"].result.photos.length === 2, "max 2 of 3: count 3, two described");
+const empty = by["get_selection with nothing selected"];
+check(empty.error?.code === "no_target_photo" && empty.error.recoverable === true && !empty.calls.length, "nothing selected: no_target_photo (recoverable), not the filmstrip getTargetPhotos would give");
+for (const n of ["get_selection max 0", "get_selection max 501", "get_selection max 1.5"]) check(by[n].error?.code === "bad_request", `${n} -> bad_request`);
+
+// get_selection while a create_virtual_copies batch runs, on this Catalog.lua and on a mutant without the lock.
+console.log("\n== get_selection while copies are made (sync-cases.lua, overlap) ==");
+const source = readFileSync(path.join(newDir, "Catalog.lua"), "utf8");
+const mutated = source.replace('return exclusive("get_selection", function() return getSelection(payload) end)', "return getSelection(payload) -- MUTANT");
+mkdirSync(path.join(here, "mutant"), { recursive: true });
+writeFileSync(path.join(here, "mutant", "Catalog.lua"), mutated);
+const mutant = runLua(`${path.join(here, "mutant").replaceAll("\\", "/")};${newDir}`, "sync-cases.lua").cases.filter((c) => c.case === "overlap");
+const locked = run.cases.filter((c) => c.case === "overlap");
+console.log("--  get_selection started N rounds after the batch: WITHOUT the lock (mutant) | with the lock (this branch); photos seen");
+for (let i = 0; i < locked.length; i++) console.log(`    N=${locked[i].delay}: ${JSON.stringify(mutant[i].seen)}${mutant[i].error ? ` ${mutant[i].error.code}` : ""} | ${JSON.stringify(locked[i].seen)}${locked[i].error ? ` ${locked[i].error.code}` : ""}; copies made ${locked[i].copies}`);
+check(mutated !== source && mutant.some((c) => c.seen.some((id) => id !== MASTER)), "without the lock, some start time reads a new copy as the selection, mid-batch");
+check(locked.every((c) => JSON.stringify(c.seen) === JSON.stringify([MASTER]) && c.copies === 3 && !c.error), "with the lock, at every start time: the master alone, after the batch's 3 copies");
+
+console.log("\n== Through Dispatch.handleLine ==");
+const d = by["dispatch"];
+for (const s of d.sent) console.log(`--  ${s.id} ${s.name}: ok ${s.ok}; ${JSON.stringify(s.body).slice(0, 200)}`);
+console.log(`    calls: ${d.calls.join(" | ")}`);
+const sel = d.sent.find((s) => s.id === "d1");
+check(sel?.ok === true && COMMANDS.get_selection.safeParse(sel.body).success && d.sent.find((s) => s.id === "d2")?.ok === true && d.sent.find((s) => s.id === "d3")?.ok === true && d.handled === 3 && d.active_after === MASTER,
+  "get_selection, a write and an export by photo_uuid go through the dispatch table; the master stays selected");
+
+// 2. The selected-photo path, main vs this branch.
+console.log("\n== The selected-photo path: main's plugin vs this branch (regress-cases.lua) ==");
+const oldReg = runLua(oldDir, "regress-cases.lua");
+const newReg = runLua(newDir, "regress-cases.lua");
+check(oldReg.errors.length === 0 && newReg.errors.length === 0, "no task raised on either");
+const unpath = (s) => JSON.stringify(s).replace(/[^"]*\/(\w+\.lua):/g, "$1:");
+for (const c of newReg.cases) console.log(`--  ${c.case}: ${c.error ? `error ${c.error.code}: ${c.error.message}` : "ok"}; calls: ${c.calls.join(" | ")}`);
+check(unpath(oldReg.cases) === unpath(newReg.cases), `same results, calls and settings in all ${newReg.cases.length} cases`);
+
+// 3. Catalog.lua's create_virtual_copies and select_photo (row 6's catalog-cases.lua), main vs this branch.
+console.log("\n== create_virtual_copies and select_photo: main's plugin vs this branch (row 6's catalog-cases.lua) ==");
+const strip = (v) => JSON.parse(JSON.stringify(v, (k, x) => (k === "filename" ? undefined : x)));
+const oldCat = runLua(oldDir, "catalog-cases.lua");
+const newCat = runLua(newDir, "catalog-cases.lua");
+check(oldCat.errors.length === 0 && newCat.errors.length === 0, "no task raised on either");
+const differing = newCat.cases.filter((c, i) => unpath(strip(c)) !== unpath(strip(oldCat.cases[i])));
+check(differing.length === 0 && newCat.cases.length === oldCat.cases.length, `same results and calls in all ${newCat.cases.length} cases, the new filename field aside${differing.length ? `; differ: ${differing.map((c) => c.case).join(", ")}` : ""}`);
+const withName = newCat.cases.find((c) => c.case === "select the master, no expect");
+check(withName?.result?.filename === "20260907-_OZ80099.NEF" && oldCat.cases.find((c) => c.case === "select the master, no expect")?.result?.filename === undefined,
+  "this branch adds the file name to a photo's description (select_photo), main has none");
+
+console.log(`\n${failures === 0 ? "ALL PASS" : `${failures} FAILED`}`);
+process.exit(failures === 0 ? 0 : 1);

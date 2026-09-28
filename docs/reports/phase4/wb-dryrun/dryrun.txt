@@ -1,0 +1,185 @@
+Dry run of npm run wb:check (engine\dist\devtools\wb-check-cli.js) against a scratch plugin
+===========================================================================================
+
+Run by Claude Code (Opus 5.5) on 2026-09-28, branch fix/white-balance-custom, before Jim's run.
+Nothing here touched Lightroom: the scratch plugin (the driver in the appendix) listens on ports
+18765/18766 with its own token file, and the CLI was pointed at it with LRC_AVG_COMMAND_PORT,
+LRC_AVG_EVENT_PORT and LRC_AVG_TOKEN_FILE (engine\src\mcp\dev-overrides.ts). TEMP/TMP pointed at the
+scratch folder, so the results file landed there, not in %TEMP%\LrC-AVG\WB\. The scratch plugin
+starts from the S5 NEF dump (docs\reports\phase0\S5\s5_20260907-_OZ80093.NEF.json: WhiteBalance
+"As Shot", Temperature 5500, Tint 6) and answers the file name 20260907-_OZ80099.NEF.
+
+Jim's answers were piped in (no echo, so each answer's line break is missing in the output below):
+  run 1: Enter (the click), y (As Shot), y (Temp slider), y (Custom)
+  run 2: Enter, y, y, n (Custom), Enter (the slider drag; the scratch plugin does not move it)
+
+The scratch plugin models the two outcomes, not Lightroom: run 1 takes every key written; run 2
+("refuse") drops WhiteBalance from every write, as Lightroom would if it refused "Custom". Which of
+the two Lightroom does is what Jim's run answers.
+
+Commands (repo root, Git Bash):
+  npm run build
+  node <scratchpad>/wb-dryrun.ts <scratchpad>/dry-take           > out-take.txt
+  node <scratchpad>/wb-dryrun.ts <scratchpad>/dry-refuse refuse  > out-refuse.txt
+
+1. Run 1: the scratch plugin takes "Custom"
+-------------------------------------------
+LrC-AVG white balance check
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+Connected (plugin 0.4.0).
+  In Lightroom's Filmstrip, click 20260907-_OZ80099.NEF (the original, not a virtual copy) and stay in the Develop module. Then press Enter here.   1. Temperature 5500 -> 5800 K, written alone. White balance read back: "As Shot"; temperature as written: YES.
+  In Lightroom's Basic panel, does WB (the menu above the Temp slider) read "As Shot"? Type y or n, then Enter:   Does the Temp slider read 5800? Type y or n, then Enter:   2. Temperature 5800 -> 6100 K with WhiteBalance "Custom". Lightroom took "Custom": YES; temperature as written: YES.
+  In the Basic panel, does WB read "Custom" now? Type y or n, then Enter:   3. From the start again, Tint 6 -> 11 with "Custom". Lightroom took "Custom": YES; tint as written: YES; temperature kept at 5500 K: YES.
+  4. A preset of these settings carries the temperature: after step 2 YES; after step 1 NO.
+  (bridge: stopped)
+
+White balance check: WORKED
+  Temperature alone left white balance: "As Shot"
+  Lightroom took "Custom" with a temperature: YES; with a tint: YES; a preset then carries the temperature: YES
+  PUT BACK: YES
+Results saved automatically: %USERPROFILE%\AppData\Local\Temp\claude\D--Developer-LrC-Autonomous-Gateway\4db5ac74-686f-4213-8f0b-6c08edd26ca4\scratchpad\dry-take\LrC-AVG\WB\wb_check_2026-09-28T12-10-18-697Z.json
+Nothing to copy. Tell Claude Code "done".
+
+exit code: 0
+scratch plugin commands:
+  hello {"protocol":1,"engine_version":"0.6.0"}
+  get_context {}
+  get_settings {"photo_uuid":"DRY-UUID"}
+  create_snapshot {"photo_uuid":"DRY-UUID","name":"AVG WBcheck before 2026-09-28T12-10-18-697Z"}
+  apply_settings {"photo_uuid":"DRY-UUID","settings":{"Temperature":5800},"history_name":"AVG WBcheck 1/3 temperature"}
+  apply_settings {"photo_uuid":"DRY-UUID","settings":{"Temperature":6100,"WhiteBalance":"Custom"},"history_name":"AVG WBcheck 2/3 temperature + Custom"}
+  apply_snapshot {"photo_uuid":"DRY-UUID","snapshot_id":"S1"}
+  apply_settings {"photo_uuid":"DRY-UUID","settings":{"Tint":11,"WhiteBalance":"Custom"},"history_name":"AVG WBcheck 3/3 tint + Custom"}
+  apply_snapshot {"photo_uuid":"DRY-UUID","snapshot_id":"S1"}
+  get_settings {"photo_uuid":"DRY-UUID"}
+scratch photo back to its start settings: true
+
+2. Run 2: the scratch plugin drops WhiteBalance ("refuse")
+---------------------------------------------------------
+LrC-AVG white balance check
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+Connected (plugin 0.4.0).
+  In Lightroom's Filmstrip, click 20260907-_OZ80099.NEF (the original, not a virtual copy) and stay in the Develop module. Then press Enter here.   1. Temperature 5500 -> 5800 K, written alone. White balance read back: "As Shot"; temperature as written: YES.
+  In Lightroom's Basic panel, does WB (the menu above the Temp slider) read "As Shot"? Type y or n, then Enter:   Does the Temp slider read 5800? Type y or n, then Enter:   2. Temperature 5800 -> 6100 K with WhiteBalance "Custom". Lightroom took "Custom": NO; temperature as written: YES.
+  In the Basic panel, does WB read "Custom" now? Type y or n, then Enter:   Lightroom did not take "Custom" from the plugin. In the Basic panel, drag the Temp slider a little to the right, then press Enter here.      After your drag, white balance reads back "As Shot".
+  3. From the start again, Tint 6 -> 11 with "Custom". Lightroom took "Custom": NO; tint as written: YES; temperature kept at 5500 K: YES.
+  4. A preset of these settings carries the temperature: after step 2 NO; after step 1 NO.
+  (bridge: stopped)
+
+White balance check: WORKED
+  Temperature alone left white balance: "As Shot"
+  Lightroom took "Custom" with a temperature: NO; with a tint: NO; a preset then carries the temperature: NO
+  PUT BACK: YES
+Results saved automatically: %USERPROFILE%\AppData\Local\Temp\claude\D--Developer-LrC-Autonomous-Gateway\4db5ac74-686f-4213-8f0b-6c08edd26ca4\scratchpad\dry-refuse\LrC-AVG\WB\wb_check_2026-09-28T12-10-19-945Z.json
+Nothing to copy. Tell Claude Code "done".
+
+exit code: 0
+scratch plugin commands:
+  hello {"protocol":1,"engine_version":"0.6.0"}
+  get_context {}
+  get_settings {"photo_uuid":"DRY-UUID"}
+  create_snapshot {"photo_uuid":"DRY-UUID","name":"AVG WBcheck before 2026-09-28T12-10-19-945Z"}
+  apply_settings {"photo_uuid":"DRY-UUID","settings":{"Temperature":5800},"history_name":"AVG WBcheck 1/3 temperature"}
+  apply_settings {"photo_uuid":"DRY-UUID","settings":{"Temperature":6100,"WhiteBalance":"Custom"},"history_name":"AVG WBcheck 2/3 temperature + Custom"}
+  get_settings {"photo_uuid":"DRY-UUID"}
+  apply_snapshot {"photo_uuid":"DRY-UUID","snapshot_id":"S1"}
+  apply_settings {"photo_uuid":"DRY-UUID","settings":{"Tint":11,"WhiteBalance":"Custom"},"history_name":"AVG WBcheck 3/3 tint + Custom"}
+  apply_snapshot {"photo_uuid":"DRY-UUID","snapshot_id":"S1"}
+  get_settings {"photo_uuid":"DRY-UUID"}
+scratch photo back to its start settings: true
+
+Appendix: the driver, verbatim (wb-dryrun.ts, run with Node's type stripping)
+-----------------------------------------------------------------------------
+// SCRATCH: dry run of the built `engine\dist\devtools\wb-check-cli.js` against a scratch plugin on
+// ports 18765/18766 (lock 18767) with its own token file, so Jim's running Lightroom is not touched.
+// TEMP/TMP point at the scratch folder, so the results land there. Usage (repo root):
+//   node <this file> <scratch dir> [refuse]
+// "refuse": the scratch plugin drops WhiteBalance from writes, as Lightroom refusing "Custom" would.
+import { spawn } from "node:child_process";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import net from "node:net";
+import path from "node:path";
+
+const repo = process.cwd();
+const scratch = process.argv[2] as string;
+const refuse = process.argv[3] === "refuse";
+mkdirSync(scratch, { recursive: true });
+const tokenFile = path.join(scratch, "dry_token");
+const TOKEN = "dry-token-wb";
+writeFileSync(tokenFile, TOKEN);
+
+const dump = (JSON.parse(readFileSync(path.join(repo, "docs/reports/phase0/S5/s5_20260907-_OZ80093.NEF.json"), "utf8")) as { settings: Record<string, unknown> }).settings;
+let settings: Record<string, unknown> = structuredClone(dump);
+const snaps = new Map<string, Record<string, unknown>>();
+const log: string[] = [];
+const UUID = "DRY-UUID";
+const luaize = (v: unknown): unknown =>
+  Array.isArray(v) ? v.map(luaize) : v && typeof v === "object" ? (Object.keys(v).length === 0 ? [] : Object.fromEntries(Object.entries(v).map(([k, x]) => [k, luaize(x)]))) : v;
+let eventClient: net.Socket | null = null;
+const send = (o: unknown): void => void eventClient?.write(JSON.stringify(o) + "\n");
+const handlers: Record<string, (p: Record<string, unknown>) => unknown> = {
+  hello: () => ({ protocol: 1, plugin_version: "0.4.0", lrc_version: "15.5.1", sdk_declared: 13, ports: { receive: 18765, send: 18766 } }),
+  ping: (p) => ({ pong: true, nonce: p["nonce"] }),
+  get_context: () => ({ uuid: UUID, local_id: 1, lrc_version: "15.5.1", filename: "20260907-_OZ80099.NEF", is_virtual_copy: false, file_format: "RAW" }),
+  get_settings: () => ({ uuid: UUID, settings: luaize(settings) }),
+  apply_settings: (p) => {
+    for (const [k, v] of Object.entries(p["settings"] as Record<string, unknown>)) if (!(refuse && k === "WhiteBalance")) settings[k] = structuredClone(v);
+    return { uuid: UUID, apply_ms: 30, read_ms: 300, command_ms: 340, read_back: luaize(settings) };
+  },
+  create_snapshot: (p) => {
+    const id = `S${snaps.size + 1}`;
+    snaps.set(id, structuredClone(settings));
+    return { uuid: UUID, snapshot_id: id, id_global: "G", name: p["name"], same_name_count: 1 };
+  },
+  apply_snapshot: (p) => {
+    settings = structuredClone(snaps.get(String(p["snapshot_id"])) ?? {});
+    return { uuid: UUID, read_back: luaize(settings) };
+  },
+};
+
+const commandServer = net.createServer((socket) => {
+  socket.setEncoding("utf8");
+  let buffer = "";
+  socket.on("data", (chunk: string) => {
+    buffer += chunk;
+    let i: number;
+    while ((i = buffer.indexOf("\n")) !== -1) {
+      const msg = JSON.parse(buffer.slice(0, i)) as { id: string; name: string; token?: string; payload?: Record<string, unknown> };
+      buffer = buffer.slice(i + 1);
+      log.push(`${msg.name} ${JSON.stringify(msg.payload ?? {})}`);
+      const handler = handlers[msg.name];
+      if (msg.token !== TOKEN) send({ id: msg.id, type: "res", name: msg.name, ok: false, error: { code: "unauthorized", message: "token", recoverable: true } });
+      else if (!handler) send({ id: msg.id, type: "res", name: msg.name, ok: false, error: { code: "unknown_command", message: msg.name, recoverable: false } });
+      else send({ id: msg.id, type: "res", name: msg.name, ok: true, payload: handler(msg.payload ?? {}) });
+    }
+  });
+  socket.on("error", () => {});
+});
+const eventServer = net.createServer((socket) => {
+  eventClient = socket;
+  socket.on("error", () => {});
+});
+await new Promise<void>((r) => commandServer.listen(18765, "127.0.0.1", () => r()));
+await new Promise<void>((r) => eventServer.listen(18766, "127.0.0.1", () => r()));
+
+const env = { ...process.env, LRC_AVG_COMMAND_PORT: "18765", LRC_AVG_EVENT_PORT: "18766", LRC_AVG_TOKEN_FILE: tokenFile, TEMP: scratch, TMP: scratch };
+const child = spawn(process.execPath, [path.join(repo, "engine/dist/devtools/wb-check-cli.js")], { env, stdio: ["pipe", "pipe", "pipe"] });
+let out = "";
+child.stdout.on("data", (d: Buffer) => void (out += d.toString()));
+child.stderr.on("data", (d: Buffer) => void (out += d.toString()));
+// Enter after the click; y (As Shot), y (Temp slider), then the Custom question; with "refuse", n and the drag's Enter.
+child.stdin.write(refuse ? "\ny\ny\nn\n\n" : "\ny\ny\ny\n");
+child.stdin.end();
+const code = await new Promise<number | null>((r) => child.on("close", r));
+const same = JSON.stringify(settings) === JSON.stringify(dump);
+console.log(out);
+console.log(`exit code: ${code}`);
+console.log(`scratch plugin commands:\n  ${log.join("\n  ")}`);
+console.log(`scratch photo back to its start settings: ${same}`);
+commandServer.close();
+eventServer.close();
+eventClient?.destroy();

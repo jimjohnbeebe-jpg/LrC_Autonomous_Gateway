@@ -15,7 +15,16 @@ export type { CameraProfileEntry, ProfileIdentity } from "./camera-profiles.js";
 export { ParamError, ParamMap, READBACK_TOLERANCE, canonicalValuesEqual, differingSettings } from "./map.js";
 export type { CanonicalSettings, CanonicalValue, FromSdkResult, ReadbackMismatch, SdkSettings } from "./map.js";
 export { SdkKeyMap, UnknownSdkKeyError } from "./sdk-keys.js";
-export { CAMERA_PROFILE_KEY, PROCESS_VERSION_KEY, PROFILE_KEYS, TONE_CURVE_NAME_KEY, WHITE_BALANCE_KEY, sdkKeysOf } from "./preset-keys.js";
+export {
+  AS_SHOT_WHITE_BALANCE,
+  CAMERA_PROFILE_KEY,
+  CUSTOM_WHITE_BALANCE,
+  PROCESS_VERSION_KEY,
+  PROFILE_KEYS,
+  TONE_CURVE_NAME_KEY,
+  WHITE_BALANCE_KEY,
+  sdkKeysOf,
+} from "./preset-keys.js";
 export { parsePresetFormat, readPresetFormatFile } from "./preset-format.js";
 export type { NumberFormat, PresetFormat } from "./preset-format.js";
 

@@ -5,7 +5,7 @@
 // its copies (session\copies.ts makeCopies).
 
 import { describe, expect, it } from "vitest";
-import { chatSessionOk, evaluateVariantsChat, failedBeginCopies } from "../src/devtools/phase4-chat.js";
+import { chatCopies, chatSessionOk, evaluateVariantsChat } from "../src/devtools/phase4-chat.js";
 
 const begin = {
   ts: "t",
@@ -53,9 +53,29 @@ describe("devtools: Phase 4 chat, the tool log", () => {
     expect(chatSessionOk(e)).toBe(false);
   });
 
-  it("names the copies a failed Variants begin made, from its error", () => {
-    const failed = { ts: "t", tool: "lr_begin_session", ok: false, error: { code: "VARIANTS_INCOMPLETE", details: { copies: [{ uuid: "a", copy_name: "AVG landscape_golden_hour A", identity_ok: true }, { identity_ok: false }] } } };
-    expect(failedBeginCopies([failed, begin])).toEqual([{ uuid: "a", copy_name: "AVG landscape_golden_hour A" }]);
+  it("names the copies of every Variants begin: each successful one's, a failed one's, and on no answer those asked for (Greptile, PR #37)", () => {
+    const failed = { ts: "t", tool: "lr_begin_session", ok: false, error: { code: "VARIANTS_INCOMPLETE", details: { copies: [{ uuid: "x", copy_name: "AVG landscape_golden_hour A", identity_ok: true }, { identity_ok: false }] } } };
+    const timedOut = { ts: "t", tool: "lr_begin_session", ok: false, error: { code: "BRIDGE_TIMEOUT", details: { names: ["AVG landscape_golden_hour A", "AVG landscape_golden_hour B"] } } };
+    const second = { ...begin, session_id: "s2", variants: [{ id: "A", uuid: "a2" }] };
+    const { known, unconfirmed } = chatCopies([failed, begin, timedOut, second]);
+    expect(known.map((c) => c.uuid)).toEqual(["a", "b", "c", "a2", "x"]);
+    expect(known[0]).toEqual({ uuid: "a", copy_name: "AVG landscape_golden_hour A" });
+    expect(unconfirmed).toEqual(["AVG … (its name could not be read)", "AVG landscape_golden_hour A", "AVG landscape_golden_hour B"]);
+  });
+
+  it("judges the session that ended with accept when Claude began more than one", () => {
+    const first = { ...begin, session_id: "s0" };
+    const records = [first, { ts: "t", tool: "lr_end_session", ok: true, session_id: "s0", outcome: "revert" }, begin, step("A"), step("B"), step("C"), { ts: "t", tool: "lr_select_variant", ok: true, session_id: "s1", picked: "A" }, step(), { ts: "t", tool: "lr_end_session", ok: true, session_id: "s1", outcome: "accept" }];
+    const e = evaluateVariantsChat(records);
+    expect(e).toMatchObject({ session_id: "s1", session_ended: "accept", picked: "A" });
+    expect(chatSessionOk(e)).toBe(true);
+  });
+
+  it("fails a session picked before every copy had its refined pass (the way to awaiting_pick)", () => {
+    const records = [begin, step("B"), { ts: "t", tool: "lr_select_variant", ok: true, session_id: "s1", picked: "B" }, step(), { ts: "t", tool: "lr_end_session", ok: true, session_id: "s1", outcome: "accept" }];
+    const e = evaluateVariantsChat(records);
+    expect(e).toMatchObject({ refined_before_pick: ["B"], picked: "B", steps_after_pick: 1 });
+    expect(chatSessionOk(e)).toBe(false);
   });
 
   it("fails a session on another photo, and reads an empty log as no session", () => {

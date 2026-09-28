@@ -13,7 +13,8 @@ import { recipeSchema, sessionLogSchema } from "../log/index.js";
 import { differingSettings } from "../params/index.js";
 import { clipCheckFile, describeClip, clipCheckAll, type SessionClip } from "./clip-check.js";
 import { brief, yn, type Answer } from "./phase3-config.js";
-import { INTENT, PICK_STEP, VARIANT_STEP, closeOpenSession, copyOf, errorBody, failLine, select, settingsOf, type Json, type Phase4Deps, type Photo, type Run } from "./phase4-config.js";
+import { copiesInError } from "./phase4-copies.js";
+import { INTENT, PICK_STEP, VARIANT_STEP, addUnconfirmed, closeOpenSession, copyOf, errorBody, failLine, select, settingsOf, type Json, type Phase4Deps, type Photo, type Run } from "./phase4-config.js";
 
 type VariantId = "A" | "B" | "C";
 type Variant = { id: VariantId; label: string; uuid: string; copy_name: string; metrics?: unknown; guardrail_actions?: unknown[] };
@@ -48,19 +49,20 @@ export async function variantsSession(deps: Phase4Deps, run: Run, photo: Photo):
 
 /**
  * A begin that failed part-way still made copies (session\copies.ts makeCopies): the open session's
- * variants and the error's `copies` name them, so the cleanup looks for them too.
+ * variants and the error name them, so the cleanup looks for them too; a begin with no answer names
+ * the copies it asked for, which may exist (phase4-copies.ts copiesInError).
  */
 function keepFailedCopies(deps: Phase4Deps, run: Run, error: Json): void {
   const known = new Set(run.copies.map((c) => c.uuid));
   const photos = deps.tools.sessionManager()?.current()?.photos ?? [];
   const fromSession = photos.filter((p) => p.target !== "master").map((p) => ({ uuid: p.uuid, copy_name: `AVG ${INTENT} ${p.target}` })); // session\copies.ts copyName
-  const details = (error["details"] ?? {}) as { copies?: Array<{ uuid?: string; copy_name?: string }> };
-  const fromError = (details.copies ?? []).flatMap((c) => (c.uuid ? [{ uuid: c.uuid, copy_name: c.copy_name ?? "?" }] : []));
-  for (const c of [...fromSession, ...fromError]) {
+  const fromError = copiesInError(error);
+  for (const c of [...fromSession, ...fromError.known]) {
     if (known.has(c.uuid)) continue;
     known.add(c.uuid);
     run.copies.push({ ...c, made_by: "variants" });
   }
+  addUnconfirmed(run, fromError.unconfirmed);
 }
 
 /** One refined lr_step per copy (PRD 6.6 step 4). */

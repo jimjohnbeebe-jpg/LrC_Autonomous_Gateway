@@ -38,7 +38,7 @@ export async function runPhase4Check(deps: Phase4Deps): Promise<{ accepted: bool
   const now = deps.now ?? (() => new Date());
   const errors: string[] = [];
   const results: Json = { check: "phase4", started_at: now().toISOString(), photo_name: PHOTO, errors };
-  const run: Run = { results, errors, copies: [], masterSnapshot: null, preset: null, fail: (m) => {
+  const run: Run = { results, errors, copies: [], unconfirmedCopies: [], masterSnapshot: null, preset: null, fail: (m) => {
     errors.push(m);
     deps.say(`FAILED: ${m}`);
   } };
@@ -179,6 +179,8 @@ function finish(deps: Phase4Deps, run: Run, now: () => Date, p: Part1, chat: Cha
   say(`  AC-4 on every pass of every session (${clip.sessions.map((s) => s.session).join(", ") || "none"}): ${describeClip(clip)}; preset listed after the restart: ${yn(lines.preset_listed_after_restart)}; preset applies: ${yn(lines.preset_applies)}`);
   say(`  write to the photo while a copy was selected: ${yn(lines.unselected_original_write)}; photo put back after Part 1: ${yn(lines.photo_put_back)}`);
   say(`Also recorded: new copies start with the photo's settings: ${yn(also.copies_start_as_master)}; contact sheet letters readable: ${also.contact_sheet_letters_readable === null ? "not asked" : yn(also.contact_sheet_letters_readable)}.`);
-  say(`Cleanup: copies removed ${tidy.copiesGone} of ${tidy.copies}; presets removed ${tidy.presetsGone} of ${tidy.presets}; photo as before the check: ${tidy.masterAsBefore === null ? "not checked" : yn(tidy.masterAsBefore)}.`);
+  const unchecked = tidy.verified ? "" : " (not checked: the check could not reach Lightroom)";
+  const unconfirmed = tidy.unconfirmed.length ? `; copies the check could not confirm: ${tidy.unconfirmed.join(", ")}` : "";
+  say(`Cleanup: copies removed ${tidy.copiesGone} of ${tidy.copies}${unchecked}${unconfirmed}; presets removed ${tidy.presetsGone} of ${tidy.presets}; photo as before the check: ${tidy.masterAsBefore === null ? "not checked" : yn(tidy.masterAsBefore)}.`);
   return { accepted, results: r };
 }

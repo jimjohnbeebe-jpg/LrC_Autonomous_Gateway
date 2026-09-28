@@ -40,6 +40,12 @@ export async function converge(deps: Phase4Deps, run: Run): Promise<Converged | 
       run.fail(`session A's ${log.success ? "recipe" : "log"} does not validate against its schema`);
       return null;
     }
+    // A session whose scripted passes were all refused holds pass 0 only: it did not run as scripted,
+    // so its AC-4 and its recipe count for nothing (Greptile, PR #37).
+    if (steps < 1 || steps > 4) {
+      run.fail(`session A made ${steps} scripted passes, not 1-4 (details in converge.session_a.passes)`);
+      return null;
+    }
     return { sessionId: String(a.begin["session_id"]), recipe: recipe.data, clip };
   } catch (err) {
     fx["error"] = errorBody(err);

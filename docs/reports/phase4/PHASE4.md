@@ -80,19 +80,23 @@ In Phase 4 the pick is `lr_select_variant` in chat, not the HUD [stated: Jim, 20
    - The check reads the copy back: every setting the preset carries must now match the pick's.
 
 *Part 2*, Variants in a Claude Desktop chat on the same photo:
-- Jim starts Claude Desktop and sends `Make three variants of the active photo for a golden hour landscape, let me pick one, then refine the one I pick.` He picks in the chat.
+- Jim starts Claude Desktop and sends `Make three variants of the active photo for a golden hour landscape, give each one a refined pass, let me pick one, then refine the one I pick.` He picks in the chat.
 - From the engine's tool log, the check needs:
   - a Variants session on the photo with three copies;
+  - a refined pass on each copy before the pick (PRD 6.6 step 4, the way to `awaiting_pick`, which PHASES.md lists for Phase 4);
   - a pick;
   - at least one pass after the pick;
   - accept.
+- When Claude began more than one Variants session, the one that ended with accept is judged, and the copies of every session join the cleanup.
 - Questions 3-5: the contact sheet seen, its letters readable (P-10), the pick asked for and followed.
 
 *Cleanup*, whatever happened before it:
 - Jim quits Claude Desktop.
 - He removes the virtual copies the check and the chat made. The check looks each one up by uuid.
+  - A copy command that got no answer may still have made copies the check knows no uuid for. The check names them for Jim and reports them as not confirmable.
 - He deletes the three presets. The check looks for their files. A preset Lightroom never listed is deleted by the check itself.
 - The photo is compared with its settings before the check.
+- If the check cannot take the bridge back from Claude Desktop, the presets are still cleaned up (they need only their files), and the copies and the photo are reported as not checked.
 
 The headline `Phase 4 acceptance: WORKED / FAILED` covers:
 - AC-3, scripted and in the chat;
@@ -145,7 +149,7 @@ Do these after Claude Code says the `phase-4/check` PR is merged. Allow about 15
 10. It prints the Part 2 steps. Do them:
     1. Start Claude Desktop (Start menu > Claude).
     2. Open a new chat, type this sentence and press Enter:
-       `Make three variants of the active photo for a golden hour landscape, let me pick one, then refine the one I pick.`
+       `Make three variants of the active photo for a golden hour landscape, give each one a refined pass, let me pick one, then refine the one I pick.`
     3. If Claude Desktop asks whether Claude may use an lrc-avg tool, choose **Always allow**.
     4. The contact sheet (the copies side by side) is inside Claude's tool step: click the step in Claude's answer to open it.
     5. When Claude asks which copy you want, answer with its letter.
@@ -161,6 +165,7 @@ Do these after Claude Code says the `phase-4/check` PR is merged. Allow about 15
        - click the first copy next to `20260907-_OZ80099.NEF` (each copy has a turned-page corner), then Ctrl-click each of the others; do not select the original;
        - press **Delete**, click **Remove**, then press Enter.
        - If it lists copies that are still there, remove those the same way and press Enter.
+       - If it says `Also remove any copies named …`, remove those too if you see them.
     3. Delete the three presets:
        - press **D**; in the **Presets** panel open **LrC-AVG**;
        - right-click each preset it names > **Delete** (if Lightroom asks to confirm, click **Delete**);
@@ -187,7 +192,7 @@ Do these after Claude Code says the `phase-4/check` PR is merged. Allow about 15
 
 Checks Claude Code ran on 2026-09-27, before Jim's run. None of them involves Lightroom.
 
-- **Engine tests: 531 pass, 1 skipped** on the `phase-4/check` branch [handle: `npm test`, "Tests 531 passed | 1 skipped (532)"]. `npm run build` and `npm run typecheck` pass too. The tests run against the fake plugin and the **simulated Lightroom** (`engine\tests\helpers\lightroom-sim.ts`, "tonal" model). The model is made up for testing the engine's rules: **Node numbers, not Lightroom's.**
+- **Engine tests: 538 pass, 1 skipped** on the `phase-4/check` branch [handle: `npm test`, "Tests 538 passed | 1 skipped (539)"]. `npm run build` and `npm run typecheck` pass too. The tests run against the fake plugin and the **simulated Lightroom** (`engine\tests\helpers\lightroom-sim.ts`, "tonal" model). The model is made up for testing the engine's rules: **Node numbers, not Lightroom's.**
   - `phase4-check.test.ts`: **the whole check**. It printed `Phase 4 acceptance: WORKED`, left the simulated photo as it started, and emptied the simulated catalog of copies and the preset folder.
   - `phase4-check-faults.test.ts`: each failure prints FAILED on its own line and is followed by the cleanup:
     - the copies judged not visibly different;
@@ -196,7 +201,10 @@ Checks Claude Code ran on 2026-09-27, before Jim's run. None of them involves Li
     - a chat that accepted right after the pick;
     - a copy whose luma cannot be matched;
     - a failed write in the burst (the photo is still put back);
-    - a Variants begin that makes two of three copies (the session is ended with revert, and the two copies join the cleanup).
+    - a Variants begin that makes two of three copies (the session is ended with revert, and the two copies join the cleanup);
+    - a chat that picked before refining every copy;
+    - a session A whose scripted passes were all refused (it does not count; the photo is still put back).
+  - `phase4-check-cleanup.test.ts`: copies of a copy command that got no answer (named for Jim as not confirmable); two Variants sessions in the chat (the copies of both removed); Claude Desktop keeping the bridge (the presets still removed, the copies reported as not checked).
   - Also in `phase4-check-faults.test.ts`, recorded without failing: a copy left in the catalog, and a white balance that stays As Shot.
   - `phase4-chat.test.ts`: the chat's tool-log reader.
 - **Mutation check:** with `presetApplies` made to ignore the read-back, and with `chatSessionOk` made to ignore the passes after the pick, 3 tests failed; the files were restored afterwards [handle: Claude Code, 2026-09-27, `npx vitest run tests/phase4-check-faults.test.ts tests/phase4-chat.test.ts`: "Tests 3 failed | 8 passed (11)"].

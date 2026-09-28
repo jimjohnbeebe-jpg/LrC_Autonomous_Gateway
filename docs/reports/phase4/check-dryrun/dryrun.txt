@@ -21,8 +21,8 @@ Part 1: the engine runs scripted steps on one photo. Connecting...
   (bridge: connecting)
   (bridge: handshaking)
   (bridge: connected)
-Connected (514 ms, plugin 0.4.0).
-  In Lightroom's Filmstrip, click 20260907-_OZ80099.NEF (the original, not a virtual copy; stay in the Develop module). Then press Enter here.   Four virtual copies made in 1 ms; each starts with the photo's settings: YES.
+Connected (517 ms, plugin 0.4.0).
+  In Lightroom's Filmstrip, click 20260907-_OZ80099.NEF (the original, not a virtual copy; stay in the Develop module). Then press Enter here.   Four virtual copies made in 2 ms; each starts with the photo's settings: YES.
   Session A (landscape_golden_hour): pass 0 done, luma 121.102, clipping 0.0186 % / 0 %
   1/4: luma 122.151, clipping 0.0186 % / 0 %, guardrail: corrected, corrected
   2/4: luma 122.151, clipping 0.0186 % / 0 %, guardrail: corrected, corrected
@@ -33,11 +33,11 @@ Connected (514 ms, plugin 0.4.0).
   AC-5, the recipe synced onto a virtual copy: reads back exactly
   Write to the photo while a copy was selected: written YES, selection kept YES, undone by its snapshot YES.
   The photo put back as before the check: YES
-  Variants: 3 copies made with pass 0 in 358.5 ms (A natural, B dramatic, C soft).
+  Variants: 3 copies made with pass 0 in 466.6 ms (A natural, B dramatic, C soft).
 
   Look at the three copies. The check selects each one in Lightroom in turn.
   Lightroom now shows copy A (natural), "AVG landscape_golden_hour A". Look at it, then press Enter.   Lightroom now shows copy B (dramatic), "AVG landscape_golden_hour B". Look at it, then press Enter.   Lightroom now shows copy C (soft), "AVG landscape_golden_hour C". Look at it, then press Enter. 1. Did the three copies look visibly different from each other? Type y or n, then Enter:   Which copy should the session continue on? Type A, B, C, then press Enter:   Picked B; the pass after the pick went to it and the recipe is its: YES. AC-4 on every copy's passes: YES
-  Preset "AVG P4check 2026-09-28T03-45-29-315Z" written (64 settings; camera profile: YES; temperature and tint: YES).
+  Preset "AVG P4check 2026-09-28T04-04-08-175Z" written (64 settings; camera profile: YES; temperature and tint: YES).
 
 Lightroom restart: Lightroom lists a new preset only after it starts again.
   1. In Lightroom: File > Exit. Wait until Lightroom has closed.
@@ -48,14 +48,14 @@ Lightroom restart: Lightroom lists a new preset only after it starts again.
   (bridge: handshaking)
   (bridge: connected)
   Connected again (plugin 0.4.0).
-2. In the Develop module's Presets panel (left side), open the group "LrC-AVG". Is a preset named "AVG P4check 2026-09-28T03-45-29-315Z" listed? Type y or n, then Enter:   Lightroom now shows the copy "AVG P4check sync 1". In the Presets panel, click "AVG P4check 2026-09-28T03-45-29-315Z" once. Then press Enter here.   The preset applied: every setting it carries now matches: YES (10 differed before the click).
+2. In the Develop module's Presets panel (left side), open the group "LrC-AVG". Is a preset named "AVG P4check 2026-09-28T04-04-08-175Z" listed? Type y or n, then Enter:   Lightroom now shows the copy "AVG P4check sync 1". In the Presets panel, click "AVG P4check 2026-09-28T04-04-08-175Z" once. Then press Enter here.   The preset applied: every setting it carries now matches: YES (10 differed before the click).
   (bridge: stopped)
 
 Part 2: the chat in Claude Desktop.
   Lightroom shows 20260907-_OZ80099.NEF (the check selected it). Stay in the Develop module.
   1. Start Claude Desktop (Start menu > Claude).
   2. Open a new chat, type this sentence and press Enter:
-       Make three variants of the active photo for a golden hour landscape, let me pick one, then refine the one I pick.
+       Make three variants of the active photo for a golden hour landscape, give each one a refined pass, let me pick one, then refine the one I pick.
   3. If Claude Desktop asks whether Claude may use an lrc-avg tool, allow it (Always allow).
   4. The contact sheet (the copies side by side) is inside Claude's tool step: click the step in Claude's answer to open it.
   5. When Claude asks which copy you want, answer with its letter.
@@ -68,14 +68,14 @@ Cleanup.
   First quit Claude Desktop: right-click the Claude icon in the Windows system tray > Quit. Then press Enter here.   (bridge: connecting)
   (bridge: handshaking)
   (bridge: connected)
-  Remove the 10 virtual copies of 20260907-_OZ80099.NEF that the check and the chat made (their copy names start with "AVG"):
+  Remove the virtual copies of 20260907-_OZ80099.NEF that the check and the chat made (10 known; their copy names start with "AVG"):
   1. Press G for the Library module's Grid.
   2. The copies sit next to 20260907-_OZ80099.NEF; each has a turned-page corner at the bottom left of its thumbnail.
   3. Click the first copy, then Ctrl-click each of the others. Do not select the photo without the corner (the original).
   4. Press Delete. Lightroom asks whether to remove the virtual copies: click Remove.
      If the dialog offers "Delete from Disk", click Cancel: the original is selected too. Then start again at step 3.
   5. Press Enter here.   Copies removed: 10 of 10.
-  Delete these presets in the group "LrC-AVG": "AVG preset reference", "AVG preset reference 2", "AVG P4check 2026-09-28T03-45-29-315Z".
+  Delete these presets in the group "LrC-AVG": "AVG preset reference", "AVG preset reference 2", "AVG P4check 2026-09-28T04-04-08-175Z".
   1. Press D for the Develop module. In the Presets panel (left side), open the group "LrC-AVG".
   2. Right-click each of them > Delete. If Lightroom asks to confirm, click Delete.
   3. Press Enter here.   Presets removed: 3 of 3.
@@ -88,7 +88,7 @@ Phase 4 acceptance: WORKED
   write to the photo while a copy was selected: YES; photo put back after Part 1: YES
 Also recorded: new copies start with the photo's settings: YES; contact sheet letters readable: YES.
 Cleanup: copies removed 10 of 10; presets removed 3 of 3; photo as before the check: YES.
-Results saved automatically: %USERPROFILE%\AppData\Local\Temp\LrC-AVG\P4\p4_check_2026-09-28T03-45-29-315Z.json
+Results saved automatically: %USERPROFILE%\AppData\Local\Temp\LrC-AVG\P4\p4_check_2026-09-28T04-04-08-175Z.json
 Nothing to copy. Tell Claude Code "done".
 
 [driver] chat: begin ok true with 1 image(s), 3 copies; pick true; step 2/4; end accept

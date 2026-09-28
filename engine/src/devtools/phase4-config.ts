@@ -1,14 +1,13 @@
 // The Phase 4 check's fixed values, its dependencies and the helpers its modules share
 // (phase4-check.ts runs the check; plan approved by Jim 2026-09-28 [stated: "Go"], PHASE4_PLAN row 10).
 
-import type { BridgeClient, PhotoExpect } from "../bridge/index.js";
-import type { BridgeGate, Tools } from "../mcp/index.js";
+import { BridgeError, type BridgeClient, type PhotoExpect } from "../bridge/index.js";
+import { toToolError, type BridgeGate, type Tools } from "../mcp/index.js";
 import { differingSettings, type CanonicalSettings, type FromSdkResult, type ParamMap } from "../params/index.js";
 import type { PreviewService } from "../preview/index.js";
 import type { Answer } from "./phase1-check.js";
 import { describeError } from "./phase1-check.js";
 import type { ChatLogs } from "./phase2-check.js";
-import { toToolError } from "../mcp/index.js";
 import type { Json } from "./phase3-config.js";
 
 export type { Answer, Json };
@@ -47,9 +46,10 @@ export const PREPARE_HISTORY_NAME = "AVG P4check preset source";
 export const REFERENCE_PRESETS = ["AVG preset reference", "AVG preset reference 2"] as const;
 /**
  * The chat (Part 2): Variants in Claude Desktop with the pick in chat (PHASE4_PLAN decision 3). It
- * asks for a pass after the pick, which AC-3's "continues convergence on it" needs.
+ * asks for a refined pass on each copy before the pick (PRD 6.6 step 4, the way to `awaiting_pick`)
+ * and a pass after it, which AC-3's "continues convergence on it" needs (phase4-chat.ts chatSessionOk).
  */
-export const CHAT_PROMPT = "Make three variants of the active photo for a golden hour landscape, let me pick one, then refine the one I pick.";
+export const CHAT_PROMPT = "Make three variants of the active photo for a golden hour landscape, give each one a refined pass, let me pick one, then refine the one I pick.";
 /** create_virtual_copies of four: the plugin's 10 s lock wait plus 4 x 5 s, as session\copies.ts sizes it [inference]. */
 export const COPIES_TIMEOUT_MS = 30000;
 export const WRITE_TIMEOUT_MS = 30000;
@@ -73,6 +73,8 @@ export type Phase4Deps = {
   stamp: string;
   connectTimeoutMs?: number;
   restartTimeoutMs?: number;
+  /** How long the check's own create_virtual_copies may take (COPIES_TIMEOUT_MS; tests shorten it). */
+  copiesTimeoutMs?: number;
   now?: () => Date;
 };
 
@@ -87,6 +89,12 @@ export type Run = {
   errors: string[];
   fail: (message: string) => void;
   copies: CopyRecord[];
+  /**
+   * Names of copies that may exist although the check knows no uuid for them: a copy command that
+   * got no answer, or a copy that came back without a uuid (Greptile, PR #37). The cleanup asks Jim
+   * to remove them too, and says it cannot confirm them.
+   */
+  unconfirmedCopies: string[];
   /** Session A's pre-session snapshot of the photo, once the session accepted: it puts the photo back. */
   masterSnapshot: { id: string; name: string } | null;
   /** The check's own preset, once written. */
@@ -114,6 +122,22 @@ export function differingIn(names: readonly string[], a: Readonly<Record<string,
 
 /** A step's error for the results and the window. */
 export const failLine = (what: string, err: unknown): string => `${what}: ${describeError(err)}`;
+
+/**
+ * A command that got no answer (timeout, lost bridge) may still have been carried out by Lightroom;
+ * one refused before it was sent (`not_connected`) was not [handle: engine\src\sync\target.ts
+ * UNANSWERED and neverSent(), the same rule for the sync's writes].
+ */
+export function mayHaveLanded(err: unknown): boolean {
+  if (err instanceof BridgeError && err.code === "not_connected") return false;
+  const code = toToolError(err).code;
+  return code === "BRIDGE_TIMEOUT" || code === "BRIDGE_DISCONNECTED";
+}
+
+/** Record names of copies that may exist without a known uuid, once each. */
+export function addUnconfirmed(run: Run, names: readonly string[]): void {
+  for (const n of names) if (!run.unconfirmedCopies.includes(n)) run.unconfirmedCopies.push(n);
+}
 
 /** An error for the results, with its code as Claude would see it (a plugin error's code upper-cased: mcp\errors.ts toToolError). */
 export const errorBody = (err: unknown): Json => ({ ...toToolError(err).body() });

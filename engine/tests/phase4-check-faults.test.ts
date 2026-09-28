@@ -6,6 +6,7 @@
 import { readdirSync } from "node:fs";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
+import { ToolError } from "../src/mcp/index.js";
 import { h, map, runCheck, usePhase4Harness, YES } from "./helpers/phase4-harness.js";
 
 usePhase4Harness();
@@ -48,6 +49,31 @@ describe("devtools: Phase 4 check, failures", () => {
     expect(accepted).toBe(false);
     expect(summaryOf(results)).toMatchObject({ ac3_chat: false, ac3_variants_scripted: true, preset_applies: true });
     expect(results["chat"]).toMatchObject({ picked: "C", steps_after_pick: 0, session_ended: "accept" });
+  });
+
+  it("fails AC-3 in the chat when Claude picked before refining every copy (Greptile, PR #37)", { timeout: 120000 }, async () => {
+    h.sim.chatRefines = ["C"];
+    const { accepted, results } = await runCheck(YES);
+    expect(accepted).toBe(false);
+    expect(summaryOf(results)).toMatchObject({ ac3_chat: false, ac3_variants_scripted: true });
+    expect(results["chat"]).toMatchObject({ refined_before_pick: ["C"], picked: "C", steps_after_pick: 1, session_ended: "accept" });
+  });
+
+  it("does not count session A when every scripted pass was refused, and still puts the photo back (Greptile, PR #37)", { timeout: 120000 }, async () => {
+    const start = map.fromSdk(structuredClone(h.lr.settings)).settings;
+    const { accepted, results } = await runCheck(YES, {
+      tamper: (tools) => {
+        const step = tools.step.bind(tools);
+        tools.step = async (args) => {
+          if (args.rationale.startsWith("scripted pass: ")) throw new ToolError("GUARDRAIL_REFUSED", "refused (test)", false); // session A's SCRIPT only
+          return step(args);
+        };
+      },
+    });
+    expect(accepted).toBe(false);
+    expect(results["errors"]).toEqual(expect.arrayContaining([expect.stringMatching(/session A made 0 scripted passes, not 1-4/)]));
+    expect(summaryOf(results)).toMatchObject({ ac4_clipping: false, ac5_log_and_sync_replay: false, sync_burst_within_2: false, photo_put_back: true, ac3_variants_scripted: true });
+    expect(map.fromSdk(h.lr.settings).settings).toEqual(start);
   });
 
   it("fails the burst when a copy's luma cannot be matched, and still puts the photo back", { timeout: 120000 }, async () => {

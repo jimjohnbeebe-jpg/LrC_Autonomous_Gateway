@@ -2,14 +2,15 @@
 // sheet (Phase 0, P-10: "not inline in the Desktop answer; test its delivery and readability") and
 // the pick in chat (PHASE4_PLAN decision 3). Claude Desktop's engine writes the tool log; the check
 // reads the chat's records from it (phase2-collect.ts), as Phase 3's chat did (phase3-chat.ts), and
-// Jim answers y/n. A Variants session does not edit the master [handle: engine\src\session\variants.ts header;
-// tests\session-variants.test.ts], so the photo
-// needs no putting back; the chat's copies join the cleanup. The chat session's AC-4 reads the log
+// Jim answers y/n. A Variants session does not edit the master [handle: engine\src\session\variants.ts
+// header; tests\session-variants.test.ts], so the photo needs no putting back; the chat's copies
+// join the cleanup. The chat session's AC-4 reads the log
 // its begin record names in `log_path` [handle: engine\src\session\variants.ts runVariants, the
 // begin's log record].
 
 import { clipCheckAll, clipCheckFile, describeClip, type SessionClip } from "./clip-check.js";
-import { CHAT_PROMPT, PHOTO, type Json, type Phase4Deps, type Run } from "./phase4-config.js";
+import { CHAT_PROMPT, PHOTO, addUnconfirmed, type Json, type Phase4Deps, type Run } from "./phase4-config.js";
+import { copiesInError } from "./phase4-copies.js";
 
 type Rec = Record<string, unknown>;
 
@@ -31,13 +32,21 @@ export type VariantsChat = {
 };
 
 const text = (v: unknown): string | null => (typeof v === "string" ? v : null);
+const isVariantsBegin = (r: Rec): boolean => r["tool"] === "lr_begin_session" && r["ok"] === true && r["mode"] === "variants";
+const call = (tool: string, sid: unknown) => (r: Rec): boolean => r["tool"] === tool && r["ok"] === true && r["session_id"] === sid;
 
-/** What the chat's tool log shows of its Variants session: the begin, the passes, the pick, the end. */
+/**
+ * What the chat's tool log shows of its Variants session: the begin, the passes, the pick, the end.
+ * When Claude began more than one, the one that ended with accept (else the last) is judged; the
+ * copies of every one join the cleanup (chatCopies, Greptile PR #37).
+ */
 export function evaluateVariantsChat(records: readonly Rec[]): VariantsChat {
   const tool_calls = records.map((r) => ({ ts: r["ts"], tool: r["tool"], ok: r["ok"], ...(r["error"] ? { error_code: (r["error"] as { code?: unknown }).code } : {}) }));
-  const begin = records.find((r) => r["tool"] === "lr_begin_session" && r["ok"] === true && r["mode"] === "variants");
+  const begins = records.filter(isVariantsBegin);
+  const accepted = (b: Rec): boolean => records.some((r) => call("lr_end_session", b["session_id"])(r) && r["outcome"] === "accept");
+  const begin = begins.find(accepted) ?? begins.at(-1);
   const sid = begin?.["session_id"];
-  const mine = (tool: string) => (r: Rec): boolean => r["tool"] === tool && r["ok"] === true && r["session_id"] === sid;
+  const mine = (tool: string) => call(tool, sid);
   const pickAt = begin ? records.findIndex(mine("lr_select_variant")) : -1;
   const steps = records.map((r, i) => ({ r, i })).filter(({ r }) => begin !== undefined && mine("lr_step")(r));
   const before = steps.filter(({ i }) => pickAt < 0 || i < pickAt).map(({ r }) => text(r["target"])).filter((t): t is string => t !== null);
@@ -59,17 +68,30 @@ export function evaluateVariantsChat(records: readonly Rec[]): VariantsChat {
   };
 }
 
-/** Copies a failed Variants begin made: its error names them (session\copies.ts makeCopies, VARIANTS_INCOMPLETE `details.copies`). */
-export function failedBeginCopies(records: readonly Rec[]): Array<{ uuid: string; copy_name: string }> {
-  return records
-    .filter((r) => r["tool"] === "lr_begin_session" && r["ok"] === false)
-    .flatMap((r) => ((((r["error"] as Rec | undefined)?.["details"] as Rec | undefined)?.["copies"] as Rec[] | undefined) ?? []))
-    .flatMap((c) => (typeof c["uuid"] === "string" ? [{ uuid: c["uuid"], copy_name: typeof c["copy_name"] === "string" ? c["copy_name"] : "?" }] : []));
+/**
+ * Every copy the chat's Variants begins made: each successful begin's `variants` (copy name "AVG
+ * <intent> <letter>", session\copies.ts copyName), and what a failed begin's error names
+ * (phase4-copies.ts copiesInError), the copies without a known uuid as `unconfirmed`.
+ */
+export function chatCopies(records: readonly Rec[]): { known: Array<{ uuid: string; copy_name: string }>; unconfirmed: string[] } {
+  const known = records.filter(isVariantsBegin).flatMap((b) => ((b["variants"] as Rec[] | undefined) ?? []).map((v) => ({ uuid: String(v["uuid"]), copy_name: `AVG ${String(b["intent_id"])} ${String(v["id"])}` })));
+  const unconfirmed: string[] = [];
+  for (const r of records.filter((x) => x["tool"] === "lr_begin_session" && x["ok"] === false)) {
+    const failed = copiesInError((r["error"] ?? {}) as Json);
+    known.push(...failed.known);
+    unconfirmed.push(...failed.unconfirmed);
+  }
+  return { known, unconfirmed };
 }
 
-/** The chat's Variants session met AC-3 as the tool log shows it: three copies of the photo, a pick, a pass on it, accept. */
+/**
+ * The chat's Variants session met AC-3 as the tool log shows it: three copies of the photo, a refined
+ * pass on each before the pick (PRD 6.6 step 4; PHASES.md Phase 4 lists `awaiting_pick`, which is
+ * reached only then: session\pick.ts awaitingPick; Greptile, PR #37), a pick, a pass on it, accept.
+ */
 export function chatSessionOk(e: VariantsChat): boolean {
-  return e.session_begun && e.target_filename === PHOTO && e.copies.length === 3 && e.picked !== null && e.steps_after_pick >= 1 && e.session_ended === "accept";
+  const allRefined = e.copies.every((c) => e.refined_before_pick.includes(c.id));
+  return e.session_begun && e.target_filename === PHOTO && e.copies.length === 3 && allRefined && e.picked !== null && e.steps_after_pick >= 1 && e.session_ended === "accept";
 }
 
 /** The chat outcome: AC-3 in chat (tool log + Jim), P-10's two questions, and the session's AC-4 (null when none began). */
@@ -107,9 +129,9 @@ export async function runChat(deps: Phase4Deps, run: Run): Promise<ChatOutcome> 
 function readChat(deps: Phase4Deps, run: Run, since: Date): { evaluation: VariantsChat; ac4: SessionClip | null } {
   const logs = deps.collectChat(since);
   const evaluation = evaluateVariantsChat(logs.engine_log.records);
-  // The begin record names each copy by letter and uuid; its copy name is "AVG <intent> <letter>" (session\copies.ts copyName).
-  for (const c of evaluation.copies) run.copies.push({ uuid: c.uuid, copy_name: `AVG ${evaluation.intent_id ?? "?"} ${c.id}`, made_by: "chat" });
-  for (const c of failedBeginCopies(logs.engine_log.records)) if (!run.copies.some((k) => k.uuid === c.uuid)) run.copies.push({ ...c, made_by: "chat" });
+  const copies = chatCopies(logs.engine_log.records);
+  for (const c of copies.known) if (!run.copies.some((k) => k.uuid === c.uuid)) run.copies.push({ ...c, made_by: "chat" });
+  addUnconfirmed(run, copies.unconfirmed);
   const ac4 = !evaluation.session_begun ? null : evaluation.log_path ? clipCheckFile("chat", evaluation.log_path) : { session: "chat", log_path: "", ok: false, passes: [], error: "the chat's lr_begin_session record names no log_path" };
   const chat: Json = { desktop_log: logs.desktop_log, engine_log: { found: logs.engine_log.found, saved_as: logs.engine_log.saved_as, records: logs.engine_log.records.length }, ...evaluation, ac4 };
   run.results["chat"] = chat;

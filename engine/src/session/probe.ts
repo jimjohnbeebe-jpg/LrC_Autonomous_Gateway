@@ -1,5 +1,7 @@
 // lr_probe: per-slider metric slopes, with the photo put back afterwards. In Variants mode it names
-// its copy, like lr_step (targets.ts), and the slopes are that copy's.
+// its copy, like lr_step (targets.ts), and the slopes are that copy's [handle:
+// tests\session-variants-faults.test.ts "probes a copy, names it in the History, and puts it back",
+// against the Lightroom sim].
 
 import { ToolError, toToolError } from "../mcp/errors.js";
 import { deltaMetrics, type MetricsDelta } from "../metrics/index.js";

@@ -2,7 +2,9 @@
 // "awaiting_pick"): one refined pass per copy, then the user's pick, then convergence on the pick.
 // In Phase 4 the pick is made in chat [stated: Jim, 2026-09-27, PHASE4_PLAN decision 3]. Like the
 // HUD's Pick button will be, lr_select_variant is accepted before every copy has had its refined
-// pass [inference: the plan for PHASE4_PLAN row 7, approved by Jim 2026-09-27].
+// pass [inference: the plan for PHASE4_PLAN row 7, approved by Jim 2026-09-27]. [handle:
+// tests\session-variants.test.ts "Variants mode: one refined pass per copy, then the pick", against
+// the Lightroom sim; in Lightroom [unverified] until PHASE4_PLAN row 10.]
 
 import { ToolError } from "../mcp/errors.js";
 import { summarize } from "../metrics/index.js";

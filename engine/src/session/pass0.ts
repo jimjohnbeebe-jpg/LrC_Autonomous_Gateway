@@ -1,6 +1,8 @@
 // Pass 0 on one photo (PRD 6.5): the intent's camera profile and priors, plus a variant's priors on
 // a copy (Variants mode, PRD 6.6 step 2), written as one History step; then the clipping baseline
-// "until under" (guardrail.ts correct, n = 0).
+// "until under" (guardrail.ts correct, n = 0) [handle: tests\session-begin.test.ts (the master),
+// tests\session-variants.test.ts "makes the copies, runs pass 0 on each …" (the copies), both
+// against the Lightroom sim].
 
 import type { GuardrailAction, PassEntry } from "../log/index.js";
 import { deltaMetrics, summarize, type MetricsDelta } from "../metrics/index.js";

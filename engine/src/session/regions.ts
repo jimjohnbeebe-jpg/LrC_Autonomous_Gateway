@@ -1,7 +1,8 @@
 // lr_set_regions: region boxes measured on every render; `preserve` guards their hue and
 // saturation (guardrail.ts regionDrift). No Lightroom call: the regions are measured on the last
 // preview of each photo the session edits (the master, or in Variants mode each copy), and a
-// preserved region keeps a baseline per photo, since the copies look different.
+// preserved region keeps a baseline per photo, since the copies look different [handle:
+// tests\session-variants-faults.test.ts "measures regions on every copy and keeps a baseline per copy"].
 
 import { ToolError } from "../mcp/errors.js";
 import { boxProblem, measureImage, type Metrics } from "../metrics/index.js";

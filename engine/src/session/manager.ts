@@ -17,7 +17,9 @@
 //
 // One session at a time per engine. Every command names the session's photo (C-2), so a change of
 // selection in Lightroom can never redirect a write: the plugin refuses it and the session stays
-// open (TARGET_CHANGED). In Variants mode each call selects its copy first (targets.ts).
+// open (TARGET_CHANGED). In Variants mode each call selects its copy first (targets.ts). Variants
+// mode is tested against the Lightroom sim [handle: tests\session-variants.test.ts,
+// tests\session-variants-faults.test.ts]; in Lightroom it is [unverified] until PHASE4_PLAN row 10.
 // The log is rewritten after every pass (log\session-log.ts). This class holds the open session and
 // runs the operations one at a time; io.ts has what they share.
 

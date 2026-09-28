@@ -2,6 +2,8 @@
 // runs pass 0 on each, with the intent's priors plus that copy's variant priors, and returns an
 // A/B/C contact sheet. Each copy then takes one refined lr_step; the user picks one
 // (lr_select_variant, pick.ts), and convergence continues on the pick. The master is not edited.
+// All of this is tested against the Lightroom sim [handle: tests\session-variants.test.ts,
+// tests\session-variants-faults.test.ts]; in Lightroom it is [unverified] until PHASE4_PLAN row 10.
 
 import { summarize } from "../metrics/index.js";
 import { differingSettings, type FromSdkResult } from "../params/index.js";

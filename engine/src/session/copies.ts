@@ -1,5 +1,7 @@
 // Variants mode's copies (PRD 6.6 step 1, AVG-008): what lr_begin_session checks before it writes
-// anything, and the create_virtual_copies call with its failures.
+// anything, and the create_virtual_copies call with its failures [handle:
+// tests\session-variants-faults.test.ts "refused before anything is written", "create_virtual_copies
+// fails", against the Lightroom sim; in Lightroom [unverified] until PHASE4_PLAN row 10].
 
 import { pluginVersionAtLeast, type CommandResult } from "../bridge/index.js";
 import type { LoadedIntent } from "../intents/index.js";
@@ -44,7 +46,7 @@ export function checkVariants(ctx: SessionContext, loaded: LoadedIntent, photo: 
   return n;
 }
 
-/** "AVG <intent id> A" (PHASE4_PLAN assumptions); the plugin requires the "AVG " prefix. */
+/** "AVG <intent id> A" (PHASE4_PLAN assumptions); the plugin requires the "AVG " prefix [handle: plugin\LrC-AVG.lrplugin\Catalog.lua validNames()]. */
 export const copyName = (s: Session, id: VariantId): string => `AVG ${s.intent.intent.id} ${id}`;
 
 export function variantEntry(t: Target, picked: boolean): VariantEntry {

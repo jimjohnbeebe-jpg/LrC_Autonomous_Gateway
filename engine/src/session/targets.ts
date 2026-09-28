@@ -6,7 +6,9 @@
 // [handle: plugin\LrC-AVG.lrplugin\Develop.lua:26-38, target()], so each call first selects its
 // copy with select_photo, whose identity check refuses a photo that is not that copy of the master
 // (Phase 0, P-18) [handle: plugin\LrC-AVG.lrplugin\Catalog.lua selectPhoto]. A click elsewhere in
-// Lightroom between two calls is overridden by the next call, until PHASE4_PLAN row 8 lets the
+// Lightroom between two calls is overridden by the next call [handle: tests\session-variants.test.ts
+// "selects each copy before working on it, with its identity as the plugin checks it", against the
+// Lightroom sim; in Lightroom [unverified] until PHASE4_PLAN row 10], until PHASE4_PLAN row 8 lets the
 // plugin work on a photo that is not selected [handle: docs\reports\phase4\S7.md Verdict 4].
 
 import { ToolError, toToolError } from "../mcp/errors.js";

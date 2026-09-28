@@ -1,7 +1,9 @@
 // lr_end_session (accept: log and recipe; revert: the pre-session snapshot) and lr_get_session_log.
 // In Variants mode, accept takes the recipe from the pick, and revert puts the master back; the
 // copies stay in the catalog either way, named in the result [stated: Jim, 2026-09-27, PHASE4_PLAN
-// decision 4: the SDK has no call that removes a photo].
+// decision 4: the SDK has no call that removes a photo; handle: tests\session-variants.test.ts
+// "refuses accept before a pick; revert puts the master back and keeps the copies with their edits",
+// against the Lightroom sim; in Lightroom [unverified] until PHASE4_PLAN row 10].
 
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";

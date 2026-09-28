@@ -2,7 +2,9 @@
 // guardrail, written as one History step, rendered and measured; then the actual guardrail
 // (corrections), the undo of a pass that still breaches a limit or moves a preserved region, and
 // convergence. In Variants mode the step names its copy (targets.ts), each copy takes one refined
-// pass before the pick, and the step that completes that round returns the contact sheet (pick.ts).
+// pass before the pick, and the step that completes that round returns the contact sheet (pick.ts)
+// [handle: tests\session-variants.test.ts "steps each copy once, refuses a second step before the
+// pick, and ends the round with awaiting_pick and the contact sheet", against the Lightroom sim].
 
 import type { GuardrailAction } from "../log/index.js";
 import { ToolError } from "../mcp/errors.js";

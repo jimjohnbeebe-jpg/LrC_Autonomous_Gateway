@@ -1,7 +1,9 @@
 // lr_begin_session: open the session (checks, snapshot, log), then pass 0 (camera profile, lens,
 // intent priors, then the clipping baseline) with its preview, metrics and the intent's brief.
 // Converge mode runs pass 0 on the master here (runPass0); Variants mode makes the copies and runs
-// pass 0 on each (variants.ts runVariants).
+// pass 0 on each (variants.ts runVariants) [handle: tests\session-variants.test.ts "makes the
+// copies, runs pass 0 on each with the intent's priors plus its variant's, and leaves the master
+// alone", against the Lightroom sim; in Lightroom [unverified] until PHASE4_PLAN row 10].
 
 import { existsSync } from "node:fs";
 import type { CommandResult } from "../bridge/index.js";

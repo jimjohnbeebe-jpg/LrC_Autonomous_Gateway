@@ -71,6 +71,7 @@ npm run phase2:check        # Phase 2 acceptance check: Lightroom + the Claude D
 npm run schemas             # regenerate engine\schemas\*.schema.json from the zod schemas (a test fails when stale)
 npm run phase3:check        # Phase 3 acceptance check: six fixtures + one Claude Desktop chat (docs\reports\phase3\PHASE3.md)
 npm run goldens             # after the check: golden JPEGs to tests\golden\ (gitignored) + golden.json (committed)
+npm run phase4:check        # Phase 4 acceptance check: one photo, a Lightroom restart, one Claude Desktop chat, cleanup (docs\reports\phase4\PHASE4.md)
 npm run preset:capture      # Lightroom's own reference preset + its photo's settings -> engine\tests\fixtures\presets\ (--precheck, --second)
 npm run preset:pin          # regenerate engine\src\params\preset-format.lrc15.json from those references (a test fails when stale)
 node engine\dist\mcp\main.js # the stdio MCP server (Claude Desktop starts it; tool log in $env:LRC_AVG_LOG_DIR or %LOCALAPPDATA%\LrC-AVG\logs)

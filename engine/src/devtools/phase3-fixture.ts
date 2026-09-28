@@ -59,8 +59,8 @@ async function saveGolden(deps: Phase3Deps, name: string, fx: Json): Promise<voi
   deps.say(`  Golden JPEG saved (${String(golden.json["width"])}x${String(golden.json["height"])}).`);
 }
 
-/** 2. Session A: pass 0, the scripted passes, accept. Returns lr_begin_session's and lr_end_session's results. */
-async function sessionA(deps: Phase3Deps, fx: Json, history: string[]): Promise<{ begin: Json; end: Json }> {
+/** 2. Session A: pass 0, the scripted passes, accept. Returns lr_begin_session's and lr_end_session's results. Phase 4's check runs it too. */
+export async function sessionA(deps: Pick<Phase3Deps, "tools" | "say">, fx: Json, history: string[]): Promise<{ begin: Json; end: Json }> {
   const a: Json = { ok: false, passes: [] as Json[] };
   fx["session_a"] = a;
   const begin = (await deps.tools.beginSession({ intent_id: INTENT_A, return_image: "none" })).json;
@@ -79,7 +79,7 @@ async function sessionA(deps: Phase3Deps, fx: Json, history: string[]): Promise<
 }
 
 /** One scripted pass of session A, recorded in `pass`. True when the session converged or reached its cap. */
-async function scriptedPass(deps: Phase3Deps, sid: string, step: (typeof SCRIPT)[number], pass: Json, history: string[]): Promise<boolean> {
+async function scriptedPass(deps: Pick<Phase3Deps, "tools" | "say">, sid: string, step: (typeof SCRIPT)[number], pass: Json, history: string[]): Promise<boolean> {
   try {
     const out = (await deps.tools.step({ session_id: sid, settings: step.settings, rationale: step.rationale, return_image: "none" })).json;
     history.push(...historyOf(out));

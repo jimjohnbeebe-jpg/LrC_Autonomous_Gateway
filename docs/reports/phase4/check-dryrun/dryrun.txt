@@ -1,0 +1,192 @@
+phase-4/check dry run of `npm run phase4:check` (PHASE4_PLAN row 10) - Claude Code (Opus 5.5), 2026-09-27 local (UTC-7)
+What ran: the built CLI `engine\dist\devtools\phase4-check-cli.js` (after `npm run build` on branch
+phase-4/check), its prompts answered by the driver in the appendix. Lightroom was NOT involved: the
+CLI talked to the simulated plugin of the engine tests (engine\tests\helpers\fake-plugin.ts and
+lightroom-sim.ts, "tonal" model, a made-up render) on OS-chosen ports with its own token file
+(LRC_AVG_COMMAND_PORT, LRC_AVG_EVENT_PORT, LRC_AVG_TOKEN_FILE). Part 2's "Claude Desktop" was the real
+engine `engine\dist\mcp\main.js` over stdio MCP, driven by the driver (a Variants session: begin,
+one lr_step per copy, lr_select_variant C, one lr_step, accept). LRC_AVG_PRESET_DIR and LRC_AVG_LOG_DIR
+pointed at a scratch folder, so neither Lightroom's preset folder nor the repo's logs\ was written.
+Jim's "clicks" were simulated as the engine tests do (tests\helpers\phase4-harness.ts): the restart
+drops the plugin's connection, the preset click applies the preset file's crs: attributes, the
+removals empty the sim's copies and delete the preset files. The sim sets WhiteBalance "Custom" when
+Temperature is written (lightroom-sim.ts customWhiteBalanceOnTemperature, [inference]).
+Numbers below are the sim's, not Lightroom's. The CLI's own output folder %TEMP%\LrC-AVG\P4 was
+deleted afterwards so Jim's run starts clean. User folder written as %USERPROFILE%.
+Stdin is a pipe, so the answers are not echoed: a prompt and the next output share a line.
+
+== CLI output ==
+LrC-AVG Phase 4 check
+Part 1: the engine runs scripted steps on one photo. Connecting...
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+Connected (517 ms, plugin 0.4.0).
+  In Lightroom's Filmstrip, click 20260907-_OZ80099.NEF (the original, not a virtual copy; stay in the Develop module). Then press Enter here.   Four virtual copies made in 2 ms; each starts with the photo's settings: YES.
+  Session A (landscape_golden_hour): pass 0 done, luma 121.102, clipping 0.0186 % / 0 %
+  1/4: luma 122.151, clipping 0.0186 % / 0 %, guardrail: corrected, corrected
+  2/4: luma 122.151, clipping 0.0186 % / 0 %, guardrail: corrected, corrected
+  3/4: luma 122.151, clipping 0.0186 % / 0 %
+  4/4: luma 122.84, clipping 0.1763 % / 0 %
+  Session A accepted: log valid YES, recipe valid YES; AC-4 on every pass: YES
+  Sync with adaptive exposure (source luma 122.84): copy 1: 122.8 after 3 renders; copy 2: 123.5 after 2 renders; copy 3: 122.5 after 3 renders. Within ±2/255, measured again: YES.
+  AC-5, the recipe synced onto a virtual copy: reads back exactly
+  Write to the photo while a copy was selected: written YES, selection kept YES, undone by its snapshot YES.
+  The photo put back as before the check: YES
+  Variants: 3 copies made with pass 0 in 466.6 ms (A natural, B dramatic, C soft).
+
+  Look at the three copies. The check selects each one in Lightroom in turn.
+  Lightroom now shows copy A (natural), "AVG landscape_golden_hour A". Look at it, then press Enter.   Lightroom now shows copy B (dramatic), "AVG landscape_golden_hour B". Look at it, then press Enter.   Lightroom now shows copy C (soft), "AVG landscape_golden_hour C". Look at it, then press Enter. 1. Did the three copies look visibly different from each other? Type y or n, then Enter:   Which copy should the session continue on? Type A, B, C, then press Enter:   Picked B; the pass after the pick went to it and the recipe is its: YES. AC-4 on every copy's passes: YES
+  Preset "AVG P4check 2026-09-28T04-04-08-175Z" written (64 settings; camera profile: YES; temperature and tint: YES).
+
+Lightroom restart: Lightroom lists a new preset only after it starts again.
+  1. In Lightroom: File > Exit. Wait until Lightroom has closed.
+  2. Start Lightroom again (Start menu > Adobe Lightroom Classic) and open the Develop module.
+  3. Then press Enter here.   (bridge: dropped (event socket closed))
+  (bridge: connecting)
+  Waiting for the LrC-AVG plugin to connect again (up to 3 minutes)...
+  (bridge: handshaking)
+  (bridge: connected)
+  Connected again (plugin 0.4.0).
+2. In the Develop module's Presets panel (left side), open the group "LrC-AVG". Is a preset named "AVG P4check 2026-09-28T04-04-08-175Z" listed? Type y or n, then Enter:   Lightroom now shows the copy "AVG P4check sync 1". In the Presets panel, click "AVG P4check 2026-09-28T04-04-08-175Z" once. Then press Enter here.   The preset applied: every setting it carries now matches: YES (10 differed before the click).
+  (bridge: stopped)
+
+Part 2: the chat in Claude Desktop.
+  Lightroom shows 20260907-_OZ80099.NEF (the check selected it). Stay in the Develop module.
+  1. Start Claude Desktop (Start menu > Claude).
+  2. Open a new chat, type this sentence and press Enter:
+       Make three variants of the active photo for a golden hour landscape, give each one a refined pass, let me pick one, then refine the one I pick.
+  3. If Claude Desktop asks whether Claude may use an lrc-avg tool, allow it (Always allow).
+  4. The contact sheet (the copies side by side) is inside Claude's tool step: click the step in Claude's answer to open it.
+  5. When Claude asks which copy you want, answer with its letter.
+  6. Wait until Claude says it has finished and has ended the session.
+  7. Come back to this window and press Enter. 3. Did you see the contact sheet, the copies side by side? Type y or n, then Enter: 4. Could you tell on it which copy is A, B and C? Type y or n, then Enter: 5. Did Claude ask you to pick, and then carry on with the copy you picked? Type y or n, then Enter: Chat log: Claude Desktop's MCP log found (0 lines); engine tool log found (7 calls).
+  Variants session: YES (landscape_golden_hour on 20260907-_OZ80099.NEF, 3 copies); picked: C; passes after the pick: 1; ended: accept
+  AC-4 on every pass of the chat's session: YES
+
+Cleanup.
+  First quit Claude Desktop: right-click the Claude icon in the Windows system tray > Quit. Then press Enter here.   (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+  Remove the virtual copies of 20260907-_OZ80099.NEF that the check and the chat made (10 known; their copy names start with "AVG"):
+  1. Press G for the Library module's Grid.
+  2. The copies sit next to 20260907-_OZ80099.NEF; each has a turned-page corner at the bottom left of its thumbnail.
+  3. Click the first copy, then Ctrl-click each of the others. Do not select the photo without the corner (the original).
+  4. Press Delete. Lightroom asks whether to remove the virtual copies: click Remove.
+     If the dialog offers "Delete from Disk", click Cancel: the original is selected too. Then start again at step 3.
+  5. Press Enter here.   Copies removed: 10 of 10.
+  Delete these presets in the group "LrC-AVG": "AVG preset reference", "AVG preset reference 2", "AVG P4check 2026-09-28T04-04-08-175Z".
+  1. Press D for the Develop module. In the Presets panel (left side), open the group "LrC-AVG".
+  2. Right-click each of them > Delete. If Lightroom asks to confirm, click Delete.
+  3. Press Enter here.   Presets removed: 3 of 3.
+  20260907-_OZ80099.NEF is as it was before the check: YES.
+  (bridge: stopped)
+
+Phase 4 acceptance: WORKED
+  AC-3 Variants (scripted): YES; AC-3 in the chat: YES; burst sync within ±2/255: YES; AC-5 recipe synced onto a copy: YES
+  AC-4 on every pass of every session (A, variants, chat): YES; preset listed after the restart: YES; preset applies: YES
+  write to the photo while a copy was selected: YES; photo put back after Part 1: YES
+Also recorded: new copies start with the photo's settings: YES; contact sheet letters readable: YES.
+Cleanup: copies removed 10 of 10; presets removed 3 of 3; photo as before the check: YES.
+Results saved automatically: %USERPROFILE%\AppData\Local\Temp\LrC-AVG\P4\p4_check_2026-09-28T04-04-08-175Z.json
+Nothing to copy. Tell Claude Code "done".
+
+[driver] chat: begin ok true with 1 image(s), 3 copies; pick true; step 2/4; end accept
+[driver] exit code 0; History steps 40; exports 41; copies left 0; preset files left 0
+
+== Appendix: the driver (a scratch vitest file, engine\tests\zz-scratch-p4-dryrun.test.ts, run with `npx vitest run tests/zz-scratch-p4-dryrun.test.ts` in engine\, then deleted) ==
+// SCRATCH (not committed): dry run of the built `phase4-check-cli.js` against the simulated plugin on
+// OS-chosen ports with its own token file, so Jim's Lightroom is not touched; the real
+// `engine\dist\mcp\main.js` plays Claude Desktop in Part 2 (a Variants session over stdio MCP).
+// LRC_AVG_PRESET_DIR and LRC_AVG_LOG_DIR point at a scratch folder. The CLI's own results go to
+// %TEMP%\LrC-AVG\P4 (deleted afterwards by hand).
+
+import { spawn } from "node:child_process";
+import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { expect, it } from "vitest";
+import { parseXml, presetDescription } from "../src/presets/index.js";
+import { defaultPreviewDir } from "../src/preview/index.js";
+import { FakePlugin } from "./helpers/fake-plugin.js";
+import { LightroomSim } from "./helpers/lightroom-sim.js";
+
+const repo = fileURLToPath(new URL("../../", import.meta.url));
+
+it("dry run of npm run phase4:check", { timeout: 300000 }, async () => {
+  const scratch = mkdtempSync(path.join(os.tmpdir(), "lrc-avg-p4dry-"));
+  const presets = path.join(scratch, "presets");
+  const logs = path.join(scratch, "logs");
+  mkdirSync(presets);
+  mkdirSync(logs);
+  copyFileSync(path.join(repo, "engine/tests/fixtures/presets/reference.lrc15.xmp"), path.join(presets, "AVG preset reference.xmp"));
+  copyFileSync(path.join(repo, "engine/tests/fixtures/presets/reference-2.lrc15.xmp"), path.join(presets, "AVG preset reference 2.xmp"));
+  const plugin = await FakePlugin.start();
+  plugin.token = "dry-token-p4";
+  const tokenFile = path.join(scratch, "dry_token");
+  writeFileSync(tokenFile, plugin.token);
+  const lr = new LightroomSim(defaultPreviewDir());
+  lr.renderModel = "tonal";
+  lr.filename = "20260907-_OZ80099.NEF";
+  lr.customWhiteBalanceOnTemperature = true;
+  lr.install(plugin);
+  const env = { ...process.env, LRC_AVG_COMMAND_PORT: String(plugin.commandPort), LRC_AVG_EVENT_PORT: String(plugin.eventPort), LRC_AVG_TOKEN_FILE: tokenFile, LRC_AVG_PRESET_DIR: presets, LRC_AVG_LOG_DIR: logs };
+
+  const chat = async (): Promise<string> => {
+    const t = new StdioClientTransport({ command: process.execPath, args: [path.join(repo, "engine/dist/mcp/main.js")], env: env as Record<string, string>, stderr: "pipe" });
+    const c = new Client({ name: "dry-desktop", version: "0" });
+    await c.connect(t);
+    const call = async (name: string, args: Record<string, unknown>) => {
+      const r = (await c.callTool({ name, arguments: args })) as { content: Array<{ type: string; text?: string }> };
+      return { json: JSON.parse(r.content.find((x) => x.type === "text")?.text ?? "{}") as Record<string, unknown>, images: r.content.filter((x) => x.type === "image").length };
+    };
+    const begin = await call("lr_begin_session", { intent_id: "landscape_golden_hour", mode: "variants" });
+    const id = begin.json["session_id"] as string;
+    for (const target of ["A", "B", "C"]) await call("lr_step", { session_id: id, target, settings: { clarity: 3 }, rationale: "dry run" });
+    const pick = await call("lr_select_variant", { session_id: id, variant: "C" });
+    const step = await call("lr_step", { session_id: id, settings: { vibrance: 3 }, rationale: "dry run" });
+    const end = await call("lr_end_session", { session_id: id, outcome: "accept" });
+    await c.close();
+    return `chat: begin ok ${String(begin.json["ok"])} with ${begin.images} image(s), ${(begin.json["variants"] as unknown[] | undefined)?.length ?? 0} copies; pick ${String(pick.json["ok"])}; step ${String(step.json["pass"])}; end ${String(end.json["outcome"])}`;
+  };
+  const clickPreset = (name: string): void => {
+    const target = lr.copies.get(lr.selected)?.settings ?? lr.settings;
+    for (const [attr, raw] of presetDescription(parseXml(readFileSync(path.join(presets, `${name}.xmp`), "utf8"))).attrs) {
+      const key = attr.replace(/^crs:/, "");
+      if (attr.startsWith("crs:") && key in target) target[key] = typeof target[key] === "number" ? Number(raw) : raw;
+    }
+  };
+
+  const cli = spawn(process.execPath, [path.join(repo, "engine/dist/devtools/phase4-check-cli.js")], { env, stdio: ["pipe", "pipe", "pipe"] });
+  let out = "";
+  const notes: string[] = [];
+  cli.stderr.on("data", (d) => (out += String(d)));
+  let pending = Promise.resolve();
+  cli.stdout.on("data", (d) => {
+    const text = String(d);
+    out += text;
+    pending = pending.then(async () => {
+      const enter = (s = ""): void => void cli.stdin.write(`${s}\n`);
+      if (/click 20260907-_OZ80099\.NEF \(the original/.test(text)) { lr.selected = lr.uuid; enter(); }
+      else if (/Lightroom now shows copy/.test(text)) enter();
+      else if (/Type y or n, then Enter:/.test(text)) enter("y");
+      else if (/Which copy should the session continue on/.test(text)) enter("B");
+      else if (/3\. Then press Enter here/.test(text)) { plugin.dropEventClient(); enter(); }
+      else if (/click "(AVG P4check [^"]+)" once/.test(text)) { clickPreset(/click "(AVG P4check [^"]+)" once/.exec(text)?.[1] as string); enter(); }
+      else if (/7\. Come back to this window/.test(text)) { notes.push(await chat()); enter(); }
+      else if (/First quit Claude Desktop/.test(text)) enter();
+      else if (/5\. Press Enter here|Still in the catalog/.test(text)) { lr.copies.clear(); enter(); }
+      else if (/ {2}3\. Press Enter here/.test(text)) { for (const f of readdirSync(presets)) unlinkSync(path.join(presets, f)); enter(); }
+    });
+  });
+  const code = await new Promise((r) => cli.on("close", r));
+  await plugin.close();
+  const transcript = out.split(os.homedir()).join("%USERPROFILE%");
+  writeFileSync(path.join(repo, "logs", "scratch-p4-dryrun-output.txt"), `${transcript}\n[driver] ${notes.join("; ")}\n[driver] exit code ${String(code)}; History steps ${lr.history.length}; exports ${lr.exports}; copies left ${lr.copies.size}; preset files left ${readdirSync(presets).length}\n`);
+  console.log(transcript);
+  console.log(`[driver] ${notes.join("; ")}; exit ${String(code)}`);
+  expect(code).toBe(0);
+});

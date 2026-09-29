@@ -1,8 +1,8 @@
 BUILD: every run as expected.
 phase-5/hud-plugin smoke transcript (PHASE5_PLAN row 4) - Claude Code (Opus 5.5), 2026-09-29
-Plugin under test: plugin\LrC-AVG.lrplugin at commit 46951e5 (branch phase-5/hud-plugin).
+Plugin under test: plugin\LrC-AVG.lrplugin at commit c379869 (branch phase-5/hud-plugin).
 "main" = plugin\LrC-AVG.lrplugin at 7617c6b, its .lua files copied to <scratch>\old with git show.
-Engine code the results are checked against: engine\dist (npm run build at 46951e5): hudUpdatePayloadSchema,
+Engine code the results are checked against: engine\dist (npm run build at c379869): hudUpdatePayloadSchema,
 parseHudEvent and HUD_LIMITS (bridge\hud-protocol.js), COMMANDS.hud_update (bridge\protocol.js).
 Node v24.11.1; fengari 0.1.4 (a Lua 5.3 VM in JavaScript), a scratch install, not a project dependency.
 The fake Lightroom (fake-lr.lua, row 3's with a new clock; fake-hud.lua, new), the scenario scripts and
@@ -296,14 +296,28 @@ $ node run.mts <repo>
       settingsTitle: Settings page (the next session reads them):
       settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
       settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [click overtaken by a new session] windows 3, open 1, events 3, buttons on: Abort, Accept
+      connection: Connection: Claude session active
+      stage: Stage: Starting the session
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [answered while sending] windows 3, open 1, events 4, buttons on: Abort, Accept
+      connection: Connection: Claude session active
+      stage: Stage: Awaiting Claude
+      lastAction: Accept: answered by the engine at 2026-09-27 12:00:00
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
 --  events sent:
       hud_pick {"session_id":"S-1","seq_seen":5,"source":"hud","variant":"B","click_id":"UUID-0004-AAAA-BBBB"}
       hud_approve_pass {"session_id":"S-1","seq_seen":7,"source":"hud","pass":2,"click_id":"UUID-0006-AAAA-BBBB"}
       hud_abort {"session_id":"S-1","seq_seen":9,"source":"menu","click_id":"UUID-0011-AAAA-BBBB"}
+      hud_accept {"session_id":"S-4","seq_seen":1,"source":"hud","click_id":"UUID-0014-AAAA-BBBB"}
 --  messages:
       LrC-AVG: ABORT SENT: Abort sent at 2026-09-27 12:00:00; waiting for the engine
       LrC-AVG: ACCEPT NOT SENT: Accept NOT sent: the session has ended (aborted)
---  replies to hud_update: [{"applied":true,"shown":true,"opened":true},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":false,"shown":true,"opened":false,"reason":"update 3 is not newer than 7"},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":true},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":false,"shown":true,"opened":false,"reason":"session S-2 was replaced by a newer one"},{"applied":true,"shown":false,"opened":false}]
+--  replies to hud_update: [{"applied":true,"shown":true,"opened":true},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":false,"shown":true,"opened":false,"reason":"update 3 is not newer than 7"},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":true},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":false,"shown":true,"opened":false,"reason":"session S-2 was replaced by a newer one"},{"applied":true,"shown":false,"opened":false},{"applied":true,"shown":true,"opened":false}]
 --  refused commands: [{"code":"bad_request","message":"hud_update.stage must be one of begin, pass0, applying, acquiring_preview, metrics, awaiting_claude, awaiting_pick, awaiting_approval, converged, target_changed, accepted, aborted, ended","recoverable":false},{"code":"bad_request","message":"hud_update.colour is not a known field","recoverable":false}]
 --  windows: [{"title":"LrC-AVG - Vision Gateway","block_task":true,"open":false,"closed_by":"code","opened_at":1004.2,"closed_at":1052.4},{"title":"LrC-AVG - Vision Gateway","block_task":true,"open":false,"closed_by":"x","opened_at":1054.4,"closed_at":1064},{"title":"LrC-AVG - Vision Gateway","block_task":true,"open":true,"opened_at":1065}]
 --  HUD lines in the plugin log:
@@ -323,6 +337,9 @@ $ node run.mts <repo>
       2026-09-27 12:00:00.400 WARN  hud: ignored an update: session S-2 was replaced by a newer one
       2026-09-27 12:00:00.000 INFO  hud: closed
       2026-09-27 12:00:00.000 INFO  hud: shown
+      2026-09-27 12:00:00.600 INFO  hud: session S-4
+      2026-09-27 12:00:00.600 INFO  hud: hud_abort UUID-0013-AAAA-BBBB from the hud: not sent, no longer pending
+      2026-09-27 12:00:00.600 INFO  hud: hud_accept UUID-0014-AAAA-BBBB from the hud: sent
 
 PASS  C1 the plugin's HudState.check and the engine's hudUpdatePayloadSchema agree on 34 cases (and differ as expected on "an empty object where a list belongs")
 PASS  C2 text over the limit is shortened to 120 bytes, a UTF-8 name on a character boundary
@@ -351,14 +368,18 @@ PASS  H18 end: the outcome shows with the buttons off, a menu Accept is refused;
 PASS  H19 a newer session within the close delay cancels the close
 PASS  H20 a late update of a session a newer one replaced is not taken
 PASS  H21 closed with its X: updates are still taken but open nothing; Show HUD opens it again
+PASS  H22 a click overtaken by a new session before its task ran is not sent, and leaves the new session's lines alone (Greptile, PR #45)
+PASS  H23 the engine's answer arriving while the event is sent keeps its line; the send does not overwrite it (Greptile, PR #45)
 
 == Mutants ==
 PASS  mutant HudState.lua (if false then return): fails ["H14"], expected ["H14"]
 PASS  mutant HudState.lua (if false then return): fails ["H20"], expected ["H20"]
 PASS  mutant HudView.lua (and pending == nil): fails ["H12"], expected ["H12"]
 PASS  mutant Hud.lua (if false then return nil, label .. " NOT sent: the "): fails ["H10","H11","H8","H9"], expected ["H8","H9","H10","H11"]
-PASS  mutant Hud.lua (): fails ["H10","H11","H9"], expected ["H9","H10","H11"]
+PASS  mutant Hud.lua (): fails ["H10","H11","H23","H9"], expected ["H9","H10","H11","H23"]
 PASS  mutant Hud.lua (-- MUTANT: pending kept): fails ["H13","H17"], expected ["H13","H17"]
+PASS  mutant Hud.lua (if false then): fails ["H22"], expected ["H22"]
+PASS  mutant Hud.lua (local current = true -- MUTANT): fails ["H23"], expected ["H23"]
 PASS  mutant Hud.lua (if s then): fails ["H19"], expected ["H19"]
 PASS  mutant Hud.lua (-- MUTANT: no open-once guard): fails ["H18","H19","H2"], expected ["H2","H18","H19"]
 
@@ -1005,6 +1026,32 @@ snap("update after the X")
 menu("MenuHud")
 snap("Show HUD after the X")
 
+-- Greptile, PR #45: a click whose task runs after the click is out of date. Hud.update is called
+-- directly (it never yields), standing in for an update whose line task ran before the click's.
+local function direct(p)
+    out.sent_updates[#out.sent_updates + 1] = p
+    Hud.update(p)
+end
+beat()
+update(U(3, "awaiting_claude", {}, "S-3"))
+out.clicks.overtaken = FH.click("Abort")
+direct(U(1, "begin", {}, "S-4"))
+F.run(3)
+snap("click overtaken by a new session")
+-- The engine's answer arrives while the event is still being sent: the send socket's send yields
+-- once, and the answer is applied meanwhile.
+beat()
+local sendSock = F.last.send
+local plainSend = sendSock.send
+sendSock.send = function(self, line) coroutine.yield(); plainSend(self, line) end
+out.clicks.slow_send = FH.click("Accept")
+F.run(1)
+local pendingNow = _G.LrCAVG_Hud.pending
+direct(U(2, "awaiting_claude", { answered_click_id = pendingNow and pendingNow.click_id or "none", note = "Accept received." }, "S-4"))
+F.run(3)
+sendSock.send = plainSend
+snap("answered while sending")
+
 local windows = {}
 for i, w in ipairs(FH.windows) do
     windows[i] = { title = w.title, block_task = w.blockTask, open = w.open, closed_by = w.closedBy, opened_at = w.openedAt, closed_at = w.closedAt }
@@ -1280,6 +1327,15 @@ function checksOf(run: any): Check[] {
   check(run.after_x.ok && run.after_x.payload.applied && !run.after_x.payload.shown && !run.after_x.payload.opened && afterX.open === 0 &&
     afterX.windows === s3.windows && shown.open === 1 && shown.windows === s3.windows + 1,
     "H21 closed with its X: updates are still taken but open nothing; Show HUD opens it again");
+  const overtaken = snap("click overtaken by a new session");
+  check(run.clicks.overtaken === "clicked" && overtaken.events === shown.events && overtaken.lastAction === "" && overtaken.stage === "Stage: Starting the session" &&
+    String(run.log).includes("hud_abort") && /hud: hud_abort \S+ from the hud: not sent, no longer pending/.test(String(run.log)),
+    "H22 a click overtaken by a new session before its task ran is not sent, and leaves the new session's lines alone (Greptile, PR #45)");
+  const during = snap("answered while sending");
+  const accepts = evts.filter((e: any) => e.name === "hud_accept");
+  check(run.clicks.slow_send === "clicked" && during.events === overtaken.events + 1 && accepts.at(-1)?.payload.session_id === "S-4" &&
+    during.lastAction.startsWith("Accept: answered by the engine") && during.note === "Accept received." && on(during).includes("Accept"),
+    "H23 the engine's answer arriving while the event is sent keeps its line; the send does not overwrite it (Greptile, PR #45)");
   return checks;
 }
 
@@ -1347,12 +1403,16 @@ const MUTANTS: Array<[string, string, string, string[]]> = [
   // Pick then no longer frees the buttons (H9), so Approve is still off (H10) and times out as the
   // Abort (H11).
   ["Hud.lua", "if p then return nil, label .. \" NOT sent: the \"", "if false then return nil, label .. \" NOT sent: the \"", ["H8", "H9", "H10", "H11"]],
-  // The answered click not recognised: the buttons stay off (H9), Approve cannot be clicked (H10), and
-  // the Pick, not the Approve, times out (H11).
-  ["Hud.lua", "or s.answered_click_id == p.click_id", "", ["H9", "H10", "H11"]],
+  // The answered click not recognised: the buttons stay off (H9), Approve cannot be clicked (H10), the
+  // Pick, not the Approve, times out (H11), and the answer during a send is not seen either (H23).
+  ["Hud.lua", "or s.answered_click_id == p.click_id", "", ["H9", "H10", "H11", "H23"]],
   // A failed send left pending: the buttons stay off after the socket is back (H13), and the menu's
   // Abort, within the same 10 s, is refused as waiting for the Accept (H17).
-  ["Hud.lua", "if H.pending == p then H.pending = nil end", "-- MUTANT: pending kept", ["H13", "H17"]],
+  ["Hud.lua", "if current and not ok then H.pending = nil end", "-- MUTANT: pending kept", ["H13", "H17"]],
+  // Greptile, PR #45: a click no longer pending is still sent.
+  ["Hud.lua", "if H.pending ~= p then", "if false then", ["H22"]],
+  // Greptile, PR #45: the send's line written over the engine's answer.
+  ["Hud.lua", "local current = H.pending == p", "local current = true -- MUTANT", ["H23"]],
   // The close not tied to the session that ended: the newer session's window closes.
   ["Hud.lua", "if s and s.session_id == H.closeFor and HudState.isEnd(s.stage) then", "if s then", ["H19"]],
   // No open-once guard: a second and a third window (H2); the later window counts differ (H18, H19).

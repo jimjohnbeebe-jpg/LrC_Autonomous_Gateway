@@ -69,17 +69,17 @@ There is nothing to clean up. Leave the S8 plugin installed, like the other spik
 - **B**: fields bound straight to the saved settings [community: https://github.com/kyl191/lr-stash/blob/master/PluginInfoProvider.lua];
 - **C**: fields bound to the section's own table, copied into the saved settings by `endDialog`, which the SDK guide says runs when the plugin is deselected in Plug-in Manager [community: https://www.yumpu.com/en/document/view/36018599/lightroom-sdk-guide/33].
 
-Whether any of the three saves in Lightroom Classic 15.5.1 is [unverified]: that is what this rerun finds out. Menu items 3 and 4 say, for each group, whether it saved what you entered. Nothing touches your photos.
+Whether any of the three saves in Lightroom Classic 15.5.1 is [unverified]: that is what this rerun finds out. Menu items 3 and 4 are written to say, for each group, whether it saved what you entered [handle: `plugin\spikes\S8.lrplugin\S8Settings.lua:112-115`; smoke checks "all three groups saved" and "after: menu 4 reports each group" in `docs\reports\phase5\S8-smoke\smoke.txt`, run against a fake Lightroom only]. Nothing touches your photos.
 
 ### Steps for Jim (settings rerun)
 
-1. **File > Exit**. Start Lightroom Classic again and wait until the photos show. This loads the changed S8 plugin.
+1. **File > Exit**. Start Lightroom Classic again and wait until the photos show. This loads the changed S8 plugin [inference: in Phase 4 each plugin update was live after a restart, e.g. plugin 0.4.0 in the row 8 probe, vault `LrC_AVG_STATE.md`].
 2. **File > Plug-in Manager**. Click **LrC-AVG Spike S8** in the list on the left. On the right, find **AVG S8 settings test**; it now has three groups, **A**, **B** and **C**.
 3. Before changing anything, look at what **Mode** and **Max passes** show in each group. The tick boxes at step 7 ask about it.
 4. In group **A**: set **Mode** to **approve_each_pass**. In **Max passes**, select what is there, type `6`, press **Tab**.
 5. Do exactly the same in group **B**, then in group **C**.
 6. Click **Done**.
-7. **File > Plug-in Extras > AVG S8 - 3. Save the settings (BEFORE restart).** After about 5 seconds a window with tick boxes appears. Tick each statement that is true, click **Save**. The next window says for groups A, B and C whether each saved approve_each_pass and 6. Click **OK**.
+7. **File > Plug-in Extras > AVG S8 - 3. Save the settings (BEFORE restart).** After about 5 seconds a window with tick boxes appears. Tick each statement that is true, click **Save**. The next window should say for groups A, B and C whether each saved approve_each_pass and 6 (as written in `S8Settings.lua:112-115`). Click **OK**.
 8. **File > Exit**. Start Lightroom Classic again and wait until the photos show.
 9. **Before choosing any S8 menu item**: **File > Plug-in Manager**, click **LrC-AVG Spike S8**, and look at groups **A**, **B** and **C**: which still show **approve_each_pass** and **6**? Change nothing. Click **Done**.
 10. **File > Plug-in Extras > AVG S8 - 4. Save the settings (AFTER restart).** Tick the groups that showed approve_each_pass and 6 at step 9, click **Save**, then **OK**.
@@ -87,7 +87,7 @@ Whether any of the three saves in Lightroom Classic 15.5.1 is [unverified]: that
 
 ### If something goes wrong (settings rerun)
 
-- **At step 2 the section has no groups A, B and C** (it looks as in run 1): the old plugin is still loaded. Do step 1 again. If it still looks the same, stop and tell Claude Code.
+- **At step 2 the section has no groups A, B and C** (it looks as in run 1): the old plugin is probably still loaded [inference]. Do step 1 again. If it still looks the same, stop and tell Claude Code.
 - **The window at step 7 says "S8 loop running: NO"**: carry on. In run 1 this was reported right after Plug-in Manager closed while the loop was running [handle: `docs\reports\phase5\S8\s8_settings_before_restart_2026-09-28T19-00-56.json` `marks.loop_running` false with `menu_to_loop_via_G` true].
 - **You clicked Cancel in a tick-box window by mistake**: choose the same menu item again.
 - **You chose menu item 4 before looking at step 9**: do steps 8-10 again.

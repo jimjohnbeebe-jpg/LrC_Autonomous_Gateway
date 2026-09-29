@@ -20,6 +20,7 @@ import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
+import { hudUpdatePayloadSchema, type HudUpdatePayload } from "../../src/bridge/hud-protocol.js";
 import type { FakePlugin, FakeReply } from "./fake-plugin.js";
 import { createVirtualCopies, describePhoto, findPhoto, getSelection, selectPhoto, type CopyFault, type SimCopy } from "./lightroom-sim-catalog.js";
 import { defaultSimPrefs, type SimPrefs } from "./lightroom-sim-prefs.js";
@@ -76,9 +77,15 @@ export class LightroomSim {
   /** The photo each snapshot was taken of. */
   private readonly snapshotOf = new Map<string, string>();
   /** The plugin version hello reports (plugin\LrC-AVG.lrplugin\Bridge.lua PLUGIN_VERSION). */
-  pluginVersion = "0.5.0";
+  pluginVersion = "0.6.0";
   /** get_prefs's answer (lightroom-sim-prefs.ts); null: the command is unknown, as to a plugin before 0.5.0. */
   prefs: SimPrefs | null = defaultSimPrefs();
+  /**
+   * Every hud_update taken (plugin 0.6.0, Hud.lua). One the engine's schema refuses is answered
+   * bad_request, as the plugin does: its check agrees with the schema on the smoke's cases
+   * [handle: docs\reports\phase5\hud-plugin-smoke\smoke.txt, check C1].
+   */
+  readonly hudUpdates: HudUpdatePayload[] = [];
   /** Virtual copies of the master, by uuid (lightroom-sim-catalog.ts). */
   readonly copies = new Map<string, SimCopy>();
   copyFault: CopyFault | null = null;
@@ -155,6 +162,12 @@ export class LightroomSim {
     plugin.handlers.set("get_prefs", () =>
       this.prefs ? ok(luaize(this.prefs)) : { ok: false, error: { code: "unknown_command", message: "unknown command get_prefs", recoverable: false } },
     );
+    plugin.handlers.set("hud_update", (p) => {
+      const parsed = hudUpdatePayloadSchema.safeParse(p);
+      if (!parsed.success) return { ok: false, error: { code: "bad_request", message: parsed.error.message, recoverable: false } };
+      this.hudUpdates.push(parsed.data);
+      return ok({ applied: true, shown: false, opened: false });
+    });
     plugin.handlers.set("get_context", (p) => on(p, (u) => this.context(u)));
     plugin.handlers.set("get_settings", (p) => on(p, (u) => ok({ uuid: u, settings: luaize(this.settingsOf(u)) })));
     plugin.handlers.set("apply_settings", (p) =>

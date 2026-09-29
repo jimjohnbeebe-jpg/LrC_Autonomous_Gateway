@@ -12,6 +12,7 @@ local LrTasks = import 'LrTasks'
 
 local Catalog = require 'Catalog'
 local Develop = require 'Develop'
+local Hud = require 'Hud'
 local Json = require 'Json'
 local Log = require 'Log'
 local Prefs = require 'Prefs'
@@ -34,6 +35,7 @@ function Dispatch.handlers(hello)
         select_photo = Catalog.selectPhoto,
         get_selection = Catalog.getSelection,
         get_prefs = Prefs.getPrefs,
+        hud_update = Hud.update,
     }
     return HANDLERS
 end

@@ -18,6 +18,10 @@
 --         [handle: docs\reports\phase0\S2.md "Consequences"]. The engine pings every 2 s (FR-1.3).
 --   P-15  Bridge state lives in the one long-running task started here, not in _G shared with menu
 --         scripts. The menu item reads the status file <temp>\LrC-AVG\bridge_status.json instead.
+--         Since plugin 0.6.0 (PHASE5_PLAN row 4) the task also leaves a small handle on _G, so the
+--         HUD's buttons and the menu items can send events and read the connection (Events.lua):
+--         S8 found menu items and the task sharing _G [handle: LR_SDK_NOTES "Recorded in Phase 5",
+--         Shared state].
 --
 -- Token: every command must carry the token this bridge wrote at start to
 -- %USERPROFILE%\.lrc-avg\bridge_token; any other command is refused with "unauthorized". Without it,
@@ -42,7 +46,7 @@ local Sockets = require 'Sockets'
 local Bridge = {}
 
 Bridge.PROTOCOL = 1
-Bridge.PLUGIN_VERSION = "0.5.0"
+Bridge.PLUGIN_VERSION = "0.6.0"
 Bridge.SDK_DECLARED = 13.0 -- Info.lua LrSdkVersion; the SDK version LrC 15.5.1 ships is [unverified]
 Bridge.STATUS_FILE = "bridge_status.json"
 
@@ -125,6 +129,13 @@ local function respond(B, id, name, ok, body)
     return sent
 end
 
+-- Both sockets connected and a message within ENGINE_QUIET_SECONDS: the status file's
+-- engine_connected, and the HUD's (Events.lua).
+local function engineConnected(S)
+    local quiet = S.lastInbound and (LrDate.currentTime() - S.lastInbound) or nil
+    return (S.receiveConnected and S.sendConnected and quiet ~= nil and quiet < ENGINE_QUIET_SECONDS) == true
+end
+
 local function writeStatus(B)
     local S = B.S
     local now = LrDate.currentTime()
@@ -140,7 +151,7 @@ local function writeStatus(B)
         ports = { receive = B.receivePort, send = B.sendPort },
         receive_connected = S.receiveConnected,
         send_connected = S.sendConnected,
-        engine_connected = S.receiveConnected and S.sendConnected and quiet ~= nil and quiet < ENGINE_QUIET_SECONDS,
+        engine_connected = engineConnected(S),
         seconds_since_last_message = quiet,
         commands_handled = S.handled,
         commands_failed = S.failed,
@@ -235,6 +246,15 @@ function Bridge.start()
             send(B, { id = LrUUID.generateUUID(), type = "evt", name = "hello",
                 payload = Bridge.helloPayload(receivePort, sendPort) })
         end
+        -- The handle Events.lua reads: this generation's event sender and connection state. A
+        -- replaced generation's handle answers current() false, so nothing is sent through it.
+        _G.LrCAVG_BridgeLive = {
+            current = B.current,
+            engineConnected = function() return engineConnected(B.S) end,
+            sendEvent = function(name, payload)
+                return send(B, { id = LrUUID.generateUUID(), type = "evt", name = name, payload = payload })
+            end,
+        }
 
         LrTasks.sleep(SETTLE_SECONDS)
         if not B.current() then return end

@@ -1,9 +1,10 @@
 -- LrC-AVG plugin. Read LR_SDK_NOTES.md before changing anything here.
 -- The bridge (Bridge.lua) starts when the plugin loads (PluginInit.lua) and serves the engine's
 -- Develop commands (Develop.lua, Phase 1), preview exports (Preview.lua, Phase 2), virtual copies
--- and selection (Catalog.lua, Phase 4), photos named by uuid (Photos.lua, Phase 4) and the settings
--- (Prefs.lua, get_prefs, Phase 5); Dispatch.lua routes them. The settings page in Plug-in Manager is
--- PluginInfoProvider.lua (Phase 5, PHASE5_PLAN row 3). The HUD comes in row 4 (ARCHITECTURE section 1).
+-- and selection (Catalog.lua, Phase 4), photos named by uuid (Photos.lua, Phase 4), the settings
+-- (Prefs.lua, get_prefs, Phase 5) and the HUD (Hud.lua, hud_update, Phase 5); Dispatch.lua routes
+-- them. The settings page in Plug-in Manager is PluginInfoProvider.lua (PHASE5_PLAN row 3); the HUD,
+-- its events (Events.lua) and the menu items below are row 4.
 -- LrSdkVersion 13.0: the five Phase 0 spike plugins declared it and ran on LrC 15.5.1
 -- [handle: docs\reports\phase0\PHASE0.md "Draft for LR_SDK_NOTES", SDK version]; whether it hides
 -- newer develop keys is [unverified].
@@ -18,9 +19,12 @@ return {
     -- Load at Lightroom start, not on first use. Automaat notes this needs at least one menu item
     -- [upstream claim: vendor\automaat\plugin\LightroomMCP.lrplugin\Info.lua:14-17].
     LrForceInitPlugin = true,
-    -- File > Plug-in Extras (PRD FR-1.1).
+    -- File > Plug-in Extras (PRD FR-1.1; PHASE5_PLAN decision 7 for the HUD's three).
     LrExportMenuItems = {
         { title = "LrC-AVG - Bridge status", file = "MenuStatus.lua" },
+        { title = "LrC-AVG - Show Vision Gateway HUD", file = "MenuHud.lua" },
+        { title = "LrC-AVG - Abort Session", file = "MenuAbort.lua" },
+        { title = "LrC-AVG - Accept Session", file = "MenuAccept.lua" },
     },
-    VERSION = { major = 0, minor = 5, revision = 0, build = 0 },
+    VERSION = { major = 0, minor = 6, revision = 0, build = 0 },
 }

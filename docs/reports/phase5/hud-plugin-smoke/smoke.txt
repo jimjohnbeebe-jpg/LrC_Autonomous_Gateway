@@ -1,0 +1,1443 @@
+BUILD: every run as expected.
+phase-5/hud-plugin smoke transcript (PHASE5_PLAN row 4) - Claude Code (Opus 5.5), 2026-09-29
+Plugin under test: plugin\LrC-AVG.lrplugin at commit 46951e5 (branch phase-5/hud-plugin).
+"main" = plugin\LrC-AVG.lrplugin at 7617c6b, its .lua files copied to <scratch>\old with git show.
+Engine code the results are checked against: engine\dist (npm run build at 46951e5): hudUpdatePayloadSchema,
+parseHudEvent and HUD_LIMITS (bridge\hud-protocol.js), COMMANDS.hud_update (bridge\protocol.js).
+Node v24.11.1; fengari 0.1.4 (a Lua 5.3 VM in JavaScript), a scratch install, not a project dependency.
+The fake Lightroom (fake-lr.lua, row 3's with a new clock; fake-hud.lua, new), the scenario scripts and
+the runner are reproduced at the end.
+
+What this shows: that the HUD's Lua runs through the real bridge and dispatch, how it checks hud_update
+(against the engine's own schema on 35 cases: 34 agree, and one differs as expected; section "Contract"), which updates it takes, what its
+window shows and which buttons are on at each step, the events its buttons and menu items send (each read
+by the engine's parseHudEvent), the "Target changed" line, the close after a session's end, and that
+main's and this branch's bridge behave the same in the row 6/8 bridge scenario. Each mutant (written by
+the runner to <scratch>\mutant) takes out one guard and must fail exactly its named checks; the reason
+for each check a mutant reaches is in the runner's MUTANTS list.
+The fake's behaviour is Claude Code's invention, modelled on what S8 observed (docs\reports\phase5\S8.md
+Numbers): it shows NOTHING about Lightroom itself. Its window draws nothing: it records the view tree,
+honours a bound "enabled" and a bound title, runs a click's action where nothing can yield, and closes
+windows inside closeFloatingDialogsForPlugin. How Lightroom draws the HUD, where the keyboard goes, and
+whether the menu items reach the bridge task are for the probe after the merge.
+Fake-runtime artefacts: the fake's LrDate.timeToUserFormat returns one fixed time, so every "sent at" and
+log line reads 2026-09-27 12:00:00; fengari's os.date does not treat a leading "!" as UTC; Lua 5.3 prints
+some numbers differently from Lightroom's Lua 5.1. Lua 5.1 syntax of every plugin file is checked by
+engine\tests\lua-plugin.test.ts.
+The fake clock: one scheduler round is 0.2 s; a sleeping task wakes at its due time. Row 3's fake moved
+the clock by every sleeping task's step, which ran time several times too fast with the HUD's ticker
+asleep too; the change is in fake-lr.lua's header. Both plugins in the bridge comparison ran on this fake.
+
+To reproduce: npm run build; in an empty folder with these files, npm install fengari@0.1.4, copy main's
+plugin .lua files into old\, then:
+$ node run.mts <repo>
+
+== Contract (HudState.check against the engine's hudUpdatePayloadSchema) ==
+--  minimal: plugin takes; engine schema takes
+--  every field: plugin takes; engine schema takes
+--  an unknown field: plugin refuses (hud_update.colour is not a known field); engine schema refuses
+--  an unknown target field: plugin refuses (hud_update.target.camera is not a known field); engine schema refuses
+--  an unknown stage: plugin refuses (hud_update.stage must be one of begin, pass0, applying, acquiring_preview, metrics, awaiting_claude, awaiting_pick, awaiting_approval, converged, target_changed, accepted, aborted, ended); engine schema refuses
+--  no target: plugin refuses (hud_update.target is required); engine schema refuses
+--  no session id: plugin refuses (hud_update.session_id is required); engine schema refuses
+--  seq 0: plugin refuses (hud_update.seq is out of range); engine schema refuses
+--  seq 1.5: plugin refuses (hud_update.seq must be a whole number); engine schema refuses
+--  seq as text: plugin refuses (hud_update.seq must be a number); engine schema refuses
+--  session id of 64 bytes (32 x e-acute): plugin takes; engine schema takes
+--  session id of 66 bytes (33 x e-acute): plugin refuses (hud_update.session_id must be a non-empty string of at most 64 bytes); engine schema refuses
+--  an empty session id: plugin refuses (hud_update.session_id must be a non-empty string of at most 64 bytes); engine schema refuses
+--  variant D: plugin refuses (hud_update.variants[2] must be one of A, B, C); engine schema refuses
+--  12 delta rows: plugin takes; engine schema takes
+--  13 delta rows: plugin refuses (hud_update.deltas has more than 12 entries); engine schema refuses
+--  a delta row without its slider: plugin refuses (hud_update.deltas[1].slider is required); engine schema refuses
+--  guardrail amber: plugin refuses (hud_update.guardrail.status must be one of green, clamped, refused, corrected, unmet, undone); engine schema refuses
+--  a guardrail without its status: plugin refuses (hud_update.guardrail.status is required); engine schema refuses
+--  open as text: plugin refuses (hud_update.open must be true or false); engine schema refuses
+--  note as an object: plugin refuses (hud_update.note must be text); engine schema refuses
+--  pass 99: plugin takes; engine schema takes
+--  pass 100: plugin refuses (hud_update.pass is out of range); engine schema refuses
+--  max_passes 0: plugin refuses (hud_update.max_passes is out of range); engine schema refuses
+--  settings with log_dir: plugin refuses (hud_update.settings.log_dir is not a known field); engine schema refuses
+--  decay with 9 values: plugin refuses (hud_update.settings.decay has more than 8 entries); engine schema refuses
+--  17 session photos: plugin refuses (hud_update.session_photos has more than 16 entries); engine schema refuses
+--  session photos as an object: plugin refuses (hud_update.session_photos must be a list); engine schema refuses
+--  an empty answered_click_id: plugin refuses (hud_update.answered_click_id must be a non-empty string of at most 64 bytes); engine schema refuses
+--  a 200-byte file name: plugin takes; engine schema takes
+--  a 200-byte UTF-8 file name (100 x e-acute): plugin takes; engine schema takes
+--  numbers where text is shown: plugin takes; engine schema takes
+--  the target as a list: plugin refuses (hud_update.target.1 is not a known field); engine schema refuses
+--  the payload as a list: plugin refuses (hud_update.1 is not a known field); engine schema refuses
+--  an empty object where a list belongs: plugin takes; engine schema refuses
+
+== Scenario (hud-cases.lua): snapshots ==
+--  [begin] windows 1, open 1, events 0, buttons on: Abort, Accept
+      connection: Connection: Claude session active
+      stage: Stage: Starting the session
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 4 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [second open, Show HUD while open] windows 1, open 1, events 0, buttons on: Abort, Accept
+      connection: Connection: Claude session active
+      stage: Stage: Pass 0: profile, lens and baseline
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 4 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [awaiting_claude] windows 1, open 1, events 0, buttons on: Abort, Accept
+      connection: Connection: Claude session active
+      stage: Stage: Awaiting Claude  (pass 1 of 4)
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 4 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [page edited] windows 1, open 1, events 0, buttons on: Abort, Accept
+      connection: Connection: Claude session active
+      stage: Stage: Awaiting Claude  (pass 1 of 4)
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [session settings] windows 1, open 1, events 0, buttons on: Abort, Accept
+      connection: Connection: Claude session active
+      stage: Stage: Awaiting Claude  (pass 1 of 4)
+      settingsTitle: Session settings:
+      settingsA: autonomous, max 4 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [awaiting_pick] windows 1, open 1, events 0, buttons on: Abort, Accept, Pick A, Pick B
+      connection: Connection: Claude session active
+      stage: Stage: Awaiting pick
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [right after Pick B] windows 1, open 1, events 0, buttons on: none
+      connection: Connection: Claude session active
+      stage: Stage: Awaiting pick
+      hint: Buttons off until the engine answers the Pick B (at most 10 s).
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [Pick B sent] windows 1, open 1, events 1, buttons on: none
+      connection: Connection: Claude session active
+      stage: Stage: Awaiting pick
+      hint: Buttons off until the engine answers the Pick B (at most 10 s).
+      lastAction: Pick B sent at 2026-09-27 12:00:00; waiting for the engine
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [Abort called while Pick B waits] windows 1, open 1, events 1, buttons on: none
+      connection: Connection: Claude session active
+      stage: Stage: Awaiting pick
+      hint: Buttons off until the engine answers the Pick B (at most 10 s).
+      lastAction: Abort NOT sent: the Pick B is still waiting for the engine
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [Pick B answered] windows 1, open 1, events 1, buttons on: Abort, Accept
+      connection: Connection: Claude session active
+      stage: Stage: Awaiting Claude
+      lastAction: Pick B: answered by the engine at 2026-09-27 12:00:00
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [awaiting approval] windows 1, open 1, events 1, buttons on: Abort, Accept, Approve pass 2
+      connection: Connection: Claude session active
+      stage: Stage: Awaiting approval
+      lastAction: Pick B: answered by the engine at 2026-09-27 12:00:00
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [Approve sent] windows 1, open 1, events 2, buttons on: none
+      connection: Connection: Claude session active
+      stage: Stage: Awaiting approval
+      hint: Buttons off until the engine answers the Approve pass 2 (at most 10 s).
+      lastAction: Approve pass 2 sent at 2026-09-27 12:00:00; waiting for the engine
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [Approve unanswered 11 s] windows 1, open 1, events 2, buttons on: Abort, Accept, Approve pass 2
+      connection: Connection: Claude session active
+      stage: Stage: Awaiting approval
+      lastAction: Approve pass 2: no answer from the engine within 10 s; the buttons are on again
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [engine silent 7 s] windows 1, open 1, events 2, buttons on: none
+      connection: Connection: Disconnected
+      stage: Stage: Awaiting approval
+      hint: Buttons off: the engine is not connected.
+      lastAction: Approve pass 2: no answer from the engine within 10 s; the buttons are on again
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [Accept while disconnected] windows 1, open 1, events 2, buttons on: none
+      connection: Connection: Disconnected
+      stage: Stage: Awaiting approval
+      hint: Buttons off: the engine is not connected.
+      lastAction: Accept NOT sent: the engine is not connected
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [Accept, send socket failed] windows 1, open 1, events 2, buttons on: none
+      connection: Connection: Disconnected
+      stage: Stage: Awaiting approval
+      hint: Buttons off: the engine is not connected.
+      lastAction: Accept NOT sent: the engine is not connected
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [send socket back] windows 1, open 1, events 2, buttons on: Abort, Accept, Approve pass 2
+      connection: Connection: Claude session active
+      stage: Stage: Awaiting approval
+      lastAction: Accept NOT sent: the engine is not connected
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [stale update] windows 1, open 1, events 2, buttons on: Abort, Accept, Approve pass 2
+      connection: Connection: Claude session active
+      stage: Stage: Awaiting approval
+      lastAction: Accept NOT sent: the engine is not connected
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [variants: another photo selected] windows 1, open 1, events 2, buttons on: Abort, Accept
+      connection: Connection: Claude session active
+      stage: Stage: Awaiting Claude
+      targetChanged: Target changed: 20260907-_OZ80093.NEF is selected. Claude's next call selects the session's photo again; the session is still open.
+      lastAction: Accept NOT sent: the engine is not connected
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [variants: copy B selected] windows 1, open 1, events 2, buttons on: Abort, Accept
+      connection: Connection: Claude session active
+      stage: Stage: Awaiting Claude
+      lastAction: Accept NOT sent: the engine is not connected
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [variants: nothing selected] windows 1, open 1, events 2, buttons on: Abort, Accept
+      connection: Connection: Claude session active
+      stage: Stage: Awaiting Claude
+      targetChanged: Target changed: No photo is selected. Claude's next call selects the session's photo again; the session is still open.
+      lastAction: Accept NOT sent: the engine is not connected
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [converge: copy A selected] windows 1, open 1, events 2, buttons on: Abort, Accept
+      connection: Connection: Claude session active
+      stage: Stage: Awaiting Claude
+      targetChanged: Target changed: 20260907-_OZ80099.NEF (AVG S-1 A) is selected. Select 20260907-_OZ80099.NEF again; the session is still open.
+      lastAction: Accept NOT sent: the engine is not connected
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [converge: the target selected again] windows 1, open 1, events 2, buttons on: Abort, Accept
+      connection: Connection: Claude session active
+      stage: Stage: Awaiting Claude
+      lastAction: Accept NOT sent: the engine is not connected
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [menu Abort] windows 1, open 1, events 3, buttons on: none
+      connection: Connection: Claude session active
+      stage: Stage: Awaiting Claude
+      hint: Buttons off until the engine answers the Abort (at most 10 s).
+      lastAction: Abort sent at 2026-09-27 12:00:00; waiting for the engine
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [aborted, at once] windows 1, open 1, events 3, buttons on: none
+      connection: Connection: Engine connected
+      stage: Stage: Aborted
+      hint: The session has ended.
+      lastAction: Abort: answered by the engine at 2026-09-27 12:00:00
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [menu Accept after the end] windows 1, open 1, events 3, buttons on: none
+      connection: Connection: Engine connected
+      stage: Stage: Aborted
+      hint: The session has ended.
+      lastAction: Abort: answered by the engine at 2026-09-27 12:00:00
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [aborted, 6 s later] windows 1, open 0, events 3, buttons on: none
+      connection: Connection: Engine connected
+      stage: Stage: Aborted
+      hint: The session has ended.
+      lastAction: Abort: answered by the engine at 2026-09-27 12:00:00
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [S-2 begins] windows 2, open 1, events 3, buttons on: Abort, Accept
+      connection: Connection: Claude session active
+      stage: Stage: Starting the session
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [S-3 began within S-2's close delay] windows 2, open 1, events 3, buttons on: Abort, Accept
+      connection: Connection: Claude session active
+      stage: Stage: Starting the session
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [late S-2 update] windows 2, open 1, events 3, buttons on: Abort, Accept
+      connection: Connection: Claude session active
+      stage: Stage: Starting the session
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [update after the X] windows 2, open 0, events 3, buttons on: none
+      connection: Connection: Claude session active
+      stage: Stage: Starting the session
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [Show HUD after the X] windows 3, open 1, events 3, buttons on: Abort, Accept
+      connection: Connection: Claude session active
+      stage: Stage: Metrics
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  events sent:
+      hud_pick {"session_id":"S-1","seq_seen":5,"source":"hud","variant":"B","click_id":"UUID-0004-AAAA-BBBB"}
+      hud_approve_pass {"session_id":"S-1","seq_seen":7,"source":"hud","pass":2,"click_id":"UUID-0006-AAAA-BBBB"}
+      hud_abort {"session_id":"S-1","seq_seen":9,"source":"menu","click_id":"UUID-0011-AAAA-BBBB"}
+--  messages:
+      LrC-AVG: ABORT SENT: Abort sent at 2026-09-27 12:00:00; waiting for the engine
+      LrC-AVG: ACCEPT NOT SENT: Accept NOT sent: the session has ended (aborted)
+--  replies to hud_update: [{"applied":true,"shown":true,"opened":true},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":false,"shown":true,"opened":false,"reason":"update 3 is not newer than 7"},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":true},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":false,"shown":true,"opened":false,"reason":"session S-2 was replaced by a newer one"},{"applied":true,"shown":false,"opened":false}]
+--  refused commands: [{"code":"bad_request","message":"hud_update.stage must be one of begin, pass0, applying, acquiring_preview, metrics, awaiting_claude, awaiting_pick, awaiting_approval, converged, target_changed, accepted, aborted, ended","recoverable":false},{"code":"bad_request","message":"hud_update.colour is not a known field","recoverable":false}]
+--  windows: [{"title":"LrC-AVG - Vision Gateway","block_task":true,"open":false,"closed_by":"code","opened_at":1004.2,"closed_at":1052.4},{"title":"LrC-AVG - Vision Gateway","block_task":true,"open":false,"closed_by":"x","opened_at":1054.4,"closed_at":1064},{"title":"LrC-AVG - Vision Gateway","block_task":true,"open":true,"opened_at":1065}]
+--  HUD lines in the plugin log:
+      2026-09-27 12:00:00.000 INFO  hud: session S-1
+      2026-09-27 12:00:00.200 INFO  hud: shown
+      2026-09-27 12:00:00.200 INFO  hud: hud_pick UUID-0004-AAAA-BBBB from the hud: sent
+      2026-09-27 12:00:00.000 INFO  hud: hud_approve_pass UUID-0006-AAAA-BBBB from the hud: sent
+      2026-09-27 12:00:00.400 WARN  hud: hud_approve_pass UUID-0006-AAAA-BBBB got no answer
+      2026-09-27 12:00:00.200 INFO  hud: hud_accept UUID-0008-AAAA-BBBB from the hud: not sent, the engine is not connected
+      2026-09-27 12:00:00.600 WARN  hud: ignored an update: update 3 is not newer than 7
+      2026-09-27 12:00:00.800 INFO  hud: hud_abort UUID-0011-AAAA-BBBB from the menu: sent
+      2026-09-27 12:00:00.400 INFO  hud: closing, the session ended (aborted)
+      2026-09-27 12:00:00.400 INFO  hud: closed
+      2026-09-27 12:00:00.200 INFO  hud: session S-2
+      2026-09-27 12:00:00.400 INFO  hud: shown
+      2026-09-27 12:00:00.600 INFO  hud: session S-3
+      2026-09-27 12:00:00.400 WARN  hud: ignored an update: session S-2 was replaced by a newer one
+      2026-09-27 12:00:00.000 INFO  hud: closed
+      2026-09-27 12:00:00.000 INFO  hud: shown
+
+PASS  C1 the plugin's HudState.check and the engine's hudUpdatePayloadSchema agree on 34 cases (and differ as expected on "an empty object where a list belongs")
+PASS  C2 text over the limit is shortened to 120 bytes, a UTF-8 name on a character boundary
+PASS  C3 every refusal names the field (a message starting hud_update...)
+PASS  S0 no task raised
+PASS  S1 every update the scenario sent passes the engine's schema, and every reply passes COMMANDS.hud_update
+PASS  S2 every event the plugin sent passes the engine's parseHudEvent
+PASS  H1 open: the first update opens one window (applied, shown, opened), titled, with blockTask
+PASS  H2 open once: a second open and Show HUD while it is open open no second window
+PASS  H3 lines: connection, target, camera, stage with pass, the deltas grid, guardrail, note
+PASS  H4 settings (decision 4): the page's when the engine sends none, following a page edit; the session's when sent
+PASS  H5 at awaiting_claude: Abort and Accept on; Pick A-C and Approve off; Approve reads "Approve pass"
+PASS  H6 a greyed Pick is not delivered; at awaiting_pick only the letters sent (A, B) are on
+PASS  H7 Pick B sends one hud_pick: session S-1, seq_seen 5, source hud, variant B, a click id
+PASS  H8 after a click every button is off until the engine answers; an Abort called meanwhile is not sent and says why
+PASS  H9 an update naming the click (answered_click_id) turns the buttons back on
+PASS  H10 Approve's bound title reads "Approve pass 2"; its event carries pass 2
+PASS  H11 a click the engine never answers frees the buttons after 10 s, and says so
+PASS  H12 engine silent over 6 s: Disconnected, buttons off with the reason (decision 2); an Accept is not sent
+PASS  H13 a send that fails on the socket reads NOT sent, never sent, and frees the buttons
+PASS  H14 an older seq in the same session is not taken (applied false, the reason); the HUD keeps the newer state
+PASS  H15 a wrong stage or an unknown field: bad_request naming the field, through the dispatch
+PASS  H16 Target changed: a photo outside the session's photos (by uuid, a copy named), or none; cleared for a session photo; advice per mode
+PASS  H17 menu item Abort Session sends hud_abort (source menu), and its message says SENT
+PASS  H18 end: the outcome shows with the buttons off, a menu Accept is refused; then closeFloatingDialogsForPlugin(_PLUGIN) closes it (decision 1)
+PASS  H19 a newer session within the close delay cancels the close
+PASS  H20 a late update of a session a newer one replaced is not taken
+PASS  H21 closed with its X: updates are still taken but open nothing; Show HUD opens it again
+
+== Mutants ==
+PASS  mutant HudState.lua (if false then return): fails ["H14"], expected ["H14"]
+PASS  mutant HudState.lua (if false then return): fails ["H20"], expected ["H20"]
+PASS  mutant HudView.lua (and pending == nil): fails ["H12"], expected ["H12"]
+PASS  mutant Hud.lua (if false then return nil, label .. " NOT sent: the "): fails ["H10","H11","H8","H9"], expected ["H8","H9","H10","H11"]
+PASS  mutant Hud.lua (): fails ["H10","H11","H9"], expected ["H9","H10","H11"]
+PASS  mutant Hud.lua (-- MUTANT: pending kept): fails ["H13","H17"], expected ["H13","H17"]
+PASS  mutant Hud.lua (if s then): fails ["H19"], expected ["H19"]
+PASS  mutant Hud.lua (-- MUTANT: no open-once guard): fails ["H18","H19","H2"], expected ["H2","H18","H19"]
+
+== The bridge scenario: main's plugin vs this branch (bridge-cases.lua) ==
+--  main: 14 lines sent, 8 steps, 0 errors; this branch: 14 lines sent, 8 steps, 0 errors
+PASS  B1 the same replies, steps, sockets, calls and log (the plugin version aside)
+
+ALL PASS
+
+(exit 0)
+
+==================== Appendix: fake-lr.lua ====================
+-- PHASE5_PLAN row 4 (phase-5/hud-plugin) changed the scheduler's clock (F.run, LrTasks.sleep below);
+-- the HUD's stand-ins are in fake-hud.lua.
+-- PHASE5_PLAN row 3 (phase-5/settings) added the persistent LrPrefs table and the LrView stand-in
+-- below; the rest is row 8's fake, unchanged.
+-- A stubbed Lightroom SDK for smoke-running plugin Lua under fengari (no Lightroom). It imitates only
+-- what the LrC-AVG plugin calls, with the behaviour observed in the spikes (S6, S7) where there is
+-- one, and records what the plugin did so the scenarios can check it. It also enforces two plugin
+-- rules: yielding catalog queries never run inside a read gate (rule 03), and getRawMetadata /
+-- getFormattedMetadata / getDevelopSettings only run inside one.
+-- Added for PHASE4_PLAN row 8 (the fake of row 6 otherwise unchanged): each photo has its own Develop
+-- settings and snapshots; applyDevelopSettings, createDevelopSnapshot and applyDevelopSnapshot must run
+-- inside a write gate and are recorded; getTargetPhotos with no photo selected gives the whole
+-- filmstrip, as the SDK reference says; LrExportSession writes one file per photo and records it.
+
+F = { clock = 1000, tasks = {}, files = {}, errors = {}, yields = 0, inRead = 0, inWrite = 0,
+      calls = {}, binds = {}, uuidN = 0, nextLocalId = 5000 }
+
+local function record(what) F.calls[#F.calls + 1] = what end
+
+-- In-memory files (fengari has no io.open).
+io = io or {}
+io.open = function(path, mode)
+    mode = mode or "r"
+    if mode:sub(1, 1) == "r" then
+        if F.files[path] == nil then return nil, path .. ": No such file" end
+        local text = F.files[path]
+        return { read = function() return text end, close = function() end }
+    end
+    if mode:sub(1, 1) == "w" then F.files[path] = "" end
+    if F.files[path] == nil then F.files[path] = "" end
+    return {
+        write = function(self, ...) for _, s in ipairs({ ... }) do F.files[path] = F.files[path] .. tostring(s) end end,
+        close = function() end,
+    }
+end
+
+-- A tiny cooperative scheduler: every task is a coroutine; sleep and yield hand control back.
+-- PHASE5_PLAN row 4 changed the clock: one round is F.TICK (0.2 s) of virtual time, and a task that
+-- sleeps s seconds is resumed in the first round at or after its wake time. Before, every sleeping
+-- task moved the shared clock by its own step, so with several tasks asleep time ran several times
+-- too fast and timing checks depended on the order tasks ran in. A task spawned during a round first
+-- runs in the next one.
+F.TICK = 0.2
+function F.spawn(name, fn)
+    F.tasks[#F.tasks + 1] = { name = name, co = coroutine.create(fn), wake = F.clock }
+end
+function F.run(rounds)
+    for _ = 1, rounds or 1 do
+        local current = F.tasks
+        F.tasks = {}
+        local live = {}
+        for _, t in ipairs(current) do
+            if coroutine.status(t.co) == "suspended" and t.wake <= F.clock + 1e-9 then
+                F.running = t
+                local ok, err = coroutine.resume(t.co)
+                F.running = nil
+                if not ok then F.errors[#F.errors + 1] = t.name .. ": " .. tostring(err) end
+            end
+            if coroutine.status(t.co) ~= "dead" then live[#live + 1] = t end
+        end
+        for _, t in ipairs(F.tasks) do live[#live + 1] = t end
+        F.tasks = live
+        F.clock = F.clock + F.TICK
+    end
+end
+-- Run fn in a task until it ends; returns what it returned.
+function F.runTask(fn)
+    local out
+    F.spawn("runTask", function() out = table.pack(fn()) end)
+    for _ = 1, 1000 do
+        if #F.tasks == 0 then break end
+        F.run(1)
+    end
+    if not out then return nil end
+    return table.unpack(out, 1, out.n)
+end
+
+local M = {}
+
+M.LrTasks = {
+    pcall = pcall,
+    yield = function() F.yields = F.yields + 1; coroutine.yield() end,
+    sleep = function(s)
+        if F.running then F.running.wake = F.clock + (s or 0) end
+        coroutine.yield()
+    end,
+    startAsyncTask = function(fn) F.spawn("async", fn) end,
+}
+M.LrDate = {
+    currentTime = function() return F.clock end,
+    timeToUserFormat = function(t, fmt) return "2026-09-27 12:00:00" end,
+}
+M.LrUUID = { generateUUID = function() F.uuidN = F.uuidN + 1; return string.format("UUID-%04d-AAAA-BBBB", F.uuidN) end }
+M.LrPathUtils = {
+    child = function(a, b) return a .. "\\" .. b end,
+    parent = function(p) return (p:gsub("\\[^\\]*$", "")) end,
+    getStandardFilePath = function(which) return which == "home" and "C:\\Users\\U" or "C:\\T" end,
+}
+M.LrFileUtils = {
+    createAllDirectories = function() end,
+    fileAttributes = function() return nil end,
+    delete = function() end,
+    -- Row 8: the files an export wrote into `dir`.
+    files = function(dir)
+        local list, i = F.exported and F.exported[dir] or {}, 0
+        return function() i = i + 1; return list[i] end
+    end,
+}
+-- PHASE5_PLAN row 3: the plugin's prefs are one table that lives as long as the fake (F.prefs), as
+-- Lightroom keeps one prefs table per plugin; F.world() empties it.
+F.prefs = {}
+M.LrPrefs = { prefsForPlugin = function() return F.prefs end }
+-- LrView for the settings page: bind(key) gives a marker, and the factory `f` records each view as
+-- { view = <kind>, props = <the table it was given> }, children included, so a scenario can walk the
+-- page. It draws nothing and checks nothing about Lightroom's own layout.
+M.LrView = { bind = function(key) return { bound = key } end }
+function F.viewFactory()
+    local f = {}
+    for _, kind in ipairs({ "static_text", "edit_field", "popup_menu", "row", "column", "group_box" }) do
+        f[kind] = function(self, props) return { view = kind, props = props } end
+    end
+    return f
+end
+-- Row 8: an export writes one JPEG per photo into the destination folder and records which photo.
+M.LrExportSession = function(spec)
+    local s = {}
+    function s:doExportOnCurrentTask()
+        local dir = spec.exportSettings.LR_export_destinationPathPrefix
+        F.exported = F.exported or {}
+        F.exported[dir] = F.exported[dir] or {}
+        for _, photo in ipairs(spec.photosToExport) do
+            record("export " .. tostring(photo.localIdentifier) .. " at " .. tostring(spec.exportSettings.LR_size_maxWidth))
+            F.exported[dir][#F.exported[dir] + 1] = dir .. "\\" .. tostring(photo._t.file_name or "photo") .. ".jpg"
+        end
+    end
+    return s
+end
+
+-- Sockets: each bind returns a socket object; the scenario drives its callbacks.
+M.LrSocket = {
+    bind = function(spec)
+        local sock = { spec = spec, sent = {}, closed = false, reconnects = 0 }
+        function sock:send(line) self.sent[#self.sent + 1] = line end
+        function sock:close() self.closed = true end
+        function sock:reconnect() self.reconnects = self.reconnects + 1 end
+        F.binds[#F.binds + 1] = sock
+        F.last = F.last or {}
+        F.last[spec.mode] = sock
+        return sock
+    end,
+}
+M.LrFunctionContext = {
+    postAsyncTaskWithContext = function(name, fn)
+        local ctx = { cleanups = {} }
+        function ctx:addCleanupHandler(h) self.cleanups[#self.cleanups + 1] = h end
+        F.contexts = F.contexts or {}
+        F.contexts[#F.contexts + 1] = ctx
+        F.spawn(name, function() fn(ctx) end)
+    end,
+}
+
+-- Photos and the catalog.
+F.photos, F.byUuid = {}, {}
+function F.newPhoto(t)
+    local p = { localIdentifier = t.local_id }
+    p._t = t
+    function p:getRawMetadata(key)
+        assert(F.inRead > 0, "getRawMetadata outside a read gate")
+        if key == "uuid" then return t.uuid end
+        if key == "isVirtualCopy" then return t.is_vc == true end
+        if key == "masterPhoto" then return t.master or p end
+        return t[key]
+    end
+    function p:getFormattedMetadata(key)
+        assert(F.inRead > 0, "getFormattedMetadata outside a read gate")
+        if key == "copyName" then return t.copy_name end
+        if key == "fileName" then return t.file_name end
+        return nil
+    end
+    -- Row 8: each photo has its own settings and snapshots; writes must be inside a write gate.
+    t.settings = t.settings or { Exposure2012 = 0, Contrast2012 = 0, ProcessVersion = "15.4" }
+    t.snapshots = t.snapshots or {}
+    function p:getDevelopSettings()
+        assert(F.inRead > 0, "getDevelopSettings outside a read gate")
+        local copy = {}
+        for k, v in pairs(t.settings) do copy[k] = v end
+        return copy
+    end
+    function p:applyDevelopSettings(settings, name)
+        assert(F.inWrite > 0, "applyDevelopSettings outside a write gate")
+        record("apply " .. tostring(t.local_id) .. " " .. tostring(name))
+        for k, v in pairs(settings) do t.settings[k] = v end
+    end
+    function p:createDevelopSnapshot(name, updateInPlace)
+        assert(F.inWrite > 0, "createDevelopSnapshot outside a write gate")
+        record("snapshot " .. tostring(t.local_id) .. " " .. tostring(name))
+        local copy = {}
+        for k, v in pairs(t.settings) do copy[k] = v end
+        t.snapshots[#t.snapshots + 1] = { snapshotID = "SNAP-" .. t.local_id .. "-" .. (#t.snapshots + 1), name = name, id_global = "G", settings = copy }
+        return true
+    end
+    function p:getDevelopSnapshots()
+        assert(F.inRead > 0, "getDevelopSnapshots outside a read gate")
+        local list = {}
+        for i, s in ipairs(t.snapshots) do list[i] = { snapshotID = s.snapshotID, name = s.name, id_global = s.id_global } end
+        return list
+    end
+    function p:applyDevelopSnapshot(id)
+        assert(F.inWrite > 0, "applyDevelopSnapshot outside a write gate")
+        record("restore " .. tostring(t.local_id) .. " " .. tostring(id))
+        for _, s in ipairs(t.snapshots) do
+            if s.snapshotID == id then
+                t.settings = {}
+                for k, v in pairs(s.settings) do t.settings[k] = v end
+            end
+        end
+    end
+    F.photos[t.local_id] = p
+    F.byUuid[t.uuid] = p
+    return p
+end
+
+local function noQueryInGate(what)
+    assert(F.inRead == 0, what .. " inside a read gate (rule 03: deadlocks on Windows)")
+    -- With F.yieldQueries, a catalog query hands control to other tasks, as a yielding query would.
+    if F.yieldQueries and coroutine.isyieldable() then coroutine.yield() end
+end
+
+F.catalog = {
+    withReadAccessDo = function(self, fn) F.inRead = F.inRead + 1; fn(); F.inRead = F.inRead - 1 end,
+    withWriteAccessDo = function(self, name, fn) F.inWrite = F.inWrite + 1; record("write gate " .. name); fn(); F.inWrite = F.inWrite - 1 end,
+    getTargetPhoto = function(self) noQueryInGate("getTargetPhoto"); return F.active end,
+    -- With no photo selected, "the entire list of photos in the filmstrip"
+    -- [handle: https://lrc.mcor.dev/modules/LrCatalog.html getTargetPhotos].
+    getTargetPhotos = function(self)
+        noQueryInGate("getTargetPhotos")
+        if F.active == nil then return F.filmstrip or {} end
+        return F.selected or {}
+    end,
+    setSelectedPhotos = function(self, active, list)
+        noQueryInGate("setSelectedPhotos")
+        record("select " .. tostring(active.localIdentifier))
+        if F.ignoreSelect then return end
+        F.active, F.selected = active, list
+    end,
+    findPhotoByUuid = function(self, uuid) noQueryInGate("findPhotoByUuid"); record("find " .. uuid); return F.byUuid[uuid] end,
+    -- S6: acts on the selection, returns the copies, names them, makes the new copy active,
+    -- needs no write gate [handle: docs\reports\phase0\S6.md "Analysis"].
+    createVirtualCopies = function(self, name)
+        noQueryInGate("createVirtualCopies")
+        F.copyCalls = (F.copyCalls or 0) + 1
+        -- With F.copyYields = n, the call takes n seconds and lets other tasks run before it reads
+        -- the selection: a model of a call that yields inside [the fake's assumption, not observed].
+        -- A table gives each call (1st, 2nd, ...) its own count.
+        local n = type(F.copyYields) == "table" and (F.copyYields[F.copyCalls] or 0) or (F.copyYields or 0)
+        if n > 0 then record("enter createVirtualCopies " .. name) end
+        for _ = 1, n do F.clock = F.clock + 1; coroutine.yield() end
+        local sel = {}
+        for _, p in ipairs(F.selected or {}) do sel[#sel + 1] = p.localIdentifier end
+        record("createVirtualCopies " .. name .. " on {" .. table.concat(sel, ",") .. "} gate=" .. F.inWrite)
+        if F.failCopyAt == F.copyCalls then error("createVirtualCopies: simulated failure") end
+        local out = {}
+        for _, src in ipairs(F.selected or {}) do
+            F.nextLocalId = F.nextLocalId + 1
+            local master = src._t.master or src
+            local copy = F.newPhoto({ local_id = F.nextLocalId, uuid = "COPY-" .. F.nextLocalId, is_vc = true, master = master,
+                copy_name = F.wrongName or name, file_name = src._t.file_name })
+            out[#out + 1] = copy
+        end
+        if out[#out] then F.active, F.selected = out[#out], { out[#out] } end
+        return out
+    end,
+}
+M.LrApplication = {
+    activeCatalog = function() return F.catalog end,
+    versionString = function() return "15.5.1" end,
+}
+
+function import(name)
+    local m = M[name]
+    if m == nil then error("fake-lr: no stub for " .. name) end
+    return m
+end
+_PLUGIN = { id = "com.lrcavg.gateway" }
+
+-- Reset the photo world between scenarios.
+function F.world()
+    F.photos, F.byUuid, F.calls = {}, {}, {}
+    for k in pairs(F.prefs) do F.prefs[k] = nil end
+    F.ignoreSelect, F.failCopyAt, F.wrongName, F.copyCalls = nil, nil, nil, 0
+    F.yieldQueries, F.copyYields = nil, nil
+    local master = F.newPhoto({ local_id = 3869534, uuid = "CF12AF60-0858-4181-9562-376D16B89126", file_name = "20260907-_OZ80099.NEF" })
+    local other = F.newPhoto({ local_id = 3869533, uuid = "OTHER-UUID", file_name = "20260907-_OZ80093.NEF" })
+    local vc = F.newPhoto({ local_id = 3869600, uuid = "OLD-COPY-UUID", is_vc = true, master = master, copy_name = "Copy 1" })
+    F.active, F.selected = master, { master }
+    F.filmstrip, F.exported = { master, other, vc }, {}
+    return master, other, vc
+end
+
+==================== Appendix: fake-hud.lua ====================
+-- PHASE5_PLAN row 4 (phase-5/hud-plugin): stand-ins for what the HUD calls, loaded after fake-lr.lua
+-- (row 3's fake, unchanged). Modelled on S8's smoke fake (docs\reports\phase5\S8-smoke\smoke.txt,
+-- appendix) and on what S8 observed in Lightroom (docs\reports\phase5\S8.md Numbers):
+--   - LrView.osFactory records every view it builds; push_buttons are kept so a scenario can click
+--     them by title (a bound title is read from the window's property table);
+--   - a click on a button whose bound `enabled` is not true is not delivered (S8: greyed clicks 0);
+--   - a click runs the button's action on the main Lua thread, where nothing can yield (S8: the
+--     action ran with LrTasks.canYield() false), so an action that yields raises here;
+--   - presentFloatingDialog must run in a task, calls onShow, and with blockTask waits until the
+--     window closes; closeFloatingDialogsForPlugin(_PLUGIN) closes the plugin's windows inside the
+--     call, calling windowWillClose (S8: closed inside the call);
+--   - FH.select changes the selection and calls the open window's selectionChangeObserver once.
+-- LrBinding.makePropertyTable gives a plain table: the fake draws nothing, so it needs no observers.
+-- It shows nothing about Lightroom's own drawing, layout or focus.
+
+FH = { windows = {}, closeCalls = {}, messages = {}, building = {} }
+
+local baseImport = import
+local extra = {}
+function import(name)
+    if extra[name] ~= nil then return extra[name] end
+    return baseImport(name)
+end
+
+local factory = setmetatable({}, { __index = function(_, kind)
+    return function(_, spec)
+        local node = { kind = kind, spec = spec }
+        if kind == "push_button" then FH.building[#FH.building + 1] = node end
+        return node
+    end
+end })
+
+extra.LrView = {
+    bind = function(key) return { bound = key } end,
+    osFactory = function() FH.building = {}; return factory end,
+}
+extra.LrBinding = { makePropertyTable = function() return {} end }
+
+function FH.closeWindow(w, how)
+    if not w.open then return end
+    w.open, w.closedBy, w.closedAt = false, how, F.clock
+    if w.args.windowWillClose then w.args.windowWillClose() end
+end
+
+extra.LrDialogs = {
+    message = function(title, text, kind)
+        FH.messages[#FH.messages + 1] = { title = title, text = text, kind = kind }
+    end,
+    presentFloatingDialog = function(plugin, args)
+        assert(plugin == _PLUGIN, "presentFloatingDialog: not this plugin")
+        assert(coroutine.isyieldable(), "presentFloatingDialog outside a task")
+        local w = { args = args, open = true, title = args.title, blockTask = args.blockTask, buttons = FH.building,
+            props = args.contents.spec.bind_to_object, openedAt = F.clock }
+        FH.building = {}
+        FH.windows[#FH.windows + 1] = w
+        FH.current = w
+        if args.onShow then args.onShow() end
+        while w.open do coroutine.yield() end
+        return nil
+    end,
+    closeFloatingDialogsForPlugin = function(plugin)
+        FH.closeCalls[#FH.closeCalls + 1] = { plugin_ok = plugin == _PLUGIN, clock = F.clock }
+        if plugin ~= _PLUGIN then return end
+        for _, w in ipairs(FH.windows) do FH.closeWindow(w, "code") end
+    end,
+}
+
+local function titleOf(w, b)
+    local t = b.spec.title
+    if type(t) == "table" then return w.props[t.bound] end
+    return t
+end
+
+-- "clicked", "disabled", or "no window"; the action runs on the main thread.
+function FH.click(title)
+    local w = FH.current
+    if not (w and w.open) then return "no window" end
+    for _, b in ipairs(w.buttons) do
+        if titleOf(w, b) == title then
+            local en = b.spec.enabled
+            if type(en) == "table" and w.props[en.bound] ~= true then return "disabled" end
+            b.spec.action()
+            return "clicked"
+        end
+    end
+    error("no button titled " .. tostring(title))
+end
+
+-- Each button's title and whether a click would be delivered, in the order the window lists them.
+function FH.buttons()
+    local w = FH.current
+    local out = {}
+    if not (w and w.open) then return out end
+    for _, b in ipairs(w.buttons) do
+        local en = b.spec.enabled
+        out[#out + 1] = { title = titleOf(w, b), enabled = type(en) ~= "table" or w.props[en.bound] == true }
+    end
+    return out
+end
+
+function FH.select(photo)
+    F.active, F.selected = photo, photo and { photo } or {}
+    local w = FH.current
+    if w and w.open and w.args.selectionChangeObserver then w.args.selectionChangeObserver() end
+end
+
+function FH.openCount()
+    local n = 0
+    for _, w in ipairs(FH.windows) do if w.open then n = n + 1 end end
+    return n
+end
+
+==================== Appendix: hud-cases.lua ====================
+-- PHASE5_PLAN row 4: the HUD through the whole bridge (Bridge.start, its sockets, the dispatch) against
+-- fake-lr.lua + fake-hud.lua, driven the way an engine and Jim would: hud_update commands on the
+-- receive socket, clicks on the window's buttons, selection changes, menu items. Before that, every
+-- payload in CASES (JSON text the runner built and checked with the engine's schema) goes through
+-- HudState.check after the plugin's own Json.decode. Returns a JSON string.
+
+local Bridge = require 'Bridge'
+local Hud = require 'Hud'
+local HudState = require 'HudState'
+local Json = require 'Json'
+
+local TOKEN_FILE = "C:\\Users\\U\\.lrc-avg\\bridge_token"
+local LOG_FILE = "C:\\T\\LrC-AVG\\bridge.log"
+local out = { contract = {}, snaps = {}, replies = {}, sent_updates = {}, clicks = {} }
+
+-- 1. The contract cases.
+for i, c in ipairs(Json.decode(CASES)) do
+    local payload = Json.decode(c.json)
+    local s, err = HudState.check(payload)
+    out.contract[i] = { name = c.name, accepted = s ~= nil, message = err and err.message or nil,
+        filename = s and s.target and s.target.filename or nil }
+end
+
+-- 2. The scenario.
+local MASTER = "CF12AF60-0858-4181-9562-376D16B89126"
+local master, other = F.world()
+local copyA = F.newPhoto({ local_id = 3869701, uuid = "COPY-A", is_vc = true, master = master, copy_name = "AVG S-1 A", file_name = "20260907-_OZ80099.NEF" })
+local copyB = F.newPhoto({ local_id = 3869702, uuid = "COPY-B", is_vc = true, master = master, copy_name = "AVG S-1 B", file_name = "20260907-_OZ80099.NEF" })
+local PHOTOS = { MASTER, "COPY-A", "COPY-B" }
+
+Bridge.start()
+F.run(8)
+F.last.receive.spec.onConnected()
+F.run(3)
+F.last.send.spec.onConnected()
+F.run(3)
+
+local n = 0
+local function allSent()
+    local lines = {}
+    for _, sock in ipairs(F.binds) do
+        if sock.spec.mode == "send" then
+            for _, l in ipairs(sock.sent) do lines[#lines + 1] = Json.decode(l) end
+        end
+    end
+    return lines
+end
+local function reply(id)
+    for _, m in ipairs(allSent()) do
+        if m.type == "res" and m.id == id then return m end
+    end
+    return nil
+end
+local function events()
+    local e = {}
+    for _, m in ipairs(allSent()) do
+        if m.type == "evt" and m.name ~= "hello" then e[#e + 1] = m end
+    end
+    return e
+end
+local function command(name, payload)
+    n = n + 1
+    local id = "c" .. n
+    F.last.receive.spec.onMessage(nil, Json.encode({ id = id, type = "cmd", name = name, token = F.files[TOKEN_FILE], payload = payload }))
+    F.run(3)
+    return reply(id)
+end
+local function update(p)
+    out.sent_updates[#out.sent_updates + 1] = p
+    local r = command("hud_update", p)
+    out.replies[#out.replies + 1] = r
+    return r
+end
+-- A heartbeat, then long enough (1.2 s) for the HUD's once-a-second refresh to see the engine again.
+local function beat()
+    command("ping", { nonce = "beat" })
+    F.run(3)
+end
+local function menu(name)
+    dofile(package.searchpath(name, package.path))
+    F.run(4)
+end
+local KEYS = { "connection", "target", "camera", "stage", "targetChanged", "guardrail", "note", "hint", "lastAction",
+    "settingsTitle", "settingsA", "settingsB", "d1_slider", "d1_before", "d1_after", "d1_delta", "d2_slider", "d2_delta", "d3_slider" }
+local function snap(label)
+    local w = FH.current
+    local p = (w and w.props) or {}
+    local s = { label = label, open = FH.openCount(), windows = #FH.windows, buttons = FH.buttons(), clock = F.clock,
+        events = #events(), close_calls = #FH.closeCalls, messages = #FH.messages }
+    for _, k in ipairs(KEYS) do s[k] = p[k] end
+    out.snaps[#out.snaps + 1] = s
+    return s
+end
+-- Rounds until the fake clock has moved `seconds` (each round moves it by every sleeping task's step).
+local function runFor(seconds, withBeats)
+    local stop = F.clock + seconds
+    while F.clock < stop do
+        if withBeats then beat() else F.run(1) end
+    end
+end
+
+local TARGET = { uuid = MASTER, filename = "20260907-_OZ80099.NEF", iso = "400", shutter = "1/250 s", aperture = "f/8",
+    lens = "NIKKOR Z 24-120mm f/4 S", lens_profile = "on" }
+local function U(seq, stage, extra, sid)
+    local p = { session_id = sid or "S-1", seq = seq, stage = stage, target = TARGET }
+    for k, v in pairs(extra or {}) do p[k] = v end
+    return p
+end
+
+beat()
+update(U(1, "begin", { open = true, mode = "converge" }))
+snap("begin")
+update(U(2, "pass0", { open = true }))
+menu("MenuHud")
+snap("second open, Show HUD while open")
+update(U(3, "awaiting_claude", { pass = 1, max_passes = 4, guardrail = { status = "green" }, note = "Pass 1 measured.",
+    deltas = { { slider = "Exposure", before = "+0.30", after = "+0.55", delta = "+0.25" },
+               { slider = "Highlights", before = "-20", after = "-35", delta = "-15" } } }))
+snap("awaiting_claude")
+F.prefs.maxPasses = 6
+F.run(6) -- one HUD refresh (once a second)
+snap("page edited")
+update(U(4, "awaiting_claude", { pass = 1, max_passes = 4, settings = { mode = "autonomous", max_passes = 4, variant_count = 3,
+    long_edge = 1600, quality = 75, clip_high_pct = 0.5, clip_low_pct = 1, decay = { 1, 0.6, 0.4, 0.25 } } }))
+snap("session settings")
+out.clicks.greyed_pick = FH.click("Pick A")
+update(U(5, "awaiting_pick", { mode = "variants", variants = { "A", "B" }, session_photos = PHOTOS }))
+snap("awaiting_pick")
+beat()
+out.clicks.pick_b = FH.click("Pick B")
+snap("right after Pick B")
+F.run(3)
+snap("Pick B sent")
+local pickEvt = events()[#events()]
+-- A heartbeat first, so the engine counts as connected and only the pending guard can stop the Abort.
+beat()
+out.clicks.abort_while_pending = FH.click("Abort")
+Hud.click("hud_abort")
+F.run(3)
+snap("Abort called while Pick B waits")
+update(U(6, "awaiting_claude", { mode = "variants", session_photos = PHOTOS, answered_click_id = pickEvt.payload.click_id, note = "Pick B received." }))
+snap("Pick B answered")
+update(U(7, "awaiting_approval", { mode = "variants", session_photos = PHOTOS, approve_pass = 2 }))
+snap("awaiting approval")
+beat()
+out.clicks.approve = FH.click("Approve pass 2")
+F.run(3)
+snap("Approve sent")
+runFor(11, true)
+snap("Approve unanswered 11 s")
+runFor(7, false)
+snap("engine silent 7 s")
+Hud.click("hud_accept")
+F.run(2)
+snap("Accept while disconnected")
+beat()
+F.last.send.send = function() error("socket gone") end
+out.clicks.accept_send_fails = FH.click("Accept")
+-- Short of the 10 s pending limit, so a click left pending after the failure would still hold the
+-- buttons off at "send socket back".
+F.run(3)
+snap("Accept, send socket failed")
+F.last.send.spec.onConnected()
+F.run(3)
+beat()
+snap("send socket back")
+
+out.stale = update(U(3, "metrics"))
+snap("stale update")
+out.bad = {
+    command("hud_update", { session_id = "S-1", seq = 8, stage = "rendering", target = TARGET }),
+    command("hud_update", { session_id = "S-1", seq = 8, stage = "metrics", target = TARGET, colour = "red" }),
+}
+update(U(8, "awaiting_claude", { mode = "variants", session_photos = PHOTOS }))
+FH.select(other)
+F.run(3)
+snap("variants: another photo selected")
+FH.select(copyB)
+F.run(3)
+snap("variants: copy B selected")
+FH.select(nil)
+F.run(3)
+snap("variants: nothing selected")
+FH.select(master)
+update(U(9, "awaiting_claude", { mode = "converge" }))
+FH.select(copyA)
+F.run(3)
+snap("converge: copy A selected")
+FH.select(master)
+F.run(3)
+snap("converge: the target selected again")
+
+beat()
+menu("MenuAbort")
+snap("menu Abort")
+local menuEvt = events()[#events()]
+update(U(10, "aborted", { answered_click_id = menuEvt.payload.click_id, note = "Photo restored to the session snapshot." }))
+F.run(1)
+snap("aborted, at once")
+menu("MenuAccept")
+snap("menu Accept after the end")
+runFor(6, true)
+snap("aborted, 6 s later")
+
+update(U(1, "begin", { open = true }, "S-2"))
+snap("S-2 begins")
+update(U(2, "accepted", {}, "S-2"))
+F.run(1)
+update(U(1, "begin", {}, "S-3"))
+runFor(7, true)
+snap("S-3 began within S-2's close delay")
+out.replaced = update(U(3, "awaiting_claude", {}, "S-2"))
+snap("late S-2 update")
+
+FH.closeWindow(FH.current, "x")
+F.run(2)
+out.after_x = update(U(2, "metrics", {}, "S-3"))
+snap("update after the X")
+menu("MenuHud")
+snap("Show HUD after the X")
+
+local windows = {}
+for i, w in ipairs(FH.windows) do
+    windows[i] = { title = w.title, block_task = w.blockTask, open = w.open, closed_by = w.closedBy, opened_at = w.openedAt, closed_at = w.closedAt }
+end
+return Json.encode({ contract = out.contract, snaps = out.snaps, replies = out.replies, sent_updates = out.sent_updates,
+    events = events(), clicks = out.clicks, bad = out.bad, stale = out.stale, replaced = out.replaced, after_x = out.after_x,
+    messages = FH.messages, close_calls = FH.closeCalls, windows = windows, errors = F.errors, log = F.files[LOG_FILE] })
+
+==================== Appendix: bridge-cases.lua ====================
+-- The whole bridge (Bridge.start, its monitor loop, the sockets and the dispatch) against
+-- fake-lr.lua, driven through the socket callbacks the way an engine would. Runs the same script on
+-- main's Bridge.lua and on the split one (on main, c11 and c12 are unknown commands). Returns a JSON string.
+
+local Bridge = require 'Bridge'
+local Json = require 'Json'
+
+local TOKEN_FILE = "C:\\Users\\U\\.lrc-avg\\bridge_token"
+local LOG_FILE = "C:\\T\\LrC-AVG\\bridge.log"
+local STATUS_FILE = "C:\\T\\LrC-AVG\\bridge_status.json"
+local steps = {}
+
+local function step(what) steps[#steps + 1] = { step = what, binds = #F.binds, clock = F.clock } end
+local function command(id, name, payload, token)
+    F.last.receive.spec.onMessage(nil, Json.encode({ id = id, type = "cmd", name = name, token = token or F.files[TOKEN_FILE], payload = payload }))
+    F.run(5)
+end
+
+F.world()
+Bridge.start()
+F.run(8)
+step("started: settle, token, first bind of both sockets")
+-- The engine connects the command (receive) socket first, then the event (send) socket (C-5).
+F.last.receive.spec.onConnected()
+F.run(3)
+F.last.send.spec.onConnected()
+F.run(3)
+step("engine connected on both sockets")
+
+command("c1", "hello", { protocol = 1, engine_version = "smoke" })
+command("c2", "ping", { nonce = "n1" })
+command("c3", "ping", { nonce = "n2" }, "wrong-token")
+F.last.receive.spec.onMessage(nil, "this is not json")
+F.run(3)
+F.last.receive.spec.onMessage(nil, '{"id":"c5","type":"res","name":"x"}')
+F.run(3)
+command("c6", "frobnicate", {})
+command("c7", "get_settings", { target_uuid = "OTHER-UUID" })
+command("c8", "get_context", {})
+command("c9", "apply_settings", { settings = { Exposure2012 = 1 }, history_name = "AVG smoke" }) -- applyDevelopSettings is not stubbed: raises
+command("c10", "apply_settings", { settings = { Exposure2012 = 1 }, history_name = "no prefix" })
+-- On main's plugin these two are unknown commands; the same rounds run either way.
+command("c11", "create_virtual_copies", { target_uuid = "CF12AF60-0858-4181-9562-376D16B89126", names = { "AVG s A", "AVG s B", "AVG s C" } })
+command("c12", "select_photo", { uuid = "OLD-COPY-UUID", expect = { copy_name = "Copy 1" } })
+step("commands answered")
+F.run(5)
+local statusMid = F.files[STATUS_FILE]
+
+F.last.receive.spec.onError(nil, "timeout") -- no-client timeout while connected: ignored
+F.last.receive.spec.onClosed()
+F.run(3)
+step("receive closed: re-armed with reconnect()")
+F.last.receive.spec.onConnected()
+command("c13", "ping", { nonce = "n3" })
+F.last.send.spec.onError(nil, "connection reset")
+F.run(3)
+step("send error: send socket rebound")
+F.last.send.spec.onConnected()
+F.run(3)
+F.run(130) -- 26 s of 0.2 s ticks without a message
+step("silent 20 s: both sockets rebound")
+local reconnects = {}
+for i, s in ipairs(F.binds) do reconnects[i] = { mode = s.spec.mode, closed = s.closed, reconnects = s.reconnects, sent = #s.sent } end
+
+Bridge.start() -- a Reload Plug-in: generation 2 replaces generation 1
+F.run(10)
+step("generation 2 started")
+F.contexts[1].cleanups[1]()
+step("generation 1 cleanup handler ran")
+
+local sent = {}
+for _, s in ipairs(F.binds) do
+    if s.spec.mode == "send" then
+        for _, line in ipairs(s.sent) do sent[#sent + 1] = line end
+    end
+end
+return Json.encode({ sent = sent, log = F.files[LOG_FILE], status_mid = statusMid, steps = steps,
+    sockets = reconnects, errors = F.errors, token = F.files[TOKEN_FILE], calls = F.calls })
+
+==================== Appendix: run.mts ====================
+// Smoke-runs the plugin's HUD Lua under fengari 0.1.4 against fake-lr.lua + fake-hud.lua (no
+// Lightroom), PHASE5_PLAN row 4, and checks the results against the engine's own code (engine\dist,
+// built by npm run build): hudUpdatePayloadSchema, COMMANDS.hud_update, parseHudEvent. Each mutant
+// must fail exactly its named checks. Then main's bridge scenario against this branch's.
+// Usage: node run.mts <repo root>
+import fengari from "fengari";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+
+const { lua, lauxlib, lualib, to_luastring } = fengari;
+const here = path.dirname(new URL(import.meta.url).pathname).replace(/^\/([A-Za-z]:)/, "$1");
+const repo = process.argv[2] as string;
+const slash = (p: string) => p.replaceAll("\\", "/");
+const newDir = slash(path.join(repo, "plugin", "LrC-AVG.lrplugin"));
+const oldDir = slash(path.join(here, "old"));
+const dist = (p: string) => import(pathToFileURL(path.join(repo, "engine", "dist", p)).href);
+const { COMMANDS } = await dist("bridge/protocol.js");
+const { hudUpdatePayloadSchema, parseHudEvent, HUD_LIMITS } = await dist("bridge/hud-protocol.js");
+
+// The contract cases: JSON text, and whether the engine's schema accepts it.
+const T = { uuid: "U1" };
+const base = { session_id: "s1", seq: 1, stage: "begin", target: T };
+const FULL = {
+  session_id: "20260929-abc123", seq: 4, open: true, stage: "awaiting_pick", mode: "variants", pass: 1, max_passes: 4,
+  target: { uuid: "U1", filename: "20260907-_OZ80099.NEF", copy_name: "AVG A", iso: 400, shutter: "1/250 s", aperture: "f/8", lens: "NIKKOR Z 24-120mm f/4 S", lens_profile: "on" },
+  session_photos: ["U1", "COPY-A", "COPY-B", "COPY-C"], variants: ["A", "B", "C"], approve_pass: 2, answered_click_id: "CLICK-1",
+  deltas: [{ slider: "Exposure", before: "+0.30", after: "+0.55", delta: "+0.25" }, { slider: "Highlights", before: -20, after: -35, delta: -15 }],
+  guardrail: { status: "corrected", reason: "highlights 0.6 % over 0.5 %" }, note: "Pick the copy you like best.",
+  settings: { mode: "autonomous", max_passes: 4, variant_count: 3, long_edge: 1600, quality: 75, clip_high_pct: 0.5, clip_low_pct: 1, decay: [1, 0.6, 0.4, 0.25] },
+};
+const rows = (k: number) => Array.from({ length: k }, (_, i) => ({ slider: `s${i}` }));
+const CASES: Array<[string, unknown]> = [
+  ["minimal", base], ["every field", FULL],
+  ["an unknown field", { ...base, colour: "red" }], ["an unknown target field", { ...base, target: { uuid: "U1", camera: "Z8" } }],
+  ["an unknown stage", { ...base, stage: "rendering" }], ["no target", { session_id: "s1", seq: 1, stage: "begin" }],
+  ["no session id", { seq: 1, stage: "begin", target: T }], ["seq 0", { ...base, seq: 0 }], ["seq 1.5", { ...base, seq: 1.5 }],
+  ["seq as text", { ...base, seq: "1" }], ["session id of 64 bytes (32 x e-acute)", { ...base, session_id: "é".repeat(32) }],
+  ["session id of 66 bytes (33 x e-acute)", { ...base, session_id: "é".repeat(33) }], ["an empty session id", { ...base, session_id: "" }],
+  ["variant D", { ...base, variants: ["A", "D"] }], [`${HUD_LIMITS.rows} delta rows`, { ...base, deltas: rows(HUD_LIMITS.rows) }],
+  [`${HUD_LIMITS.rows + 1} delta rows`, { ...base, deltas: rows(HUD_LIMITS.rows + 1) }], ["a delta row without its slider", { ...base, deltas: [{ before: "1" }] }],
+  ["guardrail amber", { ...base, guardrail: { status: "amber" } }], ["a guardrail without its status", { ...base, guardrail: { reason: "x" } }],
+  ["open as text", { ...base, open: "yes" }], ["note as an object", { ...base, note: { text: "x" } }],
+  ["pass 99", { ...base, pass: 99 }], ["pass 100", { ...base, pass: 100 }], ["max_passes 0", { ...base, max_passes: 0 }],
+  ["settings with log_dir", { ...base, settings: { log_dir: "D:\\logs" } }], ["decay with 9 values", { ...base, settings: { decay: [1, 1, 1, 1, 1, 1, 1, 1, 1] } }],
+  ["17 session photos", { ...base, session_photos: Array.from({ length: 17 }, (_, i) => `P${i}`) }],
+  ["session photos as an object", { ...base, session_photos: { a: "x" } }], ["an empty answered_click_id", { ...base, answered_click_id: "" }],
+  ["a 200-byte file name", { ...base, target: { uuid: "U1", filename: "x".repeat(200) } }],
+  ["a 200-byte UTF-8 file name (100 x e-acute)", { ...base, target: { uuid: "U1", filename: "é".repeat(100) } }],
+  ["numbers where text is shown", { ...base, target: { uuid: "U1", iso: 400 }, deltas: [{ slider: "Highlights", before: -20 }] }],
+  ["the target as a list", { ...base, target: ["U1"] }], ["the payload as a list", [base]],
+];
+// The one expected difference: after decoding, Lua cannot tell {} from [] (plugin Json.lua), so an
+// empty object where a list belongs passes the plugin; the engine's schema refuses it.
+const KNOWN_DIFFERENCE = "an empty object where a list belongs";
+CASES.push([KNOWN_DIFFERENCE, { ...base, deltas: {} }]);
+const casesJson = JSON.stringify(CASES.map(([name, p]) => ({ name, json: JSON.stringify(p) })));
+
+function runLua(pluginDir: string, script: string): any {
+  const L = lauxlib.luaL_newstate();
+  lualib.luaL_openlibs(L);
+  const dirs = pluginDir.split(";").map((d) => `${d}/?.lua`).join(";");
+  const setup = `package.path = [[${dirs};${slash(here)}/?.lua]]\ndofile([[${slash(here)}/fake-lr.lua]])\ndofile([[${slash(here)}/fake-hud.lua]])\nCASES = [==[${casesJson}]==]`;
+  if (lauxlib.luaL_dostring(L, to_luastring(setup)) !== lua.LUA_OK) throw new Error(lua.lua_tojsstring(L, -1));
+  if (lauxlib.luaL_dofile(L, to_luastring(slash(path.join(here, script)))) !== lua.LUA_OK) throw new Error(`${script}: ${lua.lua_tojsstring(L, -1)}`);
+  return JSON.parse(lua.lua_tojsstring(L, -1));
+}
+
+type Check = { name: string; ok: boolean };
+function checksOf(run: any): Check[] {
+  const checks: Check[] = [];
+  const check = (ok: boolean, name: string) => checks.push({ name, ok: Boolean(ok) });
+  const snap = (label: string) => {
+    const s = run.snaps.find((x: any) => x.label === label);
+    if (!s) throw new Error(`no snap ${label}`);
+    return s;
+  };
+  const on = (s: any) => (s.buttons as any[]).filter((b) => b.enabled).map((b) => b.title);
+  const evts = run.events as any[];
+  const evtsBefore = (label: string) => evts.slice(0, snap(label).events);
+
+  // Contract: the plugin's check agrees with the engine's schema on every case but the known one.
+  const disagree = run.contract.filter((c: any, i: number) => {
+    const zodOk = hudUpdatePayloadSchema.safeParse(CASES[i]?.[1]).success;
+    return c.name === KNOWN_DIFFERENCE ? !(c.accepted && !zodOk) : c.accepted !== zodOk;
+  });
+  check(run.contract.length === CASES.length && disagree.length === 0, `C1 the plugin's HudState.check and the engine's hudUpdatePayloadSchema agree on ${CASES.length - 1} cases (and differ as expected on "${KNOWN_DIFFERENCE}")`);
+  const byName = (n: string) => run.contract.find((c: any) => c.name === n);
+  const long = byName("a 200-byte file name").filename as string;
+  // fengari's lua_tojsstring decodes the output as UTF-8, so a name cut inside a character would not
+  // read back as whole e-acutes.
+  const utf = byName("a 200-byte UTF-8 file name (100 x e-acute)").filename as string;
+  const whole = (Buffer.byteLength(utf, "utf8") - 3) / 2;
+  check(long.length === HUD_LIMITS.text && long.endsWith("...") && Buffer.byteLength(utf, "utf8") <= HUD_LIMITS.text && whole > 50 && utf === "é".repeat(whole) + "...",
+    "C2 text over the limit is shortened to 120 bytes, a UTF-8 name on a character boundary");
+  check(run.contract.filter((c: any) => !c.accepted).every((c: any) => typeof c.message === "string" && c.message.startsWith("hud_update")), "C3 every refusal names the field (a message starting hud_update...)");
+
+  check(run.errors.length === 0, "S0 no task raised");
+  check(run.replies.every((r: any) => r.ok === true && COMMANDS.hud_update.safeParse(r.payload).success) && run.sent_updates.every((p: any) => hudUpdatePayloadSchema.safeParse(p).success),
+    "S1 every update the scenario sent passes the engine's schema, and every reply passes COMMANDS.hud_update");
+  check(evts.length > 0 && evts.every((e: any) => parseHudEvent(e)?.ok === true), "S2 every event the plugin sent passes the engine's parseHudEvent");
+
+  const r1 = run.replies[0].payload;
+  const b = snap("begin");
+  check(r1.applied && r1.shown && r1.opened && b.open === 1 && b.windows === 1 && run.windows[0].title === "LrC-AVG - Vision Gateway" && run.windows[0].block_task === true,
+    "H1 open: the first update opens one window (applied, shown, opened), titled, with blockTask");
+  const r2 = run.replies[1].payload;
+  const second = snap("second open, Show HUD while open");
+  check(r2.applied && r2.shown && !r2.opened && second.windows === 1 && second.open === 1, "H2 open once: a second open and Show HUD while it is open open no second window");
+  const a = snap("awaiting_claude");
+  check(a.connection === "Connection: Claude session active" && a.target === "Target: 20260907-_OZ80099.NEF" &&
+    a.camera === "ISO 400, 1/250 s, f/8, NIKKOR Z 24-120mm f/4 S, lens profile on" && a.stage === "Stage: Awaiting Claude  (pass 1 of 4)" &&
+    a.d1_slider === "Exposure" && a.d1_before === "+0.30" && a.d1_after === "+0.55" && a.d1_delta === "+0.25" && a.d2_slider === "Highlights" && a.d3_slider === "" &&
+    a.guardrail === "Guardrails: green" && a.note === "Pass 1 measured.", "H3 lines: connection, target, camera, stage with pass, the deltas grid, guardrail, note");
+  const edited = snap("page edited");
+  const sess = snap("session settings");
+  check(a.settingsTitle.startsWith("Settings page") && a.settingsA === "autonomous, max 4 passes, 3 variants, preview 1600 px q75" &&
+    a.settingsB === "clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25" && edited.settingsA.includes("max 6 passes") &&
+    sess.settingsTitle === "Session settings:" && sess.settingsA === "autonomous, max 4 passes, 3 variants, preview 1600 px q75",
+    "H4 settings (decision 4): the page's when the engine sends none, following a page edit; the session's when sent");
+  check(JSON.stringify(on(a)) === JSON.stringify(["Abort", "Accept"]) && a.hint === "" &&
+    (a.buttons as any[]).some((x) => x.title === "Approve pass" && !x.enabled), "H5 at awaiting_claude: Abort and Accept on; Pick A-C and Approve off; Approve reads \"Approve pass\"");
+  const pick = snap("awaiting_pick");
+  check(run.clicks.greyed_pick === "disabled" && evtsBefore("awaiting_pick").length === 0 && JSON.stringify(on(pick)) === JSON.stringify(["Abort", "Accept", "Pick A", "Pick B"]),
+    "H6 a greyed Pick is not delivered; at awaiting_pick only the letters sent (A, B) are on");
+  const pe = evts.find((e: any) => e.name === "hud_pick");
+  check(run.clicks.pick_b === "clicked" && pe && JSON.stringify(Object.keys(pe.payload).sort()) === JSON.stringify(["click_id", "seq_seen", "session_id", "source", "variant"]) &&
+    pe.payload.session_id === "S-1" && pe.payload.seq_seen === 5 && pe.payload.source === "hud" && pe.payload.variant === "B" && snap("Pick B sent").events === 1,
+    "H7 Pick B sends one hud_pick: session S-1, seq_seen 5, source hud, variant B, a click id");
+  const right = snap("right after Pick B");
+  const waiting = snap("Abort called while Pick B waits");
+  check(on(right).length === 0 && right.hint.startsWith("Buttons off until the engine answers the Pick B") && run.clicks.abort_while_pending === "disabled" &&
+    waiting.events === 1 && waiting.lastAction === "Abort NOT sent: the Pick B is still waiting for the engine",
+    "H8 after a click every button is off until the engine answers; an Abort called meanwhile is not sent and says why");
+  const answered = snap("Pick B answered");
+  check(on(answered).includes("Abort") && answered.lastAction.startsWith("Pick B: answered by the engine") && answered.note === "Pick B received.",
+    "H9 an update naming the click (answered_click_id) turns the buttons back on");
+  const appr = snap("awaiting approval");
+  const ae = evts.find((e: any) => e.name === "hud_approve_pass");
+  check(on(appr).includes("Approve pass 2") && run.clicks.approve === "clicked" && ae?.payload.pass === 2 && ae?.payload.seq_seen === 7,
+    "H10 Approve's bound title reads \"Approve pass 2\"; its event carries pass 2");
+  const late = snap("Approve unanswered 11 s");
+  check(on(late).includes("Abort") && late.lastAction.startsWith("Approve pass 2: no answer from the engine within 10 s"),
+    "H11 a click the engine never answers frees the buttons after 10 s, and says so");
+  const silent = snap("engine silent 7 s");
+  const disc = snap("Accept while disconnected");
+  check(silent.connection === "Connection: Disconnected" && on(silent).length === 0 && silent.hint === "Buttons off: the engine is not connected." &&
+    disc.lastAction === "Accept NOT sent: the engine is not connected" && disc.events === silent.events,
+    "H12 engine silent over 6 s: Disconnected, buttons off with the reason (decision 2); an Accept is not sent");
+  const failed = snap("Accept, send socket failed");
+  const back = snap("send socket back");
+  check(run.clicks.accept_send_fails === "clicked" && failed.lastAction === "Accept NOT sent: the engine is not connected" && failed.events === silent.events &&
+    on(back).includes("Accept"), "H13 a send that fails on the socket reads NOT sent, never sent, and frees the buttons");
+  check(run.stale.ok && run.stale.payload.applied === false && /not newer than 7/.test(run.stale.payload.reason) && snap("stale update").stage.includes("Awaiting approval"),
+    "H14 an older seq in the same session is not taken (applied false, the reason); the HUD keeps the newer state");
+  check(run.bad.every((r: any) => r.ok === false && r.error.code === "bad_request") && /hud_update\.stage/.test(run.bad[0].error.message) && /hud_update\.colour/.test(run.bad[1].error.message),
+    "H15 a wrong stage or an unknown field: bad_request naming the field, through the dispatch");
+  const other = snap("variants: another photo selected");
+  check(other.targetChanged === "Target changed: 20260907-_OZ80093.NEF is selected. Claude's next call selects the session's photo again; the session is still open." &&
+    snap("variants: copy B selected").targetChanged === "" && snap("variants: nothing selected").targetChanged.startsWith("Target changed: No photo is selected.") &&
+    snap("converge: copy A selected").targetChanged === "Target changed: 20260907-_OZ80099.NEF (AVG S-1 A) is selected. Select 20260907-_OZ80099.NEF again; the session is still open." &&
+    snap("converge: the target selected again").targetChanged === "",
+    "H16 Target changed: a photo outside the session's photos (by uuid, a copy named), or none; cleared for a session photo; advice per mode");
+  const ma = snap("menu Abort");
+  const me = evts[ma.events - 1];
+  const msgs = run.messages as any[];
+  check(me?.name === "hud_abort" && me.payload.source === "menu" && msgs[0]?.title === "LrC-AVG: ABORT SENT",
+    "H17 menu item Abort Session sends hud_abort (source menu), and its message says SENT");
+  const endNow = snap("aborted, at once");
+  const endLater = snap("aborted, 6 s later");
+  const acceptMsg = msgs[1];
+  check(endNow.open === 1 && on(endNow).length === 0 && endNow.hint === "The session has ended." && endNow.stage === "Stage: Aborted" &&
+    endNow.note === "Photo restored to the session snapshot." && acceptMsg?.title === "LrC-AVG: ACCEPT NOT SENT" && /session has ended \(aborted\)/.test(acceptMsg?.text) &&
+    endLater.open === 0 && endLater.close_calls === 1 && run.close_calls[0].plugin_ok && run.windows[0].closed_by === "code",
+    "H18 end: the outcome shows with the buttons off, a menu Accept is refused; then closeFloatingDialogsForPlugin(_PLUGIN) closes it (decision 1)");
+  const s2 = snap("S-2 begins");
+  const s3 = snap("S-3 began within S-2's close delay");
+  check(s2.open === 1 && s2.windows === 2 && s3.open === 1 && s3.close_calls === 1 && s3.stage === "Stage: Starting the session",
+    "H19 a newer session within the close delay cancels the close");
+  check(run.replaced.ok && run.replaced.payload.applied === false && /replaced by a newer one/.test(run.replaced.payload.reason) && snap("late S-2 update").stage === "Stage: Starting the session",
+    "H20 a late update of a session a newer one replaced is not taken");
+  const afterX = snap("update after the X");
+  const shown = snap("Show HUD after the X");
+  check(run.after_x.ok && run.after_x.payload.applied && !run.after_x.payload.shown && !run.after_x.payload.opened && afterX.open === 0 &&
+    afterX.windows === s3.windows && shown.open === 1 && shown.windows === s3.windows + 1,
+    "H21 closed with its X: updates are still taken but open nothing; Show HUD opens it again");
+  return checks;
+}
+
+let failures = 0;
+function report(checks: Check[]): void {
+  for (const c of checks) {
+    console.log(`${c.ok ? "PASS" : "FAIL"}  ${c.name}`);
+    if (!c.ok) failures++;
+  }
+}
+
+console.log("== Contract (HudState.check against the engine's hudUpdatePayloadSchema) ==");
+const run = runLua(newDir, "hud-cases.lua");
+run.contract.forEach((c: any, i: number) => {
+  const zodOk = hudUpdatePayloadSchema.safeParse(CASES[i]?.[1]).success;
+  console.log(`--  ${c.name}: plugin ${c.accepted ? "takes" : "refuses"}${c.message ? ` (${c.message})` : ""}; engine schema ${zodOk ? "takes" : "refuses"}`);
+});
+console.log("\n== Scenario (hud-cases.lua): snapshots ==");
+for (const s of run.snaps) {
+  const on = (s.buttons as any[]).filter((x) => x.enabled).map((x) => x.title).join(", ") || "none";
+  console.log(`--  [${s.label}] windows ${s.windows}, open ${s.open}, events ${s.events}, buttons on: ${on}`);
+  for (const k of ["connection", "stage", "targetChanged", "hint", "lastAction", "settingsTitle", "settingsA", "settingsB"]) if (s[k]) console.log(`      ${k}: ${s[k]}`);
+}
+console.log("--  events sent:");
+for (const e of run.events) console.log(`      ${e.name} ${JSON.stringify(e.payload)}`);
+console.log("--  messages:");
+for (const m of run.messages) console.log(`      ${m.title}: ${m.text}`);
+console.log(`--  replies to hud_update: ${JSON.stringify(run.replies.map((r: any) => r.payload))}`);
+console.log(`--  refused commands: ${JSON.stringify(run.bad.map((r: any) => r.error))}`);
+console.log(`--  windows: ${JSON.stringify(run.windows)}`);
+console.log("--  HUD lines in the plugin log:");
+for (const l of String(run.log).split("\n").filter((x: string) => x.includes("hud:"))) console.log(`      ${l}`);
+console.log("");
+report(checksOf(run));
+
+// Mutants: each must fail exactly its named checks.
+function mutant(file: string, from: string, to: string, expect: string[]): void {
+  const source = readFileSync(path.join(newDir, file), "utf8");
+  const changed = source.replace(from, to);
+  const dir = path.join(here, "mutant");
+  rmSync(dir, { recursive: true, force: true });
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(path.join(dir, file), changed);
+  let failed: string[];
+  try {
+    failed = checksOf(runLua(`${slash(dir)};${newDir}`, "hud-cases.lua")).filter((c) => !c.ok).map((c) => c.name.split(" ")[0] as string);
+  } catch (e) {
+    failed = [`raised: ${(e as Error).message.slice(0, 120)}`];
+  }
+  const got = [...new Set(failed)].sort();
+  const ok = changed !== source && JSON.stringify(got) === JSON.stringify([...expect].sort());
+  console.log(`${ok ? "PASS" : "FAIL"}  mutant ${file} (${to.trim().slice(0, 80)}): fails ${JSON.stringify(got)}, expected ${JSON.stringify(expect)}`);
+  if (!ok) failures++;
+}
+// Each takes out one guard; the expected failures are the checks that guard exists for, and the
+// checks later in the scenario that its loss reaches (noted per mutant).
+const MUTANTS: Array<[string, string, string, string[]]> = [
+  // An older update within a session taken.
+  ["HudState.lua", "if s.seq <= current.seq then return", "if false then return", ["H14"]],
+  // A replaced session's late update taken.
+  ["HudState.lua", "if seen[s.session_id] then return", "if false then return", ["H20"]],
+  // Buttons on while the engine is disconnected (decision 2).
+  ["HudView.lua", "and conn.engine == true and pending == nil", "and pending == nil", ["H12"]],
+  // A second click sent while the first waits: the Abort goes out (H8); the engine's answer to the
+  // Pick then no longer frees the buttons (H9), so Approve is still off (H10) and times out as the
+  // Abort (H11).
+  ["Hud.lua", "if p then return nil, label .. \" NOT sent: the \"", "if false then return nil, label .. \" NOT sent: the \"", ["H8", "H9", "H10", "H11"]],
+  // The answered click not recognised: the buttons stay off (H9), Approve cannot be clicked (H10), and
+  // the Pick, not the Approve, times out (H11).
+  ["Hud.lua", "or s.answered_click_id == p.click_id", "", ["H9", "H10", "H11"]],
+  // A failed send left pending: the buttons stay off after the socket is back (H13), and the menu's
+  // Abort, within the same 10 s, is refused as waiting for the Accept (H17).
+  ["Hud.lua", "if H.pending == p then H.pending = nil end", "-- MUTANT: pending kept", ["H13", "H17"]],
+  // The close not tied to the session that ended: the newer session's window closes.
+  ["Hud.lua", "if s and s.session_id == H.closeFor and HudState.isEnd(s.stage) then", "if s then", ["H19"]],
+  // No open-once guard: a second and a third window (H2); the later window counts differ (H18, H19).
+  ["Hud.lua", "if Hud.isOpen() then return false end", "-- MUTANT: no open-once guard", ["H2", "H18", "H19"]],
+];
+console.log("\n== Mutants ==");
+for (const [file, from, to, expect] of MUTANTS) mutant(file, from, to, expect);
+
+// Main's plugin against this branch's: the bridge scenario of rows 6/8 (bridge-cases.lua).
+console.log("\n== The bridge scenario: main's plugin vs this branch (bridge-cases.lua) ==");
+const tidy = (v: any): any => {
+  if (typeof v === "string") return v.replace(/"plugin_version":"0\.[56]\.0"/g, '"plugin_version":"X"').replace(/[^\s"]*[\\/](\w+\.lua):/g, "$1:");
+  if (Array.isArray(v)) return v.map(tidy);
+  if (v && typeof v === "object") return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, tidy(x)]));
+  return v;
+};
+const oldBridge = runLua(oldDir, "bridge-cases.lua");
+const newBridge = runLua(newDir, "bridge-cases.lua");
+const x = JSON.stringify(tidy(oldBridge));
+const y = JSON.stringify(tidy(newBridge));
+console.log(`--  main: ${oldBridge.sent.length} lines sent, ${oldBridge.steps.length} steps, ${oldBridge.errors.length} errors; this branch: ${newBridge.sent.length} lines sent, ${newBridge.steps.length} steps, ${newBridge.errors.length} errors`);
+const same = x === y;
+console.log(`${same ? "PASS" : "FAIL"}  B1 the same replies, steps, sockets, calls and log (the plugin version aside)`);
+if (!same) {
+  failures++;
+  for (let i = 0; i < Math.max(x.length, y.length); i++) if (x[i] !== y[i]) { console.log(`    first difference at ${i}: main ...${x.slice(i - 80, i + 80)}\n    branch ...${y.slice(i - 80, i + 80)}`); break; }
+}
+
+console.log(`\n${failures === 0 ? "ALL PASS" : `${failures} FAILED`}`);
+process.exit(failures === 0 ? 0 : 1);
+
+==================== Appendix: assemble.mts ====================
+// Builds docs\reports\phase5\hud-plugin-smoke\smoke.txt: header, the run's output, and every kit file
+// verbatim. Exits 1, with the transcript headed BUILD FAILED, when the run fails.
+// Usage: node assemble.mts <repo root> <commit under test>
+import { spawnSync } from "node:child_process";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
+
+const here = path.dirname(new URL(import.meta.url).pathname).replace(/^\/([A-Za-z]:)/, "$1");
+const repo = process.argv[2] as string;
+const commit = process.argv[3] as string;
+const run = spawnSync(process.execPath, [path.join(here, "run.mts"), repo], { encoding: "utf8" });
+const tidy = (s: string) => s.replaceAll(here, "<scratch>").replaceAll(here.replaceAll("\\", "/"), "<scratch>")
+  .replaceAll(repo, "<repo>").replace(/C:[\\/]Users[\\/][^\\/]+/g, "%USERPROFILE%");
+const ok = run.status === 0 && /\nALL PASS\n/.test(run.stdout);
+const header = `${ok ? "BUILD: every run as expected." : "BUILD FAILED: the run did not end ALL PASS."}
+phase-5/hud-plugin smoke transcript (PHASE5_PLAN row 4) - Claude Code (Opus 5.5), 2026-09-29
+Plugin under test: plugin\\LrC-AVG.lrplugin at commit ${commit} (branch phase-5/hud-plugin).
+"main" = plugin\\LrC-AVG.lrplugin at 7617c6b, its .lua files copied to <scratch>\\old with git show.
+Engine code the results are checked against: engine\\dist (npm run build at ${commit}): hudUpdatePayloadSchema,
+parseHudEvent and HUD_LIMITS (bridge\\hud-protocol.js), COMMANDS.hud_update (bridge\\protocol.js).
+Node v24.11.1; fengari 0.1.4 (a Lua 5.3 VM in JavaScript), a scratch install, not a project dependency.
+The fake Lightroom (fake-lr.lua, row 3's with a new clock; fake-hud.lua, new), the scenario scripts and
+the runner are reproduced at the end.
+
+What this shows: that the HUD's Lua runs through the real bridge and dispatch, how it checks hud_update
+(against the engine's own schema on 35 cases: 34 agree, and one differs as expected; section "Contract"), which updates it takes, what its
+window shows and which buttons are on at each step, the events its buttons and menu items send (each read
+by the engine's parseHudEvent), the "Target changed" line, the close after a session's end, and that
+main's and this branch's bridge behave the same in the row 6/8 bridge scenario. Each mutant (written by
+the runner to <scratch>\\mutant) takes out one guard and must fail exactly its named checks; the reason
+for each check a mutant reaches is in the runner's MUTANTS list.
+The fake's behaviour is Claude Code's invention, modelled on what S8 observed (docs\\reports\\phase5\\S8.md
+Numbers): it shows NOTHING about Lightroom itself. Its window draws nothing: it records the view tree,
+honours a bound "enabled" and a bound title, runs a click's action where nothing can yield, and closes
+windows inside closeFloatingDialogsForPlugin. How Lightroom draws the HUD, where the keyboard goes, and
+whether the menu items reach the bridge task are for the probe after the merge.
+Fake-runtime artefacts: the fake's LrDate.timeToUserFormat returns one fixed time, so every "sent at" and
+log line reads 2026-09-27 12:00:00; fengari's os.date does not treat a leading "!" as UTC; Lua 5.3 prints
+some numbers differently from Lightroom's Lua 5.1. Lua 5.1 syntax of every plugin file is checked by
+engine\\tests\\lua-plugin.test.ts.
+The fake clock: one scheduler round is 0.2 s; a sleeping task wakes at its due time. Row 3's fake moved
+the clock by every sleeping task's step, which ran time several times too fast with the HUD's ticker
+asleep too; the change is in fake-lr.lua's header. Both plugins in the bridge comparison ran on this fake.
+
+To reproduce: npm run build; in an empty folder with these files, npm install fengari@0.1.4, copy main's
+plugin .lua files into old\\, then:
+$ node run.mts <repo>
+`;
+const files = ["fake-lr.lua", "fake-hud.lua", "hud-cases.lua", "bridge-cases.lua", "run.mts", "assemble.mts"];
+const appendix = files.map((f) => `\n==================== Appendix: ${f} ====================\n${readFileSync(path.join(here, f), "utf8").replace(/\r\n/g, "\n")}`).join("");
+const body = `${header}\n${tidy(run.stdout)}${run.stderr ? `\n(stderr)\n${tidy(run.stderr)}` : ""}\n(exit ${run.status})\n${appendix}`;
+const out = path.join(repo, "docs", "reports", "phase5", "hud-plugin-smoke", "smoke.txt");
+mkdirSync(path.dirname(out), { recursive: true });
+writeFileSync(out, body);
+console.log(`${ok ? "written" : "BUILD FAILED, written"}: ${out} (${body.split("\n").length} lines)`);
+process.exit(ok ? 0 : 1);

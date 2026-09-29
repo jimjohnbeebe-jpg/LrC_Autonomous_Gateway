@@ -1,0 +1,892 @@
+phase-5/settings smoke transcript (PHASE5_PLAN row 3) - Claude Code (Opus 5.5), 2026-09-28
+Plugin under test: plugin\LrC-AVG.lrplugin at commit 9ba55af (branch phase-5/settings).
+"main" = plugin\LrC-AVG.lrplugin at 5d8bcc3, its .lua files copied to <scratch>\old with git show.
+Engine code the results are checked against: engine\dist (npm run build at 9ba55af): COMMANDS.get_prefs
+(bridge\protocol.js), parsePage and PAGE_SPECS (settings\index.js), readPortsFile (bridge\endpoint.js).
+Node v24.11.1; fengari 0.1.4 (a Lua 5.3 VM in JavaScript), a scratch install, not a project dependency.
+The fake Lightroom (fake-lr.lua), the two scenario scripts and the runner are reproduced at the end.
+
+What this shows: the plugin's Lua runs, what Prefs.lua does with the values it is given, that get_prefs
+goes through the dispatch and the engine's own parser takes its answer, that the bridge binds the page's
+ports and writes a ports file the engine's reader takes, that every field of the settings page is bound
+to the prefs table the way S8's group B was, and that main's and this branch's bridge do the same things
+in the row 6/8 bridge scenario. The fake's behaviour is Claude Code's invention: it shows NOTHING about
+Lightroom itself. In particular the fake LrView only records the view tree it is given; whether
+Lightroom saves these fields, shows the page as intended, or keeps a numeric field in range is what
+S8 observed for its own page (docs\reports\phase5\S8.md) and what the probe after the merge checks.
+Two fake-runtime artefacts: fengari's os.date does not treat a leading "!" as UTC, so timestamps from
+os.date("!...") read "!2026-..."; and Lua 5.3 prints some numbers differently from Lightroom's Lua 5.1
+(e.g. 1.0 as "1.0"). Lua 5.1 syntax of every plugin file is checked by engine\tests\lua-plugin.test.ts.
+Each mutant (written by the runner to <scratch>\mutant) must fail exactly its named checks.
+
+To reproduce: npm run build; in an empty folder with these files, npm install fengari@0.1.4, copy
+main's plugin .lua files into old\, then:
+$ node run.mts <repo>
+== This branch (settings-cases.lua) ==
+--  read nothing stored: []
+--  read maxPasses 12: [{"key":"maxPasses","value":"12","reason":"outside 1-8"}]
+--  read maxPasses 2.5: [{"key":"maxPasses","value":"2.5","reason":"not a whole number"}]
+--  read maxPasses abc: [{"key":"maxPasses","value":"abc","reason":"not a number"}]
+--  read maxPasses stored as text 6: []
+--  read maxPasses true: [{"key":"maxPasses","value":"true","reason":"not a number"}]
+--  read variantCount 4: [{"key":"variantCount","value":"4","reason":"outside 2-3"}]
+--  read previewLongEdge 700: [{"key":"previewLongEdge","value":"700","reason":"outside 800-1920"}]
+--  read previewQuality 91: [{"key":"previewQuality","value":"91","reason":"outside 60-90"}]
+--  read mode fast: [{"key":"mode","value":"fast","reason":"not one of autonomous, approve_each_pass"}]
+--  read mode approve_each_pass: []
+--  read clipHighPct -1: [{"key":"clipHighPct","value":"-1","reason":"outside 0-100"}]
+--  read clipLowPct 2.5: []
+--  read decay 1, 0: [{"key":"decay","value":"1, 0","reason":"each value must be a number above 0 and at most 1, not \"0\""}]
+--  read decay empty: [{"key":"decay","value":"","reason":"give 1 to 8 values, separated by commas"}]
+--  read decay a, b: [{"key":"decay","value":"a, b","reason":"each value must be a number above 0 and at most 1, not \"a\""}]
+--  read decay nine values: [{"key":"decay","value":"1,1,1,1,1,1,1,1,1","reason":"give 1 to 8 values, separated by commas"}]
+--  read decay spaced 0.8, 0.5: []
+--  read decay a number: [{"key":"decay","value":"0.5","reason":"not text"}]
+--  read intentsFolder relative: [{"key":"intentsFolder","value":"intents","reason":"not a full path (for example D:\\Photos\\LrC-AVG\\intents)"}]
+--  read intentsFolder padded: []
+--  read logFolder share: []
+--  read logFolder root-relative: [{"key":"logFolder","value":"\\logs","reason":"not a full path (for example D:\\Photos\\LrC-AVG\\intents)"}]
+--  read receivePort 8767: [{"key":"receivePort","value":"8767","reason":"8767 is the engine's own port"}]
+--  read sendPort 80: [{"key":"sendPort","value":"80","reason":"outside 1024-65535"}]
+--  read ports the same: [{"key":"sendPort","value":"9000","reason":"the same as the receive port"}]
+--  read ports 9765/9766: []
+--  get_prefs defaults: {"temp_preview_dir":"C:\\T\\LrC-AVG\\previews","invalid":[],"mode":"autonomous","max_passes":4,"variant_count":3,"long_edge":1600,"quality":75,"clip_high_pct":0.5,"clip_low_pct":1,"decay":[1,0.6,0.4,0.25],"intents_dir":"","log_dir":"","receive_port":8765,"send_port":8766}
+--  get_prefs edited: {"temp_preview_dir":"C:\\T\\LrC-AVG\\previews","invalid":[],"mode":"approve_each_pass","max_passes":6,"variant_count":2,"long_edge":1200,"quality":60,"clip_high_pct":2,"clip_low_pct":0.25,"decay":[0.8,0.5],"intents_dir":"D:\\Photos\\intents","log_dir":"D:\\Photos\\logs","receive_port":9765,"send_port":9766}
+--  get_prefs invalid: {"temp_preview_dir":"C:\\T\\LrC-AVG\\previews","invalid":[{"key":"maxPasses","value":"12","reason":"outside 1-8"},{"key":"decay","value":"1, 0","reason":"each value must be a number above 0 and at most 1, not \"0\""},{"key":"sendPort","value":"8767","reason":"8767 is the engine's own port"}],"mode":"autonomous","max_passes":4,"variant_count":3,"long_edge":1600,"quality":75,"clip_high_pct":0.5,"clip_low_pct":1,"decay":[1,0.6,0.4,0.25],"intents_dir":"","log_dir":"","receive_port":8765,"send_port":8766}
+--  bridge page_ports: {"bound":{"receive":9765,"send":9766},"ports_file":"{\"receive\":9765,\"send\":9766,\"plugin_version\":\"0.5.0\",\"written_at\":\"!2026-09-28T21:58:28Z\"}","token_written":true,"status_ports":{"receive":9765,"send":9766},"status_ports_written":true,"status_ports_file":"C:\\Users\\U\\.lrc-avg\\bridge_ports.json"}
+--  bridge no_prefs: {"bound":{"receive":8765,"send":8766},"ports_file":"{\"receive\":8765,\"send\":8766,\"plugin_version\":\"0.5.0\",\"written_at\":\"!2026-09-28T21:58:28Z\"}","token_written":true,"status_ports":{"receive":8765,"send":8766},"status_ports_written":true,"status_ports_file":"C:\\Users\\U\\.lrc-avg\\bridge_ports.json"}
+--  bridge lock_port: {"bound":{"receive":8765,"send":8766},"ports_file":"{\"receive\":8765,\"send\":8766,\"plugin_version\":\"0.5.0\",\"written_at\":\"!2026-09-28T21:58:28Z\"}","token_written":true,"status_ports":{"receive":8765,"send":8766},"status_ports_written":true,"status_ports_file":"C:\\Users\\U\\.lrc-avg\\bridge_ports.json"}
+--  page: section "LrC-AVG settings", boxes ["Sessions","Guardrails (an intent's own limits come first)","Previews","Folders (blank: the default; the engine's LRC_AVG_* variable wins when set)","Bridge ports (apply at the next Lightroom start)"]
+    field mode: popup_menu; row bound true, box bound true
+    field maxPasses: edit_field precision 0 1-8; row bound true, box bound true
+    field variantCount: edit_field precision 0 2-3; row bound true, box bound true
+    field decay: edit_field; row bound true, box bound true
+    field clipHighPct: edit_field precision 2 0-100; row bound true, box bound true
+    field clipLowPct: edit_field precision 2 0-100; row bound true, box bound true
+    field previewLongEdge: edit_field precision 0 800-1920; row bound true, box bound true
+    field previewQuality: edit_field precision 0 60-90; row bound true, box bound true
+    field intentsFolder: edit_field; row bound true, box bound true
+    field logFolder: edit_field; row bound true, box bound true
+    field receivePort: edit_field precision 0 1024-65535; row bound true, box bound true
+    field sendPort: edit_field precision 0 1024-65535; row bound true, box bound true
+--  page with invalid values, texts: ["Not valid when this page opened, so the default is used:","  maxPasses = 12: outside 1-8","  logFolder = logs: not a full path (for example D:\\Photos\\LrC-AVG\\intents)"]
+PASS  no task raised
+PASS  R1 nothing stored: every setting at the engine's PAGE_SPECS default, none invalid
+PASS  R2 maxPasses 12: maxPasses invalid, the default used
+PASS  R2 maxPasses 2.5: maxPasses invalid, the default used
+PASS  R2 maxPasses abc: maxPasses invalid, the default used
+PASS  R2 maxPasses true: maxPasses invalid, the default used
+PASS  R2 variantCount 4: variantCount invalid, the default used
+PASS  R2 previewLongEdge 700: previewLongEdge invalid, the default used
+PASS  R2 previewQuality 91: previewQuality invalid, the default used
+PASS  R2 mode fast: mode invalid, the default used
+PASS  R2 clipHighPct -1: clipHighPct invalid, the default used
+PASS  R2 decay 1, 0: decay invalid, the default used
+PASS  R2 decay empty: decay invalid, the default used
+PASS  R2 decay a, b: decay invalid, the default used
+PASS  R2 decay nine values: decay invalid, the default used
+PASS  R2 decay a number: decay invalid, the default used
+PASS  R2 intentsFolder relative: intentsFolder invalid, the default used
+PASS  R2 logFolder root-relative: logFolder invalid, the default used
+PASS  R2 receivePort 8767: receivePort invalid, the default used
+PASS  R2 sendPort 80: sendPort invalid, the default used
+PASS  R2 ports the same: sendPort invalid, the default used
+PASS  R3 maxPasses stored as text 6: taken as 6
+PASS  R3 mode approve_each_pass: taken as "approve_each_pass"
+PASS  R3 clipLowPct 2.5: taken as 2.5
+PASS  R3 decay spaced 0.8, 0.5: taken as [0.8,0.5]
+PASS  R3 intentsFolder padded: taken as "D:\\Photos\\intents"
+PASS  R3 logFolder share: taken as "\\\\nas\\share\\logs"
+PASS  R3 ports 9765/9766: taken as 9765
+PASS  G1 get_prefs (defaults): answered ok through the dispatch; COMMANDS.get_prefs accepts it
+PASS  G1 get_prefs (edited): answered ok through the dispatch; COMMANDS.get_prefs accepts it
+PASS  G1 get_prefs (invalid): answered ok through the dispatch; COMMANDS.get_prefs accepts it
+PASS  G2 defaults: the engine's parsePage takes every field, no problem
+PASS  G3 edited: parsePage gives exactly the values stored on the page, under their wire names
+PASS  G4 invalid: the plugin lists maxPasses, decay and sendPort; parsePage leaves exactly those out, one problem each
+PASS  B1 page ports 9765/9766: the bridge binds them
+PASS  B2 the ports file the bridge writes reads back through the engine's readPortsFile as 9765/9766; token written; status ports_written true
+PASS  B3 no prefs: 8765/8766, bound and in the file
+PASS  B4 receive port 8767 on the page: refused, 8765 bound and written
+PASS  P1 the page has one bound field for each setting in PAGE_SPECS
+PASS  P2 every bound field sits in a row and a group box with bind_to_object = the prefs table (S8 group B)
+PASS  P3 the eight numeric fields carry PAGE_SPECS's min and max
+PASS  P4 mode is a popup with its two values
+PASS  P5 opening the page stores every default as the page shows it
+PASS  P6 the page shows the temp preview folder, the same as Preview.directory()
+PASS  P7 the page lists what was not valid when it opened
+PASS  P8 opening the page does not overwrite a stored value, valid or not
+
+== Mutants ==
+PASS  mutant Prefs.lua (-- MUTANT: no range check): fails ["R2","P7"], expected ["P7","R2"]
+PASS  mutant PluginInfoProvider.lua (local items = { f:static_text): fails ["P2"], expected ["P2"]
+
+== The bridge scenario: main's plugin vs this branch (bridge-cases.lua) ==
+--  main: 14 lines sent, 8 steps, 0 errors; this branch: 14 lines sent, 8 steps, 0 errors
+--  this branch's added log line: ["2026-09-27 12:00:00.600 INFO  bridge: ports 8765/8766 written to C:\\Users\\U\\.lrc-avg\\bridge_ports.json","2026-09-27 12:00:00.000 INFO  bridge: ports 8765/8766 written to C:\\Users\\U\\.lrc-avg\\bridge_ports.json"]
+PASS  the same replies, steps, sockets, calls and log (the plugin version, the ports-file line and the status file's two ports-file fields aside)
+
+ALL PASS
+[exit 0]
+
+===== fake-lr.lua =====
+-- PHASE5_PLAN row 3 (phase-5/settings) added the persistent LrPrefs table and the LrView stand-in
+-- below; the rest is row 8's fake, unchanged.
+-- A stubbed Lightroom SDK for smoke-running plugin Lua under fengari (no Lightroom). It imitates only
+-- what the LrC-AVG plugin calls, with the behaviour observed in the spikes (S6, S7) where there is
+-- one, and records what the plugin did so the scenarios can check it. It also enforces two plugin
+-- rules: yielding catalog queries never run inside a read gate (rule 03), and getRawMetadata /
+-- getFormattedMetadata / getDevelopSettings only run inside one.
+-- Added for PHASE4_PLAN row 8 (the fake of row 6 otherwise unchanged): each photo has its own Develop
+-- settings and snapshots; applyDevelopSettings, createDevelopSnapshot and applyDevelopSnapshot must run
+-- inside a write gate and are recorded; getTargetPhotos with no photo selected gives the whole
+-- filmstrip, as the SDK reference says; LrExportSession writes one file per photo and records it.
+
+F = { clock = 1000, tasks = {}, files = {}, errors = {}, yields = 0, inRead = 0, inWrite = 0,
+      calls = {}, binds = {}, uuidN = 0, nextLocalId = 5000 }
+
+local function record(what) F.calls[#F.calls + 1] = what end
+
+-- In-memory files (fengari has no io.open).
+io = io or {}
+io.open = function(path, mode)
+    mode = mode or "r"
+    if mode:sub(1, 1) == "r" then
+        if F.files[path] == nil then return nil, path .. ": No such file" end
+        local text = F.files[path]
+        return { read = function() return text end, close = function() end }
+    end
+    if mode:sub(1, 1) == "w" then F.files[path] = "" end
+    if F.files[path] == nil then F.files[path] = "" end
+    return {
+        write = function(self, ...) for _, s in ipairs({ ... }) do F.files[path] = F.files[path] .. tostring(s) end end,
+        close = function() end,
+    }
+end
+
+-- A tiny cooperative scheduler: every task is a coroutine; sleep and yield hand control back.
+function F.spawn(name, fn)
+    F.tasks[#F.tasks + 1] = { name = name, co = coroutine.create(fn) }
+end
+function F.run(rounds)
+    for _ = 1, rounds or 1 do
+        local live = {}
+        for _, t in ipairs(F.tasks) do
+            if coroutine.status(t.co) == "suspended" then
+                local ok, err = coroutine.resume(t.co)
+                if not ok then F.errors[#F.errors + 1] = t.name .. ": " .. tostring(err) end
+            end
+            if coroutine.status(t.co) ~= "dead" then live[#live + 1] = t end
+        end
+        F.tasks = live
+    end
+end
+-- Run fn in a task until it ends; returns what it returned.
+function F.runTask(fn)
+    local out
+    F.spawn("runTask", function() out = table.pack(fn()) end)
+    for _ = 1, 1000 do
+        if #F.tasks == 0 then break end
+        F.run(1)
+    end
+    if not out then return nil end
+    return table.unpack(out, 1, out.n)
+end
+
+local M = {}
+
+M.LrTasks = {
+    pcall = pcall,
+    yield = function() F.yields = F.yields + 1; coroutine.yield() end,
+    sleep = function(s) F.clock = F.clock + (s or 0); coroutine.yield() end,
+    startAsyncTask = function(fn) F.spawn("async", fn) end,
+}
+M.LrDate = {
+    currentTime = function() return F.clock end,
+    timeToUserFormat = function(t, fmt) return "2026-09-27 12:00:00" end,
+}
+M.LrUUID = { generateUUID = function() F.uuidN = F.uuidN + 1; return string.format("UUID-%04d-AAAA-BBBB", F.uuidN) end }
+M.LrPathUtils = {
+    child = function(a, b) return a .. "\\" .. b end,
+    parent = function(p) return (p:gsub("\\[^\\]*$", "")) end,
+    getStandardFilePath = function(which) return which == "home" and "C:\\Users\\U" or "C:\\T" end,
+}
+M.LrFileUtils = {
+    createAllDirectories = function() end,
+    fileAttributes = function() return nil end,
+    delete = function() end,
+    -- Row 8: the files an export wrote into `dir`.
+    files = function(dir)
+        local list, i = F.exported and F.exported[dir] or {}, 0
+        return function() i = i + 1; return list[i] end
+    end,
+}
+-- PHASE5_PLAN row 3: the plugin's prefs are one table that lives as long as the fake (F.prefs), as
+-- Lightroom keeps one prefs table per plugin; F.world() empties it.
+F.prefs = {}
+M.LrPrefs = { prefsForPlugin = function() return F.prefs end }
+-- LrView for the settings page: bind(key) gives a marker, and the factory `f` records each view as
+-- { view = <kind>, props = <the table it was given> }, children included, so a scenario can walk the
+-- page. It draws nothing and checks nothing about Lightroom's own layout.
+M.LrView = { bind = function(key) return { bound = key } end }
+function F.viewFactory()
+    local f = {}
+    for _, kind in ipairs({ "static_text", "edit_field", "popup_menu", "row", "column", "group_box" }) do
+        f[kind] = function(self, props) return { view = kind, props = props } end
+    end
+    return f
+end
+-- Row 8: an export writes one JPEG per photo into the destination folder and records which photo.
+M.LrExportSession = function(spec)
+    local s = {}
+    function s:doExportOnCurrentTask()
+        local dir = spec.exportSettings.LR_export_destinationPathPrefix
+        F.exported = F.exported or {}
+        F.exported[dir] = F.exported[dir] or {}
+        for _, photo in ipairs(spec.photosToExport) do
+            record("export " .. tostring(photo.localIdentifier) .. " at " .. tostring(spec.exportSettings.LR_size_maxWidth))
+            F.exported[dir][#F.exported[dir] + 1] = dir .. "\\" .. tostring(photo._t.file_name or "photo") .. ".jpg"
+        end
+    end
+    return s
+end
+
+-- Sockets: each bind returns a socket object; the scenario drives its callbacks.
+M.LrSocket = {
+    bind = function(spec)
+        local sock = { spec = spec, sent = {}, closed = false, reconnects = 0 }
+        function sock:send(line) self.sent[#self.sent + 1] = line end
+        function sock:close() self.closed = true end
+        function sock:reconnect() self.reconnects = self.reconnects + 1 end
+        F.binds[#F.binds + 1] = sock
+        F.last = F.last or {}
+        F.last[spec.mode] = sock
+        return sock
+    end,
+}
+M.LrFunctionContext = {
+    postAsyncTaskWithContext = function(name, fn)
+        local ctx = { cleanups = {} }
+        function ctx:addCleanupHandler(h) self.cleanups[#self.cleanups + 1] = h end
+        F.contexts = F.contexts or {}
+        F.contexts[#F.contexts + 1] = ctx
+        F.spawn(name, function() fn(ctx) end)
+    end,
+}
+
+-- Photos and the catalog.
+F.photos, F.byUuid = {}, {}
+function F.newPhoto(t)
+    local p = { localIdentifier = t.local_id }
+    p._t = t
+    function p:getRawMetadata(key)
+        assert(F.inRead > 0, "getRawMetadata outside a read gate")
+        if key == "uuid" then return t.uuid end
+        if key == "isVirtualCopy" then return t.is_vc == true end
+        if key == "masterPhoto" then return t.master or p end
+        return t[key]
+    end
+    function p:getFormattedMetadata(key)
+        assert(F.inRead > 0, "getFormattedMetadata outside a read gate")
+        if key == "copyName" then return t.copy_name end
+        if key == "fileName" then return t.file_name end
+        return nil
+    end
+    -- Row 8: each photo has its own settings and snapshots; writes must be inside a write gate.
+    t.settings = t.settings or { Exposure2012 = 0, Contrast2012 = 0, ProcessVersion = "15.4" }
+    t.snapshots = t.snapshots or {}
+    function p:getDevelopSettings()
+        assert(F.inRead > 0, "getDevelopSettings outside a read gate")
+        local copy = {}
+        for k, v in pairs(t.settings) do copy[k] = v end
+        return copy
+    end
+    function p:applyDevelopSettings(settings, name)
+        assert(F.inWrite > 0, "applyDevelopSettings outside a write gate")
+        record("apply " .. tostring(t.local_id) .. " " .. tostring(name))
+        for k, v in pairs(settings) do t.settings[k] = v end
+    end
+    function p:createDevelopSnapshot(name, updateInPlace)
+        assert(F.inWrite > 0, "createDevelopSnapshot outside a write gate")
+        record("snapshot " .. tostring(t.local_id) .. " " .. tostring(name))
+        local copy = {}
+        for k, v in pairs(t.settings) do copy[k] = v end
+        t.snapshots[#t.snapshots + 1] = { snapshotID = "SNAP-" .. t.local_id .. "-" .. (#t.snapshots + 1), name = name, id_global = "G", settings = copy }
+        return true
+    end
+    function p:getDevelopSnapshots()
+        assert(F.inRead > 0, "getDevelopSnapshots outside a read gate")
+        local list = {}
+        for i, s in ipairs(t.snapshots) do list[i] = { snapshotID = s.snapshotID, name = s.name, id_global = s.id_global } end
+        return list
+    end
+    function p:applyDevelopSnapshot(id)
+        assert(F.inWrite > 0, "applyDevelopSnapshot outside a write gate")
+        record("restore " .. tostring(t.local_id) .. " " .. tostring(id))
+        for _, s in ipairs(t.snapshots) do
+            if s.snapshotID == id then
+                t.settings = {}
+                for k, v in pairs(s.settings) do t.settings[k] = v end
+            end
+        end
+    end
+    F.photos[t.local_id] = p
+    F.byUuid[t.uuid] = p
+    return p
+end
+
+local function noQueryInGate(what)
+    assert(F.inRead == 0, what .. " inside a read gate (rule 03: deadlocks on Windows)")
+    -- With F.yieldQueries, a catalog query hands control to other tasks, as a yielding query would.
+    if F.yieldQueries and coroutine.isyieldable() then coroutine.yield() end
+end
+
+F.catalog = {
+    withReadAccessDo = function(self, fn) F.inRead = F.inRead + 1; fn(); F.inRead = F.inRead - 1 end,
+    withWriteAccessDo = function(self, name, fn) F.inWrite = F.inWrite + 1; record("write gate " .. name); fn(); F.inWrite = F.inWrite - 1 end,
+    getTargetPhoto = function(self) noQueryInGate("getTargetPhoto"); return F.active end,
+    -- With no photo selected, "the entire list of photos in the filmstrip"
+    -- [handle: https://lrc.mcor.dev/modules/LrCatalog.html getTargetPhotos].
+    getTargetPhotos = function(self)
+        noQueryInGate("getTargetPhotos")
+        if F.active == nil then return F.filmstrip or {} end
+        return F.selected or {}
+    end,
+    setSelectedPhotos = function(self, active, list)
+        noQueryInGate("setSelectedPhotos")
+        record("select " .. tostring(active.localIdentifier))
+        if F.ignoreSelect then return end
+        F.active, F.selected = active, list
+    end,
+    findPhotoByUuid = function(self, uuid) noQueryInGate("findPhotoByUuid"); record("find " .. uuid); return F.byUuid[uuid] end,
+    -- S6: acts on the selection, returns the copies, names them, makes the new copy active,
+    -- needs no write gate [handle: docs\reports\phase0\S6.md "Analysis"].
+    createVirtualCopies = function(self, name)
+        noQueryInGate("createVirtualCopies")
+        F.copyCalls = (F.copyCalls or 0) + 1
+        -- With F.copyYields = n, the call takes n seconds and lets other tasks run before it reads
+        -- the selection: a model of a call that yields inside [the fake's assumption, not observed].
+        -- A table gives each call (1st, 2nd, ...) its own count.
+        local n = type(F.copyYields) == "table" and (F.copyYields[F.copyCalls] or 0) or (F.copyYields or 0)
+        if n > 0 then record("enter createVirtualCopies " .. name) end
+        for _ = 1, n do F.clock = F.clock + 1; coroutine.yield() end
+        local sel = {}
+        for _, p in ipairs(F.selected or {}) do sel[#sel + 1] = p.localIdentifier end
+        record("createVirtualCopies " .. name .. " on {" .. table.concat(sel, ",") .. "} gate=" .. F.inWrite)
+        if F.failCopyAt == F.copyCalls then error("createVirtualCopies: simulated failure") end
+        local out = {}
+        for _, src in ipairs(F.selected or {}) do
+            F.nextLocalId = F.nextLocalId + 1
+            local master = src._t.master or src
+            local copy = F.newPhoto({ local_id = F.nextLocalId, uuid = "COPY-" .. F.nextLocalId, is_vc = true, master = master,
+                copy_name = F.wrongName or name, file_name = src._t.file_name })
+            out[#out + 1] = copy
+        end
+        if out[#out] then F.active, F.selected = out[#out], { out[#out] } end
+        return out
+    end,
+}
+M.LrApplication = {
+    activeCatalog = function() return F.catalog end,
+    versionString = function() return "15.5.1" end,
+}
+
+function import(name)
+    local m = M[name]
+    if m == nil then error("fake-lr: no stub for " .. name) end
+    return m
+end
+_PLUGIN = { id = "com.lrcavg.gateway" }
+
+-- Reset the photo world between scenarios.
+function F.world()
+    F.photos, F.byUuid, F.calls = {}, {}, {}
+    for k in pairs(F.prefs) do F.prefs[k] = nil end
+    F.ignoreSelect, F.failCopyAt, F.wrongName, F.copyCalls = nil, nil, nil, 0
+    F.yieldQueries, F.copyYields = nil, nil
+    local master = F.newPhoto({ local_id = 3869534, uuid = "CF12AF60-0858-4181-9562-376D16B89126", file_name = "20260907-_OZ80099.NEF" })
+    local other = F.newPhoto({ local_id = 3869533, uuid = "OTHER-UUID", file_name = "20260907-_OZ80093.NEF" })
+    local vc = F.newPhoto({ local_id = 3869600, uuid = "OLD-COPY-UUID", is_vc = true, master = master, copy_name = "Copy 1" })
+    F.active, F.selected = master, { master }
+    F.filmstrip, F.exported = { master, other, vc }, {}
+    return master, other, vc
+end
+
+===== settings-cases.lua =====
+-- PHASE5_PLAN row 3 scenarios against fake-lr.lua: Prefs.lua's checks on stored values, get_prefs
+-- through Dispatch.handleLine, the ports and token files and the bound ports at bridge start, and the
+-- settings page's view tree (PluginInfoProvider.lua). Returns a JSON string for run.mts to check.
+
+local Bridge = require 'Bridge'
+local Dispatch = require 'Dispatch'
+local Json = require 'Json'
+local Prefs = require 'Prefs'
+local Provider = require 'PluginInfoProvider'
+
+local PORTS_FILE = "C:\\Users\\U\\.lrc-avg\\bridge_ports.json"
+local TOKEN_FILE = "C:\\Users\\U\\.lrc-avg\\bridge_token"
+local STATUS_FILE = "C:\\T\\LrC-AVG\\bridge_status.json"
+local out = {}
+
+local function setPrefs(values)
+    F.world()
+    for k, v in pairs(values) do F.prefs[k] = v end
+end
+
+-- 1. Prefs.read on stored values.
+local cases = {
+    { "nothing stored", {} },
+    { "maxPasses 12", { maxPasses = 12 } },
+    { "maxPasses 2.5", { maxPasses = 2.5 } },
+    { "maxPasses abc", { maxPasses = "abc" } },
+    { "maxPasses stored as text 6", { maxPasses = "6" } },
+    { "maxPasses true", { maxPasses = true } },
+    { "variantCount 4", { variantCount = 4 } },
+    { "previewLongEdge 700", { previewLongEdge = 700 } },
+    { "previewQuality 91", { previewQuality = 91 } },
+    { "mode fast", { mode = "fast" } },
+    { "mode approve_each_pass", { mode = "approve_each_pass" } },
+    { "clipHighPct -1", { clipHighPct = -1 } },
+    { "clipLowPct 2.5", { clipLowPct = 2.5 } },
+    { "decay 1, 0", { decay = "1, 0" } },
+    { "decay empty", { decay = "" } },
+    { "decay a, b", { decay = "a, b" } },
+    { "decay nine values", { decay = "1,1,1,1,1,1,1,1,1" } },
+    { "decay spaced 0.8, 0.5", { decay = " 0.8 , 0.5 " } },
+    { "decay a number", { decay = 0.5 } },
+    { "intentsFolder relative", { intentsFolder = "intents" } },
+    { "intentsFolder padded", { intentsFolder = "  D:\\Photos\\intents  " } },
+    { "logFolder share", { logFolder = "\\\\nas\\share\\logs" } },
+    { "logFolder root-relative", { logFolder = "\\logs" } },
+    { "receivePort 8767", { receivePort = 8767 } },
+    { "sendPort 80", { sendPort = 80 } },
+    { "ports the same", { receivePort = 9000, sendPort = 9000 } },
+    { "ports 9765/9766", { receivePort = 9765, sendPort = 9766 } },
+}
+out.reads = {}
+for _, c in ipairs(cases) do
+    setPrefs(c[2])
+    local values, invalid = Prefs.read()
+    out.reads[#out.reads + 1] = { case = c[1], values = values, invalid = invalid }
+end
+
+-- 2. get_prefs through the dispatch, as the bridge task runs it.
+local function getPrefs(values)
+    setPrefs(values)
+    local S = { token = "T", tokenFile = TOKEN_FILE, handled = 0, failed = 0, malformed = 0, unauthorized = 0 }
+    local sent = {}
+    local handlers = Dispatch.handlers(function() return {} end)
+    local function respond(id, name, ok, body) sent[#sent + 1] = { id = id, name = name, ok = ok, body = body } end
+    F.runTask(function()
+        Dispatch.handleLine(S, handlers, respond, Json.encode({ id = "p1", type = "cmd", name = "get_prefs", token = "T", payload = {} }))
+    end)
+    return { sent = sent, handled = S.handled, failed = S.failed }
+end
+out.get_prefs = {
+    defaults = getPrefs({}),
+    edited = getPrefs({ mode = "approve_each_pass", maxPasses = 6, variantCount = 2, previewLongEdge = 1200, previewQuality = 60,
+        clipHighPct = 2, clipLowPct = 0.25, decay = "0.8, 0.5", intentsFolder = "D:\\Photos\\intents", logFolder = "D:\\Photos\\logs",
+        receivePort = 9765, sendPort = 9766 }),
+    invalid = getPrefs({ maxPasses = 12, decay = "1, 0", sendPort = 8767 }),
+}
+
+-- 3. Bridge start: the ports it binds, and the files it writes.
+local function start(values)
+    setPrefs(values)
+    F.files[PORTS_FILE], F.files[TOKEN_FILE] = nil, nil
+    local firstBind = #F.binds + 1
+    Bridge.start()
+    F.run(20) -- settle (0.6 s), the token and ports files, the first binds and a status write
+    local ports = {}
+    for i = firstBind, #F.binds do ports[F.binds[i].spec.mode] = F.binds[i].spec.port end
+    local okStatus, status = pcall(Json.decode, F.files[STATUS_FILE] or "")
+    return {
+        bound = ports,
+        ports_file = F.files[PORTS_FILE],
+        token_written = F.files[TOKEN_FILE] ~= nil and #F.files[TOKEN_FILE] > 0,
+        status_ports = okStatus and status.ports or nil,
+        status_ports_written = okStatus and status.ports_written or nil,
+        status_ports_file = okStatus and status.ports_file or nil,
+    }
+end
+out.bridge = {
+    page_ports = start({ receivePort = 9765, sendPort = 9766 }),
+    no_prefs = start({}),
+    lock_port = start({ receivePort = 8767, sendPort = 8766 }),
+}
+
+-- 4. The settings page's view tree.
+local function walk(node, ancestors, found)
+    if type(node) ~= "table" then return end
+    if node.view then
+        local p = node.props
+        local here = { view = node.view, bind_to_object = p.bind_to_object }
+        local chain = {}
+        for i, a in ipairs(ancestors) do chain[i] = a end
+        chain[#chain + 1] = here
+        if type(p.value) == "table" and p.value.bound then
+            local rowBound, boxBound = false, false
+            for _, a in ipairs(chain) do
+                if a.view == "row" and a.bind_to_object == F.prefs then rowBound = true end
+                if a.view == "group_box" and a.bind_to_object == F.prefs then boxBound = true end
+            end
+            found.fields[#found.fields + 1] = { key = p.value.bound, view = node.view, precision = p.precision,
+                min = p.min, max = p.max, row_bound = rowBound, box_bound = boxBound,
+                items = p.items and #p.items or nil }
+        end
+        if node.view == "static_text" then found.texts[#found.texts + 1] = p.title end
+        if node.view == "group_box" then found.boxes[#found.boxes + 1] = p.title end
+        for _, child in ipairs(p) do walk(child, chain, found) end
+        return
+    end
+    for _, child in ipairs(node) do walk(child, ancestors, found) end
+end
+
+local function render(values)
+    setPrefs(values)
+    local found = { fields = {}, texts = {}, boxes = {} }
+    local sections = Provider.sectionsForTopOfDialog(F.viewFactory(), {})
+    for _, section in ipairs(sections) do
+        found.section_title = section.title
+        for _, child in ipairs(section) do walk(child, {}, found) end
+    end
+    local stored = {}
+    for k, v in pairs(F.prefs) do stored[k] = v end
+    found.prefs_after = stored
+    return found
+end
+out.page = {
+    fresh = render({}),
+    with_invalid = render({ maxPasses = 12, logFolder = "logs" }),
+    temp_preview_dir = Prefs.tempPreviewDir(),
+    preview_directory = require('Preview').directory(),
+}
+
+out.errors = F.errors
+return Json.encode(out)
+
+===== bridge-cases.lua =====
+-- The whole bridge (Bridge.start, its monitor loop, the sockets and the dispatch) against
+-- fake-lr.lua, driven through the socket callbacks the way an engine would. Runs the same script on
+-- main's Bridge.lua and on the split one (on main, c11 and c12 are unknown commands). Returns a JSON string.
+
+local Bridge = require 'Bridge'
+local Json = require 'Json'
+
+local TOKEN_FILE = "C:\\Users\\U\\.lrc-avg\\bridge_token"
+local LOG_FILE = "C:\\T\\LrC-AVG\\bridge.log"
+local STATUS_FILE = "C:\\T\\LrC-AVG\\bridge_status.json"
+local steps = {}
+
+local function step(what) steps[#steps + 1] = { step = what, binds = #F.binds, clock = F.clock } end
+local function command(id, name, payload, token)
+    F.last.receive.spec.onMessage(nil, Json.encode({ id = id, type = "cmd", name = name, token = token or F.files[TOKEN_FILE], payload = payload }))
+    F.run(5)
+end
+
+F.world()
+Bridge.start()
+F.run(8)
+step("started: settle, token, first bind of both sockets")
+-- The engine connects the command (receive) socket first, then the event (send) socket (C-5).
+F.last.receive.spec.onConnected()
+F.run(3)
+F.last.send.spec.onConnected()
+F.run(3)
+step("engine connected on both sockets")
+
+command("c1", "hello", { protocol = 1, engine_version = "smoke" })
+command("c2", "ping", { nonce = "n1" })
+command("c3", "ping", { nonce = "n2" }, "wrong-token")
+F.last.receive.spec.onMessage(nil, "this is not json")
+F.run(3)
+F.last.receive.spec.onMessage(nil, '{"id":"c5","type":"res","name":"x"}')
+F.run(3)
+command("c6", "frobnicate", {})
+command("c7", "get_settings", { target_uuid = "OTHER-UUID" })
+command("c8", "get_context", {})
+command("c9", "apply_settings", { settings = { Exposure2012 = 1 }, history_name = "AVG smoke" }) -- applyDevelopSettings is not stubbed: raises
+command("c10", "apply_settings", { settings = { Exposure2012 = 1 }, history_name = "no prefix" })
+-- On main's plugin these two are unknown commands; the same rounds run either way.
+command("c11", "create_virtual_copies", { target_uuid = "CF12AF60-0858-4181-9562-376D16B89126", names = { "AVG s A", "AVG s B", "AVG s C" } })
+command("c12", "select_photo", { uuid = "OLD-COPY-UUID", expect = { copy_name = "Copy 1" } })
+step("commands answered")
+F.run(5)
+local statusMid = F.files[STATUS_FILE]
+
+F.last.receive.spec.onError(nil, "timeout") -- no-client timeout while connected: ignored
+F.last.receive.spec.onClosed()
+F.run(3)
+step("receive closed: re-armed with reconnect()")
+F.last.receive.spec.onConnected()
+command("c13", "ping", { nonce = "n3" })
+F.last.send.spec.onError(nil, "connection reset")
+F.run(3)
+step("send error: send socket rebound")
+F.last.send.spec.onConnected()
+F.run(3)
+F.run(130) -- 26 s of 0.2 s ticks without a message
+step("silent 20 s: both sockets rebound")
+local reconnects = {}
+for i, s in ipairs(F.binds) do reconnects[i] = { mode = s.spec.mode, closed = s.closed, reconnects = s.reconnects, sent = #s.sent } end
+
+Bridge.start() -- a Reload Plug-in: generation 2 replaces generation 1
+F.run(10)
+step("generation 2 started")
+F.contexts[1].cleanups[1]()
+step("generation 1 cleanup handler ran")
+
+local sent = {}
+for _, s in ipairs(F.binds) do
+    if s.spec.mode == "send" then
+        for _, line in ipairs(s.sent) do sent[#sent + 1] = line end
+    end
+end
+return Json.encode({ sent = sent, log = F.files[LOG_FILE], status_mid = statusMid, steps = steps,
+    sockets = reconnects, errors = F.errors, token = F.files[TOKEN_FILE], calls = F.calls })
+
+===== run.mts =====
+// Smoke-runs the plugin's Lua under fengari 0.1.4 against fake-lr.lua (no Lightroom), PHASE5_PLAN
+// row 3, and checks the results against the engine's own code (engine\dist, built by npm run build):
+// COMMANDS.get_prefs, parsePage, PAGE_SPECS and readPortsFile. Two mutants must fail their named
+// checks. Usage: node run.mts <repo root>
+import fengari from "fengari";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+
+const { lua, lauxlib, lualib, to_luastring } = fengari;
+const here = path.dirname(new URL(import.meta.url).pathname).replace(/^\/([A-Za-z]:)/, "$1");
+const repo = process.argv[2] as string;
+const slash = (p: string) => p.replaceAll("\\", "/");
+const newDir = slash(path.join(repo, "plugin", "LrC-AVG.lrplugin"));
+const oldDir = slash(path.join(here, "old"));
+const dist = (p: string) => import(pathToFileURL(path.join(repo, "engine", "dist", p)).href);
+const { COMMANDS } = await dist("bridge/protocol.js");
+const { parsePage, PAGE_SPECS } = await dist("settings/index.js");
+const { readPortsFile } = await dist("bridge/endpoint.js");
+
+// `pluginDir` may list several folders (;-separated), searched in order.
+function runLua(pluginDir: string, script: string): any {
+  const L = lauxlib.luaL_newstate();
+  lualib.luaL_openlibs(L);
+  const dirs = pluginDir.split(";").map((d) => `${d}/?.lua`).join(";");
+  const setup = `package.path = [[${dirs};${slash(here)}/?.lua]]\ndofile([[${slash(here)}/fake-lr.lua]])`;
+  if (lauxlib.luaL_dostring(L, to_luastring(setup)) !== lua.LUA_OK) throw new Error(lua.lua_tojsstring(L, -1));
+  if (lauxlib.luaL_dofile(L, to_luastring(slash(path.join(here, script)))) !== lua.LUA_OK) throw new Error(`${script}: ${lua.lua_tojsstring(L, -1)}`);
+  return JSON.parse(lua.lua_tojsstring(L, -1));
+}
+
+type Check = { name: string; ok: boolean };
+function checksOf(run: any): Check[] {
+  const checks: Check[] = [];
+  const check = (ok: boolean, name: string) => checks.push({ name, ok });
+  const read = (c: string) => run.reads.find((r: any) => r.case === c);
+  const bad = (c: string) => (read(c).invalid as any[]).map((i) => i.key);
+  const defaults = Object.fromEntries(PAGE_SPECS.map((s: any) => [s.key, s.kind === "decay" ? s.default.split(",").map((v: string) => Number(v)) : s.default]));
+
+  check(run.errors.length === 0, "no task raised");
+  check(JSON.stringify(read("nothing stored").values) === JSON.stringify(Object.fromEntries(Object.keys(read("nothing stored").values).map((k) => [k, defaults[k]]))) &&
+    Object.keys(read("nothing stored").values).length === PAGE_SPECS.length && read("nothing stored").invalid.length === 0,
+    "R1 nothing stored: every setting at the engine's PAGE_SPECS default, none invalid");
+  const refused: Array<[string, string[]]> = [
+    ["maxPasses 12", ["maxPasses"]], ["maxPasses 2.5", ["maxPasses"]], ["maxPasses abc", ["maxPasses"]], ["maxPasses true", ["maxPasses"]],
+    ["variantCount 4", ["variantCount"]], ["previewLongEdge 700", ["previewLongEdge"]], ["previewQuality 91", ["previewQuality"]],
+    ["mode fast", ["mode"]], ["clipHighPct -1", ["clipHighPct"]], ["decay 1, 0", ["decay"]], ["decay empty", ["decay"]],
+    ["decay a, b", ["decay"]], ["decay nine values", ["decay"]], ["decay a number", ["decay"]], ["intentsFolder relative", ["intentsFolder"]],
+    ["logFolder root-relative", ["logFolder"]], ["receivePort 8767", ["receivePort"]], ["sendPort 80", ["sendPort"]], ["ports the same", ["sendPort"]],
+  ];
+  for (const [c, keys] of refused) {
+    const r = read(c);
+    const spec = PAGE_SPECS.find((s: any) => s.key === keys[0]);
+    const usedDefault = c === "ports the same" ? r.values.receivePort === 8765 && r.values.sendPort === 8766 : JSON.stringify(r.values[keys[0] as string]) === JSON.stringify(defaults[spec.key]);
+    check(JSON.stringify(bad(c)) === JSON.stringify(keys) && usedDefault, `R2 ${c}: ${keys.join(", ")} invalid, the default used`);
+  }
+  const taken: Array<[string, string, unknown]> = [
+    ["maxPasses stored as text 6", "maxPasses", 6], ["mode approve_each_pass", "mode", "approve_each_pass"], ["clipLowPct 2.5", "clipLowPct", 2.5],
+    ["decay spaced 0.8, 0.5", "decay", [0.8, 0.5]], ["intentsFolder padded", "intentsFolder", "D:\\Photos\\intents"],
+    ["logFolder share", "logFolder", "\\\\nas\\share\\logs"], ["ports 9765/9766", "receivePort", 9765],
+  ];
+  for (const [c, key, want] of taken) check(bad(c).length === 0 && JSON.stringify(read(c).values[key]) === JSON.stringify(want), `R3 ${c}: taken as ${JSON.stringify(want)}`);
+
+  const g = run.get_prefs;
+  const answer = (x: any) => x.sent[0];
+  for (const which of ["defaults", "edited", "invalid"]) {
+    const a = answer(g[which]);
+    check(g[which].sent.length === 1 && a.ok === true && a.name === "get_prefs" && COMMANDS.get_prefs.safeParse(a.body).success, `G1 get_prefs (${which}): answered ok through the dispatch; COMMANDS.get_prefs accepts it`);
+  }
+  const pd = parsePage(answer(g.defaults).body);
+  check(pd.problems.length === 0 && Object.keys(pd.values).length === PAGE_SPECS.length, "G2 defaults: the engine's parsePage takes every field, no problem");
+  const pe = parsePage(answer(g.edited).body);
+  check(pe.problems.length === 0 && JSON.stringify(pe.values) === JSON.stringify({ mode: "approve_each_pass", max_passes: 6, variant_count: 2, long_edge: 1200, quality: 60, clip_high_pct: 2, clip_low_pct: 0.25, decay: [0.8, 0.5], intents_dir: "D:\\Photos\\intents", log_dir: "D:\\Photos\\logs", receive_port: 9765, send_port: 9766 }),
+    "G3 edited: parsePage gives exactly the values stored on the page, under their wire names");
+  const pi = parsePage(answer(g.invalid).body);
+  check(JSON.stringify(Object.keys(pi.values).sort()) === JSON.stringify(PAGE_SPECS.map((s: any) => s.wire).filter((w: string) => !["max_passes", "decay", "send_port"].includes(w)).sort()) && pi.problems.length === 3,
+    "G4 invalid: the plugin lists maxPasses, decay and sendPort; parsePage leaves exactly those out, one problem each");
+
+  const b = run.bridge;
+  const portsIn = (text: string | null | undefined) => {
+    if (!text) return null;
+    const dir = mkdtempSync(path.join(os.tmpdir(), "smoke-ports-"));
+    const file = path.join(dir, "bridge_ports.json");
+    writeFileSync(file, text);
+    const r = readPortsFile(file);
+    rmSync(dir, { recursive: true, force: true });
+    return r.ports;
+  };
+  check(b.page_ports.bound.receive === 9765 && b.page_ports.bound.send === 9766, "B1 page ports 9765/9766: the bridge binds them");
+  check(JSON.stringify(portsIn(b.page_ports.ports_file)) === JSON.stringify({ receive: 9765, send: 9766 }) && b.page_ports.token_written && b.page_ports.status_ports_written === true,
+    "B2 the ports file the bridge writes reads back through the engine's readPortsFile as 9765/9766; token written; status ports_written true");
+  check(b.no_prefs.bound.receive === 8765 && b.no_prefs.bound.send === 8766 && JSON.stringify(portsIn(b.no_prefs.ports_file)) === JSON.stringify({ receive: 8765, send: 8766 }), "B3 no prefs: 8765/8766, bound and in the file");
+  check(b.lock_port.bound.receive === 8765 && JSON.stringify(portsIn(b.lock_port.ports_file)) === JSON.stringify({ receive: 8765, send: 8766 }), "B4 receive port 8767 on the page: refused, 8765 bound and written");
+
+  const p = run.page;
+  const fields = p.fresh.fields as any[];
+  const keys = fields.map((f) => f.key).sort();
+  check(JSON.stringify(keys) === JSON.stringify(PAGE_SPECS.map((s: any) => s.key).sort()), "P1 the page has one bound field for each setting in PAGE_SPECS");
+  check(fields.every((f) => f.row_bound && f.box_bound), "P2 every bound field sits in a row and a group box with bind_to_object = the prefs table (S8 group B)");
+  const numeric = fields.filter((f) => f.view === "edit_field" && f.precision !== undefined);
+  check(numeric.length === 8 && numeric.every((f) => { const s = PAGE_SPECS.find((x: any) => x.key === f.key); return s.min === f.min && s.max === f.max; }),
+    "P3 the eight numeric fields carry PAGE_SPECS's min and max");
+  check(fields.find((f) => f.key === "mode")?.view === "popup_menu" && fields.find((f) => f.key === "mode")?.items === 2, "P4 mode is a popup with its two values");
+  check(Object.keys(p.fresh.prefs_after).length === PAGE_SPECS.length && PAGE_SPECS.every((s: any) => JSON.stringify(p.fresh.prefs_after[s.key]) === JSON.stringify(s.default)), "P5 opening the page stores every default as the page shows it");
+  check(p.fresh.texts.includes(p.temp_preview_dir) && p.temp_preview_dir === p.preview_directory, "P6 the page shows the temp preview folder, the same as Preview.directory()");
+  check(p.fresh.texts.includes("All settings were valid when this page opened.") && p.with_invalid.texts.some((t: string) => t.startsWith("  maxPasses = 12")) && p.with_invalid.texts.some((t: string) => t.startsWith("  logFolder = logs")),
+    "P7 the page lists what was not valid when it opened");
+  check(p.with_invalid.prefs_after.maxPasses === 12, "P8 opening the page does not overwrite a stored value, valid or not");
+  return checks;
+}
+
+let failures = 0;
+function report(checks: Check[]): void {
+  for (const c of checks) {
+    console.log(`${c.ok ? "PASS" : "FAIL"}  ${c.name}`);
+    if (!c.ok) failures++;
+  }
+}
+
+console.log("== This branch (settings-cases.lua) ==");
+const run = runLua(newDir, "settings-cases.lua");
+for (const r of run.reads) console.log(`--  read ${r.case}: ${JSON.stringify(r.invalid)}`);
+for (const [k, v] of Object.entries(run.get_prefs)) console.log(`--  get_prefs ${k}: ${JSON.stringify((v as any).sent[0].body)}`);
+for (const [k, v] of Object.entries(run.bridge)) console.log(`--  bridge ${k}: ${JSON.stringify(v)}`);
+console.log(`--  page: section "${run.page.fresh.section_title}", boxes ${JSON.stringify(run.page.fresh.boxes)}`);
+for (const f of run.page.fresh.fields) console.log(`    field ${f.key}: ${f.view}${f.precision !== undefined ? ` precision ${f.precision} ${f.min}-${f.max}` : ""}; row bound ${f.row_bound}, box bound ${f.box_bound}`);
+console.log(`--  page with invalid values, texts: ${JSON.stringify(run.page.with_invalid.texts.filter((t: string) => t.startsWith("  ") || t.startsWith("Not valid")))}`);
+report(checksOf(run));
+
+// Mutants: each must fail exactly its named checks.
+function mutant(file: string, from: string, to: string, expect: string[]): void {
+  const source = readFileSync(path.join(newDir, file), "utf8");
+  const changed = source.replace(from, to);
+  const dir = path.join(here, "mutant");
+  rmSync(dir, { recursive: true, force: true });
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(path.join(dir, file), changed);
+  const failed = checksOf(runLua(`${slash(dir)};${newDir}`, "settings-cases.lua")).filter((c) => !c.ok).map((c) => c.name.split(" ")[0]);
+  const ok = changed !== source && JSON.stringify([...new Set(failed)].sort()) === JSON.stringify(expect.sort());
+  console.log(`${ok ? "PASS" : "FAIL"}  mutant ${file} (${to.trim().slice(0, 70)}): fails ${JSON.stringify([...new Set(failed)])}, expected ${JSON.stringify(expect)}`);
+  if (!ok) failures++;
+}
+console.log("\n== Mutants ==");
+// Without the range check, 12 passes the plugin; the engine's own check (parsePage) still leaves it
+// out, so G4 holds: the mutant fails only the plugin-side checks.
+mutant("Prefs.lua", 'if n < spec.min or n > spec.max then return nil, "outside " .. spec.min .. "-" .. spec.max end', "-- MUTANT: no range check", ["R2", "P7"]);
+mutant("PluginInfoProvider.lua", "local items = { bind_to_object = prefs, f:static_text", "local items = { f:static_text", ["P2"]);
+
+// Main's Bridge.lua against this branch's: the same bridge scenario (bridge-cases.lua, row 6/8's).
+console.log("\n== The bridge scenario: main's plugin vs this branch (bridge-cases.lua) ==");
+// Every string in the result, with the plugin version and the Lua chunk paths (which name the two
+// plugin folders) made the same.
+const tidy = (v: any): any => {
+  if (typeof v === "string") return v.replace(/"plugin_version":"0\.[45]\.0"/g, '"plugin_version":"X"').replace(/[^\s"]*[\\/](\w+\.lua):/g, "$1:");
+  if (Array.isArray(v)) return v.map(tidy);
+  if (v && typeof v === "object") return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, tidy(x)]));
+  return v;
+};
+const norm = (r: any) => {
+  const o = tidy(r);
+  o.log = String(o.log).split("\n").filter((l: string) => !l.includes("bridge: ports 8765/8766 written to")).join("\n");
+  if (o.status_mid) {
+    const s = JSON.parse(o.status_mid);
+    delete s.ports_file;
+    delete s.ports_written;
+    s.log_tail = (s.log_tail as string[]).filter((l) => !l.includes("bridge: ports 8765/8766 written to"));
+    o.status_mid = s;
+  }
+  return o;
+};
+const oldBridge = runLua(oldDir, "bridge-cases.lua");
+const newBridge = runLua(newDir, "bridge-cases.lua");
+const a = JSON.stringify(norm(oldBridge));
+const b = JSON.stringify(norm(newBridge));
+console.log(`--  main: ${oldBridge.sent.length} lines sent, ${oldBridge.steps.length} steps, ${oldBridge.errors.length} errors; this branch: ${newBridge.sent.length} lines sent, ${newBridge.steps.length} steps, ${newBridge.errors.length} errors`);
+console.log(`--  this branch's added log line: ${JSON.stringify(String(newBridge.log).split("\n").filter((l: string) => l.includes("ports")))}`);
+const same = a === b;
+console.log(`${same ? "PASS" : "FAIL"}  the same replies, steps, sockets, calls and log (the plugin version, the ports-file line and the status file's two ports-file fields aside)`);
+if (!same) {
+  failures++;
+  for (let i = 0; i < Math.max(a.length, b.length); i++) if (a[i] !== b[i]) { console.log(`    first difference at ${i}: main ...${a.slice(i - 80, i + 80)}\n    branch ...${b.slice(i - 80, i + 80)}`); break; }
+}
+
+console.log(`\n${failures === 0 ? "ALL PASS" : `${failures} FAILED`}`);
+process.exit(failures === 0 ? 0 : 1);
+
+===== assemble.mts =====
+// Runs the smoke (run.mts) and writes the transcript for the repo: header, the command, its
+// output, and the stub sources. The repo is written as <repo> and the scratch folder as <scratch>.
+// Usage: node assemble.mts <repo root> <commit under test> <main commit> <out file>
+import { execFileSync } from "node:child_process";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
+
+const [repo, commit, mainCommit, outFile] = process.argv.slice(2) as [string, string, string, string];
+const here = path.dirname(new URL(import.meta.url).pathname).replace(/^\/([A-Za-z]:)/, "$1");
+let output: string;
+let exit = 0;
+try {
+  output = execFileSync(process.execPath, [path.join(here, "run.mts"), repo], { encoding: "utf8" });
+} catch (e) {
+  const err = e as { stdout: string; status: number };
+  output = err.stdout;
+  exit = err.status;
+}
+const variants = (p: string) => [p, p.replaceAll("\\", "/"), p.replaceAll("\\", "\\\\")];
+const tidy = (s: string): string => {
+  let t = s;
+  for (const v of variants(here)) t = t.replaceAll(v, "<scratch>");
+  for (const v of variants(repo)) t = t.replaceAll(v, "<repo>");
+  return t;
+};
+const source = (name: string) => `\n===== ${name} =====\n${readFileSync(path.join(here, name), "utf8").replace(/\r\n/g, "\n")}`;
+
+const text = `phase-5/settings smoke transcript (PHASE5_PLAN row 3) - Claude Code (Opus 5.5), 2026-09-28
+Plugin under test: plugin\\LrC-AVG.lrplugin at commit ${commit} (branch phase-5/settings).
+"main" = plugin\\LrC-AVG.lrplugin at ${mainCommit}, its .lua files copied to <scratch>\\old with git show.
+Engine code the results are checked against: engine\\dist (npm run build at ${commit}): COMMANDS.get_prefs
+(bridge\\protocol.js), parsePage and PAGE_SPECS (settings\\index.js), readPortsFile (bridge\\endpoint.js).
+Node v24.11.1; fengari 0.1.4 (a Lua 5.3 VM in JavaScript), a scratch install, not a project dependency.
+The fake Lightroom (fake-lr.lua), the two scenario scripts and the runner are reproduced at the end.
+
+What this shows: the plugin's Lua runs, what Prefs.lua does with the values it is given, that get_prefs
+goes through the dispatch and the engine's own parser takes its answer, that the bridge binds the page's
+ports and writes a ports file the engine's reader takes, that every field of the settings page is bound
+to the prefs table the way S8's group B was, and that main's and this branch's bridge do the same things
+in the row 6/8 bridge scenario. The fake's behaviour is Claude Code's invention: it shows NOTHING about
+Lightroom itself. In particular the fake LrView only records the view tree it is given; whether
+Lightroom saves these fields, shows the page as intended, or keeps a numeric field in range is what
+S8 observed for its own page (docs\\reports\\phase5\\S8.md) and what the probe after the merge checks.
+Two fake-runtime artefacts: fengari's os.date does not treat a leading "!" as UTC, so timestamps from
+os.date("!...") read "!2026-..."; and Lua 5.3 prints some numbers differently from Lightroom's Lua 5.1
+(e.g. 1.0 as "1.0"). Lua 5.1 syntax of every plugin file is checked by engine\\tests\\lua-plugin.test.ts.
+Each mutant (written by the runner to <scratch>\\mutant) must fail exactly its named checks.
+
+To reproduce: npm run build; in an empty folder with these files, npm install fengari@0.1.4, copy
+main's plugin .lua files into old\\, then:
+$ node run.mts <repo>
+${tidy(output)}[exit ${exit}]
+${source("fake-lr.lua")}${source("settings-cases.lua")}${source("bridge-cases.lua")}${source("run.mts")}${source("assemble.mts")}`;
+mkdirSync(path.dirname(outFile), { recursive: true });
+writeFileSync(outFile, text);
+console.log(`wrote ${outFile} (${text.split("\n").length} lines), smoke exit ${exit}`);

@@ -1,0 +1,340 @@
+{
+  "source": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\S8",
+  "hud": {
+    "file": "s8_hud_2026-09-28T18-58-23.json",
+    "run_at": "2026-09-28 18:56:19 (local time)",
+    "lr_version": "15.5.1",
+    "answered": true,
+    "jim": {
+      "approve_label_blank": false,
+      "approve_label_changed": true,
+      "closed_by_itself": true,
+      "focus_backslash": false,
+      "hud_appeared": true,
+      "last_click_shown": true,
+      "picks_enabled_after_approve": true,
+      "picks_greyed": true,
+      "stage_updated": true
+    },
+    "findings": {
+      "clicks": 5,
+      "clicks_on_greyed_picks": 0,
+      "closed_by_code": "yes",
+      "selection_changes_seen": 2,
+      "appeared_after_request_s": 5.3317584991455,
+      "buttons": [
+        "Abort",
+        "Approve",
+        "Pick B",
+        "Accept",
+        "Accept"
+      ],
+      "closed_by_code_because": "the window closed inside the call"
+    },
+    "clicks": [
+      {
+        "button": "Abort",
+        "at": "18:56:37",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": false,
+        "task_started_ms": 3.0016899108887,
+        "task_read_ok": true,
+        "task_error": null
+      },
+      {
+        "button": "Approve",
+        "at": "18:56:48",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": false,
+        "task_started_ms": 4.0560960769653,
+        "task_read_ok": true,
+        "task_error": null
+      },
+      {
+        "button": "Pick B",
+        "at": "18:56:49",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": true,
+        "task_started_ms": 2.0128488540649,
+        "task_read_ok": true,
+        "task_error": null
+      },
+      {
+        "button": "Accept",
+        "at": "18:56:56",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": true,
+        "task_started_ms": 1.9984245300293,
+        "task_read_ok": true,
+        "task_error": null
+      },
+      {
+        "button": "Accept",
+        "at": "18:57:07",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": true,
+        "task_started_ms": 1.9967555999756,
+        "task_read_ok": true,
+        "task_error": null
+      }
+    ],
+    "close_call": {
+      "exists": true,
+      "tries": [
+        {
+          "argument": "_PLUGIN",
+          "ok": true
+        }
+      ],
+      "at": "18:57:29",
+      "closed_during_call": true,
+      "epoch": 812339849.17384,
+      "hud_open_before_call": true
+    },
+    "present": {
+      "error": null,
+      "returned_after_s": 69.566596746445,
+      "open_when_returned": false
+    },
+    "ticks": 65
+  },
+  "settings": {
+    "before_restart": {
+      "file": "s8_settings_before_restart_2026-09-28T19-00-56.json",
+      "run_at": "2026-09-28 19:00:44 (local time)",
+      "settings": {
+        "a_mode": null,
+        "a_maxPasses": null,
+        "b_mode": null,
+        "b_maxPasses": null,
+        "c_mode": null,
+        "c_maxPasses": null,
+        "mode": "autonomous",
+        "maxPasses": 4,
+        "clipHighPct": 0.5,
+        "logFolder": ""
+      },
+      "saved_by_group": {
+        "a": null,
+        "b": null,
+        "c": null
+      },
+      "observed_log": null,
+      "dialog_log": null,
+      "marks": {
+        "init_to_menu_via_G": true,
+        "init_to_menu_via_module": true,
+        "init_to_panel_via_G": true,
+        "init_to_panel_via_module": true,
+        "loop_init_mark": "init-D52108E7-B32A-48F8-A1DE-969D6EF3C2EC",
+        "loop_running": false,
+        "loop_view_age_s": 9,
+        "menu_mark": "menu-2EE9B3C0-A801-4B6A-AE14-CDDE1A1C02A8",
+        "menu_sees_init_mark_in_module": "init-D52108E7-B32A-48F8-A1DE-969D6EF3C2EC",
+        "menu_sees_init_mark_on_G": "init-D52108E7-B32A-48F8-A1DE-969D6EF3C2EC",
+        "menu_to_loop_via_G": true,
+        "menu_to_loop_via_module": true,
+        "panel_rendered_at": "2026-09-28 19:00:05 (local time)"
+      },
+      "loop_saw_the_same_settings": true,
+      "loop_view_error": null,
+      "loop_prefs_changes": [
+        {
+          "seen_at": "2026-09-28 18:59:20 (local time)",
+          "a_mode": null,
+          "a_maxPasses": null,
+          "b_mode": null,
+          "b_maxPasses": null,
+          "c_mode": null,
+          "c_maxPasses": null,
+          "mode": "autonomous",
+          "maxPasses": 4,
+          "clipHighPct": 0.5,
+          "logFolder": ""
+        }
+      ],
+      "answered": true,
+      "jim": {
+        "field_kept_12": false,
+        "page_showed_fields": true,
+        "warning_on_12": true
+      }
+    },
+    "after_restart": {
+      "file": "s8_settings_after_restart_2026-09-28T19-02-33.json",
+      "run_at": "2026-09-28 19:02:12 (local time)",
+      "settings": {
+        "a_mode": null,
+        "a_maxPasses": null,
+        "b_mode": null,
+        "b_maxPasses": null,
+        "c_mode": null,
+        "c_maxPasses": null,
+        "mode": "autonomous",
+        "maxPasses": 4,
+        "clipHighPct": 0.5,
+        "logFolder": ""
+      },
+      "saved_by_group": {
+        "a": null,
+        "b": null,
+        "c": null
+      },
+      "observed_log": null,
+      "dialog_log": null,
+      "marks": {
+        "init_to_menu_via_G": true,
+        "init_to_menu_via_module": true,
+        "init_to_panel_via_G": "inconclusive: Plug-in Manager not opened since Lightroom started",
+        "init_to_panel_via_module": "inconclusive: Plug-in Manager not opened since Lightroom started",
+        "loop_init_mark": "init-1A2B1A10-8B53-45DB-B817-AEED90AD0B51",
+        "loop_running": true,
+        "loop_view_age_s": 0,
+        "menu_mark": "menu-74BE0692-5582-4CBB-9CEE-44E37CCFDB82",
+        "menu_sees_init_mark_in_module": "init-1A2B1A10-8B53-45DB-B817-AEED90AD0B51",
+        "menu_sees_init_mark_on_G": "init-1A2B1A10-8B53-45DB-B817-AEED90AD0B51",
+        "menu_to_loop_via_G": true,
+        "menu_to_loop_via_module": true
+      },
+      "loop_saw_the_same_settings": true,
+      "loop_view_error": null,
+      "loop_prefs_changes": [
+        {
+          "seen_at": "2026-09-28 19:02:12 (local time)",
+          "a_mode": null,
+          "a_maxPasses": null,
+          "b_mode": null,
+          "b_maxPasses": null,
+          "c_mode": null,
+          "c_maxPasses": null,
+          "mode": "autonomous",
+          "maxPasses": 4,
+          "clipHighPct": 0.5,
+          "logFolder": ""
+        }
+      ],
+      "answered": true,
+      "jim": {
+        "page_kept_values": true
+      }
+    },
+    "kept_across_restart": {
+      "a_mode": null,
+      "a_maxPasses": null,
+      "b_mode": null,
+      "b_maxPasses": null,
+      "c_mode": null,
+      "c_maxPasses": null,
+      "mode": true,
+      "maxPasses": true,
+      "clipHighPct": true,
+      "logFolder": true
+    },
+    "kept_by_group": {
+      "a": null,
+      "b": null,
+      "c": null
+    },
+    "runs": [
+      {
+        "file": "s8_settings_before_restart_2026-09-28T18-54-09.json",
+        "step": "before_restart",
+        "run_at": "2026-09-28 18:53:44 (local time)",
+        "saved_by_group": {
+          "a": null,
+          "b": null,
+          "c": null
+        },
+        "settings": {
+          "a_mode": null,
+          "a_maxPasses": null,
+          "b_mode": null,
+          "b_maxPasses": null,
+          "c_mode": null,
+          "c_maxPasses": null,
+          "mode": "autonomous",
+          "maxPasses": 4,
+          "clipHighPct": 0.5,
+          "logFolder": ""
+        },
+        "observed_log": null,
+        "dialog_log": null,
+        "jim": {
+          "field_kept_12": false,
+          "page_showed_fields": true,
+          "warning_on_12": true
+        }
+      },
+      {
+        "file": "s8_settings_before_restart_2026-09-28T19-00-56.json",
+        "step": "before_restart",
+        "run_at": "2026-09-28 19:00:44 (local time)",
+        "saved_by_group": {
+          "a": null,
+          "b": null,
+          "c": null
+        },
+        "settings": {
+          "a_mode": null,
+          "a_maxPasses": null,
+          "b_mode": null,
+          "b_maxPasses": null,
+          "c_mode": null,
+          "c_maxPasses": null,
+          "mode": "autonomous",
+          "maxPasses": 4,
+          "clipHighPct": 0.5,
+          "logFolder": ""
+        },
+        "observed_log": null,
+        "dialog_log": null,
+        "jim": {
+          "field_kept_12": false,
+          "page_showed_fields": true,
+          "warning_on_12": true
+        }
+      },
+      {
+        "file": "s8_settings_after_restart_2026-09-28T19-02-33.json",
+        "step": "after_restart",
+        "run_at": "2026-09-28 19:02:12 (local time)",
+        "saved_by_group": {
+          "a": null,
+          "b": null,
+          "c": null
+        },
+        "settings": {
+          "a_mode": null,
+          "a_maxPasses": null,
+          "b_mode": null,
+          "b_maxPasses": null,
+          "c_mode": null,
+          "c_maxPasses": null,
+          "mode": "autonomous",
+          "maxPasses": 4,
+          "clipHighPct": 0.5,
+          "logFolder": ""
+        },
+        "observed_log": null,
+        "dialog_log": null,
+        "jim": {
+          "page_kept_values": true
+        }
+      }
+    ]
+  },
+  "copied": [
+    "s8_hud_2026-09-28T18-55-07.json",
+    "s8_hud_2026-09-28T18-58-23.json",
+    "s8_log.txt",
+    "s8_loop_view.json",
+    "s8_loop_view_after_restart_2026-09-28T19-02-19.json",
+    "s8_loop_view_before_restart_2026-09-28T18-53-49.json",
+    "s8_loop_view_before_restart_2026-09-28T19-00-49.json",
+    "s8_panel_view.json",
+    "s8_settings_after_restart_2026-09-28T19-02-33.json",
+    "s8_settings_before_restart_2026-09-28T18-54-09.json",
+    "s8_settings_before_restart_2026-09-28T19-00-56.json"
+  ],
+  "skipped": []
+}

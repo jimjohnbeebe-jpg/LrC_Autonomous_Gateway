@@ -1,0 +1,75 @@
+{
+  "answered": false,
+  "findings": {
+    "appeared_after_request_s": 5.1665296554565,
+    "buttons": [],
+    "clicks": 0,
+    "clicks_on_greyed_picks": 0,
+    "closed_by_code": "not tried",
+    "closed_by_code_because": "menu item 2 was not used",
+    "selection_changes_seen": 1
+  },
+  "lr_version": "15.5.1",
+  "observations": {
+    "approve_label_blank": {
+      "answer": false,
+      "statement": "The Approve button had no text on it (only the 'Approve:' label next to it)"
+    },
+    "approve_label_changed": {
+      "answer": false,
+      "statement": "After I clicked Approve, its button read 'Approve pass 2'"
+    },
+    "closed_by_itself": {
+      "answer": false,
+      "statement": "The HUD closed by itself when I chose menu item 2"
+    },
+    "focus_backslash": {
+      "answer": false,
+      "statement": "Right after the HUD appeared, pressing \\ (without clicking anywhere first) switched Before/After in the main window"
+    },
+    "hud_appeared": {
+      "answer": false,
+      "statement": "The HUD appeared by itself a few seconds after menu item 1"
+    },
+    "last_click_shown": {
+      "answer": false,
+      "statement": "The 'Last click' line named each button right after I clicked it"
+    },
+    "picks_enabled_after_approve": {
+      "answer": false,
+      "statement": "After I clicked Approve, Pick B looked normal and I could click it"
+    },
+    "picks_greyed": {
+      "answer": false,
+      "statement": "Pick A, Pick B and Pick C looked greyed out until I clicked Approve"
+    },
+    "stage_updated": {
+      "answer": false,
+      "statement": "The Stage and Deltas lines changed every second, also while I clicked"
+    }
+  },
+  "run": {
+    "clicks": [],
+    "closed_at": "18:55:04",
+    "closed_epoch": 812339704.5193,
+    "open": false,
+    "open_started_at": "18:54:30",
+    "open_when_present_returned": false,
+    "opened_from": "the S8 loop task (started by the init script), as the bridge task would open it",
+    "photo": "20260907-_OZ80099.NEF",
+    "present_returned_after_s": 34.038356781006,
+    "request_id": "58A924FF-01A3-4A3A-B738-5E54CE715386",
+    "requested_at": "2026-09-28 18:54:25 (local time)",
+    "requested_epoch": 812339665.36093,
+    "run_at": "2026-09-28 18:54:30 (local time)",
+    "selection_change_times": [
+      "18:54:53"
+    ],
+    "shown_at": "18:54:30",
+    "shown_epoch": 812339670.52746,
+    "ticks": 34
+  },
+  "run_at": "2026-09-28 18:54:30 (local time)",
+  "spike": "S8",
+  "step": "hud"
+}

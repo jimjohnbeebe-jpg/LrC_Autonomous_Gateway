@@ -1,0 +1,42 @@
+{
+  "answered": true,
+  "loop_view_copy": "s8_loop_view_before_restart_2026-09-28T18-53-49.json",
+  "lr_version": "15.5.1",
+  "marks": {
+    "init_to_menu_via_G": true,
+    "init_to_menu_via_module": true,
+    "init_to_panel_via_G": "inconclusive: Plug-in Manager not opened since Lightroom started",
+    "init_to_panel_via_module": "inconclusive: Plug-in Manager not opened since Lightroom started",
+    "loop_init_mark": "init-8BB8B54A-DB72-40E5-98B8-C8764B6251B6",
+    "loop_running": true,
+    "loop_view_age_s": 8,
+    "menu_mark": "menu-1C134987-9A76-495D-876B-1A794DC442CD",
+    "menu_sees_init_mark_in_module": "init-8BB8B54A-DB72-40E5-98B8-C8764B6251B6",
+    "menu_sees_init_mark_on_G": "init-8BB8B54A-DB72-40E5-98B8-C8764B6251B6",
+    "menu_to_loop_via_G": true,
+    "menu_to_loop_via_module": true
+  },
+  "observations": {
+    "field_kept_12": {
+      "answer": false,
+      "statement": "When I typed 12 in Max passes and pressed Tab, the field still showed 12"
+    },
+    "page_showed_fields": {
+      "answer": true,
+      "statement": "The S8 section in Plug-in Manager showed Mode, Max passes, Highlight clip guardrail, Log folder and Temp preview folder"
+    },
+    "warning_on_12": {
+      "answer": true,
+      "statement": "A warning or error message appeared when I typed 12 in Max passes"
+    }
+  },
+  "prefs_in_menu_item": {
+    "clipHighPct": 0.5,
+    "logFolder": "",
+    "maxPasses": 4,
+    "mode": "autonomous"
+  },
+  "run_at": "2026-09-28 18:53:44 (local time)",
+  "spike": "S8",
+  "step": "before_restart"
+}

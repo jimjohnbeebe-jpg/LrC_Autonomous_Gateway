@@ -1,0 +1,28 @@
+{
+  "errors": [],
+  "generation": 1,
+  "init_mark": "init-8BB8B54A-DB72-40E5-98B8-C8764B6251B6",
+  "loop_sees": {
+    "init_mark_in_module": "init-8BB8B54A-DB72-40E5-98B8-C8764B6251B6",
+    "init_mark_on_G": "init-8BB8B54A-DB72-40E5-98B8-C8764B6251B6",
+    "menu_mark_in_module": "menu-1C134987-9A76-495D-876B-1A794DC442CD",
+    "menu_mark_on_G": "menu-1C134987-9A76-495D-876B-1A794DC442CD"
+  },
+  "prefs_history": [
+    {
+      "prefs": {
+        "clipHighPct": 0.5,
+        "logFolder": "",
+        "maxPasses": 4,
+        "mode": "autonomous"
+      },
+      "seen_at": "2026-09-28 18:53:20 (local time)"
+    }
+  ],
+  "requests": [],
+  "spike": "S8",
+  "started_at": "2026-09-28 18:53:15 (local time)",
+  "started_epoch": 1790646795,
+  "updated_at": "2026-09-28 18:53:48 (local time)",
+  "updated_epoch": 1790646828
+}

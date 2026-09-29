@@ -1,0 +1,43 @@
+{
+  "answered": true,
+  "loop_view_copy": "s8_loop_view_before_restart_2026-09-28T19-00-49.json",
+  "lr_version": "15.5.1",
+  "marks": {
+    "init_to_menu_via_G": true,
+    "init_to_menu_via_module": true,
+    "init_to_panel_via_G": true,
+    "init_to_panel_via_module": true,
+    "loop_init_mark": "init-D52108E7-B32A-48F8-A1DE-969D6EF3C2EC",
+    "loop_running": false,
+    "loop_view_age_s": 9,
+    "menu_mark": "menu-2EE9B3C0-A801-4B6A-AE14-CDDE1A1C02A8",
+    "menu_sees_init_mark_in_module": "init-D52108E7-B32A-48F8-A1DE-969D6EF3C2EC",
+    "menu_sees_init_mark_on_G": "init-D52108E7-B32A-48F8-A1DE-969D6EF3C2EC",
+    "menu_to_loop_via_G": true,
+    "menu_to_loop_via_module": true,
+    "panel_rendered_at": "2026-09-28 19:00:05 (local time)"
+  },
+  "observations": {
+    "field_kept_12": {
+      "answer": false,
+      "statement": "When I typed 12 in Max passes and pressed Tab, the field still showed 12"
+    },
+    "page_showed_fields": {
+      "answer": true,
+      "statement": "The S8 section in Plug-in Manager showed Mode, Max passes, Highlight clip guardrail, Log folder and Temp preview folder"
+    },
+    "warning_on_12": {
+      "answer": true,
+      "statement": "A warning or error message appeared when I typed 12 in Max passes"
+    }
+  },
+  "prefs_in_menu_item": {
+    "clipHighPct": 0.5,
+    "logFolder": "",
+    "maxPasses": 4,
+    "mode": "autonomous"
+  },
+  "run_at": "2026-09-28 19:00:44 (local time)",
+  "spike": "S8",
+  "step": "before_restart"
+}

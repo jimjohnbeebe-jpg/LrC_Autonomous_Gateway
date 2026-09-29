@@ -8,7 +8,8 @@
 //     destDir default: docs\reports\phase5\S8
 //
 // - Reads the newest s8_hud_*.json (S8Hud.lua) and s8_settings_{before,after}_restart_*.json
-//   (S8Settings.lua), with the loop-view copy each settings file names.
+//   (S8Settings.lua), with the loop-view copy each settings file names, and lists every settings
+//   run (run 1 and the rerun of fix/s8-settings) with what each settings group A-C saved.
 // - Copies every s8_*.json and s8_*.txt with the user folder written as %USERPROFILE%.
 // - Writes s8_summary.json to destDir and prints it.
 
@@ -68,7 +69,9 @@ const Settings = z.looseObject({
 });
 const LoopView = z.looseObject({ prefs_history: z.array(z.looseObject({ seen_at: z.string(), prefs: Prefs })).optional() });
 
-const SETTING_KEYS = ["mode", "maxPasses", "clipHighPct", "logFolder"] as const;
+/** Groups A-C of the settings rerun (fix/s8-settings), then run 1's single set of fields. */
+const GROUPS = ["a", "b", "c"] as const;
+const SETTING_KEYS = [...GROUPS.flatMap((g) => [`${g}_mode`, `${g}_maxPasses`]), "mode", "maxPasses", "clipHighPct", "logFolder"] as const;
 
 const newest = (prefix: string): string | null => readdirSync(srcDir).filter((f) => f.startsWith(prefix) && f.endsWith(".json")).sort().at(-1) ?? null;
 const readJson = (file: string): unknown => JSON.parse(readFileSync(path.join(srcDir, file), "utf8"));
@@ -104,6 +107,36 @@ function hudSummary() {
   };
 }
 
+/** Whether group g holds what the README has Jim enter (approve_each_pass, 6); null when the group is absent (run 1). */
+function savedByGroup(prefs: Record<string, unknown>): Record<string, boolean | null> {
+  return Object.fromEntries(
+    GROUPS.map((g) => [g, prefs[`${g}_mode`] === undefined ? null : prefs[`${g}_mode`] === "approve_each_pass" && prefs[`${g}_maxPasses`] === 6]),
+  );
+}
+
+/** The save time in a file name (S8Common.save: <prefix>_<YYYY-MM-DDTHH-MM-SS>.json). */
+const savedAt = (f: string): string => f.match(/_(\d{4}-\d\d-\d\dT\d\d-\d\d-\d\d)\.json$/)?.[1] ?? f;
+
+/** Every settings run, oldest first by its save time, so run 1 stays in the summary after the rerun. */
+function settingsRuns() {
+  return readdirSync(srcDir)
+    .filter((f) => /^s8_settings_.*\.json$/.test(f))
+    .sort((x, y) => savedAt(x).localeCompare(savedAt(y)))
+    .map((file) => {
+      const s = Settings.parse(readJson(file));
+      return {
+        file,
+        step: s.step,
+        run_at: s.run_at,
+        saved_by_group: savedByGroup(s.prefs_in_menu_item),
+        settings: Object.fromEntries(SETTING_KEYS.map((k) => [k, s.prefs_in_menu_item[k] ?? null])),
+        observed_log: s.prefs_in_menu_item["s8_observed"] ?? null,
+        dialog_log: s.prefs_in_menu_item["s8_dialog_log"] ?? null,
+        jim: answers(s.observations),
+      };
+    });
+}
+
 function settingsFile(step: string) {
   const file = newest(`s8_settings_${step}_`);
   if (!file) return null;
@@ -117,12 +150,16 @@ function settingsFile(step: string) {
   }
   const settings = Object.fromEntries(SETTING_KEYS.map((k) => [k, s.prefs_in_menu_item[k] ?? null]));
   const loopLast = history.at(-1)?.prefs ?? null;
-  const loopSawSame = loopLast !== null && SETTING_KEYS.every((k) => JSON.stringify(loopLast[k] ?? null) === JSON.stringify(settings[k]));
+  // Only the settings this snapshot holds: two absent values are not "the same settings" (Greptile, PR #41).
+  const present = SETTING_KEYS.filter((k) => settings[k] !== null);
+  const loopSawSame = loopLast !== null && present.length > 0 && present.every((k) => JSON.stringify(loopLast[k] ?? null) === JSON.stringify(settings[k]));
   return {
     file,
     run_at: s.run_at,
     settings,
+    saved_by_group: savedByGroup(s.prefs_in_menu_item),
     observed_log: s.prefs_in_menu_item["s8_observed"] ?? null,
+    dialog_log: s.prefs_in_menu_item["s8_dialog_log"] ?? null,
     marks: s.marks,
     loop_saw_the_same_settings: loopViewError ? "unknown" : loopSawSame,
     loop_view_error: loopViewError,
@@ -191,17 +228,33 @@ function copyRedacted(): { copied: string[]; skipped: string[] } {
   return { copied, skipped };
 }
 
+/**
+ * Per setting: whether the value after the restart equals the one before; null when either snapshot
+ * lacks the setting, since a setting that was never there was not kept (Greptile, PR #41: run 1's
+ * files have no group settings). Settings are read with `?? null`, and prefs never hold a null.
+ * "Unchanged" is not "saved": run 1's defaults are unchanged too. keptByGroup answers "saved and kept".
+ */
+function keptAcrossRestart(before: Record<string, unknown>, after: Record<string, unknown>): Record<string, boolean | null> {
+  return Object.fromEntries(SETTING_KEYS.map((k) => [k, before[k] === null || after[k] === null ? null : JSON.stringify(before[k]) === JSON.stringify(after[k])]));
+}
+
+/** Per group: saved before the restart and still saved after it; null when the group was not saved before. */
+function keptByGroup(before: Record<string, boolean | null>, after: Record<string, boolean | null>): Record<string, boolean | null> {
+  return Object.fromEntries(GROUPS.map((g) => [g, before[g] === true ? after[g] === true : null]));
+}
+
 function main(): void {
   const before = settingsFile("before_restart");
   const after = settingsFile("after_restart");
-  const kept = before && after ? Object.fromEntries(SETTING_KEYS.map((k) => [k, JSON.stringify(before.settings[k]) === JSON.stringify(after.settings[k])])) : null;
   const summary = {
     source: srcDir,
     hud: hudSummary(),
     settings: {
       before_restart: before ?? { status: "NOT RUN" },
       after_restart: after ?? { status: "NOT RUN" },
-      kept_across_restart: kept,
+      kept_across_restart: before && after ? keptAcrossRestart(before.settings, after.settings) : null,
+      kept_by_group: before && after ? keptByGroup(before.saved_by_group, after.saved_by_group) : null,
+      runs: settingsRuns(),
     },
   };
   const { copied, skipped } = copyRedacted();

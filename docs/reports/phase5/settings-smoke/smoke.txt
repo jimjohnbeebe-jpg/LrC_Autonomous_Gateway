@@ -1,7 +1,7 @@
 phase-5/settings smoke transcript (PHASE5_PLAN row 3) - Claude Code (Opus 5.5), 2026-09-28
-Plugin under test: plugin\LrC-AVG.lrplugin at commit 9ba55af (branch phase-5/settings).
+Plugin under test: plugin\LrC-AVG.lrplugin at commit cbd1dc2 (branch phase-5/settings).
 "main" = plugin\LrC-AVG.lrplugin at 5d8bcc3, its .lua files copied to <scratch>\old with git show.
-Engine code the results are checked against: engine\dist (npm run build at 9ba55af): COMMANDS.get_prefs
+Engine code the results are checked against: engine\dist (npm run build at cbd1dc2): COMMANDS.get_prefs
 (bridge\protocol.js), parsePage and PAGE_SPECS (settings\index.js), readPortsFile (bridge\endpoint.js).
 Node v24.11.1; fengari 0.1.4 (a Lua 5.3 VM in JavaScript), a scratch install, not a project dependency.
 The fake Lightroom (fake-lr.lua), the two scenario scripts and the runner are reproduced at the end.
@@ -40,6 +40,9 @@ $ node run.mts <repo>
 --  read decay empty: [{"key":"decay","value":"","reason":"give 1 to 8 values, separated by commas"}]
 --  read decay a, b: [{"key":"decay","value":"a, b","reason":"each value must be a number above 0 and at most 1, not \"a\""}]
 --  read decay nine values: [{"key":"decay","value":"1,1,1,1,1,1,1,1,1","reason":"give 1 to 8 values, separated by commas"}]
+--  read decay trailing comma 0.5,: [{"key":"decay","value":"0.5,","reason":"an empty entry between commas"}]
+--  read decay double comma 0.5,,0.3: [{"key":"decay","value":"0.5,,0.3","reason":"an empty entry between commas"}]
+--  read decay spaces only: [{"key":"decay","value":"   ","reason":"give 1 to 8 values, separated by commas"}]
 --  read decay spaced 0.8, 0.5: []
 --  read decay a number: [{"key":"decay","value":"0.5","reason":"not text"}]
 --  read intentsFolder relative: [{"key":"intentsFolder","value":"intents","reason":"not a full path (for example D:\\Photos\\LrC-AVG\\intents)"}]
@@ -53,9 +56,9 @@ $ node run.mts <repo>
 --  get_prefs defaults: {"temp_preview_dir":"C:\\T\\LrC-AVG\\previews","invalid":[],"mode":"autonomous","max_passes":4,"variant_count":3,"long_edge":1600,"quality":75,"clip_high_pct":0.5,"clip_low_pct":1,"decay":[1,0.6,0.4,0.25],"intents_dir":"","log_dir":"","receive_port":8765,"send_port":8766}
 --  get_prefs edited: {"temp_preview_dir":"C:\\T\\LrC-AVG\\previews","invalid":[],"mode":"approve_each_pass","max_passes":6,"variant_count":2,"long_edge":1200,"quality":60,"clip_high_pct":2,"clip_low_pct":0.25,"decay":[0.8,0.5],"intents_dir":"D:\\Photos\\intents","log_dir":"D:\\Photos\\logs","receive_port":9765,"send_port":9766}
 --  get_prefs invalid: {"temp_preview_dir":"C:\\T\\LrC-AVG\\previews","invalid":[{"key":"maxPasses","value":"12","reason":"outside 1-8"},{"key":"decay","value":"1, 0","reason":"each value must be a number above 0 and at most 1, not \"0\""},{"key":"sendPort","value":"8767","reason":"8767 is the engine's own port"}],"mode":"autonomous","max_passes":4,"variant_count":3,"long_edge":1600,"quality":75,"clip_high_pct":0.5,"clip_low_pct":1,"decay":[1,0.6,0.4,0.25],"intents_dir":"","log_dir":"","receive_port":8765,"send_port":8766}
---  bridge page_ports: {"bound":{"receive":9765,"send":9766},"ports_file":"{\"receive\":9765,\"send\":9766,\"plugin_version\":\"0.5.0\",\"written_at\":\"!2026-09-28T21:58:28Z\"}","token_written":true,"status_ports":{"receive":9765,"send":9766},"status_ports_written":true,"status_ports_file":"C:\\Users\\U\\.lrc-avg\\bridge_ports.json"}
---  bridge no_prefs: {"bound":{"receive":8765,"send":8766},"ports_file":"{\"receive\":8765,\"send\":8766,\"plugin_version\":\"0.5.0\",\"written_at\":\"!2026-09-28T21:58:28Z\"}","token_written":true,"status_ports":{"receive":8765,"send":8766},"status_ports_written":true,"status_ports_file":"C:\\Users\\U\\.lrc-avg\\bridge_ports.json"}
---  bridge lock_port: {"bound":{"receive":8765,"send":8766},"ports_file":"{\"receive\":8765,\"send\":8766,\"plugin_version\":\"0.5.0\",\"written_at\":\"!2026-09-28T21:58:28Z\"}","token_written":true,"status_ports":{"receive":8765,"send":8766},"status_ports_written":true,"status_ports_file":"C:\\Users\\U\\.lrc-avg\\bridge_ports.json"}
+--  bridge page_ports: {"bound":{"receive":9765,"send":9766},"ports_file":"{\"receive\":9765,\"send\":9766,\"token_check\":\"uuid0001aaaabbbb\",\"plugin_version\":\"0.5.0\",\"written_at\":\"!2026-09-29T04:33:25Z\"}","token":"uuid0001aaaabbbbuuid0002aaaabbbb","token_written":true,"status_ports":{"receive":9765,"send":9766},"status_ports_written":true,"status_ports_file":"C:\\Users\\U\\.lrc-avg\\bridge_ports.json"}
+--  bridge no_prefs: {"bound":{"receive":8765,"send":8766},"ports_file":"{\"receive\":8765,\"send\":8766,\"token_check\":\"uuid0003aaaabbbb\",\"plugin_version\":\"0.5.0\",\"written_at\":\"!2026-09-29T04:33:25Z\"}","token":"uuid0003aaaabbbbuuid0004aaaabbbb","token_written":true,"status_ports":{"receive":8765,"send":8766},"status_ports_written":true,"status_ports_file":"C:\\Users\\U\\.lrc-avg\\bridge_ports.json"}
+--  bridge lock_port: {"bound":{"receive":8765,"send":8766},"ports_file":"{\"receive\":8765,\"send\":8766,\"token_check\":\"uuid0005aaaabbbb\",\"plugin_version\":\"0.5.0\",\"written_at\":\"!2026-09-29T04:33:25Z\"}","token":"uuid0005aaaabbbbuuid0006aaaabbbb","token_written":true,"status_ports":{"receive":8765,"send":8766},"status_ports_written":true,"status_ports_file":"C:\\Users\\U\\.lrc-avg\\bridge_ports.json"}
 --  page: section "LrC-AVG settings", boxes ["Sessions","Guardrails (an intent's own limits come first)","Previews","Folders (blank: the default; the engine's LRC_AVG_* variable wins when set)","Bridge ports (apply at the next Lightroom start)"]
     field mode: popup_menu; row bound true, box bound true
     field maxPasses: edit_field precision 0 1-8; row bound true, box bound true
@@ -86,6 +89,9 @@ PASS  R2 decay empty: decay invalid, the default used
 PASS  R2 decay a, b: decay invalid, the default used
 PASS  R2 decay nine values: decay invalid, the default used
 PASS  R2 decay a number: decay invalid, the default used
+PASS  R2 decay trailing comma 0.5,: decay invalid, the default used
+PASS  R2 decay double comma 0.5,,0.3: decay invalid, the default used
+PASS  R2 decay spaces only: decay invalid, the default used
 PASS  R2 intentsFolder relative: intentsFolder invalid, the default used
 PASS  R2 logFolder root-relative: logFolder invalid, the default used
 PASS  R2 receivePort 8767: receivePort invalid, the default used
@@ -105,7 +111,8 @@ PASS  G2 defaults: the engine's parsePage takes every field, no problem
 PASS  G3 edited: parsePage gives exactly the values stored on the page, under their wire names
 PASS  G4 invalid: the plugin lists maxPasses, decay and sendPort; parsePage leaves exactly those out, one problem each
 PASS  B1 page ports 9765/9766: the bridge binds them
-PASS  B2 the ports file the bridge writes reads back through the engine's readPortsFile as 9765/9766; token written; status ports_written true
+PASS  B2 the ports file the bridge writes reads back through the engine's readPortsFile, with the token file's token, as 9765/9766; status ports_written true
+PASS  B5 the ports file carries this start's token check: read with another start's token, the engine ignores it
 PASS  B3 no prefs: 8765/8766, bound and in the file
 PASS  B4 receive port 8767 on the page: refused, 8765 bound and written
 PASS  P1 the page has one bound field for each setting in PAGE_SPECS
@@ -120,6 +127,7 @@ PASS  P8 opening the page does not overwrite a stored value, valid or not
 == Mutants ==
 PASS  mutant Prefs.lua (-- MUTANT: no range check): fails ["R2","P7"], expected ["P7","R2"]
 PASS  mutant PluginInfoProvider.lua (local items = { f:static_text): fails ["P2"], expected ["P2"]
+PASS  mutant Prefs.lua (for part in v:gmatch("[^,]+") do -- MUTANT: skips empty entries): fails ["R2"], expected ["R2"]
 
 == The bridge scenario: main's plugin vs this branch (bridge-cases.lua) ==
 --  main: 14 lines sent, 8 steps, 0 errors; this branch: 14 lines sent, 8 steps, 0 errors
@@ -452,6 +460,9 @@ local cases = {
     { "decay empty", { decay = "" } },
     { "decay a, b", { decay = "a, b" } },
     { "decay nine values", { decay = "1,1,1,1,1,1,1,1,1" } },
+    { "decay trailing comma 0.5,", { decay = "0.5," } },
+    { "decay double comma 0.5,,0.3", { decay = "0.5,,0.3" } },
+    { "decay spaces only", { decay = "   " } },
     { "decay spaced 0.8, 0.5", { decay = " 0.8 , 0.5 " } },
     { "decay a number", { decay = 0.5 } },
     { "intentsFolder relative", { intentsFolder = "intents" } },
@@ -503,6 +514,7 @@ local function start(values)
     return {
         bound = ports,
         ports_file = F.files[PORTS_FILE],
+        token = F.files[TOKEN_FILE],
         token_written = F.files[TOKEN_FILE] ~= nil and #F.files[TOKEN_FILE] > 0,
         status_ports = okStatus and status.ports or nil,
         status_ports_written = okStatus and status.ports_written or nil,
@@ -694,7 +706,8 @@ function checksOf(run: any): Check[] {
     ["maxPasses 12", ["maxPasses"]], ["maxPasses 2.5", ["maxPasses"]], ["maxPasses abc", ["maxPasses"]], ["maxPasses true", ["maxPasses"]],
     ["variantCount 4", ["variantCount"]], ["previewLongEdge 700", ["previewLongEdge"]], ["previewQuality 91", ["previewQuality"]],
     ["mode fast", ["mode"]], ["clipHighPct -1", ["clipHighPct"]], ["decay 1, 0", ["decay"]], ["decay empty", ["decay"]],
-    ["decay a, b", ["decay"]], ["decay nine values", ["decay"]], ["decay a number", ["decay"]], ["intentsFolder relative", ["intentsFolder"]],
+    ["decay a, b", ["decay"]], ["decay nine values", ["decay"]], ["decay a number", ["decay"]],
+    ["decay trailing comma 0.5,", ["decay"]], ["decay double comma 0.5,,0.3", ["decay"]], ["decay spaces only", ["decay"]], ["intentsFolder relative", ["intentsFolder"]],
     ["logFolder root-relative", ["logFolder"]], ["receivePort 8767", ["receivePort"]], ["sendPort 80", ["sendPort"]], ["ports the same", ["sendPort"]],
   ];
   for (const [c, keys] of refused) {
@@ -726,20 +739,24 @@ function checksOf(run: any): Check[] {
     "G4 invalid: the plugin lists maxPasses, decay and sendPort; parsePage leaves exactly those out, one problem each");
 
   const b = run.bridge;
-  const portsIn = (text: string | null | undefined) => {
-    if (!text) return null;
+  // The engine reads the ports file with the token it just read from the token file (client.ts connect).
+  const portsIn = (text: string | null | undefined, token: string | null | undefined) => {
+    if (!text || !token) return null;
     const dir = mkdtempSync(path.join(os.tmpdir(), "smoke-ports-"));
     const file = path.join(dir, "bridge_ports.json");
     writeFileSync(file, text);
-    const r = readPortsFile(file);
+    const r = readPortsFile(token, file);
     rmSync(dir, { recursive: true, force: true });
     return r.ports;
   };
-  check(b.page_ports.bound.receive === 9765 && b.page_ports.bound.send === 9766, "B1 page ports 9765/9766: the bridge binds them");
-  check(JSON.stringify(portsIn(b.page_ports.ports_file)) === JSON.stringify({ receive: 9765, send: 9766 }) && b.page_ports.token_written && b.page_ports.status_ports_written === true,
-    "B2 the ports file the bridge writes reads back through the engine's readPortsFile as 9765/9766; token written; status ports_written true");
-  check(b.no_prefs.bound.receive === 8765 && b.no_prefs.bound.send === 8766 && JSON.stringify(portsIn(b.no_prefs.ports_file)) === JSON.stringify({ receive: 8765, send: 8766 }), "B3 no prefs: 8765/8766, bound and in the file");
-  check(b.lock_port.bound.receive === 8765 && JSON.stringify(portsIn(b.lock_port.ports_file)) === JSON.stringify({ receive: 8765, send: 8766 }), "B4 receive port 8767 on the page: refused, 8765 bound and written");
+  const pp = b.page_ports;
+  check(pp.bound.receive === 9765 && pp.bound.send === 9766, "B1 page ports 9765/9766: the bridge binds them");
+  check(JSON.stringify(portsIn(pp.ports_file, pp.token)) === JSON.stringify({ receive: 9765, send: 9766 }) && pp.token_written && pp.status_ports_written === true,
+    "B2 the ports file the bridge writes reads back through the engine's readPortsFile, with the token file's token, as 9765/9766; status ports_written true");
+  check(portsIn(pp.ports_file, "x".repeat(32)) === null && JSON.parse(pp.ports_file).token_check === String(pp.token).slice(0, 16),
+    "B5 the ports file carries this start's token check: read with another start's token, the engine ignores it");
+  check(b.no_prefs.bound.receive === 8765 && b.no_prefs.bound.send === 8766 && JSON.stringify(portsIn(b.no_prefs.ports_file, b.no_prefs.token)) === JSON.stringify({ receive: 8765, send: 8766 }), "B3 no prefs: 8765/8766, bound and in the file");
+  check(b.lock_port.bound.receive === 8765 && JSON.stringify(portsIn(b.lock_port.ports_file, b.lock_port.token)) === JSON.stringify({ receive: 8765, send: 8766 }), "B4 receive port 8767 on the page: refused, 8765 bound and written");
 
   const p = run.page;
   const fields = p.fresh.fields as any[];
@@ -794,6 +811,8 @@ console.log("\n== Mutants ==");
 // out, so G4 holds: the mutant fails only the plugin-side checks.
 mutant("Prefs.lua", 'if n < spec.min or n > spec.max then return nil, "outside " .. spec.min .. "-" .. spec.max end', "-- MUTANT: no range check", ["R2", "P7"]);
 mutant("PluginInfoProvider.lua", "local items = { bind_to_object = prefs, f:static_text", "local items = { f:static_text", ["P2"]);
+// The split before Greptile's PR #44 finding, which skipped empty entries.
+mutant("Prefs.lua", 'for part in (v .. ","):gmatch("([^,]*),") do', 'for part in v:gmatch("[^,]+") do -- MUTANT: skips empty entries', ["R2"]);
 
 // Main's Bridge.lua against this branch's: the same bridge scenario (bridge-cases.lua, row 6/8's).
 console.log("\n== The bridge scenario: main's plugin vs this branch (bridge-cases.lua) ==");

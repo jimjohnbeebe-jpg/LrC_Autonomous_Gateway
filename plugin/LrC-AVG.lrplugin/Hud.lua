@@ -275,16 +275,17 @@ function Hud.menuEvent(name)
         line = HudState.eventLabel(name, nil, H.state) .. " NOT sent: " .. refusal
         H.lastAction = line
     else
-        local waited = 0
+        local chosen, waited = H.state.session_id, 0
         while not Events.connection().engine and waited < Hud.MENU_WAIT_SECONDS do
             LrTasks.sleep(0.5)
             waited = waited + 0.5
         end
-        local p, why = begin(name, nil, "menu")
+        -- Chosen for that session: never sent to one that began during the wait (Greptile, PR #46).
+        local p, why = nil, HudState.eventLabel(name, nil, H.state) .. " NOT sent: the session changed while waiting for the engine"
+        if H.state.session_id == chosen then p, why = begin(name, nil, "menu") end
         if p then
-            -- finish shows its own line, and only while the click is still current (Greptile, PR #45).
-            local _, sentLine = finish(p)
-            line = sentLine
+            local _, sent = finish(p) -- finish shows its own line while the click is current (PR #45)
+            line = sent
         else
             line = why .. (waited >= Hud.MENU_WAIT_SECONDS and (" (waited " .. Hud.MENU_WAIT_SECONDS .. " s)") or "")
             H.lastAction = line

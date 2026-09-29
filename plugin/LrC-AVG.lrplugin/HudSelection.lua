@@ -24,8 +24,11 @@ local HudSelection = {}
 HudSelection.RECHECK_SECONDS = 0.5
 HudSelection.PERIOD_SECONDS = 2
 
-local checks = 0
-local lastLine = nil
+-- checks: a counter, one per check; lastLine: the line last logged. On _G (rule 03), so that a check
+-- still reading when a Reload Plug-in runs this module again is still told apart from newer ones
+-- (Greptile, PR #46).
+local S = _G.LrCAVG_HudSelection or { checks = 0 }
+_G.LrCAVG_HudSelection = S
 
 -- The selected photo's uuid and name, "file (copy name)" for a virtual copy, which shares its
 -- master's file [inference: a virtual copy has no file of its own]; nil, nil when none.
@@ -48,18 +51,18 @@ end
 -- Runs in a task. `state()` gives the HUD's state when the line is worked out, `show(line)` writes
 -- it. The catalog calls may yield and a newer check may start meanwhile: only the newest one writes.
 function HudSelection.check(state, show)
-    checks = checks + 1
-    local mine = checks
+    S.checks = S.checks + 1
+    local mine = S.checks
     local ok, uuid, name = LrTasks.pcall(selectedPhoto)
-    if mine ~= checks then return end
+    if mine ~= S.checks then return end
     if not ok then
         Log.warn("hud: could not read the selected photo: " .. tostring(uuid))
         return
     end
     local line = HudState.targetChangedLine(state(), uuid, name)
-    if line ~= lastLine then
+    if line ~= S.lastLine then
         Log.info("hud: selection " .. tostring(uuid) .. ": " .. (line == "" and "(no line)" or line))
-        lastLine = line
+        S.lastLine = line
     end
     show(line)
 end

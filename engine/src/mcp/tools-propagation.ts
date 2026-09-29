@@ -3,6 +3,7 @@
 
 import { loadDefaultPresetFormat } from "../params/index.js";
 import { createPreset, type CreatePresetArgs } from "../presets/index.js";
+import { folderOf } from "../session/index.js";
 import { syncSeries as runSync, type MaskGroup, type SyncSource, type SyncTargets } from "../sync/index.js";
 import { ToolError } from "./errors.js";
 import { DEFAULT_LONG_EDGE, PREVIEW_QUALITY, renderRequest, run, sessionTools, type ToolContext, type ToolOutput } from "./tools-shared.js";
@@ -18,20 +19,30 @@ export type SyncSeriesArgs = {
 
 export type { CreatePresetArgs };
 
-/** In the session queue, so no session is open or can begin while it writes (SessionManager.whenIdle). */
+/**
+ * In the session queue, so no session is open or can begin while it writes (SessionManager.whenIdle).
+ * Inside the queue it reads the settings page first, so a recipe is looked up in the page's log
+ * folder (settings\folders.ts; a failed read keeps the folder read before). Reading it there keeps
+ * the call's place in the queue: a session begun while the page is read still waits for the sync
+ * [handle: tests\sync.test.ts "refuses while a session is open, and a session begun during a sync
+ * waits for it"; tests\settings-tools.test.ts "lr_sync_series looks for the recipe in the page's log folder"].
+ */
 export async function syncSeries(ctx: ToolContext, args: SyncSeriesArgs): Promise<ToolOutput> {
   return run(ctx, "lr_sync_series", args, async () => {
     const sessions = sessionTools(ctx);
     await ctx.deps.ensureBridge();
-    const deps = {
-      client: ctx.deps.client,
-      map: ctx.deps.map,
-      render: (request: Parameters<typeof renderRequest>[1]) => renderRequest(ctx, request),
-      logDir: ctx.deps.sessionLogDir as string, // sessionTools() refuses an engine without it
-    };
-    return sessions.whenIdle("lr_sync_series", () =>
-      runSync(deps, { ...args, long_edge: args.long_edge ?? DEFAULT_LONG_EDGE, quality: PREVIEW_QUALITY }),
-    );
+    const settings = ctx.deps.settings;
+    return sessions.whenIdle("lr_sync_series", async () => {
+      if (settings) await settings.read();
+      const deps = {
+        client: ctx.deps.client,
+        map: ctx.deps.map,
+        render: (request: Parameters<typeof renderRequest>[1]) => renderRequest(ctx, request),
+        logDir: folderOf(ctx.deps.sessionLogDir as string | (() => string)), // sessionTools() refuses an engine without it
+        earlierLogDirs: ctx.deps.logFolders?.list() ?? [],
+      };
+      return runSync(deps, { ...args, long_edge: args.long_edge ?? DEFAULT_LONG_EDGE, quality: PREVIEW_QUALITY });
+    });
   });
 }
 

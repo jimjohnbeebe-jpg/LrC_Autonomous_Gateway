@@ -2,7 +2,7 @@
 
 export { SessionManager } from "./manager.js";
 export type { SessionView } from "./manager.js";
-export { COPIES_TIMEOUT_MS, MAX_REGIONS, VARIANT_IDS } from "./types.js";
+export { COPIES_TIMEOUT_MS, MAX_REGIONS, VARIANT_IDS, folderOf } from "./types.js";
 export type {
   BeginArgs,
   EndArgs,

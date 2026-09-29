@@ -5,6 +5,9 @@
 // folder, as the preview reader only reads inside its own folder (preview\service.ts take())
 // [inference: the engine reads no file a tool argument names elsewhere]. Settings are validated
 // against the params map before anything is written.
+// The log folders are the current one first, then the earlier ones a session log was written to
+// (settings\log-folders.ts, Greptile PR #44): a recipe is looked up in each, and a recipe path is
+// accepted inside any of them.
 
 import { readdirSync, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
@@ -43,23 +46,25 @@ function parseRecipe(file: string): Recipe {
   return parsed.data;
 }
 
-/** The recipe lr_end_session "accept" wrote for this session (same file naming as session\end.ts readSessionLog). */
-function findRecipe(logDir: string, sessionId: string): { file: string; recipe: Recipe } {
+/** The recipe lr_end_session "accept" wrote for this session (same file naming as session\end.ts readSessionLog), in the first log folder that has it. */
+function findRecipe(logDirs: readonly string[], sessionId: string): { file: string; recipe: Recipe } {
   const short = sessionId.replace(/-/g, "").slice(0, 6);
-  let names: string[] = [];
-  try {
-    names = readdirSync(logDir).filter((f) => f.endsWith(`-${short}${RECIPE_SUFFIX}`));
-  } catch {
-    // no log folder yet
-  }
-  for (const name of names) {
-    const file = path.join(logDir, name);
-    const recipe = parseRecipe(file);
-    if (recipe.session_id === sessionId) return { file, recipe };
+  for (const logDir of logDirs) {
+    let names: string[] = [];
+    try {
+      names = readdirSync(logDir).filter((f) => f.endsWith(`-${short}${RECIPE_SUFFIX}`));
+    } catch {
+      // no such folder (yet, or any more)
+    }
+    for (const name of names) {
+      const file = path.join(logDir, name);
+      const recipe = parseRecipe(file);
+      if (recipe.session_id === sessionId) return { file, recipe };
+    }
   }
   throw new ToolError(
     "RECIPE_NOT_FOUND",
-    `No recipe for session ${sessionId} in ${logDir}. A session writes its recipe only when it ends with lr_end_session outcome "accept".`,
+    `No recipe for session ${sessionId} in ${logDirs.join(", ")}. A session writes its recipe only when it ends with lr_end_session outcome "accept".`,
     false,
   );
 }
@@ -69,28 +74,34 @@ function isInside(dir: string, file: string): boolean {
   return rel !== "" && !rel.startsWith("..") && !path.isAbsolute(rel);
 }
 
-/** A recipe file named by path: a .recipe.json inside the log folder, also once links are resolved. */
-function readRecipe(logDir: string, recipePath: string): { file: string; recipe: Recipe } {
-  const file = path.resolve(logDir, recipePath);
+/**
+ * A recipe file named by path (relative: to the current log folder): a .recipe.json inside one of
+ * the log folders, also once links are resolved.
+ */
+function readRecipe(logDirs: readonly string[], recipePath: string): { file: string; recipe: Recipe } {
+  const current = logDirs[0] as string;
+  const file = path.resolve(current, recipePath);
   const refuse = (why: string): never => {
-    throw new ToolError("RECIPE_PATH_REFUSED", `recipe_path ${why}: ${recipePath}. Recipes are read only from the log folder ${logDir}.`, false);
+    throw new ToolError("RECIPE_PATH_REFUSED", `recipe_path ${why}: ${recipePath}. Recipes are read only from the log folders ${logDirs.join(", ")}.`, false);
   };
-  if (!file.toLowerCase().endsWith(RECIPE_SUFFIX) || !isInside(path.resolve(logDir), file)) refuse("is not a .recipe.json file in the log folder");
+  const home = logDirs.find((dir) => isInside(path.resolve(dir), file));
+  if (!file.toLowerCase().endsWith(RECIPE_SUFFIX) || home === undefined) refuse("is not a .recipe.json file in a log folder");
   let real: string;
   try {
     real = realpathSync(file);
   } catch {
     throw new ToolError("RECIPE_NOT_FOUND", `There is no recipe file ${file}.`, false);
   }
-  if (!isInside(realpathSync(logDir), real)) refuse("resolves outside the log folder");
+  if (!isInside(realpathSync(home as string), real)) refuse("resolves outside the log folder");
   return { file, recipe: parseRecipe(real) };
 }
 
-export function resolveSource(logDir: string, map: ParamMap, source: SyncSource): ResolvedSource {
+/** `logDirs`: the current log folder first, then earlier ones (at least one). */
+export function resolveSource(logDirs: readonly string[], map: ParamMap, source: SyncSource): ResolvedSource {
   if ("settings" in source) {
     return { kind: "settings", settings: validated(map, source.settings), photo: null, session_id: null, recipe_path: null };
   }
-  const { file, recipe } = "session_id" in source ? findRecipe(logDir, source.session_id) : readRecipe(logDir, source.recipe_path);
+  const { file, recipe } = "session_id" in source ? findRecipe(logDirs, source.session_id) : readRecipe(logDirs, source.recipe_path);
   return {
     kind: "session_id" in source ? "session" : "recipe",
     settings: validated(map, recipe.settings),

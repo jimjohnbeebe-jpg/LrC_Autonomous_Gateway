@@ -7,6 +7,7 @@ import type { SessionLogData, SessionLogFiles } from "../log/index.js";
 import type { Metrics, Region, RegionBox } from "../metrics/index.js";
 import type { CanonicalSettings, ParamMap } from "../params/index.js";
 import type { RenderedPreview } from "../preview/index.js";
+import type { KnownLogFolders, PageRead } from "../settings/index.js";
 import type { Limits, Slope } from "./plan.js";
 
 export type SessionOutput = { json: Record<string, unknown>; image?: Buffer; log?: Record<string, unknown> };
@@ -51,7 +52,15 @@ export type SessionDeps = {
   map: ParamMap;
   intents: IntentLibrary;
   render: (request: RenderRequest) => Promise<RenderedPreview>;
-  logDir: string;
+  /** The session log folder, or a function giving it at each session start (settings\folders.ts). */
+  logDir: string | (() => string);
+  /**
+   * Reads the settings page at lr_begin_session (settings\store.ts PageSettings.read, which also
+   * moves the folders); settings\read.ts readPage on the client when absent.
+   */
+  readPage?: () => Promise<PageRead>;
+  /** The log folders session logs were written to (settings\log-folders.ts): begin records its folder, lr_get_session_log searches them. */
+  logFolders?: KnownLogFolders;
   engineVersion: string;
   now?: () => Date;
   newId?: () => string;
@@ -138,6 +147,11 @@ export type Session = {
   files: SessionLogFiles;
   log: SessionLogData;
 };
+
+/** The folder a dependency names: itself, or what its function gives now. */
+export function folderOf(dir: string | (() => string)): string {
+  return typeof dir === "function" ? dir() : dir;
+}
 
 /** A new target record, with nothing rendered or stepped yet. */
 export function newTarget(fields: Omit<Target, "passes" | "endReason" | "last" | "slopes">): Target {

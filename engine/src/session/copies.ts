@@ -8,11 +8,12 @@ import type { LoadedIntent } from "../intents/index.js";
 import type { VariantEntry } from "../log/index.js";
 import { ToolError, toToolError } from "../mcp/errors.js";
 import { saveLog } from "./io.js";
+import { SESSION_DEFAULTS } from "./rules.js";
 import { COPIES_TIMEOUT_MS, VARIANT_IDS, newTarget, type Session, type SessionContext, type Target, type VariantId } from "./types.js";
 
 /** create_virtual_copies and select_photo come with plugin 0.3.0 [handle: engine\src\bridge\protocol.ts COMMANDS]. */
 export const VARIANTS_PLUGIN = "0.3.0";
-export const DEFAULT_VARIANT_COUNT = 3;
+export const DEFAULT_VARIANT_COUNT = SESSION_DEFAULTS.variantCount;
 /**
  * 2-3 copies: the intent file names three variants, A-C (engine\src\intents\schema.ts). PRD 6.2 allows
  * 2-4; a fourth needs a variant D in the intent schema [stated: Jim, 2026-09-27, "Go with A"].

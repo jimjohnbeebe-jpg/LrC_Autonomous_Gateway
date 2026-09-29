@@ -10,9 +10,13 @@ import type { Metrics, Region } from "../metrics/index.js";
 import type { ParamMap, PresetFormat } from "../params/index.js";
 import type { PreviewRequest, PreviewService, RenderedPreview } from "../preview/index.js";
 import { SessionManager } from "../session/index.js";
+import type { KnownLogFolders, PageSettings } from "../settings/index.js";
 import { ToolError, toToolError } from "./errors.js";
 
-/** Preview long edge and JPEG quality: PRD section 6.2 defaults and range (the settings page is Phase 5). */
+/**
+ * Preview long edge and JPEG quality outside a session: PRD section 6.2 defaults and range. A session
+ * takes the settings page's (settings\session.ts); AVG-006 has the engine read the page at session start.
+ */
 export const DEFAULT_LONG_EDGE = 1600;
 export const MIN_LONG_EDGE = 800;
 export const MAX_LONG_EDGE = 1920;
@@ -40,15 +44,26 @@ export type ToolsDeps = {
   previews: PreviewService;
   /** The intent library (Phase 3); the intent and session tools refuse without it. */
   intents?: IntentLibrary;
-  /** The folder of the session logs and recipes (log\session-log.ts); the session tools refuse without it. */
-  sessionLogDir?: string;
+  /**
+   * The folder of the session logs and recipes (log\session-log.ts), or a function giving it at each
+   * use (settings\folders.ts); the session tools refuse without it.
+   */
+  sessionLogDir?: string | (() => string);
+  /**
+   * The settings page (PHASE5_PLAN row 3): lr_begin_session, the intent tools, lr_get_session_log
+   * and lr_sync_series read it through this. Absent, a session reads get_prefs directly and the
+   * folders never change.
+   */
+  settings?: PageSettings;
+  /** The log folders sessions were written to (settings\log-folders.ts); only the current folder is searched without it. */
+  logFolders?: KnownLogFolders;
   /** Lightroom's preset folder (presets\folder.ts defaultPresetDir); lr_create_preset_from_active refuses without it. */
   presetDir?: string | undefined;
   /** How preset files are written; the pinned format (params\preset-format.lrc15.json) when absent. */
   presetFormat?: PresetFormat;
   engineVersion?: string;
-  /** Resolves when the bridge is connected (bridge-gate.ts), or throws. */
-  ensureBridge: () => Promise<void>;
+  /** Resolves when the bridge is connected (bridge-gate.ts), or throws; `waitMs` shortens the wait. */
+  ensureBridge: (waitMs?: number) => Promise<void>;
   log?: ToolLog;
   /** History names are "<prefix> set <n>"; they must start with "AVG " (PRD FR-4.4, C-7). */
   historyPrefix?: string;
@@ -77,6 +92,7 @@ export function createContext(deps: ToolsDeps): ToolContext {
   const historyPrefix = deps.historyPrefix ?? `AVG ${randomUUID().slice(0, 4)}`;
   if (!historyPrefix.startsWith("AVG ")) throw new Error(`history prefix must start with "AVG ": ${historyPrefix}`);
   const ctx: ToolContext = { deps, historyPrefix, now: deps.now ?? (() => new Date()), sessions: null, writes: 0, last: null };
+  const settings = deps.settings;
   ctx.sessions =
     deps.intents && deps.sessionLogDir
       ? new SessionManager({
@@ -85,6 +101,8 @@ export function createContext(deps: ToolsDeps): ToolContext {
           intents: deps.intents,
           render: (r) => render(ctx, r.longEdge, r.targetUuid, r.regions, r.quality),
           logDir: deps.sessionLogDir,
+          ...(settings ? { readPage: () => settings.read() } : {}),
+          ...(deps.logFolders ? { logFolders: deps.logFolders } : {}),
           engineVersion: deps.engineVersion ?? "unknown",
           now: ctx.now,
         })
@@ -104,6 +122,42 @@ export function openSession(ctx: ToolContext, sessionId: string): { id: string; 
     throw new ToolError("SESSION_NOT_ACTIVE", open ? `Session ${sessionId} is not the open one (${open.id}).` : `No session is open (asked for ${sessionId}).`, false);
   }
   return open;
+}
+
+/**
+ * How long a tool that only needs the page's folders (the intent tools, lr_get_session_log) waits
+ * for Lightroom, the connection and the get_prefs answer together, before it keeps the folders it
+ * has: the plugin answered a ping in 0.35 ms (median) and a connection took 521 ms [handle:
+ * docs\reports\phase1\PHASE1.md "Numbers", connect_ms]; 2 s is [inference].
+ */
+export const PAGE_WAIT_MS = 2000;
+/** get_prefs gets at least this long, even when the connection took nearly all of PAGE_WAIT_MS [inference]. */
+const MIN_PAGE_REQUEST_MS = 100;
+
+/**
+ * Read the settings page for its folders (decision 2A of the PHASE5_PLAN row 3 plan [stated: Jim,
+ * 2026-09-28, "Go with recommendations"]), within PAGE_WAIT_MS (plus at most MIN_PAGE_REQUEST_MS):
+ * the connection first, then get_prefs with what is left (Greptile, PR #44). Never throws: without
+ * an answer the folders stay as read before (or the variable's, or the defaults). Returns how the
+ * read went, for the result; null for an engine without the page (the checks, the tests).
+ */
+export async function readPageFolders(ctx: ToolContext): Promise<string | null> {
+  const settings = ctx.deps.settings;
+  if (!settings) return null;
+  const kept = (): string => (settings.last() ? "the page's folder as read before" : "no page read yet");
+  const deadline = performance.now() + PAGE_WAIT_MS;
+  try {
+    await ctx.deps.ensureBridge(PAGE_WAIT_MS);
+    const r = await settings.read(Math.max(MIN_PAGE_REQUEST_MS, Math.round(deadline - performance.now())));
+    return r.read ? "read now" : `not read (${r.note ?? "no answer"}); ${kept()}`;
+  } catch (err) {
+    return `not read (${toToolError(err).code}); ${kept()}`;
+  }
+}
+
+/** A tool that reads only the page's folders uses the bridge only when there is a page (the gate's idle release, PR #22). */
+export function pageBridgeUse(ctx: ToolContext): { usesBridge: boolean } {
+  return { usesBridge: ctx.deps.settings !== undefined };
 }
 
 export function library(ctx: ToolContext): IntentLibrary {

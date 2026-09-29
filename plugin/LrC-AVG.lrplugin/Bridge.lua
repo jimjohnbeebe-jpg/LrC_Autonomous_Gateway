@@ -5,8 +5,9 @@
 -- A response carries the command's id and name plus ok; on failure it has
 -- error = { code, message, recoverable } instead of a payload (PRD NFR-7).
 -- The listeners are in Sockets.lua and the command handlers in Dispatch.lua (split out in
--- PHASE4_PLAN row 6); this file holds the bridge's state, its replies, its status file and the
--- monitor loop.
+-- PHASE4_PLAN row 6), the token and ports files in Endpoint.lua (PHASE5_PLAN row 3); this file holds
+-- the bridge's state, its replies, its status file and the monitor loop. The ports come from the
+-- settings page, checked by Prefs.lua; a change applies when the bridge next starts.
 --
 -- Socket handling follows spike S2 (plugin\spikes\S2.lrplugin\S2Server.lua), which ran on LrC 15.5.1,
 -- and Automaat (vendor\automaat\plugin\LightroomMCP.lrplugin\PluginInfoProvider.lua:384-589, MIT, see
@@ -27,25 +28,22 @@
 
 local LrApplication = import 'LrApplication'
 local LrDate = import 'LrDate'
-local LrFileUtils = import 'LrFileUtils'
 local LrFunctionContext = import 'LrFunctionContext'
-local LrPathUtils = import 'LrPathUtils'
-local LrPrefs = import 'LrPrefs'
 local LrTasks = import 'LrTasks'
 local LrUUID = import 'LrUUID'
 
 local Dispatch = require 'Dispatch'
+local Endpoint = require 'Endpoint'
 local Json = require 'Json'
 local Log = require 'Log'
+local Prefs = require 'Prefs'
 local Sockets = require 'Sockets'
 
 local Bridge = {}
 
 Bridge.PROTOCOL = 1
-Bridge.PLUGIN_VERSION = "0.4.0"
+Bridge.PLUGIN_VERSION = "0.5.0"
 Bridge.SDK_DECLARED = 13.0 -- Info.lua LrSdkVersion; the SDK version LrC 15.5.1 ships is [unverified]
-Bridge.DEFAULT_RECEIVE_PORT = 8765
-Bridge.DEFAULT_SEND_PORT = 8766
 Bridge.STATUS_FILE = "bridge_status.json"
 
 local LOOP_SECONDS = 0.2
@@ -61,41 +59,8 @@ local SETTLE_SECONDS = 0.6         -- lets a replaced instance close its sockets
 -- re-execution of a module body lives on _G).
 _G.LrCAVG_BridgeGeneration = _G.LrCAVG_BridgeGeneration or 0
 
-local function validPort(n)
-    return type(n) == "number" and n == math.floor(n) and n >= 1 and n <= 65535
-end
-
-local function readPorts()
-    local prefs = LrPrefs.prefsForPlugin()
-    local receive, send = tonumber(prefs.receivePort), tonumber(prefs.sendPort)
-    if not validPort(receive) then receive = Bridge.DEFAULT_RECEIVE_PORT end
-    if not validPort(send) then send = Bridge.DEFAULT_SEND_PORT end
-    return receive, send
-end
-
 local function isoNow()
     return os.date("!%Y-%m-%dT%H:%M:%SZ")
-end
-
-function Bridge.tokenPath()
-    return LrPathUtils.child(LrPathUtils.child(LrPathUtils.getStandardFilePath("home"), ".lrc-avg"), "bridge_token")
-end
-
--- A fresh 256-bit token (two UUIDs without dashes), written for the engine to read. Returns the
--- token, or nil if the file cannot be written; then every command is refused.
-local function newToken()
-    local token = (LrUUID.generateUUID() .. LrUUID.generateUUID()):gsub("-", ""):lower()
-    local path = Bridge.tokenPath()
-    LrFileUtils.createAllDirectories(LrPathUtils.parent(path))
-    local fh, err = io.open(path, "w")
-    if not fh then
-        Log.error("bridge: cannot write the token file " .. path .. ": " .. tostring(err) .. "; every command will be refused")
-        return nil
-    end
-    fh:write(token)
-    fh:close()
-    Log.info("bridge: token written to " .. path)
-    return token
 end
 
 function Bridge.helloPayload(receivePort, sendPort)
@@ -183,6 +148,8 @@ local function writeStatus(B)
         lines_malformed = S.malformed,
         token_file = S.tokenFile,
         token_written = S.token ~= nil,
+        ports_file = S.portsFile,
+        ports_written = S.portsWritten,
         log_tail = Log.tail(20),
     }
     local okEncode, text = pcall(Json.encode, status) -- plain pcall: pure Lua, no yield
@@ -239,7 +206,7 @@ end
 function Bridge.start()
     _G.LrCAVG_BridgeGeneration = _G.LrCAVG_BridgeGeneration + 1
     local generation = _G.LrCAVG_BridgeGeneration
-    local receivePort, sendPort = readPorts()
+    local receivePort, sendPort = Prefs.ports()
     local B = {
         generation = generation, receivePort = receivePort, sendPort = sendPort,
         current = function() return _G.LrCAVG_BridgeGeneration == generation end,
@@ -252,7 +219,8 @@ function Bridge.start()
             receiveNeedsRebind = false, sendNeedsRebind = false,
             lastInbound = nil, handled = 0, failed = 0, malformed = 0, unauthorized = 0,
             startedAt = isoNow(),
-            token = nil, tokenFile = Bridge.tokenPath(),
+            token = nil, tokenFile = Endpoint.tokenPath(),
+            portsFile = Endpoint.portsPath(), portsWritten = false,
         },
     }
     Log.info(string.format("bridge: starting generation %d (receive %d, send %d)", generation, receivePort, sendPort))
@@ -270,9 +238,12 @@ function Bridge.start()
 
         LrTasks.sleep(SETTLE_SECONDS)
         if not B.current() then return end
-        local okToken, tokenOrErr = LrTasks.pcall(newToken)
+        local okToken, tokenOrErr = LrTasks.pcall(Endpoint.newToken)
         B.S.token = okToken and tokenOrErr or nil
         if not okToken then Log.error("bridge: token failed: " .. tostring(tokenOrErr) .. "; every command will be refused") end
+        local okPorts, portsOrErr = LrTasks.pcall(Endpoint.writePorts, receivePort, sendPort, Bridge.PLUGIN_VERSION, B.S.token)
+        B.S.portsWritten = okPorts and portsOrErr ~= nil
+        if not okPorts then Log.error("bridge: ports file failed: " .. tostring(portsOrErr)) end
         Log.info("bridge: listening (generation " .. generation .. ")")
         monitor(B)
         Log.info("bridge: generation " .. generation .. " replaced; loop exiting")

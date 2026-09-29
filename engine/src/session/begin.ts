@@ -4,18 +4,22 @@
 // pass 0 on each (variants.ts runVariants) [handle: tests\session-variants.test.ts "makes the
 // copies, runs pass 0 on each with the intent's priors plus its variant's, and leaves the master
 // alone", against the Lightroom sim; in Lightroom [unverified] until PHASE4_PLAN row 10].
+// The session's numbers come from the settings page first read here (get_prefs, PHASE5_PLAN row 3),
+// in the order settings\session.ts gives [handle: tests\settings-session.test.ts, against the
+// Lightroom sim; in Lightroom [unverified] until the row 3 probe and PHASE5_PLAN row 7].
 
 import { existsSync } from "node:fs";
+import path from "node:path";
 import type { CommandResult } from "../bridge/index.js";
 import { SESSION_LOG_SCHEMA_ID, SessionLogFiles, type SessionLogData } from "../log/index.js";
 import { ToolError } from "../mcp/errors.js";
 import { summarize } from "../metrics/index.js";
 import type { FromSdkResult } from "../params/index.js";
+import { readPage, resolveSessionSettings, type PageRead, type SessionSettings } from "../settings/index.js";
 import { checkVariants } from "./copies.js";
 import { brief, describe, failed, image, ms, recordPass, saveLog, text } from "./io.js";
 import { pass0, pass0Entry, type Pass0 } from "./pass0.js";
-import { SESSION_DEFAULTS } from "./rules.js";
-import { newTarget, type BeginArgs, type Session, type SessionContext, type SessionOutput } from "./types.js";
+import { folderOf, newTarget, type BeginArgs, type Session, type SessionContext, type SessionOutput } from "./types.js";
 
 /** A session just opened: its pre-session settings and the photo's context, for pass 0. */
 export type Opened = { s: Session; view: FromSdkResult; photo: CommandResult<"get_context">; started: number };
@@ -27,19 +31,22 @@ export async function openSession(ctx: SessionContext, args: BeginArgs): Promise
   if (mode === "converge" && args.variant_count !== undefined) {
     throw new ToolError("INVALID_ARGUMENTS", 'variant_count is for mode "variants"; Converge mode edits the selected photo itself.', false);
   }
+  // The page first: its intents folder is where the intent is looked up (settings\folders.ts).
+  const page = await (ctx.deps.readPage ?? (() => readPage(ctx.deps.client)))();
   const loaded = ctx.deps.intents.get(args.intent_id); // IntentError -> INTENT_NOT_FOUND
+  const settings = resolveSessionSettings(args, loaded.intent.guardrail_overrides ?? {}, page.values);
   const { client, map } = ctx.deps;
 
   const photo = await client.request("get_context", {});
   if (photo["file_format"] === "VIDEO") throw new ToolError("VIDEO_NOT_SUPPORTED", "The selected item is a video; select a photo.", false);
-  const variantCount = mode === "variants" ? checkVariants(ctx, loaded, photo, args.variant_count) : null;
+  const variantCount = mode === "variants" ? checkVariants(ctx, loaded, photo, settings.variantCount) : null;
   const view = map.fromSdk((await client.request("get_settings", { target_uuid: photo.uuid })).settings); // LEGACY_PROCESS_VERSION
 
   const now = ctx.now();
   const { id, short, files } = pickLogFiles(ctx, now);
+  ctx.deps.logFolders?.remember(path.dirname(files.logPath)); // found again after the page's folder changes
   const snapshotName = `AVG pre-session ${now.toISOString()}`;
   const snap = await client.request("create_snapshot", { target_uuid: photo.uuid, name: snapshotName });
-  const overrides = loaded.intent.guardrail_overrides ?? {};
   const master = newTarget({
     id: "master",
     label: null,
@@ -56,14 +63,11 @@ export async function openSession(ctx: SessionContext, args: BeginArgs): Promise
     startedAt: now,
     intent: loaded,
     mode,
-    maxPasses: args.max_passes ?? SESSION_DEFAULTS.maxPasses,
-    limits: {
-      clipHighPct: args.guardrails?.clip_high_pct ?? overrides.clip_high_pct ?? SESSION_DEFAULTS.clipHighPct,
-      clipLowPct: args.guardrails?.clip_low_pct ?? overrides.clip_low_pct ?? SESSION_DEFAULTS.clipLowPct,
-    },
-    decay: SESSION_DEFAULTS.decay,
-    longEdge: args.long_edge ?? SESSION_DEFAULTS.longEdge,
-    quality: SESSION_DEFAULTS.quality,
+    maxPasses: settings.maxPasses,
+    limits: { clipHighPct: settings.clipHighPct, clipLowPct: settings.clipLowPct },
+    decay: settings.decay,
+    longEdge: settings.longEdge,
+    quality: settings.quality,
     master,
     variants: [],
     picked: null,
@@ -76,6 +80,7 @@ export async function openSession(ctx: SessionContext, args: BeginArgs): Promise
     log: {} as SessionLogData,
   };
   s.log = newLog(ctx, s, variantCount, args.notes ?? null);
+  s.log.settings = settingsEntry(settings, page);
   return { s, view, photo, started };
 }
 
@@ -88,10 +93,29 @@ function pickLogFiles(ctx: SessionContext, now: Date): { id: string; short: stri
   for (let attempt = 0; attempt < 5; attempt++) {
     const id = ctx.newId();
     const short = id.replace(/-/g, "").slice(0, 6);
-    const candidate = new SessionLogFiles(ctx.deps.logDir, now, short);
+    const candidate = new SessionLogFiles(folderOf(ctx.deps.logDir), now, short);
     if (!existsSync(candidate.logPath) && !existsSync(candidate.recipePath)) return { id, short, files: candidate };
   }
-  throw new ToolError("INTERNAL_ERROR", `No free session log name in ${ctx.deps.logDir} after 5 tries.`, false);
+  throw new ToolError("INTERNAL_ERROR", `No free session log name in ${folderOf(ctx.deps.logDir)} after 5 tries.`, false);
+}
+
+/** The log's record of the session's settings: the page's values used and where each came from. */
+function settingsEntry(settings: SessionSettings, page: PageRead): NonNullable<SessionLogData["settings"]> {
+  return {
+    approval: settings.approval,
+    long_edge: settings.longEdge,
+    quality: settings.quality,
+    from: settings.from,
+    page: { read: page.read, note: page.note, problems: page.problems },
+  };
+}
+
+/** The begin result's `session_settings` (its `settings` are the photo's); approve_each_pass says it is not acted on yet (PHASE5_PLAN row 6). */
+function settingsJson(s: Session): Record<string, unknown> {
+  const recorded = s.log.settings;
+  if (!recorded) return {};
+  const note = recorded.approval === "approve_each_pass" ? { approval_note: "approve_each_pass is recorded, but this engine does not wait for an approval between passes yet" } : {};
+  return { session_settings: { ...recorded, decay: [...s.decay], ...note } };
 }
 
 function newLog(ctx: SessionContext, s: Session, variantCount: number | null, notes: string | null): SessionLogData {
@@ -170,6 +194,7 @@ export function sessionHeader(opened: Opened): Record<string, unknown> {
     },
     guardrails: s.log.guardrails,
     max_passes: s.maxPasses,
+    ...settingsJson(s),
     snapshot: s.snapshot,
   };
 }

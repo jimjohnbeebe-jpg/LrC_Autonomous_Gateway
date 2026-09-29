@@ -59,7 +59,7 @@ describe("devtools: Phase 4 check against a simulated plugin", () => {
     const prepared = preset["source_prepared"] as { camera_profile: J; temperature: { from: number; to: number }; white_balance_after: unknown };
     expect(prepared).toMatchObject({ camera_profile: { from: "Adobe Landscape", to: "Camera Neutral" }, white_balance_after: "Custom" });
     expect(prepared.temperature.to).toBe(prepared.temperature.from + 300);
-    expect(results["restart"]).toMatchObject({ ok: true, plugin_version: "0.4.0" });
+    expect(results["restart"]).toMatchObject({ ok: true, plugin_version: "0.5.0" });
     expect(results["chat"]).toMatchObject({ session_begun: true, mode: "variants", target_filename: "20260907-_OZ80099.NEF", picked: "C", steps_after_pick: 1, session_ended: "accept", refined_before_pick: ["A", "B", "C"] });
     const made = (results["cleanup"] as { copies: Array<{ made_by: string; state: string }> }).copies;
     expect(made.map((c) => c.made_by)).toEqual(["check", "check", "check", "check", "variants", "variants", "variants", "chat", "chat", "chat"]);

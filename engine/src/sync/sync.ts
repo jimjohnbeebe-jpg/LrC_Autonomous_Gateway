@@ -117,7 +117,7 @@ function targetJson(t: TargetResult): Record<string, unknown> {
 export async function syncSeries(deps: SyncDeps, args: SyncArgs): Promise<SyncOutput> {
   const started = performance.now();
   checkPlugin(deps);
-  const source = resolveSource(deps.logDir, deps.map, args.source);
+  const source = resolveSource([deps.logDir, ...(deps.earlierLogDirs ?? [])], deps.map, args.source);
   const groups = args.parameter_mask ?? [...MASK_GROUPS];
   const { copied, left } = applyMask(source.settings, groups, args.adaptive_exposure ? ["exposure"] : []);
   if (args.adaptive_exposure && !source.photo) {

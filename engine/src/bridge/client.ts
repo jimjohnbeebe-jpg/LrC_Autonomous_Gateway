@@ -15,13 +15,12 @@
 //
 // Every command carries the token the plugin writes at start (see protocol.ts). The client reads it
 // before each connection attempt, and a command refused as "unauthorized" (the plugin restarted and
-// made a new token) drops the connection so the next attempt reads the file again.
+// made a new token) drops the connection so the next attempt reads the file again. It reads the
+// plugin's ports file then too (endpoint.ts, PHASE5_PLAN row 3), unless both ports are given.
 
 import { randomUUID } from "node:crypto";
-import { readFileSync } from "node:fs";
-import net from "node:net";
-import os from "node:os";
-import path from "node:path";
+import type net from "node:net";
+import { choosePorts, defaultTokenPath, openSocket, portsFileReader, readTokenFile, type BridgePorts } from "./endpoint.js";
 import { LineSplitter, LineTooLongError } from "./lines.js";
 import {
   COMMANDS,
@@ -33,69 +32,9 @@ import {
   type EventEnvelope,
   type HelloResult,
 } from "./protocol.js";
+import { BridgeError, type BridgeClientOptions, type BridgeState, type BridgeStats } from "./types.js";
 
-export type BridgeState = "stopped" | "connecting" | "handshaking" | "connected";
-
-/** A structured bridge failure ({code, message, recoverable}, PRD NFR-7). */
-export class BridgeError extends Error {
-  readonly code: string;
-  readonly recoverable: boolean;
-  readonly command: string | null;
-
-  constructor(code: string, message: string, recoverable: boolean, command: string | null = null) {
-    super(message);
-    this.name = "BridgeError";
-    this.code = code;
-    this.recoverable = recoverable;
-    this.command = command;
-  }
-}
-
-export type BridgeClientOptions = {
-  host?: string;
-  /** The plugin's receive socket: the engine writes commands here. */
-  commandPort?: number;
-  /** The plugin's send socket: the engine reads responses and events here. */
-  eventPort?: number;
-  reconnectMs?: number;
-  heartbeatMs?: number;
-  missedBeats?: number;
-  requestTimeoutMs?: number;
-  handshakeTimeoutMs?: number;
-  connectTimeoutMs?: number;
-  /** Pause between connecting the command socket and the event socket. */
-  connectGapMs?: number;
-  engineVersion?: string;
-  /** Returns the plugin's current token, or null if there is none. Default: read defaultTokenPath(). */
-  readToken?: () => string | null;
-  log?: (message: string) => void;
-};
-
-/** Where the plugin writes its token: %USERPROFILE%\.lrc-avg\bridge_token (plugin\LrC-AVG.lrplugin\Bridge.lua). */
-export function defaultTokenPath(): string {
-  return path.join(os.homedir(), ".lrc-avg", "bridge_token");
-}
-
-function readTokenFile(): string | null {
-  try {
-    const token = readFileSync(defaultTokenPath(), "utf8").trim();
-    return token.length > 0 ? token : null;
-  } catch {
-    return null;
-  }
-}
-
-export type BridgeStats = {
-  connects: number;
-  /** Connection attempts that failed before the handshake started (e.g. Lightroom not running). */
-  connect_failures: number;
-  last_connect_error: string | null;
-  /** Established or handshaking connections that were lost. */
-  drops: number;
-  last_drop_reason: string | null;
-  malformed_lines: number;
-  unknown_response_ids: number;
-};
+export { BridgeError, type BridgeClientOptions, type BridgeState, type BridgeStats };
 
 type Pending = {
   name: string;
@@ -106,8 +45,6 @@ type Pending = {
 
 const DEFAULTS = {
   host: "127.0.0.1",
-  commandPort: 8765,
-  eventPort: 8766,
   reconnectMs: 2000,
   heartbeatMs: 2000,
   missedBeats: 3,
@@ -118,33 +55,14 @@ const DEFAULTS = {
   engineVersion: "0.0.0",
 };
 
-function openSocket(host: string, port: number, timeoutMs: number): Promise<net.Socket> {
-  return new Promise((resolve, reject) => {
-    const socket = net.connect({ host, port });
-    socket.setNoDelay(true);
-    const timer = setTimeout(() => {
-      socket.destroy();
-      reject(new Error(`connect to ${host}:${port} timed out after ${timeoutMs} ms`));
-    }, timeoutMs);
-    socket.once("connect", () => {
-      clearTimeout(timer);
-      socket.removeAllListeners("error");
-      resolve(socket);
-    });
-    socket.once("error", (err: NodeJS.ErrnoException) => {
-      clearTimeout(timer);
-      socket.destroy();
-      reject(new Error(`${host}:${port}: ${err.code ?? err.message}`));
-    });
-  });
-}
-
 const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 export class BridgeClient {
-  private readonly opts: Required<Omit<BridgeClientOptions, "log" | "readToken">>;
+  private readonly opts: Required<Omit<BridgeClientOptions, "log" | "readToken" | "readPorts" | "commandPort" | "eventPort">>;
   private readonly log: (message: string) => void;
   private readonly readToken: () => string | null;
+  private readonly readPorts: (token: string) => BridgePorts | null;
+  private readonly givenPorts: { command: number | undefined; event: number | undefined };
   private token: string | null = null;
   private state: BridgeState = "stopped";
   private attempt = 0;
@@ -166,13 +84,16 @@ export class BridgeClient {
     last_drop_reason: null,
     malformed_lines: 0,
     unknown_response_ids: 0,
+    ports: null,
   };
 
   constructor(options: BridgeClientOptions = {}) {
-    const { log, readToken, ...rest } = options;
+    const { log, readToken, readPorts, commandPort, eventPort, ...rest } = options;
     this.opts = { ...DEFAULTS, ...rest };
     this.log = log ?? (() => {});
-    this.readToken = readToken ?? readTokenFile;
+    this.readToken = readToken ?? (() => readTokenFile());
+    this.readPorts = readPorts ?? portsFileReader(this.log);
+    this.givenPorts = { command: commandPort, event: eventPort };
   }
 
   getState(): BridgeState {
@@ -276,11 +197,12 @@ export class BridgeClient {
     const current = (): boolean => attempt === this.attempt;
     this.setState("connecting");
     try {
-      this.token = this.readToken();
-      if (this.token === null) {
+      const token = (this.token = this.readToken());
+      if (token === null) {
         throw new Error(`no bridge token at ${defaultTokenPath()} (is Lightroom running with the LrC-AVG plugin enabled?)`);
       }
-      const commandSocket = await openSocket(this.opts.host, this.opts.commandPort, this.opts.connectTimeoutMs);
+      const ports = (this.stats.ports = choosePorts(this.givenPorts, () => this.readPorts(token)));
+      const commandSocket = await openSocket(this.opts.host, ports.command, this.opts.connectTimeoutMs);
       if (!current()) return void commandSocket.destroy();
       this.commandSocket = commandSocket;
       commandSocket.on("error", (err) => current() && this.drop(`command socket error: ${err.message}`));
@@ -288,7 +210,7 @@ export class BridgeClient {
 
       await delay(this.opts.connectGapMs);
       if (!current()) return;
-      const eventSocket = await openSocket(this.opts.host, this.opts.eventPort, this.opts.connectTimeoutMs);
+      const eventSocket = await openSocket(this.opts.host, ports.event, this.opts.connectTimeoutMs);
       if (!current()) return void eventSocket.destroy();
       this.eventSocket = eventSocket;
       this.splitter = new LineSplitter();

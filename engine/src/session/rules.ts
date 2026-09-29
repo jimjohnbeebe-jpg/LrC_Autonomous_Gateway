@@ -1,13 +1,20 @@
 // The numbers the session loop runs on (ARCHITECTURE section 4, PRD sections 6.2 and 6.5, AVG-009).
 //
-// Settings defaults come from PRD 6.2 until the Plugin Manager settings page exists (Phase 5).
+// The settings defaults are PRD 6.2's; the settings page (Phase 5, settings\) can replace them, and
+// a session takes its values as settings\session.ts orders them.
 // Where the docs leave a number open, the value here is Claude Code's proposal from the Phase 3
 // plan, accepted by Jim 2026-09-26 [stated: "go with recommendations"], and marked [inference].
 
-/** PRD 6.2 defaults; AVG-009 for the guardrails, decay and convergence. */
+/**
+ * PRD 6.2 defaults; AVG-009 for the guardrails, decay and convergence; the variant count 2-3
+ * (PHASE5_PLAN decision 2a). settings\page.ts PAGE_SPECS starts from the same values (a test keeps
+ * them equal).
+ */
 export const SESSION_DEFAULTS = {
+  approval: "autonomous",
   maxPasses: 4,
   maxPassesLimit: 8,
+  variantCount: 3,
   clipHighPct: 0.5,
   clipLowPct: 1.0,
   decay: [1.0, 0.6, 0.4, 0.25] as readonly number[],

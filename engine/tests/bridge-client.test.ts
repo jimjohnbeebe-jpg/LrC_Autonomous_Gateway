@@ -1,7 +1,11 @@
 // Bridge contract tests: the engine's client against a fake plugin that speaks the same line
 // protocol as plugin\LrC-AVG.lrplugin\Bridge.lua (ARCHITECTURE section 3). Timings are shortened.
 
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { portsFileReader } from "../src/bridge/endpoint.js";
 import { BridgeClient, BridgeError } from "../src/bridge/index.js";
 import { FakePlugin, waitUntil } from "./helpers/fake-plugin.js";
 
@@ -199,6 +203,32 @@ describe("bridge: client", () => {
     expect(c.stats.last_connect_error).toMatch(/no bridge token/);
     expect(plugin.received).toEqual([]);
     c.stop();
+  });
+
+  it("connects on the ports the plugin's ports file names, and reads the file again before each connection (PHASE5_PLAN row 3)", async () => {
+    const dir = mkdtempSync(path.join(os.tmpdir(), "lrc-avg-ports-"));
+    const file = path.join(dir, "bridge_ports.json");
+    const second = await FakePlugin.start();
+    plugin.token = "0123456789abcdef".repeat(4); // a token as long as the plugin's (Endpoint.lua newToken)
+    second.token = plugin.token;
+    const check = plugin.token.slice(0, 16);
+    try {
+      writeFileSync(file, JSON.stringify({ receive: plugin.commandPort, send: plugin.eventPort, token_check: check }));
+      const c = new BridgeClient({ ...FAST, readToken: () => plugin.token, readPorts: portsFileReader(() => {}, file) });
+      c.start();
+      await c.waitConnected(2000);
+      expect(c.stats.ports).toEqual({ command: plugin.commandPort, event: plugin.eventPort, from: "ports file" });
+      // As a Lightroom restart on other ports would look to the engine [inference]: the plugin
+      // rewrote the file, and the old sockets close.
+      writeFileSync(file, JSON.stringify({ receive: second.commandPort, send: second.eventPort, token_check: check }));
+      await plugin.close();
+      await waitUntil(() => c.getState() === "connected" && c.stats.ports?.command === second.commandPort, 3000);
+      expect(second.received.map((r) => r.name)).toContain("hello");
+      c.stop();
+    } finally {
+      await second.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   it("retries quietly while nothing listens, then connects", async () => {

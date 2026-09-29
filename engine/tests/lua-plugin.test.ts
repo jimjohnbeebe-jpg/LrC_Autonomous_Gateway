@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import luaparse from "luaparse";
 import { describe, expect, it } from "vitest";
 import { COMMANDS, PLUGIN_VERSION } from "../src/bridge/index.js";
+import { DECAY_MAX_VALUES, LOCK_PORT, PAGE_SPECS } from "../src/settings/index.js";
 
 const pluginRoot = fileURLToPath(new URL("../../plugin/", import.meta.url));
 const avgPlugin = path.join(pluginRoot, "LrC-AVG.lrplugin");
@@ -80,8 +81,8 @@ describe("lua: every plugin file", () => {
   it("finds the LrC-AVG plugin files", () => {
     const names = files.filter((f) => f.startsWith(avgPlugin)).map((f) => path.basename(f)).sort();
     expect(names).toEqual([
-      "Bridge.lua", "Catalog.lua", "Develop.lua", "Dispatch.lua", "Info.lua", "Json.lua", "Log.lua", "MenuStatus.lua",
-      "Photos.lua", "PluginInit.lua", "Preview.lua", "Sockets.lua",
+      "Bridge.lua", "Catalog.lua", "Develop.lua", "Dispatch.lua", "Endpoint.lua", "Info.lua", "Json.lua", "Log.lua",
+      "MenuStatus.lua", "Photos.lua", "PluginInfoProvider.lua", "PluginInit.lua", "Prefs.lua", "Preview.lua", "Sockets.lua",
     ]);
   });
 
@@ -107,8 +108,10 @@ describe("lua: LrC-AVG.lrplugin", () => {
 
   it("names every file that Info.lua points at", () => {
     const info = readFileSync(path.join(avgPlugin, "Info.lua"), "utf8");
-    for (const [, file] of info.matchAll(/(?:file|LrInitPlugin)\s*=\s*['"]([^'"]+\.lua)['"]/g)) {
-      expect(own.has((file as string).slice(0, -4)), file).toBe(true);
+    const named = [...info.matchAll(/(?:file|LrInitPlugin|LrPluginInfoProvider)\s*=\s*['"]([^'"]+\.lua)['"]/g)].map((m) => m[1] as string);
+    expect(named).toContain("PluginInfoProvider.lua");
+    for (const file of named) {
+      expect(own.has(file.slice(0, -4)), file).toBe(true);
     }
   });
 
@@ -175,6 +178,30 @@ describe("lua: LrC-AVG.lrplugin", () => {
     const info = readFileSync(path.join(avgPlugin, "Info.lua"), "utf8");
     const v = info.match(/VERSION = \{ major = (\d+), minor = (\d+), revision = (\d+)/);
     expect(v?.slice(1, 4).join(".")).toBe(PLUGIN_VERSION);
+  });
+
+  it("keeps Prefs.lua's SPECS equal to the engine's PAGE_SPECS: keys, wire names, kinds, defaults, ranges (engine\\src\\settings\\page.ts)", () => {
+    const source = readFileSync(path.join(avgPlugin, "Prefs.lua"), "utf8");
+    const table = source.match(/Prefs\.SPECS = \{([\s\S]*?)\n\}/)?.[1] ?? "";
+    const raw = (line: string, name: string): string | undefined => line.match(new RegExp(`\\b${name} = ("[^"]*"|[\\d.]+)`))?.[1];
+    const lua = table
+      .split(/\r?\n/)
+      .filter((line) => line.includes("key = "))
+      .map((line) => {
+        const value = (name: string): string | number | undefined => {
+          const v = raw(line, name);
+          return v === undefined ? undefined : v.startsWith('"') ? v.slice(1, -1) : Number(v);
+        };
+        const choices = line.match(/choices = \{([^}]*)\}/)?.[1]?.match(/"[^"]*"/g)?.map((c) => c.slice(1, -1));
+        const spec: Record<string, unknown> = { key: value("key"), wire: value("wire"), kind: value("kind"), default: value("default") };
+        if (choices) spec["choices"] = choices;
+        if (value("min") !== undefined) Object.assign(spec, { min: value("min"), max: value("max") });
+        return spec;
+      });
+    expect(lua).toHaveLength(PAGE_SPECS.length);
+    expect(lua).toEqual(PAGE_SPECS.map((s) => ({ ...s })));
+    expect(source).toMatch(new RegExp(`Prefs\\.LOCK_PORT = ${LOCK_PORT}\\b`));
+    expect(source).toMatch(new RegExp(`Prefs\\.DECAY_MAX_VALUES = ${DECAY_MAX_VALUES}\\b`));
   });
 
   it("handles every command the engine sends (engine\\src\\bridge\\protocol.ts COMMANDS)", () => {

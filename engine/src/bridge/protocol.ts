@@ -10,7 +10,7 @@
 //     { id, type: "evt", name, ts, payload }
 // Every inbound line is validated here with zod before the engine acts on it (rule 01-stack).
 // The plugin side is plugin\LrC-AVG.lrplugin\Bridge.lua, Dispatch.lua (the handler table),
-// Develop.lua, Preview.lua, Catalog.lua and Photos.lua.
+// Develop.lua, Preview.lua, Catalog.lua, Photos.lua and Prefs.lua.
 //
 // Lua cannot tell an empty array from an empty object, and the plugin's Json.lua writes every empty
 // table as []. Payload schemas below never require a non-empty table to be an object.
@@ -137,6 +137,13 @@ export const COMMANDS = {
     count: z.number(),
     photos: z.array(z.object({ ...photoIdentity, uuid: z.string().optional() })),
   }),
+  // Plugin 0.5.0 (Prefs.lua getPrefs): the settings page's values, each already checked by the
+  // plugin, under their wire names. The engine checks each field again on its own
+  // (settings\page.ts parsePage), so one bad field costs only that field; `invalid` lists what the
+  // plugin replaced by its default.
+  get_prefs: z.looseObject({
+    invalid: z.array(z.looseObject({ key: z.string(), reason: z.string() })),
+  }),
 } as const;
 
 export type CommandName = keyof typeof COMMANDS;
@@ -168,4 +175,5 @@ export type CommandPayloads = {
   select_photo: { uuid: string; expect?: PhotoExpect };
   /** max: how many photos to describe, 1-500 (the plugin's default 100). Refused with no_target_photo when none is selected. */
   get_selection: { max?: number };
+  get_prefs: Record<string, never>;
 };

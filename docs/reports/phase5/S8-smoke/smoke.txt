@@ -1,6 +1,6 @@
 BUILD: every run as expected.
-S8 smoke transcript (Claude Code, Opus 5.5, 2026-09-28, branch phase-5/spike-s8; regenerated after the
-fixes for Greptile's rounds 1-3 on PR #40).
+S8 smoke transcript (Claude Code, Opus 5.5, 2026-09-28; branch phase-5/spike-s8 with the fixes for Greptile's
+rounds 1-3 on PR #40, then branch fix/s8-settings: the settings section's groups A-C after S8 run 1).
 What it shows: the S8 harness's own logic, run against a fake Lightroom; NOT Lightroom's behaviour.
 Kit: a scratch folder outside the repo with npm fengari@0.1.4 (a Lua 5.3 VM in JavaScript) and luaparse@0.3.1,
 neither a project dependency. Its five files (this transcript's builder included) are reproduced verbatim in the
@@ -18,9 +18,12 @@ Node v24.11.1. Paths: the user folder is written as %USERPROFILE%, the scratch f
 === scenario normal (expected: pass; passed, as expected)
 > node <scratch>\run-smoke.cjs D:\Developer\LrC_Autonomous_Gateway\plugin\spikes\S8.lrplugin normal
 PASS the settings section renders with a title
+PASS three groups: A and C bound to the property table, B to the prefs
+PASS each row of a group carries the group's bind_to_object
 PASS settings BEFORE saved
-PASS before: mode saved
-PASS before: 12 recorded by the observer
+PASS all three groups saved
+PASS before: group A's observer logged 6
+PASS before: endDialog logged with its values
 PASS before: menu sees the init mark (fake shares state)
 PASS before: loop saw the menu mark
 PASS before: loop view copy saved
@@ -38,7 +41,8 @@ PASS clicks 4 (greyed Pick B ignored)
 PASS greyed clicks 0
 PASS closed_by_code yes, inside the call
 PASS settings AFTER saved
-PASS after: mode kept
+PASS after: group B kept
+PASS after: menu 4 reports each group
 PASS after: loop running
 PASS after: panel saw the new init mark
 ===LOG
@@ -61,9 +65,12 @@ PASS after: panel saw the new init mark
 === scenario no_close (expected: pass; passed, as expected)
 > node <scratch>\run-smoke.cjs D:\Developer\LrC_Autonomous_Gateway\plugin\spikes\S8.lrplugin no_close
 PASS the settings section renders with a title
+PASS three groups: A and C bound to the property table, B to the prefs
+PASS each row of a group carries the group's bind_to_object
 PASS settings BEFORE saved
-PASS before: mode saved
-PASS before: 12 recorded by the observer
+PASS all three groups saved
+PASS before: group A's observer logged 6
+PASS before: endDialog logged with its values
 PASS before: menu sees the init mark (fake shares state)
 PASS before: loop saw the menu mark
 PASS before: loop view copy saved
@@ -83,7 +90,8 @@ PASS greyed clicks counted 1
 PASS closed_by_code no although every tick box is ticked (the call does not exist)
 PASS close call recorded as missing
 PASS settings AFTER saved
-PASS after: mode kept
+PASS after: group B kept
+PASS after: menu 4 reports each group
 PASS after: loop running
 PASS after: panel not opened since the start -> inconclusive
 ===LOG
@@ -106,9 +114,12 @@ PASS after: panel not opened since the start -> inconclusive
 === scenario late_close (expected: pass; passed, as expected)
 > node <scratch>\run-smoke.cjs D:\Developer\LrC_Autonomous_Gateway\plugin\spikes\S8.lrplugin late_close
 PASS the settings section renders with a title
+PASS three groups: A and C bound to the property table, B to the prefs
+PASS each row of a group carries the group's bind_to_object
 PASS settings BEFORE saved
-PASS before: mode saved
-PASS before: 12 recorded by the observer
+PASS all three groups saved
+PASS before: group A's observer logged 6
+PASS before: endDialog logged with its values
 PASS before: menu sees the init mark (fake shares state)
 PASS before: loop saw the menu mark
 PASS before: loop view copy saved
@@ -125,7 +136,8 @@ PASS appeared about 5 s after the request
 PASS closed 1 s after the call + Jim ticked it: yes
 PASS not counted as closed inside the call
 PASS settings AFTER saved
-PASS after: mode kept
+PASS after: group B kept
+PASS after: menu 4 reports each group
 PASS after: loop running
 PASS after: panel saw the new init mark
 ===LOG
@@ -149,9 +161,12 @@ PASS after: panel saw the new init mark
 === scenario late_close_6s (expected: pass; passed, as expected)
 > node <scratch>\run-smoke.cjs D:\Developer\LrC_Autonomous_Gateway\plugin\spikes\S8.lrplugin late_close_6s
 PASS the settings section renders with a title
+PASS three groups: A and C bound to the property table, B to the prefs
+PASS each row of a group carries the group's bind_to_object
 PASS settings BEFORE saved
-PASS before: mode saved
-PASS before: 12 recorded by the observer
+PASS all three groups saved
+PASS before: group A's observer logged 6
+PASS before: endDialog logged with its values
 PASS before: menu sees the init mark (fake shares state)
 PASS before: loop saw the menu mark
 PASS before: loop view copy saved
@@ -167,7 +182,8 @@ PASS click tasks read the photo
 PASS appeared about 5 s after the request
 PASS closed 6 s after the call (within the 10 s watch) + Jim ticked it: yes
 PASS settings AFTER saved
-PASS after: mode kept
+PASS after: group B kept
+PASS after: menu 4 reports each group
 PASS after: loop running
 PASS after: panel saw the new init mark
 ===LOG
@@ -190,9 +206,12 @@ PASS after: panel saw the new init mark
 === scenario x_after_call (expected: pass; passed, as expected)
 > node <scratch>\run-smoke.cjs D:\Developer\LrC_Autonomous_Gateway\plugin\spikes\S8.lrplugin x_after_call
 PASS the settings section renders with a title
+PASS three groups: A and C bound to the property table, B to the prefs
+PASS each row of a group carries the group's bind_to_object
 PASS settings BEFORE saved
-PASS before: mode saved
-PASS before: 12 recorded by the observer
+PASS all three groups saved
+PASS before: group A's observer logged 6
+PASS before: endDialog logged with its values
 PASS before: menu sees the init mark (fake shares state)
 PASS before: loop saw the menu mark
 PASS before: loop view copy saved
@@ -208,7 +227,8 @@ PASS click tasks read the photo
 PASS appeared about 5 s after the request
 PASS X 1 s after a call that did nothing, Jim: not by itself -> no
 PASS settings AFTER saved
-PASS after: mode kept
+PASS after: group B kept
+PASS after: menu 4 reports each group
 PASS after: loop running
 PASS after: panel saw the new init mark
 ===LOG
@@ -231,9 +251,12 @@ PASS after: panel saw the new init mark
 === scenario x_after_watch (expected: pass; passed, as expected)
 > node <scratch>\run-smoke.cjs D:\Developer\LrC_Autonomous_Gateway\plugin\spikes\S8.lrplugin x_after_watch
 PASS the settings section renders with a title
+PASS three groups: A and C bound to the property table, B to the prefs
+PASS each row of a group carries the group's bind_to_object
 PASS settings BEFORE saved
-PASS before: mode saved
-PASS before: 12 recorded by the observer
+PASS all three groups saved
+PASS before: group A's observer logged 6
+PASS before: endDialog logged with its values
 PASS before: menu sees the init mark (fake shares state)
 PASS before: loop saw the menu mark
 PASS before: loop view copy saved
@@ -249,7 +272,8 @@ PASS click tasks read the photo
 PASS appeared about 5 s after the request
 PASS closed 12 s after the call, Jim ticked 'by itself': unclear
 PASS settings AFTER saved
-PASS after: mode kept
+PASS after: group B kept
+PASS after: menu 4 reports each group
 PASS after: loop running
 PASS after: panel saw the new init mark
 ===LOG
@@ -291,6 +315,32 @@ PASS a close with no HUD is recorded by the loop
 ===RESULT ALL PASS
 
 
+=== scenario observers_silent (expected: pass; passed, as expected)
+> node <scratch>\run-smoke.cjs D:\Developer\LrC_Autonomous_Gateway\plugin\spikes\S8.lrplugin observers_silent
+PASS the settings section renders with a title
+PASS three groups: A and C bound to the property table, B to the prefs
+PASS each row of a group carries the group's bind_to_object
+PASS settings BEFORE saved
+PASS observers silent: group A not saved, B and C saved
+PASS observers silent: nothing in s8_observed
+PASS before: endDialog logged with its values
+PASS before: menu sees the init mark (fake shares state)
+PASS before: loop saw the menu mark
+PASS before: loop view copy saved
+PASS before: panel saw the init mark
+PASS settings AFTER saved
+PASS after: group B kept
+PASS after: menu 4 reports each group
+PASS after: loop running
+PASS after: panel saw the new init mark
+===LOG
+[   8.00] MODAL: AVG S8 - what did the settings page show?
+[   8.00] MESSAGE: AVG S8 settings: SAVED
+[  79.00] MODAL: AVG S8 - what did the settings page show?
+[  79.00] MESSAGE: AVG S8 settings: SAVED
+===RESULT ALL PASS
+
+
 ##### Mutation check (each must FAIL)
 
 --- mutant 1 (round 1): the window's closing time alone decides 'closed by code'
@@ -298,9 +348,12 @@ PASS a close with no HUD is recorded by the loop
 === scenario x_after_call on the mutant (expected: fail exactly ["X 1 s after a call that did nothing, Jim: not by itself -> no"]; failed, as expected)
 > node <scratch>\run-smoke.cjs <scratch>\mutant x_after_call
 PASS the settings section renders with a title
+PASS three groups: A and C bound to the property table, B to the prefs
+PASS each row of a group carries the group's bind_to_object
 PASS settings BEFORE saved
-PASS before: mode saved
-PASS before: 12 recorded by the observer
+PASS all three groups saved
+PASS before: group A's observer logged 6
+PASS before: endDialog logged with its values
 PASS before: menu sees the init mark (fake shares state)
 PASS before: loop saw the menu mark
 PASS before: loop view copy saved
@@ -316,7 +369,8 @@ PASS click tasks read the photo
 PASS appeared about 5 s after the request
 FAIL X 1 s after a call that did nothing, Jim: not by itself -> no
 PASS settings AFTER saved
-PASS after: mode kept
+PASS after: group B kept
+PASS after: menu 4 reports each group
 PASS after: loop running
 PASS after: panel saw the new init mark
 ===LOG
@@ -359,9 +413,12 @@ EXIT NON-ZERO
 === scenario late_close_6s on the mutant (expected: fail exactly ["closed 6 s after the call (within the 10 s watch) + Jim ticked it: yes"]; failed, as expected)
 > node <scratch>\run-smoke.cjs <scratch>\mutant late_close_6s
 PASS the settings section renders with a title
+PASS three groups: A and C bound to the property table, B to the prefs
+PASS each row of a group carries the group's bind_to_object
 PASS settings BEFORE saved
-PASS before: mode saved
-PASS before: 12 recorded by the observer
+PASS all three groups saved
+PASS before: group A's observer logged 6
+PASS before: endDialog logged with its values
 PASS before: menu sees the init mark (fake shares state)
 PASS before: loop saw the menu mark
 PASS before: loop view copy saved
@@ -377,7 +434,8 @@ PASS click tasks read the photo
 PASS appeared about 5 s after the request
 FAIL closed 6 s after the call (within the 10 s watch) + Jim ticked it: yes
 PASS settings AFTER saved
-PASS after: mode kept
+PASS after: group B kept
+PASS after: menu 4 reports each group
 PASS after: loop running
 PASS after: panel saw the new init mark
 ===LOG
@@ -395,6 +453,58 @@ PASS after: panel saw the new init mark
 [ 107.00] MODAL: AVG S8 - what did the settings page show?
 [ 107.00] MESSAGE: AVG S8 settings: SAVED
 ===RESULT FAILED: closed 6 s after the call (within the 10 s watch) + Jim ticked it: yes
+
+
+EXIT NON-ZERO
+
+
+--- mutant 4 (S8 run 1 in Lightroom, fix/s8-settings): the settings groups carry no bind_to_object
+--- in S8InfoProvider.lua: replaced "local function group(f, g, title, object)" with "local function group(f, g, title, object)\n    object = nil"
+=== scenario normal on the mutant (expected: fail exactly ["three groups: A and C bound to the property table, B to the prefs","each row of a group carries the group's bind_to_object"]; failed, as expected)
+> node <scratch>\run-smoke.cjs <scratch>\mutant normal
+PASS the settings section renders with a title
+FAIL three groups: A and C bound to the property table, B to the prefs
+FAIL each row of a group carries the group's bind_to_object
+PASS settings BEFORE saved
+PASS all three groups saved
+PASS before: group A's observer logged 6
+PASS before: endDialog logged with its values
+PASS before: menu sees the init mark (fake shares state)
+PASS before: loop saw the menu mark
+PASS before: loop view copy saved
+PASS before: panel saw the init mark
+PASS HUD not open 2 s after menu 1
+PASS HUD open 7 s after menu 1
+PASS stage line ticking
+PASS last click shows Abort
+PASS picks enabled after Approve
+PASS HUD result saved
+PASS selection change seen
+PASS click tasks read the photo
+PASS appeared about 5 s after the request
+PASS clicks 4 (greyed Pick B ignored)
+PASS greyed clicks 0
+PASS closed_by_code yes, inside the call
+PASS settings AFTER saved
+PASS after: group B kept
+PASS after: menu 4 reports each group
+PASS after: loop running
+PASS after: panel saw the new init mark
+===LOG
+[   8.00] MODAL: AVG S8 - what did the settings page show?
+[   8.00] MESSAGE: AVG S8 settings: SAVED
+[  16.25] HUD SHOWN: AVG S8 HUD
+[  21.00] CLICK Abort
+[  22.00] CLICK Pick B ignored (disabled)
+[  23.00] CLICK Approve
+[  24.00] CLICK Pick B
+[  25.00] CLICK Accept
+[  27.25] HUD CLOSED by closeFloatingDialogsForPlugin
+[  28.75] MODAL: AVG S8 - what did you see in the HUD?
+[  28.75] MESSAGE: AVG S8 HUD test: SAVED
+[ 107.00] MODAL: AVG S8 - what did the settings page show?
+[ 107.00] MESSAGE: AVG S8 settings: SAVED
+===RESULT FAILED: three groups: A and C bound to the property table, B to the prefs; each row of a group carries the group's bind_to_object
 
 
 EXIT NON-ZERO
@@ -499,12 +609,24 @@ EXIT NON-ZERO
       "file": "s8_settings_before_restart_T8.00.json",
       "run_at": "T3.00 (local time)",
       "settings": {
-        "mode": "approve_each_pass",
-        "maxPasses": 12,
-        "clipHighPct": 0.3,
-        "logFolder": "C:\\S8-test"
+        "a_mode": "approve_each_pass",
+        "a_maxPasses": 6,
+        "b_mode": "approve_each_pass",
+        "b_maxPasses": 6,
+        "c_mode": "approve_each_pass",
+        "c_maxPasses": 6,
+        "mode": null,
+        "maxPasses": null,
+        "clipHighPct": null,
+        "logFolder": null
       },
-      "observed_log": "mode=approve_each_pass (string) at T3.00; maxPasses=6 (number) at T3.00; clipHighPct=0.3 (number) at T3.00; logFolder=C:\\S8-test (string) at T3.00; maxPasses=12 (number) at T3.00",
+      "saved_by_group": {
+        "a": true,
+        "b": true,
+        "c": true
+      },
+      "observed_log": "a_mode=approve_each_pass (string) at T3.00; a_maxPasses=6 (number) at T3.00",
+      "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00",
       "marks": {
         "init_to_menu_via_G": true,
         "init_to_menu_via_module": true,
@@ -525,6 +647,12 @@ EXIT NON-ZERO
       "loop_prefs_changes": [
         {
           "seen_at": "T0.00 (local time)",
+          "a_mode": null,
+          "a_maxPasses": null,
+          "b_mode": null,
+          "b_maxPasses": null,
+          "c_mode": null,
+          "c_maxPasses": null,
           "mode": null,
           "maxPasses": null,
           "clipHighPct": null,
@@ -532,29 +660,48 @@ EXIT NON-ZERO
         },
         {
           "seen_at": "T3.25 (local time)",
-          "mode": "approve_each_pass",
-          "maxPasses": 12,
-          "clipHighPct": 0.3,
-          "logFolder": "C:\\S8-test"
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
         }
       ],
       "answered": true,
       "jim": {
-        "field_kept_12": true,
-        "page_showed_fields": true,
-        "warning_on_12": true
+        "a_showed_values": true,
+        "b_showed_values": true,
+        "c_showed_values": true,
+        "page_showed_groups": true
       }
     },
     "after_restart": {
       "file": "s8_settings_after_restart_T107.00.json",
       "run_at": "T102.00 (local time)",
       "settings": {
-        "mode": "approve_each_pass",
-        "maxPasses": 12,
-        "clipHighPct": 0.3,
-        "logFolder": "C:\\S8-test"
+        "a_mode": "approve_each_pass",
+        "a_maxPasses": 6,
+        "b_mode": "approve_each_pass",
+        "b_maxPasses": 6,
+        "c_mode": "approve_each_pass",
+        "c_maxPasses": 6,
+        "mode": null,
+        "maxPasses": null,
+        "clipHighPct": null,
+        "logFolder": null
       },
-      "observed_log": "mode=approve_each_pass (string) at T3.00; maxPasses=6 (number) at T3.00; clipHighPct=0.3 (number) at T3.00; logFolder=C:\\S8-test (string) at T3.00; maxPasses=12 (number) at T3.00",
+      "saved_by_group": {
+        "a": true,
+        "b": true,
+        "c": true
+      },
+      "observed_log": "a_mode=approve_each_pass (string) at T3.00; a_maxPasses=6 (number) at T3.00",
+      "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00; startDialog at T102.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T102.00",
       "marks": {
         "init_to_menu_via_G": true,
         "init_to_menu_via_module": true,
@@ -575,23 +722,111 @@ EXIT NON-ZERO
       "loop_prefs_changes": [
         {
           "seen_at": "T99.00 (local time)",
-          "mode": "approve_each_pass",
-          "maxPasses": 12,
-          "clipHighPct": 0.3,
-          "logFolder": "C:\\S8-test"
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
+        },
+        {
+          "seen_at": "T102.25 (local time)",
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
         }
       ],
       "answered": true,
       "jim": {
-        "page_kept_values": true
+        "a_kept": true,
+        "b_kept": true,
+        "c_kept": true
       }
     },
     "kept_across_restart": {
+      "a_mode": true,
+      "a_maxPasses": true,
+      "b_mode": true,
+      "b_maxPasses": true,
+      "c_mode": true,
+      "c_maxPasses": true,
       "mode": true,
       "maxPasses": true,
       "clipHighPct": true,
       "logFolder": true
-    }
+    },
+    "runs": [
+      {
+        "file": "s8_settings_after_restart_T107.00.json",
+        "step": "after_restart",
+        "run_at": "T102.00 (local time)",
+        "saved_by_group": {
+          "a": true,
+          "b": true,
+          "c": true
+        },
+        "settings": {
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
+        },
+        "observed_log": "a_mode=approve_each_pass (string) at T3.00; a_maxPasses=6 (number) at T3.00",
+        "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00; startDialog at T102.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T102.00",
+        "jim": {
+          "a_kept": true,
+          "b_kept": true,
+          "c_kept": true
+        }
+      },
+      {
+        "file": "s8_settings_before_restart_T8.00.json",
+        "step": "before_restart",
+        "run_at": "T3.00 (local time)",
+        "saved_by_group": {
+          "a": true,
+          "b": true,
+          "c": true
+        },
+        "settings": {
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
+        },
+        "observed_log": "a_mode=approve_each_pass (string) at T3.00; a_maxPasses=6 (number) at T3.00",
+        "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00",
+        "jim": {
+          "a_showed_values": true,
+          "b_showed_values": true,
+          "c_showed_values": true,
+          "page_showed_groups": true
+        }
+      }
+    ]
   },
   "copied": [
     "s8_hud_T28.75.json",
@@ -710,12 +945,24 @@ Wrote <scratch>\collected\normal\s8_summary.json; copied 8 files, skipped 0.
       "file": "s8_settings_before_restart_T8.00.json",
       "run_at": "T3.00 (local time)",
       "settings": {
-        "mode": "approve_each_pass",
-        "maxPasses": 12,
-        "clipHighPct": 0.3,
-        "logFolder": "C:\\S8-test"
+        "a_mode": "approve_each_pass",
+        "a_maxPasses": 6,
+        "b_mode": "approve_each_pass",
+        "b_maxPasses": 6,
+        "c_mode": "approve_each_pass",
+        "c_maxPasses": 6,
+        "mode": null,
+        "maxPasses": null,
+        "clipHighPct": null,
+        "logFolder": null
       },
-      "observed_log": "mode=approve_each_pass (string) at T3.00; maxPasses=6 (number) at T3.00; clipHighPct=0.3 (number) at T3.00; logFolder=C:\\S8-test (string) at T3.00; maxPasses=12 (number) at T3.00",
+      "saved_by_group": {
+        "a": true,
+        "b": true,
+        "c": true
+      },
+      "observed_log": "a_mode=approve_each_pass (string) at T3.00; a_maxPasses=6 (number) at T3.00",
+      "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00",
       "marks": {
         "init_to_menu_via_G": true,
         "init_to_menu_via_module": true,
@@ -736,6 +983,12 @@ Wrote <scratch>\collected\normal\s8_summary.json; copied 8 files, skipped 0.
       "loop_prefs_changes": [
         {
           "seen_at": "T0.00 (local time)",
+          "a_mode": null,
+          "a_maxPasses": null,
+          "b_mode": null,
+          "b_maxPasses": null,
+          "c_mode": null,
+          "c_maxPasses": null,
           "mode": null,
           "maxPasses": null,
           "clipHighPct": null,
@@ -743,29 +996,48 @@ Wrote <scratch>\collected\normal\s8_summary.json; copied 8 files, skipped 0.
         },
         {
           "seen_at": "T3.25 (local time)",
-          "mode": "approve_each_pass",
-          "maxPasses": 12,
-          "clipHighPct": 0.3,
-          "logFolder": "C:\\S8-test"
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
         }
       ],
       "answered": true,
       "jim": {
-        "field_kept_12": true,
-        "page_showed_fields": true,
-        "warning_on_12": true
+        "a_showed_values": true,
+        "b_showed_values": true,
+        "c_showed_values": true,
+        "page_showed_groups": true
       }
     },
     "after_restart": {
       "file": "s8_settings_after_restart_T114.00.json",
       "run_at": "T109.00 (local time)",
       "settings": {
-        "mode": "approve_each_pass",
-        "maxPasses": 12,
-        "clipHighPct": 0.3,
-        "logFolder": "C:\\S8-test"
+        "a_mode": "approve_each_pass",
+        "a_maxPasses": 6,
+        "b_mode": "approve_each_pass",
+        "b_maxPasses": 6,
+        "c_mode": "approve_each_pass",
+        "c_maxPasses": 6,
+        "mode": null,
+        "maxPasses": null,
+        "clipHighPct": null,
+        "logFolder": null
       },
-      "observed_log": "mode=approve_each_pass (string) at T3.00; maxPasses=6 (number) at T3.00; clipHighPct=0.3 (number) at T3.00; logFolder=C:\\S8-test (string) at T3.00; maxPasses=12 (number) at T3.00",
+      "saved_by_group": {
+        "a": true,
+        "b": true,
+        "c": true
+      },
+      "observed_log": "a_mode=approve_each_pass (string) at T3.00; a_maxPasses=6 (number) at T3.00",
+      "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00",
       "marks": {
         "init_to_menu_via_G": true,
         "init_to_menu_via_module": true,
@@ -785,23 +1057,98 @@ Wrote <scratch>\collected\normal\s8_summary.json; copied 8 files, skipped 0.
       "loop_prefs_changes": [
         {
           "seen_at": "T106.00 (local time)",
-          "mode": "approve_each_pass",
-          "maxPasses": 12,
-          "clipHighPct": 0.3,
-          "logFolder": "C:\\S8-test"
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
         }
       ],
       "answered": true,
       "jim": {
-        "page_kept_values": true
+        "a_kept": true,
+        "b_kept": true,
+        "c_kept": true
       }
     },
     "kept_across_restart": {
+      "a_mode": true,
+      "a_maxPasses": true,
+      "b_mode": true,
+      "b_maxPasses": true,
+      "c_mode": true,
+      "c_maxPasses": true,
       "mode": true,
       "maxPasses": true,
       "clipHighPct": true,
       "logFolder": true
-    }
+    },
+    "runs": [
+      {
+        "file": "s8_settings_after_restart_T114.00.json",
+        "step": "after_restart",
+        "run_at": "T109.00 (local time)",
+        "saved_by_group": {
+          "a": true,
+          "b": true,
+          "c": true
+        },
+        "settings": {
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
+        },
+        "observed_log": "a_mode=approve_each_pass (string) at T3.00; a_maxPasses=6 (number) at T3.00",
+        "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00",
+        "jim": {
+          "a_kept": true,
+          "b_kept": true,
+          "c_kept": true
+        }
+      },
+      {
+        "file": "s8_settings_before_restart_T8.00.json",
+        "step": "before_restart",
+        "run_at": "T3.00 (local time)",
+        "saved_by_group": {
+          "a": true,
+          "b": true,
+          "c": true
+        },
+        "settings": {
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
+        },
+        "observed_log": "a_mode=approve_each_pass (string) at T3.00; a_maxPasses=6 (number) at T3.00",
+        "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00",
+        "jim": {
+          "a_showed_values": true,
+          "b_showed_values": true,
+          "c_showed_values": true,
+          "page_showed_groups": true
+        }
+      }
+    ]
   },
   "copied": [
     "s8_hud_T35.25.json",
@@ -916,12 +1263,24 @@ Wrote <scratch>\collected\no_close\s8_summary.json; copied 8 files, skipped 0.
       "file": "s8_settings_before_restart_T8.00.json",
       "run_at": "T3.00 (local time)",
       "settings": {
-        "mode": "approve_each_pass",
-        "maxPasses": 12,
-        "clipHighPct": 0.3,
-        "logFolder": "C:\\S8-test"
+        "a_mode": "approve_each_pass",
+        "a_maxPasses": 6,
+        "b_mode": "approve_each_pass",
+        "b_maxPasses": 6,
+        "c_mode": "approve_each_pass",
+        "c_maxPasses": 6,
+        "mode": null,
+        "maxPasses": null,
+        "clipHighPct": null,
+        "logFolder": null
       },
-      "observed_log": "mode=approve_each_pass (string) at T3.00; maxPasses=6 (number) at T3.00; clipHighPct=0.3 (number) at T3.00; logFolder=C:\\S8-test (string) at T3.00; maxPasses=12 (number) at T3.00",
+      "saved_by_group": {
+        "a": true,
+        "b": true,
+        "c": true
+      },
+      "observed_log": "a_mode=approve_each_pass (string) at T3.00; a_maxPasses=6 (number) at T3.00",
+      "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00",
       "marks": {
         "init_to_menu_via_G": true,
         "init_to_menu_via_module": true,
@@ -941,6 +1300,12 @@ Wrote <scratch>\collected\no_close\s8_summary.json; copied 8 files, skipped 0.
       "loop_prefs_changes": [
         {
           "seen_at": "T0.00 (local time)",
+          "a_mode": null,
+          "a_maxPasses": null,
+          "b_mode": null,
+          "b_maxPasses": null,
+          "c_mode": null,
+          "c_maxPasses": null,
           "mode": null,
           "maxPasses": null,
           "clipHighPct": null,
@@ -948,29 +1313,48 @@ Wrote <scratch>\collected\no_close\s8_summary.json; copied 8 files, skipped 0.
         },
         {
           "seen_at": "T3.25 (local time)",
-          "mode": "approve_each_pass",
-          "maxPasses": 12,
-          "clipHighPct": 0.3,
-          "logFolder": "C:\\S8-test"
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
         }
       ],
       "answered": true,
       "jim": {
-        "field_kept_12": true,
-        "page_showed_fields": true,
-        "warning_on_12": true
+        "a_showed_values": true,
+        "b_showed_values": true,
+        "c_showed_values": true,
+        "page_showed_groups": true
       }
     },
     "after_restart": {
       "file": "s8_settings_after_restart_T107.00.json",
       "run_at": "T102.00 (local time)",
       "settings": {
-        "mode": "approve_each_pass",
-        "maxPasses": 12,
-        "clipHighPct": 0.3,
-        "logFolder": "C:\\S8-test"
+        "a_mode": "approve_each_pass",
+        "a_maxPasses": 6,
+        "b_mode": "approve_each_pass",
+        "b_maxPasses": 6,
+        "c_mode": "approve_each_pass",
+        "c_maxPasses": 6,
+        "mode": null,
+        "maxPasses": null,
+        "clipHighPct": null,
+        "logFolder": null
       },
-      "observed_log": "mode=approve_each_pass (string) at T3.00; maxPasses=6 (number) at T3.00; clipHighPct=0.3 (number) at T3.00; logFolder=C:\\S8-test (string) at T3.00; maxPasses=12 (number) at T3.00",
+      "saved_by_group": {
+        "a": true,
+        "b": true,
+        "c": true
+      },
+      "observed_log": "a_mode=approve_each_pass (string) at T3.00; a_maxPasses=6 (number) at T3.00",
+      "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00; startDialog at T102.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T102.00",
       "marks": {
         "init_to_menu_via_G": true,
         "init_to_menu_via_module": true,
@@ -991,30 +1375,111 @@ Wrote <scratch>\collected\no_close\s8_summary.json; copied 8 files, skipped 0.
       "loop_prefs_changes": [
         {
           "seen_at": "T99.00 (local time)",
-          "mode": "approve_each_pass",
-          "maxPasses": 12,
-          "clipHighPct": 0.3,
-          "logFolder": "C:\\S8-test"
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
         },
         {
           "seen_at": "T102.25 (local time)",
-          "mode": "approve_each_pass",
-          "maxPasses": 12,
-          "clipHighPct": 0.3,
-          "logFolder": "C:\\S8-test"
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
         }
       ],
       "answered": true,
       "jim": {
-        "page_kept_values": true
+        "a_kept": true,
+        "b_kept": true,
+        "c_kept": true
       }
     },
     "kept_across_restart": {
+      "a_mode": true,
+      "a_maxPasses": true,
+      "b_mode": true,
+      "b_maxPasses": true,
+      "c_mode": true,
+      "c_maxPasses": true,
       "mode": true,
       "maxPasses": true,
       "clipHighPct": true,
       "logFolder": true
-    }
+    },
+    "runs": [
+      {
+        "file": "s8_settings_after_restart_T107.00.json",
+        "step": "after_restart",
+        "run_at": "T102.00 (local time)",
+        "saved_by_group": {
+          "a": true,
+          "b": true,
+          "c": true
+        },
+        "settings": {
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
+        },
+        "observed_log": "a_mode=approve_each_pass (string) at T3.00; a_maxPasses=6 (number) at T3.00",
+        "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00; startDialog at T102.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T102.00",
+        "jim": {
+          "a_kept": true,
+          "b_kept": true,
+          "c_kept": true
+        }
+      },
+      {
+        "file": "s8_settings_before_restart_T8.00.json",
+        "step": "before_restart",
+        "run_at": "T3.00 (local time)",
+        "saved_by_group": {
+          "a": true,
+          "b": true,
+          "c": true
+        },
+        "settings": {
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
+        },
+        "observed_log": "a_mode=approve_each_pass (string) at T3.00; a_maxPasses=6 (number) at T3.00",
+        "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00",
+        "jim": {
+          "a_showed_values": true,
+          "b_showed_values": true,
+          "c_showed_values": true,
+          "page_showed_groups": true
+        }
+      }
+    ]
   },
   "copied": [
     "s8_hud_T29.25.json",
@@ -1130,12 +1595,24 @@ Wrote <scratch>\collected\late_close\s8_summary.json; copied 7 files, skipped 1.
       "file": "s8_settings_before_restart_T8.00.json",
       "run_at": "T3.00 (local time)",
       "settings": {
-        "mode": "approve_each_pass",
-        "maxPasses": 12,
-        "clipHighPct": 0.3,
-        "logFolder": "C:\\S8-test"
+        "a_mode": "approve_each_pass",
+        "a_maxPasses": 6,
+        "b_mode": "approve_each_pass",
+        "b_maxPasses": 6,
+        "c_mode": "approve_each_pass",
+        "c_maxPasses": 6,
+        "mode": null,
+        "maxPasses": null,
+        "clipHighPct": null,
+        "logFolder": null
       },
-      "observed_log": "mode=approve_each_pass (string) at T3.00; maxPasses=6 (number) at T3.00; clipHighPct=0.3 (number) at T3.00; logFolder=C:\\S8-test (string) at T3.00; maxPasses=12 (number) at T3.00",
+      "saved_by_group": {
+        "a": true,
+        "b": true,
+        "c": true
+      },
+      "observed_log": "a_mode=approve_each_pass (string) at T3.00; a_maxPasses=6 (number) at T3.00",
+      "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00",
       "marks": {
         "init_to_menu_via_G": true,
         "init_to_menu_via_module": true,
@@ -1156,6 +1633,12 @@ Wrote <scratch>\collected\late_close\s8_summary.json; copied 7 files, skipped 1.
       "loop_prefs_changes": [
         {
           "seen_at": "T0.00 (local time)",
+          "a_mode": null,
+          "a_maxPasses": null,
+          "b_mode": null,
+          "b_maxPasses": null,
+          "c_mode": null,
+          "c_maxPasses": null,
           "mode": null,
           "maxPasses": null,
           "clipHighPct": null,
@@ -1163,29 +1646,48 @@ Wrote <scratch>\collected\late_close\s8_summary.json; copied 7 files, skipped 1.
         },
         {
           "seen_at": "T3.25 (local time)",
-          "mode": "approve_each_pass",
-          "maxPasses": 12,
-          "clipHighPct": 0.3,
-          "logFolder": "C:\\S8-test"
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
         }
       ],
       "answered": true,
       "jim": {
-        "field_kept_12": true,
-        "page_showed_fields": true,
-        "warning_on_12": true
+        "a_showed_values": true,
+        "b_showed_values": true,
+        "c_showed_values": true,
+        "page_showed_groups": true
       }
     },
     "after_restart": {
       "file": "s8_settings_after_restart_T107.00.json",
       "run_at": "T102.00 (local time)",
       "settings": {
-        "mode": "approve_each_pass",
-        "maxPasses": 12,
-        "clipHighPct": 0.3,
-        "logFolder": "C:\\S8-test"
+        "a_mode": "approve_each_pass",
+        "a_maxPasses": 6,
+        "b_mode": "approve_each_pass",
+        "b_maxPasses": 6,
+        "c_mode": "approve_each_pass",
+        "c_maxPasses": 6,
+        "mode": null,
+        "maxPasses": null,
+        "clipHighPct": null,
+        "logFolder": null
       },
-      "observed_log": "mode=approve_each_pass (string) at T3.00; maxPasses=6 (number) at T3.00; clipHighPct=0.3 (number) at T3.00; logFolder=C:\\S8-test (string) at T3.00; maxPasses=12 (number) at T3.00",
+      "saved_by_group": {
+        "a": true,
+        "b": true,
+        "c": true
+      },
+      "observed_log": "a_mode=approve_each_pass (string) at T3.00; a_maxPasses=6 (number) at T3.00",
+      "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00; startDialog at T102.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T102.00",
       "marks": {
         "init_to_menu_via_G": true,
         "init_to_menu_via_module": true,
@@ -1206,23 +1708,111 @@ Wrote <scratch>\collected\late_close\s8_summary.json; copied 7 files, skipped 1.
       "loop_prefs_changes": [
         {
           "seen_at": "T99.00 (local time)",
-          "mode": "approve_each_pass",
-          "maxPasses": 12,
-          "clipHighPct": 0.3,
-          "logFolder": "C:\\S8-test"
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
+        },
+        {
+          "seen_at": "T102.25 (local time)",
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
         }
       ],
       "answered": true,
       "jim": {
-        "page_kept_values": true
+        "a_kept": true,
+        "b_kept": true,
+        "c_kept": true
       }
     },
     "kept_across_restart": {
+      "a_mode": true,
+      "a_maxPasses": true,
+      "b_mode": true,
+      "b_maxPasses": true,
+      "c_mode": true,
+      "c_maxPasses": true,
       "mode": true,
       "maxPasses": true,
       "clipHighPct": true,
       "logFolder": true
-    }
+    },
+    "runs": [
+      {
+        "file": "s8_settings_after_restart_T107.00.json",
+        "step": "after_restart",
+        "run_at": "T102.00 (local time)",
+        "saved_by_group": {
+          "a": true,
+          "b": true,
+          "c": true
+        },
+        "settings": {
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
+        },
+        "observed_log": "a_mode=approve_each_pass (string) at T3.00; a_maxPasses=6 (number) at T3.00",
+        "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00; startDialog at T102.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T102.00",
+        "jim": {
+          "a_kept": true,
+          "b_kept": true,
+          "c_kept": true
+        }
+      },
+      {
+        "file": "s8_settings_before_restart_T8.00.json",
+        "step": "before_restart",
+        "run_at": "T3.00 (local time)",
+        "saved_by_group": {
+          "a": true,
+          "b": true,
+          "c": true
+        },
+        "settings": {
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
+        },
+        "observed_log": "a_mode=approve_each_pass (string) at T3.00; a_maxPasses=6 (number) at T3.00",
+        "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00",
+        "jim": {
+          "a_showed_values": true,
+          "b_showed_values": true,
+          "c_showed_values": true,
+          "page_showed_groups": true
+        }
+      }
+    ]
   },
   "copied": [
     "s8_hud_T34.25.json",
@@ -1337,12 +1927,24 @@ Wrote <scratch>\collected\late_close_6s\s8_summary.json; copied 8 files, skipped
       "file": "s8_settings_before_restart_T8.00.json",
       "run_at": "T3.00 (local time)",
       "settings": {
-        "mode": "approve_each_pass",
-        "maxPasses": 12,
-        "clipHighPct": 0.3,
-        "logFolder": "C:\\S8-test"
+        "a_mode": "approve_each_pass",
+        "a_maxPasses": 6,
+        "b_mode": "approve_each_pass",
+        "b_maxPasses": 6,
+        "c_mode": "approve_each_pass",
+        "c_maxPasses": 6,
+        "mode": null,
+        "maxPasses": null,
+        "clipHighPct": null,
+        "logFolder": null
       },
-      "observed_log": "mode=approve_each_pass (string) at T3.00; maxPasses=6 (number) at T3.00; clipHighPct=0.3 (number) at T3.00; logFolder=C:\\S8-test (string) at T3.00; maxPasses=12 (number) at T3.00",
+      "saved_by_group": {
+        "a": true,
+        "b": true,
+        "c": true
+      },
+      "observed_log": "a_mode=approve_each_pass (string) at T3.00; a_maxPasses=6 (number) at T3.00",
+      "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00",
       "marks": {
         "init_to_menu_via_G": true,
         "init_to_menu_via_module": true,
@@ -1363,6 +1965,12 @@ Wrote <scratch>\collected\late_close_6s\s8_summary.json; copied 8 files, skipped
       "loop_prefs_changes": [
         {
           "seen_at": "T0.00 (local time)",
+          "a_mode": null,
+          "a_maxPasses": null,
+          "b_mode": null,
+          "b_maxPasses": null,
+          "c_mode": null,
+          "c_maxPasses": null,
           "mode": null,
           "maxPasses": null,
           "clipHighPct": null,
@@ -1370,29 +1978,48 @@ Wrote <scratch>\collected\late_close_6s\s8_summary.json; copied 8 files, skipped
         },
         {
           "seen_at": "T3.25 (local time)",
-          "mode": "approve_each_pass",
-          "maxPasses": 12,
-          "clipHighPct": 0.3,
-          "logFolder": "C:\\S8-test"
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
         }
       ],
       "answered": true,
       "jim": {
-        "field_kept_12": true,
-        "page_showed_fields": true,
-        "warning_on_12": true
+        "a_showed_values": true,
+        "b_showed_values": true,
+        "c_showed_values": true,
+        "page_showed_groups": true
       }
     },
     "after_restart": {
       "file": "s8_settings_after_restart_T108.00.json",
       "run_at": "T103.00 (local time)",
       "settings": {
-        "mode": "approve_each_pass",
-        "maxPasses": 12,
-        "clipHighPct": 0.3,
-        "logFolder": "C:\\S8-test"
+        "a_mode": "approve_each_pass",
+        "a_maxPasses": 6,
+        "b_mode": "approve_each_pass",
+        "b_maxPasses": 6,
+        "c_mode": "approve_each_pass",
+        "c_maxPasses": 6,
+        "mode": null,
+        "maxPasses": null,
+        "clipHighPct": null,
+        "logFolder": null
       },
-      "observed_log": "mode=approve_each_pass (string) at T3.00; maxPasses=6 (number) at T3.00; clipHighPct=0.3 (number) at T3.00; logFolder=C:\\S8-test (string) at T3.00; maxPasses=12 (number) at T3.00",
+      "saved_by_group": {
+        "a": true,
+        "b": true,
+        "c": true
+      },
+      "observed_log": "a_mode=approve_each_pass (string) at T3.00; a_maxPasses=6 (number) at T3.00",
+      "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00; startDialog at T103.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T103.00",
       "marks": {
         "init_to_menu_via_G": true,
         "init_to_menu_via_module": true,
@@ -1413,23 +2040,111 @@ Wrote <scratch>\collected\late_close_6s\s8_summary.json; copied 8 files, skipped
       "loop_prefs_changes": [
         {
           "seen_at": "T100.00 (local time)",
-          "mode": "approve_each_pass",
-          "maxPasses": 12,
-          "clipHighPct": 0.3,
-          "logFolder": "C:\\S8-test"
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
+        },
+        {
+          "seen_at": "T103.25 (local time)",
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
         }
       ],
       "answered": true,
       "jim": {
-        "page_kept_values": true
+        "a_kept": true,
+        "b_kept": true,
+        "c_kept": true
       }
     },
     "kept_across_restart": {
+      "a_mode": true,
+      "a_maxPasses": true,
+      "b_mode": true,
+      "b_maxPasses": true,
+      "c_mode": true,
+      "c_maxPasses": true,
       "mode": true,
       "maxPasses": true,
       "clipHighPct": true,
       "logFolder": true
-    }
+    },
+    "runs": [
+      {
+        "file": "s8_settings_after_restart_T108.00.json",
+        "step": "after_restart",
+        "run_at": "T103.00 (local time)",
+        "saved_by_group": {
+          "a": true,
+          "b": true,
+          "c": true
+        },
+        "settings": {
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
+        },
+        "observed_log": "a_mode=approve_each_pass (string) at T3.00; a_maxPasses=6 (number) at T3.00",
+        "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00; startDialog at T103.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T103.00",
+        "jim": {
+          "a_kept": true,
+          "b_kept": true,
+          "c_kept": true
+        }
+      },
+      {
+        "file": "s8_settings_before_restart_T8.00.json",
+        "step": "before_restart",
+        "run_at": "T3.00 (local time)",
+        "saved_by_group": {
+          "a": true,
+          "b": true,
+          "c": true
+        },
+        "settings": {
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
+        },
+        "observed_log": "a_mode=approve_each_pass (string) at T3.00; a_maxPasses=6 (number) at T3.00",
+        "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00",
+        "jim": {
+          "a_showed_values": true,
+          "b_showed_values": true,
+          "c_showed_values": true,
+          "page_showed_groups": true
+        }
+      }
+    ]
   },
   "copied": [
     "s8_hud_T29.25.json",
@@ -1544,12 +2259,24 @@ Wrote <scratch>\collected\x_after_call\s8_summary.json; copied 8 files, skipped 
       "file": "s8_settings_before_restart_T8.00.json",
       "run_at": "T3.00 (local time)",
       "settings": {
-        "mode": "approve_each_pass",
-        "maxPasses": 12,
-        "clipHighPct": 0.3,
-        "logFolder": "C:\\S8-test"
+        "a_mode": "approve_each_pass",
+        "a_maxPasses": 6,
+        "b_mode": "approve_each_pass",
+        "b_maxPasses": 6,
+        "c_mode": "approve_each_pass",
+        "c_maxPasses": 6,
+        "mode": null,
+        "maxPasses": null,
+        "clipHighPct": null,
+        "logFolder": null
       },
-      "observed_log": "mode=approve_each_pass (string) at T3.00; maxPasses=6 (number) at T3.00; clipHighPct=0.3 (number) at T3.00; logFolder=C:\\S8-test (string) at T3.00; maxPasses=12 (number) at T3.00",
+      "saved_by_group": {
+        "a": true,
+        "b": true,
+        "c": true
+      },
+      "observed_log": "a_mode=approve_each_pass (string) at T3.00; a_maxPasses=6 (number) at T3.00",
+      "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00",
       "marks": {
         "init_to_menu_via_G": true,
         "init_to_menu_via_module": true,
@@ -1570,6 +2297,12 @@ Wrote <scratch>\collected\x_after_call\s8_summary.json; copied 8 files, skipped 
       "loop_prefs_changes": [
         {
           "seen_at": "T0.00 (local time)",
+          "a_mode": null,
+          "a_maxPasses": null,
+          "b_mode": null,
+          "b_maxPasses": null,
+          "c_mode": null,
+          "c_maxPasses": null,
           "mode": null,
           "maxPasses": null,
           "clipHighPct": null,
@@ -1577,29 +2310,48 @@ Wrote <scratch>\collected\x_after_call\s8_summary.json; copied 8 files, skipped 
         },
         {
           "seen_at": "T3.25 (local time)",
-          "mode": "approve_each_pass",
-          "maxPasses": 12,
-          "clipHighPct": 0.3,
-          "logFolder": "C:\\S8-test"
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
         }
       ],
       "answered": true,
       "jim": {
-        "field_kept_12": true,
-        "page_showed_fields": true,
-        "warning_on_12": true
+        "a_showed_values": true,
+        "b_showed_values": true,
+        "c_showed_values": true,
+        "page_showed_groups": true
       }
     },
     "after_restart": {
       "file": "s8_settings_after_restart_T119.00.json",
       "run_at": "T114.00 (local time)",
       "settings": {
-        "mode": "approve_each_pass",
-        "maxPasses": 12,
-        "clipHighPct": 0.3,
-        "logFolder": "C:\\S8-test"
+        "a_mode": "approve_each_pass",
+        "a_maxPasses": 6,
+        "b_mode": "approve_each_pass",
+        "b_maxPasses": 6,
+        "c_mode": "approve_each_pass",
+        "c_maxPasses": 6,
+        "mode": null,
+        "maxPasses": null,
+        "clipHighPct": null,
+        "logFolder": null
       },
-      "observed_log": "mode=approve_each_pass (string) at T3.00; maxPasses=6 (number) at T3.00; clipHighPct=0.3 (number) at T3.00; logFolder=C:\\S8-test (string) at T3.00; maxPasses=12 (number) at T3.00",
+      "saved_by_group": {
+        "a": true,
+        "b": true,
+        "c": true
+      },
+      "observed_log": "a_mode=approve_each_pass (string) at T3.00; a_maxPasses=6 (number) at T3.00",
+      "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00; startDialog at T114.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T114.00",
       "marks": {
         "init_to_menu_via_G": true,
         "init_to_menu_via_module": true,
@@ -1620,23 +2372,111 @@ Wrote <scratch>\collected\x_after_call\s8_summary.json; copied 8 files, skipped 
       "loop_prefs_changes": [
         {
           "seen_at": "T111.00 (local time)",
-          "mode": "approve_each_pass",
-          "maxPasses": 12,
-          "clipHighPct": 0.3,
-          "logFolder": "C:\\S8-test"
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
+        },
+        {
+          "seen_at": "T114.25 (local time)",
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
         }
       ],
       "answered": true,
       "jim": {
-        "page_kept_values": true
+        "a_kept": true,
+        "b_kept": true,
+        "c_kept": true
       }
     },
     "kept_across_restart": {
+      "a_mode": true,
+      "a_maxPasses": true,
+      "b_mode": true,
+      "b_maxPasses": true,
+      "c_mode": true,
+      "c_maxPasses": true,
       "mode": true,
       "maxPasses": true,
       "clipHighPct": true,
       "logFolder": true
-    }
+    },
+    "runs": [
+      {
+        "file": "s8_settings_after_restart_T119.00.json",
+        "step": "after_restart",
+        "run_at": "T114.00 (local time)",
+        "saved_by_group": {
+          "a": true,
+          "b": true,
+          "c": true
+        },
+        "settings": {
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
+        },
+        "observed_log": "a_mode=approve_each_pass (string) at T3.00; a_maxPasses=6 (number) at T3.00",
+        "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00; startDialog at T114.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T114.00",
+        "jim": {
+          "a_kept": true,
+          "b_kept": true,
+          "c_kept": true
+        }
+      },
+      {
+        "file": "s8_settings_before_restart_T8.00.json",
+        "step": "before_restart",
+        "run_at": "T3.00 (local time)",
+        "saved_by_group": {
+          "a": true,
+          "b": true,
+          "c": true
+        },
+        "settings": {
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
+        },
+        "observed_log": "a_mode=approve_each_pass (string) at T3.00; a_maxPasses=6 (number) at T3.00",
+        "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00",
+        "jim": {
+          "a_showed_values": true,
+          "b_showed_values": true,
+          "c_showed_values": true,
+          "page_showed_groups": true
+        }
+      }
+    ]
   },
   "copied": [
     "s8_hud_T40.25.json",
@@ -1669,7 +2509,8 @@ Wrote <scratch>\collected\x_after_watch\s8_summary.json; copied 8 files, skipped
     "after_restart": {
       "status": "NOT RUN"
     },
-    "kept_across_restart": null
+    "kept_across_restart": null,
+    "runs": []
   },
   "copied": [
     "s8_loop_view.json"
@@ -1695,7 +2536,8 @@ Wrote <scratch>\collected\close_during_delay\s8_summary.json; copied 1 files, sk
     "after_restart": {
       "status": "NOT RUN"
     },
-    "kept_across_restart": null
+    "kept_across_restart": null,
+    "runs": []
   },
   "copied": [
     "s8_loop_view.json"
@@ -1704,6 +2546,253 @@ Wrote <scratch>\collected\close_during_delay\s8_summary.json; copied 1 files, sk
 }
 
 Wrote <scratch>\collected\not_started\s8_summary.json; copied 1 files, skipped 0.
+
+
+=== collect.ts on scenario observers_silent (expected: pass; passed, as expected)
+> node D:\Developer\LrC_Autonomous_Gateway\spikes\S8\collect.ts <scratch>\out\observers_silent <scratch>\collected\observers_silent
+{
+  "source": "%USERPROFILE%\\AppData\\Local\\Temp\\claude\\D--Developer-LrC-Autonomous-Gateway\\f51ed01b-4238-4d11-9bfb-fbbec733c2e2\\scratchpad\\s8smoke\\out\\observers_silent",
+  "hud": {
+    "file": null,
+    "status": "NOT RUN"
+  },
+  "settings": {
+    "before_restart": {
+      "file": "s8_settings_before_restart_T8.00.json",
+      "run_at": "T3.00 (local time)",
+      "settings": {
+        "a_mode": "autonomous",
+        "a_maxPasses": 4,
+        "b_mode": "approve_each_pass",
+        "b_maxPasses": 6,
+        "c_mode": "approve_each_pass",
+        "c_maxPasses": 6,
+        "mode": null,
+        "maxPasses": null,
+        "clipHighPct": null,
+        "logFolder": null
+      },
+      "saved_by_group": {
+        "a": false,
+        "b": true,
+        "c": true
+      },
+      "observed_log": null,
+      "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00",
+      "marks": {
+        "init_to_menu_via_G": true,
+        "init_to_menu_via_module": true,
+        "init_to_panel_via_G": true,
+        "init_to_panel_via_module": true,
+        "loop_init_mark": "init-UUID-0001",
+        "loop_running": true,
+        "loop_view_age_s": 1,
+        "menu_mark": "menu-UUID-0002",
+        "menu_sees_init_mark_in_module": "init-UUID-0001",
+        "menu_sees_init_mark_on_G": "init-UUID-0001",
+        "menu_to_loop_via_G": true,
+        "menu_to_loop_via_module": true,
+        "panel_rendered_at": "T3.00 (local time)"
+      },
+      "loop_saw_the_same_settings": true,
+      "loop_view_error": null,
+      "loop_prefs_changes": [
+        {
+          "seen_at": "T0.00 (local time)",
+          "a_mode": null,
+          "a_maxPasses": null,
+          "b_mode": null,
+          "b_maxPasses": null,
+          "c_mode": null,
+          "c_maxPasses": null,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
+        },
+        {
+          "seen_at": "T3.25 (local time)",
+          "a_mode": "autonomous",
+          "a_maxPasses": 4,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
+        }
+      ],
+      "answered": true,
+      "jim": {
+        "a_showed_values": true,
+        "b_showed_values": true,
+        "c_showed_values": true,
+        "page_showed_groups": true
+      }
+    },
+    "after_restart": {
+      "file": "s8_settings_after_restart_T79.00.json",
+      "run_at": "T74.00 (local time)",
+      "settings": {
+        "a_mode": "autonomous",
+        "a_maxPasses": 4,
+        "b_mode": "approve_each_pass",
+        "b_maxPasses": 6,
+        "c_mode": "approve_each_pass",
+        "c_maxPasses": 6,
+        "mode": null,
+        "maxPasses": null,
+        "clipHighPct": null,
+        "logFolder": null
+      },
+      "saved_by_group": {
+        "a": false,
+        "b": true,
+        "c": true
+      },
+      "observed_log": null,
+      "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00; startDialog at T74.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T74.00",
+      "marks": {
+        "init_to_menu_via_G": true,
+        "init_to_menu_via_module": true,
+        "init_to_panel_via_G": true,
+        "init_to_panel_via_module": true,
+        "loop_init_mark": "init-UUID-0003",
+        "loop_running": true,
+        "loop_view_age_s": 1,
+        "menu_mark": "menu-UUID-0004",
+        "menu_sees_init_mark_in_module": "init-UUID-0003",
+        "menu_sees_init_mark_on_G": "init-UUID-0003",
+        "menu_to_loop_via_G": true,
+        "menu_to_loop_via_module": true,
+        "panel_rendered_at": "T74.00 (local time)"
+      },
+      "loop_saw_the_same_settings": true,
+      "loop_view_error": null,
+      "loop_prefs_changes": [
+        {
+          "seen_at": "T71.00 (local time)",
+          "a_mode": "autonomous",
+          "a_maxPasses": 4,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
+        },
+        {
+          "seen_at": "T74.25 (local time)",
+          "a_mode": "autonomous",
+          "a_maxPasses": 4,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
+        }
+      ],
+      "answered": true,
+      "jim": {
+        "a_kept": true,
+        "b_kept": true,
+        "c_kept": true
+      }
+    },
+    "kept_across_restart": {
+      "a_mode": true,
+      "a_maxPasses": true,
+      "b_mode": true,
+      "b_maxPasses": true,
+      "c_mode": true,
+      "c_maxPasses": true,
+      "mode": true,
+      "maxPasses": true,
+      "clipHighPct": true,
+      "logFolder": true
+    },
+    "runs": [
+      {
+        "file": "s8_settings_after_restart_T79.00.json",
+        "step": "after_restart",
+        "run_at": "T74.00 (local time)",
+        "saved_by_group": {
+          "a": false,
+          "b": true,
+          "c": true
+        },
+        "settings": {
+          "a_mode": "autonomous",
+          "a_maxPasses": 4,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
+        },
+        "observed_log": null,
+        "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00; startDialog at T74.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T74.00",
+        "jim": {
+          "a_kept": true,
+          "b_kept": true,
+          "c_kept": true
+        }
+      },
+      {
+        "file": "s8_settings_before_restart_T8.00.json",
+        "step": "before_restart",
+        "run_at": "T3.00 (local time)",
+        "saved_by_group": {
+          "a": false,
+          "b": true,
+          "c": true
+        },
+        "settings": {
+          "a_mode": "autonomous",
+          "a_maxPasses": 4,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": null,
+          "maxPasses": null,
+          "clipHighPct": null,
+          "logFolder": null
+        },
+        "observed_log": null,
+        "dialog_log": "startDialog at T3.00; endDialog(ok) c_mode=approve_each_pass c_maxPasses=6 at T3.00",
+        "jim": {
+          "a_showed_values": true,
+          "b_showed_values": true,
+          "c_showed_values": true,
+          "page_showed_groups": true
+        }
+      }
+    ]
+  },
+  "copied": [
+    "s8_log.txt",
+    "s8_loop_view.json",
+    "s8_loop_view_after_restart_T79.00.json",
+    "s8_loop_view_before_restart_T8.00.json",
+    "s8_panel_view.json",
+    "s8_settings_after_restart_T79.00.json",
+    "s8_settings_before_restart_T8.00.json"
+  ],
+  "skipped": []
+}
+
+Wrote <scratch>\collected\observers_silent\s8_summary.json; copied 7 files, skipped 0.
 
 
 ##### Appendix: the smoke kit, verbatim
@@ -1844,7 +2933,10 @@ function M_makeProps()
         end,
         __newindex = function(self, k, v)
             data[k] = v
-            for _, fn in ipairs(observers[k] or {}) do fn(self, k, v) end
+            -- FAKE.silent_observers: observers never fire, as in S8 run 1 in Lightroom.
+            if not FAKE.silent_observers then
+                for _, fn in ipairs(observers[k] or {}) do fn(self, k, v) end
+            end
         end,
     })
 end
@@ -1975,12 +3067,19 @@ local function restartLightroom()
     FAKE.now = FAKE.now + 60 -- a restart takes a while; os.time() epochs are real, so panel staleness uses the loop's own start
     startLightroom()
 end
+-- Plug-in Manager with S8 selected: startDialog, the section, Jim's edits, Done (endDialog). An edit
+-- to group B goes to the prefs (its fields are bound to them); A and C go to the property table.
 local function pluginManager(edits)
     local P = require 'S8InfoProvider'
     local pt = M_makeProps()
+    P.startDialog(pt)
     local sections = P.sectionsForTopOfDialog(import('LrView').osFactory(), pt)
-    for _, e in ipairs(edits or {}) do pt[e[1]] = e[2] end
-    return sections
+    local prefs = import('LrPrefs').prefsForPlugin()
+    for _, e in ipairs(edits or {}) do
+        if e[1]:find("^b_") then prefs[e[1]] = e[2] else pt[e[1]] = e[2] end
+    end
+    P.endDialog(pt, "ok")
+    return sections, pt, prefs
 end
 
 -- README steps 10-20. closeHow: what happens after menu item 2.
@@ -2021,7 +3120,12 @@ local function settingsBefore()
     return fileLike("s8_settings_before_restart_")
 end
 
-local EDITS = { { "mode", "approve_each_pass" }, { "maxPasses", 6 }, { "clipHighPct", 0.3 }, { "logFolder", "C:\\S8-test" }, { "maxPasses", 12 } }
+local EDITS = {
+    { "a_mode", "approve_each_pass" }, { "a_maxPasses", 6 },
+    { "b_mode", "approve_each_pass" }, { "b_maxPasses", 6 },
+    { "c_mode", "approve_each_pass" }, { "c_maxPasses", 6 },
+}
+local function groupLine(g, yes) return "Group " .. g .. " saved approve_each_pass and 6: " .. (yes and "YES" or "NO") end
 
 if SCENARIO == "not_started" then
     -- Menu item 1 before the loop ever ran, and with no photo selected.
@@ -2045,13 +3149,25 @@ elseif SCENARIO == "close_during_delay" then
 else
     startLightroom()
     if SCENARIO == "late_close" then FAKE.fail_open = "s8_panel_view" end
-    local sections = pluginManager(EDITS)
+    if SCENARIO == "observers_silent" then FAKE.silent_observers = true end
+    local sections, pt, prefs = pluginManager(EDITS)
     FAKE.fail_open = nil
     check("the settings section renders with a title", sections[1].title == "AVG S8 settings test")
+    local boxes = {}
+    for _, node in ipairs(sections[1]) do if type(node) == "table" and node.kind == "group_box" then table.insert(boxes, node) end end
+    check("three groups: A and C bound to the property table, B to the prefs",
+        #boxes == 3 and boxes[1].spec.bind_to_object == pt and boxes[2].spec.bind_to_object == prefs and boxes[3].spec.bind_to_object == pt)
+    check("each row of a group carries the group's bind_to_object", boxes[2] and boxes[2].spec[1].spec.bind_to_object == prefs)
     local before = settingsBefore()
     check("settings BEFORE saved", before ~= nil and lastMessage().title == "AVG S8 settings: SAVED")
-    check("before: mode saved", has(before, '"mode": "approve_each_pass"'))
-    check("before: 12 recorded by the observer", has(before, "maxPasses=12"))
+    if SCENARIO == "observers_silent" then
+        check("observers silent: group A not saved, B and C saved", has(lastMessage().text, groupLine("A", false)) and has(lastMessage().text, groupLine("B", true)) and has(lastMessage().text, groupLine("C", true)))
+        check("observers silent: nothing in s8_observed", not has(before, "s8_observed"))
+    else
+        check("all three groups saved", has(lastMessage().text, groupLine("A", true)) and has(lastMessage().text, groupLine("B", true)) and has(lastMessage().text, groupLine("C", true)))
+        check("before: group A's observer logged 6", has(before, "a_maxPasses=6"))
+    end
+    check("before: endDialog logged with its values", has(before, "endDialog(ok) c_mode=approve_each_pass c_maxPasses=6"))
     check("before: menu sees the init mark (fake shares state)", has(before, '"init_to_menu_via_module": true'))
     check("before: loop saw the menu mark", has(before, '"menu_to_loop_via_module": true'))
     check("before: loop view copy saved", fileLike("s8_loop_view_before_restart_") ~= nil)
@@ -2062,7 +3178,9 @@ else
     end
 
     local hud
-    if SCENARIO == "normal" then
+    if SCENARIO == "observers_silent" then
+        -- the settings rerun: no HUD steps
+    elseif SCENARIO == "normal" then
         hud = hudFlow("sync")
         check("clicks 4 (greyed Pick B ignored)", has(hud, '"clicks": 4'))
         check("greyed clicks 0", has(hud, '"clicks_on_greyed_picks": 0'))
@@ -2100,7 +3218,8 @@ else
     menu(4); at(8)
     local after = fileLike("s8_settings_after_restart_")
     check("settings AFTER saved", after ~= nil and lastMessage().title == "AVG S8 settings: SAVED")
-    check("after: mode kept", has(after, '"mode": "approve_each_pass"'))
+    check("after: group B kept", has(after, '"b_mode": "approve_each_pass"'))
+    check("after: menu 4 reports each group", has(lastMessage().text, "Group A saved") and has(lastMessage().text, "Group C saved"))
     check("after: loop running", has(after, '"loop_running": true'))
     if SCENARIO == "no_close" then
         check("after: panel not opened since the start -> inconclusive", has(after, '"init_to_panel_via_module": "inconclusive: Plug-in Manager not opened since Lightroom started"'))
@@ -2248,7 +3367,7 @@ function run(label: string, args: string[], expect: "pass" | readonly string[]):
 
 const parts: string[] = [];
 parts.push("\n##### Parse" + run("Lua 5.1 parse of every S8 Lua file", [path.join(kit, "parse.cjs"), plugin], "pass"));
-const SCENARIOS = ["normal", "no_close", "late_close", "late_close_6s", "x_after_call", "x_after_watch", "close_during_delay", "not_started"];
+const SCENARIOS = ["normal", "no_close", "late_close", "late_close_6s", "x_after_call", "x_after_watch", "close_during_delay", "not_started", "observers_silent"];
 parts.push("\n##### Scenarios");
 for (const sc of SCENARIOS) {
   parts.push(run(`scenario ${sc}`, [path.join(kit, "run-smoke.cjs"), plugin, sc], "pass"));
@@ -2264,6 +3383,8 @@ const MUTANTS = [
     failing: ["no HUD after a close during the 5 s delay", "the loop recorded the cancelled open as not open"] },
   { label: "mutant 3 (round 2): Jim's answer counts only within 3 s of the call, not the 10 s he watches", file: "S8Hud.lua", from: "local WATCH_S = 10", to: "local WATCH_S = 3", scenario: "late_close_6s",
     failing: ["closed 6 s after the call (within the 10 s watch) + Jim ticked it: yes"] },
+  { label: "mutant 4 (S8 run 1 in Lightroom, fix/s8-settings): the settings groups carry no bind_to_object", file: "S8InfoProvider.lua", from: "local function group(f, g, title, object)", to: "local function group(f, g, title, object)\n    object = nil", scenario: "normal",
+    failing: ["three groups: A and C bound to the property table, B to the prefs", "each row of a group carries the group's bind_to_object"] },
 ];
 for (const m of MUTANTS) {
   const dir = path.join(kit, "mutant");
@@ -2288,8 +3409,8 @@ for (const f of ["fake-lr.lua", "main.lua", "run-smoke.cjs", "parse.cjs", "assem
 
 const header = [
   unexpected.length === 0 ? "BUILD: every run as expected." : `BUILD FAILED: ${unexpected.length} run(s) not as expected: ${unexpected.join("; ")}`,
-  "S8 smoke transcript (Claude Code, Opus 5.5, 2026-09-28, branch phase-5/spike-s8; regenerated after the",
-  "fixes for Greptile's rounds 1-3 on PR #40).",
+  "S8 smoke transcript (Claude Code, Opus 5.5, 2026-09-28; branch phase-5/spike-s8 with the fixes for Greptile's",
+  "rounds 1-3 on PR #40, then branch fix/s8-settings: the settings section's groups A-C after S8 run 1).",
   "What it shows: the S8 harness's own logic, run against a fake Lightroom; NOT Lightroom's behaviour.",
   "Kit: a scratch folder outside the repo with npm fengari@0.1.4 (a Lua 5.3 VM in JavaScript) and luaparse@0.3.1,",
   "neither a project dependency. Its five files (this transcript's builder included) are reproduced verbatim in the",

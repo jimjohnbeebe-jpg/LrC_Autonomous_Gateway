@@ -1,0 +1,17 @@
+{
+  "panel_sees": {
+    "init_mark_in_module": "init-1A2B1A10-8B53-45DB-B817-AEED90AD0B51",
+    "init_mark_on_G": "init-1A2B1A10-8B53-45DB-B817-AEED90AD0B51",
+    "menu_mark_in_module": "menu-74BE0692-5582-4CBB-9CEE-44E37CCFDB82",
+    "menu_mark_on_G": "menu-74BE0692-5582-4CBB-9CEE-44E37CCFDB82"
+  },
+  "prefs": {
+    "clipHighPct": 0.5,
+    "logFolder": "",
+    "maxPasses": 4,
+    "mode": "autonomous"
+  },
+  "rendered_at": "2026-09-28 19:02:42 (local time)",
+  "rendered_epoch": 1790647362,
+  "spike": "S8"
+}

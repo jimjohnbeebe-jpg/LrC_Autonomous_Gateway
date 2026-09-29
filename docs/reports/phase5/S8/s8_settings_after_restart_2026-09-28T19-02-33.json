@@ -1,0 +1,34 @@
+{
+  "answered": true,
+  "loop_view_copy": "s8_loop_view_after_restart_2026-09-28T19-02-19.json",
+  "lr_version": "15.5.1",
+  "marks": {
+    "init_to_menu_via_G": true,
+    "init_to_menu_via_module": true,
+    "init_to_panel_via_G": "inconclusive: Plug-in Manager not opened since Lightroom started",
+    "init_to_panel_via_module": "inconclusive: Plug-in Manager not opened since Lightroom started",
+    "loop_init_mark": "init-1A2B1A10-8B53-45DB-B817-AEED90AD0B51",
+    "loop_running": true,
+    "loop_view_age_s": 0,
+    "menu_mark": "menu-74BE0692-5582-4CBB-9CEE-44E37CCFDB82",
+    "menu_sees_init_mark_in_module": "init-1A2B1A10-8B53-45DB-B817-AEED90AD0B51",
+    "menu_sees_init_mark_on_G": "init-1A2B1A10-8B53-45DB-B817-AEED90AD0B51",
+    "menu_to_loop_via_G": true,
+    "menu_to_loop_via_module": true
+  },
+  "observations": {
+    "page_kept_values": {
+      "answer": true,
+      "statement": "After the restart, the S8 section still showed approve_each_pass, the Highlight clip value 0.3 and the Log folder text I typed"
+    }
+  },
+  "prefs_in_menu_item": {
+    "clipHighPct": 0.5,
+    "logFolder": "",
+    "maxPasses": 4,
+    "mode": "autonomous"
+  },
+  "run_at": "2026-09-28 19:02:12 (local time)",
+  "spike": "S8",
+  "step": "after_restart"
+}

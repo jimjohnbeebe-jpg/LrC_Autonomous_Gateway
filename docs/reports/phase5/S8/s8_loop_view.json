@@ -1,0 +1,28 @@
+{
+  "errors": [],
+  "generation": 1,
+  "init_mark": "init-1A2B1A10-8B53-45DB-B817-AEED90AD0B51",
+  "loop_sees": {
+    "init_mark_in_module": "init-1A2B1A10-8B53-45DB-B817-AEED90AD0B51",
+    "init_mark_on_G": "init-1A2B1A10-8B53-45DB-B817-AEED90AD0B51",
+    "menu_mark_in_module": "menu-74BE0692-5582-4CBB-9CEE-44E37CCFDB82",
+    "menu_mark_on_G": "menu-74BE0692-5582-4CBB-9CEE-44E37CCFDB82"
+  },
+  "prefs_history": [
+    {
+      "prefs": {
+        "clipHighPct": 0.5,
+        "logFolder": "",
+        "maxPasses": 4,
+        "mode": "autonomous"
+      },
+      "seen_at": "2026-09-28 19:02:12 (local time)"
+    }
+  ],
+  "requests": [],
+  "spike": "S8",
+  "started_at": "2026-09-28 19:02:02 (local time)",
+  "started_epoch": 1790647322,
+  "updated_at": "2026-09-28 19:07:28 (local time)",
+  "updated_epoch": 1790647648
+}

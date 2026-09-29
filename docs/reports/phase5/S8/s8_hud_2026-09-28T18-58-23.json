@@ -1,0 +1,151 @@
+{
+  "answered": true,
+  "findings": {
+    "appeared_after_request_s": 5.3317584991455,
+    "buttons": [
+      "Abort",
+      "Approve",
+      "Pick B",
+      "Accept",
+      "Accept"
+    ],
+    "clicks": 5,
+    "clicks_on_greyed_picks": 0,
+    "closed_by_code": "yes",
+    "closed_by_code_because": "the window closed inside the call",
+    "selection_changes_seen": 2
+  },
+  "lr_version": "15.5.1",
+  "observations": {
+    "approve_label_blank": {
+      "answer": false,
+      "statement": "The Approve button had no text on it (only the 'Approve:' label next to it)"
+    },
+    "approve_label_changed": {
+      "answer": true,
+      "statement": "After I clicked Approve, its button read 'Approve pass 2'"
+    },
+    "closed_by_itself": {
+      "answer": true,
+      "statement": "The HUD closed by itself when I chose menu item 2"
+    },
+    "focus_backslash": {
+      "answer": false,
+      "statement": "Right after the HUD appeared, pressing \\ (without clicking anywhere first) switched Before/After in the main window"
+    },
+    "hud_appeared": {
+      "answer": true,
+      "statement": "The HUD appeared by itself a few seconds after menu item 1"
+    },
+    "last_click_shown": {
+      "answer": true,
+      "statement": "The 'Last click' line named each button right after I clicked it"
+    },
+    "picks_enabled_after_approve": {
+      "answer": true,
+      "statement": "After I clicked Approve, Pick B looked normal and I could click it"
+    },
+    "picks_greyed": {
+      "answer": true,
+      "statement": "Pick A, Pick B and Pick C looked greyed out until I clicked Approve"
+    },
+    "stage_updated": {
+      "answer": true,
+      "statement": "The Stage and Deltas lines changed every second, also while I clicked"
+    }
+  },
+  "run": {
+    "clicks": [
+      {
+        "at": "18:56:37",
+        "button": "Abort",
+        "can_yield_in_action": false,
+        "epoch": 812339797.70231,
+        "picks_enabled_at_click": false,
+        "task_done_ms": 5.5216550827026,
+        "task_exposure": 0.33,
+        "task_read_ok": true,
+        "task_started_ms": 3.0016899108887
+      },
+      {
+        "at": "18:56:48",
+        "button": "Approve",
+        "can_yield_in_action": false,
+        "epoch": 812339808.00046,
+        "picks_enabled_at_click": false,
+        "task_done_ms": 6.0513019561768,
+        "task_exposure": 0.33,
+        "task_read_ok": true,
+        "task_started_ms": 4.0560960769653
+      },
+      {
+        "at": "18:56:49",
+        "button": "Pick B",
+        "can_yield_in_action": false,
+        "epoch": 812339809.64947,
+        "picks_enabled_at_click": true,
+        "task_done_ms": 4.040002822876,
+        "task_exposure": 0.33,
+        "task_read_ok": true,
+        "task_started_ms": 2.0128488540649
+      },
+      {
+        "at": "18:56:56",
+        "button": "Accept",
+        "can_yield_in_action": false,
+        "epoch": 812339816.20044,
+        "picks_enabled_at_click": true,
+        "task_done_ms": 4.0016174316406,
+        "task_exposure": 0.33,
+        "task_read_ok": true,
+        "task_started_ms": 1.9984245300293
+      },
+      {
+        "at": "18:57:07",
+        "button": "Accept",
+        "can_yield_in_action": false,
+        "epoch": 812339827.88251,
+        "picks_enabled_at_click": true,
+        "task_done_ms": 3.0112266540527,
+        "task_exposure": 0.33,
+        "task_read_ok": true,
+        "task_started_ms": 1.9967555999756
+      }
+    ],
+    "close": {
+      "at": "18:57:29",
+      "closed_during_call": true,
+      "epoch": 812339849.17384,
+      "exists": true,
+      "hud_open_before_call": true,
+      "tries": [
+        {
+          "argument": "_PLUGIN",
+          "ok": true
+        }
+      ]
+    },
+    "closed_at": "18:57:29",
+    "closed_epoch": 812339849.17533,
+    "open": false,
+    "open_started_at": "18:56:19",
+    "open_when_present_returned": false,
+    "opened_from": "the S8 loop task (started by the init script), as the bridge task would open it",
+    "photo": "20260907-_OZ80099.NEF",
+    "present_returned_after_s": 69.566596746445,
+    "request_id": "B1BCA6D7-B430-465B-8693-E4AC4E2D3E18",
+    "requested_at": "2026-09-28 18:56:14 (local time)",
+    "requested_epoch": 812339774.35595,
+    "run_at": "2026-09-28 18:56:19 (local time)",
+    "selection_change_times": [
+      "18:57:10",
+      "18:57:17"
+    ],
+    "shown_at": "18:56:19",
+    "shown_epoch": 812339779.68771,
+    "ticks": 65
+  },
+  "run_at": "2026-09-28 18:56:19 (local time)",
+  "spike": "S8",
+  "step": "hud"
+}

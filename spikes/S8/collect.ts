@@ -8,7 +8,8 @@
 //     destDir default: docs\reports\phase5\S8
 //
 // - Reads the newest s8_hud_*.json (S8Hud.lua) and s8_settings_{before,after}_restart_*.json
-//   (S8Settings.lua), with the loop-view copy each settings file names.
+//   (S8Settings.lua), with the loop-view copy each settings file names, and lists every settings
+//   run (run 1 and the rerun of fix/s8-settings) with what each settings group A-C saved.
 // - Copies every s8_*.json and s8_*.txt with the user folder written as %USERPROFILE%.
 // - Writes s8_summary.json to destDir and prints it.
 
@@ -68,7 +69,9 @@ const Settings = z.looseObject({
 });
 const LoopView = z.looseObject({ prefs_history: z.array(z.looseObject({ seen_at: z.string(), prefs: Prefs })).optional() });
 
-const SETTING_KEYS = ["mode", "maxPasses", "clipHighPct", "logFolder"] as const;
+/** Groups A-C of the settings rerun (fix/s8-settings), then run 1's single set of fields. */
+const GROUPS = ["a", "b", "c"] as const;
+const SETTING_KEYS = [...GROUPS.flatMap((g) => [`${g}_mode`, `${g}_maxPasses`]), "mode", "maxPasses", "clipHighPct", "logFolder"] as const;
 
 const newest = (prefix: string): string | null => readdirSync(srcDir).filter((f) => f.startsWith(prefix) && f.endsWith(".json")).sort().at(-1) ?? null;
 const readJson = (file: string): unknown => JSON.parse(readFileSync(path.join(srcDir, file), "utf8"));
@@ -104,6 +107,36 @@ function hudSummary() {
   };
 }
 
+/** Whether group g holds what the README has Jim enter (approve_each_pass, 6); null when the group is absent (run 1). */
+function savedByGroup(prefs: Record<string, unknown>): Record<string, boolean | null> {
+  return Object.fromEntries(
+    GROUPS.map((g) => [g, prefs[`${g}_mode`] === undefined ? null : prefs[`${g}_mode`] === "approve_each_pass" && prefs[`${g}_maxPasses`] === 6]),
+  );
+}
+
+/** The save time in a file name (S8Common.save: <prefix>_<YYYY-MM-DDTHH-MM-SS>.json). */
+const savedAt = (f: string): string => f.match(/_(\d{4}-\d\d-\d\dT\d\d-\d\d-\d\d)\.json$/)?.[1] ?? f;
+
+/** Every settings run, oldest first by its save time, so run 1 stays in the summary after the rerun. */
+function settingsRuns() {
+  return readdirSync(srcDir)
+    .filter((f) => /^s8_settings_.*\.json$/.test(f))
+    .sort((x, y) => savedAt(x).localeCompare(savedAt(y)))
+    .map((file) => {
+      const s = Settings.parse(readJson(file));
+      return {
+        file,
+        step: s.step,
+        run_at: s.run_at,
+        saved_by_group: savedByGroup(s.prefs_in_menu_item),
+        settings: Object.fromEntries(SETTING_KEYS.map((k) => [k, s.prefs_in_menu_item[k] ?? null])),
+        observed_log: s.prefs_in_menu_item["s8_observed"] ?? null,
+        dialog_log: s.prefs_in_menu_item["s8_dialog_log"] ?? null,
+        jim: answers(s.observations),
+      };
+    });
+}
+
 function settingsFile(step: string) {
   const file = newest(`s8_settings_${step}_`);
   if (!file) return null;
@@ -122,7 +155,9 @@ function settingsFile(step: string) {
     file,
     run_at: s.run_at,
     settings,
+    saved_by_group: savedByGroup(s.prefs_in_menu_item),
     observed_log: s.prefs_in_menu_item["s8_observed"] ?? null,
+    dialog_log: s.prefs_in_menu_item["s8_dialog_log"] ?? null,
     marks: s.marks,
     loop_saw_the_same_settings: loopViewError ? "unknown" : loopSawSame,
     loop_view_error: loopViewError,
@@ -202,6 +237,7 @@ function main(): void {
       before_restart: before ?? { status: "NOT RUN" },
       after_restart: after ?? { status: "NOT RUN" },
       kept_across_restart: kept,
+      runs: settingsRuns(),
     },
   };
   const { copied, skipped } = copyRedacted();

@@ -10,13 +10,15 @@ Repo: https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway (public). `main
 2. **Never commit to `main` directly.** This applies from Phase 0b on (the last direct commit to `main` was `63e9185`). The rule is ours to keep: `enforce_admins` is off, so GitHub would let an admin push.
 3. **Open a PR** with `gh pr create --fill` after pushing the branch (`git push -u origin <branch>`).
 4. **Wait for Greptile's review.** Poll `gh pr view <n> --comments` (and the review comments, `gh api repos/jimjohnbeebe-jpg/LrC_Autonomous_Gateway/pulls/<n>/comments`) for a review or comment whose author is the Greptile app (login contains `greptile`). Do not triage or merge before it arrives. If it does not arrive, stop and tell Jim.
+   - **One automatic review per PR, on code defects only** [stated: Jim, 2026-09-28, "Can we tune it so that only actual code errors are called out?", each re-review costing him about $0.50]. `greptile.json` in the repo root sets it: `strictness` 3, `commentTypes` `["logic"]`, `autoReview` `["open"]` (no review on later pushes), docs and Markdown ignored, and instructions not to enforce `02-sourcing.md` [handle: https://www.greptile.com/docs/code-review/greptile-json-reference, read 2026-09-28: settings are read from the PR's source branch and override the dashboard].
+   - **Sourcing (rule 02) stays Claude Code's job**: sweep every added doc and comment line for handles and tags before the first push, since Greptile no longer checks it.
 5. **Triage every Greptile comment** in one table, posted as a PR comment (`gh pr comment <n> --body-file <file>`):
 
    | file:line | Greptile finding | decision | reason | commit (if fixed) |
    |---|---|---|---|---|
 
    `decision` is exactly one of **fix**, **reject**, **defer**. Each summary finding and each inline comment gets its own row. When Greptile reports no issues, post the table anyway with a single "no findings" row. A **defer** names where it is tracked (report, handover or issue). A **reject** gives a sourced reason (handle or tag, per `02-sourcing.md`).
-6. **A PR merges only when** the triage table is posted **and no fix decisions remain open**. Every **fix** row carries the hash of the commit that fixed it, pushed to the PR branch. If Greptile reviews those new commits, triage the new comments the same way, in an updated or additional table.
+6. **A PR merges only when** the triage table is posted **and no fix decisions remain open**. Every **fix** row carries the hash of the commit that fixed it, pushed to the PR branch. **All fixes from one review go in one push.** Pushing fixes does not start a new review (step 4). Claude Code asks Jim before requesting a re-review, and does so only when a fix changed code logic in a way the first review did not see; if Greptile reviews again, triage the new comments the same way, in an updated or additional table.
 7. **Merge** with `gh pr merge <n> --squash --delete-branch`. Jim may choose `--merge` for phase branches whose history is worth keeping. Then `git switch main && git pull`.
 8. **After the merge, update** the vault `LrC_AVG_STATE.md` "Next action".
 

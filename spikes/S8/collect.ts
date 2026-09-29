@@ -150,7 +150,9 @@ function settingsFile(step: string) {
   }
   const settings = Object.fromEntries(SETTING_KEYS.map((k) => [k, s.prefs_in_menu_item[k] ?? null]));
   const loopLast = history.at(-1)?.prefs ?? null;
-  const loopSawSame = loopLast !== null && SETTING_KEYS.every((k) => JSON.stringify(loopLast[k] ?? null) === JSON.stringify(settings[k]));
+  // Only the settings this snapshot holds: two absent values are not "the same settings" (Greptile, PR #41).
+  const present = SETTING_KEYS.filter((k) => settings[k] !== null);
+  const loopSawSame = loopLast !== null && present.length > 0 && present.every((k) => JSON.stringify(loopLast[k] ?? null) === JSON.stringify(settings[k]));
   return {
     file,
     run_at: s.run_at,
@@ -226,17 +228,32 @@ function copyRedacted(): { copied: string[]; skipped: string[] } {
   return { copied, skipped };
 }
 
+/**
+ * Per setting: whether the value after the restart equals the one before; null when either snapshot
+ * lacks the setting, since a setting that was never there was not kept (Greptile, PR #41: run 1's
+ * files have no group settings). Settings are read with `?? null`, and prefs never hold a null.
+ * "Unchanged" is not "saved": run 1's defaults are unchanged too. keptByGroup answers "saved and kept".
+ */
+function keptAcrossRestart(before: Record<string, unknown>, after: Record<string, unknown>): Record<string, boolean | null> {
+  return Object.fromEntries(SETTING_KEYS.map((k) => [k, before[k] === null || after[k] === null ? null : JSON.stringify(before[k]) === JSON.stringify(after[k])]));
+}
+
+/** Per group: saved before the restart and still saved after it; null when the group was not saved before. */
+function keptByGroup(before: Record<string, boolean | null>, after: Record<string, boolean | null>): Record<string, boolean | null> {
+  return Object.fromEntries(GROUPS.map((g) => [g, before[g] === true ? after[g] === true : null]));
+}
+
 function main(): void {
   const before = settingsFile("before_restart");
   const after = settingsFile("after_restart");
-  const kept = before && after ? Object.fromEntries(SETTING_KEYS.map((k) => [k, JSON.stringify(before.settings[k]) === JSON.stringify(after.settings[k])])) : null;
   const summary = {
     source: srcDir,
     hud: hudSummary(),
     settings: {
       before_restart: before ?? { status: "NOT RUN" },
       after_restart: after ?? { status: "NOT RUN" },
-      kept_across_restart: kept,
+      kept_across_restart: before && after ? keptAcrossRestart(before.settings, after.settings) : null,
+      kept_by_group: before && after ? keptByGroup(before.saved_by_group, after.saved_by_group) : null,
       runs: settingsRuns(),
     },
   };

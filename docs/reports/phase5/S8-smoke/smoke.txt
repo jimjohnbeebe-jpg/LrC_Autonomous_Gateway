@@ -510,6 +510,58 @@ PASS after: panel saw the new init mark
 EXIT NON-ZERO
 
 
+--- mutant 5 (PR #41): the Max passes rows lose their bind_to_object (the first row of each group keeps it)
+--- in S8InfoProvider.lua: replaced "precision = 0, min = 1, max = 8, width_in_chars = 5 }, object)," with "precision = 0, min = 1, max = 8, width_in_chars = 5 }),"
+=== scenario normal on the mutant (expected: fail exactly ["each row of a group carries the group's bind_to_object"]; failed, as expected)
+> node <scratch>\run-smoke.cjs <scratch>\mutant normal
+PASS the settings section renders with a title
+PASS three groups: A and C bound to the property table, B to the prefs
+FAIL each row of a group carries the group's bind_to_object
+PASS settings BEFORE saved
+PASS all three groups saved
+PASS before: group A's observer logged 6
+PASS before: endDialog logged with its values
+PASS before: menu sees the init mark (fake shares state)
+PASS before: loop saw the menu mark
+PASS before: loop view copy saved
+PASS before: panel saw the init mark
+PASS HUD not open 2 s after menu 1
+PASS HUD open 7 s after menu 1
+PASS stage line ticking
+PASS last click shows Abort
+PASS picks enabled after Approve
+PASS HUD result saved
+PASS selection change seen
+PASS click tasks read the photo
+PASS appeared about 5 s after the request
+PASS clicks 4 (greyed Pick B ignored)
+PASS greyed clicks 0
+PASS closed_by_code yes, inside the call
+PASS settings AFTER saved
+PASS after: group B kept
+PASS after: menu 4 reports each group
+PASS after: loop running
+PASS after: panel saw the new init mark
+===LOG
+[   8.00] MODAL: AVG S8 - what did the settings page show?
+[   8.00] MESSAGE: AVG S8 settings: SAVED
+[  16.25] HUD SHOWN: AVG S8 HUD
+[  21.00] CLICK Abort
+[  22.00] CLICK Pick B ignored (disabled)
+[  23.00] CLICK Approve
+[  24.00] CLICK Pick B
+[  25.00] CLICK Accept
+[  27.25] HUD CLOSED by closeFloatingDialogsForPlugin
+[  28.75] MODAL: AVG S8 - what did you see in the HUD?
+[  28.75] MESSAGE: AVG S8 HUD test: SAVED
+[ 107.00] MODAL: AVG S8 - what did the settings page show?
+[ 107.00] MESSAGE: AVG S8 settings: SAVED
+===RESULT FAILED: each row of a group carries the group's bind_to_object
+
+
+EXIT NON-ZERO
+
+
 ##### Collector dry run
 
 === collect.ts on scenario normal (expected: pass; passed, as expected)
@@ -761,10 +813,15 @@ EXIT NON-ZERO
       "b_maxPasses": true,
       "c_mode": true,
       "c_maxPasses": true,
-      "mode": true,
-      "maxPasses": true,
-      "clipHighPct": true,
-      "logFolder": true
+      "mode": null,
+      "maxPasses": null,
+      "clipHighPct": null,
+      "logFolder": null
+    },
+    "kept_by_group": {
+      "a": true,
+      "b": true,
+      "c": true
     },
     "runs": [
       {
@@ -1083,10 +1140,15 @@ Wrote <scratch>\collected\normal\s8_summary.json; copied 8 files, skipped 0.
       "b_maxPasses": true,
       "c_mode": true,
       "c_maxPasses": true,
-      "mode": true,
-      "maxPasses": true,
-      "clipHighPct": true,
-      "logFolder": true
+      "mode": null,
+      "maxPasses": null,
+      "clipHighPct": null,
+      "logFolder": null
+    },
+    "kept_by_group": {
+      "a": true,
+      "b": true,
+      "c": true
     },
     "runs": [
       {
@@ -1414,10 +1476,15 @@ Wrote <scratch>\collected\no_close\s8_summary.json; copied 8 files, skipped 0.
       "b_maxPasses": true,
       "c_mode": true,
       "c_maxPasses": true,
-      "mode": true,
-      "maxPasses": true,
-      "clipHighPct": true,
-      "logFolder": true
+      "mode": null,
+      "maxPasses": null,
+      "clipHighPct": null,
+      "logFolder": null
+    },
+    "kept_by_group": {
+      "a": true,
+      "b": true,
+      "c": true
     },
     "runs": [
       {
@@ -1747,10 +1814,15 @@ Wrote <scratch>\collected\late_close\s8_summary.json; copied 7 files, skipped 1.
       "b_maxPasses": true,
       "c_mode": true,
       "c_maxPasses": true,
-      "mode": true,
-      "maxPasses": true,
-      "clipHighPct": true,
-      "logFolder": true
+      "mode": null,
+      "maxPasses": null,
+      "clipHighPct": null,
+      "logFolder": null
+    },
+    "kept_by_group": {
+      "a": true,
+      "b": true,
+      "c": true
     },
     "runs": [
       {
@@ -2079,10 +2151,15 @@ Wrote <scratch>\collected\late_close_6s\s8_summary.json; copied 8 files, skipped
       "b_maxPasses": true,
       "c_mode": true,
       "c_maxPasses": true,
-      "mode": true,
-      "maxPasses": true,
-      "clipHighPct": true,
-      "logFolder": true
+      "mode": null,
+      "maxPasses": null,
+      "clipHighPct": null,
+      "logFolder": null
+    },
+    "kept_by_group": {
+      "a": true,
+      "b": true,
+      "c": true
     },
     "runs": [
       {
@@ -2411,10 +2488,15 @@ Wrote <scratch>\collected\x_after_call\s8_summary.json; copied 8 files, skipped 
       "b_maxPasses": true,
       "c_mode": true,
       "c_maxPasses": true,
-      "mode": true,
-      "maxPasses": true,
-      "clipHighPct": true,
-      "logFolder": true
+      "mode": null,
+      "maxPasses": null,
+      "clipHighPct": null,
+      "logFolder": null
+    },
+    "kept_by_group": {
+      "a": true,
+      "b": true,
+      "c": true
     },
     "runs": [
       {
@@ -2510,6 +2592,7 @@ Wrote <scratch>\collected\x_after_watch\s8_summary.json; copied 8 files, skipped
       "status": "NOT RUN"
     },
     "kept_across_restart": null,
+    "kept_by_group": null,
     "runs": []
   },
   "copied": [
@@ -2537,6 +2620,7 @@ Wrote <scratch>\collected\close_during_delay\s8_summary.json; copied 1 files, sk
       "status": "NOT RUN"
     },
     "kept_across_restart": null,
+    "kept_by_group": null,
     "runs": []
   },
   "copied": [
@@ -2713,10 +2797,15 @@ Wrote <scratch>\collected\not_started\s8_summary.json; copied 1 files, skipped 0
       "b_maxPasses": true,
       "c_mode": true,
       "c_maxPasses": true,
-      "mode": true,
-      "maxPasses": true,
-      "clipHighPct": true,
-      "logFolder": true
+      "mode": null,
+      "maxPasses": null,
+      "clipHighPct": null,
+      "logFolder": null
+    },
+    "kept_by_group": {
+      "a": null,
+      "b": true,
+      "c": true
     },
     "runs": [
       {
@@ -3157,7 +3246,15 @@ else
     for _, node in ipairs(sections[1]) do if type(node) == "table" and node.kind == "group_box" then table.insert(boxes, node) end end
     check("three groups: A and C bound to the property table, B to the prefs",
         #boxes == 3 and boxes[1].spec.bind_to_object == pt and boxes[2].spec.bind_to_object == prefs and boxes[3].spec.bind_to_object == pt)
-    check("each row of a group carries the group's bind_to_object", boxes[2] and boxes[2].spec[1].spec.bind_to_object == prefs)
+    -- Both rows of every group, since the fake applies edits by key and would not notice a lost binding (Greptile, PR #41).
+    local rowsBound = #boxes == 3
+    for i, object in ipairs({ pt, prefs, pt }) do
+        for r = 1, 2 do
+            local rowNode = boxes[i] and boxes[i].spec[r]
+            rowsBound = rowsBound and rowNode ~= nil and rowNode.kind == "row" and rowNode.spec.bind_to_object == object
+        end
+    end
+    check("each row of a group carries the group's bind_to_object", rowsBound)
     local before = settingsBefore()
     check("settings BEFORE saved", before ~= nil and lastMessage().title == "AVG S8 settings: SAVED")
     if SCENARIO == "observers_silent" then
@@ -3385,6 +3482,8 @@ const MUTANTS = [
     failing: ["closed 6 s after the call (within the 10 s watch) + Jim ticked it: yes"] },
   { label: "mutant 4 (S8 run 1 in Lightroom, fix/s8-settings): the settings groups carry no bind_to_object", file: "S8InfoProvider.lua", from: "local function group(f, g, title, object)", to: "local function group(f, g, title, object)\n    object = nil", scenario: "normal",
     failing: ["three groups: A and C bound to the property table, B to the prefs", "each row of a group carries the group's bind_to_object"] },
+  { label: "mutant 5 (PR #41): the Max passes rows lose their bind_to_object (the first row of each group keeps it)", file: "S8InfoProvider.lua", from: "precision = 0, min = 1, max = 8, width_in_chars = 5 }, object),", to: "precision = 0, min = 1, max = 8, width_in_chars = 5 }),", scenario: "normal",
+    failing: ["each row of a group carries the group's bind_to_object"] },
 ];
 for (const m of MUTANTS) {
   const dir = path.join(kit, "mutant");

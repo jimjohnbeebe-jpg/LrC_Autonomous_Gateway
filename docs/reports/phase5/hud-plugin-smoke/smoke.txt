@@ -1,18 +1,22 @@
 BUILD: every run as expected.
-phase-5/hud-plugin smoke transcript (PHASE5_PLAN row 4) - Claude Code (Opus 5.5), 2026-09-29
-Plugin under test: plugin\LrC-AVG.lrplugin at commit c379869 (branch phase-5/hud-plugin).
-"main" = plugin\LrC-AVG.lrplugin at 7617c6b, its .lua files copied to <scratch>\old with git show.
-Engine code the results are checked against: engine\dist (npm run build at c379869): hudUpdatePayloadSchema,
+HUD plugin smoke transcript (PHASE5_PLAN row 4: phase-5/hud-plugin, then fix/hud-menu-and-target after the
+row 4 probe) - Claude Code (Opus 5.5), 2026-09-29
+Plugin under test: plugin\LrC-AVG.lrplugin at commit 544ad31 (branch fix/hud-menu-and-target).
+"main" = plugin\LrC-AVG.lrplugin at 4e9409e, its .lua files copied to <scratch>\old with git show.
+Engine code the results are checked against: engine\dist (npm run build at 544ad31): hudUpdatePayloadSchema,
 parseHudEvent and HUD_LIMITS (bridge\hud-protocol.js), COMMANDS.hud_update (bridge\protocol.js).
 Node v24.11.1; fengari 0.1.4 (a Lua 5.3 VM in JavaScript), a scratch install, not a project dependency.
 The fake Lightroom (fake-lr.lua, row 3's with a new clock; fake-hud.lua, new), the scenario scripts and
 the runner are reproduced at the end.
 
-What this shows: that the HUD's Lua runs through the real bridge and dispatch, how it checks hud_update
-(against the engine's own schema on 35 cases: 34 agree, and one differs as expected; section "Contract"), which updates it takes, what its
-window shows and which buttons are on at each step, the events its buttons and menu items send (each read
-by the engine's parseHudEvent), the "Target changed" line, the close after a session's end, and that
-main's and this branch's bridge behave the same in the row 6/8 bridge scenario. Each mutant (written by
+What this shows: that the HUD's Lua runs through the real bridge and dispatch; how it checks hud_update
+(against the engine's own schema on 35 cases: 34 agree, and one differs as expected; section "Contract");
+which updates it takes; what its window shows and which buttons are on at each step; the events its
+buttons and menu items send (each read by the engine's parseHudEvent); the selection line; the close
+after a session's end; and that main's and this branch's bridge behave the same in the row 6/8 bridge
+scenario. Checks S3 and H24-H28 cover fix/hud-menu-and-target: the menu items wait for the engine and
+report in the HUD instead of a message box, and the selection is checked again 0.5 s after each
+observer call and every 2 s while a session is open. Each mutant (written by
 the runner to <scratch>\mutant) takes out one guard and must fail exactly its named checks; the reason
 for each check a mutant reaches is in the runner's MUTANTS list.
 The fake's behaviour is Claude Code's invention, modelled on what S8 observed (docs\reports\phase5\S8.md
@@ -73,42 +77,49 @@ $ node run.mts <repo>
 --  [begin] windows 1, open 1, events 0, buttons on: Abort, Accept
       connection: Connection: Claude session active
       stage: Stage: Starting the session
+      targetChanged: Selection: the session's photo.
       settingsTitle: Settings page (the next session reads them):
       settingsA: autonomous, max 4 passes, 3 variants, preview 1600 px q75
       settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
 --  [second open, Show HUD while open] windows 1, open 1, events 0, buttons on: Abort, Accept
       connection: Connection: Claude session active
       stage: Stage: Pass 0: profile, lens and baseline
+      targetChanged: Selection: the session's photo.
       settingsTitle: Settings page (the next session reads them):
       settingsA: autonomous, max 4 passes, 3 variants, preview 1600 px q75
       settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
 --  [awaiting_claude] windows 1, open 1, events 0, buttons on: Abort, Accept
       connection: Connection: Claude session active
       stage: Stage: Awaiting Claude  (pass 1 of 4)
+      targetChanged: Selection: the session's photo.
       settingsTitle: Settings page (the next session reads them):
       settingsA: autonomous, max 4 passes, 3 variants, preview 1600 px q75
       settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
 --  [page edited] windows 1, open 1, events 0, buttons on: Abort, Accept
       connection: Connection: Claude session active
       stage: Stage: Awaiting Claude  (pass 1 of 4)
+      targetChanged: Selection: the session's photo.
       settingsTitle: Settings page (the next session reads them):
       settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
       settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
 --  [session settings] windows 1, open 1, events 0, buttons on: Abort, Accept
       connection: Connection: Claude session active
       stage: Stage: Awaiting Claude  (pass 1 of 4)
+      targetChanged: Selection: the session's photo.
       settingsTitle: Session settings:
       settingsA: autonomous, max 4 passes, 3 variants, preview 1600 px q75
       settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
 --  [awaiting_pick] windows 1, open 1, events 0, buttons on: Abort, Accept, Pick A, Pick B
       connection: Connection: Claude session active
       stage: Stage: Awaiting pick
+      targetChanged: Selection: the session's photo.
       settingsTitle: Settings page (the next session reads them):
       settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
       settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
 --  [right after Pick B] windows 1, open 1, events 0, buttons on: none
       connection: Connection: Claude session active
       stage: Stage: Awaiting pick
+      targetChanged: Selection: the session's photo.
       hint: Buttons off until the engine answers the Pick B (at most 10 s).
       settingsTitle: Settings page (the next session reads them):
       settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
@@ -116,6 +127,7 @@ $ node run.mts <repo>
 --  [Pick B sent] windows 1, open 1, events 1, buttons on: none
       connection: Connection: Claude session active
       stage: Stage: Awaiting pick
+      targetChanged: Selection: the session's photo.
       hint: Buttons off until the engine answers the Pick B (at most 10 s).
       lastAction: Pick B sent at 2026-09-27 12:00:00; waiting for the engine
       settingsTitle: Settings page (the next session reads them):
@@ -124,6 +136,7 @@ $ node run.mts <repo>
 --  [Abort called while Pick B waits] windows 1, open 1, events 1, buttons on: none
       connection: Connection: Claude session active
       stage: Stage: Awaiting pick
+      targetChanged: Selection: the session's photo.
       hint: Buttons off until the engine answers the Pick B (at most 10 s).
       lastAction: Abort NOT sent: the Pick B is still waiting for the engine
       settingsTitle: Settings page (the next session reads them):
@@ -132,6 +145,7 @@ $ node run.mts <repo>
 --  [Pick B answered] windows 1, open 1, events 1, buttons on: Abort, Accept
       connection: Connection: Claude session active
       stage: Stage: Awaiting Claude
+      targetChanged: Selection: the session's photo.
       lastAction: Pick B: answered by the engine at 2026-09-27 12:00:00
       settingsTitle: Settings page (the next session reads them):
       settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
@@ -139,6 +153,7 @@ $ node run.mts <repo>
 --  [awaiting approval] windows 1, open 1, events 1, buttons on: Abort, Accept, Approve pass 2
       connection: Connection: Claude session active
       stage: Stage: Awaiting approval
+      targetChanged: Selection: the session's photo.
       lastAction: Pick B: answered by the engine at 2026-09-27 12:00:00
       settingsTitle: Settings page (the next session reads them):
       settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
@@ -146,6 +161,7 @@ $ node run.mts <repo>
 --  [Approve sent] windows 1, open 1, events 2, buttons on: none
       connection: Connection: Claude session active
       stage: Stage: Awaiting approval
+      targetChanged: Selection: the session's photo.
       hint: Buttons off until the engine answers the Approve pass 2 (at most 10 s).
       lastAction: Approve pass 2 sent at 2026-09-27 12:00:00; waiting for the engine
       settingsTitle: Settings page (the next session reads them):
@@ -154,6 +170,7 @@ $ node run.mts <repo>
 --  [Approve unanswered 11 s] windows 1, open 1, events 2, buttons on: Abort, Accept, Approve pass 2
       connection: Connection: Claude session active
       stage: Stage: Awaiting approval
+      targetChanged: Selection: the session's photo.
       lastAction: Approve pass 2: no answer from the engine within 10 s; the buttons are on again
       settingsTitle: Settings page (the next session reads them):
       settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
@@ -161,6 +178,7 @@ $ node run.mts <repo>
 --  [engine silent 7 s] windows 1, open 1, events 2, buttons on: none
       connection: Connection: Disconnected
       stage: Stage: Awaiting approval
+      targetChanged: Selection: the session's photo.
       hint: Buttons off: the engine is not connected.
       lastAction: Approve pass 2: no answer from the engine within 10 s; the buttons are on again
       settingsTitle: Settings page (the next session reads them):
@@ -169,6 +187,7 @@ $ node run.mts <repo>
 --  [Accept while disconnected] windows 1, open 1, events 2, buttons on: none
       connection: Connection: Disconnected
       stage: Stage: Awaiting approval
+      targetChanged: Selection: the session's photo.
       hint: Buttons off: the engine is not connected.
       lastAction: Accept NOT sent: the engine is not connected
       settingsTitle: Settings page (the next session reads them):
@@ -177,6 +196,7 @@ $ node run.mts <repo>
 --  [Accept, send socket failed] windows 1, open 1, events 2, buttons on: none
       connection: Connection: Disconnected
       stage: Stage: Awaiting approval
+      targetChanged: Selection: the session's photo.
       hint: Buttons off: the engine is not connected.
       lastAction: Accept NOT sent: the engine is not connected
       settingsTitle: Settings page (the next session reads them):
@@ -185,6 +205,7 @@ $ node run.mts <repo>
 --  [send socket back] windows 1, open 1, events 2, buttons on: Abort, Accept, Approve pass 2
       connection: Connection: Claude session active
       stage: Stage: Awaiting approval
+      targetChanged: Selection: the session's photo.
       lastAction: Accept NOT sent: the engine is not connected
       settingsTitle: Settings page (the next session reads them):
       settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
@@ -192,6 +213,7 @@ $ node run.mts <repo>
 --  [stale update] windows 1, open 1, events 2, buttons on: Abort, Accept, Approve pass 2
       connection: Connection: Claude session active
       stage: Stage: Awaiting approval
+      targetChanged: Selection: the session's photo.
       lastAction: Accept NOT sent: the engine is not connected
       settingsTitle: Settings page (the next session reads them):
       settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
@@ -207,6 +229,7 @@ $ node run.mts <repo>
 --  [variants: copy B selected] windows 1, open 1, events 2, buttons on: Abort, Accept
       connection: Connection: Claude session active
       stage: Stage: Awaiting Claude
+      targetChanged: Selection: the session's photo.
       lastAction: Accept NOT sent: the engine is not connected
       settingsTitle: Settings page (the next session reads them):
       settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
@@ -230,6 +253,7 @@ $ node run.mts <repo>
 --  [converge: the target selected again] windows 1, open 1, events 2, buttons on: Abort, Accept
       connection: Connection: Claude session active
       stage: Stage: Awaiting Claude
+      targetChanged: Selection: the session's photo.
       lastAction: Accept NOT sent: the engine is not connected
       settingsTitle: Settings page (the next session reads them):
       settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
@@ -237,6 +261,7 @@ $ node run.mts <repo>
 --  [menu Abort] windows 1, open 1, events 3, buttons on: none
       connection: Connection: Claude session active
       stage: Stage: Awaiting Claude
+      targetChanged: Selection: the session's photo.
       hint: Buttons off until the engine answers the Abort (at most 10 s).
       lastAction: Abort sent at 2026-09-27 12:00:00; waiting for the engine
       settingsTitle: Settings page (the next session reads them):
@@ -254,7 +279,7 @@ $ node run.mts <repo>
       connection: Connection: Engine connected
       stage: Stage: Aborted
       hint: The session has ended.
-      lastAction: Abort: answered by the engine at 2026-09-27 12:00:00
+      lastAction: Accept NOT sent: the session has ended (aborted)
       settingsTitle: Settings page (the next session reads them):
       settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
       settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
@@ -262,50 +287,101 @@ $ node run.mts <repo>
       connection: Connection: Engine connected
       stage: Stage: Aborted
       hint: The session has ended.
-      lastAction: Abort: answered by the engine at 2026-09-27 12:00:00
+      lastAction: Accept NOT sent: the session has ended (aborted)
       settingsTitle: Settings page (the next session reads them):
       settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
       settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
 --  [S-2 begins] windows 2, open 1, events 3, buttons on: Abort, Accept
       connection: Connection: Claude session active
       stage: Stage: Starting the session
+      targetChanged: Selection: the session's photo.
       settingsTitle: Settings page (the next session reads them):
       settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
       settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
 --  [S-3 began within S-2's close delay] windows 2, open 1, events 3, buttons on: Abort, Accept
       connection: Connection: Claude session active
       stage: Stage: Starting the session
+      targetChanged: Selection: the session's photo.
       settingsTitle: Settings page (the next session reads them):
       settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
       settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
 --  [late S-2 update] windows 2, open 1, events 3, buttons on: Abort, Accept
       connection: Connection: Claude session active
       stage: Stage: Starting the session
+      targetChanged: Selection: the session's photo.
       settingsTitle: Settings page (the next session reads them):
       settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
       settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
 --  [update after the X] windows 2, open 0, events 3, buttons on: none
       connection: Connection: Claude session active
       stage: Stage: Starting the session
+      targetChanged: Selection: the session's photo.
       settingsTitle: Settings page (the next session reads them):
       settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
       settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
 --  [Show HUD after the X] windows 3, open 1, events 3, buttons on: Abort, Accept
       connection: Connection: Claude session active
       stage: Stage: Metrics
+      targetChanged: Selection: the session's photo.
       settingsTitle: Settings page (the next session reads them):
       settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
       settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
 --  [click overtaken by a new session] windows 3, open 1, events 3, buttons on: Abort, Accept
       connection: Connection: Claude session active
       stage: Stage: Starting the session
+      targetChanged: Selection: the session's photo.
       settingsTitle: Settings page (the next session reads them):
       settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
       settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
 --  [answered while sending] windows 3, open 1, events 4, buttons on: Abort, Accept
       connection: Connection: Claude session active
       stage: Stage: Awaiting Claude
+      targetChanged: Selection: the session's photo.
       lastAction: Accept: answered by the engine at 2026-09-27 12:00:00
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [menu Abort while the engine is silent] windows 3, open 1, events 4, buttons on: none
+      connection: Connection: Disconnected
+      stage: Stage: Awaiting Claude
+      targetChanged: Selection: the session's photo.
+      hint: Buttons off: the engine is not connected.
+      lastAction: Accept: answered by the engine at 2026-09-27 12:00:00
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [menu Abort after the engine is back] windows 3, open 1, events 5, buttons on: none
+      connection: Connection: Claude session active
+      stage: Stage: Awaiting Claude
+      targetChanged: Selection: the session's photo.
+      hint: Buttons off until the engine answers the Abort (at most 10 s).
+      lastAction: Abort sent at 2026-09-27 12:00:00; waiting for the engine
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [observer before the change] windows 3, open 1, events 5, buttons on: Abort, Accept
+      connection: Connection: Claude session active
+      stage: Stage: Awaiting Claude
+      targetChanged: Target changed: 20260907-_OZ80093.NEF is selected. Select 20260907-_OZ80099.NEF again; the session is still open.
+      lastAction: Abort: answered by the engine at 2026-09-27 12:00:00
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [change without the observer] windows 3, open 1, events 5, buttons on: none
+      connection: Connection: Disconnected
+      stage: Stage: Awaiting Claude
+      targetChanged: Target changed: 20260907-_OZ80093.NEF is selected. Select 20260907-_OZ80099.NEF again; the session is still open.
+      hint: Buttons off: the engine is not connected.
+      lastAction: Abort: answered by the engine at 2026-09-27 12:00:00
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [menu Accept with the HUD closed] windows 4, open 1, events 6, buttons on: none
+      connection: Connection: Claude session active
+      stage: Stage: Awaiting Claude
+      targetChanged: Selection: the session's photo.
+      hint: Buttons off until the engine answers the Accept (at most 10 s).
+      lastAction: Accept sent at 2026-09-27 12:00:00; waiting for the engine
       settingsTitle: Settings page (the next session reads them):
       settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
       settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
@@ -314,32 +390,63 @@ $ node run.mts <repo>
       hud_approve_pass {"session_id":"S-1","seq_seen":7,"source":"hud","pass":2,"click_id":"UUID-0006-AAAA-BBBB"}
       hud_abort {"session_id":"S-1","seq_seen":9,"source":"menu","click_id":"UUID-0011-AAAA-BBBB"}
       hud_accept {"session_id":"S-4","seq_seen":1,"source":"hud","click_id":"UUID-0014-AAAA-BBBB"}
+      hud_abort {"session_id":"S-4","seq_seen":3,"source":"menu","click_id":"UUID-0016-AAAA-BBBB"}
+      hud_accept {"session_id":"S-4","seq_seen":4,"source":"menu","click_id":"UUID-0018-AAAA-BBBB"}
 --  messages:
-      LrC-AVG: ABORT SENT: Abort sent at 2026-09-27 12:00:00; waiting for the engine
-      LrC-AVG: ACCEPT NOT SENT: Accept NOT sent: the session has ended (aborted)
---  replies to hud_update: [{"applied":true,"shown":true,"opened":true},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":false,"shown":true,"opened":false,"reason":"update 3 is not newer than 7"},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":true},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":false,"shown":true,"opened":false,"reason":"session S-2 was replaced by a newer one"},{"applied":true,"shown":false,"opened":false},{"applied":true,"shown":true,"opened":false}]
+--  replies to hud_update: [{"applied":true,"shown":true,"opened":true},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":false,"shown":true,"opened":false,"reason":"update 3 is not newer than 7"},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":true},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":false,"shown":true,"opened":false,"reason":"session S-2 was replaced by a newer one"},{"applied":true,"shown":false,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false}]
 --  refused commands: [{"code":"bad_request","message":"hud_update.stage must be one of begin, pass0, applying, acquiring_preview, metrics, awaiting_claude, awaiting_pick, awaiting_approval, converged, target_changed, accepted, aborted, ended","recoverable":false},{"code":"bad_request","message":"hud_update.colour is not a known field","recoverable":false}]
---  windows: [{"title":"LrC-AVG - Vision Gateway","block_task":true,"open":false,"closed_by":"code","opened_at":1004.2,"closed_at":1052.4},{"title":"LrC-AVG - Vision Gateway","block_task":true,"open":false,"closed_by":"x","opened_at":1054.4,"closed_at":1064},{"title":"LrC-AVG - Vision Gateway","block_task":true,"open":true,"opened_at":1065}]
+--  windows: [{"title":"LrC-AVG - Vision Gateway","block_task":true,"open":false,"closed_by":"code","opened_at":1004.2,"closed_at":1052.4},{"title":"LrC-AVG - Vision Gateway","block_task":true,"open":false,"closed_by":"x","opened_at":1054.4,"closed_at":1064},{"title":"LrC-AVG - Vision Gateway","block_task":true,"open":false,"closed_by":"x","opened_at":1065,"closed_at":1092},{"title":"LrC-AVG - Vision Gateway","block_task":true,"open":true,"opened_at":1093.8}]
 --  HUD lines in the plugin log:
       2026-09-27 12:00:00.000 INFO  hud: session S-1
       2026-09-27 12:00:00.200 INFO  hud: shown
+      2026-09-27 12:00:00.400 INFO  hud: selection CF12AF60-0858-4181-9562-376D16B89126: Selection: the session's photo.
       2026-09-27 12:00:00.200 INFO  hud: hud_pick UUID-0004-AAAA-BBBB from the hud: sent
       2026-09-27 12:00:00.000 INFO  hud: hud_approve_pass UUID-0006-AAAA-BBBB from the hud: sent
       2026-09-27 12:00:00.400 WARN  hud: hud_approve_pass UUID-0006-AAAA-BBBB got no answer
       2026-09-27 12:00:00.200 INFO  hud: hud_accept UUID-0008-AAAA-BBBB from the hud: not sent, the engine is not connected
       2026-09-27 12:00:00.600 WARN  hud: ignored an update: update 3 is not newer than 7
+      2026-09-27 12:00:00.000 INFO  hud: selectionChangeObserver called
+      2026-09-27 12:00:00.000 INFO  hud: selection OTHER-UUID: Target changed: 20260907-_OZ80093.NEF is selected. Claude's next call selects the session's photo again; the session is still open.
+      2026-09-27 12:00:00.600 INFO  hud: selectionChangeObserver called
+      2026-09-27 12:00:00.600 INFO  hud: selection COPY-B: Selection: the session's photo.
+      2026-09-27 12:00:00.200 INFO  hud: selectionChangeObserver called
+      2026-09-27 12:00:00.200 INFO  hud: selection nil: Target changed: No photo is selected. Claude's next call selects the session's photo again; the session is still open.
+      2026-09-27 12:00:00.800 INFO  hud: selectionChangeObserver called
+      2026-09-27 12:00:00.800 INFO  hud: selection CF12AF60-0858-4181-9562-376D16B89126: Selection: the session's photo.
+      2026-09-27 12:00:00.400 INFO  hud: selectionChangeObserver called
+      2026-09-27 12:00:00.400 INFO  hud: selection COPY-A: Target changed: 20260907-_OZ80099.NEF (AVG S-1 A) is selected. Select 20260907-_OZ80099.NEF again; the session is still open.
+      2026-09-27 12:00:00.000 INFO  hud: selectionChangeObserver called
+      2026-09-27 12:00:00.000 INFO  hud: selection CF12AF60-0858-4181-9562-376D16B89126: Selection: the session's photo.
       2026-09-27 12:00:00.800 INFO  hud: hud_abort UUID-0011-AAAA-BBBB from the menu: sent
+      2026-09-27 12:00:00.800 INFO  hud: menu hud_abort: Abort sent at 2026-09-27 12:00:00; waiting for the engine
+      2026-09-27 12:00:00.800 INFO  hud: selection CF12AF60-0858-4181-9562-376D16B89126: (no line)
+      2026-09-27 12:00:00.400 INFO  hud: menu hud_accept: Accept NOT sent: the session has ended (aborted)
       2026-09-27 12:00:00.400 INFO  hud: closing, the session ended (aborted)
       2026-09-27 12:00:00.400 INFO  hud: closed
       2026-09-27 12:00:00.200 INFO  hud: session S-2
       2026-09-27 12:00:00.400 INFO  hud: shown
+      2026-09-27 12:00:00.600 INFO  hud: selection CF12AF60-0858-4181-9562-376D16B89126: Selection: the session's photo.
+      2026-09-27 12:00:00.000 INFO  hud: selection CF12AF60-0858-4181-9562-376D16B89126: (no line)
       2026-09-27 12:00:00.600 INFO  hud: session S-3
+      2026-09-27 12:00:00.800 INFO  hud: selection CF12AF60-0858-4181-9562-376D16B89126: Selection: the session's photo.
       2026-09-27 12:00:00.400 WARN  hud: ignored an update: session S-2 was replaced by a newer one
       2026-09-27 12:00:00.000 INFO  hud: closed
       2026-09-27 12:00:00.000 INFO  hud: shown
       2026-09-27 12:00:00.600 INFO  hud: session S-4
       2026-09-27 12:00:00.600 INFO  hud: hud_abort UUID-0013-AAAA-BBBB from the hud: not sent, no longer pending
       2026-09-27 12:00:00.600 INFO  hud: hud_accept UUID-0014-AAAA-BBBB from the hud: sent
+      2026-09-27 12:00:00.200 INFO  hud: hud_abort UUID-0016-AAAA-BBBB from the menu: sent
+      2026-09-27 12:00:00.200 INFO  hud: menu hud_abort: Abort sent at 2026-09-27 12:00:00; waiting for the engine
+      2026-09-27 12:00:00.800 INFO  hud: selectionChangeObserver called
+      2026-09-27 12:00:00.400 INFO  hud: selection OTHER-UUID: Target changed: 20260907-_OZ80093.NEF is selected. Select 20260907-_OZ80099.NEF again; the session is still open.
+      2026-09-27 12:00:00.800 INFO  hud: selectionChangeObserver called
+      2026-09-27 12:00:00.800 INFO  hud: selection CF12AF60-0858-4181-9562-376D16B89126: Selection: the session's photo.
+      2026-09-27 12:00:00.400 INFO  hud: selection OTHER-UUID: Target changed: 20260907-_OZ80093.NEF is selected. Select 20260907-_OZ80099.NEF again; the session is still open.
+      2026-09-27 12:00:00.400 INFO  hud: selection CF12AF60-0858-4181-9562-376D16B89126: Selection: the session's photo.
+      2026-09-27 12:00:00.000 INFO  hud: closed
+      2026-09-27 12:00:00.600 INFO  hud: hud_accept UUID-0018-AAAA-BBBB from the menu: sent
+      2026-09-27 12:00:00.600 INFO  hud: menu hud_accept: Accept sent at 2026-09-27 12:00:00; waiting for the engine
+      2026-09-27 12:00:00.800 INFO  hud: shown
 
 PASS  C1 the plugin's HudState.check and the engine's hudUpdatePayloadSchema agree on 34 cases (and differ as expected on "an empty object where a list belongs")
 PASS  C2 text over the limit is shortened to 120 bytes, a UTF-8 name on a character boundary
@@ -362,14 +469,20 @@ PASS  H12 engine silent over 6 s: Disconnected, buttons off with the reason (dec
 PASS  H13 a send that fails on the socket reads NOT sent, never sent, and frees the buttons
 PASS  H14 an older seq in the same session is not taken (applied false, the reason); the HUD keeps the newer state
 PASS  H15 a wrong stage or an unknown field: bad_request naming the field, through the dispatch
-PASS  H16 Target changed: a photo outside the session's photos (by uuid, a copy named), or none; cleared for a session photo; advice per mode
-PASS  H17 menu item Abort Session sends hud_abort (source menu), and its message says SENT
-PASS  H18 end: the outcome shows with the buttons off, a menu Accept is refused; then closeFloatingDialogsForPlugin(_PLUGIN) closes it (decision 1)
+PASS  H16 Target changed: a photo outside the session's photos (by uuid, a copy named), or none; for a session photo the line says so; advice per mode
+PASS  H17 menu item Abort Session sends hud_abort (source menu); the HUD's line says it was sent
+PASS  H18 end: the outcome shows with the buttons off, a menu Accept is refused in the HUD's line; then closeFloatingDialogsForPlugin(_PLUGIN) closes it (decision 1)
+PASS  S3 no message box is opened: the menu items' outcomes go to the HUD's line (fix/hud-menu-and-target)
 PASS  H19 a newer session within the close delay cancels the close
 PASS  H20 a late update of a session a newer one replaced is not taken
 PASS  H21 closed with its X: updates are still taken but open nothing; Show HUD opens it again
 PASS  H22 a click overtaken by a new session before its task ran is not sent, and leaves the new session's lines alone (Greptile, PR #45)
 PASS  H23 the engine's answer arriving while the event is sent keeps its line; the send does not overwrite it (Greptile, PR #45)
+PASS  H24 a menu item used while the engine counts as disconnected waits, and sends once the engine is back (row 4 probe)
+PASS  H25 an observer call that comes before the selection has changed: the re-check 0.5 s later shows Target changed (row 4 probe)
+PASS  H26 a selection change without an observer call: the ticker's check every 2 s shows Target changed (row 4 probe)
+PASS  H27 the plugin log records every observer call and each change of the selection line (row 4 probe)
+PASS  H28 a menu item used with the HUD closed opens it and shows the outcome there (row 4 probe)
 
 == Mutants ==
 PASS  mutant HudState.lua (if false then return): fails ["H14"], expected ["H14"]
@@ -381,7 +494,11 @@ PASS  mutant Hud.lua (-- MUTANT: pending kept): fails ["H13","H17"], expected ["
 PASS  mutant Hud.lua (if false then): fails ["H22"], expected ["H22"]
 PASS  mutant Hud.lua (local current = true -- MUTANT): fails ["H23"], expected ["H23"]
 PASS  mutant Hud.lua (if s then): fails ["H19"], expected ["H19"]
-PASS  mutant Hud.lua (-- MUTANT: no open-once guard): fails ["H18","H19","H2"], expected ["H2","H18","H19"]
+PASS  mutant Hud.lua (while false do): fails ["H24"], expected ["H24"]
+PASS  mutant HudSelection.lua (-- MUTANT: no re-check): fails ["H25"], expected ["H25"]
+PASS  mutant Hud.lua (false then): fails ["H26"], expected ["H26"]
+PASS  mutant Hud.lua (Log.info("hud: menu " .. name .. ": " .. line)): fails ["H28"], expected ["H28"]
+PASS  mutant Hud.lua (-- MUTANT: no open-once guard): fails ["H18","H19","H2","H28"], expected ["H2","H18","H19","H28"]
 
 == The bridge scenario: main's plugin vs this branch (bridge-cases.lua) ==
 --  main: 14 lines sent, 8 steps, 0 errors; this branch: 14 lines sent, 8 steps, 0 errors
@@ -798,6 +915,21 @@ function FH.select(photo)
     if w and w.open and w.args.selectionChangeObserver then w.args.selectionChangeObserver() end
 end
 
+-- fix/hud-menu-and-target: the two ways the row 4 probe's missing "Target changed" line could have
+-- come about [inference]. The observer is called before the selection changes (it lands 0.2 s later);
+-- or the selection changes and the observer is not called at all.
+function FH.selectLate(photo)
+    local w = FH.current
+    if w and w.open and w.args.selectionChangeObserver then w.args.selectionChangeObserver() end
+    F.spawn("selection lands late", function()
+        import('LrTasks').sleep(0.2)
+        F.active, F.selected = photo, photo and { photo } or {}
+    end)
+end
+function FH.selectSilently(photo)
+    F.active, F.selected = photo, photo and { photo } or {}
+end
+
 function FH.openCount()
     local n = 0
     for _, w in ipairs(FH.windows) do if w.open then n = n + 1 end end
@@ -1052,6 +1184,42 @@ F.run(3)
 sendSock.send = plainSend
 snap("answered while sending")
 
+-- fix/hud-menu-and-target (the row 4 probe's findings).
+-- A menu item used while the engine counts as disconnected waits, then sends once it is back.
+update(U(3, "awaiting_claude", { mode = "converge" }, "S-4"))
+runFor(7, false)
+dofile(package.searchpath("MenuAbort", package.path))
+F.run(10)
+snap("menu Abort while the engine is silent")
+beat()
+F.run(5)
+snap("menu Abort after the engine is back")
+local waitedEvt = events()[#events()]
+update(U(4, "awaiting_claude", { mode = "converge", answered_click_id = waitedEvt.payload.click_id }, "S-4"))
+-- The observer called before the selection changes: only the re-check 0.5 s later can see it (the
+-- ticker's periodic check is held off for this step).
+local HudSelection = require 'HudSelection'
+HudSelection.PERIOD_SECONDS = 1000
+F.run(6)
+FH.selectLate(other)
+F.run(5)
+snap("observer before the change")
+FH.select(master)
+F.run(6)
+-- A selection change with no observer call: only the ticker's periodic check can see it.
+HudSelection.PERIOD_SECONDS = 2
+FH.selectSilently(other)
+F.run(15)
+snap("change without the observer")
+FH.selectSilently(master)
+F.run(15)
+-- A menu item with the HUD closed opens it and shows the outcome there.
+FH.closeWindow(FH.current, "x")
+F.run(2)
+beat()
+menu("MenuAccept")
+snap("menu Accept with the HUD closed")
+
 local windows = {}
 for i, w in ipairs(FH.windows) do
     windows[i] = { title = w.title, block_task = w.blockTask, open = w.open, closed_by = w.closedBy, opened_at = w.openedAt, closed_at = w.closedAt }
@@ -1210,6 +1378,7 @@ function runLua(pluginDir: string, script: string): any {
 }
 
 type Check = { name: string; ok: boolean };
+const SELECTION_OK = "Selection: the session's photo.";
 function checksOf(run: any): Check[] {
   const checks: Check[] = [];
   const check = (ok: boolean, name: string) => checks.push({ name, ok: Boolean(ok) });
@@ -1300,22 +1469,22 @@ function checksOf(run: any): Check[] {
     "H15 a wrong stage or an unknown field: bad_request naming the field, through the dispatch");
   const other = snap("variants: another photo selected");
   check(other.targetChanged === "Target changed: 20260907-_OZ80093.NEF is selected. Claude's next call selects the session's photo again; the session is still open." &&
-    snap("variants: copy B selected").targetChanged === "" && snap("variants: nothing selected").targetChanged.startsWith("Target changed: No photo is selected.") &&
+    snap("variants: copy B selected").targetChanged === SELECTION_OK && snap("variants: nothing selected").targetChanged.startsWith("Target changed: No photo is selected.") &&
     snap("converge: copy A selected").targetChanged === "Target changed: 20260907-_OZ80099.NEF (AVG S-1 A) is selected. Select 20260907-_OZ80099.NEF again; the session is still open." &&
-    snap("converge: the target selected again").targetChanged === "",
-    "H16 Target changed: a photo outside the session's photos (by uuid, a copy named), or none; cleared for a session photo; advice per mode");
+    snap("converge: the target selected again").targetChanged === SELECTION_OK,
+    "H16 Target changed: a photo outside the session's photos (by uuid, a copy named), or none; for a session photo the line says so; advice per mode");
   const ma = snap("menu Abort");
   const me = evts[ma.events - 1];
-  const msgs = run.messages as any[];
-  check(me?.name === "hud_abort" && me.payload.source === "menu" && msgs[0]?.title === "LrC-AVG: ABORT SENT",
-    "H17 menu item Abort Session sends hud_abort (source menu), and its message says SENT");
+  check(me?.name === "hud_abort" && me.payload.source === "menu" && ma.lastAction.startsWith("Abort sent at"),
+    "H17 menu item Abort Session sends hud_abort (source menu); the HUD's line says it was sent");
   const endNow = snap("aborted, at once");
   const endLater = snap("aborted, 6 s later");
-  const acceptMsg = msgs[1];
+  const acceptLine = snap("menu Accept after the end").lastAction;
   check(endNow.open === 1 && on(endNow).length === 0 && endNow.hint === "The session has ended." && endNow.stage === "Stage: Aborted" &&
-    endNow.note === "Photo restored to the session snapshot." && acceptMsg?.title === "LrC-AVG: ACCEPT NOT SENT" && /session has ended \(aborted\)/.test(acceptMsg?.text) &&
+    endNow.note === "Photo restored to the session snapshot." && acceptLine === "Accept NOT sent: the session has ended (aborted)" &&
     endLater.open === 0 && endLater.close_calls === 1 && run.close_calls[0].plugin_ok && run.windows[0].closed_by === "code",
-    "H18 end: the outcome shows with the buttons off, a menu Accept is refused; then closeFloatingDialogsForPlugin(_PLUGIN) closes it (decision 1)");
+    "H18 end: the outcome shows with the buttons off, a menu Accept is refused in the HUD's line; then closeFloatingDialogsForPlugin(_PLUGIN) closes it (decision 1)");
+  check((run.messages as any[]).length === 0, "S3 no message box is opened: the menu items' outcomes go to the HUD's line (fix/hud-menu-and-target)");
   const s2 = snap("S-2 begins");
   const s3 = snap("S-3 began within S-2's close delay");
   check(s2.open === 1 && s2.windows === 2 && s3.open === 1 && s3.close_calls === 1 && s3.stage === "Stage: Starting the session",
@@ -1336,6 +1505,24 @@ function checksOf(run: any): Check[] {
   check(run.clicks.slow_send === "clicked" && during.events === overtaken.events + 1 && accepts.at(-1)?.payload.session_id === "S-4" &&
     during.lastAction.startsWith("Accept: answered by the engine") && during.note === "Accept received." && on(during).includes("Accept"),
     "H23 the engine's answer arriving while the event is sent keeps its line; the send does not overwrite it (Greptile, PR #45)");
+  const waiting2 = snap("menu Abort while the engine is silent");
+  const engineBack = snap("menu Abort after the engine is back");
+  const waitedEvt = evts[engineBack.events - 1];
+  check(waiting2.events === during.events && waiting2.connection === "Connection: Disconnected" && engineBack.events === during.events + 1 &&
+    waitedEvt?.name === "hud_abort" && waitedEvt.payload.source === "menu" && waitedEvt.payload.session_id === "S-4" && engineBack.lastAction.startsWith("Abort sent at") &&
+    /hud: menu hud_abort: Abort sent at/.test(String(run.log)),
+    "H24 a menu item used while the engine counts as disconnected waits, and sends once the engine is back (row 4 probe)");
+  check(snap("observer before the change").targetChanged === "Target changed: 20260907-_OZ80093.NEF is selected. Select 20260907-_OZ80099.NEF again; the session is still open.",
+    "H25 an observer call that comes before the selection has changed: the re-check 0.5 s later shows Target changed (row 4 probe)");
+  check(snap("change without the observer").targetChanged.startsWith("Target changed: 20260907-_OZ80093.NEF is selected."),
+    "H26 a selection change without an observer call: the ticker's check every 2 s shows Target changed (row 4 probe)");
+  const log = String(run.log);
+  check(/hud: selectionChangeObserver called/.test(log) && /hud: selection OTHER-UUID: Target changed: 20260907-_OZ80093\.NEF is selected/.test(log) &&
+    /hud: selection CF12AF60-0858-4181-9562-376D16B89126: Selection: the session's photo\./.test(log),
+    "H27 the plugin log records every observer call and each change of the selection line (row 4 probe)");
+  const closedMenu = snap("menu Accept with the HUD closed");
+  check(closedMenu.open === 1 && closedMenu.windows === snap("answered while sending").windows + 1 && closedMenu.lastAction.startsWith("Accept sent at"),
+    "H28 a menu item used with the HUD closed opens it and shows the outcome there (row 4 probe)");
   return checks;
 }
 
@@ -1373,7 +1560,7 @@ report(checksOf(run));
 
 // Mutants: each must fail exactly its named checks.
 function mutant(file: string, from: string, to: string, expect: string[]): void {
-  const source = readFileSync(path.join(newDir, file), "utf8");
+  const source = readFileSync(path.join(newDir, file), "utf8").replace(/\r\n/g, "\n"); // the working tree may have CRLF
   const changed = source.replace(from, to);
   const dir = path.join(here, "mutant");
   rmSync(dir, { recursive: true, force: true });
@@ -1415,8 +1602,17 @@ const MUTANTS: Array<[string, string, string, string[]]> = [
   ["Hud.lua", "local current = H.pending == p", "local current = true -- MUTANT", ["H23"]],
   // The close not tied to the session that ended: the newer session's window closes.
   ["Hud.lua", "if s and s.session_id == H.closeFor and HudState.isEnd(s.stage) then", "if s then", ["H19"]],
-  // No open-once guard: a second and a third window (H2); the later window counts differ (H18, H19).
-  ["Hud.lua", "if Hud.isOpen() then return false end", "-- MUTANT: no open-once guard", ["H2", "H18", "H19"]],
+  // fix/hud-menu-and-target: the menu item does not wait for the engine.
+  ["Hud.lua", "while not Events.connection().engine and waited < Hud.MENU_WAIT_SECONDS do", "while false do", ["H24"]],
+  // No re-check after the observer.
+  ["HudSelection.lua", "        LrTasks.sleep(HudSelection.RECHECK_SECONDS)\n        HudSelection.check(state, show)", "        -- MUTANT: no re-check", ["H25"]],
+  // No periodic check from the ticker.
+  ["Hud.lua", "now - lastCheck >= HudSelection.PERIOD_SECONDS then", "false then", ["H26"]],
+  // The menu item does not open the HUD.
+  ["Hud.lua", "    Log.info(\"hud: menu \" .. name .. \": \" .. line)\n    Hud.show()", "    Log.info(\"hud: menu \" .. name .. \": \" .. line)", ["H28"]],
+  // No open-once guard: a second and a third window (H2); the later window counts differ (H18, H19,
+  // H28).
+  ["Hud.lua", "if Hud.isOpen() then return false end", "-- MUTANT: no open-once guard", ["H2", "H18", "H19", "H28"]],
 ];
 console.log("\n== Mutants ==");
 for (const [file, from, to, expect] of MUTANTS) mutant(file, from, to, expect);
@@ -1424,7 +1620,7 @@ for (const [file, from, to, expect] of MUTANTS) mutant(file, from, to, expect);
 // Main's plugin against this branch's: the bridge scenario of rows 6/8 (bridge-cases.lua).
 console.log("\n== The bridge scenario: main's plugin vs this branch (bridge-cases.lua) ==");
 const tidy = (v: any): any => {
-  if (typeof v === "string") return v.replace(/"plugin_version":"0\.[56]\.0"/g, '"plugin_version":"X"').replace(/[^\s"]*[\\/](\w+\.lua):/g, "$1:");
+  if (typeof v === "string") return v.replace(/"plugin_version":"0\.\d+\.\d+"/g, '"plugin_version":"X"').replace(/[^\s"]*[\\/](\w+\.lua):/g, "$1:");
   if (Array.isArray(v)) return v.map(tidy);
   if (v && typeof v === "object") return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, tidy(x)]));
   return v;
@@ -1447,7 +1643,7 @@ process.exit(failures === 0 ? 0 : 1);
 ==================== Appendix: assemble.mts ====================
 // Builds docs\reports\phase5\hud-plugin-smoke\smoke.txt: header, the run's output, and every kit file
 // verbatim. Exits 1, with the transcript headed BUILD FAILED, when the run fails.
-// Usage: node assemble.mts <repo root> <commit under test>
+// Usage: node assemble.mts <repo root> <commit under test> <branch> <main's commit in old\>
 import { spawnSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -1455,25 +1651,31 @@ import path from "node:path";
 const here = path.dirname(new URL(import.meta.url).pathname).replace(/^\/([A-Za-z]:)/, "$1");
 const repo = process.argv[2] as string;
 const commit = process.argv[3] as string;
+const branch = process.argv[4] as string;
+const mainCommit = process.argv[5] as string;
 const run = spawnSync(process.execPath, [path.join(here, "run.mts"), repo], { encoding: "utf8" });
 const tidy = (s: string) => s.replaceAll(here, "<scratch>").replaceAll(here.replaceAll("\\", "/"), "<scratch>")
   .replaceAll(repo, "<repo>").replace(/C:[\\/]Users[\\/][^\\/]+/g, "%USERPROFILE%");
 const ok = run.status === 0 && /\nALL PASS\n/.test(run.stdout);
 const header = `${ok ? "BUILD: every run as expected." : "BUILD FAILED: the run did not end ALL PASS."}
-phase-5/hud-plugin smoke transcript (PHASE5_PLAN row 4) - Claude Code (Opus 5.5), 2026-09-29
-Plugin under test: plugin\\LrC-AVG.lrplugin at commit ${commit} (branch phase-5/hud-plugin).
-"main" = plugin\\LrC-AVG.lrplugin at 7617c6b, its .lua files copied to <scratch>\\old with git show.
+HUD plugin smoke transcript (PHASE5_PLAN row 4: phase-5/hud-plugin, then fix/hud-menu-and-target after the
+row 4 probe) - Claude Code (Opus 5.5), 2026-09-29
+Plugin under test: plugin\\LrC-AVG.lrplugin at commit ${commit} (branch ${branch}).
+"main" = plugin\\LrC-AVG.lrplugin at ${mainCommit}, its .lua files copied to <scratch>\\old with git show.
 Engine code the results are checked against: engine\\dist (npm run build at ${commit}): hudUpdatePayloadSchema,
 parseHudEvent and HUD_LIMITS (bridge\\hud-protocol.js), COMMANDS.hud_update (bridge\\protocol.js).
 Node v24.11.1; fengari 0.1.4 (a Lua 5.3 VM in JavaScript), a scratch install, not a project dependency.
 The fake Lightroom (fake-lr.lua, row 3's with a new clock; fake-hud.lua, new), the scenario scripts and
 the runner are reproduced at the end.
 
-What this shows: that the HUD's Lua runs through the real bridge and dispatch, how it checks hud_update
-(against the engine's own schema on 35 cases: 34 agree, and one differs as expected; section "Contract"), which updates it takes, what its
-window shows and which buttons are on at each step, the events its buttons and menu items send (each read
-by the engine's parseHudEvent), the "Target changed" line, the close after a session's end, and that
-main's and this branch's bridge behave the same in the row 6/8 bridge scenario. Each mutant (written by
+What this shows: that the HUD's Lua runs through the real bridge and dispatch; how it checks hud_update
+(against the engine's own schema on 35 cases: 34 agree, and one differs as expected; section "Contract");
+which updates it takes; what its window shows and which buttons are on at each step; the events its
+buttons and menu items send (each read by the engine's parseHudEvent); the selection line; the close
+after a session's end; and that main's and this branch's bridge behave the same in the row 6/8 bridge
+scenario. Checks S3 and H24-H28 cover fix/hud-menu-and-target: the menu items wait for the engine and
+report in the HUD instead of a message box, and the selection is checked again 0.5 s after each
+observer call and every 2 s while a session is open. Each mutant (written by
 the runner to <scratch>\\mutant) takes out one guard and must fail exactly its named checks; the reason
 for each check a mutant reaches is in the runner's MUTANTS list.
 The fake's behaviour is Claude Code's invention, modelled on what S8 observed (docs\\reports\\phase5\\S8.md

@@ -6,7 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import luaparse from "luaparse";
 import { describe, expect, it } from "vitest";
-import { COMMANDS, PLUGIN_VERSION } from "../src/bridge/index.js";
+import { COMMANDS, HUD_END_STAGES, HUD_EVENTS, HUD_GUARDRAIL, HUD_LIMITS, HUD_STAGES, HUD_VARIANTS, PLUGIN_VERSION } from "../src/bridge/index.js";
 import { DECAY_MAX_VALUES, LOCK_PORT, PAGE_SPECS } from "../src/settings/index.js";
 
 const pluginRoot = fileURLToPath(new URL("../../plugin/", import.meta.url));
@@ -81,8 +81,9 @@ describe("lua: every plugin file", () => {
   it("finds the LrC-AVG plugin files", () => {
     const names = files.filter((f) => f.startsWith(avgPlugin)).map((f) => path.basename(f)).sort();
     expect(names).toEqual([
-      "Bridge.lua", "Catalog.lua", "Develop.lua", "Dispatch.lua", "Endpoint.lua", "Info.lua", "Json.lua", "Log.lua",
-      "MenuStatus.lua", "Photos.lua", "PluginInfoProvider.lua", "PluginInit.lua", "Prefs.lua", "Preview.lua", "Sockets.lua",
+      "Bridge.lua", "Catalog.lua", "Develop.lua", "Dispatch.lua", "Endpoint.lua", "Events.lua", "Hud.lua", "HudState.lua", "HudView.lua",
+      "Info.lua", "Json.lua", "Log.lua", "MenuAbort.lua", "MenuAccept.lua", "MenuHud.lua", "MenuStatus.lua", "Photos.lua",
+      "PluginInfoProvider.lua", "PluginInit.lua", "Prefs.lua", "Preview.lua", "Sockets.lua",
     ]);
   });
 
@@ -202,6 +203,18 @@ describe("lua: LrC-AVG.lrplugin", () => {
     expect(lua).toEqual(PAGE_SPECS.map((s) => ({ ...s })));
     expect(source).toMatch(new RegExp(`Prefs\\.LOCK_PORT = ${LOCK_PORT}\\b`));
     expect(source).toMatch(new RegExp(`Prefs\\.DECAY_MAX_VALUES = ${DECAY_MAX_VALUES}\\b`));
+  });
+
+  it("keeps HudState.lua's stage, event, guardrail and variant lists and its limits equal to the engine's (engine\\src\\bridge\\hud-protocol.ts)", () => {
+    const source = readFileSync(path.join(avgPlugin, "HudState.lua"), "utf8");
+    const list = (name: string) => source.match(new RegExp(`HudState\\.${name} = \\{([^}]*)\\}`))?.[1]?.match(/"[^"]*"/g)?.map((s) => s.slice(1, -1));
+    expect(list("STAGES")).toEqual([...HUD_STAGES]);
+    expect(list("END_STAGES")).toEqual([...HUD_END_STAGES]);
+    expect(list("GUARDRAIL")).toEqual([...HUD_GUARDRAIL]);
+    expect(list("EVENTS")).toEqual([...HUD_EVENTS]);
+    expect(list("VARIANTS")).toEqual([...HUD_VARIANTS]);
+    const limits = source.match(/HudState\.LIMITS = \{([^}]*)\}/)?.[1] ?? "";
+    expect(Object.fromEntries([...limits.matchAll(/(\w+) = (\d+)/g)].map((m) => [m[1], Number(m[2])]))).toEqual(HUD_LIMITS);
   });
 
   it("handles every command the engine sends (engine\\src\\bridge\\protocol.ts COMMANDS)", () => {

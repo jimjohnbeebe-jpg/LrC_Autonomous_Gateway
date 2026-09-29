@@ -1,5 +1,6 @@
 -- The settings page: LrC-AVG's section in File > Plug-in Manager (PRD section 6.2, AVG-006,
--- PHASE5_PLAN decision 2 and row 3). The HUD will show these values read-only (row 4).
+-- PHASE5_PLAN decision 2 and row 3). The HUD shows these values read-only while the engine sends no
+-- session settings of its own (row 4, HudView.props).
 --
 -- Every field is bound straight to LrPrefs.prefsForPlugin(), with bind_to_object on its group box
 -- and on its row: S8's group B, which saved each value as it was edited, let the running bridge

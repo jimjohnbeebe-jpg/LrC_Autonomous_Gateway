@@ -10,12 +10,13 @@
 //     { id, type: "evt", name, ts, payload }
 // Every inbound line is validated here with zod before the engine acts on it (rule 01-stack).
 // The plugin side is plugin\LrC-AVG.lrplugin\Bridge.lua, Dispatch.lua (the handler table),
-// Develop.lua, Preview.lua, Catalog.lua, Photos.lua and Prefs.lua.
+// Develop.lua, Preview.lua, Catalog.lua, Photos.lua, Prefs.lua and Hud.lua (with hud-protocol.ts).
 //
 // Lua cannot tell an empty array from an empty object, and the plugin's Json.lua writes every empty
 // table as []. Payload schemas below never require a non-empty table to be an object.
 
 import { z } from "zod";
+import { hudUpdateResultSchema, type HudUpdatePayload } from "./hud-protocol.js";
 
 export const PROTOCOL_VERSION = 1;
 
@@ -144,6 +145,8 @@ export const COMMANDS = {
   get_prefs: z.looseObject({
     invalid: z.array(z.looseObject({ key: z.string(), reason: z.string() })),
   }),
+  // Plugin 0.6.0 (Hud.lua update): the HUD's state; the contract is in hud-protocol.ts.
+  hud_update: hudUpdateResultSchema,
 } as const;
 
 export type CommandName = keyof typeof COMMANDS;
@@ -176,4 +179,6 @@ export type CommandPayloads = {
   /** max: how many photos to describe, 1-500 (the plugin's default 100). Refused with no_target_photo when none is selected. */
   get_selection: { max?: number };
   get_prefs: Record<string, never>;
+  /** Refused with bad_request when a field is unknown or of the wrong type (hud-protocol.ts). */
+  hud_update: HudUpdatePayload;
 };

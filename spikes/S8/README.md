@@ -64,7 +64,12 @@ There is nothing to clean up. Leave the S8 plugin installed, like the other spik
 
 **Why.** In run 1 the settings page saved nothing, before or after the restart: menu item 3 read the defaults (autonomous, 4) and no field ever passed a value on to the saved settings [handle: `docs\reports\phase5\S8\s8_summary_run1.json` `settings.before_restart.settings`, `observed_log` null; stated: Jim, 2026-09-28, "I don't beleive that the settings were saved at all"]. The HUD half of run 1 is complete and is not repeated.
 
-**What changed.** The **AVG S8 settings test** section now shows three groups, **A**, **B** and **C**. Each has the same two settings, **Mode** and **Max passes**, saved a different way: A through the section's own table and a change watcher, B tied straight to the saved settings, C saved when Plug-in Manager closes. Menu items 3 and 4 say, for each group, whether it saved what you entered. Nothing touches your photos.
+**What changed.** The **AVG S8 settings test** section now shows three groups, **A**, **B** and **C**. Each has the same two settings, **Mode** and **Max passes**, and the harness tries a different way of saving them in each (`plugin\spikes\S8.lrplugin\S8InfoProvider.lua` header):
+- **A**: fields bound to the section's own table, with a change watcher that copies each value into the saved settings (Automaat's pattern [upstream claim: `vendor\automaat\plugin\LightroomMCP.lrplugin\PluginInfoProvider.lua:678-698`], with the binding made explicit);
+- **B**: fields bound straight to the saved settings [community: https://github.com/kyl191/lr-stash/blob/master/PluginInfoProvider.lua];
+- **C**: fields bound to the section's own table, copied into the saved settings by `endDialog`, which the SDK guide says runs when the plugin is deselected in Plug-in Manager [community: https://www.yumpu.com/en/document/view/36018599/lightroom-sdk-guide/33].
+
+Whether any of the three saves in Lightroom Classic 15.5.1 is [unverified]: that is what this rerun finds out. Menu items 3 and 4 say, for each group, whether it saved what you entered. Nothing touches your photos.
 
 ### Steps for Jim (settings rerun)
 

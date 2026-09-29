@@ -97,24 +97,36 @@ function copiesJson(s: Session, outcome: EndArgs["outcome"]): Record<string, unk
 
 /**
  * A session's log: the open session's, one that ended in this engine run, or one found in the log
- * folders (the current one first, then the earlier ones, settings\log-folders.ts).
+ * folders (the current one first, then the earlier ones, settings\log-folders.ts). A file name
+ * carries only 6 characters of the id, so another session's log can have the same name (another
+ * day, another folder): every file with the name is read until one holds this session's full id
+ * (Greptile, PR #44) [handle: tests\settings-tools.test.ts "lr_get_session_log looks past another
+ * session's log with the same short id"]. A file that cannot be read is skipped and counted.
  */
 export function readSessionLog(logDirs: readonly string[], open: Session | null, ended: ReadonlyMap<string, string>, sessionId: string): SessionOutput {
   if (open?.id === sessionId) return { json: { ok: true, open: true, log_path: open.files.logPath, log: open.log } };
-  let file = ended.get(sessionId) ?? null;
   const short = sessionId.replace(/-/g, "").slice(0, 6);
+  const candidates: string[] = [];
+  const endedFile = ended.get(sessionId);
+  if (endedFile) candidates.push(endedFile);
   for (const logDir of logDirs) {
-    if (file) break;
     try {
-      const match = readdirSync(logDir).find((f) => f.endsWith(`-${short}.json`));
-      if (match) file = path.join(logDir, match);
+      for (const f of readdirSync(logDir)) if (f.endsWith(`-${short}.json`)) candidates.push(path.join(logDir, f));
     } catch {
       // no such folder (yet, or any more)
     }
   }
-  if (file) {
-    const log = JSON.parse(readFileSync(file, "utf8")) as { session_id?: unknown };
+  let unreadable = 0;
+  for (const file of candidates) {
+    let log: { session_id?: unknown };
+    try {
+      log = JSON.parse(readFileSync(file, "utf8")) as { session_id?: unknown };
+    } catch {
+      unreadable++;
+      continue;
+    }
     if (log.session_id === sessionId) return { json: { ok: true, open: false, log_path: file, log } };
   }
-  throw new ToolError("SESSION_NOT_FOUND", `No session log for ${sessionId} in ${logDirs.join(", ")}.`, false);
+  const skipped = unreadable > 0 ? ` ${unreadable} log file(s) with that name could not be read.` : "";
+  throw new ToolError("SESSION_NOT_FOUND", `No session log for ${sessionId} in ${logDirs.join(", ")}.${skipped}`, false);
 }

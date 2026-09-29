@@ -4,7 +4,7 @@
 // intents to `userDir` only, so an intent found proves the page's intents folder was used. The
 // remembered log folders (settings\log-folders.ts) go to a file in the test's temp folder.
 
-import { existsSync, mkdirSync, readdirSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 import { IntentLibrary } from "../src/intents/index.js";
@@ -158,6 +158,23 @@ describe("sessions and the settings page's folders", () => {
     const log = await fresh.getSessionLog({ session_id: id });
     expect(path.dirname(log.json["log_path"] as string)).toBe(pageLogs);
     expect(log.json["log_folder"]).toMatchObject({ path: newer, from: "page" });
+  });
+
+  it("lr_get_session_log looks past another session's log with the same short id (Greptile, PR #44 review 2)", async () => {
+    clean();
+    const first = makeTools(new PageSettings(client, env));
+    const begun = await first.beginSession({ intent_id: "test_plain", return_image: "none" });
+    const id = begun.json["session_id"] as string;
+    await first.endSession({ session_id: id, outcome: "revert" });
+    const [logName] = readdirSync(pageLogs).filter((f) => f.endsWith(".json"));
+    // The page now names another folder, which holds a different session's log under the same name.
+    const newer = path.join(tmp, "page-logs-2");
+    mkdirSync(newer, { recursive: true });
+    writeFileSync(path.join(newer, logName as string), JSON.stringify({ session_id: "another-session" }));
+    lr.prefs = { ...defaultSimPrefs(), intents_dir: userDir, log_dir: newer };
+    const log = await makeTools(new PageSettings(client, env)).getSessionLog({ session_id: id });
+    expect(path.dirname(log.json["log_path"] as string)).toBe(pageLogs);
+    expect(log.json).toMatchObject({ log: { session_id: id } });
   });
 
   it("still refuses a recipe_path outside every log folder", async () => {

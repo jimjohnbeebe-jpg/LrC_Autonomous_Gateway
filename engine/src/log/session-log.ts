@@ -138,6 +138,29 @@ export const variantEntrySchema = z.strictObject({
   picked: z.boolean(),
 });
 
+const settingFrom = z.enum(["argument", "intent", "page", "default"]);
+/**
+ * Engine 0.7.0 (PHASE5_PLAN row 3): what lr_begin_session took from the settings page. `from` names
+ * each value's source; `page` says whether get_prefs answered, why not, and which page values were
+ * left out. Optional, so the logs of engines 0.4.0-0.6.1 still read as v2.
+ */
+const sessionSettingsSchema = z.strictObject({
+  approval: z.enum(["autonomous", "approve_each_pass"]),
+  long_edge: z.number().int(),
+  quality: z.number().int(),
+  from: z.strictObject({
+    approval: settingFrom,
+    max_passes: settingFrom,
+    variant_count: settingFrom,
+    long_edge: settingFrom,
+    quality: settingFrom,
+    clip_high_pct: settingFrom,
+    clip_low_pct: settingFrom,
+    decay: settingFrom,
+  }),
+  page: z.strictObject({ read: z.boolean(), note: z.string().nullable(), problems: z.array(z.string()) }),
+});
+
 export const sessionLogSchema = z
   .strictObject({
     schema: z.literal(SESSION_LOG_SCHEMA_ID),
@@ -174,6 +197,8 @@ export const sessionLogSchema = z
     final_settings: canonicalSettingsSchema.nullable(),
     recipe_path: z.string().nullable(),
     revert: z.strictObject({ ms: z.number(), differing: z.array(z.string()) }).nullable(),
+    /** Engine 0.7.0: the values the session read from the settings page, and where each came from. */
+    settings: sessionSettingsSchema.optional(),
   })
   .describe("LrC-AVG session log, schema v2");
 

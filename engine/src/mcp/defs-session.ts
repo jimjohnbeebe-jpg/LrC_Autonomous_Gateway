@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { MEASURED, box, longEdge, sessionId, target, type ToolDef } from "./defs-shared.js";
+import { DEFAULT_LONG_EDGE, MAX_LONG_EDGE, MIN_LONG_EDGE } from "./tools-shared.js";
 
 const returnImage = z
   .enum(["after", "before_after", "none"])
@@ -19,14 +20,14 @@ const beginArgs = z.object({
     .min(2)
     .max(3)
     .optional()
-    .describe('mode "variants" only: how many copies, 2-3 (default 3); A, B, C take the intent\'s variants of those letters'),
-  max_passes: z.number().int().min(1).max(8).optional().describe("passes after pass 0, 1-8 (default 4)"),
+    .describe('mode "variants" only: how many copies, 2-3 (default: the settings page\'s, else 3); A, B, C take the intent\'s variants of those letters'),
+  max_passes: z.number().int().min(1).max(8).optional().describe("passes after pass 0, 1-8 (default: the settings page's, else 4)"),
   guardrails: z
     .object({ clip_high_pct: z.number().min(0).max(100).optional(), clip_low_pct: z.number().min(0).max(100).optional() })
     .optional()
-    .describe("clipping limits for this session, replacing the intent's and the defaults (0.5 % high, 1.0 % low)"),
+    .describe("clipping limits for this session, replacing the intent's, the settings page's and the defaults (0.5 % high, 1.0 % low)"),
   notes: z.string().max(2000).optional().describe("the user's own words about the photo, kept in the log"),
-  long_edge: longEdge,
+  long_edge: longEdge.describe(`Preview long edge in pixels, ${MIN_LONG_EDGE}-${MAX_LONG_EDGE}, for the whole session (default: the settings page's, else ${DEFAULT_LONG_EDGE}).`),
   return_image: returnImage,
 });
 const stepArgs = z.object({
@@ -86,6 +87,8 @@ export const SESSION_DEFS: ToolDef[] = [
       "variant's (History \"AVG <id> A pass 0/N\"); it returns `variants` (each copy's settings and metrics) and a contact sheet " +
       "of the copies side by side as the image, and leaves the master as it is. Then one lr_step per copy (target \"A\", …), " +
       "then the user picks with lr_select_variant, and the remaining passes go to the pick. " +
+      "The session's numbers (max passes, variant count, clipping limits, decay, preview size and quality) come from the " +
+      "arguments, then (clipping limits only) the intent, then the user's settings page in Lightroom, then the defaults; `session_settings` in the result says where each came from. " +
       "One session at a time; the session stays open until lr_end_session. " +
       MEASURED,
     schema: beginArgs,

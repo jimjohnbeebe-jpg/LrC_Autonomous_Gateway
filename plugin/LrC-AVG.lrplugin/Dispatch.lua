@@ -14,6 +14,7 @@ local Catalog = require 'Catalog'
 local Develop = require 'Develop'
 local Json = require 'Json'
 local Log = require 'Log'
+local Prefs = require 'Prefs'
 local Preview = require 'Preview'
 
 local Dispatch = {}
@@ -32,6 +33,7 @@ function Dispatch.handlers(hello)
         create_virtual_copies = Catalog.createVirtualCopies,
         select_photo = Catalog.selectPhoto,
         get_selection = Catalog.getSelection,
+        get_prefs = Prefs.getPrefs,
     }
     return HANDLERS
 end

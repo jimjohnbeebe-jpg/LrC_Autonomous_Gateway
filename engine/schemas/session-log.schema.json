@@ -2530,6 +2530,150 @@
           "type": "null"
         }
       ]
+    },
+    "settings": {
+      "type": "object",
+      "properties": {
+        "approval": {
+          "type": "string",
+          "enum": [
+            "autonomous",
+            "approve_each_pass"
+          ]
+        },
+        "long_edge": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "quality": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "from": {
+          "type": "object",
+          "properties": {
+            "approval": {
+              "type": "string",
+              "enum": [
+                "argument",
+                "intent",
+                "page",
+                "default"
+              ]
+            },
+            "max_passes": {
+              "type": "string",
+              "enum": [
+                "argument",
+                "intent",
+                "page",
+                "default"
+              ]
+            },
+            "variant_count": {
+              "type": "string",
+              "enum": [
+                "argument",
+                "intent",
+                "page",
+                "default"
+              ]
+            },
+            "long_edge": {
+              "type": "string",
+              "enum": [
+                "argument",
+                "intent",
+                "page",
+                "default"
+              ]
+            },
+            "quality": {
+              "type": "string",
+              "enum": [
+                "argument",
+                "intent",
+                "page",
+                "default"
+              ]
+            },
+            "clip_high_pct": {
+              "type": "string",
+              "enum": [
+                "argument",
+                "intent",
+                "page",
+                "default"
+              ]
+            },
+            "clip_low_pct": {
+              "type": "string",
+              "enum": [
+                "argument",
+                "intent",
+                "page",
+                "default"
+              ]
+            },
+            "decay": {
+              "type": "string",
+              "enum": [
+                "argument",
+                "intent",
+                "page",
+                "default"
+              ]
+            }
+          },
+          "required": [
+            "approval",
+            "max_passes",
+            "variant_count",
+            "long_edge",
+            "quality",
+            "clip_high_pct",
+            "clip_low_pct",
+            "decay"
+          ],
+          "additionalProperties": false
+        },
+        "page": {
+          "type": "object",
+          "properties": {
+            "read": {
+              "type": "boolean"
+            },
+            "note": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "problems": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "read",
+            "note",
+            "problems"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "approval",
+        "long_edge",
+        "quality",
+        "from",
+        "page"
+      ],
+      "additionalProperties": false
     }
   },
   "required": [

@@ -3,7 +3,9 @@
 // Intents come from two folders, read again on every call so that a file edited between calls is
 // seen at once:
 //   1. bundled: engine\intents\ (shipped with the engine);
-//   2. user: %LOCALAPPDATA%\LrC-AVG\intents\ (PRD section 6.2), or LRC_AVG_INTENTS_DIR when set.
+//   2. user: %LOCALAPPDATA%\LrC-AVG\intents\ (PRD section 6.2), or LRC_AVG_INTENTS_DIR when set;
+//      in the engine, the folder settings\folders.ts chooses (the variable, else the settings page's
+//      folder, else the default), looked up again on every call (PHASE5_PLAN row 3).
 // A user file with the same id replaces the bundled intent. A file that fails validation is
 // skipped and reported as a warning, from either folder, so one bad file cannot stop the engine.
 // [handle: tests\intents.test.ts "adds a user intent with a new id" (written after the library was
@@ -63,13 +65,19 @@ export function defaultUserIntentsDir(env: NodeJS.ProcessEnv = process.env): str
 
 export class IntentLibrary {
   private readonly bundledDir: string;
-  private readonly userDir: string;
+  private readonly userDirOf: () => string;
   private readonly map: ParamMap;
 
-  constructor(options: { map: ParamMap; bundledDir?: string; userDir?: string }) {
+  /** `userDir`: a folder, or a function giving the folder at each call. */
+  constructor(options: { map: ParamMap; bundledDir?: string; userDir?: string | (() => string) }) {
     this.map = options.map;
     this.bundledDir = options.bundledDir ?? bundledIntentsDir();
-    this.userDir = options.userDir ?? defaultUserIntentsDir();
+    const userDir = options.userDir ?? defaultUserIntentsDir();
+    this.userDirOf = typeof userDir === "function" ? userDir : () => userDir;
+  }
+
+  private get userDir(): string {
+    return this.userDirOf();
   }
 
   directories(): { bundled: string; user: string } {
@@ -125,7 +133,8 @@ export class IntentLibrary {
   save(candidate: unknown, options: { replace?: boolean } = {}): { path: string; replaced: boolean; overrides_bundled: boolean } {
     const intent = this.check(candidate);
     const file = `${intent.id}.json`;
-    const target = path.join(this.userDir, file);
+    const dir = this.userDir;
+    const target = path.join(dir, file);
     // The file on disk counts, valid or not: a user file the loader skipped is still the user's
     // (Greptile, PR #22) [handle: tests\intents.test.ts "keeps a user file the loader skipped"].
     const replaced = existsSync(target);
@@ -137,7 +146,7 @@ export class IntentLibrary {
     if (replaced && !options.replace) {
       throw new IntentError("intent_exists", `A user intent file ${target} already exists; pass replace: true to replace it.`);
     }
-    mkdirSync(this.userDir, { recursive: true });
+    mkdirSync(dir, { recursive: true });
     // Write a temporary file and rename it over the target, so the loader does not read a file that
     // is still being written [inference: a rename within one folder swaps the file in one step; the
     // behaviour on a crash mid-write is not tested]. The loader ignores the .tmp name.

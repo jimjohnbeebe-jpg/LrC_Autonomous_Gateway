@@ -35,7 +35,7 @@ import { probe } from "./probe.js";
 import { setRegions } from "./regions.js";
 import { step } from "./step.js";
 import { allTargets, focus, resolveTarget } from "./targets.js";
-import type { BeginArgs, EndArgs, ProbeArgs, RegionArgs, SelectArgs, Session, SessionContext, SessionDeps, SessionOutput, StepArgs, TargetId } from "./types.js";
+import { folderOf, type BeginArgs, type EndArgs, type ProbeArgs, type RegionArgs, type SelectArgs, type Session, type SessionContext, type SessionDeps, type SessionOutput, type StepArgs, type TargetId } from "./types.js";
 import { runVariants } from "./variants.js";
 
 /** The open session as the other tools see it: its photos, and the one the last call worked on. */
@@ -156,7 +156,7 @@ export class SessionManager {
 
   /** lr_get_session_log (no Lightroom call). */
   getLog(args: { session_id: string }): SessionOutput {
-    return readSessionLog(this.ctx.deps.logDir, this.session, this.ended, args.session_id);
+    return readSessionLog(folderOf(this.ctx.deps.logDir), this.session, this.ended, args.session_id);
   }
 
   /**

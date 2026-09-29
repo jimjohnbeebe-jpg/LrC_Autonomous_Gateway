@@ -11,7 +11,8 @@
 //     panel and white balance instead (tonalLevel below): a made-up model, only good for testing
 //     the engine's rules, not a claim about Lightroom's rendering.
 // Keys in `ignored` are dropped silently, as Lightroom drops out-of-range values (PHASE1.md run 3).
-// The catalog commands (virtual copies, select_photo, get_selection) are in lightroom-sim-catalog.ts;
+// The catalog commands (virtual copies, select_photo, get_selection) are in lightroom-sim-catalog.ts,
+// get_prefs's answer in lightroom-sim-prefs.ts;
 // each copy has its own settings. A command works on the selected photo, or, with `photo_uuid`
 // (plugin 0.4.0), on the photo with that uuid without selecting it, as the plugin does.
 
@@ -21,6 +22,7 @@ import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 import type { FakePlugin, FakeReply } from "./fake-plugin.js";
 import { createVirtualCopies, describePhoto, findPhoto, getSelection, selectPhoto, type CopyFault, type SimCopy } from "./lightroom-sim-catalog.js";
+import { defaultSimPrefs, type SimPrefs } from "./lightroom-sim-prefs.js";
 
 export const nefDump = JSON.parse(
   readFileSync(fileURLToPath(new URL("../../../docs/reports/phase0/S5/s5_20260907-_OZ80093.NEF.json", import.meta.url)), "utf8"),
@@ -74,7 +76,9 @@ export class LightroomSim {
   /** The photo each snapshot was taken of. */
   private readonly snapshotOf = new Map<string, string>();
   /** The plugin version hello reports (plugin\LrC-AVG.lrplugin\Bridge.lua PLUGIN_VERSION). */
-  pluginVersion = "0.4.0";
+  pluginVersion = "0.5.0";
+  /** get_prefs's answer (lightroom-sim-prefs.ts); null: the command is unknown, as to a plugin before 0.5.0. */
+  prefs: SimPrefs | null = defaultSimPrefs();
   /** Virtual copies of the master, by uuid (lightroom-sim-catalog.ts). */
   readonly copies = new Map<string, SimCopy>();
   copyFault: CopyFault | null = null;
@@ -148,6 +152,9 @@ export class LightroomSim {
     plugin.handlers.set("create_virtual_copies", (p) => createVirtualCopies(this, p));
     plugin.handlers.set("select_photo", (p) => selectPhoto(this, p));
     plugin.handlers.set("get_selection", (p) => getSelection(this, p, this.filename));
+    plugin.handlers.set("get_prefs", () =>
+      this.prefs ? ok(luaize(this.prefs)) : { ok: false, error: { code: "unknown_command", message: "unknown command get_prefs", recoverable: false } },
+    );
     plugin.handlers.set("get_context", (p) => on(p, (u) => this.context(u)));
     plugin.handlers.set("get_settings", (p) => on(p, (u) => ok({ uuid: u, settings: luaize(this.settingsOf(u)) })));
     plugin.handlers.set("apply_settings", (p) =>

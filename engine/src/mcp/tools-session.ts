@@ -3,7 +3,7 @@
 // lr_select_variant (Phase 4).
 
 import type { BeginArgs, EndArgs, ProbeArgs, RegionArgs, SelectArgs, StepArgs } from "../session/index.js";
-import { run, sessionTools, type ToolContext, type ToolOutput } from "./tools-shared.js";
+import { pageBridgeUse, readPageFolders, run, sessionTools, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
 export async function beginSession(ctx: ToolContext, args: BeginArgs): Promise<ToolOutput> {
   return run(ctx, "lr_begin_session", args, async () => {
@@ -49,6 +49,12 @@ export async function endSession(ctx: ToolContext, args: EndArgs): Promise<ToolO
   });
 }
 
+/** With the settings page, it reads the page's log folder first, as the intent tools read theirs (tools-intents.ts). */
 export async function getSessionLog(ctx: ToolContext, args: { session_id: string }): Promise<ToolOutput> {
-  return run(ctx, "lr_get_session_log", args, { usesBridge: false }, async () => sessionTools(ctx).getLog(args));
+  return run(ctx, "lr_get_session_log", args, pageBridgeUse(ctx), async () => {
+    const page = await readPageFolders(ctx);
+    const out = sessionTools(ctx).getLog(args);
+    const settings = ctx.deps.settings;
+    return page === null || !settings ? out : { ...out, json: { ...out.json, log_folder: { ...settings.folders.log(), page } } };
+  });
 }

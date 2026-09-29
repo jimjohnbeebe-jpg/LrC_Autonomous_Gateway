@@ -10,6 +10,11 @@
 // why Desktop keeps two engines is unverified]. A call waits up to 15 s for the connection (bridge-gate.ts). Old previews are purged when this engine takes
 // the lock (PRD NFR-6), and again at shutdown if it holds it: an engine without the lock never
 // touches the shared previews folder, where the engine that holds it may have a preview waiting.
+// Settings (PHASE5_PLAN row 3): the bridge client finds the plugin's ports in its ports file unless
+// LRC_AVG_*_PORT sets them (bridge\endpoint.ts); the settings page is read at each session start
+// and by the intent tools, lr_get_session_log and lr_sync_series, and moves the intents and session
+// log folders (settings\folders.ts). The tool log stays in the folder it opened in here
+// (PHASE5_PLAN decision 2d).
 // Shutdown: when stdin ends. On Windows the parent often dies without a signal, and an orphaned
 // engine would keep the plugin's single-client sockets and the lock [upstream claim:
 // vendor\automaat\server\src\index.ts:194-206].
@@ -21,6 +26,7 @@ import { ToolLog, defaultLogDir } from "../log/index.js";
 import { loadDefaultParamMap } from "../params/index.js";
 import { defaultPresetDir } from "../presets/index.js";
 import { PreviewService } from "../preview/index.js";
+import { PageSettings } from "../settings/index.js";
 import { BridgeGate } from "./bridge-gate.js";
 import { devOverrides } from "./dev-overrides.js";
 import { acquireInstanceLock } from "./instance-lock.js";
@@ -40,6 +46,7 @@ const dev = devOverrides();
 const client = new BridgeClient({ engineVersion: ENGINE_VERSION, log: say, ...dev.bridge });
 const previews = new PreviewService(client);
 const toolLog = new ToolLog(defaultLogDir());
+const settings = new PageSettings(client);
 const gate = new BridgeGate(client, () => acquireInstanceLock(dev.lockPort), {
   onAcquire: () => {
     say("took the Lightroom bridge lock");
@@ -54,11 +61,12 @@ const tools = new Tools({
   client,
   map,
   previews,
-  intents: new IntentLibrary({ map }),
-  sessionLogDir: defaultLogDir(),
+  intents: new IntentLibrary({ map, userDir: () => settings.folders.intentsDir() }),
+  sessionLogDir: () => settings.folders.logDir(),
+  settings,
   presetDir: defaultPresetDir() ?? undefined,
   engineVersion: ENGINE_VERSION,
-  ensureBridge: () => gate.ready(),
+  ensureBridge: (waitMs) => gate.ready(waitMs),
   log: toolLog,
   onCallStart: () => gate.beginUse(),
   onCallEnd: () => gate.endUse(),

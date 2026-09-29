@@ -101,8 +101,11 @@ export class BridgeGate {
     return this.lock !== null;
   }
 
-  /** Resolves when the bridge is connected; throws ENGINE_BUSY or the bridge's own error. */
-  async ready(): Promise<void> {
+  /**
+   * Resolves when the bridge is connected; throws ENGINE_BUSY or the bridge's own error. `waitMs`
+   * replaces the usual wait (the intent tools wait less, mcp\tools-intents.ts PAGE_WAIT_MS).
+   */
+  async ready(waitMs: number = this.waitMs): Promise<void> {
     if (!(await this.start())) {
       const busy = this.lastBusy;
       throw new ToolError(
@@ -115,7 +118,7 @@ export class BridgeGate {
     }
     if (this.client.getState() === "connected") return;
     try {
-      await this.client.waitConnected(this.waitMs);
+      await this.client.waitConnected(waitMs);
     } catch (err) {
       // Say why: e.g. no token file (plugin not running) or the connection refused.
       const why = this.client.stats.last_drop_reason ?? this.client.stats.last_connect_error;

@@ -3,3 +3,5 @@ s8_hud 2026-09-28 18:54:30 (local time): %USERPROFILE%\AppData\Local\Temp\LrC-AV
 s8_hud 2026-09-28 18:56:19 (local time): %USERPROFILE%\AppData\Local\Temp\LrC-AVG\S8\s8_hud_2026-09-28T18-58-23.json
 s8_settings_before_restart 2026-09-28 19:00:44 (local time): %USERPROFILE%\AppData\Local\Temp\LrC-AVG\S8\s8_settings_before_restart_2026-09-28T19-00-56.json
 s8_settings_after_restart 2026-09-28 19:02:12 (local time): %USERPROFILE%\AppData\Local\Temp\LrC-AVG\S8\s8_settings_after_restart_2026-09-28T19-02-33.json
+s8_settings_before_restart 2026-09-28 19:41:43 (local time): %USERPROFILE%\AppData\Local\Temp\LrC-AVG\S8\s8_settings_before_restart_2026-09-28T19-41-57.json
+s8_settings_after_restart 2026-09-28 19:42:59 (local time): %USERPROFILE%\AppData\Local\Temp\LrC-AVG\S8\s8_settings_after_restart_2026-09-28T19-43-10.json

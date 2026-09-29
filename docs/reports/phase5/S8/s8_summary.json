@@ -1,0 +1,498 @@
+{
+  "source": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\S8",
+  "hud": {
+    "file": "s8_hud_2026-09-28T18-58-23.json",
+    "run_at": "2026-09-28 18:56:19 (local time)",
+    "lr_version": "15.5.1",
+    "answered": true,
+    "jim": {
+      "approve_label_blank": false,
+      "approve_label_changed": true,
+      "closed_by_itself": true,
+      "focus_backslash": false,
+      "hud_appeared": true,
+      "last_click_shown": true,
+      "picks_enabled_after_approve": true,
+      "picks_greyed": true,
+      "stage_updated": true
+    },
+    "findings": {
+      "clicks": 5,
+      "clicks_on_greyed_picks": 0,
+      "closed_by_code": "yes",
+      "selection_changes_seen": 2,
+      "appeared_after_request_s": 5.3317584991455,
+      "buttons": [
+        "Abort",
+        "Approve",
+        "Pick B",
+        "Accept",
+        "Accept"
+      ],
+      "closed_by_code_because": "the window closed inside the call"
+    },
+    "clicks": [
+      {
+        "button": "Abort",
+        "at": "18:56:37",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": false,
+        "task_started_ms": 3.0016899108887,
+        "task_read_ok": true,
+        "task_error": null
+      },
+      {
+        "button": "Approve",
+        "at": "18:56:48",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": false,
+        "task_started_ms": 4.0560960769653,
+        "task_read_ok": true,
+        "task_error": null
+      },
+      {
+        "button": "Pick B",
+        "at": "18:56:49",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": true,
+        "task_started_ms": 2.0128488540649,
+        "task_read_ok": true,
+        "task_error": null
+      },
+      {
+        "button": "Accept",
+        "at": "18:56:56",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": true,
+        "task_started_ms": 1.9984245300293,
+        "task_read_ok": true,
+        "task_error": null
+      },
+      {
+        "button": "Accept",
+        "at": "18:57:07",
+        "can_yield_in_action": false,
+        "picks_enabled_at_click": true,
+        "task_started_ms": 1.9967555999756,
+        "task_read_ok": true,
+        "task_error": null
+      }
+    ],
+    "close_call": {
+      "exists": true,
+      "tries": [
+        {
+          "argument": "_PLUGIN",
+          "ok": true
+        }
+      ],
+      "at": "18:57:29",
+      "closed_during_call": true,
+      "epoch": 812339849.17384,
+      "hud_open_before_call": true
+    },
+    "present": {
+      "error": null,
+      "returned_after_s": 69.566596746445,
+      "open_when_returned": false
+    },
+    "ticks": 65
+  },
+  "settings": {
+    "before_restart": {
+      "file": "s8_settings_before_restart_2026-09-28T19-41-57.json",
+      "run_at": "2026-09-28 19:41:43 (local time)",
+      "settings": {
+        "a_mode": "approve_each_pass",
+        "a_maxPasses": 6,
+        "b_mode": "approve_each_pass",
+        "b_maxPasses": 6,
+        "c_mode": "approve_each_pass",
+        "c_maxPasses": 6,
+        "mode": "autonomous",
+        "maxPasses": 4,
+        "clipHighPct": 0.5,
+        "logFolder": ""
+      },
+      "saved_by_group": {
+        "a": true,
+        "b": true,
+        "c": true
+      },
+      "observed_log": "a_mode=approve_each_pass (string) at 19:41:00; a_maxPasses=6 (number) at 19:41:06",
+      "dialog_log": "startDialog at 19:40:56; endDialog(nil) c_mode=approve_each_pass c_maxPasses=6 at 19:41:28",
+      "marks": {
+        "init_to_menu_via_G": true,
+        "init_to_menu_via_module": true,
+        "init_to_panel_via_G": true,
+        "init_to_panel_via_module": true,
+        "loop_init_mark": "init-DB2FF322-3C06-4533-A06E-0DCDEE536885",
+        "loop_running": false,
+        "loop_view_age_s": 15,
+        "menu_mark": "menu-FB4A7FEA-2475-4651-92A6-B0F2B65D69C1",
+        "menu_sees_init_mark_in_module": "init-DB2FF322-3C06-4533-A06E-0DCDEE536885",
+        "menu_sees_init_mark_on_G": "init-DB2FF322-3C06-4533-A06E-0DCDEE536885",
+        "menu_to_loop_via_G": true,
+        "menu_to_loop_via_module": true,
+        "panel_rendered_at": "2026-09-28 19:40:56 (local time)"
+      },
+      "loop_saw_the_same_settings": true,
+      "loop_view_error": null,
+      "loop_prefs_changes": [
+        {
+          "seen_at": "2026-09-28 19:40:54 (local time)",
+          "a_mode": null,
+          "a_maxPasses": null,
+          "b_mode": null,
+          "b_maxPasses": null,
+          "c_mode": null,
+          "c_maxPasses": null,
+          "mode": "autonomous",
+          "maxPasses": 4,
+          "clipHighPct": 0.5,
+          "logFolder": ""
+        },
+        {
+          "seen_at": "2026-09-28 19:41:00 (local time)",
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 4,
+          "b_mode": "autonomous",
+          "b_maxPasses": 4,
+          "c_mode": "autonomous",
+          "c_maxPasses": 4,
+          "mode": "autonomous",
+          "maxPasses": 4,
+          "clipHighPct": 0.5,
+          "logFolder": ""
+        },
+        {
+          "seen_at": "2026-09-28 19:41:02 (local time)",
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 4,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 4,
+          "c_mode": "autonomous",
+          "c_maxPasses": 4,
+          "mode": "autonomous",
+          "maxPasses": 4,
+          "clipHighPct": 0.5,
+          "logFolder": ""
+        },
+        {
+          "seen_at": "2026-09-28 19:41:06 (local time)",
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 4,
+          "c_mode": "autonomous",
+          "c_maxPasses": 4,
+          "mode": "autonomous",
+          "maxPasses": 4,
+          "clipHighPct": 0.5,
+          "logFolder": ""
+        },
+        {
+          "seen_at": "2026-09-28 19:41:07 (local time)",
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "autonomous",
+          "c_maxPasses": 4,
+          "mode": "autonomous",
+          "maxPasses": 4,
+          "clipHighPct": 0.5,
+          "logFolder": ""
+        },
+        {
+          "seen_at": "2026-09-28 19:41:28 (local time)",
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": "autonomous",
+          "maxPasses": 4,
+          "clipHighPct": 0.5,
+          "logFolder": ""
+        }
+      ],
+      "answered": true,
+      "jim": {
+        "a_showed_values": true,
+        "b_showed_values": true,
+        "c_showed_values": true,
+        "page_showed_groups": true
+      }
+    },
+    "after_restart": {
+      "file": "s8_settings_after_restart_2026-09-28T19-43-10.json",
+      "run_at": "2026-09-28 19:42:59 (local time)",
+      "settings": {
+        "a_mode": "approve_each_pass",
+        "a_maxPasses": 6,
+        "b_mode": "approve_each_pass",
+        "b_maxPasses": 6,
+        "c_mode": "approve_each_pass",
+        "c_maxPasses": 6,
+        "mode": "autonomous",
+        "maxPasses": 4,
+        "clipHighPct": 0.5,
+        "logFolder": ""
+      },
+      "saved_by_group": {
+        "a": true,
+        "b": true,
+        "c": true
+      },
+      "observed_log": "a_mode=approve_each_pass (string) at 19:41:00; a_maxPasses=6 (number) at 19:41:06",
+      "dialog_log": "startDialog at 19:40:56; endDialog(nil) c_mode=approve_each_pass c_maxPasses=6 at 19:41:28; startDialog at 19:42:45; endDialog(nil) c_mode=approve_each_pass c_maxPasses=6 at 19:42:49",
+      "marks": {
+        "init_to_menu_via_G": true,
+        "init_to_menu_via_module": true,
+        "init_to_panel_via_G": true,
+        "init_to_panel_via_module": true,
+        "loop_init_mark": "init-4DA85DDE-0712-4984-A59E-123078F8C383",
+        "loop_running": false,
+        "loop_view_age_s": 10,
+        "menu_mark": "menu-9D3F739C-A6E6-4126-8B7C-71F7E6C90855",
+        "menu_sees_init_mark_in_module": "init-4DA85DDE-0712-4984-A59E-123078F8C383",
+        "menu_sees_init_mark_on_G": "init-4DA85DDE-0712-4984-A59E-123078F8C383",
+        "menu_to_loop_via_G": true,
+        "menu_to_loop_via_module": true,
+        "panel_rendered_at": "2026-09-28 19:42:45 (local time)"
+      },
+      "loop_saw_the_same_settings": true,
+      "loop_view_error": null,
+      "loop_prefs_changes": [
+        {
+          "seen_at": "2026-09-28 19:42:40 (local time)",
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": "autonomous",
+          "maxPasses": 4,
+          "clipHighPct": 0.5,
+          "logFolder": ""
+        },
+        {
+          "seen_at": "2026-09-28 19:42:47 (local time)",
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": "autonomous",
+          "maxPasses": 4,
+          "clipHighPct": 0.5,
+          "logFolder": ""
+        },
+        {
+          "seen_at": "2026-09-28 19:42:49 (local time)",
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": "autonomous",
+          "maxPasses": 4,
+          "clipHighPct": 0.5,
+          "logFolder": ""
+        }
+      ],
+      "answered": true,
+      "jim": {
+        "a_kept": true,
+        "b_kept": true,
+        "c_kept": true
+      }
+    },
+    "kept_across_restart": {
+      "a_mode": true,
+      "a_maxPasses": true,
+      "b_mode": true,
+      "b_maxPasses": true,
+      "c_mode": true,
+      "c_maxPasses": true,
+      "mode": true,
+      "maxPasses": true,
+      "clipHighPct": true,
+      "logFolder": true
+    },
+    "kept_by_group": {
+      "a": true,
+      "b": true,
+      "c": true
+    },
+    "runs": [
+      {
+        "file": "s8_settings_before_restart_2026-09-28T18-54-09.json",
+        "step": "before_restart",
+        "run_at": "2026-09-28 18:53:44 (local time)",
+        "saved_by_group": {
+          "a": null,
+          "b": null,
+          "c": null
+        },
+        "settings": {
+          "a_mode": null,
+          "a_maxPasses": null,
+          "b_mode": null,
+          "b_maxPasses": null,
+          "c_mode": null,
+          "c_maxPasses": null,
+          "mode": "autonomous",
+          "maxPasses": 4,
+          "clipHighPct": 0.5,
+          "logFolder": ""
+        },
+        "observed_log": null,
+        "dialog_log": null,
+        "jim": {
+          "field_kept_12": false,
+          "page_showed_fields": true,
+          "warning_on_12": true
+        }
+      },
+      {
+        "file": "s8_settings_before_restart_2026-09-28T19-00-56.json",
+        "step": "before_restart",
+        "run_at": "2026-09-28 19:00:44 (local time)",
+        "saved_by_group": {
+          "a": null,
+          "b": null,
+          "c": null
+        },
+        "settings": {
+          "a_mode": null,
+          "a_maxPasses": null,
+          "b_mode": null,
+          "b_maxPasses": null,
+          "c_mode": null,
+          "c_maxPasses": null,
+          "mode": "autonomous",
+          "maxPasses": 4,
+          "clipHighPct": 0.5,
+          "logFolder": ""
+        },
+        "observed_log": null,
+        "dialog_log": null,
+        "jim": {
+          "field_kept_12": false,
+          "page_showed_fields": true,
+          "warning_on_12": true
+        }
+      },
+      {
+        "file": "s8_settings_after_restart_2026-09-28T19-02-33.json",
+        "step": "after_restart",
+        "run_at": "2026-09-28 19:02:12 (local time)",
+        "saved_by_group": {
+          "a": null,
+          "b": null,
+          "c": null
+        },
+        "settings": {
+          "a_mode": null,
+          "a_maxPasses": null,
+          "b_mode": null,
+          "b_maxPasses": null,
+          "c_mode": null,
+          "c_maxPasses": null,
+          "mode": "autonomous",
+          "maxPasses": 4,
+          "clipHighPct": 0.5,
+          "logFolder": ""
+        },
+        "observed_log": null,
+        "dialog_log": null,
+        "jim": {
+          "page_kept_values": true
+        }
+      },
+      {
+        "file": "s8_settings_before_restart_2026-09-28T19-41-57.json",
+        "step": "before_restart",
+        "run_at": "2026-09-28 19:41:43 (local time)",
+        "saved_by_group": {
+          "a": true,
+          "b": true,
+          "c": true
+        },
+        "settings": {
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": "autonomous",
+          "maxPasses": 4,
+          "clipHighPct": 0.5,
+          "logFolder": ""
+        },
+        "observed_log": "a_mode=approve_each_pass (string) at 19:41:00; a_maxPasses=6 (number) at 19:41:06",
+        "dialog_log": "startDialog at 19:40:56; endDialog(nil) c_mode=approve_each_pass c_maxPasses=6 at 19:41:28",
+        "jim": {
+          "a_showed_values": true,
+          "b_showed_values": true,
+          "c_showed_values": true,
+          "page_showed_groups": true
+        }
+      },
+      {
+        "file": "s8_settings_after_restart_2026-09-28T19-43-10.json",
+        "step": "after_restart",
+        "run_at": "2026-09-28 19:42:59 (local time)",
+        "saved_by_group": {
+          "a": true,
+          "b": true,
+          "c": true
+        },
+        "settings": {
+          "a_mode": "approve_each_pass",
+          "a_maxPasses": 6,
+          "b_mode": "approve_each_pass",
+          "b_maxPasses": 6,
+          "c_mode": "approve_each_pass",
+          "c_maxPasses": 6,
+          "mode": "autonomous",
+          "maxPasses": 4,
+          "clipHighPct": 0.5,
+          "logFolder": ""
+        },
+        "observed_log": "a_mode=approve_each_pass (string) at 19:41:00; a_maxPasses=6 (number) at 19:41:06",
+        "dialog_log": "startDialog at 19:40:56; endDialog(nil) c_mode=approve_each_pass c_maxPasses=6 at 19:41:28; startDialog at 19:42:45; endDialog(nil) c_mode=approve_each_pass c_maxPasses=6 at 19:42:49",
+        "jim": {
+          "a_kept": true,
+          "b_kept": true,
+          "c_kept": true
+        }
+      }
+    ]
+  },
+  "copied": [
+    "s8_hud_2026-09-28T18-55-07.json",
+    "s8_hud_2026-09-28T18-58-23.json",
+    "s8_log.txt",
+    "s8_loop_view.json",
+    "s8_loop_view_after_restart_2026-09-28T19-02-19.json",
+    "s8_loop_view_after_restart_2026-09-28T19-43-04.json",
+    "s8_loop_view_before_restart_2026-09-28T18-53-49.json",
+    "s8_loop_view_before_restart_2026-09-28T19-00-49.json",
+    "s8_loop_view_before_restart_2026-09-28T19-41-48.json",
+    "s8_panel_view.json",
+    "s8_settings_after_restart_2026-09-28T19-02-33.json",
+    "s8_settings_after_restart_2026-09-28T19-43-10.json",
+    "s8_settings_before_restart_2026-09-28T18-54-09.json",
+    "s8_settings_before_restart_2026-09-28T19-00-56.json",
+    "s8_settings_before_restart_2026-09-28T19-41-57.json"
+  ],
+  "skipped": []
+}

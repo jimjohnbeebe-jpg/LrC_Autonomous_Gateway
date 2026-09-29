@@ -15,6 +15,7 @@
 local LrView = import 'LrView'
 
 local HudState = require 'HudState'
+local Prefs = require 'Prefs'
 
 local HudView = {}
 
@@ -77,6 +78,14 @@ local function cameraLine(t)
     end
     if t.lens_profile then parts[#parts + 1] = "lens profile " .. t.lens_profile end
     return table.concat(parts, ", ")
+end
+
+-- The settings page's values under their wire names (Prefs.read checks each one), for props().
+function HudView.pageSettings()
+    local values = Prefs.read()
+    local wire = {}
+    for _, spec in ipairs(Prefs.SPECS) do wire[spec.wire] = values[spec.key] end
+    return wire
 end
 
 -- Every property contents() binds, from the state `s` (or nil), the connection { running, engine }

@@ -203,14 +203,18 @@ function HudState.targetName(s)
     return name
 end
 
--- The "Target changed" line for the photo selected now (uuid and name, both nil when nothing is
--- selected). The session's photos are session_photos (Variants: the master and its copies, which
--- the engine selects itself) or else the target alone. The advice matches the engine's own
--- TARGET_CHANGED message (engine\src\session\io.ts bridge()).
+-- The selection line for the photo selected now (uuid and name, both nil when nothing is selected):
+-- "Target changed: ..." when it is not one of the session's photos, else a line saying it is, so the
+-- line is never blank during a session (after the row 4 probe, HudSelection.lua). The session's
+-- photos are session_photos (Variants: the master and its copies, which the engine selects itself)
+-- or else the target alone. The advice matches the engine's own TARGET_CHANGED message
+-- (engine\src\session\io.ts bridge()).
+HudState.SELECTION_OK = "Selection: the session's photo."
+
 function HudState.targetChangedLine(s, uuid, name)
     if s == nil or HudState.isEnd(s.stage) then return "" end
     local photos = s.session_photos or { s.target.uuid }
-    if uuid ~= nil and (uuid == s.target.uuid or has(photos, uuid)) then return "" end
+    if uuid ~= nil and (uuid == s.target.uuid or has(photos, uuid)) then return HudState.SELECTION_OK end
     local selected = uuid == nil and "No photo is selected" or ((name or uuid) .. " is selected")
     local again = s.mode == "variants" and "Claude's next call selects the session's photo again"
         or ("Select " .. HudState.targetName(s) .. " again")

@@ -26,5 +26,5 @@ return {
         { title = "LrC-AVG - Abort Session", file = "MenuAbort.lua" },
         { title = "LrC-AVG - Accept Session", file = "MenuAccept.lua" },
     },
-    VERSION = { major = 0, minor = 6, revision = 0, build = 0 },
+    VERSION = { major = 0, minor = 6, revision = 1, build = 0 },
 }

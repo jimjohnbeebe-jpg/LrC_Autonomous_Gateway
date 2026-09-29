@@ -7,7 +7,7 @@ import type { SessionLogData, SessionLogFiles } from "../log/index.js";
 import type { Metrics, Region, RegionBox } from "../metrics/index.js";
 import type { CanonicalSettings, ParamMap } from "../params/index.js";
 import type { RenderedPreview } from "../preview/index.js";
-import type { PageRead } from "../settings/index.js";
+import type { KnownLogFolders, PageRead } from "../settings/index.js";
 import type { Limits, Slope } from "./plan.js";
 
 export type SessionOutput = { json: Record<string, unknown>; image?: Buffer; log?: Record<string, unknown> };
@@ -59,6 +59,8 @@ export type SessionDeps = {
    * moves the folders); settings\read.ts readPage on the client when absent.
    */
   readPage?: () => Promise<PageRead>;
+  /** The log folders session logs were written to (settings\log-folders.ts): begin records its folder, lr_get_session_log searches them. */
+  logFolders?: KnownLogFolders;
   engineVersion: string;
   now?: () => Date;
   newId?: () => string;

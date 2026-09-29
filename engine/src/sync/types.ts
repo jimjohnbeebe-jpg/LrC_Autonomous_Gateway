@@ -25,8 +25,10 @@ export type SyncDeps = {
   map: ParamMap;
   /** Export and measure a photo (preview\service.ts); sync names it with photoUuid. */
   render: (request: PreviewRequest) => Promise<RenderedPreview>;
-  /** Where session recipes are (log\session-log.ts). */
+  /** Where session recipes are (log\session-log.ts): the current log folder. */
   logDir: string;
+  /** Earlier log folders to look in after it (settings\log-folders.ts). */
+  earlierLogDirs?: readonly string[];
   newId?: () => string;
   /** How long a snapshot or a write may take (tests shorten it); target.ts WRITE_TIMEOUT_MS by default. */
   writeTimeoutMs?: number;

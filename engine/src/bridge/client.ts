@@ -61,7 +61,7 @@ export class BridgeClient {
   private readonly opts: Required<Omit<BridgeClientOptions, "log" | "readToken" | "readPorts" | "commandPort" | "eventPort">>;
   private readonly log: (message: string) => void;
   private readonly readToken: () => string | null;
-  private readonly readPorts: () => BridgePorts | null;
+  private readonly readPorts: (token: string) => BridgePorts | null;
   private readonly givenPorts: { command: number | undefined; event: number | undefined };
   private token: string | null = null;
   private state: BridgeState = "stopped";
@@ -197,11 +197,11 @@ export class BridgeClient {
     const current = (): boolean => attempt === this.attempt;
     this.setState("connecting");
     try {
-      this.token = this.readToken();
-      if (this.token === null) {
+      const token = (this.token = this.readToken());
+      if (token === null) {
         throw new Error(`no bridge token at ${defaultTokenPath()} (is Lightroom running with the LrC-AVG plugin enabled?)`);
       }
-      const ports = (this.stats.ports = choosePorts(this.givenPorts, this.readPorts));
+      const ports = (this.stats.ports = choosePorts(this.givenPorts, () => this.readPorts(token)));
       const commandSocket = await openSocket(this.opts.host, ports.command, this.opts.connectTimeoutMs);
       if (!current()) return void commandSocket.destroy();
       this.commandSocket = commandSocket;

@@ -5,6 +5,9 @@
 //   bridge_ports.json   the ports the bridge listens on, from its settings page (PHASE5_PLAN decision
 //                       2e, row 3). An explicit port (an option, from the LRC_AVG_*_PORT variables,
 //                       mcp\dev-overrides.ts) wins over the file, and the file over 8765/8766.
+//                       The file is used only when its token_check is the start of the token the
+//                       client just read: a file from an earlier start (an older plugin that writes
+//                       none, or a write that failed) is not taken for this one's (Greptile, PR #44).
 // Moved out of client.ts in PHASE5_PLAN row 3, which took client.ts off the size rule's list.
 
 import { readFileSync } from "node:fs";
@@ -19,8 +22,13 @@ export const DEFAULT_EVENT_PORT = 8766;
 /** The plugin's two listening ports: `receive` takes the engine's commands, `send` carries the replies. */
 export type BridgePorts = { receive: number; send: number };
 
+/** How many leading characters of the token the ports file carries (Endpoint.lua TOKEN_CHECK_CHARS). */
+export const TOKEN_CHECK_CHARS = 16;
+
 const port = z.number().int().min(1).max(65535);
-const portsFileSchema = z.looseObject({ receive: port, send: port }).refine((p) => p.receive !== p.send, "receive and send are the same port");
+const portsFileSchema = z
+  .looseObject({ receive: port, send: port, token_check: z.string().length(TOKEN_CHECK_CHARS) })
+  .refine((p) => p.receive !== p.send, "receive and send are the same port");
 
 function lrcAvgDir(): string {
   return path.join(os.homedir(), ".lrc-avg");
@@ -46,10 +54,11 @@ export function readTokenFile(file: string = defaultTokenPath()): string | null 
 }
 
 /**
- * The ports in the plugin's ports file, or null (with why) when there is no file or it does not
- * hold two different ports; the client then uses 8765/8766, as before the file existed.
+ * The ports in the plugin's ports file for the start that wrote `token`, or null (with why) when
+ * there is no file, it does not hold two different ports, or it is from another start; the client
+ * then uses 8765/8766, as before the file existed.
  */
-export function readPortsFile(file: string = defaultPortsPath()): { ports: BridgePorts | null; problem: string | null } {
+export function readPortsFile(token: string, file: string = defaultPortsPath()): { ports: BridgePorts | null; problem: string | null } {
   let text: string;
   try {
     text = readFileSync(file, "utf8");
@@ -64,6 +73,9 @@ export function readPortsFile(file: string = defaultPortsPath()): { ports: Bridg
   }
   const parsed = portsFileSchema.safeParse(json);
   if (!parsed.success) return { ports: null, problem: `${file}: ${parsed.error.issues.map((i) => i.message).join("; ")}` };
+  if (parsed.data.token_check !== token.slice(0, TOKEN_CHECK_CHARS)) {
+    return { ports: null, problem: `${file} is from an earlier plugin start (its token_check is not the token file's)` };
+  }
   return { ports: { receive: parsed.data.receive, send: parsed.data.send }, problem: null };
 }
 
@@ -88,10 +100,10 @@ export function choosePorts(given: { command: number | undefined; event: number 
  * A reader of the ports file for one client: logs a file it cannot use once, not at every
  * connection attempt (every 2 s while Lightroom is closed: client.ts DEFAULTS reconnectMs).
  */
-export function portsFileReader(log: (message: string) => void, file?: string): () => BridgePorts | null {
+export function portsFileReader(log: (message: string) => void, file?: string): (token: string) => BridgePorts | null {
   let lastProblem: string | null = null;
-  return () => {
-    const { ports, problem } = readPortsFile(file);
+  return (token) => {
+    const { ports, problem } = readPortsFile(token, file);
     if (problem && problem !== lastProblem) log(`bridge: ignoring the ports file (${problem}); using 8765/8766`);
     lastProblem = problem;
     return ports;

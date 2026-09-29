@@ -16,9 +16,12 @@ export class PageSettings {
     this.folders = new EngineFolders(env);
   }
 
-  /** Read the page now; the folders follow a successful read, and a failed one keeps the last. */
-  async read(): Promise<PageRead> {
-    const r = await readPage(this.client);
+  /**
+   * Read the page now; the folders follow a successful read, and a failed one keeps the last.
+   * `timeoutMs` bounds get_prefs (read.ts readPage).
+   */
+  async read(timeoutMs?: number): Promise<PageRead> {
+    const r = await readPage(this.client, timeoutMs);
     if (r.read) this.lastRead = r;
     this.folders.update(r);
     return r;

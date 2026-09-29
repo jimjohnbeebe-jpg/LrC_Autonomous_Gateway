@@ -39,6 +39,7 @@ export async function syncSeries(ctx: ToolContext, args: SyncSeriesArgs): Promis
         map: ctx.deps.map,
         render: (request: Parameters<typeof renderRequest>[1]) => renderRequest(ctx, request),
         logDir: folderOf(ctx.deps.sessionLogDir as string | (() => string)), // sessionTools() refuses an engine without it
+        earlierLogDirs: ctx.deps.logFolders?.list() ?? [],
       };
       return runSync(deps, { ...args, long_edge: args.long_edge ?? DEFAULT_LONG_EDGE, quality: PREVIEW_QUALITY });
     });

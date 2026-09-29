@@ -27,6 +27,7 @@ import { randomUUID } from "node:crypto";
 import { ToolError } from "../mcp/errors.js";
 import type { Metrics, Region } from "../metrics/index.js";
 import type { RenderedPreview } from "../preview/index.js";
+import { searchOrder } from "../settings/index.js";
 import { openSession, runPass0 } from "./begin.js";
 import { endSession, readSessionLog } from "./end.js";
 import { read, render } from "./io.js";
@@ -156,7 +157,8 @@ export class SessionManager {
 
   /** lr_get_session_log (no Lightroom call). */
   getLog(args: { session_id: string }): SessionOutput {
-    return readSessionLog(folderOf(this.ctx.deps.logDir), this.session, this.ended, args.session_id);
+    const dirs = searchOrder(folderOf(this.ctx.deps.logDir), this.ctx.deps.logFolders?.list() ?? []);
+    return readSessionLog(dirs, this.session, this.ended, args.session_id);
   }
 
   /**

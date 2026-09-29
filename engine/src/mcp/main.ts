@@ -26,7 +26,7 @@ import { ToolLog, defaultLogDir } from "../log/index.js";
 import { loadDefaultParamMap } from "../params/index.js";
 import { defaultPresetDir } from "../presets/index.js";
 import { PreviewService } from "../preview/index.js";
-import { PageSettings } from "../settings/index.js";
+import { KnownLogFolders, PageSettings } from "../settings/index.js";
 import { BridgeGate } from "./bridge-gate.js";
 import { devOverrides } from "./dev-overrides.js";
 import { acquireInstanceLock } from "./instance-lock.js";
@@ -64,6 +64,7 @@ const tools = new Tools({
   intents: new IntentLibrary({ map, userDir: () => settings.folders.intentsDir() }),
   sessionLogDir: () => settings.folders.logDir(),
   settings,
+  logFolders: new KnownLogFolders(),
   presetDir: defaultPresetDir() ?? undefined,
   engineVersion: ENGINE_VERSION,
   ensureBridge: (waitMs) => gate.ready(waitMs),

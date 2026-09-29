@@ -1,13 +1,13 @@
 // The settings module's pure parts (PHASE5_PLAN row 3): the page's values checked field by field,
 // the order a session takes its values in, the folders, and the bridge's ports file.
 
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { choosePorts, portsFileReader, readPortsFile } from "../src/bridge/endpoint.js";
 import { SESSION_DEFAULTS } from "../src/session/rules.js";
-import { EngineFolders, PAGE_SPECS, isFullPath, parsePage, resolveSessionSettings } from "../src/settings/index.js";
+import { EngineFolders, KnownLogFolders, MAX_LOG_FOLDERS, PAGE_SPECS, isFullPath, parsePage, resolveSessionSettings, searchOrder } from "../src/settings/index.js";
 import { defaultSimPrefs } from "./helpers/lightroom-sim-prefs.js";
 
 describe("settings page: defaults", () => {
@@ -154,6 +154,8 @@ describe("settings: folders", () => {
 });
 
 describe("bridge: the ports file", () => {
+  const TOKEN = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+  const CHECK = TOKEN.slice(0, 16);
   let dir: string;
   let file: string;
   beforeEach(() => {
@@ -162,23 +164,31 @@ describe("bridge: the ports file", () => {
   });
   afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
-  it("reads the plugin's ports", () => {
-    writeFileSync(file, JSON.stringify({ receive: 9765, send: 9766, plugin_version: "0.5.0", written_at: "2026-09-28T00:00:00Z" }));
-    expect(readPortsFile(file)).toEqual({ ports: { receive: 9765, send: 9766 }, problem: null });
+  it("reads the plugin's ports when the file is from this start (its token_check is the token's start)", () => {
+    writeFileSync(file, JSON.stringify({ receive: 9765, send: 9766, token_check: CHECK, plugin_version: "0.5.0", written_at: "2026-09-28T00:00:00Z" }));
+    expect(readPortsFile(TOKEN, file)).toEqual({ ports: { receive: 9765, send: 9766 }, problem: null });
   });
 
-  it("gives no ports, and no problem, without a file (a plugin before 0.5.0)", () => {
-    expect(readPortsFile(file)).toEqual({ ports: null, problem: null });
+  it("gives no ports, and no problem, without a file (a plugin before 0.5.0 that never wrote one)", () => {
+    expect(readPortsFile(TOKEN, file)).toEqual({ ports: null, problem: null });
+  });
+
+  it("ignores a file from an earlier start: an older plugin now runs, or this start could not write the file (Greptile, PR #44)", () => {
+    writeFileSync(file, JSON.stringify({ receive: 9765, send: 9766, token_check: "ffffffffffffffff" }));
+    const r = readPortsFile(TOKEN, file);
+    expect(r.ports).toBeNull();
+    expect(r.problem).toContain("earlier plugin start");
   });
 
   it.each([
     ["not JSON", "{nope"],
-    ["a port out of range", JSON.stringify({ receive: 70000, send: 8766 })],
-    ["the same port twice", JSON.stringify({ receive: 8765, send: 8765 })],
-    ["a missing port", JSON.stringify({ receive: 8765 })],
+    ["a port out of range", JSON.stringify({ receive: 70000, send: 8766, token_check: CHECK })],
+    ["the same port twice", JSON.stringify({ receive: 8765, send: 8765, token_check: CHECK })],
+    ["a missing port", JSON.stringify({ receive: 8765, token_check: CHECK })],
+    ["no token_check (a file written before the check)", JSON.stringify({ receive: 9765, send: 9766 })],
   ])("gives no ports and a problem for %s", (_what, text) => {
     writeFileSync(file, text);
-    const r = readPortsFile(file);
+    const r = readPortsFile(TOKEN, file);
     expect(r.ports).toBeNull();
     expect(r.problem).toContain(file);
   });
@@ -198,13 +208,58 @@ describe("bridge: the ports file", () => {
     writeFileSync(file, "{nope");
     const lines: string[] = [];
     const read = portsFileReader((m) => lines.push(m), file);
-    read();
-    read();
+    read(TOKEN);
+    read(TOKEN);
     expect(lines).toHaveLength(1);
-    writeFileSync(file, JSON.stringify({ receive: 9765, send: 9766 }));
-    expect(read()).toEqual({ receive: 9765, send: 9766 });
+    writeFileSync(file, JSON.stringify({ receive: 9765, send: 9766, token_check: CHECK }));
+    expect(read(TOKEN)).toEqual({ receive: 9765, send: 9766 });
     writeFileSync(file, "{nope");
-    read();
+    read(TOKEN);
     expect(lines).toHaveLength(2);
+  });
+});
+
+describe("settings: the log folders sessions were written to (Greptile, PR #44)", () => {
+  let dir: string;
+  let file: string;
+  beforeEach(() => {
+    dir = mkdtempSync(path.join(os.tmpdir(), "lrc-avg-logfolders-"));
+    file = path.join(dir, "sub", "log_folders.json");
+  });
+  afterEach(() => rmSync(dir, { recursive: true, force: true }));
+
+  it("records folders newest first, each once, and keeps them in the file", () => {
+    const known = new KnownLogFolders(file);
+    expect(known.list()).toEqual([]);
+    expect(known.remember("D:\\A")).toBe(true);
+    expect(known.remember("D:\\B")).toBe(true);
+    expect(known.remember("d:\\a")).toBe(true);
+    expect(new KnownLogFolders(file).list()).toEqual([path.resolve("d:\\a"), path.resolve("D:\\B")]);
+  });
+
+  it("keeps at most MAX_LOG_FOLDERS", () => {
+    const known = new KnownLogFolders(file);
+    for (let i = 0; i < MAX_LOG_FOLDERS + 5; i++) known.remember(`D:\\logs\\${i}`);
+    const list = known.list();
+    expect(list).toHaveLength(MAX_LOG_FOLDERS);
+    expect(list[0]).toBe(path.resolve(`D:\\logs\\${MAX_LOG_FOLDERS + 4}`));
+  });
+
+  it("reads a damaged file as empty, and a remember writes it afresh", () => {
+    mkdirSync(path.dirname(file), { recursive: true });
+    writeFileSync(file, "{nope");
+    const known = new KnownLogFolders(file);
+    expect(known.list()).toEqual([]);
+    known.remember("D:\\A");
+    expect(known.list()).toEqual([path.resolve("D:\\A")]);
+  });
+
+  it("gives false, not an error, when the file cannot be written", () => {
+    writeFileSync(path.join(dir, "blocker"), "a file where a folder should be");
+    expect(new KnownLogFolders(path.join(dir, "blocker", "log_folders.json")).remember("D:\\A")).toBe(false);
+  });
+
+  it("searches the current folder first, then each earlier one once", () => {
+    expect(searchOrder("D:\\now", ["D:\\old", "d:\\NOW", "D:\\older"])).toEqual(["D:\\now", "D:\\old", "D:\\older"]);
   });
 });

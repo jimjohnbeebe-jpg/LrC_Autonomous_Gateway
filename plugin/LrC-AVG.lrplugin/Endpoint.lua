@@ -53,20 +53,30 @@ function Endpoint.newToken()
     return token
 end
 
--- The ports this bridge binds, for the engine (engine\src\bridge\endpoint.ts readPortsFile).
--- Returns the path, or nil if the file cannot be written; the engine then reads an older file or,
--- without one, keeps to its defaults.
-function Endpoint.writePorts(receivePort, sendPort, pluginVersion)
+-- The first characters of the token, written into the ports file: the engine uses the file only
+-- when they match the token file, so a ports file from an earlier start (an older plugin that
+-- writes none, or a write that failed) is not taken for this one's (Greptile, PR #44).
+Endpoint.TOKEN_CHECK_CHARS = 16
+
+-- The ports this bridge binds, for the engine (engine\src\bridge\endpoint.ts readPortsFile), with
+-- the check of this start's token. Returns the path, or nil if there is no token or the file cannot
+-- be written; the engine then finds no ports file for this start and keeps to 8765/8766.
+function Endpoint.writePorts(receivePort, sendPort, pluginVersion, token)
     local path = Endpoint.portsPath()
+    if type(token) ~= "string" or #token < Endpoint.TOKEN_CHECK_CHARS then
+        Log.error("bridge: no token, so no ports file; the engine will try 8765/8766")
+        return nil
+    end
     local text = Json.encode({
         receive = receivePort,
         send = sendPort,
+        token_check = token:sub(1, Endpoint.TOKEN_CHECK_CHARS),
         plugin_version = pluginVersion,
         written_at = os.date("!%Y-%m-%dT%H:%M:%SZ"),
     })
     local ok, err = write(path, text)
     if not ok then
-        Log.error("bridge: cannot write the ports file " .. path .. ": " .. tostring(err) .. "; the engine will use an older file's ports, or 8765/8766")
+        Log.error("bridge: cannot write the ports file " .. path .. ": " .. tostring(err) .. "; the engine will try 8765/8766")
         return nil
     end
     Log.info(string.format("bridge: ports %d/%d written to %s", receivePort, sendPort, path))

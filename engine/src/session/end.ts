@@ -95,22 +95,26 @@ function copiesJson(s: Session, outcome: EndArgs["outcome"]): Record<string, unk
   return { copies, copies_note: note };
 }
 
-/** A session's log: the open session's, one that ended in this engine run, or one found in the log folder. */
-export function readSessionLog(logDir: string, open: Session | null, ended: ReadonlyMap<string, string>, sessionId: string): SessionOutput {
+/**
+ * A session's log: the open session's, one that ended in this engine run, or one found in the log
+ * folders (the current one first, then the earlier ones, settings\log-folders.ts).
+ */
+export function readSessionLog(logDirs: readonly string[], open: Session | null, ended: ReadonlyMap<string, string>, sessionId: string): SessionOutput {
   if (open?.id === sessionId) return { json: { ok: true, open: true, log_path: open.files.logPath, log: open.log } };
   let file = ended.get(sessionId) ?? null;
-  if (!file) {
-    const short = sessionId.replace(/-/g, "").slice(0, 6);
+  const short = sessionId.replace(/-/g, "").slice(0, 6);
+  for (const logDir of logDirs) {
+    if (file) break;
     try {
       const match = readdirSync(logDir).find((f) => f.endsWith(`-${short}.json`));
       if (match) file = path.join(logDir, match);
     } catch {
-      // no log folder yet
+      // no such folder (yet, or any more)
     }
   }
   if (file) {
     const log = JSON.parse(readFileSync(file, "utf8")) as { session_id?: unknown };
     if (log.session_id === sessionId) return { json: { ok: true, open: false, log_path: file, log } };
   }
-  throw new ToolError("SESSION_NOT_FOUND", `No session log for ${sessionId} in ${logDir}.`, false);
+  throw new ToolError("SESSION_NOT_FOUND", `No session log for ${sessionId} in ${logDirs.join(", ")}.`, false);
 }

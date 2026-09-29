@@ -9,6 +9,7 @@
 // Lightroom sim; in Lightroom [unverified] until the row 3 probe and PHASE5_PLAN row 7].
 
 import { existsSync } from "node:fs";
+import path from "node:path";
 import type { CommandResult } from "../bridge/index.js";
 import { SESSION_LOG_SCHEMA_ID, SessionLogFiles, type SessionLogData } from "../log/index.js";
 import { ToolError } from "../mcp/errors.js";
@@ -43,6 +44,7 @@ export async function openSession(ctx: SessionContext, args: BeginArgs): Promise
 
   const now = ctx.now();
   const { id, short, files } = pickLogFiles(ctx, now);
+  ctx.deps.logFolders?.remember(path.dirname(files.logPath)); // found again after the page's folder changes
   const snapshotName = `AVG pre-session ${now.toISOString()}`;
   const snap = await client.request("create_snapshot", { target_uuid: photo.uuid, name: snapshotName });
   const master = newTarget({

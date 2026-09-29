@@ -37,8 +37,11 @@ export type BridgeClientOptions = {
   engineVersion?: string;
   /** Returns the plugin's current token, or null if there is none. Default: read defaultTokenPath(). */
   readToken?: () => string | null;
-  /** Returns the plugin's ports, or null for 8765/8766. Default: read defaultPortsPath() (endpoint.ts). */
-  readPorts?: () => BridgePorts | null;
+  /**
+   * Returns the plugin's ports for the start that wrote `token` (the one just read), or null for
+   * 8765/8766. Default: read defaultPortsPath() (endpoint.ts readPortsFile).
+   */
+  readPorts?: (token: string) => BridgePorts | null;
   log?: (message: string) => void;
 };
 

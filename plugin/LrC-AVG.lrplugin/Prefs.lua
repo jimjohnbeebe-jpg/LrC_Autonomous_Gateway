@@ -53,11 +53,15 @@ local function trim(s)
     return (s:match("^%s*(.-)%s*$"))
 end
 
+-- Every entry between commas counts: an empty one ("0.5," or "0.5,,0.3") is refused, not skipped,
+-- so a schedule is never silently shortened (Greptile, PR #44).
 function Prefs.parseDecay(v)
     if type(v) ~= "string" then return nil, "not text" end
+    if trim(v) == "" then return nil, "give 1 to " .. Prefs.DECAY_MAX_VALUES .. " values, separated by commas" end
     local out = {}
-    for part in v:gmatch("[^,]+") do
+    for part in (v .. ","):gmatch("([^,]*),") do
         local s = trim(part)
+        if s == "" then return nil, "an empty entry between commas" end
         local n = tonumber(s)
         if n == nil or n ~= n or n <= 0 or n > 1 then
             return nil, "each value must be a number above 0 and at most 1, not \"" .. s .. "\""

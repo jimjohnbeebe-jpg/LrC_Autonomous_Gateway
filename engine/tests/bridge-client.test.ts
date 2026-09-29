@@ -209,16 +209,18 @@ describe("bridge: client", () => {
     const dir = mkdtempSync(path.join(os.tmpdir(), "lrc-avg-ports-"));
     const file = path.join(dir, "bridge_ports.json");
     const second = await FakePlugin.start();
+    plugin.token = "0123456789abcdef".repeat(4); // a token as long as the plugin's (Endpoint.lua newToken)
     second.token = plugin.token;
+    const check = plugin.token.slice(0, 16);
     try {
-      writeFileSync(file, JSON.stringify({ receive: plugin.commandPort, send: plugin.eventPort }));
+      writeFileSync(file, JSON.stringify({ receive: plugin.commandPort, send: plugin.eventPort, token_check: check }));
       const c = new BridgeClient({ ...FAST, readToken: () => plugin.token, readPorts: portsFileReader(() => {}, file) });
       c.start();
       await c.waitConnected(2000);
       expect(c.stats.ports).toEqual({ command: plugin.commandPort, event: plugin.eventPort, from: "ports file" });
       // As a Lightroom restart on other ports would look to the engine [inference]: the plugin
       // rewrote the file, and the old sockets close.
-      writeFileSync(file, JSON.stringify({ receive: second.commandPort, send: second.eventPort }));
+      writeFileSync(file, JSON.stringify({ receive: second.commandPort, send: second.eventPort, token_check: check }));
       await plugin.close();
       await waitUntil(() => c.getState() === "connected" && c.stats.ports?.command === second.commandPort, 3000);
       expect(second.received.map((r) => r.name)).toContain("hello");

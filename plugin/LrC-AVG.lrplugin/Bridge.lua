@@ -241,7 +241,7 @@ function Bridge.start()
         local okToken, tokenOrErr = LrTasks.pcall(Endpoint.newToken)
         B.S.token = okToken and tokenOrErr or nil
         if not okToken then Log.error("bridge: token failed: " .. tostring(tokenOrErr) .. "; every command will be refused") end
-        local okPorts, portsOrErr = LrTasks.pcall(Endpoint.writePorts, receivePort, sendPort, Bridge.PLUGIN_VERSION)
+        local okPorts, portsOrErr = LrTasks.pcall(Endpoint.writePorts, receivePort, sendPort, Bridge.PLUGIN_VERSION, B.S.token)
         B.S.portsWritten = okPorts and portsOrErr ~= nil
         if not okPorts then Log.error("bridge: ports file failed: " .. tostring(portsOrErr)) end
         Log.info("bridge: listening (generation " .. generation .. ")")

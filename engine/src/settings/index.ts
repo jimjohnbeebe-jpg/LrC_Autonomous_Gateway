@@ -11,3 +11,4 @@ export type { PageRead } from "./read.js";
 export { resolveSessionSettings } from "./session.js";
 export type { Approval, IntentOverrides, SessionSettings, SessionSettingsArgs, SettingFrom } from "./session.js";
 export { PageSettings } from "./store.js";
+export { KnownLogFolders, MAX_LOG_FOLDERS, defaultLogFoldersPath, searchOrder } from "./log-folders.js";

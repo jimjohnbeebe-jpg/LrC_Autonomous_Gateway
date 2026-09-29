@@ -10,7 +10,7 @@ import type { Metrics, Region } from "../metrics/index.js";
 import type { ParamMap, PresetFormat } from "../params/index.js";
 import type { PreviewRequest, PreviewService, RenderedPreview } from "../preview/index.js";
 import { SessionManager } from "../session/index.js";
-import type { PageSettings } from "../settings/index.js";
+import type { KnownLogFolders, PageSettings } from "../settings/index.js";
 import { ToolError, toToolError } from "./errors.js";
 
 /**
@@ -55,6 +55,8 @@ export type ToolsDeps = {
    * folders never change.
    */
   settings?: PageSettings;
+  /** The log folders sessions were written to (settings\log-folders.ts); only the current folder is searched without it. */
+  logFolders?: KnownLogFolders;
   /** Lightroom's preset folder (presets\folder.ts defaultPresetDir); lr_create_preset_from_active refuses without it. */
   presetDir?: string | undefined;
   /** How preset files are written; the pinned format (params\preset-format.lrc15.json) when absent. */
@@ -100,6 +102,7 @@ export function createContext(deps: ToolsDeps): ToolContext {
           render: (r) => render(ctx, r.longEdge, r.targetUuid, r.regions, r.quality),
           logDir: deps.sessionLogDir,
           ...(settings ? { readPage: () => settings.read() } : {}),
+          ...(deps.logFolders ? { logFolders: deps.logFolders } : {}),
           engineVersion: deps.engineVersion ?? "unknown",
           now: ctx.now,
         })
@@ -123,27 +126,32 @@ export function openSession(ctx: ToolContext, sessionId: string): { id: string; 
 
 /**
  * How long a tool that only needs the page's folders (the intent tools, lr_get_session_log) waits
- * for the bridge before it keeps the folders it has: the plugin answered a ping in 0.35 ms (median)
- * and a connection took 521 ms [handle: docs\reports\phase1\PHASE1.md "Numbers", connect_ms]; 2 s
- * is [inference].
+ * for Lightroom, the connection and the get_prefs answer together, before it keeps the folders it
+ * has: the plugin answered a ping in 0.35 ms (median) and a connection took 521 ms [handle:
+ * docs\reports\phase1\PHASE1.md "Numbers", connect_ms]; 2 s is [inference].
  */
 export const PAGE_WAIT_MS = 2000;
+/** get_prefs gets at least this long, even when the connection took nearly all of PAGE_WAIT_MS [inference]. */
+const MIN_PAGE_REQUEST_MS = 100;
 
 /**
  * Read the settings page for its folders (decision 2A of the PHASE5_PLAN row 3 plan [stated: Jim,
- * 2026-09-28, "Go with recommendations"]), waiting at most PAGE_WAIT_MS for Lightroom. Never throws:
- * without an answer the folders stay as read before (or the variable's, or the defaults). Returns
- * how the read went, for the result; null for an engine without the page (the checks, the tests).
+ * 2026-09-28, "Go with recommendations"]), within PAGE_WAIT_MS (plus at most MIN_PAGE_REQUEST_MS):
+ * the connection first, then get_prefs with what is left (Greptile, PR #44). Never throws: without
+ * an answer the folders stay as read before (or the variable's, or the defaults). Returns how the
+ * read went, for the result; null for an engine without the page (the checks, the tests).
  */
 export async function readPageFolders(ctx: ToolContext): Promise<string | null> {
   const settings = ctx.deps.settings;
   if (!settings) return null;
+  const kept = (): string => (settings.last() ? "the page's folder as read before" : "no page read yet");
+  const deadline = performance.now() + PAGE_WAIT_MS;
   try {
     await ctx.deps.ensureBridge(PAGE_WAIT_MS);
-    const r = await settings.read();
-    return r.read ? "read now" : (r.note ?? "not read");
+    const r = await settings.read(Math.max(MIN_PAGE_REQUEST_MS, Math.round(deadline - performance.now())));
+    return r.read ? "read now" : `not read (${r.note ?? "no answer"}); ${kept()}`;
   } catch (err) {
-    return `not read (${toToolError(err).code}); ${settings.last() ? "the page's folder as read before" : "no page read yet"}`;
+    return `not read (${toToolError(err).code}); ${kept()}`;
   }
 }
 

@@ -245,18 +245,28 @@ local function begin(name, variant, source)
     return H.pending
 end
 
--- The half that runs in a task: send, and say what happened. Returns sent, the line shown.
+-- The half that runs in a task: send, and say what happened. Returns sent, and the line for it.
+-- The click must still be the pending one (Greptile, PR #45): an update that ran before this task
+-- (a new session, an end stage) cleared it, and then nothing is sent. Once sent, the line is shown
+-- only while the click is still pending: an update that came during the send (the engine's answer)
+-- keeps the line it wrote. The send itself may wait up to 5 s for the send socket (Events.send),
+-- and an event already on its way is not called back; the engine checks each event against its
+-- open session (PHASE5_PLAN row 5).
 local function finish(p)
-    local ok, why = Events.send(p.name, p.payload)
-    if ok then
-        H.lastAction = p.label .. " sent at " .. clock() .. "; waiting for the engine"
-    else
-        if H.pending == p then H.pending = nil end
-        H.lastAction = p.label .. " NOT sent: " .. why
+    if H.pending ~= p then
+        Log.info("hud: " .. p.name .. " " .. p.click_id .. " from the " .. p.payload.source .. ": not sent, no longer pending")
+        return false, p.label .. " NOT sent: the session changed before it could be sent"
     end
+    local ok, why = Events.send(p.name, p.payload)
+    local line = ok and (p.label .. " sent at " .. clock() .. "; waiting for the engine") or (p.label .. " NOT sent: " .. why)
     Log.info("hud: " .. p.name .. " " .. p.click_id .. " from the " .. p.payload.source .. (ok and ": sent" or (": not sent, " .. why)))
-    refresh()
-    return ok, H.lastAction
+    local current = H.pending == p
+    if current and not ok then H.pending = nil end
+    if current then
+        H.lastAction = line
+        refresh()
+    end
+    return ok, line
 end
 
 -- A button's action (HudView.lua). It cannot yield (S8), so the send runs in a task.

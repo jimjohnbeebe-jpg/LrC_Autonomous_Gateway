@@ -1,8 +1,9 @@
 -- The HUD (PRD section 6.3, PHASE5_PLAN row 4): a floating window that shows the engine's session as
 -- hud_update sends it (HudState.lua checks it; HudView.lua lays the window out and fills it), with
 -- Abort, Accept, Pick A-C and Approve buttons that send hud_* events (Events.lua), and the menu
--- items' Abort and Accept (FR-1.1). What S8 showed in Lightroom 15.5.1, and how it is used here [handle: LR_SDK_NOTES
--- "Recorded in Phase 5", Floating dialog; docs\reports\phase5\S8.md "Consequences", row 4]:
+-- items' Abort and Accept (FR-1.1). What S8 showed in Lightroom 15.5.1, and how it is used here
+-- [handle: LR_SDK_NOTES "Recorded in Phase 5", Floating dialog; docs\reports\phase5\S8.md
+-- "Consequences", row 4]:
 --   - a button's action cannot yield, so Hud.click only checks and marks the click pending, and a
 --     task it starts sends the event;
 --   - the window takes the keyboard when it opens, so it opens by itself only when an update asks
@@ -11,11 +12,11 @@
 --   - closeFloatingDialogsForPlugin(_PLUGIN) closes it inside the call: at a session's end it shows
 --     the outcome for HudState.CLOSE_AFTER_SECONDS, then closes itself (decision 1 [stated: Jim,
 --     2026-09-29, "Go with recommended"]);
---   - selectionChangeObserver is called once per selection change: it drives "Target changed".
+--   - selectionChangeObserver is called once per selection change: it drives the selection line
+--     ("Target changed"; HudSelection.lua, with the checks added after the row 4 probe).
 -- Its state lives on _G (rule 03: it must survive a Reload Plug-in running this module again), and
 -- the bridge task's updates, the window's task, its ticker and menu items all reach it there.
 
-local LrApplication = import 'LrApplication'
 local LrBinding = import 'LrBinding'
 local LrDate = import 'LrDate'
 local LrDialogs = import 'LrDialogs'
@@ -25,10 +26,10 @@ local LrUUID = import 'LrUUID'
 local LrView = import 'LrView'
 
 local Events = require 'Events'
+local HudSelection = require 'HudSelection'
 local HudState = require 'HudState'
 local HudView = require 'HudView'
 local Log = require 'Log'
-local Prefs = require 'Prefs'
 
 local Hud = {}
 
@@ -38,8 +39,8 @@ local OPEN_WAIT_SECONDS = 10 -- a window whose onShow never came is given up aft
 
 -- state: the last update taken; seen: every session id taken; window: a counter, one per window;
 -- open / opening: the window is shown / its task is posted; props: its property table; pending: the
--- click waiting for the engine; checks: a counter, one per selection check.
-local H = _G.LrCAVG_Hud or { seen = {}, window = 0, checks = 0 }
+-- click waiting for the engine.
+local H = _G.LrCAVG_Hud or { seen = {}, window = 0 }
 _G.LrCAVG_Hud = H
 
 local function clock()
@@ -62,18 +63,11 @@ local function livePending()
     return p
 end
 
-local function pageSettings()
-    local values = Prefs.read()
-    local wire = {}
-    for _, spec in ipairs(Prefs.SPECS) do wire[spec.wire] = values[spec.key] end
-    return wire
-end
-
 -- Copies the view into the window's property table, when there is a window. Never yields.
 local function refresh()
     local props = H.props
     if not props then return end
-    local v = HudView.props(H.state, Events.connection(), livePending(), pageSettings())
+    local v = HudView.props(H.state, Events.connection(), livePending(), HudView.pageSettings())
     v.lastAction = H.lastAction or ""
     v.targetChanged = H.targetChanged or ""
     for key, value in pairs(v) do
@@ -81,38 +75,15 @@ local function refresh()
     end
 end
 
--- The selected photo's uuid and name, "file (copy name)" for a virtual copy, which shares its
--- master's file [inference: a virtual copy has no file of its own] (nil, nil when none). The query runs outside any gate, the metadata reads inside the
--- read gate with LrTasks.pcall (rule 03; Photos.lua describe).
-local function selectedPhoto()
-    local catalog = LrApplication.activeCatalog()
-    local photo = catalog:getTargetPhoto()
-    if not photo then return nil, nil end
-    local uuid, name
-    catalog:withReadAccessDo(function()
-        local okUuid, u = LrTasks.pcall(photo.getRawMetadata, photo, "uuid")
-        local okName, n = LrTasks.pcall(photo.getFormattedMetadata, photo, "fileName")
-        local okCopy, c = LrTasks.pcall(photo.getFormattedMetadata, photo, "copyName")
-        uuid = okUuid and u or nil
-        name = okName and n or nil
-        if name and okCopy and type(c) == "string" and c ~= "" then name = name .. " (" .. c .. ")" end
-    end)
-    return uuid, name
+local function currentState() return H.state end
+local function showSelection(line)
+    H.targetChanged = line
+    refresh()
 end
 
--- Runs in a task. The catalog calls may yield, and a newer check may start meanwhile (a selection
--- change, an update): only the newest check writes its line.
+-- Runs in a task (HudSelection.lua).
 local function checkSelection()
-    H.checks = H.checks + 1
-    local mine = H.checks
-    local ok, uuid, name = LrTasks.pcall(selectedPhoto)
-    if mine ~= H.checks then return end
-    if not ok then
-        Log.warn("hud: could not read the selected photo: " .. tostring(uuid))
-        return
-    end
-    H.targetChanged = HudState.targetChangedLine(H.state, uuid, name)
-    refresh()
+    HudSelection.check(currentState, showSelection)
 end
 
 -- Logged before the call: the window closes inside it (S8, handle at the top), and windowWillClose
@@ -123,11 +94,18 @@ function Hud.close(reason)
     if not ok then Log.error("hud: closeFloatingDialogsForPlugin failed: " .. tostring(err)) end
 end
 
--- While window `mine` is open: expire a pending click, close after a session's end, and refresh the
--- connection line once a second (it comes from the bridge, not from the engine's updates).
+-- While window `mine` is open: expire a pending click, close after a session's end, check the
+-- selection every HudSelection.PERIOD_SECONDS while a session is open, and refresh the connection
+-- line once a second (it comes from the bridge, not from the engine's updates).
 local function ticker(mine)
+    local lastCheck = LrDate.currentTime()
     while H.window == mine and H.open do
-        if H.closeAt and LrDate.currentTime() >= H.closeAt then
+        local now = LrDate.currentTime()
+        if H.state and not HudState.isEnd(H.state.stage) and now - lastCheck >= HudSelection.PERIOD_SECONDS then
+            lastCheck = now
+            LrTasks.startAsyncTask(checkSelection)
+        end
+        if H.closeAt and now >= H.closeAt then
             local s = H.state
             H.closeAt = nil
             -- Only the session that ended: a newer session's update cancels the close.
@@ -158,7 +136,7 @@ local function present(context, mine)
             H.open, H.opening, H.props, H.closeAt = false, false, nil, nil
             Log.info("hud: closed")
         end,
-        selectionChangeObserver = function() LrTasks.startAsyncTask(checkSelection) end,
+        selectionChangeObserver = function() HudSelection.onChange(currentState, showSelection) end,
     })
     -- With blockTask the call returned only when the window closed [handle: docs\reports\phase0\S4.md
     -- Verdict; docs\reports\phase5\S8.md Numbers, "presentFloatingDialog (blockTask) returned"].
@@ -281,14 +259,41 @@ function Hud.click(name, variant)
     LrTasks.startAsyncTask(function() finish(p) end)
 end
 
--- Menu items Abort Session / Accept Session (FR-1.1, decision 7). Runs in a task; the outcome is
--- stated in a message with a plain headline (rule 04).
+-- Menu items Abort Session / Accept Session (FR-1.1, decision 7). Runs in a task.
+-- In the row 4 probe both found the engine "not connected": the plugin logged nothing while Jim used
+-- the menu, and the engine dropped on its heartbeat [handle: repo logs\probe-hud-2026-09-29\
+-- (gitignored), bridge-log-excerpt.txt 05:56:09-05:58:49]; Lightroom pausing the plugin's tasks
+-- while a menu or message box is open is [inference]. So the item waits up to MENU_WAIT_SECONDS for
+-- the engine, then sends, and its outcome goes to the HUD's line (opening the HUD): the message box
+-- used before opened behind the HUD [stated: Jim, 2026-09-29].
+Hud.MENU_WAIT_SECONDS = 20
+
 function Hud.menuEvent(name)
-    local p, why = begin(name, nil, "menu")
-    local ok, line = false, why
-    if p then ok, line = finish(p) end
-    local label = string.upper(HudState.eventLabel(name, nil, H.state))
-    LrDialogs.message("LrC-AVG: " .. label .. (ok and " SENT" or " NOT SENT"), line, ok and "info" or "warning")
+    local line
+    local refusal = HudState.refusal(H.state, name, nil)
+    if refusal then
+        line = HudState.eventLabel(name, nil, H.state) .. " NOT sent: " .. refusal
+        H.lastAction = line
+    else
+        local chosen, waited = H.state.session_id, 0
+        while not Events.connection().engine and waited < Hud.MENU_WAIT_SECONDS do
+            LrTasks.sleep(0.5)
+            waited = waited + 0.5
+        end
+        -- Chosen for that session: never sent to one that began during the wait (Greptile, PR #46).
+        local p, why = nil, HudState.eventLabel(name, nil, H.state) .. " NOT sent: the session changed while waiting for the engine"
+        if H.state.session_id == chosen then p, why = begin(name, nil, "menu") end
+        if p then
+            local _, sent = finish(p) -- finish shows its own line while the click is current (PR #45)
+            line = sent
+        else
+            line = why .. (waited >= Hud.MENU_WAIT_SECONDS and (" (waited " .. Hud.MENU_WAIT_SECONDS .. " s)") or "")
+            H.lastAction = line
+        end
+    end
+    Log.info("hud: menu " .. name .. ": " .. line)
+    Hud.show()
+    refresh()
 end
 
 return Hud

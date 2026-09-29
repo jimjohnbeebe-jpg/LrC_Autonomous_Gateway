@@ -77,7 +77,7 @@ export class LightroomSim {
   /** The photo each snapshot was taken of. */
   private readonly snapshotOf = new Map<string, string>();
   /** The plugin version hello reports (plugin\LrC-AVG.lrplugin\Bridge.lua PLUGIN_VERSION). */
-  pluginVersion = "0.6.0";
+  pluginVersion = "0.6.1";
   /** get_prefs's answer (lightroom-sim-prefs.ts); null: the command is unknown, as to a plugin before 0.5.0. */
   prefs: SimPrefs | null = defaultSimPrefs();
   /**

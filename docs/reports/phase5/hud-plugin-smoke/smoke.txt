@@ -1,9 +1,9 @@
 BUILD: every run as expected.
 HUD plugin smoke transcript (PHASE5_PLAN row 4: phase-5/hud-plugin, then fix/hud-menu-and-target after the
 row 4 probe) - Claude Code (Opus 5.5), 2026-09-29
-Plugin under test: plugin\LrC-AVG.lrplugin at commit 544ad31 (branch fix/hud-menu-and-target).
+Plugin under test: plugin\LrC-AVG.lrplugin at commit b96a3cf (branch fix/hud-menu-and-target).
 "main" = plugin\LrC-AVG.lrplugin at 4e9409e, its .lua files copied to <scratch>\old with git show.
-Engine code the results are checked against: engine\dist (npm run build at 544ad31): hudUpdatePayloadSchema,
+Engine code the results are checked against: engine\dist (npm run build at b96a3cf): hudUpdatePayloadSchema,
 parseHudEvent and HUD_LIMITS (bridge\hud-protocol.js), COMMANDS.hud_update (bridge\protocol.js).
 Node v24.11.1; fengari 0.1.4 (a Lua 5.3 VM in JavaScript), a scratch install, not a project dependency.
 The fake Lightroom (fake-lr.lua, row 3's with a new clock; fake-hud.lua, new), the scenario scripts and
@@ -16,7 +16,8 @@ buttons and menu items send (each read by the engine's parseHudEvent); the selec
 after a session's end; and that main's and this branch's bridge behave the same in the row 6/8 bridge
 scenario. Checks S3 and H24-H28 cover fix/hud-menu-and-target: the menu items wait for the engine and
 report in the HUD instead of a message box, and the selection is checked again 0.5 s after each
-observer call and every 2 s while a session is open. Each mutant (written by
+observer call and every 2 s while a session is open. H29-H30 cover Greptile's two findings on PR #46:
+a menu action stays with the session it was chosen for, and the selection counter survives a reload. Each mutant (written by
 the runner to <scratch>\mutant) takes out one guard and must fail exactly its named checks; the reason
 for each check a mutant reaches is in the runner's MUTANTS list.
 The fake's behaviour is Claude Code's invention, modelled on what S8 observed (docs\reports\phase5\S8.md
@@ -385,6 +386,14 @@ $ node run.mts <repo>
       settingsTitle: Settings page (the next session reads them):
       settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
       settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
+--  [menu Abort across a new session] windows 4, open 1, events 6, buttons on: Abort, Accept
+      connection: Connection: Claude session active
+      stage: Stage: Starting the session
+      targetChanged: Selection: the session's photo.
+      lastAction: Abort NOT sent: the session changed while waiting for the engine
+      settingsTitle: Settings page (the next session reads them):
+      settingsA: autonomous, max 6 passes, 3 variants, preview 1600 px q75
+      settingsB: clip limits 0.5 % high, 1 % low, decay 1, 0.6, 0.4, 0.25
 --  events sent:
       hud_pick {"session_id":"S-1","seq_seen":5,"source":"hud","variant":"B","click_id":"UUID-0004-AAAA-BBBB"}
       hud_approve_pass {"session_id":"S-1","seq_seen":7,"source":"hud","pass":2,"click_id":"UUID-0006-AAAA-BBBB"}
@@ -393,7 +402,7 @@ $ node run.mts <repo>
       hud_abort {"session_id":"S-4","seq_seen":3,"source":"menu","click_id":"UUID-0016-AAAA-BBBB"}
       hud_accept {"session_id":"S-4","seq_seen":4,"source":"menu","click_id":"UUID-0018-AAAA-BBBB"}
 --  messages:
---  replies to hud_update: [{"applied":true,"shown":true,"opened":true},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":false,"shown":true,"opened":false,"reason":"update 3 is not newer than 7"},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":true},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":false,"shown":true,"opened":false,"reason":"session S-2 was replaced by a newer one"},{"applied":true,"shown":false,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false}]
+--  replies to hud_update: [{"applied":true,"shown":true,"opened":true},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":false,"shown":true,"opened":false,"reason":"update 3 is not newer than 7"},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":true},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":false,"shown":true,"opened":false,"reason":"session S-2 was replaced by a newer one"},{"applied":true,"shown":false,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false},{"applied":true,"shown":true,"opened":false}]
 --  refused commands: [{"code":"bad_request","message":"hud_update.stage must be one of begin, pass0, applying, acquiring_preview, metrics, awaiting_claude, awaiting_pick, awaiting_approval, converged, target_changed, accepted, aborted, ended","recoverable":false},{"code":"bad_request","message":"hud_update.colour is not a known field","recoverable":false}]
 --  windows: [{"title":"LrC-AVG - Vision Gateway","block_task":true,"open":false,"closed_by":"code","opened_at":1004.2,"closed_at":1052.4},{"title":"LrC-AVG - Vision Gateway","block_task":true,"open":false,"closed_by":"x","opened_at":1054.4,"closed_at":1064},{"title":"LrC-AVG - Vision Gateway","block_task":true,"open":false,"closed_by":"x","opened_at":1065,"closed_at":1092},{"title":"LrC-AVG - Vision Gateway","block_task":true,"open":true,"opened_at":1093.8}]
 --  HUD lines in the plugin log:
@@ -447,6 +456,8 @@ $ node run.mts <repo>
       2026-09-27 12:00:00.600 INFO  hud: hud_accept UUID-0018-AAAA-BBBB from the menu: sent
       2026-09-27 12:00:00.600 INFO  hud: menu hud_accept: Accept sent at 2026-09-27 12:00:00; waiting for the engine
       2026-09-27 12:00:00.800 INFO  hud: shown
+      2026-09-27 12:00:00.000 INFO  hud: session S-5
+      2026-09-27 12:00:00.200 INFO  hud: menu hud_abort: Abort NOT sent: the session changed while waiting for the engine
 
 PASS  C1 the plugin's HudState.check and the engine's hudUpdatePayloadSchema agree on 34 cases (and differ as expected on "an empty object where a list belongs")
 PASS  C2 text over the limit is shortened to 120 bytes, a UTF-8 name on a character boundary
@@ -483,6 +494,8 @@ PASS  H25 an observer call that comes before the selection has changed: the re-c
 PASS  H26 a selection change without an observer call: the ticker's check every 2 s shows Target changed (row 4 probe)
 PASS  H27 the plugin log records every observer call and each change of the selection line (row 4 probe)
 PASS  H28 a menu item used with the HUD closed opens it and shows the outcome there (row 4 probe)
+PASS  H29 a menu item chosen for one session is not sent to a session that began while it waited (Greptile, PR #46)
+PASS  H30 after a Reload Plug-in runs HudSelection.lua again, an older check still reading does not overwrite the newer line (Greptile, PR #46)
 
 == Mutants ==
 PASS  mutant HudState.lua (if false then return): fails ["H14"], expected ["H14"]
@@ -494,10 +507,12 @@ PASS  mutant Hud.lua (-- MUTANT: pending kept): fails ["H13","H17"], expected ["
 PASS  mutant Hud.lua (if false then): fails ["H22"], expected ["H22"]
 PASS  mutant Hud.lua (local current = true -- MUTANT): fails ["H23"], expected ["H23"]
 PASS  mutant Hud.lua (if s then): fails ["H19"], expected ["H19"]
-PASS  mutant Hud.lua (while false do): fails ["H24"], expected ["H24"]
+PASS  mutant Hud.lua (while false do): fails ["H24","H29"], expected ["H24","H29"]
 PASS  mutant HudSelection.lua (-- MUTANT: no re-check): fails ["H25"], expected ["H25"]
 PASS  mutant Hud.lua (false then): fails ["H26"], expected ["H26"]
-PASS  mutant Hud.lua (Log.info("hud: menu " .. name .. ": " .. line)): fails ["H28"], expected ["H28"]
+PASS  mutant Hud.lua (Log.info("hud: menu " .. name .. ": " .. line)): fails ["H28","H29"], expected ["H28","H29"]
+PASS  mutant Hud.lua (p, why = begin(name, nil, "menu")): fails ["H29"], expected ["H29"]
+PASS  mutant HudSelection.lua (local S = { checks = 0 }): fails ["H30"], expected ["H30"]
 PASS  mutant Hud.lua (-- MUTANT: no open-once guard): fails ["H18","H19","H2","H28"], expected ["H2","H18","H19","H28"]
 
 == The bridge scenario: main's plugin vs this branch (bridge-cases.lua) ==
@@ -930,6 +945,14 @@ function FH.selectSilently(photo)
     F.active, F.selected = photo, photo and { photo } or {}
 end
 
+-- Greptile, PR #46: with FH.yieldAfterRead, a read gate hands control to other tasks once it has read,
+-- as a slow catalog read would, so a check can be overtaken between its read and its write.
+local plainRead = F.catalog.withReadAccessDo
+F.catalog.withReadAccessDo = function(self, fn)
+    plainRead(self, fn)
+    if FH.yieldAfterRead and coroutine.isyieldable() then coroutine.yield() end
+end
+
 function FH.openCount()
     local n = 0
     for _, w in ipairs(FH.windows) do if w.open then n = n + 1 end end
@@ -1220,13 +1243,43 @@ beat()
 menu("MenuAccept")
 snap("menu Accept with the HUD closed")
 
+-- Greptile, PR #46: a menu item chosen for S-4 while the engine is silent, and S-5 begins during the
+-- wait: nothing may be sent to S-5.
+local acceptEvt = events()[#events()]
+update(U(5, "awaiting_claude", { mode = "converge", answered_click_id = acceptEvt.payload.click_id }, "S-4"))
+runFor(7, false)
+dofile(package.searchpath("MenuAbort", package.path))
+F.run(5)
+direct(U(1, "begin", {}, "S-5"))
+beat()
+F.run(5)
+snap("menu Abort across a new session")
+-- Greptile, PR #46: a Reload Plug-in runs HudSelection.lua again while an older check is between its
+-- read and its write. The newer check must win.
+local shownLines = {}
+local oldSelection = require 'HudSelection'
+oldSelection.PERIOD_SECONDS = 1000 -- the HUD's ticker (which holds this module) stays out of it
+FH.selectSilently(other)
+FH.yieldAfterRead = true
+F.spawn("older check", function() oldSelection.check(function() return _G.LrCAVG_Hud.state end, function(l) shownLines[#shownLines + 1] = l end) end)
+F.run(1)
+FH.yieldAfterRead = false
+package.loaded["HudSelection"] = nil
+local reloaded = require 'HudSelection'
+FH.selectSilently(master)
+reloaded.check(function() return _G.LrCAVG_Hud.state end, function(l) shownLines[#shownLines + 1] = l end)
+F.run(3)
+oldSelection.PERIOD_SECONDS = 2
+out.reload_lines = shownLines
+
 local windows = {}
 for i, w in ipairs(FH.windows) do
     windows[i] = { title = w.title, block_task = w.blockTask, open = w.open, closed_by = w.closedBy, opened_at = w.openedAt, closed_at = w.closedAt }
 end
 return Json.encode({ contract = out.contract, snaps = out.snaps, replies = out.replies, sent_updates = out.sent_updates,
     events = events(), clicks = out.clicks, bad = out.bad, stale = out.stale, replaced = out.replaced, after_x = out.after_x,
-    messages = FH.messages, close_calls = FH.closeCalls, windows = windows, errors = F.errors, log = F.files[LOG_FILE] })
+    messages = FH.messages, close_calls = FH.closeCalls, windows = windows, errors = F.errors, log = F.files[LOG_FILE],
+    reload_lines = out.reload_lines })
 
 ==================== Appendix: bridge-cases.lua ====================
 -- The whole bridge (Bridge.start, its monitor loop, the sockets and the dispatch) against
@@ -1523,6 +1576,12 @@ function checksOf(run: any): Check[] {
   const closedMenu = snap("menu Accept with the HUD closed");
   check(closedMenu.open === 1 && closedMenu.windows === snap("answered while sending").windows + 1 && closedMenu.lastAction.startsWith("Accept sent at"),
     "H28 a menu item used with the HUD closed opens it and shows the outcome there (row 4 probe)");
+  const across = snap("menu Abort across a new session");
+  check(across.events === closedMenu.events && !evts.some((e: any) => e.payload.session_id === "S-5") &&
+    across.lastAction === "Abort NOT sent: the session changed while waiting for the engine" && across.stage === "Stage: Starting the session",
+    "H29 a menu item chosen for one session is not sent to a session that began while it waited (Greptile, PR #46)");
+  check(JSON.stringify(run.reload_lines) === JSON.stringify([SELECTION_OK]),
+    "H30 after a Reload Plug-in runs HudSelection.lua again, an older check still reading does not overwrite the newer line (Greptile, PR #46)");
   return checks;
 }
 
@@ -1602,14 +1661,19 @@ const MUTANTS: Array<[string, string, string, string[]]> = [
   ["Hud.lua", "local current = H.pending == p", "local current = true -- MUTANT", ["H23"]],
   // The close not tied to the session that ended: the newer session's window closes.
   ["Hud.lua", "if s and s.session_id == H.closeFor and HudState.isEnd(s.stage) then", "if s then", ["H19"]],
-  // fix/hud-menu-and-target: the menu item does not wait for the engine.
-  ["Hud.lua", "while not Events.connection().engine and waited < Hud.MENU_WAIT_SECONDS do", "while false do", ["H24"]],
+  // fix/hud-menu-and-target: the menu item does not wait for the engine (H24); in H29 it is then
+  // refused at once as not connected, never reaching the session check.
+  ["Hud.lua", "while not Events.connection().engine and waited < Hud.MENU_WAIT_SECONDS do", "while false do", ["H24", "H29"]],
   // No re-check after the observer.
   ["HudSelection.lua", "        LrTasks.sleep(HudSelection.RECHECK_SECONDS)\n        HudSelection.check(state, show)", "        -- MUTANT: no re-check", ["H25"]],
   // No periodic check from the ticker.
   ["Hud.lua", "now - lastCheck >= HudSelection.PERIOD_SECONDS then", "false then", ["H26"]],
-  // The menu item does not open the HUD.
-  ["Hud.lua", "    Log.info(\"hud: menu \" .. name .. \": \" .. line)\n    Hud.show()", "    Log.info(\"hud: menu \" .. name .. \": \" .. line)", ["H28"]],
+  // The menu item does not open the HUD (H28); the window then stays closed, so H29 has no line to read.
+  ["Hud.lua", "    Log.info(\"hud: menu \" .. name .. \": \" .. line)\n    Hud.show()", "    Log.info(\"hud: menu \" .. name .. \": \" .. line)", ["H28", "H29"]],
+  // Greptile, PR #46: the menu item sent to whatever session is open after its wait.
+  ["Hud.lua", "if H.state.session_id == chosen then p, why = begin(name, nil, \"menu\") end", "p, why = begin(name, nil, \"menu\")", ["H29"]],
+  // Greptile, PR #46: the check counter back in the module, lost when the module runs again.
+  ["HudSelection.lua", "local S = _G.LrCAVG_HudSelection or { checks = 0 }", "local S = { checks = 0 }", ["H30"]],
   // No open-once guard: a second and a third window (H2); the later window counts differ (H18, H19,
   // H28).
   ["Hud.lua", "if Hud.isOpen() then return false end", "-- MUTANT: no open-once guard", ["H2", "H18", "H19", "H28"]],
@@ -1675,7 +1739,8 @@ buttons and menu items send (each read by the engine's parseHudEvent); the selec
 after a session's end; and that main's and this branch's bridge behave the same in the row 6/8 bridge
 scenario. Checks S3 and H24-H28 cover fix/hud-menu-and-target: the menu items wait for the engine and
 report in the HUD instead of a message box, and the selection is checked again 0.5 s after each
-observer call and every 2 s while a session is open. Each mutant (written by
+observer call and every 2 s while a session is open. H29-H30 cover Greptile's two findings on PR #46:
+a menu action stays with the session it was chosen for, and the selection counter survives a reload. Each mutant (written by
 the runner to <scratch>\\mutant) takes out one guard and must fail exactly its named checks; the reason
 for each check a mutant reaches is in the runner's MUTANTS list.
 The fake's behaviour is Claude Code's invention, modelled on what S8 observed (docs\\reports\\phase5\\S8.md

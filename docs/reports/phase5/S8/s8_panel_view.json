@@ -1,17 +1,24 @@
 {
   "panel_sees": {
-    "init_mark_in_module": "init-1A2B1A10-8B53-45DB-B817-AEED90AD0B51",
-    "init_mark_on_G": "init-1A2B1A10-8B53-45DB-B817-AEED90AD0B51",
-    "menu_mark_in_module": "menu-74BE0692-5582-4CBB-9CEE-44E37CCFDB82",
-    "menu_mark_on_G": "menu-74BE0692-5582-4CBB-9CEE-44E37CCFDB82"
+    "init_mark_in_module": "init-4DA85DDE-0712-4984-A59E-123078F8C383",
+    "init_mark_on_G": "init-4DA85DDE-0712-4984-A59E-123078F8C383"
   },
   "prefs": {
+    "a_maxPasses": 6,
+    "a_mode": "approve_each_pass",
+    "b_maxPasses": 6,
+    "b_mode": "approve_each_pass",
+    "c_maxPasses": 6,
+    "c_mode": "approve_each_pass",
     "clipHighPct": 0.5,
     "logFolder": "",
     "maxPasses": 4,
-    "mode": "autonomous"
+    "mode": "autonomous",
+    "s8_dialog_log": "startDialog at 19:40:56; endDialog(nil) c_mode=approve_each_pass c_maxPasses=6 at 19:41:28; startDialog at 19:42:45",
+    "s8_observed": "a_mode=approve_each_pass (string) at 19:41:00; a_maxPasses=6 (number) at 19:41:06"
   },
-  "rendered_at": "2026-09-28 19:02:42 (local time)",
-  "rendered_epoch": 1790647362,
+  "property_table_type": "table",
+  "rendered_at": "2026-09-28 19:42:45 (local time)",
+  "rendered_epoch": 1790649765,
   "spike": "S8"
 }

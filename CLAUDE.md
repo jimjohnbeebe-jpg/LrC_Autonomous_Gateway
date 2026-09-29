@@ -38,7 +38,7 @@ Repo: https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway (public; `main`
 1. Work on a branch named `phase-<n>/<topic>` or `fix/<topic>`.
 2. Never commit to `main` directly.
 3. Open the PR with `gh pr create --fill`.
-4. Wait for Greptile's review (a comment or review from the Greptile app).
+4. Wait for Greptile's review (a comment or review from the Greptile app). One automatic review per PR, on code defects only (`greptile.json`); all fixes from it go in one push, and a re-review happens only when Jim agrees. Sourcing (rule 02) is checked by Claude Code before the first push.
 5. Triage **every** Greptile comment in a table posted as a PR comment, with columns: `file:line` | Greptile finding | decision (`fix` \| `reject` \| `defer`) | reason | commit hash if fixed. Post the table even when Greptile reports no issues.
 6. Merge only when the triage table is posted and no `fix` decision is still open.
 7. Merge with `gh pr merge --squash --delete-branch` (Jim may choose `--merge` for phase branches with meaningful history).

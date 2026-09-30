@@ -180,13 +180,16 @@ async function finishAccept(host: ActionHost, s: Session, by: UserEnd, counted: 
   if (host.session() !== s || s.abort) return;
   const { ctx } = host;
   const refused =
-    counted !== null && s.picked !== counted
-      ? `Copy ${s.picked ?? "?"} was picked before your Pick ${counted}; nothing was accepted. Accept keeps copy ${s.picked ?? "?"}.`
-      : acceptRefusal(s);
+    counted !== null && s.picked === null
+      ? `Pick ${counted} failed, so nothing was accepted. Click Pick again, then Accept.`
+      : counted !== null && s.picked !== counted
+        ? `Copy ${s.picked} was picked before your Pick ${counted}; nothing was accepted. Accept keeps copy ${s.picked}.`
+        : acceptRefusal(s);
   if (refused) {
-    // Greptile, PR #47 (review 2): Claude's pick of another copy, made first, must not be accepted
-    // for the user [handle: tests\hud-actions.test.ts "an Accept counting on a Pick that Claude's pick
-    // overtook keeps nothing"].
+    // Greptile, PR #47 (reviews 2 and 3): Claude's pick of another copy, made first, must not be
+    // accepted for the user, and a Pick that failed is said to have failed [handle:
+    // tests\hud-actions.test.ts "an Accept counting on a Pick that Claude's pick overtook keeps
+    // nothing", "an Accept counting on a Pick that failed says so"].
     s.idleNote = refused;
     return;
   }

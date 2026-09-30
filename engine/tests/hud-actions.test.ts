@@ -144,6 +144,30 @@ describe("Pick from the HUD", () => {
     expect(readLog()).toMatchObject({ outcome: null, picked: "A" });
   });
 
+  it("an Accept counting on a Pick that failed says so (Greptile, PR #47, review 3)", async () => {
+    clean();
+    const rig = hudRig();
+    await awaitingPick(rig);
+    const selects = plugin.received.filter((r) => r.name === "select_photo").length;
+    const select = plugin.handlers.get("select_photo");
+    let release = (): void => {};
+    const held = new Promise<void>((resolve) => (release = resolve));
+    plugin.handlers.set("select_photo", async (p, id) => {
+      await held;
+      return select ? select(p, id) : "silent";
+    });
+    hudEvent(plugin, "hud_pick", { session_id: ID, variant: "B" });
+    await waitUntil(() => plugin.received.filter((r) => r.name === "select_photo").length > selects);
+    hudEvent(plugin, "hud_accept", { session_id: ID });
+    await waitUntil(() => rig.events.length === 2);
+    lr.selectFault = "the photo is not in the catalog";
+    if (select) plugin.handlers.set("select_photo", select);
+    release();
+    await waitUntil(() => lr.hud.last()?.note === "Pick B failed, so nothing was accepted. Click Pick again, then Accept.");
+    expect(rig.manager.current()?.id).toBe(ID);
+    expect(readLog()).toMatchObject({ outcome: null, picked: null });
+  });
+
   it("tells Claude of the pick in the next step's result, and refuses a second pick", async () => {
     clean();
     const rig = hudRig();

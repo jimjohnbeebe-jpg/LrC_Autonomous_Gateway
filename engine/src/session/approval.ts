@@ -21,7 +21,7 @@
 import { ToolError } from "../mcp/errors.js";
 import { abortError, saveLog } from "./io.js";
 import { variant } from "./targets.js";
-import type { ApprovalBy, ApproveArgs, Session, SessionContext, SessionOutput, Target } from "./types.js";
+import type { ApprovalBy, ApprovalWait, ApprovalWake, ApproveArgs, Session, SessionContext, SessionOutput, Target } from "./types.js";
 
 /**
  * How long lr_step waits for an approval: PHASE5_PLAN decision 4, approved by Jim 2026-09-28 [stated:
@@ -87,9 +87,10 @@ export function approve(ctx: SessionContext, s: Session, by: ApprovalBy, pass?: 
     return { ok: false, reason: `No pass waits for approval: ${notWaitingReason(s, t)}.` };
   }
   if (pass !== undefined && pass !== waiting.pass) return { ok: false, reason: `Pass ${pass} is not the one waiting for approval; pass ${waiting.pass} is.` };
+  if (s.approvalWait?.why === "accept") return { ok: false, reason: "Accept came first: the session is ending with the edit kept, and no further pass is made." };
   recordApproval(ctx, s, waiting.target, waiting.pass, by);
   const woke = s.approvalWait !== null;
-  s.approvalWait?.("approved");
+  s.approvalWait?.wake("approved");
   return { ok: true, pass: waiting.pass, already: false, woke };
 }
 
@@ -102,8 +103,33 @@ function notWaitingReason(s: Session, t: Target | null): string {
 }
 
 /** End a waiting step's wait at once: the user approved, or clicked Abort or Accept. */
-export function wakeApproval(s: Session, why: "approved" | "abort" | "accept"): void {
-  s.approvalWait?.(why);
+export function wakeApproval(s: Session, why: ApprovalWake): void {
+  s.approvalWait?.wake(why);
+}
+
+const STRENGTH = { timeout: 0, approved: 1, accept: 2, abort: 3 } as const;
+
+/**
+ * Wait until woken or `waitMs` pass. Every event the bridge client handles before the step resumes
+ * (one read can carry several [handle: engine\src\bridge\client.ts onData, the `for (const line of
+ * lines)` loop]) still counts, and the strongest wins: Abort, then Accept, then the approval, so the
+ * order of two clicks in one read cannot let the step write a pass the user ended the session before
+ * (Greptile, PR #48) [handle: tests\approve-pass-hud.test.ts "… in one bridge read: …"].
+ */
+async function waitForWake(s: Session, waitMs: number): Promise<ApprovalWake | "timeout"> {
+  const wait: ApprovalWait = { why: null, wake: () => {} };
+  await new Promise<void>((resolve) => {
+    const end = (w: ApprovalWake | "timeout"): void => {
+      if (wait.why === null || STRENGTH[w] > STRENGTH[wait.why]) wait.why = w;
+      clearTimeout(timer);
+      resolve();
+    };
+    const timer = setTimeout(() => end("timeout"), waitMs);
+    wait.wake = end;
+    s.approvalWait = wait;
+  });
+  s.approvalWait = null;
+  return wait.why ?? "timeout";
 }
 
 /**
@@ -119,27 +145,19 @@ export async function awaitApproval(ctx: SessionContext, s: Session, t: Target):
   const started = performance.now();
   s.work = { target: t, pass: t.passes };
   ctx.deps.hud?.stage(s, "awaiting_approval", { note: `Claude's pass ${t.passes + 1} waits for your Approve of pass ${t.passes}.` });
-  const waitMs = ctx.deps.approvalWaitMs ?? APPROVAL_WAIT_MS;
-  const why = await new Promise<"approved" | "abort" | "accept" | "timeout">((resolve) => {
-    const done = (w: "approved" | "abort" | "accept" | "timeout"): void => {
-      clearTimeout(timer);
-      if (s.approvalWait === done) s.approvalWait = null;
-      resolve(w);
-    };
-    const timer = setTimeout(() => done("timeout"), waitMs);
-    s.approvalWait = done;
-  });
+  const why = await waitForWake(s, ctx.deps.approvalWaitMs ?? APPROVAL_WAIT_MS);
   const waited = Math.round(performance.now() - started);
   if (s.abort) {
     s.abort.interrupted ??= `step ${t.passes + 1} (waiting for approval)`;
     throw abortError(s);
   }
-  const approved = given(waited);
-  if (approved) return approved;
+  // What ended the wait comes before an approval recorded meanwhile (waitForWake).
   const details = { session_id: s.id, target: t.id, pass: t.passes, waited_ms: waited };
   if (why === "accept") {
     throw new ToolError("AWAITING_APPROVAL", `The user clicked Accept while pass ${t.passes + 1} waited for approval: nothing was written, and the session is ending with the edit kept.`, false, details);
   }
+  const approved = given(waited);
+  if (approved) return approved;
   throw new ToolError(
     "AWAITING_APPROVAL",
     `Pass ${t.passes} waits for the user's approval (${Math.round(waited / 1000)} s waited); nothing was written and the pass is not used. ` +

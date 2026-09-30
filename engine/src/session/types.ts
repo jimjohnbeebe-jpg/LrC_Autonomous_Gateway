@@ -202,9 +202,13 @@ export type Session = {
   notices: HudNotice[];
   /** approve_each_pass (approval.ts): the last pass the user approved, of which photo, by whom. */
   approval: { target: TargetId; pass: number; by: ApprovalBy; at: string } | null;
-  /** While a step waits for an approval: ends the wait (approval.ts wakeApproval). */
-  approvalWait: ((why: "approved" | "abort" | "accept") => void) | null;
+  /** While a step waits for an approval (approval.ts): what ended the wait, and how to end it. */
+  approvalWait: ApprovalWait | null;
 };
+
+/** What ends a step's wait for an approval; the strongest seen before the step resumes wins (approval.ts). */
+export type ApprovalWake = "approved" | "accept" | "abort";
+export type ApprovalWait = { why: ApprovalWake | "timeout" | null; wake(why: ApprovalWake): void };
 
 /** The photo and pass an operation works on (pass null: not a pass, e.g. a probe or a preview). */
 export type Work = { target: Target; pass: number | null; note?: string };

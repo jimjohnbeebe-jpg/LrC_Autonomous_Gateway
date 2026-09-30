@@ -147,4 +147,26 @@ describe("approve_each_pass: Abort and Accept while a step waits", () => {
     expect(log).toMatchObject({ outcome: "accept", ended_by: { source: "hud" } });
     expect(log.passes.map((p) => p.n)).toEqual([0, 1]);
   });
+
+  // Greptile, PR #48: the client handles every line of a read before the woken step resumes [handle:
+  // engine\src\bridge\client.ts onData, the `for (const line of lines)` loop]; either order of the
+  // two clicks must end the wait with nothing written.
+  it.each([
+    ["Accept then Approve", ["hud_accept", "hud_approve_pass"], "Accept came first: the session is ending with the edit kept, and no further pass is made."],
+    ["Approve then Accept", ["hud_approve_pass", "hud_accept"], "Approved pass 1: Claude's next pass goes ahead."],
+  ])("%s in one bridge read: Accept ends the wait, and nothing more is written", async (_order, names, approveNote) => {
+    const rig = await afterPass1(30000);
+    const applies = count("apply_settings");
+    const waiting = step(rig, { exposure: -0.1 });
+    await waitingFor(1);
+    const evt = (name: string) =>
+      JSON.stringify({ id: `evt-batch-${name}`, type: "evt", name, ts: new Date().toISOString(), payload: { session_id: ID, seq_seen: 1, source: "hud", click_id: `batch-${name}`, ...(name === "hud_approve_pass" ? { pass: 1 } : {}) } }) + "\n";
+    plugin.writeRaw(names.map(evt).join(""));
+    const e = await fails(waiting);
+    expect(e).toMatchObject({ code: "AWAITING_APPROVAL", recoverable: false });
+    await hudAt("accepted");
+    expect(count("apply_settings")).toBe(applies);
+    expect(readLog().passes.map((p) => p.n)).toEqual([0, 1]);
+    expect(rig.events.find((r) => r.name === "hud_approve_pass")?.note).toBe(approveNote);
+  });
 });

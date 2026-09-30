@@ -12,7 +12,8 @@
 // Schema v2 (engine 0.4.0) adds `mode` "variants", the copies (`variants`, `picked`), each pass's
 // photo (`target` A/B/C) and region baselines per photo. v1 logs (engine 0.3.x, the Phase 3 run)
 // are read with session-log-v1.ts. Later engines only add: optional fields (`settings`, 0.7.0;
-// `ended_by` and `hud_events`, 0.8.0) and the outcome "aborted" (0.8.0), so earlier v2 logs still read.
+// `ended_by` and `hud_events`, 0.8.0; `approvals` and a pass's `approval`, 0.9.0) and the outcome
+// "aborted" (0.8.0), so earlier v2 logs still read.
 
 import { mkdirSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -77,6 +78,8 @@ export const guardrailActionSchema = z.strictObject({
 /** The photo a pass edited: the master (Converge mode) or a copy (Variants mode). */
 export const targetIdSchema = z.enum(["master", "A", "B", "C"]);
 export const variantIdSchema = z.enum(["A", "B", "C"]);
+/** Who approved a pass: the HUD (or a menu item), Claude on the user's word in chat, or the user's pick (engine 0.9.0). */
+const approvalBySchema = z.enum(["hud", "menu", "claude", "pick"]);
 
 export const passSchema = z.strictObject({
   /** The pass number of its photo: each copy counts its own passes (MCP_TOOLS lr_select_variant). */
@@ -101,6 +104,8 @@ export const passSchema = z.strictObject({
   preview_source: z.literal("export"),
   guardrail_actions: z.array(guardrailActionSchema),
   converged_by_metrics: z.boolean(),
+  /** Engine 0.9.0, approve_each_pass (PHASE5_PLAN row 6): the approval this step went ahead on, and how long it waited. */
+  approval: z.strictObject({ pass: z.number().int(), by: approvalBySchema, waited_ms: z.number() }).optional(),
 });
 
 export const probeSchema = z.strictObject({
@@ -228,6 +233,8 @@ export const sessionLogSchema = z
     settings: sessionSettingsSchema.optional(),
     ended_by: endedBySchema.optional(),
     hud_events: z.array(hudEventSchema).optional(),
+    /** Engine 0.9.0: every approval of a pass (approve_each_pass mode), in order. */
+    approvals: z.array(z.strictObject({ at: z.string(), target: targetIdSchema, pass: z.number().int(), by: approvalBySchema })).optional(),
   })
   .describe("LrC-AVG session log, schema v2");
 

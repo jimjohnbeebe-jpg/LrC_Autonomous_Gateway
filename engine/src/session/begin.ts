@@ -16,6 +16,7 @@ import { ToolError } from "../mcp/errors.js";
 import { summarize } from "../metrics/index.js";
 import type { FromSdkResult } from "../params/index.js";
 import { readPage, resolveSessionSettings, type PageRead, type SessionSettings } from "../settings/index.js";
+import { APPROVAL_WAIT_MS } from "./approval.js";
 import { checkVariants } from "./copies.js";
 import { brief, describe, failed, image, ms, recordPass, saveLog, text } from "./io.js";
 import { pass0, pass0Entry, type Pass0 } from "./pass0.js";
@@ -85,6 +86,8 @@ export async function openSession(ctx: SessionContext, args: BeginArgs): Promise
     pickedBy: null,
     pendingPick: null,
     notices: [],
+    approval: null,
+    approvalWait: null,
   };
   s.log = newLog(ctx, s, variantCount, args.notes ?? null);
   s.log.settings = settingsEntry(settings, page);
@@ -117,13 +120,18 @@ function settingsEntry(settings: SessionSettings, page: PageRead): NonNullable<S
   };
 }
 
-/** The begin result's `session_settings` (its `settings` are the photo's); approve_each_pass says it is not acted on yet (PHASE5_PLAN row 6). */
+/** The begin result's `session_settings` (its `settings` are the photo's); approve_each_pass says how it works (approval.ts). */
 function settingsJson(s: Session): Record<string, unknown> {
   const recorded = s.log.settings;
   if (!recorded) return {};
-  const note = recorded.approval === "approve_each_pass" ? { approval_note: "approve_each_pass is recorded, but this engine does not wait for an approval between passes yet" } : {};
+  const note = recorded.approval === "approve_each_pass" ? { approval_note: APPROVAL_NOTE } : {};
   return { session_settings: { ...recorded, decay: [...s.decay], ...note } };
 }
+
+const APPROVAL_NOTE =
+  "approve_each_pass: the user approves each pass they have seen. Pass 1 needs no approval; from pass 2 on, lr_step first waits " +
+  `up to ${APPROVAL_WAIT_MS / 1000} s for the user's Approve of the pass before (the LrC-AVG HUD's Approve button, or lr_approve_pass ` +
+  "after the user approved in chat), else returns AWAITING_APPROVAL. Show the user each pass. Variants mode: the pick approves the pass it was picked at.";
 
 function newLog(ctx: SessionContext, s: Session, variantCount: number | null, notes: string | null): SessionLogData {
   const { intent, master } = s;

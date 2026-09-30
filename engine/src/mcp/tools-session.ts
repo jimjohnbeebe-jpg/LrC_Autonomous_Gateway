@@ -1,8 +1,8 @@
 // The session tools (Phase 3; the loop itself is session\manager.ts): lr_begin_session, lr_step,
-// lr_probe, lr_set_regions, lr_end_session, lr_get_session_log; and Variants mode's
-// lr_select_variant (Phase 4).
+// lr_probe, lr_set_regions, lr_end_session, lr_get_session_log; Variants mode's lr_select_variant
+// (Phase 4); approve_each_pass mode's lr_approve_pass (Phase 5).
 
-import type { BeginArgs, EndArgs, ProbeArgs, RegionArgs, SelectArgs, StepArgs } from "../session/index.js";
+import type { ApproveArgs, BeginArgs, EndArgs, ProbeArgs, RegionArgs, SelectArgs, StepArgs } from "../session/index.js";
 import { pageBridgeUse, readPageFolders, run, sessionTools, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
 export async function beginSession(ctx: ToolContext, args: BeginArgs): Promise<ToolOutput> {
@@ -27,6 +27,11 @@ export async function selectVariant(ctx: ToolContext, args: SelectArgs): Promise
     await ctx.deps.ensureBridge();
     return sessions.selectVariant(args);
   });
+}
+
+/** No Lightroom call (the HUD hears of it through the publisher), and never queued behind a waiting lr_step (session\approval.ts). */
+export async function approvePass(ctx: ToolContext, args: ApproveArgs): Promise<ToolOutput> {
+  return run(ctx, "lr_approve_pass", args, { usesBridge: false }, async () => sessionTools(ctx).approvePass(args));
 }
 
 export async function probe(ctx: ToolContext, args: ProbeArgs): Promise<ToolOutput> {

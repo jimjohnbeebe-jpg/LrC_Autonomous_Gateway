@@ -27,7 +27,7 @@ describe("lr_begin_session: the settings page", () => {
       long_edge: 1200,
       quality: 60,
       decay: [0.5, 0.25],
-      approval_note: expect.stringContaining("does not wait"),
+      approval_note: expect.stringContaining("lr_step first waits up to 60 s"),
       from: { approval: "page", max_passes: "page", long_edge: "page", quality: "page", clip_high_pct: "page", clip_low_pct: "page", decay: "page" },
       page: { read: true, note: null, problems: [] },
     });

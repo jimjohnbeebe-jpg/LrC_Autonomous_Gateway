@@ -1,10 +1,13 @@
 // Entry point of the session module (ARCHITECTURE section 4).
 
 export { SessionManager } from "./manager.js";
-export type { SessionView } from "./manager.js";
+export type { SessionView } from "./view.js";
 export { COPIES_TIMEOUT_MS, MAX_REGIONS, VARIANT_IDS, folderOf } from "./types.js";
+export { APPROVAL_WAIT_MS, pendingApproval } from "./approval.js";
 export type { UserAction, UserEnded } from "./hud-actions.js";
 export type {
+  ApprovalBy,
+  ApproveArgs,
   BeginArgs,
   EndArgs,
   HudNotice,

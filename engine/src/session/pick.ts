@@ -8,6 +8,7 @@
 
 import { ToolError } from "../mcp/errors.js";
 import { summarize } from "../metrics/index.js";
+import { approveEachPass, recordApproval } from "./approval.js";
 import { variantEntry } from "./copies.js";
 import { describe, failed, saveLog } from "./io.js";
 import { checkReady, focus, variant } from "./targets.js";
@@ -83,6 +84,8 @@ export async function selectVariant(ctx: SessionContext, s: Session, args: Selec
     s.log.picked = s.picked;
     s.log.variants = s.variants.map((v) => variantEntry(v, v === t));
     saveLog(s);
+    // approve_each_pass: the pick approves the pass it was picked at (approval.ts; D1-A).
+    if (approveEachPass(s) && t.passes >= 1) recordApproval(ctx, s, t, t.passes, "pick");
   }
   const unrefined = s.variants.filter((v) => v.passes < 1).map((v) => v.id);
   // Unpicked copies are kept; the SDK has no call that removes a photo [stated: Jim, 2026-09-27,

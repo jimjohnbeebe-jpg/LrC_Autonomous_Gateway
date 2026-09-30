@@ -2026,6 +2026,34 @@
           },
           "converged_by_metrics": {
             "type": "boolean"
+          },
+          "approval": {
+            "type": "object",
+            "properties": {
+              "pass": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "by": {
+                "type": "string",
+                "enum": [
+                  "hud",
+                  "menu",
+                  "claude",
+                  "pick"
+                ]
+              },
+              "waited_ms": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "pass",
+              "by",
+              "waited_ms"
+            ],
+            "additionalProperties": false
           }
         },
         "required": [
@@ -2764,6 +2792,47 @@
           "click_id",
           "seq_seen",
           "note"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "approvals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "at": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string",
+            "enum": [
+              "master",
+              "A",
+              "B",
+              "C"
+            ]
+          },
+          "pass": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "by": {
+            "type": "string",
+            "enum": [
+              "hud",
+              "menu",
+              "claude",
+              "pick"
+            ]
+          }
+        },
+        "required": [
+          "at",
+          "target",
+          "pass",
+          "by"
         ],
         "additionalProperties": false
       }

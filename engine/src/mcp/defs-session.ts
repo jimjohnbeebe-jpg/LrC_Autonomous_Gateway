@@ -1,6 +1,7 @@
 // The MCP definitions of the session tools (tools-session.ts).
 
 import { z } from "zod";
+import { APPROVAL_WAIT_MS } from "../session/index.js";
 import { MEASURED, box, longEdge, sessionId, target, type ToolDef } from "./defs-shared.js";
 import { DEFAULT_LONG_EDGE, MAX_LONG_EDGE, MIN_LONG_EDGE } from "./tools-shared.js";
 
@@ -69,11 +70,16 @@ const selectArgs = z.object({
   variant: z.enum(["A", "B", "C"]).describe("the copy the user picked"),
 });
 const sessionLogArgs = z.object({ session_id: sessionId });
+const approveArgs = z.object({
+  session_id: sessionId,
+  confirmed: z.boolean().describe("true only after the user approved the pass in this chat"),
+});
 
-/** The HUD in Lightroom (PHASE5_PLAN row 5): what the user can do there, and what Claude then sees. */
+/** The HUD in Lightroom (PHASE5_PLAN rows 5-6): what the user can do there, and what Claude then sees. */
 const HUD_NOTE =
   "The LrC-AVG HUD in Lightroom opens and follows the session; there the user can Abort (the photo goes back to the " +
-  "pre-session snapshot, and a running call stops before its next write), Accept (after the running call) or Pick a copy. " +
+  "pre-session snapshot, and a running call stops before its next write), Accept (after the running call), Pick a copy, " +
+  "or Approve a pass (approve_each_pass mode). " +
   "A session the user ended answers every later call with SESSION_ENDED (details: outcome, source); tell the user, and " +
   "start a new session only if they ask. ";
 
@@ -125,6 +131,11 @@ export const SESSION_DEFS: ToolDef[] = [
       "AWAITING_PICK), and the step that gives the last copy its pass returns `awaiting_pick: true` and the contact sheet: " +
       "then ask the user to pick (lr_select_variant). After the pick, steps go to the pick, whose pass count carries on. " +
       "`hud_actions` lists what the user did in the HUD since your last call (a pick). " +
+      "approve_each_pass mode (begin's session_settings.approval): pass 1 needs no approval; from pass 2 on, the call first waits " +
+      `up to ${APPROVAL_WAIT_MS / 1000} s for the user's Approve of the pass before (the HUD's button, or lr_approve_pass after the user approved in chat), ` +
+      "else returns AWAITING_APPROVAL (recoverable; nothing written, the pass not used): tell the user the pass waits for their " +
+      "Approve, then call again. Unknown names are refused before the wait. `approval` in the result says which pass was approved, " +
+      "by whom, and how long the call waited. " +
       MEASURED,
     schema: stepArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
@@ -166,6 +177,19 @@ export const SESSION_DEFS: ToolDef[] = [
     schema: selectArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     run: (tools, args) => tools.selectVariant(args as z.infer<typeof selectArgs>),
+  },
+  {
+    name: "lr_approve_pass",
+    title: "Approve the pass shown",
+    description:
+      "approve_each_pass mode only: the user approves the pass they last saw, so the next lr_step may go ahead (the same as the " +
+      "HUD's Approve button). Call it ONLY after the user approved that pass in this chat, and set `confirmed: true` to state that " +
+      "they did; never call it on your own to get past AWAITING_APPROVAL. A waiting lr_step goes ahead at once. Returns " +
+      "`approved_pass`. Refused with NOT_AWAITING_APPROVAL in autonomous mode or when no pass waits for approval (pass 1 needs " +
+      "none; a Variants pick approves the pass it was picked at). Does not touch Lightroom.",
+    schema: approveArgs,
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    run: (tools, args) => tools.approvePass(args as z.infer<typeof approveArgs>),
   },
   {
     name: "lr_end_session",

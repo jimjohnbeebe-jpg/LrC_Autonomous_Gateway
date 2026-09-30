@@ -4,7 +4,9 @@
 // after the running operation:
 //   - Abort (PHASE5_PLAN decision 3): the running operation stops before its next write or export
 //     (io.ts checkAbort), then the pre-session snapshot is applied, as lr_end_session "revert" does;
-//     the log's outcome is "aborted";
+//     the log's outcome is "aborted". A revert that fails, or leaves a setting different, keeps the
+//     session open, and a second click tries again; Claude's revert while an Abort is pending is
+//     logged as the user's (end.ts);
 //   - Accept: after the running operation, as lr_end_session "accept" (Variants mode: after a pick);
 //     it waits rather than stops, so no pass is left half done (a write without its corrections);
 //   - Pick: as lr_select_variant; Claude learns of it in its next session tool result
@@ -98,8 +100,16 @@ function userEnd(a: UserAction, previous: UserEnd | null): UserEnd {
   return { source: p.source, click_id: p.click_id, received: a.received, t0: a.t0, state: "pending", interrupted: previous?.interrupted ?? null };
 }
 
-function ended(ctx: SessionContext, s: Session, outcome: UserEnded["outcome"], by: UserEnd): UserEnded {
+/** The record of a session the user ended, for the calls that still name it. */
+export function userEnded(ctx: SessionContext, s: Session, outcome: UserEnded["outcome"], by: UserEnd): UserEnded {
   return { session_id: s.id, outcome, source: by.source, at: ctx.now().toISOString(), log_path: s.files.logPath };
+}
+
+/** The HUD's note once an Abort has put the photo back. */
+export function abortedNote(s: Session): string {
+  const back = s.mode === "variants" ? "the master is as before; the copies stay in the catalog" : "the photo is back as it was before the session";
+  const differing = s.log.revert?.differing.length ?? 0;
+  return differing ? `Aborted, but ${differing} setting(s) differ from before: see the session log.` : `Aborted: ${back}.`;
 }
 
 async function connected(ctx: SessionContext): Promise<void> {
@@ -121,19 +131,36 @@ async function finishAbort(host: ActionHost, s: Session): Promise<void> {
   try {
     await connected(ctx);
     await endSession(ctx, s, { session_id: s.id, outcome: "revert" }, by);
-    host.close(s, ended(ctx, s, "aborted", by));
-    const differing = s.log.revert?.differing.length ?? 0;
-    const back = s.mode === "variants" ? "the master is as before; the copies stay in the catalog" : "the photo is back as it was before the session";
-    ctx.deps.hud?.stage(s, "aborted", { note: differing ? `Aborted, but ${differing} setting(s) differ from before: see the session log.` : `Aborted: ${back}.` });
   } catch (err) {
     by.state = "failed";
     ctx.deps.hud?.stage(s, "awaiting_claude", { note: `Abort could not put the photo back (${toToolError(err).code}). Click Abort again.` });
+    return;
   }
+  const differing = s.log.revert?.differing ?? [];
+  if (differing.length > 0) {
+    // Not all the way back: the session stays open, and a second click tries again (Greptile, PR #47)
+    // [handle: tests\hud-abort.test.ts "keeps the session open when the photo is only partly back"].
+    by.state = "failed";
+    reopenLog(s);
+    ctx.deps.hud?.stage(s, "awaiting_claude", { note: `Abort left ${differing.length} setting(s) different (${differing.slice(0, 3).join(", ")}). Click Abort again.` });
+    return;
+  }
+  host.close(s, userEnded(ctx, s, "aborted", by));
+  ctx.deps.hud?.stage(s, "aborted", { note: abortedNote(s) });
 }
 
-/** Why Accept cannot end this session now, or null. */
+/** The log of a session an Abort did not end after all: open again, with the revert tried kept. */
+function reopenLog(s: Session): void {
+  s.log.outcome = null;
+  s.log.ended = null;
+  s.log.final_settings = null;
+  delete s.log.ended_by;
+  saveLog(s);
+}
+
+/** Why Accept cannot end this session now, or null. A Pick already queued counts (Greptile, PR #47). */
 function acceptRefusal(s: Session): string | null {
-  if (s.mode === "variants" && s.picked === null) return "Accept keeps the pick's edit: click Pick first, or Abort.";
+  if (s.mode === "variants" && s.picked === null && s.pendingPick === null) return "Accept keeps the pick's edit: click Pick first, or Abort.";
   return null;
 }
 
@@ -158,7 +185,7 @@ async function finishAccept(host: ActionHost, s: Session, by: UserEnd): Promise<
   try {
     await connected(ctx);
     await endSession(ctx, s, { session_id: s.id, outcome: "accept" }, by);
-    host.close(s, ended(ctx, s, "accept", by));
+    host.close(s, userEnded(ctx, s, "accept", by));
     const kept = s.mode === "variants" ? `on copy ${s.picked ?? "?"}; the other copies stay in the catalog` : "and the recipe written";
     ctx.deps.hud?.stage(s, "accepted", { note: `Accepted: the edit is kept ${kept}.` });
   } catch (err) {
@@ -171,6 +198,7 @@ function pickRefusal(s: Session, v: VariantId): string | null {
   if (s.mode !== "variants") return "Pick is for a Variants session.";
   if (!s.ready) return "Not every copy was made; the session can only be aborted.";
   if (s.picked !== null) return `Copy ${s.picked} is already picked.`;
+  if (s.pendingPick !== null) return `Copy ${s.pendingPick} is being picked.`;
   if (!variant(s, v)) return `This session has no copy ${v}.`;
   return null;
 }
@@ -179,23 +207,28 @@ function pick(host: ActionHost, s: Session, v: VariantId, source: UserSource): s
   if (s.abort) return "The session is being aborted.";
   const refused = pickRefusal(s, v);
   if (refused) return refused;
+  s.pendingPick = v;
   host.queue(() => finishPick(host, s, v, source));
   return `Pick ${v}: selecting copy ${v}.`;
 }
 
 async function finishPick(host: ActionHost, s: Session, v: VariantId, source: UserSource): Promise<void> {
-  if (host.session() !== s || s.abort) return;
-  const refused = pickRefusal(s, v);
-  if (refused) {
-    s.idleNote = refused;
-    return;
-  }
   try {
+    if (host.session() !== s || s.abort) return;
+    s.pendingPick = null; // pickRefusal's own check; still counted by an Accept until the pick is made
+    const refused = pickRefusal(s, v);
+    if (refused) {
+      s.idleNote = refused;
+      return;
+    }
+    s.pendingPick = v;
     await selectVariant(host.ctx, s, { session_id: s.id, variant: v }, source);
     s.notices.push({ action: "pick", variant: v, source, at: host.ctx.now().toISOString() });
     s.idleNote = `Picked ${v}: Claude continues on copy ${v} at its next call.`;
   } catch (err) {
     s.idleNote = `Pick ${v} failed (${toToolError(err).code}). Click Pick again.`;
+  } finally {
+    s.pendingPick = null;
   }
 }
 

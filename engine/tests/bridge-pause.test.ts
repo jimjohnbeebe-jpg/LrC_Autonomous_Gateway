@@ -62,6 +62,17 @@ describe("bridge client: a plugin pause", () => {
     expect([client.getState(), client.stats.drops]).toEqual(["connected", 0]);
   });
 
+  it("waits out a pause with a request whose timeout is shorter than three beats", async () => {
+    // A HUD update's 5 s against three 2 s beats (Greptile, PR #47): here 80 ms against 120 ms.
+    allowance = 1000;
+    paused = true;
+    const late = client.request("ping", { nonce: "late" }, { timeoutMs: 80 });
+    await sleep(400);
+    paused = false;
+    expect((await late).nonce).toBe("late");
+    expect(client.stats.drops).toBe(0);
+  });
+
   it("without the allowance, the same pause drops the bridge and fails the request", async () => {
     paused = true;
     const e = await rejection(client.request("ping", { nonce: "late" }, { timeoutMs: 1000 }));

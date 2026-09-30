@@ -67,13 +67,17 @@ export async function endSession(ctx: SessionContext, s: Session, args: EndArgs,
   } catch (err) {
     throw failed(ctx, s, `end (${args.outcome})`, err);
   }
-  const outcome = by && args.outcome === "revert" ? "aborted" : args.outcome;
+  // A revert while the user's Abort is pending (it arrived during Claude's revert, or its own revert
+  // failed) is the user's: logged as "aborted" with their click (Greptile, PR #47) [handle:
+  // tests\hud-abort.test.ts "arriving during Claude's revert, is logged as the user's"].
+  const user = by ?? (args.outcome === "revert" ? s.abort : null);
+  const outcome = user && args.outcome === "revert" ? "aborted" : args.outcome;
   s.log.outcome = outcome;
   s.log.ended = ctx.now().toISOString();
   s.log.final_settings = finalSettings;
   s.log.recipe_path = recipePath;
   s.log.revert = revert;
-  s.log.ended_by = endedBy(by);
+  s.log.ended_by = endedBy(user);
   saveLog(s);
   const copies = s.mode === "variants" ? copiesJson(s, args.outcome) : {};
   return {

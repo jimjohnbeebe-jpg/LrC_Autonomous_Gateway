@@ -250,12 +250,16 @@ export class BridgeClient {
   }
 
   /**
-   * The plugin has missed three beats while the engine allows a longer silence: it is taken as
-   * paused (the bridge task not running), not gone, until the allowance runs out.
+   * While the engine allows a longer silence than three beats, the plugin is taken as paused (its
+   * bridge task not running), not gone, once it has missed a beat: no line for 1.5 heartbeats, where
+   * a running plugin answers a ping every beat [inference: pings go every heartbeatMs, a pong took
+   * 0.35 ms (median) in Phase 1, docs\reports\phase1\PHASE1.md "Numbers"]. So a request with a
+   * timeout shorter than three beats (a HUD update's 5 s) waits on too (Greptile, PR #47) [handle:
+   * tests\bridge-pause.test.ts "waits out a pause with a request whose timeout is shorter than three beats"].
    */
   private pluginPaused(): boolean {
-    const beats = this.opts.heartbeatMs * this.opts.missedBeats;
-    return this.silenceAllowance() > beats && Date.now() - this.lastInbound > beats;
+    const { heartbeatMs, missedBeats } = this.opts;
+    return this.silenceAllowance() > heartbeatMs * missedBeats && Date.now() - this.lastInbound > heartbeatMs * 1.5;
   }
 
   private startHeartbeat(attempt: number): void {

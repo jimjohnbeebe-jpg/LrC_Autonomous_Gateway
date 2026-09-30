@@ -188,6 +188,8 @@ export type Session = {
   abort: UserEnd | null;
   /** Who picked the copy (Variants mode): lr_select_variant, the HUD or the menu. */
   pickedBy: "claude" | UserSource | null;
+  /** A HUD Pick answered and queued but not yet made (an Accept after it counts on it). */
+  pendingPick: VariantId | null;
   notices: HudNotice[];
 };
 

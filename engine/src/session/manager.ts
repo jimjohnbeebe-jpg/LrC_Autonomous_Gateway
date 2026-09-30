@@ -32,7 +32,7 @@ import type { RenderedPreview } from "../preview/index.js";
 import { searchOrder } from "../settings/index.js";
 import { openSession, runPass0 } from "./begin.js";
 import { endSession, readSessionLog } from "./end.js";
-import { endedError, idleStage, userAction, type UserAction, type UserEnded } from "./hud-actions.js";
+import { abortedNote, endedError, idleStage, userAction, userEnded, type UserAction, type UserEnded } from "./hud-actions.js";
 import { abortError, checkAbort, read, render } from "./io.js";
 import { selectVariant } from "./pick.js";
 import { probe } from "./probe.js";
@@ -165,9 +165,12 @@ export class SessionManager {
         // revert failed); "accept" is refused, as the user asked for the photo back.
         if (s.abort && args.outcome === "accept") throw abortError(s);
         const out = await endSession(this.ctx, s, args);
-        this.close(s, null);
-        const note = args.outcome === "accept" ? "Claude accepted: the edit is kept." : "Claude reverted: the photo is back as it was before the session.";
-        this.ctx.deps.hud?.stage(s, args.outcome === "accept" ? "accepted" : "ended", { note });
+        // A revert while the user's Abort is pending ends the session as the user's Abort (end.ts).
+        const user = args.outcome === "revert" ? s.abort : null;
+        this.close(s, user ? userEnded(this.ctx, s, "aborted", user) : null);
+        if (user) this.ctx.deps.hud?.stage(s, "aborted", { note: abortedNote(s) });
+        else if (args.outcome === "accept") this.ctx.deps.hud?.stage(s, "accepted", { note: "Claude accepted: the edit is kept." });
+        else this.ctx.deps.hud?.stage(s, "ended", { note: "Claude reverted: the photo is back as it was before the session." });
         return out;
       }, true),
     );

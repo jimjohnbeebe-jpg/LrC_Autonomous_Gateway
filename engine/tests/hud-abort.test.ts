@@ -145,6 +145,55 @@ describe("Abort from the HUD", () => {
     expect(readLog()).toMatchObject({ outcome: "aborted", hud_events: [expect.anything(), expect.anything()] });
   });
 
+  it("keeps the session open when the photo is only partly back; a second click tries again (Greptile, PR #47)", async () => {
+    clean();
+    const start = structuredClone(lr.settings);
+    const rig = hudRig();
+    await rig.manager.begin({ intent_id: "test_prior" });
+    await hudAt("awaiting_claude");
+    const snapshot = plugin.handlers.get("apply_snapshot");
+    plugin.handlers.set("apply_snapshot", async (p, id) => {
+      const reply = snapshot ? await snapshot(p, id) : "silent";
+      // A setting Lightroom did not put back.
+      lr.settings["Exposure2012"] = 0.77;
+      if (reply !== "silent" && reply.ok) (reply.payload as { read_back: Record<string, unknown> }).read_back["Exposure2012"] = 0.77;
+      return reply;
+    });
+    hudEvent(plugin, "hud_abort", { session_id: ID });
+    await waitUntil(() => String(lr.hud.last()?.note ?? "").startsWith("Abort left 1 setting(s) different (exposure). Click Abort again."));
+    expect(rig.manager.current()?.id).toBe(ID);
+    const open = readLog();
+    expect(open).toMatchObject({ outcome: null, ended: null, final_settings: null, revert: { differing: ["exposure"] } });
+    expect(open.ended_by).toBeUndefined();
+    expect((await fails(step(rig))).details).toMatchObject({ state: "revert_failed" });
+    if (snapshot) plugin.handlers.set("apply_snapshot", snapshot);
+    hudEvent(plugin, "hud_abort", { session_id: ID });
+    await hudAt("aborted");
+    expect(lr.settings).toEqual(start);
+    expect(readLog()).toMatchObject({ outcome: "aborted", revert: { differing: [] } });
+  });
+
+  it("arriving during Claude's revert, is logged as the user's (Greptile, PR #47)", async () => {
+    clean();
+    const start = structuredClone(lr.settings);
+    const rig = hudRig();
+    await rig.manager.begin({ intent_id: "test_prior" });
+    await hudAt("awaiting_claude");
+    const snapshots = count("apply_snapshot");
+    const release = hold("apply_snapshot");
+    const revert = rig.manager.end({ session_id: ID, outcome: "revert" });
+    await waitUntil(() => count("apply_snapshot") > snapshots);
+    const click = hudEvent(plugin, "hud_abort", { session_id: ID });
+    await waitUntil(() => rig.events.length === 1);
+    release();
+    expect((await revert).json).toMatchObject({ outcome: "aborted", ended_by: { source: "hud", click_id: click } });
+    expect((await hudAt("aborted")).note).toBe("Aborted: the photo is back as it was before the session.");
+    expect(lr.settings).toEqual(start);
+    expect(count("apply_snapshot")).toBe(snapshots + 1); // the queued Abort found the session ended
+    expect(readLog()).toMatchObject({ outcome: "aborted", ended_by: { source: "hud", click_id: click } });
+    expect((await fails(step(rig))).code).toBe("SESSION_ENDED");
+  });
+
   it("from the menu: logged and told as the menu's", async () => {
     clean();
     const rig = hudRig();

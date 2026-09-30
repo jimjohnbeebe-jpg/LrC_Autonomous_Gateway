@@ -94,6 +94,30 @@ describe("Pick from the HUD", () => {
     expect(readLog()).toMatchObject({ picked: "B", hud_events: [expect.objectContaining({ name: "hud_pick", variant: "B" })] });
   });
 
+  it("an Accept right after a Pick still being made counts on it (Greptile, PR #47)", async () => {
+    clean();
+    const rig = hudRig();
+    await awaitingPick(rig);
+    const selects = plugin.received.filter((r) => r.name === "select_photo").length;
+    const select = plugin.handlers.get("select_photo");
+    let release = (): void => {};
+    const held = new Promise<void>((resolve) => (release = resolve));
+    plugin.handlers.set("select_photo", async (p, id) => {
+      await held;
+      return select ? select(p, id) : "silent";
+    });
+    hudEvent(plugin, "hud_pick", { session_id: ID, variant: "B" });
+    await waitUntil(() => plugin.received.filter((r) => r.name === "select_photo").length > selects);
+    hudEvent(plugin, "hud_pick", { session_id: ID, variant: "C" });
+    hudEvent(plugin, "hud_accept", { session_id: ID });
+    await waitUntil(() => rig.events.length === 3);
+    expect(rig.events.map((e) => e.note)).toEqual(["Pick B: selecting copy B.", "Copy B is being picked.", "Accept: keeping the edit once the running call is done."]);
+    if (select) plugin.handlers.set("select_photo", select);
+    release();
+    expect((await hudAt("accepted")).note).toBe("Accepted: the edit is kept on copy B; the other copies stay in the catalog.");
+    expect(readLog()).toMatchObject({ outcome: "accept", picked: "B", ended_by: { source: "hud" } });
+  });
+
   it("tells Claude of the pick in the next step's result, and refuses a second pick", async () => {
     clean();
     const rig = hudRig();

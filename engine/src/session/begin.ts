@@ -83,6 +83,7 @@ export async function openSession(ctx: SessionContext, args: BeginArgs): Promise
     idleNote: null,
     abort: null,
     pickedBy: null,
+    pendingPick: null,
     notices: [],
   };
   s.log = newLog(ctx, s, variantCount, args.notes ?? null);

@@ -11,7 +11,9 @@
 //     itself once, at lr_begin_session);
 //   - the answer to a click (`answered_click_id`, with its note) rides on the next update sent;
 //   - after a reconnect the session's state is sent again (a session rides out a plugin pause, D1);
-//   - a failed update is recorded and never fails a session call; a plugin before 0.6.0 gets none.
+//   - a failed update is recorded and never fails a session call; it is tried again RETRY_MS later,
+//     up to MAX_RETRIES times in a row (Greptile, PR #47: the HUD must not stay stale until the next
+//     stage); a plugin before 0.6.0 gets none.
 // [handle: tests\hud-publisher.test.ts, tests\hud-session.test.ts, against the Lightroom sim, whose
 // hud_update check is the plugin's: docs\reports\phase5\hud-plugin-smoke\smoke.txt "Contract".]
 
@@ -30,6 +32,9 @@ export const HUD_PLUGIN = "0.6.0";
 const UPDATE_TIMEOUT_MS = 5000;
 /** How long settle() waits at most [inference: many round trips]. */
 const SETTLE_MS = 2000;
+/** A failed update is tried again after one heartbeat (bridge client, 2 s), at most 3 times in a row [inference]. */
+const RETRY_MS = 2000;
+const MAX_RETRIES = 3;
 
 /** What the publisher records (tools-shared.ts writes it to the tool log): refused, failed and first-taken updates. */
 export type HudRecord = { ok: boolean; session_id: string; seq: number; stage: HudStage; duration_ms: number; result?: unknown; error?: unknown };
@@ -47,6 +52,8 @@ export class HudPublisher implements HudSink {
   private inFlight = false;
   private again = false;
   private settlers: Array<() => void> = [];
+  private failuresInRow = 0;
+  private retryTimer: NodeJS.Timeout | null = null;
 
   constructor(client: BridgeClient, options: { record?: (r: HudRecord) => void } = {}) {
     this.client = client;
@@ -111,6 +118,7 @@ export class HudPublisher implements HudSink {
     try {
       this.stats.sent++;
       const result = await this.client.request("hud_update", payload, { timeoutMs: UPDATE_TIMEOUT_MS });
+      this.failuresInRow = 0;
       if (result.applied) {
         this.stats.taken++;
         if (ch.taken === null && payload.open) this.record({ ok: true, ...base, duration_ms: took(), result });
@@ -124,6 +132,7 @@ export class HudPublisher implements HudSink {
     } catch (err) {
       this.stats.failed++;
       this.record({ ok: false, ...base, duration_ms: took(), error: toToolError(err).body() });
+      this.retryLater();
     } finally {
       this.inFlight = false;
       if (this.again) {
@@ -152,6 +161,16 @@ export class HudPublisher implements HudSink {
     }
     ch.seq++;
     return parsed.data;
+  }
+
+  /** Try the state again after a failed update; a newer stage or a reconnect sends it sooner. */
+  private retryLater(): void {
+    if (this.retryTimer || ++this.failuresInRow > MAX_RETRIES) return;
+    this.retryTimer = setTimeout(() => {
+      this.retryTimer = null;
+      this.kick();
+    }, RETRY_MS);
+    this.retryTimer.unref();
   }
 
   private settleAll(): void {

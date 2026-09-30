@@ -110,6 +110,26 @@ describe("HUD updates from a Converge session", () => {
   });
 });
 
+describe("A failed update", () => {
+  it("is tried again, so the HUD is not left behind until the next stage (Greptile, PR #47)", async () => {
+    clean();
+    const rig = hudRig();
+    const update = plugin.handlers.get("hud_update");
+    let fail = true;
+    plugin.handlers.set("hud_update", (p, id) => {
+      if (fail && p["stage"] === "awaiting_claude") {
+        fail = false;
+        return { ok: false, error: { code: "busy", message: "try later", recoverable: true } };
+      }
+      return update ? update(p, id) : "silent";
+    });
+    await rig.manager.begin({ intent_id: "test_plain" });
+    // Begin's last update failed, and nothing else changes the stage: only the retry brings it.
+    await hudAt("awaiting_claude", 5000);
+    expect([rig.hud.stats.failed, fail]).toEqual([1, false]);
+  });
+});
+
 describe("HUD updates from a Variants session", () => {
   it("lists every copy before selecting it, and offers the pick once each copy has its pass", async () => {
     clean();

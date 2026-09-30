@@ -118,6 +118,32 @@ describe("Pick from the HUD", () => {
     expect(readLog()).toMatchObject({ outcome: "accept", picked: "B", ended_by: { source: "hud" } });
   });
 
+  it("an Accept counting on a Pick that Claude's pick overtook keeps nothing (Greptile, PR #47)", async () => {
+    clean();
+    const rig = hudRig();
+    await awaitingPick(rig);
+    const selects = plugin.received.filter((r) => r.name === "select_photo").length;
+    const select = plugin.handlers.get("select_photo");
+    let release = (): void => {};
+    const held = new Promise<void>((resolve) => (release = resolve));
+    plugin.handlers.set("select_photo", async (p, id) => {
+      await held;
+      return select ? select(p, id) : "silent";
+    });
+    // Claude's lr_select_variant A is running when the user clicks Pick B, then Accept.
+    const claude = rig.manager.selectVariant({ session_id: ID, variant: "A" });
+    await waitUntil(() => plugin.received.filter((r) => r.name === "select_photo").length > selects);
+    hudEvent(plugin, "hud_pick", { session_id: ID, variant: "B" });
+    hudEvent(plugin, "hud_accept", { session_id: ID });
+    await waitUntil(() => rig.events.length === 2);
+    if (select) plugin.handlers.set("select_photo", select);
+    release();
+    expect((await claude).json).toMatchObject({ picked: { id: "A" } });
+    await waitUntil(() => String(lr.hud.last()?.note ?? "").startsWith("Copy A was picked before your Pick B; nothing was accepted."));
+    expect(rig.manager.current()?.id).toBe(ID);
+    expect(readLog()).toMatchObject({ outcome: null, picked: "A" });
+  });
+
   it("tells Claude of the pick in the next step's result, and refuses a second pick", async () => {
     clean();
     const rig = hudRig();

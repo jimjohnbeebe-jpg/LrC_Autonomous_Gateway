@@ -128,6 +128,31 @@ describe("A failed update", () => {
     await hudAt("awaiting_claude", 5000);
     expect([rig.hud.stats.failed, fail]).toEqual([1, false]);
   });
+
+  it("gives each new stage its own retries, so a new session's HUD is not left behind (Greptile, PR #47)", async () => {
+    clean();
+    const rig = hudRig({}, { retryMs: 20 });
+    const update = plugin.handlers.get("hud_update");
+    let failing = Number.POSITIVE_INFINITY; // how many more updates fail
+    plugin.handlers.set("hud_update", (p, id) => {
+      if (failing > 0) {
+        failing--;
+        return { ok: false, error: { code: "busy", message: "try later", recoverable: true } };
+      }
+      return update ? update(p, id) : "silent";
+    });
+    await rig.manager.begin({ intent_id: "test_plain" });
+    // Every update of begin fails, and the retries run out.
+    await waitUntil(() => rig.hud.stats.failed >= 4);
+    await new Promise((r) => setTimeout(r, 200));
+    const failed = rig.hud.stats.failed;
+    expect(lr.hud.taken).toEqual([]);
+    // Updates work again after one more failure: the next stage's own retry brings the state.
+    failing = 1;
+    await rig.manager.setRegions({ session_id: ID, regions: [] });
+    await hudAt("awaiting_claude", 2000);
+    expect(rig.hud.stats.failed).toBe(failed + 1);
+  });
 });
 
 describe("HUD updates from a Variants session", () => {

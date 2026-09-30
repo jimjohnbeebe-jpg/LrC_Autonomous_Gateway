@@ -20,11 +20,11 @@ export type HudRig = {
   records: HudRecord[];
 };
 
-export function hudRig(extra: Partial<SessionDeps> = {}): HudRig {
+export function hudRig(extra: Partial<SessionDeps> = {}, publisher: { retryMs?: number } = {}): HudRig {
   const records: HudRecord[] = [];
   const events: HudEventRecord[] = [];
   const reported: HudRig["reported"] = [];
-  const hud = new HudPublisher(client, { record: (r) => records.push(r) });
+  const hud = new HudPublisher(client, { record: (r) => records.push(r), ...publisher });
   const sink: HudSink = {
     stage: (s, stage, options) => {
       reported.push({ stage, ...(options?.note ? { note: options.note } : {}) });

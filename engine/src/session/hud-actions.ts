@@ -170,15 +170,23 @@ function accept(host: ActionHost, s: Session, a: UserAction): string {
   if (refused) return refused;
   const by = userEnd(a, null);
   const running = host.busy();
-  host.queue(() => finishAccept(host, s, by));
+  // An Accept that counts on a Pick still queued keeps that pick's copy, or nothing.
+  const counted = s.picked === null ? s.pendingPick : null;
+  host.queue(() => finishAccept(host, s, by, counted));
   return running ? "Accept: keeping the edit once the running call is done." : "Accept: keeping the edit.";
 }
 
-async function finishAccept(host: ActionHost, s: Session, by: UserEnd): Promise<void> {
+async function finishAccept(host: ActionHost, s: Session, by: UserEnd, counted: VariantId | null): Promise<void> {
   if (host.session() !== s || s.abort) return;
   const { ctx } = host;
-  const refused = acceptRefusal(s);
+  const refused =
+    counted !== null && s.picked !== counted
+      ? `Copy ${s.picked ?? "?"} was picked before your Pick ${counted}; nothing was accepted. Accept keeps copy ${s.picked ?? "?"}.`
+      : acceptRefusal(s);
   if (refused) {
+    // Greptile, PR #47 (review 2): Claude's pick of another copy, made first, must not be accepted
+    // for the user [handle: tests\hud-actions.test.ts "an Accept counting on a Pick that Claude's pick
+    // overtook keeps nothing"].
     s.idleNote = refused;
     return;
   }

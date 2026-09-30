@@ -12,8 +12,8 @@
 //   - the answer to a click (`answered_click_id`, with its note) rides on the next update sent;
 //   - after a reconnect the session's state is sent again (a session rides out a plugin pause, D1);
 //   - a failed update is recorded and never fails a session call; it is tried again RETRY_MS later,
-//     up to MAX_RETRIES times in a row (Greptile, PR #47: the HUD must not stay stale until the next
-//     stage); a plugin before 0.6.0 gets none.
+//     up to MAX_RETRIES times in a row for each stage (Greptile, PR #47: the HUD must not stay stale
+//     until the next stage); a plugin before 0.6.0 gets none.
 // [handle: tests\hud-publisher.test.ts, tests\hud-session.test.ts, against the Lightroom sim, whose
 // hud_update check is the plugin's: docs\reports\phase5\hud-plugin-smoke\smoke.txt "Contract".]
 
@@ -32,7 +32,11 @@ export const HUD_PLUGIN = "0.6.0";
 const UPDATE_TIMEOUT_MS = 5000;
 /** How long settle() waits at most [inference: many round trips]. */
 const SETTLE_MS = 2000;
-/** A failed update is tried again after one heartbeat (bridge client, 2 s), at most 3 times in a row [inference]. */
+/**
+ * A failed update is tried again after one heartbeat (bridge client, 2 s), at most 3 times in a row
+ * for the same stage [inference]; each stage reported, and so each new session, starts the count again
+ * (Greptile, PR #47, review 2) [handle: tests\hud-session.test.ts "gives each new stage its own retries"].
+ */
 const RETRY_MS = 2000;
 const MAX_RETRIES = 3;
 
@@ -46,6 +50,7 @@ export class HudPublisher implements HudSink {
   readonly stats = { sent: 0, taken: 0, not_taken: 0, failed: 0, invalid: 0 };
   private readonly client: BridgeClient;
   private readonly record: (r: HudRecord) => void;
+  private readonly retryMs: number;
   private channel: Channel | null = null;
   private state: HudState | null = null;
   private answer: { sessionId: string; clickId: string; note: string } | null = null;
@@ -55,9 +60,11 @@ export class HudPublisher implements HudSink {
   private failuresInRow = 0;
   private retryTimer: NodeJS.Timeout | null = null;
 
-  constructor(client: BridgeClient, options: { record?: (r: HudRecord) => void } = {}) {
+  /** `retryMs`: RETRY_MS unless given (tests shorten it). */
+  constructor(client: BridgeClient, options: { record?: (r: HudRecord) => void; retryMs?: number } = {}) {
     this.client = client;
     this.record = options.record ?? (() => {});
+    this.retryMs = options.retryMs ?? RETRY_MS;
     client.onStateChange((state) => {
       if (state !== "connected" || !this.channel || !this.state) return;
       // The plugin may have missed updates while the bridge was down, or restarted: send the state
@@ -71,6 +78,7 @@ export class HudPublisher implements HudSink {
     if (this.channel?.sessionId !== s.id) this.channel = { sessionId: s.id, seq: 0, open: false, taken: null };
     if (options.open) this.channel.open = true;
     this.state = hudState(s, stage, options.note);
+    this.failuresInRow = 0;
     this.kick();
   }
 
@@ -169,7 +177,7 @@ export class HudPublisher implements HudSink {
     this.retryTimer = setTimeout(() => {
       this.retryTimer = null;
       this.kick();
-    }, RETRY_MS);
+    }, this.retryMs);
     this.retryTimer.unref();
   }
 

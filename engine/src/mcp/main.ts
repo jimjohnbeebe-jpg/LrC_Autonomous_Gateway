@@ -15,6 +15,9 @@
 // and by the intent tools, lr_get_session_log and lr_sync_series, and moves the intents and session
 // log folders (settings\folders.ts). The tool log stays in the folder it opened in here
 // (PHASE5_PLAN decision 2d).
+// The HUD (PHASE5_PLAN row 5): while a session is open the engine keeps the bridge (decision 5: no
+// idle release, so the HUD's buttons reach it) and rides out a plugin pause of up to
+// SESSION_SILENCE_MS (decision D1, bridge-gate.ts).
 // Shutdown: when stdin ends. On Windows the parent often dies without a signal, and an orphaned
 // engine would keep the plugin's single-client sockets and the lock [upstream claim:
 // vendor\automaat\server\src\index.ts:194-206].
@@ -27,7 +30,7 @@ import { loadDefaultParamMap } from "../params/index.js";
 import { defaultPresetDir } from "../presets/index.js";
 import { PreviewService } from "../preview/index.js";
 import { KnownLogFolders, PageSettings } from "../settings/index.js";
-import { BridgeGate } from "./bridge-gate.js";
+import { BridgeGate, SESSION_SILENCE_MS } from "./bridge-gate.js";
 import { devOverrides } from "./dev-overrides.js";
 import { acquireInstanceLock } from "./instance-lock.js";
 import { createServer } from "./server.js";
@@ -43,7 +46,14 @@ const say = (message: string): void => console.error(`[lrc-avg] ${message}`);
 const IDLE_RELEASE_MS = 60000;
 
 const dev = devOverrides();
-const client = new BridgeClient({ engineVersion: ENGINE_VERSION, log: say, ...dev.bridge });
+/** Whether a session is open; set once the tools exist (the client and the gate are made first). */
+let sessionOpen = (): boolean => false;
+const client = new BridgeClient({
+  engineVersion: ENGINE_VERSION,
+  log: say,
+  silenceAllowanceMs: () => (sessionOpen() ? SESSION_SILENCE_MS : 0),
+  ...dev.bridge,
+});
 const previews = new PreviewService(client);
 const toolLog = new ToolLog(defaultLogDir());
 const settings = new PageSettings(client);
@@ -54,6 +64,7 @@ const gate = new BridgeGate(client, () => acquireInstanceLock(dev.lockPort), {
   },
   idleReleaseMs: IDLE_RELEASE_MS,
   onIdleRelease: () => say(`no tool call for ${IDLE_RELEASE_MS / 1000} s; gave the Lightroom bridge back`),
+  keepWhile: () => sessionOpen(),
 });
 
 const map = loadDefaultParamMap();
@@ -72,6 +83,7 @@ const tools = new Tools({
   onCallStart: () => gate.beginUse(),
   onCallEnd: () => gate.endUse(),
 });
+sessionOpen = () => (tools.sessionManager()?.current() ?? null) !== null;
 await createServer(tools).connect(new StdioServerTransport());
 
 let stopping = false;

@@ -3,9 +3,12 @@
 export { SessionManager } from "./manager.js";
 export type { SessionView } from "./manager.js";
 export { COPIES_TIMEOUT_MS, MAX_REGIONS, VARIANT_IDS, folderOf } from "./types.js";
+export type { UserAction, UserEnded } from "./hud-actions.js";
 export type {
   BeginArgs,
   EndArgs,
+  HudNotice,
+  HudSink,
   ProbeArgs,
   RegionArgs,
   RegionKind,
@@ -13,11 +16,15 @@ export type {
   ReturnImage,
   SelectArgs,
   SessionDeps,
+  Session,
   SessionOutput,
   StepArgs,
+  Target,
   TargetId,
+  UserSource,
   VariantId,
 } from "./types.js";
+export { awaitingPick } from "./pick.js";
 export { DEFAULT_VARIANT_COUNT, MAX_VARIANT_COUNT, VARIANTS_PLUGIN } from "./copies.js";
 export { applyProjectedGuardrail, convergedByMetrics, fixedCorrection, hueDistance, planStep, pullBack } from "./plan.js";
 export type { Change, Clamp, Limits, Refusal, Slope, StepPlan } from "./plan.js";

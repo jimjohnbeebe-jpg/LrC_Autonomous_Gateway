@@ -1,9 +1,12 @@
 // What the tool groups share (tools.ts has the list of groups): the dependencies, the state of one
-// engine run (the session manager, the last render, the write count), the preview settings, and
-// the helpers every tool uses: run (tool log and bridge-gate bracketing), render, and the guards.
+// engine run (the session manager, the HUD, the last render, the write count), the preview settings,
+// and the helpers every tool uses: run (tool log and bridge-gate bracketing), render, and the guards.
+// The HUD (PHASE5_PLAN row 5, hud\) comes with the session manager: its updates follow the session
+// loop, and its events act on the open session.
 
 import { randomUUID } from "node:crypto";
 import type { BridgeClient } from "../bridge/index.js";
+import { HudEvents, HudPublisher } from "../hud/index.js";
 import type { IntentLibrary } from "../intents/index.js";
 import type { ToolLog } from "../log/index.js";
 import type { Metrics, Region } from "../metrics/index.js";
@@ -71,6 +74,8 @@ export type ToolsDeps = {
   onCallStart?: () => void;
   onCallEnd?: () => void;
   now?: () => Date;
+  /** false: no HUD updates and no HUD events (PHASE5_PLAN row 5); on by default. */
+  hud?: boolean;
 };
 
 /** One engine run's tools: their dependencies and state, passed to every tool function. */
@@ -84,6 +89,8 @@ export type ToolContext = {
   writes: number;
   /** The last preview this engine rendered, if any. */
   last: LastRender | null;
+  /** The HUD's updates (null without sessions or with `hud: false`). */
+  hud: HudPublisher | null;
 };
 
 export const ms = (since: number): number => Math.round((performance.now() - since) * 10) / 10;
@@ -91,8 +98,11 @@ export const ms = (since: number): number => Math.round((performance.now() - sin
 export function createContext(deps: ToolsDeps): ToolContext {
   const historyPrefix = deps.historyPrefix ?? `AVG ${randomUUID().slice(0, 4)}`;
   if (!historyPrefix.startsWith("AVG ")) throw new Error(`history prefix must start with "AVG ": ${historyPrefix}`);
-  const ctx: ToolContext = { deps, historyPrefix, now: deps.now ?? (() => new Date()), sessions: null, writes: 0, last: null };
+  const ctx: ToolContext = { deps, historyPrefix, now: deps.now ?? (() => new Date()), sessions: null, writes: 0, last: null, hud: null };
   const settings = deps.settings;
+  const withSessions = deps.intents !== undefined && deps.sessionLogDir !== undefined;
+  const hud = withSessions && deps.hud !== false ? new HudPublisher(deps.client, { record: (r) => logHud(ctx, "hud_update", r) }) : null;
+  ctx.hud = hud;
   ctx.sessions =
     deps.intents && deps.sessionLogDir
       ? new SessionManager({
@@ -103,11 +113,18 @@ export function createContext(deps: ToolsDeps): ToolContext {
           logDir: deps.sessionLogDir,
           ...(settings ? { readPage: () => settings.read() } : {}),
           ...(deps.logFolders ? { logFolders: deps.logFolders } : {}),
+          ...(hud ? { hud } : {}),
           engineVersion: deps.engineVersion ?? "unknown",
           now: ctx.now,
         })
       : null;
+  if (hud && ctx.sessions) new HudEvents(deps.client, ctx.sessions, hud, { record: (r) => logHud(ctx, "hud_event", r), now: ctx.now });
   return ctx;
+}
+
+/** A HUD update or event in the tool log: the updates the HUD refused or did not answer, the first it took, every event. */
+function logHud(ctx: ToolContext, tool: string, record: { ok: boolean; duration_ms?: number } & Record<string, unknown>): void {
+  ctx.deps.log?.append({ ...record, ts: ctx.now().toISOString(), tool, ok: record.ok, duration_ms: record.duration_ms ?? 0 });
 }
 
 export function sessionTools(ctx: ToolContext): SessionManager {
@@ -115,8 +132,10 @@ export function sessionTools(ctx: ToolContext): SessionManager {
   return ctx.sessions;
 }
 
-/** The open session with this id, or SESSION_NOT_ACTIVE. */
+/** The open session with this id; SESSION_ENDED when the user ended it from the HUD, else SESSION_NOT_ACTIVE. */
 export function openSession(ctx: ToolContext, sessionId: string): { id: string; uuid: string } {
+  const byUser = ctx.sessions?.userEndedError(sessionId) ?? null;
+  if (byUser) throw byUser;
   const open = ctx.sessions?.current() ?? null;
   if (!open || open.id !== sessionId) {
     throw new ToolError("SESSION_NOT_ACTIVE", open ? `Session ${sessionId} is not the open one (${open.id}).` : `No session is open (asked for ${sessionId}).`, false);

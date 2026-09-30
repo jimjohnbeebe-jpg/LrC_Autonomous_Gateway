@@ -1,4 +1,6 @@
 // lr_end_session (accept: log and recipe; revert: the pre-session snapshot) and lr_get_session_log.
+// The user's Accept and Abort from the HUD or the menu end a session the same way (hud-actions.ts);
+// an Abort is logged as outcome "aborted", and `ended_by` says who ended it (PHASE5_PLAN row 5).
 // In Variants mode, accept takes the recipe from the pick, and revert puts the master back; the
 // copies stay in the catalog either way, named in the result [stated: Jim, 2026-09-27, PHASE4_PLAN
 // decision 4: the SDK has no call that removes a photo; handle: tests\session-variants.test.ts
@@ -10,9 +12,10 @@ import path from "node:path";
 import { RECIPE_SCHEMA_ID } from "../log/index.js";
 import { ToolError } from "../mcp/errors.js";
 import { differingSettings, type CanonicalSettings } from "../params/index.js";
-import { bridge, failed, ms, read, saveLog } from "./io.js";
+import type { EndedByEntry } from "../log/index.js";
+import { bridge, checkAbort, failed, ms, read, saveLog } from "./io.js";
 import { focus, variant } from "./targets.js";
-import { WRITE_TIMEOUT_MS, type EndArgs, type Session, type SessionContext, type SessionOutput, type Target } from "./types.js";
+import { WRITE_TIMEOUT_MS, type EndArgs, type Session, type SessionContext, type SessionOutput, type Target, type UserEnd } from "./types.js";
 
 /** The photo whose settings an accept keeps: the master, or in Variants mode the pick (refused before one). */
 function acceptTarget(s: Session): Target {
@@ -27,8 +30,11 @@ function acceptTarget(s: Session): Target {
   );
 }
 
-/** Finish the session's log (and the recipe on accept). The caller then closes the session. */
-export async function endSession(ctx: SessionContext, s: Session, args: EndArgs): Promise<SessionOutput> {
+/**
+ * Finish the session's log (and the recipe on accept). The caller then closes the session. `by`: the
+ * user's Accept or Abort from the HUD or the menu; without it, Claude's lr_end_session.
+ */
+export async function endSession(ctx: SessionContext, s: Session, args: EndArgs, by: UserEnd | null = null): Promise<SessionOutput> {
   const started = performance.now();
   const { client, map } = ctx.deps;
   const kept = args.outcome === "accept" ? acceptTarget(s) : s.master;
@@ -39,6 +45,7 @@ export async function endSession(ctx: SessionContext, s: Session, args: EndArgs)
     await focus(ctx, s, kept);
     if (args.outcome === "accept") {
       finalSettings = (await read(ctx, s, kept)).settings;
+      checkAbort(s); // the user's Abort, arrived during the read, wins over an accept
       s.files.writeRecipe({
         schema: RECIPE_SCHEMA_ID,
         session_id: s.id,
@@ -60,18 +67,21 @@ export async function endSession(ctx: SessionContext, s: Session, args: EndArgs)
   } catch (err) {
     throw failed(ctx, s, `end (${args.outcome})`, err);
   }
-  s.log.outcome = args.outcome;
+  const outcome = by && args.outcome === "revert" ? "aborted" : args.outcome;
+  s.log.outcome = outcome;
   s.log.ended = ctx.now().toISOString();
   s.log.final_settings = finalSettings;
   s.log.recipe_path = recipePath;
   s.log.revert = revert;
+  s.log.ended_by = endedBy(by);
   saveLog(s);
   const copies = s.mode === "variants" ? copiesJson(s, args.outcome) : {};
   return {
     json: {
       ok: true,
       session_id: s.id,
-      outcome: args.outcome,
+      outcome,
+      ended_by: s.log.ended_by,
       ...(s.mode === "variants" ? { photo: kept.id } : {}),
       passes: `${kept.passes}/${s.maxPasses}`,
       log_path: s.files.logPath,
@@ -81,8 +91,14 @@ export async function endSession(ctx: SessionContext, s: Session, args: EndArgs)
       ...copies,
       timings: { total_ms: ms(started) },
     },
-    log: { session_id: s.id, outcome: args.outcome, log_path: s.files.logPath, recipe_path: recipePath, ...(revert ? { revert } : {}), ...(s.mode === "variants" ? { photo: kept.id } : {}) },
+    log: { session_id: s.id, outcome, ended_by: s.log.ended_by, log_path: s.files.logPath, recipe_path: recipePath, ...(revert ? { revert } : {}), ...(s.mode === "variants" ? { photo: kept.id } : {}) },
   };
+}
+
+/** The log's `ended_by`: Claude, or the user's click with its timings (done_ms: from the event to now, AC-2). */
+function endedBy(by: UserEnd | null): EndedByEntry {
+  if (!by) return { source: "claude" };
+  return { source: by.source, click_id: by.click_id, received: by.received.toISOString(), interrupted: by.interrupted, done_ms: ms(by.t0) };
 }
 
 /** The copies a Variants session leaves in the catalog, and what the user can do with them. */

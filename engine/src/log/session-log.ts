@@ -11,7 +11,8 @@
 // them. Metrics are the summaries the tools return (no histograms), so a log stays small.
 // Schema v2 (engine 0.4.0) adds `mode` "variants", the copies (`variants`, `picked`), each pass's
 // photo (`target` A/B/C) and region baselines per photo. v1 logs (engine 0.3.x, the Phase 3 run)
-// are read with session-log-v1.ts.
+// are read with session-log-v1.ts. Later engines only add: optional fields (`settings`, 0.7.0;
+// `ended_by` and `hud_events`, 0.8.0) and the outcome "aborted" (0.8.0), so earlier v2 logs still read.
 
 import { mkdirSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -161,6 +162,31 @@ const sessionSettingsSchema = z.strictObject({
   page: z.strictObject({ read: z.boolean(), note: z.string().nullable(), problems: z.array(z.string()) }),
 });
 
+const userSource = z.enum(["hud", "menu"]);
+/**
+ * Engine 0.8.0 (PHASE5_PLAN row 5): who ended the session. Claude (lr_end_session), or the user from
+ * the HUD or a menu item, with the event's click id, when the engine received it, the operation an
+ * Abort stopped, and `done_ms` from the event to the end (for an Abort: the photo back; AC-2).
+ */
+const endedBySchema = z.strictObject({
+  source: z.enum(["claude", "hud", "menu"]),
+  click_id: z.string().optional(),
+  received: z.string().optional(),
+  interrupted: z.string().nullable().optional(),
+  done_ms: z.number().optional(),
+});
+/** Engine 0.8.0: every HUD or menu event for this session, and what the HUD was told. */
+const hudEventSchema = z.strictObject({
+  at: z.string(),
+  name: z.enum(["hud_abort", "hud_accept", "hud_pick", "hud_approve_pass"]),
+  source: userSource,
+  click_id: z.string(),
+  seq_seen: z.number().int(),
+  variant: variantIdSchema.optional(),
+  pass: z.number().int().optional(),
+  note: z.string(),
+});
+
 export const sessionLogSchema = z
   .strictObject({
     schema: z.literal(SESSION_LOG_SCHEMA_ID),
@@ -169,7 +195,8 @@ export const sessionLogSchema = z
     engine_version: z.string(),
     started: z.string(),
     ended: z.string().nullable(),
-    outcome: z.enum(["accept", "revert"]).nullable(),
+    /** "aborted" (engine 0.8.0, MCP_TOOLS' log schema): the user's Abort put the photo back. */
+    outcome: z.enum(["accept", "revert", "aborted"]).nullable(),
     intent: z.strictObject({ id: z.string(), label: z.string(), source: z.enum(["bundled", "user"]) }),
     mode: z.enum(["converge", "variants"]),
     /** Variants mode: the copies asked for; null in Converge mode. */
@@ -199,6 +226,8 @@ export const sessionLogSchema = z
     revert: z.strictObject({ ms: z.number(), differing: z.array(z.string()) }).nullable(),
     /** Engine 0.7.0: the values the session read from the settings page, and where each came from. */
     settings: sessionSettingsSchema.optional(),
+    ended_by: endedBySchema.optional(),
+    hud_events: z.array(hudEventSchema).optional(),
   })
   .describe("LrC-AVG session log, schema v2");
 
@@ -219,6 +248,8 @@ export type PassEntry = z.infer<typeof passSchema>;
 export type ProbeEntry = z.infer<typeof probeSchema>;
 export type GuardrailAction = z.infer<typeof guardrailActionSchema>;
 export type VariantEntry = z.infer<typeof variantEntrySchema>;
+export type EndedByEntry = z.infer<typeof endedBySchema>;
+export type HudEventEntry = z.infer<typeof hudEventSchema>;
 export type Recipe = z.infer<typeof recipeSchema>;
 
 /** Local date as yyyymmdd, the prefix of a session's files. */

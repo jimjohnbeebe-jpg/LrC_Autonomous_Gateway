@@ -12,6 +12,7 @@
 // This class does not depend on the MCP SDK: server.ts wraps it, and the checks call it directly, so
 // both go through the same code. Every call is written to the tool log.
 
+import type { HudPublisher } from "../hud/index.js";
 import type { BeginArgs, EndArgs, ProbeArgs, RegionArgs, SelectArgs, SessionManager, StepArgs } from "../session/index.js";
 import type { ToolError } from "./errors.js";
 import { getActivePhotoContext, getMetrics, getPreview, type MetricsArgs, type PreviewArgs } from "./tools-context.js";
@@ -36,6 +37,11 @@ export class Tools {
   /** The last preview this engine rendered, if any. */
   lastRender(): LastRender | null {
     return this.ctx.last;
+  }
+
+  /** The HUD's updates (for the checks: its stats); null without sessions or with `hud: false`. */
+  hud(): HudPublisher | null {
+    return this.ctx.hud;
   }
 
   /** Log a call refused before it reached a tool (unknown tool, invalid arguments; server.ts). */

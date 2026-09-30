@@ -1,7 +1,12 @@
 // What every session operation shares: the bridge calls for a session photo (read, write, render),
 // the log writes, and the pieces of a tool result. Each call names its photo, the target `t`: the
 // master in Converge mode, a copy in Variants mode (targets.ts selects it first).
+// Every write and every export of a session goes through write() and render() here (the guardrail's
+// corrections and undo, the probe's writes and put-back included), so these are where an Abort from
+// the HUD stops the running operation (PHASE5_PLAN decision 3) and where the HUD hears "applying" and
+// "acquiring preview" (row 5) [handle: tests\hud-abort.test.ts "stops a step before its next write"].
 
+import { BridgeError } from "../bridge/index.js";
 import type { PassEntry } from "../log/index.js";
 import { ToolError, toToolError } from "../mcp/errors.js";
 import type { Metrics } from "../metrics/index.js";
@@ -39,12 +44,51 @@ export async function read(ctx: SessionContext, s: Session, t: Target): Promise<
   return ctx.deps.map.fromSdk(res.settings);
 }
 
+/**
+ * The error for a session the user is aborting from the HUD or the menu: the running operation stops
+ * here, and the session's queue puts the photo back next (session\hud-actions.ts).
+ */
+export function abortError(s: Session): ToolError {
+  const a = s.abort;
+  const from = a?.source === "menu" ? "the Abort Session menu item" : "the HUD";
+  const failedNote = a?.state === "failed" ? " Putting the photo back failed: end the session with lr_end_session outcome \"revert\"." : " The engine is putting the photo back as it was before the session.";
+  return new ToolError("SESSION_ENDED", `The user aborted session ${s.id} from ${from}; nothing more is written.${failedNote} Start a new session only if the user asks.`, false, {
+    session_id: s.id,
+    outcome: "aborted",
+    source: a?.source ?? "hud",
+    state: a?.state === "failed" ? "revert_failed" : "reverting",
+  });
+}
+
+/** Before a write or an export: refused once the user has aborted the session. */
+export function checkAbort(s: Session): void {
+  if (s.abort) throw abortError(s);
+}
+
+/**
+ * A write the plugin got but did not answer (the bridge dropped, or no answer in time) may have been
+ * applied: say so, so the call's error does not read as "nothing was written" (the classification of
+ * PHASE4_PLAN rows 8-10). The session reads the photo before its next step (step.ts, fresh()).
+ */
+function maybeWritten(err: unknown, historyName: string): unknown {
+  if (!(err instanceof BridgeError) || (err.code !== "disconnected" && err.code !== "timeout")) return err;
+  const e = toToolError(err);
+  return new ToolError(e.code, `${e.message}. "${historyName}" was sent and may have been written; the next lr_step reads the photo first.`, e.recoverable, {
+    maybe_written: true,
+    history_name: historyName,
+  });
+}
+
 /** Write canonical values as one History step and check the read-back (Phase 0, P-12). */
 export async function write(ctx: SessionContext, s: Session, t: Target, values: Record<string, CanonicalValue>, historyName: string): Promise<FromSdkResult> {
+  checkAbort(s);
   const { client, map } = ctx.deps;
   const sdk = map.toSdk(values, { processVersion: t.process_version });
+  ctx.deps.hud?.stage(s, "applying");
   const res = await bridge(s, t, () =>
-    client.request("apply_settings", { target_uuid: t.uuid, settings: sdk, history_name: historyName }, { timeoutMs: WRITE_TIMEOUT_MS }),
+    client
+      .request("apply_settings", { target_uuid: t.uuid, settings: sdk, history_name: historyName }, { timeoutMs: WRITE_TIMEOUT_MS })
+      .catch((err: unknown) => Promise.reject(maybeWritten(err, historyName))),
   );
   const mismatches = map.verifyReadback(sdk, res.read_back);
   if (mismatches.length > 0) {
@@ -61,7 +105,9 @@ export async function write(ctx: SessionContext, s: Session, t: Target, values: 
  * shows (the last read-back). `keep: false` leaves the photo's last render alone (probes).
  */
 export async function render(ctx: SessionContext, s: Session, t: Target, settings: CanonicalSettings, options: { keep?: boolean; longEdge?: number } = {}): Promise<Rendered> {
+  checkAbort(s);
   const longEdge = options.longEdge ?? s.longEdge;
+  ctx.deps.hud?.stage(s, "acquiring_preview");
   const preview = await bridge(s, t, () =>
     ctx.deps.render({
       longEdge,
@@ -70,6 +116,8 @@ export async function render(ctx: SessionContext, s: Session, t: Target, setting
       regions: s.regions.map((r) => ({ label: r.label, box: r.box })),
     }),
   );
+  // The export's metrics are measured with it (preview\service.ts); this stage covers the checks on them.
+  ctx.deps.hud?.stage(s, "metrics");
   const rendered: Rendered = {
     metrics: preview.metrics,
     jpeg: preview.jpeg,
@@ -142,6 +190,11 @@ export function saveLog(s: Session): void {
 /** Record a failure in the open session's log and return the error to throw, naming the session. */
 export function failed(ctx: SessionContext, s: Session, stage: string, err: unknown): ToolError {
   const error = toToolError(err);
+  if (error.code === "SESSION_ENDED") {
+    // Not a failure: the user's Abort stopped this operation; the log's ended_by names it.
+    if (s.abort) s.abort.interrupted ??= stage;
+    return error;
+  }
   s.log.failures.push({ at: ctx.now().toISOString(), stage, error: error.body() });
   try {
     saveLog(s);

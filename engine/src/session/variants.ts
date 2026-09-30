@@ -27,7 +27,13 @@ export async function runVariants(ctx: SessionContext, opened: Opened, args: Beg
   saveLog(s);
   try {
     const original = await render(ctx, s, s.master, view.settings);
+    s.work = { target: s.master, pass: null, note: "Making the virtual copies" };
+    ctx.deps.hud?.stage(s, "pass0");
     await makeCopies(ctx, s, s.log.variant_count ?? DEFAULT_VARIANT_COUNT);
+    // The HUD must list the copies before the first is selected, or it shows "Target changed"
+    // [handle: plugin\LrC-AVG.lrplugin\HudState.lua targetChangedLine; PHASE5_PLAN "From row 4"].
+    ctx.deps.hud?.stage(s, "pass0");
+    await ctx.deps.hud?.settle(s);
     const done: Array<{ t: Target; p: Pass0 }> = [];
     for (const t of s.variants) done.push({ t, p: await copyPass0(ctx, s, t, view, original) });
     s.ready = true;

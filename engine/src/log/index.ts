@@ -13,6 +13,6 @@ export {
   recipeSchema,
   sessionLogSchema,
 } from "./session-log.js";
-export type { GuardrailAction, PassEntry, ProbeEntry, Recipe, SessionLogData, VariantEntry } from "./session-log.js";
+export type { EndedByEntry, GuardrailAction, HudEventEntry, PassEntry, ProbeEntry, Recipe, SessionLogData, VariantEntry } from "./session-log.js";
 export { SESSION_LOG_V1_SCHEMA_ID, anySessionLogSchema, sessionLogV1Schema } from "./session-log-v1.js";
 export type { AnySessionLog, SessionLogV1Data } from "./session-log-v1.js";

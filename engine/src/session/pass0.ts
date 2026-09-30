@@ -34,6 +34,8 @@ export type Pass0 = {
  */
 export async function pass0(ctx: SessionContext, s: Session, t: Target, view: FromSdkResult, variantPriors: Priors | null, original: Rendered | null): Promise<Pass0> {
   const passStarted = ctx.now().toISOString();
+  s.work = { target: t, pass: 0 };
+  ctx.deps.hud?.stage(s, "pass0");
   if (original) t.last = original;
   const before = original ?? (await render(ctx, s, t, view.settings));
   const priors = combinedPriors(s.intent.intent.priors, variantPriors ?? {}, ctx.deps.map);

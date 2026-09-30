@@ -120,6 +120,34 @@ describe("mcp: bridge gate", () => {
     }
   });
 
+  it("keeps the bridge while a session is open, and gives it back an idle time after it ends", async () => {
+    const plugin = await FakePlugin.start();
+    const client = new BridgeClient({ commandPort: plugin.commandPort, eventPort: plugin.eventPort, connectGapMs: 5, reconnectMs: 30, readToken: () => plugin.token });
+    let open = true;
+    let idleReleases = 0;
+    const gate = new BridgeGate(client, async () => ({ ok: true, lock: { port: 1, release: async () => {} } }), {
+      waitMs: 2000,
+      idleReleaseMs: 60,
+      onIdleRelease: () => idleReleases++,
+      keepWhile: () => open,
+    });
+    try {
+      gate.beginUse();
+      await gate.ready();
+      gate.endUse();
+      // Several idle times without a call: the open session keeps the bridge (PHASE5_PLAN decision 5).
+      await new Promise((r) => setTimeout(r, 250));
+      expect([gate.holdsLock(), client.getState(), idleReleases]).toEqual([true, "connected", 0]);
+      // The session ends (e.g. from the HUD, with no tool call): within one more idle time it goes back.
+      open = false;
+      await new Promise((r) => setTimeout(r, 150));
+      expect([gate.holdsLock(), client.getState(), idleReleases]).toEqual([false, "stopped", 1]);
+    } finally {
+      await gate.release();
+      await plugin.close();
+    }
+  });
+
   it("says why the bridge is not there when Lightroom does not answer", async () => {
     const client = new BridgeClient({ commandPort: 1, eventPort: 2, reconnectMs: 20, connectTimeoutMs: 100, readToken: () => null });
     const gate = new BridgeGate(client, async () => ({ ok: true, lock: { port: 1, release: async () => {} } }), { waitMs: 150 });

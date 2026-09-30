@@ -31,7 +31,8 @@
           "type": "string",
           "enum": [
             "accept",
-            "revert"
+            "revert",
+            "aborted"
           ]
         },
         {
@@ -2674,6 +2675,98 @@
         "page"
       ],
       "additionalProperties": false
+    },
+    "ended_by": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string",
+          "enum": [
+            "claude",
+            "hud",
+            "menu"
+          ]
+        },
+        "click_id": {
+          "type": "string"
+        },
+        "received": {
+          "type": "string"
+        },
+        "interrupted": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "done_ms": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "source"
+      ],
+      "additionalProperties": false
+    },
+    "hud_events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "at": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "enum": [
+              "hud_abort",
+              "hud_accept",
+              "hud_pick",
+              "hud_approve_pass"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "hud",
+              "menu"
+            ]
+          },
+          "click_id": {
+            "type": "string"
+          },
+          "seq_seen": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "variant": {
+            "type": "string",
+            "enum": [
+              "A",
+              "B",
+              "C"
+            ]
+          },
+          "pass": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "at",
+          "name",
+          "source",
+          "click_id",
+          "seq_seen",
+          "note"
+        ],
+        "additionalProperties": false
+      }
     }
   },
   "required": [

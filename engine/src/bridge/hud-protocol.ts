@@ -1,7 +1,7 @@
 // The HUD's part of the bridge protocol (PRD section 6.3, ARCHITECTURE section 3; PHASE5_PLAN row 4):
 // the hud_update command the engine sends, its result, and the four events the HUD's buttons and
-// menu items send. Row 5 (the engine's hud\) sends the updates and acts on the events; nothing in the
-// engine uses them before that.
+// menu items send. The engine's hud\ (row 5) sends the updates, and session\hud-actions.ts acts on
+// the events.
 //
 // The plugin side is plugin\LrC-AVG.lrplugin\HudState.lua, which checks the same fields and limits
 // (tests\lua-plugin.test.ts keeps the lists and limits equal; the smoke transcript runs payloads this
@@ -29,6 +29,7 @@ export const HUD_STAGES = [
   "begin", "pass0", "applying", "acquiring_preview", "metrics", "awaiting_claude", "awaiting_pick",
   "awaiting_approval", "converged", "target_changed", "accepted", "aborted", "ended",
 ] as const;
+export type HudStage = (typeof HUD_STAGES)[number];
 /** The stages that end a session: the HUD turns its buttons off and closes itself. */
 export const HUD_END_STAGES = ["accepted", "aborted", "ended"] as const;
 export const HUD_GUARDRAIL = ["green", "clamped", "refused", "corrected", "unmet", "undone"] as const;

@@ -5,7 +5,12 @@
 //   event socket   <- plugin send port (8766): the engine reads responses and events
 // Lifecycle (PRD FR-1.3): try both ports every 2 s until the plugin is there; send `hello`; ping
 // every 2 s; after 3 heartbeats without any inbound line, drop both sockets and reconnect.
-// Pending requests are rejected when the bridge drops, never left hanging.
+// Pending requests are rejected when the bridge drops, never left hanging. While the engine allows a
+// longer silence (`silenceAllowanceMs`, a session is open: PHASE5_PLAN row 5, decision D1), the drop
+// waits that long, and a request the silent plugin has not answered waits with it instead of timing
+// out: the plugin went silent for 11-34 s while Plug-in Manager or a menu was open [handle: vault
+// PHASE5_PLAN.md rows 3 and 4, the probes of 2026-09-29 and 2026-09-30]; that Lightroom pauses its
+// tasks then, and answers the queued commands after, is [inference].
 //
 // Derived from Automaat's server/src/plugin-socket.ts and server/src/dispatcher.ts (MIT, see
 // engine/THIRD_PARTY_NOTICES.md): the connect-then-reconnect TCP client and the id-correlated
@@ -58,8 +63,9 @@ const DEFAULTS = {
 const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 export class BridgeClient {
-  private readonly opts: Required<Omit<BridgeClientOptions, "log" | "readToken" | "readPorts" | "commandPort" | "eventPort">>;
+  private readonly opts: Required<Omit<BridgeClientOptions, "log" | "readToken" | "readPorts" | "commandPort" | "eventPort" | "silenceAllowanceMs">>;
   private readonly log: (message: string) => void;
+  private readonly silenceAllowance: () => number;
   private readonly readToken: () => string | null;
   private readonly readPorts: (token: string) => BridgePorts | null;
   private readonly givenPorts: { command: number | undefined; event: number | undefined };
@@ -88,9 +94,10 @@ export class BridgeClient {
   };
 
   constructor(options: BridgeClientOptions = {}) {
-    const { log, readToken, readPorts, commandPort, eventPort, ...rest } = options;
+    const { log, readToken, readPorts, commandPort, eventPort, silenceAllowanceMs, ...rest } = options;
     this.opts = { ...DEFAULTS, ...rest };
     this.log = log ?? (() => {});
+    this.silenceAllowance = silenceAllowanceMs ?? (() => 0);
     this.readToken = readToken ?? (() => readTokenFile());
     this.readPorts = readPorts ?? portsFileReader(this.log);
     this.givenPorts = { command: commandPort, event: eventPort };
@@ -157,23 +164,29 @@ export class BridgeClient {
     if (this.state !== "connected") {
       return Promise.reject(new BridgeError("not_connected", `bridge is ${this.state}`, true, name));
     }
-    return this.send(name, payload, options.timeoutMs ?? this.opts.requestTimeoutMs);
+    return this.send(name, payload, options.timeoutMs ?? this.opts.requestTimeoutMs, true);
   }
 
-  private async send<N extends CommandName>(name: N, payload: CommandPayloads[N], timeoutMs: number): Promise<CommandResult<N>> {
+  /** `waitOutPause`: past its timeout, the request waits while the plugin is paused (silenceAllowanceMs). Not for hello and ping. */
+  private async send<N extends CommandName>(name: N, payload: CommandPayloads[N], timeoutMs: number, waitOutPause = false): Promise<CommandResult<N>> {
     const socket = this.commandSocket;
     if (!socket) throw new BridgeError("not_connected", "no command socket", true, name);
     const id = randomUUID();
     const line = JSON.stringify({ id, type: "cmd", name, ts: new Date().toISOString(), token: this.token, payload }) + "\n";
     const raw = await new Promise<unknown>((resolve, reject) => {
-      const timer = setTimeout(() => {
+      const expire = (): void => {
+        if (waitOutPause && this.pluginPaused()) {
+          waiter.timer = setTimeout(expire, this.opts.heartbeatMs);
+          return;
+        }
         this.pending.delete(id);
         reject(new BridgeError("timeout", `${name}: no response within ${timeoutMs} ms`, true, name));
-      }, timeoutMs);
-      this.pending.set(id, { name, resolve, reject, timer });
+      };
+      const waiter: Pending = { name, resolve, reject, timer: setTimeout(expire, timeoutMs) };
+      this.pending.set(id, waiter);
       socket.write(line, (err) => {
         if (!err) return;
-        clearTimeout(timer);
+        clearTimeout(waiter.timer);
         this.pending.delete(id);
         reject(new BridgeError("disconnected", `${name}: write failed: ${err.message}`, true, name));
       });
@@ -236,12 +249,25 @@ export class BridgeClient {
     }
   }
 
+  /**
+   * While the engine allows a longer silence than three beats, the plugin is taken as paused (its
+   * bridge task not running), not gone, once it has missed a beat: no line for 1.5 heartbeats, where
+   * a running plugin answers a ping every beat [inference: pings go every heartbeatMs, a pong took
+   * 0.35 ms (median) in Phase 1, docs\reports\phase1\PHASE1.md "Numbers"]. So a request with a
+   * timeout shorter than three beats (a HUD update's 5 s) waits on too (Greptile, PR #47) [handle:
+   * tests\bridge-pause.test.ts "waits out a pause with a request whose timeout is shorter than three beats"].
+   */
+  private pluginPaused(): boolean {
+    const { heartbeatMs, missedBeats } = this.opts;
+    return this.silenceAllowance() > heartbeatMs * missedBeats && Date.now() - this.lastInbound > heartbeatMs * 1.5;
+  }
+
   private startHeartbeat(attempt: number): void {
     const { heartbeatMs, missedBeats } = this.opts;
     this.heartbeatTimer = setInterval(() => {
       if (attempt !== this.attempt) return;
       const silentMs = Date.now() - this.lastInbound;
-      if (silentMs > heartbeatMs * missedBeats) {
+      if (silentMs > Math.max(heartbeatMs * missedBeats, this.silenceAllowance())) {
         this.drop(`heartbeat: no message from the plugin for ${silentMs} ms`);
         return;
       }

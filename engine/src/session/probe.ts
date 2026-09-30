@@ -22,6 +22,7 @@ export async function probe(ctx: SessionContext, s: Session, args: ProbeArgs): P
   }
   const magnitude = args.magnitude ?? 0.5;
   const t = resolveTarget(s, args.target, "write");
+  s.work = { target: t, pass: null, note: `Probing ${args.sliders.join(", ")}` };
   await focus(ctx, s, t);
   const view = await read(ctx, s, t);
   let base: Rendered;
@@ -40,7 +41,8 @@ export async function probe(ctx: SessionContext, s: Session, args: ProbeArgs): P
   try {
     await runProbe(ctx, s, t, plan, base, { historyNames, results, outstanding });
   } catch (err) {
-    await putBack(ctx, s, t, outstanding, historyNames);
+    // After the user's Abort, the pre-session snapshot puts every slider back (hud-actions.ts).
+    if (!s.abort) await putBack(ctx, s, t, outstanding, historyNames);
     throw failed(ctx, s, "probe", err);
   }
   s.log.probes.push({ target: t.id, started: probeStarted, duration_ms: ms(started), magnitude, history_names: historyNames, results });

@@ -70,6 +70,13 @@ const selectArgs = z.object({
 });
 const sessionLogArgs = z.object({ session_id: sessionId });
 
+/** The HUD in Lightroom (PHASE5_PLAN row 5): what the user can do there, and what Claude then sees. */
+const HUD_NOTE =
+  "The LrC-AVG HUD in Lightroom opens and follows the session; there the user can Abort (the photo goes back to the " +
+  "pre-session snapshot, and a running call stops before its next write), Accept (after the running call) or Pick a copy. " +
+  "A session the user ended answers every later call with SESSION_ENDED (details: outcome, source); tell the user, and " +
+  "start a new session only if they ask. ";
+
 export const SESSION_DEFS: ToolDef[] = [
   {
     name: "lr_begin_session",
@@ -90,6 +97,7 @@ export const SESSION_DEFS: ToolDef[] = [
       "The session's numbers (max passes, variant count, clipping limits, decay, preview size and quality) come from the " +
       "arguments, then (clipping limits only) the intent, then the user's settings page in Lightroom, then the defaults; `session_settings` in the result says where each came from. " +
       "One session at a time; the session stays open until lr_end_session. " +
+      HUD_NOTE +
       MEASURED,
     schema: beginArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
@@ -116,6 +124,7 @@ export const SESSION_DEFS: ToolDef[] = [
       "Variants mode: name the copy with `target`; each copy takes ONE pass before the pick (a second is refused with " +
       "AWAITING_PICK), and the step that gives the last copy its pass returns `awaiting_pick: true` and the contact sheet: " +
       "then ask the user to pick (lr_select_variant). After the pick, steps go to the pick, whose pass count carries on. " +
+      "`hud_actions` lists what the user did in the HUD since your last call (a pick). " +
       MEASURED,
     schema: stepArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
@@ -152,7 +161,8 @@ export const SESSION_DEFS: ToolDef[] = [
       "Variants mode: continue the session on the copy the user picked (ask the user; do not pick for them). The copy is selected " +
       "in Lightroom, later lr_step calls go to it, and its pass count carries on from its own passes. The other copies stay in the " +
       "catalog as they are; the user removes them in Lightroom when they want. Returns the pick, its passes left and its last preview. " +
-      "Also accepted before every copy has had its refined pass. Does not render.",
+      "Also accepted before every copy has had its refined pass. Does not render. If the user already picked in the HUD, calling " +
+      "this with that letter confirms it (`picked_by: \"hud\"`); another letter is refused.",
     schema: selectArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     run: (tools, args) => tools.selectVariant(args as z.infer<typeof selectArgs>),
@@ -165,7 +175,7 @@ export const SESSION_DEFS: ToolDef[] = [
       "is written next to it. \"revert\": apply the pre-session snapshot, putting every setting back as it was before " +
       "lr_begin_session (the result lists any setting that still differs). Returns the log and recipe paths and the final settings. " +
       "Variants mode: \"accept\" needs a pick and keeps the pick's edit (the recipe is the pick's); \"revert\" puts the master back. " +
-      "Either way the copies stay in the catalog, listed in `copies`.",
+      "Either way the copies stay in the catalog, listed in `copies`. After the user clicked Abort in the HUD, only \"revert\" is taken.",
     schema: endArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     run: (tools, args) => tools.endSession(args as z.infer<typeof endArgs>),

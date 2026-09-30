@@ -1,7 +1,7 @@
 // The session module's types: the tool arguments and outputs, the dependencies, and the state of
 // the open session (manager.ts has the overview).
 
-import type { BridgeClient } from "../bridge/index.js";
+import type { BridgeClient, HudStage } from "../bridge/index.js";
 import type { IntentLibrary, LoadedIntent } from "../intents/index.js";
 import type { SessionLogData, SessionLogFiles } from "../log/index.js";
 import type { Metrics, Region, RegionBox } from "../metrics/index.js";
@@ -66,7 +66,39 @@ export type SessionDeps = {
   newId?: () => string;
   /** How long create_virtual_copies may take (tests shorten it); COPIES_TIMEOUT_MS by default. */
   copiesTimeoutMs?: number;
+  /** The HUD (hud\publisher.ts, PHASE5_PLAN row 5); no HUD updates without it. */
+  hud?: HudSink;
 };
+
+/**
+ * What the session loop tells the HUD. `stage` builds the whole update from the session and returns
+ * at once: it never throws and never waits for the plugin. `settle` resolves once the HUD has the
+ * session's current state, or after a short wait (before the session selects a photo the HUD must
+ * know first).
+ */
+export type HudSink = {
+  stage(s: Session, stage: HudStage, options?: { note?: string; open?: boolean }): void;
+  settle(s: Session): Promise<void>;
+};
+
+/** Where an end by the user came from: a HUD button or a menu item (PRD FR-1.1). */
+export type UserSource = "hud" | "menu";
+
+/** An Abort or Accept from the HUD or the menu, as the session keeps it until the session ends. */
+export type UserEnd = {
+  source: UserSource;
+  click_id: string;
+  /** When the engine received the event, and performance.now() then (for the log's done_ms). */
+  received: Date;
+  t0: number;
+  /** An Abort: pending until the photo is back; failed when the revert failed (a new click retries). */
+  state: "pending" | "failed";
+  /** The operation an Abort stopped, if one was running. */
+  interrupted: string | null;
+};
+
+/** A HUD action Claude has not been told of yet; the next session tool result lists it (`hud_actions`). */
+export type HudNotice = { action: "pick"; variant: VariantId; source: UserSource; at: string };
 
 /** What every session operation works with: the dependencies, with the clock and id source resolved. */
 export type SessionContext = { deps: SessionDeps; now: () => Date; newId: () => string };
@@ -146,7 +178,23 @@ export type Session = {
   regions: RegionState[];
   files: SessionLogFiles;
   log: SessionLogData;
+  /** The photo's EXIF from get_context at lr_begin_session, for the HUD (a copy shares its master's file). */
+  exif: { iso: unknown; shutter: unknown; aperture: unknown; lens: unknown };
+  /** What the running operation works on, for the HUD's stages; null between operations. */
+  work: Work | null;
+  /** The note the HUD shows once the running operation is over (e.g. after a pick from the HUD). */
+  idleNote: string | null;
+  /** An Abort from the HUD or the menu (PHASE5_PLAN decision 3): while set, writes and exports are refused. */
+  abort: UserEnd | null;
+  /** Who picked the copy (Variants mode): lr_select_variant, the HUD or the menu. */
+  pickedBy: "claude" | UserSource | null;
+  /** A HUD Pick answered and queued but not yet made (an Accept after it counts on it). */
+  pendingPick: VariantId | null;
+  notices: HudNotice[];
 };
+
+/** The photo and pass an operation works on (pass null: not a pass, e.g. a probe or a preview). */
+export type Work = { target: Target; pass: number | null; note?: string };
 
 /** The folder a dependency names: itself, or what its function gives now. */
 export function folderOf(dir: string | (() => string)): string {

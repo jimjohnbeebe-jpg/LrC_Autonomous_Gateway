@@ -26,6 +26,7 @@ export async function step(ctx: SessionContext, s: Session, args: StepArgs): Pro
   checkCanStep(s, t, args);
   const n = t.passes + 1;
   const passStarted = ctx.now().toISOString();
+  s.work = { target: t, pass: n };
   await focus(ctx, s, t);
   const beforeView = await read(ctx, s, t);
   const plan = planStep(args.settings, beforeView.settings, n, ctx.deps.map, s.decay); // ParamError: nothing written

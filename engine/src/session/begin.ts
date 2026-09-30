@@ -78,6 +78,13 @@ export async function openSession(ctx: SessionContext, args: BeginArgs): Promise
     regions: [],
     files,
     log: {} as SessionLogData,
+    exif: { iso: photo["iso"], shutter: photo["shutter"], aperture: photo["aperture"], lens: photo["lens"] },
+    work: null,
+    idleNote: null,
+    abort: null,
+    pickedBy: null,
+    pendingPick: null,
+    notices: [],
   };
   s.log = newLog(ctx, s, variantCount, args.notes ?? null);
   s.log.settings = settingsEntry(settings, page);

@@ -24,6 +24,16 @@ import type { InstanceLock, LockResult } from "./instance-lock.js";
  */
 const DEFAULT_WAIT_MS = 15000;
 
+/**
+ * While a session is open, how long the plugin may be silent before the bridge drops (the bridge
+ * client's silenceAllowanceMs; PHASE5_PLAN row 5, decision D1 [stated: Jim, 2026-09-30, "Go with
+ * recommendations"]). The plugin went silent for 11.5 s and 14.5 s while Plug-in Manager was open,
+ * and for 34 s during a menu use [handle: vault PHASE5_PLAN.md row 3 "Probe done" and row 4 "Probe
+ * 2"; a pause of its tasks is [inference]]; 60 s is the window ARCHITECTURE section 2 gives a session
+ * to resume after the bridge is lost. Outside a session the heartbeat's 6 s stays.
+ */
+export const SESSION_SILENCE_MS = 60000;
+
 export class BridgeGate {
   private readonly client: BridgeClient;
   private readonly acquire: () => Promise<LockResult>;
@@ -31,6 +41,7 @@ export class BridgeGate {
   private readonly onAcquire: () => void;
   private readonly idleReleaseMs: number | null;
   private readonly onIdleRelease: () => void;
+  private readonly keepWhile: () => boolean;
   private lock: InstanceLock | null = null;
   private starting: Promise<boolean> | null = null;
   private lastBusy: { port: number; pid: number | null } | null = null;
@@ -40,7 +51,7 @@ export class BridgeGate {
   constructor(
     client: BridgeClient,
     acquire: () => Promise<LockResult>,
-    options: { waitMs?: number; onAcquire?: () => void; idleReleaseMs?: number; onIdleRelease?: () => void } = {},
+    options: { waitMs?: number; onAcquire?: () => void; idleReleaseMs?: number; onIdleRelease?: () => void; keepWhile?: () => boolean } = {},
   ) {
     this.client = client;
     this.acquire = acquire;
@@ -48,6 +59,7 @@ export class BridgeGate {
     this.onAcquire = options.onAcquire ?? (() => {});
     this.idleReleaseMs = options.idleReleaseMs ?? null;
     this.onIdleRelease = options.onIdleRelease ?? (() => {});
+    this.keepWhile = options.keepWhile ?? (() => false);
   }
 
   /** A tool call begins: no idle release while any call runs. */
@@ -56,17 +68,27 @@ export class BridgeGate {
     this.clearIdle();
   }
 
-  /** A tool call ended: when none is left, give the lock back after `idleReleaseMs` without a new one. */
+  /**
+   * A tool call ended: when none is left, give the lock back after `idleReleaseMs` without a new one.
+   * While `keepWhile` holds (a session is open), the idle time starts again instead: the HUD's buttons
+   * reach the engine only over the bridge (PHASE5_PLAN decision 5) [handle: tests\mcp-lock.test.ts
+   * "keeps the bridge while a session is open, and gives it back an idle time after it ends"].
+   */
   endUse(): void {
     this.active = Math.max(0, this.active - 1);
     if (this.active > 0 || this.idleReleaseMs === null || !this.lock) return;
+    this.armIdle(this.idleReleaseMs);
+  }
+
+  private armIdle(idleMs: number): void {
     this.clearIdle();
     this.idleTimer = setTimeout(() => {
       this.idleTimer = null;
       if (this.active > 0 || !this.lock) return;
+      if (this.keepWhile()) return this.armIdle(idleMs);
       this.onIdleRelease();
       void this.release();
-    }, this.idleReleaseMs);
+    }, idleMs);
     this.idleTimer.unref();
   }
 

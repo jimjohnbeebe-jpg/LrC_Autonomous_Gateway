@@ -42,6 +42,13 @@ export type BridgeClientOptions = {
    * 8765/8766. Default: read defaultPortsPath() (endpoint.ts readPortsFile).
    */
   readPorts?: (token: string) => BridgePorts | null;
+  /**
+   * How long the plugin may be silent before the bridge drops, asked at every heartbeat; three missed
+   * beats (PRD FR-1.3) when shorter. While it is longer, a request the plugin left unanswered because
+   * it went silent waits on instead of timing out, until an answer or the drop (PHASE5_PLAN row 5,
+   * decision D1: a session rides out a plugin pause). Default: 0.
+   */
+  silenceAllowanceMs?: () => number;
   log?: (message: string) => void;
 };
 

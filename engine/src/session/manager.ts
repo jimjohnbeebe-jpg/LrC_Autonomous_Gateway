@@ -22,6 +22,8 @@
 // tests\session-variants-faults.test.ts]; in Lightroom it is [unverified] until PHASE4_PLAN row 10.
 // The log is rewritten after every pass (log\session-log.ts). This class holds the open session and
 // runs the operations one at a time; io.ts has what they share.
+// The HUD (PHASE5_PLAN row 5): the operations report their stages (deps.hud), and this class the
+// stage once each is over; the user's Abort, Accept and Pick run in the same queue (hud-actions.ts).
 
 import { randomUUID } from "node:crypto";
 import { ToolError } from "../mcp/errors.js";
@@ -30,7 +32,8 @@ import type { RenderedPreview } from "../preview/index.js";
 import { searchOrder } from "../settings/index.js";
 import { openSession, runPass0 } from "./begin.js";
 import { endSession, readSessionLog } from "./end.js";
-import { read, render } from "./io.js";
+import { abortedNote, endedError, idleStage, userAction, userEnded, type UserAction, type UserEnded } from "./hud-actions.js";
+import { abortError, checkAbort, read, render } from "./io.js";
 import { selectVariant } from "./pick.js";
 import { probe } from "./probe.js";
 import { setRegions } from "./regions.js";
@@ -58,8 +61,12 @@ export class SessionManager {
   private session: Session | null = null;
   /** Log files of sessions that ended in this engine run, by id. */
   private readonly ended = new Map<string, string>();
+  /** Sessions the user ended from the HUD or the menu, by id. */
+  private readonly endedByUser = new Map<string, UserEnded>();
   /** The end of the queue of session operations (exclusive()). */
   private tail: Promise<unknown> = Promise.resolve();
+  /** Operations of the queue running now (0 or 1). */
+  private running = 0;
 
   constructor(deps: SessionDeps) {
     this.ctx = { deps, now: deps.now ?? (() => new Date()), newId: deps.newId ?? (() => randomUUID()) };
@@ -91,7 +98,9 @@ export class SessionManager {
   preview(sessionId: string, longEdge: number, target?: TargetId): Promise<RenderedPreview> {
     return this.exclusive(async () => {
       const s = this.require(sessionId);
+      checkAbort(s);
       const t = resolveTarget(s, target, "read");
+      s.work = { target: t, pass: null };
       await focus(this.ctx, s, t);
       const view = await read(this.ctx, s, t);
       return (await render(this.ctx, s, t, view.settings, { longEdge })).preview;
@@ -106,7 +115,9 @@ export class SessionManager {
   withPhoto<T>(sessionId: string, target: TargetId | undefined, fn: (photo: { target: TargetId; uuid: string }) => Promise<T>): Promise<T> {
     return this.exclusive(async () => {
       const s = this.require(sessionId);
+      checkAbort(s); // the region preview renders outside render(), which checks it too
       const t = resolveTarget(s, target, "read");
+      s.work = { target: t, pass: null };
       await focus(this.ctx, s, t);
       return fn({ target: t.id, uuid: t.uuid });
     });
@@ -125,34 +136,86 @@ export class SessionManager {
       }
       const opened = await openSession(this.ctx, args);
       this.session = opened.s;
+      // The HUD opens by itself once, at lr_begin_session (PHASE5_PLAN decision 6).
+      this.ctx.deps.hud?.stage(opened.s, "begin", { open: true });
       return opened.s.mode === "variants" ? runVariants(this.ctx, opened, args) : runPass0(this.ctx, opened, args);
     });
   }
 
   step(args: StepArgs): Promise<SessionOutput> {
-    return this.exclusive(() => step(this.ctx, this.require(args.session_id), args));
+    return this.exclusive(() => this.withNotices(args.session_id, (s) => step(this.ctx, s, args)));
   }
 
   selectVariant(args: SelectArgs): Promise<SessionOutput> {
-    return this.exclusive(() => selectVariant(this.ctx, this.require(args.session_id), args));
+    return this.exclusive(() => this.withNotices(args.session_id, (s) => selectVariant(this.ctx, s, args)));
   }
 
   probe(args: ProbeArgs): Promise<SessionOutput> {
-    return this.exclusive(() => probe(this.ctx, this.require(args.session_id), args));
+    return this.exclusive(() => this.withNotices(args.session_id, (s) => probe(this.ctx, s, args)));
   }
 
   setRegions(args: RegionArgs): Promise<SessionOutput> {
-    return this.exclusive(() => setRegions(this.require(args.session_id), args));
+    return this.exclusive(() => this.withNotices(args.session_id, (s) => setRegions(s, args)));
   }
 
   end(args: EndArgs): Promise<SessionOutput> {
-    return this.exclusive(async () => {
-      const s = this.require(args.session_id);
-      const out = await endSession(this.ctx, s, args);
-      this.ended.set(s.id, s.files.logPath);
-      this.session = null;
-      return out;
-    });
+    return this.exclusive(() =>
+      this.withNotices(args.session_id, async (s) => {
+        // After the user's Abort, "revert" still ends the session (the way out when the Abort's own
+        // revert failed); "accept" is refused, as the user asked for the photo back.
+        if (s.abort && args.outcome === "accept") throw abortError(s);
+        const out = await endSession(this.ctx, s, args);
+        // A revert while the user's Abort is pending ends the session as the user's Abort (end.ts).
+        const user = args.outcome === "revert" ? s.abort : null;
+        this.close(s, user ? userEnded(this.ctx, s, "aborted", user) : null);
+        if (user) this.ctx.deps.hud?.stage(s, "aborted", { note: abortedNote(s) });
+        else if (args.outcome === "accept") this.ctx.deps.hud?.stage(s, "accepted", { note: "Claude accepted: the edit is kept." });
+        else this.ctx.deps.hud?.stage(s, "ended", { note: "Claude reverted: the photo is back as it was before the session." });
+        return out;
+      }, true),
+    );
+  }
+
+  /**
+   * A HUD or menu event (hud\events.ts): checked against the open session and acted on in its
+   * queue (hud-actions.ts). Returns the note the HUD shows at once.
+   */
+  userAction(action: UserAction): string {
+    return userAction(
+      {
+        ctx: this.ctx,
+        session: () => this.session,
+        ended: (id) => this.endedByUser.get(id),
+        busy: () => this.running > 0,
+        queue: (fn) => void this.exclusive(fn).catch(() => undefined),
+        close: (s, ended) => this.close(s, ended),
+      },
+      action,
+    );
+  }
+
+  /** SESSION_ENDED for a session the user ended from the HUD or the menu; null otherwise. */
+  userEndedError(sessionId: string): ToolError | null {
+    const ended = this.endedByUser.get(sessionId);
+    return ended && this.session?.id !== sessionId ? endedError(ended) : null;
+  }
+
+  private close(s: Session, byUser: UserEnded | null): void {
+    this.ended.set(s.id, s.files.logPath);
+    if (byUser) this.endedByUser.set(s.id, byUser);
+    if (this.session === s) this.session = null;
+  }
+
+  /**
+   * Run a session call and add the HUD actions Claude has not heard of yet (a pick) to its result.
+   * Once the user has aborted the session, only lr_end_session runs (`whileAborting`).
+   */
+  private async withNotices(sessionId: string, fn: (s: Session) => Promise<SessionOutput>, whileAborting = false): Promise<SessionOutput> {
+    const s = this.require(sessionId);
+    if (s.abort && !whileAborting) throw abortError(s);
+    const out = await fn(s);
+    if (s.notices.length === 0) return out;
+    return { ...out, json: { ...out.json, hud_actions: s.notices.splice(0) } };
   }
 
   /** lr_get_session_log (no Lightroom call). */
@@ -199,6 +262,8 @@ export class SessionManager {
 
   private require(sessionId: string): Session {
     const s = this.session;
+    const byUser = this.userEndedError(sessionId);
+    if (byUser) throw byUser;
     if (!s || s.id !== sessionId) {
       throw new ToolError(
         "SESSION_NOT_ACTIVE",
@@ -215,8 +280,30 @@ export class SessionManager {
    * after the other, each with its own pass number"].
    */
   private exclusive<T>(fn: () => Promise<T>): Promise<T> {
-    const run = this.tail.then(fn, fn);
+    const task = async (): Promise<T> => {
+      this.running++;
+      let error: unknown = undefined;
+      try {
+        return await fn();
+      } catch (err) {
+        error = err;
+        throw err;
+      } finally {
+        this.running--;
+        this.afterOperation(error);
+      }
+    };
+    const run = this.tail.then(task, task);
     this.tail = run.catch(() => undefined);
     return run;
+  }
+
+  /** Once an operation is over, the HUD's stage for the session still open (hud-actions.ts idleStage). */
+  private afterOperation(error: unknown): void {
+    const s = this.session;
+    if (!s) return;
+    s.work = null;
+    const next = idleStage(s, error);
+    if (next) this.ctx.deps.hud?.stage(s, next.stage, next.note !== undefined ? { note: next.note } : {});
   }
 }

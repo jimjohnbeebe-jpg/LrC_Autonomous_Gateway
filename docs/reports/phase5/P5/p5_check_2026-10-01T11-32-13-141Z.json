@@ -1,0 +1,3605 @@
+{
+  "check": "phase5",
+  "started_at": "2026-10-01T11:32:13.153Z",
+  "resumed": false,
+  "state_started_at": "2026-10-01T11:32:13.151Z",
+  "errors": [],
+  "hello": {
+    "protocol": 1,
+    "plugin_version": "0.6.1",
+    "lrc_version": "15.5.1",
+    "sdk_declared": 13,
+    "ports": {
+      "receive": 8765,
+      "send": 8766
+    }
+  },
+  "connect_ms": 509,
+  "known_restored": [],
+  "readbacks": [
+    {
+      "after": "your click on 20260907-_OZ80093.NEF",
+      "at": "2026-10-01T11:32:29.216Z",
+      "photos": [],
+      "unexpected": []
+    },
+    {
+      "after": "the HUD's Abort",
+      "at": "2026-10-01T11:34:52.671Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": [],
+          "against": "expected"
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "your Approve (session B)",
+      "at": "2026-10-01T11:36:08.608Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": [
+            "clarity",
+            "vibrance"
+          ],
+          "may_change": true
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "the 60 s without a click (session B)",
+      "at": "2026-10-01T11:37:08.694Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": []
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "your Abort while pass 3 waited (session B)",
+      "at": "2026-10-01T11:37:16.723Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": [],
+          "against": "expected"
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "your Pick (session C)",
+      "at": "2026-10-01T11:41:00.896Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": []
+        },
+        {
+          "photo": "copy A \"AVG landscape_golden_hour A\"",
+          "uuid": "7C16091C-8BCE-46E2-9ED5-209CCD8E8A8D",
+          "differing": []
+        },
+        {
+          "photo": "copy B \"AVG landscape_golden_hour B\"",
+          "uuid": "FD98E001-0A71-4FE7-B059-4333F1E3C405",
+          "differing": []
+        },
+        {
+          "photo": "copy C \"AVG landscape_golden_hour C\"",
+          "uuid": "2933E254-BAF2-48B2-B926-853D9F934848",
+          "differing": []
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "your Accept (session C)",
+      "at": "2026-10-01T11:41:14.485Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": []
+        },
+        {
+          "photo": "copy A \"AVG landscape_golden_hour A\"",
+          "uuid": "7C16091C-8BCE-46E2-9ED5-209CCD8E8A8D",
+          "differing": []
+        },
+        {
+          "photo": "copy B \"AVG landscape_golden_hour B\"",
+          "uuid": "FD98E001-0A71-4FE7-B059-4333F1E3C405",
+          "differing": []
+        },
+        {
+          "photo": "copy C \"AVG landscape_golden_hour C\"",
+          "uuid": "2933E254-BAF2-48B2-B926-853D9F934848",
+          "differing": []
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "Accept Session (session D)",
+      "at": "2026-10-01T11:41:46.804Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": []
+        },
+        {
+          "photo": "copy A \"AVG landscape_golden_hour A\"",
+          "uuid": "7C16091C-8BCE-46E2-9ED5-209CCD8E8A8D",
+          "differing": []
+        },
+        {
+          "photo": "copy B \"AVG landscape_golden_hour B\"",
+          "uuid": "FD98E001-0A71-4FE7-B059-4333F1E3C405",
+          "differing": []
+        },
+        {
+          "photo": "copy C \"AVG landscape_golden_hour C\"",
+          "uuid": "2933E254-BAF2-48B2-B926-853D9F934848",
+          "differing": []
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "the check's put-back of session D",
+      "at": "2026-10-01T11:41:47.355Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": [],
+          "against": "expected"
+        },
+        {
+          "photo": "copy A \"AVG landscape_golden_hour A\"",
+          "uuid": "7C16091C-8BCE-46E2-9ED5-209CCD8E8A8D",
+          "differing": []
+        },
+        {
+          "photo": "copy B \"AVG landscape_golden_hour B\"",
+          "uuid": "FD98E001-0A71-4FE7-B059-4333F1E3C405",
+          "differing": []
+        },
+        {
+          "photo": "copy C \"AVG landscape_golden_hour C\"",
+          "uuid": "2933E254-BAF2-48B2-B926-853D9F934848",
+          "differing": []
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "Abort Session (session E)",
+      "at": "2026-10-01T11:42:37.431Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": [],
+          "against": "expected"
+        },
+        {
+          "photo": "copy A \"AVG landscape_golden_hour A\"",
+          "uuid": "7C16091C-8BCE-46E2-9ED5-209CCD8E8A8D",
+          "differing": []
+        },
+        {
+          "photo": "copy B \"AVG landscape_golden_hour B\"",
+          "uuid": "FD98E001-0A71-4FE7-B059-4333F1E3C405",
+          "differing": []
+        },
+        {
+          "photo": "copy C \"AVG landscape_golden_hour C\"",
+          "uuid": "2933E254-BAF2-48B2-B926-853D9F934848",
+          "differing": []
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "your click on 20260907-_OZ80093.NEF",
+      "at": "2026-10-01T11:43:43.515Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": []
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "the approve chat",
+      "at": "2026-10-01T11:50:41.845Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": [
+            "camera_profile",
+            "clarity",
+            "exposure",
+            "grading.highlights.hue",
+            "grading.highlights.sat",
+            "grading.midtones.hue",
+            "grading.midtones.sat",
+            "highlights",
+            "hsl.blue.lum",
+            "hsl.blue.sat",
+            "shadows",
+            "temperature",
+            "texture",
+            "tint",
+            "vibrance",
+            "whites"
+          ],
+          "may_change": true
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "the check's put-back after the approve chat",
+      "at": "2026-10-01T11:50:42.471Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": [],
+          "against": "expected"
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "your click on 20250413-_OZ81430.NEF",
+      "at": "2026-10-01T11:51:57.514Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": []
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "chat 1 of 6",
+      "at": "2026-10-01T11:55:05.419Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": []
+        },
+        {
+          "photo": "20250413-_OZ81430.NEF",
+          "uuid": "23B201BF-A39A-44C6-839B-E13D4C0EA70D",
+          "differing": [
+            "blacks",
+            "camera_profile",
+            "clarity",
+            "dehaze",
+            "exposure",
+            "highlights",
+            "shadows",
+            "texture",
+            "vibrance",
+            "whites"
+          ],
+          "may_change": true
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "the check's put-back after chat 1 of 6",
+      "at": "2026-10-01T11:55:06.114Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": []
+        },
+        {
+          "photo": "20250413-_OZ81430.NEF",
+          "uuid": "23B201BF-A39A-44C6-839B-E13D4C0EA70D",
+          "differing": [],
+          "against": "expected"
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "your click on 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+      "at": "2026-10-01T11:55:28.020Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": []
+        },
+        {
+          "photo": "20250413-_OZ81430.NEF",
+          "uuid": "23B201BF-A39A-44C6-839B-E13D4C0EA70D",
+          "differing": []
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "chat 2 of 6",
+      "at": "2026-10-01T11:58:55.636Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": []
+        },
+        {
+          "photo": "20250413-_OZ81430.NEF",
+          "uuid": "23B201BF-A39A-44C6-839B-E13D4C0EA70D",
+          "differing": []
+        },
+        {
+          "photo": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+          "uuid": "995935D6-F379-4DDE-A8DC-737465C4A52E",
+          "differing": [
+            "blacks",
+            "camera_profile",
+            "exposure",
+            "grading.highlights.hue",
+            "grading.highlights.sat",
+            "grading.midtones.hue",
+            "grading.midtones.sat",
+            "lens.ca_remove",
+            "lens.profile_enable",
+            "shadows",
+            "temperature",
+            "texture",
+            "tint",
+            "vibrance"
+          ],
+          "may_change": true
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "the check's put-back after chat 2 of 6",
+      "at": "2026-10-01T11:58:56.238Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": []
+        },
+        {
+          "photo": "20250413-_OZ81430.NEF",
+          "uuid": "23B201BF-A39A-44C6-839B-E13D4C0EA70D",
+          "differing": []
+        },
+        {
+          "photo": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+          "uuid": "995935D6-F379-4DDE-A8DC-737465C4A52E",
+          "differing": [],
+          "against": "expected"
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "your click on 20260110-_Z8A0173.NEF",
+      "at": "2026-10-01T11:59:14.543Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": []
+        },
+        {
+          "photo": "20250413-_OZ81430.NEF",
+          "uuid": "23B201BF-A39A-44C6-839B-E13D4C0EA70D",
+          "differing": []
+        },
+        {
+          "photo": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+          "uuid": "995935D6-F379-4DDE-A8DC-737465C4A52E",
+          "differing": []
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "chat 3 of 6",
+      "at": "2026-10-01T12:03:39.264Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": []
+        },
+        {
+          "photo": "20250413-_OZ81430.NEF",
+          "uuid": "23B201BF-A39A-44C6-839B-E13D4C0EA70D",
+          "differing": []
+        },
+        {
+          "photo": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+          "uuid": "995935D6-F379-4DDE-A8DC-737465C4A52E",
+          "differing": []
+        },
+        {
+          "photo": "20260110-_Z8A0173.NEF",
+          "uuid": "4C1ADCA6-1BC5-442D-B5AE-4B2CCD7BCE67",
+          "differing": [
+            "camera_profile",
+            "clarity",
+            "grading.highlights.hue",
+            "grading.highlights.sat",
+            "grading.midtones.hue",
+            "grading.midtones.sat",
+            "highlights",
+            "shadows",
+            "temperature",
+            "texture",
+            "vibrance"
+          ],
+          "may_change": true
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "the check's put-back after chat 3 of 6",
+      "at": "2026-10-01T12:03:39.835Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": []
+        },
+        {
+          "photo": "20250413-_OZ81430.NEF",
+          "uuid": "23B201BF-A39A-44C6-839B-E13D4C0EA70D",
+          "differing": []
+        },
+        {
+          "photo": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+          "uuid": "995935D6-F379-4DDE-A8DC-737465C4A52E",
+          "differing": []
+        },
+        {
+          "photo": "20260110-_Z8A0173.NEF",
+          "uuid": "4C1ADCA6-1BC5-442D-B5AE-4B2CCD7BCE67",
+          "differing": [],
+          "against": "expected"
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "your click on 20260906-_OZ80005.NEF",
+      "at": "2026-10-01T12:03:56.848Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": []
+        },
+        {
+          "photo": "20250413-_OZ81430.NEF",
+          "uuid": "23B201BF-A39A-44C6-839B-E13D4C0EA70D",
+          "differing": []
+        },
+        {
+          "photo": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+          "uuid": "995935D6-F379-4DDE-A8DC-737465C4A52E",
+          "differing": []
+        },
+        {
+          "photo": "20260110-_Z8A0173.NEF",
+          "uuid": "4C1ADCA6-1BC5-442D-B5AE-4B2CCD7BCE67",
+          "differing": []
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "chat 4 of 6",
+      "at": "2026-10-01T12:08:49.577Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": []
+        },
+        {
+          "photo": "20250413-_OZ81430.NEF",
+          "uuid": "23B201BF-A39A-44C6-839B-E13D4C0EA70D",
+          "differing": []
+        },
+        {
+          "photo": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+          "uuid": "995935D6-F379-4DDE-A8DC-737465C4A52E",
+          "differing": []
+        },
+        {
+          "photo": "20260110-_Z8A0173.NEF",
+          "uuid": "4C1ADCA6-1BC5-442D-B5AE-4B2CCD7BCE67",
+          "differing": []
+        },
+        {
+          "photo": "20260906-_OZ80005.NEF",
+          "uuid": "B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39",
+          "differing": [
+            "camera_profile",
+            "clarity",
+            "grading.highlights.hue",
+            "grading.highlights.sat",
+            "grading.midtones.hue",
+            "grading.midtones.sat",
+            "highlights",
+            "hsl.aqua.sat",
+            "hsl.blue.lum",
+            "hsl.blue.sat",
+            "hsl.orange.hue",
+            "hsl.orange.sat",
+            "hsl.red.lum",
+            "hsl.red.sat",
+            "hsl.yellow.hue",
+            "shadows",
+            "temperature",
+            "texture",
+            "tint",
+            "vibrance"
+          ],
+          "may_change": true
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "the check's put-back after chat 4 of 6",
+      "at": "2026-10-01T12:08:50.339Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": []
+        },
+        {
+          "photo": "20250413-_OZ81430.NEF",
+          "uuid": "23B201BF-A39A-44C6-839B-E13D4C0EA70D",
+          "differing": []
+        },
+        {
+          "photo": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+          "uuid": "995935D6-F379-4DDE-A8DC-737465C4A52E",
+          "differing": []
+        },
+        {
+          "photo": "20260110-_Z8A0173.NEF",
+          "uuid": "4C1ADCA6-1BC5-442D-B5AE-4B2CCD7BCE67",
+          "differing": []
+        },
+        {
+          "photo": "20260906-_OZ80005.NEF",
+          "uuid": "B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39",
+          "differing": [],
+          "against": "expected"
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "your click on 20260907-_OZ80093.NEF",
+      "at": "2026-10-01T12:09:07.657Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": []
+        },
+        {
+          "photo": "20250413-_OZ81430.NEF",
+          "uuid": "23B201BF-A39A-44C6-839B-E13D4C0EA70D",
+          "differing": []
+        },
+        {
+          "photo": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+          "uuid": "995935D6-F379-4DDE-A8DC-737465C4A52E",
+          "differing": []
+        },
+        {
+          "photo": "20260110-_Z8A0173.NEF",
+          "uuid": "4C1ADCA6-1BC5-442D-B5AE-4B2CCD7BCE67",
+          "differing": []
+        },
+        {
+          "photo": "20260906-_OZ80005.NEF",
+          "uuid": "B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39",
+          "differing": []
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "chat 5 of 6",
+      "at": "2026-10-01T12:12:04.848Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": [
+            "blacks",
+            "camera_profile",
+            "clarity",
+            "dehaze",
+            "highlights",
+            "hsl.blue.sat",
+            "hsl.orange.sat",
+            "shadows",
+            "temperature",
+            "texture",
+            "tint",
+            "vibrance"
+          ],
+          "may_change": true
+        },
+        {
+          "photo": "20250413-_OZ81430.NEF",
+          "uuid": "23B201BF-A39A-44C6-839B-E13D4C0EA70D",
+          "differing": []
+        },
+        {
+          "photo": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+          "uuid": "995935D6-F379-4DDE-A8DC-737465C4A52E",
+          "differing": []
+        },
+        {
+          "photo": "20260110-_Z8A0173.NEF",
+          "uuid": "4C1ADCA6-1BC5-442D-B5AE-4B2CCD7BCE67",
+          "differing": []
+        },
+        {
+          "photo": "20260906-_OZ80005.NEF",
+          "uuid": "B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39",
+          "differing": []
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "the check's put-back after chat 5 of 6",
+      "at": "2026-10-01T12:12:05.470Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": [],
+          "against": "expected"
+        },
+        {
+          "photo": "20250413-_OZ81430.NEF",
+          "uuid": "23B201BF-A39A-44C6-839B-E13D4C0EA70D",
+          "differing": []
+        },
+        {
+          "photo": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+          "uuid": "995935D6-F379-4DDE-A8DC-737465C4A52E",
+          "differing": []
+        },
+        {
+          "photo": "20260110-_Z8A0173.NEF",
+          "uuid": "4C1ADCA6-1BC5-442D-B5AE-4B2CCD7BCE67",
+          "differing": []
+        },
+        {
+          "photo": "20260906-_OZ80005.NEF",
+          "uuid": "B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39",
+          "differing": []
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "your click on 20260907-_OZ80099.NEF",
+      "at": "2026-10-01T12:12:18.173Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": []
+        },
+        {
+          "photo": "20250413-_OZ81430.NEF",
+          "uuid": "23B201BF-A39A-44C6-839B-E13D4C0EA70D",
+          "differing": []
+        },
+        {
+          "photo": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+          "uuid": "995935D6-F379-4DDE-A8DC-737465C4A52E",
+          "differing": []
+        },
+        {
+          "photo": "20260110-_Z8A0173.NEF",
+          "uuid": "4C1ADCA6-1BC5-442D-B5AE-4B2CCD7BCE67",
+          "differing": []
+        },
+        {
+          "photo": "20260906-_OZ80005.NEF",
+          "uuid": "B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39",
+          "differing": []
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "chat 6 of 6",
+      "at": "2026-10-01T12:16:49.923Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": []
+        },
+        {
+          "photo": "20250413-_OZ81430.NEF",
+          "uuid": "23B201BF-A39A-44C6-839B-E13D4C0EA70D",
+          "differing": []
+        },
+        {
+          "photo": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+          "uuid": "995935D6-F379-4DDE-A8DC-737465C4A52E",
+          "differing": []
+        },
+        {
+          "photo": "20260110-_Z8A0173.NEF",
+          "uuid": "4C1ADCA6-1BC5-442D-B5AE-4B2CCD7BCE67",
+          "differing": []
+        },
+        {
+          "photo": "20260906-_OZ80005.NEF",
+          "uuid": "B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39",
+          "differing": []
+        },
+        {
+          "photo": "20260907-_OZ80099.NEF",
+          "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+          "differing": [
+            "blacks",
+            "camera_profile",
+            "clarity",
+            "dehaze",
+            "exposure",
+            "highlights",
+            "hsl.green.hue",
+            "hsl.green.sat",
+            "hsl.yellow.hue",
+            "shadows",
+            "temperature",
+            "texture",
+            "tint",
+            "vibrance"
+          ],
+          "may_change": true
+        }
+      ],
+      "unexpected": []
+    },
+    {
+      "after": "the check's put-back after chat 6 of 6",
+      "at": "2026-10-01T12:16:50.629Z",
+      "photos": [
+        {
+          "photo": "20260907-_OZ80093.NEF",
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "differing": []
+        },
+        {
+          "photo": "20250413-_OZ81430.NEF",
+          "uuid": "23B201BF-A39A-44C6-839B-E13D4C0EA70D",
+          "differing": []
+        },
+        {
+          "photo": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+          "uuid": "995935D6-F379-4DDE-A8DC-737465C4A52E",
+          "differing": []
+        },
+        {
+          "photo": "20260110-_Z8A0173.NEF",
+          "uuid": "4C1ADCA6-1BC5-442D-B5AE-4B2CCD7BCE67",
+          "differing": []
+        },
+        {
+          "photo": "20260906-_OZ80005.NEF",
+          "uuid": "B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39",
+          "differing": []
+        },
+        {
+          "photo": "20260907-_OZ80099.NEF",
+          "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+          "differing": [],
+          "against": "expected"
+        }
+      ],
+      "unexpected": []
+    }
+  ],
+  "page_at_start": {
+    "want": {
+      "mode": "autonomous",
+      "max_passes": 4
+    },
+    "reads": [
+      {
+        "at": "2026-10-01T11:32:29.227Z",
+        "read": true,
+        "mode": "autonomous",
+        "max_passes": 4,
+        "note": null,
+        "problems": []
+      }
+    ]
+  },
+  "session_a": {
+    "ok": true,
+    "begin": {
+      "session_id": "faa1242e-4ded-4485-b997-be4bf4ec105d",
+      "session_settings": {
+        "approval": "autonomous",
+        "long_edge": 1600,
+        "quality": 75,
+        "from": {
+          "approval": "page",
+          "max_passes": "page",
+          "variant_count": "page",
+          "long_edge": "page",
+          "quality": "page",
+          "clip_high_pct": "page",
+          "clip_low_pct": "page",
+          "decay": "page"
+        },
+        "page": {
+          "read": true,
+          "note": null,
+          "problems": []
+        },
+        "decay": [
+          1,
+          0.6,
+          0.4,
+          0.25
+        ]
+      },
+      "snapshot": {
+        "name": "AVG pre-session 2026-10-01T11:32:29.341Z",
+        "id": "59373302-49AB-4C4A-B520-444C35E9B6D8"
+      }
+    },
+    "hud_shown_line": "2026-10-01 04:32:29.642 INFO  hud: shown",
+    "pass_1": {
+      "pass": "1/4",
+      "history_names": [
+        "AVG faa124 pass 1/4"
+      ]
+    },
+    "pause": {
+      "ok": true,
+      "seen": true,
+      "page_ok": true,
+      "silent_from": "2026-10-01T11:33:09.709Z",
+      "answered_again": "2026-10-01T11:33:12.241Z",
+      "silence_ms": 2532,
+      "longer_than_heartbeat": false,
+      "drops": 0,
+      "last_drop_reason": null,
+      "pass_2": {
+        "ok": true,
+        "pass": "2/4",
+        "ms": 4680
+      }
+    },
+    "ac2": {
+      "ok": true,
+      "outcome": "aborted",
+      "source": "hud",
+      "click_id": "B7620329-BDA9-4778-9E52-0E2A7C11586E",
+      "click_sent": "2026-10-01T11:34:52.256Z",
+      "received": "2026-10-01T11:34:52.257Z",
+      "done_ms": 304.8,
+      "click_to_end_ms": 306,
+      "interrupted": null,
+      "revert": {
+        "ms": 301.5,
+        "differing": []
+      },
+      "hud_events": [
+        {
+          "at": "2026-10-01T11:34:52.257Z",
+          "name": "hud_abort",
+          "source": "hud",
+          "click_id": "B7620329-BDA9-4778-9E52-0E2A7C11586E",
+          "seq_seen": 15,
+          "note": "Abort: putting the photo back as it was before the session."
+        }
+      ],
+      "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\P5\\p5_sessions_2026-10-01T11-32-13-141Z\\20261001-faa124.json",
+      "photo_back": true,
+      "within_budget": true
+    },
+    "stages": [
+      "begin",
+      "acquiring_preview",
+      "metrics",
+      "applying",
+      "acquiring_preview",
+      "metrics",
+      "awaiting_claude",
+      "applying",
+      "acquiring_preview",
+      "metrics",
+      "awaiting_claude",
+      "applying",
+      "acquiring_preview",
+      "metrics",
+      "awaiting_claude",
+      "aborted"
+    ],
+    "hud_closed_itself": true,
+    "jim": {
+      "opened": "y",
+      "followed": "y",
+      "aborted": "y"
+    }
+  },
+  "page_after_visit": {
+    "want": {
+      "mode": "approve_each_pass",
+      "max_passes": 4
+    },
+    "reads": [
+      {
+        "at": "2026-10-01T11:34:41.741Z",
+        "read": true,
+        "mode": "approve_each_pass",
+        "max_passes": 4,
+        "note": null,
+        "problems": []
+      }
+    ]
+  },
+  "session_b": {
+    "ok": true,
+    "begin": {
+      "session_id": "3133cdeb-8483-4b64-85ca-8c281a7ed5c9",
+      "session_settings": {
+        "approval": "approve_each_pass",
+        "long_edge": 1600,
+        "quality": 75,
+        "from": {
+          "approval": "page",
+          "max_passes": "page",
+          "variant_count": "page",
+          "long_edge": "page",
+          "quality": "page",
+          "clip_high_pct": "page",
+          "clip_low_pct": "page",
+          "decay": "page"
+        },
+        "page": {
+          "read": true,
+          "note": null,
+          "problems": []
+        },
+        "decay": [
+          1,
+          0.6,
+          0.4,
+          0.25
+        ],
+        "approval_note": "approve_each_pass: the user approves each pass they have seen. Pass 1 needs no approval; from pass 2 on, lr_step first waits up to 60 s for the user's Approve of the pass before (the LrC-AVG HUD's Approve button, or lr_approve_pass after the user approved in chat), else returns AWAITING_APPROVAL. Show the user each pass. Variants mode: the pick approves the pass it was picked at."
+      }
+    },
+    "pass_1": {
+      "pass": "1/4",
+      "approval": null
+    },
+    "approve": {
+      "ok": true,
+      "pass": "2/4",
+      "history_names": [
+        "AVG 3133cd pass 2/4"
+      ],
+      "approval": {
+        "pass": 1,
+        "by": "hud",
+        "waited_ms": 19028
+      }
+    },
+    "wait_in_vain": {
+      "ok": true,
+      "code": "AWAITING_APPROVAL",
+      "recoverable": true,
+      "waited_ms": 60001,
+      "nothing_written": true
+    },
+    "abort_while_waiting": {
+      "step": {
+        "code": "SESSION_ENDED",
+        "message": "The user aborted session 3133cdeb-8483-4b64-85ca-8c281a7ed5c9 from the HUD; nothing more is written. The engine is putting the photo back as it was before the session. Start a new session only if the user asks.",
+        "recoverable": false,
+        "details": {
+          "session_id": "3133cdeb-8483-4b64-85ca-8c281a7ed5c9",
+          "outcome": "aborted",
+          "source": "hud",
+          "state": "reverting"
+        }
+      },
+      "end": {
+        "ok": true,
+        "outcome": "aborted",
+        "source": "hud",
+        "click_id": "0A11ED87-815F-4164-8DF3-A59DC5829C03",
+        "click_sent": "2026-10-01T11:37:16.182Z",
+        "received": "2026-10-01T11:37:16.182Z",
+        "done_ms": 406.1,
+        "click_to_end_ms": 406,
+        "interrupted": "step 3 (waiting for approval)",
+        "revert": {
+          "ms": 402.9,
+          "differing": []
+        },
+        "hud_events": [
+          {
+            "at": "2026-10-01T11:36:05.353Z",
+            "name": "hud_approve_pass",
+            "source": "hud",
+            "click_id": "078D63E9-37C5-4327-9D7E-83AA033D43A3",
+            "seq_seen": 12,
+            "pass": 1,
+            "note": "Approved pass 1: Claude's next pass goes ahead."
+          },
+          {
+            "at": "2026-10-01T11:37:16.182Z",
+            "name": "hud_abort",
+            "source": "hud",
+            "click_id": "0A11ED87-815F-4164-8DF3-A59DC5829C03",
+            "seq_seen": 20,
+            "note": "Abort: stopping before the next write or preview, then putting the photo back."
+          }
+        ],
+        "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\P5\\p5_sessions_2026-10-01T11-32-13-141Z\\20261001-3133cd.json",
+        "photo_back": true,
+        "within_budget": true
+      },
+      "interrupted_wait": true
+    },
+    "jim": {
+      "approve_button": "y"
+    }
+  },
+  "session_c": {
+    "ok": true,
+    "begin": {
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "variants": [
+        {
+          "id": "A",
+          "label": "natural",
+          "uuid": "7C16091C-8BCE-46E2-9ED5-209CCD8E8A8D",
+          "copy_name": "AVG landscape_golden_hour A"
+        },
+        {
+          "id": "B",
+          "label": "dramatic",
+          "uuid": "FD98E001-0A71-4FE7-B059-4333F1E3C405",
+          "copy_name": "AVG landscape_golden_hour B"
+        },
+        {
+          "id": "C",
+          "label": "soft",
+          "uuid": "2933E254-BAF2-48B2-B926-853D9F934848",
+          "copy_name": "AVG landscape_golden_hour C"
+        }
+      ]
+    },
+    "visibly_different": "y",
+    "picked": "C",
+    "after_pick": {
+      "ok": true,
+      "target": "C",
+      "pass": "2/4",
+      "approval": {
+        "pass": 1,
+        "by": "pick",
+        "waited_ms": 0
+      },
+      "hud_actions": [
+        {
+          "action": "pick",
+          "variant": "C",
+          "source": "hud",
+          "at": "2026-10-01T11:41:00.779Z"
+        }
+      ]
+    },
+    "accept": {
+      "ok": true,
+      "outcome": "accept",
+      "source": "hud",
+      "click_id": "B7FCC49F-A6FE-4CF0-A835-4C14C3A8C226",
+      "click_sent": "2026-10-01T11:41:14.229Z",
+      "received": "2026-10-01T11:41:14.230Z",
+      "done_ms": 15.1,
+      "click_to_end_ms": 16,
+      "interrupted": null,
+      "revert": null,
+      "hud_events": [
+        {
+          "at": "2026-10-01T11:41:00.760Z",
+          "name": "hud_pick",
+          "source": "hud",
+          "click_id": "3D4B312C-58C2-456D-8A66-7DF3117384E5",
+          "seq_seen": 33,
+          "variant": "C",
+          "note": "Pick C: selecting copy C."
+        },
+        {
+          "at": "2026-10-01T11:41:14.230Z",
+          "name": "hud_accept",
+          "source": "hud",
+          "click_id": "B7FCC49F-A6FE-4CF0-A835-4C14C3A8C226",
+          "seq_seen": 39,
+          "note": "Accept: keeping the edit."
+        }
+      ],
+      "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\P5\\p5_sessions_2026-10-01T11-32-13-141Z\\20261001-d4247b.json",
+      "read_back_ok": true
+    },
+    "verified": {
+      "ok": true,
+      "log_picked": "C",
+      "steps_on_pick": 2,
+      "last_step_on_pick": true,
+      "recipe_photo": "2933E254-BAF2-48B2-B926-853D9F934848",
+      "master_differing": []
+    }
+  },
+  "menu": {
+    "ok": true,
+    "accept": {
+      "ok": true,
+      "outcome": "accept",
+      "source": "menu",
+      "click_id": "5D2FF0F0-70D8-4BF3-ADBC-D62CBA66A862",
+      "click_sent": "2026-10-01T11:41:46.474Z",
+      "received": "2026-10-01T11:41:46.475Z",
+      "done_ms": 43.8,
+      "click_to_end_ms": 45,
+      "interrupted": null,
+      "revert": null,
+      "hud_events": [
+        {
+          "at": "2026-10-01T11:41:46.475Z",
+          "name": "hud_accept",
+          "source": "menu",
+          "click_id": "5D2FF0F0-70D8-4BF3-ADBC-D62CBA66A862",
+          "seq_seen": 11,
+          "note": "Accept: keeping the edit."
+        }
+      ],
+      "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\P5\\p5_sessions_2026-10-01T11-32-13-141Z\\20261001-6b9f84.json",
+      "read_back_ok": true,
+      "put_back": true
+    },
+    "show_hud": {
+      "ok": true,
+      "line": "2026-10-01 04:42:10.250 INFO  hud: shown"
+    },
+    "abort": {
+      "ok": true,
+      "outcome": "aborted",
+      "source": "menu",
+      "click_id": "4C83E9F1-8B32-4609-B76C-49BD30EE0D49",
+      "click_sent": "2026-10-01T11:42:36.814Z",
+      "received": "2026-10-01T11:42:36.815Z",
+      "done_ms": 387.8,
+      "click_to_end_ms": 389,
+      "interrupted": null,
+      "revert": {
+        "ms": 384.8,
+        "differing": []
+      },
+      "hud_events": [
+        {
+          "at": "2026-10-01T11:42:36.815Z",
+          "name": "hud_abort",
+          "source": "menu",
+          "click_id": "4C83E9F1-8B32-4609-B76C-49BD30EE0D49",
+          "seq_seen": 11,
+          "note": "Abort: putting the photo back as it was before the session."
+        }
+      ],
+      "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\P5\\p5_sessions_2026-10-01T11-32-13-141Z\\20261001-9b1dd4.json",
+      "photo_back": true,
+      "within_budget": true
+    }
+  },
+  "copies_cleanup": {
+    "copies": [
+      {
+        "uuid": "7C16091C-8BCE-46E2-9ED5-209CCD8E8A8D",
+        "copy_name": "AVG landscape_golden_hour A",
+        "made_by": "variants",
+        "state": "gone"
+      },
+      {
+        "uuid": "FD98E001-0A71-4FE7-B059-4333F1E3C405",
+        "copy_name": "AVG landscape_golden_hour B",
+        "made_by": "variants",
+        "state": "gone"
+      },
+      {
+        "uuid": "2933E254-BAF2-48B2-B926-853D9F934848",
+        "copy_name": "AVG landscape_golden_hour C",
+        "made_by": "variants",
+        "state": "gone"
+      }
+    ],
+    "all_gone": true
+  },
+  "photo_after_part1": {
+    "differing": []
+  },
+  "page_for_approve_chat": {
+    "want": {
+      "mode": "approve_each_pass",
+      "max_passes": 4
+    },
+    "reads": [
+      {
+        "at": "2026-10-01T11:43:25.671Z",
+        "read": true,
+        "mode": "approve_each_pass",
+        "max_passes": 4,
+        "note": null,
+        "problems": []
+      }
+    ]
+  },
+  "bridge_back": [
+    {
+      "chat": "the approve chat",
+      "idle_release": true,
+      "waited_ms": 3,
+      "ok": true
+    },
+    {
+      "chat": "chat 1 of 6",
+      "idle_release": true,
+      "waited_ms": 21282,
+      "ok": true
+    },
+    {
+      "chat": "chat 2 of 6",
+      "idle_release": true,
+      "waited_ms": 23395,
+      "ok": true
+    },
+    {
+      "chat": "chat 3 of 6",
+      "idle_release": true,
+      "waited_ms": 18654,
+      "ok": true
+    },
+    {
+      "chat": "chat 4 of 6",
+      "idle_release": true,
+      "waited_ms": 42831,
+      "ok": true
+    },
+    {
+      "chat": "chat 5 of 6",
+      "idle_release": true,
+      "waited_ms": 42314,
+      "ok": true
+    },
+    {
+      "chat": "chat 6 of 6",
+      "idle_release": true,
+      "waited_ms": 44417,
+      "ok": true
+    }
+  ],
+  "page_for_chats": {
+    "want": {
+      "mode": "autonomous",
+      "max_passes": 4
+    },
+    "reads": [
+      {
+        "at": "2026-10-01T11:50:42.539Z",
+        "read": true,
+        "mode": "approve_each_pass",
+        "max_passes": 4,
+        "note": null,
+        "problems": []
+      },
+      {
+        "at": "2026-10-01T11:51:33.810Z",
+        "read": true,
+        "mode": "autonomous",
+        "max_passes": 4,
+        "note": null,
+        "problems": []
+      }
+    ]
+  },
+  "bridge_stats": {
+    "connects": 9,
+    "connect_failures": 5,
+    "last_connect_error": "127.0.0.1:8765: ECONNREFUSED",
+    "drops": 1,
+    "last_drop_reason": "heartbeat: no message from the plugin for 6012 ms",
+    "malformed_lines": 0,
+    "unknown_response_ids": 3,
+    "ports": {
+      "command": 8765,
+      "event": 8766,
+      "from": "ports file"
+    }
+  },
+  "hud_stats": {
+    "sent": 106,
+    "taken": 106,
+    "not_taken": 0,
+    "failed": 0,
+    "invalid": 0
+  },
+  "hud_trace": [
+    {
+      "at": "2026-10-01T11:32:29.519Z",
+      "session_id": "faa1242e-4ded-4485-b997-be4bf4ec105d",
+      "seq": 1,
+      "stage": "begin",
+      "open": true,
+      "ms": 15.5,
+      "applied": true,
+      "opened": true
+    },
+    {
+      "at": "2026-10-01T11:32:29.539Z",
+      "session_id": "faa1242e-4ded-4485-b997-be4bf4ec105d",
+      "seq": 2,
+      "stage": "acquiring_preview",
+      "open": false,
+      "ms": 146.1,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:32:33.945Z",
+      "session_id": "faa1242e-4ded-4485-b997-be4bf4ec105d",
+      "seq": 3,
+      "stage": "metrics",
+      "open": false,
+      "ms": 2.6,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:32:33.948Z",
+      "session_id": "faa1242e-4ded-4485-b997-be4bf4ec105d",
+      "seq": 4,
+      "stage": "applying",
+      "open": false,
+      "ms": 7.1,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:32:34.294Z",
+      "session_id": "faa1242e-4ded-4485-b997-be4bf4ec105d",
+      "seq": 5,
+      "stage": "acquiring_preview",
+      "open": false,
+      "ms": 90.9,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:32:38.074Z",
+      "session_id": "faa1242e-4ded-4485-b997-be4bf4ec105d",
+      "seq": 6,
+      "stage": "metrics",
+      "open": false,
+      "ms": 16.9,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:32:38.091Z",
+      "session_id": "faa1242e-4ded-4485-b997-be4bf4ec105d",
+      "seq": 7,
+      "stage": "awaiting_claude",
+      "open": false,
+      "ms": 11.8,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:32:38.116Z",
+      "session_id": "faa1242e-4ded-4485-b997-be4bf4ec105d",
+      "seq": 8,
+      "stage": "applying",
+      "open": false,
+      "ms": 80.6,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:32:38.542Z",
+      "session_id": "faa1242e-4ded-4485-b997-be4bf4ec105d",
+      "seq": 9,
+      "stage": "acquiring_preview",
+      "open": false,
+      "ms": 81.8,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:32:41.786Z",
+      "session_id": "faa1242e-4ded-4485-b997-be4bf4ec105d",
+      "seq": 10,
+      "stage": "metrics",
+      "open": false,
+      "ms": 28.3,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:32:41.815Z",
+      "session_id": "faa1242e-4ded-4485-b997-be4bf4ec105d",
+      "seq": 11,
+      "stage": "awaiting_claude",
+      "open": false,
+      "ms": 7.2,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:33:12.254Z",
+      "session_id": "faa1242e-4ded-4485-b997-be4bf4ec105d",
+      "seq": 12,
+      "stage": "applying",
+      "open": false,
+      "ms": 61.4,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:33:12.626Z",
+      "session_id": "faa1242e-4ded-4485-b997-be4bf4ec105d",
+      "seq": 13,
+      "stage": "acquiring_preview",
+      "open": false,
+      "ms": 87,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:33:15.894Z",
+      "session_id": "faa1242e-4ded-4485-b997-be4bf4ec105d",
+      "seq": 14,
+      "stage": "metrics",
+      "open": false,
+      "ms": 15.8,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:33:15.909Z",
+      "session_id": "faa1242e-4ded-4485-b997-be4bf4ec105d",
+      "seq": 15,
+      "stage": "awaiting_claude",
+      "open": false,
+      "ms": 3.8,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:34:52.259Z",
+      "session_id": "faa1242e-4ded-4485-b997-be4bf4ec105d",
+      "seq": 16,
+      "stage": "awaiting_claude",
+      "open": false,
+      "ms": 4.8,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:34:52.564Z",
+      "session_id": "faa1242e-4ded-4485-b997-be4bf4ec105d",
+      "seq": 17,
+      "stage": "aborted",
+      "open": false,
+      "ms": 90.7,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:35:35.676Z",
+      "session_id": "3133cdeb-8483-4b64-85ca-8c281a7ed5c9",
+      "seq": 1,
+      "stage": "begin",
+      "open": true,
+      "ms": 5.7,
+      "applied": true,
+      "opened": true
+    },
+    {
+      "at": "2026-10-01T11:35:35.682Z",
+      "session_id": "3133cdeb-8483-4b64-85ca-8c281a7ed5c9",
+      "seq": 2,
+      "stage": "acquiring_preview",
+      "open": false,
+      "ms": 128.9,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:35:39.478Z",
+      "session_id": "3133cdeb-8483-4b64-85ca-8c281a7ed5c9",
+      "seq": 3,
+      "stage": "metrics",
+      "open": false,
+      "ms": 17.9,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:35:39.496Z",
+      "session_id": "3133cdeb-8483-4b64-85ca-8c281a7ed5c9",
+      "seq": 4,
+      "stage": "applying",
+      "open": false,
+      "ms": 3.9,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:35:39.837Z",
+      "session_id": "3133cdeb-8483-4b64-85ca-8c281a7ed5c9",
+      "seq": 5,
+      "stage": "acquiring_preview",
+      "open": false,
+      "ms": 101.7,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:35:43.106Z",
+      "session_id": "3133cdeb-8483-4b64-85ca-8c281a7ed5c9",
+      "seq": 6,
+      "stage": "metrics",
+      "open": false,
+      "ms": 29.9,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:35:43.136Z",
+      "session_id": "3133cdeb-8483-4b64-85ca-8c281a7ed5c9",
+      "seq": 7,
+      "stage": "awaiting_claude",
+      "open": false,
+      "ms": 15.7,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:35:43.161Z",
+      "session_id": "3133cdeb-8483-4b64-85ca-8c281a7ed5c9",
+      "seq": 8,
+      "stage": "applying",
+      "open": false,
+      "ms": 3.9,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:35:43.543Z",
+      "session_id": "3133cdeb-8483-4b64-85ca-8c281a7ed5c9",
+      "seq": 9,
+      "stage": "acquiring_preview",
+      "open": false,
+      "ms": 87.6,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:35:46.281Z",
+      "session_id": "3133cdeb-8483-4b64-85ca-8c281a7ed5c9",
+      "seq": 10,
+      "stage": "metrics",
+      "open": false,
+      "ms": 24.7,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:35:46.306Z",
+      "session_id": "3133cdeb-8483-4b64-85ca-8c281a7ed5c9",
+      "seq": 11,
+      "stage": "awaiting_approval",
+      "open": false,
+      "ms": 10.9,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:35:46.329Z",
+      "session_id": "3133cdeb-8483-4b64-85ca-8c281a7ed5c9",
+      "seq": 12,
+      "stage": "awaiting_approval",
+      "open": false,
+      "ms": 84.4,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:36:05.356Z",
+      "session_id": "3133cdeb-8483-4b64-85ca-8c281a7ed5c9",
+      "seq": 13,
+      "stage": "awaiting_approval",
+      "open": false,
+      "ms": 4.2,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:36:05.366Z",
+      "session_id": "3133cdeb-8483-4b64-85ca-8c281a7ed5c9",
+      "seq": 14,
+      "stage": "applying",
+      "open": false,
+      "ms": 3.3,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:36:05.785Z",
+      "session_id": "3133cdeb-8483-4b64-85ca-8c281a7ed5c9",
+      "seq": 15,
+      "stage": "acquiring_preview",
+      "open": false,
+      "ms": 95.5,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:36:08.539Z",
+      "session_id": "3133cdeb-8483-4b64-85ca-8c281a7ed5c9",
+      "seq": 16,
+      "stage": "metrics",
+      "open": false,
+      "ms": 35.5,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:36:08.574Z",
+      "session_id": "3133cdeb-8483-4b64-85ca-8c281a7ed5c9",
+      "seq": 17,
+      "stage": "awaiting_approval",
+      "open": false,
+      "ms": 13.1,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:36:08.685Z",
+      "session_id": "3133cdeb-8483-4b64-85ca-8c281a7ed5c9",
+      "seq": 18,
+      "stage": "awaiting_approval",
+      "open": false,
+      "ms": 5.8,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:37:08.686Z",
+      "session_id": "3133cdeb-8483-4b64-85ca-8c281a7ed5c9",
+      "seq": 19,
+      "stage": "awaiting_approval",
+      "open": false,
+      "ms": 2.2,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:37:08.760Z",
+      "session_id": "3133cdeb-8483-4b64-85ca-8c281a7ed5c9",
+      "seq": 20,
+      "stage": "awaiting_approval",
+      "open": false,
+      "ms": 2.4,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:37:16.184Z",
+      "session_id": "3133cdeb-8483-4b64-85ca-8c281a7ed5c9",
+      "seq": 21,
+      "stage": "awaiting_approval",
+      "open": false,
+      "ms": 3.9,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:37:16.592Z",
+      "session_id": "3133cdeb-8483-4b64-85ca-8c281a7ed5c9",
+      "seq": 22,
+      "stage": "aborted",
+      "open": false,
+      "ms": 21.1,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:37:32.810Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 1,
+      "stage": "begin",
+      "open": true,
+      "ms": 3.9,
+      "applied": true,
+      "opened": true
+    },
+    {
+      "at": "2026-10-01T11:37:32.814Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 2,
+      "stage": "acquiring_preview",
+      "open": false,
+      "ms": 138.6,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:37:36.132Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 3,
+      "stage": "metrics",
+      "open": false,
+      "ms": 16.5,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:37:36.148Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 4,
+      "stage": "pass0",
+      "open": false,
+      "ms": 4.8,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:37:39.707Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 5,
+      "stage": "pass0",
+      "open": false,
+      "ms": 552.3,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:37:41.056Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 6,
+      "stage": "pass0",
+      "open": false,
+      "ms": 40.2,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:37:41.096Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 7,
+      "stage": "applying",
+      "open": false,
+      "ms": 17.5,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:37:41.572Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 8,
+      "stage": "acquiring_preview",
+      "open": false,
+      "ms": 12.5,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:37:46.946Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 9,
+      "stage": "metrics",
+      "open": false,
+      "ms": 24.5,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:37:49.224Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 10,
+      "stage": "pass0",
+      "open": false,
+      "ms": 13.2,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:37:49.237Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 11,
+      "stage": "applying",
+      "open": false,
+      "ms": 53.3,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:37:50.828Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 12,
+      "stage": "acquiring_preview",
+      "open": false,
+      "ms": 95,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:37:59.873Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 13,
+      "stage": "metrics",
+      "open": false,
+      "ms": 113.1,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:37:59.987Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 14,
+      "stage": "applying",
+      "open": false,
+      "ms": 12,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:38:00.714Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 15,
+      "stage": "acquiring_preview",
+      "open": false,
+      "ms": 27.9,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:38:06.368Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 16,
+      "stage": "metrics",
+      "open": false,
+      "ms": 62.2,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:38:08.341Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 17,
+      "stage": "pass0",
+      "open": false,
+      "ms": 36.1,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:38:08.378Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 18,
+      "stage": "applying",
+      "open": false,
+      "ms": 17.1,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:38:10.790Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 19,
+      "stage": "acquiring_preview",
+      "open": false,
+      "ms": 403,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:38:23.580Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 20,
+      "stage": "metrics",
+      "open": false,
+      "ms": 71.9,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:38:23.653Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 21,
+      "stage": "awaiting_claude",
+      "open": false,
+      "ms": 116.7,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:38:26.750Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 22,
+      "stage": "applying",
+      "open": false,
+      "ms": 36.7,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:38:29.270Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 23,
+      "stage": "acquiring_preview",
+      "open": false,
+      "ms": 577.2,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:38:40.573Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 24,
+      "stage": "metrics",
+      "open": false,
+      "ms": 111.7,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:38:40.685Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 25,
+      "stage": "awaiting_claude",
+      "open": false,
+      "ms": 41.1,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:38:43.454Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 26,
+      "stage": "applying",
+      "open": false,
+      "ms": 144.2,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:38:45.262Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 27,
+      "stage": "acquiring_preview",
+      "open": false,
+      "ms": 153.9,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:38:52.162Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 28,
+      "stage": "metrics",
+      "open": false,
+      "ms": 78,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:38:52.241Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 29,
+      "stage": "awaiting_claude",
+      "open": false,
+      "ms": 46.2,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:38:54.570Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 30,
+      "stage": "applying",
+      "open": false,
+      "ms": 56.4,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:38:55.308Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 31,
+      "stage": "acquiring_preview",
+      "open": false,
+      "ms": 61.9,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:39:01.582Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 32,
+      "stage": "metrics",
+      "open": false,
+      "ms": 111.7,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:39:01.694Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 33,
+      "stage": "awaiting_pick",
+      "open": false,
+      "ms": 59,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:41:00.762Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 34,
+      "stage": "awaiting_pick",
+      "open": false,
+      "ms": 6.4,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:41:00.779Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 35,
+      "stage": "awaiting_claude",
+      "open": false,
+      "ms": 3.9,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:41:00.917Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 36,
+      "stage": "applying",
+      "open": false,
+      "ms": 2.4,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:41:01.196Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 37,
+      "stage": "acquiring_preview",
+      "open": false,
+      "ms": 18.1,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:41:04.924Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 38,
+      "stage": "metrics",
+      "open": false,
+      "ms": 4.6,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:41:04.929Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 39,
+      "stage": "awaiting_approval",
+      "open": false,
+      "ms": 4.5,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:41:14.232Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 40,
+      "stage": "awaiting_approval",
+      "open": false,
+      "ms": 4,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:41:14.248Z",
+      "session_id": "d4247bfd-cba3-45cd-9b9c-995b4c4751a6",
+      "seq": 41,
+      "stage": "accepted",
+      "open": false,
+      "ms": 18,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:41:16.515Z",
+      "session_id": "6b9f8456-9ce8-46fc-a9cf-bd188912449e",
+      "seq": 1,
+      "stage": "begin",
+      "open": true,
+      "ms": 8.2,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:41:16.524Z",
+      "session_id": "6b9f8456-9ce8-46fc-a9cf-bd188912449e",
+      "seq": 2,
+      "stage": "acquiring_preview",
+      "open": false,
+      "ms": 5,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:41:20.342Z",
+      "session_id": "6b9f8456-9ce8-46fc-a9cf-bd188912449e",
+      "seq": 3,
+      "stage": "metrics",
+      "open": false,
+      "ms": 13,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:41:20.355Z",
+      "session_id": "6b9f8456-9ce8-46fc-a9cf-bd188912449e",
+      "seq": 4,
+      "stage": "applying",
+      "open": false,
+      "ms": 5.9,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:41:20.719Z",
+      "session_id": "6b9f8456-9ce8-46fc-a9cf-bd188912449e",
+      "seq": 5,
+      "stage": "acquiring_preview",
+      "open": false,
+      "ms": 86.5,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:41:24.006Z",
+      "session_id": "6b9f8456-9ce8-46fc-a9cf-bd188912449e",
+      "seq": 6,
+      "stage": "metrics",
+      "open": false,
+      "ms": 26.9,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:41:24.033Z",
+      "session_id": "6b9f8456-9ce8-46fc-a9cf-bd188912449e",
+      "seq": 7,
+      "stage": "awaiting_claude",
+      "open": false,
+      "ms": 8.7,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:41:24.052Z",
+      "session_id": "6b9f8456-9ce8-46fc-a9cf-bd188912449e",
+      "seq": 8,
+      "stage": "applying",
+      "open": false,
+      "ms": 2.3,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:41:24.475Z",
+      "session_id": "6b9f8456-9ce8-46fc-a9cf-bd188912449e",
+      "seq": 9,
+      "stage": "acquiring_preview",
+      "open": false,
+      "ms": 87,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:41:28.291Z",
+      "session_id": "6b9f8456-9ce8-46fc-a9cf-bd188912449e",
+      "seq": 10,
+      "stage": "metrics",
+      "open": false,
+      "ms": 3.3,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:41:28.295Z",
+      "session_id": "6b9f8456-9ce8-46fc-a9cf-bd188912449e",
+      "seq": 11,
+      "stage": "awaiting_approval",
+      "open": false,
+      "ms": 31.5,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:41:46.477Z",
+      "session_id": "6b9f8456-9ce8-46fc-a9cf-bd188912449e",
+      "seq": 12,
+      "stage": "awaiting_approval",
+      "open": false,
+      "ms": 10.9,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:41:46.521Z",
+      "session_id": "6b9f8456-9ce8-46fc-a9cf-bd188912449e",
+      "seq": 13,
+      "stage": "accepted",
+      "open": false,
+      "ms": 183.1,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:42:12.664Z",
+      "session_id": "9b1dd47c-0de2-4ae7-b294-46901096d5f1",
+      "seq": 1,
+      "stage": "begin",
+      "open": true,
+      "ms": 7.2,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:42:12.672Z",
+      "session_id": "9b1dd47c-0de2-4ae7-b294-46901096d5f1",
+      "seq": 2,
+      "stage": "acquiring_preview",
+      "open": false,
+      "ms": 5.8,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:42:15.872Z",
+      "session_id": "9b1dd47c-0de2-4ae7-b294-46901096d5f1",
+      "seq": 3,
+      "stage": "metrics",
+      "open": false,
+      "ms": 9.8,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:42:15.882Z",
+      "session_id": "9b1dd47c-0de2-4ae7-b294-46901096d5f1",
+      "seq": 4,
+      "stage": "applying",
+      "open": false,
+      "ms": 11.4,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:42:16.296Z",
+      "session_id": "9b1dd47c-0de2-4ae7-b294-46901096d5f1",
+      "seq": 5,
+      "stage": "acquiring_preview",
+      "open": false,
+      "ms": 106.4,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:42:19.555Z",
+      "session_id": "9b1dd47c-0de2-4ae7-b294-46901096d5f1",
+      "seq": 6,
+      "stage": "metrics",
+      "open": false,
+      "ms": 18.1,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:42:19.573Z",
+      "session_id": "9b1dd47c-0de2-4ae7-b294-46901096d5f1",
+      "seq": 7,
+      "stage": "awaiting_claude",
+      "open": false,
+      "ms": 10.9,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:42:19.595Z",
+      "session_id": "9b1dd47c-0de2-4ae7-b294-46901096d5f1",
+      "seq": 8,
+      "stage": "applying",
+      "open": false,
+      "ms": 54.9,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:42:19.965Z",
+      "session_id": "9b1dd47c-0de2-4ae7-b294-46901096d5f1",
+      "seq": 9,
+      "stage": "acquiring_preview",
+      "open": false,
+      "ms": 92.1,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:42:23.214Z",
+      "session_id": "9b1dd47c-0de2-4ae7-b294-46901096d5f1",
+      "seq": 10,
+      "stage": "metrics",
+      "open": false,
+      "ms": 27.7,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:42:23.242Z",
+      "session_id": "9b1dd47c-0de2-4ae7-b294-46901096d5f1",
+      "seq": 11,
+      "stage": "awaiting_approval",
+      "open": false,
+      "ms": 18,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:42:36.817Z",
+      "session_id": "9b1dd47c-0de2-4ae7-b294-46901096d5f1",
+      "seq": 12,
+      "stage": "awaiting_approval",
+      "open": false,
+      "ms": 8.6,
+      "applied": true,
+      "opened": false
+    },
+    {
+      "at": "2026-10-01T11:42:37.205Z",
+      "session_id": "9b1dd47c-0de2-4ae7-b294-46901096d5f1",
+      "seq": 13,
+      "stage": "aborted",
+      "open": false,
+      "ms": 122.4,
+      "applied": true,
+      "opened": false
+    }
+  ],
+  "summary": {
+    "acceptance_suggestion": "WORKED",
+    "page_setting_reaches_engine": true,
+    "session_rides_out_plugin_manager": true,
+    "hud_tracks_stages": true,
+    "ac2_hud_abort": true,
+    "approve_blocks_until_pressed": true,
+    "ac3_hud_pick": true,
+    "menu_items": true,
+    "ac1_six_chats": true,
+    "ac4_clipping": true,
+    "no_unexpected_change": true,
+    "photos_put_back": true,
+    "approve_chat_ok": false,
+    "approve_chat_longest_call_held_ms": null,
+    "plugin_manager_silence_ms": 2532,
+    "session_allowance_exercised": false,
+    "copies_removed": "3 of 3",
+    "unexpected": [],
+    "progress": "Part 1 passed; approve chat done; 6 of 6 chats done"
+  },
+  "state": {
+    "schema": "lrc-avg/phase5-check-state/v1",
+    "started_at": "2026-10-01T11:32:13.151Z",
+    "runs": [
+      "2026-10-01T11-32-13-141Z"
+    ],
+    "part1": {
+      "at": "2026-10-01T11:43:25.618Z",
+      "ok": true,
+      "summary": {
+        "lines": {
+          "page_setting_reaches_engine": true,
+          "session_rides_out_plugin_manager": true,
+          "hud_tracks_stages": true,
+          "ac2_hud_abort": true,
+          "approve_blocks_until_pressed": true,
+          "ac3_hud_pick": true,
+          "menu_items": true,
+          "photo_put_back": true
+        },
+        "ac4": {
+          "ok": true,
+          "sessions": [
+            {
+              "session": "A",
+              "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\P5\\p5_sessions_2026-10-01T11-32-13-141Z\\20261001-faa124.json",
+              "ok": true,
+              "passes": [
+                {
+                  "n": 0,
+                  "clip_high_pct": 0.0641,
+                  "clip_low_pct": 0.1446,
+                  "ok": true
+                },
+                {
+                  "n": 1,
+                  "clip_high_pct": 0.0717,
+                  "clip_low_pct": 0.18,
+                  "ok": true
+                },
+                {
+                  "n": 2,
+                  "clip_high_pct": 0.0694,
+                  "clip_low_pct": 0.1512,
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "session": "B",
+              "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\P5\\p5_sessions_2026-10-01T11-32-13-141Z\\20261001-3133cd.json",
+              "ok": true,
+              "passes": [
+                {
+                  "n": 0,
+                  "clip_high_pct": 0.0641,
+                  "clip_low_pct": 0.1446,
+                  "ok": true
+                },
+                {
+                  "n": 1,
+                  "clip_high_pct": 0.0717,
+                  "clip_low_pct": 0.18,
+                  "ok": true
+                },
+                {
+                  "n": 2,
+                  "clip_high_pct": 0.0694,
+                  "clip_low_pct": 0.1512,
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "session": "C",
+              "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\P5\\p5_sessions_2026-10-01T11-32-13-141Z\\20261001-d4247b.json",
+              "ok": true,
+              "passes": [
+                {
+                  "n": 0,
+                  "target": "A",
+                  "clip_high_pct": 0.0641,
+                  "clip_low_pct": 0.1446,
+                  "ok": true
+                },
+                {
+                  "n": 0,
+                  "target": "B",
+                  "clip_high_pct": 0.1115,
+                  "clip_low_pct": 0.4695,
+                  "ok": true
+                },
+                {
+                  "n": 0,
+                  "target": "C",
+                  "clip_high_pct": 0.0199,
+                  "clip_low_pct": 0.0365,
+                  "ok": true
+                },
+                {
+                  "n": 1,
+                  "target": "A",
+                  "clip_high_pct": 0.0717,
+                  "clip_low_pct": 0.1721,
+                  "ok": true
+                },
+                {
+                  "n": 1,
+                  "target": "B",
+                  "clip_high_pct": 0.1201,
+                  "clip_low_pct": 0.5144,
+                  "ok": true
+                },
+                {
+                  "n": 1,
+                  "target": "C",
+                  "clip_high_pct": 0.0216,
+                  "clip_low_pct": 0.0415,
+                  "ok": true
+                },
+                {
+                  "n": 2,
+                  "target": "C",
+                  "clip_high_pct": 0.0231,
+                  "clip_low_pct": 0.0443,
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "session": "D",
+              "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\P5\\p5_sessions_2026-10-01T11-32-13-141Z\\20261001-6b9f84.json",
+              "ok": true,
+              "passes": [
+                {
+                  "n": 0,
+                  "clip_high_pct": 0.0641,
+                  "clip_low_pct": 0.1446,
+                  "ok": true
+                },
+                {
+                  "n": 1,
+                  "clip_high_pct": 0.0672,
+                  "clip_low_pct": 0.1765,
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "session": "E",
+              "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\P5\\p5_sessions_2026-10-01T11-32-13-141Z\\20261001-9b1dd4.json",
+              "ok": true,
+              "passes": [
+                {
+                  "n": 0,
+                  "clip_high_pct": 0.0641,
+                  "clip_low_pct": 0.1446,
+                  "ok": true
+                },
+                {
+                  "n": 1,
+                  "clip_high_pct": 0.0672,
+                  "clip_low_pct": 0.1765,
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        "unexpected": [],
+        "pause": {
+          "seen": true,
+          "silence_ms": 2532,
+          "longer_than_heartbeat": false
+        },
+        "copies": {
+          "copies": [
+            {
+              "uuid": "7C16091C-8BCE-46E2-9ED5-209CCD8E8A8D",
+              "copy_name": "AVG landscape_golden_hour A",
+              "made_by": "variants",
+              "state": "gone"
+            },
+            {
+              "uuid": "FD98E001-0A71-4FE7-B059-4333F1E3C405",
+              "copy_name": "AVG landscape_golden_hour B",
+              "made_by": "variants",
+              "state": "gone"
+            },
+            {
+              "uuid": "2933E254-BAF2-48B2-B926-853D9F934848",
+              "copy_name": "AVG landscape_golden_hour C",
+              "made_by": "variants",
+              "state": "gone"
+            }
+          ],
+          "all_gone": true
+        },
+        "errors": []
+      }
+    },
+    "approve_chat": {
+      "at": "2026-10-01T11:50:42.473Z",
+      "ok": false,
+      "summary": {
+        "jim": [
+          "y",
+          "y"
+        ],
+        "problems": [
+          "no lr_step ran its full 60 s wait (AWAITING_APPROVAL)",
+          "Claude Desktop's log has 1 error or time-out line(s)"
+        ],
+        "awaiting": [],
+        "longest_call_held_ms": null,
+        "approvals": [
+          {
+            "at": "2026-10-01T11:46:22.417Z",
+            "target": "master",
+            "pass": 1,
+            "by": "hud"
+          },
+          {
+            "at": "2026-10-01T11:47:04.268Z",
+            "target": "master",
+            "pass": 2,
+            "by": "hud"
+          },
+          {
+            "at": "2026-10-01T11:47:36.560Z",
+            "target": "master",
+            "pass": 3,
+            "by": "hud"
+          }
+        ],
+        "ac4": {
+          "session": "approve chat",
+          "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-08cfef.json",
+          "ok": true,
+          "passes": [
+            {
+              "n": 0,
+              "clip_high_pct": 0.0641,
+              "clip_low_pct": 0.1446,
+              "ok": true
+            },
+            {
+              "n": 1,
+              "clip_high_pct": 0.4864,
+              "clip_low_pct": 0.2852,
+              "ok": true
+            },
+            {
+              "n": 2,
+              "clip_high_pct": 0.1302,
+              "clip_low_pct": 0.2843,
+              "ok": true
+            },
+            {
+              "n": 3,
+              "clip_high_pct": 0.322,
+              "clip_low_pct": 0.2332,
+              "ok": true
+            },
+            {
+              "n": 4,
+              "clip_high_pct": 0.2839,
+              "clip_low_pct": 0.2335,
+              "ok": true
+            }
+          ]
+        },
+        "evaluation": {
+          "tool_calls": [
+            {
+              "ts": "2026-10-01T11:44:14.997Z",
+              "tool": "lr_list_intents",
+              "ok": true
+            },
+            {
+              "ts": "2026-10-01T11:44:17.011Z",
+              "tool": "lr_get_active_photo_context",
+              "ok": true
+            },
+            {
+              "ts": "2026-10-01T11:44:24.569Z",
+              "tool": "lr_begin_session",
+              "ok": true
+            },
+            {
+              "ts": "2026-10-01T11:45:50.105Z",
+              "tool": "lr_step",
+              "ok": true
+            },
+            {
+              "ts": "2026-10-01T11:46:48.158Z",
+              "tool": "lr_approve_pass",
+              "ok": true
+            },
+            {
+              "ts": "2026-10-01T11:46:53.056Z",
+              "tool": "lr_step",
+              "ok": true
+            },
+            {
+              "ts": "2026-10-01T11:47:24.158Z",
+              "tool": "lr_approve_pass",
+              "ok": true
+            },
+            {
+              "ts": "2026-10-01T11:47:29.018Z",
+              "tool": "lr_step",
+              "ok": true
+            },
+            {
+              "ts": "2026-10-01T11:48:35.104Z",
+              "tool": "lr_approve_pass",
+              "ok": true
+            },
+            {
+              "ts": "2026-10-01T11:48:40.236Z",
+              "tool": "lr_step",
+              "ok": true
+            },
+            {
+              "ts": "2026-10-01T11:49:39.266Z",
+              "tool": "lr_end_session",
+              "ok": true
+            }
+          ],
+          "invalid_records": 0,
+          "session_begun": true,
+          "session_id": "08cfef2b-fd8a-4904-8be1-486509e51b84",
+          "intent_id": "landscape_golden_hour",
+          "target_filename": "20260907-_OZ80093.NEF",
+          "passes": 4,
+          "session_ended": "accept",
+          "snapshot": {
+            "id": "5E3C63F3-F14E-48CE-A750-2812F15C9A0A",
+            "name": "AVG pre-session 2026-10-01T11:44:24.596Z"
+          },
+          "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-08cfef.json",
+          "hud_shown": true,
+          "awaiting": []
+        },
+        "logs": {
+          "desktop_log": {
+            "found": true,
+            "saved_as": "p5_desktop_mcp_log_2026-10-01T11-32-13-141Z_approve.txt",
+            "lines": 28
+          },
+          "desktop_errors": [
+            "# Filter: timestamped lines matching Server started|Message from|[error]|[warn], and the engine's [lrc-avg] lines; user folder redacted."
+          ],
+          "engine_log": {
+            "found": true,
+            "saved_as": "p5_chat_tool_log_2026-10-01T11-32-13-141Z_approve.jsonl",
+            "records": 15
+          },
+          "session_log_error": null
+        },
+        "put_back": true,
+        "unexpected": []
+      }
+    },
+    "page_autonomous": true,
+    "chats": [
+      {
+        "fixture": "20250413-_OZ81430.NEF",
+        "at": "2026-10-01T11:55:06.119Z",
+        "ok": true,
+        "summary": {
+          "attempts": [
+            {
+              "ok": true,
+              "problems": [],
+              "ac4": {
+                "session": "chat 1",
+                "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-ea9ee2.json",
+                "ok": true,
+                "passes": [
+                  {
+                    "n": 0,
+                    "clip_high_pct": 0.405,
+                    "clip_low_pct": 0.2405,
+                    "ok": true
+                  },
+                  {
+                    "n": 1,
+                    "clip_high_pct": 0.2697,
+                    "clip_low_pct": 0.4043,
+                    "ok": true
+                  },
+                  {
+                    "n": 2,
+                    "clip_high_pct": 0.3274,
+                    "clip_low_pct": 0.2805,
+                    "ok": true
+                  }
+                ]
+              },
+              "unexpected": [],
+              "jim": [
+                "y",
+                "y",
+                "y",
+                "y"
+              ],
+              "evaluation": {
+                "tool_calls": [
+                  {
+                    "ts": "2026-10-01T11:52:23.135Z",
+                    "tool": "lr_get_active_photo_context",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T11:52:25.729Z",
+                    "tool": "lr_begin_session",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T11:52:43.238Z",
+                    "tool": "lr_set_regions",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T11:52:46.969Z",
+                    "tool": "lr_step",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T11:52:55.443Z",
+                    "tool": "lr_step",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T11:54:02.799Z",
+                    "tool": "lr_end_session",
+                    "ok": true
+                  }
+                ],
+                "invalid_records": 0,
+                "session_begun": true,
+                "session_id": "ea9ee231-3bfc-4e2f-8984-7192ae1b8aa7",
+                "intent_id": "landscape_golden_hour",
+                "target_filename": "20250413-_OZ81430.NEF",
+                "passes": 2,
+                "session_ended": "accept",
+                "snapshot": {
+                  "id": "DF38F806-6A22-438B-9402-88CFDE53DC2E",
+                  "name": "AVG pre-session 2026-10-01T11:52:25.758Z"
+                },
+                "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-ea9ee2.json",
+                "hud_shown": true,
+                "awaiting": []
+              },
+              "logs": {
+                "desktop_log": {
+                  "found": true,
+                  "saved_as": "p5_desktop_mcp_log_2026-10-01T11-32-13-141Z_chat1.txt",
+                  "lines": 16
+                },
+                "desktop_errors": [
+                  "# Filter: timestamped lines matching Server started|Message from|[error]|[warn], and the engine's [lrc-avg] lines; user folder redacted."
+                ],
+                "engine_log": {
+                  "found": true,
+                  "saved_as": "p5_chat_tool_log_2026-10-01T11-32-13-141Z_chat1.jsonl",
+                  "records": 7
+                },
+                "session_log_error": null
+              },
+              "put_back": true
+            }
+          ]
+        }
+      },
+      {
+        "fixture": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+        "at": "2026-10-01T11:58:56.242Z",
+        "ok": true,
+        "summary": {
+          "attempts": [
+            {
+              "ok": true,
+              "problems": [],
+              "ac4": {
+                "session": "chat 2",
+                "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-782f5a.json",
+                "ok": true,
+                "passes": [
+                  {
+                    "n": 0,
+                    "clip_high_pct": 0,
+                    "clip_low_pct": 0.5706,
+                    "ok": true
+                  },
+                  {
+                    "n": 1,
+                    "clip_high_pct": 0,
+                    "clip_low_pct": 0.0928,
+                    "ok": true
+                  },
+                  {
+                    "n": 2,
+                    "clip_high_pct": 0,
+                    "clip_low_pct": 0.0689,
+                    "ok": true
+                  }
+                ]
+              },
+              "unexpected": [],
+              "jim": [
+                "y",
+                "y",
+                "y",
+                "y"
+              ],
+              "evaluation": {
+                "tool_calls": [
+                  {
+                    "ts": "2026-10-01T11:55:51.724Z",
+                    "tool": "lr_get_active_photo_context",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T11:55:54.961Z",
+                    "tool": "lr_get_preview",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T11:56:51.338Z",
+                    "tool": "lr_begin_session",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T11:57:02.978Z",
+                    "tool": "lr_step",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T11:57:10.139Z",
+                    "tool": "lr_step",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T11:57:52.925Z",
+                    "tool": "lr_end_session",
+                    "ok": true
+                  }
+                ],
+                "invalid_records": 0,
+                "session_begun": true,
+                "session_id": "782f5aee-3d4c-40ac-ad6a-9ace72a6e232",
+                "intent_id": "landscape_golden_hour",
+                "target_filename": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+                "passes": 2,
+                "session_ended": "accept",
+                "snapshot": {
+                  "id": "377D1700-7805-4573-A9AE-E25734DA57EC",
+                  "name": "AVG pre-session 2026-10-01T11:56:51.359Z"
+                },
+                "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-782f5a.json",
+                "hud_shown": true,
+                "awaiting": []
+              },
+              "logs": {
+                "desktop_log": {
+                  "found": true,
+                  "saved_as": "p5_desktop_mcp_log_2026-10-01T11-32-13-141Z_chat2.txt",
+                  "lines": 16
+                },
+                "desktop_errors": [
+                  "# Filter: timestamped lines matching Server started|Message from|[error]|[warn], and the engine's [lrc-avg] lines; user folder redacted."
+                ],
+                "engine_log": {
+                  "found": true,
+                  "saved_as": "p5_chat_tool_log_2026-10-01T11-32-13-141Z_chat2.jsonl",
+                  "records": 7
+                },
+                "session_log_error": null
+              },
+              "put_back": true
+            }
+          ]
+        }
+      },
+      {
+        "fixture": "20260110-_Z8A0173.NEF",
+        "at": "2026-10-01T12:03:39.839Z",
+        "ok": true,
+        "summary": {
+          "attempts": [
+            {
+              "ok": true,
+              "problems": [],
+              "ac4": {
+                "session": "chat 3",
+                "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-b05023.json",
+                "ok": true,
+                "passes": [
+                  {
+                    "n": 0,
+                    "clip_high_pct": 0.1242,
+                    "clip_low_pct": 0,
+                    "ok": true
+                  },
+                  {
+                    "n": 1,
+                    "clip_high_pct": 0.0084,
+                    "clip_low_pct": 0,
+                    "ok": true
+                  },
+                  {
+                    "n": 2,
+                    "clip_high_pct": 0.0013,
+                    "clip_low_pct": 0,
+                    "ok": true
+                  },
+                  {
+                    "n": 3,
+                    "clip_high_pct": 0.0354,
+                    "clip_low_pct": 0,
+                    "ok": true
+                  },
+                  {
+                    "n": 4,
+                    "clip_high_pct": 0.007,
+                    "clip_low_pct": 0,
+                    "ok": true
+                  }
+                ]
+              },
+              "unexpected": [],
+              "jim": [
+                "y",
+                "y",
+                "y",
+                "y"
+              ],
+              "evaluation": {
+                "tool_calls": [
+                  {
+                    "ts": "2026-10-01T11:59:45.172Z",
+                    "tool": "lr_get_active_photo_context",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T11:59:49.631Z",
+                    "tool": "lr_begin_session",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:00:02.812Z",
+                    "tool": "lr_list_intents",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:00:53.242Z",
+                    "tool": "lr_step",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:01:03.099Z",
+                    "tool": "lr_step",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:01:13.077Z",
+                    "tool": "lr_step",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:01:23.134Z",
+                    "tool": "lr_step",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:02:38.449Z",
+                    "tool": "lr_end_session",
+                    "ok": true
+                  }
+                ],
+                "invalid_records": 0,
+                "session_begun": true,
+                "session_id": "b0502330-c806-4a27-b8f4-8e4ec9051cd0",
+                "intent_id": "landscape_golden_hour",
+                "target_filename": "20260110-_Z8A0173.NEF",
+                "passes": 4,
+                "session_ended": "accept",
+                "snapshot": {
+                  "id": "FEC67256-3906-4655-8C11-1F8AB4710222",
+                  "name": "AVG pre-session 2026-10-01T11:59:49.651Z"
+                },
+                "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-b05023.json",
+                "hud_shown": true,
+                "awaiting": []
+              },
+              "logs": {
+                "desktop_log": {
+                  "found": true,
+                  "saved_as": "p5_desktop_mcp_log_2026-10-01T11-32-13-141Z_chat3.txt",
+                  "lines": 20
+                },
+                "desktop_errors": [
+                  "# Filter: timestamped lines matching Server started|Message from|[error]|[warn], and the engine's [lrc-avg] lines; user folder redacted."
+                ],
+                "engine_log": {
+                  "found": true,
+                  "saved_as": "p5_chat_tool_log_2026-10-01T11-32-13-141Z_chat3.jsonl",
+                  "records": 9
+                },
+                "session_log_error": null
+              },
+              "put_back": true
+            }
+          ]
+        }
+      },
+      {
+        "fixture": "20260906-_OZ80005.NEF",
+        "at": "2026-10-01T12:08:50.344Z",
+        "ok": true,
+        "summary": {
+          "attempts": [
+            {
+              "ok": true,
+              "problems": [],
+              "ac4": {
+                "session": "chat 4",
+                "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-f424db.json",
+                "ok": true,
+                "passes": [
+                  {
+                    "n": 0,
+                    "clip_high_pct": 0.0018,
+                    "clip_low_pct": 0,
+                    "ok": true
+                  },
+                  {
+                    "n": 1,
+                    "clip_high_pct": 0.0248,
+                    "clip_low_pct": 0,
+                    "ok": true
+                  },
+                  {
+                    "n": 2,
+                    "clip_high_pct": 0.017,
+                    "clip_low_pct": 0,
+                    "ok": true
+                  },
+                  {
+                    "n": 3,
+                    "clip_high_pct": 0.004,
+                    "clip_low_pct": 0,
+                    "ok": true
+                  },
+                  {
+                    "n": 4,
+                    "clip_high_pct": 0.0062,
+                    "clip_low_pct": 0,
+                    "ok": true
+                  }
+                ]
+              },
+              "unexpected": [],
+              "jim": [
+                "y",
+                "y",
+                "y",
+                "y"
+              ],
+              "evaluation": {
+                "tool_calls": [
+                  {
+                    "ts": "2026-10-01T12:04:25.427Z",
+                    "tool": "lr_get_active_photo_context",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:04:29.231Z",
+                    "tool": "lr_begin_session",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:04:43.457Z",
+                    "tool": "lr_set_regions",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:04:49.388Z",
+                    "tool": "lr_step",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:04:58.582Z",
+                    "tool": "lr_step",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:06:14.226Z",
+                    "tool": "lr_step",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:07:11.188Z",
+                    "tool": "lr_step",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:07:48.843Z",
+                    "tool": "lr_end_session",
+                    "ok": true
+                  }
+                ],
+                "invalid_records": 0,
+                "session_begun": true,
+                "session_id": "f424db30-adb0-4e55-95fa-0c6f3645d311",
+                "intent_id": "landscape_golden_hour",
+                "target_filename": "20260906-_OZ80005.NEF",
+                "passes": 4,
+                "session_ended": "accept",
+                "snapshot": {
+                  "id": "83279075-A315-4759-BF81-461088C96DF0",
+                  "name": "AVG pre-session 2026-10-01T12:04:29.263Z"
+                },
+                "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-f424db.json",
+                "hud_shown": true,
+                "awaiting": []
+              },
+              "logs": {
+                "desktop_log": {
+                  "found": true,
+                  "saved_as": "p5_desktop_mcp_log_2026-10-01T11-32-13-141Z_chat4.txt",
+                  "lines": 20
+                },
+                "desktop_errors": [
+                  "# Filter: timestamped lines matching Server started|Message from|[error]|[warn], and the engine's [lrc-avg] lines; user folder redacted."
+                ],
+                "engine_log": {
+                  "found": true,
+                  "saved_as": "p5_chat_tool_log_2026-10-01T11-32-13-141Z_chat4.jsonl",
+                  "records": 9
+                },
+                "session_log_error": null
+              },
+              "put_back": true
+            }
+          ]
+        }
+      },
+      {
+        "fixture": "20260907-_OZ80093.NEF",
+        "at": "2026-10-01T12:12:05.474Z",
+        "ok": true,
+        "summary": {
+          "attempts": [
+            {
+              "ok": true,
+              "problems": [],
+              "ac4": {
+                "session": "chat 5",
+                "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-bee6b1.json",
+                "ok": true,
+                "passes": [
+                  {
+                    "n": 0,
+                    "clip_high_pct": 0.0641,
+                    "clip_low_pct": 0.1446,
+                    "ok": true
+                  },
+                  {
+                    "n": 1,
+                    "clip_high_pct": 0.0782,
+                    "clip_low_pct": 0.1049,
+                    "ok": true
+                  },
+                  {
+                    "n": 2,
+                    "clip_high_pct": 0.1332,
+                    "clip_low_pct": 0.098,
+                    "ok": true
+                  },
+                  {
+                    "n": 3,
+                    "clip_high_pct": 0.1537,
+                    "clip_low_pct": 0.1815,
+                    "ok": true
+                  }
+                ]
+              },
+              "unexpected": [],
+              "jim": [
+                "y",
+                "y",
+                "y",
+                "y"
+              ],
+              "evaluation": {
+                "tool_calls": [
+                  {
+                    "ts": "2026-10-01T12:09:39.994Z",
+                    "tool": "lr_get_active_photo_context",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:09:42.539Z",
+                    "tool": "lr_get_intent",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:09:45.021Z",
+                    "tool": "lr_begin_session",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:10:03.460Z",
+                    "tool": "lr_set_regions",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:10:08.147Z",
+                    "tool": "lr_step",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:10:19.813Z",
+                    "tool": "lr_step",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:10:31.940Z",
+                    "tool": "lr_step",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:11:04.122Z",
+                    "tool": "lr_end_session",
+                    "ok": true
+                  }
+                ],
+                "invalid_records": 0,
+                "session_begun": true,
+                "session_id": "bee6b1b1-5b66-46b8-be00-f81d1e68abab",
+                "intent_id": "landscape_golden_hour",
+                "target_filename": "20260907-_OZ80093.NEF",
+                "passes": 3,
+                "session_ended": "accept",
+                "snapshot": {
+                  "id": "C8ABDED0-3A56-40BE-86A5-94A9460E8073",
+                  "name": "AVG pre-session 2026-10-01T12:09:45.041Z"
+                },
+                "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-bee6b1.json",
+                "hud_shown": true,
+                "awaiting": []
+              },
+              "logs": {
+                "desktop_log": {
+                  "found": true,
+                  "saved_as": "p5_desktop_mcp_log_2026-10-01T11-32-13-141Z_chat5.txt",
+                  "lines": 20
+                },
+                "desktop_errors": [
+                  "# Filter: timestamped lines matching Server started|Message from|[error]|[warn], and the engine's [lrc-avg] lines; user folder redacted."
+                ],
+                "engine_log": {
+                  "found": true,
+                  "saved_as": "p5_chat_tool_log_2026-10-01T11-32-13-141Z_chat5.jsonl",
+                  "records": 9
+                },
+                "session_log_error": null
+              },
+              "put_back": true
+            }
+          ]
+        }
+      },
+      {
+        "fixture": "20260907-_OZ80099.NEF",
+        "at": "2026-10-01T12:16:50.634Z",
+        "ok": true,
+        "summary": {
+          "attempts": [
+            {
+              "ok": true,
+              "problems": [],
+              "ac4": {
+                "session": "chat 6",
+                "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-618087.json",
+                "ok": true,
+                "passes": [
+                  {
+                    "n": 0,
+                    "clip_high_pct": 0.0526,
+                    "clip_low_pct": 0.7997,
+                    "ok": true
+                  },
+                  {
+                    "n": 1,
+                    "clip_high_pct": 0.0553,
+                    "clip_low_pct": 0.9605,
+                    "ok": true
+                  },
+                  {
+                    "n": 2,
+                    "clip_high_pct": 0.1112,
+                    "clip_low_pct": 0.8577,
+                    "ok": true
+                  },
+                  {
+                    "n": 3,
+                    "clip_high_pct": 0.1004,
+                    "clip_low_pct": 0.8517,
+                    "ok": true
+                  },
+                  {
+                    "n": 4,
+                    "clip_high_pct": 0.1684,
+                    "clip_low_pct": 0.9695,
+                    "ok": true
+                  }
+                ]
+              },
+              "unexpected": [],
+              "jim": [
+                "y",
+                "y",
+                "y",
+                "y"
+              ],
+              "evaluation": {
+                "tool_calls": [
+                  {
+                    "ts": "2026-10-01T12:12:40.304Z",
+                    "tool": "lr_get_active_photo_context",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:12:42.841Z",
+                    "tool": "lr_begin_session",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:13:15.536Z",
+                    "tool": "lr_set_regions",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:13:19.398Z",
+                    "tool": "lr_step",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:13:42.324Z",
+                    "tool": "lr_step",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:13:54.162Z",
+                    "tool": "lr_step",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:15:20.653Z",
+                    "tool": "lr_step",
+                    "ok": true
+                  },
+                  {
+                    "ts": "2026-10-01T12:15:47.183Z",
+                    "tool": "lr_end_session",
+                    "ok": true
+                  }
+                ],
+                "invalid_records": 0,
+                "session_begun": true,
+                "session_id": "6180874a-c0f8-4277-a34b-d7574f77bd8b",
+                "intent_id": "landscape_golden_hour",
+                "target_filename": "20260907-_OZ80099.NEF",
+                "passes": 4,
+                "session_ended": "accept",
+                "snapshot": {
+                  "id": "8D3CD840-2FE0-4D0D-A25D-0776E1143F5A",
+                  "name": "AVG pre-session 2026-10-01T12:12:42.863Z"
+                },
+                "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-618087.json",
+                "hud_shown": true,
+                "awaiting": []
+              },
+              "logs": {
+                "desktop_log": {
+                  "found": true,
+                  "saved_as": "p5_desktop_mcp_log_2026-10-01T11-32-13-141Z_chat6.txt",
+                  "lines": 20
+                },
+                "desktop_errors": [
+                  "# Filter: timestamped lines matching Server started|Message from|[error]|[warn], and the engine's [lrc-avg] lines; user folder redacted."
+                ],
+                "engine_log": {
+                  "found": true,
+                  "saved_as": "p5_chat_tool_log_2026-10-01T11-32-13-141Z_chat6.jsonl",
+                  "records": 9
+                },
+                "session_log_error": null
+              },
+              "put_back": true
+            }
+          ]
+        }
+      }
+    ],
+    "pending_chat": null,
+    "known_photos": [
+      {
+        "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+        "label": "20260907-_OZ80093.NEF"
+      },
+      {
+        "uuid": "23B201BF-A39A-44C6-839B-E13D4C0EA70D",
+        "label": "20250413-_OZ81430.NEF"
+      },
+      {
+        "uuid": "995935D6-F379-4DDE-A8DC-737465C4A52E",
+        "label": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng"
+      },
+      {
+        "uuid": "4C1ADCA6-1BC5-442D-B5AE-4B2CCD7BCE67",
+        "label": "20260110-_Z8A0173.NEF"
+      },
+      {
+        "uuid": "B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39",
+        "label": "20260906-_OZ80005.NEF"
+      },
+      {
+        "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+        "label": "20260907-_OZ80099.NEF"
+      }
+    ],
+    "finished": true
+  },
+  "finished_at": "2026-10-01T12:16:50.641Z",
+  "plugin_log_copied": "p5_bridge_log_2026-10-01T11-32-13-141Z.txt",
+  "node": "v24.11.1",
+  "engine_version": "0.9.0"
+}

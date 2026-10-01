@@ -1,0 +1,248 @@
+{
+  "started": "2026-09-29T12:54:53.954Z",
+  "engine_version": "0.7.0",
+  "steps": [
+    {
+      "step": 2,
+      "what": "the HUD opens by itself",
+      "started": "2026-09-29T12:54:54.518Z",
+      "seconds": 7.3,
+      "outcome": {
+        "first_update": {
+          "applied": true,
+          "shown": true,
+          "opened": true
+        },
+        "hud_shown_line": "2026-09-29 05:54:54.620 INFO  hud: shown"
+      }
+    },
+    {
+      "step": 3,
+      "what": "Approve pass 2",
+      "started": "2026-09-29T12:55:01.810Z",
+      "seconds": 12.8,
+      "outcome": {
+        "event": "hud_approve_pass",
+        "source": "hud",
+        "ms_after_update": 12715,
+        "payload": {
+          "source": "hud",
+          "session_id": "probe-mumoi61y",
+          "seq_seen": 3,
+          "pass": 2,
+          "click_id": "0262BB10-7F96-47FB-94E9-2008B7EC7CDC"
+        },
+        "answered": {
+          "applied": true,
+          "shown": true,
+          "opened": false
+        }
+      }
+    },
+    {
+      "step": 4,
+      "what": "Pick B",
+      "started": "2026-09-29T12:55:17.611Z",
+      "seconds": 14.8,
+      "outcome": {
+        "event": "hud_pick",
+        "source": "hud",
+        "ms_after_update": 14692,
+        "payload": {
+          "source": "hud",
+          "variant": "B",
+          "session_id": "probe-mumoi61y",
+          "seq_seen": 5,
+          "click_id": "C32BF90F-0A44-4E32-8316-8AE2BC030FA6"
+        },
+        "answered": {
+          "applied": true,
+          "shown": true,
+          "opened": false
+        }
+      }
+    },
+    {
+      "step": 5,
+      "what": "another photo selected, then this one again",
+      "started": "2026-09-29T12:55:32.369Z",
+      "seconds": 37.3,
+      "outcome": {
+        "away": "2026-09-29T12:55:43.598Z",
+        "back": "2026-09-29T12:56:09.693Z"
+      }
+    },
+    {
+      "step": 6,
+      "what": "menu Abort Session",
+      "started": "2026-09-29T12:56:09.693Z",
+      "seconds": 300.1,
+      "outcome": {
+        "event": null,
+        "note": "no event within 5 min"
+      }
+    }
+  ],
+  "updates": [
+    {
+      "seq": 1,
+      "stage": "begin",
+      "at": "2026-09-29T12:54:54.522Z",
+      "ms": 2.2,
+      "result": {
+        "applied": true,
+        "shown": true,
+        "opened": true
+      },
+      "note": "Probe: nothing is written to your photo."
+    },
+    {
+      "seq": 2,
+      "stage": "awaiting_claude",
+      "at": "2026-09-29T12:54:57.798Z",
+      "ms": 6.7,
+      "result": {
+        "applied": true,
+        "shown": true,
+        "opened": false
+      },
+      "note": "Probe: nothing is written to your photo. Step 3 comes next."
+    },
+    {
+      "seq": 3,
+      "stage": "awaiting_approval",
+      "at": "2026-09-29T12:55:01.813Z",
+      "ms": 3.5,
+      "result": {
+        "applied": true,
+        "shown": true,
+        "opened": false
+      },
+      "note": "Step 3: click Approve pass 2."
+    },
+    {
+      "seq": 4,
+      "stage": "awaiting_claude",
+      "at": "2026-09-29T12:55:14.601Z",
+      "ms": 7.1,
+      "result": {
+        "applied": true,
+        "shown": true,
+        "opened": false
+      },
+      "note": "Approve received. Step 4 comes next."
+    },
+    {
+      "seq": 5,
+      "stage": "awaiting_pick",
+      "at": "2026-09-29T12:55:17.619Z",
+      "ms": 7.4,
+      "result": {
+        "applied": true,
+        "shown": true,
+        "opened": false
+      },
+      "note": "Step 4: click Pick B."
+    },
+    {
+      "seq": 6,
+      "stage": "awaiting_claude",
+      "at": "2026-09-29T12:55:32.368Z",
+      "ms": 3.9,
+      "result": {
+        "applied": true,
+        "shown": true,
+        "opened": false
+      },
+      "note": "Pick B received. Step 5: select another photo, then this one again."
+    },
+    {
+      "seq": 7,
+      "stage": "awaiting_claude",
+      "at": "2026-09-29T12:56:09.696Z",
+      "ms": 2.7,
+      "result": {
+        "applied": true,
+        "shown": true,
+        "opened": false
+      },
+      "note": "Step 6: File > Plug-in Extras > LrC-AVG - Abort Session."
+    },
+    {
+      "seq": 8,
+      "stage": "awaiting_claude",
+      "at": "2026-09-29T13:01:09.781Z",
+      "ms": 2.7,
+      "result": {
+        "applied": true,
+        "shown": true,
+        "opened": false
+      },
+      "note": "Step 7: File > Plug-in Extras > LrC-AVG - Accept Session."
+    }
+  ],
+  "events": [
+    {
+      "t_ms": 20570,
+      "at": "2026-09-29T12:55:14.525Z",
+      "name": "hud_approve_pass",
+      "ok": true,
+      "payload": {
+        "source": "hud",
+        "session_id": "probe-mumoi61y",
+        "seq_seen": 3,
+        "pass": 2,
+        "click_id": "0262BB10-7F96-47FB-94E9-2008B7EC7CDC"
+      }
+    },
+    {
+      "t_ms": 38349,
+      "at": "2026-09-29T12:55:32.303Z",
+      "name": "hud_pick",
+      "ok": true,
+      "payload": {
+        "source": "hud",
+        "variant": "B",
+        "session_id": "probe-mumoi61y",
+        "seq_seen": 5,
+        "click_id": "C32BF90F-0A44-4E32-8316-8AE2BC030FA6"
+      }
+    },
+    {
+      "t_ms": 275676,
+      "at": "2026-09-29T12:59:29.630Z",
+      "name": "hud_abort",
+      "ok": true,
+      "payload": {
+        "session_id": "probe-mumoi61y",
+        "seq_seen": 7,
+        "source": "hud",
+        "click_id": "71F1FCC0-00FC-4797-A8C0-295D2D1046B6"
+      }
+    }
+  ],
+  "lock": {
+    "ok": true
+  },
+  "hello": {
+    "protocol": 1,
+    "plugin_version": "0.6.0",
+    "lrc_version": "15.5.1",
+    "sdk_declared": 13,
+    "ports": {
+      "receive": 8765,
+      "send": 8766
+    }
+  },
+  "photo": {
+    "filename": "20260906-_OZ80005.NEF",
+    "target": {
+      "uuid": "B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39",
+      "filename": "20260906-_OZ80005.NEF",
+      "iso": "64",
+      "shutter": "1/100 s",
+      "aperture": "f/7.1",
+      "lens": "TAMRON 35-150mm F/2-2.8 Di III VXD A058Z"
+    }
+  }
+}

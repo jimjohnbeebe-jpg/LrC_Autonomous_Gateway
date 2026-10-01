@@ -1,0 +1,1139 @@
+{
+  "schema": "lrc-avg/phase5-check-state/v1",
+  "started_at": "2026-10-01T11:32:13.151Z",
+  "runs": [
+    "2026-10-01T11-32-13-141Z"
+  ],
+  "part1": {
+    "at": "2026-10-01T11:43:25.618Z",
+    "ok": true,
+    "summary": {
+      "lines": {
+        "page_setting_reaches_engine": true,
+        "session_rides_out_plugin_manager": true,
+        "hud_tracks_stages": true,
+        "ac2_hud_abort": true,
+        "approve_blocks_until_pressed": true,
+        "ac3_hud_pick": true,
+        "menu_items": true,
+        "photo_put_back": true
+      },
+      "ac4": {
+        "ok": true,
+        "sessions": [
+          {
+            "session": "A",
+            "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\P5\\p5_sessions_2026-10-01T11-32-13-141Z\\20261001-faa124.json",
+            "ok": true,
+            "passes": [
+              {
+                "n": 0,
+                "clip_high_pct": 0.0641,
+                "clip_low_pct": 0.1446,
+                "ok": true
+              },
+              {
+                "n": 1,
+                "clip_high_pct": 0.0717,
+                "clip_low_pct": 0.18,
+                "ok": true
+              },
+              {
+                "n": 2,
+                "clip_high_pct": 0.0694,
+                "clip_low_pct": 0.1512,
+                "ok": true
+              }
+            ]
+          },
+          {
+            "session": "B",
+            "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\P5\\p5_sessions_2026-10-01T11-32-13-141Z\\20261001-3133cd.json",
+            "ok": true,
+            "passes": [
+              {
+                "n": 0,
+                "clip_high_pct": 0.0641,
+                "clip_low_pct": 0.1446,
+                "ok": true
+              },
+              {
+                "n": 1,
+                "clip_high_pct": 0.0717,
+                "clip_low_pct": 0.18,
+                "ok": true
+              },
+              {
+                "n": 2,
+                "clip_high_pct": 0.0694,
+                "clip_low_pct": 0.1512,
+                "ok": true
+              }
+            ]
+          },
+          {
+            "session": "C",
+            "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\P5\\p5_sessions_2026-10-01T11-32-13-141Z\\20261001-d4247b.json",
+            "ok": true,
+            "passes": [
+              {
+                "n": 0,
+                "target": "A",
+                "clip_high_pct": 0.0641,
+                "clip_low_pct": 0.1446,
+                "ok": true
+              },
+              {
+                "n": 0,
+                "target": "B",
+                "clip_high_pct": 0.1115,
+                "clip_low_pct": 0.4695,
+                "ok": true
+              },
+              {
+                "n": 0,
+                "target": "C",
+                "clip_high_pct": 0.0199,
+                "clip_low_pct": 0.0365,
+                "ok": true
+              },
+              {
+                "n": 1,
+                "target": "A",
+                "clip_high_pct": 0.0717,
+                "clip_low_pct": 0.1721,
+                "ok": true
+              },
+              {
+                "n": 1,
+                "target": "B",
+                "clip_high_pct": 0.1201,
+                "clip_low_pct": 0.5144,
+                "ok": true
+              },
+              {
+                "n": 1,
+                "target": "C",
+                "clip_high_pct": 0.0216,
+                "clip_low_pct": 0.0415,
+                "ok": true
+              },
+              {
+                "n": 2,
+                "target": "C",
+                "clip_high_pct": 0.0231,
+                "clip_low_pct": 0.0443,
+                "ok": true
+              }
+            ]
+          },
+          {
+            "session": "D",
+            "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\P5\\p5_sessions_2026-10-01T11-32-13-141Z\\20261001-6b9f84.json",
+            "ok": true,
+            "passes": [
+              {
+                "n": 0,
+                "clip_high_pct": 0.0641,
+                "clip_low_pct": 0.1446,
+                "ok": true
+              },
+              {
+                "n": 1,
+                "clip_high_pct": 0.0672,
+                "clip_low_pct": 0.1765,
+                "ok": true
+              }
+            ]
+          },
+          {
+            "session": "E",
+            "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\P5\\p5_sessions_2026-10-01T11-32-13-141Z\\20261001-9b1dd4.json",
+            "ok": true,
+            "passes": [
+              {
+                "n": 0,
+                "clip_high_pct": 0.0641,
+                "clip_low_pct": 0.1446,
+                "ok": true
+              },
+              {
+                "n": 1,
+                "clip_high_pct": 0.0672,
+                "clip_low_pct": 0.1765,
+                "ok": true
+              }
+            ]
+          }
+        ]
+      },
+      "unexpected": [],
+      "pause": {
+        "seen": true,
+        "silence_ms": 2532,
+        "longer_than_heartbeat": false
+      },
+      "copies": {
+        "copies": [
+          {
+            "uuid": "7C16091C-8BCE-46E2-9ED5-209CCD8E8A8D",
+            "copy_name": "AVG landscape_golden_hour A",
+            "made_by": "variants",
+            "state": "gone"
+          },
+          {
+            "uuid": "FD98E001-0A71-4FE7-B059-4333F1E3C405",
+            "copy_name": "AVG landscape_golden_hour B",
+            "made_by": "variants",
+            "state": "gone"
+          },
+          {
+            "uuid": "2933E254-BAF2-48B2-B926-853D9F934848",
+            "copy_name": "AVG landscape_golden_hour C",
+            "made_by": "variants",
+            "state": "gone"
+          }
+        ],
+        "all_gone": true
+      },
+      "errors": []
+    }
+  },
+  "approve_chat": {
+    "at": "2026-10-01T11:50:42.473Z",
+    "ok": false,
+    "summary": {
+      "jim": [
+        "y",
+        "y"
+      ],
+      "problems": [
+        "no lr_step ran its full 60 s wait (AWAITING_APPROVAL)",
+        "Claude Desktop's log has 1 error or time-out line(s)"
+      ],
+      "awaiting": [],
+      "longest_call_held_ms": null,
+      "approvals": [
+        {
+          "at": "2026-10-01T11:46:22.417Z",
+          "target": "master",
+          "pass": 1,
+          "by": "hud"
+        },
+        {
+          "at": "2026-10-01T11:47:04.268Z",
+          "target": "master",
+          "pass": 2,
+          "by": "hud"
+        },
+        {
+          "at": "2026-10-01T11:47:36.560Z",
+          "target": "master",
+          "pass": 3,
+          "by": "hud"
+        }
+      ],
+      "ac4": {
+        "session": "approve chat",
+        "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-08cfef.json",
+        "ok": true,
+        "passes": [
+          {
+            "n": 0,
+            "clip_high_pct": 0.0641,
+            "clip_low_pct": 0.1446,
+            "ok": true
+          },
+          {
+            "n": 1,
+            "clip_high_pct": 0.4864,
+            "clip_low_pct": 0.2852,
+            "ok": true
+          },
+          {
+            "n": 2,
+            "clip_high_pct": 0.1302,
+            "clip_low_pct": 0.2843,
+            "ok": true
+          },
+          {
+            "n": 3,
+            "clip_high_pct": 0.322,
+            "clip_low_pct": 0.2332,
+            "ok": true
+          },
+          {
+            "n": 4,
+            "clip_high_pct": 0.2839,
+            "clip_low_pct": 0.2335,
+            "ok": true
+          }
+        ]
+      },
+      "evaluation": {
+        "tool_calls": [
+          {
+            "ts": "2026-10-01T11:44:14.997Z",
+            "tool": "lr_list_intents",
+            "ok": true
+          },
+          {
+            "ts": "2026-10-01T11:44:17.011Z",
+            "tool": "lr_get_active_photo_context",
+            "ok": true
+          },
+          {
+            "ts": "2026-10-01T11:44:24.569Z",
+            "tool": "lr_begin_session",
+            "ok": true
+          },
+          {
+            "ts": "2026-10-01T11:45:50.105Z",
+            "tool": "lr_step",
+            "ok": true
+          },
+          {
+            "ts": "2026-10-01T11:46:48.158Z",
+            "tool": "lr_approve_pass",
+            "ok": true
+          },
+          {
+            "ts": "2026-10-01T11:46:53.056Z",
+            "tool": "lr_step",
+            "ok": true
+          },
+          {
+            "ts": "2026-10-01T11:47:24.158Z",
+            "tool": "lr_approve_pass",
+            "ok": true
+          },
+          {
+            "ts": "2026-10-01T11:47:29.018Z",
+            "tool": "lr_step",
+            "ok": true
+          },
+          {
+            "ts": "2026-10-01T11:48:35.104Z",
+            "tool": "lr_approve_pass",
+            "ok": true
+          },
+          {
+            "ts": "2026-10-01T11:48:40.236Z",
+            "tool": "lr_step",
+            "ok": true
+          },
+          {
+            "ts": "2026-10-01T11:49:39.266Z",
+            "tool": "lr_end_session",
+            "ok": true
+          }
+        ],
+        "invalid_records": 0,
+        "session_begun": true,
+        "session_id": "08cfef2b-fd8a-4904-8be1-486509e51b84",
+        "intent_id": "landscape_golden_hour",
+        "target_filename": "20260907-_OZ80093.NEF",
+        "passes": 4,
+        "session_ended": "accept",
+        "snapshot": {
+          "id": "5E3C63F3-F14E-48CE-A750-2812F15C9A0A",
+          "name": "AVG pre-session 2026-10-01T11:44:24.596Z"
+        },
+        "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-08cfef.json",
+        "hud_shown": true,
+        "awaiting": []
+      },
+      "logs": {
+        "desktop_log": {
+          "found": true,
+          "saved_as": "p5_desktop_mcp_log_2026-10-01T11-32-13-141Z_approve.txt",
+          "lines": 28
+        },
+        "desktop_errors": [
+          "# Filter: timestamped lines matching Server started|Message from|[error]|[warn], and the engine's [lrc-avg] lines; user folder redacted."
+        ],
+        "engine_log": {
+          "found": true,
+          "saved_as": "p5_chat_tool_log_2026-10-01T11-32-13-141Z_approve.jsonl",
+          "records": 15
+        },
+        "session_log_error": null
+      },
+      "put_back": true,
+      "unexpected": []
+    }
+  },
+  "page_autonomous": true,
+  "chats": [
+    {
+      "at": "2026-10-01T11:55:06.119Z",
+      "ok": true,
+      "summary": {
+        "attempts": [
+          {
+            "ok": true,
+            "problems": [],
+            "ac4": {
+              "session": "chat 1",
+              "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-ea9ee2.json",
+              "ok": true,
+              "passes": [
+                {
+                  "n": 0,
+                  "clip_high_pct": 0.405,
+                  "clip_low_pct": 0.2405,
+                  "ok": true
+                },
+                {
+                  "n": 1,
+                  "clip_high_pct": 0.2697,
+                  "clip_low_pct": 0.4043,
+                  "ok": true
+                },
+                {
+                  "n": 2,
+                  "clip_high_pct": 0.3274,
+                  "clip_low_pct": 0.2805,
+                  "ok": true
+                }
+              ]
+            },
+            "unexpected": [],
+            "jim": [
+              "y",
+              "y",
+              "y",
+              "y"
+            ],
+            "evaluation": {
+              "tool_calls": [
+                {
+                  "ts": "2026-10-01T11:52:23.135Z",
+                  "tool": "lr_get_active_photo_context",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T11:52:25.729Z",
+                  "tool": "lr_begin_session",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T11:52:43.238Z",
+                  "tool": "lr_set_regions",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T11:52:46.969Z",
+                  "tool": "lr_step",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T11:52:55.443Z",
+                  "tool": "lr_step",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T11:54:02.799Z",
+                  "tool": "lr_end_session",
+                  "ok": true
+                }
+              ],
+              "invalid_records": 0,
+              "session_begun": true,
+              "session_id": "ea9ee231-3bfc-4e2f-8984-7192ae1b8aa7",
+              "intent_id": "landscape_golden_hour",
+              "target_filename": "20250413-_OZ81430.NEF",
+              "passes": 2,
+              "session_ended": "accept",
+              "snapshot": {
+                "id": "DF38F806-6A22-438B-9402-88CFDE53DC2E",
+                "name": "AVG pre-session 2026-10-01T11:52:25.758Z"
+              },
+              "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-ea9ee2.json",
+              "hud_shown": true,
+              "awaiting": []
+            },
+            "logs": {
+              "desktop_log": {
+                "found": true,
+                "saved_as": "p5_desktop_mcp_log_2026-10-01T11-32-13-141Z_chat1.txt",
+                "lines": 16
+              },
+              "desktop_errors": [
+                "# Filter: timestamped lines matching Server started|Message from|[error]|[warn], and the engine's [lrc-avg] lines; user folder redacted."
+              ],
+              "engine_log": {
+                "found": true,
+                "saved_as": "p5_chat_tool_log_2026-10-01T11-32-13-141Z_chat1.jsonl",
+                "records": 7
+              },
+              "session_log_error": null
+            },
+            "put_back": true
+          }
+        ]
+      },
+      "fixture": "20250413-_OZ81430.NEF"
+    },
+    {
+      "at": "2026-10-01T11:58:56.242Z",
+      "ok": true,
+      "summary": {
+        "attempts": [
+          {
+            "ok": true,
+            "problems": [],
+            "ac4": {
+              "session": "chat 2",
+              "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-782f5a.json",
+              "ok": true,
+              "passes": [
+                {
+                  "n": 0,
+                  "clip_high_pct": 0,
+                  "clip_low_pct": 0.5706,
+                  "ok": true
+                },
+                {
+                  "n": 1,
+                  "clip_high_pct": 0,
+                  "clip_low_pct": 0.0928,
+                  "ok": true
+                },
+                {
+                  "n": 2,
+                  "clip_high_pct": 0,
+                  "clip_low_pct": 0.0689,
+                  "ok": true
+                }
+              ]
+            },
+            "unexpected": [],
+            "jim": [
+              "y",
+              "y",
+              "y",
+              "y"
+            ],
+            "evaluation": {
+              "tool_calls": [
+                {
+                  "ts": "2026-10-01T11:55:51.724Z",
+                  "tool": "lr_get_active_photo_context",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T11:55:54.961Z",
+                  "tool": "lr_get_preview",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T11:56:51.338Z",
+                  "tool": "lr_begin_session",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T11:57:02.978Z",
+                  "tool": "lr_step",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T11:57:10.139Z",
+                  "tool": "lr_step",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T11:57:52.925Z",
+                  "tool": "lr_end_session",
+                  "ok": true
+                }
+              ],
+              "invalid_records": 0,
+              "session_begun": true,
+              "session_id": "782f5aee-3d4c-40ac-ad6a-9ace72a6e232",
+              "intent_id": "landscape_golden_hour",
+              "target_filename": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+              "passes": 2,
+              "session_ended": "accept",
+              "snapshot": {
+                "id": "377D1700-7805-4573-A9AE-E25734DA57EC",
+                "name": "AVG pre-session 2026-10-01T11:56:51.359Z"
+              },
+              "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-782f5a.json",
+              "hud_shown": true,
+              "awaiting": []
+            },
+            "logs": {
+              "desktop_log": {
+                "found": true,
+                "saved_as": "p5_desktop_mcp_log_2026-10-01T11-32-13-141Z_chat2.txt",
+                "lines": 16
+              },
+              "desktop_errors": [
+                "# Filter: timestamped lines matching Server started|Message from|[error]|[warn], and the engine's [lrc-avg] lines; user folder redacted."
+              ],
+              "engine_log": {
+                "found": true,
+                "saved_as": "p5_chat_tool_log_2026-10-01T11-32-13-141Z_chat2.jsonl",
+                "records": 7
+              },
+              "session_log_error": null
+            },
+            "put_back": true
+          }
+        ]
+      },
+      "fixture": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng"
+    },
+    {
+      "at": "2026-10-01T12:03:39.839Z",
+      "ok": true,
+      "summary": {
+        "attempts": [
+          {
+            "ok": true,
+            "problems": [],
+            "ac4": {
+              "session": "chat 3",
+              "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-b05023.json",
+              "ok": true,
+              "passes": [
+                {
+                  "n": 0,
+                  "clip_high_pct": 0.1242,
+                  "clip_low_pct": 0,
+                  "ok": true
+                },
+                {
+                  "n": 1,
+                  "clip_high_pct": 0.0084,
+                  "clip_low_pct": 0,
+                  "ok": true
+                },
+                {
+                  "n": 2,
+                  "clip_high_pct": 0.0013,
+                  "clip_low_pct": 0,
+                  "ok": true
+                },
+                {
+                  "n": 3,
+                  "clip_high_pct": 0.0354,
+                  "clip_low_pct": 0,
+                  "ok": true
+                },
+                {
+                  "n": 4,
+                  "clip_high_pct": 0.007,
+                  "clip_low_pct": 0,
+                  "ok": true
+                }
+              ]
+            },
+            "unexpected": [],
+            "jim": [
+              "y",
+              "y",
+              "y",
+              "y"
+            ],
+            "evaluation": {
+              "tool_calls": [
+                {
+                  "ts": "2026-10-01T11:59:45.172Z",
+                  "tool": "lr_get_active_photo_context",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T11:59:49.631Z",
+                  "tool": "lr_begin_session",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:00:02.812Z",
+                  "tool": "lr_list_intents",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:00:53.242Z",
+                  "tool": "lr_step",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:01:03.099Z",
+                  "tool": "lr_step",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:01:13.077Z",
+                  "tool": "lr_step",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:01:23.134Z",
+                  "tool": "lr_step",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:02:38.449Z",
+                  "tool": "lr_end_session",
+                  "ok": true
+                }
+              ],
+              "invalid_records": 0,
+              "session_begun": true,
+              "session_id": "b0502330-c806-4a27-b8f4-8e4ec9051cd0",
+              "intent_id": "landscape_golden_hour",
+              "target_filename": "20260110-_Z8A0173.NEF",
+              "passes": 4,
+              "session_ended": "accept",
+              "snapshot": {
+                "id": "FEC67256-3906-4655-8C11-1F8AB4710222",
+                "name": "AVG pre-session 2026-10-01T11:59:49.651Z"
+              },
+              "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-b05023.json",
+              "hud_shown": true,
+              "awaiting": []
+            },
+            "logs": {
+              "desktop_log": {
+                "found": true,
+                "saved_as": "p5_desktop_mcp_log_2026-10-01T11-32-13-141Z_chat3.txt",
+                "lines": 20
+              },
+              "desktop_errors": [
+                "# Filter: timestamped lines matching Server started|Message from|[error]|[warn], and the engine's [lrc-avg] lines; user folder redacted."
+              ],
+              "engine_log": {
+                "found": true,
+                "saved_as": "p5_chat_tool_log_2026-10-01T11-32-13-141Z_chat3.jsonl",
+                "records": 9
+              },
+              "session_log_error": null
+            },
+            "put_back": true
+          }
+        ]
+      },
+      "fixture": "20260110-_Z8A0173.NEF"
+    },
+    {
+      "at": "2026-10-01T12:08:50.344Z",
+      "ok": true,
+      "summary": {
+        "attempts": [
+          {
+            "ok": true,
+            "problems": [],
+            "ac4": {
+              "session": "chat 4",
+              "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-f424db.json",
+              "ok": true,
+              "passes": [
+                {
+                  "n": 0,
+                  "clip_high_pct": 0.0018,
+                  "clip_low_pct": 0,
+                  "ok": true
+                },
+                {
+                  "n": 1,
+                  "clip_high_pct": 0.0248,
+                  "clip_low_pct": 0,
+                  "ok": true
+                },
+                {
+                  "n": 2,
+                  "clip_high_pct": 0.017,
+                  "clip_low_pct": 0,
+                  "ok": true
+                },
+                {
+                  "n": 3,
+                  "clip_high_pct": 0.004,
+                  "clip_low_pct": 0,
+                  "ok": true
+                },
+                {
+                  "n": 4,
+                  "clip_high_pct": 0.0062,
+                  "clip_low_pct": 0,
+                  "ok": true
+                }
+              ]
+            },
+            "unexpected": [],
+            "jim": [
+              "y",
+              "y",
+              "y",
+              "y"
+            ],
+            "evaluation": {
+              "tool_calls": [
+                {
+                  "ts": "2026-10-01T12:04:25.427Z",
+                  "tool": "lr_get_active_photo_context",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:04:29.231Z",
+                  "tool": "lr_begin_session",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:04:43.457Z",
+                  "tool": "lr_set_regions",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:04:49.388Z",
+                  "tool": "lr_step",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:04:58.582Z",
+                  "tool": "lr_step",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:06:14.226Z",
+                  "tool": "lr_step",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:07:11.188Z",
+                  "tool": "lr_step",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:07:48.843Z",
+                  "tool": "lr_end_session",
+                  "ok": true
+                }
+              ],
+              "invalid_records": 0,
+              "session_begun": true,
+              "session_id": "f424db30-adb0-4e55-95fa-0c6f3645d311",
+              "intent_id": "landscape_golden_hour",
+              "target_filename": "20260906-_OZ80005.NEF",
+              "passes": 4,
+              "session_ended": "accept",
+              "snapshot": {
+                "id": "83279075-A315-4759-BF81-461088C96DF0",
+                "name": "AVG pre-session 2026-10-01T12:04:29.263Z"
+              },
+              "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-f424db.json",
+              "hud_shown": true,
+              "awaiting": []
+            },
+            "logs": {
+              "desktop_log": {
+                "found": true,
+                "saved_as": "p5_desktop_mcp_log_2026-10-01T11-32-13-141Z_chat4.txt",
+                "lines": 20
+              },
+              "desktop_errors": [
+                "# Filter: timestamped lines matching Server started|Message from|[error]|[warn], and the engine's [lrc-avg] lines; user folder redacted."
+              ],
+              "engine_log": {
+                "found": true,
+                "saved_as": "p5_chat_tool_log_2026-10-01T11-32-13-141Z_chat4.jsonl",
+                "records": 9
+              },
+              "session_log_error": null
+            },
+            "put_back": true
+          }
+        ]
+      },
+      "fixture": "20260906-_OZ80005.NEF"
+    },
+    {
+      "at": "2026-10-01T12:12:05.474Z",
+      "ok": true,
+      "summary": {
+        "attempts": [
+          {
+            "ok": true,
+            "problems": [],
+            "ac4": {
+              "session": "chat 5",
+              "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-bee6b1.json",
+              "ok": true,
+              "passes": [
+                {
+                  "n": 0,
+                  "clip_high_pct": 0.0641,
+                  "clip_low_pct": 0.1446,
+                  "ok": true
+                },
+                {
+                  "n": 1,
+                  "clip_high_pct": 0.0782,
+                  "clip_low_pct": 0.1049,
+                  "ok": true
+                },
+                {
+                  "n": 2,
+                  "clip_high_pct": 0.1332,
+                  "clip_low_pct": 0.098,
+                  "ok": true
+                },
+                {
+                  "n": 3,
+                  "clip_high_pct": 0.1537,
+                  "clip_low_pct": 0.1815,
+                  "ok": true
+                }
+              ]
+            },
+            "unexpected": [],
+            "jim": [
+              "y",
+              "y",
+              "y",
+              "y"
+            ],
+            "evaluation": {
+              "tool_calls": [
+                {
+                  "ts": "2026-10-01T12:09:39.994Z",
+                  "tool": "lr_get_active_photo_context",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:09:42.539Z",
+                  "tool": "lr_get_intent",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:09:45.021Z",
+                  "tool": "lr_begin_session",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:10:03.460Z",
+                  "tool": "lr_set_regions",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:10:08.147Z",
+                  "tool": "lr_step",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:10:19.813Z",
+                  "tool": "lr_step",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:10:31.940Z",
+                  "tool": "lr_step",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:11:04.122Z",
+                  "tool": "lr_end_session",
+                  "ok": true
+                }
+              ],
+              "invalid_records": 0,
+              "session_begun": true,
+              "session_id": "bee6b1b1-5b66-46b8-be00-f81d1e68abab",
+              "intent_id": "landscape_golden_hour",
+              "target_filename": "20260907-_OZ80093.NEF",
+              "passes": 3,
+              "session_ended": "accept",
+              "snapshot": {
+                "id": "C8ABDED0-3A56-40BE-86A5-94A9460E8073",
+                "name": "AVG pre-session 2026-10-01T12:09:45.041Z"
+              },
+              "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-bee6b1.json",
+              "hud_shown": true,
+              "awaiting": []
+            },
+            "logs": {
+              "desktop_log": {
+                "found": true,
+                "saved_as": "p5_desktop_mcp_log_2026-10-01T11-32-13-141Z_chat5.txt",
+                "lines": 20
+              },
+              "desktop_errors": [
+                "# Filter: timestamped lines matching Server started|Message from|[error]|[warn], and the engine's [lrc-avg] lines; user folder redacted."
+              ],
+              "engine_log": {
+                "found": true,
+                "saved_as": "p5_chat_tool_log_2026-10-01T11-32-13-141Z_chat5.jsonl",
+                "records": 9
+              },
+              "session_log_error": null
+            },
+            "put_back": true
+          }
+        ]
+      },
+      "fixture": "20260907-_OZ80093.NEF"
+    },
+    {
+      "at": "2026-10-01T12:16:50.634Z",
+      "ok": true,
+      "summary": {
+        "attempts": [
+          {
+            "ok": true,
+            "problems": [],
+            "ac4": {
+              "session": "chat 6",
+              "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-618087.json",
+              "ok": true,
+              "passes": [
+                {
+                  "n": 0,
+                  "clip_high_pct": 0.0526,
+                  "clip_low_pct": 0.7997,
+                  "ok": true
+                },
+                {
+                  "n": 1,
+                  "clip_high_pct": 0.0553,
+                  "clip_low_pct": 0.9605,
+                  "ok": true
+                },
+                {
+                  "n": 2,
+                  "clip_high_pct": 0.1112,
+                  "clip_low_pct": 0.8577,
+                  "ok": true
+                },
+                {
+                  "n": 3,
+                  "clip_high_pct": 0.1004,
+                  "clip_low_pct": 0.8517,
+                  "ok": true
+                },
+                {
+                  "n": 4,
+                  "clip_high_pct": 0.1684,
+                  "clip_low_pct": 0.9695,
+                  "ok": true
+                }
+              ]
+            },
+            "unexpected": [],
+            "jim": [
+              "y",
+              "y",
+              "y",
+              "y"
+            ],
+            "evaluation": {
+              "tool_calls": [
+                {
+                  "ts": "2026-10-01T12:12:40.304Z",
+                  "tool": "lr_get_active_photo_context",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:12:42.841Z",
+                  "tool": "lr_begin_session",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:13:15.536Z",
+                  "tool": "lr_set_regions",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:13:19.398Z",
+                  "tool": "lr_step",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:13:42.324Z",
+                  "tool": "lr_step",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:13:54.162Z",
+                  "tool": "lr_step",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:15:20.653Z",
+                  "tool": "lr_step",
+                  "ok": true
+                },
+                {
+                  "ts": "2026-10-01T12:15:47.183Z",
+                  "tool": "lr_end_session",
+                  "ok": true
+                }
+              ],
+              "invalid_records": 0,
+              "session_begun": true,
+              "session_id": "6180874a-c0f8-4277-a34b-d7574f77bd8b",
+              "intent_id": "landscape_golden_hour",
+              "target_filename": "20260907-_OZ80099.NEF",
+              "passes": 4,
+              "session_ended": "accept",
+              "snapshot": {
+                "id": "8D3CD840-2FE0-4D0D-A25D-0776E1143F5A",
+                "name": "AVG pre-session 2026-10-01T12:12:42.863Z"
+              },
+              "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261001-618087.json",
+              "hud_shown": true,
+              "awaiting": []
+            },
+            "logs": {
+              "desktop_log": {
+                "found": true,
+                "saved_as": "p5_desktop_mcp_log_2026-10-01T11-32-13-141Z_chat6.txt",
+                "lines": 20
+              },
+              "desktop_errors": [
+                "# Filter: timestamped lines matching Server started|Message from|[error]|[warn], and the engine's [lrc-avg] lines; user folder redacted."
+              ],
+              "engine_log": {
+                "found": true,
+                "saved_as": "p5_chat_tool_log_2026-10-01T11-32-13-141Z_chat6.jsonl",
+                "records": 9
+              },
+              "session_log_error": null
+            },
+            "put_back": true
+          }
+        ]
+      },
+      "fixture": "20260907-_OZ80099.NEF"
+    }
+  ],
+  "pending_chat": null,
+  "known_photos": [
+    {
+      "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+      "label": "20260907-_OZ80093.NEF"
+    },
+    {
+      "uuid": "23B201BF-A39A-44C6-839B-E13D4C0EA70D",
+      "label": "20250413-_OZ81430.NEF"
+    },
+    {
+      "uuid": "995935D6-F379-4DDE-A8DC-737465C4A52E",
+      "label": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng"
+    },
+    {
+      "uuid": "4C1ADCA6-1BC5-442D-B5AE-4B2CCD7BCE67",
+      "label": "20260110-_Z8A0173.NEF"
+    },
+    {
+      "uuid": "B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39",
+      "label": "20260906-_OZ80005.NEF"
+    },
+    {
+      "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+      "label": "20260907-_OZ80099.NEF"
+    }
+  ],
+  "finished": true
+}

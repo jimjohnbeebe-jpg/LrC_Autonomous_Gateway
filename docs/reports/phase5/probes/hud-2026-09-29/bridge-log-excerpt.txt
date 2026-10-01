@@ -1,0 +1,75 @@
+2026-09-29 05:54:02.920 INFO  bridge: starting generation 1 (receive 8765, send 8766)
+2026-09-29 05:54:12.916 INFO  bridge: token written to %USERPROFILE%\.lrc-avg\bridge_token
+2026-09-29 05:54:12.959 INFO  bridge: ports 8765/8766 written to %USERPROFILE%\.lrc-avg\bridge_ports.json
+2026-09-29 05:54:12.960 INFO  bridge: listening (generation 1)
+2026-09-29 05:54:53.974 INFO  bridge: receive: engine connected
+2026-09-29 05:54:54.477 INFO  bridge: send: engine connected
+2026-09-29 05:54:54.478 INFO  bridge: hello f3b899eb-853e-44a6-b977-02b3b3f86d76
+2026-09-29 05:54:54.482 INFO  bridge: get_selection e2757ce6-a9c0-40ad-afea-d109c02f528f
+2026-09-29 05:54:54.489 INFO  bridge: get_context 8323a96d-74fb-4f0e-ad71-1745eee2c716
+2026-09-29 05:54:54.521 INFO  bridge: hud_update 6a9935cb-9985-45a3-a4ef-b0bb8b9a7eeb
+2026-09-29 05:54:54.521 INFO  hud: session probe-mumoi61y
+2026-09-29 05:54:54.620 INFO  hud: shown
+2026-09-29 05:54:57.792 INFO  bridge: hud_update f40ef293-f46a-4af6-baaa-81702f98b5d8
+2026-09-29 05:55:01.810 INFO  bridge: hud_update 064f5b6d-81c6-4d11-a9a4-c8044cbbd2ed
+2026-09-29 05:55:14.523 INFO  hud: hud_approve_pass 0262BB10-7F96-47FB-94E9-2008B7EC7CDC from the hud: sent
+2026-09-29 05:55:14.594 INFO  bridge: hud_update ea3a5521-439e-4600-852d-689c3c330325
+2026-09-29 05:55:17.612 INFO  bridge: hud_update 628a4738-22fb-4190-9611-989d1619c75c
+2026-09-29 05:55:32.302 INFO  hud: hud_pick C32BF90F-0A44-4E32-8316-8AE2BC030FA6 from the hud: sent
+2026-09-29 05:55:32.365 INFO  bridge: hud_update 9efeccb2-574f-4aac-9bb2-4e2c3d45a5f0
+2026-09-29 05:55:33.372 INFO  bridge: get_selection 7389ef01-52de-4e84-bfb5-1ace97a14aec
+2026-09-29 05:55:34.379 INFO  bridge: get_selection c864002e-f833-410d-a37b-8d924457f7a9
+2026-09-29 05:55:35.387 INFO  bridge: get_selection 34adde6e-8ccd-46b8-b7b2-5228de550a2e
+2026-09-29 05:55:36.406 INFO  bridge: get_selection 846b8aa9-041e-4e99-8641-16784cf95263
+2026-09-29 05:55:37.411 INFO  bridge: get_selection 9b08fe03-577b-4f47-9036-c4f0a7bb0672
+2026-09-29 05:55:38.430 INFO  bridge: get_selection d86f5074-9109-42e7-b750-30a6365685f2
+2026-09-29 05:55:39.444 INFO  bridge: get_selection 7ced2f19-d58b-4b86-a89e-60725f96c75c
+2026-09-29 05:55:40.462 INFO  bridge: get_selection d68a7a56-ec57-4486-9286-9cede4c6863a
+2026-09-29 05:55:41.471 INFO  bridge: get_selection 1fe6a078-20f1-4ac6-9b77-612e9580e414
+2026-09-29 05:55:42.476 INFO  bridge: get_selection 618ea391-ace3-47bb-bbd4-7988f5bc07b4
+2026-09-29 05:55:43.566 INFO  bridge: get_selection 5bf482b6-71c6-4812-95ed-68dae6ece9c0
+2026-09-29 05:55:44.604 INFO  bridge: get_selection b8215b2e-75c1-42e6-91d0-8e01bff37f4c
+2026-09-29 05:55:45.624 INFO  bridge: get_selection 3f2d7ea1-29ef-46ed-aa8f-bbdc28a6db64
+2026-09-29 05:55:46.668 INFO  bridge: get_selection da6577bc-aec5-4d9b-890d-89dee38fcd0a
+2026-09-29 05:55:47.682 INFO  bridge: get_selection bf1beade-9328-4089-98cb-d9601d3e56be
+2026-09-29 05:55:48.707 INFO  bridge: get_selection 169490cd-63af-4b75-9c75-96741f4e163c
+2026-09-29 05:55:49.715 INFO  bridge: get_selection 8c80343b-d5cd-40ef-afb5-798ef13d491e
+2026-09-29 05:55:50.724 INFO  bridge: get_selection ef4d2622-5ef4-497b-8305-99e5c58bd8a0
+2026-09-29 05:55:51.753 INFO  bridge: get_selection 4c989932-664a-4bd2-b945-cd5cee950b10
+2026-09-29 05:55:52.803 INFO  bridge: get_selection 2b35e137-3f7b-445f-84c6-8083384d372b
+2026-09-29 05:55:53.829 INFO  bridge: get_selection a1d7dcfc-d748-4582-a9aa-3cf95504fcd1
+2026-09-29 05:55:54.840 INFO  bridge: get_selection a2780d14-3d31-43b1-b467-c9c01419631f
+2026-09-29 05:55:55.862 INFO  bridge: get_selection 11781fb4-9aec-45e9-a0f1-7fdf08c8c83f
+2026-09-29 05:55:56.885 INFO  bridge: get_selection 60648693-0f26-4546-a488-faf7c40e0d60
+2026-09-29 05:55:57.894 INFO  bridge: get_selection 4da114d3-93ef-40bd-b9b2-07bc61e6e327
+2026-09-29 05:55:58.902 INFO  bridge: get_selection e6ad72ff-d510-4ad4-965f-5a832601ea76
+2026-09-29 05:55:59.911 INFO  bridge: get_selection 142d1a60-1c7a-4490-a3fe-12c69d9dd695
+2026-09-29 05:56:00.918 INFO  bridge: get_selection 7636500c-633c-48e9-8926-120e99b5f732
+2026-09-29 05:56:01.926 INFO  bridge: get_selection 2136ad96-bd37-41a8-9a4f-61031386ac2f
+2026-09-29 05:56:02.935 INFO  bridge: get_selection 25853b35-8193-41ab-88d5-4d31d83b2cb5
+2026-09-29 05:56:03.953 INFO  bridge: get_selection 5db36a00-bd08-47c1-b061-d8abe01b4fb3
+2026-09-29 05:56:04.971 INFO  bridge: get_selection fc0b044f-827e-464c-bf0c-50b612a427f7
+2026-09-29 05:56:05.975 INFO  bridge: get_selection e227fb31-ca91-430c-b127-29b4574dcf5a
+2026-09-29 05:56:06.982 INFO  bridge: get_selection b1e9fa97-6de0-44ee-bca9-d7833ed1af23
+2026-09-29 05:56:07.990 INFO  bridge: get_selection 9dd64080-f364-4d9c-be2e-662bca1bf1c8
+2026-09-29 05:56:09.662 INFO  bridge: get_selection b31035a0-dd83-4cb4-bcce-58d05420c3fb
+2026-09-29 05:56:09.694 INFO  bridge: hud_update c623fb03-8313-40ce-9d3a-a50ea3235d73
+2026-09-29 05:56:44.772 INFO  bridge: receive: closed
+2026-09-29 05:58:49.546 INFO  bridge: receive: engine connected
+2026-09-29 05:58:50.056 INFO  bridge: send: engine connected
+2026-09-29 05:58:50.057 INFO  bridge: hello 9e84f92f-e825-4c6a-a49c-46990c2368a9
+2026-09-29 05:59:10.554 INFO  bridge: receive: closed
+2026-09-29 05:59:28.231 INFO  bridge: receive: engine connected
+2026-09-29 05:59:28.742 INFO  bridge: send: engine connected
+2026-09-29 05:59:28.743 INFO  bridge: hello e6478410-e71c-45a7-893b-8fa06c3cc99e
+2026-09-29 05:59:29.630 INFO  hud: hud_abort 71F1FCC0-00FC-4797-A8C0-295D2D1046B6 from the hud: sent
+2026-09-29 05:59:40.278 WARN  hud: hud_abort 71F1FCC0-00FC-4797-A8C0-295D2D1046B6 got no answer
+2026-09-29 06:00:33.399 INFO  hud: closed
+2026-09-29 06:01:00.519 INFO  bridge: receive: closed
+2026-09-29 06:01:00.600 INFO  hud: shown
+2026-09-29 06:01:01.208 INFO  bridge: receive: engine connected
+2026-09-29 06:01:01.720 INFO  bridge: send: engine connected
+2026-09-29 06:01:01.721 INFO  bridge: hello 6214e543-a0f0-4ea7-922e-bd8c3d61377e
+2026-09-29 06:01:09.779 INFO  bridge: hud_update 3e8ec24d-2f4d-467c-ba4b-f796300b9395
+2026-09-29 06:01:10.829 INFO  hud: closed
+2026-09-29 06:01:52.054 INFO  bridge: receive: closed

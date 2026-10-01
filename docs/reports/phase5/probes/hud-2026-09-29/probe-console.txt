@@ -1,0 +1,26 @@
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+[5:54:54 AM] STEP 2: the HUD opens by itself
+[5:55:01 AM]   step 2: {"first_update":{"applied":true,"shown":true,"opened":true},"hud_shown_line":"2026-09-29 05:54:54.620 INFO  hud: shown"}
+[5:55:01 AM] STEP 3: Approve pass 2
+[5:55:14 AM]   step 3: {"event":"hud_approve_pass","source":"hud","ms_after_update":12715,"payload":{"source":"hud","session_id":"probe-mumoi61y","seq_seen":3,"pass":2,"click_id":"0262BB10-7F96-47FB-94E9-2008B7EC7CDC"},"answered":{"applied":true,"shown":true,"opened":false}}
+[5:55:17 AM] STEP 4: Pick B
+[5:55:32 AM]   step 4: {"event":"hud_pick","source":"hud","ms_after_update":14692,"payload":{"source":"hud","variant":"B","session_id":"probe-mumoi61y","seq_seen":5,"click_id":"C32BF90F-0A44-4E32-8316-8AE2BC030FA6"},"answered":{"applied":true,"shown":true,"opened":false}}
+[5:55:32 AM] STEP 5: another photo selected, then this one again
+[5:56:09 AM]   step 5: {"away":"2026-09-29T12:55:43.598Z","back":"2026-09-29T12:56:09.693Z"}
+[5:56:09 AM] STEP 6: menu Abort Session
+  (bridge: dropped (heartbeat: no message from the plugin for 7965 ms))
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+  (bridge: dropped (heartbeat: no message from the plugin for 6039 ms))
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+  (bridge: dropped (heartbeat: no message from the plugin for 6030 ms))
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+[6:01:09 AM]   step 6: {"event":null,"note":"no event within 5 min"}
+[6:01:09 AM] STEP 7: menu Accept Session

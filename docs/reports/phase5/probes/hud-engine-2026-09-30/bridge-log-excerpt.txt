@@ -1,0 +1,86 @@
+2026-09-30 05:52:42.511 INFO  bridge: receive: engine connected
+2026-09-30 05:52:43.024 INFO  bridge: send: engine connected
+2026-09-30 05:52:43.025 INFO  bridge: hello b722a5ce-408f-4cc5-9cfa-68e32d7d42a8
+2026-09-30 05:52:43.034 INFO  bridge: select_photo 040a76e7-9856-4dfc-8f93-43149740491b
+2026-09-30 05:52:45.067 INFO  bridge: get_settings 0789ca46-d107-4b95-8a5d-b9daff4ee44e
+2026-09-30 05:52:45.518 INFO  bridge: get_prefs eab22988-924b-4e76-a736-964177090ca2
+2026-09-30 05:52:45.537 INFO  bridge: get_context 64de21fe-3710-480e-9c7d-74175e95f947
+2026-09-30 05:52:45.722 INFO  bridge: get_settings d964287c-44b6-4633-a25d-09405ae03ba0
+2026-09-30 05:52:45.926 INFO  bridge: create_snapshot dfde7d8f-1453-4b37-8557-6f94af294ea9
+2026-09-30 05:52:46.152 INFO  bridge: hud_update 081d636d-430d-4ae4-a25c-a5199430a6db
+2026-09-30 05:52:46.153 INFO  hud: session 4951aeca-fb2a-402b-b97a-8eea034eaeac
+2026-09-30 05:52:46.388 INFO  hud: shown
+2026-09-30 05:52:46.523 INFO  bridge: export_preview 00b03e27-5533-434a-8de7-2a9dc2444078
+2026-09-30 05:52:46.524 INFO  bridge: hud_update e81f01d5-2ff9-47b8-ac63-86fdd15600d1
+2026-09-30 05:52:46.556 INFO  hud: selection CF12AF60-0858-4181-9562-376D16B89126: Selection: the session's photo.
+2026-09-30 05:52:54.101 INFO  bridge: hud_update 65d8d891-107d-4da7-af68-c797fef17837
+2026-09-30 05:52:54.109 INFO  bridge: apply_settings cc10b7a9-fa79-4540-87e0-ecb0947dfba8
+2026-09-30 05:52:54.121 INFO  bridge: hud_update 95830ae4-1b8e-458f-afa8-6f0f4a10197c
+2026-09-30 05:52:55.913 INFO  bridge: hud_update 7b6d5f16-96d2-41c6-bc1c-2c404746aa78
+2026-09-30 05:52:55.920 INFO  bridge: export_preview 9a1bbee0-be07-4633-ba3a-c629259f5cb4
+2026-09-30 05:53:02.441 INFO  bridge: hud_update 846d26f7-e079-4648-80bc-50d12f10b8e4
+2026-09-30 05:53:02.446 INFO  bridge: apply_settings ef71b534-fb9d-4e6f-9fde-d5f8f165ec1e
+2026-09-30 05:53:02.452 INFO  bridge: hud_update 3de025c6-7b8a-4f86-b39c-87712cc68fc9
+2026-09-30 05:53:03.803 INFO  bridge: hud_update 09388538-0a60-454d-97dd-45c66dff5084
+2026-09-30 05:53:03.807 INFO  bridge: export_preview f04db2b6-1a1f-49c2-9058-4f33b9f11dd3
+2026-09-30 05:53:08.673 INFO  bridge: hud_update e2562fcc-abcd-4825-a560-d957aa67b310
+2026-09-30 05:53:08.675 INFO  bridge: apply_settings 098f3996-90bc-4e56-b140-83395f98271f
+2026-09-30 05:53:08.684 INFO  bridge: hud_update 8b603b20-ae70-4ac8-8b70-97f1cc6ab1c5
+2026-09-30 05:53:09.952 INFO  bridge: hud_update 02f0554c-58a8-4b9d-abf7-f3139408ca58
+2026-09-30 05:53:09.955 INFO  bridge: export_preview 408d8df0-8de8-4562-b5ea-2039578edfeb
+2026-09-30 05:53:14.284 INFO  bridge: hud_update 026d51c8-cc66-48d5-a332-0dc99505a179
+2026-09-30 05:53:14.288 INFO  bridge: apply_settings 3f09a5d1-64cf-4404-b56e-bd5120f012fb
+2026-09-30 05:53:14.295 INFO  bridge: hud_update 7197fff0-ba66-4300-8797-843d01a337cb
+2026-09-30 05:53:15.418 INFO  bridge: hud_update e585ae3d-03b2-4486-a1fe-2ef6051daaf0
+2026-09-30 05:53:15.421 INFO  bridge: export_preview 65d65afd-dcd9-48db-8006-3c73c55339cf
+2026-09-30 05:53:19.794 INFO  bridge: hud_update 11ffe0ed-c420-46ba-b1de-925b8aee69ba
+2026-09-30 05:53:19.800 INFO  bridge: apply_settings a531642b-3df7-4f91-bf6c-26c99ad430d5
+2026-09-30 05:53:19.806 INFO  bridge: hud_update 94889afb-0e14-4482-bb98-3cbfb3d23149
+2026-09-30 05:53:20.911 INFO  bridge: hud_update d4116f6c-529e-41c8-98eb-06051ba47a9d
+2026-09-30 05:53:20.915 INFO  bridge: export_preview 796b573e-1662-4e7a-a693-e963675fd634
+2026-09-30 05:53:24.631 INFO  bridge: hud_update 07bec34e-e79d-4584-9c7c-aef44f691cef
+2026-09-30 05:53:24.634 INFO  bridge: apply_settings 3c4cb739-7faa-4255-8009-e0807779997f
+2026-09-30 05:53:24.636 INFO  bridge: hud_update 846e4eaf-7be0-47a1-97d9-4ad19613f517
+2026-09-30 05:53:25.184 INFO  bridge: hud_update fe1a95a7-1827-4d43-b2ed-9be53ea782be
+2026-09-30 05:53:25.186 INFO  bridge: export_preview 0412a346-88c9-4f03-90fa-ce4a61f2a7c5
+2026-09-30 05:53:27.874 INFO  bridge: hud_update 3315e790-9652-4607-8ff0-79f5aad9a44f
+2026-09-30 05:53:27.876 INFO  bridge: apply_settings 04a16267-b014-4a02-9ccb-a784d4c03eb0
+2026-09-30 05:53:27.885 INFO  bridge: hud_update 320ed0ea-e5ed-484c-b433-feb6197ee731
+2026-09-30 05:53:28.468 INFO  bridge: hud_update e1c24556-8425-4f0d-9577-ab08e4b7f27c
+2026-09-30 05:53:28.469 INFO  bridge: export_preview 53f4e445-80da-4df7-b47b-f1d6a46f7ce6
+2026-09-30 05:53:31.715 INFO  bridge: hud_update 0ebe0eb2-2247-43e5-a381-40066ed6ac63
+2026-09-30 05:53:31.719 INFO  bridge: apply_settings 0f4e7e25-08f0-4b21-be6d-6319444054b0
+2026-09-30 05:53:31.724 INFO  bridge: hud_update 279ffbd4-111e-474d-a500-284afcc12951
+2026-09-30 05:53:32.401 INFO  bridge: hud_update 583c90e6-11d8-4364-bb87-f0865d7852bc
+2026-09-30 05:53:32.403 INFO  bridge: export_preview 1ad0aefb-0ac7-46ac-b844-7001b1549d36
+2026-09-30 05:53:35.074 INFO  bridge: hud_update 2ff11553-00ee-4f47-badc-56719dff8867
+2026-09-30 05:53:35.074 INFO  bridge: apply_settings 55830c43-4466-4f5d-bd12-1b184a4d00b3
+2026-09-30 05:53:35.077 INFO  bridge: hud_update 9e404415-9088-4a88-9eb1-ff7796c17ac2
+2026-09-30 05:53:35.643 INFO  bridge: hud_update 4a0634d5-c118-4288-9db6-6be34d167be2
+2026-09-30 05:53:35.644 INFO  bridge: export_preview cb31cb7c-9d30-4240-82ec-da8b7ce53dc2
+2026-09-30 05:53:38.842 INFO  bridge: hud_update 1f4a23cb-5258-4ca0-9582-3f6a9830079a
+2026-09-30 05:53:38.845 INFO  bridge: get_settings ded44982-1349-45f2-84c0-ec0da4c8d31d
+2026-09-30 05:53:38.851 INFO  bridge: hud_update 11d473df-aa2f-433b-b6bd-efb8008a0628
+2026-09-30 05:53:38.921 INFO  bridge: hud_update 51df367c-965b-47b5-8f62-75d1d7670904
+2026-09-30 05:53:38.922 INFO  bridge: apply_settings 0f1ee9ea-648e-430d-810e-427b4a59e18e
+2026-09-30 05:53:39.598 INFO  bridge: hud_update 93ce3aa6-824a-478a-9cb8-8e1c4eb69654
+2026-09-30 05:53:39.600 INFO  bridge: export_preview e53cd808-1fea-4ffb-8a07-5b7be22cdd46
+2026-09-30 05:53:42.831 INFO  bridge: hud_update 3904d631-53f3-4f83-8c88-fca8f5f49278
+2026-09-30 05:53:42.846 INFO  bridge: hud_update 77bf1321-219d-44c5-b7d0-c1b0d3a80edc
+2026-09-30 05:54:04.418 INFO  bridge: get_settings d334ca5a-dd37-404e-aa0d-d5905bb5ffe6
+2026-09-30 05:54:04.442 INFO  bridge: hud_update 61fd84f3-b526-43cd-99a5-12747d59fb4a
+2026-09-30 05:54:04.446 INFO  bridge: apply_settings 125a63a9-1f8b-4e22-a7cf-8d658322e7c2
+2026-09-30 05:54:05.141 INFO  bridge: hud_update 5fb4e7fd-47ce-48ad-a27c-976754fc7813
+2026-09-30 05:54:05.144 INFO  bridge: export_preview 23972807-ff03-4015-b448-c830323dff26
+2026-09-30 05:54:08.378 INFO  bridge: hud_update a50265ef-d95d-4ff2-a0e6-8cbcccf9572f
+2026-09-30 05:54:08.382 INFO  bridge: hud_update 14868c4b-815d-4284-a518-907a3175f25a
+2026-09-30 05:54:54.295 INFO  hud: hud_abort C551D1DD-57A1-4585-9022-3E1688C296EE from the hud: sent
+2026-09-30 05:54:54.300 INFO  bridge: hud_update 96176bc8-fafa-4dee-96e7-3ec2b1a17602
+2026-09-30 05:54:54.304 INFO  bridge: apply_snapshot 0e7370bf-8386-44c4-bbc0-3892f56877ae
+2026-09-30 05:54:54.813 INFO  bridge: hud_update 5ee70513-040b-4fcb-80d0-0e346eff165b
+2026-09-30 05:54:54.822 INFO  bridge: get_settings c34db868-54eb-4221-8799-b4481550ca24
+2026-09-30 05:54:54.825 INFO  hud: selection CF12AF60-0858-4181-9562-376D16B89126: (no line)
+2026-09-30 05:54:54.892 INFO  bridge: receive: closed
+2026-09-30 05:54:59.958 INFO  hud: closing, the session ended (aborted)
+2026-09-30 05:54:59.958 INFO  hud: closed
+2026-09-30 05:54:59.995 INFO  hud: closed

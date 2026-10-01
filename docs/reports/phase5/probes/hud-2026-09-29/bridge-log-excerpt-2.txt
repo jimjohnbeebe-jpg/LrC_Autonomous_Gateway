@@ -1,0 +1,60 @@
+2026-09-29 06:01:10.829 INFO  hud: closed
+2026-09-29 06:01:52.054 INFO  bridge: receive: closed
+2026-09-30 03:59:53.252 INFO  bridge: receive: closed
+2026-09-30 04:00:00.574 INFO  bridge: send: closed
+2026-09-30 04:06:43.923 INFO  bridge: starting generation 1 (receive 8765, send 8766)
+2026-09-30 04:06:56.786 INFO  bridge: token written to %USERPROFILE%\.lrc-avg\bridge_token
+2026-09-30 04:06:56.834 INFO  bridge: ports 8765/8766 written to %USERPROFILE%\.lrc-avg\bridge_ports.json
+2026-09-30 04:06:56.835 INFO  bridge: listening (generation 1)
+2026-09-30 04:07:32.191 INFO  bridge: receive: engine connected
+2026-09-30 04:07:32.701 INFO  bridge: send: engine connected
+2026-09-30 04:07:32.703 INFO  bridge: hello f8f081d9-21ba-4ca9-96d8-0ca6d253f00a
+2026-09-30 04:07:32.707 INFO  bridge: get_selection 8ed8d6ed-3696-494f-8673-8e2b2d5878b5
+2026-09-30 04:07:32.712 INFO  bridge: get_context 531d4fa8-2495-4fed-a8fc-31ccf2bf2432
+2026-09-30 04:07:32.740 INFO  bridge: hud_update 40f5d40b-1f41-4e90-9181-2d1ff79ddcac
+2026-09-30 04:07:32.740 INFO  hud: session probe-muo03y7m
+2026-09-30 04:07:32.867 INFO  hud: shown
+2026-09-30 04:07:32.900 INFO  hud: selection B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39: Selection: the session's photo.
+2026-09-30 04:07:36.027 INFO  bridge: hud_update 94f2c7ee-12e2-4eb5-842f-6ca418771654
+2026-09-30 04:07:40.052 INFO  bridge: hud_update 63cdaf76-024d-495d-89f6-7e24fe2b465f
+2026-09-30 04:07:56.362 INFO  hud: hud_approve_pass DE543C8E-110D-4437-9744-3E4AFF254B21 from the hud: sent
+2026-09-30 04:07:56.435 INFO  bridge: hud_update 02bf911d-d8ff-4f15-a231-ca3da08250eb
+2026-09-30 04:07:59.456 INFO  bridge: hud_update 2c183000-89a8-4678-a86b-f2fb96ea073a
+2026-09-30 04:08:25.824 INFO  hud: hud_pick A1378CB7-EA0C-4EE1-B996-E25A80159E3E from the hud: sent
+2026-09-30 04:08:25.831 INFO  bridge: hud_update e56e0278-c594-41c8-bb01-0e3681f39057
+2026-09-30 04:08:26.848 INFO  bridge: get_selection 2f03bb20-f25d-462c-9851-8db9a8783cbc
+2026-09-30 04:08:27.856 INFO  bridge: get_selection 75cc6b22-6bc0-4215-8088-a9a22a648904
+2026-09-30 04:08:28.862 INFO  bridge: get_selection 7f29241a-106a-4035-9c14-e6561b4d3c4d
+2026-09-30 04:08:29.888 INFO  bridge: get_selection 4e25f10d-e3b4-424d-85bb-7c577dc40bf6
+2026-09-30 04:08:30.692 INFO  hud: selectionChangeObserver called
+2026-09-30 04:08:30.907 INFO  hud: selection C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9: Target changed: 20260907-_OZ80093.NEF is selected. Select 20260906-_OZ80005.NEF again; the session is still open.
+2026-09-30 04:08:30.909 INFO  bridge: get_selection 503a3d54-800e-4b06-8fd7-621c9ae8e525
+2026-09-30 04:08:31.928 INFO  bridge: get_selection 0798b2f6-0956-41f2-a5d1-c0ba8873f4a3
+2026-09-30 04:08:32.934 INFO  bridge: get_selection dfb53b3d-2a4c-481f-9080-44562caa2d55
+2026-09-30 04:08:33.942 INFO  bridge: get_selection 3a59412e-f820-4044-9c7c-d34a6ce80464
+2026-09-30 04:08:34.950 INFO  bridge: get_selection b0dc88b3-fac2-4b22-a1c4-9361f549c414
+2026-09-30 04:08:35.947 INFO  hud: selectionChangeObserver called
+2026-09-30 04:08:36.001 INFO  bridge: get_selection 0f9d875d-1647-4950-ba81-1d87e5c56ed3
+2026-09-30 04:08:36.005 INFO  hud: selection B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39: Selection: the session's photo.
+2026-09-30 04:08:36.016 INFO  bridge: hud_update 82865b3c-ea28-499e-a35a-86ebc994d934
+2026-09-30 04:09:10.547 INFO  bridge: receive: closed
+2026-09-30 04:09:11.041 INFO  bridge: receive: engine connected
+2026-09-30 04:09:11.552 INFO  bridge: send: engine connected
+2026-09-30 04:09:11.552 INFO  bridge: hello 738dac80-1276-4547-ab98-506ca2cb63d0
+2026-09-30 04:09:11.566 INFO  hud: hud_abort F9D846FA-10F6-4E94-B405-9E481EF5B821 from the menu: sent
+2026-09-30 04:09:11.568 INFO  hud: menu hud_abort: Abort sent at 04:09:11; waiting for the engine
+2026-09-30 04:09:11.659 INFO  bridge: hud_update 9f0f9d06-04c9-4941-8f84-93657c3eea4d
+2026-09-30 04:09:11.666 INFO  bridge: hud_update c4d86600-3372-490e-b7ea-2e8171287087
+2026-09-30 04:09:56.246 INFO  hud: hud_accept 72EF41CF-500E-4847-B571-CE009F0DF52A from the menu: sent
+2026-09-30 04:09:56.248 INFO  hud: menu hud_accept: Accept sent at 04:09:56; waiting for the engine
+2026-09-30 04:09:56.339 INFO  bridge: hud_update beef6f79-67cc-49f1-9c8b-efd7e9372417
+2026-09-30 04:09:56.347 INFO  bridge: hud_update 80334888-7549-497f-afe0-2bd8e8ab8331
+2026-09-30 04:10:30.942 INFO  hud: hud_abort C08465DF-8868-47BE-B994-C135D2671FAB from the hud: sent
+2026-09-30 04:10:30.971 INFO  bridge: hud_update 4bb23cf7-f00e-471a-8bbe-331cc60bc474
+2026-09-30 04:10:30.978 INFO  hud: selection B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39: (no line)
+2026-09-30 04:10:36.462 INFO  hud: closing, the session ended (aborted)
+2026-09-30 04:10:36.462 INFO  hud: closed
+2026-09-30 04:10:36.492 INFO  hud: closed
+2026-09-30 04:10:49.077 INFO  hud: shown
+2026-09-30 04:11:01.726 INFO  hud: closed
+2026-09-30 04:11:01.752 INFO  bridge: receive: closed

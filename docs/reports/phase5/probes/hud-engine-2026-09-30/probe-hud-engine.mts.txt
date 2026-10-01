@@ -1,0 +1,178 @@
+// Live check of PHASE5_PLAN row 5 (engine 0.8.0 with plugin 0.6.1), decision D2-B [stated: Jim,
+// 2026-09-30, "Go with recommendations"]. Runs ONE Converge session on 20260907-_OZ80099.NEF through
+// the engine's own tools (engine\dist), HUD included, exactly as Claude Desktop's engine would:
+//   1. takes the engine instance lock; selects the photo by uuid (select_photo, identity checked);
+//      reads its settings (the start);
+//   2. lr_begin_session (neutral_technical_correction, max 8 passes): the HUD opens by itself;
+//      one lr_step (exposure +0.1);
+//   3. waits (3 min at most) for Jim to open Plug-in Manager: once the plugin stops answering pings
+//      (1.5 s), sends the next lr_step at once and records how long it took and whether the bridge
+//      dropped (D1-A: it should not, the session allows 60 s of silence);
+//   4. waits (3 min at most) for Jim's Abort in the HUD; records the session log's ended_by and revert;
+//   5. ALWAYS: if the session is still open, lr_end_session "revert"; then reads the photo and
+//      compares every setting with the start; if any differs, applies the pre-session snapshot again.
+// Each wait ends and moves on, so a missed step never blocks the put-back.
+// Results: <out>\probe.json and the console. Usage: node probe-hud-engine.mts <repo root>
+// Dry run against a stand-in plugin: LRC_AVG_COMMAND_PORT/_EVENT_PORT/_TOKEN_FILE, PROBE_UUID, PROBE_OUT,
+// PROBE_WAIT_MS.
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+
+const repo = process.argv[2] as string;
+const dist = (p: string) => import(pathToFileURL(path.join(repo, "engine", "dist", p)).href);
+const { BridgeClient } = await dist("bridge/index.js");
+const { Tools, acquireInstanceLock, devOverrides, ENGINE_VERSION } = await dist("mcp/index.js");
+const { PreviewService } = await dist("preview/index.js");
+const { IntentLibrary } = await dist("intents/index.js");
+const { loadDefaultParamMap } = await dist("params/index.js");
+const { ToolLog } = await dist("log/index.js");
+
+const UUID = process.env["PROBE_UUID"] ?? "CF12AF60-0858-4181-9562-376D16B89126"; // 20260907-_OZ80099.NEF [handle: logs\20260927-26ecc4.json target]
+const outDir = process.env["PROBE_OUT"] ?? path.join(repo, "logs", "probe-hud-engine-2026-09-30", "run");
+const WAIT_MS = Number(process.env["PROBE_WAIT_MS"] ?? 180_000);
+/** bridge-gate.ts SESSION_SILENCE_MS (not exported from the mcp index). */
+const SESSION_SILENCE_MS = 60_000;
+mkdirSync(outDir, { recursive: true });
+
+const t0 = Date.now();
+const at = () => new Date().toISOString();
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const result: Record<string, any> = { started: at(), engine_version: ENGINE_VERSION, uuid: UUID, steps: {} };
+const save = () => writeFileSync(path.join(outDir, "probe.json"), JSON.stringify(result, null, 2));
+const say = (m: string) => console.log(`[${new Date().toLocaleTimeString()}] ${m}`);
+const step = (name: string, data: Record<string, unknown>) => {
+  result.steps[name] = { at: at(), t_ms: Date.now() - t0, ...data };
+  save();
+};
+
+const dev = devOverrides();
+const lock = await acquireInstanceLock(dev.lockPort);
+if (!lock.ok) {
+  result.lock = { ok: false, port: lock.port, pid: lock.pid };
+  save();
+  say(`LOCK BUSY: another engine (pid ${lock.pid}) holds port ${lock.port}. Do not use Claude Desktop's chat for 60 s, then run again.`);
+  process.exit(2);
+}
+let tools: any = null;
+const sessionOpen = () => (tools?.sessionManager()?.current() ?? null) !== null;
+const client = new BridgeClient({
+  engineVersion: `${ENGINE_VERSION}-probe`,
+  log: (m: string) => say(`  (${m})`),
+  silenceAllowanceMs: () => (sessionOpen() ? SESSION_SILENCE_MS : 0),
+  ...dev.bridge,
+});
+client.start();
+const hello = await client.waitConnected(30_000);
+result.hello = hello;
+if (hello.plugin_version !== "0.6.1") {
+  say(`FAILED: Lightroom runs plugin ${hello.plugin_version}, not 0.6.1.`);
+  result.failed = "plugin version";
+  save();
+  process.exit(1);
+}
+const map = loadDefaultParamMap();
+tools = new Tools({
+  client,
+  map,
+  previews: new PreviewService(client),
+  intents: new IntentLibrary({ map }),
+  sessionLogDir: path.join(outDir, "sessions"),
+  engineVersion: `${ENGINE_VERSION}-probe`,
+  ensureBridge: async () => void (await client.waitConnected(15_000)),
+  log: new ToolLog(outDir),
+});
+
+const settingsNow = async () => map.fromSdk((await client.request("get_settings", { target_uuid: UUID })).settings).settings;
+const differing = (a: Record<string, unknown>, b: Record<string, unknown>) =>
+  [...new Set([...Object.keys(a), ...Object.keys(b)])].filter((k) => JSON.stringify(a[k]) !== JSON.stringify(b[k]));
+
+let sessionId: string | null = null;
+let snapshotId: string | null = null;
+let start: Record<string, unknown> | null = null;
+try {
+  // 1. The photo.
+  const selected = await client.request("select_photo", { uuid: UUID, expect: { is_virtual_copy: false } });
+  start = await settingsNow();
+  step("1_select", { ok: true, selected, start_keys: Object.keys(start).length });
+  say(`1. selected ${UUID}; ${Object.keys(start).length} settings read.`);
+
+  // 2. Begin and one step.
+  const begun = await tools.beginSession({ intent_id: "neutral_technical_correction", max_passes: 8, return_image: "none" });
+  sessionId = begun.json.session_id;
+  snapshotId = begun.json.snapshot?.id ?? null;
+  step("2_begin", { ok: true, session_id: sessionId, snapshot: begun.json.snapshot, timings: begun.json.timings, hud: tools.hud()?.stats });
+  say(`2. session ${sessionId} begun (${begun.json.timings?.total_ms} ms); the HUD should be open.`);
+  const first = await tools.step({ session_id: sessionId, settings: { exposure: 0.1 }, rationale: "live check: pass 1", return_image: "none" });
+  step("2_step1", { ok: true, pass: first.json.pass, timings: first.json.timings });
+  say(`   pass 1 done (${first.json.timings?.total_ms} ms). NOW: open File > Plug-in Manager, wait 10 s, click Done.`);
+
+  // 3. A step sent while the plugin is silent (Plug-in Manager).
+  const drops = client.stats.drops;
+  const deadline = Date.now() + WAIT_MS;
+  let silentAt: number | null = null;
+  while (Date.now() < deadline) {
+    try {
+      await client.request("ping", { nonce: "probe" }, { timeoutMs: 1500 });
+      await sleep(300);
+    } catch {
+      silentAt = Date.now();
+      break;
+    }
+  }
+  if (silentAt === null) {
+    step("3_pause", { ok: false, note: `the plugin never went silent within ${WAIT_MS / 1000} s` });
+    say("3. no silence seen; moving on.");
+  } else {
+    say("3. the plugin went silent: sending pass 2 now.");
+    const sent = Date.now();
+    try {
+      const second = await tools.step({ session_id: sessionId, settings: { exposure: -0.1 }, rationale: "live check: pass 2, sent while the plugin was silent", return_image: "none" });
+      step("3_pause", { ok: true, step_ms: Date.now() - sent, pass: second.json.pass, drops_during: client.stats.drops - drops, bridge: client.getState() });
+      say(`   pass 2 done ${Date.now() - sent} ms after it was sent; drops during it: ${client.stats.drops - drops}.`);
+    } catch (err: any) {
+      step("3_pause", { ok: false, step_ms: Date.now() - sent, error: err?.body?.() ?? String(err), drops_during: client.stats.drops - drops });
+      say(`   pass 2 FAILED: ${err?.message ?? err}`);
+    }
+  }
+  say("4. NOW: click Abort in the HUD.");
+
+  // 4. The HUD's Abort.
+  const abortDeadline = Date.now() + WAIT_MS;
+  while (Date.now() < abortDeadline && sessionOpen()) await sleep(250);
+  const log = JSON.parse(readFileSync(tools.sessionManager().getLog({ session_id: sessionId }).json.log_path, "utf8"));
+  step("4_abort", { ok: !sessionOpen() && log.outcome === "aborted", outcome: log.outcome, ended_by: log.ended_by, revert: log.revert, hud_events: log.hud_events, failures: log.failures });
+  say(`   outcome: ${log.outcome ?? "still open"}; ended_by: ${JSON.stringify(log.ended_by ?? null)}`);
+} catch (err: any) {
+  result.error = err?.body?.() ?? String(err);
+  say(`ERROR: ${err?.message ?? err}`);
+} finally {
+  // 5. The put-back, whatever happened.
+  try {
+    if (sessionOpen() && sessionId) {
+      await tools.endSession({ session_id: sessionId, outcome: "revert" });
+      result.putback_by_probe = true;
+    }
+    if (start) {
+      let diff = differing(await settingsNow(), start);
+      if (diff.length > 0 && snapshotId) {
+        await client.request("apply_snapshot", { target_uuid: UUID, snapshot_id: snapshotId }, { timeoutMs: 30_000 });
+        diff = differing(await settingsNow(), start);
+      }
+      result.put_back = { differing: diff };
+      say(`5. PUT BACK: ${diff.length === 0 ? "YES (every setting as before)" : `NO: ${diff.join(", ")}`}`);
+    }
+  } catch (err: any) {
+    result.put_back = { error: err?.body?.() ?? String(err) };
+    say(`5. PUT BACK FAILED: ${err?.message ?? err}`);
+  }
+  result.hud = tools?.hud()?.stats ?? null;
+  result.bridge = client.stats;
+  result.ended = at();
+  save();
+  client.stop();
+  await lock.lock.release();
+  say(`results: ${path.join(outDir, "probe.json")}`);
+  process.exit(0);
+}

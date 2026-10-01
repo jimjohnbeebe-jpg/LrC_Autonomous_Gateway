@@ -1,0 +1,20 @@
+# Excerpt of Claude Desktop's MCP log for the lrc-avg server, collected by npm run phase5:check.
+# Source: %LOCALAPPDATA%\Claude\Logs\mcp-server-lrc-avg.log, lines from 2026-10-01T11:55:28.183Z on.
+# Filter: timestamped lines matching Server started|Message from|[error]|[warn], and the engine's [lrc-avg] lines; user folder redacted.
+
+2026-10-01T11:55:51.723Z [lrc-avg] [info] Message from client: method="tools/call" id=19 params { metadata: undefined }
+[lrc-avg] took the Lightroom bridge lock
+[lrc-avg] bridge: connecting
+[lrc-avg] bridge: handshaking
+[lrc-avg] bridge: connected
+2026-10-01T11:55:52.268Z [lrc-avg] [info] Message from server: id=19 result(1 blocks) { metadata: undefined }
+2026-10-01T11:55:54.960Z [lrc-avg] [info] Message from client: method="tools/call" id=20 params { metadata: undefined }
+2026-10-01T11:55:56.057Z [lrc-avg] [info] Message from server: id=20 result(2 blocks) { metadata: undefined }
+2026-10-01T11:56:51.338Z [lrc-avg] [info] Message from client: method="tools/call" id=21 params { metadata: undefined }
+2026-10-01T11:56:56.870Z [lrc-avg] [info] Message from server: id=21 result(2 blocks) { metadata: undefined }
+2026-10-01T11:57:02.978Z [lrc-avg] [info] Message from client: method="tools/call" id=22 params { metadata: undefined }
+2026-10-01T11:57:04.608Z [lrc-avg] [info] Message from server: id=22 result(2 blocks) { metadata: undefined }
+2026-10-01T11:57:10.138Z [lrc-avg] [info] Message from client: method="tools/call" id=23 params { metadata: undefined }
+2026-10-01T11:57:11.772Z [lrc-avg] [info] Message from server: id=23 result(2 blocks) { metadata: undefined }
+2026-10-01T11:57:52.925Z [lrc-avg] [info] Message from client: method="tools/call" id=24 params { metadata: undefined }
+2026-10-01T11:57:52.933Z [lrc-avg] [info] Message from server: id=24 result(1 blocks) { metadata: undefined }

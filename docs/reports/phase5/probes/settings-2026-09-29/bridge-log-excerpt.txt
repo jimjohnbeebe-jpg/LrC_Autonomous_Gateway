@@ -1,0 +1,55 @@
+2026-09-29 04:47:02.371 INFO  bridge: starting generation 1 (receive 8765, send 8766)
+2026-09-29 04:47:16.147 INFO  bridge: token written to %USERPROFILE%\.lrc-avg\bridge_token
+2026-09-29 04:47:16.272 INFO  bridge: ports 8765/8766 written to %USERPROFILE%\.lrc-avg\bridge_ports.json
+2026-09-29 04:47:16.272 INFO  bridge: listening (generation 1)
+2026-09-29 04:47:33.280 INFO  bridge: receive: engine connected
+2026-09-29 04:47:33.799 INFO  bridge: send: engine connected
+2026-09-29 04:47:33.802 INFO  bridge: hello 5ff36166-1420-4215-b5c0-8121686495c3
+2026-09-29 04:47:33.809 INFO  bridge: get_prefs 22403eff-74b8-4fdf-bcce-02345c71b9ce
+2026-09-29 04:47:33.818 INFO  bridge: get_prefs 3b8c7827-bc8e-4dff-bd6a-9ba86437dc81
+2026-09-29 04:47:35.929 INFO  bridge: get_prefs 2c492bbd-7f3a-475f-9f0d-8ed0fbc1c3a7
+2026-09-29 04:47:38.036 INFO  bridge: get_prefs 7a3702cf-c939-4211-aaf8-6fbf8ced03f5
+2026-09-29 04:47:40.147 INFO  bridge: get_prefs 543a2927-7160-4da5-8dcc-91b74da70b3a
+2026-09-29 04:47:42.252 INFO  bridge: get_prefs be510c4b-abd1-4c67-91df-00e9d03b264a
+2026-09-29 04:47:44.360 INFO  bridge: get_prefs 7f50167a-e8d7-4c47-9218-2f07eebf9d38
+2026-09-29 04:47:46.463 INFO  bridge: get_prefs 9003e202-f9c5-4199-9adc-2974030b410b
+2026-09-29 04:47:48.571 INFO  bridge: get_prefs 6ad17510-e484-47a1-84d9-baf676e821a3
+2026-09-29 04:47:50.684 INFO  bridge: get_prefs 65c73cb9-5ef3-4607-a686-9c5b80ca88dc
+2026-09-29 04:47:54.491 INFO  bridge: get_prefs 6b6325c5-29fb-4b8f-ac29-a8dac639ab94
+2026-09-29 04:47:56.594 INFO  bridge: get_prefs a6002632-d377-41a6-b1e7-ba7b8879fb91
+2026-09-29 04:47:58.698 INFO  bridge: get_prefs f60495ef-a2a2-4e21-8c26-a05221796c8a
+2026-09-29 04:48:00.819 INFO  bridge: get_prefs 1fece3f2-9327-42e5-b8f8-a68909beeaef
+2026-09-29 04:48:02.919 INFO  bridge: get_prefs d45ccbd1-ca98-47b7-92e0-462e89299a34
+2026-09-29 04:48:05.023 INFO  bridge: get_prefs 2707a4ac-3fbb-497d-a41c-faec4b11669d
+2026-09-29 04:48:07.184 INFO  bridge: get_prefs 7c80d251-df2d-4506-a375-324d950d63f9
+2026-09-29 04:48:09.295 INFO  bridge: get_prefs 2d9b3849-46e8-45d2-ad85-720553919f2f
+2026-09-29 04:48:22.877 INFO  bridge: receive: closed
+2026-09-29 04:48:24.025 INFO  bridge: receive: engine connected
+2026-09-29 04:48:24.539 INFO  bridge: send: engine connected
+2026-09-29 04:48:24.539 INFO  bridge: hello bd8d35e0-3143-401b-b606-4461d7f50084
+2026-09-29 04:48:26.428 INFO  bridge: get_prefs 0a38ec0c-ee80-40e1-a7c5-b681d23419cf
+2026-09-29 04:48:28.536 INFO  bridge: get_prefs 4d948d50-8cf6-4630-bf13-a78bc3a14bda
+2026-09-29 04:48:39.168 INFO  bridge: receive: closed
+2026-09-29 04:48:40.623 INFO  bridge: receive: engine connected
+2026-09-29 04:48:41.136 INFO  bridge: send: engine connected
+2026-09-29 04:48:41.136 INFO  bridge: hello 61a9beec-02ca-4e6c-871c-f2563ccfe69a
+2026-09-29 04:48:42.917 INFO  bridge: get_prefs 7ac9111d-269b-46b8-986e-129dd60443c1
+2026-09-29 04:48:45.027 INFO  bridge: get_prefs d3d3cd3c-1993-422b-b5c9-e0a4f24907dd
+2026-09-29 04:48:47.132 INFO  bridge: get_prefs d7f62d7c-5cd5-4d00-8532-2fd0445aaf84
+2026-09-29 04:48:49.242 INFO  bridge: get_prefs 112f2f3a-de88-444e-9c55-5982d8f1a525
+2026-09-29 04:48:51.344 INFO  bridge: get_prefs f729fd59-75f7-40a8-bf66-4982a1622af7
+2026-09-29 04:48:53.454 INFO  bridge: get_prefs 44e739fa-692b-4af6-b4aa-56aa4df16976
+2026-09-29 04:48:55.562 INFO  bridge: get_prefs 06b6974b-21c1-46cb-b52f-77c793edc482
+2026-09-29 04:48:57.667 INFO  bridge: get_prefs 042e8933-40f6-4f13-9741-ee341c67114b
+2026-09-29 04:48:59.775 INFO  bridge: get_prefs ecf28afd-b53a-4e9c-b01f-2b5c09f9f325
+2026-09-29 04:49:01.881 INFO  bridge: get_prefs c0e94611-b96c-4b61-a2b7-2415494ae40a
+2026-09-29 04:49:03.988 INFO  bridge: get_prefs 77b0b7c9-9d80-46d7-a46b-c56898151748
+2026-09-29 04:49:06.087 INFO  bridge: get_prefs ef0d18b7-d03f-4f5c-93e9-029ea3e00db5
+2026-09-29 04:49:08.195 INFO  bridge: get_prefs c5404cc2-6224-4f28-b4cd-28910f6cb846
+2026-09-29 04:49:10.301 INFO  bridge: get_prefs 73abc98e-e9b5-44a7-ad18-5ded69fc078a
+2026-09-29 04:49:12.406 INFO  bridge: get_prefs b34de482-0bbe-4961-887c-ce07897aa3d6
+2026-09-29 04:49:14.505 INFO  bridge: get_prefs 754a7707-881a-4734-9a73-04a82ef59af6
+2026-09-29 04:49:16.609 INFO  bridge: get_prefs 3ff422f9-3dbe-43c4-964e-27898d16cd9b
+2026-09-29 04:49:18.718 INFO  bridge: get_prefs fbf78307-661c-4392-a05f-36b994eb700f
+2026-09-29 04:49:20.826 INFO  bridge: get_prefs 3647520c-45eb-408d-9cec-950664774809
+2026-09-29 04:49:21.090 INFO  bridge: receive: closed

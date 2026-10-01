@@ -6,10 +6,10 @@
 // get_context's shutter and aperture are formatted when they are numbers ("1/250 s", "f/8"); which
 // form Lightroom gives them in is [unverified] (the sim gives numbers, tests\helpers\lightroom-sim.ts).
 
-import { HUD_LIMITS, type HudStage, type HudUpdatePayload } from "../bridge/index.js";
+import { HUD_END_STAGES, HUD_LIMITS, type HudStage, type HudUpdatePayload } from "../bridge/index.js";
 import type { PassEntry } from "../log/index.js";
 import type { CanonicalValue } from "../params/index.js";
-import type { Session, Target, VariantId } from "../session/index.js";
+import { pendingApproval, type Session, type Target, type VariantId } from "../session/index.js";
 
 /** An update without what the publisher adds: seq, open and answered_click_id. */
 export type HudState = Omit<HudUpdatePayload, "seq" | "open" | "answered_click_id">;
@@ -27,6 +27,8 @@ export function hudState(s: Session, stage: HudStage, note?: string): HudState {
   const pass = s.work?.pass ?? t.passes;
   const last = lastPass(s, t);
   const text = note ?? s.work?.note;
+  // approve_each_pass (PHASE5_PLAN row 6): Approve is on while a pass waits for the user's approval.
+  const waiting = (HUD_END_STAGES as readonly string[]).includes(stage) ? null : pendingApproval(s);
   return {
     session_id: s.id,
     stage,
@@ -36,6 +38,7 @@ export function hudState(s: Session, stage: HudStage, note?: string): HudState {
     target: target(s, t),
     session_photos: [s.master, ...s.variants].map((x) => x.uuid).slice(0, HUD_LIMITS.photos),
     ...(stage === "awaiting_pick" ? { variants: s.variants.map((v) => v.id as VariantId) } : {}),
+    ...(waiting ? { approve_pass: clamp(waiting.pass, 1, HUD_LIMITS.pass) } : {}),
     ...(last ? { deltas: last.changes.slice(0, HUD_LIMITS.rows).map(delta), guardrail: guardrail(last) } : {}),
     ...(text ? { note: text } : {}),
     settings: settings(s),

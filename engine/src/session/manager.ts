@@ -10,6 +10,8 @@
 //                        then the actual guardrail (corrections), region preservation, convergence
 //                                                                  (step.ts, guardrail.ts)
 //   lr_select_variant -> Variants mode: the user's pick, after one refined pass per copy (pick.ts)
+//   lr_approve_pass   -> approve_each_pass mode: the user's approval of the pass waiting for it,
+//                        given in chat; lr_step waits for it from pass 2 on        (approval.ts)
 //   lr_probe          -> per-slider metric slopes, the photo put back afterwards      (probe.ts)
 //   lr_set_regions    -> region boxes measured on every render; `preserve` guards hue and
 //                        saturation                                                  (regions.ts)
@@ -27,9 +29,10 @@
 
 import { randomUUID } from "node:crypto";
 import { ToolError } from "../mcp/errors.js";
-import type { Metrics, Region } from "../metrics/index.js";
+import type { Region } from "../metrics/index.js";
 import type { RenderedPreview } from "../preview/index.js";
 import { searchOrder } from "../settings/index.js";
+import { approvePass } from "./approval.js";
 import { openSession, runPass0 } from "./begin.js";
 import { endSession, readSessionLog } from "./end.js";
 import { abortedNote, endedError, idleStage, userAction, userEnded, type UserAction, type UserEnded } from "./hud-actions.js";
@@ -38,23 +41,10 @@ import { selectVariant } from "./pick.js";
 import { probe } from "./probe.js";
 import { setRegions } from "./regions.js";
 import { step } from "./step.js";
-import { allTargets, focus, resolveTarget } from "./targets.js";
-import { folderOf, type BeginArgs, type EndArgs, type ProbeArgs, type RegionArgs, type SelectArgs, type Session, type SessionContext, type SessionDeps, type SessionOutput, type StepArgs, type TargetId } from "./types.js";
+import { focus, resolveTarget } from "./targets.js";
+import { folderOf, type ApproveArgs, type BeginArgs, type EndArgs, type ProbeArgs, type RegionArgs, type SelectArgs, type Session, type SessionContext, type SessionDeps, type SessionOutput, type StepArgs, type TargetId } from "./types.js";
 import { runVariants } from "./variants.js";
-
-/** The open session as the other tools see it: its photos, and the one the last call worked on. */
-export type SessionView = {
-  id: string;
-  mode: Session["mode"];
-  /** The photo the last call worked on (Converge mode: the master; after a pick: the pick). */
-  target: TargetId;
-  uuid: string;
-  filename: string | null;
-  /** Every photo of the session, the master first, with its pass. */
-  photos: Array<{ target: TargetId; uuid: string; pass: string }>;
-  pass: string;
-  last: { metrics: Metrics; hash: string; width: number; height: number } | null;
-};
+import { sessionView, type SessionView } from "./view.js";
 
 export class SessionManager {
   private readonly ctx: SessionContext;
@@ -75,13 +65,13 @@ export class SessionManager {
   /** The open session, if any: what the other tools need to know about it. */
   current(): SessionView | null {
     const s = this.session;
-    return s ? this.view(s, s.active.id) : null;
+    return s ? sessionView(s, s.active.id) : null;
   }
 
   /** The open session with this id, seen from one of its photos (a read: lr_get_metrics). */
   viewOf(sessionId: string, target?: TargetId): SessionView {
     const s = this.require(sessionId);
-    return this.view(s, resolveTarget(s, target, "read").id);
+    return sessionView(s, resolveTarget(s, target, "read").id);
   }
 
   /** The regions of the open session with this id, for a preview render. */
@@ -156,6 +146,15 @@ export class SessionManager {
 
   setRegions(args: RegionArgs): Promise<SessionOutput> {
     return this.exclusive(() => this.withNotices(args.session_id, (s) => setRegions(s, args)));
+  }
+
+  /**
+   * lr_approve_pass (approval.ts): at once, outside the queue, where an lr_step waiting for this
+   * approval holds it [handle: tests\approve-pass.test.ts "lr_approve_pass releases a step that is
+   * waiting for it"].
+   */
+  approvePass(args: ApproveArgs): Promise<SessionOutput> {
+    return this.withNotices(args.session_id, async (s) => approvePass(this.ctx, s, args, this.running > 0));
   }
 
   end(args: EndArgs): Promise<SessionOutput> {
@@ -244,20 +243,6 @@ export class SessionManager {
       }
       return fn();
     });
-  }
-
-  private view(s: Session, id: TargetId): SessionView {
-    const t = allTargets(s).find((x) => x.id === id) ?? s.active;
-    return {
-      id: s.id,
-      mode: s.mode,
-      target: t.id,
-      uuid: t.uuid,
-      filename: t.filename,
-      photos: allTargets(s).map((x) => ({ target: x.id, uuid: x.uuid, pass: `${x.passes}/${s.maxPasses}` })),
-      pass: `${t.passes}/${s.maxPasses}`,
-      last: t.last ? { metrics: t.last.metrics, hash: t.last.hash, width: t.last.width, height: t.last.height } : null,
-    };
   }
 
   private require(sessionId: string): Session {

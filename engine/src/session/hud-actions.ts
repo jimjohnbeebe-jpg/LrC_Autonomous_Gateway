@@ -11,13 +11,16 @@
 //     it waits rather than stops, so no pass is left half done (a write without its corrections);
 //   - Pick: as lr_select_variant; Claude learns of it in its next session tool result
 //     (`hud_actions`), since an MCP server cannot call the model [inference: PHASE5_PLAN "Assumptions"];
-//   - Approve pass: answered only; approve_each_pass is PHASE5_PLAN row 6.
+//   - Approve pass (approve_each_pass mode, PHASE5_PLAN row 6): approves the pass the HUD showed, at
+//     once and outside the queue, where a step waiting for it holds the queue (approval.ts). Abort and
+//     Accept end such a wait at once, so they do not wait behind it.
 // A session the user ended answers every later call naming it with SESSION_ENDED (endedError).
-// [handle: tests\hud-abort.test.ts, tests\hud-actions.test.ts, against the Lightroom sim; in
-// Lightroom [unverified] until the row 5 probe and PHASE5_PLAN row 7.]
+// [handle: tests\hud-abort.test.ts, tests\hud-actions.test.ts, tests\approve-pass-hud.test.ts, against
+// the Lightroom sim; in Lightroom [unverified] until the row 5 probe and PHASE5_PLAN row 7.]
 
 import type { HudEvent, HudStage } from "../bridge/index.js";
 import { ToolError, toToolError } from "../mcp/errors.js";
+import { approvalNote, approve, pendingApproval, wakeApproval } from "./approval.js";
 import { endSession } from "./end.js";
 import { saveLog } from "./io.js";
 import { awaitingPick, selectVariant } from "./pick.js";
@@ -71,8 +74,18 @@ function act(host: ActionHost, s: Session, a: UserAction): string {
     case "hud_pick":
       return pick(host, s, a.payload.variant, a.payload.source);
     case "hud_approve_pass":
-      return "Approve is not acted on yet: this engine does not wait for an approval between passes.";
+      return approveFromHud(host, s, a.payload.pass, a.payload.source);
   }
+}
+
+function approveFromHud(host: ActionHost, s: Session, pass: number, source: UserSource): string {
+  const r = approve(host.ctx, s, source, pass);
+  if (!r.ok) return r.reason;
+  if (r.already) return `Pass ${r.pass} is approved already.`;
+  if (r.woke) return `Approved pass ${r.pass}: Claude's next pass goes ahead.`;
+  const note = `Approved pass ${r.pass}: Claude goes on at its next call.`;
+  if (!host.busy()) host.ctx.deps.hud?.stage(s, "awaiting_claude", { note });
+  return note;
 }
 
 /** The event in the session's log (hud_events), with the note the HUD was given. */
@@ -121,6 +134,7 @@ function abort(host: ActionHost, s: Session, a: UserAction): string {
   s.abort = userEnd(a, s.abort); // a second click after a failed revert tries again
   const running = host.busy();
   host.queue(() => finishAbort(host, s));
+  wakeApproval(s, "abort"); // a step waiting for an approval stops now, and the revert runs next
   return running ? "Abort: stopping before the next write or preview, then putting the photo back." : "Abort: putting the photo back as it was before the session.";
 }
 
@@ -173,6 +187,7 @@ function accept(host: ActionHost, s: Session, a: UserAction): string {
   // An Accept that counts on a Pick still queued keeps that pick's copy, or nothing.
   const counted = s.picked === null ? s.pendingPick : null;
   host.queue(() => finishAccept(host, s, by, counted));
+  wakeApproval(s, "accept"); // a step waiting for an approval ends now, nothing written
   return running ? "Accept: keeping the edit once the running call is done." : "Accept: keeping the edit.";
 }
 
@@ -252,16 +267,19 @@ export function idleStage(s: Session, error: unknown): { stage: HudStage; note?:
   const given = s.idleNote;
   s.idleNote = null;
   const at = (stage: HudStage, note: string | null): { stage: HudStage; note?: string } => (note ? { stage, note } : { stage });
+  const waiting = pendingApproval(s);
   if (error !== undefined) {
     const e = toToolError(error);
     if (e.code === "SESSION_ENDED") return null;
     if (e.code === "TARGET_CHANGED") return at("target_changed", given ?? "Lightroom's selection changed, so nothing was written; the session is still open.");
-    return at("awaiting_claude", given ?? `Claude's last call failed (${e.code}); the session is still open.`);
+    if (waiting && e.code === "AWAITING_APPROVAL") return at("awaiting_approval", given ?? approvalNote(waiting.pass));
+    return at(waiting ? "awaiting_approval" : "awaiting_claude", given ?? `Claude's last call failed (${e.code}); the session is still open.`);
   }
   if (awaitingPick(s)) return at("awaiting_pick", given ?? "Pick a copy here, or tell Claude which one.");
   const t = s.active;
   if (t.endReason === "converged") return at("converged", given ?? "Converged: Accept keeps the edit, Abort puts the photo back.");
   if (t.endReason === "cap_reached") return at("awaiting_claude", given ?? `All ${s.maxPasses} passes are used: Accept keeps the edit, Abort puts the photo back.`);
+  if (waiting) return at("awaiting_approval", given ?? approvalNote(waiting.pass));
   return at("awaiting_claude", given);
 }
 

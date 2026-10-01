@@ -206,7 +206,7 @@ describe("Abort from the HUD", () => {
 });
 
 describe("Events not acted on", () => {
-  it("another session's event, a repeated click, a malformed event, and Approve (row 6)", async () => {
+  it("another session's event, a repeated click, a malformed event, and an Approve in autonomous mode (row 6)", async () => {
     clean();
     const rig = hudRig();
     await rig.manager.begin({ intent_id: "test_plain" });
@@ -218,7 +218,7 @@ describe("Events not acted on", () => {
     await waitUntil(() => rig.events.length === 4);
     expect(rig.events.map((e) => [e.ok, e.note ?? e.error])).toEqual([
       [true, "That session is not open in the engine."],
-      [true, "Approve is not acted on yet: this engine does not wait for an approval between passes."],
+      [true, "This session runs in autonomous mode: its passes need no approval."],
       [false, "a repeat of a click already handled"],
       [false, expect.stringMatching(/^hud_abort: .*click_id/)],
     ]);

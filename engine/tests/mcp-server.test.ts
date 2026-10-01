@@ -72,9 +72,10 @@ describe("mcp server", () => {
     expect(mcp.getServerVersion()).toMatchObject({ name: "lrc-avg", version: ENGINE_VERSION });
   });
 
-  it("lists the Phase 3 tools and the Phase 4 ones, without the temporary lr_set_settings", async () => {
+  it("lists the Phase 3 tools, the Phase 4 ones and lr_approve_pass (Phase 5), without the temporary lr_set_settings", async () => {
     const { tools } = await mcp.listTools();
     expect(tools.map((t) => t.name).sort()).toEqual([
+      "lr_approve_pass",
       "lr_begin_session",
       "lr_create_preset_from_active",
       "lr_end_session",
@@ -98,6 +99,9 @@ describe("mcp server", () => {
     expect(preset?.description).toMatch(/only after it restarts/);
     const save = tools.find((t) => t.name === "lr_save_intent");
     expect(save?.inputSchema.required).toEqual(["intent", "confirmed"]);
+    const approve = tools.find((t) => t.name === "lr_approve_pass");
+    expect(approve?.inputSchema.required).toEqual(["session_id", "confirmed"]);
+    expect(approve?.description).toMatch(/ONLY after the user approved/);
     expect(save?.description).toMatch(/ONLY call this after the user has explicitly approved/);
     const step = tools.find((t) => t.name === "lr_step");
     expect(step?.inputSchema.required).toEqual(["session_id", "settings", "rationale"]);

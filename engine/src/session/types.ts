@@ -46,6 +46,11 @@ export type RegionArgs = {
 };
 export type SelectArgs = { session_id: string; variant: VariantId };
 export type EndArgs = { session_id: string; outcome: "accept" | "revert" };
+/**
+ * lr_approve_pass: `confirmed` states that the user approved in chat, as lr_save_intent's does
+ * [stated: Jim, 2026-09-30, "Go with recommendations" on the PHASE5_PLAN row 6 plan, D2-A].
+ */
+export type ApproveArgs = { session_id: string; confirmed: boolean };
 
 export type SessionDeps = {
   client: BridgeClient;
@@ -66,6 +71,8 @@ export type SessionDeps = {
   newId?: () => string;
   /** How long create_virtual_copies may take (tests shorten it); COPIES_TIMEOUT_MS by default. */
   copiesTimeoutMs?: number;
+  /** How long lr_step waits for an approval (tests shorten it); approval.ts APPROVAL_WAIT_MS by default. */
+  approvalWaitMs?: number;
   /** The HUD (hud\publisher.ts, PHASE5_PLAN row 5); no HUD updates without it. */
   hud?: HudSink;
 };
@@ -83,6 +90,8 @@ export type HudSink = {
 
 /** Where an end by the user came from: a HUD button or a menu item (PRD FR-1.1). */
 export type UserSource = "hud" | "menu";
+/** Who approved a pass (approval.ts): the HUD (or menu), Claude on the user's word in chat, or the user's pick. */
+export type ApprovalBy = UserSource | "claude" | "pick";
 
 /** An Abort or Accept from the HUD or the menu, as the session keeps it until the session ends. */
 export type UserEnd = {
@@ -191,7 +200,15 @@ export type Session = {
   /** A HUD Pick answered and queued but not yet made (an Accept after it counts on it). */
   pendingPick: VariantId | null;
   notices: HudNotice[];
+  /** approve_each_pass (approval.ts): the last pass the user approved, of which photo, by whom. */
+  approval: { target: TargetId; pass: number; by: ApprovalBy; at: string } | null;
+  /** While a step waits for an approval (approval.ts): what ended the wait, and how to end it. */
+  approvalWait: ApprovalWait | null;
 };
+
+/** What ends a step's wait for an approval; the strongest seen before the step resumes wins (approval.ts). */
+export type ApprovalWake = "approved" | "accept" | "abort";
+export type ApprovalWait = { why: ApprovalWake | "timeout" | null; wake(why: ApprovalWake): void };
 
 /** The photo and pass an operation works on (pass null: not a pass, e.g. a probe or a preview). */
 export type Work = { target: Target; pass: number | null; note?: string };

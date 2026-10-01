@@ -5,11 +5,13 @@
 // pass before the pick, and the step that completes that round returns the contact sheet (pick.ts)
 // [handle: tests\session-variants.test.ts "steps each copy once, refuses a second step before the
 // pick, and ends the round with awaiting_pick and the contact sheet", against the Lightroom sim].
+// In approve_each_pass mode a step from pass 2 on first waits for the user's approval (approval.ts).
 
 import type { GuardrailAction } from "../log/index.js";
 import { ToolError } from "../mcp/errors.js";
 import { deltaMetrics, summarize, type MetricsDelta } from "../metrics/index.js";
 import type { CanonicalValue, FromSdkResult } from "../params/index.js";
+import { approveEachPass, awaitApproval } from "./approval.js";
 import { clipBreach, correct, regionDrift, undo } from "./guardrail.js";
 import { brief, describe, failed, fresh, historyName, image, ms, read, recordPass, render, write } from "./io.js";
 import { awaitingPick, checkVariantStep, pickRound } from "./pick.js";
@@ -25,6 +27,10 @@ export async function step(ctx: SessionContext, s: Session, args: StepArgs): Pro
   const t = resolveTarget(s, args.target, "write");
   checkCanStep(s, t, args);
   const n = t.passes + 1;
+  // approve_each_pass: names and types are checked before the wait, so a typo is not heard of only
+  // after it (ParamError: nothing written); then the approval of pass n-1 (approval.ts).
+  if (approveEachPass(s) && t.passes >= 1) planStep(args.settings, t.last?.settings ?? s.startSettings, n, ctx.deps.map, s.decay);
+  const approval = await awaitApproval(ctx, s, t);
   const passStarted = ctx.now().toISOString();
   s.work = { target: t, pass: n };
   await focus(ctx, s, t);
@@ -69,8 +75,9 @@ export async function step(ctx: SessionContext, s: Session, args: StepArgs): Pro
       preview_source: "export",
       guardrail_actions: done.actions,
       converged_by_metrics: converged,
+      ...(approval ? { approval } : {}),
     });
-    const json = stepJson(s, t, n, plan, done, delta, converged, baseline.refreshed, started);
+    const json: Record<string, unknown> = { ...stepJson(s, t, n, plan, done, delta, converged, baseline.refreshed, started), ...(approval ? { approval } : {}) };
     const round = awaitingPick(s) ? await pickRound(s, args.return_image ?? "after") : null;
     const img = round ? round.image : await image(s, args.return_image ?? "after", beforeRender, done.rendered, `pass ${n - 1}`, `pass ${n}`);
     return {
@@ -89,6 +96,7 @@ export async function step(ctx: SessionContext, s: Session, args: StepArgs): Pro
         ...(baseline.refreshed ? { metrics_refreshed: true } : {}),
         ...(json["undone"] ? { undone: (json["undone"] as { limit: string }).limit } : {}),
         ...(round ? { awaiting_pick: true } : {}),
+        ...(approval ? { approval } : {}),
       },
     };
   } catch (err) {

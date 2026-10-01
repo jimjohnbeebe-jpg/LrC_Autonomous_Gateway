@@ -18,7 +18,7 @@ Vault folder: `C:\Users\jimbe\Documents\Obsidian Vault\Projects\LrC_Autonomous_G
   `AVG-001-fork-automaat-no-python.md`, `AVG-002-claude-desktop-runtime-client.md`, `AVG-003-claude-orchestrated-step-loop.md`, `AVG-004-lrsocket-transport-http-fallback.md`, `AVG-005-snapshots-for-rollback.md`, `AVG-006-settings-in-plugin-manager-autonomous-default.md`, `AVG-007-intent-library-local-install.md`, `AVG-008-variants-mode-three-copies-v1.md`, `AVG-009-guardrail-and-convergence-defaults.md`, `AVG-010-camera-profile-pass-zero.md`, `AVG-011-provenance-logs.md`
 - Reports: `C:\Users\jimbe\Documents\Obsidian Vault\Projects\LrC_Autonomous_Gateway\Reports\` (mirrored in `docs\reports\`)
 
-Repo-side records: `docs\PHASE0_HANDOVER.md` (start here in a fresh session), `docs\AUTOMAAT_SURVEY.md`, `docs\MCP_AVAILABILITY.md`, `docs\DEPENDENCIES.md`.
+Repo-side records: `docs\PHASE0_HANDOVER.md` (start here in a fresh session), `docs\AUTOMAAT_SURVEY.md`, `docs\MCP_AVAILABILITY.md`, `docs\DEPENDENCIES.md`, `docs\DEVELOPMENT.md` (developer instructions; the root `README.md` is the user guide).
 
 ## Rules (details in `.claude\rules\`)
 

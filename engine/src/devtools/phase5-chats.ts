@@ -17,7 +17,7 @@ import { CHAT_PROMPT, GO_ON, PHOTO, approvalWait, type Json, type Phase5Deps, ty
 import { approveChatProblems, chatClip, goldenChatProblems } from "./phase5-chat-eval.js";
 import { holdChat, type ChatRun, type ChatSpec } from "./phase5-chat-flow.js";
 import { ensurePage } from "./phase5-page.js";
-import { readbackMark, unexpectedSince } from "./phase5-readback.js";
+import { knownList, readbackMark, unexpectedSince } from "./phase5-readback.js";
 import type { CheckState } from "./phase5-state.js";
 
 const START_STEPS = [
@@ -60,7 +60,22 @@ const rememberIn = (state: CheckState, save: () => void): ChatSpec["remember"] =
   save();
 };
 
-/** The chats still to do, in order; false when input ended or a step that the rest needs failed. */
+/**
+ * After a chat: the photos the check knows go into the state. A photo still pending (the bridge was
+ * not taken back, or the put-back failed) stops the check: the next chat would replace its record,
+ * and the next run puts it back first (Greptile, PR #49). True when the check may go on.
+ */
+function settle(deps: Phase5Deps, run: Run, state: CheckState, save: () => void): boolean {
+  state.known_photos = knownList(run);
+  save();
+  if (!state.pending_chat) return true;
+  deps.say("");
+  deps.say(`  ${state.pending_chat.fixture} is not back as before ${state.pending_chat.label} yet, so the check stops here.`);
+  deps.say("  Run the same command again: it puts that photo back first, then goes on. If this happens again, tell Claude Code.");
+  return false;
+}
+
+/** The chats still to do, in order; false when input ended, a photo is still to be put back, or a step that the rest needs failed. */
 export async function runChats(deps: Phase5Deps, run: Run, state: CheckState, save: () => void): Promise<boolean> {
   if (!state.approve_chat) {
     if (!(await ensurePage(deps, run, "page_for_approve_chat", "approve_each_pass"))) return false;
@@ -68,7 +83,7 @@ export async function runChats(deps: Phase5Deps, run: Run, state: CheckState, sa
     const c = await holdChat(deps, run, { label: "the approve chat", tag: "approve", photo: PHOTO, steps: APPROVE_STEPS, questions: APPROVE_QUESTIONS, remember: rememberIn(state, save) });
     if (c.stopped) return false;
     state.approve_chat = { at: new Date().toISOString(), ok: approveOk(deps, c), summary: { ...approveSummary(deps, c), unexpected: unexpectedSince(run, mark) } };
-    save();
+    if (!settle(deps, run, state, save)) return false;
   }
   if (!state.page_autonomous) {
     deps.say("");
@@ -82,7 +97,7 @@ export async function runChats(deps: Phase5Deps, run: Run, state: CheckState, sa
     const entry = await goldenChat(deps, run, fixture, i + 1, rememberIn(state, save));
     if (entry === null) return false;
     state.chats.push(entry);
-    save();
+    if (!settle(deps, run, state, save)) return false;
   }
   return true;
 }

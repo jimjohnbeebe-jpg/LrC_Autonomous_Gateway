@@ -50,8 +50,12 @@ export type SimOptions = {
   stopAtChat: number | null;
   /** The plugin logged each click this much earlier: the photo then comes back that much later after the click (AC-2). */
   clickLogEarlierMs: number;
+  /** Quitting Claude Desktop does not free the bridge either (the chat's photo cannot be put back). */
+  neverQuit: boolean;
+  /** Jim leaves one of session C's copies in the catalog. */
+  keepCopy: boolean;
 };
-export const DEFAULTS = (): SimOptions => ({ answer: () => "y", pick: "B", skip: new Set(), pageUnchanged: false, noPause: false, tamperOnPick: false, lockBusyAfterChat: false, chatPasses: 2, stopAtChat: null, clickLogEarlierMs: 0 });
+export const DEFAULTS = (): SimOptions => ({ answer: () => "y", pick: "B", skip: new Set(), pageUnchanged: false, noPause: false, tamperOnPick: false, lockBusyAfterChat: false, chatPasses: 2, stopAtChat: null, clickLogEarlierMs: 0, neverQuit: false, keepCopy: false });
 
 export const h = {
   plugin: null as unknown as FakePlugin,

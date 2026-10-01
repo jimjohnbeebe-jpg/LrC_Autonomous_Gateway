@@ -16,14 +16,14 @@
 import { pluginVersionAtLeast } from "../bridge/index.js";
 import { clipCheckAll, clipCheckFile, describeClip, type SessionClip } from "./clip-check.js";
 import { describeError } from "./phase1-check.js";
-import { FIXTURES, yn } from "./phase3-config.js";
 import { closeOpenSession } from "./phase4-config.js";
 import { MIN_PLUGIN_VERSION, type Json, type Phase5Deps, type Run } from "./phase5-config.js";
 import { putBackPending } from "./phase5-chat-flow.js";
 import { runChats } from "./phase5-chats.js";
-import { runPart1, type Part1Lines } from "./phase5-part1.js";
-import { Known, readbackMark, unexpectedSince } from "./phase5-readback.js";
+import { runPart1 } from "./phase5-part1.js";
+import { Known, knownList, readbackMark, restoreKnown, unexpectedSince } from "./phase5-readback.js";
 import { stateToContinue, type CheckState } from "./phase5-state.js";
+import { finish, progress } from "./phase5-summary.js";
 
 export type CheckOutcome = { accepted: boolean; finished: boolean; results: Json };
 
@@ -65,12 +65,15 @@ async function parts(deps: Phase5Deps, run: Run, state: CheckState, save: () => 
     state.pending_chat = null;
     save();
   }
+  await restoreKnown(deps, run, state.known_photos);
   if (!state.part1?.ok) {
     const mark = readbackMark(run);
     const p1 = await runPart1(deps, run);
     const ac4 = part1Clip(deps, run);
     const unexpected = unexpectedSince(run, mark);
-    state.part1 = { at: new Date().toISOString(), ok: p1.ok && ac4.ok && unexpected.length === 0, summary: { lines: p1.lines, ac4, unexpected, errors: [...run.errors] } };
+    const recorded = { pause: pauseRecord(run), copies: run.results["copies_cleanup"] ?? null };
+    state.part1 = { at: new Date().toISOString(), ok: p1.ok && ac4.ok && unexpected.length === 0, summary: { lines: p1.lines, ac4, unexpected, ...recorded, errors: [...run.errors] } };
+    state.known_photos = knownList(run);
     save();
     if (!state.part1.ok) {
       deps.say("");
@@ -123,54 +126,8 @@ async function connect(deps: Phase5Deps, run: Run): Promise<boolean> {
   return true;
 }
 
-function progress(state: CheckState): string {
-  const p1 = state.part1 ? (state.part1.ok ? "Part 1 passed" : "Part 1 failed (run again)") : "Part 1 not run";
-  return `${p1}; approve chat ${state.approve_chat ? "done" : "not done"}; ${state.chats.length} of ${FIXTURES.length} chats done`;
-}
-
-/** The acceptance lines over the whole state (every run of this check), the headlines, and the summary. */
-function finish(deps: Phase5Deps, run: Run, state: CheckState, save: () => void, now: () => Date): CheckOutcome {
-  const p1 = (state.part1?.summary["lines"] ?? {}) as Partial<Part1Lines>;
-  const p1Ok = state.part1?.ok === true;
-  const chats = state.chats;
-  const attemptsOf = (c: CheckState["chats"][number]): Json[] => (c.summary["attempts"] as Json[] | undefined) ?? [];
-  const lastOf = (c: CheckState["chats"][number]): Json => attemptsOf(c).at(-1) ?? {};
-  const approve = state.approve_chat?.summary ?? {};
-  const unexpectedAll = [
-    ...((state.part1?.summary["unexpected"] as string[] | undefined) ?? []),
-    ...((approve["unexpected"] as string[] | undefined) ?? []),
-    ...chats.flatMap((c) => (lastOf(c)["unexpected"] as string[] | undefined) ?? []),
-  ];
-  const lines = {
-    page_setting_reaches_engine: p1.page_setting_reaches_engine === true,
-    session_rides_out_plugin_manager: p1.session_rides_out_plugin_manager === true,
-    hud_tracks_stages: p1.hud_tracks_stages === true && chats.length === FIXTURES.length && chats.every((c) => c.ok),
-    ac2_hud_abort: p1.ac2_hud_abort === true,
-    approve_blocks_until_pressed: p1.approve_blocks_until_pressed === true,
-    ac3_hud_pick: p1.ac3_hud_pick === true,
-    menu_items: p1.menu_items === true,
-    ac1_six_chats: chats.length === FIXTURES.length && chats.every((c) => c.ok),
-    ac4_clipping: p1Ok && (state.part1?.summary["ac4"] as { ok?: unknown } | undefined)?.ok === true && chats.length === FIXTURES.length && chats.every((c) => (lastOf(c)["ac4"] as { ok?: unknown } | null)?.ok === true),
-    no_unexpected_change: state.part1 !== null && unexpectedAll.length === 0,
-    photos_put_back: p1.photo_put_back === true && chats.length === FIXTURES.length && chats.every((c) => lastOf(c)["put_back"] === true) && approve["put_back"] === true,
-  };
-  const finished = state.finished;
-  const accepted = finished && Object.values(lines).every(Boolean);
-  const longest = approve["longest_call_held_ms"];
-  const also = { approve_chat_ok: state.approve_chat?.ok ?? null, approve_chat_longest_call_held_ms: typeof longest === "number" ? longest : null, unexpected: unexpectedAll };
-  // A failed Part 1 stops the check (the chats wait for a Part 1 that passes): FAILED, not unfinished.
-  const headline = accepted ? "WORKED" : finished || state.part1?.ok === false ? "FAILED" : "NOT FINISHED";
-  run.results["summary"] = { acceptance_suggestion: headline, ...lines, ...also, progress: progress(state) };
-  run.results["state"] = state;
-  run.results["finished_at"] = now().toISOString();
-  save();
-  const { say } = deps;
-  say("");
-  say(`Phase 5 acceptance: ${headline}${headline === "NOT FINISHED" ? ` (${progress(state)}; run the command again to continue)` : ""}`);
-  say(`  Settings page reaches the engine: ${yn(lines.page_setting_reaches_engine)}; session rides out Plug-in Manager: ${yn(lines.session_rides_out_plugin_manager)}; HUD tracks stages (Part 1 and every chat): ${yn(lines.hud_tracks_stages)}`);
-  say(`  AC-2 via the HUD's Abort: ${yn(lines.ac2_hud_abort)}; approve_each_pass blocks until Approve: ${yn(lines.approve_blocks_until_pressed)}; AC-3 with the HUD's Pick: ${yn(lines.ac3_hud_pick)}; menu items: ${yn(lines.menu_items)}`);
-  say(`  AC-1, six golden-hour chats with the HUD: ${chats.filter((c) => c.ok).length} of ${FIXTURES.length}; AC-4 on every pass of every session: ${yn(lines.ac4_clipping)}; no photo changed unexpectedly: ${yn(lines.no_unexpected_change)}; photos put back: ${yn(lines.photos_put_back)}`);
-  const held = also.approve_chat_longest_call_held_ms;
-  say(`Also recorded: the approve chat ${also.approve_chat_ok === null ? "not held" : `went as planned: ${yn(also.approve_chat_ok)}`}${held === null ? "" : `; its longest waiting lr_step took ${(held / 1000).toFixed(1)} s in the engine`}.`);
-  return { accepted, finished, results: run.results };
+/** Session A's Plug-in Manager pause, for the summary: how long the plugin was silent, and whether it passed the 6 s heartbeat limit. */
+function pauseRecord(run: Run): Json | null {
+  const pause = (run.results["session_a"] as Json | undefined)?.["pause"] as Json | undefined;
+  return pause ? { seen: pause["seen"] ?? false, silence_ms: pause["silence_ms"] ?? null, longer_than_heartbeat: pause["longer_than_heartbeat"] ?? false } : null;
 }

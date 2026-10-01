@@ -30,6 +30,8 @@ export const checkStateSchema = z.object({
    * and the next run puts the photo back with that snapshot before anything else (phase5-chat-flow.ts).
    */
   pending_chat: z.object({ label: z.string(), fixture: z.string(), uuid: z.string(), snapshot_id: z.string(), start: z.record(z.string(), z.unknown()) }).nullable(),
+  /** Every photo the check knows, so a resumed run reads them back after each click too (phase5-readback.ts restoreKnown). */
+  known_photos: z.array(z.object({ uuid: z.string(), label: z.string() })),
   finished: z.boolean(),
 });
 export type CheckState = z.infer<typeof checkStateSchema>;
@@ -42,7 +44,7 @@ export type StateStore = {
 };
 
 export function newState(startedAt: string): CheckState {
-  return { schema: STATE_SCHEMA_ID, started_at: startedAt, runs: [], part1: null, approve_chat: null, page_autonomous: false, chats: [], pending_chat: null, finished: false };
+  return { schema: STATE_SCHEMA_ID, started_at: startedAt, runs: [], part1: null, approve_chat: null, page_autonomous: false, chats: [], pending_chat: null, known_photos: [], finished: false };
 }
 
 /**
@@ -67,9 +69,17 @@ export function fileStateStore(file: string): StateStore {
         return null;
       }
     },
+    // Written to a temporary file, then renamed over the state: a write cut off midway leaves the
+    // previous state, whose pending chat may be the only record of a photo to put back (Greptile,
+    // PR #49). renameSync replaces an existing file on Windows [handle: Claude Code, 2026-09-30, node
+    // v24.11.1 win32: writing "new" to a.json.writing and renaming it over a.json holding "old" printed
+    // "after rename over an existing file: new ; temp left: false"; tests\phase5-check-units.test.ts
+    // "saves the state by replacing it whole"].
     save(state) {
       mkdirSync(path.dirname(file), { recursive: true });
-      writeFileSync(file, JSON.stringify(checkStateSchema.parse(state), null, 2) + "\n");
+      const temp = `${file}.writing`;
+      writeFileSync(temp, JSON.stringify(checkStateSchema.parse(state), null, 2) + "\n");
+      renameSync(temp, file);
     },
   };
 }

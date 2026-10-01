@@ -13,15 +13,46 @@
 //     after the HUD's Approve. How long Claude Desktop keeps a tool call is [unverified] until then.
 
 import { existsSync, readFileSync } from "node:fs";
+import { z } from "zod";
 import { sessionLogSchema, type SessionLogData } from "../log/index.js";
 import { APPROVAL_WAIT_MS } from "../session/index.js";
 import { clipCheckFile, type SessionClip } from "./clip-check.js";
 import { INTENT } from "./phase5-config.js";
 
-type Rec = Record<string, unknown>;
+/**
+ * The tool-log records the evaluator reads, checked with zod at this boundary (rule 01; Greptile, PR
+ * #49): every record by its common fields, and the records it takes values from by theirs (an
+ * lr_begin_session that worked, an lr_end_session that worked, a failed lr_step, a hud_update). A
+ * record that fails its check is left out and counted in `invalid_records`. The fields are the ones
+ * the engine writes [handle: engine\src\mcp\tools-shared.ts run() and logHud(); engine\src\session\begin.ts
+ * runPass0 and end.ts, their `log` records].
+ */
+const baseSchema = z.looseObject({
+  ts: z.string(),
+  tool: z.string(),
+  ok: z.boolean(),
+  duration_ms: z.number().optional(),
+  session_id: z.string().optional(),
+  args: z.looseObject({ session_id: z.string().optional() }).optional(),
+});
+type Base = z.infer<typeof baseSchema>;
+const beginSchema = baseSchema.extend({
+  session_id: z.string(),
+  intent_id: z.string(),
+  target: z.looseObject({ filename: z.string().nullable() }),
+  snapshot: z.looseObject({ id: z.string(), name: z.string() }),
+  log_path: z.string(),
+});
+const endSchema = baseSchema.extend({ session_id: z.string(), outcome: z.string() });
+const errorSchema = baseSchema.extend({
+  error: z.looseObject({ code: z.string(), details: z.looseObject({ session_id: z.string().optional(), waited_ms: z.number().optional() }).optional() }),
+});
+const hudSchema = baseSchema.extend({ session_id: z.string(), result: z.looseObject({ shown: z.boolean() }).optional() });
 
 export type ChatEvaluation = {
-  tool_calls: Array<{ ts: unknown; tool: unknown; ok: unknown; error_code?: unknown }>;
+  tool_calls: Array<{ ts: string; tool: string; ok: boolean; error_code?: string }>;
+  /** Records left out because they failed their check. */
+  invalid_records: number;
   session_begun: boolean;
   session_id: string | null;
   intent_id: string | null;
@@ -35,41 +66,48 @@ export type ChatEvaluation = {
   awaiting: Array<{ duration_ms: number; waited_ms: number | null }>;
 };
 
-const text = (v: unknown): string | null => (typeof v === "string" ? v : null);
-/** A record of session `sid`: by its own field, its arguments (a failed call logs no result), or its error's details. */
-const ofSession = (sid: unknown) => (r: Rec): boolean =>
-  sid !== undefined &&
-  (r["session_id"] === sid || (r["args"] as Rec | undefined)?.["session_id"] === sid || (r["error"] as { details?: { session_id?: unknown } } | undefined)?.details?.session_id === sid);
+/** The records that pass `schema`, and how many did not. */
+function checked<T>(records: readonly Base[], keep: (r: Base) => boolean, schema: z.ZodType<T>): { ok: T[]; bad: number } {
+  const ok: T[] = [];
+  let bad = 0;
+  for (const r of records.filter(keep)) {
+    const p = schema.safeParse(r);
+    if (p.success) ok.push(p.data);
+    else bad++;
+  }
+  return { ok, bad };
+}
 
 /** The chat's session: the one that ended with accept, else the last one begun. */
-export function evaluateChat(records: readonly Rec[]): ChatEvaluation {
-  const tool_calls = records.filter((r) => r["tool"] !== "hud_update" && r["tool"] !== "hud_event").map((r) => ({ ts: r["ts"], tool: r["tool"], ok: r["ok"], ...(r["error"] ? { error_code: (r["error"] as { code?: unknown }).code } : {}) }));
-  const begins = records.filter((r) => r["tool"] === "lr_begin_session" && r["ok"] === true);
-  const ended = (sid: unknown, outcome?: string) => (r: Rec): boolean => r["tool"] === "lr_end_session" && r["ok"] === true && r["session_id"] === sid && (outcome === undefined || r["outcome"] === outcome);
-  const begin = begins.find((b) => records.some(ended(b["session_id"], "accept"))) ?? begins.at(-1);
-  const sid = begin?.["session_id"];
-  const mine = records.filter(ofSession(sid));
-  const steps = mine.filter((r) => r["tool"] === "lr_step" && r["ok"] === true);
-  const awaiting = mine
-    .filter((r) => r["tool"] === "lr_step" && r["ok"] === false && (r["error"] as { code?: unknown } | undefined)?.code === "AWAITING_APPROVAL")
-    .map((r) => {
-      const waited = (r["error"] as { details?: { waited_ms?: unknown } }).details?.waited_ms;
-      return { duration_ms: Number(r["duration_ms"] ?? 0), waited_ms: typeof waited === "number" ? waited : null };
-    });
-  const end = begin ? records.find(ended(sid)) : undefined;
-  const snap = begin?.["snapshot"] as { id?: unknown; name?: unknown } | undefined;
-  const hud = mine.filter((r) => r["tool"] === "hud_update");
+export function evaluateChat(raw: readonly unknown[]): ChatEvaluation {
+  const base = checked(raw as Base[], () => true, baseSchema);
+  const records = base.ok;
+  const begins = checked(records, (r) => r.tool === "lr_begin_session" && r.ok, beginSchema);
+  const ends = checked(records, (r) => r.tool === "lr_end_session" && r.ok, endSchema);
+  const errors = checked(records, (r) => !r.ok && "error" in r, errorSchema);
+  const huds = checked(records, (r) => r.tool === "hud_update", hudSchema);
+  const begin = begins.ok.find((b) => ends.ok.some((e) => e.session_id === b.session_id && e.outcome === "accept")) ?? begins.ok.at(-1);
+  const sid = begin?.session_id;
+  const mine = (r: Base): boolean => sid !== undefined && (r.session_id === sid || r.args?.session_id === sid);
+  const awaiting = errors.ok
+    .filter((r) => r.tool === "lr_step" && r.error.code === "AWAITING_APPROVAL" && (mine(r) || r.error.details?.session_id === sid))
+    .map((r) => ({ duration_ms: r.duration_ms ?? 0, waited_ms: r.error.details?.waited_ms ?? null }));
+  const end = ends.ok.find((e) => e.session_id === sid);
   return {
-    tool_calls,
+    tool_calls: records.filter((r) => r.tool !== "hud_update" && r.tool !== "hud_event").map((r) => {
+      const code = errorSchema.safeParse(r).data?.error.code;
+      return { ts: r.ts, tool: r.tool, ok: r.ok, ...(code ? { error_code: code } : {}) };
+    }),
+    invalid_records: base.bad + begins.bad + ends.bad + errors.bad + huds.bad,
     session_begun: begin !== undefined,
-    session_id: text(sid),
-    intent_id: text(begin?.["intent_id"]),
-    target_filename: text((begin?.["target"] as Rec | undefined)?.["filename"]),
-    passes: steps.length,
-    session_ended: text(end?.["outcome"]),
-    snapshot: typeof snap?.id === "string" ? { id: snap.id, name: String(snap.name ?? "") } : null,
-    log_path: text(begin?.["log_path"]),
-    hud_shown: hud.some((r) => r["ok"] === true && (r["result"] as { shown?: unknown } | undefined)?.shown === true),
+    session_id: sid ?? null,
+    intent_id: begin?.intent_id ?? null,
+    target_filename: begin?.target.filename ?? null,
+    passes: records.filter((r) => r.tool === "lr_step" && r.ok && mine(r)).length,
+    session_ended: end?.outcome ?? null,
+    snapshot: begin ? { id: begin.snapshot.id, name: begin.snapshot.name } : null,
+    log_path: begin?.log_path ?? null,
+    hud_shown: huds.ok.some((r) => r.session_id === sid && r.ok && r.result?.shown === true),
     awaiting,
   };
 }

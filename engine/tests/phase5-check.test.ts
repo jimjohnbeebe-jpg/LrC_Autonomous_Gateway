@@ -32,7 +32,11 @@ describe("devtools: Phase 5 check", () => {
       no_unexpected_change: true,
       photos_put_back: true,
       approve_chat_ok: true,
+      // The sim's pause (1.8 s) is under the 6 s heartbeat limit: recorded as not exercising the allowance.
+      session_allowance_exercised: false,
+      copies_removed: "3 of 3",
     });
+    expect(h.said.join("\n")).toMatch(/Cleanup: session C's copies removed: 3 of 3\./);
     const a = results["session_a"] as J;
     expect(a["stages"]).toEqual(expect.arrayContaining(["begin", "aborted"]));
     expect(a["pause"]).toMatchObject({ ok: true, seen: true, drops: 0, page_ok: true });
@@ -65,6 +69,9 @@ describe("devtools: Phase 5 check", () => {
     expect(second.results["pending_put_back"]).toMatchObject({ chat: "chat 3 of 6", differing: [] });
     expect((h.store.saved as CheckState).pending_chat).toBeNull();
     expect(second.results["session_a"]).toBeUndefined(); // Part 1 passed before: not run again
+    // The photos the first run knew are known again, so the first click is read back against them.
+    expect(second.results["known_restored"]).toHaveLength(1);
+    expect(((second.results["readbacks"] as J[])[0] as J)["photos"]).toHaveLength(1);
     expect(second.finished).toBe(true);
     expect(second.accepted).toBe(true);
     expect((h.store.saved as CheckState).chats.map((c) => c.fixture)).toEqual([...FIXTURES]);

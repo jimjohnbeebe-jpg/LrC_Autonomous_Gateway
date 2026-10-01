@@ -6,7 +6,9 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { approveChatProblems, evaluateChat, goldenChatProblems } from "../src/devtools/phase5-chat-eval.js";
-import { fileStateStore, newState, stateToContinue } from "../src/devtools/phase5-state.js";
+import { FIXTURES } from "../src/devtools/phase3-config.js";
+import { fileStateStore, newState, stateToContinue, type CheckState } from "../src/devtools/phase5-state.js";
+import { acceptance } from "../src/devtools/phase5-summary.js";
 import { PluginLog, lineTime, stagesOf, tracked, type HudTraceEntry } from "../src/devtools/phase5-trace.js";
 import type { SessionLogData } from "../src/log/index.js";
 
@@ -54,7 +56,44 @@ describe("devtools: Phase 5 check, a chat from its tool log", () => {
   });
 });
 
+describe("devtools: Phase 5 check, records checked and the outcome summed up", () => {
+  it("leaves out a tool-log record that fails its check, and counts it", () => {
+    const noLogPath = { ...begin("s0"), log_path: undefined };
+    const e = evaluateChat([{ tool: 5 }, noLogPath, begin("s1"), step("s1"), end("s1", "accept")]);
+    expect(e).toMatchObject({ invalid_records: 2, session_id: "s1", passes: 1, session_ended: "accept" });
+  });
+
+  const finishedState = (attempts: Array<Record<string, unknown>>): CheckState => {
+    const ok = { ok: true };
+    const s = newState("t0");
+    s.part1 = { at: "t", ok: true, summary: { lines: { page_setting_reaches_engine: true, session_rides_out_plugin_manager: true, hud_tracks_stages: true, ac2_hud_abort: true, approve_blocks_until_pressed: true, ac3_hud_pick: true, menu_items: true, photo_put_back: true }, ac4: ok, unexpected: [] } };
+    s.approve_chat = { at: "t", ok: true, summary: { put_back: true, ac4: ok, unexpected: [] } };
+    s.chats = FIXTURES.map((fixture, i) => ({ fixture, at: "t", ok: true, summary: { attempts: i === 0 ? attempts : [{ ok: true, ac4: ok, unexpected: [], put_back: true }] } }));
+    s.finished = true;
+    return s;
+  };
+
+  it("counts every attempt of a chat held twice for AC-4 and unexpected changes, the last for AC-1 (Greptile, PR #49)", () => {
+    const passed = { ok: true, ac4: { ok: true }, unexpected: [], put_back: true };
+    expect(acceptance(finishedState([passed]))).toMatchObject({ accepted: true, headline: "WORKED" });
+    const overLimit = acceptance(finishedState([{ ok: false, ac4: { ok: false }, unexpected: [], put_back: true }, passed]));
+    expect(overLimit.lines).toMatchObject({ ac1_six_chats: true, ac4_clipping: false, no_unexpected_change: true });
+    const changedAnother = acceptance(finishedState([{ ok: false, ac4: { ok: true }, unexpected: ["P: exposure changed"], put_back: true }, passed]));
+    expect(changedAnother.lines).toMatchObject({ ac1_six_chats: true, ac4_clipping: true, no_unexpected_change: false });
+    expect(changedAnother).toMatchObject({ accepted: false, headline: "FAILED" });
+  });
+});
+
 describe("devtools: Phase 5 check, the resumable state", () => {
+  it("saves the state by replacing it whole, leaving no partial file", () => {
+    const file = path.join(tmp, "state.json");
+    const store = fileStateStore(file);
+    store.save(newState("t0"));
+    store.save({ ...newState("t0"), page_autonomous: true });
+    expect(store.load()?.page_autonomous).toBe(true);
+    expect(readdirSync(tmp)).toEqual(["state.json"]);
+  });
+
   it("continues an unfinished state, starts over on a finished one or with --new", () => {
     const store = fileStateStore(path.join(tmp, "state.json"));
     expect(stateToContinue(store, "t0", false)).toMatchObject({ resumed: false });

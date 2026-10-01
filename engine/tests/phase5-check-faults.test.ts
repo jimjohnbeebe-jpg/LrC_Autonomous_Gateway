@@ -88,6 +88,32 @@ describe("devtools: Phase 5 check, failures", () => {
     expect(back[0]).toMatchObject({ idle_release: false, quit_rounds: 1, ok: true });
   });
 
+  it("stops before the next chat while a chat's photo is not back, and puts it back first on the next run", { timeout: 120000 }, async () => {
+    h.sim.lockBusyAfterChat = true;
+    h.sim.neverQuit = true;
+    const first = await runCheck();
+    expect(first.finished).toBe(false);
+    expect(failures().join("\n")).toMatch(/after the approve chat, the check could not take the Lightroom bridge back/);
+    expect(h.said.join("\n")).toMatch(/is not back as before the approve chat yet, so the check stops here/);
+    expect(state().pending_chat).toMatchObject({ label: "the approve chat" });
+    expect(state().chats).toEqual([]);
+    h.sim.lockBusyAfterChat = false;
+    h.sim.neverQuit = false;
+    h.busy = false;
+    const second = await runCheck();
+    expect(second.results["pending_put_back"]).toMatchObject({ chat: "the approve chat", differing: [] });
+    expect(state().pending_chat).toBeNull();
+    expect(state().chats).toHaveLength(6);
+  });
+
+  it("reports a copy left in the catalog under Cleanup without failing the acceptance (as Phase 4)", { timeout: 120000 }, async () => {
+    h.sim.keepCopy = true;
+    const { accepted, results } = await runCheck();
+    expect(accepted).toBe(true);
+    expect(summaryOf(results)).toMatchObject({ copies_removed: "2 of 3" });
+    expect(h.said.join("\n")).toMatch(/Cleanup: session C's copies removed: 2 of 3\./);
+  });
+
   it("fails AC-1 when a chat makes no pass and Jim does not hold it again, and goes on with the next", { timeout: 120000 }, async () => {
     h.sim.chatPasses = 0;
     h.sim.answer = (q) => (/once more/.test(q) ? "n" : "y");

@@ -63,8 +63,8 @@ export async function jimPrompt(text: string): Promise<string | null> {
     h.lr.selected = h.lr.uuid;
     h.lr.filename = photo[1] as string;
   }
-  if (/5\. Press D to go back|Still in the catalog/.test(text)) h.lr.copies.clear();
-  if (/Claude Desktop still holds the bridge/.test(text)) h.busy = false;
+  if (/5\. Press D to go back|Still in the catalog/.test(text)) for (const uuid of [...h.lr.copies.keys()].slice(h.sim.keepCopy ? 1 : 0)) h.lr.copies.delete(uuid);
+  if (/Claude Desktop still holds the bridge/.test(text) && !h.sim.neverQuit) h.busy = false;
   if (/Come back to this window and press Enter/.test(text)) {
     const n = /^Chat (\d)/.exec(h.chat);
     if (n && Number(n[1]) === h.sim.stopAtChat) {

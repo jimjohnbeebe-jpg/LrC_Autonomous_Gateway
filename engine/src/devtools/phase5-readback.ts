@@ -36,6 +36,27 @@ export class Known {
   }
 }
 
+/** The photos the check knows, by uuid and name, for the state file (phase5-state.ts known_photos). */
+export const knownList = (run: Run): Array<{ uuid: string; label: string }> => run.known.entries().map(([uuid, e]) => ({ uuid, label: e.label }));
+
+/**
+ * A resumed run knows again the photos the earlier runs knew, as they are now, so a later click or
+ * chat that changes one of them is still named (Greptile, PR #49). A photo no longer in the catalog
+ * (a removed copy) is left out.
+ */
+export async function restoreKnown(deps: Pick<Phase5Deps, "client" | "map">, run: Run, list: ReadonlyArray<{ uuid: string; label: string }>): Promise<void> {
+  const restored: string[] = [];
+  for (const p of list) {
+    try {
+      run.known.set(p.uuid, p.label, (await settingsOf(deps, p.uuid)).settings);
+      restored.push(p.label);
+    } catch (err) {
+      if (!(err instanceof BridgeError && err.code === "unknown_photo")) throw err;
+    }
+  }
+  run.results["known_restored"] = restored;
+}
+
 const readbacksOf = (run: Run): Json[] => (run.results["readbacks"] as Json[] | undefined) ?? [];
 
 /** Where the read-backs stand now, to collect a part's later (unexpectedSince). */

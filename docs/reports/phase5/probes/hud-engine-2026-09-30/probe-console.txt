@@ -1,0 +1,14 @@
+[5:52:42 AM]   (bridge: connecting)
+[5:52:43 AM]   (bridge: handshaking)
+[5:52:43 AM]   (bridge: connected)
+[5:52:45 AM] 1. selected CF12AF60-0858-4181-9562-376D16B89126; 65 settings read.
+[5:53:38 AM] 2. session 4951aeca-fb2a-402b-b97a-8eea034eaeac begun (53447.9 ms); the HUD should be open.
+[5:53:42 AM]    pass 1 done (3975.3 ms). NOW: open File > Plug-in Manager, wait 10 s, click Done.
+[5:54:03 AM] 3. the plugin went silent: sending pass 2 now.
+[5:54:04 AM]   (bridge: response ping 8ae02e65-ead3-4168-a0a8-176be7987152 has no waiting request (timed out?))
+[5:54:08 AM]    pass 2 done 4495 ms after it was sent; drops during it: 0.
+[5:54:08 AM] 4. NOW: click Abort in the HUD.
+[5:54:54 AM]    outcome: aborted; ended_by: {"source":"hud","click_id":"C551D1DD-57A1-4585-9022-3E1688C296EE","received":"2026-09-30T12:54:54.296Z","interrupted":null,"done_ms":422.6}
+[5:54:54 AM] 5. PUT BACK: YES (every setting as before)
+[5:54:54 AM]   (bridge: stopped)
+[5:54:54 AM] results: D:\Developer\LrC_Autonomous_Gateway\logs\probe-hud-engine-2026-09-30\run\probe.json

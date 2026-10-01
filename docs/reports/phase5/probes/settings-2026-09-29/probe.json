@@ -1,0 +1,2385 @@
+{
+  "started": "2026-09-29T11:47:33.240Z",
+  "engine_version": "0.7.0",
+  "lock": {
+    "ok": true
+  },
+  "ports_file": {
+    "path": "%USERPROFILE%\\.lrc-avg\\bridge_ports.json",
+    "fields": [
+      "receive",
+      "send",
+      "plugin_version",
+      "token_check",
+      "written_at"
+    ],
+    "ports": {
+      "receive": 8765,
+      "send": 8766,
+      "plugin_version": "0.5.0",
+      "written_at": "2026-09-29T11:47:16Z"
+    },
+    "read": {
+      "ports": {
+        "receive": 8765,
+        "send": 8766
+      },
+      "problem": null
+    }
+  },
+  "hello": {
+    "protocol": 1,
+    "plugin_version": "0.5.0",
+    "lrc_version": "15.5.1",
+    "sdk_declared": 13,
+    "ports": {
+      "receive": 8765,
+      "send": 8766
+    }
+  },
+  "connected_ports": {
+    "command": 8765,
+    "event": 8766,
+    "from": "ports file"
+  },
+  "get_prefs_first": {
+    "ms": 2,
+    "raw": {
+      "invalid": [],
+      "max_passes": 4,
+      "send_port": 8766,
+      "decay": [
+        1,
+        0.6,
+        0.4,
+        0.25
+      ],
+      "variant_count": 3,
+      "receive_port": 8765,
+      "log_dir": "",
+      "intents_dir": "",
+      "clip_low_pct": 1,
+      "temp_preview_dir": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\previews",
+      "long_edge": 1600,
+      "mode": "autonomous",
+      "clip_high_pct": 0.5,
+      "quality": 75
+    },
+    "parsed": {
+      "values": {
+        "mode": "autonomous",
+        "max_passes": 4,
+        "variant_count": 3,
+        "long_edge": 1600,
+        "quality": 75,
+        "clip_high_pct": 0.5,
+        "clip_low_pct": 1,
+        "decay": [
+          1,
+          0.6,
+          0.4,
+          0.25
+        ],
+        "intents_dir": "",
+        "log_dir": "",
+        "receive_port": 8765,
+        "send_port": 8766
+      },
+      "problems": []
+    }
+  },
+  "window": {
+    "ended": "2026-09-29T11:49:21.089Z",
+    "seconds": 108,
+    "pings": {
+      "count": 347,
+      "failed": 43,
+      "median_ms": 0.8,
+      "max_ms": 1699.6
+    },
+    "get_prefs": {
+      "count": 45,
+      "failed": 7,
+      "max_ms": 4.7
+    },
+    "status_file_max_age_s": 14,
+    "slow_pings": [
+      {
+        "t": 21248,
+        "ms": 1699.6
+      },
+      {
+        "t": 44754,
+        "ms": null,
+        "error": "BridgeError: bridge dropped: heartbeat: no message from the plugin for 7910 ms"
+      },
+      {
+        "t": 45016,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 45279,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 45544,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 45806,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 46070,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 46335,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 46596,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 46859,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 47123,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 47387,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 47651,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 47914,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 48178,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 48440,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 48703,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 48967,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 49229,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 49492,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 49758,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 50022,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 50287,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 50551,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 50815,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 51081,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 63359,
+        "ms": null,
+        "error": "BridgeError: bridge dropped: heartbeat: no message from the plugin for 6751 ms"
+      },
+      {
+        "t": 63620,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 63883,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 64145,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 64409,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 64671,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 64934,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 65198,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 65460,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 65722,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 65985,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 66249,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 66513,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 66777,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 67040,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 67304,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 67566,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 67831,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      }
+    ],
+    "slow_get_prefs": [
+      {
+        "t": 44754,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 46859,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 48967,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 51081,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 63359,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 65460,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 67566,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      }
+    ]
+  },
+  "drops": {
+    "drops": 2,
+    "last_drop_reason": "heartbeat: no message from the plugin for 6751 ms"
+  },
+  "raw": {
+    "pings": [
+      {
+        "t": 577,
+        "ms": 1.9
+      },
+      {
+        "t": 839,
+        "ms": 1.9
+      },
+      {
+        "t": 1105,
+        "ms": 3.9
+      },
+      {
+        "t": 1371,
+        "ms": 2.3
+      },
+      {
+        "t": 1632,
+        "ms": 1.1
+      },
+      {
+        "t": 1899,
+        "ms": 2.5
+      },
+      {
+        "t": 2163,
+        "ms": 2.8
+      },
+      {
+        "t": 2427,
+        "ms": 2.3
+      },
+      {
+        "t": 2689,
+        "ms": 1.1
+      },
+      {
+        "t": 2955,
+        "ms": 1.6
+      },
+      {
+        "t": 3219,
+        "ms": 0.9
+      },
+      {
+        "t": 3482,
+        "ms": 1
+      },
+      {
+        "t": 3745,
+        "ms": 0.7
+      },
+      {
+        "t": 4008,
+        "ms": 0.7
+      },
+      {
+        "t": 4270,
+        "ms": 0.6
+      },
+      {
+        "t": 4534,
+        "ms": 0.9
+      },
+      {
+        "t": 4797,
+        "ms": 0.7
+      },
+      {
+        "t": 5061,
+        "ms": 0.7
+      },
+      {
+        "t": 5325,
+        "ms": 0.7
+      },
+      {
+        "t": 5589,
+        "ms": 0.7
+      },
+      {
+        "t": 5853,
+        "ms": 1
+      },
+      {
+        "t": 6117,
+        "ms": 0.9
+      },
+      {
+        "t": 6379,
+        "ms": 0.9
+      },
+      {
+        "t": 6643,
+        "ms": 0.7
+      },
+      {
+        "t": 6907,
+        "ms": 1.1
+      },
+      {
+        "t": 7170,
+        "ms": 0.8
+      },
+      {
+        "t": 7435,
+        "ms": 0.8
+      },
+      {
+        "t": 7696,
+        "ms": 0.6
+      },
+      {
+        "t": 7959,
+        "ms": 1.3
+      },
+      {
+        "t": 8222,
+        "ms": 1
+      },
+      {
+        "t": 8486,
+        "ms": 0.7
+      },
+      {
+        "t": 8749,
+        "ms": 0.7
+      },
+      {
+        "t": 9012,
+        "ms": 0.6
+      },
+      {
+        "t": 9275,
+        "ms": 0.9
+      },
+      {
+        "t": 9541,
+        "ms": 0.9
+      },
+      {
+        "t": 9801,
+        "ms": 0.6
+      },
+      {
+        "t": 10065,
+        "ms": 0.7
+      },
+      {
+        "t": 10329,
+        "ms": 0.9
+      },
+      {
+        "t": 10593,
+        "ms": 0.8
+      },
+      {
+        "t": 10856,
+        "ms": 0.9
+      },
+      {
+        "t": 11120,
+        "ms": 0.8
+      },
+      {
+        "t": 11383,
+        "ms": 0.7
+      },
+      {
+        "t": 11647,
+        "ms": 0.8
+      },
+      {
+        "t": 11908,
+        "ms": 0.7
+      },
+      {
+        "t": 12171,
+        "ms": 0.9
+      },
+      {
+        "t": 12433,
+        "ms": 0.6
+      },
+      {
+        "t": 12696,
+        "ms": 0.7
+      },
+      {
+        "t": 12959,
+        "ms": 1
+      },
+      {
+        "t": 13223,
+        "ms": 0.6
+      },
+      {
+        "t": 13486,
+        "ms": 0.8
+      },
+      {
+        "t": 13748,
+        "ms": 0.8
+      },
+      {
+        "t": 14012,
+        "ms": 0.7
+      },
+      {
+        "t": 14275,
+        "ms": 0.8
+      },
+      {
+        "t": 14539,
+        "ms": 0.8
+      },
+      {
+        "t": 14802,
+        "ms": 0.8
+      },
+      {
+        "t": 15067,
+        "ms": 0.9
+      },
+      {
+        "t": 15330,
+        "ms": 0.6
+      },
+      {
+        "t": 15595,
+        "ms": 0.7
+      },
+      {
+        "t": 15860,
+        "ms": 0.9
+      },
+      {
+        "t": 16124,
+        "ms": 0.8
+      },
+      {
+        "t": 16387,
+        "ms": 0.6
+      },
+      {
+        "t": 16655,
+        "ms": 5.4
+      },
+      {
+        "t": 16916,
+        "ms": 1.8
+      },
+      {
+        "t": 17179,
+        "ms": 1.4
+      },
+      {
+        "t": 17443,
+        "ms": 1.8
+      },
+      {
+        "t": 17705,
+        "ms": 1
+      },
+      {
+        "t": 17969,
+        "ms": 1
+      },
+      {
+        "t": 18233,
+        "ms": 0.9
+      },
+      {
+        "t": 18497,
+        "ms": 1.3
+      },
+      {
+        "t": 18760,
+        "ms": 1.2
+      },
+      {
+        "t": 19023,
+        "ms": 0.6
+      },
+      {
+        "t": 19286,
+        "ms": 0.7
+      },
+      {
+        "t": 21248,
+        "ms": 1699.6
+      },
+      {
+        "t": 21506,
+        "ms": 1.1
+      },
+      {
+        "t": 21769,
+        "ms": 1.1
+      },
+      {
+        "t": 22039,
+        "ms": 7.8
+      },
+      {
+        "t": 22297,
+        "ms": 1.3
+      },
+      {
+        "t": 22561,
+        "ms": 0.9
+      },
+      {
+        "t": 22832,
+        "ms": 7.1
+      },
+      {
+        "t": 23089,
+        "ms": 1.1
+      },
+      {
+        "t": 23354,
+        "ms": 0.7
+      },
+      {
+        "t": 23619,
+        "ms": 1.1
+      },
+      {
+        "t": 23882,
+        "ms": 1.5
+      },
+      {
+        "t": 24144,
+        "ms": 0.9
+      },
+      {
+        "t": 24408,
+        "ms": 1.3
+      },
+      {
+        "t": 24668,
+        "ms": 0.6
+      },
+      {
+        "t": 24931,
+        "ms": 0.9
+      },
+      {
+        "t": 25195,
+        "ms": 0.8
+      },
+      {
+        "t": 25458,
+        "ms": 1
+      },
+      {
+        "t": 25720,
+        "ms": 0.7
+      },
+      {
+        "t": 25983,
+        "ms": 0.8
+      },
+      {
+        "t": 26245,
+        "ms": 0.8
+      },
+      {
+        "t": 26509,
+        "ms": 1.3
+      },
+      {
+        "t": 26774,
+        "ms": 1.3
+      },
+      {
+        "t": 27039,
+        "ms": 0.9
+      },
+      {
+        "t": 27314,
+        "ms": 15.2
+      },
+      {
+        "t": 27579,
+        "ms": 0.9
+      },
+      {
+        "t": 27842,
+        "ms": 1.1
+      },
+      {
+        "t": 28103,
+        "ms": 1
+      },
+      {
+        "t": 28366,
+        "ms": 1
+      },
+      {
+        "t": 28629,
+        "ms": 1.2
+      },
+      {
+        "t": 28892,
+        "ms": 0.8
+      },
+      {
+        "t": 29154,
+        "ms": 1
+      },
+      {
+        "t": 29415,
+        "ms": 0.8
+      },
+      {
+        "t": 29679,
+        "ms": 0.8
+      },
+      {
+        "t": 29942,
+        "ms": 0.8
+      },
+      {
+        "t": 30206,
+        "ms": 0.9
+      },
+      {
+        "t": 30471,
+        "ms": 1
+      },
+      {
+        "t": 30734,
+        "ms": 0.8
+      },
+      {
+        "t": 30998,
+        "ms": 1.1
+      },
+      {
+        "t": 31261,
+        "ms": 0.8
+      },
+      {
+        "t": 31522,
+        "ms": 0.8
+      },
+      {
+        "t": 31784,
+        "ms": 0.7
+      },
+      {
+        "t": 32045,
+        "ms": 0.8
+      },
+      {
+        "t": 32306,
+        "ms": 1.1
+      },
+      {
+        "t": 32569,
+        "ms": 0.8
+      },
+      {
+        "t": 32901,
+        "ms": 70.4
+      },
+      {
+        "t": 33156,
+        "ms": 0.9
+      },
+      {
+        "t": 33418,
+        "ms": 0.8
+      },
+      {
+        "t": 33680,
+        "ms": 1
+      },
+      {
+        "t": 33944,
+        "ms": 0.7
+      },
+      {
+        "t": 34210,
+        "ms": 0.9
+      },
+      {
+        "t": 34475,
+        "ms": 0.9
+      },
+      {
+        "t": 34739,
+        "ms": 0.9
+      },
+      {
+        "t": 35003,
+        "ms": 1.2
+      },
+      {
+        "t": 35266,
+        "ms": 0.8
+      },
+      {
+        "t": 35528,
+        "ms": 0.6
+      },
+      {
+        "t": 35790,
+        "ms": 0.8
+      },
+      {
+        "t": 36055,
+        "ms": 1.3
+      },
+      {
+        "t": 36317,
+        "ms": 0.9
+      },
+      {
+        "t": 36580,
+        "ms": 1.1
+      },
+      {
+        "t": 36843,
+        "ms": 2
+      },
+      {
+        "t": 44754,
+        "ms": null,
+        "error": "BridgeError: bridge dropped: heartbeat: no message from the plugin for 7910 ms"
+      },
+      {
+        "t": 45016,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 45279,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 45544,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 45806,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 46070,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 46335,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 46596,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 46859,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 47123,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 47387,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 47651,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 47914,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 48178,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 48440,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 48703,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 48967,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 49229,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 49492,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 49758,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 50022,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 50287,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 50551,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 50815,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 51081,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 51346,
+        "ms": 0.8
+      },
+      {
+        "t": 51608,
+        "ms": 0.9
+      },
+      {
+        "t": 51871,
+        "ms": 0.7
+      },
+      {
+        "t": 52135,
+        "ms": 0.6
+      },
+      {
+        "t": 52398,
+        "ms": 0.7
+      },
+      {
+        "t": 52662,
+        "ms": 0.5
+      },
+      {
+        "t": 52925,
+        "ms": 0.7
+      },
+      {
+        "t": 53188,
+        "ms": 0.7
+      },
+      {
+        "t": 53454,
+        "ms": 2.5
+      },
+      {
+        "t": 53714,
+        "ms": 0.7
+      },
+      {
+        "t": 53978,
+        "ms": 0.7
+      },
+      {
+        "t": 54241,
+        "ms": 0.7
+      },
+      {
+        "t": 54504,
+        "ms": 0.8
+      },
+      {
+        "t": 54768,
+        "ms": 0.8
+      },
+      {
+        "t": 55032,
+        "ms": 0.6
+      },
+      {
+        "t": 55296,
+        "ms": 1.1
+      },
+      {
+        "t": 55558,
+        "ms": 0.7
+      },
+      {
+        "t": 55820,
+        "ms": 0.6
+      },
+      {
+        "t": 56082,
+        "ms": 0.6
+      },
+      {
+        "t": 56344,
+        "ms": 0.5
+      },
+      {
+        "t": 56607,
+        "ms": 0.7
+      },
+      {
+        "t": 63359,
+        "ms": null,
+        "error": "BridgeError: bridge dropped: heartbeat: no message from the plugin for 6751 ms"
+      },
+      {
+        "t": 63620,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 63883,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 64145,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 64409,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 64671,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 64934,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 65198,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 65460,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 65722,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 65985,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 66249,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 66513,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 66777,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 67040,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 67304,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 67566,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 67831,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 68098,
+        "ms": 1.6
+      },
+      {
+        "t": 68364,
+        "ms": 4.1
+      },
+      {
+        "t": 68624,
+        "ms": 0.6
+      },
+      {
+        "t": 68885,
+        "ms": 0.8
+      },
+      {
+        "t": 69149,
+        "ms": 0.7
+      },
+      {
+        "t": 69413,
+        "ms": 0.6
+      },
+      {
+        "t": 69677,
+        "ms": 0.8
+      },
+      {
+        "t": 69945,
+        "ms": 3.9
+      },
+      {
+        "t": 70207,
+        "ms": 1.4
+      },
+      {
+        "t": 70470,
+        "ms": 0.7
+      },
+      {
+        "t": 70735,
+        "ms": 1.3
+      },
+      {
+        "t": 70998,
+        "ms": 0.6
+      },
+      {
+        "t": 71260,
+        "ms": 0.6
+      },
+      {
+        "t": 71524,
+        "ms": 0.7
+      },
+      {
+        "t": 71787,
+        "ms": 0.6
+      },
+      {
+        "t": 72051,
+        "ms": 0.7
+      },
+      {
+        "t": 72314,
+        "ms": 0.6
+      },
+      {
+        "t": 72577,
+        "ms": 1
+      },
+      {
+        "t": 72842,
+        "ms": 3.9
+      },
+      {
+        "t": 73105,
+        "ms": 0.7
+      },
+      {
+        "t": 73369,
+        "ms": 0.7
+      },
+      {
+        "t": 73630,
+        "ms": 0.7
+      },
+      {
+        "t": 73892,
+        "ms": 0.5
+      },
+      {
+        "t": 74156,
+        "ms": 0.7
+      },
+      {
+        "t": 74421,
+        "ms": 0.9
+      },
+      {
+        "t": 74684,
+        "ms": 0.7
+      },
+      {
+        "t": 74947,
+        "ms": 0.7
+      },
+      {
+        "t": 75212,
+        "ms": 0.8
+      },
+      {
+        "t": 75475,
+        "ms": 0.7
+      },
+      {
+        "t": 75739,
+        "ms": 0.9
+      },
+      {
+        "t": 76002,
+        "ms": 0.6
+      },
+      {
+        "t": 76264,
+        "ms": 0.6
+      },
+      {
+        "t": 76527,
+        "ms": 0.9
+      },
+      {
+        "t": 76791,
+        "ms": 0.8
+      },
+      {
+        "t": 77053,
+        "ms": 0.7
+      },
+      {
+        "t": 77316,
+        "ms": 0.6
+      },
+      {
+        "t": 77578,
+        "ms": 0.8
+      },
+      {
+        "t": 77840,
+        "ms": 0.7
+      },
+      {
+        "t": 78104,
+        "ms": 0.7
+      },
+      {
+        "t": 78369,
+        "ms": 0.7
+      },
+      {
+        "t": 78635,
+        "ms": 3.2
+      },
+      {
+        "t": 78894,
+        "ms": 0.7
+      },
+      {
+        "t": 79160,
+        "ms": 0.7
+      },
+      {
+        "t": 79423,
+        "ms": 0.7
+      },
+      {
+        "t": 79687,
+        "ms": 0.8
+      },
+      {
+        "t": 79950,
+        "ms": 1
+      },
+      {
+        "t": 80214,
+        "ms": 0.6
+      },
+      {
+        "t": 80478,
+        "ms": 0.8
+      },
+      {
+        "t": 80744,
+        "ms": 0.7
+      },
+      {
+        "t": 81003,
+        "ms": 0.7
+      },
+      {
+        "t": 81267,
+        "ms": 0.7
+      },
+      {
+        "t": 81531,
+        "ms": 0.8
+      },
+      {
+        "t": 81794,
+        "ms": 0.7
+      },
+      {
+        "t": 82058,
+        "ms": 1.1
+      },
+      {
+        "t": 82322,
+        "ms": 1
+      },
+      {
+        "t": 82584,
+        "ms": 0.7
+      },
+      {
+        "t": 82847,
+        "ms": 0.9
+      },
+      {
+        "t": 83111,
+        "ms": 0.6
+      },
+      {
+        "t": 83375,
+        "ms": 0.8
+      },
+      {
+        "t": 83640,
+        "ms": 1.7
+      },
+      {
+        "t": 83901,
+        "ms": 0.7
+      },
+      {
+        "t": 84164,
+        "ms": 0.6
+      },
+      {
+        "t": 84427,
+        "ms": 0.9
+      },
+      {
+        "t": 84689,
+        "ms": 0.7
+      },
+      {
+        "t": 84953,
+        "ms": 0.6
+      },
+      {
+        "t": 85216,
+        "ms": 0.5
+      },
+      {
+        "t": 85480,
+        "ms": 0.8
+      },
+      {
+        "t": 85743,
+        "ms": 0.7
+      },
+      {
+        "t": 86006,
+        "ms": 0.9
+      },
+      {
+        "t": 86271,
+        "ms": 0.6
+      },
+      {
+        "t": 86535,
+        "ms": 1
+      },
+      {
+        "t": 86800,
+        "ms": 1.3
+      },
+      {
+        "t": 87064,
+        "ms": 0.7
+      },
+      {
+        "t": 87326,
+        "ms": 0.7
+      },
+      {
+        "t": 87590,
+        "ms": 0.7
+      },
+      {
+        "t": 87852,
+        "ms": 0.6
+      },
+      {
+        "t": 88115,
+        "ms": 0.7
+      },
+      {
+        "t": 88379,
+        "ms": 1
+      },
+      {
+        "t": 88641,
+        "ms": 0.7
+      },
+      {
+        "t": 88904,
+        "ms": 0.7
+      },
+      {
+        "t": 89168,
+        "ms": 0.8
+      },
+      {
+        "t": 89430,
+        "ms": 0.7
+      },
+      {
+        "t": 89693,
+        "ms": 0.8
+      },
+      {
+        "t": 89956,
+        "ms": 0.8
+      },
+      {
+        "t": 90218,
+        "ms": 0.6
+      },
+      {
+        "t": 90483,
+        "ms": 1.3
+      },
+      {
+        "t": 90747,
+        "ms": 0.9
+      },
+      {
+        "t": 91010,
+        "ms": 0.7
+      },
+      {
+        "t": 91275,
+        "ms": 0.8
+      },
+      {
+        "t": 91537,
+        "ms": 0.7
+      },
+      {
+        "t": 91799,
+        "ms": 0.7
+      },
+      {
+        "t": 92060,
+        "ms": 0.6
+      },
+      {
+        "t": 92322,
+        "ms": 0.7
+      },
+      {
+        "t": 92585,
+        "ms": 0.8
+      },
+      {
+        "t": 92847,
+        "ms": 0.7
+      },
+      {
+        "t": 93111,
+        "ms": 0.7
+      },
+      {
+        "t": 93373,
+        "ms": 0.8
+      },
+      {
+        "t": 93638,
+        "ms": 0.7
+      },
+      {
+        "t": 93900,
+        "ms": 0.6
+      },
+      {
+        "t": 94164,
+        "ms": 0.6
+      },
+      {
+        "t": 94428,
+        "ms": 0.8
+      },
+      {
+        "t": 94692,
+        "ms": 0.7
+      },
+      {
+        "t": 94955,
+        "ms": 1
+      },
+      {
+        "t": 95219,
+        "ms": 0.6
+      },
+      {
+        "t": 95483,
+        "ms": 1
+      },
+      {
+        "t": 95746,
+        "ms": 0.5
+      },
+      {
+        "t": 96008,
+        "ms": 0.5
+      },
+      {
+        "t": 96270,
+        "ms": 0.9
+      },
+      {
+        "t": 96534,
+        "ms": 0.7
+      },
+      {
+        "t": 96797,
+        "ms": 0.9
+      },
+      {
+        "t": 97061,
+        "ms": 0.7
+      },
+      {
+        "t": 97324,
+        "ms": 0.6
+      },
+      {
+        "t": 97588,
+        "ms": 0.7
+      },
+      {
+        "t": 97852,
+        "ms": 1
+      },
+      {
+        "t": 98114,
+        "ms": 0.8
+      },
+      {
+        "t": 98377,
+        "ms": 1
+      },
+      {
+        "t": 98640,
+        "ms": 0.9
+      },
+      {
+        "t": 98902,
+        "ms": 0.7
+      },
+      {
+        "t": 99166,
+        "ms": 0.7
+      },
+      {
+        "t": 99428,
+        "ms": 0.8
+      },
+      {
+        "t": 99692,
+        "ms": 0.5
+      },
+      {
+        "t": 99955,
+        "ms": 0.6
+      },
+      {
+        "t": 100219,
+        "ms": 0.7
+      },
+      {
+        "t": 100482,
+        "ms": 0.9
+      },
+      {
+        "t": 100743,
+        "ms": 0.6
+      },
+      {
+        "t": 101003,
+        "ms": 0.6
+      },
+      {
+        "t": 101265,
+        "ms": 0.6
+      },
+      {
+        "t": 101528,
+        "ms": 0.8
+      },
+      {
+        "t": 101792,
+        "ms": 0.9
+      },
+      {
+        "t": 102054,
+        "ms": 0.6
+      },
+      {
+        "t": 102317,
+        "ms": 0.7
+      },
+      {
+        "t": 102580,
+        "ms": 0.7
+      },
+      {
+        "t": 102843,
+        "ms": 0.8
+      },
+      {
+        "t": 103106,
+        "ms": 0.5
+      },
+      {
+        "t": 103369,
+        "ms": 0.7
+      },
+      {
+        "t": 103634,
+        "ms": 0.7
+      },
+      {
+        "t": 103898,
+        "ms": 0.6
+      },
+      {
+        "t": 104161,
+        "ms": 0.5
+      },
+      {
+        "t": 104422,
+        "ms": 0.8
+      },
+      {
+        "t": 104686,
+        "ms": 0.7
+      },
+      {
+        "t": 104950,
+        "ms": 0.9
+      },
+      {
+        "t": 105213,
+        "ms": 0.6
+      },
+      {
+        "t": 105477,
+        "ms": 0.9
+      },
+      {
+        "t": 105740,
+        "ms": 0.7
+      },
+      {
+        "t": 106003,
+        "ms": 0.8
+      },
+      {
+        "t": 106267,
+        "ms": 0.6
+      },
+      {
+        "t": 106530,
+        "ms": 0.8
+      },
+      {
+        "t": 106796,
+        "ms": 1
+      },
+      {
+        "t": 107059,
+        "ms": 1.1
+      },
+      {
+        "t": 107323,
+        "ms": 0.7
+      },
+      {
+        "t": 107586,
+        "ms": 0.7
+      }
+    ],
+    "prefsReads": [
+      {
+        "t": 579,
+        "ms": 2.1,
+        "problems": []
+      },
+      {
+        "t": 2690,
+        "ms": 1.2,
+        "problems": []
+      },
+      {
+        "t": 4798,
+        "ms": 0.9,
+        "problems": []
+      },
+      {
+        "t": 6908,
+        "ms": 1,
+        "problems": []
+      },
+      {
+        "t": 9013,
+        "ms": 0.9,
+        "problems": []
+      },
+      {
+        "t": 11121,
+        "ms": 1.2,
+        "problems": []
+      },
+      {
+        "t": 13224,
+        "ms": 1,
+        "problems": []
+      },
+      {
+        "t": 15332,
+        "ms": 1.6,
+        "problems": []
+      },
+      {
+        "t": 17445,
+        "ms": 2.1,
+        "problems": []
+      },
+      {
+        "t": 21253,
+        "ms": 4.7,
+        "problems": []
+      },
+      {
+        "t": 23355,
+        "ms": 1.6,
+        "problems": []
+      },
+      {
+        "t": 25459,
+        "ms": 1.2,
+        "problems": []
+      },
+      {
+        "t": 27580,
+        "ms": 0.9,
+        "problems": []
+      },
+      {
+        "t": 29680,
+        "ms": 0.9,
+        "problems": []
+      },
+      {
+        "t": 31785,
+        "ms": 0.9,
+        "problems": []
+      },
+      {
+        "t": 33946,
+        "ms": 1.3,
+        "problems": []
+      },
+      {
+        "t": 36056,
+        "ms": 1.3,
+        "problems": []
+      },
+      {
+        "t": 44754,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 46859,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 48967,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 51081,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 53189,
+        "ms": 1,
+        "problems": []
+      },
+      {
+        "t": 55297,
+        "ms": 1.1,
+        "problems": []
+      },
+      {
+        "t": 63359,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 65460,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 67566,
+        "ms": null,
+        "error": "BridgeError: bridge is connecting"
+      },
+      {
+        "t": 69678,
+        "ms": 1,
+        "problems": []
+      },
+      {
+        "t": 71788,
+        "ms": 1.5,
+        "problems": []
+      },
+      {
+        "t": 73894,
+        "ms": 1.1,
+        "problems": []
+      },
+      {
+        "t": 76003,
+        "ms": 0.9,
+        "problems": []
+      },
+      {
+        "t": 78105,
+        "ms": 1.1,
+        "problems": []
+      },
+      {
+        "t": 80214,
+        "ms": 0.9,
+        "problems": []
+      },
+      {
+        "t": 82323,
+        "ms": 1.1,
+        "problems": []
+      },
+      {
+        "t": 84428,
+        "ms": 1.3,
+        "problems": []
+      },
+      {
+        "t": 86537,
+        "ms": 1.4,
+        "problems": []
+      },
+      {
+        "t": 88643,
+        "ms": 1.4,
+        "problems": []
+      },
+      {
+        "t": 90749,
+        "ms": 2,
+        "problems": []
+      },
+      {
+        "t": 92848,
+        "ms": 1.1,
+        "problems": []
+      },
+      {
+        "t": 94956,
+        "ms": 1.4,
+        "problems": []
+      },
+      {
+        "t": 97062,
+        "ms": 0.9,
+        "problems": []
+      },
+      {
+        "t": 99166,
+        "ms": 0.8,
+        "problems": []
+      },
+      {
+        "t": 101266,
+        "ms": 0.8,
+        "problems": []
+      },
+      {
+        "t": 103370,
+        "ms": 1.1,
+        "problems": []
+      },
+      {
+        "t": 105479,
+        "ms": 1.3,
+        "problems": []
+      },
+      {
+        "t": 107587,
+        "ms": 1.3,
+        "problems": []
+      }
+    ],
+    "statusAges": [
+      {
+        "t": 580,
+        "updated_epoch": 1790682451
+      },
+      {
+        "t": 1632,
+        "updated_epoch": 1790682454
+      },
+      {
+        "t": 2691,
+        "updated_epoch": 1790682454
+      },
+      {
+        "t": 3745,
+        "updated_epoch": 1790682456
+      },
+      {
+        "t": 4798,
+        "updated_epoch": 1790682456
+      },
+      {
+        "t": 5853,
+        "updated_epoch": 1790682458
+      },
+      {
+        "t": 6908,
+        "updated_epoch": 1790682458
+      },
+      {
+        "t": 7959,
+        "updated_epoch": 1790682460
+      },
+      {
+        "t": 9013,
+        "updated_epoch": 1790682462
+      },
+      {
+        "t": 10065,
+        "updated_epoch": 1790682462
+      },
+      {
+        "t": 11121,
+        "updated_epoch": 1790682464
+      },
+      {
+        "t": 12171,
+        "updated_epoch": 1790682464
+      },
+      {
+        "t": 13224,
+        "updated_epoch": 1790682466
+      },
+      {
+        "t": 14275,
+        "updated_epoch": 1790682466
+      },
+      {
+        "t": 15332,
+        "updated_epoch": 1790682468
+      },
+      {
+        "t": 16387,
+        "updated_epoch": 1790682468
+      },
+      {
+        "t": 17445,
+        "updated_epoch": 1790682470
+      },
+      {
+        "t": 18497,
+        "updated_epoch": 1790682470
+      },
+      {
+        "t": 21254,
+        "updated_epoch": 1790682472
+      },
+      {
+        "t": 22297,
+        "updated_epoch": 1790682474
+      },
+      {
+        "t": 23356,
+        "updated_epoch": 1790682474
+      },
+      {
+        "t": 24408,
+        "updated_epoch": 1790682476
+      },
+      {
+        "t": 25459,
+        "updated_epoch": 1790682476
+      },
+      {
+        "t": 26509,
+        "updated_epoch": 1790682478
+      },
+      {
+        "t": 27580,
+        "updated_epoch": 1790682480
+      },
+      {
+        "t": 28629,
+        "updated_epoch": 1790682480
+      },
+      {
+        "t": 29680,
+        "updated_epoch": 1790682482
+      },
+      {
+        "t": 30734,
+        "updated_epoch": 1790682482
+      },
+      {
+        "t": 31785,
+        "updated_epoch": 1790682484
+      },
+      {
+        "t": 32901,
+        "updated_epoch": 1790682484
+      },
+      {
+        "t": 33946,
+        "updated_epoch": 1790682486
+      },
+      {
+        "t": 35003,
+        "updated_epoch": 1790682486
+      },
+      {
+        "t": 36056,
+        "updated_epoch": 1790682488
+      },
+      {
+        "t": 44754,
+        "updated_epoch": 1790682488
+      },
+      {
+        "t": 45806,
+        "updated_epoch": 1790682488
+      },
+      {
+        "t": 46859,
+        "updated_epoch": 1790682488
+      },
+      {
+        "t": 47914,
+        "updated_epoch": 1790682488
+      },
+      {
+        "t": 48967,
+        "updated_epoch": 1790682488
+      },
+      {
+        "t": 50022,
+        "updated_epoch": 1790682502
+      },
+      {
+        "t": 51081,
+        "updated_epoch": 1790682502
+      },
+      {
+        "t": 52135,
+        "updated_epoch": 1790682505
+      },
+      {
+        "t": 53189,
+        "updated_epoch": 1790682505
+      },
+      {
+        "t": 54241,
+        "updated_epoch": 1790682507
+      },
+      {
+        "t": 55297,
+        "updated_epoch": 1790682507
+      },
+      {
+        "t": 56344,
+        "updated_epoch": 1790682509
+      },
+      {
+        "t": 63359,
+        "updated_epoch": 1790682509
+      },
+      {
+        "t": 64409,
+        "updated_epoch": 1790682509
+      },
+      {
+        "t": 65460,
+        "updated_epoch": 1790682509
+      },
+      {
+        "t": 66513,
+        "updated_epoch": 1790682519
+      },
+      {
+        "t": 67566,
+        "updated_epoch": 1790682519
+      },
+      {
+        "t": 68624,
+        "updated_epoch": 1790682521
+      },
+      {
+        "t": 69678,
+        "updated_epoch": 1790682521
+      },
+      {
+        "t": 70735,
+        "updated_epoch": 1790682523
+      },
+      {
+        "t": 71789,
+        "updated_epoch": 1790682523
+      },
+      {
+        "t": 72842,
+        "updated_epoch": 1790682525
+      },
+      {
+        "t": 73894,
+        "updated_epoch": 1790682525
+      },
+      {
+        "t": 74947,
+        "updated_epoch": 1790682527
+      },
+      {
+        "t": 76003,
+        "updated_epoch": 1790682527
+      },
+      {
+        "t": 77053,
+        "updated_epoch": 1790682529
+      },
+      {
+        "t": 78105,
+        "updated_epoch": 1790682529
+      },
+      {
+        "t": 79160,
+        "updated_epoch": 1790682531
+      },
+      {
+        "t": 80215,
+        "updated_epoch": 1790682531
+      },
+      {
+        "t": 81267,
+        "updated_epoch": 1790682533
+      },
+      {
+        "t": 82323,
+        "updated_epoch": 1790682533
+      },
+      {
+        "t": 83375,
+        "updated_epoch": 1790682535
+      },
+      {
+        "t": 84429,
+        "updated_epoch": 1790682537
+      },
+      {
+        "t": 85480,
+        "updated_epoch": 1790682537
+      },
+      {
+        "t": 86537,
+        "updated_epoch": 1790682539
+      },
+      {
+        "t": 87590,
+        "updated_epoch": 1790682539
+      },
+      {
+        "t": 88643,
+        "updated_epoch": 1790682541
+      },
+      {
+        "t": 89693,
+        "updated_epoch": 1790682541
+      },
+      {
+        "t": 90750,
+        "updated_epoch": 1790682543
+      },
+      {
+        "t": 91799,
+        "updated_epoch": 1790682543
+      },
+      {
+        "t": 92848,
+        "updated_epoch": 1790682545
+      },
+      {
+        "t": 93900,
+        "updated_epoch": 1790682545
+      },
+      {
+        "t": 94957,
+        "updated_epoch": 1790682547
+      },
+      {
+        "t": 96008,
+        "updated_epoch": 1790682547
+      },
+      {
+        "t": 97062,
+        "updated_epoch": 1790682549
+      },
+      {
+        "t": 98114,
+        "updated_epoch": 1790682549
+      },
+      {
+        "t": 99167,
+        "updated_epoch": 1790682551
+      },
+      {
+        "t": 100219,
+        "updated_epoch": 1790682551
+      },
+      {
+        "t": 101266,
+        "updated_epoch": 1790682553
+      },
+      {
+        "t": 102317,
+        "updated_epoch": 1790682553
+      },
+      {
+        "t": 103370,
+        "updated_epoch": 1790682555
+      },
+      {
+        "t": 104422,
+        "updated_epoch": 1790682555
+      },
+      {
+        "t": 105479,
+        "updated_epoch": 1790682557
+      },
+      {
+        "t": 106530,
+        "updated_epoch": 1790682557
+      },
+      {
+        "t": 107588,
+        "updated_epoch": 1790682559
+      }
+    ]
+  }
+}

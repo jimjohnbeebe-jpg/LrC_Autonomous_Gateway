@@ -1,0 +1,24 @@
+# Excerpt of Claude Desktop's MCP log for the lrc-avg server, collected by npm run phase5:check.
+# Source: %LOCALAPPDATA%\Claude\Logs\mcp-server-lrc-avg.log, lines from 2026-10-01T11:59:14.733Z on.
+# Filter: timestamped lines matching Server started|Message from|[error]|[warn], and the engine's [lrc-avg] lines; user folder redacted.
+
+2026-10-01T11:59:45.172Z [lrc-avg] [info] Message from client: method="tools/call" id=25 params { metadata: undefined }
+[lrc-avg] took the Lightroom bridge lock
+[lrc-avg] bridge: connecting
+[lrc-avg] bridge: handshaking
+[lrc-avg] bridge: connected
+2026-10-01T11:59:47.707Z [lrc-avg] [info] Message from server: id=25 result(1 blocks) { metadata: undefined }
+2026-10-01T11:59:49.631Z [lrc-avg] [info] Message from client: method="tools/call" id=26 params { metadata: undefined }
+2026-10-01T11:59:57.225Z [lrc-avg] [info] Message from server: id=26 result(2 blocks) { metadata: undefined }
+2026-10-01T12:00:02.812Z [lrc-avg] [info] Message from client: method="tools/call" id=27 params { metadata: undefined }
+2026-10-01T12:00:02.825Z [lrc-avg] [info] Message from server: id=27 result(1 blocks) { metadata: undefined }
+2026-10-01T12:00:53.241Z [lrc-avg] [info] Message from client: method="tools/call" id=28 params { metadata: undefined }
+2026-10-01T12:00:57.016Z [lrc-avg] [info] Message from server: id=28 result(2 blocks) { metadata: undefined }
+2026-10-01T12:01:03.098Z [lrc-avg] [info] Message from client: method="tools/call" id=29 params { metadata: undefined }
+2026-10-01T12:01:06.821Z [lrc-avg] [info] Message from server: id=29 result(2 blocks) { metadata: undefined }
+2026-10-01T12:01:13.077Z [lrc-avg] [info] Message from client: method="tools/call" id=30 params { metadata: undefined }
+2026-10-01T12:01:16.294Z [lrc-avg] [info] Message from server: id=30 result(2 blocks) { metadata: undefined }
+2026-10-01T12:01:23.133Z [lrc-avg] [info] Message from client: method="tools/call" id=31 params { metadata: undefined }
+2026-10-01T12:01:26.472Z [lrc-avg] [info] Message from server: id=31 result(2 blocks) { metadata: undefined }
+2026-10-01T12:02:38.448Z [lrc-avg] [info] Message from client: method="tools/call" id=32 params { metadata: undefined }
+2026-10-01T12:02:38.460Z [lrc-avg] [info] Message from server: id=32 result(1 blocks) { metadata: undefined }

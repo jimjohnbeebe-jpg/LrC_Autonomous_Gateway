@@ -1,0 +1,5 @@
+Jim's answers in chat, 2026-09-30 after the live check (AskUserQuestion):
+1. HUD opened by itself: Yes
+2. Stage line followed the work: Yes
+3. After Abort, 'Aborted: the photo is back as it was before the session.' shown, HUD closed ~5 s later: Yes
+4. 20260907-_OZ80099.NEF looks as before the check: Yes

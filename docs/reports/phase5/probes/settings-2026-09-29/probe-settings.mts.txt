@@ -1,0 +1,108 @@
+// Read-only probe of plugin 0.5.0 after the phase-5/settings merge (PHASE5_PLAN row 3). Takes the
+// engine instance lock (so no Claude Desktop engine talks to the bridge meanwhile), reads the ports
+// file, connects with the engine's own client (engine\dist), checks hello and get_prefs, then pings
+// every 250 ms and reads get_prefs every 2 s while Jim opens Plug-in Manager and clicks Done, until
+// the stop file exists (or 6 minutes). Writes nothing to Lightroom; writes its results to
+// %TEMP%\LrC-AVG\probe-settings\. Usage: node probe-settings.mts <repo root>
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+
+const repo = process.argv[2] as string;
+const dist = (p: string) => import(pathToFileURL(path.join(repo, "engine", "dist", p)).href);
+const { BridgeClient, readPortsFile, defaultPortsPath, defaultTokenPath } = await dist("bridge/index.js");
+const { parsePage } = await dist("settings/index.js");
+const { acquireInstanceLock } = await dist("mcp/instance-lock.js");
+const { ENGINE_VERSION } = await dist("mcp/version.js");
+
+const outDir = path.join(os.tmpdir(), "LrC-AVG", "probe-settings");
+mkdirSync(outDir, { recursive: true });
+const stopFile = path.join(outDir, "stop");
+const statusFile = path.join(os.tmpdir(), "LrC-AVG", "bridge_status.json");
+const t0 = Date.now();
+const at = () => new Date().toISOString();
+const result: Record<string, unknown> = { started: at(), engine_version: ENGINE_VERSION };
+const save = () => writeFileSync(path.join(outDir, "probe.json"), JSON.stringify(result, null, 2));
+
+const lock = await acquireInstanceLock();
+if (!lock.ok) {
+  result["lock"] = { ok: false, port: lock.port, pid: lock.pid };
+  save();
+  console.log(`LOCK BUSY: another engine (pid ${lock.pid}) holds port ${lock.port}; quit Claude Desktop's chat use or wait 60 s`);
+  process.exit(2);
+}
+result["lock"] = { ok: true };
+const token = existsSync(defaultTokenPath()) ? readFileSync(defaultTokenPath(), "utf8").trim() : "";
+const portsText = existsSync(defaultPortsPath()) ? readFileSync(defaultPortsPath(), "utf8") : null;
+// The token itself is never recorded; only whether the ports file's check matches it.
+result["ports_file"] = {
+  path: defaultPortsPath(),
+  fields: portsText ? Object.keys(JSON.parse(portsText)) : null,
+  ports: portsText ? { receive: JSON.parse(portsText).receive, send: JSON.parse(portsText).send, plugin_version: JSON.parse(portsText).plugin_version, written_at: JSON.parse(portsText).written_at } : null,
+  read: readPortsFile(token),
+};
+
+const client = new BridgeClient({ engineVersion: `${ENGINE_VERSION}-probe`, log: (m: string) => console.error(`  (${m})`) });
+client.start();
+const hello = await client.waitConnected(20000);
+result["hello"] = hello;
+result["connected_ports"] = client.stats.ports;
+const g0 = performance.now();
+const first = await client.request("get_prefs", {});
+result["get_prefs_first"] = { ms: Math.round(performance.now() - g0), raw: first, parsed: parsePage(first) };
+save();
+console.log(`connected: plugin ${hello.plugin_version}, ports ${JSON.stringify(client.stats.ports)}; get_prefs ok, problems ${JSON.stringify(parsePage(first).problems)}`);
+console.log("READY: Jim can open Plug-in Manager now.");
+
+const pings: Array<{ t: number; ms: number | null; error?: string }> = [];
+const prefsReads: Array<{ t: number; ms: number | null; error?: string; problems?: string[] }> = [];
+const statusAges: Array<{ t: number; updated_epoch: number | null }> = [];
+let lastPrefs = 0;
+let lastStatus = 0;
+while (!existsSync(stopFile) && Date.now() - t0 < 6 * 60 * 1000) {
+  const s = performance.now();
+  try {
+    await client.request("ping", { nonce: String(pings.length) }, { timeoutMs: 20000 });
+    pings.push({ t: Date.now() - t0, ms: Math.round((performance.now() - s) * 10) / 10 });
+  } catch (err) {
+    pings.push({ t: Date.now() - t0, ms: null, error: String(err) });
+  }
+  if (Date.now() - lastPrefs >= 2000) {
+    lastPrefs = Date.now();
+    const p = performance.now();
+    try {
+      const r = await client.request("get_prefs", {}, { timeoutMs: 20000 });
+      prefsReads.push({ t: Date.now() - t0, ms: Math.round((performance.now() - p) * 10) / 10, problems: parsePage(r).problems });
+    } catch (err) {
+      prefsReads.push({ t: Date.now() - t0, ms: null, error: String(err) });
+    }
+  }
+  if (Date.now() - lastStatus >= 1000) {
+    lastStatus = Date.now();
+    try {
+      statusAges.push({ t: Date.now() - t0, updated_epoch: JSON.parse(readFileSync(statusFile, "utf8")).updated_epoch ?? null });
+    } catch {
+      statusAges.push({ t: Date.now() - t0, updated_epoch: null });
+    }
+  }
+  await new Promise((r) => setTimeout(r, 250));
+}
+const okPings = pings.filter((p) => p.ms !== null).map((p) => p.ms as number);
+const maxAge = Math.max(...statusAges.map((s) => (s.updated_epoch === null ? Infinity : Math.round(t0 / 1000 + s.t / 1000 - s.updated_epoch))));
+result["window"] = {
+  ended: at(),
+  seconds: Math.round((Date.now() - t0) / 1000),
+  pings: { count: pings.length, failed: pings.filter((p) => p.ms === null).length, median_ms: okPings.sort((a, b) => a - b)[Math.floor(okPings.length / 2)] ?? null, max_ms: Math.max(...okPings) },
+  get_prefs: { count: prefsReads.length, failed: prefsReads.filter((p) => p.ms === null).length, max_ms: Math.max(...prefsReads.filter((p) => p.ms !== null).map((p) => p.ms as number)) },
+  status_file_max_age_s: maxAge,
+  slow_pings: pings.filter((p) => p.ms === null || p.ms > 100),
+  slow_get_prefs: prefsReads.filter((p) => p.ms === null || (p.ms as number) > 100),
+};
+result["drops"] = { drops: client.stats.drops, last_drop_reason: client.stats.last_drop_reason };
+result["raw"] = { pings, prefsReads, statusAges };
+save();
+console.log(JSON.stringify(result["window"], null, 2));
+client.stop();
+await lock.lock.release();
+process.exit(0);

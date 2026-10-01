@@ -1,0 +1,428 @@
+{
+  "started": "2026-09-30T11:07:32.172Z",
+  "engine_version": "0.7.0",
+  "steps": [
+    {
+      "step": 2,
+      "what": "the HUD opens by itself",
+      "started": "2026-09-30T11:07:32.737Z",
+      "seconds": 7.3,
+      "outcome": {
+        "first_update": {
+          "applied": true,
+          "shown": true,
+          "opened": true
+        },
+        "hud_shown_line": "2026-09-30 04:07:32.867 INFO  hud: shown"
+      }
+    },
+    {
+      "step": 3,
+      "what": "Approve pass 2",
+      "started": "2026-09-30T11:07:40.052Z",
+      "seconds": 16.4,
+      "outcome": {
+        "event": "hud_approve_pass",
+        "source": "hud",
+        "ms_after_update": 16312,
+        "payload": {
+          "source": "hud",
+          "session_id": "probe-muo03y7m",
+          "seq_seen": 3,
+          "pass": 2,
+          "click_id": "DE543C8E-110D-4437-9744-3E4AFF254B21"
+        },
+        "answered": {
+          "applied": true,
+          "shown": true,
+          "opened": false
+        },
+        "menu_lines": []
+      }
+    },
+    {
+      "step": 4,
+      "what": "Pick B",
+      "started": "2026-09-30T11:07:59.456Z",
+      "seconds": 26.4,
+      "outcome": {
+        "event": "hud_pick",
+        "source": "hud",
+        "ms_after_update": 26370,
+        "payload": {
+          "source": "hud",
+          "variant": "B",
+          "session_id": "probe-muo03y7m",
+          "seq_seen": 5,
+          "click_id": "A1378CB7-EA0C-4EE1-B996-E25A80159E3E"
+        },
+        "answered": {
+          "applied": true,
+          "shown": true,
+          "opened": false
+        },
+        "menu_lines": []
+      }
+    },
+    {
+      "step": 5,
+      "what": "another photo selected, then this one again",
+      "started": "2026-09-30T11:08:25.841Z",
+      "seconds": 10.2,
+      "outcome": {
+        "away": "2026-09-30T11:08:30.913Z",
+        "back": "2026-09-30T11:08:36.010Z",
+        "selection_lines": [
+          "2026-09-30 04:08:30.692 INFO  hud: selectionChangeObserver called",
+          "2026-09-30 04:08:30.907 INFO  hud: selection C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9: Target changed: 20260907-_OZ80093.NEF is selected. Select 20260906-_OZ80005.NEF again; the session is still open.",
+          "2026-09-30 04:08:35.947 INFO  hud: selectionChangeObserver called",
+          "2026-09-30 04:08:36.005 INFO  hud: selection B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39: Selection: the session's photo."
+        ]
+      }
+    },
+    {
+      "step": 6,
+      "what": "menu Abort Session",
+      "started": "2026-09-30T11:08:36.016Z",
+      "seconds": 35.6,
+      "outcome": {
+        "event": "hud_abort",
+        "source": "menu",
+        "ms_after_update": 35551,
+        "payload": {
+          "session_id": "probe-muo03y7m",
+          "seq_seen": 7,
+          "source": "menu",
+          "click_id": "F9D846FA-10F6-4E94-B405-9E481EF5B821"
+        },
+        "answered": {
+          "applied": true,
+          "shown": true,
+          "opened": false
+        },
+        "menu_lines": [
+          "2026-09-30 04:08:35.947 INFO  hud: selectionChangeObserver called",
+          "2026-09-30 04:08:36.005 INFO  hud: selection B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39: Selection: the session's photo.",
+          "2026-09-30 04:09:11.568 INFO  hud: menu hud_abort: Abort sent at 04:09:11; waiting for the engine"
+        ]
+      }
+    },
+    {
+      "step": 7,
+      "what": "menu Accept Session",
+      "started": "2026-09-30T11:09:11.666Z",
+      "seconds": 44.7,
+      "outcome": {
+        "event": "hud_accept",
+        "source": "menu",
+        "ms_after_update": 44581,
+        "payload": {
+          "session_id": "probe-muo03y7m",
+          "seq_seen": 9,
+          "source": "menu",
+          "click_id": "72EF41CF-500E-4847-B571-CE009F0DF52A"
+        },
+        "answered": {
+          "applied": true,
+          "shown": true,
+          "opened": false
+        },
+        "menu_lines": [
+          "2026-09-30 04:09:11.568 INFO  hud: menu hud_abort: Abort sent at 04:09:11; waiting for the engine",
+          "2026-09-30 04:09:56.248 INFO  hud: menu hud_accept: Accept sent at 04:09:56; waiting for the engine"
+        ]
+      }
+    },
+    {
+      "step": 8,
+      "what": "HUD Abort, then the HUD closes by itself",
+      "started": "2026-09-30T11:09:56.347Z",
+      "seconds": 40.1,
+      "outcome": {
+        "event": "hud_abort",
+        "ms_after_update": 34595,
+        "payload": {
+          "session_id": "probe-muo03y7m",
+          "seq_seen": 11,
+          "source": "hud",
+          "click_id": "C08465DF-8868-47BE-B994-C135D2671FAB"
+        },
+        "update": {
+          "applied": true,
+          "shown": true,
+          "opened": false
+        },
+        "closing_line": "2026-09-30 04:10:36.462 INFO  hud: closing, the session ended (aborted)",
+        "closing_after_ms": 5486,
+        "closed_line": "2026-09-30 04:10:36.462 INFO  hud: closed"
+      }
+    },
+    {
+      "step": 9,
+      "what": "Show Vision Gateway HUD, then its X",
+      "started": "2026-09-30T11:10:36.481Z",
+      "seconds": 25.3,
+      "outcome": {
+        "shown_line": "2026-09-30 04:10:49.077 INFO  hud: shown",
+        "closed_line": "2026-09-30 04:11:01.726 INFO  hud: closed"
+      }
+    }
+  ],
+  "updates": [
+    {
+      "seq": 1,
+      "stage": "begin",
+      "at": "2026-09-30T11:07:32.742Z",
+      "ms": 2.7,
+      "result": {
+        "applied": true,
+        "shown": true,
+        "opened": true
+      },
+      "note": "Probe: nothing is written to your photo."
+    },
+    {
+      "seq": 2,
+      "stage": "awaiting_claude",
+      "at": "2026-09-30T11:07:36.044Z",
+      "ms": 17.8,
+      "result": {
+        "applied": true,
+        "shown": true,
+        "opened": false
+      },
+      "note": "Probe: nothing is written to your photo. Step 3 comes next."
+    },
+    {
+      "seq": 3,
+      "stage": "awaiting_approval",
+      "at": "2026-09-30T11:07:40.055Z",
+      "ms": 3.3,
+      "result": {
+        "applied": true,
+        "shown": true,
+        "opened": false
+      },
+      "note": "Step 3: click Approve pass 2."
+    },
+    {
+      "seq": 4,
+      "stage": "awaiting_claude",
+      "at": "2026-09-30T11:07:56.438Z",
+      "ms": 4.4,
+      "result": {
+        "applied": true,
+        "shown": true,
+        "opened": false
+      },
+      "note": "Approve received. Step 4 comes next."
+    },
+    {
+      "seq": 5,
+      "stage": "awaiting_pick",
+      "at": "2026-09-30T11:07:59.462Z",
+      "ms": 5.8,
+      "result": {
+        "applied": true,
+        "shown": true,
+        "opened": false
+      },
+      "note": "Step 4: click Pick B."
+    },
+    {
+      "seq": 6,
+      "stage": "awaiting_claude",
+      "at": "2026-09-30T11:08:25.837Z",
+      "ms": 10.3,
+      "result": {
+        "applied": true,
+        "shown": true,
+        "opened": false
+      },
+      "note": "Pick B received. Step 5: select another photo, then this one again."
+    },
+    {
+      "seq": 7,
+      "stage": "awaiting_claude",
+      "at": "2026-09-30T11:08:36.019Z",
+      "ms": 2.8,
+      "result": {
+        "applied": true,
+        "shown": true,
+        "opened": false
+      },
+      "note": "Step 6: File > Plug-in Extras > LrC-AVG - Abort Session."
+    },
+    {
+      "seq": 8,
+      "stage": "awaiting_claude",
+      "at": "2026-09-30T11:09:11.662Z",
+      "ms": 3.9,
+      "result": {
+        "applied": true,
+        "shown": true,
+        "opened": false
+      },
+      "note": "Menu Abort received (the probe does not act on it). Step 7 comes next."
+    },
+    {
+      "seq": 9,
+      "stage": "awaiting_claude",
+      "at": "2026-09-30T11:09:11.669Z",
+      "ms": 2.5,
+      "result": {
+        "applied": true,
+        "shown": true,
+        "opened": false
+      },
+      "note": "Step 7: File > Plug-in Extras > LrC-AVG - Accept Session."
+    },
+    {
+      "seq": 10,
+      "stage": "awaiting_claude",
+      "at": "2026-09-30T11:09:56.342Z",
+      "ms": 3.6,
+      "result": {
+        "applied": true,
+        "shown": true,
+        "opened": false
+      },
+      "note": "Menu Accept received. Step 8: click Abort in this window."
+    },
+    {
+      "seq": 11,
+      "stage": "awaiting_claude",
+      "at": "2026-09-30T11:09:56.349Z",
+      "ms": 2,
+      "result": {
+        "applied": true,
+        "shown": true,
+        "opened": false
+      },
+      "note": "Step 8: click Abort in this window."
+    },
+    {
+      "seq": 12,
+      "stage": "aborted",
+      "at": "2026-09-30T11:10:30.976Z",
+      "ms": 5.6,
+      "result": {
+        "applied": true,
+        "shown": true,
+        "opened": false
+      },
+      "note": "Probe ended: nothing was changed. This window closes by itself."
+    }
+  ],
+  "events": [
+    {
+      "t_ms": 24192,
+      "at": "2026-09-30T11:07:56.364Z",
+      "name": "hud_approve_pass",
+      "ok": true,
+      "payload": {
+        "source": "hud",
+        "session_id": "probe-muo03y7m",
+        "seq_seen": 3,
+        "pass": 2,
+        "click_id": "DE543C8E-110D-4437-9744-3E4AFF254B21"
+      }
+    },
+    {
+      "t_ms": 53654,
+      "at": "2026-09-30T11:08:25.826Z",
+      "name": "hud_pick",
+      "ok": true,
+      "payload": {
+        "source": "hud",
+        "variant": "B",
+        "session_id": "probe-muo03y7m",
+        "seq_seen": 5,
+        "click_id": "A1378CB7-EA0C-4EE1-B996-E25A80159E3E"
+      }
+    },
+    {
+      "t_ms": 99395,
+      "at": "2026-09-30T11:09:11.567Z",
+      "name": "hud_abort",
+      "ok": true,
+      "payload": {
+        "session_id": "probe-muo03y7m",
+        "seq_seen": 7,
+        "source": "menu",
+        "click_id": "F9D846FA-10F6-4E94-B405-9E481EF5B821"
+      }
+    },
+    {
+      "t_ms": 144075,
+      "at": "2026-09-30T11:09:56.247Z",
+      "name": "hud_accept",
+      "ok": true,
+      "payload": {
+        "session_id": "probe-muo03y7m",
+        "seq_seen": 9,
+        "source": "menu",
+        "click_id": "72EF41CF-500E-4847-B571-CE009F0DF52A"
+      }
+    },
+    {
+      "t_ms": 178770,
+      "at": "2026-09-30T11:10:30.942Z",
+      "name": "hud_abort",
+      "ok": true,
+      "payload": {
+        "session_id": "probe-muo03y7m",
+        "seq_seen": 11,
+        "source": "hud",
+        "click_id": "C08465DF-8868-47BE-B994-C135D2671FAB"
+      }
+    }
+  ],
+  "lock": {
+    "ok": true
+  },
+  "hello": {
+    "protocol": 1,
+    "plugin_version": "0.6.1",
+    "lrc_version": "15.5.1",
+    "sdk_declared": 13,
+    "ports": {
+      "receive": 8765,
+      "send": 8766
+    }
+  },
+  "photo": {
+    "filename": "20260906-_OZ80005.NEF",
+    "target": {
+      "uuid": "B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39",
+      "filename": "20260906-_OZ80005.NEF",
+      "iso": "64",
+      "shutter": "1/100 s",
+      "aperture": "f/7.1",
+      "lens": "TAMRON 35-150mm F/2-2.8 Di III VXD A058Z"
+    }
+  },
+  "hud_log": [
+    "2026-09-30 04:07:32.740 INFO  hud: session probe-muo03y7m",
+    "2026-09-30 04:07:32.867 INFO  hud: shown",
+    "2026-09-30 04:07:32.900 INFO  hud: selection B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39: Selection: the session's photo.",
+    "2026-09-30 04:07:56.362 INFO  hud: hud_approve_pass DE543C8E-110D-4437-9744-3E4AFF254B21 from the hud: sent",
+    "2026-09-30 04:08:25.824 INFO  hud: hud_pick A1378CB7-EA0C-4EE1-B996-E25A80159E3E from the hud: sent",
+    "2026-09-30 04:08:30.692 INFO  hud: selectionChangeObserver called",
+    "2026-09-30 04:08:30.907 INFO  hud: selection C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9: Target changed: 20260907-_OZ80093.NEF is selected. Select 20260906-_OZ80005.NEF again; the session is still open.",
+    "2026-09-30 04:08:35.947 INFO  hud: selectionChangeObserver called",
+    "2026-09-30 04:08:36.005 INFO  hud: selection B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39: Selection: the session's photo.",
+    "2026-09-30 04:09:11.566 INFO  hud: hud_abort F9D846FA-10F6-4E94-B405-9E481EF5B821 from the menu: sent",
+    "2026-09-30 04:09:11.568 INFO  hud: menu hud_abort: Abort sent at 04:09:11; waiting for the engine",
+    "2026-09-30 04:09:56.246 INFO  hud: hud_accept 72EF41CF-500E-4847-B571-CE009F0DF52A from the menu: sent",
+    "2026-09-30 04:09:56.248 INFO  hud: menu hud_accept: Accept sent at 04:09:56; waiting for the engine",
+    "2026-09-30 04:10:30.942 INFO  hud: hud_abort C08465DF-8868-47BE-B994-C135D2671FAB from the hud: sent",
+    "2026-09-30 04:10:30.978 INFO  hud: selection B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39: (no line)",
+    "2026-09-30 04:10:36.462 INFO  hud: closing, the session ended (aborted)",
+    "2026-09-30 04:10:36.462 INFO  hud: closed",
+    "2026-09-30 04:10:36.492 INFO  hud: closed",
+    "2026-09-30 04:10:49.077 INFO  hud: shown",
+    "2026-09-30 04:11:01.726 INFO  hud: closed"
+  ],
+  "finished": "2026-09-30T11:11:01.734Z"
+}

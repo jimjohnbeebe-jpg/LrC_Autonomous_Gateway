@@ -1,0 +1,25 @@
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+[4:07:32 AM] STEP 2: the HUD opens by itself
+[4:07:40 AM]   step 2: {"first_update":{"applied":true,"shown":true,"opened":true},"hud_shown_line":"2026-09-30 04:07:32.867 INFO  hud: shown"}
+[4:07:40 AM] STEP 3: Approve pass 2
+[4:07:56 AM]   step 3: {"event":"hud_approve_pass","source":"hud","ms_after_update":16312,"payload":{"source":"hud","session_id":"probe-muo03y7m","seq_seen":3,"pass":2,"click_id":"DE543C8E-110D-4437-9744-3E4AFF254B21"},"answered":{"applied":true,"shown":true,"opened":false},"menu_lines":[]}
+[4:07:59 AM] STEP 4: Pick B
+[4:08:25 AM]   step 4: {"event":"hud_pick","source":"hud","ms_after_update":26370,"payload":{"source":"hud","variant":"B","session_id":"probe-muo03y7m","seq_seen":5,"click_id":"A1378CB7-EA0C-4EE1-B996-E25A80159E3E"},"answered":{"applied":true,"shown":true,"opened":false},"menu_lines":[]}
+[4:08:25 AM] STEP 5: another photo selected, then this one again
+[4:08:36 AM]   step 5: {"away":"2026-09-30T11:08:30.913Z","back":"2026-09-30T11:08:36.010Z","selection_lines":["2026-09-30 04:08:30.692 INFO  hud: selectionChangeObserver called","2026-09-30 04:08:30.907 INFO  hud: selection C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9: Target changed: 20260907-_OZ80093.NEF is selected. Select 20260906-_OZ80005.NEF again; the session is still open.","2026-09-30 04:08:35.947 INFO  hud: selectionChangeObserver called","2026-09-30 04:08:36.005 INFO  hud: selection B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39: Selection: the session's photo."]}
+[4:08:36 AM] STEP 6: menu Abort Session
+  (bridge: dropped (heartbeat: no message from the plugin for 6005 ms))
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+[4:09:11 AM]   step 6: {"event":"hud_abort","source":"menu","ms_after_update":35551,"payload":{"session_id":"probe-muo03y7m","seq_seen":7,"source":"menu","click_id":"F9D846FA-10F6-4E94-B405-9E481EF5B821"},"answered":{"applied":true,"shown":true,"opened":false},"menu_lines":["2026-09-30 04:08:35.947 INFO  hud: selectionChangeObserver called","2026-09-30 04:08:36.005 INFO  hud: selection B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39: Selection: the session's photo.","2026-09-30 04:09:11.568 INFO  hud: menu hud_abort: Abort sent at 04:09:11; waiting for the engine"]}
+[4:09:11 AM] STEP 7: menu Accept Session
+[4:09:56 AM]   step 7: {"event":"hud_accept","source":"menu","ms_after_update":44581,"payload":{"session_id":"probe-muo03y7m","seq_seen":9,"source":"menu","click_id":"72EF41CF-500E-4847-B571-CE009F0DF52A"},"answered":{"applied":true,"shown":true,"opened":false},"menu_lines":["2026-09-30 04:09:11.568 INFO  hud: menu hud_abort: Abort sent at 04:09:11; waiting for the engine","2026-09-30 04:09:56.248 INFO  hud: menu hud_accept: Accept sent at 04:09:56; waiting for the engine"]}
+[4:09:56 AM] STEP 8: HUD Abort, then the HUD closes by itself
+[4:10:36 AM]   step 8: {"event":"hud_abort","ms_after_update":34595,"payload":{"session_id":"probe-muo03y7m","seq_seen":11,"source":"hud","click_id":"C08465DF-8868-47BE-B994-C135D2671FAB"},"update":{"applied":true,"shown":true,"opened":false},"closing_line":"2026-09-30 04:10:36.462 INFO  hud: closing, the session ended (aborted)","closing_after_ms":5486,"closed_line":"2026-09-30 04:10:36.462 INFO  hud: closed"}
+[4:10:36 AM] STEP 9: Show Vision Gateway HUD, then its X
+[4:11:01 AM]   step 9: {"shown_line":"2026-09-30 04:10:49.077 INFO  hud: shown","closed_line":"2026-09-30 04:11:01.726 INFO  hud: closed"}
+  (bridge: stopped)
+[4:11:01 AM] DONE. Results in %USERPROFILE%\AppData\Local\Temp\LrC-AVG\probe-hud-2\probe.json

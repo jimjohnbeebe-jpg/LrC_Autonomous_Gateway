@@ -1,0 +1,121 @@
+{
+  "started": "2026-09-30T12:52:42.479Z",
+  "engine_version": "0.8.0",
+  "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+  "steps": {
+    "1_select": {
+      "at": "2026-09-30T12:52:45.369Z",
+      "t_ms": 2890,
+      "ok": true,
+      "selected": {
+        "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+        "local_id": 3869534,
+        "is_virtual_copy": false,
+        "master_local_id": 3869534,
+        "filename": "20260907-_OZ80099.NEF"
+      },
+      "start_keys": 65
+    },
+    "2_begin": {
+      "at": "2026-09-30T12:53:38.825Z",
+      "t_ms": 56346,
+      "ok": true,
+      "session_id": "4951aeca-fb2a-402b-b97a-8eea034eaeac",
+      "snapshot": {
+        "name": "AVG pre-session 2026-09-30T12:52:45.772Z",
+        "id": "F59A97B2-8540-4823-8084-EC92D7AA31E7"
+      },
+      "timings": {
+        "total_ms": 53447.9
+      },
+      "hud": {
+        "sent": 41,
+        "taken": 41,
+        "not_taken": 0,
+        "failed": 0,
+        "invalid": 0
+      }
+    },
+    "2_step1": {
+      "at": "2026-09-30T12:53:42.802Z",
+      "t_ms": 60323,
+      "ok": true,
+      "pass": "1/8",
+      "timings": {
+        "total_ms": 3975.3
+      }
+    },
+    "3_pause": {
+      "at": "2026-09-30T12:54:08.369Z",
+      "t_ms": 85890,
+      "ok": true,
+      "step_ms": 4495,
+      "pass": "2/8",
+      "drops_during": 0,
+      "bridge": "connected"
+    },
+    "4_abort": {
+      "at": "2026-09-30T12:54:54.818Z",
+      "t_ms": 132339,
+      "ok": true,
+      "outcome": "aborted",
+      "ended_by": {
+        "source": "hud",
+        "click_id": "C551D1DD-57A1-4585-9022-3E1688C296EE",
+        "received": "2026-09-30T12:54:54.296Z",
+        "interrupted": null,
+        "done_ms": 422.6
+      },
+      "revert": {
+        "ms": 419.1,
+        "differing": []
+      },
+      "hud_events": [
+        {
+          "at": "2026-09-30T12:54:54.296Z",
+          "name": "hud_abort",
+          "source": "hud",
+          "click_id": "C551D1DD-57A1-4585-9022-3E1688C296EE",
+          "seq_seen": 39,
+          "note": "Abort: putting the photo back as it was before the session."
+        }
+      ],
+      "failures": []
+    }
+  },
+  "hello": {
+    "protocol": 1,
+    "plugin_version": "0.6.1",
+    "lrc_version": "15.5.1",
+    "sdk_declared": 13,
+    "ports": {
+      "receive": 8765,
+      "send": 8766
+    }
+  },
+  "put_back": {
+    "differing": []
+  },
+  "hud": {
+    "sent": 41,
+    "taken": 41,
+    "not_taken": 0,
+    "failed": 0,
+    "invalid": 0
+  },
+  "bridge": {
+    "connects": 1,
+    "connect_failures": 0,
+    "last_connect_error": null,
+    "drops": 0,
+    "last_drop_reason": null,
+    "malformed_lines": 0,
+    "unknown_response_ids": 1,
+    "ports": {
+      "command": 8765,
+      "event": 8766,
+      "from": "ports file"
+    }
+  },
+  "ended": "2026-09-30T12:54:54.832Z"
+}

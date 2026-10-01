@@ -1,0 +1,203 @@
+// Probe of plugin 0.6.0's HUD after the phase-5/hud-plugin merge (PHASE5_PLAN row 4, PR #45 4e9409e).
+// Takes the engine instance lock (so no Claude Desktop engine talks to the bridge meanwhile), connects
+// with the engine's own client (engine\dist), reads the selected photo (get_selection, get_context:
+// reads only) and drives a pretend session through hud_update only: NOTHING is written to any photo.
+// It waits for each of Jim's clicks and menu items in turn (the numbered list in chat; the HUD's note
+// line repeats each step), for the selection to move away and back, and reads the HUD's lines in
+// %TEMP%\LrC-AVG\bridge.log. Results: %TEMP%\LrC-AVG\probe-hud\probe.json.
+// Usage: node probe-hud.mts <repo root>
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+
+const repo = process.argv[2] as string;
+const dist = (p: string) => import(pathToFileURL(path.join(repo, "engine", "dist", p)).href);
+const { BridgeClient, parseHudEvent, hudUpdatePayloadSchema } = await dist("bridge/index.js");
+const { acquireInstanceLock, devOverrides } = await dist("mcp/index.js");
+const { ENGINE_VERSION } = await dist("mcp/version.js");
+
+const outDir = process.env["PROBE_OUT"] ?? path.join(os.tmpdir(), "LrC-AVG", "probe-hud");
+mkdirSync(outDir, { recursive: true });
+// The engine's development overrides (LRC_AVG_COMMAND_PORT, _EVENT_PORT, _TOKEN_FILE) and PROBE_LOG
+// point a dry run at a stand-in plugin; unset, the probe talks to Lightroom.
+const dev = devOverrides();
+const logPath = process.env["PROBE_LOG"] ?? path.join(os.tmpdir(), "LrC-AVG", "bridge.log");
+const logStart = existsSync(logPath) ? statSync(logPath).size : 0;
+const t0 = Date.now();
+const at = () => new Date().toISOString();
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const WAIT_MS = 5 * 60_000;
+const result: Record<string, any> = { started: at(), engine_version: ENGINE_VERSION, steps: [], updates: [], events: [] };
+const save = () => writeFileSync(path.join(outDir, "probe.json"), JSON.stringify(result, null, 2));
+const say = (m: string) => console.log(`[${new Date().toLocaleTimeString()}] ${m}`);
+
+// The plugin log's HUD lines written since the probe started, with their local times as epoch ms.
+function hudLines(): Array<{ ms: number; line: string; index: number }> {
+  if (!existsSync(logPath)) return [];
+  const text = readFileSync(logPath).subarray(logStart).toString("utf8");
+  return text.split(/\r?\n/).filter((l) => l.includes(" hud: ")).map((line, index) => ({ ms: new Date(line.slice(0, 23).replace(" ", "T")).getTime(), line, index }));
+}
+// The first matching line at most 1 s before afterMs (the two clocks are the same machine's) and after
+// line afterIndex, so a line an earlier step waited for is never taken again.
+async function waitLog(pattern: RegExp, afterMs: number, timeoutMs = WAIT_MS, afterIndex = -1) {
+  const end = Date.now() + timeoutMs;
+  while (Date.now() < end) {
+    const hit = hudLines().find((l) => l.index > afterIndex && l.ms >= afterMs - 1000 && pattern.test(l.line));
+    if (hit) return hit;
+    await sleep(250);
+  }
+  return null;
+}
+
+const lock = await acquireInstanceLock(dev.lockPort);
+if (!lock.ok) {
+  result["lock"] = { ok: false, port: lock.port, pid: lock.pid };
+  save();
+  say(`LOCK BUSY: another engine (pid ${lock.pid}) holds port ${lock.port}. Stop using Claude Desktop's chat for 60 s, then run again.`);
+  process.exit(2);
+}
+result["lock"] = { ok: true };
+const client = new BridgeClient({ engineVersion: `${ENGINE_VERSION}-probe`, log: (m: string) => console.error(`  (${m})`), ...dev.bridge });
+client.start();
+const hello = await client.waitConnected(30_000);
+result["hello"] = hello;
+if (hello.plugin_version !== "0.6.0") {
+  say(`FAILED: Lightroom runs plugin ${hello.plugin_version}, not 0.6.0. Restart Lightroom and run again.`);
+  result["failed"] = "plugin version";
+  save();
+  process.exit(1);
+}
+client.onEvent((e: any) => {
+  const parsed = parseHudEvent(e);
+  if (parsed) result["events"].push({ t_ms: Date.now() - t0, at: at(), name: e.name, ok: parsed.ok, payload: e.payload, error: parsed.ok ? undefined : parsed.error });
+});
+
+const selection = await client.request("get_selection", { max: 1 });
+const photo = selection.photos[0];
+if (!photo?.uuid) {
+  say("FAILED: no photo is selected in Lightroom. Select one photo and run again.");
+  result["failed"] = "no selection";
+  save();
+  process.exit(1);
+}
+const uuid: string = photo.uuid;
+const ctx = await client.request("get_context", { target_uuid: uuid });
+const shutter = typeof ctx.shutter === "number" && ctx.shutter > 0 ? (ctx.shutter < 1 ? `1/${Math.round(1 / ctx.shutter)} s` : `${ctx.shutter} s`) : undefined;
+const target: Record<string, unknown> = { uuid, filename: ctx.filename };
+if (typeof ctx.copy_name === "string" && ctx.copy_name !== "") target["copy_name"] = ctx.copy_name;
+if (ctx.iso !== undefined && ctx.iso !== null) target["iso"] = String(ctx.iso);
+if (shutter) target["shutter"] = shutter;
+if (typeof ctx.aperture === "number") target["aperture"] = `f/${ctx.aperture}`;
+if (typeof ctx.lens === "string") target["lens"] = ctx.lens;
+result["photo"] = { filename: ctx.filename, target };
+
+const sid = `probe-${Date.now().toString(36)}`;
+let seq = 0;
+const DELTAS = [
+  { slider: "Exposure", before: "+0.30", after: "+0.55", delta: "+0.25" },
+  { slider: "Highlights", before: "-20", after: "-35", delta: "-15" },
+  { slider: "Shadows", before: "+10", after: "+18", delta: "+8" },
+];
+async function send(stage: string, extra: Record<string, unknown>) {
+  seq++;
+  const p = { session_id: sid, seq, stage, target, ...extra };
+  hudUpdatePayloadSchema.parse(p);
+  const s = performance.now();
+  const r = await client.request("hud_update", p);
+  result["updates"].push({ seq, stage, at: at(), ms: Math.round((performance.now() - s) * 10) / 10, result: r, note: extra["note"] });
+  save();
+  return r;
+}
+async function waitEvent(name: string, source: string, from: number) {
+  const end = Date.now() + WAIT_MS;
+  while (Date.now() < end) {
+    const e = (result["events"] as any[]).slice(from).find((x) => x.name === name && x.payload?.source === source && x.payload?.session_id === sid);
+    if (e) return e;
+    await sleep(100);
+  }
+  return null;
+}
+async function step(n: number, what: string, fn: () => Promise<unknown>) {
+  say(`STEP ${n}: ${what}`);
+  const s = Date.now();
+  const outcome = await fn();
+  result["steps"].push({ step: n, what, started: new Date(s).toISOString(), seconds: Math.round((Date.now() - s) / 100) / 10, outcome });
+  save();
+  say(`  step ${n}: ${JSON.stringify(outcome)}`);
+}
+async function click(n: number, what: string, name: string, source: string, stage: string, extra: Record<string, unknown>, answer: (e: any) => Promise<unknown>) {
+  await step(n, what, async () => {
+    const from = result["events"].length;
+    const shown = Date.now();
+    await send(stage, extra);
+    const e = await waitEvent(name, source, from);
+    if (!e) return { event: null, note: "no event within 5 min" };
+    const reply = await answer(e);
+    return { event: e.name, source: e.payload.source, ms_after_update: new Date(e.at).getTime() - shown, payload: e.payload, answered: reply };
+  });
+}
+
+await step(2, "the HUD opens by itself", async () => {
+  const r = await send("begin", { open: true, mode: "converge", note: "Probe: nothing is written to your photo." });
+  const shown = await waitLog(/hud: shown/, t0, 20_000);
+  await sleep(3000);
+  await send("awaiting_claude", { pass: 1, max_passes: 4, deltas: DELTAS, guardrail: { status: "green" }, note: "Probe: nothing is written to your photo. Step 3 comes next." });
+  await sleep(4000);
+  return { first_update: r, hud_shown_line: shown?.line ?? null };
+});
+await click(3, "Approve pass 2", "hud_approve_pass", "hud", "awaiting_approval",
+  { pass: 1, max_passes: 4, approve_pass: 2, deltas: DELTAS, guardrail: { status: "green" }, note: "Step 3: click Approve pass 2." },
+  (e) => send("awaiting_claude", { answered_click_id: e.payload.click_id, pass: 2, max_passes: 4, deltas: DELTAS, guardrail: { status: "corrected", reason: "an example reason from the probe" }, note: "Approve received. Step 4 comes next." }));
+await sleep(3000);
+await click(4, "Pick B", "hud_pick", "hud", "awaiting_pick",
+  { mode: "variants", variants: ["A", "B", "C"], session_photos: [uuid], note: "Step 4: click Pick B." },
+  (e) => send("awaiting_claude", { mode: "converge", answered_click_id: e.payload.click_id, note: "Pick B received. Step 5: select another photo, then this one again." }));
+await step(5, "another photo selected, then this one again", async () => {
+  const end = Date.now() + WAIT_MS;
+  let away: string | null = null;
+  let back: string | null = null;
+  while (Date.now() < end && !back) {
+    await sleep(1000);
+    let now: string | undefined;
+    try {
+      now = (await client.request("get_selection", { max: 1 })).photos[0]?.uuid;
+    } catch {
+      now = undefined; // nothing selected: the plugin refuses with no_target_photo
+    }
+    if (!away && now !== uuid) away = at();
+    if (away && now === uuid) back = at();
+  }
+  return { away, back };
+});
+await click(6, "menu Abort Session", "hud_abort", "menu", "awaiting_claude",
+  { note: "Step 6: File > Plug-in Extras > LrC-AVG - Abort Session." },
+  (e) => send("awaiting_claude", { answered_click_id: e.payload.click_id, note: "Menu Abort received (the probe does not act on it). Step 7 comes next." }));
+await click(7, "menu Accept Session", "hud_accept", "menu", "awaiting_claude",
+  { note: "Step 7: File > Plug-in Extras > LrC-AVG - Accept Session." },
+  (e) => send("awaiting_claude", { answered_click_id: e.payload.click_id, note: "Menu Accept received. Step 8: click Abort in this window." }));
+let endedAt = 0;
+let lastIndex = -1;
+await click(8, "HUD Abort, then the HUD closes by itself", "hud_abort", "hud", "awaiting_claude",
+  { note: "Step 8: click Abort in this window." },
+  async (e) => {
+    const r = await send("aborted", { answered_click_id: e.payload.click_id, note: "Probe ended: nothing was changed. This window closes by itself." });
+    endedAt = Date.now();
+    const closing = await waitLog(/hud: closing/, endedAt, 30_000);
+    const closed = await waitLog(/hud: closed/, endedAt, 30_000, closing?.index ?? -1);
+    lastIndex = closed?.index ?? closing?.index ?? lastIndex;
+    return { update: r, closing_line: closing?.line ?? null, closing_after_ms: closing ? closing.ms - endedAt : null, closed_line: closed?.line ?? null };
+  });
+await step(9, "Show Vision Gateway HUD, then its X", async () => {
+  const from = Date.now();
+  const shown = await waitLog(/hud: shown/, from, WAIT_MS, lastIndex);
+  const closed = shown ? await waitLog(/hud: closed/, shown.ms, WAIT_MS, shown.index) : null;
+  return { shown_line: shown?.line ?? null, closed_line: closed?.line ?? null };
+});
+
+result["hud_log"] = hudLines().map((l) => l.line);
+result["finished"] = at();
+save();
+client.stop();
+say(`DONE. Results in ${path.join(outDir, "probe.json")}`);
+process.exit(0);

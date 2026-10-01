@@ -1,0 +1,290 @@
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+connected: plugin 0.5.0, ports {"command":8765,"event":8766,"from":"ports file"}; get_prefs ok, problems []
+READY: Jim can open Plug-in Manager now.
+  (bridge: dropped (heartbeat: no message from the plugin for 7910 ms))
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+  (bridge: dropped (heartbeat: no message from the plugin for 6751 ms))
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+{
+  "ended": "2026-09-29T11:49:21.089Z",
+  "seconds": 108,
+  "pings": {
+    "count": 347,
+    "failed": 43,
+    "median_ms": 0.8,
+    "max_ms": 1699.6
+  },
+  "get_prefs": {
+    "count": 45,
+    "failed": 7,
+    "max_ms": 4.7
+  },
+  "status_file_max_age_s": 14,
+  "slow_pings": [
+    {
+      "t": 21248,
+      "ms": 1699.6
+    },
+    {
+      "t": 44754,
+      "ms": null,
+      "error": "BridgeError: bridge dropped: heartbeat: no message from the plugin for 7910 ms"
+    },
+    {
+      "t": 45016,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 45279,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 45544,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 45806,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 46070,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 46335,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 46596,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 46859,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 47123,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 47387,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 47651,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 47914,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 48178,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 48440,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 48703,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 48967,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 49229,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 49492,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 49758,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 50022,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 50287,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 50551,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 50815,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 51081,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 63359,
+      "ms": null,
+      "error": "BridgeError: bridge dropped: heartbeat: no message from the plugin for 6751 ms"
+    },
+    {
+      "t": 63620,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 63883,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 64145,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 64409,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 64671,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 64934,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 65198,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 65460,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 65722,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 65985,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 66249,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 66513,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 66777,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 67040,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 67304,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 67566,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 67831,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    }
+  ],
+  "slow_get_prefs": [
+    {
+      "t": 44754,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 46859,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 48967,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 51081,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 63359,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 65460,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    },
+    {
+      "t": 67566,
+      "ms": null,
+      "error": "BridgeError: bridge is connecting"
+    }
+  ]
+}
+  (bridge: stopped)
+
+[exited with code 0]

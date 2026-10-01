@@ -83,17 +83,36 @@ export function applyDesktopConfig(options: ApplyOptions): ApplyResult {
 
   const text = JSON.stringify(plan.updated, null, 2) + "\n";
   if (exists) {
-    result.backup = `${path.basename(file)}.backup-${new Date().toISOString().replace(/[:.]/g, "-")}`;
-    copyFileSync(file, path.join(path.dirname(file), result.backup));
+    const backup = `${path.basename(file)}.backup-${new Date().toISOString().replace(/[:.]/g, "-")}`;
+    try {
+      copyFileSync(file, path.join(path.dirname(file), backup));
+    } catch (err) {
+      throw new SetupError(`could not write a backup next to the config (${(err as Error).message}); nothing was changed.`);
+    }
+    result.backup = backup;
   }
-  writeFileSync(file, text);
-  // Read back what was written, so a bad write cannot go unnoticed.
-  if (readFileSync(file, "utf8") !== text) {
-    if (result.backup) copyFileSync(path.join(path.dirname(file), result.backup), file);
-    else rmSync(file, { force: true });
-    throw new SetupError("the config did not read back as written; the original was put back.");
+  // A failed or partial write must not leave a truncated config: put the original back on any error
+  // as well as on a read-back that differs.
+  let problem: string | null;
+  try {
+    writeFileSync(file, text);
+    problem = readFileSync(file, "utf8") === text ? null : "the config did not read back as written";
+  } catch (err) {
+    problem = `writing the config failed (${(err as Error).message})`;
   }
+  if (problem !== null) throw new SetupError(`${problem}; ${putBack(file, result.backup)}`);
   return result;
+}
+
+/** Restores the backup (or deletes a file that did not exist before) and says what happened. */
+function putBack(file: string, backup: string | null): string {
+  try {
+    if (backup) copyFileSync(path.join(path.dirname(file), backup), file);
+    else rmSync(file, { force: true });
+    return "the original was put back.";
+  } catch (err) {
+    return `putting the original back failed too (${(err as Error).message}): ${backup ? `copy ${backup} over ${path.basename(file)} by hand` : `delete ${file}`}.`;
+  }
 }
 
 /** The lines both commands print for a result. */

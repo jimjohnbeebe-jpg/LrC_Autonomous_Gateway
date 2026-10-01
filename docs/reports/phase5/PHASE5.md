@@ -41,7 +41,7 @@ PHASES.md gives Phase 5 no go / conditional / no-go rule beyond its acceptance l
 
 | Part | Files |
 |---|---|
-| The check | `engine\src\devtools\phase5-check.ts` (the parts, the summary), `phase5-check-cli.ts` (`npm run phase5:check`), `phase5-config.ts` (fixed values), `phase5-state.ts` (resume) |
+| The check | `engine\src\devtools\phase5-check.ts` (the parts), `phase5-summary.ts` (the outcome over every run), `phase5-check-cli.ts` (`npm run phase5:check`), `phase5-config.ts` (fixed values), `phase5-state.ts` (resume) |
 | Part 1 | `phase5-part1.ts`, `phase5-session-a.ts` (HUD, stages, AC-2), `phase5-pause.ts` (Plug-in Manager), `phase5-session-b.ts` (approve), `phase5-session-c.ts` (AC-3, HUD Pick), `phase5-menu.ts`, `phase5-page.ts`, `phase5-ended.ts`, `phase5-readback.ts`, `phase5-trace.ts` |
 | Part 2 | `phase5-chats.ts`, `phase5-chat-flow.ts`, `phase5-chat-eval.ts`; shared: `clip-check.ts` (AC-4), `phase2-collect.ts` (the chats' logs) |
 | Tests | `engine\tests\phase5-check.test.ts`, `phase5-check-faults.test.ts`, `phase5-check-units.test.ts`, with `engine\tests\helpers\phase5-harness.ts` and `phase5-sim-jim.ts` |
@@ -100,7 +100,8 @@ The check's engine is wired as the MCP server's is [handle: `engine\src\devtools
   - this engine's version;
   - AC-4 on every pass.
 - In each chat Jim answers four questions: History steps, the HUD, the sliders, the look.
-- A chat that did not pass may be held once more, at Jim's choice.
+- A chat that did not pass may be held once more, at Jim's choice. AC-1 counts the last attempt; AC-4 and the unexpected changes count every attempt.
+- If a chat's photo is not back (the bridge was not taken back, or the put-back failed), the check stops before the next chat: the next run puts that photo back first.
 
 **The check resumes.** After Part 1, the approve chat, the page and each chat, it saves what it found in `%TEMP%\LrC-AVG\P5\p5_state.json`. Run again, it continues where it stopped; `npm run phase5:check -- --new` starts over. A Part 1 that failed stops the check before the chats, and the next run repeats Part 1.
 
@@ -117,7 +118,11 @@ The headline `Phase 5 acceptance: WORKED / FAILED / NOT FINISHED` covers:
 - no photo changed unexpectedly;
 - every photo put back.
 
-Recorded without deciding it: the approve chat (D4) and the timings.
+Recorded without deciding it:
+- the approve chat (D4);
+- the Plug-in Manager pause's length, and whether it passed the 6 s heartbeat limit, so that the session's 60 s allowance was exercised. The row 7 plan made that conditional on Lightroom's pause, which was ~3 s in row 5's check [handle: vault PHASE5_PLAN.md row 5 "Plug-in Manager"];
+- session C's copies removed (the `Cleanup:` line), as Phase 4 reported its cleanup [handle: `engine\src\devtools\phase4-cleanup.ts` header];
+- the timings.
 
 Results go to `%TEMP%\LrC-AVG\P5\`:
 - `p5_state.json`;
@@ -181,7 +186,7 @@ Do these after Claude Code says the `phase-5/check` PR is merged. Allow about 50
     3. Watch the HUD while Claude works.
     4. When Claude says it has finished and ended the session, press Enter in the terminal and answer the four questions.
     5. Wait while it takes the bridge back and puts the photo back (up to 2½ minutes).
-19. The last lines say `Phase 5 acceptance: WORKED` or `FAILED` and `Results saved automatically`. Tell Claude Code "done".
+19. The last lines say `Phase 5 acceptance: WORKED` or `FAILED`, `Also recorded: …`, `Cleanup: …` and `Results saved automatically`. Tell Claude Code "done".
 
 The HUD's labels and the menu titles are the plugin's own [handle: `plugin\LrC-AVG.lrplugin\HudView.lua`, `Info.lua`]. The settings page's labels are `PluginInfoProvider.lua`'s. The Library dialogs' words are described from Lightroom's usual behaviour [unverified]; the check confirms each removal by uuid.
 
@@ -194,6 +199,7 @@ The HUD's labels and the menu titles are the plugin's own [handle: `plugin\LrC-A
 - If you have to stop before the end, stop only at a `Come back to this window and press Enter` line. Close the terminal there. Later, run `npm run phase5:check` again: it puts that chat's photo back first and goes on with that chat.
 - If it prints `Part 1 did not pass`, tell Claude Code; the next run repeats Part 1.
 - If it says `Claude Desktop still holds the bridge`, quit Claude Desktop (tray icon > **Quit**) and press Enter. Start Claude Desktop again at the next chat.
+- If it says `… is not back as before … yet, so the check stops here`, quit Claude Desktop (tray icon > **Quit**), then run `npm run phase5:check` again: it puts that photo back first and goes on.
 - If a chat did not pass, it asks `Hold the chat on … once more?`. Type `y` to hold it again (a new chat in Claude Desktop), or `n` to go on.
 - If it prints `FAILED: …`, let the command carry on and tell Claude Code what the line says. Each session is ended with revert when something fails, and each photo is put back [handle: `engine\tests\phase5-check-faults.test.ts`; in Lightroom [unverified]].
 - If the Delete dialog in step 14 offers **Delete from Disk**, click **Cancel**: the original is selected too. Select only the copies and try again.
@@ -204,10 +210,10 @@ The HUD's labels and the menu titles are the plugin's own [handle: `plugin\LrC-A
 
 Checks Claude Code ran on 2026-09-30, before Jim's run. None of them involves Lightroom or Claude Desktop.
 
-- **Engine tests: 774 pass, 1 skipped** on the code of commit `afe4580` (branch `phase-5/check`) [handle: `npm test` in `engine\`, 2026-09-30 19:57-20:06 local: "Tests 775 passed | 1 skipped (776)", of which one is the scratch dry-run file below, since deleted]. `npm run build` and `npm run typecheck` pass too. The tests run against the fake plugin and the **simulated Lightroom** (`engine\tests\helpers\lightroom-sim.ts`, "tonal" model), with simulated Jim (`phase5-sim-jim.ts`): **Node numbers, not Lightroom's.**
+- **Engine tests: 779 pass, 1 skipped** on the code of commit `d6e58f9` (branch `phase-5/check`, after Greptile's review) [handle: `npm test` in `engine\`, 2026-09-30 20:25-20:34 local: "Tests 780 passed | 1 skipped (781)", of which one is the scratch dry-run file below, since deleted]. `npm run build` and `npm run typecheck` pass too. The tests run against the fake plugin and the **simulated Lightroom** (`engine\tests\helpers\lightroom-sim.ts`, "tonal" model), with simulated Jim (`phase5-sim-jim.ts`): **Node numbers, not Lightroom's.**
   - `phase5-check.test.ts`:
     - the whole check: `Phase 5 acceptance: WORKED`, every line YES, the copies removed;
-    - a run stopped at chat 3, run again: the stopped chat's photo put back first with the check's snapshot, Part 1 not repeated, then WORKED;
+    - a run stopped at chat 3, run again: the stopped chat's photo put back first with the check's snapshot, the photos known before read back again, Part 1 not repeated, then WORKED;
     - `--new` starts over and still puts back the photo of the chat it found under way.
   - `phase5-check-faults.test.ts`, each failure printed as FAILED:
     - no Abort from the HUD: AC-2 fails, the session is ended with revert, Part 1 fails, and the chats are not started;
@@ -217,24 +223,30 @@ Checks Claude Code ran on 2026-09-30, before Jim's run. None of them involves Li
     - no Approve: approve fails, and the photo is put back;
     - no Accept in session C: the check ends the session, and the menu items still run;
     - a Pick that also changed the original: the read-back names it;
-    - a chat with no pass: AC-1 fails, and the other chats go on.
+    - a chat with no pass: AC-1 fails, and the other chats go on;
+    - a chat whose photo cannot be put back (the bridge never comes back): the check stops before the next chat, and the next run puts the photo back first.
   - Also in `phase5-check-faults.test.ts`, without failing the check:
     - Claude Desktop keeps the bridge: you are asked to quit it, and the check goes on;
     - a chat held once more and counted on its second try;
-    - an approve chat that did not go as planned, recorded only.
+    - an approve chat that did not go as planned, recorded only;
+    - a copy left in the catalog, reported under `Cleanup:`.
   - `phase5-check-units.test.ts`:
-    - a chat judged from its tool log;
-    - the state file (resume, `--new`, an unreadable file set aside);
+    - a chat judged from its tool log, a record that fails its zod check left out and counted;
+    - the outcome over a chat held twice (AC-4 and unexpected changes count every attempt);
+    - the state file (resume, `--new`, an unreadable file set aside, replaced whole);
     - the plugin log's times and click lines;
     - the stage trace.
-- **Mutation check:** a scratch script broke nine guards one at a time, in `phase5-readback`, `-session-a`, `-chat-flow` (×2), `-state`, `-chat-eval`, `-session-c`, `-check` and `-page`. Each was caught by its named test, and every file was restored [handle: Claude Code, 2026-09-30, the scratchpad script `mutants.mts`: "9 of 9 killed"; `git status` clean afterwards].
-- **Dry run of `npm run phase5:check` itself.** The built command ran against the simulated plugin on scratch ports with its own token file, so Jim's Lightroom was not touched. The real `engine\dist\mcp\main.js` played Claude Desktop: one process for all seven chats, as Desktop keeps its engine. Results [handle: `docs\reports\phase5\check-dryrun\dryrun.txt`, transcript and driver]:
+- **Mutation check:** a scratch script broke 14 guards one at a time, and each was caught by its named test; every file was restored afterwards [handle: Claude Code, 2026-09-30, the scratchpad script `mutants.mts`: "14 of 14 killed"; `git status` showed only the intended changes].
+  - Nine before Greptile's review, in `phase5-readback`, `-session-a`, `-chat-flow` (×2), `-state`, `-chat-eval`, `-session-c`, `-check` and `-page`.
+  - Five for its findings: going on while a photo is pending; a resume that forgets the known photos; AC-4 and unexpected changes read from the last attempt only; tool-log records not checked.
+- **Dry run of `npm run phase5:check` itself**, on the code of `d6e58f9`. The built command ran against the simulated plugin on scratch ports with its own token file, so Jim's Lightroom was not touched. The real `engine\dist\mcp\main.js` played Claude Desktop: one process for all seven chats, as Desktop keeps its engine. Results [handle: `docs\reports\phase5\check-dryrun\dryrun.txt`, transcript and driver]:
   - `Phase 5 acceptance: WORKED`, exit code 0.
-  - The plugin was silent 11.2 s during the Plug-in Manager visit, with 0 bridge drops: the session's 60 s allowance held in the command's own wiring.
+  - The plugin was silent 11.2 s during the Plug-in Manager visit, with 0 bridge drops. The check recorded the session's 60 s allowance as exercised: the command's own wiring held it.
   - The 60 s wait in vain came back `AWAITING_APPROVAL`, with nothing written.
   - The approve chat's waiting `lr_step` took 60.0 s.
   - After all seven chats, the check took the bridge back by the engine's own 60 s idle release.
-  - Each chat's photo was put back exactly. `%TEMP%\LrC-AVG\P5` was not created (the dry run's folders pointed elsewhere).
+  - Each chat's photo was put back exactly. `Cleanup: session C's copies removed: 3 of 3.`
+  - `%TEMP%\LrC-AVG\P5` was not created (the dry run's folders pointed elsewhere).
 - **Worth knowing before the run:**
   - The MCP TypeScript SDK's default request timeout is 60 s [handle: `node_modules\@modelcontextprotocol\sdk\dist\esm\shared\protocol.js:8`, SDK 1.30.1], equal to `APPROVAL_WAIT_MS`.
   - Claude Desktop completed a 73.6 s tool call in Phase 4 [handle: vault ARCHITECTURE.md section 6, "Phase 4"], so it likely does not cut calls at 60 s [inference]. The approve chat is what records it.

@@ -1,8 +1,7 @@
 phase-5/check dry run of `npm run phase5:check` (PHASE5_PLAN row 7) - Claude Code (Opus 5.5), 2026-09-30 local (UTC-7)
 What ran: the built CLI `engine\dist\devtools\phase5-check-cli.js`, built by `npm run build` on branch
-phase-5/check from the code of commit afe4580 (built and run just before that commit; no source changed in
-between), its prompts answered and its HUD clicks made by the driver in the appendix. The driver ran inside
-`npm test`, alongside the other test files, so its timings carry that load [inference].
+phase-5/check from the code of commit d6e58f9, its prompts answered and its HUD clicks made by the driver in the appendix. The
+driver ran inside `npm test`, alongside the other test files, so its timings carry that load [inference].
 Lightroom was NOT involved: the CLI talked to the simulated plugin of the engine tests
 (engine\tests\helpers\fake-plugin.ts and lightroom-sim.ts, "tonal" model, a made-up render) on OS-chosen ports
 with its own token file (LRC_AVG_COMMAND_PORT, LRC_AVG_EVENT_PORT, LRC_AVG_TOKEN_FILE).
@@ -26,7 +25,7 @@ LrC-AVG Phase 5 check
   (bridge: connecting)
   (bridge: handshaking)
   (bridge: connected)
-Connected (544 ms, plugin 0.6.1).
+Connected (515 ms, plugin 0.6.1).
 
 Part 1: scripted sessions with the HUD on one photo. You click in the HUD and the menu when asked.
   In Lightroom's Filmstrip, click 20260907-_OZ80093.NEF (the original, not a virtual copy; stay in the Develop module). Then press Enter here. 
@@ -39,12 +38,12 @@ Session A (Autonomous): the HUD opens by itself and follows the work. Watch it; 
   3. In the "Sessions" box on the right, set Mode to "Approve each pass", and "Max passes per photo" to 4 if it is not.
   4. Count slowly to 20, then click Done.
   (The check sends Claude's next pass while Lightroom does not answer, and watches the session ride it out.)
-  Lightroom was silent about 11.2 s; the pass sent meanwhile finished after 0.2 s; bridge drops: 0.
+  Lightroom was silent about 11.2 s; the pass sent meanwhile finished after 0.1 s; bridge drops: 0.
   5. When you have clicked Done, press Enter here.   The settings page now reads Mode "Approve each pass", 4 passes.
 
   Now click Abort in the HUD.
   Read back after the HUD's Abort: 1 photo(s), nothing changed that should not have.
-  The HUD's Abort: the photo is back as before the session YES; from the click: 9 ms (AC-2: within 1000 ms YES).
+  The HUD's Abort: the photo is back as before the session YES; from the click: 10 ms (AC-2: within 1000 ms YES).
 1. When session A began, did the HUD open by itself? Type y or n, then Enter: 2. Did its Stage line follow the work (for example "Pass 0", "Applying pass", "Acquiring preview", "Awaiting Claude")? Type y or n, then Enter: 3. After your Abort, did the HUD say "Aborted: the photo is back as it was before the session." and close itself a few seconds later? Type y or n, then Enter:   Session A: HUD tracked the stages YES (begin > acquiring_preview > metrics > applying > acquiring_preview > metrics > awaiting_claude > applying > acquiring_preview > metrics > awaiting_claude > applying > acquiring_preview > metrics > awaiting_claude > aborted); rode out the pause YES; AC-2 YES.
 
 Session B (Approve each pass): each of Claude's passes waits for your Approve in the HUD.
@@ -252,19 +251,21 @@ Phase 5 acceptance: WORKED
   AC-2 via the HUD's Abort: YES; approve_each_pass blocks until Approve: YES; AC-3 with the HUD's Pick: YES; menu items: YES
   AC-1, six golden-hour chats with the HUD: 6 of 6; AC-4 on every pass of every session: YES; no photo changed unexpectedly: YES; photos put back: YES
 Also recorded: the approve chat went as planned: YES; its longest waiting lr_step took 60.0 s in the engine.
-Results saved automatically: %USERPROFILE%\AppData\Local\Temp\lrc-avg-p5dry-3epn46\out\p5_check_2026-10-01T02-57-05-742Z.json
+  Plug-in Manager pause: 11.2 s; longer than the 6 s heartbeat limit, so the session's 60 s allowance was exercised: YES.
+Cleanup: session C's copies removed: 3 of 3.
+Results saved automatically: %USERPROFILE%\AppData\Local\Temp\lrc-avg-p5dry-Has3xx\out\p5_check_2026-10-01T03-25-00-649Z.json
 Nothing to copy. Tell Claude Code "done".
 
-[driver] approve chat: first wait answered AWAITING_APPROVAL after 60008 ms at the MCP client (timeout 180 s); then 2/4, 3/4; end accept
+[driver] approve chat: first wait answered AWAITING_APPROVAL after 60004 ms at the MCP client (timeout 180 s); then 2/4, 3/4; end accept
 [driver] golden chat on 20250413-_OZ81430.NEF: true, end accept
 [driver] golden chat on 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng: true, end accept
 [driver] golden chat on 20260110-_Z8A0173.NEF: true, end accept
 [driver] golden chat on 20260906-_OZ80005.NEF: true, end accept
 [driver] golden chat on 20260907-_OZ80093.NEF: true, end accept
 [driver] golden chat on 20260907-_OZ80099.NEF: true, end accept
-[driver] exit code 0; History steps 40; exports 52; copies left 0; scratch %USERPROFILE%\AppData\Local\Temp\lrc-avg-p5dry-3epn46
+[driver] exit code 0; History steps 40; exports 52; copies left 0; scratch %USERPROFILE%\AppData\Local\Temp\lrc-avg-p5dry-Has3xx
 
-== Appendix: the driver (a scratch vitest file, engine\tests\zz-scratch-p5-dryrun.test.ts, run by `npm test` in engine\ (2026-09-30 19:57-20:06 local; 57 files, 775 passed, 1 skipped), then deleted) ==
+== Appendix: the driver (a scratch vitest file, engine\tests\zz-scratch-p5-dryrun.test.ts, run by `npm test` in engine\ (2026-09-30 20:25-20:34 local; 57 files, 780 passed, 1 skipped), then deleted) ==
 // SCRATCH (not committed): dry run of the built `phase5-check-cli.js` against the simulated plugin on
 // OS-chosen ports with its own token file, so Jim's Lightroom is not touched. The real
 // `engine\dist\mcp\main.js` plays Claude Desktop in Part 2: ONE engine process for every chat, kept

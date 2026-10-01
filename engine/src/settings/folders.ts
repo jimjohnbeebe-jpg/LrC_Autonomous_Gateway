@@ -1,9 +1,10 @@
 // The intents and log folders (PRD section 6.2; PHASE5_PLAN decision 2d): the environment variable
 // when it is set, else the settings page's folder when it holds a full path, else the default
 // (%LOCALAPPDATA%\LrC-AVG\intents, ...\logs). The dev Claude Desktop entry sets LRC_AVG_LOG_DIR
-// to the repo's logs\ folder [handle: engine\src\devtools\desktop-config.ts engineEntry], so there
-// the variable wins, as decided. A page folder applies from the next read of the page: every
-// lr_begin_session reads it, and the intent tools, lr_get_session_log and lr_sync_series too
+// to the repo's logs\ folder [handle: engine\src\devtools\install-desktop-config-cli.ts, the
+// engineEntry call], so there the variable wins, as decided; the user entry written by
+// `lrc-avg-setup` sets no variable (setup\setup-cli.ts). A page folder applies from the next read
+// of the page: every lr_begin_session reads it, and the intent tools, lr_get_session_log and lr_sync_series too
 // (decision 2A of the row 3 plan [stated: Jim, 2026-09-28, "Go with recommendations"]). The engine's
 // own tool log stays where it opened at start (mcp\main.ts).
 

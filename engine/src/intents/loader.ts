@@ -11,7 +11,9 @@
 // [handle: tests\intents.test.ts "adds a user intent with a new id" (written after the library was
 // created), "lets a user intent with the same id replace the bundled one", "skips invalid files with
 // a warning each and keeps the rest"]
-// Copying the bundled set into the user folder on first run is packaging work (PHASES.md Phase 6).
+// The bundled set is read in place, from the repo or the installed package; it is not copied into
+// the user folder on first run, so a later engine's intent fixes reach the user and only the user's
+// own files show as overrides_bundled (PHASE6_PLAN decision 3 [stated: Jim, 2026-10-01, "go"]).
 //
 // Validation: the file must be <id>.json and match the schema (schema.ts); every prior must name a
 // canonical parameter; default_camera_profile must be a pinned profile name.

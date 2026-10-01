@@ -67,6 +67,7 @@ npm run typecheck           # engine src+tests, spikes
 node spikes\S1\measure.ts   # spike scripts run directly (Node type stripping)
 npm run phase1:check        # Phase 1 acceptance check against Lightroom (docs\reports\phase1\PHASE1.md)
 npm run desktop:install     # register the engine in Claude Desktop as lrc-avg (backup first; removes lrc-avg-spike-s3)
+npm run package             # release assets to release\ (gitignored): lrc-avg-<v>.tgz (file list checked) + LrC-AVG.lrplugin-<v>.zip
 npm run phase2:check        # Phase 2 acceptance check: Lightroom + the Claude Desktop chat (docs\reports\phase2\PHASE2.md)
 npm run schemas             # regenerate engine\schemas\*.schema.json from the zod schemas (a test fails when stale)
 npm run phase3:check        # Phase 3 acceptance check: six fixtures + one Claude Desktop chat (docs\reports\phase3\PHASE3.md)

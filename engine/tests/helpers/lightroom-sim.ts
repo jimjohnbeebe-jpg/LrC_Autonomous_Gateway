@@ -24,6 +24,7 @@ import type { FakePlugin, FakeReply } from "./fake-plugin.js";
 import { createVirtualCopies, describePhoto, findPhoto, getSelection, selectPhoto, type CopyFault, type SimCopy } from "./lightroom-sim-catalog.js";
 import { SimHud } from "./lightroom-sim-hud.js";
 import { defaultSimPrefs, type SimPrefs } from "./lightroom-sim-prefs.js";
+import { PLUGIN_VERSION } from "../../src/bridge/version.js";
 
 export const nefDump = JSON.parse(
   readFileSync(fileURLToPath(new URL("../../../docs/reports/phase0/S5/s5_20260907-_OZ80093.NEF.json", import.meta.url)), "utf8"),
@@ -77,7 +78,7 @@ export class LightroomSim {
   /** The photo each snapshot was taken of. */
   private readonly snapshotOf = new Map<string, string>();
   /** The plugin version hello reports (plugin\LrC-AVG.lrplugin\Bridge.lua PLUGIN_VERSION). */
-  pluginVersion = "0.6.1";
+  pluginVersion = PLUGIN_VERSION;
   /** get_prefs's answer (lightroom-sim-prefs.ts); null: the command is unknown, as to a plugin before 0.5.0. */
   prefs: SimPrefs | null = defaultSimPrefs();
   /** The HUD (plugin 0.6.0, Hud.lua): the hud_update commands taken, and those not (lightroom-sim-hud.ts). */

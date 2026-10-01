@@ -32,3 +32,6 @@ vendor/automaat/**/*.py
 
 # Graphify per-repo knowledge graph (derived, machine-local; rebuild with `graphify update .`)
 graphify-out/
+
+# Release assets from `npm run package` (attached to GitHub Releases, never committed)
+release/

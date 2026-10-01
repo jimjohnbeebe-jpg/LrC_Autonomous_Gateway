@@ -94,7 +94,7 @@ export function copiesInError(error: Json): { known: Array<{ uuid: string; copy_
 /** Where a copy is after the cleanup: gone (unknown_photo), still there, or not known (another error). */
 export type CopyState = { uuid: string; copy_name: string; made_by: string; state: "gone" | "still there" | "unknown"; error?: string };
 
-export async function copyStates(deps: Phase4Deps, run: Run): Promise<CopyState[]> {
+export async function copyStates(deps: Pick<Phase4Deps, "client">, run: Pick<Run, "copies">): Promise<CopyState[]> {
   const states: CopyState[] = [];
   for (const c of run.copies) {
     try {

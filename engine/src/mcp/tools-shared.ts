@@ -76,6 +76,11 @@ export type ToolsDeps = {
   now?: () => Date;
   /** false: no HUD updates and no HUD events (PHASE5_PLAN row 5); on by default. */
   hud?: boolean;
+  /**
+   * How long lr_step waits for an approval (session\approval.ts APPROVAL_WAIT_MS when absent). For the
+   * tests only: the MCP server and the checks leave it unset (PHASE5_PLAN row 7, decision D3).
+   */
+  approvalWaitMs?: number;
 };
 
 /** One engine run's tools: their dependencies and state, passed to every tool function. */
@@ -114,6 +119,7 @@ export function createContext(deps: ToolsDeps): ToolContext {
           ...(settings ? { readPage: () => settings.read() } : {}),
           ...(deps.logFolders ? { logFolders: deps.logFolders } : {}),
           ...(hud ? { hud } : {}),
+          ...(deps.approvalWaitMs !== undefined ? { approvalWaitMs: deps.approvalWaitMs } : {}),
           engineVersion: deps.engineVersion ?? "unknown",
           now: ctx.now,
         })

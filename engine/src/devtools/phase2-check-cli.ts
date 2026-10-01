@@ -11,7 +11,7 @@
 // Where Claude Desktop logs: %LOCALAPPDATA%\Claude\Logs\mcp-server-<server name>.log [handle:
 // docs\reports\phase0\S3\desktop-mcp-log-excerpt.txt header; the folder listing on Jim's machine,
 // 2026-09-26, shows mcp-server-*.log files there]. The engine's tool log is in the repo's logs\
-// folder, where the Claude Desktop entry points LRC_AVG_LOG_DIR (desktop-config.ts).
+// folder, where the Claude Desktop entry points LRC_AVG_LOG_DIR (install-desktop-config-cli.ts).
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
@@ -23,7 +23,7 @@ import { ToolLog } from "../log/index.js";
 import { acquireInstanceLock, BridgeGate, devOverrides, ENGINE_VERSION, Tools } from "../mcp/index.js";
 import { loadDefaultParamMap } from "../params/index.js";
 import { PreviewService } from "../preview/index.js";
-import { SERVER_NAME } from "./desktop-config.js";
+import { SERVER_NAME } from "../setup/desktop-config.js";
 import { describeError } from "./phase1-check.js";
 import { collectChatLogs } from "./phase2-collect.js";
 import { HISTORY_PREFIX, redactHome, runPhase2Check, type Answer, type ChatLogs } from "./phase2-check.js";

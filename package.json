@@ -16,6 +16,7 @@
     "typecheck": "npm run typecheck -w engine && npm run typecheck -w spikes",
     "phase1:check": "npm run build && node engine/dist/devtools/phase1-check-cli.js",
     "desktop:install": "npm run build && node engine/dist/devtools/install-desktop-config-cli.js",
+    "package": "npm run clean -w engine && npm run build && node engine/dist/devtools/package-cli.js",
     "phase2:check": "npm run build && node engine/dist/devtools/phase2-check-cli.js",
     "schemas": "npm run build && node engine/dist/devtools/write-schemas-cli.js",
     "phase3:check": "npm run build && node engine/dist/devtools/phase3-check-cli.js",

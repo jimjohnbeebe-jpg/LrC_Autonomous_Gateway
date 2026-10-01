@@ -23,7 +23,7 @@ import { ToolLog } from "../log/index.js";
 import { acquireInstanceLock, BridgeGate, devOverrides, ENGINE_VERSION, Tools } from "../mcp/index.js";
 import { loadDefaultParamMap } from "../params/index.js";
 import { PreviewService } from "../preview/index.js";
-import { SERVER_NAME } from "./desktop-config.js";
+import { SERVER_NAME } from "../setup/desktop-config.js";
 import { describeError } from "./phase1-check.js";
 import { redactHome } from "./phase2-check.js";
 import { goldenName } from "./goldens.js";

@@ -7,7 +7,7 @@
 //     intent, 1-4 passes, accepted, the HUD shown for it (the tool log's first-taken hud_update record
 //     [handle: engine\src\hud\publisher.ts send(), `record` when `ch.taken === null && payload.open`]),
 //     autonomous mode, and this engine's version (Claude Desktop runs the repo's engine\dist [handle:
-//     engine\src\devtools\desktop-config.ts, the lrc-avg entry's args]).
+//     engine\src\devtools\install-desktop-config-cli.ts, the lrc-avg entry's args]).
 //   - The approve chat (decision D4): a session in approve_each_pass mode where a waiting lr_step ran
 //     its full wait (AWAITING_APPROVAL in the tool log, with how long the call held), and a later pass
 //     after the HUD's Approve. How long Claude Desktop keeps a tool call is [unverified] until then.

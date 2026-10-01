@@ -28,7 +28,7 @@ import { acquireInstanceLock, BridgeGate, devOverrides, ENGINE_VERSION, Tools } 
 import { loadDefaultParamMap } from "../params/index.js";
 import { PreviewService } from "../preview/index.js";
 import { PageSettings } from "../settings/index.js";
-import { SERVER_NAME } from "./desktop-config.js";
+import { SERVER_NAME } from "../setup/desktop-config.js";
 import { describeError, type Answer } from "./phase1-check.js";
 import { redactHome } from "./phase2-check.js";
 import { collectChatLogs } from "./phase2-collect.js";
@@ -129,7 +129,7 @@ async function main(): Promise<number> {
         const logs = collectChatLogs(since, {
           desktopLog: path.join(process.env["LOCALAPPDATA"] ?? "", "Claude", "Logs", `mcp-server-${SERVER_NAME}.log`),
           // Claude Desktop's engine writes its tool log to LRC_AVG_LOG_DIR, which the Desktop entry sets
-          // to the repo's logs\ folder (desktop-config.ts); a dry run points both at a scratch folder.
+          // to the repo's logs\ folder (install-desktop-config-cli.ts); a dry run points both at a scratch folder.
           engineLogDir: process.env["LRC_AVG_LOG_DIR"] || path.join(repoRoot, "logs"),
           outDir: OUT_DIR,
           stamp: `${stamp}_${tag}`,

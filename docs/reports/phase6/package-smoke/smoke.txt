@@ -1,0 +1,493 @@
+Install smoke test: Phase 6 row 1 release assets (PHASE6_PLAN row 1, branch phase-6/package)
+=============================================================================================
+
+Run by Claude Code on 2026-10-01 on Jim's PC, at commit b4f7299 with a clean working tree
+(`git status --porcelain` printed nothing before and after). Node v24.11.1 (the engine's stderr
+below), npm 11.19.1 (`npm --version`), C:\Windows\System32\tar.exe = bsdtar 3.8.8 (`tar.exe
+--version`). The zip's SHA-256 differed between this session's three package runs with the same
+plugin files (e03a2b1d…, 92de6f02…, 38d51a31…); the file times a zip stores are the likely reason
+[inference]: compare a release zip by its files, as Section B does, not by its hash. No Lightroom step; nothing touched Jim's Claude Desktop
+config or the real bridge: setup ran against scratch folders (LOCALAPPDATA/APPDATA pointed there,
+or --config), and the engine ran with scratch LOCALAPPDATA/TEMP, bridge ports 18765/18766 (lock
+18767) and a missing token file (engine\src\mcp\dev-overrides.ts).
+
+Commands (PowerShell, repo root; $s = this session's scratchpad):
+  npm run package
+  node "$s\smoke-package.ts" D:\Developer\LrC_Autonomous_Gateway "$s\pkgsmoke"
+Both exited 0. Paths under the user folder are shown as %USERPROFILE%. The driver is copied
+verbatim in the appendix (scratch .ts files are not committed, rule 01 precedent:
+docs\reports\phase4\presets-smoke\presets-live.txt).
+
+Section A: npm run package
+--------------------------
+> package
+> npm run clean -w engine && npm run build && node engine/dist/devtools/package-cli.js
+
+
+> lrc-avg@1.0.0 clean
+> node -e "require('node:fs').rmSync('dist',{recursive:true,force:true})"
+
+
+> build
+> npm run build -w engine
+
+
+> lrc-avg@1.0.0 build
+> tsc -p tsconfig.json
+
+engine package: 118 files, list as expected
+plugin zip: 25 files, list as expected (zip_check)
+Release assets in D:\Developer\LrC_Autonomous_Gateway\release:
+  lrc-avg-1.0.0.tgz  163176 bytes  sha256 a6f4b4f97f905c4165856f36a43d0c352eec420f305753cd8c75a8ba0f218436
+  LrC-AVG.lrplugin-1.0.0.zip  54606 bytes  sha256 38d51a31be56ec06f88500e715355e2b5da8ff7075f3f45d27ef1d52ea20dbeb
+
+Section B: the smoke driver's output
+------------------------------------
+## 1. npm install -g --prefix <scratch>\prefix release\lrc-avg-1.0.0.tgz
+
+added 100 packages in 4s
+
+36 packages are looking for funding
+  run `npm fund` for details
+installed package files (outside its node_modules): 118
+  LICENSE
+  THIRD_PARTY_NOTICES.md
+  dist/bridge/client.js
+  dist/bridge/endpoint.js
+  dist/bridge/hud-protocol.js
+  dist/bridge/index.js
+  dist/bridge/lines.js
+  dist/bridge/protocol.js
+  dist/bridge/types.js
+  dist/bridge/version.js
+  dist/hud/events.js
+  dist/hud/index.js
+  dist/hud/payload.js
+  dist/hud/publisher.js
+  dist/intents/index.js
+  dist/intents/loader.js
+  dist/intents/schema.js
+  dist/log/index.js
+  dist/log/session-log-v1.js
+  dist/log/session-log.js
+  dist/log/tool-log.js
+  dist/mcp/bridge-gate.js
+  dist/mcp/defs-context.js
+  dist/mcp/defs-intents.js
+  dist/mcp/defs-propagation.js
+  dist/mcp/defs-session.js
+  dist/mcp/defs-shared.js
+  dist/mcp/dev-overrides.js
+  dist/mcp/errors.js
+  dist/mcp/index.js
+  dist/mcp/instance-lock.js
+  dist/mcp/main.js
+  dist/mcp/server.js
+  dist/mcp/tools-context.js
+  dist/mcp/tools-intents.js
+  dist/mcp/tools-propagation.js
+  dist/mcp/tools-session.js
+  dist/mcp/tools-shared.js
+  dist/mcp/tools-write.js
+  dist/mcp/tools.js
+  dist/mcp/version.js
+  dist/metrics/compute.js
+  dist/metrics/index.js
+  dist/metrics/regions.js
+  dist/params/camera-profiles.js
+  dist/params/camera-profiles.lrc15.json
+  dist/params/canonical.js
+  dist/params/index.js
+  dist/params/map.js
+  dist/params/preset-format.js
+  dist/params/preset-format.lrc15.json
+  dist/params/preset-keys.js
+  dist/params/sdk-keys.js
+  dist/params/sdk-keys.lrc15.json
+  dist/presets/create.js
+  dist/presets/folder.js
+  dist/presets/index.js
+  dist/presets/select.js
+  dist/presets/xmp-parse.js
+  dist/presets/xmp-write.js
+  dist/preview/composite.js
+  dist/preview/crop.js
+  dist/preview/font.js
+  dist/preview/index.js
+  dist/preview/service.js
+  dist/session/approval.js
+  dist/session/begin.js
+  dist/session/copies.js
+  dist/session/end.js
+  dist/session/guardrail.js
+  dist/session/hud-actions.js
+  dist/session/index.js
+  dist/session/io.js
+  dist/session/manager.js
+  dist/session/pass0.js
+  dist/session/pick.js
+  dist/session/plan.js
+  dist/session/probe.js
+  dist/session/regions.js
+  dist/session/rules.js
+  dist/session/step.js
+  dist/session/targets.js
+  dist/session/types.js
+  dist/session/variants.js
+  dist/session/view.js
+  dist/settings/folders.js
+  dist/settings/index.js
+  dist/settings/log-folders.js
+  dist/settings/page.js
+  dist/settings/read.js
+  dist/settings/session.js
+  dist/settings/store.js
+  dist/setup/apply-config.js
+  dist/setup/desktop-config.js
+  dist/setup/setup-cli.js
+  dist/sync/exposure.js
+  dist/sync/index.js
+  dist/sync/mask.js
+  dist/sync/source.js
+  dist/sync/sync.js
+  dist/sync/target.js
+  dist/sync/targets.js
+  dist/sync/types.js
+  intents/bw_conversion.json
+  intents/landscape_blue_hour.json
+  intents/landscape_forest_shade.json
+  intents/landscape_golden_hour.json
+  intents/landscape_midday_high_contrast.json
+  intents/landscape_overcast_flat.json
+  intents/neutral_technical_correction.json
+  intents/night_astro.json
+  intents/pet_fur_detail.json
+  intents/portrait_natural_light.json
+  intents/portrait_skin_priority.json
+  package.json
+  schemas/intent.schema.json
+  schemas/recipe.schema.json
+  schemas/session-log.schema.json
+PASS  installed files = the .tgz's 118 entries
+PASS  no src/, tests/, devtools or source maps installed
+PASS  npm made both command shims: lrc-avg.cmd, lrc-avg-setup.cmd
+PASS  11 bundled intents installed
+
+## 2a. Fresh account: Claude folder, no config file
+
+> lrc-avg-setup 
+Claude Desktop config: %USERPROFILE%\AppData\Local\Temp\claude\D--Developer-LrC-Autonomous-Gateway\7367f003-2339-499b-bb53-b73393449dba\scratchpad\pkgsmoke\local\Packages\Claude_smoke\LocalCache\Roaming\Claude\claude_desktop_config.json (new file)
+MCP servers before: (none)
+Done: add "lrc-avg".
+MCP servers now: lrc-avg
+"lrc-avg" runs: C:\Program Files\nodejs\node.exe %USERPROFILE%\AppData\Local\Temp\claude\d--Developer-LrC-Autonomous-Gateway\7367f003-2339-499b-bb53-b73393449dba\scratchpad\pkgsmoke\prefix\node_modules\lrc-avg\dist\mcp\main.js
+Next: quit Claude Desktop (right-click the Claude icon in the Windows system tray > Quit), then start it again.
+(exit 0)
+PASS  exit 0 and the config file was created in the Claude folder
+{
+  "mcpServers": {
+    "lrc-avg": {
+      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "%USERPROFILE%\\AppData\\Local\\Temp\\claude\\d--Developer-LrC-Autonomous-Gateway\\7367f003-2339-499b-bb53-b73393449dba\\scratchpad\\pkgsmoke\\prefix\\node_modules\\lrc-avg\\dist\\mcp\\main.js"
+      ]
+    }
+  }
+}
+PASS  entry = this node.exe + the installed dist\mcp\main.js, no env
+
+## 2b. Second run
+
+> lrc-avg-setup 
+Claude Desktop config: %USERPROFILE%\AppData\Local\Temp\claude\D--Developer-LrC-Autonomous-Gateway\7367f003-2339-499b-bb53-b73393449dba\scratchpad\pkgsmoke\local\Packages\Claude_smoke\LocalCache\Roaming\Claude\claude_desktop_config.json
+MCP servers before: lrc-avg
+Nothing to change: "lrc-avg" is already as wanted.
+"lrc-avg" runs: C:\Program Files\nodejs\node.exe %USERPROFILE%\AppData\Local\Temp\claude\d--Developer-LrC-Autonomous-Gateway\7367f003-2339-499b-bb53-b73393449dba\scratchpad\pkgsmoke\prefix\node_modules\lrc-avg\dist\mcp\main.js
+Next: quit Claude Desktop (right-click the Claude icon in the Windows system tray > Quit), then start it again.
+(exit 0)
+PASS  nothing changed the second time
+
+## 2c. An existing config with another server
+
+> lrc-avg-setup --config %USERPROFILE%\AppData\Local\Temp\claude\D--Developer-LrC-Autonomous-Gateway\7367f003-2339-499b-bb53-b73393449dba\scratchpad\pkgsmoke\existing_config.json
+Claude Desktop config: %USERPROFILE%\AppData\Local\Temp\claude\D--Developer-LrC-Autonomous-Gateway\7367f003-2339-499b-bb53-b73393449dba\scratchpad\pkgsmoke\existing_config.json
+MCP servers before: github
+Done: add "lrc-avg" (backup of the old file: existing_config.json.backup-2026-10-01T13-20-52-015Z).
+MCP servers now: github, lrc-avg
+"lrc-avg" runs: C:\Program Files\nodejs\node.exe %USERPROFILE%\AppData\Local\Temp\claude\d--Developer-LrC-Autonomous-Gateway\7367f003-2339-499b-bb53-b73393449dba\scratchpad\pkgsmoke\prefix\node_modules\lrc-avg\dist\mcp\main.js
+Next: quit Claude Desktop (right-click the Claude icon in the Windows system tray > Quit), then start it again.
+(exit 0)
+PASS  lrc-avg added; github and preferences kept
+PASS  the other server's token is not printed
+existing_config.json
+existing_config.json.backup-2026-10-01T13-20-52-015Z
+PASS  a backup of the old file was written next to it
+
+## 2d. --remove
+
+> lrc-avg-setup --config %USERPROFILE%\AppData\Local\Temp\claude\D--Developer-LrC-Autonomous-Gateway\7367f003-2339-499b-bb53-b73393449dba\scratchpad\pkgsmoke\existing_config.json --remove
+Claude Desktop config: %USERPROFILE%\AppData\Local\Temp\claude\D--Developer-LrC-Autonomous-Gateway\7367f003-2339-499b-bb53-b73393449dba\scratchpad\pkgsmoke\existing_config.json
+MCP servers before: github, lrc-avg
+Done: remove "lrc-avg" (backup of the old file: existing_config.json.backup-2026-10-01T13-20-52-179Z).
+MCP servers now: github
+Next: quit Claude Desktop (right-click the Claude icon in the Windows system tray > Quit), then start it again.
+(exit 0)
+PASS  lrc-avg removed; github kept
+
+## 2e. --remove again
+
+> lrc-avg-setup --config %USERPROFILE%\AppData\Local\Temp\claude\D--Developer-LrC-Autonomous-Gateway\7367f003-2339-499b-bb53-b73393449dba\scratchpad\pkgsmoke\existing_config.json --remove
+Claude Desktop config: %USERPROFILE%\AppData\Local\Temp\claude\D--Developer-LrC-Autonomous-Gateway\7367f003-2339-499b-bb53-b73393449dba\scratchpad\pkgsmoke\existing_config.json
+MCP servers before: github
+Nothing to change: "lrc-avg" is already as wanted.
+Next: quit Claude Desktop (right-click the Claude icon in the Windows system tray > Quit), then start it again.
+(exit 0)
+PASS  nothing changed the second time
+
+## 2f. A bad argument
+
+> lrc-avg-setup --frobnicate
+FAILED: unknown argument --frobnicate. Usage: lrc-avg-setup [--remove] [--dry-run] [--config <path>]
+Claude Desktop's config was not changed.
+(exit 1)
+PASS  refused with exit 1 and the usage line
+
+## 3. The installed engine, started as the written entry says
+
+> C:\Program Files\nodejs\node.exe %USERPROFILE%\AppData\Local\Temp\claude\d--Developer-LrC-Autonomous-Gateway\7367f003-2339-499b-bb53-b73393449dba\scratchpad\pkgsmoke\prefix\node_modules\lrc-avg\dist\mcp\main.js
+engine stderr:
+  [lrc-avg] engine 1.0.0 ready on stdio (node v24.11.1); tool log: %USERPROFILE%\AppData\Local\Temp\claude\D--Developer-LrC-Autonomous-Gateway\7367f003-2339-499b-bb53-b73393449dba\scratchpad\pkgsmoke\local\LrC-AVG\logs\engine-20261001.jsonl; previews: %USERPROFILE%\AppData\Local\Temp\claude\D--Developer-LrC-Autonomous-Gateway\7367f003-2339-499b-bb53-b73393449dba\scratchpad\pkgsmoke\temp\LrC-AVG\previews
+  [lrc-avg] took the Lightroom bridge lock
+  [lrc-avg] bridge: connecting
+  [lrc-avg] shutting down: stdin ended (the client exited)
+  [lrc-avg] bridge: stopped
+serverInfo: {"name":"lrc-avg","version":"1.0.0"}
+PASS  serverInfo lrc-avg 1.0.0
+tools/list: 16 tools: lr_get_active_photo_context, lr_get_preview, lr_get_metrics, lr_begin_session, lr_step, lr_probe, lr_set_regions, lr_select_variant, lr_approve_pass, lr_end_session, lr_get_session_log, lr_list_intents, lr_get_intent, lr_save_intent, lr_sync_series, lr_create_preset_from_active
+lr_list_intents isError: false
+lr_list_intents: {"ok":true,"intents":[{"id":"bw_conversion","label":"Black and white","category":"bw","source":"bundled"},{"id":"landscape_blue_hour","label":"Landscape — blue hour","category":"landscape","source":"bundled"},{"id":"landscape_forest_shade","label":"Landscape — forest shade","category":"landscape","source":"bundled"},{"id":"landscape_golden_hour","label":"Landscape — golden hour","category":"landscape","source":"bundled"},{"id":"landscape_midday_high_contrast","label":"Landscape — midday, high contrast","category":"landscape","source":"bundled"},{"id":"landscape_overcast_flat","label":"Landscape — overcast, flat light","category":"landscape","source":"bundled"},{"id":"night_astro","label":"Night — stars and Milky Way","category":"night","source":"bundled"},{"id":"pet_fur_detail","label":"Pet — fur detail","category":"pet","source":"bundled"},{"id":"portrait_natural_light","label":"Portrait — natural light","category":"portrait","source":"bundled"},{"id":"portrait_skin_priority","label":"Portrait — skin first","category":"portrait","source":"bundled"},{"id":"neutral_technical_correction","label":"Neutral technical correction","category":"technical","source":"bundled"}],"folders":{"bundled":"%USERPROFILE%\\AppData\\Local\\Temp\\claude\\d--Developer-LrC-Autonomous-Gateway\\7367f003-2339-499b-bb53-b73393449dba\\scratchpad\\pkgsmoke\\prefix\\node_modules\\lrc-avg\\intents","user":"%USERPROFILE%\\AppData\\Local\\Temp\\claude\\D--Developer-LrC-Autonomous-Gateway\\7367f003-2339-499b-bb53-b73393449dba\\scratchpad\\pkgsmoke\\local\\LrC-AVG\\intents"},"intents_folder":{"path":"%USERPROFILE%\\AppData\\Local\\Temp\\claude\\D--Developer-LrC-Autonomous-Gateway\\7367f003-2339-499b-bb53-b73393449dba\\scratchpad\\pkgsmoke\\local\\LrC-AVG\\intents","from":"default","page":"not read (BRIDGE_DISCONNECTED); no page read yet"}}
+PASS  lr_list_intents: 11 bundled intents from the installed package, without Lightroom
+
+## 3b. The repo build (engine\dist), same calls, for comparison
+
+engine stderr:
+  [lrc-avg] engine 1.0.0 ready on stdio (node v24.11.1); tool log: %USERPROFILE%\AppData\Local\Temp\claude\D--Developer-LrC-Autonomous-Gateway\7367f003-2339-499b-bb53-b73393449dba\scratchpad\pkgsmoke\local\LrC-AVG\logs\engine-20261001.jsonl; previews: %USERPROFILE%\AppData\Local\Temp\claude\D--Developer-LrC-Autonomous-Gateway\7367f003-2339-499b-bb53-b73393449dba\scratchpad\pkgsmoke\temp\LrC-AVG\previews
+  [lrc-avg] shutting down: stdin ended (the client exited)
+PASS  tools/list identical to the repo build's (16 tools, names and schemas)
+
+## 4. Plugin zip: Expand-Archive, then hashes against the repo
+
+unzipped: 25 files
+  LICENSE  2d71b52477715ae9
+  LrC-AVG.lrplugin/Bridge.lua  b649edbd3cf16e3c
+  LrC-AVG.lrplugin/Catalog.lua  827ac56932d509d4
+  LrC-AVG.lrplugin/Develop.lua  7ece60820eba4547
+  LrC-AVG.lrplugin/Dispatch.lua  0a9898ed91315175
+  LrC-AVG.lrplugin/Endpoint.lua  fca753f6c3506290
+  LrC-AVG.lrplugin/Events.lua  daf8bee2f8b5d28e
+  LrC-AVG.lrplugin/Hud.lua  11b6e42151ad8d55
+  LrC-AVG.lrplugin/HudSelection.lua  337966650b4d31ea
+  LrC-AVG.lrplugin/HudState.lua  cec38b07292dcb47
+  LrC-AVG.lrplugin/HudView.lua  8393da37a573276c
+  LrC-AVG.lrplugin/Info.lua  e079484e2944bd70
+  LrC-AVG.lrplugin/Json.lua  fbdbcfbe03f3e18f
+  LrC-AVG.lrplugin/Log.lua  af54fd079eadcddd
+  LrC-AVG.lrplugin/MenuAbort.lua  7e653d8c8e227c67
+  LrC-AVG.lrplugin/MenuAccept.lua  11ab5205b4ad8472
+  LrC-AVG.lrplugin/MenuHud.lua  e4b91cf906a08349
+  LrC-AVG.lrplugin/MenuStatus.lua  d689063e3f7c5ea0
+  LrC-AVG.lrplugin/Photos.lua  b988b7dac14230fe
+  LrC-AVG.lrplugin/PluginInfoProvider.lua  2422801835fb22a8
+  LrC-AVG.lrplugin/PluginInit.lua  1e031ad950a44ddb
+  LrC-AVG.lrplugin/Prefs.lua  fd74de08b32de63d
+  LrC-AVG.lrplugin/Preview.lua  de1cb9263c13498f
+  LrC-AVG.lrplugin/Sockets.lua  a4d06b267be3af03
+  LrC-AVG.lrplugin/THIRD_PARTY_NOTICES.md  8aee9920eaf7c027
+PASS  same file list as plugin\LrC-AVG.lrplugin + LICENSE
+PASS  every file byte-identical to the repo's working tree
+
+## Result
+
+SMOKE: WORKED (every check PASS)
+
+Appendix: smoke-package.ts (verbatim)
+-------------------------------------
+// Install smoke test for the Phase 6 row 1 release assets (PHASE6_PLAN row 1).
+// Run: node smoke-package.ts <repo root> <scratch dir>
+// 1. npm install -g --prefix <scratch>\prefix <repo>\release\lrc-avg-<v>.tgz
+// 2. lrc-avg-setup: a fresh account (Claude folder, no config file), a second run, an existing config
+//    with another server holding a token, --remove twice, a bad argument
+// 3. the installed engine, started as the written entry says (scratch LOCALAPPDATA/TEMP, scratch
+//    bridge ports, no token): initialize, tools/list (against the repo build's list), lr_list_intents
+// 4. the plugin zip, extracted by Windows PowerShell's Expand-Archive, hashed against the repo folder
+
+import { execFileSync, execSync, spawn } from "node:child_process";
+import { createHash } from "node:crypto";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import path from "node:path";
+
+const [repo, scratch] = process.argv.slice(2) as [string, string];
+const release = path.join(repo, "release");
+const tgz = readdirSync(release).find((f) => f.endsWith(".tgz")) as string;
+const zip = readdirSync(release).find((f) => f.endsWith(".zip")) as string;
+rmSync(scratch, { recursive: true, force: true });
+mkdirSync(scratch, { recursive: true });
+const prefix = path.join(scratch, "prefix");
+let failures = 0;
+const check = (ok: boolean, what: string): void => {
+  console.log(`${ok ? "PASS" : "FAIL"}  ${what}`);
+  if (!ok) failures++;
+};
+const section = (title: string): void => console.log(`\n## ${title}\n`);
+
+function filesUnder(root: string): string[] {
+  return readdirSync(root, { recursive: true, encoding: "utf8" })
+    .map((p) => p.replaceAll("\\", "/"))
+    .filter((p) => statSync(path.join(root, p)).isFile());
+}
+const sha = (file: string): string => createHash("sha256").update(readFileSync(file)).digest("hex");
+
+// 1. Install
+section("1. npm install -g --prefix <scratch>\\prefix release\\" + tgz);
+const install = execSync(`npm install -g --prefix "${prefix}" "${path.join(release, tgz)}"`, { encoding: "utf8" });
+console.log(install.trim());
+const pkgDir = path.join(prefix, "node_modules", "lrc-avg");
+const installed = filesUnder(pkgDir).filter((p) => !p.startsWith("node_modules/")).sort();
+console.log(`installed package files (outside its node_modules): ${installed.length}`);
+for (const p of installed) console.log(`  ${p}`);
+const packed = execSync(`tar -tzf "${path.join(release, tgz)}"`, { encoding: "utf8" }).split(/\r?\n/).filter(Boolean).map((p) => p.replace(/^package\//, "")).sort();
+check(JSON.stringify(installed) === JSON.stringify(packed), `installed files = the .tgz's ${packed.length} entries`);
+check(!installed.some((p) => /^(src|tests)\/|devtools|\.map$/.test(p)), "no src/, tests/, devtools or source maps installed");
+check(existsSync(path.join(prefix, "lrc-avg.cmd")) && existsSync(path.join(prefix, "lrc-avg-setup.cmd")), "npm made both command shims: lrc-avg.cmd, lrc-avg-setup.cmd");
+check(installed.filter((p) => p.startsWith("intents/")).length === 11, "11 bundled intents installed");
+
+// 2. lrc-avg-setup
+const local = path.join(scratch, "local");
+const roaming = path.join(scratch, "roaming");
+const claudeFolder = path.join(local, "Packages", "Claude_smoke", "LocalCache", "Roaming", "Claude");
+mkdirSync(claudeFolder, { recursive: true });
+mkdirSync(roaming, { recursive: true });
+const setupEnv = { ...process.env, LOCALAPPDATA: local, APPDATA: roaming };
+function setup(args: string[]): { code: number; out: string } {
+  try {
+    const out = execFileSync("cmd.exe", ["/d", "/c", path.join(prefix, "lrc-avg-setup.cmd"), ...args], { env: setupEnv, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    return { code: 0, out };
+  } catch (err) {
+    const e = err as { status: number; stdout: string; stderr: string };
+    return { code: e.status, out: e.stdout + e.stderr };
+  }
+}
+function run(title: string, args: string[]): { code: number; out: string } {
+  section(title);
+  console.log(`> lrc-avg-setup ${args.join(" ")}`);
+  const r = setup(args);
+  console.log(r.out.trim());
+  console.log(`(exit ${r.code})`);
+  return r;
+}
+const freshConfig = path.join(claudeFolder, "claude_desktop_config.json");
+let r = run("2a. Fresh account: Claude folder, no config file", []);
+check(r.code === 0 && existsSync(freshConfig), "exit 0 and the config file was created in the Claude folder");
+const written = JSON.parse(readFileSync(freshConfig, "utf8")) as { mcpServers: Record<string, { command: string; args: string[]; env?: unknown }> };
+console.log(readFileSync(freshConfig, "utf8").trim());
+const entry = written.mcpServers["lrc-avg"];
+// Case-insensitive path compare: Windows paths ignore case, and the npm shim gives the folder's
+// on-disk spelling, which can differ in case from the path this script was handed.
+const samePath = (a: string | undefined, b: string): boolean => a !== undefined && a.toLowerCase() === b.toLowerCase();
+check(entry !== undefined && samePath(entry.command, process.execPath) && samePath(entry.args[0], path.join(pkgDir, "dist", "mcp", "main.js")) && entry.env === undefined, "entry = this node.exe + the installed dist\\mcp\\main.js, no env");
+r = run("2b. Second run", []);
+check(r.code === 0 && r.out.includes("Nothing to change"), "nothing changed the second time");
+const explicit = path.join(scratch, "existing_config.json");
+const TOKEN = "smoke-secret-token-0123";
+writeFileSync(explicit, JSON.stringify({ mcpServers: { github: { command: "github-mcp-server.exe", args: ["stdio"], env: { GITHUB_PERSONAL_ACCESS_TOKEN: TOKEN } } }, preferences: { keep: true } }, null, 2));
+r = run("2c. An existing config with another server", ["--config", explicit]);
+const afterAdd = JSON.parse(readFileSync(explicit, "utf8")) as { mcpServers: Record<string, unknown>; preferences: unknown };
+check(r.code === 0 && Object.keys(afterAdd.mcpServers).join(",") === "github,lrc-avg" && JSON.stringify(afterAdd.preferences) === '{"keep":true}', "lrc-avg added; github and preferences kept");
+check(!r.out.includes(TOKEN), "the other server's token is not printed");
+console.log(readdirSync(scratch).filter((f) => f.includes("config")).join("\n"));
+check(readdirSync(scratch).some((f) => f.startsWith("existing_config.json.backup-")), "a backup of the old file was written next to it");
+r = run("2d. --remove", ["--config", explicit, "--remove"]);
+const afterRemove = JSON.parse(readFileSync(explicit, "utf8")) as { mcpServers: Record<string, unknown> };
+check(r.code === 0 && Object.keys(afterRemove.mcpServers).join(",") === "github", "lrc-avg removed; github kept");
+r = run("2e. --remove again", ["--config", explicit, "--remove"]);
+check(r.code === 0 && r.out.includes("Nothing to change"), "nothing changed the second time");
+r = run("2f. A bad argument", ["--frobnicate"]);
+check(r.code === 1 && r.out.includes("FAILED: unknown argument --frobnicate"), "refused with exit 1 and the usage line");
+
+// 3. The installed engine, as the entry says
+type Msg = { id?: number; result?: Record<string, unknown>; error?: unknown };
+async function mcpSession(command: string, args: string[], calls: Array<{ method: string; params: unknown }>): Promise<Msg[]> {
+  const temp = path.join(scratch, "temp");
+  mkdirSync(temp, { recursive: true });
+  const env = { ...process.env, LOCALAPPDATA: local, APPDATA: roaming, TEMP: temp, TMP: temp, LRC_AVG_COMMAND_PORT: "18765", LRC_AVG_EVENT_PORT: "18766", LRC_AVG_TOKEN_FILE: path.join(scratch, "no-token") };
+  const child = spawn(command, args, { env, stdio: ["pipe", "pipe", "pipe"] });
+  let buf = "";
+  let stderr = "";
+  const replies: Msg[] = [];
+  const waiters = new Map<number, (m: Msg) => void>();
+  child.stderr.on("data", (d: Buffer) => (stderr += d.toString("utf8")));
+  child.stdout.on("data", (d: Buffer) => {
+    buf += d.toString("utf8");
+    let nl: number;
+    while ((nl = buf.indexOf("\n")) >= 0) {
+      const line = buf.slice(0, nl).trim();
+      buf = buf.slice(nl + 1);
+      if (!line) continue;
+      const m = JSON.parse(line) as Msg;
+      if (typeof m.id === "number") waiters.get(m.id)?.(m);
+    }
+  });
+  const send = (o: unknown): void => void child.stdin.write(JSON.stringify(o) + "\n");
+  const request = (id: number, method: string, params: unknown): Promise<Msg> =>
+    new Promise((resolve, reject) => {
+      const t = setTimeout(() => reject(new Error(`${method}: no reply in 30 s; stderr: ${stderr}`)), 30_000);
+      waiters.set(id, (m) => (clearTimeout(t), resolve(m)));
+      send({ jsonrpc: "2.0", id, method, params });
+    });
+  replies.push(await request(1, "initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "smoke", version: "0" } }));
+  send({ jsonrpc: "2.0", method: "notifications/initialized" });
+  let id = 2;
+  for (const c of calls) replies.push(await request(id++, c.method, c.params));
+  child.stdin.end();
+  await new Promise((res) => child.on("exit", res));
+  console.log(`engine stderr:\n${stderr.trim().split(/\r?\n/).map((l) => `  ${l}`).join("\n")}`);
+  return replies;
+}
+section("3. The installed engine, started as the written entry says");
+console.log(`> ${entry?.command} ${entry?.args.join(" ")}`);
+const calls = [
+  { method: "tools/list", params: {} },
+  { method: "tools/call", params: { name: "lr_list_intents", arguments: {} } },
+];
+const [init, list, intents] = await mcpSession(entry?.command as string, entry?.args as string[], calls);
+const server = (init?.result?.["serverInfo"] ?? {}) as { name?: string; version?: string };
+console.log(`serverInfo: ${JSON.stringify(server)}`);
+check(server.name === "lrc-avg" && server.version === "1.0.0", "serverInfo lrc-avg 1.0.0");
+const names = ((list?.result?.["tools"] ?? []) as Array<{ name: string }>).map((t) => t.name);
+console.log(`tools/list: ${names.length} tools: ${names.join(", ")}`);
+const intentsText = (((intents?.result?.["content"] ?? []) as Array<{ text?: string }>)[0]?.text ?? JSON.stringify(intents));
+console.log(`lr_list_intents isError: ${String(intents?.result?.["isError"] ?? false)}`);
+console.log(`lr_list_intents: ${intentsText}`);
+const parsedIntents = JSON.parse(intentsText) as { intents?: Array<{ id: string; source: string }> };
+check((parsedIntents.intents ?? []).filter((i) => i.source === "bundled").length === 11, "lr_list_intents: 11 bundled intents from the installed package, without Lightroom");
+
+section("3b. The repo build (engine\\dist), same calls, for comparison");
+const [, repoList] = await mcpSession(process.execPath, [path.join(repo, "engine", "dist", "mcp", "main.js")], [calls[0] as { method: string; params: unknown }]);
+const repoNames = ((repoList?.result?.["tools"] ?? []) as Array<{ name: string }>).map((t) => t.name);
+check(JSON.stringify(repoList?.result) === JSON.stringify(list?.result), `tools/list identical to the repo build's (${repoNames.length} tools, names and schemas)`);
+
+// 4. The plugin zip
+section("4. Plugin zip: Expand-Archive, then hashes against the repo");
+const out = path.join(scratch, "unzipped");
+execFileSync("powershell.exe", ["-NoProfile", "-Command", `Expand-Archive -LiteralPath '${path.join(release, zip)}' -DestinationPath '${out}'`]);
+const unzipped = filesUnder(out).sort();
+const expected = [...filesUnder(path.join(repo, "plugin", "LrC-AVG.lrplugin")).map((p) => `LrC-AVG.lrplugin/${p}`), "LICENSE"].sort();
+console.log(`unzipped: ${unzipped.length} files`);
+for (const p of unzipped) console.log(`  ${p}  ${sha(path.join(out, p)).slice(0, 16)}`);
+check(JSON.stringify(unzipped) === JSON.stringify(expected), "same file list as plugin\\LrC-AVG.lrplugin + LICENSE");
+const sourceOf = (p: string): string => (p === "LICENSE" ? path.join(repo, "LICENSE") : path.join(repo, "plugin", p));
+check(unzipped.every((p) => sha(path.join(out, p)) === sha(sourceOf(p))), "every file byte-identical to the repo's working tree");
+
+section("Result");
+console.log(failures === 0 ? "SMOKE: WORKED (every check PASS)" : `SMOKE: FAILED (${failures} checks failed)`);
+process.exit(failures === 0 ? 0 : 1);

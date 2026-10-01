@@ -1,0 +1,442 @@
+phase-5/check dry run of `npm run phase5:check` (PHASE5_PLAN row 7) - Claude Code (Opus 5.5), 2026-09-30 local (UTC-7)
+What ran: the built CLI `engine\dist\devtools\phase5-check-cli.js`, built by `npm run build` on branch
+phase-5/check from the code of commit afe4580 (built and run just before that commit; no source changed in
+between), its prompts answered and its HUD clicks made by the driver in the appendix. The driver ran inside
+`npm test`, alongside the other test files, so its timings carry that load [inference].
+Lightroom was NOT involved: the CLI talked to the simulated plugin of the engine tests
+(engine\tests\helpers\fake-plugin.ts and lightroom-sim.ts, "tonal" model, a made-up render) on OS-chosen ports
+with its own token file (LRC_AVG_COMMAND_PORT, LRC_AVG_EVENT_PORT, LRC_AVG_TOKEN_FILE).
+The "Claude Desktop" of Part 2 was the real engine `engine\dist\mcp\main.js` over stdio MCP: ONE process for
+every chat, kept open as Claude Desktop keeps its engine, so the check took the bridge back each time by that
+engine's real 60 s idle release (engine\src\mcp\main.ts IDLE_RELEASE_MS). The approval waits were the real 60 s
+(APPROVAL_WAIT_MS, decision D3). The simulated plugin stopped answering pings for 8 s at the Plug-in Manager
+visit, longer than the 6 s heartbeat limit outside a session; the check measures from its first unanswered ping
+to its first answered one, and each unanswered ping waits out its 1.5 s timeout; it printed 11.2 s (those
+timeouts and the test load make up the difference [inference]). The HUD's log lines ("hud: shown", "hud: closed"
+5 s after an end, each click's "sent" line) were written by the driver into a scratch plugin log, in Log.lua's
+format. LRC_AVG_LOG_DIR, LRC_AVG_P5_OUT, LRC_AVG_PLUGIN_LOG and LOCALAPPDATA pointed at a scratch folder, so
+neither Jim's plugin log, the repo's logs\, %TEMP%\LrC-AVG\P5 nor Claude Desktop's log was read or written
+(Claude Desktop's MCP log is therefore "NOT found" below). The previews went through %TEMP%\LrC-AVG\previews, the
+only folder the engine reads them from (PREVIEW_PATH_REFUSED otherwise). Numbers are the sim's, not Lightroom's.
+User folder written as %USERPROFILE%. Stdin is a pipe, so the answers are not echoed: a prompt and the next
+output share a line.
+
+== CLI output ==
+LrC-AVG Phase 5 check
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+Connected (544 ms, plugin 0.6.1).
+
+Part 1: scripted sessions with the HUD on one photo. You click in the HUD and the menu when asked.
+  In Lightroom's Filmstrip, click 20260907-_OZ80093.NEF (the original, not a virtual copy; stay in the Develop module). Then press Enter here. 
+Session A (Autonomous): the HUD opens by itself and follows the work. Watch it; questions come at the end.
+  Session A began and made pass 1 (the plugin logged the HUD opening: YES).
+
+  Now a visit to Plug-in Manager while the session is open:
+  1. In Lightroom: File > Plug-in Manager.
+  2. In the list on the left, click "LrC-AVG (Autonomous Vision Gateway)".
+  3. In the "Sessions" box on the right, set Mode to "Approve each pass", and "Max passes per photo" to 4 if it is not.
+  4. Count slowly to 20, then click Done.
+  (The check sends Claude's next pass while Lightroom does not answer, and watches the session ride it out.)
+  Lightroom was silent about 11.2 s; the pass sent meanwhile finished after 0.2 s; bridge drops: 0.
+  5. When you have clicked Done, press Enter here.   The settings page now reads Mode "Approve each pass", 4 passes.
+
+  Now click Abort in the HUD.
+  Read back after the HUD's Abort: 1 photo(s), nothing changed that should not have.
+  The HUD's Abort: the photo is back as before the session YES; from the click: 9 ms (AC-2: within 1000 ms YES).
+1. When session A began, did the HUD open by itself? Type y or n, then Enter: 2. Did its Stage line follow the work (for example "Pass 0", "Applying pass", "Acquiring preview", "Awaiting Claude")? Type y or n, then Enter: 3. After your Abort, did the HUD say "Aborted: the photo is back as it was before the session." and close itself a few seconds later? Type y or n, then Enter:   Session A: HUD tracked the stages YES (begin > acquiring_preview > metrics > applying > acquiring_preview > metrics > awaiting_claude > applying > acquiring_preview > metrics > awaiting_claude > applying > acquiring_preview > metrics > awaiting_claude > aborted); rode out the pause YES; AC-2 YES.
+
+Session B (Approve each pass): each of Claude's passes waits for your Approve in the HUD.
+  The engine read Mode "Approve each pass" from the settings page: YES.
+  Claude's pass 2 now waits for you. The HUD's Approve button reads "Approve pass 1".
+  Wait about 10 seconds, then click "Approve pass 1" in the HUD.
+  Read back after your Approve (session B): 1 photo(s), nothing changed that should not have.
+  Pass 2 waited 1.5 s for your Approve (by hud), then went ahead: YES.
+
+  Now do NOT click anything in the HUD for 60 seconds: the check shows that Claude's pass 3 is not written without your Approve.
+  Read back after the 60 s without a click (session B): 1 photo(s), nothing changed that should not have.
+  After 60 s without a click, Claude's pass 3 came back "AWAITING_APPROVAL" and nothing was written: YES.
+
+  Claude's pass 3 now waits again. This time click Abort in the HUD (not Approve).
+  Read back after your Abort while pass 3 waited (session B): 1 photo(s), nothing changed that should not have.
+  Your Abort while pass 3 waited (session B): the photo is back as before the session YES; from the click: 5 ms (AC-2: within 1000 ms YES).
+4. In session B, did the HUD's Approve button read "Approve pass 1", and did the check go on only after you clicked it? Type y or n, then Enter:   Session B: Approve blocks the next pass YES; nothing written without it YES; Abort while a pass waited YES.
+
+Session C (Variants): three virtual copies, your pick in the HUD, then Accept in the HUD.
+  Look at the three copies. The check selects each one in Lightroom in turn.
+  Lightroom now shows copy A (natural), "AVG landscape_golden_hour A". Look at it, then press Enter.   Lightroom now shows copy B (dramatic), "AVG landscape_golden_hour B". Look at it, then press Enter.   Lightroom now shows copy C (soft), "AVG landscape_golden_hour C". Look at it, then press Enter. 5. Did the three copies look visibly different from each other? Type y or n, then Enter:   In the HUD, "Pick A", "Pick B" and "Pick C" are now on. Click the one for the copy you liked best.
+  Read back after your Pick (session C): 4 photo(s), nothing changed that should not have.
+  You picked copy B.
+  The next pass went to copy B with no Approve needed (the pick approved it), and Claude heard of your pick: YES.
+  Now click Accept in the HUD.
+  Read back after your Accept (session C): 4 photo(s), nothing changed that should not have.
+  Accepted from the HUD: YES.
+
+The menu items: two short sessions, ended from Lightroom's menu.
+  Session D made pass 1. Now choose File > Plug-in Extras > LrC-AVG - Accept Session.
+  Read back after Accept Session (session D): 4 photo(s), nothing changed that should not have.
+  Read back after the check's put-back of session D: 4 photo(s), nothing changed that should not have.
+  The HUD should have closed by itself; if it is still open, close it with its X. Then choose File > Plug-in Extras > LrC-AVG - Show Vision Gateway HUD.
+  Session E made pass 1. Now choose File > Plug-in Extras > LrC-AVG - Abort Session.
+  Read back after Abort Session (session E): 4 photo(s), nothing changed that should not have.
+  Abort Session (session E): the photo is back as before the session YES; from the click: 11 ms.
+  Menu items: Accept Session YES; Show Vision Gateway HUD YES; Abort Session YES.
+
+  Remove the 3 virtual copies of 20260907-_OZ80093.NEF that session C made (their copy names start with "AVG"):
+  1. Press G for the Library module's Grid.
+  2. The copies sit next to 20260907-_OZ80093.NEF; each has a turned-page corner at the bottom left of its thumbnail.
+  3. Click the first copy, then Ctrl-click each of the others. Do not select the photo without the corner (the original).
+  4. Press Delete. Lightroom asks whether to remove the virtual copies: click Remove.
+     If the dialog offers "Delete from Disk", click Cancel: the original is selected too. Then start again at step 3.
+  5. Press D to go back to the Develop module, then press Enter here.   Copies removed: 3 of 3.
+  20260907-_OZ80093.NEF is as it was before Part 1: YES.
+  AC-4 on every pass of Part 1's sessions (A, B, C, D, E): YES
+
+Part 2: the chats in Claude Desktop. The check hands the Lightroom bridge to Claude Desktop for each chat, and takes it back after.
+
+The approve chat: 20260907-_OZ80093.NEF.
+  In Lightroom's Filmstrip, click 20260907-_OZ80093.NEF (the original, not a virtual copy; stay in the Develop module). Then press Enter here.   Read back after your click on 20260907-_OZ80093.NEF: 1 photo(s), nothing changed that should not have.
+  (bridge: stopped)
+  1. If Claude Desktop is not running, start it (Start menu > Claude).
+  2. Open a new chat, type this sentence and press Enter:
+       Tune the active photo for golden hour landscape.
+  3. If Claude Desktop asks whether Claude may use an lrc-avg tool, allow it (Always allow).
+  4. After Claude's pass 1, the HUD's button reads "Approve pass 1". Do NOT click it yet.
+     Wait until Claude's answer in the chat says pass 1 is waiting for your approval (about 1 minute).
+  5. Then click "Approve pass 1" in the HUD, and type in the chat: Approved, go on.
+  6. For each later pass, click the HUD's Approve button when it lights up.
+  7. Wait until Claude says it has finished and has ended the session.
+  8. Come back to this window and press Enter. 1. While pass 1 waited for your Approve, did Claude say so in the chat (rather than show an error)? Type y or n, then Enter: 2. After your Approve and "Approved, go on.", did Claude make the next pass? Type y or n, then Enter:   Chat log: Claude Desktop's MCP log NOT found; engine tool log found (9 calls).
+  Session: landscape_golden_hour on 20260907-_OZ80093.NEF, 3 pass(es), ended accept.
+  Waiting for Claude Desktop to give the Lightroom bridge back (a minute after Claude's last call; at most 150 s). Leave Claude Desktop open.
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+  Read back after the approve chat: 1 photo(s), nothing changed that should not have.
+  Read back after the check's put-back after the approve chat: 1 photo(s), nothing changed that should not have.
+  20260907-_OZ80093.NEF put back as before the chat: YES.
+  The approve chat: a waiting lr_step ran its full wait, Claude told you so with no error, and the session went on after your Approve.
+
+Before the six chats, set the settings page back to "Autonomous":
+  The settings page reads Mode "Approve each pass", 4 passes; this part needs Mode "Autonomous" and 4 passes.
+  1. In Lightroom: File > Plug-in Manager.
+  2. In the list on the left, click "LrC-AVG (Autonomous Vision Gateway)".
+  3. In the "Sessions" box on the right, set Mode to "Autonomous", and "Max passes per photo" to 4 if it is not.
+  4. Click Done.
+  5. Press Enter here.   The settings page now reads Mode "Autonomous", 4 passes.
+
+Chat 1 of 6: 20250413-_OZ81430.NEF.
+  In Lightroom's Filmstrip, click 20250413-_OZ81430.NEF (the original, not a virtual copy; stay in the Develop module). Then press Enter here.   Read back after your click on 20250413-_OZ81430.NEF: 1 photo(s), nothing changed that should not have.
+  (bridge: stopped)
+  1. If Claude Desktop is not running, start it (Start menu > Claude).
+  2. Open a new chat, type this sentence and press Enter:
+       Tune the active photo for golden hour landscape.
+  3. If Claude Desktop asks whether Claude may use an lrc-avg tool, allow it (Always allow).
+  4. Watch the HUD: it opens by itself when Claude begins, and its Stage line follows Claude's work.
+  5. Wait until Claude says it has finished and has ended the session.
+  6. Come back to this window and press Enter. 1. While Claude worked, did steps named like "AVG ... pass 1/4" appear in the History panel? Type y or n, then Enter: 2. Did the HUD open by itself when Claude began, and did its Stage line follow Claude's work? Type y or n, then Enter: 3. Are Claude's changes visible on the Develop sliders (for example Exposure or Highlights in the Basic panel)? Type y or n, then Enter: 4. Does the result look like a sensible golden-hour landscape edit to you? Type y or n, then Enter:   Chat log: Claude Desktop's MCP log NOT found; engine tool log found (5 calls).
+  Session: landscape_golden_hour on 20250413-_OZ81430.NEF, 2 pass(es), ended accept.
+  Waiting for Claude Desktop to give the Lightroom bridge back (a minute after Claude's last call; at most 150 s). Leave Claude Desktop open.
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+  Read back after chat 1 of 6: 1 photo(s), nothing changed that should not have.
+  Read back after the check's put-back after chat 1 of 6: 1 photo(s), nothing changed that should not have.
+  20250413-_OZ81430.NEF put back as before the chat: YES.
+  chat 1 of 6: PASSED.
+
+Chat 2 of 6: 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.
+  In Lightroom's Filmstrip, click 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng (the original, not a virtual copy; stay in the Develop module). Then press Enter here.   Read back after your click on 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng: 1 photo(s), nothing changed that should not have.
+  (bridge: stopped)
+  1. If Claude Desktop is not running, start it (Start menu > Claude).
+  2. Open a new chat, type this sentence and press Enter:
+       Tune the active photo for golden hour landscape.
+  3. If Claude Desktop asks whether Claude may use an lrc-avg tool, allow it (Always allow).
+  4. Watch the HUD: it opens by itself when Claude begins, and its Stage line follows Claude's work.
+  5. Wait until Claude says it has finished and has ended the session.
+  6. Come back to this window and press Enter. 1. While Claude worked, did steps named like "AVG ... pass 1/4" appear in the History panel? Type y or n, then Enter: 2. Did the HUD open by itself when Claude began, and did its Stage line follow Claude's work? Type y or n, then Enter: 3. Are Claude's changes visible on the Develop sliders (for example Exposure or Highlights in the Basic panel)? Type y or n, then Enter: 4. Does the result look like a sensible golden-hour landscape edit to you? Type y or n, then Enter:   Chat log: Claude Desktop's MCP log NOT found; engine tool log found (5 calls).
+  Session: landscape_golden_hour on 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng, 2 pass(es), ended accept.
+  Waiting for Claude Desktop to give the Lightroom bridge back (a minute after Claude's last call; at most 150 s). Leave Claude Desktop open.
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+  Read back after chat 2 of 6: 1 photo(s), nothing changed that should not have.
+  Read back after the check's put-back after chat 2 of 6: 1 photo(s), nothing changed that should not have.
+  20260110-_Z8A0138-DxO_DeepPRIME XD3.dng put back as before the chat: YES.
+  chat 2 of 6: PASSED.
+
+Chat 3 of 6: 20260110-_Z8A0173.NEF.
+  In Lightroom's Filmstrip, click 20260110-_Z8A0173.NEF (the original, not a virtual copy; stay in the Develop module). Then press Enter here.   Read back after your click on 20260110-_Z8A0173.NEF: 1 photo(s), nothing changed that should not have.
+  (bridge: stopped)
+  1. If Claude Desktop is not running, start it (Start menu > Claude).
+  2. Open a new chat, type this sentence and press Enter:
+       Tune the active photo for golden hour landscape.
+  3. If Claude Desktop asks whether Claude may use an lrc-avg tool, allow it (Always allow).
+  4. Watch the HUD: it opens by itself when Claude begins, and its Stage line follows Claude's work.
+  5. Wait until Claude says it has finished and has ended the session.
+  6. Come back to this window and press Enter. 1. While Claude worked, did steps named like "AVG ... pass 1/4" appear in the History panel? Type y or n, then Enter: 2. Did the HUD open by itself when Claude began, and did its Stage line follow Claude's work? Type y or n, then Enter: 3. Are Claude's changes visible on the Develop sliders (for example Exposure or Highlights in the Basic panel)? Type y or n, then Enter: 4. Does the result look like a sensible golden-hour landscape edit to you? Type y or n, then Enter:   Chat log: Claude Desktop's MCP log NOT found; engine tool log found (5 calls).
+  Session: landscape_golden_hour on 20260110-_Z8A0173.NEF, 2 pass(es), ended accept.
+  Waiting for Claude Desktop to give the Lightroom bridge back (a minute after Claude's last call; at most 150 s). Leave Claude Desktop open.
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+  Read back after chat 3 of 6: 1 photo(s), nothing changed that should not have.
+  Read back after the check's put-back after chat 3 of 6: 1 photo(s), nothing changed that should not have.
+  20260110-_Z8A0173.NEF put back as before the chat: YES.
+  chat 3 of 6: PASSED.
+
+Chat 4 of 6: 20260906-_OZ80005.NEF.
+  In Lightroom's Filmstrip, click 20260906-_OZ80005.NEF (the original, not a virtual copy; stay in the Develop module). Then press Enter here.   Read back after your click on 20260906-_OZ80005.NEF: 1 photo(s), nothing changed that should not have.
+  (bridge: stopped)
+  1. If Claude Desktop is not running, start it (Start menu > Claude).
+  2. Open a new chat, type this sentence and press Enter:
+       Tune the active photo for golden hour landscape.
+  3. If Claude Desktop asks whether Claude may use an lrc-avg tool, allow it (Always allow).
+  4. Watch the HUD: it opens by itself when Claude begins, and its Stage line follows Claude's work.
+  5. Wait until Claude says it has finished and has ended the session.
+  6. Come back to this window and press Enter. 1. While Claude worked, did steps named like "AVG ... pass 1/4" appear in the History panel? Type y or n, then Enter: 2. Did the HUD open by itself when Claude began, and did its Stage line follow Claude's work? Type y or n, then Enter: 3. Are Claude's changes visible on the Develop sliders (for example Exposure or Highlights in the Basic panel)? Type y or n, then Enter: 4. Does the result look like a sensible golden-hour landscape edit to you? Type y or n, then Enter:   Chat log: Claude Desktop's MCP log NOT found; engine tool log found (5 calls).
+  Session: landscape_golden_hour on 20260906-_OZ80005.NEF, 2 pass(es), ended accept.
+  Waiting for Claude Desktop to give the Lightroom bridge back (a minute after Claude's last call; at most 150 s). Leave Claude Desktop open.
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+  Read back after chat 4 of 6: 1 photo(s), nothing changed that should not have.
+  Read back after the check's put-back after chat 4 of 6: 1 photo(s), nothing changed that should not have.
+  20260906-_OZ80005.NEF put back as before the chat: YES.
+  chat 4 of 6: PASSED.
+
+Chat 5 of 6: 20260907-_OZ80093.NEF.
+  In Lightroom's Filmstrip, click 20260907-_OZ80093.NEF (the original, not a virtual copy; stay in the Develop module). Then press Enter here.   Read back after your click on 20260907-_OZ80093.NEF: 1 photo(s), nothing changed that should not have.
+  (bridge: stopped)
+  1. If Claude Desktop is not running, start it (Start menu > Claude).
+  2. Open a new chat, type this sentence and press Enter:
+       Tune the active photo for golden hour landscape.
+  3. If Claude Desktop asks whether Claude may use an lrc-avg tool, allow it (Always allow).
+  4. Watch the HUD: it opens by itself when Claude begins, and its Stage line follows Claude's work.
+  5. Wait until Claude says it has finished and has ended the session.
+  6. Come back to this window and press Enter. 1. While Claude worked, did steps named like "AVG ... pass 1/4" appear in the History panel? Type y or n, then Enter: 2. Did the HUD open by itself when Claude began, and did its Stage line follow Claude's work? Type y or n, then Enter: 3. Are Claude's changes visible on the Develop sliders (for example Exposure or Highlights in the Basic panel)? Type y or n, then Enter: 4. Does the result look like a sensible golden-hour landscape edit to you? Type y or n, then Enter:   Chat log: Claude Desktop's MCP log NOT found; engine tool log found (5 calls).
+  Session: landscape_golden_hour on 20260907-_OZ80093.NEF, 2 pass(es), ended accept.
+  Waiting for Claude Desktop to give the Lightroom bridge back (a minute after Claude's last call; at most 150 s). Leave Claude Desktop open.
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+  Read back after chat 5 of 6: 1 photo(s), nothing changed that should not have.
+  Read back after the check's put-back after chat 5 of 6: 1 photo(s), nothing changed that should not have.
+  20260907-_OZ80093.NEF put back as before the chat: YES.
+  chat 5 of 6: PASSED.
+
+Chat 6 of 6: 20260907-_OZ80099.NEF.
+  In Lightroom's Filmstrip, click 20260907-_OZ80099.NEF (the original, not a virtual copy; stay in the Develop module). Then press Enter here.   Read back after your click on 20260907-_OZ80099.NEF: 1 photo(s), nothing changed that should not have.
+  (bridge: stopped)
+  1. If Claude Desktop is not running, start it (Start menu > Claude).
+  2. Open a new chat, type this sentence and press Enter:
+       Tune the active photo for golden hour landscape.
+  3. If Claude Desktop asks whether Claude may use an lrc-avg tool, allow it (Always allow).
+  4. Watch the HUD: it opens by itself when Claude begins, and its Stage line follows Claude's work.
+  5. Wait until Claude says it has finished and has ended the session.
+  6. Come back to this window and press Enter. 1. While Claude worked, did steps named like "AVG ... pass 1/4" appear in the History panel? Type y or n, then Enter: 2. Did the HUD open by itself when Claude began, and did its Stage line follow Claude's work? Type y or n, then Enter: 3. Are Claude's changes visible on the Develop sliders (for example Exposure or Highlights in the Basic panel)? Type y or n, then Enter: 4. Does the result look like a sensible golden-hour landscape edit to you? Type y or n, then Enter:   Chat log: Claude Desktop's MCP log NOT found; engine tool log found (5 calls).
+  Session: landscape_golden_hour on 20260907-_OZ80099.NEF, 2 pass(es), ended accept.
+  Waiting for Claude Desktop to give the Lightroom bridge back (a minute after Claude's last call; at most 150 s). Leave Claude Desktop open.
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+  Read back after chat 6 of 6: 1 photo(s), nothing changed that should not have.
+  Read back after the check's put-back after chat 6 of 6: 1 photo(s), nothing changed that should not have.
+  20260907-_OZ80099.NEF put back as before the chat: YES.
+  chat 6 of 6: PASSED.
+  (bridge: stopped)
+
+Phase 5 acceptance: WORKED
+  Settings page reaches the engine: YES; session rides out Plug-in Manager: YES; HUD tracks stages (Part 1 and every chat): YES
+  AC-2 via the HUD's Abort: YES; approve_each_pass blocks until Approve: YES; AC-3 with the HUD's Pick: YES; menu items: YES
+  AC-1, six golden-hour chats with the HUD: 6 of 6; AC-4 on every pass of every session: YES; no photo changed unexpectedly: YES; photos put back: YES
+Also recorded: the approve chat went as planned: YES; its longest waiting lr_step took 60.0 s in the engine.
+Results saved automatically: %USERPROFILE%\AppData\Local\Temp\lrc-avg-p5dry-3epn46\out\p5_check_2026-10-01T02-57-05-742Z.json
+Nothing to copy. Tell Claude Code "done".
+
+[driver] approve chat: first wait answered AWAITING_APPROVAL after 60008 ms at the MCP client (timeout 180 s); then 2/4, 3/4; end accept
+[driver] golden chat on 20250413-_OZ81430.NEF: true, end accept
+[driver] golden chat on 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng: true, end accept
+[driver] golden chat on 20260110-_Z8A0173.NEF: true, end accept
+[driver] golden chat on 20260906-_OZ80005.NEF: true, end accept
+[driver] golden chat on 20260907-_OZ80093.NEF: true, end accept
+[driver] golden chat on 20260907-_OZ80099.NEF: true, end accept
+[driver] exit code 0; History steps 40; exports 52; copies left 0; scratch %USERPROFILE%\AppData\Local\Temp\lrc-avg-p5dry-3epn46
+
+== Appendix: the driver (a scratch vitest file, engine\tests\zz-scratch-p5-dryrun.test.ts, run by `npm test` in engine\ (2026-09-30 19:57-20:06 local; 57 files, 775 passed, 1 skipped), then deleted) ==
+// SCRATCH (not committed): dry run of the built `phase5-check-cli.js` against the simulated plugin on
+// OS-chosen ports with its own token file, so Jim's Lightroom is not touched. The real
+// `engine\dist\mcp\main.js` plays Claude Desktop in Part 2: ONE engine process for every chat, kept
+// open as Claude Desktop keeps its engine, so the check takes the bridge back by the engine's real
+// 60 s idle release. LRC_AVG_LOG_DIR, LRC_AVG_P5_OUT, LRC_AVG_PLUGIN_LOG and LOCALAPPDATA point at a
+// scratch folder. The approval waits are the real 60 s (decision D3). "Jim" acts on the CLI's words
+// as tests\helpers\phase5-sim-jim.ts does; the Plug-in Manager pause lasts 8 s here, longer than the
+// heartbeat's 6 s outside a session.
+
+import { spawn } from "node:child_process";
+import { appendFileSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { expect, it } from "vitest";
+import { defaultPreviewDir } from "../src/preview/index.js";
+import { FakePlugin, type FakeReply } from "./helpers/fake-plugin.js";
+import { hudEvent } from "./helpers/lightroom-sim-hud.js";
+import { LightroomSim } from "./helpers/lightroom-sim.js";
+
+const repo = fileURLToPath(new URL("../../", import.meta.url));
+const MENU = { hud: "LrC-AVG - Show Vision Gateway HUD", abort: "LrC-AVG - Abort Session", accept: "LrC-AVG - Accept Session" };
+
+it("dry run of npm run phase5:check", { timeout: 1800000 }, async () => {
+  const scratch = mkdtempSync(path.join(os.tmpdir(), "lrc-avg-p5dry-"));
+  for (const d of ["logs", "out", "localappdata"]) mkdirSync(path.join(scratch, d));
+  const bridgeLog = path.join(scratch, "bridge.log");
+  writeFileSync(bridgeLog, "");
+  const plugin = await FakePlugin.start();
+  plugin.token = "dry-token-p5";
+  const tokenFile = path.join(scratch, "dry_token");
+  writeFileSync(tokenFile, plugin.token);
+  const lr = new LightroomSim(defaultPreviewDir());
+  lr.renderModel = "tonal";
+  lr.filename = "20260907-_OZ80093.NEF";
+  lr.install(plugin);
+  const log = (text: string): void => {
+    const d = new Date();
+    const p = (n: number, w = 2) => String(n).padStart(w, "0");
+    appendFileSync(bridgeLog, `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}.${p(d.getMilliseconds(), 3)} INFO  ${text}\n`);
+  };
+  const hudUpdate = plugin.handlers.get("hud_update") as (p: Record<string, unknown>, id: string) => Promise<FakeReply>;
+  plugin.handlers.set("hud_update", async (p, id) => {
+    const r = await hudUpdate(p, id);
+    if (typeof r === "object" && r.ok) {
+      const res = r.payload as { applied?: boolean; opened?: boolean };
+      if (res.opened) log("hud: shown");
+      if (res.applied && ["accepted", "aborted", "ended"].includes(String(p["stage"]))) {
+        setTimeout(() => {
+          if (!lr.hud.shown) return;
+          lr.hud.shown = false;
+          log("hud: closed");
+        }, 5000);
+      }
+    }
+    return r;
+  });
+  const click = (name: "hud_abort" | "hud_accept" | "hud_pick" | "hud_approve_pass", extra: Record<string, unknown> = {}, source = "hud"): void => {
+    const last = lr.hud.last();
+    if (!last) return;
+    const id = `dry-${Math.random().toString(36).slice(2, 10)}`;
+    log(`hud: ${name} ${id} from the ${source}: sent`);
+    hudEvent(plugin, name, { session_id: last.session_id, seq_seen: last.seq, source, ...extra }, id);
+  };
+  const env = {
+    ...process.env,
+    LRC_AVG_COMMAND_PORT: String(plugin.commandPort),
+    LRC_AVG_EVENT_PORT: String(plugin.eventPort),
+    LRC_AVG_TOKEN_FILE: tokenFile,
+    LRC_AVG_LOG_DIR: path.join(scratch, "logs"),
+    LRC_AVG_P5_OUT: path.join(scratch, "out"),
+    LRC_AVG_PLUGIN_LOG: bridgeLog,
+    LOCALAPPDATA: path.join(scratch, "localappdata"),
+  };
+
+  // "Claude Desktop": one engine for every chat.
+  let desk: Client | null = null;
+  const notes: string[] = [];
+  const call = async (name: string, args: Record<string, unknown>): Promise<Record<string, unknown>> => {
+    if (!desk) {
+      desk = new Client({ name: "dry-desktop", version: "0" });
+      await desk.connect(new StdioClientTransport({ command: process.execPath, args: [path.join(repo, "engine/dist/mcp/main.js")], env: env as Record<string, string>, stderr: "pipe" }));
+    }
+    const r = (await desk.callTool({ name, arguments: args }, undefined, { timeout: 180000 })) as { isError?: boolean; content: Array<{ type: string; text?: string }> };
+    return JSON.parse(r.content.find((x) => x.type === "text")?.text ?? "{}") as Record<string, unknown>;
+  };
+  const goldenChat = async (): Promise<string> => {
+    const begin = await call("lr_begin_session", { intent_id: "landscape_golden_hour", return_image: "none" });
+    const sid = String(begin["session_id"]);
+    for (let i = 0; i < 2; i++) await call("lr_step", { session_id: sid, settings: { vibrance: 3 }, rationale: "dry run", return_image: "none" });
+    const end = await call("lr_end_session", { session_id: sid, outcome: "accept" });
+    return `golden chat on ${lr.filename}: ${String(begin["ok"])}, end ${String(end["outcome"])}`;
+  };
+  const approveChat = async (): Promise<string> => {
+    const begin = await call("lr_begin_session", { intent_id: "landscape_golden_hour", return_image: "none" });
+    const sid = String(begin["session_id"]);
+    const step = () => call("lr_step", { session_id: sid, settings: { vibrance: 3 }, rationale: "dry run", return_image: "none" });
+    await step();
+    const t0 = Date.now();
+    const waited = await step(); // pass 2 waits the full 60 s in vain
+    const heldMs = Date.now() - t0;
+    click("hud_approve_pass", { pass: 1 });
+    await new Promise((r) => setTimeout(r, 500));
+    const p2 = await step();
+    setTimeout(() => click("hud_approve_pass", { pass: 2 }), 1500);
+    const p3 = await step();
+    const end = await call("lr_end_session", { session_id: sid, outcome: "accept" });
+    const code = (waited["error"] as { code?: unknown } | undefined)?.code; // server.ts: an error is {ok: false, error: {code, …}}
+    return `approve chat: first wait answered ${String(code)} after ${heldMs} ms at the MCP client (timeout 180 s); then ${String(p2["pass"])}, ${String(p3["pass"])}; end ${String(end["outcome"])}`;
+  };
+
+  const cli = spawn(process.execPath, [path.join(repo, "engine/dist/devtools/phase5-check-cli.js")], { env, stdio: ["pipe", "pipe", "pipe"] });
+  let out = "";
+  let tail = "";
+  let chat = "";
+  cli.stderr.on("data", (d) => (out += String(d)));
+  const enter = (s = ""): void => void cli.stdin.write(`${s}\n`);
+  const later = (ms: number, fn: () => void): void => void setTimeout(fn, ms);
+  const says = (line: string): void => {
+    const c = /^(The approve chat|Chat \d of 6)/.exec(line);
+    if (c) chat = c[1] as string;
+    if (/Now a visit to Plug-in Manager/.test(line)) {
+      plugin.answerPings = false;
+      later(8000, () => (plugin.answerPings = true));
+    }
+    const mode = /set Mode to "(Approve each pass|Autonomous)"/.exec(line);
+    if (mode && lr.prefs) lr.prefs["mode"] = mode[1] === "Autonomous" ? "autonomous" : "approve_each_pass";
+    if (/^ {2}Now click Abort in the HUD\./.test(line)) later(500, () => click("hud_abort"));
+    if (/then click "Approve pass 1" in the HUD/.test(line)) later(1500, () => click("hud_approve_pass", { pass: 1 }));
+    if (/This time click Abort in the HUD/.test(line)) later(1000, () => click("hud_abort"));
+    if (/"Pick A", "Pick B" and "Pick C" are now on/.test(line)) later(500, () => click("hud_pick", { variant: "B" }));
+    if (/^ {2}Now click Accept in the HUD\./.test(line)) later(500, () => click("hud_accept"));
+    if (line.includes(MENU.accept)) later(500, () => click("hud_accept", {}, "menu"));
+    if (line.includes(MENU.abort)) later(500, () => click("hud_abort", {}, "menu"));
+    if (line.includes(MENU.hud)) later(500, () => ((lr.hud.shown = true), log("hud: shown")));
+  };
+  let pending = Promise.resolve();
+  const prompt = async (text: string): Promise<boolean> => {
+    const photo = /[Cc]lick (.+?) \(the original/.exec(text);
+    if (photo) {
+      lr.selected = lr.uuid;
+      lr.filename = photo[1] as string;
+      enter();
+    } else if (/once more\? Type y or n/.test(text)) enter("n");
+    else if (/Type y or n, then Enter:\s*$/.test(text)) enter("y");
+    else if (/Press D to go back.*Enter here\.\s*$|Still in the catalog/.test(text)) {
+      lr.copies.clear();
+      enter();
+    } else if (/Come back to this window and press Enter\.\s*$/.test(text)) {
+      notes.push(await (chat === "The approve chat" ? approveChat() : goldenChat()));
+      enter();
+    } else if (/[Pp]ress Enter[^\n]*\.\s*$/.test(text)) enter(); // every other prompt: "Look at it, then press Enter.", "… press Enter here."
+    else return false;
+    return true;
+  };
+  cli.stdout.on("data", (d) => {
+    const text = String(d);
+    out += text;
+    pending = pending.then(async () => {
+      const lines = (tail + text).split("\n");
+      tail = lines.pop() ?? "";
+      for (const l of lines) says(l);
+      if (tail && (await prompt(tail))) tail = "";
+    });
+  });
+  const code = await new Promise((r) => cli.on("close", r));
+  await (desk as Client | null)?.close();
+  await plugin.close();
+  const transcript = out.split(os.homedir()).join("%USERPROFILE%");
+  writeFileSync(path.join(repo, "logs", "scratch-p5-dryrun-output.txt"), `${transcript}\n[driver] ${notes.join("\n[driver] ")}\n[driver] exit code ${String(code)}; History steps ${lr.history.length}; exports ${lr.exports}; copies left ${lr.copies.size}; scratch ${scratch.split(os.homedir()).join("%USERPROFILE%")}\n`);
+  console.log(`[driver] exit ${String(code)}`);
+  expect(code).toBe(0);
+});

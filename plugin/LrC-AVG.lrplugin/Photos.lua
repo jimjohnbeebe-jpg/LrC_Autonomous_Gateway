@@ -29,6 +29,9 @@ end
 -- copyName is nil [handle: docs\reports\phase4\S7\s7_run_2026-09-27T12-53-05.json "master"].
 -- fileName (plugin 0.4.0) is the key Develop.lua getContext reads as `filename`, read without error
 -- in Phase 1 [handle: docs\reports\phase1\PHASE1.md "Numbers", metadata keys refused 0 of 13].
+-- rating and capture_time (plugin 0.8.0, Library.lua's listings): getRawMetadata("rating") is "either
+-- nil or number of stars", nil for none; getFormattedMetadata("dateTimeOriginal") is "the date and time
+-- of capture (for example, "09/15/2005 17:32:50")" [handle: https://lrc.mcor.dev/modules/LrPhoto.html].
 function Photos.describe(catalog, photo)
     local d = { local_id = photo.localIdentifier }
     catalog:withReadAccessDo(function()
@@ -38,6 +41,8 @@ function Photos.describe(catalog, photo)
         if type(master) ~= "string" and master ~= nil then d.master_local_id = master.localIdentifier end
         d.copy_name = read(photo, photo.getFormattedMetadata, "copyName")
         d.filename = read(photo, photo.getFormattedMetadata, "fileName")
+        d.rating = read(photo, photo.getRawMetadata, "rating")
+        d.capture_time = read(photo, photo.getFormattedMetadata, "dateTimeOriginal")
     end)
     return d
 end

@@ -1,0 +1,509 @@
+LrC-AVG plugin 0.8.0, Library.lua smoke test (PHASE6_PROTOTYPE_PLAN row 2, phase-6/catalog-tools)
+
+Run 2026-10-02T12:21:23.714Z by Claude Code, Node v24.11.1, fengari 0.1.4 (Lua 5.3 in JavaScript), against a fake
+Lightroom SDK (fake-lr.lua, below). Not Lightroom: the fake checks the plugin's own logic and rule 03 (catalog queries
+outside any gate, metadata reads inside one, writes inside a write gate, no nested gate, no yield inside a gate).
+Whether Lightroom behaves as the fake does is for the Lightroom check (docs\reports\phase6\catalog-tools-check\).
+
+Files tested (sha256):
+  plugin\LrC-AVG.lrplugin\Library.lua  817fedde81251b6179b0228e1628316a5cb7229ee08fdfab802c8c4a856c7393
+  plugin\LrC-AVG.lrplugin\Photos.lua   fbf2a5182e7f3e079e2c0b174227591531af4afa4946251b9bef48879834b7ff
+
+== 1. The cases: node run.mts <repo>\plugin\LrC-AVG.lrplugin
+
+== search_photos
+PASS keywords all bird -> U2,U3  -- {capture_time=2026-09-07 12:00:00, filename=20260907-_OZ80099.NEF, is_virtual_copy=false, local_id=2, master_local_id=2, rating=3, uuid=U2}
+PASS an unrated photo has no rating field; a rated one has it, with capture_time
+PASS no criteria, no collection: getAllPhotos, paged from offset 1  -- getAllPhotos
+PASS yields between photos: 3 for 4  -- 3
+PASS rating 5 within smart collection 502 -> U3,U4
+PASS filename in collection 501 -> intersection U3
+PASS collection alone: its photos, no findPhotos or getAllPhotos  -- getCollectionByLocalIdentifier
+PASS captureTime in 09-08..09-09 -> U3,U4
+PASS a collection set's id is refused  -- {code=unknown_collection, message=id 601 is a LrCollectionSet, not a collection, recoverable=false}
+PASS an unknown id is refused  -- {code=unknown_collection, message=no collection has id 999, recoverable=false}
+PASS limit 501 refused
+PASS offset 0.5 refused
+PASS a criterion without criteria/operation refused
+== list_collections
+PASS two collections, top level and nested  -- {1={local_id=501, name=Birds, photo_count=2, smart=false}, 2={local_id=502, name=Five stars, photo_count=2, set_path=Best / 2026, smart=true}}
+PASS Birds: top level, not smart, 2 photos
+PASS Five stars: set path 'Best / 2026', smart, 2 photos
+== set_rating
+PASS unrated U1 -> 3: before 0, after 3, one gate 'AVG set rating'  -- {after=3, before=0, filename=20260907-_OZ80093.NEF, uuid=U1}
+PASS already 3: not written
+PASS 0 clears it (written as nil, the fake rejects 0)  -- {after=0, before=3, filename=20260907-_OZ80093.NEF, uuid=U1}
+PASS rating 6 refused
+PASS rating 2.5 refused
+PASS unknown uuid refused
+== set_keywords
+PASS U2: bird -> heron, pond; 'heron' reused, 'pond' created  -- {after={1=heron, 2=pond}, before={1=bird}, filename=20260907-_OZ80099.NEF, uuid=U2}
+PASS nothing to change: not written
+PASS no names refused
+PASS an empty name refused
+PASS remove alone (add absent): U3 keeps bird  -- {after={1=bird}, before={1=bird, 2=heron}, filename=20260908-_OZ80100.NEF, uuid=U3}
+== rules
+PASS no catalog query inside a gate, no read outside one, no write outside a write gate, no nested gate, no yield in a gate  -- {}
+ALL PASS
+
+== 2. Library.lua mutants (one change each, cases run again): node mutants.mts <repo>\plugin\LrC-AVG.lrplugin
+
+M1 findPhotos inside a read gate: CAUGHT
+    FAIL no catalog query inside a gate, no read outside one, no write outside a write gate, no nested gate, no yield in a gate  -- {1=findPhotos inside a read gate, 2=findPhotos inside a read gate, 3=findPhotos inside a read gate, 4=findPhotos inside a read gate}
+M2 rating 0 written as 0: CAUGHT
+    LUA ERROR <scratch>/fake-lr.lua:51: fake: rating 0 rejected (use nil)
+M3 no yield between photos: CAUGHT
+    FAIL yields between photos: 3 for 4  -- 0
+M4 collection filter ignores the criteria: CAUGHT
+    FAIL filename in collection 501 -> intersection U3
+M5 createKeyword without returnExisting: CAUGHT
+    LUA ERROR <scratch>/fake-lr.lua:136: fake: keyword exists
+M6 rating written even when unchanged: CAUGHT
+    FAIL already 3: not written
+6 of 6 mutants caught
+
+== 3. Engine mutants (one change each, tests\catalog-tools.test.ts run again, file restored): node engine-mutants.mts <repo>
+
+E1 writes not held to between sessions: CAUGHT
+    FAIL  tests/catalog-tools.test.ts > lr_set_rating > is refused while a session is open, and sends nothing
+E2 an unanswered write is skipped, not a stop: CAUGHT
+    FAIL  tests/catalog-tools.test.ts > lr_set_rating > stops at a photo with no answer, names it maybe_written, and sends nothing after it
+    FAIL  tests/catalog-tools.test.ts > lr_set_rating > says a photo whose command was never sent was not written
+E3 the read-back is not checked: CAUGHT
+    FAIL  tests/catalog-tools.test.ts > lr_set_rating > lists an unknown photo and one whose read-back differs in failed, and still rates the rest
+    FAIL  tests/catalog-tools.test.ts > lr_set_keywords > lists a photo whose read-back still has a removed keyword in failed
+E4 the descriptor is not sent: CAUGHT
+    FAIL  tests/catalog-tools.test.ts > lr_search_photos > sends the descriptor and lists the matches with uuid, rating and capture time
+    FAIL  tests/catalog-tools.test.ts > lr_search_photos > limits to a collection, and refuses an unknown one
+    FAIL  tests/catalog-tools.test.ts > lr_set_rating > is refused while a session is open, and sends nothing
+4 of 4 mutants caught
+
+== Appendix: fake-lr.lua (verbatim)
+
+-- A fake Lightroom SDK for the catalog commands (Library.lua, Photos.lua) under fengari. Not
+-- Lightroom: it checks the rules the plugin must follow (rule 03) and records what was called.
+--   * a catalog query (findPhotos, getAllPhotos, getCollectionByLocalIdentifier, findPhotoByUuid)
+--     inside a read or write gate is a violation;
+--   * a metadata read outside a gate, or a write (setRawMetadata, addKeyword, removeKeyword)
+--     outside a write gate, is a violation; gates may not nest;
+--   * setRawMetadata("rating", 0) raises, as Automaat says the SDK does (upstream claim).
+-- Its findPhotos matches filename "any", rating "==", keywords "all", captureTime ">" "<" "in".
+
+local F = { violations = {}, gates = {}, yields = 0, created = 0, calls = {} }
+local gate = nil -- "read" or "write"
+
+local function violation(what) F.violations[#F.violations + 1] = what end
+local function query(name) F.calls[#F.calls + 1] = name; if gate then violation(name .. " inside a " .. gate .. " gate") end end
+local function needGate(what) if not gate then violation(what .. " outside a gate") end end
+local function needWrite(what) if gate ~= "write" then violation(what .. " outside a write gate") end end
+
+local keywords = {}
+local function keyword(name)
+    if not keywords[name] then
+        keywords[name] = { name = name, getName = function(self) needGate("getName"); return self.name end }
+    end
+    return keywords[name]
+end
+
+local Photo = {}
+Photo.__index = Photo
+function Photo:getRawMetadata(key)
+    needGate("getRawMetadata " .. key)
+    if key == "uuid" then return self.uuid end
+    if key == "isVirtualCopy" then return false end
+    if key == "masterPhoto" then return self end
+    if key == "rating" then return self.rating end
+    if key == "keywords" then
+        local list = {}
+        for i, k in ipairs(self.keywords) do list[i] = k end
+        return list
+    end
+    error("fake: unknown raw key " .. key)
+end
+function Photo:getFormattedMetadata(key)
+    needGate("getFormattedMetadata " .. key)
+    if key == "fileName" then return self.fileName end
+    if key == "copyName" then return nil end
+    if key == "dateTimeOriginal" then return self.day .. " 12:00:00" end
+    error("fake: unknown formatted key " .. key)
+end
+function Photo:setRawMetadata(key, value)
+    needWrite("setRawMetadata")
+    if key ~= "rating" then error("fake: only rating") end
+    if value == 0 then error("fake: rating 0 rejected (use nil)") end
+    self.rating = value
+end
+function Photo:addKeyword(k)
+    needWrite("addKeyword")
+    for _, have in ipairs(self.keywords) do if have == k then return end end
+    self.keywords[#self.keywords + 1] = k
+end
+function Photo:removeKeyword(k)
+    needWrite("removeKeyword")
+    for i, have in ipairs(self.keywords) do if have == k then table.remove(self.keywords, i) return end end
+end
+
+local function photo(id, uuid, fileName, rating, kws, day)
+    local p = setmetatable({ localIdentifier = id, uuid = uuid, fileName = fileName, rating = rating, keywords = {}, day = day }, Photo)
+    for _, n in ipairs(kws) do p.keywords[#p.keywords + 1] = keyword(n) end
+    return p
+end
+
+F.photos = {
+    photo(1, "U1", "20260907-_OZ80093.NEF", nil, {}, "2026-09-07"),
+    photo(2, "U2", "20260907-_OZ80099.NEF", 3, { "bird" }, "2026-09-07"),
+    photo(3, "U3", "20260908-_OZ80100.NEF", 5, { "bird", "heron" }, "2026-09-08"),
+    photo(4, "U4", "20260909-_DSC0001.NEF", 5, {}, "2026-09-09"),
+}
+
+local function collection(id, name, smart, members)
+    return { localIdentifier = id, smart = smart, members = members,
+        type = function() needGate("type"); return smart and "LrSmartCollection" or "LrCollection" end,
+        getName = function() needGate("getName"); return name end,
+        getPhotos = function() needGate("getPhotos"); return members end,
+        isSmartCollection = function() needGate("isSmartCollection"); return smart end }
+end
+local function set(id, name, collections, sets)
+    return { localIdentifier = id,
+        type = function() needGate("type"); return "LrCollectionSet" end,
+        getName = function() needGate("getName"); return name end,
+        getChildCollections = function() needGate("getChildCollections"); return collections end,
+        getChildCollectionSets = function() needGate("getChildCollectionSets"); return sets end }
+end
+local P = F.photos
+local birds = collection(501, "Birds", false, { P[2], P[3] })
+local fives = collection(502, "Five stars", true, { P[3], P[4] })
+local y2026 = set(602, "2026", { fives }, {})
+local best = set(601, "Best", {}, { y2026 })
+local byId = { [501] = birds, [502] = fives, [601] = best, [602] = y2026 }
+
+local function matches(p, c)
+    local v = c.value
+    if c.criteria == "filename" and c.operation == "any" then return p.fileName:find(v, 1, true) ~= nil end
+    if c.criteria == "rating" and c.operation == "==" then return (p.rating or 0) == v end
+    if c.criteria == "keywords" and c.operation == "all" then
+        for _, k in ipairs(p.keywords) do if k.name == v then return true end end
+        return false
+    end
+    if c.criteria == "captureTime" and c.operation == ">" then return p.day > v end
+    if c.criteria == "captureTime" and c.operation == "<" then return p.day < v end
+    if c.criteria == "captureTime" and c.operation == "in" then return p.day >= v and p.day <= c.value2 end
+    error("fake: unknown criterion " .. tostring(c.criteria) .. " " .. tostring(c.operation))
+end
+
+F.catalog = {
+    findPhotos = function(self, args)
+        query("findPhotos")
+        local desc = args.searchDesc
+        if desc.combine ~= "intersect" then violation("findPhotos without combine = intersect") end
+        local out = {}
+        for _, p in ipairs(P) do
+            local all = true
+            for _, c in ipairs(desc) do if not matches(p, c) then all = false end end
+            if all then out[#out + 1] = p end
+        end
+        return out
+    end,
+    getAllPhotos = function() query("getAllPhotos"); return P end,
+    getCollectionByLocalIdentifier = function(self, id) query("getCollectionByLocalIdentifier"); return byId[id] end,
+    findPhotoByUuid = function(self, uuid)
+        query("findPhotoByUuid")
+        for _, p in ipairs(P) do if p.uuid == uuid then return p end end
+        return nil
+    end,
+    getChildCollections = function() needGate("getChildCollections"); return { birds } end,
+    getChildCollectionSets = function() needGate("getChildCollectionSets"); return { best } end,
+    createKeyword = function(self, name, synonyms, includeOnExport, parent, returnExisting)
+        needWrite("createKeyword")
+        if keywords[name] and returnExisting ~= true then error("fake: keyword exists") end
+        if not keywords[name] then F.created = F.created + 1 end
+        return keyword(name)
+    end,
+    withReadAccessDo = function(self, fn)
+        if gate then violation("read gate inside a " .. gate .. " gate") end
+        gate = "read"; fn(); gate = nil
+    end,
+    withWriteAccessDo = function(self, name, fn)
+        if gate then violation("write gate inside a " .. gate .. " gate") end
+        F.gates[#F.gates + 1] = name
+        gate = "write"; fn(); gate = nil
+    end,
+}
+
+local modules = {
+    LrApplication = { activeCatalog = function() return F.catalog end },
+    LrTasks = { pcall = pcall, yield = function()
+        if gate then violation("yield inside a " .. gate .. " gate") end
+        F.yields = F.yields + 1
+    end },
+}
+function import(name) return modules[name] or error("fake: no module " .. name) end
+
+return F
+
+== Appendix: cases.lua (verbatim)
+
+-- Smoke cases for Library.lua (plugin 0.8.0) against fake-lr.lua. Each check prints PASS or FAIL.
+local F = require 'fake-lr'
+local Library = require 'Library'
+
+local failures = 0
+local function check(name, ok, detail)
+    if not ok then failures = failures + 1 end
+    print((ok and "PASS " or "FAIL ") .. name .. (detail and ("  -- " .. detail) or ""))
+end
+local function show(v)
+    if type(v) ~= "table" then return tostring(v) end
+    local keys = {}
+    for k in pairs(v) do keys[#keys + 1] = k end
+    table.sort(keys, function(a, b) return tostring(a) < tostring(b) end)
+    local parts = {}
+    for _, k in ipairs(keys) do parts[#parts + 1] = tostring(k) .. "=" .. show(v[k]) end
+    return "{" .. table.concat(parts, ", ") .. "}"
+end
+local function uuids(list)
+    local out = {}
+    for _, p in ipairs(list) do out[#out + 1] = p.uuid end
+    return table.concat(out, ",")
+end
+local function since(n) local c = {} for i = n + 1, #F.calls do c[#c + 1] = F.calls[i] end return table.concat(c, ",") end
+
+print("== search_photos")
+local r = Library.searchPhotos({ criteria = { { criteria = "keywords", operation = "all", value = "bird" } }, offset = 0, limit = 100 })
+check("keywords all bird -> U2,U3", r and r.count == 2 and uuids(r.photos) == "U2,U3", show(r and r.photos[1]))
+check("an unrated photo has no rating field; a rated one has it, with capture_time",
+    Library.searchPhotos({ criteria = {}, collection_id = nil, offset = 0, limit = 1 }).photos[1].rating == nil and r.photos[1].rating == 3
+    and r.photos[1].capture_time == "2026-09-07 12:00:00")
+local n = #F.calls
+r = Library.searchPhotos({ criteria = {}, offset = 1, limit = 2 })
+check("no criteria, no collection: getAllPhotos, paged from offset 1", r.count == 4 and uuids(r.photos) == "U2,U3" and since(n) == "getAllPhotos", since(n))
+local y = F.yields
+r = Library.searchPhotos({ criteria = {}, offset = 0, limit = 4 })
+check("yields between photos: 3 for 4", F.yields - y == 3, tostring(F.yields - y))
+r = Library.searchPhotos({ criteria = { { criteria = "rating", operation = "==", value = 5 } }, collection_id = 502, offset = 0, limit = 100 })
+check("rating 5 within smart collection 502 -> U3,U4", r.count == 2 and uuids(r.photos) == "U3,U4")
+r = Library.searchPhotos({ criteria = { { criteria = "filename", operation = "any", value = "OZ801" } }, collection_id = 501, offset = 0, limit = 100 })
+check("filename in collection 501 -> intersection U3", r.count == 1 and uuids(r.photos) == "U3")
+n = #F.calls
+r = Library.searchPhotos({ criteria = {}, collection_id = 501, offset = 0, limit = 100 })
+check("collection alone: its photos, no findPhotos or getAllPhotos", r.count == 2 and since(n) == "getCollectionByLocalIdentifier", since(n))
+r = Library.searchPhotos({ criteria = { { criteria = "captureTime", operation = "in", value = "2026-09-08", value2 = "2026-09-09" } }, offset = 0, limit = 100 })
+check("captureTime in 09-08..09-09 -> U3,U4", r.count == 2 and uuids(r.photos) == "U3,U4")
+local _, e = Library.searchPhotos({ criteria = {}, collection_id = 601, offset = 0, limit = 10 })
+check("a collection set's id is refused", e and e.code == "unknown_collection", show(e))
+_, e = Library.searchPhotos({ criteria = {}, collection_id = 999, offset = 0, limit = 10 })
+check("an unknown id is refused", e and e.code == "unknown_collection", show(e))
+_, e = Library.searchPhotos({ criteria = {}, offset = 0, limit = 501 })
+check("limit 501 refused", e and e.code == "bad_request")
+_, e = Library.searchPhotos({ criteria = {}, offset = 0.5, limit = 10 })
+check("offset 0.5 refused", e and e.code == "bad_request")
+_, e = Library.searchPhotos({ criteria = { { value = 1 } }, offset = 0, limit = 10 })
+check("a criterion without criteria/operation refused", e and e.code == "bad_request")
+
+print("== list_collections")
+r = Library.listCollections({})
+check("two collections, top level and nested", #r.collections == 2, show(r.collections))
+check("Birds: top level, not smart, 2 photos", r.collections[1].name == "Birds" and r.collections[1].set_path == nil
+    and r.collections[1].smart == false and r.collections[1].photo_count == 2 and r.collections[1].local_id == 501)
+check("Five stars: set path 'Best / 2026', smart, 2 photos", r.collections[2].set_path == "Best / 2026" and r.collections[2].smart == true
+    and r.collections[2].photo_count == 2)
+
+print("== set_rating")
+local gates = #F.gates
+r = Library.setRating({ photo_uuid = "U1", rating = 3 })
+check("unrated U1 -> 3: before 0, after 3, one gate 'AVG set rating'", r.before == 0 and r.after == 3 and #F.gates == gates + 1
+    and F.gates[#F.gates] == "AVG set rating" and r.filename == "20260907-_OZ80093.NEF", show(r))
+gates = #F.gates
+r = Library.setRating({ photo_uuid = "U1", rating = 3 })
+check("already 3: not written", r.before == 3 and r.after == 3 and #F.gates == gates)
+r = Library.setRating({ photo_uuid = "U1", rating = 0 })
+check("0 clears it (written as nil, the fake rejects 0)", r and r.before == 3 and r.after == 0 and F.photos[1].rating == nil, show(r))
+_, e = Library.setRating({ photo_uuid = "U1", rating = 6 })
+check("rating 6 refused", e and e.code == "bad_request")
+_, e = Library.setRating({ photo_uuid = "U1", rating = 2.5 })
+check("rating 2.5 refused", e and e.code == "bad_request")
+_, e = Library.setRating({ photo_uuid = "NOPE", rating = 2 })
+check("unknown uuid refused", e and e.code == "unknown_photo")
+
+print("== set_keywords")
+local created = F.created
+r = Library.setKeywords({ photo_uuid = "U2", add = { "heron", "pond" }, remove = { "bird" } })
+check("U2: bird -> heron, pond; 'heron' reused, 'pond' created", show(r.before) == "{1=bird}" and show(r.after) == "{1=heron, 2=pond}"
+    and F.created == created + 1 and F.gates[#F.gates] == "AVG set keywords", show(r))
+gates = #F.gates
+r = Library.setKeywords({ photo_uuid = "U2", add = { "pond" }, remove = { "bird" } })
+check("nothing to change: not written", #F.gates == gates and show(r.after) == "{1=heron, 2=pond}")
+_, e = Library.setKeywords({ photo_uuid = "U2", add = {}, remove = {} })
+check("no names refused", e and e.code == "bad_request")
+_, e = Library.setKeywords({ photo_uuid = "U2", add = { "" } })
+check("an empty name refused", e and e.code == "bad_request")
+r = Library.setKeywords({ photo_uuid = "U3", remove = { "heron" } })
+check("remove alone (add absent): U3 keeps bird", show(r.after) == "{1=bird}", show(r))
+
+print("== rules")
+check("no catalog query inside a gate, no read outside one, no write outside a write gate, no nested gate, no yield in a gate",
+    #F.violations == 0, show(F.violations))
+
+print(failures == 0 and "ALL PASS" or (failures .. " FAILED"))
+
+== Appendix: run.mts (verbatim)
+
+// Runs cases.lua under fengari 0.1.4 (Lua 5.3 in JS; the plugin targets Lua 5.1, which luaparse
+// checks in engine\tests\lua-plugin.test.ts) with the plugin folder given as the first argument.
+// Usage: node run.mts <plugin folder>
+import fengari from "fengari";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const { lauxlib, lualib, lua, to_luastring, to_jsstring } = fengari;
+const here = path.dirname(fileURLToPath(import.meta.url)).replaceAll("\\", "/");
+const plugin = (process.argv[2] ?? "").replaceAll("\\", "/");
+const L = lauxlib.luaL_newstate();
+lualib.luaL_openlibs(L);
+const code = `package.path = "${plugin}/?.lua;${here}/?.lua;" .. package.path\nrequire 'cases'`;
+if (lauxlib.luaL_dostring(L, to_luastring(code)) !== lua.LUA_OK) {
+  console.log("LUA ERROR " + to_jsstring(lua.lua_tostring(L, -1)));
+  process.exitCode = 1;
+}
+
+== Appendix: mutants.mts (verbatim)
+
+// Mutants of Library.lua: each copies the plugin's Library.lua and Photos.lua into mut/<id>/, makes
+// one change, runs cases.lua against it, and prints the checks that failed. A mutant is caught when
+// at least one check fails. Usage: node mutants.mts <plugin folder>
+import { execFileSync } from "node:child_process";
+import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+const plugin = process.argv[2] ?? "";
+const MUTANTS: Array<[string, string, string]> = [
+  ["M1 findPhotos inside a read gate", "matches = catalog:findPhotos { searchDesc = desc } or {}",
+    "catalog:withReadAccessDo(function() matches = catalog:findPhotos { searchDesc = desc } or {} end)"],
+  ["M2 rating 0 written as 0", 'photo:setRawMetadata("rating", rating > 0 and rating or nil)', 'photo:setRawMetadata("rating", rating)'],
+  ["M3 no yield between photos", "if i > offset + 1 then LrTasks.yield() end", ""],
+  ["M4 collection filter ignores the criteria", "matches = matches and intersect(matches, inCollection) or inCollection", "matches = inCollection"],
+  ["M5 createKeyword without returnExisting", "catalog:createKeyword(name, {}, true, nil, true)", "catalog:createKeyword(name, {}, true, nil, false)"],
+  ["M6 rating written even when unchanged", "if before ~= rating then", "if true then"],
+];
+let caught = 0;
+for (const [id, from, to] of MUTANTS) {
+  const dir = path.join(here, "mut", id.split(" ")[0] as string);
+  mkdirSync(dir, { recursive: true });
+  for (const f of ["Library.lua", "Photos.lua"]) copyFileSync(path.join(plugin, f), path.join(dir, f));
+  const lib = path.join(dir, "Library.lua");
+  const src = readFileSync(lib, "utf8");
+  if (!src.includes(from)) throw new Error(`${id}: text not found`);
+  writeFileSync(lib, src.replace(from, to));
+  let out: string;
+  try {
+    out = execFileSync(process.execPath, [path.join(here, "run.mts"), dir], { encoding: "utf8" });
+  } catch (err) {
+    out = String((err as { stdout?: string }).stdout ?? err);
+  }
+  const failed = out.split(/\r?\n/).filter((l) => l.startsWith("FAIL ") || l.startsWith("LUA ERROR"));
+  if (failed.length > 0) caught++;
+  console.log(`${id}: ${failed.length > 0 ? "CAUGHT" : "SURVIVED"}`);
+  for (const l of failed) console.log(`    ${l}`);
+}
+console.log(`${caught} of ${MUTANTS.length} mutants caught`);
+
+== Appendix: engine-mutants.mts (verbatim)
+
+// Engine mutants for the catalog tools: each edits one source file, runs tests\catalog-tools.test.ts,
+// prints the failing tests, and restores the file (finally). Usage: node engine-mutants.mts <repo>
+import { execSync } from "node:child_process";
+import { readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
+
+const repo = process.argv[2] ?? "";
+const MUTANTS: Array<[string, string, string, string]> = [
+  ["E1 writes not held to between sessions", "engine/src/mcp/tools-catalog.ts", 'return sessions.whenIdle("lr_set_rating", async () => {', "return (async () => {"],
+  ["E2 an unanswered write is skipped, not a stop", "engine/src/library/write.ts", "if (UNANSWERED.has(error.code)) throw stopped(err, error, uuid, uuids.slice(i + 1), out, what);", ""],
+  ["E3 the read-back is not checked", "engine/src/library/write.ts", "const why = problem(r);", "const why = null as string | null;"],
+  ["E4 the descriptor is not sent", "engine/src/mcp/tools-catalog.ts", 'request("search_photos", { criteria, ...inCollection', 'request("search_photos", { criteria: [], ...inCollection'],
+];
+let caught = 0;
+for (const [id, rel, from, to] of MUTANTS) {
+  const file = path.join(repo, rel);
+  const src = readFileSync(file, "utf8");
+  if (!src.includes(from)) throw new Error(`${id}: text not found`);
+  let mutated = src.replace(from, to);
+  // E1 closes the whenIdle call it opened: "});" of the whenIdle becomes "})();" for the IIFE.
+  if (id.startsWith("E1")) mutated = mutated.replace('      return written(out, { rating: args.rating });\r\n    });', "      return written(out, { rating: args.rating });\r\n    })();").replace('      return written(out, { rating: args.rating });\n    });', "      return written(out, { rating: args.rating });\n    })();");
+  writeFileSync(file, mutated);
+  let out = "";
+  try {
+    out = execSync("npx vitest run tests/catalog-tools.test.ts", { cwd: path.join(repo, "engine"), encoding: "utf8", stdio: "pipe" });
+  } catch (err) {
+    out = String((err as { stdout?: string }).stdout ?? "") + String((err as { stderr?: string }).stderr ?? "");
+  } finally {
+    writeFileSync(file, src);
+  }
+  const failed = [...new Set(out.split(/\r?\n/).filter((l) => /FAIL .*>/.test(l)).map((l) => l.trim()))];
+  if (failed.length > 0) caught++;
+  console.log(`${id}: ${failed.length > 0 ? "CAUGHT" : "SURVIVED"}`);
+  for (const l of failed) console.log(`    ${l}`);
+}
+console.log(`${caught} of ${MUTANTS.length} mutants caught`);
+
+== Appendix: assemble.mts (verbatim)
+
+// Builds docs\reports\phase6\catalog-tools-smoke\smoke.txt: runs the smoke cases and both mutant
+// sets, and appends the kit verbatim. The scratch folder's path is redacted to <scratch>.
+// Usage: node assemble.mts <repo>
+import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+const repo = process.argv[2] ?? "";
+const plugin = path.join(repo, "plugin", "LrC-AVG.lrplugin");
+const redact = (s: string): string =>
+  [here, here.replaceAll("\\", "/"), path.dirname(path.dirname(here)).replaceAll("\\", "/")].reduce((t, p) => t.split(p).join("<scratch>"), s)
+    .replace(/\.\.\.[^ ]*\/scratchpad\/luasmoke/g, "<scratch>");
+const run = (script: string, arg: string): string => {
+  try {
+    return execFileSync(process.execPath, [path.join(here, script), arg], { encoding: "utf8" });
+  } catch (err) {
+    return String((err as { stdout?: string }).stdout ?? err);
+  }
+};
+const sha = (f: string): string => createHash("sha256").update(readFileSync(f)).digest("hex");
+const fengari = JSON.parse(readFileSync(path.join(here, "node_modules", "fengari", "package.json"), "utf8")) as { version: string };
+
+const parts = [
+  "LrC-AVG plugin 0.8.0, Library.lua smoke test (PHASE6_PROTOTYPE_PLAN row 2, phase-6/catalog-tools)",
+  "",
+  `Run ${new Date().toISOString()} by Claude Code, Node ${process.version}, fengari ${fengari.version} (Lua 5.3 in JavaScript), against a fake`,
+  "Lightroom SDK (fake-lr.lua, below). Not Lightroom: the fake checks the plugin's own logic and rule 03 (catalog queries",
+  "outside any gate, metadata reads inside one, writes inside a write gate, no nested gate, no yield inside a gate).",
+  "Whether Lightroom behaves as the fake does is for the Lightroom check (docs\\reports\\phase6\\catalog-tools-check\\).",
+  "",
+  "Files tested (sha256):",
+  `  plugin\\LrC-AVG.lrplugin\\Library.lua  ${sha(path.join(plugin, "Library.lua"))}`,
+  `  plugin\\LrC-AVG.lrplugin\\Photos.lua   ${sha(path.join(plugin, "Photos.lua"))}`,
+  "",
+  "== 1. The cases: node run.mts <repo>\\plugin\\LrC-AVG.lrplugin",
+  "",
+  redact(run("run.mts", plugin)).trimEnd(),
+  "",
+  "== 2. Library.lua mutants (one change each, cases run again): node mutants.mts <repo>\\plugin\\LrC-AVG.lrplugin",
+  "",
+  redact(run("mutants.mts", plugin)).trimEnd(),
+  "",
+  "== 3. Engine mutants (one change each, tests\\catalog-tools.test.ts run again, file restored): node engine-mutants.mts <repo>",
+  "",
+  redact(run("engine-mutants.mts", repo)).trimEnd(),
+  "",
+];
+for (const f of ["fake-lr.lua", "cases.lua", "run.mts", "mutants.mts", "engine-mutants.mts", "assemble.mts"]) {
+  parts.push(`== Appendix: ${f} (verbatim)`, "", readFileSync(path.join(here, f), "utf8").replace(/\r\n/g, "\n").trimEnd(), "");
+}
+const out = path.join(repo, "docs", "reports", "phase6", "catalog-tools-smoke");
+mkdirSync(out, { recursive: true });
+writeFileSync(path.join(out, "smoke.txt"), parts.join("\n"), "utf8");
+console.log(parts.slice(0, 12).join("\n"));

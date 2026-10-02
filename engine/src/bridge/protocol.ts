@@ -10,7 +10,7 @@
 //     { id, type: "evt", name, ts, payload }
 // Every inbound line is validated here with zod before the engine acts on it (rule 01-stack).
 // The plugin side is plugin\LrC-AVG.lrplugin\Bridge.lua, Dispatch.lua (the handler table),
-// Develop.lua, Preview.lua, Catalog.lua, Photos.lua, Prefs.lua and Hud.lua (with hud-protocol.ts).
+// Develop.lua, Preview.lua, Catalog.lua, Photos.lua, Library.lua, Prefs.lua and Hud.lua (with hud-protocol.ts).
 //
 // Lua cannot tell an empty array from an empty object, and the plugin's Json.lua writes every empty
 // table as []. Payload schemas below never require a non-empty table to be an object.
@@ -86,7 +86,21 @@ const photoIdentity = {
   copy_name: z.string().optional(),
   /** Plugin 0.4.0 (Photos.lua describe). */
   filename: z.string().optional(),
+  /**
+   * Plugin 0.8.0: absent for an unrated photo, whose getRawMetadata("rating") is nil [handle:
+   * https://lrc.mcor.dev/modules/LrPhoto.html, "either nil or number of stars"; vault LR_SDK_NOTES
+   * "Recorded in Phase 2", metadata keys].
+   */
+  rating: z.number().optional(),
+  /** Plugin 0.8.0: getFormattedMetadata("dateTimeOriginal"), e.g. "09/15/2005 17:32:50" [handle: the LrPhoto page above]. */
+  capture_time: z.string().optional(),
 };
+
+/** A photo in a listing (get_selection, search_photos). A photo whose uuid could not be read has none. */
+const listedPhoto = z.object({ ...photoIdentity, uuid: z.string().optional() });
+
+/** One entry of a findPhotos search descriptor (engine\src\library\search.ts builds them). */
+export type SearchCriterion = { criteria: string; operation: string; value: string | number; value2?: string };
 
 export const COMMANDS = {
   hello: helloResultSchema,
@@ -134,10 +148,19 @@ export const COMMANDS = {
   select_photo: z.object({ ...targeted, ...photoIdentity }),
   // Plugin 0.4.0 (Catalog.lua): the selected photos, the active one first; `count` is how many are
   // selected, `photos` at most the `max` asked for. A photo whose uuid could not be read has none.
-  get_selection: z.object({
-    count: z.number(),
-    photos: z.array(z.object({ ...photoIdentity, uuid: z.string().optional() })),
+  get_selection: z.object({ count: z.number(), photos: z.array(listedPhoto) }),
+  // Plugin 0.8.0 (Library.lua): `count` matched, `photos` from offset + 1, at most `limit`.
+  search_photos: z.object({ count: z.number(), photos: z.array(listedPhoto) }),
+  // Every collection; `set_path` names its collection sets, "Set / Subset", absent at the top level.
+  list_collections: z.object({
+    collections: z.array(
+      z.object({ local_id: z.number(), name: z.string(), set_path: z.string().optional(), smart: z.boolean(), photo_count: z.number() }),
+    ),
   }),
+  // One photo, read before and after the write (0: no rating); not written when it already held it.
+  set_rating: z.object({ ...targeted, filename: z.string().optional(), before: z.number(), after: z.number() }),
+  // One photo's keyword names before and after; not written when nothing would change.
+  set_keywords: z.object({ ...targeted, filename: z.string().optional(), before: z.array(z.string()), after: z.array(z.string()) }),
   // Plugin 0.5.0 (Prefs.lua getPrefs): the settings page's values, each already checked by the
   // plugin, under their wire names. The engine checks each field again on its own
   // (settings\page.ts parsePage), so one bad field costs only that field; `invalid` lists what the
@@ -178,6 +201,13 @@ export type CommandPayloads = {
   select_photo: { uuid: string; expect?: PhotoExpect };
   /** max: how many photos to describe, 1-500 (the plugin's default 100). Refused with no_target_photo when none is selected. */
   get_selection: { max?: number };
+  /** The criteria intersected; with `collection_id`, only that collection's photos. limit 1-500. */
+  search_photos: { criteria: SearchCriterion[]; collection_id?: number; offset: number; limit: number };
+  list_collections: Record<string, never>;
+  /** rating 0-5, 0 clears it. Refused with unknown_photo when no photo has the uuid. */
+  set_rating: { photo_uuid: string; rating: number };
+  /** Keyword names; at least one between add and remove. */
+  set_keywords: { photo_uuid: string; add: string[]; remove: string[] };
   get_prefs: Record<string, never>;
   /** Refused with bad_request when a field is unknown or of the wrong type (hud-protocol.ts). */
   hud_update: HudUpdatePayload;

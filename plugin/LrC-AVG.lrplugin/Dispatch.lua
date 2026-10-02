@@ -14,6 +14,7 @@ local Catalog = require 'Catalog'
 local Develop = require 'Develop'
 local Hud = require 'Hud'
 local Json = require 'Json'
+local Library = require 'Library'
 local Log = require 'Log'
 local Prefs = require 'Prefs'
 local Preview = require 'Preview'
@@ -34,6 +35,10 @@ function Dispatch.handlers(hello)
         create_virtual_copies = Catalog.createVirtualCopies,
         select_photo = Catalog.selectPhoto,
         get_selection = Catalog.getSelection,
+        search_photos = Library.searchPhotos,
+        list_collections = Library.listCollections,
+        set_rating = Library.setRating,
+        set_keywords = Library.setKeywords,
         get_prefs = Prefs.getPrefs,
         hud_update = Hud.update,
     }

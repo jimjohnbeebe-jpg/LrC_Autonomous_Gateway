@@ -100,8 +100,9 @@ Claude Desktop shows the renders Claude looks at only inside the tool-call boxes
 - **Sync a burst.** After a session you accepted: "Sync this edit to the selected photos." It copies the settings to the photos selected in Lightroom, at most 20 per request. For a burst of the same scene, Claude can instead match each photo's brightness to the edited one, 3 photos per request. Each photo gets its own snapshot **AVG pre-sync …** first.
 - **Save a preset.** "Save this photo's settings as a preset called …". It is saved in the group **LrC-AVG**, and Lightroom lists it after a restart.
 - **Save your own intent.** Describe the look you want and ask Claude to save it as an intent. Claude shows you the intent first and saves it only after you approve.
+- **Find, rate and keyword photos.** "Find my five-star photos from September 7 with the keyword heron", "Which collections do I have?", "Rate the selected photos three stars", "Add the keyword pond to these photos." Claude searches by file name, keywords, star rating, capture date and collection, and sets star ratings and keywords on at most 100 photos per request. Claude tells you which photos will change first. Ratings and keywords are not Develop settings: History and snapshots don't cover them, but Claude can put the earlier values back on request.
 
-Sync and presets are not available while a session is open.
+Sync, presets, ratings and keywords are not available while a session is open.
 
 ## The HUD
 
@@ -216,7 +217,7 @@ Your edits stay in the Lightroom catalog: History steps, snapshots, virtual copi
 - **One PC tested:** Windows 11, Lightroom Classic 15.5.1. Windows only.
 - **Process version:** a photo still on an older Lightroom process version is refused. Update the photo to the current process version in Develop first.
 - **Global Develop settings only:** no masks or local adjustments, no crop or geometry, no HDR.
-- **One session at a time.** Sync and presets wait until it ends.
+- **One session at a time.** Sync, presets, ratings and keywords are not available until it ends.
 - **Keep Plug-in Manager closed during a session.** Lightroom pauses the plugin while Plug-in Manager or a menu is open (2.5 to 15 s in testing). The engine waits up to 60 s for the plugin during a session, but a long pause during a session has not been tested.
 - **Approve and Claude Desktop:** whether Claude Desktop waits the full 60 s for an Approve has not been tested (in testing, Claude asked in the chat instead of waiting).
 - **If the engine disconnects during a session** (for example, Claude Desktop is quit), the HUD offers no way back: apply the **AVG pre-session …** snapshot yourself.
@@ -225,6 +226,7 @@ Your edits stay in the Lightroom catalog: History steps, snapshots, virtual copi
 - **Presets:** a new preset shows only after Lightroom restarts. Only the group "LrC-AVG" has been tested. Adobe camera profiles (Adobe Color, Adobe Landscape, …) are left out of presets, as are temperature and tint while white balance is As Shot.
 - **Virtual copies** from Variants mode are never removed by LrC-AVG.
 - **Sync:** at most 20 photos per request, or 3 when matching brightness.
+- **Keywords** are matched by their exact name. A keyword removed from photos stays in the Keyword List; delete it there if you no longer want it.
 
 ## Development
 
@@ -255,6 +257,8 @@ The evidence behind the behaviour this page describes. Paths are in this reposit
 | What else you can ask | Sync: limits 20 and 3, snapshots, not during a session | [handle: `engine/src/sync/types.ts:18-19`; `engine/src/mcp/defs-propagation.ts` `lr_sync_series`] |
 | What else you can ask, Known limitations | Presets: group, folder, shown after a restart, what is left out; only the "LrC-AVG" group tested | [handle: `defs-propagation.ts` `lr_create_preset_from_active`; `engine/src/presets/folder.ts`; `docs/reports/phase4/S7.md` "Consequences"; `docs/reports/phase4/WB.md`]; groups other than "LrC-AVG" [unverified] |
 | What else you can ask | Saving an intent only after approval | [handle: `engine/src/mcp/defs-intents.ts` `lr_save_intent`] |
+| What else you can ask, Known limitations | Search filters, collections, ratings and keywords: limit 100, before and after values, not during a session, exact names, removed keywords kept | [handle: `engine/src/mcp/defs-catalog.ts`; `engine/src/library/write.ts` `MAX_PHOTOS`; `plugin/LrC-AVG.lrplugin/Library.lua`; `docs/reports/phase6/catalog-tools-smoke/smoke.txt`]; in Lightroom [handle: `docs/reports/phase6/catalog-tools-check/check.txt`] |
+| What else you can ask | History and snapshots don't cover ratings and keywords | [inference]: they are catalog metadata, written with `setRawMetadata` and `addKeyword`, not `applyDevelopSettings` (`Library.lua`) |
 | The HUD | Lines, stage labels, buttons, greyed buttons, 10 s, 12 rows; the selection line | [handle: `plugin/LrC-AVG.lrplugin/HudView.lua`; `HudState.lua:20, 26, 212, 221`; vault `PRD.md` §6.3 "Lines as built"] |
 | The HUD | Opens by itself; takes the keyboard when it opens | [handle: `PHASE5.md` "Numbers", "HUD opened by itself"; `docs/reports/phase5/S8.md` "Numbers", "Keyboard stayed with the main window"] |
 | The HUD | Abort and Accept timing and behaviour | [handle: `PHASE5.md` "Numbers", "AC-2"; vault `PRD.md` §6.3 "Buttons as built"] |

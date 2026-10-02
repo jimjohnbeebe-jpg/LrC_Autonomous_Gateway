@@ -4,7 +4,7 @@ LrC-AVG lets Claude, in Claude Desktop, edit a raw photo in Lightroom Classic th
 
 It comes in two halves: a Lightroom plugin, and an engine that Claude Desktop starts as an MCP server.
 
-**Version 1.0.0.** Built and tested on one Windows 11 PC with Lightroom Classic 15.5.1. The install below has not yet been run end to end on a fresh Windows account; that test is the project's last open check. Where this page states how something behaves, the evidence is listed under [Sources](#sources).
+**Prototype: engine 0.10.0, plugin 0.7.0. There is no release yet.** The [Install](#install) section below describes the planned 1.0.0 release; its download links do not work yet. To run the prototype, build it from source as in [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md). From [Your first session](#your-first-session) on, this page describes the prototype as it is. Built and tested on one Windows 11 PC with Lightroom Classic 15.5.1. Where this page states how something behaves, the evidence is listed under [Sources](#sources).
 
 ## What you need
 
@@ -237,7 +237,7 @@ The evidence behind the behaviour this page describes. Paths are in this reposit
 | Section | Claim | Source |
 |---|---|---|
 | Version | Tested PC and versions | [handle: `docs/reports/phase5/PHASE5.md` "Numbers", "Plugin, engine, connect time": LrC 15.5.1; "Draft for LR_SDK_NOTES": Windows 11] |
-| Version, Install | The whole install from the release on a fresh Windows account (the release URLs, `npm.cmd install -g <URL>`, `Invoke-WebRequest`, the Plug-in Manager steps) | [unverified] until the Phase 6 check (AC-6). The parts already run: installing the `.tgz` from a file, `lrc-avg-setup.cmd` and `--remove` against scratch configs, the installed engine's tools, and `Expand-Archive` of the zip [handle: `docs/reports/phase6/package-smoke/smoke.txt` sections 1-4] |
+| Version, Install | The whole install from the release on a fresh Windows account (the release URLs, `npm.cmd install -g <URL>`, `Invoke-WebRequest`, the Plug-in Manager steps) | [unverified] until the packaging check (AC-6), now Phase 8 (vault `PHASES.md`). The parts already run: installing the `.tgz` from a file, `lrc-avg-setup.cmd` and `--remove` against scratch configs, the installed engine's tools, and `Expand-Archive` of the zip [handle: `docs/reports/phase6/package-smoke/smoke.txt` sections 1-4] |
 | Install | Release asset URL form `/releases/download/<tag>/<asset>` | [handle: https://docs.github.com/en/repositories/releasing-projects-on-github/linking-to-releases, read 2026-10-01]; the tag `v1.0.0` is set when the release is made [unverified] |
 | What you need | Node ≥ 22 | [handle: `engine/package.json` `engines`] |
 | What you need | The engine connects to Lightroom on 127.0.0.1 only | [handle: `engine/src/bridge/client.ts:52`] |
@@ -260,7 +260,7 @@ The evidence behind the behaviour this page describes. Paths are in this reposit
 | The HUD | Abort and Accept timing and behaviour | [handle: `PHASE5.md` "Numbers", "AC-2"; vault `PRD.md` §6.3 "Buttons as built"] |
 | The HUD | Shows the outcome 5 s, then closes | [handle: `plugin/LrC-AVG.lrplugin/Hud.lua:12-13`; `HudState.lua:24`] |
 | Menu items | Titles; 20 s wait; reports in the HUD | [handle: `Info.lua:24-27`; `Hud.lua:269` `MENU_WAIT_SECONDS`]; in Lightroom [handle: `PHASE5.md` "Numbers", "Menu items"] |
-| Menu items, Known limitations | No keyboard shortcuts | [handle: vault `PHASES.md` Phase 6 "Carried from Phase 5", hotkeys] |
+| Menu items, Known limitations | No keyboard shortcuts | [handle: vault `PHASES.md` Phase 8 (was Phase 6) "Carried from Phase 5", hotkeys] |
 | Settings | Labels, defaults, ranges, the invalid-value list | [handle: `plugin/LrC-AVG.lrplugin/Prefs.lua:33-46`, `PluginInfoProvider.lua`] |
 | Settings | Saved as edited; read by the next session; the mode reached the engine | [handle: `docs/reports/phase5/S8.md` "Consequences"; `PHASE5.md` "Numbers", "Settings page reached the engine"] |
 | Settings | Argument > intent > page > default; folders remembered | [handle: `defs-session.ts` `lr_begin_session`; `engine/src/settings/log-folders.ts`] |

@@ -1,0 +1,555 @@
+LrC-AVG catalog tools, Lightroom check (PHASE6_PROTOTYPE_PLAN row 2, phase-6/catalog-tools, PR #57)
+
+Run 2026-10-02 05:41:59-05:42:06 local (12:41:59-12:42:06 UTC) by Claude Code on Jim's PC: LrC 15.5.1, Windows 11,
+engine 0.11.0 (engine\dist built from the branch at a0092ab), plugin 0.8.0 loaded from the repo folder with the branch
+checked out. Jim quit Claude Desktop, restarted Lightroom, selected one photo and said "restarted" [stated: Jim, 2026-10-02].
+The check calls the engine's Tools class (the same code Claude Desktop's engine runs); it records counts, not collection or
+keyword names (Jim's own data). The user folder is redacted to %USERPROFILE%.
+
+== 1. Console: node logs\probe-catalog-tools-2026-10-02\check.mts <repo>
+
+[5:41:59 AM]   (bridge: connecting)
+[5:42:00 AM]   (bridge: handshaking)
+[5:42:00 AM]   (bridge: connected)
+[5:42:00 AM] Photo: 20260906-_OZ80005.NEF, rating 0, captured 9/6/2026 11:12:07.000 AM
+[5:42:00 AM] YES  the selection lists the photo with uuid, filename, rating and capture time
+[5:42:00 AM] YES  search by file name finds it
+[5:42:00 AM] YES  search by file name and its rating finds it
+[5:42:00 AM] YES  search by file name and another rating does not
+[5:42:00 AM] YES  captured 1900-01-01..2100-12-31 finds it
+[5:42:00 AM] YES  captured on or before 1900-01-01 does not
+[5:42:00 AM] YES  captured on or after 2100-01-01 does not
+[5:42:00 AM] YES  a search with no filter answers, with the warning  (21001 photos, 63 ms)
+[5:42:04 AM] YES  lr_list_collections answers  (838 collections, 4036 ms)
+[5:42:04 AM] YES  searching a plain collection by id finds its photo_count  (20 of 20)
+[5:42:06 AM] YES  searching a smart collection by id finds its photo_count  (308 of 308)
+[5:42:06 AM] YES  rating 4 written and read back  (before 0, after 4, 54 ms)
+[5:42:06 AM] YES  then a search by file name and rating 4 finds it
+[5:42:06 AM] YES  rating 0 written and read back  (before 4, after 0, 60 ms)
+[5:42:06 AM] YES  then a search by file name and rating 0 finds it
+[5:42:06 AM] YES  rating 0 written and read back  (before 0, after 0, 5 ms)
+[5:42:06 AM] YES  then a search by file name and rating 0 finds it
+[5:42:06 AM] YES  the keyword was added and read back  (0 -> 1 keywords, 40 ms)
+[5:42:06 AM] YES  then a search by it finds the photo
+[5:42:06 AM] YES  the keyword was removed, the photo's other keywords as before  (0 keywords, 18 ms)
+[5:42:06 AM] YES  then a search by it does not find the photo
+[5:42:06 AM] YES  the photo's rating is its own again  (0 (was 0))
+[5:42:06 AM] YES  no Develop setting changed
+[5:42:06 AM] YES  the probe keyword is off the photo
+[5:42:06 AM] Catalog tools check: WORKED
+[5:42:06 AM] Results: D:\Developer\LrC_Autonomous_Gateway\logs\probe-catalog-tools-2026-10-02\run\check.json
+[5:42:06 AM]   (bridge: stopped)
+
+== 2. Jim's answers, asked by Claude Code after the run (AskUserQuestion), 2026-10-02
+
+Q: In Lightroom's Library, look at the selected photo 20260906-_OZ80005.NEF. Does it show NO stars (as it had before the check)?
+A: Yes, no stars
+Q: With that photo selected, look at the Keywording panel on the right of the Library module. Is the keyword "LrC-AVG probe" absent from the photo?
+A: Yes, not on the photo
+Q: Click Lightroom's Edit menu (top menu bar) and read the first item, then close the menu with Esc. What does the first item say?
+A: Undo AVG set keywords
+
+== 3. Plugin bridge log, %TEMP%\LrC-AVG\bridge.log lines 2135-2168 (Lightroom start to the check's disconnect)
+
+2026-10-02 05:41:21.914 INFO  bridge: starting generation 1 (receive 8765, send 8766)
+2026-10-02 05:41:36.135 INFO  bridge: token written to %USERPROFILE%\.lrc-avg\bridge_token
+2026-10-02 05:41:36.150 INFO  bridge: ports 8765/8766 written to %USERPROFILE%\.lrc-avg\bridge_ports.json
+2026-10-02 05:41:36.150 INFO  bridge: listening (generation 1)
+2026-10-02 05:41:59.770 INFO  bridge: receive: engine connected
+2026-10-02 05:42:00.272 INFO  bridge: send: engine connected
+2026-10-02 05:42:00.274 INFO  bridge: hello 5d0f85e6-71b0-49d2-9609-36beb14c8a8d
+2026-10-02 05:42:00.283 INFO  bridge: get_selection 4672e1d4-eb70-4f36-9046-1b5782c62f6a
+2026-10-02 05:42:00.289 INFO  bridge: get_settings e2c43139-1802-4f2b-848f-f35682eee9ab
+2026-10-02 05:42:00.300 INFO  bridge: search_photos 45f95ed1-7df2-4df8-ab7b-200ba057de94
+2026-10-02 05:42:00.330 INFO  bridge: search_photos d69f3856-974a-41d1-aa6f-3e3c7b82fcd4
+2026-10-02 05:42:00.357 INFO  bridge: search_photos 77380748-9999-4ef8-ae79-45fcd2f1e686
+2026-10-02 05:42:00.366 INFO  bridge: search_photos 8114e9f6-a46e-443f-ba0a-8bbeae472110
+2026-10-02 05:42:00.416 INFO  bridge: search_photos f25dcea8-d615-48a0-9f09-72d26a67f801
+2026-10-02 05:42:00.427 INFO  bridge: search_photos bf511796-50ba-4321-b4e0-a0131faef7af
+2026-10-02 05:42:00.438 INFO  bridge: search_photos 6ed82369-21c2-462b-a8f2-c0bc004f2eeb
+2026-10-02 05:42:00.501 INFO  bridge: list_collections 6bd82be7-e3da-431c-951e-31deee209b47
+2026-10-02 05:42:04.539 INFO  bridge: search_photos 704ec0e4-e55a-4bb3-ab40-2ec4048e3b06
+2026-10-02 05:42:04.681 INFO  bridge: search_photos 2f50c3ea-1b36-48ec-8ba7-f7eded08c494
+2026-10-02 05:42:06.093 INFO  bridge: set_rating 07bb0d91-46d7-44a9-b372-02db10ce1d7b
+2026-10-02 05:42:06.147 INFO  bridge: search_photos ac52a73f-1cf8-487e-a25c-485eea7150a3
+2026-10-02 05:42:06.168 INFO  bridge: set_rating fae64255-93bd-4c96-b36c-aba9ac71e55f
+2026-10-02 05:42:06.228 INFO  bridge: search_photos f3aac215-b5fe-456b-9117-4188c4768e6c
+2026-10-02 05:42:06.241 INFO  bridge: set_rating 17cf16ec-00e8-435b-9f1a-e1b3ae128c2e
+2026-10-02 05:42:06.247 INFO  bridge: search_photos 06c61ecc-5b95-4f12-a7b8-ab96a45f5cd6
+2026-10-02 05:42:06.258 INFO  bridge: search_photos 457976a9-e884-403f-b740-468304a2602b
+2026-10-02 05:42:06.275 INFO  bridge: set_keywords c0333048-9e25-4172-ac60-3908da23bf9d
+2026-10-02 05:42:06.317 INFO  bridge: search_photos cb9b6b51-aa95-45c6-96fe-646a2818efdf
+2026-10-02 05:42:06.329 INFO  bridge: set_keywords d873fe16-828b-4695-ab02-8fe3ca6402bc
+2026-10-02 05:42:06.348 INFO  bridge: search_photos 7eb3578e-8158-44c3-8909-e2ebf3362521
+2026-10-02 05:42:06.362 INFO  bridge: get_selection a594c7cd-fed4-46b8-bf5f-bd24c3f4402d
+2026-10-02 05:42:06.368 INFO  bridge: get_settings ed0cc55a-3b3a-4e2a-9621-225eb35259c5
+2026-10-02 05:42:06.376 INFO  bridge: search_photos 03c30295-aab5-4357-a284-7d8cb17b67e1
+2026-10-02 05:42:06.382 INFO  bridge: receive: closed
+
+== 4. check.json (logs\probe-catalog-tools-2026-10-02\run\check.json)
+
+{
+  "started": "2026-10-02T12:41:59.739Z",
+  "engine_version": "0.11.0",
+  "steps": {
+    "selection": {
+      "at": "2026-10-02T12:42:00.289Z",
+      "t_ms": 550,
+      "ms": 6,
+      "ok": true,
+      "count": 1,
+      "first": {
+        "uuid": "B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39",
+        "filename": "20260906-_OZ80005.NEF",
+        "rating": 0,
+        "capture_time": "9/6/2026 11:12:07.000 AM",
+        "virtual_copy": false
+      }
+    },
+    "search by file name": {
+      "at": "2026-10-02T12:42:00.329Z",
+      "t_ms": 590,
+      "args": {},
+      "ms": 31,
+      "ok": true,
+      "count": 2,
+      "found": true
+    },
+    "search with its rating": {
+      "at": "2026-10-02T12:42:00.356Z",
+      "t_ms": 617,
+      "args": {
+        "rating": 0
+      },
+      "ms": 26,
+      "ok": true,
+      "count": 1,
+      "found": true
+    },
+    "search with another rating": {
+      "at": "2026-10-02T12:42:00.365Z",
+      "t_ms": 626,
+      "args": {
+        "rating": 5
+      },
+      "ms": 8,
+      "ok": true,
+      "count": 0,
+      "found": false
+    },
+    "search all time": {
+      "at": "2026-10-02T12:42:00.414Z",
+      "t_ms": 675,
+      "args": {
+        "start_date": "1900-01-01",
+        "end_date": "2100-12-31"
+      },
+      "ms": 49,
+      "ok": true,
+      "count": 2,
+      "found": true
+    },
+    "search before 1900": {
+      "at": "2026-10-02T12:42:00.426Z",
+      "t_ms": 687,
+      "args": {
+        "end_date": "1900-01-01"
+      },
+      "ms": 11,
+      "ok": true,
+      "count": 0,
+      "found": false
+    },
+    "search after 2100": {
+      "at": "2026-10-02T12:42:00.436Z",
+      "t_ms": 697,
+      "args": {
+        "start_date": "2100-01-01"
+      },
+      "ms": 9,
+      "ok": true,
+      "count": 0,
+      "found": false
+    },
+    "search with no filter": {
+      "at": "2026-10-02T12:42:00.500Z",
+      "t_ms": 761,
+      "ms": 63,
+      "ok": true,
+      "count": 21001,
+      "warning": "No filter was given, so every photo in the catalog was searched. Give a filename, keywords, rating, dates or a collection_id to narrow it."
+    },
+    "collections": {
+      "at": "2026-10-02T12:42:04.537Z",
+      "t_ms": 4798,
+      "ms": 4036,
+      "ok": true,
+      "count": 838,
+      "smart": 13,
+      "in_sets": 489
+    },
+    "collection search, a plain collection": {
+      "at": "2026-10-02T12:42:04.680Z",
+      "t_ms": 4941,
+      "photo_count": 20,
+      "in_set": false,
+      "ms": 142,
+      "ok": true,
+      "count": 20
+    },
+    "collection search, a smart collection": {
+      "at": "2026-10-02T12:42:06.091Z",
+      "t_ms": 6352,
+      "photo_count": 308,
+      "in_set": false,
+      "ms": 1411,
+      "ok": true,
+      "count": 308
+    },
+    "rating 4": {
+      "at": "2026-10-02T12:42:06.146Z",
+      "t_ms": 6407,
+      "ms": 54,
+      "ok": true,
+      "photo": {
+        "uuid": "B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39",
+        "filename": "20260906-_OZ80005.NEF",
+        "before": 0,
+        "after": 4,
+        "changed": true
+      },
+      "failed": []
+    },
+    "search with rating 4": {
+      "at": "2026-10-02T12:42:06.166Z",
+      "t_ms": 6427,
+      "args": {
+        "rating": 4
+      },
+      "ms": 20,
+      "ok": true,
+      "count": 2,
+      "found": true
+    },
+    "rating 0": {
+      "at": "2026-10-02T12:42:06.245Z",
+      "t_ms": 6506,
+      "ms": 5,
+      "ok": true,
+      "photo": {
+        "uuid": "B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39",
+        "filename": "20260906-_OZ80005.NEF",
+        "before": 0,
+        "after": 0,
+        "changed": false
+      },
+      "failed": []
+    },
+    "search with rating 0": {
+      "at": "2026-10-02T12:42:06.256Z",
+      "t_ms": 6517,
+      "args": {
+        "rating": 0
+      },
+      "ms": 10,
+      "ok": true,
+      "count": 1,
+      "found": true
+    },
+    "search by the probe keyword": {
+      "at": "2026-10-02T12:42:06.380Z",
+      "t_ms": 6641,
+      "args": {
+        "keywords": [
+          "LrC-AVG probe"
+        ]
+      },
+      "ms": 4,
+      "ok": true,
+      "count": 0,
+      "found": false
+    },
+    "keyword added": {
+      "at": "2026-10-02T12:42:06.315Z",
+      "t_ms": 6576,
+      "ms": 40,
+      "ok": true,
+      "before_count": 0,
+      "after_count": 1,
+      "failed": []
+    },
+    "keyword removed": {
+      "at": "2026-10-02T12:42:06.346Z",
+      "t_ms": 6607,
+      "ms": 18,
+      "ok": true,
+      "after_count": 0,
+      "failed": []
+    },
+    "put back": {
+      "at": "2026-10-02T12:42:06.374Z",
+      "t_ms": 6635,
+      "extra_calls": {},
+      "rating_now": 0,
+      "develop_settings_differing": []
+    }
+  },
+  "checks": {
+    "the selection lists the photo with uuid, filename, rating and capture time": true,
+    "search by file name finds it": true,
+    "search by file name and its rating finds it": true,
+    "search by file name and another rating does not": true,
+    "captured 1900-01-01..2100-12-31 finds it": true,
+    "captured on or before 1900-01-01 does not": true,
+    "captured on or after 2100-01-01 does not": true,
+    "a search with no filter answers, with the warning": true,
+    "lr_list_collections answers": true,
+    "searching a plain collection by id finds its photo_count": true,
+    "searching a smart collection by id finds its photo_count": true,
+    "rating 4 written and read back": true,
+    "then a search by file name and rating 4 finds it": true,
+    "rating 0 written and read back": true,
+    "then a search by file name and rating 0 finds it": true,
+    "the keyword was added and read back": true,
+    "then a search by it finds the photo": true,
+    "the keyword was removed, the photo's other keywords as before": true,
+    "then a search by it does not find the photo": true,
+    "the photo's rating is its own again": true,
+    "no Develop setting changed": true,
+    "the probe keyword is off the photo": true
+  },
+  "hello": {
+    "plugin_version": "0.8.0",
+    "lrc_version": "15.5.1"
+  },
+  "ended": "2026-10-02T12:42:06.381Z",
+  "failed_checks": []
+}
+
+== 5. The engine's tool log of the run (run\engine-20261002.jsonl)
+
+{"ts":"2026-10-02T12:42:00.282Z","tool":"lr_get_selected_photos","ok":true,"duration_ms":5.5,"args":{"limit":5},"count":1}
+{"ts":"2026-10-02T12:42:00.297Z","tool":"lr_search_photos","ok":true,"duration_ms":30.7,"args":{"filename":"20260906-_OZ80005.NEF","limit":500},"count":2,"returned":2}
+{"ts":"2026-10-02T12:42:00.329Z","tool":"lr_search_photos","ok":true,"duration_ms":25.7,"args":{"filename":"20260906-_OZ80005.NEF","limit":500,"rating":0},"count":1,"returned":1}
+{"ts":"2026-10-02T12:42:00.357Z","tool":"lr_search_photos","ok":true,"duration_ms":5.6,"args":{"filename":"20260906-_OZ80005.NEF","limit":500,"rating":5},"count":0,"returned":0}
+{"ts":"2026-10-02T12:42:00.365Z","tool":"lr_search_photos","ok":true,"duration_ms":48,"args":{"filename":"20260906-_OZ80005.NEF","limit":500,"start_date":"1900-01-01","end_date":"2100-12-31"},"count":2,"returned":2}
+{"ts":"2026-10-02T12:42:00.415Z","tool":"lr_search_photos","ok":true,"duration_ms":10.5,"args":{"filename":"20260906-_OZ80005.NEF","limit":500,"end_date":"1900-01-01"},"count":0,"returned":0}
+{"ts":"2026-10-02T12:42:00.427Z","tool":"lr_search_photos","ok":true,"duration_ms":8.3,"args":{"filename":"20260906-_OZ80005.NEF","limit":500,"start_date":"2100-01-01"},"count":0,"returned":0}
+{"ts":"2026-10-02T12:42:00.437Z","tool":"lr_search_photos","ok":true,"duration_ms":62.6,"args":{"limit":1},"count":21001,"returned":1}
+{"ts":"2026-10-02T12:42:00.501Z","tool":"lr_list_collections","ok":true,"duration_ms":4035.2,"args":{"limit":500},"count":838}
+{"ts":"2026-10-02T12:42:04.538Z","tool":"lr_search_photos","ok":true,"duration_ms":140.8,"args":{"collection_id":1282171,"limit":500},"count":20,"returned":20}
+{"ts":"2026-10-02T12:42:04.680Z","tool":"lr_search_photos","ok":true,"duration_ms":1410.5,"args":{"collection_id":1247950,"limit":500},"count":308,"returned":308}
+{"ts":"2026-10-02T12:42:06.092Z","tool":"lr_set_rating","ok":true,"duration_ms":53,"args":{"uuids":["B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39"],"rating":4},"changed":1,"failed":0}
+{"ts":"2026-10-02T12:42:06.147Z","tool":"lr_search_photos","ok":true,"duration_ms":19.1,"args":{"filename":"20260906-_OZ80005.NEF","limit":500,"rating":4},"count":2,"returned":2}
+{"ts":"2026-10-02T12:42:06.167Z","tool":"lr_set_rating","ok":true,"duration_ms":59,"args":{"uuids":["B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39"],"rating":0},"changed":1,"failed":0}
+{"ts":"2026-10-02T12:42:06.228Z","tool":"lr_search_photos","ok":true,"duration_ms":11.9,"args":{"filename":"20260906-_OZ80005.NEF","limit":500,"rating":0},"count":1,"returned":1}
+{"ts":"2026-10-02T12:42:06.241Z","tool":"lr_set_rating","ok":true,"duration_ms":4.1,"args":{"uuids":["B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39"],"rating":0},"changed":0,"failed":0}
+{"ts":"2026-10-02T12:42:06.246Z","tool":"lr_search_photos","ok":true,"duration_ms":9.4,"args":{"filename":"20260906-_OZ80005.NEF","limit":500,"rating":0},"count":1,"returned":1}
+{"ts":"2026-10-02T12:42:06.257Z","tool":"lr_search_photos","ok":true,"duration_ms":16.5,"args":{"filename":"20260906-_OZ80005.NEF","limit":500,"keywords":["LrC-AVG probe"]},"count":0,"returned":0}
+{"ts":"2026-10-02T12:42:06.275Z","tool":"lr_set_keywords","ok":true,"duration_ms":39.7,"args":{"uuids":["B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39"],"add":["LrC-AVG probe"]},"changed":1,"failed":0}
+{"ts":"2026-10-02T12:42:06.316Z","tool":"lr_search_photos","ok":true,"duration_ms":10.8,"args":{"filename":"20260906-_OZ80005.NEF","limit":500,"keywords":["LrC-AVG probe"]},"count":1,"returned":1}
+{"ts":"2026-10-02T12:42:06.328Z","tool":"lr_set_keywords","ok":true,"duration_ms":17.1,"args":{"uuids":["B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39"],"remove":["LrC-AVG probe"]},"changed":1,"failed":0}
+{"ts":"2026-10-02T12:42:06.347Z","tool":"lr_search_photos","ok":true,"duration_ms":13.2,"args":{"filename":"20260906-_OZ80005.NEF","limit":500,"keywords":["LrC-AVG probe"]},"count":0,"returned":0}
+{"ts":"2026-10-02T12:42:06.361Z","tool":"lr_get_selected_photos","ok":true,"duration_ms":5,"args":{"limit":5},"count":1}
+{"ts":"2026-10-02T12:42:06.376Z","tool":"lr_search_photos","ok":true,"duration_ms":3.8,"args":{"filename":"20260906-_OZ80005.NEF","limit":500,"keywords":["LrC-AVG probe"]},"count":0,"returned":0}
+
+== Appendix: check.mts (verbatim)
+
+// Lightroom check of PHASE6_PROTOTYPE_PLAN row 2 (engine 0.11.0 with plugin 0.8.0), decision D4-A
+// [stated: Jim, 2026-10-02, "Go"]: the five catalog tools on the photo Jim selected, through the
+// engine's own Tools class (engine\dist), as Claude Desktop's engine would call them.
+//   1. takes the engine instance lock; reads the selection (lr_get_selected_photos): the photo P;
+//      reads P's Develop settings (the start);
+//   2. searches: P by file name; with its rating; with capture dates around all time, before 1900
+//      and after 2100; with no filter (the whole catalog, timed);
+//   3. lists collections; for the first plain and the first smart collection with 1-500 photos,
+//      searches the collection and compares the count;
+//   4. rating: sets 4 (or 2 if P has 4), then 0, then P's own rating back; after each, searches P by
+//      file name and the new rating;
+//   5. keywords: adds "LrC-AVG probe", searches P by it, removes it, searches again;
+//   6. ALWAYS (finally): P's rating put back, the probe keyword taken off, and P's Develop settings
+//      compared with the start (they must not change: ratings and keywords are not Develop settings).
+// Collection names and P's keyword names are not recorded (Jim's own data): counts only.
+// Results: <out>\check.json and the console. Usage: node check.mts <repo root>
+// Dry run against a stand-in plugin: LRC_AVG_COMMAND_PORT/_EVENT_PORT/_TOKEN_FILE, CHECK_OUT, CHECK_PLUGIN.
+import { mkdirSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+
+const repo = process.argv[2] as string;
+const dist = (p: string) => import(pathToFileURL(path.join(repo, "engine", "dist", p)).href);
+const { BridgeClient } = await dist("bridge/index.js");
+const { Tools, acquireInstanceLock, devOverrides, toToolError, ENGINE_VERSION } = await dist("mcp/index.js");
+const { PreviewService } = await dist("preview/index.js");
+const { IntentLibrary } = await dist("intents/index.js");
+const { loadDefaultParamMap } = await dist("params/index.js");
+const { ToolLog } = await dist("log/index.js");
+
+const outDir = process.env["CHECK_OUT"] ?? path.join(repo, "logs", "probe-catalog-tools-2026-10-02", "run");
+const PLUGIN = process.env["CHECK_PLUGIN"] ?? "0.8.0";
+const KEYWORD = "LrC-AVG probe";
+mkdirSync(outDir, { recursive: true });
+
+const t0 = Date.now();
+const at = () => new Date().toISOString();
+const result: Record<string, any> = { started: at(), engine_version: ENGINE_VERSION, steps: {}, checks: {} };
+const save = () => writeFileSync(path.join(outDir, "check.json"), JSON.stringify(result, null, 2));
+const say = (m: string) => console.log(`[${new Date().toLocaleTimeString()}] ${m}`);
+const step = (name: string, data: Record<string, unknown>) => {
+  result.steps[name] = { at: at(), t_ms: Date.now() - t0, ...data };
+  save();
+};
+const check = (name: string, ok: boolean, detail = "") => {
+  result.checks[name] = ok;
+  save();
+  say(`${ok ? "YES" : "NO "}  ${name}${detail ? `  (${detail})` : ""}`);
+};
+/** A tool call, timed; its JSON, or its error body. */
+const call = async (name: string, fn: () => Promise<{ json: Record<string, any> }>) => {
+  const s = performance.now();
+  try {
+    const out = await fn();
+    return { ok: true as const, ms: Math.round(performance.now() - s), json: out.json };
+  } catch (err) {
+    return { ok: false as const, ms: Math.round(performance.now() - s), error: toToolError(err).body() };
+  }
+};
+
+const dev = devOverrides();
+const lock = await acquireInstanceLock(dev.lockPort);
+if (!lock.ok) {
+  result.lock = { ok: false, port: lock.port, pid: lock.pid };
+  save();
+  say(`LOCK BUSY: another engine (pid ${lock.pid}) holds port ${lock.port}. Quit Claude Desktop, then run again.`);
+  process.exit(2);
+}
+const client = new BridgeClient({ engineVersion: `${ENGINE_VERSION}-check`, log: (m: string) => say(`  (${m})`), ...dev.bridge });
+client.start();
+const hello = await client.waitConnected(30_000);
+result.hello = { plugin_version: hello.plugin_version, lrc_version: hello.lrc_version };
+if (hello.plugin_version !== PLUGIN) {
+  say(`FAILED: Lightroom runs plugin ${hello.plugin_version}, not ${PLUGIN}. Restart Lightroom.`);
+  result.failed = "plugin version";
+  save();
+  process.exit(1);
+}
+const map = loadDefaultParamMap();
+const tools = new Tools({
+  client,
+  map,
+  previews: new PreviewService(client),
+  intents: new IntentLibrary({ map }),
+  sessionLogDir: path.join(outDir, "sessions"),
+  engineVersion: `${ENGINE_VERSION}-check`,
+  ensureBridge: async () => void (await client.waitConnected(15_000)),
+  log: new ToolLog(outDir),
+  hud: false,
+});
+
+// 1. The selected photo.
+const sel = await call("lr_get_selected_photos", () => tools.getSelectedPhotos({ limit: 5 }));
+step("selection", { ms: sel.ms, ok: sel.ok, count: sel.ok ? sel.json.count : null, first: sel.ok ? sel.json.photos[0] : sel.error });
+if (!sel.ok || !sel.json.photos[0]?.uuid) {
+  say("FAILED: select one photo in Lightroom, then run again.");
+  process.exit(1);
+}
+const P = sel.json.photos[0] as { uuid: string; filename: string; rating: number; capture_time: string | null };
+const startRating = P.rating;
+const settingsOf = async () => map.fromSdk((await client.request("get_settings", { photo_uuid: P.uuid })).settings).settings as Record<string, unknown>;
+const start = await settingsOf();
+say(`Photo: ${P.filename}, rating ${startRating}, captured ${P.capture_time}`);
+check("the selection lists the photo with uuid, filename, rating and capture time", typeof P.filename === "string" && typeof P.capture_time === "string");
+
+const found = async (label: string, args: Record<string, unknown>) => {
+  const r = await call("lr_search_photos", () => tools.searchPhotos({ filename: P.filename, limit: 500, ...args }));
+  const has = r.ok && (r.json.photos as Array<{ uuid: string }>).some((p) => p.uuid === P.uuid);
+  step(`search ${label}`, { args, ms: r.ok ? r.ms : null, ok: r.ok, count: r.ok ? r.json.count : null, found: has, ...(r.ok ? {} : { error: r.error }) });
+  return has;
+};
+const keywordOn = async () => found("by the probe keyword", { keywords: [KEYWORD] });
+
+let ratingChanged = false;
+let keywordAdded = false;
+try {
+  // 2. Searches.
+  check("search by file name finds it", await found("by file name", {}));
+  check("search by file name and its rating finds it", await found("with its rating", { rating: startRating }));
+  check("search by file name and another rating does not", !(await found("with another rating", { rating: startRating === 5 ? 4 : 5 })));
+  check("captured 1900-01-01..2100-12-31 finds it", await found("all time", { start_date: "1900-01-01", end_date: "2100-12-31" }));
+  check("captured on or before 1900-01-01 does not", !(await found("before 1900", { end_date: "1900-01-01" })));
+  check("captured on or after 2100-01-01 does not", !(await found("after 2100", { start_date: "2100-01-01" })));
+  const all = await call("lr_search_photos", () => tools.searchPhotos({ limit: 1 }));
+  step("search with no filter", { ms: all.ms, ok: all.ok, count: all.ok ? all.json.count : null, warning: all.ok ? all.json.warning : null, ...(all.ok ? {} : { error: all.error }) });
+  check("a search with no filter answers, with the warning", all.ok && typeof all.json.warning === "string", all.ok ? `${all.json.count} photos, ${all.ms} ms` : JSON.stringify(all.error));
+
+  // 3. Collections.
+  const cols = await call("lr_list_collections", () => tools.listCollections({ limit: 500 }));
+  step("collections", { ms: cols.ms, ok: cols.ok, count: cols.ok ? cols.json.count : null, smart: cols.ok ? cols.json.collections.filter((c: any) => c.smart).length : null, in_sets: cols.ok ? cols.json.collections.filter((c: any) => c.set !== null).length : null, ...(cols.ok ? {} : { error: cols.error }) });
+  check("lr_list_collections answers", cols.ok, cols.ok ? `${cols.json.count} collections, ${cols.ms} ms` : JSON.stringify(cols.error));
+  for (const smart of [false, true]) {
+    const c = cols.ok ? cols.json.collections.find((x: any) => x.smart === smart && x.photo_count >= 1 && x.photo_count <= 500) : undefined;
+    const label = smart ? "a smart collection" : "a plain collection";
+    if (!c) {
+      step(`collection search, ${label}`, { skipped: "none with 1-500 photos" });
+      say(`--   ${label}: none with 1-500 photos, not checked`);
+      continue;
+    }
+    const r = await call("lr_search_photos", () => tools.searchPhotos({ collection_id: c.id, limit: 500 }));
+    step(`collection search, ${label}`, { photo_count: c.photo_count, in_set: c.set !== null, ms: r.ms, ok: r.ok, count: r.ok ? r.json.count : null, ...(r.ok ? {} : { error: r.error }) });
+    check(`searching ${label} by id finds its photo_count`, r.ok && r.json.count === c.photo_count, r.ok ? `${r.json.count} of ${c.photo_count}` : JSON.stringify(r.error));
+  }
+
+  // 4. Rating.
+  for (const rating of [startRating === 4 ? 2 : 4, 0, startRating]) {
+    ratingChanged = true;
+    const r = await call("lr_set_rating", () => tools.setRating({ uuids: [P.uuid], rating }));
+    const photo = r.ok ? r.json.photos[0] : null;
+    step(`rating ${rating}`, { ms: r.ms, ok: r.ok, photo, failed: r.ok ? r.json.failed : null, ...(r.ok ? {} : { error: r.error }) });
+    check(`rating ${rating} written and read back`, r.ok && photo?.after === rating, r.ok ? `before ${photo?.before}, after ${photo?.after}, ${r.ms} ms` : JSON.stringify(r.error));
+    check(`then a search by file name and rating ${rating} finds it`, await found(`with rating ${rating}`, { rating }));
+  }
+  ratingChanged = false;
+
+  // 5. Keywords.
+  if (await keywordOn()) {
+    check(`the photo had no keyword "${KEYWORD}" before`, false);
+  } else {
+    keywordAdded = true;
+    const add = await call("lr_set_keywords", () => tools.setKeywords({ uuids: [P.uuid], add: [KEYWORD] }));
+    const a = add.ok ? add.json.photos[0] : null;
+    step("keyword added", { ms: add.ms, ok: add.ok, before_count: a?.before.length ?? null, after_count: a?.after.length ?? null, failed: add.ok ? add.json.failed : null, ...(add.ok ? {} : { error: add.error }) });
+    check("the keyword was added and read back", add.ok && a?.after.includes(KEYWORD) === true, add.ok ? `${a?.before.length} -> ${a?.after.length} keywords, ${add.ms} ms` : JSON.stringify(add.error));
+    check("then a search by it finds the photo", await keywordOn());
+    const rm = await call("lr_set_keywords", () => tools.setKeywords({ uuids: [P.uuid], remove: [KEYWORD] }));
+    const b = rm.ok ? rm.json.photos[0] : null;
+    step("keyword removed", { ms: rm.ms, ok: rm.ok, after_count: b?.after.length ?? null, failed: rm.ok ? rm.json.failed : null, ...(rm.ok ? {} : { error: rm.error }) });
+    check("the keyword was removed, the photo's other keywords as before", rm.ok && JSON.stringify(b?.after) === JSON.stringify(a?.before), rm.ok ? `${b?.after.length} keywords, ${rm.ms} ms` : JSON.stringify(rm.error));
+    keywordAdded = !rm.ok;
+    check("then a search by it does not find the photo", !(await keywordOn()));
+  }
+} catch (err) {
+  result.error = String(err);
+  say(`ERROR: ${String(err)}`);
+} finally {
+  // 6. Put back.
+  const back: Record<string, unknown> = {};
+  if (ratingChanged) back["rating"] = await call("lr_set_rating", () => tools.setRating({ uuids: [P.uuid], rating: startRating }));
+  if (keywordAdded) back["keyword"] = await call("lr_set_keywords", () => tools.setKeywords({ uuids: [P.uuid], remove: [KEYWORD] }));
+  const now = await call("lr_get_selected_photos", () => tools.getSelectedPhotos({ limit: 5 }));
+  const end = await settingsOf();
+  const differing = [...new Set([...Object.keys(start), ...Object.keys(end)])].filter((k) => JSON.stringify(start[k]) !== JSON.stringify(end[k]));
+  const nowP = now.ok ? (now.json.photos as Array<{ uuid: string; rating: number }>).find((p) => p.uuid === P.uuid) : undefined;
+  step("put back", { extra_calls: back, rating_now: nowP?.rating ?? null, develop_settings_differing: differing });
+  check("the photo's rating is its own again", nowP?.rating === startRating, `${nowP?.rating} (was ${startRating})`);
+  check("no Develop setting changed", differing.length === 0, differing.join(", "));
+  check("the probe keyword is off the photo", !(await keywordOn()));
+  const failedChecks = Object.entries(result.checks).filter(([, ok]) => !ok).map(([name]) => name);
+  result.ended = at();
+  result.failed_checks = failedChecks;
+  save();
+  say(failedChecks.length === 0 ? "Catalog tools check: WORKED" : `Catalog tools check: FAILED (${failedChecks.length}): ${failedChecks.join("; ")}`);
+  say(`Results: ${path.join(outDir, "check.json")}`);
+  client.stop();
+  await lock.lock.release();
+  process.exit(failedChecks.length === 0 ? 0 : 1);
+}

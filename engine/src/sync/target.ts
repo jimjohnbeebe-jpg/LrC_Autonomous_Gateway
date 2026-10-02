@@ -34,7 +34,7 @@ function neverSent(err: unknown): boolean {
 }
 
 /** A command with no answer that may still have reached Lightroom. */
-const mayHaveLanded = (err: unknown): boolean => UNANSWERED.has(toToolError(err).code) && !neverSent(err);
+export const mayHaveLanded = (err: unknown): boolean => UNANSWERED.has(toToolError(err).code) && !neverSent(err);
 
 type Photo = { uuid: string; filename: string | null; copy_name: string | null };
 const text = (v: unknown): string | null => (typeof v === "string" ? v : null);

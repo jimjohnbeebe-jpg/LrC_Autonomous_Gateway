@@ -7,6 +7,8 @@
 //   intents  (tools-intents.ts): lr_list_intents, lr_get_intent, lr_save_intent (Phase 3).
 //   propagation (tools-propagation.ts): lr_sync_series (Phase 4; the sync is sync\sync.ts) and
 //            lr_create_preset_from_active (Phase 4; the preset is presets\create.ts).
+//   catalog  (tools-catalog.ts): lr_search_photos, lr_get_selected_photos, lr_list_collections,
+//            lr_set_rating, lr_set_keywords (Phase 6, kept from Automaat; library\).
 //   write    (tools-write.ts): setSettings, Phase 2's lr_set_settings, for the Phase 2 check only.
 // What they share is in tools-shared.ts. The MCP definitions are the defs-*.ts modules, by the same
 // groups.
@@ -16,6 +18,7 @@
 import type { HudPublisher } from "../hud/index.js";
 import type { ApproveArgs, BeginArgs, EndArgs, ProbeArgs, RegionArgs, SelectArgs, SessionManager, StepArgs } from "../session/index.js";
 import type { ToolError } from "./errors.js";
+import { getSelectedPhotos, listCollections, searchPhotos, setKeywords, setRating, type SearchPhotosArgs, type SetKeywordsArgs, type SetRatingArgs } from "./tools-catalog.js";
 import { getActivePhotoContext, getMetrics, getPreview, type MetricsArgs, type PreviewArgs } from "./tools-context.js";
 import { getIntent, listIntents, saveIntent, type SaveIntentArgs } from "./tools-intents.js";
 import { createPresetFromActive, syncSeries, type CreatePresetArgs, type SyncSeriesArgs } from "./tools-propagation.js";
@@ -120,6 +123,28 @@ export class Tools {
 
   createPresetFromActive(args: CreatePresetArgs): Promise<ToolOutput> {
     return createPresetFromActive(this.ctx, args);
+  }
+
+  // --- Catalog.
+
+  searchPhotos(args: SearchPhotosArgs = {}): Promise<ToolOutput> {
+    return searchPhotos(this.ctx, args);
+  }
+
+  getSelectedPhotos(args: { limit?: number | undefined } = {}): Promise<ToolOutput> {
+    return getSelectedPhotos(this.ctx, args);
+  }
+
+  listCollections(args: { limit?: number | undefined; offset?: number | undefined } = {}): Promise<ToolOutput> {
+    return listCollections(this.ctx, args);
+  }
+
+  setRating(args: SetRatingArgs): Promise<ToolOutput> {
+    return setRating(this.ctx, args);
+  }
+
+  setKeywords(args: SetKeywordsArgs): Promise<ToolOutput> {
+    return setKeywords(this.ctx, args);
   }
 
   // --- Phase 2's write, for the Phase 2 check (not offered over MCP).

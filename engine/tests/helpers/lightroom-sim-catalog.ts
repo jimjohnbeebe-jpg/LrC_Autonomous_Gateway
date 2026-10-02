@@ -30,6 +30,8 @@ export type CatalogSim = {
   readonly copies: Map<string, SimCopy>;
   copyFault: CopyFault | null;
   selectFault: string | null;
+  /** Rating and capture time per photo (plugin 0.8.0, Photos.describe; lightroom-sim-library.ts). */
+  readonly library?: { meta(uuid: string): Record<string, unknown> };
 };
 
 export const MASTER_LOCAL_ID = 1;
@@ -113,6 +115,6 @@ export function getSelection(sim: CatalogSim, p: Record<string, unknown>, filena
   if (typeof max !== "number" || !Number.isInteger(max) || max < 1 || max > 500) return fail("bad_request", "max must be a whole number from 1 to 500");
   if (sim.selected === "") return fail("no_target_photo", "No photo is selected in Lightroom", true);
   const ordered = [sim.selected, ...sim.alsoSelected.filter((u) => u !== sim.selected)];
-  const photos = ordered.slice(0, max).map((uuid) => ({ ...(describePhoto(sim, uuid) ?? { uuid, local_id: 0 }), filename }));
+  const photos = ordered.slice(0, max).map((uuid) => ({ ...(describePhoto(sim, uuid) ?? { uuid, local_id: 0 }), filename, ...sim.library?.meta(uuid) }));
   return ok({ count: ordered.length, photos });
 }

@@ -23,6 +23,7 @@ import sharp from "sharp";
 import type { FakePlugin, FakeReply } from "./fake-plugin.js";
 import { createVirtualCopies, describePhoto, findPhoto, getSelection, selectPhoto, type CopyFault, type SimCopy } from "./lightroom-sim-catalog.js";
 import { SimHud } from "./lightroom-sim-hud.js";
+import { SimLibrary } from "./lightroom-sim-library.js";
 import { defaultSimPrefs, type SimPrefs } from "./lightroom-sim-prefs.js";
 import { PLUGIN_VERSION } from "../../src/bridge/version.js";
 
@@ -83,6 +84,8 @@ export class LightroomSim {
   prefs: SimPrefs | null = defaultSimPrefs();
   /** The HUD (plugin 0.6.0, Hud.lua): the hud_update commands taken, and those not (lightroom-sim-hud.ts). */
   readonly hud = new SimHud();
+  /** The library commands (plugin 0.8.0, Library.lua): search, collections, ratings, keywords (lightroom-sim-library.ts). */
+  readonly library = new SimLibrary();
   /** Virtual copies of the master, by uuid (lightroom-sim-catalog.ts). */
   readonly copies = new Map<string, SimCopy>();
   copyFault: CopyFault | null = null;
@@ -160,6 +163,7 @@ export class LightroomSim {
       this.prefs ? ok(luaize(this.prefs)) : { ok: false, error: { code: "unknown_command", message: "unknown command get_prefs", recoverable: false } },
     );
     plugin.handlers.set("hud_update", (p) => this.hud.update(p));
+    this.library.install(plugin);
     plugin.handlers.set("get_context", (p) => on(p, (u) => this.context(u)));
     plugin.handlers.set("get_settings", (p) => on(p, (u) => ok({ uuid: u, settings: luaize(this.settingsOf(u)) })));
     plugin.handlers.set("apply_settings", (p) =>

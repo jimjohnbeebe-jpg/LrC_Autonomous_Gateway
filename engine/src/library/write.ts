@@ -18,8 +18,29 @@ export const MAX_PHOTOS = 100;
 export const MAX_KEYWORDS = 50;
 export const MAX_KEYWORD_LENGTH = 100;
 
-/** A plugin answer for one photo: its value before and after the write. */
-export type PhotoWrite<T> = { uuid: string; filename?: string | undefined; before: T; after: T };
+/**
+ * A plugin answer for one photo: its value before and after the write. A write gate that raised
+ * comes back as `write_error`, a failed read-back as `after_error` with no `after`; `before` is
+ * always there (Greptile, PR #57).
+ */
+export type PhotoWrite<T> = {
+  uuid: string;
+  filename?: string | undefined;
+  before: T;
+  after?: T | undefined;
+  write_error?: string | undefined;
+  after_error?: string | undefined;
+};
+type ReadBack<T> = PhotoWrite<T> & { after: T };
+
+/** Why a photo's write cannot be trusted, or null: the gate raised, or the value was not read back. */
+function unsure<T>(r: PhotoWrite<T>, what: string): string | null {
+  const why = [
+    ...(r.write_error !== undefined ? [`Lightroom raised an error while writing the ${what}: ${r.write_error}.`] : []),
+    ...(r.after === undefined ? [`Lightroom could not read the ${what} back${r.after_error !== undefined ? `: ${r.after_error}` : ""}.`] : []),
+  ];
+  return why.length === 0 ? null : `${why.join(" ")} The photo may have changed; \`before\` holds its ${what} before the call.`;
+}
 
 export type Failed = { uuid: string; code: string; message: string; before?: unknown; after?: unknown };
 
@@ -37,7 +58,7 @@ const same = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.str
 export async function writeEach<T>(
   uuids: readonly string[],
   write: (uuid: string) => Promise<PhotoWrite<T>>,
-  problem: (r: PhotoWrite<T>) => string | null,
+  problem: (r: ReadBack<T>) => string | null,
   what: string,
   notTaken: string,
 ): Promise<WriteResult<T>> {
@@ -53,9 +74,15 @@ export async function writeEach<T>(
       out.failed.push({ uuid, code: error.code, message: error.message + unknown });
       continue;
     }
-    const why = problem(r);
+    const doubt = unsure(r, what);
+    if (doubt) {
+      const code = r.write_error !== undefined ? "WRITE_FAILED" : "READ_BACK_FAILED";
+      out.failed.push({ uuid, code, message: doubt, before: r.before, ...(r.after !== undefined ? { after: r.after } : {}) });
+      continue;
+    }
+    const why = problem(r as ReadBack<T>);
     if (why) out.failed.push({ uuid, code: notTaken, message: why, before: r.before, after: r.after });
-    else out.photos.push({ uuid, filename: r.filename ?? null, before: r.before, after: r.after, changed: !same(r.before, r.after) });
+    else out.photos.push({ uuid, filename: r.filename ?? null, before: r.before, after: r.after as T, changed: !same(r.before, r.after) });
   }
   return out;
 }

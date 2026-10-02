@@ -129,6 +129,32 @@ describe("lr_set_rating", () => {
     expect(out.json["photos"]).toEqual([{ uuid: "SIM-LIB-3", filename: "20260908-_OZ80100.NEF", before: 5, after: 0, changed: true }]);
   });
 
+  it("keeps a photo's earlier rating when the read-back or the write gate fails after the write (Greptile, PR #57)", async () => {
+    lr.library.readBackError = "getRawMetadata: catalog busy";
+    const lost = await tools.setRating({ uuids: ["SIM-LIB-2"], rating: 1 });
+    expect(lost.json["photos"]).toEqual([]);
+    expect(lost.json["failed"]).toEqual([
+      {
+        uuid: "SIM-LIB-2",
+        code: "READ_BACK_FAILED",
+        message: "Lightroom could not read the rating back: getRawMetadata: catalog busy. The photo may have changed; `before` holds its rating before the call.",
+        before: 3,
+      },
+    ]);
+    lr.library.readBackError = null;
+    lr.library.writeError = "blocked by another write access call";
+    const raised = await tools.setKeywords({ uuids: ["SIM-LIB-3"], add: ["pond"] });
+    expect(raised.json["failed"]).toEqual([
+      {
+        uuid: "SIM-LIB-3",
+        code: "WRITE_FAILED",
+        message: "Lightroom raised an error while writing the keywords: blocked by another write access call. The photo may have changed; `before` holds its keywords before the call.",
+        before: ["bird", "heron"],
+        after: ["bird", "heron", "pond"],
+      },
+    ]);
+  });
+
   // The client's own errors for a command sent without an answer, and for one never sent
   // [handle: src\bridge\client.ts send(), the "timeout" BridgeError; request(), "not_connected"].
   const failOn = (uuid: string, error: BridgeError): void => {

@@ -120,6 +120,16 @@ function Library.listCollections()
     return { collections = list }
 end
 
+-- Once a photo's earlier value is read, the command answers ok, so the engine always gets that value
+-- back to put the photo back (Greptile, PR #57): a write gate that raises comes back as
+-- `write_error`, a read-back that fails as `after_error` with no `after`. Returns the write's error
+-- text, or nil.
+local function written(fn)
+    local ok, err = LrTasks.pcall(fn)
+    if not ok then return tostring(err) end
+    return nil
+end
+
 -- A photo's rating, 0 for none: getRawMetadata("rating") is "either nil or number of stars" [handle:
 -- https://lrc.mcor.dev/modules/LrPhoto.html getRawMetadata], and returned nil for an unrated photo
 -- [handle: LR_SDK_NOTES "Recorded in Phase 2", metadata keys]. Returns rating, or nil plus the error.
@@ -138,16 +148,18 @@ function Library.setRating(payload)
     if not photo then return nil, d end
     local before, err = ratingOf(catalog, photo)
     if not before then return fail("read_failed", "rating: " .. err, true) end
+    local writeErr
     if before ~= rating then
-        catalog:withWriteAccessDo("AVG set rating", function()
-            -- nil clears it: the SDK's rating is "either nil or number of stars" [handle: LrPhoto page,
-            -- setRawMetadata], and Automaat writes nil for 0 [upstream claim: HandlerOrganization.lua:116-118].
-            photo:setRawMetadata("rating", rating > 0 and rating or nil)
+        writeErr = written(function()
+            catalog:withWriteAccessDo("AVG set rating", function()
+                -- nil clears it: the SDK's rating is "either nil or number of stars" [handle: LrPhoto page,
+                -- setRawMetadata], and Automaat writes nil for 0 [upstream claim: HandlerOrganization.lua:116-118].
+                photo:setRawMetadata("rating", rating > 0 and rating or nil)
+            end)
         end)
     end
     local after, afterErr = ratingOf(catalog, photo)
-    if not after then return fail("read_failed", "rating after the write: " .. afterErr, true) end
-    return { uuid = d.uuid, filename = d.filename, before = before, after = after }
+    return { uuid = d.uuid, filename = d.filename, before = before, after = after, write_error = writeErr, after_error = afterErr }
 end
 
 -- A photo's keywords: { names, objects } in the same order, or nil plus the error. getRawMetadata
@@ -201,19 +213,22 @@ function Library.setKeywords(payload)
     for i, name in ipairs(before.names) do
         if removing[name] then toRemove[#toRemove + 1] = before.objects[i] end
     end
+    local writeErr
     if #toAdd + #toRemove > 0 then
-        catalog:withWriteAccessDo("AVG set keywords", function()
-            for _, name in ipairs(toAdd) do
-                -- createKeyword(name, synonyms, includeOnExport, parent, returnExisting) [handle: LrCatalog page].
-                local keyword = catalog:createKeyword(name, {}, true, nil, true)
-                if keyword then photo:addKeyword(keyword) end -- a nil shows in the read-back
-            end
-            for _, keyword in ipairs(toRemove) do photo:removeKeyword(keyword) end
+        writeErr = written(function()
+            catalog:withWriteAccessDo("AVG set keywords", function()
+                for _, name in ipairs(toAdd) do
+                    -- createKeyword(name, synonyms, includeOnExport, parent, returnExisting) [handle: LrCatalog page].
+                    local keyword = catalog:createKeyword(name, {}, true, nil, true)
+                    if keyword then photo:addKeyword(keyword) end -- a nil shows in the read-back
+                end
+                for _, keyword in ipairs(toRemove) do photo:removeKeyword(keyword) end
+            end)
         end)
     end
     local after, afterErr = keywordsOf(catalog, photo)
-    if not after then return fail("read_failed", "keywords after the write: " .. afterErr, true) end
-    return { uuid = d.uuid, filename = d.filename, before = before.names, after = after.names }
+    return { uuid = d.uuid, filename = d.filename, before = before.names, after = after and after.names,
+        write_error = writeErr, after_error = afterErr }
 end
 
 return Library

@@ -158,9 +158,25 @@ export const COMMANDS = {
     ),
   }),
   // One photo, read before and after the write (0: no rating); not written when it already held it.
-  set_rating: z.object({ ...targeted, filename: z.string().optional(), before: z.number(), after: z.number() }),
-  // One photo's keyword names before and after; not written when nothing would change.
-  set_keywords: z.object({ ...targeted, filename: z.string().optional(), before: z.array(z.string()), after: z.array(z.string()) }),
+  // Once `before` is read the plugin answers ok: a write gate that raised gives `write_error`, a
+  // read-back that failed gives `after_error` and no `after` (Greptile, PR #57).
+  set_rating: z.object({
+    ...targeted,
+    filename: z.string().optional(),
+    before: z.number(),
+    after: z.number().optional(),
+    write_error: z.string().optional(),
+    after_error: z.string().optional(),
+  }),
+  // One photo's keyword names before and after; not written when nothing would change. As set_rating.
+  set_keywords: z.object({
+    ...targeted,
+    filename: z.string().optional(),
+    before: z.array(z.string()),
+    after: z.array(z.string()).optional(),
+    write_error: z.string().optional(),
+    after_error: z.string().optional(),
+  }),
   // Plugin 0.5.0 (Prefs.lua getPrefs): the settings page's values, each already checked by the
   // plugin, under their wire names. The engine checks each field again on its own
   // (settings\page.ts parsePage), so one bad field costs only that field; `invalid` lists what the

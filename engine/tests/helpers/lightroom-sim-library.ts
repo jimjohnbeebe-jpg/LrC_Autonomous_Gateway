@@ -30,6 +30,10 @@ export class SimLibrary {
   stuckKeywords: string[] = [];
   /** set_rating and set_keywords commands that changed a photo. */
   writes = 0;
+  /** The write gate raises with this text after the write was made (Library.lua `write_error`). */
+  writeError: string | null = null;
+  /** The read after the write fails with this text (Library.lua `after_error`, no `after`). */
+  readBackError: string | null = null;
 
   find(uuid: string): SimLibraryPhoto | undefined {
     return this.photos.find((p) => p.uuid === uuid);
@@ -90,7 +94,15 @@ export class SimLibrary {
   private write(p: Record<string, unknown>, fn: (photo: SimLibraryPhoto) => FakeReply): FakeReply {
     const uuid = String(p["photo_uuid"]);
     const photo = this.find(uuid);
-    return photo ? fn(photo) : fail("unknown_photo", `no photo in the catalog has uuid ${uuid}`);
+    if (!photo) return fail("unknown_photo", `no photo in the catalog has uuid ${uuid}`);
+    const reply = fn(photo);
+    if (reply === "silent" || !reply.ok) return reply;
+    const { after, ...rest } = reply.payload as Record<string, unknown>;
+    return ok({
+      ...rest,
+      ...(this.readBackError ? { after_error: this.readBackError } : { after }),
+      ...(this.writeError ? { write_error: this.writeError } : {}),
+    });
   }
 
   private rate(photo: SimLibraryPhoto, rating: number): FakeReply {

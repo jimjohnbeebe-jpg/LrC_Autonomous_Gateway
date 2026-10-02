@@ -92,7 +92,11 @@ const photoIdentity = {
    * "Recorded in Phase 2", metadata keys].
    */
   rating: z.number().optional(),
-  /** Plugin 0.8.0: getFormattedMetadata("dateTimeOriginal"), e.g. "09/15/2005 17:32:50" [handle: the LrPhoto page above]. */
+  /**
+   * Plugin 0.8.0: getFormattedMetadata("dateTimeOriginal"), e.g. "09/15/2005 17:32:50" [handle: the
+   * LrPhoto page above]; on Jim's PC "9/6/2026 11:12:07.000 AM" [handle:
+   * docs\reports\phase6\catalog-tools-check\check.txt section 4, `selection`].
+   */
   capture_time: z.string().optional(),
 };
 

@@ -6,8 +6,8 @@
 // from a start to an end day, or ">" the day before a start, or "<" the day after an end. The
 // criteria names filename, rating, keywords and captureTime, and the operations "==", "any", "all",
 // "in", ">" and "<", are on the SDK's page [handle: https://lrc.mcor.dev/modules/LrCatalog.html
-// findPhotos]; that Lightroom 15.5.1 matches them as Automaat expects is [unverified] until the row 2
-// check (docs\reports\phase6\catalog-tools-check\).
+// findPhotos]. Lightroom 15.5.1 matched all six as Automaat expects in the row 2 check, `rating == 0`
+// finding an unrated photo too [handle: docs\reports\phase6\catalog-tools-check\check.txt section 1].
 
 import type { CommandResult, SearchCriterion } from "../bridge/index.js";
 

@@ -9,6 +9,16 @@ Parts of the engine are derived from **Automaat/lightroom-mcp** (https://github.
 
 The plugin's derived files are listed in `plugin\LrC-AVG.lrplugin\THIRD_PARTY_NOTICES.md`.
 
+### Later upstream commits (engine 0.15.0, plugin 0.10.0)
+
+Three commits made upstream after the snapshot were rewritten into this project's patterns (photos by uuid, `lr_` tools, zod-checked arguments, before/after read-back) for GitHub issue #60 [stated: Jim, 2026-10-03, "Keyword hierarchy, set_gps, MCP SDK 1.32.0" plus the bind-failure log line]. No upstream file was copied; `vendor\automaat\` stays at `a160e7a`. Same MIT licence and copyright as below.
+
+| Upstream commit | What was taken | Files here |
+|---|---|---|
+| `11c0b9332cc9547e3cafcfdfc52ab8931c11ec2d` (#246, "address keywords by hierarchy path") | Keywords named by a `\|`-separated path, missing levels created one write gate per depth, names compared case aside, a sorted depth-first listing of the tree | `src/library/keywords.ts`, `src/mcp/tools-catalog.ts`, `src/mcp/defs-catalog.ts` (`lr_set_keywords`, `lr_list_keywords`); plugin `KeywordTree.lua`, `Library.lua` |
+| `9ba2ed613bfef1a1c76b89404694632bde04deaa` (#247, "add set_gps tool") | Writing a photo's position with `setRawMetadata("gps", { latitude, longitude })`, range-checked | `src/mcp/tools-catalog.ts`, `src/mcp/defs-catalog.ts` (`lr_set_gps`), `src/library/write.ts`; plugin `Library.lua` |
+| `923f27d29a61f66b4690ee82a2a8373d01544a9d` (#236, "diagnose hijacked plugin ports"), the plugin half only | Logging a socket's "failed to open", throttled to once per 10 s per socket, naming the port and the likely holder | plugin `Sockets.lua` |
+
 npm dependencies keep their own licences; they are listed with their versions in `docs\DEPENDENCIES.md`.
 
 ## Automaat/lightroom-mcp licence

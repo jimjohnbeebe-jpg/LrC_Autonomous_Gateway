@@ -7,7 +7,7 @@
 -- The rules they follow (P-13 re-arm and rebind, generation counters) are described at the top of
 -- Bridge.lua, whose monitor loop calls the two rebind functions below.
 --
--- `B` is the running bridge: { context, S (state), receivePort, sendPort, current(), onLine(line),
+-- `B` is the running bridge: { context, generation, S (state), receivePort, sendPort, current(), onLine(line),
 -- onSendConnected() }. Callbacks only set flags in `S`; the monitor loop acts on them.
 
 local LrDate = import 'LrDate'
@@ -20,6 +20,26 @@ local Sockets = {}
 
 local function isNoClientError(err)
     return err == "timeout" or err:find("failed to open", 1, true) ~= nil
+end
+
+-- "failed to open" is also what LrSocket reports when something else already listens on the port:
+-- another process, or an instance of the plugin that Reload Plug-in left running [upstream claim:
+-- Automaat commit 923f27d, PluginInfoProvider.lua:95-108, 118-127, 461-462, 518-519]. Recovery stays
+-- the same (re-arm), but the failure is logged, at most once per BIND_LOG_SECONDS per socket, with the
+-- bridge generation, since an old and a new instance write to the same log (GitHub issue #60). The
+-- times live in this generation's state `S`: a new generation logs its own failures, so nothing needs
+-- to survive on _G. Whether a clean, idle Lightroom on Windows reports "failed to open" while it
+-- re-arms is [unverified]; Automaat saw none on macOS [upstream claim: commit 923f27d message].
+local BIND_LOG_SECONDS = 10
+
+local function logBindFailure(B, side, port, err)
+    if not err:find("failed to open", 1, true) then return end
+    local now, S = LrDate.currentTime(), B.S
+    S.bindLoggedAt = S.bindLoggedAt or {}
+    if S.bindLoggedAt[side] and now - S.bindLoggedAt[side] < BIND_LOG_SECONDS then return end
+    S.bindLoggedAt[side] = now
+    Log.warn(string.format("bridge: %s port %d failed to open (%s, generation %d); if this repeats, another "
+        .. "process or a leftover instance of this plugin may hold it", side, port, err, B.generation))
 end
 
 local function bindReceive(B, myGen)
@@ -58,6 +78,7 @@ local function bindReceive(B, myGen)
         onError = function(_, err)
             if not live() then return end
             local e = tostring(err)
+            logBindFailure(B, "receive", B.receivePort, e)
             if isNoClientError(e) then
                 if not S.receiveConnected then S.receiveNeedsReconnect = true end
             else
@@ -92,6 +113,7 @@ local function bindSend(B, myGen)
         onError = function(_, err)
             if not live() then return end
             local e = tostring(err)
+            logBindFailure(B, "send", B.sendPort, e)
             if isNoClientError(e) then
                 if not S.sendConnected then S.sendNeedsReconnect = true end
             else

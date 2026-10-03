@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import luaparse from "luaparse";
 import { describe, expect, it } from "vitest";
 import { COMMANDS, HUD_END_STAGES, HUD_EVENTS, HUD_GUARDRAIL, HUD_LIMITS, HUD_STAGES, HUD_VARIANTS, PLUGIN_VERSION } from "../src/bridge/index.js";
+import { KEYWORD_SEPARATOR, MAX_PAGE } from "../src/library/index.js";
 import { DECAY_MAX_VALUES, LOCK_PORT, PAGE_SPECS } from "../src/settings/index.js";
 
 const pluginRoot = fileURLToPath(new URL("../../plugin/", import.meta.url));
@@ -82,7 +83,7 @@ describe("lua: every plugin file", () => {
     const names = files.filter((f) => f.startsWith(avgPlugin)).map((f) => path.basename(f)).sort();
     expect(names).toEqual([
       "Bridge.lua", "Catalog.lua", "Develop.lua", "Dispatch.lua", "Endpoint.lua", "Events.lua", "Hud.lua", "HudClick.lua", "HudSelection.lua", "HudState.lua", "HudText.lua", "HudView.lua",
-      "Info.lua", "Json.lua", "Library.lua", "Log.lua", "MenuAbort.lua", "MenuAccept.lua", "MenuApprove.lua", "MenuHud.lua",
+      "Info.lua", "Json.lua", "KeywordTree.lua", "Library.lua", "Log.lua", "MenuAbort.lua", "MenuAccept.lua", "MenuApprove.lua", "MenuHud.lua",
       "MenuPickA.lua", "MenuPickB.lua", "MenuPickC.lua", "MenuStatus.lua", "Photos.lua",
       "PluginInfoProvider.lua", "PluginInit.lua", "Prefs.lua", "Preview.lua", "Sockets.lua",
     ]);
@@ -216,6 +217,11 @@ describe("lua: LrC-AVG.lrplugin", () => {
     expect(list("VARIANTS")).toEqual([...HUD_VARIANTS]);
     const limits = source.match(/HudState\.LIMITS = \{([^}]*)\}/)?.[1] ?? "";
     expect(Object.fromEntries([...limits.matchAll(/(\w+) = (\d+)/g)].map((m) => [m[1], Number(m[2])]))).toEqual(HUD_LIMITS);
+  });
+
+  it("keeps KeywordTree.lua's separator and Library.lua's page limit equal to the engine's (engine\\src\\library\\)", () => {
+    expect(readFileSync(path.join(avgPlugin, "KeywordTree.lua"), "utf8")).toMatch(new RegExp(`KeywordTree\\.SEPARATOR = "\\${KEYWORD_SEPARATOR}"`));
+    expect(readFileSync(path.join(avgPlugin, "Library.lua"), "utf8")).toMatch(new RegExp(`Library\\.MAX_PAGE = ${MAX_PAGE}\\b`));
   });
 
   it("handles every command the engine sends (engine\\src\\bridge\\protocol.ts COMMANDS)", () => {

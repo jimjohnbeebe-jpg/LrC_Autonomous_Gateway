@@ -10,7 +10,8 @@
 //     { id, type: "evt", name, ts, payload }
 // Every inbound line is validated here with zod before the engine acts on it (rule 01-stack).
 // The plugin side is plugin\LrC-AVG.lrplugin\Bridge.lua, Dispatch.lua (the handler table),
-// Develop.lua, Preview.lua, Catalog.lua, Photos.lua, Library.lua, Prefs.lua and Hud.lua (with hud-protocol.ts).
+// Develop.lua, Preview.lua, Catalog.lua, Photos.lua, Library.lua (with KeywordTree.lua), Prefs.lua and
+// Hud.lua (with hud-protocol.ts).
 //
 // Lua cannot tell an empty array from an empty object, and the plugin's Json.lua writes every empty
 // table as []. Payload schemas below never require a non-empty table to be an object.
@@ -106,6 +107,12 @@ const listedPhoto = z.object({ ...photoIdentity, uuid: z.string().optional() });
 /** One entry of a findPhotos search descriptor (engine\src\library\search.ts builds them). */
 export type SearchCriterion = { criteria: string; operation: string; value: string | number; value2?: string };
 
+/**
+ * A photo's GPS position as set_gps reads it (plugin 0.10.0, Library.lua gpsOf), `false` for none:
+ * a Lua table cannot hold a nil field, so "none" needs a value the plugin's Json.lua writes [inference].
+ */
+const gpsWire = z.union([z.object({ latitude: z.number(), longitude: z.number() }), z.literal(false)]);
+
 export const COMMANDS = {
   hello: helloResultSchema,
   ping: z.object({ pong: z.literal(true), nonce: z.string().optional() }),
@@ -172,12 +179,27 @@ export const COMMANDS = {
     write_error: z.string().optional(),
     after_error: z.string().optional(),
   }),
-  // One photo's keyword names before and after; not written when nothing would change. As set_rating.
+  // Plugin 0.10.0 (Library.lua listKeywords): the keyword tree's paths ("Parent|Child"), a parent
+  // before its children, siblings by name; `count` matched the query, `keywords` from offset + 1, at
+  // most `limit`.
+  list_keywords: z.object({ count: z.number(), keywords: z.array(z.string()) }),
+  // One photo's keywords before and after; not written when nothing would change. As set_rating.
+  // Plain names up to plugin 0.9.0; paths ("Parent|Child"; a top-level keyword is its name) from 0.10.0.
   set_keywords: z.object({
     ...targeted,
     filename: z.string().optional(),
     before: z.array(z.string()),
     after: z.array(z.string()).optional(),
+    write_error: z.string().optional(),
+    after_error: z.string().optional(),
+  }),
+  // Plugin 0.10.0: one photo's GPS position before and after; not written when it already held it.
+  // As set_rating.
+  set_gps: z.object({
+    ...targeted,
+    filename: z.string().optional(),
+    before: gpsWire,
+    after: gpsWire.optional(),
     write_error: z.string().optional(),
     after_error: z.string().optional(),
   }),
@@ -224,10 +246,14 @@ export type CommandPayloads = {
   /** The criteria intersected; with `collection_id`, only that collection's photos. limit 1-500. */
   search_photos: { criteria: SearchCriterion[]; collection_id?: number; offset: number; limit: number };
   list_collections: Record<string, never>;
+  /** query: only paths that contain it, case aside. limit 1-500. */
+  list_keywords: { query?: string; offset: number; limit: number };
   /** rating 0-5, 0 clears it. Refused with unknown_photo when no photo has the uuid. */
   set_rating: { photo_uuid: string; rating: number };
-  /** Keyword names; at least one between add and remove. */
+  /** Keyword names or paths (library\keywords.ts); at least one between add and remove. */
   set_keywords: { photo_uuid: string; add: string[]; remove: string[] };
+  /** A position in decimal degrees, or clear: true to remove the photo's position. */
+  set_gps: { photo_uuid: string; latitude: number; longitude: number } | { photo_uuid: string; clear: true };
   get_prefs: Record<string, never>;
   /** Refused with bad_request when a field is unknown or of the wrong type (hud-protocol.ts). */
   hud_update: HudUpdatePayload;

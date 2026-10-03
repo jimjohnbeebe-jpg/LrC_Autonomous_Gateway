@@ -1,0 +1,646 @@
+phase-6/automaat-sync: Lightroom check (issue #60), transcript
+
+What: on 20260907-_OZ80099.NEF, through the engine's own tools: lr_list_keywords (paged, then
+filtered), lr_set_keywords with the path "LrC-AVG check|keywords" (levels created), lr_set_gps
+(47.6205, -122.3493), each read back; then the keyword taken off the photo and the GPS position
+removed again (the photo had none), the Develop settings compared with the start, and bridge.log's
+"failed to open" lines counted (the new bind-failure log line).
+Code: branch phase-6/automaat-sync at 69c9107 (engine 0.15.0, engine\dist built from it); plugin
+0.10.0 in Lightroom (Reload Plug-in).
+Run: by Jim on 2026-10-03, 15:15:57-15:19:44 local, Lightroom 15.6 [handle: section 1, first line];
+the five y/n answers typed by Jim in the PowerShell window.
+Command: node logs\check-automaat-sync-2026-10-03\check.mts
+Script changes after the code review, before the run (review of PR #71): a Ctrl+C handler so a
+second Ctrl+C cannot skip the put-back, and a PLUGIN_ERROR entry counted as "maybe written".
+Redaction: the user folder is written %USERPROFILE%. Nothing else was changed.
+
+Sections:
+  1. Transcript (check.txt), verbatim
+  2. check.json, verbatim
+  3. The check script (check.mts), verbatim, as run
+  4. Dry runs against the engine's test simulator (dryrun.txt), verbatim; they ran the script as it
+     was before the two review changes named above
+
+================================================================================
+1. Transcript
+================================================================================
+[3:15:57 PM] YES  Lightroom 15.6 runs plugin 0.10.0 (0.10.0 or later needed)
+[3:15:57 PM] YES  lr_search_photos finds 20260907-_OZ80099.NEF with uuid CF12AF60-0858-4181-9562-376D16B89126
+[3:16:15 PM] YES  lr_list_keywords answers: 5 of 16861 keywords, 17555 ms
+[3:16:15 PM] YES  it says the list is truncated: "5 of 16861 keywords from offset 0: call again with offset 5, or narrow with query."
+[3:16:35 PM] Before the check the catalog has no "LrC-AVG check" keyword.
+[3:16:35 PM] YES  the path "LrC-AVG check|keywords" was added and read back (0 -> 1 keywords, 150 ms)
+[3:16:55 PM] YES  lr_list_keywords now lists "LrC-AVG check" and "LrC-AVG check|keywords"
+[3:16:55 PM] NOW: in Lightroom's Library module, right side, open the Keyword List panel and type LrC-AVG in its filter box.
+    Do you see "LrC-AVG check" with "keywords" inside it (click the triangle next to it to open it)? -> y
+[3:18:38 PM] YES  the GPS position was written and read back: {"latitude":47.6205,"longitude":-122.3493} for {"latitude":47.6205,"longitude":-122.3493}, 125 ms
+[3:18:38 PM] NOW: select 20260907-_OZ80099.NEF in the Library module and look at the Metadata panel (right side), field GPS.
+    Does GPS read about 47°37'14" N 122°20'57" W (the seconds may show decimals)? -> y
+[3:19:14 PM] YES  PUT BACK keywords: YES (the photo's keywords as before the check)
+[3:19:14 PM] YES  PUT BACK GPS: YES (removed again with position null: the photo had none)
+[3:19:14 PM] NOW: look at the Metadata panel's GPS field again.
+    Is the GPS field empty again, as before the check? -> y
+[3:19:18 PM] NOW: click Lightroom's Edit menu (top menu bar) and read its first item. Do not click it; press Esc to close the menu.
+    Does the first item read "Undo AVG set GPS"? -> y
+[3:19:44 PM] YES  no Develop setting changed
+[3:19:44 PM] bridge.log since the plugin last started: 0 "failed to open" line(s)
+[3:19:44 PM] 
+[3:19:44 PM] automaat-sync check: WORKED
+[3:19:44 PM] NOT PUT BACK (by design or by failure):
+[3:19:44 PM]   - the keywords "LrC-AVG check" and "LrC-AVG check|keywords" stay in the catalog's Keyword List: the SDK lists no call that deletes a keyword [handle: https://lrc.mcor.dev/modules/LrCatalog.html, https://lrc.mcor.dev/modules/LrKeyword.html]. To remove them: Keyword List panel, right-click "LrC-AVG check" > Delete
+[3:19:44 PM] Results: D:\Developer\LrC_Autonomous_Gateway\logs\check-automaat-sync-2026-10-03\check.json and check.txt
+
+================================================================================
+2. check.json
+================================================================================
+{
+  "started": "2026-10-03T22:15:57.230Z",
+  "engine_version": "0.15.0",
+  "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+  "steps": {
+    "1_photo": {
+      "at": "2026-10-03T22:15:57.835Z",
+      "ok": true,
+      "count": 2,
+      "found": true
+    },
+    "2_list_all": {
+      "at": "2026-10-03T22:16:15.403Z",
+      "ms": 17555,
+      "count": 16861,
+      "returned": 5,
+      "has_more": true,
+      "truncated": "5 of 16861 keywords from offset 0: call again with offset 5, or narrow with query."
+    },
+    "2_check_keyword_before": {
+      "at": "2026-10-03T22:16:35.535Z",
+      "ok": true,
+      "keywords": []
+    },
+    "3_add_path": {
+      "at": "2026-10-03T22:16:35.688Z",
+      "ms": 150,
+      "ok": true,
+      "before_count": 0,
+      "after_count": 1,
+      "had_it": false,
+      "failed": []
+    },
+    "3_check_keyword_after": {
+      "at": "2026-10-03T22:16:55.455Z",
+      "ok": true,
+      "keywords": [
+        "LrC-AVG check",
+        "LrC-AVG check|keywords"
+      ]
+    },
+    "4_set_gps": {
+      "at": "2026-10-03T22:18:38.437Z",
+      "ms": 125,
+      "ok": true,
+      "had_position": false,
+      "written": {
+        "latitude": 47.6205,
+        "longitude": -122.3493
+      },
+      "read_back": {
+        "latitude": 47.6205,
+        "longitude": -122.3493
+      },
+      "failed": []
+    },
+    "5_keyword_back": {
+      "at": "2026-10-03T22:19:14.705Z",
+      "ms": 89,
+      "ok": true,
+      "after_count": 0,
+      "failed": []
+    },
+    "5_gps_back": {
+      "at": "2026-10-03T22:19:14.802Z",
+      "ms": 96,
+      "ok": true,
+      "removed": true,
+      "put_back": true,
+      "wrote": true,
+      "failed": []
+    },
+    "5_develop": {
+      "at": "2026-10-03T22:19:44.606Z",
+      "differing": []
+    }
+  },
+  "checks": [
+    {
+      "ok": true,
+      "text": "Lightroom 15.6 runs plugin 0.10.0 (0.10.0 or later needed)"
+    },
+    {
+      "ok": true,
+      "text": "lr_search_photos finds 20260907-_OZ80099.NEF with uuid CF12AF60-0858-4181-9562-376D16B89126"
+    },
+    {
+      "ok": true,
+      "text": "lr_list_keywords answers: 5 of 16861 keywords, 17555 ms"
+    },
+    {
+      "ok": true,
+      "text": "it says the list is truncated: \"5 of 16861 keywords from offset 0: call again with offset 5, or narrow with query.\""
+    },
+    {
+      "ok": true,
+      "text": "the path \"LrC-AVG check|keywords\" was added and read back (0 -> 1 keywords, 150 ms)"
+    },
+    {
+      "ok": true,
+      "text": "lr_list_keywords now lists \"LrC-AVG check\" and \"LrC-AVG check|keywords\"",
+      "detail": [
+        "LrC-AVG check",
+        "LrC-AVG check|keywords"
+      ]
+    },
+    {
+      "ok": true,
+      "text": "the GPS position was written and read back: {\"latitude\":47.6205,\"longitude\":-122.3493} for {\"latitude\":47.6205,\"longitude\":-122.3493}, 125 ms"
+    },
+    {
+      "ok": true,
+      "text": "PUT BACK keywords: YES (the photo's keywords as before the check)"
+    },
+    {
+      "ok": true,
+      "text": "PUT BACK GPS: YES (removed again with position null: the photo had none)"
+    },
+    {
+      "ok": true,
+      "text": "no Develop setting changed"
+    }
+  ],
+  "answers": [
+    {
+      "q": "Do you see \"LrC-AVG check\" with \"keywords\" inside it (click the triangle next to it to open it)?",
+      "answer": "y",
+      "at": "2026-10-03T22:18:38.310Z"
+    },
+    {
+      "q": "Does GPS read about 47°37'14\" N 122°20'57\" W (the seconds may show decimals)?",
+      "answer": "y",
+      "at": "2026-10-03T22:19:14.615Z"
+    },
+    {
+      "q": "Is the GPS field empty again, as before the check?",
+      "answer": "y",
+      "at": "2026-10-03T22:19:18.384Z"
+    },
+    {
+      "q": "Does the first item read \"Undo AVG set GPS\"?",
+      "answer": "y",
+      "at": "2026-10-03T22:19:44.587Z"
+    }
+  ],
+  "failures": [],
+  "cannot_put_back": [
+    "the keywords \"LrC-AVG check\" and \"LrC-AVG check|keywords\" stay in the catalog's Keyword List: the SDK lists no call that deletes a keyword [handle: https://lrc.mcor.dev/modules/LrCatalog.html, https://lrc.mcor.dev/modules/LrKeyword.html]. To remove them: Keyword List panel, right-click \"LrC-AVG check\" > Delete"
+  ],
+  "hello": {
+    "plugin_version": "0.10.0",
+    "lrc_version": "15.6"
+  },
+  "bridge_log": {
+    "file": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\bridge.log",
+    "since": "2026-10-03 15:14:57.262 INFO  bridge: starting generation 1 (receive 8765, send 8766)",
+    "failed_to_open": 0,
+    "last": []
+  },
+  "bridge": {
+    "connects": 1,
+    "connect_failures": 0,
+    "last_connect_error": null,
+    "drops": 0,
+    "last_drop_reason": null,
+    "malformed_lines": 0,
+    "unknown_response_ids": 0,
+    "ports": {
+      "command": 8765,
+      "event": 8766,
+      "from": "ports file"
+    }
+  },
+  "ended": "2026-10-03T22:19:44.611Z"
+}
+
+================================================================================
+3. The check script (check.mts)
+================================================================================
+// Lightroom check of branch phase-6/automaat-sync (engine 0.15.0, plugin 0.10.0), GitHub issue #60.
+// Decisions [stated: Jim, 2026-10-03]: "Keyword hierarchy, set_gps, MCP SDK 1.32.0", plus the
+// bind-failure log line. Runs through the engine's own Tools (engine\dist), as Claude Desktop's
+// engine would, on ONE photo: 20260907-_OZ80099.NEF [handle: logs\20260927-26ecc4.json target.uuid].
+//   1. takes the engine instance lock; the plugin's hello; finds the photo by file name
+//      (lr_search_photos) and checks its uuid; reads its Develop settings (the start);
+//   2. lr_list_keywords: at most 5 of the whole tree (count, truncated), then "LrC-AVG check" (does
+//      the check's keyword exist already?);
+//   3. lr_set_keywords adds the path "LrC-AVG check|keywords"; lr_list_keywords lists both levels;
+//      Jim confirms the Keyword List;
+//   4. lr_set_gps sets 47.6205, -122.3493; the exact read-back; Jim confirms the Metadata panel;
+//   5. ALWAYS: the keyword taken off the photo (unless it was on it before), the GPS position put
+//      back (removed with position null if the photo had none), the Develop settings compared with
+//      the start; Jim confirms the Metadata panel and the Edit menu; what cannot be put back is said
+//      plainly (the SDK has no call that deletes a keyword);
+//   6. counts bridge.log's "failed to open" lines since the plugin last started (the new log line).
+// Every step times out and moves on, so a missed step never blocks the put-back. y = good.
+// Only counts of the photo's own keywords are recorded, and only whether it had a GPS position.
+// Results: <out>\check.json and <out>\check.txt (the transcript); <out> is this script's folder.
+// Usage, from the repo root with branch phase-6/automaat-sync checked out and built (npm run build):
+//   node logs\check-automaat-sync-2026-10-03\check.mts
+// Dry run against the test sim: LRC_AVG_COMMAND_PORT/_EVENT_PORT/_TOKEN_FILE, CHECK_OUT, CHECK_UUID,
+// CHECK_FILENAME, CHECK_BRIDGE_LOG.
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { createInterface } from "node:readline/promises";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+const repo = path.resolve(process.argv[2] ?? process.cwd());
+const dist = (p: string) => import(pathToFileURL(path.join(repo, "engine", "dist", p)).href);
+const { BridgeClient, pluginVersionAtLeast } = await dist("bridge/index.js");
+const { Tools, acquireInstanceLock, devOverrides, toToolError, ENGINE_VERSION } = await dist("mcp/index.js");
+const { PreviewService } = await dist("preview/index.js");
+const { IntentLibrary } = await dist("intents/index.js");
+const { loadDefaultParamMap } = await dist("params/index.js");
+const { ToolLog } = await dist("log/index.js");
+
+const UUID = process.env["CHECK_UUID"] ?? "CF12AF60-0858-4181-9562-376D16B89126";
+const FILENAME = process.env["CHECK_FILENAME"] ?? "20260907-_OZ80099.NEF";
+const PARENT = "LrC-AVG check";
+const KEYWORD = "LrC-AVG check|keywords";
+const SPOT = { latitude: 47.6205, longitude: -122.3493 };
+const SPOT_DMS = `47°37'14" N 122°20'57" W`; // 47.6205 = 47° 37' 13.8", 122.3493 = 122° 20' 57.5" [inference: arithmetic]
+const STEP_MS = 90_000;
+const outDir = process.env["CHECK_OUT"] ?? path.dirname(fileURLToPath(import.meta.url));
+const bridgeLog = process.env["CHECK_BRIDGE_LOG"] ?? path.join(process.env["TEMP"] ?? os.tmpdir(), "LrC-AVG", "bridge.log");
+mkdirSync(outDir, { recursive: true });
+
+const transcript: string[] = [];
+const at = () => new Date().toISOString();
+const result: Record<string, any> = { started: at(), engine_version: ENGINE_VERSION, uuid: UUID, steps: {}, checks: [], answers: [], failures: [], cannot_put_back: [] };
+const save = () => {
+  writeFileSync(path.join(outDir, "check.json"), JSON.stringify(result, null, 2));
+  writeFileSync(path.join(outDir, "check.txt"), `${transcript.join("\n")}\n`);
+};
+const say = (m: string) => {
+  const line = `[${new Date().toLocaleTimeString()}] ${m}`;
+  console.log(line);
+  transcript.push(line);
+  save();
+};
+const step = (name: string, data: Record<string, unknown>) => {
+  result.steps[name] = { at: at(), ...data };
+  save();
+};
+function check(ok: boolean, text: string, detail?: unknown) {
+  result.checks.push({ ok, text, detail });
+  if (!ok) result.failures.push(text);
+  say(`${ok ? "YES" : "NO "}  ${text}`);
+}
+
+const rl = createInterface({ input: process.stdin, output: process.stdout });
+// Ctrl+C: without a listener readline closes and a second Ctrl+C is a real SIGINT that kills Node
+// before the put-back (review of PR #71). So the first one closes readline (questions left get "no
+// answer"), and any later one is ignored until the put-back has run.
+rl.on("SIGINT", () => { say("Ctrl+C: questions left get no answer; the put-back still runs, wait for its last lines."); rl.close(); });
+process.on("SIGINT", () => say("Ctrl+C again: ignored, the put-back is still running."));
+async function ask(q: string): Promise<string> {
+  let a: string | null = null;
+  for (let i = 0; i < 3 && a !== "y" && a !== "n"; i++) {
+    try {
+      a = (await rl.question(`${q} (y/n) `, { signal: AbortSignal.timeout(10 * 60_000) })).trim().toLowerCase();
+    } catch {
+      a = null; // no answer in 10 minutes, or stdin closed
+      break;
+    }
+  }
+  const answer = a === "y" || a === "n" ? a : "no answer";
+  result.answers.push({ q, answer, at: at() });
+  transcript.push(`    ${q} -> ${answer}`);
+  if (answer !== "y") result.failures.push(`answered ${answer}: ${q}`);
+  save();
+  return answer;
+}
+
+type Called = { ok: true; ms: number; json: Record<string, any> } | { ok: false; ms: number; error: unknown };
+/** A tool call that gives up after STEP_MS: its JSON, or its error body. */
+async function call(label: string, fn: () => Promise<{ json: Record<string, any> }>): Promise<Called> {
+  const s = performance.now();
+  let timer: NodeJS.Timeout | undefined;
+  const late = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label}: no answer within ${STEP_MS / 1000} s`)), STEP_MS);
+  });
+  try {
+    const out = await Promise.race([fn(), late]);
+    return { ok: true, ms: Math.round(performance.now() - s), json: out.json };
+  } catch (err) {
+    return { ok: false, ms: Math.round(performance.now() - s), error: toToolError(err).body() };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+const ms = (c: Called) => `${c.ms} ms`;
+const why = (c: Called) => (c.ok ? JSON.stringify(c.json["failed"] ?? []) : JSON.stringify(c.error));
+const near = (p: any, q: any) => !!p && !!q && Math.abs(p.latitude - q.latitude) <= 1e-5 && Math.abs(p.longitude - q.longitude) <= 1e-5;
+const sameSet = (a: string[], b: string[]) => JSON.stringify(a.map((k) => k.toLowerCase()).sort()) === JSON.stringify(b.map((k) => k.toLowerCase()).sort());
+const hasKeyword = (list: string[] | null | undefined) => (list ?? []).some((k) => k.toLowerCase() === KEYWORD.toLowerCase());
+/** The photo's entry in a write tool's answer: in `photos`, or in `failed` (which keeps `before`). */
+const entry = (c: Called): Record<string, any> | null => (c.ok ? (c.json["photos"][0] ?? c.json["failed"][0] ?? null) : null);
+
+const dev = devOverrides();
+const lock = await acquireInstanceLock(dev.lockPort);
+if (!lock.ok) {
+  result.lock = { ok: false, port: lock.port, pid: lock.pid };
+  save();
+  console.log(`LOCK BUSY: another engine (pid ${lock.pid}) holds port ${lock.port}. Quit Claude Desktop (File > Exit), wait 60 s, then run this again.`);
+  process.exit(2);
+}
+const client = new BridgeClient({ engineVersion: `${ENGINE_VERSION}-automaat-sync-check`, log: (m: string) => console.error(`  (${m})`), ...dev.bridge });
+client.start();
+const map = loadDefaultParamMap();
+const settingsNow = async () => map.fromSdk((await client.request("get_settings", { photo_uuid: UUID })).settings).settings as Record<string, unknown>;
+
+let tools: any = null;
+let start: Record<string, unknown> | null = null;
+let existedBefore: string[] | null = null; // "LrC-AVG check" keywords in the catalog before the check
+let keywordsBefore: string[] | null = null; // the photo's keyword paths before the check
+let keywordTried = false;
+let gpsBefore: { latitude: number; longitude: number } | null | undefined; // undefined: never read
+let gpsTried = false;
+let gpsMayBeWritten = false; // false when the set was refused before anything was written
+try {
+  // 1. The engine, the plugin and the photo.
+  if (!pluginVersionAtLeast(ENGINE_VERSION, "0.15.0")) throw new Error(`engine\\dist is engine ${ENGINE_VERSION}: check out phase-6/automaat-sync and run npm run build`);
+  const hello = await client.waitConnected(30_000);
+  result.hello = { plugin_version: hello.plugin_version, lrc_version: hello.lrc_version };
+  const newEnough = pluginVersionAtLeast(hello.plugin_version, "0.10.0");
+  check(newEnough, `Lightroom ${hello.lrc_version} runs plugin ${hello.plugin_version} (0.10.0 or later needed)`);
+  if (!newEnough) throw new Error("plugin version: restart Lightroom so it loads plugin 0.10.0");
+  tools = new Tools({
+    client,
+    map,
+    previews: new PreviewService(client),
+    intents: new IntentLibrary({ map }),
+    sessionLogDir: path.join(outDir, "sessions"),
+    engineVersion: `${ENGINE_VERSION}-automaat-sync-check`,
+    ensureBridge: async () => void (await client.waitConnected(15_000)),
+    log: new ToolLog(outDir),
+    hud: false,
+  });
+  const found = await call("lr_search_photos", () => tools.searchPhotos({ filename: FILENAME, limit: 50 }));
+  const P = found.ok ? (found.json["photos"] as Array<{ uuid: string }>).find((p) => p.uuid === UUID) : undefined;
+  step("1_photo", { ok: found.ok, count: found.ok ? found.json["count"] : null, found: P !== undefined, ...(found.ok ? {} : { error: found.error }) });
+  check(P !== undefined, `lr_search_photos finds ${FILENAME} with uuid ${UUID}`);
+  if (!P) throw new Error("the photo was not found");
+  start = await settingsNow();
+
+  // 2. The keyword tree, bounded.
+  const whole = await call("lr_list_keywords", () => tools.listKeywords({ limit: 5 }));
+  step("2_list_all", whole.ok ? { ms: whole.ms, count: whole.json["count"], returned: whole.json["returned"], has_more: whole.json["has_more"], truncated: whole.json["truncated"] ?? null } : { ms: whole.ms, error: whole.error });
+  check(whole.ok && whole.json["returned"] <= 5, whole.ok ? `lr_list_keywords answers: ${whole.json["returned"]} of ${whole.json["count"]} keywords, ${ms(whole)}` : `lr_list_keywords answers (${why(whole)})`);
+  if (whole.ok && whole.json["has_more"]) check(typeof whole.json["truncated"] === "string", `it says the list is truncated: "${whole.json["truncated"]}"`);
+  const mine = await call("lr_list_keywords", () => tools.listKeywords({ query: PARENT }));
+  existedBefore = mine.ok ? mine.json["keywords"] : null;
+  step("2_check_keyword_before", { ok: mine.ok, keywords: existedBefore, ...(mine.ok ? {} : { error: mine.error }) });
+  say(`Before the check the catalog has ${existedBefore === null ? "(unknown)" : existedBefore.length === 0 ? "no" : JSON.stringify(existedBefore)} "${PARENT}" keyword.`);
+
+  // 3. A keyword path.
+  keywordTried = true;
+  const add = await call("lr_set_keywords", () => tools.setKeywords({ uuids: [UUID], add: [KEYWORD] }));
+  const a = entry(add);
+  keywordsBefore = a?.before ?? null;
+  step("3_add_path", { ms: add.ms, ok: add.ok, before_count: keywordsBefore?.length ?? null, after_count: a?.after?.length ?? null, had_it: hasKeyword(keywordsBefore), failed: add.ok ? add.json["failed"] : add.error });
+  check(add.ok && add.json["failed"].length === 0 && hasKeyword(a?.after), add.ok ? `the path "${KEYWORD}" was added and read back (${keywordsBefore?.length} -> ${a?.after?.length} keywords, ${ms(add)})` : `the path was added (${why(add)})`);
+  const listed = await call("lr_list_keywords", () => tools.listKeywords({ query: PARENT }));
+  step("3_check_keyword_after", { ok: listed.ok, keywords: listed.ok ? listed.json["keywords"] : listed.error });
+  check(listed.ok && listed.json["keywords"].includes(PARENT) && listed.json["keywords"].includes(KEYWORD), `lr_list_keywords now lists "${PARENT}" and "${KEYWORD}"`, listed.ok ? listed.json["keywords"] : listed.error);
+  say("NOW: in Lightroom's Library module, right side, open the Keyword List panel and type LrC-AVG in its filter box.");
+  await ask(`Do you see "${PARENT}" with "keywords" inside it (click the triangle next to it to open it)?`);
+
+  // 4. A GPS position.
+  gpsTried = true;
+  const set = await call("lr_set_gps", () => tools.setGps({ uuids: [UUID], position: SPOT }));
+  const g = entry(set);
+  if (g && "before" in g) gpsBefore = g["before"];
+  // Written, or maybe: the plugin read `before` (so it went on to write), or the call got no answer
+  // after being sent (maybe_written, or this script's own time-out). A refusal wrote nothing.
+  const setError = set.ok ? null : (set.error as { message?: string; details?: { maybe_written?: string } });
+  // A PLUGIN_ERROR entry has no `before` but may have raised after the write (review of PR #71).
+  const pluginError = set.ok && (set.json["failed"] as Array<{ code?: string }>).some((f) => f.code === "PLUGIN_ERROR");
+  gpsMayBeWritten = set.ok ? gpsBefore !== undefined || pluginError :Boolean(setError?.details?.maybe_written) || String(setError?.message ?? "").includes("no answer within");
+  step("4_set_gps", { ms: set.ms, ok: set.ok, had_position: gpsBefore === undefined ? null : gpsBefore !== null, written: SPOT, read_back: g?.after ?? null, failed: set.ok ? set.json["failed"] : set.error });
+  check(set.ok && set.json["failed"].length === 0 && near(g?.after, SPOT), set.ok ? `the GPS position was written and read back: ${JSON.stringify(g?.after ?? null)} for ${JSON.stringify(SPOT)}, ${ms(set)}` : `the GPS position was written (${why(set)})`);
+  say(`NOW: select ${FILENAME} in the Library module and look at the Metadata panel (right side), field GPS.`);
+  await ask(`Does GPS read about ${SPOT_DMS} (the seconds may show decimals)?`);
+} catch (err: any) {
+  result.error = String(err?.message ?? err);
+  result.failures.push(`error: ${result.error}`);
+  say(`ERROR: ${result.error}`);
+} finally {
+  // 5. The put-back, whatever happened.
+  try {
+    if (keywordTried && !hasKeyword(keywordsBefore)) {
+      const rm = await call("lr_set_keywords", () => tools.setKeywords({ uuids: [UUID], remove: [KEYWORD] }));
+      const r = entry(rm);
+      const after: unknown = r?.after;
+      const back =
+        rm.ok && rm.json["failed"].length === 0 && Array.isArray(after) && (keywordsBefore ? sameSet(after, keywordsBefore) : !hasKeyword(after));
+      step("5_keyword_back", { ms: rm.ms, ok: rm.ok, after_count: Array.isArray(after) ? after.length : null, failed: rm.ok ? rm.json["failed"] : rm.error });
+      check(rm.ok && back, back ? "PUT BACK keywords: YES (the photo's keywords as before the check)" : `PUT BACK keywords: NO (${why(rm)})`);
+      if (!back) result.cannot_put_back.push(`the keyword "${KEYWORD}" on ${FILENAME}: take it off in the Keyword List panel (untick it with the photo selected)`);
+    }
+    if (gpsMayBeWritten && gpsBefore === undefined) {
+      check(false, "PUT BACK GPS: NO (the write may have landed, and the position before it was never read)");
+      result.cannot_put_back.push(`the GPS position of ${FILENAME}: its earlier position is unknown`);
+    } else if (gpsMayBeWritten) {
+      const back = await call("lr_set_gps", () => tools.setGps({ uuids: [UUID], position: gpsBefore }));
+      const r = entry(back);
+      const ok = back.ok && back.json["failed"].length === 0 && (gpsBefore === null ? r?.after === null : near(r?.after, gpsBefore));
+      step("5_gps_back", { ms: back.ms, ok: back.ok, removed: gpsBefore === null, put_back: ok, wrote: r?.changed ?? null, failed: back.ok ? back.json["failed"] : back.error });
+      check(ok, ok ? `PUT BACK GPS: YES (${gpsBefore === null ? "removed again with position null: the photo had none" : "the photo's own position again"})` : `PUT BACK GPS: NO (${why(back)})`);
+      if (!ok) result.cannot_put_back.push(`the GPS position of ${FILENAME}: ${gpsBefore === null ? "Lightroom did not remove it; delete the GPS field's text in the Metadata panel" : "set it back in the Metadata panel"}`);
+      say("NOW: look at the Metadata panel's GPS field again.");
+      await ask(gpsBefore === null ? "Is the GPS field empty again, as before the check?" : "Does the GPS field show the photo's own position again, as before the check?");
+      if (back.ok && r?.changed === true) {
+        say("NOW: click Lightroom's Edit menu (top menu bar) and read its first item. Do not click it; press Esc to close the menu.");
+        await ask(`Does the first item read "Undo AVG set GPS"?`);
+      } else {
+        say("(The put-back wrote no GPS position, so the Edit menu is not checked.)");
+      }
+    } else if (gpsTried) {
+      say("GPS: the set was refused before anything was written, so there is nothing to put back.");
+    }
+    if (start) {
+      const end = await settingsNow();
+      const diff = [...new Set([...Object.keys(start), ...Object.keys(end)])].filter((k) => JSON.stringify(start?.[k]) !== JSON.stringify(end[k]));
+      step("5_develop", { differing: diff });
+      check(diff.length === 0, diff.length === 0 ? "no Develop setting changed" : `Develop settings changed: ${diff.join(", ")}`);
+    }
+  } catch (err: any) {
+    check(false, "PUT BACK ran", String(err?.message ?? err));
+  }
+  const created = [PARENT, KEYWORD].filter((k) => existedBefore === null || !existedBefore.includes(k));
+  if (keywordTried && created.length > 0) {
+    result.cannot_put_back.push(
+      `the keywords ${created.map((k) => `"${k}"`).join(" and ")} stay in the catalog's Keyword List: the SDK lists no call that deletes a keyword ` +
+        `[handle: https://lrc.mcor.dev/modules/LrCatalog.html, https://lrc.mcor.dev/modules/LrKeyword.html]. To remove them: Keyword List panel, right-click "${PARENT}" > Delete`,
+    );
+  }
+
+  // 6. The bind-failure log line.
+  if (existsSync(bridgeLog)) {
+    const lines = readFileSync(bridgeLog, "utf8").split(/\r?\n/);
+    const from = lines.reduce((last, line, i) => (line.includes("bridge: starting generation") ? i : last), 0);
+    const failed = lines.slice(from).filter((line) => line.includes("failed to open"));
+    result.bridge_log = { file: bridgeLog, since: lines[from] ?? null, failed_to_open: failed.length, last: failed.slice(-3) };
+    say(`bridge.log since the plugin last started: ${failed.length} "failed to open" line(s)${failed.length ? `; last: ${failed.at(-1)}` : ""}`);
+  } else {
+    result.bridge_log = { file: bridgeLog, found: false };
+    say(`bridge.log not found at ${bridgeLog}`);
+  }
+
+  result.bridge = client.stats;
+  result.ended = at();
+  client.stop();
+  await lock.lock.release();
+  rl.close();
+  const failures: string[] = result.failures;
+  say("");
+  say(failures.length === 0 ? "automaat-sync check: WORKED" : `automaat-sync check: FAILED (${failures.length})`);
+  for (const f of failures) say(`  - ${f}`);
+  if (result.cannot_put_back.length > 0) {
+    say("NOT PUT BACK (by design or by failure):");
+    for (const c of result.cannot_put_back) say(`  - ${c}`);
+  }
+  say(`Results: ${path.join(outDir, "check.json")} and check.txt`);
+  process.exit(failures.length === 0 ? 0 : 1);
+}
+
+================================================================================
+4. Dry runs (dryrun.txt)
+================================================================================
+===== dry run 1 (photo with a GPS position): SIM-LIB-2 (20260907-_OZ80099.NEF), out %USERPROFILE%\AppData\Local\Temp\automaat-sync-dry-yegGmA
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+[2:35:58 PM] YES  Lightroom 15.5.1 runs plugin 0.10.0 (0.10.0 or later needed)
+[2:35:58 PM] YES  lr_search_photos finds 20260907-_OZ80099.NEF with uuid SIM-LIB-2
+[2:35:58 PM] YES  lr_list_keywords answers: 5 of 7 keywords, 2 ms
+[2:35:58 PM] YES  it says the list is truncated: "5 of 7 keywords from offset 0: call again with offset 5, or narrow with query."
+[2:35:58 PM] Before the check the catalog has no "LrC-AVG check" keyword.
+[2:35:58 PM] YES  the path "LrC-AVG check|keywords" was added and read back (1 -> 2 keywords, 4 ms)
+[2:35:58 PM] YES  lr_list_keywords now lists "LrC-AVG check" and "LrC-AVG check|keywords"
+[2:35:58 PM] NOW: in Lightroom's Library module, right side, open the Keyword List panel and type LrC-AVG in its filter box.
+Do you see "LrC-AVG check" with "keywords" inside it (click the triangle next to it to open it)? (y/n) [2:35:58 PM] YES  the GPS position was written and read back: {"latitude":47.6205,"longitude":-122.3493} for {"latitude":47.6205,"longitude":-122.3493}, 5 ms
+[2:35:58 PM] NOW: select 20260907-_OZ80099.NEF in the Library module and look at the Metadata panel (right side), field GPS.
+Does GPS read about 47°37'14" N 122°20'57" W (the seconds may show decimals)? (y/n) [2:35:58 PM] YES  PUT BACK keywords: YES (the photo's keywords as before the check)
+[2:35:58 PM] YES  PUT BACK GPS: YES (the photo's own position again)
+[2:35:58 PM] NOW: look at the Metadata panel's GPS field again.
+Does the GPS field show the photo's own position again, as before the check? (y/n) [2:35:58 PM] NOW: click Lightroom's Edit menu (top menu bar) and read its first item. Do not click it; press Esc to close the menu.
+Does the first item read "Undo AVG set GPS"? (y/n) [2:35:58 PM] YES  no Develop setting changed
+[2:35:58 PM] bridge.log since the plugin last started: 0 "failed to open" line(s)
+  (bridge: stopped)
+[2:35:58 PM] 
+[2:35:58 PM] automaat-sync check: WORKED
+[2:35:58 PM] NOT PUT BACK (by design or by failure):
+[2:35:58 PM]   - the keywords "LrC-AVG check" and "LrC-AVG check|keywords" stay in the catalog's Keyword List: the SDK lists no call that deletes a keyword [handle: https://lrc.mcor.dev/modules/LrCatalog.html, https://lrc.mcor.dev/modules/LrKeyword.html]. To remove them: Keyword List panel, right-click "LrC-AVG check" > Delete
+[2:35:58 PM] Results: %USERPROFILE%\AppData\Local\Temp\automaat-sync-dry-yegGmA\check.json and check.txt
+
+SIM AFTER: keywords ["bird"], gps {"latitude":47.6062,"longitude":-122.3321}, keyword tree ["bird","heron","Animals","Animals|bird","Places","Places|Europe","Places|Europe|Paris","LrC-AVG check","LrC-AVG check|keywords"]
+exit 0
+
+===== dry run 2 (photo without a GPS position): SIM-UUID (20260907-_OZ80093.NEF), out %USERPROFILE%\AppData\Local\Temp\automaat-sync-dry-eShxlV
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+[2:35:59 PM] YES  Lightroom 15.5.1 runs plugin 0.10.0 (0.10.0 or later needed)
+[2:35:59 PM] YES  lr_search_photos finds 20260907-_OZ80093.NEF with uuid SIM-UUID
+[2:35:59 PM] YES  lr_list_keywords answers: 5 of 7 keywords, 4 ms
+[2:35:59 PM] YES  it says the list is truncated: "5 of 7 keywords from offset 0: call again with offset 5, or narrow with query."
+[2:35:59 PM] Before the check the catalog has no "LrC-AVG check" keyword.
+[2:35:59 PM] YES  the path "LrC-AVG check|keywords" was added and read back (0 -> 1 keywords, 2 ms)
+[2:35:59 PM] YES  lr_list_keywords now lists "LrC-AVG check" and "LrC-AVG check|keywords"
+[2:35:59 PM] NOW: in Lightroom's Library module, right side, open the Keyword List panel and type LrC-AVG in its filter box.
+Do you see "LrC-AVG check" with "keywords" inside it (click the triangle next to it to open it)? (y/n) [2:35:59 PM] YES  the GPS position was written and read back: {"latitude":47.6205,"longitude":-122.3493} for {"latitude":47.6205,"longitude":-122.3493}, 2 ms
+[2:35:59 PM] NOW: select 20260907-_OZ80093.NEF in the Library module and look at the Metadata panel (right side), field GPS.
+Does GPS read about 47°37'14" N 122°20'57" W (the seconds may show decimals)? (y/n) [2:35:59 PM] YES  PUT BACK keywords: YES (the photo's keywords as before the check)
+[2:35:59 PM] YES  PUT BACK GPS: YES (removed again with position null: the photo had none)
+[2:35:59 PM] NOW: look at the Metadata panel's GPS field again.
+Is the GPS field empty again, as before the check? (y/n) [2:35:59 PM] NOW: click Lightroom's Edit menu (top menu bar) and read its first item. Do not click it; press Esc to close the menu.
+Does the first item read "Undo AVG set GPS"? (y/n) [2:35:59 PM] YES  no Develop setting changed
+[2:35:59 PM] bridge.log since the plugin last started: 0 "failed to open" line(s)
+  (bridge: stopped)
+[2:35:59 PM] 
+[2:35:59 PM] automaat-sync check: WORKED
+[2:35:59 PM] NOT PUT BACK (by design or by failure):
+[2:35:59 PM]   - the keywords "LrC-AVG check" and "LrC-AVG check|keywords" stay in the catalog's Keyword List: the SDK lists no call that deletes a keyword [handle: https://lrc.mcor.dev/modules/LrCatalog.html, https://lrc.mcor.dev/modules/LrKeyword.html]. To remove them: Keyword List panel, right-click "LrC-AVG check" > Delete
+[2:35:59 PM] Results: %USERPROFILE%\AppData\Local\Temp\automaat-sync-dry-eShxlV\check.json and check.txt
+
+SIM AFTER: keywords [], gps null, keyword tree ["bird","heron","Animals","Animals|bird","Places","Places|Europe","Places|Europe|Paris","LrC-AVG check","LrC-AVG check|keywords"]
+exit 0
+
+===== dry run 3 (fault: the sim does not take GPS writes): SIM-LIB-2 (20260907-_OZ80099.NEF), out %USERPROFILE%\AppData\Local\Temp\automaat-sync-dry-EHS3GV
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+[2:36:00 PM] YES  Lightroom 15.5.1 runs plugin 0.10.0 (0.10.0 or later needed)
+[2:36:00 PM] YES  lr_search_photos finds 20260907-_OZ80099.NEF with uuid SIM-LIB-2
+[2:36:00 PM] YES  lr_list_keywords answers: 5 of 7 keywords, 4 ms
+[2:36:00 PM] YES  it says the list is truncated: "5 of 7 keywords from offset 0: call again with offset 5, or narrow with query."
+[2:36:00 PM] Before the check the catalog has no "LrC-AVG check" keyword.
+[2:36:00 PM] YES  the path "LrC-AVG check|keywords" was added and read back (1 -> 2 keywords, 3 ms)
+[2:36:00 PM] YES  lr_list_keywords now lists "LrC-AVG check" and "LrC-AVG check|keywords"
+[2:36:00 PM] NOW: in Lightroom's Library module, right side, open the Keyword List panel and type LrC-AVG in its filter box.
+Do you see "LrC-AVG check" with "keywords" inside it (click the triangle next to it to open it)? (y/n) [2:36:01 PM] NO   the GPS position was written and read back: {"latitude":47.6062,"longitude":-122.3321} for {"latitude":47.6205,"longitude":-122.3493}, 2 ms
+[2:36:01 PM] NOW: select 20260907-_OZ80099.NEF in the Library module and look at the Metadata panel (right side), field GPS.
+Does GPS read about 47°37'14" N 122°20'57" W (the seconds may show decimals)? (y/n) [2:36:01 PM] YES  PUT BACK keywords: YES (the photo's keywords as before the check)
+[2:36:01 PM] YES  PUT BACK GPS: YES (the photo's own position again)
+[2:36:01 PM] NOW: look at the Metadata panel's GPS field again.
+Does the GPS field show the photo's own position again, as before the check? (y/n) [2:36:01 PM] (The put-back wrote no GPS position, so the Edit menu is not checked.)
+[2:36:01 PM] YES  no Develop setting changed
+[2:36:01 PM] bridge.log since the plugin last started: 0 "failed to open" line(s)
+  (bridge: stopped)
+[2:36:01 PM] 
+[2:36:01 PM] automaat-sync check: FAILED (1)
+[2:36:01 PM]   - the GPS position was written and read back: {"latitude":47.6062,"longitude":-122.3321} for {"latitude":47.6205,"longitude":-122.3493}, 2 ms
+[2:36:01 PM] NOT PUT BACK (by design or by failure):
+[2:36:01 PM]   - the keywords "LrC-AVG check" and "LrC-AVG check|keywords" stay in the catalog's Keyword List: the SDK lists no call that deletes a keyword [handle: https://lrc.mcor.dev/modules/LrCatalog.html, https://lrc.mcor.dev/modules/LrKeyword.html]. To remove them: Keyword List panel, right-click "LrC-AVG check" > Delete
+[2:36:01 PM] Results: %USERPROFILE%\AppData\Local\Temp\automaat-sync-dry-EHS3GV\check.json and check.txt
+
+SIM AFTER: keywords ["bird"], gps {"latitude":47.6062,"longitude":-122.3321}, keyword tree ["bird","heron","Animals","Animals|bird","Places","Places|Europe","Places|Europe|Paris","LrC-AVG check","LrC-AVG check|keywords"]
+exit 1
+
+===== dry run 4 (fault: the plugin refuses set_gps before writing): SIM-LIB-2 (20260907-_OZ80099.NEF), out %USERPROFILE%\AppData\Local\Temp\automaat-sync-dry-zdZy92
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+[2:36:02 PM] YES  Lightroom 15.5.1 runs plugin 0.10.0 (0.10.0 or later needed)
+[2:36:02 PM] YES  lr_search_photos finds 20260907-_OZ80099.NEF with uuid SIM-LIB-2
+[2:36:02 PM] YES  lr_list_keywords answers: 5 of 7 keywords, 1 ms
+[2:36:02 PM] YES  it says the list is truncated: "5 of 7 keywords from offset 0: call again with offset 5, or narrow with query."
+[2:36:02 PM] Before the check the catalog has no "LrC-AVG check" keyword.
+[2:36:02 PM] YES  the path "LrC-AVG check|keywords" was added and read back (1 -> 2 keywords, 2 ms)
+[2:36:02 PM] YES  lr_list_keywords now lists "LrC-AVG check" and "LrC-AVG check|keywords"
+[2:36:02 PM] NOW: in Lightroom's Library module, right side, open the Keyword List panel and type LrC-AVG in its filter box.
+Do you see "LrC-AVG check" with "keywords" inside it (click the triangle next to it to open it)? (y/n) [2:36:02 PM] NO   the GPS position was written and read back: null for {"latitude":47.6205,"longitude":-122.3493}, 2 ms
+[2:36:02 PM] NOW: select 20260907-_OZ80099.NEF in the Library module and look at the Metadata panel (right side), field GPS.
+Does GPS read about 47°37'14" N 122°20'57" W (the seconds may show decimals)? (y/n) [2:36:02 PM] YES  PUT BACK keywords: YES (the photo's keywords as before the check)
+[2:36:02 PM] GPS: the set was refused before anything was written, so there is nothing to put back.
+[2:36:02 PM] YES  no Develop setting changed
+[2:36:02 PM] bridge.log since the plugin last started: 0 "failed to open" line(s)
+  (bridge: stopped)
+[2:36:02 PM] 
+[2:36:02 PM] automaat-sync check: FAILED (1)
+[2:36:02 PM]   - the GPS position was written and read back: null for {"latitude":47.6205,"longitude":-122.3493}, 2 ms
+[2:36:02 PM] NOT PUT BACK (by design or by failure):
+[2:36:02 PM]   - the keywords "LrC-AVG check" and "LrC-AVG check|keywords" stay in the catalog's Keyword List: the SDK lists no call that deletes a keyword [handle: https://lrc.mcor.dev/modules/LrCatalog.html, https://lrc.mcor.dev/modules/LrKeyword.html]. To remove them: Keyword List panel, right-click "LrC-AVG check" > Delete
+[2:36:02 PM] Results: %USERPROFILE%\AppData\Local\Temp\automaat-sync-dry-zdZy92\check.json and check.txt
+
+SIM AFTER: keywords ["bird"], gps {"latitude":47.6062,"longitude":-122.3321}, keyword tree ["bird","heron","Animals","Animals|bird","Places","Places|Europe","Places|Europe|Paris","LrC-AVG check","LrC-AVG check|keywords"]
+exit 1

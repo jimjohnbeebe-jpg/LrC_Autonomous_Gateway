@@ -8,7 +8,8 @@
 //   propagation (tools-propagation.ts): lr_sync_series (Phase 4; the sync is sync\sync.ts) and
 //            lr_create_preset_from_active (Phase 4; the preset is presets\create.ts).
 //   catalog  (tools-catalog.ts): lr_search_photos, lr_get_selected_photos, lr_list_collections,
-//            lr_set_rating, lr_set_keywords (Phase 6, kept from Automaat; library\).
+//            lr_set_rating, lr_set_keywords (Phase 6, kept from Automaat; library\); lr_list_keywords
+//            and lr_set_gps (GitHub issue #60, from later Automaat commits).
 //   write    (tools-write.ts): setSettings, Phase 2's lr_set_settings, for the Phase 2 check only.
 // What they share is in tools-shared.ts. The MCP definitions are the defs-*.ts modules, by the same
 // groups.
@@ -18,7 +19,20 @@
 import type { HudPublisher } from "../hud/index.js";
 import type { ApproveArgs, BeginArgs, EndArgs, ProbeArgs, RegionArgs, SelectArgs, SessionManager, StepArgs } from "../session/index.js";
 import type { ToolError } from "./errors.js";
-import { getSelectedPhotos, listCollections, searchPhotos, setKeywords, setRating, type SearchPhotosArgs, type SetKeywordsArgs, type SetRatingArgs } from "./tools-catalog.js";
+import {
+  getSelectedPhotos,
+  listCollections,
+  listKeywords,
+  searchPhotos,
+  setGps,
+  setKeywords,
+  setRating,
+  type ListKeywordsArgs,
+  type SearchPhotosArgs,
+  type SetGpsArgs,
+  type SetKeywordsArgs,
+  type SetRatingArgs,
+} from "./tools-catalog.js";
 import { getActivePhotoContext, getMetrics, getPreview, type MetricsArgs, type PreviewArgs } from "./tools-context.js";
 import { getIntent, listIntents, saveIntent, type SaveIntentArgs } from "./tools-intents.js";
 import { createPresetFromActive, syncSeries, type CreatePresetArgs, type SyncSeriesArgs } from "./tools-propagation.js";
@@ -145,6 +159,14 @@ export class Tools {
 
   setKeywords(args: SetKeywordsArgs): Promise<ToolOutput> {
     return setKeywords(this.ctx, args);
+  }
+
+  listKeywords(args: ListKeywordsArgs = {}): Promise<ToolOutput> {
+    return listKeywords(this.ctx, args);
+  }
+
+  setGps(args: SetGpsArgs): Promise<ToolOutput> {
+    return setGps(this.ctx, args);
   }
 
   // --- Phase 2's write, for the Phase 2 check (not offered over MCP).

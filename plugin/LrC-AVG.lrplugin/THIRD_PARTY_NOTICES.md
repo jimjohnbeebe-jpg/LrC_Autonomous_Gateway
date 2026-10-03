@@ -9,6 +9,14 @@ Parts of this plugin are derived from **Automaat/lightroom-mcp** (https://github
 | `PluginInit.lua` | `plugin/LightroomMCP.lrplugin/PluginInit.lua` | Starting the server in its own function context from the init script. |
 | `Preview.lua` | `plugin/LightroomMCP.lrplugin/HandlerExport.lua` (lines 71-104) | The `LrExportSession` settings for a JPEG in a chosen folder without a collision prompt, as spike S1 ran them (`plugin\spikes\S1.lrplugin\S1Run.lua`). |
 
+From upstream commits after the snapshot (plugin 0.10.0, GitHub issue #60), rewritten, not copied; the commits are listed in `engine\THIRD_PARTY_NOTICES.md`:
+
+| File in this plugin | Derived from | What was taken |
+|---|---|---|
+| `KeywordTree.lua`, `Library.lua` (`setKeywords`, `listKeywords`) | `KeywordTree.lua`, `HandlerKeywords.lua`, `HandlerOrganization.lua` at `11c0b93` | Keyword paths with `\|`, missing levels created one write gate per depth, case-aside matching, the sorted depth-first walk. |
+| `Library.lua` (`setGps`) | `HandlerMetadata.lua` at `9ba2ed6` | `setRawMetadata("gps", { latitude, longitude })` in a write gate, with range checks. |
+| `Sockets.lua` (`logBindFailure`) | `PluginInfoProvider.lua` at `923f27d` | The throttled log line for a socket that failed to open. |
+
 The engine's derived files are listed in `engine\THIRD_PARTY_NOTICES.md`.
 
 ## Automaat/lightroom-mcp licence

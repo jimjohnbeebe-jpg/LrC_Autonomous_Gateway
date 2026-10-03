@@ -1,8 +1,9 @@
 // The catalog writes kept from Automaat (PHASE6_PROTOTYPE_PLAN row 2): lr_set_rating and
-// lr_set_keywords write one photo per plugin command (plugin\LrC-AVG.lrplugin\Library.lua), each
-// photo read before and after. The guard is decision D3-A of the row's plan [stated: Jim, 2026-10-02,
-// "Go"]: photos named by uuid only, at most MAX_PHOTOS per call, and only between sessions
-// (tools-catalog.ts runs them in SessionManager.whenIdle, as lr_sync_series).
+// lr_set_keywords, and lr_set_gps (GitHub issue #60), write one photo per plugin command
+// (plugin\LrC-AVG.lrplugin\Library.lua), each photo read before and after. The guard is decision D3-A
+// of the row's plan [stated: Jim, 2026-10-02, "Go"]: photos named by uuid only, at most MAX_PHOTOS per
+// call, and only between sessions (tools-catalog.ts runs them in SessionManager.whenIdle, as
+// lr_sync_series).
 //
 // Per photo, as lr_sync_series does per target (sync\target.ts): a refusal Lightroom answered (no
 // photo with that uuid, a failed read) lists the photo in `failed` and the others are still written;
@@ -16,7 +17,27 @@ import { UNANSWERED, mayHaveLanded } from "../sync/target.js";
 export const MAX_PHOTOS = 100;
 /** Keyword names per call, added and removed each [inference: the figure; Automaat takes 1000, vendor\automaat\server\src\tool-contracts.ts:13]. */
 export const MAX_KEYWORDS = 50;
+/** Characters per keyword level [inference: the figure]. */
 export const MAX_KEYWORD_LENGTH = 100;
+/** Characters per keyword path, levels and separators included [inference: the figure]. */
+export const MAX_KEYWORD_PATH_LENGTH = 1000;
+
+/** A GPS position in decimal degrees; null for none. */
+export type Gps = { latitude: number; longitude: number } | null;
+/**
+ * How far a read-back coordinate may sit from the one written: 1e-5 degrees, about 1 m [inference:
+ * the figure; the precision Lightroom keeps is [unverified] until Jim's check].
+ */
+export const GPS_TOLERANCE = 1e-5;
+
+const where = (p: Gps): string => (p === null ? "no GPS position" : `(${p.latitude}, ${p.longitude})`);
+
+/** What a GPS read-back shows Lightroom did not take, or null. */
+export function gpsNotTaken(after: Gps, want: Gps): string | null {
+  const close = (a: number, b: number): boolean => Math.abs(a - b) <= GPS_TOLERANCE;
+  const taken = want === null ? after === null : after !== null && close(after.latitude, want.latitude) && close(after.longitude, want.longitude);
+  return taken ? null : `Lightroom read back ${where(after)}, not ${where(want)}.`;
+}
 
 /**
  * A plugin answer for one photo: its value before and after the write. A write gate that raised

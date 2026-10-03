@@ -37,8 +37,10 @@ function Dispatch.handlers(hello)
         get_selection = Catalog.getSelection,
         search_photos = Library.searchPhotos,
         list_collections = Library.listCollections,
+        list_keywords = Library.listKeywords,
         set_rating = Library.setRating,
         set_keywords = Library.setKeywords,
+        set_gps = Library.setGps,
         get_prefs = Prefs.getPrefs,
         hud_update = Hud.update,
     }

@@ -4,18 +4,56 @@
 // lr_set_rating and lr_set_keywords write, and run only between sessions, in the session queue
 // (SessionManager.whenIdle, as lr_sync_series): no session can begin while they write, and they
 // never write while a session does [stated: Jim, 2026-10-02, "Go", decision D3-A of the row's plan].
+// Engine 0.15.0 (GitHub issue #60 [stated: Jim, 2026-10-03, "Keyword hierarchy, set_gps"]): keyword
+// paths in lr_set_keywords (library\keywords.ts), lr_list_keywords (a read, as above) and lr_set_gps
+// (a write, as above), all three needing plugin 0.10.0.
 
-import { CATALOG_READ_TIMEOUT_MS, DEFAULT_PAGE, listing, searchCriteria, writeEach, type SearchFilters, type WriteResult } from "../library/index.js";
+import { pluginVersionAtLeast } from "../bridge/index.js";
+import {
+  CATALOG_READ_TIMEOUT_MS,
+  DEFAULT_PAGE,
+  gpsNotTaken,
+  keywordsNotTaken,
+  listing,
+  normalizeKeyword,
+  searchCriteria,
+  writeEach,
+  type Gps,
+  type SearchFilters,
+  type WriteResult,
+} from "../library/index.js";
 import { WRITE_TIMEOUT_MS } from "../sync/target.js";
+import { ToolError } from "./errors.js";
 import { run, sessionTools, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
 type Page = { limit?: number | undefined; offset?: number | undefined };
 export type SearchPhotosArgs = SearchFilters & Page & { collection_id?: number | undefined };
+export type ListKeywordsArgs = Page & { query?: string | undefined };
 export type SetRatingArgs = { uuids: string[]; rating: number };
 export type SetKeywordsArgs = { uuids: string[]; add?: string[] | undefined; remove?: string[] | undefined };
+export type SetGpsArgs = { uuids: string[]; position: Gps };
+
+/** Keyword paths, list_keywords and set_gps came with this plugin (Library.lua, KeywordTree.lua). */
+export const KEYWORD_GPS_PLUGIN = "0.10.0";
 
 const UNFILTERED =
   "No filter was given, so every photo in the catalog was searched. Give a filename, keywords, rating, dates or a collection_id to narrow it.";
+
+/**
+ * Refuses before anything is sent when Lightroom runs an older plugin: it has neither new command, it
+ * would pass a path "A|B" whole to createKeyword as one top-level name [inference: plugin 0.9.0's
+ * Library.lua setKeywords] (what Lightroom makes of the "|" is [unverified]), and it removes a plain
+ * name at every level, not only the top-level keyword.
+ */
+function needPlugin(ctx: ToolContext, tool: string, why: string): void {
+  const version = ctx.deps.client.hello()?.plugin_version;
+  if (pluginVersionAtLeast(version, KEYWORD_GPS_PLUGIN)) return;
+  throw new ToolError(
+    "PLUGIN_TOO_OLD",
+    `${tool} needs the LrC-AVG plugin ${KEYWORD_GPS_PLUGIN} or later (${why}); Lightroom runs ${String(version ?? "an unknown version")}. Restart Lightroom so it loads the current plugin.`,
+    false,
+  );
+}
 
 export async function searchPhotos(ctx: ToolContext, args: SearchPhotosArgs): Promise<ToolOutput> {
   return run(ctx, "lr_search_photos", args, async () => {
@@ -58,6 +96,22 @@ export async function listCollections(ctx: ToolContext, args: Page): Promise<Too
   });
 }
 
+export async function listKeywords(ctx: ToolContext, args: ListKeywordsArgs): Promise<ToolOutput> {
+  return run(ctx, "lr_list_keywords", args, async () => {
+    await ctx.deps.ensureBridge();
+    needPlugin(ctx, "lr_list_keywords", "it reads the keyword tree");
+    const offset = args.offset ?? 0;
+    const limit = args.limit ?? DEFAULT_PAGE;
+    const query = args.query !== undefined ? { query: args.query } : {};
+    const res = await ctx.deps.client.request("list_keywords", { ...query, offset, limit }, { timeoutMs: CATALOG_READ_TIMEOUT_MS });
+    const returned = res.keywords.length;
+    const more = offset + returned < res.count;
+    const truncated = `${returned} of ${res.count} keywords from offset ${offset}: call again with offset ${offset + returned}, or narrow with query.`;
+    const json = { count: res.count, offset, returned, has_more: more, keywords: res.keywords, ...(more ? { truncated } : {}) };
+    return { json, log: { count: res.count, returned } };
+  });
+}
+
 /** A write tool's answer: how many photos changed, each photo's before and after, and the failures. */
 function written<T>(out: WriteResult<T>, extra: Record<string, unknown>): ToolOutput {
   const changed = out.photos.filter((p) => p.changed).length;
@@ -83,24 +137,46 @@ export async function setRating(ctx: ToolContext, args: SetRatingArgs): Promise<
 
 export async function setKeywords(ctx: ToolContext, args: SetKeywordsArgs): Promise<ToolOutput> {
   return run(ctx, "lr_set_keywords", args, async () => {
-    const add = args.add ?? [];
-    const remove = args.remove ?? [];
+    const add = (args.add ?? []).map(normalizeKeyword);
+    const remove = (args.remove ?? []).map(normalizeKeyword);
     const sessions = sessionTools(ctx);
     await ctx.deps.ensureBridge();
+    needPlugin(ctx, "lr_set_keywords", "for keyword paths and its top-level rule for plain names");
     return sessions.whenIdle("lr_set_keywords", async () => {
       const out = await writeEach(
         args.uuids,
         (uuid) => ctx.deps.client.request("set_keywords", { photo_uuid: uuid, add, remove }, { timeoutMs: WRITE_TIMEOUT_MS }),
-        (r) => {
-          const missing = add.filter((k) => !r.after.includes(k));
-          const left = remove.filter((k) => r.after.includes(k));
-          if (missing.length === 0 && left.length === 0) return null;
-          return `Lightroom read back keywords without ${JSON.stringify(missing)} and still with ${JSON.stringify(left)}.`;
-        },
+        (r) => keywordsNotTaken(r.after, add, remove),
         "keywords",
         "KEYWORDS_NOT_TAKEN",
       );
       return written(out, { add, remove });
+    });
+  });
+}
+
+/** The plugin's `false` (no position) as null. */
+const gps = (wire: { latitude: number; longitude: number } | false): Gps => (wire === false ? null : wire);
+
+export async function setGps(ctx: ToolContext, args: SetGpsArgs): Promise<ToolOutput> {
+  return run(ctx, "lr_set_gps", args, async () => {
+    const want = args.position;
+    const sessions = sessionTools(ctx);
+    await ctx.deps.ensureBridge();
+    needPlugin(ctx, "lr_set_gps", "it writes GPS positions");
+    const payload = want === null ? { clear: true as const } : { latitude: want.latitude, longitude: want.longitude };
+    return sessions.whenIdle("lr_set_gps", async () => {
+      const out = await writeEach(
+        args.uuids,
+        async (uuid) => {
+          const r = await ctx.deps.client.request("set_gps", { photo_uuid: uuid, ...payload }, { timeoutMs: WRITE_TIMEOUT_MS });
+          return { ...r, before: gps(r.before), after: r.after === undefined ? undefined : gps(r.after) };
+        },
+        (r) => gpsNotTaken(r.after, want),
+        "GPS position",
+        "GPS_NOT_TAKEN",
+      );
+      return written(out, { position: want });
     });
   });
 }

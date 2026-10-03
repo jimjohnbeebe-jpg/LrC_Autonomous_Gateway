@@ -38,7 +38,7 @@ async function afterPass1(waitMs: number): Promise<HudRig> {
 describe("approve_each_pass: the HUD's Approve", () => {
   it("is offered once a pass is shown, and a step waiting for it goes ahead on the click", async () => {
     const rig = await afterPass1(20000);
-    expect(lr.hud.last()).toMatchObject({ pass: 1, approve_pass: 1, note: "Approve pass 1 to let Claude make the next pass (or tell Claude in chat)." });
+    expect(lr.hud.last()).toMatchObject({ pass: 1, approve_pass: 1, note: "Approve pass 1 to let Claude make the next pass, or tell Claude in chat." });
     const waiting = step(rig, { exposure: -0.1 });
     await waitingFor(1);
     expect(lr.hud.last()).toMatchObject({ pass: 1, approve_pass: 1 });
@@ -86,7 +86,7 @@ describe("approve_each_pass: the HUD's Approve", () => {
     hudEvent(plugin, "hud_approve_pass", { session_id: ID, pass: 1 });
     await waitUntil(() => rig.events.length === 4);
     expect(rig.events.map((e) => e.note)).toEqual([
-      "No pass waits for approval: no pass after pass 0 has been made yet (pass 1 needs no approval).",
+      "No pass is waiting for approval.",
       "Pass 2 is not the one waiting for approval; pass 1 is.",
       "Approved pass 1: Claude goes on at its next call.",
       "Pass 1 is approved already.",
@@ -152,7 +152,7 @@ describe("approve_each_pass: Abort and Accept while a step waits", () => {
   // engine\src\bridge\client.ts onData, the `for (const line of lines)` loop]; either order of the
   // two clicks must end the wait with nothing written.
   it.each([
-    ["Accept then Approve", ["hud_accept", "hud_approve_pass"], "Accept came first: the session is ending with the edit kept, and no further pass is made."],
+    ["Accept then Approve", ["hud_accept", "hud_approve_pass"], "Accept came first: the edit is being kept, and no further pass is made."],
     ["Approve then Accept", ["hud_approve_pass", "hud_accept"], "Approved pass 1: Claude's next pass goes ahead."],
   ])("%s in one bridge read: Accept ends the wait, and nothing more is written", async (_order, names, approveNote) => {
     const rig = await afterPass1(30000);

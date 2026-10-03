@@ -43,12 +43,12 @@ describe("Abort from the HUD", () => {
     const click = hudEvent(plugin, "hud_abort", { session_id: ID });
     const done = await hudAt("aborted");
     expect(lr.settings).toEqual(start);
-    expect(done.note).toBe("Aborted: the photo is back as it was before the session.");
+    expect(done.note).toBe("Aborted: the photo is back as it was before the edit.");
     // The click was answered before the photo was put back.
     const order = plugin.received.map((r) => (r.name === "hud_update" && r.payload["answered_click_id"] === click ? "answer" : r.name));
     expect(order.indexOf("answer")).toBeGreaterThan(-1);
     expect(order.indexOf("answer")).toBeLessThan(order.indexOf("apply_snapshot"));
-    expect(rig.events).toEqual([expect.objectContaining({ ok: true, name: "hud_abort", click_id: click, answered: true, note: "Abort: putting the photo back as it was before the session." })]);
+    expect(rig.events).toEqual([expect.objectContaining({ ok: true, name: "hud_abort", click_id: click, answered: true, note: "Abort: putting the photo back as it was before the edit." })]);
     const log = readLog();
     expect(log).toMatchObject({ outcome: "aborted", revert: { differing: [] }, ended_by: { source: "hud", click_id: click, interrupted: null, done_ms: expect.any(Number) } });
     expect(log.hud_events).toEqual([expect.objectContaining({ name: "hud_abort", source: "hud", click_id: click, note: expect.stringMatching(/^Abort: /) })]);
@@ -71,7 +71,7 @@ describe("Abort from the HUD", () => {
     const exports = lr.exports;
     const click = hudEvent(plugin, "hud_abort", { session_id: ID });
     await waitUntil(() => rig.events.length === 1);
-    expect(rig.events[0]?.note).toBe("Abort: stopping before the next write or preview, then putting the photo back.");
+    expect(rig.events[0]?.note).toBe("Abort: stopping before the next change or preview, then putting the photo back.");
     release();
     const e = await fails(pending);
     expect(e.code).toBe("SESSION_ENDED");
@@ -132,7 +132,9 @@ describe("Abort from the HUD", () => {
     const snapshot = plugin.handlers.get("apply_snapshot");
     plugin.handlers.set("apply_snapshot", () => ({ ok: false, error: { code: "snapshot_failed", message: "no", recoverable: true } }));
     hudEvent(plugin, "hud_abort", { session_id: ID });
-    await waitUntil(() => /^Abort could not put the photo back \(SNAPSHOT_FAILED\)/.test(String(lr.hud.last()?.note ?? "")));
+    await waitUntil(() => lr.hud.last()?.note === "Abort could not put the photo back. Click Abort again.");
+    // The HUD shows no code; the session log keeps it.
+    expect(readLog().failures).toEqual([expect.objectContaining({ stage: "end (revert)", error: expect.objectContaining({ code: "SNAPSHOT_FAILED" }) })]);
     // Claude hears of the Abort: no more steps, no accept; lr_end_session "revert" stays the way out.
     const e = await fails(step(rig));
     expect([e.code, (e.details as { state: string }).state]).toEqual(["SESSION_ENDED", "revert_failed"]);
@@ -160,7 +162,7 @@ describe("Abort from the HUD", () => {
       return reply;
     });
     hudEvent(plugin, "hud_abort", { session_id: ID });
-    await waitUntil(() => String(lr.hud.last()?.note ?? "").startsWith("Abort left 1 setting(s) different (exposure). Click Abort again."));
+    await waitUntil(() => lr.hud.last()?.note === "Abort left 1 setting different from before. Click Abort again.");
     expect(rig.manager.current()?.id).toBe(ID);
     const open = readLog();
     expect(open).toMatchObject({ outcome: null, ended: null, final_settings: null, revert: { differing: ["exposure"] } });
@@ -187,7 +189,7 @@ describe("Abort from the HUD", () => {
     await waitUntil(() => rig.events.length === 1);
     release();
     expect((await revert).json).toMatchObject({ outcome: "aborted", ended_by: { source: "hud", click_id: click } });
-    expect((await hudAt("aborted")).note).toBe("Aborted: the photo is back as it was before the session.");
+    expect((await hudAt("aborted")).note).toBe("Aborted: the photo is back as it was before the edit.");
     expect(lr.settings).toEqual(start);
     expect(count("apply_snapshot")).toBe(snapshots + 1); // the queued Abort found the session ended
     expect(readLog()).toMatchObject({ outcome: "aborted", ended_by: { source: "hud", click_id: click } });
@@ -217,8 +219,8 @@ describe("Events not acted on", () => {
     plugin.send({ id: "evt-bad", type: "evt", name: "hud_abort", payload: { session_id: ID } });
     await waitUntil(() => rig.events.length === 4);
     expect(rig.events.map((e) => [e.ok, e.note ?? e.error])).toEqual([
-      [true, "That session is not open in the engine."],
-      [true, "This session runs in autonomous mode: its passes need no approval."],
+      [true, "This edit is no longer open in Claude, so nothing was done."],
+      [true, "This edit runs in autonomous mode, so its passes need no approval."],
       [false, "a repeat of a click already handled"],
       [false, expect.stringMatching(/^hud_abort: .*click_id/)],
     ]);

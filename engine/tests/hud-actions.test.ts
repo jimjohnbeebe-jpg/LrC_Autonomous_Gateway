@@ -29,7 +29,7 @@ describe("Accept from the HUD", () => {
     await rig.manager.begin({ intent_id: "test_plain" });
     await step(rig, { exposure: 0.2 });
     const click = hudEvent(plugin, "hud_accept", { session_id: ID });
-    expect((await hudAt("accepted")).note).toBe("Accepted: the edit is kept and the recipe written.");
+    expect((await hudAt("accepted")).note).toBe("Accepted: the edit is kept.");
     expect(lr.settings["Exposure2012"]).toBe(0.2);
     const log = readLog();
     expect(log).toMatchObject({ outcome: "accept", ended_by: { source: "hud", click_id: click }, revert: null });
@@ -53,7 +53,7 @@ describe("Accept from the HUD", () => {
     await waitUntil(() => plugin.received.some((r) => r.name === "apply_settings"));
     hudEvent(plugin, "hud_accept", { session_id: ID });
     await waitUntil(() => rig.events.length === 1);
-    expect(rig.events[0]?.note).toBe("Accept: keeping the edit once the running call is done.");
+    expect(rig.events[0]?.note).toBe("Accept: keeping the edit once Claude's current step is done.");
     if (apply) plugin.handlers.set("apply_settings", apply);
     release();
     expect((await pending).json).toMatchObject({ ok: true, pass: "1/4" });
@@ -111,10 +111,10 @@ describe("Pick from the HUD", () => {
     hudEvent(plugin, "hud_pick", { session_id: ID, variant: "C" });
     hudEvent(plugin, "hud_accept", { session_id: ID });
     await waitUntil(() => rig.events.length === 3);
-    expect(rig.events.map((e) => e.note)).toEqual(["Pick B: selecting copy B.", "Copy B is being picked.", "Accept: keeping the edit once the running call is done."]);
+    expect(rig.events.map((e) => e.note)).toEqual(["Pick B: selecting copy B.", "Copy B is being picked.", "Accept: keeping the edit once Claude's current step is done."]);
     if (select) plugin.handlers.set("select_photo", select);
     release();
-    expect((await hudAt("accepted")).note).toBe("Accepted: the edit is kept on copy B; the other copies stay in the catalog.");
+    expect((await hudAt("accepted")).note).toBe("Accepted: copy B is kept; the other copies stay in the catalog.");
     expect(readLog()).toMatchObject({ outcome: "accept", picked: "B", ended_by: { source: "hud" } });
   });
 
@@ -163,7 +163,7 @@ describe("Pick from the HUD", () => {
     lr.selectFault = "the photo is not in the catalog";
     if (select) plugin.handlers.set("select_photo", select);
     release();
-    await waitUntil(() => lr.hud.last()?.note === "Pick B failed, so nothing was accepted. Click Pick again, then Accept.");
+    await waitUntil(() => lr.hud.last()?.note === "Pick B did not go through, so nothing was accepted. Click Pick B again, then Accept.");
     expect(rig.manager.current()?.id).toBe(ID);
     expect(readLog()).toMatchObject({ outcome: null, picked: null });
   });

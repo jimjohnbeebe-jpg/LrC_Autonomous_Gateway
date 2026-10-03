@@ -15,6 +15,8 @@
 //     once and outside the queue, where a step waiting for it holds the queue (approval.ts). Abort and
 //     Accept end such a wait at once, so they do not wait behind it.
 // A session the user ended answers every later call naming it with SESSION_ENDED (endedError).
+// The notes are the HUD's, in the photographer's words (PRODUCT.md; fix/hud-p1 copy deck): an "edit",
+// not a session; Claude, not the engine; no error codes. Claude's tool results keep their own words.
 // [handle: tests\hud-abort.test.ts, tests\hud-actions.test.ts, tests\approve-pass-hud.test.ts, against
 // the Lightroom sim; in Lightroom [unverified] until the row 5 probe and PHASE5_PLAN row 7.]
 
@@ -57,8 +59,8 @@ export function userAction(host: ActionHost, a: UserAction): string {
   const s = host.session();
   if (!s || s.id !== a.payload.session_id) {
     const ended = host.ended(a.payload.session_id);
-    if (ended) return `The session had already ended (${ended.outcome === "aborted" ? "aborted" : "accepted"}).`;
-    return "That session is not open in the engine.";
+    if (ended) return `This edit had already ended: ${ended.outcome === "aborted" ? "the photo was put back" : "the edit was kept"}.`;
+    return "This edit is no longer open in Claude, so nothing was done."; // hud\events.ts answers it with an `ended` update
   }
   const note = act(host, s, a);
   record(s, a, note);
@@ -80,7 +82,7 @@ function act(host: ActionHost, s: Session, a: UserAction): string {
 
 function approveFromHud(host: ActionHost, s: Session, pass: number, source: UserSource): string {
   const r = approve(host.ctx, s, source, pass);
-  if (!r.ok) return r.reason;
+  if (!r.ok) return r.hud;
   if (r.already) return `Pass ${r.pass} is approved already.`;
   if (r.woke) return `Approved pass ${r.pass}: Claude's next pass goes ahead.`;
   const note = `Approved pass ${r.pass}: Claude goes on at its next call.`;
@@ -120,10 +122,12 @@ export function userEnded(ctx: SessionContext, s: Session, outcome: UserEnded["o
 
 /** The HUD's note once an Abort has put the photo back. */
 export function abortedNote(s: Session): string {
-  const back = s.mode === "variants" ? "the master is as before; the copies stay in the catalog" : "the photo is back as it was before the session";
+  const back = s.mode === "variants" ? "the master photo is as before; the copies stay in the catalog" : "the photo is back as it was before the edit";
   const differing = s.log.revert?.differing.length ?? 0;
-  return differing ? `Aborted, but ${differing} setting(s) differ from before: see the session log.` : `Aborted: ${back}.`;
+  return differing ? `Aborted, but ${settingsCount(differing)} differ from before; the edit's log lists them.` : `Aborted: ${back}.`;
 }
+
+const settingsCount = (n: number): string => (n === 1 ? "1 setting" : `${n} settings`);
 
 async function connected(ctx: SessionContext): Promise<void> {
   if (ctx.deps.client.getState() !== "connected") await ctx.deps.client.waitConnected(RECONNECT_WAIT_MS);
@@ -135,7 +139,7 @@ function abort(host: ActionHost, s: Session, a: UserAction): string {
   const running = host.busy();
   host.queue(() => finishAbort(host, s));
   wakeApproval(s, "abort"); // a step waiting for an approval stops now, and the revert runs next
-  return running ? "Abort: stopping before the next write or preview, then putting the photo back." : "Abort: putting the photo back as it was before the session.";
+  return running ? "Abort: stopping before the next change or preview, then putting the photo back." : "Abort: putting the photo back as it was before the edit.";
 }
 
 async function finishAbort(host: ActionHost, s: Session): Promise<void> {
@@ -145,9 +149,9 @@ async function finishAbort(host: ActionHost, s: Session): Promise<void> {
   try {
     await connected(ctx);
     await endSession(ctx, s, { session_id: s.id, outcome: "revert" }, by);
-  } catch (err) {
-    by.state = "failed";
-    ctx.deps.hud?.stage(s, "awaiting_claude", { note: `Abort could not put the photo back (${toToolError(err).code}). Click Abort again.` });
+  } catch {
+    by.state = "failed"; // endSession's own failure is in the log's failures (io.ts failed())
+    ctx.deps.hud?.stage(s, "awaiting_claude", { note: "Abort could not put the photo back. Click Abort again." });
     return;
   }
   const differing = s.log.revert?.differing ?? [];
@@ -156,7 +160,7 @@ async function finishAbort(host: ActionHost, s: Session): Promise<void> {
     // [handle: tests\hud-abort.test.ts "keeps the session open when the photo is only partly back"].
     by.state = "failed";
     reopenLog(s);
-    ctx.deps.hud?.stage(s, "awaiting_claude", { note: `Abort left ${differing.length} setting(s) different (${differing.slice(0, 3).join(", ")}). Click Abort again.` });
+    ctx.deps.hud?.stage(s, "awaiting_claude", { note: `Abort left ${settingsCount(differing.length)} different from before. Click Abort again.` });
     return;
   }
   host.close(s, userEnded(ctx, s, "aborted", by));
@@ -178,8 +182,10 @@ function acceptRefusal(s: Session): string | null {
   return null;
 }
 
+const ABORTING = "The edit is being aborted.";
+
 function accept(host: ActionHost, s: Session, a: UserAction): string {
-  if (s.abort) return "The session is being aborted.";
+  if (s.abort) return ABORTING;
   const refused = acceptRefusal(s);
   if (refused) return refused;
   const by = userEnd(a, null);
@@ -188,7 +194,7 @@ function accept(host: ActionHost, s: Session, a: UserAction): string {
   const counted = s.picked === null ? s.pendingPick : null;
   host.queue(() => finishAccept(host, s, by, counted));
   wakeApproval(s, "accept"); // a step waiting for an approval ends now, nothing written
-  return running ? "Accept: keeping the edit once the running call is done." : "Accept: keeping the edit.";
+  return running ? "Accept: keeping the edit once Claude's current step is done." : "Accept: keeping the edit.";
 }
 
 async function finishAccept(host: ActionHost, s: Session, by: UserEnd, counted: VariantId | null): Promise<void> {
@@ -196,7 +202,7 @@ async function finishAccept(host: ActionHost, s: Session, by: UserEnd, counted: 
   const { ctx } = host;
   const refused =
     counted !== null && s.picked === null
-      ? `Pick ${counted} failed, so nothing was accepted. Click Pick again, then Accept.`
+      ? `Pick ${counted} did not go through, so nothing was accepted. Click Pick ${counted} again, then Accept.`
       : counted !== null && s.picked !== counted
         ? `Copy ${s.picked} was picked before your Pick ${counted}; nothing was accepted. Accept keeps copy ${s.picked}.`
         : acceptRefusal(s);
@@ -212,25 +218,25 @@ async function finishAccept(host: ActionHost, s: Session, by: UserEnd, counted: 
     await connected(ctx);
     await endSession(ctx, s, { session_id: s.id, outcome: "accept" }, by);
     host.close(s, userEnded(ctx, s, "accept", by));
-    const kept = s.mode === "variants" ? `on copy ${s.picked ?? "?"}; the other copies stay in the catalog` : "and the recipe written";
-    ctx.deps.hud?.stage(s, "accepted", { note: `Accepted: the edit is kept ${kept}.` });
-  } catch (err) {
-    s.idleNote = `Accept failed (${toToolError(err).code}); the session is still open. Click Accept again.`;
+    const kept = s.mode === "variants" ? `copy ${s.picked ?? "?"} is kept; the other copies stay in the catalog` : "the edit is kept";
+    ctx.deps.hud?.stage(s, "accepted", { note: `Accepted: ${kept}.` });
+  } catch {
+    s.idleNote = "Accept did not go through; the edit is still open. Click Accept again.";
   }
 }
 
 /** Why a Pick of copy `v` cannot be made now, or null. */
 function pickRefusal(s: Session, v: VariantId): string | null {
-  if (s.mode !== "variants") return "Pick is for a Variants session.";
-  if (!s.ready) return "Not every copy was made; the session can only be aborted.";
+  if (s.mode !== "variants") return "Pick is for a Variants edit.";
+  if (!s.ready) return "Not every copy was made; this edit can only be aborted.";
   if (s.picked !== null) return `Copy ${s.picked} is already picked.`;
   if (s.pendingPick !== null) return `Copy ${s.pendingPick} is being picked.`;
-  if (!variant(s, v)) return `This session has no copy ${v}.`;
+  if (!variant(s, v)) return `This edit has no copy ${v}.`;
   return null;
 }
 
 function pick(host: ActionHost, s: Session, v: VariantId, source: UserSource): string {
-  if (s.abort) return "The session is being aborted.";
+  if (s.abort) return ABORTING;
   const refused = pickRefusal(s, v);
   if (refused) return refused;
   s.pendingPick = v;
@@ -251,8 +257,8 @@ async function finishPick(host: ActionHost, s: Session, v: VariantId, source: Us
     await selectVariant(host.ctx, s, { session_id: s.id, variant: v }, source);
     s.notices.push({ action: "pick", variant: v, source, at: host.ctx.now().toISOString() });
     s.idleNote = `Picked ${v}: Claude continues on copy ${v} at its next call.`;
-  } catch (err) {
-    s.idleNote = `Pick ${v} failed (${toToolError(err).code}). Click Pick again.`;
+  } catch {
+    s.idleNote = `Pick ${v} did not go through. Click Pick ${v} again.`;
   } finally {
     s.pendingPick = null;
   }
@@ -271,14 +277,15 @@ export function idleStage(s: Session, error: unknown): { stage: HudStage; note?:
   if (error !== undefined) {
     const e = toToolError(error);
     if (e.code === "SESSION_ENDED") return null;
-    if (e.code === "TARGET_CHANGED") return at("target_changed", given ?? "Lightroom's selection changed, so nothing was written; the session is still open.");
+    if (e.code === "TARGET_CHANGED") return at("target_changed", given ?? "Another photo was selected, so nothing was changed; the edit is still open.");
     if (waiting && e.code === "AWAITING_APPROVAL") return at("awaiting_approval", given ?? approvalNote(waiting.pass));
-    return at(waiting ? "awaiting_approval" : "awaiting_claude", given ?? `Claude's last call failed (${e.code}); the session is still open.`);
+    return at(waiting ? "awaiting_approval" : "awaiting_claude", given ?? "Claude's last call failed; the edit is still open.");
   }
   if (awaitingPick(s)) return at("awaiting_pick", given ?? "Pick a copy here, or tell Claude which one.");
   const t = s.active;
-  if (t.endReason === "converged") return at("converged", given ?? "Converged: Accept keeps the edit, Abort puts the photo back.");
-  if (t.endReason === "cap_reached") return at("awaiting_claude", given ?? `All ${s.maxPasses} passes are used: Accept keeps the edit, Abort puts the photo back.`);
+  const finish = "Accept keeps the edit; Abort puts the photo back.";
+  if (t.endReason === "converged") return at("converged", given ?? finish);
+  if (t.endReason === "cap_reached") return at("awaiting_claude", given ?? `All ${s.maxPasses} passes are used. ${finish}`);
   if (waiting) return at("awaiting_approval", given ?? approvalNote(waiting.pass));
   return at("awaiting_claude", given);
 }

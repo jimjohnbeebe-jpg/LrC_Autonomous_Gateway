@@ -35,6 +35,7 @@ describe("HUD updates from a Converge session", () => {
       settings: { mode: "autonomous", max_passes: 4, long_edge: 1600, quality: 75, clip_high_pct: 0.5, clip_low_pct: 1, decay: [1, 0.6, 0.4, 0.25] },
       deltas: [],
       guardrail: { status: "green" },
+      snapshot: expect.stringMatching(/^AVG pre-session \d{4}-\d\d-\d\dT/),
     });
     expect(last.settings?.variant_count).toBeUndefined();
     // The first update the HUD took is in the tool log's record (tools-shared.ts).
@@ -50,18 +51,18 @@ describe("HUD updates from a Converge session", () => {
     expect(stagesOf(rig).slice(5)).toEqual(["applying", "acquiring_preview", "metrics", "awaiting_claude"]);
     expect(lr.hud.last()).toMatchObject({
       deltas: [
-        { slider: "exposure", before: 0, after: 0.2, delta: "+0.2" },
-        { slider: "contrast", before: 0, after: 10, delta: "+10" },
+        { slider: "Exposure", before: 0, after: 0.2, delta: "+0.2" },
+        { slider: "Contrast", before: 0, after: 10, delta: "+10" },
       ],
       guardrail: { status: "green" },
     });
     // Capped and then corrected: the correction is the status shown.
     await step(rig, { exposure: 5 });
     await waitUntil(() => lr.hud.last()?.pass === 2 && lr.hud.last()?.stage === "awaiting_claude");
-    expect(lr.hud.last()?.guardrail).toMatchObject({ status: "corrected", reason: expect.stringMatching(/^clip_high_pct was /) });
+    expect(lr.hud.last()?.guardrail).toMatchObject({ status: "corrected", reason: expect.stringMatching(/^Highlight clipping was \d+(\.\d+)? % \(limit 0\.5 %\); corrected\.$/) });
     await step(rig, { clarity: 100 });
     await waitUntil(() => lr.hud.last()?.pass === 3 && lr.hud.last()?.stage === "awaiting_claude");
-    expect(lr.hud.last()?.guardrail).toMatchObject({ status: "clamped", reason: expect.stringMatching(/^clarity: /) });
+    expect(lr.hud.last()?.guardrail).toMatchObject({ status: "clamped", reason: expect.stringMatching(/^Clarity: change held to ±\d+(\.\d+)? this pass\.$/) });
     await rig.manager.end({ session_id: ID, outcome: "accept" });
     expect((await hudAt("accepted")).note).toBe("Claude accepted: the edit is kept.");
   });
@@ -72,20 +73,20 @@ describe("HUD updates from a Converge session", () => {
     await rig.manager.begin({ intent_id: "test_plain" });
     lr.selected = "SOMEONE-ELSE";
     expect((await fails(step(rig, { exposure: 0.1 }))).code).toBe("TARGET_CHANGED");
-    expect((await hudAt("target_changed")).note).toMatch(/selection changed/);
+    expect((await hudAt("target_changed")).note).toBe("Another photo was selected, so nothing was changed; the edit is still open.");
     lr.selected = "SIM-UUID";
     lr.exportError = "disk full";
-    const e = await fails(step(rig, { exposure: 0.1 }));
-    await waitUntil(() => lr.hud.last()?.note === `Claude's last call failed (${e.code}); the session is still open.`);
+    await fails(step(rig, { exposure: 0.1 }));
+    await waitUntil(() => lr.hud.last()?.note === "Claude's last call failed; the edit is still open.");
     expect(lr.hud.last()?.stage).toBe("awaiting_claude");
     lr.exportError = null;
     await rig.manager.end({ session_id: ID, outcome: "revert" });
     expect((await hudAt("ended")).note).toMatch(/Claude reverted/);
   });
 
-  it("sends nothing to a plugin before 0.6.0", async () => {
-    lr.pluginVersion = "0.5.0";
-    plugin.dropEventClient(); // the next hello reports 0.5.0
+  it("sends nothing to a plugin before 0.9.0, which would refuse the snapshot field", async () => {
+    lr.pluginVersion = "0.8.0";
+    plugin.dropEventClient(); // the next hello reports 0.8.0
     await waitUntil(() => client.stats.drops === 1);
     await client.waitConnected(2000);
     clean();

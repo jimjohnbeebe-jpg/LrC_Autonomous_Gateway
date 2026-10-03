@@ -10,6 +10,7 @@ import { loadSdkKeys } from "./sdk-keys.js";
 
 export { CAMERA_PROFILE_PARAM, CANONICAL_PARAMS, SUPPORTED_PROCESS_VERSIONS } from "./canonical.js";
 export type { ParamSpec } from "./canonical.js";
+export { lightroomLabel } from "./labels.js";
 export { CameraProfiles, UnknownCameraProfileError, isEmptyLook } from "./camera-profiles.js";
 export type { CameraProfileEntry, ProfileIdentity } from "./camera-profiles.js";
 export { CUSTOM_WHITE_BALANCE_PARAMS, ParamError, ParamMap, READBACK_TOLERANCE, canonicalValuesEqual, differingSettings } from "./map.js";

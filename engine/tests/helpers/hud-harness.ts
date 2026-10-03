@@ -1,8 +1,10 @@
 // The HUD's side of the session tests (hud-*.test.ts): a HudPublisher and HudEvents on the session
 // harness's client, a SessionManager that reports to them, and the stages it reported, in order (the
 // publisher may send fewer: a newer stage replaces one still waiting). Call after useSessionHarness(),
-// inside a test or a beforeEach.
+// inside a test. When the test finishes, every note, guardrail sentence and slider label the HUD was
+// given is checked for engine words (hudWordProblems; fix/hud-p1 copy deck).
 
+import { expect, onTestFinished } from "vitest";
 import type { HudUpdatePayload } from "../../src/bridge/index.js";
 import { HudEvents, HudPublisher, type HudEventRecord, type HudRecord } from "../../src/hud/index.js";
 import type { HudSink, SessionDeps, SessionManager } from "../../src/session/index.js";
@@ -34,7 +36,20 @@ export function hudRig(extra: Partial<SessionDeps> = {}, publisher: { retryMs?: 
   };
   const manager = newManager({ hud: sink, ...extra });
   new HudEvents(client, manager, hud, { record: (r) => events.push(r) });
+  onTestFinished(() => {
+    const updates = lr.hud.taken.flatMap((u) => [u.note, u.guardrail?.reason, ...(u.deltas ?? []).map((d) => d.slider)]);
+    const shown = [...reported.map((r) => r.note), ...events.map((e) => e.note), ...updates];
+    expect(shown.filter((t) => t !== undefined && hudWordProblems(String(t)).length > 0)).toEqual([]);
+  });
   return { hud, manager, reported, events, records };
+}
+
+/** Words the HUD must not show: "session", "engine", snake_case or CODE_NAMES, a code in parentheses, canonical names. */
+const ENGINE_WORDS = [/\bsessions?\b/i, /\bengine\b/i, /\w+_\w+/, /\([A-Z0-9_ ]{3,}\)/, /\b(?:hsl|grading|sharpening|noise|lens)\.\w/];
+
+/** The engine words in a text the HUD shows (none: []). */
+export function hudWordProblems(text: string): string[] {
+  return ENGINE_WORDS.filter((re) => re.test(text)).map(String);
 }
 
 /** Wait until the HUD's state is at `stage`; returns that state. */

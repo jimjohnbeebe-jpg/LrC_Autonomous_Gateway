@@ -1,5 +1,5 @@
--- The HUD's words and line slots (fix/hud-p1, vault logs\fix-hud-p1-plan.md "Copy deck" and "Long
--- lines"). Pure Lua with no SDK import, so the smoke kit can load it on its own: every fixed string
+-- The HUD's words and line slots (fix/hud-p1, repo logs\fix-hud-p1-plan.md, gitignored, "Copy deck"
+-- and "Long lines"). Pure Lua with no SDK import, so it loads without Lightroom: every fixed string
 -- the HUD shows is in the tables below, and wrap() is the only way a text reaches a line.
 --
 -- A static_text title longer than its control does not wrap: it runs off the window [stated: Jim,
@@ -13,7 +13,9 @@
 -- capitals or digits is wider than the same count of average characters [inference]. At 85 % nothing
 -- ran off the window in Lightroom 15.6, but lines left a lot of empty space at the right [handle:
 -- docs\reports\phase6\hud-p1-check\check.txt, run 1, step 2]; Jim chose 95 % [stated: Jim,
--- 2026-10-03, "Raise to 95 % now"], checked again in run 2.
+-- 2026-10-03, "Raise to 95 % now"]. At 95 % nothing ran off either, but the note and the clipping
+-- sentence ended in "..." (run 2; Lightroom's own cut is [inference]); kept for a later change
+-- [stated: Jim, 2026-10-03, "Continue as-is, we can address in a later change request."].
 
 local HudText = {}
 

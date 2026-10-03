@@ -6,8 +6,8 @@
 // The plugin side is plugin\LrC-AVG.lrplugin\HudState.lua, which checks the same fields and limits
 // (tests\lua-plugin.test.ts keeps the lists and limits equal; the smoke transcript runs payloads this
 // schema accepts and refuses through the plugin's check [handle: docs\reports\phase5\hud-plugin-smoke\
-// smoke.txt "Contract"]), and Hud.lua. The plugin, from 0.9.0 (fix/hud-p1; what is new there is
-// [unverified] until its smoke, docs\reports\phase6\hud-p1-smoke\smoke.txt, and the Lightroom check):
+// smoke.txt "Contract"]), and Hud.lua. The plugin, from 0.9.0 (fix/hud-p1; what is new there was
+// checked in Lightroom 15.6 [handle: docs\reports\phase6\hud-p1-check\check.txt, section 3]):
 //   - refuses an update with an unknown field or a wrong type (bad_request, naming the field);
 //   - within a session takes only a newer `seq`, and never goes back to a session a newer one replaced
 //     (the result says `applied: false` and why);

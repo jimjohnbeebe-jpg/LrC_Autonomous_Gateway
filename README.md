@@ -243,8 +243,8 @@ Your edits stay in the Lightroom catalog: History steps, snapshots, virtual copi
 - **Presets:** a new preset shows only after Lightroom restarts. Only the group "LrC-AVG" has been tested. Adobe camera profiles (Adobe Color, Adobe Landscape, …) are left out of presets, as are temperature and tint while white balance is As Shot.
 - **Virtual copies** from Variants mode are never removed by LrC-AVG.
 - **Sync:** at most 20 photos per request, or 3 when matching brightness.
-- **Keywords:** a plain name added is always the top-level keyword of that name, even when a nested keyword has the same name; a plain name removed takes off every keyword of exactly that name, at any level. Give the path to reach one nested keyword. A keyword removed from photos, and every level created, stays in the Keyword List; delete it there if you no longer want it.
-- **Keyword paths and GPS positions** have not yet been tried in Lightroom; they need plugin 0.10.0.
+- **Keywords:** a plain name always means the top-level keyword of that name, for adding and removing alike, even when a nested keyword has the same name; give the path to reach a nested keyword. Upper and lower case count as the same. A keyword removed from photos, and every level created, stays in the Keyword List; delete it there if you no longer want it.
+- **Keyword paths and GPS positions** have not yet been tried in Lightroom. Keywords and GPS positions need plugin 0.10.0.
 
 ## Development
 

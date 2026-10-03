@@ -5,13 +5,11 @@
 // plugin/LightroomMCP.lrplugin/KeywordTree.lua:3-6 at commit 11c0b93]. A name without "|" is a
 // top-level keyword. Levels are trimmed; an empty level is refused.
 //
-// How a name that fits several keywords is settled (the same rules as KeywordTree.lua changes()):
-//   - an added plain name is the top-level keyword of that name, created there if missing, even when
-//     deeper keywords share the name (plugin 0.8.0 created every added name at the top level);
-//   - a removed plain name takes off every keyword of exactly that name, at any level (plugin 0.8.0
-//     matched removals by name);
-//   - a path means the one keyword at that place; its levels match case aside, as Lightroom matches
-//     keyword names [upstream claim: Automaat KeywordTree.lua:13-15 at 11c0b93].
+// How a name that fits several keywords is settled (the same rule as KeywordTree.lua changes()): a
+// plain name is the top-level keyword of that name, to add (created there if missing) and to remove
+// alike, never a deeper keyword of the same name; a path means the one keyword at that place. So
+// removing what was added puts a photo back. Levels match case aside, as Lightroom matches keyword
+// names [upstream claim: Automaat KeywordTree.lua:13-15 at 11c0b93].
 
 export const KEYWORD_SEPARATOR = "|";
 
@@ -26,26 +24,25 @@ export function normalizeKeyword(path: string): string {
   return keywordLevels(path)?.join(KEYWORD_SEPARATOR) ?? path;
 }
 
-export const isKeywordPath = (keyword: string): boolean => keyword.includes(KEYWORD_SEPARATOR);
-
 /**
  * Case aside. JavaScript's lower-casing and the plugin's LrStringUtils.lower ("the operating system's
  * localized case conversion" [handle: https://lrc.mcor.dev/modules/LrStringUtils.html lower]) may
  * differ on a few letters [inference].
  */
 const fold = (s: string): string => s.toLowerCase();
-const leaf = (path: string): string => path.slice(path.lastIndexOf(KEYWORD_SEPARATOR) + 1);
+
+/** What two spellings of one keyword share: the path trimmed, case aside ("A | b" and "a|B"). */
+export const keywordKey = (keyword: string): string => fold(normalizeKeyword(keyword));
 
 /**
  * What a read-back shows Lightroom did not take, or null. `after` holds the photo's keyword paths
- * (normalized `add` and `remove`, as sent). An added keyword must be there, case aside (a plain name
- * as a top-level keyword); a removed plain name must be gone at every level, by exact name; a
- * removed path must be gone, case aside.
+ * (normalized `add` and `remove`, as sent). An added keyword must be there and a removed one gone,
+ * case aside; a plain name is the top-level keyword.
  */
 export function keywordsNotTaken(after: readonly string[], add: readonly string[], remove: readonly string[]): string | null {
   const held = new Set(after.map(fold));
   const missing = add.filter((k) => !held.has(fold(k)));
-  const left = remove.filter((k) => (isKeywordPath(k) ? held.has(fold(k)) : after.some((p) => leaf(p) === k)));
+  const left = remove.filter((k) => held.has(fold(k)));
   if (missing.length === 0 && left.length === 0) return null;
   return `Lightroom read back keywords without ${JSON.stringify(missing)} and still with ${JSON.stringify(left)}.`;
 }

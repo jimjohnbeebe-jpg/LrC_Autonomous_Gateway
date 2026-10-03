@@ -13,7 +13,6 @@ import {
   CATALOG_READ_TIMEOUT_MS,
   DEFAULT_PAGE,
   gpsNotTaken,
-  isKeywordPath,
   keywordsNotTaken,
   listing,
   normalizeKeyword,
@@ -41,9 +40,10 @@ const UNFILTERED =
   "No filter was given, so every photo in the catalog was searched. Give a filename, keywords, rating, dates or a collection_id to narrow it.";
 
 /**
- * Refuses before anything is sent when Lightroom runs an older plugin: it has neither new command, and
+ * Refuses before anything is sent when Lightroom runs an older plugin: it has neither new command, it
  * would pass a path "A|B" whole to createKeyword as one top-level name [inference: plugin 0.9.0's
- * Library.lua setKeywords]; what Lightroom then makes of the "|" is [unverified].
+ * Library.lua setKeywords] (what Lightroom makes of the "|" is [unverified]), and it removes a plain
+ * name at every level, not only the top-level keyword.
  */
 function needPlugin(ctx: ToolContext, tool: string, why: string): void {
   const version = ctx.deps.client.hello()?.plugin_version;
@@ -141,7 +141,7 @@ export async function setKeywords(ctx: ToolContext, args: SetKeywordsArgs): Prom
     const remove = (args.remove ?? []).map(normalizeKeyword);
     const sessions = sessionTools(ctx);
     await ctx.deps.ensureBridge();
-    if ([...add, ...remove].some(isKeywordPath)) needPlugin(ctx, "lr_set_keywords", "for a keyword path");
+    needPlugin(ctx, "lr_set_keywords", "for keyword paths and its top-level rule for plain names");
     return sessions.whenIdle("lr_set_keywords", async () => {
       const out = await writeEach(
         args.uuids,

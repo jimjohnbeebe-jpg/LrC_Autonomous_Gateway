@@ -188,36 +188,35 @@ function Library.setRating(payload)
 end
 
 -- A photo's keywords: { paths, objects } in the same order, or nil plus the error. getRawMetadata
--- ("keywords") is "the list of keyword objects for the photo" [handle: LrPhoto page].
+-- ("keywords") is "the list of keyword objects for the photo" [handle: LrPhoto page], read in the read
+-- gate as every metadata read here; the paths (getName, getParent) are read outside it, by
+-- KeywordTree.lua's rule for keyword getters.
 local function keywordsOf(catalog, photo)
-    local paths, objects, err = {}, {}, nil
-    catalog:withReadAccessDo(function()
-        local ok, list = LrTasks.pcall(photo.getRawMetadata, photo, "keywords")
-        if not ok then err = tostring(list) return end
-        for _, keyword in ipairs(list or {}) do
-            local okPath, path = LrTasks.pcall(KeywordTree.pathOf, keyword)
-            if not okPath then err = tostring(path) return end
-            paths[#paths + 1] = path
-            objects[#objects + 1] = keyword
-        end
-    end)
-    if err then return nil, err end
+    local ok, list
+    catalog:withReadAccessDo(function() ok, list = LrTasks.pcall(photo.getRawMetadata, photo, "keywords") end)
+    if not ok then return nil, tostring(list) end
+    local paths, objects = {}, {}
+    for _, keyword in ipairs(list or {}) do
+        local okPath, path = LrTasks.pcall(KeywordTree.pathOf, keyword)
+        if not okPath then return nil, tostring(path) end
+        paths[#paths + 1] = path
+        objects[#objects + 1] = keyword
+    end
     return { paths = paths, objects = objects }
 end
 
--- Each added path's missing parents first (KeywordTree.ensureParents), then one gate adds and removes.
--- The last level is made by createKeyword with returnExisting true, which returns "an LrKeyword
--- instance ... when a keyword with the specified name and parent already exists" [handle:
--- https://lrc.mcor.dev/modules/LrCatalog.html createKeyword], else creates it. So a one-level name
--- is written exactly as plugin 0.8.0 wrote it: one gate, a top-level keyword. Removing takes a keyword
--- off the photo only; the catalog keeps it (the SDK pages list no call that deletes a keyword
--- [handle: LrCatalog and LrKeyword pages above]).
+-- Each added path's missing parents first, and its last level found case aside (KeywordTree.resolve),
+-- then one gate adds and removes. A last level not found is made by createKeyword with returnExisting
+-- true, which returns "an LrKeyword instance ... when a keyword with the specified name and parent
+-- already exists" [handle: https://lrc.mcor.dev/modules/LrCatalog.html createKeyword], else creates
+-- it. Removing takes a keyword off the photo only; the catalog keeps it (the SDK pages list no call
+-- that deletes a keyword [handle: LrCatalog and LrKeyword pages above]).
 local function writeKeywords(catalog, photo, toAdd, toRemove)
-    local parents = KeywordTree.ensureParents(catalog, toAdd)
+    local parents, leaves = KeywordTree.resolve(catalog, toAdd)
     catalog:withWriteAccessDo("AVG set keywords", function()
         for i, parts in ipairs(toAdd) do
             -- createKeyword(name, synonyms, includeOnExport, parent, returnExisting) [handle: LrCatalog page].
-            local keyword = catalog:createKeyword(parts[#parts], {}, true, parents[i], true)
+            local keyword = leaves[i] or catalog:createKeyword(parts[#parts], {}, true, parents[i], true)
             if keyword then photo:addKeyword(keyword) end -- a nil shows in the read-back
         end
         for _, keyword in ipairs(toRemove) do photo:removeKeyword(keyword) end
@@ -225,6 +224,7 @@ local function writeKeywords(catalog, photo, toAdd, toRemove)
 end
 
 -- `before` and `after` are the photo's keywords as paths ("Parent|Child"; a top-level one is its name).
+-- A one-level name means the top-level keyword, to add and to remove (KeywordTree.changes).
 function Library.setKeywords(payload)
     local add, whyAdd = KeywordTree.parseList(payload.add)
     local remove, whyRemove = KeywordTree.parseList(payload.remove)

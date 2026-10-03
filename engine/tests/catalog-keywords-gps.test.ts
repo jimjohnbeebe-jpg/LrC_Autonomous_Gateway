@@ -34,13 +34,14 @@ describe("keyword paths (library\\keywords.ts)", () => {
     expect(normalizeKeyword(" bird ")).toBe("bird");
   });
 
-  it("checks a read-back by the ambiguity rules: a plain name added is the top-level one, a plain name removed goes at every level", () => {
+  it("checks a read-back by the ambiguity rule: a plain name is the top-level keyword, to add and to remove; case aside", () => {
     expect(keywordsNotTaken(["Animals|bird"], ["bird"], [])).toMatch(/without \["bird"\]/);
     expect(keywordsNotTaken(["Animals|bird", "bird"], ["bird"], [])).toBeNull();
-    expect(keywordsNotTaken(["Animals|bird"], [], ["bird"])).toMatch(/still with \["bird"\]/);
+    expect(keywordsNotTaken(["Animals|bird"], [], ["bird"])).toBeNull(); // the nested one may stay
+    expect(keywordsNotTaken(["Animals|bird", "bird"], [], ["bird"])).toMatch(/still with \["bird"\]/);
     expect(keywordsNotTaken(["bird"], [], ["Animals|bird"])).toBeNull();
     expect(keywordsNotTaken(["Places|Europe|Paris"], ["places|europe|PARIS"], [])).toBeNull();
-    expect(keywordsNotTaken(["Animals|Bird"], [], ["bird"])).toBeNull(); // a plain name removes by exact name
+    expect(keywordsNotTaken(["Bird"], [], ["bird"])).toMatch(/still with \["bird"\]/);
   });
 });
 
@@ -56,14 +57,25 @@ describe("GPS read-back (library\\write.ts gpsNotTaken)", () => {
 });
 
 describe("the argument schemas", () => {
-  it("lr_set_keywords: refuses an empty level, a path given twice in two spellings, and one both added and removed", () => {
+  it("lr_set_keywords: refuses an empty level, a keyword given twice in two spellings, and one both added and removed, case aside", () => {
     const kw = schema("lr_set_keywords");
     expect(kw.safeParse({ uuids: ["A"], add: ["Places|Europe|Paris"] }).success).toBe(true);
     expect(kw.safeParse({ uuids: ["A"], add: ["Places||Paris"] }).success).toBe(false);
     expect(kw.safeParse({ uuids: ["A"], add: ["|Paris"] }).success).toBe(false);
     expect(kw.safeParse({ uuids: ["A"], add: ["A|B", "A | B"] }).success).toBe(false);
-    expect(kw.safeParse({ uuids: ["A"], add: ["A|B"], remove: ["A | B"] }).success).toBe(false);
+    expect(kw.safeParse({ uuids: ["A"], add: ["A|B", "a|b"] }).success).toBe(false);
+    expect(kw.safeParse({ uuids: ["A"], add: ["A|B"], remove: ["a | b"] }).success).toBe(false);
+    expect(kw.safeParse({ uuids: ["A"], add: ["Bird"], remove: ["bird"] }).success).toBe(false);
+  });
+
+  it("lr_set_keywords: 100 characters a level, 1000 a path, so any listed path can be passed back", () => {
+    const kw = schema("lr_set_keywords");
+    const level = "x".repeat(100);
+    expect(kw.safeParse({ uuids: ["A"], add: [level] }).success).toBe(true);
     expect(kw.safeParse({ uuids: ["A"], add: ["x".repeat(101)] }).success).toBe(false);
+    expect(kw.safeParse({ uuids: ["A"], add: [Array(9).fill(level).join("|")] }).success).toBe(true); // 908 characters
+    expect(kw.safeParse({ uuids: ["A"], add: [`P|${"x".repeat(101)}`] }).success).toBe(false);
+    expect(kw.safeParse({ uuids: ["A"], add: [Array(10).fill(level).join("|")] }).success).toBe(false); // 1009 characters
   });
 
   it("lr_set_gps: latitude -90..90, longitude -180..180, finite, or null to remove; 1-100 uuids", () => {
@@ -101,24 +113,27 @@ describe("lr_set_keywords with paths", () => {
     expect(lr.library.keywordTree).toEqual(expect.arrayContaining(["Places|Asia", "Places|Asia|Tokyo"]));
   });
 
-  it("settles an ambiguous plain name: added at the top level only, removed at every level", async () => {
-    photo("SIM-UUID").keywords = ["Animals|bird"];
-    const added = await tools.setKeywords({ uuids: ["SIM-UUID"], add: ["bird"] });
-    expect(photos(added)[0]).toMatchObject({ before: ["Animals|bird"], after: ["Animals|bird", "bird"], changed: true });
-    const removed = await tools.setKeywords({ uuids: ["SIM-UUID"], remove: ["bird"] });
-    expect(photos(removed)[0]).toMatchObject({ before: ["Animals|bird", "bird"], after: [], changed: true });
+  it("treats a plain name as the top-level keyword both ways, so removing what was added puts the photo back", async () => {
+    lr.library.keywordTree.push("Places|Paris");
+    photo("SIM-UUID").keywords = ["Places|Paris"];
+    const added = await tools.setKeywords({ uuids: ["SIM-UUID"], add: ["Paris"] });
+    expect(photos(added)[0]).toMatchObject({ before: ["Places|Paris"], after: ["Places|Paris", "Paris"], changed: true });
+    const removed = await tools.setKeywords({ uuids: ["SIM-UUID"], remove: ["Paris"] });
+    expect(photos(removed)[0]).toMatchObject({ before: ["Places|Paris", "Paris"], after: ["Places|Paris"], changed: true });
     expect(removed.json["failed"]).toEqual([]);
   });
 
-  it("removes by path only the keyword at that place, case aside", async () => {
-    photo("SIM-LIB-3").keywords = ["bird", "heron", "Animals|bird"];
-    const out = await tools.setKeywords({ uuids: ["SIM-LIB-3"], remove: ["animals | BIRD"] });
-    expect(photos(out)[0]).toMatchObject({ after: ["bird", "heron"], changed: true });
+  it("removes by path only the keyword at that place, and a plain name case aside", async () => {
+    photo("SIM-LIB-3").keywords = ["Bird", "heron", "Animals|bird"];
+    const byPath = await tools.setKeywords({ uuids: ["SIM-LIB-3"], remove: ["animals | BIRD"] });
+    expect(photos(byPath)[0]).toMatchObject({ after: ["Bird", "heron"], changed: true });
+    const byName = await tools.setKeywords({ uuids: ["SIM-LIB-3"], remove: ["bird"] });
+    expect(photos(byName)[0]).toMatchObject({ after: ["heron"], changed: true });
   });
 
-  it("lists a photo whose read-back still has a deeper keyword of a removed plain name in failed", async () => {
+  it("lists a photo whose read-back still has a removed keyword in failed", async () => {
     photo("SIM-LIB-2").keywords = ["bird", "Animals|bird"];
-    lr.library.stuckKeywords = ["Animals|bird"];
+    lr.library.stuckKeywords = ["bird"];
     const out = await tools.setKeywords({ uuids: ["SIM-LIB-2"], remove: ["bird"] });
     expect(out.json["failed"]).toEqual([
       {
@@ -126,7 +141,7 @@ describe("lr_set_keywords with paths", () => {
         code: "KEYWORDS_NOT_TAKEN",
         message: 'Lightroom read back keywords without [] and still with ["bird"].',
         before: ["bird", "Animals|bird"],
-        after: ["Animals|bird"],
+        after: ["bird", "Animals|bird"],
       },
     ]);
   });
@@ -138,10 +153,11 @@ describe("an older plugin (before 0.10.0)", () => {
     vi.spyOn(client, "hello").mockReturnValue({ ...hello, plugin_version: "0.9.0" });
   };
 
-  it("refuses a keyword path, lr_list_keywords and lr_set_gps before sending anything; plain names still go", async () => {
+  it("refuses lr_set_keywords (paths and plain names alike), lr_list_keywords and lr_set_gps before sending anything", async () => {
     oldPlugin();
     for (const call of [
       tools.setKeywords({ uuids: ["SIM-UUID"], add: ["Places|Paris"] }),
+      tools.setKeywords({ uuids: ["SIM-UUID"], remove: ["bird"] }),
       tools.listKeywords(),
       tools.setGps({ uuids: ["SIM-UUID"], position: null }),
     ]) {
@@ -150,8 +166,6 @@ describe("an older plugin (before 0.10.0)", () => {
       expect(err.message).toMatch(/plugin 0\.10\.0 or later.*Lightroom runs 0\.9\.0/);
     }
     expect([...sent("set_keywords"), ...sent("list_keywords"), ...sent("set_gps")]).toEqual([]);
-    const plain = await tools.setKeywords({ uuids: ["SIM-UUID"], add: ["pond"] });
-    expect(photos(plain)[0]).toMatchObject({ after: ["pond"] });
   });
 });
 

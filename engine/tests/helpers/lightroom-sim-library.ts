@@ -16,7 +16,6 @@ export type SimCollection = { local_id: number; name: string; set_path?: string;
 const ok = (payload: unknown): FakeReply => ({ ok: true, payload });
 const fail = (code: string, message: string, recoverable = false): FakeReply => ({ ok: false, error: { code, message, recoverable } });
 const fold = (s: string): string => s.toLowerCase();
-const leaf = (path: string): string => path.slice(path.lastIndexOf("|") + 1);
 
 /** KeywordTree.walk's order: a parent before its children, siblings by folded name, then by name. */
 function walkOrder(a: string, b: string): number {
@@ -156,13 +155,12 @@ export class SimLibrary {
     return ok({ uuid: photo.uuid, filename: photo.filename, before, after: photo.rating });
   }
 
-  /** KeywordTree.changes: adds by path case aside; a removed plain name goes at every level, a path only there. */
+  /** KeywordTree.changes: every keyword by path, case aside; a plain name is the top-level keyword. */
   private tag(photo: SimLibraryPhoto, add: string[], remove: string[]): FakeReply {
     const before = [...photo.keywords];
     const held = new Set(before.map(fold));
     const toAdd = add.filter((k) => !held.has(fold(k)) && held.add(fold(k)));
-    const gone = (p: string): boolean =>
-      !this.stuckKeywords.includes(p) && remove.some((k) => (k.includes("|") ? fold(k) === fold(p) : leaf(p) === k));
+    const gone = (p: string): boolean => !this.stuckKeywords.includes(p) && remove.some((k) => fold(k) === fold(p));
     const after = [...before.filter((p) => !gone(p)), ...toAdd.map((k) => this.ensure(k))];
     if (after.join("\n") !== before.join("\n")) this.writes++;
     photo.keywords = after;

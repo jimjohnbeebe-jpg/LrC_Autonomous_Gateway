@@ -115,7 +115,7 @@ describe("mcp server", () => {
     expect(step?.description).toMatch(/CHANGE for numeric sliders/);
     const gps = tools.find((t) => t.name === "lr_set_gps");
     expect(gps?.inputSchema.required).toEqual(["uuids", "position"]);
-    expect(tools.find((t) => t.name === "lr_set_keywords")?.description).toMatch(/added plain name is always the top-level keyword/);
+    expect(tools.find((t) => t.name === "lr_set_keywords")?.description).toMatch(/A plain name always means the top-level keyword/);
   });
 
   it("returns the preview as an image block followed by the JSON text block", async () => {

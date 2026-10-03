@@ -18,22 +18,28 @@
 -- the walk runs outside any gate, as rule 03 asks of catalog queries that may yield, since whether
 -- these yield is [unverified]. Automaat found LrKeyword getters yielding [upstream claim: commit 11c0b93
 -- message, "Yielding is not allowed within a C or metamethod call" from a sort comparator], so names
--- are read before sorting, never in a table.sort comparator. A photo's own keywords are still read in
--- Library.lua's read gate, where plugin 0.8.0 read their names in Lightroom [handle: vault
+-- are read before sorting, never in a table.sort comparator. The walk yields every YIELD_EVERY
+-- keywords (PRD NFR-1). A photo's own keywords get their paths outside the gate too (Library.lua
+-- keywordsOf); plugin 0.8.0 read their names inside a read gate in Lightroom [handle: vault
 -- LR_SDK_NOTES "Recorded in Phase 6", catalog search and metadata].
 --
 -- Creating levels: a keyword made by createKeyword "is not available for access until that function
 -- returns" [handle: LrCatalog page, createKeyword], so a new level cannot be the parent of another new
 -- level in the same write gate (Automaat saw "bad argument #2 to 'format'" [upstream claim:
--- HandlerOrganization.lua:77-80 at 11c0b93]). ensureParents opens one gate per depth that has a missing
+-- HandlerOrganization.lua:77-80 at 11c0b93]). resolve() opens one gate per depth that has a missing
 -- parent; each such gate is one more "AVG set keywords" in Edit > Undo [inference: every named gate is
--- an Undo item, vault LR_SDK_NOTES "Recorded in Phase 6"].
+-- an Undo item, vault LR_SDK_NOTES "Recorded in Phase 6"]. It also finds an existing last level case
+-- aside, so createKeyword never meets a case variant of a keyword that already exists.
 
 local LrStringUtils = import 'LrStringUtils'
+local LrTasks = import 'LrTasks'
 
 local KeywordTree = {}
 
 KeywordTree.SEPARATOR = "|"
+
+-- Keywords walked between yields [inference: the figure].
+local YIELD_EVERY = 50
 
 function KeywordTree.fold(s)
     return LrStringUtils.lower(s)
@@ -79,12 +85,11 @@ function KeywordTree.parseList(v)
     return out
 end
 
--- What set_keywords writes, from the photo's keyword paths before the call:
---   toAdd: each path to add that the photo does not hold, case aside, once; a one-level name is the
---     top-level keyword of that name, even when keywords of that name sit deeper in the tree;
---   removeAt: the positions in `paths` of the keywords to take off. A one-level name takes off every
---     keyword of exactly that name at any level, as plugin 0.8.0 matched by name; a longer path only
---     the keyword at that path, case aside.
+-- What set_keywords writes, from the photo's keyword paths before the call. Every keyword is a path,
+-- matched case aside; a one-level name is the top-level keyword of that name, for adding and removing
+-- alike, never a deeper keyword of the same name. So removing what was added puts the photo back.
+--   toAdd: each path to add that the photo does not hold, once;
+--   removeAt: the positions in `paths` of the keywords to take off.
 function KeywordTree.changes(paths, add, remove)
     local held, toAdd = {}, {}
     for _, path in ipairs(paths) do held[KeywordTree.fold(path)] = true end
@@ -95,13 +100,10 @@ function KeywordTree.changes(paths, add, remove)
             toAdd[#toAdd + 1] = parts
         end
     end
-    local byName, byPath = {}, {}
-    for _, parts in ipairs(remove) do
-        if #parts == 1 then byName[parts[1]] = true else byPath[KeywordTree.fold(KeywordTree.join(parts))] = true end
-    end
-    local removeAt = {}
+    local removing, removeAt = {}, {}
+    for _, parts in ipairs(remove) do removing[KeywordTree.fold(KeywordTree.join(parts))] = true end
     for i, path in ipairs(paths) do
-        if byName[path:match("[^|]*$")] or byPath[KeywordTree.fold(path)] then removeAt[#removeAt + 1] = i end
+        if removing[KeywordTree.fold(path)] then removeAt[#removeAt + 1] = i end
     end
     return toAdd, removeAt
 end
@@ -134,6 +136,7 @@ function KeywordTree.walk(catalog, parent, prefix, out)
     for _, kid in ipairs(kids) do
         local path = prefix .. kid.name
         out[#out + 1] = path
+        if #out % YIELD_EVERY == 0 then LrTasks.yield() end -- PRD NFR-1
         KeywordTree.walk(catalog, kid.keyword, path .. KeywordTree.SEPARATOR, out)
     end
     return out
@@ -143,11 +146,12 @@ local function prefixKey(parts, depth)
     return KeywordTree.fold(KeywordTree.join({ unpack(parts, 1, depth) }))
 end
 
--- For each path in `paths` (lists of levels), the keyword its last level goes under: nil for a
--- top-level name, else the parent, found case aside or created. Missing parents are created depth by
--- depth, one write gate per depth, each level once even when several paths share it. Raises when
--- Lightroom creates no keyword. A list of one-level names reads and writes nothing here.
-function KeywordTree.ensureParents(catalog, paths)
+-- For each path in `paths` (lists of levels): `parents[i]`, the keyword its last level goes under (nil
+-- for a top-level name; else found case aside, or created), and `leaves[i]`, that last level when it
+-- exists already (found case aside), else nil for the caller to create. Missing parents are created
+-- depth by depth, one write gate per depth, each level once even when several paths share it. Raises
+-- when Lightroom creates no keyword. A list of one-level names opens no gate here.
+function KeywordTree.resolve(catalog, paths)
     local known, deepest = {}, 0
     for _, parts in ipairs(paths) do deepest = math.max(deepest, #parts - 1) end
     for depth = 1, deepest do
@@ -172,9 +176,12 @@ function KeywordTree.ensureParents(catalog, paths)
             end
         end
     end
-    local parents = {}
-    for i, parts in ipairs(paths) do parents[i] = known[prefixKey(parts, #parts - 1)] end
-    return parents
+    local parents, leaves = {}, {}
+    for i, parts in ipairs(paths) do
+        parents[i] = known[prefixKey(parts, #parts - 1)]
+        leaves[i] = findChild(catalog, parents[i], parts[#parts])
+    end
+    return parents, leaves
 end
 
 return KeywordTree

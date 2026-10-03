@@ -3,11 +3,22 @@
 // lr_set_gps.
 
 import { z } from "zod";
-import { DEFAULT_PAGE, MAX_KEYWORDS, MAX_KEYWORD_LENGTH, MAX_PAGE, MAX_PHOTOS, isCalendarDay, keywordLevels, normalizeKeyword } from "../library/index.js";
+import {
+  DEFAULT_PAGE,
+  MAX_KEYWORDS,
+  MAX_KEYWORD_LENGTH,
+  MAX_KEYWORD_PATH_LENGTH,
+  MAX_PAGE,
+  MAX_PHOTOS,
+  isCalendarDay,
+  keywordKey,
+  keywordLevels,
+} from "../library/index.js";
 import type { ToolDef } from "./defs-shared.js";
 
 const distinct = (list: readonly unknown[]): boolean => new Set(list).size === list.length;
-const normalized = (list: readonly string[] | undefined): string[] => (list ?? []).map(normalizeKeyword);
+/** The keywords trimmed and case-folded, so two spellings of one keyword compare equal. */
+const keys = (list: readonly string[] | undefined): string[] => (list ?? []).map(keywordKey);
 
 const limit = z.number().int().min(1).max(MAX_PAGE).optional().describe(`how many to return, 1-${MAX_PAGE} (default ${DEFAULT_PAGE})`);
 const offset = z.number().int().min(0).optional().describe("how many to skip, for the next page (default 0)");
@@ -22,12 +33,13 @@ const keyword = z
   .string()
   .trim()
   .min(1)
-  .max(MAX_KEYWORD_LENGTH)
-  .refine((k) => keywordLevels(k) !== null, 'a keyword path cannot have an empty level ("A||B", "|A", "A|")');
+  .max(MAX_KEYWORD_PATH_LENGTH)
+  .refine((k) => keywordLevels(k) !== null, 'a keyword path cannot have an empty level ("A||B", "|A", "A|")')
+  .refine((k) => (keywordLevels(k) ?? []).every((level) => level.length <= MAX_KEYWORD_LENGTH), `a keyword level has at most ${MAX_KEYWORD_LENGTH} characters`);
 const keywords = z
   .array(keyword)
   .max(MAX_KEYWORDS)
-  .refine((list) => distinct(normalized(list)), "keywords must differ")
+  .refine((list) => distinct(keys(list)), "keywords must differ, case aside")
   .optional();
 
 /** A photo listing, as every read tool describes its photos. */
@@ -51,7 +63,7 @@ const searchArgs = z
 const selectedArgs = z.object({ limit });
 const collectionArgs = z.object({ limit, offset });
 const keywordListArgs = z.object({
-  query: z.string().trim().min(1).max(MAX_KEYWORD_LENGTH).optional().describe("only the paths that contain this text, case aside"),
+  query: z.string().trim().min(1).max(MAX_KEYWORD_PATH_LENGTH).optional().describe("only the paths that contain this text, case aside"),
   limit,
   offset,
 });
@@ -60,16 +72,16 @@ const keywordArgs = z
   .object({
     uuids,
     add: keywords.describe(
-      `keywords to add, at most ${MAX_KEYWORDS}, ${MAX_KEYWORD_LENGTH} characters each: a plain name is the top-level keyword of that name, ` +
-        "created there if missing; a path is the keyword at that place, its missing levels created",
+      `keywords to add, at most ${MAX_KEYWORDS} (${MAX_KEYWORD_LENGTH} characters a level, ${MAX_KEYWORD_PATH_LENGTH} a path): a plain name is ` +
+        "the top-level keyword of that name, created there if missing; a path is the keyword at that place, its missing levels created",
     ),
     remove: keywords.describe(
-      `keywords to take off the photos, at most ${MAX_KEYWORDS}: a plain name takes off every keyword of exactly that name, at any level; ` +
-        "a path only the keyword at that place. The keywords stay in the catalog",
+      `keywords to take off the photos, at most ${MAX_KEYWORDS}: a plain name takes off the top-level keyword of that name only; a path ` +
+        "the keyword at that place. The keywords stay in the catalog",
     ),
   })
   .refine((a) => (a.add?.length ?? 0) + (a.remove?.length ?? 0) > 0, "name at least one keyword to add or remove")
-  .refine((a) => !normalized(a.add).some((k) => normalized(a.remove).includes(k)), "a keyword cannot be both added and removed");
+  .refine((a) => !keys(a.add).some((k) => keys(a.remove).includes(k)), "a keyword cannot be both added and removed, case aside");
 const gpsArgs = z.object({
   uuids,
   position: z
@@ -83,7 +95,8 @@ const gpsArgs = z.object({
 
 const WRITE_RULES =
   "Tell the user which photos will change before calling. Ratings, keywords and GPS positions are catalog metadata, not Develop settings: " +
-  "no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back. A photo " +
+  "no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for " +
+  "keywords: remove exactly the names and paths that were added, or add back those removed). A photo " +
   "that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the " +
   "error names the photo that may still have been written (`maybe_written`). Not while a session is open.";
 
@@ -144,11 +157,10 @@ export const CATALOG_DEFS: ToolDef[] = [
     name: "lr_set_keywords",
     title: "Add or remove keywords",
     description:
-      `Add keywords to and/or remove keywords from photos named by uuid. ${PATHS} A name that fits several keywords is settled so: an ` +
-      "added plain name is always the top-level keyword of that name (created there if missing), never a deeper keyword of the same " +
-      "name; a removed plain name takes off every keyword of exactly that name, at any level. To reach one particular keyword, give its " +
-      "path (lr_list_keywords lists them). `before` and `after` give each photo's keywords as paths. A removed keyword, and every level " +
-      `created, stays in the catalog's Keyword List: this tool deletes no keyword. ${WRITE_RULES}`,
+      `Add keywords to and/or remove keywords from photos named by uuid. ${PATHS} A plain name always means the top-level keyword of ` +
+      "that name, to add (created there if missing) and to remove alike, never a deeper keyword of the same name: to reach a nested " +
+      "keyword, give its path (lr_list_keywords lists them). `before` and `after` give each photo's keywords as paths. A removed keyword, " +
+      `and every level created, stays in the catalog's Keyword List: this tool deletes no keyword. ${WRITE_RULES}`,
     schema: keywordArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     run: (tools, args) => tools.setKeywords(args as z.infer<typeof keywordArgs>),

@@ -1,8 +1,8 @@
 ---
 report: masks-capture — how Lightroom stores and changes masks (GitHub issue #59, PR C step 1)
 phase: 6
-status: template
-authored_by: "Template, harness, pre-run findings and open questions: Claude Code (Opus 5.5), 2026-10-03 (branch phase-6/masks). Observed: Jim (blank until his run). Verdict: Jim."
+status: observed
+authored_by: "Template, harness, pre-run findings, open questions and the Capture 2 section: Claude Code (Opus 5.5), 2026-10-03 (branch phase-6/masks). Capture 1 Observed and Numbers: collected by Claude Code from Jim's run files (committed in the masks-capture folder beside this report), Jim's y/n answers as typed. Capture 2 Observed: blank until Jim's run. Verdict: Jim."
 date: 2026-10-03
 ---
 
@@ -50,7 +50,8 @@ Before any mask tool is built (issue #59, PR C step 2), learn from one live phot
 | Plugin 0.11.0 | `plugin\LrC-AVG.lrplugin\Masks.lua` (new): `update_ai_settings`, `probe_masks_dc`; registered in `Dispatch.lua`; version in `Info.lua`, `Bridge.lua` |
 | Engine protocol | `engine\src\bridge\protocol.ts` `COMMANDS` (zod result schemas) and `CommandPayloads`; `engine\src\bridge\version.ts` `PLUGIN_VERSION` 0.11.0 |
 | Tests | `engine\tests\bridge-masks.test.ts` (contract), `engine\tests\helpers\lightroom-sim-masks.ts` (the sim's answers), `engine\tests\lua-plugin.test.ts` (handlers = `COMMANDS`, Lua 5.1 parse) |
-| The check | `logs\check-masks-capture-2026-10-03\check.mts` (gitignored, like the earlier one-off checks); its dry run `dryrun.txt` and driver `dryrun-driver.ts.txt` beside it |
+| The check | `logs\check-masks-capture-2026-10-03\check.mts` (gitignored, like the earlier one-off checks; Jim runs it from there). The copy Jim ran is committed as `docs\reports\phase6\masks-capture\check-capture1.mts.txt`, and its dry runs as `dryrun-capture1.txt` beside it |
+| Jim's run | `docs\reports\phase6\masks-capture\`: `transcript.txt`, `check.json`, `3_dump-1.json` (the five-entry table), `12_probe_dc.json` (the DC probe), copied from his run's files; no user folder appears in them |
 
 **The two commands** [handle: `plugin\LrC-AVG.lrplugin\Masks.lua` header]:
 - **`update_ai_settings { photo_uuid, expect? }`** → `{ uuid, call_ms, command_ms, gate? }`. It finds the photo by uuid (`Photos.find`), then calls `photo:updateAISettings()` in its own write gate, `"AVG update AI masks"`.
@@ -65,7 +66,7 @@ Before any mask tool is built (issue #59, PR C step 2), learn from one live phot
   - it deletes the sky mask with `deleteMask(id)` and the subject mask with `deleteMask(id, id)`.
   - Every SDK call is looked up with `type(fn) == "function"` and run under `LrTasks.pcall`. A missing call is recorded as a failed step, never raised. Every wait has a timeout.
 
-**What the check is written to do** [handle: `check.mts` header]: steps 0-13 as listed in the Purpose. It uses the plugin's raw `get_settings` and `apply_settings`, because the params map would refuse mask keys. It finds the mask key by structure: the top-level array of objects that changed between the dump before step 2 and the dump after it. No key name is assumed for it.
+**What the check is written to do** [handle: `docs\reports\phase6\masks-capture\check-capture1.mts.txt` header]: steps 0-13 as listed in the Purpose. It uses the plugin's raw `get_settings` and `apply_settings`, because the params map would refuse mask keys. It finds the mask key by structure: the top-level array of objects that changed between the dump before step 2 and the dump after it. No key name is assumed for it.
 
 It labels each new entry two ways and records whether they agree:
 - by the order Jim made the masks;
@@ -154,9 +155,9 @@ The menu labels in step 5 (Create New Mask, Linear Gradient, Range > Luminance R
    - `selectMask` and `deleteMask` are listed as `(id, param)`, with one description for both arguments.
    - `local_Exposure` is in the reference's "Version 6" list of local parameters [handle: same page].
    - `switchToModule` and `getCurrentModuleName` are SDK 6.0 [handle: https://lrc.mcor.dev/modules/LrApplicationView.html, read 2026-10-03].
-4. **The plugin declares `LrSdkVersion = 13.0`** [handle: `plugin\LrC-AVG.lrplugin\Info.lua`], below `updateAISettings`'s 13.3. Whether Lightroom hides newer calls from such a plugin is [unverified]. If step 7 answers `feature_unavailable`, this is the first suspect [inference]. Changing the declared version is Jim's decision, not part of this step.
+4. **The plugin declares `LrSdkVersion = 13.0`** [handle: `plugin\LrC-AVG.lrplugin\Info.lua`], below `updateAISettings`'s 13.3. (Jim's run answered this: the call worked; see Numbers.) Whether Lightroom hides newer calls from such a plugin is [unverified]. If step 7 answers `feature_unavailable`, this is the first suspect [inference]. Changing the declared version is Jim's decision, not part of this step.
 5. **The capture photo's uuid** is `CF12AF60-0858-4181-9562-376D16B89126`, an original (no copy name), local id 3869534 [handle: `docs\reports\phase4\P4\p4_chat_session\20260927-26ecc4.json` `target`].
-6. **Dry runs** of `check.mts` against the test sim [handle: `logs\check-masks-capture-2026-10-03\dryrun.txt`, five runs, 2026-10-03; driver `dryrun-driver.ts.txt` beside it]. They show only that the script runs, skips, times out and puts back. They show nothing about Lightroom.
+6. **Dry runs** of `check.mts` against the test sim [handle: `docs\reports\phase6\masks-capture\dryrun-capture1.txt`, five runs, 2026-10-03, user folder redacted; the driver is reproduced in the working copy's `logs\check-masks-capture-2026-10-03\dryrun-driver.ts.txt`, not committed]. They show only that the script runs, skips, times out and puts back. They show nothing about Lightroom.
    - **Run 1, the sim as it is (no masks).** Step 3 reports `NO the settings hold a new array of mask entries`, steps 4, 5 and 7-10 are skipped, and step 6 writes. After the probe the selection is still the photo. `PUT BACK: YES`; one History step (`AVG capture global write`).
    - **Run 2, an invented five-entry table injected at the Enter prompt.**
      - Every mask step ran: 5 entries identified, the write-back identical, the local exposure 0.125 → 0.25 read back, the global write leaving the table unchanged.
@@ -166,35 +167,46 @@ The menu labels in step 5 (Create New Mask, Linear Gradient, Range > Luminance R
    - **Run 3, hello reporting plugin 0.9.0.** The check stops after `hello`: no write, no snapshot.
    - **Run 4, the invented table and a Ctrl+C before step 5.** The script's dry-run hook emits readline's `SIGINT` event. It printed `ABORTING`, ran no further step, then put back (`PUT BACK: YES`, one History step). A real keyboard Ctrl+C, and the process `SIGINT` / `SIGHUP` handlers, were not exercised: the dry run has no terminal, and on Windows a signal sent to a child process ends it at once [handle: https://nodejs.org/api/process.html#signal-events]. So those stay [unverified].
    - **Run 5, the probe answering an error.** The settings held still for 5 s (5053 ms) before the snapshot was applied; `PUT BACK: YES`.
-7. **Tests.** Before: 833 passed, 7 skipped (840), in 61 files. After: 840 passed, 7 skipped (847), in 62 files (`npm test`, 2026-10-03): the 5 contract tests in `bridge-masks.test.ts`, and the Lua 5.1 parse and no-utf8 checks for `Masks.lua`. `npm run build` and `npm run typecheck` pass.
+7. **Tests.** Before: 833 passed, 7 skipped (840), in 61 files. After capture 1's commands: 840 passed, 7 skipped (847), in 62 files: the 5 contract tests in `bridge-masks.test.ts`, and the Lua 5.1 parse and no-utf8 checks for `Masks.lua`. After capture 2's: 846 passed, 7 skipped (853), in 62 files (`npm test`, 2026-10-03): 2 more contract tests, and the same checks for `MaskProbe.lua` and `MaskCalibrate.lua`. `npm run build` and `npm run typecheck` pass.
 
 ## Observed (Jim)
 
-*Blank until Jim's run. Claude Code fills this from `check.json` and `transcript.txt`, with Jim's y/n answers as recorded there.*
+*Collected by Claude Code from Jim's run files; Jim's y/n answers as typed.* Jim ran the check on 2026-10-03 from 21:57:42 to 22:02:14 UTC. The files are committed in `docs\reports\phase6\masks-capture\`: `transcript.txt`, `check.json`, `3_dump-1.json` and `12_probe_dc.json`.
 
-- hello (plugin, Lightroom version):
-- Step 2, five masks made in order (y/n):
-- Steps 3-13: YES/NO lines and answers:
+- **hello:** plugin 0.11.0, Lightroom 15.6, declared SDK 13 [handle: `check.json` `hello`].
+- **Step 1:** `20260907-_OZ80099.NEF` selected, snapshot `AVG capture before 14:57:43`, 177 settings saved. The photo is uncropped: `CropLeft` 0, `CropRight` 1, `CropTop` 0, `CropBottom` 1, `CropAngle` 0 [handle: `check.json` step `1_photo`].
+- **Every YES/NO line read YES** (20 lines), `failures` is empty, and the last line reads `masks capture: WORKED` [handle: `transcript.txt` lines 2-63; `check.json` `failures`].
+- **Jim answered `y` to all eight questions** [handle: `transcript.txt` lines 18, 28, 36, 41, 43, 46, 47, 61]:
+  1. "Did you make all five masks, in the order b-f …?"
+  2. "Does its Exposure now show +1.00?"
+  3. "Is there a mask named 'AVG new sky', and does its red overlay cover the sky?"
+  4. "Is the bottom of the photo brighter than before, fading out about a third of the way up ('AVG new linear')?"
+  5. "Does that oval sit in the upper right of the photo (right half, upper half)?"
+  6. "Is the mask that was 'AVG new linear' now named 'AVG renamed'?"
+  7. "… Is the brightening at the bottom of the photo gone now (the 'AVG renamed' mask switched off)?"
+  8. "Does the photo look as it did before the check, with none of the check's masks left?"
 
 ## Numbers
 
+*From the files above.*
+
 | Field | Value |
 |---|---|
-| Mask key; entries before / after step 2 | |
-| Entry labels (by strings / by order, agree?) | |
-| Differing paths between two reads (ids stable?) | |
-| Differing paths after the unchanged write-back | |
-| Local exposure field; value stored for +0.50; panel shows +1.00 after doubling (y/n) | |
-| Mask table differing after a global-only write | |
-| `update_ai_settings` call_ms; sky by table computed (ms, reads) or not | |
-| Geometry fields found; read back as written; where they landed (y/n) | |
-| Name / active fields; panel shows rename / hide (y/n) | |
-| Delete by omission: count before → after, others unchanged | |
-| Mask table after the snapshot (differing paths) | |
-| DC probe: steps ok / failed; createNewMask → mask visible (ms); setValue immediate / after wait kept | |
-| DC probe: selectMask 1 arg / 2 args; deleteMask 1 arg / 2 args | |
-| DC sky id found in the table (field name) | |
-| PUT BACK (differing paths); photo as before (y/n) | |
+| Mask key; entries before / after step 2 | `MaskGroupBasedCorrections`; 0 / 5. No other top-level key changed [handle: `check.json` `3_dumps.changed_top_keys`] |
+| Entry labels (by strings / by order, agree?) | 0 linear, 1 radial, 2 sky, 3 subject, 4 luminance; strings and order agree for all five [handle: `check.json` `3_dumps.labels`] |
+| Differing paths between two reads (ids stable?) | 0: ids stable between reads [handle: `3_dumps.differs_between_reads`] |
+| Differing paths after the unchanged write-back | 0, every setting compared [handle: `4_write_back.differing`] |
+| Local exposure field; value stored for +0.50; panel shows +1.00 after doubling (y/n) | `LocalExposure2012`; 0.125 (EV/4); 0.25 written and read back; y [handle: `5_local_exposure`; `transcript.txt` line 28] |
+| Mask table differing after a global-only write | 0, with `Exposure2012` 0.33 → 0.43 [handle: `6_global`] |
+| `update_ai_settings` call_ms; sky by table computed (ms, reads) or not | 2,844.7 ms, gate `executed`, at declared SDK 13. The copy written without digests got new `MaskDigest`, `InputDigest` and `LocalInputDigest` 1,216 ms after the call (1 read), with no error field [handle: `7_sky`] |
+| Geometry fields found; read back as written; where they landed (y/n) | Linear `ZeroX/ZeroY/FullX/FullY`, radial `Top/Left/Bottom/Right`; both read back as written; y, y [handle: `8_geometry_plan`, `transcript.txt` lines 38-43]. The radial also has `Angle`, `Feather`, `Midpoint`, `Roundness`, `Flipped` and `Version` [handle: `3_dump-1.json`, entry 1] |
+| Name / active fields; panel shows rename / hide (y/n) | `CorrectionName`, `CorrectionActive`; y, y [handle: `9_fields`, `9_fields_written`] |
+| Delete by omission: count before → after, others unchanged | 8 → 7, 0 differing paths [handle: `10_delete`] |
+| Mask table after the snapshot (differing paths) | 0, and 0 in all settings [handle: `11_snapshot`] |
+| DC probe: steps ok / failed; createNewMask → mask visible (ms); setValue immediate / after wait kept | 32 / 0. Sky 2,479 ms, subject 875 ms. `getValue("local_Exposure")` right after `setValue(…, 0.5)` returned nothing; after the wait, `setValue(…, 0.75)` then `getValue` returned 0.75. Yet `getDevelopSettings()` read right after showed `LocalExposure2012` 0 [handle: `12_probe_dc.json` steps `getValue_immediate_sky`, `getValue_after_wait_sky`, `getDevelopSettings_after_sky`] |
+| DC probe: selectMask 1 arg / 2 args; deleteMask 1 arg / 2 args | Each worked: the selected mask became the one asked for, and the count went 2 → 1 → 0 [handle: `12_probe_dc.json` steps `getSelectedMask_after_1arg`, `_2arg`, `mask_count_after_1arg`, `_2arg`] |
+| DC sky id found in the table (field name) | `CorrectionID` (`8E077BDB-…`); the DC tool id equals the table's `MaskID` (`2DB0B254-…`) [handle: `12_probe_dc.json` `getAllMasks_after_sky` against `getDevelopSettings_after_sky`] |
+| PUT BACK (differing paths); photo as before (y/n) | 0 after the probe, 0 at the put-back; y [handle: `12_snapshot_after_probe`, `13_put_back`; `transcript.txt` line 61] |
 
 ## Verdict
 
@@ -212,3 +224,107 @@ The menu labels in step 5 (Create New Mask, Linear Gradient, Range > Luminance R
   - timing on a photo whose AI model is not yet loaded;
   - whether `Reload Plug-in` loads a new Lua module such as `Masks.lua`, or only a restart does [inference: `require` loads it on the reload]. Step 0's version line shows which.
 - `Json.lua` keeps `%.14g` (pre-run finding 1). If a later mask value needs more digits, `%.17g` would carry every double exactly, at the cost of longer numbers in every settings line [inference].
+
+## Capture 2: every local slider's scale, and the AI mask templates
+
+### Purpose
+
+Capture 1 worked on Jim's run: every line YES, and the put-back exact [handle: `docs\reports\phase6\masks-capture\check.json`, `failures` empty, 8 answers `y`; capture 1's Observed and Numbers above]. It pinned one scale: the local exposure is stored as EV/4. The panel's +0.50 was stored as 0.125, and a stored 0.25 showed as +1.00 [handle: same file, step `5_local_exposure`; Jim answered y]. Step 2 needs the scale of every local slider, and the table entries of the AI masks capture 1 did not make. Jim chose to run a second capture first [stated: "Yes, capture 2 first (Recommended)", relayed by the lead, 2026-10-03].
+
+**The questions:**
+- **A.** For each slider field of a correction, what does the Masks panel show for a stored value? Is the relation linear, which `LrDevelopController` name reads it, and what range does the panel give it?
+  - The fields: `LocalTemperature`, `LocalTint`, `LocalExposure2012`, `LocalContrast2012`, `LocalHighlights2012`, `LocalShadows2012`, `LocalWhites2012`, `LocalBlacks2012`, `LocalTexture`, `LocalClarity2012`, `LocalDehaze`, `LocalHue`, `LocalSaturation`, `LocalSharpness`, `LocalLuminanceNoise`, `LocalMoire`, `LocalDefringe`, `LocalToningHue`, `LocalToningSaturation`, `LocalGrain` [handle: `docs\reports\phase6\masks-capture\3_dump-1.json`, capture 1's linear entry].
+  - `LocalExposure`, `LocalContrast`, `LocalClarity`, `LocalBrightness`, `CorrectionAmount` and `LocalCurveRefineSaturation` are recorded each round but not written. They are not the sliders of process version 15.4 [inference: older-process names, and the amount].
+- **B.** Which table entries does Lightroom make for AI masks of type `background`, `people` and `landscape`, created through `LrDevelopController`? `objects` is left out: without a stroke it would likely leave Lightroom in a tool [inference].
+- **C.** Does the panel show the value the probe read? One question for Jim.
+
+**Proposed rule** [inference], for Jim to decide: step 2 pins a field's scale only when its row in `calibration.json` has no flag. A field with a flag is refused by the mask tools until it is understood. Likewise, step 2 pins an AI mask type only when `templates.json` holds its entry.
+
+### Harness
+
+| Part | Files |
+|---|---|
+| Plugin | `plugin\LrC-AVG.lrplugin\MaskCalibrate.lua` (new): `probe_masks_calibrate`, `probe_masks_create`. `MaskProbe.lua` (new) holds the probes' shared parts, split out of `Masks.lua`. Plugin version unchanged at 0.11.0. |
+| Engine protocol | `engine\src\bridge\protocol.ts` (both commands, zod result schemas); sim answers in `engine\tests\helpers\lightroom-sim-masks.ts`; contract tests in `engine\tests\bridge-masks.test.ts` |
+| The check | `logs\check-masks-calibrate-2026-10-03\check.mts` (gitignored; Jim runs it from there). The copy at this commit is `docs\reports\phase6\masks-capture\check-capture2.mts.txt`, and its dry runs are `dryrun-capture2.txt` |
+
+**The two commands** [handle: `plugin\LrC-AVG.lrplugin\MaskCalibrate.lua` header]. Both are probes like `probe_masks_dc`: pinned to `target_uuid`, re-checked before every step, bounded by their own deadline, and outside any write gate (`MaskProbe.lua`).
+- Every probe, `probe_masks_dc` included, calls `goToMasking` only when `getSelectedTool` is not `"masking"`, the only way capture 1 called it.
+- Every probe ends with `selectTool("loupe")` and records `getSelectedTool_end`, so the capture does not leave Lightroom in a mask tool. That `"loupe"` closes Masking is [unverified] until this run.
+- **`probe_masks_calibrate { target_uuid, mask_id, mask_name?, names }`** → `{ uuid, filename, steps, stopped?, selected? }`.
+  - It waits up to 5 s for the mask to be listed, then selects it by id. If that does not take, it selects it by name.
+  - Then it waits a second and reads `getValue` and `getRange` of each name. With no mask selected it reads nothing.
+  - The DC mask id is the table's `CorrectionID`, and the DC tool id is the table's `MaskID` [handle: Jim's capture 1 run, `docs\reports\phase6\masks-capture\12_probe_dc.json`, `getAllMasks_after_sky` (`8E077BDB-…`, tool `2DB0B254-…`) against `getDevelopSettings_after_sky`].
+- **`probe_masks_create { target_uuid, subtypes, wait_seconds? }`** → `{ uuid, filename, steps, stopped? }`.
+  - It calls `createNewMask("aiSelection", subtype)` for each subtype and waits up to `wait_seconds` (default 10) for the mask to show.
+  - It records the ids that are new since just before each create (`new_masks_<subtype>`).
+  - The masks stay; the check puts the photo back with a snapshot.
+
+**What the check is written to do** [handle: `docs\reports\phase6\masks-capture\check-capture2.mts.txt` header]:
+0. It takes the instance lock and checks the plugin version. Both commands must answer an empty payload with `bad_request`; an older build of 0.11.0 answers `unknown_command`, and the check then asks for a reload.
+1. It selects the photo, takes the snapshot `AVG calibrate before <time>`, and saves every setting.
+2. **Round 1.** It writes one correction, `AVG calibrate`: a fresh copy of capture 1's linear entry, with new ids, and every slider field at its own round 1 value. The base values:
+   - signed fields: 0.2, then -0.4, then 0.3;
+   - exposure: 0.125, -0.25, 0.1875;
+   - `LocalToningHue`, `LocalToningSaturation` and `LocalGrain`: 0.2, 0.5, 0.35.
+
+   Field number i (0-19) gets base × (1 + 0.05 i) in rounds 1-2 and base × (1 + 0.05 (19 − i)) in round 3. So no two fields share a value, and every value stays within -1..1 (largest 0.975) [inference]. Values within 0..1 are valid whether a field is stored as a fraction or in degrees [inference].
+
+   It reads the entry back, then runs `probe_masks_calibrate` over every candidate name. The names are `local_<X>` from the SDK reference's Version 6 list and the field-named variant, such as `local_Contrast2012`, plus `local_Amount` and `local_RefineSaturation` [unverified until this run]. Values read with another mask selected are not used.
+3. **The question.** Jim clicks `AVG calibrate` in the Masks panel and says whether a slider shows the value the probe read (Contrast, if it answered non-zero).
+4. **Rounds 2 and 3** work as round 1, each with a fresh copy and new ids, so a probe never reads the previous round's mask.
+5. **The results table.** Per field it gives the DC name that answered, stored → panel for each round, and `scale` and `offset` from rounds 1-2. A flag marks:
+   - no DC answer;
+   - a constant answer;
+   - a stored value Lightroom changed;
+   - fewer than 2 rounds;
+   - a round 3 off the line by more than 1 % of the span. Because round 3 reverses the per-field factors, a name that reads another field misses round 3. For neighbouring fields on a ×100 slider the miss is about 2.5 panel units [inference: the algebra in the script's header].
+
+   When a name answers but stays constant, the next candidate is used. The table is saved as `calibration.json`, also when the run stops early.
+6. The snapshot puts the photo back.
+7. **The AI masks.** `probe_masks_create` runs for `background`, `people` and `landscape` (10 s each). A subtype counts only when its mask showed and exactly one id is new since just before its create, not claimed by an earlier subtype and not in the table before. A subtype that made no mask is never credited with the mask still selected from the one before. After a 3 s wait the check reads the table and saves each counted entry, and any unclaimed new entry, in `templates.json`.
+8. **Always:** the snapshot is applied and every setting is compared with step 1. They are compared again 5 s later, in case a mask still computing changed them. Then Jim's last question.
+
+The History names it writes are `AVG calibrate write 1` to `AVG calibrate write 3`. After Ctrl+C no further step or probe runs. The stable-wait after a failed probe and the manual fallback work as in capture 1. Closing the window also asks for the put-back, but Windows ends Node about 10 s later [handle: https://nodejs.org/api/process.html#signal-events, read 2026-10-03]. So Jim's steps say Ctrl+C.
+
+**Dry runs** [handle: `docs\reports\phase6\masks-capture\dryrun-capture2.txt`, four runs, 2026-10-03, user folder redacted]. The template is capture 1's committed `3_dump-1.json`. The runs show only the script's flow and arithmetic, nothing about Lightroom; every scale and entry in them is invented.
+1. **The sim as it is.** The writes and read-backs worked, every probe selected nothing, and every field read "no DC answer". No AI subtype was credited. `PUT BACK: YES`, also 5 s later.
+2. **Invented DC answers.** Scale 4 for exposure and 100 for the others. On purpose: `local_Contrast` answered the older-process field, `LocalHue` was made non-linear, `local_Moire` read `LocalDefringe`, and `people` made no mask.
+   - 18 of 20 fields came out clean.
+   - `LocalHue` and the misread `LocalMoire` were flagged non-linear (round 3: 34.5 against 37.03 on the line).
+   - `LocalContrast2012` fell back to `local_Contrast2012`.
+   - The question asked about `+23`.
+   - `background` and `landscape` were credited with their own entries. `people` was not, with "no new mask showed", although the background mask was still selected.
+   - `PUT BACK: YES`.
+3. **Ctrl+C before round 2.** It aborted, flagged every field "fewer than 2 rounds", and put back.
+4. **A plugin build without the commands.** It stopped before any write and printed the reload instruction.
+
+### Steps for Jim
+
+Do these when Claude Code asks for the run. Claude Code has checked out `phase-6/masks` in the repo folder and run `npm run build` first. It takes about 5 minutes [inference: three writes, two probes, two questions].
+
+1. Right-click the Claude icon in the Windows system tray, then click **Quit**.
+2. In Lightroom Classic, open **File > Plug-in Manager**. In the list on the left, click **LrC-AVG (Autonomous Vision Gateway)**, then click **Reload Plug-in**. Click **Done**, then wait 20 seconds.
+3. In the **Library** module's **Folders** panel (left side), click the `fixtures` folder, so `20260907-_OZ80099.NEF` shows in the Filmstrip.
+4. In VS Code's PowerShell terminal, at `D:\Developer\LrC_Autonomous_Gateway`, run:
+
+   ```powershell
+   node logs\check-masks-calibrate-2026-10-03\check.mts
+   ```
+
+   You should see `YES  Lightroom 15.6 runs plugin 0.11.0`, `YES  the plugin knows probe_masks_calibrate`, `YES  the plugin knows probe_masks_create`, then `YES  selected 20260907-_OZ80099.NEF`.
+5. When it prints `The plugin now selects the mask in Develop > Masking`, do not click in Lightroom until it asks a question.
+6. It asks about one slider. In Lightroom's Develop module: if the Masks panel is not open, press **Shift+W**. In the Masks panel, click **AVG calibrate**. Look at the slider it names, then type `y` or `n` and press **Enter**.
+7. It writes twice more and prints a results table. When it prints `The plugin now creates AI masks`, do not click in Lightroom until the next line (up to a minute).
+8. After `--- 9_put_back` it waits 5 seconds by itself. The last lines say `PUT BACK: YES` or `NO`. Then it asks you to look at the photo and the Masks panel: if the Masks panel is not open, press **Shift+W**. Answer whether the photo looks as before (type `y` or `n`, then **Enter**). Then they say `masks capture 2: WORKED` or `DONE, n NO / FAILED lines`. A NO line is a finding, not your mistake. Tell Claude Code "done".
+
+### If something goes wrong
+
+- If it prints `LOCK BUSY`, Claude Desktop is still running: do step 1 again, wait 60 seconds, then do step 4 again.
+- If it prints `Reload the plugin`, do step 2 again, then step 4. If it prints that line again, quit Lightroom, start it again, wait 20 seconds, then do step 4.
+- If you need to stop, or the window shows no new line for 5 minutes, press **Ctrl+C** once. Do not press it again, and do not close the window. It prints `ABORTING`, puts the photo back by itself and prints `PUT BACK: YES` or `NO`. Tell Claude Code.
+- If it prints `PUT BACK: NO`, wait 1 minute. Then, in Lightroom's Develop module, open the **Snapshots** panel (left side) and click the snapshot it names (it starts with `AVG calibrate before`). Tell Claude Code.
+
+### Observed (Jim)
+
+*Blank until Jim's run. Claude Code fills this from `check.json`, `calibration.json`, `templates.json` and `transcript.txt`.*

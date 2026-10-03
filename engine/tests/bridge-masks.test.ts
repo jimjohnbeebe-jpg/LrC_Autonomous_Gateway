@@ -74,3 +74,25 @@ describe("bridge: probe_masks_dc", () => {
     expect((await rejection(client.request("probe_masks_dc", { target_uuid: lr.uuid }))).code).toBe("bad_response");
   });
 });
+
+describe("bridge: capture 2 probes (probe_masks_calibrate, probe_masks_create)", () => {
+  it("sends the mask and the names, and reads the selected mask and the values back", async () => {
+    const payload = { target_uuid: lr.uuid, mask_id: "CORR-1", mask_name: "AVG calibrate", names: ["local_Contrast", "local_Contrast2012"] };
+    const steps = [
+      { step: "getValue_local_Contrast", ok: true, result: 20, ms: 0.2 },
+      { step: "getRange_local_Contrast", ok: true, result: [-100, 100], ms: 0.1 },
+      { step: "getValue_local_Contrast2012", ok: false, error: "unknown parameter", ms: 0.1 },
+    ];
+    plugin.handlers.set("probe_masks_calibrate", () => ({ ok: true, payload: { uuid: lr.uuid, steps, selected: "CORR-1" } }));
+    const result = await client.request("probe_masks_calibrate", payload);
+    expect(plugin.received.at(-1)).toEqual({ name: "probe_masks_calibrate", payload });
+    expect([result.selected, result.steps]).toEqual(["CORR-1", steps]);
+  });
+
+  it("refuses another selected photo in the sim, for both probes", async () => {
+    lr.selected = "OTHER";
+    const calibrate = await rejection(client.request("probe_masks_calibrate", { target_uuid: lr.uuid, mask_id: "CORR-1", names: ["local_Exposure"] }));
+    const create = await rejection(client.request("probe_masks_create", { target_uuid: lr.uuid, subtypes: ["background"] }));
+    expect([calibrate.code, create.code]).toEqual(["target_mismatch", "target_mismatch"]);
+  });
+});

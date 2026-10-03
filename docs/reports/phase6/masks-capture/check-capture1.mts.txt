@@ -1,0 +1,630 @@
+// Masks capture (GitHub issue #59, PR C step 1, branch phase-6/masks, plugin 0.11.0). Written by
+// Claude Code (Opus 5.5), 2026-10-03. Report: docs\reports\phase6\masks-capture.md.
+// Decisions [stated: Jim, 2026-10-03]: masks inside sessions ("Inside sessions (Recommended)"); the
+// route is the mask table written with applyDevelopSettings + photo:updateAISettings(), with an
+// LrDevelopController fallback for AI masks ("Table + Develop fallback"); the photo is
+// 20260907-_OZ80099.NEF.
+// It learns, on one photo, how Lightroom stores masks, through the plugin's raw get_settings /
+// apply_settings (the params map would refuse mask keys), update_ai_settings and probe_masks_dc:
+//   0. Claude Desktop quit (the engine instance lock); plugin 0.11.0 or later; Lightroom's version.
+//   1. selects the photo, takes the snapshot "AVG capture before <time>", saves every setting.
+//   2. Jim adds five masks by hand (linear +0.50 EV, radial, sky, subject, luminance range).
+//   3. reads the settings twice: which key holds the masks, which entry is which, are ids stable?
+//   4. writes the mask table back unchanged and compares the read-back.
+//   5. changes the linear mask's local exposure in the table (the EV/4 question).
+//   6. a global write (exposure +0.10) must leave the mask table alone.
+//   7. adds a second sky mask by table, then update_ai_settings, and waits for it to compute.
+//   8. adds a linear (at the bottom, where Jim's is not) and a radial gradient with set geometry,
+//      named "AVG new linear" / "AVG new radial" when the entries have a name field; Jim says where
+//      they land.
+//   9. rename / hide fields, if the entries have them.
+//  10. deletes Jim's radial by writing the array without it.
+//  11. applies the snapshot: the mask table must be as before step 2.
+//  12. selects the photo, runs probe_masks_dc on it (LrDevelopController; refused if another photo
+//      is selected), checks the selection after it, applies the snapshot again; after a failed or
+//      timed-out probe it first waits until the settings hold still.
+//  13. ALWAYS: applies the snapshot and compares every setting with step 1; Jim confirms the photo.
+// Every wait ends and moves on, so a missed step never blocks the put-back. Every y/n: y = good.
+// Ctrl+C (once) or closing the window skips the remaining steps and goes to the put-back.
+// Results: <out>\check.json, transcript.txt, raw\*.json (also %TEMP%\LrC-AVG\masks-capture\).
+// Usage, from the repo root after npm run build: node logs\check-masks-capture-2026-10-03\check.mts [repo root]
+// Dry run against a stand-in plugin: LRC_AVG_COMMAND_PORT/_EVENT_PORT/_TOKEN_FILE, CHECK_OUT, CHECK_TEMP, CHECK_UUID.
+import { randomInt } from "node:crypto";
+import { mkdirSync, writeFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { createInterface } from "node:readline/promises";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+const repo = path.resolve(process.argv[2] ?? process.cwd());
+const dist = (p: string) => import(pathToFileURL(path.join(repo, "engine", "dist", p)).href);
+const { BridgeClient, pluginVersionAtLeast } = await dist("bridge/index.js");
+const { acquireInstanceLock, devOverrides, ENGINE_VERSION } = await dist("mcp/index.js");
+
+// 20260907-_OZ80099.NEF, an original (no copy name) [handle: logs\20260927-26ecc4.json target;
+// committed copy docs\reports\phase4\P4\p4_chat_session\20260927-26ecc4.json].
+const UUID = process.env["CHECK_UUID"] ?? "CF12AF60-0858-4181-9562-376D16B89126";
+const EXPECT = { is_virtual_copy: false };
+const MIN_PLUGIN = "0.11.0";
+const ORDER = ["linear", "radial", "sky", "subject", "luminance"]; // the order step 2 asks for
+// Geometry field names and their meaning are [community: issue #59 research, "Mask types by
+// robustness"]; they are set only when Jim's own entry has them (rule 03: names from the live dump).
+const GEOMETRY: Record<string, Record<string, number>> = {
+  // full effect at the bottom, gone a third of the way up: where Jim's own linear (top down) is not
+  linear: { ZeroX: 0.5, ZeroY: 0.67, FullX: 0.5, FullY: 0.9 },
+  radial: { Top: 0.1, Left: 0.6, Bottom: 0.5, Right: 0.9 }, // an oval in the upper right
+};
+const outDir = process.env["CHECK_OUT"] ?? path.dirname(fileURLToPath(import.meta.url));
+const tempDir = process.env["CHECK_TEMP"] ?? path.join(os.tmpdir(), "LrC-AVG", "masks-capture");
+for (const d of [outDir, path.join(outDir, "raw"), tempDir]) mkdirSync(d, { recursive: true });
+
+type J = any;
+const at = () => new Date().toISOString();
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const transcript: string[] = [];
+const result: Record<string, J> = { started: at(), engine_version: ENGINE_VERSION, uuid: UUID, steps: {}, checks: [], answers: [], failures: [] };
+const save = () => {
+  writeFileSync(path.join(outDir, "check.json"), JSON.stringify(result, null, 2));
+  writeFileSync(path.join(outDir, "transcript.txt"), transcript.join("\n") + "\n");
+};
+const say = (m: string) => {
+  const text = `[${new Date().toLocaleTimeString()}] ${m}`;
+  console.log(text);
+  transcript.push(text);
+};
+const step = (name: string, data: Record<string, unknown>) => {
+  result.steps[name] = { at: at(), ...data };
+  save();
+};
+function check(ok: boolean, text: string, detail?: unknown) {
+  result.checks.push({ ok, text, detail });
+  if (!ok) result.failures.push(text);
+  say(`${ok ? "YES" : "NO "}  ${text}`);
+  save();
+}
+const saveRaw = (name: string, data: unknown) => {
+  const text = JSON.stringify(data, null, 2);
+  for (const d of [path.join(outDir, "raw"), tempDir]) writeFileSync(path.join(d, `${name}.json`), text);
+};
+
+const rl = createInterface({ input: process.stdin, output: process.stdout });
+// Ctrl+C (or closing the window) must not kill Node before the put-back: in a terminal, readline
+// takes Ctrl+C itself, and without handlers a second one ends the process with no `finally`. So
+// both set `aborting`; every step checks it, and the run goes straight to the put-back (step 13).
+let aborting: string | null = null;
+const abortCtl = new AbortController();
+function abort(why: string): void {
+  if (aborting) {
+    say(`(${why} again: still putting the photo back; wait for the last lines)`);
+    return;
+  }
+  aborting = why;
+  result.failures.push(`aborted: ${why}`);
+  say(`ABORTING (${why}): going straight to the put-back. Wait for the last lines.`);
+  abortCtl.abort();
+}
+rl.on("SIGINT", () => abort("Ctrl+C"));
+process.on("SIGINT", () => abort("Ctrl+C"));
+process.on("SIGHUP", () => abort("the window was closed"));
+async function line(q: string, minutes: number): Promise<string | null> {
+  if (aborting) return null;
+  try {
+    return (await rl.question(q, { signal: AbortSignal.any([AbortSignal.timeout(minutes * 60_000), abortCtl.signal]) })).trim().toLowerCase();
+  } catch {
+    return null; // no answer in time, aborted, or stdin closed
+  }
+}
+async function ask(q: string): Promise<string> {
+  let a: string | null = null;
+  for (let i = 0; i < 3 && a !== "y" && a !== "n"; i++) {
+    a = await line(`${q} (y/n) `, 10);
+    if (a === null) break;
+  }
+  const answer = a === "y" || a === "n" ? a : aborting ? "aborted" : "no answer";
+  result.answers.push({ q, answer, at: at() });
+  transcript.push(`  ? ${q} -> ${answer}`);
+  if (answer !== "y" && answer !== "aborted") result.failures.push(`answered ${answer}: ${q}`);
+  save();
+  return answer;
+}
+
+// ---- pure helpers -------------------------------------------------------------------------------
+const isObj = (v: J) => v !== null && typeof v === "object" && !Array.isArray(v);
+const isEmpty = (v: J) => (Array.isArray(v) && v.length === 0) || (isObj(v) && Object.keys(v).length === 0);
+const short = (v: J) => (v === undefined ? "(absent)" : JSON.stringify(v).slice(0, 160));
+/** Absent, [] or {}: Lua writes {} as [], and a photo without masks has no mask key at all. */
+const blank = (v: J) => v === undefined || isEmpty(v);
+/** Paths where a and b differ, with absent, [] and {} all equal. At most 200. */
+function diff(a: J, b: J, where = "", out: Array<Record<string, J>> = []): Array<Record<string, J>> {
+  if (out.length >= 200 || (blank(a) && blank(b))) return out;
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) out.push({ path: `${where}.length`, before: a.length, after: b.length });
+    for (let i = 0; i < Math.min(a.length, b.length); i++) diff(a[i], b[i], `${where}[${i}]`, out);
+  } else if (isObj(a) && isObj(b)) {
+    for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) diff(a[k], b[k], where ? `${where}.${k}` : k, out);
+  } else if (a !== b) out.push({ path: where || "(root)", before: short(a), after: short(b) });
+  return out;
+}
+/** Every [key, value] pair at any depth. */
+function pairs(v: J, out: Array<[string, J]> = []): Array<[string, J]> {
+  if (Array.isArray(v)) v.forEach((x) => pairs(x, out));
+  else if (isObj(v)) {
+    for (const [k, x] of Object.entries(v)) {
+      out.push([k, x]);
+      pairs(x, out);
+    }
+  }
+  return out;
+}
+const strings = (v: J): string[] => (typeof v === "string" ? [v] : pairs(v).map(([, x]) => x).filter((x) => typeof x === "string"));
+/** The top-level key whose value is a non-empty array of objects that changed, the longest such. */
+function findMaskKey(before: J, after: J): string | null {
+  const keys = Object.keys(after).filter((k) => Array.isArray(after[k]) && after[k].length > 0 && after[k].every(isObj) && diff(before[k], after[k]).length > 0);
+  return keys.sort((a, b) => after[b].length - after[a].length)[0] ?? null;
+}
+/** A mask type from an entry's string values ([community: issue #59 research, the `What` values]). */
+function typeFromStrings(entry: J): string | null {
+  const s = strings(entry).join(" ");
+  if (s.includes("CircularGradient")) return "radial";
+  if (s.includes("Mask/Gradient")) return "linear";
+  if (s.includes("RangeMask")) return "luminance";
+  if (s.includes("Mask/Image")) return "ai";
+  return null;
+}
+/** Labels for the entries that are not in `old`: by their strings, else by the order step 2 asked for. */
+function identify(entries: J[], old: J[]): Array<Record<string, J>> {
+  const seen = new Set(old.map((e) => JSON.stringify(e)));
+  const fresh = entries.map((e, index) => ({ e, index })).filter(({ e }) => !seen.has(JSON.stringify(e)));
+  let ai = 0;
+  return fresh.map(({ e, index }, j) => {
+    const fromStrings = typeFromStrings(e);
+    const byOrder = fresh.length === ORDER.length ? (ORDER[j] as string) : null;
+    const label = (fromStrings === "ai" ? (["sky", "subject"][ai++] ?? "ai") : fromStrings) ?? byOrder ?? "unknown";
+    return { index, label, from_strings: fromStrings, by_order: byOrder, agree: byOrder === null || byOrder === label, keys: Object.keys(e) };
+  });
+}
+/** A new id in the format of `s`: each hex digit replaced, in the same case; other characters kept. */
+function newIdLike(s: string): string {
+  if (/^\d+$/.test(s)) return s.replace(/\d/g, () => String(randomInt(10)));
+  const upper = /[A-F]/.test(s) && !/[a-f]/.test(s);
+  const digit = () => {
+    const c = "0123456789abcdef".charAt(randomInt(16));
+    return upper ? c.toUpperCase() : c;
+  };
+  return s.replace(/[0-9a-fA-F]/g, digit);
+}
+/** A copy of an entry without fields whose names contain "Digest", with new values for string fields named *ID / *Id. */
+function freshCopy(entry: J): { entry: J; ids: Record<string, string>; dropped: string[] } {
+  const ids: Record<string, string> = {};
+  const dropped: string[] = [];
+  const fix = (v: J): J => {
+    if (Array.isArray(v)) return v.map(fix);
+    if (!isObj(v)) return v;
+    const out: J = {};
+    for (const [k, x] of Object.entries(v)) {
+      if (k.includes("Digest")) dropped.push(k);
+      else if (/I[Dd]$/.test(k) && typeof x === "string" && x !== "") out[k] = ids[x] ?? (ids[x] = newIdLike(x));
+      else out[k] = fix(x);
+    }
+    return out;
+  };
+  return { entry: fix(entry), ids, dropped };
+}
+const indexWith = (arr: J[], idValues: string[]) => arr.findIndex((e) => strings(e).some((s) => idValues.includes(s)));
+/** The first object at any depth (v itself included) that holds every key in `keys`. */
+function holder(v: J, keys: string[]): J | null {
+  if (isObj(v) && keys.every((k) => k in v)) return v;
+  for (const x of Array.isArray(v) ? v : isObj(v) ? Object.values(v) : []) {
+    const h = holder(x, keys);
+    if (h) return h;
+  }
+  return null;
+}
+const topKeys = (entry: J, re: RegExp, type: string) => Object.keys(entry ?? {}).filter((k) => re.test(k) && typeof entry[k] === type);
+/** Sets the entry's first top-level *Name* string to `name`: the field's key, or null when it has none. */
+function setName(entry: J, name: string): string | null {
+  const key = topKeys(entry, /Name/, "string")[0] ?? null;
+  if (key) entry[key] = name;
+  return key;
+}
+const digestOf = (entry: J) => pairs(entry).filter(([k, x]) => k.includes("Digest") && typeof x === "string" && x !== "");
+const errorsOf = (entry: J) => pairs(entry).filter(([k]) => k.includes("Error"));
+const failedError = (entry: J) => errorsOf(entry).some(([, x]) => ![0, "0", "", false, null].includes(x));
+/** Digest fields in `entry` that `earlier` did not have with the same value. */
+const newDigests = (entry: J, earlier: J) => digestOf(entry).filter(([k, x]) => !digestOf(earlier).some(([k2, x2]) => k === k2 && x === x2));
+
+// ---- the bridge --------------------------------------------------------------------------------
+const dev = devOverrides();
+const lock = await acquireInstanceLock(dev.lockPort);
+if (!lock.ok) {
+  result.lock = { ok: false, port: lock.port, pid: lock.pid };
+  save();
+  say(`LOCK BUSY: another engine (pid ${lock.pid}) holds port ${lock.port}. Quit Claude Desktop (File > Exit), wait 60 s, then run this again.`);
+  process.exit(2);
+}
+// The plugin goes silent while a menu or dialog is open (vault LR_SDK_NOTES "Recorded in Phase 5");
+// Jim works in Lightroom during step 2, so the bridge allows 60 s of silence before it drops.
+const client = new BridgeClient({ engineVersion: `${ENGINE_VERSION}-masks-capture`, log: (m: string) => console.error(`  (${m})`), silenceAllowanceMs: () => 60_000, ...dev.bridge });
+client.start();
+async function req(name: string, payload: J, timeoutMs = 30_000): Promise<J> {
+  if (client.getState() !== "connected") await client.waitConnected(30_000);
+  return client.request(name, payload, { timeoutMs });
+}
+const read = async (): Promise<J> => (await req("get_settings", { photo_uuid: UUID, expect: EXPECT })).settings;
+const write = async (settings: J, history: string): Promise<J> => (await req("apply_settings", { photo_uuid: UUID, expect: EXPECT, settings, history_name: history })).read_back;
+const errBody = (err: J) => (err?.code ? `${err.code}: ${err.message}` : String(err?.message ?? err));
+
+const st: Record<string, J> = {}; // state the steps share
+/** Runs one step; a failure is recorded and the run goes on. A step returns a skip reason or nothing. */
+async function run(name: string, fn: () => Promise<string | void>): Promise<boolean> {
+  if (aborting) return false;
+  say(`--- ${name}`);
+  try {
+    const skipped = await fn();
+    if (skipped) {
+      step(`${name}_skipped`, { reason: skipped });
+      say(`skipped: ${skipped}`);
+    }
+    return true;
+  } catch (err) {
+    step(`${name}_error`, { error: errBody(err), aborting });
+    if (!aborting) check(false, `${name} ran`, errBody(err));
+    return false;
+  }
+}
+const masks = (s: J): J[] => (st.maskKey && Array.isArray(s?.[st.maskKey]) ? s[st.maskKey] : []);
+const label = (name: string) => (st.labels ?? []).find((l: J) => l.label === name)?.index ?? -1;
+const noTable = () => (st.maskKey ? null : "no mask table was found in step 3");
+
+async function s0(): Promise<void> {
+  const hello = await client.waitConnected(30_000);
+  result.hello = { plugin_version: hello.plugin_version, lrc_version: hello.lrc_version, sdk_declared: hello.sdk_declared };
+  const ok = pluginVersionAtLeast(hello.plugin_version, MIN_PLUGIN);
+  check(ok, `Lightroom ${hello.lrc_version} runs plugin ${hello.plugin_version} (${MIN_PLUGIN} or later needed)`);
+  if (!ok) throw new Error(`plugin ${hello.plugin_version}: in Plug-in Manager, select LrC-AVG and click Reload Plug-in`);
+}
+
+async function s1(): Promise<void> {
+  const selected = await req("select_photo", { uuid: UUID, expect: EXPECT });
+  const name = `AVG capture before ${new Date().toLocaleTimeString("en-GB")}`;
+  const snap = await req("create_snapshot", { photo_uuid: UUID, expect: EXPECT, name });
+  st.snapshotId = snap.snapshot_id;
+  st.before = await read();
+  saveRaw("1_before", st.before);
+  const crop = Object.fromEntries(Object.entries(st.before).filter(([k]) => k.startsWith("Crop")));
+  step("1_photo", { filename: selected.filename, snapshot: { id: snap.snapshot_id, name }, keys: Object.keys(st.before).length, crop });
+  check(true, `selected ${selected.filename ?? UUID}; snapshot "${name}" taken; ${Object.keys(st.before).length} settings saved`);
+  st.snapshotName = name;
+  say(`To stop at any point, press Ctrl+C once and wait: the check puts the photo back by itself.`);
+  say(`Only if its last lines say PUT BACK: NO: wait 1 minute, then in Lightroom's Develop module open the Snapshots panel (left side) and click "${name}".`);
+}
+
+async function s2(): Promise<void> {
+  say("NOW, in Lightroom (the photo 20260907-_OZ80099.NEF is selected). Do these in this order:");
+  for (const t of [
+    "a. Press D (Develop), then Shift+W (Masking). The Masks panel opens.",
+    "b. Click Create New Mask, then Linear Gradient. Drag on the photo from the top edge down to about a third.",
+    "   In the panel on the right, click the number next to Exposure, type 0.5, press Enter.",
+    "c. Click Create New Mask, then Radial Gradient. Drag an oval anywhere on the photo.",
+    "d. Click Create New Mask, then Sky. Wait until the new mask shows in the Masks panel.",
+    "e. Click Create New Mask, then Subject. Wait until the new mask shows in the Masks panel.",
+    "f. Click Create New Mask, then Range, then Luminance Range. Click once on a bright part of the photo.",
+    "g. Leave Masking open. Come back to this window.",
+    "At the end this check puts the photo back as it is now: the masks you add are removed.",
+  ]) say(t);
+  const enter = await line("Press Enter when the five masks are in the Masks panel. ", 30);
+  if (enter === null) throw new Error("no Enter within 30 minutes");
+  await ask("Did you make all five masks, in the order b-f (linear with Exposure +0.50, radial, sky, subject, luminance range)?");
+}
+
+async function s3(): Promise<string | void> {
+  const d1 = await read();
+  await sleep(1000);
+  const d2 = await read();
+  saveRaw("3_dump-1", d1);
+  saveRaw("3_dump-2", d2);
+  st.maskKey = findMaskKey(st.before, d1);
+  st.dump2 = d2;
+  const changed = [...new Set(diff(st.before, d1).map((d) => String(d.path).split(/[.[]/)[0]))];
+  if (!st.maskKey) {
+    step("3_dumps", { changed_top_keys: changed, mask_key: null });
+    check(false, "the settings hold a new array of mask entries after step 2");
+    return "no mask table";
+  }
+  st.labels = identify(masks(d1), masks(st.before));
+  const between = diff(masks(d1), masks(d2));
+  step("3_dumps", { changed_top_keys: changed, mask_key: st.maskKey, count_before: masks(st.before).length, count: masks(d1).length, labels: st.labels, differs_between_reads: between });
+  check(true, `the masks are under "${st.maskKey}": ${masks(d1).length} entries (${masks(st.before).length} before step 2)`);
+  check(between.length === 0, `two reads in a row give the same mask table, ids included (${between.length} differing paths)`, between);
+  check(st.labels.length === 5 && st.labels.every((l: J) => l.agree), `each new entry identified: ${st.labels.map((l: J) => `${l.index}=${l.label}`).join(", ")}`, st.labels);
+}
+
+async function s4(): Promise<string | void> {
+  if (noTable()) return noTable()!;
+  const rb = await write({ [st.maskKey]: st.dump2[st.maskKey] }, "AVG capture write-back");
+  saveRaw("4_write_back", rb);
+  const d = diff(st.dump2, rb);
+  step("4_write_back", { differing: d });
+  check(d.length === 0, `the unchanged mask table written back reads back identical, every setting compared (${d.length} differing paths)`, d);
+  st.current = rb;
+}
+
+async function s5(): Promise<string | void> {
+  const i = label("linear");
+  if (noTable() || i < 0 || !st.current) return noTable() ?? "no linear gradient identified, or step 4 did not run";
+  const entry = masks(st.current)[i];
+  const candidates = topKeys(entry, /^LocalExposure/, "number"); // the prefix is [community: issue #59 research]
+  const key = candidates.find((k) => entry[k] !== 0) ?? candidates[0];
+  if (!key) {
+    step("5_local_exposure", { field: "absent", keys: Object.keys(entry ?? {}) });
+    return "no LocalExposure* number at the top of the linear entry";
+  }
+  const stored = entry[key];
+  const wanted = stored === 0 ? 0.25 : stored * 2;
+  const arr = structuredClone(masks(st.current));
+  arr[i][key] = wanted;
+  const rb = await write({ [st.maskKey]: arr }, "AVG capture local exposure");
+  const back = masks(rb)[i]?.[key];
+  step("5_local_exposure", { field: key, candidates, stored_for_ui_plus_0_50: stored, ratio_to_ui: stored / 0.5, written: wanted, read_back: back });
+  check(back === wanted, `the linear mask's ${key} reads back as written (${stored} for +0.50 in the panel, wrote ${wanted}, read ${back})`);
+  st.current = rb;
+  if (stored === 0) return "Jim's linear gradient held 0, not +0.50: no panel question";
+  say("NOW: in the Masks panel, click the Linear Gradient mask you made (the first one). Look at its Exposure slider.");
+  await ask("Does its Exposure now show +1.00?");
+}
+
+async function s6(): Promise<void> {
+  const cur = await read();
+  const exposure = Number(cur["Exposure2012"]);
+  const wanted = Math.round((exposure + 0.1) * 100) / 100;
+  const rb = await write({ Exposure2012: wanted }, "AVG capture global write");
+  // "Unchanged" means something only when the table was there before the write.
+  const present = st.maskKey && masks(cur).length > 0;
+  const d = present ? diff(cur[st.maskKey], rb[st.maskKey], st.maskKey) : null;
+  step("6_global", { exposure_before: exposure, written: wanted, read_back: rb["Exposure2012"], mask_key_present_before: Boolean(present), mask_table_differing: d });
+  check(rb["Exposure2012"] === wanted, `a global exposure write reads back (${exposure} -> ${rb["Exposure2012"]})`);
+  if (d) check(d.length === 0, `a global-only write leaves the mask table unchanged (${d.length} differing paths)`, d);
+  else if (st.maskKey) check(false, `the mask table "${st.maskKey}" was there before the global write (it was not, so "unchanged" cannot be judged)`);
+  st.current = rb;
+}
+
+/** Reads every 250 ms (plus the read itself) for up to 30 s until the entry with one of `ids` has a new digest or an error. */
+async function waitComputed(ids: string[], after: J): Promise<{ entry: J; polls: number; ms: number }> {
+  const t0 = Date.now();
+  let entry: J = after;
+  let polls = 0;
+  while (!aborting && Date.now() - t0 < 30_000 && newDigests(entry, after).length === 0 && !failedError(entry)) {
+    await sleep(250);
+    const s = await read();
+    polls++;
+    entry = masks(s)[indexWith(masks(s), ids)] ?? masks(s).at(-1);
+  }
+  return { entry, polls, ms: Date.now() - t0 };
+}
+
+async function s7(): Promise<string | void> {
+  const i = label("sky");
+  if (noTable() || i < 0 || !st.current) return noTable() ?? "no sky mask identified, or an earlier write did not run";
+  const copy = freshCopy(masks(st.current)[i]);
+  const nameKey = setName(copy.entry, "AVG new sky");
+  const ids = Object.values(copy.ids);
+  const rb = await write({ [st.maskKey]: [...masks(st.current), copy.entry] }, "AVG capture add sky");
+  const foundById = indexWith(masks(rb), ids) >= 0;
+  const after = masks(rb)[indexWith(masks(rb), ids)] ?? masks(rb).at(-1);
+  const update = await req("update_ai_settings", { photo_uuid: UUID, expect: EXPECT }, 30_000).catch((err) => ({ error: errBody(err) }));
+  const { entry, polls, ms } = await waitComputed(ids, after);
+  saveRaw("7_sky_by_table", { written: copy.entry, after_write: after, update, final: entry });
+  step("7_sky", { new_ids: copy.ids, dropped: copy.dropped, found_by_id: foundById, name_field: nameKey, name_read_back: nameKey ? (after?.[nameKey] ?? null) : null, digest_after_write: digestOf(after), update, polls, ms_after_update: ms, new_digests: newDigests(entry, after), errors: errorsOf(entry) });
+  check(!("error" in update), `update_ai_settings answered (${JSON.stringify(update)})`);
+  check(newDigests(entry, after).length > 0 && !failedError(entry), `the sky mask added by table computed within 30 s of update_ai_settings (${ms} ms, ${polls} reads)`, { digest: digestOf(entry), errors: errorsOf(entry) });
+  st.current = await read();
+  say("NOW: look at the Masks panel (Shift+W opens it). Hover over the newest mask.");
+  await ask(nameKey ? "Is there a mask named 'AVG new sky', and does its red overlay cover the sky?" : "Is there now a second Sky mask, and does its red overlay cover the sky?");
+}
+
+/** A fresh copy of the entry labelled `name` with GEOMETRY[name] set; a note when Jim's entry lacks the fields. */
+function placed(name: string, exposure: number | null): J | null {
+  const i = label(name);
+  if (i < 0) return null;
+  const copy = freshCopy(masks(st.current)[i]);
+  const h = holder(copy.entry, Object.keys(GEOMETRY[name]!));
+  if (!h) return { name, geometry: "fields absent", keys: Object.keys(masks(st.current)[i]) };
+  Object.assign(h, GEOMETRY[name]);
+  if (exposure !== null) for (const k of topKeys(copy.entry, /^LocalExposure/, "number")) copy.entry[k] = exposure;
+  const named = setName(copy.entry, `AVG new ${name}`) ? `AVG new ${name}` : null;
+  return { name, copy, named };
+}
+
+/** How the questions name a copy: by the name the check gave it, else by its place in the panel. */
+const called = (p: J, kind: string) => (p.named ? `'${p.named}'` : `the newest ${kind} mask`);
+
+async function askWhereTheyLand(usable: J[]): Promise<void> {
+  const linear = usable.find((p) => p.name === "linear");
+  const radial = usable.find((p) => p.name === "radial");
+  if (linear) {
+    say("NOW: press Shift+W to close Masking, then look at the whole photo.");
+    await ask(`Is the bottom of the photo brighter than before, fading out about a third of the way up (${called(linear, "Linear Gradient")})?`);
+  }
+  if (radial) {
+    say(`NOW: press Shift+W, then in the Masks panel click ${called(radial, "Radial Gradient")}: its outline shows on the photo.`);
+    await ask("Does that oval sit in the upper right of the photo (right half, upper half)?");
+  }
+}
+
+async function s8(): Promise<string | void> {
+  if (noTable() || !st.current) return noTable() ?? "an earlier write did not run";
+  const li = label("linear");
+  const ex = li >= 0 ? (topKeys(masks(st.current)[li], /^LocalExposure/, "number").map((k) => masks(st.current)[li][k]).find((v) => v !== 0) ?? null) : null;
+  const made = ["linear", "radial"].map((n) => placed(n, ex)).filter((p): p is J => p !== null);
+  const usable = made.filter((p) => p.copy);
+  step("8_geometry_plan", { exposure_set: ex, made: made.map((p) => ({ name: p.name, geometry: p.geometry ?? GEOMETRY[p.name], keys: p.keys })) });
+  if (usable.length === 0) return "no geometry fields found in Jim's linear or radial entry";
+  const rb = await write({ [st.maskKey]: [...masks(st.current), ...usable.map((p) => p.copy.entry)] }, "AVG capture add gradients");
+  saveRaw("8_gradients", rb[st.maskKey]);
+  for (const p of usable) {
+    const back = masks(rb)[indexWith(masks(rb), Object.values(p.copy.ids))];
+    const h = holder(back, Object.keys(GEOMETRY[p.name]!));
+    const got = h ? Object.fromEntries(Object.keys(GEOMETRY[p.name]!).map((k) => [k, h[k]])) : null;
+    st[`placed_${p.name}`] = Object.values(p.copy.ids);
+    st[`named_${p.name}`] = p.named;
+    check(JSON.stringify(got) === JSON.stringify(GEOMETRY[p.name]), `the new ${p.name} gradient's geometry reads back as written`, got);
+  }
+  st.current = rb;
+  await askWhereTheyLand(usable);
+}
+
+async function s9(): Promise<string | void> {
+  if (noTable() || !st.current) return noTable() ?? "an earlier write did not run";
+  const arr = structuredClone(masks(st.current));
+  const i = st.placed_linear ? indexWith(arr, st.placed_linear) : label("linear");
+  if (i < 0) return "no linear entry to rename";
+  const names = topKeys(arr[i], /Name/, "string");
+  const actives = topKeys(arr[i], /Active/, "boolean");
+  step("9_fields", { entry_index: i, name_fields: names, active_fields: actives, keys: Object.keys(arr[i]) });
+  if (names.length === 0 && actives.length === 0) return "field absent: no *Name* string or *Active* boolean at the top of the entry";
+  if (names[0]) arr[i][names[0]] = "AVG renamed";
+  if (actives[0]) arr[i][actives[0]] = false;
+  const rb = await write({ [st.maskKey]: arr }, "AVG capture rename hide");
+  const back = masks(rb)[i];
+  step("9_fields_written", { name: names[0] ? back?.[names[0]] : "field absent", active: actives[0] ? back?.[actives[0]] : "field absent" });
+  st.current = rb;
+  say("NOW: look at the Masks panel (Shift+W opens it).");
+  const was = st.named_linear ? `the mask that was '${st.named_linear}'` : st.placed_linear ? "the newest Linear Gradient mask" : "your Linear Gradient mask";
+  if (names[0]) await ask(`Is ${was} now named 'AVG renamed'?`);
+  if (!actives[0]) return;
+  // Only the copy from step 8 sits at the bottom, so there its hiding shows as a change in the photo.
+  if (st.placed_linear) await ask("Press Shift+W to close Masking. Is the brightening at the bottom of the photo gone now (the 'AVG renamed' mask switched off)?");
+  else await ask(`Is ${names[0] ? "'AVG renamed'" : was} switched off (its effect hidden; the eye icon next to it crossed out or greyed)?`);
+}
+
+async function s10(): Promise<string | void> {
+  if (noTable() || label("radial") < 0 || !st.current) return noTable() ?? "no radial gradient identified, or an earlier write did not run";
+  const radialIds = strings(st.dump2[st.maskKey][label("radial")]).filter((s) => /^[0-9A-Fa-f-]{16,}$/.test(s));
+  const cur = masks(st.current);
+  const i = radialIds.length ? indexWith(cur, radialIds) : label("radial");
+  if (i < 0) return "Jim's radial is no longer in the table";
+  const kept = cur.filter((_: J, j: number) => j !== i);
+  const rb = await write({ [st.maskKey]: kept }, "AVG capture delete radial");
+  const d = diff(kept, masks(rb));
+  step("10_delete", { removed_index: i, count_before: cur.length, count_after: masks(rb).length, differing: d });
+  check(masks(rb).length === cur.length - 1 && d.length === 0, `deleting by writing the array without the radial: ${cur.length} -> ${masks(rb).length} entries, the others unchanged (${d.length} differing paths)`, d);
+  st.current = rb;
+}
+
+async function restore(name: string): Promise<J[]> {
+  const rb = (await req("apply_snapshot", { photo_uuid: UUID, expect: EXPECT, snapshot_id: st.snapshotId }, 30_000)).read_back;
+  const d = diff(st.before, rb);
+  step(name, { differing: d });
+  return d;
+}
+
+async function s11(): Promise<void> {
+  const d = await restore("11_snapshot");
+  const m = st.maskKey ? d.filter((x) => String(x.path).startsWith(st.maskKey)) : d;
+  check(m.length === 0, `applying the snapshot puts the mask table back as before step 2 (${m.length} differing paths; ${d.length} in all settings)`, d);
+}
+
+/** What the probe's steps say about ids, selection and the stored local exposure. */
+function probeSummary(steps: J[]): Record<string, J> {
+  const r = (n: string) => steps.find((s) => s.step === n);
+  const table = masks(r("getDevelopSettings_after_sky")?.result ?? {});
+  const skyId = r("getSelectedMask_after_sky")?.result ?? null;
+  return {
+    sky_id: skyId,
+    sky_id_fields_in_table: pairs(table).filter(([, v]) => skyId !== null && v === skyId).map(([k]) => k),
+    selected_after_1arg: r("getSelectedMask_after_1arg")?.result ?? null,
+    subject_id: r("getSelectedMask_after_subject")?.result ?? null,
+    selected_after_2arg: r("getSelectedMask_after_2arg")?.result ?? null,
+    local_exposure_after_setValue_0_75: table.map((e) => Object.fromEntries(topKeys(e, /^LocalExposure/, "number").map((k) => [k, e[k]]))),
+  };
+}
+
+/**
+ * After a probe that failed or timed out, the plugin may still be changing the photo (its own
+ * deadline is 60 s, Masks.lua PROBE_SECONDS): read every second until the settings have not changed
+ * for 5 s, at most 90 s, so the snapshot is not applied under a running probe.
+ */
+async function waitStable(): Promise<Record<string, J>> {
+  const t0 = Date.now();
+  let last = JSON.stringify(await read());
+  let since = Date.now();
+  while (Date.now() - since < 5_000 && Date.now() - t0 < 90_000) {
+    await sleep(1000);
+    const now = JSON.stringify(await read());
+    if (now !== last) {
+      last = now;
+      since = Date.now();
+    }
+  }
+  return { stable: Date.now() - since >= 5_000, waited_ms: Date.now() - t0 };
+}
+
+async function s12(): Promise<void> {
+  await req("select_photo", { uuid: UUID, expect: EXPECT });
+  say("12. The plugin now drives the Develop module by itself for up to a minute. Do not click in Lightroom.");
+  const probe = await req("probe_masks_dc", { target_uuid: UUID }, 90_000).catch((err) => ({ error: errBody(err) }));
+  saveRaw("12_probe_dc", probe);
+  const steps: J[] = probe.steps ?? [];
+  const settled = probe.error ? await waitStable() : null;
+  const sel = await req("get_selection", { max: 5 }).catch((err) => ({ error: errBody(err) }));
+  const selected = (sel.photos ?? []).map((p: J) => p.uuid ?? null);
+  step("12_probe", {
+    error: probe.error ?? null,
+    uuid: probe.uuid ?? null,
+    stopped: probe.stopped ?? null,
+    settled_after_error: settled,
+    selection_after: sel.error ? { error: sel.error } : { count: sel.count, uuids: selected },
+    steps: steps.map((s) => ({ step: s.step, ok: s.ok, ms: Math.round(s.ms), result: short(s.result), error: s.error })),
+    ...probeSummary(steps),
+  });
+  const answered = `probe_masks_dc answered with ${steps.length} steps, ${steps.filter((s) => !s.ok).length} failed${probe.stopped ? `; it stopped early: ${probe.stopped}` : ""}`;
+  check(!probe.error && steps.length > 0, probe.error ? `probe_masks_dc failed: ${probe.error}` : answered, probe.error ?? undefined);
+  if (!probe.error) check(probe.uuid === UUID, `the probe worked on 20260907-_OZ80099.NEF (uuid ${probe.uuid ?? "none"})`);
+  if (settled) check(settled.stable === true, `after the probe failed, the photo's settings held still for 5 s before the put-back (waited ${settled.waited_ms} ms)`, settled);
+  check(!sel.error && selected[0] === UUID && sel.count === 1, `after the probe, 20260907-_OZ80099.NEF is still the one selected photo (${sel.error ?? `${sel.count} selected: ${selected.join(", ")}`})`);
+  const d = await restore("12_snapshot_after_probe");
+  check(d.length === 0, `the snapshot puts the photo back after the probe (${d.length} differing paths)`, d);
+}
+
+const STEPS: Array<[string, () => Promise<string | void>]> = [
+  ["2_hand_masks", s2], ["3_dumps", s3], ["4_write_back", s4], ["5_local_exposure", s5], ["6_global", s6], ["7_sky", s7],
+  ["8_geometry", s8], ["9_fields", s9], ["10_delete", s10], ["11_snapshot", s11], ["12_probe", s12],
+];
+try {
+  if ((await run("0_preconditions", s0)) && (await run("1_photo", s1)) && st.snapshotId && st.before) {
+    for (const [name, fn] of STEPS) {
+      if (process.env["CHECK_SIGINT_AT"] === name) rl.emit("SIGINT"); // dry runs only: a Ctrl+C before this step
+      if (aborting) break;
+      if (!(await run(name, fn)) && name === "2_hand_masks") break;
+    }
+  }
+} finally {
+  // 13. The put-back, whatever happened (also after Ctrl+C).
+  const manual = `wait 1 minute, then in Lightroom's Develop module open the Snapshots panel (left side) and click "${st.snapshotName ?? "AVG capture before ..."}"`;
+  try {
+    if (st.snapshotId && st.before) {
+      say("--- 13_put_back");
+      const d = await restore("13_put_back");
+      check(d.length === 0, d.length === 0 ? "PUT BACK: YES (every setting as before the check)" : `PUT BACK: NO (${d.length} differing paths): ${manual}`, d);
+      if (!aborting) {
+        say("NOW: look at the photo in Lightroom, and at the Masks panel (Shift+W).");
+        await ask("Does the photo look as it did before the check, with none of the check's masks left?");
+      }
+    }
+  } catch (err) {
+    check(false, `PUT BACK: NO, it did not run (${errBody(err)}): ${manual}`, errBody(err));
+  }
+  result.bridge = client.stats;
+  result.ended = at();
+  save();
+  client.stop();
+  await lock.lock.release();
+  rl.close();
+  const failures: string[] = result.failures;
+  say("");
+  say(failures.length === 0 ? "masks capture: WORKED" : `masks capture: DONE, ${failures.length} NO / FAILED lines (each one is a finding for the report)`);
+  for (const f of failures) say(`  - ${f}`);
+  say(`Results: ${path.join(outDir, "check.json")}`);
+  save();
+  process.exit(failures.length === 0 ? 0 : 1);
+}

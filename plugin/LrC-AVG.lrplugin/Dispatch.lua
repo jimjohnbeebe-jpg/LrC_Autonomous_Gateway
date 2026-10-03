@@ -16,6 +16,7 @@ local Hud = require 'Hud'
 local Json = require 'Json'
 local Library = require 'Library'
 local Log = require 'Log'
+local MaskCalibrate = require 'MaskCalibrate'
 local Masks = require 'Masks'
 local Prefs = require 'Prefs'
 local Preview = require 'Preview'
@@ -46,6 +47,8 @@ function Dispatch.handlers(hello)
         hud_update = Hud.update,
         update_ai_settings = Masks.updateAISettings,
         probe_masks_dc = Masks.probeDc,
+        probe_masks_calibrate = MaskCalibrate.calibrate,
+        probe_masks_create = MaskCalibrate.create,
     }
     return HANDLERS
 end

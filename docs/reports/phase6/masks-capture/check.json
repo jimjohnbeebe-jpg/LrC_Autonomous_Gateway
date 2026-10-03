@@ -1,0 +1,1031 @@
+{
+  "started": "2026-10-03T21:57:42.861Z",
+  "engine_version": "0.13.0",
+  "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+  "steps": {
+    "1_photo": {
+      "at": "2026-10-03T21:57:43.515Z",
+      "filename": "20260907-_OZ80099.NEF",
+      "snapshot": {
+        "id": "F4C83EBC-8AA3-4A7D-A182-FE30240E76CF",
+        "name": "AVG capture before 14:57:43"
+      },
+      "keys": 177,
+      "crop": {
+        "CropConstrainToWarp": 0,
+        "CropTop": 0,
+        "CropBottom": 1,
+        "CropConstrainToUnitSquare": 1,
+        "CropAngle": 0,
+        "CropRight": 1,
+        "CropLeft": 0
+      }
+    },
+    "3_dumps": {
+      "at": "2026-10-03T22:00:09.636Z",
+      "changed_top_keys": [
+        "MaskGroupBasedCorrections"
+      ],
+      "mask_key": "MaskGroupBasedCorrections",
+      "count_before": 0,
+      "count": 5,
+      "labels": [
+        {
+          "index": 0,
+          "label": "linear",
+          "from_strings": "linear",
+          "by_order": "linear",
+          "agree": true,
+          "keys": [
+            "LocalHighlights2012",
+            "LocalSaturation",
+            "CorrectionAmount",
+            "LocalTint",
+            "LocalExposure2012",
+            "LocalToningSaturation",
+            "CorrectionName",
+            "CorrectionID",
+            "CorrectionReferenceY",
+            "LocalSharpness",
+            "LocalDefringe",
+            "LocalDehaze",
+            "LocalExposure",
+            "CorrectionActive",
+            "LocalLuminanceNoise",
+            "CorrectionReferenceX",
+            "LocalWhites2012",
+            "What",
+            "LocalHue",
+            "LocalBlacks2012",
+            "LocalClarity2012",
+            "LocalContrast",
+            "CorrectionSyncID",
+            "LocalBrightness",
+            "LocalContrast2012",
+            "LocalCurveRefineSaturation",
+            "CorrectionMasks",
+            "LocalShadows2012",
+            "LocalGrain",
+            "LocalTemperature",
+            "LocalMoire",
+            "LocalToningHue",
+            "LocalClarity",
+            "LocalTexture"
+          ]
+        },
+        {
+          "index": 1,
+          "label": "radial",
+          "from_strings": "radial",
+          "by_order": "radial",
+          "agree": true,
+          "keys": [
+            "LocalHighlights2012",
+            "LocalSaturation",
+            "CorrectionAmount",
+            "LocalTint",
+            "LocalExposure2012",
+            "LocalToningSaturation",
+            "CorrectionName",
+            "CorrectionID",
+            "CorrectionReferenceY",
+            "LocalSharpness",
+            "LocalDefringe",
+            "LocalDehaze",
+            "LocalExposure",
+            "CorrectionActive",
+            "LocalLuminanceNoise",
+            "CorrectionReferenceX",
+            "LocalWhites2012",
+            "What",
+            "LocalHue",
+            "LocalBlacks2012",
+            "LocalClarity2012",
+            "LocalContrast",
+            "CorrectionSyncID",
+            "LocalBrightness",
+            "LocalContrast2012",
+            "LocalCurveRefineSaturation",
+            "CorrectionMasks",
+            "LocalShadows2012",
+            "LocalGrain",
+            "LocalTemperature",
+            "LocalMoire",
+            "LocalToningHue",
+            "LocalClarity",
+            "LocalTexture"
+          ]
+        },
+        {
+          "index": 2,
+          "label": "sky",
+          "from_strings": "ai",
+          "by_order": "sky",
+          "agree": true,
+          "keys": [
+            "LocalHighlights2012",
+            "LocalSaturation",
+            "CorrectionAmount",
+            "LocalTint",
+            "LocalExposure2012",
+            "LocalToningSaturation",
+            "CorrectionName",
+            "CorrectionID",
+            "CorrectionReferenceY",
+            "LocalSharpness",
+            "LocalDefringe",
+            "LocalDehaze",
+            "LocalExposure",
+            "CorrectionActive",
+            "LocalLuminanceNoise",
+            "CorrectionReferenceX",
+            "LocalWhites2012",
+            "What",
+            "LocalHue",
+            "LocalBlacks2012",
+            "LocalClarity2012",
+            "LocalContrast",
+            "CorrectionSyncID",
+            "LocalBrightness",
+            "LocalContrast2012",
+            "LocalCurveRefineSaturation",
+            "CorrectionMasks",
+            "LocalShadows2012",
+            "LocalGrain",
+            "LocalTemperature",
+            "LocalMoire",
+            "LocalToningHue",
+            "LocalClarity",
+            "LocalTexture"
+          ]
+        },
+        {
+          "index": 3,
+          "label": "subject",
+          "from_strings": "ai",
+          "by_order": "subject",
+          "agree": true,
+          "keys": [
+            "LocalHighlights2012",
+            "LocalSaturation",
+            "CorrectionAmount",
+            "LocalTint",
+            "LocalExposure2012",
+            "LocalToningSaturation",
+            "CorrectionName",
+            "CorrectionID",
+            "CorrectionReferenceY",
+            "LocalSharpness",
+            "LocalDefringe",
+            "LocalDehaze",
+            "LocalExposure",
+            "CorrectionActive",
+            "LocalLuminanceNoise",
+            "CorrectionReferenceX",
+            "LocalWhites2012",
+            "What",
+            "LocalHue",
+            "LocalBlacks2012",
+            "LocalClarity2012",
+            "LocalContrast",
+            "CorrectionSyncID",
+            "LocalBrightness",
+            "LocalContrast2012",
+            "LocalCurveRefineSaturation",
+            "CorrectionMasks",
+            "LocalShadows2012",
+            "LocalGrain",
+            "LocalTemperature",
+            "LocalMoire",
+            "LocalToningHue",
+            "LocalClarity",
+            "LocalTexture"
+          ]
+        },
+        {
+          "index": 4,
+          "label": "luminance",
+          "from_strings": "luminance",
+          "by_order": "luminance",
+          "agree": true,
+          "keys": [
+            "LocalHighlights2012",
+            "LocalSaturation",
+            "CorrectionAmount",
+            "LocalTint",
+            "LocalExposure2012",
+            "LocalToningSaturation",
+            "CorrectionName",
+            "CorrectionID",
+            "CorrectionReferenceY",
+            "LocalSharpness",
+            "LocalDefringe",
+            "LocalDehaze",
+            "LocalExposure",
+            "CorrectionActive",
+            "LocalLuminanceNoise",
+            "CorrectionReferenceX",
+            "LocalWhites2012",
+            "What",
+            "LocalHue",
+            "LocalBlacks2012",
+            "LocalClarity2012",
+            "LocalContrast",
+            "CorrectionSyncID",
+            "LocalBrightness",
+            "LocalContrast2012",
+            "LocalCurveRefineSaturation",
+            "CorrectionMasks",
+            "LocalShadows2012",
+            "LocalGrain",
+            "LocalTemperature",
+            "LocalMoire",
+            "LocalToningHue",
+            "LocalClarity",
+            "LocalTexture"
+          ]
+        }
+      ],
+      "differs_between_reads": []
+    },
+    "4_write_back": {
+      "at": "2026-10-03T22:00:09.888Z",
+      "differing": []
+    },
+    "5_local_exposure": {
+      "at": "2026-10-03T22:00:11.248Z",
+      "field": "LocalExposure2012",
+      "candidates": [
+        "LocalExposure2012",
+        "LocalExposure"
+      ],
+      "stored_for_ui_plus_0_50": 0.125,
+      "ratio_to_ui": 0.25,
+      "written": 0.25,
+      "read_back": 0.25
+    },
+    "6_global": {
+      "at": "2026-10-03T22:00:24.040Z",
+      "exposure_before": 0.33,
+      "written": 0.43,
+      "read_back": 0.43,
+      "mask_key_present_before": true,
+      "mask_table_differing": []
+    },
+    "7_sky": {
+      "at": "2026-10-03T22:00:29.263Z",
+      "new_ids": {
+        "9DEF978E-5F84-40E0-8DAC-F5CB895800EB": "34CA9EA9-8BA8-03A0-E7F1-1CADC788A4D1",
+        "58DE80DED4897A44B991D2901748DC3E": "B02234750807908F35F6A74E8750E9AF",
+        "6803F8917A061A4E88A1A080E39B161B": "83C82CCD677E6F203485DDB2992885F4",
+        "AFADF674-F876-4522-86CB-D25655450CB7": "D102F835-B2D9-A0A8-4269-354A48CDC86D"
+      },
+      "dropped": [
+        "LocalInputDigestVersion",
+        "MaskDigest",
+        "InputDigest",
+        "LocalInputDigest",
+        "InputDigestVersion"
+      ],
+      "found_by_id": true,
+      "name_field": "CorrectionName",
+      "name_read_back": "AVG new sky",
+      "digest_after_write": [],
+      "update": {
+        "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+        "call_ms": 2844.7023630142,
+        "command_ms": 2855.105638504,
+        "gate": "executed"
+      },
+      "polls": 1,
+      "ms_after_update": 1216,
+      "new_digests": [
+        [
+          "MaskDigest",
+          "BC3C47BFBB81F99B3BBB83FFAAFAB93F"
+        ],
+        [
+          "InputDigest",
+          "D01EAE1986659337966F8C8185E3FF86"
+        ],
+        [
+          "LocalInputDigest",
+          "82BF0DA5ECFEB3E614A39E98F71EFDFD"
+        ]
+      ],
+      "errors": []
+    },
+    "8_geometry_plan": {
+      "at": "2026-10-03T22:00:47.527Z",
+      "exposure_set": 0.25,
+      "made": [
+        {
+          "name": "linear",
+          "geometry": {
+            "ZeroX": 0.5,
+            "ZeroY": 0.67,
+            "FullX": 0.5,
+            "FullY": 0.9
+          }
+        },
+        {
+          "name": "radial",
+          "geometry": {
+            "Top": 0.1,
+            "Left": 0.6,
+            "Bottom": 0.5,
+            "Right": 0.9
+          }
+        }
+      ]
+    },
+    "9_fields": {
+      "at": "2026-10-03T22:01:13.263Z",
+      "entry_index": 6,
+      "name_fields": [
+        "CorrectionName"
+      ],
+      "active_fields": [
+        "CorrectionActive"
+      ],
+      "keys": [
+        "LocalHighlights2012",
+        "LocalSaturation",
+        "LocalMoire",
+        "LocalTint",
+        "LocalExposure2012",
+        "LocalToningSaturation",
+        "CorrectionName",
+        "CorrectionID",
+        "CorrectionReferenceY",
+        "LocalSharpness",
+        "LocalDefringe",
+        "LocalDehaze",
+        "LocalExposure",
+        "CorrectionActive",
+        "LocalLuminanceNoise",
+        "CorrectionReferenceX",
+        "LocalWhites2012",
+        "What",
+        "LocalBrightness",
+        "LocalContrast2012",
+        "LocalClarity2012",
+        "LocalContrast",
+        "CorrectionSyncID",
+        "LocalClarity",
+        "LocalToningHue",
+        "LocalCurveRefineSaturation",
+        "CorrectionMasks",
+        "LocalShadows2012",
+        "LocalGrain",
+        "LocalTemperature",
+        "LocalBlacks2012",
+        "CorrectionAmount",
+        "LocalHue",
+        "LocalTexture"
+      ]
+    },
+    "9_fields_written": {
+      "at": "2026-10-03T22:01:14.027Z",
+      "name": "AVG renamed",
+      "active": false
+    },
+    "10_delete": {
+      "at": "2026-10-03T22:01:49.111Z",
+      "removed_index": 1,
+      "count_before": 8,
+      "count_after": 7,
+      "differing": []
+    },
+    "11_snapshot": {
+      "at": "2026-10-03T22:01:50.859Z",
+      "differing": []
+    },
+    "12_probe": {
+      "at": "2026-10-03T22:02:04.449Z",
+      "error": null,
+      "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+      "stopped": null,
+      "settled_after_error": null,
+      "selection_after": {
+        "count": 1,
+        "uuids": [
+          "CF12AF60-0858-4181-9562-376D16B89126"
+        ]
+      },
+      "steps": [
+        {
+          "step": "module_before",
+          "ok": true,
+          "ms": 0,
+          "result": "\"develop\""
+        },
+        {
+          "step": "switchToModule_develop",
+          "ok": true,
+          "ms": 0,
+          "result": "(absent)"
+        },
+        {
+          "step": "wait_develop",
+          "ok": true,
+          "ms": 0,
+          "result": "{\"in_develop\":true,\"waited_ms\":0}"
+        },
+        {
+          "step": "getAllMasks_before",
+          "ok": true,
+          "ms": 0,
+          "result": "[]"
+        },
+        {
+          "step": "getSelectedMask_before",
+          "ok": true,
+          "ms": 1,
+          "result": "(absent)"
+        },
+        {
+          "step": "goToMasking",
+          "ok": true,
+          "ms": 1,
+          "result": "(absent)"
+        },
+        {
+          "step": "getSelectedTool_after_goToMasking",
+          "ok": true,
+          "ms": 0,
+          "result": "\"masking\""
+        },
+        {
+          "step": "mask_count_before",
+          "ok": true,
+          "ms": 1,
+          "result": "0"
+        },
+        {
+          "step": "createNewMask_sky",
+          "ok": true,
+          "ms": 2,
+          "result": "(absent)"
+        },
+        {
+          "step": "setValue_immediate_sky",
+          "ok": true,
+          "ms": 0,
+          "result": "(absent)"
+        },
+        {
+          "step": "getValue_immediate_sky",
+          "ok": true,
+          "ms": 0,
+          "result": "(absent)"
+        },
+        {
+          "step": "wait_mask_sky",
+          "ok": true,
+          "ms": 2479,
+          "result": "{\"waited_ms\":2479.3744087219,\"reached\":true,\"count\":1}"
+        },
+        {
+          "step": "getSelectedMask_after_sky",
+          "ok": true,
+          "ms": 0,
+          "result": "\"8E077BDB-FFD1-40D6-BEB8-08C20CB01468\""
+        },
+        {
+          "step": "setValue_after_wait_sky",
+          "ok": true,
+          "ms": 22,
+          "result": "(absent)"
+        },
+        {
+          "step": "getValue_after_wait_sky",
+          "ok": true,
+          "ms": 0,
+          "result": "0.75"
+        },
+        {
+          "step": "getAllMasks_after_sky",
+          "ok": true,
+          "ms": 0,
+          "result": "[{\"Tools\":[{\"Type\":\"aiSelection\",\"Name\":\"Sky 1\",\"Subtype\":\"sky\",\"ID\":\"2DB0B254-ADA9-48A2-8998-57E1C18B60FE\",\"Hidden\":false,\"Inverted\":false}],\"Hidden\":false,\"Na"
+        },
+        {
+          "step": "getDevelopSettings_after_sky",
+          "ok": true,
+          "ms": 2,
+          "result": "{\"HueAdjustmentAqua\":0,\"EnableLensCorrections\":true,\"Sharpness\":24,\"EnableEffects\":true,\"ColorGradeBlending\":50,\"HueAdjustmentGreen\":0,\"SDRWhites\":0,\"ColorNoise"
+        },
+        {
+          "step": "createNewMask_subject",
+          "ok": true,
+          "ms": 37,
+          "result": "(absent)"
+        },
+        {
+          "step": "setValue_immediate_subject",
+          "ok": true,
+          "ms": 0,
+          "result": "(absent)"
+        },
+        {
+          "step": "getValue_immediate_subject",
+          "ok": true,
+          "ms": 0,
+          "result": "(absent)"
+        },
+        {
+          "step": "wait_mask_subject",
+          "ok": true,
+          "ms": 875,
+          "result": "{\"waited_ms\":875.30875205994,\"reached\":true,\"count\":2}"
+        },
+        {
+          "step": "getSelectedMask_after_subject",
+          "ok": true,
+          "ms": 0,
+          "result": "\"B8160D91-6FE2-414C-8EFD-2FE3A6F99442\""
+        },
+        {
+          "step": "selectMask_1arg_sky",
+          "ok": true,
+          "ms": 17,
+          "result": "(absent)"
+        },
+        {
+          "step": "getSelectedMask_after_1arg",
+          "ok": true,
+          "ms": 0,
+          "result": "\"8E077BDB-FFD1-40D6-BEB8-08C20CB01468\""
+        },
+        {
+          "step": "selectMask_2arg_subject",
+          "ok": true,
+          "ms": 13,
+          "result": "(absent)"
+        },
+        {
+          "step": "getSelectedMask_after_2arg",
+          "ok": true,
+          "ms": 0,
+          "result": "\"B8160D91-6FE2-414C-8EFD-2FE3A6F99442\""
+        },
+        {
+          "step": "mask_count_before_delete",
+          "ok": true,
+          "ms": 0,
+          "result": "2"
+        },
+        {
+          "step": "deleteMask_1arg_sky",
+          "ok": true,
+          "ms": 39,
+          "result": "(absent)"
+        },
+        {
+          "step": "mask_count_after_1arg",
+          "ok": true,
+          "ms": 0,
+          "result": "{\"waited_ms\":0,\"reached\":true,\"count\":1}"
+        },
+        {
+          "step": "deleteMask_2arg_subject",
+          "ok": true,
+          "ms": 7,
+          "result": "(absent)"
+        },
+        {
+          "step": "mask_count_after_2arg",
+          "ok": true,
+          "ms": 0,
+          "result": "{\"waited_ms\":0,\"reached\":true,\"count\":0}"
+        },
+        {
+          "step": "getAllMasks_end",
+          "ok": true,
+          "ms": 0,
+          "result": "[]"
+        }
+      ],
+      "sky_id": "8E077BDB-FFD1-40D6-BEB8-08C20CB01468",
+      "sky_id_fields_in_table": [
+        "CorrectionID"
+      ],
+      "selected_after_1arg": "8E077BDB-FFD1-40D6-BEB8-08C20CB01468",
+      "subject_id": "B8160D91-6FE2-414C-8EFD-2FE3A6F99442",
+      "selected_after_2arg": "B8160D91-6FE2-414C-8EFD-2FE3A6F99442",
+      "local_exposure_after_setValue_0_75": [
+        {
+          "LocalExposure2012": 0,
+          "LocalExposure": 0
+        }
+      ]
+    },
+    "12_snapshot_after_probe": {
+      "at": "2026-10-03T22:02:05.186Z",
+      "differing": []
+    },
+    "13_put_back": {
+      "at": "2026-10-03T22:02:06.640Z",
+      "differing": []
+    }
+  },
+  "checks": [
+    {
+      "ok": true,
+      "text": "Lightroom 15.6 runs plugin 0.11.0 (0.11.0 or later needed)"
+    },
+    {
+      "ok": true,
+      "text": "selected 20260907-_OZ80099.NEF; snapshot \"AVG capture before 14:57:43\" taken; 177 settings saved"
+    },
+    {
+      "ok": true,
+      "text": "the masks are under \"MaskGroupBasedCorrections\": 5 entries (0 before step 2)"
+    },
+    {
+      "ok": true,
+      "text": "two reads in a row give the same mask table, ids included (0 differing paths)",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "text": "each new entry identified: 0=linear, 1=radial, 2=sky, 3=subject, 4=luminance",
+      "detail": [
+        {
+          "index": 0,
+          "label": "linear",
+          "from_strings": "linear",
+          "by_order": "linear",
+          "agree": true,
+          "keys": [
+            "LocalHighlights2012",
+            "LocalSaturation",
+            "CorrectionAmount",
+            "LocalTint",
+            "LocalExposure2012",
+            "LocalToningSaturation",
+            "CorrectionName",
+            "CorrectionID",
+            "CorrectionReferenceY",
+            "LocalSharpness",
+            "LocalDefringe",
+            "LocalDehaze",
+            "LocalExposure",
+            "CorrectionActive",
+            "LocalLuminanceNoise",
+            "CorrectionReferenceX",
+            "LocalWhites2012",
+            "What",
+            "LocalHue",
+            "LocalBlacks2012",
+            "LocalClarity2012",
+            "LocalContrast",
+            "CorrectionSyncID",
+            "LocalBrightness",
+            "LocalContrast2012",
+            "LocalCurveRefineSaturation",
+            "CorrectionMasks",
+            "LocalShadows2012",
+            "LocalGrain",
+            "LocalTemperature",
+            "LocalMoire",
+            "LocalToningHue",
+            "LocalClarity",
+            "LocalTexture"
+          ]
+        },
+        {
+          "index": 1,
+          "label": "radial",
+          "from_strings": "radial",
+          "by_order": "radial",
+          "agree": true,
+          "keys": [
+            "LocalHighlights2012",
+            "LocalSaturation",
+            "CorrectionAmount",
+            "LocalTint",
+            "LocalExposure2012",
+            "LocalToningSaturation",
+            "CorrectionName",
+            "CorrectionID",
+            "CorrectionReferenceY",
+            "LocalSharpness",
+            "LocalDefringe",
+            "LocalDehaze",
+            "LocalExposure",
+            "CorrectionActive",
+            "LocalLuminanceNoise",
+            "CorrectionReferenceX",
+            "LocalWhites2012",
+            "What",
+            "LocalHue",
+            "LocalBlacks2012",
+            "LocalClarity2012",
+            "LocalContrast",
+            "CorrectionSyncID",
+            "LocalBrightness",
+            "LocalContrast2012",
+            "LocalCurveRefineSaturation",
+            "CorrectionMasks",
+            "LocalShadows2012",
+            "LocalGrain",
+            "LocalTemperature",
+            "LocalMoire",
+            "LocalToningHue",
+            "LocalClarity",
+            "LocalTexture"
+          ]
+        },
+        {
+          "index": 2,
+          "label": "sky",
+          "from_strings": "ai",
+          "by_order": "sky",
+          "agree": true,
+          "keys": [
+            "LocalHighlights2012",
+            "LocalSaturation",
+            "CorrectionAmount",
+            "LocalTint",
+            "LocalExposure2012",
+            "LocalToningSaturation",
+            "CorrectionName",
+            "CorrectionID",
+            "CorrectionReferenceY",
+            "LocalSharpness",
+            "LocalDefringe",
+            "LocalDehaze",
+            "LocalExposure",
+            "CorrectionActive",
+            "LocalLuminanceNoise",
+            "CorrectionReferenceX",
+            "LocalWhites2012",
+            "What",
+            "LocalHue",
+            "LocalBlacks2012",
+            "LocalClarity2012",
+            "LocalContrast",
+            "CorrectionSyncID",
+            "LocalBrightness",
+            "LocalContrast2012",
+            "LocalCurveRefineSaturation",
+            "CorrectionMasks",
+            "LocalShadows2012",
+            "LocalGrain",
+            "LocalTemperature",
+            "LocalMoire",
+            "LocalToningHue",
+            "LocalClarity",
+            "LocalTexture"
+          ]
+        },
+        {
+          "index": 3,
+          "label": "subject",
+          "from_strings": "ai",
+          "by_order": "subject",
+          "agree": true,
+          "keys": [
+            "LocalHighlights2012",
+            "LocalSaturation",
+            "CorrectionAmount",
+            "LocalTint",
+            "LocalExposure2012",
+            "LocalToningSaturation",
+            "CorrectionName",
+            "CorrectionID",
+            "CorrectionReferenceY",
+            "LocalSharpness",
+            "LocalDefringe",
+            "LocalDehaze",
+            "LocalExposure",
+            "CorrectionActive",
+            "LocalLuminanceNoise",
+            "CorrectionReferenceX",
+            "LocalWhites2012",
+            "What",
+            "LocalHue",
+            "LocalBlacks2012",
+            "LocalClarity2012",
+            "LocalContrast",
+            "CorrectionSyncID",
+            "LocalBrightness",
+            "LocalContrast2012",
+            "LocalCurveRefineSaturation",
+            "CorrectionMasks",
+            "LocalShadows2012",
+            "LocalGrain",
+            "LocalTemperature",
+            "LocalMoire",
+            "LocalToningHue",
+            "LocalClarity",
+            "LocalTexture"
+          ]
+        },
+        {
+          "index": 4,
+          "label": "luminance",
+          "from_strings": "luminance",
+          "by_order": "luminance",
+          "agree": true,
+          "keys": [
+            "LocalHighlights2012",
+            "LocalSaturation",
+            "CorrectionAmount",
+            "LocalTint",
+            "LocalExposure2012",
+            "LocalToningSaturation",
+            "CorrectionName",
+            "CorrectionID",
+            "CorrectionReferenceY",
+            "LocalSharpness",
+            "LocalDefringe",
+            "LocalDehaze",
+            "LocalExposure",
+            "CorrectionActive",
+            "LocalLuminanceNoise",
+            "CorrectionReferenceX",
+            "LocalWhites2012",
+            "What",
+            "LocalHue",
+            "LocalBlacks2012",
+            "LocalClarity2012",
+            "LocalContrast",
+            "CorrectionSyncID",
+            "LocalBrightness",
+            "LocalContrast2012",
+            "LocalCurveRefineSaturation",
+            "CorrectionMasks",
+            "LocalShadows2012",
+            "LocalGrain",
+            "LocalTemperature",
+            "LocalMoire",
+            "LocalToningHue",
+            "LocalClarity",
+            "LocalTexture"
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "text": "the unchanged mask table written back reads back identical, every setting compared (0 differing paths)",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "text": "the linear mask's LocalExposure2012 reads back as written (0.125 for +0.50 in the panel, wrote 0.25, read 0.25)"
+    },
+    {
+      "ok": true,
+      "text": "a global exposure write reads back (0.33 -> 0.43)"
+    },
+    {
+      "ok": true,
+      "text": "a global-only write leaves the mask table unchanged (0 differing paths)",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "text": "update_ai_settings answered ({\"uuid\":\"CF12AF60-0858-4181-9562-376D16B89126\",\"call_ms\":2844.7023630142,\"command_ms\":2855.105638504,\"gate\":\"executed\"})"
+    },
+    {
+      "ok": true,
+      "text": "the sky mask added by table computed within 30 s of update_ai_settings (1216 ms, 1 reads)",
+      "detail": {
+        "digest": [
+          [
+            "MaskDigest",
+            "BC3C47BFBB81F99B3BBB83FFAAFAB93F"
+          ],
+          [
+            "InputDigest",
+            "D01EAE1986659337966F8C8185E3FF86"
+          ],
+          [
+            "LocalInputDigest",
+            "82BF0DA5ECFEB3E614A39E98F71EFDFD"
+          ]
+        ],
+        "errors": []
+      }
+    },
+    {
+      "ok": true,
+      "text": "the new linear gradient's geometry reads back as written",
+      "detail": {
+        "ZeroX": 0.5,
+        "ZeroY": 0.67,
+        "FullX": 0.5,
+        "FullY": 0.9
+      }
+    },
+    {
+      "ok": true,
+      "text": "the new radial gradient's geometry reads back as written",
+      "detail": {
+        "Top": 0.1,
+        "Left": 0.6,
+        "Bottom": 0.5,
+        "Right": 0.9
+      }
+    },
+    {
+      "ok": true,
+      "text": "deleting by writing the array without the radial: 8 -> 7 entries, the others unchanged (0 differing paths)",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "text": "applying the snapshot puts the mask table back as before step 2 (0 differing paths; 0 in all settings)",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "text": "probe_masks_dc answered with 32 steps, 0 failed"
+    },
+    {
+      "ok": true,
+      "text": "the probe worked on 20260907-_OZ80099.NEF (uuid CF12AF60-0858-4181-9562-376D16B89126)"
+    },
+    {
+      "ok": true,
+      "text": "after the probe, 20260907-_OZ80099.NEF is still the one selected photo (1 selected: CF12AF60-0858-4181-9562-376D16B89126)"
+    },
+    {
+      "ok": true,
+      "text": "the snapshot puts the photo back after the probe (0 differing paths)",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "text": "PUT BACK: YES (every setting as before the check)",
+      "detail": []
+    }
+  ],
+  "answers": [
+    {
+      "q": "Did you make all five masks, in the order b-f (linear with Exposure +0.50, radial, sky, subject, luminance range)?",
+      "answer": "y",
+      "at": "2026-10-03T22:00:08.556Z"
+    },
+    {
+      "q": "Does its Exposure now show +1.00?",
+      "answer": "y",
+      "at": "2026-10-03T22:00:23.283Z"
+    },
+    {
+      "q": "Is there a mask named 'AVG new sky', and does its red overlay cover the sky?",
+      "answer": "y",
+      "at": "2026-10-03T22:00:47.525Z"
+    },
+    {
+      "q": "Is the bottom of the photo brighter than before, fading out about a third of the way up ('AVG new linear')?",
+      "answer": "y",
+      "at": "2026-10-03T22:00:58.690Z"
+    },
+    {
+      "q": "Does that oval sit in the upper right of the photo (right half, upper half)?",
+      "answer": "y",
+      "at": "2026-10-03T22:01:13.259Z"
+    },
+    {
+      "q": "Is the mask that was 'AVG new linear' now named 'AVG renamed'?",
+      "answer": "y",
+      "at": "2026-10-03T22:01:28.286Z"
+    },
+    {
+      "q": "Press Shift+W to close Masking. Is the brightening at the bottom of the photo gone now (the 'AVG renamed' mask switched off)?",
+      "answer": "y",
+      "at": "2026-10-03T22:01:48.398Z"
+    },
+    {
+      "q": "Does the photo look as it did before the check, with none of the check's masks left?",
+      "answer": "y",
+      "at": "2026-10-03T22:02:14.308Z"
+    }
+  ],
+  "failures": [],
+  "hello": {
+    "plugin_version": "0.11.0",
+    "lrc_version": "15.6",
+    "sdk_declared": 13
+  },
+  "bridge": {
+    "connects": 1,
+    "connect_failures": 0,
+    "last_connect_error": null,
+    "drops": 0,
+    "last_drop_reason": null,
+    "malformed_lines": 0,
+    "unknown_response_ids": 0,
+    "ports": {
+      "command": 8765,
+      "event": 8766,
+      "from": "ports file"
+    }
+  },
+  "ended": "2026-10-03T22:02:14.310Z"
+}

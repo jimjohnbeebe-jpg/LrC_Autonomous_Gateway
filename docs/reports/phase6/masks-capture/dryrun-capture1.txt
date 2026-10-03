@@ -1,0 +1,258 @@
+Dry runs of check.mts against the engine test sim (engine\tests\helpers\lightroom-sim.ts) - Claude Code (Opus 5.5), 2026-10-03.
+Branch phase-6/masks; the plugin and engine code is commit 6ce6d60 (the runs used its working tree, built with npm run build).
+Driver: dryrun-driver.ts.txt (a scratch vitest file, deleted after; it answers y to every (y/n) and Enter to the Enter prompt;
+DRY_SEED injects an invented table, DRY_PLUGIN fakes the plugin version, DRY_PROBE_ERROR makes the probe fail, and the
+script's CHECK_SIGINT_AT hook emits readline's SIGINT before a step). Node v24.11.1.
+These runs show that the script runs, skips, times out, aborts and puts back. They show NOTHING about Lightroom. The table is invented.
+A keyboard Ctrl+C and the process SIGINT/SIGHUP handlers are not exercised here (no terminal; on Windows a signal sent to a
+child ends it at once, https://nodejs.org/api/process.html#signal-events).
+
+==== run 1: the sim as it is (no masks): flow, skips, put-back
+  (bridge: connecting)
+[2:38:53 PM] --- 0_preconditions
+  (bridge: handshaking)
+  (bridge: connected)
+[2:38:53 PM] YES  Lightroom 15.5.1 runs plugin 0.11.0 (0.11.0 or later needed)
+[2:38:53 PM] --- 1_photo
+[2:38:53 PM] YES  selected SIM-UUID; snapshot "AVG capture before 14:38:53" taken; 177 settings saved
+[2:38:53 PM] To stop at any point, press Ctrl+C once and wait: the check puts the photo back by itself.
+[2:38:53 PM] Only if its last lines say PUT BACK: NO: wait 1 minute, then in Lightroom's Develop module open the Snapshots panel (left side) and click "AVG capture before 14:38:53".
+[2:38:53 PM] --- 2_hand_masks
+[2:38:53 PM] NOW, in Lightroom (the photo 20260907-_OZ80099.NEF is selected). Do these in this order:
+[2:38:53 PM] a. Press D (Develop), then Shift+W (Masking). The Masks panel opens.
+[2:38:53 PM] b. Click Create New Mask, then Linear Gradient. Drag on the photo from the top edge down to about a third.
+[2:38:53 PM]    In the panel on the right, click the number next to Exposure, type 0.5, press Enter.
+[2:38:53 PM] c. Click Create New Mask, then Radial Gradient. Drag an oval anywhere on the photo.
+[2:38:53 PM] d. Click Create New Mask, then Sky. Wait until the new mask shows in the Masks panel.
+[2:38:53 PM] e. Click Create New Mask, then Subject. Wait until the new mask shows in the Masks panel.
+[2:38:53 PM] f. Click Create New Mask, then Range, then Luminance Range. Click once on a bright part of the photo.
+[2:38:53 PM] g. Leave Masking open. Come back to this window.
+[2:38:53 PM] At the end this check puts the photo back as it is now: the masks you add are removed.
+Press Enter when the five masks are in the Masks panel. Did you make all five masks, in the order b-f (linear with Exposure +0.50, radial, sky, subject, luminance range)? (y/n) [2:38:53 PM] --- 3_dumps
+[2:38:54 PM] NO   the settings hold a new array of mask entries after step 2
+[2:38:54 PM] skipped: no mask table
+[2:38:54 PM] --- 4_write_back
+[2:38:54 PM] skipped: no mask table was found in step 3
+[2:38:54 PM] --- 5_local_exposure
+[2:38:54 PM] skipped: no mask table was found in step 3
+[2:38:54 PM] --- 6_global
+[2:38:54 PM] YES  a global exposure write reads back (0.33 -> 0.43)
+[2:38:54 PM] --- 7_sky
+[2:38:54 PM] skipped: no mask table was found in step 3
+[2:38:54 PM] --- 8_geometry
+[2:38:54 PM] skipped: no mask table was found in step 3
+[2:38:54 PM] --- 9_fields
+[2:38:54 PM] skipped: no mask table was found in step 3
+[2:38:54 PM] --- 10_delete
+[2:38:54 PM] skipped: no mask table was found in step 3
+[2:38:54 PM] --- 11_snapshot
+[2:38:54 PM] YES  applying the snapshot puts the mask table back as before step 2 (0 differing paths; 0 in all settings)
+[2:38:54 PM] --- 12_probe
+[2:38:54 PM] 12. The plugin now drives the Develop module by itself for up to a minute. Do not click in Lightroom.
+[2:38:54 PM] YES  probe_masks_dc answered with 1 steps, 1 failed
+[2:38:54 PM] YES  the probe worked on 20260907-_OZ80099.NEF (uuid SIM-UUID)
+[2:38:54 PM] YES  after the probe, 20260907-_OZ80099.NEF is still the one selected photo (1 selected: SIM-UUID)
+[2:38:54 PM] YES  the snapshot puts the photo back after the probe (0 differing paths)
+[2:38:54 PM] --- 13_put_back
+[2:38:54 PM] YES  PUT BACK: YES (every setting as before the check)
+[2:38:54 PM] NOW: look at the photo in Lightroom, and at the Masks panel (Shift+W).
+Does the photo look as it did before the check, with none of the check's masks left? (y/n)   (bridge: stopped)
+[2:38:54 PM] 
+[2:38:54 PM] masks capture: DONE, 1 NO / FAILED lines (each one is a finding for the report)
+[2:38:54 PM]   - the settings hold a new array of mask entries after step 2
+[2:38:54 PM] Results: %USERPROFILE%\AppData\Local\Temp\masks-dry-f8tNu9\check.json
+
+HISTORY ["AVG capture global write"]
+RECEIVED {"hello":1,"select_photo":2,"create_snapshot":1,"get_settings":4,"apply_settings":1,"apply_snapshot":3,"probe_masks_dc":1,"get_selection":1}
+STEPS 1_photo, 3_dumps, 3_dumps_skipped, 4_write_back_skipped, 5_local_exposure_skipped, 6_global, 7_sky_skipped, 8_geometry_skipped, 9_fields_skipped, 10_delete_skipped, 11_snapshot, 12_probe, 12_snapshot_after_probe, 13_put_back
+exit 1
+
+==== run 2: an INVENTED five-entry table injected into the sim at the Enter prompt: mask steps 3-10; the sim never computes, so step 7 waits its full 30 s
+  (bridge: connecting)
+[2:38:59 PM] --- 0_preconditions
+  (bridge: handshaking)
+  (bridge: connected)
+[2:38:59 PM] YES  Lightroom 15.5.1 runs plugin 0.11.0 (0.11.0 or later needed)
+[2:38:59 PM] --- 1_photo
+[2:38:59 PM] YES  selected SIM-UUID; snapshot "AVG capture before 14:38:59" taken; 177 settings saved
+[2:38:59 PM] To stop at any point, press Ctrl+C once and wait: the check puts the photo back by itself.
+[2:38:59 PM] Only if its last lines say PUT BACK: NO: wait 1 minute, then in Lightroom's Develop module open the Snapshots panel (left side) and click "AVG capture before 14:38:59".
+[2:38:59 PM] --- 2_hand_masks
+[2:38:59 PM] NOW, in Lightroom (the photo 20260907-_OZ80099.NEF is selected). Do these in this order:
+[2:38:59 PM] a. Press D (Develop), then Shift+W (Masking). The Masks panel opens.
+[2:38:59 PM] b. Click Create New Mask, then Linear Gradient. Drag on the photo from the top edge down to about a third.
+[2:38:59 PM]    In the panel on the right, click the number next to Exposure, type 0.5, press Enter.
+[2:38:59 PM] c. Click Create New Mask, then Radial Gradient. Drag an oval anywhere on the photo.
+[2:38:59 PM] d. Click Create New Mask, then Sky. Wait until the new mask shows in the Masks panel.
+[2:38:59 PM] e. Click Create New Mask, then Subject. Wait until the new mask shows in the Masks panel.
+[2:38:59 PM] f. Click Create New Mask, then Range, then Luminance Range. Click once on a bright part of the photo.
+[2:38:59 PM] g. Leave Masking open. Come back to this window.
+[2:38:59 PM] At the end this check puts the photo back as it is now: the masks you add are removed.
+Press Enter when the five masks are in the Masks panel. Did you make all five masks, in the order b-f (linear with Exposure +0.50, radial, sky, subject, luminance range)? (y/n) [2:38:59 PM] --- 3_dumps
+[2:39:00 PM] YES  the masks are under "SimMasks": 5 entries (0 before step 2)
+[2:39:00 PM] YES  two reads in a row give the same mask table, ids included (0 differing paths)
+[2:39:00 PM] YES  each new entry identified: 0=linear, 1=radial, 2=sky, 3=subject, 4=luminance
+[2:39:00 PM] --- 4_write_back
+[2:39:00 PM] YES  the unchanged mask table written back reads back identical, every setting compared (0 differing paths)
+[2:39:00 PM] --- 5_local_exposure
+[2:39:00 PM] YES  the linear mask's LocalExposure2012 reads back as written (0.125 for +0.50 in the panel, wrote 0.25, read 0.25)
+[2:39:00 PM] NOW: in the Masks panel, click the Linear Gradient mask you made (the first one). Look at its Exposure slider.
+Does its Exposure now show +1.00? (y/n) [2:39:00 PM] --- 6_global
+[2:39:00 PM] YES  a global exposure write reads back (0.33 -> 0.43)
+[2:39:00 PM] YES  a global-only write leaves the mask table unchanged (0 differing paths)
+[2:39:00 PM] --- 7_sky
+[2:39:30 PM] YES  update_ai_settings answered ({"uuid":"SIM-UUID","call_ms":1,"command_ms":2})
+[2:39:30 PM] NO   the sky mask added by table computed within 30 s of update_ai_settings (30098 ms, 114 reads)
+[2:39:30 PM] NOW: look at the Masks panel (Shift+W opens it). Hover over the newest mask.
+Is there a mask named 'AVG new sky', and does its red overlay cover the sky? (y/n) [2:39:30 PM] --- 8_geometry
+[2:39:30 PM] YES  the new linear gradient's geometry reads back as written
+[2:39:30 PM] YES  the new radial gradient's geometry reads back as written
+[2:39:30 PM] NOW: press Shift+W to close Masking, then look at the whole photo.
+Is the bottom of the photo brighter than before, fading out about a third of the way up ('AVG new linear')? (y/n) [2:39:30 PM] NOW: press Shift+W, then in the Masks panel click 'AVG new radial': its outline shows on the photo.
+Does that oval sit in the upper right of the photo (right half, upper half)? (y/n) [2:39:30 PM] --- 9_fields
+[2:39:30 PM] NOW: look at the Masks panel (Shift+W opens it).
+Is the mask that was 'AVG new linear' now named 'AVG renamed'? (y/n) Press Shift+W to close Masking. Is the brightening at the bottom of the photo gone now (the 'AVG renamed' mask switched off)? (y/n) [2:39:30 PM] --- 10_delete
+[2:39:30 PM] YES  deleting by writing the array without the radial: 8 -> 7 entries, the others unchanged (0 differing paths)
+[2:39:30 PM] --- 11_snapshot
+[2:39:30 PM] YES  applying the snapshot puts the mask table back as before step 2 (0 differing paths; 0 in all settings)
+[2:39:30 PM] --- 12_probe
+[2:39:30 PM] 12. The plugin now drives the Develop module by itself for up to a minute. Do not click in Lightroom.
+[2:39:30 PM] YES  probe_masks_dc answered with 1 steps, 1 failed
+[2:39:30 PM] YES  the probe worked on 20260907-_OZ80099.NEF (uuid SIM-UUID)
+[2:39:30 PM] YES  after the probe, 20260907-_OZ80099.NEF is still the one selected photo (1 selected: SIM-UUID)
+[2:39:30 PM] YES  the snapshot puts the photo back after the probe (0 differing paths)
+[2:39:30 PM] --- 13_put_back
+[2:39:30 PM] YES  PUT BACK: YES (every setting as before the check)
+[2:39:30 PM] NOW: look at the photo in Lightroom, and at the Masks panel (Shift+W).
+Does the photo look as it did before the check, with none of the check's masks left? (y/n)   (bridge: stopped)
+[2:39:30 PM] 
+[2:39:30 PM] masks capture: DONE, 1 NO / FAILED lines (each one is a finding for the report)
+[2:39:30 PM]   - the sky mask added by table computed within 30 s of update_ai_settings (30098 ms, 114 reads)
+[2:39:30 PM] Results: %USERPROFILE%\AppData\Local\Temp\masks-dry-JFsRma\check.json
+
+HISTORY ["AVG capture write-back","AVG capture local exposure","AVG capture global write","AVG capture add sky","AVG capture add gradients","AVG capture rename hide","AVG capture delete radial"]
+RECEIVED {"hello":1,"select_photo":2,"create_snapshot":1,"get_settings":119,"apply_settings":7,"update_ai_settings":1,"apply_snapshot":3,"probe_masks_dc":1,"get_selection":1}
+STEPS 1_photo, 3_dumps, 4_write_back, 5_local_exposure, 6_global, 7_sky, 8_geometry_plan, 9_fields, 9_fields_written, 10_delete, 11_snapshot, 12_probe, 12_snapshot_after_probe, 13_put_back
+exit 1
+
+==== run 3: hello reports plugin 0.9.0: stops before any write
+  (bridge: connecting)
+[2:39:34 PM] --- 0_preconditions
+  (bridge: handshaking)
+  (bridge: connected)
+[2:39:34 PM] NO   Lightroom 15.5.1 runs plugin 0.9.0 (0.11.0 or later needed)
+[2:39:34 PM] NO   0_preconditions ran
+  (bridge: stopped)
+[2:39:34 PM] 
+[2:39:34 PM] masks capture: DONE, 2 NO / FAILED lines (each one is a finding for the report)
+[2:39:34 PM]   - Lightroom 15.5.1 runs plugin 0.9.0 (0.11.0 or later needed)
+[2:39:34 PM]   - 0_preconditions ran
+[2:39:34 PM] Results: %USERPROFILE%\AppData\Local\Temp\masks-dry-5zNtMW\check.json
+
+HISTORY []
+RECEIVED {"hello":1}
+STEPS 0_preconditions_error
+exit 1
+
+==== run 4: the invented table, and a Ctrl+C (the readline SIGINT event, emitted by the script's dry-run hook) before step 5: straight to the put-back
+  (bridge: connecting)
+[2:39:38 PM] --- 0_preconditions
+  (bridge: handshaking)
+  (bridge: connected)
+[2:39:38 PM] YES  Lightroom 15.5.1 runs plugin 0.11.0 (0.11.0 or later needed)
+[2:39:38 PM] --- 1_photo
+[2:39:38 PM] YES  selected SIM-UUID; snapshot "AVG capture before 14:39:38" taken; 177 settings saved
+[2:39:38 PM] To stop at any point, press Ctrl+C once and wait: the check puts the photo back by itself.
+[2:39:38 PM] Only if its last lines say PUT BACK: NO: wait 1 minute, then in Lightroom's Develop module open the Snapshots panel (left side) and click "AVG capture before 14:39:38".
+[2:39:38 PM] --- 2_hand_masks
+[2:39:38 PM] NOW, in Lightroom (the photo 20260907-_OZ80099.NEF is selected). Do these in this order:
+[2:39:38 PM] a. Press D (Develop), then Shift+W (Masking). The Masks panel opens.
+[2:39:38 PM] b. Click Create New Mask, then Linear Gradient. Drag on the photo from the top edge down to about a third.
+[2:39:38 PM]    In the panel on the right, click the number next to Exposure, type 0.5, press Enter.
+[2:39:38 PM] c. Click Create New Mask, then Radial Gradient. Drag an oval anywhere on the photo.
+[2:39:38 PM] d. Click Create New Mask, then Sky. Wait until the new mask shows in the Masks panel.
+[2:39:38 PM] e. Click Create New Mask, then Subject. Wait until the new mask shows in the Masks panel.
+[2:39:38 PM] f. Click Create New Mask, then Range, then Luminance Range. Click once on a bright part of the photo.
+[2:39:38 PM] g. Leave Masking open. Come back to this window.
+[2:39:38 PM] At the end this check puts the photo back as it is now: the masks you add are removed.
+Press Enter when the five masks are in the Masks panel. Did you make all five masks, in the order b-f (linear with Exposure +0.50, radial, sky, subject, luminance range)? (y/n) [2:39:38 PM] --- 3_dumps
+[2:39:39 PM] YES  the masks are under "SimMasks": 5 entries (0 before step 2)
+[2:39:39 PM] YES  two reads in a row give the same mask table, ids included (0 differing paths)
+[2:39:39 PM] YES  each new entry identified: 0=linear, 1=radial, 2=sky, 3=subject, 4=luminance
+[2:39:39 PM] --- 4_write_back
+[2:39:39 PM] YES  the unchanged mask table written back reads back identical, every setting compared (0 differing paths)
+[2:39:39 PM] ABORTING (Ctrl+C): going straight to the put-back. Wait for the last lines.
+[2:39:39 PM] --- 13_put_back
+[2:39:39 PM] YES  PUT BACK: YES (every setting as before the check)
+  (bridge: stopped)
+[2:39:39 PM] 
+[2:39:39 PM] masks capture: DONE, 1 NO / FAILED lines (each one is a finding for the report)
+[2:39:39 PM]   - aborted: Ctrl+C
+[2:39:39 PM] Results: %USERPROFILE%\AppData\Local\Temp\masks-dry-L29WU2\check.json
+
+HISTORY ["AVG capture write-back"]
+RECEIVED {"hello":1,"select_photo":1,"create_snapshot":1,"get_settings":3,"apply_settings":1,"apply_snapshot":1}
+STEPS 1_photo, 3_dumps, 4_write_back, 13_put_back
+exit 1
+
+==== run 5: the probe answers an error: the settings must hold still for 5 s before the put-back
+  (bridge: connecting)
+[2:39:43 PM] --- 0_preconditions
+  (bridge: handshaking)
+  (bridge: connected)
+[2:39:43 PM] YES  Lightroom 15.5.1 runs plugin 0.11.0 (0.11.0 or later needed)
+[2:39:43 PM] --- 1_photo
+[2:39:43 PM] YES  selected SIM-UUID; snapshot "AVG capture before 14:39:43" taken; 177 settings saved
+[2:39:43 PM] To stop at any point, press Ctrl+C once and wait: the check puts the photo back by itself.
+[2:39:43 PM] Only if its last lines say PUT BACK: NO: wait 1 minute, then in Lightroom's Develop module open the Snapshots panel (left side) and click "AVG capture before 14:39:43".
+[2:39:43 PM] --- 2_hand_masks
+[2:39:43 PM] NOW, in Lightroom (the photo 20260907-_OZ80099.NEF is selected). Do these in this order:
+[2:39:43 PM] a. Press D (Develop), then Shift+W (Masking). The Masks panel opens.
+[2:39:43 PM] b. Click Create New Mask, then Linear Gradient. Drag on the photo from the top edge down to about a third.
+[2:39:43 PM]    In the panel on the right, click the number next to Exposure, type 0.5, press Enter.
+[2:39:43 PM] c. Click Create New Mask, then Radial Gradient. Drag an oval anywhere on the photo.
+[2:39:43 PM] d. Click Create New Mask, then Sky. Wait until the new mask shows in the Masks panel.
+[2:39:43 PM] e. Click Create New Mask, then Subject. Wait until the new mask shows in the Masks panel.
+[2:39:43 PM] f. Click Create New Mask, then Range, then Luminance Range. Click once on a bright part of the photo.
+[2:39:43 PM] g. Leave Masking open. Come back to this window.
+[2:39:43 PM] At the end this check puts the photo back as it is now: the masks you add are removed.
+Press Enter when the five masks are in the Masks panel. Did you make all five masks, in the order b-f (linear with Exposure +0.50, radial, sky, subject, luminance range)? (y/n) [2:39:43 PM] --- 3_dumps
+[2:39:44 PM] NO   the settings hold a new array of mask entries after step 2
+[2:39:44 PM] skipped: no mask table
+[2:39:44 PM] --- 4_write_back
+[2:39:44 PM] skipped: no mask table was found in step 3
+[2:39:44 PM] --- 5_local_exposure
+[2:39:44 PM] skipped: no mask table was found in step 3
+[2:39:44 PM] --- 6_global
+[2:39:44 PM] YES  a global exposure write reads back (0.33 -> 0.43)
+[2:39:44 PM] --- 7_sky
+[2:39:44 PM] skipped: no mask table was found in step 3
+[2:39:44 PM] --- 8_geometry
+[2:39:44 PM] skipped: no mask table was found in step 3
+[2:39:44 PM] --- 9_fields
+[2:39:44 PM] skipped: no mask table was found in step 3
+[2:39:44 PM] --- 10_delete
+[2:39:44 PM] skipped: no mask table was found in step 3
+[2:39:44 PM] --- 11_snapshot
+[2:39:44 PM] YES  applying the snapshot puts the mask table back as before step 2 (0 differing paths; 0 in all settings)
+[2:39:44 PM] --- 12_probe
+[2:39:44 PM] 12. The plugin now drives the Develop module by itself for up to a minute. Do not click in Lightroom.
+[2:39:49 PM] NO   probe_masks_dc failed: plugin_error: dry run: the probe raised
+[2:39:49 PM] YES  after the probe failed, the photo's settings held still for 5 s before the put-back (waited 5053 ms)
+[2:39:49 PM] YES  after the probe, 20260907-_OZ80099.NEF is still the one selected photo (1 selected: SIM-UUID)
+[2:39:49 PM] YES  the snapshot puts the photo back after the probe (0 differing paths)
+[2:39:49 PM] --- 13_put_back
+[2:39:49 PM] YES  PUT BACK: YES (every setting as before the check)
+[2:39:49 PM] NOW: look at the photo in Lightroom, and at the Masks panel (Shift+W).
+Does the photo look as it did before the check, with none of the check's masks left? (y/n)   (bridge: stopped)
+[2:39:49 PM] 
+[2:39:49 PM] masks capture: DONE, 2 NO / FAILED lines (each one is a finding for the report)
+[2:39:49 PM]   - the settings hold a new array of mask entries after step 2
+[2:39:49 PM]   - probe_masks_dc failed: plugin_error: dry run: the probe raised
+[2:39:49 PM] Results: %USERPROFILE%\AppData\Local\Temp\masks-dry-P4wUhe\check.json
+
+HISTORY ["AVG capture global write"]
+RECEIVED {"hello":1,"select_photo":2,"create_snapshot":1,"get_settings":10,"apply_settings":1,"apply_snapshot":3,"probe_masks_dc":1,"get_selection":1}
+STEPS 1_photo, 3_dumps, 3_dumps_skipped, 4_write_back_skipped, 5_local_exposure_skipped, 6_global, 7_sky_skipped, 8_geometry_skipped, 9_fields_skipped, 10_delete_skipped, 11_snapshot, 12_probe, 12_snapshot_after_probe, 13_put_back
+exit 1
+

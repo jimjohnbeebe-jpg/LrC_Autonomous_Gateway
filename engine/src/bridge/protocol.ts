@@ -11,7 +11,7 @@
 // Every inbound line is validated here with zod before the engine acts on it (rule 01-stack).
 // The plugin side is plugin\LrC-AVG.lrplugin\Bridge.lua, Dispatch.lua (the handler table),
 // Develop.lua, Preview.lua, Catalog.lua, Photos.lua, Library.lua (with KeywordTree.lua), Prefs.lua,
-// Hud.lua (with hud-protocol.ts) and Masks.lua.
+// Hud.lua (with hud-protocol.ts), Masks.lua and MaskCalibrate.lua (with MaskProbe.lua).
 //
 // Lua cannot tell an empty array from an empty object, and the plugin's Json.lua writes every empty
 // table as []. Payload schemas below never require a non-empty table to be an object.
@@ -109,6 +109,8 @@ const listedPhoto = z.object({ ...photoIdentity, uuid: z.string().optional() });
  * its result as the SDK gave it (functions and userdata as "<type>"), or the error it raised.
  */
 const probeStep = z.object({ step: z.string(), ok: z.boolean(), result: z.unknown().optional(), error: z.string().optional(), ms: z.number() });
+/** A probe's answer (MaskProbe.lua finish): the target photo, its steps in order, and why it stopped early, if it did. */
+const probeResult = z.object({ uuid: z.string().optional(), filename: z.string().optional(), steps: z.array(probeStep), stopped: z.string().optional() });
 
 /** One entry of a findPhotos search descriptor (engine\src\library\search.ts builds them). */
 export type SearchCriterion = { criteria: string; operation: string; value: string | number; value2?: string };
@@ -224,7 +226,12 @@ export const COMMANDS = {
   update_ai_settings: z.object({ ...targeted, call_ms: z.number(), command_ms: z.number(), gate: z.string().optional() }),
   // probe_masks_dc: the selected photo (the target) and every step of the LrDevelopController probe, in
   // order; `stopped` says why it ran no further step (the selection changed, or its own deadline passed).
-  probe_masks_dc: z.object({ uuid: z.string().optional(), filename: z.string().optional(), steps: z.array(probeStep), stopped: z.string().optional() }),
+  probe_masks_dc: probeResult,
+  // Capture 2 (MaskCalibrate.lua). probe_masks_calibrate: getValue / getRange of each name on the mask
+  // `selected` (absent when none could be selected, and then no value was read).
+  probe_masks_calibrate: probeResult.extend({ selected: z.string().optional() }),
+  // probe_masks_create: createNewMask("aiSelection", subtype) for each subtype; the masks stay.
+  probe_masks_create: probeResult,
 } as const;
 
 export type CommandName = keyof typeof COMMANDS;
@@ -274,4 +281,8 @@ export type CommandPayloads = {
   update_ai_settings: { photo_uuid: string; expect?: PhotoExpect };
   /** Plugin 0.11.0: on the selected photo, refused with target_mismatch unless it is target_uuid's; switches Lightroom to Develop and leaves it there. */
   probe_masks_dc: { target_uuid: string };
+  /** Capture 2: the mask with mask_id (its CorrectionID), else the one named mask_name; 1-80 DC parameter names. */
+  probe_masks_calibrate: { target_uuid: string; mask_id: string; mask_name?: string; names: string[] };
+  /** Capture 2: createNewMask("aiSelection", subtype) for 1-8 subtypes, each waited for up to wait_seconds (1-15, default 10). */
+  probe_masks_create: { target_uuid: string; subtypes: string[]; wait_seconds?: number };
 };

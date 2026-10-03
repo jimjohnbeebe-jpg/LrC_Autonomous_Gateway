@@ -12,8 +12,8 @@
 // Schema v2 (engine 0.4.0) adds `mode` "variants", the copies (`variants`, `picked`), each pass's
 // photo (`target` A/B/C) and region baselines per photo. v1 logs (engine 0.3.x, the Phase 3 run)
 // are read with session-log-v1.ts. Later engines only add: optional fields (`settings`, 0.7.0;
-// `ended_by` and `hud_events`, 0.8.0; `approvals` and a pass's `approval`, 0.9.0) and the outcome
-// "aborted" (0.8.0), so earlier v2 logs still read.
+// `ended_by` and `hud_events`, 0.8.0; `approvals` and a pass's `approval`, 0.9.0; `lightroom`,
+// 0.13.0, and its `notices`, 0.14.0) and the outcome "aborted" (0.8.0), so earlier v2 logs still read.
 
 import { mkdirSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -198,8 +198,12 @@ export const sessionLogSchema = z
     session_id: z.string(),
     short_id: z.string(),
     engine_version: z.string(),
-    /** Engine 0.13.0: the Lightroom the session ran in, from the plugin's hello (issue #67). */
-    lightroom: z.strictObject({ lrc_version: z.string(), sdk_declared: z.number() }).optional(),
+    /**
+     * Engine 0.13.0: the Lightroom the session ran in, from the plugin's hello (issue #67). Engine
+     * 0.14.0 adds `notices`, what the user was told about that version (bridge\lightroom.ts), empty
+     * within the supported and tested versions.
+     */
+    lightroom: z.strictObject({ lrc_version: z.string(), sdk_declared: z.number(), notices: z.array(z.string()).optional() }).optional(),
     started: z.string(),
     ended: z.string().nullable(),
     /** "aborted" (engine 0.8.0, MCP_TOOLS' log schema): the user's Abort put the photo back. */

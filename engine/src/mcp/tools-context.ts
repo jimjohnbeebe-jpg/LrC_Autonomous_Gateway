@@ -2,6 +2,7 @@
 // lr_get_preview, lr_get_metrics. They change nothing in Lightroom.
 
 import { z } from "zod";
+import { lightroomNotices } from "../bridge/index.js";
 import { boxProblem, summarize, type Region, type RegionBox } from "../metrics/index.js";
 import { ParamError, type FromSdkResult } from "../params/index.js";
 import { cropRegion } from "../preview/index.js";
@@ -51,20 +52,21 @@ export async function getActivePhotoContext(ctx: ToolContext): Promise<ToolOutpu
     await ctx.deps.ensureBridge();
     const photo = await client.request("get_context", {});
     const sdk = (await client.request("get_settings", { target_uuid: photo.uuid })).settings;
+    const hello = client.hello();
     let view: FromSdkResult | null = null;
     let settingsError: Record<string, unknown> | null = null;
     try {
       view = map.fromSdk(sdk);
     } catch (err) {
       if (!(err instanceof ParamError)) throw err;
-      settingsError = toToolError(err).body(); // e.g. a legacy process version: the rest still helps
+      settingsError = toToolError(err, { lrc_version: photo.lrc_version }).body(); // e.g. an older or newer process version: the rest still helps
     }
     const field = (key: string): unknown => photo[key] ?? null;
     const open = ctx.sessions?.current() ?? null;
-    const hello = client.hello();
     const json: Record<string, unknown> = {
       ok: true,
-      lightroom: { lrc_version: photo.lrc_version, sdk_declared: hello?.sdk_declared ?? null },
+      // notices: for the user, empty within the supported and tested versions (bridge\lightroom.ts).
+      lightroom: { lrc_version: photo.lrc_version, sdk_declared: hello?.sdk_declared ?? null, notices: lightroomNotices(photo.lrc_version) },
       uuid: photo.uuid,
       local_id: photo.local_id,
       filename: field("filename"),

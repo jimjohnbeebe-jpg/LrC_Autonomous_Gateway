@@ -24,6 +24,12 @@
         },
         "sdk_declared": {
           "type": "number"
+        },
+        "notices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "required": [

@@ -5,9 +5,11 @@ authored_by: Claude Code (Opus 5.5), Phase 0b session 2026-09-23
 decided_by: Jim (Phase 0b directive, 2026-09-23)
 ---
 
-# Review workflow — pull requests + Greptile triage
+# Review workflow — pull requests + reviewer triage
 
 > Summary of the rule in `.claude\rules\04-workflow.md` (the authoritative text; also mirrored in `CLAUDE.md` and in the vault `PHASES.md` "Standing rules"). Written by Claude Code in the Phase 0b session.
+
+> **Reviewer switched 2026-10-03 (PR `fix/coderabbit-review`): CodeRabbit now reviews, in place of Greptile** [stated: Jim, 2026-10-03, "switch the reviewer for the remainder of this phase to CodeRabbit from Greptile … I will switch back when needed"]. Read "Greptile" below as "the reviewer", and look for a review from `coderabbitai`. CodeRabbit's settings are in `.coderabbit.yaml`. `greptile.json` stays with `autoReview` `[]`, so Greptile does not review; rule 04 gives the steps to switch back. The text below is the Phase 0b record.
 
 ## Repository and protection
 

@@ -25,21 +25,21 @@ Repo-side records: `docs\PHASE0_HANDOVER.md` (start here in a fresh session), `d
 - **Stack rule.** Lua for the plugin, Node ≥ 22 / TypeScript for the engine. **No Python anywhere, including tooling scripts.** `sharp` does all image work. → `.claude\rules\01-stack.md`
 - **Sourcing rule.** Every claim about SDK or runtime behaviour, in reports and in commit messages, carries a handle (script path + observed output, screenshot path, or URL) or is tagged `[unverified]`. Do not write results you did not observe. → `.claude\rules\02-sourcing.md`
 - **Interaction rule.** Jim sets direction. When a decision is needed, present the options with a recommendation and stop. Never proceed past a STOP marker. → `.claude\rules\04-workflow.md`
-- **Every change reaches `main` through a Greptile-triaged pull request.** See the "Pull request + Greptile workflow" section below.
+- **Every change reaches `main` through a reviewer-triaged pull request** (reviewer: CodeRabbit from 2026-10-03, Greptile before). See the "Pull request + review workflow" section below.
 - **Read `LR_SDK_NOTES.md` before touching Lua.** → `.claude\rules\03-lightroom.md`
 - **Query Graphify before grepping for structural questions.** The per-repo graph exists: run `graphify query "<question>"` (or `graphify path "A" "B"`, `graphify explain "X"`) from the repo root. After code changes, refresh it with `graphify update .`. Graph answers point you at code; they are not sourced facts. See `docs\MCP_AVAILABILITY.md`.
 - **Lightroom-side results are Jim's observations: ask, do not assume.** Claude Code writes harnesses and report templates; Jim runs Lightroom and fills in the "Observed" sections.
 - `vendor\automaat\` is a read-only upstream snapshot (MIT, commit `a160e7a`). Never modify it. Its `CLAUDE.md`/`AGENTS.md` are upstream's contributor notes and **do not apply to this project**.
 
-## Pull request + Greptile workflow (from Phase 0b on)
+## Pull request + review workflow (from Phase 0b on)
 
-Repo: https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway (public; `main` is protected: PR required, 0 approvals, no force pushes or deletions). Full rule: `.claude\rules\04-workflow.md`.
+Repo: https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway (public; `main` is protected: PR required, 0 approvals, no force pushes or deletions). Full rule: `.claude\rules\04-workflow.md`. The reviewer is **CodeRabbit** from 2026-10-03 (`.coderabbit.yaml`), in place of Greptile (`greptile.json` kept with `autoReview` `[]`); how to switch back is in rule 04.
 
 1. Work on a branch named `phase-<n>/<topic>` or `fix/<topic>`.
 2. Never commit to `main` directly.
 3. Open the PR with `gh pr create --fill`.
-4. Wait for Greptile's review (a comment or review from the Greptile app). One automatic review per PR, on code defects only (`greptile.json`); all fixes from it go in one push, and a re-review happens only when Jim agrees. Sourcing (rule 02) is checked by Claude Code before the first push.
-5. Triage **every** Greptile comment in a table posted as a PR comment, with columns: `file:line` | Greptile finding | decision (`fix` \| `reject` \| `defer`) | reason | commit hash if fixed. Post the table even when Greptile reports no issues.
+4. Wait for CodeRabbit's review (a review or comment from `coderabbitai`). One automatic review per PR, on code defects only (`.coderabbit.yaml`); all fixes from it go in one push, and a re-review (`@coderabbitai review`) happens only when Jim agrees. Sourcing (rule 02) is checked by Claude Code before the first push.
+5. Triage **every** CodeRabbit comment in a table posted as a PR comment, with columns: `file:line` | CodeRabbit finding | decision (`fix` \| `reject` \| `defer`) | reason | commit hash if fixed. Post the table even when CodeRabbit reports no issues.
 6. Merge only when the triage table is posted and no `fix` decision is still open.
 7. Merge with `gh pr merge --squash --delete-branch` (Jim may choose `--merge` for phase branches with meaningful history).
 8. After the merge, update the vault `LrC_AVG_STATE.md` "Next action".

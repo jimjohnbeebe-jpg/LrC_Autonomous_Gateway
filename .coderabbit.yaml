@@ -1,0 +1,118 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# CodeRabbit: this repo's pull request reviewer from 2026-10-03, in place of Greptile [stated: Jim,
+# 2026-10-03, "switch the reviewer for the remainder of this phase to CodeRabbit from Greptile"].
+# greptile.json stays, with autoReview [], for switching back (.claude/rules/04-workflow.md).
+# Tuned as greptile.json was: one automatic review per PR, code defects only, docs and Markdown not
+# reviewed. Keys, defaults and enums: https://coderabbit.ai/integrations/schema.v2.json (read
+# 2026-10-03); this file validates against it (ajv 8, PR fix/coderabbit-review). CodeRabbit reads
+# the file from the PR's own branch [handle: https://docs.coderabbit.ai/getting-started/yaml-configuration].
+language: en-US
+tone_instructions: "Report only real code defects: logic errors, crashes, wrong results, data loss, races, security. No style, naming, wording, docs, comments, sourcing tags or test-coverage remarks unless they hide a real defect. Be brief."
+early_access: false
+reviews:
+  # "quiet for only the most important feedback" (schema, reviews.profile).
+  profile: quiet
+  request_changes_workflow: false
+  # Keep the PR description as written: the summary would go into it (schema, high_level_summary).
+  high_level_summary: false
+  review_status: true
+  collapse_walkthrough: true
+  changed_files_summary: true
+  sequence_diagrams: false
+  estimate_code_review_effort: false
+  assess_linked_issues: false
+  related_issues: false
+  related_prs: false
+  suggested_labels: false
+  suggested_reviewers: false
+  in_progress_fortune: false
+  poem: false
+  auto_review:
+    enabled: true
+    # One review per PR, at open: later pushes are not reviewed unless asked (@coderabbitai review).
+    auto_incremental_review: false
+    drafts: false
+  # As greptile.json ignorePatterns.
+  path_filters:
+    - "!**/*.md"
+    - "!docs/**"
+    - "!vendor/**"
+    - "!engine/schemas/**"
+    - "!engine/tests/fixtures/**"
+    - "!tests/golden/**"
+  path_instructions:
+    - path: "**"
+      instructions: >-
+        Review for real defects in code only: logic errors, crashes, wrong results, data loss, race
+        conditions, and security issues. Do not comment on documentation, code comments, report or
+        README wording, evidence transcripts, or sourcing tags such as [handle: ...] or [unverified];
+        do not enforce .claude/rules/02-sourcing.md, which the author checks before pushing. Do not
+        suggest extra tests, stricter test checks, or style changes unless they hide a real defect.
+    - path: "plugin/**/*.lua"
+      instructions: >-
+        Lightroom Classic SDK plugin code running in Lightroom's embedded Lua 5.1 (no goto, no //, no
+        utf8 library). import, _PLUGIN and the Lr* modules are SDK globals. State kept on _G is
+        deliberate: it must survive a module body running again. Catalog writes run inside
+        catalog:withWriteAccessDo from an async task; catalog:createVirtualCopies runs outside a write
+        gate on purpose (spike S6). Yielding catalog queries (getTargetPhoto(s), findPhotos,
+        setSelectedPhotos) stay outside withReadAccessDo. Task code uses LrTasks.pcall; a plain pcall
+        is marked with a "-- plain pcall:" comment. LrSocket onMessage and push_button actions cannot
+        yield, so they hand work to LrTasks.startAsyncTask. Plugin code never opens a modal dialog on
+        a bridge path.
+    - path: "engine/**/*.ts"
+      instructions: >-
+        Node 22+ ESM TypeScript (strict, noUncheckedIndexedAccess, exactOptionalPropertyTypes,
+        erasable syntax only: no enum, namespace or parameter properties). External input (MCP tool
+        arguments, plugin responses, JSON files) is validated with zod at the boundary. Only
+        engine/src/params names Lightroom SDK develop keys. sharp is the only image library. No
+        Python anywhere. Sockets bind to 127.0.0.1 only.
+  finishing_touches:
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: false
+    simplify:
+      enabled: false
+    autofix:
+      enabled: false
+    fix_ci:
+      enabled: false
+    resolve_merge_conflict:
+      enabled: false
+  pre_merge_checks:
+    docstrings:
+      mode: "off"
+    title:
+      mode: "off"
+    description:
+      mode: "off"
+    issue_assessment:
+      mode: "off"
+  # Style linters off (code defects only); security scanners (gitleaks, trufflehog, osvScanner,
+  # semgrep) keep their defaults.
+  tools:
+    biome:
+      enabled: false
+    eslint:
+      enabled: false
+    oxc:
+      enabled: false
+    luacheck:
+      enabled: false
+    markdownlint:
+      enabled: false
+    languagetool:
+      enabled: false
+    vale:
+      enabled: false
+    yamllint:
+      enabled: false
+chat:
+  # Answer only when mentioned, so the triage table comment gets no automatic reply.
+  auto_reply: false
+knowledge_base:
+  # Off: its default files include every CLAUDE.md and AGENTS.md (schema, code_guidelines.filePatterns),
+  # which would bring in the sourcing rule and vendor/automaat's upstream notes. The code rules that
+  # matter for review are in path_instructions above.
+  code_guidelines:
+    enabled: false

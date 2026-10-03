@@ -1,7 +1,7 @@
 {
   "strictness": 3,
   "commentTypes": ["logic"],
-  "autoReview": ["open"],
+  "autoReview": [],
   "ignorePatterns": "**/*.md\ndocs/**\nvendor/**\nengine/schemas/**\nengine/tests/fixtures/**\ntests/golden/**",
   "instructions": "Review for real defects in code only: logic errors, crashes, wrong results, data loss, race conditions, and security issues. Do not comment on documentation, code comments, report or README wording, evidence transcripts, or sourcing tags such as [handle: ...] or [unverified]; do not enforce .claude/rules/02-sourcing.md, which the author checks before pushing. Do not suggest extra tests, stricter test checks, or style changes unless they hide a real defect."
 }

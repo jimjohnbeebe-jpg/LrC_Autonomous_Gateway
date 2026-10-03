@@ -76,4 +76,4 @@ writes the two release assets to `release\`: `lrc-avg-<version>.tgz` (the engine
 
 ## Workflow
 
-Every change reaches `main` through a pull request from a `phase-<n>/<topic>` or `fix/<topic>` branch, reviewed by Greptile, with every finding triaged in a table on the PR before the merge. The full rule is [`.claude/rules/04-workflow.md`](../.claude/rules/04-workflow.md); a summary is [`REVIEW_WORKFLOW.md`](REVIEW_WORKFLOW.md). Source files are kept to 300 lines (400 enforced by `engine/tests/module-size.test.ts`), as rule 01 sets out.
+Every change reaches `main` through a pull request from a `phase-<n>/<topic>` or `fix/<topic>` branch, reviewed by CodeRabbit (Greptile until 2026-10-03), with every finding triaged in a table on the PR before the merge. The full rule is [`.claude/rules/04-workflow.md`](../.claude/rules/04-workflow.md); a summary is [`REVIEW_WORKFLOW.md`](REVIEW_WORKFLOW.md). Source files are kept to 300 lines (400 enforced by `engine/tests/module-size.test.ts`), as rule 01 sets out.

@@ -251,7 +251,7 @@ export async function run(
     ctx.deps.log?.append({ ts, tool, ok: true, duration_ms: ms(started), args, ...out.log });
     return out;
   } catch (err) {
-    const error = toToolError(err);
+    const error = toToolError(err, ctx.deps.client.hello());
     ctx.deps.log?.append({ ts, tool, ok: false, duration_ms: ms(started), args, error: error.body() });
     throw error;
   } finally {

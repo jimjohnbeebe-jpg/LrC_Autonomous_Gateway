@@ -189,7 +189,7 @@ describe("intents: tools", () => {
   let gateCalls = 0;
   const tools = (): Tools =>
     new Tools({
-      client: {} as BridgeClient,
+      client: { hello: () => null } as unknown as BridgeClient, // a failed call's error names the versions from hello()
       map,
       previews: {} as PreviewService,
       intents: library,

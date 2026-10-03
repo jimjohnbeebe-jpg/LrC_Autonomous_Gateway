@@ -10,7 +10,7 @@
 
 import { existsSync } from "node:fs";
 import path from "node:path";
-import type { CommandResult } from "../bridge/index.js";
+import { lightroomNotices, type CommandResult } from "../bridge/index.js";
 import { SESSION_LOG_SCHEMA_ID, SessionLogFiles, type SessionLogData } from "../log/index.js";
 import { ToolError } from "../mcp/errors.js";
 import { summarize } from "../metrics/index.js";
@@ -91,6 +91,8 @@ export async function openSession(ctx: SessionContext, args: BeginArgs): Promise
   };
   s.log = newLog(ctx, s, variantCount, args.notes ?? null);
   s.log.settings = settingsEntry(settings, page);
+  // A Lightroom outside the supported and tested versions: the HUD says so once, after lr_begin_session.
+  s.idleNote = s.log.lightroom?.notices?.[0] ?? null;
   return { s, view, photo, started };
 }
 
@@ -141,7 +143,7 @@ function newLog(ctx: SessionContext, s: Session, variantCount: number | null, no
     session_id: s.id,
     short_id: s.short,
     engine_version: ctx.deps.engineVersion,
-    ...(hello ? { lightroom: { lrc_version: hello.lrc_version, sdk_declared: hello.sdk_declared } } : {}),
+    ...(hello ? { lightroom: { lrc_version: hello.lrc_version, sdk_declared: hello.sdk_declared, notices: lightroomNotices(hello.lrc_version) } } : {}),
     started: s.startedAt.toISOString(),
     ended: null,
     outcome: null,

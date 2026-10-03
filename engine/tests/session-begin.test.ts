@@ -31,7 +31,7 @@ describe("lr_begin_session", () => {
     expect(out.json["ok"]).toBe(true);
     expect((lr.settings["Look"] as { Parameters: Record<string, unknown> }).Parameters["Version"]).toBe("18.7");
     expect(map.fromSdk(lr.settings).camera_profile.name).toBe("Adobe Color");
-    expect(readLog().lightroom).toEqual({ lrc_version: "15.5.1", sdk_declared: 13 });
+    expect(readLog().lightroom).toEqual({ lrc_version: "15.5.1", sdk_declared: 13, notices: [] });
   });
 
   it("refuses a second session while one is open", async () => {

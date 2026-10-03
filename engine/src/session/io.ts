@@ -8,7 +8,7 @@
 
 import { BridgeError } from "../bridge/index.js";
 import type { PassEntry } from "../log/index.js";
-import { ToolError, toToolError } from "../mcp/errors.js";
+import { ToolError, readbackError, toToolError } from "../mcp/errors.js";
 import type { Metrics } from "../metrics/index.js";
 import { differingSettings, type CanonicalSettings, type CanonicalValue, type FromSdkResult } from "../params/index.js";
 import { composite } from "../preview/index.js";
@@ -90,13 +90,8 @@ export async function write(ctx: SessionContext, s: Session, t: Target, values: 
       .request("apply_settings", { target_uuid: t.uuid, settings: sdk, history_name: historyName }, { timeoutMs: WRITE_TIMEOUT_MS })
       .catch((err: unknown) => Promise.reject(maybeWritten(err, historyName))),
   );
-  const mismatches = map.verifyReadback(sdk, res.read_back);
-  if (mismatches.length > 0) {
-    throw new ToolError("WRITE_NOT_TAKEN", `Lightroom did not take ${mismatches.map((m) => m.sdk_key).join(", ")} as written in "${historyName}".`, false, {
-      history_name: historyName,
-      mismatches,
-    });
-  }
+  const error = readbackError(map, sdk, res.read_back, historyName, client.hello()); // WRITE_NOT_TAKEN or FEATURE_UNAVAILABLE
+  if (error) throw error;
   return map.fromSdk(res.read_back);
 }
 
@@ -189,7 +184,7 @@ export function saveLog(s: Session): void {
 
 /** Record a failure in the open session's log and return the error to throw, naming the session. */
 export function failed(ctx: SessionContext, s: Session, stage: string, err: unknown): ToolError {
-  const error = toToolError(err);
+  const error = toToolError(err, ctx.deps.client.hello());
   if (error.code === "SESSION_ENDED") {
     // Not a failure: the user's Abort stopped this operation; the log's ended_by names it.
     if (s.abort) s.abort.interrupted ??= stage;

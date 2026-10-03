@@ -7,7 +7,7 @@
 // tests\sync.test.ts "writes to photos by uuid and leaves the selection alone"].
 
 import { BridgeError } from "../bridge/index.js";
-import { ToolError, toToolError } from "../mcp/errors.js";
+import { ToolError, readbackError, toToolError } from "../mcp/errors.js";
 import { differingSettings, type CanonicalValue, type FromSdkResult } from "../params/index.js";
 import type { RenderedPreview } from "../preview/index.js";
 import { roundForSlider } from "../session/rules.js";
@@ -65,10 +65,8 @@ async function write(run: SyncRun, uuid: string, values: Record<string, Canonica
     throw new ToolError(error.code, `${error.message} Lightroom may still write "${historyName}" to this photo.`, error.recoverable, { maybe_written: historyName });
   }
   names.push(historyName);
-  const mismatches = map.verifyReadback(sdk, res.read_back);
-  if (mismatches.length > 0) {
-    throw new ToolError("WRITE_NOT_TAKEN", `Lightroom did not take ${mismatches.map((m) => m.sdk_key).join(", ")} as written in "${historyName}".`, false, { history_name: historyName, mismatches });
-  }
+  const error = readbackError(map, sdk, res.read_back, historyName, client.hello()); // WRITE_NOT_TAKEN or FEATURE_UNAVAILABLE
+  if (error) throw error;
   return map.fromSdk(res.read_back);
 }
 

@@ -27,7 +27,10 @@ export type ParamErrorCode =
   | "unknown_parameter"
   | "wrong_type"
   | "out_of_range"
-  | "unsupported_process_version";
+  /** Older than the supported ones (or none): update the photo in Lightroom. */
+  | "unsupported_process_version"
+  /** Newer than the supported ones: it comes with a Lightroom this engine does not know yet. */
+  | "newer_process_version";
 
 /** A structured error ({code, message, recoverable}, PRD NFR-7). */
 export class ParamError extends Error {
@@ -275,11 +278,25 @@ export class ParamMap {
 
   private checkProcessVersion(pv: string): void {
     if (SUPPORTED_PROCESS_VERSIONS.includes(pv)) return;
+    const supported = `(supported: ${SUPPORTED_PROCESS_VERSIONS.join(", ")})`;
     // A newer process version comes with a Lightroom update; updating the photo cannot help then [inference].
-    const newer = SUPPORTED_PROCESS_VERSIONS.every((v) => Number.parseFloat(pv) > Number.parseFloat(v));
-    const advice = newer
-      ? "it is newer than this engine knows, so editing this photo is unavailable until the engine supports it; reading its context still works"
-      : "update the photo's process version in Lightroom first";
-    throw new ParamError("unsupported_process_version", `Process version ${pv} is not supported (supported: ${SUPPORTED_PROCESS_VERSIONS.join(", ")}): ${advice}`);
+    if (SUPPORTED_PROCESS_VERSIONS.every((v) => compareVersions(pv, v) > 0)) {
+      throw new ParamError(
+        "newer_process_version",
+        `Process version ${pv} is newer than this engine knows ${supported}, so editing this photo is unavailable until the engine supports it; reading its context still works.`,
+      );
+    }
+    throw new ParamError("unsupported_process_version", `Process version ${pv} is not supported ${supported}: update the photo's process version in Lightroom first.`);
   }
+}
+
+/** Dotted versions compared by number per component ("15.10" > "15.4", "15.4.1" > "15.4"); NaN counts as not newer. */
+function compareVersions(a: string, b: string): number {
+  const pa = a.split(".").map(Number);
+  const pb = b.split(".").map(Number);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const d = (pa[i] ?? 0) - (pb[i] ?? 0);
+    if (d !== 0) return d;
+  }
+  return 0;
 }

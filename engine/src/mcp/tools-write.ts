@@ -5,7 +5,7 @@
 
 import { deltaMetrics, summarize } from "../metrics/index.js";
 import type { CanonicalValue } from "../params/index.js";
-import { ToolError, toToolError } from "./errors.js";
+import { readbackError, toToolError } from "./errors.js";
 import { DEFAULT_LONG_EDGE, describe, ms, render, run, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
 /**
@@ -53,16 +53,8 @@ export async function setSettings(ctx: ToolContext, args: SetSettingsArgs): Prom
       requested: args.settings[name] ?? null,
       after: after.settings[name] ?? null,
     }));
-    const mismatches = map.verifyReadback(sdk, res.read_back);
-    if (mismatches.length > 0) {
-      throw new ToolError(
-        "WRITE_NOT_TAKEN",
-        `Lightroom did not take ${mismatches.map((m) => m.sdk_key).join(", ")} as written. The History step "${historyName}" exists; ` +
-          "check `changes` for what the photo holds now.",
-        false,
-        { history_name: historyName, changes, mismatches },
-      );
-    }
+    const error = readbackError(map, sdk, res.read_back, historyName, client.hello(), { changes }); // `changes`: what the photo holds now
+    if (error) throw error;
 
     const timings: Record<string, unknown> = {
       get_settings_ms: getSettingsMs,

@@ -4,15 +4,19 @@ LrC-AVG lets Claude, in Claude Desktop, edit a raw photo in Lightroom Classic th
 
 It comes in two halves: a Lightroom plugin, and an engine that Claude Desktop starts as an MCP server.
 
-**Prototype: engine 0.10.0, plugin 0.7.0. There is no release yet.** The [Install](#install) section below describes the planned 1.0.0 release; its download links do not work yet. To run the prototype, build it from source as in [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md). From [Your first session](#your-first-session) on, this page describes the prototype as it is. Built and tested on one Windows 11 PC with Lightroom Classic 15.5.1. Where this page states how something behaves, the evidence is listed under [Sources](#sources).
+**Prototype: there is no release yet.** The [Install](#install) section below describes the planned 1.0.0 release; its download links do not work yet. To run the prototype, build it from source as in [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md). From [Your first session](#your-first-session) on, this page describes the prototype as it is. Built and tested on one Windows 11 PC with Lightroom Classic 15.5.1 and 15.6. Where this page states how something behaves, the evidence is listed under [Sources](#sources).
 
 ## What you need
 
 - Windows 10 or 11 (tested on Windows 11 only).
-- Lightroom Classic 15.5.1 (other versions are untested).
+- Lightroom Classic 15.0 or later (see [Supported Lightroom versions](#supported-lightroom-versions)).
 - Claude Desktop, signed in, and started at least once in this Windows account.
 - Node.js 22 or newer, from https://nodejs.org. To check, run `node --version` in PowerShell.
 - An internet connection for the install: npm downloads the engine's dependencies. LrC-AVG itself talks to Lightroom only on this computer (127.0.0.1).
+
+## Supported Lightroom versions
+
+LrC-AVG supports Lightroom Classic 15.0 and later, and was tested on 15.6. Earlier versions may work but are untested. On a version older than 15.0 or newer than 15.6, nothing is blocked: the HUD says so once when an edit starts, and Claude sees the same notice when it reads the photo's details. If a newer Lightroom no longer offers a setting LrC-AVG uses, Claude is told which one is not available and the edit stays open. A photo on a process version newer than LrC-AVG knows can be described but not edited.
 
 ## Install
 
@@ -224,7 +228,7 @@ Your edits stay in the Lightroom catalog: History steps, snapshots, virtual copi
 
 ## Known limitations
 
-- **One PC tested:** Windows 11, Lightroom Classic 15.5.1. Windows only.
+- **One PC tested:** Windows 11, Lightroom Classic 15.5.1 and 15.6. Windows only.
 - **Process version:** a photo still on an older Lightroom process version is refused. Update the photo to the current process version in Develop first.
 - **Global Develop settings only:** no masks or local adjustments, no crop or geometry, no HDR.
 - **One session at a time.** Sync, presets, ratings and keywords are not available until it ends.
@@ -249,7 +253,9 @@ The evidence behind the behaviour this page describes. Paths are in this reposit
 
 | Section | Claim | Source |
 |---|---|---|
-| Version | Tested PC and versions | [handle: `docs/reports/phase5/PHASE5.md` "Numbers", "Plugin, engine, connect time": LrC 15.5.1; "Draft for LR_SDK_NOTES": Windows 11] |
+| Version | Tested PC and versions | [handle: `docs/reports/phase5/PHASE5.md` "Numbers", "Plugin, engine, connect time": LrC 15.5.1; "Draft for LR_SDK_NOTES": Windows 11]; LrC 15.6 [handle: `docs/reports/phase6/lrc-version-check/check.txt` section 1] |
+| Supported Lightroom versions | 15.0 the supported baseline, earlier versions untested; 15.6 the newest tested | [stated: Jim, 2026-10-03, "Set version 15.0 as the baseline, but note that it might work on earlier versions (untested.)"]; [handle: `docs/reports/phase6/lrc-version-check/check.txt` section 1, "Lightroom 15.6"] |
+| Supported Lightroom versions | The notice outside 15.0-15.6, once in the HUD and in `lr_get_active_photo_context`; a setting Lightroom no longer reports named as not available, the edit kept open; a newer process version read but not edited | [handle: `engine/src/bridge/lightroom.ts`; `engine/src/mcp/errors.ts` `readbackError`, `featureUnavailable`; `engine/src/params/map.ts` `checkProcessVersion`]; tested against the simulated Lightroom [handle: `engine/tests/lrc-baseline.test.ts`]; in a Lightroom outside 15.0-15.6 [unverified] |
 | Version, Install | The whole install from the release on a fresh Windows account (the release URLs, `npm.cmd install -g <URL>`, `Invoke-WebRequest`, the Plug-in Manager steps) | [unverified] until the packaging check (AC-6), now Phase 8 (vault `PHASES.md`). The parts already run: installing the `.tgz` from a file, `lrc-avg-setup.cmd` and `--remove` against scratch configs, the installed engine's tools, and `Expand-Archive` of the zip [handle: `docs/reports/phase6/package-smoke/smoke.txt` sections 1-4] |
 | Install | Release asset URL form `/releases/download/<tag>/<asset>` | [handle: https://docs.github.com/en/repositories/releasing-projects-on-github/linking-to-releases, read 2026-10-01]; the tag `v1.0.0` is set when the release is made [unverified] |
 | What you need | Node ≥ 22 | [handle: `engine/package.json` `engines`] |
@@ -289,7 +295,7 @@ The evidence behind the behaviour this page describes. Paths are in this reposit
 | Where files go | Bundled intents read in place, user intents override | [handle: `engine/src/intents/loader.ts:55-56`; vault `PHASE6_PLAN.md` decision 3] |
 | Where files go | `%TEMP%\LrC-AVG`, `%USERPROFILE%\.lrc-avg` contents | [handle: `Prefs.lua:157-158`; `plugin/LrC-AVG.lrplugin/Log.lua:2`; `Endpoint.lua:2-4`; `log-folders.ts:19`]; previews purged at session end and start [handle: vault `PRD.md` NFR-6; `main.ts:10`] |
 | Uninstall | `--remove`; the order of the two commands; the Plug-in Manager **Remove** button; edits stay in the catalog | [handle: `smoke.txt` sections 2d-2e]; that `npm uninstall` also deletes `lrc-avg-setup` is [inference] (it is the package's own `bin`, `engine/package.json`); **Remove** [unverified]; edits staying is [inference]: uninstalling writes nothing to the catalog |
-| Known limitations | Older process versions refused | [handle: `engine/src/params/canonical.ts:28-33`; `engine/src/mcp/errors.ts:69`] |
+| Known limitations | Older process versions refused | [handle: `engine/src/params/canonical.ts:28-33`; `engine/src/mcp/errors.ts:114`] |
 | Known limitations | No masks, crop, HDR | [handle: vault `PRD.md` §3] |
 | Known limitations | Plug-in Manager pauses; the 60 s allowance untested; Desktop's hold untested | [handle: `PHASE5.md` "Consequences" item 2]; both [unverified] |
 | Known limitations | Undo line after a disconnect; Tab, Space and Enter; a long note cut with "..." | [handle: `HudText.lua:72-73`; `HudView.lua:76-81`]; all three in Lightroom 15.6 [handle: `docs/reports/phase6/hud-p1-check/check.txt` section 3] |

@@ -15,17 +15,18 @@
 --   - selectionChangeObserver is called once per selection change: it drives the selection line
 --     ("Target changed"; HudSelection.lua, with the checks added after the row 4 probe).
 -- Its state lives on _G (rule 03: it must survive a Reload Plug-in running this module again), and
--- the bridge task's updates, the window's task, its ticker and menu items all reach it there.
+-- the bridge task's updates, the window's task, its ticker and menu items all reach it there. The
+-- clicks and menu items are in HudClick.lua.
 
 local LrBinding = import 'LrBinding'
 local LrDate = import 'LrDate'
 local LrDialogs = import 'LrDialogs'
 local LrFunctionContext = import 'LrFunctionContext'
 local LrTasks = import 'LrTasks'
-local LrUUID = import 'LrUUID'
 local LrView = import 'LrView'
 
 local Events = require 'Events'
+local HudClick = require 'HudClick'
 local HudSelection = require 'HudSelection'
 local HudState = require 'HudState'
 local HudView = require 'HudView'
@@ -39,35 +40,19 @@ local OPEN_WAIT_SECONDS = 10 -- a window whose onShow never came is given up aft
 
 -- state: the last update taken; seen: every session id taken; window: a counter, one per window;
 -- open / opening: the window is shown / its task is posted; props: its property table; pending: the
--- click waiting for the engine.
+-- click waiting for the engine (HudClick.lua).
 local H = _G.LrCAVG_Hud or { seen = {}, window = 0 }
 _G.LrCAVG_Hud = H
 
-local function clock()
-    return LrDate.timeToUserFormat(LrDate.currentTime(), "%H:%M:%S")
-end
-
 function Hud.isOpen()
     return H.open == true or H.opening == true
-end
-
--- The pending click, or nil once it has waited HudState.PENDING_SECONDS: then the buttons come back.
-local function livePending()
-    local p = H.pending
-    if p and LrDate.currentTime() - p.at >= HudState.PENDING_SECONDS then
-        H.pending = nil
-        H.lastAction = p.label .. ": no answer from the engine within " .. HudState.PENDING_SECONDS .. " s; the buttons are on again"
-        Log.warn("hud: " .. p.name .. " " .. p.click_id .. " got no answer")
-        return nil
-    end
-    return p
 end
 
 -- Copies the view into the window's property table, when there is a window. Never yields.
 local function refresh()
     local props = H.props
     if not props then return end
-    local v = HudView.props(H.state, Events.connection(), livePending(), HudView.pageSettings())
+    local v = HudView.props(H.state, Events.connection(), HudClick.livePending(), HudView.pageSettings())
     v.lastAction = H.lastAction or ""
     v.targetChanged = H.targetChanged or ""
     for key, value in pairs(v) do
@@ -190,7 +175,7 @@ function Hud.update(payload)
     local p = H.pending
     if p and (newSession or HudState.isEnd(s.stage) or s.answered_click_id == p.click_id) then
         H.pending = nil
-        if not newSession then H.lastAction = p.label .. ": answered by the engine at " .. clock() end
+        if not newSession then H.lastAction = p.label .. ": answered by the engine at " .. HudClick.clock() end
     end
     H.state = s
     -- Close at the end only a window open now; one opened later from the menu stays open. A newer
@@ -204,96 +189,13 @@ function Hud.update(payload)
     return { applied = true, shown = Hud.isOpen(), opened = opened }
 end
 
--- The half of a click or menu item that must not yield: the checks, then the click marked pending
--- (the buttons go off). Returns the pending click, or nil and why not.
-local function begin(name, variant, source)
-    local s = H.state
-    local label = HudState.eventLabel(name, variant, s)
-    local refusal = HudState.refusal(s, name, variant)
-    if refusal then return nil, label .. " NOT sent: " .. refusal end
-    local p = livePending()
-    if p then return nil, label .. " NOT sent: the " .. p.label .. " is still waiting for the engine" end
-    local conn = Events.connection()
-    if not conn.engine then
-        return nil, label .. " NOT sent: " .. (conn.running and "the engine is not connected" or "the LrC-AVG bridge is not running")
-    end
-    local payload = HudState.eventPayload(s, name, variant, source)
-    payload.click_id = LrUUID.generateUUID()
-    H.pending = { name = name, label = label, click_id = payload.click_id, at = LrDate.currentTime(), payload = payload }
-    return H.pending
-end
-
--- The half that runs in a task: send, and say what happened. Returns sent, and the line for it.
--- The click must still be the pending one (Greptile, PR #45): an update that ran before this task
--- (a new session, an end stage) cleared it, and then nothing is sent. Once sent, the line is shown
--- only while the click is still pending: an update that came during the send (the engine's answer)
--- keeps the line it wrote. The send itself may wait up to 5 s for the send socket (Events.send),
--- and an event already on its way is not called back; the engine checks each event against its
--- open session (PHASE5_PLAN row 5).
-local function finish(p)
-    if H.pending ~= p then
-        Log.info("hud: " .. p.name .. " " .. p.click_id .. " from the " .. p.payload.source .. ": not sent, no longer pending")
-        return false, p.label .. " NOT sent: the session changed before it could be sent"
-    end
-    local ok, why = Events.send(p.name, p.payload)
-    local line = ok and (p.label .. " sent at " .. clock() .. "; waiting for the engine") or (p.label .. " NOT sent: " .. why)
-    Log.info("hud: " .. p.name .. " " .. p.click_id .. " from the " .. p.payload.source .. (ok and ": sent" or (": not sent, " .. why)))
-    local current = H.pending == p
-    if current and not ok then H.pending = nil end
-    if current then
-        H.lastAction = line
-        refresh()
-    end
-    return ok, line
-end
-
--- A button's action (HudView.lua). It cannot yield (S8), so the send runs in a task.
+-- A button's action (HudView.lua) and the menu items' Abort and Accept: HudClick.lua.
 function Hud.click(name, variant)
-    local p, why = begin(name, variant, "hud")
-    if not p then
-        H.lastAction = why
-        refresh()
-        return
-    end
-    refresh()
-    LrTasks.startAsyncTask(function() finish(p) end)
+    HudClick.click(name, variant, refresh)
 end
-
--- Menu items Abort Session / Accept Session (FR-1.1, decision 7). Runs in a task.
--- In the row 4 probe both found the engine "not connected": the plugin logged nothing while Jim used
--- the menu, and the engine dropped on its heartbeat [handle: repo logs\probe-hud-2026-09-29\
--- (gitignored), bridge-log-excerpt.txt 05:56:09-05:58:49]; Lightroom pausing the plugin's tasks
--- while a menu or message box is open is [inference]. So the item waits up to MENU_WAIT_SECONDS for
--- the engine, then sends, and its outcome goes to the HUD's line (opening the HUD): the message box
--- used before opened behind the HUD [stated: Jim, 2026-09-29].
-Hud.MENU_WAIT_SECONDS = 20
 
 function Hud.menuEvent(name)
-    local line
-    local refusal = HudState.refusal(H.state, name, nil)
-    if refusal then
-        line = HudState.eventLabel(name, nil, H.state) .. " NOT sent: " .. refusal
-        H.lastAction = line
-    else
-        local chosen, waited = H.state.session_id, 0
-        while not Events.connection().engine and waited < Hud.MENU_WAIT_SECONDS do
-            LrTasks.sleep(0.5)
-            waited = waited + 0.5
-        end
-        -- Chosen for that session: never sent to one that began during the wait (Greptile, PR #46).
-        local p, why = nil, HudState.eventLabel(name, nil, H.state) .. " NOT sent: the session changed while waiting for the engine"
-        if H.state.session_id == chosen then p, why = begin(name, nil, "menu") end
-        if p then
-            local _, sent = finish(p) -- finish shows its own line while the click is current (PR #45)
-            line = sent
-        else
-            line = why .. (waited >= Hud.MENU_WAIT_SECONDS and (" (waited " .. Hud.MENU_WAIT_SECONDS .. " s)") or "")
-            H.lastAction = line
-        end
-    end
-    Log.info("hud: menu " .. name .. ": " .. line)
-    Hud.show()
-    refresh()
+    HudClick.menuEvent(name, refresh, Hud.show)
 end
 
 return Hud

@@ -50,7 +50,7 @@ describe("A click on a session the engine does not know", () => {
       session_photos: ["SIM-UUID"],
       snapshot: shown.snapshot,
       answered_click_id: "CLICK-AFTER-RESTART",
-      note: NOTE,
+      note: `${NOTE} To undo it, use Develop > Snapshots.`,
     });
     expect(shown.snapshot).toMatch(/^AVG pre-session /);
     expect(engine.eventRecords).toEqual([expect.objectContaining({ ok: true, session_id: ID, note: NOTE, answered: true })]);
@@ -58,6 +58,22 @@ describe("A click on a session the engine does not know", () => {
     expect(engine.records[0]).toMatchObject({ ok: true, stage: "ended", result: { applied: true } });
     expect(plugin.received.some((r) => r.name === "apply_snapshot")).toBe(false);
     expect(lr.settings["Exposure2012"]).toBe(exposure);
+  });
+
+  it("answers with the log's outcome when the edit had ended, without the undo hint", async () => {
+    clean();
+    const before = hudRig();
+    await before.manager.begin({ intent_id: "test_plain" });
+    const shown = await hudAt("awaiting_claude");
+    await before.manager.end({ session_id: ID, outcome: "accept" });
+    const accepted = await hudAt("accepted");
+    const engine = restartedEngine();
+    engine.events.handle(abort(ID, accepted.seq, "CLICK-AFTER-ACCEPT"));
+    await waitUntil(() => engine.records.length === 1);
+    expect(engine.records[0]).toMatchObject({ ok: true, seq: accepted.seq + 1, stage: "accepted" });
+    const answer = plugin.received.filter((r) => r.name === "hud_update").at(-1)?.payload;
+    expect(answer).toMatchObject({ stage: "accepted", answered_click_id: "CLICK-AFTER-ACCEPT", snapshot: shown.snapshot });
+    expect(String((answer as { note?: unknown }).note)).not.toContain("To undo it");
   });
 
   it("sends nothing when no log of it is found, so the HUD's 10 s line answers", async () => {

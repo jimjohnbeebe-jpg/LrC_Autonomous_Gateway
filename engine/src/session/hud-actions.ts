@@ -24,7 +24,7 @@ import type { HudEvent, HudStage } from "../bridge/index.js";
 import { ToolError, toToolError } from "../mcp/errors.js";
 import { approvalNote, approve, pendingApproval, wakeApproval } from "./approval.js";
 import { endSession } from "./end.js";
-import { saveLog } from "./io.js";
+import { failed, saveLog } from "./io.js";
 import { awaitingPick, selectVariant } from "./pick.js";
 import { variant } from "./targets.js";
 import type { Session, SessionContext, UserEnd, UserSource, VariantId } from "./types.js";
@@ -129,8 +129,10 @@ export function abortedNote(s: Session): string {
 
 const settingsCount = (n: number): string => (n === 1 ? "1 setting" : `${n} settings`);
 
-async function connected(ctx: SessionContext): Promise<void> {
-  if (ctx.deps.client.getState() !== "connected") await ctx.deps.client.waitConnected(RECONNECT_WAIT_MS);
+/** Waits for the bridge; a failed wait goes in the log's failures, as the HUD's note names no code. */
+async function connected(ctx: SessionContext, s: Session, stage: string): Promise<void> {
+  if (ctx.deps.client.getState() === "connected") return;
+  await ctx.deps.client.waitConnected(RECONNECT_WAIT_MS).catch((err: unknown) => Promise.reject(failed(ctx, s, stage, err)));
 }
 
 function abort(host: ActionHost, s: Session, a: UserAction): string {
@@ -147,10 +149,10 @@ async function finishAbort(host: ActionHost, s: Session): Promise<void> {
   if (host.session() !== s || !by) return;
   const { ctx } = host;
   try {
-    await connected(ctx);
+    await connected(ctx, s, "abort (reconnect)");
     await endSession(ctx, s, { session_id: s.id, outcome: "revert" }, by);
   } catch {
-    by.state = "failed"; // endSession's own failure is in the log's failures (io.ts failed())
+    by.state = "failed"; // the failure is in the log's failures: connected()'s, or endSession's own (io.ts failed())
     ctx.deps.hud?.stage(s, "awaiting_claude", { note: "Abort could not put the photo back. Click Abort again." });
     return;
   }
@@ -215,7 +217,7 @@ async function finishAccept(host: ActionHost, s: Session, by: UserEnd, counted: 
     return;
   }
   try {
-    await connected(ctx);
+    await connected(ctx, s, "accept (reconnect)");
     await endSession(ctx, s, { session_id: s.id, outcome: "accept" }, by);
     host.close(s, userEnded(ctx, s, "accept", by));
     const kept = s.mode === "variants" ? `copy ${s.picked ?? "?"} is kept; the other copies stay in the catalog` : "the edit is kept";

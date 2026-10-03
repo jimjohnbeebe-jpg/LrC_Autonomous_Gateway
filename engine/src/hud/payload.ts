@@ -128,7 +128,7 @@ export function hudGuardrail(p: Pick<PassEntry, "guardrail_actions" | "refused" 
   const corrected = action("corrected");
   if (corrected) return { status: "corrected", reason: `${end(corrected)} clipping was ${clip(corrected, limits)}; corrected.` };
   const refused = p.refused[0];
-  if (refused) return { status: "refused", reason: `${lightroomLabel(refused.name)}: ${refusedWhy(refused)}.` };
+  if (refused) return { status: "refused", reason: `${lightroomLabel(refused.name)}: ${refusedWhy(refused, p.clamped)}.` };
   const clamped = p.clamped[0];
   if (clamped) return { status: "clamped", reason: `${lightroomLabel(clamped.name)}: ${clampedWhy(clamped)}.` };
   return { status: "green" };
@@ -150,10 +150,16 @@ function clip(a: GuardrailAction, limits: Limits): string {
 
 const pct = (n: number): string => String(round(n, 2));
 
-/** Why a slider was not changed, from session\plan.ts planStep and applyProjectedGuardrail. */
-function refusedWhy(r: PassEntry["refused"][number]): string {
+/**
+ * Why a slider was not changed, from session\plan.ts planStep and applyProjectedGuardrail. planStep's
+ * "no change is left after the limits" follows a range clamp of the same slider when it is already at
+ * the end of its range; otherwise the change rounded to nothing (session\plan.ts planStep).
+ */
+function refusedWhy(r: PassEntry["refused"][number], clamped: PassEntry["clamped"]): string {
   if (r.by === "guardrail") return "not changed, it would push clipping over the limit";
-  return r.reason.includes("not available") ? "not available on this photo, not changed" : "not changed, no room left within this pass's limit";
+  if (r.reason.includes("not available")) return "not available on this photo, not changed";
+  const atEnd = clamped.some((c) => c.name === r.name && c.reason.startsWith("the slider's range"));
+  return atEnd ? "not changed, it is already at the end of its range" : "not changed, no room left within its limits";
 }
 
 /** Why a change was held, from the reasons session\plan.ts planStep and applyProjectedGuardrail write. */

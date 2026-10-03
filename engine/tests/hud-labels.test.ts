@@ -52,7 +52,8 @@ describe("The guardrail sentence", () => {
 
   it("refused: not on this photo, no room left, or the clipping guardrail", () => {
     expect(of(planStep({ "hsl.red.sat": 10 }, {}, 1, map))).toEqual({ status: "refused", reason: "Red Saturation: not available on this photo, not changed." });
-    expect(of(planStep({ exposure: 0.5 }, { exposure: 5 }, 1, map))).toEqual({ status: "refused", reason: "Exposure: not changed, no room left within this pass's limit." });
+    expect(of(planStep({ exposure: 0.5 }, { exposure: 5 }, 1, map))).toEqual({ status: "refused", reason: "Exposure: not changed, it is already at the end of its range." });
+    expect(of(planStep({ exposure: 0.001 }, { exposure: 0 }, 1, map))).toEqual({ status: "refused", reason: "Exposure: not changed, no room left within its limits." });
     expect(of(applyProjectedGuardrail(planStep({ exposure: 0.3 }, { exposure: 0 }, 1, map), last(0.8), limits))).toEqual({
       status: "refused",
       reason: "Exposure: not changed, it would push clipping over the limit.",

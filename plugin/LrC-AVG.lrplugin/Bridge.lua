@@ -242,8 +242,10 @@ function Bridge.start()
         context:addCleanupHandler(function() closeAll(B.S, "task ended") end)
         -- The engine sends hello once per connection (engine\src\bridge\client.ts:237): the HUD
         -- marks its open edit unknown before the reply (Hud.markUnknown says why there, fix/hud-p1).
+        -- A HUD error must not fail the handshake, or no command would work (fix/hud-p1 review).
         local handlers = Dispatch.handlers(function()
-            Hud.markUnknown()
+            local ok, err = LrTasks.pcall(Hud.markUnknown)
+            if not ok then Log.error("hud: markUnknown failed: " .. tostring(err)) end
             return Bridge.helloPayload(receivePort, sendPort)
         end)
         local function reply(id, name, ok, body) return respond(B, id, name, ok, body) end

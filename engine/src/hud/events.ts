@@ -7,9 +7,10 @@
 // after a reconnect [handle: vault PHASE5_PLAN.md "From row 4": probe 2, 14 ms after the reconnect]
 // and is handled like any other.
 // A click on a session the publisher has no line to (Claude Desktop restarted the engine while the
-// HUD showed a session) is answered with one `ended` update for it, its photo and snapshot read from
-// the session's log; with no log found nothing is sent, and the HUD's own 10 s line says no answer
-// came (fix/hud-p1, critique P1-3) [handle: tests\hud-unknown-session.test.ts].
+// HUD showed a session) is answered with one end update for it, its photo, snapshot and outcome read
+// from the session's log: `accepted` or `aborted` when the log has that outcome, else `ended` with
+// the way to undo the edit in the note; with no log found nothing is sent, and the HUD's own 10 s
+// line says no answer came (fix/hud-p1, critique P1-3) [handle: tests\hud-unknown-session.test.ts].
 
 import { z } from "zod";
 import { HUD_LIMITS, parseHudEvent, type BridgeClient, type EventEnvelope } from "../bridge/index.js";
@@ -40,7 +41,11 @@ const loggedSession = z.object({
   target: z.object({ uuid: z.string(), filename: z.string().nullable().optional(), copy_name: z.string().nullable().optional() }),
   snapshot: z.object({ name: z.string() }).optional(),
   variants: z.array(z.object({ uuid: z.string() })).optional(),
+  outcome: z.string().nullable().optional(),
 });
+
+/** Added to the note of an edit left as it was when it stopped being open (no outcome in its log). */
+const UNDO_HINT = "To undo it, use Develop > Snapshots.";
 
 export class HudEvents {
   private readonly seen: string[] = [];
@@ -85,7 +90,7 @@ export class HudEvents {
     this.record({ ok: true, ...ids, note, answered, ...(error ? { error } : {}) });
   }
 
-  /** One `ended` update for a session without a line, from its log; false when no log is found. */
+  /** One end update for a session without a line, from its log; false when no log is found. */
   private answerEnded(p: { session_id: string; seq_seen: number; click_id: string }, note: string): boolean {
     let log: z.infer<typeof loggedSession>;
     try {
@@ -94,11 +99,14 @@ export class HudEvents {
       return false; // SESSION_NOT_FOUND, or a log without a photo
     }
     const t = log.target;
+    // log\session-log.ts outcome: "accept", "revert", "aborted", or null while the edit was open.
+    const stage = log.outcome === "accept" ? "accepted" : log.outcome ? "aborted" : "ended";
     const from: EndedFrom = {
+      stage,
       target: { uuid: t.uuid, ...(t.filename ? { filename: t.filename } : {}), ...(t.copy_name ? { copy_name: t.copy_name } : {}) },
       session_photos: [t.uuid, ...(log.variants ?? []).map((v) => v.uuid)].slice(0, HUD_LIMITS.photos),
       ...(log.snapshot ? { snapshot: log.snapshot.name } : {}),
     };
-    return this.publisher.answerEnded(p, from, note);
+    return this.publisher.answerEnded(p, from, stage === "ended" ? `${note} ${UNDO_HINT}` : note);
   }
 }

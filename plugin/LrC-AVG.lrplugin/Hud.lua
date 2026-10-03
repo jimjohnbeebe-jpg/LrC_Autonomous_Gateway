@@ -149,9 +149,9 @@ end
 
 -- At each engine connection (Bridge.lua, the hello command, before its reply): the edit shown, if it
 -- has not ended, is unknown until an update for it arrives. The same engine sends its session's
--- state again once connected (engine\src\hud\publisher.ts:68-74), and it is connected only after
+-- state again once connected (engine\src\hud\publisher.ts:79-85), and it is connected only after
 -- the hello reply (engine\src\bridge\client.ts:237-246), so that update comes after this mark; an
--- engine without the session (Claude Desktop restarted it) sends none (publisher.ts:69, no
+-- engine without the session (Claude Desktop restarted it) sends none (publisher.ts:80, no
 -- channel). Marking at the send socket's connection instead could race that update [inference:
 -- Sockets.lua starts onSendConnected in its own task]. Never yields.
 function Hud.markUnknown()

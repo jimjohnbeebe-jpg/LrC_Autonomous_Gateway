@@ -3,11 +3,12 @@
 // the pre-session snapshot, a running step stopped before its next write or export, the click
 // answered before the revert, a failed revert and a second click, and the events that are not acted on.
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { ToolError } from "../src/mcp/errors.js";
 import { waitUntil } from "./helpers/fake-plugin.js";
 import { hudAt, hudRig } from "./helpers/hud-harness.js";
 import { hudEvent } from "./helpers/lightroom-sim-hud.js";
-import { ID, clean, fails, lr, plugin, readLog, useSessionHarness } from "./helpers/session-harness.js";
+import { ID, clean, client, fails, lr, plugin, readLog, useSessionHarness } from "./helpers/session-harness.js";
 
 useSessionHarness();
 
@@ -121,6 +122,24 @@ describe("Abort from the HUD", () => {
     await hudAt("aborted");
     expect(lr.settings).toEqual(start);
     expect(readLog()).toMatchObject({ outcome: "aborted", recipe_path: null, ended_by: { source: "hud", interrupted: "end (accept)" } });
+  });
+
+  it("logs a bridge that does not come back in time, as the HUD's note names no code", async () => {
+    clean();
+    const rig = hudRig();
+    await rig.manager.begin({ intent_id: "test_prior" });
+    await hudAt("awaiting_claude");
+    hudEvent(plugin, "hud_abort", { session_id: ID });
+    // The click has arrived; the bridge drops before the queued revert runs and does not come back.
+    const state = vi.spyOn(client, "getState").mockReturnValue("connecting");
+    const wait = vi.spyOn(client, "waitConnected").mockRejectedValue(new ToolError("NOT_CONNECTED", "no bridge", true));
+    try {
+      await waitUntil(() => readLog().failures.length > 0);
+      expect(readLog().failures).toEqual([expect.objectContaining({ stage: "abort (reconnect)", error: expect.objectContaining({ code: "NOT_CONNECTED" }) })]);
+    } finally {
+      state.mockRestore();
+      wait.mockRestore();
+    }
   });
 
   it("keeps the session open when the photo cannot be put back; a second click tries again", async () => {

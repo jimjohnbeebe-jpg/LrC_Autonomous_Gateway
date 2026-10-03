@@ -51,8 +51,8 @@ const MAX_RETRIES = 3;
 /** What the publisher records (tools-shared.ts writes it to the tool log): refused, failed and first-taken updates. */
 export type HudRecord = { ok: boolean; session_id: string; seq: number; stage: HudStage; duration_ms: number; result?: unknown; error?: unknown };
 
-/** What an `ended` update for a session without a line takes from that session's log (hud\events.ts). */
-export type EndedFrom = Pick<HudUpdatePayload, "target" | "session_photos" | "snapshot">;
+/** What an end update for a session without a line takes from that session's log (hud\events.ts). */
+export type EndedFrom = Pick<HudUpdatePayload, "target" | "session_photos" | "snapshot"> & { stage: (typeof HUD_END_STAGES)[number] };
 
 /** One session's line to the HUD: its seq, whether the HUD still has to open, and the last update it took. */
 type Channel = { sessionId: string; seq: number; open: boolean; taken: string | null };
@@ -116,13 +116,14 @@ export class HudPublisher implements HudSink {
   }
 
   /**
-   * Answer a click on a session without a line here with one `ended` update for it: `seq` one above
-   * the HUD's (seq_seen), so the HUD takes it. Sent at once and on its own, as no other update of that
-   * session follows. False when it cannot be sent (no bridge, an older plugin, or it fails the contract).
+   * Answer a click on a session without a line here with one end update for it (`from.stage`): `seq`
+   * one above the HUD's (seq_seen), so the HUD takes it. Sent at once and on its own, as no other
+   * update of that session follows. False when it cannot be sent (no bridge, an older plugin, or it
+   * fails the contract).
    */
   answerEnded(click: { session_id: string; seq_seen: number; click_id: string }, from: EndedFrom, note: string): boolean {
     if (this.client.getState() !== "connected" || !pluginVersionAtLeast(this.client.hello()?.plugin_version, HUD_PLUGIN)) return false;
-    const base = { session_id: click.session_id, seq: click.seq_seen + 1, stage: "ended" as const };
+    const base = { session_id: click.session_id, seq: click.seq_seen + 1, stage: from.stage };
     const parsed = hudUpdatePayloadSchema.safeParse({ ...base, ...from, answered_click_id: click.click_id, note });
     if (!parsed.success) {
       this.stats.invalid++;

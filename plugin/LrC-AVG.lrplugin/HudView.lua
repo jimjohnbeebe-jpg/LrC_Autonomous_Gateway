@@ -138,7 +138,8 @@ function HudView.props(s, conn, pending, page, hud)
     put(v, "photo", s and ("Photo: " .. HudState.targetName(s)) or "")
     put(v, "camera", s and cameraLine(s.target) or "")
     put(v, "step", s and stepLine(s) or "")
-    put(v, "selection", hud.selection or "")
+    -- An edit Claude no longer has is not "still open": no selection line then (fix/hud-p1 review).
+    put(v, "selection", hud.unknown ~= "gone" and hud.selection or "")
     put(v, "guardrail", guardrailLine(s))
     local rows = (s and s.deltas) or {}
     for i = 1, HudState.LIMITS.rows do

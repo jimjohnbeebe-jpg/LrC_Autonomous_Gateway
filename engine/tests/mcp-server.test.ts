@@ -87,10 +87,12 @@ describe("mcp server", () => {
       "lr_get_session_log",
       "lr_list_collections",
       "lr_list_intents",
+      "lr_list_keywords",
       "lr_probe",
       "lr_save_intent",
       "lr_search_photos",
       "lr_select_variant",
+      "lr_set_gps",
       "lr_set_keywords",
       "lr_set_rating",
       "lr_set_regions",
@@ -111,6 +113,9 @@ describe("mcp server", () => {
     const step = tools.find((t) => t.name === "lr_step");
     expect(step?.inputSchema.required).toEqual(["session_id", "settings", "rationale"]);
     expect(step?.description).toMatch(/CHANGE for numeric sliders/);
+    const gps = tools.find((t) => t.name === "lr_set_gps");
+    expect(gps?.inputSchema.required).toEqual(["uuids", "position"]);
+    expect(tools.find((t) => t.name === "lr_set_keywords")?.description).toMatch(/added plain name is always the top-level keyword/);
   });
 
   it("returns the preview as an image block followed by the JSON text block", async () => {

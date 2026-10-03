@@ -3,5 +3,6 @@
 
 export { CATALOG_READ_TIMEOUT_MS, DEFAULT_PAGE, MAX_PAGE, isCalendarDay, listing, searchCriteria, shiftDay } from "./search.js";
 export type { SearchFilters } from "./search.js";
-export { MAX_KEYWORDS, MAX_KEYWORD_LENGTH, MAX_PHOTOS, writeEach } from "./write.js";
-export type { Failed, PhotoWrite, WriteResult } from "./write.js";
+export { KEYWORD_SEPARATOR, isKeywordPath, keywordLevels, keywordsNotTaken, normalizeKeyword } from "./keywords.js";
+export { GPS_TOLERANCE, MAX_KEYWORDS, MAX_KEYWORD_LENGTH, MAX_PHOTOS, gpsNotTaken, writeEach } from "./write.js";
+export type { Failed, Gps, PhotoWrite, WriteResult } from "./write.js";

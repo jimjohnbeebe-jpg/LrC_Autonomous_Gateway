@@ -105,8 +105,10 @@ Claude Desktop shows the renders Claude looks at only inside the tool-call boxes
 - **Save a preset.** "Save this photo's settings as a preset called …". It is saved in the group **LrC-AVG**, and Lightroom lists it after a restart.
 - **Save your own intent.** Describe the look you want and ask Claude to save it as an intent. Claude shows you the intent first and saves it only after you approve.
 - **Find, rate and keyword photos.** "Find my five-star photos from September 7 with the keyword heron", "Which collections do I have?", "Rate the selected photos three stars", "Add the keyword pond to these photos." Claude searches by file name, keywords, star rating, capture date and collection, and sets star ratings and keywords on at most 100 photos per request. Claude tells you which photos will change first. Ratings and keywords are not Develop settings: History and snapshots don't cover them, but Claude can put the earlier values back on request.
+- **Keywords in a hierarchy.** "Which keywords do I have under Places?", "Add Places > Europe > Paris to these photos." Claude lists your keyword tree and writes a nested keyword as a path, parent first with `|` between the levels (`Places|Europe|Paris`), creating the levels that are missing. A plain name means the top-level keyword of that name.
+- **GPS positions.** "Set the location of these photos to 48.5818, 7.7509", "Remove the GPS position from this photo." Claude sets or removes the latitude and longitude of at most 100 photos per request, with each photo's earlier position in the answer. LrC-AVG does not write the altitude.
 
-Sync, presets, ratings and keywords are not available while a session is open.
+Sync, presets, ratings, keywords and GPS positions are not available while a session is open.
 
 ## The HUD
 
@@ -231,7 +233,7 @@ Your edits stay in the Lightroom catalog: History steps, snapshots, virtual copi
 - **One PC tested:** Windows 11, Lightroom Classic 15.5.1 and 15.6. Windows only.
 - **Process version:** a photo still on an older Lightroom process version is refused. Update the photo to the current process version in Develop first.
 - **Global Develop settings only:** no masks or local adjustments, no crop or geometry, no HDR.
-- **One session at a time.** Sync, presets, ratings and keywords are not available until it ends.
+- **One session at a time.** Sync, presets, ratings, keywords and GPS positions are not available until it ends.
 - **Keep Plug-in Manager closed during a session.** Lightroom pauses the plugin while Plug-in Manager or a menu is open (2.5 to 15 s in testing). The engine waits up to 60 s for the plugin during a session, but a long pause during a session has not been tested.
 - **Approve and Claude Desktop:** whether Claude Desktop waits the full 60 s for an Approve has not been tested (in testing, Claude asked in the chat instead of waiting).
 - **If the engine disconnects during an edit** (for example, Claude Desktop is quit), the HUD says "Not connected to Claude" and names the **AVG pre-session …** snapshot to apply in Develop > Snapshots. When Claude connects again, the HUD shows "Checking this edit with Claude..."; if Claude no longer has the edit, it says so and the same snapshot line stays.
@@ -241,7 +243,8 @@ Your edits stay in the Lightroom catalog: History steps, snapshots, virtual copi
 - **Presets:** a new preset shows only after Lightroom restarts. Only the group "LrC-AVG" has been tested. Adobe camera profiles (Adobe Color, Adobe Landscape, …) are left out of presets, as are temperature and tint while white balance is As Shot.
 - **Virtual copies** from Variants mode are never removed by LrC-AVG.
 - **Sync:** at most 20 photos per request, or 3 when matching brightness.
-- **Keywords** are matched by their exact name. A keyword removed from photos stays in the Keyword List; delete it there if you no longer want it.
+- **Keywords:** a plain name added is always the top-level keyword of that name, even when a nested keyword has the same name; a plain name removed takes off every keyword of exactly that name, at any level. Give the path to reach one nested keyword. A keyword removed from photos, and every level created, stays in the Keyword List; delete it there if you no longer want it.
+- **Keyword paths and GPS positions** have not yet been tried in Lightroom; they need plugin 0.10.0.
 
 ## Development
 
@@ -276,6 +279,7 @@ The evidence behind the behaviour this page describes. Paths are in this reposit
 | What else you can ask | Saving an intent only after approval | [handle: `engine/src/mcp/defs-intents.ts` `lr_save_intent`] |
 | What else you can ask, Known limitations | Search filters, collections, ratings and keywords: limit 100, before and after values, not during a session, exact names, removed keywords kept | [handle: `engine/src/mcp/defs-catalog.ts`; `engine/src/library/write.ts` `MAX_PHOTOS`; `plugin/LrC-AVG.lrplugin/Library.lua`; `docs/reports/phase6/catalog-tools-smoke/smoke.txt`]; in Lightroom [handle: `docs/reports/phase6/catalog-tools-check/check.txt`] |
 | What else you can ask | History and snapshots don't cover ratings and keywords | [inference]: they are catalog metadata, written with `setRawMetadata` and `addKeyword`, not `applyDevelopSettings` (`Library.lua`) |
+| What else you can ask, Known limitations | Keyword paths, the `\|` separator, the ambiguity rules, levels created and kept; GPS set or removed, altitude not written, limit 100; neither tried in Lightroom yet | [handle: `engine/src/mcp/defs-catalog.ts` `lr_set_keywords`, `lr_list_keywords`, `lr_set_gps`; `engine/src/library/keywords.ts`; `plugin/LrC-AVG.lrplugin/KeywordTree.lua`, `Library.lua` `setGps`; `engine/tests/catalog-keywords-gps.test.ts`]; the separator [upstream claim: Automaat `KeywordTree.lua:3-6` at `11c0b93`]; in Lightroom [unverified] |
 | The HUD | Window order, headlines, step labels, connection line, click lines, undo line, wrapping onto a second line | [handle: `plugin/LrC-AVG.lrplugin/HudView.lua:200-210`; `HudText.lua:39-96`, `HudText.lua:162-172`]; in Lightroom 15.6 [handle: `docs/reports/phase6/hud-p1-check/check.txt` section 3] |
 | The HUD | Greyed buttons, 10 s, 12 rows, the selection line, Pick/Approve titles | [handle: `HudView.lua:134-168`; `HudState.lua:24, 29, 228-237`]; the buttons, the 10 s and the rows in Lightroom [handle: vault `PRD.md` §6.3 "Lines as built"] |
 | The HUD | Grid in Lightroom's slider names; the clipping sentence | [handle: `engine/src/params/labels.ts:10, 44`; `engine/src/hud/payload.ts:112-170`; `HudText.lua:75`]; names matched Jim's Develop panel [handle: `labels.ts:2-3`, stated: Jim, 2026-10-03]; the sentences in Lightroom [unverified] |

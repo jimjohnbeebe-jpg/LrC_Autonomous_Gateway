@@ -1,8 +1,9 @@
 -- Catalog commands kept from Automaat (PHASE6_PROTOTYPE_PLAN row 2, decision 3 [stated: Jim,
 -- 2026-10-01, "Go with A"]; plugin 0.8.0): search_photos, list_collections, set_rating and
--- set_keywords. lr_get_selected_photos uses Catalog.lua's get_selection. Each handler runs in its own
--- task (Dispatch.lua) and returns a result table, or nil plus an error table
--- { code, message, recoverable } (PRD NFR-7).
+-- set_keywords; plugin 0.10.0 (GitHub issue #60 [stated: Jim, 2026-10-03, "Keyword hierarchy,
+-- set_gps"]) adds keyword paths (KeywordTree.lua), list_keywords and set_gps. lr_get_selected_photos
+-- uses Catalog.lua's get_selection. Each handler runs in its own task (Dispatch.lua) and returns a
+-- result table, or nil plus an error table { code, message, recoverable } (PRD NFR-7).
 --
 -- search_photos { criteria, collection_id, offset, limit }: the engine builds the search descriptor's
 --   entries (engine\src\library\search.ts); this side runs them, intersected, through findPhotos.
@@ -10,9 +11,11 @@
 --   vendor\automaat\plugin\LightroomMCP.lrplugin\HandlerSearch.lua:110-114]. `count` is how many
 --   matched; `photos` describes those from offset + 1, at most `limit`.
 -- list_collections {}: every collection, top level and inside collection sets, with the set path.
--- set_rating { photo_uuid, rating } and set_keywords { photo_uuid, add, remove }: one photo per
---   command, written in a named write gate and read back; the engine loops over the photos
---   (engine\src\library\write.ts). A photo that already holds what was asked is not written.
+-- list_keywords { query, offset, limit }: the keyword tree's paths, paged as search_photos.
+-- set_rating { photo_uuid, rating }, set_keywords { photo_uuid, add, remove } and set_gps
+--   { photo_uuid, latitude, longitude } or { photo_uuid, clear }: one photo per command, written in a
+--   named write gate and read back; the engine loops over the photos (engine\src\library\write.ts).
+--   A photo that already holds what was asked is not written.
 --
 -- Catalog rules (.claude\rules\03-lightroom.md): findPhotos, getAllPhotos and
 -- getCollectionByLocalIdentifier "must be called from within" a task [handle: https://lrc.mcor.dev/modules/LrCatalog.html
@@ -25,6 +28,7 @@
 local LrApplication = import 'LrApplication'
 local LrTasks = import 'LrTasks'
 
+local KeywordTree = require 'KeywordTree'
 local Photos = require 'Photos'
 
 local Library = {}
@@ -120,6 +124,27 @@ function Library.listCollections()
     return { collections = list }
 end
 
+-- The whole tree is walked (outside any gate, KeywordTree.lua says why) and then filtered: `query`
+-- keeps the paths that contain it, case aside.
+function Library.listKeywords(payload)
+    local offset, limit, query = payload.offset or 0, payload.limit or 100, payload.query
+    if not wholeNumber(offset, 0) or not wholeNumber(limit, 1, Library.MAX_PAGE) then
+        return fail("bad_request", "offset must be a whole number from 0, limit from 1 to " .. Library.MAX_PAGE)
+    end
+    if query ~= nil and (type(query) ~= "string" or query == "") then return fail("bad_request", "query must be a non-empty string") end
+    local ok, all = LrTasks.pcall(KeywordTree.walk, LrApplication.activeCatalog(), nil, "", {})
+    if not ok then return fail("read_failed", "keywords: " .. tostring(all), true) end
+    local folded = query and KeywordTree.fold(query)
+    local count, page = 0, {}
+    for _, path in ipairs(all) do
+        if not folded or KeywordTree.fold(path):find(folded, 1, true) then
+            count = count + 1
+            if count > offset and #page < limit then page[#page + 1] = path end
+        end
+    end
+    return { count = count, keywords = page }
+end
+
 -- Once a photo's earlier value is read, the command answers ok, so the engine always gets that value
 -- back to put the photo back (Greptile, PR #57): a write gate that raises comes back as
 -- `write_error`, a read-back that fails as `after_error` with no `after`. Returns the write's error
@@ -162,73 +187,107 @@ function Library.setRating(payload)
     return { uuid = d.uuid, filename = d.filename, before = before, after = after, write_error = writeErr, after_error = afterErr }
 end
 
--- A photo's keywords: { names, objects } in the same order, or nil plus the error. getRawMetadata
+-- A photo's keywords: { paths, objects } in the same order, or nil plus the error. getRawMetadata
 -- ("keywords") is "the list of keyword objects for the photo" [handle: LrPhoto page].
 local function keywordsOf(catalog, photo)
-    local names, objects, err = {}, {}, nil
+    local paths, objects, err = {}, {}, nil
     catalog:withReadAccessDo(function()
         local ok, list = LrTasks.pcall(photo.getRawMetadata, photo, "keywords")
         if not ok then err = tostring(list) return end
         for _, keyword in ipairs(list or {}) do
-            local okName, name = LrTasks.pcall(keyword.getName, keyword)
-            if not okName then err = tostring(name) return end
-            names[#names + 1] = name
+            local okPath, path = LrTasks.pcall(KeywordTree.pathOf, keyword)
+            if not okPath then err = tostring(path) return end
+            paths[#paths + 1] = path
             objects[#objects + 1] = keyword
         end
     end)
     if err then return nil, err end
-    return { names = names, objects = objects }
+    return { paths = paths, objects = objects }
 end
 
-local function nameList(v)
-    if v == nil then return {} end
-    if type(v) ~= "table" then return nil end
-    for _, name in ipairs(v) do
-        if type(name) ~= "string" or name == "" then return nil end
-    end
-    return v
+-- Each added path's missing parents first (KeywordTree.ensureParents), then one gate adds and removes.
+-- The last level is made by createKeyword with returnExisting true, which returns "an LrKeyword
+-- instance ... when a keyword with the specified name and parent already exists" [handle:
+-- https://lrc.mcor.dev/modules/LrCatalog.html createKeyword], else creates it. So a one-level name
+-- is written exactly as plugin 0.8.0 wrote it: one gate, a top-level keyword. Removing takes a keyword
+-- off the photo only; the catalog keeps it (the SDK pages list no call that deletes a keyword
+-- [handle: LrCatalog and LrKeyword pages above]).
+local function writeKeywords(catalog, photo, toAdd, toRemove)
+    local parents = KeywordTree.ensureParents(catalog, toAdd)
+    catalog:withWriteAccessDo("AVG set keywords", function()
+        for i, parts in ipairs(toAdd) do
+            -- createKeyword(name, synonyms, includeOnExport, parent, returnExisting) [handle: LrCatalog page].
+            local keyword = catalog:createKeyword(parts[#parts], {}, true, parents[i], true)
+            if keyword then photo:addKeyword(keyword) end -- a nil shows in the read-back
+        end
+        for _, keyword in ipairs(toRemove) do photo:removeKeyword(keyword) end
+    end)
 end
 
--- Keywords are matched by name. An added name is a top-level keyword: createKeyword with
--- returnExisting true returns "an LrKeyword instance ... when a keyword with the specified name and
--- parent already exists" [handle: https://lrc.mcor.dev/modules/LrCatalog.html createKeyword], else
--- creates it. Removing takes a keyword off the photo only; the catalog keeps it.
+-- `before` and `after` are the photo's keywords as paths ("Parent|Child"; a top-level one is its name).
 function Library.setKeywords(payload)
-    local add, remove = nameList(payload.add), nameList(payload.remove)
-    if not add or not remove or #add + #remove == 0 then
-        return fail("bad_request", "add and remove must be lists of keyword names, with at least one name between them")
-    end
+    local add, whyAdd = KeywordTree.parseList(payload.add)
+    local remove, whyRemove = KeywordTree.parseList(payload.remove)
+    if not add or not remove then return fail("bad_request", "add and remove: " .. tostring(whyAdd or whyRemove)) end
+    if #add + #remove == 0 then return fail("bad_request", "name at least one keyword to add or remove") end
     local catalog = LrApplication.activeCatalog()
     local photo, d = Photos.find(catalog, payload.photo_uuid)
     if not photo then return nil, d end
     local before, err = keywordsOf(catalog, photo)
     if not before then return fail("read_failed", "keywords: " .. err, true) end
-    local has, removing = {}, {}
-    for _, name in ipairs(before.names) do has[name] = true end
-    for _, name in ipairs(remove) do removing[name] = true end
-    local toAdd, toRemove = {}, {}
-    for _, name in ipairs(add) do
-        if not has[name] then toAdd[#toAdd + 1] = name end
-    end
-    for i, name in ipairs(before.names) do
-        if removing[name] then toRemove[#toRemove + 1] = before.objects[i] end
-    end
+    local toAdd, removeAt = KeywordTree.changes(before.paths, add, remove)
+    local toRemove = {}
+    for _, i in ipairs(removeAt) do toRemove[#toRemove + 1] = before.objects[i] end
     local writeErr
     if #toAdd + #toRemove > 0 then
-        writeErr = written(function()
-            catalog:withWriteAccessDo("AVG set keywords", function()
-                for _, name in ipairs(toAdd) do
-                    -- createKeyword(name, synonyms, includeOnExport, parent, returnExisting) [handle: LrCatalog page].
-                    local keyword = catalog:createKeyword(name, {}, true, nil, true)
-                    if keyword then photo:addKeyword(keyword) end -- a nil shows in the read-back
-                end
-                for _, keyword in ipairs(toRemove) do photo:removeKeyword(keyword) end
-            end)
-        end)
+        writeErr = written(function() writeKeywords(catalog, photo, toAdd, toRemove) end)
     end
     local after, afterErr = keywordsOf(catalog, photo)
-    return { uuid = d.uuid, filename = d.filename, before = before.names, after = after and after.names,
+    return { uuid = d.uuid, filename = d.filename, before = before.paths, after = after and after.paths,
         write_error = writeErr, after_error = afterErr }
+end
+
+-- A photo's GPS position { latitude, longitude }, false for none, or nil plus the error.
+-- getRawMetadata("gps") is "(table) The location of this photo (for example, { latitude = 37.9362,
+-- longitude = 27.3451 })" [handle: LrPhoto page]; nil for a photo without one [inference].
+local function gpsOf(catalog, photo)
+    local ok, value
+    catalog:withReadAccessDo(function() ok, value = LrTasks.pcall(photo.getRawMetadata, photo, "gps") end)
+    if not ok then return nil, tostring(value) end
+    if type(value) ~= "table" or type(value.latitude) ~= "number" or type(value.longitude) ~= "number" then return false end
+    return { latitude = value.latitude, longitude = value.longitude }
+end
+
+local function coordinate(v, limit)
+    return type(v) == "number" and v == v and v >= -limit and v <= limit
+end
+
+-- setRawMetadata("gps", { latitude, longitude }) in a write gate, as Automaat writes it [upstream
+-- claim: plugin/LightroomMCP.lrplugin/HandlerMetadata.lua:217-223 at commit 9ba2ed6]; nil removes
+-- the position: "Pass nil to 'unset'" [handle: https://lrc.mcor.dev/modules/LrPhoto.html
+-- setRawMetadata, gps]. Automaat never writes nil. Both are [unverified] in our Lightroom until Jim's
+-- check. Altitude (gpsAltitude) is neither read nor written.
+function Library.setGps(payload)
+    local clear = payload.clear == true
+    if not clear and not (coordinate(payload.latitude, 90) and coordinate(payload.longitude, 180)) then
+        return fail("bad_request", "latitude must be a number from -90 to 90 and longitude from -180 to 180, or clear must be true")
+    end
+    local catalog = LrApplication.activeCatalog()
+    local photo, d = Photos.find(catalog, payload.photo_uuid)
+    if not photo then return nil, d end
+    local before, err = gpsOf(catalog, photo)
+    if before == nil then return fail("read_failed", "gps: " .. err, true) end
+    local want = (not clear) and { latitude = payload.latitude, longitude = payload.longitude } or nil
+    local held = (want == nil and before == false)
+        or (want ~= nil and before ~= false and before.latitude == want.latitude and before.longitude == want.longitude)
+    local writeErr
+    if not held then
+        writeErr = written(function()
+            catalog:withWriteAccessDo("AVG set GPS", function() photo:setRawMetadata("gps", want) end)
+        end)
+    end
+    local after, afterErr = gpsOf(catalog, photo)
+    return { uuid = d.uuid, filename = d.filename, before = before, after = after, write_error = writeErr, after_error = afterErr }
 end
 
 return Library

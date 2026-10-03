@@ -14,13 +14,15 @@ Runtime this was built and tested on: Node `v24.11.1`, npm `11.19.1` (Windows 11
 
 | Package | Pinned | Kind | License | `engines.node` | npm registry |
 |---|---|---|---|---|---|
-| `@modelcontextprotocol/sdk` | 1.30.1 | dependency | MIT | `>=18` | https://www.npmjs.com/package/@modelcontextprotocol/sdk/v/1.30.1 |
+| `@modelcontextprotocol/sdk` | 1.32.0 | dependency | MIT | `>=18` | https://www.npmjs.com/package/@modelcontextprotocol/sdk/v/1.32.0 |
 | `sharp` | 0.35.4 | dependency | Apache-2.0 | `>=20.9.0` | https://www.npmjs.com/package/sharp/v/0.35.4 |
 | `zod` | 4.6.5 | dependency | MIT | — | https://www.npmjs.com/package/zod/v/4.6.5 |
 | `vitest` | 5.0.1 | devDependency | MIT | `^22.12.0 \|\| ^24.0.0 \|\| >=26.0.0` | https://www.npmjs.com/package/vitest/v/5.0.1 |
 | `typescript` | 7.0.2 | devDependency | Apache-2.0 | `>=16.20.0` | https://www.npmjs.com/package/typescript/v/7.0.2 |
 | `@types/node` | 24.13.6 | devDependency | MIT | — | https://www.npmjs.com/package/@types/node/v/24.13.6 |
 | `luaparse` | 0.3.1 | devDependency | MIT | — | https://www.npmjs.com/package/luaparse/v/0.3.1 |
+
+`@modelcontextprotocol/sdk` went from 1.30.1 to 1.32.0 on 2026-10-03 (GitHub issue #60 [stated: Jim, 2026-10-03, "MCP SDK 1.32.0"]), in `engine\package.json` and `spikes\package.json` alike, so npm still keeps one copy. 1.32.0 was the npm `latest` tag, MIT, with `engines.node` `>=18` and `zod` `^3.25 || ^4.0` as dependency and peer [handle: `npm view @modelcontextprotocol/sdk@1.32.0 version license engines dependencies peerDependencies` and `npm view @modelcontextprotocol/sdk dist-tags` → `latest: '1.32.0'`, 2026-10-03]. `npm install` reported 0 vulnerabilities and changed only the SDK's entries in `package-lock.json`; `npm ls @modelcontextprotocol/sdk` shows 1.32.0, `deduped` for the engine.
 
 `luaparse` was added in Phase 1 (2026-09-26) for `engine\tests\lua-plugin.test.ts`, which parses every plugin `.lua` file as Lua 5.1; no Lua runtime runs in the tests. 0.3.1 was the npm `latest` version and its licence is MIT [handle: `npm view luaparse version license` → `0.3.1`, `MIT`, 2026-09-26]. It ships no TypeScript types; `engine\tests\types\luaparse.d.ts` declares the one function the test uses. `npm install -D -E luaparse@0.3.1 -w engine` reported 0 vulnerabilities.
 
@@ -30,7 +32,7 @@ Same pins for `@modelcontextprotocol/sdk`, `sharp`, `zod`, `typescript` and `@ty
 
 ## Notes
 
-- **zod 4 with the MCP SDK:** SDK 1.30.1 declares `zod: "^3.25 || ^4.0"` as dependency and peer (`npm view @modelcontextprotocol/sdk@1.30.1 dependencies peerDependencies`), so zod 4.6.5 is supported.
+- **zod 4 with the MCP SDK:** SDK 1.30.1 declares `zod: "^3.25 || ^4.0"` as dependency and peer (`npm view @modelcontextprotocol/sdk@1.30.1 dependencies peerDependencies`), so zod 4.6.5 is supported. SDK 1.32.0 declares the same (`npm view @modelcontextprotocol/sdk@1.32.0 dependencies peerDependencies`, 2026-10-03).
 - **TypeScript 7.0.2** is the npm `latest` tag (`npm view typescript dist-tags` → `latest: 7.0.2`). It is the native-compiled `tsc`, installed through platform packages such as `@typescript/typescript-win32-x64`. `tsc --version` → `Version 7.0.2`, and `npm run build` compiles `engine\src` cleanly. Automaat still pins TS 6 for `typescript` and loads TS 7 as `@typescript/native` (`vendor\automaat\server\package.json:60, 65`), apparently for its ESLint tooling. We have no ESLint yet; revisit if we add typed lint rules.
 - **sharp** bundles libvips 8.18.6 (`sharp.versions` at runtime). It cannot decode the Z8 NEF fixtures, and it decodes only the 258×172 IFD0 thumbnail of the DxO DNG (see `docs\reports\phase0\S3.md`, "Pre-run findings"). No other decoder is added; this follows the stack rule.
 - **Spike scripts run with Node's built-in TypeScript type stripping** (`node file.ts`; confirmed on v24.11.1), so no `tsx`/`ts-node` dependency is needed. This requires erasable-only TS syntax (`erasableSyntaxOnly: true` in both tsconfigs).

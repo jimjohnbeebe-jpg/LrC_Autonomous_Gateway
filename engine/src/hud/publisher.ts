@@ -13,17 +13,25 @@
 //   - after a reconnect the session's state is sent again (a session rides out a plugin pause, D1);
 //   - a failed update is recorded and never fails a session call; it is tried again RETRY_MS later,
 //     up to MAX_RETRIES times in a row for each stage (Greptile, PR #47: the HUD must not stay stale
-//     until the next stage); a plugin before 0.6.0 gets none.
-// [handle: tests\hud-publisher.test.ts, tests\hud-session.test.ts, against the Lightroom sim, whose
-// hud_update check is the plugin's: docs\reports\phase5\hud-plugin-smoke\smoke.txt "Contract".]
+//     until the next stage); a plugin before HUD_PLUGIN gets none;
+//   - a click on a session this publisher has no line to (the engine restarted, so the HUD still shows
+//     a session of the engine before) is answered on its own: one `ended` update for that session,
+//     built by hud\events.ts from the session's log (answerEnded), so the HUD can say the edit is no
+//     longer open instead of waiting out its 10 s.
+// [handle: tests\hud-session.test.ts, tests\hud-unknown-session.test.ts, against the Lightroom sim,
+// whose hud_update check is the plugin's: docs\reports\phase5\hud-plugin-smoke\smoke.txt "Contract".]
 
 import { HUD_END_STAGES, hudUpdatePayloadSchema, pluginVersionAtLeast, type BridgeClient, type HudStage, type HudUpdatePayload } from "../bridge/index.js";
 import { toToolError } from "../mcp/errors.js";
 import type { HudSink, Session } from "../session/index.js";
 import { hudState, type HudState } from "./payload.js";
 
-/** hud_update comes with plugin 0.6.0 (PHASE5_PLAN row 4) [handle: plugin\LrC-AVG.lrplugin\Dispatch.lua, Hud.update]. */
-export const HUD_PLUGIN = "0.6.0";
+/**
+ * hud_update came with plugin 0.6.0 (PHASE5_PLAN row 4) [handle: plugin\LrC-AVG.lrplugin\Dispatch.lua,
+ * Hud.update]; `snapshot` with 0.9.0, and an earlier plugin refuses an update with a field it does not
+ * know (bridge\hud-protocol.ts header), so the HUD needs 0.9.0.
+ */
+export const HUD_PLUGIN = "0.9.0";
 /**
  * An update's answer took 2-7 ms in Lightroom [handle: vault PHASE5_PLAN.md "From row 4": "hud_update
  * round trips took 2-7 ms"]; 5 s is [inference]. While the plugin is paused the bridge client lets it
@@ -42,6 +50,9 @@ const MAX_RETRIES = 3;
 
 /** What the publisher records (tools-shared.ts writes it to the tool log): refused, failed and first-taken updates. */
 export type HudRecord = { ok: boolean; session_id: string; seq: number; stage: HudStage; duration_ms: number; result?: unknown; error?: unknown };
+
+/** What an end update for a session without a line takes from that session's log (hud\events.ts). */
+export type EndedFrom = Pick<HudUpdatePayload, "target" | "session_photos" | "snapshot"> & { stage: (typeof HUD_END_STAGES)[number] };
 
 /** One session's line to the HUD: its seq, whether the HUD still has to open, and the last update it took. */
 type Channel = { sessionId: string; seq: number; open: boolean; taken: string | null };
@@ -101,6 +112,38 @@ export class HudPublisher implements HudSink {
     if (this.channel?.sessionId !== sessionId) return false;
     this.answer = { sessionId, clickId, note };
     this.kick();
+    return true;
+  }
+
+  /**
+   * Answer a click on a session without a line here with one end update for it (`from.stage`): `seq`
+   * one above the HUD's (seq_seen), so the HUD takes it. Sent at once and on its own, as no other
+   * update of that session follows. False when it cannot be sent (no bridge, an older plugin, or it
+   * fails the contract).
+   */
+  answerEnded(click: { session_id: string; seq_seen: number; click_id: string }, from: EndedFrom, note: string): boolean {
+    if (this.client.getState() !== "connected" || !pluginVersionAtLeast(this.client.hello()?.plugin_version, HUD_PLUGIN)) return false;
+    const base = { session_id: click.session_id, seq: click.seq_seen + 1, stage: from.stage };
+    const parsed = hudUpdatePayloadSchema.safeParse({ ...base, ...from, answered_click_id: click.click_id, note });
+    if (!parsed.success) {
+      this.stats.invalid++;
+      this.record({ ok: false, ...base, duration_ms: 0, error: `not sent: ${parsed.error.message}` });
+      return false;
+    }
+    const started = performance.now();
+    const took = (): number => Math.round((performance.now() - started) * 10) / 10;
+    this.stats.sent++;
+    this.client.request("hud_update", parsed.data, { timeoutMs: UPDATE_TIMEOUT_MS }).then(
+      (result) => {
+        if (result.applied) this.stats.taken++;
+        else this.stats.not_taken++;
+        this.record({ ok: result.applied, ...base, duration_ms: took(), result });
+      },
+      (err: unknown) => {
+        this.stats.failed++;
+        this.record({ ok: false, ...base, duration_ms: took(), error: toToolError(err).body() });
+      },
+    );
     return true;
   }
 

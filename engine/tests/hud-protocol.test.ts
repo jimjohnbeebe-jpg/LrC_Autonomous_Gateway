@@ -29,10 +29,11 @@ const FULL: HudUpdatePayload = {
   variants: ["A", "B", "C"],
   approve_pass: 2,
   answered_click_id: "CLICK-1",
-  deltas: [{ slider: "exposure", before: "+0.30", after: "+0.55", delta: "+0.25" }, { slider: "highlights", before: -20, after: -35, delta: -15 }],
-  guardrail: { status: "corrected", reason: "highlights 0.6 % over 0.5 %: whites -20" },
+  deltas: [{ slider: "Exposure", before: "+0.30", after: "+0.55", delta: "+0.25" }, { slider: "Highlights", before: -20, after: -35, delta: -15 }],
+  guardrail: { status: "corrected", reason: "Highlight clipping was 0.6 % (limit 0.5 %); corrected." },
   note: "Pick the copy you like best.",
   settings: { mode: "autonomous", max_passes: 4, variant_count: 3, long_edge: 1600, quality: 75, clip_high_pct: 0.5, clip_low_pct: 1, decay: [1, 0.6, 0.4, 0.25] },
+  snapshot: "AVG pre-session 2026-09-29T10:00:00.000Z",
 };
 const MINIMAL = { session_id: "s1", seq: 1, stage: "begin", target: { uuid: "U1" } };
 
@@ -57,6 +58,7 @@ describe("hud-protocol: hud_update payload", () => {
     ["an unknown guardrail status", { ...MINIMAL, guardrail: { status: "amber" } }],
     ["open as text", { ...MINIMAL, open: "yes" }],
     ["text given as an object", { ...MINIMAL, note: { text: "x" } }],
+    ["a snapshot given as an object (plugin 0.9.0)", { ...MINIMAL, snapshot: { name: "AVG pre-session" } }],
     ["a pass over the limit", { ...MINIMAL, pass: HUD_LIMITS.pass + 1 }],
     ["a settings key the HUD does not show", { ...MINIMAL, settings: { log_dir: "D:\\logs" } }],
   ])("refuses %s", (_what, payload) => {

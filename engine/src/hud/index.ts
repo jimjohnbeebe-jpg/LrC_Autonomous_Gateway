@@ -3,7 +3,7 @@
 
 export { HudEvents } from "./events.js";
 export type { HudEventRecord } from "./events.js";
-export { aperture, hudState, shutter } from "./payload.js";
+export { aperture, hudGuardrail, hudState, shutter } from "./payload.js";
 export type { HudState } from "./payload.js";
 export { HUD_PLUGIN, HudPublisher } from "./publisher.js";
 export type { HudRecord } from "./publisher.js";

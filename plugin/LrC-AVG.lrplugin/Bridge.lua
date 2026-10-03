@@ -38,6 +38,7 @@ local LrUUID = import 'LrUUID'
 
 local Dispatch = require 'Dispatch'
 local Endpoint = require 'Endpoint'
+local Hud = require 'Hud'
 local Json = require 'Json'
 local Log = require 'Log'
 local Prefs = require 'Prefs'
@@ -46,7 +47,7 @@ local Sockets = require 'Sockets'
 local Bridge = {}
 
 Bridge.PROTOCOL = 1
-Bridge.PLUGIN_VERSION = "0.8.0"
+Bridge.PLUGIN_VERSION = "0.9.0"
 Bridge.SDK_DECLARED = 13.0 -- Info.lua LrSdkVersion; the SDK version LrC 15.5.1 ships is [unverified]
 Bridge.STATUS_FILE = "bridge_status.json"
 
@@ -239,7 +240,14 @@ function Bridge.start()
     LrFunctionContext.postAsyncTaskWithContext("LrC-AVG bridge", function(context)
         B.context = context
         context:addCleanupHandler(function() closeAll(B.S, "task ended") end)
-        local handlers = Dispatch.handlers(function() return Bridge.helloPayload(receivePort, sendPort) end)
+        -- The engine sends hello once per connection (engine\src\bridge\client.ts:237): the HUD
+        -- marks its open edit unknown before the reply (Hud.markUnknown says why there, fix/hud-p1).
+        -- A HUD error must not fail the handshake, or no command would work (fix/hud-p1 review).
+        local handlers = Dispatch.handlers(function()
+            local ok, err = LrTasks.pcall(Hud.markUnknown)
+            if not ok then Log.error("hud: markUnknown failed: " .. tostring(err)) end
+            return Bridge.helloPayload(receivePort, sendPort)
+        end)
         local function reply(id, name, ok, body) return respond(B, id, name, ok, body) end
         B.onLine = function(line) Dispatch.handleLine(B.S, handlers, reply, line) end
         B.onSendConnected = function()

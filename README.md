@@ -106,39 +106,49 @@ Sync, presets, ratings and keywords are not available while a session is open.
 
 ## The HUD
 
-The HUD opens by itself when a session starts (if it is not open already), and from **File > Plug-in Extras > LrC-AVG - Show Vision Gateway HUD**. It takes the keyboard when it opens: click Lightroom's main window before you use keyboard shortcuts.
+The HUD opens by itself when an edit starts (if it is not open already), and from **File > Plug-in Extras > LrC-AVG - Show Vision Gateway HUD**. It takes the keyboard when it opens: click Lightroom's main window before you use keyboard shortcuts.
 
-It shows:
+From top to bottom it shows:
 
-- **Connection:** Disconnected, Engine connected, or Claude session active.
-- **Target:** the photo's file name (and copy name), then ISO, shutter speed, aperture, lens and lens-profile status.
-- **Stage:** for example Pass 0: profile, lens and baseline; Applying pass 2 of 4; Acquiring preview; Metrics; Awaiting Claude; Awaiting pick; Awaiting approval; Converged; Accepted; Aborted.
-- **Selection: the session's photo.**, or **Target changed: …** if you select a different photo during the session.
-- **Changes in the latest pass:** slider, before, after, change, up to 12 rows.
-- **Guardrails:** whether the last pass stayed within the clipping limits, and why not if it did not.
-- The settings the session uses (between sessions, the settings page's).
+- **The headline:** whose turn it is. **Claude is working. Nothing needed from you.** while Claude works. When something is needed from you it starts with "Your turn": **Your turn: pick a copy, or tell Claude which one.**; **Your turn: approve pass n so Claude can go on.**; **Your turn: Claude thinks the edit is done.**; **Your turn: select the edit's photo again.** After an edit ends: **Done: the edit is kept.** or **Done: the photo is back as it was.**
+- **The buttons** (below).
+- **A feedback line:** what your last click did (for example "Accept sent; waiting for Claude."), or the plugin's latest note.
+- **Photo:** the file name (and copy name).
+- **Camera:** ISO, shutter speed, aperture, lens and lens-profile status.
+- **Step:** what is happening, for example Setting profile, lens corrections and baseline; Applying pass 2 of 4; Rendering a preview; Measuring the preview; Claude is looking at the result; Waiting for your pick; Waiting for your approval; Claude thinks the edit is done; Accepted; Aborted. From pass 1 on, the label is followed by the pass, for example "(pass 2 of 4)".
+- **The selection line:** **Selection: the edit's photo.**, or **Target changed: …** if you select a different photo during the edit.
+- **Changes in the latest pass:** a grid with the slider, before, after and change, up to 12 rows. Sliders carry the names Lightroom's Develop panel shows, such as Orange Saturation.
+- **The clipping sentence:** **Clipping: within limits.**, or one sentence saying what the guardrails did, for example that a pass was undone, a clipping was corrected, or a slider was held back.
+- **The settings** the edit uses (between edits, the settings page's).
+- **The connection line:** Connected to Claude., Not connected to Claude., or LrC-AVG is not running in Lightroom.
+
+A line that is too long for the window continues on a second line, and ends with "..." if it still does not fit.
 
 Buttons:
 
 | Button | What it does |
 |---|---|
-| **Abort** | Stops the running step before its next write, then puts the photo back to the **AVG pre-session …** snapshot. |
-| **Accept** | Ends the session and keeps the edit, once the running step has finished. |
 | **Pick A / B / C** | Variants mode, while a pick is awaited: continue on that copy. |
 | **Approve pass n** | Approve-each-pass mode, while pass n waits for you ([below](#approve-each-pass)). |
+| **Accept** | Ends the session and keeps the edit, once the running step has finished. |
+| **Abort** | Stops the running step before its next write, then puts the photo back to the **AVG pre-session …** snapshot. It is the last button. |
 
-The buttons are greyed out while the engine is not connected. After a click they all stay off until the engine answers that click, or for at most 10 s. When a session ends, the HUD shows the outcome for 5 s, then closes itself.
+The buttons are greyed out while the engine is not connected, and while the HUD checks an edit after a reconnect. After a click they all stay off until the engine answers that click, or for at most 10 s. When an edit ends, the HUD stays open and shows the outcome until you close it or the next edit starts.
 
 ## Menu items
 
-Under **File > Plug-in Extras**:
+Under **File > Plug-in Extras**, in this order:
 
 | Menu item | What it does |
 |---|---|
 | **LrC-AVG - Bridge status** | Says whether the plugin's bridge runs and whether the engine is connected; shows the ports and the plugin log's path. |
 | **LrC-AVG - Show Vision Gateway HUD** | Opens the HUD. |
-| **LrC-AVG - Abort Session** | The HUD's Abort. Waits up to 20 s for the engine and reports in the HUD. |
-| **LrC-AVG - Accept Session** | The HUD's Accept. Waits up to 20 s for the engine and reports in the HUD. |
+| **LrC-AVG - Pick A**, **Pick B**, **Pick C** | The HUD's Pick buttons. |
+| **LrC-AVG - Approve Pass** | The HUD's Approve pass n. |
+| **LrC-AVG - Accept Edit** | The HUD's Accept. |
+| **LrC-AVG - Abort Edit** | The HUD's Abort. |
+
+Each of the last five waits up to 20 s for the engine, and for an edit being checked after a reconnect, and reports in the HUD's feedback line. If it cannot send, the line says why, for example "Pick A not sent: no pick is waiting."
 
 There are no keyboard shortcuts.
 
@@ -220,8 +230,9 @@ Your edits stay in the Lightroom catalog: History steps, snapshots, virtual copi
 - **One session at a time.** Sync, presets, ratings and keywords are not available until it ends.
 - **Keep Plug-in Manager closed during a session.** Lightroom pauses the plugin while Plug-in Manager or a menu is open (2.5 to 15 s in testing). The engine waits up to 60 s for the plugin during a session, but a long pause during a session has not been tested.
 - **Approve and Claude Desktop:** whether Claude Desktop waits the full 60 s for an Approve has not been tested (in testing, Claude asked in the chat instead of waiting).
-- **If the engine disconnects during a session** (for example, Claude Desktop is quit), the HUD offers no way back: apply the **AVG pre-session …** snapshot yourself.
-- **The HUD takes the keyboard when it opens**, and there are no keyboard shortcuts for its buttons.
+- **If the engine disconnects during an edit** (for example, Claude Desktop is quit), the HUD says "Not connected to Claude" and names the **AVG pre-session …** snapshot to apply in Develop > Snapshots. When Claude connects again, the HUD shows "Checking this edit with Claude..."; if Claude no longer has the edit, it says so and the same snapshot line stays.
+- **The HUD takes the keyboard when it opens.** Every HUD button has a menu item. Inside the HUD, Tab moves to the first button that is switched on, and Space or Enter clicks it.
+- **A long note or clipping sentence can end in "..."** in Lightroom, cut off at the window's right side. A later change fixes it.
 - **Renders show only inside the expanded tool-call boxes** in Claude Desktop, not in Claude's answer.
 - **Presets:** a new preset shows only after Lightroom restarts. Only the group "LrC-AVG" has been tested. Adobe camera profiles (Adobe Color, Adobe Landscape, …) are left out of presets, as are temperature and tint while white balance is As Shot.
 - **Virtual copies** from Variants mode are never removed by LrC-AVG.
@@ -259,11 +270,14 @@ The evidence behind the behaviour this page describes. Paths are in this reposit
 | What else you can ask | Saving an intent only after approval | [handle: `engine/src/mcp/defs-intents.ts` `lr_save_intent`] |
 | What else you can ask, Known limitations | Search filters, collections, ratings and keywords: limit 100, before and after values, not during a session, exact names, removed keywords kept | [handle: `engine/src/mcp/defs-catalog.ts`; `engine/src/library/write.ts` `MAX_PHOTOS`; `plugin/LrC-AVG.lrplugin/Library.lua`; `docs/reports/phase6/catalog-tools-smoke/smoke.txt`]; in Lightroom [handle: `docs/reports/phase6/catalog-tools-check/check.txt`] |
 | What else you can ask | History and snapshots don't cover ratings and keywords | [inference]: they are catalog metadata, written with `setRawMetadata` and `addKeyword`, not `applyDevelopSettings` (`Library.lua`) |
-| The HUD | Lines, stage labels, buttons, greyed buttons, 10 s, 12 rows; the selection line | [handle: `plugin/LrC-AVG.lrplugin/HudView.lua`; `HudState.lua:20, 26, 212, 221`; vault `PRD.md` §6.3 "Lines as built"] |
+| The HUD | Window order, headlines, step labels, connection line, click lines, undo line, wrapping onto a second line | [handle: `plugin/LrC-AVG.lrplugin/HudView.lua:200-210`; `HudText.lua:39-96`, `HudText.lua:162-172`]; in Lightroom 15.6 [handle: `docs/reports/phase6/hud-p1-check/check.txt` section 3] |
+| The HUD | Greyed buttons, 10 s, 12 rows, the selection line, Pick/Approve titles | [handle: `HudView.lua:134-168`; `HudState.lua:24, 29, 228-237`]; the buttons, the 10 s and the rows in Lightroom [handle: vault `PRD.md` §6.3 "Lines as built"] |
+| The HUD | Grid in Lightroom's slider names; the clipping sentence | [handle: `engine/src/params/labels.ts:10, 44`; `engine/src/hud/payload.ts:112-170`; `HudText.lua:75`]; names matched Jim's Develop panel [handle: `labels.ts:2-3`, stated: Jim, 2026-10-03]; the sentences in Lightroom [unverified] |
+| The HUD | The ended HUD stays open until closed or the next edit starts | [handle: `plugin/LrC-AVG.lrplugin/Hud.lua:14-16`; stated: Jim, 2026-10-03, `HudState.lua:27-28`]; in Lightroom 15.6 [handle: `docs/reports/phase6/hud-p1-check/check.txt` section 3] |
+| The HUD, Known limitations | After a reconnect: "Checking this edit with Claude...", then "no longer open in Claude" with the snapshot to apply; a click for an edit Claude no longer has is answered with how the edit ended | [handle: `HudText.lua:43-44, 72-73`; `HudState.lua:34, 179-182`; `Hud.lua:17-19`; `engine/src/hud/events.ts:9-13`; `publisher.ts:119-127`]; the reconnect lines in Lightroom 15.6 [handle: `docs/reports/phase6/hud-p1-check/check.txt` section 3]; the answer to a click is tested by vitest [handle: `engine/tests/hud-unknown-session.test.ts`] |
 | The HUD | Opens by itself; takes the keyboard when it opens | [handle: `PHASE5.md` "Numbers", "HUD opened by itself"; `docs/reports/phase5/S8.md` "Numbers", "Keyboard stayed with the main window"] |
 | The HUD | Abort and Accept timing and behaviour | [handle: `PHASE5.md` "Numbers", "AC-2"; vault `PRD.md` §6.3 "Buttons as built"] |
-| The HUD | Shows the outcome 5 s, then closes | [handle: `plugin/LrC-AVG.lrplugin/Hud.lua:12-13`; `HudState.lua:24`] |
-| Menu items | Titles; 20 s wait; reports in the HUD | [handle: `Info.lua:24-27`; `Hud.lua:269` `MENU_WAIT_SECONDS`]; in Lightroom [handle: `PHASE5.md` "Numbers", "Menu items"] |
+| Menu items | Titles, order (Pick A-C and Approve Pass added); 20 s wait, including for an edit being checked; reports in the HUD | [handle: `Info.lua:25-34`; `HudClick.lua:98, 100-102, 113`]; the first three items and the wait in Lightroom [handle: `PHASE5.md` "Numbers", "Menu items"]; Pick B, Approve Pass and the names Accept Edit / Abort Edit in Lightroom 15.6 [handle: `docs/reports/phase6/hud-p1-check/check.txt` section 3] |
 | Menu items, Known limitations | No keyboard shortcuts | [handle: vault `PHASES.md` Phase 8 (was Phase 6) "Carried from Phase 5", hotkeys] |
 | Settings | Labels, defaults, ranges, the invalid-value list | [handle: `plugin/LrC-AVG.lrplugin/Prefs.lua:33-46`, `PluginInfoProvider.lua`] |
 | Settings | Saved as edited; read by the next session; the mode reached the engine | [handle: `docs/reports/phase5/S8.md` "Consequences"; `PHASE5.md` "Numbers", "Settings page reached the engine"] |
@@ -278,7 +292,7 @@ The evidence behind the behaviour this page describes. Paths are in this reposit
 | Known limitations | Older process versions refused | [handle: `engine/src/params/canonical.ts:28-33`; `engine/src/mcp/errors.ts:69`] |
 | Known limitations | No masks, crop, HDR | [handle: vault `PRD.md` §3] |
 | Known limitations | Plug-in Manager pauses; the 60 s allowance untested; Desktop's hold untested | [handle: `PHASE5.md` "Consequences" item 2]; both [unverified] |
-| Known limitations | No revert button after a disconnect | [handle: vault `PRD.md` FR-1.4, "stay open, not scheduled"] |
+| Known limitations | Undo line after a disconnect; Tab, Space and Enter; a long note cut with "..." | [handle: `HudText.lua:72-73`; `HudView.lua:76-81`]; all three in Lightroom 15.6 [handle: `docs/reports/phase6/hud-p1-check/check.txt` section 3] |
 
 ## License
 

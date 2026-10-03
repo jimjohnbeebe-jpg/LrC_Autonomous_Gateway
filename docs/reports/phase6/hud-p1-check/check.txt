@@ -1,0 +1,692 @@
+LrC-AVG HUD fixes, Lightroom check script (fix/hud-p1, plugin 0.9.0; decision D3)
+
+Branch fix/hud-p1; written and dry-run at head 9a80988 2026-10-03 by Claude Code.
+Lightroom runs: two, by Jim, 2026-10-03 (section 3). Sections 1-2 are not observations of Lightroom: the dry run used the
+engine's stand-in plugin (engine\tests\helpers\fake-plugin.ts and lightroom-sim-hud.ts), which checks each hud_update
+against the engine's schema only. What the HUD actually shows is Jim's to answer.
+
+D3: "One check on the branch (Recommended)" [stated: Jim, 2026-10-03]; y/n answered in the PowerShell window.
+The script makes no catalog or Develop writes (hud_update, get_selection and get_context only). Keyboard results (Tab,
+Space, Enter) are recorded, not pass/fail: which control has focus when the HUD opens is [unverified].
+Waits on Jim's keyboard test are 20 s (the brief said 15 s), counted from his Enter, so he can switch windows.
+
+== 1. Run (PowerShell, repo root)
+
+  node logs\probe-hud-p1-2026-10-03\check.mts
+
+== 2. Dry run (scratch driver, appendix B; deleted afterwards, git status clean)
+
+  cd engine
+  $env:DRY_FILE = "<scratchpad>\dry.txt"
+  npx vitest run tests\zz-scratch-hudp1-check.test.ts
+
+  Result: Test Files 1 passed (1); Tests 3 passed (3); Duration 20.72 s.
+  Cases: (a) every answer y -> WORKED, exit 0, the HUD (simulated) ended on stage "ended", no command other than
+  hello/get_selection/get_context/hud_update was received, 0 updates refused, 0 not taken; (b) plugin 0.8.0 -> FAILED at
+  step 1, exit 1; (c) first answer n -> FAILED (1), the ending update still sent, exit 1. The wait times ran at
+  CHECK_TIME_SCALE=0.1. In (a) the driver sent hud_pick B and hud_approve_pass 2 (source menu) and hud_accept (Tab, Space);
+  Tab, Enter got no event (the timeout path). Console of the three runs, in order (case (c) was printed from its last
+  12 lines only):
+
+  [8:02:43 AM] 
+  [8:02:43 AM] STEP 1: the plugin
+  [8:02:43 AM] YES  Lightroom runs plugin 0.9.0 (expected 0.9.0)
+  [8:02:43 AM] YES  the selected photo is DSC0001.NEF
+  [8:02:43 AM] 
+  [8:02:43 AM] STEP 2: the longest lines the HUD may show
+  [8:02:43 AM] YES  the HUD is open (hud_update answered shown)
+  [8:02:44 AM] NOW: look at the HUD window. It shows the longest note, sentence, file name, lens, snapshot and a full 12-row grid.
+  Is every line fully inside the window, with nothing cut off at the right edge? (y/n) Is every line readable in full, with no '...' at the end of a line? (y/n) Do the lines use the window's width well (NOT a lot of empty space at the right of them)? (y/n) Does the 12-row grid show every label, before and after in full (for example 'Lens Corrections (panel on/off)' and 'Camera Monochrome')? (y/n) [8:02:44 AM] 
+  [8:02:44 AM] STEP 3: the headline and the buttons
+  [8:02:44 AM] NOW: look at the HUD window (a pick is awaited).
+  Is the first line at the top 'Your turn: pick a copy, or tell Claude which one.', with Pick A, Pick B and Pick C under it switched on? (y/n) Under those, is there a row with Accept (greyed out) and Abort (switched on), with Abort last (on the right)? (y/n) [8:02:44 AM] NOW: look at the HUD window (an approval is awaited).
+  Is the first line now 'Your turn: approve pass 2 so Claude can go on.'? (y/n) Is the 'Approve pass 2' button switched on next to Pick A-C (greyed out), with Accept and Abort on in the row under them? (y/n) [8:02:44 AM] 
+  [8:02:44 AM] STEP 4: the new menu items (Pick B, Approve Pass)
+  [8:02:44 AM] NOW: in Lightroom click File > Plug-in Extras > LrC-AVG - Pick B   (I wait up to 2 minutes)
+  [8:02:45 AM]   event: hud_pick {"seq_seen":1,"source":"menu","session_id":"p1check-musity0j","variant":"B","click_id":"click-1"}
+  [8:02:45 AM] YES  the menu item Pick B sent an event
+  [8:02:45 AM] YES  the event is hud_pick, variant B, source menu
+  During those 4 seconds, did the line under the buttons say 'Pick B sent; waiting for Claude.', and did it go away afterwards? (y/n) [8:02:45 AM] NOW: in Lightroom click File > Plug-in Extras > LrC-AVG - Approve Pass   (I wait up to 2 minutes)
+  [8:02:45 AM]   event: hud_approve_pass {"seq_seen":1,"source":"menu","session_id":"p1check-musity0j","pass":2,"click_id":"click-2"}
+  [8:02:45 AM] YES  the menu item Approve Pass sent an event
+  [8:02:45 AM] YES  the event is hud_approve_pass, pass 2, source menu
+  During those 4 seconds, did the line under the buttons say 'Approve pass 2 sent; waiting for Claude.', and did it go away afterwards? (y/n) [8:02:46 AM] 
+  [8:02:46 AM] STEP 5: keyboard: Tab, then Space [unverified which control has focus]
+  [8:02:46 AM] NOW: get ready to (1) click the HUD window's title bar, (2) press Tab once, (3) press Space once.
+  I watch for 20 s from when you press Enter here. (press Enter) [8:02:46 AM] WATCHING (Tab, Space) for 20 s: do it now.
+  [8:02:46 AM]   event: hud_accept {"seq_seen":1,"source":"hud","session_id":"p1check-musity0j","click_id":"click-3"}
+  [8:02:46 AM] YES  Tab then Space sent hud_accept
+  Did you see a focus ring (an outline) on a button while you pressed Tab? (y/n) Which button had it? a=Accept b=Abort c=Approve pass 2 o=other (a/b/c/o) [8:02:46 AM] 
+  [8:02:46 AM] STEP 5: keyboard: Tab, then Enter [unverified which control has focus]
+  [8:02:46 AM] NOW: get ready to (1) click the HUD window's title bar, (2) press Tab once, (3) press Enter once.
+  I watch for 20 s from when you press Enter here. (press Enter) [8:02:46 AM] WATCHING (Tab, Enter) for 20 s: do it now.
+  [8:02:48 AM] YES  Tab then Enter sent no event within 20 s
+  Did you see a focus ring (an outline) on a button while you pressed Tab? (y/n) Which button had it? a=Accept b=Abort c=Approve pass 2 o=other (a/b/c/o) [8:02:48 AM] 
+  [8:02:48 AM] STEP 6: disconnect and reconnect
+  [8:02:49 AM] disconnected; reconnecting in 2 s.
+  [8:02:49 AM] YES  reconnected (a new hello)
+  [8:02:49 AM] NOW: watch the HUD's top line for the next 14 s. It should say 'Checking this edit with Claude...' first, then (after about 10 s) 'This edit is no longer open in Claude. Your edit so far stays.'
+  At first, did the top line say 'Checking this edit with Claude...'? (y/n) Does it now say 'This edit is no longer open in Claude. Your edit so far stays.', with 'To undo it: Develop > Snapshots > AVG pre-session 2026-10-03T14:05:09.123Z' below the buttons? (y/n) Are the Pick, Approve, Accept and Abort buttons all greyed out? (y/n) [8:02:51 AM] 
+  [8:02:51 AM] STEP 7: an ended edit leaves the HUD open
+  [8:02:51 AM] NOW: leave the HUD alone for 10 s.
+  Is the HUD still open, with the top line 'Done: the photo is back as it was.'? (y/n) Are all four buttons greyed out? (y/n) [8:02:52 AM] 
+  [8:02:52 AM] STEP 8: the end
+  [8:02:52 AM] YES  the ending update was sent: the HUD shows no live edit
+  [8:02:52 AM] 
+  [8:02:52 AM] Keyboard (recorded, not a pass/fail): Tab+Space -> hud_accept; Tab+Enter -> no event
+  [8:02:52 AM] HUD check (plugin 0.9.0): WORKED
+  [8:02:52 AM] Results: %USERPROFILE%\AppData\Local\Temp\hudp1-eBMk9g\check.json
+  
+  exit 0 updates taken begin,awaiting_claude,awaiting_pick,awaiting_approval,awaiting_pick,awaiting_approval,awaiting_claude,awaiting_approval,awaiting_approval,awaiting_approval,awaiting_claude,aborted,ended refused 0 notTaken 0
+  writes: 
+  [8:02:52 AM] 
+  [8:02:52 AM] STEP 1: the plugin
+  [8:02:53 AM] NO   Lightroom runs plugin 0.8.0 (expected 0.9.0)
+  [8:02:53 AM] FAILED: Lightroom runs plugin 0.8.0, not 0.9.0. Quit Lightroom Classic, start it again, and run this again.
+  [8:02:53 AM] 
+  [8:02:53 AM] STEP 8: the end
+  [8:02:53 AM] 
+  [8:02:53 AM] HUD check (plugin 0.9.0): FAILED (1)
+  [8:02:53 AM]   - step 1: Lightroom runs plugin 0.8.0 (expected 0.9.0)
+  [8:02:53 AM] Results: %USERPROFILE%\AppData\Local\Temp\hudp1-pim5vy\check.json
+  
+  At first, did the top line say 'Checking this edit with Claude...'? (y/n) Does it now say 'This edit is no longer open in Claude. Your edit so far stays.', with 'To undo it: Develop > Snapshots > AVG pre-session 2026-10-03T14:05:09.123Z' below the buttons? (y/n) Are the Pick, Approve, Accept and Abort buttons all greyed out? (y/n) [8:03:01 AM] 
+  [8:03:01 AM] STEP 7: an ended edit leaves the HUD open
+  [8:03:01 AM] NOW: leave the HUD alone for 10 s.
+  Is the HUD still open, with the top line 'Done: the photo is back as it was.'? (y/n) Are all four buttons greyed out? (y/n) [8:03:02 AM] 
+  [8:03:02 AM] STEP 8: the end
+  [8:03:02 AM] YES  the ending update was sent: the HUD shows no live edit
+  [8:03:03 AM] 
+  [8:03:03 AM] Keyboard (recorded, not a pass/fail): Tab+Space -> hud_accept; Tab+Enter -> no event
+  [8:03:03 AM] HUD check (plugin 0.9.0): FAILED (1)
+  [8:03:03 AM]   - step 2: answered n: Is every line fully inside the window, with nothing cut off at the right edge?
+  [8:03:03 AM] Results: %USERPROFILE%\AppData\Local\Temp\hudp1-RLv1iJ\check.json
+  
+
+== 3. Lightroom runs (Jim, 2026-10-03)
+
+Both runs: Claude Desktop quit, Lightroom restarted, plugin loaded from the fix/hud-p1 checkout. The lines below are
+copied from the run files the script saved (logs\probe-hud-p1-2026-10-03\, gitignored); every "Jim:" line is his
+y/n answer in the PowerShell window. Photo 20260906-_OZ80004.NEF was only read (get_selection, get_context).
+
+Run 1: HudText.MARGIN 0.85 (commit 3313b52). Run 2: MARGIN 0.95 and the menu items renamed to Accept Edit / Abort
+Edit (commit d533d83), with one more question in step 4 (the renamed items).
+
+--- Run 1 (file check-run1.json, started 2026-10-03T15:39:35.520Z)
+engine 0.12.0; hello: plugin 0.9.0, Lightroom 15.6; photo 20260906-_OZ80004.NEF (read only)
+result: WORKED
+  step 1 plugin_version (2026-10-03T15:39:35.535Z)
+    YES  Lightroom runs plugin 0.9.0 (expected 0.9.0)
+    YES  the selected photo is 20260906-_OZ80004.NEF
+  step 2 long_lines (2026-10-03T15:39:36.080Z)
+    YES  the HUD is open (hud_update answered shown)
+    sent seq 1 begin at 2026-10-03T15:39:36.085Z; result {"applied":true,"shown":true,"opened":true}
+    sent seq 2 awaiting_claude at 2026-10-03T15:39:40.121Z; result {"applied":true,"shown":true,"opened":false}
+    Jim: y  (expected y) Is every line fully inside the window, with nothing cut off at the right edge?
+    Jim: y  (expected y) Is every line readable in full, with no '...' at the end of a line?
+    Jim: n  (expected any) Do the lines use the window's width well (NOT a lot of empty space at the right of them)?
+    Jim: y  (expected y) Does the 12-row grid show every label, before and after in full (for example 'Lens Corrections (panel on/off)' and 'Camera Monochrome')?
+  step 3 headline_and_buttons (2026-10-03T15:40:47.810Z)
+    sent seq 3 awaiting_pick at 2026-10-03T15:40:47.834Z; result {"applied":true,"shown":true,"opened":false}
+    sent seq 4 awaiting_approval at 2026-10-03T15:41:10.033Z; result {"applied":true,"shown":true,"opened":false}
+    Jim: y  (expected y) Is the first line at the top 'Your turn: pick a copy, or tell Claude which one.', with Pick A, Pick B and Pick C under it switched on?
+    Jim: y  (expected y) Under those, is there a row with Accept (greyed out) and Abort (switched on), with Abort last (on the right)?
+    Jim: y  (expected y) Is the first line now 'Your turn: approve pass 2 so Claude can go on.'?
+    Jim: y  (expected y) Is the 'Approve pass 2' button switched on next to Pick A-C (greyed out), with Accept and Abort on in the row under them?
+  step 4 menu_items (2026-10-03T15:41:26.388Z)
+    YES  the menu item Pick B sent an event
+    YES  the event is hud_pick, variant B, source menu
+    YES  the menu item Approve Pass sent an event
+    YES  the event is hud_approve_pass, pass 2, source menu
+    sent seq 5 awaiting_pick at 2026-10-03T15:41:26.395Z; result {"applied":true,"shown":true,"opened":false}
+    sent seq 6 awaiting_approval at 2026-10-03T15:41:49.645Z, answers click 4B098035-5233-44F2-99E3-132BFA1DC414; result {"applied":true,"shown":true,"opened":false}
+    sent seq 7 awaiting_claude at 2026-10-03T15:42:21.147Z, answers click ED9013AD-B664-445E-9F51-B771303ED11D; result {"applied":true,"shown":true,"opened":false}
+    event 2026-10-03T15:41:45.598Z hud_pick {"source":"menu","variant":"B","session_id":"p1check-musk5cz3","seq_seen":5,"click_id":"4B098035-5233-44F2-99E3-132BFA1DC414"}
+    event 2026-10-03T15:42:17.051Z hud_approve_pass {"source":"menu","session_id":"p1check-musk5cz3","seq_seen":6,"pass":2,"click_id":"ED9013AD-B664-445E-9F51-B771303ED11D"}
+    Jim: y  (expected y) During those 4 seconds, did the line under the buttons say 'Pick B sent; waiting for Claude.', and did it go away afterwards?
+    Jim: y  (expected y) During those 4 seconds, did the line under the buttons say 'Approve pass 2 sent; waiting for Claude.', and did it go away afterwards?
+  step 5 keyboard_space (2026-10-03T15:42:26.644Z)
+    YES  Tab then Space sent hud_approve_pass
+    sent seq 8 awaiting_approval at 2026-10-03T15:42:26.648Z; result {"applied":true,"shown":true,"opened":false}
+    sent seq 9 awaiting_approval at 2026-10-03T15:42:53.171Z, answers click 67BFBD14-ABC1-4F2E-8E04-524CDAB1FE7D; result {"applied":true,"shown":true,"opened":false}
+    event 2026-10-03T15:42:33.069Z hud_approve_pass {"source":"hud","session_id":"p1check-musk5cz3","seq_seen":8,"pass":2,"click_id":"F2DA0B8A-E202-40C2-A986-163EE1B12E83"}
+    event 2026-10-03T15:42:52.092Z hud_approve_pass {"source":"hud","session_id":"p1check-musk5cz3","seq_seen":8,"pass":2,"click_id":"67BFBD14-ABC1-4F2E-8E04-524CDAB1FE7D"}
+    Jim: y  (expected any) Did you see a focus ring (an outline) on a button while you pressed Tab?
+    Jim: c  (expected any) Which button had it? a=Accept b=Abort c=Approve pass 2 o=other
+  step 5 keyboard_enter (2026-10-03T15:43:24.754Z)
+    YES  Tab then Enter sent hud_approve_pass
+    sent seq 10 awaiting_approval at 2026-10-03T15:43:24.757Z; result {"applied":true,"shown":true,"opened":false}
+    sent seq 11 awaiting_approval at 2026-10-03T15:43:49.319Z, answers click D79CFC5F-56A2-46AB-904C-7D25880F1460; result {"applied":true,"shown":true,"opened":false}
+    event 2026-10-03T15:43:31.390Z hud_approve_pass {"source":"hud","session_id":"p1check-musk5cz3","seq_seen":10,"pass":2,"click_id":"4CABCC39-1130-4319-A962-01D8A3CF1B64"}
+    event 2026-10-03T15:43:48.300Z hud_approve_pass {"source":"hud","session_id":"p1check-musk5cz3","seq_seen":10,"pass":2,"click_id":"D79CFC5F-56A2-46AB-904C-7D25880F1460"}
+    Jim: y  (expected any) Did you see a focus ring (an outline) on a button while you pressed Tab?
+    Jim: c  (expected any) Which button had it? a=Accept b=Abort c=Approve pass 2 o=other
+  step 6 reconnect (2026-10-03T15:43:58.338Z)
+    YES  reconnected (a new hello)
+    sent seq 12 awaiting_claude at 2026-10-03T15:43:58.344Z; result {"applied":true,"shown":true,"opened":false}
+    Jim: y  (expected y) At first, did the top line say 'Checking this edit with Claude...'?
+    Jim: y  (expected y) Does it now say 'This edit is no longer open in Claude. Your edit so far stays.', with 'To undo it: Develop > Snapshots > AVG pre-session 2026-10-03T14:05:09.123Z' below the buttons?
+    Jim: y  (expected y) Are the Pick, Approve, Accept and Abort buttons all greyed out?
+  step 7 ended_stays_open (2026-10-03T15:44:28.127Z)
+    sent seq 13 aborted at 2026-10-03T15:44:28.132Z; result {"applied":true,"shown":true,"opened":false}
+    Jim: y  (expected y) Is the HUD still open, with the top line 'Done: the photo is back as it was.'?
+    Jim: y  (expected y) Are all four buttons greyed out?
+  step 8 end (2026-10-03T15:44:45.888Z)
+    YES  the ending update was sent: the HUD shows no live edit
+    sent seq 14 ended at 2026-10-03T15:44:45.891Z; result {"applied":true,"shown":true,"opened":false}
+  keyboard: {"ring_space":"c","ring_enter":"c"}
+
+--- Run 2 (file check.json, started 2026-10-03T15:48:39.313Z)
+engine 0.12.0; hello: plugin 0.9.0, Lightroom 15.6; photo 20260906-_OZ80004.NEF (read only)
+result: FAILED (1)
+  - step 2: answered n: Is every line readable in full, with no '...' at the end of a line?
+  step 1 plugin_version (2026-10-03T15:48:39.327Z)
+    YES  Lightroom runs plugin 0.9.0 (expected 0.9.0)
+    YES  the selected photo is 20260906-_OZ80004.NEF
+  step 2 long_lines (2026-10-03T15:48:41.921Z)
+    YES  the HUD is open (hud_update answered shown)
+    sent seq 1 begin at 2026-10-03T15:48:41.926Z; result {"applied":true,"shown":true,"opened":true}
+    sent seq 2 awaiting_claude at 2026-10-03T15:48:45.948Z; result {"applied":true,"shown":true,"opened":false}
+    Jim: y  (expected y) Is every line fully inside the window, with nothing cut off at the right edge?
+    Jim: n  (expected y) Is every line readable in full, with no '...' at the end of a line?
+    Jim: n  (expected any) Do the lines use the window's width well (NOT a lot of empty space at the right of them)?
+    Jim: y  (expected y) Does the 12-row grid show every label, before and after in full (for example 'Lens Corrections (panel on/off)' and 'Camera Monochrome')?
+  step 3 headline_and_buttons (2026-10-03T15:49:19.805Z)
+    sent seq 3 awaiting_pick at 2026-10-03T15:49:19.827Z; result {"applied":true,"shown":true,"opened":false}
+    sent seq 4 awaiting_approval at 2026-10-03T15:49:36.209Z; result {"applied":true,"shown":true,"opened":false}
+    Jim: y  (expected y) Is the first line at the top 'Your turn: pick a copy, or tell Claude which one.', with Pick A, Pick B and Pick C under it switched on?
+    Jim: y  (expected y) Under those, is there a row with Accept (greyed out) and Abort (switched on), with Abort last (on the right)?
+    Jim: y  (expected y) Is the first line now 'Your turn: approve pass 2 so Claude can go on.'?
+    Jim: y  (expected y) Is the 'Approve pass 2' button switched on next to Pick A-C (greyed out), with Accept and Abort on in the row under them?
+  step 4 menu_items (2026-10-03T15:49:54.642Z)
+    YES  the menu item Pick B sent an event
+    YES  the event is hud_pick, variant B, source menu
+    YES  the menu item Approve Pass sent an event
+    YES  the event is hud_approve_pass, pass 2, source menu
+    sent seq 5 awaiting_pick at 2026-10-03T15:49:54.649Z; result {"applied":true,"shown":true,"opened":false}
+    sent seq 6 awaiting_approval at 2026-10-03T15:50:09.853Z, answers click 3F16419F-DF47-4C92-9A62-EBDBF35CB2EA; result {"applied":true,"shown":true,"opened":false}
+    sent seq 7 awaiting_claude at 2026-10-03T15:54:54.534Z, answers click 1043B7C9-3907-4785-8166-BCA018F273A7; result {"applied":true,"shown":true,"opened":false}
+    event 2026-10-03T15:50:05.811Z hud_pick {"source":"menu","variant":"B","session_id":"p1check-muskh0kf","seq_seen":5,"click_id":"3F16419F-DF47-4C92-9A62-EBDBF35CB2EA"}
+    event 2026-10-03T15:54:50.447Z hud_approve_pass {"source":"menu","session_id":"p1check-muskh0kf","seq_seen":6,"pass":2,"click_id":"1043B7C9-3907-4785-8166-BCA018F273A7"}
+    Jim: y  (expected y) During those 4 seconds, did the line under the buttons say 'Pick B sent; waiting for Claude.', and did it go away afterwards?
+    Jim: y  (expected y) During those 4 seconds, did the line under the buttons say 'Approve pass 2 sent; waiting for Claude.', and did it go away afterwards?
+    Jim: y  (expected y) Open File > Plug-in Extras (then close it again): does it list 'LrC-AVG - Accept Edit' and 'LrC-AVG - Abort Edit', with Abort Edit last?
+  step 5 keyboard_space (2026-10-03T15:55:18.988Z)
+    YES  Tab then Space sent hud_approve_pass
+    sent seq 8 awaiting_approval at 2026-10-03T15:55:18.993Z; result {"applied":true,"shown":true,"opened":false}
+    sent seq 9 awaiting_approval at 2026-10-03T15:55:37.976Z, answers click DBB4A2A4-BE16-4DFB-ACDE-98FFC1EEA76C; result {"applied":true,"shown":true,"opened":false}
+    event 2026-10-03T15:55:36.888Z hud_approve_pass {"source":"hud","session_id":"p1check-muskh0kf","seq_seen":8,"pass":2,"click_id":"DBB4A2A4-BE16-4DFB-ACDE-98FFC1EEA76C"}
+    Jim: y  (expected any) Did you see a focus ring (an outline) on a button while you pressed Tab?
+    Jim: c  (expected any) Which button had it? a=Accept b=Abort c=Approve pass 2 o=other
+  step 5 keyboard_enter (2026-10-03T15:55:46.978Z)
+    YES  Tab then Enter sent hud_approve_pass
+    sent seq 10 awaiting_approval at 2026-10-03T15:55:46.981Z; result {"applied":true,"shown":true,"opened":false}
+    sent seq 11 awaiting_approval at 2026-10-03T15:56:07.303Z, answers click 3C6ACE65-C0EA-4CD4-B331-08DA657C102F; result {"applied":true,"shown":true,"opened":false}
+    event 2026-10-03T15:56:06.205Z hud_approve_pass {"source":"hud","session_id":"p1check-muskh0kf","seq_seen":10,"pass":2,"click_id":"3C6ACE65-C0EA-4CD4-B331-08DA657C102F"}
+    Jim: y  (expected any) Did you see a focus ring (an outline) on a button while you pressed Tab?
+    Jim: c  (expected any) Which button had it? a=Accept b=Abort c=Approve pass 2 o=other
+  step 6 reconnect (2026-10-03T15:56:15.495Z)
+    YES  reconnected (a new hello)
+    sent seq 12 awaiting_claude at 2026-10-03T15:56:15.499Z; result {"applied":true,"shown":true,"opened":false}
+    Jim: y  (expected y) At first, did the top line say 'Checking this edit with Claude...'?
+    Jim: y  (expected y) Does it now say 'This edit is no longer open in Claude. Your edit so far stays.', with 'To undo it: Develop > Snapshots > AVG pre-session 2026-10-03T14:05:09.123Z' below the buttons?
+    Jim: y  (expected y) Are the Pick, Approve, Accept and Abort buttons all greyed out?
+  step 7 ended_stays_open (2026-10-03T15:56:43.142Z)
+    sent seq 13 aborted at 2026-10-03T15:56:43.146Z; result {"applied":true,"shown":true,"opened":false}
+    Jim: y  (expected y) Is the HUD still open, with the top line 'Done: the photo is back as it was.'?
+    Jim: y  (expected y) Are all four buttons greyed out?
+  step 8 end (2026-10-03T15:57:04.769Z)
+    YES  the ending update was sent: the HUD shows no live edit
+    sent seq 14 ended at 2026-10-03T15:57:04.772Z; result {"applied":true,"shown":true,"opened":false}
+  keyboard: {"ring_space":"c","ring_enter":"c"}
+
+--- Jim, after the runs
+- After run 1, on the empty space at the right: "Raise to 95 % now"; on the menu names: "Rename to Edit
+  (Recommended)" [stated: Jim, 2026-10-03].
+- After run 2, which line ended with "...": "Note or clipping sentence"; on the line width: "Continue as-is, we can
+  address in a later change request." [stated: Jim, 2026-10-03]. MARGIN stays 0.95 in this PR.
+
+--- Reading of the runs
+- Long lines: at 0.85 nothing ran off the window and nothing ended in "..." (run 1). At 0.95 nothing ran off either,
+  but the note and the clipping sentence ended in "..." (run 2). HudText.wrap adds "..." only when text does not fit
+  its slots, and a larger budget fits more, so the "..." in run 2 is most likely Lightroom's own, cutting a line wider
+  than its static_text [inference]. The empty space at the right was there at both margins, so it does not come from
+  the budget; the deltas grid's row is wider than the text lines [inference: HudText.WIDTH and HudText.CELL].
+- Keyboard: in both runs Tab put a focus ring on "Approve pass 2" (the first enabled button; Pick A-C greyed), and
+  both Space and Enter clicked it (source hud). In run 1 each round also had an earlier Approve click about 7 s after
+  the step began, outside the script's 20 s window, so it was not answered and the HUD's 10 s limit turned the buttons
+  back on; Jim most likely pressed the keys before Enter in PowerShell [inference]. Run 2 had one click per round.
+- Reconnect: "Checking this edit with Claude...", then "no longer open" with the undo line naming the snapshot, and
+  every button greyed, in both runs. The ended HUD stayed open on "Done: the photo is back as it was." in both runs.
+- Lightroom reports 15.6 in hello (both runs); Jim checked the slider labels against 15.5.1 (plan D1).
+
+== Appendix A: logs\probe-hud-p1-2026-10-03\check.mts (verbatim, as run in run 2)
+
+// Lightroom check of the HUD fixes on branch fix/hud-p1 (plugin 0.9.0), decision D3 [stated: Jim,
+// 2026-10-03, "One check on the branch (Recommended)"]; y/n answered in the PowerShell window.
+// The script acts as the engine: it takes the engine instance lock, connects to the plugin's bridge
+// with the engine's own client (engine\dist), reads the selected photo (get_selection, get_context:
+// reads only) and drives a made-up edit through hud_update only. NOTHING is written to any photo or
+// the catalog: no Develop settings, no snapshots (the snapshot name it sends is only text).
+// Steps: 1 plugin version; 2 long lines; 3 headline and buttons; 4 the new menu items; 5 keyboard
+// (Tab, Space, Enter; unverified); 6 disconnect and reconnect; 7 an ended edit stays open; 8 the end.
+// Every wait ends and moves on; the ending update and the lock release always run (finally).
+// Results: <out>\check.json. Usage: node logs\probe-hud-p1-2026-10-03\check.mts [repo root]
+// Dry run against a stand-in plugin: LRC_AVG_COMMAND_PORT/_EVENT_PORT/_TOKEN_FILE, CHECK_OUT,
+// CHECK_TIME_SCALE (multiplies every wait; default 1).
+import { mkdirSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { createInterface } from "node:readline/promises";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+const repo = path.resolve(process.argv[2] ?? process.cwd());
+const dist = (p: string) => import(pathToFileURL(path.join(repo, "engine", "dist", p)).href);
+const { BridgeClient, parseHudEvent, hudUpdatePayloadSchema } = await dist("bridge/index.js");
+const { acquireInstanceLock, devOverrides, ENGINE_VERSION } = await dist("mcp/index.js");
+
+const outDir = process.env["CHECK_OUT"] ?? path.dirname(fileURLToPath(import.meta.url));
+const SCALE = Number(process.env["CHECK_TIME_SCALE"] ?? 1);
+const EXPECTED_PLUGIN = "0.9.0";
+mkdirSync(outDir, { recursive: true });
+
+const t0 = Date.now();
+const at = () => new Date().toISOString();
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const secs = (s: number) => Math.round(s * 1000 * SCALE);
+const say = (m: string) => console.log(`[${new Date().toLocaleTimeString()}] ${m}`);
+const result: Record<string, any> = { started: at(), engine_version: ENGINE_VERSION, expected_plugin: EXPECTED_PLUGIN, steps: [], events: [], failures: [] };
+const save = () => writeFileSync(path.join(outDir, "check.json"), JSON.stringify(result, null, 2));
+
+// ---- the step record, the checks and the questions ----
+let cur: Record<string, any> = { sent: [], events: [], checks: [], answers: [] };
+function begin(n: number, name: string, what: string) {
+  cur = { step: n, name, started: at(), sent: [], events: [], checks: [], answers: [] };
+  result["steps"].push(cur);
+  save();
+  say("");
+  say(`STEP ${n}: ${what}`);
+}
+function check(ok: boolean, text: string, detail?: unknown) {
+  cur["checks"].push({ ok, text, detail });
+  if (!ok) result["failures"].push(`step ${cur["step"]}: ${text}`);
+  say(`${ok ? "YES" : "NO "}  ${text}`);
+  save();
+}
+
+const rl = createInterface({ input: process.stdin, output: process.stdout });
+async function line(prompt: string): Promise<string | null> {
+  try {
+    return (await rl.question(prompt, { signal: AbortSignal.timeout(10 * 60_000) })).trim().toLowerCase();
+  } catch {
+    return null; // no answer in 10 minutes, or stdin closed
+  }
+}
+/** A y/n question. `expect` "y" or "n" makes a different answer a failure; null only records it. */
+async function ask(q: string, expect: "y" | "n" | null = "y"): Promise<string> {
+  let a: string | null = null;
+  for (let i = 0; i < 3 && a !== "y" && a !== "n"; i++) a = await line(`${q} (y/n) `);
+  const answer = a === "y" || a === "n" ? a : "no answer";
+  cur["answers"].push({ q, expect, answer, at: at() });
+  if (expect !== null && answer !== expect) result["failures"].push(`step ${cur["step"]}: answered ${answer}: ${q}`);
+  save();
+  return answer;
+}
+async function choose(q: string, letters: string): Promise<string> {
+  let a: string | null = null;
+  const allowed = letters.split("/");
+  for (let i = 0; i < 3 && !(a && allowed.includes(a)); i++) a = await line(`${q} (${letters}) `);
+  const answer = a && allowed.includes(a) ? a : "no answer";
+  cur["answers"].push({ q, expect: null, answer, at: at() });
+  save();
+  return answer;
+}
+async function pause(q: string) {
+  await line(`${q} (press Enter) `);
+}
+
+// ---- the bridge ----
+const dev = devOverrides();
+const lock = await acquireInstanceLock(dev.lockPort);
+if (!lock.ok) {
+  result["lock"] = { ok: false, port: lock.port, pid: lock.pid };
+  save();
+  say(`LOCK BUSY: another engine (pid ${lock.pid}) holds port ${lock.port}. Quit Claude Desktop (and stop using its chat) for 60 s, then run again.`);
+  process.exit(2);
+}
+result["lock"] = { ok: true };
+
+let client: any = null;
+const events: any[] = result["events"];
+function makeClient() {
+  const c = new BridgeClient({
+    engineVersion: `${ENGINE_VERSION}-hudp1-check`,
+    log: (m: string) => console.error(`  (${m})`),
+    // The plugin goes quiet while a menu item runs [handle: docs\reports\phase5\probes\hud-engine-2026-09-30\probe-hud-engine.mts.txt:63].
+    silenceAllowanceMs: () => 60_000,
+    ...dev.bridge,
+  });
+  c.onEvent((e: any) => {
+    const parsed = parseHudEvent(e);
+    if (!parsed) return;
+    const rec = { t_ms: Date.now() - t0, at: at(), name: e.name, ok: parsed.ok, payload: e.payload, error: parsed.ok ? undefined : parsed.error };
+    events.push(rec);
+    cur["events"].push(rec);
+    say(`  event: ${e.name} ${JSON.stringify(e.payload)}`);
+    save();
+  });
+  c.start();
+  return c;
+}
+async function waitEvent(from: number, pred: (e: any) => boolean, ms: number) {
+  const end = Date.now() + ms;
+  while (Date.now() < end) {
+    const hit = events.slice(from).find(pred);
+    if (hit) return hit;
+    await sleep(100);
+  }
+  return null;
+}
+
+// ---- the made-up edit ----
+const sid = `p1check-${Date.now().toString(36)}`;
+const SNAPSHOT = "AVG pre-session 2026-10-03T14:05:09.123Z";
+let seq = 0;
+let target: Record<string, unknown> = {};
+let endedSent = false;
+async function send(stage: string, extra: Record<string, unknown> = {}) {
+  seq++;
+  const p = { session_id: sid, seq, stage, target, snapshot: SNAPSHOT, ...extra };
+  hudUpdatePayloadSchema.parse(p);
+  const s = performance.now();
+  const r = await client.request("hud_update", p);
+  cur["sent"].push({ seq, stage, at: at(), ms: Math.round((performance.now() - s) * 10) / 10, payload: p, result: r });
+  if (!r.applied) check(false, `the HUD took update ${seq} (${stage})`, r);
+  save();
+  return r;
+}
+
+const LONG_NOTE = "Claude's last call failed; the edit is still open. Accept keeps the edit; Abort puts the photo back. Click either one when you are ready, there is no hurry at all.".slice(0, 120);
+const LONG_SENTENCE = "Highlight Clipping Was 12.5 % (Limit 0.5 %); Corrected. WWW MMM 000 888 Wide Words Make Wide Lines In The Window, Now Is The Time".slice(0, 120);
+const GRID = [
+  ["Profile", "Adobe Landscape", "Camera Monochrome", "changed"],
+  ["Exposure", "+0.30", "+0.55", "+0.25"],
+  ["Highlights", "-20", "-35", "-15"],
+  ["Shadows", "+10", "+18", "+8"],
+  ["Lens Corrections (panel on/off)", "off", "on", "on"],
+  ["Noise Reduction Luminance", "0", "35", "+35"],
+  ["Noise Reduction Color", "25", "40", "+15"],
+  ["Orange Saturation", "0", "-12", "-12"],
+  ["Shadows Luminance", "0", "+9", "+9"],
+  ["Point Curve Red", "linear", "edited", "edited"],
+  ["Remove Chromatic Aberration", "off", "on", "on"],
+  ["Sharpening Masking", "0", "20", "+20"],
+].map(([slider, before, after, delta]) => ({ slider, before, after, delta }));
+const OPEN_STATE = { mode: "converge", pass: 1, max_passes: 4, deltas: GRID.slice(1, 4), guardrail: { status: "green" } };
+
+let exitCode = 0;
+try {
+  // ---- 1. the plugin ----
+  begin(1, "plugin_version", "the plugin");
+  client = makeClient();
+  const hello = await client.waitConnected(30_000);
+  result["hello"] = hello;
+  save();
+  const versionOk = hello.plugin_version === EXPECTED_PLUGIN;
+  check(versionOk, `Lightroom runs plugin ${hello.plugin_version} (expected ${EXPECTED_PLUGIN})`);
+  if (!versionOk) {
+    say(`FAILED: Lightroom runs plugin ${hello.plugin_version}, not ${EXPECTED_PLUGIN}. Quit Lightroom Classic, start it again, and run this again.`);
+    result["failed"] = "plugin version";
+    throw new Error("plugin version");
+  }
+  const selection = await client.request("get_selection", { max: 1 }).catch(() => ({ photos: [] }));
+  const photo = selection.photos?.[0];
+  if (!photo?.uuid) {
+    check(false, "a photo is selected in Lightroom");
+    say("FAILED: no photo is selected in Lightroom. Select one photo in the Library or Develop module and run this again.");
+    result["failed"] = "no selection";
+    throw new Error("no selection");
+  }
+  const ctx = await client.request("get_context", { target_uuid: photo.uuid });
+  const shutter = typeof ctx.shutter === "number" && ctx.shutter > 0 ? (ctx.shutter < 1 ? `1/${Math.round(1 / ctx.shutter)} s` : `${ctx.shutter} s`) : undefined;
+  target = { uuid: photo.uuid, filename: ctx.filename };
+  if (typeof ctx.copy_name === "string" && ctx.copy_name !== "") target["copy_name"] = ctx.copy_name;
+  if (ctx.iso !== undefined && ctx.iso !== null) target["iso"] = String(ctx.iso);
+  if (shutter) target["shutter"] = shutter;
+  if (typeof ctx.aperture === "number") target["aperture"] = `f/${ctx.aperture}`;
+  if (typeof ctx.lens === "string") target["lens"] = ctx.lens;
+  result["photo"] = { filename: ctx.filename, target };
+  check(true, `the selected photo is ${ctx.filename}`);
+
+  // ---- 2. long lines ----
+  begin(2, "long_lines", "the longest lines the HUD may show");
+  const r0 = await send("begin", { ...OPEN_STATE, open: true, note: "Check: nothing is written to your photo." });
+  check(r0.shown === true, "the HUD is open (hud_update answered shown)", r0);
+  await sleep(secs(4));
+  await send("awaiting_claude", {
+    mode: "converge", pass: 3, max_passes: 8, deltas: GRID, note: LONG_NOTE,
+    guardrail: { status: "corrected", reason: LONG_SENTENCE },
+    target: {
+      uuid: photo.uuid,
+      filename: "20260906-_OZ80005-Enhanced-NR-Pano-HDR-Merge-Final-Export-v2-Retouched.NEF",
+      copy_name: "Virtual Copy 12 - Warm Sunset Variant (Brightened)",
+      iso: "64000", shutter: "1/8000 s", aperture: "f/22",
+      lens: "NIKKOR Z 24-70mm f/2.8 S II Special Edition", lens_profile: "Adobe (NIKKOR Z 24-70mm f/2.8 S)",
+    },
+  });
+  say("NOW: look at the HUD window. It shows the longest note, sentence, file name, lens, snapshot and a full 12-row grid.");
+  await sleep(secs(2));
+  await ask("Is every line fully inside the window, with nothing cut off at the right edge?");
+  await ask("Is every line readable in full, with no '...' at the end of a line?");
+  await ask("Do the lines use the window's width well (NOT a lot of empty space at the right of them)?", null);
+  await ask("Does the 12-row grid show every label, before and after in full (for example 'Lens Corrections (panel on/off)' and 'Camera Monochrome')?");
+
+  // ---- 3. headline and buttons ----
+  begin(3, "headline_and_buttons", "the headline and the buttons");
+  await send("awaiting_pick", { ...OPEN_STATE, mode: "variants", variants: ["A", "B", "C"], session_photos: [photo.uuid], note: "Step 3: pick state." });
+  await sleep(secs(2));
+  say("NOW: look at the HUD window (a pick is awaited).");
+  await ask("Is the first line at the top 'Your turn: pick a copy, or tell Claude which one.', with Pick A, Pick B and Pick C under it switched on?");
+  await ask("Under those, is there a row with Accept (greyed out) and Abort (switched on), with Abort last (on the right)?");
+  await send("awaiting_approval", { ...OPEN_STATE, approve_pass: 2, note: "Step 3: approval state." });
+  await sleep(secs(2));
+  say("NOW: look at the HUD window (an approval is awaited).");
+  await ask("Is the first line now 'Your turn: approve pass 2 so Claude can go on.'?");
+  await ask("Is the 'Approve pass 2' button switched on next to Pick A-C (greyed out), with Accept and Abort on in the row under them?");
+
+  // ---- 4. the new menu items ----
+  begin(4, "menu_items", "the new menu items (Pick B, Approve Pass)");
+  await send("awaiting_pick", { ...OPEN_STATE, mode: "variants", variants: ["A", "B", "C"], session_photos: [photo.uuid], note: "Step 4: use the menu item Pick B." });
+  say("NOW: in Lightroom click File > Plug-in Extras > LrC-AVG - Pick B   (I wait up to 2 minutes)");
+  let from = events.length;
+  const pick = await waitEvent(from, (e) => e.name === "hud_pick" && e.payload?.session_id === sid, secs(120));
+  check(pick !== null, "the menu item Pick B sent an event");
+  if (pick) {
+    check(pick.ok && pick.payload.variant === "B" && pick.payload.source === "menu", "the event is hud_pick, variant B, source menu", pick.payload);
+    await sleep(secs(4));
+  }
+  await send("awaiting_approval", { ...OPEN_STATE, approve_pass: 2, note: "Step 4: use the menu item Approve Pass.", ...(pick ? { answered_click_id: pick.payload.click_id } : {}) });
+  if (pick) await ask("During those 4 seconds, did the line under the buttons say 'Pick B sent; waiting for Claude.', and did it go away afterwards?");
+  say("NOW: in Lightroom click File > Plug-in Extras > LrC-AVG - Approve Pass   (I wait up to 2 minutes)");
+  from = events.length;
+  const approve = await waitEvent(from, (e) => e.name === "hud_approve_pass" && e.payload?.session_id === sid, secs(120));
+  check(approve !== null, "the menu item Approve Pass sent an event");
+  if (approve) {
+    check(approve.ok && approve.payload.pass === 2 && approve.payload.source === "menu", "the event is hud_approve_pass, pass 2, source menu", approve.payload);
+    await sleep(secs(4));
+  }
+  await send("awaiting_claude", { ...OPEN_STATE, pass: 2, note: "Step 4 done.", ...(approve ? { answered_click_id: approve.payload.click_id } : {}) });
+  if (approve) await ask("During those 4 seconds, did the line under the buttons say 'Approve pass 2 sent; waiting for Claude.', and did it go away afterwards?");
+  await ask("Open File > Plug-in Extras (then close it again): does it list 'LrC-AVG - Accept Edit' and 'LrC-AVG - Abort Edit', with Abort Edit last?");
+
+  // ---- 5. keyboard ----
+  const keyboard: Record<string, unknown> = {};
+  result["keyboard"] = keyboard;
+  for (const key of ["Space", "Enter"]) {
+    begin(5, `keyboard_${key.toLowerCase()}`, `keyboard: Tab, then ${key} [unverified which control has focus]`);
+    await send("awaiting_approval", { ...OPEN_STATE, approve_pass: 2, note: `Step 5: click this window's title bar, press Tab once, then ${key}.` });
+    say(`NOW: get ready to (1) click the HUD window's title bar, (2) press Tab once, (3) press ${key} once.`);
+    await pause(`I watch for 20 s from when you press Enter here.`);
+    say(`WATCHING (Tab, ${key}) for 20 s: do it now.`);
+    from = events.length;
+    const e = await waitEvent(from, (x) => x.payload?.session_id === sid, secs(20));
+    keyboard[`tab_${key.toLowerCase()}`] = e ? { event: e.name, source: e.payload.source, payload: e.payload } : { event: null };
+    check(true, e ? `Tab then ${key} sent ${e.name}` : `Tab then ${key} sent no event within 20 s`);
+    if (e) {
+      await sleep(secs(1));
+      await send("awaiting_approval", { ...OPEN_STATE, approve_pass: 2, answered_click_id: e.payload.click_id, note: "Step 5: event received." });
+    }
+    const ring = await ask("Did you see a focus ring (an outline) on a button while you pressed Tab?", null);
+    if (ring === "y") {
+      const which = await choose("Which button had it? a=Accept b=Abort c=Approve pass 2 o=other", "a/b/c/o");
+      keyboard[`ring_${key.toLowerCase()}`] = which;
+    }
+  }
+
+  // ---- 6. disconnect and reconnect ----
+  begin(6, "reconnect", "disconnect and reconnect");
+  await send("awaiting_claude", { ...OPEN_STATE, pass: 2, note: "Step 6: the check is about to disconnect." });
+  await sleep(secs(2));
+  client.stop();
+  say("disconnected; reconnecting in 2 s.");
+  await sleep(secs(2));
+  client = makeClient();
+  const hello2 = await client.waitConnected(30_000);
+  check(hello2.plugin_version === EXPECTED_PLUGIN, "reconnected (a new hello)", hello2.plugin_version);
+  say("NOW: watch the HUD's top line for the next 14 s. It should say 'Checking this edit with Claude...' first, then (after about 10 s) 'This edit is no longer open in Claude. Your edit so far stays.'");
+  await sleep(secs(14));
+  await ask("At first, did the top line say 'Checking this edit with Claude...'?");
+  await ask(`Does it now say 'This edit is no longer open in Claude. Your edit so far stays.', with 'To undo it: Develop > Snapshots > ${SNAPSHOT}' below the buttons?`);
+  await ask("Are the Pick, Approve, Accept and Abort buttons all greyed out?");
+
+  // ---- 7. an ended edit stays open ----
+  begin(7, "ended_stays_open", "an ended edit leaves the HUD open");
+  await send("aborted", { ...OPEN_STATE, pass: 2, note: "Step 7: the edit is aborted." });
+  say("NOW: leave the HUD alone for 10 s.");
+  await sleep(secs(10));
+  await ask("Is the HUD still open, with the top line 'Done: the photo is back as it was.'?");
+  await ask("Are all four buttons greyed out?");
+} catch (err: any) {
+  if (!result["failed"]) {
+    result["error"] = err?.body?.() ?? String(err?.message ?? err);
+    say(`ERROR: ${result["error"]}`);
+    result["failures"].push(`error: ${result["error"]}`);
+  }
+} finally {
+  // ---- 8. the end ----
+  begin(8, "end", "the end");
+  try {
+    if (client && seq > 0) {
+      await send("ended", { ...OPEN_STATE, pass: 2, note: "The check is over." });
+      endedSent = true;
+    }
+  } catch (err: any) {
+    check(false, "the ending update was sent", String(err?.message ?? err));
+  }
+  if (endedSent) check(true, "the ending update was sent: the HUD shows no live edit");
+  result["bridge"] = client?.stats ?? null;
+  result["ended"] = at();
+  save();
+  client?.stop();
+  await lock.lock.release();
+  rl.close();
+  const failures: string[] = result["failures"];
+  const kb = result["keyboard"] as Record<string, any> | undefined;
+  say("");
+  if (kb) say(`Keyboard (recorded, not a pass/fail): Tab+Space -> ${kb["tab_space"]?.event ?? "no event"}; Tab+Enter -> ${kb["tab_enter"]?.event ?? "no event"}`);
+  say(failures.length === 0 ? "HUD check (plugin 0.9.0): WORKED" : `HUD check (plugin 0.9.0): FAILED (${failures.length})`);
+  for (const f of failures) say(`  - ${f}`);
+  say(`Results: ${path.join(outDir, "check.json")}`);
+  exitCode = failures.length === 0 ? 0 : 1;
+  process.exit(exitCode);
+}
+
+== Appendix B: engine\tests\zz-scratch-hudp1-check.test.ts (dry-run driver, verbatim; deleted after the run)
+
+// SCRATCH dry-run driver for logs\probe-hud-p1-2026-10-03\check.mts (deleted after the run).
+import { spawn } from "node:child_process";
+import { mkdtempSync, writeFileSync, readFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { appendFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+import { FakePlugin } from "./helpers/fake-plugin.js";
+import { SimHud, hudEvent } from "./helpers/lightroom-sim-hud.js";
+
+const log = (...a: unknown[]) => appendFileSync(process.env["DRY_FILE"] ?? "dry.txt", a.join(" ") + "\n");
+const repo = path.resolve(import.meta.dirname, "..", "..");
+
+async function run(opts: { version: string; answer: (prompt: string, n: number) => string }) {
+  const plugin = await FakePlugin.start();
+  const hud = new SimHud();
+  plugin.handlers.set("hello", () => ({
+    ok: true,
+    payload: { protocol: 1, plugin_version: opts.version, lrc_version: "15.5.1", sdk_declared: 13, ports: { receive: plugin.commandPort, send: plugin.eventPort } },
+  }));
+  plugin.handlers.set("get_selection", () => ({ ok: true, payload: { count: 1, photos: [{ local_id: 1, uuid: "UUID-1", filename: "DSC0001.NEF" }] } }));
+  plugin.handlers.set("get_context", () => ({ ok: true, payload: { local_id: 1, uuid: "UUID-1", lrc_version: "15.5.1", filename: "DSC0001.NEF", iso: 100, shutter: 0.004, aperture: 8, lens: "24-70mm" } }));
+  plugin.handlers.set("hud_update", (p) => hud.update(p));
+  const dir = mkdtempSync(path.join(os.tmpdir(), "hudp1-"));
+  const tokenFile = path.join(dir, "token");
+  writeFileSync(tokenFile, plugin.token);
+  const child = spawn(process.execPath, [path.join(repo, "logs", "probe-hud-p1-2026-10-03", "check.mts"), repo], {
+    cwd: repo,
+    env: {
+      ...process.env,
+      LRC_AVG_COMMAND_PORT: String(plugin.commandPort), LRC_AVG_EVENT_PORT: String(plugin.eventPort), LRC_AVG_TOKEN_FILE: tokenFile,
+      CHECK_OUT: dir, CHECK_TIME_SCALE: "0.1",
+    },
+  });
+  let out = "";
+  let pos = 0;
+  const handled = new Set<string>();
+  let asked = 0;
+  const sid = () => hud.last()?.session_id ?? "";
+  const mark = (key: string, f: () => void) => {
+    if (!handled.has(key) && out.includes(key)) {
+      handled.add(key);
+      setTimeout(f, 300);
+    }
+  };
+  child.stdout.on("data", (d) => {
+    out += d.toString();
+    const fresh = out.slice(pos);
+    mark("LrC-AVG - Pick B", () => hudEvent(plugin, "hud_pick", { session_id: sid(), variant: "B", source: "menu" }));
+    mark("LrC-AVG - Approve Pass", () => hudEvent(plugin, "hud_approve_pass", { session_id: sid(), pass: 2, source: "menu" }));
+    mark("WATCHING (Tab, Space)", () => hudEvent(plugin, "hud_accept", { session_id: sid() }));
+    // WATCHING (Tab, Enter): no event, the timeout path.
+    const m = /(.*\((y\/n|press Enter|a\/b\/c\/o)\) )$/s.exec(fresh);
+    if (m) {
+      pos = out.length;
+      const kind = m[2];
+      child.stdin.write(`${kind === "press Enter" ? "" : kind === "y/n" ? opts.answer(m[1] ?? "", asked++) : "b"}\n`);
+    }
+  });
+  const code: number = await new Promise((resolve) => child.on("close", (c) => resolve(c ?? -1)));
+  await plugin.close();
+  return { out, code, hud, check: JSON.parse(readFileSync(path.join(dir, "check.json"), "utf8")), received: plugin.received.map((r) => r.name) };
+}
+
+describe("hud-p1 check dry run", () => {
+  it("all yes: WORKED", async () => {
+    const r = await run({ version: "0.9.0", answer: () => "y" });
+    log(r.out);
+    log("exit", r.code, "updates taken", r.hud.taken.map((u) => u.stage).join(","), "refused", r.hud.refused.length, "notTaken", r.hud.notTaken.length);
+    log("writes:", r.received.filter((n) => !["hello", "ping", "get_selection", "get_context", "hud_update"].includes(n)));
+    expect(r.out).toContain("WORKED");
+    expect(r.code).toBe(0);
+    expect(r.hud.last()?.stage).toBe("ended");
+  }, 120_000);
+  it("wrong plugin version: FAILED", async () => {
+    const r = await run({ version: "0.8.0", answer: () => "y" });
+    log(r.out);
+    expect(r.out).toContain("FAILED");
+    expect(r.code).toBe(1);
+  }, 60_000);
+  it("an n answer: FAILED, still ends", async () => {
+    const r = await run({ version: "0.9.0", answer: (_q, n) => (n === 0 ? "n" : "y") });
+    log(r.out.split("\n").slice(-12).join("\n"));
+    expect(r.out).toContain("FAILED");
+    expect(r.code).toBe(1);
+    expect(r.hud.last()?.stage).toBe("ended");
+  }, 120_000);
+});

@@ -16,7 +16,8 @@
 //     again without a new click [inference: the approval is of the pass the user saw, which is
 //     still the photo's last].
 // [handle: tests\approve-pass.test.ts, tests\approve-pass-hud.test.ts, against the Lightroom sim; in
-// Lightroom [unverified] until PHASE5_PLAN row 7.]
+// Lightroom [unverified] until PHASE5_PLAN row 7.] The HUD's notes say "edit" where Claude's results
+// say "session" (fix/hud-p1 copy deck).
 
 import { ToolError } from "../mcp/errors.js";
 import { abortError, saveLog } from "./io.js";
@@ -59,7 +60,7 @@ export function pendingApproval(s: Session): { target: Target; pass: number } | 
 }
 
 /** The HUD's note while a pass waits for approval. */
-export const approvalNote = (pass: number): string => `Approve pass ${pass} to let Claude make the next pass (or tell Claude in chat).`;
+export const approvalNote = (pass: number): string => `Approve pass ${pass} to let Claude make the next pass, or tell Claude in chat.`;
 
 /** Record the approval of photo `t`'s pass `pass` in the session and its log. */
 export function recordApproval(ctx: SessionContext, s: Session, t: Target, pass: number, by: ApprovalBy): void {
@@ -73,21 +74,29 @@ export function recordApproval(ctx: SessionContext, s: Session, t: Target, pass:
   }
 }
 
-/** An approval asked for (the HUD names the pass it showed): approved, already approved, or why not. */
-export type ApproveResult = { ok: true; pass: number; already: boolean; woke: boolean } | { ok: false; reason: string };
+/**
+ * An approval asked for (the HUD names the pass it showed): approved, already approved, or why not,
+ * for Claude (`reason`, lr_approve_pass) and for the HUD (`hud`, in the photographer's words).
+ */
+export type ApproveResult = { ok: true; pass: number; already: boolean; woke: boolean } | { ok: false; reason: string; hud: string };
 
 export function approve(ctx: SessionContext, s: Session, by: ApprovalBy, pass?: number): ApproveResult {
-  if (!approveEachPass(s)) return { ok: false, reason: "This session runs in autonomous mode: its passes need no approval." };
-  if (s.abort) return { ok: false, reason: "The session is being aborted." };
+  if (!approveEachPass(s)) return { ok: false, reason: "This session runs in autonomous mode: its passes need no approval.", hud: "This edit runs in autonomous mode, so its passes need no approval." };
+  if (s.abort) return { ok: false, reason: "The session is being aborted.", hud: "The edit is being aborted." };
   const waiting = pendingApproval(s);
   const t = edited(s);
   if (!waiting) {
     const last = t ? approvedPass(s, t) : 0;
     if (t && last >= 1 && last === t.passes && (pass === undefined || pass === last)) return { ok: true, pass: last, already: true, woke: false };
-    return { ok: false, reason: `No pass waits for approval: ${notWaitingReason(s, t)}.` };
+    return { ok: false, reason: `No pass waits for approval: ${notWaitingReason(s, t)}.`, hud: "No pass is waiting for approval." };
   }
-  if (pass !== undefined && pass !== waiting.pass) return { ok: false, reason: `Pass ${pass} is not the one waiting for approval; pass ${waiting.pass} is.` };
-  if (s.approvalWait?.why === "accept") return { ok: false, reason: "Accept came first: the session is ending with the edit kept, and no further pass is made." };
+  if (pass !== undefined && pass !== waiting.pass) {
+    const other = `Pass ${pass} is not the one waiting for approval; pass ${waiting.pass} is.`;
+    return { ok: false, reason: other, hud: other };
+  }
+  if (s.approvalWait?.why === "accept") {
+    return { ok: false, reason: "Accept came first: the session is ending with the edit kept, and no further pass is made.", hud: "Accept came first: the edit is being kept, and no further pass is made." };
+  }
   recordApproval(ctx, s, waiting.target, waiting.pass, by);
   const woke = s.approvalWait !== null;
   s.approvalWait?.wake("approved");

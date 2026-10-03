@@ -1,15 +1,18 @@
 // The HUD's state built from the session (PRD 6.3; the fields are bridge\hud-protocol.ts's, and its
 // header says how the plugin shows each): the photo the session works on with its EXIF, the session's
-// photos, the deltas and guardrail status of that photo's last pass, and the session's settings
-// (PHASE5_PLAN decision 4). The plugin replaces its whole state with each update [handle:
-// plugin\LrC-AVG.lrplugin\Hud.lua update(), `H.state = s`], so every update carries all of it.
-// get_context's shutter and aperture are formatted when they are numbers ("1/250 s", "f/8"); which
-// form Lightroom gives them in is [unverified] (the sim gives numbers, tests\helpers\lightroom-sim.ts).
+// photos, the deltas and guardrail status of that photo's last pass, the session's settings
+// (PHASE5_PLAN decision 4) and its pre-session snapshot's name. The plugin replaces its whole state
+// with each update [handle: plugin\LrC-AVG.lrplugin\Hud.lua update(), `H.state = s`], so every update
+// carries all of it. Sliders go by Lightroom's labels (params\labels.ts), and the guardrail status
+// comes with one sentence for the photographer (hudGuardrail); the session log keeps the engine's
+// own words. get_context's shutter and aperture are formatted when they are numbers ("1/250 s",
+// "f/8"); which form Lightroom gives them in is [unverified] (the sim gives numbers,
+// tests\helpers\lightroom-sim.ts).
 
 import { HUD_END_STAGES, HUD_LIMITS, type HudStage, type HudUpdatePayload } from "../bridge/index.js";
 import type { PassEntry } from "../log/index.js";
-import type { CanonicalValue } from "../params/index.js";
-import { pendingApproval, type Session, type Target, type VariantId } from "../session/index.js";
+import { lightroomLabel, type CanonicalValue } from "../params/index.js";
+import { pendingApproval, type Limits, type Session, type Target, type VariantId } from "../session/index.js";
 
 /** An update without what the publisher adds: seq, open and answered_click_id. */
 export type HudState = Omit<HudUpdatePayload, "seq" | "open" | "answered_click_id">;
@@ -39,9 +42,10 @@ export function hudState(s: Session, stage: HudStage, note?: string): HudState {
     session_photos: [s.master, ...s.variants].map((x) => x.uuid).slice(0, HUD_LIMITS.photos),
     ...(stage === "awaiting_pick" ? { variants: s.variants.map((v) => v.id as VariantId) } : {}),
     ...(waiting ? { approve_pass: clamp(waiting.pass, 1, HUD_LIMITS.pass) } : {}),
-    ...(last ? { deltas: last.changes.slice(0, HUD_LIMITS.rows).map(delta), guardrail: guardrail(last) } : {}),
+    ...(last ? { deltas: last.changes.slice(0, HUD_LIMITS.rows).map(delta), guardrail: hudGuardrail(last, s.limits) } : {}),
     ...(text ? { note: text } : {}),
     settings: settings(s),
+    snapshot: s.snapshot.name,
   };
 }
 
@@ -96,27 +100,73 @@ function shown(v: CanonicalValue): string | number {
 
 function delta(c: PassEntry["changes"][number]): HudDelta {
   return {
-    slider: c.name,
+    slider: lightroomLabel(c.name),
     ...(c.before !== null ? { before: shown(c.before) } : {}),
     after: shown(c.after),
     ...(c.delta !== null ? { delta: c.delta > 0 ? `+${c.delta}` : String(c.delta) } : {}),
   };
 }
 
-/** The pass's guardrail status: the strongest action taken, else what was refused or clamped, else green. */
-function guardrail(p: PassEntry): HudGuardrail {
-  const action = (kind: PassEntry["guardrail_actions"][number]["kind"]) => p.guardrail_actions.find((a) => a.kind === kind);
+type GuardrailAction = PassEntry["guardrail_actions"][number];
+
+/**
+ * The pass's guardrail status, the strongest action taken, else what was refused or clamped, else
+ * green, with one sentence for the photographer (green: none; plugin 0.9.0 prints "Clipping: within
+ * limits.", bridge\hud-protocol.ts header). Each sentence stays well under HUD_LIMITS.text: the
+ * longest label a clamp or refusal can name is 25 characters [handle: tests\hud-labels.test.ts "keeps
+ * every guardrail sentence within the HUD's text limit, in the photographer's words"].
+ */
+export function hudGuardrail(p: Pick<PassEntry, "guardrail_actions" | "refused" | "clamped">, limits: Limits): HudGuardrail {
+  const action = (kind: GuardrailAction["kind"]) => p.guardrail_actions.find((a) => a.kind === kind);
   const reverted = action("reverted");
-  if (reverted) return { status: "undone", reason: reverted.reason };
+  if (reverted) {
+    const why = reverted.limit === "region" ? "a region changed more than allowed" : `${end(reverted).toLowerCase()} clipping went over the limit`;
+    return { status: "undone", reason: `Pass undone: ${why}.` };
+  }
   const unmet = action("unmet");
-  if (unmet) return { status: "unmet", reason: unmet.reason };
+  if (unmet) return { status: "unmet", reason: `${end(unmet)} clipping is still ${clip(unmet, limits)} after corrections.` };
   const corrected = action("corrected");
-  if (corrected) return { status: "corrected", reason: corrected.reason };
+  if (corrected) return { status: "corrected", reason: `${end(corrected)} clipping was ${clip(corrected, limits)}; corrected.` };
   const refused = p.refused[0];
-  if (refused) return { status: "refused", reason: `${refused.name}: ${refused.reason}` };
+  if (refused) return { status: "refused", reason: `${lightroomLabel(refused.name)}: ${refusedWhy(refused, p.clamped)}.` };
   const clamped = p.clamped[0];
-  if (clamped) return { status: "clamped", reason: `${clamped.name}: ${clamped.reason}` };
+  if (clamped) return { status: "clamped", reason: `${lightroomLabel(clamped.name)}: ${clampedWhy(clamped)}.` };
   return { status: "green" };
+}
+
+/** Corrections and "unmet" are about a clipping limit (session\guardrail.ts correct(), unmet()). */
+const end = (a: GuardrailAction): string => (a.limit === "clip_low" ? "Shadow" : "Highlight");
+
+/**
+ * "<x> % (limit <y> %)". The clipping is the first percentage in the action's reason, which
+ * session\guardrail.ts correct() and unmet() write as "clip_<end>_pct was|is still <x> %, over the
+ * limit of <y> %"; the log keeps no other field with it for a correction (the reading before it).
+ */
+function clip(a: GuardrailAction, limits: Limits): string {
+  const limit = a.limit === "clip_low" ? limits.clipLowPct : limits.clipHighPct;
+  const x = /(\d+(?:\.\d+)?) %/.exec(a.reason)?.[1];
+  return x === undefined ? `over the limit of ${pct(limit)} %` : `${pct(Number(x))} % (limit ${pct(limit)} %)`;
+}
+
+const pct = (n: number): string => String(round(n, 2));
+
+/**
+ * Why a slider was not changed, from session\plan.ts planStep and applyProjectedGuardrail. planStep's
+ * "no change is left after the limits" follows a range clamp of the same slider when it is already at
+ * the end of its range; otherwise the change rounded to nothing (session\plan.ts planStep).
+ */
+function refusedWhy(r: PassEntry["refused"][number], clamped: PassEntry["clamped"]): string {
+  if (r.by === "guardrail") return "not changed, it would push clipping over the limit";
+  if (r.reason.includes("not available")) return "not available on this photo, not changed";
+  const atEnd = clamped.some((c) => c.name === r.name && c.reason.startsWith("the slider's range"));
+  return atEnd ? "not changed, it is already at the end of its range" : "not changed, no room left within its limits";
+}
+
+/** Why a change was held, from the reasons session\plan.ts planStep and applyProjectedGuardrail write. */
+function clampedWhy(c: PassEntry["clamped"][number]): string {
+  if (c.reason.startsWith("pass ")) return `change held to ±${Math.abs(c.applied)} this pass`;
+  if (c.reason.startsWith("the slider's range")) return "held at the end of its range";
+  return "change held back to keep clipping within limits";
 }
 
 /** The session's own values, under get_prefs' names (decision 4: the HUD shows them, not the page's). */

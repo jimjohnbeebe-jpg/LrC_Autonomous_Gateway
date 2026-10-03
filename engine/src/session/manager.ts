@@ -169,7 +169,7 @@ export class SessionManager {
         this.close(s, user ? userEnded(this.ctx, s, "aborted", user) : null);
         if (user) this.ctx.deps.hud?.stage(s, "aborted", { note: abortedNote(s) });
         else if (args.outcome === "accept") this.ctx.deps.hud?.stage(s, "accepted", { note: "Claude accepted: the edit is kept." });
-        else this.ctx.deps.hud?.stage(s, "ended", { note: "Claude reverted: the photo is back as it was before the session." });
+        else this.ctx.deps.hud?.stage(s, "ended", { note: "Claude reverted: the photo is back as it was before the edit." });
         return out;
       }, true),
     );

@@ -5,7 +5,7 @@
 
 import { ToolError, toToolError } from "../mcp/errors.js";
 import { deltaMetrics, type MetricsDelta } from "../metrics/index.js";
-import type { CanonicalValue, FromSdkResult, ParamMap } from "../params/index.js";
+import { lightroomLabel, type CanonicalValue, type FromSdkResult, type ParamMap } from "../params/index.js";
 import { failed, fresh, ms, read, render, saveLog, write } from "./io.js";
 import type { Slope } from "./plan.js";
 import { baseMaxStep, roundForSlider } from "./rules.js";
@@ -22,7 +22,7 @@ export async function probe(ctx: SessionContext, s: Session, args: ProbeArgs): P
   }
   const magnitude = args.magnitude ?? 0.5;
   const t = resolveTarget(s, args.target, "write");
-  s.work = { target: t, pass: null, note: `Probing ${args.sliders.join(", ")}` };
+  s.work = { target: t, pass: null, note: `Testing how ${args.sliders.map(lightroomLabel).join(", ")} change clipping` };
   await focus(ctx, s, t);
   const view = await read(ctx, s, t);
   let base: Rendered;

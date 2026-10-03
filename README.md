@@ -4,7 +4,7 @@ LrC-AVG lets Claude, in Claude Desktop, edit a raw photo in Lightroom Classic th
 
 It comes in two halves: a Lightroom plugin, and an engine that Claude Desktop starts as an MCP server.
 
-**Prototype: engine 0.10.0, plugin 0.7.0. There is no release yet.** The [Install](#install) section below describes the planned 1.0.0 release; its download links do not work yet. To run the prototype, build it from source as in [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md). From [Your first session](#your-first-session) on, this page describes the prototype as it is. Built and tested on one Windows 11 PC with Lightroom Classic 15.5.1 and 15.6. Where this page states how something behaves, the evidence is listed under [Sources](#sources).
+**Prototype: there is no release yet.** The [Install](#install) section below describes the planned 1.0.0 release; its download links do not work yet. To run the prototype, build it from source as in [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md). From [Your first session](#your-first-session) on, this page describes the prototype as it is. Built and tested on one Windows 11 PC with Lightroom Classic 15.5.1 and 15.6. Where this page states how something behaves, the evidence is listed under [Sources](#sources).
 
 ## What you need
 

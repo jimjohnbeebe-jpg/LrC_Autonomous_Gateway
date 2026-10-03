@@ -110,7 +110,7 @@ export class SimLibrary {
     return ok({ count: found.length, keywords: found.slice(offset, offset + Number(p["limit"])) });
   }
 
-  /** The keyword at `path`, case aside, its missing levels created (KeywordTree.ensureParents, then createKeyword). */
+  /** The keyword at `path`, case aside, its missing levels created (KeywordTree.resolve, then createKeyword). */
   private ensure(path: string): string {
     const existing = this.keywordTree.find((k) => fold(k) === fold(path));
     if (existing) return existing;

@@ -33,7 +33,7 @@ Repo-side records: `docs\PHASE0_HANDOVER.md` (start here in a fresh session), `d
 
 ## Pull request + review workflow (from Phase 0b on)
 
-Repo: https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway (public; `main` is protected: PR required, 0 approvals, no force pushes or deletions). Full rule: `.claude\rules\04-workflow.md`. The reviewer is **CodeRabbit** from 2026-10-03 (`.coderabbit.yaml`), in place of Greptile (`greptile.json` kept with `autoReview` `[]`); how to switch back is in rule 04.
+Repo: https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway (public; `main` is protected: PR required, 0 approvals, no force pushes or deletions). Full rule: `.claude\rules\04-workflow.md`. The reviewer is **CodeRabbit** from 2026-10-03 (`.coderabbit.yaml`), in place of Greptile (the Greptile app no longer has access to this repo; `greptile.json` is kept); how to switch back is in rule 04.
 
 1. Work on a branch named `phase-<n>/<topic>` or `fix/<topic>`.
 2. Never commit to `main` directly.

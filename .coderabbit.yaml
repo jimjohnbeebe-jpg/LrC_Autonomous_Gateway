@@ -1,7 +1,8 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 # CodeRabbit: this repo's pull request reviewer from 2026-10-03, in place of Greptile [stated: Jim,
 # 2026-10-03, "switch the reviewer for the remainder of this phase to CodeRabbit from Greptile"].
-# greptile.json stays, with autoReview [], for switching back (.claude/rules/04-workflow.md).
+# Greptile is off on this repo through its GitHub App's repository access; greptile.json stays for
+# switching back (.claude/rules/04-workflow.md).
 # Tuned as greptile.json was: one automatic review per PR, code defects only, docs and Markdown not
 # reviewed. Keys, defaults and enums: https://coderabbit.ai/integrations/schema.v2.json (read
 # 2026-10-03); this file validates against it (ajv 8, PR fix/coderabbit-review). CodeRabbit reads

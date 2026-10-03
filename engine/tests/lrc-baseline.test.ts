@@ -109,6 +109,11 @@ describe("process versions", () => {
     expect(toToolError(refusal("16.0")).message).not.toMatch(/is running/);
   });
 
+  it("compares process versions by component, so 15.10 and 15.4.1 are newer than 15.4", () => {
+    for (const pv of ["15.10", "15.4.1"]) expect(toToolError(refusal(pv)).body()).toMatchObject({ code: "NEWER_PROCESS_VERSION" });
+    expect(toToolError(refusal("15.3")).body()).toMatchObject({ code: "LEGACY_PROCESS_VERSION" });
+  });
+
   it("still describes the photo, with NEWER_PROCESS_VERSION as its settings_error", async () => {
     lr.lrcVersion = "16.0";
     lr.settings["ProcessVersion"] = "16.0";

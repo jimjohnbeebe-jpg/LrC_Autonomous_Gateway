@@ -280,7 +280,7 @@ export class ParamMap {
     if (SUPPORTED_PROCESS_VERSIONS.includes(pv)) return;
     const supported = `(supported: ${SUPPORTED_PROCESS_VERSIONS.join(", ")})`;
     // A newer process version comes with a Lightroom update; updating the photo cannot help then [inference].
-    if (SUPPORTED_PROCESS_VERSIONS.every((v) => Number.parseFloat(pv) > Number.parseFloat(v))) {
+    if (SUPPORTED_PROCESS_VERSIONS.every((v) => compareVersions(pv, v) > 0)) {
       throw new ParamError(
         "newer_process_version",
         `Process version ${pv} is newer than this engine knows ${supported}, so editing this photo is unavailable until the engine supports it; reading its context still works.`,
@@ -288,4 +288,15 @@ export class ParamMap {
     }
     throw new ParamError("unsupported_process_version", `Process version ${pv} is not supported ${supported}: update the photo's process version in Lightroom first.`);
   }
+}
+
+/** Dotted versions compared by number per component ("15.10" > "15.4", "15.4.1" > "15.4"); NaN counts as not newer. */
+function compareVersions(a: string, b: string): number {
+  const pa = a.split(".").map(Number);
+  const pb = b.split(".").map(Number);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const d = (pa[i] ?? 0) - (pb[i] ?? 0);
+    if (d !== 0) return d;
+  }
+  return 0;
 }

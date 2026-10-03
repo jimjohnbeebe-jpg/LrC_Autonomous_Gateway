@@ -48,20 +48,29 @@ describe("bridge: update_ai_settings", () => {
 
 describe("bridge: probe_masks_dc", () => {
   it("reads the steps whatever their results hold, and an empty step list as Json.lua writes it", async () => {
-    expect((await client.request("probe_masks_dc", {})).steps).toEqual([{ step: "switchToModule_develop", ok: false, error: "the sim has no Develop module", ms: 0 }]);
+    expect((await client.request("probe_masks_dc", { target_uuid: lr.uuid })).steps).toEqual([{ step: "switchToModule_develop", ok: false, error: "the sim has no Develop module", ms: 0 }]);
     const steps = [
       { step: "getAllMasks_before", ok: true, result: [{ ID: "A", "1": { ID: "B" } }], ms: 0.4 },
       { step: "goToMasking", ok: true, ms: 1 },
       { step: "getSelectedTool_after_goToMasking", ok: true, result: "masking", ms: 0.1 },
     ];
     plugin.handlers.set("probe_masks_dc", () => ({ ok: true, payload: { uuid: lr.uuid, filename: "x.NEF", steps } }));
-    expect((await client.request("probe_masks_dc", {})).steps).toEqual(steps);
+    expect((await client.request("probe_masks_dc", { target_uuid: lr.uuid })).steps).toEqual(steps);
     plugin.handlers.set("probe_masks_dc", () => ({ ok: true, payload: { steps: [] } }));
-    expect((await client.request("probe_masks_dc", {})).steps).toEqual([]);
+    expect((await client.request("probe_masks_dc", { target_uuid: lr.uuid })).steps).toEqual([]);
+  });
+
+  it("is refused when another photo is selected, and reads why a probe stopped", async () => {
+    lr.selected = "OTHER";
+    const err = await rejection(client.request("probe_masks_dc", { target_uuid: lr.uuid }));
+    expect([err.code, err.recoverable]).toEqual(["target_mismatch", true]);
+    const stopped = "target_mismatch: The selected photo (OTHER) is not the target (SIM-UUID)";
+    plugin.handlers.set("probe_masks_dc", () => ({ ok: true, payload: { uuid: lr.uuid, steps: [{ step: "stopped_before_createNewMask_sky", ok: false, ms: 0, error: stopped }], stopped } }));
+    expect((await client.request("probe_masks_dc", { target_uuid: lr.uuid })).stopped).toBe(stopped);
   });
 
   it("refuses a step without its time", async () => {
     plugin.handlers.set("probe_masks_dc", () => ({ ok: true, payload: { steps: [{ step: "goToMasking", ok: true }] } }));
-    expect((await rejection(client.request("probe_masks_dc", {}))).code).toBe("bad_response");
+    expect((await rejection(client.request("probe_masks_dc", { target_uuid: lr.uuid }))).code).toBe("bad_response");
   });
 });

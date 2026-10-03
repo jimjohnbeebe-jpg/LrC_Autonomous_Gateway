@@ -222,8 +222,9 @@ export const COMMANDS = {
   // update_ai_settings: photo:updateAISettings() in its own write gate, timed; `gate` is what
   // withWriteAccessDo returned, when anything. A Lightroom without the call answers feature_unavailable.
   update_ai_settings: z.object({ ...targeted, call_ms: z.number(), command_ms: z.number(), gate: z.string().optional() }),
-  // probe_masks_dc: the selected photo and every step of the LrDevelopController probe, in order.
-  probe_masks_dc: z.object({ uuid: z.string().optional(), filename: z.string().optional(), steps: z.array(probeStep) }),
+  // probe_masks_dc: the selected photo (the target) and every step of the LrDevelopController probe, in
+  // order; `stopped` says why it ran no further step (the selection changed, or its own deadline passed).
+  probe_masks_dc: z.object({ uuid: z.string().optional(), filename: z.string().optional(), steps: z.array(probeStep), stopped: z.string().optional() }),
 } as const;
 
 export type CommandName = keyof typeof COMMANDS;
@@ -271,6 +272,6 @@ export type CommandPayloads = {
   hud_update: HudUpdatePayload;
   /** Plugin 0.11.0: the photo with that uuid, checked against `expect`; the selection is not touched. */
   update_ai_settings: { photo_uuid: string; expect?: PhotoExpect };
-  /** Plugin 0.11.0: on the selected photo; switches Lightroom to Develop and leaves it there. */
-  probe_masks_dc: Record<string, never>;
+  /** Plugin 0.11.0: on the selected photo, refused with target_mismatch unless it is target_uuid's; switches Lightroom to Develop and leaves it there. */
+  probe_masks_dc: { target_uuid: string };
 };

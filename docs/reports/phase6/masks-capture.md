@@ -56,7 +56,8 @@ Before any mask tool is built (issue #59, PR C step 2), learn from one live phot
 - **`update_ai_settings { photo_uuid, expect? }`** → `{ uuid, call_ms, command_ms, gate? }`. It finds the photo by uuid (`Photos.find`), then calls `photo:updateAISettings()` in its own write gate, `"AVG update AI masks"`.
   - A Lightroom without the call answers `feature_unavailable` (recoverable). A call that raises answers `update_failed`.
   - It does not wait for the mask to compute: the check reads `get_settings` for that. So no mask field name is written in Lua.
-- **`probe_masks_dc {}`** → `{ uuid, filename, steps: [{ step, ok, result | error, ms }] }`. It works on the selected photo, outside any write gate:
+- **`probe_masks_dc { target_uuid }`** → `{ uuid, filename, steps: [{ step, ok, result | error, ms }], stopped? }`. It works on the selected photo, outside any write gate. If the selected photo is not `target_uuid`'s, it refuses with `target_mismatch`, as `Develop.lua` `target()` does.
+  - `LrDevelopController` acts on the current photo, not on a photo object. So before every step the probe checks that the selected photo is still the target and that its own 60 s deadline has not passed. If either fails, it records why in `stopped` and runs no further step. A probe the engine has given up on therefore stops by itself.
   - it switches to Develop and opens Masking;
   - it creates an AI sky mask, writes `local_Exposure` 0.5 at once, waits up to 10 s for the mask to show in `getAllMasks()`, then after 2 s more writes 0.75 and reads the photo's settings;
   - it creates an AI subject mask;
@@ -72,8 +73,8 @@ It labels each new entry two ways and records whether they agree:
 
 Field names it changes are found in Jim's own entries and are named in check.json:
 - a top-level number whose name starts with `LocalExposure`;
-- geometry fields `ZeroX/ZeroY/FullX/FullY` and `Top/Left/Bottom/Right` [community: same research], set only when Jim's entry has them;
-- `*Name*` strings and `*Active*` booleans;
+- geometry fields `ZeroX/ZeroY/FullX/FullY` and `Top/Left/Bottom/Right` [community: same research], set only when Jim's entry has them. The new linear gradient goes at the bottom (full effect at the bottom edge, gone a third of the way up), where Jim's own linear (top edge down) is not, so its question can come back `n`;
+- `*Name*` strings and `*Active*` booleans. When the entries have a name field, the copies are named `AVG new sky`, `AVG new linear` and `AVG new radial`, and the questions call them by those names;
 - string fields ending in `ID`, which a copied entry gets new values for in the same format;
 - fields with `Digest` in the name, which a copied entry drops.
 
@@ -88,6 +89,9 @@ The History names it writes:
 - `AVG update AI masks`, the write gate's name
 
 Whatever happens, the snapshot `AVG capture before <time>` puts the photo back at the end, and every setting is compared with the start. The snapshot and the History steps stay on the photo, as in the earlier checks.
+- **Ctrl+C.** In a terminal, readline takes Ctrl+C itself, and without handlers a second one would end Node before the put-back. So Ctrl+C (readline's and the process's `SIGINT`) and closing the window (`SIGHUP`) only set a flag. The check then skips every remaining step and goes straight to the put-back. Step 1 prints the snapshot's name and the manual fallback. Closing the window leaves Node about 10 s before Windows ends it [handle: https://nodejs.org/api/process.html#signal-events, read 2026-10-03], which may cut the put-back short, so Jim's steps say Ctrl+C.
+- **After the probe.** The check passes `target_uuid`, checks that the probe answered for `_OZ80099`, and calls `get_selection` afterwards to report any change of selection. When the probe fails or times out (the check waits 90 s), it reads the settings every second until they have held still for 5 s, for at most 90 s, before it applies the snapshot.
+- **Absent, `[]` and `{}`** count as the same in every comparison: a photo without masks has no mask key at all (pre-run finding 2). Step 6 reports "unchanged" only when the mask key was there before its write.
 
 Results land in the check's folder: `check.json`, `transcript.txt`, and `raw\*.json` (the full dumps). Copies of the dumps go to `%TEMP%\LrC-AVG\masks-capture\`. Claude Code collects them.
 
@@ -125,8 +129,8 @@ The menu labels in step 5 (Create New Mask, Linear Gradient, Range > Luminance R
 - If it prints `LOCK BUSY`, Claude Desktop is still running: do step 1 again, wait 60 seconds, then do step 4 again.
 - If it prints `Lightroom plugin not connected within 30000 ms`, check that Lightroom is open and that **File > Plug-in Manager** lists LrC-AVG as **Enabled**, then do step 4 again.
 - If it prints `NO   Lightroom ... runs plugin 0.9.0` (or any number below 0.11.0), quit Lightroom, start it again, wait 20 seconds, then do step 4 again.
-- If the window shows no new line for 5 minutes after you pressed Enter, press **Ctrl+C**. Then, in Lightroom's Develop module, open the **Snapshots** panel (left side) and click the snapshot whose name starts with `AVG capture before`. Tell Claude Code.
-- If it prints `PUT BACK: NO`, click the same snapshot as in the line above, then tell Claude Code.
+- If you need to stop, or the window shows no new line for 5 minutes after you pressed Enter, press **Ctrl+C** once. Do not press it again, and do not close the window. It prints `ABORTING`, then puts the photo back by itself and prints `PUT BACK: YES` or `NO`. Wait for those last lines. Tell Claude Code.
+- If it prints `PUT BACK: NO`, wait 1 minute. Then, in Lightroom's Develop module, open the **Snapshots** panel (left side) and click the snapshot it names (it starts with `AVG capture before`). Tell Claude Code.
 
 ## Pre-run findings (Claude Code)
 
@@ -152,15 +156,17 @@ The menu labels in step 5 (Create New Mask, Linear Gradient, Range > Luminance R
    - `switchToModule` and `getCurrentModuleName` are SDK 6.0 [handle: https://lrc.mcor.dev/modules/LrApplicationView.html, read 2026-10-03].
 4. **The plugin declares `LrSdkVersion = 13.0`** [handle: `plugin\LrC-AVG.lrplugin\Info.lua`], below `updateAISettings`'s 13.3. Whether Lightroom hides newer calls from such a plugin is [unverified]. If step 7 answers `feature_unavailable`, this is the first suspect [inference]. Changing the declared version is Jim's decision, not part of this step.
 5. **The capture photo's uuid** is `CF12AF60-0858-4181-9562-376D16B89126`, an original (no copy name), local id 3869534 [handle: `docs\reports\phase4\P4\p4_chat_session\20260927-26ecc4.json` `target`].
-6. **Dry runs** of `check.mts` against the test sim [handle: `logs\check-masks-capture-2026-10-03\dryrun.txt`, three runs, 2026-10-03; driver `dryrun-driver.ts.txt` beside it]. They show only that the script runs, skips, times out and puts back. They show nothing about Lightroom.
-   - **Run 1, the sim as it is (no masks).** Step 3 reports `NO the settings hold a new array of mask entries`, steps 4, 5 and 7-10 are skipped, and step 6 writes. `PUT BACK: YES`; one History step (`AVG capture global write`).
+6. **Dry runs** of `check.mts` against the test sim [handle: `logs\check-masks-capture-2026-10-03\dryrun.txt`, five runs, 2026-10-03; driver `dryrun-driver.ts.txt` beside it]. They show only that the script runs, skips, times out and puts back. They show nothing about Lightroom.
+   - **Run 1, the sim as it is (no masks).** Step 3 reports `NO the settings hold a new array of mask entries`, steps 4, 5 and 7-10 are skipped, and step 6 writes. After the probe the selection is still the photo. `PUT BACK: YES`; one History step (`AVG capture global write`).
    - **Run 2, an invented five-entry table injected at the Enter prompt.**
      - Every mask step ran: 5 entries identified, the write-back identical, the local exposure 0.125 → 0.25 read back, the global write leaving the table unchanged.
      - The sim never computes, so step 7 waited its full 30 s (114 reads) and reported NO.
-     - Both gradients' geometry read back as written; the rename and hide fields were found; the delete went from 8 to 7 entries with the others unchanged.
+     - The copies were named `AVG new sky`, `AVG new linear` and `AVG new radial`, and the questions used those names. Both gradients' geometry read back as written; the rename and hide fields were found; the delete went from 8 to 7 entries with the others unchanged.
      - The snapshot restored everything; `PUT BACK: YES`; seven History steps.
    - **Run 3, hello reporting plugin 0.9.0.** The check stops after `hello`: no write, no snapshot.
-7. **Tests.** Before: 833 passed, 7 skipped (840), in 61 files. After: 839 passed, 7 skipped (846), in 62 files (`npm test`, 2026-10-03): the 4 contract tests in `bridge-masks.test.ts`, and the Lua 5.1 parse and no-utf8 checks for `Masks.lua`. `npm run build` and `npm run typecheck` pass.
+   - **Run 4, the invented table and a Ctrl+C before step 5.** The script's dry-run hook emits readline's `SIGINT` event. It printed `ABORTING`, ran no further step, then put back (`PUT BACK: YES`, one History step). A real keyboard Ctrl+C, and the process `SIGINT` / `SIGHUP` handlers, were not exercised: the dry run has no terminal, and on Windows a signal sent to a child process ends it at once [handle: https://nodejs.org/api/process.html#signal-events]. So those stay [unverified].
+   - **Run 5, the probe answering an error.** The settings held still for 5 s (5053 ms) before the snapshot was applied; `PUT BACK: YES`.
+7. **Tests.** Before: 833 passed, 7 skipped (840), in 61 files. After: 840 passed, 7 skipped (847), in 62 files (`npm test`, 2026-10-03): the 5 contract tests in `bridge-masks.test.ts`, and the Lua 5.1 parse and no-utf8 checks for `Masks.lua`. `npm run build` and `npm run typecheck` pass.
 
 ## Observed (Jim)
 

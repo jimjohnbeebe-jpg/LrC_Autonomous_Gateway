@@ -6,7 +6,11 @@
 -- state; docs\reports\phase5\S8.md Numbers, "_G shared"]. This module does not require Bridge.lua,
 -- which requires the dispatch and so the HUD: that would be a require loop.
 
+local HudText = require 'HudText'
+
 local Events = {}
+
+local R = HudText.REASON
 
 local function live()
     local handle = _G.LrCAVG_BridgeLive
@@ -26,12 +30,12 @@ end
 -- (Bridge.lua SEND_WAIT_SECONDS). Returns true, or false and why, in words the HUD shows.
 function Events.send(name, payload)
     local handle = live()
-    if not handle then return false, "the LrC-AVG bridge is not running" end
-    if handle.engineConnected() ~= true then return false, "the engine is not connected" end
+    if not handle then return false, R.not_running end
+    if handle.engineConnected() ~= true then return false, R.not_connected end
     local ok, why = handle.sendEvent(name, payload)
     if ok then return true end
-    if why == "encode" then return false, "the event could not be encoded" end
-    return false, "the engine is not connected"
+    if why == "encode" then return false, R.encode end
+    return false, R.not_connected
 end
 
 return Events

@@ -9,6 +9,10 @@
 -- "Contract"]. A field that is not in the spec, or of the wrong type, refuses the whole update
 -- (bad_request, naming the field): the engine is the only sender, so a wrong field is a bug to show,
 -- not to guess around. Text longer than LIMITS.text is shortened for display, not refused.
+-- fix/hud-p1: the optional `snapshot` (the pre-session snapshot's name, for the undo line), and the
+-- HUD's words (HudText.lua).
+
+local HudText = require 'HudText'
 
 local HudState = {}
 
@@ -19,11 +23,15 @@ HudState.EVENTS = { "hud_abort", "hud_accept", "hud_pick", "hud_approve_pass" }
 HudState.VARIANTS = { "A", "B", "C" }
 HudState.LIMITS = { text = 120, id = 64, rows = 12, photos = 16, pass = 99, decay = 8 }
 
--- Decision 1 [stated: Jim, 2026-09-29, "Go with recommended"]: at the end the HUD shows the outcome
--- this long, then closes itself [inference: long enough to read one line].
-HudState.CLOSE_AFTER_SECONDS = 5
--- After a click the buttons stay off until the engine answers that click, or this long.
+-- After a click the buttons stay off until the engine answers that click, or this long. (The ended
+-- HUD stays open until closed or the next session starts [stated: Jim, 2026-10-03, D2 "Stay open
+-- (Recommended)"]; that replaced decision 1's close after 5 s.)
 HudState.PENDING_SECONDS = 10
+-- After an engine connection the HUD's open session is unknown until an update for it arrives, at
+-- most this long; then it is taken as no longer open in the engine (fix/hud-p1 P1-3). The engine
+-- sends the session's state again as soon as it is connected (engine\src\hud\publisher.ts
+-- onStateChange), so 10 s is ample [inference].
+HudState.UNKNOWN_SECONDS = 10
 
 local LIMITS = HudState.LIMITS
 
@@ -86,6 +94,7 @@ local FIELDS = {
     guardrail = { kind = "object", fields = GUARD },
     note = TEXT,
     settings = { kind = "object", fields = SETTINGS },
+    snapshot = TEXT,
 }
 
 local checkObject
@@ -165,6 +174,13 @@ function HudState.staleReason(current, seen, s)
     return nil
 end
 
+-- The session marked unknown at `unknownAt` (an engine connection; nil when an update has arrived
+-- since): nil, "checking" for UNKNOWN_SECONDS, then "gone".
+function HudState.unknown(unknownAt, now)
+    if unknownAt == nil then return nil end
+    return (now - unknownAt >= HudState.UNKNOWN_SECONDS) and "gone" or "checking"
+end
+
 -- "Pick B", "Approve pass 3", "Abort", "Accept": what the HUD and the menu items call an event.
 function HudState.eventLabel(name, variant, s)
     if name == "hud_pick" then return "Pick " .. tostring(variant) end
@@ -175,15 +191,15 @@ end
 
 -- Why this event cannot be sent for the session the HUD shows, or nil. The buttons' `enabled`
 -- bindings say the same; this check also covers the menu items and an update arriving between a
--- button's greying and its click.
+-- button's greying and its click. Accept at awaiting_pick is greyed (HudView.props) but not refused
+-- here: from a menu item it goes to the engine, whose answer says to pick first.
 function HudState.refusal(s, name, variant)
+    local R = HudText.REASON
     if not has(HudState.EVENTS, name) then return "unknown event " .. tostring(name) end
-    if s == nil then return "no session is open" end
-    if HudState.isEnd(s.stage) then return "the session has ended (" .. s.stage .. ")" end
-    if name == "hud_pick" and not (s.stage == "awaiting_pick" and has(s.variants, variant)) then
-        return "no pick of " .. tostring(variant) .. " is awaited"
-    end
-    if name == "hud_approve_pass" and s.approve_pass == nil then return "no pass is waiting for approval" end
+    if s == nil then return R.no_edit end
+    if HudState.isEnd(s.stage) then return R.ended end
+    if name == "hud_pick" and not (s.stage == "awaiting_pick" and has(s.variants, variant)) then return R.no_pick end
+    if name == "hud_approve_pass" and s.approve_pass == nil then return R.no_approval end
     return nil
 end
 
@@ -208,17 +224,17 @@ end
 -- line is never blank during a session (after the row 4 probe, HudSelection.lua). The session's
 -- photos are session_photos (Variants: the master and its copies, which the engine selects itself)
 -- or else the target alone. The advice matches the engine's own TARGET_CHANGED message
--- (engine\src\session\io.ts bridge()).
-HudState.SELECTION_OK = "Selection: the session's photo."
+-- (engine\src\session\io.ts bridge()). fix/hud-p1: "session" became "edit".
+HudState.SELECTION_OK = "Selection: the edit's photo."
 
 function HudState.targetChangedLine(s, uuid, name)
     if s == nil or HudState.isEnd(s.stage) then return "" end
     local photos = s.session_photos or { s.target.uuid }
     if uuid ~= nil and (uuid == s.target.uuid or has(photos, uuid)) then return HudState.SELECTION_OK end
     local selected = uuid == nil and "No photo is selected" or ((name or uuid) .. " is selected")
-    local again = s.mode == "variants" and "Claude's next call selects the session's photo again"
+    local again = s.mode == "variants" and "Claude's next call selects the edit's photo again"
         or ("Select " .. HudState.targetName(s) .. " again")
-    return "Target changed: " .. selected .. ". " .. again .. "; the session is still open."
+    return "Target changed: " .. selected .. ". " .. again .. "; the edit is still open."
 end
 
 return HudState

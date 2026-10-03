@@ -1,22 +1,24 @@
 -- The HUD (PRD section 6.3, PHASE5_PLAN row 4): a floating window that shows the engine's session as
 -- hud_update sends it (HudState.lua checks it; HudView.lua lays the window out and fills it), with
--- Abort, Accept, Pick A-C and Approve buttons that send hud_* events (Events.lua), and the menu
--- items' Abort and Accept (FR-1.1). What S8 showed in Lightroom 15.5.1, and how it is used here
--- [handle: LR_SDK_NOTES "Recorded in Phase 5", Floating dialog; docs\reports\phase5\S8.md
--- "Consequences", row 4]:
---   - a button's action cannot yield, so Hud.click only checks and marks the click pending, and a
+-- Pick A-C, Approve, Accept and Abort buttons that send hud_* events (Events.lua), and the menu
+-- items' (FR-1.1); the clicks and menu items are in HudClick.lua. What S8 showed in Lightroom
+-- 15.5.1, and how it is used here [handle: LR_SDK_NOTES "Recorded in Phase 5", Floating dialog;
+-- docs\reports\phase5\S8.md "Consequences", row 4]:
+--   - a button's action cannot yield, so a click only checks and marks the click pending, and a
 --     task it starts sends the event;
 --   - the window takes the keyboard when it opens, so it opens by itself only when an update asks
 --     (`open`, sent once at lr_begin_session) and it is not already open (decision 6 [stated: Jim,
 --     2026-09-28, "Opens by itself, once (Recommended)"]), and otherwise from the menu;
---   - closeFloatingDialogsForPlugin(_PLUGIN) closes it inside the call: at a session's end it shows
---     the outcome for HudState.CLOSE_AFTER_SECONDS, then closes itself (decision 1 [stated: Jim,
---     2026-09-29, "Go with recommended"]);
 --   - selectionChangeObserver is called once per selection change: it drives the selection line
 --     ("Target changed"; HudSelection.lua, with the checks added after the row 4 probe).
+-- At an edit's end the window stays open, showing the outcome, until it is closed or the next
+-- session's update replaces it [stated: Jim, 2026-10-03, D2 "Stay open (Recommended)"]; the close
+-- after 5 s (decision 1) is gone.
+-- At each engine connection the edit shown is marked unknown until an update for it arrives
+-- (markUnknown, fix/hud-p1 P1-3): the buttons go off, and after HudState.UNKNOWN_SECONDS the
+-- headline says the edit is no longer open in Claude.
 -- Its state lives on _G (rule 03: it must survive a Reload Plug-in running this module again), and
--- the bridge task's updates, the window's task, its ticker and menu items all reach it there. The
--- clicks and menu items are in HudClick.lua.
+-- the bridge task's updates, the window's task, its ticker and menu items all reach it there.
 
 local LrBinding = import 'LrBinding'
 local LrDate = import 'LrDate'
@@ -40,7 +42,9 @@ local OPEN_WAIT_SECONDS = 10 -- a window whose onShow never came is given up aft
 
 -- state: the last update taken; seen: every session id taken; window: a counter, one per window;
 -- open / opening: the window is shown / its task is posted; props: its property table; pending: the
--- click waiting for the engine (HudClick.lua).
+-- click waiting for the engine and lastAction: the click line (HudClick.lua); targetChanged: the
+-- selection line; unknownAt: when an engine connection made the shown edit unknown (nil once an
+-- update has come since).
 local H = _G.LrCAVG_Hud or { seen = {}, window = 0 }
 _G.LrCAVG_Hud = H
 
@@ -52,9 +56,9 @@ end
 local function refresh()
     local props = H.props
     if not props then return end
-    local v = HudView.props(H.state, Events.connection(), HudClick.livePending(), HudView.pageSettings())
-    v.lastAction = H.lastAction or ""
-    v.targetChanged = H.targetChanged or ""
+    local pending = HudClick.livePending() -- first: an expired click writes its line
+    local hud = { click = H.lastAction, selection = H.targetChanged, unknown = HudState.unknown(H.unknownAt, LrDate.currentTime()) }
+    local v = HudView.props(H.state, Events.connection(), pending, HudView.pageSettings(), hud)
     for key, value in pairs(v) do
         if props[key] ~= value then props[key] = value end
     end
@@ -71,17 +75,10 @@ local function checkSelection()
     HudSelection.check(currentState, showSelection)
 end
 
--- Logged before the call: the window closes inside it (S8, handle at the top), and windowWillClose
--- logs "closed".
-function Hud.close(reason)
-    Log.info("hud: closing, " .. reason)
-    local ok, err = LrTasks.pcall(LrDialogs.closeFloatingDialogsForPlugin, _PLUGIN)
-    if not ok then Log.error("hud: closeFloatingDialogsForPlugin failed: " .. tostring(err)) end
-end
-
--- While window `mine` is open: expire a pending click, close after a session's end, check the
--- selection every HudSelection.PERIOD_SECONDS while a session is open, and refresh the connection
--- line once a second (it comes from the bridge, not from the engine's updates).
+-- While window `mine` is open: check the selection every HudSelection.PERIOD_SECONDS while a session
+-- is open, and refresh once a second, which expires a pending click, turns an unknown edit's
+-- "checking" into "no longer open", and shows the connection (it comes from the bridge, not from
+-- the engine's updates).
 local function ticker(mine)
     local lastCheck = LrDate.currentTime()
     while H.window == mine and H.open do
@@ -89,12 +86,6 @@ local function ticker(mine)
         if H.state and not HudState.isEnd(H.state.stage) and now - lastCheck >= HudSelection.PERIOD_SECONDS then
             lastCheck = now
             LrTasks.startAsyncTask(checkSelection)
-        end
-        if H.closeAt and now >= H.closeAt then
-            local s = H.state
-            H.closeAt = nil
-            -- Only the session that ended: a newer session's update cancels the close.
-            if s and s.session_id == H.closeFor and HudState.isEnd(s.stage) then Hud.close("the session ended (" .. s.stage .. ")") end
         end
         refresh()
         LrTasks.sleep(TICK_SECONDS)
@@ -118,7 +109,7 @@ local function present(context, mine)
         end,
         windowWillClose = function()
             if H.window ~= mine then return end
-            H.open, H.opening, H.props, H.closeAt = false, false, nil, nil
+            H.open, H.opening, H.props = false, false, nil
             Log.info("hud: closed")
         end,
         selectionChangeObserver = function() HudSelection.onChange(currentState, showSelection) end,
@@ -156,6 +147,21 @@ function Hud.show()
     return true
 end
 
+-- At each engine connection (Bridge.lua, the hello command, before its reply): the edit shown, if it
+-- has not ended, is unknown until an update for it arrives. The same engine sends its session's
+-- state again once connected (engine\src\hud\publisher.ts:68-74), and it is connected only after
+-- the hello reply (engine\src\bridge\client.ts:237-246), so that update comes after this mark; an
+-- engine without the session (Claude Desktop restarted it) sends none (publisher.ts:69, no
+-- channel). Marking at the send socket's connection instead could race that update [inference:
+-- Sockets.lua starts onSendConnected in its own task]. Never yields.
+function Hud.markUnknown()
+    local s = H.state
+    if s == nil or HudState.isEnd(s.stage) then return end
+    H.unknownAt = LrDate.currentTime()
+    Log.info("hud: session " .. s.session_id .. " unknown until the engine sends it")
+    refresh()
+end
+
 -- Bridge command hud_update (engine\src\bridge\protocol.ts COMMANDS.hud_update). Runs in the
 -- bridge line's task and never yields; the selection check it starts runs in its own task.
 function Hud.update(payload)
@@ -169,33 +175,29 @@ function Hud.update(payload)
     local newSession = H.state == nil or H.state.session_id ~= s.session_id
     H.seen[s.session_id] = true
     if newSession then
-        H.lastAction, H.targetChanged = nil, ""
+        H.targetChanged = ""
         Log.info("hud: session " .. s.session_id)
+    elseif s.snapshot == nil then
+        s.snapshot = H.state.snapshot -- the snapshot's name is kept for the whole session
     end
     local p = H.pending
-    if p and (newSession or HudState.isEnd(s.stage) or s.answered_click_id == p.click_id) then
-        H.pending = nil
-        if not newSession then H.lastAction = p.label .. ": answered by the engine at " .. HudClick.clock() end
-    end
-    H.state = s
-    -- Close at the end only a window open now; one opened later from the menu stays open. A newer
-    -- session's update cancels the close: the ticker closes only while this session's end is shown.
-    if HudState.isEnd(s.stage) and Hud.isOpen() then
-        H.closeAt, H.closeFor = LrDate.currentTime() + HudState.CLOSE_AFTER_SECONDS, s.session_id
-    end
+    if p and (newSession or HudState.isEnd(s.stage) or s.answered_click_id == p.click_id) then H.pending = nil end
+    -- A taken update clears the click line unless a click is still pending; the update's note shows.
+    if H.pending == nil then H.lastAction = nil end
+    H.state, H.unknownAt = s, nil
     local opened = s.open == true and Hud.show()
     refresh()
     if H.open then LrTasks.startAsyncTask(checkSelection) end
     return { applied = true, shown = Hud.isOpen(), opened = opened }
 end
 
--- A button's action (HudView.lua) and the menu items' Abort and Accept: HudClick.lua.
+-- A button's action (HudView.lua), and the menu items with the event's variant (Pick A-C): HudClick.lua.
 function Hud.click(name, variant)
     HudClick.click(name, variant, refresh)
 end
 
-function Hud.menuEvent(name)
-    HudClick.menuEvent(name, refresh, Hud.show)
+function Hud.menuEvent(name, variant)
+    HudClick.menuEvent(name, variant, refresh, Hud.show)
 end
 
 return Hud

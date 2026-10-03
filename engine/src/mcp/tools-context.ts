@@ -61,8 +61,10 @@ export async function getActivePhotoContext(ctx: ToolContext): Promise<ToolOutpu
     }
     const field = (key: string): unknown => photo[key] ?? null;
     const open = ctx.sessions?.current() ?? null;
+    const hello = client.hello();
     const json: Record<string, unknown> = {
       ok: true,
+      lightroom: { lrc_version: photo.lrc_version, sdk_declared: hello?.sdk_declared ?? null },
       uuid: photo.uuid,
       local_id: photo.local_id,
       filename: field("filename"),

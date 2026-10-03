@@ -198,6 +198,8 @@ export const sessionLogSchema = z
     session_id: z.string(),
     short_id: z.string(),
     engine_version: z.string(),
+    /** Engine 0.13.0: the Lightroom the session ran in, from the plugin's hello (issue #67). */
+    lightroom: z.strictObject({ lrc_version: z.string(), sdk_declared: z.number() }).optional(),
     started: z.string(),
     ended: z.string().nullable(),
     /** "aborted" (engine 0.8.0, MCP_TOOLS' log schema): the user's Abort put the photo back. */

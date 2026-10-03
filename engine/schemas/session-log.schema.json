@@ -16,6 +16,22 @@
     "engine_version": {
       "type": "string"
     },
+    "lightroom": {
+      "type": "object",
+      "properties": {
+        "lrc_version": {
+          "type": "string"
+        },
+        "sdk_declared": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "lrc_version",
+        "sdk_declared"
+      ],
+      "additionalProperties": false
+    },
     "started": {
       "type": "string"
     },

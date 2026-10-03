@@ -81,6 +81,7 @@ describe("mcp tools: lr_get_active_photo_context", () => {
     expect(image).toBeUndefined();
     expect(json).toMatchObject({
       ok: true,
+      lightroom: { lrc_version: "15.5.1", sdk_declared: 13 },
       uuid: "SIM-UUID",
       filename: "20260907-_OZ80093.NEF",
       file_format: "RAW",
@@ -101,7 +102,14 @@ describe("mcp tools: lr_get_active_photo_context", () => {
     const { json } = await tools.getActivePhotoContext();
     expect(json["settings"]).toBeNull();
     expect(json["process_version"]).toBe("6.7");
-    expect(json["settings_error"]).toMatchObject({ code: "LEGACY_PROCESS_VERSION" });
+    expect(json["settings_error"]).toMatchObject({ code: "LEGACY_PROCESS_VERSION", message: expect.stringMatching(/update the photo's process version/) });
+  });
+
+  it("says a newer process version than the engine knows makes editing unavailable, not that the photo needs updating", async () => {
+    lr.settings["ProcessVersion"] = "16.0";
+    const { json } = await tools.getActivePhotoContext();
+    expect(json["process_version"]).toBe("16.0");
+    expect((json["settings_error"] as { message: string }).message).toMatch(/16\.0 .*newer than this engine knows.*reading its context still works/);
   });
 
   it("reports a missing selection as NO_ACTIVE_PHOTO", async () => {

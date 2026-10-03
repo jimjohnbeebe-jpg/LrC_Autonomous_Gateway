@@ -127,8 +127,9 @@ export class CameraProfiles {
 
   /**
    * The two SDK settings that select this profile. A profile without a Look writes Look = {}. The
-   * Look goes without its Parameters.Version, the Camera Raw version it was recorded under: Lightroom
-   * stamps its own on a write (issue #67) [unverified until the fix/lrc-version Lightroom check].
+   * Look goes without its Parameters.Version, the version it was recorded under: Lightroom stamps its
+   * own on a write (issue #67) [handle: docs\reports\phase6\lrc-version-check\check.txt section 2
+   * "2_look", LrC 15.6 read back "18.7"].
    */
   toSdk(name: string): { CameraProfile: string; Look: Record<string, unknown> } {
     const entry = this.get(name);

@@ -83,7 +83,7 @@ describe("lua: every plugin file", () => {
     const names = files.filter((f) => f.startsWith(avgPlugin)).map((f) => path.basename(f)).sort();
     expect(names).toEqual([
       "Bridge.lua", "Catalog.lua", "Develop.lua", "Dispatch.lua", "Endpoint.lua", "Events.lua", "Hud.lua", "HudClick.lua", "HudSelection.lua", "HudState.lua", "HudText.lua", "HudView.lua",
-      "Info.lua", "Json.lua", "KeywordTree.lua", "Library.lua", "Log.lua", "MenuAbort.lua", "MenuAccept.lua", "MenuApprove.lua", "MenuHud.lua",
+      "Info.lua", "Json.lua", "KeywordTree.lua", "Library.lua", "Log.lua", "Masks.lua", "MenuAbort.lua", "MenuAccept.lua", "MenuApprove.lua", "MenuHud.lua",
       "MenuPickA.lua", "MenuPickB.lua", "MenuPickC.lua", "MenuStatus.lua", "Photos.lua",
       "PluginInfoProvider.lua", "PluginInit.lua", "Prefs.lua", "Preview.lua", "Sockets.lua",
     ]);

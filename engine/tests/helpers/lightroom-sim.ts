@@ -12,7 +12,8 @@
 //     the engine's rules, not a claim about Lightroom's rendering.
 // Keys in `ignored` are dropped silently, as Lightroom drops out-of-range values (PHASE1.md run 3).
 // The catalog commands (virtual copies, select_photo, get_selection) are in lightroom-sim-catalog.ts,
-// get_prefs's answer in lightroom-sim-prefs.ts, the HUD (hud_update) in lightroom-sim-hud.ts;
+// get_prefs's answer in lightroom-sim-prefs.ts, the HUD (hud_update) in lightroom-sim-hud.ts, the masks
+// capture's commands in lightroom-sim-masks.ts;
 // each copy has its own settings. A command works on the selected photo, or, with `photo_uuid`
 // (plugin 0.4.0), on the photo with that uuid without selecting it, as the plugin does.
 
@@ -24,6 +25,7 @@ import type { FakePlugin, FakeReply } from "./fake-plugin.js";
 import { createVirtualCopies, describePhoto, findPhoto, getSelection, selectPhoto, type CopyFault, type SimCopy } from "./lightroom-sim-catalog.js";
 import { SimHud } from "./lightroom-sim-hud.js";
 import { SimLibrary } from "./lightroom-sim-library.js";
+import { installMasks } from "./lightroom-sim-masks.js";
 import { defaultSimPrefs, type SimPrefs } from "./lightroom-sim-prefs.js";
 import { PLUGIN_VERSION } from "../../src/bridge/version.js";
 
@@ -168,6 +170,7 @@ export class LightroomSim {
     );
     plugin.handlers.set("hud_update", (p) => this.hud.update(p));
     this.library.install(plugin);
+    installMasks(this, plugin);
     plugin.handlers.set("get_context", (p) => on(p, (u) => this.context(u)));
     plugin.handlers.set("get_settings", (p) => on(p, (u) => ok({ uuid: u, settings: luaize(this.settingsOf(u)) })));
     plugin.handlers.set("apply_settings", (p) =>

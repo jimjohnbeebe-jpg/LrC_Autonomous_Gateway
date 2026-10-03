@@ -10,8 +10,8 @@
 //     { id, type: "evt", name, ts, payload }
 // Every inbound line is validated here with zod before the engine acts on it (rule 01-stack).
 // The plugin side is plugin\LrC-AVG.lrplugin\Bridge.lua, Dispatch.lua (the handler table),
-// Develop.lua, Preview.lua, Catalog.lua, Photos.lua, Library.lua (with KeywordTree.lua), Prefs.lua and
-// Hud.lua (with hud-protocol.ts).
+// Develop.lua, Preview.lua, Catalog.lua, Photos.lua, Library.lua (with KeywordTree.lua), Prefs.lua,
+// Hud.lua (with hud-protocol.ts) and Masks.lua.
 //
 // Lua cannot tell an empty array from an empty object, and the plugin's Json.lua writes every empty
 // table as []. Payload schemas below never require a non-empty table to be an object.
@@ -103,6 +103,12 @@ const photoIdentity = {
 
 /** A photo in a listing (get_selection, search_photos). A photo whose uuid could not be read has none. */
 const listedPhoto = z.object({ ...photoIdentity, uuid: z.string().optional() });
+
+/**
+ * One step of probe_masks_dc (Masks.lua record()): an LrDevelopController or LrApplicationView call,
+ * its result as the SDK gave it (functions and userdata as "<type>"), or the error it raised.
+ */
+const probeStep = z.object({ step: z.string(), ok: z.boolean(), result: z.unknown().optional(), error: z.string().optional(), ms: z.number() });
 
 /** One entry of a findPhotos search descriptor (engine\src\library\search.ts builds them). */
 export type SearchCriterion = { criteria: string; operation: string; value: string | number; value2?: string };
@@ -212,6 +218,12 @@ export const COMMANDS = {
   }),
   // Plugin 0.6.0 (Hud.lua update): the HUD's state; the contract is in hud-protocol.ts.
   hud_update: hudUpdateResultSchema,
+  // Plugin 0.11.0 (Masks.lua, the masks capture of issue #59; only the capture script sends these).
+  // update_ai_settings: photo:updateAISettings() in its own write gate, timed; `gate` is what
+  // withWriteAccessDo returned, when anything. A Lightroom without the call answers feature_unavailable.
+  update_ai_settings: z.object({ ...targeted, call_ms: z.number(), command_ms: z.number(), gate: z.string().optional() }),
+  // probe_masks_dc: the selected photo and every step of the LrDevelopController probe, in order.
+  probe_masks_dc: z.object({ uuid: z.string().optional(), filename: z.string().optional(), steps: z.array(probeStep) }),
 } as const;
 
 export type CommandName = keyof typeof COMMANDS;
@@ -257,4 +269,8 @@ export type CommandPayloads = {
   get_prefs: Record<string, never>;
   /** Refused with bad_request when a field is unknown or of the wrong type (hud-protocol.ts). */
   hud_update: HudUpdatePayload;
+  /** Plugin 0.11.0: the photo with that uuid, checked against `expect`; the selection is not touched. */
+  update_ai_settings: { photo_uuid: string; expect?: PhotoExpect };
+  /** Plugin 0.11.0: on the selected photo; switches Lightroom to Develop and leaves it there. */
+  probe_masks_dc: Record<string, never>;
 };

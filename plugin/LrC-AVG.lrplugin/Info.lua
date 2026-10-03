@@ -19,12 +19,18 @@ return {
     -- Load at Lightroom start, not on first use. Automaat notes this needs at least one menu item
     -- [upstream claim: vendor\automaat\plugin\LightroomMCP.lrplugin\Info.lua:14-17].
     LrForceInitPlugin = true,
-    -- File > Plug-in Extras (PRD FR-1.1; PHASE5_PLAN decision 7 for the HUD's three).
+    -- File > Plug-in Extras (PRD FR-1.1; PHASE5_PLAN decision 7 for the HUD's first three; Approve
+    -- Pass and Pick A-C from fix/hud-p1 P1-4, so every HUD button has a menu item; Abort last, as on
+    -- the HUD).
     LrExportMenuItems = {
         { title = "LrC-AVG - Bridge status", file = "MenuStatus.lua" },
         { title = "LrC-AVG - Show Vision Gateway HUD", file = "MenuHud.lua" },
-        { title = "LrC-AVG - Abort Session", file = "MenuAbort.lua" },
+        { title = "LrC-AVG - Pick A", file = "MenuPickA.lua" },
+        { title = "LrC-AVG - Pick B", file = "MenuPickB.lua" },
+        { title = "LrC-AVG - Pick C", file = "MenuPickC.lua" },
+        { title = "LrC-AVG - Approve Pass", file = "MenuApprove.lua" },
         { title = "LrC-AVG - Accept Session", file = "MenuAccept.lua" },
+        { title = "LrC-AVG - Abort Session", file = "MenuAbort.lua" },
     },
-    VERSION = { major = 0, minor = 8, revision = 0, build = 0 },
+    VERSION = { major = 0, minor = 9, revision = 0, build = 0 },
 }

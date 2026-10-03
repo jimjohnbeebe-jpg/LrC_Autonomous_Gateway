@@ -145,8 +145,8 @@ Under **File > Plug-in Extras**, in this order:
 | **LrC-AVG - Show Vision Gateway HUD** | Opens the HUD. |
 | **LrC-AVG - Pick A**, **Pick B**, **Pick C** | The HUD's Pick buttons. |
 | **LrC-AVG - Approve Pass** | The HUD's Approve pass n. |
-| **LrC-AVG - Accept Session** | The HUD's Accept. |
-| **LrC-AVG - Abort Session** | The HUD's Abort. |
+| **LrC-AVG - Accept Edit** | The HUD's Accept. |
+| **LrC-AVG - Abort Edit** | The HUD's Abort. |
 
 Each of the last five waits up to 20 s for the engine, and for an edit being checked after a reconnect, and reports in the HUD's feedback line. If it cannot send, the line says why, for example "Pick A not sent: no pick is waiting."
 

@@ -10,12 +10,14 @@
 -- text still does not fit.
 --
 -- A slot's budget is MARGIN of its width_in_chars, because characters differ in width and a line of
--- capitals or digits is wider than the same count of average characters [inference]. 85 % is a guess
--- for the Lightroom check to confirm or change (the plan's D3 check shows worst-case lines).
+-- capitals or digits is wider than the same count of average characters [inference]. At 85 % nothing
+-- ran off the window in Lightroom 15.6, but lines left a lot of empty space at the right [handle:
+-- docs\reports\phase6\hud-p1-check\check.txt, run 1, step 2]; Jim chose 95 % [stated: Jim,
+-- 2026-10-03, "Raise to 95 % now"], checked again in run 2.
 
 local HudText = {}
 
-HudText.MARGIN = 0.85 -- [inference], see above
+HudText.MARGIN = 0.95 -- see above
 
 -- width_in_chars of every line, and of the deltas grid's cells. The slider cell fits the longest
 -- Lightroom label, "Lens Corrections (panel on/off)" (31); before and after fit the profile names

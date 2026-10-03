@@ -29,8 +29,8 @@ return {
         { title = "LrC-AVG - Pick B", file = "MenuPickB.lua" },
         { title = "LrC-AVG - Pick C", file = "MenuPickC.lua" },
         { title = "LrC-AVG - Approve Pass", file = "MenuApprove.lua" },
-        { title = "LrC-AVG - Accept Session", file = "MenuAccept.lua" },
-        { title = "LrC-AVG - Abort Session", file = "MenuAbort.lua" },
+        { title = "LrC-AVG - Accept Edit", file = "MenuAccept.lua" },
+        { title = "LrC-AVG - Abort Edit", file = "MenuAbort.lua" },
     },
     VERSION = { major = 0, minor = 9, revision = 0, build = 0 },
 }

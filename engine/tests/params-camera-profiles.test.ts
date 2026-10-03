@@ -31,12 +31,15 @@ describe("params: pinned camera profile pairs (S5)", () => {
     expect(names.map((n) => profiles.get(n).camera_profile)).not.toContain("Camera Standard");
   });
 
-  it("writes an Adobe profile as Adobe Standard plus its full Look table", () => {
+  it("writes an Adobe profile as Adobe Standard plus its Look table, without the recorded Camera Raw version (issue #67)", () => {
     const pair = profiles.toSdk("Adobe Landscape");
     expect(pair.CameraProfile).toBe("Adobe Standard");
     expect(pair.Look["Name"]).toBe("Adobe Landscape");
     expect(pair.Look["UUID"]).toBe("6F9C877E84273F4E8271E6B91BEB36A1");
-    expect((pair.Look["Parameters"] as Record<string, unknown>)["LookTable"]).toBeTypeOf("string");
+    const params = pair.Look["Parameters"] as Record<string, unknown>;
+    expect(params["LookTable"]).toBeTypeOf("string");
+    expect(params).not.toHaveProperty("Version");
+    expect(profiles.get("Adobe Landscape").look?.Parameters["Version"]).toBe("18.5.1");
   });
 
   it("writes a Nikon profile as its stored string plus an empty Look", () => {

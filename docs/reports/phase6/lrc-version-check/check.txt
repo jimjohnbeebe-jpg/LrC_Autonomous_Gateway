@@ -1,0 +1,1910 @@
+fix/lrc-version: Lightroom check (issue #67), transcript
+
+What: one Converge session on 20260906-_OZ80029.NEF (the photo issue #67 failed on) through the
+engine's own tools, pass 0 (profile swap Camera Neutral -> Adobe Landscape, its Look written WITHOUT
+Parameters.Version, decision D1 [stated: Jim, 2026-10-03, "Drop Version (Recommended)"]) through two
+passes and accept, then the photo put back with the session's pre-session snapshot.
+Code: branch fix/lrc-version at 30f5e52 (engine 0.13.0, engine\dist built from it); plugin 0.9.0 in Lightroom.
+Run: by Jim on 2026-10-03, 2026-10-03T19:37:57.995Z to 2026-10-03T19:38:27.083Z (UTC), Lightroom 15.6
+[handle: section 2 "hello"]; the two y/n answers typed by Jim in the PowerShell window.
+Command: node logs\check-lrc-version-2026-10-03\check.mts
+Redaction: the user folder is written %USERPROFILE%. Nothing else was changed.
+
+Sections:
+  1. Result (from check.json)
+  2. check.json, verbatim
+  3. The session log the check wrote (sessions\20261003-5fdad4.json), verbatim
+  4. The check script (check.mts), verbatim
+  5. Dry run before Jim's run, against the engine's test simulator (FakePlugin + LightroomSim
+     with lookVersion "18.7"): driver and output, verbatim
+
+================================================================================
+1. Result
+================================================================================
+YES  Lightroom 15.6 runs plugin 0.9.0 (0.9.0 or later needed)
+YES  selected 20260906-_OZ80029.NEF; its profile now: Camera Neutral
+YES  pass 0 was taken (no WRITE_NOT_TAKEN)
+YES  the photo's Look is Adobe Landscape (name and UUID)
+YES  Lightroom filled in the Look's Version itself (read back: "18.7")
+YES  lr_get_active_photo_context names the Lightroom version ({"lrc_version":"15.6","sdk_declared":13})
+YES  pass 1: exposure, shadows, vibrance: written and read back
+YES  pass 2: HSL, temperature (WhiteBalance Custom), a curve: written and read back
+YES  the session ended with accept
+YES  the session log names the Lightroom version ({"lrc_version":"15.6","sdk_declared":13})
+YES  the session log records no failures (0)
+YES  PUT BACK: YES (every setting as before the check)
+Jim: Does Profile show 'Adobe Landscape'? -> y
+Jim: Does it look as it did before the check, with Profile 'Camera Neutral'? -> y
+failures: 0
+fix/lrc-version check: WORKED
+
+================================================================================
+2. check.json
+================================================================================
+{
+  "started": "2026-10-03T19:37:57.995Z",
+  "engine_version": "0.13.0",
+  "uuid": "D0B90B6F-91F6-4838-B171-C9CAF77EE7BE",
+  "steps": {
+    "1_photo": {
+      "at": "2026-10-03T19:38:00.623Z",
+      "selected": {
+        "uuid": "D0B90B6F-91F6-4838-B171-C9CAF77EE7BE",
+        "local_id": 3854527,
+        "is_virtual_copy": false,
+        "master_local_id": 3854527,
+        "filename": "20260906-_OZ80029.NEF",
+        "capture_time": "9/6/2026 11:28:17.400 AM"
+      },
+      "start_profile": "Camera Neutral",
+      "start_look": null
+    },
+    "2_begin": {
+      "at": "2026-10-03T19:38:08.758Z",
+      "ok": true,
+      "session_id": "5fdad4a6-97cf-40e6-8448-0c15d79d5bb4",
+      "snapshot": {
+        "name": "AVG pre-session 2026-10-03T19:38:00.807Z",
+        "id": "08B9CE9B-881C-4272-B595-79FBDAC44981"
+      },
+      "session_settings": {
+        "approval": "autonomous",
+        "long_edge": 1600,
+        "quality": 75,
+        "from": {
+          "approval": "page",
+          "max_passes": "argument",
+          "variant_count": "page",
+          "long_edge": "page",
+          "quality": "page",
+          "clip_high_pct": "page",
+          "clip_low_pct": "page",
+          "decay": "page"
+        },
+        "page": {
+          "read": true,
+          "note": null,
+          "problems": []
+        },
+        "decay": [
+          1,
+          0.6,
+          0.4,
+          0.25
+        ]
+      }
+    },
+    "2_look": {
+      "at": "2026-10-03T19:38:08.784Z",
+      "look": {
+        "UUID": "6F9C877E84273F4E8271E6B91BEB36A1",
+        "Copyright": "© 2018 Adobe Systems, Inc.",
+        "Parameters": {
+          "Version": "18.7",
+          "ToneCurveName2012": "",
+          "Shadows2012": 12,
+          "ToneCurvePV2012Green": [],
+          "ToneCurvePV2012": [
+            0,
+            0,
+            64,
+            60,
+            128,
+            128,
+            192,
+            196,
+            255,
+            255
+          ],
+          "Clarity2012": 10,
+          "ToneCurvePV2012Red": [],
+          "ProcessVersion": "15.4",
+          "ToneCurvePV2012Blue": [],
+          "AILook": [],
+          "FilterList": [],
+          "LookTable": "0B3BFB5CFB7DBF7FF175E98F24D316B0",
+          "Highlights2012": -12,
+          "PointColors": [],
+          "CameraProfile": "Adobe Standard",
+          "ConvertToGrayscale": false
+        },
+        "Name": "Adobe Landscape",
+        "Amount": 1,
+        "SupportsMonochrome": false,
+        "SupportsOutputReferred": false,
+        "SupportsAmount": false,
+        "Group": {
+          "x-default": "Profiles"
+        }
+      }
+    },
+    "3_context": {
+      "at": "2026-10-03T19:38:13.677Z",
+      "lightroom": {
+        "lrc_version": "15.6",
+        "sdk_declared": 13
+      },
+      "camera_profile": "Adobe Landscape"
+    },
+    "4_pass1": {
+      "at": "2026-10-03T19:38:16.823Z",
+      "ok": true,
+      "pass": "1/6",
+      "applied": [
+        {
+          "name": "exposure",
+          "before": 0.33,
+          "requested": 0.1,
+          "after": 0.43,
+          "delta": 0.1
+        },
+        {
+          "name": "shadows",
+          "before": 10,
+          "requested": 5,
+          "after": 15,
+          "delta": 5
+        },
+        {
+          "name": "vibrance",
+          "before": 15,
+          "requested": 5,
+          "after": 20,
+          "delta": 5
+        }
+      ],
+      "refused": [],
+      "undone": null,
+      "guardrail_actions": []
+    },
+    "4_pass2": {
+      "at": "2026-10-03T19:38:20.133Z",
+      "ok": true,
+      "pass": "2/6",
+      "applied": [
+        {
+          "name": "hsl.orange.sat",
+          "before": 0,
+          "requested": -5,
+          "after": -5,
+          "delta": -5
+        },
+        {
+          "name": "temperature",
+          "before": 4650,
+          "requested": 100,
+          "after": 4750,
+          "delta": 100
+        },
+        {
+          "name": "tone_curve.master",
+          "before": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "requested": [
+            0,
+            0,
+            64,
+            60,
+            192,
+            196,
+            255,
+            255
+          ],
+          "after": [
+            0,
+            0,
+            64,
+            60,
+            192,
+            196,
+            255,
+            255
+          ],
+          "delta": null
+        }
+      ],
+      "refused": [],
+      "undone": null,
+      "guardrail_actions": []
+    },
+    "5_accept": {
+      "at": "2026-10-03T19:38:20.155Z",
+      "outcome": "accept",
+      "lightroom": {
+        "lrc_version": "15.6",
+        "sdk_declared": 13
+      },
+      "failures": [],
+      "passes": 3
+    },
+    "6_put_back": {
+      "at": "2026-10-03T19:38:20.608Z",
+      "differing": [],
+      "snapshot_id": "08B9CE9B-881C-4272-B595-79FBDAC44981"
+    }
+  },
+  "checks": [
+    {
+      "ok": true,
+      "text": "Lightroom 15.6 runs plugin 0.9.0 (0.9.0 or later needed)"
+    },
+    {
+      "ok": true,
+      "text": "selected 20260906-_OZ80029.NEF; its profile now: Camera Neutral"
+    },
+    {
+      "ok": true,
+      "text": "pass 0 was taken (no WRITE_NOT_TAKEN)"
+    },
+    {
+      "ok": true,
+      "text": "the photo's Look is Adobe Landscape (name and UUID)",
+      "detail": {
+        "name": "Adobe Landscape",
+        "uuid": "6F9C877E84273F4E8271E6B91BEB36A1"
+      }
+    },
+    {
+      "ok": true,
+      "text": "Lightroom filled in the Look's Version itself (read back: \"18.7\")"
+    },
+    {
+      "ok": true,
+      "text": "lr_get_active_photo_context names the Lightroom version ({\"lrc_version\":\"15.6\",\"sdk_declared\":13})"
+    },
+    {
+      "ok": true,
+      "text": "pass 1: exposure, shadows, vibrance: written and read back"
+    },
+    {
+      "ok": true,
+      "text": "pass 2: HSL, temperature (WhiteBalance Custom), a curve: written and read back"
+    },
+    {
+      "ok": true,
+      "text": "the session ended with accept"
+    },
+    {
+      "ok": true,
+      "text": "the session log names the Lightroom version ({\"lrc_version\":\"15.6\",\"sdk_declared\":13})"
+    },
+    {
+      "ok": true,
+      "text": "the session log records no failures (0)",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "text": "PUT BACK: YES (every setting as before the check)"
+    }
+  ],
+  "answers": [
+    {
+      "q": "Does Profile show 'Adobe Landscape'?",
+      "answer": "y",
+      "at": "2026-10-03T19:38:13.641Z"
+    },
+    {
+      "q": "Does it look as it did before the check, with Profile 'Camera Neutral'?",
+      "answer": "y",
+      "at": "2026-10-03T19:38:27.082Z"
+    }
+  ],
+  "failures": [],
+  "hello": {
+    "plugin_version": "0.9.0",
+    "lrc_version": "15.6",
+    "sdk_declared": 13
+  },
+  "bridge": {
+    "connects": 1,
+    "connect_failures": 1,
+    "last_connect_error": "127.0.0.1:8765: ECONNREFUSED",
+    "drops": 0,
+    "last_drop_reason": null,
+    "malformed_lines": 0,
+    "unknown_response_ids": 0,
+    "ports": {
+      "command": 8765,
+      "event": 8766,
+      "from": "ports file"
+    }
+  },
+  "ended": "2026-10-03T19:38:27.083Z"
+}
+
+================================================================================
+3. sessions\20261003-5fdad4.json
+================================================================================
+{
+  "schema": "lrc-avg/session-log/2",
+  "session_id": "5fdad4a6-97cf-40e6-8448-0c15d79d5bb4",
+  "short_id": "5fdad4",
+  "engine_version": "0.13.0-lrc-version-check",
+  "lightroom": {
+    "lrc_version": "15.6",
+    "sdk_declared": 13
+  },
+  "started": "2026-10-03T19:38:00.807Z",
+  "ended": "2026-10-03T19:38:20.150Z",
+  "outcome": "accept",
+  "intent": {
+    "id": "landscape_overcast_flat",
+    "label": "Landscape — overcast, flat light",
+    "source": "bundled"
+  },
+  "mode": "converge",
+  "variant_count": null,
+  "max_passes": 6,
+  "guardrails": {
+    "clip_high_pct": 0.5,
+    "clip_low_pct": 1
+  },
+  "decay": [
+    1,
+    0.6,
+    0.4,
+    0.25
+  ],
+  "notes": null,
+  "target": {
+    "uuid": "D0B90B6F-91F6-4838-B171-C9CAF77EE7BE",
+    "local_id": 3854527,
+    "filename": "20260906-_OZ80029.NEF",
+    "copy_name": null,
+    "process_version": "15.4",
+    "camera_profile": "Camera Neutral"
+  },
+  "snapshot": {
+    "name": "AVG pre-session 2026-10-03T19:38:00.807Z",
+    "id": "08B9CE9B-881C-4272-B595-79FBDAC44981"
+  },
+  "variants": [],
+  "picked": null,
+  "regions": [],
+  "passes": [
+    {
+      "n": 0,
+      "kind": "pass0",
+      "target": "master",
+      "started": "2026-10-03T19:38:00.956Z",
+      "duration_ms": 8125.8,
+      "history_names": [
+        "AVG 5fdad4 pass 0/6"
+      ],
+      "rationale": "engine: camera profile, lens corrections and intent priors, then the clipping baseline (PRD 6.5)",
+      "requested": {
+        "camera_profile": "Adobe Landscape",
+        "lens.profile_enable": 1,
+        "lens.ca_remove": 1,
+        "contrast": 15,
+        "highlights": -15,
+        "clarity": 10,
+        "dehaze": 10,
+        "vibrance": 15
+      },
+      "changes": [
+        {
+          "name": "camera_profile",
+          "before": "Camera Neutral",
+          "requested": "Adobe Landscape",
+          "after": "Adobe Landscape",
+          "delta": null
+        },
+        {
+          "name": "contrast",
+          "before": 0,
+          "requested": 15,
+          "after": 15,
+          "delta": 15
+        },
+        {
+          "name": "highlights",
+          "before": -21,
+          "requested": -36,
+          "after": -36,
+          "delta": -15
+        },
+        {
+          "name": "clarity",
+          "before": 2,
+          "requested": 12,
+          "after": 12,
+          "delta": 10
+        },
+        {
+          "name": "dehaze",
+          "before": 0,
+          "requested": 10,
+          "after": 10,
+          "delta": 10
+        },
+        {
+          "name": "vibrance",
+          "before": 0,
+          "requested": 15,
+          "after": 15,
+          "delta": 15
+        }
+      ],
+      "clamped": [],
+      "refused": [],
+      "unchanged": [],
+      "settings_before": {
+        "exposure": 0.33,
+        "contrast": 0,
+        "highlights": -21,
+        "shadows": 10,
+        "whites": 0,
+        "blacks": 0,
+        "texture": 4,
+        "clarity": 2,
+        "dehaze": 0,
+        "vibrance": 0,
+        "saturation": 0,
+        "temperature": 4650,
+        "tint": 10,
+        "grading.shadows.hue": 0,
+        "grading.shadows.sat": 0,
+        "grading.shadows.lum": 0,
+        "grading.midtones.hue": 0,
+        "grading.midtones.sat": 0,
+        "grading.midtones.lum": 0,
+        "grading.highlights.hue": 0,
+        "grading.highlights.sat": 0,
+        "grading.highlights.lum": 0,
+        "grading.global.hue": 0,
+        "grading.global.sat": 0,
+        "grading.global.lum": 0,
+        "grading.blending": 50,
+        "grading.balance": 0,
+        "sharpening.amount": 24,
+        "sharpening.radius": 2,
+        "sharpening.detail": 25,
+        "sharpening.masking": 0,
+        "noise.luminance": 45,
+        "noise.color": 25,
+        "lens.corrections_enable": true,
+        "lens.profile_enable": 1,
+        "lens.ca_remove": 1,
+        "tone_curve.master": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.red": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.green": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.blue": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "hsl.red.hue": 0,
+        "hsl.red.sat": 0,
+        "hsl.red.lum": 0,
+        "hsl.orange.hue": 0,
+        "hsl.orange.sat": 0,
+        "hsl.orange.lum": 0,
+        "hsl.yellow.hue": 0,
+        "hsl.yellow.sat": 0,
+        "hsl.yellow.lum": 0,
+        "hsl.green.hue": 0,
+        "hsl.green.sat": 0,
+        "hsl.green.lum": 0,
+        "hsl.aqua.hue": 0,
+        "hsl.aqua.sat": 0,
+        "hsl.aqua.lum": 0,
+        "hsl.blue.hue": 0,
+        "hsl.blue.sat": 0,
+        "hsl.blue.lum": 0,
+        "hsl.purple.hue": 0,
+        "hsl.purple.sat": 0,
+        "hsl.purple.lum": 0,
+        "hsl.magenta.hue": 0,
+        "hsl.magenta.sat": 0,
+        "hsl.magenta.lum": 0,
+        "camera_profile": "Camera Neutral"
+      },
+      "settings_after": {
+        "exposure": 0.33,
+        "contrast": 15,
+        "highlights": -36,
+        "shadows": 10,
+        "whites": 0,
+        "blacks": 0,
+        "texture": 4,
+        "clarity": 12,
+        "dehaze": 10,
+        "vibrance": 15,
+        "saturation": 0,
+        "temperature": 4650,
+        "tint": 10,
+        "grading.shadows.hue": 0,
+        "grading.shadows.sat": 0,
+        "grading.shadows.lum": 0,
+        "grading.midtones.hue": 0,
+        "grading.midtones.sat": 0,
+        "grading.midtones.lum": 0,
+        "grading.highlights.hue": 0,
+        "grading.highlights.sat": 0,
+        "grading.highlights.lum": 0,
+        "grading.global.hue": 0,
+        "grading.global.sat": 0,
+        "grading.global.lum": 0,
+        "grading.blending": 50,
+        "grading.balance": 0,
+        "sharpening.amount": 24,
+        "sharpening.radius": 2,
+        "sharpening.detail": 25,
+        "sharpening.masking": 0,
+        "noise.luminance": 45,
+        "noise.color": 25,
+        "lens.corrections_enable": true,
+        "lens.profile_enable": 1,
+        "lens.ca_remove": 1,
+        "tone_curve.master": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.red": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.green": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.blue": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "hsl.red.hue": 0,
+        "hsl.red.sat": 0,
+        "hsl.red.lum": 0,
+        "hsl.orange.hue": 0,
+        "hsl.orange.sat": 0,
+        "hsl.orange.lum": 0,
+        "hsl.yellow.hue": 0,
+        "hsl.yellow.sat": 0,
+        "hsl.yellow.lum": 0,
+        "hsl.green.hue": 0,
+        "hsl.green.sat": 0,
+        "hsl.green.lum": 0,
+        "hsl.aqua.hue": 0,
+        "hsl.aqua.sat": 0,
+        "hsl.aqua.lum": 0,
+        "hsl.blue.hue": 0,
+        "hsl.blue.sat": 0,
+        "hsl.blue.lum": 0,
+        "hsl.purple.hue": 0,
+        "hsl.purple.sat": 0,
+        "hsl.purple.lum": 0,
+        "hsl.magenta.hue": 0,
+        "hsl.magenta.sat": 0,
+        "hsl.magenta.lum": 0,
+        "camera_profile": "Adobe Landscape"
+      },
+      "metrics_before": {
+        "luma_mean": 123.433,
+        "luma_std": 43.908,
+        "luma_percentiles": {
+          "p1": 57,
+          "p5": 69,
+          "p50": 114,
+          "p95": 217,
+          "p99": 234
+        },
+        "dynamic_range": 0.6941,
+        "channel_mean": {
+          "r": 121.951,
+          "g": 123.504,
+          "b": 127.098
+        },
+        "rb_ratio": 0.9595,
+        "clip_high_pct": 0.959,
+        "clip_low_pct": 0,
+        "clip_high_pct_by_channel": {
+          "r": 0,
+          "g": 0,
+          "b": 0.959
+        },
+        "clip_low_pct_by_channel": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "saturation_mean": 14.663,
+        "chromatic_pct": 58.4614,
+        "hue_mean": 27.36,
+        "hue_histogram": [
+          3.0303,
+          45.405,
+          12.1925,
+          0.1192,
+          0.0016,
+          0.0136,
+          0.06,
+          36.5475,
+          1.9306,
+          0.0509,
+          0.1895,
+          0.4593
+        ],
+        "regions": []
+      },
+      "metrics_after": {
+        "luma_mean": 116.606,
+        "luma_std": 51.754,
+        "luma_percentiles": {
+          "p1": 38,
+          "p5": 50,
+          "p50": 105,
+          "p95": 219,
+          "p99": 236
+        },
+        "dynamic_range": 0.7765,
+        "channel_mean": {
+          "r": 119.457,
+          "g": 116.062,
+          "b": 113.598
+        },
+        "rb_ratio": 1.0516,
+        "clip_high_pct": 0.0317,
+        "clip_low_pct": 0,
+        "clip_high_pct_by_channel": {
+          "r": 0,
+          "g": 0.0001,
+          "b": 0.0317
+        },
+        "clip_low_pct_by_channel": {
+          "r": 0.0449,
+          "g": 0.0001,
+          "b": 0.0031
+        },
+        "saturation_mean": 23.164,
+        "chromatic_pct": 82.6917,
+        "hue_mean": 27.09,
+        "hue_histogram": [
+          6.2068,
+          60.2247,
+          7.8794,
+          0.2186,
+          0.0177,
+          0.0368,
+          0.0848,
+          24.1516,
+          0.4838,
+          0.1185,
+          0.0943,
+          0.483
+        ],
+        "regions": []
+      },
+      "delta_metrics": {
+        "luma_mean": -6.827,
+        "luma_std": 7.846,
+        "luma_percentiles": {
+          "p1": -19,
+          "p5": -19,
+          "p50": -9,
+          "p95": 2,
+          "p99": 2
+        },
+        "dynamic_range": 0.0824,
+        "channel_mean": {
+          "r": -2.494,
+          "g": -7.442,
+          "b": -13.5
+        },
+        "rb_ratio": 0.0921,
+        "clip_high_pct": -0.9273,
+        "clip_low_pct": 0,
+        "clip_high_pct_by_channel": {
+          "r": 0,
+          "g": 0.0001,
+          "b": -0.9273
+        },
+        "clip_low_pct_by_channel": {
+          "r": 0.0449,
+          "g": 0.0001,
+          "b": 0.0031
+        },
+        "saturation_mean": 8.501,
+        "chromatic_pct": 24.2303,
+        "hue_mean": -0.27,
+        "regions": []
+      },
+      "preview_hash": "9c0534b0e7f3ca9356914d27c50746f3a905613227bcdc0e1c45f37544e5b6e5",
+      "preview_source": "export",
+      "guardrail_actions": [],
+      "converged_by_metrics": false
+    },
+    {
+      "n": 1,
+      "kind": "step",
+      "target": "master",
+      "started": "2026-10-03T19:38:13.679Z",
+      "duration_ms": 3142,
+      "history_names": [
+        "AVG 5fdad4 pass 1/6"
+      ],
+      "rationale": "fix/lrc-version check: pass 1: exposure, shadows, vibrance",
+      "requested": {
+        "exposure": 0.1,
+        "shadows": 5,
+        "vibrance": 5
+      },
+      "changes": [
+        {
+          "name": "exposure",
+          "before": 0.33,
+          "requested": 0.1,
+          "after": 0.43,
+          "delta": 0.1
+        },
+        {
+          "name": "shadows",
+          "before": 10,
+          "requested": 5,
+          "after": 15,
+          "delta": 5
+        },
+        {
+          "name": "vibrance",
+          "before": 15,
+          "requested": 5,
+          "after": 20,
+          "delta": 5
+        }
+      ],
+      "clamped": [],
+      "refused": [],
+      "unchanged": [],
+      "settings_before": {
+        "exposure": 0.33,
+        "contrast": 15,
+        "highlights": -36,
+        "shadows": 10,
+        "whites": 0,
+        "blacks": 0,
+        "texture": 4,
+        "clarity": 12,
+        "dehaze": 10,
+        "vibrance": 15,
+        "saturation": 0,
+        "temperature": 4650,
+        "tint": 10,
+        "grading.shadows.hue": 0,
+        "grading.shadows.sat": 0,
+        "grading.shadows.lum": 0,
+        "grading.midtones.hue": 0,
+        "grading.midtones.sat": 0,
+        "grading.midtones.lum": 0,
+        "grading.highlights.hue": 0,
+        "grading.highlights.sat": 0,
+        "grading.highlights.lum": 0,
+        "grading.global.hue": 0,
+        "grading.global.sat": 0,
+        "grading.global.lum": 0,
+        "grading.blending": 50,
+        "grading.balance": 0,
+        "sharpening.amount": 24,
+        "sharpening.radius": 2,
+        "sharpening.detail": 25,
+        "sharpening.masking": 0,
+        "noise.luminance": 45,
+        "noise.color": 25,
+        "lens.corrections_enable": true,
+        "lens.profile_enable": 1,
+        "lens.ca_remove": 1,
+        "tone_curve.master": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.red": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.green": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.blue": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "hsl.red.hue": 0,
+        "hsl.red.sat": 0,
+        "hsl.red.lum": 0,
+        "hsl.orange.hue": 0,
+        "hsl.orange.sat": 0,
+        "hsl.orange.lum": 0,
+        "hsl.yellow.hue": 0,
+        "hsl.yellow.sat": 0,
+        "hsl.yellow.lum": 0,
+        "hsl.green.hue": 0,
+        "hsl.green.sat": 0,
+        "hsl.green.lum": 0,
+        "hsl.aqua.hue": 0,
+        "hsl.aqua.sat": 0,
+        "hsl.aqua.lum": 0,
+        "hsl.blue.hue": 0,
+        "hsl.blue.sat": 0,
+        "hsl.blue.lum": 0,
+        "hsl.purple.hue": 0,
+        "hsl.purple.sat": 0,
+        "hsl.purple.lum": 0,
+        "hsl.magenta.hue": 0,
+        "hsl.magenta.sat": 0,
+        "hsl.magenta.lum": 0,
+        "camera_profile": "Adobe Landscape"
+      },
+      "settings_after": {
+        "exposure": 0.43,
+        "contrast": 15,
+        "highlights": -36,
+        "shadows": 15,
+        "whites": 0,
+        "blacks": 0,
+        "texture": 4,
+        "clarity": 12,
+        "dehaze": 10,
+        "vibrance": 20,
+        "saturation": 0,
+        "temperature": 4650,
+        "tint": 10,
+        "grading.shadows.hue": 0,
+        "grading.shadows.sat": 0,
+        "grading.shadows.lum": 0,
+        "grading.midtones.hue": 0,
+        "grading.midtones.sat": 0,
+        "grading.midtones.lum": 0,
+        "grading.highlights.hue": 0,
+        "grading.highlights.sat": 0,
+        "grading.highlights.lum": 0,
+        "grading.global.hue": 0,
+        "grading.global.sat": 0,
+        "grading.global.lum": 0,
+        "grading.blending": 50,
+        "grading.balance": 0,
+        "sharpening.amount": 24,
+        "sharpening.radius": 2,
+        "sharpening.detail": 25,
+        "sharpening.masking": 0,
+        "noise.luminance": 45,
+        "noise.color": 25,
+        "lens.corrections_enable": true,
+        "lens.profile_enable": 1,
+        "lens.ca_remove": 1,
+        "tone_curve.master": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.red": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.green": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.blue": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "hsl.red.hue": 0,
+        "hsl.red.sat": 0,
+        "hsl.red.lum": 0,
+        "hsl.orange.hue": 0,
+        "hsl.orange.sat": 0,
+        "hsl.orange.lum": 0,
+        "hsl.yellow.hue": 0,
+        "hsl.yellow.sat": 0,
+        "hsl.yellow.lum": 0,
+        "hsl.green.hue": 0,
+        "hsl.green.sat": 0,
+        "hsl.green.lum": 0,
+        "hsl.aqua.hue": 0,
+        "hsl.aqua.sat": 0,
+        "hsl.aqua.lum": 0,
+        "hsl.blue.hue": 0,
+        "hsl.blue.sat": 0,
+        "hsl.blue.lum": 0,
+        "hsl.purple.hue": 0,
+        "hsl.purple.sat": 0,
+        "hsl.purple.lum": 0,
+        "hsl.magenta.hue": 0,
+        "hsl.magenta.sat": 0,
+        "hsl.magenta.lum": 0,
+        "camera_profile": "Adobe Landscape"
+      },
+      "metrics_before": {
+        "luma_mean": 116.606,
+        "luma_std": 51.754,
+        "luma_percentiles": {
+          "p1": 38,
+          "p5": 50,
+          "p50": 105,
+          "p95": 219,
+          "p99": 236
+        },
+        "dynamic_range": 0.7765,
+        "channel_mean": {
+          "r": 119.457,
+          "g": 116.062,
+          "b": 113.598
+        },
+        "rb_ratio": 1.0516,
+        "clip_high_pct": 0.0317,
+        "clip_low_pct": 0,
+        "clip_high_pct_by_channel": {
+          "r": 0,
+          "g": 0.0001,
+          "b": 0.0317
+        },
+        "clip_low_pct_by_channel": {
+          "r": 0.0449,
+          "g": 0.0001,
+          "b": 0.0031
+        },
+        "saturation_mean": 23.164,
+        "chromatic_pct": 82.6917,
+        "hue_mean": 27.09,
+        "hue_histogram": [
+          6.2068,
+          60.2247,
+          7.8794,
+          0.2186,
+          0.0177,
+          0.0368,
+          0.0848,
+          24.1516,
+          0.4838,
+          0.1185,
+          0.0943,
+          0.483
+        ],
+        "regions": []
+      },
+      "metrics_after": {
+        "luma_mean": 122.411,
+        "luma_std": 51.503,
+        "luma_percentiles": {
+          "p1": 41,
+          "p5": 55,
+          "p50": 112,
+          "p95": 222,
+          "p99": 237
+        },
+        "dynamic_range": 0.7686,
+        "channel_mean": {
+          "r": 125.776,
+          "g": 121.796,
+          "b": 118.59
+        },
+        "rb_ratio": 1.0606,
+        "clip_high_pct": 0.0529,
+        "clip_low_pct": 0,
+        "clip_high_pct_by_channel": {
+          "r": 0,
+          "g": 0.0001,
+          "b": 0.0529
+        },
+        "clip_low_pct_by_channel": {
+          "r": 0.0527,
+          "g": 0.0001,
+          "b": 0.0028
+        },
+        "saturation_mean": 23.067,
+        "chromatic_pct": 82.0333,
+        "hue_mean": 27.5,
+        "hue_histogram": [
+          6.1262,
+          60.5031,
+          8.1502,
+          0.2627,
+          0.0231,
+          0.0413,
+          0.0965,
+          23.6394,
+          0.4603,
+          0.1185,
+          0.0909,
+          0.4876
+        ],
+        "regions": []
+      },
+      "delta_metrics": {
+        "luma_mean": 5.805,
+        "luma_std": -0.251,
+        "luma_percentiles": {
+          "p1": 3,
+          "p5": 5,
+          "p50": 7,
+          "p95": 3,
+          "p99": 1
+        },
+        "dynamic_range": -0.0079,
+        "channel_mean": {
+          "r": 6.319,
+          "g": 5.734,
+          "b": 4.992
+        },
+        "rb_ratio": 0.009,
+        "clip_high_pct": 0.0212,
+        "clip_low_pct": 0,
+        "clip_high_pct_by_channel": {
+          "r": 0,
+          "g": 0,
+          "b": 0.0212
+        },
+        "clip_low_pct_by_channel": {
+          "r": 0.0078,
+          "g": 0,
+          "b": -0.0003
+        },
+        "saturation_mean": -0.097,
+        "chromatic_pct": -0.6584,
+        "hue_mean": 0.41,
+        "regions": []
+      },
+      "preview_hash": "bdf6ce7c886c60122d089dd017c11bbd7271746007adaa7ff589ff789d2eb083",
+      "preview_source": "export",
+      "guardrail_actions": [],
+      "converged_by_metrics": false
+    },
+    {
+      "n": 2,
+      "kind": "step",
+      "target": "master",
+      "started": "2026-10-03T19:38:16.824Z",
+      "duration_ms": 3306.9,
+      "history_names": [
+        "AVG 5fdad4 pass 2/6"
+      ],
+      "rationale": "fix/lrc-version check: pass 2: HSL, temperature (WhiteBalance Custom), a curve",
+      "requested": {
+        "hsl.orange.sat": -5,
+        "temperature": 100,
+        "tone_curve.master": [
+          0,
+          0,
+          64,
+          60,
+          192,
+          196,
+          255,
+          255
+        ]
+      },
+      "changes": [
+        {
+          "name": "hsl.orange.sat",
+          "before": 0,
+          "requested": -5,
+          "after": -5,
+          "delta": -5
+        },
+        {
+          "name": "temperature",
+          "before": 4650,
+          "requested": 100,
+          "after": 4750,
+          "delta": 100
+        },
+        {
+          "name": "tone_curve.master",
+          "before": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "requested": [
+            0,
+            0,
+            64,
+            60,
+            192,
+            196,
+            255,
+            255
+          ],
+          "after": [
+            0,
+            0,
+            64,
+            60,
+            192,
+            196,
+            255,
+            255
+          ],
+          "delta": null
+        }
+      ],
+      "clamped": [],
+      "refused": [],
+      "unchanged": [],
+      "settings_before": {
+        "exposure": 0.43,
+        "contrast": 15,
+        "highlights": -36,
+        "shadows": 15,
+        "whites": 0,
+        "blacks": 0,
+        "texture": 4,
+        "clarity": 12,
+        "dehaze": 10,
+        "vibrance": 20,
+        "saturation": 0,
+        "temperature": 4650,
+        "tint": 10,
+        "grading.shadows.hue": 0,
+        "grading.shadows.sat": 0,
+        "grading.shadows.lum": 0,
+        "grading.midtones.hue": 0,
+        "grading.midtones.sat": 0,
+        "grading.midtones.lum": 0,
+        "grading.highlights.hue": 0,
+        "grading.highlights.sat": 0,
+        "grading.highlights.lum": 0,
+        "grading.global.hue": 0,
+        "grading.global.sat": 0,
+        "grading.global.lum": 0,
+        "grading.blending": 50,
+        "grading.balance": 0,
+        "sharpening.amount": 24,
+        "sharpening.radius": 2,
+        "sharpening.detail": 25,
+        "sharpening.masking": 0,
+        "noise.luminance": 45,
+        "noise.color": 25,
+        "lens.corrections_enable": true,
+        "lens.profile_enable": 1,
+        "lens.ca_remove": 1,
+        "tone_curve.master": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.red": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.green": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.blue": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "hsl.red.hue": 0,
+        "hsl.red.sat": 0,
+        "hsl.red.lum": 0,
+        "hsl.orange.hue": 0,
+        "hsl.orange.sat": 0,
+        "hsl.orange.lum": 0,
+        "hsl.yellow.hue": 0,
+        "hsl.yellow.sat": 0,
+        "hsl.yellow.lum": 0,
+        "hsl.green.hue": 0,
+        "hsl.green.sat": 0,
+        "hsl.green.lum": 0,
+        "hsl.aqua.hue": 0,
+        "hsl.aqua.sat": 0,
+        "hsl.aqua.lum": 0,
+        "hsl.blue.hue": 0,
+        "hsl.blue.sat": 0,
+        "hsl.blue.lum": 0,
+        "hsl.purple.hue": 0,
+        "hsl.purple.sat": 0,
+        "hsl.purple.lum": 0,
+        "hsl.magenta.hue": 0,
+        "hsl.magenta.sat": 0,
+        "hsl.magenta.lum": 0,
+        "camera_profile": "Adobe Landscape"
+      },
+      "settings_after": {
+        "exposure": 0.43,
+        "contrast": 15,
+        "highlights": -36,
+        "shadows": 15,
+        "whites": 0,
+        "blacks": 0,
+        "texture": 4,
+        "clarity": 12,
+        "dehaze": 10,
+        "vibrance": 20,
+        "saturation": 0,
+        "temperature": 4750,
+        "tint": 10,
+        "grading.shadows.hue": 0,
+        "grading.shadows.sat": 0,
+        "grading.shadows.lum": 0,
+        "grading.midtones.hue": 0,
+        "grading.midtones.sat": 0,
+        "grading.midtones.lum": 0,
+        "grading.highlights.hue": 0,
+        "grading.highlights.sat": 0,
+        "grading.highlights.lum": 0,
+        "grading.global.hue": 0,
+        "grading.global.sat": 0,
+        "grading.global.lum": 0,
+        "grading.blending": 50,
+        "grading.balance": 0,
+        "sharpening.amount": 24,
+        "sharpening.radius": 2,
+        "sharpening.detail": 25,
+        "sharpening.masking": 0,
+        "noise.luminance": 45,
+        "noise.color": 25,
+        "lens.corrections_enable": true,
+        "lens.profile_enable": 1,
+        "lens.ca_remove": 1,
+        "tone_curve.master": [
+          0,
+          0,
+          64,
+          60,
+          192,
+          196,
+          255,
+          255
+        ],
+        "tone_curve.red": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.green": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "tone_curve.blue": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "hsl.red.hue": 0,
+        "hsl.red.sat": 0,
+        "hsl.red.lum": 0,
+        "hsl.orange.hue": 0,
+        "hsl.orange.sat": -5,
+        "hsl.orange.lum": 0,
+        "hsl.yellow.hue": 0,
+        "hsl.yellow.sat": 0,
+        "hsl.yellow.lum": 0,
+        "hsl.green.hue": 0,
+        "hsl.green.sat": 0,
+        "hsl.green.lum": 0,
+        "hsl.aqua.hue": 0,
+        "hsl.aqua.sat": 0,
+        "hsl.aqua.lum": 0,
+        "hsl.blue.hue": 0,
+        "hsl.blue.sat": 0,
+        "hsl.blue.lum": 0,
+        "hsl.purple.hue": 0,
+        "hsl.purple.sat": 0,
+        "hsl.purple.lum": 0,
+        "hsl.magenta.hue": 0,
+        "hsl.magenta.sat": 0,
+        "hsl.magenta.lum": 0,
+        "camera_profile": "Adobe Landscape"
+      },
+      "metrics_before": {
+        "luma_mean": 122.411,
+        "luma_std": 51.503,
+        "luma_percentiles": {
+          "p1": 41,
+          "p5": 55,
+          "p50": 112,
+          "p95": 222,
+          "p99": 237
+        },
+        "dynamic_range": 0.7686,
+        "channel_mean": {
+          "r": 125.776,
+          "g": 121.796,
+          "b": 118.59
+        },
+        "rb_ratio": 1.0606,
+        "clip_high_pct": 0.0529,
+        "clip_low_pct": 0,
+        "clip_high_pct_by_channel": {
+          "r": 0,
+          "g": 0.0001,
+          "b": 0.0529
+        },
+        "clip_low_pct_by_channel": {
+          "r": 0.0527,
+          "g": 0.0001,
+          "b": 0.0028
+        },
+        "saturation_mean": 23.067,
+        "chromatic_pct": 82.0333,
+        "hue_mean": 27.5,
+        "hue_histogram": [
+          6.1262,
+          60.5031,
+          8.1502,
+          0.2627,
+          0.0231,
+          0.0413,
+          0.0965,
+          23.6394,
+          0.4603,
+          0.1185,
+          0.0909,
+          0.4876
+        ],
+        "regions": []
+      },
+      "metrics_after": {
+        "luma_mean": 121.95,
+        "luma_std": 54.172,
+        "luma_percentiles": {
+          "p1": 38,
+          "p5": 51,
+          "p50": 111,
+          "p95": 226,
+          "p99": 239
+        },
+        "dynamic_range": 0.7882,
+        "channel_mean": {
+          "r": 127.158,
+          "g": 121.063,
+          "b": 115.408
+        },
+        "rb_ratio": 1.1018,
+        "clip_high_pct": 0.0602,
+        "clip_low_pct": 0.0001,
+        "clip_high_pct_by_channel": {
+          "r": 0.0001,
+          "g": 0.0004,
+          "b": 0.0601
+        },
+        "clip_low_pct_by_channel": {
+          "r": 0.0758,
+          "g": 0.0001,
+          "b": 0.0045
+        },
+        "saturation_mean": 25.966,
+        "chromatic_pct": 87.1965,
+        "hue_mean": 28.28,
+        "hue_histogram": [
+          5.1026,
+          66.6201,
+          6.841,
+          0.1622,
+          0.0177,
+          0.0421,
+          0.0572,
+          20.2118,
+          0.4209,
+          0.0936,
+          0.0599,
+          0.3709
+        ],
+        "regions": []
+      },
+      "delta_metrics": {
+        "luma_mean": -0.461,
+        "luma_std": 2.669,
+        "luma_percentiles": {
+          "p1": -3,
+          "p5": -4,
+          "p50": -1,
+          "p95": 4,
+          "p99": 2
+        },
+        "dynamic_range": 0.0196,
+        "channel_mean": {
+          "r": 1.382,
+          "g": -0.733,
+          "b": -3.182
+        },
+        "rb_ratio": 0.0412,
+        "clip_high_pct": 0.0073,
+        "clip_low_pct": 0.0001,
+        "clip_high_pct_by_channel": {
+          "r": 0.0001,
+          "g": 0.0003,
+          "b": 0.0072
+        },
+        "clip_low_pct_by_channel": {
+          "r": 0.0231,
+          "g": 0,
+          "b": 0.0017
+        },
+        "saturation_mean": 2.899,
+        "chromatic_pct": 5.1632,
+        "hue_mean": 0.78,
+        "regions": []
+      },
+      "preview_hash": "e9f33dab1b4285003e0b2c5a19eb19ffe6c9e864735cb85806b8fa11fc44f00b",
+      "preview_source": "export",
+      "guardrail_actions": [],
+      "converged_by_metrics": false
+    }
+  ],
+  "probes": [],
+  "failures": [],
+  "final_settings": {
+    "exposure": 0.43,
+    "contrast": 15,
+    "highlights": -36,
+    "shadows": 15,
+    "whites": 0,
+    "blacks": 0,
+    "texture": 4,
+    "clarity": 12,
+    "dehaze": 10,
+    "vibrance": 20,
+    "saturation": 0,
+    "temperature": 4750,
+    "tint": 10,
+    "grading.shadows.hue": 0,
+    "grading.shadows.sat": 0,
+    "grading.shadows.lum": 0,
+    "grading.midtones.hue": 0,
+    "grading.midtones.sat": 0,
+    "grading.midtones.lum": 0,
+    "grading.highlights.hue": 0,
+    "grading.highlights.sat": 0,
+    "grading.highlights.lum": 0,
+    "grading.global.hue": 0,
+    "grading.global.sat": 0,
+    "grading.global.lum": 0,
+    "grading.blending": 50,
+    "grading.balance": 0,
+    "sharpening.amount": 24,
+    "sharpening.radius": 2,
+    "sharpening.detail": 25,
+    "sharpening.masking": 0,
+    "noise.luminance": 45,
+    "noise.color": 25,
+    "lens.corrections_enable": true,
+    "lens.profile_enable": 1,
+    "lens.ca_remove": 1,
+    "tone_curve.master": [
+      0,
+      0,
+      64,
+      60,
+      192,
+      196,
+      255,
+      255
+    ],
+    "tone_curve.red": [
+      0,
+      0,
+      255,
+      255
+    ],
+    "tone_curve.green": [
+      0,
+      0,
+      255,
+      255
+    ],
+    "tone_curve.blue": [
+      0,
+      0,
+      255,
+      255
+    ],
+    "hsl.red.hue": 0,
+    "hsl.red.sat": 0,
+    "hsl.red.lum": 0,
+    "hsl.orange.hue": 0,
+    "hsl.orange.sat": -5,
+    "hsl.orange.lum": 0,
+    "hsl.yellow.hue": 0,
+    "hsl.yellow.sat": 0,
+    "hsl.yellow.lum": 0,
+    "hsl.green.hue": 0,
+    "hsl.green.sat": 0,
+    "hsl.green.lum": 0,
+    "hsl.aqua.hue": 0,
+    "hsl.aqua.sat": 0,
+    "hsl.aqua.lum": 0,
+    "hsl.blue.hue": 0,
+    "hsl.blue.sat": 0,
+    "hsl.blue.lum": 0,
+    "hsl.purple.hue": 0,
+    "hsl.purple.sat": 0,
+    "hsl.purple.lum": 0,
+    "hsl.magenta.hue": 0,
+    "hsl.magenta.sat": 0,
+    "hsl.magenta.lum": 0,
+    "camera_profile": "Adobe Landscape"
+  },
+  "recipe_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\check-lrc-version-2026-10-03\\sessions\\20261003-5fdad4.recipe.json",
+  "revert": null,
+  "settings": {
+    "approval": "autonomous",
+    "long_edge": 1600,
+    "quality": 75,
+    "from": {
+      "approval": "page",
+      "max_passes": "argument",
+      "variant_count": "page",
+      "long_edge": "page",
+      "quality": "page",
+      "clip_high_pct": "page",
+      "clip_low_pct": "page",
+      "decay": "page"
+    },
+    "page": {
+      "read": true,
+      "note": null,
+      "problems": []
+    }
+  },
+  "ended_by": {
+    "source": "claude"
+  }
+}
+
+================================================================================
+4. check.mts
+================================================================================
+// Lightroom check of branch fix/lrc-version (engine 0.13.0, plugin unchanged 0.9.0), issue #67.
+// Decisions [stated: Jim, 2026-10-03]: D1 "Drop Version (Recommended)", D2 "Leave as is", D3 "P0 now".
+// Runs ONE Converge session on 20260906-_OZ80029.NEF (the photo issue #67 failed on) through the
+// engine's own tools (engine\dist), exactly as Claude Desktop's engine would:
+//   1. takes the engine instance lock; the plugin's hello (Lightroom version); selects the photo by
+//      uuid; reads its settings (the start);
+//   2. lr_begin_session landscape_overcast_flat, max 6 passes: pass 0 swaps the profile to Adobe
+//      Landscape, its Look written WITHOUT Parameters.Version (D1). Reads the Look back raw: did
+//      Lightroom stamp its own Version? Jim confirms the profile in the Basic panel;
+//   3. lr_get_active_photo_context: the new `lightroom` field;
+//   4. two lr_step passes over other key types: numbers (exposure, shadows, vibrance, HSL), a
+//      temperature (writes WhiteBalance "Custom", a string) and a curve (tone_curve.master);
+//   5. lr_end_session "accept"; the session log's `lightroom`;
+//   6. ALWAYS: if the session is still open, lr_end_session "revert"; then applies the pre-session
+//      snapshot and compares every setting with the start. Jim confirms the photo looks as before.
+// Every wait ends and moves on, so a missed step never blocks the put-back.
+// Results: <out>\check.json. Usage: node logs\check-lrc-version-2026-10-03\check.mts [repo root]
+// Dry run against a stand-in plugin: LRC_AVG_COMMAND_PORT/_EVENT_PORT/_TOKEN_FILE, CHECK_OUT, CHECK_UUID.
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { createInterface } from "node:readline/promises";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+const repo = path.resolve(process.argv[2] ?? process.cwd());
+const dist = (p: string) => import(pathToFileURL(path.join(repo, "engine", "dist", p)).href);
+const { BridgeClient } = await dist("bridge/index.js");
+const { Tools, acquireInstanceLock, devOverrides, ENGINE_VERSION } = await dist("mcp/index.js");
+const { PreviewService } = await dist("preview/index.js");
+const { IntentLibrary } = await dist("intents/index.js");
+const { loadDefaultParamMap } = await dist("params/index.js");
+const { ToolLog } = await dist("log/index.js");
+
+const UUID = process.env["CHECK_UUID"] ?? "D0B90B6F-91F6-4838-B171-C9CAF77EE7BE"; // 20260906-_OZ80029.NEF [handle: logs\20261003-9569c3.json target]
+const LANDSCAPE_UUID = "6F9C877E84273F4E8271E6B91BEB36A1"; // Adobe Landscape's Look [handle: engine\src\params\camera-profiles.lrc15.json]
+const MIN_PLUGIN = [0, 9, 0];
+const SESSION_SILENCE_MS = 60_000; // bridge-gate.ts SESSION_SILENCE_MS (not exported from the mcp index)
+const outDir = process.env["CHECK_OUT"] ?? path.dirname(fileURLToPath(import.meta.url));
+mkdirSync(outDir, { recursive: true });
+
+const at = () => new Date().toISOString();
+const say = (m: string) => console.log(`[${new Date().toLocaleTimeString()}] ${m}`);
+const result: Record<string, any> = { started: at(), engine_version: ENGINE_VERSION, uuid: UUID, steps: {}, checks: [], answers: [], failures: [] };
+const save = () => writeFileSync(path.join(outDir, "check.json"), JSON.stringify(result, null, 2));
+const step = (name: string, data: Record<string, unknown>) => {
+  result.steps[name] = { at: at(), ...data };
+  save();
+};
+function check(ok: boolean, text: string, detail?: unknown) {
+  result.checks.push({ ok, text, detail });
+  if (!ok) result.failures.push(text);
+  say(`${ok ? "YES" : "NO "}  ${text}`);
+  save();
+}
+
+const rl = createInterface({ input: process.stdin, output: process.stdout });
+async function ask(q: string): Promise<string> {
+  let a: string | null = null;
+  for (let i = 0; i < 3 && a !== "y" && a !== "n"; i++) {
+    try {
+      a = (await rl.question(`${q} (y/n) `, { signal: AbortSignal.timeout(10 * 60_000) })).trim().toLowerCase();
+    } catch {
+      a = null; // no answer in 10 minutes, or stdin closed
+      break;
+    }
+  }
+  const answer = a === "y" || a === "n" ? a : "no answer";
+  result.answers.push({ q, answer, at: at() });
+  if (answer !== "y") result.failures.push(`answered ${answer}: ${q}`);
+  save();
+  return answer;
+}
+
+const dev = devOverrides();
+const lock = await acquireInstanceLock(dev.lockPort);
+if (!lock.ok) {
+  result.lock = { ok: false, port: lock.port, pid: lock.pid };
+  save();
+  say(`LOCK BUSY: another engine (pid ${lock.pid}) holds port ${lock.port}. Quit Claude Desktop (File > Exit), wait 60 s, then run this again.`);
+  process.exit(2);
+}
+let tools: any = null;
+const sessionOpen = () => (tools?.sessionManager()?.current() ?? null) !== null;
+const client = new BridgeClient({
+  engineVersion: `${ENGINE_VERSION}-lrc-version-check`,
+  log: (m: string) => console.error(`  (${m})`),
+  silenceAllowanceMs: () => (sessionOpen() ? SESSION_SILENCE_MS : 0),
+  ...dev.bridge,
+});
+client.start();
+const map = loadDefaultParamMap();
+
+const rawSettings = async () => (await client.request("get_settings", { target_uuid: UUID })).settings as Record<string, any>;
+const settingsNow = async () => map.fromSdk(await rawSettings()).settings;
+const differing = (a: Record<string, unknown>, b: Record<string, unknown>) =>
+  [...new Set([...Object.keys(a), ...Object.keys(b)])].filter((k) => JSON.stringify(a[k]) !== JSON.stringify(b[k]));
+const errBody = (err: any) => err?.body?.() ?? String(err?.message ?? err);
+
+let sessionId: string | null = null;
+let snapshotId: string | null = null;
+let start: Record<string, unknown> | null = null;
+let hello: any = null;
+try {
+  // 1. The plugin and the photo.
+  hello = await client.waitConnected(30_000);
+  result.hello = { plugin_version: hello.plugin_version, lrc_version: hello.lrc_version, sdk_declared: hello.sdk_declared };
+  const v = String(hello.plugin_version).split(".").map(Number);
+  const newEnough = v[0]! > MIN_PLUGIN[0]! || (v[0] === MIN_PLUGIN[0] && (v[1]! > MIN_PLUGIN[1]! || (v[1] === MIN_PLUGIN[1] && v[2]! >= MIN_PLUGIN[2]!)));
+  check(newEnough, `Lightroom ${hello.lrc_version} runs plugin ${hello.plugin_version} (0.9.0 or later needed)`);
+  if (!newEnough) throw new Error("plugin version");
+  tools = new Tools({
+    client,
+    map,
+    previews: new PreviewService(client),
+    intents: new IntentLibrary({ map }),
+    sessionLogDir: path.join(outDir, "sessions"),
+    engineVersion: `${ENGINE_VERSION}-lrc-version-check`,
+    ensureBridge: async () => void (await client.waitConnected(15_000)),
+    log: new ToolLog(outDir),
+  });
+  const selected = await client.request("select_photo", { uuid: UUID, expect: { is_virtual_copy: false } });
+  const raw0 = await rawSettings();
+  start = map.fromSdk(raw0).settings;
+  step("1_photo", { selected, start_profile: start["camera_profile"] ?? null, start_look: raw0["Look"] ?? null });
+  check(true, `selected ${selected.filename ?? UUID}; its profile now: ${String(start["camera_profile"] ?? "(not pinned)")}`);
+
+  // 2. Begin: pass 0 swaps the profile.
+  say("2. Beginning the session; the HUD opens by itself. Leave it alone.");
+  try {
+    const begun = await tools.beginSession({ intent_id: "landscape_overcast_flat", max_passes: 6, return_image: "none" });
+    sessionId = begun.json.session_id;
+    snapshotId = begun.json.snapshot?.id ?? null;
+    step("2_begin", { ok: true, session_id: sessionId, snapshot: begun.json.snapshot, session_settings: begun.json.session_settings ?? null });
+    check(true, "pass 0 was taken (no WRITE_NOT_TAKEN)");
+  } catch (err) {
+    step("2_begin", { ok: false, error: errBody(err) });
+    check(false, "pass 0 was taken (no WRITE_NOT_TAKEN)", errBody(err));
+    throw err;
+  }
+  const look = (await rawSettings())["Look"] ?? null;
+  step("2_look", { look });
+  check(look?.Name === "Adobe Landscape" && look?.UUID === LANDSCAPE_UUID, "the photo's Look is Adobe Landscape (name and UUID)", { name: look?.Name, uuid: look?.UUID });
+  const stamped = look?.Parameters?.Version;
+  check(typeof stamped === "string" && stamped !== "", `Lightroom filled in the Look's Version itself (read back: ${JSON.stringify(stamped ?? null)})`);
+  say("NOW: look at Lightroom's Develop module, top of the Basic panel (Profile).");
+  await ask("Does Profile show 'Adobe Landscape'?");
+
+  // 3. The context's new field.
+  const context = await tools.getActivePhotoContext();
+  step("3_context", { lightroom: context.json.lightroom ?? null, camera_profile: context.json.camera_profile });
+  check(context.json.lightroom?.lrc_version === hello.lrc_version, `lr_get_active_photo_context names the Lightroom version (${JSON.stringify(context.json.lightroom ?? null)})`);
+
+  // 4. Two passes over other key types.
+  const mode = approvalMode();
+  const passes: Array<[string, Record<string, unknown>]> = [
+    ["pass 1: exposure, shadows, vibrance", { exposure: 0.1, shadows: 5, vibrance: 5 }],
+    ["pass 2: HSL, temperature (WhiteBalance Custom), a curve", { "hsl.orange.sat": -5, temperature: 100, "tone_curve.master": [0, 0, 64, 60, 192, 196, 255, 255] }],
+  ];
+  for (const [i, [label, settings]] of passes.entries()) {
+    if (i > 0 && mode === "approve_each_pass") await tools.approvePass({ session_id: sessionId, confirmed: true }).catch((err: any) => step(`4_approve_${i + 1}`, { error: errBody(err) }));
+    try {
+      const out = await tools.step({ session_id: sessionId, settings, rationale: `fix/lrc-version check: ${label}`, return_image: "none" });
+      step(`4_pass${i + 1}`, { ok: true, pass: out.json.pass, applied: out.json.applied ?? null, refused: out.json.refused ?? null, undone: out.json.undone ?? null, guardrail_actions: out.json.guardrail_actions ?? null });
+      check(true, `${label}: written and read back`);
+    } catch (err) {
+      step(`4_pass${i + 1}`, { ok: false, error: errBody(err) });
+      check(false, `${label}: written and read back`, errBody(err));
+    }
+  }
+
+  // 5. Accept.
+  const ended = await tools.endSession({ session_id: sessionId, outcome: "accept" });
+  const log = JSON.parse(readFileSync(ended.json.log_path ?? tools.sessionManager().getLog({ session_id: sessionId }).json.log_path, "utf8"));
+  step("5_accept", { outcome: log.outcome, lightroom: log.lightroom ?? null, failures: log.failures, passes: log.passes.length });
+  check(log.outcome === "accept", "the session ended with accept");
+  check(log.lightroom?.lrc_version === hello.lrc_version, `the session log names the Lightroom version (${JSON.stringify(log.lightroom ?? null)})`);
+  check(log.failures.length === 0, `the session log records no failures (${log.failures.length})`, log.failures);
+} catch (err: any) {
+  if (!result.failures.length) result.failures.push(`error: ${errBody(err)}`);
+  result.error = errBody(err);
+  say(`ERROR: ${result.error}`);
+} finally {
+  // 6. The put-back, whatever happened.
+  try {
+    if (sessionOpen() && sessionId) {
+      await tools.endSession({ session_id: sessionId, outcome: "revert" });
+      result.putback_revert = true;
+    }
+    if (start && snapshotId) {
+      await client.request("apply_snapshot", { target_uuid: UUID, snapshot_id: snapshotId }, { timeoutMs: 30_000 });
+    }
+    if (start) {
+      const diff = differing(await settingsNow(), start);
+      step("6_put_back", { differing: diff, snapshot_id: snapshotId });
+      check(diff.length === 0, diff.length === 0 ? "PUT BACK: YES (every setting as before the check)" : `PUT BACK: NO (${diff.join(", ")})`);
+      say("NOW: look at the photo in Lightroom.");
+      await ask(`Does it look as it did before the check, with Profile '${String(start["camera_profile"] ?? "as before")}'?`);
+    }
+  } catch (err: any) {
+    check(false, "PUT BACK ran", errBody(err));
+  }
+  result.bridge = client.stats;
+  result.ended = at();
+  save();
+  client.stop();
+  await lock.lock.release();
+  rl.close();
+  const failures: string[] = result.failures;
+  say("");
+  say(failures.length === 0 ? "fix/lrc-version check: WORKED" : `fix/lrc-version check: FAILED (${failures.length})`);
+  for (const f of failures) say(`  - ${f}`);
+  say(`Results: ${path.join(outDir, "check.json")}`);
+  process.exit(failures.length === 0 ? 0 : 1);
+}
+
+/** The session's approval mode, from begin's session_settings. */
+function approvalMode(): string | null {
+  return result.steps["2_begin"]?.session_settings?.approval ?? null;
+}
+
+================================================================================
+5. Dry run (2026-10-03, before Jim's run)
+================================================================================
+--- driver: engine\tests\zz-scratch-lrcv-dryrun.test.ts (deleted after the run) ---
+// SCRATCH (not committed): dry run of logs\check-lrc-version-2026-10-03\check.mts against the test sim.
+import { spawn } from "node:child_process";
+import { mkdtempSync, writeFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { expect, it } from "vitest";
+import { FakePlugin } from "./helpers/fake-plugin.js";
+import { LightroomSim } from "./helpers/lightroom-sim.js";
+
+it("dry run", async () => {
+  const repo = path.resolve(import.meta.dirname, "..", "..");
+  const tmp = mkdtempSync(path.join(os.tmpdir(), "lrcv-dry-"));
+  const plugin = await FakePlugin.start();
+  const lr = new LightroomSim(path.join(os.tmpdir(), "LrC-AVG", "previews"));
+  lr.renderModel = "tonal";
+  lr.lookVersion = process.env["DRY_NO_STAMP"] ? null : "18.7";
+  lr.install(plugin);
+  const tokenFile = path.join(tmp, "token");
+  writeFileSync(tokenFile, plugin.token);
+  const child = spawn(process.execPath, [path.join(repo, "logs", "check-lrc-version-2026-10-03", "check.mts"), repo], {
+    env: { ...process.env, LRC_AVG_COMMAND_PORT: String(plugin.commandPort), LRC_AVG_EVENT_PORT: String(plugin.eventPort), LRC_AVG_TOKEN_FILE: tokenFile, CHECK_OUT: tmp, CHECK_UUID: "SIM-UUID" },
+  });
+  let out = "";
+  child.stdout.on("data", (d: Buffer) => {
+    out += d.toString();
+    if (d.toString().includes("(y/n)")) child.stdin.write("y\n");
+  });
+  child.stderr.on("data", (d: Buffer) => (out += d.toString()));
+  const code = await new Promise<number | null>((r) => child.on("exit", r));
+  writeFileSync(path.join(os.tmpdir(), "lrcv-dry-out.txt"), `${out}\nHISTORY ${JSON.stringify(lr.history)}\nexit ${code}`);
+  console.log("HISTORY", lr.history);
+  console.log("OUT", tmp, "exit", code);
+  await plugin.stop?.();
+  expect(code).not.toBeNull();
+}, 120_000);
+
+--- output ---
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+[11:39:11 AM] YES  Lightroom 15.5.1 runs plugin 0.9.0 (0.9.0 or later needed)
+[11:39:11 AM] YES  selected SIM-UUID; its profile now: Camera Neutral
+[11:39:11 AM] 2. Beginning the session; the HUD opens by itself. Leave it alone.
+[11:39:11 AM] YES  pass 0 was taken (no WRITE_NOT_TAKEN)
+[11:39:11 AM] YES  the photo's Look is Adobe Landscape (name and UUID)
+[11:39:11 AM] YES  Lightroom filled in the Look's Version itself (read back: "18.7")
+[11:39:11 AM] NOW: look at Lightroom's Develop module, top of the Basic panel (Profile).
+Does Profile show 'Adobe Landscape'? (y/n) [11:39:11 AM] YES  lr_get_active_photo_context names the Lightroom version ({"lrc_version":"15.5.1","sdk_declared":13})
+[11:39:11 AM] YES  pass 1: exposure, shadows, vibrance: written and read back
+[11:39:12 AM] YES  pass 2: HSL, temperature (WhiteBalance Custom), a curve: written and read back
+[11:39:12 AM] YES  the session ended with accept
+[11:39:12 AM] YES  the session log names the Lightroom version ({"lrc_version":"15.5.1","sdk_declared":13})
+[11:39:12 AM] YES  the session log records no failures (0)
+[11:39:12 AM] YES  PUT BACK: YES (every setting as before the check)
+[11:39:12 AM] NOW: look at the photo in Lightroom.
+Does it look as it did before the check, with Profile 'Camera Neutral'? (y/n)   (bridge: stopped)
+[11:39:12 AM] 
+[11:39:12 AM] fix/lrc-version check: WORKED
+[11:39:12 AM] Results: %USERPROFILE%\AppData\Local\Temp\lrcv-dry-QiGBeL\check.json
+
+HISTORY ["AVG 1117b0 pass 0/6","AVG 1117b0 pass 0/6 baseline 1","AVG 1117b0 pass 1/6","AVG 1117b0 pass 2/6"]
+exit 0

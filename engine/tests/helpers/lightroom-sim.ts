@@ -92,6 +92,8 @@ export class LightroomSim {
   /** Answer select_photo with this select_failed message instead. */
   selectFault: string | null = null;
   readonly ignored = new Set<string>();
+  /** Stamp a written Look's Parameters.Version with this, as LrC 15.6 did with "18.7" (issue #67); null: kept as written. */
+  lookVersion: string | null = null;
   /** Export at this long edge instead of the requested one (to exercise the resize). */
   exportLongEdge: number | null = null;
   /** Return this path instead of the file written (to exercise the path check). */
@@ -177,6 +179,8 @@ export class LightroomSim {
           if (k === "Look" && (Array.isArray(v) ? v.length === 0 : Object.keys(v as object).length === 0)) delete settings["Look"];
           else settings[k] = structuredClone(v);
         }
+        const look = settings["Look"] as { Parameters?: Record<string, unknown> } | undefined;
+        if ("Look" in written && this.lookVersion !== null && look?.Parameters) look.Parameters["Version"] = this.lookVersion;
         return ok({ uuid: u, apply_ms: 25, read_ms: 300, command_ms: 330, read_back: luaize(settings) });
       }),
     );

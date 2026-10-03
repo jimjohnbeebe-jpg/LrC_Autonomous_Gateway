@@ -135,11 +135,13 @@ const APPROVAL_NOTE =
 
 function newLog(ctx: SessionContext, s: Session, variantCount: number | null, notes: string | null): SessionLogData {
   const { intent, master } = s;
+  const hello = ctx.deps.client.hello();
   return {
     schema: SESSION_LOG_SCHEMA_ID,
     session_id: s.id,
     short_id: s.short,
     engine_version: ctx.deps.engineVersion,
+    ...(hello ? { lightroom: { lrc_version: hello.lrc_version, sdk_declared: hello.sdk_declared } } : {}),
     started: s.startedAt.toISOString(),
     ended: null,
     outcome: null,

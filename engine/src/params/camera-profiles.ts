@@ -125,13 +125,18 @@ export class CameraProfiles {
     return entry;
   }
 
-  /** The two SDK settings that select this profile. A profile without a Look writes Look = {}. */
+  /**
+   * The two SDK settings that select this profile. A profile without a Look writes Look = {}. The
+   * Look goes without its Parameters.Version, the version it was recorded under: Lightroom stamps its
+   * own on a write (issue #67) [handle: docs\reports\phase6\lrc-version-check\check.txt section 2
+   * "2_look", LrC 15.6 read back "18.7"].
+   */
   toSdk(name: string): { CameraProfile: string; Look: Record<string, unknown> } {
     const entry = this.get(name);
-    return {
-      CameraProfile: entry.camera_profile,
-      Look: entry.look ? structuredClone(entry.look) : {},
-    };
+    if (!entry.look) return { CameraProfile: entry.camera_profile, Look: {} };
+    const look = structuredClone(entry.look);
+    delete look.Parameters["Version"];
+    return { CameraProfile: entry.camera_profile, Look: look };
   }
 
   /**

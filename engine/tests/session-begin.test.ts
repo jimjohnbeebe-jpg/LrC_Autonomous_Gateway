@@ -24,6 +24,16 @@ describe("lr_begin_session", () => {
     expect(log.passes[0]).toMatchObject({ n: 0, kind: "pass0", history_names: [`AVG ${SHORT} pass 0/4`] });
   });
 
+  it("takes pass 0's profile when Lightroom stamps its own Look version, and logs the Lightroom version (issue #67)", async () => {
+    clean();
+    lr.lookVersion = "18.7";
+    const out = await manager.begin({ intent_id: "test_prior" });
+    expect(out.json["ok"]).toBe(true);
+    expect((lr.settings["Look"] as { Parameters: Record<string, unknown> }).Parameters["Version"]).toBe("18.7");
+    expect(map.fromSdk(lr.settings).camera_profile.name).toBe("Adobe Color");
+    expect(readLog().lightroom).toEqual({ lrc_version: "15.5.1", sdk_declared: 13 });
+  });
+
   it("refuses a second session while one is open", async () => {
     clean();
     await manager.begin({ intent_id: "test_plain" });

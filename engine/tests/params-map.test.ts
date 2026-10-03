@@ -265,6 +265,33 @@ describe("params: canonical map", () => {
       expect(map.verifyReadback({ Look: look }, { Look: swapped })).toHaveLength(1);
     });
 
+    describe("a profile swap on another Camera Raw version (issue #67)", () => {
+      const look = profiles.toSdk("Adobe Landscape").Look;
+      const params = look["Parameters"] as Record<string, unknown>;
+      const readBack = (p: Record<string, unknown>, top: Record<string, unknown> = {}) => ({ Look: { ...look, ...top, Parameters: { ...params, ...p } } });
+
+      it("passes when Lightroom stamps its own version or adds a field", () => {
+        expect(map.verifyReadback({ Look: look }, readBack({ Version: "18.7" }))).toEqual([]);
+        expect(map.verifyReadback({ Look: look }, readBack({ Version: "18.7", NewHostField: 0 }))).toEqual([]);
+      });
+
+      it("still fails on a different UUID, LookTable, Name or effect value", () => {
+        for (const bad of [
+          readBack({ Version: "18.7" }, { UUID: "00000000000000000000000000000000" }),
+          readBack({ Version: "18.7", LookTable: "00000000000000000000000000000000" }),
+          readBack({ Version: "18.7" }, { Name: "Adobe Color" }),
+          readBack({ Version: "18.7", Shadows2012: 13 }),
+          readBack({ Version: "18.7", ToneCurvePV2012: [0, 0, 255, 255] }),
+        ]) {
+          expect(map.verifyReadback({ Look: look }, bad)).toHaveLength(1);
+        }
+      });
+
+      it("still fails when a curve reads back longer than written", () => {
+        expect(map.verifyReadback({ ToneCurvePV2012: [0, 0, 255, 255] }, { ToneCurvePV2012: [0, 0, 128, 128, 255, 255] })).toHaveLength(1);
+      });
+    });
+
     it("allows only the top-level Look to read back absent", () => {
       expect(map.verifyReadback({ Look: {} }, {})).toEqual([]);
       expect(map.verifyReadback({ ToneCurvePV2012Blue: [] }, {})).toEqual([

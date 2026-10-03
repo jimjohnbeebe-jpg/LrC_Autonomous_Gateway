@@ -125,8 +125,12 @@ function isTable(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Equality for values that crossed Lua and JSON. The one allowance: an empty table can arrive as
- * [] or {}. Inside tables every key must be present on both sides; a missing nested key is a mismatch.
+ * Equality for values that crossed Lua and JSON. An empty table can arrive as [] or {}. Every field
+ * written must read back equal (a missing one is a mismatch); fields Lightroom adds to a table are its
+ * own, not a failed write: it stamps a Look's Parameters.Version with its own version (written
+ * "18.5.1", read back "18.7" on LrC 15.6 [handle: https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway/issues/67
+ * "Evidence"; docs\reports\phase6\lrc-version-check\check.txt section 2 "2_look"]).
+ * Arrays (curves) compare element by element, length included.
  */
 function sdkValuesEqual(written: unknown, readBack: unknown): boolean {
   if (typeof written === "number" && typeof readBack === "number") {
@@ -137,10 +141,9 @@ function sdkValuesEqual(written: unknown, readBack: unknown): boolean {
     const readEmpty = isEmptyLook(readBack);
     if (writtenEmpty || readEmpty) return writtenEmpty && readEmpty;
     if (Array.isArray(written) !== Array.isArray(readBack)) return false;
-    const keys = new Set([...Object.keys(written), ...Object.keys(readBack)]);
-    for (const k of keys) {
-      if (!(k in written) || !(k in readBack)) return false;
-      if (!sdkValuesEqual(written[k], readBack[k])) return false;
+    if (Array.isArray(written) && Array.isArray(readBack) && written.length !== readBack.length) return false;
+    for (const k of Object.keys(written)) {
+      if (!(k in readBack) || !sdkValuesEqual(written[k], readBack[k])) return false;
     }
     return true;
   }
@@ -271,11 +274,12 @@ export class ParamMap {
   }
 
   private checkProcessVersion(pv: string): void {
-    if (!SUPPORTED_PROCESS_VERSIONS.includes(pv)) {
-      throw new ParamError(
-        "unsupported_process_version",
-        `Process version ${pv} is not supported (supported: ${SUPPORTED_PROCESS_VERSIONS.join(", ")}); update the photo's process version in Lightroom first`,
-      );
-    }
+    if (SUPPORTED_PROCESS_VERSIONS.includes(pv)) return;
+    // A newer process version comes with a Lightroom update; updating the photo cannot help then [inference].
+    const newer = SUPPORTED_PROCESS_VERSIONS.every((v) => Number.parseFloat(pv) > Number.parseFloat(v));
+    const advice = newer
+      ? "it is newer than this engine knows, so editing this photo is unavailable until the engine supports it; reading its context still works"
+      : "update the photo's process version in Lightroom first";
+    throw new ParamError("unsupported_process_version", `Process version ${pv} is not supported (supported: ${SUPPORTED_PROCESS_VERSIONS.join(", ")}): ${advice}`);
   }
 }

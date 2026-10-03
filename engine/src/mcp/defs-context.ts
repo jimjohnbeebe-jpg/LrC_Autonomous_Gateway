@@ -22,7 +22,8 @@ export const CONTEXT_DEFS: ToolDef[] = [
     description:
       "Describe the photo selected in Lightroom Classic: file, EXIF (ISO, shutter in seconds, aperture, focal length, lens, camera), " +
       "rating/label/pick, process version, camera profile, and every Develop setting under its canonical name " +
-      "(`settings`; these names are the ones lr_step takes). Also says whether a session is open on it. Changes nothing.",
+      "(`settings`; these names are the ones lr_step takes). Also says whether a session is open on it, and which Lightroom " +
+      "version runs (`lightroom`). Changes nothing.",
     schema: noArgs,
     annotations: { readOnlyHint: true, openWorldHint: false },
     run: (tools) => tools.getActivePhotoContext(),

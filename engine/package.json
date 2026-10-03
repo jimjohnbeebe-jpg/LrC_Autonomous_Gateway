@@ -1,6 +1,6 @@
 {
   "name": "lrc-avg",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "LrC-AVG engine: stdio MCP server, metrics, session state and Lightroom bridge.",
   "license": "MIT",
   "repository": {

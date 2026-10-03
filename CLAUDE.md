@@ -38,7 +38,7 @@ Repo: https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway (public; `main`
 1. Work on a branch named `phase-<n>/<topic>` or `fix/<topic>`.
 2. Never commit to `main` directly.
 3. Open the PR with `gh pr create --fill`.
-4. Wait for CodeRabbit's review (a review or comment from `coderabbitai`). One automatic review per PR, on code defects only (`.coderabbit.yaml`); all fixes from it go in one push, and a re-review (`@coderabbitai review`) happens only when Jim agrees. Sourcing (rule 02) is checked by Claude Code before the first push.
+4. Request CodeRabbit's review and wait for it (a review or comment from `coderabbitai`). Below 10 stars, CodeRabbit skips the automatic review, so once its status reads "Review skipped", Claude Code posts `@coderabbitai review` without asking. One review per PR, on code defects only (`.coderabbit.yaml`). All fixes from it go in one push. Claude Code posts `@coderabbitai review` again after a fix push that changed code logic. Sourcing (rule 02) is checked by Claude Code before the first push.
 5. Triage **every** CodeRabbit comment in a table posted as a PR comment, with columns: `file:line` | CodeRabbit finding | decision (`fix` \| `reject` \| `defer`) | reason | commit hash if fixed. Post the table even when CodeRabbit reports no issues.
 6. Merge only when the triage table is posted and no `fix` decision is still open.
 7. Merge with `gh pr merge --squash --delete-branch` (Jim may choose `--merge` for phase branches with meaningful history).

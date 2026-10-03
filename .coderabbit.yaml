@@ -11,8 +11,9 @@ language: en-US
 tone_instructions: "Report only real code defects: logic errors, crashes, wrong results, data loss, races, security. No style, naming, wording, docs, comments, sourcing tags or test-coverage remarks unless they hide a real defect. Be brief."
 early_access: false
 reviews:
-  # "quiet for only the most important feedback" (schema, reviews.profile).
-  profile: quiet
+  # chill, the default: "balanced feedback" (quiet posts only critical, high-impact issues). Changed
+  # from quiet after PR #63's review found nothing (Jim, 2026-10-03, "Just switch to 'chill'").
+  profile: chill
   request_changes_workflow: false
   # Keep the PR description as written: the summary would go into it (schema, high_level_summary).
   high_level_summary: false

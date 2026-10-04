@@ -1,0 +1,83 @@
+{
+  "entries": [
+    {
+      "LocalHighlights2012": 0,
+      "LocalSaturation": 0,
+      "LocalMoire": 0,
+      "LocalTint": 0,
+      "LocalExposure2012": 0,
+      "LocalToningSaturation": 0,
+      "CorrectionName": "Mask 1",
+      "CorrectionID": "DABACD76-4FDD-463E-8905-EB5B9904FB73",
+      "CorrectionReferenceY": 0.473529,
+      "LocalSharpness": 0,
+      "LocalDefringe": 0,
+      "LocalDehaze": 0,
+      "LocalExposure": 0,
+      "CorrectionActive": true,
+      "LocalLuminanceNoise": 0,
+      "CorrectionReferenceX": 0.566406,
+      "LocalWhites2012": 0,
+      "What": "Correction",
+      "LocalBrightness": 0,
+      "LocalContrast2012": 0,
+      "LocalClarity2012": 0,
+      "LocalContrast": 0,
+      "CorrectionSyncID": "F6595A7924DAB14585CF63660C781650",
+      "LocalClarity": 0,
+      "LocalToningHue": 0,
+      "LocalCurveRefineSaturation": 100,
+      "CorrectionMasks": [
+        {
+          "ModelVersion": 234881976,
+          "MaskValue": 1,
+          "Origin": "1573,820",
+          "LocalInputDigestVersion": 1,
+          "MaskInverted": false,
+          "MaskSyncID": "E1BE0970A4740249AF05726ACC48A466",
+          "MaskBlendMode": 0,
+          "MaskSubType": 0,
+          "MaskID": "B8BABAE6-6366-4227-BB36-5F5EE272E6FD",
+          "ReferencePoint": "0.566406 0.473529",
+          "What": "Mask/Image",
+          "InstanceIDs": [
+            {
+              "InstanceID": 1
+            }
+          ],
+          "MaskActive": true,
+          "MaskSubCategoryID": 2,
+          "FullMaskSize": "2891,1920",
+          "MaskVersion": 1,
+          "MaskDigest": "56BA8732EA22D520BACDA072D232B54B",
+          "InstanceBounds": [
+            {
+              "Top": 0.374479,
+              "Right": 0.532342,
+              "Left": 0.156001,
+              "Bottom": 0.785937
+            },
+            {
+              "Top": 0.409896,
+              "Right": 0.823936,
+              "Left": 0.349014,
+              "Bottom": 1
+            }
+          ],
+          "WholeImageArea": "0/1,0/1,1920/1,2891/1",
+          "InputDigest": "C16CCDF48F144AB3C634A4A92EE3289B",
+          "MaskName": "Person 2 - Facial Skin",
+          "LocalInputDigest": "300C5E2B49375642F89F3948749DE0C0",
+          "InputDigestVersion": 2
+        }
+      ],
+      "LocalShadows2012": 0,
+      "LocalGrain": 0,
+      "LocalTemperature": 0,
+      "LocalBlacks2012": 0,
+      "CorrectionAmount": 1,
+      "LocalHue": 0,
+      "LocalTexture": 0
+    }
+  ]
+}

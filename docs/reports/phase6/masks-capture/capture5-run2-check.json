@@ -1,0 +1,278 @@
+{
+  "started": "2026-10-04T13:10:37.892Z",
+  "engine_version": "0.16.0",
+  "steps": {
+    "rowB_photo": {
+      "at": "2026-10-04T13:10:43.588Z",
+      "uuid": "7DB97E4A-79F6-494E-BB6F-FBB465D220A6",
+      "filename": "_DSC0111.NEF",
+      "snapshot": {
+        "id": "9EEFCB46-F58C-4587-8F66-C8262B641732",
+        "name": "AVG c5 rowB 06:10:43"
+      },
+      "masks_before": 0
+    },
+    "rowB_put_back": {
+      "at": "2026-10-04T13:10:49.191Z",
+      "differing": [],
+      "late": []
+    },
+    "rowD_photo": {
+      "at": "2026-10-04T13:11:27.029Z",
+      "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+      "filename": "_DSC0028.NEF",
+      "snapshot": {
+        "id": "76265DD1-1486-42DA-A050-DF21BE4CE3F6",
+        "name": "AVG c5 rowD 06:11:25"
+      },
+      "masks_before": 0
+    },
+    "rowD_sky": {
+      "at": "2026-10-04T13:11:31.229Z",
+      "kind": "sky",
+      "id": "9D471856-88A1-49C6-81CD-75E390E0C3B9",
+      "update": {
+        "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+        "status": "started",
+        "state": "started",
+        "command_ms": 13.044834136963
+      },
+      "outcome": "computed",
+      "ms": 3388,
+      "polls": 4,
+      "probes": [],
+      "dialog_ms": null,
+      "final": {
+        "name": "AVG c5 sky edit",
+        "What": "Mask/Image",
+        "MaskSubType": 2,
+        "ReferencePoint": "0.835938 0.097059",
+        "digest": true
+      }
+    },
+    "rowD_put_back": {
+      "at": "2026-10-04T13:11:58.598Z",
+      "differing": [],
+      "late": []
+    },
+    "rowE_photo": {
+      "at": "2026-10-04T13:12:08.015Z",
+      "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+      "filename": "20260907-_OZ80099.NEF",
+      "snapshot": {
+        "id": "CF6F488C-5B6E-4664-AD89-5F65911876D0",
+        "name": "AVG c5 rowE 06:12:05"
+      },
+      "masks_before": 0
+    },
+    "rowE_landscape_vegetation": {
+      "at": "2026-10-04T13:13:55.342Z",
+      "ok": false,
+      "json": null,
+      "error": "LIGHTROOM_DIALOG: Lightroom was busy or showed a dialog while it computed the AI Vegetation mask (Lightroom was free again and the mask had not computed). Once Lightroom was free again, the engine put the photo back as it was before the session (every setting and the masks checked) and ended session 92370f88-2c82-44f3-981c-0e6f80880b66 with outcome \"revert\". Tell the user what happened; start a new session only if they ask.",
+      "details": {
+        "session_id": "92370f88-2c82-44f3-981c-0e6f80880b66",
+        "reverted": true,
+        "outcome": "revert",
+        "ended_by": "engine",
+        "reason": "Lightroom was busy or showed a dialog while it computed the AI Vegetation mask (Lightroom was free again and the mask had not computed)"
+      },
+      "told": "aborted"
+    },
+    "rowE_put_back": {
+      "at": "2026-10-04T13:14:16.414Z",
+      "differing": [],
+      "late": []
+    },
+    "final_7DB97E4A-79F6-494E-BB6F-FBB465D220A6": {
+      "at": "2026-10-04T13:15:02.151Z",
+      "filename": "_DSC0111.NEF",
+      "differing": []
+    },
+    "final_268D3EFD-034F-4555-99CF-D355707B5153": {
+      "at": "2026-10-04T13:15:02.160Z",
+      "filename": "_DSC0028.NEF",
+      "differing": []
+    },
+    "final_CF12AF60-0858-4181-9562-376D16B89126": {
+      "at": "2026-10-04T13:15:02.170Z",
+      "filename": "20260907-_OZ80099.NEF",
+      "differing": []
+    }
+  },
+  "checks": [
+    {
+      "ok": true,
+      "text": "Lightroom 15.6 runs plugin 0.14.0 with probe_write_gate (executed)"
+    },
+    {
+      "ok": true,
+      "text": "rowB: _DSC0111.NEF, snapshot \"AVG c5 rowB 06:10:43\", 0 masks on it"
+    },
+    {
+      "ok": false,
+      "text": "rowB stopped: LEGACY_PROCESS_VERSION: Process version 11.0 is not supported (supported: 15.4): update the photo's process version in Lightroom first. Lightroom 15.6 is running.",
+      "detail": "LEGACY_PROCESS_VERSION: Process version 11.0 is not supported (supported: 15.4): update the photo's process version in Lightroom first. Lightroom 15.6 is running."
+    },
+    {
+      "ok": true,
+      "text": "rowB: PUT BACK: YES (every setting and the masks as at the check's start, and still 5 s later)"
+    },
+    {
+      "ok": true,
+      "text": "rowD: _DSC0028.NEF, snapshot \"AVG c5 rowD 06:11:25\", 0 masks on it"
+    },
+    {
+      "ok": true,
+      "text": "rowD_sky: the entry \"AVG c5 sky edit\" is in the table after the write",
+      "detail": {
+        "name": "AVG c5 sky edit",
+        "What": "Mask/Image",
+        "MaskSubType": 2,
+        "ReferencePoint": "0.500000 0.500000",
+        "ErrorReason": 0,
+        "digest": false
+      }
+    },
+    {
+      "ok": true,
+      "text": "rowD: the sky computed (computed)"
+    },
+    {
+      "ok": true,
+      "text": "rowD: rename_sliders written by table",
+      "detail": {
+        "name": "AVG c5 sky renamed",
+        "What": "Mask/Image",
+        "MaskSubType": 2,
+        "ReferencePoint": "0.835938 0.097059",
+        "digest": true
+      }
+    },
+    {
+      "ok": true,
+      "text": "rowD: invert written by table",
+      "detail": {
+        "name": "AVG c5 sky renamed",
+        "What": "Mask/Image",
+        "MaskSubType": 2,
+        "ReferencePoint": "0.835938 0.097059",
+        "digest": true
+      }
+    },
+    {
+      "ok": true,
+      "text": "rowD: the AI mask deleted by table"
+    },
+    {
+      "ok": true,
+      "text": "rowD: PUT BACK: YES (every setting and the masks as at the check's start, and still 5 s later)"
+    },
+    {
+      "ok": true,
+      "text": "rowE: 20260907-_OZ80099.NEF, snapshot \"AVG c5 rowE 06:12:05\", 0 masks on it"
+    },
+    {
+      "ok": true,
+      "text": "rowE: session 92370f88-2c82-44f3-981c-0e6f80880b66 begun on 20260907-_OZ80099.NEF"
+    },
+    {
+      "ok": true,
+      "text": "rowE: AUTO-REVERT: YES (session ended: true; differing from the start: none)"
+    },
+    {
+      "ok": true,
+      "text": "rowE: PUT BACK: YES (every setting and the masks as at the check's start, and still 5 s later)"
+    },
+    {
+      "ok": true,
+      "text": "FINAL: _DSC0111.NEF is as at the check's start"
+    },
+    {
+      "ok": true,
+      "text": "FINAL: _DSC0028.NEF is as at the check's start"
+    },
+    {
+      "ok": true,
+      "text": "FINAL: 20260907-_OZ80099.NEF is as at the check's start"
+    }
+  ],
+  "answers": [
+    {
+      "q": "Does _DSC0111.NEF look as it did before the check, with none of the check's masks left?",
+      "answer": "y",
+      "meaning": "yes",
+      "at": "2026-10-04T13:11:25.102Z"
+    },
+    {
+      "q": "Is the mask now named 'AVG c5 sky renamed', and is the sky darker?",
+      "answer": "y",
+      "meaning": "yes",
+      "at": "2026-10-04T13:11:45.650Z"
+    },
+    {
+      "q": "Is the darkening now on everything BUT the sky (the mask inverted)?",
+      "answer": "y",
+      "meaning": "yes",
+      "at": "2026-10-04T13:11:48.996Z"
+    },
+    {
+      "q": "Is 'AVG c5 sky renamed' gone from the Masks panel, with the sky as before?",
+      "answer": "y",
+      "meaning": "yes",
+      "at": "2026-10-04T13:11:53.072Z"
+    },
+    {
+      "q": "Does _DSC0028.NEF look as it did before the check, with none of the check's masks left?",
+      "answer": "y",
+      "meaning": "yes",
+      "at": "2026-10-04T13:12:05.673Z"
+    },
+    {
+      "q": "Is the photo back as it was before rowE (no 'AVG c5 vegetation' mask)?",
+      "answer": "n",
+      "meaning": "no",
+      "at": "2026-10-04T13:14:10.854Z"
+    },
+    {
+      "q": "Does 20260907-_OZ80099.NEF look as it did before the check, with none of the check's masks left?",
+      "answer": "n",
+      "meaning": "no",
+      "at": "2026-10-04T13:14:32.117Z"
+    }
+  ],
+  "failures": [
+    "rowB stopped: LEGACY_PROCESS_VERSION: Process version 11.0 is not supported (supported: 15.4): update the photo's process version in Lightroom first. Lightroom 15.6 is running.",
+    "answered n (no): Is the photo back as it was before rowE (no 'AVG c5 vegetation' mask)?",
+    "answered n (no): Does 20260907-_OZ80099.NEF look as it did before the check, with none of the check's masks left?"
+  ],
+  "hello": {
+    "plugin_version": "0.14.0",
+    "lrc_version": "15.6",
+    "sdk_declared": 13
+  },
+  "skipped_rows": [
+    "rowA"
+  ],
+  "rows_ok": {
+    "rowB": false,
+    "rowD": true,
+    "rowE": false
+  },
+  "stopped": "rowE: Lightroom was busy or showed a dialog",
+  "bridge": {
+    "connects": 1,
+    "connect_failures": 1,
+    "last_connect_error": "127.0.0.1:8765: ECONNREFUSED",
+    "drops": 0,
+    "last_drop_reason": null,
+    "malformed_lines": 0,
+    "unknown_response_ids": 1,
+    "ports": {
+      "command": 8765,
+      "event": 8766,
+      "from": "ports file"
+    }
+  },
+  "ended": "2026-10-04T13:15:02.172Z"
+}

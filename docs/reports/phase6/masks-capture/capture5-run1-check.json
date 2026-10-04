@@ -1,0 +1,166 @@
+{
+  "started": "2026-10-04T12:54:48.420Z",
+  "engine_version": "0.16.0",
+  "steps": {
+    "rowA_photo": {
+      "at": "2026-10-04T12:55:01.707Z",
+      "uuid": "7DB97E4A-79F6-494E-BB6F-FBB465D220A6",
+      "filename": "_DSC0111.NEF",
+      "snapshot": {
+        "id": "D1EC5CDE-D2F5-4D96-9E22-6E799898C1B2",
+        "name": "AVG c5 rowA 05:54:59"
+      },
+      "masks_before": 0
+    },
+    "rowA_settled": {
+      "at": "2026-10-04T12:56:16.782Z",
+      "ms": 7,
+      "entries": [
+        {
+          "name": "Mask 1",
+          "What": "Mask/Image",
+          "MaskSubType": 0,
+          "MaskSubCategoryID": 2,
+          "ReferencePoint": "0.566406 0.473529",
+          "digest": true
+        }
+      ]
+    },
+    "rowA_face_skin_by_hand": {
+      "at": "2026-10-04T12:56:16.798Z",
+      "entries": [
+        {
+          "name": "Mask 1",
+          "What": "Mask/Image",
+          "MaskSubType": 0,
+          "MaskSubCategoryID": 2,
+          "ReferencePoint": "0.566406 0.473529",
+          "digest": true
+        }
+      ],
+      "instances": [
+        [
+          {
+            "InstanceID": 1
+          }
+        ]
+      ],
+      "bounds": [
+        [
+          {
+            "Top": 0.374479,
+            "Right": 0.532342,
+            "Left": 0.156001,
+            "Bottom": 0.785937
+          },
+          {
+            "Top": 0.409896,
+            "Right": 0.823936,
+            "Left": 0.349014,
+            "Bottom": 1
+          }
+        ]
+      ]
+    },
+    "rowA_round_trip": {
+      "at": "2026-10-04T12:56:16.878Z",
+      "kinds": [
+        "person_face_skin"
+      ],
+      "ok": true,
+      "differing_write": [],
+      "differing_read": []
+    },
+    "rowA_put_back": {
+      "at": "2026-10-04T12:56:28.281Z",
+      "differing": [
+        "Look.Parameters.LensBlur"
+      ],
+      "late": [
+        "Look.Parameters.LensBlur"
+      ]
+    },
+    "final_7DB97E4A-79F6-494E-BB6F-FBB465D220A6": {
+      "at": "2026-10-04T12:57:03.565Z",
+      "filename": "_DSC0111.NEF",
+      "differing": [
+        "Look.Parameters.LensBlur"
+      ]
+    }
+  },
+  "checks": [
+    {
+      "ok": true,
+      "text": "Lightroom 15.6 runs plugin 0.14.0 with probe_write_gate (executed)"
+    },
+    {
+      "ok": true,
+      "text": "rowA: _DSC0111.NEF, snapshot \"AVG c5 rowA 05:54:59\", 0 masks on it"
+    },
+    {
+      "ok": true,
+      "text": "rowA: each of Lightroom's 1 new entries has a digest or an ErrorReason (0 s)"
+    },
+    {
+      "ok": true,
+      "text": "rowA: one new entry by hand (1)"
+    },
+    {
+      "ok": true,
+      "text": "rowA: it is MaskSubType 0 + category 2 (0 + 2)"
+    },
+    {
+      "ok": true,
+      "text": "rowA: it names the right person, InstanceIDs [{ InstanceID: 1 }] ([{\"InstanceID\":1}])"
+    },
+    {
+      "ok": true,
+      "text": "rowA: it carries every person's box (InstanceBounds: 2)"
+    },
+    {
+      "ok": true,
+      "text": "rowA: person_face_skin round-trips unchanged (the table written back as it was, read back equal)"
+    },
+    {
+      "ok": false,
+      "text": "rowA: PUT BACK: NO (Look.Parameters.LensBlur, Look.Parameters.LensBlur): wait 1 minute; if a dialog is open in Lightroom, click OK; then in Lightroom select _DSC0111.NEF, open the Develop module, open the Snapshots panel (left side) and click \"AVG c5 rowA 05:54:59\". Tell Claude Code."
+    },
+    {
+      "ok": false,
+      "text": "FINAL: _DSC0111.NEF still differs (Look.Parameters.LensBlur): wait 1 minute; if a dialog is open in Lightroom, click OK; then in Lightroom select _DSC0111.NEF, open the Develop module, open the Snapshots panel (left side) and click \"AVG c5 rowA 05:54:59\". Tell Claude Code."
+    }
+  ],
+  "answers": [],
+  "failures": [
+    "rowA: PUT BACK: NO (Look.Parameters.LensBlur, Look.Parameters.LensBlur): wait 1 minute; if a dialog is open in Lightroom, click OK; then in Lightroom select _DSC0111.NEF, open the Develop module, open the Snapshots panel (left side) and click \"AVG c5 rowA 05:54:59\". Tell Claude Code.",
+    "FINAL: _DSC0111.NEF still differs (Look.Parameters.LensBlur): wait 1 minute; if a dialog is open in Lightroom, click OK; then in Lightroom select _DSC0111.NEF, open the Develop module, open the Snapshots panel (left side) and click \"AVG c5 rowA 05:54:59\". Tell Claude Code."
+  ],
+  "hello": {
+    "plugin_version": "0.14.0",
+    "lrc_version": "15.6",
+    "sdk_declared": 13
+  },
+  "round_trip": {
+    "person_face_skin": true
+  },
+  "skipped": "rowA: PUT BACK: NO",
+  "rows_ok": {
+    "rowA": false
+  },
+  "stopped": "rowA: PUT BACK: NO",
+  "bridge": {
+    "connects": 1,
+    "connect_failures": 0,
+    "last_connect_error": null,
+    "drops": 0,
+    "last_drop_reason": null,
+    "malformed_lines": 0,
+    "unknown_response_ids": 0,
+    "ports": {
+      "command": 8765,
+      "event": 8766,
+      "from": "ports file"
+    }
+  },
+  "ended": "2026-10-04T12:57:03.566Z"
+}

@@ -1,0 +1,8 @@
+[8:23:02 AM] Lightroom 15.6, plugin 0.16.0
+[8:23:51 AM] Session a6508648-fd72-4851-8926-851da992ff8c begun (pass 0 done). Creating the Vegetation mask; the engine waits up to 5 minutes for Lightroom. Do not click in Lightroom.
+[8:24:06 AM] lr_create_mask after 15 s: OK
+  ? In Develop's Masks panel (Shift+W), does 'AVG diag vegetation' cover the trees and plants? -> y
+[8:28:41 AM] lr_end_session revert: OK
+[8:28:42 AM] PUT BACK: NO (masks 0, profile ?, before ?): in Develop > Snapshots click the snapshot starting 'AVG pre-session'
+  ? Does 20260907-_OZ80099.NEF look as before the run (original profile, no 'AVG diag' mask), and does Lightroom respond normally? -> y
+[8:28:56 AM] Diagnostic 2 done.

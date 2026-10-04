@@ -1,0 +1,27 @@
+[5:54:50 AM] YES  Lightroom 15.6 runs plugin 0.14.0 with probe_write_gate (executed)
+[5:54:50 AM] Do not close this window while the check runs. To stop, press Ctrl+C once and wait for the last lines: the check puts the photo back by itself.
+[5:54:50 AM] === rowA
+[5:55:01 AM] YES  rowA: _DSC0111.NEF, snapshot "AVG c5 rowA 05:54:59", 0 masks on it
+[5:55:01 AM] NOW, in Lightroom (this photo stays selected):
+[5:55:01 AM] a. Press D (Develop). If the Masks panel is not open, press Shift+W.
+[5:55:01 AM] b. Click Create New Mask, then People. Click the FACE of the person on the RIGHT.
+[5:55:01 AM] c. In the list for that person, tick ONLY Face Skin (untick Entire Person), then click Create Mask.
+[5:55:01 AM] d. Come back to this window. The check removes the mask again at the end of this row.
+[5:56:16 AM] YES  rowA: each of Lightroom's 1 new entries has a digest or an ErrorReason (0 s)
+[5:56:16 AM] YES  rowA: one new entry by hand (1)
+[5:56:16 AM] YES  rowA: it is MaskSubType 0 + category 2 (0 + 2)
+[5:56:16 AM] YES  rowA: it names the right person, InstanceIDs [{ InstanceID: 1 }] ([{"InstanceID":1}])
+[5:56:16 AM] YES  rowA: it carries every person's box (InstanceBounds: 2)
+[5:56:16 AM] YES  rowA: person_face_skin round-trips unchanged (the table written back as it was, read back equal)
+[5:56:16 AM] --- rowA_put_back
+[5:56:23 AM] The photo changed after the put-back (Look.Parameters.LensBlur): applying the snapshot again.
+[5:56:28 AM] NO   rowA: PUT BACK: NO (Look.Parameters.LensBlur, Look.Parameters.LensBlur): wait 1 minute; if a dialog is open in Lightroom, click OK; then in Lightroom select _DSC0111.NEF, open the Develop module, open the Snapshots panel (left side) and click "AVG c5 rowA 05:54:59". Tell Claude Code.
+[5:56:28 AM] rowB and the rows after it are not run: rowA: PUT BACK: NO.
+[5:56:28 AM] --- final: waiting 30 s, then reading every photo the check touched again
+[5:56:58 AM] _DSC0111.NEF differs from the check's start (Look.Parameters.LensBlur): applying its first snapshot again.
+[5:57:03 AM] NO   FINAL: _DSC0111.NEF still differs (Look.Parameters.LensBlur): wait 1 minute; if a dialog is open in Lightroom, click OK; then in Lightroom select _DSC0111.NEF, open the Develop module, open the Snapshots panel (left side) and click "AVG c5 rowA 05:54:59". Tell Claude Code.
+[5:57:03 AM] 
+[5:57:03 AM] masks capture 5: DONE, 2 NO / FAILED lines (each one is a finding for the report)
+[5:57:03 AM]   - rowA: PUT BACK: NO (Look.Parameters.LensBlur, Look.Parameters.LensBlur): wait 1 minute; if a dialog is open in Lightroom, click OK; then in Lightroom select _DSC0111.NEF, open the Develop module, open the Snapshots panel (left side) and click "AVG c5 rowA 05:54:59". Tell Claude Code.
+[5:57:03 AM]   - FINAL: _DSC0111.NEF still differs (Look.Parameters.LensBlur): wait 1 minute; if a dialog is open in Lightroom, click OK; then in Lightroom select _DSC0111.NEF, open the Develop module, open the Snapshots panel (left side) and click "AVG c5 rowA 05:54:59". Tell Claude Code.
+[5:57:03 AM] Results: D:\Developer\LrC_Autonomous_Gateway\logs\check-masks-capture5-2026-10-04\check.json, transcript.txt, raw\

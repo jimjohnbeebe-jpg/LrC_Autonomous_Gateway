@@ -1,0 +1,118 @@
+[4:44:58 AM] YES  Lightroom 15.6 runs plugin 0.13.0 with probe_write_gate (executed)
+[4:44:58 AM] Do not close this window while the check runs. To stop, press Ctrl+C once and wait for the last lines: the check puts the photo back by itself.
+[4:44:58 AM] === row0
+[4:44:58 AM] YES  row0: 20260907-_OZ80099.NEF, snapshot "AVG c4 row0 04:44:58", 0 masks on it
+[4:44:58 AM] NOW, in Lightroom (this photo stays selected):
+[4:44:58 AM] a. Press D (Develop). If the Masks panel is not open, press Shift+W.
+[4:44:58 AM] b. Click Create New Mask, then Landscape. Tick every category it offers, then click Create Mask.
+[4:44:58 AM] c. If Lightroom shows an error dialog, click OK. If Landscape offers no category, close its panel.
+[4:44:58 AM] d. Come back to this window. The check removes the mask again at the end of this row.
+[4:46:09 AM] YES  row0: each of Lightroom's 3 new entries has a digest or an ErrorReason (0 s)
+[4:46:09 AM] YES  row0: Lightroom's own Landscape made 3 entries: 50005, 50002, 50006
+[4:46:09 AM] YES  row0: landscape_vegetation, landscape_mountains, landscape_sky round-trips unchanged (the table written back as it was, read back equal)
+  ? What did Lightroom do? -> m (it made the Landscape mask, no dialog)
+[4:47:03 AM] --- row0_put_back
+[4:47:09 AM] YES  row0: PUT BACK: YES (every setting and the masks as at the check's start, and still 5 s later)
+[4:47:09 AM] === row1
+[4:47:09 AM] YES  row1: 20260907-_OZ80099.NEF, as at the check's start (snapshot "AVG c4 row0 04:44:58"), 0 masks on it
+[4:47:09 AM] Row 1 is an ordinary put-back rehearsal: a linear mask is written, the write gate probed, the photo put back (nothing waits behind a dialog here).
+[4:47:11 AM] YES  row1: a linear mask written by table (no AI)
+[4:47:11 AM] YES  row1: probe_write_gate answers "executed" when Lightroom is free (executed, 0 ms)
+[4:47:11 AM] --- row1_put_back
+[4:47:17 AM] YES  row1: PUT BACK: YES (every setting and the masks as at the check's start, and still 5 s later)
+[4:47:17 AM] NOW: look at the photo in Lightroom, and at the Masks panel (if it is not open, press Shift+W).
+  ? Does 20260907-_OZ80099.NEF look as it did before the check, with none of the check's masks left? -> y (yes)
+[4:47:29 AM] === row2
+[4:47:33 AM] YES  row2: _DSC0028.NEF, snapshot "AVG c4 row2 04:47:29", 0 masks on it
+[4:47:33 AM] --- row2_vegetation: AVG c4 vegetation (landscape_vegetation)
+[4:47:34 AM] YES  row2_vegetation: the entry "AVG c4 vegetation" is in the table after the write
+[4:47:46 AM] NO   row2: update_ai_settings answered at once from the asynchronous gate (status executed, 11306 ms)
+[4:47:46 AM] YES  row2: the Adobe-form vegetation computed after the asynchronous update (computed, 502 ms, 1 reads)
+[4:47:46 AM] YES  row2: landscape_vegetation round-trips unchanged (the table written back as it was, read back equal)
+[4:47:46 AM] NOW, in Develop's Masks panel (Shift+W if it is not open): hover over "AVG c4 vegetation".
+  ? Does 'AVG c4 vegetation' cover the plants and trees in the photo? -> y (yes)
+[4:48:03 AM] --- row2_put_back
+[4:48:10 AM] YES  row2: PUT BACK: YES (every setting and the masks as at the check's start, and still 5 s later)
+[4:48:10 AM] === row3
+[4:48:10 AM] YES  row3: _DSC0028.NEF, as at the check's start (snapshot "AVG c4 row2 04:47:29"), 0 masks on it
+[4:48:10 AM] NOW, in Lightroom: press D (Develop) and leave _DSC0028.NEF on screen. Do not click anything until the next question.
+  ? Is _DSC0028.NEF on screen in Develop now? -> y (yes)
+[4:48:26 AM] --- row3_sky_no_update: AVG c4 sky (no update) (sky)
+[4:48:27 AM] YES  row3_sky_no_update: the entry "AVG c4 sky (no update)" is in the table after the write
+[4:48:58 AM] YES  row3: without update_ai_settings the sky did not compute within 30 s (computed or not: either is a finding)
+  ? Did Lightroom stay dialog-free during these 30 seconds? -> y (yes)
+[4:49:03 AM] --- row3_put_back
+[4:49:10 AM] YES  row3: PUT BACK: YES (every setting and the masks as at the check's start, and still 5 s later)
+[4:49:10 AM] === row4
+[4:49:10 AM] YES  row4: _DSC0028.NEF, as at the check's start (snapshot "AVG c4 row2 04:47:29"), 0 masks on it
+[4:49:10 AM] --- row4_snow: AVG c4 snow (landscape_snow)
+[4:49:11 AM] YES  row4_snow: the entry "AVG c4 snow" is in the table after the write
+[4:49:17 AM] YES  row4: snow (not in this photo) came back with ErrorReason 1 (error_reason, 329 ms)
+[4:49:17 AM] YES  row4: Lightroom's catalog stayed free for snow
+[4:49:18 AM] YES  row4_snow: the entry is out of the table again
+[4:49:18 AM] --- row4_water: AVG c4 water (landscape_water)
+[4:49:20 AM] YES  row4_water: the entry "AVG c4 water" is in the table after the write
+[4:49:24 AM] YES  row4: water (not in this photo) came back with ErrorReason 1 (error_reason, 339 ms)
+[4:49:24 AM] YES  row4: Lightroom's catalog stayed free for water
+[4:49:26 AM] YES  row4_water: the entry is out of the table again
+  ? Did Lightroom stay dialog-free while it looked for Snow and Water? -> y (yes)
+[4:49:32 AM] --- row4_put_back
+[4:49:38 AM] YES  row4: PUT BACK: YES (every setting and the masks as at the check's start, and still 5 s later)
+[4:49:38 AM] === row5
+[4:49:38 AM] YES  row5: _DSC0028.NEF, as at the check's start (snapshot "AVG c4 row2 04:47:29"), 0 masks on it
+[4:49:38 AM] --- row5_people_face_skin: AVG c4 people face skin (people_face_skin)
+[4:49:39 AM] YES  row5_people_face_skin: the entry "AVG c4 people face skin" is in the table after the write
+[4:49:42 AM] YES  row5: people_face_skin computed (computed, 388 ms)
+[4:49:42 AM] YES  row5_people_face_skin: people_face_skin round-trips unchanged (the table written back as it was, read back equal)
+[4:49:42 AM] NOW, in Develop's Masks panel: hover over "AVG c4 people face skin".
+  ? Does 'AVG c4 people face skin' cover the person's facial skin? -> y (yes)
+[4:49:56 AM] --- row5_people_hair: AVG c4 people hair (people_hair)
+[4:49:56 AM] YES  row5_people_hair: the entry "AVG c4 people hair" is in the table after the write
+[4:49:59 AM] YES  row5: people_hair computed (computed, 344 ms)
+[4:49:59 AM] YES  row5_people_hair: people_hair round-trips unchanged (the table written back as it was, read back equal)
+[4:49:59 AM] NOW, in Develop's Masks panel: hover over "AVG c4 people hair".
+  ? Does 'AVG c4 people hair' cover the person's hair? -> y (yes)
+[4:50:16 AM] --- row5_put_back
+[4:50:23 AM] YES  row5: PUT BACK: YES (every setting and the masks as at the check's start, and still 5 s later)
+[4:50:23 AM] NOW: look at the photo in Lightroom, and at the Masks panel (if it is not open, press Shift+W).
+  ? Does _DSC0028.NEF look as it did before the check, with none of the check's masks left? -> y (yes)
+[4:50:44 AM] === row6: NOW, in Lightroom, select ONE photo with exactly two people in it (a raw photo; the check puts it back at the end).
+[4:54:49 AM] === row6
+[4:54:49 AM] YES  row6: _DSC0111.NEF, snapshot "AVG c4 row6 04:54:49", 0 masks on it
+[4:54:49 AM] a. Press D (Develop). If the Masks panel is not open, press Shift+W.
+[4:54:49 AM] b. Click Create New Mask, then People. Click the FACE of the person on the LEFT. Tick Entire Person, then click Create Mask.
+[4:54:49 AM] c. Click Create New Mask, then People again. Click the FACE of the person on the RIGHT. Tick Entire Person, then click Create Mask.
+[4:54:49 AM] d. Come back to this window.
+[4:56:41 AM] YES  row6: each of Lightroom's 2 new entries has a digest or an ErrorReason (0 s)
+[4:56:41 AM] YES  row6: two Entire Person entries by hand (points ["0.375000 0.661765","0.570312 0.564706"])
+[4:56:41 AM] YES  row6: both carry MaskSubType 0 and MaskSubCategoryID 20036 ([[0,20036],[0,20036]])
+[4:56:41 AM] --- row6_person_entire: AVG c4 person 2 (person_entire)
+[4:56:45 AM] YES  row6_person_entire: the entry "AVG c4 person 2" is in the table after the write
+[4:56:49 AM] YES  row6: person_entire at the right person's point computed (computed, 277 ms)
+[4:56:49 AM] YES  row6_person_entire: person_entire round-trips unchanged (the table written back as it was, read back equal)
+[4:56:49 AM] NOW, in the Masks panel: hover over "AVG c4 person 2".
+  ? Does 'AVG c4 person 2' cover the person on the RIGHT only? -> n (no)
+[4:57:00 AM] --- row6_person_face_skin: AVG c4 person 2 face (person_face_skin)
+[4:57:00 AM] YES  row6_person_face_skin: the entry "AVG c4 person 2 face" is in the table after the write
+[4:57:04 AM] YES  row6: person_face_skin at the right person's point computed (computed, 561 ms)
+[4:57:04 AM] YES  row6_person_face_skin: person_face_skin round-trips unchanged (the table written back as it was, read back equal)
+[4:57:04 AM] NOW, in the Masks panel: hover over "AVG c4 person 2 face".
+  ? Does 'AVG c4 person 2 face' cover the RIGHT person's face only? -> n (no)
+[4:57:53 AM] --- row6_put_back
+[4:58:00 AM] YES  row6: PUT BACK: YES (every setting and the masks as at the check's start, and still 5 s later)
+[4:58:00 AM] NOW: look at the photo in Lightroom, and at the Masks panel (if it is not open, press Shift+W).
+  ? Does _DSC0111.NEF look as it did before the check, with none of the check's masks left? -> y (yes)
+[4:58:06 AM] === row8
+[4:58:06 AM] NO   row8 stopped: select_failed: Lightroom did not select photo 25260 (active photo nil, 688 selected)
+[4:58:06 AM] YES  row7 skipped: rows 1-4 did not all pass (it runs only after them)
+[4:58:06 AM] --- final: waiting 30 s, then reading every photo the check touched again
+[4:58:36 AM] YES  FINAL: 20260907-_OZ80099.NEF is as at the check's start
+[4:58:36 AM] YES  FINAL: _DSC0028.NEF is as at the check's start
+[4:58:36 AM] YES  FINAL: _DSC0111.NEF is as at the check's start
+[4:58:36 AM] 
+[4:58:36 AM] masks capture 4: DONE, 4 NO / FAILED lines (each one is a finding for the report)
+[4:58:36 AM]   - row2: update_ai_settings answered at once from the asynchronous gate (status executed, 11306 ms)
+[4:58:36 AM]   - answered n (no): Does 'AVG c4 person 2' cover the person on the RIGHT only?
+[4:58:36 AM]   - answered n (no): Does 'AVG c4 person 2 face' cover the RIGHT person's face only?
+[4:58:36 AM]   - row8 stopped: select_failed: Lightroom did not select photo 25260 (active photo nil, 688 selected)
+[4:58:36 AM] Results: D:\Developer\LrC_Autonomous_Gateway\logs\check-masks-capture4-2026-10-03\check.json, transcript.txt, raw\

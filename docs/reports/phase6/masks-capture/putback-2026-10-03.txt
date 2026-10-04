@@ -1,0 +1,2 @@
+Lightroom 15.6, plugin 0.11.0
+PUT BACK: YES (every setting as in capture 2's before-dump, no masks)

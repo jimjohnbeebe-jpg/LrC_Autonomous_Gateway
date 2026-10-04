@@ -1,0 +1,77 @@
+// Diagnostic 2, 2026-10-04: the case that froze Lightroom in capture 5 row E, on the D16 build (58b63db,
+// plugin 0.16.0): a session on 20260907-_OZ80099.NEF (pass 0 swaps the profile and renders), then
+// lr_create_mask landscape_vegetation. The engine now waits up to 5 min for Lightroom's result and nothing
+// writes to the photo before it. Then lr_end_session revert, and a check that the photo is back.
+// Usage, repo root, Claude Desktop quit, plugin 0.16.0 loaded: node logs\diag-vegetation-2026-10-04\diag-session.mts
+import { mkdirSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { createInterface } from "node:readline/promises";
+import { pathToFileURL } from "node:url";
+
+const repo = process.cwd();
+const out = path.join(repo, "logs", "diag-vegetation-2026-10-04", "session");
+const dist = (p: string) => import(pathToFileURL(path.join(repo, "engine", "dist", p)).href);
+const { BridgeClient } = await dist("bridge/index.js");
+const { Tools, acquireInstanceLock, devOverrides, ENGINE_VERSION } = await dist("mcp/index.js");
+const { PreviewService } = await dist("preview/index.js");
+const { IntentLibrary } = await dist("intents/index.js");
+const { loadDefaultParamMap } = await dist("params/index.js");
+const { ToolLog } = await dist("log/index.js");
+
+const UUID = "CF12AF60-0858-4181-9562-376D16B89126"; // 20260907-_OZ80099.NEF [handle: logs\20260927-26ecc4.json]
+const KEY = "MaskGroupBasedCorrections";
+const lines: string[] = [];
+const say = (s: string) => { const l = `[${new Date().toLocaleTimeString()}] ${s}`; lines.push(l); console.log(l); writeFileSync(path.join(out, "transcript.txt"), lines.join("\n") + "\n"); };
+const rl = createInterface({ input: process.stdin, output: process.stdout });
+rl.on("SIGINT", () => say("Ctrl+C: ignored; the engine never writes before Lightroom's result. Wait for the last lines."));
+const ask = async (q: string) => { const a = (await rl.question(`${q} (y/n) `)).trim().toLowerCase(); lines.push(`  ? ${q} -> ${a}`); return a; };
+const body = (e: any) => e?.body?.() ?? { message: String(e?.message ?? e) };
+
+mkdirSync(out, { recursive: true });
+const dev = devOverrides();
+const lock = await acquireInstanceLock(dev.lockPort);
+if (!lock.ok) { console.log("LOCK BUSY: quit Claude Desktop from the tray, wait 60 s, run again."); process.exit(2); }
+let tools: any = null;
+const client = new BridgeClient({ engineVersion: `${ENGINE_VERSION}-diag-session`, log: () => {}, silenceAllowanceMs: () => (tools?.sessionManager()?.current() ? 60_000 : 0), ...dev.bridge });
+client.start();
+const map = loadDefaultParamMap();
+const get = async () => (await client.request("get_settings", { photo_uuid: UUID }, { timeoutMs: 30_000 })).settings as Record<string, any>;
+let sessionId: string | null = null;
+let beforeLook: string | null = null;
+try {
+  const hello = await client.waitConnected(30_000);
+  say(`Lightroom ${hello.lrc_version}, plugin ${hello.plugin_version}`);
+  tools = new Tools({ client, map, previews: new PreviewService(client), intents: new IntentLibrary({ map }), sessionLogDir: path.join(out, "sessions"), engineVersion: `${ENGINE_VERSION}-diag-session`, ensureBridge: async () => void (await client.waitConnected(15_000)), log: new ToolLog(out) });
+  await client.request("select_photo", { uuid: UUID, expect: { is_virtual_copy: false } }).catch(async () => {
+    await rl.question("Lightroom could not select the photo. In Library > Catalog click All Photographs, select 20260907-_OZ80099.NEF, then press Enter. ");
+  });
+  const before = await get();
+  beforeLook = before.Look?.Name ?? null;
+  if ((before[KEY] ?? []).length !== 0) throw new Error("the photo already has masks; this diagnostic expects none");
+  const begun = (await tools.beginSession({ intent_id: "landscape_overcast_flat", max_passes: 3, return_image: "none" })).json;
+  sessionId = begun.session_id;
+  if (begun.target?.uuid !== UUID) throw new Error(`the session began on another photo (${begun.target?.uuid})`);
+  say(`Session ${sessionId} begun (pass 0 done). Creating the Vegetation mask; the engine waits up to 5 minutes for Lightroom. Do not click in Lightroom.`);
+  const t0 = Date.now();
+  const made = await tools.createMask({ session_id: sessionId, kind: "landscape_vegetation", name: "AVG diag vegetation", rationale: "diagnostic 2", return_image: "none" })
+    .then((r: any) => ({ ok: true, json: r.json }), (e: any) => ({ ok: false, json: body(e) }));
+  say(`lr_create_mask after ${Math.round((Date.now() - t0) / 1000)} s: ${made.ok ? "OK" : `${made.json.code}: ${made.json.message}`}`);
+  if (made.ok) await ask("In Develop's Masks panel (Shift+W), does 'AVG diag vegetation' cover the trees and plants?");
+  if (!made.ok && made.json.code === "LIGHTROOM_STUCK") {
+    await rl.question("Restart Lightroom now (File > Exit, then start it again). When it is open again, press Enter here. ");
+    await client.waitConnected(15 * 60_000);
+  }
+} catch (err: any) {
+  say(`STOPPED: ${JSON.stringify(body(err))}`);
+} finally {
+  const open = tools?.sessionManager()?.current();
+  if (open) await tools.endSession({ session_id: open.id, outcome: "revert" }).then(() => say("lr_end_session revert: OK"), (e: any) => say(`lr_end_session revert: ${JSON.stringify(body(e))}`));
+  else if (sessionId) say("The session was already ended by the engine.");
+  const after = await get().catch(() => null);
+  const back = after !== null && (after[KEY] ?? []).length === 0 && after.Look?.Name === beforeLook;
+  say(`PUT BACK: ${back ? "YES" : "NO"} (masks ${after ? (after[KEY] ?? []).length : "?"}, profile ${after?.Look?.Name ?? "?"}, before ${beforeLook ?? "?"})${back ? "" : ": in Develop > Snapshots click the snapshot starting 'AVG pre-session'"}`);
+  await ask("Does 20260907-_OZ80099.NEF look as before the run (original profile, no 'AVG diag' mask), and does Lightroom respond normally?");
+  say("Diagnostic 2 done.");
+  client.stop(); await lock.lock.release(); rl.close();
+  process.exit(0);
+}

@@ -200,6 +200,18 @@ function Hud.update(payload)
     -- keeps its line until it ends, unless a new session replaces its own.
     if H.putBack and (newSession or H.putBack.state ~= "running") then H.putBack = nil end
     H.state, H.unknownAt = s, nil
+    -- Plugin 0.15.0 (D15): a session the engine ended closes the window close_after seconds later, unless a
+    -- newer update came meanwhile [stated: Jim, 2026-10-04, "Show, then close (Recommended)"].
+    if s.close_after then
+        local seq, sid = s.seq, s.session_id
+        LrTasks.startAsyncTask(function()
+            LrTasks.sleep(s.close_after)
+            if H.open and H.state and H.state.seq == seq and H.state.session_id == sid then
+                Log.info("hud: closing " .. tostring(s.close_after) .. " s after the edit ended")
+                LrDialogs.closeFloatingDialogsForPlugin(_PLUGIN)
+            end
+        end)
+    end
     local opened = s.open == true and Hud.show()
     refresh()
     if H.open then LrTasks.startAsyncTask(checkSelection) end

@@ -32,6 +32,7 @@ import { ToolError } from "../mcp/errors.js";
 import type { Region } from "../metrics/index.js";
 import type { RenderedPreview } from "../preview/index.js";
 import { searchOrder } from "../settings/index.js";
+import { engineEndedNote } from "./ai-revert.js";
 import { approvePass } from "./approval.js";
 import { openSession, runPass0 } from "./begin.js";
 import { endSession, readSessionLog } from "./end.js";
@@ -46,6 +47,9 @@ import { focus, resolveTarget } from "./targets.js";
 import { folderOf, type ApproveArgs, type BeginArgs, type CreateMaskArgs, type DeleteMaskArgs, type EditMaskArgs, type EndArgs, type ListMasksArgs, type ProbeArgs, type RegionArgs, type SelectArgs, type Session, type SessionContext, type SessionDeps, type SessionOutput, type StepArgs, type TargetId } from "./types.js";
 import { runVariants } from "./variants.js";
 import { sessionView, type SessionView } from "./view.js";
+
+/** How long the HUD shows a session the engine ended before it closes itself (D15). */
+const ENGINE_END_CLOSE_S = 10;
 
 export class SessionManager {
   private readonly ctx: SessionContext;
@@ -234,10 +238,11 @@ export class SessionManager {
     try {
       out = await fn(s);
     } finally {
-      // The engine put the photo back after a Lightroom dialog and ended the session (ai-masks.ts autoRevert).
+      // The engine put the photo back and ended the session (ai-revert.ts autoRevert): the HUD shows that
+      // for 10 s, then closes itself [stated: Jim, 2026-10-04, "Show, then close (Recommended)"].
       if (s.endedByEngine && this.session === s) {
         this.close(s, null);
-        this.ctx.deps.hud?.stage(s, "ended", { note: "Lightroom was busy or showed a dialog, so the photo was put back as it was before the edit." });
+        this.ctx.deps.hud?.stage(s, "ended", { note: engineEndedNote(s.endedByEngine), closeAfter: ENGINE_END_CLOSE_S });
       }
     }
     if (s.notices.length === 0) return out;

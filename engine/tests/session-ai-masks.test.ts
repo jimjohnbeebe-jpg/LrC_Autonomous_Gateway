@@ -59,14 +59,14 @@ describe("AI masks: the table route", () => {
     expect(component(masks()[0])).toMatchObject({ MaskSubType: 0, MaskSubCategoryID: 2, ReferencePoint: "0.492188 0.379412" });
   });
 
-  it("takes out a mask that does not compute, and does not try LrDevelopController for it", async () => {
+  it("a mask that does not compute in time: the photo is put back and the session ended, LrDevelopController not tried", async () => {
     const { m, create } = await session();
     lr.masks.tableRoute = "never";
     const e = await fails(create("sky"));
-    expect(e).toMatchObject({ code: "FEATURE_UNAVAILABLE", details: { routes_tried: [{ route: "table", why: expect.stringMatching(/did not compute/) }, { route: "dc", why: expect.stringMatching(/not tried/) }] } });
+    expect(e).toMatchObject({ code: "LIGHTROOM_STUCK", details: { reverted: true, outcome: "revert" } });
     expect(sent("create_ai_mask_dc")).toBe(0);
     expect(masks()).toEqual([]);
-    expect(m.current()?.pass).toBe("0/4");
+    expect(m.current()).toBeNull();
   });
 });
 

@@ -26,10 +26,9 @@
 import { ToolError, featureUnavailable, toToolError } from "../mcp/errors.js";
 import { AI_KINDS, KIND_LABELS, computed, correctionIds, firstComponent, named, readTable, type AiKind, type Box, type Correction, type SdkSettings } from "../params/index.js";
 import { aiTimings, updateAndWait } from "./ai-update.js";
-import { endSession } from "./end.js";
-import { reopenLog } from "./hud-actions.js";
+import { autoRevert, stuckError } from "./ai-revert.js";
 import { byPerson } from "./person-masks.js";
-import { bridge, checkAbort, historyName, ms, readSdk, saveLog, writeTable } from "./io.js";
+import { bridge, checkAbort, historyName, ms, readSdk, writeTable } from "./io.js";
 import type { Session, SessionContext, Target } from "./types.js";
 
 export const AI_POLL_MS = 250;
@@ -100,54 +99,13 @@ async function takeOut(ctx: SessionContext, s: Session, job: AiJob): Promise<str
   }
 }
 
-/**
- * After a dialog (ai-update.ts): the photo back to before the session through the plugin's queued
- * gate, checked, masks included (end.ts revert), and the session ended by the engine [stated: Jim,
- * 2026-10-03, "Also auto-revert"]. In Variants mode the pick's attempt is taken out first (the
- * session's revert puts only the master back); an attempt left on the copy is reported, not a reason
- * to stop. After a successful end that left anything different, the log is opened again. Always
- * throws LIGHTROOM_DIALOG.
- */
-async function autoRevert(ctx: SessionContext, s: Session, job: AiJob, cause: string): Promise<never> {
-  const pending = s.aiPending;
-  s.aiPending = null; // the put-back's own gate waits for the catalog
-  const reason = `Lightroom was busy or showed a dialog while it computed the AI ${KIND_LABELS[job.kind]} mask (${cause})`;
-  const manual = `Tell the user: if a dialog is open in Lightroom, click OK; then call lr_end_session with outcome "revert". If that fails too: in Lightroom's Develop module, open the Snapshots panel and click "${s.snapshot.name}".`;
-  let copy: string | null = null;
-  if (job.t.id !== "master") copy = await takeOut(ctx, s, job).catch((err: unknown) => `taking the attempt out failed: ${toToolError(err).message}`);
-  const onCopy = copy ? ` On copy ${job.t.id}: ${copy}; it stays in the catalog with the attempt.` : "";
-  let problem: string | null = null;
-  let ended = false;
-  try {
-    await endSession(ctx, s, { session_id: s.id, outcome: "revert" });
-    ended = true;
-    const differing = s.log.revert?.differing ?? [];
-    if (differing.length > 0) problem = `the put-back left ${differing.join(", ")} different from before the session`;
-  } catch (err) {
-    problem = `the put-back did not go through: ${toToolError(err).message}`;
-  }
-  if (ended && problem !== null) reopenLog(s);
-  if (problem !== null) {
-    s.aiPending = pending; // nothing more is written or rendered until the session ends
-    throw new ToolError("LIGHTROOM_DIALOG", `${reason}. ${problem}.${onCopy} Session ${s.id} is still open, and writes and renders nothing more. ${manual}`, false, { session_id: s.id, reverted: false, reason });
-  }
-  s.log.ended_by = { source: "engine", reason };
-  s.endedByEngine = reason;
-  saveLog(s);
-  throw new ToolError(
-    "LIGHTROOM_DIALOG",
-    `${reason}. Once Lightroom was free again, the engine put the photo back as it was before the session (every setting and the masks checked) and ended session ${s.id} with outcome "revert".${onCopy} Tell the user what happened; start a new session only if they ask.`,
-    false,
-    { session_id: s.id, reverted: true, outcome: "revert", ended_by: "engine", reason },
-  );
-}
-
 async function byTable(ctx: SessionContext, s: Session, job: AiJob): Promise<AiResult | Failed> {
   const u = await updateAndWait(ctx, s, job);
   if (u.kind === "computed") {
     return { sdk: u.sdk, id: job.id, route: "table", update_ms: u.update_ms, computed_ms: u.computed_ms, ...(u.dialog_ms !== undefined ? { dialog_ms: u.dialog_ms } : {}) };
   }
-  if (u.kind === "dialog") return autoRevert(ctx, s, job, u.why);
+  if (u.kind === "dialog") return autoRevert(ctx, s, job, u.why, u.stuck === true, (j) => takeOut(ctx, s, j));
+  if (u.kind === "stuck") throw stuckError(s, job, u.why);
   if (u.kind === "failed") return { why: u.why, fallback: u.fallback };
   const left = await takeOut(ctx, s, job);
   const label = KIND_LABELS[job.kind];

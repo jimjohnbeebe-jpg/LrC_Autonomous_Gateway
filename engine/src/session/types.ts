@@ -108,7 +108,7 @@ export type SessionDeps = {
  * know first).
  */
 export type HudSink = {
-  stage(s: Session, stage: HudStage, options?: { note?: string; open?: boolean }): void;
+  stage(s: Session, stage: HudStage, options?: { note?: string; open?: boolean; closeAfter?: number }): void;
   settle(s: Session): Promise<void>;
 };
 

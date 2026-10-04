@@ -25,7 +25,7 @@ const clamp = (n: number, lo: number, hi: number): number => Math.min(hi, Math.m
 const round = (n: number, places: number): number => Math.round(n * 10 ** places) / 10 ** places;
 
 /** The HUD's state for the session at `stage`: the photo the running operation works on, else the last one. */
-export function hudState(s: Session, stage: HudStage, note?: string): HudState {
+export function hudState(s: Session, stage: HudStage, note?: string, closeAfter?: number): HudState {
   const t = s.work?.target ?? s.active;
   const pass = s.work?.pass ?? t.passes;
   const last = lastPass(s, t);
@@ -49,6 +49,8 @@ export function hudState(s: Session, stage: HudStage, note?: string): HudState {
     snapshot: s.snapshot.name,
     // The snapshot lr_begin_session took on the master, which a revert applies (session\end.ts).
     ...(ended ? {} : { put_back: { photo_uuid: s.master.uuid, snapshot_id: s.snapshot.id, snapshot_name: s.snapshot.name } }),
+    // A session the engine ended: the HUD closes itself this many seconds after taking the update (D15, plugin 0.15.0).
+    ...(closeAfter ? { close_after: closeAfter } : {}),
   };
 }
 

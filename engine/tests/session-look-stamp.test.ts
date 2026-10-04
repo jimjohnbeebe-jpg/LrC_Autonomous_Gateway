@@ -33,7 +33,7 @@ describe("a block Lightroom adds inside the Look", () => {
 
   it("the auto-revert after Lightroom's dialog is verified as back", async () => {
     withProfileLook();
-    const m = newManager({ aiTimings: { computeMs: 2000, pollMs: 5, pollMaxMs: 10, dialogAfterMs: 30, probeEveryMs: 10, graceMs: 40, dialogWaitMs: 2000 } });
+    const m = newManager({ aiTimings: { computeMs: 2000, pollMs: 5, pollMaxMs: 10, dialogAfterMs: 30, probeEveryMs: 10, graceMs: 40 } });
     await m.begin({ intent_id: "test_plain", return_image: "none", max_passes: 4 });
     [lr.masks.gate, lr.masks.heldProbes] = ["dialog", 4];
     expect(await fails(m.createMask({ session_id: ID, rationale: "test", return_image: "none", kind: "sky" }))).toMatchObject({ code: "LIGHTROOM_DIALOG", details: { reverted: true } });

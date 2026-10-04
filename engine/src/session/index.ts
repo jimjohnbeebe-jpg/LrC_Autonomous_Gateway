@@ -33,7 +33,7 @@ export type {
 } from "./types.js";
 export { awaitingPick } from "./pick.js";
 export { MASKS_PLUGIN } from "./masks.js";
-export { AI_TIMINGS, DIALOG_NOTE } from "./ai-update.js";
+export { AI_TIMINGS, DIALOG_NOTE, STUCK_REVERTED, WORKING_NOTE } from "./ai-update.js";
 export type { AiTimings } from "./ai-update.js";
 export { DEFAULT_VARIANT_COUNT, MAX_VARIANT_COUNT, VARIANTS_PLUGIN } from "./copies.js";
 export { applyProjectedGuardrail, convergedByMetrics, fixedCorrection, hueDistance, planStep, pullBack } from "./plan.js";

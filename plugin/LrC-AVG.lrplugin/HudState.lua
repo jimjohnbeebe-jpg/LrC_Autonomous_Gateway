@@ -104,6 +104,7 @@ local FIELDS = {
     settings = { kind = "object", fields = SETTINGS },
     snapshot = TEXT,
     put_back = { kind = "object", fields = PUT_BACK },
+    close_after = { kind = "int", min = 1, max = 60 },
 }
 
 local checkObject

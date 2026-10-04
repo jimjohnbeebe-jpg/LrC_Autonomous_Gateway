@@ -6,7 +6,7 @@
 
 import { describe, expect, it } from "vitest";
 import { MASK_TABLE_KEY, type Correction } from "../src/params/index.js";
-import { DIALOG_NOTE, type HudSink } from "../src/session/index.js";
+import { DIALOG_NOTE, STUCK_REVERTED, WORKING_NOTE, type HudSink } from "../src/session/index.js";
 import type { FakeHandler } from "./helpers/fake-plugin.js";
 import { ID, clean, fails, lr, newManager, plugin, readLog, useSessionHarness } from "./helpers/session-harness.js";
 
@@ -14,13 +14,13 @@ useSessionHarness();
 
 const masks = (): Correction[] => (lr.settings[MASK_TABLE_KEY] ?? []) as Correction[];
 const sent = (name: string): number => plugin.received.filter((r) => r.name === name).length;
-const FAST = { computeMs: 2000, dcWaitMs: 300, pollMs: 5, pollMaxMs: 10, dialogAfterMs: 30, probeEveryMs: 10, graceMs: 40, dialogWaitMs: 2000 };
+const FAST = { computeMs: 2000, dcWaitMs: 300, pollMs: 5, pollMaxMs: 10, dialogAfterMs: 30, probeEveryMs: 10, probeReplyMs: 50, stuckProbesMs: 300, graceMs: 40 };
 
 async function session(timings: Record<string, number> = {}) {
   clean();
   const notes: string[] = [];
   const hud: HudSink = {
-    stage: (s, stage, o) => void notes.push(`${stage}: ${o?.note ?? s.work?.note ?? ""}`),
+    stage: (s, stage, o) => void notes.push(`${stage}: ${o?.note ?? s.work?.note ?? ""}${o?.closeAfter ? ` (closes after ${o.closeAfter} s)` : ""}`),
     settle: async () => undefined,
   };
   const m = newManager({ hud, aiTimings: { ...FAST, ...timings } });
@@ -58,7 +58,8 @@ describe("AI masks: Lightroom's dialog", () => {
     expect(e).toMatchObject({ code: "LIGHTROOM_DIALOG", recoverable: false, details: { session_id: ID, reverted: true, outcome: "revert", ended_by: "engine" } });
     expect(e.message).toMatch(/put the photo back as it was before the session/);
     expect(notes).toContain(`applying: ${DIALOG_NOTE}`);
-    expect(notes.at(-1)).toBe("ended: Lightroom was busy or showed a dialog, so the photo was put back as it was before the edit.");
+    expect(notes.at(-1)).toBe("ended: Lightroom was busy or showed a dialog, so the photo was put back as it was before the edit. (closes after 10 s)");
+    expect(notes).toContain(`applying: ${WORKING_NOTE}`);
     expect(DIALOG_NOTE).toBe("Lightroom is busy or shows a dialog: if a dialog is open in Lightroom, click OK.");
     expect(lr.masks.blocked).toEqual([]);
     expect(sent("create_ai_mask_dc")).toBe(0);
@@ -81,14 +82,17 @@ describe("AI masks: Lightroom's dialog", () => {
     expect(m.current()?.id).toBe(ID);
   });
 
-  it("when the dialog stays open: says what to do, keeps the session open, and writes nothing more until it ends", async () => {
-    const { m, create } = await session({ dialogWaitMs: 100 });
+  it("when Lightroom's update still runs after the time is up: says it seems stuck, writes nothing, keeps the session open until it ends", async () => {
+    const { m, create, notes } = await session({ computeMs: 200, stuckProbesMs: 10_000 });
     lr.masks.gate = "dialog";
     lr.masks.heldProbes = 1_000_000;
+    const snapshots = sent("apply_snapshot");
     const e = await fails(create("people_face_skin"));
-    expect(e).toMatchObject({ code: "LIGHTROOM_DIALOG", details: { reverted: false } });
-    expect(e.message).toMatch(/if a dialog is open in Lightroom, click OK; then call lr_end_session with outcome "revert"/);
-    expect(e.message).toMatch(/open the Snapshots panel and click "AVG pre-session/);
+    expect(e).toMatchObject({ code: "LIGHTROOM_STUCK", details: { reverted: false } });
+    expect(e.message.startsWith("Lightroom's AI mask computation seems stuck (the AI People - Face Skin mask: no result within 0 minutes, and Lightroom's update still running).")).toBe(true);
+    expect(e.message).toContain("restart Lightroom (File > Exit, then start it again); once it is back, lr_end_session with outcome \"revert\"");
+    expect(sent("apply_snapshot")).toBe(snapshots);
+    expect(notes.at(-1)).toBe("awaiting_claude: Lightroom's AI mask seems stuck. Restart Lightroom, then ask Claude to put the photo back.");
     expect(m.current()?.id).toBe(ID);
     const step = await fails(m.step({ session_id: ID, settings: { exposure: 0.2 }, rationale: "test", return_image: "none" }));
     expect(step.code).toBe("AI_UPDATE_PENDING");
@@ -141,15 +145,37 @@ describe("AI masks: an update Lightroom dropped or that raised", () => {
   it("takes the update's state only from its own request: another request's failure is not this one's", async () => {
     const { create } = await session({ computeMs: 300 });
     [lr.masks.tableRoute, lr.masks.foreignUpdate] = ["failed", true];
-    const e = await fails(create("subject"));
-    expect(e.details).toMatchObject({ routes_tried: [{ route: "table", why: expect.stringMatching(/did not compute/) }, { route: "dc", why: expect.stringMatching(/not tried/) }] });
+    expect(await fails(create("subject"))).toMatchObject({ code: "LIGHTROOM_STUCK", details: { reverted: true } });
     expect(sent("create_ai_mask_dc")).toBe(0);
   });
 
-  it("stops probing once the update is over and the gate reads free", async () => {
-    const { create } = await session({ computeMs: 300 });
+  it("stops probing once the update is over and the gate reads free; no result in time: the photo put back, Lightroom said to seem stuck", async () => {
+    const { m, create } = await session({ computeMs: 300 });
     lr.masks.tableRoute = "never";
-    expect((await fails(create("sky"))).code).toBe("FEATURE_UNAVAILABLE");
+    const e = await fails(create("sky"));
+    expect(e).toMatchObject({ code: "LIGHTROOM_STUCK", details: { reverted: true, ended_by: "engine" } });
+    expect(e.message.startsWith(STUCK_REVERTED)).toBe(true);
     expect(sent("probe_write_gate")).toBe(1);
+    expect(m.current()).toBeNull();
+  });
+
+  it("never puts the photo back while Lightroom's update still runs, though its gate is free again", async () => {
+    const { m, create } = await session({ computeMs: 400 });
+    [lr.masks.gate, lr.masks.heldProbes, lr.masks.releaseState] = ["dialog", 2, "running"];
+    const snapshots = sent("apply_snapshot");
+    expect(await fails(create("sky"))).toMatchObject({ code: "LIGHTROOM_STUCK", details: { reverted: false } });
+    expect(sent("apply_snapshot")).toBe(snapshots);
+    expect(m.current()?.id).toBe(ID);
+  });
+
+  it("probes that go unanswered: Lightroom seems stuck, nothing written", async () => {
+    const { m, create } = await session({ computeMs: 5000, stuckProbesMs: 150 });
+    [lr.masks.tableRoute, lr.masks.probe] = ["never", "silent"];
+    const snapshots = sent("apply_snapshot");
+    const e = await fails(create("sky"));
+    expect(e).toMatchObject({ code: "LIGHTROOM_STUCK", details: { reverted: false } });
+    expect(e.message).toMatch(/did not answer the gate probes/);
+    expect(sent("apply_snapshot")).toBe(snapshots);
+    expect(m.current()?.id).toBe(ID);
   });
 });

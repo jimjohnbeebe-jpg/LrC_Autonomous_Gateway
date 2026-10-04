@@ -45,7 +45,8 @@ export class SimMasks {
   tableRoute: "computes" | "absent" | "never" | "unavailable" | "failed" | "abandoned" = "computes";
   gate: "free" | "dialog" | "slow" = "free";
   heldProbes = 3;
-  releaseState: "done" | "failed" = "done";
+  /** What the update's record says once the gate is free again; "running": Lightroom still works on it after its gate. */
+  releaseState: "done" | "failed" | "running" = "done";
   people: Array<{ Top: number; Left: number; Bottom: number; Right: number }> = [
     { Top: 0.374479, Right: 0.532342, Left: 0.156001, Bottom: 0.785937 },
     { Top: 0.409896, Right: 0.823936, Left: 0.349014, Bottom: 1 },
@@ -54,7 +55,8 @@ export class SimMasks {
   personDrift: boolean | "wanted" = false;
   instanceFromPoint = false;
   foreignUpdate = false;
-  probe: "known" | "unknown" = "known";
+  /** probe_write_gate: answered; "unknown" as a plugin without it; "silent": no answer (a stuck plugin). */
+  probe: "known" | "unknown" | "silent" = "known";
   /** "late": the mask shows in the table only after the command's wait, so it answers no new id. */
   dc: "works" | "late" | "none" | "unknown" = "works";
   readonly calls: string[] = [];
@@ -134,7 +136,7 @@ function updateAiSettings(sim: MaskSim, p: Record<string, unknown>): FakeReply {
   const slow = sm.gate === "slow";
   sm.release = () => {
     if (slow) compute(sim, uuid);
-    sm.update = sm.releaseState === "failed" ? rec("failed", "dry: updateAISettings raised after the dialog") : rec("done");
+    sm.update = sm.releaseState === "failed" ? rec("failed", "dry: updateAISettings raised after the dialog") : rec(sm.releaseState);
   };
   return { ok: true, payload: { uuid, status: "started", state: "started", command_ms: 1 } };
 }
@@ -143,6 +145,7 @@ function probeWriteGate(sim: MaskSim): FakeReply {
   const sm = sim.masks;
   sm.calls.push("probe_write_gate");
   if (sm.probe === "unknown") return fail("unknown_command", "unknown command probe_write_gate", false);
+  if (sm.probe === "silent") return "silent";
   const update = sm.update ? { update: { ...sm.update } } : {};
   if (sm.held > 0) {
     sm.held--;

@@ -181,6 +181,13 @@ describe("lua: LrC-AVG.lrplugin", () => {
     expect(gate).not.toMatch(/asynchronous/);
   });
 
+  it("closes the HUD close_after seconds after an update that carries it, unless a newer update came (D15, plugin 0.15.0)", () => {
+    const hud = codeOnly(readFileSync(path.join(avgPlugin, "Hud.lua"), "utf8"));
+    expect(hud).toMatch(/if s\.close_after then[\s\S]*?LrTasks\.startAsyncTask\(function\(\)\s+LrTasks\.sleep\(s\.close_after\)\s+if H\.open and H\.state and H\.state\.seq == seq and H\.state\.session_id == sid then[\s\S]*?LrDialogs\.closeFloatingDialogsForPlugin\(_PLUGIN\)/);
+    expect(readFileSync(path.join(avgPlugin, "HudState.lua"), "utf8")).toMatch(/close_after = \{ kind = "int", min = 1, max = 60 \}/);
+    expect(hudUpdatePayloadSchema.shape.close_after.unwrap().maxValue).toBe(60);
+  });
+
   it("passes a History name to every applyDevelopSettings call (rule 03-lightroom)", () => {
     for (const file of files.filter((f) => f.startsWith(avgPlugin))) {
       for (const [call] of codeOnly(readFileSync(file, "utf8")).matchAll(/applyDevelopSettings\s*\(([^)]*)\)/g)) {

@@ -28,10 +28,10 @@ import { hudState, type HudState } from "./payload.js";
 
 /**
  * hud_update came with plugin 0.6.0 (PHASE5_PLAN row 4) [handle: plugin\LrC-AVG.lrplugin\Dispatch.lua,
- * Hud.update]; `snapshot` with 0.9.0, `put_back` with 0.13.0, and an earlier plugin refuses an update
- * with a field it does not know (bridge\hud-protocol.ts header), so the HUD needs 0.13.0.
+ * Hud.update]; `snapshot` with 0.9.0, `put_back` with 0.13.0, `close_after` with 0.15.0, and an earlier
+ * plugin refuses an update with a field it does not know (bridge\hud-protocol.ts header), so the HUD needs 0.15.0.
  */
-export const HUD_PLUGIN = "0.13.0";
+export const HUD_PLUGIN = "0.15.0";
 /**
  * An update's answer took 2-7 ms in Lightroom [handle: vault PHASE5_PLAN.md "From row 4": "hud_update
  * round trips took 2-7 ms"]; 5 s is [inference]. While the plugin is paused the bridge client lets it
@@ -85,10 +85,10 @@ export class HudPublisher implements HudSink {
     });
   }
 
-  stage(s: Session, stage: HudStage, options: { note?: string; open?: boolean } = {}): void {
+  stage(s: Session, stage: HudStage, options: { note?: string; open?: boolean; closeAfter?: number } = {}): void {
     if (this.channel?.sessionId !== s.id) this.channel = { sessionId: s.id, seq: 0, open: false, taken: null };
     if (options.open) this.channel.open = true;
-    this.state = hudState(s, stage, options.note);
+    this.state = hudState(s, stage, options.note, options.closeAfter);
     this.failuresInRow = 0;
     this.kick();
   }

@@ -115,6 +115,11 @@ export const hudUpdatePayloadSchema = z.strictObject({
    * at an end stage.
    */
   put_back: z.strictObject({ photo_uuid: id, snapshot_id: id, snapshot_name: text }).optional(),
+  /**
+   * Plugin 0.15.0 (D15): close the window this many seconds after taking this update, unless a newer one
+   * came; sent when the engine itself ended the session [stated: Jim, 2026-10-04, "Show, then close"].
+   */
+  close_after: int(1, 60).optional(),
 });
 export type HudUpdatePayload = z.infer<typeof hudUpdatePayloadSchema>;
 

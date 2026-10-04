@@ -8,6 +8,7 @@ import type { Metrics, Region, RegionBox } from "../metrics/index.js";
 import type { CanonicalSettings, Geometry, ParamMap } from "../params/index.js";
 import type { RenderedPreview } from "../preview/index.js";
 import type { KnownLogFolders, PageRead } from "../settings/index.js";
+import type { AiTimings } from "./ai-update.js";
 import type { Limits, Slope } from "./plan.js";
 
 export type SessionOutput = { json: Record<string, unknown>; image?: Buffer; log?: Record<string, unknown> };
@@ -94,8 +95,8 @@ export type SessionDeps = {
   copiesTimeoutMs?: number;
   /** How long lr_step waits for an approval (tests shorten it); approval.ts APPROVAL_WAIT_MS by default. */
   approvalWaitMs?: number;
-  /** How long an AI mask may take to compute, per route (tests shorten it); ai-masks.ts AI_WAIT_MS by default. */
-  aiWaitMs?: number;
+  /** The AI mask waits (tests shorten them); ai-update.ts AI_TIMINGS by default. */
+  aiTimings?: Partial<AiTimings>;
   /** The HUD (hud\publisher.ts, PHASE5_PLAN row 5); no HUD updates without it. */
   hud?: HudSink;
 };
@@ -135,8 +136,12 @@ export type HudNotice = { action: "pick"; variant: VariantId; source: UserSource
 /** What every session operation works with: the dependencies, with the clock and id source resolved. */
 export type SessionContext = { deps: SessionDeps; now: () => Date; newId: () => string };
 
-/** A write with its read-back took ~0.39 s in Phase 2 [handle: docs\reports\phase2\PHASE2.md "Numbers"]; 30 s leaves room. */
-export const WRITE_TIMEOUT_MS = 30000;
+/**
+ * A write with its read-back took ~0.39 s in Phase 2 [handle: docs\reports\phase2\PHASE2.md "Numbers"].
+ * The plugin's write gate waits up to 60 s for the catalog (plugin\LrC-AVG.lrplugin\Gate.lua), so the
+ * engine waits 90 s: a write queued behind a Lightroom dialog gets its own answer, not a timeout.
+ */
+export const WRITE_TIMEOUT_MS = 90000;
 /**
  * create_virtual_copies: the plugin waits up to 10 s for its selection lock [handle:
  * plugin\LrC-AVG.lrplugin\Catalog.lua Catalog.LOCK_WAIT_SECONDS], then makes each copy; S6's copies
@@ -213,6 +218,10 @@ export type Session = {
   startMasks: string;
   /** How AI masks were last made (ai-masks.ts): the table route, or LrDevelopController after it failed. */
   aiRoute: "table" | "dc" | null;
+  /** An update_ai_settings not answered yet (ai-update.ts): while set, the session writes, exports and renders nothing (io.ts). */
+  aiPending: { since: string; kind: string } | null;
+  /** Why the engine itself ended the session (ai-masks.ts autoRevert, after a Lightroom dialog); the manager then closes it. */
+  endedByEngine: string | null;
   regions: RegionState[];
   files: SessionLogFiles;
   log: SessionLogData;

@@ -1,6 +1,7 @@
 // Contract tests for the plugin's AI-mask commands (plugin\LrC-AVG.lrplugin\Masks.lua: update_ai_settings
-// from 0.11.0, create_ai_mask_dc from 0.12.0): the engine's client against the sim (lightroom-sim-masks.ts) and against answers shaped the way Masks.lua builds
-// them and Json.lua writes them (an empty table as [], nil fields left out).
+// from 0.11.0, create_ai_mask_dc from 0.12.0, probe_write_gate and the asynchronous update from PR C
+// step 2b): the engine's client against the sim (lightroom-sim-masks.ts) and against answers shaped
+// the way Masks.lua builds them and Json.lua writes them (an empty table as [], nil fields left out).
 
 import os from "node:os";
 import path from "node:path";
@@ -32,10 +33,15 @@ afterEach(async () => {
 const rejection = (p: Promise<unknown>): Promise<BridgeError> => p.then(() => Promise.reject(new Error("expected a rejection")), (e: BridgeError) => e);
 
 describe("bridge: update_ai_settings", () => {
-  it("names the photo by uuid and reads the timing back", async () => {
+  it("names the photo by uuid and reads the gate's status and the update's state back", async () => {
     const result = await client.request("update_ai_settings", { photo_uuid: lr.uuid, expect: { is_virtual_copy: false } });
     expect(plugin.received.at(-1)).toEqual({ name: "update_ai_settings", payload: { photo_uuid: lr.uuid, expect: { is_virtual_copy: false } } });
-    expect(result).toEqual({ uuid: lr.uuid, call_ms: 1, command_ms: 2 });
+    expect(result).toEqual({ uuid: lr.uuid, status: "executed", state: "done", command_ms: 2 });
+  });
+
+  it("still reads the answer of plugin 0.11.0, which waited for the update", async () => {
+    plugin.handlers.set("update_ai_settings", () => ({ ok: true, payload: { uuid: lr.uuid, call_ms: 2800, command_ms: 2810, gate: "executed" } }));
+    expect(await client.request("update_ai_settings", { photo_uuid: lr.uuid })).toEqual({ uuid: lr.uuid, call_ms: 2800, command_ms: 2810, gate: "executed" });
   });
 
   it("passes on unknown_photo and feature_unavailable as recoverable errors", async () => {
@@ -43,6 +49,22 @@ describe("bridge: update_ai_settings", () => {
     lr.masks.tableRoute = "unavailable";
     const err = await rejection(client.request("update_ai_settings", { photo_uuid: lr.uuid }));
     expect([err.code, err.recoverable]).toEqual(["feature_unavailable", true]);
+  });
+});
+
+describe("bridge: probe_write_gate", () => {
+  it("answers executed with no update yet, and aborted while an update holds the gate, with the update's record", async () => {
+    expect(await client.request("probe_write_gate", {})).toEqual({ status: "executed", ms: 1 });
+    lr.masks.gate = "dialog";
+    lr.masks.heldProbes = 1;
+    await client.request("update_ai_settings", { photo_uuid: lr.uuid });
+    expect(await client.request("probe_write_gate", {})).toEqual({ status: "aborted", ms: 500, update: { uuid: lr.uuid, state: "running" } });
+    expect(await client.request("probe_write_gate", {})).toEqual({ status: "executed", ms: 1, update: { uuid: lr.uuid, state: "done" } });
+  });
+
+  it("reads a failed update's error as Masks.lua records it", async () => {
+    plugin.handlers.set("probe_write_gate", () => ({ ok: true, payload: { status: "executed", ms: 2, update: { uuid: lr.uuid, state: "failed", error: "boom" } } }));
+    expect((await client.request("probe_write_gate", {})).update).toEqual({ uuid: lr.uuid, state: "failed", error: "boom" });
   });
 });
 

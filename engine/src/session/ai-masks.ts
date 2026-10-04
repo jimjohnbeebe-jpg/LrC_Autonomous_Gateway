@@ -1,34 +1,36 @@
-// AI masks inside a mask pass (masks.ts; GitHub issue #59, PR C step 2): the table route first,
-// LrDevelopController after it [stated: Jim, 2026-10-03, "Table + Develop fallback"]; people and
-// landscape kinds have the table route only (params\mask-table.ts AI_KINDS).
-//   - Table: the entry is written without its digests (masks.ts), then update_ai_settings, then the
-//     table is read every AI_POLL_MS until the entry has its digest. In capture 1 the call took 2.8 s
-//     and the digests were there 1.2 s later [handle: docs\reports\phase6\masks-capture\check.json
-//     `7_sky`]; AI_WAIT_MS leaves room for a slower photo [inference].
-//   - The table route fails when update_ai_settings fails in any way but Lightroom going away (or the
-//     user's Abort), or the mask does not compute in time. Then this pass's attempt is taken out of
-//     the table as it is now ("… mask ai revert"; other masks, the user's changes included, stay) and
-//     create_ai_mask_dc makes the mask; the new entry is found by its id, and its name and sliders are
-//     written by an AVG table write ("… mask sliders"). The DC step itself keeps Lightroom's History
-//     name [stated: Jim, 2026-10-03, "Accept for fallback (Recommended)"]; a DC setValue did not show
-//     in an immediate table read [handle: docs\reports\phase6\masks-capture\12_probe_dc.json
-//     getDevelopSettings_after_sky], hence the table write. When createNewMask answered but no new mask
-//     showed in the plugin's wait, the table is read for a new entry for up to AI_WAIT_MS more.
+// AI masks inside a mask pass (masks.ts; GitHub issue #59, PR C steps 2 and 2b): the table route
+// first, LrDevelopController after it [stated: Jim, 2026-10-03, "Table + Develop fallback"] for
+// subject, sky and background only (params\mask-ai-kinds.ts).
+//   - Table: the entry is written in Adobe's own form (params\mask-ops.ts), then update_ai_settings and
+//     the wait for Lightroom's answer (ai-update.ts): computed; nothing found (ErrorReason not 0: the
+//     entry is taken out of the table as it is now and MASK_NOTHING_FOUND says so, no pass used);
+//     a dialog (the photo is put back to before the session and the session ends: autoRevert);
+//     or a failure.
+//   - LrDevelopController runs only when the table route's update failed with a gate or plugin error,
+//     never after a dialog and never after a mask that simply did not compute [stated: Jim,
+//     2026-10-03, "full control of the masking from the llm without throwing errors", relayed by the
+//     lead, whose step 2b directive set this rule]. Then this pass's attempt is taken out of the table as it is now ("… mask ai
+//     revert"; other masks, the user's changes included, stay) and create_ai_mask_dc makes the mask;
+//     the new entry is found by its id, and its name and sliders are written by an AVG table write
+//     ("… mask sliders"). The DC step itself keeps Lightroom's History name [stated: Jim, 2026-10-03,
+//     "Accept for fallback (Recommended)"]; a DC setValue did not show in an immediate table read
+//     [handle: docs\reports\phase6\masks-capture\12_probe_dc.json getDevelopSettings_after_sky], hence
+//     the table write. When createNewMask answered but no new mask showed in the plugin's wait, the
+//     table is read for a new entry for up to dcWaitMs more.
 //   - Neither route: FEATURE_UNAVAILABLE {routes_tried, waited_ms}; the result says whether the last
 //     read of the table showed this pass's attempts gone (they stay in History) and the pass is not used.
 // The route that worked is kept for the session (s.aiRoute). [handle: tests\session-ai-masks.test.ts,
-// against the Lightroom sim; in Lightroom [unverified] until Jim's mask tools check.]
+// tests\session-ai-dialog.test.ts, against the Lightroom sim; in Lightroom [unverified] until capture 4.]
 
-import { featureUnavailable, toToolError } from "../mcp/errors.js";
-import { AI_KINDS, computed, correctionIds, firstComponent, named, readTable, type AiKind, type Correction, type SdkSettings } from "../params/index.js";
-import { bridge, checkAbort, historyName, ms, readSdk, writeTable } from "./io.js";
+import { ToolError, featureUnavailable, toToolError } from "../mcp/errors.js";
+import { AI_KINDS, KIND_LABELS, computed, correctionIds, firstComponent, named, readTable, type AiKind, type Correction, type SdkSettings } from "../params/index.js";
+import { aiTimings, updateAndWait } from "./ai-update.js";
+import { endSession } from "./end.js";
+import { reopenLog } from "./hud-actions.js";
+import { bridge, checkAbort, historyName, ms, readSdk, saveLog, writeTable } from "./io.js";
 import type { Session, SessionContext, Target } from "./types.js";
 
-/** How long a new AI mask may take to compute, per route (SessionDeps.aiWaitMs shortens it in tests). */
-export const AI_WAIT_MS = 10000;
 export const AI_POLL_MS = 250;
-/** update_ai_settings took 2.8 s in capture 1 (check.json `7_sky.update.call_ms`); 30 s leaves room [inference]. */
-const UPDATE_TIMEOUT_MS = 30000;
 /** create_ai_mask_dc bounds itself at about 10 s to open Masking plus its wait (plugin\LrC-AVG.lrplugin\Masks.lua). */
 const DC_TIMEOUT_MS = 35000;
 
@@ -40,6 +42,8 @@ export type AiResult = {
   update_ms?: number;
   computed_ms?: number;
   dc_ms?: number;
+  /** How long Lightroom's write gate stayed held while the mask computed (a slow model, not a dialog after all). */
+  dialog_ms?: number;
 };
 
 /**
@@ -48,27 +52,31 @@ export type AiResult = {
  */
 export type AiJob = { t: Target; n: number; kind: AiKind; before: Correction[]; id: string; name: string; stored: Record<string, number>; historyNames: string[]; attempts: Set<string> };
 
+type Failed = { why: string; fallback: boolean };
+
 const why = (err: unknown): string => (err instanceof Error ? err.message : String(err));
 /** A failure that stops the pass rather than the route: Lightroom gone or not answering, another photo selected, the user's Abort. */
 const stops = (err: unknown): boolean => ["BRIDGE_DISCONNECTED", "BRIDGE_TIMEOUT", "TARGET_CHANGED", "SESSION_ENDED"].includes(toToolError(err).code);
+const sleep = (t: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, t));
 
 /** Read the table until the correction `pick` names has computed, or the wait ends; the read and the time waited. */
 async function waitComputed(ctx: SessionContext, s: Session, t: Target, pick: (entries: Correction[]) => string | null): Promise<{ sdk: SdkSettings; id: string | null; seen: string | null; ms: number }> {
   const started = performance.now();
-  const wait = ctx.deps.aiWaitMs ?? AI_WAIT_MS;
+  const wait = aiTimings(ctx).dcWaitMs;
   for (;;) {
     checkAbort(s);
     const { sdk } = await readSdk(ctx, s, t);
     const id = pick(readTable(sdk));
     const done = id !== null && computed(firstComponent(readTable(sdk), id) ?? {});
     if (done || performance.now() - started >= wait) return { sdk, id: done ? id : null, seen: id, ms: ms(started) };
-    await new Promise((resolve) => setTimeout(resolve, AI_POLL_MS));
+    await sleep(AI_POLL_MS);
   }
 }
 
 /**
- * Take this pass's attempts out of the table as it is now, leaving every other entry; nothing is
- * written when none is there. Returns null when the table no longer holds any, else why it may.
+ * Take this pass's attempts out of the table as it is now (a fresh read, never an earlier array),
+ * leaving every other entry; nothing is written when none is there. Returns null when the table no
+ * longer holds any, else why it may.
  */
 async function takeOut(ctx: SessionContext, s: Session, job: AiJob): Promise<string | null> {
   try {
@@ -85,18 +93,59 @@ async function takeOut(ctx: SessionContext, s: Session, job: AiJob): Promise<str
   }
 }
 
-async function byTable(ctx: SessionContext, s: Session, job: AiJob): Promise<AiResult | string> {
-  const t0 = performance.now();
+/**
+ * After a dialog (ai-update.ts): the photo back to before the session through the plugin's queued
+ * gate, checked, masks included (end.ts revert), and the session ended by the engine [stated: Jim,
+ * 2026-10-03, "Also auto-revert"]. In Variants mode the pick's attempt is taken out first: the
+ * session's revert puts only the master back. Always throws LIGHTROOM_DIALOG.
+ */
+async function autoRevert(ctx: SessionContext, s: Session, job: AiJob, cause: string): Promise<never> {
+  const pending = s.aiPending;
+  s.aiPending = null; // the put-back's own gate waits for the catalog
+  const reason = `Lightroom showed a dialog while it computed the AI ${KIND_LABELS[job.kind]} mask (${cause})`;
+  const manual = `Tell the user: if the dialog is still open, click OK in Lightroom; then call lr_end_session with outcome "revert". If that fails too: in Lightroom's Develop module, open the Snapshots panel and click "${s.snapshot.name}".`;
+  let problem: string | null = null;
   try {
-    await bridge(s, job.t, () => ctx.deps.client.request("update_ai_settings", { photo_uuid: job.t.uuid }, { timeoutMs: UPDATE_TIMEOUT_MS }));
+    if (job.t.id !== "master") problem = await takeOut(ctx, s, job);
+    await endSession(ctx, s, { session_id: s.id, outcome: "revert" });
+    const differing = s.log.revert?.differing ?? [];
+    if (differing.length > 0) {
+      reopenLog(s);
+      problem = `the put-back left ${differing.join(", ")} different from before the session`;
+    }
   } catch (err) {
-    if (stops(err)) throw err;
-    return `update_ai_settings: ${why(err)}`;
+    problem = `the put-back did not go through: ${toToolError(err).message}`;
   }
-  const update = ms(t0);
-  const done = await waitComputed(ctx, s, job.t, (entries) => (correctionIds(entries).includes(job.id) ? job.id : null));
-  if (done.id === null) return `the mask did not compute within ${Math.round(done.ms)} ms of update_ai_settings`;
-  return { sdk: done.sdk, id: job.id, route: "table", update_ms: update, computed_ms: done.ms };
+  if (problem !== null) {
+    s.aiPending = pending; // nothing more is written or rendered until the session ends
+    throw new ToolError("LIGHTROOM_DIALOG", `${reason}. ${problem}. Session ${s.id} is still open, and writes and renders nothing more. ${manual}`, false, { session_id: s.id, reverted: false, reason });
+  }
+  s.log.ended_by = { source: "engine", reason };
+  s.endedByEngine = reason;
+  saveLog(s);
+  throw new ToolError(
+    "LIGHTROOM_DIALOG",
+    `${reason}. Once Lightroom was free again, the engine put the photo back as it was before the session (every setting and the masks checked) and ended session ${s.id} with outcome "revert". Tell the user what happened; start a new session only if they ask.`,
+    false,
+    { session_id: s.id, reverted: true, outcome: "revert", ended_by: "engine", reason },
+  );
+}
+
+async function byTable(ctx: SessionContext, s: Session, job: AiJob): Promise<AiResult | Failed> {
+  const u = await updateAndWait(ctx, s, job);
+  if (u.kind === "computed") {
+    return { sdk: u.sdk, id: job.id, route: "table", update_ms: u.update_ms, computed_ms: u.computed_ms, ...(u.dialog_ms !== undefined ? { dialog_ms: u.dialog_ms } : {}) };
+  }
+  if (u.kind === "dialog") return autoRevert(ctx, s, job, u.why);
+  if (u.kind === "failed") return { why: u.why, fallback: u.fallback };
+  const left = await takeOut(ctx, s, job);
+  const label = KIND_LABELS[job.kind];
+  throw new ToolError(
+    "MASK_NOTHING_FOUND",
+    `Lightroom found no ${label} in this photo (its ErrorReason ${u.reason}), so the mask was taken out again${left ? ` (${left})` : ""}; the pass is not used. Try another kind, or a linear, radial or luminance mask.`,
+    true,
+    { session_id: s.id, kind: job.kind, error_reason: u.reason, history_names: job.historyNames, ...(left ? { left } : {}) },
+  );
 }
 
 /** create_ai_mask_dc: the new ids it saw, or why it made none; `answered`: createNewMask itself reported ok. */
@@ -112,9 +161,7 @@ async function askDevelop(ctx: SessionContext, s: Session, job: AiJob, subtype: 
   }
 }
 
-async function byDevelop(ctx: SessionContext, s: Session, job: AiJob): Promise<AiResult | string> {
-  const subtype = AI_KINDS[job.kind].dc;
-  if (subtype === null) return "none for this kind: LrDevelopController made no people or landscape mask in capture 2";
+async function byDevelop(ctx: SessionContext, s: Session, job: AiJob, subtype: string): Promise<AiResult | string> {
   checkAbort(s);
   const t0 = performance.now();
   const asked = await askDevelop(ctx, s, job, subtype);
@@ -132,34 +179,45 @@ async function byDevelop(ctx: SessionContext, s: Session, job: AiJob): Promise<A
   return { sdk, id: done.id, route: "dc", dc_ms: ms(t0) };
 }
 
+/** Why LrDevelopController does not run for this kind after this table failure, or null when it may. */
+function noDevelop(job: AiJob, table: Failed | null): string | null {
+  if (AI_KINDS[job.kind].dc === null) return "none for this kind: LrDevelopController made no people or landscape mask in capture 2";
+  if (table && !table.fallback) return "not tried: the table route did not fail with a gate or plugin error";
+  return null;
+}
+
 /**
  * Make the AI mask of `job`, whose entry the pass has just written (the table route's start). Returns
- * the table after it and how it was made; FEATURE_UNAVAILABLE when neither route made it.
+ * the table after it and how it was made; MASK_NOTHING_FOUND, LIGHTROOM_DIALOG or FEATURE_UNAVAILABLE
+ * when it was not.
  */
 export async function makeAiMask(ctx: SessionContext, s: Session, job: AiJob): Promise<AiResult> {
   const started = performance.now();
   const tried: Array<{ route: "table" | "dc"; why: string }> = [];
+  let table: Failed | null = null;
   if (s.aiRoute !== "dc" || AI_KINDS[job.kind].dc === null) {
-    const table = await byTable(ctx, s, job);
-    if (typeof table !== "string") {
+    const out = await byTable(ctx, s, job);
+    if ("route" in out) {
       s.aiRoute = "table";
-      return table;
+      return out;
     }
-    tried.push({ route: "table", why: table });
+    table = out;
+    tried.push({ route: "table", why: out.why });
   } else {
     tried.push({ route: "table", why: "skipped: the table route failed earlier in this session" });
   }
-  const stuck = await takeOut(ctx, s, job); // a failed take-out is part of the table route's failure; the fallback still runs
+  const stuck = await takeOut(ctx, s, job); // a failed take-out is part of the table route's failure
   if (stuck !== null && tried[0]) tried[0].why += `; ${stuck}`;
-  const dc = await byDevelop(ctx, s, job);
+  const refused = noDevelop(job, table);
+  const dc = refused ?? (await byDevelop(ctx, s, job, AI_KINDS[job.kind].dc as string));
   if (typeof dc !== "string") {
     s.aiRoute = "dc";
     return { ...dc, fallback: tried[0]?.why ?? "" };
   }
   tried.push({ route: "dc", why: dc });
-  const left = await takeOut(ctx, s, job);
-  const table = left === null ? "The last read of the mask table showed this pass's attempts gone (they stay in History)" : `This pass's attempt may still be in the mask table (${left}): lr_list_masks shows it, and lr_end_session revert removes it`;
-  throw featureUnavailable(`An AI ${job.kind} mask`, ctx.deps.client.hello(), `neither the mask table nor Lightroom's Develop controller made it (routes_tried says why); linear, radial and luminance masks still work. ${table}; the pass is not used.`, {
+  const left = refused ? stuck : await takeOut(ctx, s, job);
+  const gone = left === null ? "The last read of the mask table showed this pass's attempts gone (they stay in History)" : `This pass's attempt may still be in the mask table (${left}): lr_list_masks shows it, and lr_end_session revert removes it`;
+  throw featureUnavailable(`An AI ${job.kind} mask`, ctx.deps.client.hello(), `the mask table route did not make it, and LrDevelopController did not either or was not tried (routes_tried says why); linear, radial and luminance masks still work. ${gone}; the pass is not used.`, {
     routes_tried: tried,
     waited_ms: ms(started),
   });

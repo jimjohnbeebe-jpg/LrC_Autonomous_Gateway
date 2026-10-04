@@ -169,8 +169,8 @@ async function finishAbort(host: ActionHost, s: Session): Promise<void> {
   ctx.deps.hud?.stage(s, "aborted", { note: abortedNote(s) });
 }
 
-/** The log of a session an Abort did not end after all: open again, with the revert tried kept. */
-function reopenLog(s: Session): void {
+/** The log of a session an Abort (or the engine's put-back, ai-masks.ts) did not end after all: open again, with the revert tried kept. */
+export function reopenLog(s: Session): void {
   s.log.outcome = null;
   s.log.ended = null;
   s.log.final_settings = null;

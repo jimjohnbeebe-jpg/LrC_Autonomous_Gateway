@@ -2241,6 +2241,9 @@
                   },
                   "dc_ms": {
                     "type": "number"
+                  },
+                  "dialog_ms": {
+                    "type": "number"
                   }
                 },
                 "required": [
@@ -2916,8 +2919,12 @@
           "enum": [
             "claude",
             "hud",
-            "menu"
+            "menu",
+            "engine"
           ]
+        },
+        "reason": {
+          "type": "string"
         },
         "click_id": {
           "type": "string"

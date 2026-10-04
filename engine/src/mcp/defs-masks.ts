@@ -5,7 +5,7 @@
 // in Lightroom until Jim's mask tools check (it creates a luminance range; it does not invert).
 
 import { z } from "zod";
-import { LOCAL_PARAMS } from "../params/index.js";
+import { AI_KINDS, LOCAL_PARAMS, REFUSED_KINDS } from "../params/index.js";
 import { MASKS_PLUGIN } from "../session/index.js";
 import { sessionId, target, type ToolDef } from "./defs-shared.js";
 
@@ -35,35 +35,23 @@ const passFields = {
 const name = z.string().min(1).max(60);
 const maskId = z.string().min(1).describe("the mask's id from lr_list_masks or a mask tool's result (`masks[].id`)");
 
+const AI_NAMES = Object.keys(AI_KINDS);
+const KINDS = ["linear", "radial", "luminance", ...AI_NAMES, ...Object.keys(REFUSED_KINDS)] as [string, ...string[]];
+const group = (prefix: string): string => AI_NAMES.filter((k) => k.startsWith(prefix)).join(", ");
+
 const listArgs = z.object({ session_id: sessionId, target: target.describe('Variants mode: which photo ("master", "A", …); default the photo the last call worked on') });
 const createArgs = z.object({
   ...passFields,
   kind: z
-    .enum([
-      "linear",
-      "radial",
-      "luminance",
-      "subject",
-      "sky",
-      "background",
-      "people_entire",
-      "people_face_skin",
-      "landscape_vegetation",
-      "landscape_sky",
-      "people",
-      "landscape",
-      "brush",
-      "objects",
-      "color_range",
-      "depth_range",
-    ])
+    .enum(KINDS)
     .describe(
-      "linear, radial, luminance (geometry); subject, sky, background, people_entire, people_face_skin (with point), landscape_vegetation, " +
-        "landscape_sky (Lightroom's AI finds them). Other people parts and landscape categories, brush, objects, color_range and depth_range are refused, with the reason",
+      "linear, radial, luminance (geometry). Found by Lightroom's AI: subject, sky, background; landscape, one category per mask: " +
+        `${group("landscape_")}; every person in the photo, one part per mask: ${group("people_")}; one person, with point on them: ` +
+        `${group("person_")}. people, landscape (name the part or category), brush, objects, color_range and depth_range are refused, with the reason`,
     ),
   name: name.optional().describe('the name the Masks panel shows (default "AVG <kind>")'),
   geometry: geometry.optional(),
-  point: point.optional().describe("people_entire and people_face_skin only: a point on that person (on the face, for face skin), in 0-1 of the photo"),
+  point: point.optional().describe(`${group("person_")} only: a point on that person (on the face, for face skin), in 0-1 of the photo`),
   sliders: sliders.optional(),
 });
 const editArgs = z.object({
@@ -94,7 +82,7 @@ export const MASK_DEFS: ToolDef[] = [
     name: "lr_list_masks",
     title: "List the photo's masks",
     description:
-      "List the masks on the session's photo: id, name, kind (linear, radial, luminance, subject, sky, background; other kinds as Lightroom made them), " +
+      "List the masks on the session's photo: id, name, kind (lr_create_mask's kinds; \"ai\" or \"other\" for a kind Lightroom made that the tools do not know), " +
       "on/off, inverted, components, the local sliders not at 0 (Masking panel units), geometry, and for AI masks whether they have computed. " +
       "Also lists the local sliders and their ranges. Does not use a pass and writes nothing.",
     schema: listArgs,
@@ -106,10 +94,14 @@ export const MASK_DEFS: ToolDef[] = [
     title: "Create a mask",
     description:
       "Create one mask on the session's photo, with its local sliders set in the same pass. linear and radial take geometry; luminance takes " +
-      "geometry.lum_range; the AI kinds are found by Lightroom: the engine adds the mask to the table and asks Lightroom to compute it. If that " +
-      "does not work, subject, sky and background are made by Lightroom's Develop module instead (Lightroom then switches to Develop; " +
-      "`ai.route` \"dc\", `switched_to_develop`); people and landscape kinds have no such fallback. If nothing works, FEATURE_UNAVAILABLE " +
-      "(details.routes_tried): the masks are as before and the pass is not used. " +
+      "geometry.lum_range; the AI kinds are found by Lightroom: the engine adds the mask to the table and asks Lightroom to compute it " +
+      "(up to 2 minutes for a cold model). If the photo has none of that kind, MASK_NOTHING_FOUND: the mask is taken out again and the " +
+      "pass is not used. If Lightroom shows a dialog while it computes, the engine tells the user on the HUD to click OK in Lightroom, " +
+      "waits, then puts the photo back as it was before the session and ENDS the session (LIGHTROOM_DIALOG): tell the user, and start a " +
+      "new session only if they ask. If the update fails with a Lightroom or plugin error, subject, sky and background are made by " +
+      "Lightroom's Develop module instead (Lightroom then switches to Develop; `ai.route` \"dc\", `switched_to_develop`); people and " +
+      "landscape kinds have no such fallback. If nothing works, FEATURE_UNAVAILABLE (details.routes_tried): the masks are as before and " +
+      "the pass is not used. " +
       PASS_NOTE,
     schema: createArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },

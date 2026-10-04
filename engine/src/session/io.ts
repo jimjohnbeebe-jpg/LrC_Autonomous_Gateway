@@ -12,6 +12,7 @@ import { ToolError, readbackError, toToolError } from "../mcp/errors.js";
 import type { Metrics } from "../metrics/index.js";
 import { differingSettings, tableSettings, verifyTable, type CanonicalValue, type Correction, type FromSdkResult, type SdkSettings } from "../params/index.js";
 import { composite } from "../preview/index.js";
+import { pendingError } from "./ai-update.js";
 import { WRITE_TIMEOUT_MS, type Rendered, type ReturnImage, type Session, type SessionContext, type Target } from "./types.js";
 
 export const ms = (since: number): number => Math.round((performance.now() - since) * 10) / 10;
@@ -70,6 +71,11 @@ export function checkAbort(s: Session): void {
   if (s.abort) throw abortError(s);
 }
 
+/** Before a write or an export: refused while Lightroom has not answered an AI mask update (ai-update.ts). */
+function checkPending(s: Session): void {
+  if (s.aiPending) throw pendingError(s);
+}
+
 /**
  * A write the plugin got but did not answer (the bridge dropped, or no answer in time) may have been
  * applied: say so, so the call's error does not read as "nothing was written" (the classification of
@@ -109,6 +115,7 @@ export async function writeTable(ctx: SessionContext, s: Session, t: Target, ent
 /** Write an SDK table as one History step and return the read-back for the caller to check. */
 export async function writeSdk(ctx: SessionContext, s: Session, t: Target, sdk: SdkSettings, historyName: string): Promise<SdkSettings> {
   checkAbort(s);
+  checkPending(s);
   ctx.deps.hud?.stage(s, "applying");
   const res = await bridge(s, t, () =>
     ctx.deps.client
@@ -124,6 +131,7 @@ export async function writeSdk(ctx: SessionContext, s: Session, t: Target, sdk: 
  */
 export async function render(ctx: SessionContext, s: Session, t: Target, view: Pick<FromSdkResult, "settings" | "masks">, options: { keep?: boolean; longEdge?: number } = {}): Promise<Rendered> {
   checkAbort(s);
+  checkPending(s);
   const longEdge = options.longEdge ?? s.longEdge;
   ctx.deps.hud?.stage(s, "acquiring_preview");
   const preview = await bridge(s, t, () =>
@@ -221,6 +229,7 @@ export function failed(ctx: SessionContext, s: Session, stage: string, err: unkn
   } catch {
     // the error being reported matters more than the log write
   }
+  if (s.endedByEngine) return error; // the engine ended the session (ai-masks.ts autoRevert): its message says so
   const details = typeof error.details === "object" && error.details !== null ? error.details : {};
   const back = s.mode === "variants" ? "puts the master back (the copies stay in the catalog)" : "puts the photo back";
   return new ToolError(error.code, `${error.message} (session ${s.id} is still open; lr_end_session with outcome "revert" ${back}.)`, error.recoverable, {

@@ -16,6 +16,20 @@
 --   added as a table entry computed after it, and Jim saw it cover the sky [handle: Jim's capture 1
 --   run, 2026-10-03, docs\reports\phase6\masks-capture\check.json step 7_sky and answers]. Waiting for
 --   the mask to compute is the engine's job, by reading get_settings.
+--   Plugin 0.12.0, PR C step 2b: the gate is asynchronous (Gate.async, 5 s in the queue), and the
+--   command answers { uuid, status, state } without waiting for the update, because Lightroom's
+--   "Update AI Settings Errors" dialog once opened inside this gate and held it until Jim restarted
+--   Lightroom [stated: Jim's step-2 check, 2026-10-03, his screenshot]. Whether an asynchronous gate
+--   that gets the catalog at once still runs `func` before it returns ("executed") is [unverified]: if
+--   it does, a dialog holds this answer too, and the engine's wait for it runs out and goes on to
+--   watching the table. `state` and the last update's record (_G, so it survives a reload of this
+--   module, rule 03) say what the gate did: queued, running, done, failed (updateAISettings raised; the
+--   error is kept, not raised on, so no Lightroom error dialog comes from this plugin), abandoned (the
+--   gate stayed held for 5 s and Lightroom dropped the update).
+-- probe_write_gate {}: an empty write gate with a 0.5 s timeout: "executed" when the catalog is free,
+--   "aborted" when another write holds it (such as a dialog inside the update's gate) [community: the
+--   SDK reference above, LrCatalog withWriteAccessDo]; with the last update's record. Whether an empty
+--   gate leaves an Undo entry is [unverified].
 -- create_ai_mask_dc { target_uuid, subtype, wait_seconds? }: LrDevelopController on the selected photo
 --   (MaskProbe.lua says how it is pinned to the target and bounded): Develop, Masking, then
 --   createNewMask("aiSelection", subtype), and the mask ids getAllMasks lists that were not there
@@ -34,6 +48,7 @@ local LrApplication = import 'LrApplication'
 local LrDate = import 'LrDate'
 local LrTasks = import 'LrTasks'
 
+local Gate = require 'Gate'
 local MaskProbe = require 'MaskProbe'
 local Photos = require 'Photos'
 
@@ -49,6 +64,9 @@ local DEFAULT_WAIT_SECONDS = 12
 -- mask then gets its own bound, wait_seconds + 2. At most about 27 s together; the engine waits 35 s
 -- for the answer (engine\src\session\ai-masks.ts DC_TIMEOUT_MS), so this stops first [inference].
 local OPEN_SECONDS = 10
+-- How long the update may wait in the gate's queue, and how long the probe waits for the gate.
+local UPDATE_QUEUE_SECONDS = 5
+local PROBE_SECONDS = 0.5
 
 function Masks.updateAISettings(payload)
     local tCommand = LrDate.currentTime()
@@ -56,14 +74,27 @@ function Masks.updateAISettings(payload)
     local photo, found = Photos.find(catalog, payload.photo_uuid, payload.expect)
     if not photo then return nil, found end
     if MaskProbe.kind(photo, "updateAISettings") ~= "function" then return MaskProbe.unavailable("photo:updateAISettings (SDK 13.3)") end
+    local rec = { uuid = found.uuid, state = "queued" }
+    _G.AVG_LAST_AI_UPDATE = rec
+    local ok, status = LrTasks.pcall(Gate.async, catalog, "AVG update AI masks", function()
+        rec.state = "running"
+        local okCall, err = LrTasks.pcall(function() photo:updateAISettings() end)
+        rec.state = okCall and "done" or "failed"
+        if not okCall then rec.error = tostring(err) end
+    end, function() rec.state = "abandoned" end, UPDATE_QUEUE_SECONDS)
+    if not ok then
+        rec.state, rec.error = "failed", tostring(status)
+        return nil, { code = "update_failed", message = tostring(status), recoverable = true }
+    end
+    return { uuid = found.uuid, status = tostring(status), state = rec.state, command_ms = (LrDate.currentTime() - tCommand) * 1000 }
+end
+
+function Masks.probeWriteGate()
     local t0 = LrDate.currentTime()
-    local ok, status = LrTasks.pcall(function()
-        return catalog:withWriteAccessDo("AVG update AI masks", function() photo:updateAISettings() end)
-    end)
-    local t1 = LrDate.currentTime()
-    if not ok then return nil, { code = "update_failed", message = tostring(status), recoverable = true } end
-    return { uuid = found.uuid, call_ms = (t1 - t0) * 1000, command_ms = (t1 - tCommand) * 1000,
-        gate = status ~= nil and tostring(status) or nil }
+    local status = Gate.write(LrApplication.activeCatalog(), "AVG gate probe", function() end, PROBE_SECONDS)
+    local u = _G.AVG_LAST_AI_UPDATE
+    return { status = status or "aborted", ms = (LrDate.currentTime() - t0) * 1000,
+        update = u and { uuid = u.uuid, state = u.state, error = u.error } or nil }
 end
 
 -- The ids getAllMasks lists now, as a set.

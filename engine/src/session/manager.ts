@@ -230,7 +230,16 @@ export class SessionManager {
   private async withNotices(sessionId: string, fn: (s: Session) => Promise<SessionOutput>, whileAborting = false): Promise<SessionOutput> {
     const s = this.require(sessionId);
     if (s.abort && !whileAborting) throw abortError(s);
-    const out = await fn(s);
+    let out: SessionOutput;
+    try {
+      out = await fn(s);
+    } finally {
+      // The engine put the photo back after a Lightroom dialog and ended the session (ai-masks.ts autoRevert).
+      if (s.endedByEngine && this.session === s) {
+        this.close(s, null);
+        this.ctx.deps.hud?.stage(s, "ended", { note: "Lightroom showed a dialog, so the photo was put back as it was before the edit." });
+      }
+    }
     if (s.notices.length === 0) return out;
     return { ...out, json: { ...out.json, hud_actions: s.notices.splice(0) } };
   }

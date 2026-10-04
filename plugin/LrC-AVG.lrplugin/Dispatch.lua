@@ -46,6 +46,7 @@ function Dispatch.handlers(hello)
         hud_update = Hud.update,
         update_ai_settings = Masks.updateAISettings,
         create_ai_mask_dc = Masks.createAiMaskDc,
+        probe_write_gate = Masks.probeWriteGate,
     }
     return HANDLERS
 end

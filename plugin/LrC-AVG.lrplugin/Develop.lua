@@ -6,7 +6,8 @@
 --   * catalog:getTargetPhoto() is a yielding query and runs outside any read gate: nesting it
 --     inside one deadlocks on Windows [upstream claim: vendor\automaat\plugin\LightroomMCP.lrplugin\HandlerSelection.lua:30-38].
 --     findPhotoByUuid (Photos.lua) runs outside a gate too.
---   * getDevelopSettings() runs inside withReadAccessDo; writes run inside withWriteAccessDo.
+--   * getDevelopSettings() runs inside withReadAccessDo; writes run inside Gate.write (Gate.lua: a
+--     write gate that waits up to 60 s for the catalog, and answers gate_busy when it stays held).
 --   * Every applyDevelopSettings call passes a History name, and the name starts with "AVG " (PRD FR-4.4).
 --   * Writes are read back and the read-back is returned, so the engine can verify them (Phase 0, P-12):
 --     Lightroom silently ignored a malformed CameraProfile [handle: docs\reports\phase0\S5.md "Part 1 analysis"].
@@ -18,6 +19,7 @@ local LrApplication = import 'LrApplication'
 local LrDate = import 'LrDate'
 local LrTasks = import 'LrTasks'
 
+local Gate = require 'Gate'
 local Photos = require 'Photos'
 
 local Develop = {}
@@ -138,9 +140,10 @@ function Develop.applySettings(payload)
     local catalog, photo, uuid, err = target(payload)
     if err then return nil, err end
     local t0 = LrDate.currentTime()
-    catalog:withWriteAccessDo(historyName, function()
+    local gated, busy = Gate.write(catalog, historyName, function()
         photo:applyDevelopSettings(payload.settings, historyName)
     end)
+    if not gated then return nil, busy end
     local t1 = LrDate.currentTime()
     local readBack = readSettings(catalog, photo)
     local t2 = LrDate.currentTime()
@@ -158,9 +161,10 @@ function Develop.createSnapshot(payload)
     local catalog, photo, uuid, err = target(payload)
     if err then return nil, err end
     local created
-    catalog:withWriteAccessDo("AVG snapshot", function()
+    local gated, busy = Gate.write(catalog, "AVG snapshot", function()
         created = photo:createDevelopSnapshot(name, true)
     end)
+    if not gated then return nil, busy end
     -- createDevelopSnapshot returned true in S5 [handle: docs\reports\phase0\S5.md "Part 2 analysis"].
     if created ~= true then return fail("snapshot_failed", "createDevelopSnapshot returned " .. tostring(created)) end
     local matches = findSnapshots(catalog, photo, "name", name)
@@ -177,9 +181,10 @@ function Develop.applySnapshot(payload)
     if #findSnapshots(catalog, photo, "snapshotID", id) == 0 then
         return fail("unknown_snapshot", "the target photo has no snapshot with id " .. id)
     end
-    catalog:withWriteAccessDo("AVG restore snapshot", function()
+    local gated, busy = Gate.write(catalog, "AVG restore snapshot", function()
         photo:applyDevelopSnapshot(id)
     end)
+    if not gated then return nil, busy end
     return { uuid = uuid, read_back = readSettings(catalog, photo) }
 end
 

@@ -219,9 +219,18 @@ export const COMMANDS = {
   // Plugin 0.6.0 (Hud.lua update): the HUD's state; the contract is in hud-protocol.ts.
   hud_update: hudUpdateResultSchema,
   // Plugin 0.11.0 (Masks.lua, issue #59). update_ai_settings: photo:updateAISettings() in its own write
-  // gate, timed; `gate` is what withWriteAccessDo returned, when anything. A Lightroom without the call
-  // answers feature_unavailable.
-  update_ai_settings: z.object({ ...targeted, call_ms: z.number(), command_ms: z.number(), gate: z.string().optional() }),
+  // gate. A Lightroom without the call answers feature_unavailable. Up to the first 0.12.0 it waited for
+  // the update (call_ms, `gate` what withWriteAccessDo returned); from PR C step 2b the gate is
+  // asynchronous and the answer comes at once: `status` "executed" or "queued" (Lightroom's), `state`
+  // what the update did so far (queued, running, done, failed, abandoned; probe_write_gate reports it later).
+  update_ai_settings: z.object({
+    ...targeted,
+    status: z.string().optional(),
+    state: z.string().optional(),
+    call_ms: z.number().optional(),
+    command_ms: z.number().optional(),
+    gate: z.string().optional(),
+  }),
   // create_ai_mask_dc (plugin 0.12.0): LrDevelopController.createNewMask("aiSelection", subtype) on the
   // selected photo (the target), and the mask ids getAllMasks lists that were not there before it
   // (`new_ids`, each a table CorrectionID [handle: docs\reports\phase6\masks-capture\12_probe_dc.json
@@ -235,6 +244,14 @@ export const COMMANDS = {
     stopped: z.string().optional(),
     new_ids: z.array(z.string()),
     waited_ms: z.number(),
+  }),
+  // probe_write_gate (plugin 0.12.0, PR C step 2b): an empty write gate with a 0.5 s timeout; `status`
+  // "executed" (the catalog is free) or "aborted" (another write holds it, such as a Lightroom dialog
+  // inside the update's gate), and the last update_ai_settings' record (Masks.lua).
+  probe_write_gate: z.object({
+    status: z.string(),
+    ms: z.number(),
+    update: z.object({ uuid: z.string().optional(), state: z.string(), error: z.string().optional() }).optional(),
   }),
 } as const;
 
@@ -285,4 +302,5 @@ export type CommandPayloads = {
   update_ai_settings: { photo_uuid: string; expect?: PhotoExpect };
   /** Plugin 0.12.0: on the selected photo, refused with target_mismatch unless it is target_uuid's; waits up to wait_seconds (1-15, default 12) for the mask after createNewMask; switches Lightroom to Develop. */
   create_ai_mask_dc: { target_uuid: string; subtype: string; wait_seconds?: number };
+  probe_write_gate: Record<string, never>;
 };

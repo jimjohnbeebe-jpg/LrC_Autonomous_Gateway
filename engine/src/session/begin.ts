@@ -78,6 +78,8 @@ export async function openSession(ctx: SessionContext, args: BeginArgs): Promise
     startSettings: view.settings,
     startMasks: view.masks.fingerprint,
     aiRoute: null,
+    aiPending: null,
+    endedByEngine: null,
     regions: [],
     files,
     log: {} as SessionLogData,

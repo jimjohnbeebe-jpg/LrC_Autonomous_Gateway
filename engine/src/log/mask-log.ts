@@ -32,6 +32,8 @@ export const maskPassSchema = z.strictObject({
       update_ms: z.number().optional(),
       computed_ms: z.number().optional(),
       dc_ms: z.number().optional(),
+      /** PR C step 2b: how long Lightroom's write gate stayed held before the mask computed (session\ai-update.ts). */
+      dialog_ms: z.number().optional(),
     })
     .optional(),
 });

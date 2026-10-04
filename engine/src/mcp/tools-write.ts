@@ -12,7 +12,8 @@ import { DEFAULT_LONG_EDGE, describe, ms, render, run, type ToolContext, type To
  * A write with its read-back took under 1 s in Phase 1 (0.45-1 s receipt to receipt)
  * [handle: docs\reports\phase1\PHASE1.md "Numbers"]; 30 s leaves room for a busy Lightroom.
  */
-const WRITE_TIMEOUT_MS = 30000;
+/** The plugin's write gate waits up to 60 s for the catalog (plugin\LrC-AVG.lrplugin\Gate.lua); 90 s leaves room for the write. */
+const WRITE_TIMEOUT_MS = 90000;
 
 export type SetSettingsArgs = {
   uuid: string;

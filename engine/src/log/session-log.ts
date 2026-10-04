@@ -13,8 +13,8 @@
 // photo (`target` A/B/C) and region baselines per photo. v1 logs (engine 0.3.x, the Phase 3 run)
 // are read with session-log-v1.ts. Later engines only add: optional fields (`settings`, 0.7.0;
 // `ended_by` and `hud_events`, 0.8.0; `approvals` and a pass's `approval`, 0.9.0; `lightroom`,
-// 0.13.0, and its `notices`, 0.14.0; a pass's `mask`, kind "mask", 0.16.0, log\mask-log.ts) and the
-// outcome "aborted" (0.8.0), so earlier v2 logs still read.
+// 0.13.0, and its `notices`, 0.14.0; a pass's `mask`, kind "mask", 0.16.0, log\mask-log.ts; `ended_by`
+// source "engine" with its `reason`, PR C step 2b) and the outcome "aborted" (0.8.0), so earlier v2 logs still read.
 
 import { mkdirSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -176,9 +176,12 @@ const userSource = z.enum(["hud", "menu"]);
  * Engine 0.8.0 (PHASE5_PLAN row 5): who ended the session. Claude (lr_end_session), or the user from
  * the HUD or a menu item, with the event's click id, when the engine received it, the operation an
  * Abort stopped, and `done_ms` from the event to the end (for an Abort: the photo back; AC-2).
+ * Engine 0.16.0, PR C step 2b: the engine itself, which put the photo back after a Lightroom dialog
+ * (session\ai-masks.ts autoRevert), with its `reason`.
  */
 const endedBySchema = z.strictObject({
-  source: z.enum(["claude", "hud", "menu"]),
+  source: z.enum(["claude", "hud", "menu", "engine"]),
+  reason: z.string().optional(),
   click_id: z.string().optional(),
   received: z.string().optional(),
   interrupted: z.string().nullable().optional(),

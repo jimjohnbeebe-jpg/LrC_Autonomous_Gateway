@@ -82,7 +82,7 @@ describe("lua: every plugin file", () => {
   it("finds the LrC-AVG plugin files", () => {
     const names = files.filter((f) => f.startsWith(avgPlugin)).map((f) => path.basename(f)).sort();
     expect(names).toEqual([
-      "Bridge.lua", "Catalog.lua", "Develop.lua", "Dispatch.lua", "Endpoint.lua", "Events.lua", "Hud.lua", "HudClick.lua", "HudSelection.lua", "HudState.lua", "HudText.lua", "HudView.lua",
+      "Bridge.lua", "Catalog.lua", "Develop.lua", "Dispatch.lua", "Endpoint.lua", "Events.lua", "Gate.lua", "Hud.lua", "HudClick.lua", "HudSelection.lua", "HudState.lua", "HudText.lua", "HudView.lua",
       "Info.lua", "Json.lua", "KeywordTree.lua", "Library.lua", "Log.lua", "MaskProbe.lua", "Masks.lua", "MenuAbort.lua", "MenuAccept.lua", "MenuApprove.lua", "MenuHud.lua",
       "MenuPickA.lua", "MenuPickB.lua", "MenuPickC.lua", "MenuStatus.lua", "Photos.lua",
       "PluginInfoProvider.lua", "PluginInit.lua", "Prefs.lua", "Preview.lua", "Sockets.lua",
@@ -165,6 +165,16 @@ describe("lua: LrC-AVG.lrplugin", () => {
     const code = codeOnly(source).split("\n");
     expect(code).toHaveLength(3);
     expect(code[2]).toContain("pcall(f)");
+  });
+
+  it("opens every catalog write gate through Gate.lua, which passes timeoutParams and answers gate_busy for aborted (issue #59, PR C step 2b)", () => {
+    for (const file of files.filter((f) => f.startsWith(avgPlugin) && path.basename(f) !== "Gate.lua")) {
+      expect(codeOnly(readFileSync(file, "utf8")), path.basename(file)).not.toMatch(/with(Prolonged)?WriteAccessDo/);
+    }
+    const gate = codeOnly(readFileSync(path.join(avgPlugin, "Gate.lua"), "utf8"));
+    for (const [call] of gate.matchAll(/withWriteAccessDo\(([^\n]*)\)/g)) expect(call, call).toMatch(/\{ timeout = seconds/);
+    expect(gate).toMatch(/if status == "" then return nil, busy\(name, seconds\) end/);
+    expect(codeOnly(readFileSync(path.join(avgPlugin, "Masks.lua"), "utf8"))).toMatch(/Gate\.async\(catalog, ""|LrTasks\.pcall\(Gate\.async, catalog, ""/);
   });
 
   it("passes a History name to every applyDevelopSettings call (rule 03-lightroom)", () => {

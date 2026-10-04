@@ -2,11 +2,13 @@
 // correction of each kind, and create / edit / delete applied to a copy of the corrections. Field names
 // come only from mask-table.ts (rule 03). A new entry is built in the captured shape: every correction
 // field the captures show, its sliders at 0 but those asked for, and one component of its kind
-// [handle: docs\reports\phase6\masks-capture\3_dump-1.json]. Combining components (add, subtract,
-// intersect), inverting a mask of several components, and the kinds below are refused with a reason:
-// the captures saw only single-component masks, each with MaskBlendMode 0. A person's mask is placed by
-// a point on the person (its ReferencePoint, as both captured people masks carry one [handle:
-// docs\reports\phase6\masks-capture\capture3-templates.json]).
+// [handle: docs\reports\phase6\masks-capture\3_dump-1.json]; an AI component in Adobe's own form
+// (mask-table.ts AI_KINDS). Combining components (add, subtract, intersect), inverting a mask of several
+// components, and the kinds below are refused with a reason: the captures saw only single-component
+// masks, each with MaskBlendMode 0. One person's mask is placed by a point on the person (its
+// ReferencePoint, as both captured people masks carry one [handle:
+// docs\reports\phase6\masks-capture\capture3-templates.json]); every other AI kind gets the photo's
+// centre, "0.500000 0.500000", as in every Adobe adaptive preset (mask-ai-kinds.ts).
 
 import {
   AI_KINDS,
@@ -67,10 +69,10 @@ export type MaskOp =
 
 export type OpResult = { entries: Correction[]; id: string; kind: string; before: MaskSummary | null; after: MaskSummary | null };
 
-/** Kinds Claude may ask for that are refused, each with its reason (none was captured; the reasons are [inference]). */
+/** Kinds Claude may ask for that are refused, each with its reason (the reasons are [inference]). */
 export const REFUSED_KINDS: Readonly<Record<string, string>> = {
-  people: "name the part: people_entire or people_face_skin, with the person's point (other parts were not captured on this Lightroom yet)",
-  landscape: "name the category: landscape_vegetation or landscape_sky (other categories were not captured on this Lightroom yet)",
+  people: "name the part: people_<part> for every person in the photo (people_face_skin, people_hair, ...), or person_entire / person_face_skin with a point on one person",
+  landscape: "name the category: landscape_<category> (landscape_sky, landscape_vegetation, landscape_water, ...), one mask each",
   brush: "brush painting needs strokes, which the mask table cannot be given",
   objects: "Select Objects needs a stroke or a box drawn in Lightroom",
   color_range: "colour range needs a colour sampled on the photo in Lightroom",
@@ -141,12 +143,19 @@ const rangeTemplate = (): Record<string, unknown> => ({ [RANGE.type]: 2, [RANGE.
 
 /**
  * One component of a new correction, as captured for its kind (radial: 3_dump-1.json entry 1; feather
- * 50 is [inference]). An AI kind gets its AI_KINDS fields and, for a person, the point as its
- * ReferencePoint, written "x y" with 6 decimals as captured ("0.539062 0.650000", capture3-templates.json).
+ * 50 is [inference]). An AI kind in Adobe's form: its AI_KINDS fields, ReferencePoint (a person's point,
+ * else the centre), written "x y" with 6 decimals as Lightroom writes it ("0.539062 0.650000",
+ * capture3-templates.json), and ErrorReason 0. The ids (MaskID here, CorrectionID in newCorrection) are
+ * not in Adobe's presets, but the engine needs them to find the entry again, and Lightroom kept the
+ * ids written in captures 1-3 [handle: docs\reports\phase6\masks-capture\capture3-4_landscape_1.json `written` and `after_write`
+ * CorrectionID, MaskID].
  */
 function newComponent(kind: MaskKind, name: string, g: Geometry, point: Point | null): Component {
   const base: Component = { [M.id]: newMaskId(), [M.syncId]: newSyncId(), [M.name]: name, [M.active]: true, [M.inverted]: false, [M.blend]: 0, [M.value]: 1 };
-  if (isAiKind(kind)) return { ...base, [M.what]: WHAT.image, ...AI_KINDS[kind].fields, ...(point ? { [IMAGE.referencePoint]: `${point.x.toFixed(6)} ${point.y.toFixed(6)}` } : {}) };
+  if (isAiKind(kind)) {
+    const at = point ?? { x: 0.5, y: 0.5 };
+    return { ...base, [M.what]: WHAT.image, ...AI_KINDS[kind].fields, [IMAGE.referencePoint]: `${at.x.toFixed(6)} ${at.y.toFixed(6)}`, [IMAGE.errorReason]: 0 };
+  }
   const what = kind === "linear" ? WHAT.linear : kind === "radial" ? WHAT.radial : WHAT.range;
   const fixed = kind === "radial" ? { [RADIAL.angle]: 0, [RADIAL.feather]: 50, [RADIAL.midpoint]: 50, [RADIAL.roundness]: 0, [RADIAL.flipped]: true, [RADIAL.version]: 2 } : {};
   return { ...base, [M.what]: what, ...fixed, ...geometryFields(kind, g, null) };
@@ -177,7 +186,7 @@ export function newCorrection(kind: MaskKind, name: string, g: Geometry, point: 
 
 const KINDS: readonly MaskKind[] = ["linear", "radial", "luminance", ...(Object.keys(AI_KINDS) as MaskKind[])];
 
-/** A person's point, required for people kinds and refused for the others. */
+/** A person's point, required for one-person kinds and refused for the others. */
 function pointFor(kind: MaskKind, point: Point | undefined): Point | null {
   const needs = isAiKind(kind) && AI_KINDS[kind].point;
   if (needs && !point) throw new MaskError("INVALID_ARGUMENTS", `A ${kind} mask needs point: {x, y} in 0-1 on the person (the face, for face skin).`);

@@ -172,7 +172,6 @@ export class LightroomSim {
     );
     plugin.handlers.set("hud_update", (p) => this.hud.update(p));
     this.library.install(plugin);
-    installMasks(this, plugin);
     plugin.handlers.set("get_context", (p) => on(p, (u) => this.context(u)));
     plugin.handlers.set("get_settings", (p) => on(p, (u) => ok({ uuid: u, settings: luaize(this.settingsOf(u)) })));
     plugin.handlers.set("apply_settings", (p) =>
@@ -207,6 +206,7 @@ export class LightroomSim {
       }),
     );
     plugin.handlers.set("export_preview", (p, id) => on(p, (u) => this.exportPreview(u, p, id)));
+    installMasks(this, plugin); // last: it holds the writes and exports above while the AI update holds the gate
   }
 
   /** get_context of a photo (Develop.lua getContext). */

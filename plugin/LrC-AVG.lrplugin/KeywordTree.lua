@@ -34,6 +34,8 @@
 local LrStringUtils = import 'LrStringUtils'
 local LrTasks = import 'LrTasks'
 
+local Gate = require 'Gate'
+
 local KeywordTree = {}
 
 KeywordTree.SEPARATOR = "|"
@@ -165,7 +167,7 @@ function KeywordTree.resolve(catalog, paths)
             end
         end
         if next(missing) then
-            catalog:withWriteAccessDo("AVG set keywords", function()
+            Gate.run(catalog, "AVG set keywords", function()
                 for k, level in pairs(missing) do
                     -- createKeyword(name, synonyms, includeOnExport, parent, returnExisting) [handle: LrCatalog page].
                     known[k] = catalog:createKeyword(level.name, {}, true, level.parent, true)

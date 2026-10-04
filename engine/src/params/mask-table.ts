@@ -1,5 +1,5 @@
 // The mask table of getDevelopSettings() (GitHub issue #59, PR C step 2): the only file that names
-// its fields (rule 03). Every field and type string below comes from Jim's two masks captures on LrC
+// its fields (rule 03). Every field and type string below comes from Jim's masks captures on LrC
 // 15.6, never from documentation [handle: docs\reports\phase6\masks-capture\3_dump-1.json, the
 // five-entry table (linear, radial, sky, subject, luminance); capture2-templates.json, the background
 // entry]; engine\tests\params-mask-table.test.ts checks that each constant appears in those files.
@@ -17,6 +17,9 @@
 
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
+import { AI_KIND_DATA, type AiKind } from "./mask-ai-kinds.js";
+
+export type { AiKind } from "./mask-ai-kinds.js";
 
 /** The top-level key [handle: docs\reports\phase6\masks-capture\check.json `3_dumps.mask_key`]. */
 export const MASK_TABLE_KEY = "MaskGroupBasedCorrections";
@@ -43,7 +46,8 @@ export const M = { what: "What", id: "MaskID", syncId: "MaskSyncID", name: "Mask
 export const WHAT = { linear: "Mask/Gradient", radial: "Mask/CircularGradient", image: "Mask/Image", range: "Mask/RangeMask" } as const;
 export const LINEAR = { zeroX: "ZeroX", zeroY: "ZeroY", fullX: "FullX", fullY: "FullY" } as const;
 export const RADIAL = { top: "Top", left: "Left", bottom: "Bottom", right: "Right", angle: "Angle", feather: "Feather", midpoint: "Midpoint", roundness: "Roundness", flipped: "Flipped", version: "Version" } as const;
-export const IMAGE = { subType: "MaskSubType", subCategory: "MaskSubCategoryID", maskVersion: "MaskVersion", digest: "MaskDigest", referencePoint: "ReferencePoint" } as const;
+/** ErrorReason: Lightroom added it, 0, to every AI entry written in capture 3 [handle: docs\reports\phase6\masks-capture\capture3-4_people_entire.json `after_write`]. */
+export const IMAGE = { subType: "MaskSubType", subCategory: "MaskSubCategoryID", maskVersion: "MaskVersion", digest: "MaskDigest", referencePoint: "ReferencePoint", errorReason: "ErrorReason" } as const;
 export const RANGE = { holder: "CorrectionRangeMask", lumRange: "LumRange", type: "Type", version: "Version", sampleType: "SampleType", sampleInfo: "LuminanceDepthSampleInfo", invert: "Invert" } as const;
 /**
  * Fields Lightroom computes for an AI component: the digests (new ones appeared after
@@ -54,6 +58,14 @@ export const RANGE = { holder: "CorrectionRangeMask", lumRange: "LumRange", type
  */
 export const RECOMPUTED: readonly string[] = ["MaskDigest", "InputDigest", "LocalInputDigest", "InputDigestVersion", "LocalInputDigestVersion", "ModelVersion", "Origin", "FullMaskSize", "WholeImageArea"];
 const recomputed = new Set(RECOMPUTED);
+/**
+ * Fields left out of the read-back check only: right after the write of capture 3's copies, Lightroom
+ * read back ReferencePoint "0.500000 0.500000" and CorrectionReferenceX/Y 0.5 for a person's point,
+ * and the written values again once the mask had computed; it added ErrorReason 0 [handle:
+ * docs\reports\phase6\masks-capture\capture3-4_people_entire.json `written`, `after_write`, `final`].
+ * ErrorReason is Lightroom's answer, which session\ai-update.ts reads.
+ */
+const settling = new Set<string>(["ReferencePoint", "ErrorReason", "CorrectionReferenceX", "CorrectionReferenceY"]);
 
 /** A local slider: its stored field, the panel's scale (panel = scale x stored) and the panel's range. */
 export type LocalParam = { field: string; scale: number; min: number; max: number };
@@ -140,7 +152,7 @@ function covers(written: unknown, got: unknown): boolean {
   if (written && typeof written === "object" && got && typeof got === "object") {
     if (isEmpty(written) || isEmpty(got)) return isEmpty(written) && isEmpty(got);
     if (Array.isArray(written) && (!Array.isArray(got) || written.length !== got.length)) return false;
-    return Object.entries(written).every(([k, x]) => recomputed.has(k) || (k in got && covers(x, (got as Record<string, unknown>)[k])));
+    return Object.entries(written).every(([k, x]) => recomputed.has(k) || settling.has(k) || (k in got && covers(x, (got as Record<string, unknown>)[k])));
   }
   return written === got;
 }
@@ -164,42 +176,20 @@ export function verifyTable(written: readonly Correction[], readBack: Readonly<R
 }
 
 /**
- * The AI kinds as data, one entry per kind: the fields that tell it (MaskSubType, MaskSubCategoryID),
- * LrDevelopController's subtype when that route made it, and whether it needs a point on the photo.
- *   - subject 1, sky 2, background 0 + 22 [handle: docs\reports\phase6\masks-capture\3_dump-1.json
- *     entries 2-3; capture2-templates.json `background`]; LrDevelopController made all three
- *     [handle: 12_probe_dc.json; capture2-templates.json];
- *   - people (Entire Person 0 + 20036, Face Skin 0 + 2) and landscape (Vegetation 0 + 50005, Sky 0 +
- *     50006), each in its own correction [handle: capture3-templates.json, _DSC0028.NEF]. Capture 2's
- *     createNewMask made no people or landscape mask [handle: capture2-transcript.txt], so they have
- *     no fallback. 20036 is one person on one photo: that it holds for every person is [unverified];
- *     other people parts and landscape categories were not offered on that photo, so they are refused.
- * A component is written with these fields only, plus a person's point (ReferencePoint, as captured
- * "x y" in 0-1): digests and the photo's own fields (ModelVersion, Origin, FullMaskSize,
- * WholeImageArea, and ReferencePoint but for people) are left out. That shape was never captured: the
- * copies that computed after update_ai_settings dropped only their digests and were made on the same
- * photo [handle: check.json `7_sky.dropped`; capture3-check.json]. Whether the stripped entry computes,
- * on the same photo or another, is [unverified] until Jim's mask tools check; a mask that does not
- * compute is taken out again and falls back (ai-masks.ts).
+ * The AI kinds (mask-ai-kinds.ts has the numbers and where each comes from): the fields that tell a
+ * kind (MaskSubType, MaskSubCategoryID, MaskVersion 1), LrDevelopController's subtype when that route
+ * made it, and whether it needs a point on the photo. mask-ops.ts writes a new component in Adobe's
+ * own form, as Lightroom's adaptive presets carry it: these fields, ReferencePoint, ErrorReason 0; no
+ * digests and none of the photo's own fields (ModelVersion, Origin, FullMaskSize, WholeImageArea).
  */
-export type AiKind = "subject" | "sky" | "background" | "people_entire" | "people_face_skin" | "landscape_vegetation" | "landscape_sky";
 export type MaskKind = "linear" | "radial" | "luminance" | AiKind;
 type AiSpec = { dc: string | null; label: string; point: boolean; fields: Readonly<Record<string, number>> };
-const ai = (subType: number, subCategory: number | null, label: string, dc: string | null, point = false): AiSpec => ({
-  dc,
-  label,
-  point,
-  fields: { [IMAGE.subType]: subType, ...(subCategory !== null ? { [IMAGE.subCategory]: subCategory } : {}), [IMAGE.maskVersion]: 1 },
-});
-export const AI_KINDS: Readonly<Record<AiKind, AiSpec>> = {
-  subject: ai(1, null, "Subject", "subject"),
-  sky: ai(2, null, "Sky", "sky"),
-  background: ai(0, 22, "Background", "background"),
-  people_entire: ai(0, 20036, "Person", null, true),
-  people_face_skin: ai(0, 2, "Person - Facial Skin", null, true),
-  landscape_vegetation: ai(0, 50005, "Vegetation", null),
-  landscape_sky: ai(0, 50006, "Landscape Sky", null),
-};
+export const AI_KINDS = Object.fromEntries(
+  Object.entries(AI_KIND_DATA).map(([k, d]) => [
+    k,
+    { dc: d.dc, label: d.label, point: d.point, fields: { [IMAGE.subType]: d.subType, ...(d.subCategory !== null ? { [IMAGE.subCategory]: d.subCategory } : {}), [IMAGE.maskVersion]: 1 } },
+  ]),
+) as unknown as Readonly<Record<AiKind, AiSpec>>;
 export const isAiKind = (k: string): k is AiKind => k in AI_KINDS;
 export const KIND_LABELS: Readonly<Record<MaskKind, string>> = {
   linear: "Linear Gradient",
@@ -244,6 +234,11 @@ export const newSyncId = (): string => randomUUID().replace(/-/g, "").toUpperCas
 
 /** Whether an AI component has computed: Lightroom writes its digest once it has [handle: check.json `7_sky.new_digests`]. */
 export const computed = (m: Component): boolean => typeof m[IMAGE.digest] === "string" && m[IMAGE.digest] !== "";
+/** An AI component's ErrorReason when it is a number other than 0 (Lightroom found nothing to mask [unverified until capture 4 row 4]), else null. */
+export function aiError(m: Component): number | null {
+  const n = Number(m[IMAGE.errorReason] ?? 0);
+  return Number.isFinite(n) && n !== 0 ? n : null;
+}
 
 // ---- summaries: a correction as the tools show it (mask-ops.ts, session\masks.ts, the session log)
 

@@ -1,0 +1,8 @@
+[8:14:05 AM] Lightroom 15.6, plugin 0.14.0
+[8:14:05 AM] Snapshot taken. Writing one Vegetation mask (no session, no renders)...
+[8:14:06 AM] Lightroom asked to compute it. Waiting up to 3 minutes for its result. Do not click in Lightroom.
+[8:14:20 AM] RESULT: computed in 14671 ms.
+  ? In Develop's Masks panel (Shift+W), does 'AVG diag vegetation' cover the trees and plants? -> y
+[8:14:36 AM] PUT BACK: YES (no masks left)
+  ? Does 20260907-_OZ80099.NEF look as before, with no 'AVG diag' mask, and does Lightroom respond normally? -> y
+[8:14:39 AM] Diagnostic done: computed in 14671 ms.

@@ -50,12 +50,13 @@ const approvedPass = (s: Session, t: Target): number => (s.approval?.target === 
 
 /**
  * The pass waiting for the user's approval, or null: the edited photo's last pass, from 1 up, not yet
- * approved, while another pass may follow.
+ * approved, while another pass may follow. A converged photo can still take a mask pass (masks.ts),
+ * so its last pass waits for approval too; only the cap ends the passes.
  */
 export function pendingApproval(s: Session): { target: Target; pass: number } | null {
   if (!approveEachPass(s) || s.abort) return null;
   const t = edited(s);
-  if (!t || t.passes < 1 || t.endReason !== null || t.passes >= s.maxPasses) return null;
+  if (!t || t.passes < 1 || t.endReason === "cap_reached" || t.passes >= s.maxPasses) return null;
   return approvedPass(s, t) >= t.passes ? null : { target: t, pass: t.passes };
 }
 
@@ -105,7 +106,6 @@ export function approve(ctx: SessionContext, s: Session, by: ApprovalBy, pass?: 
 
 function notWaitingReason(s: Session, t: Target | null): string {
   if (!t) return "no copy is picked yet (a Variants session's passes are approved after the pick)";
-  if (t.endReason === "converged") return "the session converged; no further pass follows";
   if (t.endReason === "cap_reached" || t.passes >= s.maxPasses) return `all ${s.maxPasses} passes are used`;
   if (t.passes < 1) return "no pass after pass 0 has been made yet (pass 1 needs no approval)";
   return `pass ${t.passes} is approved already`;
@@ -142,11 +142,11 @@ async function waitForWake(s: Session, waitMs: number): Promise<ApprovalWake | "
 }
 
 /**
- * Before step n+1 of photo `t`: wait for the approval of pass n, when one is needed. Returns what the
+ * Before step n+1 of photo `t` (`tool`: the tool making the pass, for the message): wait for the approval of pass n, when one is needed. Returns what the
  * step goes ahead on (null: no approval needed); throws SESSION_ENDED on the user's Abort and
  * AWAITING_APPROVAL on the user's Accept or once `waitMs` pass.
  */
-export async function awaitApproval(ctx: SessionContext, s: Session, t: Target): Promise<StepApproval | null> {
+export async function awaitApproval(ctx: SessionContext, s: Session, t: Target, tool = "lr_step"): Promise<StepApproval | null> {
   if (!approveEachPass(s) || t.passes < 1) return null;
   const given = (waited: number): StepApproval | null => (s.approval && approvedPass(s, t) >= t.passes ? { pass: s.approval.pass, by: s.approval.by, waited_ms: waited } : null);
   const already = given(0);
@@ -170,7 +170,7 @@ export async function awaitApproval(ctx: SessionContext, s: Session, t: Target):
   throw new ToolError(
     "AWAITING_APPROVAL",
     `Pass ${t.passes} waits for the user's approval (${Math.round(waited / 1000)} s waited); nothing was written and the pass is not used. ` +
-      `Tell the user pass ${t.passes} is waiting for their Approve in the LrC-AVG HUD (or their go-ahead in chat, then lr_approve_pass), then call lr_step again.`,
+      `Tell the user pass ${t.passes} is waiting for their Approve in the LrC-AVG HUD (or their go-ahead in chat, then lr_approve_pass), then call ${tool} again.`,
     true,
     details,
   );

@@ -5,9 +5,11 @@ import type { BridgeClient, HudStage } from "../bridge/index.js";
 import type { IntentLibrary, LoadedIntent } from "../intents/index.js";
 import type { SessionLogData, SessionLogFiles } from "../log/index.js";
 import type { Metrics, Region, RegionBox } from "../metrics/index.js";
-import type { CanonicalSettings, ParamMap } from "../params/index.js";
+import type { CanonicalSettings, Geometry, ParamMap } from "../params/index.js";
 import type { RenderedPreview } from "../preview/index.js";
 import type { KnownLogFolders, PageRead } from "../settings/index.js";
+import type { AiJob } from "./ai-masks.js";
+import type { AiTimings } from "./ai-update.js";
 import type { Limits, Slope } from "./plan.js";
 
 export type SessionOutput = { json: Record<string, unknown>; image?: Buffer; log?: Record<string, unknown> };
@@ -51,6 +53,27 @@ export type EndArgs = { session_id: string; outcome: "accept" | "revert" };
  * [stated: Jim, 2026-09-30, "Go with recommendations" on the PHASE5_PLAN row 6 plan, D2-A].
  */
 export type ApproveArgs = { session_id: string; confirmed: boolean };
+/** The mask tools (masks.ts, GitHub issue #59): each change is a pass of the session's photo [stated: Jim, 2026-10-03, "Own pass (Recommended)"]. */
+export type ListMasksArgs = { session_id: string; target?: TargetId | undefined };
+type MaskPassArgs = { session_id: string; target?: TargetId | undefined; rationale: string; return_image?: ReturnImage | undefined };
+export type CreateMaskArgs = MaskPassArgs & {
+  kind: string;
+  name?: string | undefined;
+  geometry?: Geometry | undefined;
+  /** People kinds: a point on the person (0-1). */
+  point?: { x: number; y: number } | undefined;
+  sliders?: Record<string, number> | undefined;
+};
+export type EditMaskArgs = MaskPassArgs & {
+  mask_id: string;
+  name?: string | undefined;
+  active?: boolean | undefined;
+  inverted?: boolean | undefined;
+  geometry?: Geometry | undefined;
+  sliders?: Record<string, number> | undefined;
+  combine?: { mode: string } | undefined;
+};
+export type DeleteMaskArgs = MaskPassArgs & { mask_id: string };
 
 export type SessionDeps = {
   client: BridgeClient;
@@ -73,6 +96,8 @@ export type SessionDeps = {
   copiesTimeoutMs?: number;
   /** How long lr_step waits for an approval (tests shorten it); approval.ts APPROVAL_WAIT_MS by default. */
   approvalWaitMs?: number;
+  /** The AI mask waits (tests shorten them); ai-update.ts AI_TIMINGS by default. */
+  aiTimings?: Partial<AiTimings>;
   /** The HUD (hud\publisher.ts, PHASE5_PLAN row 5); no HUD updates without it. */
   hud?: HudSink;
 };
@@ -84,7 +109,7 @@ export type SessionDeps = {
  * know first).
  */
 export type HudSink = {
-  stage(s: Session, stage: HudStage, options?: { note?: string; open?: boolean }): void;
+  stage(s: Session, stage: HudStage, options?: { note?: string; open?: boolean; closeAfter?: number }): void;
   settle(s: Session): Promise<void>;
 };
 
@@ -112,8 +137,13 @@ export type HudNotice = { action: "pick"; variant: VariantId; source: UserSource
 /** What every session operation works with: the dependencies, with the clock and id source resolved. */
 export type SessionContext = { deps: SessionDeps; now: () => Date; newId: () => string };
 
-/** A write with its read-back took ~0.39 s in Phase 2 [handle: docs\reports\phase2\PHASE2.md "Numbers"]; 30 s leaves room. */
-export const WRITE_TIMEOUT_MS = 30000;
+/**
+ * A write with its read-back took ~0.39 s in Phase 2 [handle: docs\reports\phase2\PHASE2.md "Numbers"].
+ * The plugin's write gate waits up to 60 s for the catalog (plugin\LrC-AVG.lrplugin\Gate.lua), so the
+ * engine waits 90 s: a write queued behind a Lightroom dialog gets its own answer, not a timeout
+ * (that the plugin's gate waits behind a dialog is [unverified] until masks capture 4).
+ */
+export const WRITE_TIMEOUT_MS = 90000;
 /**
  * create_virtual_copies: the plugin waits up to 10 s for its selection lock [handle:
  * plugin\LrC-AVG.lrplugin\Catalog.lua Catalog.LOCK_WAIT_SECONDS], then makes each copy; S6's copies
@@ -137,6 +167,8 @@ export type Rendered = {
   height: number;
   timings: RenderedPreview["timings"];
   settings: CanonicalSettings;
+  /** The mask table it shows (params\mask-table.ts tableInfo fingerprint). */
+  masks: string;
   /** The long edge the render was asked for (a session preview may use another than the session's). */
   longEdge: number;
   preview: RenderedPreview;
@@ -184,6 +216,14 @@ export type Session = {
   active: Target;
   snapshot: { name: string; id: string };
   startSettings: CanonicalSettings;
+  /** The mask table before the session (its fingerprint): a revert must bring it back too. */
+  startMasks: string;
+  /** How AI masks were last made (ai-masks.ts): the table route, or LrDevelopController after it failed. */
+  aiRoute: "table" | "dc" | null;
+  /** An update_ai_settings whose result Lightroom has not shown yet (ai-update.ts, D16): while set, the session writes, exports, renders and reverts nothing (io.ts). */
+  aiPending: AiPending | null;
+  /** Why the engine itself ended the session (ai-revert.ts autoRevert: a dialog, or a Lightroom restart); the manager then closes it. */
+  endedByEngine: string | null;
   regions: RegionState[];
   files: SessionLogFiles;
   log: SessionLogData;
@@ -204,6 +244,21 @@ export type Session = {
   approval: { target: TargetId; pass: number; by: ApprovalBy; at: string } | null;
   /** While a step waits for an approval (approval.ts): what ended the wait, and how to end it. */
   approvalWait: ApprovalWait | null;
+};
+
+/**
+ * An AI update Lightroom has not answered (ai-update.ts, D16). It stays until a read shows the entry's digest
+ * or ErrorReason (or the entry gone), Lightroom reports the update failed, or Lightroom restarts.
+ */
+export type AiPending = {
+  since: string;
+  kind: string;
+  /** The pass's photo and entry: what a read checks, and what a revert after a restart takes out (ai-revert.ts). */
+  job: AiJob;
+  /** hello's process_started_at when the update was sent: another one at a reconnect is a Lightroom restart (restart.ts). */
+  process: string | null;
+  /** No result within the wait (LIGHTROOM_STUCK): writes stay refused until the result or a restart. */
+  stuck: boolean;
 };
 
 /** What ends a step's wait for an approval; the strongest seen before the step resumes wins (approval.ts). */

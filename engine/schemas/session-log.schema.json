@@ -350,7 +350,8 @@
             "type": "string",
             "enum": [
               "pass0",
-              "step"
+              "step",
+              "mask"
             ]
           },
           "target": {
@@ -2076,6 +2077,302 @@
               "waited_ms"
             ],
             "additionalProperties": false
+          },
+          "mask": {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "enum": [
+                  "create",
+                  "edit",
+                  "delete"
+                ]
+              },
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "before": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string"
+                      },
+                      "active": {
+                        "type": "boolean"
+                      },
+                      "inverted": {
+                        "type": "boolean"
+                      },
+                      "components": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "sliders": {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {
+                          "type": "number"
+                        }
+                      },
+                      "geometry": {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {}
+                      },
+                      "computed": {
+                        "type": "boolean"
+                      },
+                      "instance": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "people": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "top": {
+                              "type": "number"
+                            },
+                            "left": {
+                              "type": "number"
+                            },
+                            "bottom": {
+                              "type": "number"
+                            },
+                            "right": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "top",
+                            "left",
+                            "bottom",
+                            "right"
+                          ],
+                          "additionalProperties": false
+                        }
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                      "kind",
+                      "active",
+                      "inverted",
+                      "components",
+                      "sliders"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "after": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string"
+                      },
+                      "active": {
+                        "type": "boolean"
+                      },
+                      "inverted": {
+                        "type": "boolean"
+                      },
+                      "components": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "sliders": {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {
+                          "type": "number"
+                        }
+                      },
+                      "geometry": {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {}
+                      },
+                      "computed": {
+                        "type": "boolean"
+                      },
+                      "instance": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "people": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "top": {
+                              "type": "number"
+                            },
+                            "left": {
+                              "type": "number"
+                            },
+                            "bottom": {
+                              "type": "number"
+                            },
+                            "right": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "top",
+                            "left",
+                            "bottom",
+                            "right"
+                          ],
+                          "additionalProperties": false
+                        }
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                      "kind",
+                      "active",
+                      "inverted",
+                      "components",
+                      "sliders"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "ai": {
+                "type": "object",
+                "properties": {
+                  "route": {
+                    "type": "string",
+                    "enum": [
+                      "table",
+                      "dc"
+                    ]
+                  },
+                  "fallback": {
+                    "type": "string"
+                  },
+                  "update_ms": {
+                    "type": "number"
+                  },
+                  "computed_ms": {
+                    "type": "number"
+                  },
+                  "dc_ms": {
+                    "type": "number"
+                  },
+                  "dialog_ms": {
+                    "type": "number"
+                  },
+                  "people": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "top": {
+                          "type": "number"
+                        },
+                        "left": {
+                          "type": "number"
+                        },
+                        "bottom": {
+                          "type": "number"
+                        },
+                        "right": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "top",
+                        "left",
+                        "bottom",
+                        "right"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "instance": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "probe": {
+                    "type": "object",
+                    "properties": {
+                      "update_ms": {
+                        "type": "number"
+                      },
+                      "computed_ms": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "update_ms",
+                      "computed_ms"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "route"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "op",
+              "id",
+              "name",
+              "kind",
+              "before",
+              "after"
+            ],
+            "additionalProperties": false
           }
         },
         "required": [
@@ -2734,8 +3031,12 @@
           "enum": [
             "claude",
             "hud",
-            "menu"
+            "menu",
+            "engine"
           ]
+        },
+        "reason": {
+          "type": "string"
         },
         "click_id": {
           "type": "string"
@@ -2772,7 +3073,8 @@
               "hud_abort",
               "hud_accept",
               "hud_pick",
-              "hud_approve_pass"
+              "hud_approve_pass",
+              "hud_put_back"
             ]
           },
           "source": {

@@ -3,7 +3,8 @@
 //            Phase 3 added `session_id` and `region` to lr_get_preview, `session_id` to lr_get_metrics).
 //   session  (tools-session.ts): lr_begin_session, lr_step, lr_probe, lr_set_regions, lr_end_session,
 //            lr_get_session_log (Phase 3; the loop is session\manager.ts); lr_select_variant (Phase 4);
-//            lr_approve_pass (Phase 5).
+//            lr_approve_pass (Phase 5); lr_list_masks, lr_create_mask, lr_edit_mask, lr_delete_mask
+//            (engine 0.16.0, GitHub issue #59; their definitions are defs-masks.ts).
 //   intents  (tools-intents.ts): lr_list_intents, lr_get_intent, lr_save_intent (Phase 3).
 //   propagation (tools-propagation.ts): lr_sync_series (Phase 4; the sync is sync\sync.ts) and
 //            lr_create_preset_from_active (Phase 4; the preset is presets\create.ts).
@@ -17,7 +18,7 @@
 // both go through the same code. Every call is written to the tool log.
 
 import type { HudPublisher } from "../hud/index.js";
-import type { ApproveArgs, BeginArgs, EndArgs, ProbeArgs, RegionArgs, SelectArgs, SessionManager, StepArgs } from "../session/index.js";
+import type { ApproveArgs, BeginArgs, CreateMaskArgs, DeleteMaskArgs, EditMaskArgs, EndArgs, ListMasksArgs, ProbeArgs, RegionArgs, SelectArgs, SessionManager, StepArgs } from "../session/index.js";
 import type { ToolError } from "./errors.js";
 import {
   getSelectedPhotos,
@@ -36,7 +37,7 @@ import {
 import { getActivePhotoContext, getMetrics, getPreview, type MetricsArgs, type PreviewArgs } from "./tools-context.js";
 import { getIntent, listIntents, saveIntent, type SaveIntentArgs } from "./tools-intents.js";
 import { createPresetFromActive, syncSeries, type CreatePresetArgs, type SyncSeriesArgs } from "./tools-propagation.js";
-import { approvePass, beginSession, endSession, getSessionLog, probe, selectVariant, setRegions, step } from "./tools-session.js";
+import { approvePass, beginSession, createMask, deleteMask, editMask, endSession, getSessionLog, listMasks, probe, selectVariant, setRegions, step } from "./tools-session.js";
 import { createContext, type LastRender, type ToolContext, type ToolOutput, type ToolsDeps } from "./tools-shared.js";
 import { setSettings, type SetSettingsArgs } from "./tools-write.js";
 
@@ -60,6 +61,11 @@ export class Tools {
   /** The HUD's updates (for the checks: its stats); null without sessions or with `hud: false`. */
   hud(): HudPublisher | null {
     return this.ctx.hud;
+  }
+
+  /** The open session's HUD note while an operation runs, for MCP progress notifications (server.ts); null otherwise. */
+  progressNote(): string | null {
+    return this.ctx.sessions?.workNote() ?? null;
   }
 
   /** Log a call refused before it reached a tool (unknown tool, invalid arguments; server.ts). */
@@ -113,6 +119,24 @@ export class Tools {
 
   getSessionLog(args: { session_id: string }): Promise<ToolOutput> {
     return getSessionLog(this.ctx, args);
+  }
+
+  // --- Masks, inside a session.
+
+  listMasks(args: ListMasksArgs): Promise<ToolOutput> {
+    return listMasks(this.ctx, args);
+  }
+
+  createMask(args: CreateMaskArgs): Promise<ToolOutput> {
+    return createMask(this.ctx, args);
+  }
+
+  editMask(args: EditMaskArgs): Promise<ToolOutput> {
+    return editMask(this.ctx, args);
+  }
+
+  deleteMask(args: DeleteMaskArgs): Promise<ToolOutput> {
+    return deleteMask(this.ctx, args);
   }
 
   // --- Intents.

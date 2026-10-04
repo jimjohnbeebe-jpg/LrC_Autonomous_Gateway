@@ -25,13 +25,14 @@ const clamp = (n: number, lo: number, hi: number): number => Math.min(hi, Math.m
 const round = (n: number, places: number): number => Math.round(n * 10 ** places) / 10 ** places;
 
 /** The HUD's state for the session at `stage`: the photo the running operation works on, else the last one. */
-export function hudState(s: Session, stage: HudStage, note?: string): HudState {
+export function hudState(s: Session, stage: HudStage, note?: string, closeAfter?: number): HudState {
   const t = s.work?.target ?? s.active;
   const pass = s.work?.pass ?? t.passes;
   const last = lastPass(s, t);
   const text = note ?? s.work?.note;
+  const ended = (HUD_END_STAGES as readonly string[]).includes(stage);
   // approve_each_pass (PHASE5_PLAN row 6): Approve is on while a pass waits for the user's approval.
-  const waiting = (HUD_END_STAGES as readonly string[]).includes(stage) ? null : pendingApproval(s);
+  const waiting = ended ? null : pendingApproval(s);
   return {
     session_id: s.id,
     stage,
@@ -42,10 +43,14 @@ export function hudState(s: Session, stage: HudStage, note?: string): HudState {
     session_photos: [s.master, ...s.variants].map((x) => x.uuid).slice(0, HUD_LIMITS.photos),
     ...(stage === "awaiting_pick" ? { variants: s.variants.map((v) => v.id as VariantId) } : {}),
     ...(waiting ? { approve_pass: clamp(waiting.pass, 1, HUD_LIMITS.pass) } : {}),
-    ...(last ? { deltas: last.changes.slice(0, HUD_LIMITS.rows).map(delta), guardrail: hudGuardrail(last, s.limits) } : {}),
+    ...(last ? { deltas: (last.mask ? maskDeltas(last.mask, last.guardrail_actions.some((a) => a.kind === "reverted")) : last.changes.map(delta)).slice(0, HUD_LIMITS.rows), guardrail: hudGuardrail(last, s.limits) } : {}),
     ...(text ? { note: text } : {}),
     settings: settings(s),
     snapshot: s.snapshot.name,
+    // The snapshot lr_begin_session took on the master, which a revert applies (session\end.ts).
+    ...(ended ? {} : { put_back: { photo_uuid: s.master.uuid, snapshot_id: s.snapshot.id, snapshot_name: s.snapshot.name } }),
+    // A session the engine ended: the HUD closes itself this many seconds after taking the update (D15, plugin 0.15.0).
+    ...(closeAfter ? { close_after: closeAfter } : {}),
   };
 }
 
@@ -105,6 +110,30 @@ function delta(c: PassEntry["changes"][number]): HudDelta {
     after: shown(c.after),
     ...(c.delta !== null ? { delta: c.delta > 0 ? `+${c.delta}` : String(c.delta) } : {}),
   };
+}
+
+/**
+ * A mask pass's rows (session\masks.ts): "<mask> · <slider>" for each local slider it changed, in the
+ * Masking panel's words (params\labels.ts), and what happened to the mask itself ("Sky 1 · Exposure");
+ * a pass its guardrail undid is one row saying so.
+ */
+function maskDeltas(m: NonNullable<PassEntry["mask"]>, undone: boolean): HudDelta[] {
+  const name = m.after?.name ?? m.before?.name ?? m.name;
+  if (undone) return [{ slider: name, after: m.op === "create" ? "new mask undone" : "change undone" }];
+  if (!m.after) return [{ slider: name, after: "deleted" }];
+  const was = m.before?.sliders ?? {};
+  const rows: HudDelta[] = [];
+  if (!m.before) rows.push({ slider: name, after: "new mask" });
+  else if (m.before.name !== m.after.name) rows.push({ slider: m.before.name, after: `renamed ${m.after.name}` });
+  for (const k of new Set([...Object.keys(was), ...Object.keys(m.after.sliders)])) {
+    const before = was[k] ?? 0;
+    const after = m.after.sliders[k] ?? 0;
+    const d = round(after - before, 2);
+    if (d !== 0) rows.push({ slider: `${name} · ${lightroomLabel(k)}`, before, after, delta: d > 0 ? `+${d}` : String(d) });
+  }
+  if (m.before && m.before.active !== m.after.active) rows.push({ slider: name, after: m.after.active ? "shown" : "hidden" });
+  if (m.before && m.before.inverted !== m.after.inverted) rows.push({ slider: name, after: m.after.inverted ? "inverted" : "not inverted" });
+  return rows.length > 0 ? rows : [{ slider: name, after: "reshaped" }];
 }
 
 type GuardrailAction = PassEntry["guardrail_actions"][number];

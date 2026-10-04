@@ -10,7 +10,8 @@
 -- (bad_request, naming the field): the engine is the only sender, so a wrong field is a bug to show,
 -- not to guess around. Text longer than LIMITS.text is shortened for display, not refused.
 -- fix/hud-p1: the optional `snapshot` (the pre-session snapshot's name, for the undo line), and the
--- HUD's words (HudText.lua).
+-- HUD's words (HudText.lua). Plugin 0.13.0 (PR C step 2b): the optional `put_back` (the session's
+-- pre-session snapshot and its photo, for the Put back button; canPutBack below, HudClick.lua).
 
 local HudText = require 'HudText'
 
@@ -19,7 +20,7 @@ local HudState = {}
 HudState.STAGES = { "begin", "pass0", "applying", "acquiring_preview", "metrics", "awaiting_claude", "awaiting_pick", "awaiting_approval", "converged", "target_changed", "accepted", "aborted", "ended" }
 HudState.END_STAGES = { "accepted", "aborted", "ended" }
 HudState.GUARDRAIL = { "green", "clamped", "refused", "corrected", "unmet", "undone" }
-HudState.EVENTS = { "hud_abort", "hud_accept", "hud_pick", "hud_approve_pass" }
+HudState.EVENTS = { "hud_abort", "hud_accept", "hud_pick", "hud_approve_pass", "hud_put_back" }
 HudState.VARIANTS = { "A", "B", "C" }
 HudState.LIMITS = { text = 120, id = 64, rows = 12, photos = 16, pass = 99, decay = 8 }
 
@@ -32,6 +33,12 @@ HudState.PENDING_SECONDS = 10
 -- sends the session's state again as soon as it is connected (engine\src\hud\publisher.ts
 -- onStateChange), so 10 s is ample [inference].
 HudState.UNKNOWN_SECONDS = 10
+-- Put back is offered once the engine has been away from an open edit this long, as the HUD's
+-- ticker sees it: a menu or Plug-in Manager pauses the plugin and the engine drops on its heartbeat,
+-- then reconnects within seconds and the edit goes on (LR_SDK_NOTES "The bridge task's pauses"), and
+-- a button offered during such a drop would put the photo back under a live edit. 10 s, as for
+-- UNKNOWN_SECONDS, is [inference].
+HudState.AWAY_SECONDS = 10
 
 local LIMITS = HudState.LIMITS
 
@@ -76,6 +83,7 @@ local GUARD = { status = { kind = "enum", list = HudState.GUARDRAIL, required = 
 local SETTINGS = { mode = { kind = "enum", list = { "autonomous", "approve_each_pass" } }, max_passes = INT,
     variant_count = INT, long_edge = INT, quality = INT, clip_high_pct = NUMBER, clip_low_pct = NUMBER,
     decay = { kind = "array", of = NUMBER, max = LIMITS.decay } }
+local PUT_BACK = { photo_uuid = { kind = "id", required = true }, snapshot_id = { kind = "id", required = true }, snapshot_name = { kind = "text", required = true } }
 
 local FIELDS = {
     session_id = { kind = "id", required = true },
@@ -95,6 +103,8 @@ local FIELDS = {
     note = TEXT,
     settings = { kind = "object", fields = SETTINGS },
     snapshot = TEXT,
+    put_back = { kind = "object", fields = PUT_BACK },
+    close_after = { kind = "int", min = 1, max = 60 },
 }
 
 local checkObject
@@ -181,11 +191,22 @@ function HudState.unknown(unknownAt, now)
     return (now - unknownAt >= HudState.UNKNOWN_SECONDS) and "gone" or "checking"
 end
 
+-- Whether the HUD offers Put back (a plain true or false): the open edit carries `put_back`, no
+-- put-back is running or done (`hud.putBack`, HudClick.lua; one that failed may be tried again), and
+-- Claude cannot reach the edit: the engine away AWAY_SECONDS (`hud.away`), or the edit no longer open
+-- in Claude (`hud.unknown` "gone"). `conn` and `hud` are HudView.props's.
+function HudState.canPutBack(s, conn, hud)
+    if s == nil or HudState.isEnd(s.stage) or s.put_back == nil then return false end
+    if hud.putBack and hud.putBack.state ~= "failed" then return false end
+    return ((not conn.engine and hud.away == true) or hud.unknown == "gone") and true or false
+end
+
 -- "Pick B", "Approve pass 3", "Abort", "Accept": what the HUD and the menu items call an event.
 function HudState.eventLabel(name, variant, s)
     if name == "hud_pick" then return "Pick " .. tostring(variant) end
     if name == "hud_approve_pass" then return "Approve pass" .. ((s and s.approve_pass) and (" " .. s.approve_pass) or "") end
     if name == "hud_accept" then return "Accept" end
+    if name == "hud_put_back" then return "Put back" end
     return "Abort"
 end
 

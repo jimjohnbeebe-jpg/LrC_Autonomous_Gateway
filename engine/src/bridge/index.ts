@@ -10,4 +10,4 @@ export { PLUGIN_VERSION, pluginVersionAtLeast } from "./version.js";
 export { MIN_SUPPORTED_LRC, TESTED_LRC, lightroomNotices } from "./lightroom.js";
 export { HUD_END_STAGES, HUD_EVENTS, HUD_GUARDRAIL, HUD_LIMITS, HUD_STAGES, HUD_VARIANTS, hudEventSchemas, hudUpdatePayloadSchema, hudUpdateResultSchema, parseHudEvent } from "./hud-protocol.js";
 export type { HudEvent, HudEventName, HudStage, HudUpdatePayload } from "./hud-protocol.js";
-export type { CommandName, CommandPayloads, CommandResult, EventEnvelope, HelloResult, PhotoExpect, SearchCriterion } from "./protocol.js";
+export type { AiWatch, CommandName, CommandPayloads, CommandResult, EventEnvelope, HelloResult, PhotoExpect, SearchCriterion } from "./protocol.js";

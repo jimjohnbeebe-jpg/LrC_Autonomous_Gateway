@@ -171,6 +171,8 @@ function output(p: OutputParts): SyncOutput {
     adaptive_exposure: p.args.adaptive_exposure,
     copied: Object.keys(p.run.copied).sort(),
     not_copied: p.left,
+    // A recipe's photo kept masks: the sync copies global settings only (GitHub issue #59).
+    ...(p.source.masks > 0 ? { left_out: [{ name: "masks", reason: `the source photo's ${p.source.masks} mask(s) stay on it; masks are not synced` }] } : {}),
     applied: p.results.length,
     skipped: p.skipped,
     per_target_exposure_offsets: offsets,

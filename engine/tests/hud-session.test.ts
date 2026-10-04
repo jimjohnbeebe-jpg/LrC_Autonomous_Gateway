@@ -37,6 +37,10 @@ describe("HUD updates from a Converge session", () => {
       guardrail: { status: "green" },
       snapshot: expect.stringMatching(/^AVG pre-session \d{4}-\d\d-\d\dT/),
     });
+    // Every update of the open session carries the HUD's Put back (plugin 0.13.0): the master's pre-session snapshot.
+    const snap = (plugin.received.find((r) => r.name === "create_snapshot")?.payload ?? {}) as { name?: string };
+    expect(lr.hud.taken.every((u) => u.put_back?.photo_uuid === "SIM-UUID" && u.put_back.snapshot_name === snap.name && u.put_back.snapshot_name === u.snapshot)).toBe(true);
+    expect(last.put_back?.snapshot_id).toEqual(expect.any(String));
     expect(last.settings?.variant_count).toBeUndefined();
     // The first update the HUD took is in the tool log's record (tools-shared.ts).
     expect(rig.records).toEqual([expect.objectContaining({ ok: true, stage: "begin", seq: 1, result: { applied: true, shown: true, opened: true } })]);
@@ -64,7 +68,10 @@ describe("HUD updates from a Converge session", () => {
     await waitUntil(() => lr.hud.last()?.pass === 3 && lr.hud.last()?.stage === "awaiting_claude");
     expect(lr.hud.last()?.guardrail).toMatchObject({ status: "clamped", reason: expect.stringMatching(/^Clarity: change held to ±\d+(\.\d+)? this pass\.$/) });
     await rig.manager.end({ session_id: ID, outcome: "accept" });
-    expect((await hudAt("accepted")).note).toBe("Claude accepted: the edit is kept.");
+    const accepted = await hudAt("accepted");
+    expect(accepted.note).toBe("Claude accepted: the edit is kept.");
+    expect(accepted.close_after).toBe(10); // every end closes the HUD after 10 s, not only the engine's
+    expect(accepted.put_back).toBeUndefined(); // an ended session has nothing to put back
   });
 
   it("shows a changed selection, a failed call and Claude's revert", async () => {
@@ -81,12 +88,14 @@ describe("HUD updates from a Converge session", () => {
     expect(lr.hud.last()?.stage).toBe("awaiting_claude");
     lr.exportError = null;
     await rig.manager.end({ session_id: ID, outcome: "revert" });
-    expect((await hudAt("ended")).note).toMatch(/Claude reverted/);
+    const ended = await hudAt("ended");
+    expect(ended.note).toMatch(/Claude reverted/);
+    expect(ended.close_after).toBe(10);
   });
 
-  it("sends nothing to a plugin before 0.9.0, which would refuse the snapshot field", async () => {
-    lr.pluginVersion = "0.8.0";
-    plugin.dropEventClient(); // the next hello reports 0.8.0
+  it("sends nothing to a plugin before 0.13.0, which would refuse the put_back field", async () => {
+    lr.pluginVersion = "0.11.0";
+    plugin.dropEventClient(); // the next hello reports 0.11.0
     await waitUntil(() => client.stats.drops === 1);
     await client.waitConnected(2000);
     clean();
@@ -172,6 +181,7 @@ describe("HUD updates from a Variants session", () => {
     const pick = await hudAt("awaiting_pick");
     expect(pick).toMatchObject({ mode: "variants", variants: ["A", "B", "C"], session_photos: ["SIM-UUID", "SIM-COPY-1", "SIM-COPY-2", "SIM-COPY-3"], settings: { variant_count: 3 } });
     expect(pick.target).toMatchObject({ uuid: "SIM-COPY-3", copy_name: "AVG test_variants C" });
+    expect(pick.put_back?.photo_uuid).toBe("SIM-UUID"); // the master's snapshot, whichever copy is the target
     expect(lr.hud.notTaken).toEqual([]);
   });
 });

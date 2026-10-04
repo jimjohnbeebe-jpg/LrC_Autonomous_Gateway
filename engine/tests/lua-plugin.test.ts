@@ -6,8 +6,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import luaparse from "luaparse";
 import { describe, expect, it } from "vitest";
-import { COMMANDS, HUD_END_STAGES, HUD_EVENTS, HUD_GUARDRAIL, HUD_LIMITS, HUD_STAGES, HUD_VARIANTS, PLUGIN_VERSION } from "../src/bridge/index.js";
+import { COMMANDS, HUD_END_STAGES, HUD_EVENTS, HUD_GUARDRAIL, HUD_LIMITS, HUD_STAGES, HUD_VARIANTS, PLUGIN_VERSION, hudUpdatePayloadSchema } from "../src/bridge/index.js";
 import { KEYWORD_SEPARATOR, MAX_PAGE } from "../src/library/index.js";
+import { aiWatch } from "../src/params/index.js";
 import { DECAY_MAX_VALUES, LOCK_PORT, PAGE_SPECS } from "../src/settings/index.js";
 
 const pluginRoot = fileURLToPath(new URL("../../plugin/", import.meta.url));
@@ -82,9 +83,9 @@ describe("lua: every plugin file", () => {
   it("finds the LrC-AVG plugin files", () => {
     const names = files.filter((f) => f.startsWith(avgPlugin)).map((f) => path.basename(f)).sort();
     expect(names).toEqual([
-      "Bridge.lua", "Catalog.lua", "Develop.lua", "Dispatch.lua", "Endpoint.lua", "Events.lua", "Hud.lua", "HudClick.lua", "HudSelection.lua", "HudState.lua", "HudText.lua", "HudView.lua",
-      "Info.lua", "Json.lua", "KeywordTree.lua", "Library.lua", "Log.lua", "MenuAbort.lua", "MenuAccept.lua", "MenuApprove.lua", "MenuHud.lua",
-      "MenuPickA.lua", "MenuPickB.lua", "MenuPickC.lua", "MenuStatus.lua", "Photos.lua",
+      "Bridge.lua", "Catalog.lua", "Develop.lua", "Dispatch.lua", "Endpoint.lua", "Events.lua", "Gate.lua", "Hud.lua", "HudClick.lua", "HudSelection.lua", "HudState.lua", "HudText.lua", "HudView.lua",
+      "Info.lua", "Json.lua", "KeywordTree.lua", "Library.lua", "Log.lua", "MaskProbe.lua", "Masks.lua", "MenuAbort.lua", "MenuAccept.lua", "MenuApprove.lua", "MenuHud.lua",
+      "MenuPickA.lua", "MenuPickB.lua", "MenuPickC.lua", "MenuStatus.lua", "Pending.lua", "Photos.lua",
       "PluginInfoProvider.lua", "PluginInit.lua", "Prefs.lua", "Preview.lua", "Sockets.lua",
     ]);
   });
@@ -167,6 +168,50 @@ describe("lua: LrC-AVG.lrplugin", () => {
     expect(code[2]).toContain("pcall(f)");
   });
 
+  it("opens every catalog write gate through Gate.lua, which passes timeoutParams and answers gate_busy for aborted (issue #59, PR C step 2b)", () => {
+    for (const file of files.filter((f) => f.startsWith(avgPlugin) && path.basename(f) !== "Gate.lua")) {
+      expect(codeOnly(readFileSync(file, "utf8")), path.basename(file)).not.toMatch(/with(Prolonged)?WriteAccessDo/);
+    }
+    const gate = codeOnly(readFileSync(path.join(avgPlugin, "Gate.lua"), "utf8"));
+    for (const [call] of gate.matchAll(/withWriteAccessDo\(([^\n]*)\)/g)) expect(call, call).toMatch(/\{ timeout = seconds/);
+    expect(gate).toMatch(/if status == "" then return nil, busy\(name, seconds\) end/);
+    // The AI update runs in its own task, its gate inside it, and the command answers "started" at once (plugin 0.14.0).
+    const masks = codeOnly(readFileSync(path.join(avgPlugin, "Masks.lua"), "utf8"));
+    expect(masks).toMatch(/LrTasks\.startAsyncTask\(function\(\)\s+local ok, err = LrTasks\.pcall\(function\(\)\s+local gated = Gate\.write\(catalog, ""/);
+    expect(masks).toMatch(/return \{ uuid = found\.uuid, status = "", state = rec\.state/);
+    expect(gate).not.toMatch(/asynchronous/);
+  });
+
+  it("closes the HUD close_after seconds after an update that carries it, unless another session's update came; a click's answer does not keep it open (D15, plugin 0.16.0)", () => {
+    const hud = codeOnly(readFileSync(path.join(avgPlugin, "Hud.lua"), "utf8"));
+    expect(hud).toMatch(/if s\.close_after then[\s\S]*?LrTasks\.startAsyncTask\(function\(\)\s+LrTasks\.sleep\(s\.close_after\)\s+if H\.open and H\.state and H\.state\.session_id == sid and HudState\.isEnd\(H\.state\.stage\) then[\s\S]*?LrDialogs\.closeFloatingDialogsForPlugin\(_PLUGIN\)/);
+    expect(readFileSync(path.join(avgPlugin, "HudState.lua"), "utf8")).toMatch(/close_after = \{ kind = "int", min = 1, max = 60 \}/);
+    expect(hudUpdatePayloadSchema.shape.close_after.unwrap().maxValue).toBe(60);
+  });
+
+  it("guards every write to a photo while an AI mask computes on it, before its gate, with the engine's field names (Pending.lua, plugin 0.16.0, D16)", () => {
+    const read = (f: string): string => codeOnly(readFileSync(path.join(avgPlugin, f), "utf8"));
+    const develop = read("Develop.lua");
+    expect(develop).toMatch(/local function writeTarget\(payload\)\s+local catalog, photo, uuid, err = Develop\.target\(payload\)\s+if err then return nil, nil, nil, err end\s+local refused = Pending\.refusal\(catalog, photo, uuid\)\s+if refused then return nil, nil, nil, refused end/);
+    for (const fn of ["applySettings", "createSnapshot", "applySnapshot"]) {
+      const body = develop.match(new RegExp(`function Develop\\.${fn}\\(payload\\)([\\s\\S]*?)\\nend`))?.[1] ?? "";
+      expect(body, fn).toMatch(/= writeTarget\(payload\)[\s\S]*Gate\.write/);
+    }
+    const masks = read("Masks.lua");
+    expect(masks).toMatch(/local guard = Pending\.start\(found\.uuid, rec\.request_id, payload\.watch\)\s+LrTasks\.startAsyncTask/);
+    expect(masks).toMatch(/if rec\.state == "" or rec\.state == "" then Pending\.clear\(found\.uuid, guard\) end/);
+    expect(masks).toMatch(/local refused = Pending\.refusal\(ctx\.catalog, ctx\.photo, ctx\.uuid\)\s+if refused then return nil, refused end\s+MaskProbe\.openMasking\(ctx\)/);
+    expect(read("HudClick.lua")).toMatch(/local refused = Pending\.refusal\(catalog, photo, pb\.photo_uuid\)\s+if refused then return nil, PB_REASON\.computing, refused\.message end\s+local stale = false\s+local gated, busy = Gate\.write/);
+    // No SDK key in the plugin (rule 03): the guard reads the fields `watch` names, the engine's aiWatch.
+    const pending = readFileSync(path.join(avgPlugin, "Pending.lua"), "utf8");
+    expect(pending).not.toMatch(/"(MaskGroupBasedCorrections|CorrectionID|CorrectionMasks|MaskDigest|ErrorReason)"/);
+    const fields = pending.match(/local FIELDS = \{([^}]*)\}/)?.[1]?.match(/"[^"]*"/g)?.map((s) => s.slice(1, -1));
+    const { ids: _ids, ...names } = aiWatch([]);
+    expect(fields).toEqual(Object.keys(names));
+    expect(pending).toMatch(/_G\.LrCAVG_PendingAi = _G\.LrCAVG_PendingAi or \{\}/);
+    expect(read("Bridge.lua")).toMatch(/process_started_at = _G\.LrCAVG_ProcessStartedAt,/);
+  });
+
   it("passes a History name to every applyDevelopSettings call (rule 03-lightroom)", () => {
     for (const file of files.filter((f) => f.startsWith(avgPlugin))) {
       for (const [call] of codeOnly(readFileSync(file, "utf8")).matchAll(/applyDevelopSettings\s*\(([^)]*)\)/g)) {
@@ -217,6 +262,22 @@ describe("lua: LrC-AVG.lrplugin", () => {
     expect(list("VARIANTS")).toEqual([...HUD_VARIANTS]);
     const limits = source.match(/HudState\.LIMITS = \{([^}]*)\}/)?.[1] ?? "";
     expect(Object.fromEntries([...limits.matchAll(/(\w+) = (\d+)/g)].map((m) => [m[1], Number(m[2])]))).toEqual(HUD_LIMITS);
+  });
+
+  it("keeps HudState.lua's put_back fields equal to the engine's, and puts back through a write gate that waits (plugin 0.13.0, HudClick.lua)", () => {
+    const state = readFileSync(path.join(avgPlugin, "HudState.lua"), "utf8");
+    const fields = state.match(/local PUT_BACK = \{(.*)\}\r?\n/)?.[1] ?? "";
+    const keys = [...fields.matchAll(/(\w+) = \{ kind = "(\w+)", required = true \}/g)].map((m) => `${m[1]}:${m[2]}`).sort();
+    expect(keys).toEqual(["photo_uuid:id", "snapshot_id:id", "snapshot_name:text"]);
+    expect(Object.keys(hudUpdatePayloadSchema.shape.put_back.unwrap().shape).sort()).toEqual(["photo_uuid", "snapshot_id", "snapshot_name"]);
+    expect(state).toMatch(/put_back = \{ kind = "object", fields = PUT_BACK \}/);
+    const click = codeOnly(readFileSync(path.join(avgPlugin, "HudClick.lua"), "utf8"));
+    expect(click).toMatch(/Gate\.write\(catalog, "", function\(\)\s+if not sameEdit\(sid\) then stale = true; return end\s+photo:applyDevelopSnapshot\(pb\.snapshot_id\)/);
+    expect(click).toMatch(/if not sameEdit\(sid\) then return nil, PB_REASON\.newer/); // checked before the gate too
+    expect(click).toMatch(/Events\.send\("", r\)/); // hud_put_back, told to the engine
+    expect(codeOnly(readFileSync(path.join(avgPlugin, "Hud.lua"), "utf8"))).toMatch(/function Hud\.markUnknown\(\)\s+HudClick\.resendReport\(\)/);
+    expect(click).not.toMatch(/withWriteAccessDo/);
+    expect(codeOnly(readFileSync(path.join(avgPlugin, "HudView.lua"), "utf8"))).toMatch(/v\.putBackEnabled = HudState\.canPutBack\(s, conn, hud\)/);
   });
 
   it("keeps KeywordTree.lua's separator and Library.lua's page limit equal to the engine's (engine\\src\\library\\)", () => {

@@ -12,7 +12,8 @@
 //     the engine's rules, not a claim about Lightroom's rendering.
 // Keys in `ignored` are dropped silently, as Lightroom drops out-of-range values (PHASE1.md run 3).
 // The catalog commands (virtual copies, select_photo, get_selection) are in lightroom-sim-catalog.ts,
-// get_prefs's answer in lightroom-sim-prefs.ts, the HUD (hud_update) in lightroom-sim-hud.ts;
+// get_prefs's answer in lightroom-sim-prefs.ts, the HUD (hud_update) in lightroom-sim-hud.ts, the
+// AI-mask commands in lightroom-sim-masks.ts (masks themselves are the table apply_settings writes);
 // each copy has its own settings. A command works on the selected photo, or, with `photo_uuid`
 // (plugin 0.4.0), on the photo with that uuid without selecting it, as the plugin does.
 
@@ -24,6 +25,7 @@ import type { FakePlugin, FakeReply } from "./fake-plugin.js";
 import { createVirtualCopies, describePhoto, findPhoto, getSelection, selectPhoto, type CopyFault, type SimCopy } from "./lightroom-sim-catalog.js";
 import { SimHud } from "./lightroom-sim-hud.js";
 import { SimLibrary } from "./lightroom-sim-library.js";
+import { SimMasks, installMasks } from "./lightroom-sim-masks.js";
 import { defaultSimPrefs, type SimPrefs } from "./lightroom-sim-prefs.js";
 import { PLUGIN_VERSION } from "../../src/bridge/version.js";
 
@@ -80,6 +82,8 @@ export class LightroomSim {
   private readonly snapshotOf = new Map<string, string>();
   /** The plugin version hello reports (plugin\LrC-AVG.lrplugin\Bridge.lua PLUGIN_VERSION). */
   pluginVersion = PLUGIN_VERSION;
+  /** hello's process_started_at (plugin 0.16.0); restartLightroom (lightroom-sim-masks.ts) gives a new one. */
+  processStartedAt = "2026-10-04T06:00:00Z";
   /** The Lightroom version hello and get_context report (LrApplication.versionString()). */
   lrcVersion = "15.5.1";
   /** get_prefs's answer (lightroom-sim-prefs.ts); null: the command is unknown, as to a plugin before 0.5.0. */
@@ -88,6 +92,8 @@ export class LightroomSim {
   readonly hud = new SimHud();
   /** The library commands (plugin 0.8.0, Library.lua): search, collections, ratings, keywords (lightroom-sim-library.ts). */
   readonly library = new SimLibrary();
+  /** The AI-mask commands' behaviour (plugin 0.13.0, Masks.lua; lightroom-sim-masks.ts). */
+  readonly masks = new SimMasks();
   /** Virtual copies of the master, by uuid (lightroom-sim-catalog.ts). */
   readonly copies = new Map<string, SimCopy>();
   copyFault: CopyFault | null = null;
@@ -96,6 +102,8 @@ export class LightroomSim {
   readonly ignored = new Set<string>();
   /** Stamp a written Look's Parameters.Version with this, as LrC 15.6 did with "18.7" (issue #67); null: kept as written. */
   lookVersion: string | null = null;
+  /** Add a default LensBlur block to a Look's Parameters when a snapshot is applied, as LrC 15.6 did in capture 5 (docs\reports\phase6\masks-capture\, rowA_put_back). */
+  lensBlurStamp = false;
   /** Export at this long edge instead of the requested one (to exercise the resize). */
   exportLongEdge: number | null = null;
   /** Return this path instead of the file written (to exercise the path check). */
@@ -158,7 +166,7 @@ export class LightroomSim {
       return typeof u === "string" ? fn(u) : u;
     };
     plugin.handlers.set("hello", () =>
-      ok({ protocol: 1, plugin_version: this.pluginVersion, lrc_version: this.lrcVersion, sdk_declared: 13, ports: { receive: plugin.commandPort, send: plugin.eventPort } }),
+      ok({ protocol: 1, plugin_version: this.pluginVersion, lrc_version: this.lrcVersion, sdk_declared: 13, ports: { receive: plugin.commandPort, send: plugin.eventPort }, process_started_at: this.processStartedAt }),
     );
     plugin.handlers.set("create_virtual_copies", (p) => createVirtualCopies(this, p));
     plugin.handlers.set("select_photo", (p) => selectPhoto(this, p));
@@ -198,10 +206,13 @@ export class LightroomSim {
       on(p, (u) => {
         const id = String(p["snapshot_id"]);
         this.setSettingsOf(this.snapshotOf.get(id) ?? u, structuredClone(this.snapshots.get(id) ?? {}));
+        const params = (this.settingsOf(u)["Look"] as { Parameters?: Record<string, unknown> } | undefined)?.Parameters;
+        if (this.lensBlurStamp && params) params["LensBlur"] ??= { Active: false, BlurAmount: 50, Version: 1 };
         return ok({ uuid: u, read_back: luaize(this.settingsOf(u)) });
       }),
     );
     plugin.handlers.set("export_preview", (p, id) => on(p, (u) => this.exportPreview(u, p, id)));
+    installMasks(this, plugin); // last: it holds the writes and exports above while the AI update holds the gate
   }
 
   /** get_context of a photo (Develop.lua getContext). */

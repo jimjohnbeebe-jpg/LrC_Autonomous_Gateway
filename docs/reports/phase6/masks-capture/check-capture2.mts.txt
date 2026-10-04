@@ -1,0 +1,471 @@
+// Masks capture 2 (GitHub issue #59, PR C step 1, branch phase-6/masks, plugin 0.11.0). Written by
+// Claude Code (Opus 5.5), 2026-10-03. Report: docs\reports\phase6\masks-capture.md, "Capture 2".
+// Decided by Jim after capture 1 [stated: "Yes, capture 2 first (Recommended)", relayed by the lead].
+// On 20260907-_OZ80099.NEF it learns:
+//   A. every local slider's scale: a linear-gradient correction "AVG calibrate" (a copy of capture
+//      1's linear entry) is written by table three times, each round with new ids (so a probe never
+//      reads the previous round's mask) and each field at its own value; after each write
+//      probe_masks_calibrate selects it in Masking and reads LrDevelopController getValue / getRange
+//      of each candidate parameter name. Per field: stored -> panel, a linear fit on rounds 1-2
+//      checked against round 3, flags for no answer, a constant answer, a stored value Lightroom
+//      changed, a non-linear answer, or fewer than 2 rounds. Round 3 reverses the per-field factors,
+//      so a name that reads another field shows as non-linear. Jim checks one value in the panel.
+//   B. the table entries Lightroom makes for AI masks by DC: createNewMask("aiSelection", ...) for
+//      background, people and landscape (10 s each). A subtype counts only when its mask showed and
+//      exactly one id is new since just before its create.
+// Steps: 0 lock, plugin, commands present; 1 select, snapshot "AVG calibrate before <time>", save the
+// settings; 2 round 1; 3 one question on round 1's values; 4-5 rounds 2-3; 6 the results table,
+// calibration.json; 7 snapshot; 8 the AI masks, templates.json; 9 ALWAYS: snapshot, every setting
+// compared with step 1, again 5 s later (a late AI compute), Jim confirms.
+// Ctrl+C (once) skips every remaining step and probe and goes to step 9. Closing the window also asks
+// for the put-back, but Windows ends Node about 10 s later [handle:
+// https://nodejs.org/api/process.html#signal-events], so that may not finish: Jim's steps say Ctrl+C.
+// After a probe that failed, the check waits until the settings hold still before restoring. Every
+// y/n: y = good.
+// The mask key and field names below are from capture 1's live dump [handle: Jim's run 2026-10-03,
+// docs\reports\phase6\masks-capture\3_dump-1.json] (rule 03).
+// Usage, from the repo root after npm run build: node logs\check-masks-calibrate-2026-10-03\check.mts [repo root]
+// Dry run: LRC_AVG_COMMAND_PORT/_EVENT_PORT/_TOKEN_FILE, CHECK_OUT, CHECK_TEMP, CHECK_UUID, CHECK_TEMPLATE.
+import { randomInt } from "node:crypto";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { createInterface } from "node:readline/promises";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+const repo = path.resolve(process.argv[2] ?? process.cwd());
+const dist = (p: string) => import(pathToFileURL(path.join(repo, "engine", "dist", p)).href);
+const { BridgeClient, pluginVersionAtLeast } = await dist("bridge/index.js");
+const { acquireInstanceLock, devOverrides, ENGINE_VERSION } = await dist("mcp/index.js");
+
+// 20260907-_OZ80099.NEF [handle: docs\reports\phase4\P4\p4_chat_session\20260927-26ecc4.json target].
+const UUID = process.env["CHECK_UUID"] ?? "CF12AF60-0858-4181-9562-376D16B89126";
+const EXPECT = { is_virtual_copy: false };
+const MIN_PLUGIN = "0.11.0";
+const KEY = "MaskGroupBasedCorrections";
+const NAME = "AVG calibrate";
+const TEMPLATES = [process.env["CHECK_TEMPLATE"], path.join(repo, "docs", "reports", "phase6", "masks-capture", "3_dump-1.json")].filter((p): p is string => Boolean(p));
+// The PV 15.4 slider fields of a correction (FIELD_LIST order gives each its index i), and the base
+// values of rounds 1-3. Signed sliders 0.2 / -0.4 / 0.3; exposure, stored as EV/4 [handle: Jim's
+// capture 1 run, docs\reports\phase6\masks-capture\check.json step 5_local_exposure and the answer
+// "y" to +1.00], 0.125 / -0.25 / 0.1875; fields that may not go below 0 get 0.2 / 0.5 / 0.35. Each
+// field gets base * (1 + 0.05 i) in rounds 1-2 and base * (1 + 0.05 (19 - i)) in round 3, at most
+// 1.95 times the base: every value stays within -1..1 (exposure within -0.5..0.5) [inference: the
+// largest is 0.5 * 1.95 = 0.975]. A name that reads field j instead of field i then misses round 3
+// by 0.1475 |i - j| base / (1 + 0.05 i) of the scale, about 2.5 panel units for neighbours on a
+// x100 slider, over the 1 % tolerance [inference: the algebra of the two factor patterns]. Values
+// within 0..1 are valid whether a field is stored as a fraction or in degrees [inference].
+const SIGNED = [0.2, -0.4, 0.3];
+const POSITIVE = [0.2, 0.5, 0.35];
+const BASES: Record<string, number[]> = {
+  LocalTemperature: SIGNED, LocalTint: SIGNED, LocalExposure2012: [0.125, -0.25, 0.1875], LocalContrast2012: SIGNED,
+  LocalHighlights2012: SIGNED, LocalShadows2012: SIGNED, LocalWhites2012: SIGNED, LocalBlacks2012: SIGNED,
+  LocalTexture: SIGNED, LocalClarity2012: SIGNED, LocalDehaze: SIGNED, LocalHue: SIGNED, LocalSaturation: SIGNED,
+  LocalSharpness: SIGNED, LocalLuminanceNoise: SIGNED, LocalMoire: SIGNED, LocalDefringe: SIGNED,
+  LocalToningHue: POSITIVE, LocalToningSaturation: POSITIVE, LocalGrain: POSITIVE,
+};
+const FIELD_LIST = Object.keys(BASES);
+const round4 = (x: number) => Math.round(x * 10_000) / 10_000;
+const FIELDS: Record<string, number[]> = Object.fromEntries(
+  FIELD_LIST.map((f, i) => {
+    const [a, b, c] = BASES[f] as [number, number, number];
+    return [f, [round4(a * (1 + 0.05 * i)), round4(b * (1 + 0.05 * i)), round4(c * (1 + 0.05 * (FIELD_LIST.length - 1 - i)))]];
+  }),
+);
+// Recorded each round, not written: older-process fields, the mask's amount and refine saturation.
+const RECORDED = ["LocalExposure", "LocalContrast", "LocalClarity", "LocalBrightness", "CorrectionAmount", "LocalCurveRefineSaturation"];
+// DC parameter names to try per field: the SDK reference's "local_<X>" names [handle:
+// https://lrc.mcor.dev/modules/LrDevelopController.html, Version 6 list, read 2026-10-03, a
+// third-party mirror of Adobe's reference] and the field-named variant ("local_Contrast2012");
+// which answer is [unverified] until this run.
+const SPECIAL: Record<string, string[]> = { CorrectionAmount: ["local_Amount"], LocalCurveRefineSaturation: ["local_RefineSaturation", "local_CurveRefineSaturation"] };
+const candidates = (field: string): string[] => {
+  if (SPECIAL[field]) return SPECIAL[field]!;
+  const base = field.replace(/^Local/, "");
+  return [...new Set([`local_${base.replace(/2012$/, "")}`, `local_${base}`])];
+};
+const NAMES = [...new Set([...FIELD_LIST, ...RECORDED].flatMap(candidates))];
+// "objects" is left out: without a stroke it would leave Lightroom in a tool [inference].
+const AI = { subtypes: ["background", "people", "landscape"], wait: 10 };
+
+const outDir = process.env["CHECK_OUT"] ?? path.dirname(fileURLToPath(import.meta.url));
+const tempDir = process.env["CHECK_TEMP"] ?? path.join(os.tmpdir(), "LrC-AVG", "masks-calibrate");
+for (const d of [outDir, path.join(outDir, "raw"), tempDir]) mkdirSync(d, { recursive: true });
+
+type J = any;
+const at = () => new Date().toISOString();
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const transcript: string[] = [];
+const result: Record<string, J> = { started: at(), engine_version: ENGINE_VERSION, uuid: UUID, steps: {}, checks: [], answers: [], failures: [] };
+const save = () => {
+  writeFileSync(path.join(outDir, "check.json"), JSON.stringify(result, null, 2));
+  writeFileSync(path.join(outDir, "transcript.txt"), transcript.join("\n") + "\n");
+};
+const say = (m: string) => {
+  const text = `[${new Date().toLocaleTimeString()}] ${m}`;
+  console.log(text);
+  transcript.push(text);
+};
+const step = (name: string, data: Record<string, unknown>) => {
+  result.steps[name] = { at: at(), ...data };
+  save();
+};
+function check(ok: boolean, text: string, detail?: unknown) {
+  result.checks.push({ ok, text, detail });
+  if (!ok) result.failures.push(text);
+  say(`${ok ? "YES" : "NO "}  ${text}`);
+  save();
+}
+const saveRaw = (name: string, data: unknown) => {
+  const text = JSON.stringify(data, null, 2);
+  for (const d of [path.join(outDir, "raw"), tempDir]) writeFileSync(path.join(d, `${name}.json`), text);
+};
+
+// ---- input, Ctrl+C (as capture 1: readline takes Ctrl+C in a terminal; both handlers set `aborting`).
+// SIGHUP (the window closing) sets it too, but Node has only about 10 s then (header), so the
+// put-back may not finish; only Ctrl+C is promised to put the photo back.
+const rl = createInterface({ input: process.stdin, output: process.stdout });
+let aborting: string | null = null;
+const abortCtl = new AbortController();
+function abort(why: string): void {
+  if (aborting) return say(`(${why} again: still putting the photo back; wait for the last lines)`);
+  aborting = why;
+  result.failures.push(`aborted: ${why}`);
+  say(`ABORTING (${why}): going straight to the put-back. Wait for the last lines.`);
+  abortCtl.abort();
+}
+rl.on("SIGINT", () => abort("Ctrl+C"));
+process.on("SIGINT", () => abort("Ctrl+C"));
+process.on("SIGHUP", () => abort("the window was closed"));
+async function ask(q: string): Promise<string> {
+  let a: string | null = null;
+  for (let i = 0; i < 3 && a !== "y" && a !== "n" && !aborting; i++) {
+    try {
+      a = (await rl.question(`${q} (y/n) `, { signal: AbortSignal.any([AbortSignal.timeout(600_000), abortCtl.signal]) })).trim().toLowerCase();
+    } catch {
+      break; // no answer in 10 minutes, aborted, or stdin closed
+    }
+  }
+  const answer = a === "y" || a === "n" ? a : aborting ? "aborted" : "no answer";
+  result.answers.push({ q, answer, at: at() });
+  transcript.push(`  ? ${q} -> ${answer}`);
+  if (answer !== "y" && answer !== "aborted") result.failures.push(`answered ${answer}: ${q}`);
+  save();
+  return answer;
+}
+
+// ---- pure helpers (as capture 1) ---------------------------------------------------------------
+const isObj = (v: J) => v !== null && typeof v === "object" && !Array.isArray(v);
+const blank = (v: J) => v === undefined || (Array.isArray(v) && v.length === 0) || (isObj(v) && Object.keys(v).length === 0);
+const short = (v: J) => (v === undefined ? "(absent)" : JSON.stringify(v).slice(0, 160));
+function diff(a: J, b: J, where = "", out: Array<Record<string, J>> = []): Array<Record<string, J>> {
+  if (out.length >= 200 || (blank(a) && blank(b))) return out;
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) out.push({ path: `${where}.length`, before: a.length, after: b.length });
+    for (let i = 0; i < Math.min(a.length, b.length); i++) diff(a[i], b[i], `${where}[${i}]`, out);
+  } else if (isObj(a) && isObj(b)) {
+    for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) diff(a[k], b[k], where ? `${where}.${k}` : k, out);
+  } else if (a !== b) out.push({ path: where || "(root)", before: short(a), after: short(b) });
+  return out;
+}
+function newIdLike(s: string): string {
+  const upper = /[A-F]/.test(s) && !/[a-f]/.test(s);
+  return s.replace(/[0-9a-fA-F]/g, () => {
+    const c = "0123456789abcdef".charAt(randomInt(16));
+    return upper ? c.toUpperCase() : c;
+  });
+}
+/** A copy without fields whose names contain "Digest", with new values for string fields named *ID. */
+function freshCopy(v: J): J {
+  if (Array.isArray(v)) return v.map(freshCopy);
+  if (!isObj(v)) return v;
+  const out: J = {};
+  for (const [k, x] of Object.entries(v)) {
+    if (k.includes("Digest")) continue;
+    out[k] = /ID$/.test(k) && typeof x === "string" && x !== "" ? newIdLike(x) : freshCopy(x);
+  }
+  return out;
+}
+const masks = (s: J): J[] => (Array.isArray(s?.[KEY]) ? s[KEY] : []);
+const fmt = (n: J) => (typeof n !== "number" ? String(n ?? "-") : Number.isInteger(n) ? String(n) : String(+n.toFixed(4)));
+const signed = (n: number) => (n > 0 ? `+${fmt(n)}` : fmt(n));
+
+// ---- the bridge --------------------------------------------------------------------------------
+const dev = devOverrides();
+const lock = await acquireInstanceLock(dev.lockPort);
+if (!lock.ok) {
+  result.lock = { ok: false, port: lock.port, pid: lock.pid };
+  save();
+  say(`LOCK BUSY: another engine (pid ${lock.pid}) holds port ${lock.port}. Quit Claude Desktop (File > Exit), wait 60 s, then run this again.`);
+  process.exit(2);
+}
+const client = new BridgeClient({ engineVersion: `${ENGINE_VERSION}-masks-calibrate`, log: (m: string) => console.error(`  (${m})`), silenceAllowanceMs: () => 60_000, ...dev.bridge });
+client.start();
+async function req(name: string, payload: J, timeoutMs = 30_000): Promise<J> {
+  if (client.getState() !== "connected") await client.waitConnected(30_000);
+  return client.request(name, payload, { timeoutMs });
+}
+const read = async (): Promise<J> => (await req("get_settings", { photo_uuid: UUID, expect: EXPECT })).settings;
+const write = async (settings: J, history: string): Promise<J> => (await req("apply_settings", { photo_uuid: UUID, expect: EXPECT, settings, history_name: history })).read_back;
+const errBody = (err: J) => (err?.code ? `${err.code}: ${err.message}` : String(err?.message ?? err));
+const st: Record<string, J> = {};
+async function run(name: string, fn: () => Promise<string | void>): Promise<boolean> {
+  if (aborting) return false;
+  say(`--- ${name}`);
+  try {
+    const skipped = await fn();
+    if (skipped) (step(`${name}_skipped`, { reason: skipped }), say(`skipped: ${skipped}`));
+    return true;
+  } catch (err) {
+    step(`${name}_error`, { error: errBody(err), aborting });
+    if (!aborting) check(false, `${name} ran`, errBody(err));
+    return false;
+  }
+}
+async function restore(name: string): Promise<J[]> {
+  const rb = (await req("apply_snapshot", { photo_uuid: UUID, expect: EXPECT, snapshot_id: st.snapshotId }, 30_000)).read_back;
+  const d = diff(st.before, rb);
+  step(name, { differing: d });
+  return d;
+}
+/** After a probe that failed: read every second until the settings held still for 5 s, at most 90 s. */
+async function waitStable(): Promise<Record<string, J>> {
+  const t0 = Date.now();
+  let last = JSON.stringify(await read());
+  let since = Date.now();
+  while (Date.now() - since < 5_000 && Date.now() - t0 < 90_000) {
+    await sleep(1000);
+    const now = JSON.stringify(await read());
+    if (now !== last) {
+      last = now;
+      since = Date.now();
+    }
+  }
+  return { stable: Date.now() - since >= 5_000, waited_ms: Date.now() - t0 };
+}
+/** A probe, with the stable-wait after a failure; the answer, or { error }. None is sent after Ctrl+C. */
+async function probe(name: string, payload: J, timeoutMs: number): Promise<J> {
+  if (aborting) return { error: "not sent: aborting", skipped: true };
+  const out = await req(name, { target_uuid: UUID, ...payload }, timeoutMs).catch((err) => ({ error: errBody(err) }));
+  if (out.error) out.settled = await waitStable();
+  return out;
+}
+const stepResult = (p: J, name: string) => (p.steps ?? []).find((s: J) => s.step === name);
+
+async function s0(): Promise<void> {
+  const hello = await client.waitConnected(30_000);
+  result.hello = { plugin_version: hello.plugin_version, lrc_version: hello.lrc_version, sdk_declared: hello.sdk_declared };
+  const ok = pluginVersionAtLeast(hello.plugin_version, MIN_PLUGIN);
+  check(ok, `Lightroom ${hello.lrc_version} runs plugin ${hello.plugin_version} (${MIN_PLUGIN} or later needed)`);
+  // A plugin with capture 2's commands answers an empty payload with bad_request; an older build of
+  // 0.11.0 does not know them (unknown_command).
+  for (const name of ["probe_masks_calibrate", "probe_masks_create"]) {
+    const code = await req(name, {}).then(() => "answered", (err) => err?.code ?? String(err));
+    check(code === "bad_request", `the plugin knows ${name} (${code})`);
+  }
+  if (result.failures.length) {
+    say("Reload the plugin: File > Plug-in Manager, click LrC-AVG, click Reload Plug-in, click Done, wait 20 s, then run this again.");
+    throw new Error("plugin without capture 2's commands");
+  }
+}
+
+async function s1(): Promise<void> {
+  const selected = await req("select_photo", { uuid: UUID, expect: EXPECT });
+  const name = `AVG calibrate before ${new Date().toLocaleTimeString("en-GB")}`;
+  const snap = await req("create_snapshot", { photo_uuid: UUID, expect: EXPECT, name });
+  st.snapshotId = snap.snapshot_id;
+  st.snapshotName = name;
+  st.before = await read();
+  saveRaw("1_before", st.before);
+  step("1_photo", { filename: selected.filename, snapshot: { id: snap.snapshot_id, name }, masks_before: masks(st.before).length });
+  check(true, `selected ${selected.filename ?? UUID}; snapshot "${name}" taken; ${masks(st.before).length} masks on the photo`);
+  say("To stop at any point, press Ctrl+C once and wait: the check puts the photo back by itself.");
+  say(`Only if its last lines say PUT BACK: NO: wait 1 minute, then in Lightroom's Develop module open the Snapshots panel (left side) and click "${name}".`);
+}
+
+/** Capture 1's linear entry, the shape the calibration correction is copied from. */
+function template(): J {
+  for (const file of TEMPLATES) {
+    if (!existsSync(file)) continue;
+    const entry = masks(JSON.parse(readFileSync(file, "utf8"))).find((e) => (e.CorrectionMasks ?? []).some((m: J) => m.What === "Mask/Gradient"));
+    if (entry) return { file, entry };
+  }
+  throw new Error(`no linear gradient entry in capture 1's dump (looked in ${TEMPLATES.join("; ")})`);
+}
+
+/**
+ * Round r (0-2): writes every field at its r-th value, reads the entry back, probes it. Each round's
+ * entry is a fresh copy with new ids (CorrectionID, MaskID, sync ids), so the probe cannot read the
+ * previous round's mask, which it had already selected.
+ */
+async function round(r: number): Promise<string | void> {
+  if (r === 0) {
+    const t = template();
+    st.template = t.entry;
+    step("2_template", { file: t.file });
+  }
+  if (!st.template) return "round 1 did not run";
+  const entry = { ...freshCopy(st.template), CorrectionName: NAME, ...Object.fromEntries(Object.entries(FIELDS).map(([f, v]) => [f, v[r]])) };
+  const rb = await write({ [KEY]: [...masks(st.before), entry] }, `AVG calibrate write ${r + 1}`);
+  const back = masks(rb).find((e) => e.CorrectionID === entry.CorrectionID);
+  saveRaw(`round${r + 1}_entry`, back ?? null);
+  check(back !== undefined, `round ${r + 1}: the "${NAME}" correction is in the table after the write`);
+  if (!back) return "the correction was not taken";
+  const stored = Object.fromEntries([...Object.keys(FIELDS), ...RECORDED].map((f) => [f, back[f]]));
+  const changed = Object.keys(FIELDS).filter((f) => stored[f] !== FIELDS[f]![r]);
+  check(changed.length === 0, `round ${r + 1}: every slider field reads back as written${changed.length ? ` (not: ${changed.join(", ")})` : ""}`, changed.map((f) => ({ f, wrote: FIELDS[f]![r], read: stored[f] })));
+  if (r === 0) say("The plugin now selects the mask in Develop > Masking and reads its sliders. Do not click in Lightroom until the next question.");
+  const p = await probe("probe_masks_calibrate", { mask_id: entry.CorrectionID, mask_name: NAME, names: NAMES }, 75_000);
+  if (p.skipped) return "aborted before the probe";
+  saveRaw(`round${r + 1}_probe`, p);
+  const selectedIt = !p.error && p.selected === entry.CorrectionID;
+  // Values read with another mask selected would mislead: the round's panel values count only when it was this round's mask.
+  const panel = Object.fromEntries(NAMES.map((n) => [n, stepResult(p, `getValue_${n}`)]).map(([n, s]) => [n, selectedIt && s?.ok ? s.result : { error: s?.error ?? "not read" }]));
+  const ranges = Object.fromEntries(NAMES.map((n) => [n, stepResult(p, `getRange_${n}`)?.result ?? null]));
+  (st.rounds ??= [])[r] = { correction_id: entry.CorrectionID, stored, panel, ranges, selected: p.selected ?? null };
+  step(`round${r + 1}`, { correction_id: entry.CorrectionID, error: p.error ?? null, settled: p.settled ?? null, stopped: p.stopped ?? null, selected: p.selected ?? null, tool_end: stepResult(p, "getSelectedTool_end")?.result ?? null, stored, panel });
+  check(selectedIt, `round ${r + 1}: the probe selected this round's "${NAME}" (${p.error ?? p.stopped ?? `selected ${p.selected ?? "nothing"}`})`);
+}
+
+async function s5(): Promise<string | void> {
+  const r1 = st.rounds?.[0];
+  if (!r1) return "round 1 did not run";
+  // A name that answered a non-zero number: every field was written non-zero in round 1.
+  const answers = (f: string) => candidates(f).find((n) => typeof r1.panel[n] === "number" && r1.panel[n] !== 0);
+  const field = ["LocalContrast2012", ...Object.keys(FIELDS)].find((f) => answers(f) !== undefined);
+  if (!field) return "the probe read no non-zero slider value";
+  const name = answers(field)!;
+  const label = field.replace(/^Local/, "").replace(/2012$/, "");
+  st.question = { field, name, panel: r1.panel[name] };
+  say(`NOW: in Lightroom (Develop module), if the Masks panel is not open, press Shift+W. In the Masks panel click "${NAME}". Look at its ${label} slider.`);
+  await ask(`Does ${label} show ${signed(r1.panel[name])}?`);
+}
+
+/** Per field: the name that answered, stored -> panel per round, the fit and its flags. */
+function fit(field: string): Record<string, J> {
+  const rounds: J[] = st.rounds ?? [];
+  const stored = rounds.map((r) => r?.stored?.[field]);
+  const tried = candidates(field).map((name) => ({ name, panel: rounds.map((r) => r?.panel?.[name]) }));
+  // The first name whose answer follows the table (rounds 1 and 2 differ), else the first that answered at all.
+  const numeric = tried.filter((t) => t.panel.slice(0, 2).every((v) => typeof v === "number"));
+  const answered = numeric.find((t) => t.panel[0] !== t.panel[1]) ?? numeric[0];
+  if (!FIELDS[field]) return { field, name: answered?.name ?? null, tried, stored, panel: answered?.panel ?? null, flags: ["recorded, not written"] };
+  const flags: string[] = [];
+  if (stored.some((s, i) => s !== undefined && s !== FIELDS[field]![i])) flags.push("stored differs from written");
+  if (rounds.filter(Boolean).length < 2) return { field, tried, stored, flags: [...flags, "fewer than 2 rounds"] };
+  if (!answered) return { field, tried, stored, flags: [...flags, "no DC answer"] };
+  const [p1, p2, p3] = answered.panel as number[];
+  const [s1, s2, s3] = stored as number[];
+  if (p1 === p2) return { field, name: answered.name, tried, stored, panel: answered.panel, flags: [...flags, "DC constant (did not follow the table)"] };
+  const scale = (p2! - p1!) / (s2! - s1!);
+  const offset = p1! - scale * s1!;
+  const predicted = typeof s3 === "number" ? scale * s3 + offset : null;
+  if (typeof p3 !== "number" || predicted === null) flags.push("no round 3");
+  else if (Math.abs(p3 - predicted) > Math.max(1e-6, 0.01 * Math.abs(p2! - p1!))) flags.push(`non-linear (round 3: ${fmt(p3)}, line gives ${fmt(predicted)})`);
+  return { field, name: answered.name, tried, stored, panel: answered.panel, scale, offset, range: rounds[0]?.ranges?.[answered.name] ?? null, flags };
+}
+
+async function s6(): Promise<void> {
+  const fields = Object.keys(FIELDS).map(fit);
+  const recorded = RECORDED.map(fit);
+  writeFileSync(path.join(outDir, "calibration.json"), JSON.stringify({ at: at(), uuid: UUID, values: FIELDS, names: NAMES, fields, recorded, question: st.question ?? null, rounds: st.rounds ?? [] }, null, 2));
+  say("Results (stored -> panel per round; panel = scale * stored + offset):");
+  say(`${"field".padEnd(28)}${"DC name".padEnd(28)}${"stored -> panel".padEnd(44)}${"scale".padEnd(10)}${"offset".padEnd(8)}flags`);
+  for (const f of [...fields, ...recorded]) {
+    const pairs = (f.stored as J[]).map((s, i) => `${fmt(s)}->${fmt(typeof f.panel?.[i] === "number" ? f.panel[i] : null)}`).join(" ");
+    say(`${f.field.padEnd(28)}${String(f.name ?? "-").padEnd(28)}${pairs.padEnd(44)}${fmt(f.scale).padEnd(10)}${fmt(f.offset).padEnd(8)}${f.flags.join("; ")}`);
+  }
+  const clean = fields.filter((f) => f.flags.length === 0).length;
+  step("6_results", { clean, of: fields.length });
+  check(clean === fields.length, `every slider field has a clean linear scale (${clean} of ${fields.length}; calibration.json)`);
+}
+
+async function s7(): Promise<void> {
+  const d = await restore("7_snapshot");
+  check(d.length === 0, `the snapshot puts the photo back before the AI masks (${d.length} differing paths)`, d);
+}
+
+/**
+ * A subtype's mask: only when its mask showed (`wait_mask_<sub>` reached) and exactly one id is new
+ * since just before its create (`new_masks_<sub>`), not claimed by an earlier subtype and not in the
+ * table before the probe. Otherwise null and why: a subtype that made no mask must never be credited
+ * with the mask still selected from the one before.
+ */
+function claim(p: J, sub: string, claimed: Set<string>, old: Set<string>): { id: string | null; why: string | null } {
+  const shown = stepResult(p, `wait_mask_${sub}`)?.result;
+  if (shown?.reached !== true) return { id: null, why: "no new mask showed" };
+  const fresh: string[] = (stepResult(p, `new_masks_${sub}`)?.result ?? []).filter((id: string) => !claimed.has(id) && !old.has(id));
+  if (fresh.length !== 1) return { id: null, why: `${fresh.length} unclaimed new ids` };
+  return { id: fresh[0]!, why: null };
+}
+
+async function s8(): Promise<string | void> {
+  say("The plugin now creates AI masks in Develop by itself (up to a minute). Do not click in Lightroom.");
+  const p = await probe("probe_masks_create", { subtypes: AI.subtypes, wait_seconds: AI.wait }, 90_000);
+  if (p.skipped) return "aborted before the probe";
+  saveRaw("8_create_probe", p);
+  await sleep(3000); // let a mask still computing finish [inference: capture 1's DC masks took 0.9-2.5 s]
+  const s = await read();
+  const old = new Set<string>(masks(st.before).map((e) => e.CorrectionID));
+  const fresh = masks(s).filter((e) => !old.has(e.CorrectionID));
+  const claimed = new Set<string>();
+  const templates: Record<string, J> = {};
+  for (const sub of AI.subtypes) {
+    const { id, why } = claim(p, sub, claimed, old);
+    if (id) claimed.add(id);
+    templates[sub] = { dc_id: id, why, shown: stepResult(p, `wait_mask_${sub}`)?.result ?? null, tool: stepResult(p, `getSelectedTool_after_${sub}`)?.result ?? null, entry: fresh.find((e) => e.CorrectionID === id) ?? null };
+  }
+  writeFileSync(path.join(outDir, "templates.json"), JSON.stringify({ at: at(), templates, unmatched: fresh.filter((e) => !claimed.has(e.CorrectionID)), probe: p }, null, 2));
+  saveRaw("8_after_create", s);
+  step("8_ai_masks", { error: p.error ?? null, stopped: p.stopped ?? null, tool_end: stepResult(p, "getSelectedTool_end")?.result ?? null, ...Object.fromEntries(Object.entries(templates).map(([k, t]) => [k, { dc_id: t.dc_id, why: t.why, shown: t.shown, tool: t.tool, in_table: t.entry !== null }])) });
+  for (const sub of AI.subtypes) check(templates[sub].entry !== null, `createNewMask("aiSelection", "${sub}") made its own table entry (templates.json)${templates[sub].why ? `: ${templates[sub].why}` : ""}`, templates[sub].shown);
+}
+
+const STEPS: Array<[string, () => Promise<string | void>]> = [
+  ["2_round1", () => round(0)], ["3_question", s5], ["4_round2", () => round(1)], ["5_round3", () => round(2)],
+  ["6_results", async () => s6()], ["7_snapshot", s7], ["8_ai_masks", s8],
+];
+try {
+  if ((await run("0_preconditions", s0)) && (await run("1_photo", s1)) && st.snapshotId && st.before) {
+    for (const [name, fn] of STEPS) {
+      if (process.env["CHECK_SIGINT_AT"] === name) rl.emit("SIGINT"); // dry runs only: a Ctrl+C before this step
+      if (aborting) break;
+      await run(name, fn);
+    }
+  }
+} finally {
+  // 9. The put-back, whatever happened (also after Ctrl+C). The results table first, from whatever rounds ran.
+  if (st.rounds && !result.steps["6_results"]) await s6().catch((err) => step("6_results_error", { error: errBody(err) }));
+  const manual = `wait 1 minute, then in Lightroom's Develop module open the Snapshots panel (left side) and click "${st.snapshotName ?? "AVG calibrate before ..."}"`;
+  try {
+    if (st.snapshotId && st.before) {
+      say("--- 9_put_back");
+      const d = await restore("9_put_back");
+      // A mask still computing could change the settings after the snapshot: read them again 5 s later.
+      await sleep(5000);
+      const late = diff(st.before, await read());
+      step("9_put_back_late", { differing: late });
+      const all = [...d, ...late];
+      check(all.length === 0, all.length === 0 ? "PUT BACK: YES (every setting as before the check, and still 5 s later)" : `PUT BACK: NO (${d.length} differing paths, ${late.length} 5 s later): ${manual}`, { at_once: d, late });
+      if (!aborting) {
+        say("NOW: look at the photo in Lightroom, and at the Masks panel (if the Masks panel is not open, press Shift+W).");
+        await ask("Does the photo look as it did before the check, with none of the check's masks left?");
+      }
+    }
+  } catch (err) {
+    check(false, `PUT BACK: NO, it did not run (${errBody(err)}): ${manual}`, errBody(err));
+  }
+  result.bridge = client.stats;
+  result.ended = at();
+  save();
+  client.stop();
+  await lock.lock.release();
+  rl.close();
+  const failures: string[] = result.failures;
+  say("");
+  say(failures.length === 0 ? "masks capture 2: WORKED" : `masks capture 2: DONE, ${failures.length} NO / FAILED lines (each one is a finding for the report)`);
+  for (const f of failures) say(`  - ${f}`);
+  say(`Results: ${path.join(outDir, "check.json")}, calibration.json, templates.json`);
+  save();
+  process.exit(failures.length === 0 ? 0 : 1);
+}

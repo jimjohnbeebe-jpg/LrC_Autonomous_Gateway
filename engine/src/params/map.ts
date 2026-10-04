@@ -16,6 +16,7 @@ import {
   SUPPORTED_PROCESS_VERSIONS,
   type ParamSpec,
 } from "./canonical.js";
+import { tableInfo } from "./mask-table.js";
 import { CUSTOM_WHITE_BALANCE, WHITE_BALANCE_KEY } from "./preset-keys.js";
 import type { SdkKeyMap, SdkValueType } from "./sdk-keys.js";
 
@@ -53,6 +54,8 @@ export type FromSdkResult = {
   camera_profile: ProfileIdentity;
   /** Keys Lightroom returned that are not in the pinned dump (reported, not fatal). */
   unpinned_keys: string[];
+  /** The mask table: how many masks, and a fingerprint that changes when any of it does (mask-table.ts tableInfo). */
+  masks: { count: number; fingerprint: string };
 };
 
 export type ReadbackMismatch = { sdk_key: string; written: unknown; read_back: unknown };
@@ -258,6 +261,7 @@ export class ParamMap {
       settings,
       camera_profile: cameraProfile,
       unpinned_keys: Object.keys(sdk).filter((k) => !this.sdkKeys.has(k)).sort(),
+      masks: tableInfo(sdk),
     };
   }
 

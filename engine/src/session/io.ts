@@ -10,8 +10,9 @@ import { BridgeError } from "../bridge/index.js";
 import type { PassEntry } from "../log/index.js";
 import { ToolError, readbackError, toToolError } from "../mcp/errors.js";
 import type { Metrics } from "../metrics/index.js";
-import { differingSettings, type CanonicalSettings, type CanonicalValue, type FromSdkResult } from "../params/index.js";
+import { differingSettings, tableSettings, verifyTable, type CanonicalValue, type Correction, type FromSdkResult, type SdkSettings } from "../params/index.js";
 import { composite } from "../preview/index.js";
+import { settlePending } from "./ai-update.js";
 import { WRITE_TIMEOUT_MS, type Rendered, type ReturnImage, type Session, type SessionContext, type Target } from "./types.js";
 
 export const ms = (since: number): number => Math.round((performance.now() - since) * 10) / 10;
@@ -40,8 +41,13 @@ export async function bridge<T>(s: Session, t: Target, fn: () => Promise<T>): Pr
 }
 
 export async function read(ctx: SessionContext, s: Session, t: Target): Promise<FromSdkResult> {
+  return (await readSdk(ctx, s, t)).view;
+}
+
+/** The photo's settings as Lightroom gives them (the mask table included), and their canonical view. */
+export async function readSdk(ctx: SessionContext, s: Session, t: Target): Promise<{ sdk: SdkSettings; view: FromSdkResult }> {
   const res = await bridge(s, t, () => ctx.deps.client.request("get_settings", { target_uuid: t.uuid }));
-  return ctx.deps.map.fromSdk(res.settings);
+  return { sdk: res.settings, view: ctx.deps.map.fromSdk(res.settings) };
 }
 
 /**
@@ -81,26 +87,46 @@ function maybeWritten(err: unknown, historyName: string): unknown {
 
 /** Write canonical values as one History step and check the read-back (Phase 0, P-12). */
 export async function write(ctx: SessionContext, s: Session, t: Target, values: Record<string, CanonicalValue>, historyName: string): Promise<FromSdkResult> {
-  checkAbort(s);
   const { client, map } = ctx.deps;
   const sdk = map.toSdk(values, { processVersion: t.process_version });
-  ctx.deps.hud?.stage(s, "applying");
-  const res = await bridge(s, t, () =>
-    client
-      .request("apply_settings", { target_uuid: t.uuid, settings: sdk, history_name: historyName }, { timeoutMs: WRITE_TIMEOUT_MS })
-      .catch((err: unknown) => Promise.reject(maybeWritten(err, historyName))),
-  );
-  const error = readbackError(map, sdk, res.read_back, historyName, client.hello()); // WRITE_NOT_TAKEN or FEATURE_UNAVAILABLE
+  const readBack = await writeSdk(ctx, s, t, sdk, historyName);
+  const error = readbackError(map, sdk, readBack, historyName, client.hello()); // WRITE_NOT_TAKEN or FEATURE_UNAVAILABLE
   if (error) throw error;
-  return map.fromSdk(res.read_back);
+  return map.fromSdk(readBack);
 }
 
 /**
- * Render a session photo, measuring the session's regions. `settings` are the settings the render
- * shows (the last read-back). `keep: false` leaves the photo's last render alone (probes).
+ * Write the whole mask table as one History step and check it read back (params\mask-table.ts
+ * verifyTable: every correction written there with its fields, matched by id). `emptyOk`: params\mask-ops.ts
+ * tableSettings. Returns the read-back.
  */
-export async function render(ctx: SessionContext, s: Session, t: Target, settings: CanonicalSettings, options: { keep?: boolean; longEdge?: number } = {}): Promise<Rendered> {
+export async function writeTable(ctx: SessionContext, s: Session, t: Target, entries: readonly Correction[], historyName: string, emptyOk: boolean): Promise<SdkSettings> {
+  const readBack = await writeSdk(ctx, s, t, tableSettings(entries, emptyOk), historyName);
+  const problems = verifyTable(entries, readBack);
+  if (problems.length > 0) throw new ToolError("WRITE_NOT_TAKEN", `Lightroom did not take the mask table as written in "${historyName}": ${problems.join("; ")}.`, false, { history_name: historyName, problems });
+  return readBack;
+}
+
+/** Write an SDK table as one History step and return the read-back for the caller to check. */
+export async function writeSdk(ctx: SessionContext, s: Session, t: Target, sdk: SdkSettings, historyName: string): Promise<SdkSettings> {
   checkAbort(s);
+  await settlePending(ctx, s); // refused while Lightroom has not answered an AI mask update (ai-update.ts, D16)
+  ctx.deps.hud?.stage(s, "applying");
+  const res = await bridge(s, t, () =>
+    ctx.deps.client
+      .request("apply_settings", { target_uuid: t.uuid, settings: sdk, history_name: historyName }, { timeoutMs: WRITE_TIMEOUT_MS })
+      .catch((err: unknown) => Promise.reject(maybeWritten(err, historyName))),
+  );
+  return res.read_back;
+}
+
+/**
+ * Render a session photo, measuring the session's regions. `view` is what the render shows (the last
+ * read-back: its settings and mask table). `keep: false` leaves the photo's last render alone (probes).
+ */
+export async function render(ctx: SessionContext, s: Session, t: Target, view: Pick<FromSdkResult, "settings" | "masks">, options: { keep?: boolean; longEdge?: number } = {}): Promise<Rendered> {
+  checkAbort(s);
+  await settlePending(ctx, s);
   const longEdge = options.longEdge ?? s.longEdge;
   ctx.deps.hud?.stage(s, "acquiring_preview");
   const preview = await bridge(s, t, () =>
@@ -120,7 +146,8 @@ export async function render(ctx: SessionContext, s: Session, t: Target, setting
     width: preview.width,
     height: preview.height,
     timings: preview.timings,
-    settings,
+    settings: view.settings,
+    masks: view.masks.fingerprint,
     longEdge,
     preview,
   };
@@ -131,8 +158,8 @@ export async function render(ctx: SessionContext, s: Session, t: Target, setting
 /**
  * The photo's last render, rendered again first when it no longer stands for the photo as the
  * session measures it (Greptile, PR #23):
- *   - its settings are not the photo's now (an edit in Lightroom between calls, or a render after
- *     a write failed);
+ *   - its settings or its mask table are not the photo's now (an edit in Lightroom between calls, or
+ *     a render after a write failed);
  *   - it is at another size than the session's (lr_get_preview with another long_edge), since
  *     resizing averages pixels and so moves the clipping counts [inference].
  * The guardrails, deltas and convergence then compare like with like [handle: tests\session-step.test.ts
@@ -141,8 +168,9 @@ export async function render(ctx: SessionContext, s: Session, t: Target, setting
  * preview at another size"].
  */
 export async function fresh(ctx: SessionContext, s: Session, t: Target, view: FromSdkResult): Promise<{ last: Rendered; refreshed: boolean }> {
-  if (t.last && t.last.longEdge === s.longEdge && differingSettings(t.last.settings, view.settings).length === 0) return { last: t.last, refreshed: false };
-  return { last: await render(ctx, s, t, view.settings), refreshed: true };
+  const last = t.last;
+  if (last && last.longEdge === s.longEdge && last.masks === view.masks.fingerprint && differingSettings(last.settings, view.settings).length === 0) return { last, refreshed: false };
+  return { last: await render(ctx, s, t, view), refreshed: true };
 }
 
 /** "AVG <id> pass n/N" (PRD FR-4.4); a copy's steps name the copy, "AVG <id> A pass n/N" [inference: the letter is this engine's addition]. */
@@ -196,9 +224,14 @@ export function failed(ctx: SessionContext, s: Session, stage: string, err: unkn
   } catch {
     // the error being reported matters more than the log write
   }
+  if (s.endedByEngine) return error; // the engine ended the session (ai-masks.ts autoRevert): its message says so
   const details = typeof error.details === "object" && error.details !== null ? error.details : {};
   const back = s.mode === "variants" ? "puts the master back (the copies stay in the catalog)" : "puts the photo back";
-  return new ToolError(error.code, `${error.message} (session ${s.id} is still open; lr_end_session with outcome "revert" ${back}.)`, error.recoverable, {
+  // An AI update without a result (ai-update.ts, D16): no revert either until it shows, or until Lightroom restarts.
+  const open = s.aiPending
+    ? `session ${s.id} is still open; Lightroom has not finished the AI mask, so nothing is written until its result shows, or until Lightroom restarts and the engine puts the photo back by itself`
+    : `session ${s.id} is still open; lr_end_session with outcome "revert" ${back}`;
+  return new ToolError(error.code, `${error.message} (${open}.)`, error.recoverable, {
     ...details,
     session_id: s.id,
   });

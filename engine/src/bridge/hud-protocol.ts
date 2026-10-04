@@ -28,7 +28,11 @@
 //     it says the edit is no longer open in Claude and shows the undo path through `snapshot` (a click
 //     on a session the engine does not know gets one `ended` update for it, hud\events.ts);
 //   - shows "Target changed" when the selected photo is not in `session_photos` (or is not the
-//     target, without it), so a copy the engine is about to select must be listed first.
+//     target, without it), so a copy the engine is about to select must be listed first;
+//   - from 0.13.0, keeps `put_back` and, once the open session's engine has been away 10 s or the
+//     edit is no longer open in Claude, enables a Put back button that applies that snapshot to that
+//     photo itself (HudClick.lua), so the photo never waits on a Lightroom restart [stated: Jim,
+//     2026-10-03, "A LrC restart had to be done to revert the photo"].
 // `target.iso` is shown after "ISO ", `target.lens_profile` after "lens profile "; the other target
 // fields as given (e.g. shutter "1/250 s", aperture "f/8"). `deltas[].slider` is Lightroom's panel
 // label (params\labels.ts) and `guardrail.reason` one finished sentence (hud\payload.ts); the plugin
@@ -45,7 +49,7 @@ export type HudStage = (typeof HUD_STAGES)[number];
 /** The stages that end a session: the HUD turns its buttons off and stays open (plugin 0.9.0). */
 export const HUD_END_STAGES = ["accepted", "aborted", "ended"] as const;
 export const HUD_GUARDRAIL = ["green", "clamped", "refused", "corrected", "unmet", "undone"] as const;
-export const HUD_EVENTS = ["hud_abort", "hud_accept", "hud_pick", "hud_approve_pass"] as const;
+export const HUD_EVENTS = ["hud_abort", "hud_accept", "hud_pick", "hud_approve_pass", "hud_put_back"] as const;
 export const HUD_VARIANTS = ["A", "B", "C"] as const;
 /** `id` and `text` count UTF-8 bytes, as Lua's # does. */
 export const HUD_LIMITS = { text: 120, id: 64, rows: 12, photos: 16, pass: 99, decay: 8 } as const;
@@ -105,6 +109,17 @@ export const hudUpdatePayloadSchema = z.strictObject({
   settings: settings.optional(),
   /** The pre-session snapshot's name (Develop > Snapshots), for the undo line when Claude is gone (plugin 0.9.0). */
   snapshot: text.optional(),
+  /**
+   * The pre-session snapshot and its photo (Variants: the master), for the HUD's Put back button when
+   * the engine stops mid-session (plugin 0.13.0, PR C step 2b); sent while the session is open, absent
+   * at an end stage.
+   */
+  put_back: z.strictObject({ photo_uuid: id, snapshot_id: id, snapshot_name: text }).optional(),
+  /**
+   * Plugin 0.15.0 (D15): close the window this many seconds after taking this update, unless a newer one
+   * came; sent when the engine itself ended the session [stated: Jim, 2026-10-04, "Show, then close"].
+   */
+  close_after: int(1, 60).optional(),
 });
 export type HudUpdatePayload = z.infer<typeof hudUpdatePayloadSchema>;
 
@@ -130,6 +145,8 @@ export const hudEventSchemas = {
   hud_accept: z.strictObject(eventBase),
   hud_pick: z.strictObject({ ...eventBase, variant: z.enum(HUD_VARIANTS) }),
   hud_approve_pass: z.strictObject({ ...eventBase, pass: int(1, HUD_LIMITS.pass) }),
+  /** Plugin 0.13.0: the HUD's Put back applied the session's snapshot itself; `outcome` says whether it took (engine\src\session\put-back.ts). */
+  hud_put_back: z.strictObject({ ...eventBase, outcome: z.enum(["done", "failed"]) }),
 } as const;
 
 export type HudEventName = (typeof HUD_EVENTS)[number];

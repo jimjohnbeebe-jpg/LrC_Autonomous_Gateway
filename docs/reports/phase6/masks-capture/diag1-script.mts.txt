@@ -1,0 +1,92 @@
+// Diagnostic, 2026-10-04: one AI Vegetation mask on 20260907-_OZ80099.NEF with NO session (no pass 0, no
+// renders), built with the engine's own builder. Question: does Lightroom compute it, or does it freeze as
+// inside a session (capture 5 row E)? Never writes to the photo while the mask has no result.
+// Usage, repo root, Claude Desktop quit: node logs\diag-vegetation-2026-10-04\diag.mts
+import { copyFileSync, existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { createInterface } from "node:readline/promises";
+import { pathToFileURL } from "node:url";
+
+const repo = process.cwd();
+const out = path.join(repo, "logs", "diag-vegetation-2026-10-04");
+const dist = (p: string) => import(pathToFileURL(path.join(repo, "engine", "dist", p)).href);
+const { BridgeClient } = await dist("bridge/index.js");
+const { acquireInstanceLock, devOverrides, ENGINE_VERSION } = await dist("mcp/index.js");
+const { applyOp, readTable, tableSettings } = await dist("params/index.js");
+
+const UUID = "CF12AF60-0858-4181-9562-376D16B89126"; // 20260907-_OZ80099.NEF [handle: logs\20260927-26ecc4.json]
+const KEY = "MaskGroupBasedCorrections";
+const lines: string[] = [];
+const say = (s: string) => { const l = `[${new Date().toLocaleTimeString()}] ${s}`; lines.push(l); console.log(l); writeFileSync(path.join(out, "transcript.txt"), lines.join("\n") + "\n"); };
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const rl = createInterface({ input: process.stdin, output: process.stdout });
+rl.on("SIGINT", () => say("Ctrl+C: ignored while Lightroom may be computing; the check never writes before Lightroom's result. Wait for the last lines."));
+const ask = async (q: string) => { const a = (await rl.question(`${q} (y/n) `)).trim().toLowerCase(); lines.push(`  ? ${q} -> ${a}`); return a; };
+
+function copyLogs(): void {
+  const dirs = [path.join(process.env["APPDATA"] ?? "", "Adobe", "CameraRaw", "Logs"), path.join(process.env["APPDATA"] ?? "", "Adobe", "Lightroom")];
+  for (const d of dirs) if (existsSync(d)) for (const f of readdirSync(d).filter((x) => /Log Latest|lrc_console/.test(x))) copyFileSync(path.join(d, f), path.join(out, f.replace(/\s+/g, "_")));
+  say("Lightroom's logs copied into logs\\diag-vegetation-2026-10-04.");
+}
+
+mkdirSync(out, { recursive: true });
+const dev = devOverrides();
+const lock = await acquireInstanceLock(dev.lockPort);
+if (!lock.ok) { console.log("LOCK BUSY: quit Claude Desktop from the tray, wait 60 s, run again."); process.exit(2); }
+const client = new BridgeClient({ engineVersion: `${ENGINE_VERSION}-diag`, log: () => {}, silenceAllowanceMs: () => 60_000, ...dev.bridge });
+client.start();
+const get = async () => (await client.request("get_settings", { photo_uuid: UUID }, { timeoutMs: 30_000 })).settings as Record<string, any>;
+let snapshotId: string | null = null;
+let result = "not run";
+let computeStarted = false;
+try {
+  const hello = await client.waitConnected(30_000);
+  say(`Lightroom ${hello.lrc_version}, plugin ${hello.plugin_version}`);
+  const before = await get();
+  if ((before[KEY] ?? []).length !== 0) throw new Error("the photo already has masks; the diagnostic expects none");
+  snapshotId = (await client.request("create_snapshot", { photo_uuid: UUID, name: `AVG diag before ${new Date().toLocaleTimeString("en-GB")}` }, { timeoutMs: 60_000 })).snapshot_id;
+  say("Snapshot taken. Writing one Vegetation mask (no session, no renders)...");
+  const op = applyOp(readTable(before), { op: "create", kind: "landscape_vegetation", name: "AVG diag vegetation" });
+  await client.request("apply_settings", { photo_uuid: UUID, settings: tableSettings(op.entries, false), history_name: "AVG diag vegetation" }, { timeoutMs: 90_000 });
+  const t0 = Date.now();
+  computeStarted = true;
+  await client.request("update_ai_settings", { photo_uuid: UUID, request_id: `diag-${t0}` }, { timeoutMs: 30_000 });
+  say("Lightroom asked to compute it. Waiting up to 3 minutes for its result. Do not click in Lightroom.");
+  while (Date.now() - t0 < 180_000) {
+    await sleep(1000);
+    let s: Record<string, any>;
+    try { s = await get(); } catch (err: any) { say(`read failed (${err?.message ?? err}); waiting`); continue; }
+    const mask = (s[KEY] ?? []).find((e: any) => e.CorrectionID === op.id)?.CorrectionMasks?.[0];
+    if (mask?.MaskDigest) { result = `computed in ${Date.now() - t0} ms`; break; }
+    if (mask?.ErrorReason && Number(mask.ErrorReason) !== 0) { result = `nothing found (ErrorReason ${mask.ErrorReason}) in ${Date.now() - t0} ms`; break; }
+    if ((Date.now() - t0) % 15_000 < 1000) say(`...still computing (${Math.round((Date.now() - t0) / 1000)} s)`);
+  }
+  if (result === "not run") {
+    result = "no result in 3 minutes";
+    say("RESULT: no result in 3 minutes: Lightroom's AI computation seems stuck.");
+    copyLogs();
+    await rl.question("Restart Lightroom now (File > Exit, then start it again; Claude Desktop stays closed). When Lightroom is open again, press Enter here. ");
+    await client.waitConnected(15 * 60_000);
+  } else {
+    say(`RESULT: ${result}.`);
+    if (result.startsWith("computed")) await ask("In Develop's Masks panel (Shift+W), does 'AVG diag vegetation' cover the trees and plants?");
+  }
+} catch (err: any) {
+  say(`STOPPED: ${err?.code ?? ""} ${err?.message ?? err}`);
+  if (computeStarted && result === "not run") {
+    // Lightroom may still be computing: never write under it (capture 5 row E).
+    copyLogs();
+    await rl.question("Lightroom may still be computing. Restart Lightroom (File > Exit, then start it again), then press Enter here. ");
+    await client.waitConnected(15 * 60_000).catch(() => undefined);
+  }
+} finally {
+  if (snapshotId) {
+    await client.request("apply_snapshot", { photo_uuid: UUID, snapshot_id: snapshotId }, { timeoutMs: 90_000 }).catch((e: any) => say(`put-back failed: ${e?.message ?? e}`));
+    const after = await get().catch(() => null);
+    say(`PUT BACK: ${after && (after[KEY] ?? []).length === 0 ? "YES (no masks left)" : "NO: in Develop > Snapshots click the snapshot starting 'AVG diag before'"}`);
+    await ask("Does 20260907-_OZ80099.NEF look as before, with no 'AVG diag' mask, and does Lightroom respond normally?");
+  }
+  say(`Diagnostic done: ${result}.`);
+  client.stop(); await lock.lock.release(); rl.close();
+  process.exit(0);
+}

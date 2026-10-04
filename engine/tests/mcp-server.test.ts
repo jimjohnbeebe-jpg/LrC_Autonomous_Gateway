@@ -14,7 +14,7 @@ import { createServer, ENGINE_VERSION, Tools } from "../src/mcp/index.js";
 import { loadDefaultParamMap } from "../src/params/index.js";
 import { PreviewService } from "../src/preview/index.js";
 import { ToolLog } from "../src/log/index.js";
-import { FakePlugin } from "./helpers/fake-plugin.js";
+import { FakePlugin, type FakeHandler } from "./helpers/fake-plugin.js";
 import { LightroomSim } from "./helpers/lightroom-sim.js";
 
 type Content = Array<{ type: string; text?: string; data?: string; mimeType?: string }>;
@@ -48,7 +48,7 @@ beforeEach(async () => {
     log: new ToolLog(logDir),
   });
   const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
-  await createServer(tools).connect(serverSide);
+  await createServer(tools, { progressMs: 20 }).connect(serverSide);
   mcp = new Client({ name: "test", version: "0" });
   await mcp.connect(clientSide);
 });
@@ -72,12 +72,15 @@ describe("mcp server", () => {
     expect(mcp.getServerVersion()).toMatchObject({ name: "lrc-avg", version: ENGINE_VERSION });
   });
 
-  it("lists the Phase 3 tools, the Phase 4 ones, lr_approve_pass (Phase 5) and the catalog tools (Phase 6), without the temporary lr_set_settings", async () => {
+  it("lists the Phase 3 tools, the Phase 4 ones, lr_approve_pass (Phase 5), the catalog and mask tools (Phase 6), without the temporary lr_set_settings", async () => {
     const { tools } = await mcp.listTools();
     expect(tools.map((t) => t.name).sort()).toEqual([
       "lr_approve_pass",
       "lr_begin_session",
+      "lr_create_mask",
       "lr_create_preset_from_active",
+      "lr_delete_mask",
+      "lr_edit_mask",
       "lr_end_session",
       "lr_get_active_photo_context",
       "lr_get_intent",
@@ -88,6 +91,7 @@ describe("mcp server", () => {
       "lr_list_collections",
       "lr_list_intents",
       "lr_list_keywords",
+      "lr_list_masks",
       "lr_probe",
       "lr_save_intent",
       "lr_search_photos",
@@ -153,6 +157,19 @@ describe("mcp server", () => {
     expect(body["ok"]).toBe(false);
     expect(body["error"]).toMatchObject({ code: "SESSION_NOT_ACTIVE", recoverable: false });
     expect(String((body["error"] as { message: string }).message)).not.toMatch(/\n\s+at /); // no stack
+  });
+
+  it("sends progress notifications, rising, while a call runs when the client asked for them (issue #59, PR C step 2d)", async () => {
+    const real = plugin.handlers.get("get_context") as FakeHandler;
+    plugin.handlers.set("get_context", async (p, id) => {
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      return real(p, id);
+    });
+    const seen: number[] = [];
+    const res = await mcp.callTool({ name: "lr_get_active_photo_context", arguments: {} }, undefined, { onprogress: (p) => void seen.push(p.progress) });
+    expect(res.isError).toBeFalsy();
+    expect(seen.length).toBeGreaterThanOrEqual(2);
+    expect(seen).toEqual(seen.map((_, i) => i + 1));
   });
 
   it("lists and returns the bundled intents without Lightroom, and refuses an unconfirmed save", async () => {

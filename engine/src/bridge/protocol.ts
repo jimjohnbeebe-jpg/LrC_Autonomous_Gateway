@@ -10,8 +10,8 @@
 //     { id, type: "evt", name, ts, payload }
 // Every inbound line is validated here with zod before the engine acts on it (rule 01-stack).
 // The plugin side is plugin\LrC-AVG.lrplugin\Bridge.lua, Dispatch.lua (the handler table),
-// Develop.lua, Preview.lua, Catalog.lua, Photos.lua, Library.lua (with KeywordTree.lua), Prefs.lua and
-// Hud.lua (with hud-protocol.ts).
+// Develop.lua, Preview.lua, Catalog.lua, Photos.lua, Library.lua (with KeywordTree.lua), Prefs.lua,
+// Hud.lua (with hud-protocol.ts) and Masks.lua (with MaskProbe.lua).
 //
 // Lua cannot tell an empty array from an empty object, and the plugin's Json.lua writes every empty
 // table as []. Payload schemas below never require a non-empty table to be an object.
@@ -62,6 +62,12 @@ export const helloResultSchema = z.looseObject({
   lrc_version: z.string(),
   sdk_declared: z.number(),
   ports: z.object({ receive: z.number(), send: z.number() }),
+  /**
+   * Plugin 0.16.0 (Bridge.lua): when the plugin's Lua state first loaded the bridge; another value at a
+   * reconnect means Lightroom restarted [inference: a Reload Plug-in keeps the Lua state, a restart does not]
+   * (session\restart.ts, D16).
+   */
+  process_started_at: z.string().optional(),
 });
 export type HelloResult = z.infer<typeof helloResultSchema>;
 
@@ -103,6 +109,12 @@ const photoIdentity = {
 
 /** A photo in a listing (get_selection, search_photos). A photo whose uuid could not be read has none. */
 const listedPhoto = z.object({ ...photoIdentity, uuid: z.string().optional() });
+
+/**
+ * One step of create_ai_mask_dc (MaskProbe.lua record()): an LrDevelopController or LrApplicationView
+ * call, its result as the SDK gave it (functions and userdata as "<type>"), or the error it raised.
+ */
+const probeStep = z.object({ step: z.string(), ok: z.boolean(), result: z.unknown().optional(), error: z.string().optional(), ms: z.number() });
 
 /** One entry of a findPhotos search descriptor (engine\src\library\search.ts builds them). */
 export type SearchCriterion = { criteria: string; operation: string; value: string | number; value2?: string };
@@ -212,10 +224,55 @@ export const COMMANDS = {
   }),
   // Plugin 0.6.0 (Hud.lua update): the HUD's state; the contract is in hud-protocol.ts.
   hud_update: hudUpdateResultSchema,
+  // Plugin 0.11.0 (Masks.lua, issue #59). update_ai_settings: photo:updateAISettings() in its own write
+  // gate. A Lightroom without the call answers feature_unavailable. Up to 0.12.0 it waited for the
+  // update (call_ms, `gate` what withWriteAccessDo returned); 0.13.0 used an asynchronous gate, which
+  // still waited for the update when the catalog was free (`status` "executed"); from 0.14.0 the update
+  // runs in the plugin's own task and the answer comes at once [unverified until capture 5]: `status` "started", `state` what the task
+  // did so far (started, running, done, failed, abandoned; probe_write_gate reports it later). From 0.16.0
+  // (Pending.lua, D16) the payload's `watch` makes the plugin refuse every write to the photo, with
+  // ai_compute_pending, until the entries it lists show a digest or an ErrorReason; `guarded` says it took.
+  update_ai_settings: z.object({
+    ...targeted,
+    status: z.string().optional(),
+    state: z.string().optional(),
+    guarded: z.boolean().optional(),
+    call_ms: z.number().optional(),
+    command_ms: z.number().optional(),
+    gate: z.string().optional(),
+  }),
+  // create_ai_mask_dc (plugin 0.12.0): LrDevelopController.createNewMask("aiSelection", subtype) on the
+  // selected photo (the target), and the mask ids getAllMasks lists that were not there before it
+  // (`new_ids`, each a table CorrectionID [handle: docs\reports\phase6\masks-capture\12_probe_dc.json
+  // getAllMasks_after_sky against getDevelopSettings_after_sky]); `steps` say whether createNewMask
+  // itself ran; `stopped` says why it ran no further step (the selection changed, or its own deadline
+  // passed). It switches to Develop and does not switch back [inference: no step of it leaves Develop].
+  create_ai_mask_dc: z.object({
+    uuid: z.string().optional(),
+    filename: z.string().optional(),
+    steps: z.array(probeStep),
+    stopped: z.string().optional(),
+    new_ids: z.array(z.string()),
+    waited_ms: z.number(),
+  }),
+  // probe_write_gate (plugin 0.13.0, PR C step 2b): an empty write gate with a 0.5 s timeout; `status`
+  // "executed" (the catalog is free) or "aborted" (another write holds it, such as a Lightroom dialog
+  // inside the update's gate), and the last update_ai_settings' record (Masks.lua).
+  probe_write_gate: z.object({
+    status: z.string(),
+    ms: z.number(),
+    update: z.object({ uuid: z.string().optional(), request_id: z.string().optional(), state: z.string(), error: z.string().optional() }).optional(),
+  }),
 } as const;
 
 export type CommandName = keyof typeof COMMANDS;
 export type CommandResult<N extends CommandName> = z.infer<(typeof COMMANDS)[N]>;
+
+/**
+ * What the plugin's AI-mask guard reads (plugin 0.16.0, Pending.lua): the entries asked for, by their
+ * CorrectionID, and the table's field names, which only the engine's params hold (rule 03; params\mask-ops.ts aiWatch).
+ */
+export type AiWatch = { ids: string[]; table: string; id: string; masks: string; digest: string; error: string };
 
 /** What the plugin checks a photo found by uuid against (Photos.lua); each field optional. */
 export type PhotoExpect = { copy_name?: string; master_local_id?: number; is_virtual_copy?: boolean };
@@ -257,4 +314,9 @@ export type CommandPayloads = {
   get_prefs: Record<string, never>;
   /** Refused with bad_request when a field is unknown or of the wrong type (hud-protocol.ts). */
   hud_update: HudUpdatePayload;
+  /** Plugin 0.11.0: the photo with that uuid, checked against `expect`; the selection is not touched. `watch`: plugin 0.16.0 (params\mask-ops.ts aiWatch). */
+  update_ai_settings: { photo_uuid: string; expect?: PhotoExpect; request_id?: string; watch?: AiWatch };
+  /** Plugin 0.12.0: on the selected photo, refused with target_mismatch unless it is target_uuid's; waits up to wait_seconds (1-15, default 12) for the mask after createNewMask; switches Lightroom to Develop. */
+  create_ai_mask_dc: { target_uuid: string; subtype: string; wait_seconds?: number };
+  probe_write_gate: Record<string, never>;
 };

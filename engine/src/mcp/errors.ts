@@ -6,7 +6,7 @@
 
 import { BridgeError } from "../bridge/index.js";
 import { IntentError } from "../intents/index.js";
-import { ParamError, UnknownCameraProfileError, lightroomLabel, sdkKeysOf, type ParamMap, type SdkSettings } from "../params/index.js";
+import { MaskError, ParamError, UnknownCameraProfileError, lightroomLabel, sdkKeysOf, type ParamMap, type SdkSettings } from "../params/index.js";
 import { PreviewError } from "../preview/index.js";
 
 export type ToolErrorBody = { code: string; message: string; recoverable: boolean; details?: unknown };
@@ -128,6 +128,8 @@ export function toToolError(err: unknown, lightroom?: LightroomVersions): ToolEr
     return new ToolError("UNKNOWN_CAMERA_PROFILE", err.message, false, { profile: err.profile });
   }
   if (err instanceof PreviewError) return new ToolError(err.code, err.message, err.recoverable);
+  // A mask operation the engine refuses (params\mask-ops.ts): nothing was written; the codes are the masks tools' own.
+  if (err instanceof MaskError) return new ToolError(err.code, err.message, false, err.details);
   if (err instanceof IntentError) {
     // INTENT_NOT_FOUND is MCP_TOOLS' code; INVALID_INTENT and INTENT_EXISTS are Phase 3's own.
     const codes: Record<IntentError["code"], string> = { intent_not_found: "INTENT_NOT_FOUND", invalid_intent: "INVALID_INTENT", intent_exists: "INTENT_EXISTS" };

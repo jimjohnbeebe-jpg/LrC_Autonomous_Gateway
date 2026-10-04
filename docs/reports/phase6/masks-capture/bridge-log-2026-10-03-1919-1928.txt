@@ -1,0 +1,148 @@
+2026-10-03 19:19:31.013 INFO  bridge: starting generation 1 (receive 8765, send 8766)
+2026-10-03 19:19:42.331 INFO  bridge: token written to %USERPROFILE%\.lrc-avg\bridge_token
+2026-10-03 19:19:42.368 INFO  bridge: ports 8765/8766 written to %USERPROFILE%\.lrc-avg\bridge_ports.json
+2026-10-03 19:19:42.368 INFO  bridge: listening (generation 1)
+2026-10-03 19:19:57.064 INFO  bridge: receive: engine connected
+2026-10-03 19:19:57.575 INFO  bridge: send: engine connected
+2026-10-03 19:19:57.577 INFO  bridge: hello f7a12a0d-8e7a-48c3-8f59-5aab5572c897
+2026-10-03 19:19:57.605 INFO  bridge: select_photo b96e5298-f408-41f3-9145-431700fb1768
+2026-10-03 19:19:57.663 INFO  bridge: get_settings 7b25b548-bcfb-498c-b606-80f6c9a965b6
+2026-10-03 19:19:57.675 INFO  bridge: get_prefs 1c6348e6-0632-4326-a938-c8050c56ffbd
+2026-10-03 19:19:57.695 INFO  bridge: get_context 208db9c3-157c-419e-bca2-637407a3fdc8
+2026-10-03 19:19:57.707 INFO  bridge: get_settings 1aee7d38-a81b-4d01-b9d4-05604255ba10
+2026-10-03 19:19:57.714 INFO  bridge: create_snapshot 85539c45-577f-4d30-b6ce-5c4c4a6622cf
+2026-10-03 19:19:57.743 INFO  bridge: hud_update b366c476-87f7-45cc-9f49-1e76c2ee49e2
+2026-10-03 19:19:57.743 INFO  hud: session f9d3883f-e357-484d-ad8f-cb8ed929640b
+2026-10-03 19:19:57.875 INFO  hud: shown
+2026-10-03 19:19:57.985 INFO  bridge: export_preview 16741152-fb7e-4df7-ba23-d86c878a1f2d
+2026-10-03 19:19:57.986 INFO  bridge: hud_update 9b2b837b-92b3-454b-b619-47d6bbb46c04
+2026-10-03 19:19:58.004 INFO  hud: selection CF12AF60-0858-4181-9562-376D16B89126: Selection: the edit's photo.
+2026-10-03 19:20:02.068 INFO  bridge: hud_update 69266ec7-4294-4421-9a1a-9367a2ec293e
+2026-10-03 19:20:02.071 INFO  bridge: apply_settings 741f1a2d-497d-4437-a49f-e8a348df957f
+2026-10-03 19:20:02.071 INFO  bridge: hud_update bea4d343-0046-425a-b6ee-25aae8608775
+2026-10-03 19:20:02.129 INFO  bridge: hud_update e344d222-1216-4410-ba3c-06de7221ffbb
+2026-10-03 19:20:02.133 INFO  bridge: export_preview a915f981-8257-4d06-8b53-33ee4407f1d5
+2026-10-03 19:20:06.033 INFO  bridge: hud_update 16d52909-5ad9-4960-a25d-48a53e49c1ea
+2026-10-03 19:20:06.036 INFO  bridge: apply_settings 2f033bdf-277d-4c16-9399-69bc42243173
+2026-10-03 19:20:06.037 INFO  bridge: hud_update b4c0b46e-7499-4f99-aaf5-1845407aee08
+2026-10-03 19:20:06.132 INFO  bridge: hud_update 4deffab3-3e53-485c-93e3-d09683a07353
+2026-10-03 19:20:06.135 INFO  bridge: export_preview 4a911289-4ec1-49a9-a90b-31a23969f480
+2026-10-03 19:20:09.593 INFO  bridge: hud_update d49a1308-38a0-4579-ba0d-6bdb5b67bbd1
+2026-10-03 19:20:09.597 INFO  bridge: apply_settings 024dcffe-1692-4fc6-8151-f64a00057ed3
+2026-10-03 19:20:09.597 INFO  bridge: hud_update 6bd3b4b0-8e60-42aa-bcca-3dff4e021596
+2026-10-03 19:20:09.693 INFO  bridge: hud_update d9313aa4-2bd2-4370-b4a3-c98ff68ee03d
+2026-10-03 19:20:09.697 INFO  bridge: export_preview 3050b763-64ce-4545-8adc-3721a875c4cb
+2026-10-03 19:20:13.485 INFO  bridge: hud_update d83f6dbd-b676-4cf8-b653-fe161654aeaf
+2026-10-03 19:20:13.490 INFO  bridge: apply_settings 3c08fec5-92eb-4538-a704-5cdd3340c925
+2026-10-03 19:20:13.491 INFO  bridge: hud_update e90070f4-0c7d-492d-8b53-b0c1c085f797
+2026-10-03 19:20:13.579 INFO  bridge: hud_update 36e140bb-861d-4af3-a10e-bce01ee1bc78
+2026-10-03 19:20:13.581 INFO  bridge: export_preview 719f3bf0-31ac-4e34-9264-200be535c6ee
+2026-10-03 19:20:17.494 INFO  bridge: hud_update 8d5daa3d-7395-4598-be68-4731d76205e9
+2026-10-03 19:20:17.496 INFO  bridge: apply_settings db5cffd8-1619-4da1-a309-545cb51896d1
+2026-10-03 19:20:17.498 INFO  bridge: hud_update 8e0a99db-c013-4c51-ab58-669ae95d025d
+2026-10-03 19:20:17.617 INFO  bridge: hud_update d9ec4b9b-ca74-433e-a568-1f8d09632c5d
+2026-10-03 19:20:17.623 INFO  bridge: export_preview 3283e7ed-b30f-4e76-9340-3d3a57518d5a
+2026-10-03 19:20:21.566 INFO  bridge: hud_update 9e92c9a7-098c-4230-9a6f-18f20929c1f0
+2026-10-03 19:20:21.572 INFO  bridge: apply_settings 3533b1e0-b491-495f-a900-5845cf860477
+2026-10-03 19:20:21.573 INFO  bridge: hud_update 683d1e98-cf29-488e-bc49-e2fae0d44695
+2026-10-03 19:20:21.673 INFO  bridge: hud_update 12cc4d04-665e-4c22-849d-16118fe47331
+2026-10-03 19:20:21.676 INFO  bridge: export_preview a78504f9-5d5b-4253-910a-196c56309443
+2026-10-03 19:20:25.796 INFO  bridge: hud_update 5e2fcfdb-4155-4846-a0c6-f6ce1f1471c7
+2026-10-03 19:20:25.802 INFO  bridge: apply_settings 6da7bdbd-69a8-4e6b-8a26-7baec5a27672
+2026-10-03 19:20:25.804 INFO  bridge: hud_update 6b8e8df4-7936-4447-ad88-fc873361fa4f
+2026-10-03 19:20:25.917 INFO  bridge: hud_update 22cbd49d-997c-49ab-bbca-878181294530
+2026-10-03 19:20:25.922 INFO  bridge: export_preview e5f8c8cb-7c38-44d0-abd7-e66c3c5ce7cc
+2026-10-03 19:20:30.179 INFO  bridge: hud_update 4a187895-8f92-4cd9-9b32-d2afa104a253
+2026-10-03 19:20:30.183 INFO  bridge: apply_settings 65656d1d-cc49-4acf-88db-9a8aa880cbd4
+2026-10-03 19:20:30.184 INFO  bridge: hud_update 3aa2a7d0-853b-4fb6-bb5f-00b2e9897f1d
+2026-10-03 19:20:30.288 INFO  bridge: hud_update 64e03332-f4a6-4d7d-a985-9023493b9acd
+2026-10-03 19:20:30.293 INFO  bridge: export_preview fef5a9c5-d58d-4e6b-935c-6fb8d77c97a6
+2026-10-03 19:20:34.503 INFO  bridge: hud_update 3725c778-1bc0-47ff-adce-139bc0aed997
+2026-10-03 19:20:34.509 INFO  bridge: apply_settings 571ff7dc-f800-42c7-852c-ad3b33784c25
+2026-10-03 19:20:34.512 INFO  bridge: hud_update 67eb23e6-bd21-4019-8611-6f786db83b51
+2026-10-03 19:20:34.624 INFO  bridge: hud_update 5e8e1007-d7a1-4ce9-a47a-22be65a74d77
+2026-10-03 19:20:34.627 INFO  bridge: export_preview f79b6c2b-a59f-47a1-ba10-be9438ab3e93
+2026-10-03 19:20:38.882 INFO  bridge: hud_update a941db86-41f2-4c39-9d46-7efb34a6eac5
+2026-10-03 19:20:38.893 INFO  bridge: get_settings 187d66be-76c3-4018-89aa-26ed26e5ce64
+2026-10-03 19:20:38.895 INFO  bridge: hud_update 8071696e-3aed-4c0f-bcb9-a13f4d2a2ea8
+2026-10-03 19:20:38.943 INFO  bridge: get_settings 32e75419-b535-424e-b83d-08c9aa78f97b
+2026-10-03 19:20:38.948 INFO  bridge: get_settings 9187a4f5-cf3d-4f24-8b32-cf785db8040f
+2026-10-03 19:20:38.955 INFO  bridge: hud_update 24adc843-46a2-42e1-8c3a-2943dc558f0e
+2026-10-03 19:20:38.960 INFO  bridge: apply_settings 8375def9-1384-4a74-96d2-0e0166252008
+2026-10-03 19:20:39.079 INFO  bridge: update_ai_settings abd140a1-29bd-467f-862d-ebd1b3bbc522
+2026-10-03 19:20:43.827 INFO  bridge: get_settings e00113bb-4324-44c6-93a7-1efd3e69e8d6
+2026-10-03 19:20:43.881 INFO  bridge: hud_update 5926e655-e10d-4160-afa9-52334087abb5
+2026-10-03 19:20:43.885 INFO  bridge: export_preview f9d2ab78-f56b-4168-aabe-ee0423e0e434
+2026-10-03 19:20:48.737 INFO  bridge: hud_update da46c87a-5036-4ff0-9891-f1bb21fa5d2f
+2026-10-03 19:20:48.751 INFO  bridge: hud_update 2cea1b69-04e8-4665-9030-d3ad6f02db4e
+2026-10-03 19:21:27.105 INFO  bridge: get_settings 8a46090b-1509-4982-8f2f-82cc49b4093c
+2026-10-03 19:21:27.122 INFO  bridge: get_settings 5bafe828-8f1a-4ccb-9852-58b888d51a4e
+2026-10-03 19:21:27.146 INFO  bridge: hud_update e8a53b2a-4b9a-46b3-88a5-2a9307689f14
+2026-10-03 19:21:27.154 INFO  bridge: apply_settings 80c9f2ab-9a34-4816-b681-76f8ebf5c859
+2026-10-03 19:21:27.539 INFO  bridge: hud_update ecb2b2e0-b0d4-4e37-974a-86d86d60c78e
+2026-10-03 19:21:27.542 INFO  bridge: export_preview db3a597c-8a25-42e8-8199-fa61469c1238
+2026-10-03 19:21:31.894 INFO  bridge: hud_update d5004ea2-42b6-4a2a-b521-667836a100f2
+2026-10-03 19:21:31.905 INFO  bridge: hud_update 21e7c5ec-e79d-4492-ba4f-1c8ce5d48656
+2026-10-03 19:21:40.380 INFO  bridge: get_settings b74316d7-9aff-42f9-b4a6-9b643a095060
+2026-10-03 19:21:40.386 INFO  bridge: get_settings 1cf21326-bded-4e27-9860-e46e312bd56e
+2026-10-03 19:21:40.406 INFO  bridge: hud_update 2c68634d-e56c-450e-95be-912e2d1c4d68
+2026-10-03 19:21:40.431 INFO  bridge: apply_settings 09e90d67-b324-4c9b-bf4c-5392c4181015
+2026-10-03 19:21:40.755 INFO  bridge: hud_update 06caafe7-3378-478d-b2ea-383d6e45d569
+2026-10-03 19:21:40.757 INFO  bridge: export_preview 8e7f2a6f-b0f2-41c4-acda-d5d722ebc889
+2026-10-03 19:21:44.532 INFO  bridge: hud_update 78576414-8fce-4b15-9b61-05a7ea1aab0b
+2026-10-03 19:21:44.537 INFO  bridge: hud_update c955c792-882f-4846-9f79-f61d1c818bd9
+2026-10-03 19:21:47.663 INFO  bridge: get_settings 4c8fa42b-abde-4085-8bbe-4fd6eb08b58f
+2026-10-03 19:21:47.668 INFO  bridge: get_settings 23bc095a-6a11-454f-bf80-668dba132cf7
+2026-10-03 19:21:47.685 INFO  bridge: hud_update 812cfda8-273b-447e-9d23-1ada6a4e8ada
+2026-10-03 19:21:47.689 INFO  bridge: apply_settings 64f947d6-2974-4443-9297-4aaa77694ae1
+2026-10-03 19:21:47.979 INFO  bridge: update_ai_settings 1d8580b2-d2b4-4741-874b-93b1c4b88f9b
+2026-10-03 19:22:17.982 INFO  bridge: hud_update d468c15a-83de-4689-8d57-e5686a5eafd6
+2026-10-03 19:22:17.989 INFO  bridge: get_settings f2765401-23b9-4d0d-83f2-4c7dc0e120a6
+2026-10-03 19:22:18.022 INFO  bridge: hud_update 841d86cf-52d7-4de3-a9df-df7eb9d0377f
+2026-10-03 19:22:18.026 INFO  bridge: export_preview 4c8425ad-caa9-44ed-8b8a-d1831830a0f3
+2026-10-03 19:22:50.254 WARN  bridge: export_preview failed: export_failed the export wrote no JPEG into %USERPROFILE%\AppData\Local\Temp\LrC-AVG\previews\1AAEEC3E-1651-4172-9991-D317B7610001
+2026-10-03 19:22:50.271 INFO  bridge: hud_update de3bf2b5-e4c6-4d01-a5f3-b0e1c6a13e89
+2026-10-03 19:22:50.274 INFO  bridge: get_settings a48602ec-95af-4f15-a13a-c7adc7360e2c
+2026-10-03 19:22:50.286 INFO  bridge: hud_update aede1675-0f59-4568-84e1-ed3743576c0f
+2026-10-03 19:22:50.296 INFO  bridge: export_preview 64973bb7-4f55-4c85-9a8a-3494e5f2a352
+2026-10-03 19:22:51.920 WARN  bridge: export_preview failed: export_failed the export wrote no JPEG into %USERPROFILE%\AppData\Local\Temp\LrC-AVG\previews\1FA72CEB-631B-4842-8E92-260BB7B84E2B
+2026-10-03 19:22:51.936 INFO  bridge: hud_update 0eba56e8-e07b-4a73-aae8-e61659a02571
+2026-10-03 19:22:51.939 INFO  bridge: get_settings 7a142f17-4b57-41bc-ad52-064e9c87883e
+2026-10-03 19:22:51.947 INFO  bridge: hud_update 20e6552d-7676-4efa-9109-44f7344f1087
+2026-10-03 19:22:51.951 INFO  bridge: export_preview 3c141bf9-a467-4fc4-a2c3-410437c37440
+2026-10-03 19:22:57.232 WARN  bridge: export_preview failed: export_failed the export wrote no JPEG into %USERPROFILE%\AppData\Local\Temp\LrC-AVG\previews\92CA43FA-1F8B-4DC5-9C72-708227E423C0
+2026-10-03 19:22:57.243 INFO  bridge: hud_update 346a5e97-89b8-480d-a92d-13ce81d14707
+2026-10-03 19:22:57.246 INFO  bridge: get_settings c093ab93-a9a7-46d3-a014-e22102021011
+2026-10-03 19:22:57.260 INFO  bridge: hud_update 5626c4ab-3122-4ea5-9ac4-219e8796779b
+2026-10-03 19:22:57.264 INFO  bridge: export_preview f12b68d8-051b-4b59-9a5a-19652d0e0ab0
+2026-10-03 19:22:58.129 WARN  bridge: export_preview failed: export_failed the export wrote no JPEG into %USERPROFILE%\AppData\Local\Temp\LrC-AVG\previews\2339C8FB-BB59-4A5F-9CDC-BB3D689615B9
+2026-10-03 19:22:58.144 INFO  bridge: hud_update 02ac6ab5-5106-4a0f-bb4f-d5f4d71e8efd
+2026-10-03 19:22:58.147 INFO  bridge: apply_snapshot 3fc6f07d-46c2-4911-92f2-221f4cda3cf8
+2026-10-03 19:22:58.149 ERROR bridge: apply_snapshot raised: LrCatalog:withWriteAccessDo: could not execute action 'AVG restore snapshot'. It was blocked by another write access call, and no timeout parameters were provided.
+2026-10-03 19:22:58.156 INFO  bridge: apply_snapshot 62319527-83ad-4596-be0a-adcd6c46f68d
+2026-10-03 19:22:58.157 ERROR bridge: apply_snapshot raised: LrCatalog:withWriteAccessDo: could not execute action 'AVG restore snapshot'. It was blocked by another write access call, and no timeout parameters were provided.
+2026-10-03 19:22:58.163 INFO  bridge: apply_snapshot c851fdbf-e858-4194-9cb6-bed09c108e17
+2026-10-03 19:22:58.167 ERROR bridge: apply_snapshot raised: LrCatalog:withWriteAccessDo: could not execute action 'AVG restore snapshot'. It was blocked by another write access call, and no timeout parameters were provided.
+2026-10-03 19:22:58.170 INFO  bridge: apply_snapshot d71e1ae9-10b2-4e29-ab60-f3c7abc5e693
+2026-10-03 19:22:58.171 ERROR bridge: apply_snapshot raised: LrCatalog:withWriteAccessDo: could not execute action 'AVG restore snapshot'. It was blocked by another write access call, and no timeout parameters were provided.
+2026-10-03 19:22:58.176 INFO  bridge: apply_snapshot 7e7cbb00-5191-4e22-bf41-55bff8489fa1
+2026-10-03 19:22:58.181 ERROR bridge: apply_snapshot raised: LrCatalog:withWriteAccessDo: could not execute action 'AVG restore snapshot'. It was blocked by another write access call, and no timeout parameters were provided.
+2026-10-03 19:22:58.183 INFO  bridge: apply_snapshot d86f0149-ec93-44bb-8a5c-a8e343322233
+2026-10-03 19:22:58.185 ERROR bridge: apply_snapshot raised: LrCatalog:withWriteAccessDo: could not execute action 'AVG restore snapshot'. It was blocked by another write access call, and no timeout parameters were provided.
+2026-10-03 19:22:58.191 INFO  bridge: apply_snapshot c43672a9-ab0f-45a2-8f73-dbf0238f5bdb
+2026-10-03 19:22:58.195 ERROR bridge: apply_snapshot raised: LrCatalog:withWriteAccessDo: could not execute action 'AVG restore snapshot'. It was blocked by another write access call, and no timeout parameters were provided.
+2026-10-03 19:22:58.201 INFO  bridge: receive: closed
+2026-10-03 19:25:29.745 INFO  hud: closed
+2026-10-03 19:26:34.418 INFO  bridge: receive: engine connected
+2026-10-03 19:26:34.926 INFO  bridge: send: engine connected
+2026-10-03 19:26:34.929 INFO  bridge: hello bf86e44f-1f42-4b5f-8064-953bcfe4ac20
+2026-10-03 19:26:34.929 INFO  hud: session f9d3883f-e357-484d-ad8f-cb8ed929640b unknown until the engine sends it
+2026-10-03 19:26:34.933 INFO  bridge: apply_snapshot 3e7daea3-4aa7-47bb-915d-233e444ed1fd
+2026-10-03 19:26:40.221 INFO  bridge: get_settings a59c3f95-4dcf-471b-afa0-aee59f9e6a3f
+2026-10-03 19:26:40.271 INFO  bridge: receive: closed
+2026-10-03 19:27:22.365 INFO  bridge: send: closed
+2026-10-03 19:27:22.375 INFO  bridge: receive: closed
+2026-10-03 19:27:50.529 INFO  bridge: starting generation 1 (receive 8765, send 8766)
+2026-10-03 19:28:01.129 INFO  bridge: token written to %USERPROFILE%\.lrc-avg\bridge_token
+2026-10-03 19:28:01.140 INFO  bridge: ports 8765/8766 written to %USERPROFILE%\.lrc-avg\bridge_ports.json
+2026-10-03 19:28:01.140 INFO  bridge: listening (generation 1)

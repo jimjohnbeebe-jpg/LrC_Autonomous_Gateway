@@ -28,10 +28,14 @@ import { hudState, type HudState } from "./payload.js";
 
 /**
  * hud_update came with plugin 0.6.0 (PHASE5_PLAN row 4) [handle: plugin\LrC-AVG.lrplugin\Dispatch.lua,
- * Hud.update]; `snapshot` with 0.9.0, and an earlier plugin refuses an update with a field it does not
- * know (bridge\hud-protocol.ts header), so the HUD needs 0.9.0.
+ * Hud.update]; `snapshot` with 0.9.0, `put_back` with 0.13.0, `close_after` with 0.15.0, and an earlier
+ * plugin refuses an update with a field it does not know (bridge\hud-protocol.ts header), so the HUD needs
+ * 0.13.0, and `close_after` goes only to 0.15.0 or later (CLOSE_AFTER_PLUGIN).
  */
-export const HUD_PLUGIN = "0.9.0";
+export const HUD_PLUGIN = "0.13.0";
+const CLOSE_AFTER_PLUGIN = "0.15.0";
+/** Seconds an ended HUD stays up before it closes itself (any end: Jim, Claude or the engine). */
+const END_CLOSE_S = 10;
 /**
  * An update's answer took 2-7 ms in Lightroom [handle: vault PHASE5_PLAN.md "From row 4": "hud_update
  * round trips took 2-7 ms"]; 5 s is [inference]. While the plugin is paused the bridge client lets it
@@ -85,10 +89,13 @@ export class HudPublisher implements HudSink {
     });
   }
 
-  stage(s: Session, stage: HudStage, options: { note?: string; open?: boolean } = {}): void {
+  stage(s: Session, stage: HudStage, options: { note?: string; open?: boolean; closeAfter?: number } = {}): void {
     if (this.channel?.sessionId !== s.id) this.channel = { sessionId: s.id, seq: 0, open: false, taken: null };
     if (options.open) this.channel.open = true;
-    this.state = hudState(s, stage, options.note);
+    // Every end closes the HUD after END_CLOSE_S, whoever ended the session [stated: Jim, 2026-10-04, "the HUD did
+    // not close automatically after the test"] (supersedes the fix/hud-p1 rule that an ended HUD stays open).
+    const closeAfter = options.closeAfter ?? ((HUD_END_STAGES as readonly string[]).includes(stage) ? END_CLOSE_S : undefined);
+    this.state = hudState(s, stage, options.note, closeAfter);
     this.failuresInRow = 0;
     this.kick();
   }
@@ -198,8 +205,11 @@ export class HudPublisher implements HudSink {
   /** The next update of the channel, or null when there is nothing new or it fails the contract. */
   private payload(ch: Channel, state: HudState): HudUpdatePayload | null {
     const answer = this.answer?.sessionId === ch.sessionId ? this.answer : null;
+    const { close_after: closeAfter, ...rest } = state;
+    const closes = closeAfter !== undefined && pluginVersionAtLeast(this.client.hello()?.plugin_version, CLOSE_AFTER_PLUGIN);
     const body = {
-      ...state,
+      ...rest,
+      ...(closes ? { close_after: closeAfter } : {}),
       ...(ch.open ? { open: true } : {}),
       ...(answer ? { answered_click_id: answer.clickId, note: answer.note } : {}),
     };

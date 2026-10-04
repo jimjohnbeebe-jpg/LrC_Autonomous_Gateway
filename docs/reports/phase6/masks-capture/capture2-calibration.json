@@ -1,0 +1,1561 @@
+{
+  "at": "2026-10-04T00:50:40.006Z",
+  "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+  "values": {
+    "LocalTemperature": [
+      0.2,
+      -0.4,
+      0.585
+    ],
+    "LocalTint": [
+      0.21,
+      -0.42,
+      0.57
+    ],
+    "LocalExposure2012": [
+      0.1375,
+      -0.275,
+      0.3469
+    ],
+    "LocalContrast2012": [
+      0.23,
+      -0.46,
+      0.54
+    ],
+    "LocalHighlights2012": [
+      0.24,
+      -0.48,
+      0.525
+    ],
+    "LocalShadows2012": [
+      0.25,
+      -0.5,
+      0.51
+    ],
+    "LocalWhites2012": [
+      0.26,
+      -0.52,
+      0.495
+    ],
+    "LocalBlacks2012": [
+      0.27,
+      -0.54,
+      0.48
+    ],
+    "LocalTexture": [
+      0.28,
+      -0.56,
+      0.465
+    ],
+    "LocalClarity2012": [
+      0.29,
+      -0.58,
+      0.45
+    ],
+    "LocalDehaze": [
+      0.3,
+      -0.6,
+      0.435
+    ],
+    "LocalHue": [
+      0.31,
+      -0.62,
+      0.42
+    ],
+    "LocalSaturation": [
+      0.32,
+      -0.64,
+      0.405
+    ],
+    "LocalSharpness": [
+      0.33,
+      -0.66,
+      0.39
+    ],
+    "LocalLuminanceNoise": [
+      0.34,
+      -0.68,
+      0.375
+    ],
+    "LocalMoire": [
+      0.35,
+      -0.7,
+      0.36
+    ],
+    "LocalDefringe": [
+      0.36,
+      -0.72,
+      0.345
+    ],
+    "LocalToningHue": [
+      0.37,
+      0.925,
+      0.385
+    ],
+    "LocalToningSaturation": [
+      0.38,
+      0.95,
+      0.3675
+    ],
+    "LocalGrain": [
+      0.39,
+      0.975,
+      0.35
+    ]
+  },
+  "names": [
+    "local_Temperature",
+    "local_Tint",
+    "local_Exposure",
+    "local_Exposure2012",
+    "local_Contrast",
+    "local_Contrast2012",
+    "local_Highlights",
+    "local_Highlights2012",
+    "local_Shadows",
+    "local_Shadows2012",
+    "local_Whites",
+    "local_Whites2012",
+    "local_Blacks",
+    "local_Blacks2012",
+    "local_Texture",
+    "local_Clarity",
+    "local_Clarity2012",
+    "local_Dehaze",
+    "local_Hue",
+    "local_Saturation",
+    "local_Sharpness",
+    "local_LuminanceNoise",
+    "local_Moire",
+    "local_Defringe",
+    "local_ToningHue",
+    "local_ToningSaturation",
+    "local_Grain",
+    "local_Brightness",
+    "local_Amount",
+    "local_RefineSaturation",
+    "local_CurveRefineSaturation"
+  ],
+  "fields": [
+    {
+      "field": "LocalTemperature",
+      "name": "local_Temperature",
+      "tried": [
+        {
+          "name": "local_Temperature",
+          "panel": [
+            20,
+            -40,
+            58
+          ]
+        }
+      ],
+      "stored": [
+        0.2,
+        -0.4,
+        0.585
+      ],
+      "panel": [
+        20,
+        -40,
+        58
+      ],
+      "scale": 99.99999999999999,
+      "offset": 0,
+      "range": [
+        -100,
+        100
+      ],
+      "flags": []
+    },
+    {
+      "field": "LocalTint",
+      "name": "local_Tint",
+      "tried": [
+        {
+          "name": "local_Tint",
+          "panel": [
+            21,
+            -42,
+            57
+          ]
+        }
+      ],
+      "stored": [
+        0.21,
+        -0.42,
+        0.57
+      ],
+      "panel": [
+        21,
+        -42,
+        57
+      ],
+      "scale": 100,
+      "offset": 0,
+      "range": [
+        -100,
+        100
+      ],
+      "flags": []
+    },
+    {
+      "field": "LocalExposure2012",
+      "name": "local_Exposure",
+      "tried": [
+        {
+          "name": "local_Exposure",
+          "panel": [
+            0.55,
+            -1.1,
+            1.39
+          ]
+        },
+        {
+          "name": "local_Exposure2012",
+          "panel": [
+            0.55,
+            -1.1,
+            1.39
+          ]
+        }
+      ],
+      "stored": [
+        0.1375,
+        -0.275,
+        0.3469
+      ],
+      "panel": [
+        0.55,
+        -1.1,
+        1.39
+      ],
+      "scale": 4,
+      "offset": 0,
+      "range": [
+        -4,
+        4
+      ],
+      "flags": []
+    },
+    {
+      "field": "LocalContrast2012",
+      "name": "local_Contrast",
+      "tried": [
+        {
+          "name": "local_Contrast",
+          "panel": [
+            23,
+            -46,
+            54
+          ]
+        },
+        {
+          "name": "local_Contrast2012",
+          "panel": [
+            23,
+            -46,
+            54
+          ]
+        }
+      ],
+      "stored": [
+        0.23,
+        -0.46,
+        0.54
+      ],
+      "panel": [
+        23,
+        -46,
+        54
+      ],
+      "scale": 99.99999999999999,
+      "offset": 3.552713678800501e-15,
+      "range": [
+        -100,
+        100
+      ],
+      "flags": []
+    },
+    {
+      "field": "LocalHighlights2012",
+      "name": "local_Highlights",
+      "tried": [
+        {
+          "name": "local_Highlights",
+          "panel": [
+            24,
+            -48,
+            52
+          ]
+        },
+        {
+          "name": "local_Highlights2012",
+          "panel": [
+            24,
+            -48,
+            52
+          ]
+        }
+      ],
+      "stored": [
+        0.24,
+        -0.48,
+        0.525
+      ],
+      "panel": [
+        24,
+        -48,
+        52
+      ],
+      "scale": 100,
+      "offset": 0,
+      "range": [
+        -100,
+        100
+      ],
+      "flags": []
+    },
+    {
+      "field": "LocalShadows2012",
+      "name": "local_Shadows",
+      "tried": [
+        {
+          "name": "local_Shadows",
+          "panel": [
+            25,
+            -50,
+            51
+          ]
+        },
+        {
+          "name": "local_Shadows2012",
+          "panel": [
+            25,
+            -50,
+            51
+          ]
+        }
+      ],
+      "stored": [
+        0.25,
+        -0.5,
+        0.51
+      ],
+      "panel": [
+        25,
+        -50,
+        51
+      ],
+      "scale": 100,
+      "offset": 0,
+      "range": [
+        -100,
+        100
+      ],
+      "flags": []
+    },
+    {
+      "field": "LocalWhites2012",
+      "name": "local_Whites",
+      "tried": [
+        {
+          "name": "local_Whites",
+          "panel": [
+            26,
+            -52,
+            50
+          ]
+        },
+        {
+          "name": "local_Whites2012",
+          "panel": [
+            26,
+            -52,
+            50
+          ]
+        }
+      ],
+      "stored": [
+        0.26,
+        -0.52,
+        0.495
+      ],
+      "panel": [
+        26,
+        -52,
+        50
+      ],
+      "scale": 100,
+      "offset": 0,
+      "range": [
+        -100,
+        100
+      ],
+      "flags": []
+    },
+    {
+      "field": "LocalBlacks2012",
+      "name": "local_Blacks",
+      "tried": [
+        {
+          "name": "local_Blacks",
+          "panel": [
+            27,
+            -54,
+            48
+          ]
+        },
+        {
+          "name": "local_Blacks2012",
+          "panel": [
+            27,
+            -54,
+            48
+          ]
+        }
+      ],
+      "stored": [
+        0.27,
+        -0.54,
+        0.48
+      ],
+      "panel": [
+        27,
+        -54,
+        48
+      ],
+      "scale": 100,
+      "offset": 0,
+      "range": [
+        -100,
+        100
+      ],
+      "flags": []
+    },
+    {
+      "field": "LocalTexture",
+      "name": "local_Texture",
+      "tried": [
+        {
+          "name": "local_Texture",
+          "panel": [
+            28,
+            -56,
+            47
+          ]
+        }
+      ],
+      "stored": [
+        0.28,
+        -0.56,
+        0.465
+      ],
+      "panel": [
+        28,
+        -56,
+        47
+      ],
+      "scale": 99.99999999999999,
+      "offset": 0,
+      "range": [
+        -100,
+        100
+      ],
+      "flags": []
+    },
+    {
+      "field": "LocalClarity2012",
+      "name": "local_Clarity",
+      "tried": [
+        {
+          "name": "local_Clarity",
+          "panel": [
+            29,
+            -58,
+            45
+          ]
+        },
+        {
+          "name": "local_Clarity2012",
+          "panel": [
+            29,
+            -58,
+            45
+          ]
+        }
+      ],
+      "stored": [
+        0.29,
+        -0.58,
+        0.45
+      ],
+      "panel": [
+        29,
+        -58,
+        45
+      ],
+      "scale": 100.00000000000001,
+      "offset": -3.552713678800501e-15,
+      "range": [
+        -100,
+        100
+      ],
+      "flags": []
+    },
+    {
+      "field": "LocalDehaze",
+      "name": "local_Dehaze",
+      "tried": [
+        {
+          "name": "local_Dehaze",
+          "panel": [
+            30,
+            -60,
+            44
+          ]
+        }
+      ],
+      "stored": [
+        0.3,
+        -0.6,
+        0.435
+      ],
+      "panel": [
+        30,
+        -60,
+        44
+      ],
+      "scale": 100.00000000000001,
+      "offset": -3.552713678800501e-15,
+      "range": [
+        -100,
+        100
+      ],
+      "flags": []
+    },
+    {
+      "field": "LocalHue",
+      "name": "local_Hue",
+      "tried": [
+        {
+          "name": "local_Hue",
+          "panel": [
+            55.8,
+            -111.6,
+            75.6
+          ]
+        }
+      ],
+      "stored": [
+        0.31,
+        -0.62,
+        0.42
+      ],
+      "panel": [
+        55.8,
+        -111.6,
+        75.6
+      ],
+      "scale": 180,
+      "offset": 0,
+      "range": [
+        -180,
+        180
+      ],
+      "flags": []
+    },
+    {
+      "field": "LocalSaturation",
+      "name": "local_Saturation",
+      "tried": [
+        {
+          "name": "local_Saturation",
+          "panel": [
+            32,
+            -64,
+            41
+          ]
+        }
+      ],
+      "stored": [
+        0.32,
+        -0.64,
+        0.405
+      ],
+      "panel": [
+        32,
+        -64,
+        41
+      ],
+      "scale": 100,
+      "offset": 0,
+      "range": [
+        -100,
+        100
+      ],
+      "flags": []
+    },
+    {
+      "field": "LocalSharpness",
+      "name": "local_Sharpness",
+      "tried": [
+        {
+          "name": "local_Sharpness",
+          "panel": [
+            33,
+            -66,
+            39
+          ]
+        }
+      ],
+      "stored": [
+        0.33,
+        -0.66,
+        0.39
+      ],
+      "panel": [
+        33,
+        -66,
+        39
+      ],
+      "scale": 100,
+      "offset": 0,
+      "range": [
+        -100,
+        100
+      ],
+      "flags": []
+    },
+    {
+      "field": "LocalLuminanceNoise",
+      "name": "local_LuminanceNoise",
+      "tried": [
+        {
+          "name": "local_LuminanceNoise",
+          "panel": [
+            34,
+            -68,
+            38
+          ]
+        }
+      ],
+      "stored": [
+        0.34,
+        -0.68,
+        0.375
+      ],
+      "panel": [
+        34,
+        -68,
+        38
+      ],
+      "scale": 100,
+      "offset": 0,
+      "range": [
+        -100,
+        100
+      ],
+      "flags": []
+    },
+    {
+      "field": "LocalMoire",
+      "name": "local_Moire",
+      "tried": [
+        {
+          "name": "local_Moire",
+          "panel": [
+            35,
+            -70,
+            36
+          ]
+        }
+      ],
+      "stored": [
+        0.35,
+        -0.7,
+        0.36
+      ],
+      "panel": [
+        35,
+        -70,
+        36
+      ],
+      "scale": 100.00000000000001,
+      "offset": 0,
+      "range": [
+        -100,
+        100
+      ],
+      "flags": []
+    },
+    {
+      "field": "LocalDefringe",
+      "name": "local_Defringe",
+      "tried": [
+        {
+          "name": "local_Defringe",
+          "panel": [
+            36,
+            -72,
+            34
+          ]
+        }
+      ],
+      "stored": [
+        0.36,
+        -0.72,
+        0.345
+      ],
+      "panel": [
+        36,
+        -72,
+        34
+      ],
+      "scale": 100,
+      "offset": 0,
+      "range": [
+        -100,
+        100
+      ],
+      "flags": []
+    },
+    {
+      "field": "LocalToningHue",
+      "name": "local_ToningHue",
+      "tried": [
+        {
+          "name": "local_ToningHue",
+          "panel": [
+            0,
+            1,
+            0
+          ]
+        }
+      ],
+      "stored": [
+        0.37,
+        0.925,
+        0.385
+      ],
+      "panel": [
+        0,
+        1,
+        0
+      ],
+      "scale": 1.8018018018018016,
+      "offset": -0.6666666666666666,
+      "range": [
+        0,
+        360
+      ],
+      "flags": [
+        "non-linear (round 3: 0, line gives 0.027)"
+      ]
+    },
+    {
+      "field": "LocalToningSaturation",
+      "name": "local_ToningSaturation",
+      "tried": [
+        {
+          "name": "local_ToningSaturation",
+          "panel": [
+            38,
+            95,
+            37
+          ]
+        }
+      ],
+      "stored": [
+        0.38,
+        0.95,
+        0.3675
+      ],
+      "panel": [
+        38,
+        95,
+        37
+      ],
+      "scale": 100.00000000000001,
+      "offset": -7.105427357601002e-15,
+      "range": [
+        0,
+        100
+      ],
+      "flags": []
+    },
+    {
+      "field": "LocalGrain",
+      "name": "local_Grain",
+      "tried": [
+        {
+          "name": "local_Grain",
+          "panel": [
+            39,
+            98,
+            35
+          ]
+        }
+      ],
+      "stored": [
+        0.39,
+        0.975,
+        0.35
+      ],
+      "panel": [
+        39,
+        98,
+        35
+      ],
+      "scale": 100.85470085470087,
+      "offset": -0.3333333333333357,
+      "range": [
+        -100,
+        100
+      ],
+      "flags": []
+    }
+  ],
+  "recorded": [
+    {
+      "field": "LocalExposure",
+      "name": "local_Exposure",
+      "tried": [
+        {
+          "name": "local_Exposure",
+          "panel": [
+            0.55,
+            -1.1,
+            1.39
+          ]
+        }
+      ],
+      "stored": [
+        0,
+        0,
+        0
+      ],
+      "panel": [
+        0.55,
+        -1.1,
+        1.39
+      ],
+      "flags": [
+        "recorded, not written"
+      ]
+    },
+    {
+      "field": "LocalContrast",
+      "name": "local_Contrast",
+      "tried": [
+        {
+          "name": "local_Contrast",
+          "panel": [
+            23,
+            -46,
+            54
+          ]
+        }
+      ],
+      "stored": [
+        0,
+        0,
+        0
+      ],
+      "panel": [
+        23,
+        -46,
+        54
+      ],
+      "flags": [
+        "recorded, not written"
+      ]
+    },
+    {
+      "field": "LocalClarity",
+      "name": "local_Clarity",
+      "tried": [
+        {
+          "name": "local_Clarity",
+          "panel": [
+            29,
+            -58,
+            45
+          ]
+        }
+      ],
+      "stored": [
+        0,
+        0,
+        0
+      ],
+      "panel": [
+        29,
+        -58,
+        45
+      ],
+      "flags": [
+        "recorded, not written"
+      ]
+    },
+    {
+      "field": "LocalBrightness",
+      "name": null,
+      "tried": [
+        {
+          "name": "local_Brightness",
+          "panel": [
+            null,
+            null,
+            null
+          ]
+        }
+      ],
+      "stored": [
+        0,
+        0,
+        0
+      ],
+      "panel": null,
+      "flags": [
+        "recorded, not written"
+      ]
+    },
+    {
+      "field": "CorrectionAmount",
+      "name": "local_Amount",
+      "tried": [
+        {
+          "name": "local_Amount",
+          "panel": [
+            100,
+            100,
+            100
+          ]
+        }
+      ],
+      "stored": [
+        1,
+        1,
+        1
+      ],
+      "panel": [
+        100,
+        100,
+        100
+      ],
+      "flags": [
+        "recorded, not written"
+      ]
+    },
+    {
+      "field": "LocalCurveRefineSaturation",
+      "name": "local_RefineSaturation",
+      "tried": [
+        {
+          "name": "local_RefineSaturation",
+          "panel": [
+            100,
+            100,
+            100
+          ]
+        },
+        {
+          "name": "local_CurveRefineSaturation",
+          "panel": [
+            null,
+            null,
+            null
+          ]
+        }
+      ],
+      "stored": [
+        100,
+        100,
+        100
+      ],
+      "panel": [
+        100,
+        100,
+        100
+      ],
+      "flags": [
+        "recorded, not written"
+      ]
+    }
+  ],
+  "question": {
+    "field": "LocalContrast2012",
+    "name": "local_Contrast",
+    "panel": 23
+  },
+  "rounds": [
+    {
+      "correction_id": "C913269E-A5AC-3C51-0D4C-59465815447C",
+      "stored": {
+        "LocalTemperature": 0.2,
+        "LocalTint": 0.21,
+        "LocalExposure2012": 0.1375,
+        "LocalContrast2012": 0.23,
+        "LocalHighlights2012": 0.24,
+        "LocalShadows2012": 0.25,
+        "LocalWhites2012": 0.26,
+        "LocalBlacks2012": 0.27,
+        "LocalTexture": 0.28,
+        "LocalClarity2012": 0.29,
+        "LocalDehaze": 0.3,
+        "LocalHue": 0.31,
+        "LocalSaturation": 0.32,
+        "LocalSharpness": 0.33,
+        "LocalLuminanceNoise": 0.34,
+        "LocalMoire": 0.35,
+        "LocalDefringe": 0.36,
+        "LocalToningHue": 0.37,
+        "LocalToningSaturation": 0.38,
+        "LocalGrain": 0.39,
+        "LocalExposure": 0,
+        "LocalContrast": 0,
+        "LocalClarity": 0,
+        "LocalBrightness": 0,
+        "CorrectionAmount": 1,
+        "LocalCurveRefineSaturation": 100
+      },
+      "panel": {
+        "local_Temperature": 20,
+        "local_Tint": 21,
+        "local_Exposure": 0.55,
+        "local_Exposure2012": 0.55,
+        "local_Contrast": 23,
+        "local_Contrast2012": 23,
+        "local_Highlights": 24,
+        "local_Highlights2012": 24,
+        "local_Shadows": 25,
+        "local_Shadows2012": 25,
+        "local_Whites": 26,
+        "local_Whites2012": 26,
+        "local_Blacks": 27,
+        "local_Blacks2012": 27,
+        "local_Texture": 28,
+        "local_Clarity": 29,
+        "local_Clarity2012": 29,
+        "local_Dehaze": 30,
+        "local_Hue": 55.8,
+        "local_Saturation": 32,
+        "local_Sharpness": 33,
+        "local_LuminanceNoise": 34,
+        "local_Moire": 35,
+        "local_Defringe": 36,
+        "local_ToningHue": 0,
+        "local_ToningSaturation": 38,
+        "local_Grain": 39,
+        "local_Amount": 100,
+        "local_RefineSaturation": 100
+      },
+      "ranges": {
+        "local_Temperature": [
+          -100,
+          100
+        ],
+        "local_Tint": [
+          -100,
+          100
+        ],
+        "local_Exposure": [
+          -4,
+          4
+        ],
+        "local_Exposure2012": [
+          -4,
+          4
+        ],
+        "local_Contrast": [
+          -100,
+          100
+        ],
+        "local_Contrast2012": [
+          -100,
+          100
+        ],
+        "local_Highlights": [
+          -100,
+          100
+        ],
+        "local_Highlights2012": [
+          -100,
+          100
+        ],
+        "local_Shadows": [
+          -100,
+          100
+        ],
+        "local_Shadows2012": [
+          -100,
+          100
+        ],
+        "local_Whites": [
+          -100,
+          100
+        ],
+        "local_Whites2012": [
+          -100,
+          100
+        ],
+        "local_Blacks": [
+          -100,
+          100
+        ],
+        "local_Blacks2012": [
+          -100,
+          100
+        ],
+        "local_Texture": [
+          -100,
+          100
+        ],
+        "local_Clarity": [
+          -100,
+          100
+        ],
+        "local_Clarity2012": [
+          -100,
+          100
+        ],
+        "local_Dehaze": [
+          -100,
+          100
+        ],
+        "local_Hue": [
+          -180,
+          180
+        ],
+        "local_Saturation": [
+          -100,
+          100
+        ],
+        "local_Sharpness": [
+          -100,
+          100
+        ],
+        "local_LuminanceNoise": [
+          -100,
+          100
+        ],
+        "local_Moire": [
+          -100,
+          100
+        ],
+        "local_Defringe": [
+          -100,
+          100
+        ],
+        "local_ToningHue": [
+          0,
+          360
+        ],
+        "local_ToningSaturation": [
+          0,
+          100
+        ],
+        "local_Grain": [
+          -100,
+          100
+        ],
+        "local_Brightness": [
+          -100,
+          100
+        ],
+        "local_Amount": [
+          0,
+          200
+        ],
+        "local_RefineSaturation": [
+          0,
+          100
+        ],
+        "local_CurveRefineSaturation": [
+          -100,
+          100
+        ]
+      },
+      "selected": "C913269E-A5AC-3C51-0D4C-59465815447C"
+    },
+    {
+      "correction_id": "7370F0D6-CAD2-6CDD-A7A2-2773EF05B026",
+      "stored": {
+        "LocalTemperature": -0.4,
+        "LocalTint": -0.42,
+        "LocalExposure2012": -0.275,
+        "LocalContrast2012": -0.46,
+        "LocalHighlights2012": -0.48,
+        "LocalShadows2012": -0.5,
+        "LocalWhites2012": -0.52,
+        "LocalBlacks2012": -0.54,
+        "LocalTexture": -0.56,
+        "LocalClarity2012": -0.58,
+        "LocalDehaze": -0.6,
+        "LocalHue": -0.62,
+        "LocalSaturation": -0.64,
+        "LocalSharpness": -0.66,
+        "LocalLuminanceNoise": -0.68,
+        "LocalMoire": -0.7,
+        "LocalDefringe": -0.72,
+        "LocalToningHue": 0.925,
+        "LocalToningSaturation": 0.95,
+        "LocalGrain": 0.975,
+        "LocalExposure": 0,
+        "LocalContrast": 0,
+        "LocalClarity": 0,
+        "LocalBrightness": 0,
+        "CorrectionAmount": 1,
+        "LocalCurveRefineSaturation": 100
+      },
+      "panel": {
+        "local_Temperature": -40,
+        "local_Tint": -42,
+        "local_Exposure": -1.1,
+        "local_Exposure2012": -1.1,
+        "local_Contrast": -46,
+        "local_Contrast2012": -46,
+        "local_Highlights": -48,
+        "local_Highlights2012": -48,
+        "local_Shadows": -50,
+        "local_Shadows2012": -50,
+        "local_Whites": -52,
+        "local_Whites2012": -52,
+        "local_Blacks": -54,
+        "local_Blacks2012": -54,
+        "local_Texture": -56,
+        "local_Clarity": -58,
+        "local_Clarity2012": -58,
+        "local_Dehaze": -60,
+        "local_Hue": -111.6,
+        "local_Saturation": -64,
+        "local_Sharpness": -66,
+        "local_LuminanceNoise": -68,
+        "local_Moire": -70,
+        "local_Defringe": -72,
+        "local_ToningHue": 1,
+        "local_ToningSaturation": 95,
+        "local_Grain": 98,
+        "local_Amount": 100,
+        "local_RefineSaturation": 100
+      },
+      "ranges": {
+        "local_Temperature": [
+          -100,
+          100
+        ],
+        "local_Tint": [
+          -100,
+          100
+        ],
+        "local_Exposure": [
+          -4,
+          4
+        ],
+        "local_Exposure2012": [
+          -4,
+          4
+        ],
+        "local_Contrast": [
+          -100,
+          100
+        ],
+        "local_Contrast2012": [
+          -100,
+          100
+        ],
+        "local_Highlights": [
+          -100,
+          100
+        ],
+        "local_Highlights2012": [
+          -100,
+          100
+        ],
+        "local_Shadows": [
+          -100,
+          100
+        ],
+        "local_Shadows2012": [
+          -100,
+          100
+        ],
+        "local_Whites": [
+          -100,
+          100
+        ],
+        "local_Whites2012": [
+          -100,
+          100
+        ],
+        "local_Blacks": [
+          -100,
+          100
+        ],
+        "local_Blacks2012": [
+          -100,
+          100
+        ],
+        "local_Texture": [
+          -100,
+          100
+        ],
+        "local_Clarity": [
+          -100,
+          100
+        ],
+        "local_Clarity2012": [
+          -100,
+          100
+        ],
+        "local_Dehaze": [
+          -100,
+          100
+        ],
+        "local_Hue": [
+          -180,
+          180
+        ],
+        "local_Saturation": [
+          -100,
+          100
+        ],
+        "local_Sharpness": [
+          -100,
+          100
+        ],
+        "local_LuminanceNoise": [
+          -100,
+          100
+        ],
+        "local_Moire": [
+          -100,
+          100
+        ],
+        "local_Defringe": [
+          -100,
+          100
+        ],
+        "local_ToningHue": [
+          0,
+          360
+        ],
+        "local_ToningSaturation": [
+          0,
+          100
+        ],
+        "local_Grain": [
+          -100,
+          100
+        ],
+        "local_Brightness": [
+          -100,
+          100
+        ],
+        "local_Amount": [
+          0,
+          200
+        ],
+        "local_RefineSaturation": [
+          0,
+          100
+        ],
+        "local_CurveRefineSaturation": [
+          -100,
+          100
+        ]
+      },
+      "selected": "7370F0D6-CAD2-6CDD-A7A2-2773EF05B026"
+    },
+    {
+      "correction_id": "DD0E5A6C-4C69-DAD4-50B1-92DB5B924329",
+      "stored": {
+        "LocalTemperature": 0.585,
+        "LocalTint": 0.57,
+        "LocalExposure2012": 0.3469,
+        "LocalContrast2012": 0.54,
+        "LocalHighlights2012": 0.525,
+        "LocalShadows2012": 0.51,
+        "LocalWhites2012": 0.495,
+        "LocalBlacks2012": 0.48,
+        "LocalTexture": 0.465,
+        "LocalClarity2012": 0.45,
+        "LocalDehaze": 0.435,
+        "LocalHue": 0.42,
+        "LocalSaturation": 0.405,
+        "LocalSharpness": 0.39,
+        "LocalLuminanceNoise": 0.375,
+        "LocalMoire": 0.36,
+        "LocalDefringe": 0.345,
+        "LocalToningHue": 0.385,
+        "LocalToningSaturation": 0.3675,
+        "LocalGrain": 0.35,
+        "LocalExposure": 0,
+        "LocalContrast": 0,
+        "LocalClarity": 0,
+        "LocalBrightness": 0,
+        "CorrectionAmount": 1,
+        "LocalCurveRefineSaturation": 100
+      },
+      "panel": {
+        "local_Temperature": 58,
+        "local_Tint": 57,
+        "local_Exposure": 1.39,
+        "local_Exposure2012": 1.39,
+        "local_Contrast": 54,
+        "local_Contrast2012": 54,
+        "local_Highlights": 52,
+        "local_Highlights2012": 52,
+        "local_Shadows": 51,
+        "local_Shadows2012": 51,
+        "local_Whites": 50,
+        "local_Whites2012": 50,
+        "local_Blacks": 48,
+        "local_Blacks2012": 48,
+        "local_Texture": 47,
+        "local_Clarity": 45,
+        "local_Clarity2012": 45,
+        "local_Dehaze": 44,
+        "local_Hue": 75.6,
+        "local_Saturation": 41,
+        "local_Sharpness": 39,
+        "local_LuminanceNoise": 38,
+        "local_Moire": 36,
+        "local_Defringe": 34,
+        "local_ToningHue": 0,
+        "local_ToningSaturation": 37,
+        "local_Grain": 35,
+        "local_Amount": 100,
+        "local_RefineSaturation": 100
+      },
+      "ranges": {
+        "local_Temperature": [
+          -100,
+          100
+        ],
+        "local_Tint": [
+          -100,
+          100
+        ],
+        "local_Exposure": [
+          -4,
+          4
+        ],
+        "local_Exposure2012": [
+          -4,
+          4
+        ],
+        "local_Contrast": [
+          -100,
+          100
+        ],
+        "local_Contrast2012": [
+          -100,
+          100
+        ],
+        "local_Highlights": [
+          -100,
+          100
+        ],
+        "local_Highlights2012": [
+          -100,
+          100
+        ],
+        "local_Shadows": [
+          -100,
+          100
+        ],
+        "local_Shadows2012": [
+          -100,
+          100
+        ],
+        "local_Whites": [
+          -100,
+          100
+        ],
+        "local_Whites2012": [
+          -100,
+          100
+        ],
+        "local_Blacks": [
+          -100,
+          100
+        ],
+        "local_Blacks2012": [
+          -100,
+          100
+        ],
+        "local_Texture": [
+          -100,
+          100
+        ],
+        "local_Clarity": [
+          -100,
+          100
+        ],
+        "local_Clarity2012": [
+          -100,
+          100
+        ],
+        "local_Dehaze": [
+          -100,
+          100
+        ],
+        "local_Hue": [
+          -180,
+          180
+        ],
+        "local_Saturation": [
+          -100,
+          100
+        ],
+        "local_Sharpness": [
+          -100,
+          100
+        ],
+        "local_LuminanceNoise": [
+          -100,
+          100
+        ],
+        "local_Moire": [
+          -100,
+          100
+        ],
+        "local_Defringe": [
+          -100,
+          100
+        ],
+        "local_ToningHue": [
+          0,
+          360
+        ],
+        "local_ToningSaturation": [
+          0,
+          100
+        ],
+        "local_Grain": [
+          -100,
+          100
+        ],
+        "local_Brightness": [
+          -100,
+          100
+        ],
+        "local_Amount": [
+          0,
+          200
+        ],
+        "local_RefineSaturation": [
+          0,
+          100
+        ],
+        "local_CurveRefineSaturation": [
+          -100,
+          100
+        ]
+      },
+      "selected": "DD0E5A6C-4C69-DAD4-50B1-92DB5B924329"
+    }
+  ]
+}

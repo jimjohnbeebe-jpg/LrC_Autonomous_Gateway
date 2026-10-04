@@ -1,0 +1,71 @@
+[5:49:48 PM] --- 0_preconditions
+[5:49:48 PM] YES  Lightroom 15.6 runs plugin 0.11.0 (0.11.0 or later needed)
+[5:49:48 PM] YES  the plugin knows probe_masks_calibrate (bad_request)
+[5:49:48 PM] YES  the plugin knows probe_masks_create (bad_request)
+[5:49:48 PM] --- 1_photo
+[5:49:49 PM] YES  selected 20260907-_OZ80099.NEF; snapshot "AVG calibrate before 17:49:48" taken; 0 masks on the photo
+[5:49:49 PM] To stop at any point, press Ctrl+C once and wait: the check puts the photo back by itself.
+[5:49:49 PM] Only if its last lines say PUT BACK: NO: wait 1 minute, then in Lightroom's Develop module open the Snapshots panel (left side) and click "AVG calibrate before 17:49:48".
+[5:49:49 PM] --- 2_round1
+[5:49:49 PM] YES  round 1: the "AVG calibrate" correction is in the table after the write
+[5:49:49 PM] YES  round 1: every slider field reads back as written
+[5:49:49 PM] The plugin now selects the mask in Develop > Masking and reads its sliders. Do not click in Lightroom until the next question.
+[5:49:59 PM] YES  round 1: the probe selected this round's "AVG calibrate" (selected C913269E-A5AC-3C51-0D4C-59465815447C)
+[5:49:59 PM] --- 3_question
+[5:49:59 PM] NOW: in Lightroom (Develop module), if the Masks panel is not open, press Shift+W. In the Masks panel click "AVG calibrate". Look at its Contrast slider.
+  ? Does Contrast show +23? -> y
+[5:50:30 PM] --- 4_round2
+[5:50:32 PM] YES  round 2: the "AVG calibrate" correction is in the table after the write
+[5:50:32 PM] YES  round 2: every slider field reads back as written
+[5:50:34 PM] YES  round 2: the probe selected this round's "AVG calibrate" (selected 7370F0D6-CAD2-6CDD-A7A2-2773EF05B026)
+[5:50:34 PM] --- 5_round3
+[5:50:35 PM] YES  round 3: the "AVG calibrate" correction is in the table after the write
+[5:50:35 PM] YES  round 3: every slider field reads back as written
+[5:50:40 PM] YES  round 3: the probe selected this round's "AVG calibrate" (selected DD0E5A6C-4C69-DAD4-50B1-92DB5B924329)
+[5:50:40 PM] --- 6_results
+[5:50:40 PM] Results (stored -> panel per round; panel = scale * stored + offset):
+[5:50:40 PM] field                       DC name                     stored -> panel                             scale     offset  flags
+[5:50:40 PM] LocalTemperature            local_Temperature           0.2->20 -0.4->-40 0.585->58                 100       0       
+[5:50:40 PM] LocalTint                   local_Tint                  0.21->21 -0.42->-42 0.57->57                100       0       
+[5:50:40 PM] LocalExposure2012           local_Exposure              0.1375->0.55 -0.275->-1.1 0.3469->1.39      4         0       
+[5:50:40 PM] LocalContrast2012           local_Contrast              0.23->23 -0.46->-46 0.54->54                100       0       
+[5:50:40 PM] LocalHighlights2012         local_Highlights            0.24->24 -0.48->-48 0.525->52               100       0       
+[5:50:40 PM] LocalShadows2012            local_Shadows               0.25->25 -0.5->-50 0.51->51                 100       0       
+[5:50:40 PM] LocalWhites2012             local_Whites                0.26->26 -0.52->-52 0.495->50               100       0       
+[5:50:40 PM] LocalBlacks2012             local_Blacks                0.27->27 -0.54->-54 0.48->48                100       0       
+[5:50:40 PM] LocalTexture                local_Texture               0.28->28 -0.56->-56 0.465->47               100       0       
+[5:50:40 PM] LocalClarity2012            local_Clarity               0.29->29 -0.58->-58 0.45->45                100       0       
+[5:50:40 PM] LocalDehaze                 local_Dehaze                0.3->30 -0.6->-60 0.435->44                 100       0       
+[5:50:40 PM] LocalHue                    local_Hue                   0.31->55.8 -0.62->-111.6 0.42->75.6         180       0       
+[5:50:40 PM] LocalSaturation             local_Saturation            0.32->32 -0.64->-64 0.405->41               100       0       
+[5:50:40 PM] LocalSharpness              local_Sharpness             0.33->33 -0.66->-66 0.39->39                100       0       
+[5:50:40 PM] LocalLuminanceNoise         local_LuminanceNoise        0.34->34 -0.68->-68 0.375->38               100       0       
+[5:50:40 PM] LocalMoire                  local_Moire                 0.35->35 -0.7->-70 0.36->36                 100       0       
+[5:50:40 PM] LocalDefringe               local_Defringe              0.36->36 -0.72->-72 0.345->34               100       0       
+[5:50:40 PM] LocalToningHue              local_ToningHue             0.37->0 0.925->1 0.385->0                   1.8018    -0.6667 non-linear (round 3: 0, line gives 0.027)
+[5:50:40 PM] LocalToningSaturation       local_ToningSaturation      0.38->38 0.95->95 0.3675->37                100       0       
+[5:50:40 PM] LocalGrain                  local_Grain                 0.39->39 0.975->98 0.35->35                 100.8547  -0.3333 
+[5:50:40 PM] LocalExposure               local_Exposure              0->0.55 0->-1.1 0->1.39                     -         -       recorded, not written
+[5:50:40 PM] LocalContrast               local_Contrast              0->23 0->-46 0->54                          -         -       recorded, not written
+[5:50:40 PM] LocalClarity                local_Clarity               0->29 0->-58 0->45                          -         -       recorded, not written
+[5:50:40 PM] LocalBrightness             -                           0->- 0->- 0->-                              -         -       recorded, not written
+[5:50:40 PM] CorrectionAmount            local_Amount                1->100 1->100 1->100                        -         -       recorded, not written
+[5:50:40 PM] LocalCurveRefineSaturation  local_RefineSaturation      100->100 100->100 100->100                  -         -       recorded, not written
+[5:50:40 PM] NO   every slider field has a clean linear scale (19 of 20; calibration.json)
+[5:50:40 PM] --- 7_snapshot
+[5:50:40 PM] YES  the snapshot puts the photo back before the AI masks (0 differing paths)
+[5:50:40 PM] --- 8_ai_masks
+[5:50:40 PM] The plugin now creates AI masks in Develop by itself (up to a minute). Do not click in Lightroom.
+[5:51:11 PM] YES  createNewMask("aiSelection", "background") made its own table entry (templates.json)
+[5:51:11 PM] NO   createNewMask("aiSelection", "people") made its own table entry (templates.json): no new mask showed
+[5:51:11 PM] NO   createNewMask("aiSelection", "landscape") made its own table entry (templates.json): no new mask showed
+[5:51:11 PM] --- 9_put_back
+[5:51:17 PM] YES  PUT BACK: YES (every setting as before the check, and still 5 s later)
+[5:51:17 PM] NOW: look at the photo in Lightroom, and at the Masks panel (if the Masks panel is not open, press Shift+W).
+  ? Does the photo look as it did before the check, with none of the check's masks left? -> y
+[5:51:24 PM] 
+[5:51:24 PM] masks capture 2: DONE, 3 NO / FAILED lines (each one is a finding for the report)
+[5:51:24 PM]   - every slider field has a clean linear scale (19 of 20; calibration.json)
+[5:51:24 PM]   - createNewMask("aiSelection", "people") made its own table entry (templates.json): no new mask showed
+[5:51:24 PM]   - createNewMask("aiSelection", "landscape") made its own table entry (templates.json): no new mask showed
+[5:51:24 PM] Results: D:\Developer\LrC_Autonomous_Gateway\logs\check-masks-calibrate-2026-10-03\check.json, calibration.json, templates.json

@@ -28,6 +28,7 @@
 local LrApplication = import 'LrApplication'
 local LrTasks = import 'LrTasks'
 
+local Gate = require 'Gate'
 local KeywordTree = require 'KeywordTree'
 local Photos = require 'Photos'
 
@@ -176,7 +177,7 @@ function Library.setRating(payload)
     local writeErr
     if before ~= rating then
         writeErr = written(function()
-            catalog:withWriteAccessDo("AVG set rating", function()
+            Gate.run(catalog, "AVG set rating", function()
                 -- nil clears it: the SDK's rating is "either nil or number of stars" [handle: LrPhoto page,
                 -- setRawMetadata], and Automaat writes nil for 0 [upstream claim: HandlerOrganization.lua:116-118].
                 photo:setRawMetadata("rating", rating > 0 and rating or nil)
@@ -213,7 +214,7 @@ end
 -- that deletes a keyword [handle: LrCatalog and LrKeyword pages above]).
 local function writeKeywords(catalog, photo, toAdd, toRemove)
     local parents, leaves = KeywordTree.resolve(catalog, toAdd)
-    catalog:withWriteAccessDo("AVG set keywords", function()
+    Gate.run(catalog, "AVG set keywords", function()
         for i, parts in ipairs(toAdd) do
             -- createKeyword(name, synonyms, includeOnExport, parent, returnExisting) [handle: LrCatalog page].
             local keyword = leaves[i] or catalog:createKeyword(parts[#parts], {}, true, parents[i], true)
@@ -283,7 +284,7 @@ function Library.setGps(payload)
     local writeErr
     if not held then
         writeErr = written(function()
-            catalog:withWriteAccessDo("AVG set GPS", function() photo:setRawMetadata("gps", want) end)
+            Gate.run(catalog, "AVG set GPS", function() photo:setRawMetadata("gps", want) end)
         end)
     end
     local after, afterErr = gpsOf(catalog, photo)

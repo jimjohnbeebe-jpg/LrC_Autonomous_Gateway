@@ -16,8 +16,8 @@
 -- invalidLines). So every text is cut by HudText.wrap into a fixed number of slots, one bound
 -- static_text each ("headline1", "headline2", ...), as the deltas grid has one bound cell per text.
 -- Window order (fix/hud-p1 plan, "Copy deck"): the headline; Pick A-C and Approve; Accept and Abort,
--- Abort last; the feedback line; Photo; Camera; Step; the selection line; the deltas grid; the
--- guardrail sentence; the settings block; the connection line.
+-- then Put back (plugin 0.13.0); the feedback line; Photo; Camera; Step; the selection line; the
+-- deltas grid; the guardrail sentence; the settings block; the connection line.
 
 local LrView = import 'LrView'
 
@@ -56,24 +56,30 @@ local function settingsLines(w)
     return table.concat(a, ", "), table.concat(b, ", ")
 end
 
--- Whose turn it is. The bridge and the end of an edit come first, then the connection, then
--- `unknown` ("checking" or "gone", HudState.unknown), then the stage.
-local function headline(s, conn, unknown)
+-- Whose turn it is. The bridge and the end of an edit come first, then a put-back running or done,
+-- then the connection (away HudState.AWAY_SECONDS: "stopped"), then `unknown` ("checking" or
+-- "gone", HudState.unknown), then the stage.
+local function headline(s, conn, hud)
     local T = HudText.HEADLINE
     if not conn.running then return T.not_running end
     if s == nil then return T.none end
     if isEnd(s.stage) then return T[s.stage] end
-    if not conn.engine then return T.not_connected end
-    if unknown then return T[unknown] end
+    local pb = hud.putBack
+    if pb and pb.state ~= "failed" then return pb.state == "done" and T.aborted or T.putting_back end
+    if not conn.engine then return hud.away and T.stopped or T.not_connected end
+    if hud.unknown then return T[hud.unknown] end
     if s.stage == "awaiting_pick" then return T.awaiting_pick end
     if s.approve_pass then return string.format(T.approve, s.approve_pass) end
     if s.stage == "converged" or s.stage == "target_changed" then return T[s.stage] end
     return T.working
 end
 
--- The undo line while an open edit cannot reach Claude (not connected, or no longer open in
--- Claude); else the click line; else the update's note (fix/hud-p1 "Feedback rule").
+-- The put-back's line, while there is one; the offer while Put back is on; the undo line while an
+-- open edit cannot reach Claude (not connected, or no longer open in Claude); else the click line;
+-- else the update's note (fix/hud-p1 "Feedback rule").
 local function feedback(s, conn, hud)
+    if hud.putBack then return hud.putBack.line end
+    if HudState.canPutBack(s, conn, hud) then return HudText.PUT_BACK.offer end
     if s and not isEnd(s.stage) and (not conn.engine or hud.unknown == "gone") then
         return string.format(HudText.UNDO, s.snapshot or HudText.UNDO_NO_SNAPSHOT)
     end
@@ -129,11 +135,13 @@ end
 -- (Events.lua), the pending click (or nil), the settings page's values by wire name (decision 4
 -- [stated: Jim, 2026-09-29, "Go with recommended"]: the session's settings when the engine sends
 -- them, else the page's), and what Hud.lua keeps beside the state, `hud` = { click (the click line or
--- nil), selection (the selection line), unknown (nil, "checking" or "gone") }. Buttons are off while
--- the engine is not connected (decision 2) or the edit is unknown (fix/hud-p1 P1-3).
+-- nil), selection (the selection line), unknown (nil, "checking" or "gone"), away (the engine away
+-- HudState.AWAY_SECONDS), putBack (HudClick.lua's put-back, or nil) }. Buttons are off while the
+-- engine is not connected (decision 2) or the edit is unknown (fix/hud-p1 P1-3); Put back is on only
+-- then (HudState.canPutBack).
 function HudView.props(s, conn, pending, page, hud)
     local v = {}
-    put(v, "headline", headline(s, conn, hud.unknown))
+    put(v, "headline", headline(s, conn, hud))
     put(v, "feedback", feedback(s, conn, hud))
     put(v, "photo", s and ("Photo: " .. HudState.targetName(s)) or "")
     put(v, "camera", s and cameraLine(s.target) or "")
@@ -164,6 +172,7 @@ function HudView.props(s, conn, pending, page, hud)
     end
     v.approveEnabled = live and s.approve_pass ~= nil
     v.approveTitle = HudState.eventLabel("hud_approve_pass", nil, (s and not isEnd(s.stage)) and s or nil)
+    v.putBackEnabled = HudState.canPutBack(s, conn, hud)
     return v
 end
 
@@ -204,7 +213,14 @@ function HudView.contents(f, props, click)
         button("Pick C", "hud_pick", "C", "pickCEnabled"),
         button(bind("approveTitle"), "hud_approve_pass", nil, "approveEnabled", 16),
     })
-    add(row { button("Accept", "hud_accept", nil, "acceptEnabled"), button("Abort", "hud_abort", nil, "abortEnabled") })
+    -- Put back after Abort, in its row: it is on only while Abort is off (HudState.canPutBack), and
+    -- then it is the only button on, so one Tab reaches it (LR_SDK_NOTES "Keyboard in the floating
+    -- dialog": Tab goes to the first enabled push_button, Space or Enter clicks it).
+    add(row {
+        button("Accept", "hud_accept", nil, "acceptEnabled"),
+        button("Abort", "hud_abort", nil, "abortEnabled"),
+        button("Put back", "put_back", nil, "putBackEnabled"),
+    })
     for _, key in ipairs({ "feedback", "photo", "camera", "step", "selection" }) do text(key) end
     add(f:group_box { title = "Changes in the latest pass", bind_to_object = props, fill_horizontal = 1, f:column(grid) })
     for _, key in ipairs({ "guardrail", "settingsTitle", "settingsA", "settingsB", "connection" }) do text(key) end

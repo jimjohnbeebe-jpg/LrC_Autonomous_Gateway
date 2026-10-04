@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated_by": "spikes/S5/pin.ts",
-  "generated_at": "2026-09-24T04:05:36.160Z",
+  "generated_at": "2026-10-04T01:31:20.172Z",
   "sources": [
     {
       "label": "s5_20260907-_OZ80093.NEF.json",
@@ -16,6 +16,13 @@
       "lr_version": "15.5.1",
       "process_version": "15.4",
       "camera_profile": "Group: Camera Standard"
+    },
+    {
+      "label": "masks-capture_3_dump-1.json",
+      "filename": "20260907-_OZ80099.NEF",
+      "lr_version": "15.6",
+      "process_version": "15.4",
+      "camera_profile": "Camera Neutral"
     }
   ],
   "keys": [
@@ -25,7 +32,8 @@
       "sample": [],
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -34,7 +42,8 @@
       "sample": false,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -43,7 +52,8 @@
       "sample": false,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -52,7 +62,8 @@
       "sample": false,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -61,7 +72,8 @@
       "sample": 1,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -70,7 +82,8 @@
       "sample": false,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -79,7 +92,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -88,7 +102,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -97,7 +112,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -106,7 +122,8 @@
       "sample": 50,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -115,7 +132,8 @@
       "sample": "Camera Neutral",
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -124,7 +142,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -133,7 +152,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -142,7 +162,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -151,7 +172,8 @@
       "sample": 2,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -160,7 +182,8 @@
       "sample": 50,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -169,7 +192,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -178,7 +202,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -187,7 +212,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -196,7 +222,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -205,7 +232,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -214,7 +242,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -223,7 +252,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -232,7 +262,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -241,7 +272,8 @@
       "sample": 25,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -250,7 +282,8 @@
       "sample": 50,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -259,7 +292,8 @@
       "sample": 50,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -268,7 +302,8 @@
       "sample": 25,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -277,7 +312,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -286,7 +322,8 @@
       "sample": false,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -295,7 +332,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -304,7 +342,8 @@
       "sample": 1,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -313,7 +352,8 @@
       "sample": 1,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -322,7 +362,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -331,7 +372,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -340,7 +382,8 @@
       "sample": 1,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -349,7 +392,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -358,7 +402,8 @@
       "sample": 100,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -367,7 +412,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -376,7 +422,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -385,7 +432,8 @@
       "sample": 60,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -394,7 +442,8 @@
       "sample": 40,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -403,7 +452,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -412,7 +462,8 @@
       "sample": 70,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -421,7 +472,8 @@
       "sample": 30,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -430,7 +482,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -439,7 +492,8 @@
       "sample": true,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -448,7 +502,8 @@
       "sample": true,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -457,7 +512,8 @@
       "sample": true,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -466,7 +522,8 @@
       "sample": true,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -475,7 +532,8 @@
       "sample": true,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -484,7 +542,8 @@
       "sample": true,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -493,7 +552,8 @@
       "sample": true,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -502,7 +562,8 @@
       "sample": true,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -511,7 +572,8 @@
       "sample": true,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -520,7 +582,8 @@
       "sample": true,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -529,7 +592,8 @@
       "sample": true,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -538,7 +602,8 @@
       "sample": true,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -547,7 +612,8 @@
       "sample": true,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -556,7 +622,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -565,7 +632,8 @@
       "sample": 0.33,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -574,7 +642,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -583,7 +652,8 @@
       "sample": [],
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -592,7 +662,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -601,7 +672,8 @@
       "sample": 50,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -610,7 +682,8 @@
       "sample": 25,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -619,7 +692,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -628,7 +702,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -637,7 +712,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -646,7 +722,8 @@
       "sample": 2.3,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -655,7 +732,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -664,7 +742,8 @@
       "sample": -21,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -673,7 +752,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -682,7 +762,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -691,7 +772,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -700,7 +782,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -709,7 +792,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -718,7 +802,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -727,7 +812,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -736,7 +822,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -745,7 +832,8 @@
       "sample": [],
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -754,7 +842,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -762,7 +851,8 @@
       "type": "string",
       "sample": "BDFADD245438D5343CC1F5F75E7E8232",
       "seen_in": [
-        "s5_20260907-_OZ80093.NEF.json"
+        "s5_20260907-_OZ80093.NEF.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -770,7 +860,8 @@
       "type": "number",
       "sample": 100,
       "seen_in": [
-        "s5_20260907-_OZ80093.NEF.json"
+        "s5_20260907-_OZ80093.NEF.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -779,7 +870,8 @@
       "sample": 1,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -787,7 +879,8 @@
       "type": "boolean",
       "sample": true,
       "seen_in": [
-        "s5_20260907-_OZ80093.NEF.json"
+        "s5_20260907-_OZ80093.NEF.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -795,7 +888,8 @@
       "type": "string",
       "sample": "Camera Settings",
       "seen_in": [
-        "s5_20260907-_OZ80093.NEF.json"
+        "s5_20260907-_OZ80093.NEF.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -804,7 +898,8 @@
       "sample": "LensDefaults",
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -812,7 +907,8 @@
       "type": "number",
       "sample": 100,
       "seen_in": [
-        "s5_20260907-_OZ80093.NEF.json"
+        "s5_20260907-_OZ80093.NEF.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -862,7 +958,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -871,7 +968,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -880,7 +978,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -889,7 +988,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -898,7 +998,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -907,7 +1008,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -916,7 +1018,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -925,7 +1028,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -934,7 +1038,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -943,7 +1048,8 @@
       "sample": 75,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -952,7 +1058,298 @@
       "sample": 48,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
+      ]
+    },
+    {
+      "key": "MaskGroupBasedCorrections",
+      "type": "array",
+      "sample": [
+        {
+          "LocalHighlights2012": 0,
+          "LocalSaturation": 0,
+          "CorrectionAmount": 1,
+          "LocalTint": 0,
+          "LocalExposure2012": 0.125,
+          "LocalToningSaturation": 0,
+          "CorrectionName": "Mask 1",
+          "CorrectionID": "DE3D0532-E96E-41B9-B465-EDDB9F9F8EEB",
+          "CorrectionReferenceY": 0.655882,
+          "LocalSharpness": 0,
+          "LocalDefringe": 0,
+          "LocalDehaze": 0,
+          "LocalExposure": 0,
+          "CorrectionActive": true,
+          "LocalLuminanceNoise": 0,
+          "CorrectionReferenceX": 0.494853,
+          "LocalWhites2012": 0,
+          "What": "Correction",
+          "LocalHue": 0,
+          "LocalBlacks2012": 0,
+          "LocalClarity2012": 0,
+          "LocalContrast": 0,
+          "CorrectionSyncID": "F46720A615AF5F45A5286EF3EBC24B7B",
+          "LocalBrightness": 0,
+          "LocalContrast2012": 0,
+          "LocalCurveRefineSaturation": 100,
+          "CorrectionMasks": [
+            {
+              "FullY": 0.789555,
+              "MaskValue": 1,
+              "What": "Mask/Gradient",
+              "FullX": 0.495633,
+              "MaskInverted": false,
+              "MaskSyncID": "AF319DBC36D7BC4BB9B8B5EE0AE64405",
+              "MaskBlendMode": 0,
+              "MaskID": "FFC62404-A8B8-47E8-BABD-85D04D4FEB77",
+              "ZeroX": 0.494073,
+              "MaskName": "Linear Gradient 1",
+              "MaskActive": true,
+              "ZeroY": 0.52221
+            }
+          ],
+          "LocalShadows2012": 0,
+          "LocalGrain": 0,
+          "LocalTemperature": 0,
+          "LocalMoire": 0,
+          "LocalToningHue": 0,
+          "LocalClarity": 0,
+          "LocalTexture": 0
+        },
+        {
+          "LocalHighlights2012": 0,
+          "LocalSaturation": 0,
+          "CorrectionAmount": 1,
+          "LocalTint": 0,
+          "LocalExposure2012": 0,
+          "LocalToningSaturation": 0,
+          "CorrectionName": "Mask 2",
+          "CorrectionID": "826A7C5C-42AD-4737-A048-829C0947EE2A",
+          "CorrectionReferenceY": 0.235841,
+          "LocalSharpness": 0,
+          "LocalDefringe": 0,
+          "LocalDehaze": 0,
+          "LocalExposure": 0,
+          "CorrectionActive": true,
+          "LocalLuminanceNoise": 0,
+          "CorrectionReferenceX": 0.477044,
+          "LocalWhites2012": 0,
+          "What": "Correction",
+          "LocalHue": 0,
+          "LocalBlacks2012": 0,
+          "LocalClarity2012": 0,
+          "LocalContrast": 0,
+          "CorrectionSyncID": "5C07373D8C662C4AA023F0969A5EE843",
+          "LocalBrightness": 0,
+          "LocalContrast2012": 0,
+          "LocalCurveRefineSaturation": 100,
+          "CorrectionMasks": [
+            {
+              "MaskValue": 1,
+              "Right": 0.626111,
+              "Left": 0.327978,
+              "MaskInverted": false,
+              "MaskSyncID": "B535B6A1E2976D42AB921E553A5FC6C4",
+              "MaskBlendMode": 0,
+              "Roundness": 0,
+              "Angle": 0,
+              "Feather": 38,
+              "What": "Mask/CircularGradient",
+              "Midpoint": 50,
+              "Flipped": true,
+              "Version": 2,
+              "Bottom": 0.407704,
+              "Top": 0.063978,
+              "MaskName": "Radial Gradient 1",
+              "MaskActive": true,
+              "MaskID": "C5244446-82D8-4E2A-8F7B-A8B797E80AAE"
+            }
+          ],
+          "LocalShadows2012": 0,
+          "LocalGrain": 0,
+          "LocalTemperature": 0,
+          "LocalMoire": 0,
+          "LocalToningHue": 0,
+          "LocalClarity": 0,
+          "LocalTexture": 0
+        },
+        {
+          "LocalHighlights2012": 0,
+          "LocalSaturation": 0,
+          "CorrectionAmount": 1,
+          "LocalTint": 0,
+          "LocalExposure2012": 0,
+          "LocalToningSaturation": 0,
+          "CorrectionName": "Mask 3",
+          "CorrectionID": "9DEF978E-5F84-40E0-8DAC-F5CB895800EB",
+          "CorrectionReferenceY": 0.09164,
+          "LocalSharpness": 0,
+          "LocalDefringe": 0,
+          "LocalDehaze": 0,
+          "LocalExposure": 0,
+          "CorrectionActive": true,
+          "LocalLuminanceNoise": 0,
+          "CorrectionReferenceX": 0.461006,
+          "LocalWhites2012": 0,
+          "What": "Correction",
+          "LocalHue": 0,
+          "LocalBlacks2012": 0,
+          "LocalClarity2012": 0,
+          "LocalContrast": 0,
+          "CorrectionSyncID": "58DE80DED4897A44B991D2901748DC3E",
+          "LocalBrightness": 0,
+          "LocalContrast2012": 0,
+          "LocalCurveRefineSaturation": 100,
+          "CorrectionMasks": [
+            {
+              "ModelVersion": 234881976,
+              "MaskValue": 1,
+              "Origin": "761,0",
+              "LocalInputDigestVersion": 1,
+              "MaskInverted": false,
+              "MaskSyncID": "6803F8917A061A4E88A1A080E39B161B",
+              "MaskBlendMode": 0,
+              "MaskSubType": 2,
+              "MaskID": "AFADF674-F876-4522-86CB-D25655450CB7",
+              "ReferencePoint": "0.461006 0.091640",
+              "What": "Mask/Image",
+              "FullMaskSize": "2880,1920",
+              "WholeImageArea": "0/1,0/1,1920/1,2880/1",
+              "MaskActive": true,
+              "MaskVersion": 1,
+              "MaskDigest": "BC3C47BFBB81F99B3BBB83FFAAFAB93F",
+              "InputDigest": "D01EAE1986659337966F8C8185E3FF86",
+              "MaskName": "Sky 1",
+              "LocalInputDigest": "82BF0DA5ECFEB3E614A39E98F71EFDFD",
+              "InputDigestVersion": 2
+            }
+          ],
+          "LocalShadows2012": 0,
+          "LocalGrain": 0,
+          "LocalTemperature": 0,
+          "LocalMoire": 0,
+          "LocalToningHue": 0,
+          "LocalClarity": 0,
+          "LocalTexture": 0
+        },
+        {
+          "LocalHighlights2012": 0,
+          "LocalSaturation": 0,
+          "CorrectionAmount": 1,
+          "LocalTint": 0,
+          "LocalExposure2012": 0,
+          "LocalToningSaturation": 0,
+          "CorrectionName": "Mask 4",
+          "CorrectionID": "90D89E48-3FAB-4EAD-9F5C-EDA77773EEF1",
+          "CorrectionReferenceY": 0.641981,
+          "LocalSharpness": 0,
+          "LocalDefringe": 0,
+          "LocalDehaze": 0,
+          "LocalExposure": 0,
+          "CorrectionActive": true,
+          "LocalLuminanceNoise": 0,
+          "CorrectionReferenceX": 0.761259,
+          "LocalWhites2012": 0,
+          "What": "Correction",
+          "LocalHue": 0,
+          "LocalBlacks2012": 0,
+          "LocalClarity2012": 0,
+          "LocalContrast": 0,
+          "CorrectionSyncID": "0665A3484516CA49927D2BC4676EB930",
+          "LocalBrightness": 0,
+          "LocalContrast2012": 0,
+          "LocalCurveRefineSaturation": 100,
+          "CorrectionMasks": [
+            {
+              "ModelVersion": 318769633,
+              "MaskValue": 1,
+              "Origin": "0,0",
+              "LocalInputDigestVersion": 1,
+              "MaskInverted": false,
+              "MaskSyncID": "5136897644686440A099C8B70A8CA718",
+              "MaskBlendMode": 0,
+              "MaskSubType": 1,
+              "MaskID": "40F5AC81-3C0D-436D-A875-28E4DA38225F",
+              "ReferencePoint": "0.761259 0.641981",
+              "What": "Mask/Image",
+              "FullMaskSize": "2880,1920",
+              "WholeImageArea": "0/1,0/1,1920/1,2880/1",
+              "MaskActive": true,
+              "MaskVersion": 1,
+              "MaskDigest": "3B802FF370F043B94C7D3AD6FE1A7EAD",
+              "InputDigest": "D01EAE1986659337966F8C8185E3FF86",
+              "MaskName": "Subject 1",
+              "LocalInputDigest": "82BF0DA5ECFEB3E614A39E98F71EFDFD",
+              "InputDigestVersion": 2
+            }
+          ],
+          "LocalShadows2012": 0,
+          "LocalGrain": 0,
+          "LocalTemperature": 0,
+          "LocalMoire": 0,
+          "LocalToningHue": 0,
+          "LocalClarity": 0,
+          "LocalTexture": 0
+        },
+        {
+          "LocalHighlights2012": 0,
+          "LocalSaturation": 0,
+          "CorrectionAmount": 1,
+          "LocalTint": 0,
+          "LocalExposure2012": 0,
+          "LocalToningSaturation": 0,
+          "CorrectionName": "Mask 5",
+          "CorrectionID": "35898032-5836-42EC-AB78-CF5A40BF603F",
+          "CorrectionReferenceY": 0.143024,
+          "LocalSharpness": 0,
+          "LocalDefringe": 0,
+          "LocalDehaze": 0,
+          "LocalExposure": 0,
+          "CorrectionActive": true,
+          "LocalLuminanceNoise": 0,
+          "CorrectionReferenceX": 0.45842,
+          "LocalWhites2012": 0,
+          "What": "Correction",
+          "LocalHue": 0,
+          "LocalBlacks2012": 0,
+          "LocalClarity2012": 0,
+          "LocalContrast": 0,
+          "CorrectionSyncID": "8E1FCAB33D4C534EA609D2359DB2DB1E",
+          "LocalBrightness": 0,
+          "LocalContrast2012": 0,
+          "LocalCurveRefineSaturation": 100,
+          "CorrectionMasks": [
+            {
+              "MaskValue": 1,
+              "What": "Mask/RangeMask",
+              "CorrectionRangeMask": {
+                "LumRange": "0.650000 0.900000 1.000000 1.000000",
+                "Type": 2,
+                "Version": 3,
+                "SampleType": 0,
+                "LuminanceDepthSampleInfo": "0 0.458420 0.143024",
+                "Invert": false
+              },
+              "MaskInverted": false,
+              "MaskSyncID": "1494229498C6364198797F6943CAEC1F",
+              "MaskBlendMode": 0,
+              "MaskID": "8E94A31B-5AE8-41C8-9EF2-8F26037191FA",
+              "MaskActive": true,
+              "MaskName": "Luminance Range 1"
+            }
+          ],
+          "LocalShadows2012": 0,
+          "LocalGrain": 0,
+          "LocalTemperature": 0,
+          "LocalMoire": 0,
+          "LocalToningHue": 0,
+          "LocalClarity": 0,
+          "LocalTexture": 0
+        }
+      ],
+      "seen_in": [
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -961,7 +1358,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -970,7 +1368,8 @@
       "sample": 75,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -979,7 +1378,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -988,7 +1388,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -997,7 +1398,8 @@
       "sample": 50,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1006,7 +1408,8 @@
       "sample": 25,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1015,7 +1418,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1024,7 +1428,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1033,7 +1438,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1042,7 +1448,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1051,7 +1458,8 @@
       "sample": 100,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1060,7 +1468,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1069,7 +1478,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1078,7 +1488,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1087,7 +1498,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1096,7 +1508,8 @@
       "sample": [],
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1105,7 +1518,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1114,7 +1528,8 @@
       "sample": 50,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1123,7 +1538,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1132,7 +1548,8 @@
       "sample": 50,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1141,7 +1558,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1150,7 +1568,8 @@
       "sample": 1,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1159,7 +1578,8 @@
       "sample": "15.4",
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1168,7 +1588,8 @@
       "sample": [],
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1177,7 +1598,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1186,7 +1608,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1195,7 +1618,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1204,7 +1628,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1213,7 +1638,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1222,7 +1648,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1231,7 +1658,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1240,7 +1668,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1249,7 +1678,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1258,7 +1688,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1267,7 +1698,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1276,7 +1708,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1285,7 +1718,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1294,7 +1728,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1303,7 +1738,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1312,7 +1748,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1321,7 +1758,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1330,7 +1768,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1339,7 +1778,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1348,7 +1788,8 @@
       "sample": 5,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1357,7 +1798,8 @@
       "sample": 10,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1366,7 +1808,8 @@
       "sample": 25,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1375,7 +1818,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1384,7 +1828,8 @@
       "sample": 2,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1393,7 +1838,8 @@
       "sample": 24,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1402,7 +1848,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1411,7 +1858,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1420,7 +1868,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1429,7 +1878,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1438,7 +1888,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1447,7 +1898,8 @@
       "sample": 5500,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1456,7 +1908,8 @@
       "sample": 4,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1465,7 +1918,8 @@
       "sample": 6,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1474,7 +1928,8 @@
       "sample": "Linear",
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1488,7 +1943,8 @@
       ],
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1502,7 +1958,8 @@
       ],
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1516,7 +1973,8 @@
       ],
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1530,7 +1988,8 @@
       ],
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1539,7 +1998,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1548,7 +2008,8 @@
       "sample": 0.5,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1557,7 +2018,8 @@
       "sample": 0.5,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1566,7 +2028,8 @@
       "sample": 35,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1575,7 +2038,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1584,7 +2048,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1593,7 +2058,8 @@
       "sample": false,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1602,7 +2068,8 @@
       "sample": 6,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1611,7 +2078,8 @@
       "sample": 151388160,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1620,7 +2088,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1629,7 +2098,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1638,7 +2108,8 @@
       "sample": 50,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1647,7 +2118,8 @@
       "sample": "As Shot",
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1656,7 +2128,8 @@
       "sample": 0,
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     },
     {
@@ -1665,7 +2138,8 @@
       "sample": "AB",
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
-        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json"
+        "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
+        "masks-capture_3_dump-1.json"
       ]
     }
   ]

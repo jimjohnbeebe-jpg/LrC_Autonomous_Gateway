@@ -1,0 +1,162 @@
+{
+  "entries": [
+    {
+      "LocalHighlights2012": 0,
+      "LocalSaturation": 0,
+      "LocalMoire": 0,
+      "LocalTint": 0,
+      "LocalExposure2012": 0,
+      "LocalToningSaturation": 0,
+      "CorrectionName": "Mask 1",
+      "CorrectionID": "9D13100A-2EEC-4FDF-A2A7-FEAAFA303A15",
+      "CorrectionReferenceY": 0.661765,
+      "LocalSharpness": 0,
+      "LocalDefringe": 0,
+      "LocalDehaze": 0,
+      "LocalExposure": 0,
+      "CorrectionActive": true,
+      "LocalLuminanceNoise": 0,
+      "CorrectionReferenceX": 0.375,
+      "LocalWhites2012": 0,
+      "What": "Correction",
+      "LocalBrightness": 0,
+      "LocalContrast2012": 0,
+      "LocalClarity2012": 0,
+      "LocalContrast": 0,
+      "CorrectionSyncID": "1E2A925F0556A74B9F4D7E76C2F22037",
+      "LocalClarity": 0,
+      "LocalToningHue": 0,
+      "LocalCurveRefineSaturation": 100,
+      "CorrectionMasks": [
+        {
+          "ModelVersion": 234881976,
+          "MaskValue": 1,
+          "Origin": "451,719",
+          "LocalInputDigestVersion": 1,
+          "MaskInverted": false,
+          "MaskSyncID": "B3C57E79FC56B4448E5A2DFC52D85FA6",
+          "MaskBlendMode": 0,
+          "MaskSubType": 0,
+          "MaskID": "580ECABB-426F-4FB9-AFA1-51EF7F1A669B",
+          "ReferencePoint": "0.375000 0.661765",
+          "What": "Mask/Image",
+          "InstanceIDs": [
+            {
+              "InstanceID": 0
+            }
+          ],
+          "MaskActive": true,
+          "MaskSubCategoryID": 20036,
+          "FullMaskSize": "2891,1920",
+          "MaskVersion": 1,
+          "MaskDigest": "CD7B5E24284085120F7CD290D39F9464",
+          "InstanceBounds": [
+            {
+              "Top": 0.374479,
+              "Right": 0.532342,
+              "Left": 0.156001,
+              "Bottom": 0.785937
+            },
+            {
+              "Top": 0.409896,
+              "Right": 0.823936,
+              "Left": 0.349014,
+              "Bottom": 1
+            }
+          ],
+          "WholeImageArea": "0/1,0/1,1920/1,2891/1",
+          "InputDigest": "C16CCDF48F144AB3C634A4A92EE3289B",
+          "MaskName": "Person 1",
+          "LocalInputDigest": "300C5E2B49375642F89F3948749DE0C0",
+          "InputDigestVersion": 2
+        }
+      ],
+      "LocalShadows2012": 0,
+      "LocalGrain": 0,
+      "LocalTemperature": 0,
+      "LocalBlacks2012": 0,
+      "CorrectionAmount": 1,
+      "LocalHue": 0,
+      "LocalTexture": 0
+    },
+    {
+      "LocalHighlights2012": 0,
+      "LocalSaturation": 0,
+      "LocalMoire": 0,
+      "LocalTint": 0,
+      "LocalExposure2012": 0,
+      "LocalToningSaturation": 0,
+      "CorrectionName": "Mask 2",
+      "CorrectionID": "73E80000-6042-403D-9B32-A040A169BDEB",
+      "CorrectionReferenceY": 0.564706,
+      "LocalSharpness": 0,
+      "LocalDefringe": 0,
+      "LocalDehaze": 0,
+      "LocalExposure": 0,
+      "CorrectionActive": true,
+      "LocalLuminanceNoise": 0,
+      "CorrectionReferenceX": 0.570312,
+      "LocalWhites2012": 0,
+      "What": "Correction",
+      "LocalBrightness": 0,
+      "LocalContrast2012": 0,
+      "LocalClarity2012": 0,
+      "LocalContrast": 0,
+      "CorrectionSyncID": "2DAB87DEC22D0A45874411DDB4A635B9",
+      "LocalClarity": 0,
+      "LocalToningHue": 0,
+      "LocalCurveRefineSaturation": 100,
+      "CorrectionMasks": [
+        {
+          "ModelVersion": 234881976,
+          "MaskValue": 1,
+          "Origin": "1009,787",
+          "LocalInputDigestVersion": 1,
+          "MaskInverted": false,
+          "MaskSyncID": "ACF79DA599CBD046A1C82F402D202A0C",
+          "MaskBlendMode": 0,
+          "MaskSubType": 0,
+          "MaskID": "F583F496-FBE4-48C6-A982-866D48ACD5E9",
+          "ReferencePoint": "0.570312 0.564706",
+          "What": "Mask/Image",
+          "InstanceIDs": [
+            {
+              "InstanceID": 1
+            }
+          ],
+          "MaskActive": true,
+          "MaskSubCategoryID": 20036,
+          "FullMaskSize": "2891,1920",
+          "MaskVersion": 1,
+          "MaskDigest": "01501F0382E02DAC3DE5CA069BB55188",
+          "InstanceBounds": [
+            {
+              "Top": 0.374479,
+              "Right": 0.532342,
+              "Left": 0.156001,
+              "Bottom": 0.785937
+            },
+            {
+              "Top": 0.409896,
+              "Right": 0.823936,
+              "Left": 0.349014,
+              "Bottom": 1
+            }
+          ],
+          "WholeImageArea": "0/1,0/1,1920/1,2891/1",
+          "InputDigest": "C16CCDF48F144AB3C634A4A92EE3289B",
+          "MaskName": "Person 2",
+          "LocalInputDigest": "300C5E2B49375642F89F3948749DE0C0",
+          "InputDigestVersion": 2
+        }
+      ],
+      "LocalShadows2012": 0,
+      "LocalGrain": 0,
+      "LocalTemperature": 0,
+      "LocalBlacks2012": 0,
+      "CorrectionAmount": 1,
+      "LocalHue": 0,
+      "LocalTexture": 0
+    }
+  ]
+}

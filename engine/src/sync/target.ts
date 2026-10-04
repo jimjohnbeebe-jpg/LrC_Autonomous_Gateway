@@ -14,8 +14,11 @@ import { roundForSlider } from "../session/rules.js";
 import { solveExposure } from "./exposure.js";
 import type { SyncRun, TargetResult } from "./types.js";
 
-/** A write with its read-back took ~0.39 s in Phase 2 [handle: docs\reports\phase2\PHASE2.md:240]; 30 s, as session\types.ts. */
-export const WRITE_TIMEOUT_MS = 30000;
+/**
+ * A write with its read-back took ~0.39 s in Phase 2 [handle: docs\reports\phase2\PHASE2.md:240]; the
+ * plugin's write gate waits up to 60 s for the catalog (plugin\LrC-AVG.lrplugin\Gate.lua): 90 s, as session\types.ts.
+ */
+export const WRITE_TIMEOUT_MS = 90000;
 /**
  * A command that got no answer (timeout, lost bridge) may still be carried out by Lightroom
  * [inference: on a timeout the engine only stops waiting and tells the plugin nothing

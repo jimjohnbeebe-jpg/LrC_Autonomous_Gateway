@@ -13,6 +13,7 @@ import { RECIPE_SCHEMA_ID } from "../log/index.js";
 import { ToolError } from "../mcp/errors.js";
 import { differingSettings, type CanonicalSettings } from "../params/index.js";
 import type { EndedByEntry } from "../log/index.js";
+import { settlePending } from "./ai-update.js";
 import { bridge, checkAbort, failed, ms, read, saveLog } from "./io.js";
 import { focus, variant } from "./targets.js";
 import { WRITE_TIMEOUT_MS, type EndArgs, type Session, type SessionContext, type SessionOutput, type Target, type UserEnd } from "./types.js";
@@ -41,10 +42,13 @@ export async function endSession(ctx: SessionContext, s: Session, args: EndArgs,
   let finalSettings: CanonicalSettings;
   let recipePath: string | null = null;
   let revert: { ms: number; differing: string[] } | null = null;
+  let masks = 0;
   try {
     await focus(ctx, s, kept);
     if (args.outcome === "accept") {
-      finalSettings = (await read(ctx, s, kept)).settings;
+      const view = await read(ctx, s, kept);
+      finalSettings = view.settings;
+      masks = view.masks.count;
       checkAbort(s); // the user's Abort, arrived during the read, wins over an accept
       s.files.writeRecipe({
         schema: RECIPE_SCHEMA_ID,
@@ -54,14 +58,19 @@ export async function endSession(ctx: SessionContext, s: Session, args: EndArgs,
         source: { uuid: kept.uuid, filename: kept.filename },
         process_version: kept.process_version,
         settings: finalSettings,
+        ...(masks > 0 ? { masks } : {}),
       });
       recipePath = s.files.recipePath;
     } else {
+      // Not while Lightroom computes an AI mask on the photo (ai-update.ts, D16); the plugin refuses it too.
+      await settlePending(ctx, s);
       const t = performance.now();
       const res = await bridge(s, s.master, () => client.request("apply_snapshot", { target_uuid: s.master.uuid, snapshot_id: s.snapshot.id }, { timeoutMs: WRITE_TIMEOUT_MS }));
       const revertMs = ms(t);
-      finalSettings = map.fromSdk(res.read_back).settings;
-      const differing = differingSettings(finalSettings, s.startSettings);
+      const view = map.fromSdk(res.read_back);
+      finalSettings = view.settings;
+      // The snapshot puts the mask table back too [handle: docs\reports\phase6\masks-capture\check.json `11_snapshot`, 0 differing paths].
+      const differing = [...differingSettings(finalSettings, s.startSettings), ...(view.masks.fingerprint !== s.startMasks ? ["masks"] : [])];
       revert = { ms: revertMs, differing };
     }
   } catch (err) {
@@ -92,12 +101,16 @@ export async function endSession(ctx: SessionContext, s: Session, args: EndArgs,
       recipe_path: recipePath,
       final_settings: finalSettings,
       ...(revert ? { revert } : {}),
+      ...(masks > 0 ? { masks_note: MASKS_NOTE(masks) } : {}),
       ...copies,
       timings: { total_ms: ms(started) },
     },
     log: { session_id: s.id, outcome, ended_by: s.log.ended_by, log_path: s.files.logPath, recipe_path: recipePath, ...(revert ? { revert } : {}), ...(s.mode === "variants" ? { photo: kept.id } : {}) },
   };
 }
+
+const MASKS_NOTE = (n: number): string =>
+  `The photo keeps its ${n === 1 ? "mask" : `${n} masks`}; the recipe carries the global settings only, so lr_sync_series and lr_create_preset_from_active do not copy masks.`;
 
 /** The log's `ended_by`: Claude, or the user's click with its timings (done_ms: from the event to now, AC-2). */
 function endedBy(by: UserEnd | null): EndedByEntry {

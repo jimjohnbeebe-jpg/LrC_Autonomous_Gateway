@@ -1,0 +1,478 @@
+{
+  "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+  "filename": "20260907-_OZ80099.NEF",
+  "steps": [
+    {
+      "step": "module_before",
+      "ok": true,
+      "result": "develop",
+      "ms": 0
+    },
+    {
+      "step": "switchToModule_develop",
+      "ok": true,
+      "ms": 0
+    },
+    {
+      "step": "wait_develop",
+      "ok": true,
+      "result": {
+        "in_develop": true,
+        "waited_ms": 0
+      },
+      "ms": 0
+    },
+    {
+      "step": "getAllMasks_before",
+      "ok": true,
+      "result": [],
+      "ms": 0
+    },
+    {
+      "step": "getSelectedMask_before",
+      "ok": true,
+      "ms": 0.50234794616699
+    },
+    {
+      "step": "goToMasking",
+      "ok": true,
+      "ms": 0.99670886993408
+    },
+    {
+      "step": "getSelectedTool_after_goToMasking",
+      "ok": true,
+      "result": "masking",
+      "ms": 0
+    },
+    {
+      "step": "mask_count_before",
+      "ok": true,
+      "result": 0,
+      "ms": 0.50079822540283
+    },
+    {
+      "step": "createNewMask_sky",
+      "ok": true,
+      "ms": 2.0192861557007
+    },
+    {
+      "step": "setValue_immediate_sky",
+      "ok": true,
+      "ms": 0
+    },
+    {
+      "step": "getValue_immediate_sky",
+      "ok": true,
+      "ms": 0
+    },
+    {
+      "step": "wait_mask_sky",
+      "ok": true,
+      "result": {
+        "waited_ms": 2479.3744087219,
+        "reached": true,
+        "count": 1
+      },
+      "ms": 2479.3744087219
+    },
+    {
+      "step": "getSelectedMask_after_sky",
+      "ok": true,
+      "result": "8E077BDB-FFD1-40D6-BEB8-08C20CB01468",
+      "ms": 0
+    },
+    {
+      "step": "setValue_after_wait_sky",
+      "ok": true,
+      "ms": 21.532893180847
+    },
+    {
+      "step": "getValue_after_wait_sky",
+      "ok": true,
+      "result": 0.75,
+      "ms": 0
+    },
+    {
+      "step": "getAllMasks_after_sky",
+      "ok": true,
+      "result": [
+        {
+          "Tools": [
+            {
+              "Type": "aiSelection",
+              "Name": "Sky 1",
+              "Subtype": "sky",
+              "ID": "2DB0B254-ADA9-48A2-8998-57E1C18B60FE",
+              "Hidden": false,
+              "Inverted": false
+            }
+          ],
+          "Hidden": false,
+          "Name": "Mask 1",
+          "ID": "8E077BDB-FFD1-40D6-BEB8-08C20CB01468"
+        }
+      ],
+      "ms": 0
+    },
+    {
+      "step": "getDevelopSettings_after_sky",
+      "ok": true,
+      "result": {
+        "HueAdjustmentAqua": 0,
+        "EnableLensCorrections": true,
+        "Sharpness": 24,
+        "EnableEffects": true,
+        "ColorGradeBlending": 50,
+        "HueAdjustmentGreen": 0,
+        "SDRWhites": 0,
+        "ColorNoiseReductionDetail": 50,
+        "ChromaticAberrationB": 0,
+        "SharpenEdgeMasking": 0,
+        "ParametricHighlightSplit": 75,
+        "LuminanceNoiseReductionContrast": 0,
+        "UprightFocalLength35mm": 35,
+        "HueAdjustmentOrange": 0,
+        "SplitToningShadowHue": 0,
+        "ParametricMidtoneSplit": 50,
+        "HueAdjustmentPurple": 0,
+        "EnableColorAdjustments": true,
+        "WhiteBalance": "As Shot",
+        "FillLight": 0,
+        "EnableMaskGroupBasedCorrections": true,
+        "RedEyeInfo": [],
+        "LuminanceNoiseReductionDetail": 75,
+        "PostCropVignetteFeather": 50,
+        "ColorNoiseReductionSmoothness": 50,
+        "Contrast": 25,
+        "DefringeGreenAmount": 0,
+        "Dehaze": 0,
+        "Defringe": 0,
+        "Temperature": 4900,
+        "LensProfileName": "Camera Settings",
+        "ToneCurvePV2012Red": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "ConvertToGrayscale": false,
+        "SaturationAdjustmentPurple": 0,
+        "DefringePurpleHueLo": 30,
+        "Exposure2012": 0.33,
+        "Tint": 11,
+        "HueAdjustmentBlue": 0,
+        "ProcessVersion": "15.4",
+        "EnableDistractionRemoval": true,
+        "LensProfileDigest": "5CADF5E894FB7CC7CEDB03EAB8AE99B0",
+        "LuminanceAdjustmentRed": 0,
+        "EnableTransform": true,
+        "ParametricHighlights": 0,
+        "SaturationAdjustmentAqua": 0,
+        "SDRShadows": 0,
+        "LensManualDistortionAmount": 0,
+        "AutoShadows": false,
+        "PostCropVignetteMidpoint": 50,
+        "AutoLateralCA": 1,
+        "EnableSplitToning": true,
+        "UprightCenterNormY": 0.5,
+        "Contrast2012": 0,
+        "DefringeGreenHueHi": 60,
+        "Clarity2012": 2,
+        "AutoBrightness": false,
+        "SaturationAdjustmentYellow": 0,
+        "DefringeGreenHueLo": 40,
+        "UprightTransformCount": 6,
+        "RedHue": 0,
+        "Shadows": 5,
+        "ToneCurvePV2012": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "Exposure": 0,
+        "ColorNoiseReduction": 25,
+        "ToneCurvePV2012Green": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "orientation": "AB",
+        "EnableDetail": true,
+        "ColorGradeShadowLum": 0,
+        "LensProfileDistortionScale": 100,
+        "Saturation": 0,
+        "PostCropVignetteAmount": 0,
+        "SplitToningHighlightHue": 0,
+        "CropConstrainToWarp": 0,
+        "SaturationAdjustmentBlue": 0,
+        "ParametricLights": 0,
+        "CropTop": 0,
+        "EnableRetouch": true,
+        "ChromaticAberrationR": 0,
+        "SDRBrightness": 0,
+        "LuminanceAdjustmentOrange": 0,
+        "PerspectiveHorizontal": 0,
+        "AutoContrast": false,
+        "SplitToningBalance": 0,
+        "SaturationAdjustmentRed": 0,
+        "GrainAmount": 0,
+        "PerspectiveUpright": 0,
+        "SDRClarity": 0,
+        "GrainFrequency": 50,
+        "UprightFourSegmentsCount": 0,
+        "LuminanceAdjustmentPurple": 0,
+        "EnableCalibration": true,
+        "LensProfileIsEmbedded": true,
+        "EnableToneCurve": true,
+        "UprightCenterNormX": 0.5,
+        "PointColors": [],
+        "LuminanceAdjustmentYellow": 0,
+        "VignetteAmount": 0,
+        "LensBlur": [],
+        "HDRMaxValue": 2.3,
+        "FilterList": [],
+        "ColorGradeMidtoneHue": 0,
+        "RedSaturation": 0,
+        "HueAdjustmentYellow": 0,
+        "AutoExposure": false,
+        "UprightCenterMode": 0,
+        "HighlightRecovery": 0,
+        "EnableGrayscaleMix": true,
+        "Texture": 4,
+        "LuminanceAdjustmentMagenta": 0,
+        "LuminanceAdjustmentGreen": 0,
+        "CameraProfile": "Camera Neutral",
+        "LensProfileEnable": 1,
+        "Blacks2012": 0,
+        "LuminanceSmoothing": 48,
+        "ColorGradeGlobalHue": 0,
+        "PostCropVignetteStyle": 1,
+        "ParametricShadowSplit": 25,
+        "HueAdjustmentMagenta": 0,
+        "LensProfileSetup": "LensDefaults",
+        "UprightPreview": false,
+        "ColorGradeGlobalLum": 0,
+        "CropRight": 1,
+        "CropConstrainToUnitSquare": 1,
+        "ToneCurvePV2012Blue": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "VignetteMidpoint": 50,
+        "CropAngle": 0,
+        "SaturationAdjustmentOrange": 0,
+        "GreenSaturation": 0,
+        "PostCropVignetteRoundness": 0,
+        "EnableRedEye": true,
+        "Vibrance": 0,
+        "SDRBlend": 0,
+        "CropLeft": 0,
+        "PerspectiveScale": 100,
+        "ColorGradeHighlightLum": 0,
+        "ParametricShadows": 0,
+        "ColorGradeGlobalSat": 0,
+        "GrainSize": 25,
+        "PerspectiveRotate": 0,
+        "UprightVersion": 151388160,
+        "SaturationAdjustmentMagenta": 0,
+        "SplitToningShadowSaturation": 0,
+        "ColorGradeMidtoneLum": 0,
+        "DefringePurpleHueHi": 70,
+        "ToneCurveName2012": "Linear",
+        "HueAdjustmentRed": 0,
+        "Clarity": 0,
+        "BlueHue": 0,
+        "LuminanceAdjustmentBlue": 0,
+        "SaturationAdjustmentGreen": 0,
+        "LuminanceAdjustmentAqua": 0,
+        "Whites2012": 0,
+        "SharpenRadius": 2,
+        "ParametricDarks": 0,
+        "CurveRefineSaturation": 100,
+        "AILook": [],
+        "PerspectiveVertical": 0,
+        "DefringePurpleAmount": 0,
+        "SDRHighlights": 0,
+        "Brightness": 50,
+        "GreenHue": 0,
+        "PostCropVignetteHighlightContrast": 0,
+        "SplitToningHighlightSaturation": 0,
+        "PerspectiveX": 0,
+        "MaskGroupBasedCorrections": [
+          {
+            "LocalHighlights2012": 0,
+            "LocalSaturation": 0,
+            "LocalMoire": 0,
+            "LocalTint": 0,
+            "LocalExposure2012": 0,
+            "LocalToningSaturation": 0,
+            "CorrectionName": "Mask 1",
+            "LocalWhites2012": 0,
+            "CorrectionReferenceY": 0.09164,
+            "LocalSharpness": 0,
+            "LocalDefringe": 0,
+            "LocalDehaze": 0,
+            "LocalExposure": 0,
+            "CorrectionActive": true,
+            "LocalShadows2012": 0,
+            "CorrectionReferenceX": 0.461006,
+            "CorrectionID": "8E077BDB-FFD1-40D6-BEB8-08C20CB01468",
+            "LocalHue": 0,
+            "CorrectionAmount": 1,
+            "LocalBlacks2012": 0,
+            "LocalClarity2012": 0,
+            "LocalContrast": 0,
+            "CorrectionSyncID": "9BBD9E7250312446B43F92C0AC49D763",
+            "LocalBrightness": 0,
+            "LocalContrast2012": 0,
+            "LocalCurveRefineSaturation": 100,
+            "CorrectionMasks": [
+              {
+                "ModelVersion": 234881976,
+                "MaskValue": 1,
+                "Origin": "761,0",
+                "LocalInputDigestVersion": 1,
+                "MaskInverted": false,
+                "MaskSyncID": "6803F8917A061A4E88A1A080E39B161B",
+                "MaskBlendMode": 0,
+                "MaskSubType": 2,
+                "MaskID": "2DB0B254-ADA9-48A2-8998-57E1C18B60FE",
+                "ReferencePoint": "0.461006 0.091640",
+                "What": "Mask/Image",
+                "FullMaskSize": "2880,1920",
+                "WholeImageArea": "0/1,0/1,1920/1,2880/1",
+                "LocalInputDigest": "82BF0DA5ECFEB3E614A39E98F71EFDFD",
+                "MaskVersion": 1,
+                "MaskDigest": "BC3C47BFBB81F99B3BBB83FFAAFAB93F",
+                "InputDigest": "D01EAE1986659337966F8C8185E3FF86",
+                "MaskName": "Sky 1",
+                "MaskActive": true,
+                "InputDigestVersion": 2
+              }
+            ],
+            "LocalLuminanceNoise": 0,
+            "LocalGrain": 0,
+            "LocalTemperature": 0,
+            "LocalToningHue": 0,
+            "LocalClarity": 0,
+            "What": "Correction",
+            "LocalTexture": 0
+          }
+        ],
+        "SDRContrast": 0,
+        "SharpenDetail": 25,
+        "Highlights2012": -21,
+        "ShadowTint": 0,
+        "UprightFocalMode": 0,
+        "PerspectiveAspect": 0,
+        "ColorGradeMidtoneSat": 0,
+        "BlueSaturation": 0,
+        "CropBottom": 1,
+        "HDREditMode": 0,
+        "Shadows2012": 10,
+        "LensProfileVignettingScale": 100,
+        "PerspectiveY": 0
+      },
+      "ms": 1.9999742507935
+    },
+    {
+      "step": "createNewMask_subject",
+      "ok": true,
+      "ms": 36.601662635803
+    },
+    {
+      "step": "setValue_immediate_subject",
+      "ok": true,
+      "ms": 0
+    },
+    {
+      "step": "getValue_immediate_subject",
+      "ok": true,
+      "ms": 0
+    },
+    {
+      "step": "wait_mask_subject",
+      "ok": true,
+      "result": {
+        "waited_ms": 875.30875205994,
+        "reached": true,
+        "count": 2
+      },
+      "ms": 875.30875205994
+    },
+    {
+      "step": "getSelectedMask_after_subject",
+      "ok": true,
+      "result": "B8160D91-6FE2-414C-8EFD-2FE3A6F99442",
+      "ms": 0
+    },
+    {
+      "step": "selectMask_1arg_sky",
+      "ok": true,
+      "ms": 17.003178596497
+    },
+    {
+      "step": "getSelectedMask_after_1arg",
+      "ok": true,
+      "result": "8E077BDB-FFD1-40D6-BEB8-08C20CB01468",
+      "ms": 0
+    },
+    {
+      "step": "selectMask_2arg_subject",
+      "ok": true,
+      "ms": 12.510418891907
+    },
+    {
+      "step": "getSelectedMask_after_2arg",
+      "ok": true,
+      "result": "B8160D91-6FE2-414C-8EFD-2FE3A6F99442",
+      "ms": 0
+    },
+    {
+      "step": "mask_count_before_delete",
+      "ok": true,
+      "result": 2,
+      "ms": 0
+    },
+    {
+      "step": "deleteMask_1arg_sky",
+      "ok": true,
+      "ms": 38.553595542908
+    },
+    {
+      "step": "mask_count_after_1arg",
+      "ok": true,
+      "result": {
+        "waited_ms": 0,
+        "reached": true,
+        "count": 1
+      },
+      "ms": 0
+    },
+    {
+      "step": "deleteMask_2arg_subject",
+      "ok": true,
+      "ms": 6.5120458602905
+    },
+    {
+      "step": "mask_count_after_2arg",
+      "ok": true,
+      "result": {
+        "waited_ms": 0,
+        "reached": true,
+        "count": 0
+      },
+      "ms": 0
+    },
+    {
+      "step": "getAllMasks_end",
+      "ok": true,
+      "result": [],
+      "ms": 0
+    }
+  ]
+}

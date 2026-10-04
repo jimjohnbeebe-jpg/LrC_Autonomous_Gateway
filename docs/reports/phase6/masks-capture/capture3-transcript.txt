@@ -1,0 +1,48 @@
+[6:25:13 PM] --- 0_preconditions
+[6:25:13 PM] YES  Lightroom 15.6 runs plugin 0.11.0 (0.11.0 or later needed)
+[6:25:13 PM] --- 1_photo
+[6:25:13 PM] YES  photo _DSC0028.NEF (RAW); snapshot "AVG people before 18:25:13" taken; 0 masks on it
+[6:25:13 PM] To stop at any point, press Ctrl+C once and wait: the check puts the photo back by itself.
+[6:25:13 PM] Only if its last lines say PUT BACK: NO: wait 1 minute, then in Lightroom's Develop module open the Snapshots panel (left side) and click "AVG people before 18:25:13".
+[6:25:13 PM] --- 2_hand_masks
+[6:25:13 PM] NOW, in Lightroom (your photo stays selected). Do these in this order:
+[6:25:13 PM] a. Press D (Develop). If the Masks panel is not open, press Shift+W.
+[6:25:13 PM] b. Click Create New Mask, then People. Click the person you want. Tick Entire Person, then click Create Mask.
+[6:25:13 PM] c. Click Create New Mask, then People again. Click the same person. Tick only Face Skin, then click Create Mask.
+[6:25:13 PM]    If the list for that person has no Face Skin, leave step c out.
+[6:25:13 PM] d. Click Create New Mask, then Landscape. Tick every category it offers, then click Create Mask.
+[6:25:13 PM] e. Leave Masking open. Come back to this window.
+[6:25:13 PM] At the end this check puts the photo back as it is now: the masks you add are removed.
+  ? Did you make the People mask (Entire Person), the Face Skin mask if it was offered, and the Landscape mask? -> y
+[6:27:44 PM] --- 3_dumps
+[6:27:47 PM] YES  the table holds 4 new entries: people_entire, people_part, landscape_1, landscape_2 (templates.json)
+[6:27:47 PM] YES  two reads in a row give the same mask table (0 differing paths)
+[6:27:47 PM] YES  a People and a Landscape entry were found
+[6:27:47 PM] --- 4_copies
+[6:27:48 PM] YES  people_entire: the copy "AVG new people_entire" is in the table after the write
+[6:27:49 PM] YES  people_entire: update_ai_settings answered ({"uuid":"268D3EFD-034F-4555-99CF-D355707B5153","call_ms":1155.0352573395,"command_ms":1191.3216114044,"gate":"executed"})
+[6:27:49 PM] YES  people_entire: the copy computed within 30 s of update_ai_settings (469 ms, 1 reads)
+[6:27:50 PM] NOW: look at the Masks panel (if it is not open, press Shift+W). Hover over "AVG new people_entire", then over your own mask it copies.
+  ? Is there a mask named 'AVG new people_entire' covering the same area as yours? -> y
+[6:28:33 PM] YES  people_part: the copy "AVG new people_part" is in the table after the write
+[6:28:34 PM] YES  people_part: update_ai_settings answered ({"uuid":"268D3EFD-034F-4555-99CF-D355707B5153","call_ms":963.67037296295,"command_ms":999.70233440399,"gate":"executed"})
+[6:28:34 PM] YES  people_part: the copy computed within 30 s of update_ai_settings (412 ms, 1 reads)
+[6:28:34 PM] NOW: look at the Masks panel (if it is not open, press Shift+W). Hover over "AVG new people_part", then over your own mask it copies.
+  ? Is there a mask named 'AVG new people_part' covering the same area as yours? -> y
+[6:29:01 PM] YES  landscape_1: the copy "AVG new landscape_1" is in the table after the write
+[6:29:02 PM] YES  landscape_1: update_ai_settings answered ({"uuid":"268D3EFD-034F-4555-99CF-D355707B5153","call_ms":1136.3008022308,"command_ms":1206.5119743347,"gate":"executed"})
+[6:29:02 PM] YES  landscape_1: the copy computed within 30 s of update_ai_settings (317 ms, 1 reads)
+[6:29:03 PM] NOW: look at the Masks panel (if it is not open, press Shift+W). Hover over "AVG new landscape_1", then over your own mask it copies.
+  ? Is there a mask named 'AVG new landscape_1' covering the same area as yours? -> y
+[6:29:10 PM] YES  landscape_2: the copy "AVG new landscape_2" is in the table after the write
+[6:29:12 PM] YES  landscape_2: update_ai_settings answered ({"uuid":"268D3EFD-034F-4555-99CF-D355707B5153","call_ms":999.75681304932,"command_ms":1011.9839906693,"gate":"executed"})
+[6:29:12 PM] YES  landscape_2: the copy computed within 30 s of update_ai_settings (286 ms, 1 reads)
+[6:29:12 PM] NOW: look at the Masks panel (if it is not open, press Shift+W). Hover over "AVG new landscape_2", then over your own mask it copies.
+  ? Is there a mask named 'AVG new landscape_2' covering the same area as yours? -> y
+[6:29:14 PM] --- 5_put_back
+[6:29:20 PM] YES  PUT BACK: YES (every setting as before the check, and still 5 s later)
+[6:29:20 PM] NOW: look at the photo in Lightroom, and at the Masks panel (if the Masks panel is not open, press Shift+W).
+  ? Does the photo look as it did before the check, with none of the check's masks left? -> y
+[6:29:36 PM] 
+[6:29:36 PM] masks capture 3: WORKED
+[6:29:36 PM] Results: D:\Developer\LrC_Autonomous_Gateway\logs\check-masks-people-2026-10-03\check.json, templates.json

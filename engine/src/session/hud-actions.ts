@@ -6,7 +6,8 @@
 //     (io.ts checkAbort), then the pre-session snapshot is applied, as lr_end_session "revert" does;
 //     the log's outcome is "aborted". A revert that fails, or leaves a setting different, keeps the
 //     session open, and a second click tries again; Claude's revert while an Abort is pending is
-//     logged as the user's (end.ts);
+//     logged as the user's (end.ts). While Lightroom computes an AI mask (s.aiPending) it is refused
+//     with a note, nothing written (D16, ai-update.ts);
 //   - Accept: after the running operation, as lr_end_session "accept" (Variants mode: after a pick);
 //     it waits rather than stops, so no pass is left half done (a write without its corrections);
 //   - Pick: as lr_select_variant; Claude learns of it in its next session tool result
@@ -26,6 +27,7 @@ import { approvalNote, approve, pendingApproval, wakeApproval } from "./approval
 import { endSession } from "./end.js";
 import { failed, saveLog } from "./io.js";
 import { awaitingPick, selectVariant } from "./pick.js";
+import { putBackReported } from "./put-back.js";
 import { variant } from "./targets.js";
 import type { Session, SessionContext, UserEnd, UserSource, VariantId } from "./types.js";
 
@@ -33,7 +35,8 @@ import type { Session, SessionContext, UserEnd, UserSource, VariantId } from "./
 export type UserAction = HudEvent & { received: Date; t0: number };
 
 /** A session the user ended from the HUD or the menu, for the calls that still name it. */
-export type UserEnded = { session_id: string; outcome: "aborted" | "accept"; source: UserSource; at: string; log_path: string };
+/** `put_back`: the HUD's Put back put the photo back itself and told the engine (put-back.ts). */
+export type UserEnded = { session_id: string; outcome: "aborted" | "accept" | "put_back"; source: UserSource; at: string; log_path: string };
 
 /** What the actions need from the session manager (manager.ts). */
 export type ActionHost = {
@@ -59,7 +62,7 @@ export function userAction(host: ActionHost, a: UserAction): string {
   const s = host.session();
   if (!s || s.id !== a.payload.session_id) {
     const ended = host.ended(a.payload.session_id);
-    if (ended) return `This edit had already ended: ${ended.outcome === "aborted" ? "the photo was put back" : "the edit was kept"}.`;
+    if (ended) return `This edit had already ended: ${ended.outcome === "accept" ? "the edit was kept" : "the photo was put back"}.`;
     return "This edit is no longer open in Claude, so nothing was done."; // hud\events.ts answers it with an `ended` update
   }
   const note = act(host, s, a);
@@ -77,6 +80,8 @@ function act(host: ActionHost, s: Session, a: UserAction): string {
       return pick(host, s, a.payload.variant, a.payload.source);
     case "hud_approve_pass":
       return approveFromHud(host, s, a.payload.pass, a.payload.source);
+    case "hud_put_back":
+      return putBackReported(host, s, a);
   }
 }
 
@@ -128,6 +133,7 @@ export function abortedNote(s: Session): string {
 }
 
 const settingsCount = (n: number): string => (n === 1 ? "1 setting" : `${n} settings`);
+export const ABORT_WAITS = "Lightroom is still computing the AI mask, so Abort must wait. If it seems stuck, restart Lightroom.";
 
 /** Waits for the bridge; a failed wait goes in the log's failures, as the HUD's note names no code. */
 async function connected(ctx: SessionContext, s: Session, stage: string): Promise<void> {
@@ -137,6 +143,10 @@ async function connected(ctx: SessionContext, s: Session, stage: string): Promis
 
 function abort(host: ActionHost, s: Session, a: UserAction): string {
   if (s.abort?.state === "pending") return "Abort is already under way.";
+  // Nothing is put back while Lightroom computes an AI mask on the photo (ai-update.ts, D16). While a call runs
+  // the answer is plain; when idle, the queued revert re-reads the table (endSession's settlePending) and
+  // goes ahead if Lightroom has finished meanwhile, else it reports ABORT_WAITS (finishAbort).
+  if (s.aiPending && host.busy()) return ABORT_WAITS;
   s.abort = userEnd(a, s.abort); // a second click after a failed revert tries again
   const running = host.busy();
   host.queue(() => finishAbort(host, s));
@@ -151,7 +161,13 @@ async function finishAbort(host: ActionHost, s: Session): Promise<void> {
   try {
     await connected(ctx, s, "abort (reconnect)");
     await endSession(ctx, s, { session_id: s.id, outcome: "revert" }, by);
-  } catch {
+  } catch (err) {
+    if (toToolError(err).code === "AI_UPDATE_PENDING") {
+      // Nothing was written: the session goes on as before the click (D16), and Abort works again once the mask has its result.
+      s.abort = null;
+      ctx.deps.hud?.stage(s, "awaiting_claude", { note: ABORT_WAITS });
+      return;
+    }
     by.state = "failed"; // the failure is in the log's failures: connected()'s, or endSession's own (io.ts failed())
     ctx.deps.hud?.stage(s, "awaiting_claude", { note: "Abort could not put the photo back. Click Abort again." });
     return;
@@ -169,8 +185,8 @@ async function finishAbort(host: ActionHost, s: Session): Promise<void> {
   ctx.deps.hud?.stage(s, "aborted", { note: abortedNote(s) });
 }
 
-/** The log of a session an Abort did not end after all: open again, with the revert tried kept. */
-function reopenLog(s: Session): void {
+/** The log of a session an Abort (or the engine's put-back, ai-masks.ts) did not end after all: open again, with the revert tried kept. */
+export function reopenLog(s: Session): void {
   s.log.outcome = null;
   s.log.ended = null;
   s.log.final_settings = null;
@@ -294,7 +310,8 @@ export function idleStage(s: Session, error: unknown): { stage: HudStage; note?:
 
 /** The answer to a call naming a session the user ended from the HUD or the menu. */
 export function endedError(e: UserEnded): ToolError {
-  const how = e.outcome === "aborted" ? "aborted it: the photo is back as it was before the session" : "accepted it: the edit is kept and the recipe written";
+  const how =
+    e.outcome === "aborted" ? "aborted it: the photo is back as it was before the session" : e.outcome === "put_back" ? "put the photo back with the HUD's Put back: it is as it was before the session" : "accepted it: the edit is kept and the recipe written";
   const where = e.source === "menu" ? "Lightroom's menu" : "the HUD";
   return new ToolError("SESSION_ENDED", `The user ended session ${e.session_id} from ${where} at ${e.at} and ${how}. Start a new session only if the user asks.`, false, e);
 }

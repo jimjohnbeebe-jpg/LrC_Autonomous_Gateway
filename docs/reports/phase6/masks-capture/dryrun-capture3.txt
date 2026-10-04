@@ -1,0 +1,172 @@
+Dry runs of check.mts (masks capture 3) against the engine test sim (engine\tests\helpers\lightroom-sim.ts) - Claude Code (Opus 5.5), 2026-10-03.
+Worktree of phase-6/masks, engine\dist as built there (no plugin or engine change for capture 3). Node v24.11.1.
+Driver: dryrun-driver.test.ts beside this file (gitignored), run with: npx vitest run --root logs/check-masks-people-2026-10-03
+It answers y to every (y/n) and Enter to the Enter prompt. DRY_SEED injects an INVENTED table (categories made up) and an
+update_ai_settings that "computes" it; DRY_TWO selects two photos; DRY_PLUGIN fakes the version; CHECK_SIGINT_AT emits readline's SIGINT.
+These runs show that the script runs, stops, aborts and puts back. They show NOTHING about Lightroom.
+
+==== run 1: the sim as it is (one photo selected, no masks added): step 3 finds nothing, put-back
+  (bridge: connecting)
+[6:05:08 PM] --- 0_preconditions
+  (bridge: handshaking)
+  (bridge: connected)
+[6:05:09 PM] YES  Lightroom 15.5.1 runs plugin 0.11.0 (0.11.0 or later needed)
+[6:05:09 PM] --- 1_photo
+[6:05:09 PM] YES  photo 20260907-_OZ80093.NEF (RAW); snapshot "AVG people before 18:05:09" taken; 0 masks on it
+[6:05:09 PM] To stop at any point, press Ctrl+C once and wait: the check puts the photo back by itself.
+[6:05:09 PM] Only if its last lines say PUT BACK: NO: wait 1 minute, then in Lightroom's Develop module open the Snapshots panel (left side) and click "AVG people before 18:05:09".
+[6:05:09 PM] --- 2_hand_masks
+[6:05:09 PM] NOW, in Lightroom (your photo stays selected). Do these in this order:
+[6:05:09 PM] a. Press D (Develop). If the Masks panel is not open, press Shift+W.
+[6:05:09 PM] b. Click Create New Mask, then People. Click the person you want. Tick Entire Person, then click Create Mask.
+[6:05:09 PM] c. Click Create New Mask, then People again. Click the same person. Tick only Face Skin, then click Create Mask.
+[6:05:09 PM]    If the list for that person has no Face Skin, leave step c out.
+[6:05:09 PM] d. Click Create New Mask, then Landscape. Tick every category it offers, then click Create Mask.
+[6:05:09 PM] e. Leave Masking open. Come back to this window.
+[6:05:09 PM] At the end this check puts the photo back as it is now: the masks you add are removed.
+Press Enter when the masks are in the Masks panel. Did you make the People mask (Entire Person), the Face Skin mask if it was offered, and the Landscape mask? (y/n) [6:05:09 PM] --- 3_dumps
+[6:05:10 PM] NO   the table holds 0 new entries: none (templates.json)
+[6:05:10 PM] YES  two reads in a row give the same mask table (0 differing paths)
+[6:05:10 PM] NO   a People and a Landscape entry were found
+[6:05:10 PM] skipped: no new entries
+[6:05:10 PM] --- 5_put_back
+[6:05:15 PM] YES  PUT BACK: YES (every setting as before the check, and still 5 s later)
+[6:05:15 PM] NOW: look at the photo in Lightroom, and at the Masks panel (if the Masks panel is not open, press Shift+W).
+Does the photo look as it did before the check, with none of the check's masks left? (y/n)   (bridge: stopped)
+[6:05:15 PM] 
+[6:05:15 PM] masks capture 3: DONE, 2 NO / FAILED lines (each one is a finding for the report)
+[6:05:15 PM]   - the table holds 0 new entries: none (templates.json)
+[6:05:15 PM]   - a People and a Landscape entry were found
+[6:05:15 PM] Results: %USERPROFILE%\AppData\Local\Temp\people-dry-HYp8Fe\check.json, templates.json
+
+HISTORY []
+RECEIVED {"hello":1,"get_selection":1,"get_context":1,"create_snapshot":1,"get_settings":4,"apply_snapshot":1}
+STEPS 1_selection, 1_photo, 3_dumps, 3_dumps_skipped, 5_put_back, 5_put_back_late
+exit 1
+
+==== run 2: an INVENTED table at the Enter prompt (person, face skin, a two-category landscape) and an update_ai_settings that 'computes' it
+  (bridge: connecting)
+[6:05:18 PM] --- 0_preconditions
+  (bridge: handshaking)
+  (bridge: connected)
+[6:05:19 PM] YES  Lightroom 15.5.1 runs plugin 0.11.0 (0.11.0 or later needed)
+[6:05:19 PM] --- 1_photo
+[6:05:19 PM] YES  photo 20260907-_OZ80093.NEF (RAW); snapshot "AVG people before 18:05:19" taken; 0 masks on it
+[6:05:19 PM] To stop at any point, press Ctrl+C once and wait: the check puts the photo back by itself.
+[6:05:19 PM] Only if its last lines say PUT BACK: NO: wait 1 minute, then in Lightroom's Develop module open the Snapshots panel (left side) and click "AVG people before 18:05:19".
+[6:05:19 PM] --- 2_hand_masks
+[6:05:19 PM] NOW, in Lightroom (your photo stays selected). Do these in this order:
+[6:05:19 PM] a. Press D (Develop). If the Masks panel is not open, press Shift+W.
+[6:05:19 PM] b. Click Create New Mask, then People. Click the person you want. Tick Entire Person, then click Create Mask.
+[6:05:19 PM] c. Click Create New Mask, then People again. Click the same person. Tick only Face Skin, then click Create Mask.
+[6:05:19 PM]    If the list for that person has no Face Skin, leave step c out.
+[6:05:19 PM] d. Click Create New Mask, then Landscape. Tick every category it offers, then click Create Mask.
+[6:05:19 PM] e. Leave Masking open. Come back to this window.
+[6:05:19 PM] At the end this check puts the photo back as it is now: the masks you add are removed.
+Press Enter when the masks are in the Masks panel. Did you make the People mask (Entire Person), the Face Skin mask if it was offered, and the Landscape mask? (y/n) [6:05:19 PM] --- 3_dumps
+[6:05:20 PM] YES  the table holds 3 new entries: people_entire, people_part, landscape_1 (templates.json)
+[6:05:20 PM] YES  two reads in a row give the same mask table (0 differing paths)
+[6:05:20 PM] YES  a People and a Landscape entry were found
+[6:05:20 PM] --- 4_copies
+[6:05:20 PM] YES  people_entire: the copy "AVG new people_entire" is in the table after the write
+[6:05:20 PM] YES  people_entire: update_ai_settings answered ({"uuid":"SIM-UUID","call_ms":1,"command_ms":2})
+[6:05:20 PM] YES  people_entire: the copy computed within 30 s of update_ai_settings (254 ms, 1 reads)
+[6:05:20 PM] NOW: look at the Masks panel (if it is not open, press Shift+W). Hover over "AVG new people_entire", then over your own mask it copies.
+Is there a mask named 'AVG new people_entire' covering the same area as yours? (y/n) [6:05:20 PM] YES  people_part: the copy "AVG new people_part" is in the table after the write
+[6:05:20 PM] YES  people_part: update_ai_settings answered ({"uuid":"SIM-UUID","call_ms":1,"command_ms":2})
+[6:05:20 PM] YES  people_part: the copy computed within 30 s of update_ai_settings (264 ms, 1 reads)
+[6:05:20 PM] NOW: look at the Masks panel (if it is not open, press Shift+W). Hover over "AVG new people_part", then over your own mask it copies.
+Is there a mask named 'AVG new people_part' covering the same area as yours? (y/n) [6:05:20 PM] YES  landscape_1: the copy "AVG new landscape_1" is in the table after the write
+[6:05:21 PM] YES  landscape_1: update_ai_settings answered ({"uuid":"SIM-UUID","call_ms":1,"command_ms":2})
+[6:05:21 PM] YES  landscape_1: the copy computed within 30 s of update_ai_settings (257 ms, 1 reads)
+[6:05:21 PM] NOW: look at the Masks panel (if it is not open, press Shift+W). Hover over "AVG new landscape_1", then over your own mask it copies.
+Is there a mask named 'AVG new landscape_1' covering the same area as yours? (y/n) [6:05:21 PM] --- 5_put_back
+[6:05:26 PM] YES  PUT BACK: YES (every setting as before the check, and still 5 s later)
+[6:05:26 PM] NOW: look at the photo in Lightroom, and at the Masks panel (if the Masks panel is not open, press Shift+W).
+Does the photo look as it did before the check, with none of the check's masks left? (y/n)   (bridge: stopped)
+[6:05:26 PM] 
+[6:05:26 PM] masks capture 3: WORKED
+[6:05:26 PM] Results: %USERPROFILE%\AppData\Local\Temp\people-dry-l9Km6H\check.json, templates.json
+
+HISTORY ["AVG people add people_entire","AVG people add people_part","AVG people add landscape_1"]
+RECEIVED {"hello":1,"get_selection":1,"get_context":1,"create_snapshot":1,"get_settings":10,"apply_settings":3,"update_ai_settings":3,"apply_snapshot":1}
+STEPS 1_selection, 1_photo, 3_dumps, 4_people_entire, 4_people_part, 4_landscape_1, 5_put_back, 5_put_back_late
+exit 0
+
+==== run 3: two photos selected: stops before the snapshot
+  (bridge: connecting)
+[6:05:29 PM] --- 0_preconditions
+  (bridge: handshaking)
+  (bridge: connected)
+[6:05:29 PM] YES  Lightroom 15.5.1 runs plugin 0.11.0 (0.11.0 or later needed)
+[6:05:29 PM] --- 1_photo
+[6:05:29 PM] NO   exactly one photo is selected (2 selected)
+[6:05:29 PM] Select exactly one photo in Lightroom (a raw photo with a person and some outdoor landscape), then run this again.
+[6:05:29 PM] skipped: not exactly one photo selected
+  (bridge: stopped)
+[6:05:29 PM] 
+[6:05:29 PM] masks capture 3: DONE, 1 NO / FAILED lines (each one is a finding for the report)
+[6:05:29 PM]   - exactly one photo is selected (2 selected)
+[6:05:29 PM] Results: %USERPROFILE%\AppData\Local\Temp\people-dry-tUiAMk\check.json, templates.json
+
+HISTORY []
+RECEIVED {"hello":1,"get_selection":1}
+STEPS 1_selection, 1_photo_skipped
+exit 1
+
+==== run 4: as run 2, with a Ctrl+C (readline SIGINT emitted by the script's dry-run hook) before step 4
+  (bridge: connecting)
+[6:05:32 PM] --- 0_preconditions
+  (bridge: handshaking)
+  (bridge: connected)
+[6:05:33 PM] YES  Lightroom 15.5.1 runs plugin 0.11.0 (0.11.0 or later needed)
+[6:05:33 PM] --- 1_photo
+[6:05:33 PM] YES  photo 20260907-_OZ80093.NEF (RAW); snapshot "AVG people before 18:05:33" taken; 0 masks on it
+[6:05:33 PM] To stop at any point, press Ctrl+C once and wait: the check puts the photo back by itself.
+[6:05:33 PM] Only if its last lines say PUT BACK: NO: wait 1 minute, then in Lightroom's Develop module open the Snapshots panel (left side) and click "AVG people before 18:05:33".
+[6:05:33 PM] --- 2_hand_masks
+[6:05:33 PM] NOW, in Lightroom (your photo stays selected). Do these in this order:
+[6:05:33 PM] a. Press D (Develop). If the Masks panel is not open, press Shift+W.
+[6:05:33 PM] b. Click Create New Mask, then People. Click the person you want. Tick Entire Person, then click Create Mask.
+[6:05:33 PM] c. Click Create New Mask, then People again. Click the same person. Tick only Face Skin, then click Create Mask.
+[6:05:33 PM]    If the list for that person has no Face Skin, leave step c out.
+[6:05:33 PM] d. Click Create New Mask, then Landscape. Tick every category it offers, then click Create Mask.
+[6:05:33 PM] e. Leave Masking open. Come back to this window.
+[6:05:33 PM] At the end this check puts the photo back as it is now: the masks you add are removed.
+Press Enter when the masks are in the Masks panel. Did you make the People mask (Entire Person), the Face Skin mask if it was offered, and the Landscape mask? (y/n) [6:05:33 PM] --- 3_dumps
+[6:05:34 PM] YES  the table holds 3 new entries: people_entire, people_part, landscape_1 (templates.json)
+[6:05:34 PM] YES  two reads in a row give the same mask table (0 differing paths)
+[6:05:34 PM] YES  a People and a Landscape entry were found
+[6:05:34 PM] ABORTING (Ctrl+C): going straight to the put-back. Wait for the last lines.
+[6:05:34 PM] --- 5_put_back
+[6:05:39 PM] YES  PUT BACK: YES (every setting as before the check, and still 5 s later)
+  (bridge: stopped)
+[6:05:39 PM] 
+[6:05:39 PM] masks capture 3: DONE, 1 NO / FAILED lines (each one is a finding for the report)
+[6:05:39 PM]   - aborted: Ctrl+C
+[6:05:39 PM] Results: %USERPROFILE%\AppData\Local\Temp\people-dry-OEbTW3\check.json, templates.json
+
+HISTORY []
+RECEIVED {"hello":1,"get_selection":1,"get_context":1,"create_snapshot":1,"get_settings":4,"apply_snapshot":1}
+STEPS 1_selection, 1_photo, 3_dumps, 5_put_back, 5_put_back_late
+exit 1
+
+==== run 5: hello reports plugin 0.9.0: stops before any write
+  (bridge: connecting)
+[6:05:42 PM] --- 0_preconditions
+  (bridge: handshaking)
+  (bridge: connected)
+[6:05:43 PM] NO   Lightroom 15.5.1 runs plugin 0.9.0 (0.11.0 or later needed)
+[6:05:43 PM] NO   0_preconditions ran
+  (bridge: stopped)
+[6:05:43 PM] 
+[6:05:43 PM] masks capture 3: DONE, 2 NO / FAILED lines (each one is a finding for the report)
+[6:05:43 PM]   - Lightroom 15.5.1 runs plugin 0.9.0 (0.11.0 or later needed)
+[6:05:43 PM]   - 0_preconditions ran
+[6:05:43 PM] Results: %USERPROFILE%\AppData\Local\Temp\people-dry-Cg3RNY\check.json, templates.json
+
+HISTORY []
+RECEIVED {"hello":1}
+STEPS 0_preconditions_error
+exit 1
+

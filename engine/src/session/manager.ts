@@ -32,19 +32,25 @@ import { ToolError } from "../mcp/errors.js";
 import type { Region } from "../metrics/index.js";
 import type { RenderedPreview } from "../preview/index.js";
 import { searchOrder } from "../settings/index.js";
+import { engineEndedNote } from "./ai-revert.js";
 import { approvePass } from "./approval.js";
 import { openSession, runPass0 } from "./begin.js";
 import { endSession, readSessionLog } from "./end.js";
 import { abortedNote, endedError, idleStage, userAction, userEnded, type UserAction, type UserEnded } from "./hud-actions.js";
 import { abortError, checkAbort, read, render } from "./io.js";
+import { createMask, deleteMask, editMask, listMasks } from "./masks.js";
 import { selectVariant } from "./pick.js";
 import { probe } from "./probe.js";
 import { setRegions } from "./regions.js";
+import { watchRestarts } from "./restart.js";
 import { step } from "./step.js";
 import { focus, resolveTarget } from "./targets.js";
-import { folderOf, type ApproveArgs, type BeginArgs, type EndArgs, type ProbeArgs, type RegionArgs, type SelectArgs, type Session, type SessionContext, type SessionDeps, type SessionOutput, type StepArgs, type TargetId } from "./types.js";
+import { folderOf, type ApproveArgs, type BeginArgs, type CreateMaskArgs, type DeleteMaskArgs, type EditMaskArgs, type EndArgs, type ListMasksArgs, type ProbeArgs, type RegionArgs, type SelectArgs, type Session, type SessionContext, type SessionDeps, type SessionOutput, type StepArgs, type TargetId } from "./types.js";
 import { runVariants } from "./variants.js";
 import { sessionView, type SessionView } from "./view.js";
+
+/** How long the HUD shows a session the engine ended before it closes itself (D15). */
+const ENGINE_END_CLOSE_S = 10;
 
 export class SessionManager {
   private readonly ctx: SessionContext;
@@ -53,6 +59,8 @@ export class SessionManager {
   private readonly ended = new Map<string, string>();
   /** Sessions the user ended from the HUD or the menu, by id. */
   private readonly endedByUser = new Map<string, UserEnded>();
+  /** Sessions the engine ended itself (ai-revert.ts autoRevert), by id: why. */
+  private readonly endedByEngine = new Map<string, string>();
   /** The end of the queue of session operations (exclusive()). */
   private tail: Promise<unknown> = Promise.resolve();
   /** Operations of the queue running now (0 or 1). */
@@ -60,12 +68,19 @@ export class SessionManager {
 
   constructor(deps: SessionDeps) {
     this.ctx = { deps, now: deps.now ?? (() => new Date()), newId: deps.newId ?? (() => randomUUID()) };
+    // A Lightroom restart while an AI mask had no result puts the photo back (restart.ts, D16).
+    watchRestarts({ ctx: this.ctx, session: () => this.session, queue: (fn) => void this.exclusive(fn).catch(() => undefined), endedByEngine: (s) => this.engineEnded(s) });
   }
 
   /** The open session, if any: what the other tools need to know about it. */
   current(): SessionView | null {
     const s = this.session;
     return s ? sessionView(s, s.active.id) : null;
+  }
+
+  /** What the running operation tells the HUD (e.g. that Lightroom computes an AI mask), for MCP progress notifications; null when none runs. */
+  workNote(): string | null {
+    return this.session?.work?.note ?? null;
   }
 
   /** The open session with this id, seen from one of its photos (a read: lr_get_metrics). */
@@ -93,7 +108,7 @@ export class SessionManager {
       s.work = { target: t, pass: null };
       await focus(this.ctx, s, t);
       const view = await read(this.ctx, s, t);
-      return (await render(this.ctx, s, t, view.settings, { longEdge })).preview;
+      return (await render(this.ctx, s, t, view, { longEdge })).preview;
     });
   }
 
@@ -146,6 +161,23 @@ export class SessionManager {
 
   setRegions(args: RegionArgs): Promise<SessionOutput> {
     return this.exclusive(() => this.withNotices(args.session_id, (s) => setRegions(s, args)));
+  }
+
+  /** The mask tools (masks.ts): a listing, and one pass per change. */
+  listMasks(args: ListMasksArgs): Promise<SessionOutput> {
+    return this.exclusive(() => this.withNotices(args.session_id, (s) => listMasks(this.ctx, s, args)));
+  }
+
+  createMask(args: CreateMaskArgs): Promise<SessionOutput> {
+    return this.exclusive(() => this.withNotices(args.session_id, (s) => createMask(this.ctx, s, args)));
+  }
+
+  editMask(args: EditMaskArgs): Promise<SessionOutput> {
+    return this.exclusive(() => this.withNotices(args.session_id, (s) => editMask(this.ctx, s, args)));
+  }
+
+  deleteMask(args: DeleteMaskArgs): Promise<SessionOutput> {
+    return this.exclusive(() => this.withNotices(args.session_id, (s) => deleteMask(this.ctx, s, args)));
   }
 
   /**
@@ -206,13 +238,29 @@ export class SessionManager {
   }
 
   /**
+   * Once the engine put the photo back and ended the session (ai-revert.ts autoRevert, s.endedByEngine): it is
+   * closed, and the HUD shows that for 10 s, then closes itself [stated: Jim, 2026-10-04, "Show, then close (Recommended)"].
+   */
+  private engineEnded(s: Session): void {
+    if (!s.endedByEngine || this.session !== s) return;
+    this.endedByEngine.set(s.id, s.endedByEngine);
+    this.close(s, null);
+    this.ctx.deps.hud?.stage(s, "ended", { note: engineEndedNote(s.endedByEngine), closeAfter: ENGINE_END_CLOSE_S });
+  }
+
+  /**
    * Run a session call and add the HUD actions Claude has not heard of yet (a pick) to its result.
    * Once the user has aborted the session, only lr_end_session runs (`whileAborting`).
    */
   private async withNotices(sessionId: string, fn: (s: Session) => Promise<SessionOutput>, whileAborting = false): Promise<SessionOutput> {
     const s = this.require(sessionId);
     if (s.abort && !whileAborting) throw abortError(s);
-    const out = await fn(s);
+    let out: SessionOutput;
+    try {
+      out = await fn(s);
+    } finally {
+      this.engineEnded(s);
+    }
     if (s.notices.length === 0) return out;
     return { ...out, json: { ...out.json, hud_actions: s.notices.splice(0) } };
   }
@@ -249,6 +297,10 @@ export class SessionManager {
     const s = this.session;
     const byUser = this.userEndedError(sessionId);
     if (byUser) throw byUser;
+    const byEngine = s?.id === sessionId ? undefined : this.endedByEngine.get(sessionId);
+    if (byEngine !== undefined) {
+      throw new ToolError("SESSION_ENDED", `The engine ended session ${sessionId}: ${byEngine}. The photo was put back as it was before the session. Start a new session only if the user asks.`, false, { session_id: sessionId, ended_by: "engine", reason: byEngine });
+    }
     if (!s || s.id !== sessionId) {
       throw new ToolError(
         "SESSION_NOT_ACTIVE",

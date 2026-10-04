@@ -1,0 +1,52 @@
+[6:10:40 AM] YES  Lightroom 15.6 runs plugin 0.14.0 with probe_write_gate (executed)
+[6:10:40 AM] Do not close this window while the check runs. To stop, press Ctrl+C once and wait for the last lines: the check puts the photo back by itself.
+[6:10:40 AM] rowA is skipped, as asked (--skip-a or CHECK_SKIP).
+[6:10:40 AM] === rowB
+[6:10:43 AM] YES  rowB: _DSC0111.NEF, snapshot "AVG c5 rowB 06:10:43", 0 masks on it
+[6:10:43 AM] rowB can take up to 36 minutes: up to 2 per mask, and up to 10 more while Lightroom is busy or shows a dialog. Leave it running.
+[6:10:43 AM] The engine begins a session; the HUD opens by itself. If the HUD or this window says "Lightroom is busy or shows a dialog: if a dialog is open in Lightroom, click OK.", do that.
+[6:10:43 AM] NO   rowB stopped: LEGACY_PROCESS_VERSION: Process version 11.0 is not supported (supported: 15.4): update the photo's process version in Lightroom first. Lightroom 15.6 is running.
+[6:10:43 AM] --- rowB_put_back
+[6:10:49 AM] YES  rowB: PUT BACK: YES (every setting and the masks as at the check's start, and still 5 s later)
+[6:10:49 AM] NOW: look at the photo in Lightroom, and at the Masks panel (if it is not open, press Shift+W).
+  ? Does _DSC0111.NEF look as it did before the check, with none of the check's masks left? -> y (yes)
+[6:11:25 AM] === rowD
+[6:11:27 AM] YES  rowD: _DSC0028.NEF, snapshot "AVG c5 rowD 06:11:25", 0 masks on it
+[6:11:27 AM] --- rowD_sky: AVG c5 sky edit (sky)
+[6:11:27 AM] YES  rowD_sky: the entry "AVG c5 sky edit" is in the table after the write
+[6:11:31 AM] YES  rowD: the sky computed (computed)
+[6:11:31 AM] YES  rowD: rename_sliders written by table
+[6:11:31 AM] NOW, in the Masks panel: look at "AVG c5 sky renamed" and at the photo.
+  ? Is the mask now named 'AVG c5 sky renamed', and is the sky darker? -> y (yes)
+[6:11:45 AM] YES  rowD: invert written by table
+[6:11:45 AM] NOW, in the Masks panel: look at "AVG c5 sky renamed" and at the photo.
+  ? Is the darkening now on everything BUT the sky (the mask inverted)? -> y (yes)
+[6:11:49 AM] YES  rowD: the AI mask deleted by table
+  ? Is 'AVG c5 sky renamed' gone from the Masks panel, with the sky as before? -> y (yes)
+[6:11:53 AM] --- rowD_put_back
+[6:11:58 AM] YES  rowD: PUT BACK: YES (every setting and the masks as at the check's start, and still 5 s later)
+[6:11:58 AM] NOW: look at the photo in Lightroom, and at the Masks panel (if it is not open, press Shift+W).
+  ? Does _DSC0028.NEF look as it did before the check, with none of the check's masks left? -> y (yes)
+[6:12:05 AM] === rowE
+[6:12:08 AM] YES  rowE: 20260907-_OZ80099.NEF, snapshot "AVG c5 rowE 06:12:05", 0 masks on it
+[6:12:08 AM] rowE can take up to 12 minutes: up to 2 per mask, and up to 10 more while Lightroom is busy or shows a dialog. Leave it running.
+[6:12:08 AM] The engine begins a session; the HUD opens by itself. If the HUD or this window says "Lightroom is busy or shows a dialog: if a dialog is open in Lightroom, click OK.", do that.
+[6:13:05 AM] YES  rowE: session 92370f88-2c82-44f3-981c-0e6f80880b66 begun on 20260907-_OZ80099.NEF
+[6:13:20 AM] Lightroom does not answer (timeout: probe_write_gate: no response within 5000 ms): is Lightroom still open? The check waits.
+[6:13:23 AM] Lightroom is busy or shows a dialog: if a dialog is open in Lightroom, click OK.
+[6:13:55 AM] YES  rowE: AUTO-REVERT: YES (session ended: true; differing from the start: none)
+  ? Is the photo back as it was before rowE (no 'AVG c5 vegetation' mask)? -> n (no)
+[6:14:10 AM] --- rowE_put_back
+[6:14:16 AM] YES  rowE: PUT BACK: YES (every setting and the masks as at the check's start, and still 5 s later)
+[6:14:16 AM] NOW: look at the photo in Lightroom, and at the Masks panel (if it is not open, press Shift+W).
+  ? Does 20260907-_OZ80099.NEF look as it did before the check, with none of the check's masks left? -> n (no)
+[6:14:32 AM] --- final: waiting 30 s, then reading every photo the check touched again
+[6:15:02 AM] YES  FINAL: _DSC0111.NEF is as at the check's start
+[6:15:02 AM] YES  FINAL: _DSC0028.NEF is as at the check's start
+[6:15:02 AM] YES  FINAL: 20260907-_OZ80099.NEF is as at the check's start
+[6:15:02 AM] 
+[6:15:02 AM] masks capture 5: DONE, 3 NO / FAILED lines (each one is a finding for the report)
+[6:15:02 AM]   - rowB stopped: LEGACY_PROCESS_VERSION: Process version 11.0 is not supported (supported: 15.4): update the photo's process version in Lightroom first. Lightroom 15.6 is running.
+[6:15:02 AM]   - answered n (no): Is the photo back as it was before rowE (no 'AVG c5 vegetation' mask)?
+[6:15:02 AM]   - answered n (no): Does 20260907-_OZ80099.NEF look as it did before the check, with none of the check's masks left?
+[6:15:02 AM] Results: D:\Developer\LrC_Autonomous_Gateway\logs\check-masks-capture5-2026-10-04\check.json, transcript.txt, raw\

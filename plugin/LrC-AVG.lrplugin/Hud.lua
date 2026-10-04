@@ -17,6 +17,12 @@
 -- At each engine connection the edit shown is marked unknown until an update for it arrives
 -- (markUnknown, fix/hud-p1 P1-3): the buttons go off, and after HudState.UNKNOWN_SECONDS the
 -- headline says the edit is no longer open in Claude.
+-- Plugin 0.13.0 (PR C step 2b): once the engine has been away from an open edit for
+-- HudState.AWAY_SECONDS, or the edit is no longer open in Claude, a Put back button applies the
+-- session's pre-session snapshot (the update's `put_back`) itself (HudClick.lua), because after a
+-- failed edit the photo was left as it was and only a Lightroom restart put it back [stated: Jim,
+-- 2026-10-03, "The dialogues and HUD did not close by themselves. A LrC restart had to be done to
+-- revert the photo."]. The engine's next update brings the normal HUD back.
 -- Its state lives on _G (rule 03: it must survive a Reload Plug-in running this module again), and
 -- the bridge task's updates, the window's task, its ticker and menu items all reach it there.
 
@@ -44,7 +50,9 @@ local OPEN_WAIT_SECONDS = 10 -- a window whose onShow never came is given up aft
 -- open / opening: the window is shown / its task is posted; props: its property table; pending: the
 -- click waiting for the engine and lastAction: the click line (HudClick.lua); targetChanged: the
 -- selection line; unknownAt: when an engine connection made the shown edit unknown (nil once an
--- update has come since).
+-- update has come since); awayAt: when the open window's ticker first saw the engine away (nil
+-- while it is connected); putBack: the put-back clicked (HudClick.lua), nil once an update is taken
+-- after it ends.
 local H = _G.LrCAVG_Hud or { seen = {}, window = 0 }
 _G.LrCAVG_Hud = H
 
@@ -56,9 +64,12 @@ end
 local function refresh()
     local props = H.props
     if not props then return end
+    local now, conn = LrDate.currentTime(), Events.connection()
+    if conn.engine then H.awayAt = nil elseif H.awayAt == nil then H.awayAt = now end
     local pending = HudClick.livePending() -- first: an expired click writes its line
-    local hud = { click = H.lastAction, selection = H.targetChanged, unknown = HudState.unknown(H.unknownAt, LrDate.currentTime()) }
-    local v = HudView.props(H.state, Events.connection(), pending, HudView.pageSettings(), hud)
+    local hud = { click = H.lastAction, selection = H.targetChanged, unknown = HudState.unknown(H.unknownAt, now),
+        away = H.awayAt ~= nil and now - H.awayAt >= HudState.AWAY_SECONDS, putBack = H.putBack }
+    local v = HudView.props(H.state, conn, pending, HudView.pageSettings(), hud)
     for key, value in pairs(v) do
         if props[key] ~= value then props[key] = value end
     end
@@ -109,7 +120,7 @@ local function present(context, mine)
         end,
         windowWillClose = function()
             if H.window ~= mine then return end
-            H.open, H.opening, H.props = false, false, nil
+            H.open, H.opening, H.props, H.awayAt = false, false, nil, nil -- away is timed while the window shows
             Log.info("hud: closed")
         end,
         selectionChangeObserver = function() HudSelection.onChange(currentState, showSelection) end,
@@ -155,6 +166,7 @@ end
 -- channel). Marking at the send socket's connection instead could race that update [inference:
 -- Sockets.lua starts onSendConnected in its own task]. Never yields.
 function Hud.markUnknown()
+    HudClick.resendReport() -- a put-back the engine has not heard of yet (HudClick.lua)
     local s = H.state
     if s == nil or HudState.isEnd(s.stage) then return end
     H.unknownAt = LrDate.currentTime()
@@ -184,7 +196,23 @@ function Hud.update(payload)
     if p and (newSession or HudState.isEnd(s.stage) or s.answered_click_id == p.click_id) then H.pending = nil end
     -- A taken update clears the click line unless a click is still pending; the update's note shows.
     if H.pending == nil then H.lastAction = nil end
+    -- The engine is back: a put-back that has ended gives way to the normal HUD; one still running
+    -- keeps its line until it ends, unless a new session replaces its own.
+    if H.putBack and (newSession or H.putBack.state ~= "running") then H.putBack = nil end
     H.state, H.unknownAt = s, nil
+    -- Plugin 0.15.0 (D15): a session the engine ended closes the window close_after seconds later, unless
+    -- another session's update came meanwhile [stated: Jim, 2026-10-04, "Show, then close (Recommended)"].
+    -- A later update of the same ended session (the answer to a click) does not keep it open (plugin 0.16.0).
+    if s.close_after then
+        local sid = s.session_id
+        LrTasks.startAsyncTask(function()
+            LrTasks.sleep(s.close_after)
+            if H.open and H.state and H.state.session_id == sid and HudState.isEnd(H.state.stage) then
+                Log.info("hud: closing " .. tostring(s.close_after) .. " s after the edit ended")
+                LrDialogs.closeFloatingDialogsForPlugin(_PLUGIN)
+            end
+        end)
+    end
     local opened = s.open == true and Hud.show()
     refresh()
     if H.open then LrTasks.startAsyncTask(checkSelection) end

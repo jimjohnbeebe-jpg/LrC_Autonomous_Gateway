@@ -20,7 +20,7 @@ import { APPROVAL_WAIT_MS } from "./approval.js";
 import { checkVariants } from "./copies.js";
 import { brief, describe, failed, image, ms, recordPass, saveLog, text } from "./io.js";
 import { pass0, pass0Entry, type Pass0 } from "./pass0.js";
-import { folderOf, newTarget, type BeginArgs, type Session, type SessionContext, type SessionOutput } from "./types.js";
+import { WRITE_TIMEOUT_MS, folderOf, newTarget, type BeginArgs, type Session, type SessionContext, type SessionOutput } from "./types.js";
 
 /** A session just opened: its pre-session settings and the photo's context, for pass 0. */
 export type Opened = { s: Session; view: FromSdkResult; photo: CommandResult<"get_context">; started: number };
@@ -47,7 +47,7 @@ export async function openSession(ctx: SessionContext, args: BeginArgs): Promise
   const { id, short, files } = pickLogFiles(ctx, now);
   ctx.deps.logFolders?.remember(path.dirname(files.logPath)); // found again after the page's folder changes
   const snapshotName = `AVG pre-session ${now.toISOString()}`;
-  const snap = await client.request("create_snapshot", { target_uuid: photo.uuid, name: snapshotName });
+  const snap = await client.request("create_snapshot", { target_uuid: photo.uuid, name: snapshotName }, { timeoutMs: WRITE_TIMEOUT_MS }); // its write gate waits up to 60 s (Gate.lua)
   const master = newTarget({
     id: "master",
     label: null,
@@ -76,6 +76,10 @@ export async function openSession(ctx: SessionContext, args: BeginArgs): Promise
     active: master,
     snapshot: { name: snapshotName, id: snap.snapshot_id },
     startSettings: view.settings,
+    startMasks: view.masks.fingerprint,
+    aiRoute: null,
+    aiPending: null,
+    endedByEngine: null,
     regions: [],
     files,
     log: {} as SessionLogData,

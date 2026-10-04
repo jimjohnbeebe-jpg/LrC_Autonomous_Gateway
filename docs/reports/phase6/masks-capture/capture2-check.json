@@ -1,0 +1,418 @@
+{
+  "started": "2026-10-04T00:49:48.430Z",
+  "engine_version": "0.13.0",
+  "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+  "steps": {
+    "1_photo": {
+      "at": "2026-10-04T00:49:49.018Z",
+      "filename": "20260907-_OZ80099.NEF",
+      "snapshot": {
+        "id": "F2500ECD-2FAE-4CEA-B521-A976DCA88ACA",
+        "name": "AVG calibrate before 17:49:48"
+      },
+      "masks_before": 0
+    },
+    "2_template": {
+      "at": "2026-10-04T00:49:49.022Z",
+      "file": "D:\\Developer\\LrC_Autonomous_Gateway\\docs\\reports\\phase6\\masks-capture\\3_dump-1.json"
+    },
+    "round1": {
+      "at": "2026-10-04T00:49:59.491Z",
+      "correction_id": "C913269E-A5AC-3C51-0D4C-59465815447C",
+      "error": null,
+      "settled": null,
+      "stopped": null,
+      "selected": "C913269E-A5AC-3C51-0D4C-59465815447C",
+      "tool_end": "loupe",
+      "stored": {
+        "LocalTemperature": 0.2,
+        "LocalTint": 0.21,
+        "LocalExposure2012": 0.1375,
+        "LocalContrast2012": 0.23,
+        "LocalHighlights2012": 0.24,
+        "LocalShadows2012": 0.25,
+        "LocalWhites2012": 0.26,
+        "LocalBlacks2012": 0.27,
+        "LocalTexture": 0.28,
+        "LocalClarity2012": 0.29,
+        "LocalDehaze": 0.3,
+        "LocalHue": 0.31,
+        "LocalSaturation": 0.32,
+        "LocalSharpness": 0.33,
+        "LocalLuminanceNoise": 0.34,
+        "LocalMoire": 0.35,
+        "LocalDefringe": 0.36,
+        "LocalToningHue": 0.37,
+        "LocalToningSaturation": 0.38,
+        "LocalGrain": 0.39,
+        "LocalExposure": 0,
+        "LocalContrast": 0,
+        "LocalClarity": 0,
+        "LocalBrightness": 0,
+        "CorrectionAmount": 1,
+        "LocalCurveRefineSaturation": 100
+      },
+      "panel": {
+        "local_Temperature": 20,
+        "local_Tint": 21,
+        "local_Exposure": 0.55,
+        "local_Exposure2012": 0.55,
+        "local_Contrast": 23,
+        "local_Contrast2012": 23,
+        "local_Highlights": 24,
+        "local_Highlights2012": 24,
+        "local_Shadows": 25,
+        "local_Shadows2012": 25,
+        "local_Whites": 26,
+        "local_Whites2012": 26,
+        "local_Blacks": 27,
+        "local_Blacks2012": 27,
+        "local_Texture": 28,
+        "local_Clarity": 29,
+        "local_Clarity2012": 29,
+        "local_Dehaze": 30,
+        "local_Hue": 55.8,
+        "local_Saturation": 32,
+        "local_Sharpness": 33,
+        "local_LuminanceNoise": 34,
+        "local_Moire": 35,
+        "local_Defringe": 36,
+        "local_ToningHue": 0,
+        "local_ToningSaturation": 38,
+        "local_Grain": 39,
+        "local_Amount": 100,
+        "local_RefineSaturation": 100
+      }
+    },
+    "round2": {
+      "at": "2026-10-04T00:50:34.757Z",
+      "correction_id": "7370F0D6-CAD2-6CDD-A7A2-2773EF05B026",
+      "error": null,
+      "settled": null,
+      "stopped": null,
+      "selected": "7370F0D6-CAD2-6CDD-A7A2-2773EF05B026",
+      "tool_end": "loupe",
+      "stored": {
+        "LocalTemperature": -0.4,
+        "LocalTint": -0.42,
+        "LocalExposure2012": -0.275,
+        "LocalContrast2012": -0.46,
+        "LocalHighlights2012": -0.48,
+        "LocalShadows2012": -0.5,
+        "LocalWhites2012": -0.52,
+        "LocalBlacks2012": -0.54,
+        "LocalTexture": -0.56,
+        "LocalClarity2012": -0.58,
+        "LocalDehaze": -0.6,
+        "LocalHue": -0.62,
+        "LocalSaturation": -0.64,
+        "LocalSharpness": -0.66,
+        "LocalLuminanceNoise": -0.68,
+        "LocalMoire": -0.7,
+        "LocalDefringe": -0.72,
+        "LocalToningHue": 0.925,
+        "LocalToningSaturation": 0.95,
+        "LocalGrain": 0.975,
+        "LocalExposure": 0,
+        "LocalContrast": 0,
+        "LocalClarity": 0,
+        "LocalBrightness": 0,
+        "CorrectionAmount": 1,
+        "LocalCurveRefineSaturation": 100
+      },
+      "panel": {
+        "local_Temperature": -40,
+        "local_Tint": -42,
+        "local_Exposure": -1.1,
+        "local_Exposure2012": -1.1,
+        "local_Contrast": -46,
+        "local_Contrast2012": -46,
+        "local_Highlights": -48,
+        "local_Highlights2012": -48,
+        "local_Shadows": -50,
+        "local_Shadows2012": -50,
+        "local_Whites": -52,
+        "local_Whites2012": -52,
+        "local_Blacks": -54,
+        "local_Blacks2012": -54,
+        "local_Texture": -56,
+        "local_Clarity": -58,
+        "local_Clarity2012": -58,
+        "local_Dehaze": -60,
+        "local_Hue": -111.6,
+        "local_Saturation": -64,
+        "local_Sharpness": -66,
+        "local_LuminanceNoise": -68,
+        "local_Moire": -70,
+        "local_Defringe": -72,
+        "local_ToningHue": 1,
+        "local_ToningSaturation": 95,
+        "local_Grain": 98,
+        "local_Amount": 100,
+        "local_RefineSaturation": 100
+      }
+    },
+    "round3": {
+      "at": "2026-10-04T00:50:40.003Z",
+      "correction_id": "DD0E5A6C-4C69-DAD4-50B1-92DB5B924329",
+      "error": null,
+      "settled": null,
+      "stopped": null,
+      "selected": "DD0E5A6C-4C69-DAD4-50B1-92DB5B924329",
+      "tool_end": "loupe",
+      "stored": {
+        "LocalTemperature": 0.585,
+        "LocalTint": 0.57,
+        "LocalExposure2012": 0.3469,
+        "LocalContrast2012": 0.54,
+        "LocalHighlights2012": 0.525,
+        "LocalShadows2012": 0.51,
+        "LocalWhites2012": 0.495,
+        "LocalBlacks2012": 0.48,
+        "LocalTexture": 0.465,
+        "LocalClarity2012": 0.45,
+        "LocalDehaze": 0.435,
+        "LocalHue": 0.42,
+        "LocalSaturation": 0.405,
+        "LocalSharpness": 0.39,
+        "LocalLuminanceNoise": 0.375,
+        "LocalMoire": 0.36,
+        "LocalDefringe": 0.345,
+        "LocalToningHue": 0.385,
+        "LocalToningSaturation": 0.3675,
+        "LocalGrain": 0.35,
+        "LocalExposure": 0,
+        "LocalContrast": 0,
+        "LocalClarity": 0,
+        "LocalBrightness": 0,
+        "CorrectionAmount": 1,
+        "LocalCurveRefineSaturation": 100
+      },
+      "panel": {
+        "local_Temperature": 58,
+        "local_Tint": 57,
+        "local_Exposure": 1.39,
+        "local_Exposure2012": 1.39,
+        "local_Contrast": 54,
+        "local_Contrast2012": 54,
+        "local_Highlights": 52,
+        "local_Highlights2012": 52,
+        "local_Shadows": 51,
+        "local_Shadows2012": 51,
+        "local_Whites": 50,
+        "local_Whites2012": 50,
+        "local_Blacks": 48,
+        "local_Blacks2012": 48,
+        "local_Texture": 47,
+        "local_Clarity": 45,
+        "local_Clarity2012": 45,
+        "local_Dehaze": 44,
+        "local_Hue": 75.6,
+        "local_Saturation": 41,
+        "local_Sharpness": 39,
+        "local_LuminanceNoise": 38,
+        "local_Moire": 36,
+        "local_Defringe": 34,
+        "local_ToningHue": 0,
+        "local_ToningSaturation": 37,
+        "local_Grain": 35,
+        "local_Amount": 100,
+        "local_RefineSaturation": 100
+      }
+    },
+    "6_results": {
+      "at": "2026-10-04T00:50:40.009Z",
+      "clean": 19,
+      "of": 20
+    },
+    "7_snapshot": {
+      "at": "2026-10-04T00:50:40.489Z",
+      "differing": []
+    },
+    "8_ai_masks": {
+      "at": "2026-10-04T00:51:11.568Z",
+      "error": null,
+      "stopped": null,
+      "tool_end": "masking",
+      "background": {
+        "dc_id": "F9B1A2AB-14D1-4790-B1AD-DFED10EC50A8",
+        "why": null,
+        "shown": {
+          "waited_ms": 4031.6064357758,
+          "reached": true,
+          "count": 1
+        },
+        "tool": "masking",
+        "in_table": true
+      },
+      "people": {
+        "dc_id": null,
+        "why": "no new mask showed",
+        "shown": {
+          "waited_ms": 10070.236802101,
+          "reached": false,
+          "count": 1
+        },
+        "tool": "masking",
+        "in_table": false
+      },
+      "landscape": {
+        "dc_id": null,
+        "why": "no new mask showed",
+        "shown": {
+          "waited_ms": 10118.495941162,
+          "reached": false,
+          "count": 0
+        },
+        "tool": "masking",
+        "in_table": false
+      }
+    },
+    "9_put_back": {
+      "at": "2026-10-04T00:51:12.816Z",
+      "differing": []
+    },
+    "9_put_back_late": {
+      "at": "2026-10-04T00:51:17.833Z",
+      "differing": []
+    }
+  },
+  "checks": [
+    {
+      "ok": true,
+      "text": "Lightroom 15.6 runs plugin 0.11.0 (0.11.0 or later needed)"
+    },
+    {
+      "ok": true,
+      "text": "the plugin knows probe_masks_calibrate (bad_request)"
+    },
+    {
+      "ok": true,
+      "text": "the plugin knows probe_masks_create (bad_request)"
+    },
+    {
+      "ok": true,
+      "text": "selected 20260907-_OZ80099.NEF; snapshot \"AVG calibrate before 17:49:48\" taken; 0 masks on the photo"
+    },
+    {
+      "ok": true,
+      "text": "round 1: the \"AVG calibrate\" correction is in the table after the write"
+    },
+    {
+      "ok": true,
+      "text": "round 1: every slider field reads back as written",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "text": "round 1: the probe selected this round's \"AVG calibrate\" (selected C913269E-A5AC-3C51-0D4C-59465815447C)"
+    },
+    {
+      "ok": true,
+      "text": "round 2: the \"AVG calibrate\" correction is in the table after the write"
+    },
+    {
+      "ok": true,
+      "text": "round 2: every slider field reads back as written",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "text": "round 2: the probe selected this round's \"AVG calibrate\" (selected 7370F0D6-CAD2-6CDD-A7A2-2773EF05B026)"
+    },
+    {
+      "ok": true,
+      "text": "round 3: the \"AVG calibrate\" correction is in the table after the write"
+    },
+    {
+      "ok": true,
+      "text": "round 3: every slider field reads back as written",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "text": "round 3: the probe selected this round's \"AVG calibrate\" (selected DD0E5A6C-4C69-DAD4-50B1-92DB5B924329)"
+    },
+    {
+      "ok": false,
+      "text": "every slider field has a clean linear scale (19 of 20; calibration.json)"
+    },
+    {
+      "ok": true,
+      "text": "the snapshot puts the photo back before the AI masks (0 differing paths)",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "text": "createNewMask(\"aiSelection\", \"background\") made its own table entry (templates.json)",
+      "detail": {
+        "waited_ms": 4031.6064357758,
+        "reached": true,
+        "count": 1
+      }
+    },
+    {
+      "ok": false,
+      "text": "createNewMask(\"aiSelection\", \"people\") made its own table entry (templates.json): no new mask showed",
+      "detail": {
+        "waited_ms": 10070.236802101,
+        "reached": false,
+        "count": 1
+      }
+    },
+    {
+      "ok": false,
+      "text": "createNewMask(\"aiSelection\", \"landscape\") made its own table entry (templates.json): no new mask showed",
+      "detail": {
+        "waited_ms": 10118.495941162,
+        "reached": false,
+        "count": 0
+      }
+    },
+    {
+      "ok": true,
+      "text": "PUT BACK: YES (every setting as before the check, and still 5 s later)",
+      "detail": {
+        "at_once": [],
+        "late": []
+      }
+    }
+  ],
+  "answers": [
+    {
+      "q": "Does Contrast show +23?",
+      "answer": "y",
+      "at": "2026-10-04T00:50:30.107Z"
+    },
+    {
+      "q": "Does the photo look as it did before the check, with none of the check's masks left?",
+      "answer": "y",
+      "at": "2026-10-04T00:51:24.104Z"
+    }
+  ],
+  "failures": [
+    "every slider field has a clean linear scale (19 of 20; calibration.json)",
+    "createNewMask(\"aiSelection\", \"people\") made its own table entry (templates.json): no new mask showed",
+    "createNewMask(\"aiSelection\", \"landscape\") made its own table entry (templates.json): no new mask showed"
+  ],
+  "hello": {
+    "plugin_version": "0.11.0",
+    "lrc_version": "15.6",
+    "sdk_declared": 13
+  },
+  "bridge": {
+    "connects": 1,
+    "connect_failures": 0,
+    "last_connect_error": null,
+    "drops": 0,
+    "last_drop_reason": null,
+    "malformed_lines": 0,
+    "unknown_response_ids": 0,
+    "ports": {
+      "command": 8765,
+      "event": 8766,
+      "from": "ports file"
+    }
+  },
+  "ended": "2026-10-04T00:51:24.105Z"
+}

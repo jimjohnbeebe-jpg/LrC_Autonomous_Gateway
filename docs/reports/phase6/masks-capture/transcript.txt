@@ -1,0 +1,64 @@
+[2:57:42 PM] --- 0_preconditions
+[2:57:43 PM] YES  Lightroom 15.6 runs plugin 0.11.0 (0.11.0 or later needed)
+[2:57:43 PM] --- 1_photo
+[2:57:43 PM] YES  selected 20260907-_OZ80099.NEF; snapshot "AVG capture before 14:57:43" taken; 177 settings saved
+[2:57:43 PM] To stop at any point, press Ctrl+C once and wait: the check puts the photo back by itself.
+[2:57:43 PM] Only if its last lines say PUT BACK: NO: wait 1 minute, then in Lightroom's Develop module open the Snapshots panel (left side) and click "AVG capture before 14:57:43".
+[2:57:43 PM] --- 2_hand_masks
+[2:57:43 PM] NOW, in Lightroom (the photo 20260907-_OZ80099.NEF is selected). Do these in this order:
+[2:57:43 PM] a. Press D (Develop), then Shift+W (Masking). The Masks panel opens.
+[2:57:43 PM] b. Click Create New Mask, then Linear Gradient. Drag on the photo from the top edge down to about a third.
+[2:57:43 PM]    In the panel on the right, click the number next to Exposure, type 0.5, press Enter.
+[2:57:43 PM] c. Click Create New Mask, then Radial Gradient. Drag an oval anywhere on the photo.
+[2:57:43 PM] d. Click Create New Mask, then Sky. Wait until the new mask shows in the Masks panel.
+[2:57:43 PM] e. Click Create New Mask, then Subject. Wait until the new mask shows in the Masks panel.
+[2:57:43 PM] f. Click Create New Mask, then Range, then Luminance Range. Click once on a bright part of the photo.
+[2:57:43 PM] g. Leave Masking open. Come back to this window.
+[2:57:43 PM] At the end this check puts the photo back as it is now: the masks you add are removed.
+  ? Did you make all five masks, in the order b-f (linear with Exposure +0.50, radial, sky, subject, luminance range)? -> y
+[3:00:08 PM] --- 3_dumps
+[3:00:09 PM] YES  the masks are under "MaskGroupBasedCorrections": 5 entries (0 before step 2)
+[3:00:09 PM] YES  two reads in a row give the same mask table, ids included (0 differing paths)
+[3:00:09 PM] YES  each new entry identified: 0=linear, 1=radial, 2=sky, 3=subject, 4=luminance
+[3:00:09 PM] --- 4_write_back
+[3:00:09 PM] YES  the unchanged mask table written back reads back identical, every setting compared (0 differing paths)
+[3:00:09 PM] --- 5_local_exposure
+[3:00:11 PM] YES  the linear mask's LocalExposure2012 reads back as written (0.125 for +0.50 in the panel, wrote 0.25, read 0.25)
+[3:00:11 PM] NOW: in the Masks panel, click the Linear Gradient mask you made (the first one). Look at its Exposure slider.
+  ? Does its Exposure now show +1.00? -> y
+[3:00:23 PM] --- 6_global
+[3:00:24 PM] YES  a global exposure write reads back (0.33 -> 0.43)
+[3:00:24 PM] YES  a global-only write leaves the mask table unchanged (0 differing paths)
+[3:00:24 PM] --- 7_sky
+[3:00:29 PM] YES  update_ai_settings answered ({"uuid":"CF12AF60-0858-4181-9562-376D16B89126","call_ms":2844.7023630142,"command_ms":2855.105638504,"gate":"executed"})
+[3:00:29 PM] YES  the sky mask added by table computed within 30 s of update_ai_settings (1216 ms, 1 reads)
+[3:00:29 PM] NOW: look at the Masks panel (Shift+W opens it). Hover over the newest mask.
+  ? Is there a mask named 'AVG new sky', and does its red overlay cover the sky? -> y
+[3:00:47 PM] --- 8_geometry
+[3:00:48 PM] YES  the new linear gradient's geometry reads back as written
+[3:00:48 PM] YES  the new radial gradient's geometry reads back as written
+[3:00:48 PM] NOW: press Shift+W to close Masking, then look at the whole photo.
+  ? Is the bottom of the photo brighter than before, fading out about a third of the way up ('AVG new linear')? -> y
+[3:00:58 PM] NOW: press Shift+W, then in the Masks panel click 'AVG new radial': its outline shows on the photo.
+  ? Does that oval sit in the upper right of the photo (right half, upper half)? -> y
+[3:01:13 PM] --- 9_fields
+[3:01:14 PM] NOW: look at the Masks panel (Shift+W opens it).
+  ? Is the mask that was 'AVG new linear' now named 'AVG renamed'? -> y
+  ? Press Shift+W to close Masking. Is the brightening at the bottom of the photo gone now (the 'AVG renamed' mask switched off)? -> y
+[3:01:48 PM] --- 10_delete
+[3:01:49 PM] YES  deleting by writing the array without the radial: 8 -> 7 entries, the others unchanged (0 differing paths)
+[3:01:49 PM] --- 11_snapshot
+[3:01:50 PM] YES  applying the snapshot puts the mask table back as before step 2 (0 differing paths; 0 in all settings)
+[3:01:50 PM] --- 12_probe
+[3:01:51 PM] 12. The plugin now drives the Develop module by itself for up to a minute. Do not click in Lightroom.
+[3:02:04 PM] YES  probe_masks_dc answered with 32 steps, 0 failed
+[3:02:04 PM] YES  the probe worked on 20260907-_OZ80099.NEF (uuid CF12AF60-0858-4181-9562-376D16B89126)
+[3:02:04 PM] YES  after the probe, 20260907-_OZ80099.NEF is still the one selected photo (1 selected: CF12AF60-0858-4181-9562-376D16B89126)
+[3:02:05 PM] YES  the snapshot puts the photo back after the probe (0 differing paths)
+[3:02:05 PM] --- 13_put_back
+[3:02:06 PM] YES  PUT BACK: YES (every setting as before the check)
+[3:02:06 PM] NOW: look at the photo in Lightroom, and at the Masks panel (Shift+W).
+  ? Does the photo look as it did before the check, with none of the check's masks left? -> y
+[3:02:14 PM] 
+[3:02:14 PM] masks capture: WORKED
+[3:02:14 PM] Results: D:\Developer\LrC_Autonomous_Gateway\logs\check-masks-capture-2026-10-03\check.json

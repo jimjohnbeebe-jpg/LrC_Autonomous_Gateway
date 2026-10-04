@@ -1,0 +1,257 @@
+Dry runs of check.mts (masks capture 2) against the engine test sim (engine\tests\helpers\lightroom-sim.ts) - Claude Code (Opus 5.5), 2026-10-03.
+Branch phase-6/masks, the staged working tree after the review fixes (built with npm run build). Node v24.11.1.
+Driver: dryrun-driver.ts.txt (a scratch vitest file, deleted after; it answers y to every (y/n)). The template is capture 1's real dump,
+committed at docs\reports\phase6\masks-capture\3_dump-1.json, so the calibration correction has Lightroom's real shape. DRY_FAKE_DC
+answers the two probes with INVENTED values and entries; DRY_OLD_PLUGIN removes the two commands; the script's CHECK_SIGINT_AT hook
+emits readline's SIGINT. These runs show that the script runs, writes, fits, flags, credits AI masks only to the subtype that made them,
+aborts and puts back. They show NOTHING about Lightroom: every scale and entry below is invented.
+
+==== run 1: the sim as it is (no Develop module): writes and read-backs, probes answer one failed step, put-back
+  (bridge: connecting)
+[3:45:27 PM] --- 0_preconditions
+  (bridge: handshaking)
+  (bridge: connected)
+[3:45:27 PM] YES  Lightroom 15.5.1 runs plugin 0.11.0 (0.11.0 or later needed)
+[3:45:27 PM] YES  the plugin knows probe_masks_calibrate (bad_request)
+[3:45:27 PM] YES  the plugin knows probe_masks_create (bad_request)
+[3:45:27 PM] --- 1_photo
+[3:45:27 PM] YES  selected SIM-UUID; snapshot "AVG calibrate before 15:45:27" taken; 0 masks on the photo
+[3:45:27 PM] To stop at any point, press Ctrl+C once and wait: the check puts the photo back by itself.
+[3:45:27 PM] Only if its last lines say PUT BACK: NO: wait 1 minute, then in Lightroom's Develop module open the Snapshots panel (left side) and click "AVG calibrate before 15:45:27".
+[3:45:27 PM] --- 2_round1
+[3:45:27 PM] YES  round 1: the "AVG calibrate" correction is in the table after the write
+[3:45:27 PM] YES  round 1: every slider field reads back as written
+[3:45:27 PM] The plugin now selects the mask in Develop > Masking and reads its sliders. Do not click in Lightroom until the next question.
+[3:45:28 PM] NO   round 1: the probe selected this round's "AVG calibrate" (selected nothing)
+[3:45:28 PM] --- 3_question
+[3:45:28 PM] skipped: the probe read no non-zero slider value
+[3:45:28 PM] --- 4_round2
+[3:45:28 PM] YES  round 2: the "AVG calibrate" correction is in the table after the write
+[3:45:28 PM] YES  round 2: every slider field reads back as written
+[3:45:28 PM] NO   round 2: the probe selected this round's "AVG calibrate" (selected nothing)
+[3:45:28 PM] --- 5_round3
+[3:45:28 PM] YES  round 3: the "AVG calibrate" correction is in the table after the write
+[3:45:28 PM] YES  round 3: every slider field reads back as written
+[3:45:28 PM] NO   round 3: the probe selected this round's "AVG calibrate" (selected nothing)
+[3:45:28 PM] --- 6_results
+[3:45:28 PM] Results (stored -> panel per round; panel = scale * stored + offset):
+[3:45:28 PM] field                       DC name                     stored -> panel                             scale     offset  flags
+[3:45:28 PM] LocalTemperature            -                           0.2->- -0.4->- 0.585->-                     -         -       no DC answer
+[3:45:28 PM] LocalTint                   -                           0.21->- -0.42->- 0.57->-                    -         -       no DC answer
+[3:45:28 PM] LocalExposure2012           -                           0.1375->- -0.275->- 0.3469->-               -         -       no DC answer
+[3:45:28 PM] LocalContrast2012           -                           0.23->- -0.46->- 0.54->-                    -         -       no DC answer
+[3:45:28 PM] LocalHighlights2012         -                           0.24->- -0.48->- 0.525->-                   -         -       no DC answer
+[3:45:28 PM] LocalShadows2012            -                           0.25->- -0.5->- 0.51->-                     -         -       no DC answer
+[3:45:28 PM] LocalWhites2012             -                           0.26->- -0.52->- 0.495->-                   -         -       no DC answer
+[3:45:28 PM] LocalBlacks2012             -                           0.27->- -0.54->- 0.48->-                    -         -       no DC answer
+[3:45:28 PM] LocalTexture                -                           0.28->- -0.56->- 0.465->-                   -         -       no DC answer
+[3:45:28 PM] LocalClarity2012            -                           0.29->- -0.58->- 0.45->-                    -         -       no DC answer
+[3:45:28 PM] LocalDehaze                 -                           0.3->- -0.6->- 0.435->-                     -         -       no DC answer
+[3:45:28 PM] LocalHue                    -                           0.31->- -0.62->- 0.42->-                    -         -       no DC answer
+[3:45:28 PM] LocalSaturation             -                           0.32->- -0.64->- 0.405->-                   -         -       no DC answer
+[3:45:28 PM] LocalSharpness              -                           0.33->- -0.66->- 0.39->-                    -         -       no DC answer
+[3:45:28 PM] LocalLuminanceNoise         -                           0.34->- -0.68->- 0.375->-                   -         -       no DC answer
+[3:45:28 PM] LocalMoire                  -                           0.35->- -0.7->- 0.36->-                     -         -       no DC answer
+[3:45:28 PM] LocalDefringe               -                           0.36->- -0.72->- 0.345->-                   -         -       no DC answer
+[3:45:28 PM] LocalToningHue              -                           0.37->- 0.925->- 0.385->-                   -         -       no DC answer
+[3:45:28 PM] LocalToningSaturation       -                           0.38->- 0.95->- 0.3675->-                   -         -       no DC answer
+[3:45:28 PM] LocalGrain                  -                           0.39->- 0.975->- 0.35->-                    -         -       no DC answer
+[3:45:28 PM] LocalExposure               -                           0->- 0->- 0->-                              -         -       recorded, not written
+[3:45:28 PM] LocalContrast               -                           0->- 0->- 0->-                              -         -       recorded, not written
+[3:45:28 PM] LocalClarity                -                           0->- 0->- 0->-                              -         -       recorded, not written
+[3:45:28 PM] LocalBrightness             -                           0->- 0->- 0->-                              -         -       recorded, not written
+[3:45:28 PM] CorrectionAmount            -                           1->- 1->- 1->-                              -         -       recorded, not written
+[3:45:28 PM] LocalCurveRefineSaturation  -                           100->- 100->- 100->-                        -         -       recorded, not written
+[3:45:28 PM] NO   every slider field has a clean linear scale (0 of 20; calibration.json)
+[3:45:28 PM] --- 7_snapshot
+[3:45:28 PM] YES  the snapshot puts the photo back before the AI masks (0 differing paths)
+[3:45:28 PM] --- 8_ai_masks
+[3:45:28 PM] The plugin now creates AI masks in Develop by itself (up to a minute). Do not click in Lightroom.
+[3:45:31 PM] NO   createNewMask("aiSelection", "background") made its own table entry (templates.json): no new mask showed
+[3:45:31 PM] NO   createNewMask("aiSelection", "people") made its own table entry (templates.json): no new mask showed
+[3:45:31 PM] NO   createNewMask("aiSelection", "landscape") made its own table entry (templates.json): no new mask showed
+[3:45:31 PM] --- 9_put_back
+[3:45:36 PM] YES  PUT BACK: YES (every setting as before the check, and still 5 s later)
+[3:45:36 PM] NOW: look at the photo in Lightroom, and at the Masks panel (if the Masks panel is not open, press Shift+W).
+Does the photo look as it did before the check, with none of the check's masks left? (y/n)   (bridge: stopped)
+[3:45:36 PM] 
+[3:45:36 PM] masks capture 2: DONE, 7 NO / FAILED lines (each one is a finding for the report)
+[3:45:36 PM]   - round 1: the probe selected this round's "AVG calibrate" (selected nothing)
+[3:45:36 PM]   - round 2: the probe selected this round's "AVG calibrate" (selected nothing)
+[3:45:36 PM]   - round 3: the probe selected this round's "AVG calibrate" (selected nothing)
+[3:45:36 PM]   - every slider field has a clean linear scale (0 of 20; calibration.json)
+[3:45:36 PM]   - createNewMask("aiSelection", "background") made its own table entry (templates.json): no new mask showed
+[3:45:36 PM]   - createNewMask("aiSelection", "people") made its own table entry (templates.json): no new mask showed
+[3:45:36 PM]   - createNewMask("aiSelection", "landscape") made its own table entry (templates.json): no new mask showed
+[3:45:36 PM] Results: %USERPROFILE%\AppData\Local\Temp\calib-dry-axCEiU\check.json, calibration.json, templates.json
+
+HISTORY ["AVG calibrate write 1","AVG calibrate write 2","AVG calibrate write 3"]
+RECEIVED {"hello":1,"probe_masks_calibrate":4,"probe_masks_create":2,"select_photo":1,"create_snapshot":1,"get_settings":3,"apply_settings":3,"apply_snapshot":2}
+STEPS 1_photo, 2_template, round1, 3_question_skipped, round2, round3, 6_results, 7_snapshot, 8_ai_masks, 9_put_back, 9_put_back_late
+exit 1
+
+==== run 2: INVENTED DC answers (scale 4 exposure, 100 others; local_Contrast answers the old-process field; LocalHue non-linear and local_Moire reading LocalDefringe on purpose; people makes no mask)
+  (bridge: connecting)
+[3:45:39 PM] --- 0_preconditions
+  (bridge: handshaking)
+  (bridge: connected)
+[3:45:39 PM] YES  Lightroom 15.5.1 runs plugin 0.11.0 (0.11.0 or later needed)
+[3:45:39 PM] YES  the plugin knows probe_masks_calibrate (bad_request)
+[3:45:39 PM] YES  the plugin knows probe_masks_create (bad_request)
+[3:45:39 PM] --- 1_photo
+[3:45:39 PM] YES  selected SIM-UUID; snapshot "AVG calibrate before 15:45:39" taken; 0 masks on the photo
+[3:45:39 PM] To stop at any point, press Ctrl+C once and wait: the check puts the photo back by itself.
+[3:45:39 PM] Only if its last lines say PUT BACK: NO: wait 1 minute, then in Lightroom's Develop module open the Snapshots panel (left side) and click "AVG calibrate before 15:45:39".
+[3:45:39 PM] --- 2_round1
+[3:45:39 PM] YES  round 1: the "AVG calibrate" correction is in the table after the write
+[3:45:39 PM] YES  round 1: every slider field reads back as written
+[3:45:39 PM] The plugin now selects the mask in Develop > Masking and reads its sliders. Do not click in Lightroom until the next question.
+[3:45:39 PM] YES  round 1: the probe selected this round's "AVG calibrate" (selected 52D29F3F-0639-E56B-6A61-FA4677E0E2AE)
+[3:45:39 PM] --- 3_question
+[3:45:39 PM] NOW: in Lightroom (Develop module), if the Masks panel is not open, press Shift+W. In the Masks panel click "AVG calibrate". Look at its Contrast slider.
+Does Contrast show +23? (y/n) [3:45:39 PM] --- 4_round2
+[3:45:39 PM] YES  round 2: the "AVG calibrate" correction is in the table after the write
+[3:45:39 PM] YES  round 2: every slider field reads back as written
+[3:45:39 PM] YES  round 2: the probe selected this round's "AVG calibrate" (selected B7DC3B85-0648-4883-5AF5-856CFB5E2DBA)
+[3:45:39 PM] --- 5_round3
+[3:45:39 PM] YES  round 3: the "AVG calibrate" correction is in the table after the write
+[3:45:39 PM] YES  round 3: every slider field reads back as written
+[3:45:39 PM] YES  round 3: the probe selected this round's "AVG calibrate" (selected A21B58EA-7C4F-8112-3F8D-4197C692DBBF)
+[3:45:39 PM] --- 6_results
+[3:45:39 PM] Results (stored -> panel per round; panel = scale * stored + offset):
+[3:45:39 PM] field                       DC name                     stored -> panel                             scale     offset  flags
+[3:45:39 PM] LocalTemperature            local_Temperature           0.2->20 -0.4->-40 0.585->58.5               100       0       
+[3:45:39 PM] LocalTint                   local_Tint                  0.21->21 -0.42->-42 0.57->57                100       0       
+[3:45:39 PM] LocalExposure2012           local_Exposure              0.1375->0.55 -0.275->-1.1 0.3469->1.39      4         0       
+[3:45:39 PM] LocalContrast2012           local_Contrast2012          0.23->23 -0.46->-46 0.54->54                100       0       
+[3:45:39 PM] LocalHighlights2012         local_Highlights            0.24->24 -0.48->-48 0.525->52.5             100       0       
+[3:45:39 PM] LocalShadows2012            local_Shadows               0.25->25 -0.5->-50 0.51->51                 100       0       
+[3:45:39 PM] LocalWhites2012             local_Whites                0.26->26 -0.52->-52 0.495->49.5             100       0       
+[3:45:39 PM] LocalBlacks2012             local_Blacks                0.27->27 -0.54->-54 0.48->48                100       0       
+[3:45:39 PM] LocalTexture                local_Texture               0.28->28 -0.56->-56 0.465->46.5             100       0       
+[3:45:39 PM] LocalClarity2012            local_Clarity               0.29->29 -0.58->-58 0.45->45                100       0       
+[3:45:39 PM] LocalDehaze                 local_Dehaze                0.3->30 -0.6->-60 0.435->43.5               100       0       
+[3:45:39 PM] LocalHue                    local_Hue                   0.31->9.61 -0.62->-38.44 0.42->17.64        51.6667   -6.4067 non-linear (round 3: 17.64, line gives 15.2933)
+[3:45:39 PM] LocalSaturation             local_Saturation            0.32->32 -0.64->-64 0.405->40.5             100       0       
+[3:45:39 PM] LocalSharpness              local_Sharpness             0.33->33 -0.66->-66 0.39->39                100       0       
+[3:45:39 PM] LocalLuminanceNoise         local_LuminanceNoise        0.34->34 -0.68->-68 0.375->37.5             100       0       
+[3:45:39 PM] LocalMoire                  local_Moire                 0.35->36 -0.7->-72 0.36->34.5               102.8571  0       non-linear (round 3: 34.5, line gives 37.0286)
+[3:45:39 PM] LocalDefringe               local_Defringe              0.36->36 -0.72->-72 0.345->34.5             100       0       
+[3:45:39 PM] LocalToningHue              local_ToningHue             0.37->37 0.925->92.5 0.385->38.5            100       0       
+[3:45:39 PM] LocalToningSaturation       local_ToningSaturation      0.38->38 0.95->95 0.3675->36.75             100       0       
+[3:45:39 PM] LocalGrain                  local_Grain                 0.39->39 0.975->97.5 0.35->35               100       0       
+[3:45:39 PM] LocalExposure               local_Exposure              0->0.55 0->-1.1 0->1.39                     -         -       recorded, not written
+[3:45:39 PM] LocalContrast               local_Contrast              0->0 0->0 0->0                              -         -       recorded, not written
+[3:45:39 PM] LocalClarity                local_Clarity               0->29 0->-58 0->45                          -         -       recorded, not written
+[3:45:39 PM] LocalBrightness             local_Brightness            0->0 0->0 0->0                              -         -       recorded, not written
+[3:45:39 PM] CorrectionAmount            -                           1->- 1->- 1->-                              -         -       recorded, not written
+[3:45:39 PM] LocalCurveRefineSaturation  local_CurveRefineSaturation 100->10000 100->10000 100->10000            -         -       recorded, not written
+[3:45:39 PM] NO   every slider field has a clean linear scale (18 of 20; calibration.json)
+[3:45:39 PM] --- 7_snapshot
+[3:45:39 PM] YES  the snapshot puts the photo back before the AI masks (0 differing paths)
+[3:45:39 PM] --- 8_ai_masks
+[3:45:39 PM] The plugin now creates AI masks in Develop by itself (up to a minute). Do not click in Lightroom.
+[3:45:42 PM] YES  createNewMask("aiSelection", "background") made its own table entry (templates.json)
+[3:45:42 PM] NO   createNewMask("aiSelection", "people") made its own table entry (templates.json): no new mask showed
+[3:45:42 PM] YES  createNewMask("aiSelection", "landscape") made its own table entry (templates.json)
+[3:45:42 PM] --- 9_put_back
+[3:45:47 PM] YES  PUT BACK: YES (every setting as before the check, and still 5 s later)
+[3:45:47 PM] NOW: look at the photo in Lightroom, and at the Masks panel (if the Masks panel is not open, press Shift+W).
+Does the photo look as it did before the check, with none of the check's masks left? (y/n)   (bridge: stopped)
+[3:45:47 PM] 
+[3:45:47 PM] masks capture 2: DONE, 2 NO / FAILED lines (each one is a finding for the report)
+[3:45:47 PM]   - every slider field has a clean linear scale (18 of 20; calibration.json)
+[3:45:47 PM]   - createNewMask("aiSelection", "people") made its own table entry (templates.json): no new mask showed
+[3:45:47 PM] Results: %USERPROFILE%\AppData\Local\Temp\calib-dry-k8LJri\check.json, calibration.json, templates.json
+
+HISTORY ["AVG calibrate write 1","AVG calibrate write 2","AVG calibrate write 3"]
+RECEIVED {"hello":1,"probe_masks_calibrate":4,"probe_masks_create":2,"select_photo":1,"create_snapshot":1,"get_settings":3,"apply_settings":3,"apply_snapshot":2}
+STEPS 1_photo, 2_template, round1, round2, round3, 6_results, 7_snapshot, 8_ai_masks, 9_put_back, 9_put_back_late
+exit 1
+
+==== run 3: as run 2, with a Ctrl+C (readline SIGINT emitted by the script's dry-run hook) before round 2
+  (bridge: connecting)
+[3:45:51 PM] --- 0_preconditions
+  (bridge: handshaking)
+  (bridge: connected)
+[3:45:52 PM] YES  Lightroom 15.5.1 runs plugin 0.11.0 (0.11.0 or later needed)
+[3:45:52 PM] YES  the plugin knows probe_masks_calibrate (bad_request)
+[3:45:52 PM] YES  the plugin knows probe_masks_create (bad_request)
+[3:45:52 PM] --- 1_photo
+[3:45:52 PM] YES  selected SIM-UUID; snapshot "AVG calibrate before 15:45:52" taken; 0 masks on the photo
+[3:45:52 PM] To stop at any point, press Ctrl+C once and wait: the check puts the photo back by itself.
+[3:45:52 PM] Only if its last lines say PUT BACK: NO: wait 1 minute, then in Lightroom's Develop module open the Snapshots panel (left side) and click "AVG calibrate before 15:45:52".
+[3:45:52 PM] --- 2_round1
+[3:45:52 PM] YES  round 1: the "AVG calibrate" correction is in the table after the write
+[3:45:52 PM] YES  round 1: every slider field reads back as written
+[3:45:52 PM] The plugin now selects the mask in Develop > Masking and reads its sliders. Do not click in Lightroom until the next question.
+[3:45:52 PM] YES  round 1: the probe selected this round's "AVG calibrate" (selected 5FE56DA4-5646-DF7D-4DA2-147606B941AD)
+[3:45:52 PM] --- 3_question
+[3:45:52 PM] NOW: in Lightroom (Develop module), if the Masks panel is not open, press Shift+W. In the Masks panel click "AVG calibrate". Look at its Contrast slider.
+Does Contrast show +23? (y/n) [3:45:52 PM] ABORTING (Ctrl+C): going straight to the put-back. Wait for the last lines.
+[3:45:52 PM] Results (stored -> panel per round; panel = scale * stored + offset):
+[3:45:52 PM] field                       DC name                     stored -> panel                             scale     offset  flags
+[3:45:52 PM] LocalTemperature            -                           0.2->-                                      -         -       fewer than 2 rounds
+[3:45:52 PM] LocalTint                   -                           0.21->-                                     -         -       fewer than 2 rounds
+[3:45:52 PM] LocalExposure2012           -                           0.1375->-                                   -         -       fewer than 2 rounds
+[3:45:52 PM] LocalContrast2012           -                           0.23->-                                     -         -       fewer than 2 rounds
+[3:45:52 PM] LocalHighlights2012         -                           0.24->-                                     -         -       fewer than 2 rounds
+[3:45:52 PM] LocalShadows2012            -                           0.25->-                                     -         -       fewer than 2 rounds
+[3:45:52 PM] LocalWhites2012             -                           0.26->-                                     -         -       fewer than 2 rounds
+[3:45:52 PM] LocalBlacks2012             -                           0.27->-                                     -         -       fewer than 2 rounds
+[3:45:52 PM] LocalTexture                -                           0.28->-                                     -         -       fewer than 2 rounds
+[3:45:52 PM] LocalClarity2012            -                           0.29->-                                     -         -       fewer than 2 rounds
+[3:45:52 PM] LocalDehaze                 -                           0.3->-                                      -         -       fewer than 2 rounds
+[3:45:52 PM] LocalHue                    -                           0.31->-                                     -         -       fewer than 2 rounds
+[3:45:52 PM] LocalSaturation             -                           0.32->-                                     -         -       fewer than 2 rounds
+[3:45:52 PM] LocalSharpness              -                           0.33->-                                     -         -       fewer than 2 rounds
+[3:45:52 PM] LocalLuminanceNoise         -                           0.34->-                                     -         -       fewer than 2 rounds
+[3:45:52 PM] LocalMoire                  -                           0.35->-                                     -         -       fewer than 2 rounds
+[3:45:52 PM] LocalDefringe               -                           0.36->-                                     -         -       fewer than 2 rounds
+[3:45:52 PM] LocalToningHue              -                           0.37->-                                     -         -       fewer than 2 rounds
+[3:45:52 PM] LocalToningSaturation       -                           0.38->-                                     -         -       fewer than 2 rounds
+[3:45:52 PM] LocalGrain                  -                           0.39->-                                     -         -       fewer than 2 rounds
+[3:45:52 PM] LocalExposure               local_Exposure              0->0.55                                     -         -       recorded, not written
+[3:45:52 PM] LocalContrast               local_Contrast              0->0                                        -         -       recorded, not written
+[3:45:52 PM] LocalClarity                local_Clarity               0->29                                       -         -       recorded, not written
+[3:45:52 PM] LocalBrightness             local_Brightness            0->0                                        -         -       recorded, not written
+[3:45:52 PM] CorrectionAmount            -                           1->-                                        -         -       recorded, not written
+[3:45:52 PM] LocalCurveRefineSaturation  local_CurveRefineSaturation 100->10000                                  -         -       recorded, not written
+[3:45:52 PM] NO   every slider field has a clean linear scale (0 of 20; calibration.json)
+[3:45:52 PM] --- 9_put_back
+[3:45:57 PM] YES  PUT BACK: YES (every setting as before the check, and still 5 s later)
+  (bridge: stopped)
+[3:45:57 PM] 
+[3:45:57 PM] masks capture 2: DONE, 2 NO / FAILED lines (each one is a finding for the report)
+[3:45:57 PM]   - aborted: Ctrl+C
+[3:45:57 PM]   - every slider field has a clean linear scale (0 of 20; calibration.json)
+[3:45:57 PM] Results: %USERPROFILE%\AppData\Local\Temp\calib-dry-KUTsOM\check.json, calibration.json, templates.json
+
+HISTORY ["AVG calibrate write 1"]
+RECEIVED {"hello":1,"probe_masks_calibrate":2,"probe_masks_create":1,"select_photo":1,"create_snapshot":1,"get_settings":2,"apply_settings":1,"apply_snapshot":1}
+STEPS 1_photo, 2_template, round1, 6_results, 9_put_back, 9_put_back_late
+exit 1
+
+==== run 4: a plugin build without capture 2's commands: stops before any write
+  (bridge: connecting)
+[3:46:00 PM] --- 0_preconditions
+  (bridge: handshaking)
+  (bridge: connected)
+[3:46:00 PM] YES  Lightroom 15.5.1 runs plugin 0.11.0 (0.11.0 or later needed)
+[3:46:00 PM] NO   the plugin knows probe_masks_calibrate (unknown_command)
+[3:46:00 PM] NO   the plugin knows probe_masks_create (unknown_command)
+[3:46:00 PM] Reload the plugin: File > Plug-in Manager, click LrC-AVG, click Reload Plug-in, click Done, wait 20 s, then run this again.
+[3:46:00 PM] NO   0_preconditions ran
+  (bridge: stopped)
+[3:46:00 PM] 
+[3:46:00 PM] masks capture 2: DONE, 3 NO / FAILED lines (each one is a finding for the report)
+[3:46:00 PM]   - the plugin knows probe_masks_calibrate (unknown_command)
+[3:46:00 PM]   - the plugin knows probe_masks_create (unknown_command)
+[3:46:00 PM]   - 0_preconditions ran
+[3:46:00 PM] Results: %USERPROFILE%\AppData\Local\Temp\calib-dry-6tmGve\check.json, calibration.json, templates.json
+
+HISTORY []
+RECEIVED {"hello":1,"probe_masks_calibrate":1,"probe_masks_create":1}
+STEPS 0_preconditions_error
+exit 1
+

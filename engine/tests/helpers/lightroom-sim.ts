@@ -100,6 +100,8 @@ export class LightroomSim {
   readonly ignored = new Set<string>();
   /** Stamp a written Look's Parameters.Version with this, as LrC 15.6 did with "18.7" (issue #67); null: kept as written. */
   lookVersion: string | null = null;
+  /** Add a default LensBlur block to a Look's Parameters when a snapshot is applied, as LrC 15.6 did in capture 5 (docs\reports\phase6\masks-capture\, rowA_put_back). */
+  lensBlurStamp = false;
   /** Export at this long edge instead of the requested one (to exercise the resize). */
   exportLongEdge: number | null = null;
   /** Return this path instead of the file written (to exercise the path check). */
@@ -202,6 +204,8 @@ export class LightroomSim {
       on(p, (u) => {
         const id = String(p["snapshot_id"]);
         this.setSettingsOf(this.snapshotOf.get(id) ?? u, structuredClone(this.snapshots.get(id) ?? {}));
+        const params = (this.settingsOf(u)["Look"] as { Parameters?: Record<string, unknown> } | undefined)?.Parameters;
+        if (this.lensBlurStamp && params) params["LensBlur"] ??= { Active: false, BlurAmount: 50, Version: 1 };
         return ok({ uuid: u, read_back: luaize(this.settingsOf(u)) });
       }),
     );

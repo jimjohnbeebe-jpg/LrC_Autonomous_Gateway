@@ -207,7 +207,11 @@ export async function updateAndWait(ctx: SessionContext, s: Session, job: AiJob)
   const T = aiTimings(ctx);
   const t0 = performance.now();
   const note = s.work?.note;
-  s.aiPending = { since: ctx.now().toISOString(), kind: job.kind, job, process: ctx.deps.client.hello()?.process_started_at ?? null, stuck: false };
+  checkAbort(s); // an Abort clicked during the table write stops here, before the update goes out
+  const hello = ctx.deps.client.hello();
+  // No connection: the update is not sent, so nothing is pending (else the session could never be put back).
+  if (!hello) throw new ToolError("BRIDGE_DISCONNECTED", "Lightroom is not connected; the AI update was not sent.", true);
+  s.aiPending = { since: ctx.now().toISOString(), kind: job.kind, job, process: hello.process_started_at ?? null, stuck: false };
   let out: Update | null = null;
   try {
     const token = randomUUID();

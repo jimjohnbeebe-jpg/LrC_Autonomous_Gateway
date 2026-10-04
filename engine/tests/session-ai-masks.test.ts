@@ -4,11 +4,11 @@
 // route kept for the session, one person with their point, and FEATURE_UNAVAILABLE with nothing left
 // written. Dialogs and kinds the photo lacks: session-ai-dialog.test.ts.
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { MASK_TABLE_KEY, type Correction } from "../src/params/index.js";
 import type { FakeHandler } from "./helpers/fake-plugin.js";
 import { captureTable } from "./helpers/lightroom-sim-masks.js";
-import { ID, SHORT, clean, fails, lr, newManager, plugin, readLog, useSessionHarness } from "./helpers/session-harness.js";
+import { ID, SHORT, clean, client, fails, lr, newManager, plugin, readLog, useSessionHarness } from "./helpers/session-harness.js";
 
 useSessionHarness();
 
@@ -91,6 +91,37 @@ describe("AI masks: the fall back to LrDevelopController", () => {
     const e = await fails(create("subject"));
     expect(e).toMatchObject({ code: "FEATURE_UNAVAILABLE", details: { routes_tried: [{ route: "table" }, { route: "dc", why: expect.stringMatching(/setting its sliders failed: .*dry: refused/) }] } });
     expect(masks()).toEqual([]);
+  });
+
+  it("a Develop mask that shows without a result is not taken out: nothing is written while Lightroom may compute it (D16)", async () => {
+    const { m, create } = await session();
+    plugin.handlers.set("update_ai_settings", pluginError);
+    const real = plugin.handlers.get("create_ai_mask_dc") as FakeHandler;
+    plugin.handlers.set("create_ai_mask_dc", (p, id) => {
+      const reply = real(p, id);
+      for (const e of masks()) delete component(e)["MaskDigest"]; // the mask shows, still computing
+      return reply;
+    });
+    expect(await fails(create("subject"))).toMatchObject({ code: "LIGHTROOM_STUCK" });
+    expect(masks()).toHaveLength(1); // left in place, not taken out under a running computation
+    expect(await fails(m.step({ session_id: ID, settings: { exposure: 0.2 }, rationale: "test", return_image: "none" }))).toMatchObject({ code: "AI_UPDATE_PENDING" });
+  });
+
+  it("an update the bridge cannot send leaves nothing pending, so the session can still be put back", async () => {
+    const { m, create } = await session();
+    const real = plugin.handlers.get("apply_settings") as FakeHandler;
+    let gone = false;
+    plugin.handlers.set("apply_settings", (p, id) => {
+      const reply = real(p, id);
+      if (String(p["history_name"]).endsWith("mask create")) gone = true; // the bridge drops right after the entry's write
+      return reply;
+    });
+    const hello = client.hello.bind(client);
+    const spy = vi.spyOn(client, "hello").mockImplementation(() => (gone ? null : hello()));
+    expect(await fails(create("sky"))).toMatchObject({ code: "BRIDGE_DISCONNECTED" });
+    spy.mockRestore();
+    // Nothing pending: the revert goes through (it would be refused with AI_UPDATE_PENDING otherwise).
+    expect((await m.end({ session_id: ID, outcome: "revert" })).json).toMatchObject({ outcome: "revert" });
   });
 
   it("goes to LrDevelopController when the plugin lacks update_ai_settings, and keeps that route for the session", async () => {

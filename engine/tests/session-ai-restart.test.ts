@@ -43,8 +43,9 @@ describe("D16: nothing written while Lightroom computes an AI mask", () => {
     const snapshots = sent("apply_snapshot");
     expect(await fails(step(rig.manager))).toMatchObject({ code: "AI_UPDATE_PENDING", recoverable: false, details: { stuck: true } });
     expect(await fails(rig.manager.end({ session_id: ID, outcome: "revert" }))).toMatchObject({ code: "AI_UPDATE_PENDING" });
-    expect(abortClick(rig.manager)).toBe(ABORT_WAITS);
-    await new Promise((resolve) => setTimeout(resolve, 50)); // an Abort would have been queued by now
+    // Idle: the click is taken, its revert re-reads the table, finds the mask still without a result, and writes nothing.
+    expect(abortClick(rig.manager)).toMatch(/^Abort: /);
+    await waitUntil(() => rig.reported.some((r) => r.note === ABORT_WAITS));
     expect(sent("apply_snapshot")).toBe(snapshots);
     expect(rig.reported.some((r) => r.note === "Lightroom's AI mask seems stuck. Restart Lightroom: the photo is then put back by itself.")).toBe(true);
     lr.masks.finishLate(); // Lightroom finishes after all

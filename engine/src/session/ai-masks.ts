@@ -157,7 +157,13 @@ async function byDevelop(ctx: SessionContext, s: Session, job: AiJob, subtype: s
   const fresh = (entries: Correction[]): string | null => correctionIds(entries).find((id) => (asked.made.length > 0 ? asked.made.includes(id) : !old.has(id) && !job.attempts.has(id))) ?? null;
   const done = await waitComputed(ctx, s, job.t, fresh);
   if (done.seen !== null) job.attempts.add(done.seen);
-  if (done.id === null) return `the mask create_ai_mask_dc made ${done.seen ? "did not compute" : "did not show"} within ${Math.round(done.ms)} ms`;
+  if (done.id === null && done.seen !== null) {
+    // The mask showed but has no result yet: Lightroom may still be computing it, so nothing may write to the
+    // photo now, not even the take-out (D16 [stated: Jim, 2026-10-04, "Yes: revert after restart (Recommended)"]).
+    s.aiPending = { since: ctx.now().toISOString(), kind: job.kind, job: { ...job, id: done.seen }, process: ctx.deps.client.hello()?.process_started_at ?? null, stuck: true };
+    throw stuckError(s, job, `the mask LrDevelopController made showed but had no result within ${Math.round(done.ms)} ms`);
+  }
+  if (done.id === null) return `the mask create_ai_mask_dc made did not show within ${Math.round(done.ms)} ms`;
   const name = historyName(s, job.t, job.n, "mask sliders");
   job.historyNames.push(name);
   let sdk: SdkSettings;

@@ -143,8 +143,10 @@ async function connected(ctx: SessionContext, s: Session, stage: string): Promis
 
 function abort(host: ActionHost, s: Session, a: UserAction): string {
   if (s.abort?.state === "pending") return "Abort is already under way.";
-  // Nothing is put back while Lightroom computes an AI mask on the photo (ai-update.ts, D16).
-  if (s.aiPending) return ABORT_WAITS;
+  // Nothing is put back while Lightroom computes an AI mask on the photo (ai-update.ts, D16). While a call runs
+  // the answer is plain; when idle, the queued revert re-reads the table (endSession's settlePending) and
+  // goes ahead if Lightroom has finished meanwhile, else it reports ABORT_WAITS (finishAbort).
+  if (s.aiPending && host.busy()) return ABORT_WAITS;
   s.abort = userEnd(a, s.abort); // a second click after a failed revert tries again
   const running = host.busy();
   host.queue(() => finishAbort(host, s));
@@ -159,7 +161,13 @@ async function finishAbort(host: ActionHost, s: Session): Promise<void> {
   try {
     await connected(ctx, s, "abort (reconnect)");
     await endSession(ctx, s, { session_id: s.id, outcome: "revert" }, by);
-  } catch {
+  } catch (err) {
+    if (toToolError(err).code === "AI_UPDATE_PENDING") {
+      // Nothing was written: the session goes on as before the click (D16), and Abort works again once the mask has its result.
+      s.abort = null;
+      ctx.deps.hud?.stage(s, "awaiting_claude", { note: ABORT_WAITS });
+      return;
+    }
     by.state = "failed"; // the failure is in the log's failures: connected()'s, or endSession's own (io.ts failed())
     ctx.deps.hud?.stage(s, "awaiting_claude", { note: "Abort could not put the photo back. Click Abort again." });
     return;

@@ -1,0 +1,4 @@
+const L = h => { const c = [1,3,5].map(i => parseInt(h.slice(i,i+2),16)/255).map(v => v <= 0.03928 ? v/12.92 : ((v+0.055)/1.055)**2.4); return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2]; };
+const cr = (a,b) => { const [x,y] = [L(a),L(b)].sort((p,q)=>q-p); return (x+0.05)/(y+0.05); };
+const pairs = JSON.parse(process.argv[2]);
+for (const [name, fg, bg] of pairs) console.log(`${cr(fg,bg).toFixed(2).padStart(6)} : 1  ${name}  ${fg} on ${bg}`);

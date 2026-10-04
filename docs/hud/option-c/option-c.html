@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Option C Deck</title>
+<link rel="stylesheet" href="../stage/stage.css">
+<style>
+  html, body { margin: 0; background: #000; }
+  body { width: 1984px; }
+  .ctx { position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+
+  /* ---------- Deck: Instrument tokens (shared design system) ---------- */
+  .deck {
+    --bg: #202122; --raised: #2a2b2d; --inset: #161718; --line: #3a3b3e;
+    --text: #e4e6e8; --text2: #aeb2b6; --text3: #8d9196;
+    --accent: #eda447; --on-accent: #1d1305; --ok: #86c296; --danger: #ee8064; --working: #9fb7d4;
+    position: absolute; z-index: 5; left: 0; top: 936px; width: 1920px;
+    background: var(--bg); color: var(--text);
+    border-top: 1px solid var(--line);
+    font-family: 'Inter', 'Segoe UI', sans-serif; font-size: 12px; line-height: 16px; font-weight: 400;
+    font-feature-settings: 'tnum' 1; -webkit-font-smoothing: antialiased;
+    box-sizing: border-box; user-select: none;
+  }
+  .deck *, .deck *::before, .deck *::after { box-sizing: border-box; }
+  .deck svg { display: block; flex: none; }
+  /* keyboard focus (all controls): 2 px `text` ring, 2 px out */
+  .deck .focus { outline: 2px solid var(--text); outline-offset: 2px; }
+
+  /* expanded: 1920 x 144, exactly the filmstrip band */
+  .deck.x { height: 144px; display: grid; grid-template-columns: 380px 1fr 300px; }
+  .col { position: relative; height: 143px; }
+  .col.c::before, .col.r::before { content: ''; position: absolute; left: 0; top: 11px; width: 1px; height: 120px; background: var(--line); }
+
+  /* left: status + note + timeline */
+  .col.l { padding: 11px 16px 12px 16px; display: flex; flex-direction: column; }
+  .turn { display: flex; align-items: flex-start; }
+  .disc { width: 12px; height: 20px; display: flex; align-items: center; margin-right: 8px; }
+  .glyph { width: 16px; height: 20px; display: flex; align-items: center; margin-right: 8px; }
+  .sentence { font-size: 15px; line-height: 20px; font-weight: 600; color: var(--text); text-wrap: balance; max-width: 304px; }
+  .sentence.prose { font-feature-settings: 'tnum' 0; }
+  .step { margin: 4px 0 0 44px; color: var(--text2); white-space: nowrap; }
+  .band { margin: 4px 0 0 44px; max-width: 304px; color: var(--text2); font-feature-settings: 'tnum' 0;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .band.id { color: var(--text3); white-space: nowrap; display: block; }
+  .tl { margin-top: auto; margin-left: 44px; display: flex; align-items: flex-start; gap: 12px; height: 25px; }
+  .tl .lab { color: var(--text2); font-weight: 500; line-height: 12px; }
+
+  /* center */
+  .col.c { display: flex; align-items: flex-start; justify-content: center; padding-top: 11px; }
+  .col.c.v { padding-top: 4px; }
+  .cardsw .ccap { height: 14px; font-size: 11px; line-height: 14px; color: var(--text3); font-feature-settings: 'tnum' 0; margin-bottom: 6px; }
+  .cards { display: flex; gap: 16px; }
+  .card { position: relative; width: 368px; height: 114px; background: var(--raised); border: 1px solid var(--line); border-radius: 8px;
+    padding: 10px; display: flex; gap: 12px; }
+  .card.chosen { border-color: var(--accent); }
+  .card .caret { position: absolute; left: 75px; top: -8px; }
+  .card .th { width: 138px; height: 92px; border-radius: 4px; overflow: hidden; flex: none; position: relative; background: var(--inset); }
+  .card .th img { display: block; width: 138px; height: 92px; }
+  .card .th::after { content: ''; position: absolute; inset: 0; border-radius: 4px; box-shadow: inset 0 0 0 1px var(--line); }
+  .card .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .cname { height: 18px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; line-height: 18px; color: var(--text); }
+  .cname .picked { font-size: 12px; font-weight: 500; color: var(--text2); }
+  .cgrid { margin-top: 4px; display: grid; grid-template-columns: 56px 24px 72px 24px; column-gap: 6px; }
+  .cgrid span:nth-child(4n+3) { padding-left: 12px; }
+  .cgrid .k { color: var(--text2); white-space: nowrap; }
+  .cgrid .v { color: var(--text); font-weight: 500; text-align: right; }
+  /* a corrected row: the half-filled guardrail mark right after the slider's name, so it reads with its own row */
+  .cgrid .k .gm { display: inline-block; vertical-align: -2px; margin-left: 4px; }
+  .cnone { margin-top: 4px; color: var(--text2); }
+  .cguard { margin-top: 6px; display: flex; gap: 6px; color: var(--text2); }
+  .cguard svg { margin-top: 2px; }
+  .key { display: inline-flex; align-items: center; justify-content: center; min-width: 16px; height: 16px; padding: 0 4px; border: 1px solid var(--line);
+    border-radius: 3px; font-size: 11px; line-height: 14px; font-weight: 500; color: var(--text2); }
+
+  .diffs { display: flex; gap: 48px; }
+  .blk { display: flex; flex-direction: column; }
+  .subs { display: flex; gap: 24px; }
+  .blk-h { height: 16px; margin: 0 0 2px 116px; white-space: nowrap; }
+  .blk-h b { font-weight: 600; color: var(--text); }
+  .blk-h span { color: var(--text2); }
+  .drow { height: 18px; display: grid; grid-template-columns: 108px 100px 88px 36px; column-gap: 8px; align-items: center; }
+  .drow .dl { text-align: right; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .drow .ba { text-align: right; color: var(--text3); white-space: nowrap; }
+  .drow .dd { text-align: right; color: var(--text); font-weight: 600; }
+  .drow .prof { grid-column: 2 / span 2; color: var(--text2); white-space: nowrap; }
+  .drow .prof b { color: var(--text); font-weight: 400; }
+  .drow .more { grid-column: 2 / span 3; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-feature-settings: 'tnum' 0; }
+  .drow .dl.m { color: var(--text3); }
+  /* an undone pass: nothing of it is on the sliders; rows in text3, after struck, "not kept" for the delta */
+  .blk.undone .drow { grid-template-columns: 108px 100px 88px 48px; }
+  .drow.undone .dl, .drow.undone .ba, .drow.undone .dd { color: var(--text3); font-weight: 400; }
+  .drow.undone .ba s { text-decoration-thickness: 1px; }
+  .drow.undone .dd { font-feature-settings: 'tnum' 0; }
+  .gline { margin-top: 2px; margin-left: 116px; display: flex; gap: 6px; align-items: center; color: var(--text2); height: 16px; white-space: nowrap; font-feature-settings: 'tnum' 0; }
+
+  .way { padding-top: 13px; text-align: left; }
+  .way .a { font-size: 13px; line-height: 20px; font-weight: 500; color: var(--text2); }
+  .way .b { font-size: 15px; line-height: 20px; font-weight: 600; color: var(--text); margin-top: 2px; }
+  .way .c { margin-top: 8px; color: var(--text3); }
+
+  /* right: actions */
+  .col.r { padding: 11px 16px 12px 16px; display: flex; flex-direction: column; }
+  .btn { height: 32px; border-radius: 6px; display: flex; align-items: center; font-size: 13px; line-height: 16px; font-weight: 600; white-space: nowrap; }
+  .btn.primary { background: var(--accent); color: var(--on-accent); justify-content: space-between; padding: 0 7px 0 12px; }
+  .btn.primary .key { color: var(--on-accent); border-color: var(--on-accent); }
+  .btn.secondary { border: 1px solid var(--line); color: var(--text); justify-content: flex-start; padding: 0 12px; font-weight: 500; }
+  .btn.off { border: 1px solid var(--line); color: var(--text3); justify-content: flex-start; padding: 0 12px; font-weight: 500; }
+  .conseq { margin-top: 4px; color: var(--text2); white-space: nowrap; font-feature-settings: 'tnum' 0; }
+  /* top-aligned, with the consequence nudged 4 px so its first line centres on the 24 px button (one or two lines) */
+  .abortrow { margin-top: 6px; display: flex; gap: 10px; align-items: flex-start; }
+  .btn.abort { height: 24px; padding: 0 9px; border: 1px solid var(--line); color: var(--danger); font-weight: 500; flex: none; }
+  .btn.abort.armed { border-color: var(--danger); padding: 0 8px; }
+  .btn.abort.off { color: var(--text3); }
+  .abortrow .conseq { margin-top: 4px; }
+  .abortrow .hint { font-size: 11px; line-height: 14px; color: var(--text2); white-space: nowrap; font-feature-settings: 'tnum' 0; margin: -2px 0 0 -2px; }
+  /* P: Accept and Abort as a compact pair; their consequences are tooltips */
+  .pairrow { margin-top: 6px; display: flex; gap: 8px; }
+  .btn.compact { height: 24px; padding: 0 9px; border: 1px solid var(--line); color: var(--text); font-weight: 500; flex: none; }
+  .btn.off.compact { color: var(--text3); }
+  .undo { margin-top: auto; font-size: 12px; line-height: 16px; color: var(--text2); white-space: nowrap; font-feature-settings: 'tnum' 0; }
+  /* Inter's tabular figures also widen the hyphen ("pre - session", "2026 - 10 - 04" in a render), so prose and
+     identifiers with hyphens set tnum off; every number in a column or a changing value keeps it. */
+  .blk-h span, .way .a, .way .b, .way .c, .hintbox, .ccap, .cguard, .cnone { font-feature-settings: 'tnum' 0; }
+  .hintbox .h1 { height: 32px; display: flex; align-items: center; font-size: 13px; font-weight: 500; color: var(--text2); }
+  .hintbox .h2 { margin-top: 4px; color: var(--text3); }
+
+  /* collapsed: 1920 x 44, over the filmstrip header */
+  .deck.k { height: 44px; border-bottom: 1px solid var(--line); display: flex; align-items: center; padding: 0 16px; }
+  .deck.k .disc, .deck.k .glyph { height: 20px; }
+  .deck.k .words { font-size: 13px; line-height: 20px; font-weight: 500; color: var(--text2); white-space: nowrap; }
+  .deck.k .words b { font-weight: 600; color: var(--text); }
+  .deck.k .words.turn15 b { font-size: 15px; }
+  .deck.k .words .fid { color: var(--text3); font-weight: 400; font-size: 12px; }
+  .deck.k .cq { position: absolute; right: 316px; top: 0; height: 43px; display: flex; align-items: center; color: var(--text3); white-space: nowrap; font-feature-settings: 'tnum' 0; }
+  .deck.k .cq.u { color: var(--text2); }
+  .deck.k .vr { position: absolute; left: 1620px; top: 11px; width: 1px; height: 20px; background: var(--line); }
+  .deck.k .btn.primary { height: 28px; gap: 12px; }
+  .deck.k .btn.secondary { height: 28px; }
+  .deck.k .btn.abort { height: 28px; }
+  /* W bar: Accept as a text-only control (no border, text2), so the bar asks nothing */
+  .deck.k .btn.textonly { height: 28px; padding: 0 8px; color: var(--text2); font-weight: 500; }
+  .deck.k .rcol { position: absolute; left: 1636px; top: 7px; display: flex; gap: 8px; }
+  .deck.k .close { position: absolute; left: 1876px; top: 7px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 6px; }
+
+  /* ---------- states sheets ---------- */
+  .sheetw { width: 1984px; background: #2b2b2b; padding: 40px 32px 40px; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+  .sheetw h1 { margin: 0; font-size: 20px; line-height: 28px; font-weight: 600; color: #e4e6e8; }
+  .sheetw .sub { margin: 4px 0 28px; font-size: 12px; line-height: 16px; color: #c8c8c8; }
+  .sheetw .cap { font-size: 12px; line-height: 16px; color: #c8c8c8; margin: 0 0 8px; }
+  .sheetw .cap b { color: #e4e6e8; font-weight: 600; }
+  .sheetw .crop { position: relative; width: 1920px; height: 180px; overflow: hidden; outline: 1px solid #3a3a3a; margin-bottom: 28px; }
+  .sheetw .crop > .lr-root { margin-top: -900px; }
+</style>
+</head>
+<body>
+
+<div id="ctx-variants" class="ctx"><div id="lr-v"></div></div>
+<div id="ctx-working" class="ctx"><div id="lr-w"></div></div>
+
+<div id="states" class="sheetw">
+  <h1>Option C · Deck: states (1 of 2)</h1>
+  <div class="sub">Each state over the bottom of the Lightroom stage (crop y 900-1080: the loupe toolbar and the panels' bottom buttons, then the filmstrip band). The deck spans the full window width; its column lines sit at x 380 and x 1620 (the right panel's edge).</div>
+  <div id="sheet1"></div>
+</div>
+<div id="states-more" class="sheetw">
+  <h1>Option C · Deck: states (2 of 2)</h1>
+  <div class="sub">The cap, collapsed turns, problems, keyboard and the end of an edit. Crops marked "constructed" use data made up for the state; every other crop uses the shared scene data.</div>
+  <div id="sheet2"></div>
+</div>
+
+<script src="../stage/stage.js"></script>
+<script>
+(function () {
+  'use strict';
+  var PHOTO = '../stage/photo.svg';
+  var C = { text: '#e4e6e8', text2: '#aeb2b6', text3: '#8d9196', line: '#3a3b3e', accent: '#eda447', ok: '#86c296', danger: '#ee8064', working: '#9fb7d4' };
+  var MINUS = '−';
+  var SNAP = 'AVG pre-session 2026-10-04T18:42:07.311Z';
+  var ID = '_DSC0412.NEF';
+  var EXIF = 'ISO 100 · 1/250 s · f/8';
+  var COPYNAME = 'AVG landscape_golden_hour B';
+
+  function sgn(v, plus) {
+    var s = String(Math.abs(v));
+    if (Math.abs(v) >= 1000) s = Math.abs(v).toLocaleString('en-US');
+    return v < 0 ? MINUS + s : (plus && v > 0 ? '+' + s : s);
+  }
+  // A slider value as Lightroom's Basic panel writes it: "+" on positive values of signed sliders, Exposure to two
+  // decimals, Temp and the unsigned sliders bare. A value that is not a number (Profile, "curve") passes through.
+  var UNSIGNED = { Temp: 1, 'Sharpening Amount': 1, 'Noise Reduction Luminance': 1 };
+  function val(label, v) {
+    if (typeof v !== 'number') return v;
+    if (label === 'Temp') return v.toLocaleString('en-US');
+    var s = label === 'Exposure' ? Math.abs(v).toFixed(2) : String(Math.abs(v));
+    if (v === 0) return s;
+    return v < 0 ? MINUS + s : (UNSIGNED[label] ? s : '+' + s);
+  }
+  function d(v) { return v === 0 ? '0' : sgn(Math.round(v * 100) / 100, true); }
+
+  // ---------- glyphs ----------
+  var G = {
+    discOpen: '<svg width="12" height="12"><path d="M2 4h8L6 8.5z" fill="' + C.text2 + '"/></svg>',
+    discShut: '<svg width="12" height="12"><path d="M4 2v8l4.5-4z" fill="' + C.text2 + '"/></svg>',
+    // working: soft ring (static mid-pulse frame of the halo)
+    working: '<svg width="16" height="16"><circle cx="8" cy="8" r="7" fill="none" stroke="' + C.working + '" stroke-width="1.5" opacity=".35"/><circle cx="8" cy="8" r="4" fill="none" stroke="' + C.working + '" stroke-width="2"/></svg>',
+    turn: '<svg width="16" height="16"><circle cx="8" cy="8" r="5" fill="' + C.accent + '"/></svg>',
+    done: '<svg width="16" height="16"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="' + C.ok + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    problem: '<svg width="16" height="16"><path d="M8 2.2L14.6 13.6H1.4Z" fill="none" stroke="' + C.danger + '" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 6.4v3.4" stroke="' + C.danger + '" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="11.7" r=".95" fill="' + C.danger + '"/></svg>',
+    // note at awaiting_claude: an "i" in a ring (neither working nor your turn)
+    info: '<svg width="16" height="16"><circle cx="8" cy="8" r="6.25" fill="none" stroke="' + C.text2 + '" stroke-width="1.5"/><rect x="7.25" y="7" width="1.5" height="4.6" rx=".75" fill="' + C.text2 + '"/><circle cx="8" cy="4.9" r=".95" fill="' + C.text2 + '"/></svg>',
+    close: '<svg width="12" height="12"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7" stroke="' + C.text2 + '" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    caret: '<svg width="12" height="7"><path d="M0 7L6 0.5L12 7z" fill="' + C.accent + '"/></svg>'
+  };
+  // guardrail marks, 12 px, one shape per meaning (HUD_GUARDRAIL, hud-protocol.ts:47): check, half-filled circle,
+  // a bar between two stops ("held"), triangle
+  var GM = {
+    ok: '<svg width="12" height="12"><path d="M2.2 6.4l2.5 2.5L9.8 3.6" fill="none" stroke="' + C.ok + '" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    corr: '<svg width="12" height="12"><circle cx="6" cy="6" r="4.4" fill="none" stroke="' + C.text2 + '" stroke-width="1.2"/><path d="M6 1.6a4.4 4.4 0 0 0 0 8.8z" fill="' + C.text2 + '"/></svg>',
+    lim: '<svg width="12" height="12"><path d="M1.5 3.5v5M10.5 3.5v5M1.5 6h9" stroke="' + C.text2 + '" stroke-width="1.4" stroke-linecap="round"/></svg>',
+    prob: '<svg width="12" height="12"><path d="M6 1.3L11.2 10.6H.8Z" fill="none" stroke="' + C.danger + '" stroke-width="1.2" stroke-linejoin="round"/><path d="M6 4.6v2.8" stroke="' + C.danger + '" stroke-width="1.2" stroke-linecap="round"/><circle cx="6" cy="9" r=".7" fill="' + C.danger + '"/></svg>'
+  };
+  var STATUS_MARK = { green: 'ok', corrected: 'corr', clamped: 'lim', refused: 'lim', unmet: 'prob', undone: 'prob' };
+
+  // ---------- pass timeline: 0..max; a 9 px guardrail mark under each done pass ----------
+  // spec: { max, done: [indices], current: index|null, ring: 'accent'|'working'|'unknown'|'info', marks: {i: status}, label }
+  function timeline(spec) {
+    var step = 20, r0 = 7, w = spec.max * step + 2 * r0 + 2, h = 25, out = [], cy = 7, my = 19.75;
+    var cx = function (i) { return r0 + 1 + i * step; };
+    for (var i = 0; i < spec.max; i++) {
+      out.push('<path d="M' + (cx(i) + 5) + ' ' + cy + 'H' + (cx(i + 1) - 5) + '" stroke="' + C.line + '" stroke-width="1"/>');
+    }
+    for (i = 0; i <= spec.max; i++) {
+      var isDone = spec.done.indexOf(i) >= 0, x = cx(i);
+      if (isDone) out.push('<circle cx="' + x + '" cy="' + cy + '" r="4" fill="' + C.text2 + '"/>');
+      else out.push('<circle cx="' + x + '" cy="' + cy + '" r="3.5" fill="none" stroke="' + C.text3 + '" stroke-width="1"/>');
+      if (spec.current === i) {
+        var rc = { accent: C.accent, working: C.working, info: C.text2 }[spec.ring] || C.text3;
+        out.push('<circle cx="' + x + '" cy="' + cy + '" r="6.75" fill="none" stroke="' + rc + '" stroke-width="1.5"/>');
+      }
+      var m = spec.marks && STATUS_MARK[spec.marks[i]];
+      if (m === 'ok') out.push('<path d="M' + (x - 4) + ' ' + (my - 0.2) + 'l2.7 2.7L' + (x + 4.2) + ' ' + (my - 3.8) + '" fill="none" stroke="' + C.ok + '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>');
+      if (m === 'corr') out.push('<circle cx="' + x + '" cy="' + my + '" r="4.25" fill="none" stroke="' + C.text2 + '" stroke-width="1"/><path d="M' + x + ' ' + (my - 4.25) + 'a4.25 4.25 0 0 0 0 8.5z" fill="' + C.text2 + '"/>');
+      if (m === 'lim') out.push('<path d="M' + (x - 4.5) + ' ' + (my - 2.75) + 'v5.5M' + (x + 4.5) + ' ' + (my - 2.75) + 'v5.5M' + (x - 4.5) + ' ' + my + 'H' + (x + 4.5) + '" stroke="' + C.text2 + '" stroke-width="1.4" stroke-linecap="round"/>');
+      if (m === 'prob') out.push('<path d="M' + x + ' ' + (my - 4.75) + 'L' + (x + 4.75) + ' ' + (my + 4) + 'H' + (x - 4.75) + 'Z" fill="' + C.danger + '"/>');
+    }
+    return '<div class="tl"><svg width="' + w + '" height="' + h + '">' + out.join('') + '</svg><span class="lab" style="margin-top:1px">' + spec.label + '</span></div>';
+  }
+
+  // ---------- mini Lightroom slider track ----------
+  // Lightroom's form: a 2 px track and one thumb below it at the value. The segment from before to after is accent
+  // at 60 % (at least 2 px); the before value is only in the "a → b" text. Ranges kept on the deck side (proposed
+  // field 7). An undone pass: thumb at before (where Lightroom's slider is), no segment.
+  var RANGE = { Temp: [2000, 50000], Tint: [-150, 150], Exposure: [-5, 5], 'Sharpening Amount': [0, 150] };
+  function track(label, before, after, undone) {
+    var R = RANGE[label] || [-100, 100];
+    var W = 100, x0 = 5, x1 = W - 5;
+    var x = function (v) { return x0 + (v - R[0]) / (R[1] - R[0]) * (x1 - x0); };
+    var xb = x(before), xa = x(after);
+    var len = Math.max(2, Math.abs(xa - xb)), lo = (xb + xa) / 2 - len / 2;
+    var xt = undone ? xb : xa;
+    return '<svg width="' + W + '" height="18">' +
+      '<rect x="' + x0 + '" y="8" width="' + (x1 - x0) + '" height="2" fill="' + C.line + '"/>' +
+      (undone ? '' : '<rect x="' + lo + '" y="8" width="' + len + '" height="2" fill="' + C.accent + '" opacity=".6"/>') +
+      '<path d="M' + xt + ' 11l4.5 6h-9z" fill="' + (undone ? C.text3 : C.text) + '"/>' +
+      '</svg>';
+  }
+  function drow(label, before, after, undone) {
+    var ba = val(label, before) + ' → ' + (undone ? '<s>' + val(label, after) + '</s>' : val(label, after));
+    return '<div class="drow' + (undone ? ' undone' : '') + '"><span class="dl">' + label + '</span>' + track(label, before, after, undone) +
+      '<span class="ba">' + ba + '</span><span class="dd">' + (undone ? 'not kept' : d(after - before)) + '</span></div>';
+  }
+  // a row whose values are not numbers (Profile, Point Curve): no track, no delta
+  function textRow(label, before, after) {
+    return '<div class="drow"><span class="dl">' + label + '</span><span class="prof">' + before + ' → <b>' + after + '</b></span><span></span></div>';
+  }
+  function moreRow(names) {
+    return '<div class="drow"><span class="dl m">+' + names.length + ' more</span><span class="more">' + names.join(', ') + '</span></div>';
+  }
+  // Rows arrive in Basic-panel order. One sub-column holds 5 slots; `cols` sub-columns at most; when rows
+  // do not fit, the last slot says "+n more" with the names (hover lists them all).
+  function rowsHtml(rows, cols, undone) {
+    var slots = 5 * cols, html = rows.map(function (r) { return typeof r[1] === 'number' ? drow(r[0], r[1], r[2], undone) : textRow(r[0], r[1], r[2]); });
+    if (rows.length > slots) {
+      var hidden = rows.slice(slots - 1).map(function (r) { return r[0]; });
+      html = html.slice(0, slots - 1).concat([moreRow(hidden)]);
+    }
+    var subs = [];
+    for (var i = 0; i < html.length; i += 5) subs.push('<div class="subc">' + html.slice(i, i + 5).join('') + '</div>');
+    return subs.length > 1 ? '<div class="subs">' + subs.join('') + '</div>' : subs.join('');
+  }
+  // sub: null for none ("Pass 2"), else " · sub"
+  function block(title, sub, rows, guard, cols, undone) {
+    return '<div class="blk' + (undone ? ' undone' : '') + '"><div class="blk-h"><b>' + title + '</b>' + (sub ? '<span> · ' + sub + '</span>' : '') + '</div>' + rowsHtml(rows, cols || 1, undone) +
+      (guard ? '<div class="gline">' + GM[STATUS_MARK[guard[0]]] + '<span>' + guard[1] + '</span></div>' : '') + '</div>';
+  }
+
+  // ---------- copy cards: what each copy holds after pass 0 and its corrections, minus the baseline ----------
+  // (proposed field 3). Real values: docs/reports/phase5/P5/p5_sessions_2026-10-01T11-32-13-141Z/20261001-d4247b.json,
+  // passes n 0, settings_after, minus copy A's (the baseline). B's correction set Blacks to +5 (guardrail_actions[0].changes);
+  // the row carries the half-filled mark, and its tooltip says what was asked ("asked −15").
+  var COPIES = {
+    A: { look: 'natural', key: 1, rows: null, guard: ['green', 'Clipping: within limits.'] },
+    B: { look: 'dramatic', key: 2, rows: [['Contrast', 20], ['Blacks', 5, 'corrected', -15], ['Clarity', 10], ['Dehaze', 10]],
+      guard: ['corrected', 'Shadow clipping was 3.47 % (limit 1 %); corrected.'] },
+    C: { look: 'soft', key: 3, rows: [['Contrast', -10], ['Highlights', -15], ['Shadows', 15], ['Clarity', -10]], guard: ['green', 'Clipping: within limits.'] }
+  };
+  // state: '' | 'chosen' | 'focus' | 'picked'; keys: draw the 1/2/3 keycaps (only while the deck has keyboard focus)
+  function card(id, state, keys) {
+    var c = COPIES[id], g = [];
+    // Basic-panel order read down the columns: rows 0, 1 in the first pair, 2, 3 in the second
+    if (c.rows) [0, 2, 1, 3].forEach(function (i) {
+      var r = c.rows[i]; if (!r) return;
+      var mark = r[2] ? '<span class="gm" title="asked ' + d(r[3]) + '">' + GM[STATUS_MARK[r[2]]] + '</span>' : '';
+      g.push('<span class="k">' + r[0] + mark + '</span><span class="v">' + d(r[1]) + '</span>');
+    });
+    var ringed = state === 'chosen' || state === 'picked';
+    var right = state === 'picked' ? '<span class="picked">Picked</span>' : keys ? '<span class="key">' + c.key + '</span>' : '';
+    return '<div class="card' + (ringed ? ' chosen' : '') + (state === 'focus' ? ' focus' : '') + '">' + (ringed ? '<div class="caret">' + G.caret + '</div>' : '') +
+      '<div class="th"><img src="' + PHOTO + '" alt="" class="look-' + c.look + '"></div>' +
+      '<div class="tx"><div class="cname"><span>' + id + ' ' + c.look + '</span>' + right + '</div>' +
+      (c.rows ? '<div class="cgrid">' + g.join('') + '</div>' : '<div class="cnone">No change beyond the baseline</div>') +
+      '<div class="cguard">' + GM[STATUS_MARK[c.guard[0]]] + '<span>' + c.guard[1] + '</span></div></div></div>';
+  }
+  function cards(states, keys) {
+    return '<div class="col c v"><div class="cardsw"><div class="ccap">Each copy\'s changes beyond the baseline</div><div class="cards">' +
+      card('A', states.A, keys) + card('B', states.B, keys) + card('C', states.C, keys) + '</div></div></div>';
+  }
+
+  // ---------- columns ----------
+  // o: { glyph, sentence, prose, line2, band, bandId, tl }
+  function left(o) {
+    return '<div class="col l"><div class="turn"><span class="disc">' + G.discOpen + '</span><span class="glyph">' + o.glyph + '</span>' +
+      '<div class="sentence' + (o.prose ? ' prose' : '') + '">' + o.sentence + '</div></div>' +
+      '<div class="step">' + o.line2 + '</div>' +
+      (o.band ? '<div class="band' + (o.bandId ? ' id' : '') + '">' + o.band + '</div>' : '') +
+      timeline(o.tl) + '</div>';
+  }
+  // The way back, by mode. Converge: the pre-session snapshot. Variants: the master is never edited
+  // (engine/src/session/variants.ts:4) and an Abort leaves the copies in the catalog with their edits
+  // (end.ts:4-7, :114; hud-actions.ts:125), so the line names the copies instead of Snapshots.
+  var UNDO = '<div class="undo">To undo it: Develop &gt; Snapshots &gt;<br>' + SNAP + '</div>';
+  var UNDO_V = '<div class="undo">Copies: “AVG landscape_golden_hour A–C”</div>';
+  var ABORT_CONSEQ = 'Puts the pre-session snapshot back.';
+  var ABORT_V = 'Leaves the master as it was;<br>the copies stay in the catalog.';
+  function abortRow(kind, side) {
+    if (kind === 'armed') return '<div class="abortrow"><div class="btn abort armed">Press again to abort</div><div class="hint">Ctrl+Backspace again;<br>Esc or 3 s cancels.</div></div>';
+    var cls = kind === 'off' ? ' off' : kind === 'focus' ? ' focus' : '';
+    var line = side === '' ? '' : '<div class="conseq">' + (side || ABORT_CONSEQ) + '</div>';
+    return '<div class="abortrow"><div class="btn abort' + cls + '">Abort</div>' + line + '</div>';
+  }
+  // o.key: draw the Enter keycap (only while the deck has keyboard focus, and not while Abort is armed)
+  function primary(label, conseq, o) {
+    o = o || {};
+    return '<div class="btn primary' + (o.focus ? ' focus' : '') + '"><span>' + label + '</span>' + (o.key ? '<span class="key">Enter</span>' : '') + '</div><div class="conseq">' + conseq + '</div>';
+  }
+  function secondary(label, conseq) { return '<div class="btn secondary">' + label + '</div><div class="conseq">' + conseq + '</div>'; }
+  function offBtn(label, conseq) { return '<div class="btn off">' + label + '</div>' + (conseq ? '<div class="conseq">' + conseq + '</div>' : ''); }
+  // P: Accept next to Abort, both 24 px and outlined; consequences in their tooltips (proposed)
+  function pairRow() {
+    return '<div class="pairrow"><div class="btn compact" title="Accept keeps the edit as it is now.">Accept</div>' +
+      '<div class="btn abort" title="Abort puts the pre-session snapshot back.">Abort</div></div>';
+  }
+  function right(inner) { return '<div class="col r">' + inner + '</div>'; }
+
+  var IDLINE = ID + ' · ' + EXIF;
+  var ACCEPT_C = 'Ends the edit; the sliders stay as they are.';
+  var ACCEPT_RUN = 'Ends the edit after Claude’s current step.';
+  var TL_C = { max: 6, done: [0, 1, 2], current: 2, ring: 'accent', marks: { 0: 'green', 1: 'green', 2: 'green' }, label: 'pass 2 of 6' };
+  // The copy count and letters: `variants` at awaiting_pick (payload.ts:43); after the pick the deck keeps that list (proposed)
+  var TL_V = function (ring, label) { return { max: 6, done: [0], current: 0, ring: ring, marks: {}, label: label || 'pass 0 · 3 copies' }; };
+
+  // Scene data (shared): C/W last pass, whole edit after pass 2; P pass 1 and whole edit after pass 1.
+  var C_PASS = [['Clarity', 6, 3], ['Vibrance', 16, 12]];
+  var C_WHOLE = [['Profile', 'Camera Neutral', 'Adobe Landscape'], ['Highlights', -21, -41], ['Shadows', 10, 20], ['Clarity', 2, 3], ['Vibrance', 0, 12]];
+  var P_PASS = [['Clarity', 2, 6], ['Vibrance', 10, 16]];
+  var P_WHOLE = [['Profile', 'Camera Neutral', 'Adobe Landscape'], ['Highlights', -21, -41], ['Shadows', 10, 20], ['Clarity', 2, 6], ['Vibrance', 0, 16]];
+  var OK = ['green', 'Clipping: within limits.'];
+
+  function cDiffs(pass, rows, whole, guard, undone) {
+    return '<div class="col c"><div class="diffs">' + block('Pass ' + pass, undone ? 'undone' : null, rows, guard, 1, undone) +
+      block('Whole edit', 'since the pre-session snapshot', whole) + '</div></div>';
+  }
+  function deckX(l, c, r) { return '<div class="deck x">' + l + c + right(r) + '</div>'; }
+  function bar(glyph, words, cq, rcol) {
+    return '<div class="deck k"><span class="disc">' + G.discShut + '</span><span class="glyph">' + glyph + '</span>' + words +
+      (cq ? '<div class="cq' + (cq.u ? ' u' : '') + '">' + cq.t + '</div>' : '') + '<span class="vr"></span>' + rcol + '</div>';
+  }
+
+  var DECKS = {
+    // Scene V, nothing chosen yet. focusA: the deck has keyboard focus (on card A, by Tab), so the 1/2/3 keycaps
+    // and the "press 1, 2 or 3" hint show; without focus they are not drawn.
+    V0: function (focusA) {
+      return deckX(left({ glyph: G.turn, sentence: 'Your turn: pick a copy, or tell Claude which one.', line2: IDLINE, tl: TL_V('accent') }),
+        cards({ A: focusA ? 'focus' : '' }, !!focusA),
+        '<div class="hintbox"><div class="h1">Choose a copy to continue on</div><div class="h2">' + (focusA ? 'Click a card, or press 1, 2 or 3.' : 'Click a card.') + '</div></div>' +
+        abortRow(null, ABORT_V) + UNDO_V);
+    },
+    // Scene V, copy B chosen with the pointer (focus went back to Lightroom: no keycaps)
+    VB: function () {
+      return deckX(left({ glyph: G.turn, sentence: 'Your turn: pick a copy, or tell Claude which one.', line2: IDLINE, tl: TL_V('accent') }),
+        cards({ B: 'chosen' }, false),
+        primary('Continue on copy B', 'Claude continues on copy B at its next call.') + abortRow(null, ABORT_V) + UNDO_V);
+    },
+    // Scene V after Continue: stage awaiting_claude with the engine's note (hud-actions.ts:261)
+    Vp: function () {
+      return deckX(left({ glyph: G.info, prose: true, sentence: 'Picked B: Claude continues on copy B at its next call.', line2: ID + ' / ' + COPYNAME, tl: TL_V('info', 'copy B · pass 0') }),
+        cards({ B: 'picked' }, false),
+        secondary('Accept', 'Keeps copy B; the other copies stay.') + abortRow(null, ABORT_V) + UNDO_V);
+    },
+    // Scene C, converged (variants: armed, sent, focus)
+    C: function (variant) {
+      var r, l = { glyph: G.turn, sentence: 'Your turn: Claude thinks the edit is done.', line2: IDLINE, tl: TL_C };
+      if (variant === 'armed') r = primary('Accept', ACCEPT_C) + abortRow('armed') + UNDO;
+      else if (variant === 'sent') {
+        l = { glyph: G.working, sentence: 'Accept sent; waiting for Claude.', line2: IDLINE, tl: { max: 6, done: [0, 1, 2], current: 2, ring: 'working', marks: TL_C.marks, label: 'pass 2 of 6' } };
+        r = offBtn('Accept', 'Off until Claude answers.') + abortRow('off', 'Off until Claude answers.') + UNDO;
+      } else r = primary('Accept', ACCEPT_C, { focus: variant === 'focus', key: variant === 'focus' }) + abortRow() + UNDO;
+      return deckX(left(l), cDiffs(2, C_PASS, C_WHOLE, OK), r);
+    },
+    // Scene P, approve pass 1. The engine's note (approval.ts:156) repeats the headline: left out for the deck (field 12).
+    // Accept stays on the photographer's turn, as today (HudView.lua:161; approval.ts:165-167).
+    P: function () {
+      return deckX(left({ glyph: G.turn, sentence: 'Your turn: approve pass 1 so Claude can go on.', line2: IDLINE,
+        tl: { max: 6, done: [0, 1], current: 1, ring: 'accent', marks: { 0: 'green', 1: 'green' }, label: 'pass 1 of 6' } }),
+        cDiffs(1, P_PASS, P_WHOLE, OK),
+        primary('Approve pass 1', 'Lets Claude write pass 2.') + pairRow() + UNDO);
+    },
+    // P with a 12-row pass (constructed): two sub-columns for this pass, "+n more" in both blocks
+    Pbusy: function () {
+      var pass = [['Tint', 6, 9], ['Exposure', 0.33, 0.45], ['Contrast', 0, 8], ['Highlights', -41, -48], ['Shadows', 20, 26], ['Whites', 0, 6],
+        ['Blacks', 0, -5], ['Texture', 4, 8], ['Clarity', 2, 6], ['Vibrance', 10, 16], ['Point Curve', 'curve', 'curve'], ['Sharpening Amount', 40, 50]];
+      var whole = [['Profile', 'Camera Neutral', 'Adobe Landscape'], ['Tint', 6, 9], ['Exposure', 0.33, 0.45], ['Contrast', 0, 8], ['Highlights', -21, -48],
+        ['Shadows', 10, 26], ['Whites', 0, 6], ['Blacks', 0, -5], ['Texture', 4, 8], ['Clarity', 2, 6], ['Vibrance', 0, 16], ['Point Curve', 'curve', 'curve'], ['Sharpening Amount', 40, 50]];
+      return deckX(left({ glyph: G.turn, sentence: 'Your turn: approve pass 1 so Claude can go on.', line2: IDLINE,
+        tl: { max: 6, done: [0, 1], current: 1, ring: 'accent', marks: { 0: 'green', 1: 'clamped' }, label: 'pass 1 of 6' } }),
+        '<div class="col c"><div class="diffs">' + block('Pass 1', null, pass, ['clamped', 'Clarity: change held to ±4 this pass.'], 2) +
+        block('Whole edit', 'since the pre-session snapshot', whole) + '</div></div>',
+        primary('Approve pass 1', 'Lets Claude write pass 2.') + pairRow() + UNDO);
+    },
+    // Scene W, expanded by the photographer; undone: pass 2 written, then undone (constructed)
+    Wx: function (undone) {
+      var pass = undone ? [['Exposure', 0.33, 0.7], ['Whites', 0, 15]] : C_PASS;
+      var whole = undone ? P_WHOLE : C_WHOLE;
+      var guard = undone ? ['undone', 'Pass undone: highlight clipping went over the limit.'] : OK;
+      var marks = undone ? { 0: 'green', 1: 'corrected', 2: 'undone' } : TL_C.marks;
+      return deckX(left({ glyph: G.working, sentence: 'Claude is working. Nothing needed from you.', line2: 'Claude is looking at the result',
+        band: IDLINE, bandId: true, tl: { max: 6, done: [0, 1, 2], current: 2, ring: 'working', marks: marks, label: 'pass 2 of 6' } }),
+        cDiffs(2, pass, whole, guard, undone),
+        secondary('Accept', ACCEPT_RUN) + abortRow() + UNDO);
+    },
+    // Cap reached (constructed: pass 6 of 6): stage awaiting_claude with pass == max_passes, read as your turn on the
+    // deck side (both are payload fields); the engine's cap note (hud-actions.ts:290) is left out for the deck (field 12).
+    Cap: function () {
+      return deckX(left({ glyph: G.turn, sentence: 'Your turn: all 6 passes are used.', line2: IDLINE,
+        tl: { max: 6, done: [0, 1, 2, 3, 4, 5, 6], current: 6, ring: 'accent', marks: { 0: 'green', 1: 'green', 2: 'green', 3: 'green', 4: 'green', 5: 'green', 6: 'green' }, label: 'pass 6 of 6' } }),
+        cDiffs(6, [['Clarity', 3, 4], ['Vibrance', 12, 13]], [['Profile', 'Camera Neutral', 'Adobe Landscape'], ['Highlights', -21, -41], ['Shadows', 10, 20], ['Clarity', 2, 4], ['Vibrance', 0, 13]], OK),
+        primary('Accept', ACCEPT_C) + abortRow() + UNDO);
+    },
+    // Scene D, Claude disconnected (drawn assuming a host that outlives the engine)
+    D: function () {
+      return deckX(left({ glyph: G.problem, sentence: 'Claude is not connected. Your edit so far stays.', line2: IDLINE,
+        tl: { max: 6, done: [0, 1, 2], current: 2, ring: 'unknown', marks: TL_C.marks, label: 'pass 2 of 6' } }),
+        '<div class="col c"><div class="way"><div class="a">To undo it: Develop &gt; Snapshots &gt;</div><div class="b">' + SNAP + '</div>' +
+        '<div class="c">Each step in History starts with “AVG 4f2a1c”.</div></div></div>',
+        offBtn('Accept') + abortRow('off', '') + '<div class="conseq">Off until Claude is connected.</div>');
+    },
+    // Scene W, collapsed: the status words lead; Accept is text-only in text2; one text3 phrase for Abort
+    Wk: function () {
+      return bar(G.working, '<span class="words"><b>Working</b> · pass 2 of 6 · Claude is looking at the result · <span class="fid">' + ID + '</span></span>',
+        { t: 'Abort puts the pre-session snapshot back.' },
+        '<div class="rcol"><div class="btn textonly" title="Ends the edit after Claude’s current step.">Accept</div><div class="btn abort">Abort</div></div>');
+    },
+    // Scene C, collapsed: the resting form of a turn (the deck does not open by itself, open question 1)
+    Ck: function () {
+      return bar(G.turn, '<span class="words turn15"><b>Your turn: Claude thinks the edit is done.</b> · <span class="fid">' + ID + '</span></span>',
+        { t: 'Accept ends the edit; the sliders stay.&nbsp;&nbsp;Abort puts the pre-session snapshot back.' },
+        '<div class="rcol"><div class="btn primary" style="width:96px;justify-content:center">Accept</div><div class="btn abort">Abort</div></div>');
+    },
+    // Scene V, collapsed: the resting form of the pick; the primary opens the cards
+    Vk: function () {
+      return bar(G.turn, '<span class="words turn15"><b>Your turn: pick a copy, or tell Claude which one.</b> · <span class="fid">' + ID + ' · 3 copies</span></span>',
+        { t: 'Abort leaves the master as it was; the copies stay in the catalog.' },
+        '<div class="rcol"><div class="btn primary" style="justify-content:center">Show the copies</div><div class="btn abort">Abort</div></div>');
+    },
+    // Done (accepted), collapsed, with a close button. The engine's note ("Accepted: the edit is kept.", hud-actions.ts:224)
+    // repeats HEADLINE.accepted in Converge, so it is not shown; the Variants note adds the copies and is shown.
+    Done: function () {
+      return bar(G.done, '<span class="words"><b>Done: the edit is kept.</b> · <span class="fid">' + ID + '</span></span>',
+        { t: 'To undo it: Develop &gt; Snapshots &gt; ' + SNAP, u: true },
+        '<div class="close">' + G.close + '</div>');
+    }
+  };
+
+  // Local stage fixes, pending the lead's stage.js (open question 7): the histogram's focal length is in neither the scene
+  // data nor the payload, so it is blanked; a copy's Basic values are set to what the real run holds after pass 0 and its
+  // corrections (20261001-d4247b.json passes n 0, settings_after: B Highlights −41, Shadows +20, Blacks +5, Vibrance +10;
+  // C Vibrance +10). The stage gives the copies the pre-session values instead of the baseline, and B Blacks −15.
+  var STAGE_FIX = { B: { Highlights: -41, Shadows: 20, Blacks: 5, Vibrance: 10 }, C: { Vibrance: 10 } };
+  function fixStage(root, opts) {
+    var hi = root.querySelectorAll('.lr-histinfo span');
+    if (hi[1]) hi[1].textContent = '';
+    var fix = opts.scene === 'variants' && STAGE_FIX[opts.selected];
+    if (fix) Object.keys(fix).forEach(function (k) {
+      var row = root.querySelector('.lr-brow[data-slider="' + k + '"]'), v = fix[k];
+      if (!row) return;
+      row.querySelector('.val').textContent = v === 0 ? '0' : (v > 0 ? '+' : '-') + Math.abs(v);
+      row.querySelector('.lr-thumb').style.left = ((v + 100) / 200 * 150).toFixed(1) + 'px';
+    });
+  }
+  function mount(rootId, opts, deckHtml) {
+    var root = document.getElementById(rootId);
+    window.renderLightroom(root, opts);
+    fixStage(root, opts);
+    root.insertAdjacentHTML('beforeend', deckHtml);
+  }
+
+  // in-context frames. Scene V: Lightroom's selection is left as the gateway left it, on copy C, the last copy pass 0
+  // selected (variants.ts:38 runs A, B, C in order; copyPass0 calls focus(), variants.ts:74, which selects the copy,
+  // targets.ts:88) [inference]. Choosing card B does not select it (spec v2 E12: hud_show is "no in v1").
+  mount('lr-v', { scene: 'variants', selected: 'C' }, DECKS.VB());
+  mount('lr-w', { scene: 'converge' }, DECKS.Wk());
+
+  // states sheets
+  var SHEET1 = [
+    ['V', 'Variants pick, expanded, with keyboard focus', 'Scene V. Nothing chosen yet, so there is no primary; Accept is absent until a copy is picked (the engine refuses it). The deck has keyboard focus (on card A, by Tab): a 2 px text ring and no caret, so focus is not a choice. Only with focus does it draw the 1 / 2 / 3 keycaps and "press 1, 2 or 3".', { scene: 'variants', selected: 'C' }, DECKS.V0(true)],
+    ['V', 'Copy B chosen', 'Scene V, after a click on card B (focus went back to Lightroom, so no keycaps). 1 px accent ring plus a caret on the chosen card. One primary: Continue on copy B. The way back is the Variants form: the master is not edited; the copies stay.', { scene: 'variants', selected: 'C' }, DECKS.VB()],
+    ['V', 'After Continue', 'Scene V, Pick B done. Stage awaiting_claude with the engine’s note, which becomes the sentence (info glyph). The identity line names the copy; the timeline reads "copy B · pass 0". The cards are the list the deck kept from awaiting_pick (proposed). Accept is back, as a secondary.', { scene: 'variants', selected: 'B' }, DECKS.Vp()],
+    ['C', 'Converged, expanded', 'Scene C, opened by the photographer. The last pass and the whole edit (proposed) as Lightroom slider rows: one thumb at the new value, the accent segment from the old one. One primary: Accept.', { scene: 'converge' }, DECKS.C()],
+    ['P', 'Approve, expanded', 'Scene P (approve each pass). One primary: Approve pass 1. Accept stays on this turn, as today, next to Abort (consequences in their tooltips).', { scene: 'converge' }, DECKS.P()],
+    ['P', 'A busy pass (constructed: 12 rows, the payload’s maximum)', 'This pass flows into a second sub-column; each block ends in "+n more" when its slots run out. The pass was clamped: the "held" mark, a bar between two stops.', { scene: 'converge' }, DECKS.Pbusy()],
+    ['W', 'Working, collapsed to 44 px', 'Scene W. The bar replaces the filmstrip header; every thumbnail stays whole and clickable. It asks nothing: the status leads, Accept is text-only, Abort stays in reach with one consequence phrase.', { scene: 'converge' }, DECKS.Wk()],
+    ['W', 'Working, expanded by the photographer', 'Scene W, after a click on the triangle. The last pass (pass 2 data as in C), Accept as a secondary, Abort, the way back.', { scene: 'converge' }, DECKS.Wx(false)]
+  ];
+  var SHEET2 = [
+    ['Cap', 'All passes used (constructed: pass 6 of 6)', 'Stage awaiting_claude with pass equal to max_passes: the deck reads it as your turn (amber dot, proposed sentence) with Accept as the primary.', { scene: 'converge' }, DECKS.Cap()],
+    ['C', 'Your turn at rest, collapsed (the default)', 'Scene C. The deck does not open by itself (open question 1): the turn, its primary and Abort, with their consequences, sit in the 44 px bar.', { scene: 'converge' }, DECKS.Ck()],
+    ['D', 'Claude disconnected, expanded (drawn assuming a host that outlives the engine)', 'Scene D. Both buttons are off, with one line saying why; the way back is the largest text on the deck.', { scene: 'converge' }, DECKS.D()],
+    ['C', 'Keyboard focus on the primary', 'Scene C after "Show Vision Gateway HUD" gave the deck focus. 2 px text ring, 2 px out; the same ring on every control. With focus, the primary shows its Enter keycap.', { scene: 'converge' }, DECKS.C('focus')],
+    ['C', 'Abort armed', 'Scene C, after one Ctrl+Backspace. A second press within 3 s aborts; Esc or 3 s cancels. Enter is ignored while armed, so the primary has no keycap. Pointer Abort is one click.', { scene: 'converge' }, DECKS.C('armed')],
+    ['C', 'Accept sent', 'Scene C, right after Accept. Working ring, CLICK.sent as the sentence; buttons off until Claude answers the click or 10 s pass.', { scene: 'converge' }, DECKS.C('sent')],
+    ['W', 'A pass undone (constructed)', 'Pass 2 was written, then undone: its rows in text3 with the thumb at the old value, the new value struck and "not kept"; triangle in the timeline and on the guardrail line. Pass 1 had a correction (half-filled mark).', { scene: 'converge' }, DECKS.Wx(true)],
+    ['Done', 'Accepted, collapsed', 'HEADLINE.accepted with the check glyph; the way back stays. The × (or Esc) closes the bar.', { scene: 'converge' }, DECKS.Done()],
+    ['V', 'Your turn to pick, at rest (the default)', 'Scene V collapsed. The primary, Show the copies, opens the cards; the Variants way back sits in the bar.', { scene: 'variants', selected: 'C' }, DECKS.Vk()]
+  ];
+  function fill(sheetId, list, offset) {
+    var sheet = document.getElementById(sheetId);
+    list.forEach(function (s, i) {
+      var k = offset + i, id = 'st-' + k;
+      sheet.insertAdjacentHTML('beforeend', '<div class="cap"><b>' + s[0] + ' · ' + s[1] + '.</b> ' + s[2] + '</div><div class="crop" id="crop-' + k + '"><div id="' + id + '"></div></div>');
+      mount(id, s[3], s[4]);
+    });
+  }
+  fill('sheet1', SHEET1, 0);
+  fill('sheet2', SHEET2, SHEET1.length);
+})();
+</script>
+</body>
+</html>

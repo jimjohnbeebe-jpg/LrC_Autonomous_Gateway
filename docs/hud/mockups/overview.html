@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=2400">
+<title>HUD Options Overview</title>
+<style>
+  @font-face { font-family: "InterLocal"; src: url("../fonts/inter.woff2") format("woff2"); font-weight: 100 900; }
+  :root {
+    --bg: #121314; --card: #1a1b1d; --line: #2a2b2e; --line2: #34363a;
+    --text: #e4e6e8; --text2: #aeb2b6; --text3: #8d9196; --accent: #eda447;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); }
+  body { font-family: "InterLocal", system-ui, sans-serif; color: var(--text); width: 2400px; -webkit-font-smoothing: antialiased; }
+  #sheet { width: 2400px; padding: 56px 48px 48px; }
+
+  header { display: flex; align-items: baseline; justify-content: space-between; padding-bottom: 28px; border-bottom: 1px solid var(--line); }
+  header h1 { font-size: 34px; font-weight: 600; letter-spacing: -0.01em; }
+  header h1 span { color: var(--text3); font-weight: 500; }
+  header .meta { font-size: 15px; color: var(--text3); text-align: right; line-height: 1.5; }
+
+  .row { display: grid; grid-template-columns: 1280px 1fr; gap: 40px; padding: 40px 0; border-bottom: 1px solid var(--line); }
+  .shot { width: 1280px; height: 720px; border: 1px solid var(--line2); border-radius: 6px; overflow: hidden; background: #000; }
+  .shot img { display: block; width: 1280px; height: 720px; }
+  .shotcap { margin-top: 10px; font-size: 14px; color: var(--text3); }
+  .shotcap code { font-family: inherit; color: var(--text2); }
+
+  .cap { display: flex; flex-direction: column; min-width: 0; }
+  .name { display: flex; align-items: baseline; gap: 14px; }
+  .name .letter { font-size: 15px; font-weight: 600; color: var(--accent); letter-spacing: 0.06em; text-transform: uppercase; }
+  .name h2 { font-size: 36px; font-weight: 600; letter-spacing: -0.01em; }
+  .placement { margin-top: 8px; font-size: 18px; color: var(--text); line-height: 1.45; }
+  dl { margin-top: 18px; display: grid; grid-template-columns: 132px 1fr; row-gap: 12px; column-gap: 16px; }
+  dt { font-size: 13px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; padding-top: 3px; }
+  dd { font-size: 16px; line-height: 1.5; color: var(--text2); }
+  dd b { color: var(--text); font-weight: 600; }
+
+  .closeups { margin-top: 22px; display: flex; flex-direction: column; gap: 14px; }
+  .cl { display: flex; flex-direction: column; gap: 6px; }
+  .cl .lbl { font-size: 13px; color: var(--text3); }
+  .cl .lbl b { color: var(--text2); font-weight: 600; }
+  .crop { border: 1px solid var(--line2); border-radius: 4px; background-repeat: no-repeat; flex: none; }
+  .pair { display: flex; gap: 18px; align-items: flex-start; }
+
+  footer { padding-top: 32px; display: flex; justify-content: space-between; align-items: baseline; }
+  footer .lean { font-size: 22px; font-weight: 600; color: var(--text); }
+  footer .lean span { color: var(--text3); font-weight: 500; }
+  footer .src { font-size: 14px; color: var(--text3); text-align: right; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div id="sheet">
+
+  <header>
+    <h1>LrC-AVG HUD <span>· three layout options</span></h1>
+    <div class="meta">Drawn over a mockup of Lightroom Classic's Develop module at 1920 x 1080, not over Lightroom itself; all geometry is [stage].<br>
+      Left: the in-context frame at 2/3 size. Right: close-ups cropped from the same frames at 1:1 unless marked. 2026-10-04.</div>
+  </header>
+
+  <!-- ===== Option A ===== -->
+  <section class="row" id="row-a">
+    <div>
+      <div class="shot"><img src="option-a-context.png" alt="Option A Island at rest in Lightroom's top band"></div>
+      <div class="shotcap"><code>option-a-context.png</code>: Scene C at rest, "Your turn: Claude thinks the edit is done."</div>
+    </div>
+    <div class="cap">
+      <div class="name"><span class="letter">Option A</span><h2>Island</h2></div>
+      <p class="placement">One row in Lightroom's black top band, between the identity plate and the module picker.</p>
+      <dl>
+        <dt>Best case</dt>
+        <dd><b>Never in the way.</b> At rest it covers neither the photo nor any panel. On your turn, the sentence and its actions sit in one line at the top of the screen, and the details drop down only on request.</dd>
+        <dt>Trade-off</dt>
+        <dd><b>The least visible controls.</b> While Claude works and during a pick, Abort is not in the row: it is one click under the chevron, or Ctrl+Backspace. The 54 x 36 copy chips remind you of the copies but are too small to judge them.</dd>
+      </dl>
+      <div class="closeups">
+        <div class="cl"><span class="lbl"><b>At rest</b> · the island in the top band, 1:1</span>
+          <div class="crop" style="width:600px;height:58px;background-image:url(option-a-context.png);background-position:-660px -56px;"></div></div>
+        <div class="cl"><span class="lbl"><b>Details open</b> · Scene P, This pass, 0.75x (<code style="font-family:inherit">option-a-context-open.png</code>)</span>
+          <div class="crop" style="width:493.5px;height:384px;background-image:url(option-a-context-open.png);background-size:1440px 810px;background-position:-474px -45px;"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Option B ===== -->
+  <section class="row" id="row-b">
+    <div>
+      <div class="shot"><img src="option-b-context.png" alt="Option B Rail as the full rail over the left panel column"></div>
+      <div class="shotcap"><code>option-b-context.png</code>: Scene P, full rail (opened by the photographer), "Your turn: approve pass 1 so Claude can go on."</div>
+    </div>
+    <div class="cap">
+      <div class="name"><span class="letter">Option B</span><h2>Rail</h2></div>
+      <p class="placement">A Lightroom-style panel stack over the left panel column, where Navigator, Presets, Snapshots and History sit.</p>
+      <dl>
+        <dt>Best case</dt>
+        <dd><b>The richest detail, and the most native.</b> It uses Lightroom's own panel chrome and slider rows, and an Undo panel that names the pre-session snapshot. Abort sits at the same screen position in every state and in both forms.</dd>
+        <dt>Trade-off</dt>
+        <dd><b>The full rail covers Snapshots and History</b>, the photographer's own way back. So it docks by default, never expands by itself, and restates the undo path in the rail.</dd>
+      </dl>
+      <div class="closeups">
+        <div class="pair">
+          <div class="cl"><span class="lbl"><b>Full rail</b> · top panels, 1:1</span>
+            <div class="crop" style="width:300px;height:408px;background-image:url(option-b-context.png);background-position:0 -112px;"></div></div>
+          <div class="cl"><span class="lbl"><b>Docked</b> (the default) · Scene P, 1:1 (<code style="font-family:inherit">option-b-context-collapsed.png</code>)</span>
+            <div class="crop" style="width:300px;height:300px;background-image:url(option-b-context-collapsed.png);background-position:0 -636px;"></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Option C ===== -->
+  <section class="row" id="row-c">
+    <div>
+      <div class="shot"><img src="option-c-context.png" alt="Option C Deck opened over the filmstrip band with three copy cards"></div>
+      <div class="shotcap"><code>option-c-context.png</code>: Scene V, opened by the photographer, copy B chosen. "Your turn: pick a copy, or tell Claude which one."</div>
+    </div>
+    <div class="cap">
+      <div class="name"><span class="letter">Option C</span><h2>Deck</h2></div>
+      <p class="placement">A wide, low bar over the filmstrip band at the bottom: 44 px at rest, 144 px when opened.</p>
+      <dl>
+        <dt>Best case</dt>
+        <dd><b>Variants.</b> The three copies sit side by side under the photo at 138 x 92. Each card shows what that copy holds and how its clipping check came out. Picking takes one click plus Enter.</dd>
+        <dt>Trade-off</dt>
+        <dd><b>It covers the filmstrip</b>, where the virtual copies live, and hides the filmstrip header's controls. It must show the copies itself. Lightroom's filmstrip height is assumed, not measured [unverified].</dd>
+      </dl>
+      <div class="closeups">
+        <div class="cl"><span class="lbl"><b>Opened</b> · Scene V: the turn column and the action column, 1:1</span>
+          <div class="pair">
+            <div class="crop" style="width:380px;height:144px;background-image:url(option-c-context.png);background-position:0 -936px;"></div>
+            <div class="crop" style="width:300px;height:144px;background-image:url(option-c-context.png);background-position:-1620px -936px;"></div>
+          </div></div>
+        <div class="cl"><span class="lbl"><b>Opened</b> · cards A and B (B chosen); card C is in the frame on the left, 1:1</span>
+          <div class="crop" style="width:768px;height:144px;background-image:url(option-c-context.png);background-position:-424px -936px;"></div></div>
+        <div class="cl"><span class="lbl"><b>At rest</b> · Scene W, the 44 px bar, ends shown 1:1 (<code style="font-family:inherit">option-c-context-working.png</code>)</span>
+          <div class="pair">
+            <div class="crop" style="width:490px;height:46px;background-image:url(option-c-context-working.png);background-position:0 -935px;"></div>
+            <div class="crop" style="width:440px;height:46px;background-image:url(option-c-context-working.png);background-position:-1340px -935px;"></div>
+          </div></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="lean">Lead's leaning: A Island, with B's slider rows in its details <span>[inference; Jim decides]</span></div>
+    <div class="src">Captions summarise <code style="font-family:inherit">option-a/NOTES.md</code> §9, <code style="font-family:inherit">option-b/NOTES.md</code> Trade-offs and <code style="font-family:inherit">option-c/NOTES.md</code> §8.<br>
+      Decisions D1-D5: <code style="font-family:inherit">lrc-avg-hud-spec-v2.md</code> §2. Every state: <code style="font-family:inherit">option-{a,b,c}-states*.png</code>.</div>
+  </footer>
+
+</div>
+</body>
+</html>

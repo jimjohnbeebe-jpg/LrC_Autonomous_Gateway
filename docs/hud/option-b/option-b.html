@@ -1,0 +1,666 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>HUD Option B Rail</title>
+<link rel="stylesheet" href="../stage/stage.css">
+<style>
+  html, body { margin: 0; background: #000; }
+  body { width: 1920px; }
+  .frame { position: relative; margin: 0 0 40px 0; }
+  .ctx { width: 1920px; height: 1080px; }
+
+  /* ---------- close-up sheets ---------- */
+  .sheet { background: #2b2b2b; display: inline-flex; gap: 40px; padding: 32px; font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; align-items: flex-start; }
+  .sheet .col { display: flex; flex-direction: column; gap: 12px; }
+  .sheet .cap { font-size: 12px; line-height: 16px; color: #c8c8c8; font-weight: 500; white-space: nowrap; }
+  .sheet .cap b { font-weight: 700; color: #c8c8c8; }
+  .sheet .cap.sub { margin-top: -8px; font-weight: 400; }
+  .sheet .slot { position: relative; width: 300px; height: 824px; }
+  .sheet .slot.panel { width: 284px; height: auto; }
+  .sheet .slot.short { height: 516px; }
+
+  /* =====================================================================
+     Rail tokens (Native set + the refinements listed in NOTES.md)
+     ===================================================================== */
+  .rb, .rbp, .rbx {
+    --hdr: #292929;      /* panel header */
+    --body: #404040;     /* panel body */
+    --text: #d0d0d0;
+    --text2: #adadad;
+    --hdrtext: #b0b0b0;
+    --hi: #e6ebef;
+    --accent: #f0ad4e;   /* your turn, and nothing else */
+    --onacc: #1d1305;
+    --danger: #f2937a;   /* >= 13 px semibold on body; any size on --hdr (6.39:1, NOTES refinements) */
+    --track: #2b2b2b;
+    --thumb: #cfcfcf;
+    /* refinements (NOTES.md "Token refinements") */
+    --frame: #161616;    /* panel separators, gutters, edge (F23 #0f0f0f-#161616) */
+    --line: #353535;     /* hairline inside a panel body */
+    --btn: #555555;      /* secondary button fill; chosen card fill; scroll thumb */
+    --dis: #8a8a8a;      /* disabled control label only */
+    --edgetri: #5e5e5e;  /* Lightroom's panel-edge triangle (stage.css .lr-tri) */
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    font-feature-settings: 'tnum' 0;   /* Inter's tnum also widens the hyphen (8 px vs 6 px at 12 px); numbers opt in below */
+    -webkit-font-smoothing: antialiased;
+    color: var(--text);
+    font-size: 12px;
+    line-height: 16px;
+    cursor: default;
+  }
+  .rb *, .rbp *, .rbx * { box-sizing: border-box; }
+  .rb svg, .rbp svg, .rbx svg { display: block; flex: none; }
+
+  /* the full rail: exactly LR_REGIONS.leftPanel, 300 x 824 (height set inline for the short-window frame) */
+  .rb { position: absolute; width: 300px; height: 824px; background: var(--frame); z-index: 5; }
+  .rb-edge { position: absolute; left: 0; top: 0; width: 10px; height: 100%; background: var(--frame); }
+  .rb-edge .et { position: absolute; left: 3px; }
+  .rb-col { position: absolute; left: 11px; top: 0; width: 284px; height: 788px; background: var(--body); overflow: hidden; display: flex; flex-direction: column; }
+  /* info panels scroll; the action panel (.rb-bot) is anchored to the column's bottom edge, in both forms */
+  .rb-scroll { position: relative; flex: 1 1 0; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .rb-scroll > * { flex: none; }
+  .rb-bot { position: relative; flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; background: var(--body); }
+  .rb .rb-bot { box-shadow: 0 -1px 0 var(--frame); margin-top: 1px; }
+  .rb-bot > * { flex: none; }
+  .rb-bot > .rb-cardwrap { flex: 0 1 auto; min-height: 0; overflow: hidden; position: relative; }
+  .rb-sbar { position: absolute; right: 1px; width: 4px; border-radius: 2px; background: var(--btn); z-index: 3; }
+  .rb-strip { position: absolute; left: 296px; top: 0; width: 2px; height: 100%; background: var(--accent); }
+  .rb-foot { position: absolute; left: 0; width: 300px; height: 36px; background: var(--hdr); border-top: 1px solid var(--frame);
+    display: flex; align-items: center; gap: 8px; padding-left: 20px; font-size: 12px; color: var(--text); }
+  .rb-foot.bad { color: var(--hi); }
+  .rb-foot .g { color: var(--text2); }
+  .rb-foot.bad .g { color: var(--danger); }
+
+  /* title row: 10 + tri 8 + 6 + name 73 + [auto] + chip <= 106 + 6 + icons 62 + 4 = 275 <= 284 (NOTES "Title row") */
+  .rb-title { height: 28px; flex: none; background: var(--hdr); display: flex; align-items: center; padding: 0 4px 0 10px; gap: 6px; white-space: nowrap; }
+  .rb-title > * { flex: none; }
+  .rb-title .name { font-size: 13px; font-weight: 600; color: var(--hi); letter-spacing: 0.1px; margin-left: 2px; }
+  .rb-icos { display: flex; gap: 4px; }
+  .rb-ico { flex: none; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; color: var(--text2); }
+  .rb-ico.on { color: var(--hi); }
+  .rb-chip { margin-left: auto; height: 20px; display: flex; align-items: center; gap: 4px; padding: 0 6px; border-radius: 10px; font-size: 11px; font-weight: 600;
+    box-shadow: inset 0 0 0 1px var(--body); white-space: nowrap; }
+  .rb-chip svg { width: 10px; height: 10px; }
+  .rb-chip.work { color: var(--text); }
+  .rb-chip.turn { color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .rb-chip.done { color: var(--text); }
+  .rb-chip.bad  { color: var(--danger); box-shadow: inset 0 0 0 1px var(--danger); }
+
+  /* top block of the action panel: headline or turn sentence, step line, note line */
+  .rb-top { padding: 12px 12px 0; }
+  .rb-top.end { padding-bottom: 12px; }
+  .rb-say { font-size: 15px; font-weight: 600; line-height: 20px; color: var(--hi); }
+  .rb-say.calm { font-size: 13px; font-weight: 500; line-height: 18px; color: var(--text); }
+  .rb-sayrow { display: flex; gap: 8px; align-items: flex-start; }
+  .rb-sayrow .g { margin-top: 3px; color: var(--text2); }
+  .rb-sayrow .g.bad { color: var(--danger); }
+  .rb-sayrow .g.act { color: var(--hi); }
+  .rb-step { margin-top: 4px; color: var(--text2); }
+  .rb-note { margin-top: 6px; display: flex; gap: 6px; align-items: flex-start; color: var(--text); }
+  .rb-note .tx { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+  .rb-ind { padding-left: 22px; }   /* aligns with text after a 14 px status glyph */
+  .rb-undoline .nm { color: var(--hi); font-feature-settings: 'tnum' 0; white-space: nowrap; }
+
+  /* action block: hints (focus only) sit ABOVE the buttons, so focus never moves a button; Abort is always the last row */
+  .rb-actblk { background: var(--body); padding: 12px; }
+  .rb-primary { position: relative; height: 32px; border-radius: 3px; background: var(--accent); color: var(--onacc);
+    font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 1px var(--frame); }
+  .rb-primary .rb-key { position: absolute; right: 8px; top: 8px; color: var(--onacc); box-shadow: inset 0 0 0 1px var(--onacc); }
+  .rb-primary.off { background: transparent; color: var(--dis); box-shadow: inset 0 0 0 1px var(--btn); }
+  .focus { outline: 2px solid var(--hi); outline-offset: 2px; }
+  .rb-pcons { margin-top: 6px; color: var(--text2); }
+  .rb-acts { margin-top: 8px; border-top: 1px solid var(--line); }
+  .rb-acts.first { margin-top: 0; border-top: 0; }
+  .rb-acts.first .rb-act:first-child { margin-top: 0; }
+  .rb-act { display: grid; grid-template-columns: 72px 1fr; column-gap: 10px; margin-top: 8px; height: 40px; }
+  .rb-btn { height: 24px; border-radius: 3px; background: var(--btn); color: var(--hi); font-size: 13px; font-weight: 500;
+    display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 1px var(--frame); }
+  .rb-btn.danger { background: transparent; color: var(--danger); font-weight: 600; box-shadow: inset 0 0 0 1px var(--danger); }
+  .rb-btn.off { background: transparent; color: var(--dis); font-weight: 500; box-shadow: inset 0 0 0 1px var(--btn); }
+  .rb-cons { color: var(--text2); padding-top: 4px; }
+  .rb-keys { margin: 0 0 10px; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11px; line-height: 16px; color: var(--text2); }
+  .rb-keys span { display: inline-flex; align-items: center; gap: 4px; }
+  .rb-key { display: inline-flex; align-items: center; height: 16px; padding: 0 4px; border-radius: 3px; font-size: 11px; font-weight: 500; line-height: 16px;
+    color: var(--text2); box-shadow: inset 0 0 0 1px var(--text2); font-feature-settings: 'tnum' 1; }
+
+  /* identity */
+  .rb-id { padding: 8px 12px 12px; }
+  .rb-id .fn { font-size: 13px; font-weight: 500; line-height: 20px; color: var(--hi); }
+  .rb-id .m { color: var(--text2); }
+
+  /* Lightroom panel header */
+  .rb-ph { position: relative; height: 24px; background: var(--hdr); border-top: 1px solid var(--frame); display: flex; align-items: center;
+    padding: 0 10px 0 24px; color: var(--hdrtext); font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .rb-ph .tw { position: absolute; left: 9px; top: 9px; color: var(--text2); }
+  .rb-ph .tw.r { left: 11px; top: 7px; }
+  .rb-ph .rt { margin-left: auto; font-size: 11px; color: var(--text2); font-weight: 500; display: flex; align-items: center; gap: 4px; }
+  .rb-ph .rt.warn { color: var(--hi); }
+  /* tabular figures on every number */
+  .rb .n, .rbp .n, .rbx .n, .rb-row .av, .rb-row .d, .rb-tip, .rb-ph .rt, .rb-step, .rb-say, .rb-primary, .rb-chip, .rb-card .sum { font-feature-settings: 'tnum' 1; }
+
+  /* segmented control */
+  .rb-seg { margin: 8px 12px 4px; height: 24px; display: flex; border-radius: 3px; background: var(--track); padding: 2px; }
+  .rb-seg span { flex: 1; display: flex; align-items: center; justify-content: center; border-radius: 2px; font-size: 12px; font-weight: 500; color: var(--text2); }
+  .rb-seg span.on { background: var(--btn); color: var(--hi); font-weight: 600; box-shadow: 0 0 0 1px var(--frame); }
+
+  /* Changes rows, drawn like Lightroom's Basic panel. Grid (column x): label right-aligned to 70 (one line up to 64 px, else
+     two lines), track 76-196 (120 px), after value 202-237 (right-aligned, where Lightroom puts its value), delta 243-278;
+     before -> after only on hover or focus (tooltip). NOTES "Slider rows". */
+  .rb-rows { padding: 4px 0 4px; }
+  .rb-row { position: relative; height: 24px; }
+  .rb-row .lab { position: absolute; left: 0; width: 70px; top: 4px; text-align: right; color: var(--text); white-space: nowrap; }
+  .rb-row .trk { position: absolute; left: 76px; width: 120px; top: 11px; height: 2px; background: var(--track); }
+  .rb-row .seg { position: absolute; top: 10px; height: 4px; background: var(--accent); opacity: .6; }
+  .rb-row .bm { position: absolute; top: 5px; width: 1px; height: 8px; background: var(--text2); }   /* 6 px above the groove: clears the thumb */
+  .rb-row .th { position: absolute; top: 12px; margin-left: -5px; }
+  .rb-row .av { position: absolute; left: 202px; width: 35px; top: 4px; text-align: right; color: var(--text); white-space: nowrap; }
+  .rb-row .d { position: absolute; left: 243px; width: 35px; top: 4px; text-align: right; color: var(--hi); font-weight: 600; white-space: nowrap; }
+  .rb-row.hov { background: #4a4a4a; }
+  .rb-row.two { height: 40px; }
+  .rb-row.two .lab { left: 12px; width: auto; text-align: left; top: 2px; }
+  .rb-row.two .trk { top: 27px; } .rb-row.two .seg { top: 26px; } .rb-row.two .bm { top: 21px; } .rb-row.two .th { top: 28px; }
+  .rb-row.two .av, .rb-row.two .d { top: 20px; }
+  .rb-row.txt { height: 40px; }
+  .rb-row.txt .val { position: absolute; left: 76px; top: 4px; color: var(--text); white-space: nowrap; }
+  .rb-row.txt .was { position: absolute; left: 76px; top: 20px; color: var(--text2); white-space: nowrap; }
+  .rb-row.chk .box { position: absolute; left: 12px; top: 6px; }
+  .rb-row.chk .lab, .rb-row.crv .lab { left: 30px; width: auto; text-align: left; }
+  .rb-row.crv .lab { left: 12px; }
+  .rb-row .st { position: absolute; right: 6px; top: 4px; color: var(--text2); white-space: nowrap; display: flex; align-items: center; gap: 2px; height: 16px; }
+  .rb-tip { position: absolute; z-index: 4; height: 22px; padding: 0 8px; display: flex; align-items: center; gap: 4px; background: var(--hdr);
+    box-shadow: 0 0 0 1px var(--frame), 0 2px 6px rgba(0,0,0,.4); color: var(--text); white-space: nowrap; border-radius: 2px; }
+  .rb-tip svg { color: var(--text2); }
+  .rb-sub { height: 22px; padding: 6px 12px 0; font-weight: 500; color: var(--text2); white-space: nowrap; }
+  .rb-rows > .rb-sub:not(:first-child) { border-top: 1px solid var(--line); margin-top: 4px; }
+
+  .rb-clip { display: flex; gap: 8px; align-items: flex-start; padding: 8px 12px 12px; border-top: 1px solid var(--line); margin-top: 4px; }
+  .rb-clip .g { margin-top: 1px; color: var(--text2); }
+
+  /* undo */
+  .rb-undo { padding: 8px 12px 12px; }
+  .rb-undo .where { color: var(--text2); margin-bottom: 2px; }
+  .rb-undo .snap { height: 20px; line-height: 20px; color: var(--hi); font-feature-settings: 'tnum' 0; white-space: nowrap; }
+  .rb-undo .h { margin-top: 6px; color: var(--text2); }
+  .rb-undo .h b { font-weight: 400; color: var(--text); white-space: nowrap; }
+  .rb-link { margin-top: 8px; height: 24px; border-radius: 3px; display: flex; align-items: center; justify-content: center; gap: 6px;
+    background: var(--btn); color: var(--hi); font-size: 12px; font-weight: 500; box-shadow: 0 0 0 1px var(--frame); }
+
+  /* settings */
+  .rb-set { padding: 8px 12px 12px; }
+  .rb-set div + div { margin-top: 2px; }
+  .rb-set .m { color: var(--text2); }
+
+  /* Pick a Copy: full-width list rows; a 6 px gutter on the right keeps every card clear of the scroll thumb */
+  .rb-cards { padding: 4px 6px 4px 0; }
+  .rb-card { position: relative; display: flex; gap: 8px; padding: 6px 0 6px 12px; }
+  .rb-card + .rb-card { box-shadow: 0 -1px 0 var(--line); }
+  /* chosen: Lightroom's selected-row look (lighter fill + 1 px hi frame); keyboard focus keeps the 2 px ring */
+  .rb-card.sel { background: var(--btn); box-shadow: inset 0 0 0 1px var(--hi); }
+  .rb-card.sel + .rb-card { box-shadow: none; }
+  .rb-card .im { flex: none; width: 80px; height: 53px; overflow: hidden; outline: 1px solid var(--frame); background: var(--frame); }
+  .rb-card .im img { width: 80px; height: 53px; display: block; object-fit: cover; }
+  /* docked: no panel header, 64 x 43 thumbnails, so the docked panel stays clear of Lightroom's Snapshots (NOTES Placement) */
+  .rb-cards.compact .im, .rb-cards.compact .im img { width: 64px; height: 43px; }
+  .rb-card .tx { flex: 1; min-width: 0; }
+  .rb-card .t { display: flex; align-items: center; justify-content: space-between; height: 20px; }
+  .rb-card .t b { font-size: 13px; font-weight: 600; color: var(--hi); }
+  .rb-card .t b em { font-style: normal; font-weight: 500; color: var(--text); }
+  .rb-card.sel .t b em { color: var(--hi); }
+  .rb-card.sel .rb-key { background: var(--hi); color: var(--onacc); box-shadow: none; font-weight: 600; }
+  .rb-card .sum { color: var(--text2); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+  .rb-card.sel .sum { color: var(--text); }   /* text2 on btn is 3.32:1; text on btn 4.83:1 */
+  .rb-card .sum .it { white-space: nowrap; }
+  .rb-card .gr { margin-top: 4px; color: var(--text); }
+  .rb-card .gr .g { display: inline-block; vertical-align: -1px; margin-right: 6px; color: var(--hi); }
+
+  /* docked: the title row + the action panel, at the bottom of Lightroom's own left column */
+  .rbp { position: absolute; width: 284px; background: var(--body); z-index: 5; box-shadow: 0 -1px 0 var(--frame); display: flex; flex-direction: column; }
+  .rbp .rb-strip { left: 285px; top: 0; height: 100%; }
+  /* close-up container */
+  .rbx { position: relative; width: 284px; background: var(--body); }
+</style>
+</head>
+<body>
+
+<!-- 1. in context, Scene P, full rail (the user expanded it with the dock glyph), rail not focused -->
+<div class="frame ctx" id="ctx-approve"><div id="lr-p"></div></div>
+<!-- 2. in context, Scene V as it first appears: docked (the default), no copy chosen, Lightroom still on copy C (Claude's last) -->
+<div class="frame ctx" id="ctx-variants"><div id="lr-v"></div></div>
+<!-- 3. in context, Scene P docked (the default form): Lightroom's Snapshots and History stay visible -->
+<div class="frame ctx" id="ctx-collapsed"><div id="lr-c"></div></div>
+
+<!-- 4. states sheet: W, P, V, D (full rail) -->
+<div class="frame sheet" id="states">
+  <div class="col"><div class="cap"><b>W</b> &middot; Working (awaiting_claude), full rail, pinned</div><div class="slot" id="s-w"></div></div>
+  <div class="col"><div class="cap"><b>P</b> &middot; Your turn: approve; rail has focus</div><div class="slot" id="s-p"></div></div>
+  <div class="col"><div class="cap"><b>V</b> &middot; Your turn: B chosen with 2; rail has focus</div><div class="slot" id="s-v"></div></div>
+  <div class="col"><div class="cap"><b>D</b> &middot; Claude disconnected (mid-edit)</div><div class="slot" id="s-d"></div></div>
+</div>
+
+<!-- 5. more states: C converged, Abort armed, Done, docked while working -->
+<div class="frame sheet" id="states-more">
+  <div class="col"><div class="cap"><b>C</b> &middot; Your turn: converged</div><div class="slot" id="s-c"></div></div>
+  <div class="col"><div class="cap"><b>W</b> &middot; Abort armed from the keyboard</div><div class="slot" id="s-arm"></div></div>
+  <div class="col"><div class="cap"><b>C</b> &middot; Done after Accept (accepted)</div><div class="slot" id="s-done"></div></div>
+  <div class="col"><div class="cap"><b>W</b> &middot; Docked (default), Claude working</div><div class="slot" id="s-wc" style="overflow:hidden"><div id="lr-wc" style="position:absolute;left:0;top:-112px"></div></div></div>
+</div>
+
+<!-- 6. extra states: note_level "act" (Abort failed, cap reached), P during another step, V in a shorter window, today's engine -->
+<div class="frame sheet" id="states-extra">
+  <div class="col"><div class="cap"><b>Act</b> &middot; Abort failed (note_level "act")</div><div class="slot" id="x-abf"></div></div>
+  <div class="col"><div class="cap"><b>Act</b> &middot; All passes used (cap_reached), docked</div><div class="slot" id="x-cap"></div></div>
+  <div class="col"><div class="cap"><b>P</b> &middot; approve_pass while a preview renders</div><div class="slot" id="x-pr"></div></div>
+  <div class="col"><div class="cap"><b>V</b> &middot; Shorter window: the cards scroll</div><div class="slot short" id="x-vs"></div></div>
+  <div class="col"><div class="cap"><b>P</b> &middot; Today's engine: the note repeats the sentence</div><div class="slot" id="x-today"></div></div>
+</div>
+
+<!-- 7. Changes panel close-ups -->
+<div class="frame sheet" id="rows">
+  <div class="col"><div class="cap"><b>P</b> &middot; Changes, This pass (Vibrance hovered)</div><div class="slot panel" id="r-this"></div>
+    <div class="cap" style="margin-top:28px">Changes folded, guardrail not green (mockup status)</div><div class="slot panel" id="r-fold"></div></div>
+  <div class="col"><div class="cap"><b>P</b> &middot; Changes, Whole edit (proposed)</div><div class="slot panel" id="r-whole"></div></div>
+  <div class="col"><div class="cap">Worst-case rows (mockup values), grouped</div><div class="slot panel" id="r-worst"></div>
+    <div class="cap" style="margin-top:12px">Fallback: a label with no short form</div><div class="slot panel" id="r-two"></div></div>
+  <div class="col"><div class="cap"><b>V</b> &middot; Pick a Copy: nothing chosen yet</div><div class="slot panel" id="r-card0"></div>
+    <div class="cap" style="margin-top:12px"><b>V</b> &middot; B chosen, rail has focus (keycaps shown)</div><div class="slot panel" id="r-card"></div></div>
+</div>
+
+<script src="../stage/stage.js"></script>
+<script>
+(function () {
+  'use strict';
+  var PHOTO = '../stage/photo.svg';
+  var SNAP = 'AVG pre-session 2026-10-04T18:42:07.311Z';
+
+  // ---------- glyphs ----------
+  var G = {
+    triD: '<svg width="8" height="5" viewBox="0 0 8 5"><path d="M0 0h8L4 5z" fill="currentColor"/></svg>',
+    triR: '<svg width="5" height="8" viewBox="0 0 5 8"><path d="M0 0v8l5-4z" fill="currentColor"/></svg>',
+    ring: '<svg width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.75" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="6" cy="6" r="1.6" fill="currentColor"/></svg>',
+    dot: '<svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="currentColor"/></svg>',
+    link: '<svg width="12" height="12" viewBox="0 0 12 12"><path d="M4.6 7.4l2.8-2.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M5.3 3.6l1.2-1.2a2.1 2.1 0 0 1 3 3L8.4 6.6" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M6.7 8.4L5.5 9.6a2.1 2.1 0 0 1-3-3l1.2-1.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>',
+    check: '<svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 6.4l2.6 2.6L10 3.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    okc: '<svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M4.2 7.2l1.9 1.9 3.8-4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    warn: '<svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 1.5L13 12.5H1z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M7 5.6v3.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="7" cy="10.6" r=".85" fill="currentColor"/></svg>',
+    warnS: '<svg width="12" height="12" viewBox="0 0 14 14"><path d="M7 1.5L13 12.5H1z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M7 5.6v3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="7" cy="10.6" r=".9" fill="currentColor"/></svg>',
+    pin: '<svg width="12" height="12" viewBox="0 0 12 12"><path d="M4.4 1.2h3.2l-.5 3.1 2 2v1.1H2.9V6.3l2-2z" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/><path d="M6 7.4v3.6" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>',
+    pinOn: '<svg width="12" height="12" viewBox="0 0 12 12"><path d="M4.4 1.2h3.2l-.5 3.1 2 2v1.1H2.9V6.3l2-2z" fill="currentColor" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/><path d="M6 7.4v3.6" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>',
+    // dock (full rail -> the action panel alone at the column's bottom) and undock (-> the full rail)
+    dock: '<svg width="12" height="12" viewBox="0 0 12 12"><rect x="1.5" y="1.5" width="9" height="9" rx="1" fill="none" stroke="currentColor" stroke-width="1.1"/><rect x="2" y="7" width="8" height="3" fill="currentColor"/></svg>',
+    undock: '<svg width="12" height="12" viewBox="0 0 12 12"><rect x="1.5" y="1.5" width="9" height="9" rx="1" fill="none" stroke="currentColor" stroke-width="1.1"/><rect x="2" y="2" width="3.5" height="8" fill="currentColor"/></svg>',
+    close: '<svg width="10" height="10" viewBox="0 0 10 10"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>',
+    arrow: '<svg width="9" height="8" viewBox="0 0 9 8"><path d="M0.5 4h7M4.7 1.2l2.8 2.8-2.8 2.8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    thumb: '<svg width="10" height="7" viewBox="0 0 10 7"><path d="M5 0L10 7H0z" fill="#cfcfcf"/></svg>',
+    boxOn: '<svg width="12" height="12" viewBox="0 0 12 12"><rect x="0.5" y="0.5" width="11" height="11" rx="2" fill="#e6ebef"/><path d="M3 6.2l2 2 4-4.2" fill="none" stroke="#1d1305" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    edgeTri: '<svg width="4" height="8" viewBox="0 0 4 8"><path d="M4 0v8L0 4z" fill="#5e5e5e"/></svg>',
+    pointer: '<svg width="12" height="18" viewBox="0 0 12 18"><path d="M1 1v14l3.6-3.4 2.6 5.6 2.2-1-2.6-5.4H11.5z" fill="#ffffff" stroke="#000000" stroke-width="1" stroke-linejoin="round"/></svg>'
+  };
+
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  var MINUS = '−';
+  // Lightroom's value format: Temp with a thousands separator, Exposure with 2 decimals, signs on the rest; true minus sign.
+  function lrv(label, v) {
+    if (label === 'Temp') return v.toLocaleString('en-US');
+    var a = label === 'Exposure' ? Math.abs(v).toFixed(2) : String(Math.abs(v));
+    return (v > 0 ? '+' : v < 0 ? MINUS : '') + a;
+  }
+  function dlt(label, d) {
+    var a = label === 'Exposure' ? Math.abs(d).toFixed(2) : String(Math.abs(d));
+    return (d > 0 ? '+' : d < 0 ? MINUS : '') + a;
+  }
+  function key(k) { return '<span class="rb-key">' + k + '</span>'; }
+
+  // ---------- slider rows ----------
+  // Track position 0..1. Ranges are mockup values (NOTES "Proposed additions" 6); Temp follows the stage's
+  // 5,500 K at 0.42 on a log scale [mockup].
+  var RANGE = { Tint: [-150, 150], Exposure: [-5, 5], Amount: [0, 150], Luminance: [0, 100] };
+  function p01(label, v) {
+    if (label === 'Temp') return Math.max(0, Math.min(1, 0.42 + Math.log(v / 5500) / Math.log(25)));
+    var r = RANGE[label] || [-100, 100];
+    return (v - r[0]) / (r[1] - r[0]);
+  }
+  var TW = 120, TX = 76, MINSEG = 6;
+  function sliderRow(label, before, after, opt) {
+    opt = opt || {};
+    var pb = p01(label, before) * TW, pa = p01(label, after) * TW, dir = after > before ? 1 : -1;
+    // change segment: before -> after, at least MINSEG px, always ending at the thumb so the direction shows
+    var s0 = Math.abs(pa - pb) >= MINSEG ? pb : pa - dir * MINSEG;
+    s0 = Math.max(0, Math.min(TW, s0));
+    var lo = Math.min(s0, pa), w = Math.abs(pa - s0);
+    var tip = opt.hover ? '<div class="rb-tip" style="left:' + (TX + pa - 20).toFixed(0) + 'px;top:' + (opt.two ? 44 : 26) + 'px">' + label + '&nbsp; ' + lrv(label, before) + G.arrow + lrv(label, after) + '</div>' +
+      '<span style="position:absolute;z-index:5;left:' + (TX + pa + 2).toFixed(0) + 'px;top:' + (opt.two ? 26 : 10) + 'px">' + G.pointer + '</span>' : '';
+    return '<div class="rb-row' + (opt.two ? ' two' : '') + (opt.hover ? ' hov' : '') + '"><div class="lab">' + label + '</div>' +
+      '<div class="trk"></div><div class="seg" style="left:' + (TX + lo).toFixed(1) + 'px;width:' + w.toFixed(1) + 'px"></div>' +
+      '<div class="bm" style="left:' + (TX + pb - 0.5).toFixed(1) + 'px"></div>' +
+      '<div class="th" style="left:' + (TX + pa).toFixed(1) + 'px">' + G.thumb + '</div>' +
+      '<div class="av">' + lrv(label, after) + '</div>' +
+      '<div class="d">' + dlt(label, after - before) + '</div>' + tip + '</div>';
+  }
+  function textRow(label, before, after) {
+    return '<div class="rb-row txt"><div class="lab">' + label + '</div><div class="val">' + esc(after) + '</div><div class="was">was ' + esc(before) + '</div></div>';
+  }
+  function checkRow(label, before, after) {   // on/off values (payload.ts shown(): booleans as "on"/"off")
+    return '<div class="rb-row chk"><span class="box">' + G.boxOn + '</span><div class="lab">' + label + '</div>' +
+      '<div class="st"><span>' + before + '</span>' + G.arrow + '<span>' + after + '</span></div></div>';
+  }
+  function curveRow(label) {                  // curves: the payload sends "curve" for before and after
+    return '<div class="rb-row crv"><div class="lab">' + label + '</div><div class="st">changed</div></div>';
+  }
+  function sub(t) { return '<div class="rb-sub">' + t + '</div>'; }
+
+  // ---------- scene data ----------
+  var ROWS = {
+    p1: function () { return sliderRow('Clarity', 2, 6) + sliderRow('Vibrance', 10, 16); },
+    p1hover: function () { return sliderRow('Clarity', 2, 6) + sliderRow('Vibrance', 10, 16, { hover: true }); },
+    whole: function () { return textRow('Profile', 'Camera Neutral', 'Adobe Landscape') + sliderRow('Highlights', -21, -41) + sliderRow('Shadows', 10, 20) + sliderRow('Clarity', 2, 6) + sliderRow('Vibrance', 0, 16); },
+    p2: function () { return sliderRow('Clarity', 6, 3) + sliderRow('Vibrance', 16, 12); },
+    worst: function () {
+      return sub('Basic') + sliderRow('Temp', 5500, 5650) + sliderRow('Exposure', 0.33, 0.50) + sliderRow('Highlights', -100, -85) +
+        sub('Tone Curve') + curveRow('Point Curve') +
+        sub('HSL / Color &rsaquo; Saturation') + sliderRow('Orange', -10, -25) +
+        sub('Detail &rsaquo; Sharpening') + sliderRow('Amount', 40, 55) +
+        sub('Detail &rsaquo; Noise Reduction') + sliderRow('Luminance', 0, 20) +
+        sub('Lens Corrections') + checkRow('Enable Profile Corrections', 'off', 'on') + checkRow('Remove Chromatic Aberration', 'off', 'on');
+    },
+    two: function () { return sliderRow('Noise Reduction Luminance', 0, 20, { two: true }); }
+  };
+
+  var CONS = {
+    acceptW: 'Ends the edit after Claude’s current step; the sliders stay.',
+    accept: 'Ends the edit; the sliders stay as they are.',
+    abort: 'Stops Claude and puts the <span style="white-space:nowrap">pre-session</span> snapshot back.',
+    abortV: 'Stops Claude; the master goes back, the copies stay.',
+    abortRetry: 'Tries again to put the <span style="white-space:nowrap">pre-session</span> snapshot back.'
+  };
+  var ACCEPT_W = { label: 'Accept', cons: CONS.acceptW };
+  var ACCEPT = { label: 'Accept', cons: CONS.accept };
+  var ABORT = { label: 'Abort', danger: true, cons: CONS.abort };
+
+  // ---------- pieces ----------
+  function title(st) {
+    var chip = {
+      work: '<div class="rb-chip work">' + G.ring + 'Working</div>',
+      turn: '<div class="rb-chip turn">' + G.dot + 'Your turn</div>',
+      done: '<div class="rb-chip done">' + G.check + 'Done</div>',
+      bad: '<div class="rb-chip bad">' + G.warnS + 'Not connected</div>'
+    }[st.chip];
+    return '<div class="rb-title"><span style="color:#adadad">' + G.triD + '</span><span class="name">Claude Edit</span>' + chip +
+      '<span class="rb-icos"><span class="rb-ico" title="' + (st.docked ? 'Show the full rail' : 'Dock at the bottom') + '">' + (st.docked ? G.undock : G.dock) + '</span>' +
+      '<span class="rb-ico' + (st.pinned ? ' on' : '') + '" title="' + (st.pinned ? 'Full rail pinned' : 'Pin the full rail') + '">' + (st.pinned ? G.pinOn : G.pin) + '</span>' +
+      '<span class="rb-ico" title="Hide">' + G.close + '</span></span></div>';
+  }
+
+  function note(st, indent) {
+    if (!st.note) return '';
+    return '<div class="rb-note' + (indent ? ' rb-ind' : '') + '"><span class="tx">' + st.note + '</span></div>';
+  }
+  function undoLine(indent, master) {
+    return '<div class="rb-note rb-undoline' + (indent ? ' rb-ind' : '') + '"><span class="tx">To undo it: Develop &gt; Snapshots &gt; <span class="nm">' + SNAP + '</span></span></div>';
+  }
+
+  // HudView.lua stepLine (:83-89) has two exceptions, kept here: "applying" reads "Applying pass 2 of 6",
+  // and "pass0" carries no pass count.
+  function stepLine(st) {
+    if (st.stage === 'applying') return '<div class="rb-step">Applying pass ' + st.pass + ' of 6</div>';
+    if (st.stage === 'pass0') return '<div class="rb-step">' + st.step + '</div>';
+    return '<div class="rb-step">' + st.step + ' &middot; <span style="white-space:nowrap">pass ' + st.pass + ' of 6</span></div>';
+  }
+
+  function top(st) {
+    var h = '<div class="rb-top' + (st.kind === 'done' ? ' end' : '') + '">';
+    if (st.kind === 'work') {
+      h += '<div class="rb-sayrow"><span class="g">' + G.ring + '</span><div><div class="rb-say calm">Claude is working. Nothing needed from you.</div>' + stepLine(st) + '</div></div>';
+      h += note(st, true);
+    } else if (st.kind === 'bad') {
+      h += '<div class="rb-sayrow"><span class="g bad">' + G.warn + '</span><div class="rb-say">Claude is not connected. Your edit so far stays.</div></div>';
+      h += undoLine();   // the note slot shows the undo line while Claude is not connected (HudView.lua feedback())
+    } else if (st.kind === 'act') {
+      // note_level "act" (proposed): the note becomes the turn sentence, with a triangle
+      h += '<div class="rb-sayrow"><span class="g act">' + G.warn + '</span><div class="rb-say">' + st.say + '</div></div>';
+      if (st.undo) h += undoLine();
+    } else if (st.kind === 'done') {
+      h += '<div class="rb-sayrow"><span class="g">' + G.okc + '</span><div class="rb-say">Done: the edit is kept.</div></div>';
+      h += st.note ? note(st, true) : undoLine();   // converge: the freed note slot keeps the way back visible
+    } else {
+      h += '<div class="rb-say">' + st.say + '</div>';
+      if (st.step) h += stepLine(st);
+      h += note(st);
+    }
+    return h + '</div>';
+  }
+
+  function actions(list, first, focus) {
+    return '<div class="rb-acts' + (first ? ' first' : '') + '">' + list.map(function (a) {
+      var cls = a.off ? ' off' : a.danger ? ' danger' : '';
+      return '<div class="rb-act"><div class="rb-btn' + cls + (focus === a.label ? ' focus' : '') + '">' + a.label + '</div><div class="rb-cons">' + a.cons + '</div></div>';
+    }).join('') + '</div>';
+  }
+
+  function armed() {
+    return '<div class="rb-acts first"><div class="rb-act"><div class="rb-btn">Accept</div><div class="rb-cons">' + CONS.acceptW + '</div></div>' +
+      '<div class="rb-act"><div class="rb-btn danger focus" style="background:transparent;box-shadow:inset 0 0 0 2px var(--danger)">Abort?</div>' +
+      '<div class="rb-cons" style="color:var(--hi);line-height:18px;padding-top:3px">Press ' + key('Ctrl+Backspace') + ' again to abort. ' + key('Esc') + ' cancels.</div></div></div>';
+  }
+
+  function hints() {
+    return '<div class="rb-keys"><span>' + key('Ctrl+Backspace') + ' aborts</span><span>' + key('Esc') + ' to Lightroom</span></div>';
+  }
+
+  function actblk(st) {
+    if (st.kind === 'done') return '';
+    var h = '<div class="rb-actblk">' + (st.focused ? hints() : '');
+    if (st.kind === 'work') h += st.armed ? armed() : actions([ACCEPT_W, ABORT], true);
+    else if (st.kind === 'bad') {
+      h += actions([{ label: 'Accept', off: true, cons: 'Accept and Abort come back when Claude reconnects.' },
+        { label: 'Abort', off: true, cons: 'Until then, the snapshot above puts the photo back.' }], true);
+    } else if (!st.primary) {
+      h += actions(st.acts, true);   // act note whose action is Abort: no filled primary
+    } else {
+      var p = st.primary;
+      h += '<div class="rb-primary' + (p.off ? ' off' : '') + (st.focused && !p.off ? ' focus' : '') + '">' + p.label + (st.focused && !p.off ? key('Enter') : '') + '</div><div class="rb-pcons">' + p.cons + '</div>';
+      if (st.after) h += '<div class="rb-pcons" style="margin-top:0">' + st.after + '</div>';
+      h += actions(st.acts);
+    }
+    return h + '</div>';
+  }
+
+  // Pick a Copy. Each line is the copy's look: its variant priors in the intent (NOTES "Proposed additions" 3).
+  function pickPanel(st, compact) {
+    function card(id, name, sum, gr) {
+      return '<div class="rb-card' + (st.cards === id ? ' sel' : '') + '"><div class="im"><img src="' + PHOTO + '" class="look-' + name + '" alt=""></div>' +
+        '<div class="tx"><div class="t"><b>' + id + ' <em>' + name + '</em></b>' + (st.focused ? key({ A: '1', B: '2', C: '3' }[id]) : '') + '</div>' +
+        '<div class="sum">' + sum + '</div>' +
+        (gr ? '<div class="gr"><span class="g">' + G.warnS + '</span><span class="n">' + gr + '</span></div>' : '') + '</div></div>';
+    }
+    // each "·" is bound to the item before it (no-break space), the break comes after it, and a dot left at a line end is hidden
+    function s(list) { return list.map(function (p) { return '<span class="it">' + p[0] + '&nbsp;' + dlt(p[0], p[1]) + '</span>'; }).join('<span class="dt">&nbsp;&middot;</span> '); }
+    return (compact ? '' : header('Pick a Copy', true, '3 copies')) + '<div class="rb-cards' + (compact ? ' compact' : '') + '">' +
+      card('A', 'natural', 'No look added') +
+      card('B', 'dramatic', s([['Contrast', 20], ['Blacks', -15], ['Clarity', 10], ['Dehaze', 10]]), 'Shadow clipping was 3.47&nbsp;% (limit&nbsp;1&nbsp;%); corrected.') +
+      card('C', 'soft', s([['Contrast', -10], ['Highlights', -15], ['Shadows', 15], ['Clarity', -10]])) +
+      '</div>';
+  }
+
+  function identity() {
+    return '<div class="rb-id"><div class="fn">_DSC0412.NEF</div>' +
+      '<div class="m n">ISO 100 &middot; 1/250 s &middot; f/8</div>' +
+      '<div class="m">18.0-105.0 mm f/3.5-5.6 &middot; lens profile on</div></div>';
+  }
+
+  function header(name, open, right, warn) {
+    return '<div class="rb-ph"><span class="tw' + (open ? '' : ' r') + '">' + (open ? G.triD : G.triR) + '</span>' + name +
+      (right ? '<span class="rt' + (warn ? ' warn' : '') + '">' + (warn ? G.warnS : '') + right + '</span>' : '') + '</div>';
+  }
+
+  // guardrail.status other than green shows in the header too, so folding Changes never hides it (proposed short phrases)
+  var GR_SHORT = { corrected: 'Clipping corrected', unmet: 'Clipping over limit', undone: 'Pass undone', clamped: 'Change held', refused: 'Change not made' };
+  function changes(st) {
+    if (st.changes === 'hidden') return '';
+    var warn = st.guard && st.guard !== 'green';
+    var right = warn ? GR_SHORT[st.guard] : st.changesRight;
+    if (st.changes === 'closed') return header('Changes', false, right, warn);
+    return header('Changes', true, right, warn) +
+      '<div><div class="rb-seg"><span class="' + (st.view === 'whole' ? '' : 'on') + '">This pass</span><span class="' + (st.view === 'whole' ? 'on' : '') + '">Whole edit</span></div>' +
+      '<div class="rb-rows">' + ROWS[st.rows]() + '</div>' +
+      (st.noClip ? '' : '<div class="rb-clip"><span class="g">' + G.okc + '</span><span>Clipping: within limits.</span></div>') + '</div>';
+  }
+
+  function undo(st) {
+    var where = st.copies ? '<div class="where">Develop &gt; Snapshots, on the master _DSC0412.NEF</div>' : '';
+    var steps = st.copies ? 'AVG 4f2a1c B pass n/6' : 'AVG 4f2a1c pass n/6';
+    return header('Undo', true, st.copies ? '' : 'Develop &gt; Snapshots') + '<div class="rb-undo">' + where + '<div class="snap">' + SNAP + '</div>' +
+      '<div class="h">History: ' + (st.copies ? 'each copy’s steps, named ' : 'steps named ') + '<b>' + steps + '</b></div>' +
+      '<div class="rb-link">Show Snapshots and History</div></div>';
+  }
+
+  function settings(st) {
+    var mode = st.mode === 'approve' ? 'Approve each pass' : 'Autonomous';
+    if (!st.settingsOpen) return header('Edit Settings', false, mode);
+    return header('Edit Settings', true) + '<div class="rb-set">' +
+      '<div class="n">' + mode + ' &middot; up to 6 passes' + (st.copies ? ' &middot; 3 copies' : '') + '</div>' +
+      '<div class="m n">Preview 1600 px, quality 75</div>' +
+      '<div class="m n">Clipping limits: 0.5&nbsp;% highlights, 1&nbsp;% shadows</div>' +
+      '<div class="m" style="margin-top:6px">Change in File &gt; Plug-in Manager.</div></div>';
+  }
+
+  function footer(st, y) {
+    if (st.chip === 'bad') return '<div class="rb-foot bad" style="top:' + y + 'px"><span class="g">' + G.warnS + '</span>Not connected to Claude.</div>';
+    return '<div class="rb-foot" style="top:' + y + 'px"><span class="g">' + G.link + '</span>Connected to Claude.</div>';
+  }
+
+  // the action panel: identical in both forms, anchored to the column's bottom edge (y 900 in context)
+  function bottom(st) {
+    return '<div class="rb-bot">' + top(st) + (st.pick ? '<div class="rb-cardwrap">' + pickPanel(st, st.docked) + '</div>' : '') + actblk(st) + '</div>';
+  }
+
+  function rail(st) {
+    var colH = st.colH || 788, H = colH + 36;
+    var info = identity(st) + changes(st) + undo(st) + settings(st);
+    return '<div class="rb" data-state="' + st.id + '" style="height:' + H + 'px"><div class="rb-edge"><span class="et" style="top:' + (H / 2 - 4) + 'px">' + G.edgeTri + '</span></div>' +
+      '<div class="rb-col" style="height:' + colH + 'px">' + title(st) + '<div class="rb-scroll">' + info + '</div>' + bottom(st) + '</div>' +
+      footer(st, colH) + (st.strip ? '<div class="rb-strip"></div>' : '') + '</div>';
+  }
+
+  // docked (the default form while unpinned): the title row + the same action panel, at the bottom of Lightroom's left column
+  function docked(st) {
+    var s2 = Object.assign({}, st, { docked: true });
+    return '<div class="rbp" data-state="' + st.id + '">' + title(s2) + bottom(s2) + (st.strip ? '<div class="rb-strip"></div>' : '') + '</div>';
+  }
+
+  // ---------- states (target engine: no idle note where the headline already says it; NOTES "Proposed additions" 11) ----------
+  var W_STEP = { stage: 'awaiting_claude', step: 'Claude is looking at the result', pass: 2 };
+  var P_BASE = { kind: 'turn', chip: 'turn', strip: true, say: 'Your turn: approve pass 1 so Claude can go on.',
+    primary: { label: 'Approve pass 1', cons: 'Lets Claude write pass 2.' }, acts: [ACCEPT, ABORT],
+    rows: 'p1', changesRight: 'Pass 1 of 6', mode: 'approve' };
+  var V_BASE = { kind: 'turn', chip: 'turn', strip: true, say: 'Your turn: pick a copy, or tell Claude which one.', copies: true, pick: true, cards: null,
+    primary: { label: 'Pick a copy', off: true, cons: 'Click a copy to choose it.' },
+    acts: [{ label: 'Accept', off: true, cons: 'Comes back after a pick.' }, { label: 'Abort', danger: true, cons: CONS.abortV }],
+    changes: 'hidden', mode: 'auto' };
+  var PICK_B = { label: 'Pick B', cons: 'Selects copy B. Tell Claude in chat to go on.' };
+  var S = {
+    W: Object.assign({ id: 'W', kind: 'work', chip: 'work', pinned: true, rows: 'p2', changesRight: 'Pass 2 of 6', mode: 'auto', settingsOpen: true }, W_STEP),
+    P: Object.assign({ id: 'P' }, P_BASE, { focused: true }),
+    PU: Object.assign({ id: 'P-unfocused' }, P_BASE),
+    PR: Object.assign({ id: 'P-rendering' }, P_BASE, { stage: 'acquiring_preview', step: 'Rendering a preview', pass: 1 }),
+    TODAY: Object.assign({ id: 'P-today' }, P_BASE, { note: 'Claude’s pass 2 waits for your Approve of pass 1.' }),
+    V: Object.assign({ id: 'V' }, V_BASE, { focused: true, cards: 'B', primary: PICK_B }),
+    VD: Object.assign({ id: 'V-docked-default' }, V_BASE),
+    VS: Object.assign({ id: "V-short" }, V_BASE, { colH: 480, cards: 'B', primary: PICK_B }),
+    D: { id: 'D', kind: 'bad', chip: 'bad', rows: 'p2', changesRight: 'Pass 2 of 6', mode: 'auto' },
+    C: { id: 'C', kind: 'turn', chip: 'turn', strip: true, say: 'Your turn: Claude thinks the edit is done.',
+      primary: { label: 'Accept', cons: CONS.accept }, after: 'To go on instead, tell Claude in chat.',
+      acts: [ABORT], rows: 'p2', changesRight: 'Pass 2 of 6', mode: 'auto' },
+    ARM: Object.assign({ id: 'W-armed', kind: 'work', chip: 'work', pinned: true, armed: true, focused: true, rows: 'p2', changesRight: 'Pass 2 of 6', mode: 'auto' }, W_STEP),
+    ABF: { id: 'abort-failed', kind: 'act', chip: 'turn', strip: true, undo: true, say: 'Abort could not put the photo back. Click Abort again.',
+      acts: [ACCEPT, { label: 'Abort', danger: true, cons: CONS.abortRetry }], rows: 'p2', changesRight: 'Pass 2 of 6', mode: 'auto' },
+    CAP: { id: 'cap-reached', kind: 'act', chip: 'turn', strip: true, say: 'Your turn: all 6 passes are used.',
+      primary: { label: 'Accept', cons: CONS.accept }, acts: [ABORT], mode: 'auto' },
+    DONE: { id: 'done', kind: 'done', chip: 'done', rows: 'p2', changesRight: 'Pass 2 of 6', mode: 'auto' }
+  };
+
+  // ---------- stage corrections, local to this page (stage/stage.js is shared and unchanged) ----------
+  function setBasic(root, vals) {
+    Object.keys(vals).forEach(function (k) {
+      var row = root.querySelector('[data-slider="' + k + '"]'); if (!row) return;
+      var v = vals[k];
+      row.querySelector('.val').textContent = v === 0 ? '0' : (v > 0 ? '+' : '-') + Math.abs(v);
+      row.querySelector('.lr-thumb').style.left = ((v + 100) / 200 * 150).toFixed(1) + 'px';
+    });
+  }
+  function patchStage(root, opts) {
+    // the scene data defines no focal length: drop the histogram's "18 mm"
+    Array.prototype.forEach.call(root.querySelectorAll('.lr-histinfo span'), function (s) { if (/mm$/.test(s.textContent)) s.remove(); });
+    // a copy after pass 0 also carries the shared priors (20261001-d4247b.json): B Highlights -41, Shadows +20; both Vibrance +10
+    if (opts.selected === 'B') setBasic(root, { Highlights: -41, Shadows: 20, Vibrance: 10 });
+    if (opts.selected === 'C') setBasic(root, { Vibrance: 10 });
+  }
+
+  function put(id, html) { document.getElementById(id).insertAdjacentHTML('beforeend', html); }
+
+  // in context
+  function ctx(rootId, opts, html, pos) {
+    var root = document.getElementById(rootId);
+    renderLightroom(root, opts);
+    patchStage(root, opts);
+    var wrap = document.createElement('div');
+    wrap.innerHTML = html;
+    var el = wrap.firstChild;
+    el.style.left = pos.x + 'px'; el.style.top = pos.y + 'px';
+    if (pos.bottom !== undefined) { el.style.top = ''; el.style.bottom = pos.bottom + 'px'; }
+    root.appendChild(el);
+  }
+  ctx('lr-p', { scene: 'converge' }, rail(S.PU), { x: 0, y: 112 });
+  // V as it first appears: Claude's last step selected copy C (targets.ts focus); the rail does not take that as a choice
+  ctx('lr-v', { scene: 'variants', selected: 'C' }, docked(S.VD), { x: 11, bottom: 1080 - 900 });
+  ctx('lr-c', { scene: 'converge' }, docked(S.PU), { x: 11, bottom: 1080 - 900 });
+
+  // sheets
+  put('s-w', rail(S.W)); put('s-p', rail(S.P)); put('s-v', rail(S.V)); put('s-d', rail(S.D));
+  put('s-c', rail(S.C)); put('s-arm', rail(S.ARM)); put('s-done', rail(S.DONE));
+  put('x-abf', rail(S.ABF)); put('x-pr', rail(S.PR)); put('x-vs', rail(S.VS)); put('x-today', rail(S.TODAY));
+  put('x-cap', docked(S.CAP));
+  var capel = document.querySelector('#x-cap .rbp'); capel.style.left = '11px'; capel.style.bottom = '36px';
+  // docked while working, over a crop of the stage's left column. History as the gateway names the steps
+  // (engine/src/session/io.ts historyName; guardrail.ts:48 "baseline k"), with pass 2 added on top of the stage's list.
+  var wcRoot = document.getElementById('lr-wc');
+  renderLightroom(wcRoot, { scene: 'converge' }); patchStage(wcRoot, {});
+  var hist = wcRoot.querySelector('[data-region="history"]');
+  hist.innerHTML = ['AVG 4f2a1c pass 2/6', 'AVG 4f2a1c pass 1/6', 'AVG 4f2a1c pass 0/6 baseline 1', 'AVG 4f2a1c pass 0/6',
+    'Import (10/4/2026 6:40:12 PM)'].map(function (t, i) { return '<div class="lr-row' + (i === 0 ? ' sel' : '') + '">' + t + '</div>'; }).join('');
+  put('s-wc', docked(Object.assign({}, S.W, { pinned: false })));
+  var wcel = document.querySelector('#s-wc .rbp'); wcel.style.left = '11px'; wcel.style.bottom = '36px';
+
+  // rows close-ups
+  put('r-this', '<div class="rbx">' + changes({ rows: 'p1hover', changesRight: 'Pass 1 of 6' }) + '</div>');
+  put('r-fold', '<div class="rbx">' + changes({ changes: 'closed', guard: 'corrected', changesRight: 'Pass 1 of 6' }) + '</div>');
+  put('r-whole', '<div class="rbx">' + changes({ rows: 'whole', view: 'whole', changesRight: 'Since the snapshot' }) + '</div>');
+  put('r-worst', '<div class="rbx">' + changes({ rows: 'worst', changesRight: 'Pass 3 of 6', noClip: true }) + '</div>');
+  put('r-two', '<div class="rbx"><div class="rb-rows">' + ROWS.two() + '</div></div>');
+  put('r-card0', '<div class="rbx">' + pickPanel({ cards: null }) + '</div>');
+  put('r-card', '<div class="rbx">' + pickPanel({ cards: 'B', focused: true }) + '</div>');
+
+  // hide a separator dot left at the end of a summary line
+  Array.prototype.forEach.call(document.querySelectorAll('.rb-card .sum .dt'), function (dt) {
+    var nx = dt.nextElementSibling; if (!nx) return;
+    if (nx.getBoundingClientRect().top > dt.getBoundingClientRect().top + 4) dt.style.visibility = 'hidden';
+  });
+  // scroll thumbs: info panels (full rail) and the card list (when the column is too short)
+  function thumb(sc, content, top) {
+    if (content > sc.clientHeight + 1) {
+      var th = Math.max(16, Math.round(sc.clientHeight * sc.clientHeight / content));
+      sc.insertAdjacentHTML('beforeend', '<div class="rb-sbar" style="top:' + (top || 2) + 'px;height:' + th + 'px"></div>');
+    }
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.rb-scroll'), function (sc) {
+    var content = 0; Array.prototype.forEach.call(sc.children, function (c) { content += c.offsetHeight; });
+    thumb(sc, content);
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.rb-cardwrap'), function (cw) {
+    var content = 0; Array.prototype.forEach.call(cw.children, function (c) { content += c.offsetHeight; });
+    thumb(cw, content, 26);
+  });
+})();
+</script>
+</body>
+</html>

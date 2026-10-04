@@ -2141,6 +2141,38 @@
                       },
                       "computed": {
                         "type": "boolean"
+                      },
+                      "instance": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "people": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "top": {
+                              "type": "number"
+                            },
+                            "left": {
+                              "type": "number"
+                            },
+                            "bottom": {
+                              "type": "number"
+                            },
+                            "right": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "top",
+                            "left",
+                            "bottom",
+                            "right"
+                          ],
+                          "additionalProperties": false
+                        }
                       }
                     },
                     "required": [
@@ -2202,6 +2234,38 @@
                       },
                       "computed": {
                         "type": "boolean"
+                      },
+                      "instance": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "people": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "top": {
+                              "type": "number"
+                            },
+                            "left": {
+                              "type": "number"
+                            },
+                            "bottom": {
+                              "type": "number"
+                            },
+                            "right": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "top",
+                            "left",
+                            "bottom",
+                            "right"
+                          ],
+                          "additionalProperties": false
+                        }
                       }
                     },
                     "required": [
@@ -2244,6 +2308,38 @@
                   },
                   "dialog_ms": {
                     "type": "number"
+                  },
+                  "people": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "top": {
+                          "type": "number"
+                        },
+                        "left": {
+                          "type": "number"
+                        },
+                        "bottom": {
+                          "type": "number"
+                        },
+                        "right": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "top",
+                        "left",
+                        "bottom",
+                        "right"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "instance": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
                   }
                 },
                 "required": [

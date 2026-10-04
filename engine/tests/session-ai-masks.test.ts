@@ -39,22 +39,8 @@ describe("AI masks: the table route", () => {
   it("makes every person's part and every landscape category by the table route", async () => {
     const { create } = await session();
     expect((await create("people_hair")).json).toMatchObject({ ai: { route: "table" }, mask: { kind: "people_hair", computed: true } });
-    expect(masks().map((e) => [component(e)["MaskSubType"], component(e)["MaskSubCategoryID"]])).toEqual([[3, 5]]);
-    // A kind no capture round-tripped is not written back: the next mask change on the photo is refused.
-    expect((await fails(create("landscape_water"))).code).toBe("MASKS_UNCAPTURED_KIND");
-  });
-
-  it("checks one person's point once the mask has computed: moved, the mask is taken out", async () => {
-    const { create } = await session();
-    const real = plugin.handlers.get("update_ai_settings") as FakeHandler;
-    plugin.handlers.set("update_ai_settings", (p, id) => {
-      const reply = real(p, id);
-      for (const e of masks()) Object.assign(component(e), { ReferencePoint: "0.500000 0.500000" });
-      return reply;
-    });
-    const e = await fails(create("person_entire", { point: { x: 0.3, y: 0.6 } }));
-    expect(e.details).toMatchObject({ routes_tried: [{ route: "table", why: expect.stringMatching(/point read back as 0\.5 0\.5, not 0\.3 0\.6/) }, { route: "dc" }] });
-    expect(masks()).toEqual([]);
+    expect((await create("landscape_water")).json).toMatchObject({ ai: { route: "table" }, mask: { kind: "landscape_water", computed: true } });
+    expect(masks().map((e) => [component(e)["MaskSubType"], component(e)["MaskSubCategoryID"]])).toEqual([[3, 5], [0, 50007]]);
   });
 
   it("names the photo by uuid while it waits, so a change of selection cannot end the wait", async () => {

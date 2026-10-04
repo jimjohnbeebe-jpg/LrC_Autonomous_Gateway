@@ -25,7 +25,6 @@ import {
   RADIAL,
   RANGE,
   WHAT,
-  summarize,
   componentKind,
   components,
   isAiKind,
@@ -34,8 +33,9 @@ import {
   type Component,
   type Correction,
   type MaskKind,
-  type MaskSummary,
 } from "./mask-table.js";
+import { personFields } from "./mask-person.js";
+import { summarize, type MaskSummary } from "./mask-summary.js";
 
 export type Point = { x: number; y: number };
 /**
@@ -154,7 +154,9 @@ function newComponent(kind: MaskKind, name: string, g: Geometry, point: Point | 
   const base: Component = { [M.id]: newMaskId(), [M.syncId]: newSyncId(), [M.name]: name, [M.active]: true, [M.inverted]: false, [M.blend]: 0, [M.value]: 1 };
   if (isAiKind(kind)) {
     const at = point ?? { x: 0.5, y: 0.5 };
-    return { ...base, [M.what]: WHAT.image, ...AI_KINDS[kind].fields, [IMAGE.referencePoint]: `${at.x.toFixed(6)} ${at.y.toFixed(6)}`, [IMAGE.errorReason]: 0 };
+    // One person's kinds start as the probe, Entire Person of instance 0 (mask-person.ts); the pass then writes the kind itself.
+    const fields = AI_KINDS[kind].point ? personFields("person_entire", 0) : AI_KINDS[kind].fields;
+    return { ...base, [M.what]: WHAT.image, ...fields, [IMAGE.referencePoint]: `${at.x.toFixed(6)} ${at.y.toFixed(6)}`, [IMAGE.errorReason]: 0 };
   }
   const what = kind === "linear" ? WHAT.linear : kind === "radial" ? WHAT.radial : WHAT.range;
   const fixed = kind === "radial" ? { [RADIAL.angle]: 0, [RADIAL.feather]: 50, [RADIAL.midpoint]: 50, [RADIAL.roundness]: 0, [RADIAL.flipped]: true, [RADIAL.version]: 2 } : {};

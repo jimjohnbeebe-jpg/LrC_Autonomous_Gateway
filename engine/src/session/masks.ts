@@ -51,8 +51,8 @@ import { brief, describe, failed, fresh, historyName, image, ms, readSdk, record
 import { checkReady, focus, resolveTarget } from "./targets.js";
 import type { CreateMaskArgs, DeleteMaskArgs, EditMaskArgs, ListMasksArgs, Rendered, ReturnImage, Session, SessionContext, SessionOutput, Target, TargetId } from "./types.js";
 
-/** The plugin with the asynchronous update_ai_settings and probe_write_gate (0.13.0, plugin\LrC-AVG.lrplugin\Masks.lua); the mask tools need it. */
-export const MASKS_PLUGIN = "0.13.0";
+/** The plugin whose update_ai_settings answers at once from its own task, with probe_write_gate (0.14.0, plugin\LrC-AVG.lrplugin\Masks.lua); the mask tools need it. */
+export const MASKS_PLUGIN = "0.14.0";
 
 type PassArgs = { session_id: string; target?: TargetId | undefined; rationale: string; return_image?: ReturnImage | undefined };
 /** What a mask pass wrote and measured. */
@@ -229,7 +229,7 @@ function passJson(s: Session, t: Target, n: number, op: MaskOp, { mask, masks, d
     cap_reached: t.endReason === "cap_reached",
     passes_left: s.maxPasses - n,
     ...(done.undone ? { undone: { limit: done.undone.limit, reason: done.undone.reason, note: "the mask change was written, then undone: the masks are as before this pass" } } : {}),
-    ...(done.ai ? { ai: { route: done.ai.route, ...(done.ai.route === "dc" ? { switched_to_develop: true, fallback: done.ai.fallback } : {}) } } : {}),
+    ...(done.ai ? { ai: { route: done.ai.route, ...(done.ai.route === "dc" ? { switched_to_develop: true, fallback: done.ai.fallback } : {}), ...(done.ai.instance !== undefined ? { instance: done.ai.instance, people: done.ai.people } : {}) } } : {}),
     ...describe(done.rendered),
     timings: { total_ms: ms(started) },
   };

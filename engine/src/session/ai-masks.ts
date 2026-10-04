@@ -5,7 +5,8 @@
 //     the wait for Lightroom's answer (ai-update.ts): computed; nothing found (ErrorReason not 0: the
 //     entry is taken out of the table as it is now and MASK_NOTHING_FOUND says so, no pass used);
 //     a dialog (the photo is put back to before the session and the session ends: autoRevert);
-//     or a failure.
+//     or a failure. One person's kinds go by instance: person-masks.ts runs the table route twice (the
+//     probe, then the wanted entry).
 //   - LrDevelopController runs only when the table route's update failed with a gate or plugin error,
 //     never after a dialog and never after a mask that simply did not compute [inference: the lead's
 //     design after Jim's "full control of the masking from the llm without throwing errors", stated
@@ -23,10 +24,11 @@
 // tests\session-ai-dialog.test.ts, against the Lightroom sim; in Lightroom [unverified] until capture 4.]
 
 import { ToolError, featureUnavailable, toToolError } from "../mcp/errors.js";
-import { AI_KINDS, KIND_LABELS, computed, correctionIds, firstComponent, named, pointOf, readTable, type AiKind, type Correction, type SdkSettings } from "../params/index.js";
+import { AI_KINDS, KIND_LABELS, computed, correctionIds, firstComponent, named, readTable, type AiKind, type Box, type Correction, type SdkSettings } from "../params/index.js";
 import { aiTimings, updateAndWait } from "./ai-update.js";
 import { endSession } from "./end.js";
 import { reopenLog } from "./hud-actions.js";
+import { byPerson } from "./person-masks.js";
 import { bridge, checkAbort, historyName, ms, readSdk, saveLog, writeTable } from "./io.js";
 import type { Session, SessionContext, Target } from "./types.js";
 
@@ -44,6 +46,9 @@ export type AiResult = {
   dc_ms?: number;
   /** How long Lightroom's write gate stayed held while the mask computed (a slow model, not a dialog after all). */
   dialog_ms?: number;
+  /** One person's mask (person-masks.ts): every person's box Lightroom found, and the one chosen. */
+  people?: Box[];
+  instance?: number;
 };
 
 /**
@@ -138,12 +143,6 @@ async function autoRevert(ctx: SessionContext, s: Session, job: AiJob, cause: st
 async function byTable(ctx: SessionContext, s: Session, job: AiJob): Promise<AiResult | Failed> {
   const u = await updateAndWait(ctx, s, job);
   if (u.kind === "computed") {
-    // One person's point, checked once computed: right after the write Lightroom reads it back as the
-    // centre, once computed as written [handle: docs\reports\phase6\masks-capture\capture3-4_people_entire.json `after_write`, `final`].
-    const got = job.point ? pointOf(firstComponent(readTable(u.sdk), job.id)) : null;
-    if (job.point && (!got || Math.abs(got[0] - job.point[0]) > 1e-6 || Math.abs(got[1] - job.point[1]) > 1e-6)) {
-      return { why: `once computed, the person's point read back as ${got ? got.join(" ") : "none"}, not ${job.point.join(" ")} as written`, fallback: false };
-    }
     return { sdk: u.sdk, id: job.id, route: "table", update_ms: u.update_ms, computed_ms: u.computed_ms, ...(u.dialog_ms !== undefined ? { dialog_ms: u.dialog_ms } : {}) };
   }
   if (u.kind === "dialog") return autoRevert(ctx, s, job, u.why);
@@ -206,7 +205,9 @@ export async function makeAiMask(ctx: SessionContext, s: Session, job: AiJob): P
   const tried: Array<{ route: "table" | "dc"; why: string }> = [];
   let table: Failed | null = null;
   if (s.aiRoute !== "dc" || AI_KINDS[job.kind].dc === null) {
-    const out = await byTable(ctx, s, job);
+    const out = AI_KINDS[job.kind].point
+      ? await byPerson(ctx, s, job, { table: (j) => byTable(ctx, s, j), takeOut: (j) => takeOut(ctx, s, j) })
+      : await byTable(ctx, s, job);
     if ("route" in out) {
       s.aiRoute = "table";
       return out;

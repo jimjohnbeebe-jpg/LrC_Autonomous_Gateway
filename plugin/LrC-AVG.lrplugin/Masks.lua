@@ -16,16 +16,16 @@
 --   added as a table entry computed after it, and Jim saw it cover the sky [handle: Jim's capture 1
 --   run, 2026-10-03, docs\reports\phase6\masks-capture\check.json step 7_sky and answers]. Waiting for
 --   the mask to compute is the engine's job, by reading get_settings.
---   Plugin 0.13.0, PR C step 2b: the gate is asynchronous (Gate.async, 5 s in the queue), and the
---   command answers { uuid, status, state } without waiting for the update, because Lightroom's
---   "Update AI Settings Errors" dialog once opened inside this gate and held it until Jim restarted
---   Lightroom [stated: Jim's step-2 check, 2026-10-03, his screenshot]. Whether an asynchronous gate
---   that gets the catalog at once still runs `func` before it returns ("executed") is [unverified]: if
---   it does, a dialog holds this answer too, and the engine's wait for it runs out and goes on to
---   watching the table. `state` and the last update's record (_G, so it survives a reload of this
---   module, rule 03) say what the gate did: queued, running, done, failed (updateAISettings raised; the
---   error is kept, not raised on, so no Lightroom error dialog comes from this plugin), abandoned (the
---   gate stayed held for 5 s and Lightroom dropped the update).
+--   Lightroom's "Update AI Settings Errors" dialog once opened inside this gate and held it until Jim
+--   restarted Lightroom [stated: Jim's step-2 check, 2026-10-03, his screenshot]. Plugin 0.13.0 used an
+--   asynchronous gate; with the catalog free it ran the update before it returned: "executed" after
+--   11 306 ms [handle: docs\reports\phase6\masks-capture\capture4-check.json step `row2_vegetation`
+--   `update`]. So from plugin 0.14.0 (PR C step 2c) the update runs in its own task, its gate inside it
+--   (Gate.write, 5 s in the queue), and the command answers { uuid, status = "started", state } at once.
+--   `state` and the last update's record (_G, so it survives a reload of this module, rule 03) say what
+--   the task did: started, running, done, failed (updateAISettings raised; the error is kept, not raised
+--   on, so no Lightroom error dialog comes from this plugin), abandoned (the gate stayed held for 5 s and
+--   the update did not run).
 -- probe_write_gate {}: an empty write gate with a 0.5 s timeout: "executed" when the catalog is free,
 --   "aborted" when another write holds it (such as a dialog inside the update's gate) [community: the
 --   SDK reference above, LrCatalog withWriteAccessDo]; with the last update's record. Whether an empty
@@ -74,19 +74,21 @@ function Masks.updateAISettings(payload)
     local photo, found = Photos.find(catalog, payload.photo_uuid, payload.expect)
     if not photo then return nil, found end
     if MaskProbe.kind(photo, "updateAISettings") ~= "function" then return MaskProbe.unavailable("photo:updateAISettings (SDK 13.3)") end
-    local rec = { uuid = found.uuid, state = "queued" }
+    local rec = { uuid = found.uuid, state = "started" }
     _G.AVG_LAST_AI_UPDATE = rec
-    local ok, status = LrTasks.pcall(Gate.async, catalog, "AVG update AI masks", function()
-        rec.state = "running"
-        local okCall, err = LrTasks.pcall(function() photo:updateAISettings() end)
-        rec.state = okCall and "done" or "failed"
-        if not okCall then rec.error = tostring(err) end
-    end, function() rec.state = "abandoned" end, UPDATE_QUEUE_SECONDS)
-    if not ok then
-        rec.state, rec.error = "failed", tostring(status)
-        return nil, { code = "update_failed", message = tostring(status), recoverable = true }
-    end
-    return { uuid = found.uuid, status = tostring(status), state = rec.state, command_ms = (LrDate.currentTime() - tCommand) * 1000 }
+    LrTasks.startAsyncTask(function()
+        local ok, err = LrTasks.pcall(function()
+            local gated = Gate.write(catalog, "AVG update AI masks", function()
+                rec.state = "running"
+                local okCall, e = LrTasks.pcall(function() photo:updateAISettings() end)
+                rec.state = okCall and "done" or "failed"
+                if not okCall then rec.error = tostring(e) end
+            end, UPDATE_QUEUE_SECONDS)
+            if not gated then rec.state = "abandoned" end
+        end)
+        if not ok then rec.state, rec.error = "failed", tostring(err) end
+    end)
+    return { uuid = found.uuid, status = "started", state = rec.state, command_ms = (LrDate.currentTime() - tCommand) * 1000 }
 end
 
 function Masks.probeWriteGate()

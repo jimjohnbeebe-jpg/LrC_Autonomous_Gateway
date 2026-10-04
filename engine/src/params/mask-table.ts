@@ -46,8 +46,25 @@ export const M = { what: "What", id: "MaskID", syncId: "MaskSyncID", name: "Mask
 export const WHAT = { linear: "Mask/Gradient", radial: "Mask/CircularGradient", image: "Mask/Image", range: "Mask/RangeMask" } as const;
 export const LINEAR = { zeroX: "ZeroX", zeroY: "ZeroY", fullX: "FullX", fullY: "FullY" } as const;
 export const RADIAL = { top: "Top", left: "Left", bottom: "Bottom", right: "Right", angle: "Angle", feather: "Feather", midpoint: "Midpoint", roundness: "Roundness", flipped: "Flipped", version: "Version" } as const;
-/** ErrorReason: Lightroom added it, 0, to every AI entry written in capture 3 [handle: docs\reports\phase6\masks-capture\capture3-4_people_entire.json `after_write`]. */
-export const IMAGE = { subType: "MaskSubType", subCategory: "MaskSubCategoryID", maskVersion: "MaskVersion", digest: "MaskDigest", referencePoint: "ReferencePoint", errorReason: "ErrorReason" } as const;
+/**
+ * ErrorReason: Lightroom added it, 0, to every AI entry written in capture 3 [handle: docs\reports\phase6\masks-capture\capture3-4_people_entire.json `after_write`].
+ * InstanceIDs, InstanceID, InstanceBounds: one person's Entire Person, made by hand on a photo of two
+ * people, names its person as InstanceIDs [{ InstanceID: 0 | 1 }] and carries the boxes of every person
+ * Lightroom found [handle: docs\reports\phase6\masks-capture\capture4-row6_people_by_hand.json].
+ */
+export const IMAGE = {
+  subType: "MaskSubType",
+  subCategory: "MaskSubCategoryID",
+  maskVersion: "MaskVersion",
+  digest: "MaskDigest",
+  referencePoint: "ReferencePoint",
+  errorReason: "ErrorReason",
+  instanceIds: "InstanceIDs",
+  instanceId: "InstanceID",
+  instanceBounds: "InstanceBounds",
+} as const;
+/** An InstanceBounds box, in 0-1 of the photo [handle: same file]. */
+export const BOX = { top: "Top", left: "Left", bottom: "Bottom", right: "Right" } as const;
 export const RANGE = { holder: "CorrectionRangeMask", lumRange: "LumRange", type: "Type", version: "Version", sampleType: "SampleType", sampleInfo: "LuminanceDepthSampleInfo", invert: "Invert" } as const;
 /**
  * Fields Lightroom computes for an AI component: the digests (new ones appeared after
@@ -56,7 +73,7 @@ export const RANGE = { holder: "CorrectionRangeMask", lumRange: "LumRange", type
  * 3_dump-1.json). They are left out of the table's fingerprint and of the read-back check, so a mask
  * computing does not read as a change.
  */
-export const RECOMPUTED: readonly string[] = ["MaskDigest", "InputDigest", "LocalInputDigest", "InputDigestVersion", "LocalInputDigestVersion", "ModelVersion", "Origin", "FullMaskSize", "WholeImageArea"];
+export const RECOMPUTED: readonly string[] = ["MaskDigest", "InputDigest", "LocalInputDigest", "InputDigestVersion", "LocalInputDigestVersion", "ModelVersion", "Origin", "FullMaskSize", "WholeImageArea", "InstanceBounds"];
 const recomputed = new Set(RECOMPUTED);
 /**
  * Fields left out of the read-back check only: right after the write of capture 3's copies, Lightroom
@@ -209,24 +226,29 @@ export function componentKind(m: Component): MaskKind | "ai" | "range" | "other"
 }
 
 /**
- * The kinds the captures round-tripped: in a table written back by apply_settings and read back.
- * Linear, radial, luminance, sky and subject in capture 1 (the unchanged table read back identical
- * [handle: docs\reports\phase6\masks-capture\check.json]), background in capture 2 [handle:
- * capture2-templates.json], one person's Entire Person and Facial Skin and the landscape Vegetation
- * and Sky in capture 3 (the table written back with Jim's entries and the copies [handle:
- * capture3-check.json]). Every other AI kind (every person's parts, the other landscape categories)
- * is made by the engine but not yet trusted in a table written back, until capture 4 round-trips it.
+ * Whether a component's structure was round-tripped (a table written back by apply_settings read back
+ * unchanged): linear, radial and luminance, and every Mask/Image with MaskSubType 0, 1, 2 or 3 and
+ * its category or InstanceIDs. Capture 1 wrote back sky (2) and subject (1) unchanged [handle:
+ * docs\reports\phase6\masks-capture\check.json `4_write_back`]; capture 4's round trips read back
+ * unchanged landscape vegetation, mountains and sky (0 + 50005, 50002, 50006), every person's face skin
+ * and hair (3 + 2, 3 + 5), Entire Person with InstanceIDs (0 + 20036, two by hand) and a 3 + 13 entry
+ * Lightroom made [handle: capture4-check.json `round_trip`, steps `row*_round_trip`]. Background
+ * (0 + 22) had no round trip of its own; it shares SubType 0 [inference]. Brush strokes, Select
+ * Objects, colour and depth ranges (any other What or RangeMask type) stay refused.
  */
-const ROUND_TRIPPED: ReadonlySet<string> = new Set(["linear", "radial", "luminance", "subject", "sky", "background", "person_entire", "person_face_skin", "landscape_vegetation", "landscape_sky"]);
+function roundTripped(m: Component): boolean {
+  const kind = componentKind(m);
+  if (kind === "linear" || kind === "radial" || kind === "luminance") return true;
+  return m[M.what] === WHAT.image && [0, 1, 2, 3].includes(m[IMAGE.subType] as number);
+}
 
 /**
- * The first correction the engine must not write back, and why: a component of a kind the captures did
- * not round-trip (ROUND_TRIPPED), more than one component, or a MaskBlendMode other than 0 (every
+ * The first correction the engine must not write back, and why: a component whose structure the captures
+ * did not round-trip (roundTripped), more than one component, or a MaskBlendMode other than 0 (every
  * captured component had one component and MaskBlendMode 0 [handle: 3_dump-1.json;
- * capture2-templates.json; capture3-templates.json]). The mask tools write the whole table, so such a
- * mask would be written back in a form never shown to survive it [inference]; they refuse instead
- * (session\masks.ts). A kind the engine made itself counts too: after a people part, say, the photo's
- * masks are not written again in that session.
+ * capture2-templates.json; capture3-templates.json; capture4-row6_people_by_hand.json]). The mask tools
+ * write the whole table, so such a mask would be written back in a form never shown to survive it
+ * [inference]; they refuse instead (session\masks.ts).
  */
 export function uncaptured(entries: readonly Correction[]): { name: string; why: string } | null {
   for (const e of entries) {
@@ -236,7 +258,7 @@ export function uncaptured(entries: readonly Correction[]): { name: string; why:
     const m = parts[0] as Component;
     if (m[M.blend] !== undefined && m[M.blend] !== 0) return { name, why: `its MaskBlendMode is ${String(m[M.blend])}` };
     const kind = componentKind(m);
-    if (!ROUND_TRIPPED.has(kind)) return { name, why: `its kind (${kind === "ai" || kind === "range" || kind === "other" ? String(m[M.what]) : kind}) was not round-tripped in the masks captures` };
+    if (!roundTripped(m)) return { name, why: `its kind (${String(m[M.what])}${kind === "range" ? ", not a luminance range" : ""}) was not round-tripped in the masks captures` };
   }
   return null;
 }
@@ -254,70 +276,10 @@ export function pointOf(m: Component | null | undefined): [number, number] | nul
   const [x, y] = at.split(/\s+/).map(Number);
   return Number.isFinite(x) && Number.isFinite(y) ? [x as number, y as number] : null;
 }
-/** An AI component's ErrorReason when it is a number other than 0 (Lightroom found nothing to mask [unverified until capture 4 row 4]), else null. */
+/** An AI component's ErrorReason when it is a number other than 0, else null: Snow and Water on a photo without them came back with ErrorReason 1, and no dialog [handle: docs\reports\phase6\masks-capture\capture4-check.json steps `row4_snow`, `row4_water`]. */
 export function aiError(m: Component): number | null {
   const n = Number(m[IMAGE.errorReason] ?? 0);
   return Number.isFinite(n) && n !== 0 ? n : null;
 }
 
-// ---- summaries: a correction as the tools show it (mask-ops.ts, session\masks.ts, the session log)
-
-export type MaskSummary = {
-  id: string;
-  name: string;
-  kind: string;
-  active: boolean;
-  inverted: boolean;
-  components: number;
-  /** Local sliders not at 0, in the panel's units. */
-  sliders: Record<string, number>;
-  geometry?: Record<string, unknown>;
-  /** AI kinds: whether Lightroom has computed the mask. */
-  computed?: boolean;
-};
-
-const round = (v: number): number => Math.round(v * 100) / 100;
 export const components = (e: Correction): Component[] => e[C.masks] as Component[];
-const nameOf = (e: Correction): string => (typeof e[C.name] === "string" ? (e[C.name] as string) : String(e[C.id]));
-
-function geometryOf(m: Component): Record<string, unknown> | undefined {
-  const kind = componentKind(m);
-  if (kind === "linear") return { zero: { x: m[LINEAR.zeroX], y: m[LINEAR.zeroY] }, full: { x: m[LINEAR.fullX], y: m[LINEAR.fullY] } };
-  if (kind === "radial") return { left: m[RADIAL.left], top: m[RADIAL.top], right: m[RADIAL.right], bottom: m[RADIAL.bottom], feather: m[RADIAL.feather] };
-  if (kind === "luminance") {
-    const lum = (m[RANGE.holder] as Record<string, unknown>)[RANGE.lumRange];
-    return { lum_range: typeof lum === "string" ? lum.split(/\s+/).map(Number) : lum };
-  }
-  const at = m[IMAGE.referencePoint];
-  if (typeof at === "string") {
-    const [x, y] = at.split(/\s+/).map(Number);
-    return { point: { x, y } };
-  }
-  return undefined;
-}
-
-/** A correction as the tools show it: id, name, kind, on/off, sliders in panel units, geometry. */
-export function summarize(e: Correction): MaskSummary {
-  const parts = components(e);
-  const first = parts[0];
-  const kinds = [...new Set(parts.map(componentKind))];
-  const sliders: Record<string, number> = {};
-  for (const [name, p] of LOCAL_PARAMS) {
-    const v = e[p.field];
-    if (typeof v === "number" && v !== 0) sliders[name] = round(v * p.scale);
-  }
-  const geometry = parts.length === 1 && first ? geometryOf(first) : undefined;
-  const ai = parts.filter((m) => m[M.what] === WHAT.image);
-  return {
-    id: String(e[C.id]),
-    name: nameOf(e),
-    kind: kinds.length === 1 ? (kinds[0] as string) : "mixed",
-    active: e[C.active] !== false,
-    inverted: parts.length > 0 && parts.every((m) => m[M.inverted] === true),
-    components: parts.length,
-    sliders,
-    ...(geometry ? { geometry } : {}),
-    ...(ai.length > 0 ? { computed: ai.every(computed) } : {}),
-  };
-}
-

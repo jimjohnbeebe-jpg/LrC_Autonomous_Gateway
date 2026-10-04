@@ -36,7 +36,7 @@ describe("bridge: update_ai_settings", () => {
   it("names the photo by uuid and reads the gate's status and the update's state back", async () => {
     const result = await client.request("update_ai_settings", { photo_uuid: lr.uuid, expect: { is_virtual_copy: false } });
     expect(plugin.received.at(-1)).toEqual({ name: "update_ai_settings", payload: { photo_uuid: lr.uuid, expect: { is_virtual_copy: false } } });
-    expect(result).toEqual({ uuid: lr.uuid, status: "executed", state: "done", command_ms: 2 });
+    expect(result).toEqual({ uuid: lr.uuid, status: "started", state: "started", command_ms: 2 });
   });
 
   it("still reads the answer of plugin 0.11.0, which waited for the update", async () => {

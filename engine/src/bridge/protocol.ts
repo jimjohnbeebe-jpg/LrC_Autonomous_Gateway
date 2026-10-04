@@ -220,9 +220,10 @@ export const COMMANDS = {
   hud_update: hudUpdateResultSchema,
   // Plugin 0.11.0 (Masks.lua, issue #59). update_ai_settings: photo:updateAISettings() in its own write
   // gate. A Lightroom without the call answers feature_unavailable. Up to 0.12.0 it waited for the
-  // update (call_ms, `gate` what withWriteAccessDo returned); from 0.13.0 (PR C step 2b) the gate is
-  // asynchronous and the answer comes at once: `status` "executed" or "queued" (Lightroom's), `state`
-  // what the update did so far (queued, running, done, failed, abandoned; probe_write_gate reports it later).
+  // update (call_ms, `gate` what withWriteAccessDo returned); 0.13.0 used an asynchronous gate, which
+  // still waited for the update when the catalog was free (`status` "executed"); from 0.14.0 the update
+  // runs in the plugin's own task and the answer comes at once: `status` "started", `state` what the task
+  // did so far (started, running, done, failed, abandoned; probe_write_gate reports it later).
   update_ai_settings: z.object({
     ...targeted,
     status: z.string().optional(),

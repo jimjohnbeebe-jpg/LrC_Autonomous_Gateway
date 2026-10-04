@@ -3,8 +3,9 @@
 // In Jim's step-2 check, Lightroom's "Update AI Settings Errors" dialog opened inside the update's
 // write gate and held it; every later write, the put-backs included, was refused until Jim restarted
 // Lightroom [stated: Jim, 2026-10-03, his screenshot and his restart of Lightroom]. So:
-//   - the plugin's update runs in an asynchronous gate and answers at once (plugin\LrC-AVG.lrplugin\
-//     Masks.lua); the engine then reads the table, every POLL_MS doubling to 1 s, for the entry's
+//   - the plugin's update runs in its own task and answers at once (plugin 0.14.0, plugin\LrC-AVG.lrplugin\
+//     Masks.lua: plugin 0.13.0's asynchronous gate still held the answer for 11 s [handle:
+//     docs\reports\phase6\masks-capture\capture4-check.json step `row2_vegetation`]); the engine then reads the table, every POLL_MS doubling to 1 s, for the entry's
 //     digest (computed [handle: docs\reports\phase6\masks-capture\check.json `7_sky.new_digests`]) or an
 //     ErrorReason other than 0 (Lightroom found nothing to mask [unverified until capture 4 row 4]);
 //   - while the update is pending (s.aiPending) the session writes, exports and renders nothing

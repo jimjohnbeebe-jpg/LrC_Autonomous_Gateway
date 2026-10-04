@@ -1,7 +1,10 @@
 // The AI-mask commands in the Lightroom sim (plugin 0.13.0, plugin\LrC-AVG.lrplugin\Masks.lua). The sim
 // keeps masks as the table its apply_settings writes (lightroom-sim.ts); here:
-//   - update_ai_settings finds the photo by uuid and answers at once, as the asynchronous gate does
-//     (PR C step 2b). With `tableRoute` "computes" every AI component without a digest gets its digests,
+//   - update_ai_settings finds the photo by uuid and answers "started" at once, as plugin 0.14.0's task
+//     does (PR C step 2c). A component with InstanceIDs (one person's mask) gets InstanceBounds, the
+//     boxes of `people` (capture 4's two people by default, docs\reports\phase6\masks-capture\
+//     capture4-row6_people_by_hand.json), or ErrorReason 1 when `people` is empty; `personDrift` makes
+//     it come back as MaskSubType 3 + 13 without InstanceIDs, as the engine's instance-less entry did. With `tableRoute` "computes" every AI component without a digest gets its digests,
 //     as Lightroom did in capture 1 (docs\reports\phase6\masks-capture\check.json `7_sky`); "absent"
 //     gives it ErrorReason 1 instead (what Lightroom does for a kind the photo lacks is [unverified]);
 //     "never" leaves it uncomputed; "unavailable" answers feature_unavailable; "failed" / "abandoned"
@@ -40,6 +43,12 @@ export class SimMasks {
   gate: "free" | "dialog" | "slow" = "free";
   heldProbes = 3;
   releaseState: "done" | "failed" = "done";
+  people: Array<{ Top: number; Left: number; Bottom: number; Right: number }> = [
+    { Top: 0.374479, Right: 0.532342, Left: 0.156001, Bottom: 0.785937 },
+    { Top: 0.409896, Right: 0.823936, Left: 0.349014, Bottom: 1 },
+  ];
+  /** true: every one-person entry drifts; "wanted": only the wanted entry (not the probe, instance 0 of Entire Person). */
+  personDrift: boolean | "wanted" = false;
   probe: "known" | "unknown" = "known";
   /** "late": the mask shows in the table only after the command's wait, so it answers no new id. */
   dc: "works" | "late" | "none" | "unknown" = "works";
@@ -77,9 +86,19 @@ function dcEntry(subtype: string): Entry {
 const pending = (sim: MaskSim, uuid: string): Entry[] => table(sim.settingsOf(uuid)).flatMap(parts).filter((m) => m[M.what] === WHAT.image && m[IMAGE.digest] === undefined);
 
 function compute(sim: MaskSim, uuid: string): void {
+  const sm = sim.masks;
   for (const m of pending(sim, uuid)) {
-    if (sim.masks.tableRoute === "computes") m[IMAGE.digest] = "D0D0D0D0D0D0D0D0D0D0D0D0D0D0D0D0";
-    if (sim.masks.tableRoute === "absent") m[IMAGE.errorReason] = 1;
+    const person = Array.isArray(m[IMAGE.instanceIds]);
+    if (sm.tableRoute === "absent" || (person && sm.tableRoute === "computes" && sm.people.length === 0)) m[IMAGE.errorReason] = 1;
+    else if (sm.tableRoute === "computes") {
+      m[IMAGE.digest] = "D0D0D0D0D0D0D0D0D0D0D0D0D0D0D0D0";
+      if (person) m[IMAGE.instanceBounds] = structuredClone(sm.people);
+      const probe = m[IMAGE.subCategory] === 20036 && (m[IMAGE.instanceIds] as Array<Record<string, unknown>>)[0]?.[IMAGE.instanceId] === 0;
+      if (person && (sm.personDrift === true || (sm.personDrift === "wanted" && !probe))) {
+        Object.assign(m, { [IMAGE.subType]: 3, [IMAGE.subCategory]: 13 });
+        delete m[IMAGE.instanceIds];
+      }
+    }
   }
 }
 
@@ -91,12 +110,12 @@ function updateAiSettings(sim: MaskSim, p: Record<string, unknown>): FakeReply {
   if (sm.tableRoute === "unavailable") return fail("feature_unavailable", "photo:updateAISettings (SDK 13.3) is not available in this Lightroom (or not to this plugin)", true);
   if (sm.tableRoute === "failed" || sm.tableRoute === "abandoned") {
     sm.update = { uuid, state: sm.tableRoute, ...(sm.tableRoute === "failed" ? { error: "dry: updateAISettings raised" } : {}) };
-    return { ok: true, payload: { uuid, status: "queued", state: "queued", command_ms: 1 } };
+    return { ok: true, payload: { uuid, status: "started", state: "started", command_ms: 1 } };
   }
   if (sm.gate === "free") {
     compute(sim, uuid);
     sm.update = { uuid, state: "done" };
-    return { ok: true, payload: { uuid, status: "executed", state: "done", command_ms: 2 } };
+    return { ok: true, payload: { uuid, status: "started", state: "started", command_ms: 2 } };
   }
   sm.update = { uuid, state: "running" };
   sm.held = sm.heldProbes;
@@ -105,7 +124,7 @@ function updateAiSettings(sim: MaskSim, p: Record<string, unknown>): FakeReply {
     if (slow) compute(sim, uuid);
     sm.update = sm.releaseState === "failed" ? { uuid, state: "failed", error: "dry: updateAISettings raised after the dialog" } : { uuid, state: "done" };
   };
-  return { ok: true, payload: { uuid, status: "executed", state: "running", command_ms: 1 } };
+  return { ok: true, payload: { uuid, status: "started", state: "started", command_ms: 1 } };
 }
 
 function probeWriteGate(sim: MaskSim): FakeReply {

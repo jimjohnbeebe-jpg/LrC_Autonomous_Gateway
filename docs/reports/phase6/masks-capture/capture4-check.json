@@ -1,0 +1,1015 @@
+{
+  "started": "2026-10-04T11:44:57.613Z",
+  "engine_version": "0.16.0",
+  "steps": {
+    "row0_photo": {
+      "at": "2026-10-04T11:44:58.433Z",
+      "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+      "filename": "20260907-_OZ80099.NEF",
+      "snapshot": {
+        "id": "D0056DEE-BED5-419F-9259-F7910349BA13",
+        "name": "AVG c4 row0 04:44:58"
+      },
+      "masks_before": 0
+    },
+    "row0_settled": {
+      "at": "2026-10-04T11:46:09.797Z",
+      "ms": 8,
+      "entries": [
+        {
+          "name": "Vegetation",
+          "What": "Mask/Image",
+          "MaskSubType": 0,
+          "MaskSubCategoryID": 50005,
+          "ReferencePoint": "0.525306 0.349462",
+          "digest": true
+        },
+        {
+          "name": "Mountains",
+          "What": "Mask/Image",
+          "MaskSubType": 0,
+          "MaskSubCategoryID": 50002,
+          "ReferencePoint": "0.761259 0.641981",
+          "digest": true
+        },
+        {
+          "name": "Sky",
+          "What": "Mask/Image",
+          "MaskSubType": 0,
+          "MaskSubCategoryID": 50006,
+          "ReferencePoint": "0.461006 0.091640",
+          "digest": true
+        }
+      ]
+    },
+    "row0_landscape_by_hand": {
+      "at": "2026-10-04T11:46:09.803Z",
+      "entries": [
+        {
+          "name": "Vegetation",
+          "What": "Mask/Image",
+          "MaskSubType": 0,
+          "MaskSubCategoryID": 50005,
+          "ReferencePoint": "0.525306 0.349462",
+          "digest": true
+        },
+        {
+          "name": "Mountains",
+          "What": "Mask/Image",
+          "MaskSubType": 0,
+          "MaskSubCategoryID": 50002,
+          "ReferencePoint": "0.761259 0.641981",
+          "digest": true
+        },
+        {
+          "name": "Sky",
+          "What": "Mask/Image",
+          "MaskSubType": 0,
+          "MaskSubCategoryID": 50006,
+          "ReferencePoint": "0.461006 0.091640",
+          "digest": true
+        }
+      ]
+    },
+    "row0_round_trip": {
+      "at": "2026-10-04T11:46:09.921Z",
+      "kinds": [
+        "landscape_vegetation",
+        "landscape_mountains",
+        "landscape_sky"
+      ],
+      "ok": true,
+      "differing_write": [],
+      "differing_read": []
+    },
+    "row0_put_back": {
+      "at": "2026-10-04T11:47:09.912Z",
+      "differing": [],
+      "late": []
+    },
+    "row1_probe": {
+      "at": "2026-10-04T11:47:11.208Z",
+      "status": "executed",
+      "ms": 0.49924850463867
+    },
+    "row1_put_back": {
+      "at": "2026-10-04T11:47:17.549Z",
+      "differing": [],
+      "late": []
+    },
+    "row2_photo": {
+      "at": "2026-10-04T11:47:33.051Z",
+      "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+      "filename": "_DSC0028.NEF",
+      "snapshot": {
+        "id": "78326BFB-6070-49A4-9F70-62B72205BF28",
+        "name": "AVG c4 row2 04:47:29"
+      },
+      "masks_before": 0
+    },
+    "row2_vegetation": {
+      "at": "2026-10-04T11:47:46.510Z",
+      "kind": "landscape_vegetation",
+      "id": "69EB0CD7-4AE6-46D0-80A4-8701FFB2B47D",
+      "update": {
+        "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+        "status": "executed",
+        "state": "done",
+        "command_ms": 11306.217670441
+      },
+      "outcome": "computed",
+      "ms": 502,
+      "polls": 1,
+      "probes": [],
+      "dialog_ms": null,
+      "final": {
+        "name": "AVG c4 vegetation",
+        "What": "Mask/Image",
+        "MaskSubType": 0,
+        "MaskSubCategoryID": 50005,
+        "ReferencePoint": "0.220703 0.402941",
+        "digest": true
+      }
+    },
+    "row2_round_trip": {
+      "at": "2026-10-04T11:47:46.847Z",
+      "kinds": [
+        "landscape_vegetation"
+      ],
+      "ok": true,
+      "differing_write": [],
+      "differing_read": []
+    },
+    "row2_put_back": {
+      "at": "2026-10-04T11:48:10.060Z",
+      "differing": [],
+      "late": []
+    },
+    "row3_sky_no_update": {
+      "at": "2026-10-04T11:48:58.156Z",
+      "kind": "sky",
+      "id": "356F96FF-CCB2-46D7-86AD-2BFF0386EC67",
+      "update": null,
+      "outcome": "timeout",
+      "ms": 30458,
+      "polls": 32,
+      "probes": [
+        {
+          "at_ms": 10057,
+          "status": "executed",
+          "ms": 0,
+          "update": {
+            "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+            "state": "done"
+          }
+        },
+        {
+          "at_ms": 12090,
+          "status": "executed",
+          "ms": 0,
+          "update": {
+            "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+            "state": "done"
+          }
+        },
+        {
+          "at_ms": 14112,
+          "status": "executed",
+          "ms": 0,
+          "update": {
+            "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+            "state": "done"
+          }
+        },
+        {
+          "at_ms": 16133,
+          "status": "executed",
+          "ms": 0,
+          "update": {
+            "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+            "state": "done"
+          }
+        },
+        {
+          "at_ms": 18305,
+          "status": "executed",
+          "ms": 0,
+          "update": {
+            "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+            "state": "done"
+          }
+        },
+        {
+          "at_ms": 20326,
+          "status": "executed",
+          "ms": 0,
+          "update": {
+            "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+            "state": "done"
+          }
+        },
+        {
+          "at_ms": 22363,
+          "status": "executed",
+          "ms": 0,
+          "update": {
+            "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+            "state": "done"
+          }
+        },
+        {
+          "at_ms": 24396,
+          "status": "executed",
+          "ms": 0,
+          "update": {
+            "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+            "state": "done"
+          }
+        },
+        {
+          "at_ms": 26415,
+          "status": "executed",
+          "ms": 0,
+          "update": {
+            "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+            "state": "done"
+          }
+        },
+        {
+          "at_ms": 28438,
+          "status": "executed",
+          "ms": 0,
+          "update": {
+            "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+            "state": "done"
+          }
+        }
+      ],
+      "dialog_ms": null,
+      "final": {
+        "name": "AVG c4 sky (no update)",
+        "What": "Mask/Image",
+        "MaskSubType": 2,
+        "ReferencePoint": "0.500000 0.500000",
+        "ErrorReason": 0,
+        "digest": false
+      }
+    },
+    "row3_put_back": {
+      "at": "2026-10-04T11:49:10.100Z",
+      "differing": [],
+      "late": []
+    },
+    "row4_snow": {
+      "at": "2026-10-04T11:49:17.316Z",
+      "kind": "landscape_snow",
+      "id": "4DF05CD2-33A1-4471-8D55-E73E6F6DC66C",
+      "update": {
+        "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+        "status": "executed",
+        "state": "done",
+        "command_ms": 5775.9135961533
+      },
+      "outcome": "error_reason",
+      "ms": 329,
+      "polls": 1,
+      "probes": [],
+      "dialog_ms": null,
+      "final": {
+        "name": "AVG c4 snow",
+        "What": "Mask/Image",
+        "MaskSubType": 0,
+        "MaskSubCategoryID": 50008,
+        "ReferencePoint": "0.500000 0.500000",
+        "ErrorReason": 1,
+        "digest": false
+      }
+    },
+    "row4_water": {
+      "at": "2026-10-04T11:49:24.922Z",
+      "kind": "landscape_water",
+      "id": "0B91315B-D7F0-46F0-A097-BA0D69817B3C",
+      "update": {
+        "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+        "status": "executed",
+        "state": "done",
+        "command_ms": 4408.2592725754
+      },
+      "outcome": "error_reason",
+      "ms": 339,
+      "polls": 1,
+      "probes": [],
+      "dialog_ms": null,
+      "final": {
+        "name": "AVG c4 water",
+        "What": "Mask/Image",
+        "MaskSubType": 0,
+        "MaskSubCategoryID": 50007,
+        "ReferencePoint": "0.500000 0.500000",
+        "ErrorReason": 1,
+        "digest": false
+      }
+    },
+    "row4_put_back": {
+      "at": "2026-10-04T11:49:38.144Z",
+      "differing": [],
+      "late": []
+    },
+    "row5_people_face_skin": {
+      "at": "2026-10-04T11:49:42.672Z",
+      "kind": "people_face_skin",
+      "id": "0BAA10E7-C34D-4E1F-A1F7-75DA597950D8",
+      "update": {
+        "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+        "status": "executed",
+        "state": "done",
+        "command_ms": 2803.3599853516
+      },
+      "outcome": "computed",
+      "ms": 388,
+      "polls": 1,
+      "probes": [],
+      "dialog_ms": null,
+      "final": {
+        "name": "AVG c4 people face skin",
+        "What": "Mask/Image",
+        "MaskSubType": 3,
+        "MaskSubCategoryID": 2,
+        "ReferencePoint": "0.492188 0.379412",
+        "digest": true
+      }
+    },
+    "row5_people_face_skin_round_trip": {
+      "at": "2026-10-04T11:49:42.990Z",
+      "kinds": [
+        "people_face_skin"
+      ],
+      "ok": true,
+      "differing_write": [],
+      "differing_read": []
+    },
+    "row5_people_hair": {
+      "at": "2026-10-04T11:49:59.454Z",
+      "kind": "people_hair",
+      "id": "59098E1A-23C0-426C-9869-CA6182B6EFD4",
+      "update": {
+        "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+        "status": "executed",
+        "state": "done",
+        "command_ms": 2826.246380806
+      },
+      "outcome": "computed",
+      "ms": 344,
+      "polls": 1,
+      "probes": [],
+      "dialog_ms": null,
+      "final": {
+        "name": "AVG c4 people hair",
+        "What": "Mask/Image",
+        "MaskSubType": 3,
+        "MaskSubCategoryID": 5,
+        "ReferencePoint": "0.470703 0.464706",
+        "digest": true
+      }
+    },
+    "row5_people_hair_round_trip": {
+      "at": "2026-10-04T11:49:59.648Z",
+      "kinds": [
+        "people_hair"
+      ],
+      "ok": true,
+      "differing_write": [],
+      "differing_read": []
+    },
+    "row5_put_back": {
+      "at": "2026-10-04T11:50:23.069Z",
+      "differing": [],
+      "late": []
+    },
+    "row6_photo": {
+      "at": "2026-10-04T11:54:49.267Z",
+      "uuid": "7DB97E4A-79F6-494E-BB6F-FBB465D220A6",
+      "filename": "_DSC0111.NEF",
+      "snapshot": {
+        "id": "0373290C-C3C4-461A-A826-A9EFA54E112D",
+        "name": "AVG c4 row6 04:54:49"
+      },
+      "masks_before": 0
+    },
+    "row6_settled": {
+      "at": "2026-10-04T11:56:41.285Z",
+      "ms": 8,
+      "entries": [
+        {
+          "name": "Mask 1",
+          "What": "Mask/Image",
+          "MaskSubType": 0,
+          "MaskSubCategoryID": 20036,
+          "ReferencePoint": "0.375000 0.661765",
+          "digest": true
+        },
+        {
+          "name": "Mask 2",
+          "What": "Mask/Image",
+          "MaskSubType": 0,
+          "MaskSubCategoryID": 20036,
+          "ReferencePoint": "0.570312 0.564706",
+          "digest": true
+        }
+      ]
+    },
+    "row6_people_by_hand": {
+      "at": "2026-10-04T11:56:41.309Z",
+      "entries": [
+        {
+          "name": "Mask 1",
+          "What": "Mask/Image",
+          "MaskSubType": 0,
+          "MaskSubCategoryID": 20036,
+          "ReferencePoint": "0.375000 0.661765",
+          "digest": true
+        },
+        {
+          "name": "Mask 2",
+          "What": "Mask/Image",
+          "MaskSubType": 0,
+          "MaskSubCategoryID": 20036,
+          "ReferencePoint": "0.570312 0.564706",
+          "digest": true
+        }
+      ]
+    },
+    "row6_person_entire": {
+      "at": "2026-10-04T11:56:49.477Z",
+      "kind": "person_entire",
+      "id": "3589323C-3EF9-46C8-B56E-3C1F592A6855",
+      "update": {
+        "uuid": "7DB97E4A-79F6-494E-BB6F-FBB465D220A6",
+        "status": "executed",
+        "state": "done",
+        "command_ms": 3804.5343160629
+      },
+      "outcome": "computed",
+      "ms": 277,
+      "polls": 1,
+      "probes": [],
+      "dialog_ms": null,
+      "final": {
+        "name": "AVG c4 person 2",
+        "What": "Mask/Image",
+        "MaskSubType": 3,
+        "MaskSubCategoryID": 13,
+        "ReferencePoint": "0.382812 0.629412",
+        "digest": true
+      }
+    },
+    "row6_person_entire_round_trip": {
+      "at": "2026-10-04T11:56:49.826Z",
+      "kinds": [
+        "person_entire"
+      ],
+      "ok": true,
+      "differing_write": [],
+      "differing_read": []
+    },
+    "row6_person_face_skin": {
+      "at": "2026-10-04T11:57:04.824Z",
+      "kind": "person_face_skin",
+      "id": "4FAD463F-41FB-4A19-86CC-1B1AEE15DCE3",
+      "update": {
+        "uuid": "7DB97E4A-79F6-494E-BB6F-FBB465D220A6",
+        "status": "executed",
+        "state": "done",
+        "command_ms": 3637.8079652786
+      },
+      "outcome": "computed",
+      "ms": 561,
+      "polls": 1,
+      "probes": [],
+      "dialog_ms": null,
+      "final": {
+        "name": "AVG c4 person 2 face",
+        "What": "Mask/Image",
+        "MaskSubType": 3,
+        "MaskSubCategoryID": 2,
+        "ReferencePoint": "0.236328 0.517647",
+        "digest": true
+      }
+    },
+    "row6_person_face_skin_round_trip": {
+      "at": "2026-10-04T11:57:04.993Z",
+      "kinds": [
+        "person_face_skin"
+      ],
+      "ok": true,
+      "differing_write": [],
+      "differing_read": []
+    },
+    "row6_put_back": {
+      "at": "2026-10-04T11:58:00.069Z",
+      "differing": [],
+      "late": []
+    },
+    "final_CF12AF60-0858-4181-9562-376D16B89126": {
+      "at": "2026-10-04T11:58:36.655Z",
+      "filename": "20260907-_OZ80099.NEF",
+      "differing": []
+    },
+    "final_268D3EFD-034F-4555-99CF-D355707B5153": {
+      "at": "2026-10-04T11:58:36.672Z",
+      "filename": "_DSC0028.NEF",
+      "differing": []
+    },
+    "final_7DB97E4A-79F6-494E-BB6F-FBB465D220A6": {
+      "at": "2026-10-04T11:58:36.684Z",
+      "filename": "_DSC0111.NEF",
+      "differing": []
+    }
+  },
+  "checks": [
+    {
+      "ok": true,
+      "text": "Lightroom 15.6 runs plugin 0.13.0 with probe_write_gate (executed)"
+    },
+    {
+      "ok": true,
+      "text": "row0: 20260907-_OZ80099.NEF, snapshot \"AVG c4 row0 04:44:58\", 0 masks on it"
+    },
+    {
+      "ok": true,
+      "text": "row0: each of Lightroom's 3 new entries has a digest or an ErrorReason (0 s)"
+    },
+    {
+      "ok": true,
+      "text": "row0: Lightroom's own Landscape made 3 entries: 50005, 50002, 50006"
+    },
+    {
+      "ok": true,
+      "text": "row0: landscape_vegetation, landscape_mountains, landscape_sky round-trips unchanged (the table written back as it was, read back equal)"
+    },
+    {
+      "ok": true,
+      "text": "row0: PUT BACK: YES (every setting and the masks as at the check's start, and still 5 s later)"
+    },
+    {
+      "ok": true,
+      "text": "row1: 20260907-_OZ80099.NEF, as at the check's start (snapshot \"AVG c4 row0 04:44:58\"), 0 masks on it"
+    },
+    {
+      "ok": true,
+      "text": "row1: a linear mask written by table (no AI)"
+    },
+    {
+      "ok": true,
+      "text": "row1: probe_write_gate answers \"executed\" when Lightroom is free (executed, 0 ms)",
+      "detail": {
+        "status": "executed",
+        "ms": 0.49924850463867
+      }
+    },
+    {
+      "ok": true,
+      "text": "row1: PUT BACK: YES (every setting and the masks as at the check's start, and still 5 s later)"
+    },
+    {
+      "ok": true,
+      "text": "row2: _DSC0028.NEF, snapshot \"AVG c4 row2 04:47:29\", 0 masks on it"
+    },
+    {
+      "ok": true,
+      "text": "row2_vegetation: the entry \"AVG c4 vegetation\" is in the table after the write",
+      "detail": {
+        "name": "AVG c4 vegetation",
+        "What": "Mask/Image",
+        "MaskSubType": 0,
+        "MaskSubCategoryID": 50005,
+        "ReferencePoint": "0.500000 0.500000",
+        "ErrorReason": 0,
+        "digest": false
+      }
+    },
+    {
+      "ok": false,
+      "text": "row2: update_ai_settings answered at once from the asynchronous gate (status executed, 11306 ms)",
+      "detail": {
+        "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+        "status": "executed",
+        "state": "done",
+        "command_ms": 11306.217670441
+      }
+    },
+    {
+      "ok": true,
+      "text": "row2: the Adobe-form vegetation computed after the asynchronous update (computed, 502 ms, 1 reads)",
+      "detail": {
+        "name": "AVG c4 vegetation",
+        "What": "Mask/Image",
+        "MaskSubType": 0,
+        "MaskSubCategoryID": 50005,
+        "ReferencePoint": "0.220703 0.402941",
+        "digest": true
+      }
+    },
+    {
+      "ok": true,
+      "text": "row2: landscape_vegetation round-trips unchanged (the table written back as it was, read back equal)"
+    },
+    {
+      "ok": true,
+      "text": "row2: PUT BACK: YES (every setting and the masks as at the check's start, and still 5 s later)"
+    },
+    {
+      "ok": true,
+      "text": "row3: _DSC0028.NEF, as at the check's start (snapshot \"AVG c4 row2 04:47:29\"), 0 masks on it"
+    },
+    {
+      "ok": true,
+      "text": "row3_sky_no_update: the entry \"AVG c4 sky (no update)\" is in the table after the write",
+      "detail": {
+        "name": "AVG c4 sky (no update)",
+        "What": "Mask/Image",
+        "MaskSubType": 2,
+        "ReferencePoint": "0.500000 0.500000",
+        "ErrorReason": 0,
+        "digest": false
+      }
+    },
+    {
+      "ok": true,
+      "text": "row3: without update_ai_settings the sky did not compute within 30 s (computed or not: either is a finding)",
+      "detail": {
+        "name": "AVG c4 sky (no update)",
+        "What": "Mask/Image",
+        "MaskSubType": 2,
+        "ReferencePoint": "0.500000 0.500000",
+        "ErrorReason": 0,
+        "digest": false
+      }
+    },
+    {
+      "ok": true,
+      "text": "row3: PUT BACK: YES (every setting and the masks as at the check's start, and still 5 s later)"
+    },
+    {
+      "ok": true,
+      "text": "row4: _DSC0028.NEF, as at the check's start (snapshot \"AVG c4 row2 04:47:29\"), 0 masks on it"
+    },
+    {
+      "ok": true,
+      "text": "row4_snow: the entry \"AVG c4 snow\" is in the table after the write",
+      "detail": {
+        "name": "AVG c4 snow",
+        "What": "Mask/Image",
+        "MaskSubType": 0,
+        "MaskSubCategoryID": 50008,
+        "ReferencePoint": "0.500000 0.500000",
+        "ErrorReason": 0,
+        "digest": false
+      }
+    },
+    {
+      "ok": true,
+      "text": "row4: snow (not in this photo) came back with ErrorReason 1 (error_reason, 329 ms)",
+      "detail": {
+        "name": "AVG c4 snow",
+        "What": "Mask/Image",
+        "MaskSubType": 0,
+        "MaskSubCategoryID": 50008,
+        "ReferencePoint": "0.500000 0.500000",
+        "ErrorReason": 1,
+        "digest": false
+      }
+    },
+    {
+      "ok": true,
+      "text": "row4: Lightroom's catalog stayed free for snow"
+    },
+    {
+      "ok": true,
+      "text": "row4_snow: the entry is out of the table again"
+    },
+    {
+      "ok": true,
+      "text": "row4_water: the entry \"AVG c4 water\" is in the table after the write",
+      "detail": {
+        "name": "AVG c4 water",
+        "What": "Mask/Image",
+        "MaskSubType": 0,
+        "MaskSubCategoryID": 50007,
+        "ReferencePoint": "0.500000 0.500000",
+        "ErrorReason": 0,
+        "digest": false
+      }
+    },
+    {
+      "ok": true,
+      "text": "row4: water (not in this photo) came back with ErrorReason 1 (error_reason, 339 ms)",
+      "detail": {
+        "name": "AVG c4 water",
+        "What": "Mask/Image",
+        "MaskSubType": 0,
+        "MaskSubCategoryID": 50007,
+        "ReferencePoint": "0.500000 0.500000",
+        "ErrorReason": 1,
+        "digest": false
+      }
+    },
+    {
+      "ok": true,
+      "text": "row4: Lightroom's catalog stayed free for water"
+    },
+    {
+      "ok": true,
+      "text": "row4_water: the entry is out of the table again"
+    },
+    {
+      "ok": true,
+      "text": "row4: PUT BACK: YES (every setting and the masks as at the check's start, and still 5 s later)"
+    },
+    {
+      "ok": true,
+      "text": "row5: _DSC0028.NEF, as at the check's start (snapshot \"AVG c4 row2 04:47:29\"), 0 masks on it"
+    },
+    {
+      "ok": true,
+      "text": "row5_people_face_skin: the entry \"AVG c4 people face skin\" is in the table after the write",
+      "detail": {
+        "name": "AVG c4 people face skin",
+        "What": "Mask/Image",
+        "MaskSubType": 3,
+        "MaskSubCategoryID": 2,
+        "ReferencePoint": "0.500000 0.500000",
+        "ErrorReason": 0,
+        "digest": false
+      }
+    },
+    {
+      "ok": true,
+      "text": "row5: people_face_skin computed (computed, 388 ms)",
+      "detail": {
+        "name": "AVG c4 people face skin",
+        "What": "Mask/Image",
+        "MaskSubType": 3,
+        "MaskSubCategoryID": 2,
+        "ReferencePoint": "0.492188 0.379412",
+        "digest": true
+      }
+    },
+    {
+      "ok": true,
+      "text": "row5_people_face_skin: people_face_skin round-trips unchanged (the table written back as it was, read back equal)"
+    },
+    {
+      "ok": true,
+      "text": "row5_people_hair: the entry \"AVG c4 people hair\" is in the table after the write",
+      "detail": {
+        "name": "AVG c4 people hair",
+        "What": "Mask/Image",
+        "MaskSubType": 3,
+        "MaskSubCategoryID": 5,
+        "ReferencePoint": "0.500000 0.500000",
+        "ErrorReason": 0,
+        "digest": false
+      }
+    },
+    {
+      "ok": true,
+      "text": "row5: people_hair computed (computed, 344 ms)",
+      "detail": {
+        "name": "AVG c4 people hair",
+        "What": "Mask/Image",
+        "MaskSubType": 3,
+        "MaskSubCategoryID": 5,
+        "ReferencePoint": "0.470703 0.464706",
+        "digest": true
+      }
+    },
+    {
+      "ok": true,
+      "text": "row5_people_hair: people_hair round-trips unchanged (the table written back as it was, read back equal)"
+    },
+    {
+      "ok": true,
+      "text": "row5: PUT BACK: YES (every setting and the masks as at the check's start, and still 5 s later)"
+    },
+    {
+      "ok": true,
+      "text": "row6: _DSC0111.NEF, snapshot \"AVG c4 row6 04:54:49\", 0 masks on it"
+    },
+    {
+      "ok": true,
+      "text": "row6: each of Lightroom's 2 new entries has a digest or an ErrorReason (0 s)"
+    },
+    {
+      "ok": true,
+      "text": "row6: two Entire Person entries by hand (points [\"0.375000 0.661765\",\"0.570312 0.564706\"])"
+    },
+    {
+      "ok": true,
+      "text": "row6: both carry MaskSubType 0 and MaskSubCategoryID 20036 ([[0,20036],[0,20036]])"
+    },
+    {
+      "ok": true,
+      "text": "row6_person_entire: the entry \"AVG c4 person 2\" is in the table after the write",
+      "detail": {
+        "name": "AVG c4 person 2",
+        "What": "Mask/Image",
+        "MaskSubType": 0,
+        "MaskSubCategoryID": 20036,
+        "ReferencePoint": "0.500000 0.500000",
+        "ErrorReason": 0,
+        "digest": false
+      }
+    },
+    {
+      "ok": true,
+      "text": "row6: person_entire at the right person's point computed (computed, 277 ms)",
+      "detail": {
+        "name": "AVG c4 person 2",
+        "What": "Mask/Image",
+        "MaskSubType": 3,
+        "MaskSubCategoryID": 13,
+        "ReferencePoint": "0.382812 0.629412",
+        "digest": true
+      }
+    },
+    {
+      "ok": true,
+      "text": "row6_person_entire: person_entire round-trips unchanged (the table written back as it was, read back equal)"
+    },
+    {
+      "ok": true,
+      "text": "row6_person_face_skin: the entry \"AVG c4 person 2 face\" is in the table after the write",
+      "detail": {
+        "name": "AVG c4 person 2 face",
+        "What": "Mask/Image",
+        "MaskSubType": 0,
+        "MaskSubCategoryID": 2,
+        "ReferencePoint": "0.500000 0.500000",
+        "ErrorReason": 0,
+        "digest": false
+      }
+    },
+    {
+      "ok": true,
+      "text": "row6: person_face_skin at the right person's point computed (computed, 561 ms)",
+      "detail": {
+        "name": "AVG c4 person 2 face",
+        "What": "Mask/Image",
+        "MaskSubType": 3,
+        "MaskSubCategoryID": 2,
+        "ReferencePoint": "0.236328 0.517647",
+        "digest": true
+      }
+    },
+    {
+      "ok": true,
+      "text": "row6_person_face_skin: person_face_skin round-trips unchanged (the table written back as it was, read back equal)"
+    },
+    {
+      "ok": true,
+      "text": "row6: PUT BACK: YES (every setting and the masks as at the check's start, and still 5 s later)"
+    },
+    {
+      "ok": false,
+      "text": "row8 stopped: select_failed: Lightroom did not select photo 25260 (active photo nil, 688 selected)",
+      "detail": "select_failed: Lightroom did not select photo 25260 (active photo nil, 688 selected)"
+    },
+    {
+      "ok": true,
+      "text": "row7 skipped: rows 1-4 did not all pass (it runs only after them)"
+    },
+    {
+      "ok": true,
+      "text": "FINAL: 20260907-_OZ80099.NEF is as at the check's start"
+    },
+    {
+      "ok": true,
+      "text": "FINAL: _DSC0028.NEF is as at the check's start"
+    },
+    {
+      "ok": true,
+      "text": "FINAL: _DSC0111.NEF is as at the check's start"
+    }
+  ],
+  "answers": [
+    {
+      "q": "What did Lightroom do?",
+      "answer": "m",
+      "meaning": "it made the Landscape mask, no dialog",
+      "at": "2026-10-04T11:47:03.835Z"
+    },
+    {
+      "q": "Does 20260907-_OZ80099.NEF look as it did before the check, with none of the check's masks left?",
+      "answer": "y",
+      "meaning": "yes",
+      "at": "2026-10-04T11:47:29.264Z"
+    },
+    {
+      "q": "Does 'AVG c4 vegetation' cover the plants and trees in the photo?",
+      "answer": "y",
+      "meaning": "yes",
+      "at": "2026-10-04T11:48:03.771Z"
+    },
+    {
+      "q": "Is _DSC0028.NEF on screen in Develop now?",
+      "answer": "y",
+      "meaning": "yes",
+      "at": "2026-10-04T11:48:26.505Z"
+    },
+    {
+      "q": "Did Lightroom stay dialog-free during these 30 seconds?",
+      "answer": "y",
+      "meaning": "yes",
+      "at": "2026-10-04T11:49:03.966Z"
+    },
+    {
+      "q": "Did Lightroom stay dialog-free while it looked for Snow and Water?",
+      "answer": "y",
+      "meaning": "yes",
+      "at": "2026-10-04T11:49:32.667Z"
+    },
+    {
+      "q": "Does 'AVG c4 people face skin' cover the person's facial skin?",
+      "answer": "y",
+      "meaning": "yes",
+      "at": "2026-10-04T11:49:56.015Z"
+    },
+    {
+      "q": "Does 'AVG c4 people hair' cover the person's hair?",
+      "answer": "y",
+      "meaning": "yes",
+      "at": "2026-10-04T11:50:16.185Z"
+    },
+    {
+      "q": "Does _DSC0028.NEF look as it did before the check, with none of the check's masks left?",
+      "answer": "y",
+      "meaning": "yes",
+      "at": "2026-10-04T11:50:44.507Z"
+    },
+    {
+      "q": "Does 'AVG c4 person 2' cover the person on the RIGHT only?",
+      "answer": "n",
+      "meaning": "no",
+      "at": "2026-10-04T11:57:00.192Z"
+    },
+    {
+      "q": "Does 'AVG c4 person 2 face' cover the RIGHT person's face only?",
+      "answer": "n",
+      "meaning": "no",
+      "at": "2026-10-04T11:57:53.906Z"
+    },
+    {
+      "q": "Does _DSC0111.NEF look as it did before the check, with none of the check's masks left?",
+      "answer": "y",
+      "meaning": "yes",
+      "at": "2026-10-04T11:58:06.456Z"
+    }
+  ],
+  "failures": [
+    "row2: update_ai_settings answered at once from the asynchronous gate (status executed, 11306 ms)",
+    "answered n (no): Does 'AVG c4 person 2' cover the person on the RIGHT only?",
+    "answered n (no): Does 'AVG c4 person 2 face' cover the RIGHT person's face only?",
+    "row8 stopped: select_failed: Lightroom did not select photo 25260 (active photo nil, 688 selected)"
+  ],
+  "hello": {
+    "plugin_version": "0.13.0",
+    "lrc_version": "15.6",
+    "sdk_declared": 13
+  },
+  "round_trip": {
+    "landscape_vegetation": true,
+    "landscape_mountains": true,
+    "landscape_sky": true,
+    "people_face_skin": true,
+    "people_hair": true,
+    "person_entire": true,
+    "person_face_skin": true
+  },
+  "rows_ok": {
+    "row0": true,
+    "row1": true,
+    "row2": false,
+    "row3": true,
+    "row4": true,
+    "row5": true,
+    "row6": false,
+    "row8": false
+  },
+  "stopped": null,
+  "bridge": {
+    "connects": 1,
+    "connect_failures": 0,
+    "last_connect_error": null,
+    "drops": 0,
+    "last_drop_reason": null,
+    "malformed_lines": 0,
+    "unknown_response_ids": 0,
+    "ports": {
+      "command": 8765,
+      "event": 8766,
+      "from": "ports file"
+    }
+  },
+  "ended": "2026-10-04T11:58:36.686Z"
+}

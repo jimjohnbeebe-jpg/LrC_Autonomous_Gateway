@@ -5,6 +5,7 @@
 
 import { z } from "zod";
 
+const box = z.strictObject({ top: z.number(), left: z.number(), bottom: z.number(), right: z.number() });
 const summary = z.strictObject({
   id: z.string(),
   name: z.string(),
@@ -15,6 +16,9 @@ const summary = z.strictObject({
   sliders: z.record(z.string(), z.number()),
   geometry: z.record(z.string(), z.unknown()).optional(),
   computed: z.boolean().optional(),
+  /** PR C step 2c: one person's mask, its person and every person's box Lightroom found (params\mask-summary.ts). */
+  instance: z.number().int().optional(),
+  people: z.array(box).optional(),
 });
 
 export const maskPassSchema = z.strictObject({
@@ -34,6 +38,9 @@ export const maskPassSchema = z.strictObject({
       dc_ms: z.number().optional(),
       /** PR C step 2b: how long Lightroom's write gate stayed held before the mask computed (session\ai-update.ts). */
       dialog_ms: z.number().optional(),
+      /** PR C step 2c: one person's mask (session\person-masks.ts). */
+      people: z.array(box).optional(),
+      instance: z.number().int().optional(),
     })
     .optional(),
 });

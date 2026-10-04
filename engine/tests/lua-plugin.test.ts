@@ -174,7 +174,11 @@ describe("lua: LrC-AVG.lrplugin", () => {
     const gate = codeOnly(readFileSync(path.join(avgPlugin, "Gate.lua"), "utf8"));
     for (const [call] of gate.matchAll(/withWriteAccessDo\(([^\n]*)\)/g)) expect(call, call).toMatch(/\{ timeout = seconds/);
     expect(gate).toMatch(/if status == "" then return nil, busy\(name, seconds\) end/);
-    expect(codeOnly(readFileSync(path.join(avgPlugin, "Masks.lua"), "utf8"))).toMatch(/Gate\.async\(catalog, ""|LrTasks\.pcall\(Gate\.async, catalog, ""/);
+    // The AI update runs in its own task, its gate inside it, and the command answers "started" at once (plugin 0.14.0).
+    const masks = codeOnly(readFileSync(path.join(avgPlugin, "Masks.lua"), "utf8"));
+    expect(masks).toMatch(/LrTasks\.startAsyncTask\(function\(\)\s+local ok, err = LrTasks\.pcall\(function\(\)\s+local gated = Gate\.write\(catalog, ""/);
+    expect(masks).toMatch(/return \{ uuid = found\.uuid, status = "", state = rec\.state/);
+    expect(gate).not.toMatch(/asynchronous/);
   });
 
   it("passes a History name to every applyDevelopSettings call (rule 03-lightroom)", () => {

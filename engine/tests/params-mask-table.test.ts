@@ -8,7 +8,9 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { CANONICAL_PARAMS, loadDefaultParamMap } from "../src/params/index.js";
 import { applyOp, newCorrection, precheck, storedSliders, tableSettings, type MaskOp } from "../src/params/mask-ops.js";
-import { AI_KINDS, C, CARRIED, CORRECTION, IMAGE, LINEAR, LOCAL_PARAMS, M, MASK_TABLE_KEY, RADIAL, RANGE, RECOMPUTED, WHAT, MaskError, readTable, summarize, tableInfo, uncaptured, verifyTable, type Correction } from "../src/params/mask-table.js";
+import { boundsOf, instanceOf, pickInstance, withInstance } from "../src/params/mask-person.js";
+import { summarize } from "../src/params/mask-summary.js";
+import { AI_KINDS, C, CARRIED, CORRECTION, IMAGE, LINEAR, LOCAL_PARAMS, M, MASK_TABLE_KEY, RADIAL, RANGE, RECOMPUTED, WHAT, BOX, MaskError, readTable, tableInfo, uncaptured, verifyTable, type Correction } from "../src/params/mask-table.js";
 
 const capture = (name: string): unknown => JSON.parse(readFileSync(fileURLToPath(new URL(`../../docs/reports/phase6/masks-capture/${name}`, import.meta.url)), "utf8"));
 const dump = capture("3_dump-1.json") as Record<string, unknown>;
@@ -18,6 +20,8 @@ const people = (capture("capture3-templates.json") as { templates: Record<string
 const captured: Correction[] = [...table, background, ...Object.values(people)];
 /** Capture 3's copies as written, right after the write, and once computed (Lightroom's own read-backs). */
 const copies = ["people_entire", "people_part", "landscape_1", "landscape_2"].map((k) => capture(`capture3-4_${k}.json`) as { written: Correction; after_write: Correction; final: Correction });
+/** Capture 4, row 6: Jim's two Entire Person masks on a photo of two people (left, right). */
+const twoPeople = (capture("capture4-row6_people_by_hand.json") as { entries: Correction[] }).entries;
 
 /** Every key and every string value at any depth. */
 function words(v: unknown, out = new Set<string>()): Set<string> {
@@ -38,8 +42,8 @@ const codeOf = (fn: () => unknown): string => {
 
 describe("params: the mask table's field names (rule 03)", () => {
   it("names only fields and type strings that appear in the committed capture dumps", () => {
-    const seen = words({ dump, captured, copies });
-    const constants = [MASK_TABLE_KEY, CORRECTION, ...CARRIED, ...RECOMPUTED, ...[C, M, WHAT, LINEAR, RADIAL, IMAGE, RANGE].flatMap((o) => Object.values(o)), ...[...LOCAL_PARAMS.values()].map((p) => p.field)];
+    const seen = words({ dump, captured, copies, twoPeople });
+    const constants = [MASK_TABLE_KEY, CORRECTION, ...CARRIED, ...RECOMPUTED, ...[C, M, WHAT, LINEAR, RADIAL, IMAGE, RANGE, BOX].flatMap((o) => Object.values(o)), ...[...LOCAL_PARAMS.values()].map((p) => p.field)];
     expect(constants.filter((c) => !seen.has(c))).toEqual([]);
   });
 
@@ -60,11 +64,40 @@ describe("params: the mask table's field names (rule 03)", () => {
     for (const [kind, e] of Object.entries(from)) expect(AI_KINDS[kind as keyof typeof AI_KINDS].fields, kind).toEqual(tells(e as Correction));
   });
 
-  it("tells every AI kind apart by its fields, so each new entry reads back as its own kind", () => {
+  it("tells every AI kind apart by its fields, so each new entry reads back as its own kind (one person's: once given its instance)", () => {
     const kinds = Object.keys(AI_KINDS) as Array<keyof typeof AI_KINDS>;
-    const made = kinds.map((k) => summarize(newCorrection(k, "n", {}, AI_KINDS[k].point ? { x: 0.4, y: 0.3 } : null, {}, [])).kind);
+    const made = kinds.map((k) => {
+      const e = newCorrection(k, "n", {}, AI_KINDS[k].point ? { x: 0.4, y: 0.3 } : null, {}, []);
+      return summarize(AI_KINDS[k].point ? withInstance(e, k, 1, [0.4, 0.3]) : e).kind;
+    });
     expect(made).toEqual(kinds);
     expect(kinds.filter((k) => AI_KINDS[k].dc !== null)).toEqual(["subject", "sky", "background"]);
+  });
+
+  it("reads one person's instance and every person's box from Lightroom's own entries, and picks the person at a point", () => {
+    const [left, right] = twoPeople.map((e) => (e[C.masks] as Record<string, unknown>[])[0]);
+    expect([instanceOf(left), instanceOf(right)]).toEqual([0, 1]);
+    const boxes = boundsOf(left);
+    expect(boxes).toEqual([{ top: 0.374479, left: 0.156001, bottom: 0.785937, right: 0.532342 }, { top: 0.409896, left: 0.349014, bottom: 1, right: 0.823936 }]);
+    expect(pickInstance(boxes, [0.570312, 0.564706])).toBe(1); // Jim's click on the right person: in box 1 only
+    expect(pickInstance(boxes, [0.375, 0.661765])).toBe(0); // on the left person: in both boxes, nearer box 0's centre
+    expect(pickInstance(boxes, [0.5, 0.7])).toBe(1); // in both boxes, nearer box 1's centre
+    expect(pickInstance(boxes, [0.9, 0.1])).toBeNull();
+    expect(summarize(twoPeople[1] as Correction)).toMatchObject({ kind: "person_entire", instance: 1, people: boxes });
+  });
+
+  it("starts one person's mask as the probe, Entire Person of instance 0, then writes the kind with its instance and new mask ids", () => {
+    const probe = newCorrection("person_hair", "h", {}, { x: 0.57, y: 0.56 }, {}, []);
+    const m = (probe[C.masks] as Record<string, unknown>[])[0] as Record<string, unknown>;
+    expect(m).toMatchObject({ [IMAGE.subType]: 0, [IMAGE.subCategory]: 20036, [IMAGE.instanceIds]: [{ [IMAGE.instanceId]: 0 }], [IMAGE.referencePoint]: "0.570000 0.560000" });
+    const computedProbe = structuredClone(probe);
+    Object.assign((computedProbe[C.masks] as Record<string, unknown>[])[0] as object, { MaskDigest: "D", InstanceBounds: [{ Top: 0, Left: 0, Bottom: 1, Right: 1 }], Origin: "1,2" });
+    const real = withInstance(computedProbe, "person_hair", 1, [0.57, 0.56]);
+    const r = (real[C.masks] as Record<string, unknown>[])[0] as Record<string, unknown>;
+    expect(r).toMatchObject({ [IMAGE.subType]: 0, [IMAGE.subCategory]: 5, [IMAGE.instanceIds]: [{ [IMAGE.instanceId]: 1 }], [IMAGE.errorReason]: 0 });
+    expect(r[M.id]).not.toBe(m[M.id]);
+    expect(["MaskDigest", "InstanceBounds", "Origin"].filter((k) => k in r)).toEqual([]);
+    expect([real[C.id], real[C.name]]).toEqual([probe[C.id], probe[C.name]]);
   });
 });
 
@@ -82,6 +115,7 @@ describe("params: reading the mask table", () => {
   });
 
   it("reads each captured entry as its kind, sliders in the panel's units", () => {
+    expect(summarize(twoPeople[0] as Correction).kind).toBe("person_entire");
     expect(captured.map((e) => summarize(e).kind)).toEqual(["linear", "radial", "sky", "subject", "luminance", "background", "person_entire", "person_face_skin", "landscape_vegetation", "landscape_sky"]);
     expect(summarize(table[0] as Correction)).toMatchObject({ name: "Mask 1", active: true, inverted: false, components: 1, sliders: { "local.exposure": 0.5 } });
     expect(summarize(table[0] as Correction).geometry).toEqual({ zero: { x: 0.494073, y: 0.52221 }, full: { x: 0.495633, y: 0.789555 } });
@@ -114,9 +148,16 @@ describe("params: reading the mask table", () => {
     const brush = structuredClone(table[0]) as Correction;
     Object.assign((brush[C.masks] as Record<string, unknown>[])[0] as object, { [M.what]: "Mask/Paint" });
     expect(uncaptured([brush])?.why).toBe("its kind (Mask/Paint) was not round-tripped in the masks captures");
-    // A kind the engine can make but no capture wrote back and read back (every person's hair, say) is not trusted either.
-    expect(uncaptured([newCorrection("people_hair", "h", {}, null, {}, [])])?.why).toBe("its kind (people_hair) was not round-tripped in the masks captures");
-    expect(uncaptured([newCorrection("person_entire", "p", {}, { x: 0.5, y: 0.5 }, {}, []), newCorrection("landscape_sky", "s", {}, null, {}, [])])).toBeNull();
+    // Every Mask/Image of MaskSubType 0-3 is trusted (capture 4's round trips), whatever its category or instance; other range types are not.
+    const subtype13 = structuredClone(table[2]) as Correction;
+    Object.assign((subtype13[C.masks] as Record<string, unknown>[])[0] as object, { [IMAGE.subType]: 3, [IMAGE.subCategory]: 13 });
+    expect(uncaptured([newCorrection("people_hair", "h", {}, null, {}, []), ...twoPeople, subtype13, newCorrection("landscape_snow", "s", {}, null, {}, [])])).toBeNull();
+    const subtype4 = structuredClone(subtype13);
+    Object.assign((subtype4[C.masks] as Record<string, unknown>[])[0] as object, { [IMAGE.subType]: 4 });
+    expect(uncaptured([subtype4])?.why).toBe("its kind (Mask/Image) was not round-tripped in the masks captures");
+    const colour = structuredClone(table[4]) as Correction;
+    Object.assign(((colour[C.masks] as Record<string, unknown>[])[0] as Record<string, Record<string, unknown>>)[RANGE.holder] as object, { [RANGE.type]: 1 });
+    expect(uncaptured([colour])?.why).toBe("its kind (Mask/RangeMask, not a luminance range) was not round-tripped in the masks captures");
   });
 
   it("gives the same fingerprint to two equal tables whatever their key order", () => {

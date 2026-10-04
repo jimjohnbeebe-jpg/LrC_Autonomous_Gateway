@@ -101,7 +101,9 @@ export const MASK_DEFS: ToolDef[] = [
       "new session only if they ask. If the update fails with a Lightroom or plugin error, subject, sky and background are made by " +
       "Lightroom's Develop module instead (Lightroom then switches to Develop; `ai.route` \"dc\", `switched_to_develop`); people and " +
       "landscape kinds have no such fallback. If nothing works, FEATURE_UNAVAILABLE (details.routes_tried): the masks are as before and " +
-      "the pass is not used. " +
+      "the pass is not used. One person's kinds (person_*) take the person whose box holds the point: `ai.people` lists every person's " +
+      "box Lightroom found (left, top, right, bottom in 0-1 of the photo) and `ai.instance` the one chosen (lr_list_masks shows both); " +
+      "no person at the point: MASK_NOTHING_FOUND with the boxes, so a point inside the right box can be given. " +
       PASS_NOTE,
     schema: createArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },

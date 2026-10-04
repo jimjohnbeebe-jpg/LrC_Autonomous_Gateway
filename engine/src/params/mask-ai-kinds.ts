@@ -16,13 +16,17 @@
 //     Body Skin 4, Hair 5, Lips 6, Facial Hair 7, Eye Sclera 8, Eyebrows 9, Teeth 12 [handle:
 //     Lightroom's own preset ...\Adaptive - Portrait\Polished Portrait.xmp], Clothes 11 [handle:
 //     ...\Adaptive - Portrait\Enhance Clothes.xmp];
-//   - one person, by a point on them, MaskSubType 0: Entire Person 20036 and Facial Skin 2 [handle:
-//     capture3-templates.json `people_entire`, `people_part`]. 20036 is one person on one photo: that it
-//     holds for every person is [unverified] until capture 4 row 6.
+//   - one person, by a point on them, MaskSubType 0 and InstanceIDs (mask-person.ts): Entire Person
+//     20036 on two photos and both people of one [handle: capture3-templates.json `people_entire`;
+//     capture4-row6_people_by_hand.json], Facial Skin 2 [handle: capture3-templates.json `people_part`];
+//     the other parts as every person's part numbers with MaskSubType 0 [inference] [unverified until
+//     capture 5].
 // Every preset entry carries ReferencePoint "0.500000 0.500000" and ErrorReason "0" [handle: the
-// presets above]; the engine writes them so (mask-ops.ts newComponent). Whether each kind computes on a photo that has it is
-// [unverified] until capture 4; a kind the photo lacks is expected to come back with ErrorReason not 0
-// [unverified], and the engine then takes the mask out (session\ai-update.ts).
+// presets above]; the engine writes them so (mask-ops.ts newComponent). Adobe-form vegetation computed
+// and every person's face skin and hair computed [handle: docs\reports\phase6\masks-capture\
+// capture4-check.json steps `row2_vegetation`, `row5_people_face_skin`, `row5_people_hair`]; a kind
+// the photo lacks came back with ErrorReason 1 (steps `row4_snow`, `row4_water`), and the engine then
+// takes the mask out (session\ai-update.ts). The other kinds are [unverified] on a photo that has them.
 
 export type AiKindSpec = { subType: number; subCategory: number | null; label: string; dc: string | null; point: boolean };
 const kind = (subType: number, subCategory: number | null, label: string, dc: string | null = null, point = false): AiKindSpec => ({ subType, subCategory, label, dc, point });
@@ -51,6 +55,15 @@ export const AI_KIND_DATA = {
   people_teeth: kind(3, 12, "People - Teeth"),
   person_entire: kind(0, 20036, "Person", null, true),
   person_face_skin: kind(0, 2, "Person - Facial Skin", null, true),
+  person_iris_pupil: kind(0, 3, "Person - Iris and Pupil", null, true),
+  person_body_skin: kind(0, 4, "Person - Body Skin", null, true),
+  person_hair: kind(0, 5, "Person - Hair", null, true),
+  person_lips: kind(0, 6, "Person - Lips", null, true),
+  person_facial_hair: kind(0, 7, "Person - Facial Hair", null, true),
+  person_eye_sclera: kind(0, 8, "Person - Eye Sclera", null, true),
+  person_eyebrows: kind(0, 9, "Person - Eyebrows", null, true),
+  person_clothes: kind(0, 11, "Person - Clothes", null, true),
+  person_teeth: kind(0, 12, "Person - Teeth", null, true),
 } as const satisfies Record<string, AiKindSpec>;
 
 export type AiKind = keyof typeof AI_KIND_DATA;

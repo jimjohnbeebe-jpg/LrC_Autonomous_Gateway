@@ -24,8 +24,9 @@ end
 -- withWriteAccessDo(name, fn) waiting up to `seconds` (default WAIT_SECONDS). Returns Lightroom's
 -- status ("executed"), or nil plus the error table gate_busy. An error raised by `fn` is raised on.
 -- "executed" means `fn` ran: 'When "executed" is returned, 'func' will have been executed' [community:
--- third-party-hosted copy of Adobe's SDK 15.1 reference, LrCatalog withWriteAccessDo]; observed in
--- Lightroom it is [unverified] until masks capture 4.
+-- third-party-hosted copy of Adobe's SDK 15.1 reference, LrCatalog withWriteAccessDo]; every put-back of
+-- capture 4 went through here and read back equal to the start [handle:
+-- docs\reports\phase6\masks-capture\capture4-check.json steps `row*_put_back`, `final_*`].
 function Gate.write(catalog, name, fn, seconds)
     seconds = seconds or Gate.WAIT_SECONDS
     local status = catalog:withWriteAccessDo(name, fn, { timeout = seconds })
@@ -40,10 +41,8 @@ function Gate.run(catalog, name, fn, seconds)
     return status
 end
 
--- The asynchronous gate: returns "executed" or "queued" without waiting for `fn`; `onAbandon` runs
--- when the gate stayed held for `seconds` and `fn` was dropped.
-function Gate.async(catalog, name, fn, onAbandon, seconds)
-    return catalog:withWriteAccessDo(name, fn, { timeout = seconds, asynchronous = true, callback = onAbandon })
-end
+-- No asynchronous gate: with the catalog free, one (plugin 0.13.0) ran `fn` before it returned, 11 s
+-- for an AI update [handle: docs\reports\phase6\masks-capture\capture4-check.json step
+-- `row2_vegetation` `update`]. Masks.lua runs that update in its own task instead.
 
 return Gate

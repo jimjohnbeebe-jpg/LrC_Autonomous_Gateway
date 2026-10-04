@@ -42,6 +42,8 @@ HudText.HEADLINE = {
     not_connected = "Claude is not connected. Your edit so far stays.",
     checking = "Checking this edit with Claude...",
     gone = "This edit is no longer open in Claude. Your edit so far stays.",
+    stopped = "Claude stopped during the edit. Your edit so far stays.",
+    putting_back = "Putting the photo back...",
     working = "Claude is working. Nothing needed from you.",
     awaiting_pick = "Your turn: pick a copy, or tell Claude which one.",
     approve = "Your turn: approve pass %d so Claude can go on.",
@@ -71,6 +73,24 @@ HudText.CONNECTION = {
 -- The feedback line while Claude is not connected or the edit is no longer open in Claude.
 HudText.UNDO = "To undo it: Develop > Snapshots > %s"
 HudText.UNDO_NO_SNAPSHOT = "the newest AVG pre-session snapshot"
+
+-- The feedback line around Put back (plugin 0.12.0, HudClick.lua): the offer, the wait (the write
+-- gate waits behind a Lightroom message, so the user is told to answer it), the outcome. `failed` is
+-- filled with a REASON below and the snapshot's name. The headline after a done put-back is
+-- HEADLINE.aborted's.
+HudText.PUT_BACK = {
+    offer = "Put back returns the photo to how it was before the edit.",
+    running = "Putting the photo back. If Lightroom shows a message, click OK there.",
+    done = "Put back: done.",
+    failed = "Put back: not possible — %s; in Develop > Snapshots click '%s'.",
+}
+HudText.PUT_BACK_REASON = {
+    no_photo = "the photo is not in the catalog",
+    no_snapshot = "the photo no longer has that snapshot",
+    busy = "Lightroom stayed busy for %d s",
+    error = "Lightroom could not apply it",
+    read_back = "Lightroom could not read the photo back",
+}
 
 HudText.CLIPPING_OK = "Clipping: within limits."
 

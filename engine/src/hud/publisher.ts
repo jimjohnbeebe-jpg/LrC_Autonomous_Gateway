@@ -28,10 +28,10 @@ import { hudState, type HudState } from "./payload.js";
 
 /**
  * hud_update came with plugin 0.6.0 (PHASE5_PLAN row 4) [handle: plugin\LrC-AVG.lrplugin\Dispatch.lua,
- * Hud.update]; `snapshot` with 0.9.0, and an earlier plugin refuses an update with a field it does not
- * know (bridge\hud-protocol.ts header), so the HUD needs 0.9.0.
+ * Hud.update]; `snapshot` with 0.9.0, `put_back` with 0.12.0, and an earlier plugin refuses an update
+ * with a field it does not know (bridge\hud-protocol.ts header), so the HUD needs 0.12.0.
  */
-export const HUD_PLUGIN = "0.9.0";
+export const HUD_PLUGIN = "0.12.0";
 /**
  * An update's answer took 2-7 ms in Lightroom [handle: vault PHASE5_PLAN.md "From row 4": "hud_update
  * round trips took 2-7 ms"]; 5 s is [inference]. While the plugin is paused the bridge client lets it

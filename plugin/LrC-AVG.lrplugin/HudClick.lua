@@ -3,15 +3,20 @@
 -- yield, then sent from a task (Events.lua); a menu item runs in a task and may wait for the engine.
 -- Hud.lua owns the window and passes `refresh` (copy the view into the window) and `show` (open it).
 -- The HUD's state is on _G (rule 03), shared with Hud.lua. Every line it writes is HudText's.
+-- Put back (plugin 0.12.0) is a click with no event: the plugin applies the snapshot itself (below).
 
+local LrApplication = import 'LrApplication'
 local LrDate = import 'LrDate'
+local LrDialogs = import 'LrDialogs'
 local LrTasks = import 'LrTasks'
 local LrUUID = import 'LrUUID'
 
 local Events = require 'Events'
+local Gate = require 'Gate'
 local HudState = require 'HudState'
 local HudText = require 'HudText'
 local Log = require 'Log'
+local Photos = require 'Photos'
 
 local HudClick = {}
 
@@ -75,8 +80,86 @@ local function finish(p, refresh)
     return ok, line
 end
 
--- A button's action (HudView.lua). It cannot yield (S8), so the send runs in a task.
+-- Put back (plugin 0.12.0, PR C step 2b; HudState.canPutBack says when it is on): the update's
+-- `put_back` snapshot applied to its photo by uuid, as lr_end_session "revert" does
+-- (engine\src\session\end.ts; Develop.lua applySnapshot), selected or not (Photos.find). Steps:
+--   - the snapshot is looked up first, so a missing one is said plainly;
+--   - the write goes through Gate.write, which waits up to Gate.WAIT_SECONDS for write access, so a
+--     put-back clicked while Lightroom shows a message inside another gate runs once the user clicks
+--     OK there, instead of failing at once as a gate without timeoutParams does ("blocked by another
+--     write access call, and no timeout parameters were provided" [handle:
+--     %TEMP%\LrC-AVG\bridge.log 2026-10-03 19:22:58, quoted in repo logs\masks-step2b-plan.md
+--     (gitignored), "What failed"]). Gate.lua says what the SDK returns; that the wait holds behind
+--     Lightroom's own message is [unverified];
+--   - the photo's settings are read back. The plugin holds no copy of the settings before the edit,
+--     so "done" means the snapshot applied and the photo reads; applyDevelopSnapshot restored all six
+--     fixtures with 0 settings differing [handle: LR_SDK_NOTES "Recorded in Phase 3", the run
+--     `fixtures[*].ac2`]. Whether a read gate also waits behind such a message is [unverified].
+-- No dialog opens (LR_SDK_NOTES "The HUD in use": a message box opened behind the HUD); the outcome
+-- is the feedback line, and every step is in bridge.log. After "done" the window closes itself
+-- CLOSE_SECONDS later, Claude Code's choice for Jim to confirm: he found the HUD left open on a dead
+-- edit (Hud.lua header), and the stay-open rule (D2) is for edits the engine ends [inference]. It
+-- does not close once an update has come since the click (the engine is back, Hud.lua update), and
+-- after a failure it stays open with the way to do it by hand.
+HudClick.PUT_BACK = "put_back"
+HudClick.CLOSE_SECONDS = 5
+
+local PB, PB_REASON = HudText.PUT_BACK, HudText.PUT_BACK_REASON
+
+-- Runs in a task. Returns true, or nil, the reason (HudText) and a detail for the log.
+local function putBackTo(pb)
+    local catalog = LrApplication.activeCatalog()
+    local photo, found = Photos.find(catalog, pb.photo_uuid)
+    if not photo then return nil, PB_REASON.no_photo, found.message end
+    local known = false
+    catalog:withReadAccessDo(function()
+        for _, snap in ipairs(photo:getDevelopSnapshots() or {}) do
+            if snap.snapshotID == pb.snapshot_id then known = true end
+        end
+    end)
+    if not known then return nil, PB_REASON.no_snapshot, "no snapshot " .. pb.snapshot_id end
+    local gated, busy = Gate.write(catalog, "AVG put back", function() photo:applyDevelopSnapshot(pb.snapshot_id) end)
+    if not gated then return nil, string.format(PB_REASON.busy, Gate.WAIT_SECONDS), busy.message end
+    local settings
+    catalog:withReadAccessDo(function() settings = photo:getDevelopSettings() end)
+    if type(settings) ~= "table" or next(settings) == nil then return nil, PB_REASON.read_back, "no settings read back" end
+    return true
+end
+
+local function putBack(refresh)
+    local s = H.state
+    local pb = s and s.put_back
+    -- The button is greyed otherwise; this also stops a second click while one runs.
+    if not pb or (H.putBack and H.putBack.state ~= "failed") then return end
+    local attempt = { state = "running", line = PB.running, seq = s.seq }
+    H.putBack = attempt
+    Log.info("hud: put back " .. pb.photo_uuid .. " to snapshot " .. pb.snapshot_id .. " (" .. pb.snapshot_name .. "), session " .. s.session_id)
+    refresh()
+    LrTasks.startAsyncTask(function()
+        local t0 = LrDate.currentTime()
+        local ok, done, reason, detail = LrTasks.pcall(putBackTo, pb)
+        if not ok then done, reason, detail = nil, PB_REASON.error, done end
+        local ms = tostring(math.floor((LrDate.currentTime() - t0) * 1000 + 0.5))
+        if done then
+            attempt.state, attempt.line = "done", PB.done
+            Log.info("hud: put back done in " .. ms .. " ms")
+        else
+            attempt.state, attempt.line = "failed", string.format(PB.failed, reason, pb.snapshot_name)
+            Log.warn("hud: put back not possible after " .. ms .. " ms: " .. reason .. " (" .. tostring(detail) .. ")")
+        end
+        refresh()
+        if not done then return end
+        LrTasks.sleep(HudClick.CLOSE_SECONDS)
+        if H.putBack == attempt and H.open and H.state and H.state.seq == attempt.seq then
+            Log.info("hud: closing after the put-back")
+            LrDialogs.closeFloatingDialogsForPlugin(_PLUGIN)
+        end
+    end)
+end
+
+-- A button's action (HudView.lua). It cannot yield (S8), so the send (or the put-back) runs in a task.
 function HudClick.click(name, variant, refresh)
+    if name == HudClick.PUT_BACK then return putBack(refresh) end
     local p, label, why = begin(name, variant, "hud")
     if not p then
         H.lastAction = notSent(label, why)

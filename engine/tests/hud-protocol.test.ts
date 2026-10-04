@@ -34,6 +34,7 @@ const FULL: HudUpdatePayload = {
   note: "Pick the copy you like best.",
   settings: { mode: "autonomous", max_passes: 4, variant_count: 3, long_edge: 1600, quality: 75, clip_high_pct: 0.5, clip_low_pct: 1, decay: [1, 0.6, 0.4, 0.25] },
   snapshot: "AVG pre-session 2026-09-29T10:00:00.000Z",
+  put_back: { photo_uuid: "CF12AF60-0858-4181-9562-376D16B89126", snapshot_id: "08B9CE9B-881C-4272-B595-79FBDAC44981", snapshot_name: "AVG pre-session 2026-09-29T10:00:00.000Z" },
 };
 const MINIMAL = { session_id: "s1", seq: 1, stage: "begin", target: { uuid: "U1" } };
 
@@ -59,6 +60,9 @@ describe("hud-protocol: hud_update payload", () => {
     ["open as text", { ...MINIMAL, open: "yes" }],
     ["text given as an object", { ...MINIMAL, note: { text: "x" } }],
     ["a snapshot given as an object (plugin 0.9.0)", { ...MINIMAL, snapshot: { name: "AVG pre-session" } }],
+    ["a put_back without its snapshot id (plugin 0.12.0)", { ...MINIMAL, put_back: { photo_uuid: "U1", snapshot_name: "AVG pre-session" } }],
+    ["a put_back with an extra field", { ...MINIMAL, put_back: { photo_uuid: "U1", snapshot_id: "S1", snapshot_name: "x", history: "AVG" } }],
+    ["a put_back photo uuid over the byte limit", { ...MINIMAL, put_back: { photo_uuid: "x".repeat(HUD_LIMITS.id + 1), snapshot_id: "S1", snapshot_name: "x" } }],
     ["a pass over the limit", { ...MINIMAL, pass: HUD_LIMITS.pass + 1 }],
     ["a settings key the HUD does not show", { ...MINIMAL, settings: { log_dir: "D:\\logs" } }],
   ])("refuses %s", (_what, payload) => {

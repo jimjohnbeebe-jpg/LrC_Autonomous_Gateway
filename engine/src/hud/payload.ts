@@ -30,8 +30,9 @@ export function hudState(s: Session, stage: HudStage, note?: string): HudState {
   const pass = s.work?.pass ?? t.passes;
   const last = lastPass(s, t);
   const text = note ?? s.work?.note;
+  const ended = (HUD_END_STAGES as readonly string[]).includes(stage);
   // approve_each_pass (PHASE5_PLAN row 6): Approve is on while a pass waits for the user's approval.
-  const waiting = (HUD_END_STAGES as readonly string[]).includes(stage) ? null : pendingApproval(s);
+  const waiting = ended ? null : pendingApproval(s);
   return {
     session_id: s.id,
     stage,
@@ -46,6 +47,8 @@ export function hudState(s: Session, stage: HudStage, note?: string): HudState {
     ...(text ? { note: text } : {}),
     settings: settings(s),
     snapshot: s.snapshot.name,
+    // The snapshot lr_begin_session took on the master, which a revert applies (session\end.ts).
+    ...(ended ? {} : { put_back: { photo_uuid: s.master.uuid, snapshot_id: s.snapshot.id, snapshot_name: s.snapshot.name } }),
   };
 }
 

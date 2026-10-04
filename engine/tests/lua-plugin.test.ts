@@ -6,7 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import luaparse from "luaparse";
 import { describe, expect, it } from "vitest";
-import { COMMANDS, HUD_END_STAGES, HUD_EVENTS, HUD_GUARDRAIL, HUD_LIMITS, HUD_STAGES, HUD_VARIANTS, PLUGIN_VERSION } from "../src/bridge/index.js";
+import { COMMANDS, HUD_END_STAGES, HUD_EVENTS, HUD_GUARDRAIL, HUD_LIMITS, HUD_STAGES, HUD_VARIANTS, PLUGIN_VERSION, hudUpdatePayloadSchema } from "../src/bridge/index.js";
 import { KEYWORD_SEPARATOR, MAX_PAGE } from "../src/library/index.js";
 import { DECAY_MAX_VALUES, LOCK_PORT, PAGE_SPECS } from "../src/settings/index.js";
 
@@ -217,6 +217,19 @@ describe("lua: LrC-AVG.lrplugin", () => {
     expect(list("VARIANTS")).toEqual([...HUD_VARIANTS]);
     const limits = source.match(/HudState\.LIMITS = \{([^}]*)\}/)?.[1] ?? "";
     expect(Object.fromEntries([...limits.matchAll(/(\w+) = (\d+)/g)].map((m) => [m[1], Number(m[2])]))).toEqual(HUD_LIMITS);
+  });
+
+  it("keeps HudState.lua's put_back fields equal to the engine's, and puts back through a write gate that waits (plugin 0.12.0, HudClick.lua)", () => {
+    const state = readFileSync(path.join(avgPlugin, "HudState.lua"), "utf8");
+    const fields = state.match(/local PUT_BACK = \{(.*)\}\r?\n/)?.[1] ?? "";
+    const keys = [...fields.matchAll(/(\w+) = \{ kind = "(\w+)", required = true \}/g)].map((m) => `${m[1]}:${m[2]}`).sort();
+    expect(keys).toEqual(["photo_uuid:id", "snapshot_id:id", "snapshot_name:text"]);
+    expect(Object.keys(hudUpdatePayloadSchema.shape.put_back.unwrap().shape).sort()).toEqual(["photo_uuid", "snapshot_id", "snapshot_name"]);
+    expect(state).toMatch(/put_back = \{ kind = "object", fields = PUT_BACK \}/);
+    const click = codeOnly(readFileSync(path.join(avgPlugin, "HudClick.lua"), "utf8"));
+    expect(click).toMatch(/Gate\.write\(catalog, "", function\(\) photo:applyDevelopSnapshot\(pb\.snapshot_id\) end\)/);
+    expect(click).not.toMatch(/withWriteAccessDo/);
+    expect(codeOnly(readFileSync(path.join(avgPlugin, "HudView.lua"), "utf8"))).toMatch(/v\.putBackEnabled = HudState\.canPutBack\(s, conn, hud\)/);
   });
 
   it("keeps KeywordTree.lua's separator and Library.lua's page limit equal to the engine's (engine\\src\\library\\)", () => {

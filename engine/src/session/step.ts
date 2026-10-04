@@ -145,7 +145,7 @@ async function apply(ctx: SessionContext, s: Session, t: Target, n: number, plan
   const values: Record<string, CanonicalValue> = Object.fromEntries(plan.changes.map((c) => [c.name, c.after]));
   const written = await write(ctx, s, t, values, name);
   historyNames.push(name);
-  const corrected = await correct(ctx, s, t, n, plan.changes, written, await render(ctx, s, t, written.settings), historyNames);
+  const corrected = await correct(ctx, s, t, n, plan.changes, written, await render(ctx, s, t, written), historyNames);
   const actions = [...corrected.actions];
 
   const drift = regionDrift(s, t, corrected.rendered.metrics);

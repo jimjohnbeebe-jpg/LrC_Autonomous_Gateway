@@ -1,6 +1,5 @@
--- The shared parts of the masks captures' LrDevelopController probes (GitHub issue #59): Masks.lua's
--- probe_masks_dc and MaskCalibrate.lua's probe_masks_calibrate and probe_masks_create. Split out of
--- Masks.lua for capture 2, so no file passes the size target (rule 01).
+-- The LrDevelopController parts of Masks.lua's create_ai_mask_dc (GitHub issue #59), first written for
+-- the masks captures' probes (their commands stay in git history, PR C step 1).
 --
 -- A probe works on the selected photo, which must be the photo with target_uuid (else
 -- target_mismatch, as Develop.lua target() refuses), and outside any write gate (a gate around
@@ -131,22 +130,6 @@ function MaskProbe.waitFor(ctx, seconds, fn)
     end
 end
 
--- How many entries getAllMasks returns (counted with pairs: its shape is what the probes record).
-function MaskProbe.maskCount()
-    local all = MaskProbe.dc("getAllMasks")
-    local n = 0
-    if type(all) == "table" then for _ in pairs(all) do n = n + 1 end end
-    return n
-end
-
--- Records the mask count until it passes `test` or `seconds` pass.
-function MaskProbe.recordCount(ctx, name, seconds, test)
-    MaskProbe.record(ctx, name, function()
-        local n, ms = MaskProbe.waitFor(ctx, seconds, function() local c = MaskProbe.maskCount(); return test(c) and c end)
-        return { reached = n ~= nil, count = n or MaskProbe.maskCount(), waited_ms = ms }
-    end)
-end
-
 -- Develop, then Masking.
 function MaskProbe.openMasking(ctx)
     local record, dc = MaskProbe.record, MaskProbe.dc
@@ -169,11 +152,12 @@ function MaskProbe.openMasking(ctx)
     record(ctx, "getSelectedTool_after_goToMasking", function() return dc("getSelectedTool") end)
 end
 
--- Back to the loupe, so the capture does not leave Lightroom in a mask tool. selectTool takes "one
+-- Back to the loupe, so a probe does not leave Lightroom in a mask tool. selectTool takes "one
 -- of: 'loupe', 'crop', ... 'masking', ..." [handle: https://lrc.mcor.dev/modules/LrDevelopController.html
--- selectTool, read 2026-10-03; a third-party mirror of Adobe's reference]; that "loupe" closes
--- Masking is [unverified] until the capture records getSelectedTool_end. Skipped once a probe has
--- stopped (the photo may no longer be the target).
+-- selectTool, read 2026-10-03; a third-party mirror of Adobe's reference]. It does not close Masking:
+-- capture 2 read getSelectedTool_end "masking" after it [handle:
+-- docs\reports\phase6\masks-capture\capture2-templates.json]. Skipped once a probe has stopped (the
+-- photo may no longer be the target).
 local function leaveMasking(ctx)
     MaskProbe.record(ctx, "selectTool_loupe", function() return MaskProbe.dc("selectTool", "loupe") end)
     MaskProbe.record(ctx, "getSelectedTool_end", function() return MaskProbe.dc("getSelectedTool") end)

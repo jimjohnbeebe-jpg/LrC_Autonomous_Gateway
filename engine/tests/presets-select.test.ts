@@ -34,6 +34,12 @@ describe("selectPresetSettings", () => {
     ]);
   });
 
+  it("names the photo's masks in left_out: a preset carries global settings only (GitHub issue #59)", () => {
+    const masked = nef({ MaskGroupBasedCorrections: [{ What: "Correction", CorrectionID: "A", CorrectionMasks: [] }] });
+    expect(leftOut(masked, ["hsl"])).toEqual(["masks"]);
+    expect(keys(masked, ["hsl"])).toEqual(keys(nef(), ["hsl"]));
+  });
+
   it("writes the point curve's name with tone_curve", () => {
     expect(keys(nef(), ["tone_curve"])).toEqual(["ProcessVersion", "ToneCurveName2012", "ToneCurvePV2012", "ToneCurvePV2012Red", "ToneCurvePV2012Green", "ToneCurvePV2012Blue"]);
   });

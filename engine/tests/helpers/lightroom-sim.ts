@@ -12,8 +12,8 @@
 //     the engine's rules, not a claim about Lightroom's rendering.
 // Keys in `ignored` are dropped silently, as Lightroom drops out-of-range values (PHASE1.md run 3).
 // The catalog commands (virtual copies, select_photo, get_selection) are in lightroom-sim-catalog.ts,
-// get_prefs's answer in lightroom-sim-prefs.ts, the HUD (hud_update) in lightroom-sim-hud.ts, the masks
-// capture's commands in lightroom-sim-masks.ts;
+// get_prefs's answer in lightroom-sim-prefs.ts, the HUD (hud_update) in lightroom-sim-hud.ts, the
+// AI-mask commands in lightroom-sim-masks.ts (masks themselves are the table apply_settings writes);
 // each copy has its own settings. A command works on the selected photo, or, with `photo_uuid`
 // (plugin 0.4.0), on the photo with that uuid without selecting it, as the plugin does.
 
@@ -25,7 +25,7 @@ import type { FakePlugin, FakeReply } from "./fake-plugin.js";
 import { createVirtualCopies, describePhoto, findPhoto, getSelection, selectPhoto, type CopyFault, type SimCopy } from "./lightroom-sim-catalog.js";
 import { SimHud } from "./lightroom-sim-hud.js";
 import { SimLibrary } from "./lightroom-sim-library.js";
-import { installMasks } from "./lightroom-sim-masks.js";
+import { SimMasks, installMasks } from "./lightroom-sim-masks.js";
 import { defaultSimPrefs, type SimPrefs } from "./lightroom-sim-prefs.js";
 import { PLUGIN_VERSION } from "../../src/bridge/version.js";
 
@@ -90,6 +90,8 @@ export class LightroomSim {
   readonly hud = new SimHud();
   /** The library commands (plugin 0.8.0, Library.lua): search, collections, ratings, keywords (lightroom-sim-library.ts). */
   readonly library = new SimLibrary();
+  /** The AI-mask commands' behaviour (plugin 0.11.0, Masks.lua; lightroom-sim-masks.ts). */
+  readonly masks = new SimMasks();
   /** Virtual copies of the master, by uuid (lightroom-sim-catalog.ts). */
   readonly copies = new Map<string, SimCopy>();
   copyFault: CopyFault | null = null;

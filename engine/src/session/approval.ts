@@ -50,12 +50,13 @@ const approvedPass = (s: Session, t: Target): number => (s.approval?.target === 
 
 /**
  * The pass waiting for the user's approval, or null: the edited photo's last pass, from 1 up, not yet
- * approved, while another pass may follow.
+ * approved, while another pass may follow. A converged photo can still take a mask pass (masks.ts),
+ * so its last pass waits for approval too; only the cap ends the passes.
  */
 export function pendingApproval(s: Session): { target: Target; pass: number } | null {
   if (!approveEachPass(s) || s.abort) return null;
   const t = edited(s);
-  if (!t || t.passes < 1 || t.endReason !== null || t.passes >= s.maxPasses) return null;
+  if (!t || t.passes < 1 || t.endReason === "cap_reached" || t.passes >= s.maxPasses) return null;
   return approvedPass(s, t) >= t.passes ? null : { target: t, pass: t.passes };
 }
 
@@ -105,7 +106,6 @@ export function approve(ctx: SessionContext, s: Session, by: ApprovalBy, pass?: 
 
 function notWaitingReason(s: Session, t: Target | null): string {
   if (!t) return "no copy is picked yet (a Variants session's passes are approved after the pick)";
-  if (t.endReason === "converged") return "the session converged; no further pass follows";
   if (t.endReason === "cap_reached" || t.passes >= s.maxPasses) return `all ${s.maxPasses} passes are used`;
   if (t.passes < 1) return "no pass after pass 0 has been made yet (pass 1 needs no approval)";
   return `pass ${t.passes} is approved already`;

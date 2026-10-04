@@ -1,8 +1,9 @@
 // The session tools (Phase 3; the loop itself is session\manager.ts): lr_begin_session, lr_step,
 // lr_probe, lr_set_regions, lr_end_session, lr_get_session_log; Variants mode's lr_select_variant
-// (Phase 4); approve_each_pass mode's lr_approve_pass (Phase 5).
+// (Phase 4); approve_each_pass mode's lr_approve_pass (Phase 5); the mask tools lr_list_masks,
+// lr_create_mask, lr_edit_mask and lr_delete_mask (engine 0.16.0, GitHub issue #59).
 
-import type { ApproveArgs, BeginArgs, EndArgs, ProbeArgs, RegionArgs, SelectArgs, StepArgs } from "../session/index.js";
+import type { ApproveArgs, BeginArgs, CreateMaskArgs, DeleteMaskArgs, EditMaskArgs, EndArgs, ListMasksArgs, ProbeArgs, RegionArgs, SelectArgs, StepArgs } from "../session/index.js";
 import { pageBridgeUse, readPageFolders, run, sessionTools, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
 export async function beginSession(ctx: ToolContext, args: BeginArgs): Promise<ToolOutput> {
@@ -61,5 +62,37 @@ export async function getSessionLog(ctx: ToolContext, args: { session_id: string
     const out = sessionTools(ctx).getLog(args);
     const settings = ctx.deps.settings;
     return page === null || !settings ? out : { ...out, json: { ...out.json, log_folder: { ...settings.folders.log(), page } } };
+  });
+}
+
+export async function listMasks(ctx: ToolContext, args: ListMasksArgs): Promise<ToolOutput> {
+  return run(ctx, "lr_list_masks", args, async () => {
+    const sessions = sessionTools(ctx);
+    await ctx.deps.ensureBridge();
+    return sessions.listMasks(args);
+  });
+}
+
+export async function createMask(ctx: ToolContext, args: CreateMaskArgs): Promise<ToolOutput> {
+  return run(ctx, "lr_create_mask", args, async () => {
+    const sessions = sessionTools(ctx);
+    await ctx.deps.ensureBridge();
+    return sessions.createMask(args);
+  });
+}
+
+export async function editMask(ctx: ToolContext, args: EditMaskArgs): Promise<ToolOutput> {
+  return run(ctx, "lr_edit_mask", args, async () => {
+    const sessions = sessionTools(ctx);
+    await ctx.deps.ensureBridge();
+    return sessions.editMask(args);
+  });
+}
+
+export async function deleteMask(ctx: ToolContext, args: DeleteMaskArgs): Promise<ToolOutput> {
+  return run(ctx, "lr_delete_mask", args, async () => {
+    const sessions = sessionTools(ctx);
+    await ctx.deps.ensureBridge();
+    return sessions.deleteMask(args);
   });
 }

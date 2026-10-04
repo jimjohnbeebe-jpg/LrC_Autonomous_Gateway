@@ -350,7 +350,8 @@
             "type": "string",
             "enum": [
               "pass0",
-              "step"
+              "step",
+              "mask"
             ]
           },
           "target": {
@@ -2074,6 +2075,187 @@
               "pass",
               "by",
               "waited_ms"
+            ],
+            "additionalProperties": false
+          },
+          "mask": {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "enum": [
+                  "create",
+                  "edit",
+                  "delete"
+                ]
+              },
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "before": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string"
+                      },
+                      "active": {
+                        "type": "boolean"
+                      },
+                      "inverted": {
+                        "type": "boolean"
+                      },
+                      "components": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "sliders": {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {
+                          "type": "number"
+                        }
+                      },
+                      "geometry": {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {}
+                      },
+                      "computed": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                      "kind",
+                      "active",
+                      "inverted",
+                      "components",
+                      "sliders"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "after": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string"
+                      },
+                      "active": {
+                        "type": "boolean"
+                      },
+                      "inverted": {
+                        "type": "boolean"
+                      },
+                      "components": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "sliders": {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {
+                          "type": "number"
+                        }
+                      },
+                      "geometry": {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {}
+                      },
+                      "computed": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                      "kind",
+                      "active",
+                      "inverted",
+                      "components",
+                      "sliders"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "ai": {
+                "type": "object",
+                "properties": {
+                  "route": {
+                    "type": "string",
+                    "enum": [
+                      "table",
+                      "dc"
+                    ]
+                  },
+                  "fallback": {
+                    "type": "string"
+                  },
+                  "update_ms": {
+                    "type": "number"
+                  },
+                  "computed_ms": {
+                    "type": "number"
+                  },
+                  "dc_ms": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "route"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "op",
+              "id",
+              "name",
+              "kind",
+              "before",
+              "after"
             ],
             "additionalProperties": false
           }

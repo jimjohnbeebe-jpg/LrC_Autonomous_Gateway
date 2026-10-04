@@ -37,7 +37,7 @@ export async function pass0(ctx: SessionContext, s: Session, t: Target, view: Fr
   s.work = { target: t, pass: 0 };
   ctx.deps.hud?.stage(s, "pass0");
   if (original) t.last = original;
-  const before = original ?? (await render(ctx, s, t, view.settings));
+  const before = original ?? (await render(ctx, s, t, view));
   const priors = combinedPriors(s.intent.intent.priors, variantPriors ?? {}, ctx.deps.map);
   const profile = s.intent.intent.default_camera_profile;
   const changes = pass0Changes(profile, priors, view.settings, ctx.deps.map);
@@ -48,7 +48,7 @@ export async function pass0(ctx: SessionContext, s: Session, t: Target, view: Fr
     const name = historyName(s, t, 0);
     current = await write(ctx, s, t, changes, name);
     historyNames.push(name);
-    rendered = await render(ctx, s, t, current.settings);
+    rendered = await render(ctx, s, t, current);
   }
   const corrected = await correct(ctx, s, t, 0, null, current, rendered, historyNames);
   const applied = Object.entries(changes).map(([name, after]): Change => {

@@ -24,6 +24,8 @@ export type ResolvedSource = {
   photo: { uuid: string; filename: string | null } | null;
   session_id: string | null;
   recipe_path: string | null;
+  /** How many masks the recipe's photo kept (engine 0.16.0 recipes); the sync copies none of them. */
+  masks: number;
 };
 
 const RECIPE_SUFFIX = ".recipe.json";
@@ -99,7 +101,7 @@ function readRecipe(logDirs: readonly string[], recipePath: string): { file: str
 /** `logDirs`: the current log folder first, then earlier ones (at least one). */
 export function resolveSource(logDirs: readonly string[], map: ParamMap, source: SyncSource): ResolvedSource {
   if ("settings" in source) {
-    return { kind: "settings", settings: validated(map, source.settings), photo: null, session_id: null, recipe_path: null };
+    return { kind: "settings", settings: validated(map, source.settings), photo: null, session_id: null, recipe_path: null, masks: 0 };
   }
   const { file, recipe } = "session_id" in source ? findRecipe(logDirs, source.session_id) : readRecipe(logDirs, source.recipe_path);
   return {
@@ -108,5 +110,6 @@ export function resolveSource(logDirs: readonly string[], map: ParamMap, source:
     photo: recipe.source,
     session_id: recipe.session_id,
     recipe_path: file,
+    masks: recipe.masks ?? 0,
   };
 }

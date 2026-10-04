@@ -42,7 +42,7 @@ export function hudState(s: Session, stage: HudStage, note?: string): HudState {
     session_photos: [s.master, ...s.variants].map((x) => x.uuid).slice(0, HUD_LIMITS.photos),
     ...(stage === "awaiting_pick" ? { variants: s.variants.map((v) => v.id as VariantId) } : {}),
     ...(waiting ? { approve_pass: clamp(waiting.pass, 1, HUD_LIMITS.pass) } : {}),
-    ...(last ? { deltas: last.changes.slice(0, HUD_LIMITS.rows).map(delta), guardrail: hudGuardrail(last, s.limits) } : {}),
+    ...(last ? { deltas: (last.mask ? maskDeltas(last.mask) : last.changes.map(delta)).slice(0, HUD_LIMITS.rows), guardrail: hudGuardrail(last, s.limits) } : {}),
     ...(text ? { note: text } : {}),
     settings: settings(s),
     snapshot: s.snapshot.name,
@@ -105,6 +105,28 @@ function delta(c: PassEntry["changes"][number]): HudDelta {
     after: shown(c.after),
     ...(c.delta !== null ? { delta: c.delta > 0 ? `+${c.delta}` : String(c.delta) } : {}),
   };
+}
+
+/**
+ * A mask pass's rows (session\masks.ts): "<mask> · <slider>" for each local slider it changed, in the
+ * Masking panel's words (params\labels.ts), and what happened to the mask itself ("Sky 1 · Exposure").
+ */
+function maskDeltas(m: NonNullable<PassEntry["mask"]>): HudDelta[] {
+  const name = m.after?.name ?? m.before?.name ?? m.name;
+  if (!m.after) return [{ slider: name, after: m.op === "delete" ? "deleted" : "undone" }];
+  const was = m.before?.sliders ?? {};
+  const rows: HudDelta[] = [];
+  if (!m.before) rows.push({ slider: name, after: "new mask" });
+  else if (m.before.name !== m.after.name) rows.push({ slider: m.before.name, after: `renamed ${m.after.name}` });
+  for (const k of new Set([...Object.keys(was), ...Object.keys(m.after.sliders)])) {
+    const before = was[k] ?? 0;
+    const after = m.after.sliders[k] ?? 0;
+    const d = round(after - before, 2);
+    if (d !== 0) rows.push({ slider: `${name} · ${lightroomLabel(k)}`, before, after, delta: d > 0 ? `+${d}` : String(d) });
+  }
+  if (m.before && m.before.active !== m.after.active) rows.push({ slider: name, after: m.after.active ? "shown" : "hidden" });
+  if (m.before && m.before.inverted !== m.after.inverted) rows.push({ slider: name, after: m.after.inverted ? "inverted" : "not inverted" });
+  return rows.length > 0 ? rows : [{ slider: name, after: "reshaped" }];
 }
 
 type GuardrailAction = PassEntry["guardrail_actions"][number];

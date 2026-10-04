@@ -1,0 +1,83 @@
+// AI masks in a mask pass (src/session/ai-masks.ts; GitHub issue #59) against the simulated Lightroom
+// (helpers/lightroom-sim-masks.ts): the table route (the entry, update_ai_settings, the wait for its
+// digest), the fall back to LrDevelopController when the table route fails, the route kept for the
+// session, people with their point, and FEATURE_UNAVAILABLE with nothing left written.
+
+import { describe, expect, it } from "vitest";
+import { MASK_TABLE_KEY, type Correction } from "../src/params/index.js";
+import { ID, SHORT, clean, fails, lr, newManager, plugin, readLog, useSessionHarness } from "./helpers/session-harness.js";
+
+useSessionHarness();
+
+const masks = (): Correction[] => (lr.settings[MASK_TABLE_KEY] ?? []) as Correction[];
+const component = (e: Correction | undefined): Record<string, unknown> => ((e?.["CorrectionMasks"] as Record<string, unknown>[] | undefined) ?? [])[0] ?? {};
+const sent = (name: string): number => plugin.received.filter((r) => r.name === name).length;
+
+async function session(maxPasses = 4) {
+  clean();
+  const m = newManager({ aiWaitMs: 300 });
+  await m.begin({ intent_id: "test_plain", return_image: "none", max_passes: maxPasses });
+  const create = (kind: string, extra: Record<string, unknown> = {}) => m.createMask({ session_id: ID, rationale: "test", return_image: "none", kind, ...extra });
+  return { m, create };
+}
+
+describe("AI masks: the table route", () => {
+  it("writes the entry, asks Lightroom to compute it, and waits for its digest", async () => {
+    const { create } = await session();
+    const out = await create("sky", { sliders: { "local.exposure": -0.5 } });
+    expect(out.json).toMatchObject({ pass: "1/4", ai: { route: "table" }, mask: { kind: "sky", computed: true, sliders: { "local.exposure": -0.5 } } });
+    expect(sent("update_ai_settings")).toBe(1);
+    expect(sent("create_ai_mask_dc")).toBe(0);
+    expect(component(masks()[0])).toMatchObject({ What: "Mask/Image", MaskSubType: 2, MaskDigest: expect.any(String) });
+    expect(readLog().passes.at(-1)?.mask?.ai).toMatchObject({ route: "table", update_ms: expect.any(Number), computed_ms: expect.any(Number) });
+  });
+
+  it("writes a person's point as the entry's ReferencePoint and pin", async () => {
+    const { create } = await session();
+    const out = await create("people_face_skin", { point: { x: 0.492188, y: 0.379412 } });
+    expect(out.json).toMatchObject({ ai: { route: "table" }, mask: { kind: "people_face_skin", geometry: { point: { x: 0.492188, y: 0.379412 } } } });
+    expect(masks()[0]).toMatchObject({ CorrectionReferenceX: 0.492188, CorrectionReferenceY: 0.379412 });
+    expect(component(masks()[0])).toMatchObject({ MaskSubType: 0, MaskSubCategoryID: 2, ReferencePoint: "0.492188 0.379412" });
+  });
+});
+
+describe("AI masks: the fall back to LrDevelopController", () => {
+  it("takes the entry out when it does not compute, has Lightroom make the mask, then names it and sets its sliders", async () => {
+    const { create } = await session();
+    lr.masks.tableRoute = "never";
+    const out = await create("subject", { name: "AVG her", sliders: { "local.shadows": 30 } });
+    expect(out.json).toMatchObject({ ai: { route: "dc", switched_to_develop: true, fallback: expect.stringMatching(/did not compute/) }, mask: { name: "AVG her", kind: "subject", sliders: { "local.shadows": 30 } } });
+    expect(lr.history.slice(-3)).toEqual([`AVG ${SHORT} pass 1/4 mask create`, `AVG ${SHORT} pass 1/4 mask ai revert`, `AVG ${SHORT} pass 1/4 mask sliders`]);
+    expect(masks()).toHaveLength(1);
+    expect(masks()[0]).toMatchObject({ CorrectionName: "AVG her", LocalShadows2012: 0.3 });
+  });
+
+  it("goes to LrDevelopController when the plugin lacks update_ai_settings, and keeps that route for the session", async () => {
+    const { create } = await session();
+    lr.masks.tableRoute = "unavailable";
+    expect((await create("background")).json).toMatchObject({ ai: { route: "dc", fallback: expect.stringMatching(/not available/) } });
+    const updates = sent("update_ai_settings");
+    expect((await create("sky")).json).toMatchObject({ ai: { route: "dc", fallback: expect.stringMatching(/skipped/) } });
+    expect(sent("update_ai_settings")).toBe(updates);
+    expect(masks()).toHaveLength(2);
+  });
+
+  it("FEATURE_UNAVAILABLE when neither route makes it, with nothing left written and the pass not used", async () => {
+    const { m, create } = await session();
+    lr.masks.tableRoute = "never";
+    lr.masks.dc = "unknown";
+    const e = await fails(create("sky"));
+    expect(e).toMatchObject({ code: "FEATURE_UNAVAILABLE", recoverable: true, details: { routes_tried: [{ route: "table" }, { route: "dc", why: expect.stringMatching(/plugin does not know it/) }], waited_ms: expect.any(Number) } });
+    expect(masks()).toEqual([]);
+    expect(m.current()?.pass).toBe("0/4");
+  });
+
+  it("people and landscape have no Develop route: FEATURE_UNAVAILABLE without trying it", async () => {
+    const { create } = await session();
+    lr.masks.tableRoute = "never";
+    const e = await fails(create("landscape_vegetation"));
+    expect(e).toMatchObject({ code: "FEATURE_UNAVAILABLE", details: { routes_tried: [{ route: "table" }, { route: "dc", why: expect.stringMatching(/none for this kind/) }] } });
+    expect(sent("create_ai_mask_dc")).toBe(0);
+    expect(masks()).toEqual([]);
+  });
+});

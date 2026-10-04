@@ -72,6 +72,9 @@ export function selectPresetSettings(map: ParamMap, sdk: SdkSettings, groups: re
   const entries: PresetEntry[] = [...extra];
   const written: string[] = [];
   const left_out: LeftOut[] = [];
+  // Masks are the photo's own (GitHub issue #59): a preset of global settings carries none [inference:
+  // how Lightroom writes masks into a preset file was not captured].
+  if (read.masks.count > 0) left_out.push({ name: "masks", reason: `the photo's ${read.masks.count} mask(s): this preset carries global settings only` });
   if (groups.includes("camera_profile") && !(CAMERA_PROFILE_PARAM in copied)) {
     left_out.push({ name: CAMERA_PROFILE_PARAM, reason: `the photo's profile (${read.camera_profile.camera_profile ?? "none"}) is not one of the pinned profiles` });
   }

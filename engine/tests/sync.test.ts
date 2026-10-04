@@ -14,6 +14,7 @@ import type { SyncSeriesArgs } from "../src/mcp/tools-propagation.js";
 import { differingSettings } from "../src/params/index.js";
 import { PreviewService, type PreviewRequest } from "../src/preview/index.js";
 import { syncSeries, type SyncArgs } from "../src/sync/index.js";
+import { captureTable } from "./helpers/lightroom-sim-masks.js";
 import { acceptedSession, addCopy, clean, client, logDir, lr, map, plugin, sent, sync, syncFails, tmp, tools, useSyncHarness } from "./helpers/sync-harness.js";
 
 useSyncHarness();
@@ -59,6 +60,16 @@ describe("lr_sync_series: writes", () => {
     expect([settingsOf(a)["SaturationAdjustmentRed"], settingsOf(a)["Contrast2012"]]).toEqual([10, -30]);
     expect(targetsOf(out)[0]?.["changed"]).toEqual(["hsl.red.sat"]);
     expect(out.json["not_copied"]).toEqual(expect.arrayContaining(["contrast", "exposure", "temperature"]));
+  });
+
+  it("says the source photo's masks stay on it: masks are not synced (GitHub issue #59)", async () => {
+    clean();
+    lr.settings["MaskGroupBasedCorrections"] = [structuredClone(captureTable[0])];
+    const { id } = await acceptedSession([{ contrast: 20 }]);
+    const a = addCopy(1);
+    const out = await sync({ source: { session_id: id }, targets: { uuids: [a] }, ...quiet });
+    expect(out.json["left_out"]).toEqual([{ name: "masks", reason: expect.stringMatching(/1 mask\(s\) stay on it/) }]);
+    expect(Object.keys(sent("apply_settings").at(-1)?.["settings"] as object)).not.toContain("MaskGroupBasedCorrections");
   });
 
   it('copies the white balance group with WhiteBalance "Custom", which the target reads back (docs\\reports\\phase4\\WB.md)', async () => {

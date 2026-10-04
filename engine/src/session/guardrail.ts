@@ -48,7 +48,7 @@ export async function correct(
     const name = historyName(s, t, n, baseline ? `baseline ${round}` : `guard ${round}`);
     current = await write(ctx, s, t, fix, name);
     historyNames.push(name);
-    now = await render(ctx, s, t, current.settings);
+    now = await render(ctx, s, t, current);
     for (const end of breached) {
       actions.push({
         kind: "corrected",
@@ -177,7 +177,7 @@ export async function undo(
   const name = historyName(s, t, n, breach.limit === "region" ? "region revert" : "clip revert");
   const view = await write(ctx, s, t, back, name);
   historyNames.push(name);
-  const rendered = await render(ctx, s, t, view.settings);
+  const rendered = await render(ctx, s, t, view);
   const changes = Object.fromEntries(Object.entries(back).filter((e): e is [string, number] => typeof e[1] === "number"));
   return { view, rendered, action: { kind: "reverted", limit: breach.limit, reason: breach.reason, history_name: name, changes, metrics_after: summarize(rendered.metrics) } };
 }

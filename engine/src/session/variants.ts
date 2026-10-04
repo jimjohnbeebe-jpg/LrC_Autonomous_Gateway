@@ -26,7 +26,7 @@ export async function runVariants(ctx: SessionContext, opened: Opened, args: Beg
   const { s, view } = opened;
   saveLog(s);
   try {
-    const original = await render(ctx, s, s.master, view.settings);
+    const original = await render(ctx, s, s.master, view);
     s.work = { target: s.master, pass: null, note: "Making the virtual copies" };
     ctx.deps.hud?.stage(s, "pass0");
     await makeCopies(ctx, s, s.log.variant_count ?? DEFAULT_VARIANT_COUNT);

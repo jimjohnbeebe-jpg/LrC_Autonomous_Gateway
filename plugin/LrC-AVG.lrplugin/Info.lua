@@ -5,7 +5,7 @@
 -- (Prefs.lua, get_prefs, Phase 5) and the HUD (Hud.lua, hud_update, Phase 5); Dispatch.lua routes
 -- them. The settings page in Plug-in Manager is PluginInfoProvider.lua (PHASE5_PLAN row 3); the HUD,
 -- its events (Events.lua) and the menu items below are row 4. Masks.lua (plugin 0.11.0) holds the
--- masks capture's two commands (GitHub issue #59).
+-- AI-mask commands of the mask tools (GitHub issue #59).
 -- LrSdkVersion 13.0: the five Phase 0 spike plugins declared it and ran on LrC 15.5.1
 -- [handle: docs\reports\phase0\PHASE0.md "Draft for LR_SDK_NOTES", SDK version]; whether it hides
 -- newer develop keys is [unverified].

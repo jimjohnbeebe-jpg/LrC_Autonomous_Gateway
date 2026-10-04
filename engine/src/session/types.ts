@@ -5,7 +5,7 @@ import type { BridgeClient, HudStage } from "../bridge/index.js";
 import type { IntentLibrary, LoadedIntent } from "../intents/index.js";
 import type { SessionLogData, SessionLogFiles } from "../log/index.js";
 import type { Metrics, Region, RegionBox } from "../metrics/index.js";
-import type { CanonicalSettings, ParamMap } from "../params/index.js";
+import type { CanonicalSettings, Geometry, ParamMap } from "../params/index.js";
 import type { RenderedPreview } from "../preview/index.js";
 import type { KnownLogFolders, PageRead } from "../settings/index.js";
 import type { Limits, Slope } from "./plan.js";
@@ -51,6 +51,27 @@ export type EndArgs = { session_id: string; outcome: "accept" | "revert" };
  * [stated: Jim, 2026-09-30, "Go with recommendations" on the PHASE5_PLAN row 6 plan, D2-A].
  */
 export type ApproveArgs = { session_id: string; confirmed: boolean };
+/** The mask tools (masks.ts, GitHub issue #59): each change is a pass of the session's photo [stated: Jim, 2026-10-03, "Own pass (Recommended)"]. */
+export type ListMasksArgs = { session_id: string; target?: TargetId | undefined };
+type MaskPassArgs = { session_id: string; target?: TargetId | undefined; rationale: string; return_image?: ReturnImage | undefined };
+export type CreateMaskArgs = MaskPassArgs & {
+  kind: string;
+  name?: string | undefined;
+  geometry?: Geometry | undefined;
+  /** People kinds: a point on the person (0-1). */
+  point?: { x: number; y: number } | undefined;
+  sliders?: Record<string, number> | undefined;
+};
+export type EditMaskArgs = MaskPassArgs & {
+  mask_id: string;
+  name?: string | undefined;
+  active?: boolean | undefined;
+  inverted?: boolean | undefined;
+  geometry?: Geometry | undefined;
+  sliders?: Record<string, number> | undefined;
+  combine?: { mode: string } | undefined;
+};
+export type DeleteMaskArgs = MaskPassArgs & { mask_id: string };
 
 export type SessionDeps = {
   client: BridgeClient;
@@ -73,6 +94,8 @@ export type SessionDeps = {
   copiesTimeoutMs?: number;
   /** How long lr_step waits for an approval (tests shorten it); approval.ts APPROVAL_WAIT_MS by default. */
   approvalWaitMs?: number;
+  /** How long an AI mask may take to compute, per route (tests shorten it); ai-masks.ts AI_WAIT_MS by default. */
+  aiWaitMs?: number;
   /** The HUD (hud\publisher.ts, PHASE5_PLAN row 5); no HUD updates without it. */
   hud?: HudSink;
 };
@@ -137,6 +160,8 @@ export type Rendered = {
   height: number;
   timings: RenderedPreview["timings"];
   settings: CanonicalSettings;
+  /** The mask table it shows (params\mask-table.ts tableInfo fingerprint). */
+  masks: string;
   /** The long edge the render was asked for (a session preview may use another than the session's). */
   longEdge: number;
   preview: RenderedPreview;
@@ -184,6 +209,10 @@ export type Session = {
   active: Target;
   snapshot: { name: string; id: string };
   startSettings: CanonicalSettings;
+  /** The mask table before the session (its fingerprint): a revert must bring it back too. */
+  startMasks: string;
+  /** How AI masks were last made (ai-masks.ts): the table route, or LrDevelopController after it failed. */
+  aiRoute: "table" | "dc" | null;
   regions: RegionState[];
   files: SessionLogFiles;
   log: SessionLogData;

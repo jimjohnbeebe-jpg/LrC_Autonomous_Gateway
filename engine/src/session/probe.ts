@@ -102,7 +102,7 @@ async function runProbe(
     const probedView = await write(ctx, s, t, values, name);
     if (previous) outstanding.delete(previous.name); // this write put the previous slider back
     historyNames.push(name);
-    const probed = await render(ctx, s, t, probedView.settings, { keep: false });
+    const probed = await render(ctx, s, t, probedView, { keep: false });
     const d = deltaMetrics(base.metrics, probed.metrics);
     const perUnit: Slope = {
       luma_mean: Math.round((d.luma_mean / p.delta) * 10000) / 10000,

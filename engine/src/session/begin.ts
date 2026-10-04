@@ -76,6 +76,8 @@ export async function openSession(ctx: SessionContext, args: BeginArgs): Promise
     active: master,
     snapshot: { name: snapshotName, id: snap.snapshot_id },
     startSettings: view.settings,
+    startMasks: view.masks.fingerprint,
+    aiRoute: null,
     regions: [],
     files,
     log: {} as SessionLogData,

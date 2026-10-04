@@ -124,13 +124,14 @@ describe("approve_each_pass: Converge mode", () => {
     expect(readLog().approvals?.length).toBe(1);
   });
 
-  it("a converged pass waits for no approval: no further pass follows", async () => {
+  it("a converged pass still waits for approval: a mask pass may follow it (masks.ts)", async () => {
     clean();
     approveMode();
     const m = newManager({ approvalWaitMs: 150 });
     await m.begin({ intent_id: "test_plain", return_image: "none" });
     expect((await step(m, { exposure: 0.02 })).json).toMatchObject({ pass: "1/4", converged_by_metrics: true });
-    expect(await fails(approve(m))).toMatchObject({ code: "NOT_AWAITING_APPROVAL", message: expect.stringMatching(/the session converged/) });
+    expect((await approve(m)).json).toMatchObject({ approved_pass: 1 });
+    expect(await fails(step(m, { exposure: 0.1 }))).toMatchObject({ code: "CONVERGED" });
   });
 
   it("autonomous mode (the default): no wait, no approval, and lr_approve_pass is refused", async () => {

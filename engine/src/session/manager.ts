@@ -37,12 +37,13 @@ import { openSession, runPass0 } from "./begin.js";
 import { endSession, readSessionLog } from "./end.js";
 import { abortedNote, endedError, idleStage, userAction, userEnded, type UserAction, type UserEnded } from "./hud-actions.js";
 import { abortError, checkAbort, read, render } from "./io.js";
+import { createMask, deleteMask, editMask, listMasks } from "./masks.js";
 import { selectVariant } from "./pick.js";
 import { probe } from "./probe.js";
 import { setRegions } from "./regions.js";
 import { step } from "./step.js";
 import { focus, resolveTarget } from "./targets.js";
-import { folderOf, type ApproveArgs, type BeginArgs, type EndArgs, type ProbeArgs, type RegionArgs, type SelectArgs, type Session, type SessionContext, type SessionDeps, type SessionOutput, type StepArgs, type TargetId } from "./types.js";
+import { folderOf, type ApproveArgs, type BeginArgs, type CreateMaskArgs, type DeleteMaskArgs, type EditMaskArgs, type EndArgs, type ListMasksArgs, type ProbeArgs, type RegionArgs, type SelectArgs, type Session, type SessionContext, type SessionDeps, type SessionOutput, type StepArgs, type TargetId } from "./types.js";
 import { runVariants } from "./variants.js";
 import { sessionView, type SessionView } from "./view.js";
 
@@ -93,7 +94,7 @@ export class SessionManager {
       s.work = { target: t, pass: null };
       await focus(this.ctx, s, t);
       const view = await read(this.ctx, s, t);
-      return (await render(this.ctx, s, t, view.settings, { longEdge })).preview;
+      return (await render(this.ctx, s, t, view, { longEdge })).preview;
     });
   }
 
@@ -146,6 +147,23 @@ export class SessionManager {
 
   setRegions(args: RegionArgs): Promise<SessionOutput> {
     return this.exclusive(() => this.withNotices(args.session_id, (s) => setRegions(s, args)));
+  }
+
+  /** The mask tools (masks.ts): a listing, and one pass per change. */
+  listMasks(args: ListMasksArgs): Promise<SessionOutput> {
+    return this.exclusive(() => this.withNotices(args.session_id, (s) => listMasks(this.ctx, s, args)));
+  }
+
+  createMask(args: CreateMaskArgs): Promise<SessionOutput> {
+    return this.exclusive(() => this.withNotices(args.session_id, (s) => createMask(this.ctx, s, args)));
+  }
+
+  editMask(args: EditMaskArgs): Promise<SessionOutput> {
+    return this.exclusive(() => this.withNotices(args.session_id, (s) => editMask(this.ctx, s, args)));
+  }
+
+  deleteMask(args: DeleteMaskArgs): Promise<SessionOutput> {
+    return this.exclusive(() => this.withNotices(args.session_id, (s) => deleteMask(this.ctx, s, args)));
   }
 
   /**

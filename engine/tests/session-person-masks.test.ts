@@ -5,6 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 import { MASK_TABLE_KEY, type Correction } from "../src/params/index.js";
+import type { FakeHandler } from "./helpers/fake-plugin.js";
 import { ID, SHORT, clean, fails, lr, newManager, plugin, readLog, useSessionHarness } from "./helpers/session-harness.js";
 
 useSessionHarness();
@@ -72,6 +73,31 @@ describe("one person's mask, by instance", () => {
     lr.masks.personDrift = true;
     const e = await fails(create("person_entire", RIGHT));
     expect(e).toMatchObject({ code: "FEATURE_UNAVAILABLE", details: { routes_tried: [{ route: "table", why: expect.stringMatching(/MaskSubType 3, category 13, instance null/) }, { route: "dc", why: expect.stringMatching(/none for this kind/) }] } });
+    expect(masks()).toEqual([]);
+  });
+
+  it("a probe that Lightroom gave the person at the point is the mask: one write, any instance accepted", async () => {
+    const { create } = await session();
+    lr.masks.instanceFromPoint = true;
+    expect((await create("person_entire", RIGHT)).json).toMatchObject({ ai: { instance: 1 }, mask: { instance: 1 } });
+    expect(sent("update_ai_settings")).toBe(1);
+    expect(component(masks()[0])).toMatchObject({ MaskSubCategoryID: 20036, InstanceIDs: [{ InstanceID: 1 }] });
+  });
+
+  it("keeps the probe's own times in the log when the wanted entry is written after it", async () => {
+    const { create } = await session();
+    await create("person_hair", RIGHT);
+    expect(readLog().passes.at(-1)?.mask?.ai).toMatchObject({ probe: { update_ms: expect.any(Number), computed_ms: expect.any(Number) }, update_ms: expect.any(Number) });
+  });
+
+  it("a failed write of the wanted entry leaves nothing behind: the probe is taken out", async () => {
+    const { create } = await session();
+    const real = plugin.handlers.get("apply_settings") as FakeHandler;
+    plugin.handlers.set("apply_settings", (p, id) =>
+      String(p["history_name"]).endsWith("mask person") ? { ok: false, error: { code: "write_failed", message: "dry: refused", recoverable: false } } : real(p, id),
+    );
+    const e = await fails(create("person_hair", RIGHT));
+    expect(e.details).toMatchObject({ routes_tried: [{ route: "table", why: expect.stringMatching(/writing the person mask of person 1 failed: dry: refused/) }, { route: "dc" }] });
     expect(masks()).toEqual([]);
   });
 

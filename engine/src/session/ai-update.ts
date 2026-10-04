@@ -3,11 +3,12 @@
 // In Jim's step-2 check, Lightroom's "Update AI Settings Errors" dialog opened inside the update's
 // write gate and held it; every later write, the put-backs included, was refused until Jim restarted
 // Lightroom [stated: Jim, 2026-10-03, his screenshot and his restart of Lightroom]. So:
-//   - the plugin's update runs in its own task and answers at once (plugin 0.14.0, plugin\LrC-AVG.lrplugin\
+//   - the plugin's update runs in its own task and answers at once [unverified until capture 5] (plugin 0.14.0, plugin\LrC-AVG.lrplugin\
 //     Masks.lua: plugin 0.13.0's asynchronous gate still held the answer for 11 s [handle:
 //     docs\reports\phase6\masks-capture\capture4-check.json step `row2_vegetation`]); the engine then reads the table, every POLL_MS doubling to 1 s, for the entry's
 //     digest (computed [handle: docs\reports\phase6\masks-capture\check.json `7_sky.new_digests`]) or an
-//     ErrorReason other than 0 (Lightroom found nothing to mask [unverified until capture 4 row 4]);
+//     ErrorReason other than 0 (Lightroom found nothing to mask: Snow and Water came back with 1 [handle:
+//     capture4-check.json steps `row4_snow`, `row4_water`]);
 //   - while the update is pending (s.aiPending) the session writes, exports and renders nothing
 //     (io.ts checkPending): in that run the exports made while the gate was held wrote no JPEG
 //     [unverified: seen in the plugin's log of Jim's step-2 run, which is not committed];
@@ -26,8 +27,10 @@
 //   - the reads name the photo by uuid (photo_uuid), so a change of selection in Lightroom does not
 //     end the wait before the entry is dealt with.
 // Every read checks the user's Abort first. [handle: tests\session-ai-dialog.test.ts, against the
-// Lightroom sim; in Lightroom [unverified] until capture 4.]
+// Lightroom sim. In Lightroom, capture 4 saw updates compute and ErrorReason answers without a dialog
+// (capture4-check.json); the dialog path itself is [unverified].]
 
+import { randomUUID } from "node:crypto";
 import type { CommandResult } from "../bridge/index.js";
 import { ToolError, toToolError } from "../mcp/errors.js";
 import { aiError, computed, firstComponent, readTable, type SdkSettings } from "../params/index.js";
@@ -41,7 +44,7 @@ export type AiTimings = {
   /** The first wait between reads; it doubles up to pollMaxMs. */
   pollMs: number;
   pollMaxMs: number;
-  /** How long update_ai_settings may take to answer (it answers at once from an asynchronous gate). */
+  /** How long update_ai_settings may take to answer (plugin 0.14.0 answers from its own task at once [unverified until capture 5]; 0.13.0 took 11 s, capture4-check.json). */
   replyMs: number;
   /** After this long with nothing in the table, the write gate is probed, every probeEveryMs. */
   dialogAfterMs: number;
@@ -80,11 +83,17 @@ const sleep = (t: number): Promise<void> => new Promise((resolve) => setTimeout(
 const STOPS = ["BRIDGE_DISCONNECTED", "TARGET_CHANGED", "SESSION_ENDED"];
 
 const ABANDONED = "Lightroom's catalog stayed busy, so Lightroom dropped the update";
+/** The probe's record of an update: this request's (its token), or of the photo when the plugin sent no token. */
+const ownUpdate = (p: CommandResult<"probe_write_gate"> | null, job: AiJob, token: string) => {
+  const u = p?.update;
+  if (!u) return null;
+  return (u.request_id !== undefined ? u.request_id === token : u.uuid === undefined || u.uuid === job.t.uuid) ? u : null;
+};
 
 /** update_ai_settings; null once it is under way (or may be: no answer in time), else what ended it. */
-async function send(ctx: SessionContext, s: Session, job: AiJob, T: AiTimings): Promise<Update | null> {
+async function send(ctx: SessionContext, s: Session, job: AiJob, T: AiTimings, token: string): Promise<Update | null> {
   try {
-    const res = await bridge(s, job.t, () => ctx.deps.client.request("update_ai_settings", { photo_uuid: job.t.uuid }, { timeoutMs: T.replyMs }));
+    const res = await bridge(s, job.t, () => ctx.deps.client.request("update_ai_settings", { photo_uuid: job.t.uuid, request_id: token }, { timeoutMs: T.replyMs }));
     if (res.state === "abandoned") return { kind: "dialog", why: ABANDONED, dialog_ms: 0 };
     return res.state === "failed" ? { kind: "failed", why: "update_ai_settings: the update failed", fallback: true } : null;
   } catch (err) {
@@ -126,8 +135,8 @@ function tell(ctx: SessionContext, s: Session, note: string): void {
 type Watch = { dialogAt: number | null; freeAt: number | null; probed: number; settled: boolean };
 
 /** What a probe says about this update: an Update to return, or null to read on (`w` updated). */
-function judge(p: CommandResult<"probe_write_gate"> | null, job: AiJob, w: Watch, now: number): Update | null {
-  const own = p?.update && (p.update.uuid === undefined || p.update.uuid === job.t.uuid) ? p.update : null;
+function judge(p: CommandResult<"probe_write_gate"> | null, job: AiJob, w: Watch, now: number, token: string): Update | null {
+  const own = ownUpdate(p, job, token);
   if (own?.state === "abandoned") return { kind: "dialog", why: ABANDONED, dialog_ms: w.dialogAt === null ? 0 : Math.round(now - w.dialogAt) };
   if (own?.state === "failed" && w.dialogAt === null) return { kind: "failed", why: `updateAISettings raised in Lightroom: ${own.error ?? "no message"}`, fallback: true };
   if (p?.status === "aborted") w.dialogAt ??= now;
@@ -136,7 +145,7 @@ function judge(p: CommandResult<"probe_write_gate"> | null, job: AiJob, w: Watch
   return null;
 }
 
-async function watch(ctx: SessionContext, s: Session, job: AiJob, T: AiTimings, t0: number, note: string | undefined): Promise<Update> {
+async function watch(ctx: SessionContext, s: Session, job: AiJob, T: AiTimings, t0: number, note: string | undefined, token: string): Promise<Update> {
   const w: Watch = { dialogAt: null, freeAt: null, probed: 0, settled: false };
   const dialogMs = (): number => (w.dialogAt === null ? 0 : Math.round(performance.now() - w.dialogAt));
   for (let wait = T.pollMs; ; wait = Math.min(wait * 2, T.pollMaxMs)) {
@@ -156,7 +165,7 @@ async function watch(ctx: SessionContext, s: Session, job: AiJob, T: AiTimings, 
     if (now - t0 >= T.dialogAfterMs && w.freeAt === null && !w.settled && now - w.probed >= T.probeEveryMs) {
       w.probed = now;
       const seenDialog = w.dialogAt !== null;
-      const out = judge(await probe(ctx), job, w, now);
+      const out = judge(await probe(ctx), job, w, now, token);
       if (out) return out;
       if (!seenDialog && w.dialogAt !== null) tell(ctx, s, DIALOG_NOTE);
     }
@@ -175,9 +184,10 @@ export async function updateAndWait(ctx: SessionContext, s: Session, job: AiJob)
   s.aiPending = { since: ctx.now().toISOString(), kind: job.kind };
   let out: Update | null = null;
   try {
-    const ended = await send(ctx, s, job, T);
+    const token = randomUUID();
+    const ended = await send(ctx, s, job, T, token);
     const sent = ms(t0);
-    out = ended ?? (await watch(ctx, s, job, T, t0, note));
+    out = ended ?? (await watch(ctx, s, job, T, t0, note, token));
     if (out.kind === "computed") out.update_ms = sent;
     return out;
   } finally {

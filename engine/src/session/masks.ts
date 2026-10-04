@@ -229,7 +229,7 @@ function passJson(s: Session, t: Target, n: number, op: MaskOp, { mask, masks, d
     cap_reached: t.endReason === "cap_reached",
     passes_left: s.maxPasses - n,
     ...(done.undone ? { undone: { limit: done.undone.limit, reason: done.undone.reason, note: "the mask change was written, then undone: the masks are as before this pass" } } : {}),
-    ...(done.ai ? { ai: { route: done.ai.route, ...(done.ai.route === "dc" ? { switched_to_develop: true, fallback: done.ai.fallback } : {}), ...(done.ai.instance !== undefined ? { instance: done.ai.instance, people: done.ai.people } : {}) } } : {}),
+    ...(done.ai ? { ai: { route: done.ai.route, ...(done.ai.route === "dc" ? { switched_to_develop: true, fallback: done.ai.fallback } : {}), ...(done.ai.instance !== undefined ? { instance: done.ai.instance, people: done.ai.people } : {}), ...(done.ai.probe ? { probe: done.ai.probe } : {}) } } : {}),
     ...describe(done.rendered),
     timings: { total_ms: ms(started) },
   };

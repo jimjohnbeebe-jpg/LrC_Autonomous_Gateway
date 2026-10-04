@@ -41,6 +41,8 @@ export const maskPassSchema = z.strictObject({
       /** PR C step 2c: one person's mask (session\person-masks.ts). */
       people: z.array(box).optional(),
       instance: z.number().int().optional(),
+      /** The probe's own update and compute times, when the wanted entry was written after it. */
+      probe: z.strictObject({ update_ms: z.number(), computed_ms: z.number() }).optional(),
     })
     .optional(),
 });

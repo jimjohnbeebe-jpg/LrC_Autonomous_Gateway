@@ -21,7 +21,9 @@
 --   asynchronous gate; with the catalog free it ran the update before it returned: "executed" after
 --   11 306 ms [handle: docs\reports\phase6\masks-capture\capture4-check.json step `row2_vegetation`
 --   `update`]. So from plugin 0.14.0 (PR C step 2c) the update runs in its own task, its gate inside it
---   (Gate.write, 5 s in the queue), and the command answers { uuid, status = "started", state } at once.
+--   (Gate.write, 5 s in the queue), and the command answers { uuid, status = "started", state } at once
+--   [unverified until capture 5]. `request_id`, when the engine sends one, is kept on the record and
+--   probe_write_gate echoes it, so the engine knows the record is its own request's.
 --   `state` and the last update's record (_G, so it survives a reload of this module, rule 03) say what
 --   the task did: started, running, done, failed (updateAISettings raised; the error is kept, not raised
 --   on, so no Lightroom error dialog comes from this plugin), abandoned (the gate stayed held for 5 s and
@@ -74,7 +76,7 @@ function Masks.updateAISettings(payload)
     local photo, found = Photos.find(catalog, payload.photo_uuid, payload.expect)
     if not photo then return nil, found end
     if MaskProbe.kind(photo, "updateAISettings") ~= "function" then return MaskProbe.unavailable("photo:updateAISettings (SDK 13.3)") end
-    local rec = { uuid = found.uuid, state = "started" }
+    local rec = { uuid = found.uuid, state = "started", request_id = type(payload.request_id) == "string" and payload.request_id or nil }
     _G.AVG_LAST_AI_UPDATE = rec
     LrTasks.startAsyncTask(function()
         local ok, err = LrTasks.pcall(function()
@@ -96,7 +98,7 @@ function Masks.probeWriteGate()
     local status = Gate.write(LrApplication.activeCatalog(), "AVG gate probe", function() end, PROBE_SECONDS)
     local u = _G.AVG_LAST_AI_UPDATE
     return { status = status or "aborted", ms = (LrDate.currentTime() - t0) * 1000,
-        update = u and { uuid = u.uuid, state = u.state, error = u.error } or nil }
+        update = u and { uuid = u.uuid, request_id = u.request_id, state = u.state, error = u.error } or nil }
 end
 
 -- The ids getAllMasks lists now, as a set.

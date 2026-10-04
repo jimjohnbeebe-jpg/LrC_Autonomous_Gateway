@@ -1,10 +1,12 @@
-// The AI-mask commands in the Lightroom sim (plugin 0.13.0, plugin\LrC-AVG.lrplugin\Masks.lua). The sim
+// The AI-mask commands in the Lightroom sim (plugin 0.14.0, plugin\LrC-AVG.lrplugin\Masks.lua). The sim
 // keeps masks as the table its apply_settings writes (lightroom-sim.ts); here:
 //   - update_ai_settings finds the photo by uuid and answers "started" at once, as plugin 0.14.0's task
 //     does (PR C step 2c). A component with InstanceIDs (one person's mask) gets InstanceBounds, the
 //     boxes of `people` (capture 4's two people by default, docs\reports\phase6\masks-capture\
 //     capture4-row6_people_by_hand.json), or ErrorReason 1 when `people` is empty; `personDrift` makes
-//     it come back as MaskSubType 3 + 13 without InstanceIDs, as the engine's instance-less entry did. With `tableRoute` "computes" every AI component without a digest gets its digests,
+//     it come back as MaskSubType 3 + 13 without InstanceIDs, as the engine's instance-less entry did;
+//     `instanceFromPoint` sets the probe's instance to the person at its point (what Lightroom does is
+//     [unverified]). The update's record carries the engine's request_id (`foreignUpdate`: another one's). With `tableRoute` "computes" every AI component without a digest gets its digests,
 //     as Lightroom did in capture 1 (docs\reports\phase6\masks-capture\check.json `7_sky`); "absent"
 //     gives it ErrorReason 1 instead (what Lightroom does for a kind the photo lacks is [unverified]);
 //     "never" leaves it uncomputed; "unavailable" answers feature_unavailable; "failed" / "abandoned"
@@ -25,6 +27,7 @@
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { boundsOf, pickInstance } from "../../src/params/mask-person.js";
 import { C, IMAGE, M, MASK_TABLE_KEY, WHAT } from "../../src/params/mask-table.js";
 import type { FakePlugin, FakeReply } from "./fake-plugin.js";
 import { findPhoto, type CatalogSim } from "./lightroom-sim-catalog.js";
@@ -49,6 +52,8 @@ export class SimMasks {
   ];
   /** true: every one-person entry drifts; "wanted": only the wanted entry (not the probe, instance 0 of Entire Person). */
   personDrift: boolean | "wanted" = false;
+  instanceFromPoint = false;
+  foreignUpdate = false;
   probe: "known" | "unknown" = "known";
   /** "late": the mask shows in the table only after the command's wait, so it answers no new id. */
   dc: "works" | "late" | "none" | "unknown" = "works";
@@ -58,7 +63,7 @@ export class SimMasks {
   /** Probes left while the update holds the gate, and what happens when it lets go. */
   held = 0;
   release: () => void = () => undefined;
-  update: { uuid: string; state: string; error?: string } | null = null;
+  update: { uuid: string; request_id?: string; state: string; error?: string } | null = null;
 }
 
 /** What the masks commands need of the sim. */
@@ -94,6 +99,11 @@ function compute(sim: MaskSim, uuid: string): void {
       m[IMAGE.digest] = "D0D0D0D0D0D0D0D0D0D0D0D0D0D0D0D0";
       if (person) m[IMAGE.instanceBounds] = structuredClone(sm.people);
       const probe = m[IMAGE.subCategory] === 20036 && (m[IMAGE.instanceIds] as Array<Record<string, unknown>>)[0]?.[IMAGE.instanceId] === 0;
+      if (probe && sm.instanceFromPoint) {
+        const [x, y] = String(m[IMAGE.referencePoint]).split(" ").map(Number);
+        const n = pickInstance(boundsOf(m), [x as number, y as number]);
+        if (n !== null) m[IMAGE.instanceIds] = [{ [IMAGE.instanceId]: n }];
+      }
       if (person && (sm.personDrift === true || (sm.personDrift === "wanted" && !probe))) {
         Object.assign(m, { [IMAGE.subType]: 3, [IMAGE.subCategory]: 13 });
         delete m[IMAGE.instanceIds];
@@ -107,22 +117,24 @@ function updateAiSettings(sim: MaskSim, p: Record<string, unknown>): FakeReply {
   sm.calls.push("update_ai_settings");
   const uuid = findPhoto(sim, p);
   if (typeof uuid !== "string") return uuid;
+  const rid = sm.foreignUpdate ? "another-request" : typeof p["request_id"] === "string" ? (p["request_id"] as string) : undefined;
+  const rec = (state: string, error?: string) => ({ uuid, ...(rid ? { request_id: rid } : {}), state, ...(error ? { error } : {}) });
   if (sm.tableRoute === "unavailable") return fail("feature_unavailable", "photo:updateAISettings (SDK 13.3) is not available in this Lightroom (or not to this plugin)", true);
   if (sm.tableRoute === "failed" || sm.tableRoute === "abandoned") {
-    sm.update = { uuid, state: sm.tableRoute, ...(sm.tableRoute === "failed" ? { error: "dry: updateAISettings raised" } : {}) };
+    sm.update = rec(sm.tableRoute, sm.tableRoute === "failed" ? "dry: updateAISettings raised" : undefined);
     return { ok: true, payload: { uuid, status: "started", state: "started", command_ms: 1 } };
   }
   if (sm.gate === "free") {
     compute(sim, uuid);
-    sm.update = { uuid, state: "done" };
+    sm.update = rec("done");
     return { ok: true, payload: { uuid, status: "started", state: "started", command_ms: 2 } };
   }
-  sm.update = { uuid, state: "running" };
+  sm.update = rec("running");
   sm.held = sm.heldProbes;
   const slow = sm.gate === "slow";
   sm.release = () => {
     if (slow) compute(sim, uuid);
-    sm.update = sm.releaseState === "failed" ? { uuid, state: "failed", error: "dry: updateAISettings raised after the dialog" } : { uuid, state: "done" };
+    sm.update = sm.releaseState === "failed" ? rec("failed", "dry: updateAISettings raised after the dialog") : rec("done");
   };
   return { ok: true, payload: { uuid, status: "started", state: "started", command_ms: 1 } };
 }

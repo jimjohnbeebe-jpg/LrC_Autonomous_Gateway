@@ -138,6 +138,14 @@ describe("AI masks: an update Lightroom dropped or that raised", () => {
     expect(m.current()).toBeNull();
   });
 
+  it("takes the update's state only from its own request: another request's failure is not this one's", async () => {
+    const { create } = await session({ computeMs: 300 });
+    [lr.masks.tableRoute, lr.masks.foreignUpdate] = ["failed", true];
+    const e = await fails(create("subject"));
+    expect(e.details).toMatchObject({ routes_tried: [{ route: "table", why: expect.stringMatching(/did not compute/) }, { route: "dc", why: expect.stringMatching(/not tried/) }] });
+    expect(sent("create_ai_mask_dc")).toBe(0);
+  });
+
   it("stops probing once the update is over and the gate reads free", async () => {
     const { create } = await session({ computeMs: 300 });
     lr.masks.tableRoute = "never";

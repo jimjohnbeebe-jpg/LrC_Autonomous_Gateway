@@ -2340,6 +2340,22 @@
                     "type": "integer",
                     "minimum": -9007199254740991,
                     "maximum": 9007199254740991
+                  },
+                  "probe": {
+                    "type": "object",
+                    "properties": {
+                      "update_ms": {
+                        "type": "number"
+                      },
+                      "computed_ms": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "update_ms",
+                      "computed_ms"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 "required": [

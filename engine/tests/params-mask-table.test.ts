@@ -10,7 +10,7 @@ import { CANONICAL_PARAMS, loadDefaultParamMap } from "../src/params/index.js";
 import { applyOp, newCorrection, precheck, storedSliders, tableSettings, type MaskOp } from "../src/params/mask-ops.js";
 import { boundsOf, instanceOf, pickInstance, withInstance } from "../src/params/mask-person.js";
 import { summarize } from "../src/params/mask-summary.js";
-import { AI_KINDS, C, CARRIED, CORRECTION, IMAGE, LINEAR, LOCAL_PARAMS, M, MASK_TABLE_KEY, RADIAL, RANGE, RECOMPUTED, WHAT, BOX, MaskError, readTable, tableInfo, uncaptured, verifyTable, type Correction } from "../src/params/mask-table.js";
+import { AI_KINDS, C, CARRIED, CORRECTION, IMAGE, LINEAR, LOCAL_PARAMS, M, MASK_TABLE_KEY, RADIAL, RANGE, RECOMPUTED, WHAT, BOX, IMAGE_KEYS, MaskError, readTable, tableInfo, uncaptured, verifyTable, type Correction } from "../src/params/mask-table.js";
 
 const capture = (name: string): unknown => JSON.parse(readFileSync(fileURLToPath(new URL(`../../docs/reports/phase6/masks-capture/${name}`, import.meta.url)), "utf8"));
 const dump = capture("3_dump-1.json") as Record<string, unknown>;
@@ -43,7 +43,7 @@ const codeOf = (fn: () => unknown): string => {
 describe("params: the mask table's field names (rule 03)", () => {
   it("names only fields and type strings that appear in the committed capture dumps", () => {
     const seen = words({ dump, captured, copies, twoPeople });
-    const constants = [MASK_TABLE_KEY, CORRECTION, ...CARRIED, ...RECOMPUTED, ...[C, M, WHAT, LINEAR, RADIAL, IMAGE, RANGE, BOX].flatMap((o) => Object.values(o)), ...[...LOCAL_PARAMS.values()].map((p) => p.field)];
+    const constants = [MASK_TABLE_KEY, CORRECTION, ...CARRIED, ...RECOMPUTED, ...IMAGE_KEYS, ...[C, M, WHAT, LINEAR, RADIAL, IMAGE, RANGE, BOX].flatMap((o) => Object.values(o)), ...[...LOCAL_PARAMS.values()].map((p) => p.field)];
     expect(constants.filter((c) => !seen.has(c))).toEqual([]);
   });
 
@@ -83,6 +83,8 @@ describe("params: the mask table's field names (rule 03)", () => {
     expect(pickInstance(boxes, [0.375, 0.661765])).toBe(0); // on the left person: in both boxes, nearer box 0's centre
     expect(pickInstance(boxes, [0.5, 0.7])).toBe(1); // in both boxes, nearer box 1's centre
     expect(pickInstance(boxes, [0.9, 0.1])).toBeNull();
+    // A box that is not one makes the whole list unusable: a box's position is its InstanceID.
+    expect(boundsOf({ InstanceBounds: [{ Top: 0, Left: 0, Bottom: 1, Right: 1 }, { Top: "x" }] })).toEqual([]);
     expect(summarize(twoPeople[1] as Correction)).toMatchObject({ kind: "person_entire", instance: 1, people: boxes });
   });
 
@@ -154,7 +156,16 @@ describe("params: reading the mask table", () => {
     expect(uncaptured([newCorrection("people_hair", "h", {}, null, {}, []), ...twoPeople, subtype13, newCorrection("landscape_snow", "s", {}, null, {}, [])])).toBeNull();
     const subtype4 = structuredClone(subtype13);
     Object.assign((subtype4[C.masks] as Record<string, unknown>[])[0] as object, { [IMAGE.subType]: 4 });
-    expect(uncaptured([subtype4])?.why).toBe("its kind (Mask/Image) was not round-tripped in the masks captures");
+    expect(uncaptured([subtype4])?.why).toBe("its AI kind (MaskSubType 4, category 13) is not one the masks captures round-tripped");
+    const unknownCategory = structuredClone(subtype13);
+    Object.assign((unknownCategory[C.masks] as Record<string, unknown>[])[0] as object, { [IMAGE.subType]: 0, [IMAGE.subCategory]: 99999 });
+    expect(uncaptured([unknownCategory])?.why).toBe("its AI kind (MaskSubType 0, category 99999) is not one the masks captures round-tripped");
+    const twoIds = structuredClone(twoPeople[0]) as Correction;
+    Object.assign((twoIds[C.masks] as Record<string, unknown>[])[0] as object, { [IMAGE.instanceIds]: [{ [IMAGE.instanceId]: 0 }, { [IMAGE.instanceId]: 1 }] });
+    expect(uncaptured([twoIds])?.why).toBe("it names 2 people (InstanceIDs)");
+    const oddKey = structuredClone(subtype13);
+    Object.assign((oddKey[C.masks] as Record<string, unknown>[])[0] as object, { NewLightroomField: 1 });
+    expect(uncaptured([oddKey])?.why).toBe("it has fields the masks captures never showed (NewLightroomField)");
     const colour = structuredClone(table[4]) as Correction;
     Object.assign(((colour[C.masks] as Record<string, unknown>[])[0] as Record<string, Record<string, unknown>>)[RANGE.holder] as object, { [RANGE.type]: 1 });
     expect(uncaptured([colour])?.why).toBe("its kind (Mask/RangeMask, not a luminance range) was not round-tripped in the masks captures");

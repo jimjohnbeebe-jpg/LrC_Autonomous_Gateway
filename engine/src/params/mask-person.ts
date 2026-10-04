@@ -23,18 +23,18 @@ export function instanceOf(m: Component | null | undefined): number | null {
   return typeof n === "number" && Number.isInteger(n) && n >= 0 ? n : null;
 }
 
-/** The boxes of every person Lightroom found (InstanceBounds), in its order; [] when none. */
+/** The boxes of every person Lightroom found (InstanceBounds), in its order; [] when none, or when any box is not one (a box's position is its InstanceID). */
 export function boundsOf(m: Component | null | undefined): Box[] {
   const raw = m?.[IMAGE.instanceBounds];
   if (!Array.isArray(raw)) return [];
-  return raw.flatMap((b) => {
-    const r = b as Record<string, unknown>;
-    const box = { top: Number(r[BOX.top]), left: Number(r[BOX.left]), bottom: Number(r[BOX.bottom]), right: Number(r[BOX.right]) };
-    return Object.values(box).every(Number.isFinite) ? [box] : [];
+  const boxes = raw.map((b) => {
+    const r = (b ?? {}) as Record<string, unknown>;
+    return { top: Number(r[BOX.top]), left: Number(r[BOX.left]), bottom: Number(r[BOX.bottom]), right: Number(r[BOX.right]) };
   });
+  return boxes.every((box) => Object.values(box).every(Number.isFinite)) ? boxes : [];
 }
 
-/** The instance whose box holds the point; when several do, the one with the nearest centre; null when none. */
+/** The instance whose box holds the point; when several do, the one with the nearest centre [inference: a point on a person lies nearer its own box's centre]; null when none. */
 export function pickInstance(boxes: readonly Box[], point: readonly [number, number]): number | null {
   const [x, y] = point;
   let best: { n: number; d: number } | null = null;

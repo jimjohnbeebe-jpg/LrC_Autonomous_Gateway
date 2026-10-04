@@ -225,26 +225,42 @@ export function componentKind(m: Component): MaskKind | "ai" | "range" | "other"
   return (Object.keys(AI_KINDS) as AiKind[]).find(tells) ?? "ai";
 }
 
+/** Every key of a Mask/Image component in the committed captures [handle: docs\reports\phase6\masks-capture\3_dump-1.json, capture2-templates.json, capture3-*.json, capture4-row6_people_by_hand.json]. */
+export const IMAGE_KEYS: ReadonlySet<string> = new Set([
+  "What", "MaskActive", "MaskName", "MaskBlendMode", "MaskInverted", "MaskSyncID", "MaskValue", "MaskVersion", "MaskSubType", "MaskSubCategoryID", "ReferencePoint",
+  "ErrorReason", "MaskID", "MaskDigest", "InputDigest", "LocalInputDigest", "InputDigestVersion", "LocalInputDigestVersion", "ModelVersion", "Origin", "FullMaskSize",
+  "WholeImageArea", "InstanceIDs", "InstanceBounds",
+]);
+const pairOf = (subType: unknown, subCategory: unknown): string => `${String(subType)}:${subCategory === undefined || subCategory === null ? "" : String(subCategory)}`;
+/** The AI kinds' (MaskSubType, MaskSubCategoryID) pairs, and 3 + 13, which Lightroom made of an entry and which round-tripped [handle: capture4-check.json steps `row6_person_entire`, `row6_person_entire_round_trip`]. */
+const TRUSTED_PAIRS: ReadonlySet<string> = new Set([...Object.values(AI_KINDS).map((k) => pairOf(k.fields[IMAGE.subType], k.fields[IMAGE.subCategory])), pairOf(3, 13)]);
+
 /**
- * Whether a component's structure was round-tripped (a table written back by apply_settings read back
- * unchanged): linear, radial and luminance, and every Mask/Image with MaskSubType 0, 1, 2 or 3 and
- * its category or InstanceIDs. Capture 1 wrote back sky (2) and subject (1) unchanged [handle:
- * docs\reports\phase6\masks-capture\check.json `4_write_back`]; capture 4's round trips read back
- * unchanged landscape vegetation, mountains and sky (0 + 50005, 50002, 50006), every person's face skin
- * and hair (3 + 2, 3 + 5), Entire Person with InstanceIDs (0 + 20036, two by hand) and a 3 + 13 entry
- * Lightroom made [handle: capture4-check.json `round_trip`, steps `row*_round_trip`]. Background
- * (0 + 22) had no round trip of its own; it shares SubType 0 [inference]. Brush strokes, Select
- * Objects, colour and depth ranges (any other What or RangeMask type) stay refused.
+ * Why a component's structure is not trusted in a table written back, or null when it is (the lead's
+ * decision, 2026-10-04: the variant that covers every kind the engine makes, and no more). Trusted:
+ * linear, radial and luminance; a Mask/Image of a known pair (TRUSTED_PAIRS) whose InstanceIDs, if any,
+ * name one person, and whose keys are all in IMAGE_KEYS. Round trips behind it: capture 1 wrote back sky
+ * (2) and subject (1) unchanged [handle: docs\reports\phase6\masks-capture\check.json `4_write_back`];
+ * capture 4's read back unchanged landscape vegetation, mountains and sky, every person's face skin and
+ * hair, Entire Person with InstanceIDs and the 3 + 13 entry [handle: capture4-check.json `round_trip`,
+ * steps `row*_round_trip`]; the other known pairs share those structures [inference]. Brush strokes,
+ * colour and depth ranges (any other What or RangeMask type) stay refused, and so does Select Objects
+ * [unverified: no capture shows its MaskSubType].
  */
-function roundTripped(m: Component): boolean {
+function untrusted(m: Component): string | null {
   const kind = componentKind(m);
-  if (kind === "linear" || kind === "radial" || kind === "luminance") return true;
-  return m[M.what] === WHAT.image && [0, 1, 2, 3].includes(m[IMAGE.subType] as number);
+  if (kind === "linear" || kind === "radial" || kind === "luminance") return null;
+  if (m[M.what] !== WHAT.image) return `its kind (${String(m[M.what])}${kind === "range" ? ", not a luminance range" : ""}) was not round-tripped in the masks captures`;
+  if (!TRUSTED_PAIRS.has(pairOf(m[IMAGE.subType], m[IMAGE.subCategory]))) return `its AI kind (MaskSubType ${String(m[IMAGE.subType])}, category ${String(m[IMAGE.subCategory] ?? "none")}) is not one the masks captures round-tripped`;
+  const ids = m[IMAGE.instanceIds];
+  if (ids !== undefined && (!Array.isArray(ids) || ids.length !== 1)) return `it names ${Array.isArray(ids) ? ids.length : "no list of"} people (InstanceIDs)`;
+  const odd = Object.keys(m).filter((k) => !IMAGE_KEYS.has(k));
+  return odd.length > 0 ? `it has fields the masks captures never showed (${odd.join(", ")})` : null;
 }
 
 /**
  * The first correction the engine must not write back, and why: a component whose structure the captures
- * did not round-trip (roundTripped), more than one component, or a MaskBlendMode other than 0 (every
+ * did not round-trip (untrusted), more than one component, or a MaskBlendMode other than 0 (every
  * captured component had one component and MaskBlendMode 0 [handle: 3_dump-1.json;
  * capture2-templates.json; capture3-templates.json; capture4-row6_people_by_hand.json]). The mask tools
  * write the whole table, so such a mask would be written back in a form never shown to survive it
@@ -257,8 +273,8 @@ export function uncaptured(entries: readonly Correction[]): { name: string; why:
     if (parts.length !== 1) return { name, why: `it has ${parts.length} components` };
     const m = parts[0] as Component;
     if (m[M.blend] !== undefined && m[M.blend] !== 0) return { name, why: `its MaskBlendMode is ${String(m[M.blend])}` };
-    const kind = componentKind(m);
-    if (!roundTripped(m)) return { name, why: `its kind (${String(m[M.what])}${kind === "range" ? ", not a luminance range" : ""}) was not round-tripped in the masks captures` };
+    const why = untrusted(m);
+    if (why) return { name, why };
   }
   return null;
 }

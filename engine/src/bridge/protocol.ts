@@ -222,7 +222,7 @@ export const COMMANDS = {
   // gate. A Lightroom without the call answers feature_unavailable. Up to 0.12.0 it waited for the
   // update (call_ms, `gate` what withWriteAccessDo returned); 0.13.0 used an asynchronous gate, which
   // still waited for the update when the catalog was free (`status` "executed"); from 0.14.0 the update
-  // runs in the plugin's own task and the answer comes at once: `status` "started", `state` what the task
+  // runs in the plugin's own task and the answer comes at once [unverified until capture 5]: `status` "started", `state` what the task
   // did so far (started, running, done, failed, abandoned; probe_write_gate reports it later).
   update_ai_settings: z.object({
     ...targeted,
@@ -252,7 +252,7 @@ export const COMMANDS = {
   probe_write_gate: z.object({
     status: z.string(),
     ms: z.number(),
-    update: z.object({ uuid: z.string().optional(), state: z.string(), error: z.string().optional() }).optional(),
+    update: z.object({ uuid: z.string().optional(), request_id: z.string().optional(), state: z.string(), error: z.string().optional() }).optional(),
   }),
 } as const;
 
@@ -300,7 +300,7 @@ export type CommandPayloads = {
   /** Refused with bad_request when a field is unknown or of the wrong type (hud-protocol.ts). */
   hud_update: HudUpdatePayload;
   /** Plugin 0.11.0: the photo with that uuid, checked against `expect`; the selection is not touched. */
-  update_ai_settings: { photo_uuid: string; expect?: PhotoExpect };
+  update_ai_settings: { photo_uuid: string; expect?: PhotoExpect; request_id?: string };
   /** Plugin 0.12.0: on the selected photo, refused with target_mismatch unless it is target_uuid's; waits up to wait_seconds (1-15, default 12) for the mask after createNewMask; switches Lightroom to Develop. */
   create_ai_mask_dc: { target_uuid: string; subtype: string; wait_seconds?: number };
   probe_write_gate: Record<string, never>;

@@ -81,6 +81,18 @@ describe("AI masks: the fall back to LrDevelopController", () => {
     expect(masks()[0]).toMatchObject({ CorrectionName: "AVG her", LocalShadows2012: 0.3 });
   });
 
+  it("a failed write of the name and sliders after LrDevelopController leaves nothing behind", async () => {
+    const { create } = await session();
+    plugin.handlers.set("update_ai_settings", pluginError);
+    const real = plugin.handlers.get("apply_settings") as FakeHandler;
+    plugin.handlers.set("apply_settings", (p, id) =>
+      String(p["history_name"]).endsWith("mask sliders") ? { ok: false, error: { code: "write_failed", message: "dry: refused", recoverable: false } } : real(p, id),
+    );
+    const e = await fails(create("subject"));
+    expect(e).toMatchObject({ code: "FEATURE_UNAVAILABLE", details: { routes_tried: [{ route: "table" }, { route: "dc", why: expect.stringMatching(/setting its sliders failed: .*dry: refused/) }] } });
+    expect(masks()).toEqual([]);
+  });
+
   it("goes to LrDevelopController when the plugin lacks update_ai_settings, and keeps that route for the session", async () => {
     const { create } = await session();
     lr.masks.tableRoute = "unavailable";

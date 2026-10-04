@@ -49,6 +49,8 @@ export type AiResult = {
   /** One person's mask (person-masks.ts): every person's box Lightroom found, and the one chosen. */
   people?: Box[];
   instance?: number;
+  /** One person's mask written after its probe: the probe's own update and compute times. */
+  probe?: { update_ms: number; computed_ms: number };
 };
 
 /**
@@ -183,8 +185,14 @@ async function byDevelop(ctx: SessionContext, s: Session, job: AiJob, subtype: s
   if (done.seen !== null) job.attempts.add(done.seen);
   if (done.id === null) return `the mask create_ai_mask_dc made ${done.seen ? "did not compute" : "did not show"} within ${Math.round(done.ms)} ms`;
   const name = historyName(s, job.t, job.n, "mask sliders");
-  const sdk = await writeTable(ctx, s, job.t, named(readTable(done.sdk), done.id, job.name, job.stored), name, false);
   job.historyNames.push(name);
+  let sdk: SdkSettings;
+  try {
+    sdk = await writeTable(ctx, s, job.t, named(readTable(done.sdk), done.id, job.name, job.stored), name, false);
+  } catch (err) {
+    if (stops(err)) throw err;
+    return `naming the mask LrDevelopController made and setting its sliders failed: ${why(err)}`; // makeAiMask takes it out
+  }
   return { sdk, id: done.id, route: "dc", dc_ms: ms(t0) };
 }
 

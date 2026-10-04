@@ -70,6 +70,7 @@ describe("HUD updates from a Converge session", () => {
     await rig.manager.end({ session_id: ID, outcome: "accept" });
     const accepted = await hudAt("accepted");
     expect(accepted.note).toBe("Claude accepted: the edit is kept.");
+    expect(accepted.close_after).toBe(10); // every end closes the HUD after 10 s, not only the engine's
     expect(accepted.put_back).toBeUndefined(); // an ended session has nothing to put back
   });
 
@@ -87,7 +88,9 @@ describe("HUD updates from a Converge session", () => {
     expect(lr.hud.last()?.stage).toBe("awaiting_claude");
     lr.exportError = null;
     await rig.manager.end({ session_id: ID, outcome: "revert" });
-    expect((await hudAt("ended")).note).toMatch(/Claude reverted/);
+    const ended = await hudAt("ended");
+    expect(ended.note).toMatch(/Claude reverted/);
+    expect(ended.close_after).toBe(10);
   });
 
   it("sends nothing to a plugin before 0.13.0, which would refuse the put_back field", async () => {

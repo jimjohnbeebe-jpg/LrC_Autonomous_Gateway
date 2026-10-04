@@ -34,6 +34,8 @@ import { hudState, type HudState } from "./payload.js";
  */
 export const HUD_PLUGIN = "0.13.0";
 const CLOSE_AFTER_PLUGIN = "0.15.0";
+/** Seconds an ended HUD stays up before it closes itself (any end: Jim, Claude or the engine). */
+const END_CLOSE_S = 10;
 /**
  * An update's answer took 2-7 ms in Lightroom [handle: vault PHASE5_PLAN.md "From row 4": "hud_update
  * round trips took 2-7 ms"]; 5 s is [inference]. While the plugin is paused the bridge client lets it
@@ -90,7 +92,10 @@ export class HudPublisher implements HudSink {
   stage(s: Session, stage: HudStage, options: { note?: string; open?: boolean; closeAfter?: number } = {}): void {
     if (this.channel?.sessionId !== s.id) this.channel = { sessionId: s.id, seq: 0, open: false, taken: null };
     if (options.open) this.channel.open = true;
-    this.state = hudState(s, stage, options.note, options.closeAfter);
+    // Every end closes the HUD after END_CLOSE_S, whoever ended the session [stated: Jim, 2026-10-04, "the HUD did
+    // not close automatically after the test"] (supersedes the fix/hud-p1 rule that an ended HUD stays open).
+    const closeAfter = options.closeAfter ?? ((HUD_END_STAGES as readonly string[]).includes(stage) ? END_CLOSE_S : undefined);
+    this.state = hudState(s, stage, options.note, closeAfter);
     this.failuresInRow = 0;
     this.kick();
   }

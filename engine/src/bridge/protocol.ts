@@ -215,6 +215,38 @@ export const COMMANDS = {
     write_error: z.string().optional(),
     after_error: z.string().optional(),
   }),
+  // Plugin 0.17.0 (Transfer.lua, GitHub issue #55). create_collection: the collection asked for, new or
+  // found (`created` false); `set_path` as list_collections gives it.
+  create_collection: z.object({
+    local_id: z.number(),
+    name: z.string(),
+    set_path: z.string().optional(),
+    smart: z.boolean(),
+    photo_count: z.number(),
+    created: z.boolean(),
+  }),
+  // collection_photos: which of the photos found were in the collection before and after the add or
+  // removal; once `before_in` is read the plugin answers ok, as set_rating does.
+  collection_photos: z.object({
+    collection_id: z.number(),
+    name: z.string(),
+    before_in: z.array(z.string()),
+    after_in: z.array(z.string()).optional(),
+    not_found: z.array(z.string()),
+    write_error: z.string().optional(),
+    after_error: z.string().optional(),
+  }),
+  // export_photo: the files Lightroom wrote for one photo, all in `dir`, a new folder under
+  // <temp>\LrC-AVG\exports that the engine empties into the user's folder (library\files.ts).
+  export_photo: z.object({
+    uuid: z.string(),
+    filename: z.string().optional(),
+    dir: z.string().min(1),
+    files: z.array(z.string().min(1)).min(1),
+    export_ms: z.number(),
+  }),
+  // import_photo: the photo at that path, added now or already in the catalog.
+  import_photo: z.object({ status: z.enum(["imported", "already"]), uuid: z.string(), filename: z.string().optional() }),
   // Plugin 0.5.0 (Prefs.lua getPrefs): the settings page's values, each already checked by the
   // plugin, under their wire names. The engine checks each field again on its own
   // (settings\page.ts parsePage), so one bad field costs only that field; `invalid` lists what the
@@ -311,6 +343,22 @@ export type CommandPayloads = {
   set_keywords: { photo_uuid: string; add: string[]; remove: string[] };
   /** A position in decimal degrees, or clear: true to remove the photo's position. */
   set_gps: { photo_uuid: string; latitude: number; longitude: number } | { photo_uuid: string; clear: true };
+  /** set_path: the collection sets, top level first; [] for the top level. */
+  create_collection: { name: string; set_path: string[] };
+  /** 1-500 uuids; remove: true takes them out. Refused with smart_collection for a smart collection. */
+  collection_photos: { collection_id: number; uuids: string[]; remove: boolean };
+  /** quality 1-100 (JPEG), bit_depth 8 or 16 (PNG, TIFF); long_edge, or width and height together, or neither (full size). */
+  export_photo: {
+    photo_uuid: string;
+    format: "jpeg" | "png" | "tiff" | "original";
+    quality?: number;
+    bit_depth?: 8 | 16;
+    long_edge?: number;
+    width?: number;
+    height?: number;
+  };
+  /** An absolute file path; added in place. */
+  import_photo: { path: string };
   get_prefs: Record<string, never>;
   /** Refused with bad_request when a field is unknown or of the wrong type (hud-protocol.ts). */
   hud_update: HudUpdatePayload;

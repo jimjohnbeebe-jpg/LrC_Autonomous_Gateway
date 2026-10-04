@@ -11,6 +11,8 @@
 //   catalog  (tools-catalog.ts): lr_search_photos, lr_get_selected_photos, lr_list_collections,
 //            lr_set_rating, lr_set_keywords (Phase 6, kept from Automaat; library\); lr_list_keywords
 //            and lr_set_gps (GitHub issue #60, from later Automaat commits).
+//   files    (tools-collections.ts, tools-files.ts): lr_create_collection, lr_add_to_collection,
+//            lr_export_photos, lr_import_photos (GitHub issue #55; library\files.ts).
 //   write    (tools-write.ts): setSettings, Phase 2's lr_set_settings, for the Phase 2 check only.
 // What they share is in tools-shared.ts. The MCP definitions are the defs-*.ts modules, by the same
 // groups.
@@ -34,7 +36,9 @@ import {
   type SetKeywordsArgs,
   type SetRatingArgs,
 } from "./tools-catalog.js";
+import { addToCollection, createCollection, type AddToCollectionArgs, type CreateCollectionArgs } from "./tools-collections.js";
 import { getActivePhotoContext, getMetrics, getPreview, type MetricsArgs, type PreviewArgs } from "./tools-context.js";
+import { exportPhotos, importPhotos, type Budget, type ExportPhotosArgs, type ImportPhotosArgs } from "./tools-files.js";
 import { getIntent, listIntents, saveIntent, type SaveIntentArgs } from "./tools-intents.js";
 import { createPresetFromActive, syncSeries, type CreatePresetArgs, type SyncSeriesArgs } from "./tools-propagation.js";
 import { approvePass, beginSession, createMask, deleteMask, editMask, endSession, getSessionLog, listMasks, probe, selectVariant, setRegions, step } from "./tools-session.js";
@@ -191,6 +195,24 @@ export class Tools {
 
   setGps(args: SetGpsArgs): Promise<ToolOutput> {
     return setGps(this.ctx, args);
+  }
+
+  // --- Collections and files (GitHub issue #55).
+
+  createCollection(args: CreateCollectionArgs): Promise<ToolOutput> {
+    return createCollection(this.ctx, args);
+  }
+
+  addToCollection(args: AddToCollectionArgs): Promise<ToolOutput> {
+    return addToCollection(this.ctx, args);
+  }
+
+  exportPhotos(args: ExportPhotosArgs, budget?: Budget): Promise<ToolOutput> {
+    return exportPhotos(this.ctx, args, budget);
+  }
+
+  importPhotos(args: ImportPhotosArgs, budget?: Budget): Promise<ToolOutput> {
+    return importPhotos(this.ctx, args, budget);
   }
 
   // --- Phase 2's write, for the Phase 2 check (not offered over MCP).

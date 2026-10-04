@@ -8,7 +8,6 @@
 // paths in lr_set_keywords (library\keywords.ts), lr_list_keywords (a read, as above) and lr_set_gps
 // (a write, as above), all three needing plugin 0.10.0.
 
-import { pluginVersionAtLeast } from "../bridge/index.js";
 import {
   CATALOG_READ_TIMEOUT_MS,
   DEFAULT_PAGE,
@@ -23,8 +22,8 @@ import {
   type WriteResult,
 } from "../library/index.js";
 import { WRITE_TIMEOUT_MS } from "../sync/target.js";
-import { ToolError } from "./errors.js";
-import { run, sessionTools, type ToolContext, type ToolOutput } from "./tools-shared.js";
+
+import { needPlugin, run, sessionTools, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
 type Page = { limit?: number | undefined; offset?: number | undefined };
 export type SearchPhotosArgs = SearchFilters & Page & { collection_id?: number | undefined };
@@ -45,14 +44,8 @@ const UNFILTERED =
  * Library.lua setKeywords] (what Lightroom makes of the "|" is [unverified]), and it removes a plain
  * name at every level, not only the top-level keyword.
  */
-function needPlugin(ctx: ToolContext, tool: string, why: string): void {
-  const version = ctx.deps.client.hello()?.plugin_version;
-  if (pluginVersionAtLeast(version, KEYWORD_GPS_PLUGIN)) return;
-  throw new ToolError(
-    "PLUGIN_TOO_OLD",
-    `${tool} needs the LrC-AVG plugin ${KEYWORD_GPS_PLUGIN} or later (${why}); Lightroom runs ${String(version ?? "an unknown version")}. Restart Lightroom so it loads the current plugin.`,
-    false,
-  );
+function needKeywordPlugin(ctx: ToolContext, tool: string, why: string): void {
+  needPlugin(ctx, tool, KEYWORD_GPS_PLUGIN, why);
 }
 
 export async function searchPhotos(ctx: ToolContext, args: SearchPhotosArgs): Promise<ToolOutput> {
@@ -99,7 +92,7 @@ export async function listCollections(ctx: ToolContext, args: Page): Promise<Too
 export async function listKeywords(ctx: ToolContext, args: ListKeywordsArgs): Promise<ToolOutput> {
   return run(ctx, "lr_list_keywords", args, async () => {
     await ctx.deps.ensureBridge();
-    needPlugin(ctx, "lr_list_keywords", "it reads the keyword tree");
+    needKeywordPlugin(ctx, "lr_list_keywords", "it reads the keyword tree");
     const offset = args.offset ?? 0;
     const limit = args.limit ?? DEFAULT_PAGE;
     const query = args.query !== undefined ? { query: args.query } : {};
@@ -141,7 +134,7 @@ export async function setKeywords(ctx: ToolContext, args: SetKeywordsArgs): Prom
     const remove = (args.remove ?? []).map(normalizeKeyword);
     const sessions = sessionTools(ctx);
     await ctx.deps.ensureBridge();
-    needPlugin(ctx, "lr_set_keywords", "for keyword paths and its top-level rule for plain names");
+    needKeywordPlugin(ctx, "lr_set_keywords", "for keyword paths and its top-level rule for plain names");
     return sessions.whenIdle("lr_set_keywords", async () => {
       const out = await writeEach(
         args.uuids,
@@ -163,7 +156,7 @@ export async function setGps(ctx: ToolContext, args: SetGpsArgs): Promise<ToolOu
     const want = args.position;
     const sessions = sessionTools(ctx);
     await ctx.deps.ensureBridge();
-    needPlugin(ctx, "lr_set_gps", "it writes GPS positions");
+    needKeywordPlugin(ctx, "lr_set_gps", "it writes GPS positions");
     const payload = want === null ? { clear: true as const } : { latitude: want.latitude, longitude: want.longitude };
     return sessions.whenIdle("lr_set_gps", async () => {
       const out = await writeEach(

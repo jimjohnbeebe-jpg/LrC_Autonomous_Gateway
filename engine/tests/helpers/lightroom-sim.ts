@@ -24,6 +24,7 @@ import sharp from "sharp";
 import type { FakePlugin, FakeReply } from "./fake-plugin.js";
 import { createVirtualCopies, describePhoto, findPhoto, getSelection, selectPhoto, type CopyFault, type SimCopy } from "./lightroom-sim-catalog.js";
 import { SimHud } from "./lightroom-sim-hud.js";
+import { SimFiles } from "./lightroom-sim-files.js";
 import { SimLibrary } from "./lightroom-sim-library.js";
 import { SimMasks, installMasks } from "./lightroom-sim-masks.js";
 import { defaultSimPrefs, type SimPrefs } from "./lightroom-sim-prefs.js";
@@ -92,6 +93,8 @@ export class LightroomSim {
   readonly hud = new SimHud();
   /** The library commands (plugin 0.8.0, Library.lua): search, collections, ratings, keywords (lightroom-sim-library.ts). */
   readonly library = new SimLibrary();
+  /** The collection and file commands (plugin 0.17.0, Transfer.lua; lightroom-sim-files.ts). */
+  readonly files = new SimFiles(this.library);
   /** The AI-mask commands' behaviour (plugin 0.13.0, Masks.lua; lightroom-sim-masks.ts). */
   readonly masks = new SimMasks();
   /** Virtual copies of the master, by uuid (lightroom-sim-catalog.ts). */
@@ -176,6 +179,7 @@ export class LightroomSim {
     );
     plugin.handlers.set("hud_update", (p) => this.hud.update(p));
     this.library.install(plugin);
+    this.files.install(plugin);
     plugin.handlers.set("get_context", (p) => on(p, (u) => this.context(u)));
     plugin.handlers.set("get_settings", (p) => on(p, (u) => ok({ uuid: u, settings: luaize(this.settingsOf(u)) })));
     plugin.handlers.set("apply_settings", (p) =>

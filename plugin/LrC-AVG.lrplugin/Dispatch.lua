@@ -19,6 +19,7 @@ local Log = require 'Log'
 local Masks = require 'Masks'
 local Prefs = require 'Prefs'
 local Preview = require 'Preview'
+local Transfer = require 'Transfer'
 
 local Dispatch = {}
 
@@ -42,6 +43,10 @@ function Dispatch.handlers(hello)
         set_rating = Library.setRating,
         set_keywords = Library.setKeywords,
         set_gps = Library.setGps,
+        create_collection = Transfer.createCollection,
+        collection_photos = Transfer.collectionPhotos,
+        export_photo = Transfer.exportPhoto,
+        import_photo = Transfer.importPhoto,
         get_prefs = Prefs.getPrefs,
         hud_update = Hud.update,
         update_ai_settings = Masks.updateAISettings,

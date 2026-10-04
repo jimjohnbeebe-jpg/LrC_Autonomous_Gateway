@@ -77,7 +77,8 @@ export type RenderedPreview = {
   };
 };
 
-function isInside(dir: string, file: string): boolean {
+/** True when `file` is strictly inside `dir` (libraryiles.ts uses it for exports too). */
+export function isInside(dir: string, file: string): boolean {
   const rel = path.relative(path.resolve(dir), path.resolve(file));
   return rel !== "" && !rel.startsWith("..") && !path.isAbsolute(rel);
 }

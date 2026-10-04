@@ -1,6 +1,8 @@
 // The MCP definitions of the mask tools (tools-session.ts; the work is session\masks.ts, GitHub issue
 // #59, engine 0.16.0). The local sliders are params\mask-table.ts LOCAL_PARAMS, in the Masking panel's
-// units [handle: docs\reports\phase6\masks-capture\capture2-calibration.json `fields`].
+// units [handle: docs\reports\phase6\masks-capture\capture2-calibration.json `fields`]. Inverting a mask
+// (MaskInverted true, captured only as false) and a luminance entry made by the engine are [unverified]
+// in Lightroom until Jim's mask tools check (it creates a luminance range; it does not invert).
 
 import { z } from "zod";
 import { LOCAL_PARAMS } from "../params/index.js";
@@ -69,7 +71,7 @@ const editArgs = z.object({
   mask_id: maskId,
   name: name.optional().describe("rename"),
   active: z.boolean().optional().describe("false hides the mask (its effect is off), true shows it"),
-  inverted: z.boolean().optional(),
+  inverted: z.boolean().optional().describe("true inverts the mask (not yet checked in Lightroom: look at the preview)"),
   geometry: geometry.optional(),
   sliders: sliders.optional(),
   combine: z.object({ mode: z.enum(["add", "subtract", "intersect"]) }).optional().describe("refused for now: combining components was not captured"),
@@ -81,7 +83,9 @@ const PASS_NOTE =
   "are planned; it may follow convergence, and approve_each_pass mode gates it like lr_step). It writes the photo's whole mask " +
   "table as one History step \"AVG <id> pass n/N mask <op>\", reads it back, renders and measures, and is undone (\"… clip revert\") " +
   "when clipping goes over a limit the photo was within; global sliders are never moved for a mask. If the masks changed in " +
-  "Lightroom meanwhile: MASKS_CHANGED, nothing written. Returns the mask, every mask of the photo (`masks`, with fresh ids), " +
+  "Lightroom meanwhile: MASKS_CHANGED, nothing written. While the photo has a mask the tools cannot write back safely (several " +
+  "components, a blend mode, a kind not listed here): MASKS_UNCAPTURED_KIND, nothing written (lr_list_masks still reads). " +
+  "Returns the mask, every mask of the photo (`masks`, with fresh ids), " +
   `metrics, delta_metrics and the image. Needs plugin ${MASKS_PLUGIN}. Not offered: brush painting, Select Objects, colour or ` +
   "depth range sampling, reading mask pixels, mask presets.";
 

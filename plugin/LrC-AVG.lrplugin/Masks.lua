@@ -1,4 +1,4 @@
--- Bridge commands for AI masks (GitHub issue #59, plugin 0.11.0). The engine writes masks as the
+-- Bridge commands for AI masks (GitHub issue #59; update_ai_settings plugin 0.11.0, create_ai_mask_dc 0.12.0). The engine writes masks as the
 -- MaskGroupBasedCorrections table with apply_settings (Develop.lua); an AI mask written that way
 -- computes after update_ai_settings, and when it does not, the engine falls back to
 -- create_ai_mask_dc. No mask field name is written here (rule 03: key names come from a live
@@ -25,8 +25,10 @@
 --   getAllMasks_after_sky; capture2-templates.json wait_mask_background]. It runs outside any write
 --   gate (a gate around createNewMask reportedly rolls it back [community: issue #59 research]), so
 --   the History step it makes carries Lightroom's own name [stated: Jim, 2026-10-03, "Accept for
---   fallback (Recommended)"]; what that name is [unverified]. selectTool("loupe") at the end did not
---   leave Masking in capture 2 [handle: capture2-templates.json getSelectedTool_end "masking"].
+--   fallback (Recommended)"]; what that name is [unverified]. After capture 2's create probe,
+--   selectTool("loupe") left Masking open [handle: capture2-8_create_probe.json getSelectedTool_end
+--   "masking"]. Opening Masking and the wait for the mask each have their own bound, so a slow module
+--   switch does not eat the wait; the engine then reads the table for a mask that showed later.
 
 local LrApplication = import 'LrApplication'
 local LrDate = import 'LrDate'
@@ -43,9 +45,10 @@ local record, dc = MaskProbe.record, MaskProbe.dc
 -- reference's [handle: https://lrc.mcor.dev/modules/LrDevelopController.html createNewMask, read 2026-10-03].
 local SUBTYPES = { subject = true, sky = true, background = true }
 local DEFAULT_WAIT_SECONDS = 12
--- The whole command's bound: opening Masking (up to ~7 s, MaskProbe.lua) shares it with the wait.
--- The engine waits 25 s for the answer (engine\src\session\ai-masks.ts), so this stops first.
-local COMMAND_SECONDS = 15
+-- Opening Masking takes up to ~7 s (MaskProbe.lua: Develop 5, settle 2); its bound. The wait for the
+-- mask then gets its own bound, wait_seconds + 2. At most about 27 s together; the engine waits 35 s
+-- for the answer (engine\src\session\ai-masks.ts DC_TIMEOUT_MS), so this stops first [inference].
+local OPEN_SECONDS = 10
 
 function Masks.updateAISettings(payload)
     local tCommand = LrDate.currentTime()
@@ -83,11 +86,14 @@ function Masks.createAiMaskDc(payload)
     if type(wait) ~= "number" or wait < 1 or wait > 15 then
         return nil, { code = "bad_request", message = "wait_seconds must be 1-15", recoverable = false }
     end
-    local ctx, err = MaskProbe.begin(payload, COMMAND_SECONDS)
+    local ctx, err = MaskProbe.begin(payload, OPEN_SECONDS)
     if not ctx then return nil, err end
     MaskProbe.openMasking(ctx)
     local okIds, old = record(ctx, "mask_ids_before", ids)
     if not okIds or type(old) ~= "table" then old = {} end
+    -- The create and its wait get their own bound, counted from now (record() stops at ctx.deadline).
+    ctx.seconds = wait + 2
+    ctx.deadline = LrDate.currentTime() + ctx.seconds
     record(ctx, "createNewMask_" .. subtype, function() return dc("createNewMask", "aiSelection", subtype) end)
     local fresh, waited = {}, 0
     record(ctx, "wait_new_mask", function()

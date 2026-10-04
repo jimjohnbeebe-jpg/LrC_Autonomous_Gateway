@@ -126,8 +126,46 @@ describe("mask tools: the photo changing, the guardrail, convergence and the cap
     const out = await create();
     expect(out.json).toMatchObject({ pass: "1/4", undone: { limit: "clip_high" }, masks: [], guardrail_actions: [{ kind: "reverted", limit: "clip_high" }] });
     expect(lr.history.slice(-2)).toEqual([`AVG ${SHORT} pass 1/4 mask create`, `AVG ${SHORT} pass 1/4 clip revert`]);
+    expect(readLog().passes.at(-1)?.mask).toMatchObject({ name: "AVG bottom", after: null });
     expect(masks()).toEqual([]);
     expect({ ...lr.settings, [MASK_TABLE_KEY]: undefined }).toEqual({ ...before, [MASK_TABLE_KEY]: undefined });
+  });
+
+  it("reports a clip undo of the first mask that did not take as unmet, and keeps the mask", async () => {
+    clean();
+    await begin();
+    masksBrighten();
+    const real = plugin.handlers.get("apply_settings") as FakeHandler;
+    plugin.handlers.set("apply_settings", (p, id) => {
+      const table = (p["settings"] as Record<string, unknown>)[MASK_TABLE_KEY];
+      return Array.isArray(table) && table.length === 0 ? real({ ...p, settings: { Exposure2012: lr.settings["Exposure2012"] } }, id) : real(p, id);
+    });
+    const out = await create();
+    expect(out.json).toMatchObject({ guardrail_actions: [{ kind: "unmet", limit: "clip_high", reason: expect.stringMatching(/did not take.*the mask change stays/) }], masks: [{ name: "AVG bottom" }] });
+    expect(out.json["undone"]).toBeUndefined();
+  });
+
+  it("an undone delete says deleted: false, and the HUD says the change was undone", async () => {
+    clean();
+    lr.settings[MASK_TABLE_KEY] = [structuredClone(captureTable[0])];
+    const rig = hudRig();
+    await begin({}, rig.manager);
+    masksBrighten(); // the photo is brighter while it has masks: deleting the mask makes it darker, which does not clip
+    const realExport = plugin.handlers.get("export_preview") as FakeHandler;
+    plugin.handlers.set("export_preview", async (p, id) => {
+      const saved = lr.settings["Blacks2012"];
+      if (masks().length === 0) lr.settings["Blacks2012"] = -100; // without the mask the shadows crush
+      try {
+        return await realExport(p, id);
+      } finally {
+        lr.settings["Blacks2012"] = saved;
+      }
+    });
+    const id = String((captureTable[0] as Correction)["CorrectionID"]);
+    const out = await rig.manager.deleteMask({ ...pass, mask_id: id });
+    expect(out.json).toMatchObject({ deleted: false, undone: { limit: "clip_low" } });
+    await waitUntil(() => lr.hud.last()?.pass === 1 && lr.hud.last()?.stage === "awaiting_claude");
+    expect(lr.hud.last()?.deltas).toEqual([{ slider: "Mask 1", after: "change undone" }]);
   });
 
   it("may follow convergence and clears it; the cap still holds", async () => {
@@ -145,7 +183,7 @@ describe("mask tools: the photo changing, the guardrail, convergence and the cap
     const m = (await import("./helpers/session-harness.js")).newManager({ approvalWaitMs: 150 });
     await begin({}, m);
     await m.step({ session_id: ID, settings: { exposure: 0.02 }, rationale: "test", return_image: "none" });
-    expect(await fails(create(LINEAR, m))).toMatchObject({ code: "AWAITING_APPROVAL" });
+    expect(await fails(create(LINEAR, m))).toMatchObject({ code: "AWAITING_APPROVAL", message: expect.stringMatching(/call lr_create_mask again/) });
     await m.approvePass({ session_id: ID, confirmed: true });
     expect((await create(LINEAR, m)).json).toMatchObject({ pass: "2/4", approval: { pass: 1, by: "claude" } });
   });
@@ -179,18 +217,33 @@ describe("mask tools: the session's end, Variants mode, an older plugin, the HUD
     expect(recipe.masks).toBe(1);
   });
 
+  it("refuses mask writes while the photo has a mask it cannot write back; lr_step never sends the mask table", async () => {
+    clean();
+    const two = structuredClone(captureTable[0]) as Correction;
+    (two["CorrectionMasks"] as unknown[]).push(structuredClone((captureTable[1] as Correction)["CorrectionMasks"] as unknown[])[0]);
+    lr.settings[MASK_TABLE_KEY] = [two, structuredClone(captureTable[2])];
+    await begin();
+    const writes = lr.history.length;
+    expect(await fails(create())).toMatchObject({ code: "MASKS_UNCAPTURED_KIND", recoverable: false, message: expect.stringMatching(/"Mask 1".*2 components.*left untouched/) });
+    expect(lr.history.length).toBe(writes);
+    expect((await manager.listMasks({ session_id: ID })).json).toMatchObject({ count: 2 });
+    await manager.step({ session_id: ID, settings: { exposure: 0.1 }, rationale: "test", return_image: "none" });
+    const sent = plugin.received.filter((r) => r.name === "apply_settings").map((r) => Object.keys(r.payload["settings"] as object));
+    expect(sent.flat()).not.toContain(MASK_TABLE_KEY);
+  });
+
   it("Variants mode: masks are refused before the pick", async () => {
     clean();
     await manager.begin({ intent_id: "test_variants", mode: "variants", variant_count: 2, return_image: "none" });
     expect(await fails(create({ ...LINEAR, target: "A" }))).toMatchObject({ code: "MASKS_AFTER_PICK" });
   });
 
-  it("refuses the mask writes on a plugin before 0.11.0; the listing still reads", async () => {
+  it("refuses the mask writes on a plugin before 0.12.0; the listing still reads", async () => {
     clean();
     await begin();
     const hello = client.hello();
-    const old = vi.spyOn(client, "hello").mockReturnValue(hello ? { ...hello, plugin_version: "0.10.0" } : null);
-    expect(await fails(create())).toMatchObject({ code: "PLUGIN_TOO_OLD", message: expect.stringMatching(/0\.11\.0 or later.*runs 0\.10\.0/) });
+    const old = vi.spyOn(client, "hello").mockReturnValue(hello ? { ...hello, plugin_version: "0.11.0" } : null);
+    expect(await fails(create())).toMatchObject({ code: "PLUGIN_TOO_OLD", message: expect.stringMatching(/0\.12\.0 or later.*runs 0\.11\.0/) });
     expect((await manager.listMasks({ session_id: ID })).json).toMatchObject({ count: 0 });
     old.mockRestore();
   });

@@ -132,7 +132,11 @@ function feather(v: unknown): number {
   return v;
 }
 
-/** The captured luminance range's fixed fields; the sample point at the photo's centre is [inference]. */
+/**
+ * The captured luminance range's fixed fields; the sample point at the photo's centre is [inference]. A
+ * luminance entry made by the engine (not by Lightroom's own sampling) is [unverified] until Jim's mask
+ * tools check creates one.
+ */
 const rangeTemplate = (): Record<string, unknown> => ({ [RANGE.type]: 2, [RANGE.version]: 3, [RANGE.sampleType]: 0, [RANGE.sampleInfo]: "0 0.500000 0.500000", [RANGE.invert]: false });
 
 /**
@@ -214,6 +218,7 @@ function edit(entries: Correction[], op: Extract<MaskOp, { op: "edit" }>): OpRes
   if ((op.inverted !== undefined || op.geometry) && !only) throw new MaskError("MASK_OP_NOT_CAPTURED", "Inverting or reshaping a mask of several components was not captured; edit it in Lightroom.");
   if (op.name !== undefined) e[C.name] = op.name;
   if (op.active !== undefined) e[C.active] = op.active;
+  // MaskInverted was captured only as false; what writing true does is [unverified].
   if (only && op.inverted !== undefined) only[M.inverted] = op.inverted;
   if (only && op.geometry) Object.assign(only, geometryFields(String(componentKind(only)), op.geometry, only));
   if (op.sliders) Object.assign(e, storedSliders(op.sliders));
@@ -240,7 +245,8 @@ export function applyOp(current: readonly Correction[], op: MaskOp): OpResult {
 /**
  * The settings that write `entries` as the whole table. An empty table is written only to delete the
  * last mask or to undo a pass whose table was empty before it (`emptyOk`): an empty array from any
- * other path would be a bug about to wipe the user's masks.
+ * other path would be a bug about to wipe the user's masks. That Lightroom takes an empty array as "no
+ * masks" is [unverified]: the captures deleted down to 7 entries, never to 0 (check.json `10_delete`).
  */
 export function tableSettings(entries: readonly Correction[], emptyOk: boolean): Record<string, unknown> {
   if (entries.length === 0 && !emptyOk) throw new MaskError("INTERNAL_ERROR", "Refused to write an empty mask table outside a delete or an undo.");

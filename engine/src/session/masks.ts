@@ -19,7 +19,7 @@
 
 import { pluginVersionAtLeast } from "../bridge/index.js";
 import type { GuardrailAction, MaskPassEntry } from "../log/index.js";
-import { ToolError } from "../mcp/errors.js";
+import { ToolError, toToolError } from "../mcp/errors.js";
 import { deltaMetrics, summarize as metricsOf } from "../metrics/index.js";
 import {
   KIND_LABELS,
@@ -32,6 +32,7 @@ import {
   storedSliders,
   summarize,
   tableInfo,
+  uncaptured,
   type Correction,
   type FromSdkResult,
   type MaskKind,
@@ -47,8 +48,8 @@ import { brief, describe, failed, fresh, historyName, image, ms, readSdk, record
 import { checkReady, focus, resolveTarget } from "./targets.js";
 import type { CreateMaskArgs, DeleteMaskArgs, EditMaskArgs, ListMasksArgs, Rendered, ReturnImage, Session, SessionContext, SessionOutput, Target, TargetId } from "./types.js";
 
-/** The plugin the mask tools were captured and tested with (plugin\LrC-AVG.lrplugin\Masks.lua). */
-export const MASKS_PLUGIN = "0.11.0";
+/** The plugin with create_ai_mask_dc (plugin\LrC-AVG.lrplugin\Masks.lua); the mask tools need it. */
+export const MASKS_PLUGIN = "0.12.0";
 
 type PassArgs = { session_id: string; target?: TargetId | undefined; rationale: string; return_image?: ReturnImage | undefined };
 /** What a mask pass wrote and measured. */
@@ -91,6 +92,20 @@ function maskTarget(ctx: SessionContext, s: Session, requested: TargetId | undef
   return t;
 }
 
+const TOOL = { create: "lr_create_mask", edit: "lr_edit_mask", delete: "lr_delete_mask" } as const;
+
+/** The mask tools write the whole table: none writes while it holds a mask the captures did not round-trip. */
+function refuseUncaptured(s: Session, entries: readonly Correction[]): void {
+  const odd = uncaptured(entries);
+  if (!odd) return;
+  throw new ToolError(
+    "MASKS_UNCAPTURED_KIND",
+    `The photo has the mask "${odd.name}", which the mask tools cannot write back safely (${odd.why}). They write the photo's whole mask table, so they change no mask while it is there; the photo's masks are left untouched. lr_list_masks still lists them; the user can edit or remove that mask in Lightroom.`,
+    false,
+    { session_id: s.id, mask: odd.name, why: odd.why },
+  );
+}
+
 const masksChanged = (s: Session): ToolError =>
   new ToolError("MASKS_CHANGED", "The photo's masks changed in Lightroom while this pass prepared its change; nothing was written and the pass is not used. Call lr_list_masks, then try again.", true, { session_id: s.id });
 
@@ -102,12 +117,13 @@ async function maskPass(ctx: SessionContext, s: Session, args: PassArgs, op: Mas
   const t = maskTarget(ctx, s, args.target);
   precheck(op); // MaskError: nothing written, before any wait
   const n = t.passes + 1;
-  const approval = await awaitApproval(ctx, s, t);
+  const approval = await awaitApproval(ctx, s, t, TOOL[op.op]);
   const passStarted = ctx.now().toISOString();
   s.work = { target: t, pass: n, note: op.op === "create" ? `New mask: ${KIND_LABELS[op.kind as MaskKind] ?? op.kind}` : op.op === "edit" ? "Changing a mask" : "Deleting a mask" };
   await focus(ctx, s, t);
   const first = await readSdk(ctx, s, t);
   const before = readTable(first.sdk);
+  refuseUncaptured(s, before);
   const plan = applyOp(before, op); // MaskError: nothing written
   if (sameTable(before, plan.entries)) throw new ToolError("NO_CHANGE", "Nothing was written: the mask already is as asked. The pass is not used.", false, { session_id: s.id });
   let baseline: Rendered;
@@ -124,7 +140,7 @@ async function maskPass(ctx: SessionContext, s: Session, args: PassArgs, op: Mas
     const delta = deltaMetrics(baseline.metrics, done.rendered.metrics);
     const masks = readTable(done.sdk).map(summarize);
     const after = masks.find((m) => m.id === done.id) ?? null;
-    const mask: MaskPassEntry = { op: op.op, id: done.id, name: (after ?? plan.before)?.name ?? "", kind: plan.kind, before: plan.before, after, ...(done.ai ? { ai: aiLog(done.ai) } : {}) };
+    const mask: MaskPassEntry = { op: op.op, id: done.id, name: (after ?? plan.before ?? plan.after)?.name ?? "", kind: plan.kind, before: plan.before, after, ...(done.ai ? { ai: aiLog(done.ai) } : {}) };
     recordPass(s, {
       n, kind: "mask", target: t.id, started: passStarted, duration_ms: ms(started), history_names: done.historyNames, rationale: args.rationale,
       requested: { ...op }, changes: [], clamped: [], refused: [], unchanged: [], settings_before: first.view.settings, settings_after: done.view.settings,
@@ -157,7 +173,7 @@ async function applyPlan(ctx: SessionContext, s: Session, t: Target, n: number, 
   let id = plan.id;
   let ai: AiResult | null = null;
   if (op.op === "create" && isAiKind(plan.kind)) {
-    ai = await makeAiMask(ctx, s, { t, n, kind: plan.kind, before, id, name: plan.after?.name ?? "", stored: storedSliders(op.sliders ?? {}), historyNames });
+    ai = await makeAiMask(ctx, s, { t, n, kind: plan.kind, before, id, name: plan.after?.name ?? "", stored: storedSliders(op.sliders ?? {}), historyNames, attempts: new Set([id]) });
     ({ sdk, id } = ai);
   }
   let view = ctx.deps.map.fromSdk(sdk);
@@ -171,11 +187,19 @@ async function applyPlan(ctx: SessionContext, s: Session, t: Target, n: number, 
       actions.push({ kind: "unmet", limit: breach.limit, reason: `${breach.reason}; the masks changed in Lightroom after this pass wrote them, so it was not undone`, history_name: null, changes: {}, metrics_after: metricsOf(rendered.metrics) });
     } else {
       const undoName = historyName(s, t, n, breach.limit === "region" ? "region revert" : "clip revert");
-      sdk = await writeTable(ctx, s, t, before, undoName, true); // an undo: the table before the pass, empty or not
-      historyNames.push(undoName);
-      view = ctx.deps.map.fromSdk(sdk);
-      rendered = await render(ctx, s, t, view);
-      actions.push({ kind: "reverted", limit: breach.limit, reason: breach.reason, history_name: undoName, changes: {}, metrics_after: metricsOf(rendered.metrics) });
+      try {
+        sdk = await writeTable(ctx, s, t, before, undoName, true); // an undo: the table before the pass (an empty one is [unverified])
+        historyNames.push(undoName);
+        view = ctx.deps.map.fromSdk(sdk);
+        rendered = await render(ctx, s, t, view);
+        actions.push({ kind: "reverted", limit: breach.limit, reason: breach.reason, history_name: undoName, changes: {}, metrics_after: metricsOf(rendered.metrics) });
+      } catch (err) {
+        if (!["WRITE_NOT_TAKEN", "FEATURE_UNAVAILABLE"].includes(toToolError(err).code)) throw err;
+        historyNames.push(undoName);
+        sdk = (await readSdk(ctx, s, t)).sdk;
+        view = ctx.deps.map.fromSdk(sdk);
+        actions.push({ kind: "unmet", limit: breach.limit, reason: `${breach.reason}; the undo ("${undoName}") did not take (${toToolError(err).message}), so the mask change stays`, history_name: null, changes: {}, metrics_after: metricsOf(rendered.metrics) });
+      }
     }
   }
   const undone = actions.some((a) => a.kind === "reverted") ? breach : null;
@@ -192,7 +216,7 @@ function passJson(s: Session, t: Target, n: number, op: MaskOp, { mask, masks, d
     pass: `${n}/${s.maxPasses}`,
     op: op.op,
     mask: mask.after ?? mask.before,
-    ...(op.op === "delete" ? { deleted: true } : {}),
+    ...(op.op === "delete" ? { deleted: !done.undone } : {}),
     masks,
     history_names: done.historyNames,
     guardrail_actions: done.actions,

@@ -5,6 +5,8 @@
 
 import { describe, expect, it } from "vitest";
 import { MASK_TABLE_KEY, type Correction } from "../src/params/index.js";
+import type { FakeHandler } from "./helpers/fake-plugin.js";
+import { captureTable } from "./helpers/lightroom-sim-masks.js";
 import { ID, SHORT, clean, fails, lr, newManager, plugin, readLog, useSessionHarness } from "./helpers/session-harness.js";
 
 useSessionHarness();
@@ -69,7 +71,36 @@ describe("AI masks: the fall back to LrDevelopController", () => {
     const e = await fails(create("sky"));
     expect(e).toMatchObject({ code: "FEATURE_UNAVAILABLE", recoverable: true, details: { routes_tried: [{ route: "table" }, { route: "dc", why: expect.stringMatching(/plugin does not know it/) }], waited_ms: expect.any(Number) } });
     expect(masks()).toEqual([]);
+    expect(e.message).toMatch(/showed this pass's attempts gone/);
     expect(m.current()?.pass).toBe("0/4");
+  });
+
+  it("takes only this pass's attempt out: a mask the user added meanwhile stays", async () => {
+    const { create } = await session();
+    lr.masks.tableRoute = "never";
+    const real = plugin.handlers.get("update_ai_settings") as FakeHandler;
+    plugin.handlers.set("update_ai_settings", (p, id) => {
+      (lr.settings[MASK_TABLE_KEY] as Correction[]).push(structuredClone(captureTable[1] as Correction)); // the user's radial
+      return real(p, id);
+    });
+    const out = await create("sky");
+    expect(out.json).toMatchObject({ ai: { route: "dc" } });
+    expect(masks().map((e) => e["CorrectionName"])).toEqual(["Mask 2", "AVG Sky"]);
+  });
+
+  it("any failure of update_ai_settings but Lightroom going away is a route failure: the fallback runs", async () => {
+    const { create } = await session();
+    plugin.handlers.set("update_ai_settings", () => ({ ok: false, error: { code: "plugin_error", message: "dry: raised", recoverable: false } }));
+    expect((await create("sky")).json).toMatchObject({ ai: { route: "dc", fallback: expect.stringMatching(/update_ai_settings: dry: raised/) } });
+    expect(masks()).toHaveLength(1);
+  });
+
+  it("finds a Develop mask that showed after the plugin's wait, by reading the table", async () => {
+    const { create } = await session();
+    lr.masks.tableRoute = "never";
+    lr.masks.dc = "late";
+    expect((await create("subject")).json).toMatchObject({ ai: { route: "dc" }, mask: { kind: "subject" } });
+    expect(masks()).toHaveLength(1);
   });
 
   it("people and landscape have no Develop route: FEATURE_UNAVAILABLE without trying it", async () => {

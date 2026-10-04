@@ -154,9 +154,10 @@ end
 
 -- Back to the loupe, so a probe does not leave Lightroom in a mask tool. selectTool takes "one
 -- of: 'loupe', 'crop', ... 'masking', ..." [handle: https://lrc.mcor.dev/modules/LrDevelopController.html
--- selectTool, read 2026-10-03; a third-party mirror of Adobe's reference]. It does not close Masking:
--- capture 2 read getSelectedTool_end "masking" after it [handle:
--- docs\reports\phase6\masks-capture\capture2-templates.json]. Skipped once a probe has stopped (the
+-- selectTool, read 2026-10-03; a third-party mirror of Adobe's reference]. In capture 2,
+-- getSelectedTool_end read "loupe" after each of the three calibrate probes and "masking" after the
+-- create probe [handle: docs\reports\phase6\masks-capture\capture2-round1_probe.json, round2, round3;
+-- capture2-8_create_probe.json]; why it differs is [unverified]. Skipped once a probe has stopped (the
 -- photo may no longer be the target).
 local function leaveMasking(ctx)
     MaskProbe.record(ctx, "selectTool_loupe", function() return MaskProbe.dc("selectTool", "loupe") end)

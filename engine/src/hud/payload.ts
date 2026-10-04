@@ -42,7 +42,7 @@ export function hudState(s: Session, stage: HudStage, note?: string): HudState {
     session_photos: [s.master, ...s.variants].map((x) => x.uuid).slice(0, HUD_LIMITS.photos),
     ...(stage === "awaiting_pick" ? { variants: s.variants.map((v) => v.id as VariantId) } : {}),
     ...(waiting ? { approve_pass: clamp(waiting.pass, 1, HUD_LIMITS.pass) } : {}),
-    ...(last ? { deltas: (last.mask ? maskDeltas(last.mask) : last.changes.map(delta)).slice(0, HUD_LIMITS.rows), guardrail: hudGuardrail(last, s.limits) } : {}),
+    ...(last ? { deltas: (last.mask ? maskDeltas(last.mask, last.guardrail_actions.some((a) => a.kind === "reverted")) : last.changes.map(delta)).slice(0, HUD_LIMITS.rows), guardrail: hudGuardrail(last, s.limits) } : {}),
     ...(text ? { note: text } : {}),
     settings: settings(s),
     snapshot: s.snapshot.name,
@@ -109,11 +109,13 @@ function delta(c: PassEntry["changes"][number]): HudDelta {
 
 /**
  * A mask pass's rows (session\masks.ts): "<mask> · <slider>" for each local slider it changed, in the
- * Masking panel's words (params\labels.ts), and what happened to the mask itself ("Sky 1 · Exposure").
+ * Masking panel's words (params\labels.ts), and what happened to the mask itself ("Sky 1 · Exposure");
+ * a pass its guardrail undid is one row saying so.
  */
-function maskDeltas(m: NonNullable<PassEntry["mask"]>): HudDelta[] {
+function maskDeltas(m: NonNullable<PassEntry["mask"]>, undone: boolean): HudDelta[] {
   const name = m.after?.name ?? m.before?.name ?? m.name;
-  if (!m.after) return [{ slider: name, after: m.op === "delete" ? "deleted" : "undone" }];
+  if (undone) return [{ slider: name, after: m.op === "create" ? "new mask undone" : "change undone" }];
+  if (!m.after) return [{ slider: name, after: "deleted" }];
   const was = m.before?.sliders ?? {};
   const rows: HudDelta[] = [];
   if (!m.before) rows.push({ slider: name, after: "new mask" });

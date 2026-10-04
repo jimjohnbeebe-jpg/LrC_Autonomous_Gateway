@@ -1,4 +1,4 @@
-// The AI-mask commands in the Lightroom sim (plugin 0.11.0, plugin\LrC-AVG.lrplugin\Masks.lua). The sim
+// The AI-mask commands in the Lightroom sim (plugin 0.12.0, plugin\LrC-AVG.lrplugin\Masks.lua). The sim
 // keeps masks as the table its apply_settings writes (lightroom-sim.ts); here:
 //   - update_ai_settings finds the photo by uuid and, with `tableRoute` "computes", gives every AI
 //     component without a digest its digests, as Lightroom did in capture 1 (docs\reports\phase6\
@@ -28,7 +28,8 @@ const parts = (e: Entry): Entry[] => (e[C.masks] as Entry[] | undefined) ?? [];
 
 export class SimMasks {
   tableRoute: "computes" | "never" | "unavailable" = "computes";
-  dc: "works" | "none" | "unknown" = "works";
+  /** "late": the mask shows in the table only after the command's wait, so it answers no new id. */
+  dc: "works" | "late" | "none" | "unknown" = "works";
   readonly calls: string[] = [];
 }
 
@@ -75,6 +76,6 @@ export function installMasks(sim: MaskSim, plugin: FakePlugin): void {
     if (sim.masks.dc === "none") return { ok: true, payload: { uuid: target, steps, new_ids: [], waited_ms: 12000 } };
     const e = dcEntry(String(p["subtype"]));
     table(sim.settingsOf(target)).push(e);
-    return { ok: true, payload: { uuid: target, steps, new_ids: [e[C.id]], waited_ms: 900 } };
+    return { ok: true, payload: { uuid: target, steps, new_ids: sim.masks.dc === "late" ? [] : [e[C.id]], waited_ms: sim.masks.dc === "late" ? 12000 : 900 } };
   });
 }

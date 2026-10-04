@@ -11,7 +11,7 @@ import { loadSdkKeys } from "./sdk-keys.js";
 export { CAMERA_PROFILE_PARAM, CANONICAL_PARAMS, SUPPORTED_PROCESS_VERSIONS } from "./canonical.js";
 export type { ParamSpec } from "./canonical.js";
 export { lightroomLabel } from "./labels.js";
-export { AI_KINDS, KIND_LABELS, LOCAL_PARAMS, MASK_TABLE_KEY, MaskError, computed, isAiKind, readTable, summarize, tableInfo, verifyTable } from "./mask-table.js";
+export { AI_KINDS, KIND_LABELS, LOCAL_PARAMS, MASK_TABLE_KEY, MaskError, computed, isAiKind, readTable, summarize, tableInfo, uncaptured, verifyTable } from "./mask-table.js";
 export type { AiKind, Correction, LocalParam, MaskKind, MaskSummary } from "./mask-table.js";
 export { REFUSED_KINDS, applyOp, checkKind, correctionIds, firstComponent, named, precheck, storedSliders, tableSettings } from "./mask-ops.js";
 export type { Geometry, MaskOp, OpResult } from "./mask-ops.js";

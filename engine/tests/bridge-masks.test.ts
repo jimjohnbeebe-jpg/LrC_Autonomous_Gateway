@@ -1,5 +1,5 @@
-// Contract tests for plugin 0.11.0's AI-mask commands (plugin\LrC-AVG.lrplugin\Masks.lua): the engine's
-// client against the sim (lightroom-sim-masks.ts) and against answers shaped the way Masks.lua builds
+// Contract tests for the plugin's AI-mask commands (plugin\LrC-AVG.lrplugin\Masks.lua: update_ai_settings
+// from 0.11.0, create_ai_mask_dc from 0.12.0): the engine's client against the sim (lightroom-sim-masks.ts) and against answers shaped the way Masks.lua builds
 // them and Json.lua writes them (an empty table as [], nil fields left out).
 
 import os from "node:os";

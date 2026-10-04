@@ -9,7 +9,8 @@
 //     give identical tables, ids included, and the unchanged table written back reads back identical;
 //   - new entries with fresh ids in the captured formats are taken; geometry, CorrectionName and
 //     CorrectionActive write and read back; writing the array without an entry deletes just it;
-//   - a photo without masks may have no table at all: absent, [] and {} count as the same here.
+//   - a photo without masks may have no table at all [inference: the S5 dump of a photo without masks
+//     has none, masks-capture.md pre-run finding 2]: absent, [] and {} count as the same here.
 // The local sliders' scales are capture 2's [handle: capture2-calibration.json `fields`]: the panel
 // shows scale x stored, offset 0. LocalToningHue is pinned 1:1 in degrees [stated: Jim, 2026-10-03,
 // "Pin 1:1, verify in final check (Recommended)"]; that it is 1:1 is [inference] (capture 2 flagged it).
@@ -44,6 +45,15 @@ export const LINEAR = { zeroX: "ZeroX", zeroY: "ZeroY", fullX: "FullX", fullY: "
 export const RADIAL = { top: "Top", left: "Left", bottom: "Bottom", right: "Right", angle: "Angle", feather: "Feather", midpoint: "Midpoint", roundness: "Roundness", flipped: "Flipped", version: "Version" } as const;
 export const IMAGE = { subType: "MaskSubType", subCategory: "MaskSubCategoryID", maskVersion: "MaskVersion", digest: "MaskDigest", referencePoint: "ReferencePoint" } as const;
 export const RANGE = { holder: "CorrectionRangeMask", lumRange: "LumRange", type: "Type", version: "Version", sampleType: "SampleType", sampleInfo: "LuminanceDepthSampleInfo", invert: "Invert" } as const;
+/**
+ * Fields Lightroom computes for an AI component: the digests (new ones appeared after
+ * update_ai_settings [handle: docs\reports\phase6\masks-capture\check.json `7_sky.new_digests`]) and,
+ * by [inference], the photo's own fields that differ between photos (capture3-templates.json against
+ * 3_dump-1.json). They are left out of the table's fingerprint and of the read-back check, so a mask
+ * computing does not read as a change.
+ */
+export const RECOMPUTED: readonly string[] = ["MaskDigest", "InputDigest", "LocalInputDigest", "InputDigestVersion", "LocalInputDigestVersion", "ModelVersion", "Origin", "FullMaskSize", "WholeImageArea"];
+const recomputed = new Set(RECOMPUTED);
 
 /** A local slider: its stored field, the panel's scale (panel = scale x stored) and the panel's range. */
 export type LocalParam = { field: string; scale: number; min: number; max: number };
@@ -107,27 +117,30 @@ export function readTable(sdk: Readonly<Record<string, unknown>>): Correction[] 
   return structuredClone(parsed.data) as Correction[];
 }
 
-/** JSON with object keys sorted, so two reads of the same table give the same text. */
+/** JSON with object keys sorted and RECOMPUTED fields left out, so two reads of the same table give the same text. */
 function stable(v: unknown): string {
   if (Array.isArray(v)) return `[${v.map(stable).join(",")}]`;
-  if (v && typeof v === "object") return `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${stable((v as Record<string, unknown>)[k])}`).join(",")}}`;
+  if (v && typeof v === "object") {
+    const keys = Object.keys(v).filter((k) => !recomputed.has(k)).sort();
+    return `{${keys.map((k) => `${JSON.stringify(k)}:${stable((v as Record<string, unknown>)[k])}`).join(",")}}`;
+  }
   return JSON.stringify(v) ?? "null";
 }
 
-/** How many corrections the table holds, and its fingerprint (equal tables, equal text; absent = [] = {}). Never throws. */
+/** How many corrections the table holds, and its fingerprint (equal tables, equal text, RECOMPUTED fields aside; absent = [] = {}). Never throws. */
 export function tableInfo(sdk: Readonly<Record<string, unknown>>): { count: number; fingerprint: string } {
   const raw = sdk[MASK_TABLE_KEY];
   if (isEmpty(raw)) return { count: 0, fingerprint: "[]" };
   return { count: Array.isArray(raw) ? raw.length : 0, fingerprint: stable(raw) };
 }
 
-/** `written`'s fields all in `got` with equal values (numbers within 1e-6); fields Lightroom adds are its own. */
+/** `written`'s fields all in `got` with equal values (numbers within 1e-6); fields Lightroom adds or recomputes are its own. */
 function covers(written: unknown, got: unknown): boolean {
   if (typeof written === "number" && typeof got === "number") return Math.abs(written - got) <= 1e-6;
   if (written && typeof written === "object" && got && typeof got === "object") {
     if (isEmpty(written) || isEmpty(got)) return isEmpty(written) && isEmpty(got);
     if (Array.isArray(written) && (!Array.isArray(got) || written.length !== got.length)) return false;
-    return Object.entries(written).every(([k, x]) => k in got && covers(x, (got as Record<string, unknown>)[k]));
+    return Object.entries(written).every(([k, x]) => recomputed.has(k) || (k in got && covers(x, (got as Record<string, unknown>)[k])));
   }
   return written === got;
 }
@@ -163,9 +176,11 @@ export function verifyTable(written: readonly Correction[], readBack: Readonly<R
  *     other people parts and landscape categories were not offered on that photo, so they are refused.
  * A component is written with these fields only, plus a person's point (ReferencePoint, as captured
  * "x y" in 0-1): digests and the photo's own fields (ModelVersion, Origin, FullMaskSize,
- * WholeImageArea) are left out. Copies on the same photo computed after update_ai_settings
- * [handle: check.json `7_sky`; capture3-check.json]; that a stripped entry computes on another photo is
- * [unverified] (Jim's mask tools check tries it; a mask that does not compute falls back, ai-masks.ts).
+ * WholeImageArea, and ReferencePoint but for people) are left out. That shape was never captured: the
+ * copies that computed after update_ai_settings dropped only their digests and were made on the same
+ * photo [handle: check.json `7_sky.dropped`; capture3-check.json]. Whether the stripped entry computes,
+ * on the same photo or another, is [unverified] until Jim's mask tools check; a mask that does not
+ * compute is taken out again and falls back (ai-masks.ts).
  */
 export type AiKind = "subject" | "sky" | "background" | "people_entire" | "people_face_skin" | "landscape_vegetation" | "landscape_sky";
 export type MaskKind = "linear" | "radial" | "luminance" | AiKind;
@@ -201,6 +216,26 @@ export function componentKind(m: Component): MaskKind | "ai" | "range" | "other"
   if (m[M.what] !== WHAT.image) return "other";
   const tells = (k: AiKind): boolean => m[IMAGE.subType] === AI_KINDS[k].fields[IMAGE.subType] && m[IMAGE.subCategory] === AI_KINDS[k].fields[IMAGE.subCategory];
   return (Object.keys(AI_KINDS) as AiKind[]).find(tells) ?? "ai";
+}
+
+/**
+ * The first correction the engine must not write back, and why: a component of a kind the captures did
+ * not round-trip, more than one component, or a MaskBlendMode other than 0 (every captured component
+ * had one component and MaskBlendMode 0 [handle: 3_dump-1.json; capture2-templates.json;
+ * capture3-templates.json]). The mask tools write the whole table, so such a mask would be written back
+ * in a form never shown to survive it [inference]; they refuse instead (session\masks.ts).
+ */
+export function uncaptured(entries: readonly Correction[]): { name: string; why: string } | null {
+  for (const e of entries) {
+    const parts = e[C.masks] as Component[];
+    const name = typeof e[C.name] === "string" ? (e[C.name] as string) : String(e[C.id]);
+    if (parts.length !== 1) return { name, why: `it has ${parts.length} components` };
+    const m = parts[0] as Component;
+    if (m[M.blend] !== undefined && m[M.blend] !== 0) return { name, why: `its MaskBlendMode is ${String(m[M.blend])}` };
+    const kind = componentKind(m);
+    if (kind === "ai" || kind === "range" || kind === "other") return { name, why: `its kind (${String(m[M.what])}) was not captured` };
+  }
+  return null;
 }
 
 /** A new id in the captured formats: CorrectionID / MaskID as an upper-case UUID, the sync ids as 32 upper-case hex digits. */

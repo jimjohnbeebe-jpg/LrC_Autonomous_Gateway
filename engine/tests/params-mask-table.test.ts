@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { CANONICAL_PARAMS, loadDefaultParamMap } from "../src/params/index.js";
 import { applyOp, newCorrection, precheck, storedSliders, tableSettings, type MaskOp } from "../src/params/mask-ops.js";
-import { AI_KINDS, C, CARRIED, CORRECTION, IMAGE, LINEAR, LOCAL_PARAMS, M, MASK_TABLE_KEY, RADIAL, RANGE, WHAT, MaskError, readTable, summarize, tableInfo, verifyTable, type Correction } from "../src/params/mask-table.js";
+import { AI_KINDS, C, CARRIED, CORRECTION, IMAGE, LINEAR, LOCAL_PARAMS, M, MASK_TABLE_KEY, RADIAL, RANGE, RECOMPUTED, WHAT, MaskError, readTable, summarize, tableInfo, uncaptured, verifyTable, type Correction } from "../src/params/mask-table.js";
 
 const capture = (name: string): unknown => JSON.parse(readFileSync(fileURLToPath(new URL(`../../docs/reports/phase6/masks-capture/${name}`, import.meta.url)), "utf8"));
 const dump = capture("3_dump-1.json") as Record<string, unknown>;
@@ -37,7 +37,7 @@ const codeOf = (fn: () => unknown): string => {
 describe("params: the mask table's field names (rule 03)", () => {
   it("names only fields and type strings that appear in the committed capture dumps", () => {
     const seen = words({ dump, captured });
-    const constants = [MASK_TABLE_KEY, CORRECTION, ...CARRIED, ...[C, M, WHAT, LINEAR, RADIAL, IMAGE, RANGE].flatMap((o) => Object.values(o)), ...[...LOCAL_PARAMS.values()].map((p) => p.field)];
+    const constants = [MASK_TABLE_KEY, CORRECTION, ...CARRIED, ...RECOMPUTED, ...[C, M, WHAT, LINEAR, RADIAL, IMAGE, RANGE].flatMap((o) => Object.values(o)), ...[...LOCAL_PARAMS.values()].map((p) => p.field)];
     expect(constants.filter((c) => !seen.has(c))).toEqual([]);
   });
 
@@ -79,6 +79,29 @@ describe("params: reading the mask table", () => {
     expect(summarize(table[4] as Correction).geometry).toEqual({ lum_range: [0.65, 0.9, 1, 1] });
     expect(summarize(table[2] as Correction).computed).toBe(true);
     expect(summarize(people["people_entire"] as Correction).geometry).toEqual({ point: { x: 0.539062, y: 0.65 } });
+  });
+
+  it("leaves the fields Lightroom recomputes out of the fingerprint and the read-back check", () => {
+    const recomputed = structuredClone(table);
+    Object.assign((recomputed[2]?.[C.masks] as Record<string, unknown>[])[0] as object, { MaskDigest: "NEW", InputDigest: "NEW", Origin: "1,2", FullMaskSize: "1,1" });
+    expect(tableInfo({ [MASK_TABLE_KEY]: recomputed })).toEqual(tableInfo(dump));
+    expect(verifyTable(table, { [MASK_TABLE_KEY]: recomputed })).toEqual([]);
+    const changed = structuredClone(table);
+    (changed[0] as Correction)[C.name] = "renamed";
+    expect(tableInfo({ [MASK_TABLE_KEY]: changed }).fingerprint).not.toBe(tableInfo(dump).fingerprint);
+  });
+
+  it("names the first mask the tools cannot write back: several components, a blend mode, an uncaptured kind", () => {
+    expect(uncaptured(captured)).toBeNull();
+    const two = structuredClone(table[0]) as Correction;
+    (two[C.masks] as unknown[]).push(structuredClone((table[1] as Correction)[C.masks] as unknown[])[0]);
+    expect(uncaptured([two])).toEqual({ name: "Mask 1", why: "it has 2 components" });
+    const blend = structuredClone(table[1]) as Correction;
+    Object.assign((blend[C.masks] as Record<string, unknown>[])[0] as object, { [M.blend]: 1 });
+    expect(uncaptured([table[0] as Correction, blend])?.why).toBe("its MaskBlendMode is 1");
+    const brush = structuredClone(table[0]) as Correction;
+    Object.assign((brush[C.masks] as Record<string, unknown>[])[0] as object, { [M.what]: "Mask/Paint" });
+    expect(uncaptured([brush])?.why).toBe("its kind (Mask/Paint) was not captured");
   });
 
   it("gives the same fingerprint to two equal tables whatever their key order", () => {

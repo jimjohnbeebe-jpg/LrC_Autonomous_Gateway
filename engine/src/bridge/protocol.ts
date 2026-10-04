@@ -222,11 +222,12 @@ export const COMMANDS = {
   // gate, timed; `gate` is what withWriteAccessDo returned, when anything. A Lightroom without the call
   // answers feature_unavailable.
   update_ai_settings: z.object({ ...targeted, call_ms: z.number(), command_ms: z.number(), gate: z.string().optional() }),
-  // create_ai_mask_dc: LrDevelopController.createNewMask("aiSelection", subtype) on the selected photo
-  // (the target), and the mask ids getAllMasks lists that were not there before it (`new_ids`, each a
-  // table CorrectionID [handle: docs\reports\phase6\masks-capture\12_probe_dc.json getAllMasks_after_sky
-  // against getDevelopSettings_after_sky]); `stopped` says why it ran no further step (the selection changed, or its own
-  // deadline passed). Lightroom is left in Develop.
+  // create_ai_mask_dc (plugin 0.12.0): LrDevelopController.createNewMask("aiSelection", subtype) on the
+  // selected photo (the target), and the mask ids getAllMasks lists that were not there before it
+  // (`new_ids`, each a table CorrectionID [handle: docs\reports\phase6\masks-capture\12_probe_dc.json
+  // getAllMasks_after_sky against getDevelopSettings_after_sky]); `steps` say whether createNewMask
+  // itself ran; `stopped` says why it ran no further step (the selection changed, or its own deadline
+  // passed). It switches to Develop and does not switch back [inference: no step of it leaves Develop].
   create_ai_mask_dc: z.object({
     uuid: z.string().optional(),
     filename: z.string().optional(),
@@ -282,6 +283,6 @@ export type CommandPayloads = {
   hud_update: HudUpdatePayload;
   /** Plugin 0.11.0: the photo with that uuid, checked against `expect`; the selection is not touched. */
   update_ai_settings: { photo_uuid: string; expect?: PhotoExpect };
-  /** Plugin 0.11.0: on the selected photo, refused with target_mismatch unless it is target_uuid's; waits up to wait_seconds (1-15, default 12) for the mask; switches Lightroom to Develop and leaves it there. */
+  /** Plugin 0.12.0: on the selected photo, refused with target_mismatch unless it is target_uuid's; waits up to wait_seconds (1-15, default 12) for the mask after createNewMask; switches Lightroom to Develop. */
   create_ai_mask_dc: { target_uuid: string; subtype: string; wait_seconds?: number };
 };

@@ -11,6 +11,8 @@
 // itself and answers a failure with its own plain-text error before the tool handler runs
 // [handle: node_modules\@modelcontextprotocol\sdk\dist\esm\server\mcp.js:125, 141, 166-178, SDK 1.30.1],
 // so neither the error shape nor the log would cover it (Greptile, PR #17).
+// A call whose request carries a progressToken gets notifications/progress while it runs (withProgress;
+// GitHub issue #59, PR C step 2d: an AI mask's wait may take minutes).
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { CallToolRequestSchema, ListToolsRequestSchema, type CallToolResult, type Tool } from "@modelcontextprotocol/sdk/types.js";
@@ -52,7 +54,32 @@ async function respond(fn: () => Promise<ToolOutput>): Promise<CallToolResult> {
   }
 }
 
-export function createServer(tools: Tools): Server {
+/**
+ * How often a call that asked for progress (a progressToken) gets notifications/progress while it runs
+ * [inference: often enough to show an AI mask's wait of up to 5 minutes, session\ai-update.ts]. How long
+ * Claude Desktop waits for a tool call, whether it sends a token, and whether progress extends its wait, are
+ * [unverified].
+ */
+const PROGRESS_MS = 10_000;
+
+type Notify = (n: { method: "notifications/progress"; params: { progressToken: string | number; progress: number; message?: string } }) => Promise<void>;
+
+/** Run `fn`, sending notifications/progress every `everyMs` (with the session's HUD note as message) when the client gave a token. */
+async function withProgress<T>(token: string | number | undefined, notify: Notify, note: () => string | null, everyMs: number, fn: () => Promise<T>): Promise<T> {
+  if (token === undefined) return fn();
+  let progress = 0;
+  const timer = setInterval(() => {
+    const message = note();
+    notify({ method: "notifications/progress", params: { progressToken: token, progress: ++progress, ...(message ? { message } : {}) } }).catch(() => undefined);
+  }, everyMs);
+  try {
+    return await fn();
+  } finally {
+    clearInterval(timer);
+  }
+}
+
+export function createServer(tools: Tools, options: { progressMs?: number } = {}): Server {
   const server = new Server({ name: "lrc-avg", version: ENGINE_VERSION }, { capabilities: { tools: {} } });
   const byName = new Map(DEFS.map((d) => [d.name, d]));
 
@@ -66,7 +93,7 @@ export function createServer(tools: Tools): Server {
     })),
   }));
 
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
     const { name } = request.params;
     const args: unknown = request.params.arguments ?? {};
     const def = byName.get(name);
@@ -82,7 +109,8 @@ export function createServer(tools: Tools): Server {
       tools.recordRejected(name, args, error);
       return errorResult(error);
     }
-    return respond(() => def.run(tools, parsed.data as Record<string, unknown>));
+    const progress = { token: request.params._meta?.progressToken, ms: options.progressMs ?? PROGRESS_MS };
+    return withProgress(progress.token, (n) => extra.sendNotification(n), () => tools.progressNote(), progress.ms, () => respond(() => def.run(tools, parsed.data as Record<string, unknown>)));
   });
 
   return server;

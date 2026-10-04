@@ -1,5 +1,13 @@
-// The AI-mask commands in the Lightroom sim (plugin 0.14.0, plugin\LrC-AVG.lrplugin\Masks.lua). The sim
-// keeps masks as the table its apply_settings writes (lightroom-sim.ts); here:
+// The AI-mask commands in the Lightroom sim (plugin 0.16.0, plugin\LrC-AVG.lrplugin\Masks.lua, Pending.lua).
+// The sim keeps masks as the table its apply_settings writes (lightroom-sim.ts); here:
+//   - the guard (Pending.lua): an update with `watch` makes apply_settings, apply_snapshot, create_snapshot
+//     and create_ai_mask_dc on that photo answer ai_compute_pending (each counted in `refusedPending`) while
+//     a listed entry's first component has neither digest nor ErrorReason; a read of the table that shows
+//     them answered clears it, as does an update that failed or was abandoned. `tableRoute` "late": the
+//     update's record says done at once, and the entry computes only at `finishLate()` (digests came after
+//     the update returned in capture 3, docs\reports\phase6\masks-capture\capture3-check.json `4_*`);
+//   - restartLightroom: a new process_started_at in hello, the guard and the update's record gone, the
+//     gate free, nothing computing, and the bridge dropped, so the engine connects again;
 //   - update_ai_settings finds the photo by uuid and answers "started" at once, as plugin 0.14.0's task
 //     does (PR C step 2c). A component with InstanceIDs (one person's mask) gets InstanceBounds, the
 //     boxes of `people` (capture 4's two people by default, docs\reports\phase6\masks-capture\
@@ -28,7 +36,7 @@ import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { boundsOf, pickInstance } from "../../src/params/mask-person.js";
-import { C, IMAGE, M, MASK_TABLE_KEY, WHAT } from "../../src/params/mask-table.js";
+import { C, IMAGE, M, MASK_TABLE_KEY, WHAT, aiError, computed } from "../../src/params/mask-table.js";
 import type { FakePlugin, FakeReply } from "./fake-plugin.js";
 import { findPhoto, type CatalogSim } from "./lightroom-sim-catalog.js";
 
@@ -42,7 +50,7 @@ const fail = (code: string, message: string, recoverable: boolean): FakeReply =>
 const parts = (e: Entry): Entry[] => (e[C.masks] as Entry[] | undefined) ?? [];
 
 export class SimMasks {
-  tableRoute: "computes" | "absent" | "never" | "unavailable" | "failed" | "abandoned" = "computes";
+  tableRoute: "computes" | "late" | "absent" | "never" | "unavailable" | "failed" | "abandoned" = "computes";
   gate: "free" | "dialog" | "slow" = "free";
   heldProbes = 3;
   /** What the update's record says once the gate is free again; "running": Lightroom still works on it after its gate. */
@@ -66,6 +74,12 @@ export class SimMasks {
   held = 0;
   release: () => void = () => undefined;
   update: { uuid: string; request_id?: string; state: string; error?: string } | null = null;
+  /** The guard (Pending.lua): the entries each photo waits for, by uuid. */
+  readonly guard = new Map<string, string[]>();
+  /** Writes the guard refused, by command name. */
+  readonly refusedPending: string[] = [];
+  /** tableRoute "late": computes the photo's waiting entries now. */
+  finishLate: () => void = () => undefined;
 }
 
 /** What the masks commands need of the sim. */
@@ -92,12 +106,12 @@ function dcEntry(subtype: string): Entry {
 /** The uncomputed AI components of a photo. */
 const pending = (sim: MaskSim, uuid: string): Entry[] => table(sim.settingsOf(uuid)).flatMap(parts).filter((m) => m[M.what] === WHAT.image && m[IMAGE.digest] === undefined);
 
-function compute(sim: MaskSim, uuid: string): void {
+function compute(sim: MaskSim, uuid: string, route = sim.masks.tableRoute): void {
   const sm = sim.masks;
   for (const m of pending(sim, uuid)) {
     const person = Array.isArray(m[IMAGE.instanceIds]);
-    if (sm.tableRoute === "absent" || (person && sm.tableRoute === "computes" && sm.people.length === 0)) m[IMAGE.errorReason] = 1;
-    else if (sm.tableRoute === "computes") {
+    if (route === "absent" || (person && route === "computes" && sm.people.length === 0)) m[IMAGE.errorReason] = 1;
+    else if (route === "computes") {
       m[IMAGE.digest] = "D0D0D0D0D0D0D0D0D0D0D0D0D0D0D0D0";
       if (person) m[IMAGE.instanceBounds] = structuredClone(sm.people);
       const probe = m[IMAGE.subCategory] === 20036 && (m[IMAGE.instanceIds] as Array<Record<string, unknown>>)[0]?.[IMAGE.instanceId] === 0;
@@ -122,14 +136,20 @@ function updateAiSettings(sim: MaskSim, p: Record<string, unknown>): FakeReply {
   const rid = sm.foreignUpdate ? "another-request" : typeof p["request_id"] === "string" ? (p["request_id"] as string) : undefined;
   const rec = (state: string, error?: string) => ({ uuid, ...(rid ? { request_id: rid } : {}), state, ...(error ? { error } : {}) });
   if (sm.tableRoute === "unavailable") return fail("feature_unavailable", "photo:updateAISettings (SDK 13.3) is not available in this Lightroom (or not to this plugin)", true);
+  const ids = (p["watch"] as { ids?: unknown } | undefined)?.ids;
+  const guarded = Array.isArray(ids) && ids.length > 0;
+  if (guarded) sm.guard.set(uuid, [...(sm.guard.get(uuid) ?? []), ...(ids as string[])]);
+  const started = (ms: number): FakeReply => ({ ok: true, payload: { uuid, status: "started", state: "started", guarded, command_ms: ms } });
   if (sm.tableRoute === "failed" || sm.tableRoute === "abandoned") {
     sm.update = rec(sm.tableRoute, sm.tableRoute === "failed" ? "dry: updateAISettings raised" : undefined);
-    return { ok: true, payload: { uuid, status: "started", state: "started", command_ms: 1 } };
+    sm.guard.delete(uuid); // nothing computes
+    return started(1);
   }
   if (sm.gate === "free") {
-    compute(sim, uuid);
+    if (sm.tableRoute === "late") sm.finishLate = () => compute(sim, uuid, "computes");
+    else compute(sim, uuid);
     sm.update = rec("done");
-    return { ok: true, payload: { uuid, status: "started", state: "started", command_ms: 2 } };
+    return started(2);
   }
   sm.update = rec("running");
   sm.held = sm.heldProbes;
@@ -137,8 +157,35 @@ function updateAiSettings(sim: MaskSim, p: Record<string, unknown>): FakeReply {
   sm.release = () => {
     if (slow) compute(sim, uuid);
     sm.update = sm.releaseState === "failed" ? rec("failed", "dry: updateAISettings raised after the dialog") : rec(sm.releaseState);
+    if (sm.releaseState === "failed") sm.guard.delete(uuid);
   };
-  return { ok: true, payload: { uuid, status: "started", state: "started", command_ms: 1 } };
+  return started(1);
+}
+
+/** Pending.lua's refusal of a write to photo `uuid`: while an entry it waits for has no answer; cleared once none waits. */
+function refusal(sim: MaskSim, uuid: string): FakeReply | null {
+  const ids = sim.masks.guard.get(uuid);
+  if (!ids) return null;
+  const waiting = table(sim.settingsOf(uuid)).some((e) => {
+    const m = ids.includes(String(e[C.id])) ? parts(e)[0] : undefined;
+    return m !== undefined && !computed(m) && aiError(m) === null;
+  });
+  if (!waiting) {
+    sim.masks.guard.delete(uuid);
+    return null;
+  }
+  return fail("ai_compute_pending", "Lightroom is still computing an AI mask on this photo: wait, or restart Lightroom", false);
+}
+
+/** A Lightroom restart: a new process in hello; the guard, the update's record and a held gate gone (a new Lua state); the bridge dropped, so the engine connects again. */
+export function restartLightroom(sim: MaskSim & { processStartedAt: string }, plugin: FakePlugin, startedAt = new Date().toISOString()): void {
+  const sm = sim.masks;
+  sim.processStartedAt = startedAt;
+  sm.guard.clear();
+  [sm.update, sm.held, sm.probe] = [null, 0, "known"];
+  sm.release = () => undefined;
+  sm.finishLate = () => undefined;
+  plugin.dropEventClient();
 }
 
 function probeWriteGate(sim: MaskSim): FakeReply {
@@ -174,11 +221,17 @@ export function installMasks(sim: MaskSim, plugin: FakePlugin): void {
   plugin.handlers.set("update_ai_settings", (p) => updateAiSettings(sim, p));
   plugin.handlers.set("probe_write_gate", () => probeWriteGate(sim));
   plugin.handlers.set("create_ai_mask_dc", (p) => createAiMaskDc(sim, p));
-  for (const name of ["apply_settings", "apply_snapshot", "create_snapshot", "export_preview"]) {
+  for (const name of ["apply_settings", "apply_snapshot", "create_snapshot", "export_preview", "create_ai_mask_dc"]) {
     const real = plugin.handlers.get(name);
     if (!real) continue;
     plugin.handlers.set(name, (p, id) => {
-      if (sim.masks.held === 0) return real(p, id);
+      const uuid = typeof p["photo_uuid"] === "string" ? p["photo_uuid"] : typeof p["target_uuid"] === "string" ? p["target_uuid"] : sim.selected;
+      const refused = name === "export_preview" ? null : refusal(sim, uuid); // the guard first, before the gate (Pending.lua)
+      if (refused) {
+        sim.masks.refusedPending.push(name);
+        return refused;
+      }
+      if (sim.masks.held === 0 || name === "create_ai_mask_dc") return real(p, id);
       sim.masks.blocked.push(name);
       return name === "export_preview"
         ? fail("export_failed", "the export wrote no JPEG", true)

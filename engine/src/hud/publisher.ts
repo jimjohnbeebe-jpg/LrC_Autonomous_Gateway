@@ -29,9 +29,11 @@ import { hudState, type HudState } from "./payload.js";
 /**
  * hud_update came with plugin 0.6.0 (PHASE5_PLAN row 4) [handle: plugin\LrC-AVG.lrplugin\Dispatch.lua,
  * Hud.update]; `snapshot` with 0.9.0, `put_back` with 0.13.0, `close_after` with 0.15.0, and an earlier
- * plugin refuses an update with a field it does not know (bridge\hud-protocol.ts header), so the HUD needs 0.15.0.
+ * plugin refuses an update with a field it does not know (bridge\hud-protocol.ts header), so the HUD needs
+ * 0.13.0, and `close_after` goes only to 0.15.0 or later (CLOSE_AFTER_PLUGIN).
  */
-export const HUD_PLUGIN = "0.15.0";
+export const HUD_PLUGIN = "0.13.0";
+const CLOSE_AFTER_PLUGIN = "0.15.0";
 /**
  * An update's answer took 2-7 ms in Lightroom [handle: vault PHASE5_PLAN.md "From row 4": "hud_update
  * round trips took 2-7 ms"]; 5 s is [inference]. While the plugin is paused the bridge client lets it
@@ -198,8 +200,11 @@ export class HudPublisher implements HudSink {
   /** The next update of the channel, or null when there is nothing new or it fails the contract. */
   private payload(ch: Channel, state: HudState): HudUpdatePayload | null {
     const answer = this.answer?.sessionId === ch.sessionId ? this.answer : null;
+    const { close_after: closeAfter, ...rest } = state;
+    const closes = closeAfter !== undefined && pluginVersionAtLeast(this.client.hello()?.plugin_version, CLOSE_AFTER_PLUGIN);
     const body = {
-      ...state,
+      ...rest,
+      ...(closes ? { close_after: closeAfter } : {}),
       ...(ch.open ? { open: true } : {}),
       ...(answer ? { answered_click_id: answer.clickId, note: answer.note } : {}),
     };

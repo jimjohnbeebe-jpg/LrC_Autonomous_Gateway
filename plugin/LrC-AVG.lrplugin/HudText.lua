@@ -83,6 +83,8 @@ HudText.PUT_BACK = {
     running = "Putting the photo back. If Lightroom shows a message, click OK there.",
     done = "Put back: done.",
     failed = "Put back: not possible — %s; in Develop > Snapshots click '%s'.",
+    -- Plugin 0.16.0 (Pending.lua, D16): no snapshot to click while Lightroom computes an AI mask.
+    computing = "Put back: not yet. Lightroom is still computing an AI mask on this photo: wait, or restart Lightroom.",
 }
 HudText.PUT_BACK_REASON = {
     no_photo = "the photo is not in the catalog",
@@ -91,6 +93,7 @@ HudText.PUT_BACK_REASON = {
     error = "Lightroom could not apply it",
     read_back = "Lightroom could not read the photo back",
     newer = "a newer edit began",
+    computing = "Lightroom is still computing an AI mask on this photo: wait, or restart Lightroom",
 }
 
 HudText.CLIPPING_OK = "Clipping: within limits."

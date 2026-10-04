@@ -59,14 +59,14 @@ describe("AI masks: the table route", () => {
     expect(component(masks()[0])).toMatchObject({ MaskSubType: 0, MaskSubCategoryID: 2, ReferencePoint: "0.492188 0.379412" });
   });
 
-  it("a mask that does not compute in time: the photo is put back and the session ended, LrDevelopController not tried", async () => {
+  it("a mask that does not compute in time: nothing written, the session open, LrDevelopController not tried (D16)", async () => {
     const { m, create } = await session();
     lr.masks.tableRoute = "never";
     const e = await fails(create("sky"));
-    expect(e).toMatchObject({ code: "LIGHTROOM_STUCK", details: { reverted: true, outcome: "revert" } });
+    expect(e).toMatchObject({ code: "LIGHTROOM_STUCK", details: { reverted: false } });
     expect(sent("create_ai_mask_dc")).toBe(0);
-    expect(masks()).toEqual([]);
-    expect(m.current()).toBeNull();
+    expect(masks()).toHaveLength(1); // the attempt stays until Lightroom answers or restarts
+    expect(m.current()?.id).toBe(ID);
   });
 });
 

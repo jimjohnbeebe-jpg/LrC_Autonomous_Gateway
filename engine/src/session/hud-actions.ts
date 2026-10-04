@@ -6,7 +6,8 @@
 //     (io.ts checkAbort), then the pre-session snapshot is applied, as lr_end_session "revert" does;
 //     the log's outcome is "aborted". A revert that fails, or leaves a setting different, keeps the
 //     session open, and a second click tries again; Claude's revert while an Abort is pending is
-//     logged as the user's (end.ts);
+//     logged as the user's (end.ts). While Lightroom computes an AI mask (s.aiPending) it is refused
+//     with a note, nothing written (D16, ai-update.ts);
 //   - Accept: after the running operation, as lr_end_session "accept" (Variants mode: after a pick);
 //     it waits rather than stops, so no pass is left half done (a write without its corrections);
 //   - Pick: as lr_select_variant; Claude learns of it in its next session tool result
@@ -132,6 +133,7 @@ export function abortedNote(s: Session): string {
 }
 
 const settingsCount = (n: number): string => (n === 1 ? "1 setting" : `${n} settings`);
+export const ABORT_WAITS = "Lightroom is still computing the AI mask, so Abort must wait. If it seems stuck, restart Lightroom.";
 
 /** Waits for the bridge; a failed wait goes in the log's failures, as the HUD's note names no code. */
 async function connected(ctx: SessionContext, s: Session, stage: string): Promise<void> {
@@ -141,6 +143,8 @@ async function connected(ctx: SessionContext, s: Session, stage: string): Promis
 
 function abort(host: ActionHost, s: Session, a: UserAction): string {
   if (s.abort?.state === "pending") return "Abort is already under way.";
+  // Nothing is put back while Lightroom computes an AI mask on the photo (ai-update.ts, D16).
+  if (s.aiPending) return ABORT_WAITS;
   s.abort = userEnd(a, s.abort); // a second click after a failed revert tries again
   const running = host.busy();
   host.queue(() => finishAbort(host, s));

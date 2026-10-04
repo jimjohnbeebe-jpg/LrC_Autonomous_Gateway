@@ -63,6 +63,11 @@ export class Tools {
     return this.ctx.hud;
   }
 
+  /** The open session's HUD note while an operation runs, for MCP progress notifications (server.ts); null otherwise. */
+  progressNote(): string | null {
+    return this.ctx.sessions?.workNote() ?? null;
+  }
+
   /** Log a call refused before it reached a tool (unknown tool, invalid arguments; server.ts). */
   recordRejected(tool: string, args: unknown, error: ToolError): void {
     this.ctx.deps.log?.append({ ts: this.ctx.now().toISOString(), tool, ok: false, duration_ms: 0, args, error: error.body() });

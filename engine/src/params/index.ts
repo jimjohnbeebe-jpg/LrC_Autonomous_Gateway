@@ -17,7 +17,7 @@ export { summarize } from "./mask-summary.js";
 export type { MaskSummary } from "./mask-summary.js";
 export { boundsOf, instanceOf, pickInstance, withInstance } from "./mask-person.js";
 export type { Box } from "./mask-person.js";
-export { REFUSED_KINDS, applyOp, checkKind, correctionIds, firstComponent, named, precheck, storedSliders, tableSettings } from "./mask-ops.js";
+export { REFUSED_KINDS, aiWatch, applyOp, checkKind, correctionIds, firstComponent, named, precheck, storedSliders, tableSettings } from "./mask-ops.js";
 export type { Geometry, MaskOp, OpResult } from "./mask-ops.js";
 export { CameraProfiles, UnknownCameraProfileError, isEmptyLook } from "./camera-profiles.js";
 export type { CameraProfileEntry, ProfileIdentity } from "./camera-profiles.js";

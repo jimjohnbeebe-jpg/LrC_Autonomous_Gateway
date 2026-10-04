@@ -13,6 +13,7 @@ import { RECIPE_SCHEMA_ID } from "../log/index.js";
 import { ToolError } from "../mcp/errors.js";
 import { differingSettings, type CanonicalSettings } from "../params/index.js";
 import type { EndedByEntry } from "../log/index.js";
+import { settlePending } from "./ai-update.js";
 import { bridge, checkAbort, failed, ms, read, saveLog } from "./io.js";
 import { focus, variant } from "./targets.js";
 import { WRITE_TIMEOUT_MS, type EndArgs, type Session, type SessionContext, type SessionOutput, type Target, type UserEnd } from "./types.js";
@@ -61,6 +62,8 @@ export async function endSession(ctx: SessionContext, s: Session, args: EndArgs,
       });
       recipePath = s.files.recipePath;
     } else {
+      // Not while Lightroom computes an AI mask on the photo (ai-update.ts, D16); the plugin refuses it too.
+      await settlePending(ctx, s);
       const t = performance.now();
       const res = await bridge(s, s.master, () => client.request("apply_snapshot", { target_uuid: s.master.uuid, snapshot_id: s.snapshot.id }, { timeoutMs: WRITE_TIMEOUT_MS }));
       const revertMs = ms(t);

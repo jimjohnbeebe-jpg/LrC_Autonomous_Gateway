@@ -16,6 +16,7 @@ local Gate = require 'Gate'
 local HudState = require 'HudState'
 local HudText = require 'HudText'
 local Log = require 'Log'
+local Pending = require 'Pending'
 local Photos = require 'Photos'
 
 local HudClick = {}
@@ -84,12 +85,13 @@ end
 -- `put_back` snapshot applied to its photo by uuid, as lr_end_session "revert" does
 -- (engine\src\session\end.ts; Develop.lua applySnapshot), selected or not (Photos.find). Steps:
 --   - the snapshot is looked up first, so a missing one is said plainly;
+--   - while Lightroom still computes an AI mask on the photo, nothing is written (Pending.lua, plugin
+--     0.16.0, D16): the line says to wait or restart Lightroom;
 --   - the write goes through Gate.write, which waits up to Gate.WAIT_SECONDS for write access, so a
 --     put-back clicked while Lightroom shows a message inside another gate runs once the user clicks
 --     OK there, instead of failing at once as a gate without timeoutParams does ("blocked by another
---     write access call, and no timeout parameters were provided" [handle:
---     %TEMP%\LrC-AVG\bridge.log 2026-10-03 19:22:58, quoted in repo logs\masks-step2b-plan.md
---     (gitignored), "What failed"]). Gate.lua says what the SDK returns; that the wait holds behind
+--     write access call, and no timeout parameters were provided" [stated: Jim's step-2 check,
+--     2026-10-03, as Gate.lua quotes it]). Gate.lua says what the SDK returns; that the wait holds behind
 --     Lightroom's own message is [unverified];
 --   - the photo's settings are read back. The plugin holds no copy of the settings before the edit,
 --     so "done" means the snapshot applied and the photo reads; applyDevelopSnapshot restored all six
@@ -126,6 +128,8 @@ local function putBackTo(pb, sid)
     end)
     if not known then return nil, PB_REASON.no_snapshot, "no snapshot " .. pb.snapshot_id end
     if not sameEdit(sid) then return nil, PB_REASON.newer, "a newer edit began" end
+    local refused = Pending.refusal(catalog, photo, pb.photo_uuid)
+    if refused then return nil, PB_REASON.computing, refused.message end
     local stale = false
     local gated, busy = Gate.write(catalog, "AVG put back", function()
         if not sameEdit(sid) then stale = true; return end
@@ -183,7 +187,8 @@ local function putBack(refresh)
             attempt.state, attempt.line = "done", PB.done
             Log.info("hud: put back done in " .. ms .. " ms")
         else
-            attempt.state, attempt.line = "failed", string.format(PB.failed, reason, pb.snapshot_name)
+            -- While the mask computes, the snapshot is not to be clicked by hand either (D16).
+            attempt.state, attempt.line = "failed", reason == PB_REASON.computing and PB.computing or string.format(PB.failed, reason, pb.snapshot_name)
             Log.warn("hud: put back not possible after " .. ms .. " ms: " .. reason .. " (" .. tostring(detail) .. ")")
         end
         refresh()

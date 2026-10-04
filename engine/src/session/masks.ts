@@ -51,8 +51,12 @@ import { brief, describe, failed, fresh, historyName, image, ms, readSdk, record
 import { checkReady, focus, resolveTarget } from "./targets.js";
 import type { CreateMaskArgs, DeleteMaskArgs, EditMaskArgs, ListMasksArgs, Rendered, ReturnImage, Session, SessionContext, SessionOutput, Target, TargetId } from "./types.js";
 
-/** The plugin whose update_ai_settings answers at once from its own task, with probe_write_gate (0.14.0, plugin\LrC-AVG.lrplugin\Masks.lua); the mask tools need it. */
-export const MASKS_PLUGIN = "0.14.0";
+/**
+ * The plugin the mask tools need: update_ai_settings answers at once from its own task, with probe_write_gate
+ * (0.14.0, plugin\LrC-AVG.lrplugin\Masks.lua), and refuses writes while an AI mask computes, with a restart
+ * told in hello (0.16.0, Pending.lua, Bridge.lua; D16).
+ */
+export const MASKS_PLUGIN = "0.16.0";
 
 type PassArgs = { session_id: string; target?: TargetId | undefined; rationale: string; return_image?: ReturnImage | undefined };
 /** What a mask pass wrote and measured. */

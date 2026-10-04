@@ -8,6 +8,7 @@ import luaparse from "luaparse";
 import { describe, expect, it } from "vitest";
 import { COMMANDS, HUD_END_STAGES, HUD_EVENTS, HUD_GUARDRAIL, HUD_LIMITS, HUD_STAGES, HUD_VARIANTS, PLUGIN_VERSION, hudUpdatePayloadSchema } from "../src/bridge/index.js";
 import { KEYWORD_SEPARATOR, MAX_PAGE } from "../src/library/index.js";
+import { aiWatch } from "../src/params/index.js";
 import { DECAY_MAX_VALUES, LOCK_PORT, PAGE_SPECS } from "../src/settings/index.js";
 
 const pluginRoot = fileURLToPath(new URL("../../plugin/", import.meta.url));
@@ -84,7 +85,7 @@ describe("lua: every plugin file", () => {
     expect(names).toEqual([
       "Bridge.lua", "Catalog.lua", "Develop.lua", "Dispatch.lua", "Endpoint.lua", "Events.lua", "Gate.lua", "Hud.lua", "HudClick.lua", "HudSelection.lua", "HudState.lua", "HudText.lua", "HudView.lua",
       "Info.lua", "Json.lua", "KeywordTree.lua", "Library.lua", "Log.lua", "MaskProbe.lua", "Masks.lua", "MenuAbort.lua", "MenuAccept.lua", "MenuApprove.lua", "MenuHud.lua",
-      "MenuPickA.lua", "MenuPickB.lua", "MenuPickC.lua", "MenuStatus.lua", "Photos.lua",
+      "MenuPickA.lua", "MenuPickB.lua", "MenuPickC.lua", "MenuStatus.lua", "Pending.lua", "Photos.lua",
       "PluginInfoProvider.lua", "PluginInit.lua", "Prefs.lua", "Preview.lua", "Sockets.lua",
     ]);
   });
@@ -181,11 +182,34 @@ describe("lua: LrC-AVG.lrplugin", () => {
     expect(gate).not.toMatch(/asynchronous/);
   });
 
-  it("closes the HUD close_after seconds after an update that carries it, unless a newer update came (D15, plugin 0.15.0)", () => {
+  it("closes the HUD close_after seconds after an update that carries it, unless another session's update came; a click's answer does not keep it open (D15, plugin 0.16.0)", () => {
     const hud = codeOnly(readFileSync(path.join(avgPlugin, "Hud.lua"), "utf8"));
-    expect(hud).toMatch(/if s\.close_after then[\s\S]*?LrTasks\.startAsyncTask\(function\(\)\s+LrTasks\.sleep\(s\.close_after\)\s+if H\.open and H\.state and H\.state\.seq == seq and H\.state\.session_id == sid then[\s\S]*?LrDialogs\.closeFloatingDialogsForPlugin\(_PLUGIN\)/);
+    expect(hud).toMatch(/if s\.close_after then[\s\S]*?LrTasks\.startAsyncTask\(function\(\)\s+LrTasks\.sleep\(s\.close_after\)\s+if H\.open and H\.state and H\.state\.session_id == sid and HudState\.isEnd\(H\.state\.stage\) then[\s\S]*?LrDialogs\.closeFloatingDialogsForPlugin\(_PLUGIN\)/);
     expect(readFileSync(path.join(avgPlugin, "HudState.lua"), "utf8")).toMatch(/close_after = \{ kind = "int", min = 1, max = 60 \}/);
     expect(hudUpdatePayloadSchema.shape.close_after.unwrap().maxValue).toBe(60);
+  });
+
+  it("guards every write to a photo while an AI mask computes on it, before its gate, with the engine's field names (Pending.lua, plugin 0.16.0, D16)", () => {
+    const read = (f: string): string => codeOnly(readFileSync(path.join(avgPlugin, f), "utf8"));
+    const develop = read("Develop.lua");
+    expect(develop).toMatch(/local function writeTarget\(payload\)\s+local catalog, photo, uuid, err = Develop\.target\(payload\)\s+if err then return nil, nil, nil, err end\s+local refused = Pending\.refusal\(catalog, photo, uuid\)\s+if refused then return nil, nil, nil, refused end/);
+    for (const fn of ["applySettings", "createSnapshot", "applySnapshot"]) {
+      const body = develop.match(new RegExp(`function Develop\\.${fn}\\(payload\\)([\\s\\S]*?)\\nend`))?.[1] ?? "";
+      expect(body, fn).toMatch(/= writeTarget\(payload\)[\s\S]*Gate\.write/);
+    }
+    const masks = read("Masks.lua");
+    expect(masks).toMatch(/local guard = Pending\.start\(found\.uuid, rec\.request_id, payload\.watch\)\s+LrTasks\.startAsyncTask/);
+    expect(masks).toMatch(/if rec\.state == "" or rec\.state == "" then Pending\.clear\(found\.uuid, guard\) end/);
+    expect(masks).toMatch(/local refused = Pending\.refusal\(ctx\.catalog, ctx\.photo, ctx\.uuid\)\s+if refused then return nil, refused end\s+MaskProbe\.openMasking\(ctx\)/);
+    expect(read("HudClick.lua")).toMatch(/local refused = Pending\.refusal\(catalog, photo, pb\.photo_uuid\)\s+if refused then return nil, PB_REASON\.computing, refused\.message end\s+local stale = false\s+local gated, busy = Gate\.write/);
+    // No SDK key in the plugin (rule 03): the guard reads the fields `watch` names, the engine's aiWatch.
+    const pending = readFileSync(path.join(avgPlugin, "Pending.lua"), "utf8");
+    expect(pending).not.toMatch(/"(MaskGroupBasedCorrections|CorrectionID|CorrectionMasks|MaskDigest|ErrorReason)"/);
+    const fields = pending.match(/local FIELDS = \{([^}]*)\}/)?.[1]?.match(/"[^"]*"/g)?.map((s) => s.slice(1, -1));
+    const { ids: _ids, ...names } = aiWatch([]);
+    expect(fields).toEqual(Object.keys(names));
+    expect(pending).toMatch(/_G\.LrCAVG_PendingAi = _G\.LrCAVG_PendingAi or \{\}/);
+    expect(read("Bridge.lua")).toMatch(/process_started_at = _G\.LrCAVG_ProcessStartedAt,/);
   });
 
   it("passes a History name to every applyDevelopSettings call (rule 03-lightroom)", () => {

@@ -82,6 +82,8 @@ export class LightroomSim {
   private readonly snapshotOf = new Map<string, string>();
   /** The plugin version hello reports (plugin\LrC-AVG.lrplugin\Bridge.lua PLUGIN_VERSION). */
   pluginVersion = PLUGIN_VERSION;
+  /** hello's process_started_at (plugin 0.16.0); restartLightroom (lightroom-sim-masks.ts) gives a new one. */
+  processStartedAt = "2026-10-04T06:00:00Z";
   /** The Lightroom version hello and get_context report (LrApplication.versionString()). */
   lrcVersion = "15.5.1";
   /** get_prefs's answer (lightroom-sim-prefs.ts); null: the command is unknown, as to a plugin before 0.5.0. */
@@ -164,7 +166,7 @@ export class LightroomSim {
       return typeof u === "string" ? fn(u) : u;
     };
     plugin.handlers.set("hello", () =>
-      ok({ protocol: 1, plugin_version: this.pluginVersion, lrc_version: this.lrcVersion, sdk_declared: 13, ports: { receive: plugin.commandPort, send: plugin.eventPort } }),
+      ok({ protocol: 1, plugin_version: this.pluginVersion, lrc_version: this.lrcVersion, sdk_declared: 13, ports: { receive: plugin.commandPort, send: plugin.eventPort }, process_started_at: this.processStartedAt }),
     );
     plugin.handlers.set("create_virtual_copies", (p) => createVirtualCopies(this, p));
     plugin.handlers.set("select_photo", (p) => selectPhoto(this, p));

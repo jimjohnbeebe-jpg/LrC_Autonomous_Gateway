@@ -1,12 +1,13 @@
 // AI masks that cannot leave the photo stuck (src/session/ai-update.ts, ai-masks.ts; GitHub issue #59,
-// PR C step 2b) against the simulated Lightroom (helpers/lightroom-sim-masks.ts): a kind the photo
+// PR C steps 2b-2d) against the simulated Lightroom (helpers/lightroom-sim-masks.ts): a kind the photo
 // lacks (ErrorReason), Lightroom's dialog holding the write gate (the HUD told, nothing written or
-// exported meanwhile, then the photo put back and the session ended), a slow model that holds the gate
-// and then computes, a dialog that never closes, and an update Lightroom dropped.
+// exported meanwhile; the photo put back only when Lightroom reports the update failed or dropped it, D16),
+// a slow model that holds the gate and then computes, a dialog that never closes, and an update Lightroom
+// dropped. A Lightroom restart's revert is in session-ai-restart.test.ts.
 
 import { describe, expect, it } from "vitest";
 import { MASK_TABLE_KEY, type Correction } from "../src/params/index.js";
-import { DIALOG_NOTE, STUCK_REVERTED, WORKING_NOTE, type HudSink } from "../src/session/index.js";
+import { DIALOG_NOTE, WORKING_NOTE, type HudSink } from "../src/session/index.js";
 import type { FakeHandler } from "./helpers/fake-plugin.js";
 import { ID, clean, fails, lr, newManager, plugin, readLog, useSessionHarness } from "./helpers/session-harness.js";
 
@@ -14,7 +15,7 @@ useSessionHarness();
 
 const masks = (): Correction[] => (lr.settings[MASK_TABLE_KEY] ?? []) as Correction[];
 const sent = (name: string): number => plugin.received.filter((r) => r.name === name).length;
-const FAST = { computeMs: 2000, dcWaitMs: 300, pollMs: 5, pollMaxMs: 10, dialogAfterMs: 30, probeEveryMs: 10, probeReplyMs: 50, stuckProbesMs: 300, graceMs: 40 };
+const FAST = { computeMs: 2000, dcWaitMs: 300, pollMs: 5, pollMaxMs: 10, dialogAfterMs: 30, probeEveryMs: 10, probeReplyMs: 50, stuckProbesMs: 300 };
 
 async function session(timings: Record<string, number> = {}) {
   clean();
@@ -50,10 +51,9 @@ describe("AI masks: a kind the photo lacks", () => {
 });
 
 describe("AI masks: Lightroom's dialog", () => {
-  it("tells the user to click OK, writes and exports nothing while it is open, then puts the photo back and ends the session", async () => {
+  it("tells the user to click OK, writes and exports nothing while it is open; when Lightroom then reports the update failed, puts the photo back and ends the session", async () => {
     const { m, create, notes, start } = await session();
-    lr.masks.gate = "dialog";
-    lr.masks.heldProbes = 4;
+    [lr.masks.gate, lr.masks.heldProbes, lr.masks.releaseState] = ["dialog", 4, "failed"];
     const e = await fails(create("sky", { sliders: { "local.exposure": -0.5 } }));
     expect(e).toMatchObject({ code: "LIGHTROOM_DIALOG", recoverable: false, details: { session_id: ID, reverted: true, outcome: "revert", ended_by: "engine" } });
     expect(e.message).toMatch(/put the photo back as it was before the session/);
@@ -71,6 +71,19 @@ describe("AI masks: Lightroom's dialog", () => {
     expect(log.failures.at(-1)?.error.code).toBe("LIGHTROOM_DIALOG");
   });
 
+  it("a dialog closed with no mask computed: writes nothing, neither 60 s after nor at the time limit (LIGHTROOM_STUCK), the session open (D16)", async () => {
+    const { m, create, notes } = await session({ computeMs: 400 });
+    [lr.masks.gate, lr.masks.heldProbes] = ["dialog", 3];
+    const snapshots = sent("apply_snapshot");
+    const e = await fails(create("sky"));
+    expect(e).toMatchObject({ code: "LIGHTROOM_STUCK", details: { reverted: false } });
+    expect(e.message).toMatch(/no result within 0 minutes, Lightroom's update done/);
+    expect(notes).toContain(`applying: ${DIALOG_NOTE}`);
+    expect(sent("apply_snapshot")).toBe(snapshots);
+    expect(lr.masks.blocked).toEqual([]);
+    expect(m.current()?.id).toBe(ID);
+  });
+
   it("goes on when the gate was held by a slow model that then computed: nothing is reverted", async () => {
     const { m, create, notes } = await session();
     lr.masks.gate = "slow";
@@ -82,22 +95,23 @@ describe("AI masks: Lightroom's dialog", () => {
     expect(m.current()?.id).toBe(ID);
   });
 
-  it("when Lightroom's update still runs after the time is up: says it seems stuck, writes nothing, keeps the session open until it ends", async () => {
+  it("when Lightroom's update still runs after the time is up: says it seems stuck, writes nothing, keeps the session open and refuses its revert", async () => {
     const { m, create, notes } = await session({ computeMs: 200, stuckProbesMs: 10_000 });
     lr.masks.gate = "dialog";
     lr.masks.heldProbes = 1_000_000;
     const snapshots = sent("apply_snapshot");
     const e = await fails(create("people_face_skin"));
     expect(e).toMatchObject({ code: "LIGHTROOM_STUCK", details: { reverted: false } });
-    expect(e.message.startsWith("Lightroom's AI mask computation seems stuck (the AI People - Face Skin mask: no result within 0 minutes, and Lightroom's update still running).")).toBe(true);
-    expect(e.message).toContain("restart Lightroom (File > Exit, then start it again); once it is back, lr_end_session with outcome \"revert\"");
+    expect(e.message.startsWith("Lightroom's AI mask computation seems stuck (the AI People - Face Skin mask: no result within 0 minutes, Lightroom's update running).")).toBe(true);
+    expect(e.message).toContain("restart Lightroom (File > Exit, then start it again). Once it is back, the engine notices the restart");
     expect(sent("apply_snapshot")).toBe(snapshots);
-    expect(notes.at(-1)).toBe("awaiting_claude: Lightroom's AI mask seems stuck. Restart Lightroom, then ask Claude to put the photo back.");
+    expect(notes.at(-1)).toBe("awaiting_claude: Lightroom's AI mask seems stuck. Restart Lightroom: the photo is then put back by itself.");
     expect(m.current()?.id).toBe(ID);
     const step = await fails(m.step({ session_id: ID, settings: { exposure: 0.2 }, rationale: "test", return_image: "none" }));
-    expect(step.code).toBe("AI_UPDATE_PENDING");
-    lr.masks.held = 0; // the user clicks OK
-    expect((await m.end({ session_id: ID, outcome: "revert" })).json).toMatchObject({ outcome: "revert", revert: { differing: [] } });
+    expect(step).toMatchObject({ code: "AI_UPDATE_PENDING", recoverable: false });
+    lr.masks.held = 0; // the user clicks OK; still no result
+    expect(await fails(m.end({ session_id: ID, outcome: "revert" }))).toMatchObject({ code: "AI_UPDATE_PENDING" });
+    expect(sent("apply_snapshot")).toBe(snapshots);
   });
 });
 
@@ -128,11 +142,11 @@ describe("AI masks: an update Lightroom dropped or that raised", () => {
     expect(m.current()).toBeNull();
   });
 
-  it("an update whose answer does not come (the gate held at once) is watched, then put back as a dialog", async () => {
+  it("an update whose answer does not come (the gate held at once) is watched, then put back as a dialog once it reports it failed", async () => {
     const { m, create } = await session({ replyMs: 50 });
     const real = plugin.handlers.get("update_ai_settings") as FakeHandler;
     plugin.handlers.set("update_ai_settings", (p, id) => {
-      [lr.masks.gate, lr.masks.heldProbes] = ["dialog", 3];
+      [lr.masks.gate, lr.masks.heldProbes, lr.masks.releaseState] = ["dialog", 3, "failed"];
       void real(p, id);
       lr.masks.gate = "free";
       return "silent";
@@ -143,20 +157,22 @@ describe("AI masks: an update Lightroom dropped or that raised", () => {
   });
 
   it("takes the update's state only from its own request: another request's failure is not this one's", async () => {
-    const { create } = await session({ computeMs: 300 });
+    const { m, create } = await session({ computeMs: 300 });
     [lr.masks.tableRoute, lr.masks.foreignUpdate] = ["failed", true];
-    expect(await fails(create("subject"))).toMatchObject({ code: "LIGHTROOM_STUCK", details: { reverted: true } });
+    expect(await fails(create("subject"))).toMatchObject({ code: "LIGHTROOM_STUCK", details: { reverted: false } });
     expect(sent("create_ai_mask_dc")).toBe(0);
+    expect(m.current()?.id).toBe(ID);
   });
 
-  it("stops probing once the update is over and the gate reads free; no result in time: the photo put back, Lightroom said to seem stuck", async () => {
+  it("stops probing once the update is over and the gate reads free; no result in time: Lightroom said to seem stuck, nothing written (D16)", async () => {
     const { m, create } = await session({ computeMs: 300 });
     lr.masks.tableRoute = "never";
+    const snapshots = sent("apply_snapshot");
     const e = await fails(create("sky"));
-    expect(e).toMatchObject({ code: "LIGHTROOM_STUCK", details: { reverted: true, ended_by: "engine" } });
-    expect(e.message.startsWith(STUCK_REVERTED)).toBe(true);
+    expect(e).toMatchObject({ code: "LIGHTROOM_STUCK", details: { reverted: false } });
     expect(sent("probe_write_gate")).toBe(1);
-    expect(m.current()).toBeNull();
+    expect(sent("apply_snapshot")).toBe(snapshots);
+    expect(m.current()?.id).toBe(ID);
   });
 
   it("never puts the photo back while Lightroom's update still runs, though its gate is free again", async () => {

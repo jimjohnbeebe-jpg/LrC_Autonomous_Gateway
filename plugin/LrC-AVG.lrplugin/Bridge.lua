@@ -47,7 +47,7 @@ local Sockets = require 'Sockets'
 local Bridge = {}
 
 Bridge.PROTOCOL = 1
-Bridge.PLUGIN_VERSION = "0.15.0"
+Bridge.PLUGIN_VERSION = "0.16.0"
 Bridge.SDK_DECLARED = 13.0 -- Info.lua LrSdkVersion; the SDK version LrC 15.5.1 ships is [unverified]
 Bridge.STATUS_FILE = "bridge_status.json"
 
@@ -68,6 +68,11 @@ local function isoNow()
     return os.date("!%Y-%m-%dT%H:%M:%SZ")
 end
 
+-- When this Lua state first loaded the bridge (plugin 0.16.0, D16): it survives a Reload Plug-in (_G), and
+-- a Lightroom restart starts a new one [inference: _G is per Lua state], so the engine reads another value
+-- in hello as a restart (engine\src\session\restart.ts). One second's resolution: a restart takes longer.
+_G.LrCAVG_ProcessStartedAt = _G.LrCAVG_ProcessStartedAt or isoNow()
+
 function Bridge.helloPayload(receivePort, sendPort)
     return {
         protocol = Bridge.PROTOCOL,
@@ -75,6 +80,7 @@ function Bridge.helloPayload(receivePort, sendPort)
         lrc_version = LrApplication.versionString(),
         sdk_declared = Bridge.SDK_DECLARED,
         ports = { receive = receivePort, send = sendPort },
+        process_started_at = _G.LrCAVG_ProcessStartedAt,
     }
 end
 

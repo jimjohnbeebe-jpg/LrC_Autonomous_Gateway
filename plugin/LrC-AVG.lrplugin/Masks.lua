@@ -8,8 +8,8 @@
 -- feature_unavailable; nothing here raises on purpose. The masks captures' probe commands
 -- (probe_masks_dc, probe_masks_calibrate, probe_masks_create) stay in git history (PR C step 1).
 --
--- update_ai_settings { photo_uuid, expect? }: photo:updateAISettings() on the photo found by uuid
---   (Photos.lua), in its own write gate. The SDK reference: "Updates AI Settings for this photo. Must
+-- update_ai_settings { photo_uuid, expect?, request_id?, watch? }: photo:updateAISettings() on the photo
+--   found by uuid (Photos.lua), in its own write gate. The SDK reference: "Updates AI Settings for this photo. Must
 --   be called from within a catalog:withWriteAccessDo or catalog:withProlongedWriteAccessDo gate.
 --   First supported in version 13.3" [handle: https://lrc.mcor.dev/modules/LrPhoto.html, read
 --   2026-10-03]. It worked for this plugin, which declares LrSdkVersion 13.0, on LrC 15.6: an AI mask
@@ -28,6 +28,11 @@
 --   the task did: started, running, done, failed (updateAISettings raised; the error is kept, not raised
 --   on, so no Lightroom error dialog comes from this plugin), abandoned (the gate stayed held for 5 s and
 --   the update did not run).
+--   From plugin 0.16.0 (PR C step 2d, D16) the update also records the entries it computes (`watch`,
+--   from the engine), and every write to the photo waits for their results (Pending.lua); an update
+--   that failed or was abandoned computes nothing [inference], so its record is cleared. The answer's
+--   `guarded` says whether a record was made. create_ai_mask_dc is refused while one is pending, as every
+--   write is.
 -- probe_write_gate {}: an empty write gate with a 0.5 s timeout: "executed" when the catalog is free,
 --   "aborted" when another write holds it (such as a dialog inside the update's gate) [community: the
 --   SDK reference above, LrCatalog withWriteAccessDo]; with the last update's record. Whether an empty
@@ -52,6 +57,7 @@ local LrTasks = import 'LrTasks'
 
 local Gate = require 'Gate'
 local MaskProbe = require 'MaskProbe'
+local Pending = require 'Pending'
 local Photos = require 'Photos'
 
 local Masks = {}
@@ -78,6 +84,7 @@ function Masks.updateAISettings(payload)
     if MaskProbe.kind(photo, "updateAISettings") ~= "function" then return MaskProbe.unavailable("photo:updateAISettings (SDK 13.3)") end
     local rec = { uuid = found.uuid, state = "started", request_id = type(payload.request_id) == "string" and payload.request_id or nil }
     _G.AVG_LAST_AI_UPDATE = rec
+    local guard = Pending.start(found.uuid, rec.request_id, payload.watch)
     LrTasks.startAsyncTask(function()
         local ok, err = LrTasks.pcall(function()
             local gated = Gate.write(catalog, "AVG update AI masks", function()
@@ -89,8 +96,9 @@ function Masks.updateAISettings(payload)
             if not gated then rec.state = "abandoned" end
         end)
         if not ok then rec.state, rec.error = "failed", tostring(err) end
+        if rec.state == "failed" or rec.state == "abandoned" then Pending.clear(found.uuid, guard) end
     end)
-    return { uuid = found.uuid, status = "started", state = rec.state, command_ms = (LrDate.currentTime() - tCommand) * 1000 }
+    return { uuid = found.uuid, status = "started", state = rec.state, guarded = guard ~= nil, command_ms = (LrDate.currentTime() - tCommand) * 1000 }
 end
 
 function Masks.probeWriteGate()
@@ -123,6 +131,8 @@ function Masks.createAiMaskDc(payload)
     end
     local ctx, err = MaskProbe.begin(payload, OPEN_SECONDS)
     if not ctx then return nil, err end
+    local refused = Pending.refusal(ctx.catalog, ctx.photo, ctx.uuid)
+    if refused then return nil, refused end
     MaskProbe.openMasking(ctx)
     local okIds, old = record(ctx, "mask_ids_before", ids)
     if not okIds or type(old) ~= "table" then old = {} end

@@ -97,9 +97,10 @@ export const MASK_DEFS: ToolDef[] = [
       "geometry.lum_range; the AI kinds are found by Lightroom: the engine adds the mask to the table and asks Lightroom to compute it " +
       "(the call waits up to 5 minutes for Lightroom, and the HUD says it is working). If the photo has none of that kind, MASK_NOTHING_FOUND: " +
       "the mask is taken out again and the pass is not used. If Lightroom stays busy or shows a dialog, the HUD says: \"Lightroom is busy or shows a dialog: if a dialog is open in Lightroom, click OK.\" " +
-      "If the mask then computes the pass goes on; if Lightroom reports a failure, or stays without a result 60 s after it is free again or for 5 minutes, the engine puts the photo " +
-      "back as it was before the session and ENDS the session (LIGHTROOM_DIALOG, or LIGHTROOM_STUCK when no result came); while Lightroom's own update still runs, or it stops " +
-      "answering, nothing is written and LIGHTROOM_STUCK says to restart Lightroom, then end the session with \"revert\". Tell the user what happened, and start a " +
+      "If the mask then computes the pass goes on; if Lightroom reports the update failed or dropped it, the engine puts the photo back as it was before the session and ENDS " +
+      "the session (LIGHTROOM_DIALOG). Nothing is written to the photo while Lightroom has not given the mask's result: no result in 5 minutes, or Lightroom not answering, " +
+      "is LIGHTROOM_STUCK, the session stays open and refuses writes, renders and reverts (AI_UPDATE_PENDING); tell the user to restart Lightroom: once it is back the engine " +
+      "puts the photo back and ends the session by itself (later calls naming it get SESSION_ENDED). Tell the user what happened, and start a " +
       "new session only if they ask. If the update fails with a Lightroom or plugin error, subject, sky and background are made by " +
       "Lightroom's Develop module instead (Lightroom then switches to Develop; `ai.route` \"dc\", `switched_to_develop`); people and " +
       "landscape kinds have no such fallback. If nothing works, FEATURE_UNAVAILABLE (details.routes_tried): the masks are as before and " +

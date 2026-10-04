@@ -5,7 +5,8 @@
 //     the wait for Lightroom's answer (ai-update.ts): computed; nothing found (ErrorReason not 0: the
 //     entry is taken out of the table as it is now and MASK_NOTHING_FOUND says so, no pass used);
 //     a dialog (the photo is put back to before the session and the session ends: autoRevert);
-//     or a failure. One person's kinds go by instance: person-masks.ts runs the table route twice (the
+//     no result (LIGHTROOM_STUCK, nothing written; after a Lightroom restart revertAfterRestart puts the
+//     photo back, restart.ts, D16); or a failure. One person's kinds go by instance: person-masks.ts runs the table route twice (the
 //     probe, then the wanted entry).
 //   - LrDevelopController runs only when the table route's update failed with a gate or plugin error,
 //     never after a dialog and never after a mask that simply did not compute [inference: the lead's
@@ -104,7 +105,7 @@ async function byTable(ctx: SessionContext, s: Session, job: AiJob): Promise<AiR
   if (u.kind === "computed") {
     return { sdk: u.sdk, id: job.id, route: "table", update_ms: u.update_ms, computed_ms: u.computed_ms, ...(u.dialog_ms !== undefined ? { dialog_ms: u.dialog_ms } : {}) };
   }
-  if (u.kind === "dialog") return autoRevert(ctx, s, job, u.why, u.stuck === true, (j) => takeOut(ctx, s, j));
+  if (u.kind === "dialog") return autoRevert(ctx, s, job, u.why, "dialog", (j) => takeOut(ctx, s, j));
   if (u.kind === "stuck") throw stuckError(s, job, u.why);
   if (u.kind === "failed") return { why: u.why, fallback: u.fallback };
   const left = await takeOut(ctx, s, job);
@@ -115,6 +116,21 @@ async function byTable(ctx: SessionContext, s: Session, job: AiJob): Promise<AiR
     true,
     { session_id: s.id, kind: job.kind, error_reason: u.reason, history_names: job.historyNames, ...(left ? { left } : {}) },
   );
+}
+
+/**
+ * After a Lightroom restart while s.aiPending was set (restart.ts): the photo put back and the session ended,
+ * as autoRevert does (the attempt on a copy taken out first); returns the error it ended with, since no tool
+ * call waits for it.
+ */
+export async function revertAfterRestart(ctx: SessionContext, s: Session, cause: string): Promise<ToolError> {
+  const job = s.aiPending?.job;
+  if (!job) return new ToolError("INTERNAL_ERROR", "no AI update was pending", false);
+  try {
+    return await autoRevert(ctx, s, job, cause, "restart", (j) => takeOut(ctx, s, j));
+  } catch (err) {
+    return toToolError(err);
+  }
 }
 
 /** create_ai_mask_dc: the new ids it saw, or why it made none; `answered`: createNewMask itself reported ok. */

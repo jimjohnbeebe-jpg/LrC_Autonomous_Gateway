@@ -264,6 +264,12 @@ export function tableSettings(entries: readonly Correction[], emptyOk: boolean):
   return { [MASK_TABLE_KEY]: entries };
 }
 
+/**
+ * update_ai_settings' `watch` (plugin 0.16.0, Pending.lua): the entries `ids` and the field names the
+ * plugin's guard reads them by (it reads their first component's digest and ErrorReason, as below).
+ */
+export const aiWatch = (ids: string[]) => ({ ids, table: MASK_TABLE_KEY, id: C.id, masks: C.masks, digest: IMAGE.digest, error: IMAGE.errorReason });
+
 /** The component of correction `id` (its first), for the AI route's checks. */
 export function firstComponent(entries: readonly Correction[], id: string): Component | null {
   const e = entries.find((x) => x[C.id] === id);

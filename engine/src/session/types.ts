@@ -8,6 +8,7 @@ import type { Metrics, Region, RegionBox } from "../metrics/index.js";
 import type { CanonicalSettings, Geometry, ParamMap } from "../params/index.js";
 import type { RenderedPreview } from "../preview/index.js";
 import type { KnownLogFolders, PageRead } from "../settings/index.js";
+import type { AiJob } from "./ai-masks.js";
 import type { AiTimings } from "./ai-update.js";
 import type { Limits, Slope } from "./plan.js";
 
@@ -219,9 +220,9 @@ export type Session = {
   startMasks: string;
   /** How AI masks were last made (ai-masks.ts): the table route, or LrDevelopController after it failed. */
   aiRoute: "table" | "dc" | null;
-  /** An update_ai_settings not answered yet (ai-update.ts): while set, the session writes, exports and renders nothing (io.ts). */
-  aiPending: { since: string; kind: string } | null;
-  /** Why the engine itself ended the session (ai-masks.ts autoRevert, after a Lightroom dialog); the manager then closes it. */
+  /** An update_ai_settings whose result Lightroom has not shown yet (ai-update.ts, D16): while set, the session writes, exports, renders and reverts nothing (io.ts). */
+  aiPending: AiPending | null;
+  /** Why the engine itself ended the session (ai-revert.ts autoRevert: a dialog, or a Lightroom restart); the manager then closes it. */
   endedByEngine: string | null;
   regions: RegionState[];
   files: SessionLogFiles;
@@ -243,6 +244,21 @@ export type Session = {
   approval: { target: TargetId; pass: number; by: ApprovalBy; at: string } | null;
   /** While a step waits for an approval (approval.ts): what ended the wait, and how to end it. */
   approvalWait: ApprovalWait | null;
+};
+
+/**
+ * An AI update Lightroom has not answered (ai-update.ts, D16). It stays until a read shows the entry's digest
+ * or ErrorReason (or the entry gone), Lightroom reports the update failed, or Lightroom restarts.
+ */
+export type AiPending = {
+  since: string;
+  kind: string;
+  /** The pass's photo and entry: what a read checks, and what a revert after a restart takes out (ai-revert.ts). */
+  job: AiJob;
+  /** hello's process_started_at when the update was sent: another one at a reconnect is a Lightroom restart (restart.ts). */
+  process: string | null;
+  /** No result within the wait (LIGHTROOM_STUCK): writes stay refused until the result or a restart. */
+  stuck: boolean;
 };
 
 /** What ends a step's wait for an approval; the strongest seen before the step resumes wins (approval.ts). */

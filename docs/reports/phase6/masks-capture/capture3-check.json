@@ -1,0 +1,505 @@
+{
+  "started": "2026-10-04T01:25:13.233Z",
+  "engine_version": "0.13.0",
+  "steps": {
+    "1_selection": {
+      "at": "2026-10-04T01:25:13.837Z",
+      "count": 1,
+      "photos": [
+        {
+          "local_id": 25260,
+          "is_virtual_copy": false,
+          "master_local_id": 25260,
+          "filename": "_DSC0028.NEF",
+          "capture_time": "4/26/2009 1:10:58.000 PM",
+          "uuid": "268D3EFD-034F-4555-99CF-D355707B5153"
+        }
+      ]
+    },
+    "1_photo": {
+      "at": "2026-10-04T01:25:13.910Z",
+      "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+      "filename": "_DSC0028.NEF",
+      "file_format": "RAW",
+      "is_virtual_copy": false,
+      "snapshot": {
+        "id": "53A16811-37C1-4F80-8557-3AF080B6ACF4",
+        "name": "AVG people before 18:25:13"
+      },
+      "masks_before": 0,
+      "context_error": null
+    },
+    "3_dumps": {
+      "at": "2026-10-04T01:27:47.873Z",
+      "count_before": 0,
+      "count": 4,
+      "found": [
+        {
+          "kind": "people_entire",
+          "parts": [
+            {
+              "What": "Mask/Image",
+              "MaskSubType": 0,
+              "MaskSubCategoryID": 20036,
+              "MaskName": "Person 1"
+            }
+          ]
+        },
+        {
+          "kind": "people_part",
+          "parts": [
+            {
+              "What": "Mask/Image",
+              "MaskSubType": 0,
+              "MaskSubCategoryID": 2,
+              "MaskName": "Person 1 - Facial Skin"
+            }
+          ]
+        },
+        {
+          "kind": "landscape_1",
+          "parts": [
+            {
+              "What": "Mask/Image",
+              "MaskSubType": 0,
+              "MaskSubCategoryID": 50005,
+              "MaskName": "Vegetation"
+            }
+          ]
+        },
+        {
+          "kind": "landscape_2",
+          "parts": [
+            {
+              "What": "Mask/Image",
+              "MaskSubType": 0,
+              "MaskSubCategoryID": 50006,
+              "MaskName": "Sky"
+            }
+          ]
+        }
+      ],
+      "differs_between_reads": []
+    },
+    "4_people_entire": {
+      "at": "2026-10-04T01:27:49.928Z",
+      "new_ids": {
+        "A9947F6A-8F26-4023-87F4-3FFAE3E9308F": "B8B0555B-D2AF-FEC8-D128-F84F25E951B6",
+        "39B35E5829413141BCED7DECBAD7F47C": "0B0EAC1E3CEF116C945B03D35FFC70F6",
+        "9618F37A979F184E950F59266617026B": "B6A81CEB988A8500C440DC0CE4F7B562",
+        "BB3FD910-99ED-41C6-A68A-54BEE02D7A6B": "20CEDC5F-2B90-24EB-95C5-2D4300E3CEC0"
+      },
+      "dropped": [
+        "LocalInputDigestVersion",
+        "MaskDigest",
+        "InputDigest",
+        "LocalInputDigest",
+        "InputDigestVersion"
+      ],
+      "digest_after_write": [],
+      "update": {
+        "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+        "call_ms": 1155.0352573395,
+        "command_ms": 1191.3216114044,
+        "gate": "executed"
+      },
+      "polls": 1,
+      "ms_after_update": 469,
+      "new_digests": [
+        [
+          "MaskDigest",
+          "1DDB15DB12AFA23B6E143D88F447F366"
+        ],
+        [
+          "InputDigest",
+          "C16CCDF48F144AB3C634A4A92EE3289B"
+        ],
+        [
+          "LocalInputDigest",
+          "300C5E2B49375642F89F3948749DE0C0"
+        ]
+      ],
+      "errors": []
+    },
+    "4_people_part": {
+      "at": "2026-10-04T01:28:34.554Z",
+      "new_ids": {
+        "8C5F5A70-4FAF-467D-8BE1-0EE089755B69": "B540ADFD-5F46-4B38-F2D4-79329E259827",
+        "508E3FAE8C1C054FA24369823F1A62C5": "D672CBBA5C52C56E84661AB4D28798EE",
+        "71BF9501BCBB174AA03C9D2A8B98F9C9": "1402DBAFC2367F1BA1DD1F9BB766640A",
+        "A795CD60-B38B-408D-B517-AB30038B07B3": "9593BD39-BD69-34BD-DF67-F74D1D2BED2D"
+      },
+      "dropped": [
+        "LocalInputDigestVersion",
+        "MaskDigest",
+        "InputDigest",
+        "LocalInputDigest",
+        "InputDigestVersion"
+      ],
+      "digest_after_write": [],
+      "update": {
+        "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+        "call_ms": 963.67037296295,
+        "command_ms": 999.70233440399,
+        "gate": "executed"
+      },
+      "polls": 1,
+      "ms_after_update": 412,
+      "new_digests": [
+        [
+          "MaskDigest",
+          "DE0CFE54182F18237E099990183AADAA"
+        ],
+        [
+          "InputDigest",
+          "C16CCDF48F144AB3C634A4A92EE3289B"
+        ],
+        [
+          "LocalInputDigest",
+          "300C5E2B49375642F89F3948749DE0C0"
+        ]
+      ],
+      "errors": []
+    },
+    "4_landscape_1": {
+      "at": "2026-10-04T01:29:02.795Z",
+      "new_ids": {
+        "0B2B2FE9-531E-44CD-A69E-B9F2E72A8ACB": "0DAA445E-C4C2-AC06-A210-D75936A0CE9B",
+        "97CEB70A8D60BC4AA5DE4CFB5C84994A": "EEA39AEB42E0F33F2C85E594503DCCF8",
+        "D860E91DA0B35B4B9C4061E89DBC5726": "3817DCA1B5ED1D26F7A7C067F09AF003",
+        "EB37D716-56A0-4AD4-B19C-549A4DCAF96F": "80524B14-7ECE-0684-8133-0CAA56AFB3A0"
+      },
+      "dropped": [
+        "LocalInputDigestVersion",
+        "MaskDigest",
+        "InputDigest",
+        "LocalInputDigest",
+        "InputDigestVersion"
+      ],
+      "digest_after_write": [],
+      "update": {
+        "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+        "call_ms": 1136.3008022308,
+        "command_ms": 1206.5119743347,
+        "gate": "executed"
+      },
+      "polls": 1,
+      "ms_after_update": 317,
+      "new_digests": [
+        [
+          "MaskDigest",
+          "24E0D08B15C67DC19667AD5A2A59051D"
+        ],
+        [
+          "InputDigest",
+          "C16CCDF48F144AB3C634A4A92EE3289B"
+        ],
+        [
+          "LocalInputDigest",
+          "300C5E2B49375642F89F3948749DE0C0"
+        ]
+      ],
+      "errors": []
+    },
+    "4_landscape_2": {
+      "at": "2026-10-04T01:29:12.298Z",
+      "new_ids": {
+        "D4D80D9D48BDB54D9BF1881C71BAF266": "6243D204F9C509783B7061DCB3F7DDA0",
+        "B2CDFCC7ADB9FF4AB1DB89F51A630C88": "8AF9354E221BC1D898D86CFF3FB2F420",
+        "88F5BDAF3AF94A40AAD52D813BFBF991": "E75282DED3B3B8C51A82C5B9D8491398",
+        "432B3042CE18D347BC8F250DC0CCAD9E": "58C625F5540B86550992B785CBD814EB"
+      },
+      "dropped": [
+        "LocalInputDigestVersion",
+        "MaskDigest",
+        "InputDigest",
+        "LocalInputDigest",
+        "InputDigestVersion"
+      ],
+      "digest_after_write": [],
+      "update": {
+        "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+        "call_ms": 999.75681304932,
+        "command_ms": 1011.9839906693,
+        "gate": "executed"
+      },
+      "polls": 1,
+      "ms_after_update": 286,
+      "new_digests": [
+        [
+          "MaskDigest",
+          "B30761C148B69913990BAF977A6B916D"
+        ],
+        [
+          "InputDigest",
+          "C16CCDF48F144AB3C634A4A92EE3289B"
+        ],
+        [
+          "LocalInputDigest",
+          "300C5E2B49375642F89F3948749DE0C0"
+        ]
+      ],
+      "errors": []
+    },
+    "5_put_back": {
+      "at": "2026-10-04T01:29:15.424Z",
+      "differing": []
+    },
+    "5_put_back_late": {
+      "at": "2026-10-04T01:29:20.749Z",
+      "differing": []
+    }
+  },
+  "checks": [
+    {
+      "ok": true,
+      "text": "Lightroom 15.6 runs plugin 0.11.0 (0.11.0 or later needed)"
+    },
+    {
+      "ok": true,
+      "text": "photo _DSC0028.NEF (RAW); snapshot \"AVG people before 18:25:13\" taken; 0 masks on it"
+    },
+    {
+      "ok": true,
+      "text": "the table holds 4 new entries: people_entire, people_part, landscape_1, landscape_2 (templates.json)",
+      "detail": [
+        {
+          "kind": "people_entire",
+          "parts": [
+            {
+              "What": "Mask/Image",
+              "MaskSubType": 0,
+              "MaskSubCategoryID": 20036,
+              "MaskName": "Person 1"
+            }
+          ]
+        },
+        {
+          "kind": "people_part",
+          "parts": [
+            {
+              "What": "Mask/Image",
+              "MaskSubType": 0,
+              "MaskSubCategoryID": 2,
+              "MaskName": "Person 1 - Facial Skin"
+            }
+          ]
+        },
+        {
+          "kind": "landscape_1",
+          "parts": [
+            {
+              "What": "Mask/Image",
+              "MaskSubType": 0,
+              "MaskSubCategoryID": 50005,
+              "MaskName": "Vegetation"
+            }
+          ]
+        },
+        {
+          "kind": "landscape_2",
+          "parts": [
+            {
+              "What": "Mask/Image",
+              "MaskSubType": 0,
+              "MaskSubCategoryID": 50006,
+              "MaskName": "Sky"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ok": true,
+      "text": "two reads in a row give the same mask table (0 differing paths)",
+      "detail": []
+    },
+    {
+      "ok": true,
+      "text": "a People and a Landscape entry were found"
+    },
+    {
+      "ok": true,
+      "text": "people_entire: the copy \"AVG new people_entire\" is in the table after the write"
+    },
+    {
+      "ok": true,
+      "text": "people_entire: update_ai_settings answered ({\"uuid\":\"268D3EFD-034F-4555-99CF-D355707B5153\",\"call_ms\":1155.0352573395,\"command_ms\":1191.3216114044,\"gate\":\"executed\"})"
+    },
+    {
+      "ok": true,
+      "text": "people_entire: the copy computed within 30 s of update_ai_settings (469 ms, 1 reads)",
+      "detail": {
+        "digest": [
+          [
+            "MaskDigest",
+            "1DDB15DB12AFA23B6E143D88F447F366"
+          ],
+          [
+            "InputDigest",
+            "C16CCDF48F144AB3C634A4A92EE3289B"
+          ],
+          [
+            "LocalInputDigest",
+            "300C5E2B49375642F89F3948749DE0C0"
+          ]
+        ],
+        "errors": []
+      }
+    },
+    {
+      "ok": true,
+      "text": "people_part: the copy \"AVG new people_part\" is in the table after the write"
+    },
+    {
+      "ok": true,
+      "text": "people_part: update_ai_settings answered ({\"uuid\":\"268D3EFD-034F-4555-99CF-D355707B5153\",\"call_ms\":963.67037296295,\"command_ms\":999.70233440399,\"gate\":\"executed\"})"
+    },
+    {
+      "ok": true,
+      "text": "people_part: the copy computed within 30 s of update_ai_settings (412 ms, 1 reads)",
+      "detail": {
+        "digest": [
+          [
+            "MaskDigest",
+            "DE0CFE54182F18237E099990183AADAA"
+          ],
+          [
+            "InputDigest",
+            "C16CCDF48F144AB3C634A4A92EE3289B"
+          ],
+          [
+            "LocalInputDigest",
+            "300C5E2B49375642F89F3948749DE0C0"
+          ]
+        ],
+        "errors": []
+      }
+    },
+    {
+      "ok": true,
+      "text": "landscape_1: the copy \"AVG new landscape_1\" is in the table after the write"
+    },
+    {
+      "ok": true,
+      "text": "landscape_1: update_ai_settings answered ({\"uuid\":\"268D3EFD-034F-4555-99CF-D355707B5153\",\"call_ms\":1136.3008022308,\"command_ms\":1206.5119743347,\"gate\":\"executed\"})"
+    },
+    {
+      "ok": true,
+      "text": "landscape_1: the copy computed within 30 s of update_ai_settings (317 ms, 1 reads)",
+      "detail": {
+        "digest": [
+          [
+            "MaskDigest",
+            "24E0D08B15C67DC19667AD5A2A59051D"
+          ],
+          [
+            "InputDigest",
+            "C16CCDF48F144AB3C634A4A92EE3289B"
+          ],
+          [
+            "LocalInputDigest",
+            "300C5E2B49375642F89F3948749DE0C0"
+          ]
+        ],
+        "errors": []
+      }
+    },
+    {
+      "ok": true,
+      "text": "landscape_2: the copy \"AVG new landscape_2\" is in the table after the write"
+    },
+    {
+      "ok": true,
+      "text": "landscape_2: update_ai_settings answered ({\"uuid\":\"268D3EFD-034F-4555-99CF-D355707B5153\",\"call_ms\":999.75681304932,\"command_ms\":1011.9839906693,\"gate\":\"executed\"})"
+    },
+    {
+      "ok": true,
+      "text": "landscape_2: the copy computed within 30 s of update_ai_settings (286 ms, 1 reads)",
+      "detail": {
+        "digest": [
+          [
+            "MaskDigest",
+            "B30761C148B69913990BAF977A6B916D"
+          ],
+          [
+            "InputDigest",
+            "C16CCDF48F144AB3C634A4A92EE3289B"
+          ],
+          [
+            "LocalInputDigest",
+            "300C5E2B49375642F89F3948749DE0C0"
+          ]
+        ],
+        "errors": []
+      }
+    },
+    {
+      "ok": true,
+      "text": "PUT BACK: YES (every setting as before the check, and still 5 s later)",
+      "detail": {
+        "at_once": [],
+        "late": []
+      }
+    }
+  ],
+  "answers": [
+    {
+      "q": "Did you make the People mask (Entire Person), the Face Skin mask if it was offered, and the Landscape mask?",
+      "answer": "y",
+      "at": "2026-10-04T01:27:44.911Z"
+    },
+    {
+      "q": "Is there a mask named 'AVG new people_entire' covering the same area as yours?",
+      "answer": "y",
+      "at": "2026-10-04T01:28:32.745Z"
+    },
+    {
+      "q": "Is there a mask named 'AVG new people_part' covering the same area as yours?",
+      "answer": "y",
+      "at": "2026-10-04T01:29:00.777Z"
+    },
+    {
+      "q": "Is there a mask named 'AVG new landscape_1' covering the same area as yours?",
+      "answer": "y",
+      "at": "2026-10-04T01:29:10.661Z"
+    },
+    {
+      "q": "Is there a mask named 'AVG new landscape_2' covering the same area as yours?",
+      "answer": "y",
+      "at": "2026-10-04T01:29:14.377Z"
+    },
+    {
+      "q": "Does the photo look as it did before the check, with none of the check's masks left?",
+      "answer": "y",
+      "at": "2026-10-04T01:29:36.949Z"
+    }
+  ],
+  "failures": [],
+  "hello": {
+    "plugin_version": "0.11.0",
+    "lrc_version": "15.6",
+    "sdk_declared": 13
+  },
+  "photo": {
+    "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+    "filename": "_DSC0028.NEF",
+    "file_format": "RAW",
+    "is_virtual_copy": false
+  },
+  "bridge": {
+    "connects": 1,
+    "connect_failures": 0,
+    "last_connect_error": null,
+    "drops": 0,
+    "last_drop_reason": null,
+    "malformed_lines": 0,
+    "unknown_response_ids": 0,
+    "ports": {
+      "command": 8765,
+      "event": 8766,
+      "from": "ports file"
+    }
+  },
+  "ended": "2026-10-04T01:29:36.949Z"
+}

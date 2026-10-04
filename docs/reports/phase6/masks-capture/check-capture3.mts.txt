@@ -1,0 +1,376 @@
+// Masks capture 3 (GitHub issue #59, PR C step 1, branch phase-6/masks, plugin 0.11.0): People and
+// Landscape masks. Written by Claude Code (Opus 5.5), 2026-10-03. Report: docs\reports\phase6\masks-capture.md,
+// "Capture 3". Decided by Jim after capture 2 [stated: "Capture 3 on another photo", relayed by the lead]:
+// in capture 2, createNewMask("aiSelection", "people" / "landscape") made no mask within 10 s on
+// 20260907-_OZ80099.NEF [handle: docs\reports\phase6\masks-capture\, capture 2's templates.json].
+// So here Jim makes them by hand, on a photo he picks, and the check learns their table entries and
+// whether a copy written by table computes. Only commands plugin 0.11.0 already has are used.
+//   0. Claude Desktop quit (the engine instance lock); plugin 0.11.0 or later.
+//   1. the SELECTED photo (exactly one, else it stops): its file name, snapshot "AVG people before
+//      <time>", every setting saved.
+//   2. Jim adds by hand: People (one person, Entire Person), People again (that person's Face Skin,
+//      if offered), Landscape (every category it offers).
+//   3. reads the settings twice; the new entries by structure: a nested mask with a
+//      MaskSubCategoryID of 50000 or more is "landscape" [community: issue #59 research, landscape
+//      categories 50001-50008], the others are people, in the order Jim made them
+//      (people_entire, people_part); each saved raw in templates.json.
+//   4. for each: a copy without fields whose names contain "Digest" (all five fields capture 1's sky
+//      copy dropped contain it [handle: docs\reports\phase6\masks-capture\check.json step 7_sky
+//      `dropped`]), new ids in the same formats, named "AVG new <kind>", appended and written, then
+//      update_ai_settings and up to 30 s for a new digest or an error field; Jim says whether it
+//      covers the same area as his.
+//   5. ALWAYS: the snapshot, every setting compared with step 1, again 5 s later; Jim confirms.
+// Ctrl+C (once) skips every remaining step and goes to the put-back. Closing the window also asks for
+// it, but Windows ends Node about 10 s later [handle: https://nodejs.org/api/process.html#signal-events],
+// so Jim's steps say Ctrl+C. Every wait is bounded. Every y/n: y = good.
+// The mask key and field names are from capture 1's live dump [handle:
+// docs\reports\phase6\masks-capture\3_dump-1.json] (rule 03).
+// Usage, from the repo root after npm run build: node logs\check-masks-people-2026-10-03\check.mts [repo root]
+// Dry run: LRC_AVG_COMMAND_PORT/_EVENT_PORT/_TOKEN_FILE, CHECK_OUT, CHECK_TEMP.
+import { randomInt } from "node:crypto";
+import { mkdirSync, writeFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { createInterface } from "node:readline/promises";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+const repo = path.resolve(process.argv[2] ?? process.cwd());
+const dist = (p: string) => import(pathToFileURL(path.join(repo, "engine", "dist", p)).href);
+const { BridgeClient, pluginVersionAtLeast } = await dist("bridge/index.js");
+const { acquireInstanceLock, devOverrides, ENGINE_VERSION } = await dist("mcp/index.js");
+
+const MIN_PLUGIN = "0.11.0";
+const KEY = "MaskGroupBasedCorrections";
+const outDir = process.env["CHECK_OUT"] ?? path.dirname(fileURLToPath(import.meta.url));
+const tempDir = process.env["CHECK_TEMP"] ?? path.join(os.tmpdir(), "LrC-AVG", "masks-people");
+for (const d of [outDir, path.join(outDir, "raw"), tempDir]) mkdirSync(d, { recursive: true });
+
+type J = any;
+const at = () => new Date().toISOString();
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const transcript: string[] = [];
+const result: Record<string, J> = { started: at(), engine_version: ENGINE_VERSION, steps: {}, checks: [], answers: [], failures: [] };
+const save = () => {
+  writeFileSync(path.join(outDir, "check.json"), JSON.stringify(result, null, 2));
+  writeFileSync(path.join(outDir, "transcript.txt"), transcript.join("\n") + "\n");
+};
+const say = (m: string) => {
+  const text = `[${new Date().toLocaleTimeString()}] ${m}`;
+  console.log(text);
+  transcript.push(text);
+};
+const step = (name: string, data: Record<string, unknown>) => {
+  result.steps[name] = { at: at(), ...data };
+  save();
+};
+function check(ok: boolean, text: string, detail?: unknown) {
+  result.checks.push({ ok, text, detail });
+  if (!ok) result.failures.push(text);
+  say(`${ok ? "YES" : "NO "}  ${text}`);
+  save();
+}
+const saveRaw = (name: string, data: unknown) => {
+  const text = JSON.stringify(data, null, 2);
+  for (const d of [path.join(outDir, "raw"), tempDir]) writeFileSync(path.join(d, `${name}.json`), text);
+};
+
+// ---- input, Ctrl+C (as captures 1-2: readline takes Ctrl+C in a terminal; both handlers set
+// `aborting`; SIGHUP too, but Node has only about 10 s then, see the header).
+const rl = createInterface({ input: process.stdin, output: process.stdout });
+let aborting: string | null = null;
+const abortCtl = new AbortController();
+function abort(why: string): void {
+  if (aborting) return say(`(${why} again: still putting the photo back; wait for the last lines)`);
+  aborting = why;
+  result.failures.push(`aborted: ${why}`);
+  say(`ABORTING (${why}): going straight to the put-back. Wait for the last lines.`);
+  abortCtl.abort();
+}
+rl.on("SIGINT", () => abort("Ctrl+C"));
+process.on("SIGINT", () => abort("Ctrl+C"));
+process.on("SIGHUP", () => abort("the window was closed"));
+async function line(q: string, minutes: number): Promise<string | null> {
+  if (aborting) return null;
+  try {
+    return (await rl.question(q, { signal: AbortSignal.any([AbortSignal.timeout(minutes * 60_000), abortCtl.signal]) })).trim().toLowerCase();
+  } catch {
+    return null; // no answer in time, aborted, or stdin closed
+  }
+}
+async function ask(q: string): Promise<string> {
+  let a: string | null = null;
+  for (let i = 0; i < 3 && a !== "y" && a !== "n"; i++) {
+    a = await line(`${q} (y/n) `, 10);
+    if (a === null) break;
+  }
+  const answer = a === "y" || a === "n" ? a : aborting ? "aborted" : "no answer";
+  result.answers.push({ q, answer, at: at() });
+  transcript.push(`  ? ${q} -> ${answer}`);
+  if (answer !== "y" && answer !== "aborted") result.failures.push(`answered ${answer}: ${q}`);
+  save();
+  return answer;
+}
+
+// ---- pure helpers (as captures 1-2) ------------------------------------------------------------
+const isObj = (v: J) => v !== null && typeof v === "object" && !Array.isArray(v);
+const blank = (v: J) => v === undefined || (Array.isArray(v) && v.length === 0) || (isObj(v) && Object.keys(v).length === 0);
+const short = (v: J) => (v === undefined ? "(absent)" : JSON.stringify(v).slice(0, 160));
+function diff(a: J, b: J, where = "", out: Array<Record<string, J>> = []): Array<Record<string, J>> {
+  if (out.length >= 200 || (blank(a) && blank(b))) return out;
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) out.push({ path: `${where}.length`, before: a.length, after: b.length });
+    for (let i = 0; i < Math.min(a.length, b.length); i++) diff(a[i], b[i], `${where}[${i}]`, out);
+  } else if (isObj(a) && isObj(b)) {
+    for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) diff(a[k], b[k], where ? `${where}.${k}` : k, out);
+  } else if (a !== b) out.push({ path: where || "(root)", before: short(a), after: short(b) });
+  return out;
+}
+function pairs(v: J, out: Array<[string, J]> = []): Array<[string, J]> {
+  if (Array.isArray(v)) v.forEach((x) => pairs(x, out));
+  else if (isObj(v)) {
+    for (const [k, x] of Object.entries(v)) {
+      out.push([k, x]);
+      pairs(x, out);
+    }
+  }
+  return out;
+}
+const strings = (v: J): string[] => pairs(v).map(([, x]) => x).filter((x) => typeof x === "string");
+function newIdLike(s: string): string {
+  if (/^\d+$/.test(s)) return s.replace(/\d/g, () => String(randomInt(10)));
+  const upper = /[A-F]/.test(s) && !/[a-f]/.test(s);
+  return s.replace(/[0-9a-fA-F]/g, () => {
+    const c = "0123456789abcdef".charAt(randomInt(16));
+    return upper ? c.toUpperCase() : c;
+  });
+}
+/** A copy without fields whose names contain "Digest", with new values for string fields named *ID / *Id. */
+function freshCopy(entry: J): { entry: J; ids: Record<string, string>; dropped: string[] } {
+  const ids: Record<string, string> = {};
+  const dropped: string[] = [];
+  const fix = (v: J): J => {
+    if (Array.isArray(v)) return v.map(fix);
+    if (!isObj(v)) return v;
+    const out: J = {};
+    for (const [k, x] of Object.entries(v)) {
+      if (k.includes("Digest")) dropped.push(k);
+      else if (/I[Dd]$/.test(k) && typeof x === "string" && x !== "") out[k] = ids[x] ?? (ids[x] = newIdLike(x));
+      else out[k] = fix(x);
+    }
+    return out;
+  };
+  return { entry: fix(entry), ids, dropped };
+}
+const masks = (s: J): J[] => (Array.isArray(s?.[KEY]) ? s[KEY] : []);
+const indexWith = (arr: J[], idValues: string[]) => arr.findIndex((e) => strings(e).some((s) => idValues.includes(s)));
+const digestOf = (entry: J) => pairs(entry).filter(([k, x]) => k.includes("Digest") && typeof x === "string" && x !== "");
+const errorsOf = (entry: J) => pairs(entry).filter(([k]) => k.includes("Error"));
+const failedError = (entry: J) => errorsOf(entry).some(([, x]) => ![0, "0", "", false, null].includes(x));
+const newDigests = (entry: J, earlier: J) => digestOf(entry).filter(([k, x]) => !digestOf(earlier).some(([k2, x2]) => k === k2 && x === x2));
+/** What each nested mask of an entry is: What, MaskSubType, MaskSubCategoryID, MaskName. */
+const parts = (entry: J) => (entry?.CorrectionMasks ?? []).map((m: J) => ({ What: m.What, MaskSubType: m.MaskSubType, MaskSubCategoryID: m.MaskSubCategoryID, MaskName: m.MaskName }));
+/** Kinds for the new entries: landscape when a nested mask has a category of 50000 or more, else people in Jim's order. */
+function kinds(entries: J[]): string[] {
+  let people = 0;
+  let land = 0;
+  return entries.map((e) => {
+    if (parts(e).some((p: J) => typeof p.MaskSubCategoryID === "number" && p.MaskSubCategoryID >= 50000)) return `landscape_${++land}`;
+    people++;
+    return people === 1 ? "people_entire" : people === 2 ? "people_part" : `people_${people}`;
+  });
+}
+
+// ---- the bridge --------------------------------------------------------------------------------
+const dev = devOverrides();
+const lock = await acquireInstanceLock(dev.lockPort);
+if (!lock.ok) {
+  result.lock = { ok: false, port: lock.port, pid: lock.pid };
+  save();
+  say(`LOCK BUSY: another engine (pid ${lock.pid}) holds port ${lock.port}. Quit Claude Desktop (File > Exit), wait 60 s, then run this again.`);
+  process.exit(2);
+}
+const client = new BridgeClient({ engineVersion: `${ENGINE_VERSION}-masks-people`, log: (m: string) => console.error(`  (${m})`), silenceAllowanceMs: () => 60_000, ...dev.bridge });
+client.start();
+async function req(name: string, payload: J, timeoutMs = 30_000): Promise<J> {
+  if (client.getState() !== "connected") await client.waitConnected(30_000);
+  return client.request(name, payload, { timeoutMs });
+}
+const st: Record<string, J> = {};
+const target = () => ({ photo_uuid: st.uuid });
+const read = async (): Promise<J> => (await req("get_settings", target())).settings;
+const write = async (settings: J, history: string): Promise<J> => (await req("apply_settings", { ...target(), settings, history_name: history })).read_back;
+const errBody = (err: J) => (err?.code ? `${err.code}: ${err.message}` : String(err?.message ?? err));
+async function run(name: string, fn: () => Promise<string | void>): Promise<boolean> {
+  if (aborting) return false;
+  say(`--- ${name}`);
+  try {
+    const skipped = await fn();
+    if (skipped) (step(`${name}_skipped`, { reason: skipped }), say(`skipped: ${skipped}`));
+    return !skipped;
+  } catch (err) {
+    step(`${name}_error`, { error: errBody(err), aborting });
+    if (!aborting) check(false, `${name} ran`, errBody(err));
+    return false;
+  }
+}
+async function restore(name: string): Promise<J[]> {
+  const rb = (await req("apply_snapshot", { ...target(), snapshot_id: st.snapshotId }, 30_000)).read_back;
+  const d = diff(st.before, rb);
+  step(name, { differing: d });
+  return d;
+}
+
+async function s0(): Promise<void> {
+  const hello = await client.waitConnected(30_000);
+  result.hello = { plugin_version: hello.plugin_version, lrc_version: hello.lrc_version, sdk_declared: hello.sdk_declared };
+  const ok = pluginVersionAtLeast(hello.plugin_version, MIN_PLUGIN);
+  check(ok, `Lightroom ${hello.lrc_version} runs plugin ${hello.plugin_version} (${MIN_PLUGIN} or later needed)`);
+  if (!ok) throw new Error(`plugin ${hello.plugin_version}: in Plug-in Manager, select LrC-AVG and click Reload Plug-in`);
+}
+
+async function s1(): Promise<string | void> {
+  const sel = await req("get_selection", { max: 5 });
+  const photo = sel.photos?.[0];
+  step("1_selection", { count: sel.count, photos: sel.photos });
+  if (sel.count !== 1 || !photo?.uuid) {
+    check(false, `exactly one photo is selected (${sel.count} selected)`);
+    say("Select exactly one photo in Lightroom (a raw photo with a person and some outdoor landscape), then run this again.");
+    return "not exactly one photo selected";
+  }
+  st.uuid = photo.uuid;
+  const ctx = await req("get_context", target()).catch((err) => ({ error: errBody(err) }));
+  const name = `AVG people before ${new Date().toLocaleTimeString("en-GB")}`;
+  const snap = await req("create_snapshot", { ...target(), name });
+  st.snapshotId = snap.snapshot_id;
+  st.snapshotName = name;
+  st.before = await read();
+  saveRaw("1_before", st.before);
+  result.photo = { uuid: photo.uuid, filename: photo.filename ?? null, file_format: ctx.file_format ?? null, is_virtual_copy: photo.is_virtual_copy ?? null };
+  step("1_photo", { ...result.photo, snapshot: { id: snap.snapshot_id, name }, masks_before: masks(st.before).length, context_error: ctx.error ?? null });
+  check(true, `photo ${photo.filename ?? photo.uuid} (${ctx.file_format ?? "format unknown"}); snapshot "${name}" taken; ${masks(st.before).length} masks on it`);
+  say("To stop at any point, press Ctrl+C once and wait: the check puts the photo back by itself.");
+  say(`Only if its last lines say PUT BACK: NO: wait 1 minute, then in Lightroom's Develop module open the Snapshots panel (left side) and click "${name}".`);
+}
+
+async function s2(): Promise<void> {
+  say("NOW, in Lightroom (your photo stays selected). Do these in this order:");
+  for (const t of [
+    "a. Press D (Develop). If the Masks panel is not open, press Shift+W.",
+    "b. Click Create New Mask, then People. Click the person you want. Tick Entire Person, then click Create Mask.",
+    "c. Click Create New Mask, then People again. Click the same person. Tick only Face Skin, then click Create Mask.",
+    "   If the list for that person has no Face Skin, leave step c out.",
+    "d. Click Create New Mask, then Landscape. Tick every category it offers, then click Create Mask.",
+    "e. Leave Masking open. Come back to this window.",
+    "At the end this check puts the photo back as it is now: the masks you add are removed.",
+  ]) say(t);
+  const enter = await line("Press Enter when the masks are in the Masks panel. ", 30);
+  if (enter === null) throw new Error(aborting ? "aborted" : "no Enter within 30 minutes");
+  await ask("Did you make the People mask (Entire Person), the Face Skin mask if it was offered, and the Landscape mask?");
+}
+
+async function s3(): Promise<string | void> {
+  const d1 = await read();
+  await sleep(1000);
+  const d2 = await read();
+  saveRaw("3_dump-1", d1);
+  saveRaw("3_dump-2", d2);
+  const old = new Set(masks(st.before).map((e) => e.CorrectionID));
+  const fresh = masks(d1).filter((e) => !old.has(e.CorrectionID));
+  const labels = kinds(fresh);
+  st.found = fresh.map((entry, i) => ({ kind: labels[i]!, entry }));
+  const between = diff(masks(d1), masks(d2));
+  const templates = Object.fromEntries(st.found.map((f: J) => [f.kind, f.entry]));
+  writeFileSync(path.join(outDir, "templates.json"), JSON.stringify({ at: at(), photo: result.photo, templates, parts: Object.fromEntries(st.found.map((f: J) => [f.kind, parts(f.entry)])) }, null, 2));
+  step("3_dumps", { count_before: masks(st.before).length, count: masks(d1).length, found: st.found.map((f: J) => ({ kind: f.kind, parts: parts(f.entry) })), differs_between_reads: between });
+  check(fresh.length > 0, `the table holds ${fresh.length} new entries: ${labels.join(", ") || "none"} (templates.json)`, st.found.map((f: J) => ({ kind: f.kind, parts: parts(f.entry) })));
+  check(between.length === 0, `two reads in a row give the same mask table (${between.length} differing paths)`, between);
+  check(labels.includes("people_entire") && labels.some((k) => k.startsWith("landscape_")), "a People and a Landscape entry were found");
+  st.current = d2;
+  if (fresh.length === 0) return "no new entries";
+}
+
+/** Reads every 250 ms (plus the read) for up to 30 s until the entry with one of `ids` has a new digest or an error. */
+async function waitComputed(ids: string[], after: J): Promise<{ entry: J; polls: number; ms: number }> {
+  const t0 = Date.now();
+  let entry: J = after;
+  let polls = 0;
+  while (!aborting && Date.now() - t0 < 30_000 && newDigests(entry, after).length === 0 && !failedError(entry)) {
+    await sleep(250);
+    const s = await read();
+    polls++;
+    entry = masks(s)[indexWith(masks(s), ids)];
+  }
+  return { entry, polls, ms: Date.now() - t0 };
+}
+
+/** Step 4 for one kind: a copy by table, update_ai_settings, the wait, Jim's answer. */
+async function copyKind(kind: string, source: J): Promise<void> {
+  const copy = freshCopy(source);
+  copy.entry.CorrectionName = `AVG new ${kind}`;
+  const ids = Object.values(copy.ids);
+  const rb = await write({ [KEY]: [...masks(st.current), copy.entry] }, `AVG people add ${kind}`);
+  const i = indexWith(masks(rb), ids);
+  const after = masks(rb)[i];
+  check(after !== undefined, `${kind}: the copy "AVG new ${kind}" is in the table after the write`);
+  if (!after) return;
+  const update = await req("update_ai_settings", { ...target() }, 30_000).catch((err) => ({ error: errBody(err) }));
+  const { entry, polls, ms } = await waitComputed(ids, after);
+  saveRaw(`4_${kind}`, { written: copy.entry, after_write: after, update, final: entry ?? null });
+  step(`4_${kind}`, { new_ids: copy.ids, dropped: copy.dropped, digest_after_write: digestOf(after), update, polls, ms_after_update: ms, new_digests: newDigests(entry, after), errors: errorsOf(entry) });
+  check(!("error" in update), `${kind}: update_ai_settings answered (${JSON.stringify(update)})`);
+  check(entry !== undefined && newDigests(entry, after).length > 0 && !failedError(entry), `${kind}: the copy computed within 30 s of update_ai_settings (${ms} ms, ${polls} reads)`, { digest: digestOf(entry), errors: errorsOf(entry) });
+  st.current = await read();
+  if (aborting) return;
+  say(`NOW: look at the Masks panel (if it is not open, press Shift+W). Hover over "AVG new ${kind}", then over your own mask it copies.`);
+  await ask(`Is there a mask named 'AVG new ${kind}' covering the same area as yours?`);
+}
+
+async function s4(): Promise<string | void> {
+  if (!st.found?.length) return "no new entries from step 3";
+  for (const f of st.found) {
+    if (aborting) break;
+    await copyKind(f.kind, f.entry);
+  }
+}
+
+try {
+  if ((await run("0_preconditions", s0)) && (await run("1_photo", s1)) && st.snapshotId && st.before) {
+    for (const [name, fn] of [["2_hand_masks", s2], ["3_dumps", s3], ["4_copies", s4]] as Array<[string, () => Promise<string | void>]>) {
+      if (process.env["CHECK_SIGINT_AT"] === name) rl.emit("SIGINT"); // dry runs only: a Ctrl+C before this step
+      if (aborting || !(await run(name, fn))) break;
+    }
+  }
+} finally {
+  // 5. The put-back, whatever happened (also after Ctrl+C).
+  const manual = `wait 1 minute, then in Lightroom's Develop module open the Snapshots panel (left side) and click "${st.snapshotName ?? "AVG people before ..."}"`;
+  try {
+    if (st.snapshotId && st.before) {
+      say("--- 5_put_back");
+      const d = await restore("5_put_back");
+      await sleep(5000); // a mask still computing could change the settings after the snapshot
+      const late = diff(st.before, await read());
+      step("5_put_back_late", { differing: late });
+      const all = [...d, ...late];
+      check(all.length === 0, all.length === 0 ? "PUT BACK: YES (every setting as before the check, and still 5 s later)" : `PUT BACK: NO (${d.length} differing paths, ${late.length} 5 s later): ${manual}`, { at_once: d, late });
+      if (!aborting) {
+        say("NOW: look at the photo in Lightroom, and at the Masks panel (if the Masks panel is not open, press Shift+W).");
+        await ask("Does the photo look as it did before the check, with none of the check's masks left?");
+      }
+    }
+  } catch (err) {
+    check(false, `PUT BACK: NO, it did not run (${errBody(err)}): ${manual}`, errBody(err));
+  }
+  result.bridge = client.stats;
+  result.ended = at();
+  save();
+  client.stop();
+  await lock.lock.release();
+  rl.close();
+  const failures: string[] = result.failures;
+  say("");
+  say(failures.length === 0 ? "masks capture 3: WORKED" : `masks capture 3: DONE, ${failures.length} NO / FAILED lines (each one is a finding for the report)`);
+  for (const f of failures) say(`  - ${f}`);
+  say(`Results: ${path.join(outDir, "check.json")}, templates.json`);
+  save();
+  process.exit(failures.length === 0 ? 0 : 1);
+}

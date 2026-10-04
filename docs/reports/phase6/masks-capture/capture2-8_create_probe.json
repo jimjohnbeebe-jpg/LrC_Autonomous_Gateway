@@ -1,0 +1,209 @@
+{
+  "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+  "filename": "20260907-_OZ80099.NEF",
+  "steps": [
+    {
+      "step": "module_before",
+      "ok": true,
+      "result": "develop",
+      "ms": 0
+    },
+    {
+      "step": "switchToModule_develop",
+      "ok": true,
+      "ms": 0
+    },
+    {
+      "step": "wait_develop",
+      "ok": true,
+      "result": {
+        "in_develop": true,
+        "waited_ms": 0
+      },
+      "ms": 0
+    },
+    {
+      "step": "getAllMasks_before",
+      "ok": true,
+      "result": [],
+      "ms": 0
+    },
+    {
+      "step": "getSelectedMask_before",
+      "ok": true,
+      "ms": 0
+    },
+    {
+      "step": "getSelectedTool_before",
+      "ok": true,
+      "result": "loupe",
+      "ms": 0
+    },
+    {
+      "step": "goToMasking",
+      "ok": true,
+      "ms": 12.00795173645
+    },
+    {
+      "step": "getSelectedTool_after_goToMasking",
+      "ok": true,
+      "result": "masking",
+      "ms": 0
+    },
+    {
+      "step": "mask_count_before_background",
+      "ok": true,
+      "result": 0,
+      "ms": 0
+    },
+    {
+      "step": "mask_ids_before_background",
+      "ok": true,
+      "result": [],
+      "ms": 0
+    },
+    {
+      "step": "createNewMask_background",
+      "ok": true,
+      "ms": 4.5071840286255
+    },
+    {
+      "step": "wait_mask_background",
+      "ok": true,
+      "result": {
+        "waited_ms": 4031.6064357758,
+        "reached": true,
+        "count": 1
+      },
+      "ms": 4031.6064357758
+    },
+    {
+      "step": "new_masks_background",
+      "ok": true,
+      "result": [
+        "F9B1A2AB-14D1-4790-B1AD-DFED10EC50A8"
+      ],
+      "ms": 0
+    },
+    {
+      "step": "getSelectedMask_after_background",
+      "ok": true,
+      "result": "F9B1A2AB-14D1-4790-B1AD-DFED10EC50A8",
+      "ms": 0
+    },
+    {
+      "step": "getSelectedTool_after_background",
+      "ok": true,
+      "result": "masking",
+      "ms": 0
+    },
+    {
+      "step": "mask_count_before_people",
+      "ok": true,
+      "result": 1,
+      "ms": 0
+    },
+    {
+      "step": "mask_ids_before_people",
+      "ok": true,
+      "result": {
+        "F9B1A2AB-14D1-4790-B1AD-DFED10EC50A8": true
+      },
+      "ms": 0
+    },
+    {
+      "step": "createNewMask_people",
+      "ok": true,
+      "ms": 32.043218612671
+    },
+    {
+      "step": "wait_mask_people",
+      "ok": true,
+      "result": {
+        "waited_ms": 10070.236802101,
+        "reached": false,
+        "count": 1
+      },
+      "ms": 10070.236802101
+    },
+    {
+      "step": "new_masks_people",
+      "ok": true,
+      "result": [],
+      "ms": 0
+    },
+    {
+      "step": "getSelectedMask_after_people",
+      "ok": true,
+      "ms": 0
+    },
+    {
+      "step": "getSelectedTool_after_people",
+      "ok": true,
+      "result": "masking",
+      "ms": 0
+    },
+    {
+      "step": "mask_count_before_landscape",
+      "ok": true,
+      "result": 1,
+      "ms": 0
+    },
+    {
+      "step": "mask_ids_before_landscape",
+      "ok": true,
+      "result": {
+        "F9B1A2AB-14D1-4790-B1AD-DFED10EC50A8": true
+      },
+      "ms": 0
+    },
+    {
+      "step": "createNewMask_landscape",
+      "ok": true,
+      "ms": 74.723243713379
+    },
+    {
+      "step": "wait_mask_landscape",
+      "ok": true,
+      "result": {
+        "waited_ms": 10118.495941162,
+        "reached": false,
+        "count": 0
+      },
+      "ms": 10118.495941162
+    },
+    {
+      "step": "new_masks_landscape",
+      "ok": true,
+      "result": [],
+      "ms": 0
+    },
+    {
+      "step": "getSelectedMask_after_landscape",
+      "ok": true,
+      "ms": 0
+    },
+    {
+      "step": "getSelectedTool_after_landscape",
+      "ok": true,
+      "result": "masking",
+      "ms": 0
+    },
+    {
+      "step": "getAllMasks_end",
+      "ok": true,
+      "ms": 0
+    },
+    {
+      "step": "selectTool_loupe",
+      "ok": true,
+      "ms": 0
+    },
+    {
+      "step": "getSelectedTool_end",
+      "ok": true,
+      "result": "masking",
+      "ms": 0
+    }
+  ]
+}

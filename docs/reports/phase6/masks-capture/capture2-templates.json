@@ -1,0 +1,305 @@
+{
+  "at": "2026-10-04T00:51:11.563Z",
+  "templates": {
+    "background": {
+      "dc_id": "F9B1A2AB-14D1-4790-B1AD-DFED10EC50A8",
+      "why": null,
+      "shown": {
+        "waited_ms": 4031.6064357758,
+        "reached": true,
+        "count": 1
+      },
+      "tool": "masking",
+      "entry": {
+        "LocalHighlights2012": 0,
+        "LocalSaturation": 0,
+        "LocalMoire": 0,
+        "LocalTint": 0,
+        "LocalExposure2012": 0,
+        "LocalToningSaturation": 0,
+        "CorrectionName": "Mask 1",
+        "CorrectionID": "F9B1A2AB-14D1-4790-B1AD-DFED10EC50A8",
+        "CorrectionReferenceY": 0.194293,
+        "LocalSharpness": 0,
+        "LocalDefringe": 0,
+        "LocalDehaze": 0,
+        "LocalExposure": 0,
+        "CorrectionActive": true,
+        "LocalLuminanceNoise": 0,
+        "CorrectionReferenceX": 0.445443,
+        "LocalWhites2012": 0,
+        "What": "Correction",
+        "LocalBrightness": 0,
+        "LocalContrast2012": 0,
+        "LocalClarity2012": 0,
+        "LocalContrast": 0,
+        "CorrectionSyncID": "A8B77B0AFCA9454183B7860C1A6C288F",
+        "LocalClarity": 0,
+        "LocalToningHue": 0,
+        "LocalCurveRefineSaturation": 100,
+        "CorrectionMasks": [
+          {
+            "ModelVersion": 318769633,
+            "MaskValue": 1,
+            "Origin": "0,0",
+            "MaskInverted": false,
+            "MaskSyncID": "13206D8E3127A74587BCA50921D46734",
+            "MaskBlendMode": 0,
+            "MaskSubType": 0,
+            "MaskID": "B80740A0-F6F6-4DC7-BEA9-C817BBF18E31",
+            "ReferencePoint": "0.445443 0.194293",
+            "What": "Mask/Image",
+            "FullMaskSize": "2880,1920",
+            "WholeImageArea": "0/1,0/1,62914560/32768,94371840/32768",
+            "MaskVersion": 1,
+            "MaskSubCategoryID": 22,
+            "MaskDigest": "D98EB762C8DF7E97499C651CC4F0A581",
+            "InputDigest": "D01EAE1986659337966F8C8185E3FF86",
+            "MaskName": "Background 1",
+            "MaskActive": true,
+            "InputDigestVersion": 2
+          }
+        ],
+        "LocalShadows2012": 0,
+        "LocalGrain": 0,
+        "LocalTemperature": 0,
+        "LocalBlacks2012": 0,
+        "CorrectionAmount": 1,
+        "LocalHue": 0,
+        "LocalTexture": 0
+      }
+    },
+    "people": {
+      "dc_id": null,
+      "why": "no new mask showed",
+      "shown": {
+        "waited_ms": 10070.236802101,
+        "reached": false,
+        "count": 1
+      },
+      "tool": "masking",
+      "entry": null
+    },
+    "landscape": {
+      "dc_id": null,
+      "why": "no new mask showed",
+      "shown": {
+        "waited_ms": 10118.495941162,
+        "reached": false,
+        "count": 0
+      },
+      "tool": "masking",
+      "entry": null
+    }
+  },
+  "unmatched": [],
+  "probe": {
+    "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+    "filename": "20260907-_OZ80099.NEF",
+    "steps": [
+      {
+        "step": "module_before",
+        "ok": true,
+        "result": "develop",
+        "ms": 0
+      },
+      {
+        "step": "switchToModule_develop",
+        "ok": true,
+        "ms": 0
+      },
+      {
+        "step": "wait_develop",
+        "ok": true,
+        "result": {
+          "in_develop": true,
+          "waited_ms": 0
+        },
+        "ms": 0
+      },
+      {
+        "step": "getAllMasks_before",
+        "ok": true,
+        "result": [],
+        "ms": 0
+      },
+      {
+        "step": "getSelectedMask_before",
+        "ok": true,
+        "ms": 0
+      },
+      {
+        "step": "getSelectedTool_before",
+        "ok": true,
+        "result": "loupe",
+        "ms": 0
+      },
+      {
+        "step": "goToMasking",
+        "ok": true,
+        "ms": 12.00795173645
+      },
+      {
+        "step": "getSelectedTool_after_goToMasking",
+        "ok": true,
+        "result": "masking",
+        "ms": 0
+      },
+      {
+        "step": "mask_count_before_background",
+        "ok": true,
+        "result": 0,
+        "ms": 0
+      },
+      {
+        "step": "mask_ids_before_background",
+        "ok": true,
+        "result": [],
+        "ms": 0
+      },
+      {
+        "step": "createNewMask_background",
+        "ok": true,
+        "ms": 4.5071840286255
+      },
+      {
+        "step": "wait_mask_background",
+        "ok": true,
+        "result": {
+          "waited_ms": 4031.6064357758,
+          "reached": true,
+          "count": 1
+        },
+        "ms": 4031.6064357758
+      },
+      {
+        "step": "new_masks_background",
+        "ok": true,
+        "result": [
+          "F9B1A2AB-14D1-4790-B1AD-DFED10EC50A8"
+        ],
+        "ms": 0
+      },
+      {
+        "step": "getSelectedMask_after_background",
+        "ok": true,
+        "result": "F9B1A2AB-14D1-4790-B1AD-DFED10EC50A8",
+        "ms": 0
+      },
+      {
+        "step": "getSelectedTool_after_background",
+        "ok": true,
+        "result": "masking",
+        "ms": 0
+      },
+      {
+        "step": "mask_count_before_people",
+        "ok": true,
+        "result": 1,
+        "ms": 0
+      },
+      {
+        "step": "mask_ids_before_people",
+        "ok": true,
+        "result": {
+          "F9B1A2AB-14D1-4790-B1AD-DFED10EC50A8": true
+        },
+        "ms": 0
+      },
+      {
+        "step": "createNewMask_people",
+        "ok": true,
+        "ms": 32.043218612671
+      },
+      {
+        "step": "wait_mask_people",
+        "ok": true,
+        "result": {
+          "waited_ms": 10070.236802101,
+          "reached": false,
+          "count": 1
+        },
+        "ms": 10070.236802101
+      },
+      {
+        "step": "new_masks_people",
+        "ok": true,
+        "result": [],
+        "ms": 0
+      },
+      {
+        "step": "getSelectedMask_after_people",
+        "ok": true,
+        "ms": 0
+      },
+      {
+        "step": "getSelectedTool_after_people",
+        "ok": true,
+        "result": "masking",
+        "ms": 0
+      },
+      {
+        "step": "mask_count_before_landscape",
+        "ok": true,
+        "result": 1,
+        "ms": 0
+      },
+      {
+        "step": "mask_ids_before_landscape",
+        "ok": true,
+        "result": {
+          "F9B1A2AB-14D1-4790-B1AD-DFED10EC50A8": true
+        },
+        "ms": 0
+      },
+      {
+        "step": "createNewMask_landscape",
+        "ok": true,
+        "ms": 74.723243713379
+      },
+      {
+        "step": "wait_mask_landscape",
+        "ok": true,
+        "result": {
+          "waited_ms": 10118.495941162,
+          "reached": false,
+          "count": 0
+        },
+        "ms": 10118.495941162
+      },
+      {
+        "step": "new_masks_landscape",
+        "ok": true,
+        "result": [],
+        "ms": 0
+      },
+      {
+        "step": "getSelectedMask_after_landscape",
+        "ok": true,
+        "ms": 0
+      },
+      {
+        "step": "getSelectedTool_after_landscape",
+        "ok": true,
+        "result": "masking",
+        "ms": 0
+      },
+      {
+        "step": "getAllMasks_end",
+        "ok": true,
+        "ms": 0
+      },
+      {
+        "step": "selectTool_loupe",
+        "ok": true,
+        "ms": 0
+      },
+      {
+        "step": "getSelectedTool_end",
+        "ok": true,
+        "result": "masking",
+        "ms": 0
+      }
+    ]
+  }
+}

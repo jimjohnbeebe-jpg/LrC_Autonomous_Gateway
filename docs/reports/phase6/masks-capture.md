@@ -1,8 +1,8 @@
 ---
 report: masks-capture — how Lightroom stores and changes masks (GitHub issue #59, PR C step 1)
 phase: 6
-status: observed
-authored_by: "Template, harness, pre-run findings, open questions and the Capture 2 section: Claude Code (Opus 5.5), 2026-10-03 (branch phase-6/masks). Capture 1 Observed and Numbers: collected by Claude Code from Jim's run files (committed in the masks-capture folder beside this report), Jim's y/n answers as typed. Capture 2 Observed: blank until Jim's run. Verdict: Jim."
+status: accepted
+authored_by: "Template, harness, pre-run findings, open questions and the Capture 2 and Capture 3 sections: Claude Code (Opus 5.5), 2026-10-03 (branch phase-6/masks). Capture 1, 2 and 3 Observed and Numbers: collected by Claude Code from Jim's run files (committed in the masks-capture folder beside this report), Jim's y/n answers as typed. Verdict on captures 1, 2 and 3: Jim (accepted)."
 date: 2026-10-03
 ---
 
@@ -210,12 +210,13 @@ The menu labels in step 5 (Create New Mask, Linear Gradient, Range > Luminance R
 
 ## Verdict
 
-*Jim's decision: go / conditional / no-go, per the proposed rule in Purpose.*
+**Accepted**, for captures 1 and 2 [stated: Jim, 2026-10-03, "Accept both (Recommended)", relayed by the lead]. **Accepted**, for capture 3 [stated: Jim, 2026-10-03, "Accept (Recommended)"]; writing an AI entry onto a different photo stays [unverified] until step 2's Lightroom check.
 
 ## Consequences / open questions
 
 - **For step 2** (after Jim's go): pin the mask table's shape as a zod schema, and the local key names, from these dumps into `engine\src\params\` (rule 03). Map the panel's units to stored units from the step 5 number. Choose the AI-mask route from steps 7 and 12.
 - **For the vault LR_SDK_NOTES**, after Jim accepts: the mask table facts this run observes.
+- **Report status.** `accepted` for captures 1, 2 and 3 (Verdict above).
 - **Still [unverified] after this run, whatever it shows:**
   - mask types not captured: brush, color and depth range, objects, people, landscape, background;
   - a cropped, rotated or Upright photo's geometry frame;
@@ -327,4 +328,143 @@ Do these when Claude Code asks for the run. Claude Code has checked out `phase-6
 
 ### Observed (Jim)
 
-*Blank until Jim's run. Claude Code fills this from `check.json`, `calibration.json`, `templates.json` and `transcript.txt`.*
+*Collected by Claude Code from Jim's run files; Jim's y/n answers as typed.* Jim ran capture 2 on 2026-10-03, 17:49:48-17:51:24 local, on `20260907-_OZ80099.NEF`. The files are committed in `docs\reports\phase6\masks-capture\` with a `capture2-` prefix: `capture2-transcript.txt`, `capture2-check.json`, `capture2-calibration.json`, `capture2-templates.json`, and the probes' raw answers `capture2-round1_probe.json` to `capture2-round3_probe.json` and `capture2-8_create_probe.json`. The script that ran is `check-capture2.mts.txt` (identical to the run's copy apart from line endings).
+
+- **hello:** plugin 0.11.0 on Lightroom 15.6. The plugin knew both new commands [handle: `capture2-transcript.txt` lines 2-4].
+- **Result:** `DONE, 3 NO / FAILED lines`; every other line YES [handle: `capture2-transcript.txt` lines 67-70]. The three NO lines:
+  1. 19 of 20 slider fields clean: `LocalToningHue` was flagged.
+  2. `people` made no mask.
+  3. `landscape` made no mask.
+- **PUT BACK: YES**, also 5 s later [handle: same file, line 63].
+- **Jim answered `y` to both questions:** "Does Contrast show +23?" and "Does the photo look as it did before the check, …?" [handle: same file, lines 16 and 65].
+
+### Numbers
+
+*From the files above.*
+
+| Field | Value |
+|---|---|
+| Rounds; mask selected each round | 3 of 3. The probe selected that round's own `AVG calibrate` each time, and every slider field read back as written [handle: `capture2-transcript.txt` lines 10-24] |
+| DC names that answer | `local_<X>` for every field. For the six `…2012` fields, the field-named variants (`local_Contrast2012` etc.) answered the same values as the short names. `local_Contrast`, `local_Exposure` and `local_Clarity` read the PV 2012 fields, not the older `LocalContrast` / `LocalExposure` / `LocalClarity` (those stayed 0). `local_Amount` reads `CorrectionAmount` 1 as 100; `local_RefineSaturation` reads `LocalCurveRefineSaturation` 100 as 100; `local_Brightness` did not answer [handle: `capture2-calibration.json` `fields[*].tried`, `recorded`] |
+| Scale ×100, offset 0, range -100..100 | `LocalTemperature`, `LocalTint`, `LocalContrast2012`, `LocalHighlights2012`, `LocalShadows2012`, `LocalWhites2012`, `LocalBlacks2012`, `LocalTexture`, `LocalClarity2012`, `LocalDehaze`, `LocalSaturation`, `LocalSharpness`, `LocalLuminanceNoise`, `LocalMoire`, `LocalDefringe` [handle: `capture2-calibration.json` `fields`] |
+| `LocalToningSaturation` | ×100, range 0..100 |
+| `LocalGrain` | fit 100.85, offset -0.33; range -100..100. The panel shows whole numbers (0.975 → 98), so the fit is ×100 off by rounding [inference: integer panel values] |
+| `LocalExposure2012` | ×4, range -4..4: EV/4, as capture 1 found. Panel values have 2 decimals (0.3469 → 1.39) |
+| `LocalHue` | ×180, range -180..180 |
+| `LocalToningHue` | Flagged. Range 0..360; stored 0.37 / 0.925 / 0.385 read as 0 / 1 / 0, which is whole degrees, rounded, at 1:1 [inference]. Jim decided: "Pin 1:1, verify in final check" [stated: Jim, 2026-10-03, relayed by the lead] |
+| Panel rounding | Every ×100 field reads stored × 100 rounded to a whole number (0.495 → 50, 0.585 → 58: the double nearest 0.585 × 100 is just under 58.5) [inference] |
+| Contrast question | +23 shown in the panel: y [handle: `capture2-transcript.txt` line 16] |
+| AI masks by DC | `background`: one entry, `What` `Mask/Image`, `MaskSubType` 0, `MaskSubCategoryID` 22, shown after 4.0 s [handle: `capture2-templates.json` `templates.background`]. `people`: no new mask within 10 s, count unchanged. `landscape`: no new mask within 10 s, and the mask count dropped to 0; that a picker opened is [inference] |
+| `selectTool("loupe")` | After each calibrate probe the tool read `loupe`. After the create probe it still read `masking` [handle: `capture2-check.json` steps `round1`-`round3` and `8_ai_masks`, `tool_end`] |
+| PUT BACK; photo as before | 0 differing paths at once and 5 s later; y [handle: `capture2-transcript.txt` lines 63, 65] |
+
+## Capture 3: People and Landscape masks, made by hand
+
+### Purpose
+
+In capture 2, `createNewMask("aiSelection", "people")` and `("landscape")` made no mask within 10 s on `20260907-_OZ80099.NEF` (capture 2's Numbers above). Step 2 still needs their table entries. Jim chose a third capture on another photo [stated: Jim, 2026-10-03, "Capture 3 on another photo", relayed by the lead]: Jim makes People and Landscape masks by hand, and the check learns their entries and whether a copy written by table computes. No plugin change: it uses only the commands plugin 0.11.0 has (`get_selection`, `get_context`, `get_settings`, `apply_settings`, `update_ai_settings`, `create_snapshot`, `apply_snapshot`).
+
+**The questions:**
+1. What does the table hold for a People mask: one person, Entire Person?
+2. What does it hold for one part of that person (Face Skin)?
+3. What does it hold for a Landscape mask with every category it offers? One entry with several parts, or several entries?
+4. Does a copy of each, written by table without its digests and with new ids, compute after `update_ai_settings`, and does it cover the same area as Jim's own?
+
+**Proposed rule** [inference], for Jim to decide: step 2 offers People and Landscape masks only for the kinds whose copy computed and that Jim confirmed.
+
+### Harness
+
+| Part | Files |
+|---|---|
+| The check | `logs\check-masks-people-2026-10-03\check.mts` (gitignored; Jim runs it from there). The copy at this commit is `docs\reports\phase6\masks-capture\check-capture3.mts.txt`, and its dry runs are `dryrun-capture3.txt` |
+
+**What the check is written to do** [handle: `docs\reports\phase6\masks-capture\check-capture3.mts.txt` header]:
+0. It takes the instance lock and checks the plugin version (0.11.0 or later).
+1. **The photo is the selected one.** With 0 or more than 1 selected, it stops before any write. It records the file name and format, takes the snapshot `AVG people before <time>`, and saves every setting.
+2. **Jim makes the masks by hand:**
+   - People → one person → Entire Person;
+   - People again → the same person → Face Skin only, if offered;
+   - Landscape → every category it offers.
+   
+   Then Enter and one y/n.
+3. **The new entries.** It reads the table twice and takes the entries whose `CorrectionID` is new.
+   - An entry with a nested mask whose `MaskSubCategoryID` is 50000 or more is a landscape [community: issue #59 research, landscape categories 50001-50008].
+   - The others are people, in the order Jim made them: `people_entire`, then `people_part`.
+   - Each is saved raw in `templates.json`, with a summary of its parts (`What`, `MaskSubType`, `MaskSubCategoryID`, `MaskName`).
+4. **A copy of each.** It drops every field whose name contains "Digest" (all five fields capture 1's sky copy dropped contain it [handle: `docs\reports\phase6\masks-capture\check.json` step `7_sky` `dropped`]) and gives new ids in the same formats.
+   - The copy is named `AVG new <kind>`, appended and written (History `AVG people add <kind>`).
+   - Then `update_ai_settings`, and up to 30 s for a new digest or an error field.
+   - Jim says whether the copy covers the same area as his own mask.
+5. **Always:** the snapshot is applied and every setting is compared with step 1, again 5 s later. Then Jim's last question.
+
+Ctrl+C, the bounded waits and the manual fallback work as in captures 1 and 2.
+
+**Dry runs** [handle: `docs\reports\phase6\masks-capture\dryrun-capture3.txt`, five runs, 2026-10-03, user folder redacted]. They show only the script's flow; the entries in them are invented.
+1. **The sim as it is (no masks added).** Step 3 found nothing and the check went to the put-back (`PUT BACK: YES`, also 5 s later).
+2. **An invented table** (person, face skin, a two-category landscape) with an `update_ai_settings` that computes it. `WORKED`: three entries labelled `people_entire`, `people_part`, `landscape_1`; three copies computed; put back.
+3. **Two photos selected.** It stopped before the snapshot.
+4. **Ctrl+C before step 4.** It aborted and put back.
+5. **Plugin 0.9.0.** It stopped before any write.
+
+### Steps for Jim
+
+Do these when Claude Code asks for the run. Claude Code has put the script in the repo's `logs\` folder. It takes about 10 minutes [inference: three masks by hand and up to five questions].
+
+1. Right-click the Claude icon in the Windows system tray, then click **Quit**.
+2. In Lightroom Classic's **Library** module, click one raw photo that shows at least one person and some outdoor landscape (sky, mountains, water or plants), so it is the only selected photo.
+3. In VS Code's PowerShell terminal, at `D:\Developer\LrC_Autonomous_Gateway`, run:
+
+   ```powershell
+   node logs\check-masks-people-2026-10-03\check.mts
+   ```
+
+   You should see `YES  Lightroom 15.6 runs plugin 0.11.0`, then `YES  photo <its file name> (RAW); snapshot ... taken`.
+4. It lists steps a-e. Follow them in Lightroom, in that order:
+   1. press **D**; if the Masks panel is not open, press **Shift+W**;
+   2. Create New Mask → People → click the person → tick **Entire Person** → **Create Mask**;
+   3. Create New Mask → People → the same person → tick only **Face Skin** → **Create Mask**. If that person's list has no Face Skin, leave this step out;
+   4. Create New Mask → Landscape → tick every category it offers → **Create Mask**.
+
+   Come back to the PowerShell window and press **Enter**. Then answer its question with `y` or `n` and **Enter**.
+5. For each mask you made, it writes a copy named `AVG new …` and asks whether it covers the same area as yours. Hover over each in the Masks panel, then type `y` or `n` and press **Enter**.
+6. After `--- 5_put_back` it waits 5 seconds by itself. The last lines say `PUT BACK: YES` or `NO`. Then it asks whether the photo looks as before (if the Masks panel is not open, press **Shift+W**); type `y` or `n`, then **Enter**. Then it says `masks capture 3: WORKED` or `DONE, n NO / FAILED lines`. A NO line is a finding, not your mistake. Tell Claude Code "done".
+
+The menu labels in step 4 (People, Entire Person, Face Skin, Landscape, Create Mask) are written from Lightroom's usual Masking panel, not observed in this project [unverified].
+
+### If something goes wrong
+
+- If it prints `LOCK BUSY`, Claude Desktop is still running: do step 1 again, wait 60 seconds, then do step 3 again.
+- If it prints `exactly one photo is selected`, do step 2 again, then step 3.
+- If it prints `NO   Lightroom ... runs plugin` with a number below 0.11.0: in **File > Plug-in Manager**, click LrC-AVG, click **Reload Plug-in**, click **Done**, wait 20 seconds, then do step 3 again.
+- If you need to stop, or the window shows no new line for 5 minutes after you pressed Enter, press **Ctrl+C** once. Do not press it again, and do not close the window. It prints `ABORTING`, puts the photo back by itself and prints `PUT BACK: YES` or `NO`. Tell Claude Code.
+- If it prints `PUT BACK: NO`, wait 1 minute. Then, in Lightroom's Develop module, open the **Snapshots** panel (left side) and click the snapshot it names (it starts with `AVG people before`). Tell Claude Code.
+
+### Observed (Jim)
+
+*Collected by Claude Code from Jim's run files; Jim's y/n answers as typed.* Jim ran capture 3 on 2026-10-03, 18:25:13-18:29:36 local, on `_DSC0028.NEF` (RAW, an original). The files are committed in `docs\reports\phase6\masks-capture\` with a `capture3-` prefix:
+- `capture3-transcript.txt`, `capture3-check.json`, `capture3-templates.json`;
+- `capture3-3_dump-1.json` (the table with Jim's four masks);
+- `capture3-4_<kind>.json` (each copy as written, after the write, and final).
+
+The script that ran is `check-capture3.mts.txt`.
+
+- **hello:** plugin 0.11.0 on Lightroom 15.6 [handle: `capture3-transcript.txt` line 2].
+- **Result:** `masks capture 3: WORKED`. Every line read YES, and the put-back was exact, also 5 s later [handle: same file, lines 43 and 47].
+- **Jim answered `y` to all six questions** [handle: same file, lines 16, 26, 31, 36, 41, 45]:
+  - masks made;
+  - each of the four copies covers the same area as his own;
+  - photo as before.
+
+### Numbers
+
+*From the files above.*
+
+| Field | Value |
+|---|---|
+| New entries | 4: `people_entire`, `people_part`, `landscape_1`, `landscape_2`. Two reads in a row were identical [handle: `capture3-transcript.txt` lines 18-19] |
+| People, Entire Person | `What` `Mask/Image`, `MaskSubType` 0, `MaskSubCategoryID` 20036, `MaskName` "Person 1" [handle: `capture3-check.json` step `3_dumps.found`]. One sample: that 20036 is constant across photos and people is [unverified] |
+| People, Face Skin | `Mask/Image`, `MaskSubType` 0, `MaskSubCategoryID` 2, `MaskName` "Person 1 - Facial Skin" [handle: same] |
+| Landscape | One correction per category: Vegetation (`MaskSubType` 0, `MaskSubCategoryID` 50005) and Sky (0, 50006). These were the only categories offered on this photo [handle: same; stated by the lead from Jim's run] |
+| Copies by table | All four computed after `update_ai_settings`: 469, 412, 317 and 286 ms after the call, each on the first read. The calls took 964-1,155 ms. Each copy got new `MaskDigest`, `InputDigest` and `LocalInputDigest` [handle: `capture3-check.json` steps `4_people_entire`, `4_people_part`, `4_landscape_1`, `4_landscape_2`] |
+| Photo-specific fields | Every entry holds `FullMaskSize` (`2891,1920` here, `2880,1920` on `_OZ80099` in capture 1), `WholeImageArea`, `Origin`, `ReferencePoint` and `ModelVersion` [handle: `capture3-templates.json`; `3_dump-1.json` entry 2]. Whether an entry made on one photo can be written to another is [unverified] until step 2's Lightroom check |
+| PUT BACK; photo as before | 0 differing paths at once and 5 s later; y [handle: `capture3-transcript.txt` lines 43, 45] |

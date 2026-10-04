@@ -1,0 +1,570 @@
+{
+  "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+  "filename": "20260907-_OZ80099.NEF",
+  "steps": [
+    {
+      "step": "module_before",
+      "ok": true,
+      "result": "develop",
+      "ms": 0
+    },
+    {
+      "step": "switchToModule_develop",
+      "ok": true,
+      "ms": 0
+    },
+    {
+      "step": "wait_develop",
+      "ok": true,
+      "result": {
+        "in_develop": true,
+        "waited_ms": 0.50079822540283
+      },
+      "ms": 0.50079822540283
+    },
+    {
+      "step": "getAllMasks_before",
+      "ok": true,
+      "result": [
+        {
+          "Tools": [
+            {
+              "Type": "gradient",
+              "Name": "Linear Gradient 1",
+              "Inverted": false,
+              "ID": "A2D64C41-7D3C-9302-871B-F8B09EB0C3B2",
+              "Hidden": false
+            }
+          ],
+          "Hidden": false,
+          "Name": "AVG calibrate",
+          "ID": "DD0E5A6C-4C69-DAD4-50B1-92DB5B924329"
+        }
+      ],
+      "ms": 0
+    },
+    {
+      "step": "getSelectedMask_before",
+      "ok": true,
+      "ms": 0
+    },
+    {
+      "step": "getSelectedTool_before",
+      "ok": true,
+      "result": "loupe",
+      "ms": 0
+    },
+    {
+      "step": "goToMasking",
+      "ok": true,
+      "ms": 12.022376060486
+    },
+    {
+      "step": "getSelectedTool_after_goToMasking",
+      "ok": true,
+      "result": "masking",
+      "ms": 0
+    },
+    {
+      "step": "wait_mask_listed",
+      "ok": true,
+      "result": {
+        "listed": true,
+        "waited_ms": 0
+      },
+      "ms": 0
+    },
+    {
+      "step": "find_by_id",
+      "ok": true,
+      "result": "DD0E5A6C-4C69-DAD4-50B1-92DB5B924329",
+      "ms": 0
+    },
+    {
+      "step": "selectMask_by_id",
+      "ok": true,
+      "ms": 137.56322860718
+    },
+    {
+      "step": "getSelectedMask_by_id",
+      "ok": true,
+      "result": "DD0E5A6C-4C69-DAD4-50B1-92DB5B924329",
+      "ms": 0
+    },
+    {
+      "step": "getValue_local_Temperature",
+      "ok": true,
+      "result": 58,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_Temperature",
+      "ok": true,
+      "result": [
+        -100,
+        100
+      ],
+      "ms": 0
+    },
+    {
+      "step": "getValue_local_Tint",
+      "ok": true,
+      "result": 57,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_Tint",
+      "ok": true,
+      "result": [
+        -100,
+        100
+      ],
+      "ms": 0
+    },
+    {
+      "step": "getValue_local_Exposure",
+      "ok": true,
+      "result": 1.39,
+      "ms": 0.50234794616699
+    },
+    {
+      "step": "getRange_local_Exposure",
+      "ok": true,
+      "result": [
+        -4,
+        4
+      ],
+      "ms": 0.50234794616699
+    },
+    {
+      "step": "getValue_local_Exposure2012",
+      "ok": true,
+      "result": 1.39,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_Exposure2012",
+      "ok": true,
+      "result": [
+        -4,
+        4
+      ],
+      "ms": 0.49924850463867
+    },
+    {
+      "step": "getValue_local_Contrast",
+      "ok": true,
+      "result": 54,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_Contrast",
+      "ok": true,
+      "result": [
+        -100,
+        100
+      ],
+      "ms": 0.50246715545654
+    },
+    {
+      "step": "getValue_local_Contrast2012",
+      "ok": true,
+      "result": 54,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_Contrast2012",
+      "ok": true,
+      "result": [
+        -100,
+        100
+      ],
+      "ms": 0
+    },
+    {
+      "step": "getValue_local_Highlights",
+      "ok": true,
+      "result": 52,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_Highlights",
+      "ok": true,
+      "result": [
+        -100,
+        100
+      ],
+      "ms": 0.49924850463867
+    },
+    {
+      "step": "getValue_local_Highlights2012",
+      "ok": true,
+      "result": 52,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_Highlights2012",
+      "ok": true,
+      "result": [
+        -100,
+        100
+      ],
+      "ms": 0
+    },
+    {
+      "step": "getValue_local_Shadows",
+      "ok": true,
+      "result": 51,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_Shadows",
+      "ok": true,
+      "result": [
+        -100,
+        100
+      ],
+      "ms": 0
+    },
+    {
+      "step": "getValue_local_Shadows2012",
+      "ok": true,
+      "result": 51,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_Shadows2012",
+      "ok": true,
+      "result": [
+        -100,
+        100
+      ],
+      "ms": 0.51045417785645
+    },
+    {
+      "step": "getValue_local_Whites",
+      "ok": true,
+      "result": 50,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_Whites",
+      "ok": true,
+      "result": [
+        -100,
+        100
+      ],
+      "ms": 0
+    },
+    {
+      "step": "getValue_local_Whites2012",
+      "ok": true,
+      "result": 50,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_Whites2012",
+      "ok": true,
+      "result": [
+        -100,
+        100
+      ],
+      "ms": 0
+    },
+    {
+      "step": "getValue_local_Blacks",
+      "ok": true,
+      "result": 48,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_Blacks",
+      "ok": true,
+      "result": [
+        -100,
+        100
+      ],
+      "ms": 0
+    },
+    {
+      "step": "getValue_local_Blacks2012",
+      "ok": true,
+      "result": 48,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_Blacks2012",
+      "ok": true,
+      "result": [
+        -100,
+        100
+      ],
+      "ms": 0.49912929534912
+    },
+    {
+      "step": "getValue_local_Texture",
+      "ok": true,
+      "result": 47,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_Texture",
+      "ok": true,
+      "result": [
+        -100,
+        100
+      ],
+      "ms": 0
+    },
+    {
+      "step": "getValue_local_Clarity",
+      "ok": true,
+      "result": 45,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_Clarity",
+      "ok": true,
+      "result": [
+        -100,
+        100
+      ],
+      "ms": 0
+    },
+    {
+      "step": "getValue_local_Clarity2012",
+      "ok": true,
+      "result": 45,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_Clarity2012",
+      "ok": true,
+      "result": [
+        -100,
+        100
+      ],
+      "ms": 0
+    },
+    {
+      "step": "getValue_local_Dehaze",
+      "ok": true,
+      "result": 44,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_Dehaze",
+      "ok": true,
+      "result": [
+        -100,
+        100
+      ],
+      "ms": 0
+    },
+    {
+      "step": "getValue_local_Hue",
+      "ok": true,
+      "result": 75.6,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_Hue",
+      "ok": true,
+      "result": [
+        -180,
+        180
+      ],
+      "ms": 0
+    },
+    {
+      "step": "getValue_local_Saturation",
+      "ok": true,
+      "result": 41,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_Saturation",
+      "ok": true,
+      "result": [
+        -100,
+        100
+      ],
+      "ms": 0
+    },
+    {
+      "step": "getValue_local_Sharpness",
+      "ok": true,
+      "result": 39,
+      "ms": 0.50556659698486
+    },
+    {
+      "step": "getRange_local_Sharpness",
+      "ok": true,
+      "result": [
+        -100,
+        100
+      ],
+      "ms": 0
+    },
+    {
+      "step": "getValue_local_LuminanceNoise",
+      "ok": true,
+      "result": 38,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_LuminanceNoise",
+      "ok": true,
+      "result": [
+        -100,
+        100
+      ],
+      "ms": 0
+    },
+    {
+      "step": "getValue_local_Moire",
+      "ok": true,
+      "result": 36,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_Moire",
+      "ok": true,
+      "result": [
+        -100,
+        100
+      ],
+      "ms": 0
+    },
+    {
+      "step": "getValue_local_Defringe",
+      "ok": true,
+      "result": 34,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_Defringe",
+      "ok": true,
+      "result": [
+        -100,
+        100
+      ],
+      "ms": 0
+    },
+    {
+      "step": "getValue_local_ToningHue",
+      "ok": true,
+      "result": 0,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_ToningHue",
+      "ok": true,
+      "result": [
+        0,
+        360
+      ],
+      "ms": 0
+    },
+    {
+      "step": "getValue_local_ToningSaturation",
+      "ok": true,
+      "result": 37,
+      "ms": 0.48959255218506
+    },
+    {
+      "step": "getRange_local_ToningSaturation",
+      "ok": true,
+      "result": [
+        0,
+        100
+      ],
+      "ms": 0.49757957458496
+    },
+    {
+      "step": "getValue_local_Grain",
+      "ok": true,
+      "result": 35,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_Grain",
+      "ok": true,
+      "result": [
+        -100,
+        100
+      ],
+      "ms": 0
+    },
+    {
+      "step": "getValue_local_Brightness",
+      "ok": true,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_Brightness",
+      "ok": true,
+      "result": [
+        -100,
+        100
+      ],
+      "ms": 0
+    },
+    {
+      "step": "getValue_local_Amount",
+      "ok": true,
+      "result": 100,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_Amount",
+      "ok": true,
+      "result": [
+        0,
+        200
+      ],
+      "ms": 0
+    },
+    {
+      "step": "getValue_local_RefineSaturation",
+      "ok": true,
+      "result": 100,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_RefineSaturation",
+      "ok": true,
+      "result": [
+        0,
+        100
+      ],
+      "ms": 0
+    },
+    {
+      "step": "getValue_local_CurveRefineSaturation",
+      "ok": true,
+      "ms": 0
+    },
+    {
+      "step": "getRange_local_CurveRefineSaturation",
+      "ok": true,
+      "result": [
+        -100,
+        100
+      ],
+      "ms": 0.49281120300293
+    },
+    {
+      "step": "selectTool_loupe",
+      "ok": true,
+      "ms": 223.99044036865
+    },
+    {
+      "step": "getSelectedTool_end",
+      "ok": true,
+      "result": "loupe",
+      "ms": 0
+    }
+  ],
+  "selected": "DD0E5A6C-4C69-DAD4-50B1-92DB5B924329"
+}

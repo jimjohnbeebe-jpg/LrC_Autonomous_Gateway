@@ -150,6 +150,28 @@ describe("placeExport (library\\files.ts)", () => {
     await expect(placeExport(exportDir, outside, [path.join(outside, "a.jpg")], path.join(tmp, "dest"), "rename")).rejects.toThrow(/not inside/);
     expect(existsSync(path.join(outside, "a.jpg"))).toBe(true);
   });
+
+  const exported = (name: string, text: string) => {
+    const dir = path.join(exportDir, `req-${name}`);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(path.join(dir, name), text);
+    return { dir, file: path.join(dir, name) };
+  };
+
+  it("overwrites in one step, and keeps the old file when the replacement cannot be placed (CodeRabbit, PR #73)", async () => {
+    const dest = path.join(tmp, "dest-ow");
+    mkdirSync(dest, { recursive: true });
+    writeFileSync(path.join(dest, "a.jpg"), "old");
+    const one = exported("a.jpg", "new");
+    expect(await placeExport(exportDir, one.dir, [one.file], dest, "overwrite")).toEqual([{ file: path.join(dest, "a.jpg"), status: "overwritten" }]);
+    expect(readFileSync(path.join(dest, "a.jpg"), "utf8")).toBe("new");
+    // A folder of that name cannot be renamed over: the call fails and leaves it, and no temporary file, behind.
+    mkdirSync(path.join(dest, "b.jpg", "keep"), { recursive: true });
+    const two = exported("b.jpg", "new");
+    await expect(placeExport(exportDir, two.dir, [two.file], dest, "overwrite")).rejects.toThrow();
+    expect(existsSync(path.join(dest, "b.jpg", "keep"))).toBe(true);
+    expect(readdirSync(dest).sort()).toEqual(["a.jpg", "b.jpg"]);
+  });
 });
 
 describe("lr_import_photos", () => {
@@ -196,6 +218,9 @@ describe("lr_import_photos", () => {
     writeFileSync(path.join(copyTo, "100NIKON", "_DSC0001.NEF"), "another photo, longer");
     await expect(copyForImport(path.join(source, "100NIKON", "_DSC0001.NEF"), source, copyTo)).rejects.toThrow(/different file/);
     expect(readFileSync(path.join(copyTo, "100NIKON", "_DSC0001.NEF"), "utf8")).toBe("another photo, longer");
+    // Same size, other contents: not the copy either (CodeRabbit, PR #73).
+    writeFileSync(path.join(copyTo, "100NIKON", "_DSC0002.NEF"), "raw TWO");
+    await expect(copyForImport(path.join(source, "100NIKON", "_DSC0002.NEF"), source, copyTo)).rejects.toThrow(/different file/);
     expect(await importFiles(path.join(source, "100NIKON"), false)).toHaveLength(2);
   });
 });

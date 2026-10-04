@@ -8,16 +8,17 @@
 // only inside its own (preview\service.ts isInside); the two temp folders are the same
 // (preview\service.ts header, Phase 1 handle).
 // Import: importFiles() lists the photo files under a folder; copyForImport() copies one into
-// `copy_to`, keeping its path below the source folder, and never overwrites: a file already there of
-// the same size is taken as the earlier copy, so calling again after a partial run goes on where it
-// stopped [inference: size as the identity check; no hash is made].
+// `copy_to`, keeping its path below the source folder, and never overwrites: a file already there with
+// the same contents (size, then SHA-256) is taken as the earlier copy, so calling again after a partial
+// run goes on where it stopped.
 //
 // Both tools stop starting photos after CALL_BUDGET_MS and say which are left, because Claude
 // Desktop's tool call has a time limit: the MCP SDK's default request timeout is 60 s [handle:
 // node_modules\@modelcontextprotocol\sdk\dist\esm\shared\protocol.js:8 DEFAULT_REQUEST_TIMEOUT_MSEC =
 // 60000]; whether Claude Desktop uses that default is [unverified] (PHASE5_PLAN "Carried").
 
-import { constants } from "node:fs";
+import { createHash, randomUUID } from "node:crypto";
+import { constants, createReadStream } from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -78,6 +79,23 @@ async function move(from: string, to: string): Promise<void> {
   }
 }
 
+/**
+ * Replace the file at `to` with `from`, keeping `to` as it was if anything fails (CodeRabbit, PR #73):
+ * the new file is first moved beside it under a temporary name, then renamed over it in one step.
+ * fs.rename replaces an existing file on Windows [handle: Claude Code, 2026-10-04, Node v24.11.1:
+ * renameSync("rn-a.txt", "rn-b.txt") over an existing rn-b.txt left rn-b.txt holding rn-a.txt's text].
+ */
+async function replace(from: string, to: string): Promise<void> {
+  const staged = `${to}.avg-${randomUUID().slice(0, 8)}.tmp`;
+  await move(from, staged);
+  try {
+    await fs.rename(staged, to);
+  } catch (err) {
+    await fs.rm(staged, { force: true });
+    throw err;
+  }
+}
+
 /** The first "name-n.ext" (n from 2) not in `folder`. */
 async function freeName(folder: string, name: string): Promise<string> {
   const ext = path.extname(name);
@@ -111,8 +129,9 @@ export async function placeExport(exportDir: string, dir: string, files: readonl
           to = await freeName(folder, path.basename(file));
           status = "renamed";
         } else {
-          await fs.rm(to, { force: true });
-          status = "overwritten";
+          await replace(file, to);
+          placed.push({ file: to, status: "overwritten" });
+          continue;
         }
       }
       await move(file, to);
@@ -146,7 +165,17 @@ async function sidecar(file: string): Promise<string | null> {
   return null;
 }
 
-/** Copy without overwriting; a file already at `to` of the same size counts as the copy. Throws on a different file there. */
+/** The file's SHA-256, read as a stream. */
+async function digest(file: string): Promise<string> {
+  const hash = createHash("sha256");
+  for await (const chunk of createReadStream(file)) hash.update(chunk as Buffer);
+  return hash.digest("hex");
+}
+
+/**
+ * Copy without overwriting; a file already at `to` with the same size and contents counts as the copy
+ * (contents compared since CodeRabbit, PR #73). Throws on a different file there.
+ */
 async function copyOnce(from: string, to: string): Promise<"copied" | "already"> {
   try {
     await fs.copyFile(from, to, constants.COPYFILE_EXCL);
@@ -154,7 +183,7 @@ async function copyOnce(from: string, to: string): Promise<"copied" | "already">
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code !== "EEXIST") throw err;
     const [a, b] = await Promise.all([fs.stat(from), fs.stat(to)]);
-    if (a.size === b.size) return "already";
+    if (a.size === b.size && (await digest(from)) === (await digest(to))) return "already";
     throw new Error(`a different file already has this name: ${to}`);
   }
 }

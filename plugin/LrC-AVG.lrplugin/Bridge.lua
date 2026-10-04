@@ -296,7 +296,13 @@ function Bridge.start()
         if not B.current() then return end
         local okToken, tokenOrErr = LrTasks.pcall(Endpoint.newToken)
         B.S.token = okToken and tokenOrErr or nil
-        if not okToken then Log.error("bridge: token failed: " .. tostring(tokenOrErr) .. "; every command will be refused") end
+        -- No token: every command would be refused, and a bridge without one could never see a newer
+        -- start (replacedOnDisk), so it would keep the ports through a reload (CodeRabbit, PR #73).
+        -- It does not start; Endpoint.newToken has logged why when it returned nil.
+        if not B.S.token then
+            Log.error("bridge: no token (" .. tostring(okToken and "not written" or tokenOrErr) .. "); the bridge is not started")
+            return
+        end
         local okPorts, portsOrErr = LrTasks.pcall(Endpoint.writePorts, receivePort, sendPort, Bridge.PLUGIN_VERSION, B.S.token)
         B.S.portsWritten = okPorts and portsOrErr ~= nil
         if not okPorts then Log.error("bridge: ports file failed: " .. tostring(portsOrErr)) end

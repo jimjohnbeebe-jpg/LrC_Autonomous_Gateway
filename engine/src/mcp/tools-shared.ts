@@ -5,7 +5,7 @@
 // loop, and its events act on the open session.
 
 import { randomUUID } from "node:crypto";
-import type { BridgeClient } from "../bridge/index.js";
+import { pluginVersionAtLeast, type BridgeClient } from "../bridge/index.js";
 import { HudEvents, HudPublisher } from "../hud/index.js";
 import type { IntentLibrary } from "../intents/index.js";
 import type { ToolLog } from "../log/index.js";
@@ -60,6 +60,8 @@ export type ToolsDeps = {
   settings?: PageSettings;
   /** The log folders sessions were written to (settings\log-folders.ts); only the current folder is searched without it. */
   logFolders?: KnownLogFolders;
+  /** The plugin's export folder (library\files.ts defaultExportDir when absent); lr_export_photos moves files only from inside it. */
+  exportDir?: string;
   /** Lightroom's preset folder (presets\folder.ts defaultPresetDir); lr_create_preset_from_active refuses without it. */
   presetDir?: string | undefined;
   /** How preset files are written; the pinned format (params\preset-format.lrc15.json) when absent. */
@@ -131,6 +133,20 @@ export function createContext(deps: ToolsDeps): ToolContext {
 /** A HUD update or event in the tool log: the updates the HUD refused or did not answer, the first it took, every event. */
 function logHud(ctx: ToolContext, tool: string, record: { ok: boolean; duration_ms?: number } & Record<string, unknown>): void {
   ctx.deps.log?.append({ ...record, ts: ctx.now().toISOString(), tool, ok: record.ok, duration_ms: record.duration_ms ?? 0 });
+}
+
+/**
+ * Refuses with PLUGIN_TOO_OLD, before anything is sent, when Lightroom runs a plugin older than
+ * `minimum`; `why` says what the tool needs from it.
+ */
+export function needPlugin(ctx: ToolContext, tool: string, minimum: string, why: string): void {
+  const version = ctx.deps.client.hello()?.plugin_version;
+  if (pluginVersionAtLeast(version, minimum)) return;
+  throw new ToolError(
+    "PLUGIN_TOO_OLD",
+    `${tool} needs the LrC-AVG plugin ${minimum} or later (${why}); Lightroom runs ${String(version ?? "an unknown version")}. Restart Lightroom so it loads the current plugin.`,
+    false,
+  );
 }
 
 export function sessionTools(ctx: ToolContext): SessionManager {

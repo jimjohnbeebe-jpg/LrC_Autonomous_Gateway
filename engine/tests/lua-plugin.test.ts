@@ -229,7 +229,7 @@ describe("lua: LrC-AVG.lrplugin", () => {
     expect(Object.fromEntries([...limits.matchAll(/(\w+) = (\d+)/g)].map((m) => [m[1], Number(m[2])]))).toEqual(HUD_LIMITS);
   });
 
-  it("keeps HudState.lua's put_back fields equal to the engine's, and puts back through a write gate that waits (plugin 0.12.0, HudClick.lua)", () => {
+  it("keeps HudState.lua's put_back fields equal to the engine's, and puts back through a write gate that waits (plugin 0.13.0, HudClick.lua)", () => {
     const state = readFileSync(path.join(avgPlugin, "HudState.lua"), "utf8");
     const fields = state.match(/local PUT_BACK = \{(.*)\}\r?\n/)?.[1] ?? "";
     const keys = [...fields.matchAll(/(\w+) = \{ kind = "(\w+)", required = true \}/g)].map((m) => `${m[1]}:${m[2]}`).sort();
@@ -237,7 +237,10 @@ describe("lua: LrC-AVG.lrplugin", () => {
     expect(Object.keys(hudUpdatePayloadSchema.shape.put_back.unwrap().shape).sort()).toEqual(["photo_uuid", "snapshot_id", "snapshot_name"]);
     expect(state).toMatch(/put_back = \{ kind = "object", fields = PUT_BACK \}/);
     const click = codeOnly(readFileSync(path.join(avgPlugin, "HudClick.lua"), "utf8"));
-    expect(click).toMatch(/Gate\.write\(catalog, "", function\(\) photo:applyDevelopSnapshot\(pb\.snapshot_id\) end\)/);
+    expect(click).toMatch(/Gate\.write\(catalog, "", function\(\)\s+if not sameEdit\(sid\) then stale = true; return end\s+photo:applyDevelopSnapshot\(pb\.snapshot_id\)/);
+    expect(click).toMatch(/if not sameEdit\(sid\) then return nil, PB_REASON\.newer/); // checked before the gate too
+    expect(click).toMatch(/Events\.send\("", r\)/); // hud_put_back, told to the engine
+    expect(codeOnly(readFileSync(path.join(avgPlugin, "Hud.lua"), "utf8"))).toMatch(/function Hud\.markUnknown\(\)\s+HudClick\.resendReport\(\)/);
     expect(click).not.toMatch(/withWriteAccessDo/);
     expect(codeOnly(readFileSync(path.join(avgPlugin, "HudView.lua"), "utf8"))).toMatch(/v\.putBackEnabled = HudState\.canPutBack\(s, conn, hud\)/);
   });

@@ -7,6 +7,7 @@
 import { describe, expect, it } from "vitest";
 import { MASK_TABLE_KEY, type Correction } from "../src/params/index.js";
 import { DIALOG_NOTE, type HudSink } from "../src/session/index.js";
+import type { FakeHandler } from "./helpers/fake-plugin.js";
 import { ID, clean, fails, lr, newManager, plugin, readLog, useSessionHarness } from "./helpers/session-harness.js";
 
 useSessionHarness();
@@ -97,13 +98,50 @@ describe("AI masks: Lightroom's dialog", () => {
 });
 
 describe("AI masks: an update Lightroom dropped or that raised", () => {
-  it("is a gate or plugin error: LrDevelopController makes subject, sky and background", async () => {
+  it("an update that raised with the gate free is a plugin error: LrDevelopController makes subject, sky and background", async () => {
     const { create } = await session();
-    lr.masks.tableRoute = "abandoned";
-    expect((await create("subject")).json).toMatchObject({ ai: { route: "dc", fallback: expect.stringMatching(/dropped the update/) } });
     lr.masks.tableRoute = "failed";
+    expect((await create("subject")).json).toMatchObject({ ai: { route: "dc", fallback: expect.stringMatching(/updateAISettings raised in Lightroom: dry/) } });
     lr.masks.dc = "unknown";
     const e = await fails(create("person_entire", { point: { x: 0.5, y: 0.6 } }));
-    expect(e.details).toMatchObject({ routes_tried: [{ route: "table", why: expect.stringMatching(/updateAISettings raised in Lightroom: dry/) }, { route: "dc", why: expect.stringMatching(/none for this kind/) }] });
+    expect(e.details).toMatchObject({ routes_tried: [{ route: "table", why: expect.stringMatching(/raised in Lightroom/) }, { route: "dc", why: expect.stringMatching(/none for this kind/) }] });
+  });
+
+  it("an update Lightroom dropped (the gate stayed held) is handled as a dialog: the photo is put back, no fallback", async () => {
+    const { m, create } = await session();
+    lr.masks.tableRoute = "abandoned";
+    expect(await fails(create("subject"))).toMatchObject({ code: "LIGHTROOM_DIALOG", details: { reverted: true } });
+    expect(sent("create_ai_mask_dc")).toBe(0);
+    expect(m.current()).toBeNull();
+  });
+
+  it("after a busy gate, an update that then reports it raised is still a dialog: the photo is put back, no fallback", async () => {
+    const { m, create } = await session();
+    [lr.masks.gate, lr.masks.heldProbes, lr.masks.releaseState] = ["dialog", 3, "failed"];
+    expect(await fails(create("sky"))).toMatchObject({ code: "LIGHTROOM_DIALOG", details: { reverted: true } });
+    expect(sent("create_ai_mask_dc")).toBe(0);
+    expect(lr.masks.blocked).toEqual([]);
+    expect(m.current()).toBeNull();
+  });
+
+  it("an update whose answer does not come (the gate held at once) is watched, then put back as a dialog", async () => {
+    const { m, create } = await session({ replyMs: 50 });
+    const real = plugin.handlers.get("update_ai_settings") as FakeHandler;
+    plugin.handlers.set("update_ai_settings", (p, id) => {
+      [lr.masks.gate, lr.masks.heldProbes] = ["dialog", 3];
+      void real(p, id);
+      lr.masks.gate = "free";
+      return "silent";
+    });
+    expect(await fails(create("sky"))).toMatchObject({ code: "LIGHTROOM_DIALOG", details: { reverted: true } });
+    expect(sent("create_ai_mask_dc")).toBe(0);
+    expect(m.current()).toBeNull();
+  });
+
+  it("stops probing once the update is over and the gate reads free", async () => {
+    const { create } = await session({ computeMs: 300 });
+    lr.masks.tableRoute = "never";
+    expect((await fails(create("sky"))).code).toBe("FEATURE_UNAVAILABLE");
+    expect(sent("probe_write_gate")).toBe(1);
   });
 });

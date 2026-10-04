@@ -209,11 +209,24 @@ export function componentKind(m: Component): MaskKind | "ai" | "range" | "other"
 }
 
 /**
+ * The kinds the captures round-tripped: in a table written back by apply_settings and read back.
+ * Linear, radial, luminance, sky and subject in capture 1 (the unchanged table read back identical
+ * [handle: docs\reports\phase6\masks-capture\check.json]), background in capture 2 [handle:
+ * capture2-templates.json], one person's Entire Person and Facial Skin and the landscape Vegetation
+ * and Sky in capture 3 (the table written back with Jim's entries and the copies [handle:
+ * capture3-check.json]). Every other AI kind (every person's parts, the other landscape categories)
+ * is made by the engine but not yet trusted in a table written back, until capture 4 round-trips it.
+ */
+const ROUND_TRIPPED: ReadonlySet<string> = new Set(["linear", "radial", "luminance", "subject", "sky", "background", "person_entire", "person_face_skin", "landscape_vegetation", "landscape_sky"]);
+
+/**
  * The first correction the engine must not write back, and why: a component of a kind the captures did
- * not round-trip, more than one component, or a MaskBlendMode other than 0 (every captured component
- * had one component and MaskBlendMode 0 [handle: 3_dump-1.json; capture2-templates.json;
- * capture3-templates.json]). The mask tools write the whole table, so such a mask would be written back
- * in a form never shown to survive it [inference]; they refuse instead (session\masks.ts).
+ * not round-trip (ROUND_TRIPPED), more than one component, or a MaskBlendMode other than 0 (every
+ * captured component had one component and MaskBlendMode 0 [handle: 3_dump-1.json;
+ * capture2-templates.json; capture3-templates.json]). The mask tools write the whole table, so such a
+ * mask would be written back in a form never shown to survive it [inference]; they refuse instead
+ * (session\masks.ts). A kind the engine made itself counts too: after a people part, say, the photo's
+ * masks are not written again in that session.
  */
 export function uncaptured(entries: readonly Correction[]): { name: string; why: string } | null {
   for (const e of entries) {
@@ -223,7 +236,7 @@ export function uncaptured(entries: readonly Correction[]): { name: string; why:
     const m = parts[0] as Component;
     if (m[M.blend] !== undefined && m[M.blend] !== 0) return { name, why: `its MaskBlendMode is ${String(m[M.blend])}` };
     const kind = componentKind(m);
-    if (kind === "ai" || kind === "range" || kind === "other") return { name, why: `its kind (${String(m[M.what])}) was not captured` };
+    if (!ROUND_TRIPPED.has(kind)) return { name, why: `its kind (${kind === "ai" || kind === "range" || kind === "other" ? String(m[M.what]) : kind}) was not round-tripped in the masks captures` };
   }
   return null;
 }
@@ -234,6 +247,13 @@ export const newSyncId = (): string => randomUUID().replace(/-/g, "").toUpperCas
 
 /** Whether an AI component has computed: Lightroom writes its digest once it has [handle: check.json `7_sky.new_digests`]. */
 export const computed = (m: Component): boolean => typeof m[IMAGE.digest] === "string" && m[IMAGE.digest] !== "";
+/** A component's ReferencePoint as [x, y] in 0-1, or null. */
+export function pointOf(m: Component | null | undefined): [number, number] | null {
+  const at = m?.[IMAGE.referencePoint];
+  if (typeof at !== "string") return null;
+  const [x, y] = at.split(/\s+/).map(Number);
+  return Number.isFinite(x) && Number.isFinite(y) ? [x as number, y as number] : null;
+}
 /** An AI component's ErrorReason when it is a number other than 0 (Lightroom found nothing to mask [unverified until capture 4 row 4]), else null. */
 export function aiError(m: Component): number | null {
   const n = Number(m[IMAGE.errorReason] ?? 0);

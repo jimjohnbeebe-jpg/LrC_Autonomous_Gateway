@@ -74,7 +74,7 @@ HudText.CONNECTION = {
 HudText.UNDO = "To undo it: Develop > Snapshots > %s"
 HudText.UNDO_NO_SNAPSHOT = "the newest AVG pre-session snapshot"
 
--- The feedback line around Put back (plugin 0.12.0, HudClick.lua): the offer, the wait (the write
+-- The feedback line around Put back (plugin 0.13.0, HudClick.lua): the offer, the wait (the write
 -- gate waits behind a Lightroom message, so the user is told to answer it), the outcome. `failed` is
 -- filled with a REASON below and the snapshot's name. The headline after a done put-back is
 -- HEADLINE.aborted's.
@@ -90,6 +90,7 @@ HudText.PUT_BACK_REASON = {
     busy = "Lightroom stayed busy for %d s",
     error = "Lightroom could not apply it",
     read_back = "Lightroom could not read the photo back",
+    newer = "a newer edit began",
 }
 
 HudText.CLIPPING_OK = "Clipping: within limits."

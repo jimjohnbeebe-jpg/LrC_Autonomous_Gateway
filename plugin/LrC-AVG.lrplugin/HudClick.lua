@@ -3,7 +3,7 @@
 -- yield, then sent from a task (Events.lua); a menu item runs in a task and may wait for the engine.
 -- Hud.lua owns the window and passes `refresh` (copy the view into the window) and `show` (open it).
 -- The HUD's state is on _G (rule 03), shared with Hud.lua. Every line it writes is HudText's.
--- Put back (plugin 0.12.0) is a click with no event: the plugin applies the snapshot itself (below).
+-- Put back (plugin 0.13.0): the plugin applies the snapshot itself, then tells the engine (hud_put_back, below).
 
 local LrApplication = import 'LrApplication'
 local LrDate = import 'LrDate'
@@ -80,7 +80,7 @@ local function finish(p, refresh)
     return ok, line
 end
 
--- Put back (plugin 0.12.0, PR C step 2b; HudState.canPutBack says when it is on): the update's
+-- Put back (plugin 0.13.0, PR C step 2b; HudState.canPutBack says when it is on): the update's
 -- `put_back` snapshot applied to its photo by uuid, as lr_end_session "revert" does
 -- (engine\src\session\end.ts; Develop.lua applySnapshot), selected or not (Photos.find). Steps:
 --   - the snapshot is looked up first, so a missing one is said plainly;
@@ -106,8 +106,15 @@ HudClick.CLOSE_SECONDS = 5
 
 local PB, PB_REASON = HudText.PUT_BACK, HudText.PUT_BACK_REASON
 
+-- The put-back of an edit never runs once a newer edit's update has replaced it (H.state): checked
+-- before the gate and again inside it, right before the snapshot is applied (the lead's review of
+-- 79e6e91, 2026-10-03).
+local function sameEdit(sid)
+    return H.state ~= nil and H.state.session_id == sid
+end
+
 -- Runs in a task. Returns true, or nil, the reason (HudText) and a detail for the log.
-local function putBackTo(pb)
+local function putBackTo(pb, sid)
     local catalog = LrApplication.activeCatalog()
     local photo, found = Photos.find(catalog, pb.photo_uuid)
     if not photo then return nil, PB_REASON.no_photo, found.message end
@@ -118,12 +125,43 @@ local function putBackTo(pb)
         end
     end)
     if not known then return nil, PB_REASON.no_snapshot, "no snapshot " .. pb.snapshot_id end
-    local gated, busy = Gate.write(catalog, "AVG put back", function() photo:applyDevelopSnapshot(pb.snapshot_id) end)
+    if not sameEdit(sid) then return nil, PB_REASON.newer, "a newer edit began" end
+    local stale = false
+    local gated, busy = Gate.write(catalog, "AVG put back", function()
+        if not sameEdit(sid) then stale = true; return end
+        photo:applyDevelopSnapshot(pb.snapshot_id)
+    end)
     if not gated then return nil, string.format(PB_REASON.busy, Gate.WAIT_SECONDS), busy.message end
+    if stale then return nil, PB_REASON.newer, "a newer edit began during the wait" end
     local settings
     catalog:withReadAccessDo(function() settings = photo:getDevelopSettings() end)
     if type(settings) ~= "table" or next(settings) == nil then return nil, PB_REASON.read_back, "no settings read back" end
     return true
+end
+
+-- The outcome, told to the engine (engine\src\session\put-back.ts ends the edit on "done"): at once,
+-- or at the engine's next connection (HudClick.resendReport, from Hud.markUnknown) until it has gone
+-- out. The engine takes a click id once (engine\src\hud\events.ts), so a second send is harmless.
+local function sendReport()
+    local r = H.putBackReport
+    if not r then return end
+    local ok, why = Events.send("hud_put_back", r)
+    Log.info("hud: put back told to the engine (" .. r.outcome .. ", edit " .. r.session_id .. "): " .. (ok and "sent" or ("not sent, " .. tostring(why))))
+    if ok and H.putBackReport == r then H.putBackReport = nil end
+end
+
+-- At each engine connection (Hud.markUnknown): a put-back not yet told is sent once the engine is
+-- connected (up to MENU_WAIT_SECONDS). Never yields: the wait runs in its own task.
+function HudClick.resendReport()
+    if not H.putBackReport then return end
+    LrTasks.startAsyncTask(function()
+        local waited = 0
+        while not Events.connection().engine and waited < HudClick.MENU_WAIT_SECONDS do
+            LrTasks.sleep(0.5)
+            waited = waited + 0.5
+        end
+        sendReport()
+    end)
 end
 
 local function putBack(refresh)
@@ -132,12 +170,13 @@ local function putBack(refresh)
     -- The button is greyed otherwise; this also stops a second click while one runs.
     if not pb or (H.putBack and H.putBack.state ~= "failed") then return end
     local attempt = { state = "running", line = PB.running, seq = s.seq }
+    local sid = s.session_id
     H.putBack = attempt
     Log.info("hud: put back " .. pb.photo_uuid .. " to snapshot " .. pb.snapshot_id .. " (" .. pb.snapshot_name .. "), session " .. s.session_id)
     refresh()
     LrTasks.startAsyncTask(function()
         local t0 = LrDate.currentTime()
-        local ok, done, reason, detail = LrTasks.pcall(putBackTo, pb)
+        local ok, done, reason, detail = LrTasks.pcall(putBackTo, pb, sid)
         if not ok then done, reason, detail = nil, PB_REASON.error, done end
         local ms = tostring(math.floor((LrDate.currentTime() - t0) * 1000 + 0.5))
         if done then
@@ -148,6 +187,8 @@ local function putBack(refresh)
             Log.warn("hud: put back not possible after " .. ms .. " ms: " .. reason .. " (" .. tostring(detail) .. ")")
         end
         refresh()
+        H.putBackReport = { session_id = sid, seq_seen = attempt.seq, click_id = LrUUID.generateUUID(), source = "hud", outcome = done and "done" or "failed" }
+        sendReport()
         if not done then return end
         LrTasks.sleep(HudClick.CLOSE_SECONDS)
         if H.putBack == attempt and H.open and H.state and H.state.seq == attempt.seq then

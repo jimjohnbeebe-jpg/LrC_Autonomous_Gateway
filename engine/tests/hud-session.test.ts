@@ -37,7 +37,7 @@ describe("HUD updates from a Converge session", () => {
       guardrail: { status: "green" },
       snapshot: expect.stringMatching(/^AVG pre-session \d{4}-\d\d-\d\dT/),
     });
-    // Every update of the open session carries the HUD's Put back (plugin 0.12.0): the master's pre-session snapshot.
+    // Every update of the open session carries the HUD's Put back (plugin 0.13.0): the master's pre-session snapshot.
     const snap = (plugin.received.find((r) => r.name === "create_snapshot")?.payload ?? {}) as { name?: string };
     expect(lr.hud.taken.every((u) => u.put_back?.photo_uuid === "SIM-UUID" && u.put_back.snapshot_name === snap.name && u.put_back.snapshot_name === u.snapshot)).toBe(true);
     expect(last.put_back?.snapshot_id).toEqual(expect.any(String));
@@ -90,7 +90,7 @@ describe("HUD updates from a Converge session", () => {
     expect((await hudAt("ended")).note).toMatch(/Claude reverted/);
   });
 
-  it("sends nothing to a plugin before 0.12.0, which would refuse the put_back field", async () => {
+  it("sends nothing to a plugin before 0.13.0, which would refuse the put_back field", async () => {
     lr.pluginVersion = "0.11.0";
     plugin.dropEventClient(); // the next hello reports 0.11.0
     await waitUntil(() => client.stats.drops === 1);

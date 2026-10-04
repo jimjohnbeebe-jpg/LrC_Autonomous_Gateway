@@ -60,7 +60,7 @@ describe("hud-protocol: hud_update payload", () => {
     ["open as text", { ...MINIMAL, open: "yes" }],
     ["text given as an object", { ...MINIMAL, note: { text: "x" } }],
     ["a snapshot given as an object (plugin 0.9.0)", { ...MINIMAL, snapshot: { name: "AVG pre-session" } }],
-    ["a put_back without its snapshot id (plugin 0.12.0)", { ...MINIMAL, put_back: { photo_uuid: "U1", snapshot_name: "AVG pre-session" } }],
+    ["a put_back without its snapshot id (plugin 0.13.0)", { ...MINIMAL, put_back: { photo_uuid: "U1", snapshot_name: "AVG pre-session" } }],
     ["a put_back with an extra field", { ...MINIMAL, put_back: { photo_uuid: "U1", snapshot_id: "S1", snapshot_name: "x", history: "AVG" } }],
     ["a put_back photo uuid over the byte limit", { ...MINIMAL, put_back: { photo_uuid: "x".repeat(HUD_LIMITS.id + 1), snapshot_id: "S1", snapshot_name: "x" } }],
     ["a pass over the limit", { ...MINIMAL, pass: HUD_LIMITS.pass + 1 }],
@@ -103,7 +103,7 @@ describe("hud-protocol: HUD events", () => {
   });
 
   it("has one schema per event name", () => {
-    expect(Object.keys(hudEventSchemas).sort()).toEqual(["hud_abort", "hud_accept", "hud_approve_pass", "hud_pick"]);
+    expect(Object.keys(hudEventSchemas).sort()).toEqual(["hud_abort", "hud_accept", "hud_approve_pass", "hud_pick", "hud_put_back"]);
   });
 });
 

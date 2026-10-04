@@ -13,12 +13,17 @@
 //   - after DIALOG_AFTER_MS with nothing in the table, probe_write_gate: "aborted" (the gate is held)
 //     means Lightroom is busy or shows a dialog [inference: a cold model could hold the gate as long;
 //     then the mask computes once the gate is free and nothing is reverted]. The user is told so on the
-//     HUD (the work note, DIALOG_NOTE, true in both cases [stated: the lead, 2026-10-03]) and in the tool result, and the engine keeps probing for up to DIALOG_WAIT_MS. Once the gate is free and
+//     HUD (the work note, DIALOG_NOTE, true in both cases (the lead's decision, 2026-10-03)) and in the tool result, and the engine keeps probing for up to DIALOG_WAIT_MS. Once the gate is free and
 //     the mask still has not computed within GRACE_MS, the caller puts the photo back (ai-masks.ts
 //     autoRevert) [stated: Jim, 2026-10-03, "Also auto-revert"];
-//   - the probe also reports the update's own state: failed (updateAISettings raised) or abandoned
-//     (the gate stayed held and Lightroom dropped it) are gate or plugin errors, after which the
-//     LrDevelopController route may run; a mask that does not compute in COMPUTE_MS is not.
+//   - the probe also reports the update's own state: failed (updateAISettings raised) is a plugin
+//     error, after which the LrDevelopController route may run, but only while no busy gate was seen;
+//     abandoned (the gate stayed held and Lightroom dropped the update) is handled as a dialog, as is
+//     everything once a busy gate was seen: the put-back, never a fallback (the lead's review
+//     of efffd2e, 2026-10-03). A mask that does not compute in COMPUTE_MS gets no fallback either.
+//     Once the update is over and the gate reads free, the probing stops;
+//   - the reads name the photo by uuid (photo_uuid), so a change of selection in Lightroom does not
+//     end the wait before the entry is dealt with.
 // Every read checks the user's Abort first. [handle: tests\session-ai-dialog.test.ts, against the
 // Lightroom sim; in Lightroom [unverified] until capture 4.]
 
@@ -26,7 +31,7 @@ import type { CommandResult } from "../bridge/index.js";
 import { ToolError, toToolError } from "../mcp/errors.js";
 import { aiError, computed, firstComponent, readTable, type SdkSettings } from "../params/index.js";
 import type { AiJob } from "./ai-masks.js";
-import { bridge, checkAbort, ms, readSdk } from "./io.js";
+import { bridge, checkAbort, ms } from "./io.js";
 import type { Session, SessionContext } from "./types.js";
 
 export type AiTimings = {
@@ -56,7 +61,7 @@ export const AI_TIMINGS: Readonly<AiTimings> = {
   dialogAfterMs: 10_000,
   probeEveryMs: 2000,
   dialogWaitMs: 600_000,
-  graceMs: 3000,
+  graceMs: 20_000, // a false put-back costs far more than the wait (the lead's review, 2026-10-03)
   dcWaitMs: 10_000,
 };
 export const aiTimings = (ctx: SessionContext): AiTimings => ({ ...AI_TIMINGS, ...ctx.deps.aiTimings });
@@ -73,23 +78,26 @@ export type Update =
 const sleep = (t: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, t));
 const STOPS = ["BRIDGE_DISCONNECTED", "TARGET_CHANGED", "SESSION_ENDED"];
 
-/** update_ai_settings; null once it is under way (or may be: no answer in time), else why it failed. */
-async function send(ctx: SessionContext, s: Session, job: AiJob, T: AiTimings): Promise<string | null> {
+const ABANDONED = "Lightroom's catalog stayed busy, so Lightroom dropped the update";
+
+/** update_ai_settings; null once it is under way (or may be: no answer in time), else what ended it. */
+async function send(ctx: SessionContext, s: Session, job: AiJob, T: AiTimings): Promise<Update | null> {
   try {
     const res = await bridge(s, job.t, () => ctx.deps.client.request("update_ai_settings", { photo_uuid: job.t.uuid }, { timeoutMs: T.replyMs }));
-    return res.state === "failed" || res.state === "abandoned" ? `update_ai_settings: the update ${res.state}` : null;
+    if (res.state === "abandoned") return { kind: "dialog", why: ABANDONED, dialog_ms: 0 };
+    return res.state === "failed" ? { kind: "failed", why: "update_ai_settings: the update failed", fallback: true } : null;
   } catch (err) {
     const e = toToolError(err);
     if (e.code === "BRIDGE_TIMEOUT") return null; // a dialog may hold the answer too (Masks.lua): watch the table
     if (STOPS.includes(e.code)) throw err;
-    return `update_ai_settings: ${e.message}`;
+    return { kind: "failed", why: `update_ai_settings: ${e.message}`, fallback: true };
   }
 }
 
 /** The table and the entry's component; null when Lightroom did not answer the read in time. */
-async function look(ctx: SessionContext, s: Session, job: AiJob): Promise<{ sdk: SdkSettings; m: Record<string, unknown> | null } | null> {
+async function look(ctx: SessionContext, job: AiJob): Promise<{ sdk: SdkSettings; m: Record<string, unknown> | null } | null> {
   try {
-    const { sdk } = await readSdk(ctx, s, job.t);
+    const sdk = (await ctx.deps.client.request("get_settings", { photo_uuid: job.t.uuid })).settings;
     return { sdk, m: firstComponent(readTable(sdk), job.id) };
   } catch (err) {
     if (toToolError(err).code === "BRIDGE_TIMEOUT") return null;
@@ -113,24 +121,26 @@ function tell(ctx: SessionContext, s: Session, note: string): void {
   ctx.deps.hud?.stage(s, "applying");
 }
 
-type Watch = { dialogAt: number | null; freeAt: number | null; probed: number };
+/** `settled`: the update is over and the gate read free, so no more probes. */
+type Watch = { dialogAt: number | null; freeAt: number | null; probed: number; settled: boolean };
 
 /** What a probe says about this update: an Update to return, or null to read on (`w` updated). */
 function judge(p: CommandResult<"probe_write_gate"> | null, job: AiJob, w: Watch, now: number): Update | null {
   const own = p?.update && (p.update.uuid === undefined || p.update.uuid === job.t.uuid) ? p.update : null;
-  if (own?.state === "failed") return { kind: "failed", why: `updateAISettings raised in Lightroom: ${own.error ?? "no message"}`, fallback: true };
-  if (own?.state === "abandoned") return { kind: "failed", why: "Lightroom's catalog stayed busy, so Lightroom dropped the update", fallback: true };
+  if (own?.state === "abandoned") return { kind: "dialog", why: ABANDONED, dialog_ms: w.dialogAt === null ? 0 : Math.round(now - w.dialogAt) };
+  if (own?.state === "failed" && w.dialogAt === null) return { kind: "failed", why: `updateAISettings raised in Lightroom: ${own.error ?? "no message"}`, fallback: true };
   if (p?.status === "aborted") w.dialogAt ??= now;
   else if (p?.status === "executed" && w.dialogAt !== null) w.freeAt = now;
+  else if (p?.status === "executed" && (own?.state === "done" || own?.state === "failed")) w.settled = true;
   return null;
 }
 
 async function watch(ctx: SessionContext, s: Session, job: AiJob, T: AiTimings, t0: number, note: string | undefined): Promise<Update> {
-  const w: Watch = { dialogAt: null, freeAt: null, probed: 0 };
+  const w: Watch = { dialogAt: null, freeAt: null, probed: 0, settled: false };
   const dialogMs = (): number => (w.dialogAt === null ? 0 : Math.round(performance.now() - w.dialogAt));
   for (let wait = T.pollMs; ; wait = Math.min(wait * 2, T.pollMaxMs)) {
     checkAbort(s);
-    const seen = await look(ctx, s, job);
+    const seen = await look(ctx, job);
     if (seen && !seen.m) return { kind: "failed", why: "the mask's entry is no longer in the table (removed in Lightroom?)", fallback: false };
     const reason = seen?.m ? aiError(seen.m) : null;
     if (reason !== null) return { kind: "not_found", reason };
@@ -142,7 +152,7 @@ async function watch(ctx: SessionContext, s: Session, job: AiJob, T: AiTimings, 
     if (w.freeAt !== null && now - w.freeAt >= T.graceMs) return { kind: "dialog", why: "Lightroom was free again and the mask had not computed", dialog_ms: dialogMs() };
     if (w.dialogAt !== null && now - w.dialogAt >= T.dialogWaitMs) return { kind: "dialog", why: `Lightroom was still busy after ${Math.round(T.dialogWaitMs / 60_000)} minutes`, dialog_ms: dialogMs() };
     if (w.dialogAt === null && now - t0 >= T.computeMs) return { kind: "failed", why: `the mask did not compute within ${Math.round(now - t0)} ms of update_ai_settings`, fallback: false };
-    if (now - t0 >= T.dialogAfterMs && w.freeAt === null && now - w.probed >= T.probeEveryMs) {
+    if (now - t0 >= T.dialogAfterMs && w.freeAt === null && !w.settled && now - w.probed >= T.probeEveryMs) {
       w.probed = now;
       const seenDialog = w.dialogAt !== null;
       const out = judge(await probe(ctx), job, w, now);
@@ -164,9 +174,9 @@ export async function updateAndWait(ctx: SessionContext, s: Session, job: AiJob)
   s.aiPending = { since: ctx.now().toISOString(), kind: job.kind };
   let out: Update | null = null;
   try {
-    const failed = await send(ctx, s, job, T);
+    const ended = await send(ctx, s, job, T);
     const sent = ms(t0);
-    out = failed !== null ? { kind: "failed", why: failed, fallback: true } : await watch(ctx, s, job, T, t0, note);
+    out = ended ?? (await watch(ctx, s, job, T, t0, note));
     if (out.kind === "computed") out.update_ms = sent;
     return out;
   } finally {

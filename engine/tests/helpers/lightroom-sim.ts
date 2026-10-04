@@ -90,7 +90,7 @@ export class LightroomSim {
   readonly hud = new SimHud();
   /** The library commands (plugin 0.8.0, Library.lua): search, collections, ratings, keywords (lightroom-sim-library.ts). */
   readonly library = new SimLibrary();
-  /** The AI-mask commands' behaviour (plugin 0.12.0, Masks.lua; lightroom-sim-masks.ts). */
+  /** The AI-mask commands' behaviour (plugin 0.13.0, Masks.lua; lightroom-sim-masks.ts). */
   readonly masks = new SimMasks();
   /** Virtual copies of the master, by uuid (lightroom-sim-catalog.ts). */
   readonly copies = new Map<string, SimCopy>();

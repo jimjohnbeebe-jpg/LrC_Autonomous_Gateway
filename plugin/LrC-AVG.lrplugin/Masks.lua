@@ -16,7 +16,7 @@
 --   added as a table entry computed after it, and Jim saw it cover the sky [handle: Jim's capture 1
 --   run, 2026-10-03, docs\reports\phase6\masks-capture\check.json step 7_sky and answers]. Waiting for
 --   the mask to compute is the engine's job, by reading get_settings.
---   Plugin 0.12.0, PR C step 2b: the gate is asynchronous (Gate.async, 5 s in the queue), and the
+--   Plugin 0.13.0, PR C step 2b: the gate is asynchronous (Gate.async, 5 s in the queue), and the
 --   command answers { uuid, status, state } without waiting for the update, because Lightroom's
 --   "Update AI Settings Errors" dialog once opened inside this gate and held it until Jim restarted
 --   Lightroom [stated: Jim's step-2 check, 2026-10-03, his screenshot]. Whether an asynchronous gate

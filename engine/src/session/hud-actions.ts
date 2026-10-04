@@ -26,6 +26,7 @@ import { approvalNote, approve, pendingApproval, wakeApproval } from "./approval
 import { endSession } from "./end.js";
 import { failed, saveLog } from "./io.js";
 import { awaitingPick, selectVariant } from "./pick.js";
+import { putBackReported } from "./put-back.js";
 import { variant } from "./targets.js";
 import type { Session, SessionContext, UserEnd, UserSource, VariantId } from "./types.js";
 
@@ -33,7 +34,8 @@ import type { Session, SessionContext, UserEnd, UserSource, VariantId } from "./
 export type UserAction = HudEvent & { received: Date; t0: number };
 
 /** A session the user ended from the HUD or the menu, for the calls that still name it. */
-export type UserEnded = { session_id: string; outcome: "aborted" | "accept"; source: UserSource; at: string; log_path: string };
+/** `put_back`: the HUD's Put back put the photo back itself and told the engine (put-back.ts). */
+export type UserEnded = { session_id: string; outcome: "aborted" | "accept" | "put_back"; source: UserSource; at: string; log_path: string };
 
 /** What the actions need from the session manager (manager.ts). */
 export type ActionHost = {
@@ -59,7 +61,7 @@ export function userAction(host: ActionHost, a: UserAction): string {
   const s = host.session();
   if (!s || s.id !== a.payload.session_id) {
     const ended = host.ended(a.payload.session_id);
-    if (ended) return `This edit had already ended: ${ended.outcome === "aborted" ? "the photo was put back" : "the edit was kept"}.`;
+    if (ended) return `This edit had already ended: ${ended.outcome === "accept" ? "the edit was kept" : "the photo was put back"}.`;
     return "This edit is no longer open in Claude, so nothing was done."; // hud\events.ts answers it with an `ended` update
   }
   const note = act(host, s, a);
@@ -77,6 +79,8 @@ function act(host: ActionHost, s: Session, a: UserAction): string {
       return pick(host, s, a.payload.variant, a.payload.source);
     case "hud_approve_pass":
       return approveFromHud(host, s, a.payload.pass, a.payload.source);
+    case "hud_put_back":
+      return putBackReported(host, s, a);
   }
 }
 
@@ -294,7 +298,8 @@ export function idleStage(s: Session, error: unknown): { stage: HudStage; note?:
 
 /** The answer to a call naming a session the user ended from the HUD or the menu. */
 export function endedError(e: UserEnded): ToolError {
-  const how = e.outcome === "aborted" ? "aborted it: the photo is back as it was before the session" : "accepted it: the edit is kept and the recipe written";
+  const how =
+    e.outcome === "aborted" ? "aborted it: the photo is back as it was before the session" : e.outcome === "put_back" ? "put the photo back with the HUD's Put back: it is as it was before the session" : "accepted it: the edit is kept and the recipe written";
   const where = e.source === "menu" ? "Lightroom's menu" : "the HUD";
   return new ToolError("SESSION_ENDED", `The user ended session ${e.session_id} from ${where} at ${e.at} and ${how}. Start a new session only if the user asks.`, false, e);
 }

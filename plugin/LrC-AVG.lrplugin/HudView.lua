@@ -16,7 +16,7 @@
 -- invalidLines). So every text is cut by HudText.wrap into a fixed number of slots, one bound
 -- static_text each ("headline1", "headline2", ...), as the deltas grid has one bound cell per text.
 -- Window order (fix/hud-p1 plan, "Copy deck"): the headline; Pick A-C and Approve; Accept and Abort,
--- then Put back (plugin 0.12.0); the feedback line; Photo; Camera; Step; the selection line; the
+-- then Put back (plugin 0.13.0); the feedback line; Photo; Camera; Step; the selection line; the
 -- deltas grid; the guardrail sentence; the settings block; the connection line.
 
 local LrView = import 'LrView'

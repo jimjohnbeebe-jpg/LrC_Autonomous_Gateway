@@ -219,8 +219,8 @@ export const COMMANDS = {
   // Plugin 0.6.0 (Hud.lua update): the HUD's state; the contract is in hud-protocol.ts.
   hud_update: hudUpdateResultSchema,
   // Plugin 0.11.0 (Masks.lua, issue #59). update_ai_settings: photo:updateAISettings() in its own write
-  // gate. A Lightroom without the call answers feature_unavailable. Up to the first 0.12.0 it waited for
-  // the update (call_ms, `gate` what withWriteAccessDo returned); from PR C step 2b the gate is
+  // gate. A Lightroom without the call answers feature_unavailable. Up to 0.12.0 it waited for the
+  // update (call_ms, `gate` what withWriteAccessDo returned); from 0.13.0 (PR C step 2b) the gate is
   // asynchronous and the answer comes at once: `status` "executed" or "queued" (Lightroom's), `state`
   // what the update did so far (queued, running, done, failed, abandoned; probe_write_gate reports it later).
   update_ai_settings: z.object({
@@ -245,7 +245,7 @@ export const COMMANDS = {
     new_ids: z.array(z.string()),
     waited_ms: z.number(),
   }),
-  // probe_write_gate (plugin 0.12.0, PR C step 2b): an empty write gate with a 0.5 s timeout; `status`
+  // probe_write_gate (plugin 0.13.0, PR C step 2b): an empty write gate with a 0.5 s timeout; `status`
   // "executed" (the catalog is free) or "aborted" (another write holds it, such as a Lightroom dialog
   // inside the update's gate), and the last update_ai_settings' record (Masks.lua).
   probe_write_gate: z.object({

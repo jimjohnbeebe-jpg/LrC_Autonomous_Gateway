@@ -22,11 +22,14 @@ import type { GuardrailAction, MaskPassEntry } from "../log/index.js";
 import { ToolError, toToolError } from "../mcp/errors.js";
 import { deltaMetrics, summarize as metricsOf } from "../metrics/index.js";
 import {
+  AI_KINDS,
   KIND_LABELS,
   LOCAL_PARAMS,
   MASK_TABLE_KEY,
   applyOp,
+  firstComponent,
   isAiKind,
+  pointOf,
   precheck,
   readTable,
   storedSliders,
@@ -48,8 +51,8 @@ import { brief, describe, failed, fresh, historyName, image, ms, readSdk, record
 import { checkReady, focus, resolveTarget } from "./targets.js";
 import type { CreateMaskArgs, DeleteMaskArgs, EditMaskArgs, ListMasksArgs, Rendered, ReturnImage, Session, SessionContext, SessionOutput, Target, TargetId } from "./types.js";
 
-/** The plugin with create_ai_mask_dc (plugin\LrC-AVG.lrplugin\Masks.lua); the mask tools need it. */
-export const MASKS_PLUGIN = "0.12.0";
+/** The plugin with the asynchronous update_ai_settings and probe_write_gate (0.13.0, plugin\LrC-AVG.lrplugin\Masks.lua); the mask tools need it. */
+export const MASKS_PLUGIN = "0.13.0";
 
 type PassArgs = { session_id: string; target?: TargetId | undefined; rationale: string; return_image?: ReturnImage | undefined };
 /** What a mask pass wrote and measured. */
@@ -173,7 +176,8 @@ async function applyPlan(ctx: SessionContext, s: Session, t: Target, n: number, 
   let id = plan.id;
   let ai: AiResult | null = null;
   if (op.op === "create" && isAiKind(plan.kind)) {
-    ai = await makeAiMask(ctx, s, { t, n, kind: plan.kind, before, id, name: plan.after?.name ?? "", stored: storedSliders(op.sliders ?? {}), historyNames, attempts: new Set([id]) });
+    const point = AI_KINDS[plan.kind].point ? pointOf(firstComponent(plan.entries, id)) : null;
+    ai = await makeAiMask(ctx, s, { t, n, kind: plan.kind, before, id, name: plan.after?.name ?? "", stored: storedSliders(op.sliders ?? {}), historyNames, attempts: new Set([id]), point });
     ({ sdk, id } = ai);
   }
   let view = ctx.deps.map.fromSdk(sdk);

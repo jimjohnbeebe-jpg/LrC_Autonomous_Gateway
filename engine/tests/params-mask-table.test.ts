@@ -113,7 +113,10 @@ describe("params: reading the mask table", () => {
     expect(uncaptured([table[0] as Correction, blend])?.why).toBe("its MaskBlendMode is 1");
     const brush = structuredClone(table[0]) as Correction;
     Object.assign((brush[C.masks] as Record<string, unknown>[])[0] as object, { [M.what]: "Mask/Paint" });
-    expect(uncaptured([brush])?.why).toBe("its kind (Mask/Paint) was not captured");
+    expect(uncaptured([brush])?.why).toBe("its kind (Mask/Paint) was not round-tripped in the masks captures");
+    // A kind the engine can make but no capture wrote back and read back (every person's hair, say) is not trusted either.
+    expect(uncaptured([newCorrection("people_hair", "h", {}, null, {}, [])])?.why).toBe("its kind (people_hair) was not round-tripped in the masks captures");
+    expect(uncaptured([newCorrection("person_entire", "p", {}, { x: 0.5, y: 0.5 }, {}, []), newCorrection("landscape_sky", "s", {}, null, {}, [])])).toBeNull();
   });
 
   it("gives the same fingerprint to two equal tables whatever their key order", () => {

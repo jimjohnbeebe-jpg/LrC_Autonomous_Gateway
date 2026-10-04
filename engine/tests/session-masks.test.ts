@@ -238,12 +238,12 @@ describe("mask tools: the session's end, Variants mode, an older plugin, the HUD
     expect(await fails(create({ ...LINEAR, target: "A" }))).toMatchObject({ code: "MASKS_AFTER_PICK" });
   });
 
-  it("refuses the mask writes on a plugin before 0.12.0; the listing still reads", async () => {
+  it("refuses the mask writes on a plugin before 0.13.0; the listing still reads", async () => {
     clean();
     await begin();
     const hello = client.hello();
-    const old = vi.spyOn(client, "hello").mockReturnValue(hello ? { ...hello, plugin_version: "0.11.0" } : null);
-    expect(await fails(create())).toMatchObject({ code: "PLUGIN_TOO_OLD", message: expect.stringMatching(/0\.12\.0 or later.*runs 0\.11\.0/) });
+    const old = vi.spyOn(client, "hello").mockReturnValue(hello ? { ...hello, plugin_version: "0.12.0" } : null);
+    expect(await fails(create())).toMatchObject({ code: "PLUGIN_TOO_OLD", message: expect.stringMatching(/0\.13\.0 or later.*runs 0\.12\.0/) });
     expect((await manager.listMasks({ session_id: ID })).json).toMatchObject({ count: 0 });
     old.mockRestore();
   });

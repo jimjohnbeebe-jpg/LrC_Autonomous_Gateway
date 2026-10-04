@@ -1,4 +1,4 @@
-// The AI-mask commands in the Lightroom sim (plugin 0.12.0, plugin\LrC-AVG.lrplugin\Masks.lua). The sim
+// The AI-mask commands in the Lightroom sim (plugin 0.13.0, plugin\LrC-AVG.lrplugin\Masks.lua). The sim
 // keeps masks as the table its apply_settings writes (lightroom-sim.ts); here:
 //   - update_ai_settings finds the photo by uuid and answers at once, as the asynchronous gate does
 //     (PR C step 2b). With `tableRoute` "computes" every AI component without a digest gets its digests,
@@ -8,7 +8,8 @@
 //     leave it uncomputed and probe_write_gate reports that state;
 //   - `gate` "dialog": the update holds the write gate for `heldProbes` probes, as Lightroom's error
 //     dialog did in Jim's step-2 run, then the user clicks OK and nothing has computed; "slow": the
-//     same hold, then it computes (a cold model). While the gate is held, writes answer gate_busy
+//     same hold, then it computes (a cold model); `releaseState` "failed": the update reports it raised
+//     once the hold ends. While the gate is held, writes answer gate_busy
 //     and exports export_failed (each counted in `blocked`); reads answer;
 //   - probe_write_gate: "aborted" while the gate is held, else "executed", with the update's record;
 //     `probe` "unknown" answers unknown_command, as a plugin without it;
@@ -38,6 +39,7 @@ export class SimMasks {
   tableRoute: "computes" | "absent" | "never" | "unavailable" | "failed" | "abandoned" = "computes";
   gate: "free" | "dialog" | "slow" = "free";
   heldProbes = 3;
+  releaseState: "done" | "failed" = "done";
   probe: "known" | "unknown" = "known";
   /** "late": the mask shows in the table only after the command's wait, so it answers no new id. */
   dc: "works" | "late" | "none" | "unknown" = "works";
@@ -101,7 +103,7 @@ function updateAiSettings(sim: MaskSim, p: Record<string, unknown>): FakeReply {
   const slow = sm.gate === "slow";
   sm.release = () => {
     if (slow) compute(sim, uuid);
-    sm.update = { uuid, state: "done" };
+    sm.update = sm.releaseState === "failed" ? { uuid, state: "failed", error: "dry: updateAISettings raised after the dialog" } : { uuid, state: "done" };
   };
   return { ok: true, payload: { uuid, status: "executed", state: "running", command_ms: 1 } };
 }

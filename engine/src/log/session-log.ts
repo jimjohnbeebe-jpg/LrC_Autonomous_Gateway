@@ -14,7 +14,7 @@
 // are read with session-log-v1.ts. Later engines only add: optional fields (`settings`, 0.7.0;
 // `ended_by` and `hud_events`, 0.8.0; `approvals` and a pass's `approval`, 0.9.0; `lightroom`,
 // 0.13.0, and its `notices`, 0.14.0; a pass's `mask`, kind "mask", 0.16.0, log\mask-log.ts; `ended_by`
-// source "engine" with its `reason`, PR C step 2b) and the outcome "aborted" (0.8.0), so earlier v2 logs still read.
+// source "engine" with its `reason`, and the HUD event hud_put_back, PR C step 2b) and the outcome "aborted" (0.8.0), so earlier v2 logs still read.
 
 import { mkdirSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -190,7 +190,7 @@ const endedBySchema = z.strictObject({
 /** Engine 0.8.0: every HUD or menu event for this session, and what the HUD was told. */
 const hudEventSchema = z.strictObject({
   at: z.string(),
-  name: z.enum(["hud_abort", "hud_accept", "hud_pick", "hud_approve_pass"]),
+  name: z.enum(["hud_abort", "hud_accept", "hud_pick", "hud_approve_pass", "hud_put_back"]),
   source: userSource,
   click_id: z.string(),
   seq_seen: z.number().int(),

@@ -17,7 +17,7 @@
 -- At each engine connection the edit shown is marked unknown until an update for it arrives
 -- (markUnknown, fix/hud-p1 P1-3): the buttons go off, and after HudState.UNKNOWN_SECONDS the
 -- headline says the edit is no longer open in Claude.
--- Plugin 0.12.0 (PR C step 2b): once the engine has been away from an open edit for
+-- Plugin 0.13.0 (PR C step 2b): once the engine has been away from an open edit for
 -- HudState.AWAY_SECONDS, or the edit is no longer open in Claude, a Put back button applies the
 -- session's pre-session snapshot (the update's `put_back`) itself (HudClick.lua), because after a
 -- failed edit the photo was left as it was and only a Lightroom restart put it back [stated: Jim,
@@ -166,6 +166,7 @@ end
 -- channel). Marking at the send socket's connection instead could race that update [inference:
 -- Sockets.lua starts onSendConnected in its own task]. Never yields.
 function Hud.markUnknown()
+    HudClick.resendReport() -- a put-back the engine has not heard of yet (HudClick.lua)
     local s = H.state
     if s == nil or HudState.isEnd(s.stage) then return end
     H.unknownAt = LrDate.currentTime()

@@ -23,6 +23,9 @@ end
 
 -- withWriteAccessDo(name, fn) waiting up to `seconds` (default WAIT_SECONDS). Returns Lightroom's
 -- status ("executed"), or nil plus the error table gate_busy. An error raised by `fn` is raised on.
+-- "executed" means `fn` ran: 'When "executed" is returned, 'func' will have been executed' [community:
+-- third-party-hosted copy of Adobe's SDK 15.1 reference, LrCatalog withWriteAccessDo]; observed in
+-- Lightroom it is [unverified] until masks capture 4.
 function Gate.write(catalog, name, fn, seconds)
     seconds = seconds or Gate.WAIT_SECONDS
     local status = catalog:withWriteAccessDo(name, fn, { timeout = seconds })

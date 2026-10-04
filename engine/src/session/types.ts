@@ -139,7 +139,8 @@ export type SessionContext = { deps: SessionDeps; now: () => Date; newId: () => 
 /**
  * A write with its read-back took ~0.39 s in Phase 2 [handle: docs\reports\phase2\PHASE2.md "Numbers"].
  * The plugin's write gate waits up to 60 s for the catalog (plugin\LrC-AVG.lrplugin\Gate.lua), so the
- * engine waits 90 s: a write queued behind a Lightroom dialog gets its own answer, not a timeout.
+ * engine waits 90 s: a write queued behind a Lightroom dialog gets its own answer, not a timeout
+ * (that the plugin's gate waits behind a dialog is [unverified] until masks capture 4).
  */
 export const WRITE_TIMEOUT_MS = 90000;
 /**

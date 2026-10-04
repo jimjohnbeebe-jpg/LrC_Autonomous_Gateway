@@ -4,7 +4,7 @@
 -- and selection (Catalog.lua, Phase 4), photos named by uuid (Photos.lua, Phase 4), the settings
 -- (Prefs.lua, get_prefs, Phase 5) and the HUD (Hud.lua, hud_update, Phase 5); Dispatch.lua routes
 -- them. The settings page in Plug-in Manager is PluginInfoProvider.lua (PHASE5_PLAN row 3); the HUD,
--- its events (Events.lua) and the menu items below are row 4. Masks.lua (plugin 0.11.0, 0.12.0) holds the
+-- its events (Events.lua) and the menu items below are row 4. Masks.lua (plugin 0.11.0, 0.12.0, 0.13.0) holds the
 -- AI-mask commands of the mask tools (GitHub issue #59).
 -- LrSdkVersion 13.0: the five Phase 0 spike plugins declared it and ran on LrC 15.5.1
 -- [handle: docs\reports\phase0\PHASE0.md "Draft for LR_SDK_NOTES", SDK version]; whether it hides
@@ -33,5 +33,5 @@ return {
         { title = "LrC-AVG - Accept Edit", file = "MenuAccept.lua" },
         { title = "LrC-AVG - Abort Edit", file = "MenuAbort.lua" },
     },
-    VERSION = { major = 0, minor = 12, revision = 0, build = 0 },
+    VERSION = { major = 0, minor = 13, revision = 0, build = 0 },
 }

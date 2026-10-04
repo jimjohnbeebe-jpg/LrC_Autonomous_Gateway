@@ -7,9 +7,9 @@
 //     a dialog (the photo is put back to before the session and the session ends: autoRevert);
 //     or a failure.
 //   - LrDevelopController runs only when the table route's update failed with a gate or plugin error,
-//     never after a dialog and never after a mask that simply did not compute [stated: Jim,
-//     2026-10-03, "full control of the masking from the llm without throwing errors", relayed by the
-//     lead, whose step 2b directive set this rule]. Then this pass's attempt is taken out of the table as it is now ("… mask ai
+//     never after a dialog and never after a mask that simply did not compute [inference: the lead's
+//     design after Jim's "full control of the masking from the llm without throwing errors", stated
+//     2026-10-03]. Then this pass's attempt is taken out of the table as it is now ("… mask ai
 //     revert"; other masks, the user's changes included, stay) and create_ai_mask_dc makes the mask;
 //     the new entry is found by its id, and its name and sliders are written by an AVG table write
 //     ("… mask sliders"). The DC step itself keeps Lightroom's History name [stated: Jim, 2026-10-03,
@@ -23,7 +23,7 @@
 // tests\session-ai-dialog.test.ts, against the Lightroom sim; in Lightroom [unverified] until capture 4.]
 
 import { ToolError, featureUnavailable, toToolError } from "../mcp/errors.js";
-import { AI_KINDS, KIND_LABELS, computed, correctionIds, firstComponent, named, readTable, type AiKind, type Correction, type SdkSettings } from "../params/index.js";
+import { AI_KINDS, KIND_LABELS, computed, correctionIds, firstComponent, named, pointOf, readTable, type AiKind, type Correction, type SdkSettings } from "../params/index.js";
 import { aiTimings, updateAndWait } from "./ai-update.js";
 import { endSession } from "./end.js";
 import { reopenLog } from "./hud-actions.js";
@@ -50,7 +50,7 @@ export type AiResult = {
  * What the AI route needs from the pass: the photo, its pass, the table before it, the new entry's
  * id, name and sliders, and `attempts`: the ids of every entry this pass made (taken out on failure).
  */
-export type AiJob = { t: Target; n: number; kind: AiKind; before: Correction[]; id: string; name: string; stored: Record<string, number>; historyNames: string[]; attempts: Set<string> };
+export type AiJob = { t: Target; n: number; kind: AiKind; before: Correction[]; id: string; name: string; stored: Record<string, number>; historyNames: string[]; attempts: Set<string>; point?: [number, number] | null };
 
 type Failed = { why: string; fallback: boolean };
 
@@ -96,36 +96,40 @@ async function takeOut(ctx: SessionContext, s: Session, job: AiJob): Promise<str
 /**
  * After a dialog (ai-update.ts): the photo back to before the session through the plugin's queued
  * gate, checked, masks included (end.ts revert), and the session ended by the engine [stated: Jim,
- * 2026-10-03, "Also auto-revert"]. In Variants mode the pick's attempt is taken out first: the
- * session's revert puts only the master back. Always throws LIGHTROOM_DIALOG.
+ * 2026-10-03, "Also auto-revert"]. In Variants mode the pick's attempt is taken out first (the
+ * session's revert puts only the master back); an attempt left on the copy is reported, not a reason
+ * to stop. After a successful end that left anything different, the log is opened again. Always
+ * throws LIGHTROOM_DIALOG.
  */
 async function autoRevert(ctx: SessionContext, s: Session, job: AiJob, cause: string): Promise<never> {
   const pending = s.aiPending;
   s.aiPending = null; // the put-back's own gate waits for the catalog
   const reason = `Lightroom was busy or showed a dialog while it computed the AI ${KIND_LABELS[job.kind]} mask (${cause})`;
   const manual = `Tell the user: if a dialog is open in Lightroom, click OK; then call lr_end_session with outcome "revert". If that fails too: in Lightroom's Develop module, open the Snapshots panel and click "${s.snapshot.name}".`;
+  let copy: string | null = null;
+  if (job.t.id !== "master") copy = await takeOut(ctx, s, job).catch((err: unknown) => `taking the attempt out failed: ${toToolError(err).message}`);
+  const onCopy = copy ? ` On copy ${job.t.id}: ${copy}; it stays in the catalog with the attempt.` : "";
   let problem: string | null = null;
+  let ended = false;
   try {
-    if (job.t.id !== "master") problem = await takeOut(ctx, s, job);
     await endSession(ctx, s, { session_id: s.id, outcome: "revert" });
+    ended = true;
     const differing = s.log.revert?.differing ?? [];
-    if (differing.length > 0) {
-      reopenLog(s);
-      problem = `the put-back left ${differing.join(", ")} different from before the session`;
-    }
+    if (differing.length > 0) problem = `the put-back left ${differing.join(", ")} different from before the session`;
   } catch (err) {
     problem = `the put-back did not go through: ${toToolError(err).message}`;
   }
+  if (ended && problem !== null) reopenLog(s);
   if (problem !== null) {
     s.aiPending = pending; // nothing more is written or rendered until the session ends
-    throw new ToolError("LIGHTROOM_DIALOG", `${reason}. ${problem}. Session ${s.id} is still open, and writes and renders nothing more. ${manual}`, false, { session_id: s.id, reverted: false, reason });
+    throw new ToolError("LIGHTROOM_DIALOG", `${reason}. ${problem}.${onCopy} Session ${s.id} is still open, and writes and renders nothing more. ${manual}`, false, { session_id: s.id, reverted: false, reason });
   }
   s.log.ended_by = { source: "engine", reason };
   s.endedByEngine = reason;
   saveLog(s);
   throw new ToolError(
     "LIGHTROOM_DIALOG",
-    `${reason}. Once Lightroom was free again, the engine put the photo back as it was before the session (every setting and the masks checked) and ended session ${s.id} with outcome "revert". Tell the user what happened; start a new session only if they ask.`,
+    `${reason}. Once Lightroom was free again, the engine put the photo back as it was before the session (every setting and the masks checked) and ended session ${s.id} with outcome "revert".${onCopy} Tell the user what happened; start a new session only if they ask.`,
     false,
     { session_id: s.id, reverted: true, outcome: "revert", ended_by: "engine", reason },
   );
@@ -134,6 +138,12 @@ async function autoRevert(ctx: SessionContext, s: Session, job: AiJob, cause: st
 async function byTable(ctx: SessionContext, s: Session, job: AiJob): Promise<AiResult | Failed> {
   const u = await updateAndWait(ctx, s, job);
   if (u.kind === "computed") {
+    // One person's point, checked once computed: right after the write Lightroom reads it back as the
+    // centre, once computed as written [handle: docs\reports\phase6\masks-capture\capture3-4_people_entire.json `after_write`, `final`].
+    const got = job.point ? pointOf(firstComponent(readTable(u.sdk), job.id)) : null;
+    if (job.point && (!got || Math.abs(got[0] - job.point[0]) > 1e-6 || Math.abs(got[1] - job.point[1]) > 1e-6)) {
+      return { why: `once computed, the person's point read back as ${got ? got.join(" ") : "none"}, not ${job.point.join(" ")} as written`, fallback: false };
+    }
     return { sdk: u.sdk, id: job.id, route: "table", update_ms: u.update_ms, computed_ms: u.computed_ms, ...(u.dialog_ms !== undefined ? { dialog_ms: u.dialog_ms } : {}) };
   }
   if (u.kind === "dialog") return autoRevert(ctx, s, job, u.why);

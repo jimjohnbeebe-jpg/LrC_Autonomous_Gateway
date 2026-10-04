@@ -2961,7 +2961,8 @@
               "hud_abort",
               "hud_accept",
               "hud_pick",
-              "hud_approve_pass"
+              "hud_approve_pass",
+              "hud_put_back"
             ]
           },
           "source": {

@@ -11,9 +11,9 @@
 //     (io.ts checkPending): in that run the exports made while the gate was held wrote no JPEG
 //     [unverified: seen in the plugin's log of Jim's step-2 run, which is not committed];
 //   - after DIALOG_AFTER_MS with nothing in the table, probe_write_gate: "aborted" (the gate is held)
-//     means a dialog [inference: a cold model could hold the gate as long; then the mask computes once
-//     the gate is free and nothing is reverted]. The user is told on the HUD (the work note) and in
-//     the tool result, and the engine keeps probing for up to DIALOG_WAIT_MS. Once the gate is free and
+//     means Lightroom is busy or shows a dialog [inference: a cold model could hold the gate as long;
+//     then the mask computes once the gate is free and nothing is reverted]. The user is told so on the
+//     HUD (the work note, DIALOG_NOTE, true in both cases [stated: the lead, 2026-10-03]) and in the tool result, and the engine keeps probing for up to DIALOG_WAIT_MS. Once the gate is free and
 //     the mask still has not computed within GRACE_MS, the caller puts the photo back (ai-masks.ts
 //     autoRevert) [stated: Jim, 2026-10-03, "Also auto-revert"];
 //   - the probe also reports the update's own state: failed (updateAISettings raised) or abandoned
@@ -61,7 +61,8 @@ export const AI_TIMINGS: Readonly<AiTimings> = {
 };
 export const aiTimings = (ctx: SessionContext): AiTimings => ({ ...AI_TIMINGS, ...ctx.deps.aiTimings });
 
-export const DIALOG_NOTE = "Lightroom shows a dialog: click OK in Lightroom.";
+/** True for a dialog and for a slow model alike: both hold the write gate (the header's [inference]). */
+export const DIALOG_NOTE = "Lightroom is busy or shows a dialog: if a dialog is open in Lightroom, click OK.";
 
 export type Update =
   | { kind: "computed"; sdk: SdkSettings; update_ms: number; computed_ms: number; dialog_ms?: number }
@@ -138,8 +139,8 @@ async function watch(ctx: SessionContext, s: Session, job: AiJob, T: AiTimings, 
       return { kind: "computed", sdk: seen.sdk, update_ms: 0, computed_ms: ms(t0), ...(w.dialogAt !== null ? { dialog_ms: dialogMs() } : {}) };
     }
     const now = performance.now();
-    if (w.freeAt !== null && now - w.freeAt >= T.graceMs) return { kind: "dialog", why: "the dialog was closed and the mask did not compute", dialog_ms: dialogMs() };
-    if (w.dialogAt !== null && now - w.dialogAt >= T.dialogWaitMs) return { kind: "dialog", why: `the dialog was still open after ${Math.round(T.dialogWaitMs / 60_000)} minutes`, dialog_ms: dialogMs() };
+    if (w.freeAt !== null && now - w.freeAt >= T.graceMs) return { kind: "dialog", why: "Lightroom was free again and the mask had not computed", dialog_ms: dialogMs() };
+    if (w.dialogAt !== null && now - w.dialogAt >= T.dialogWaitMs) return { kind: "dialog", why: `Lightroom was still busy after ${Math.round(T.dialogWaitMs / 60_000)} minutes`, dialog_ms: dialogMs() };
     if (w.dialogAt === null && now - t0 >= T.computeMs) return { kind: "failed", why: `the mask did not compute within ${Math.round(now - t0)} ms of update_ai_settings`, fallback: false };
     if (now - t0 >= T.dialogAfterMs && w.freeAt === null && now - w.probed >= T.probeEveryMs) {
       w.probed = now;

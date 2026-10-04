@@ -102,8 +102,8 @@ async function takeOut(ctx: SessionContext, s: Session, job: AiJob): Promise<str
 async function autoRevert(ctx: SessionContext, s: Session, job: AiJob, cause: string): Promise<never> {
   const pending = s.aiPending;
   s.aiPending = null; // the put-back's own gate waits for the catalog
-  const reason = `Lightroom showed a dialog while it computed the AI ${KIND_LABELS[job.kind]} mask (${cause})`;
-  const manual = `Tell the user: if the dialog is still open, click OK in Lightroom; then call lr_end_session with outcome "revert". If that fails too: in Lightroom's Develop module, open the Snapshots panel and click "${s.snapshot.name}".`;
+  const reason = `Lightroom was busy or showed a dialog while it computed the AI ${KIND_LABELS[job.kind]} mask (${cause})`;
+  const manual = `Tell the user: if a dialog is open in Lightroom, click OK; then call lr_end_session with outcome "revert". If that fails too: in Lightroom's Develop module, open the Snapshots panel and click "${s.snapshot.name}".`;
   let problem: string | null = null;
   try {
     if (job.t.id !== "master") problem = await takeOut(ctx, s, job);

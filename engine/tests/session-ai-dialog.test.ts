@@ -57,7 +57,8 @@ describe("AI masks: Lightroom's dialog", () => {
     expect(e).toMatchObject({ code: "LIGHTROOM_DIALOG", recoverable: false, details: { session_id: ID, reverted: true, outcome: "revert", ended_by: "engine" } });
     expect(e.message).toMatch(/put the photo back as it was before the session/);
     expect(notes).toContain(`applying: ${DIALOG_NOTE}`);
-    expect(notes.at(-1)).toMatch(/^ended: Lightroom showed a dialog/);
+    expect(notes.at(-1)).toBe("ended: Lightroom was busy or showed a dialog, so the photo was put back as it was before the edit.");
+    expect(DIALOG_NOTE).toBe("Lightroom is busy or shows a dialog: if a dialog is open in Lightroom, click OK.");
     expect(lr.masks.blocked).toEqual([]);
     expect(sent("create_ai_mask_dc")).toBe(0);
     expect(lr.settings[MASK_TABLE_KEY] ?? []).toEqual(start[MASK_TABLE_KEY] ?? []);
@@ -85,7 +86,7 @@ describe("AI masks: Lightroom's dialog", () => {
     lr.masks.heldProbes = 1_000_000;
     const e = await fails(create("people_face_skin"));
     expect(e).toMatchObject({ code: "LIGHTROOM_DIALOG", details: { reverted: false } });
-    expect(e.message).toMatch(/click OK in Lightroom; then call lr_end_session with outcome "revert"/);
+    expect(e.message).toMatch(/if a dialog is open in Lightroom, click OK; then call lr_end_session with outcome "revert"/);
     expect(e.message).toMatch(/open the Snapshots panel and click "AVG pre-session/);
     expect(m.current()?.id).toBe(ID);
     const step = await fails(m.step({ session_id: ID, settings: { exposure: 0.2 }, rationale: "test", return_image: "none" }));

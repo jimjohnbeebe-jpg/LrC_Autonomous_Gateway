@@ -237,7 +237,7 @@ export class SessionManager {
       // The engine put the photo back after a Lightroom dialog and ended the session (ai-masks.ts autoRevert).
       if (s.endedByEngine && this.session === s) {
         this.close(s, null);
-        this.ctx.deps.hud?.stage(s, "ended", { note: "Lightroom showed a dialog, so the photo was put back as it was before the edit." });
+        this.ctx.deps.hud?.stage(s, "ended", { note: "Lightroom was busy or showed a dialog, so the photo was put back as it was before the edit." });
       }
     }
     if (s.notices.length === 0) return out;

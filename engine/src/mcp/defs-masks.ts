@@ -96,8 +96,8 @@ export const MASK_DEFS: ToolDef[] = [
       "Create one mask on the session's photo, with its local sliders set in the same pass. linear and radial take geometry; luminance takes " +
       "geometry.lum_range; the AI kinds are found by Lightroom: the engine adds the mask to the table and asks Lightroom to compute it " +
       "(up to 2 minutes for a cold model). If the photo has none of that kind, MASK_NOTHING_FOUND: the mask is taken out again and the " +
-      "pass is not used. If Lightroom shows a dialog while it computes, the engine tells the user on the HUD to click OK in Lightroom, " +
-      "waits, then puts the photo back as it was before the session and ENDS the session (LIGHTROOM_DIALOG): tell the user, and start a " +
+      "pass is not used. If Lightroom stays busy or shows a dialog while it computes, the engine tells the user on the HUD: \"Lightroom is busy or shows a dialog: if a dialog is open in Lightroom, click OK.\" It " +
+      "waits; if the mask then computes the pass goes on, else it puts the photo back as it was before the session and ENDS the session (LIGHTROOM_DIALOG): tell the user, and start a " +
       "new session only if they ask. If the update fails with a Lightroom or plugin error, subject, sky and background are made by " +
       "Lightroom's Develop module instead (Lightroom then switches to Develop; `ai.route` \"dc\", `switched_to_develop`); people and " +
       "landscape kinds have no such fallback. If nothing works, FEATURE_UNAVAILABLE (details.routes_tried): the masks are as before and " +

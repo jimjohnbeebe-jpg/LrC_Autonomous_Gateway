@@ -520,6 +520,28 @@ hello and a read-only get_selection. It ran twice, at 12:38 and again when this 
 
 All five reached the bridge started at the reload (19:37:23Z); none was refused.
 
+Again at 13:03, after the CodeRabbit fixes (commit 4a73a52: Bridge.lua no longer starts without a
+token). Claude Code clicked Reload Plug-in; the plugin log:
+
+2026-10-04 13:03:50.558 INFO  bridge: starting generation 1 (receive 8765, send 8766)
+2026-10-04 13:03:54.620 INFO  bridge: token written to %USERPROFILE%\.lrc-avg\bridge_token
+2026-10-04 13:03:54.624 INFO  bridge: ports 8765/8766 written to %USERPROFILE%\.lrc-avg\bridge_ports.json
+2026-10-04 13:03:54.624 INFO  bridge: listening (generation 1)
+2026-10-04 13:03:56.639 INFO  bridge: generation 1 replaced by a newer start (token file)
+2026-10-04 13:03:56.639 INFO  bridge: generation 1 replaced; loop exiting
+2026-10-04 13:03:56.640 INFO  bridge: send: closed
+2026-10-04 13:03:56.640 INFO  bridge: receive: closed
+2026-10-04 13:04:04.634 INFO  bridge: sockets closed (task ended)
+
+reload-probe.mts at 13:04:
+
+1: hello plugin 0.17.0, started 2026-10-04T20:03:50Z; get_selection count 1; drops none
+2: hello plugin 0.17.0, started 2026-10-04T20:03:50Z; get_selection count 1; drops none
+3: hello plugin 0.17.0, started 2026-10-04T20:03:50Z; get_selection count 1; drops none
+4: hello plugin 0.17.0, started 2026-10-04T20:03:50Z; get_selection count 1; drops none
+5: hello plugin 0.17.0, started 2026-10-04T20:03:50Z; get_selection count 1; drops none
+
+
 == 4. Left in Jim's catalog by the check
 
 - Collection set "LrC-AVG check" with the collection named in check.json step 2_create; it holds

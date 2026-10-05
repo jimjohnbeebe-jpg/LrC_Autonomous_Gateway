@@ -48,6 +48,8 @@ export async function topmostChecks(ctx: Ctx): Promise<void> {
     return exe.get(pid) ?? "";
   };
   const switches: Record<string, unknown>[] = [];
+  // Only alternations count: Lightroom, Claude Desktop, Lightroom, ... A visit to any other window
+  // (this one, the HUD) is ignored, so a return to the same app is not a switch.
   let last = "";
   const end = now() + 180_000;
   while (switches.length < 10 && now() < end) {
@@ -55,9 +57,8 @@ export async function topmostChecks(ctx: Ctx): Promise<void> {
     const fg = foreground();
     const pid = pidOf(fg);
     const kind = pid === ctx.lr.pid ? "lightroom" : exeOf(pid) === "claude.exe" ? "claude" : "other";
-    if (kind === last) continue;
+    if (kind === "other" || kind === last) continue;
     last = kind;
-    if (kind === "other") continue;
     const t0 = now();
     const correct = (): boolean => {
       const z = zOrder();
@@ -90,8 +91,8 @@ export async function followChecks(ctx: Ctx): Promise<void> {
     "     (F cycles the screen modes; Ctrl+Alt+F goes back to Normal at any time).",
     "  Then put Lightroom back as it was at the start (maximise it if it was maximised).",
   ].join("\n"));
-  let finished = false;
-  void enterLater("When you have done all five, press Enter here.").then(() => (finished = true));
+  let finishedAt = 0;
+  void enterLater("When you have done all five, press Enter here.").then(() => (finishedAt = now()));
   const episodes: Record<string, unknown>[] = [];
   let lr = mainWindow(ctx.lr.pid) || ctx.lr.hwnd;
   const keyOf = (h: number): string => (iconic(h) ? "iconic" : JSON.stringify(rect(h)));
@@ -100,7 +101,14 @@ export async function followChecks(ctx: Ctx): Promise<void> {
   let lastFind = now();
   let inPlaceSince: number | null = null;
   let open = false;
-  while (!finished) {
+  const close = (min: boolean, settled: boolean): void => {
+    open = false;
+    const ms = settled && inPlaceSince !== null ? inPlaceSince - lastChange : null;
+    episodes.push({ kind: min ? "minimised" : "moved", settled, ms, lr_rect: min ? null : rect(lr), hud_rect: rect(ctx.hud.hwnd), expected: min ? null : deckRect(lr), hud_visible: visible(ctx.hud.hwnd) });
+  };
+  // After Enter, an episode still open gets up to 1.5 s to settle; one that does not is kept as unsettled
+  // (ms null, so the gate fails) rather than dropped.
+  while (!finishedAt || (open && now() - finishedAt < 1500)) {
     await sleep(5);
     const t = now();
     if (t - lastFind > 250) [lr, lastFind] = [mainWindow(ctx.lr.pid) || lr, t];
@@ -113,11 +121,9 @@ export async function followChecks(ctx: Ctx): Promise<void> {
     const hudVisible = visible(ctx.hud.hwnd);
     const inPlace = min ? !hudVisible : hudVisible && same(rect(ctx.hud.hwnd), deckRect(lr));
     inPlaceSince = inPlace ? (inPlaceSince ?? t) : null;
-    if (open && t - lastChange > 400) {
-      open = false;
-      episodes.push({ kind: min ? "minimised" : "moved", ms: inPlaceSince === null ? null : inPlaceSince - lastChange, lr_rect: min ? null : rect(lr), hud_rect: rect(ctx.hud.hwnd), expected: min ? null : deckRect(lr), hud_visible: hudVisible });
-    }
+    if (open && t - lastChange > 400) close(min, true);
   }
+  if (open) close(lastKey === "iconic", false);
   ctx.lr.hwnd = lr;
   const moved = await ask("Each time you moved or resized Lightroom, did the bar end up along Lightroom's bottom part, as wide as the window?");
   const minimised = await ask("While Lightroom was minimised, was the bar gone, and did it come back when you brought Lightroom back?");
@@ -150,16 +156,22 @@ export async function survives(ctx: Ctx): Promise<void> {
 
 /** S9-10: the HUD exits after Lightroom exits. */
 export async function exitsWithLightroom(ctx: Ctx): Promise<void> {
-  const hudTree = tree(ctx.hud.pid);
+  // Every process the HUD had at any point up to its exit: WebView2 may start or replace a child while
+  // Jim is at the prompt or quitting Lightroom.
+  const hudTree = new Set(tree(ctx.hud.pid));
+  const collect = (): void => {
+    if (alive(ctx.hud.pid)) for (const p of tree(ctx.hud.pid)) hudTree.add(p);
+  };
   await enter("S9-10, the last step. After you press Enter, quit Lightroom: File > Exit. If Lightroom offers to back up the catalog, answer as you usually do.\nThis window waits up to 3 minutes for Lightroom to close.");
-  const lrGone = await pollUntil(() => !alive(ctx.lr.pid), 180_000, 20);
-  const hostGone = lrGone ? await pollUntil(() => !alive(ctx.hud.pid), 30_000, 20) : null;
-  const treeGone = lrGone ? await pollUntil(() => hudTree.every((p) => !alive(p)), 30_000, 20) : null;
+  collect();
+  const lrGone = await pollUntil(() => (collect(), !alive(ctx.lr.pid)), 180_000, 50);
+  const hostGone = lrGone ? await pollUntil(() => (collect(), !alive(ctx.hud.pid)), 30_000, 20) : null;
+  const treeGone = lrGone ? await pollUntil(() => [...hudTree].every((p) => !alive(p)), 30_000, 20) : null;
   ctx.r.s9_10 = {
     lightroom_exited: lrGone !== null,
     host_ms: lrGone && hostGone ? hostGone - lrGone : null,
     tree_ms: lrGone && treeGone ? treeGone - lrGone : null,
-    tree: hudTree,
+    tree: [...hudTree],
   };
   ctx.save();
 }

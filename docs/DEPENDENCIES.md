@@ -49,8 +49,8 @@ Rust crates in `spikes\S9\tauri\src-tauri\Cargo.toml`, resolved in the committed
 | `tauri` | 2.12.1 | `=2.12.1` (spec D2: 2.12.x; the index already lists 3.0.0-alpha.4) | Apache-2.0 OR MIT | https://crates.io/crates/tauri/2.12.1 |
 | `tauri-build` | 2.7.1 | `=2.7.1` (tauri 2.12.1 asks for `^2.7.1`, crates.io index) | Apache-2.0 OR MIT | https://crates.io/crates/tauri-build/2.7.1 |
 | `webview2-com` | 0.39.1 | `=0.39.1`, the version tauri 2.12.1 resolves | MIT | https://crates.io/crates/webview2-com/0.39.1 |
-| `windows` | 0.62.2 | `0.62` (tauri 2.12.1 asks for `^0.62`) | MIT OR Apache-2.0 | https://crates.io/crates/windows/0.62.2 |
-| `serde_json` | 1.0.151 | `1` | MIT OR Apache-2.0 | https://crates.io/crates/serde_json/1.0.151 |
+| `windows` | 0.62.2 | `=0.62.2` (tauri 2.12.1 asks for `^0.62`) | MIT OR Apache-2.0 | https://crates.io/crates/windows/0.62.2 |
+| `serde_json` | 1.0.151 | `=1.0.151` | MIT OR Apache-2.0 | https://crates.io/crates/serde_json/1.0.151 |
 
 Toolchain: rustup 1.29.1 (`winget install --id Rustlang.Rustup -e`), rustc 1.99.0 stable-x86_64-pc-windows-msvc, Microsoft C++ Build Tools 2022 [handle: `spikes\S9\prereqs.ps1` output in `docs\reports\phase7\S9-prerun\prerun.txt` section 1]. The first `tauri build --bundles nsis` downloaded NSIS 3.11 and nsis_tauri_utils v0.5.3 from github.com/tauri-apps (tauri-cli output, same file section 2).
 

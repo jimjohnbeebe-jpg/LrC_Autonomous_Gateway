@@ -16,7 +16,9 @@ fn open() -> Option<Mutex<File>> {
     let dir = std::env::temp_dir().join("LrC-AVG").join("S9");
     std::fs::create_dir_all(&dir).ok()?;
     let path = dir.join(format!("hud_{}.jsonl", std::process::id()));
-    OpenOptions::new().create(true).append(true).open(path).ok().map(Mutex::new)
+    // Truncated at the process's first line: Windows reuses pids, and an appended file mixed an earlier
+    // HUD's lines (and window handle) into a new one's in Claude Code's dry run (S9.md "Pre-run findings").
+    OpenOptions::new().create(true).write(true).truncate(true).open(path).ok().map(Mutex::new)
 }
 
 pub fn write(mut line: Value) {

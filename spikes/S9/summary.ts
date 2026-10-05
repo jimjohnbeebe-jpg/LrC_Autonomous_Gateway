@@ -37,18 +37,24 @@ export function summarize(r: Results): { gates: Gate[]; headline: string } {
   const s11 = r.s9_11 as Row | undefined;
   const switches = rows(s7?.switches);
   const episodes = rows(s8?.episodes);
+  // A sample counts only in the window state it was meant to measure (a failed hide or show is a miss),
+  // and a CPU/memory sample only when every process of the tree was read for the whole window.
+  const s3ms = Array.isArray(s3.ms) ? (s3.visible_at_start === true ? s3.ms : s3.ms.map(() => null)) : [];
+  const hiddenOk = hidden?.hidden === true && hidden.still_hidden === true && hidden.complete === true;
+  const pulsingOk = pulsing?.shown === true && pulsing.still_visible === true && pulsing.complete === true;
+  const kinds = (k: string): number => switches.filter((x) => x.to === k).length;
   const gates: Gate[] = [
     timed("S9-1 cold start", rows(s1.runs).map((x) => x.ms), "median", 1500),
-    timed("S9-2 warm show", shows.map((x) => x.ms), "p95", 150),
-    timed("S9-3 update to paint", Array.isArray(s3.ms) ? s3.ms : [], "p95", 100),
-    gate("S9-4 idle memory (hidden, 60 s)", hidden ? { tree_mib: Number(hidden.private_bytes_tree) / MB, host_mib: Number(hidden.private_bytes_host) / MB } : null,
-      "<= 150 MiB private bytes, process tree", hidden ? Number(hidden.private_bytes_tree) <= 150 * MB : null),
-    gate("S9-5 CPU", { hidden_pct: hidden?.cpu_pct_one_core ?? null, visible_pct: pulsing?.cpu_pct_one_core ?? null },
-      "hidden <= 0.5 %, visible and pulsing <= 2 % of one core", hidden && pulsing ? Number(hidden.cpu_pct_one_core) <= 0.5 && Number(pulsing.cpu_pct_one_core) <= 2 : null),
+    timed("S9-2 warm show", shows.map((x) => (x.hidden_before === true ? x.ms : null)), "p95", 150),
+    timed("S9-3 update to paint", s3ms, "p95", 100),
+    gate("S9-4 idle memory (hidden, 60 s)", hidden ? { tree_mib: Number(hidden.private_bytes_tree) / MB, host_mib: Number(hidden.private_bytes_host) / MB, measured_hidden_and_complete: hiddenOk } : null,
+      "<= 150 MiB private bytes, process tree, hidden and every process read", hidden ? hiddenOk && Number(hidden.private_bytes_tree) <= 150 * MB : null),
+    gate("S9-5 CPU", { hidden_pct: hidden?.cpu_pct_one_core ?? null, visible_pct: pulsing?.cpu_pct_one_core ?? null, hidden_ok: hiddenOk, visible_ok: pulsingOk },
+      "hidden <= 0.5 %, visible and pulsing <= 2 % of one core, each in its state with every process read", hidden && pulsing ? hiddenOk && pulsingOk && Number(hidden.cpu_pct_one_core) <= 0.5 && Number(pulsing.cpu_pct_one_core) <= 2 : null),
     gate("S9-6 show without activation", { programmatic_unchanged: shows.filter((x) => x.fg_unchanged).length, programmatic: shows.length, jim_yes: jim6.filter((x) => x.jim_backslash_reached_lightroom).length, jim: jim6.length },
       "20 of 20 programmatic shows, Jim 3 of 3", shows.length && jim6.length ? shows.length === 20 && shows.every((x) => x.fg_unchanged) && jim6.length === 3 && jim6.every((x) => x.jim_backslash_reached_lightroom) : null),
-    gate("S9-7 topmost policy", { switches: switches.length, correct_within_250: switches.filter((x) => x.correct && Number(x.ms) <= 250).length, jim_over_lightroom: s7?.jim_over_lightroom ?? null, jim_under_claude: s7?.jim_under_claude ?? null },
-      "10 switches, each correct within 250 ms; Jim y, y", s7 ? switches.length >= 10 && switches.every((x) => x.correct && Number(x.ms) <= 250) && s7.jim_over_lightroom === true && s7.jim_under_claude === true : null),
+    gate("S9-7 topmost policy", { switches: switches.length, to_lightroom: kinds("lightroom"), to_claude: kinds("claude"), correct_within_250: switches.filter((x) => x.correct && Number(x.ms) <= 250).length, jim_over_lightroom: s7?.jim_over_lightroom ?? null, jim_under_claude: s7?.jim_under_claude ?? null },
+      "10 alternating switches (5 each way), each correct within 250 ms; Jim y, y", s7 ? switches.length >= 10 && kinds("lightroom") >= 5 && kinds("claude") >= 5 && switches.every((x) => x.correct && Number(x.ms) <= 250) && s7.jim_over_lightroom === true && s7.jim_under_claude === true : null),
     gate("S9-8 follows Lightroom", { episodes: episodes.length, in_place_within_100: episodes.filter((x) => typeof x.ms === "number" && x.ms <= 100).length, jim: [s8?.jim_moved, s8?.jim_minimised, s8?.jim_screen_modes] },
       "every episode in place <= 100 ms after the change ends; hidden while minimised; Jim y, y, y", s8 ? episodes.length > 0 && episodes.every((x) => typeof x.ms === "number" && x.ms <= 100) && s8.jim_moved === true && s8.jim_minimised === true && s8.jim_screen_modes === true : null),
     gate("S9-9 survives the launcher", s9 ?? null, "running, not-connected state with the undo line (Jim y)", s9 ? s9.hud_running_5s_after === true && s9.jim_not_connected_with_undo === true : null),

@@ -35,7 +35,10 @@ export async function coldStarts(ctx: Ctx, n = 5): Promise<void> {
     const pid = num(spawned, "pid") ?? 0;
     let hwnd = 0;
     await pollUntil(() => {
-      hwnd = Number(hudLog(pid).find((e) => e.ev === "start")?.hwnd ?? 0);
+      // Only this process's start line: a file left by an earlier process with the same pid is still
+      // there until the new HUD truncates it on its first line.
+      const tSpawn = spawned?.t ?? 0;
+      hwnd = Number(hudLog(pid).findLast((e) => e.ev === "start" && e.t >= tSpawn - 50)?.hwnd ?? 0);
       return hwnd !== 0;
     }, 15_000, 5);
     const tVisible = hwnd ? await pollUntil(() => visible(hwnd), 15_000, 1) : null;
@@ -100,11 +103,16 @@ async function sample(ctx: Ctx, windowMs: number): Promise<Record<string, unknow
   const t1 = now();
   const names = processes();
   const procs = tree(ctx.hud.pid).map((pid) => {
-    const c0 = before.get(pid);
     const c1 = cpuMs(pid);
+    // A process that started inside the window spent all its CPU time inside it.
+    const c0 = before.has(pid) ? before.get(pid) : 0;
     return { pid, exe: names.get(pid)?.exe ?? "?", private_bytes: privateBytes(pid), cpu_ms: c0 != null && c1 != null ? c1 - c0 : null };
   });
   const sum = (k: "private_bytes" | "cpu_ms"): number => procs.reduce((a, p) => a + (p[k] ?? 0), 0);
+  // A process that ended inside the window took its CPU time with it, and an unreadable one has no
+  // number: either makes the totals too low, so the sample is marked incomplete and its gate fails.
+  const vanished = [...before.keys()].filter((pid) => !procs.some((p) => p.pid === pid));
+  const unreadable = procs.filter((p) => p.private_bytes === null || p.cpu_ms === null).map((p) => p.pid);
   return {
     window_ms: t1 - t0,
     procs,
@@ -112,6 +120,9 @@ async function sample(ctx: Ctx, windowMs: number): Promise<Record<string, unknow
     private_bytes_host: procs.find((p) => p.pid === ctx.hud.pid)?.private_bytes ?? null,
     cpu_pct_one_core: (sum("cpu_ms") / (t1 - t0)) * 100,
     new_processes: procs.filter((p) => !before.has(p.pid)).map((p) => p.pid),
+    vanished,
+    unreadable,
+    complete: vanished.length === 0 && unreadable.length === 0,
   };
 }
 

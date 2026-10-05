@@ -122,6 +122,31 @@ minimise -> hidden ms 15.2
 restore -> shown in place ms 61.4
 log counts [ start 1, lightroom_found 1, place 6, webview 3, show 2, follow 8, hide 1, foreground 2 ]
 
+== 10. After Greptile's review of PR #80 (gates tightened, samples marked complete) ==
+10a. Dry run (appendix B) on the tightened harness found a harness bug: S9-1 run 1 missed (t_visible null).
+  {"pid":48132,"hwnd":57280020,"ms":null,"t_spawn":1791167026807.1326,"t_hello":1791167027355.6714,"t_visible":null,"t_paint":1791167027392.2,...}
+  hud_48132.jsonl began with an earlier process's lines (same pid, t 1791164843109): its "start" line named window
+  57280020, while this process logged "start" hwnd 71106686 at 1791167027250. Windows had reused the pid, the log
+  appended, and auto.ts took the first start line. Fix: log.rs truncates on the process's first line, and auto.ts takes
+  the last start line written after the spawn.
+10b. Dry run after that fix (Notepad stand-in, VS Code in front):
+S9 SUGGESTED: FAILED (S9-4); not run: S9-6, S9-7, S9-8, S9-9, S9-10, S9-11. A suggestion only: the verdict is Jim's.
+  PASS     S9-1 cold start: {"median":540.9619140625,"n":5,"misses":0,"max":672.604248046875}
+  PASS     S9-2 warm show: {"p95":13.5283203125,"n":20,"misses":0,"max":13.9716796875}
+  PASS     S9-3 update to paint: {"p95":1.904296875,"n":100,"misses":0,"max":9.806396484375}
+  FAIL     S9-4 idle memory (hidden, 60 s): {"tree_mib":157.8671875,"host_mib":5.7734375,"measured_hidden_and_complete":true}
+  PASS     S9-5 CPU: {"hidden_pct":0.44270613745612974,"visible_pct":1.7968799133435132,"hidden_ok":true,"visible_ok":true}
+  NOT RUN  S9-6 show without activation: {"programmatic_unchanged":20,"programmatic":20,"jim_yes":0,"jim":0}
+The run before it (10a) had hidden 0.49 % and visible 2.32 %, both samples complete (7 processes, none new, vanished
+or unreadable): S9-5 sits at its limits.
+10c. The tightened gates against made-up results (appendix F, zz-sum.ts):
+S9-7 alternating 10: pass
+S9-7 only lightroom: fail
+S9-8 all settled fast: pass
+S9-8 last unsettled: fail
+S9-2 hide failed once: fail
+S9-4 incomplete: fail
+
 == Appendix: scripts, verbatim ==
 
 --- Appendix A: smoke-s9.ts ---
@@ -332,3 +357,17 @@ stub.cmd({ cmd: "quit" });
 for (const p of hudPids()) await killTree(tree(p));
 execSync(`taskkill /PID ${np} /F`);
 process.exit(0);
+
+--- Appendix F: zz-sum.ts ---
+import { summarize } from "./summary.ts";
+const sw = (k: string[]) => k.map((to) => ({ to, ms: 20, correct: true }));
+const base = { run_id: "x", errors: [] as string[] };
+const g = (r: object, name: string) => summarize({ ...base, ...r }).gates.find((x) => x.gate.startsWith(name))?.suggested;
+console.log("S9-7 alternating 10:", g({ s9_7: { switches: sw(["lightroom","claude","lightroom","claude","lightroom","claude","lightroom","claude","lightroom","claude"]), jim_over_lightroom: true, jim_under_claude: true } }, "S9-7"));
+console.log("S9-7 only lightroom:", g({ s9_7: { switches: sw(Array(10).fill("lightroom")), jim_over_lightroom: true, jim_under_claude: true } }, "S9-7"));
+const s8 = (eps: object[]) => ({ s9_8: { episodes: eps, jim_moved: true, jim_minimised: true, jim_screen_modes: true } });
+console.log("S9-8 all settled fast:", g(s8([{ ms: 20, settled: true }, { ms: 40, settled: true }]), "S9-8"));
+console.log("S9-8 last unsettled:", g(s8([{ ms: 20, settled: true }, { ms: null, settled: false }]), "S9-8"));
+console.log("S9-2 hide failed once:", g({ s9_2: { shows: Array.from({ length: 20 }, (_, i) => ({ ms: 10, hidden_before: i !== 3, fg_unchanged: true })) } }, "S9-2"));
+console.log("S9-4 incomplete:", g({ s9_4_5_hidden: { hidden: true, still_hidden: true, complete: false, private_bytes_tree: 1 } }, "S9-4"));
+(run with stdin open it does not exit, because summary.ts imports harness.ts, which opens the y/n prompt reader)

@@ -19,7 +19,7 @@ const uuidOf = (state: HudChannelState, letter: string): string => state.copies?
 /** A Variants edit at awaiting_pick, with the Deck connected. */
 async function atPick(): Promise<{ rig: DeckRig; sim: SimHudClient; state: HudChannelState }> {
   clean();
-  const rig = await deckRig({ pingMs: 50 });
+  const rig = await deckRig();
   const sim = await SimHudClient.connect(rig.endpoint);
   await sim.welcomed();
   await rig.manager.begin({ intent_id: "test_variants", mode: "variants" });
@@ -27,7 +27,8 @@ async function atPick(): Promise<{ rig: DeckRig; sim: SimHudClient; state: HudCh
   return { rig, sim, state: await sim.at("awaiting_pick") };
 }
 
-describe("show a copy (E12)", () => {
+// Each test makes a Variants edit with three passes first: seconds under a full parallel run.
+describe("show a copy (E12)", { timeout: 30000 }, () => {
   it("selects the chosen copy in Lightroom, leaves the session's photo, and the selection reads as in the edit", async () => {
     const { rig, sim, state } = await atPick();
     expect(state.target.uuid).toBe(uuidOf(state, "C")); // the copy refined last
@@ -46,7 +47,7 @@ describe("show a copy (E12)", () => {
 
   it("refuses outside awaiting_pick, for another edit and for a copy the edit lacks, and sends nothing", async () => {
     clean();
-    const rig = await deckRig({ pingMs: 50 });
+    const rig = await deckRig();
     await rig.manager.begin({ intent_id: "test_variants", mode: "variants" });
     const show = (id: string, v: "A" | "B"): void => rig.manager.showCopy(id, v, (r) => rig.shows.push(r));
     let before = selects();
@@ -85,6 +86,39 @@ describe("show a copy (E12)", () => {
     expect(rig.shows.at(-1)?.variant).toBe("B");
     expect(selects() - before).toBe(1);
     expect(lr.selected).toBe(uuidOf(state, "B"));
+  });
+
+  it("selects nothing once an Abort failed or is queued (Greptile, PR #86)", async () => {
+    const { rig, sim } = await atPick();
+    plugin.handlers.set("apply_snapshot", () => ({ ok: false, error: { code: "snapshot_failed", message: "no", recoverable: true } }));
+    sim.click("hud_abort", { session_id: ID });
+    await sim.at("awaiting_claude", (s) => s.note === "Abort could not put the photo back. Click Abort again.");
+    const before = selects();
+    rig.manager.showCopy(ID, "A", (r) => rig.shows.push(r));
+    await sleep(50);
+    expect(rig.shows.map((r) => r.result)).toEqual(["refused: the edit is being aborted"]);
+    expect(selects()).toBe(before);
+  });
+
+  it("drops a choice queued behind an Abort", async () => {
+    const { rig, sim } = await atPick();
+    // A preview of copy B holds the queue (its select is slow); the show queues behind it, then the Abort. The show runs while the Abort is pending.
+    const select = plugin.handlers.get("select_photo");
+    let entered = false;
+    plugin.handlers.set("select_photo", async (p, id) => {
+      if (!entered) {
+        entered = true;
+        await sleep(200);
+      }
+      return select ? select(p, id) : "silent";
+    });
+    const preview = rig.manager.preview(ID, 800, "B");
+    await waitUntil(() => entered);
+    rig.manager.showCopy(ID, "A", (r) => rig.shows.push(r));
+    sim.click("hud_abort", { session_id: ID });
+    await preview.catch(() => undefined);
+    await waitUntil(() => rig.shows.length === 2);
+    expect(rig.shows.map((r) => r.result)).toEqual(["queued", "dropped: the edit no longer waits for a pick"]);
   });
 
   it("drops a choice queued behind the pick", async () => {

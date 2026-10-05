@@ -1,7 +1,8 @@
 // Showing a copy in Lightroom from the Deck (Phase 7 row 4a, spec docs\hud\lrc-avg-hud-spec-v2.md D5
 // E12) [stated: Jim, 2026-10-05, Q11 "Choose, confirm + E12"]: choosing a copy's card on the Deck
 // selects that copy in Lightroom, so the user can look at it there before the pick, which stays a
-// separate click (hud_pick). Only while the edit waits for the pick (pick.ts awaitingPick). It runs in
+// separate click (hud_pick). Only while the edit waits for the pick (pick.ts awaitingPick) and no
+// Abort, pending or failed, is on it. It runs in
 // the session's queue, after the running operation, and checks again when its turn comes that the
 // edit still waits for the pick; choices made while one waits replace it, so only the last is
 // selected. It selects with the identity check every Variants call uses (targets.ts selectExpect) and
@@ -30,6 +31,8 @@ export function showCopy(host: ShowHost, sessionId: string, v: VariantId, report
   const r = (ok: boolean, result: string, error?: string): void => report({ ok, session_id: sessionId, variant: v, result, ...(error ? { error } : {}) });
   const s = host.session();
   if (!s || s.id !== sessionId) return r(false, "refused: the edit is not open");
+  // An Abort, pending or failed, asked for the photo back: nothing else is selected (Greptile, PR #86), as Pick does (hud-actions.ts).
+  if (s.abort) return r(false, "refused: the edit is being aborted");
   if (!awaitingPick(s)) return r(false, "refused: the edit is not waiting for a pick");
   if (!variant(s, v)) return r(false, "refused: the edit has no such copy");
   const replaces = waiting.has(s);
@@ -41,7 +44,7 @@ export function showCopy(host: ShowHost, sessionId: string, v: VariantId, report
     waiting.delete(s);
     const done = (ok: boolean, result: string, error?: string): void => report({ ok, session_id: sessionId, variant: latest, result, ...(error ? { error } : {}) });
     const t = variant(s, latest);
-    if (host.session() !== s || !awaitingPick(s) || !t) return done(false, "dropped: the edit no longer waits for a pick");
+    if (host.session() !== s || s.abort || !awaitingPick(s) || !t) return done(false, "dropped: the edit no longer waits for a pick");
     try {
       await host.ctx.deps.client.request("select_photo", { uuid: t.uuid, expect: selectExpect(s, t) });
       done(true, "selected");

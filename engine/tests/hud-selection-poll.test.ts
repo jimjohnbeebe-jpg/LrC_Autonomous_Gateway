@@ -70,6 +70,34 @@ describe("selection polling", () => {
     expect((await sim.at("awaiting_claude", (s) => s.selection?.uuid === null)).selection).toEqual({ uuid: null, name: null, in_edit: false });
   });
 
+  it("drops an answer that comes after its edit ended and the next one began (Greptile, PR #85)", async () => {
+    clean();
+    const ids = [ID, "fedcba98-7654-3210-fedc-ba9876543210"];
+    const rig = await deckRig({ pingMs: 50, newId: () => ids.shift() as string });
+    const sim = await SimHudClient.connect(rig.endpoint);
+    await sim.welcomed();
+    await rig.manager.begin({ intent_id: "test_plain" });
+    await sim.at("awaiting_claude", (st) => st.selection?.in_edit === true);
+
+    const getSelection = plugin.handlers.get("get_selection");
+    let release: () => void = () => {};
+    const held = new Promise<void>((resolve) => (release = resolve));
+    plugin.handlers.set("get_selection", async () => {
+      await held; // answered only once the next edit is open and idle
+      return { ok: true, payload: { count: 1, photos: [{ uuid: "STALE-PHOTO", local_id: 9, filename: "stale.NEF" }] } };
+    });
+    const asked = selectionReads();
+    await waitUntil(() => selectionReads() > asked);
+    await rig.manager.end({ session_id: ID, outcome: "revert" });
+    await rig.manager.begin({ intent_id: "test_plain" });
+    await sim.at("awaiting_claude", (st) => st.session_id !== ID);
+    if (getSelection) plugin.handlers.set("get_selection", getSelection); // later polls answer as Lightroom would
+    release();
+    await sleep(150);
+    await sim.at("awaiting_claude", (st) => st.session_id !== ID && st.selection?.uuid === "SIM-UUID");
+    expect(sim.states().some((m) => m.state.session_id !== ID && m.state.selection?.uuid === "STALE-PHOTO")).toBe(false);
+  });
+
   it("does not ask while the copies are made, and counts a copy as in the edit", async () => {
     clean();
     const rig = await deckRig({ pingMs: 50 });

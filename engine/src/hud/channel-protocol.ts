@@ -19,6 +19,8 @@ import { HUD_EVENTS, HUD_LIMITS, HUD_VARIANTS, hudUpdatePayloadSchema, utf8Bytes
 /** connected; waiting: the plugin missed a beat inside an allowed silence (E10); down: no bridge. */
 export const LIGHTROOM_STATES = ["connected", "waiting", "down"] as const;
 export type LightroomState = (typeof LIGHTROOM_STATES)[number];
+/** The HUD events the Deck may send: every one but hud_put_back (deckMessageSchema). */
+export const DECK_EVENTS = HUD_EVENTS.filter((e) => e !== "hud_put_back") as ["hud_abort", "hud_accept", "hud_pick", "hud_approve_pass"];
 
 /** At most HUD_LIMITS.text bytes; the engine cuts its own text to fit (hud\extras.ts fit). */
 const text = z.string().refine((s) => utf8Bytes(s) <= HUD_LIMITS.text, `at most ${HUD_LIMITS.text} bytes`);
@@ -93,8 +95,13 @@ export type EngineMessage = z.infer<typeof engineMessageSchema>;
 
 export const deckMessageSchema = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("hello"), token: z.string(), hud_version: z.string(), pid: z.number().int().min(1) }),
-  /** A click: `payload` is checked as the bridge's event of that name (hudEventSchemas). */
-  z.strictObject({ type: z.literal("event"), name: z.enum(HUD_EVENTS), payload: z.unknown() }),
+  /**
+   * A click: `payload` is checked as the bridge's event of that name (hudEventSchemas). Not
+   * `hud_put_back`: Put back is the plugin's own action, which it reports after it applied the snapshot
+   * (spec D5, "Put back"); the Deck cannot press it, so a Deck's report would record a put-back that
+   * never happened (Greptile, PR #85).
+   */
+  z.strictObject({ type: z.literal("event"), name: z.enum(DECK_EVENTS), payload: z.unknown() }),
   z.strictObject({ type: z.literal("get_thumb"), key: id }),
   z.strictObject({ type: z.literal("pong") }),
 ]);

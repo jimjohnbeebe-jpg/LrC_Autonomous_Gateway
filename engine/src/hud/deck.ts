@@ -82,7 +82,8 @@ export class Deck {
         this.poll.tick();
       },
     });
-    this.poll = new SelectionPoll(client, () => this.channel.connected() && this.editOpen() && !options.busy(), (sel) => {
+    const polling = (): boolean => this.channel.connected() && this.editOpen() && !options.busy();
+    this.poll = new SelectionPoll(client, polling, () => this.session?.id ?? null, (sel) => {
       this.selected = sel;
       this.push();
     });

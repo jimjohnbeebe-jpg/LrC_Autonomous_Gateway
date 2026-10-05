@@ -19,30 +19,36 @@ const SELECTION_TIMEOUT_MS = 5000;
 export class SelectionPoll {
   private readonly client: Pick<BridgeClient, "request">;
   private readonly mayPoll: () => boolean;
+  private readonly edit: () => string | null;
   private readonly onResult: (selected: Selected) => void;
   private inFlight = false;
   /** How many requests were sent (tests). */
   polls = 0;
 
-  constructor(client: Pick<BridgeClient, "request">, mayPoll: () => boolean, onResult: (selected: Selected) => void) {
+  /** `edit`: the id of the edit polled for; an answer is dropped once it changed. */
+  constructor(client: Pick<BridgeClient, "request">, mayPoll: () => boolean, edit: () => string | null, onResult: (selected: Selected) => void) {
     this.client = client;
     this.mayPoll = mayPoll;
+    this.edit = edit;
     this.onResult = onResult;
   }
 
   /** Ask once, unless a request is still out or polling is not allowed now. */
   tick(): void {
     if (this.inFlight || !this.mayPoll()) return;
+    // An answer counts only for the edit that asked (Greptile, PR #85: a late answer must not reach the next edit).
+    const edit = this.edit();
+    const current = (): boolean => this.mayPoll() && this.edit() === edit;
     this.inFlight = true;
     this.polls++;
     this.client.request("get_selection", { max: 1 }, { timeoutMs: SELECTION_TIMEOUT_MS }).then(
       (r) => {
         const p = r.photos[0];
         // The engine's own work may have started meanwhile: then the answer may show its selection.
-        if (this.mayPoll()) this.onResult(p?.uuid ? { uuid: p.uuid, name: p.copy_name ?? p.filename ?? null } : null);
+        if (current()) this.onResult(p?.uuid ? { uuid: p.uuid, name: p.copy_name ?? p.filename ?? null } : null);
       },
       (err: unknown) => {
-        if (err instanceof BridgeError && err.code === "no_target_photo" && this.mayPoll()) this.onResult(null);
+        if (err instanceof BridgeError && err.code === "no_target_photo" && current()) this.onResult(null);
       },
     ).finally(() => {
       this.inFlight = false;

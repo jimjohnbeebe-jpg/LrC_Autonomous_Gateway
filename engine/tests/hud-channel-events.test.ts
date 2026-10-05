@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { SimHudClient, deckRig } from "./helpers/deck-harness.js";
 import { waitUntil } from "./helpers/fake-plugin.js";
 import { hudEvent } from "./helpers/lightroom-sim-hud.js";
-import { ID, clean, lr, plugin, useSessionHarness } from "./helpers/session-harness.js";
+import { ID, clean, lr, plugin, readLog, useSessionHarness } from "./helpers/session-harness.js";
 
 useSessionHarness();
 
@@ -48,8 +48,9 @@ describe("Deck clicks", () => {
     const { sim } = await openEdit();
     const click = sim.click("hud_pick", { session_id: ID, variant: "A" }); // refused in Converge mode: answered, nothing else
     await waitUntil(() => sim.received.some((m) => m.type === "answer" && m.click_id === click));
-    await waitUntil(() => sim.last()?.answered_click_id === click);
-    expect(sim.last()?.note).toEqual(expect.any(String));
+    // In the next state sent; a later stage may replace that state, as on the classic HUD.
+    await waitUntil(() => sim.states().some((m) => m.state.answered_click_id === click));
+    expect(sim.states().find((m) => m.state.answered_click_id === click)?.state.note).toEqual(expect.any(String));
     expect(lr.hud.taken.some((u) => u.answered_click_id === click)).toBe(false);
   });
 
@@ -59,6 +60,16 @@ describe("Deck clicks", () => {
     await waitUntil(() => lr.hud.last()?.answered_click_id === click);
     expect(rig.events.at(-1)).toMatchObject({ via: "bridge", click_id: click, answered: true });
     expect(sim.received.some((m) => (m.type === "answer" && m.click_id === click) || (m.type === "state" && m.state.answered_click_id === click))).toBe(false);
+  });
+
+  it("are refused for Put back, the plugin's own action: the edit stays open (Greptile, PR #85)", async () => {
+    const { rig, sim } = await openEdit();
+    sim.click("hud_put_back", { session_id: ID, outcome: "done" });
+    sim.click("hud_accept", { session_id: "not-this-edit" }); // a later click, to know the first was read
+    await waitUntil(() => rig.events.length === 1);
+    expect(rig.events.map((e) => e.name)).toEqual(["hud_accept"]);
+    expect(rig.manager.current()?.id).toBe(ID);
+    expect(readLog().outcome ?? null).toBeNull();
   });
 
   it("answer a Deck click on an edit that is not open, without an update to the classic HUD", async () => {

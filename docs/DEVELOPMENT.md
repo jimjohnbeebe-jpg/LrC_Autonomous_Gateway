@@ -52,7 +52,7 @@ Use this instead of the README's install, not next to it: both write the same Cl
 2. **Engine:** `npm run desktop:install`. It builds the engine and points the `lrc-avg` entry at this repo's `engine\dist\mcp\main.js`, with `LRC_AVG_LOG_DIR` set to the repo's `logs\` folder. Then quit Claude Desktop from its tray icon and start it again.
 3. After each `npm run build`, restart Claude Desktop to run the new engine; after a plugin change, restart Lightroom. Claude Desktop starts the engine and keeps it running [handle: `engine/src/mcp/main.ts:6-10`]; that a running engine does not pick up a rebuilt `dist` is [inference] (Node loads the modules once).
 
-Development overrides are read from `LRC_AVG_*` environment variables: the ports and token file in `engine/src/mcp/dev-overrides.ts`, the folders in `engine/src/settings/folders.ts` and `engine/src/presets/folder.ts`.
+Development overrides are read from `LRC_AVG_*` environment variables: the ports and token file in `engine/src/mcp/dev-overrides.ts`, the folders in `engine/src/settings/folders.ts` and `engine/src/presets/folder.ts`. The Deck's executable (Phase 7) is `LRC_AVG_HUD_EXE` (`engine/src/hud/launch.ts`).
 
 ## Packaging
 

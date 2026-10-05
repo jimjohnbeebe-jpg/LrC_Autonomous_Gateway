@@ -6,10 +6,11 @@
 import { describe, expect, it } from "vitest";
 import { HUD_LIMITS } from "../src/bridge/index.js";
 import { hudGuardrail } from "../src/hud/index.js";
+import { deckRows } from "../src/hud/extras.js";
 import type { GuardrailAction } from "../src/log/index.js";
 import type { MetricsSummary } from "../src/metrics/index.js";
 import { CAMERA_PROFILE_PARAM, CANONICAL_PARAMS, lightroomLabel, loadDefaultParamMap } from "../src/params/index.js";
-import { applyProjectedGuardrail, planStep, type Limits, type StepPlan } from "../src/session/index.js";
+import { applyProjectedGuardrail, planStep, type Limits, type Session, type StepPlan } from "../src/session/index.js";
 import { hudWordProblems } from "./helpers/hud-harness.js";
 
 const map = loadDefaultParamMap();
@@ -86,5 +87,19 @@ describe("The guardrail sentence", () => {
     sentences.push(String(acted({ kind: "unmet", limit: "clip_high", reason: "clip_high_pct is still 100 %, over the limit of 0.5 %" }).reason));
     expect(sentences.filter((s) => bytes(s) > HUD_LIMITS.text)).toEqual([]);
     expect(sentences.filter((s) => hudWordProblems(s).length > 0)).toEqual([]);
+  });
+});
+
+describe("the Deck's rows (Phase 7 row 3, src/hud/extras.ts)", () => {
+  it("put every canonical parameter and the camera profile in a Develop panel, in Lightroom's words", () => {
+    const names = [...CANONICAL_PARAMS.keys(), CAMERA_PROFILE_PARAM];
+    const rows = names.map((name) => {
+      const change = { name, before: 0, requested: 1, after: 1, delta: 1 };
+      const s = { work: null, active: { id: "master" }, log: { passes: [{ target: "master", changes: [change], guardrail_actions: [] }] } } as unknown as Session;
+      return deckRows(s)[0];
+    });
+    expect(rows.filter((r) => r?.group === "Other").map((r) => r?.name)).toEqual([]);
+    const shown = rows.flatMap((r) => [r?.label ?? "", r?.group ?? ""]);
+    expect(shown.filter((t) => hudWordProblems(t).length > 0 || bytes(t) > HUD_LIMITS.text)).toEqual([]);
   });
 });

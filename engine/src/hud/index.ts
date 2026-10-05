@@ -7,3 +7,12 @@ export { aperture, hudGuardrail, hudState, shutter } from "./payload.js";
 export type { HudState } from "./payload.js";
 export { HUD_PLUGIN, HudPublisher } from "./publisher.js";
 export type { HudRecord } from "./publisher.js";
+// The Deck (Phase 7 row 3): the HUD channel, the state the Deck gets, and the fan-out to both HUDs.
+export { Deck } from "./deck.js";
+export type { DeckRecord } from "./deck.js";
+export { HudChannel, defaultHudEndpointPath } from "./channel.js";
+export * from "./channel-protocol.js";
+export { HudLauncher, findHudExe } from "./launch.js";
+export type { HudLauncherOptions } from "./launch.js";
+export { HudFanOut } from "./sinks.js";
+export type { DeckDeps } from "./sinks.js";

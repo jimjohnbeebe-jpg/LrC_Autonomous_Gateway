@@ -518,6 +518,7 @@ The HUD process never talks to Lightroom's sockets. The plugin serves one bridge
 
 **Transport:**
 
+- **As built (Phase 7 row 3, engine 0.18.0): WebSocket on 127.0.0.1, one JSON message per frame** (`ws` 8.22.0; `engine/src/hud/channel.ts`, `channel-protocol.ts`). A WebView page cannot open a raw TCP socket [inference], so the newline-delimited TCP and `LineSplitter` below were replaced, as S9 did [stated: Jim, 2026-10-04, "Use recommendations for websocket"; vault AVG-014]. The endpoint file, handshake and message names below are unchanged. Also as built: `thumb.jpeg_b64` is null for a key that is not current, and the Deck builds the "Target changed" sentence from `selection` (row 3 decision 3).
 - TCP on 127.0.0.1 only. PRD NFR-4 binds sockets to 127.0.0.1 (`.claude/rules/01-stack.md`, "Runtime").
 - One bidirectional socket, with newline-delimited JSON.
 - Reuse `LineSplitter` (`engine/src/bridge/lines.ts:21`; maximum line 32 MiB, `:19`).

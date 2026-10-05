@@ -54,7 +54,9 @@ export const HUD_VARIANTS = ["A", "B", "C"] as const;
 /** `id` and `text` count UTF-8 bytes, as Lua's # does. */
 export const HUD_LIMITS = { text: 120, id: 64, rows: 12, photos: 16, pass: 99, decay: 8 } as const;
 
-const id = z.string().min(1).refine((s) => Buffer.byteLength(s, "utf8") <= HUD_LIMITS.id, `at most ${HUD_LIMITS.id} bytes`);
+/** UTF-8 bytes through TextEncoder, not Buffer: the Deck's UI (a WebView, Phase 7 row 4) checks with these schemas too (hud\channel-protocol.ts). */
+export const utf8Bytes = (s: string): number => new TextEncoder().encode(s).length;
+const id = z.string().min(1).refine((s) => utf8Bytes(s) <= HUD_LIMITS.id, `at most ${HUD_LIMITS.id} bytes`);
 /** Text for display; a number is shown as Lua's tostring writes it. */
 const text = z.union([z.string(), z.number()]);
 const int = (min: number, max?: number) => (max === undefined ? z.number().int().min(min) : z.number().int().min(min).max(max));
@@ -160,7 +162,7 @@ function isHudEventName(name: string): name is HudEventName {
  * A plugin event checked as a HUD event: null when it is not one (e.g. the hello event), else the
  * event or why its payload was refused.
  */
-export function parseHudEvent(event: EventEnvelope): { ok: true; event: HudEvent } | { ok: false; error: string } | null {
+export function parseHudEvent(event: Pick<EventEnvelope, "name" | "payload">): { ok: true; event: HudEvent } | { ok: false; error: string } | null {
   if (!isHudEventName(event.name)) return null;
   const name = event.name;
   const parsed = hudEventSchemas[name].safeParse(event.payload);

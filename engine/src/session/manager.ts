@@ -78,6 +78,11 @@ export class SessionManager {
     return s ? sessionView(s, s.active.id) : null;
   }
 
+  /** An operation of the session queue runs now (the Deck's selection poll waits for an idle queue, hud\selection.ts). */
+  busy(): boolean {
+    return this.running > 0;
+  }
+
   /** What the running operation tells the HUD (e.g. that Lightroom computes an AI mask), for MCP progress notifications; null when none runs. */
   workNote(): string | null {
     return this.session?.work?.note ?? null;

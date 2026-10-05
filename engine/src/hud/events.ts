@@ -11,6 +11,11 @@
 // from the session's log: `accepted` or `aborted` when the log has that outcome, else `ended` with
 // the way to undo the edit in the note; with no log found nothing is sent, and the HUD's own 10 s
 // line says no answer came (fix/hud-p1, critique P1-3) [handle: tests\hud-unknown-session.test.ts].
+// The Deck's clicks (Phase 7 row 3, hud\deck.ts) come here too, `via: "channel"`, and take the same
+// path to the session manager; the seen click ids are shared, so a click that reached both HUDs acts
+// once. The answer goes back to the HUD clicked: a Deck click's to the Deck (deck.ts answerClick),
+// which shows the not-open edit itself (spec 3.2), so no `ended` update is sent for it
+// [handle: tests\hud-channel-events.test.ts].
 
 import { z } from "zod";
 import { HUD_LIMITS, parseHudEvent, type BridgeClient, type EventEnvelope } from "../bridge/index.js";
@@ -28,10 +33,14 @@ export type HudEventRecord = {
   note?: string;
   answered?: boolean;
   error?: string;
+  /** Which HUD sent it: the plugin's (over the bridge) or the Deck (over the HUD channel). */
+  via: "bridge" | "channel";
 };
 
 /** What the events need from the session manager (manager.ts). */
 type Manager = { userAction(action: UserAction): string; getLog(args: { session_id: string }): SessionOutput };
+/** Where a Deck click's answer goes (hud\deck.ts). */
+type DeckAnswer = { answerClick(sessionId: string, clickId: string, note: string): boolean };
 
 /** How many click ids are remembered to drop repeats [inference: far more than a session's clicks]. */
 const SEEN_CLICKS = 64;
@@ -53,25 +62,32 @@ export class HudEvents {
   private readonly publisher: HudPublisher;
   private readonly record: (r: HudEventRecord) => void;
   private readonly now: () => Date;
+  private readonly deck: DeckAnswer | null;
 
-  constructor(client: BridgeClient, manager: Manager, publisher: HudPublisher, options: { record?: (r: HudEventRecord) => void; now?: () => Date } = {}) {
+  constructor(
+    client: BridgeClient,
+    manager: Manager,
+    publisher: HudPublisher,
+    options: { record?: (r: HudEventRecord) => void; now?: () => Date; deck?: DeckAnswer } = {},
+  ) {
     this.manager = manager;
     this.publisher = publisher;
     this.record = options.record ?? (() => {});
     this.now = options.now ?? (() => new Date());
+    this.deck = options.deck ?? null;
     client.onEvent((event) => this.handle(event));
   }
 
-  handle(envelope: EventEnvelope): void {
+  handle(envelope: Pick<EventEnvelope, "name" | "payload">, via: HudEventRecord["via"] = "bridge"): void {
     const parsed = parseHudEvent(envelope);
     if (parsed === null) return; // not a HUD event (e.g. selection_changed)
     if (!parsed.ok) {
-      this.record({ ok: false, name: envelope.name, error: parsed.error });
+      this.record({ ok: false, name: envelope.name, error: parsed.error, via });
       return;
     }
     const { event } = parsed;
     const p = event.payload;
-    const ids = { name: event.name, session_id: p.session_id, click_id: p.click_id, source: p.source };
+    const ids = { name: event.name, session_id: p.session_id, click_id: p.click_id, source: p.source, via };
     if (this.seen.includes(p.click_id)) {
       this.record({ ok: false, ...ids, error: "a repeat of a click already handled" });
       return;
@@ -86,7 +102,10 @@ export class HudEvents {
       note = "LrC-AVG could not act on that click.";
       error = toToolError(err).code; // for the tool log; the HUD shows no codes
     }
-    const answered = this.publisher.answerClick(p.session_id, p.click_id, note) || this.answerEnded(p, note);
+    const answered =
+      via === "channel"
+        ? (this.deck?.answerClick(p.session_id, p.click_id, note) ?? false)
+        : this.publisher.answerClick(p.session_id, p.click_id, note) || this.answerEnded(p, note);
     this.record({ ok: true, ...ids, note, answered, ...(error ? { error } : {}) });
   }
 

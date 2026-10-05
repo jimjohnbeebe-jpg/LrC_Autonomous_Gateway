@@ -139,20 +139,24 @@ fn rect() -> Rect {
     Rect { left: r.left, top: r.top, right: r.right, bottom: r.bottom }
 }
 
-/// Pins the height (min = max), then moves and sizes the window without activating it.
+/// Moves and sizes the window without activating it, then pins its height (min = max) and its narrowest
+/// width at the scale of the monitor it now sits on. The constraints are cleared first: each tao
+/// constraint call resizes the window to fit at once (tao-0.37.1 platform_impl/windows/window.rs:290-292,
+/// run synchronously on the main thread: tauri-runtime-wry-2.12.1 lib.rs:263-273), which would grow
+/// the deck downward before it is moved.
 fn set_rect(r: Rect, why: &str) {
-    if let Some(w) = WINDOW.get() {
-        let h = (r.bottom - r.top) as u32;
-        let _ = w.set_min_size(Some(PhysicalSize::new(1, h)));
-        let _ = w.set_max_size(Some(PhysicalSize::new(100_000, h)));
+    let w = WINDOW.get();
+    if let Some(w) = w {
+        let _ = w.set_min_size(None::<PhysicalSize<u32>>);
+        let _ = w.set_max_size(None::<PhysicalSize<u32>>);
     }
     unsafe {
         let _ = SetWindowPos(deck(), None, r.left, r.top, r.right - r.left, r.bottom - r.top, SWP_NOZORDER | SWP_NOACTIVATE);
     }
-    // The narrowest width, at the scale of the monitor it now sits on.
-    if let (Some(w), Some(m)) = (WINDOW.get(), monitors::of_window(deck())) {
-        let min_w = (place::MIN_W * m.scale).round() as u32;
-        let _ = w.set_min_size(Some(PhysicalSize::new(min_w, (r.bottom - r.top) as u32)));
+    if let (Some(w), Some(m)) = (w, monitors::of_window(deck())) {
+        let h = (r.bottom - r.top) as u32;
+        let _ = w.set_min_size(Some(PhysicalSize::new((place::MIN_W * m.scale).round() as u32, h)));
+        let _ = w.set_max_size(Some(PhysicalSize::new(100_000, h)));
     }
     let got = rect();
     write(json!({ "ev": "place", "why": why, "target": [r.left, r.top, r.width(), r.bottom - r.top], "got": [got.left, got.top, got.width(), got.bottom - got.top] }));

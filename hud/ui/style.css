@@ -1,0 +1,29 @@
+/* The Deck's shell (Phase 7 row 4b): the instrument tokens of spec 8.1, as spike S9's bar used them. Row 4c
+   draws the Deck's states, cards and keyboard; this is only the frame: a 44 px bar, the opened area
+   below it, and the side grips that resize it. */
+@font-face { font-family: "Inter"; src: url("fonts/inter.woff2") format("woff2"); font-weight: 100 900; }
+
+:root {
+  --bg: #202122; --raised: #2a2b2d; --line: #3a3b3e;
+  --text: #e4e6e8; --text2: #aeb2b6; --text3: #8d9196; --danger: #ee8064;
+}
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); }
+.deck {
+  position: relative; box-sizing: border-box; height: 100vh; display: flex; flex-direction: column;
+  border: 1px solid var(--line); background: var(--bg); color: var(--text);
+  font-family: "Inter", "Segoe UI", sans-serif; font-size: 12px; line-height: 16px;
+  -webkit-font-smoothing: antialiased; user-select: none; cursor: default;
+}
+.bar { flex: none; height: 42px; display: flex; align-items: center; gap: 8px; padding: 0 16px; }
+.words { flex: 1; font-size: 13px; line-height: 20px; font-weight: 500; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.words b { font-weight: 600; color: var(--text); }
+/* Clicks on the text reach .words, a drag region: Tauri drags only from the marked element itself. */
+.words * { pointer-events: none; }
+.words .fid { color: var(--text3); font-weight: 400; font-size: 12px; }
+.more { flex: 1; padding: 0 16px 8px; color: var(--text3); overflow: hidden; }
+.rcol { flex: none; display: flex; gap: 8px; padding-left: 16px; border-left: 1px solid var(--line); }
+.btn { height: 28px; border-radius: 6px; border: 1px solid var(--line); background: var(--raised); color: var(--text2); font: inherit; font-size: 13px; font-weight: 500; padding: 0 10px; }
+.btn:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.grip { position: absolute; top: 0; bottom: 0; width: 6px; cursor: ew-resize; z-index: 1; }
+.grip.west { left: 0; }
+.grip.east { right: 0; }

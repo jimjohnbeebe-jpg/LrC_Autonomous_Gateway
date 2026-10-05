@@ -58,6 +58,10 @@ Rust crates in `spikes\S9\tauri\src-tauri\Cargo.toml`, resolved in the committed
 
 Toolchain: rustup 1.29.1 (`winget install --id Rustlang.Rustup -e`), rustc 1.99.0 stable-x86_64-pc-windows-msvc, Microsoft C++ Build Tools 2022 [handle: `spikes\S9\prereqs.ps1` output in `docs\reports\phase7\S9-prerun\prerun.txt` section 1]. The first `tauri build --bundles nsis` downloaded NSIS 3.11 and nsis_tauri_utils v0.5.3 from github.com/tauri-apps (tauri-cli output, same file section 2).
 
+## hud (`lrc-avg-hud`, the Deck; Phase 7 row 4b, 2026-10-05)
+
+No new package or crate: the `hud` workspace pins the versions already in the repo. npm: `zod` 4.6.5 (dependency, as the engine), and as devDependencies `@tauri-apps/cli` 2.12.1, `@tauri-apps/api` 2.12.1 (types only, as in S9), `@types/node` 24.13.6, `typescript` 7.0.2 and `vitest` 5.0.1 (as the engine and spikes); links in the tables above. Rust (`hud\src-tauri\Cargo.toml`, `Cargo.lock` committed): the S9 crates and versions above. The `windows` crate gains the `Win32_Security` feature, needed by `CreateMutexW` (the one-Deck mutex, `main.rs`) [handle: rustc error "the item is gated behind the `Win32_Security` feature", windows-0.62.2 `src\Windows\Win32\System\Threading\mod.rs:299-301`], and drops `Win32_UI_Input_KeyboardAndMouse` (S9's drag code only). The tauri-plugin-single-instance crate (spec 3.2) is not added: the named mutex does that job.
+
 ## Notes
 
 - **zod 4 with the MCP SDK:** SDK 1.30.1 declares `zod: "^3.25 || ^4.0"` as dependency and peer (`npm view @modelcontextprotocol/sdk@1.30.1 dependencies peerDependencies`), so zod 4.6.5 is supported. SDK 1.32.0 declares the same (`npm view @modelcontextprotocol/sdk@1.32.0 dependencies peerDependencies`, 2026-10-03).

@@ -22,7 +22,7 @@ describe("finding the Deck", () => {
       writeFileSync(given, "");
       expect(findHudExe({ LRC_AVG_HUD_EXE: given })).toBe(given);
       expect(findHudExe({ LRC_AVG_HUD_EXE: path.join(dir, "missing.exe") })).toBeNull();
-      const installed = path.join(dir, "Programs", "LrC-AVG HUD", HUD_EXE_NAME);
+      const installed = path.join(dir, "LrC-AVG HUD", HUD_EXE_NAME);
       expect(findHudExe({ LOCALAPPDATA: dir })).toBeNull();
       mkdirSync(path.dirname(installed), { recursive: true });
       writeFileSync(installed, "");

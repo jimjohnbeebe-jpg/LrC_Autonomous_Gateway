@@ -1,19 +1,20 @@
 {
   "name": "lrc-avg-workspace",
   "private": true,
-  "description": "LrC-AVG monorepo root: engine (Node/TS MCP server) and Phase 0 spike scripts.",
+  "description": "LrC-AVG monorepo root: engine (Node/TS MCP server), the Deck (hud, Tauri) and spike scripts.",
   "type": "module",
   "engines": {
     "node": ">=22"
   },
   "workspaces": [
     "engine",
-    "spikes"
+    "spikes",
+    "hud"
   ],
   "scripts": {
     "build": "npm run build -w engine",
     "test": "npm test -w engine",
-    "typecheck": "npm run typecheck -w engine && npm run typecheck -w spikes",
+    "typecheck": "npm run typecheck -w engine && npm run typecheck -w spikes && npm run typecheck -w hud",
     "phase1:check": "npm run build && node engine/dist/devtools/phase1-check-cli.js",
     "desktop:install": "npm run build && node engine/dist/devtools/install-desktop-config-cli.js",
     "package": "npm run clean -w engine && npm run build && node engine/dist/devtools/package-cli.js",
@@ -25,6 +26,8 @@
     "goldens": "npm run build && node engine/dist/devtools/goldens-cli.js",
     "preset:capture": "npm run build && node engine/dist/devtools/preset-capture-cli.js",
     "preset:pin": "npm run build && node engine/dist/devtools/preset-pin-cli.js",
-    "wb:check": "npm run build && node engine/dist/devtools/wb-check-cli.js"
+    "wb:check": "npm run build && node engine/dist/devtools/wb-check-cli.js",
+    "deck:build": "npm run build && npm run build -w hud",
+    "deck:probe": "npm run build && node hud/probe/probe.ts"
   }
 }

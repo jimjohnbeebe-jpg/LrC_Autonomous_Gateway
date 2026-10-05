@@ -1,0 +1,25 @@
+{
+  "name": "lrc-avg-hud",
+  "version": "0.1.0",
+  "private": true,
+  "description": "LrC-AVG HUD: the detached Deck (Phase 7). Tauri shell in src-tauri/ (Rust), UI in ui/ (TypeScript), probe in probe/.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "build": "node build-ui.ts && cd src-tauri && tauri build --bundles nsis",
+    "typecheck": "tsc -p ui/tsconfig.json && tsc -p probe/tsconfig.json",
+    "test": "vitest run ui && cd src-tauri && cargo test --quiet"
+  },
+  "dependencies": {
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@tauri-apps/api": "2.12.1",
+    "@tauri-apps/cli": "2.12.1",
+    "@types/node": "24.13.6",
+    "typescript": "7.0.2",
+    "vitest": "5.0.1"
+  }
+}

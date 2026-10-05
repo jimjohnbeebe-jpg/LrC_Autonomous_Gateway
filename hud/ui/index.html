@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LrC-AVG Deck</title>
+<link rel="stylesheet" href="style.css">
+<script type="module" src="deck.js"></script>
+</head>
+<body>
+<div id="deck" class="deck" data-tauri-drag-region>
+  <div class="grip west" data-resize="West" aria-hidden="true"></div>
+  <div class="bar" data-tauri-drag-region>
+    <div id="words" class="words" role="status" aria-live="polite" data-tauri-drag-region></div>
+    <div class="rcol">
+      <button id="toggle" class="btn" type="button" aria-expanded="false">Open</button>
+      <button id="hide" class="btn" type="button" aria-label="Hide the Deck">×</button>
+    </div>
+  </div>
+  <div id="more" class="more" data-tauri-drag-region></div>
+  <div class="grip east" data-resize="East" aria-hidden="true"></div>
+</div>
+</body>
+</html>

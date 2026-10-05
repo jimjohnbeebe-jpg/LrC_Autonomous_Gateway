@@ -1,0 +1,51 @@
+S9b run 2: the full-screen placement in the HUD's own log.
+Written by Claude Code (Opus 5.5), 2026-10-05, branch phase-7/s9b-run2-detached-deck.
+Command (repo root): node run2-timeline.ts   (the script is in the appendix, verbatim; it was run from the session scratchpad)
+Inputs: s9_s9b-2026-10-05T12-36-43-456Z.json and hud_3912_1791203830873.jsonl (this run's long-lived HUD), both in this folder.
+Exit code: 0. Output follows.
+
+== A. Harness S9-8 episodes 10-13 (minimise, restore, and the two after it)
+10 minimised ms=50.6 detached_ms=0 lr=- hud=576,1680,3349,1746 visible=false
+11 moved ms=48.8 detached_ms=0 lr=565,161,3360,1907 hud=576,1680,3349,1746 visible=true
+12 moved ms=5.1 detached_ms=0 lr=0,0,3840,2160 hud=0,1944,3840,2010 visible=true
+13 moved ms=6.0 detached_ms=0 lr=565,161,3360,1907 hud=576,1680,3349,1746 visible=true
+== B. HUD log from 349 s (seconds from the run start); 'follow' = a location event from Lightroom's process
+349.860 webview   
+349.860 hide lightroom_minimised  
+349.860 follow 32779  
+349.860 follow 22  
+349.864 foreground   8564
+349.873 follow 32779  
+352.847 foreground   7440
+352.864 follow 32779  
+352.924 place  [576,1680,2773,66] 
+352.931 webview   
+352.932 show lightroom_restored  
+352.932 follow 32779  
+352.932 place  [576,1680,2773,66] 
+352.933 follow 23  
+361.056 place  [0,1944,3840,66] 
+361.291 foreground   7440
+361.299 foreground   7440
+366.571 place  [576,1680,2773,66] 
+370.245 foreground   8564
+370.260 place  [576,1680,2773,66] 
+370.261 follow 32779  
+
+== Appendix: run2-timeline.ts
+// S9b run 2: the HUD's log from Lightroom's restore to the end, beside the harness's last S9-8 episodes.
+import { readFileSync } from "node:fs";
+const dir = "docs/reports/phase7/S9b-run2/";
+const run = JSON.parse(readFileSync(dir + "s9_s9b-2026-10-05T12-36-43-456Z.json", "utf8"));
+const t0 = Date.parse(run.started);
+const log = readFileSync(dir + "hud_3912_1791203830873.jsonl", "utf8").trim().split("\n").map((l) => JSON.parse(l));
+console.log("== A. Harness S9-8 episodes 10-13 (minimise, restore, and the two after it)");
+run.s9_8.episodes.slice(9).forEach((e: any, i: number) =>
+  console.log(i + 10, e.kind, "ms=" + (e.ms?.toFixed(1) ?? null), "detached_ms=" + e.detached_ms,
+    "lr=" + (e.lr_rect ? Object.values(e.lr_rect).join(",") : "-"), "hud=" + Object.values(e.hud_rect).join(","), "visible=" + e.hud_visible));
+console.log("== B. HUD log from 349 s (seconds from the run start); 'follow' = a location event from Lightroom's process");
+for (const e of log) {
+  const s = (e.t - t0) / 1000;
+  if (s < 349) continue;
+  console.log(s.toFixed(3), e.ev, e.reason ?? e.kind ?? e.event ?? "", e.got ? JSON.stringify(e.got) : "", e.fg_pid ?? "");
+}

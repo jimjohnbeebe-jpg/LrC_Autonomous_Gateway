@@ -12,7 +12,9 @@ import { coldStarts, idle, pulsing, updates, warmShows, type Ctx } from "./auto.
 import { exitsWithLightroom, focusChecks, followChecks, responsiveness, survives, topmostChecks } from "./jim.ts";
 import { summarize } from "./summary.ts";
 
-const r: Results = { run_id: new Date().toISOString().replace(/[:.]/g, "-"), started: new Date().toISOString(), errors: [] };
+/** `--s9b`: Part 1 and S9-8 only (the S9b re-run). */
+const S9B = process.argv.includes("--s9b");
+const r: Results = { run_id: (S9B ? "s9b-" : "") + new Date().toISOString().replace(/[:.]/g, "-"), started: new Date().toISOString(), errors: [], s9b: S9B };
 const save = saver(r);
 let stub: Stub | null = null;
 
@@ -69,13 +71,14 @@ async function main(): Promise<void> {
   for (const pid of hudPids()) await killTree(tree(pid)); // a HUD left over from an earlier run
   const lrExe = process.env.LRC_AVG_S9_LR_EXE ?? "lightroom.exe"; // dev override for dry runs, as in win.rs
   const lr = await findWindow(lrExe, "Lightroom Classic is not open. Start it, open a photo in Develop (press D), then come back here.");
-  const claude = await findWindow("claude.exe", "Claude Desktop is not open. Start it, then come back here.");
+  // The S9b re-run skips S9-7, the only step that needs Claude Desktop.
+  const claude = S9B ? { pid: 0, hwnd: 0 } : await findWindow("claude.exe", "Claude Desktop is not open. Start it, then come back here.");
   if (!lr || !claude) {
     say("FAILED: Lightroom Classic and Claude Desktop must both be open. Nothing was measured.");
     return;
   }
   r.lightroom = { pid: lr.pid, title: title(lr.hwnd), rect: rect(lr.hwnd), dpi: dpi(lr.hwnd), exe: lrExe };
-  r.claude_desktop = { pid: claude.pid, title: title(claude.hwnd) };
+  r.claude_desktop = S9B ? null : { pid: claude.pid, title: title(claude.hwnd) };
   r.windows_animation_effects = clientAreaAnimation();
   fineTimers(true);
   save();
@@ -92,6 +95,13 @@ async function main(): Promise<void> {
   await step("S9-5 visible", () => pulsing(ctx));
   r.reduced_motion = { windows_animation_effects: r.windows_animation_effects, webview_prefers_reduced_motion: stub.events.find((e) => e.ev === "hello")?.reduced_motion ?? null };
   beep();
+  if (S9B) {
+    // S9b re-run (Jim, 2026-10-04: "S9b follow-up"): Part 1 again with WebView2's GPU process off,
+    // and S9-8 with the drag hide. The other gates stand from the first run (docs\reports\phase7\S9.md).
+    say("\nPart 1 is done. Part 2 of this re-run has one step.");
+    await step("S9-8", () => followChecks(ctx));
+    return;
+  }
   say("\nPart 1 is done. Part 2 has six short steps; each one tells you what to do.");
   await step("S9-6", () => focusChecks(ctx));
   await step("S9-7", () => topmostChecks(ctx));

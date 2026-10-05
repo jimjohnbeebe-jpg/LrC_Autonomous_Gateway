@@ -47,6 +47,31 @@ The y/n questions are asked in the PowerShell window [stated: Jim, 2026-10-04, "
    - **The last step** asks you to quit Lightroom (**File > Exit**).
 5. The window ends with a summary that starts `S9 SUGGESTED:` and a `Results:` line. Tell Claude Code: **"S9 done."**
 
+## S9b re-run (after the first run)
+
+**Why.** The first run (2026-10-05 03:22 UTC) failed S9-4 (memory 158.9 MiB) and S9-5 (CPU 0.55 % hidden, 2.11 % visible) narrowly. The harness also recorded no S9-8 episode: you pressed Enter before the moves, as every other step had asked. And the bar visibly trailed Lightroom's window during drags [stated: Jim, 2026-10-04, "there was a very large amount of latency with the bar when moving the Lightroom main window"]. You chose a follow-up [stated: "S9b follow-up (Recommended)"; "Hide, reappear in place (Recommended)"].
+
+**What changed:**
+- **The bar hides while you drag or resize Lightroom** and comes back in place when you let go (`tauri\src-tauri\src\drag.rs`).
+- **WebView2 runs without its GPU process** (`--disable-gpu` in `tauri.conf.json`), which in Claude Code's checks cut memory to about 105-111 MiB.
+- **S9-8 asks for Enter first, then again when you are done.** It measures how long the bar was visible out of place, and asks two more questions.
+- The other gates stand from the first run. Evidence: `docs\reports\phase7\S9b-prerun\prerun.txt`.
+
+### Steps for Jim (S9b)
+
+About 6 minutes. Claude Desktop is not needed, and Lightroom stays open.
+
+1. Start **Lightroom Classic**. Click a photo and press **D** to open it in Develop.
+2. In the PowerShell window in VS Code, run:
+
+   ```powershell
+   node spikes\S9\measure.ts --s9b
+   ```
+
+3. **Part 1 (hands-off, about 4 minutes):** press Enter, click once on the photo in Lightroom, then leave the mouse and keyboard alone until the window beeps.
+4. **Part 2 (S9-8):** the window lists five things to do. **Press Enter first**, then do the five things in Lightroom, then come back and press **Enter again**. Answer the six questions with `y` or `n`.
+5. Tell Claude Code: **"S9b done."**
+
 ## If something goes wrong
 
 - **The window says "Lightroom Classic is not open" or "Claude Desktop is not open":** start it, then press Enter in the window. It tries three times.

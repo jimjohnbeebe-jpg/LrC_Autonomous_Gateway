@@ -154,6 +154,36 @@ fn hook_lightroom() {
         SetWinEventHook(EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_LOCATIONCHANGE, None, Some(on_location), pid, 0, WINEVENT_OUTOFCONTEXT);
         SetWinEventHook(EVENT_SYSTEM_MINIMIZESTART, EVENT_SYSTEM_MINIMIZEEND, None, Some(on_location), pid, 0, WINEVENT_OUTOFCONTEXT);
     }
+    crate::drag::hook(pid);
+}
+
+pub fn lightroom() -> isize {
+    LR.load(SeqCst)
+}
+
+/// S9b (drag.rs): out of sight while Lightroom's window moves.
+pub fn hide_for_move(kind: &str) {
+    let hud = hwnd(HUD.load(SeqCst));
+    unsafe {
+        let was_visible = IsWindowVisible(hud).as_bool();
+        if was_visible {
+            let _ = ShowWindow(hud, SW_HIDE);
+        }
+        write(json!({ "ev": "move_hide", "kind": kind, "was_visible": was_visible }));
+    }
+}
+
+/// S9b (drag.rs): back in place when the move ends, if the UI wants the HUD shown.
+pub fn show_after_move(kind: &str) {
+    place();
+    let shown = WANT.load(SeqCst) && !iconic(LR.load(SeqCst));
+    if shown {
+        unsafe {
+            let _ = ShowWindow(hwnd(HUD.load(SeqCst)), SW_SHOWNA);
+            topmost_for(GetForegroundWindow());
+        }
+    }
+    write(json!({ "ev": "move_show", "kind": kind, "shown": shown }));
 }
 
 unsafe extern "system" fn on_location(_: HWINEVENTHOOK, event: u32, h: HWND, id_object: i32, _: i32, _: u32, _: u32) {
@@ -161,6 +191,11 @@ unsafe extern "system" fn on_location(_: HWINEVENTHOOK, event: u32, h: HWND, id_
         return;
     }
     let t_event = now_ms();
+    if event == EVENT_OBJECT_LOCATIONCHANGE {
+        let mut r = RECT::default();
+        let known = !IsIconic(h).as_bool() && GetWindowRect(h, &mut r).is_ok();
+        crate::drag::on_location(known.then_some((r.left, r.top, r.right, r.bottom)));
+    }
     place();
     write(json!({ "ev": "follow", "event": event, "t_event": t_event, "t_set": now_ms() }));
 }
@@ -232,7 +267,7 @@ fn place() {
         let mut r = RECT::default();
         let _ = GetWindowRect(hud, &mut r);
         write(json!({ "ev": "place", "dpi": GetDpiForWindow(hwnd(lr)), "target": [x, y, w, h], "got": [r.left, r.top, r.right - r.left, r.bottom - r.top] }));
-        if MIN_HIDDEN.swap(false, SeqCst) && WANT.load(SeqCst) {
+        if !crate::drag::dragging() && MIN_HIDDEN.swap(false, SeqCst) && WANT.load(SeqCst) {
             let _ = ShowWindow(hud, SW_SHOWNA);
             crate::webview::set_active(true);
             topmost_for(GetForegroundWindow());
@@ -250,6 +285,8 @@ pub fn show(reason: &str) {
         let fg = GetForegroundWindow();
         if iconic(LR.load(SeqCst)) {
             MIN_HIDDEN.store(true, SeqCst);
+        } else if crate::drag::dragging() {
+            // show_after_move shows it when the move ends
         } else {
             let _ = ShowWindow(hud, SW_SHOWNA);
             crate::webview::set_active(true);

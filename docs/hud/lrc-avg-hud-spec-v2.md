@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | Accepted as the HUD spec for Phase 7. D1-D4 decided by Jim on 2026-10-04, D5 deferred, Q14-Q16 answered the same day (section 2, 13.1). Nothing is built yet. **Phase 7 starts here; its first row is spike S9** (section 2.6, step 2) [stated: Jim, 2026-10-05, "This will be the first row of Phase 7"]. Open: Q17. |
+| Status | Accepted as the HUD spec for Phase 7. D1-D4 decided by Jim on 2026-10-04, D5 deferred, Q14-Q16 answered the same day (section 2, 13.1). Nothing is built yet. **Phase 7 starts here; its first row is spike S9** (section 2.6, step 2) [stated: Jim, 2026-10-05, "This will be the first row of Phase 7"]. Open: Q17. **2026-10-05: after S9, the Deck is detached** [stated: Jim, "Go with B, detached Deck … Please add the requirement that the dock remembers its position each time."]: a free-floating window that opens and closes by itself and remembers its position (4.4). Sections 4.1, 4.3, 4.5 and D4 still describe the docked bar, until the Phase 7 re-plan rewrites them (`docs/reports/phase7/S9.md` "Consequences"). |
 | Replaces | The Grok draft, kept for reference at `docs/hud/source/grok-draft-2026-10-04.md` |
 | Written by | Claude Code, 2026-10-04, in a cloud session Jim asked for. The gateway repo was only read. |
 | Readers | The Claude Code session that implements this in the LrC-AVG repo, and Jim |
@@ -630,6 +630,7 @@ Not chosen:
 
 ### 4.4 Position, monitors, DPI (proposed)
 
+- **Required (decided 2026-10-05): the detached Deck remembers its position each time.** It opens where the user last left it [stated: Jim, 2026-10-05, "the dock remembers its position each time"]. The first-run position, and what happens when the remembered position is on no connected monitor, are open for the Phase 7 re-plan.
 - The position is stored relative to the anchor in `%LOCALAPPDATA%\LrC-AVG\hud\window.json`, one entry per layout option.
 - The HUD follows the monitor of Lightroom's main window, and works in physical pixels converted by that monitor's DPI [inference].
 - A second monitor and Lightroom's secondary display window are [unverified]. The HUD stays with the main window.

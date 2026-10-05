@@ -1,0 +1,46 @@
+S9-8 follow analysis by Claude Code, 2026-10-04 (local), from the run's last HUD log (docs/reports/phase7/S9/hud_46956_1791170557002.jsonl).
+Output of the script below (node <script>):
+
+events by kind: {"start":1,"lightroom_found":1,"place":242,"webview":51,"show":26,"hide":25,"foreground":77,"follow":215,"lightroom_exited":1}
+placement after each location event (t_set - t_event), ms: median 2.19, p95 5.58, max 28.27, n 215
+placements whose rectangle read back as the target: 242 of 242
+gap between consecutive location events, gaps under 500 ms (during drags), ms: median 64.1, p90 87.3, min 11.6, n 154
+bursts of location events with more than 5 events (s from start, n):
+  304.4-320.2 s, n 15, 1.0 events/s
+  412.5-413.0 s, n 7, 14.1 events/s
+  424.9-426.2 s, n 12, 9.3 events/s
+  438.5-449.4 s, n 135, 12.4 events/s
+  470.0 s hide lightroom_minimised
+  473.2 s show lightroom_restored
+
+--- script, verbatim ---
+// Reads the S9 run's last HUD log and reports how the HUD followed Lightroom (S9-8).
+import { readFileSync } from "node:fs";
+const file = "D:/Developer/LrC_Autonomous_Gateway/docs/reports/phase7/S9/hud_46956_1791170557002.jsonl";
+const L = readFileSync(file, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l));
+const t0 = Date.parse("2026-10-05T03:22:22.051Z"); // the run's "started"
+const sec = (t) => ((t - t0) / 1000).toFixed(1);
+const counts = {};
+for (const e of L) counts[e.ev] = (counts[e.ev] ?? 0) + 1;
+console.log("events by kind:", JSON.stringify(counts));
+const follow = L.filter((e) => e.ev === "follow");
+const cost = follow.map((e) => e.t_set - e.t_event).sort((a, b) => a - b);
+const q = (xs, p) => xs[Math.min(xs.length - 1, Math.ceil(p * xs.length) - 1)];
+console.log(`placement after each location event (t_set - t_event), ms: median ${q(cost, 0.5).toFixed(2)}, p95 ${q(cost, 0.95).toFixed(2)}, max ${cost.at(-1).toFixed(2)}, n ${cost.length}`);
+const place = L.filter((e) => e.ev === "place");
+console.log(`placements whose rectangle read back as the target: ${place.filter((e) => JSON.stringify(e.target) === JSON.stringify(e.got)).length} of ${place.length}`);
+const gaps = [];
+for (let i = 1; i < follow.length; i++) gaps.push(follow[i].t_event - follow[i - 1].t_event);
+const inDrag = gaps.filter((g) => g < 500).sort((a, b) => a - b);
+console.log(`gap between consecutive location events, gaps under 500 ms (during drags), ms: median ${q(inDrag, 0.5).toFixed(1)}, p90 ${q(inDrag, 0.9).toFixed(1)}, min ${inDrag[0].toFixed(1)}, n ${inDrag.length}`);
+let burst = null;
+const bursts = [];
+for (const e of follow) {
+  if (!burst || e.t_event - burst.end > 1500) bursts.push((burst = { start: e.t_event, end: e.t_event, n: 0 }));
+  burst.n++;
+  burst.end = e.t_event;
+}
+console.log("bursts of location events with more than 5 events (s from start, n):");
+for (const b of bursts.filter((b) => b.n > 5)) console.log(`  ${sec(b.start)}-${sec(b.end)} s, n ${b.n}, ${(b.n / Math.max(0.001, (b.end - b.start) / 1000)).toFixed(1)} events/s`);
+for (const e of L.filter((e) => (e.ev === "hide" && e.reason === "lightroom_minimised") || (e.ev === "show" && e.reason === "lightroom_restored")))
+  console.log(`  ${sec(e.t)} s ${e.ev} ${e.reason}`);

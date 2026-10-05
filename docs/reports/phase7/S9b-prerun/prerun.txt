@@ -1,0 +1,246 @@
+S9b pre-run checks by Claude Code (Opus 5.5), 2026-10-04 (local), branch phase-7/s9b, on Jim's machine with Lightroom NOT
+running (Notepad stands in through LRC_AVG_S9_LR_EXE). These are Claude Code's runs, not Jim's run and not gate results.
+Scripts are copied verbatim in the appendix; they were deleted after the runs (no scratch .ts is committed as evidence).
+
+Jim's decisions for S9b [stated: Jim, 2026-10-04]: "S9b follow-up (Recommended)"; during drags "Hide, reappear in place
+(Recommended)"; at S9-8 of the first run he pressed Enter first ("Yes, Enter first").
+
+== 1. WebView2 TrySuspend while hidden (appendix G; build with LRC_AVG_S9_SUSPEND switching it on) ==
+base hidden 30 s: cpu % 0.52 tree MiB 159.0 procs 7
+base turn state while hidden: visible after ms 3.5 paint after ms 18.1
+suspend hidden 30 s: cpu % 0.68 tree MiB 159.9 procs 7
+suspend turn state while hidden: visible after ms NEVER (5 s) paint after ms none
+{"ev":"webview_suspend","ok":true,...}
+=> TrySuspend succeeded, saved no CPU or memory, and the suspended page never heard the next state, so the HUD could not
+   show itself (MS performance.md:244: TrySuspend "pauses scripts"). Dropped; not in the build.
+
+== 2. WebView2 without its GPU process (appendix H; tauri.conf.json additionalBrowserArgs adds --disable-gpu) ==
+2a. First run (sample right after start):
+visible pulsing 30 s: cpu % 2.40 tree MiB 110.8 [["lrc-avg-s9-hud.exe","6.0"],["msedgewebview2.exe","38.7"],["msedgewebview2.exe","3.3"],["msedgewebview2.exe","12.9"],["msedgewebview2.exe","11.9"],["msedgewebview2.exe","7.2"],["msedgewebview2.exe","30.8"]]
+hidden 30 s: cpu % 0.42 tree MiB 106.4 [...]
+warm show: visible ms 14.0 paint ms 15.5
+2b. With a settled visible-static sample first:
+visible static 30 s: cpu % 0.42 tree MiB 109.5
+visible pulsing 30 s: cpu % 0.89 tree MiB 105.8
+visible pulsing again 30 s: cpu % 1.04 tree MiB 105.1
+hidden 30 s: cpu % 0.21 tree MiB 104.8
+warm show: visible ms 5.3 paint ms 14.7
+=> The tree drops from about 159 MiB (Jim's run: 158.9) to about 105-111 MiB; the GPU process is gone (7 processes remain,
+   the largest 38.7 MiB). The 2.40 % in 2a was the first 30 s after start.
+
+== 3. Drag hide, burst path (appendix I, zz-drag.ts; moves made from code, so no movesize events) ==
+single move: in place, visible ms 13.5
+burst: hidden during burst true detached polls 3 back in place ms after last move 94.5
+{"ev":"move_hide","kind":"burst",...,"was_visible":true}
+(The 3 detached polls are the first two moves before the third event triggers the burst. "back in place" is measured from
+the end of the last 60 ms wait, about 60 ms after the last move.)
+
+== 4. The new S9-8 step, scripted (appendix J, zz-follow8.ts: Enter, moves from code, Enter, six y) ==
+4a. First run: the script's moves began before its first Enter, so the burst fell outside the measurement; it showed a
+restore coming back after 168 ms. The HUD log around the restore:
+  8334 show lightroom_restored / 8334 follow 32779 / 8334 follow 23 / 8335 follow 32779 / 8357 move_hide burst /
+  8358 follow 32779 / 8509 move_show burst
+  => the restore's 3 location events in 24 ms counted as a burst. Fix: drag.rs counts an event toward a burst only when
+     Lightroom's rectangle changed, and never while it is minimised.
+4b. After the fix, moves after the first Enter:
+[{"k":"moved","settled":true,"ms":154,"detached":0,"changes":11,"span":776},{"k":"moved","settled":true,"ms":16,"detached":0,"changes":1,"span":0},{"k":"minimised","settled":true,"ms":8,"detached":0,"changes":1,"span":0},{"k":"moved","settled":true,"ms":8,"detached":0,"changes":1,"span":0}]
+move_events {"movesize":0,"burst":2} answers true true
+=> The drag-like burst (11 changes over 776 ms) never showed the bar out of place (detached 0 ms); it came back 154 ms after
+   the last change, which is the burst path's 150 ms quiet period, over the 100 ms target. A user drag should take the
+   movesize path instead, which shows the bar at EVENT_SYSTEM_MOVESIZEEND; whether Lightroom sends those events is what
+   Jim's re-run shows (move_events in the results). The restore came back in 8 ms.
+
+== 5. Part 1 dry run on the S9b build (appendix B of docs/reports/phase7/S9-prerun/prerun.txt) ==
+S9 SUGGESTED: INCOMPLETE (not run: S9-6, S9-7, S9-8, S9-9, S9-10, S9-11). A suggestion only: the verdict is Jim's.
+  PASS     S9-1 cold start: {"median":479.59814453125,"n":5,"misses":0,"max":494.204345703125}
+  PASS     S9-2 warm show: {"p95":13.561279296875,"n":20,"misses":0,"max":13.6015625}
+  PASS     S9-3 update to paint: {"p95":1.093505859375,"n":100,"misses":0,"max":8.5625}
+  PASS     S9-4 idle memory (hidden, 60 s): {"tree_mib":109.4609375,"host_mib":6.2578125,"measured_hidden_and_complete":true}
+  PASS     S9-5 CPU: {"hidden_pct":0.23436592423298777,"visible_pct":0.8072848308930132,"hidden_ok":true,"visible_ok":true}
+  NOT RUN  S9-6 show without activation: {"programmatic_unchanged":20,"programmatic":20,"jim_yes":0,"jim":0}
+
+== 6. After Greptile's review of PR #81: the button trigger replaces the burst count ==
+drag.rs now hides when a location event changes Lightroom's rectangle while the primary mouse button is down
+(GetAsyncKeyState, VK_RBUTTON when SM_SWAPBUTTON), polls the button every 30 ms and shows the bar at release; movesize
+events stay the primary trigger. Scripted re-run of appendix J (moves made from code, so no button is held):
+[{"k":"moved","settled":true,"ms":15,"detached":154,"changes":11,"span":777},{"k":"moved","settled":true,"ms":7,"detached":0,"changes":1,"span":0},{"k":"minimised","settled":true,"ms":9,"detached":0,"changes":1,"span":0},{"k":"moved","settled":true,"ms":17,"detached":0,"changes":1,"span":0}]
+move_events {"movesize":0,"burst":0} answers true true   (run before the key was renamed "button")
+=> Without a held button the bar follows code-driven moves, as in run 1; the detached time of that 11-move sequence is
+   now counted on every poll, the one that saw the change included (154 ms). The button path is not exercised here:
+   Claude Code does not send mouse input on Jim's machine, so Jim's re-run is its test.
+
+== 7. After Greptile's second review of PR #81 ==
+drag.rs: a failed SetTimer gives up hiding for that drag and shows the bar at once (otherwise nothing would show it).
+jim.ts: the poll that saw a change counts half its interval as detached (the change came at an unknown moment within it).
+Scripted re-run of appendix J:
+[{"k":"moved","settled":true,"ms":14,"detached":86,"changes":11,"span":777},{"k":"moved","settled":true,"ms":20,"detached":21,"changes":1,"span":0},{"k":"minimised","settled":true,"ms":8,"detached":0,"changes":1,"span":0},{"k":"moved","settled":true,"ms":9,"detached":0,"changes":1,"span":0}]
+move_events {"movesize":0,"button":0} answers true true
+
+== Appendix: scripts, verbatim ==
+
+--- Appendix G: zz-suspend.ts (run as `node zz-suspend.ts base` and `node zz-suspend.ts suspend`, stdin closed) ---
+import { execSync, spawn } from "node:child_process";
+import { hudLog, hudPids, killTree, now, pollUntil, sleep, startStub } from "./harness.ts";
+import { cpuMs, mainWindow, pidsByExe, privateBytes, tree, visible } from "./win32.ts";
+process.env.LRC_AVG_S9_LR_EXE = "notepad.exe";
+const mode = process.argv[2] ?? "base";
+if (mode === "suspend") process.env.LRC_AVG_S9_SUSPEND = "1"; else delete process.env.LRC_AVG_S9_SUSPEND;
+spawn("notepad.exe", [], { detached: true, stdio: "ignore" }).unref();
+await sleep(2500);
+const stub = await startStub();
+stub.cmd({ cmd: "spawn" });
+const sp = await stub.waitFor((e) => e.ev === "spawned", 5000);
+const pid = Number(sp?.pid);
+await stub.waitFor((e) => e.ev === "paint", 15000);
+await sleep(1500);
+const hwnd = Number(hudLog(pid, sp?.t ?? 0).find((e) => e.ev === "start")?.hwnd);
+stub.cmd({ cmd: "state", name: "W" });
+await sleep(500);
+stub.cmd({ cmd: "spike", action: "hide" });
+await pollUntil(() => !visible(hwnd), 2000);
+await sleep(5000);
+const t = tree(pid); const c0 = t.map(cpuMs); const w0 = performance.now();
+await sleep(30000);
+const dt = performance.now() - w0;
+const cpu = t.reduce((a, p, i) => a + ((cpuMs(p) ?? 0) - (c0[i] ?? 0)), 0) / dt * 100;
+const mem = tree(pid).reduce((a, p) => a + (privateBytes(p) ?? 0), 0) / 2 ** 20;
+console.log(mode, "hidden 30 s: cpu %", cpu.toFixed(2), "tree MiB", mem.toFixed(1), "procs", tree(pid).length);
+const from = stub.events.length; const t1 = now();
+stub.cmd({ cmd: "state", name: "C" });
+const vis = await pollUntil(() => visible(hwnd), 5000, 2);
+const paint = await stub.waitFor((e) => e.ev === "paint", 5000, from);
+console.log(mode, "turn state while hidden: visible after ms", vis ? (vis - t1).toFixed(1) : "NEVER (5 s)", "paint after ms", paint ? (Number(paint.t_paint) - t1).toFixed(1) : "none");
+console.log(hudLog(pid, sp?.t ?? 0).filter((e) => e.ev.startsWith("webview")).map((e) => JSON.stringify(e)).slice(-4).join("\n"));
+stub.cmd({ cmd: "quit" });
+for (const p of hudPids()) await killTree(tree(p));
+for (const p of pidsByExe("notepad.exe")) execSync(`taskkill /PID ${p} /F`);
+process.exit(0);
+(The build it ran against had, in webview.rs set_active: Resume() before SetIsVisible(true) and TrySuspend(handler) after
+SetIsVisible(false) when LRC_AVG_S9_SUSPEND was set; that code was removed afterwards.)
+
+--- Appendix H: zz-gpu.ts (as run for 2b; 2a ran without the "visible static" sample and the second pulsing sample) ---
+import { execSync, spawn } from "node:child_process";
+import { hudLog, hudPids, killTree, now, pollUntil, sleep, startStub } from "./harness.ts";
+import { cpuMs, pidsByExe, privateBytes, processes, tree, visible } from "./win32.ts";
+process.env.LRC_AVG_S9_LR_EXE = "notepad.exe";
+spawn("notepad.exe", [], { detached: true, stdio: "ignore" }).unref();
+await sleep(2500);
+const stub = await startStub();
+stub.cmd({ cmd: "spawn" });
+const sp = await stub.waitFor((e) => e.ev === "spawned", 5000);
+const pid = Number(sp?.pid);
+await stub.waitFor((e) => e.ev === "paint", 15000);
+await sleep(1500);
+const hwnd = Number(hudLog(pid, sp?.t ?? 0).find((e) => e.ev === "start")?.hwnd);
+const sample = async (label: string, ms: number) => {
+  const t = tree(pid); const c0 = t.map(cpuMs); const w0 = performance.now();
+  await sleep(ms);
+  const dt = performance.now() - w0;
+  const cpu = t.reduce((a, p, i) => a + ((cpuMs(p) ?? 0) - (c0[i] ?? 0)), 0) / dt * 100;
+  const names = processes();
+  const mem = tree(pid).map((p) => [names.get(p)?.exe, ((privateBytes(p) ?? 0) / 2 ** 20).toFixed(1)]);
+  console.log(label, "cpu %", cpu.toFixed(2), "tree MiB", mem.reduce((a, m) => a + Number(m[1]), 0).toFixed(1), JSON.stringify(mem));
+};
+stub.cmd({ cmd: "state", name: "C" });
+await sleep(3000);
+await sample("visible static 30 s:", 30000);
+stub.cmd({ cmd: "state", name: "W" });
+await sleep(1000);
+await sample("visible pulsing 30 s:", 30000);
+await sample("visible pulsing again 30 s:", 30000);
+stub.cmd({ cmd: "spike", action: "hide" });
+await pollUntil(() => !visible(hwnd), 2000);
+await sleep(5000);
+await sample("hidden 30 s:", 30000);
+const from = stub.events.length; const t1 = now();
+stub.cmd({ cmd: "state", name: "C" });
+const vis = await pollUntil(() => visible(hwnd), 5000, 2);
+const paint = await stub.waitFor((e) => e.ev === "paint", 5000, from);
+console.log("warm show: visible ms", vis ? (vis - t1).toFixed(1) : "NEVER", "paint ms", paint ? (Number(paint.t_paint) - t1).toFixed(1) : "none");
+stub.cmd({ cmd: "quit" });
+for (const p of hudPids()) await killTree(tree(p));
+for (const p of pidsByExe("notepad.exe")) execSync(`taskkill /PID ${p} /F`);
+process.exit(0);
+
+--- Appendix I: zz-drag.ts ---
+import koffi from "koffi";
+import { execSync, spawn } from "node:child_process";
+import { hudLog, hudPids, killTree, now, pollUntil, sleep, startStub } from "./harness.ts";
+import { deckRect, mainWindow, pidsByExe, rect, tree, visible } from "./win32.ts";
+const u = koffi.load("user32.dll");
+const SetWindowPos = u.func("bool __stdcall SetWindowPos(uintptr_t h, uintptr_t after, int x, int y, int cx, int cy, uint32_t f)");
+process.env.LRC_AVG_S9_LR_EXE = "notepad.exe";
+spawn("notepad.exe", [], { detached: true, stdio: "ignore" }).unref();
+await sleep(2500);
+const np = pidsByExe("notepad.exe")[0] ?? 0; const npH = mainWindow(np);
+const stub = await startStub();
+stub.cmd({ cmd: "spawn" });
+const sp = await stub.waitFor((e) => e.ev === "spawned", 5000);
+const pid = Number(sp?.pid);
+await stub.waitFor((e) => e.ev === "paint", 15000);
+await sleep(800);
+const hud = Number(hudLog(pid, sp?.t ?? 0).find((e) => e.ev === "start")?.hwnd);
+const eq = (a: any, b: any) => JSON.stringify(a) === JSON.stringify(b);
+const r0 = rect(npH);
+// a single move: should stay visible, in place
+let t = now(); SetWindowPos(npH, 0, r0.left + 100, r0.top, r0.right - r0.left, r0.bottom - r0.top, 0x14);
+let ok = await pollUntil(() => visible(hud) && eq(rect(hud), deckRect(npH)), 1000, 2);
+console.log("single move: in place, visible ms", ok ? (ok - t).toFixed(1) : null);
+await sleep(600);
+// a burst of 10 moves, 60 ms apart (like Jim's drag cadence)
+let hiddenSeen = false, detachedPolls = 0;
+const t0 = now();
+for (let i = 0; i < 10; i++) {
+  SetWindowPos(npH, 0, r0.left + 100 + i * 20, r0.top + i * 5, r0.right - r0.left, r0.bottom - r0.top, 0x14);
+  const until = now() + 60;
+  while (now() < until) { if (!visible(hud)) hiddenSeen = true; else if (!eq(rect(hud), deckRect(npH))) detachedPolls++; await sleep(2); }
+}
+const tEnd = now();
+ok = await pollUntil(() => visible(hud) && eq(rect(hud), deckRect(npH)), 2000, 2);
+console.log("burst: hidden during burst", hiddenSeen, "detached polls", detachedPolls, "back in place ms after last move", ok ? (ok - tEnd).toFixed(1) : null);
+console.log(hudLog(pid, sp?.t ?? 0).filter((e) => e.ev.startsWith("move_") || e.ev === "burst_quiet").map((e) => JSON.stringify(e)).join("\n"));
+stub.cmd({ cmd: "quit" });
+for (const p of hudPids()) await killTree(tree(p));
+execSync(`taskkill /PID ${np} /F`);
+process.exit(0);
+
+--- Appendix J: zz-follow8.ts (run as: ( sleep 9; echo; sleep 12; echo; sleep 3; for i in 1 2 3 4 5 6; do echo y; sleep 0.3; done ) | node zz-follow8.ts; run 4a used setTimeout 3000 and sleep 9 between the Enters) ---
+import koffi from "koffi";
+import { execSync, spawn } from "node:child_process";
+import { closePrompts, hudPids, killTree, saver, sleep, startStub, hudLog, type Results } from "./harness.ts";
+import { followChecks } from "./jim.ts";
+import type { Ctx } from "./auto.ts";
+import { mainWindow, pidsByExe, rect, tree } from "./win32.ts";
+const u = koffi.load("user32.dll");
+const SetWindowPos = u.func("bool __stdcall SetWindowPos(uintptr_t h, uintptr_t after, int x, int y, int cx, int cy, uint32_t f)");
+const ShowWindow = u.func("bool __stdcall ShowWindow(uintptr_t h, int cmd)");
+process.env.LRC_AVG_S9_LR_EXE = "notepad.exe";
+spawn("notepad.exe", [], { detached: true, stdio: "ignore" }).unref();
+await sleep(2500);
+const np = pidsByExe("notepad.exe")[0] ?? 0; const npH = mainWindow(np);
+const stub = await startStub();
+stub.cmd({ cmd: "spawn" });
+const sp = await stub.waitFor((e) => e.ev === "spawned", 5000);
+const pid = Number(sp?.pid);
+await stub.waitFor((e) => e.ev === "paint", 15000);
+await sleep(800);
+const hwnd = Number(hudLog(pid, sp?.t ?? 0).find((e) => e.ev === "start")?.hwnd);
+const r: Results = { run_id: "zz-follow8", errors: [] };
+const ctx: Ctx = { stub, r, save: saver(r), lr: { pid: np, hwnd: npH }, hud: { pid, hwnd } };
+const r0 = rect(npH);
+// the "user": after the first Enter (stdin at ~2 s), a drag-like burst, a single jump, a minimise/restore
+setTimeout(async () => {
+  for (let i = 0; i < 12; i++) { SetWindowPos(npH, 0, r0.left + i * 15, r0.top, r0.right - r0.left, r0.bottom - r0.top, 0x14); await sleep(64); }
+  await sleep(1200);
+  SetWindowPos(npH, 0, r0.left, r0.top, r0.right - r0.left - 200, r0.bottom - r0.top, 0x14);
+  await sleep(1200);
+  ShowWindow(npH, 6); await sleep(1000); ShowWindow(npH, 9);
+}, 11000);
+await followChecks(ctx);
+console.log(JSON.stringify((r.s9_8 as any).episodes.map((e: any) => ({ k: e.kind, settled: e.settled, ms: e.ms === null ? null : Math.round(e.ms), detached: e.detached_ms, changes: e.lr_changes, span: e.lr_change_span_ms }))));
+console.log("move_events", JSON.stringify((r.s9_8 as any).move_events), "answers", (r.s9_8 as any).jim_drag_hidden, (r.s9_8 as any).jim_text_sharp);
+closePrompts();
+stub.cmd({ cmd: "quit" });
+for (const p of hudPids()) await killTree(tree(p));
+execSync(`taskkill /PID ${np} /F`);
+process.exit(0);

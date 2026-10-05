@@ -5,7 +5,7 @@
 // read through Tavily 2026-10-04]. That each release of a slider is one History step, undone by one
 // Ctrl+Z, is [inference]; S9-11 asks Jim to check the History panel.
 import { deckRect, foreground, iconic, mainWindow, pidOf, processes, rect, startedAt, topmost, tree, visible, zOrder } from "./win32.ts";
-import { alive, ask, beep, enter, enterLater, now, pollUntil, say, sleep } from "./harness.ts";
+import { alive, ask, beep, enter, enterLater, hudLog, now, pollUntil, say, sleep } from "./harness.ts";
 import type { Ctx } from "./auto.ts";
 
 const lrFront = (ctx: Ctx): boolean => pidOf(foreground()) === ctx.lr.pid;
@@ -78,11 +78,63 @@ export async function topmostChecks(ctx: Ctx): Promise<void> {
 const same = (a: { left: number; top: number; right: number; bottom: number }, b: typeof a): boolean =>
   Math.abs(a.left - b.left) <= 1 && Math.abs(a.top - b.top) <= 1 && Math.abs(a.right - b.right) <= 1 && Math.abs(a.bottom - b.bottom) <= 1;
 
-/** S9-8: follows Lightroom's window: each change, then 400 ms still, is one episode. */
+/**
+ * Watches Lightroom's window until Jim presses Enter. Each change, then 400 ms still, is one episode:
+ * when the HUD was in place (or hidden, while minimised) after the change, how long it was visible but
+ * out of place meanwhile (`detached_ms`: S9b's drag hide should keep it near 0), and how often
+ * Lightroom's own rectangle changed (`lr_changes`), the move rate Jim's S9 run could not tell apart
+ * from the event rate.
+ */
+async function followLoop(ctx: Ctx): Promise<Record<string, unknown>[]> {
+  let finishedAt = 0;
+  void enterLater("When you have done all five, press Enter here again.").then(() => (finishedAt = now()));
+  const episodes: Record<string, unknown>[] = [];
+  let lr = mainWindow(ctx.lr.pid) || ctx.lr.hwnd;
+  const keyOf = (h: number): string => (iconic(h) ? "iconic" : JSON.stringify(rect(h)));
+  let lastKey = keyOf(lr);
+  let [firstChange, lastChange, changes, detached, lastFind, lastPoll] = [0, 0, 0, 0, now(), now()];
+  let inPlaceSince: number | null = null;
+  let open = false;
+  const close = (min: boolean, settled: boolean): void => {
+    open = false;
+    const ms = settled && inPlaceSince !== null ? inPlaceSince - lastChange : null;
+    episodes.push({ kind: min ? "minimised" : "moved", settled, ms, detached_ms: Math.round(detached), lr_changes: changes, lr_change_span_ms: Math.round(lastChange - firstChange), lr_rect: min ? null : rect(lr), hud_rect: rect(ctx.hud.hwnd), expected: min ? null : deckRect(lr), hud_visible: visible(ctx.hud.hwnd) });
+  };
+  // After Enter, an episode still open gets up to 1.5 s to settle; one that does not is kept as unsettled
+  // (ms null, so the gate fails) rather than dropped.
+  while (!finishedAt || (open && now() - finishedAt < 1500)) {
+    await sleep(5);
+    const t = now();
+    const dt = t - lastPoll;
+    lastPoll = t;
+    if (t - lastFind > 250) [lr, lastFind] = [mainWindow(ctx.lr.pid) || lr, t];
+    const key = keyOf(lr);
+    const min = key === "iconic";
+    const hudVisible = visible(ctx.hud.hwnd);
+    const inPlace = min ? !hudVisible : hudVisible && same(rect(ctx.hud.hwnd), deckRect(lr));
+    const changed = key !== lastKey;
+    if (changed) {
+      if (!open) [firstChange, changes, detached] = [t, 0, 0];
+      [lastKey, lastChange, inPlaceSince, open] = [key, t, null, true];
+      changes++;
+    }
+    // Counted on every poll of an episode. The poll that saw a change counts half its interval: the
+    // change came at an unknown moment within it, so the midpoint is off by at most half a poll.
+    if (open && hudVisible && !inPlace && !min) detached += changed ? dt / 2 : dt;
+    if (changed) continue;
+    inPlaceSince = inPlace ? (inPlaceSince ?? t) : null;
+    if (open && t - lastChange > 400) close(min, true);
+  }
+  if (open) close(lastKey === "iconic", false);
+  ctx.lr.hwnd = lr;
+  return episodes;
+}
+
+/** S9-8: follows Lightroom's window; S9b: out of sight while it is dragged or resized. */
 export async function followChecks(ctx: Ctx): Promise<void> {
   await showWorking(ctx);
   say([
-    "\nS9-8. Do these five things in Lightroom, a few seconds apart:",
+    "\nS9-8. You will do these five things in Lightroom, a few seconds apart:",
     "  1. If Lightroom fills the screen, click its Restore button (the middle of the three buttons at the top right).",
     "  2. Drag Lightroom by its title bar to another place and let go. Do it twice.",
     "  3. Drag Lightroom's bottom-right corner to make it bigger or smaller and let go. Do it twice.",
@@ -91,45 +143,21 @@ export async function followChecks(ctx: Ctx): Promise<void> {
     "     (F cycles the screen modes; Ctrl+Alt+F goes back to Normal at any time).",
     "  Then put Lightroom back as it was at the start (maximise it if it was maximised).",
   ].join("\n"));
-  let finishedAt = 0;
-  void enterLater("When you have done all five, press Enter here.").then(() => (finishedAt = now()));
-  const episodes: Record<string, unknown>[] = [];
-  let lr = mainWindow(ctx.lr.pid) || ctx.lr.hwnd;
-  const keyOf = (h: number): string => (iconic(h) ? "iconic" : JSON.stringify(rect(h)));
-  let lastKey = keyOf(lr);
-  let lastChange = 0;
-  let lastFind = now();
-  let inPlaceSince: number | null = null;
-  let open = false;
-  const close = (min: boolean, settled: boolean): void => {
-    open = false;
-    const ms = settled && inPlaceSince !== null ? inPlaceSince - lastChange : null;
-    episodes.push({ kind: min ? "minimised" : "moved", settled, ms, lr_rect: min ? null : rect(lr), hud_rect: rect(ctx.hud.hwnd), expected: min ? null : deckRect(lr), hud_visible: visible(ctx.hud.hwnd) });
-  };
-  // After Enter, an episode still open gets up to 1.5 s to settle; one that does not is kept as unsettled
-  // (ms null, so the gate fails) rather than dropped.
-  while (!finishedAt || (open && now() - finishedAt < 1500)) {
-    await sleep(5);
-    const t = now();
-    if (t - lastFind > 250) [lr, lastFind] = [mainWindow(ctx.lr.pid) || lr, t];
-    const key = keyOf(lr);
-    if (key !== lastKey) {
-      [lastKey, lastChange, inPlaceSince, open] = [key, t, null, true];
-      continue;
-    }
-    const min = key === "iconic";
-    const hudVisible = visible(ctx.hud.hwnd);
-    const inPlace = min ? !hudVisible : hudVisible && same(rect(ctx.hud.hwnd), deckRect(lr));
-    inPlaceSince = inPlace ? (inPlaceSince ?? t) : null;
-    if (open && t - lastChange > 400) close(min, true);
-  }
-  if (open) close(lastKey === "iconic", false);
-  ctx.lr.hwnd = lr;
+  await enter("Press Enter FIRST, then do the five things. This window measures until you press Enter again.");
+  const since = now();
+  const episodes = await followLoop(ctx);
+  const moves = hudLog(ctx.hud.pid, 0).filter((e) => e.t >= since && (e.ev === "move_hide" || e.ev === "move_show"));
   const moved = await ask("Each time you moved or resized Lightroom, did the bar end up along Lightroom's bottom part, as wide as the window?");
+  const dragHidden = await ask("While you dragged or resized Lightroom, was the bar out of sight (never trailing behind), and did it come back in place when you let go?");
   const minimised = await ask("While Lightroom was minimised, was the bar gone, and did it come back when you brought Lightroom back?");
   const modes = await ask("In each screen mode (F), did the bar stay along the bottom part of Lightroom?");
   const filmstrip = await ask("(Not a gate, for the layout work) Did the bar sit over the top edge of the filmstrip, leaving the thumbnails visible?");
-  ctx.r.s9_8 = { episodes, jim_moved: moved, jim_minimised: minimised, jim_screen_modes: modes, jim_over_filmstrip_top: filmstrip };
+  const sharp = await ask("(Not a gate) Does the bar's text look as sharp as in your first S9 run?");
+  ctx.r.s9_8 = {
+    episodes,
+    move_events: { movesize: moves.filter((e) => e.kind === "movesize").length, button: moves.filter((e) => e.kind === "button").length },
+    jim_moved: moved, jim_drag_hidden: dragHidden, jim_minimised: minimised, jim_screen_modes: modes, jim_over_filmstrip_top: filmstrip, jim_text_sharp: sharp,
+  };
   ctx.save();
 }
 

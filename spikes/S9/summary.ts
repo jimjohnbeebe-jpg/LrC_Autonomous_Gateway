@@ -8,6 +8,8 @@ type Row = Record<string, unknown>;
 const rows = (v: unknown): Row[] => (Array.isArray(v) ? (v as Row[]) : []);
 const nums = (xs: unknown[]): number[] => xs.filter((x): x is number => typeof x === "number");
 const MB = 1024 * 1024;
+/** An S9-8 episode: in place within 100 ms of the change ending, and (S9b) visible out of place at most 100 ms. */
+const followOk = (x: Row): boolean => typeof x.ms === "number" && x.ms <= 100 && (typeof x.detached_ms !== "number" || x.detached_ms <= 100);
 
 function gate(name: string, value: unknown, target: string, ok: boolean | null): Gate {
   return { gate: name, value, target, suggested: ok === null ? "not run" : ok ? "pass" : "fail" };
@@ -55,15 +57,18 @@ export function summarize(r: Results): { gates: Gate[]; headline: string } {
       "20 of 20 programmatic shows, Jim 3 of 3", shows.length && jim6.length ? shows.length === 20 && shows.every((x) => x.fg_unchanged) && jim6.length === 3 && jim6.every((x) => x.jim_backslash_reached_lightroom) : null),
     gate("S9-7 topmost policy", { switches: switches.length, to_lightroom: kinds("lightroom"), to_claude: kinds("claude"), correct_within_250: switches.filter((x) => x.correct && Number(x.ms) <= 250).length, jim_over_lightroom: s7?.jim_over_lightroom ?? null, jim_under_claude: s7?.jim_under_claude ?? null },
       "10 alternating switches (5 each way), each correct within 250 ms; Jim y, y", s7 ? switches.length >= 10 && kinds("lightroom") >= 5 && kinds("claude") >= 5 && switches.every((x) => x.correct && Number(x.ms) <= 250) && s7.jim_over_lightroom === true && s7.jim_under_claude === true : null),
-    gate("S9-8 follows Lightroom", { episodes: episodes.length, in_place_within_100: episodes.filter((x) => typeof x.ms === "number" && x.ms <= 100).length, jim: [s8?.jim_moved, s8?.jim_minimised, s8?.jim_screen_modes] },
-      "every episode in place <= 100 ms after the change ends; hidden while minimised; Jim y, y, y", s8 ? episodes.length > 0 && episodes.every((x) => typeof x.ms === "number" && x.ms <= 100) && s8.jim_moved === true && s8.jim_minimised === true && s8.jim_screen_modes === true : null),
+    gate("S9-8 follows Lightroom", { episodes: episodes.length, in_place_within_100: episodes.filter(followOk).length, max_detached_ms: Math.max(0, ...nums(episodes.map((x) => x.detached_ms))), move_events: s8?.move_events ?? null, jim: [s8?.jim_moved, s8?.jim_drag_hidden, s8?.jim_minimised, s8?.jim_screen_modes] },
+      "every episode in place <= 100 ms after the change ends and visible out of place <= 100 ms; hidden while minimised; Jim y to each (S9b adds the drag question)",
+      s8 ? episodes.length > 0 && episodes.every(followOk) && s8.jim_moved === true && s8.jim_minimised === true && s8.jim_screen_modes === true && (!("jim_drag_hidden" in s8) || s8.jim_drag_hidden === true) : null),
     gate("S9-9 survives the launcher", s9 ?? null, "running, not-connected state with the undo line (Jim y)", s9 ? s9.hud_running_5s_after === true && s9.jim_not_connected_with_undo === true : null),
     gate("S9-10 exits after Lightroom", s10 ?? null, "process tree gone <= 5000 ms after Lightroom exits", s10 ? typeof s10.tree_ms === "number" && s10.tree_ms <= 5000 : null),
     gate("S9-11 Lightroom responsive", s11?.jim_no_difference ?? null, "Jim y", s11 ? s11.jim_no_difference === true : null),
     { gate: "S9-12 size on disk / download", value: r.s9_12 ?? null, target: "reported (no gate)", suggested: "reported" },
   ];
   const failed = gates.filter((g) => g.suggested === "fail").map((g) => g.gate.split(" ")[0]);
-  const notRun = gates.filter((g) => g.suggested === "not run").map((g) => g.gate.split(" ")[0]);
+  // The S9b re-run (`--s9b`) runs Part 1 and S9-8 only; the other gates stand from the first run.
+  const fromRun1 = r.s9b === true ? ["S9-6", "S9-7", "S9-9", "S9-10", "S9-11"] : [];
+  const notRun = gates.filter((g) => g.suggested === "not run").map((g) => g.gate.split(" ")[0] ?? "").filter((g) => !fromRun1.includes(g));
   const headline = failed.length
     ? `S9 SUGGESTED: FAILED (${failed.join(", ")})${notRun.length ? `; not run: ${notRun.join(", ")}` : ""}`
     : notRun.length ? `S9 SUGGESTED: INCOMPLETE (not run: ${notRun.join(", ")})` : "S9 SUGGESTED: EVERY GATE PASSED";

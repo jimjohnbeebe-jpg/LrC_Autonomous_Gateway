@@ -3,6 +3,7 @@
 // Lightroom's window, exit after Lightroom exits. The channel client lives in the TypeScript UI (ui\ui.ts).
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod drag;
 mod log;
 mod webview;
 mod win;

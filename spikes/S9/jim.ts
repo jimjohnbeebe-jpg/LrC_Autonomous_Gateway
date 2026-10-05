@@ -118,8 +118,9 @@ async function followLoop(ctx: Ctx): Promise<Record<string, unknown>[]> {
       [lastKey, lastChange, inPlaceSince, open] = [key, t, null, true];
       changes++;
     }
-    // Counted on every poll of an episode, the one that saw the change included.
-    if (open && hudVisible && !inPlace && !min) detached += dt;
+    // Counted on every poll of an episode. The poll that saw a change counts half its interval: the
+    // change came at an unknown moment within it, so the midpoint is off by at most half a poll.
+    if (open && hudVisible && !inPlace && !min) detached += changed ? dt / 2 : dt;
     if (changed) continue;
     inPlaceSince = inPlace ? (inPlaceSince ?? t) : null;
     if (open && t - lastChange > 400) close(min, true);

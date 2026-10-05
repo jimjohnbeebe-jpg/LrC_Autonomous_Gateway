@@ -89,9 +89,14 @@ pub fn on_location(rect: Option<(i32, i32, i32, i32)>) {
     }
     BUTTON.store(true, SeqCst);
     win::hide_for_move("button");
-    unsafe {
-        TIMER.store(SetTimer(None, 0, BUTTON_POLL_MS, Some(on_poll)), SeqCst);
+    let timer = unsafe { SetTimer(None, 0, BUTTON_POLL_MS, Some(on_poll)) };
+    if timer == 0 {
+        // No poll, so nothing would ever show it again: give up hiding for this drag.
+        BUTTON.store(false, SeqCst);
+        win::show_after_move("button_no_timer");
+        return;
     }
+    TIMER.store(timer, SeqCst);
 }
 
 unsafe extern "system" fn on_poll(_: HWND, _: u32, _: usize, _: u32) {

@@ -69,6 +69,13 @@ move_events {"movesize":0,"burst":0} answers true true   (run before the key was
    now counted on every poll, the one that saw the change included (154 ms). The button path is not exercised here:
    Claude Code does not send mouse input on Jim's machine, so Jim's re-run is its test.
 
+== 7. After Greptile's second review of PR #81 ==
+drag.rs: a failed SetTimer gives up hiding for that drag and shows the bar at once (otherwise nothing would show it).
+jim.ts: the poll that saw a change counts half its interval as detached (the change came at an unknown moment within it).
+Scripted re-run of appendix J:
+[{"k":"moved","settled":true,"ms":14,"detached":86,"changes":11,"span":777},{"k":"moved","settled":true,"ms":20,"detached":21,"changes":1,"span":0},{"k":"minimised","settled":true,"ms":8,"detached":0,"changes":1,"span":0},{"k":"moved","settled":true,"ms":9,"detached":0,"changes":1,"span":0}]
+move_events {"movesize":0,"button":0} answers true true
+
 == Appendix: scripts, verbatim ==
 
 --- Appendix G: zz-suspend.ts (run as `node zz-suspend.ts base` and `node zz-suspend.ts suspend`, stdin closed) ---

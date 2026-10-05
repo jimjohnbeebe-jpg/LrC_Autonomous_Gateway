@@ -36,16 +36,17 @@ import { engineEndedNote } from "./ai-revert.js";
 import { approvePass } from "./approval.js";
 import { openSession, runPass0 } from "./begin.js";
 import { endSession, readSessionLog } from "./end.js";
-import { abortedNote, endedError, idleStage, userAction, userEnded, type UserAction, type UserEnded } from "./hud-actions.js";
+import { abortedNote, endedError, idleStage, userAction, userEnded, type ActionHost, type UserAction, type UserEnded } from "./hud-actions.js";
 import { abortError, checkAbort, read, render } from "./io.js";
 import { createMask, deleteMask, editMask, listMasks } from "./masks.js";
 import { selectVariant } from "./pick.js";
 import { probe } from "./probe.js";
 import { setRegions } from "./regions.js";
+import { showCopy, type ShowRecord } from "./show-copy.js";
 import { watchRestarts } from "./restart.js";
 import { step } from "./step.js";
 import { focus, resolveTarget } from "./targets.js";
-import { folderOf, type ApproveArgs, type BeginArgs, type CreateMaskArgs, type DeleteMaskArgs, type EditMaskArgs, type EndArgs, type ListMasksArgs, type ProbeArgs, type RegionArgs, type SelectArgs, type Session, type SessionContext, type SessionDeps, type SessionOutput, type StepArgs, type TargetId } from "./types.js";
+import { folderOf, type ApproveArgs, type BeginArgs, type CreateMaskArgs, type DeleteMaskArgs, type EditMaskArgs, type EndArgs, type ListMasksArgs, type ProbeArgs, type RegionArgs, type SelectArgs, type Session, type SessionContext, type SessionDeps, type SessionOutput, type StepArgs, type TargetId, type VariantId } from "./types.js";
 import { runVariants } from "./variants.js";
 import { sessionView, type SessionView } from "./view.js";
 
@@ -217,17 +218,23 @@ export class SessionManager {
    * queue (hud-actions.ts). Returns the note the HUD shows at once.
    */
   userAction(action: UserAction): string {
-    return userAction(
-      {
-        ctx: this.ctx,
-        session: () => this.session,
-        ended: (id) => this.endedByUser.get(id),
-        busy: () => this.running > 0,
-        queue: (fn) => void this.exclusive(fn).catch(() => undefined),
-        close: (s, ended) => this.close(s, ended),
-      },
-      action,
-    );
+    return userAction(this.actionHost(), action);
+  }
+
+  /** The Deck chose copy `variant` (E12): select it in Lightroom while the edit waits for the pick (show-copy.ts). */
+  showCopy(sessionId: string, variant: VariantId, report: (r: ShowRecord) => void): void {
+    showCopy(this.actionHost(), sessionId, variant, report);
+  }
+
+  private actionHost(): ActionHost {
+    return {
+      ctx: this.ctx,
+      session: () => this.session,
+      ended: (id) => this.endedByUser.get(id),
+      busy: () => this.running > 0,
+      queue: (fn) => void this.exclusive(fn).catch(() => undefined),
+      close: (s, ended) => this.close(s, ended),
+    };
   }
 
   /** SESSION_ENDED for a session the user ended from the HUD or the menu; null otherwise. */

@@ -13,9 +13,12 @@
 //     here: sent at once as `answer`, and folded into the next state as answered_click_id and note.
 //   - `get_thumb` is answered with the copy's thumbnail (thumbs.ts), or null when the key is not a
 //     current one; thumbnails are made only while the edit is open.
+//   - `show` (row 4a, E12) goes to the show listener (the session manager, session\show-copy.ts).
+//   - `cap_reached` (row 4a, Q6) is set at awaiting_claude when the photo's passes are all used, as
+//     session\hud-actions.ts idleStage decides that stage.
 // The fan-out to both HUDs, and starting the Deck, are sinks.ts's.
 // [handle: tests\hud-channel.test.ts, tests\hud-channel-events.test.ts, tests\hud-thumbs.test.ts,
-// tests\hud-selection-poll.test.ts]
+// tests\hud-selection-poll.test.ts, tests\hud-show-copy.test.ts]
 
 import { HUD_END_STAGES, type BridgeClient, type HudStage } from "../bridge/index.js";
 import type { Session } from "../session/index.js";
@@ -44,6 +47,7 @@ export type DeckOptions = {
 };
 
 type DeckEvent = Extract<DeckMessage, { type: "event" }>;
+type DeckShow = Extract<DeckMessage, { type: "show" }>;
 type Base = Omit<HudChannelState, "lightroom" | "selection" | "answered_click_id">;
 
 const ended = (stage: string): boolean => (HUD_END_STAGES as readonly string[]).includes(stage);
@@ -57,6 +61,7 @@ export class Deck {
   private readonly record: (r: DeckRecord) => void;
   private readonly clientListeners = new Set<(connected: boolean) => void>();
   private eventListener: (e: DeckEvent) => void = () => {};
+  private showListener: (m: DeckShow) => void = () => {};
   private session: Session | null = null;
   private base: Base | null = null;
   private seq = 0;
@@ -115,6 +120,10 @@ export class Deck {
     this.eventListener = listener;
   }
 
+  onShow(listener: (m: DeckShow) => void): void {
+    this.showListener = listener;
+  }
+
   /** The session loop reported `stage` (sinks.ts passes every stage on). Never throws, never waits. */
   stage(s: Session, stage: HudStage, options: { note?: string; closeAfter?: number } = {}): void {
     if (this.session?.id !== s.id) {
@@ -130,6 +139,7 @@ export class Deck {
       ...hudState(s, stage, options.note, closeAfter),
       ...(s.mode === "variants" ? { copies: deckCopies(s), picked: s.picked } : {}),
       rows: deckRows(s),
+      ...(stage === "awaiting_claude" && s.active.endReason === "cap_reached" ? { cap_reached: true as const } : {}),
     };
     if (ended(stage)) this.thumbs.clear();
     this.push();
@@ -195,6 +205,7 @@ export class Deck {
 
   private async message(m: Exclude<DeckMessage, { type: "hello" | "pong" }>): Promise<void> {
     if (m.type === "event") return this.eventListener(m);
+    if (m.type === "show") return this.showListener(m);
     const jpeg = await this.thumbs.get(this.editOpen() ? this.session : null, m.key).catch(() => null);
     this.channel.send({ type: "thumb", key: m.key, jpeg_b64: jpeg ? jpeg.toString("base64") : null });
   }

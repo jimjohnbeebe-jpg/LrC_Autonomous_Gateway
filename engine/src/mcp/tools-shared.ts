@@ -150,6 +150,7 @@ export function createContext(deps: ToolsDeps): ToolContext {
   if (hud && ctx.sessions) {
     const events = new HudEvents(deps.client, ctx.sessions, hud, { record: (r) => logHud(ctx, "hud_event", r), now: ctx.now, ...(deck ? { deck } : {}) });
     deck?.onEvent((e) => events.handle(e, "channel"));
+    deck?.onShow((m) => ctx.sessions?.showCopy(m.session_id, m.variant, (r) => logHud(ctx, "hud_show", r)));
   }
   return ctx;
 }

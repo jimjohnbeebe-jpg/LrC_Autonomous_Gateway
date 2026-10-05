@@ -2,7 +2,7 @@
 // hud-launch; Phase 7 row 3): SimHudClient, a stand-in for the Deck (Phase 7 row 4) that reads the
 // endpoint file, says hello and collects what the engine sends; and deckRig, the session harness's
 // manager reporting to the classic HUD and the Deck through HudFanOut, as mcp\tools-shared.ts wires
-// them, with the channel open and its endpoint file in the test's temporary folder. Call deckRig after
+// them (clicks and `show`), with the channel open and its endpoint file in the test's temporary folder. Call deckRig after
 // useSessionHarness(), inside a test.
 
 import { readFileSync } from "node:fs";
@@ -22,7 +22,7 @@ import {
   type HudChannelState,
   type HudEventRecord,
 } from "../../src/hud/index.js";
-import type { SessionManager } from "../../src/session/index.js";
+import type { SessionManager, ShowRecord } from "../../src/session/index.js";
 import { waitUntil } from "./fake-plugin.js";
 import { client, newManager, tmp } from "./session-harness.js";
 
@@ -109,6 +109,8 @@ export type DeckRig = {
   started: string[];
   records: DeckRecord[];
   events: HudEventRecord[];
+  /** What happened to each `show` (row 4a, E12), as mcp\tools-shared.ts logs it. */
+  shows: ShowRecord[];
 };
 
 /**
@@ -143,7 +145,10 @@ export async function deckRig(options: { exe?: string | null; onStart?: () => vo
   manager = newManager({ hud: new HudFanOut(hud, deck, launcher, { waitMs: options.waitMs ?? 300 }), ...(options.newId ? { newId: options.newId } : {}) });
   const hudEvents = new HudEvents(client, manager, hud, { record: (r) => events.push(r), deck });
   deck.onEvent((e) => hudEvents.handle(e, "channel"));
+  const shows: ShowRecord[] = [];
+  const m = manager;
+  deck.onShow((s) => m.showCopy(s.session_id, s.variant, (r) => shows.push(r)));
   await deck.open();
   onTestFinished(() => deck.close());
-  return { deck, hud, manager, launcher, endpoint, started, records, events };
+  return { deck, hud, manager, launcher, endpoint, started, records, events, shows };
 }

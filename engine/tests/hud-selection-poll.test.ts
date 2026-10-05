@@ -100,7 +100,8 @@ describe("selection polling", () => {
 
   it("does not ask while the copies are made, and counts a copy as in the edit", async () => {
     clean();
-    const rig = await deckRig({ pingMs: 50 });
+    // The default ping: at 50 ms the busy Variants begin dropped the client under a full parallel run (PR #86).
+    const rig = await deckRig();
     const sim = await SimHudClient.connect(rig.endpoint);
     await sim.welcomed();
     const commands = plugin.received.length;

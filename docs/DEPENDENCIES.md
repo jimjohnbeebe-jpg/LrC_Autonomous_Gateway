@@ -21,6 +21,10 @@ Runtime this was built and tested on: Node `v24.11.1`, npm `11.19.1` (Windows 11
 | `typescript` | 7.0.2 | devDependency | Apache-2.0 | `>=16.20.0` | https://www.npmjs.com/package/typescript/v/7.0.2 |
 | `@types/node` | 24.13.6 | devDependency | MIT | — | https://www.npmjs.com/package/@types/node/v/24.13.6 |
 | `luaparse` | 0.3.1 | devDependency | MIT | — | https://www.npmjs.com/package/luaparse/v/0.3.1 |
+| `ws` | 8.22.0 | dependency | MIT | `>=10.0.0` | https://www.npmjs.com/package/ws/v/8.22.0 |
+| `@types/ws` | 8.18.2 | devDependency | MIT | — | https://www.npmjs.com/package/@types/ws/v/8.18.2 |
+
+`ws` and `@types/ws` were added in Phase 7 row 3 (2026-10-05) for the HUD channel the engine hosts for the Deck (`engine\src\hud\channel.ts`; vault AVG-014), at the versions spike S9 pinned (below), so npm keeps one copy. 8.22.0 was still the npm `latest` tag [handle: `npm view ws@8.22.0 version license engines` → `8.22.0`, `MIT`, `{ node: '>=10.0.0' }`; `npm view ws dist-tags.latest` → `8.22.0`; `npm view @types/ws@8.18.2 version license` → `8.18.2`, `MIT`; 2026-10-05]. `npm install -E ws@8.22.0 -w engine` and `npm install -E -D @types/ws@8.18.2 -w engine`; `npm ls ws @types/ws` shows both `deduped` for the engine.
 
 `@modelcontextprotocol/sdk` went from 1.30.1 to 1.32.0 on 2026-10-03 (GitHub issue #60 [stated: Jim, 2026-10-03, "MCP SDK 1.32.0"]), in `engine\package.json` and `spikes\package.json` alike, so npm still keeps one copy. 1.32.0 was the npm `latest` tag, MIT, with `engines.node` `>=18` and `zod` `^3.25 || ^4.0` as dependency and peer [handle: `npm view @modelcontextprotocol/sdk@1.32.0 version license engines dependencies peerDependencies` and `npm view @modelcontextprotocol/sdk dist-tags` → `latest: '1.32.0'`, 2026-10-03]. `npm install` reported 0 vulnerabilities and changed only the SDK's entries in `package-lock.json`; `npm ls @modelcontextprotocol/sdk` shows 1.32.0, `deduped` for the engine.
 

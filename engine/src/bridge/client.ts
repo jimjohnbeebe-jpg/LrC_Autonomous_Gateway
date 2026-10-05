@@ -256,8 +256,9 @@ export class BridgeClient {
    * 0.35 ms (median) in Phase 1, docs\reports\phase1\PHASE1.md "Numbers"]. So a request with a
    * timeout shorter than three beats (a HUD update's 5 s) waits on too (Greptile, PR #47) [handle:
    * tests\bridge-pause.test.ts "waits out a pause with a request whose timeout is shorter than three beats"].
+   * Public for the Deck's "waiting" (hud\extras.ts lightroomState, Phase 7 E10).
    */
-  private pluginPaused(): boolean {
+  pluginPaused(): boolean {
     const { heartbeatMs, missedBeats } = this.opts;
     return this.silenceAllowance() > heartbeatMs * missedBeats && Date.now() - this.lastInbound > heartbeatMs * 1.5;
   }

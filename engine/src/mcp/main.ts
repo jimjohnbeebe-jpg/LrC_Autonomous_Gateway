@@ -18,6 +18,10 @@
 // The HUD (PHASE5_PLAN row 5): while a session is open the engine keeps the bridge (decision 5: no
 // idle release, so the HUD's buttons reach it) and rides out a plugin pause of up to
 // SESSION_SILENCE_MS (decision D1, bridge-gate.ts).
+// The Deck (Phase 7 row 3, hud\deck.ts): the engine that holds the bridge lock also holds the HUD
+// channel. It opens when the lock is taken and closes (deleting hud_endpoint.json) when the lock is given
+// back or the engine exits, so only one engine ever writes the endpoint file (spec docs\hud\
+// lrc-avg-hud-spec-v2.md 3.2, D3).
 // Shutdown: when stdin ends. On Windows the parent often dies without a signal, and an orphaned
 // engine would keep the plugin's single-client sockets and the lock [upstream claim:
 // vendor\automaat\server\src\index.ts:194-206].
@@ -61,9 +65,16 @@ const gate = new BridgeGate(client, () => acquireInstanceLock(dev.lockPort), {
   onAcquire: () => {
     say("took the Lightroom bridge lock");
     previews.purge();
+    tools
+      .deck()
+      ?.open()
+      .catch((err: unknown) => say(`the HUD channel did not open: ${err instanceof Error ? err.message : String(err)}`));
   },
   idleReleaseMs: IDLE_RELEASE_MS,
-  onIdleRelease: () => say(`no tool call for ${IDLE_RELEASE_MS / 1000} s; gave the Lightroom bridge back`),
+  onIdleRelease: () => {
+    say(`no tool call for ${IDLE_RELEASE_MS / 1000} s; gave the Lightroom bridge back`);
+    tools.deck()?.close();
+  },
   keepWhile: () => sessionOpen(),
 });
 
@@ -82,6 +93,7 @@ const tools = new Tools({
   log: toolLog,
   onCallStart: () => gate.beginUse(),
   onCallEnd: () => gate.endUse(),
+  deck: { log: say },
 });
 sessionOpen = () => (tools.sessionManager()?.current() ?? null) !== null;
 await createServer(tools).connect(new StdioServerTransport());
@@ -92,6 +104,7 @@ const shutdown = (reason: string) => (): void => {
   stopping = true;
   say(`shutting down: ${reason}`);
   if (gate.holdsLock()) previews.purge();
+  tools.deck()?.close();
   void gate.release();
   process.exit(0); // the OS frees the lock port with the process
 };

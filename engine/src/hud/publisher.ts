@@ -35,7 +35,7 @@ import { hudState, type HudState } from "./payload.js";
 export const HUD_PLUGIN = "0.13.0";
 const CLOSE_AFTER_PLUGIN = "0.15.0";
 /** Seconds an ended HUD stays up before it closes itself (any end: Jim, Claude or the engine). */
-const END_CLOSE_S = 10;
+export const END_CLOSE_S = 10;
 /**
  * An update's answer took 2-7 ms in Lightroom [handle: vault PHASE5_PLAN.md "From row 4": "hud_update
  * round trips took 2-7 ms"]; 5 s is [inference]. While the plugin is paused the bridge client lets it
@@ -109,6 +109,17 @@ export class HudPublisher implements HudSink {
         resolve();
       });
     });
+  }
+
+  /**
+   * Open the classic HUD for this open session after all (Phase 7 row 3, hud\sinks.ts): the Deck did not
+   * connect in time, or was lost and could not be started again. `open: true` rides on the session's next
+   * updates until the HUD takes one, as at begin.
+   */
+  open(sessionId: string): void {
+    if (this.channel?.sessionId !== sessionId || !this.state || (HUD_END_STAGES as readonly string[]).includes(this.state.stage)) return;
+    this.channel.open = true;
+    this.kick();
   }
 
   /**

@@ -6,7 +6,7 @@
 
 import { randomUUID } from "node:crypto";
 import { pluginVersionAtLeast, type BridgeClient } from "../bridge/index.js";
-import { HudEvents, HudPublisher } from "../hud/index.js";
+import { Deck, HudEvents, HudFanOut, HudLauncher, HudPublisher, type DeckDeps } from "../hud/index.js";
 import type { IntentLibrary } from "../intents/index.js";
 import type { ToolLog } from "../log/index.js";
 import type { Metrics, Region } from "../metrics/index.js";
@@ -79,6 +79,11 @@ export type ToolsDeps = {
   /** false: no HUD updates and no HUD events (PHASE5_PLAN row 5); on by default. */
   hud?: boolean;
   /**
+   * The Deck (Phase 7 row 3, hud\deck.ts): with it, the HUD channel exists (main.ts opens it with the
+   * bridge lock) and each state goes to the Deck too (hud\sinks.ts). Absent: the classic HUD only.
+   */
+  deck?: DeckDeps;
+  /**
    * How long lr_step waits for an approval (session\approval.ts APPROVAL_WAIT_MS when absent). For the
    * tests only: the MCP server and the checks leave it unset (PHASE5_PLAN row 7, decision D3).
    */
@@ -98,6 +103,8 @@ export type ToolContext = {
   last: LastRender | null;
   /** The HUD's updates (null without sessions or with `hud: false`). */
   hud: HudPublisher | null;
+  /** The Deck and its channel (null without `deck` or without the HUD). */
+  deck: Deck | null;
 };
 
 export const ms = (since: number): number => Math.round((performance.now() - since) * 10) / 10;
@@ -105,11 +112,25 @@ export const ms = (since: number): number => Math.round((performance.now() - sin
 export function createContext(deps: ToolsDeps): ToolContext {
   const historyPrefix = deps.historyPrefix ?? `AVG ${randomUUID().slice(0, 4)}`;
   if (!historyPrefix.startsWith("AVG ")) throw new Error(`history prefix must start with "AVG ": ${historyPrefix}`);
-  const ctx: ToolContext = { deps, historyPrefix, now: deps.now ?? (() => new Date()), sessions: null, writes: 0, last: null, hud: null };
+  const ctx: ToolContext = { deps, historyPrefix, now: deps.now ?? (() => new Date()), sessions: null, writes: 0, last: null, hud: null, deck: null };
   const settings = deps.settings;
   const withSessions = deps.intents !== undefined && deps.sessionLogDir !== undefined;
   const hud = withSessions && deps.hud !== false ? new HudPublisher(deps.client, { record: (r) => logHud(ctx, "hud_update", r) }) : null;
   ctx.hud = hud;
+  const { launcher, waitMs, ...deckOptions } = deps.deck ?? {};
+  const deck =
+    hud && deps.deck
+      ? new Deck({
+          client: deps.client,
+          engineVersion: deps.engineVersion ?? "unknown",
+          openSession: () => ctx.sessions?.current()?.id ?? null,
+          busy: () => ctx.sessions?.busy() ?? false,
+          record: (r) => logHud(ctx, "hud_channel", r),
+          ...deckOptions,
+        })
+      : null;
+  ctx.deck = deck;
+  const sink = hud && deck ? new HudFanOut(hud, deck, new HudLauncher(launcher), waitMs !== undefined ? { waitMs } : {}) : hud;
   ctx.sessions =
     deps.intents && deps.sessionLogDir
       ? new SessionManager({
@@ -120,13 +141,16 @@ export function createContext(deps: ToolsDeps): ToolContext {
           logDir: deps.sessionLogDir,
           ...(settings ? { readPage: () => settings.read() } : {}),
           ...(deps.logFolders ? { logFolders: deps.logFolders } : {}),
-          ...(hud ? { hud } : {}),
+          ...(sink ? { hud: sink } : {}),
           ...(deps.approvalWaitMs !== undefined ? { approvalWaitMs: deps.approvalWaitMs } : {}),
           engineVersion: deps.engineVersion ?? "unknown",
           now: ctx.now,
         })
       : null;
-  if (hud && ctx.sessions) new HudEvents(deps.client, ctx.sessions, hud, { record: (r) => logHud(ctx, "hud_event", r), now: ctx.now });
+  if (hud && ctx.sessions) {
+    const events = new HudEvents(deps.client, ctx.sessions, hud, { record: (r) => logHud(ctx, "hud_event", r), now: ctx.now, ...(deck ? { deck } : {}) });
+    deck?.onEvent((e) => events.handle(e, "channel"));
+  }
   return ctx;
 }
 

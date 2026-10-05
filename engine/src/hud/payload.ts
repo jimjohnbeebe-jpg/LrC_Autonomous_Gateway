@@ -55,7 +55,7 @@ export function hudState(s: Session, stage: HudStage, note?: string, closeAfter?
 }
 
 /** The last pass of photo `t` (pass 0 included), or null before its pass 0. */
-function lastPass(s: Session, t: Target): PassEntry | null {
+export function lastPass(s: Session, t: Target): PassEntry | null {
   for (let i = s.log.passes.length - 1; i >= 0; i--) {
     const p = s.log.passes[i];
     if (p?.target === t.id) return p;
@@ -97,7 +97,7 @@ export function aperture(v: unknown): string | null {
   return `f/${round(v, 1)}`;
 }
 
-function shown(v: CanonicalValue): string | number {
+export function shown(v: CanonicalValue): string | number {
   if (typeof v === "number" || typeof v === "string") return v;
   if (typeof v === "boolean") return v ? "on" : "off";
   return "curve";
@@ -117,7 +117,7 @@ function delta(c: PassEntry["changes"][number]): HudDelta {
  * Masking panel's words (params\labels.ts), and what happened to the mask itself ("Sky 1 · Exposure");
  * a pass its guardrail undid is one row saying so.
  */
-function maskDeltas(m: NonNullable<PassEntry["mask"]>, undone: boolean): HudDelta[] {
+export function maskDeltas(m: NonNullable<PassEntry["mask"]>, undone: boolean): HudDelta[] {
   const name = m.after?.name ?? m.before?.name ?? m.name;
   if (undone) return [{ slider: name, after: m.op === "create" ? "new mask undone" : "change undone" }];
   if (!m.after) return [{ slider: name, after: "deleted" }];

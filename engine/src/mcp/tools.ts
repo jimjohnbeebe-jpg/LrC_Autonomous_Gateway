@@ -19,7 +19,7 @@
 // This class does not depend on the MCP SDK: server.ts wraps it, and the checks call it directly, so
 // both go through the same code. Every call is written to the tool log.
 
-import type { HudPublisher } from "../hud/index.js";
+import type { Deck, HudPublisher } from "../hud/index.js";
 import type { ApproveArgs, BeginArgs, CreateMaskArgs, DeleteMaskArgs, EditMaskArgs, EndArgs, ListMasksArgs, ProbeArgs, RegionArgs, SelectArgs, SessionManager, StepArgs } from "../session/index.js";
 import type { ToolError } from "./errors.js";
 import {
@@ -65,6 +65,11 @@ export class Tools {
   /** The HUD's updates (for the checks: its stats); null without sessions or with `hud: false`. */
   hud(): HudPublisher | null {
     return this.ctx.hud;
+  }
+
+  /** The Deck and its HUD channel (main.ts opens and closes the channel with the bridge lock); null without `deck`. */
+  deck(): Deck | null {
+    return this.ctx.deck;
   }
 
   /** The open session's HUD note while an operation runs, for MCP progress notifications (server.ts); null otherwise. */

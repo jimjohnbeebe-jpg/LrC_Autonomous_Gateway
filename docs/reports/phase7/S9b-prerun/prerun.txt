@@ -59,6 +59,16 @@ S9 SUGGESTED: INCOMPLETE (not run: S9-6, S9-7, S9-8, S9-9, S9-10, S9-11). A sugg
   PASS     S9-5 CPU: {"hidden_pct":0.23436592423298777,"visible_pct":0.8072848308930132,"hidden_ok":true,"visible_ok":true}
   NOT RUN  S9-6 show without activation: {"programmatic_unchanged":20,"programmatic":20,"jim_yes":0,"jim":0}
 
+== 6. After Greptile's review of PR #81: the button trigger replaces the burst count ==
+drag.rs now hides when a location event changes Lightroom's rectangle while the primary mouse button is down
+(GetAsyncKeyState, VK_RBUTTON when SM_SWAPBUTTON), polls the button every 30 ms and shows the bar at release; movesize
+events stay the primary trigger. Scripted re-run of appendix J (moves made from code, so no button is held):
+[{"k":"moved","settled":true,"ms":15,"detached":154,"changes":11,"span":777},{"k":"moved","settled":true,"ms":7,"detached":0,"changes":1,"span":0},{"k":"minimised","settled":true,"ms":9,"detached":0,"changes":1,"span":0},{"k":"moved","settled":true,"ms":17,"detached":0,"changes":1,"span":0}]
+move_events {"movesize":0,"burst":0} answers true true   (run before the key was renamed "button")
+=> Without a held button the bar follows code-driven moves, as in run 1; the detached time of that 11-move sequence is
+   now counted on every poll, the one that saw the change included (154 ms). The button path is not exercised here:
+   Claude Code does not send mouse input on Jim's machine, so Jim's re-run is its test.
+
 == Appendix: scripts, verbatim ==
 
 --- Appendix G: zz-suspend.ts (run as `node zz-suspend.ts base` and `node zz-suspend.ts suspend`, stdin closed) ---

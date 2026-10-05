@@ -182,6 +182,9 @@ pub fn show_after_move(kind: &str) {
             let _ = ShowWindow(hwnd(HUD.load(SeqCst)), SW_SHOWNA);
             topmost_for(GetForegroundWindow());
         }
+        // A show the UI asked for during the move was deferred, and a hide before it had made
+        // WebView2 inactive: activate it again (harmless when already active).
+        crate::webview::set_active(true);
     }
     write(json!({ "ev": "move_show", "kind": kind, "shown": shown }));
 }

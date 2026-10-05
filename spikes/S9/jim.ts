@@ -112,13 +112,15 @@ async function followLoop(ctx: Ctx): Promise<Record<string, unknown>[]> {
     const min = key === "iconic";
     const hudVisible = visible(ctx.hud.hwnd);
     const inPlace = min ? !hudVisible : hudVisible && same(rect(ctx.hud.hwnd), deckRect(lr));
-    if (key !== lastKey) {
+    const changed = key !== lastKey;
+    if (changed) {
       if (!open) [firstChange, changes, detached] = [t, 0, 0];
       [lastKey, lastChange, inPlaceSince, open] = [key, t, null, true];
       changes++;
-      continue;
     }
+    // Counted on every poll of an episode, the one that saw the change included.
     if (open && hudVisible && !inPlace && !min) detached += dt;
+    if (changed) continue;
     inPlaceSince = inPlace ? (inPlaceSince ?? t) : null;
     if (open && t - lastChange > 400) close(min, true);
   }
@@ -152,7 +154,7 @@ export async function followChecks(ctx: Ctx): Promise<void> {
   const sharp = await ask("(Not a gate) Does the bar's text look as sharp as in your first S9 run?");
   ctx.r.s9_8 = {
     episodes,
-    move_events: { movesize: moves.filter((e) => e.kind === "movesize").length, burst: moves.filter((e) => e.kind === "burst").length },
+    move_events: { movesize: moves.filter((e) => e.kind === "movesize").length, button: moves.filter((e) => e.kind === "button").length },
     jim_moved: moved, jim_drag_hidden: dragHidden, jim_minimised: minimised, jim_screen_modes: modes, jim_over_filmstrip_top: filmstrip, jim_text_sharp: sharp,
   };
   ctx.save();

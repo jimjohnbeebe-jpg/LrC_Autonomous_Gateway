@@ -86,4 +86,4 @@ Section 2.6 gives the build order. Sections 3-12 cover architecture, window beha
 ## History
 
 - **2026-10-04.** The spec, critique and mockups were drafted. The spec's handles and prose were then reconciled with the option notes after the mockups' last review round. Jim decided D1-D4 and deferred D5, then answered Q14-Q16 (spec section 2 and 13.1). Section 1.6 of the spec records what changed on `main` up to c2752bc while this was written.
-- **Implementation has not started.** It waits for Jim's "go" [stated: Jim, 2026-10-04].
+- **2026-10-05.** Merged as PR #74. Phase 7 starts from this spec; its first row is spike S9 (spec section 2.6, step 2) [stated: Jim, 2026-10-05].

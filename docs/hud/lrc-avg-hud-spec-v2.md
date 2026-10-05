@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | Draft. D1-D4 decided by Jim on 2026-10-04, D5 deferred, Q14-Q16 answered the same day (section 2, 13.1). **Nothing is built. Implementation waits for Jim's "go"** [stated: Jim, 2026-10-04, "don't start until I say go, there is a session already in progress in Claude code cli"]. Open: Q17. |
+| Status | Accepted as the HUD spec for Phase 7. D1-D4 decided by Jim on 2026-10-04, D5 deferred, Q14-Q16 answered the same day (section 2, 13.1). Nothing is built yet. **Phase 7 starts here; its first row is spike S9** (section 2.6, step 2) [stated: Jim, 2026-10-05, "This will be the first row of Phase 7"]. Open: Q17. |
 | Replaces | The Grok draft, kept for reference at `docs/hud/source/grok-draft-2026-10-04.md` |
 | Written by | Claude Code, 2026-10-04, in a cloud session Jim asked for. The gateway repo was only read. |
 | Readers | The Claude Code session that implements this in the LrC-AVG repo, and Jim |
@@ -111,6 +111,8 @@ Lua stays the only code that writes to the catalog. The HUD sends events; it nev
 | **Every end closes the HUD after 10 s**, whoever ended the edit. This supersedes "stays open". | `engine/src/hud/publisher.ts:38` (END_CLOSE_S = 10) [stated: Jim, 2026-10-04, "the HUD did not close automatically after the test"] | 3.2 "End stage" row and Q8: Done shows for 10 s, then the HUD hides. |
 | Abort is refused while Lightroom computes an AI mask, with a note | `engine/src/session/hud-actions.ts:136` (ABORT_WAITS) | Shown as an engine note (10.3). No new state. |
 | New headlines `stopped`, `putting_back`, and the `PUT_BACK` lines | `plugin/LrC-AVG.lrplugin/HudText.lua:45-46`, `:81` | Copy deck 10.1: these strings are used verbatim. |
+
+**#73 (04a8d39, plugin 0.17.0)**, merged before this spec: among HUD-related files it touched only `plugin/LrC-AVG.lrplugin/Info.lua` (a header comment and the version; the menu items moved down one line) [handle: `git diff --stat c2752bc 04a8d39` over the files listed above, plus `Info.lua`, `Prefs.lua` and `engine/src/settings`]. No HUD protocol change.
 
 Handles elsewhere in this spec still point at 75369b7 unless they say c2752bc. A file that #72 changed may have moved lines (`git diff --stat 75369b7 c2752bc` lists `hud-protocol.ts`, `payload.ts`, `publisher.ts`, `hud-actions.ts`, `Hud.lua`, `HudClick.lua`, `HudState.lua`, `HudText.lua`, `HudView.lua`). The implementer re-reads those files at the then-current `main` before relying on a line number.
 ## 2. Decisions
@@ -377,7 +379,7 @@ Each addition is engine-only and is sent only on the new HUD channel. None of th
   Under D3 the new HUD reaches Lightroom only through the engine. So in exactly the case Put back exists for, the new HUD cannot press it [inference]. With existing functionality only, the new HUD:
   - keeps the last state;
   - shows `HEADLINE.stopped` ("Claude stopped during the edit. Your edit so far stays.", `HudText.lua:45` at c2752bc);
-  - shows the path to the plugin's Put back: "To put the photo back: File > Plug-in Extras > LrC-AVG - Show Vision Gateway HUD, then Put back" (proposed copy). The menu item is `plugin/LrC-AVG.lrplugin/Info.lua:29` (MenuHud.lua);
+  - shows the path to the plugin's Put back: "To put the photo back: File > Plug-in Extras > LrC-AVG - Show Vision Gateway HUD, then Put back" (proposed copy). The menu item is `plugin/LrC-AVG.lrplugin/Info.lua:29` at c2752bc, `:30` at 04a8d39 (MenuHud.lua);
   - shows the snapshot line (`HudText.UNDO`), so the photo can also be put back by hand.
 
   No new engine or plugin behaviour is added. Q17 asks whether the plugin should open its classic window by itself in this case.
@@ -400,7 +402,7 @@ Deferred under this proposal: E5 (the Whole edit view; the toggle is hidden), E9
 
 ### 2.6 Build order, after the 2026-10-04 decisions (proposed)
 
-1. **Done in branch `phase-6/hud-spec`:** the `PRODUCT.md` amendment (D1), and this spec, the critique and the mockups in `docs\hud\` (rule 04; Q16). Everything below waits for Jim's "go" [stated: Jim, 2026-10-04].
+1. **Done in PR #74 (branch `phase-6/hud-spec`):** the `PRODUCT.md` amendment (D1), and this spec, the critique and the mockups in `docs\hud\` (rule 04; Q16). Everything below waits for Jim's "go" [stated: Jim, 2026-10-04].
 2. S9 (D2): a Tauri validation spike with the Option C HTML. Report `docs\reports\<phase>\S9.md`, with Jim's observations. A failed gate stops here for Jim.
 3. Engine:
    - the v1 items from Q15 (E1, E2 and E8 at least), with simulator tests (section 11.2);

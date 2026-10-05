@@ -1,0 +1,5 @@
+{"ev":"start","hwnd":2822904,"pid":50244,"t":1791198977667.569}
+{"ev":"lightroom_found","exe":"C:\\Program Files\\Adobe\\Adobe Lightroom Classic\\Lightroom.exe","hwnd":2363772,"pid":51380,"t":1791198977670.5815}
+{"dpi":144,"ev":"place","got":[296,1598,2921,66],"t":1791198977773.5115,"target":[296,1598,2921,66]}
+{"active":true,"ev":"webview","is_visible_set":true,"memory_level_set":true,"t":1791198977776.703}
+{"ev":"show","fg_pid":51380,"reason":"begin","t":1791198977778.3757}

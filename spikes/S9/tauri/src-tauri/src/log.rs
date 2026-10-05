@@ -1,5 +1,7 @@
-// One JSON line per event in %TEMP%\LrC-AVG\S9\hud_<pid>.jsonl; `t` is epoch milliseconds, as
-// measure.ts and stub-engine.ts write them, so the three logs share one clock.
+// One JSON line per event in %TEMP%\LrC-AVG\S9\hud_<pid>_<start ms>.jsonl; `t` is epoch milliseconds,
+// as measure.ts and stub-engine.ts write them, so the three logs share one clock. The start time in
+// the name keeps each process's log apart: Windows reuses pids, and a pid-only name mixed an earlier
+// HUD's lines into a new one's in Claude Code's dry run (S9.md "Pre-run findings").
 use serde_json::Value;
 use std::fs::{File, OpenOptions};
 use std::io::Write;
@@ -15,10 +17,8 @@ pub fn now_ms() -> f64 {
 fn open() -> Option<Mutex<File>> {
     let dir = std::env::temp_dir().join("LrC-AVG").join("S9");
     std::fs::create_dir_all(&dir).ok()?;
-    let path = dir.join(format!("hud_{}.jsonl", std::process::id()));
-    // Truncated at the process's first line: Windows reuses pids, and an appended file mixed an earlier
-    // HUD's lines (and window handle) into a new one's in Claude Code's dry run (S9.md "Pre-run findings").
-    OpenOptions::new().create(true).write(true).truncate(true).open(path).ok().map(Mutex::new)
+    let path = dir.join(format!("hud_{}_{}.jsonl", std::process::id(), now_ms() as u64));
+    OpenOptions::new().create(true).append(true).open(path).ok().map(Mutex::new)
 }
 
 pub fn write(mut line: Value) {

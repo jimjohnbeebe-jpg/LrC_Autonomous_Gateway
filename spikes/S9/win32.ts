@@ -160,6 +160,17 @@ export function cpuMs(pid: number): number | null {
   });
 }
 
+/**
+ * The process's creation time (GetProcessTimes, 100 ns units), or null when no such process: with the
+ * pid, it names one process, since Windows reuses pids.
+ */
+export function startedAt(pid: number): number | null {
+  return withProcess(pid, PROCESS_QUERY_LIMITED_INFORMATION, (h) => {
+    const t = Array.from({ length: 4 }, (): FileTime => ({ lo: 0, hi: 0 }));
+    return GetProcessTimes(h, t[0], t[1], t[2], t[3]) && t[0] ? t[0].hi * 2 ** 32 + t[0].lo : null;
+  });
+}
+
 /** Where win.rs puts the Deck over Lightroom's window `lr`, in physical pixels. */
 export function deckRect(lr: number): Rect {
   const c: Rect = { left: 0, top: 0, right: 0, bottom: 0 };

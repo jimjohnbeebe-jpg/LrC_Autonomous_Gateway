@@ -35,10 +35,7 @@ export async function coldStarts(ctx: Ctx, n = 5): Promise<void> {
     const pid = num(spawned, "pid") ?? 0;
     let hwnd = 0;
     await pollUntil(() => {
-      // Only this process's start line: a file left by an earlier process with the same pid is still
-      // there until the new HUD truncates it on its first line.
-      const tSpawn = spawned?.t ?? 0;
-      hwnd = Number(hudLog(pid).findLast((e) => e.ev === "start" && e.t >= tSpawn - 50)?.hwnd ?? 0);
+      hwnd = Number(hudLog(pid, spawned?.t ?? 0).find((e) => e.ev === "start")?.hwnd ?? 0);
       return hwnd !== 0;
     }, 15_000, 5);
     const tVisible = hwnd ? await pollUntil(() => visible(hwnd), 15_000, 1) : null;

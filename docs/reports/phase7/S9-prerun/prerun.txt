@@ -147,6 +147,18 @@ S9-8 last unsettled: fail
 S9-2 hide failed once: fail
 S9-4 incomplete: fail
 
+== 11. After Greptile's second review (per-process HUD logs, pid + creation time for S9-10) ==
+Dry run (appendix B, stdin closed), Notepad stand-in, VS Code in front:
+S9 SUGGESTED: FAILED (S9-4, S9-5); not run: S9-6, S9-7, S9-8, S9-9, S9-10, S9-11. A suggestion only: the verdict is Jim's.
+  PASS     S9-1 cold start: {"median":538.96435546875,"n":5,"misses":0,"max":703.12841796875}
+  PASS     S9-2 warm show: {"p95":11.8642578125,"n":20,"misses":0,"max":11.95263671875}
+  PASS     S9-3 update to paint: {"p95":2.2705078125,"n":100,"misses":0,"max":10.28662109375}
+  FAIL     S9-4 idle memory (hidden, 60 s): {"tree_mib":161.12109375,"host_mib":5.55078125,"measured_hidden_and_complete":true}
+  FAIL     S9-5 CPU: {"hidden_pct":0.5989516969992231,"visible_pct":1.7708179208189592,"hidden_ok":true,"visible_ok":true}
+Newest HUD logs (ls -t %TEMP%\LrC-AVG\S9\ | grep ^hud_): hud_36488_1791168945565.jsonl, hud_36892_1791168943985.jsonl, hud_5716_1791168942425.jsonl
+Across sections 7, 10 and 11, hidden CPU read 0.62, 0.49, 0.44 and 0.60 % (limit 0.5 %) and the hidden tree 158.1, 154.8,
+157.9 and 161.1 MiB (limit 150 MiB).
+
 == Appendix: scripts, verbatim ==
 
 --- Appendix A: smoke-s9.ts ---

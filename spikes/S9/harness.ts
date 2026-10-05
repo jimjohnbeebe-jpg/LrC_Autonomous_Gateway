@@ -1,7 +1,7 @@
 // Spike S9: the shared parts of measure.ts: the stub engine as a child process, waiting for its
 // events, the HUD's own log, polling, the PowerShell y/n questions, and the results file.
 import { spawn, type ChildProcess } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { createInterface as lines } from "node:readline";
@@ -63,11 +63,22 @@ export async function startStub(): Promise<Stub> {
   return stub;
 }
 
-/** The HUD's own log lines (src-tauri\src\log.rs), %TEMP%\LrC-AVG\S9\hud_<pid>.jsonl. */
-export function hudLog(pid: number): Ev[] {
-  const file = join(OUT, `hud_${pid}.jsonl`);
-  if (!existsSync(file)) return [];
-  return readFileSync(file, "utf8").split("\n").filter(Boolean).flatMap((l) => {
+/**
+ * The HUD's own log lines (src-tauri\src\log.rs), %TEMP%\LrC-AVG\S9\hud_<pid>_<start ms>.jsonl: the
+ * newest file of that pid started after `since` (epoch ms, with 1 s of clock slack), so a log left by
+ * an earlier process with the same pid is never read.
+ */
+export function hudLog(pid: number, since: number): Ev[] {
+  const name = new RegExp(`^hud_${pid}_(\\d+)\\.jsonl$`);
+  const starts = existsSync(OUT)
+    ? readdirSync(OUT).flatMap((f) => {
+        const start = Number(name.exec(f)?.[1] ?? NaN);
+        return start >= since - 1000 ? [{ f, start }] : [];
+      })
+    : [];
+  const newest = starts.sort((a, b) => b.start - a.start)[0];
+  if (!newest) return [];
+  return readFileSync(join(OUT, newest.f), "utf8").split("\n").filter(Boolean).flatMap((l) => {
     try {
       return [JSON.parse(l) as Ev];
     } catch {

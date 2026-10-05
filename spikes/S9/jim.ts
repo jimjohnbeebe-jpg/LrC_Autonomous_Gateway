@@ -4,7 +4,7 @@
 // Ctrl+Alt+F "Go to Normal screen mode" [handle: https://helpx.adobe.com/lightroom-classic/help/keyboard-shortcuts.html,
 // read through Tavily 2026-10-04]. That each release of a slider is one History step, undone by one
 // Ctrl+Z, is [inference]; S9-11 asks Jim to check the History panel.
-import { deckRect, foreground, iconic, mainWindow, pidOf, processes, rect, topmost, tree, visible, zOrder } from "./win32.ts";
+import { deckRect, foreground, iconic, mainWindow, pidOf, processes, rect, startedAt, topmost, tree, visible, zOrder } from "./win32.ts";
 import { alive, ask, beep, enter, enterLater, now, pollUntil, say, sleep } from "./harness.ts";
 import type { Ctx } from "./auto.ts";
 
@@ -156,22 +156,25 @@ export async function survives(ctx: Ctx): Promise<void> {
 
 /** S9-10: the HUD exits after Lightroom exits. */
 export async function exitsWithLightroom(ctx: Ctx): Promise<void> {
-  // Every process the HUD had at any point up to its exit: WebView2 may start or replace a child while
-  // Jim is at the prompt or quitting Lightroom.
-  const hudTree = new Set(tree(ctx.hud.pid));
+  // Every process the HUD had at any point up to its exit, as pid + creation time: WebView2 may start or
+  // replace a child while Jim is at the prompt, and Windows may give a dead child's pid to another
+  // program, which must not count as a HUD process still running.
+  const hudTree = new Map<number, number | null>();
   const collect = (): void => {
-    if (alive(ctx.hud.pid)) for (const p of tree(ctx.hud.pid)) hudTree.add(p);
+    if (alive(ctx.hud.pid)) for (const p of tree(ctx.hud.pid)) if (!hudTree.has(p)) hudTree.set(p, startedAt(p));
   };
+  const running = (pid: number, at: number | null): boolean => at !== null && startedAt(pid) === at;
+  collect();
   await enter("S9-10, the last step. After you press Enter, quit Lightroom: File > Exit. If Lightroom offers to back up the catalog, answer as you usually do.\nThis window waits up to 3 minutes for Lightroom to close.");
   collect();
   const lrGone = await pollUntil(() => (collect(), !alive(ctx.lr.pid)), 180_000, 50);
   const hostGone = lrGone ? await pollUntil(() => (collect(), !alive(ctx.hud.pid)), 30_000, 20) : null;
-  const treeGone = lrGone ? await pollUntil(() => [...hudTree].every((p) => !alive(p)), 30_000, 20) : null;
+  const treeGone = lrGone ? await pollUntil(() => [...hudTree].every(([p, at]) => !running(p, at)), 30_000, 20) : null;
   ctx.r.s9_10 = {
     lightroom_exited: lrGone !== null,
     host_ms: lrGone && hostGone ? hostGone - lrGone : null,
     tree_ms: lrGone && treeGone ? treeGone - lrGone : null,
-    tree: [...hudTree],
+    tree: [...hudTree.keys()],
   };
   ctx.save();
 }

@@ -44,6 +44,7 @@ export async function coldStarts(ctx: Ctx, n = 5): Promise<void> {
     const tPaint = num(paint, "t_paint");
     const ms = spawned && tVisible && tPaint ? Math.max(tVisible, tPaint) - spawned.t : null;
     runs.push({ pid, hwnd, ms, t_spawn: spawned?.t ?? null, t_hello: hello?.t ?? null, t_visible: tVisible, t_paint: tPaint, lightroom_in_front: lrFront(ctx) });
+    if (!pid) break; // no HUD started: tree(0) would name system processes
     if (i < n - 1) await killTree(tree(pid));
     else ctx.hud = { pid, hwnd };
     await sleep(1000);

@@ -81,6 +81,7 @@ wss.on("listening", () => {
 
 wss.on("connection", (ws, req) => {
   let greeted = false;
+  const helloTimer = setTimeout(() => greeted || ws.close(), 5000); // no hello, no socket
   ws.on("message", (data) => {
     let parsed;
     try {
@@ -96,6 +97,7 @@ wss.on("connection", (ws, req) => {
         return ws.close();
       }
       greeted = true;
+      clearTimeout(helloTimer);
       client?.close();
       client = ws;
       emit("hello", { pid: msg.pid, hud_version: msg.hud_version, reduced_motion: msg.reduced_motion, origin: req.headers.origin ?? null });

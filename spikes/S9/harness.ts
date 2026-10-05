@@ -104,6 +104,8 @@ export async function killTree(pids: number[]): Promise<boolean> {
 export const hudPids = (): number[] => [...processes()].filter(([, p]) => p.exe.toLowerCase() === "lrc-avg-s9-hud.exe").map(([pid]) => pid);
 
 const rl = createInterface({ input: process.stdin, output: process.stdout });
+// readline takes Ctrl+C itself and, with no listener, only pauses; pass it on to measure.ts's handler.
+rl.on("SIGINT", () => process.emit("SIGINT", "SIGINT"));
 export const say = (text: string): void => console.log(text);
 export const beep = (): void => void process.stdout.write("\x07");
 export async function enter(text: string): Promise<void> {

@@ -126,7 +126,20 @@ function disconnect(): void {
   }
 }
 
+/** One attempt at a time: the 2 s timer must not start a second one while the first awaits the endpoint. */
+let connecting = false;
+
 async function connect(): Promise<void> {
+  if (connecting) return;
+  connecting = true;
+  try {
+    await open();
+  } finally {
+    connecting = false;
+  }
+}
+
+async function open(): Promise<void> {
   const ep = (await invoke("endpoint")) as { text: string; pid_alive: boolean; hud_pid: number } | null;
   if (!ep?.pid_alive) return; // no engine, or a stale file (spec 3.3)
   let endpoint;
@@ -137,6 +150,7 @@ async function connect(): Promise<void> {
   }
   const socket = new WebSocket(`ws://127.0.0.1:${endpoint.port}`);
   ws = socket;
+  lastMessage = now(); // a socket that never opens is dropped by the same 6 s rule
   socket.onopen = () => {
     connected = true;
     lastMessage = now();
@@ -151,7 +165,7 @@ async function connect(): Promise<void> {
 // While disconnected, read the endpoint every 2 s (spec 3.3); drop after 3 missed pings (spec 3.7).
 setInterval(() => {
   if (!ws) void connect();
-  else if (connected && now() - lastMessage > 6000) ws.close();
+  else if (now() - lastMessage > 6000) ws.close();
 }, 2000);
 // The working ring's pulse: 8 steps per 1.6 s loop (spec 8.4), none under reduced motion.
 const HALO = [0.15, 0.26, 0.37, 0.49, 0.6, 0.49, 0.37, 0.26];

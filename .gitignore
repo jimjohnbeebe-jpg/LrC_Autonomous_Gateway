@@ -35,3 +35,8 @@ graphify-out/
 
 # Release assets from `npm run package` (attached to GitHub Releases, never committed)
 release/
+
+# Spike S9: the Tauri build output and the generated UI (npm run s9:build -w spikes)
+spikes/S9/tauri/src-tauri/target/
+spikes/S9/tauri/src-tauri/gen/
+spikes/S9/tauri/ui-dist/

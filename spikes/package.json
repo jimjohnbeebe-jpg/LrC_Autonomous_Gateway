@@ -2,21 +2,27 @@
   "name": "lrc-avg-spikes",
   "version": "0.0.0",
   "private": true,
-  "description": "Phase 0 throwaway spike scripts. Run with Node's built-in TypeScript type stripping: node spikes/<id>/<script>.ts",
+  "description": "Spike scripts (Phase 0 S1-S6, later S7-S9). Run with Node's built-in TypeScript type stripping: node spikes/<id>/<script>.ts",
   "type": "module",
   "engines": {
     "node": ">=22.18"
   },
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json && tsc -p S9/tauri/ui/tsconfig.json",
+    "s9:build": "node S9/tauri/build-ui.ts && cd S9/tauri && tauri build --bundles nsis"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.0",
     "sharp": "0.35.4",
+    "ws": "8.22.0",
     "zod": "4.6.5"
   },
   "devDependencies": {
+    "@tauri-apps/api": "2.12.1",
+    "@tauri-apps/cli": "2.12.1",
     "@types/node": "24.13.6",
+    "@types/ws": "8.18.2",
+    "koffi": "3.3.2",
     "typescript": "7.0.2"
   }
 }

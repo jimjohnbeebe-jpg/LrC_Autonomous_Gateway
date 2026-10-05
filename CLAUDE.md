@@ -22,7 +22,7 @@ Repo-side records: `docs\PHASE0_HANDOVER.md` (start here in a fresh session), `d
 
 ## Rules (details in `.claude\rules\`)
 
-- **Stack rule.** Lua for the plugin, Node ≥ 22 / TypeScript for the engine. **No Python anywhere, including tooling scripts.** `sharp` does all image work. → `.claude\rules\01-stack.md`
+- **Stack rule.** Lua for the plugin, Node ≥ 22 / TypeScript for the engine, Rust for the HUD shell only (Phase 7, Tauri). **No Python anywhere, including tooling scripts.** `sharp` does all image work. → `.claude\rules\01-stack.md`
 - **Sourcing rule.** Every claim about SDK or runtime behaviour, in reports and in commit messages, carries a handle (script path + observed output, screenshot path, or URL) or is tagged `[unverified]`. Do not write results you did not observe. → `.claude\rules\02-sourcing.md`
 - **Interaction rule.** Jim sets direction. When a decision is needed, present the options with a recommendation and stop. Never proceed past a STOP marker. → `.claude\rules\04-workflow.md`
 - **Every change reaches `main` through a reviewer-triaged pull request** (reviewer: Greptile; CodeRabbit 2026-10-03 to 2026-10-04). See the "Pull request + review workflow" section below.
@@ -76,6 +76,8 @@ npm run phase4:check        # Phase 4 acceptance check: one photo, a Lightroom r
 npm run preset:capture      # Lightroom's own reference preset + its photo's settings -> engine\tests\fixtures\presets\ (--precheck, --second)
 npm run preset:pin          # regenerate engine\src\params\preset-format.lrc15.json from those references (a test fails when stale)
 npm run phase5:check        # Phase 5 acceptance check: HUD sessions on one photo, an approve chat, six Claude Desktop chats; resumes after a stop (-- --new starts over) (docs\reports\phase5\PHASE5.md)
+npm run s9:build -w spikes  # Phase 7 spike S9: build the Tauri HUD (rustup MSVC needed; spikes\S9\prereqs.ps1 checks)
+node spikes\S9\measure.ts   # spike S9 run: Lightroom in Develop and Claude Desktop open (docs\reports\phase7\S9.md)
 node engine\dist\mcp\main.js # the stdio MCP server (Claude Desktop starts it; tool log in $env:LRC_AVG_LOG_DIR or %LOCALAPPDATA%\LrC-AVG\logs)
 graphify query "How does X reach Y?"
 ```

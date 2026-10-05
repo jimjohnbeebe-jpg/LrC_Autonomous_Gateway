@@ -1,0 +1,334 @@
+S9 pre-run checks by Claude Code (Opus 5.5), 2026-10-04 (local), branch phase-7/s9-tauri-spike, on Jim's machine
+with Lightroom NOT running. These are Claude Code's own runs, not Jim's run and not gate results.
+Times are epoch ms; percentages are of one core. Scripts are copied verbatim in the appendix (they were deleted after the run, rule 01 lesson: no scratch .ts/.mjs is committed as evidence).
+
+== 1. Toolchain (powershell -ExecutionPolicy Bypass -File spikes\S9\prereqs.ps1) ==
+OK       Rust (rustup, MSVC toolchain)  stable-x86_64-pc-windows-msvc (default)
+OK       Microsoft C++ Build Tools  C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools
+OK       WebView2 Runtime  154.0.4258.53
+OK       Node >= 22.18  v24.11.1
+PREREQUISITES: ALL PRESENT. Build the HUD with: npm run s9:build -w spikes
+(rustup 1.29.1 was installed by Claude Code with `winget install --id Rustlang.Rustup -e` [stated: Jim, 2026-10-04, "Yes, please install software as needed"];
+ `rustc --version` printed `rustc 1.99.0 (b940084d7 2026-09-28)`, `cargo --version` printed `cargo 1.99.0 (5f94df478 2026-08-27)`.)
+
+== 2. Build (npm run s9:build -w spikes), final build ==
+    Finished `release` profile [optimized] target(s) in 1m 08s
+       Built application at: ...\spikes\S9\tauri\src-tauri\target\release\lrc-avg-s9-hud.exe
+     Running makensis to produce ...\target\release\bundle\nsis\LrC-AVG S9 HUD_0.0.0_x64-setup.exe
+    Finished 1 bundle at: ...\LrC-AVG S9 HUD_0.0.0_x64-setup.exe (1.32 MiB)
+File sizes (ls -l): lrc-avg-s9-hud.exe 3442176 B; LrC-AVG S9 HUD_0.0.0_x64-setup.exe 1387211 B.
+The first build downloaded NSIS 3.11 and nsis_tauri_utils v0.5.3 from github.com/tauri-apps (tauri-cli output).
+
+== 3. Smoke: stub engine + HUD, no Lightroom (appendix A, first build) ==
+{"ev":"listening","t":1791163280940.0515,"port":57694,"session_id":"s9-2d6bec"}
+{"ev":"spawned","t":1791163281426.6494,"pid":48376}
+{"ev":"hello","t":1791163282085.3416,"pid":48376,"hud_version":"s9","reduced_motion":false,"origin":"http://tauri.localhost"}
+{"ev":"sent","t":1791163282086.7715,"seq":1,"name":"W"}
+{"ev":"paint","t":1791163282147.4702,"seq":1,"t_paint":1791163282147}
+{"ev":"sent","t":1791163285295.421,"seq":2,"name":"C"}
+{"ev":"paint","t":1791163285300.897,"seq":2,"t_paint":1791163285300.9}
+{"ev":"sent_spike","t":1791163285809.1367,"action":"hide","sent":true}
+{"ev":"sent","t":1791163286322.9944,"seq":3,"name":"V"}
+{"ev":"paint","t":1791163286324.1301,"seq":3,"t_paint":1791163286324.2}
+HUD log hud_48376.jsonl:
+{"ev":"start","pid":48376,"t":1791163281976.1045}
+{"ev":"show","fg_pid":3864,"reason":"begin","t":1791163282098.2268}
+{"ev":"hide","reason":"spike","t":1791163285811.5664}
+{"ev":"show","fg_pid":3864,"reason":"turn","t":1791163286330.5396}
+Afterwards `ls ~/.lrc-avg/` listed bridge_ports.json, bridge_token, log_folders.json: the stub removed hud_endpoint.json on quit.
+Finding: seq 3 was painted (…324.2) before the HUD logged its show (…330.5): a paint report alone does not prove the
+window is visible, so measure.ts times "visible and painted" as the later of IsWindowVisible and the paint (spec D2 S9-2).
+
+== 4. Dry run of the hands-off part, first build (appendix B; Notepad as the Lightroom stand-in, VS Code in front) ==
+stand-in { pid: 38296, hwnd: 2108268 } { left: 2703, top: 320, right: 4074, bottom: 1008 }
+hud { pid: 37308, hwnd: 2098918 } visible true rect { left: 2709, top: 858, right: 4068, bottom: 902 } expected { left: 2709, top: 786, right: 4068, bottom: 852 }
+  PASS     S9-1 cold start: {"median":523.83935546875,"n":5,"misses":0,"max":594.606201171875}
+  PASS     S9-2 warm show: {"p95":2.222900390625,"n":20,"misses":0,"max":4.868896484375}
+  PASS     S9-3 update to paint: {"p95":14.076416015625,"n":100,"misses":0,"max":14.41748046875}
+  FAIL     S9-4 idle memory (hidden, 60 s): {"tree_mib":165.3984375,"host_mib":5.65234375}
+  FAIL     S9-5 CPU: {"hidden_pct":9.609170351572184,"visible_pct":9.401000162413833}
+Three findings followed from this run (sections 5-7).
+
+== 5. CPU by state (appendix C, zz-probe.ts; 15 s windows; per = each process of the HUD's tree, host first) ==
+5a. First build (SVG halo with a CSS opacity animation; hide = ShowWindow SW_HIDE only):
+visible static (C) total % 2.19 per 0.00 1.87 0.00 0.00 0.21 0.00 0.10 mem MiB 170.8 visible true
+visible pulsing (W) total % 9.99 per 0.31 0.00 0.00 8.12 0.00 0.00 1.56 mem MiB 165.3 visible true
+hidden pulsing (W) total % 9.37 per 0.10 0.00 0.00 7.08 0.00 0.00 2.19 mem MiB 165.5 visible false
+hidden static (C) total % 0.42 per 0.21 0.21 0.00 0.00 0.00 0.00 0.00 mem MiB 168.9 visible false
+=> SW_HIDE alone leaves WebView2 rendering the animation while hidden.
+5b. Hide/show also set WebView2's controller IsVisible and MemoryUsageTargetLevel (webview.rs); halo as a composited HTML element:
+visible static (C) total % 1.77 per 0.10 1.56 0.00 0.00 0.00 0.00 0.10 mem MiB 171.2 visible true
+visible pulsing (W) total % 10.94 per 0.10 0.00 0.00 7.19 0.00 0.00 3.65 mem MiB 163.4 visible true
+hidden pulsing (W) total % 0.31 per 0.31 0.00 0.00 0.00 0.00 0.00 0.00 mem MiB 160.0 visible false
+hidden static (C) total % 0.62 per 0.21 0.42 0.00 0.00 0.00 0.00 0.00 mem MiB 157.4 visible false
+=> IsVisible fixes the hidden cost; compositing the halo does not lower the visible cost.
+5c. Halo as a CSS steps() animation of border-color (8 changes per 1.6 s):
+visible static (C) total % 1.46 per 0.10 1.25 0.00 0.00 0.00 0.00 0.10 mem MiB 166.4 visible true
+visible pulsing (W) total % 5.94 per 0.10 0.00 0.00 2.19 0.00 0.00 3.64 mem MiB 165.7 visible true
+hidden pulsing (W) total % 0.10 per 0.10 0.00 0.00 0.00 0.00 0.00 0.00 mem MiB 159.2 visible false
+hidden static (C) total % 1.67 per 0.31 1.15 0.00 0.00 0.10 0.00 0.10 mem MiB 155.7 visible false
+5d. Final: halo colour stepped by a 200 ms setInterval in ui.ts, no CSS animation (8 steps per 1.6 s loop):
+visible static (C) total % 2.60 per 0.00 1.98 0.00 0.00 0.42 0.00 0.21 mem MiB 198.5 visible true
+visible pulsing (W) total % 1.35 per 0.10 0.00 0.21 0.62 0.00 0.00 0.42 mem MiB 196.9 visible true
+hidden pulsing (W) total % 0.42 per 0.21 0.00 0.00 0.10 0.00 0.00 0.10 mem MiB 190.1 visible false
+hidden static (C) total % 0.52 per 0.21 0.31 0.00 0.00 0.00 0.00 0.00 mem MiB 192.9 visible false
+Note: the first window of each run ("visible static", right after start) varies most (1.46-2.60 %); memory varied
+between runs from 155.7 to 198.5 MiB for the same states.
+
+== 6. Placement and DPI (appendix D, zz-place.ts and zz-trace.ts, then appendix E, zz-follow.ts) ==
+HUD log with the "place" line (Rust sees the stand-in's client in physical pixels):
+{"dpi":144,"ev":"place","got":[4064,1287,2039,66],"t":1791164471083.371,"target":[4064,1287,2039,66]}
+measure.ts (Node, not DPI aware) read the same HUD at { left: 2709, top: 858, right: 4068, bottom: 902 }: 2039/1359 = 1.5,
+the monitor's scale. The bar was in place; the measuring process was reading scaled (virtualized) rectangles.
+Fix: win32.ts calls SetProcessDpiAwarenessContext(PER_MONITOR_AWARE_V2) when it loads. After it (zz-follow.ts, moving and
+minimising the stand-in from code with SetWindowPos / ShowWindow):
+start in place true {"left":4064,"top":1287,"right":6103,"bottom":1353} {"left":4064,"top":1287,"right":6103,"bottom":1353} topmost true
+move 150 in place ms 43.7
+move -150 in place ms 15.8
+minimise -> hidden ms 15.4
+restore -> shown in place ms 42.0
+log counts [ start 1, lightroom_found 1, place 6, webview 3, show 2, follow 8, hide 1, foreground 2 ]
+
+== 7. Dry run of the hands-off part (appendix B, timer-pulse build, before section 9; Notepad stand-in, VS Code in front) ==
+stand-in { pid: 36916, hwnd: 2365794 } { left: 4055, top: 480, right: 6112, bottom: 1512 }
+hud { pid: 34064, hwnd: 4664290 } visible true rect { left: 4064, top: 1287, right: 6103, bottom: 1353 } expected { left: 4064, top: 1287, right: 6103, bottom: 1353 }
+S9 SUGGESTED: FAILED (S9-4, S9-5); not run: S9-6, S9-7, S9-8, S9-9, S9-10, S9-11. A suggestion only: the verdict is Jim's.
+  PASS     S9-1 cold start: {"median":530.585693359375,"n":5,"misses":0,"max":539.3115234375}
+  PASS     S9-2 warm show: {"p95":14.7548828125,"n":20,"misses":0,"max":15.636474609375}
+  PASS     S9-3 update to paint: {"p95":1.20361328125,"n":100,"misses":0,"max":14.96826171875}
+  FAIL     S9-4 idle memory (hidden, 60 s): {"tree_mib":158.09375,"host_mib":6.13671875}
+  FAIL     S9-5 CPU: {"hidden_pct":0.6249958521800337,"visible_pct":2.3176983650424323}
+  NOT RUN  S9-6 show without activation: {"programmatic_unchanged":20,"programmatic":20,"jim_yes":0,"jim":0}
+(S9-6..S9-11 need Jim; S9-12 is filled by measure.ts, not by this driver.)
+
+== 8. claude.exe without a window (tasklist; then win32.ts pidsByExe + mainWindow, before the DPI fix) ==
+tasklist //FI "IMAGENAME eq claude.exe" //FO CSV //NH
+"claude.exe","36684","Console","1","455,716 K"
+claude pids [ 36684 ]
+claude main undefined undefined undefined
+Same run, the other win32.ts lines: "anim true" (SPI_GETCLIENTAREAANIMATION) and, with fineTimers(true),
+"timeout1 ms 1.67" (one setTimeout(1, ...) measured with performance.now()).
+One claude.exe ran and it owned no visible top-level window. That it was the Claude Code CLI running this session, with
+Claude Desktop not running, is [inference]. measure.ts therefore finds Claude Desktop as a claude.exe process that owns a
+visible window, not by the image name alone.
+
+== 9. Final build, the place loop removed (appendix E re-run) ==
+win.rs first re-placed the bar up to three times, written for a DPI cause that section 6 disproved; the "place" log line
+showed the first SetWindowPos already on target, so the loop was removed. Re-run of zz-follow.ts on that build:
+start in place true {"left":4064,"top":1287,"right":6103,"bottom":1353} {"left":4064,"top":1287,"right":6103,"bottom":1353} topmost true
+move 150 in place ms 28.2
+move -150 in place ms 15.3
+minimise -> hidden ms 15.2
+restore -> shown in place ms 61.4
+log counts [ start 1, lightroom_found 1, place 6, webview 3, show 2, follow 8, hide 1, foreground 2 ]
+
+== Appendix: scripts, verbatim ==
+
+--- Appendix A: smoke-s9.ts ---
+import { spawn } from "node:child_process";
+import { createInterface } from "node:readline";
+const repo = "D:/Developer/LrC_Autonomous_Gateway";
+const exe = `${repo}/spikes/S9/tauri/src-tauri/target/release/lrc-avg-s9-hud.exe`;
+const stub = spawn(process.execPath, [`${repo}/spikes/S9/stub-engine.ts`, exe], { stdio: ["pipe", "pipe", "inherit"] });
+const events: any[] = [];
+createInterface({ input: stub.stdout! }).on("line", (l) => { const e = JSON.parse(l); events.push(e); console.log(l); });
+const cmd = (c: object) => stub.stdin!.write(JSON.stringify(c) + "\n");
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+await wait(800);
+cmd({ cmd: "spawn" });
+await wait(4000);
+cmd({ cmd: "state", name: "C" });
+await wait(500);
+cmd({ cmd: "spike", action: "hide" });
+await wait(500);
+cmd({ cmd: "state", name: "V" });
+await wait(1000);
+const hello = events.find((e) => e.ev === "hello");
+const spawned = events.find((e) => e.ev === "spawned");
+const paints = events.filter((e) => e.ev === "paint");
+const sent = events.filter((e) => e.ev === "sent");
+console.log("cold ms", paints[0] ? paints[0].t_paint - spawned.t : "none");
+for (const p of paints) { const s = sent.find((x) => x.seq === p.seq); console.log("seq", p.seq, "paint-sent ms", s ? (p.t_paint - s.t).toFixed(1) : "?"); }
+if (hello) process.kill(hello.pid);
+cmd({ cmd: "quit" });
+
+--- Appendix B: zz-dryrun.ts ---
+// Claude Code's dry run of measure.ts's hands-off part, with Notepad standing in for Lightroom
+// (LRC_AVG_S9_LR_EXE). Not Jim's run: no Lightroom, and the foreground stays with VS Code.
+import { execSync, spawn } from "node:child_process";
+import { hudPids, killTree, saver, sleep, startStub, type Results } from "./harness.ts";
+import { coldStarts, idle, pulsing, updates, warmShows, type Ctx } from "./auto.ts";
+import { summarize } from "./summary.ts";
+import { deckRect, fineTimers, mainWindow, pidsByExe, rect, tree, visible } from "./win32.ts";
+
+process.env.LRC_AVG_S9_LR_EXE = "notepad.exe";
+const before = new Set(pidsByExe("notepad.exe"));
+spawn("notepad.exe", [], { detached: true, stdio: "ignore" }).unref();
+await sleep(2500);
+const npPid = pidsByExe("notepad.exe").find((p) => !before.has(p) && mainWindow(p)) ?? 0;
+const lr = { pid: npPid, hwnd: mainWindow(npPid) };
+console.log("stand-in", lr, rect(lr.hwnd));
+const r: Results = { run_id: "dryrun-" + new Date().toISOString().replace(/[:.]/g, "-"), errors: [] };
+const save = saver(r);
+fineTimers(true);
+const stub = await startStub();
+const ctx: Ctx = { stub, r, save, lr, hud: { pid: 0, hwnd: 0 } };
+await coldStarts(ctx);
+console.log("hud", ctx.hud, "visible", visible(ctx.hud.hwnd), "rect", rect(ctx.hud.hwnd), "expected", deckRect(lr.hwnd));
+await warmShows(ctx);
+await updates(ctx);
+await idle(ctx);
+await pulsing(ctx);
+r.reduced_motion = stub.events.find((e) => e.ev === "hello")?.reduced_motion ?? null;
+const { gates, headline } = summarize(r);
+r.summary = { headline, gates };
+console.log("results", save());
+console.log(headline);
+for (const g of gates) console.log(`  ${g.suggested.toUpperCase().padEnd(8)} ${g.gate}: ${JSON.stringify(g.value)}`);
+stub.cmd({ cmd: "quit" });
+for (const pid of hudPids()) await killTree(tree(pid));
+execSync(`taskkill /PID ${npPid} /F`);
+fineTimers(false);
+process.exit(0);
+
+--- Appendix C: zz-probe.ts ---
+// Claude Code's probe: DPI as each side sees it, and CPU for static vs pulsing, visible vs hidden.
+import koffi from "koffi";
+import { execSync, spawn } from "node:child_process";
+import { hudLog, hudPids, killTree, pollUntil, sleep, startStub } from "./harness.ts";
+import { cpuMs, deckRect, dpi, mainWindow, pidsByExe, privateBytes, rect, tree, visible } from "./win32.ts";
+
+const user32 = koffi.load("user32.dll");
+const GetWindowDpiAwarenessContext = user32.func("intptr_t __stdcall GetWindowDpiAwarenessContext(uintptr_t h)");
+const GetAwarenessFromDpiAwarenessContext = user32.func("int __stdcall GetAwarenessFromDpiAwarenessContext(intptr_t c)");
+const aw = (h: number): number => GetAwarenessFromDpiAwarenessContext(GetWindowDpiAwarenessContext(h)) as number;
+
+process.env.LRC_AVG_S9_LR_EXE = "notepad.exe";
+const before = new Set(pidsByExe("notepad.exe"));
+spawn("notepad.exe", [], { detached: true, stdio: "ignore" }).unref();
+await sleep(2500);
+const np = pidsByExe("notepad.exe").find((p) => !before.has(p) && mainWindow(p)) ?? 0;
+const npH = mainWindow(np);
+const stub = await startStub();
+stub.cmd({ cmd: "spawn" });
+const sp = await stub.waitFor((e) => e.ev === "spawned", 5000);
+const pid = Number(sp?.pid);
+await stub.waitFor((e) => e.ev === "paint", 15000);
+const hwnd = Number(hudLog(pid).find((e) => e.ev === "start")?.hwnd);
+await sleep(1000);
+console.log("notepad dpi", dpi(npH), "awareness", aw(npH), "| hud dpi", dpi(hwnd), "awareness", aw(hwnd));
+console.log("hud rect", rect(hwnd), "expected", deckRect(npH));
+const cpu = async (label: string): Promise<void> => {
+  const t = tree(pid);
+  const c0 = t.map(cpuMs);
+  const w0 = performance.now();
+  await sleep(15000);
+  const dt = performance.now() - w0;
+  const per = t.map((p, i) => ({ p, pct: (((cpuMs(p) ?? 0) - (c0[i] ?? 0)) / dt) * 100 }));
+  const mem = t.reduce((a, p) => a + (privateBytes(p) ?? 0), 0) / 2 ** 20;
+  console.log(label, "total %", per.reduce((a, x) => a + x.pct, 0).toFixed(2), "per", per.map((x) => x.pct.toFixed(2)).join(" "), "mem MiB", mem.toFixed(1), "visible", visible(hwnd));
+};
+stub.cmd({ cmd: "state", name: "C" });
+await cpu("visible static (C)");
+stub.cmd({ cmd: "state", name: "W" });
+await cpu("visible pulsing (W)");
+stub.cmd({ cmd: "spike", action: "hide" });
+await pollUntil(() => !visible(hwnd), 2000);
+await cpu("hidden pulsing (W)");
+stub.cmd({ cmd: "state", name: "W" });
+stub.cmd({ cmd: "spike", action: "hide" });
+stub.cmd({ cmd: "state", name: "C" });
+await sleep(300);
+stub.cmd({ cmd: "spike", action: "hide" });
+await cpu("hidden static (C)");
+stub.cmd({ cmd: "quit" });
+for (const p of hudPids()) await killTree(tree(p));
+execSync(`taskkill /PID ${np} /F`);
+process.exit(0);
+
+--- Appendix D: zz-place.ts ---
+import { execSync, spawn } from "node:child_process";
+import { hudLog, hudPids, killTree, sleep, startStub } from "./harness.ts";
+import { deckRect, pidsByExe, rect, tree } from "./win32.ts";
+process.env.LRC_AVG_S9_LR_EXE = "notepad.exe";
+spawn("notepad.exe", [], { detached: true, stdio: "ignore" }).unref();
+await sleep(2500);
+const stub = await startStub();
+stub.cmd({ cmd: "spawn" });
+const pid = Number((await stub.waitFor((e) => e.ev === "spawned", 5000))?.pid);
+await stub.waitFor((e) => e.ev === "paint", 15000);
+await sleep(2000);
+const log = hudLog(pid);
+const hud = Number(log.find((e) => e.ev === "start")?.hwnd);
+const lrH = Number(log.find((e) => e.ev === "lightroom_found")?.hwnd);
+for (const e of log.filter((e) => e.ev !== "foreground")) console.log(JSON.stringify(e));
+console.log("final hud rect", rect(hud), "deckRect", deckRect(lrH));
+stub.cmd({ cmd: "quit" });
+for (const p of hudPids()) await killTree(tree(p));
+for (const p of pidsByExe("notepad.exe")) execSync(`taskkill /PID ${p} /F`);
+process.exit(0);
+
+--- Appendix D2: zz-trace.ts ---
+import { execSync, spawn } from "node:child_process";
+import { hudLog, hudPids, killTree, now, sleep, startStub } from "./harness.ts";
+import { pidsByExe, rect, tree, visible, mainWindow } from "./win32.ts";
+process.env.LRC_AVG_S9_LR_EXE = "notepad.exe";
+spawn("notepad.exe", [], { detached: true, stdio: "ignore" }).unref();
+await sleep(2500);
+const np = pidsByExe("notepad.exe")[0] ?? 0; const npH = mainWindow(np);
+console.log("notepad", np, npH, JSON.stringify(rect(npH)), "huds before", hudPids());
+const stub = await startStub();
+const t0 = now();
+stub.cmd({ cmd: "spawn" });
+const pid = Number((await stub.waitFor((e) => e.ev === "spawned", 5000))?.pid);
+let hud = 0; let last = ""; let lastN = "";
+while (now() - t0 < 6000) {
+  if (!hud) hud = Number(hudLog(pid).find((e) => e.ev === "start")?.hwnd ?? 0);
+  const k = hud ? JSON.stringify(rect(hud)) + " vis=" + visible(hud) : "";
+  const kn = JSON.stringify(rect(npH));
+  if (k !== last) { console.log((now() - t0).toFixed(0), "hud", k); last = k; }
+  if (kn !== lastN) { console.log((now() - t0).toFixed(0), "notepad", kn); lastN = kn; }
+  await sleep(5);
+}
+console.log(hudLog(pid).filter((e) => e.ev !== "x").map((e) => JSON.stringify(e)).join("\n"));
+stub.cmd({ cmd: "quit" });
+for (const p of hudPids()) await killTree(tree(p));
+execSync(`taskkill /PID ${np} /F`);
+process.exit(0);
+
+--- Appendix E: zz-follow.ts ---
+import koffi from "koffi";
+import { execSync, spawn } from "node:child_process";
+import { hudLog, hudPids, killTree, now, pollUntil, sleep, startStub } from "./harness.ts";
+import { deckRect, pidsByExe, rect, tree, visible, mainWindow, topmost } from "./win32.ts";
+const u = koffi.load("user32.dll");
+const ShowWindow = u.func("bool __stdcall ShowWindow(uintptr_t h, int cmd)");
+const SetWindowPos = u.func("bool __stdcall SetWindowPos(uintptr_t h, uintptr_t after, int x, int y, int cx, int cy, uint32_t f)");
+process.env.LRC_AVG_S9_LR_EXE = "notepad.exe";
+spawn("notepad.exe", [], { detached: true, stdio: "ignore" }).unref();
+await sleep(2500);
+const np = pidsByExe("notepad.exe")[0] ?? 0; const npH = mainWindow(np);
+const stub = await startStub();
+stub.cmd({ cmd: "spawn" });
+const pid = Number((await stub.waitFor((e) => e.ev === "spawned", 5000))?.pid);
+await stub.waitFor((e) => e.ev === "paint", 15000);
+await sleep(800);
+const hud = Number(hudLog(pid).find((e) => e.ev === "start")?.hwnd);
+const eq = (a: any, b: any) => JSON.stringify(a) === JSON.stringify(b);
+console.log("start in place", eq(rect(hud), deckRect(npH)), JSON.stringify(rect(hud)), JSON.stringify(deckRect(npH)), "topmost", topmost(hud));
+const r0 = rect(npH);
+for (const dx of [150, -150]) {
+  const t = now(); SetWindowPos(npH, 0, r0.left + dx, r0.top + 40, r0.right - r0.left - 100, r0.bottom - r0.top - 60, 0x0014 /* NOZORDER|NOACTIVATE */);
+  const ok = await pollUntil(() => eq(rect(hud), deckRect(npH)), 1000, 2);
+  console.log("move", dx, "in place ms", ok === null ? null : (ok - t).toFixed(1));
+}
+let t = now(); ShowWindow(npH, 6 /* SW_MINIMIZE */);
+let ok = await pollUntil(() => !visible(hud), 1000, 2); console.log("minimise -> hidden ms", ok === null ? null : (ok - t).toFixed(1));
+await sleep(500);
+t = now(); ShowWindow(npH, 9 /* SW_RESTORE */);
+ok = await pollUntil(() => visible(hud) && eq(rect(hud), deckRect(npH)), 1000, 2); console.log("restore -> shown in place ms", ok === null ? null : (ok - t).toFixed(1));
+const log = hudLog(pid); console.log("log counts", Object.entries(log.reduce((a: any, e) => ((a[e.ev] = (a[e.ev] ?? 0) + 1), a), {})));
+stub.cmd({ cmd: "quit" });
+for (const p of hudPids()) await killTree(tree(p));
+execSync(`taskkill /PID ${np} /F`);
+process.exit(0);

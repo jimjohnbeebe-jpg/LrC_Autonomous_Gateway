@@ -1,0 +1,38 @@
+/* Spike S9: the collapsed Deck bar, adapted from docs/hud/option-c/option-c.html (".deck.k" rules) with
+   the instrument tokens of spec 8.1. Laid out with flex for any window width, not the mockup's 1920 px. */
+@font-face { font-family: "Inter"; src: url("fonts/inter.woff2") format("woff2"); font-weight: 100 900; }
+
+:root {
+  --bg: #202122; --raised: #2a2b2d; --line: #3a3b3e;
+  --text: #e4e6e8; --text2: #aeb2b6; --text3: #8d9196;
+  --accent: #eda447; --on-accent: #1d1305; --danger: #ee8064; --working: #9fb7d4;
+}
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); }
+.deck {
+  box-sizing: border-box; height: 100vh; display: flex; align-items: center; gap: 8px; padding: 0 16px;
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  background: var(--bg); color: var(--text);
+  font-family: "Inter", "Segoe UI", sans-serif; font-size: 12px; line-height: 16px;
+  -webkit-font-smoothing: antialiased; user-select: none; cursor: default;
+}
+.deck svg { display: block; flex: none; }
+.glyph { width: 16px; height: 20px; display: flex; align-items: center; }
+.words { font-size: 13px; line-height: 20px; font-weight: 500; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.words b { font-weight: 600; color: var(--text); }
+.words.turn15 b { font-size: 15px; }
+.words .fid { color: var(--text3); font-weight: 400; font-size: 12px; }
+.cq { margin-left: auto; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.cq.u { color: var(--text2); }
+.rcol { flex: none; display: flex; gap: 8px; padding-left: 16px; margin-left: 16px; border-left: 1px solid var(--line); }
+.btn { height: 28px; border-radius: 6px; display: flex; align-items: center; font-size: 13px; font-weight: 600; white-space: nowrap; padding: 0 12px; }
+.btn.primary { background: var(--accent); color: var(--on-accent); }
+.btn.textonly { padding: 0 8px; color: var(--text2); font-weight: 500; }
+.btn.abort { padding: 0 9px; border: 1px solid var(--line); color: var(--danger); font-weight: 500; }
+.btn.abort.off { color: var(--text3); }
+
+/* The working ring pulses on a 1.6 s loop (spec 8.4): ui.ts steps the halo's colour 8 times per loop from
+   a timer, so the page draws only on a change; a CSS animation kept WebView2 drawing every frame (S9.md
+   "Pre-run findings"). Static under reduced motion. */
+.ring { position: relative; width: 16px; height: 16px; flex: none; }
+.ring svg { position: absolute; left: 0; top: 0; }
+.halo { position: absolute; inset: 0.25px; box-sizing: border-box; border: 1.5px solid rgba(159, 183, 212, .35); border-radius: 50%; }

@@ -28,7 +28,31 @@ Runtime this was built and tested on: Node `v24.11.1`, npm `11.19.1` (Windows 11
 
 ## spikes (`lrc-avg-spikes`, Phase 0 only)
 
-Same pins for `@modelcontextprotocol/sdk`, `sharp`, `zod`, `typescript` and `@types/node`. npm hoists them into one copy (`npm ls` shows `deduped`). No extra packages.
+Same pins for `@modelcontextprotocol/sdk`, `sharp`, `zod`, `typescript` and `@types/node`. npm hoists them into one copy (`npm ls` shows `deduped`). No extra packages until spike S9 (below).
+
+### Spike S9 (Phase 7 row 1, 2026-10-04): the Tauri HUD shell
+
+Added to `spikes\package.json` for `spikes\S9\`. Each version was the npm `latest` version, with the licence shown [handle: `npm view <pkg> version` and `npm view <pkg> license`, 2026-10-04]. `npm install -E` (`-D` for the dev dependencies) `-w spikes` installed them. npm 11 did not run koffi's install script (`npm warn install-scripts koffi@3.3.2`); koffi loads its prebuilt `@koromix/koffi-win32-x64` without it [handle: `docs\reports\phase7\S9-prerun\prerun.txt`, every `win32.ts` call in sections 5-8].
+
+| Package | Pinned | Kind | License | npm registry |
+|---|---|---|---|---|
+| `ws` | 8.22.0 | dependency | MIT | https://www.npmjs.com/package/ws/v/8.22.0 |
+| `koffi` | 3.3.2 | devDependency | MIT | https://www.npmjs.com/package/koffi/v/3.3.2 |
+| `@tauri-apps/cli` | 2.12.1 | devDependency | Apache-2.0 OR MIT | https://www.npmjs.com/package/@tauri-apps/cli/v/2.12.1 |
+| `@tauri-apps/api` | 2.12.1 | devDependency (types only: the UI calls `window.__TAURI__`, `withGlobalTauri`) | Apache-2.0 OR MIT | https://www.npmjs.com/package/@tauri-apps/api/v/2.12.1 |
+| `@types/ws` | 8.18.2 | devDependency | MIT | https://www.npmjs.com/package/@types/ws/v/8.18.2 |
+
+Rust crates in `spikes\S9\tauri\src-tauri\Cargo.toml`, resolved in the committed `Cargo.lock`. Licences are from each crate's `Cargo.toml` in the local cargo registry.
+
+| Crate | Version | Pin | License | crates.io |
+|---|---|---|---|---|
+| `tauri` | 2.12.1 | `=2.12.1` (spec D2: 2.12.x; the index already lists 3.0.0-alpha.4) | Apache-2.0 OR MIT | https://crates.io/crates/tauri/2.12.1 |
+| `tauri-build` | 2.7.1 | `=2.7.1` (tauri 2.12.1 asks for `^2.7.1`, crates.io index) | Apache-2.0 OR MIT | https://crates.io/crates/tauri-build/2.7.1 |
+| `webview2-com` | 0.39.1 | `=0.39.1`, the version tauri 2.12.1 resolves | MIT | https://crates.io/crates/webview2-com/0.39.1 |
+| `windows` | 0.62.2 | `0.62` (tauri 2.12.1 asks for `^0.62`) | MIT OR Apache-2.0 | https://crates.io/crates/windows/0.62.2 |
+| `serde_json` | 1.0.151 | `1` | MIT OR Apache-2.0 | https://crates.io/crates/serde_json/1.0.151 |
+
+Toolchain: rustup 1.29.1 (`winget install --id Rustlang.Rustup -e`), rustc 1.99.0 stable-x86_64-pc-windows-msvc, Microsoft C++ Build Tools 2022 [handle: `spikes\S9\prereqs.ps1` output in `docs\reports\phase7\S9-prerun\prerun.txt` section 1]. The first `tauri build --bundles nsis` downloaded NSIS 3.11 and nsis_tauri_utils v0.5.3 from github.com/tauri-apps (tauri-cli output, same file section 2).
 
 ## Notes
 

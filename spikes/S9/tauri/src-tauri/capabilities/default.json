@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "S9 HUD: core only; the app's own commands (endpoint, hud_show, hud_hide, hud_log) are registered in main.rs.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

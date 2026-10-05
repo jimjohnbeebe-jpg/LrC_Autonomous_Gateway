@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Option A Island</title>
+<link rel="stylesheet" href="../stage/stage.css">
+<style>
+  html, body { margin: 0; background: #000; }
+  .frame { position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+
+  /* ================= HUD: Instrument tokens ================= */
+  .hud, .hud * { box-sizing: border-box; }
+  .hud {
+    --bg: #202122; --raised: #2a2b2d; --inset: #161718; --line: #3a3b3e;
+    --text: #e4e6e8; --text2: #aeb2b6; --text3: #8d9196;
+    --accent: #eda447; --on-accent: #1d1305; --ok: #86c296; --danger: #ee8064; --working: #9fb7d4;
+    position: absolute; z-index: 10;
+    font-family: 'Inter', 'Segoe UI', sans-serif; font-size: 12px; font-weight: 400; line-height: 16px; /* 1.33, whole px keeps the 4 px grid */
+    color: var(--text);
+    -webkit-font-smoothing: antialiased; white-space: nowrap; cursor: default;
+  }
+  .hud.dd-host { z-index: 9; } /* the panel sits under the island, so the two share the island's bottom hairline */
+  .hud svg { display: block; flex: none; }
+  .hud .n { font-feature-settings: 'tnum' 1; } /* every number: tabular figures (wrapped by tnum() below) */
+  .nb { white-space: nowrap; }
+
+  /* ---- island ---- */
+  .isl {
+    height: 40px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line);
+    box-shadow: none; /* at rest no shadow: on the black band it only smudged the loupe surround (NOTES 7) */
+    display: flex; align-items: center; padding: 0 3px 0 15px;
+  }
+  .isl.tall { height: 44px; } /* not 48: see NOTES.md, Placement (top-panel toggle at y 55-59) */
+  .isl.sq-bl { border-bottom-left-radius: 0; }
+  .isl.sq-br { border-bottom-right-radius: 0; }
+  .isl .glyph { width: 16px; height: 16px; margin-right: 8px; display: flex; align-items: center; justify-content: center; flex: none; }
+  .isl .turn { font-size: 15px; line-height: 20px; font-weight: 600; letter-spacing: -0.15px; color: var(--text); }
+  .isl .turn.clip { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .isl .lbl { font-size: 13px; font-weight: 500; color: var(--text); }
+  .isl .sub { font-size: 13px; font-weight: 500; color: var(--text2); margin-left: 16px; }
+  .isl .file { font-size: 12px; color: var(--text3); margin-left: 16px; }
+  .isl .note { font-size: 12px; color: var(--text2); margin-left: 16px; max-width: 360px; overflow: hidden; text-overflow: ellipsis; }
+  .isl .undo { font-size: 13px; font-weight: 500; color: var(--text2); margin-left: 24px; } /* plain text2: no link styling, nothing here undoes anything by itself */
+  .isl .g24 { width: 24px; flex: none; }
+  .isl .x { width: 24px; height: 24px; margin-left: 12px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex: none; }
+  .isl .vr { width: 1px; height: 20px; background: var(--line); margin: 0 4px 0 12px; flex: none; }
+  .isl.tall .vr { height: 24px; }
+  .chev { width: 32px; height: 32px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex: none; }
+  .chev.on { background: var(--raised); }
+
+  .btn {
+    height: 28px; padding: 0 12px; border-radius: 6px; font-size: 13px; font-weight: 500;
+    display: inline-flex; align-items: center; justify-content: center; flex: none; border: 1px solid transparent; position: relative;
+  }
+  .btn + .btn { margin-left: 8px; }
+  .btn.primary { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+  .btn.second { background: var(--raised); color: var(--text); border-color: var(--line); }
+  .btn.abort { color: var(--danger); border-color: var(--line); background: transparent; }
+  .btn.armed { color: var(--danger); border-color: var(--danger); background: transparent; } /* same size as Abort: nothing moves under the pointer */
+  .btn.off { color: var(--text3); border-color: var(--line); background: transparent; font-weight: 500; }
+  .focus { outline: 2px solid var(--text); outline-offset: 2px; }
+
+  .key {
+    display: inline-flex; align-items: center; justify-content: center; height: 16px; min-width: 16px; padding: 0 4px;
+    border: 1px solid var(--line); border-radius: 4px; font-size: 11px; font-weight: 500; line-height: 1; color: var(--text3);
+  }
+  .on-raised .key, .key.r { color: var(--text2); }
+
+  /* ---- variant chips ---- */
+  .chips { display: flex; gap: 8px; margin-left: 16px; }
+  .chip {
+    height: 36px; border-radius: 7px; border: 1px solid var(--line); background: var(--bg);
+    display: flex; align-items: center; padding: 0 8px 0 0; position: relative; flex: none;
+  }
+  .chip.hover { background: var(--raised); }
+  .chip.focus { outline-offset: 1px; }
+  .chip .th { width: 54px; height: 36px; margin: -1px 0 -1px -1px; border-radius: 7px 0 0 7px; overflow: hidden; flex: none; position: relative; }
+  .chip .th img { width: 54px; height: 36px; display: block; object-fit: cover; }
+  .chip .lab { margin-left: 10px; font-size: 13px; font-weight: 500; color: var(--text2); }
+  .chip .lab b { font-weight: 600; color: var(--text); }
+  .chip.shown .lab { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 5px; text-decoration-color: var(--text); }
+  .chip .shw { margin-left: 8px; font-size: 11px; font-weight: 500; color: var(--text2); }
+  .chip .warn { margin-left: 6px; }
+  .chip .key { margin-left: 12px; }
+  /* Chip looks: CSS filters standing in for the copies' slider differences (Scene V); a stage approximation, not a Lightroom render.
+     B dramatic: Contrast +20, Dehaze +10, Blacks -15, Clarity +10 -> darker, punchier. C soft: Highlights -35, Shadows +25,
+     Contrast -10, Clarity -10 -> flatter, lifted shadows. */
+  .chip .th img.cl-natural { filter: none; }
+  .chip .th img.cl-dramatic { filter: contrast(1.5) saturate(1.3) brightness(.78); }
+  .chip .th img.cl-soft { filter: contrast(.62) brightness(1.16) saturate(.8); }
+
+  /* ---- callouts (hover / keyboard focus / armed Abort) ---- */
+  .tip {
+    background: var(--raised); border: 1px solid var(--line); border-radius: 7px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.45);
+    display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 8px 0 12px;
+    font-size: 12px; color: var(--text2);
+  }
+  .tip.arm { border-color: var(--danger); padding-right: 12px; }
+  .tip .t { color: var(--text); font-weight: 500; }
+
+  /* ---- details drop-down ---- */
+  .dd {
+    width: 440px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line);
+    box-shadow: 0 10px 30px rgba(0,0,0,.45); white-space: normal; overflow: hidden;
+  }
+  .dd.sq-tl { border-top-left-radius: 0; }
+  .dd.sq-tr { border-top-right-radius: 0; }
+  .sec { padding: 12px 16px; }
+  .sec + .sec { border-top: 1px solid var(--line); }
+  .row { display: flex; align-items: center; min-height: 16px; }
+  .row + .row { margin-top: 4px; }
+  .fname { font-size: 13px; line-height: 20px; font-weight: 500; color: var(--text); }
+  .t2 { color: var(--text2); }
+  .t3 { color: var(--text3); }
+  .cap { font-size: 11px; color: var(--text3); }
+  .sp { margin-left: auto; }
+  .gap8 { display: inline-block; width: 8px; }
+  .step { font-size: 12px; font-weight: 500; color: var(--text2); }
+  .stepline { min-height: 16px; white-space: normal; } /* wraps; nothing else shares its line */
+  .dnote { margin-top: 4px; font-size: 12px; color: var(--text); }
+
+  .seghead { display: flex; align-items: flex-end; justify-content: space-between; margin-top: 8px; } /* diff header row: first group's caption left, the view switch right; the step line never shares it */
+  .seghead .grp { padding-top: 0; }
+  .seg { display: inline-flex; height: 24px; padding: 2px; border-radius: 6px; background: var(--inset); border: 1px solid var(--line); }
+  .seg span { height: 18px; padding: 0 10px; border-radius: 4px; font-size: 12px; font-weight: 500; color: var(--text2); display: flex; align-items: center; }
+  .seg span.on { background: var(--raised); color: var(--text); box-shadow: 0 0 0 1px var(--line); }
+
+  .diff { margin-top: 4px; }
+  /* Lightroom panel subhead: 11 px text3 caption row, in Lightroom's panel order */
+  .grp { font-size: 11px; line-height: 16px; color: var(--text3); padding-top: 8px; }
+  .grp:first-child { padding-top: 0; }
+  /* min-height, not height: a label that wraps makes its row taller instead of overlapping the next one */
+  .drow { display: flex; align-items: center; min-height: 24px; font-size: 12px; }
+  .drow .dl { width: 150px; padding-right: 8px; color: var(--text2); flex: none; white-space: normal; }
+  .drow .trk { width: 110px; flex: none; }
+  .drow .ba { width: 92px; text-align: right; color: var(--text3); flex: none; }
+  .drow .dv { width: 56px; text-align: right; color: var(--text); font-weight: 500; flex: none; }
+  .drow .prof { width: 258px; color: var(--text2); flex: none; white-space: normal; } /* a text value (Profile) spans the track, before-after and change columns */
+  .drow .dl.wide { width: 260px; } /* a checkbox row has no track, so its label takes the track's column too */
+  .drow .prof b { color: var(--text); font-weight: 500; }
+
+  .gr { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 12px; color: var(--text2); }
+  .undo-name { font-size: 12px; font-weight: 500; color: var(--text); }
+  .tri-r { width: 0; height: 0; border-style: solid; border-width: 4px 0 4px 6px; border-color: transparent transparent transparent var(--text2); margin: 0 8px 0 2px; }
+
+  .acts { display: grid; grid-template-columns: 1fr 1fr; column-gap: 24px; }
+  .acts .ah { display: flex; align-items: center; gap: 8px; }
+  .acts .ah .key { margin-left: auto; }
+  .acts .c { font-size: 12px; color: var(--text2); margin-top: 6px; }
+
+  /* ================= sheets ================= */
+  .sheet { width: 1200px; background: #2b2b2b; padding: 32px 40px 40px; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+  .sheet.wide { width: 1616px; }
+  .sheet h1 { margin: 0 0 4px; font-size: 15px; font-weight: 600; color: #c8c8c8; }
+  .sheet .lede { margin: 0 0 24px; font-size: 12px; color: #c8c8c8; line-height: 1.4; }
+  .state + .state { margin-top: 24px; }
+  .state .caption { font-size: 12px; color: #c8c8c8; margin-bottom: 8px; line-height: 1.35; }
+  .state .caption b { font-weight: 600; }
+  .state .caption code { font-family: inherit; font-weight: 600; color: #dcdcdc; }
+  .crop { position: relative; width: 1120px; overflow: hidden; outline: 1px solid #1a1a1a; }
+  .crop > .lrhost { position: absolute; left: -400px; top: -52px; }
+  .mini { position: relative; outline: 1px solid #1a1a1a; overflow: hidden; }
+</style>
+</head>
+<body>
+
+<!-- Frame 1: Scene C converged, island at rest with the turn inline -->
+<section class="frame" id="ctx-converged"><div id="lr-c"></div></section>
+
+<!-- Frame 2: Scene P approve, details drop-down open (attached under the chevron) -->
+<section class="frame" id="ctx-approve-open"><div id="lr-p"></div></section>
+
+<!-- Frame 3: states sheet -->
+<section class="sheet" id="states">
+  <h1>Option A · Island: states</h1>
+  <p class="lede">Each state over Lightroom's top band (stage crop x 400-1520 from y 52; Library sits at the right edge). The island starts on the loupe's centre line (x 960) and is clamped into the free span between the identity zone (x 360) and the module picker (NOTES section 1). Its top edge is at y 65, so a 40 px island's centre is level with the identity plate's text (y 85).</p>
+  <div id="state-list"></div>
+</section>
+
+<!-- Frame 4: details sheet -->
+<section class="sheet" id="details">
+  <h1>Option A · Island: details open</h1>
+  <p class="lede">The drop-down is attached under the island's chevron (0 px gap, shared hairline, right edges aligned). It covers the top of the loupe only while open. Its footer holds real Accept and Abort buttons. The last row is a fit check of the longest step lines and labels.</p>
+  <div id="detail-list"></div>
+</section>
+
+<!-- Frame 5: narrow windows -->
+<section class="sheet wide" id="widths">
+  <h1>Option A · Island: narrower Lightroom windows</h1>
+  <p class="lede">Top band only, drawn at the window widths named (stage geometry: identity-plate text ends at x 234, module picker 447 px wide with a 24 px right margin, side panels 300 px; whether real Lightroom keeps these widths in smaller windows is [inference]). The free span starts at x 360, an identity zone wide enough for Lightroom's activity indicator during exports [inference], and ends 24 px before the module picker.
+    Rule: centre on the loupe; if it does not fit, shift toward the free-space centre; if it still does not fit, take the state's next shorter form; last, the compact row with the actions in the details.</p>
+  <div id="width-list"></div>
+</section>
+
+<script src="../stage/stage.js"></script>
+<script>
+(function () {
+  'use strict';
+  var PHOTO = '../stage/photo.svg';
+  var CLAMP = 24; // px kept clear of the identity plate and the module picker
+
+  // ---------- glyphs (token colours only) ----------
+  var G = {
+    ring: '<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="#9fb7d4" stroke-opacity=".35" stroke-width="1.5"/><circle cx="8" cy="8" r="4" fill="none" stroke="#9fb7d4" stroke-width="2"/></svg>',
+    dot: '<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#eda447"/></svg>',
+    idle: '<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="4.5" fill="none" stroke="#8d9196" stroke-width="1.5"/></svg>',
+    check: '<svg width="14" height="14" viewBox="0 0 14 14"><path d="M2.8 7.3l2.7 2.7L11.2 4.3" fill="none" stroke="#86c296" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    tri: function (c, s) { s = s || 16; return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 16 16"><path d="M8 2.3L14.3 13.2H1.7z" fill="none" stroke="' + c + '" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 6.3v3.2" stroke="' + c + '" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="11.3" r=".9" fill="' + c + '"/></svg>'; },
+    chevDown: '<svg width="12" height="12" viewBox="0 0 12 12"><path d="M2.5 4.5L6 8l3.5-3.5" fill="none" stroke="#aeb2b6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    chevUp: '<svg width="12" height="12" viewBox="0 0 12 12"><path d="M2.5 7.5L6 4l3.5 3.5" fill="none" stroke="#e4e6e8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    x: '<svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 2l6 6M8 2L2 8" fill="none" stroke="#8d9196" stroke-width="1.5" stroke-linecap="round"/></svg>'
+  };
+  var DANGER = '#ee8064', TEXT2 = '#aeb2b6';
+  function key(k, cls) { return '<span class="key' + (cls ? ' ' + cls : '') + '">' + k + '</span>'; }
+  function chev(open) { return '<span class="vr"></span><span class="chev' + (open ? ' on' : '') + '" data-a="chev">' + (open ? G.chevUp : G.chevDown) + '</span>'; }
+  function glyph(g) { return '<span class="glyph">' + g + '</span>'; }
+  function turn(t, clip, max) { return '<span class="turn' + (clip ? ' clip' : '') + '"' + (max ? ' style="max-width:' + max + 'px"' : '') + '>' + t + '</span>'; }
+  function isl(inner, o) { o = o || {}; return '<div class="isl' + (o.tall ? ' tall' : '') + '">' + inner + chev(!!o.open) + '</div>'; }
+  var G24 = '<span class="g24"></span>';
+  var HIDE = '<span class="x" data-a="hide">' + G.x + '</span>'; // the hide control: Done and the idle row only (NOTES section 2)
+  function primary(label, o) { o = o || {}; return '<span class="btn primary' + (o.focus ? ' focus' : '') + '" data-a="primary">' + label + '</span>'; }
+  function abort(o) { o = o || {}; return '<span class="btn ' + (o.armed ? 'armed' : 'abort') + '" data-a="abort">Abort</span>'; }
+
+  // ---------- copy ----------
+  var T = {
+    converged: 'Your turn: Claude thinks the edit is done.',                 // HudText.HEADLINE.converged
+    approve: 'Your turn: approve pass 1 so Claude can go on.',               // HudText.HEADLINE.approve, %d = 1
+    notConnected: 'Claude is not connected. Your edit so far stays.',        // HudText.HEADLINE.not_connected
+    notRunning: 'LrC-AVG is not running: reload it in File &gt; Plug-in Manager.', // HudText.HEADLINE.not_running
+    none: 'No edit running. In Claude Desktop, ask Claude to edit a photo.',  // HudText.HEADLINE.none
+    accepted: 'Done: the edit is kept.',                                     // HudText.HEADLINE.accepted
+    sent: 'Accept sent; waiting for Claude.',                                // HudText.CLICK.sent, %s = Accept
+    connected: 'Connected to Claude.',                                       // HudText.CONNECTION.connected
+    pick: 'Your turn: pick a copy',          // proposed (first clause of HEADLINE.awaiting_pick)
+    yourTurn: 'Your turn',                   // proposed short form
+    cap: 'Your turn: all 6 passes are used.', // proposed (from the engine's cap_reached note)
+    // Problem: the island's short sentence per failed action, instruction intact (proposed; engine `note_short`, NOTES section 5 item 1)
+    probAbort: 'Abort did not go through. Click Abort again.',               // for hud-actions.ts:156
+    probAbortPart: 'Abort did not finish. Click Abort again.',               // for hud-actions.ts:165
+    probAccept: 'Accept did not go through. Click Accept again.',            // for hud-actions.ts:226
+    probPickAccept: 'Pick B did not go through. Click Pick B, then Accept.', // for hud-actions.ts:207
+    probAbortNarrow: 'Click Abort again.',                                   // narrow-window form: the instruction only
+    // W notes
+    callFailed: 'Claude\'s last call failed; the edit is still open.',       // engine note, hud-actions.ts:284 (warn kind)
+    approvedChat: 'Pass 1 approved in chat: Claude goes on at its next call.', // engine note, approval.ts:186 (info kind)
+    // D: HudText.UNDO's own prefix, shortened only in the snapshot name (proposed short forms)
+    undoFull: 'To undo it: Develop &gt; Snapshots &gt; …18:42:07',
+    undoShort: 'To undo it: Develop &gt; Snapshots…',
+    undoNone: 'To undo it: Develop &gt; Snapshots &gt; the newest AVG pre-session snapshot' // HudText.UNDO + UNDO_NO_SNAPSHOT, verbatim
+  };
+
+  // ---------- islands ----------
+  var ISL = {
+    // W: "pass n of N" only where today's stepLine prints a pass number (pass >= 1, not begin / pass0); else the stage's STEP words.
+    W: function (o) {
+      o = o || {};
+      var sub = o.sub || 'pass 2 of 6';
+      return isl(glyph(G.ring) + '<span class="lbl">Working</span><span class="sub">' + sub + '</span>' +
+        (o.note ? '<span class="note">' + o.note + '</span>' : '<span class="file">_DSC0412.NEF</span>'), o);
+    },
+    // warn kind: a call failed; Claude may be talking in the chat, so no ring and no "Working"
+    WARN: function (o) {
+      o = o || {};
+      return isl(glyph(G.tri(TEXT2)) + '<span class="lbl">' + T.callFailed + '</span><span class="file">_DSC0412.NEF</span>', o);
+    },
+    C: function (o) { o = o || {}; return isl(glyph(G.dot) + turn(o.short ? T.yourTurn : T.converged) + G24 + primary('Accept', o) + abort(o), o); },
+    CAP: function (o) { o = o || {}; return isl(glyph(G.dot) + turn(o.short ? T.yourTurn : T.cap) + G24 + primary('Accept', o) + abort(o), o); },
+    // Problem raised by a failed Abort: Abort comes pre-armed, so the one click the sentence asks for is enough.
+    PROB: function (o) { o = o || {}; return isl(glyph(G.tri(DANGER)) + turn(o.narrow ? T.probAbortNarrow : T.probAbort) + G24 + abort({ armed: true }), o); },
+    P: function (o) { o = o || {}; return isl(glyph(G.dot) + turn(o.short ? T.yourTurn : T.approve) + G24 + primary('Approve pass 1', o) + abort(o), o); },
+    COMPACT: function (o) { o = o || {}; return isl(glyph(G.dot) + turn(T.yourTurn), o); },
+    // V forms, longest first: full; no keycaps (they return on keyboard focus); no "shown" word (the underline stays);
+    // letters only; letters + "Your turn"; then the compact row.
+    V: function (o) {
+      o = o || {};
+      var f = o.form || 'full';
+      var letters = f === 'letters' || f === 'letters-short';
+      var keys = f === 'full' || o.focus;
+      var shownWord = f === 'full' || f === 'nokeys';
+      function chip(letter, look, label, n, warn) {
+        var cls = 'chip' + (o.hover === letter ? ' hover' : '') + (o.shown === letter ? ' shown' : '') + (o.focus === letter ? ' focus' : '');
+        return '<span class="' + cls + '" data-chip="' + letter + '"><span class="th"><img class="cl-' + look + '" src="' + PHOTO + '" alt=""></span>' +
+          '<span class="lab"><b>' + letter + '</b>' + (letters ? '' : ' <span class="ds">' + label + '</span>') + '</span>' +
+          (o.shown === letter && shownWord ? '<span class="shw">shown</span>' : '') +
+          (warn ? '<span class="warn">' + G.tri(TEXT2, 14) + '</span>' : '') +
+          (keys ? key(n, o.hover === letter || o.focus === letter ? 'r' : '') : '') + '</span>';
+      }
+      var lead = o.problem ? glyph(G.tri(DANGER)) + turn(T.probPickAccept) : glyph(G.dot) + turn(f === 'letters-short' ? T.yourTurn : T.pick);
+      return isl(lead +
+        '<span class="chips">' + chip('A', 'natural', 'natural', 1) + chip('B', 'dramatic', 'dramatic', 2, true) + chip('C', 'soft', 'soft', 3) + '</span>',
+        { tall: true, open: o.open });
+    },
+    D: function (o) {
+      o = o || {};
+      var undo = o.link === 'none' ? '' : '<span class="undo" data-a="undo">' + (o.link === 'short' ? T.undoShort : o.link === 'nosnap' ? T.undoNone : T.undoFull) + '</span>';
+      return isl(glyph(G.tri(TEXT2)) + turn(T.notConnected) + undo, o);
+    },
+    SENT: function () {
+      return isl(glyph(G.ring) + '<span class="lbl">' + T.sent + '</span>' + G24 + '<span class="btn off">Accept</span><span class="btn off">Abort</span>');
+    },
+    DONE: function () { return isl(glyph(G.check) + '<span class="lbl">' + T.accepted + '</span><span class="file">_DSC0412.NEF</span>' + HIDE); },
+    NOTRUN: function () { return isl(glyph(G.tri(TEXT2)) + turn(T.notRunning)); },
+    IDLE: function () { return isl(glyph(G.idle) + '<span class="sub" style="margin-left:0">' + T.none + '</span><span class="file">' + T.connected + '</span>' + HIDE); }
+  };
+  // Forms per state, longest first (NOTES section 1, "Narrower windows").
+  var FORMS = {
+    W: [ISL.W()],
+    C: [ISL.C(), ISL.C({ short: true }), ISL.COMPACT()],
+    P: [ISL.P(), ISL.P({ short: true }), ISL.COMPACT()],
+    V: [ISL.V({ shown: 'A' }), ISL.V({ form: 'nokeys', shown: 'A' }), ISL.V({ form: 'noshown', shown: 'A' }), ISL.V({ form: 'letters', shown: 'A' }), ISL.V({ form: 'letters-short', shown: 'A' }), ISL.COMPACT()],
+    D: [ISL.D(), ISL.D({ link: 'short' }), ISL.D({ link: 'none' })],
+    CAP: [ISL.CAP(), ISL.CAP({ short: true }), ISL.COMPACT()],
+    PROB: [ISL.PROB(), ISL.PROB({ narrow: true })]
+  };
+
+  // ---------- mini Lightroom-style slider ----------
+  // Track 2 px; before = a 1 x 8 text3 tick above it; after = one filled thumb below it; the accent segment between them
+  // is 4 px tall and at least 4 px long (one slider unit is 0.49 px on this 98 px track, so +4 alone would be 2 px).
+  function track(before, after, min, max) {
+    var W = 110, pad = 6;
+    function x(v) { return pad + (v - min) / (max - min) * (W - 2 * pad); }
+    var bx = x(before), ax = x(after);
+    var lo = Math.min(bx, ax), hi = Math.max(bx, ax);
+    if (hi - lo < 4) { if (ax >= bx) { lo = bx; hi = bx + 4; } else { hi = bx; lo = bx - 4; } }
+    return '<svg width="' + W + '" height="18" viewBox="0 0 ' + W + ' 18">' +
+      '<rect x="' + pad + '" y="8" width="' + (W - 2 * pad) + '" height="2" rx="1" fill="#3a3b3e"/>' +
+      '<rect x="' + lo.toFixed(1) + '" y="7" width="' + (hi - lo).toFixed(1) + '" height="4" rx="1" fill="#eda447" fill-opacity=".6"/>' +
+      '<rect x="' + (bx - 0.5).toFixed(1) + '" y="0" width="1" height="8" fill="#8d9196"/>' +
+      '<path d="M' + ax.toFixed(1) + ' 11l4.5 6.5h-9z" fill="#e4e6e8"/>' +
+      '</svg>';
+  }
+  function sign(n) { return n > 0 ? '+' + n : n < 0 ? '−' + Math.abs(n) : '0'; }
+  function num(n) { return n < 0 ? '−' + Math.abs(n) : String(n); }
+  function drow(label, b, a) {
+    return '<div class="drow"><span class="dl">' + label + '</span><span class="trk">' + track(b, a, -100, 100) + '</span>' +
+      '<span class="ba">' + num(b) + ' → ' + num(a) + '</span><span class="dv">' + sign(a - b) + '</span></div>';
+  }
+  // A row with no track: a text value (Profile), whose value spans the track, before-after and change columns.
+  function txtRow(label, b, a) {
+    return '<div class="drow"><span class="dl">' + label + '</span><span class="prof">' + b + ' → <b>' + a + '</b></span></div>';
+  }
+  // A checkbox setting. The payload sends checkboxes as 0 / 1 with "+1" (payload.ts:95-107; intent priors are 0 / 1,
+  // landscape_golden_hour.json:7); the island shows them off / on, with no track and no delta, and the label takes the track's column.
+  function chkRow(label, b, a) {
+    return '<div class="drow"><span class="dl wide">' + label + '</span><span class="ba">' + b + ' → <b style="color:var(--text);font-weight:500">' + a + '</b></span><span class="dv"></span></div>';
+  }
+  function profRow(b, a) { return txtRow('Profile', b, a); }
+  function grp(name) { return '<div class="grp">' + name + '</div>'; }
+
+  // Details step line, after today's stepLine (HudView.lua:83-89; HudText.lua:55-56): a pass number only from pass 1 up
+  // and never at pass0; applying takes "n of N" itself.
+  function stepText(stage, label, pass, max) {
+    if (stage === 'applying') return 'Applying pass ' + pass + ' of ' + max;
+    if (stage === 'begin' || stage === 'pass0' || pass < 1) return label;
+    return 'Pass ' + pass + ' of ' + max + ' · ' + label;
+  }
+
+  // ---------- details drop-down ----------
+  // o: { step, note, view: 'pass'|'whole'|null (no rows yet), groups: [[panel subhead, rows html], ...] in Lightroom's panel order, gr, settings, accept, variants }
+  function details(o) {
+    return '<div class="dd">' +
+      // identity
+      '<div class="sec">' +
+        '<div class="row"><span class="fname">_DSC0412.NEF</span><span class="sp cap">' + key('Esc') + '<span class="gap8"></span>closes</span></div>' +
+        '<div class="row t2">ISO 100 · 1/250 s · f/8 · 18.0-105.0 mm f/3.5-5.6 · lens profile on</div>' +
+      '</div>' +
+      // progress, the update's note in full, changes
+      '<div class="sec">' +
+        '<div class="row stepline"><span class="step">' + o.step + '</span></div>' +
+        (o.note ? '<div class="dnote">' + o.note + '</div>' : '') +
+        (o.view ? '<div class="seghead">' + grp(o.groups[0][0]) + '<span class="seg"><span class="' + (o.view === 'whole' ? '' : 'on') + '">This pass</span><span class="' + (o.view === 'whole' ? 'on' : '') + '">Whole edit</span></span></div>' +
+          '<div class="diff">' + o.groups.map(function (g, i) { return (i ? grp(g[0]) : '') + g[1]; }).join('') + '</div>' +
+          '<div class="gr">' + (o.gr || G.check + '<span>Clipping: within limits.</span>') + '</div>' : '') +
+      '</div>' +
+      // way back
+      '<div class="sec">' +
+        '<div class="row t2">To undo it: Develop &gt; Snapshots &gt;</div>' +
+        '<div class="undo-name">AVG pre-session 2026-10-04T18:42:07.311Z</div>' +
+        '<div class="row t3" style="margin-top:4px">Each step in History starts with “AVG 4f2a1c”.</div>' +
+      '</div>' +
+      // the edit's own settings (collapsed); they were copied into the edit at its start (begin.ts:117), so the page changes the next edit only
+      '<div class="sec">' +
+        '<div class="row"><span class="tri-r"></span><span class="step">This edit\'s settings</span><span class="sp cap">For the next edit: File &gt; Plug-in Manager</span></div>' +
+        '<div class="row t3" style="padding-left:16px">' + o.settings + '</div>' +
+      '</div>' +
+      // real buttons, each with its consequence
+      '<div class="sec acts">' +
+        (o.accept ? '<div><div class="ah"><span class="btn second" data-a="accept2">Accept</span></div><div class="c">Ends the edit; the sliders stay as they are.</div></div>' : '<div></div>') +
+        '<div><div class="ah"><span class="btn abort" data-a="abort2">Abort</span>' + key('Ctrl+Backspace') + '</div><div class="c">' +
+          (o.variants ? 'Stops Claude and puts the master back; copies A, B and C stay in the catalog.' : 'Stops Claude and puts the <span class="nb">pre-session snapshot</span> back.') + '</div></div>' +
+      '</div>' +
+    '</div>';
+  }
+  var DET = {
+    P: function (view) {
+      return details({ step: stepText('awaiting_approval', 'Waiting for your approval', 1, 6), note: 'Claude\'s pass 2 waits for your Approve of pass 1.', view: view,
+        groups: view === 'whole'
+          ? [['Basic', profRow('Camera Neutral', 'Adobe Landscape') + drow('Highlights', -21, -41) + drow('Shadows', 10, 20) + drow('Clarity', 2, 6) + drow('Vibrance', 0, 16)]]
+          : [['Basic', drow('Clarity', 2, 6) + drow('Vibrance', 10, 16)]],
+        settings: 'Approve each pass · up to 6 passes · preview 1600 px', accept: true });
+    },
+    W: function () {
+      return details({ step: stepText('awaiting_claude', 'Claude is looking at the result', 2, 6), view: 'pass',
+        groups: [['Basic', drow('Clarity', 6, 3) + drow('Vibrance', 16, 12)]],
+        settings: 'Autonomous · up to 6 passes · preview 1600 px', accept: true });
+    },
+    // After pass 0, for a photo that came in with lens corrections off (see the caption): two groups, Lightroom's in-panel labels.
+    W0: function () {
+      return details({ step: stepText('awaiting_claude', 'Claude is looking at the result', 0, 6), view: 'pass',
+        groups: [['Basic', profRow('Camera Neutral', 'Adobe Landscape') + drow('Highlights', -21, -41) + drow('Shadows', 10, 20) + drow('Vibrance', 0, 10)],
+          ['Lens Corrections', chkRow('Enable Profile Corrections', 'off', 'on') + chkRow('Remove Chromatic Aberration', 'off', 'on')]],
+        settings: 'Autonomous · up to 6 passes · preview 1600 px', accept: true });
+    }
+  };
+  // Fit check: the longest step lines and labels in a details-width panel (sample values; not a state).
+  function fitCheck() {
+    return '<div class="dd" style="width:440px">' +
+      '<div class="sec">' +
+        '<div class="row stepline"><span class="step">' + stepText('pass0', 'Setting profile, lens corrections and baseline', 0, 6) + '</span></div>' +
+        '<div class="row stepline"><span class="step">' + stepText('awaiting_claude', 'Claude is looking at the result', 12, 12) + '</span></div>' +
+        '<div class="row stepline"><span class="step">' + stepText('applying', 'Applying pass', 2, 6) + '</span></div>' +
+        '<div class="row stepline"><span class="step">' + stepText('acquiring_preview', 'Rendering a preview', 99, 99) + '</span></div>' +
+        '<div class="seghead">' + grp('Basic') + '<span class="seg"><span class="on">This pass</span><span>Whole edit</span></span></div>' +
+        '<div class="diff">' +
+          drow('Shadows', 20, 24) +
+          grp('HSL / Color · Saturation') + drow('Orange', 0, -12) +
+          grp('Color Grading · Shadows') + drow('Hue', 0, 30) +
+          grp('Detail · Sharpening') + drow('Amount', 24, 40) +
+          grp('Detail · Noise Reduction') + drow('Luminance', 48, 30) +
+          grp('Lens Corrections') + chkRow('Enable Profile Corrections', 'off', 'on') + chkRow('Remove Chromatic Aberration', 'off', 'on') +
+          grp('Detail') + drow('Noise Reduction Luminance', 48, 30) +
+        '</div>' +
+        '<div class="gr">' + G.tri(TEXT2, 14) + '<span>Noise Reduction Luminance: not changed, it would push clipping over the limit.</span></div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  // ---------- helpers ----------
+  // Wrap every run of digits (with a leading + or minus sign) in span.n so only numbers get tabular figures;
+  // Inter's tnum also widens hyphens, which would space out "pre-session" and "18.0-105.0".
+  function tnum(node) {
+    var w = document.createTreeWalker(node, NodeFilter.SHOW_TEXT), t, list = [];
+    while ((t = w.nextNode())) list.push(t);
+    list.forEach(function (t) {
+      if (!/\d/.test(t.nodeValue)) return;
+      var f = document.createElement('span');
+      f.innerHTML = t.nodeValue.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/[+−]?\d+(?:[.,:]\d+)*/g, function (m) { return '<span class="n">' + m + '</span>'; });
+      t.parentNode.replaceChild(f, t); // one span per text node, so a flex row keeps its spaces
+    });
+  }
+  function el(html) { var d = document.createElement('div'); d.className = 'hud'; d.innerHTML = html; tnum(d); return d; }
+  function rel(e, root) { var r = e.getBoundingClientRect(), rr = root.getBoundingClientRect(); return { x: r.left - rr.left, y: r.top - rr.top, w: r.width, h: r.height, r: r.right - rr.left, b: r.bottom - rr.top }; }
+
+  // The band's free span and anchor, measured on whatever Lightroom root (full stage or narrow band) is given.
+  // The identity zone is at least IDZONE px wide: LrC's activity / progress indicator takes the identity plate's place during
+  // exports, which every pass makes, and may be wider than the plate's text [inference]. The zone includes the clearance (NOTES section 1).
+  var IDZONE = 360;
+  function bandGeom(root) {
+    var id = rel(root.querySelector('.lr-idtext'), root), md = rel(root.querySelector('.lr-modules'), root);
+    var lp = rel(root.querySelector('[data-region="loupe"]'), root), tb = rel(root.querySelector('[data-region="topband"]'), root);
+    return { lo: Math.max(Math.ceil(id.r) + CLAMP, IDZONE), hi: Math.floor(md.x) - CLAMP, cx: Math.round(lp.x + lp.w / 2), top: tb.y + 13, idr: id.r, mdl: md.x };
+  }
+  // Island: top edge fixed 13 px into the band, so a 40 px island's centre (y 85) is level with the identity plate's text;
+  // the 44 px Variants island grows down (y 65-109, 3 px inside the band's bottom at y 112).
+  // Horizontal: centre on the loupe, shift into the free span, else take the next shorter form.
+  function placeIsland(root, forms) {
+    if (typeof forms === 'string') forms = [forms];
+    var g = bandGeom(root);
+    for (var i = 0; i < forms.length; i++) {
+      var d = el(forms[i]); root.appendChild(d);
+      var w = d.offsetWidth;
+      if (w <= g.hi - g.lo || i === forms.length - 1) {
+        var ideal = Math.round(g.cx - w / 2);
+        var left = Math.max(g.lo, Math.min(g.hi - w, ideal));
+        d.style.left = left + 'px'; d.style.top = g.top + 'px';
+        d.dataset.form = i; d.dataset.w = w; d.dataset.shift = left - ideal; d.dataset.span = g.hi - g.lo;
+        d.dataset.lo = g.lo; d.dataset.hi = g.hi; d.dataset.cx = g.cx;
+        return d;
+      }
+      root.removeChild(d);
+    }
+  }
+  // Details: attached under the island with no gap, right edges aligned, so the chevron sits over the panel.
+  function placePanel(root, island, html) {
+    var d = el(html); d.classList.add('dd-host'); root.appendChild(d);
+    var il = island.offsetLeft, ir = il + island.offsetWidth, ib = island.offsetTop + island.offsetHeight;
+    var left = ir - d.offsetWidth;
+    d.style.left = left + 'px'; d.style.top = (ib - 1) + 'px'; // shares the island's bottom hairline
+    var i = island.querySelector('.isl'), p = d.querySelector('.dd');
+    i.classList.add('sq-br'); p.classList.add('sq-tr');
+    if (left < il) i.classList.add('sq-bl'); else if (left > il) p.classList.add('sq-tl'); else { i.classList.add('sq-bl'); p.classList.add('sq-tl'); }
+    return d;
+  }
+  // Callout: 8 px below the island. One rule: left edge on the anchor's left edge, unless that would pass the island's
+  // right edge; then right edge on the anchor's right edge. It never extends past the island's left edge either.
+  function placeTip(root, island, html, anchorEl) {
+    var d = el(html); root.appendChild(d);
+    var a = rel(anchorEl, root), w = d.offsetWidth;
+    var il = island.offsetLeft, ir = il + island.offsetWidth;
+    var left = a.x;
+    if (left + w > ir) left = a.r - w;
+    if (left < il) left = il;
+    d.style.left = Math.round(left) + 'px';
+    d.style.top = (island.offsetTop + island.offsetHeight + 8) + 'px';
+    d.dataset.overhang = Math.max(0, Math.round(left + w - ir)) + ',' + Math.max(0, Math.round(il - left));
+    return d;
+  }
+  var TIP = {
+    accept: '<div class="tip"><span class="t">Ends the edit; the sliders stay as they are.</span>' + key('Enter', 'r') + '</div>',
+    armed: '<div class="tip arm">' + G.tri(DANGER, 14) + '<span class="t">Click again to abort.</span><span>Stops Claude and puts the pre-session snapshot back.</span></div>',
+    rearmed: '<div class="tip arm">' + G.tri(DANGER, 14) + '<span class="t">Click to abort again.</span><span>Stops Claude and puts the pre-session snapshot back.</span></div>',
+    clip: '<div class="tip">' + G.tri(TEXT2, 14) + '<span class="t">Shadow clipping was 3.47 % (limit 1 %); corrected.</span></div>'
+  };
+
+  // ---------- stage ----------
+  function lr(root, opts) {
+    renderLightroom(root, opts);
+    // The payload has no focal length (hud-protocol.ts:58-67) and the scene data gives none: blank the stage's histogram cell.
+    var cell = root.querySelector('.lr-histinfo span:nth-child(2)'); if (cell) cell.textContent = '';
+    return root;
+  }
+  // Scenes W and C are after pass 2: the stage's converge scene shows pass-1 values, so set the pass-2 sliders and History.
+  function toPass2(root) {
+    function set(k, v) {
+      var row = root.querySelector('[data-slider="' + k + '"]'); if (!row) return;
+      row.querySelector('.val').textContent = (v > 0 ? '+' : v < 0 ? '-' : '') + Math.abs(v);
+      row.querySelector('.lr-thumb').style.left = ((v + 100) / 200 * 150).toFixed(1) + 'px';
+    }
+    set('Vibrance', 12); set('Clarity', 3);
+    var hist = root.querySelector('[data-region="history"]');
+    // One step per pass, "AVG <short> pass n/N" (gateway engine/src/session/io.ts:148-151)
+    var steps = ['AVG 4f2a1c pass 2/6', 'AVG 4f2a1c pass 1/6', 'AVG 4f2a1c pass 0/6 baseline 1', 'AVG 4f2a1c pass 0/6', 'Import (10/4/2026 6:40:12 PM)'];
+    hist.innerHTML = steps.map(function (s, i) { return '<div class="lr-row' + (i === 0 ? ' sel' : '') + '">' + s + '</div>'; }).join('');
+  }
+
+  // Every placement below measures text widths, so build only once Inter is loaded (fallback-font widths misplace the island).
+  // render.cjs awaits document.fonts.ready, which settles after this load, and this callback was registered first.
+  document.fonts.load('600 15px Inter').then(build);
+  function build() {
+  // ---------- Frame 1: context, Scene C at rest ----------
+  var rc = document.getElementById('lr-c');
+  lr(rc, { scene: 'converge', selected: 'master' });
+  toPass2(rc);
+  placeIsland(rc, FORMS.C);
+
+  // ---------- Frame 2: context, Scene P, details open ----------
+  var rp = document.getElementById('lr-p');
+  lr(rp, { scene: 'converge', selected: 'master' });
+  var ip = placeIsland(rp, [ISL.P({ open: true })]);
+  placePanel(rp, ip, DET.P('pass'));
+
+  // ---------- Frame 3: states sheet ----------
+  function cropRow(list, caption, h, scene, build, opts) {
+    var s = document.createElement('div'); s.className = 'state';
+    s.innerHTML = '<div class="caption">' + caption + '</div><div class="crop" style="height:' + h + 'px"><div class="lrhost"></div></div>';
+    list.appendChild(s);
+    var host = s.querySelector('.lrhost');
+    lr(host, Object.assign({ scene: scene, selected: 'master' }, opts || {}));
+    build(host, s.querySelector('.caption'));
+  }
+  var list = document.getElementById('state-list');
+  var state = cropRow.bind(null, list);
+
+  state('<b>W</b> · Working (Scene W). Stages begin, pass0, applying, acquiring_preview, metrics, awaiting_claude, with no <code>approve_pass</code> and no action note. Asks nothing; Accept and Abort are in the details (details sheet). “pass n of N” follows today\'s stepLine (HudView.lua:83-89): only from pass 1 up, never at begin or pass0.', 72, 'converge', function (r) {
+    toPass2(r); placeIsland(r, FORMS.W);
+  });
+  state('<b>W</b> · at <code>begin</code>: no pass number; the second slot takes STEP.begin “Starting” (HudText.lua:58).', 72, 'converge', function (r) {
+    placeIsland(r, [ISL.W({ sub: 'Starting' })]);
+  });
+  state('<b>W</b> · at <code>pass0</code>: “Setting the baseline” (proposed short form of STEP.pass0; the details show the full STEP words). Later pass-0 stages show their own STEP words, e.g. “Claude is looking at the result” (details sheet, row 2).', 72, 'converge', function (r) {
+    placeIsland(r, [ISL.W({ sub: 'Setting the baseline' })]);
+  });
+  state('<b>W</b> · info note: the note takes the filename\'s slot in text2, cut with “…” past 360 px; the details show it in full. Note from approval.ts:186 (pass 1 approved in the chat). The ring and “Working” stay: nothing is needed from you.', 72, 'converge', function (r) {
+    placeIsland(r, [ISL.W({ sub: 'pass 1 of 6', note: T.approvedChat })]);
+  });
+  state('<b>Warn</b> · a tool call failed (hud-actions.ts:284). Neutral text2 triangle + the note; no ring and no “Working”, because Claude may have stopped to talk in the chat. Actions in the details, as in W.', 72, 'converge', function (r) {
+    toPass2(r); placeIsland(r, [ISL.WARN()]);
+  });
+  state('<b>Problem</b> · a failed Abort (hud-actions.ts:156). The island\'s short sentence keeps the instruction whole (the engine\'s full note is in the details). Abort comes <b>pre-armed</b> (danger hairline), so the one click the sentence asks for aborts; pointer on it shown. No primary.', 120, 'converge', function (r) {
+    toPass2(r);
+    var i = placeIsland(r, FORMS.PROB);
+    placeTip(r, i, TIP.rearmed, i.querySelector('[data-a="abort"]'));
+  });
+  state('<b>Problem</b> in Variants · an Accept that counted on a Pick that failed (hud-actions.ts:207; the engine returns to awaiting_pick, :286). Short sentence instead of “Your turn: pick a copy”; the chips stay; the form ladder drops keycaps first.', 72, 'variants', function (r) {
+    placeIsland(r, [ISL.V({ problem: true, shown: 'A' }), ISL.V({ problem: true, form: 'nokeys', shown: 'A' }), ISL.V({ problem: true, form: 'noshown', shown: 'A' }), ISL.V({ problem: true, form: 'letters', shown: 'A' })]);
+  }, { selected: 'A' });
+  state('<b>Cap reached</b> · awaiting_claude with the cap_reached note (hud-actions.ts:290). Proposed sentence from that note; one primary: Accept. The full note shows in the details.', 72, 'converge', function (r) {
+    toPass2(r); placeIsland(r, FORMS.CAP);
+  });
+  state('<b>C</b> · Converged (Scene C). Accept has keyboard focus, so its consequence shows below it. One primary: Accept. Callout rule: left-aligned to its control unless it would pass the island\'s right edge, then right-aligned to it.', 120, 'converge', function (r) {
+    toPass2(r);
+    var i = placeIsland(r, [ISL.C({ focus: true })]);
+    placeTip(r, i, TIP.accept, i.querySelector('[data-a="primary"]'));
+  });
+  state('<b>C</b> · Abort armed by a click (Scene C). Abort keeps its size and place (same island width as above); the confirm and the consequence show at once (0 ms) in the callout. A second click within 3 s aborts; leaving Abort or 3 s disarms. Ctrl+Backspace arms the same way, with “Press Ctrl+Backspace again to abort.”', 120, 'converge', function (r) {
+    toPass2(r);
+    var i = placeIsland(r, [ISL.C({ armed: true })]);
+    placeTip(r, i, TIP.armed, i.querySelector('[data-a="abort"]'));
+  });
+  state('<b>V</b> · Variants pick (Scene V). Copy A is in the loupe (“shown”, underlined). Pointer on B shows its clipping note. Accept is absent until a copy is picked.', 128, 'variants', function (r) {
+    var i = placeIsland(r, [ISL.V({ hover: 'B', shown: 'A' })]);
+    placeTip(r, i, TIP.clip, i.querySelector('[data-chip="B"]'));
+  }, { selected: 'A' });
+  state('<b>V</b> · keyboard focus on chip A <b>[unverified until S9-13]</b>. The way in is File &gt; Plug-in Extras &gt; “LrC-AVG - Show Vision Gateway HUD” (Info.lua:27), which today opens the classic window (MenuHud.lua:9); activating the island from it is cross-process and may be refused (NOTES section 3). 1 / 2 / 3 or Enter then pick.', 72, 'variants', function (r) {
+    placeIsland(r, [ISL.V({ focus: 'A', shown: 'A' })]);
+  }, { selected: 'A' });
+  state('<b>P</b> · Approve (Scene P). Trigger: <code>approve_pass</code> present at any non-end stage, as HudView.lua:69 and :165 do; the details name the stage with its STEP words. One primary: Approve pass 1. Details open: see the details sheet.', 72, 'converge', function (r) {
+    placeIsland(r, FORMS.P);
+  });
+  state('<b>D</b> · Claude disconnected (Scene D). Neutral grey, no buttons. The undo line uses HudText.UNDO\'s own prefix in plain text2 (no link styling: nothing here undoes by itself); the snapshot name is cut to its time. A click anywhere on the island, or the chevron, opens the details at the full name.', 72, 'converge', function (r) {
+    placeIsland(r, FORMS.D);
+  });
+  state('<b>D</b> · an update with no <code>snapshot</code>: HudText.UNDO with UNDO_NO_SNAPSHOT, verbatim (HudText.lua:72-73).', 72, 'converge', function (r) {
+    placeIsland(r, [ISL.D({ link: 'nosnap' })]);
+  });
+  state('<b>Sent</b> · after a click, until <code>answered_click_id</code>, a new edit or an end stage, or 10 s (hud-protocol.ts:24-25). Buttons shown off: text3, no fill. After 10 s: HudText.CLICK.no_answer.', 72, 'converge', function (r) {
+    toPass2(r); placeIsland(r, [ISL.SENT()]);
+  });
+  state('<b>Done</b> · accepted / aborted / ended: check + HEADLINE.accepted (or .aborted, .ended). Stays until the next edit (hud-protocol.ts:18-20) or until hidden with × (or Esc while it has focus). The menu item and the next edit bring it back. The end note (e.g. “Accepted: the edit is kept.”, hud-actions.ts:224) is in the details.', 72, 'converge', function (r) {
+    toPass2(r); placeIsland(r, [ISL.DONE()]);
+  });
+  state('<b>Not running</b> · HEADLINE.not_running (HudText.lua:41): the engine\'s channel reports Lightroom\'s bridge down (proposed <code>lightroom</code> field, spec 3.3 / 3.7), or, while the channel is down, the plugin\'s bridge_status.json says so (NOTES section 10).', 72, 'converge', function (r) {
+    placeIsland(r, [ISL.NOTRUN()]);
+  });
+  state('<b>No edit</b> · hidden by default; the menu item “LrC-AVG - Show Vision Gateway HUD” shows this idle row (HEADLINE.none + the connection line) until ×, Esc or the next edit. Proposed.', 72, 'converge', function (r) {
+    placeIsland(r, [ISL.IDLE()]);
+  });
+
+  // ---------- Frame 4: details sheet ----------
+  var dlist = document.getElementById('detail-list');
+  cropRow(dlist, '<b>W</b> · Working, details open (Scene W, after pass 2). The step line has its own line and wraps; the This pass | Whole edit switch heads the diff block. Rows sit under Lightroom panel subheads. The footer\'s Accept (secondary) and Abort are real buttons: the pointer route to Abort while Claude works.', 560, 'converge', function (r) {
+    toPass2(r);
+    var i = placeIsland(r, [ISL.W({ open: true })]);
+    placePanel(r, i, DET.W());
+  });
+  cropRow(dlist, '<b>W</b> · after pass 0, Claude looking (stage awaiting_claude, pass 0): no pass number, as stepLine. This pass view for a photo that came in with lens corrections off: the intent\'s priors turn both on (landscape_golden_hour.json:7), so the Lens Corrections group appears with Lightroom\'s checkbox labels, shown off → on. (Scene P\'s Whole edit, given by the scene data, assumes they were already on, as in session 3133cd.)', 680, 'converge', function (r) {
+    var i = placeIsland(r, [ISL.W({ sub: 'Claude is looking at the result', open: true })]);
+    placePanel(r, i, DET.W0());
+  });
+  cropRow(dlist, '<b>P</b> · Approve, details open on the proposed Whole edit view (Scene P). The update\'s note (approval.ts:156) shows in full under the step line.', 640, 'converge', function (r) {
+    var i = placeIsland(r, [ISL.P({ open: true })]);
+    placePanel(r, i, DET.P('whole'));
+  });
+  (function () {
+    var s = document.createElement('div'); s.className = 'state';
+    s.innerHTML = '<div class="caption"><b>Fit check</b> (sample values, not a state) · the longest step lines (STEP.pass0 with no pass number, a two-digit pass, applying, pass 99) and the long labels, in a 440 px panel. Inside a group the row uses Lightroom\'s in-panel label (Amount, Luminance, Orange) [inference: the engine\'s labels are section + control, labels.ts:25-33]. The last row is today\'s payload with no group field: the full label wraps and its row grows (min-height), with no overlap.</div><div class="mini" style="width:1120px;background:#161616;padding:16px 0"></div>';
+    dlist.appendChild(s);
+    var box = s.querySelector('.mini');
+    var d = el(fitCheck()); d.style.position = 'relative'; d.style.width = '440px'; d.style.marginLeft = '340px'; box.appendChild(d);
+  })();
+
+  // ---------- Frame 5: narrow windows ----------
+  var MODS = ['Library', 'Develop', 'Map', 'Book', 'Slideshow', 'Print', 'Web'];
+  function narrowLR(host, W) {
+    var H = 124, pw = Math.min(W - 600 - 160, 740);
+    host.className = 'lr-root mini'; host.style.width = W + 'px'; host.style.height = H + 'px';
+    host.innerHTML =
+      '<div class="lr-abs lr-topband" data-region="topband" style="top:0;width:' + W + 'px"><div class="lr-idbadge">LrC</div><div class="lr-idtext">Adobe Lightroom Classic</div>' +
+        '<div class="lr-modules" style="right:24px">' + MODS.map(function (m, i) { return (i ? '<i></i>' : '') + '<span class="' + (m === 'Develop' ? 'on' : '') + '">' + m + '</span>'; }).join('') + '</div>' +
+        '<div class="lr-tri up" style="left:' + (W / 2 - 4) + 'px;top:3px"></div></div>' +
+      '<div class="lr-abs lr-side lr-left" style="top:60px;height:' + (H - 60) + 'px"><div class="lr-edge" style="height:' + (H - 60) + 'px"></div><div class="lr-col" style="height:' + (H - 60) + 'px"><div class="lr-ph"><div class="lr-tri down"></div>Navigator</div><div class="lr-pb" style="height:40px;background:#3e3e3e"></div></div></div>' +
+      '<div class="lr-abs lr-side lr-right" style="left:' + (W - 300) + 'px;top:60px;height:' + (H - 60) + 'px"><div class="lr-edge" style="height:' + (H - 60) + 'px"></div><div class="lr-col" style="height:' + (H - 60) + 'px"><div class="lr-ph">Histogram<div class="lr-tri down"></div></div><div class="lr-pb" style="height:40px;background:#3e3e3e"></div></div></div>' +
+      '<div class="lr-abs lr-loupe" data-region="loupe" style="left:300px;top:60px;width:' + (W - 600) + 'px;height:' + (H - 60) + 'px;overflow:hidden">' +
+        '<img class="lr-photo" src="' + PHOTO + '" alt="" style="left:' + Math.round((W - 600 - pw) / 2) + 'px;top:40px;width:' + pw + 'px;height:' + Math.round(pw / 1.5) + 'px"></div>';
+    return host;
+  }
+  var wlist = document.getElementById('width-list');
+  var FORM_NAMES = { C: ['full', 'short (“Your turn”)', 'compact'], P: ['full', 'short (“Your turn”)', 'compact'],
+    V: ['full', 'no keycaps', 'no keycaps, no “shown” word', 'letters', 'letters + “Your turn”', 'compact'],
+    D: ['full', 'short undo line', 'no undo line (undo in the details)'], PROB: ['full', 'instruction only'] };
+  [1536, 1366].forEach(function (W) {
+    ['P', 'V', 'D', 'C', 'PROB'].forEach(function (k) {
+      var s = document.createElement('div'); s.className = 'state';
+      s.innerHTML = '<div class="caption"></div><div class="lrhost"></div>';
+      wlist.appendChild(s);
+      var host = narrowLR(s.querySelector('.lrhost'), W);
+      var d = placeIsland(host, FORMS[k]);
+      s.querySelector('.caption').innerHTML = '<b>' + (k === 'PROB' ? 'Problem' : k) + '</b> · window ' + W + ' px: free span x ' + d.dataset.lo + '-' + d.dataset.hi + ' (' + d.dataset.span + ' px), loupe centre x ' + d.dataset.cx +
+        '. Form: <b>' + FORM_NAMES[k][+d.dataset.form] + '</b>, ' + d.dataset.w + ' px wide, ' + (+d.dataset.shift === 0 ? 'on the loupe centre' : 'shifted ' + Math.abs(+d.dataset.shift) + ' px ' + (+d.dataset.shift < 0 ? 'left' : 'right') + ' of the loupe centre') + '.';
+    });
+  });
+
+  // ---------- measured widths of every form, for NOTES (read by option-a/forms.cjs) ----------
+  var probe = document.createElement('div'); probe.style.cssText = 'position:absolute;left:-5000px;top:0;width:3000px;height:100px'; document.body.appendChild(probe);
+  window.FORM_WIDTHS = {};
+  Object.keys(FORMS).forEach(function (k) {
+    window.FORM_WIDTHS[k] = FORMS[k].map(function (h) { var d = el(h); probe.appendChild(d); var w = d.offsetWidth; probe.removeChild(d); return w; });
+  });
+  ['SENT', 'DONE', 'NOTRUN', 'IDLE', 'WARN'].forEach(function (k) { var d = el(ISL[k]()); probe.appendChild(d); window.FORM_WIDTHS[k] = [d.offsetWidth]; probe.removeChild(d); });
+  [['W_begin', ISL.W({ sub: 'Starting' })], ['W_pass0', ISL.W({ sub: 'Setting the baseline' })], ['W_pass0_looking', ISL.W({ sub: 'Claude is looking at the result' })], ['W_info', ISL.W({ sub: 'pass 1 of 6', note: T.approvedChat })],
+   ['V_problem', ISL.V({ problem: true, shown: 'A' })], ['V_noshown', ISL.V({ form: 'noshown' })]].forEach(function (p) { var d = el(p[1]); probe.appendChild(d); window.FORM_WIDTHS[p[0]] = [d.offsetWidth]; probe.removeChild(d); });
+  document.body.removeChild(probe);
+  // whole-pixel sheet heights, so every sheet starts on a whole pixel and --selector crops carry no sliver of the one above
+  ['states', 'details', 'widths'].forEach(function (id) { var e = document.getElementById(id); e.style.height = Math.ceil(e.getBoundingClientRect().height) + 'px'; });
+  window.BUILT = true;
+  }
+})();
+</script>
+</body>
+</html>

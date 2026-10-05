@@ -37,9 +37,9 @@ All four [stated: Jim, 2026-10-03]:
 2. **Say when it's your turn.** The moments that need the user (pick, approve, accept) stand out from the moments that don't; while Claude is working, the HUD says so and asks nothing.
 3. **Never in the way.** The HUD follows the session without taking focus or blocking Lightroom; it reports outcomes in place rather than in a dialog.
 4. **Every exit is visible.** Abort and the way back (the pre-session snapshot) are always findable, and a click always says what happened to it.
-5. **Native first.** Use Lightroom's own controls and layout conventions; brevity and order carry the hierarchy, not decoration.
+5. **Lightroom-native conventions.** Use Lightroom's words, panel order, slider rendering and panel tones, and sit where Lightroom has free space; brevity and order carry the hierarchy, not decoration. [stated: Jim, 2026-10-04, D1 of `docs/hud/lrc-avg-hud-spec-v2.md`: the HUD moves out of LrView into its own window; it was "Native first. Use Lightroom's own controls and layout conventions".]
 
 ## Accessibility & Inclusion
 
 - **Keyboard operation** [stated: Jim, 2026-10-03]: the HUD's actions must be usable without the mouse.
-- Native LrView controls and Lightroom's text sizes; meaning is never carried by colour alone.
+- Lightroom's conventions; text at 12 px or larger (11 px only for key hints and captions); every action usable from the keyboard; meaning is never carried by colour alone. [stated: Jim, 2026-10-04, D1 of `docs/hud/lrc-avg-hud-spec-v2.md`; it was "Native LrView controls and Lightroom's text sizes".]

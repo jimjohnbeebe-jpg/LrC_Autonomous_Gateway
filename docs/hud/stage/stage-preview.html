@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lightroom stage preview</title>
+<link rel="stylesheet" href="stage.css">
+<style>html, body { margin: 0; background: #000; }</style>
+</head>
+<body>
+<div id="lr"></div>
+<script src="stage.js"></script>
+<script>
+  // ?scene=variants&selected=B overrides the default (converge, master)
+  var q = new URLSearchParams(location.search);
+  renderLightroom(document.getElementById('lr'), { scene: q.get('scene') || 'converge', selected: q.get('selected') || 'master' });
+</script>
+</body>
+</html>

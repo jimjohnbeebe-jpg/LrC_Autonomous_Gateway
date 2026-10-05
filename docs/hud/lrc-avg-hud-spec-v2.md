@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | Accepted as the HUD spec for Phase 7. D1-D4 decided by Jim on 2026-10-04, D5 deferred, Q14-Q16 answered the same day (section 2, 13.1). Nothing is built yet. **Phase 7 starts here; its first row is spike S9** (section 2.6, step 2) [stated: Jim, 2026-10-05, "This will be the first row of Phase 7"]. Open: Q17. **2026-10-05: after S9, the Deck is detached** [stated: Jim, "Go with B, detached Deck … Please add the requirement that the dock remembers its position each time."]: a free-floating window that opens and closes by itself and remembers its position (4.4). Sections 4.1, 4.3, 4.5 and D4 still describe the docked bar, until the Phase 7 re-plan rewrites them (`docs/reports/phase7/S9.md` "Consequences"). |
+| Status | Accepted as the HUD spec for Phase 7. D1-D4 decided by Jim on 2026-10-04, D5 deferred, Q14-Q16 answered the same day (section 2, 13.1). Nothing is built yet. **Phase 7 starts here; its first row is spike S9** (section 2.6, step 2) [stated: Jim, 2026-10-05, "This will be the first row of Phase 7"]. Open: Q17. **2026-10-05: after S9, the Deck is detached** [stated: Jim, "Go with B, detached Deck … Please add the requirement that the dock remembers its position each time."]: a free-floating window that opens and closes by itself and remembers its position (4.4). Sections 4.1, 4.3, 4.5 and D4 still describe the docked bar, until the Phase 7 re-plan rewrites them (`docs/reports/phase7/S9.md` "Consequences"). **2026-10-05, re-plan: only the detached Deck is built in Phase 7**; Island, Rail and the layout setting are deferred. Section 2.7 holds the decisions and overrides D4, 2.6, 3.2, 4.1, 4.3-4.5 and 11.1 where they differ. |
 | Replaces | The Grok draft, kept for reference at `docs/hud/source/grok-draft-2026-10-04.md` |
 | Written by | Claude Code, 2026-10-04, in a cloud session Jim asked for. The gateway repo was only read. |
 | Readers | The Claude Code session that implements this in the LrC-AVG repo, and Jim |
@@ -124,7 +124,7 @@ Jim decided D1-D4 and deferred D5 on 2026-10-04 [stated: Jim, 2026-10-04]. Each 
 | D1 | Out-of-process HUD; the classic LrView HUD stays as a fallback, now also a selectable layout (D4) | **Decided: yes** |
 | D2 | Runtime: **Tauri v2**, pinned to 2.12.x; spike S9 validates it rather than choosing between runtimes | **Decided** (re-evaluated below) |
 | D3 | The engine hosts the HUD channel | **Decided: yes** |
-| D4 | All three layouts, chosen on the plugin's settings page; **C "Deck" is the default** | **Decided** (evaluation below) |
+| D4 | All three layouts, chosen on the plugin's settings page; **C "Deck" is the default** | **Decided** (evaluation below). **Narrowed 2026-10-05: Deck only, detached; A, B and the setting deferred** (2.7) |
 | D5 | Engine additions | **Deferred** to a later feature push, except what D3 and the default layout need to work at all (Q15) |
 | — | Put back | **Decided: keep both Abort and Put back, using existing functionality** (Q14). See D5. |
 
@@ -414,6 +414,62 @@ Deferred under this proposal: E5 (the Whole edit view; the toggle is hidden), E9
 7. Layouts A and B on the same core. Each gets acceptance on placement, its forms and keyboard focus.
 8. "Classic window" stays a choice on the settings page.
 
+Steps 3-8 are replaced by 2.7.
+
+### 2.7 Deck only, detached (decided 2026-10-05)
+
+**Scope** [stated: Jim, 2026-10-05, "Defer development of all of the HUDs except for the detached deck. The other versions can come later as possible enhancements. All effort should be on turning out a first version of the deck."]. The five window rules below were Claude Code's recommendations, accepted as a set [stated: Jim, 2026-10-05, "Go with recommendations"]. This section overrides D4, 2.6, 3.2, 4.1, 4.3-4.5 and 11.1 where they differ.
+
+**Built in Phase 7:** layout C "Deck", as a free-floating window (decided after S9b run 2, `docs/reports/phase7/S9.md` "Consequences").
+
+**Deferred, as later enhancements:**
+- A "Island" and B "Rail";
+- the `hud_layout` setting and "Classic window" as a choice (D4, "The setting");
+- the layout contract (D4) [inference: one layout needs no contract].
+
+The classic LrView HUD stays as the automatic fallback only: it opens when no Deck is connected (D1, E2).
+
+**Window rules:**
+
+1. **Topmost** while Lightroom's main window or the Deck is the foreground window. Otherwise the Deck is not topmost. This replaces 4.3's "any Lightroom window". The reason: in S9b run 2, F (full-screen preview) put the bar over the image (`docs/reports/phase7/S9.md` "S9b run 2"). That F opens a separate top-level window is [unverified]; the check asks it (A9 below).
+2. **First-run position:** bottom centre of the work area of the monitor that holds Lightroom's main window. A remembered position that lies on no connected monitor falls back to this position.
+3. **Lightroom minimised:** the Deck hides. When Lightroom is restored, the Deck shows again if it was showing before.
+4. **Width:** resizable sideways only; the default width is 1200 px [inference: chosen, not measured; the opened deck's three columns need 1816 px at full card size, D4]. Position and width are remembered in `%LOCALAPPDATA%\LrC-AVG\hud\window.json` (4.4), one entry.
+5. **Q13: decision 6 is kept.** The Deck opens by itself once per edit, at begin, without activation. A Deck the user hid stays hidden until the next edit. It hides 10 s after the end (3.2).
+
+**Form** (proposed):
+- 44 px bar and 144 px opened deck, as `option-c/NOTES.md` section 1 draws them. The bottom edge stays put; opening grows the deck upward, clamped to the monitor's work area.
+- The user moves the Deck by dragging the bar.
+
+**Finding Lightroom's main window** (rules 1-3 need it). S9 took the largest visible top-level window of Lightroom's process (4.1), and in S9b run 2 that was F's full-screen window [inference: `docs/reports/phase7/S9.md` "S9b run 2"]. The main window's title in run 2 was "Lightroom Catalog-v13-4 - Adobe Photoshop Lightroom Classic - Develop" (same section). How to tell the main window from F's window (title, class or owner) is decided in row 4 from a logged window list [unverified until then].
+
+**From S9:**
+- Carried over: Tauri 2.12 with WebView2 without its GPU process; show without activation and WebView2 `IsVisible` on every hide and show; the WebSocket channel; a timer-stepped pulse; `TextEncoder` in the shared schemas (`docs/reports/phase7/S9.md` "Consequences").
+- Not carried over: the follow code (`spikes/S9/tauri/src-tauri/src/win.rs` placement and watch loop, `drag.rs`) and the filmstrip anchor (4.1) [inference: nothing left to follow].
+
+**Build order** (the rows of the vault `PHASE7_PLAN.md`; one branch and one PR each):
+
+| Row | Branch | Work |
+|---|---|---|
+| 1 | `phase-7/s9-tauri-spike` | S9, done (STOP, then the detached Deck) |
+| 2 | `phase-7/deck-replan` | This section; docs only |
+| 3 | `phase-7/hud-channel` | Engine: E1-E4, E6-E8, E10 (Q15) and the classic fallback; no `hud_layout` read |
+| 4 | `phase-7/deck-app` | The Deck app in `hud/` (`hud/src-tauri/` for Rust). Q5, Q6, Q11 and Q12 are asked first |
+| 5 | `phase-7/plugin-menu` | The menu-item fix (D1, "Known conflict"), keyed on "a Deck is connected" instead of the setting. Q4 and Q17 are asked first |
+| 6 | `phase-7/check` | Jim's acceptance on the Deck: 11.1 as amended below |
+| 7 | `phase-7/results` | Report accepted, vault mirror, PHASES status |
+
+Jim's go on this plan is the Q15 go for row 3 [stated: Jim, 2026-10-05, "Go with recommendations", to a plan whose row 3 said so].
+
+**Acceptance (11.1) for the detached Deck.** Lines not named here stay as written.
+- A1: At Claude's first `lr_begin_session`, the Deck appears within 2 s where you last left it (the first time: bottom centre of Lightroom's monitor), and the classic window does not open.
+- A5: Drag the Deck somewhere else and widen it. At the next edit it opens there, at that width. When its remembered spot is on no connected monitor (the check moves it there), it opens at the bottom centre of Lightroom's monitor.
+- A7: Moving or resizing Lightroom leaves the Deck where it is. Minimising Lightroom hides it; restoring Lightroom brings it back.
+- A9: In each Lightroom screen mode the Deck stays visible over Lightroom. In F's full-screen preview it is not over the image.
+- A12: "… and stays" becomes "… and hides 10 s later" (3.2).
+- A17: "three chips" becomes "the copy cards".
+- A20 (Whole edit) is dropped while E5 is deferred (D5).
+
 ---
 
 ## 3. Architecture
@@ -591,6 +647,8 @@ While the channel is down the engine cannot report `lightroom`. The HUD may then
 
 ### 4.1 Finding Lightroom, and placement
 
+*Amended 2026-10-05 by 2.7: the Deck floats free. Only finding Lightroom's main window still applies; the placement table is kept for the deferred layouts.*
+
 **Finding Lightroom's window** (proposed):
 
 - The HUD finds Lightroom's main window as the largest visible top-level window of the Lightroom process. The process image name and title pattern are [unverified]; Jim's check records them.
@@ -617,6 +675,8 @@ While the channel is down the engine cannot report `lightroom`. The HUD may then
 
 ### 4.3 Topmost policy [inference until S9-7]
 
+*Amended 2026-10-05 by 2.7, rule 1: topmost only while Lightroom's main window or the Deck is in front.*
+
 The HUD is topmost only while Lightroom or the HUD itself is the foreground window.
 
 - **How:** `EVENT_SYSTEM_FOREGROUND` (`MS event-constants.md:148`), then `SetWindowPos` with HWND_TOPMOST or HWND_NOTOPMOST and SWP_NOACTIVATE (`MS nf-winuser-setwindowpos.md:103-131`, `:231-237`; https://learn.microsoft.com/windows/win32/api/winuser/nf-winuser-setwindowpos).
@@ -630,12 +690,16 @@ Not chosen:
 
 ### 4.4 Position, monitors, DPI (proposed)
 
+*Amended 2026-10-05 by 2.7, rules 2 and 4: first-run position, off-monitor fallback, one remembered entry with the width.*
+
 - **Required (decided 2026-10-05): the detached Deck remembers its position each time.** It opens where the user last left it [stated: Jim, 2026-10-05, "the dock remembers its position each time"]. The first-run position, and what happens when the remembered position is on no connected monitor, are open for the Phase 7 re-plan.
 - The position is stored relative to the anchor in `%LOCALAPPDATA%\LrC-AVG\hud\window.json`, one entry per layout option.
 - The HUD follows the monitor of Lightroom's main window, and works in physical pixels converted by that monitor's DPI [inference].
 - A second monitor and Lightroom's secondary display window are [unverified]. The HUD stays with the main window.
 
 ### 4.5 Lightroom states (proposed)
+
+*Amended 2026-10-05 by 2.7: minimised hides the Deck (rule 3); screen modes as A9 there.*
 
 | Lightroom | HUD |
 |---|---|
@@ -1007,6 +1071,8 @@ Guardrail sentences come from `payload.ts:119-170`. All are checked for engine w
 
 ### 11.1 Jim's observations in Lightroom
 
+*Amended 2026-10-05 by 2.7: A1, A5, A7, A9, A12 and A17 reworded for the detached Deck; A20 dropped while E5 is deferred.*
+
 Lightroom-side results are Jim's observations (`CLAUDE.md`, Rules). The harness asks these and saves the answers (rule 04). Each line passes only on Jim's tick.
 
 **Opening and focus**
@@ -1118,7 +1184,7 @@ The HUD app's own tests are runtime-specific and are chosen after D2:
 - **Q10.** Install path, and whether the HUD comes with the plugin's installer or separately.
 - **Q11.** Pick with the pointer: one click on a chip (this spec, as today), or choose then confirm, as Options B and C draw it? A pick is final (`hud-actions.ts:234`). Should choosing also select the copy in Lightroom (E12), and should `target_changed` get a "Select <file>" button (E13)?
 - **Q12.** The HUD offers the pick only at `awaiting_pick`, after every copy's refined pass (`engine/src/session/pick.ts:21`; `HudView.lua:163`), so the chips show pass-1 renders. Claude can pick earlier: `lr_select_variant` is accepted before every copy is refined (`pick.ts:4-5`, itself tagged [inference] there; `picked_before_refining` at `pick.ts:101`). Is `awaiting_pick` the moment you want the copies shown in the HUD, or should they appear as each copy finishes?
-- **Q13.** Decision 6 opens the HUD by itself once per edit (`Hud.lua:9-11`; `publisher.ts:10-11`). This spec proposes that a HUD you hid shows itself again, without taking focus, at each Your turn (3.2, 4.2). Change decision 6 that way, or keep it: hidden stays hidden until the next edit? The re-show is close to the "Interrupting: pop-ups" anti-reference (`PRODUCT.md:31`).
+- **Q13.** Answered [stated: Jim, 2026-10-05, "Go with recommendations"]: decision 6 is kept; hidden stays hidden until the next edit (2.7, rule 5). Decision 6 opens the HUD by itself once per edit (`Hud.lua:9-11`; `publisher.ts:10-11`). This spec proposes that a HUD you hid shows itself again, without taking focus, at each Your turn (3.2, 4.2). Change decision 6 that way, or keep it: hidden stays hidden until the next edit? The re-show is close to the "Interrupting: pop-ups" anti-reference (`PRODUCT.md:31`).
 - **Q14.** Answered [stated: Jim, 2026-10-04]: "keep both using existing functionality". Abort goes through the engine; Put back is the plugin's own (D5, section 1.6).
 - **Q15.** Answered [stated: Jim, 2026-10-04]: "agreed, but don't start until I say go, there is a session already in progress in Claude code cli". v1 = E1-E4, E6-E8 and E10.
 - **Q16.** Answered [stated: Jim, 2026-10-04]: "yes to all". This spec, the critique and the mockups go into `docs\hud\` on branch `phase-6/hud-spec`, with a draft PR, and the `PRODUCT.md` amendment (D1) rides in the same PR.

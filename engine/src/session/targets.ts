@@ -74,18 +74,20 @@ export function checkReady(s: Session): void {
   );
 }
 
+/** What select_photo checks of `t`: a copy must still be a virtual copy of the master with its name, the master must not be a copy. */
+export function selectExpect(s: Session, t: Target): Record<string, unknown> {
+  if (t.id === "master") return { is_virtual_copy: false };
+  return { is_virtual_copy: true, master_local_id: s.master.local_id, ...(t.copy_name !== null ? { copy_name: t.copy_name } : {}) };
+}
+
 /**
  * Make `t` the photo the session works on. In Variants mode, select it in Lightroom first: a copy
  * must still be a virtual copy of the master with its name, the master must not be a copy.
  */
 export async function focus(ctx: SessionContext, s: Session, t: Target): Promise<void> {
   if (s.mode === "variants") {
-    const expect =
-      t.id === "master"
-        ? { is_virtual_copy: false }
-        : { is_virtual_copy: true, master_local_id: s.master.local_id, ...(t.copy_name !== null ? { copy_name: t.copy_name } : {}) };
     try {
-      await ctx.deps.client.request("select_photo", { uuid: t.uuid, expect });
+      await ctx.deps.client.request("select_photo", { uuid: t.uuid, expect: selectExpect(s, t) });
     } catch (err) {
       const error = toToolError(err);
       throw new ToolError(error.code, `Could not select ${photoName(t)} in Lightroom: ${error.message}`, error.recoverable, { target: t.id, uuid: t.uuid });

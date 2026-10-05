@@ -12,6 +12,11 @@
 // only the Deck gets. Left out while their D5 items are deferred (spec 2.7, vault PHASE7_PLAN
 // "Deferred"): `whole_edit` (E5) and `history_prefix` (E9). The "Target changed" sentence is the Deck's
 // to build from `selection` and `session_photos` (row 3 decision 3, Jim's go 2026-10-05).
+//
+// Row 4a [stated: Jim, 2026-10-05, Q6 "Yes, Your turn" and Q11 "Choose, confirm + E12"]: `cap_reached`
+// marks an edit whose passes are all used (the stage stays awaiting_claude, which the classic HUD
+// shares); the Deck shows it as the user's turn. `show` asks the engine to select a copy in Lightroom
+// while the edit waits for the pick (E12, session\show-copy.ts); it is not a click and gets no answer.
 
 import { z } from "zod";
 import { HUD_EVENTS, HUD_LIMITS, HUD_VARIANTS, hudUpdatePayloadSchema, utf8Bytes } from "../bridge/hud-protocol.js";
@@ -64,6 +69,8 @@ export const hudChannelStateSchema = hudUpdatePayloadSchema.omit({ open: true, s
   picked: z.enum(HUD_VARIANTS).nullable().optional(),
   rows: z.array(deckRowSchema).max(HUD_LIMITS.rows).optional(),
   selection: deckSelectionSchema.optional(),
+  /** All passes are used (the photo's last pass reached max_passes): only Accept or Abort is left (Q6). */
+  cap_reached: z.literal(true).optional(),
 });
 export type HudChannelState = z.infer<typeof hudChannelStateSchema>;
 export type DeckRow = z.infer<typeof deckRowSchema>;
@@ -103,6 +110,8 @@ export const deckMessageSchema = z.discriminatedUnion("type", [
    */
   z.strictObject({ type: z.literal("event"), name: z.enum(DECK_EVENTS), payload: z.unknown() }),
   z.strictObject({ type: z.literal("get_thumb"), key: id }),
+  /** The user chose copy `variant`'s card: select it in Lightroom (E12); the pick is a separate hud_pick. */
+  z.strictObject({ type: z.literal("show"), session_id: id, variant: z.enum(HUD_VARIANTS) }),
   z.strictObject({ type: z.literal("pong") }),
 ]);
 export type DeckMessage = z.infer<typeof deckMessageSchema>;

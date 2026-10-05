@@ -1,0 +1,107 @@
+S9b S9-8 analysis: the harness's episodes beside the HUD's own log.
+Written by Claude Code (Opus 5.5), 2026-10-05, branch phase-7/s9b-results.
+Command (repo root): node s9b-analysis.ts   (the script is in the appendix, verbatim; it was run from the session scratchpad)
+Inputs: docs\reports\phase7\S9b\s9_s9b-2026-10-05T11-16-10-168Z.json and hud_24220_1791198983874.jsonl (this run's long-lived HUD).
+Exit code: 0. Output follows.
+
+== A. The harness's S9-8 episodes (s9_8.episodes), in order; run started 2026-10-05T11:16:10.168Z
+ 1 moved     ms=198.8 detached_ms=0 lr_changes=21 span=678 hud_visible=true lr=481,359,3502,2032 hud=492,1805,3491,1871 expected=492,1805,3491,1871
+ 2 moved     ms=382.0 detached_ms=0 lr_changes=19 span=626 hud_visible=true lr=474,156,3495,1829 hud=485,1602,3484,1668 expected=485,1602,3484,1668
+ 3 moved     ms=292.8 detached_ms=0 lr_changes=16 span=500 hud_visible=true lr=451,249,3472,1922 hud=462,1695,3461,1761 expected=462,1695,3461,1761
+ 4 moved     ms=null detached_ms=0 lr_changes=1 span=0 hud_visible=false lr=451,249,3471,1922 hud=462,1695,3461,1761 expected=462,1695,3460,1761
+ 5 moved     ms=null detached_ms=0 lr_changes=1 span=0 hud_visible=false lr=451,249,3266,1840 hud=462,1695,3460,1761 expected=462,1613,3255,1679
+ 6 moved     ms=null detached_ms=0 lr_changes=1 span=0 hud_visible=false lr=451,249,3261,1832 hud=462,1613,3255,1679 expected=462,1605,3250,1671
+ 7 moved     ms=null detached_ms=0 lr_changes=1 span=0 hud_visible=false lr=451,249,3261,1833 hud=462,1606,3250,1672 expected=462,1606,3250,1672
+ 8 moved     ms=null detached_ms=0 lr_changes=1 span=0 hud_visible=false lr=451,249,3261,1834 hud=462,1607,3250,1673 expected=462,1607,3250,1673
+ 9 moved     ms=null detached_ms=0 lr_changes=1 span=0 hud_visible=false lr=451,249,3371,1962 hud=462,1607,3250,1673 expected=462,1735,3360,1801
+10 moved     ms=null detached_ms=0 lr_changes=1 span=0 hud_visible=false lr=451,249,3385,1969 hud=462,1742,3374,1808 expected=462,1742,3374,1808
+11 moved     ms=null detached_ms=0 lr_changes=1 span=0 hud_visible=false lr=451,249,3391,1970 hud=462,1743,3380,1809 expected=462,1743,3380,1809
+12 moved     ms=null detached_ms=0 lr_changes=1 span=0 hud_visible=false lr=451,249,3442,1976 hud=462,1749,3431,1815 expected=462,1749,3431,1815
+13 moved     ms=null detached_ms=0 lr_changes=1 span=0 hud_visible=false lr=451,249,3447,1976 hud=462,1749,3436,1815 expected=462,1749,3436,1815
+14 minimised ms=63.5 detached_ms=0 lr_changes=1 span=0 hud_visible=false lr=- hud=462,1749,3436,1815 expected=-
+15 moved     ms=83.6 detached_ms=0 lr_changes=2 span=5 hud_visible=true lr=451,249,3447,1976 hud=462,1749,3436,1815 expected=462,1749,3436,1815
+16 moved     ms=173.7 detached_ms=171 lr_changes=1 span=0 hud_visible=true lr=0,0,3840,2160 hud=0,1944,3840,2010 expected=0,1944,3840,2010
+17 moved     ms=5.5 detached_ms=0 lr_changes=1 span=0 hud_visible=true lr=451,249,3447,1976 hud=462,1749,3436,1815 expected=462,1749,3436,1815
+18 moved     ms=134.5 detached_ms=132 lr_changes=1 span=0 hud_visible=true lr=0,0,3840,2160 hud=0,1944,3840,2010 expected=0,1944,3840,2010
+19 moved     ms=124.8 detached_ms=122 lr_changes=1 span=0 hud_visible=true lr=451,249,3447,1976 hud=462,1749,3436,1815 expected=462,1749,3436,1815
+move_events {"movesize":10,"button":0}
+
+== B. Each movesize hide/show pair in the HUD log (seconds from the run start)
+hide 265.738 show 270.328 hidden 4590 ms; location changes 5, largest gap 633 ms; last change -> show 1703 ms; final place -> show 5.7 ms, got [296,1646,2962,66]
+hide 300.393 show 302.320 hidden 1927 ms; location changes 44, largest gap 49 ms; last change -> show 347 ms; final place -> show 6.3 ms, got [316,1652,2962,66]
+hide 307.936 show 312.692 hidden 4756 ms; location changes 6, largest gap 1670 ms; last change -> show 171 ms; final place -> show 5.0 ms, got [316,1694,2999,66]
+hide 335.282 show 336.166 hidden 884 ms; location changes 21, largest gap 43 ms; last change -> show 172 ms; final place -> show 4.6 ms, got [492,1805,2999,66]
+hide 337.328 show 338.344 hidden 1016 ms; location changes 19, largest gap 39 ms; last change -> show 354 ms; final place -> show 5.4 ms, got [485,1602,2999,66]
+hide 339.873 show 340.670 hidden 796 ms; location changes 16, largest gap 41 ms; last change -> show 267 ms; final place -> show 6.3 ms, got [462,1695,2999,66]
+hide 345.576 show 348.835 hidden 3259 ms; location changes 4, largest gap 1308 ms; last change -> show 135 ms; final place -> show 4.0 ms, got [462,1606,2788,66]
+hide 353.890 show 358.032 hidden 4142 ms; location changes 6, largest gap 1287 ms; last change -> show 147 ms; final place -> show 4.8 ms, got [462,1749,2974,66]
+hide 436.570 show 444.020 hidden 7450 ms; location changes 182, largest gap 764 ms; last change -> show 125 ms; final place -> show 5.1 ms, got [636,1800,2974,66]
+hide 447.772 show 452.117 hidden 4345 ms; location changes 5, largest gap 1272 ms; last change -> show 130 ms; final place -> show 4.2 ms, got [636,1676,2781,66]
+
+== C. HUD log lines from 360 s to 395 s (minimise, restore, screen modes); webview lines left out
+365.786 hide {"reason":"lightroom_minimised"}
+365.786 follow {"event":32779,"t_event":1791199335948.3462,"t_set":1791199335954.3608}
+365.787 follow {"event":22,"t_event":1791199335955.0662,"t_set":1791199335955.071}
+365.812 foreground {"fg_pid":3864,"front":false,"t_event":1791199335955.784,"t_set":1791199335979.909}
+365.836 follow {"event":32779,"t_event":1791199336004.0059,"t_set":1791199336004.011}
+371.470 foreground {"fg_pid":15340,"front":false,"t_event":1791199341636.6853,"t_set":1791199341637.813}
+371.580 foreground {"fg_pid":51380,"front":true,"t_event":1791199341746.4963,"t_set":1791199341748.357}
+371.602 follow {"event":32779,"t_event":1791199341769.6953,"t_set":1791199341769.701}
+371.697 place {"dpi":144,"got":[462,1749,2974,66],"target":[462,1749,2974,66]}
+371.705 show {"reason":"lightroom_restored"}
+371.705 follow {"event":32779,"t_event":1791199341864.8325,"t_set":1791199341873.485}
+371.706 place {"dpi":144,"got":[462,1749,2974,66],"target":[462,1749,2974,66]}
+371.706 follow {"event":23,"t_event":1791199341873.648,"t_set":1791199341873.9885}
+378.913 place {"dpi":144,"got":[0,1944,3840,66],"target":[0,1944,3840,66]}
+379.082 foreground {"fg_pid":51380,"front":true,"t_event":1791199349249.1106,"t_set":1791199349249.7295}
+379.097 foreground {"fg_pid":51380,"front":true,"t_event":1791199349263.8123,"t_set":1791199349264.6777}
+381.426 place {"dpi":144,"got":[462,1749,2974,66],"target":[462,1749,2974,66]}
+385.185 place {"dpi":144,"got":[0,1944,3840,66],"target":[0,1944,3840,66]}
+385.396 foreground {"fg_pid":51380,"front":true,"t_event":1791199355561.6433,"t_set":1791199355563.8938}
+385.413 foreground {"fg_pid":51380,"front":true,"t_event":1791199355580.1096,"t_set":1791199355581.4084}
+386.944 place {"dpi":144,"got":[462,1749,2974,66],"target":[462,1749,2974,66]}
+392.348 foreground {"fg_pid":3864,"front":false,"t_event":1791199362510.1208,"t_set":1791199362516.3003}
+392.369 place {"dpi":144,"got":[462,1749,2974,66],"target":[462,1749,2974,66]}
+392.369 follow {"event":32779,"t_event":1791199362536.603,"t_set":1791199362536.9844}
+
+== Appendix: s9b-analysis.ts, verbatim
+
+// S9b S9-8 analysis: the harness's episodes beside the HUD's own log. Run from the repo root:
+//   node <this file>
+import { readFileSync } from "node:fs";
+
+const dir = "docs/reports/phase7/S9b/";
+const run = JSON.parse(readFileSync(dir + "s9_s9b-2026-10-05T11-16-10-168Z.json", "utf8"));
+const log = readFileSync(dir + "hud_24220_1791198983874.jsonl", "utf8").trim().split("\n").map((l) => JSON.parse(l));
+const S = Date.parse(run.started);
+const s = (t: number): string => ((t - S) / 1000).toFixed(3);
+const box = (r: { left: number; top: number; right: number; bottom: number } | null): string => (r ? `${r.left},${r.top},${r.right},${r.bottom}` : "-");
+
+console.log(`== A. The harness's S9-8 episodes (s9_8.episodes), in order; run started ${run.started}`);
+run.s9_8.episodes.forEach((e: Record<string, any>, i: number) =>
+  console.log(`${String(i + 1).padStart(2)} ${e.kind.padEnd(9)} ms=${e.ms === null ? "null" : e.ms.toFixed(1)} detached_ms=${e.detached_ms} lr_changes=${e.lr_changes} span=${e.lr_change_span_ms} hud_visible=${e.hud_visible} lr=${box(e.lr_rect)} hud=${box(e.hud_rect)} expected=${box(e.expected)}`));
+console.log(`move_events ${JSON.stringify(run.s9_8.move_events)}`);
+
+console.log("\n== B. Each movesize hide/show pair in the HUD log (seconds from the run start)");
+let hide: number | null = null;
+let follows: number[] = [];
+let places: { t: number; got: number[] }[] = [];
+for (const e of log) {
+  if (e.ev === "move_hide") [hide, follows, places] = [e.t, [], []];
+  else if (e.ev === "follow" && hide !== null) follows.push(e.t_event);
+  else if (e.ev === "place" && hide !== null) places.push(e);
+  else if (e.ev === "move_show" && hide !== null) {
+    const gaps = follows.slice(1).map((x, i) => x - follows[i]!);
+    const last = places.at(-1)!;
+    console.log(`hide ${s(hide)} show ${s(e.t)} hidden ${(e.t - hide).toFixed(0)} ms; location changes ${follows.length}, largest gap ${gaps.length ? Math.max(...gaps).toFixed(0) : "-"} ms; last change -> show ${follows.length ? (e.t - follows.at(-1)!).toFixed(0) : "-"} ms; final place -> show ${(e.t - last.t).toFixed(1)} ms, got [${last.got}]`);
+    hide = null;
+  }
+}
+
+console.log("\n== C. HUD log lines from 360 s to 395 s (minimise, restore, screen modes); webview lines left out");
+for (const e of log) {
+  const r = (e.t - S) / 1000;
+  if (r < 360 || r > 395 || e.ev === "webview") continue;
+  const { ev, t, ...rest } = e;
+  console.log(`${s(t)} ${ev} ${JSON.stringify(rest)}`);
+}

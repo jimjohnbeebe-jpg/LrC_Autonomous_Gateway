@@ -38,9 +38,25 @@ install(setup);
 const found = findHudExe();
 record("C1", "the installer put the Deck where the engine looks for it", found !== null, found);
 const exe = found ?? stop("The Deck is not where the engine looks for it.");
+// The Deck is removed however the probe ends: a stop, an error, or Ctrl+C (Greptile, PR #87). An exit
+// handler runs only synchronous code, which closing the channel and uninstalling are (kit.ts).
+let engine: StandIn | null = null;
+let removed: boolean | null = null;
+const removeDeck = (): boolean => {
+  if (removed === null) {
+    engine?.channel.close();
+    stopDeck();
+    removed = uninstall(exe);
+  }
+  return removed;
+};
+process.once("exit", () => {
+  if (removed === null) console.log(`The Deck was ${removeDeck() ? "" : "NOT "}uninstalled.`);
+});
+process.once("SIGINT", () => process.exit(130));
 rmSync(WINDOW_JSON, { force: true }); // the first-run position is checked first
 
-const engine = new StandIn();
+engine = new StandIn();
 await engine.channel.open();
 const launcher = new HudLauncher();
 const started = Date.now();
@@ -108,10 +124,8 @@ const end3 = Date.now();
 engine.state("accepted");
 const hid3 = await after(end3, "hide", "edit_end");
 record("A12b", "the Deck hid about 10 s after the last edit ended", hid3 !== null && Math.abs(hid3.t - end3 - 10_000) <= 1500, hid3 ? Math.round(hid3.t - end3) : null);
-engine.channel.close();
-stopDeck();
 closeInput();
-record("C2", "the Deck was uninstalled again (real edits keep the classic HUD until row 4c)", uninstall(exe));
+record("C2", "the Deck was uninstalled again (real edits keep the classic HUD until row 4c)", removeDeck());
 
 mkdirSync(out, { recursive: true });
 const deckFile = log();

@@ -4,7 +4,7 @@
   "description": "LrC-AVG monorepo root: engine (Node/TS MCP server), the Deck (hud, Tauri) and spike scripts.",
   "type": "module",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.18"
   },
   "workspaces": [
     "engine",

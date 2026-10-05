@@ -25,7 +25,25 @@ const rl = createInterface({ input: process.stdin });
 const lines: string[] = [];
 const waiters: ((line: string) => void)[] = [];
 rl.on("line", (line) => (waiters.length ? waiters.shift()?.(line) : lines.push(line)));
-const nextLine = (): Promise<string> => (lines.length ? Promise.resolve(lines.shift() ?? "") : new Promise((r) => waiters.push(r)));
+/**
+ * Input that ends (Ctrl+Z, a closed pipe) stops the probe once it needs an answer that will not come;
+ * its exit handler removes the Deck. Lines already typed are used first.
+ */
+let closing = false;
+let ended = false;
+function inputEnded(): never {
+  console.log("\nInput ended: the probe stops.");
+  process.exit(1);
+}
+rl.on("close", () => {
+  ended = true;
+  if (!closing && waiters.length) inputEnded();
+});
+const nextLine = (): Promise<string> => {
+  if (lines.length) return Promise.resolve(lines.shift() ?? "");
+  if (ended) inputEnded();
+  return new Promise((r) => waiters.push(r));
+};
 
 export async function enter(text: string): Promise<void> {
   process.stdout.write(`\n${text}\nPress Enter when done. `);
@@ -42,6 +60,7 @@ export async function yes(text: string): Promise<boolean> {
 }
 
 export function closeInput(): void {
+  closing = true;
   rl.close();
 }
 

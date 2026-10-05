@@ -1,0 +1,767 @@
+LrC-AVG — Lightroom check of branch phase-6/automaat-files (GitHub issue #55), 2026-10-04
+Engine 0.17.0, plugin 0.17.0, Lightroom Classic 15.6 on Jim's PC. Run by Claude Code with Jim's leave
+[stated: Jim, 2026-10-04, "You have permission to interact with Lightroom Classic on the desktop to do
+tests if needed."]; Jim was away, so no question was asked of him: every result below was read back by
+the script (sharp reads the exported files). User folder redacted to %USERPROFILE%.
+
+Contents
+  1. Reload Plug-in left two bridges running (found on the way, fixed in Bridge.lua)
+  2. The check (lr_create_collection, lr_add_to_collection, lr_export_photos, lr_import_photos): WORKED
+  3. The reload fix in Lightroom: the old bridge stops; 5 of 5 fresh connections reach the new one
+  4. What the check left in Jim's catalog
+  5. Appendix: the scripts, verbatim
+
+== 1. Reload Plug-in left two bridges running
+
+Lightroom was started at 12:12 (plugin 0.16.0). Claude Code clicked Reload Plug-in in Plug-in Manager
+at about 12:32 to load 0.17.0, then ran the check. The plugin log (%TEMP%\LrC-AVG\bridge.log):
+
+2026-10-04 12:12:04.376 INFO  bridge: starting generation 1 (receive 8765, send 8766)
+2026-10-04 12:12:16.454 INFO  bridge: token written to %USERPROFILE%\.lrc-avg\bridge_token
+2026-10-04 12:12:16.479 INFO  bridge: ports 8765/8766 written to %USERPROFILE%\.lrc-avg\bridge_ports.json
+2026-10-04 12:12:16.479 INFO  bridge: listening (generation 1)
+2026-10-04 12:32:36.309 INFO  bridge: starting generation 1 (receive 8765, send 8766)
+2026-10-04 12:32:39.890 INFO  bridge: token written to %USERPROFILE%\.lrc-avg\bridge_token
+2026-10-04 12:32:39.893 INFO  bridge: ports 8765/8766 written to %USERPROFILE%\.lrc-avg\bridge_ports.json
+2026-10-04 12:32:39.893 INFO  bridge: listening (generation 1)
+2026-10-04 12:33:31.007 INFO  bridge: receive: engine connected
+2026-10-04 12:33:31.516 INFO  bridge: send: engine connected
+2026-10-04 12:33:31.518 WARN  bridge: refused hello 144023b8-dcd5-4add-9cf8-eff5fff483fc (missing or wrong token)
+2026-10-04 12:33:31.520 INFO  bridge: receive: closed
+2026-10-04 12:33:33.525 INFO  bridge: receive: engine connected
+2026-10-04 12:33:34.037 INFO  bridge: hello 67365e53-64ed-4e2a-a0ea-0553952ef5af
+2026-10-04 12:33:39.049 INFO  bridge: receive: closed
+2026-10-04 12:33:39.593 WARN  bridge: dropped res hello (send socket not connected)
+2026-10-04 12:33:41.059 INFO  bridge: receive: engine connected
+2026-10-04 12:33:41.561 INFO  bridge: send: engine connected
+2026-10-04 12:33:41.562 WARN  bridge: refused hello eb766d2c-125e-42e6-9924-ca93c8e520eb (missing or wrong token)
+2026-10-04 12:33:46.571 INFO  bridge: receive: closed
+2026-10-04 12:33:47.113 WARN  bridge: dropped res hello (send socket not connected)
+2026-10-04 12:33:48.577 INFO  bridge: receive: engine connected
+2026-10-04 12:33:49.091 INFO  bridge: send: engine connected
+2026-10-04 12:33:49.091 INFO  bridge: hello 1038ed82-e779-48a9-b0c0-8aaf14047841
+2026-10-04 12:33:54.098 INFO  bridge: receive: closed
+2026-10-04 12:33:54.642 WARN  bridge: dropped res hello (send socket not connected)
+2026-10-04 12:33:56.104 INFO  bridge: receive: engine connected
+2026-10-04 12:33:56.618 INFO  bridge: send: engine connected
+2026-10-04 12:33:56.619 WARN  bridge: refused hello cfcfbb44-880c-4e0e-9c74-4ebd5a03b195 (missing or wrong token)
+2026-10-04 12:34:01.035 INFO  bridge: receive: closed
+2026-10-04 12:34:02.171 WARN  bridge: dropped res hello (send socket not connected)
+
+Both starts say "generation 1": the reload ran in a fresh Lua state [inference: the _G counter started
+again], so the _G generation meant to stop the old bridge (Bridge.lua, an upstream claim) did not, and both served
+8765/8766: connections alternated between "refused hello" and "hello" [inference: the old one refused the new token]. Fix (plugin
+0.17.0, Bridge.lua replacedOnDisk): a bridge stops when the token file no longer holds its token.
+The old 0.16.0 code had no such check, so Claude Code restarted Lightroom (a normal close, then
+Lightroom.exe) at 12:35 before the check.
+
+== 2. The check: node logs\check-automaat-files-2026-10-04\check.mts .  (12:36, after the restart)
+
+YES  Lightroom 15.6 runs plugin 0.17.0 (0.17.0 needed)
+YES  found 20260907-_OZ80099: CF12AF60-0858-4181-9562-376D16B89126
+YES  found 20260906-_OZ80029: D0B90B6F-91F6-4838-B171-C9CAF77EE7BE
+YES  created collection 3935420 "AVG check 2026-10-04-19-36-04" in set "LrC-AVG check"
+YES  the same name in other case returned collection 3935420, created false
+YES  lr_list_collections lists it in set "LrC-AVG check"
+YES  added 2 photos
+YES  adding again changed nothing (2 unchanged)
+YES  removed 1 photo
+YES  lr_search_photos finds 1 photo in it, 20260907-_OZ80099.NEF
+YES  20260907-_OZ80099.png: png 1620x1080, fits 2040x1080 touching one side (written)
+YES  20260906-_OZ80029.png: png 1620x1080, fits 2040x1080 touching one side (written)
+YES  PNG export: 2 exported, 0 failed
+YES  the same export again was renamed: 20260907-_OZ80099-2.png
+YES  JPEG long edge 800: jpeg 800x533
+YES  original: 20260907-_OZ80099.nef 51510683 B, 20260907-_OZ80099.xmp 131380 B
+YES  the plugin's export folders were removed (0 left)
+YES  imported 1 of 1: %USERPROFILE%\Pictures\LrC-AVG check\AVG check import 1791142607433.jpg -> 553BCE0C-5592-4A0E-89F1-18BDE8F01C6C
+YES  importing again found it in the catalog (1)
+YES  the imported photo went into the check collection
+phase-6/automaat-files check: WORKED
+(started 2026-10-04T19:36:04.185Z, ended 2026-10-04T19:36:49.612Z; the lines as check.json records them)
+
+Plugin log of the run:
+
+2026-10-04 12:35:46.842 INFO  bridge: starting generation 1 (receive 8765, send 8766)
+2026-10-04 12:35:58.477 INFO  bridge: token written to %USERPROFILE%\.lrc-avg\bridge_token
+2026-10-04 12:35:58.502 INFO  bridge: ports 8765/8766 written to %USERPROFILE%\.lrc-avg\bridge_ports.json
+2026-10-04 12:35:58.502 INFO  bridge: listening (generation 1)
+2026-10-04 12:36:04.207 INFO  bridge: receive: engine connected
+2026-10-04 12:36:04.724 INFO  bridge: send: engine connected
+2026-10-04 12:36:04.725 INFO  bridge: hello 831a4e23-09bb-44b4-9c85-47ab9b03c9a7
+2026-10-04 12:36:04.757 INFO  bridge: search_photos 20007d61-5a7b-4871-b499-bd0afcdf6aa9
+2026-10-04 12:36:04.804 INFO  bridge: search_photos 9083b60d-87b1-4db5-a264-9d3abab2b33f
+2026-10-04 12:36:04.818 INFO  bridge: create_collection e71a626a-c448-40b2-aa58-33b9f0343d60
+2026-10-04 12:36:04.890 INFO  bridge: create_collection 3857942c-c176-4278-94bc-f19abe9891bf
+2026-10-04 12:36:04.903 INFO  bridge: list_collections 04842966-d173-4638-8c5e-3346372f684e
+2026-10-04 12:36:09.659 INFO  bridge: list_collections 38d3bdee-cae2-4be9-aff1-4b5e8d0c41d2
+2026-10-04 12:36:13.399 INFO  bridge: collection_photos 7959423b-e7a3-4ca3-96c0-10d07b027a26
+2026-10-04 12:36:13.455 INFO  bridge: collection_photos 278a28eb-133d-44e1-a4b9-5d3e145852c8
+2026-10-04 12:36:13.463 INFO  bridge: collection_photos dbd998d8-fcb2-47eb-8b8e-c40628ff622f
+2026-10-04 12:36:13.484 INFO  bridge: search_photos a586af24-679d-4e6c-a8c6-4f3c41d83176
+2026-10-04 12:36:13.492 INFO  bridge: export_photo eac61dcf-58df-496f-9287-7eb697d9a33d
+2026-10-04 12:36:24.822 INFO  bridge: export_photo b47fcd6b-d28a-43bd-a8fa-5e346565e887
+2026-10-04 12:36:33.102 INFO  bridge: export_photo 8c7bdaa3-1300-47da-9cd1-1d0117d4f0f0
+2026-10-04 12:36:44.515 INFO  bridge: export_photo 65949c5c-48b1-47bd-9033-924492e04bb7
+2026-10-04 12:36:47.168 INFO  bridge: export_photo 5ee74c0f-d6f7-4f91-b6c1-09f9cd67547d
+2026-10-04 12:36:47.477 INFO  bridge: import_photo d228467f-9a2f-4c31-b575-d67034ebca01
+2026-10-04 12:36:48.681 INFO  bridge: import_photo 41c39eed-753d-4ae8-a7de-9f5328a25d36
+2026-10-04 12:36:49.593 INFO  bridge: collection_photos 41cf79e1-a7ca-4d99-b5e3-18a688ce9c27
+2026-10-04 12:36:49.613 INFO  bridge: receive: closed
+
+The photos were found by file name; 20260907-_OZ80099.NEF and 20260906-_OZ80029.NEF are 3:2, so 2040x1080
+gives 1620x1080. The original of a NEF came with its XMP sidecar. check.json, with every tool answer:
+
+{
+  "started": "2026-10-04T19:36:04.185Z",
+  "engine_version": "0.17.0",
+  "steps": {
+    "1_find_20260907-_OZ80099": {
+      "at": "2026-10-04T19:36:04.803Z",
+      "data": {
+        "count": 2,
+        "offset": 0,
+        "returned": 2,
+        "has_more": false,
+        "photos": [
+          {
+            "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+            "filename": "20260907-_OZ80099.NEF",
+            "rating": 0,
+            "capture_time": "9/7/2026 10:13:52.770 AM",
+            "virtual_copy": false
+          },
+          {
+            "uuid": "69F834EC-46D4-4C71-80B0-9F707318FD06",
+            "filename": "20260907-_OZ80099.NEF",
+            "rating": 0,
+            "capture_time": "9/7/2026 10:13:52.770 AM",
+            "virtual_copy": false
+          }
+        ]
+      }
+    },
+    "1_find_20260906-_OZ80029": {
+      "at": "2026-10-04T19:36:04.816Z",
+      "data": {
+        "count": 1,
+        "offset": 0,
+        "returned": 1,
+        "has_more": false,
+        "photos": [
+          {
+            "uuid": "D0B90B6F-91F6-4838-B171-C9CAF77EE7BE",
+            "filename": "20260906-_OZ80029.NEF",
+            "rating": 0,
+            "capture_time": "9/6/2026 11:28:17.400 AM",
+            "virtual_copy": false
+          }
+        ]
+      }
+    },
+    "2_create": {
+      "at": "2026-10-04T19:36:04.889Z",
+      "data": {
+        "id": 3935420,
+        "name": "AVG check 2026-10-04-19-36-04",
+        "set": "LrC-AVG check",
+        "created": true,
+        "photo_count": 0
+      }
+    },
+    "2_create_again": {
+      "at": "2026-10-04T19:36:04.902Z",
+      "data": {
+        "id": 3935420,
+        "name": "AVG check 2026-10-04-19-36-04",
+        "set": "LrC-AVG check",
+        "created": false,
+        "photo_count": 0
+      }
+    },
+    "2_listed": {
+      "at": "2026-10-04T19:36:13.396Z",
+      "data": {
+        "id": 3935420,
+        "name": "AVG check 2026-10-04-19-36-04",
+        "set": "LrC-AVG check",
+        "smart": false,
+        "photo_count": 0
+      }
+    },
+    "3_add": {
+      "at": "2026-10-04T19:36:13.454Z",
+      "data": {
+        "collection": {
+          "id": 3935420,
+          "name": "AVG check 2026-10-04-19-36-04"
+        },
+        "added": [
+          "CF12AF60-0858-4181-9562-376D16B89126",
+          "D0B90B6F-91F6-4838-B171-C9CAF77EE7BE"
+        ],
+        "unchanged": [],
+        "not_found": []
+      }
+    },
+    "3_add_again": {
+      "at": "2026-10-04T19:36:13.461Z",
+      "data": {
+        "collection": {
+          "id": 3935420,
+          "name": "AVG check 2026-10-04-19-36-04"
+        },
+        "added": [],
+        "unchanged": [
+          "CF12AF60-0858-4181-9562-376D16B89126",
+          "D0B90B6F-91F6-4838-B171-C9CAF77EE7BE"
+        ],
+        "not_found": []
+      }
+    },
+    "3_remove": {
+      "at": "2026-10-04T19:36:13.483Z",
+      "data": {
+        "collection": {
+          "id": 3935420,
+          "name": "AVG check 2026-10-04-19-36-04"
+        },
+        "removed": [
+          "D0B90B6F-91F6-4838-B171-C9CAF77EE7BE"
+        ],
+        "unchanged": [],
+        "not_found": []
+      }
+    },
+    "3_search": {
+      "at": "2026-10-04T19:36:13.490Z",
+      "data": {
+        "count": 1,
+        "offset": 0,
+        "returned": 1,
+        "has_more": false,
+        "photos": [
+          {
+            "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+            "filename": "20260907-_OZ80099.NEF",
+            "rating": 0,
+            "capture_time": "9/7/2026 10:13:52.770 AM",
+            "virtual_copy": false
+          }
+        ]
+      }
+    },
+    "4_png": {
+      "at": "2026-10-04T19:36:33.077Z",
+      "data": {
+        "folder": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\check-files\\Ella Wedding Exports",
+        "exported": [
+          {
+            "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+            "filename": "20260907-_OZ80099.NEF",
+            "files": [
+              {
+                "file": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\check-files\\Ella Wedding Exports\\20260907-_OZ80099.png",
+                "status": "written"
+              }
+            ]
+          },
+          {
+            "uuid": "D0B90B6F-91F6-4838-B171-C9CAF77EE7BE",
+            "filename": "20260906-_OZ80029.NEF",
+            "files": [
+              {
+                "file": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\check-files\\Ella Wedding Exports\\20260906-_OZ80029.png",
+                "status": "written"
+              }
+            ]
+          }
+        ],
+        "failed": []
+      }
+    },
+    "4_png_again": {
+      "at": "2026-10-04T19:36:44.493Z",
+      "data": {
+        "folder": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\check-files\\Ella Wedding Exports",
+        "exported": [
+          {
+            "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+            "filename": "20260907-_OZ80099.NEF",
+            "files": [
+              {
+                "file": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\check-files\\Ella Wedding Exports\\20260907-_OZ80099-2.png",
+                "status": "renamed"
+              }
+            ]
+          }
+        ],
+        "failed": []
+      }
+    },
+    "4_jpeg": {
+      "at": "2026-10-04T19:36:47.149Z",
+      "data": {
+        "folder": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\check-files\\Ella Wedding Exports",
+        "exported": [
+          {
+            "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+            "filename": "20260907-_OZ80099.NEF",
+            "files": [
+              {
+                "file": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\check-files\\Ella Wedding Exports\\20260907-_OZ80099.jpg",
+                "status": "written"
+              }
+            ]
+          }
+        ],
+        "failed": []
+      }
+    },
+    "4_original": {
+      "at": "2026-10-04T19:36:47.430Z",
+      "data": {
+        "folder": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\check-files\\Ella Wedding Exports",
+        "exported": [
+          {
+            "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+            "filename": "20260907-_OZ80099.NEF",
+            "files": [
+              {
+                "file": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\check-files\\Ella Wedding Exports\\20260907-_OZ80099.nef",
+                "status": "written"
+              },
+              {
+                "file": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\check-files\\Ella Wedding Exports\\20260907-_OZ80099.xmp",
+                "status": "written"
+              }
+            ]
+          }
+        ],
+        "failed": []
+      }
+    },
+    "5_import": {
+      "at": "2026-10-04T19:36:48.677Z",
+      "data": {
+        "source": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\check-files\\import-src",
+        "copied_to": "%USERPROFILE%\\Pictures\\LrC-AVG check",
+        "found": 1,
+        "imported": [
+          {
+            "uuid": "553BCE0C-5592-4A0E-89F1-18BDE8F01C6C",
+            "filename": "AVG check import 1791142607433.jpg",
+            "path": "%USERPROFILE%\\Pictures\\LrC-AVG check\\AVG check import 1791142607433.jpg"
+          }
+        ],
+        "already_in_catalog": [],
+        "failed": []
+      }
+    },
+    "5_import_again": {
+      "at": "2026-10-04T19:36:49.591Z",
+      "data": {
+        "source": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\check-files\\import-src",
+        "copied_to": "%USERPROFILE%\\Pictures\\LrC-AVG check",
+        "found": 1,
+        "imported": [],
+        "already_in_catalog": [
+          {
+            "uuid": "553BCE0C-5592-4A0E-89F1-18BDE8F01C6C",
+            "filename": "AVG check import 1791142607433.jpg",
+            "path": "%USERPROFILE%\\Pictures\\LrC-AVG check\\AVG check import 1791142607433.jpg"
+          }
+        ],
+        "failed": []
+      }
+    },
+    "5_add_imported": {
+      "at": "2026-10-04T19:36:49.611Z",
+      "data": {
+        "collection": {
+          "id": 3935420,
+          "name": "AVG check 2026-10-04-19-36-04"
+        },
+        "added": [
+          "553BCE0C-5592-4A0E-89F1-18BDE8F01C6C"
+        ],
+        "unchanged": [],
+        "not_found": []
+      }
+    }
+  },
+  "checks": [
+    {
+      "ok": true,
+      "text": "Lightroom 15.6 runs plugin 0.17.0 (0.17.0 needed)"
+    },
+    {
+      "ok": true,
+      "text": "found 20260907-_OZ80099: CF12AF60-0858-4181-9562-376D16B89126"
+    },
+    {
+      "ok": true,
+      "text": "found 20260906-_OZ80029: D0B90B6F-91F6-4838-B171-C9CAF77EE7BE"
+    },
+    {
+      "ok": true,
+      "text": "created collection 3935420 \"AVG check 2026-10-04-19-36-04\" in set \"LrC-AVG check\""
+    },
+    {
+      "ok": true,
+      "text": "the same name in other case returned collection 3935420, created false"
+    },
+    {
+      "ok": true,
+      "text": "lr_list_collections lists it in set \"LrC-AVG check\""
+    },
+    {
+      "ok": true,
+      "text": "added 2 photos"
+    },
+    {
+      "ok": true,
+      "text": "adding again changed nothing (2 unchanged)"
+    },
+    {
+      "ok": true,
+      "text": "removed 1 photo"
+    },
+    {
+      "ok": true,
+      "text": "lr_search_photos finds 1 photo in it, 20260907-_OZ80099.NEF"
+    },
+    {
+      "ok": true,
+      "text": "20260907-_OZ80099.png: png 1620x1080, fits 2040x1080 touching one side (written)"
+    },
+    {
+      "ok": true,
+      "text": "20260906-_OZ80029.png: png 1620x1080, fits 2040x1080 touching one side (written)"
+    },
+    {
+      "ok": true,
+      "text": "PNG export: 2 exported, 0 failed"
+    },
+    {
+      "ok": true,
+      "text": "the same export again was renamed: 20260907-_OZ80099-2.png"
+    },
+    {
+      "ok": true,
+      "text": "JPEG long edge 800: jpeg 800x533"
+    },
+    {
+      "ok": true,
+      "text": "original: 20260907-_OZ80099.nef 51510683 B, 20260907-_OZ80099.xmp 131380 B"
+    },
+    {
+      "ok": true,
+      "text": "the plugin's export folders were removed (0 left)"
+    },
+    {
+      "ok": true,
+      "text": "imported 1 of 1: %USERPROFILE%\\Pictures\\LrC-AVG check\\AVG check import 1791142607433.jpg -> 553BCE0C-5592-4A0E-89F1-18BDE8F01C6C"
+    },
+    {
+      "ok": true,
+      "text": "importing again found it in the catalog (1)"
+    },
+    {
+      "ok": true,
+      "text": "the imported photo went into the check collection"
+    }
+  ],
+  "failures": [],
+  "hello": {
+    "plugin_version": "0.17.0",
+    "lrc_version": "15.6"
+  },
+  "bridge": {
+    "connects": 1,
+    "connect_failures": 0,
+    "last_connect_error": null,
+    "drops": 0,
+    "last_drop_reason": null,
+    "malformed_lines": 0,
+    "unknown_response_ids": 0,
+    "ports": {
+      "command": 8765,
+      "event": 8766,
+      "from": "ports file"
+    }
+  },
+  "ended": "2026-10-04T19:36:49.612Z"
+}
+
+== 3. The reload fix in Lightroom (12:37)
+
+Claude Code clicked Reload Plug-in again (plugin 0.17.0 running), then Done. The plugin log:
+
+2026-10-04 12:37:23.812 INFO  bridge: starting generation 1 (receive 8765, send 8766)
+2026-10-04 12:37:27.447 INFO  bridge: token written to %USERPROFILE%\.lrc-avg\bridge_token
+2026-10-04 12:37:27.452 INFO  bridge: ports 8765/8766 written to %USERPROFILE%\.lrc-avg\bridge_ports.json
+2026-10-04 12:37:27.453 INFO  bridge: listening (generation 1)
+2026-10-04 12:37:29.469 INFO  bridge: generation 1 replaced by a newer start (token file)
+2026-10-04 12:37:29.469 INFO  bridge: generation 1 replaced; loop exiting
+2026-10-04 12:37:29.470 INFO  bridge: send: closed
+2026-10-04 12:37:29.470 INFO  bridge: receive: closed
+2026-10-04 12:37:30.228 INFO  bridge: sockets closed (task ended)
+
+Then node logs\check-automaat-files-2026-10-04\reload-probe.mts . : five fresh connections, each a
+hello and a read-only get_selection. It ran twice, at 12:38 and again when this file was assembled
+(12:39); both printed the same five lines, shown once:
+
+1: hello plugin 0.17.0, started 2026-10-04T19:37:23Z; get_selection count 1; drops none
+2: hello plugin 0.17.0, started 2026-10-04T19:37:23Z; get_selection count 1; drops none
+3: hello plugin 0.17.0, started 2026-10-04T19:37:23Z; get_selection count 1; drops none
+4: hello plugin 0.17.0, started 2026-10-04T19:37:23Z; get_selection count 1; drops none
+5: hello plugin 0.17.0, started 2026-10-04T19:37:23Z; get_selection count 1; drops none
+
+All five reached the bridge started at the reload (19:37:23Z); none was refused.
+
+Again at 13:03, after the CodeRabbit fixes (commit 4a73a52: Bridge.lua no longer starts without a
+token). Claude Code clicked Reload Plug-in; the plugin log:
+
+2026-10-04 13:03:50.558 INFO  bridge: starting generation 1 (receive 8765, send 8766)
+2026-10-04 13:03:54.620 INFO  bridge: token written to %USERPROFILE%\.lrc-avg\bridge_token
+2026-10-04 13:03:54.624 INFO  bridge: ports 8765/8766 written to %USERPROFILE%\.lrc-avg\bridge_ports.json
+2026-10-04 13:03:54.624 INFO  bridge: listening (generation 1)
+2026-10-04 13:03:56.639 INFO  bridge: generation 1 replaced by a newer start (token file)
+2026-10-04 13:03:56.639 INFO  bridge: generation 1 replaced; loop exiting
+2026-10-04 13:03:56.640 INFO  bridge: send: closed
+2026-10-04 13:03:56.640 INFO  bridge: receive: closed
+2026-10-04 13:04:04.634 INFO  bridge: sockets closed (task ended)
+
+reload-probe.mts at 13:04:
+
+1: hello plugin 0.17.0, started 2026-10-04T20:03:50Z; get_selection count 1; drops none
+2: hello plugin 0.17.0, started 2026-10-04T20:03:50Z; get_selection count 1; drops none
+3: hello plugin 0.17.0, started 2026-10-04T20:03:50Z; get_selection count 1; drops none
+4: hello plugin 0.17.0, started 2026-10-04T20:03:50Z; get_selection count 1; drops none
+5: hello plugin 0.17.0, started 2026-10-04T20:03:50Z; get_selection count 1; drops none
+
+
+== 4. Left in Jim's catalog by the check
+
+- Collection set "LrC-AVG check" with the collection named in check.json step 2_create; it holds
+  20260907-_OZ80099.NEF and the imported JPEG. Delete the set in Lightroom when no longer wanted.
+- The imported JPEG (check.json step 5_import), a copy of an export of 20260907-_OZ80099.NEF, in
+  %USERPROFILE%\Pictures\LrC-AVG check\. Remove it with Library > Remove Photo, then delete the folder.
+- Exported files in %TEMP%\LrC-AVG\check-files\ (renders of Jim's photo; not committed).
+No Develop setting was written.
+
+== 5. Appendix: logs\check-automaat-files-2026-10-04\check.mts
+
+// Lightroom check of branch phase-6/automaat-files (engine 0.17.0, plugin 0.17.0), GitHub issue #55:
+// lr_create_collection, lr_add_to_collection, lr_export_photos and lr_import_photos through the
+// engine's own tools (engine\dist), as Claude Desktop's engine runs them. No editing session; no
+// Develop setting is written. Claude Code checks every result itself (files read back with sharp);
+// no question for Jim. Run by Claude Code with Jim's leave [stated: Jim, 2026-10-04, "You have
+// permission to interact with Lightroom Classic on the desktop to do tests if needed."].
+//   1. hello: plugin 0.17.0 or later; two photos found by file name (lr_search_photos);
+//   2. lr_create_collection "AVG check <stamp>" in set "LrC-AVG check"; again in other case: same id;
+//   3. lr_add_to_collection both; again (unchanged); remove one; lr_search_photos by collection_id;
+//   4. lr_export_photos: PNG 2040x1080 (both), the same again (renamed), JPEG long edge 800 q80,
+//      original; each file read back (format, size);
+//   5. lr_import_photos: one exported JPEG, copied into %USERPROFILE%\Pictures\LrC-AVG check\;
+//      again (already in the catalog); the imported photo added to the check collection.
+// Leaves in the catalog, for Jim to delete: the collection set "LrC-AVG check" (its collection holds
+// one of the two photos and the imported JPEG) and the imported JPEG (Library > Remove Photo).
+// Results: <out>\check.json. Usage: node logs\check-automaat-files-2026-10-04\check.mts [repo root]
+import { existsSync, mkdirSync, rmSync, statSync, writeFileSync, copyFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+const repo = path.resolve(process.argv[2] ?? process.cwd());
+const dist = (p: string) => import(pathToFileURL(path.join(repo, "engine", "dist", p)).href);
+const { BridgeClient } = await dist("bridge/index.js");
+const { Tools, acquireInstanceLock, devOverrides, ENGINE_VERSION } = await dist("mcp/index.js");
+const { PreviewService } = await dist("preview/index.js");
+const { IntentLibrary } = await dist("intents/index.js");
+const { loadDefaultParamMap } = await dist("params/index.js");
+const { ToolLog } = await dist("log/index.js");
+const sharp = (await import(pathToFileURL(path.join(repo, "node_modules", "sharp", "dist", "index.mjs")).href)).default;
+
+const PHOTOS = ["20260907-_OZ80099", "20260906-_OZ80029"];
+const outDir = process.env["CHECK_OUT"] ?? path.dirname(fileURLToPath(import.meta.url));
+const work = path.join(os.tmpdir(), "LrC-AVG", "check-files");
+const importHome = path.join(os.homedir(), "Pictures", "LrC-AVG check");
+mkdirSync(outDir, { recursive: true });
+rmSync(work, { recursive: true, force: true });
+mkdirSync(work, { recursive: true });
+
+const at = () => new Date().toISOString();
+const say = (m: string) => console.log(`[${new Date().toLocaleTimeString()}] ${m}`);
+const result: Record<string, any> = { started: at(), engine_version: ENGINE_VERSION, steps: {}, checks: [], failures: [] };
+const save = () => writeFileSync(path.join(outDir, "check.json"), JSON.stringify(result, null, 2));
+const step = (name: string, data: unknown) => {
+  result.steps[name] = { at: at(), data };
+  save();
+};
+function check(ok: boolean, text: string, detail?: unknown) {
+  result.checks.push({ ok, text, ...(detail !== undefined ? { detail } : {}) });
+  if (!ok) result.failures.push(text);
+  say(`${ok ? "YES" : "NO "}  ${text}`);
+  save();
+}
+const errBody = (err: any) => err?.body?.() ?? String(err?.message ?? err);
+
+const dev = devOverrides();
+const lock = await acquireInstanceLock(dev.lockPort);
+if (!lock.ok) {
+  say(`LOCK BUSY: another engine (pid ${lock.pid}) holds port ${lock.port}. Quit Claude Desktop, wait 60 s, run again.`);
+  process.exit(2);
+}
+const client = new BridgeClient({ engineVersion: `${ENGINE_VERSION}-files-check`, log: (m: string) => console.error(`  (${m})`), ...dev.bridge });
+client.start();
+const map = loadDefaultParamMap();
+
+try {
+  const hello = await client.waitConnected(30_000);
+  result.hello = { plugin_version: hello.plugin_version, lrc_version: hello.lrc_version };
+  check(hello.plugin_version === "0.17.0", `Lightroom ${hello.lrc_version} runs plugin ${hello.plugin_version} (0.17.0 needed)`);
+  if (hello.plugin_version !== "0.17.0") throw new Error("plugin version");
+  const tools = new Tools({
+    client,
+    map,
+    previews: new PreviewService(client),
+    intents: new IntentLibrary({ map }),
+    sessionLogDir: path.join(outDir, "sessions"),
+    engineVersion: `${ENGINE_VERSION}-files-check`,
+    ensureBridge: async () => void (await client.waitConnected(15_000)),
+    log: new ToolLog(outDir),
+  });
+
+  // 1. The two photos.
+  const uuids: string[] = [];
+  for (const name of PHOTOS) {
+    const found = (await tools.searchPhotos({ filename: name, limit: 5 })).json;
+    const photo = found.photos.find((p: any) => !p.virtual_copy);
+    step(`1_find_${name}`, found);
+    check(photo !== undefined, `found ${name}: ${photo?.uuid ?? "none"}`);
+    if (photo) uuids.push(photo.uuid);
+  }
+  if (uuids.length !== 2) throw new Error("photos");
+
+  // 2. The collection.
+  const name = `AVG check ${at().slice(0, 19).replace(/[:T]/g, "-")}`;
+  const made = (await tools.createCollection({ name, set: "LrC-AVG check" })).json;
+  step("2_create", made);
+  check(made.created === true && made.set === "LrC-AVG check" && made.name === name, `created collection ${made.id} "${made.name}" in set "${made.set}"`);
+  const again = (await tools.createCollection({ name: name.toUpperCase(), set: "lrc-avg CHECK" })).json;
+  step("2_create_again", again);
+  check(again.created === false && again.id === made.id, `the same name in other case returned collection ${again.id}, created ${again.created}`);
+  const listed = (await tools.listCollections({ limit: 500 })).json;
+  const all = [];
+  for (let offset = 0; ; offset += 500) {
+    const page = offset === 0 ? listed : (await tools.listCollections({ limit: 500, offset })).json;
+    all.push(...page.collections);
+    if (!page.has_more) break;
+  }
+  const row = all.find((c: any) => c.id === made.id);
+  step("2_listed", row ?? null);
+  check(row?.set === "LrC-AVG check", `lr_list_collections lists it in set "${row?.set}"`);
+
+  // 3. Membership.
+  const add = (await tools.addToCollection({ collection_id: made.id, uuids })).json;
+  step("3_add", add);
+  check(add.added.length === 2 && add.unchanged.length === 0, `added ${add.added.length} photos`);
+  const add2 = (await tools.addToCollection({ collection_id: made.id, uuids })).json;
+  step("3_add_again", add2);
+  check(add2.added.length === 0 && add2.unchanged.length === 2, `adding again changed nothing (${add2.unchanged.length} unchanged)`);
+  const rem = (await tools.addToCollection({ collection_id: made.id, uuids: [uuids[1]], remove: true })).json;
+  step("3_remove", rem);
+  check(rem.removed?.length === 1, `removed ${rem.removed?.length} photo`);
+  const inside = (await tools.searchPhotos({ collection_id: made.id })).json;
+  step("3_search", inside);
+  check(inside.count === 1 && inside.photos[0]?.uuid === uuids[0], `lr_search_photos finds ${inside.count} photo in it, ${inside.photos[0]?.filename}`);
+
+  // 4. Exports.
+  const out = path.join(work, "Ella Wedding Exports");
+  const png = (await tools.exportPhotos({ uuids, folder: out, format: "png", width: 2040, height: 1080 })).json;
+  step("4_png", png);
+  for (const e of png.exported) {
+    const f = e.files[0];
+    const meta = await sharp(f.file).metadata();
+    check(meta.format === "png" && meta.width! <= 2040 && meta.height! <= 1080 && (meta.width === 2040 || meta.height === 1080),
+      `${path.basename(f.file)}: ${meta.format} ${meta.width}x${meta.height}, fits 2040x1080 touching one side (${f.status})`);
+  }
+  check(png.exported.length === 2 && png.failed.length === 0, `PNG export: ${png.exported.length} exported, ${png.failed.length} failed`);
+  const png2 = (await tools.exportPhotos({ uuids: [uuids[0]], folder: out, format: "png", width: 2040, height: 1080 })).json;
+  step("4_png_again", png2);
+  const f2 = png2.exported[0]?.files[0];
+  check(f2?.status === "renamed" && /-2\.png$/.test(f2.file), `the same export again was renamed: ${path.basename(f2?.file ?? "")}`);
+  const jpg = (await tools.exportPhotos({ uuids: [uuids[0]], folder: out, format: "jpeg", long_edge: 800, quality: 80 })).json;
+  step("4_jpeg", jpg);
+  const jf = jpg.exported[0]?.files[0]?.file;
+  const jm = jf ? await sharp(jf).metadata() : null;
+  check(jm?.format === "jpeg" && Math.max(jm.width!, jm.height!) === 800, `JPEG long edge 800: ${jm?.format} ${jm?.width}x${jm?.height}`);
+  const orig = (await tools.exportPhotos({ uuids: [uuids[0]], folder: out, format: "original" })).json;
+  step("4_original", orig);
+  const of = orig.exported[0]?.files ?? [];
+  check(of.some((f: any) => /\.nef$/i.test(f.file) && statSync(f.file).size > 1_000_000), `original: ${of.map((f: any) => `${path.basename(f.file)} ${statSync(f.file).size} B`).join(", ")}`);
+  const leftovers = existsSync(path.join(os.tmpdir(), "LrC-AVG", "exports")) ? (await import("node:fs")).readdirSync(path.join(os.tmpdir(), "LrC-AVG", "exports")) : [];
+  check(leftovers.length === 0, `the plugin's export folders were removed (${leftovers.length} left)`);
+
+  // 5. Import.
+  const src = path.join(work, "import-src");
+  mkdirSync(src, { recursive: true });
+  copyFileSync(jf!, path.join(src, `AVG check import ${Date.now()}.jpg`));
+  const imp = (await tools.importPhotos({ source: src, copy_to: importHome })).json;
+  step("5_import", imp);
+  check(imp.found === 1 && imp.imported.length === 1 && imp.failed.length === 0, `imported ${imp.imported.length} of ${imp.found}: ${imp.imported[0]?.path} -> ${imp.imported[0]?.uuid}`);
+  const imp2 = (await tools.importPhotos({ source: src, copy_to: importHome })).json;
+  step("5_import_again", imp2);
+  check(imp2.imported.length === 0 && imp2.already_in_catalog[0]?.uuid === imp.imported[0]?.uuid, `importing again found it in the catalog (${imp2.already_in_catalog.length})`);
+  if (imp.imported[0]) {
+    const addImp = (await tools.addToCollection({ collection_id: made.id, uuids: [imp.imported[0].uuid] })).json;
+    step("5_add_imported", addImp);
+    check(addImp.added.length === 1, "the imported photo went into the check collection");
+  }
+} catch (err: any) {
+  check(false, "the check ran to its end", errBody(err));
+}
+result.bridge = client.stats;
+result.ended = at();
+save();
+client.stop();
+await lock.lock.release();
+const failures: string[] = result.failures;
+say(failures.length === 0 ? "phase-6/automaat-files check: WORKED" : `phase-6/automaat-files check: FAILED (${failures.length})`);
+for (const f of failures) say(`  - ${f}`);
+process.exit(failures.length === 0 ? 0 : 1);
+
+== logs\check-automaat-files-2026-10-04\reload-probe.mts
+
+// After Reload Plug-in (plugin 0.17.0 with the token-file stop in Bridge.lua): five fresh connections,
+// each a hello and a read-only get_selection. Before the fix every other hello was refused (two
+// bridges on the same ports). Usage: node logs\check-automaat-files-2026-10-04\reload-probe.mts [repo]
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+
+const repo = path.resolve(process.argv[2] ?? process.cwd());
+const dist = (p: string) => import(pathToFileURL(path.join(repo, "engine", "dist", p)).href);
+const { BridgeClient } = await dist("bridge/index.js");
+const { acquireInstanceLock, devOverrides } = await dist("mcp/index.js");
+const dev = devOverrides();
+const lock = await acquireInstanceLock(dev.lockPort);
+if (!lock.ok) throw new Error("engine lock busy");
+const lines: string[] = [];
+for (let i = 1; i <= 5; i++) {
+  const drops: string[] = [];
+  const client = new BridgeClient({ engineVersion: "reload-probe", log: (m: string) => { if (m.includes("dropped")) drops.push(m); }, ...dev.bridge });
+  client.start();
+  try {
+    const hello = await client.waitConnected(15_000);
+    const sel = await client.request("get_selection", { max: 1 });
+    lines.push(`${i}: hello plugin ${hello.plugin_version}, started ${hello.process_started_at}; get_selection count ${sel.count}; drops ${drops.length ? drops.join(" | ") : "none"}`);
+  } catch (err: any) {
+    lines.push(`${i}: FAILED ${err?.message ?? err}; drops ${drops.join(" | ")}`);
+  }
+  client.stop();
+  await new Promise((r) => setTimeout(r, 1500));
+}
+await lock.lock.release();
+console.log(lines.join("\n"));

@@ -18,6 +18,7 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { CallToolRequestSchema, ListToolsRequestSchema, type CallToolResult, type Tool } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { CATALOG_DEFS } from "./defs-catalog.js";
+import { FILE_DEFS } from "./defs-files.js";
 import { CONTEXT_DEFS } from "./defs-context.js";
 import { INTENT_DEFS } from "./defs-intents.js";
 import { MASK_DEFS } from "./defs-masks.js";
@@ -30,7 +31,7 @@ import type { ToolOutput } from "./tools-shared.js";
 import { ENGINE_VERSION } from "./version.js";
 
 /** The tool groups, in the order the server lists them. */
-const DEFS: ToolDef[] = [...CONTEXT_DEFS, ...SESSION_DEFS, ...MASK_DEFS, ...INTENT_DEFS, ...PROPAGATION_DEFS, ...CATALOG_DEFS];
+const DEFS: ToolDef[] = [...CONTEXT_DEFS, ...SESSION_DEFS, ...MASK_DEFS, ...INTENT_DEFS, ...PROPAGATION_DEFS, ...CATALOG_DEFS, ...FILE_DEFS];
 
 /** The advertised JSON Schema of a tool's arguments, from the same zod schema that validates them. */
 function inputSchema(schema: z.ZodObject): Tool["inputSchema"] {

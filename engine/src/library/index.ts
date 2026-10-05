@@ -6,3 +6,18 @@ export type { SearchFilters } from "./search.js";
 export { KEYWORD_SEPARATOR, keywordKey, keywordLevels, keywordsNotTaken, normalizeKeyword } from "./keywords.js";
 export { GPS_TOLERANCE, MAX_KEYWORDS, MAX_KEYWORD_LENGTH, MAX_KEYWORD_PATH_LENGTH, MAX_PHOTOS, gpsNotTaken, writeEach } from "./write.js";
 export type { Failed, Gps, PhotoWrite, WriteResult } from "./write.js";
+export {
+  CALL_BUDGET_MS,
+  EXPORT_PHOTO_TIMEOUT_MS,
+  IMPORT_PHOTO_TIMEOUT_MS,
+  MAX_COLLECTION_PHOTOS,
+  MAX_EXPORT_PHOTOS,
+  PHOTO_EXTENSIONS,
+  copyForImport,
+  defaultExportDir,
+  expandHome,
+  importFiles,
+  isAbsoluteFolder,
+  placeExport,
+} from "./files.js";
+export type { OnExisting, Placed } from "./files.js";

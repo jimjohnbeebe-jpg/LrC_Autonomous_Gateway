@@ -47,7 +47,7 @@ local Sockets = require 'Sockets'
 local Bridge = {}
 
 Bridge.PROTOCOL = 1
-Bridge.PLUGIN_VERSION = "0.16.0"
+Bridge.PLUGIN_VERSION = "0.17.0"
 Bridge.SDK_DECLARED = 13.0 -- Info.lua LrSdkVersion; the SDK version LrC 15.5.1 ships is [unverified]
 Bridge.STATUS_FILE = "bridge_status.json"
 
@@ -61,16 +61,18 @@ local SETTLE_SECONDS = 0.6         -- lets a replaced instance close its sockets
 -- Only a generation number lives on _G. A Reload Plug-in runs the init script again in the same Lua
 -- state [upstream claim: vendor\automaat\plugin\LightroomMCP.lrplugin\PluginInit.lua:8-15]; the old
 -- monitor loop sees that it has been replaced and stops (rule 03: state that must survive
--- re-execution of a module body lives on _G).
+-- re-execution of a module body lives on _G). On LrC 15.6 the reload started a fresh _G instead, so
+-- the monitor also stops when the token file shows a newer start (replacedOnDisk below).
 _G.LrCAVG_BridgeGeneration = _G.LrCAVG_BridgeGeneration or 0
 
 local function isoNow()
     return os.date("!%Y-%m-%dT%H:%M:%SZ")
 end
 
--- When this Lua state first loaded the bridge (plugin 0.16.0, D16): it survives a Reload Plug-in (_G), and
--- a Lightroom restart starts a new one [inference: _G is per Lua state], so the engine reads another value
--- in hello as a restart (engine\src\session\restart.ts). One second's resolution: a restart takes longer.
+-- When this Lua state first loaded the bridge (plugin 0.16.0, D16): a Lightroom restart starts a new one
+-- [inference: _G is per Lua state], so the engine reads another value in hello as a restart
+-- (engine\src\session\restart.ts). On LrC 15.6 a Reload Plug-in started a fresh _G too (see the
+-- generation note above), so a reload also reads as a restart. One second's resolution.
 _G.LrCAVG_ProcessStartedAt = _G.LrCAVG_ProcessStartedAt or isoNow()
 
 function Bridge.helloPayload(receivePort, sendPort)
@@ -205,9 +207,29 @@ local function tendSockets(B)
     end
 end
 
+-- True once a newer bridge has started: the token file no longer holds this bridge's token (every
+-- start writes its own, Endpoint.newToken). The _G generation alone did not stop an old bridge on
+-- LrC 15.6: after Reload Plug-in both bridges said "starting generation 1" and both answered on
+-- 8765/8766, one refusing the other's token [handle: %TEMP%\LrC-AVG\bridge.log 2026-10-04 12:12:04
+-- and 12:32:36 "starting generation 1", then "refused hello ... (missing or wrong token)" alternating
+-- with "hello" from 12:33:31; copied into docs\reports\phase6\automaat-files-check\check.txt]. An
+-- unreadable or empty file is not taken as a replacement.
+local function replacedOnDisk(S)
+    if not S.token then return false end
+    local fh = io.open(S.tokenFile, "r")
+    if not fh then return false end
+    local text = fh:read("*a")
+    fh:close()
+    return type(text) == "string" and text ~= "" and text ~= S.token
+end
+
 local function monitor(B)
     local S = B.S
     while B.current() do
+        if LrDate.currentTime() - B.lastStatus >= STATUS_EVERY_SECONDS and replacedOnDisk(S) then
+            Log.info("bridge: generation " .. B.generation .. " replaced by a newer start (token file)")
+            return
+        end
         if LrDate.currentTime() >= B.retryAt then tendSockets(B) end
         -- Windows may not report a vanished engine at all [upstream claim: PluginInfoProvider.lua:558-560].
         -- The engine pings every 2 s, so a long silence means it is gone: start both sockets afresh.
@@ -274,7 +296,13 @@ function Bridge.start()
         if not B.current() then return end
         local okToken, tokenOrErr = LrTasks.pcall(Endpoint.newToken)
         B.S.token = okToken and tokenOrErr or nil
-        if not okToken then Log.error("bridge: token failed: " .. tostring(tokenOrErr) .. "; every command will be refused") end
+        -- No token: every command would be refused, and a bridge without one could never see a newer
+        -- start (replacedOnDisk), so it would keep the ports through a reload (CodeRabbit, PR #73).
+        -- It does not start; Endpoint.newToken has logged why when it returned nil.
+        if not B.S.token then
+            Log.error("bridge: no token (" .. tostring(okToken and "not written" or tokenOrErr) .. "); the bridge is not started")
+            return
+        end
         local okPorts, portsOrErr = LrTasks.pcall(Endpoint.writePorts, receivePort, sendPort, Bridge.PLUGIN_VERSION, B.S.token)
         B.S.portsWritten = okPorts and portsOrErr ~= nil
         if not okPorts then Log.error("bridge: ports file failed: " .. tostring(portsOrErr)) end

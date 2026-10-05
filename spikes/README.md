@@ -1,6 +1,6 @@
-# Spikes (AVG-S1 … AVG-S6 for Phase 0, AVG-S7 for Phase 4, AVG-S8 for Phase 5)
+# Spikes (AVG-S1 … AVG-S6 for Phase 0, AVG-S7 for Phase 4, AVG-S8 for Phase 5, AVG-S9 for Phase 7)
 
-Throwaway harnesses that answer the feasibility questions in PHASES.md Phase 0, S7 for Phase 4 (`PHASE4_PLAN.md` row 4) and S8 for Phase 5 (`PHASE5_PLAN.md` row 1). Claude Code wrote the harnesses and the report templates. **Jim runs the Lightroom parts and then tells Claude Code "S<n> done". The harnesses save their results themselves, and Claude Code collects them. Jim copies, pastes and screenshots nothing.**
+Throwaway harnesses that answer the feasibility questions in PHASES.md Phase 0, S7 for Phase 4 (`PHASE4_PLAN.md` row 4), S8 for Phase 5 (`PHASE5_PLAN.md` row 1) and S9 for Phase 7 (`PHASE7_PLAN.md` row 1). Claude Code wrote the harnesses and the report templates. **Jim runs the Lightroom parts and then tells Claude Code "S<n> done". The harnesses save their results themselves, and Claude Code collects them. Jim copies, pastes and screenshots nothing.**
 
 | Spike | Question | Lightroom plugin | Node script(s) | README |
 |---|---|---|---|---|
@@ -12,6 +12,7 @@ Throwaway harnesses that answer the feasibility questions in PHASES.md Phase 0, 
 | S6 | Does `createVirtualCopies` work from Loupe and Grid, and are the copies addressable? | `plugin\spikes\S6.lrplugin` | — | [S6](S6/README.md) |
 | S7 (Phase 4) | Plugin preset vs preset file in the Presets panel (before/after restart)? An undocumented removal call? Do width/height follow a crop? Write + export an unselected photo? | `plugin\spikes\S7.lrplugin` | `spikes\S7\summarize.ts` | [S7](S7/README.md) |
 | S8 (Phase 5) | Do buttons in a floating HUD fire (with `enabled` and title bindings)? Does the HUD take the keyboard when it opens? Close it from code? Selection observer? Do scripts share module state? Does a Plug-in Manager section save to `LrPrefs` across a restart? | `plugin\spikes\S8.lrplugin` | `spikes\S8\collect.ts` | [S8](S8/README.md) |
+| S9 (Phase 7) | Does a Tauri 2.12 HUD window meet the spec D2 gates next to Lightroom: start, show and update times, memory, CPU, no focus stealing, topmost only with Lightroom in front, following its window, surviving the engine, exiting with Lightroom? | — (no plugin; the HUD is `spikes\S9\tauri\`) | `spikes\S9\measure.ts` (+ `stub-engine.ts`) | [S9](S9/README.md) |
 
 ## Run order
 

@@ -1,8 +1,8 @@
----
+ YES |YES |YES |YES |YES |YES |YES |YES |YES |YES |YES |YES |YES |YES |YES |YES |YES |---
 report: AVG-P7-5 the menu items with the Deck
 phase: 7
-status: template
-authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-10-05, branch phase-7/plugin-menu (vault PHASE7_PLAN row 5). Observed: Jim. Verdict: Jim."
+status: accepted
+authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-10-05, branch phase-7/plugin-menu (vault PHASE7_PLAN row 5). Observed: Jim's run and answers (2026-10-06 11:16 UTC); the analysis of the logs: Claude Code. Verdict: Jim."
 date: 2026-10-05
 ---
 
@@ -73,36 +73,51 @@ Answers and decisions [stated: Jim, 2026-10-05]:
 
 ## Observed (Jim)
 
-*To be filled from the run.*
+Jim ran `npm run deck:menu` once, on 2026-10-06 at 11:16 UTC (04:16 local), with plugin 0.18.0 reloaded and the Deck 0.3.0 built at `a559699`. He said "probe done" [stated]. Result: `Menu probe: WORKED`, no failed line, no error, PUT BACK YES, outcome `kept`: the Deck 0.3.0 stays installed [handle: `docs\reports\phase7\plugin-menu\menu_2026-10-06T11-16-43-227Z.json`]. All of Jim's y/n answers were y.
+
+What the logs show (Claude Code's reading; files in `docs\reports\phase7\plugin-menu\menu_2026-10-06T11-16-43-227Z\`, user folder redacted to `%USERPROFILE%`):
+- **The plugin's log** (`plugin-log.txt`), in local time:
+  - 04:16:45.461 `hud: Deck connected`, 0.5 s after the edit's first update (04:16:44.915).
+  - 04:17:21.435 `hud: menu show: the Deck asked to show edit a10b74d5-…`; no `hud: shown` in that step.
+  - 04:17:39.758 `hud: menu hud_pick: Pick A not sent: no pick is waiting.`, then `hud: shown` 41 ms later. This is decision D1 A: the refused item opened the classic window, which says why.
+  - 04:18:17.546 `hud: menu hud_abort: Abort sent; waiting for Claude.` and `hud: menu hud_abort: the Deck shows the outcome`; no `hud: shown` in that step.
+  - 04:18:30.021 `hud: Deck not connected` after the probe stopped the Deck. The second edit's first update (04:18:30.342) opened the classic window by itself (`hud: shown` 04:18:30.389), and the Show item opened it again after Jim closed it (`hud: shown` 04:18:58.469).
+- **The engine's tool log** (`engine-20261006.jsonl`, `tool: "hud_menu"`), all `ok: true`: `hud_deck` connected true (11:16:45.459Z); `hud_show` for edit `a10b74d5-…` at 11:17:21.444Z (Show) and at 11:18:17.563Z (the Abort's ask, the review-1 fix); `hud_deck` connected false (11:18:30.024Z).
+- **The Deck's log** (`hud_3648_1791285405318.jsonl`, Deck pid 3648, `"version":"0.3.0"`): `show` with reason `edit_start`, then two with reason `menu`, the Show item and the hidden Deck at the Abort. Both `menu` shows record `fg_pid` 27284, the foreground process at that moment, not the Deck's 3648. So the Deck was shown without taking the foreground, which agrees with Jim's M2c answer that `\` still worked in Lightroom.
+- **The first edit's session log** (`sessions\20261006-a10b74.json`): outcome `aborted`; `ended_by` `{ "source": "menu", "done_ms": 350.8 }`; `hud_events` one `hud_abort` from the `menu`.
+- **Put back:** the photo's settings after the probe equal those before it, 0 differing (line P, detail `[]`).
 
 ## Numbers
 
 | Line | What | Result |
 |---|---|---|
-| M1a | the Deck connected and the plugin heard it | |
-| M1b | no classic window at the edit's start | |
-| M1c | Jim: the Deck opened by itself, no classic window | |
-| M2a | Show asked the engine for the Deck, and the Deck showed itself | |
-| M2b | no classic window | |
-| M2c | Jim: the Deck came back opened; Lightroom kept the keyboard | |
-| M3a | the refused Pick A opened the classic window | |
-| M3b | Jim: it says why | |
-| M4a | the menu's Abort was sent, the Deck took the outcome | |
-| M4b | the edit ended as aborted | |
-| M4c | no classic window | |
-| M4e | the hidden Deck showed itself for the outcome | |
-| M4d | Jim: Done, the photo is back | |
-| M5a | the plugin heard the Deck went away | |
-| M5b | with no Deck, the classic window opened by itself | |
-| M5c | with no Deck, Show opened the classic window | |
-| M5d | Jim: the classic window opened from the menu | |
-| P | the photo as before the probe | |
+| M1a | the Deck connected and the plugin heard it | YES |
+| M1b | no classic window at the edit's start | YES |
+| M1c | Jim: the Deck opened by itself, no classic window | YES |
+| M2a | Show asked the engine for the Deck, and the Deck showed itself | YES |
+| M2b | no classic window | YES |
+| M2c | Jim: the Deck came back opened; Lightroom kept the keyboard | YES |
+| M3a | the refused Pick A opened the classic window | YES |
+| M3b | Jim: it says why | YES |
+| M4a | the menu's Abort was sent, the Deck took the outcome | YES |
+| M4b | the edit ended as aborted | YES |
+| M4c | no classic window | YES |
+| M4e | the hidden Deck showed itself for the outcome | YES |
+| M4d | Jim: Done, the photo is back | YES |
+| M5a | the plugin heard the Deck went away | YES |
+| M5b | with no Deck, the classic window opened by itself | YES |
+| M5c | with no Deck, Show opened the classic window | YES |
+| M5d | Jim: the classic window opened from the menu | YES |
+| P | the photo as before the probe | YES, 0 settings differ |
 
 ## Verdict
 
-*Jim's.*
+**Go** [stated: Jim, 2026-10-06, "Go (Recommended)"]. All 18 lines are YES, and the photo was put back. No Greptile re-review [stated: Jim, "no rerun with greptile"].
 
 ## Consequences / open questions
 
 - [inference] A Deck that has just died, but that the engine has not yet dropped (3 missed pings, about 6 s), still counts as connected. A menu item in that window leaves the classic window closed. The event still reaches the engine, whose Deck-lost path starts the Deck again or opens the classic window (`engine\src\hud\sinks.ts`).
 - Q17 stays as decided: no classic window opens by itself while Claude is away.
+- Plugin 0.18.0 is loaded in Jim's Lightroom (from the repo folder), and the Deck 0.3.0 is installed. Claude Desktop runs engine 0.20.0 after its next start, once `engine\dist` is rebuilt from `main`. Until then, the older engine sends no `hud_deck`, and the plugin's menu items behave as before row 5.
+- Not tried in this run [unverified]: a Deck before 0.3.0 with this plugin (the tests cover the engine side), Ctrl+C during the probe, and the Show item while the engine is away (the Q17 path).
+- Row 6 (`phase-7/check`) checks the whole of spec 11.1 on the Deck in real edits.

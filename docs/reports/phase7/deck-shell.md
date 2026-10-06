@@ -108,4 +108,5 @@ Every placement landed where it was aimed (`target` = `got` in all 4 `place` lin
 ## Consequences / open questions
 
 - Run 1 answered the open point of spec 2.7: F opens a separate, owned window that fills its monitor and never keeps the foreground. The main window is found by class `AgWinMainFrame`. Run 2 checks the fix.
+- After run 2, Greptile's second review: F's window keeps the Deck below it only when both are on the same monitor (`426e842`). The same-monitor case is the one run 2 checked. F on one monitor with the Deck on another was not probed [unverified]; row 6's check covers it.
 - Not in this probe: the Deck's own states, copy cards, clicks and keyboard (row 4c), and the budgets of spec section 9 (row 6).

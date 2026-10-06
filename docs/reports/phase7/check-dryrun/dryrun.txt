@@ -1,0 +1,719 @@
+Phase 7 row 6: dry run of `npm run phase7:check` (hud\probe\check\check.ts) against the Lightroom simulator
+Claude Code (Opus 5.5), 2026-10-06, branch phase-7/check.
+
+Setup: engine\tests\helpers' FakePlugin + LightroomSim on OS-chosen ports with their own token file (LRC_AVG_COMMAND_PORT,
+LRC_AVG_EVENT_PORT, LRC_AVG_TOKEN_FILE), so Jim's Lightroom was not touched. "Lightroom" for the process checks was a hidden
+ping.exe (LRC_AVG_HUD_LR_EXE=PING.EXE), killed at the check's "Now quit Lightroom". "Claude Desktop" was the real
+engine\dist\mcp\main.js over MCP stdio. No real Deck ran: LRC_AVG_HUD_EXE named a dummy file that cannot start, so the
+engine opened the simulated classic HUD. Every Deck-log check is therefore expected NO and every budget NOT MEASURED here;
+Jim's answers were typed as y. LRC_AVG_P7_OUT, LRC_AVG_PLUGIN_LOG and LOCALAPPDATA pointed at a scratch folder.
+The check did run the real Deck 0.3.1 installer (silent, per user) at each start; no Deck process ran during the runs
+(`tasklist /FI "IMAGENAME eq LrC-AVG HUD.exe"` afterwards: no tasks; no new %TEMP%\LrC-AVG\hud\hud_*.jsonl).
+
+What it shows:
+  - Pass 1: E1-E4 ran end to end without an ERROR, the photo put back after each (back.E1-E4 YES), the copies removed;
+    E5 stopped with ENOENT: the Deck's hud folder did not exist yet (a Deck that never saved a spot). Fixed in
+    hud\probe\check\edits-b.ts e5 (mkdirSync of window.json's folder). Its `--redo E5` run failed the same way (before the fix).
+  - Pass 2 (after the fix, same state folder): the run resumed at E5 and ran E5, C1, C2, F1, F2; back.* YES for every step,
+    the bridge went to "Claude Desktop" and came back after its 60 s idle release (C1) and after it quit (C2), F1 renamed
+    and restored the executable, F2 saw "Lightroom" quit. `Every step has run.` A `--redo E5` run then ran E5 alone.
+    A1.chat.log found Claude's lr_begin_session in the engine's tool log (began 12:28:54.383Z).
+  - Pass 2's A24.log was NO because the simulated classic window, opened in E5, was never closed by this driver (the real
+    plugin closes it at an edit's end), so F1's open did not log `hud: shown` again. Pass 3, `--redo F1` on a fresh
+    simulator: A24.log, A24.abort.log, deck.restored, back.F1 all YES.
+  - Each pass is two check runs: "run 1" resumes from the saved state (nothing left to run in pass 3), "run 2" is the
+    driver's `--redo`. The driver's label says "--redo E5" in every pass; in pass 3 it ran `--redo F1` (P7DRY_REDO).
+
+== Pass 1 (driver run 2026-10-06 12:14-12:28 UTC; 782.7 s) ==
+== run 1 (exit 0) ==
+Phase 7 check. Installing the Deck 0.3.1 (per user, no admin rights needed)...
+
+The check's photo: 20260907-_OZ80093.NEF. A snapshot "AVG P7check start 2026-10-06T12-14-57-326Z" holds it as it is now.
+
+=== Edit 1: the Deck opens, your turn, Accept ===
+
+Edit 1. The check stops the Deck, then starts an edit on your photo: the Deck starts and appears by itself.
+
+After you press Enter here, click Lightroom's title bar (the top edge of its window) within 5 seconds, and then keep your hands off the mouse. When the Deck has appeared, press \ (backslash) once: the photo should switch to Before. Press \ again to switch back. Then come back here.
+Press Enter when done.   NO   A1.e1.shown
+  NO   A1.e1.classic
+
+The Deck appeared by itself, opened at full height: where you last left it (the first time: at the bottom centre of Lightroom's monitor). No window titled "LrC-AVG - Vision Gateway" opened.
+Type y or n, then Enter:   YES  A1.e1.jim
+
+Without a click, \ switched the photo to Before and back: the keyboard stayed with Lightroom.
+Type y or n, then Enter:   YES  A2.jim
+
+After you press Enter here, click Lightroom's title bar (the top edge of its window) within 5 seconds, and then keep your hands off the mouse. When the Deck says "Your turn", press \ twice (Before, then back). Then come back here.
+Press Enter when done.   YES  A4.log
+
+The Deck says "Your turn: Claude thinks the edit is done." with an amber dot, and \ switched Before and back without a click.
+Type y or n, then Enter:   YES  A4.jim
+  NO   A2.log
+
+Look at the rows in the Deck's middle. They use Lightroom's slider names (Exposure, Contrast, Highlights, Shadows, Vibrance) in the Basic panel's order, and each row's mark sits where that slider sits in Lightroom's Basic panel (right side of Develop).
+Type y or n, then Enter:   YES  A19.jim
+
+The Deck's text is readable at a glance, nothing in it is smaller than the key hints, and nothing depends on colour alone (each state also has words or a shape).
+Type y or n, then Enter:   YES  A22.jim
+
+The Deck looks at home next to Lightroom's panels.
+Type y or n, then Enter:   YES  A23.jim
+
+Note whether Accept is the only filled button. Then click Accept in the Deck, and watch the Deck for about 10 seconds.
+  YES  A12.ended
+  NO   A12.hid
+
+Before your click, Accept was the only filled button; after it, the Deck showed "Done: the edit is kept."
+Type y or n, then Enter:   YES  A12.jim
+
+About 10 seconds after "Done", the Deck hid itself.
+Type y or n, then Enter:   YES  A12.hid.jim
+  YES  back.E1
+
+=== Edit 2: Lightroom's window and screen modes, the spot, Abort ===
+
+Edit 2. The check starts another edit; the Deck comes back by itself.
+
+If Lightroom fills the screen (maximised), click its Restore button first (the middle one of the three at its top right). Then drag Lightroom's title bar to move it, and drag its bottom-right corner to resize it. If you restored it, maximise it again (the same middle button).
+Press Enter when done. 
+While Lightroom moved and changed size, the Deck stayed where it was.
+Type y or n, then Enter:   YES  A7.move.jim
+
+Minimise Lightroom (the _ button at its top right) and look for the Deck. Then click Lightroom's icon in the Windows taskbar to bring it back.
+Press Enter when done.   NO   A7.min.log
+
+While Lightroom was minimised the Deck was hidden, and when Lightroom came back the Deck came back too.
+Type y or n, then Enter:   YES  A7.min.jim
+
+In Lightroom, press Shift+F and look at the Deck. Repeat until Lightroom's window looks as it did at the start (each press is the next screen mode).
+Press Enter when done. 
+In each screen mode, the Deck stayed visible over Lightroom.
+Type y or n, then Enter:   YES  A9.modes.jim
+
+Press F in Lightroom: the photo shows full screen. Look at the Deck. Then press F again to come back.
+Press Enter when done. 
+In the full-screen preview, the Deck was not over the image.
+Type y or n, then Enter:   YES  A9.f.jim
+
+Drag the Deck (by the words on its bar) onto your other monitor. Press F in Lightroom, look at the Deck, then press F again.
+Press Enter when done. 
+With the full-screen preview on Lightroom's monitor, the Deck stayed visible on the other monitor.
+Type y or n, then Enter:   YES  A9.f2.jim
+
+Drag the Deck by the words on its bar to a new spot where you like it, and drag its right edge to make it wider. Leave it there for the rest of the check.
+Press Enter when done.   NO   A5.drag.log
+
+Next: Abort while Claude is working. When you press Enter here, the check keeps working on the photo; click Abort in the Deck at once, while it says "Claude is working".
+Press Enter when done.   NO   A16.log
+  YES  A13.back
+
+Right after your click, the Deck's buttons went quiet (grey) and its line said "Abort sent; waiting for Claude." until the outcome showed.
+Type y or n, then Enter:   YES  A16.jim
+
+One click was enough: the Deck shows "Done: the photo is back as it was."
+Type y or n, then Enter:   YES  A13.jim
+
+In Lightroom's Develop module, the Snapshots panel (left side) lists a snapshot named "AVG pre-session 2026-10-06T12:15:25.613Z".
+Type y or n, then Enter:   YES  A13.snapshot.jim
+  YES  back.E2
+
+=== Edit 3: Approve each pass, the keys ===
+
+Edit 3: Approve each pass.
+
+In Lightroom: File > Plug-in Manager. In the list on the left, click LrC-AVG. In the Sessions box, set Mode to "Approve each pass", then click Done.
+Press Enter when done.   NO   A5.there.log
+
+The Deck opened at the spot where you left it in edit 2, at the width you gave it.
+Type y or n, then Enter:   YES  A5.there.jim
+
+The Deck says "Your turn: approve pass 1 so Claude can go on.", "Approve pass 1" is its only filled button, and the line under it says "Lets Claude write pass 2."
+Type y or n, then Enter:   YES  A11.jim
+
+Click the words at the Deck's left (its sentence) to give the Deck the keyboard, then press Enter on your keyboard. (The check sees it; nothing to type here.)
+  NO   A11.enter.log
+
+Click the Deck's sentence again. Press Ctrl+Backspace once and look at the Abort button. Then press Esc and look at it again.
+Press Enter when done. 
+After Ctrl+Backspace the Abort button read "Press again to abort"; after Esc it read "Abort" again, and nothing was aborted.
+Type y or n, then Enter:   YES  A14.arm.jim
+
+Click the Deck's sentence once more, then press Esc. Then, in Lightroom, press \ twice.
+Press Enter when done.   YES  A15.open.log
+
+Esc did not abort the edit (the Deck still says "Your turn"), and the keyboard went back to Lightroom: \ switched Before and After.
+Type y or n, then Enter:   YES  A15.jim
+
+Click the Deck's sentence once more, then press Ctrl+Backspace twice. (The check sees it; nothing to type here.)
+  NO   A14.abort.log
+
+The second Ctrl+Backspace aborted the edit: the Deck shows "Done: the photo is back as it was."
+Type y or n, then Enter:   YES  A14.abort.jim
+
+Set the mode back: In Lightroom: File > Plug-in Manager. In the list on the left, click LrC-AVG. In the Sessions box, set Mode to "Autonomous", then click Done.
+Press Enter when done.   YES  back.E3
+
+=== Edit 4: copies, the pick, another photo selected ===
+
+Edit 4: three copies, and your pick. The check makes virtual copies A, B and C of your photo.
+
+The Deck says "Your turn: pick a copy, or tell Claude which one." and offers no Accept button.
+Type y or n, then Enter:   YES  A18.jim
+
+The Deck shows three copy cards, A, B and C, each with its look (a small image) and its name.
+Type y or n, then Enter:   YES  A17.cards.jim
+
+In Lightroom's Filmstrip (along the bottom), click a different photo: not yours and not one of its copies. Watch the Deck. (The check sees it; nothing to type here.)
+  NO   A21.log
+
+Within about 2 seconds of your click, the Deck showed a line starting "Target changed:".
+Type y or n, then Enter:   YES  A21.jim
+
+Click copy B's card in the Deck. (The check sees it; nothing to type here.)
+  NO   A17.click.log
+
+Lightroom now shows copy B: the photo shows copy B's look, and the selected Filmstrip thumbnail is copy B (with a turned-page corner).
+Type y or n, then Enter:   YES  A17.click.jim
+
+Click the Deck's sentence to give it the keyboard, then press 3, then Enter. (The check sees it; nothing to type here.)
+  NO   A17.keys.log
+  YES  A17.picked.log
+
+The Deck marks copy C as Picked, and Lightroom shows copy C.
+Type y or n, then Enter:   YES  A17.picked.jim
+
+Remove the 3 copies of 20260907-_OZ80093.NEF:
+  1. Press G for the Library Grid.
+  2. Click the first copy next to 20260907-_OZ80093.NEF (each copy has a turned-page corner), then Ctrl-click the other copies. Do not select the original.
+  3. Press Delete and click Remove.
+  4. Press D for Develop.
+Press Enter when done.   YES  copies.removed
+  YES  back.E4
+
+=== Edit 5: a remembered spot on no monitor ===
+
+Edit 5: the Deck's remembered spot on no monitor. The check stops the Deck, writes a spot far off every monitor into its window.json, and starts an edit.
+
+ERROR in E5: ENOENT: no such file or directory, open '%USERPROFILE%\AppData\Local\Temp\lrc-avg-p7dry-BZ4jxC\localappdata\LrC-AVG\hud\window.json'
+
+Lines:
+  A1       NO (A1.e1.shown, A1.e1.classic)
+  A2       NO (A2.log)
+  A3       NOT RUN
+  A4       YES
+  A5       NO (A5.drag.log, A5.there.log)
+  A6       NOT RUN
+  A7       NO (A7.min.log)
+  A8       NOT RUN
+  A9       YES
+  A10      NOT RUN
+  A11      NO (A11.enter.log)
+  A12      NO (A12.hid)
+  A13      YES
+  A14      NO (A14.abort.log)
+  A15      YES
+  A16      NO (A16.log)
+  A17      NO (A17.click.log, A17.keys.log)
+  A18      YES
+  A19      YES
+  A21      NO (A21.log)
+  A22      YES
+  A23      YES
+  A24      NOT RUN
+  cleanup  NOT RUN
+Budgets (spec 9):
+  cold_start    not measured (target 1500 ms, n=0)  NOT MEASURED
+  warm_show     not measured (target 150 ms, n=0)  NOT MEASURED
+  update_paint  not measured (target 100 ms, n=0)  NOT MEASURED
+  click_action  not measured (target 50 ms, n=0)  NOT MEASURED
+  memory        not measured (target 150 MiB, n=0)  NOT MEASURED
+  cpu_hidden    not measured (target 0.5 %, n=0)  NOT MEASURED
+  cpu_visible   not measured (target 2 %, n=0)  NOT MEASURED
+  error in E5: ENOENT: no such file or directory, open '%USERPROFILE%\AppData\Local\Temp\lrc-avg-p7dry-BZ4jxC\localappdata\LrC-AVG\hud\window.json'
+
+Phase 7 acceptance: FAILED (A1 NO, A2 NO, A3 NOT RUN, A5 NO, A6 NOT RUN, A7 NO, A8 NOT RUN, A10 NOT RUN, A11 NO, A12 NO, A14 NO, A16 NO, A17 NO, A21 NO, A24 NOT RUN, cleanup NOT RUN, cold_start NOT MEASURED, warm_show NOT MEASURED, update_paint NOT MEASURED, click_action NOT MEASURED, memory NOT MEASURED, cpu_hidden NOT MEASURED, cpu_visible NOT MEASURED, E5 error)
+Steps left: E5, C1, C2, F1, F2. Run `npm run phase7:check` again to go on.
+Results saved automatically in %USERPROFILE%\AppData\Local\Temp\lrc-avg-p7dry-BZ4jxC\out. Tell Claude Code "done".
+
+== run 2: --redo E5 (exit 0) ==
+Phase 7 check. Installing the Deck 0.3.1 (per user, no admin rights needed)...
+
+=== Edit 5: a remembered spot on no monitor ===
+
+Edit 5: the Deck's remembered spot on no monitor. The check stops the Deck, writes a spot far off every monitor into its window.json, and starts an edit.
+
+ERROR in E5: ENOENT: no such file or directory, open '%USERPROFILE%\AppData\Local\Temp\lrc-avg-p7dry-BZ4jxC\localappdata\LrC-AVG\hud\window.json'
+
+Lines:
+  A1       NO (A1.e1.shown, A1.e1.classic)
+  A2       NO (A2.log)
+  A3       NOT RUN
+  A4       YES
+  A5       NO (A5.drag.log, A5.there.log)
+  A6       NOT RUN
+  A7       NO (A7.min.log)
+  A8       NOT RUN
+  A9       YES
+  A10      NOT RUN
+  A11      NO (A11.enter.log)
+  A12      NO (A12.hid)
+  A13      YES
+  A14      NO (A14.abort.log)
+  A15      YES
+  A16      NO (A16.log)
+  A17      NO (A17.click.log, A17.keys.log)
+  A18      YES
+  A19      YES
+  A21      NO (A21.log)
+  A22      YES
+  A23      YES
+  A24      NOT RUN
+  cleanup  NOT RUN
+Budgets (spec 9):
+  cold_start    not measured (target 1500 ms, n=0)  NOT MEASURED
+  warm_show     not measured (target 150 ms, n=0)  NOT MEASURED
+  update_paint  not measured (target 100 ms, n=0)  NOT MEASURED
+  click_action  not measured (target 50 ms, n=0)  NOT MEASURED
+  memory        not measured (target 150 MiB, n=0)  NOT MEASURED
+  cpu_hidden    not measured (target 0.5 %, n=0)  NOT MEASURED
+  cpu_visible   not measured (target 2 %, n=0)  NOT MEASURED
+  error in E5: ENOENT: no such file or directory, open '%USERPROFILE%\AppData\Local\Temp\lrc-avg-p7dry-BZ4jxC\localappdata\LrC-AVG\hud\window.json'
+
+Phase 7 acceptance: FAILED (A1 NO, A2 NO, A3 NOT RUN, A5 NO, A6 NOT RUN, A7 NO, A8 NOT RUN, A10 NOT RUN, A11 NO, A12 NO, A14 NO, A16 NO, A17 NO, A21 NO, A24 NOT RUN, cleanup NOT RUN, cold_start NOT MEASURED, warm_show NOT MEASURED, update_paint NOT MEASURED, click_action NOT MEASURED, memory NOT MEASURED, cpu_hidden NOT MEASURED, cpu_visible NOT MEASURED, E5 error)
+Steps left: E5, C1, C2, F1, F2. Run `npm run phase7:check` again to go on.
+Results saved automatically in %USERPROFILE%\AppData\Local\Temp\lrc-avg-p7dry-BZ4jxC\out. Tell Claude Code "done".
+
+[driver] 
+[driver] exe restored: true; copies left 0; scratch %USERPROFILE%\AppData\Local\Temp\lrc-avg-p7dry-BZ4jxC
+
+== Pass 2 (driver run 2026-10-06 12:28-12:31 UTC; 141.6 s) ==
+== run 1 (exit 0) ==
+Phase 7 check. Installing the Deck 0.3.1 (per user, no admin rights needed)...
+
+=== Edit 5: a remembered spot on no monitor ===
+
+Edit 5: the Deck's remembered spot on no monitor. The check stops the Deck, writes a spot far off every monitor into its window.json, and starts an edit.
+  NO   A5.fallback.log
+
+The Deck opened at the bottom centre of the monitor Lightroom is on.
+Type y or n, then Enter:   YES  A5.fallback.jim
+  YES  back.E5
+
+=== Chat 1: Claude Desktop ===
+
+Chat 1. The check now lets Claude Desktop use Lightroom.
+
+  1. Start Claude Desktop (Start menu > Claude). Place its window so that you can see Lightroom's photo and the Deck's spot beside it.
+  2. Open a new chat, type `Tune the active photo for golden hour landscape.` and press Enter.
+  3. If Claude Desktop asks whether Claude may use an lrc-avg tool, choose Always allow.
+  4. While Claude works, keep your hands off Lightroom and the Deck, and watch the Deck.
+  5. When Claude says it has finished, come back to this window.
+Press Enter when done.   NO   A1.chat.log
+  NO   A3.log
+
+When Claude began, the Deck appeared within about 2 seconds, and no window titled "LrC-AVG - Vision Gateway" opened.
+Type y or n, then Enter:   YES  A1.chat.jim
+
+While Claude worked, the Deck never took the keyboard and never came in front of Claude Desktop.
+Type y or n, then Enter:   YES  A3.jim
+
+Click Claude Desktop's window so it is in front, and drag it over the Deck. Look at the Deck. Then click Lightroom's window and look again.
+Press Enter when done.   NO   A8.log
+
+With Claude Desktop in front, it covered the Deck (the Deck was not on top). After you clicked Lightroom, the Deck was on top again.
+Type y or n, then Enter:   YES  A8.jim
+
+Waiting for Claude Desktop to give the Lightroom bridge back (about a minute after Claude's last call; at most 2½ minutes). Leave Claude Desktop open.
+  YES  back.C1
+
+=== Chat 2: Claude Desktop quits mid-edit ===
+
+Chat 2: Claude Desktop quits in the middle of an edit.
+
+  1. In Claude Desktop, open a new chat, type `Tune the active photo for golden hour landscape.` and press Enter.
+  2. As soon as the Deck appears, quit Claude Desktop: right-click the Claude icon in the Windows system tray > Quit.
+  3. Look at the Deck, then come back to this window.
+Press Enter when done.   NO   A6.log
+
+The Deck shows "Claude is not connected. Your edit so far stays." and a line starting "To undo it: Develop > Snapshots > AVG pre-session".
+Type y or n, then Enter:   YES  A6.jim
+  YES  back.C2
+
+=== No Deck: the classic window ===
+
+No Deck: the check stops the Deck and renames its program for a moment, so the next edit finds no Deck.
+  NO   A24.log
+
+The classic window "LrC-AVG - Vision Gateway" opened by itself. Click its Abort button. (The check sees it; nothing to type here.)
+  YES  A24.abort.log
+
+The classic window "LrC-AVG - Vision Gateway" opened by itself, and its Abort put the photo back. Close that window now (its x), then answer.
+Type y or n, then Enter:   YES  A24.jim
+  YES  deck.restored
+  YES  back.F1
+
+=== Lightroom quits ===
+
+Last: Lightroom quits. The check starts a short edit so the Deck is running, puts the photo back, then you quit Lightroom.
+  YES  back.F2
+
+Now quit Lightroom: File > Exit. If Lightroom asks to back up its catalog, answer as you usually do. Watch the Deck. (The check sees it; nothing to type here.)
+  NO   A10.log
+
+The Deck closed within about 5 seconds after Lightroom closed.
+Type y or n, then Enter:   YES  A10.jim
+
+Lines:
+  A1       NO (A1.e1.shown, A1.e1.classic, A1.chat.log)
+  A2       NO (A2.log)
+  A3       NO (A3.log)
+  A4       YES
+  A5       NO (A5.drag.log, A5.there.log, A5.fallback.log)
+  A6       NO (A6.log)
+  A7       NO (A7.min.log)
+  A8       NO (A8.log)
+  A9       YES
+  A10      NO (A10.log)
+  A11      NO (A11.enter.log)
+  A12      NO (A12.hid)
+  A13      YES
+  A14      NO (A14.abort.log)
+  A15      YES
+  A16      NO (A16.log)
+  A17      NO (A17.click.log, A17.keys.log)
+  A18      YES
+  A19      YES
+  A21      NO (A21.log)
+  A22      YES
+  A23      YES
+  A24      NO (A24.log)
+  cleanup  YES
+Budgets (spec 9):
+  cold_start    not measured (target 1500 ms, n=0)  NOT MEASURED
+  warm_show     not measured (target 150 ms, n=0)  NOT MEASURED
+  update_paint  not measured (target 100 ms, n=0)  NOT MEASURED
+  click_action  not measured (target 50 ms, n=0)  NOT MEASURED
+  memory        not measured (target 150 MiB, n=0)  NOT MEASURED
+  cpu_hidden    not measured (target 0.5 %, n=0)  NOT MEASURED
+  cpu_visible   not measured (target 2 %, n=0)  NOT MEASURED
+
+Phase 7 acceptance: FAILED (A1 NO, A2 NO, A3 NO, A5 NO, A6 NO, A7 NO, A8 NO, A10 NO, A11 NO, A12 NO, A14 NO, A16 NO, A17 NO, A21 NO, A24 NO, cold_start NOT MEASURED, warm_show NOT MEASURED, update_paint NOT MEASURED, click_action NOT MEASURED, memory NOT MEASURED, cpu_hidden NOT MEASURED, cpu_visible NOT MEASURED)
+Every step has run.
+Results saved automatically in %USERPROFILE%\AppData\Local\Temp\lrc-avg-p7dry-BZ4jxC\out. Tell Claude Code "done".
+
+== run 2: --redo E5 (exit 0) ==
+Phase 7 check. Installing the Deck 0.3.1 (per user, no admin rights needed)...
+
+=== Edit 5: a remembered spot on no monitor ===
+
+Edit 5: the Deck's remembered spot on no monitor. The check stops the Deck, writes a spot far off every monitor into its window.json, and starts an edit.
+  NO   A5.fallback.log
+
+The Deck opened at the bottom centre of the monitor Lightroom is on.
+Type y or n, then Enter:   YES  A5.fallback.jim
+  YES  back.E5
+
+Lines:
+  A1       NO (A1.e1.shown, A1.e1.classic, A1.chat.log)
+  A2       NO (A2.log)
+  A3       NO (A3.log)
+  A4       YES
+  A5       NO (A5.drag.log, A5.there.log, A5.fallback.log)
+  A6       NO (A6.log)
+  A7       NO (A7.min.log)
+  A8       NO (A8.log)
+  A9       YES
+  A10      NO (A10.log)
+  A11      NO (A11.enter.log)
+  A12      NO (A12.hid)
+  A13      YES
+  A14      NO (A14.abort.log)
+  A15      YES
+  A16      NO (A16.log)
+  A17      NO (A17.click.log, A17.keys.log)
+  A18      YES
+  A19      YES
+  A21      NO (A21.log)
+  A22      YES
+  A23      YES
+  A24      NO (A24.log)
+  cleanup  YES
+Budgets (spec 9):
+  cold_start    not measured (target 1500 ms, n=0)  NOT MEASURED
+  warm_show     not measured (target 150 ms, n=0)  NOT MEASURED
+  update_paint  not measured (target 100 ms, n=0)  NOT MEASURED
+  click_action  not measured (target 50 ms, n=0)  NOT MEASURED
+  memory        not measured (target 150 MiB, n=0)  NOT MEASURED
+  cpu_hidden    not measured (target 0.5 %, n=0)  NOT MEASURED
+  cpu_visible   not measured (target 2 %, n=0)  NOT MEASURED
+
+Phase 7 acceptance: FAILED (A1 NO, A2 NO, A3 NO, A5 NO, A6 NO, A7 NO, A8 NO, A10 NO, A11 NO, A12 NO, A14 NO, A16 NO, A17 NO, A21 NO, A24 NO, cold_start NOT MEASURED, warm_show NOT MEASURED, update_paint NOT MEASURED, click_action NOT MEASURED, memory NOT MEASURED, cpu_hidden NOT MEASURED, cpu_visible NOT MEASURED)
+Every step has run.
+Results saved automatically in %USERPROFILE%\AppData\Local\Temp\lrc-avg-p7dry-BZ4jxC\out. Tell Claude Code "done".
+
+[driver] chat 1: begin true, end accept
+[driver] chat 2: one pass, then Claude Desktop quit mid-edit
+[driver] exe restored: true; copies left 0; scratch %USERPROFILE%/AppData/Local/Temp/lrc-avg-p7dry-BZ4jxC
+
+== Pass 3: --redo F1 on a fresh simulator (2026-10-06 12:31 UTC; 7.0 s) ==
+== run 1 (exit 0) ==
+Phase 7 check. Installing the Deck 0.3.1 (per user, no admin rights needed)...
+
+Lines:
+  A1       NO (A1.e1.shown, A1.e1.classic, A1.chat.log)
+  A2       NO (A2.log)
+  A3       NO (A3.log)
+  A4       YES
+  A5       NO (A5.drag.log, A5.there.log, A5.fallback.log)
+  A6       NO (A6.log)
+  A7       NO (A7.min.log)
+  A8       NO (A8.log)
+  A9       YES
+  A10      NO (A10.log)
+  A11      NO (A11.enter.log)
+  A12      NO (A12.hid)
+  A13      YES
+  A14      NO (A14.abort.log)
+  A15      YES
+  A16      NO (A16.log)
+  A17      NO (A17.click.log, A17.keys.log)
+  A18      YES
+  A19      YES
+  A21      NO (A21.log)
+  A22      YES
+  A23      YES
+  A24      NO (A24.log)
+  cleanup  YES
+Budgets (spec 9):
+  cold_start    not measured (target 1500 ms, n=0)  NOT MEASURED
+  warm_show     not measured (target 150 ms, n=0)  NOT MEASURED
+  update_paint  not measured (target 100 ms, n=0)  NOT MEASURED
+  click_action  not measured (target 50 ms, n=0)  NOT MEASURED
+  memory        not measured (target 150 MiB, n=0)  NOT MEASURED
+  cpu_hidden    not measured (target 0.5 %, n=0)  NOT MEASURED
+  cpu_visible   not measured (target 2 %, n=0)  NOT MEASURED
+
+Phase 7 acceptance: FAILED (A1 NO, A2 NO, A3 NO, A5 NO, A6 NO, A7 NO, A8 NO, A10 NO, A11 NO, A12 NO, A14 NO, A16 NO, A17 NO, A21 NO, A24 NO, cold_start NOT MEASURED, warm_show NOT MEASURED, update_paint NOT MEASURED, click_action NOT MEASURED, memory NOT MEASURED, cpu_hidden NOT MEASURED, cpu_visible NOT MEASURED)
+Every step has run.
+Results saved automatically in %USERPROFILE%\AppData\Local\Temp\lrc-avg-p7dry-BZ4jxC\out. Tell Claude Code "done".
+
+== run 2: --redo E5 (exit 0) ==
+Phase 7 check. Installing the Deck 0.3.1 (per user, no admin rights needed)...
+
+=== No Deck: the classic window ===
+
+No Deck: the check stops the Deck and renames its program for a moment, so the next edit finds no Deck.
+  YES  A24.log
+
+The classic window "LrC-AVG - Vision Gateway" opened by itself. Click its Abort button. (The check sees it; nothing to type here.)
+  YES  A24.abort.log
+
+The classic window "LrC-AVG - Vision Gateway" opened by itself, and its Abort put the photo back. Close that window now (its x), then answer.
+Type y or n, then Enter:   YES  A24.jim
+  YES  deck.restored
+  YES  back.F1
+
+Lines:
+  A1       NO (A1.e1.shown, A1.e1.classic, A1.chat.log)
+  A2       NO (A2.log)
+  A3       NO (A3.log)
+  A4       YES
+  A5       NO (A5.drag.log, A5.there.log, A5.fallback.log)
+  A6       NO (A6.log)
+  A7       NO (A7.min.log)
+  A8       NO (A8.log)
+  A9       YES
+  A10      NO (A10.log)
+  A11      NO (A11.enter.log)
+  A12      NO (A12.hid)
+  A13      YES
+  A14      NO (A14.abort.log)
+  A15      YES
+  A16      NO (A16.log)
+  A17      NO (A17.click.log, A17.keys.log)
+  A18      YES
+  A19      YES
+  A21      NO (A21.log)
+  A22      YES
+  A23      YES
+  A24      YES
+  cleanup  YES
+Budgets (spec 9):
+  cold_start    not measured (target 1500 ms, n=0)  NOT MEASURED
+  warm_show     not measured (target 150 ms, n=0)  NOT MEASURED
+  update_paint  not measured (target 100 ms, n=0)  NOT MEASURED
+  click_action  not measured (target 50 ms, n=0)  NOT MEASURED
+  memory        not measured (target 150 MiB, n=0)  NOT MEASURED
+  cpu_hidden    not measured (target 0.5 %, n=0)  NOT MEASURED
+  cpu_visible   not measured (target 2 %, n=0)  NOT MEASURED
+
+Phase 7 acceptance: FAILED (A1 NO, A2 NO, A3 NO, A5 NO, A6 NO, A7 NO, A8 NO, A10 NO, A11 NO, A12 NO, A14 NO, A16 NO, A17 NO, A21 NO, cold_start NOT MEASURED, warm_show NOT MEASURED, update_paint NOT MEASURED, click_action NOT MEASURED, memory NOT MEASURED, cpu_hidden NOT MEASURED, cpu_visible NOT MEASURED)
+Every step has run.
+Results saved automatically in %USERPROFILE%\AppData\Local\Temp\lrc-avg-p7dry-BZ4jxC\out. Tell Claude Code "done".
+
+[driver] 
+[driver] exe restored: true; copies left 0; scratch %USERPROFILE%/AppData/Local/Temp/lrc-avg-p7dry-BZ4jxC
+
+== Appendix: the driver (a scratch vitest file, engine\tests\zz-scratch-p7-dryrun.test.ts, run with `npx vitest run
+tests/zz-scratch-p7-dryrun.test.ts` in engine\; passes 2-3 with P7DRY_SCRATCH set to pass 1's scratch folder, pass 3 with
+P7DRY_REDO=F1; then deleted) ==
+// SCRATCH (not committed): dry run of `hud\probe\check\check.ts` (npm run phase7:check) against the
+// simulated plugin on OS-chosen ports with its own token file, so Jim's Lightroom is not touched. No real
+// Deck runs: LRC_AVG_HUD_EXE names a dummy file, so the engine finds an executable that does not start
+// and opens the simulated classic HUD; every Deck-log line is expected NO and the budgets NOT MEASURED.
+// What it checks: the steps run end to end without an ERROR, the prompts can be followed, the bridge
+// goes to "Claude Desktop" (the real engine\dist\mcp\main.js) and back, the photo is put back after every
+// step, F1 renames and restores the executable, F2 sees "Lightroom" (a hidden ping.exe) quit, and a
+// second run with `--redo E5` resumes from the saved state. LRC_AVG_P7_OUT, LRC_AVG_PLUGIN_LOG and
+// LOCALAPPDATA point at a scratch folder. "Jim" acts on the check's words, as Phase 5's driver did
+// (docs\reports\phase5\check-dryrun\dryrun.txt).
+import { spawn, type ChildProcess } from "node:child_process";
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { expect, it } from "vitest";
+import { defaultPreviewDir } from "../src/preview/index.js";
+import { FakePlugin, type FakeReply } from "./helpers/fake-plugin.js";
+import { hudEvent } from "./helpers/lightroom-sim-hud.js";
+import { LightroomSim } from "./helpers/lightroom-sim.js";
+
+const repo = fileURLToPath(new URL("../../", import.meta.url));
+
+it("dry run of npm run phase7:check", { timeout: 3_600_000 }, async () => {
+  const scratch = process.env["P7DRY_SCRATCH"] ?? mkdtempSync(path.join(os.tmpdir(), "lrc-avg-p7dry-"));
+  for (const d of ["out", "localappdata", "deck"]) mkdirSync(path.join(scratch, d), { recursive: true });
+  const dummyExe = path.join(scratch, "deck", "LrC-AVG HUD.exe");
+  writeFileSync(dummyExe, "not a program");
+  const bridgeLog = path.join(scratch, "bridge.log");
+  writeFileSync(bridgeLog, "");
+  const plugin = await FakePlugin.start();
+  plugin.token = "dry-token-p7";
+  const tokenFile = path.join(scratch, "dry_token");
+  writeFileSync(tokenFile, plugin.token);
+  const lr = new LightroomSim(defaultPreviewDir());
+  lr.renderModel = "tonal";
+  lr.install(plugin);
+  const log = (text: string): void => appendFileSync(bridgeLog, `${new Date().toISOString()} INFO  ${text}\n`);
+  const hudUpdate = plugin.handlers.get("hud_update") as (p: Record<string, unknown>, id: string) => Promise<FakeReply>;
+  plugin.handlers.set("hud_update", async (p, id) => {
+    const r = await hudUpdate(p, id);
+    if (typeof r === "object" && r.ok && (r.payload as { opened?: boolean }).opened) log("hud: shown");
+    return r;
+  });
+  const click = (name: "hud_abort" | "hud_accept" | "hud_pick" | "hud_approve_pass", extra: Record<string, unknown> = {}): void => {
+    const last = lr.hud.last();
+    if (last) hudEvent(plugin, name, { session_id: last.session_id, seq_seen: last.seq, source: "hud", ...extra });
+  };
+  const fakeLr: ChildProcess = spawn("ping", ["-n", "100000", "127.0.0.1"], { windowsHide: true, stdio: "ignore" });
+  const env: Record<string, string> = {
+    ...(process.env as Record<string, string>),
+    LRC_AVG_COMMAND_PORT: String(plugin.commandPort),
+    LRC_AVG_EVENT_PORT: String(plugin.eventPort),
+    LRC_AVG_TOKEN_FILE: tokenFile,
+    LRC_AVG_P7_OUT: path.join(scratch, "out"),
+    LRC_AVG_PLUGIN_LOG: bridgeLog,
+    LRC_AVG_HUD_EXE: dummyExe,
+    LRC_AVG_HUD_LR_EXE: "PING.EXE",
+    LOCALAPPDATA: path.join(scratch, "localappdata"),
+  };
+  delete env["LRC_AVG_LOG_DIR"];
+
+  // "Claude Desktop": the real engine over MCP.
+  let desk: Client | null = null;
+  const notes: string[] = [];
+  const call = async (name: string, args: Record<string, unknown>): Promise<Record<string, unknown>> => {
+    if (!desk) {
+      desk = new Client({ name: "dry-desktop", version: "0" });
+      await desk.connect(new StdioClientTransport({ command: process.execPath, args: [path.join(repo, "engine/dist/mcp/main.js")], env, stderr: "pipe" }));
+    }
+    const r = (await desk.callTool({ name, arguments: args }, undefined, { timeout: 180000 })) as { content: Array<{ type: string; text?: string }> };
+    return JSON.parse(r.content.find((x) => x.type === "text")?.text ?? "{}") as Record<string, unknown>;
+  };
+  const quitDesktop = async (): Promise<void> => {
+    await (desk as Client | null)?.close();
+    desk = null;
+  };
+  const chat1 = async (): Promise<void> => {
+    const begin = await call("lr_begin_session", { intent_id: "landscape_golden_hour", return_image: "none" });
+    const sid = String(begin["session_id"]);
+    await call("lr_step", { session_id: sid, settings: { vibrance: 3 }, rationale: "dry run", return_image: "none" });
+    const end = await call("lr_end_session", { session_id: sid, outcome: "accept" });
+    notes.push(`chat 1: begin ${String(begin["ok"] ?? sid)}, end ${String(end["outcome"])}`);
+  };
+  const chat2 = async (): Promise<void> => {
+    const begin = await call("lr_begin_session", { intent_id: "landscape_golden_hour", return_image: "none" });
+    await call("lr_step", { session_id: String(begin["session_id"]), settings: { vibrance: 3 }, rationale: "dry run", return_image: "none" });
+    await quitDesktop();
+    notes.push("chat 2: one pass, then Claude Desktop quit mid-edit");
+  };
+
+  const runCheck = async (args: string[]): Promise<{ code: unknown; out: string }> => {
+    const cli = spawn(process.execPath, [path.join(repo, "hud/probe/check/check.ts"), ...args], { env, stdio: ["pipe", "pipe", "pipe"] });
+    let out = "";
+    let tail = "";
+    cli.stderr.on("data", (d) => (out += String(d)));
+    const enter = (s = ""): void => void cli.stdin.write(`${s}\n`);
+    const later = (ms: number, fn: () => void): void => void setTimeout(fn, ms);
+    const says = (line: string): void => {
+      if (/Then click Accept in the Deck/.test(line)) later(1000, () => click("hud_accept"));
+      if (/then press Enter on your keyboard/.test(line)) later(1000, () => click("hud_approve_pass", { pass: 1 }));
+      if (/press Ctrl\+Backspace twice/.test(line)) later(1000, () => click("hud_abort"));
+      if (/press 3, then Enter/.test(line)) later(1000, () => click("hud_pick", { variant: "C" }));
+      if (/Click its Abort button/.test(line)) later(1000, () => click("hud_abort"));
+      if (/Now quit Lightroom/.test(line)) later(2000, () => void fakeLr.kill());
+    };
+    let pending = Promise.resolve();
+    let recent: string[] = []; // the instruction's lines before its prompt line
+    const prompt = async (text: string): Promise<boolean> => {
+      if (/Type y or n, then Enter:\s*$/.test(text)) enter("y");
+      else if (/Press Enter when done\.\s*$/.test(text)) {
+        const mode = /set Mode to "(Approve each pass|Autonomous)"/.exec(text);
+        if (mode && lr.prefs) lr.prefs["mode"] = mode[1] === "Autonomous" ? "autonomous" : "approve_each_pass";
+        if (/Remove the \d+ copies/.test(text)) lr.copies.clear();
+        if (/Start Claude Desktop/.test(text)) await chat1();
+        if (/As soon as the Deck appears, quit Claude Desktop/.test(text)) await chat2();
+        if (/still holds the bridge/.test(text)) await quitDesktop();
+        enter();
+        if (/click Abort in the Deck at once/.test(text)) later(1500, () => click("hud_abort"));
+      } else return false;
+      return true;
+    };
+    cli.stdout.on("data", (d) => {
+      const text = String(d);
+      out += text;
+      pending = pending.then(async () => {
+        const lines = (tail + text).split("\n");
+        tail = lines.pop() ?? "";
+        for (const l of lines) {
+          says(l);
+          recent.push(l);
+        }
+        if (tail && (await prompt([...recent, tail].join("\n")))) {
+          tail = "";
+          recent = [];
+        }
+      });
+    });
+    const code = await new Promise((r) => cli.on("close", r));
+    return { code, out };
+  };
+
+  const first = await runCheck([]);
+  if (!fakeLr.killed) fakeLr.kill();
+  const fakeLr2 = spawn("ping", ["-n", "100000", "127.0.0.1"], { windowsHide: true, stdio: "ignore" });
+  const second = await runCheck(["--redo", process.env["P7DRY_REDO"] ?? "E5"]);
+  fakeLr2.kill();
+  await quitDesktop();
+  await plugin.close();
+  const scrub = (s: string): string => s.split(os.homedir()).join("%USERPROFILE%");
+  writeFileSync(
+    path.join(repo, "logs", "scratch-p7-dryrun-output.txt"),
+    `== run 1 (exit ${String(first.code)}) ==\n${scrub(first.out)}\n== run 2: --redo E5 (exit ${String(second.code)}) ==\n${scrub(second.out)}\n[driver] ${notes.join("\n[driver] ")}\n[driver] exe restored: ${String(existsSync(dummyExe))}; copies left ${lr.copies.size}; scratch ${scrub(scratch)}\n`,
+  );
+  expect(first.code).toBe(0);
+  expect(existsSync(dummyExe)).toBe(true);
+});

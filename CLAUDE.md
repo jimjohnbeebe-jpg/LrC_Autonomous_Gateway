@@ -84,6 +84,7 @@ npm run deck:build          # the Deck: engine\dist, then hud\ui-dist + the Taur
 npm run deck:probe          # row 4b probe: Lightroom in Develop, Claude Desktop quit; installs, checks, uninstalls the Deck (docs\reports\phase7\deck-shell.md)
 npm run deck:states         # row 4c probe: the Deck's states, clicks and keys; keeps the Deck installed only when all YES (docs\reports\phase7\deck-ui.md)
 npm run deck:menu           # row 5 probe: the menu items with the Deck, two real edits on the selected photo, put back; plugin 0.18.0 (docs\reports\phase7\plugin-menu.md)
+npm run phase7:check        # Phase 7 acceptance on the Deck: five edits, two Claude Desktop chats, no-Deck fallback, Lightroom quit; resumes (-- --new, -- --redo E3) (docs\reports\phase7\PHASE7.md)
 node engine\dist\mcp\main.js # the stdio MCP server (Claude Desktop starts it; tool log in $env:LRC_AVG_LOG_DIR or %LOCALAPPDATA%\LrC-AVG\logs)
 graphify query "How does X reach Y?"
 ```

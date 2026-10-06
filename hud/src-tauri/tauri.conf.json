@@ -2,7 +2,7 @@
   "$schema": "../../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "LrC-AVG HUD",
   "mainBinaryName": "LrC-AVG HUD",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "identifier": "com.lrcavg.hud",
   "build": {
     "frontendDist": "../ui-dist"

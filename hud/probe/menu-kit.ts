@@ -17,7 +17,8 @@ import { PreviewService } from "../../engine/dist/preview/index.js";
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
 
 // --- The plugin's log ----------------------------------------------------------------------------
-const BRIDGE_LOG = path.join(tmpdir(), "LrC-AVG", "bridge.log");
+/** LRC_AVG_PLUGIN_LOG: a dev override for dry runs against the simulator, as phase5-check-cli.ts has it. */
+const BRIDGE_LOG = process.env["LRC_AVG_PLUGIN_LOG"] || path.join(tmpdir(), "LrC-AVG", "bridge.log");
 
 /** The plugin's log from the byte where the probe started (the file only grows during a run; a restart that starts it over reads from 0). */
 export class PluginLog {
@@ -88,12 +89,12 @@ export type ProbeClient = {
 };
 export type Engine = { client: ProbeClient; tools: ProbeTools; map: ReturnType<typeof loadDefaultParamMap> };
 
-/** The engine with the Deck; `deckOn()` false makes it find no Deck to start (the fallback step). */
-export async function startEngine(outDir: string, deckOn: () => boolean, say: (m: string) => void): Promise<Engine> {
+/** The engine with the Deck; `deckOn()` false makes it find no Deck to start (the fallback step); `tag` marks its engine version in the logs (row 6: "phase7-check"). */
+export async function startEngine(outDir: string, deckOn: () => boolean, say: (m: string) => void, tag = "menu-probe"): Promise<Engine> {
   const dev = devOverrides();
   let tools: ProbeTools | null = null;
   const client = new BridgeClient({
-    engineVersion: `${ENGINE_VERSION}-menu-probe`,
+    engineVersion: `${ENGINE_VERSION}-${tag}`,
     log: (m: string) => say(`  (${m})`),
     silenceAllowanceMs: () => ((tools?.sessionManager()?.current() ?? null) !== null ? SESSION_SILENCE_MS : 0),
     ...dev.bridge,
@@ -107,7 +108,7 @@ export async function startEngine(outDir: string, deckOn: () => boolean, say: (m
     previews: new PreviewService(client),
     intents: new IntentLibrary({ map }),
     sessionLogDir: path.join(outDir, "sessions"),
-    engineVersion: `${ENGINE_VERSION}-menu-probe`,
+    engineVersion: `${ENGINE_VERSION}-${tag}`,
     ensureBridge: async () => void (await client.waitConnected(15_000)),
     log: new ToolLog(outDir),
     deck: { log: (m: string) => say(`  (${m})`), launcher: { exe: () => (deckOn() ? findHudExe() : null) } },

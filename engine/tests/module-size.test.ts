@@ -8,9 +8,9 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
-const SCANNED = ["engine/src", "engine/tests", "plugin", "spikes"];
+const SCANNED = ["engine/src", "engine/tests", "plugin", "spikes", "hud"];
 const EXTENSIONS = new Set([".ts", ".js", ".mjs", ".lua", ".rs"]);
-// target and gen: Cargo and Tauri output; ui-dist: the S9 HUD's generated UI, which copies zod (all gitignored).
+// target and gen: Cargo and Tauri output; ui-dist: the S9 HUD's and the Deck's generated UI, which copies zod (all gitignored).
 const SKIPPED_DIRS = new Set(["node_modules", "dist", "target", "gen", "ui-dist"]);
 const MAX_LINES = 400;
 

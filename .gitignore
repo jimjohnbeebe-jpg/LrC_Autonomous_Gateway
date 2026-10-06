@@ -40,3 +40,8 @@ release/
 spikes/S9/tauri/src-tauri/target/
 spikes/S9/tauri/src-tauri/gen/
 spikes/S9/tauri/ui-dist/
+
+# The Deck (hud): the Tauri build output and the generated UI (npm run deck:build)
+hud/src-tauri/target/
+hud/src-tauri/gen/
+hud/ui-dist/

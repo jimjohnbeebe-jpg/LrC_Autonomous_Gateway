@@ -49,6 +49,7 @@ Repo: https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway (public; `main`
 ```
 engine\                   Node/TS MCP server (src\{mcp,session,params,metrics,preview,intents,log,bridge}, tests\, intents\, schemas\)
 plugin\LrC-AVG.lrplugin\  Lua plugin (Phase 1: bridge on 8765/8766 + Develop commands)
+hud\                      the Deck (Phase 7): src-tauri\ Rust window shell, ui\ TypeScript UI + channel client, probe\ row 4b probe
 plugin\spikes\S1-S6.lrplugin\  Phase 0 spike plugins (throwaway)
 spikes\S1-S6\             Phase 0 spike READMEs + Node scripts (throwaway)
 docs\                     survey, availability, dependencies, handover, reports\ (mirror of vault Reports\)
@@ -60,10 +61,11 @@ logs\  tests\golden\      dev logs (gitignored) / golden JPEG renders (later pha
 ## Commands (PowerShell, repo root)
 
 ```powershell
-npm install                 # installs engine + spikes workspaces
+npm install                 # installs engine + spikes + hud workspaces
 npm run build               # tsc -> engine\dist
 npm test                    # vitest (engine)
-npm run typecheck           # engine src+tests, spikes
+npm test -w hud             # vitest (hud\ui) + cargo test (hud\src-tauri; rustup MSVC needed)
+npm run typecheck           # engine src+tests, spikes, hud
 node spikes\S1\measure.ts   # spike scripts run directly (Node type stripping)
 npm run phase1:check        # Phase 1 acceptance check against Lightroom (docs\reports\phase1\PHASE1.md)
 npm run desktop:install     # register the engine in Claude Desktop as lrc-avg (backup first; removes lrc-avg-spike-s3)
@@ -78,6 +80,8 @@ npm run preset:pin          # regenerate engine\src\params\preset-format.lrc15.j
 npm run phase5:check        # Phase 5 acceptance check: HUD sessions on one photo, an approve chat, six Claude Desktop chats; resumes after a stop (-- --new starts over) (docs\reports\phase5\PHASE5.md)
 npm run s9:build -w spikes  # Phase 7 spike S9: build the Tauri HUD (rustup MSVC needed; spikes\S9\prereqs.ps1 checks)
 node spikes\S9\measure.ts   # spike S9 run: Lightroom in Develop and Claude Desktop open (docs\reports\phase7\S9.md)
+npm run deck:build          # the Deck: engine\dist, then hud\ui-dist + the Tauri build + NSIS installer (hud\src-tauri\target\release\bundle\nsis\)
+npm run deck:probe          # row 4b probe: Lightroom in Develop, Claude Desktop quit; installs, checks, uninstalls the Deck (docs\reports\phase7\deck-shell.md)
 node engine\dist\mcp\main.js # the stdio MCP server (Claude Desktop starts it; tool log in $env:LRC_AVG_LOG_DIR or %LOCALAPPDATA%\LrC-AVG\logs)
 graphify query "How does X reach Y?"
 ```

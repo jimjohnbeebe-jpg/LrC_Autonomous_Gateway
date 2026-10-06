@@ -499,7 +499,7 @@ The HUD process never talks to Lightroom's sockets. The plugin serves one bridge
 
 | Event | Engine | HUD |
 |---|---|---|
-| Install (proposed) | Finds the HUD executable at `%LOCALAPPDATA%\Programs\LrC-AVG HUD\` or through the `LRC_AVG_HUD_EXE` environment variable | Installed per user. No service, no autostart. |
+| Install (proposed) | Finds the HUD executable at `%LOCALAPPDATA%\Programs\LrC-AVG HUD\` or through the `LRC_AVG_HUD_EXE` environment variable. *As built (row 4b, engine 0.19.1): `%LOCALAPPDATA%\LrC-AVG HUD\LrC-AVG HUD.exe`, the folder of the Deck's per-user NSIS installer (`engine/src/hud/launch.ts`); the final install path is Phase 8's (Q10).* | Installed per user. No service, no autostart. *As built: one Deck at a time through a named mutex, not the single-instance crate (`hud/src-tauri/src/main.rs`).* |
 | Engine takes the bridge lock (the first tool call that needs Lightroom: `main.ts:6-10`) | Opens the HUD listener on 127.0.0.1, port 0. Writes `hud_endpoint.json`. | If running, it reads the file and connects (section 3.3) |
 | `lr_begin_session` (the begin state goes out with `open: true`: `engine/src/session/manager.ts:129-130`) | Sends the full state on the channel. If no HUD client is connected, spawns the HUD with `detached: true` and `windowsHide: true`, then waits up to 3 s [inference] for it to connect. If none connects, `open: true` goes to the classic HUD (fallback). | Connects and shows itself without activation, once per edit. This is decision 6 as it stands: the HUD opens by itself once, at begin (`Hud.lua:9-11`; `publisher.ts:10-11`; [stated: Jim, 2026-09-28, "Opens by itself, once (Recommended)"]). |
 | Each stage | A full state with seq + 1 | Replaces its whole state. No partial updates. |

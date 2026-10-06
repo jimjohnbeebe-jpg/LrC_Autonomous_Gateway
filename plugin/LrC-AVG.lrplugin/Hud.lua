@@ -167,6 +167,7 @@ end
 -- Sockets.lua starts onSendConnected in its own task]. Never yields.
 function Hud.markUnknown()
     HudClick.resendReport() -- a put-back the engine has not heard of yet (HudClick.lua)
+    H.deck = false -- until this engine says otherwise (Hud.deck): a Deck of the engine before is not this one's
     local s = H.state
     if s == nil or HudState.isEnd(s.stage) then return end
     H.unknownAt = LrDate.currentTime()
@@ -226,6 +227,34 @@ end
 
 function Hud.menuEvent(name, variant)
     HudClick.menuEvent(name, variant, refresh, Hud.show)
+end
+
+-- Bridge command hud_deck (plugin 0.18.0, Phase 7 row 5; engine\src\hud\deck-menu.ts): whether a Deck
+-- is connected to the engine, sent at each change and after each engine connection. Never yields.
+function Hud.deck(payload)
+    local bad = { code = "bad_request", message = "hud_deck takes { connected = true or false }", recoverable = false }
+    if type(payload) ~= "table" or type(payload.connected) ~= "boolean" then return nil, bad end
+    for key in pairs(payload) do
+        if key ~= "connected" then return nil, bad end
+    end
+    H.deck = payload.connected
+    Log.info("hud: Deck " .. (H.deck and "connected" or "not connected"))
+    return { connected = H.deck }
+end
+
+-- "Show Vision Gateway HUD" (Q4 [stated: Jim, 2026-10-05, "Show Deck, keep keys (Recommended)"]): with
+-- a Deck live and an open edit the engine knows, the Deck is asked to show itself opened (hud_show) and
+-- the classic window stays closed. Otherwise the classic window opens, as before: also while the engine
+-- is away, so its Put back stays this one menu item away (Q17 [stated: Jim, 2026-10-05, "No, Deck shows
+-- path (Recommended)"]). Runs in a task: the send may wait for its socket (Events.send).
+function Hud.showFromMenu()
+    local s = H.state
+    if s and not HudState.isEnd(s.stage) and not H.unknownAt and HudClick.deckLive() then
+        local ok, why = Events.send("hud_show", { session_id = s.session_id })
+        Log.info("hud: menu show: " .. (ok and ("the Deck asked to show edit " .. s.session_id) or ("not sent, " .. tostring(why))))
+        if ok then return end
+    end
+    Hud.show()
 end
 
 return Hud

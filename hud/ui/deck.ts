@@ -16,7 +16,7 @@ import { startPulse } from "./glyphs.ts";
 import { html } from "./render.ts";
 import { approveLabel, LABEL, pickLabel } from "./text.ts";
 import { primary, view, type ActionId, type View } from "./view.ts";
-import { HIDDEN, onState, onTick, onUserHide, type Change } from "./visibility.ts";
+import { HIDDEN, onReveal, onState, onTick, onUserHide, type Change } from "./visibility.ts";
 
 declare global {
   interface Window {
@@ -217,6 +217,14 @@ function onMessage(text: string): void {
   } else if (msg.type === "thumb") {
     if (msg.jpeg_b64) thumbs.set(msg.key, `data:image/jpeg;base64,${msg.jpeg_b64}`);
     else thumbs.delete(msg.key);
+    render();
+  } else if (msg.type === "reveal") {
+    // Row 5 (Q4): the menu's "Show Vision Gateway HUD". Shown opened, without the keyboard (window.rs show; S9-6, docs\reports\phase7\S9.md).
+    const [v, change] = onReveal(vis, msg.session_id);
+    vis = v;
+    if (change) open = true;
+    log({ reveal: msg.session_id, shown: change !== null });
+    apply(change, "menu");
     render();
   } else if (msg.type === "welcome") {
     connected = true;

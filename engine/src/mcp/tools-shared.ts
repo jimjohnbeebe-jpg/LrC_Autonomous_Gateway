@@ -6,7 +6,7 @@
 
 import { randomUUID } from "node:crypto";
 import { pluginVersionAtLeast, type BridgeClient } from "../bridge/index.js";
-import { Deck, HudEvents, HudFanOut, HudLauncher, HudPublisher, type DeckDeps } from "../hud/index.js";
+import { Deck, DeckMenu, HudEvents, HudFanOut, HudLauncher, HudPublisher, type DeckDeps } from "../hud/index.js";
 import type { IntentLibrary } from "../intents/index.js";
 import type { ToolLog } from "../log/index.js";
 import type { Metrics, Region } from "../metrics/index.js";
@@ -150,6 +150,7 @@ export function createContext(deps: ToolsDeps): ToolContext {
   if (hud && ctx.sessions) {
     const events = new HudEvents(deps.client, ctx.sessions, hud, { record: (r) => logHud(ctx, "hud_event", r), now: ctx.now, ...(deck ? { deck } : {}) });
     deck?.onEvent((e) => events.handle(e, "channel"));
+    if (deck) new DeckMenu(deps.client, deck, { record: (r) => logHud(ctx, "hud_menu", r) });
     deck?.onShow((m) => ctx.sessions?.showCopy(m.session_id, m.variant, (r) => logHud(ctx, "hud_show", r)));
   }
   return ctx;

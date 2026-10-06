@@ -2,7 +2,7 @@
 // hud-launch; Phase 7 row 3): SimHudClient, a stand-in for the Deck (Phase 7 row 4) that reads the
 // endpoint file, says hello and collects what the engine sends; and deckRig, the session harness's
 // manager reporting to the classic HUD and the Deck through HudFanOut, as mcp\tools-shared.ts wires
-// them (clicks and `show`), with the channel open and its endpoint file in the test's temporary folder. Call deckRig after
+// them (clicks, `show`, and row 5's DeckMenu), with the channel open and its endpoint file in the test's temporary folder. Call deckRig after
 // useSessionHarness(), inside a test.
 
 import { readFileSync } from "node:fs";
@@ -11,12 +11,14 @@ import { onTestFinished } from "vitest";
 import WebSocket from "ws";
 import {
   Deck,
+  DeckMenu,
   HudEvents,
   HudFanOut,
   HudLauncher,
   HudPublisher,
   engineMessageSchema,
   hudEndpointSchema,
+  type DeckMenuRecord,
   type DeckRecord,
   type EngineMessage,
   type HudChannelState,
@@ -52,7 +54,7 @@ export class SimHudClient {
   }
 
   /** Connect to the endpoint file's port and say hello (with `token`, the file's when absent). */
-  static async connect(endpointPath: string, options: { token?: string; hello?: boolean } = {}): Promise<SimHudClient> {
+  static async connect(endpointPath: string, options: { token?: string; hello?: boolean; hudVersion?: string } = {}): Promise<SimHudClient> {
     const endpoint = hudEndpointSchema.parse(JSON.parse(readFileSync(endpointPath, "utf8")));
     const ws = new WebSocket(`ws://127.0.0.1:${endpoint.port}`);
     await new Promise<void>((resolve, reject) => {
@@ -61,7 +63,7 @@ export class SimHudClient {
     });
     const sim = new SimHudClient(ws);
     onTestFinished(() => sim.close());
-    if (options.hello !== false) sim.send({ type: "hello", token: options.token ?? endpoint.token, hud_version: "test", pid: process.pid });
+    if (options.hello !== false) sim.send({ type: "hello", token: options.token ?? endpoint.token, hud_version: options.hudVersion ?? "test", pid: process.pid });
     return sim;
   }
 
@@ -111,6 +113,8 @@ export type DeckRig = {
   events: HudEventRecord[];
   /** What happened to each `show` (row 4a, E12), as mcp\tools-shared.ts logs it. */
   shows: ShowRecord[];
+  /** What the menu link did (row 5, hud\deck-menu.ts): hud_deck sent, hud_show handled. */
+  menu: DeckMenuRecord[];
 };
 
 /**
@@ -148,7 +152,9 @@ export async function deckRig(options: { exe?: string | null; onStart?: () => vo
   const shows: ShowRecord[] = [];
   const m = manager;
   deck.onShow((s) => m.showCopy(s.session_id, s.variant, (r) => shows.push(r)));
+  const menu: DeckMenuRecord[] = [];
+  new DeckMenu(client, deck, { record: (r) => menu.push(r), retryMs: 50 });
   await deck.open();
   onTestFinished(() => deck.close());
-  return { deck, hud, manager, launcher, endpoint, started, records, events, shows };
+  return { deck, hud, manager, launcher, endpoint, started, records, events, shows, menu };
 }

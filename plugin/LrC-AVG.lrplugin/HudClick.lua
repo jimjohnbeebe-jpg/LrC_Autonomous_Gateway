@@ -226,13 +226,19 @@ end
 -- opened behind the HUD [stated: Jim, 2026-09-29].
 HudClick.MENU_WAIT_SECONDS = 20
 
+-- Plugin 0.18.0 (Phase 7 row 5): a Deck is live while the engine is connected and has said one is
+-- connected to it (Hud.deck; reset at each engine connection, Hud.markUnknown).
+function HudClick.deckLive()
+    return H.deck == true and Events.connection().engine
+end
+
 local function mustWait()
     return not Events.connection().engine or HudState.unknown(H.unknownAt, LrDate.currentTime()) == "checking"
 end
 
 function HudClick.menuEvent(name, variant, refresh, show)
     local label = HudState.eventLabel(name, variant, H.state)
-    local line
+    local line, sent
     local refusal = HudState.refusal(H.state, name, variant)
     if refusal then
         line = notSent(label, refusal)
@@ -247,8 +253,7 @@ function HudClick.menuEvent(name, variant, refresh, show)
         local p, why = nil, R.changed
         if H.state.session_id == chosen then p, label, why = begin(name, variant, "menu") end
         if p then
-            local _, sent = finish(p, refresh) -- finish shows its own line while the click is current (PR #45)
-            line = sent
+            sent, line = finish(p, refresh) -- finish shows its own line while the click is current (PR #45)
         else
             local waitedText = waited >= HudClick.MENU_WAIT_SECONDS and string.format(CLICK.waited, HudClick.MENU_WAIT_SECONDS) or ""
             line = notSent(label, why .. waitedText)
@@ -256,7 +261,14 @@ function HudClick.menuEvent(name, variant, refresh, show)
         end
     end
     Log.info("hud: menu " .. name .. ": " .. line)
-    show()
+    -- Row 5 (spec D1, "Known conflict"): with a Deck live, a sent item leaves the classic window closed
+    -- and the Deck shows what follows; a refused or unsent one still opens it, so its reason is never
+    -- hidden [stated: Jim, 2026-10-05, "Go with recommendations", plan decision D1 A].
+    if sent and HudClick.deckLive() then
+        Log.info("hud: menu " .. name .. ": the Deck shows the outcome")
+    else
+        show()
+    end
     refresh()
 end
 

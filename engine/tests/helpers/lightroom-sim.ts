@@ -28,7 +28,8 @@ import { SimFiles } from "./lightroom-sim-files.js";
 import { SimLibrary } from "./lightroom-sim-library.js";
 import { SimMasks, installMasks } from "./lightroom-sim-masks.js";
 import { defaultSimPrefs, type SimPrefs } from "./lightroom-sim-prefs.js";
-import { PLUGIN_VERSION } from "../../src/bridge/version.js";
+import { HUD_DECK_PLUGIN } from "../../src/bridge/hud-protocol.js";
+import { PLUGIN_VERSION, pluginVersionAtLeast } from "../../src/bridge/version.js";
 
 export const nefDump = JSON.parse(
   readFileSync(fileURLToPath(new URL("../../../docs/reports/phase0/S5/s5_20260907-_OZ80093.NEF.json", import.meta.url)), "utf8"),
@@ -178,6 +179,11 @@ export class LightroomSim {
       this.prefs ? ok(luaize(this.prefs)) : { ok: false, error: { code: "unknown_command", message: "unknown command get_prefs", recoverable: false } },
     );
     plugin.handlers.set("hud_update", (p) => this.hud.update(p));
+    plugin.handlers.set("hud_deck", (p) =>
+      pluginVersionAtLeast(this.pluginVersion, HUD_DECK_PLUGIN)
+        ? this.hud.deckUpdate(p)
+        : { ok: false, error: { code: "unknown_command", message: "unknown command hud_deck", recoverable: false } },
+    );
     this.library.install(plugin);
     this.files.install(plugin);
     plugin.handlers.set("get_context", (p) => on(p, (u) => this.context(u)));

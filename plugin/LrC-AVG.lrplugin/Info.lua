@@ -7,7 +7,8 @@
 -- its events (Events.lua) and the menu items below are row 4. Masks.lua (plugin 0.11.0 to 0.14.0) holds the
 -- AI-mask commands of the mask tools (GitHub issue #59); Pending.lua (0.16.0) guards every write to a photo
 -- while Lightroom still computes an AI mask on it. Transfer.lua (0.17.0, GitHub issue #55) holds collections,
--- exports and imports.
+-- exports and imports. From 0.18.0 (Phase 7 row 5, hud_deck) the menu items leave the classic HUD closed
+-- while the engine says a Deck is connected (HudClick.menuEvent, Hud.showFromMenu).
 -- LrSdkVersion 13.0: the five Phase 0 spike plugins declared it and ran on LrC 15.5.1
 -- [handle: docs\reports\phase0\PHASE0.md "Draft for LR_SDK_NOTES", SDK version]; whether it hides
 -- newer develop keys is [unverified].
@@ -35,5 +36,5 @@ return {
         { title = "LrC-AVG - Accept Edit", file = "MenuAccept.lua" },
         { title = "LrC-AVG - Abort Edit", file = "MenuAbort.lua" },
     },
-    VERSION = { major = 0, minor = 17, revision = 0, build = 0 },
+    VERSION = { major = 0, minor = 18, revision = 0, build = 0 },
 }

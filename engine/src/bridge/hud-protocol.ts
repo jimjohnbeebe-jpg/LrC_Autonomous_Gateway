@@ -171,3 +171,15 @@ export function parseHudEvent(event: Pick<EventEnvelope, "name" | "payload">): {
   }
   return { ok: true, event: { name, payload: parsed.data } as HudEvent };
 }
+
+// Phase 7 row 5 (spec docs\hud\lrc-avg-hud-spec-v2.md D1, "Known conflict"; Q4 [stated: Jim, 2026-10-05,
+// "Show Deck, keep keys (Recommended)"]), plugin 0.18.0. The engine tells the plugin whether a Deck is
+// connected (command hud_deck), so its menu items leave the classic window closed while one is; and the
+// plugin's "Show Vision Gateway HUD" asks the engine to bring up the Deck (event hud_show). hud_show is
+// not a click (no click id, no answer), so it is not one of HUD_EVENTS.
+export const HUD_DECK_PLUGIN = "0.18.0";
+export const hudDeckPayloadSchema = z.strictObject({ connected: z.boolean() });
+/** The plugin answers with what it now holds. */
+export const hudDeckResultSchema = z.object({ connected: z.boolean() });
+export const HUD_SHOW_EVENT = "hud_show";
+export const hudShowSchema = z.strictObject({ session_id: id });

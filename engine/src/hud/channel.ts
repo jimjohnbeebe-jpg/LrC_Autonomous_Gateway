@@ -57,6 +57,7 @@ export class HudChannel {
   private opening: Promise<void> | null = null;
   private token = "";
   private client: WebSocket | null = null;
+  private version: string | null = null;
   private lastInbound = 0;
   private timer: NodeJS.Timeout | null = null;
   /** Rises with each listen and close, so a listen that close() overtook does not open. */
@@ -96,6 +97,11 @@ export class HudChannel {
 
   connected(): boolean {
     return this.client !== null;
+  }
+
+  /** The connected client's `hud_version` from its hello, else null. */
+  clientVersion(): string | null {
+    return this.client ? this.version : null;
   }
 
   /** Send to the client; false when there is none. */
@@ -166,7 +172,7 @@ export class HudChannel {
         if (msg?.type !== "hello" || !this.tokenMatches(msg.token)) return ws.close(1008, "hello refused");
         greeted = true;
         clearTimeout(helloTimer);
-        return this.take(ws);
+        return this.take(ws, msg.hud_version);
       }
       if (this.client !== ws) return;
       this.lastInbound = Date.now();
@@ -176,9 +182,10 @@ export class HudChannel {
     });
   }
 
-  private take(ws: WebSocket): void {
+  private take(ws: WebSocket, version: string): void {
     const old = this.client;
     this.client = ws;
+    this.version = version;
     this.lastInbound = Date.now();
     if (old) old.close(1000, "replaced by a newer client");
     this.send({ type: "welcome", engine_version: this.opts.engineVersion, ...this.opts.welcome() });

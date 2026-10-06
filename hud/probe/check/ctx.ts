@@ -37,7 +37,7 @@ export function saveState(state: State): void {
 
 export class Ctx {
   readonly state: State;
-  readonly dir: string;
+  dir: string;
   readonly plog = new PluginLog();
   private engineNow: Engine | null = null;
   private lock: Lock | null = null;
@@ -46,6 +46,14 @@ export class Ctx {
     this.state = state;
     this.dir = path.join(OUT, state.run);
     mkdirSync(this.dir, { recursive: true });
+  }
+
+  /** `--new`, once the last run's photo is back: this run's state replaces it, in place, and is saved. */
+  reset(next: State): void {
+    Object.assign(this.state, next);
+    this.dir = path.join(OUT, next.run);
+    mkdirSync(this.dir, { recursive: true });
+    this.save();
   }
 
   say(text: string): void {
@@ -176,7 +184,8 @@ export class Ctx {
    */
   async ensureMode(want: "autonomous" | "approve_each_pass"): Promise<void> {
     const label = want === "autonomous" ? "Autonomous" : "Approve each pass";
-    for (let round = 0; round < 3; round++) {
+    // Three asks, each read back, the last one too (Greptile, PR #91 review 2).
+    for (let round = 0; round <= 3; round++) {
       const prefs = (await this.engine().client.request("get_prefs", {}, { timeoutMs: 30_000 })) as Json;
       if (prefs["mode"] === want) {
         if (want === "autonomous" && this.state.mode_changed) {
@@ -185,7 +194,7 @@ export class Ctx {
         }
         return;
       }
-      await enter(`${PLUGIN_MANAGER} "${label}", then click Done.`);
+      if (round < 3) await enter(`${PLUGIN_MANAGER} "${label}", then click Done.`);
     }
     throw new Error(`the settings page's Mode is still not "${label}". Set it (${PLUGIN_MANAGER} "${label}"), then run \`npm run phase7:check\` again.`);
   }

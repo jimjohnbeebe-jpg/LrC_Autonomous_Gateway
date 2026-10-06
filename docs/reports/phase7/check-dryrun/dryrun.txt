@@ -893,6 +893,117 @@ Results saved automatically in %USERPROFILE%\AppData\Local\Temp\lrc-avg-p7dry-ay
 [driver] chat 2: one pass, then Claude Desktop quit mid-edit
 [driver] exe restored: true; copies left 0; scratch %USERPROFILE%\AppData\Local\Temp\lrc-avg-p7dry-ayMDus
 
+== Pass 5: after Greptile review 2's fixes, the `--new` path, a fresh simulator (2026-10-06 13:12 UTC) ==
+The driver's two runCheck calls were changed to `["--redo", "E5"]` (a first run: no saved state) and then
+`["--new", "--redo", "E5"]` (its label still reads "--redo E5"). Run 2 put the saved photo back, replaced the
+state (a new run folder and snapshot, "AVG P7check start 2026-10-06T13-12-30-691Z") and ran E5; no ERROR, back.E5 YES.
+== run 1 (exit 0) ==
+Phase 7 check. Installing the Deck 0.3.1 (per user, no admin rights needed)...
+
+The check's photo: 20260907-_OZ80093.NEF. A snapshot "AVG P7check start 2026-10-06T13-12-08-075Z" holds it as it is now.
+
+=== Edit 5: a remembered spot on no monitor ===
+
+Edit 5: the Deck's remembered spot on no monitor. The check stops the Deck, writes a spot far off every monitor into its window.json, and starts an edit.
+  NO   A5.fallback.log
+
+The Deck opened at the bottom centre of the monitor Lightroom is on.
+Type y or n, then Enter:   YES  A5.fallback.jim
+  YES  back.E5
+
+Lines:
+  A1       NOT RUN
+  A2       NOT RUN
+  A3       NOT RUN
+  A4       NOT RUN
+  A5       NO (A5.fallback.log)
+  A6       NOT RUN
+  A7       NOT RUN
+  A8       NOT RUN
+  A9       NOT RUN
+  A10      NOT RUN
+  A11      NOT RUN
+  A12      NOT RUN
+  A13      NOT RUN
+  A14      NOT RUN
+  A15      NOT RUN
+  A16      NOT RUN
+  A17      NOT RUN
+  A18      NOT RUN
+  A19      NOT RUN
+  A21      NOT RUN
+  A22      NOT RUN
+  A23      NOT RUN
+  A24      NOT RUN
+  cleanup  NOT RUN
+Budgets (spec 9):
+  cold_start    not measured (target 1500 ms, n=0)  NOT MEASURED
+  warm_show     not measured (target 150 ms, n=0)  NOT MEASURED
+  update_paint  not measured (target 100 ms, n=0)  NOT MEASURED
+  click_action  not measured (target 50 ms, n=0)  NOT MEASURED
+  memory        not measured (target 150 MiB, n=0)  NOT MEASURED
+  cpu_hidden    not measured (target 0.5 %, n=0)  NOT MEASURED
+  cpu_visible   not measured (target 2 %, n=0)  NOT MEASURED
+
+Phase 7 acceptance: FAILED (A1 NOT RUN, A2 NOT RUN, A3 NOT RUN, A4 NOT RUN, A5 NO, A6 NOT RUN, A7 NOT RUN, A8 NOT RUN, A9 NOT RUN, A10 NOT RUN, A11 NOT RUN, A12 NOT RUN, A13 NOT RUN, A14 NOT RUN, A15 NOT RUN, A16 NOT RUN, A17 NOT RUN, A18 NOT RUN, A19 NOT RUN, A21 NOT RUN, A22 NOT RUN, A23 NOT RUN, A24 NOT RUN, cleanup NOT RUN, cold_start NOT MEASURED, warm_show NOT MEASURED, update_paint NOT MEASURED, click_action NOT MEASURED, memory NOT MEASURED, cpu_hidden NOT MEASURED, cpu_visible NOT MEASURED)
+Steps left: E1, E2, E3, E4, C1, C2, F1, F2. Run `npm run phase7:check` again to go on.
+Results saved automatically in %USERPROFILE%\AppData\Local\Temp\lrc-avg-p7dry-K76SHl\out. Tell Claude Code "done".
+
+== run 2: --redo E5 (exit 0) ==
+Phase 7 check. Installing the Deck 0.3.1 (per user, no admin rights needed)...
+
+The check's photo: 20260907-_OZ80093.NEF. A snapshot "AVG P7check start 2026-10-06T13-12-30-691Z" holds it as it is now.
+
+=== Edit 5: a remembered spot on no monitor ===
+
+Edit 5: the Deck's remembered spot on no monitor. The check stops the Deck, writes a spot far off every monitor into its window.json, and starts an edit.
+  NO   A5.fallback.log
+
+The Deck opened at the bottom centre of the monitor Lightroom is on.
+Type y or n, then Enter:   YES  A5.fallback.jim
+  YES  back.E5
+
+Lines:
+  A1       NOT RUN
+  A2       NOT RUN
+  A3       NOT RUN
+  A4       NOT RUN
+  A5       NO (A5.fallback.log)
+  A6       NOT RUN
+  A7       NOT RUN
+  A8       NOT RUN
+  A9       NOT RUN
+  A10      NOT RUN
+  A11      NOT RUN
+  A12      NOT RUN
+  A13      NOT RUN
+  A14      NOT RUN
+  A15      NOT RUN
+  A16      NOT RUN
+  A17      NOT RUN
+  A18      NOT RUN
+  A19      NOT RUN
+  A21      NOT RUN
+  A22      NOT RUN
+  A23      NOT RUN
+  A24      NOT RUN
+  cleanup  NOT RUN
+Budgets (spec 9):
+  cold_start    not measured (target 1500 ms, n=0)  NOT MEASURED
+  warm_show     not measured (target 150 ms, n=0)  NOT MEASURED
+  update_paint  not measured (target 100 ms, n=0)  NOT MEASURED
+  click_action  not measured (target 50 ms, n=0)  NOT MEASURED
+  memory        not measured (target 150 MiB, n=0)  NOT MEASURED
+  cpu_hidden    not measured (target 0.5 %, n=0)  NOT MEASURED
+  cpu_visible   not measured (target 2 %, n=0)  NOT MEASURED
+
+Phase 7 acceptance: FAILED (A1 NOT RUN, A2 NOT RUN, A3 NOT RUN, A4 NOT RUN, A5 NO, A6 NOT RUN, A7 NOT RUN, A8 NOT RUN, A9 NOT RUN, A10 NOT RUN, A11 NOT RUN, A12 NOT RUN, A13 NOT RUN, A14 NOT RUN, A15 NOT RUN, A16 NOT RUN, A17 NOT RUN, A18 NOT RUN, A19 NOT RUN, A21 NOT RUN, A22 NOT RUN, A23 NOT RUN, A24 NOT RUN, cleanup NOT RUN, cold_start NOT MEASURED, warm_show NOT MEASURED, update_paint NOT MEASURED, click_action NOT MEASURED, memory NOT MEASURED, cpu_hidden NOT MEASURED, cpu_visible NOT MEASURED)
+Steps left: E1, E2, E3, E4, C1, C2, F1, F2. Run `npm run phase7:check` again to go on.
+Results saved automatically in %USERPROFILE%\AppData\Local\Temp\lrc-avg-p7dry-K76SHl\out. Tell Claude Code "done".
+
+[driver] 
+[driver] exe restored: true; copies left 0; scratch %USERPROFILE%\AppData\Local\Temp\lrc-avg-p7dry-K76SHl
+
 == Appendix: the driver (a scratch vitest file, engine\tests\zz-scratch-p7-dryrun.test.ts, run with `npx vitest run
 tests/zz-scratch-p7-dryrun.test.ts` in engine\; passes 2-3 with P7DRY_SCRATCH set to pass 1's scratch folder, pass 3 with
 P7DRY_REDO=F1; then deleted) ==

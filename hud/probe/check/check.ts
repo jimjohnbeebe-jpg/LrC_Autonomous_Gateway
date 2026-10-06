@@ -36,19 +36,16 @@ if (!lightroomRunning()) stop("Lightroom is not running: open Lightroom in Devel
 if (liveEngine() !== null) stop("Claude Desktop's engine is running: quit Claude Desktop (right-click the Claude icon in the Windows system tray > Quit), then run this again.");
 const setup = installer() ?? stop("The Deck's installer 0.3.1 is not built: Claude Code runs `npm run deck:build` first.");
 
-// A run killed mid-step can have left the Deck renamed or window.json replaced: put them back from the
-// saved state first, also before `--new` replaces it (Greptile, PR #91).
+// The saved state is used as it is until everything it holds out is back: the Deck renamed, window.json
+// replaced, the photo edited. Only then does `--new` replace it (ctx.reset), so a run stopped on the way
+// keeps all of it for the next start (Greptile, PR #91, reviews 1 and 2).
 const prior = loadState();
-if (prior) {
-  const before = new Ctx(prior);
-  if (prior.renamed) restoreExe(before);
-  restoreSpot(before);
-}
 const run = new Date().toISOString().replace(/[:.]/g, "-");
 const fresh = prior === null || argv.includes("--new");
-// `--new` keeps what is still out in the catalog and the settings page: copies to remove, the Mode to set back.
-const ctx = new Ctx(fresh ? { ...freshState(run, Date.now()), copies: prior?.copies ?? [], mode_changed: prior?.mode_changed ?? false } : prior);
+const ctx = new Ctx(prior ?? freshState(run, Date.now()));
 const state = ctx.state;
+if (state.renamed) restoreExe(ctx);
+restoreSpot(ctx);
 // A step's error stays until that step finishes; the rest belong to the run that wrote them.
 for (const k of Object.keys(state.errors)) if (!STEPS.some((s) => s.id === k)) delete state.errors[k];
 saveState(state);
@@ -98,17 +95,14 @@ await wrapUp(null);
 async function firstPhoto(): Promise<void> {
   const e = ctx.engine();
   // `--new` after a stopped run: that run's photo goes back to its start before anything is recorded.
-  if (fresh && prior?.photo) {
-    state.photo = prior.photo;
-    const back = await ctx.putBack(null);
-    state.photo = null;
-    if (!back) throw new Error(`${prior.photo.filename} could not be put back as it was before the last check`);
-  }
   if (state.photo) {
     await ctx.selectPhoto();
     if (!(await ctx.putBack(null))) throw new Error(`${state.photo.filename} could not be put back as it was before the check`);
-    return;
   }
+  // `--new`, now that the last run's photo is back: a new state, keeping what is still out in the catalog
+  // and the settings page (copies to remove, the Mode to set back).
+  if (fresh && prior) ctx.reset({ ...freshState(run, Date.now()), copies: [...state.copies], mode_changed: state.mode_changed });
+  if (state.photo) return;
   const sel = await e.client.request("get_selection", { max: 2 });
   const p = sel.count === 1 ? sel.photos[0] : undefined;
   if (!p?.uuid) throw new Error(`select exactly one photo in Lightroom (${sel.count} selected), then run this again.`);

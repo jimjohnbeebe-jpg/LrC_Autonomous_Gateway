@@ -117,7 +117,7 @@ export const stateSchema = z.strictObject({
   /** The Deck's executable is renamed (F1): the next start renames it back first. */
   renamed: z.boolean(),
   /** E3 asked Jim to set the settings page's Mode to "Approve each pass" and it is not yet seen back at Autonomous. */
-  mode_changed: z.boolean(),
+  mode_changed: z.boolean().default(false), // absent in a state saved before it (Greptile, PR #91 review 2)
   /** window.json before E5 wrote a spot on no monitor (null: nothing to put back). */
   spot_backup: z.string().nullable(),
   /** Deck processes started from a stopped Deck: their creation time, for the cold start. */

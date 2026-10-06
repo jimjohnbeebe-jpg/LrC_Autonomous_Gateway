@@ -78,5 +78,7 @@ describe("phase7 check summary", () => {
   it("the state schema takes a fresh state and refuses unknown fields", () => {
     expect(stateSchema.parse(freshState("r", 1))).toEqual(freshState("r", 1));
     expect(() => stateSchema.parse({ ...freshState("r", 1), extra: 1 })).toThrow();
+    const { mode_changed: _, ...before } = freshState("r", 1); // a state saved before mode_changed existed
+    expect(stateSchema.parse(before).mode_changed).toBe(false);
   });
 });

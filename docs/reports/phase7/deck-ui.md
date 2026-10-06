@@ -1,8 +1,8 @@
 ---
 report: AVG-P7-4c the Deck's states probe
 phase: 7
-status: template
-authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-10-05, branch phase-7/deck-ui (vault PHASE7_PLAN row 4c). Observed and verdict: Jim."
+status: accepted
+authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-10-05, branch phase-7/deck-ui (vault PHASE7_PLAN row 4c). Observed: Jim's answers and run (2026-10-06 03:34 UTC); the analysis of the Deck's log: Claude Code. Verdict: Jim."
 date: 2026-10-05
 ---
 
@@ -73,32 +73,39 @@ PHASES.md gives no go/no-go rule for a row probe. The plan's rule: every line YE
    - **Found reading the code after the PR opened:** a click on a Deck that did not have the keyboard (the usual case, since the Deck hands it back to Lightroom after each click) activates the window. The `focus` event then redrew the Deck between mouse-down and mouse-up, and a click whose two halves land on different elements is dropped [inference: the browser's click rule, not tried in the Deck]. Now key hints are shown and hidden by a CSS class, with no redraw on focus, and a pointer press counts when mouse-down and mouse-up are on the same control by its `data-act`/`data-card` (`hud\ui\deck.ts` `keyOf`), so a state arriving mid-click no longer loses it either.
    - **At the default 1200 px width:** one column of four slider rows, then "+n more"; cards with the thumbnail on top and the guardrail mark beside the name, the sentence in the card's tooltip. **At 1800 px:** two columns of rows, full cards with the sentence. **At 960 px**, the Deck's minimum since Greptile's review (it was 640 px, too narrow for the opened deck: `hud\src-tauri\src\place.rs` `MIN_W`), the rows and three cards still fit (`renders\*-960.png`).
 4. **Dry run of the probe's start with Notepad standing in for Lightroom** (`LRC_AVG_HUD_LR_EXE=notepad.exe`, stopped after S1). The installer put hud 0.2.0 where the engine looks. C1, S1a and S1b were YES (the S1b answer was scripted, so it means nothing here). The Deck's log: `"version":"0.2.0"`; placed at `[1020,1872,1800,216]`, the opened height (144 CSS px at scale 1.5); shown with `fg_pid` 11896, not the Deck's 23136. So it opened without taking the foreground [handle: `%TEMP%\LrC-AVG\hud\hud_23136_1791256268150.jsonl` lines "start", "place", "show", 2026-10-05]. Claude Code then uninstalled the Deck by hand (`uninstall.exe /S`; the folder was gone) and deleted the stale `hud_endpoint.json` the stopped run left (its pid 22608 was dead) [handle: `ls` "No such file or directory", 2026-10-05].
-5. **[unverified] until the probe:**
+5. **[unverified] until the probe** (all three answered by run 1, below):
    - that a click on the Deck's sentence (a drag region) gives the Deck the keyboard (S3, S5);
    - that `SetForegroundWindow` hands the keyboard back to Lightroom after a pointer click (S2b; `hud\src-tauri\src\window.rs` `focus_lightroom`);
    - that thumbnails show under the page's CSP, now `img-src 'self' data:` (`tauri.conf.json`).
 
 ## Observed (Jim)
 
-*(Jim fills this in: the run's time, the probe's headline, and any n answers.)*
+**Run 1: 2026-10-06 03:34 UTC (2026-10-05 20:34 local)**, `npm run deck:states` on branch `phase-7/deck-ui` at `fff45fd`, the installer built from it [handle: `docs\reports\phase7\deck-ui\states_2026-10-06T03-34-41-788Z.json`; the Deck's log beside it, `states_2026-10-06T03-34-41-788Z_hud_6524_1791257683705.jsonl`, 69 lines, redacted to `%USERPROFILE%`]. Jim said "probe done". The probe's result: `worked: true`, `failed: []`, `outcome: "kept"`. Jim answered y to every question, and every check the probe made itself passed. The Deck stays installed.
+
+**What the Deck's log shows (Claude Code; seconds from the Deck's start at 03:34:43.705 UTC):**
+- **Opened at every new edit:** each `edit_start` show (0.13 s, 88.63 s, 97.92 s, 163.69 s) placed the Deck at `[1020,1872,1800,216]`, 144 CSS px at scale 1.5. The foreground then stayed with the probe's PowerShell window (`fg_pid` 8564), not the Deck (6524).
+- **The keyboard back to Lightroom after each pointer click:** `focus_lightroom` `ok: true` after Approve (18.60 s), Abort (93.18 s), card B (120.62 s) and both triangle clicks (153.20 s, 161.01 s). Lightroom (pid 27476) became the foreground 0.12-0.18 s after each one: the `foreground` lines at 18.64 s, 93.21 s, 120.65 s, 153.23 s, 161.04 s.
+- **The keyboard way:** clicking the sentence made the Deck the foreground (50.43 s, 136.49 s), and its keys were taken: Enter sent Accept (83.20 s), 3 chose C (139.66 s), Enter picked C (142.12 s).
+- At 67.44 s, during S3, the deck closed to the bar (`place` `close`). That is Esc pressed a second time with nothing armed, which closes the opened deck (`keys.ts`) [inference: the log records the close, not the key]. The next edit opened at full height again.
+- Every click was answered by the stand-in within 0-60 ms (`answer` lines), and the probe recorded each click's payload (`states_….json` `detail`): `hud_approve_pass` with pass 1, `hud_accept`, `hud_abort`, `hud_pick` with variant C, each with `source: "hud"`.
 
 ## Numbers
 
 | Line | What | Result |
 |---|---|---|
-| C1 | the Deck connected within 3 s | |
-| S1a, S1b | opened at the edit's start, working, rows, keyboard stayed with Lightroom | |
-| S2a-c | Approve pass 1 sent; keyboard back to Lightroom; click line and grey buttons | |
-| S3a-d | Ctrl+Backspace arms, Esc disarms, nothing aborted; Enter sends Accept; Done | |
-| S4a, S4b | one click sends Abort; Done, photo back | |
-| S5a-e | three cards, no Accept; card click shows copy B; 3 then Enter picks C; Picked | |
-| S6 | the triangle closes and opens the deck | |
-| S7, S7b | not connected: undo and Put back paths, grey buttons; reconnects | |
-| C2 | the Deck stays installed (all YES) or was uninstalled | |
+| C1 | the Deck connected within 3 s | YES |
+| S1a, S1b | opened at the edit's start, working, rows, keyboard stayed with Lightroom | YES, YES |
+| S2a-c | Approve pass 1 sent; keyboard back to Lightroom; click line and grey buttons | YES, YES, YES |
+| S3a-d | Ctrl+Backspace arms, Esc disarms, nothing aborted; Enter sends Accept; Done | YES, YES, YES, YES |
+| S4a, S4b | one click sends Abort; Done, photo back | YES, YES |
+| S5a-e | three cards, no Accept; card click shows copy B; 3 then Enter picks C; Picked | YES ×5 |
+| S6 | the triangle closes and opens the deck | YES |
+| S7, S7b | not connected: undo and Put back paths, grey buttons; reconnects | YES, YES |
+| C2 | the Deck stays installed (all YES) or was uninstalled | YES: kept |
 
 ## Verdict
 
-*(Jim: go, or what to change.)*
+**Go** [stated: Jim, 2026-10-05 local, "Go (Recommended)" to "What is your verdict for row 4c?"]. PR #89 merges by squash, without a Greptile re-review [stated: Jim, "Squash (Recommended)"; "Did not do Greptile re-review if you performed the code fix already."]. The Deck stays installed on Jim's machine, so his real edits use it from now on; the classic window stays the fallback.
 
 ## Consequences / open questions
 

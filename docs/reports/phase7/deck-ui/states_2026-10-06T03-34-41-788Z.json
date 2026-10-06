@@ -1,0 +1,282 @@
+{
+  "run": "2026-10-06T03-34-41-788Z",
+  "worked": true,
+  "failed": [],
+  "outcome": "kept",
+  "results": [
+    {
+      "id": "C1",
+      "what": "the Deck connected within 3 s of its start",
+      "ok": true
+    },
+    {
+      "id": "S1a",
+      "what": "the Deck showed at the edit's start",
+      "ok": true
+    },
+    {
+      "id": "S1b",
+      "what": "Jim: opened, working, slider rows, Lightroom kept the keyboard",
+      "ok": true
+    },
+    {
+      "id": "S2a",
+      "what": "the Deck sent Approve pass 1",
+      "ok": true,
+      "detail": {
+        "type": "event",
+        "name": "hud_approve_pass",
+        "payload": {
+          "session_id": "deck-probe-muw4kqjt-1",
+          "seq_seen": 2,
+          "click_id": "deck-e963dd889a84b7eadd91d99b",
+          "source": "hud",
+          "pass": 1
+        }
+      }
+    },
+    {
+      "id": "S2b",
+      "what": "the keyboard went back to Lightroom after the click",
+      "ok": true
+    },
+    {
+      "id": "S2c",
+      "what": "Jim: the click line, grey buttons, Lightroom active",
+      "ok": true
+    },
+    {
+      "id": "S3a",
+      "what": "Jim: Ctrl+Backspace arms Abort, Esc disarms",
+      "ok": true
+    },
+    {
+      "id": "S3b",
+      "what": "nothing was aborted by Ctrl+Backspace then Esc",
+      "ok": true
+    },
+    {
+      "id": "S3c",
+      "what": "Enter sent Accept",
+      "ok": true,
+      "detail": {
+        "type": "event",
+        "name": "hud_accept",
+        "payload": {
+          "session_id": "deck-probe-muw4kqjt-1",
+          "seq_seen": 3,
+          "click_id": "deck-2c352873d7fa87e043641960",
+          "source": "hud"
+        }
+      }
+    },
+    {
+      "id": "S3d",
+      "what": "Jim: Done, the edit is kept",
+      "ok": true
+    },
+    {
+      "id": "S4a",
+      "what": "one click sent Abort",
+      "ok": true,
+      "detail": {
+        "type": "event",
+        "name": "hud_abort",
+        "payload": {
+          "session_id": "deck-probe-muw4mmui-2",
+          "seq_seen": 1,
+          "click_id": "deck-a20bedbe891214c2d9373aba",
+          "source": "hud"
+        }
+      }
+    },
+    {
+      "id": "S4b",
+      "what": "Jim: Done, the photo is back",
+      "ok": true
+    },
+    {
+      "id": "S5a",
+      "what": "Jim: three cards with pictures, no Accept",
+      "ok": true
+    },
+    {
+      "id": "S5b",
+      "what": "a click on card B asked Lightroom to show copy B",
+      "ok": true
+    },
+    {
+      "id": "S5c",
+      "what": "Jim: card B framed, Continue on copy B",
+      "ok": true
+    },
+    {
+      "id": "S5d",
+      "what": "3 chose copy C and Enter picked it",
+      "ok": true,
+      "detail": {
+        "type": "event",
+        "name": "hud_pick",
+        "payload": {
+          "session_id": "deck-probe-muw4mu0j-3",
+          "seq_seen": 1,
+          "click_id": "deck-c5baca0071e08b7c3bfc3e34",
+          "source": "hud",
+          "variant": "C"
+        }
+      }
+    },
+    {
+      "id": "S5e",
+      "what": "Jim: card C reads Picked",
+      "ok": true
+    },
+    {
+      "id": "S6",
+      "what": "Jim: the triangle closes and opens the deck",
+      "ok": true
+    },
+    {
+      "id": "S7",
+      "what": "Jim: not connected, undo path, Put back path, grey buttons",
+      "ok": true
+    },
+    {
+      "id": "S7b",
+      "what": "the Deck reconnected by itself",
+      "ok": true
+    },
+    {
+      "id": "C2",
+      "what": "the Deck stays installed: real edits use it from now on",
+      "ok": true
+    }
+  ],
+  "deck_ui": [
+    {
+      "ev": "ui",
+      "line": {
+        "engine_version": "deck-probe",
+        "gone": false,
+        "welcome": null
+      },
+      "t": 1791257683812.8923
+    },
+    {
+      "ev": "ui",
+      "line": {
+        "click": "hud_approve_pass",
+        "click_id": "deck-e963dd889a84b7eadd91d99b",
+        "pass": 1
+      },
+      "t": 1791257702304.1665
+    },
+    {
+      "ev": "focus_lightroom",
+      "ok": true,
+      "t": 1791257702308.7288,
+      "why": "pointer_approve"
+    },
+    {
+      "ev": "ui",
+      "line": {
+        "answer": "deck-e963dd889a84b7eadd91d99b"
+      },
+      "t": 1791257702309.0515
+    },
+    {
+      "ev": "ui",
+      "line": {
+        "click": "hud_accept",
+        "click_id": "deck-2c352873d7fa87e043641960"
+      },
+      "t": 1791257766908.782
+    },
+    {
+      "ev": "ui",
+      "line": {
+        "answer": "deck-2c352873d7fa87e043641960"
+      },
+      "t": 1791257766910.2717
+    },
+    {
+      "ev": "ui",
+      "line": {
+        "click": "hud_abort",
+        "click_id": "deck-a20bedbe891214c2d9373aba"
+      },
+      "t": 1791257776874.9465
+    },
+    {
+      "ev": "focus_lightroom",
+      "ok": true,
+      "t": 1791257776880.6987,
+      "why": "pointer_abort"
+    },
+    {
+      "ev": "ui",
+      "line": {
+        "answer": "deck-a20bedbe891214c2d9373aba"
+      },
+      "t": 1791257776929.998
+    },
+    {
+      "ev": "ui",
+      "line": {
+        "choose": "B"
+      },
+      "t": 1791257804320.1123
+    },
+    {
+      "ev": "focus_lightroom",
+      "ok": true,
+      "t": 1791257804326.3552,
+      "why": "pointer_card"
+    },
+    {
+      "ev": "ui",
+      "line": {
+        "choose": "C"
+      },
+      "t": 1791257823366.7175
+    },
+    {
+      "ev": "ui",
+      "line": {
+        "click": "hud_pick",
+        "click_id": "deck-c5baca0071e08b7c3bfc3e34",
+        "variant": "C"
+      },
+      "t": 1791257825820.6924
+    },
+    {
+      "ev": "ui",
+      "line": {
+        "answer": "deck-c5baca0071e08b7c3bfc3e34"
+      },
+      "t": 1791257825823.0327
+    },
+    {
+      "ev": "focus_lightroom",
+      "ok": true,
+      "t": 1791257836905.4114,
+      "why": "pointer_toggle"
+    },
+    {
+      "ev": "focus_lightroom",
+      "ok": true,
+      "t": 1791257844717.0044,
+      "why": "pointer_toggle"
+    },
+    {
+      "ev": "ui",
+      "line": {
+        "engine_version": "deck-probe",
+        "gone": false,
+        "welcome": "deck-probe-muw4o8ri-4"
+      },
+      "t": 1791257881814.02
+    }
+  ],
+  "deck_log": "hud_6524_1791257683705.jsonl"
+}

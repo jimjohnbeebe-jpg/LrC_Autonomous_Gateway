@@ -10,7 +10,7 @@ date: 2026-10-06
 
 ## Purpose
 
-Phase 7 built the Deck, a free-floating HUD window for Lightroom (spec `docs\hud\lrc-avg-hud-spec-v2.md` section 2.7). This check is Jim's acceptance of it in real edits on his machine:
+Phase 7 built the Deck, a free-floating HUD window for Lightroom (spec `docs\hud\lrc-avg-hud-spec-v2.md` section 2.7). This check is Jim's acceptance of it in real edits on Jim's machine:
 - the lines of spec 11.1 as 2.7 amends them, A1-A24 without A20 (Whole edit, deferred with E5);
 - the section 9 budgets, measured on the built Deck.
 
@@ -22,7 +22,7 @@ The plan for this row [stated: Jim, 2026-10-06, "go", to the recommendations]:
 - D3 A: for A24 the check renames the Deck's program and gives it its name back.
 - D4: Jim answers y/n in PowerShell.
 
-**How a line passes.** Each line passes only when Jim answers y. Where the logs can show the same thing, a log check sits beside his answer, and the line needs both. "Acceptance: WORKED" needs every line YES, the photo put back after every step, and every budget measured. A budget over its target is named in the headline. Whether that blocks Phase 7 is Jim's verdict.
+**How a line passes.** Each line passes only when Jim answers y. Where the logs can show the same thing, a log check sits beside Jim's answer, and the line needs both. "Acceptance: WORKED" needs every line YES, the photo put back after every step, and every budget measured. A budget over its target is named in the headline. Whether that blocks Phase 7 is Jim's verdict.
 
 ## Harness
 
@@ -43,7 +43,9 @@ The plan for this row [stated: Jim, 2026-10-06, "go", to the recommendations]:
   - Steps: edits E1-E5, chats C1-C2, F1 (no Deck), F2 (Lightroom quits).
   - The check resumes where it stopped: finished steps are skipped. `npm run phase7:check -- --new` starts over, and `npm run phase7:check -- --redo E3` runs one step again.
   - F2 runs only when every other step has finished, because nothing can be put back after Lightroom quits.
-  - A run stopped with Ctrl+C, or killed, puts back the photo, the Deck's program name and its `window.json` first: at its end, or else at the next start.
+  - A run stopped with Ctrl+C, or killed, puts back the photo, the Deck's program name and its `window.json` first: at its end, or else at the next start (also before `--new` starts over). On Ctrl+C the check starts no new edit call and waits for the one in flight before it puts the photo back.
+  - The settings page's Mode is read (`get_prefs`) before every edit. If it is not what the edit needs, the check asks Jim to set it. After E3, or after a run stopped during E3, it asks for Autonomous again until it reads it.
+  - E4 stays unfinished while any of its copies are still in the catalog. The next run asks for them first, before it makes new ones.
 - **The Deck.** The check installs Deck 0.3.1 at its start. The Deck stays installed.
 - **Logs.**
   - The Deck's logs: `%TEMP%\LrC-AVG\hud\hud_<pid>_<start>.jsonl`.
@@ -97,7 +99,7 @@ Allow about 60 minutes [inference: five scripted edits with two one-minute measu
 - If it says Lightroom is not running, open Lightroom in Develop and run the command again.
 - If it says Claude Desktop's engine is running, or another engine holds the bridge, quit Claude Desktop from its tray icon, wait a minute, and run the command again.
 - If it says to select exactly one photo, do step 2 and run the command again.
-- If it says the settings page's Mode is not Autonomous, set it (File > Plug-in Manager > LrC-AVG > Sessions > Mode: Autonomous > Done) and run the command again. It goes on from the step that stopped.
+- If it asks you to set the Mode, do the steps it prints (File > Plug-in Manager > LrC-AVG > Sessions > Mode > Done), then press Enter. If it says the Mode is still not right after three tries, set it and run the command again: it goes on from the step that stopped.
 - If it says `ERROR in <step>`, the run stops there and puts the photo back. Tell Claude Code the error line before you run it again.
 - If you need to stop, press Ctrl+C: the check puts things back and saves what it has. Run the command again later to go on.
 - If the last lines say `put_back` in an error, tell Claude Code before you edit that photo.
@@ -106,7 +108,7 @@ Allow about 60 minutes [inference: five scripted edits with two one-minute measu
 
 1. **Tests and builds** (2026-10-06, branch `phase-7/check`):
    - `npm test`: 83 files, 1069 passed, 1 skipped.
-   - `npm test -w hud`: 7 files, 51 passed (the 12 new ones in `hud\probe\check\summary.test.ts` and `budgets.test.ts`), plus cargo test, 5 passed.
+   - `npm test -w hud`: 7 files, 53 passed (the 14 new ones in `hud\probe\check\summary.test.ts` and `budgets.test.ts`), plus cargo test, 5 passed.
    - `npm run typecheck`: clean.
    - `npm run deck:build`: built `LrC-AVG HUD_0.3.1_x64-setup.exe` (1.35 MiB).
 2. **What the new tests cover:**
@@ -137,6 +139,10 @@ Allow about 60 minutes [inference: five scripted edits with two one-minute measu
      - `--redo E5` then ran E5 alone.
    - **Pass 3:** `--redo F1` on a fresh simulator. A24's log checks were all YES. Pass 2's A24 log NO came from the driver, which never closed the simulated classic window.
    - **Expected NOs:** without a Deck, every Deck-log check is NO and every budget is NOT MEASURED. Those lines are tested by Jim's run.
+   - **Pass 4**, after Greptile review 1's nine fixes, on a fresh simulator:
+     - all nine steps ran without an error, and the photo was back after every step;
+     - E3 asked for the Mode through `get_prefs` and read Autonomous again at its end;
+     - the copies were removed and the Deck's program restored.
 4. **Not run by Claude Code:** anything on the real Deck in Lightroom. That is Jim's run (rule: "Lightroom-side results are Jim's observations").
 
 ## Observed (Jim)

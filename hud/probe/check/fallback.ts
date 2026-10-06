@@ -11,7 +11,6 @@ import { HUD_EXE_NAME } from "../../../engine/dist/hud/launch.js";
 import { DECK_IMAGE, lightroomRunning, running, stopDeck } from "../kit.ts";
 import { createdMs } from "./budgets.ts";
 import type { Ctx } from "./ctx.ts";
-import { autonomous } from "./edits-a.ts";
 
 const SECOND = 1000;
 /** The executable the engine starts, as launch.ts findHudExe looks for it (LRC_AVG_HUD_EXE, else the per-user install). */
@@ -37,7 +36,6 @@ export async function f1(ctx: Ctx): Promise<void> {
   try {
     ctx.plog.step();
     const b = await ctx.begin({});
-    autonomous(b.json);
     await ctx.step(b.sid, { exposure: 0.1 });
     ctx.record("A24.log", (await ctx.plog.wait("hud: shown", 10 * SECOND)) && !running(DECK_IMAGE));
     ctx.say("The classic window \"LrC-AVG - Vision Gateway\" opened by itself. Click its Abort button. (The check sees it; nothing to type here.)");
@@ -54,12 +52,12 @@ export async function f2(ctx: Ctx): Promise<void> {
   ctx.say("Last: Lightroom quits. The check starts a short edit so the Deck is running, puts the photo back, then you quit Lightroom.");
   stopDeck();
   const b = await ctx.begin({});
-  autonomous(b.json);
   const shown = await ctx.deck(b.t0, (e) => e.ev === "show", 10 * SECOND);
   const created = shown ? createdMs(shown.pid) : null;
   if (shown && created !== null && created >= b.t0 - 2 * SECOND) ctx.state.cold.push({ pid: shown.pid, created });
   await ctx.step(b.sid, { exposure: 0.1 });
-  await ctx.putBack("F2");
+  // Nothing can be put back once Lightroom quits: stop here if the photo is not back (Greptile, PR #91).
+  if (!(await ctx.putBack("F2"))) throw new Error("the photo is not back as it was; Lightroom stays open. Tell Claude Code.");
   await ctx.release();
   const deckBefore = running(DECK_IMAGE);
   ctx.say("Now quit Lightroom: File > Exit. If Lightroom asks to back up its catalog, answer as you usually do. Watch the Deck. (The check sees it; nothing to type here.)");

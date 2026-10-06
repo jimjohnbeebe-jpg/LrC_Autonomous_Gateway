@@ -2,7 +2,7 @@
 // the process's creation to its first paint, the warm show only for a hidden Deck's new edit, update
 // to paint only while shown, and click to the engine's receipt by click id.
 import { describe, expect, it } from "vitest";
-import { timingsFrom, type PidEvent } from "./budgets.ts";
+import { sampleTree, timingsFrom, type PidEvent } from "./budgets.ts";
 
 const ui = (t: number, line: Record<string, unknown>, pid = 1): PidEvent => ({ ev: "ui", t, line, pid });
 const ev = (t: number, name: string, pid = 1): PidEvent => ({ ev: name, t, pid });
@@ -24,6 +24,20 @@ const LOG: PidEvent[] = [
   ui(6100, { got: 3, session: "s2", stage: "aborted", at: 6100 }),
   ui(6151, { painted: 3, at: 6150 }),
 ];
+
+describe("phase7 check samples", () => {
+  it("a Deck process that is not there gives an incomplete sample, not a zero that passes", async () => {
+    const s = await sampleTree(2_000_000_000, 20);
+    expect(s.complete).toBe(false);
+    expect(s.procs).toBe(0);
+  });
+
+  it("a process that is there gives a complete sample", async () => {
+    const s = await sampleTree(process.pid, 20);
+    expect(s.complete).toBe(true);
+    expect(s.private_mib).toBeGreaterThan(0);
+  });
+});
 
 describe("phase7 check timings", () => {
   it("measures each budget from its own start and stop", () => {

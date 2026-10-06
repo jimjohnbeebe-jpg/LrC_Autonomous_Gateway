@@ -11,11 +11,9 @@ import path from "node:path";
 import { WINDOW_JSON, enter, stopDeck } from "../kit.ts";
 import { createdMs, ui } from "./budgets.ts";
 import { Ctx } from "./ctx.ts";
-import { autonomous } from "./edits-a.ts";
 
 const SECOND = 1000;
 const CLICK_MS = 180 * SECOND;
-const PLUGIN_MANAGER = "In Lightroom: File > Plug-in Manager. In the list on the left, click LrC-AVG. In the Sessions box, set Mode to";
 type Variant = { id: string; uuid: string; copy_name: string };
 
 /** Lightroom's selected photo (the active one), or null. */
@@ -35,11 +33,12 @@ async function selects(ctx: Ctx, uuid: string | undefined, ms: number): Promise<
 }
 
 export async function e3(ctx: Ctx): Promise<void> {
-  ctx.say("Edit 3: Approve each pass.");
-  await enter(`${PLUGIN_MANAGER} "Approve each pass", then click Done.`);
+  ctx.say("Edit 3: Approve each pass. The check asks you to set the Mode, then sets nothing else.");
   const spot = existsSync(WINDOW_JSON) ? (JSON.parse(readFileSync(WINDOW_JSON, "utf8")) as { left?: number; bottom?: number; width?: number }) : null;
-  const b = await ctx.begin({});
-  if (Ctx.approval(b.json) !== "approve_each_pass") throw new Error(`the settings page's Mode is not "Approve each pass" (${String(Ctx.approval(b.json))}). Set it as the check said, then run \`npm run phase7:check\` again.`);
+  // Saved before Jim changes it: a stopped run, or the next start, asks for Autonomous back (ctx.ts ensureMode).
+  ctx.state.mode_changed = true;
+  ctx.save();
+  const b = await ctx.begin({}, "approve_each_pass");
   const place = await ctx.deck(b.t0, (e) => e.ev === "place" && e["why"] === "remembered", 10 * SECOND);
   const got = (place?.["got"] as number[] | undefined) ?? [];
   const near = (a: number | undefined, x: number | undefined): boolean => a !== undefined && x !== undefined && Math.abs(a - x) <= 2;
@@ -69,13 +68,21 @@ export async function e3(ctx: Ctx): Promise<void> {
   const key = ctx.deckBetween(tk, Date.now()).find((e) => ui(e, "click") === "hud_abort");
   ctx.record("A14.abort.log", done && key !== undefined && log?.outcome === "aborted" && log.ended_by?.source === "hud", { outcome: log?.outcome ?? null });
   await ctx.jim("A14.abort.jim", "The second Ctrl+Backspace aborted the edit: the Deck shows \"Done: the photo is back as it was.\"");
-  await enter(`Set the mode back: ${PLUGIN_MANAGER} "Autonomous", then click Done.`);
+  ctx.say("Now set the Mode back to Autonomous.");
+  await ctx.ensureMode("autonomous");
 }
 
 export async function e4(ctx: Ctx): Promise<void> {
   ctx.say("Edit 4: three copies, and your pick. The check makes virtual copies A, B and C of your photo.");
-  const b = await ctx.begin({ intent_id: "landscape_golden_hour", mode: "variants", variant_count: 3 });
-  autonomous(b.json);
+  // Copies left by an earlier try are removed first, so a retry never adds to them (Greptile, PR #91).
+  if (ctx.state.copies.length > 0) await removeCopies(ctx);
+  const b = await ctx.begin({ intent_id: "landscape_golden_hour", mode: "variants", variant_count: 3 }).catch((err: unknown) => {
+    // A begin that made only some copies names them (engine\src\session\copies.ts VARIANTS_INCOMPLETE `details.copies`).
+    const made = ((err as { details?: { copies?: { uuid?: string }[] } }).details?.copies ?? []).flatMap((x) => (x.uuid ? [x.uuid] : []));
+    ctx.state.copies.push(...made);
+    ctx.save();
+    throw err;
+  });
   const variants = (b.json["variants"] as Variant[] | undefined) ?? [];
   ctx.state.copies.push(...variants.map((v) => v.uuid));
   ctx.save();
@@ -137,6 +144,8 @@ export async function removeCopies(ctx: Ctx): Promise<void> {
     ctx.save();
   }
   ctx.record("copies.removed", ctx.state.copies.length === 0, ctx.state.copies.length ? { left: ctx.state.copies } : undefined);
+  // E4 stays unfinished while copies remain: the next run asks for them again before anything else in E4.
+  if (ctx.state.copies.length > 0) throw new Error(`${ctx.state.copies.length} copies of ${name} are still in the catalog`);
 }
 
 export async function e5(ctx: Ctx): Promise<void> {
@@ -150,7 +159,6 @@ export async function e5(ctx: Ctx): Promise<void> {
   writeFileSync(WINDOW_JSON, JSON.stringify({ left: -60000, bottom: -60000, width }));
   try {
     const b = await ctx.begin({});
-    autonomous(b.json);
     const spot = await ctx.deck(b.t0, (e) => e.ev === "spot", 10 * SECOND);
     const shown = await ctx.deck(b.t0, (e) => e.ev === "show", 10 * SECOND);
     const created = shown ? createdMs(shown.pid) : null;

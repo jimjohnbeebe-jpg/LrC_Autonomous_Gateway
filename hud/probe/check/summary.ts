@@ -116,6 +116,8 @@ export const stateSchema = z.strictObject({
   copies: z.array(z.string()),
   /** The Deck's executable is renamed (F1): the next start renames it back first. */
   renamed: z.boolean(),
+  /** E3 asked Jim to set the settings page's Mode to "Approve each pass" and it is not yet seen back at Autonomous. */
+  mode_changed: z.boolean(),
   /** window.json before E5 wrote a spot on no monitor (null: nothing to put back). */
   spot_backup: z.string().nullable(),
   /** Deck processes started from a stopped Deck: their creation time, for the cold start. */
@@ -127,7 +129,7 @@ export const stateSchema = z.strictObject({
 export type State = z.infer<typeof stateSchema>;
 
 export function freshState(run: string, now: number): State {
-  return { version: 1, run, started: now, photo: null, done: [], answers: {}, copies: [], renamed: false, spot_backup: null, cold: [], samples: { hidden: null, visible: null }, errors: {} };
+  return { version: 1, run, started: now, photo: null, done: [], answers: {}, copies: [], renamed: false, mode_changed: false, spot_backup: null, cold: [], samples: { hidden: null, visible: null }, errors: {} };
 }
 
 // --- The budgets (spec 9) --------------------------------------------------------------------------

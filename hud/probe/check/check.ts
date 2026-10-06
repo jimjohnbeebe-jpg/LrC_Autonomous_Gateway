@@ -16,7 +16,7 @@ import path from "node:path";
 import { closeInput, install, installer, lightroomRunning, liveEngine, onInputEnded, stopDeck } from "../kit.ts";
 import { deckLogFiles, timings } from "./budgets.ts";
 import { c1, c2 } from "./chats.ts";
-import { Ctx, OUT, loadState, saveState } from "./ctx.ts";
+import { Ctx, OUT, PLUGIN_MANAGER, loadState, saveState } from "./ctx.ts";
 import { e1, e2 } from "./edits-a.ts";
 import { e3, e4, e5, restoreSpot } from "./edits-b.ts";
 import { f1, f2, restoreExe } from "./fallback.ts";
@@ -36,17 +36,22 @@ if (!lightroomRunning()) stop("Lightroom is not running: open Lightroom in Devel
 if (liveEngine() !== null) stop("Claude Desktop's engine is running: quit Claude Desktop (right-click the Claude icon in the Windows system tray > Quit), then run this again.");
 const setup = installer() ?? stop("The Deck's installer 0.3.1 is not built: Claude Code runs `npm run deck:build` first.");
 
-const old = argv.includes("--new") ? null : loadState();
+// A run killed mid-step can have left the Deck renamed or window.json replaced: put them back from the
+// saved state first, also before `--new` replaces it (Greptile, PR #91).
+const prior = loadState();
+if (prior) {
+  const before = new Ctx(prior);
+  if (prior.renamed) restoreExe(before);
+  restoreSpot(before);
+}
 const run = new Date().toISOString().replace(/[:.]/g, "-");
-const ctx = new Ctx(old ?? freshState(run, Date.now()));
+const fresh = prior === null || argv.includes("--new");
+// `--new` keeps what is still out in the catalog and the settings page: copies to remove, the Mode to set back.
+const ctx = new Ctx(fresh ? { ...freshState(run, Date.now()), copies: prior?.copies ?? [], mode_changed: prior?.mode_changed ?? false } : prior);
 const state = ctx.state;
 // A step's error stays until that step finishes; the rest belong to the run that wrote them.
 for (const k of Object.keys(state.errors)) if (!STEPS.some((s) => s.id === k)) delete state.errors[k];
 saveState(state);
-
-// A run killed mid-step can have left the Deck renamed or window.json replaced: put them back first.
-if (state.renamed) restoreExe(ctx);
-restoreSpot(ctx);
 console.log("Phase 7 check. Installing the Deck 0.3.1 (per user, no admin rights needed)...");
 stopDeck();
 install(setup);
@@ -59,6 +64,7 @@ onInputEnded(() => void wrapUp("input ended"));
 try {
   if (!(await ctx.start(0))) stop("Another engine holds the Lightroom bridge: quit Claude Desktop, wait a minute, then run this again.");
   await firstPhoto();
+  if (state.mode_changed) await ctx.ensureMode("autonomous");
   const todo = redo !== undefined ? STEPS.filter((s) => s.id === redo) : STEPS.filter((s) => !state.done.includes(s.id));
   for (const step of todo) {
     if (step.id === "F2" && STEPS.some((s) => s.id !== "F2" && !state.done.includes(s.id))) {
@@ -66,6 +72,8 @@ try {
       break;
     }
     ctx.say(`=== ${step.title} ===`);
+    // A step counts as finished only when this run of it finishes (Greptile, PR #91: a failed --redo).
+    state.done = state.done.filter((d) => d !== step.id);
     delete state.errors[step.id];
     ctx.save();
     try {
@@ -89,6 +97,13 @@ await wrapUp(null);
 /** The first run records the selected photo, its settings and the check's own snapshot; a later run puts it back first. */
 async function firstPhoto(): Promise<void> {
   const e = ctx.engine();
+  // `--new` after a stopped run: that run's photo goes back to its start before anything is recorded.
+  if (fresh && prior?.photo) {
+    state.photo = prior.photo;
+    const back = await ctx.putBack(null);
+    state.photo = null;
+    if (!back) throw new Error(`${prior.photo.filename} could not be put back as it was before the last check`);
+  }
   if (state.photo) {
     await ctx.selectPhoto();
     if (!(await ctx.putBack(null))) throw new Error(`${state.photo.filename} could not be put back as it was before the check`);
@@ -109,6 +124,9 @@ async function finish(why: string | null): Promise<never> {
     state.errors["stopped"] = why;
     ctx.say(`${why}: putting things back first...`);
   }
+  // No new edit call starts; the one in flight finishes before the put-back (Greptile, PR #91).
+  ctx.stopping = true;
+  await ctx.settle(60_000);
   try {
     // Stopped during a chat: the bridge is Claude Desktop's until it lets go; take it back if it is free.
     if (!ctx.hasEngine() && state.photo && lightroomRunning()) await ctx.start(0);
@@ -143,6 +161,7 @@ function report(): void {
   console.log("Budgets (spec 9):");
   for (const b of a.budgets) console.log(`  ${b.id.padEnd(13)} ${b.value === null ? "not measured" : `${b.value.toFixed(b.unit === "ms" ? 0 : 2)} ${b.unit}`} (target ${b.target} ${b.unit}, n=${b.n})  ${b.ok === null ? "NOT MEASURED" : b.ok ? "YES" : "OVER"}`);
   for (const [k, v] of Object.entries(state.errors)) console.log(`  error in ${k}: ${v}`);
+  if (state.mode_changed) console.log(`\nThe settings page's Mode may still be "Approve each pass". Set it back: ${PLUGIN_MANAGER} "Autonomous", then click Done. (The next run checks it.)`);
   const left = STEPS.filter((s) => !state.done.includes(s.id)).map((s) => s.id);
   console.log(`\n${a.headline}`);
   console.log(left.length ? `Steps left: ${left.join(", ")}. Run \`npm run phase7:check\` again to go on.` : "Every step has run.");

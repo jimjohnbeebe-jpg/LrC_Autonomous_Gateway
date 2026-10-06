@@ -10,6 +10,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { z } from "zod";
 import { defaultLogDir } from "../../../engine/dist/log/index.js";
+import { CONFIG_FILE, SERVER_NAME, findClaudeFolders } from "../../../engine/dist/setup/desktop-config.js";
 import { processes } from "../../../spikes/S9/win32.ts";
 import { DECK_IMAGE, REPO, enter, liveEngine, running } from "../kit.ts";
 import type { Ctx } from "./ctx.ts";
@@ -18,10 +19,31 @@ const SECOND = 1000;
 const PROMPT = "Tune the active photo for golden hour landscape.";
 const toolRecord = z.looseObject({ ts: z.string(), tool: z.string(), ok: z.boolean() });
 
+const desktopEntry = z.looseObject({ mcpServers: z.record(z.string(), z.looseObject({ env: z.record(z.string(), z.string()).optional() })).optional() });
+
+/**
+ * Where Claude Desktop's engine writes its tool log: LRC_AVG_LOG_DIR from its entry in
+ * claude_desktop_config.json (engine\src\setup\desktop-config.ts findClaudeFolders, SERVER_NAME), the
+ * repo's logs\ folder and the product default (Greptile, PR #91: a configured folder was missed).
+ */
+function toolLogDirs(): string[] {
+  const dirs = [path.join(REPO, "logs"), defaultLogDir({ LOCALAPPDATA: process.env["LOCALAPPDATA"] })];
+  for (const folder of findClaudeFolders()) {
+    try {
+      const config = desktopEntry.parse(JSON.parse(readFileSync(path.join(folder, CONFIG_FILE), "utf8")));
+      const dir = config.mcpServers?.[SERVER_NAME]?.env?.["LRC_AVG_LOG_DIR"];
+      if (dir) dirs.push(dir);
+    } catch {
+      // no config file there, or not one this check can read
+    }
+  }
+  return [...new Set(dirs)];
+}
+
 /** Claude Desktop's engine's first lr_begin_session that worked, started at or after `since` (epoch ms). */
 function beganAt(since: number): number | null {
   const times: number[] = [];
-  for (const dir of [path.join(REPO, "logs"), defaultLogDir({ LOCALAPPDATA: process.env["LOCALAPPDATA"] })]) {
+  for (const dir of toolLogDirs()) {
     if (!existsSync(dir)) continue;
     for (const f of readdirSync(dir)) {
       const p = path.join(dir, f);

@@ -65,7 +65,8 @@ export async function sampleTree(root: number, ms: number): Promise<Sample> {
   const now = tree(root);
   let bytes = 0;
   let cpu = 0;
-  let complete = [...before.keys()].every((p) => now.includes(p));
+  // The Deck itself must be there at both ends: a gone process would read as zero (Greptile, PR #91).
+  let complete = before.has(root) && now.includes(root) && [...before.keys()].every((p) => now.includes(p));
   for (const p of now) {
     const b = privateBytes(p);
     const c1 = cpuMs(p);

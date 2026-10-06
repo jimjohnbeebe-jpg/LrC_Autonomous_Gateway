@@ -15,15 +15,9 @@ const SECOND = 1000;
 const CLICK_MS = 180 * SECOND;
 const PASS_1 = { exposure: 0.15, contrast: 5, highlights: -10, shadows: 10, vibrance: 5 };
 
-/** The edit must run in Autonomous mode (E1, E2, E4, E5): else stop with the steps to set it. */
-export function autonomous(json: Record<string, unknown>): void {
-  if (Ctx.approval(json) === "autonomous") return;
-  throw new Error("the settings page's Mode is not Autonomous. In Lightroom: File > Plug-in Manager > LrC-AVG > Mode: Autonomous > Done. Then run `npm run phase7:check` again.");
-}
-
 /**
- * Jim gives Lightroom the keyboard before the Deck appears or changes (A2, A4): his last click is in
- * this window otherwise. The check waits 5 s after his Enter.
+ * Jim gives Lightroom the keyboard before the Deck appears or changes (A2, A4): Jim's last click is in
+ * this window otherwise. The check waits 5 s after Jim's Enter.
  */
 async function handToLightroom(then: string): Promise<void> {
   await enter(`After you press Enter here, click Lightroom's title bar (the top edge of its window) within 5 seconds, and then keep your hands off the mouse. ${then}`);
@@ -36,7 +30,6 @@ export async function e1(ctx: Ctx): Promise<void> {
   await handToLightroom("When the Deck has appeared, press \\ (backslash) once: the photo should switch to Before. Press \\ again to switch back. Then come back here.");
   ctx.plog.step();
   const b = await ctx.begin({});
-  autonomous(b.json);
   const shown = await ctx.deck(b.t0, (e) => e.ev === "show", 10 * SECOND);
   const created = shown ? createdMs(shown.pid) : null;
   if (shown && created !== null && created >= b.t0 - 2 * SECOND) ctx.state.cold.push({ pid: shown.pid, created });
@@ -92,7 +85,6 @@ export async function e1(ctx: Ctx): Promise<void> {
 export async function e2(ctx: Ctx): Promise<void> {
   ctx.say("Edit 2. The check starts another edit; the Deck comes back by itself.");
   const b = await ctx.begin({ max_passes: 8 });
-  autonomous(b.json);
   await ctx.step(b.sid, { exposure: 0.1 });
 
   await enter("If Lightroom fills the screen (maximised), click its Restore button first (the middle one of the three at its top right). Then drag Lightroom's title bar to move it, and drag its bottom-right corner to resize it. If you restored it, maximise it again (the same middle button).");

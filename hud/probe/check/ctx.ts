@@ -10,7 +10,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { pluginVersionAtLeast } from "../../../engine/dist/bridge/index.js";
 import { acquireInstanceLock, devOverrides } from "../../../engine/dist/mcp/index.js";
-import { yes } from "../kit.ts";
+import { enter, yes } from "../kit.ts";
 import { PluginLog, differing, startEngine, until, type Engine } from "../menu-kit.ts";
 import { deckEvents, sessionLogs, type PidEvent } from "./budgets.ts";
 import { CHECKS, stateSchema, type State } from "./summary.ts";
@@ -21,6 +21,7 @@ export const STATE_FILE = path.join(OUT, "p7_state.json");
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
 type Lock = { release: () => Promise<void> };
 type Json = Record<string, unknown>;
+export const PLUGIN_MANAGER = "In Lightroom: File > Plug-in Manager. In the list on the left, click LrC-AVG. In the Sessions box, set Mode to";
 
 export function loadState(): State | null {
   if (!existsSync(STATE_FILE)) return null;
@@ -149,18 +150,60 @@ export class Ctx {
     return this.record(`back.${step}`, diff.length === 0, diff.length ? { differing: diff } : undefined);
   }
 
+  // --- Stopping (Ctrl+C, input ended) -------------------------------------------------------------------
+  /** Set when the check stops: no new begin or step starts (Greptile, PR #91: a step loop racing the cleanup). */
+  stopping = false;
+  private busy: Promise<unknown> = Promise.resolve();
+
+  /** Runs one engine call unless the check is stopping, and remembers it so the cleanup can wait for it. */
+  private guarded<T>(call: () => Promise<T>): Promise<T> {
+    if (this.stopping) return Promise.reject(new Error("the check is stopping"));
+    const p = call();
+    this.busy = p.catch(() => undefined);
+    return p;
+  }
+
+  /** Waits up to `ms` for the engine call in flight (the cleanup runs after it). */
+  async settle(ms: number): Promise<void> {
+    await Promise.race([this.busy, sleep(ms)]);
+  }
+
+  // --- The settings page's Mode ---------------------------------------------------------------------------
+  /**
+   * Waits until the settings page's Mode is `want`, asking Jim to set it (get_prefs, plugin 0.5.0,
+   * engine\src\bridge\protocol.ts; wire key `mode`, engine\src\settings\page.ts). Read before an edit
+   * begins, so a wrong mode never gets as far as Variants' copies (Greptile, PR #91).
+   */
+  async ensureMode(want: "autonomous" | "approve_each_pass"): Promise<void> {
+    const label = want === "autonomous" ? "Autonomous" : "Approve each pass";
+    for (let round = 0; round < 3; round++) {
+      const prefs = (await this.engine().client.request("get_prefs", {}, { timeoutMs: 30_000 })) as Json;
+      if (prefs["mode"] === want) {
+        if (want === "autonomous" && this.state.mode_changed) {
+          this.state.mode_changed = false;
+          this.save();
+        }
+        return;
+      }
+      await enter(`${PLUGIN_MANAGER} "${label}", then click Done.`);
+    }
+    throw new Error(`the settings page's Mode is still not "${label}". Set it (${PLUGIN_MANAGER} "${label}"), then run \`npm run phase7:check\` again.`);
+  }
+
   // --- Edits --------------------------------------------------------------------------------------------
-  /** Starts an edit on the check's photo; `t0` is just before the call. */
-  async begin(args: Json): Promise<{ sid: string; t0: number; snapshot: string; json: Json }> {
+  /** Starts an edit on the check's photo in mode `mode` (checked first); `t0` is just before the call. */
+  async begin(args: Json, mode: "autonomous" | "approve_each_pass" = "autonomous"): Promise<{ sid: string; t0: number; snapshot: string; json: Json }> {
+    await this.ensureMode(mode);
     await this.selectPhoto();
     const t0 = Date.now();
-    const json = (await this.engine().tools.beginSession({ intent_id: "neutral_technical_correction", max_passes: 6, return_image: "none", ...args })).json;
+    const json = (await this.guarded(() => this.engine().tools.beginSession({ intent_id: "neutral_technical_correction", max_passes: 6, return_image: "none", ...args }))).json;
+    if (Ctx.approval(json) !== mode) throw new Error(`the edit began in mode ${String(Ctx.approval(json))}, not ${mode}`);
     const snapshot = String((json["snapshot"] as { name?: string } | undefined)?.name ?? "");
     return { sid: String(json["session_id"]), t0, snapshot, json };
   }
 
   async step(sid: string, settings: Json, extra: Json = {}): Promise<Json> {
-    return (await this.engine().tools.step({ session_id: sid, settings, rationale: "Phase 7 check", return_image: "none", ...extra })).json;
+    return (await this.guarded(() => this.engine().tools.step({ session_id: sid, settings, rationale: "Phase 7 check", return_image: "none", ...extra }))).json;
   }
 
   /** Waits up to `ms` for the open edit to end. */

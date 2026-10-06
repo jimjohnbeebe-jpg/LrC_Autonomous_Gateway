@@ -1,8 +1,8 @@
 ---
 report: AVG-P7-4b the Deck shell probe
 phase: 7
-status: observed
-authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-10-05, branch phase-7/deck-shell (vault PHASE7_PLAN row 4b). Observed and Verdict: Jim."
+status: accepted
+authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-10-05, branch phase-7/deck-shell (vault PHASE7_PLAN row 4b). Observed: Jim's answers and runs (run 1 2026-10-06 01:41 UTC, run 2 02:23 UTC); the analysis of the Deck's logs: Claude Code. Verdict: Jim, 2026-10-05 local."
 date: 2026-10-05
 ---
 
@@ -72,7 +72,17 @@ Jim's answers: y to A1e, D1, A5c, A5e, A7a, A7b, R1 and A9b; **n to A9a** ("in F
 
 **Also seen:** the Deck stays opened across edits once opened. Run 1 ended with the 216 px (144 CSS px) deck at both later spots (the log's `place` lines). Row 4c decides whether a new edit starts with the bar.
 
+**Run 2: 2026-10-06 02:23 UTC (2026-10-05 19:23 local)**, after the fix, on branch `phase-7/deck-shell` at `3a83cf1` [handle: `docs\reports\phase7\deck-shell\probe_2026-10-06T02-23-03-895Z.json`; the Deck's log beside it, `probe_2026-10-06T02-23-03-895Z_hud_24984_1791253385736.jsonl`]. Jim said "probe done". The probe's headline: `Deck shell probe: WORKED`. Jim answered y to every question, A9a included.
+
+**What the log shows during F (Claude Code; seconds from the Deck's start):**
+- 107.0 s: `cover` found F's window (hwnd 597260, `0,0,3840,2160`).
+- 107.4 s: the main window took the foreground back as in run 1, and the Deck stayed not topmost (`front: false`, `cover: 597260`).
+- 110.5 s: `cover` 0, after F was closed.
+- The main window was the `AgWinMainFrame` window in every logged list. (The log's `main_by` value "title" names the class-or-title test, `lightroom.rs` `is_main`.)
+
 ## Numbers
+
+Run 2, after the fix: every line YES [handle: the run 2 results file above]. Connected 725 ms after start, shown at 792 ms, without taking the foreground. Spot and width saved (`[3873, 938, 2394]`) and reopened there. Hidden 10,342 ms and 10,423 ms after the two ends. Minimise hide and restore show logged 2.0 s apart. W1: 4 window lists while F was on. C2: uninstalled.
 
 Run 1 (from the results file):
 
@@ -93,7 +103,7 @@ Every placement landed where it was aimed (`target` = `got` in all 4 `place` lin
 
 ## Verdict
 
-*(Jim.)*
+**Go** [stated: Jim, 2026-10-05, "Go (Recommended)", after run 2]. Row 4b is accepted; row 4c (the Deck's states, cards and keyboard) is next.
 
 ## Consequences / open questions
 

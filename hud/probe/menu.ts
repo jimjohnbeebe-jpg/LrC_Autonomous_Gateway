@@ -16,7 +16,7 @@ import path from "node:path";
 import { pluginVersionAtLeast } from "../../engine/dist/bridge/index.js";
 import { findHudExe } from "../../engine/dist/hud/launch.js";
 import { acquireInstanceLock, devOverrides } from "../../engine/dist/mcp/index.js";
-import { closeInput, deckLog, enter, install, installer, lightroomRunning, liveEngine, stopDeck, uninstall, waitEvent, yes } from "./kit.ts";
+import { closeInput, deckLog, enter, install, installer, lightroomRunning, liveEngine, onInputEnded, stopDeck, uninstall, waitEvent, yes } from "./kit.ts";
 import { PluginLog, putBack, settingsOf, startEngine, until, type Engine } from "./menu-kit.ts";
 
 type Line = { id: string; what: string; ok: boolean | null; detail?: unknown };
@@ -71,7 +71,14 @@ const finishDeck = (): Outcome => {
   }
   return outcome;
 };
-process.once("SIGINT", () => process.exit(130));
+let wrapping: Promise<never> | null = null;
+/**
+ * The put-back, the Deck's outcome and the results, once, whether the run finished, failed, was stopped
+ * with Ctrl+C or its input ended: the probe has edited a real photo (Greptile, PR #90).
+ */
+const wrapUp = (why: string | null): Promise<never> => (wrapping ??= finishRun(why));
+process.on("SIGINT", () => void wrapUp("stopped with Ctrl+C"));
+onInputEnded(() => void wrapUp("input ended"));
 
 try {
   engine = await startEngine(runDir, () => deckOn, quiet);
@@ -116,17 +123,19 @@ try {
   record("M3b", "Jim: the classic window says why; you closed it", await yes(
     "A window \"LrC-AVG - Vision Gateway\" opened and says Pick A was not sent, with the reason. Close that window now (its x), then answer."));
 
-  // 4. A sent item (Abort) leaves the classic window closed; the Deck shows the outcome.
-  say(`4. Choose ${MENU} LrC-AVG - Abort Edit.`);
+  // 4. A sent item (Abort) leaves the classic window closed; the Deck, hidden first, shows itself with the outcome.
+  say(`4. Click the x at the Deck's right end to hide it again. Then choose ${MENU} LrC-AVG - Abort Edit.`);
   plog.step();
+  const t4 = Date.now();
   const aborted = await plog.wait("hud: menu hud_abort", MENU_MS);
   await until(() => e.tools.sessionManager()?.current() === null, 30_000);
   const outcomeLine = plog.since().find((l) => l.includes("hud: menu hud_abort:"));
   record("M4a", "the menu's Abort was sent and the Deck took the outcome", aborted && plog.count("hud: menu hud_abort: the Deck shows the outcome") === 1, outcomeLine);
   record("M4b", "the edit ended as aborted", e.tools.sessionManager()?.current() === null);
   record("M4c", "the classic window did not open", plog.count("hud: shown") === 0);
+  record("M4e", "the hidden Deck showed itself for the outcome", (await waitEvent(log, t4, (ev) => ev.ev === "show" && ev["reason"] === "menu", 5000)) !== null);
   record("M4d", "Jim: Done, the photo is back; no classic window", await yes(
-    "The Deck shows \"Done: the photo is back as it was.\" and no \"LrC-AVG - Vision Gateway\" window opened."));
+    "The Deck came back by itself and shows \"Done: the photo is back as it was.\", and no \"LrC-AVG - Vision Gateway\" window opened."));
 
   // 5. With no Deck, as before: the classic window opens by itself, and Show opens it.
   say("5. The probe now stops the Deck and starts a second edit with no Deck to start...");
@@ -145,7 +154,14 @@ try {
 } catch (err) {
   error = err instanceof Error ? err.message : String(err);
   say(`ERROR: ${error}`);
-} finally {
+}
+await wrapUp(null);
+
+async function finishRun(why: string | null): Promise<never> {
+  if (why) {
+    error ??= why;
+    say(`${why}: putting the photo back first...`);
+  }
   if (engine && uuid && start) {
     try {
       putBackDiff = await putBack(engine, uuid, start, snapshotId);
@@ -157,15 +173,18 @@ try {
   engine?.tools.deck()?.close();
   engine?.client.stop();
   await lock.lock.release();
+  closeInput();
+  report();
+  return process.exit(why ? 130 : 0);
 }
 
-closeInput();
-const end = finishDeck();
-const failed = results.filter((l) => l.ok !== true).map((l) => l.id);
-const deckFile = log();
-if (deckFile) copyFileSync(deckFile, path.join(runDir, path.basename(deckFile)));
-writeFileSync(path.join(runDir, "plugin-log.txt"), plog.text());
-writeFileSync(path.join(out, `menu_${run}.json`), JSON.stringify({ run, worked: failed.length === 0 && error === null, failed, error, outcome: end, results, deck_log: deckFile && path.basename(deckFile) }, null, 2));
-const told = end === "STILL INSTALLED" ? "The Deck is STILL INSTALLED: its uninstaller failed. Tell Claude Code before the next edit." : `The Deck was ${end}.`;
-console.log(`\nMenu probe: ${failed.length === 0 && error === null ? "WORKED" : `FAILED (${[...failed, ...(error ? ["error"] : [])].join(", ")})`}. PUT BACK: ${putBackDiff?.length === 0 ? "YES" : "NO"}. ${told} Results saved; tell Claude Code "probe done".`);
-process.exit(0);
+function report(): void {
+  const end = finishDeck();
+  const failed = results.filter((l) => l.ok !== true).map((l) => l.id);
+  const deckFile = log();
+  if (deckFile) copyFileSync(deckFile, path.join(runDir, path.basename(deckFile)));
+  writeFileSync(path.join(runDir, "plugin-log.txt"), plog.text());
+  writeFileSync(path.join(out, `menu_${run}.json`), JSON.stringify({ run, worked: failed.length === 0 && error === null, failed, error, outcome: end, results, deck_log: deckFile && path.basename(deckFile) }, null, 2));
+  const told = end === "STILL INSTALLED" ? "The Deck is STILL INSTALLED: its uninstaller failed. Tell Claude Code before the next edit." : `The Deck was ${end}.`;
+  console.log(`\nMenu probe: ${failed.length === 0 && error === null ? "WORKED" : `FAILED (${[...failed, ...(error ? ["error"] : [])].join(", ")})`}. PUT BACK: ${putBackDiff?.length === 0 ? "YES" : "NO"}. ${told} Results saved; tell Claude Code "probe done".`);
+}

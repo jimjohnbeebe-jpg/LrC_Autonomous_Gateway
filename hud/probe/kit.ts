@@ -31,8 +31,14 @@ rl.on("line", (line) => (waiters.length ? waiters.shift()?.(line) : lines.push(l
  */
 let closing = false;
 let ended = false;
-function inputEnded(): never {
+let inputEndedHook: (() => void) | null = null;
+/** Row 5 (menu.ts): what an ended input does instead of exiting at once, so a put-back runs first (Greptile, PR #90). */
+export function onInputEnded(fn: () => void): void {
+  inputEndedHook = fn;
+}
+function inputEnded(): void {
   console.log("\nInput ended: the probe stops.");
+  if (inputEndedHook) return inputEndedHook(); // the answer awaited never comes; the hook ends the process
   process.exit(1);
 }
 rl.on("close", () => {

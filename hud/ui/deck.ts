@@ -220,7 +220,7 @@ function onMessage(text: string): void {
     render();
   } else if (msg.type === "reveal") {
     // Row 5 (Q4): the menu's "Show Vision Gateway HUD". Shown opened, without the keyboard (window.rs show; S9-6, docs\reports\phase7\S9.md).
-    const [v, change] = onReveal(vis, msg.session_id);
+    const [v, change] = onReveal(vis, msg.session_id, state?.session_id === msg.session_id ? state.close_after : undefined, Date.now());
     vis = v;
     if (change) open = true;
     log({ reveal: msg.session_id, shown: change !== null });

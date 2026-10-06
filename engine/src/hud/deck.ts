@@ -112,6 +112,11 @@ export class Deck {
     return this.editOpen() ? (this.session?.id ?? null) : null;
   }
 
+  /** The id of the edit the Deck shows, open or ended (row 5: a menu's `reveal`), else null. */
+  shownEdit(): string | null {
+    return this.base?.session_id ?? null;
+  }
+
   onClient(listener: (connected: boolean) => void): void {
     this.clientListeners.add(listener);
   }

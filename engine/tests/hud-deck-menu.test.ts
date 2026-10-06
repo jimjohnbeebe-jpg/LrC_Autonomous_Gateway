@@ -85,6 +85,17 @@ describe("hud_deck: the plugin hears whether a Deck is connected", () => {
     expect(rig.menu[0]).toMatchObject({ ok: false, connected: true, error: "the plugin holds false" });
   });
 
+  it("a Deck before 0.3.0 counts as none: it could not be shown from the menu", async () => {
+    const rig = await deckRig();
+    const old = await SimHudClient.connect(rig.endpoint, { hudVersion: "0.2.0" });
+    await old.welcomed();
+    await waitUntil(() => lr.hud.deck.length === 1);
+    old.close();
+    await waitUntil(() => !rig.deck.connected());
+    await sleep(100);
+    expect(lr.hud.deck).toEqual([false]);
+  });
+
   it("is never sent to a plugin before 0.18.0", async () => {
     lr.pluginVersion = "0.17.0";
     plugin.dropEventClient(); // the next hello reports 0.17.0
@@ -112,7 +123,20 @@ describe("hud_show: the menu brings up the Deck (Q4)", () => {
     expect(rig.menu.at(-1)).toMatchObject({ ok: true, what: "hud_show", session_id: ID });
   });
 
-  it("sends nothing for another edit, an ended one, a bad payload, or a Deck before 0.3.0", async () => {
+  it("also for the edit just ended (a menu Abort), so a hidden Deck shows the outcome", async () => {
+    clean();
+    const rig = await deckRig();
+    const sim = await SimHudClient.connect(rig.endpoint);
+    await sim.welcomed();
+    await rig.manager.begin({ intent_id: "test_plain" });
+    await rig.manager.end({ session_id: ID, outcome: "accept" });
+    await sim.at("accepted");
+    hudShow({ session_id: ID });
+    await waitUntil(() => sim.received.some((m) => m.type === "reveal"));
+    expect(rig.menu.at(-1)).toMatchObject({ ok: true, what: "hud_show", session_id: ID });
+  });
+
+  it("sends nothing for another edit, a bad payload, or a Deck before 0.3.0", async () => {
     clean();
     const rig = await deckRig();
     const old = await SimHudClient.connect(rig.endpoint, { hudVersion: "0.2.0" });
@@ -125,17 +149,10 @@ describe("hud_show: the menu brings up the Deck (Q4)", () => {
     await waitUntil(() => rig.menu.filter((r) => r.what === "hud_show").length === 3);
     expect(rig.menu.filter((r) => r.what === "hud_show").map((r) => r.error ?? "")).toEqual([
       expect.stringContaining("no Deck that knows reveal (0.2.0)"),
-      "not the open edit",
+      "not the edit the Deck shows",
       expect.stringContaining("session_id"),
     ]);
-    const sim = await SimHudClient.connect(rig.endpoint, { hudVersion: "0.3.0" });
-    await sim.welcomed();
-    await rig.manager.end({ session_id: ID, outcome: "accept" });
-    await sim.at("accepted");
-    hudShow({ session_id: ID });
-    await waitUntil(() => rig.menu.filter((r) => r.what === "hud_show").length === 4);
-    expect(rig.menu.at(-1)?.error).toBe("not the open edit");
-    expect([...old.received, ...sim.received].some((m) => m.type === "reveal")).toBe(false);
+    expect(old.received.some((m) => m.type === "reveal")).toBe(false);
   });
 });
 
@@ -147,7 +164,10 @@ describe("the plugin's menu items with a Deck (Hud.lua, HudClick.lua, MenuHud.lu
 
   it("a sent menu item leaves the classic window closed only while a Deck is live; anything else opens it", () => {
     const click = lua("HudClick.lua");
-    expect(click).toContain('if sent and HudClick.deckLive() then Log.info("hud: menu " .. name .. ": the Deck shows the outcome") else show() end');
+    // Sent with a Deck live: the Deck is asked to show itself (it may be hidden); else, or when that ask fails, the classic window.
+    expect(click).toContain(`if sent and HudClick.deckLive() then local ok, why = Events.send("${HUD_SHOW_EVENT}", { session_id = sid }) asked = ok`);
+    expect(click).toContain('if asked then Log.info("hud: menu " .. name .. ": the Deck shows the outcome") else show() end');
+    expect(click).toContain("local chosen, waited = H.state.session_id, 0 sid = chosen");
     expect(click).toContain("return H.deck == true and Events.connection().engine");
   });
 

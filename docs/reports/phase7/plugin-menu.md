@@ -11,7 +11,7 @@ date: 2026-10-05
 ## Purpose
 
 Until row 5, every File > Plug-in Extras item opened the classic window, which takes the keyboard, even with the Deck showing (spec `docs\hud\lrc-avg-hud-spec-v2.md` D1, "Known conflict"). Row 5 is the plugin release (0.18.0) that fixes it, with engine 0.20.0 and Deck 0.3.0. This probe checks on Jim's machine, in real edits, that:
-- while a Deck is connected, a menu item that was sent leaves the classic window closed, and the Deck shows what follows;
+- while a Deck is connected, a menu item that was sent leaves the classic window closed, and the Deck shows what follows, showing itself if it was hidden;
 - "LrC-AVG - Show Vision Gateway HUD" brings up the Deck opened, and Lightroom keeps the keyboard (Q4);
 - a refused menu item still opens the classic window, which says why (plan decision D1 A);
 - with no Deck, the menu works as before: the classic window opens by itself at an edit's start, and from the Show item.
@@ -54,9 +54,9 @@ Answers and decisions [stated: Jim, 2026-10-05]:
 
 ## Pre-run findings (Claude Code)
 
-1. **Engine tests.** `npm test`: 83 files, 1067 passed, 1 skipped. The new `engine\tests\hud-deck-menu.test.ts` has 10 tests:
-   - hud_deck at each Deck connect and loss, again after a bridge reconnect, the newest value after one in flight, a failed one tried again, a wrong answer recorded and not resent, none to a plugin before 0.18.0;
-   - `reveal` for the open edit only, only to a Deck from 0.3.0;
+1. **Engine tests.** `npm test`: 83 files, 1069 passed, 1 skipped (after the review fixes). The new `engine\tests\hud-deck-menu.test.ts` has 12 tests:
+   - hud_deck at each Deck connect and loss, again after a bridge reconnect, the newest value after one in flight, a failed one tried again, a wrong answer recorded and not resent, a Deck before 0.3.0 counted as none, none to a plugin before 0.18.0;
+   - `reveal` for the edit the Deck shows (also just ended), only to a Deck from 0.3.0;
    - the plugin's menu code read as text.
 
    [handle: `npm test` output, 2026-10-05.] One earlier full run failed `hud-selection-poll` once. It passed alone 3 of 3 times and in the next full run; it is the load-timing test the row 4b report names.
@@ -65,7 +65,11 @@ Answers and decisions [stated: Jim, 2026-10-05]:
 4. **Lua.** `engine\tests\lua-plugin.test.ts` parses every plugin file as Lua 5.1 and checks that `Dispatch.lua` handles exactly the engine's commands, `hud_deck` included [handle: `npx vitest run tests/lua-plugin.test.ts`, 2026-10-05]. Whether the menu items behave so in Lightroom is [unverified] until this probe.
 5. **Self-review fix.** Before the first push: a plugin answering hud_deck with another value would have been sent to again and again. Now what was sent counts as told and the answer is recorded as not ok. The new test fails without the fix [handle: `git stash push -- src/hud/deck-menu.ts`, then `npx vitest run tests/hud-deck-menu.test.ts -t "another value"`: "1 failed", 2026-10-05].
 6. **Deck installer.** `npm run deck:build` built `hud\src-tauri\target\release\bundle\nsis\LrC-AVG HUD_0.3.0_x64-setup.exe` (1.35 MiB) [handle: tauri-cli output "Finished 1 bundle at: …\LrC-AVG HUD_0.3.0_x64-setup.exe (1.35 MiB)", 2026-10-05].
-7. **Not dry-run.** The probe makes real edits through the real bridge, so it was not run against a stand-in plugin. Its first live run is Jim's.
+7. **Greptile review 1 (2/5, three P1, all fixed before Jim's run):**
+   - a hidden Deck hid a menu item's outcome: a sent item now also asks for `reveal`, for the edit the Deck shows, open or just ended (`HudClick.menuEvent`, `Deck.shownEdit`), and an ended edit revealed so hides again `close_after` later (`visibility.ts` `onReveal`); probe line M4e;
+   - Show with a Deck before 0.3.0 opened neither window: only a Deck that knows `reveal` now counts as connected for the plugin, so with an older one the menu opens the classic window as before;
+   - Ctrl+C (or an ended input) skipped the probe's put-back: both now run the same wrap-up as the end of the run (`menu.ts` `finishRun`, `kit.ts` `onInputEnded`).
+8. **Not dry-run.** The probe makes real edits through the real bridge, so it was not run against a stand-in plugin. Its first live run is Jim's.
 
 ## Observed (Jim)
 
@@ -86,6 +90,7 @@ Answers and decisions [stated: Jim, 2026-10-05]:
 | M4a | the menu's Abort was sent, the Deck took the outcome | |
 | M4b | the edit ended as aborted | |
 | M4c | no classic window | |
+| M4e | the hidden Deck showed itself for the outcome | |
 | M4d | Jim: Done, the photo is back | |
 | M5a | the plugin heard the Deck went away | |
 | M5b | with no Deck, the classic window opened by itself | |

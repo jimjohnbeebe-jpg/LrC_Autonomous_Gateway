@@ -1,13 +1,17 @@
 // The menu items and the Deck (Phase 7 row 5; spec docs\hud\lrc-avg-hud-spec-v2.md D1, "Known conflict";
 // Q4 [stated: Jim, 2026-10-05, "Show Deck, keep keys (Recommended)"]). Two jobs:
 //   - tell the plugin whether a Deck is connected (bridge command hud_deck, plugin 0.18.0), so its
-//     File > Plug-in Extras items leave the classic window closed while one is. Sent at every Deck
+//     File > Plug-in Extras items leave the classic window closed while one is. Only a Deck that knows
+//     `reveal` (REVEAL_HUD) counts: with an older one the menu opens the classic window as before, since
+//     that Deck could not be shown from the menu (Greptile, PR #90). Sent at every Deck
 //     connect and loss, and again at every bridge (re)connection, since a restarted plugin starts with
 //     "no Deck" (Hud.markUnknown). One command in flight at a time; when the Deck changed meanwhile, the
 //     newest value follows. A failed one is tried again RETRY_MS later, up to MAX_RETRIES in a row.
-//   - "Show Vision Gateway HUD" sends hud_show { session_id }: for the open edit, the Deck gets `reveal`
-//     and shows itself opened, without the keyboard (hud\ui\visibility.ts onReveal). A Deck older than
-//     REVEAL_HUD, or another edit than the open one, gets nothing; the tool log says why.
+//   - "Show Vision Gateway HUD", and every menu item sent while the Deck counts, sends hud_show
+//     { session_id }: for the edit the Deck shows (open, or just ended by that item, e.g. Abort), the
+//     Deck gets `reveal` and shows itself opened, without the keyboard (hud\ui\visibility.ts onReveal),
+//     even if the user had hidden it. A Deck older than REVEAL_HUD, or another edit, gets nothing; the
+//     tool log says why.
 // [handle: tests\hud-deck-menu.test.ts]
 
 import { HUD_DECK_PLUGIN, HUD_SHOW_EVENT, hudShowSchema, pluginVersionAtLeast, type BridgeClient, type EventEnvelope } from "../bridge/index.js";
@@ -59,7 +63,7 @@ export class DeckMenu {
 
   private tell(): void {
     if (this.inFlight || this.retryTimer || !this.ready()) return;
-    const connected = this.deck.connected();
+    const connected = this.deck.connected() && pluginVersionAtLeast(this.deck.channel.clientVersion(), REVEAL_HUD);
     if (connected === this.told) return;
     this.inFlight = true;
     this.client.request("hud_deck", { connected }, { timeoutMs: TIMEOUT_MS }).then(
@@ -91,7 +95,7 @@ export class DeckMenu {
     if (!parsed.success) return this.record({ ok: false, what: "hud_show", error: parsed.error.message });
     const sid = parsed.data.session_id;
     const no = (error: string): void => this.record({ ok: false, what: "hud_show", session_id: sid, error });
-    if (this.deck.openEdit() !== sid) return no("not the open edit");
+    if (this.deck.shownEdit() !== sid) return no("not the edit the Deck shows");
     if (!pluginVersionAtLeast(this.deck.channel.clientVersion(), REVEAL_HUD)) return no(`no Deck that knows reveal (${this.deck.channel.clientVersion() ?? "none"})`);
     if (!this.deck.channel.send({ type: "reveal", session_id: sid })) return no("the Deck is gone");
     this.record({ ok: true, what: "hud_show", session_id: sid });

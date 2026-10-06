@@ -29,11 +29,22 @@ describe("the Deck's visibility", () => {
     let [v] = onState(HIDDEN, { session_id: "a" }, 0);
     let c;
     [v] = onUserHide(v);
-    [v, c] = onReveal(v, "b");
+    [v, c] = onReveal(v, "b", undefined, 1);
     expect([v.shown, c]).toEqual([false, null]);
-    [v, c] = onReveal(v, "a");
-    expect([v.shown, c]).toEqual([true, "show"]);
-    expect(onReveal(HIDDEN, "a")[1]).toBeNull(); // no edit shown yet
+    [v, c] = onReveal(v, "a", undefined, 2);
+    expect([v.shown, c, v.hideAt]).toEqual([true, "show", null]);
+    expect(onReveal(HIDDEN, "a", undefined, 3)[1]).toBeNull(); // no edit shown yet
+  });
+
+  it("an ended edit revealed while hidden (a menu Abort) hides again close_after seconds later", () => {
+    let [v] = onState(HIDDEN, { session_id: "a" }, 0);
+    let c;
+    [v] = onUserHide(v);
+    [v] = onState(v, { session_id: "a", close_after: 10 }, 1000); // the end state, while hidden
+    expect(v.hideAt).toBeNull();
+    [v, c] = onReveal(v, "a", 10, 2000);
+    expect([v.shown, c, v.hideAt]).toEqual([true, "show", 12_000]);
+    expect(onTick(v, 12_000)[1]).toBe("hide");
   });
 
   it("hides close_after seconds after an end state, unless a newer state came", () => {

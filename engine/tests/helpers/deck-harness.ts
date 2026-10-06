@@ -63,7 +63,7 @@ export class SimHudClient {
     });
     const sim = new SimHudClient(ws);
     onTestFinished(() => sim.close());
-    if (options.hello !== false) sim.send({ type: "hello", token: options.token ?? endpoint.token, hud_version: options.hudVersion ?? "test", pid: process.pid });
+    if (options.hello !== false) sim.send({ type: "hello", token: options.token ?? endpoint.token, hud_version: options.hudVersion ?? "0.3.0", pid: process.pid });
     return sim;
   }
 

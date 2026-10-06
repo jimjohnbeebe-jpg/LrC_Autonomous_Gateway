@@ -26,10 +26,14 @@ export function onTick(v: Visibility, now: number): [Visibility, Change] {
   return [{ ...v, shown: false, hideAt: null }, v.shown ? "hide" : null];
 }
 
-/** `reveal` from the engine (row 5, Q4 [stated: Jim, 2026-10-05, "Show Deck, keep keys (Recommended)"]): shown for the edit shown; another edit's does nothing. */
-export function onReveal(v: Visibility, sessionId: string): [Visibility, Change] {
+/**
+ * `reveal` from the engine (row 5, Q4 [stated: Jim, 2026-10-05, "Show Deck, keep keys (Recommended)"]): shown for the edit
+ * shown; another edit's does nothing. `closeAfter` is the shown state's: an ended edit (a menu Abort) hides again that long
+ * after the reveal, as after its end state (Greptile, PR #90).
+ */
+export function onReveal(v: Visibility, sessionId: string, closeAfter: number | undefined, now: number): [Visibility, Change] {
   if (sessionId !== v.session) return [v, null];
-  return [{ ...v, shown: true }, "show"];
+  return [{ ...v, shown: true, hideAt: deadline(closeAfter, now) ?? v.hideAt }, "show"];
 }
 
 /** The user's × (or, later, Esc with nothing open). */

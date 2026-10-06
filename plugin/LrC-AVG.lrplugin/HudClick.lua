@@ -238,13 +238,14 @@ end
 
 function HudClick.menuEvent(name, variant, refresh, show)
     local label = HudState.eventLabel(name, variant, H.state)
-    local line, sent
+    local line, sent, sid
     local refusal = HudState.refusal(H.state, name, variant)
     if refusal then
         line = notSent(label, refusal)
         H.lastAction = line
     else
         local chosen, waited = H.state.session_id, 0
+        sid = chosen
         while mustWait() and waited < HudClick.MENU_WAIT_SECONDS do
             LrTasks.sleep(0.5)
             waited = waited + 0.5
@@ -264,7 +265,15 @@ function HudClick.menuEvent(name, variant, refresh, show)
     -- Row 5 (spec D1, "Known conflict"): with a Deck live, a sent item leaves the classic window closed
     -- and the Deck shows what follows; a refused or unsent one still opens it, so its reason is never
     -- hidden [stated: Jim, 2026-10-05, "Go with recommendations", plan decision D1 A].
+    -- The Deck may be hidden (its x), so it is asked to show itself (hud_show), and the outcome is seen
+    -- (Greptile, PR #90); when that ask cannot go out, the classic window opens instead.
+    local asked = false
     if sent and HudClick.deckLive() then
+        local ok, why = Events.send("hud_show", { session_id = sid })
+        asked = ok
+        if not ok then Log.warn("hud: menu " .. name .. ": the Deck was not asked to show, " .. tostring(why)) end
+    end
+    if asked then
         Log.info("hud: menu " .. name .. ": the Deck shows the outcome")
     else
         show()

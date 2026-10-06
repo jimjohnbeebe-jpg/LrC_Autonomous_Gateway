@@ -6,12 +6,14 @@
 //     rectangle is kept inside its monitor's work area.
 // Sizes are CSS pixels times the monitor's scale. The bar and deck heights are the mockup's
 // (option-c/NOTES.md section 1); the 1200 px default width is spec 2.7 rule 4 [inference: chosen, not
-// measured]; the 640 px minimum is [inference: room for the headline and two buttons].
+// measured]. The 960 px minimum is the opened deck's (row 4c, Greptile PR #89): its side columns at their
+// narrowest (250 + 230) leave 480 for the centre, room for one column of slider rows (356 + padding) or
+// three copy cards with their thumbnails and names [inference: from hud\ui\style.css widths].
 
 pub const BAR_H: f64 = 44.0;
 pub const DECK_H: f64 = 144.0;
 pub const DEFAULT_W: f64 = 1200.0;
-pub const MIN_W: f64 = 640.0;
+pub const MIN_W: f64 = 960.0;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Rect {
@@ -122,7 +124,7 @@ mod tests {
     #[test]
     fn width_and_edges_are_clamped() {
         let r = fit(5500, 900, 100, false, &B);
-        assert_eq!((r.left, r.right), (5120, 5760)); // widened to 640, pulled back on screen
+        assert_eq!((r.left, r.right), (4800, 5760)); // widened to 960, pulled back on screen
         let r = fit(3000, 900, 99999, false, &B);
         assert_eq!((r.left, r.right), (3840, 5760));
     }

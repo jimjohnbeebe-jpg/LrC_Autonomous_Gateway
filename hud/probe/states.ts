@@ -41,19 +41,25 @@ stopDeck();
 install(setup);
 const exe = findHudExe() ?? stop("The Deck is not where the engine looks for it.");
 let engine: StandIn | null = null;
-let kept: boolean | null = null;
-/** Stops the Deck; keeps it installed only when every line is YES (see the header). */
-const finish = (): boolean => {
-  if (kept === null) {
+type Outcome = "kept" | "uninstalled" | "STILL INSTALLED";
+let outcome: Outcome | null = null;
+/**
+ * Stops the Deck; keeps it installed only when every line is YES (see the header). An uninstall that
+ * left the executable behind says so, rather than "uninstalled" (Greptile, PR #89).
+ */
+const finish = (): Outcome => {
+  if (outcome === null) {
     engine?.channel.close();
     stopDeck();
-    kept = results.length > 0 && results.every((l) => l.ok === true);
-    if (!kept) uninstall(exe);
+    const keep = results.length > 0 && results.every((l) => l.ok === true);
+    outcome = keep ? "kept" : uninstall(exe) ? "uninstalled" : "STILL INSTALLED";
   }
-  return kept;
+  return outcome;
 };
+const told = (o: Outcome): string =>
+  o === "STILL INSTALLED" ? "The Deck is STILL INSTALLED: its uninstaller failed. Tell Claude Code before the next edit." : `The Deck was ${o}.`;
 process.once("exit", () => {
-  if (kept === null) console.log(`The Deck was ${finish() ? "kept" : "uninstalled"}.`);
+  if (outcome === null) console.log(told(finish()));
 });
 process.once("SIGINT", () => process.exit(130));
 
@@ -146,22 +152,27 @@ record("S5e", "Jim: card C reads Picked", await yes("Card C reads \"Picked\", an
 record("S6", "Jim: the triangle closes and opens the deck", await yes(
   "Click the small triangle at the Deck's top left: the Deck shrinks to the thin bar, which still shows the sentence and Abort. Click the triangle again: it opens."));
 
-// 7. Claude gone (A6, spec D5): the undo path and the way to Put back.
+// 7. Claude gone (A6, spec D5), in a Converge edit: the undo path (a Variants edit shows the copies'
+// names there instead, view.ts wayLine; Greptile, PR #89) and the way to Put back.
+engine.begin(4, { rows, pass: 1, guardrail: { status: "green" } });
+await new Promise((r) => setTimeout(r, 1000));
 engine.channel.close();
 await new Promise((r) => setTimeout(r, 2500));
 record("S7", "Jim: not connected, undo path, Put back path, grey buttons", await yes(
-  "The Deck says \"Claude is not connected. Your edit so far stays.\", shows the way to undo it and to put the photo back, and its buttons are grey."));
+  "A new edit started, then the stand-in Claude went away. The Deck says \"Claude is not connected. Your edit so far stays.\", shows \"To undo it: Develop > Snapshots >\" with a snapshot name and the way to put the photo back, and its buttons are grey."));
 await engine.channel.open();
 record("S7b", "the Deck reconnected by itself", await engine.waitClient(10_000));
-engine.state("ended", { mode: "variants", copies, picked: "C" });
+engine.state("ended", { pass: 1 });
 
 closeInput();
+const answered = results.every((l) => l.ok === true);
+const end = finish();
+const C2_TEXT = { kept: "the Deck stays installed: real edits use it from now on", uninstalled: "the Deck was uninstalled again (a line was not YES)", "STILL INSTALLED": "the Deck's uninstaller failed: it is STILL INSTALLED" };
+record("C2", C2_TEXT[end], end === "kept" ? answered : end === "uninstalled");
 const failed = results.filter((l) => l.ok !== true).map((l) => l.id);
-const keptNow = finish();
-record("C2", keptNow ? "the Deck stays installed: real edits use it from now on" : "the Deck was uninstalled again (a line was not YES)", keptNow || failed.length > 0);
 mkdirSync(out, { recursive: true });
 const deckFile = log();
 if (deckFile) copyFileSync(deckFile, path.join(out, `states_${run}_${path.basename(deckFile)}`));
 const ui = events(deckFile).filter((e) => e.ev === "ui" || e.ev === "focus_lightroom");
-writeFileSync(path.join(out, `states_${run}.json`), JSON.stringify({ run, worked: failed.length === 0, failed, kept: keptNow, results, deck_ui: ui, deck_log: deckFile && path.basename(deckFile) }, null, 2));
-console.log(`\nDeck states probe: ${failed.length === 0 ? "WORKED" : `FAILED (${failed.join(", ")})`}. The Deck is ${keptNow ? "installed" : "uninstalled"}. Results saved; tell Claude Code "probe done".`);
+writeFileSync(path.join(out, `states_${run}.json`), JSON.stringify({ run, worked: failed.length === 0, failed, outcome: end, results, deck_ui: ui, deck_log: deckFile && path.basename(deckFile) }, null, 2));
+console.log(`\nDeck states probe: ${failed.length === 0 ? "WORKED" : `FAILED (${failed.join(", ")})`}. ${told(end)} Results saved; tell Claude Code "probe done".`);

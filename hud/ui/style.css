@@ -1,6 +1,6 @@
 /* The Deck (Phase 7 row 4c): the instrument tokens of spec 8.1 and Option C's measures
    (docs\hud\option-c\option-c.html, NOTES.md sections 1 and 7), for a free-floating window of any
-   width from 640 px: the 44 px bar, or the opened 144 px deck in three columns. Square edges, 1 px
+   width from 960 px (place.rs MIN_W): the 44 px bar, or the opened 144 px deck in three columns. Square edges, 1 px
    hairlines, radius 8 on cards, 6 on buttons, 4 on thumbnails. */
 @font-face { font-family: "Inter"; src: url("fonts/inter.woff2") format("woff2"); font-weight: 100 900; }
 
@@ -61,7 +61,8 @@ body.kbd .nf { display: none; }
 .deck.k .btn { height: 28px; }
 
 /* ---- the opened deck (144 px) ---- */
-.deck.open { display: grid; grid-template-columns: minmax(250px, 380px) minmax(0, 1fr) minmax(230px, 300px); }
+/* The centre's 388 px holds one column of slider rows (16 + 356 + 16); the sides grow first (place.rs MIN_W). */
+.deck.open { display: grid; grid-template-columns: minmax(250px, 380px) minmax(388px, 1fr) minmax(230px, 300px); }
 .col { position: relative; min-width: 0; height: 142px; overflow: hidden; }
 .col.c::before, .col.r::before { content: ""; position: absolute; left: 0; top: 11px; width: 1px; height: 120px; background: var(--line); }
 .col.l { padding: 11px 16px 10px 16px; display: flex; flex-direction: column; }
@@ -107,12 +108,15 @@ body.kbd .nf { display: none; }
 .cguard { margin-top: 6px; display: flex; gap: 6px; color: var(--text2); font-feature-settings: "tnum" 0;
   overflow: hidden; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; }
 .cguard svg { display: inline-block; vertical-align: -2px; margin-right: 6px; }
+.cname .gmark { display: none; align-items: center; margin-left: auto; }
 /* Narrow decks: the thumbnail on top, the name under it (Option C NOTES section 8, "Small windows"). */
 @media (max-width: 1400px) {
   .card { flex-direction: column; padding: 6px; gap: 4px; }
   .card .th { width: 100%; height: 80px; }
   .card .caret { left: calc(50% - 6px); }
+  /* No room for the guardrail sentence: its mark stays beside the name; the sentence is the card's tooltip. */
   .cguard { display: none; }
+  .cname .gmark { display: inline-flex; }
 }
 
 .way { padding-top: 2px; }

@@ -2,7 +2,7 @@ Headless renders of the Deck's own drawing code (Phase 7 row 4c, pre-run finding
 
 Claude Code ran, on branch phase-7/deck-ui, 2026-10-05 local, after `node build-ui.ts` in hud\:
   node headless.mts            (every state at 1200 CSS px)
-  node headless.mts V-pick 1800 / C-converged 1800
+  node headless.mts V-pick 1800 / C-converged 1800, and the same two at 960
 It copies hud\ui-dist, adds a harness page that calls the Deck's own view() and html() (ui-dist\view.js,
 render.js) for made-up states validated by the engine's hudChannelStateSchema, and screenshots each in
 headless Microsoft Edge (--screenshot), so no window opens on the desktop. The thumbnails are flat colours

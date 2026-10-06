@@ -104,9 +104,11 @@ function card(c: Card, f: Form): string {
   const img = src ? `<img src="${esc(src)}" alt="">` : "";
   const right = c.picked ? `<span class="picked">${T.PICK.picked}</span>` : c.on ? key({ A: "1", B: "2", C: "3" }[c.letter]) : "";
   const cls = `card${c.chosen || c.picked ? " chosen" : ""}`;
-  return `<button class="${cls}" data-card="${c.letter}"${c.on ? "" : " disabled"}${attr("title", c.copyName)} aria-pressed="${c.chosen}">
+  const tip = [c.copyName, c.guard?.text].filter(Boolean).join("\n");
+  const mark = c.guard ? `<span class="gmark">${guardGlyph(c.guard.status)}</span>` : "";
+  return `<button class="${cls}" data-card="${c.letter}"${c.on ? "" : " disabled"}${attr("title", tip)} aria-pressed="${c.chosen}">
 ${c.chosen || c.picked ? `<span class="caret">${CARET}</span>` : ""}<span class="th">${img}</span>
-<span class="tx"><span class="cname"><span>${esc(c.name)}</span>${right}</span>${guardLine(c.guard, "cguard")}</span></button>`;
+<span class="tx"><span class="cname"><span>${esc(c.name)}</span>${mark}${right}</span>${guardLine(c.guard, "cguard")}</span></button>`;
 }
 
 function centre(v: View, f: Form): string {

@@ -17,7 +17,7 @@
 // table as []. Payload schemas below never require a non-empty table to be an object.
 
 import { z } from "zod";
-import { hudUpdateResultSchema, type HudUpdatePayload } from "./hud-protocol.js";
+import { hudDeckResultSchema, hudUpdateResultSchema, type HudUpdatePayload } from "./hud-protocol.js";
 
 export const PROTOCOL_VERSION = 1;
 
@@ -256,6 +256,8 @@ export const COMMANDS = {
   }),
   // Plugin 0.6.0 (Hud.lua update): the HUD's state; the contract is in hud-protocol.ts.
   hud_update: hudUpdateResultSchema,
+  // Plugin 0.18.0 (Hud.lua deck): whether a Deck is connected; the contract is in hud-protocol.ts.
+  hud_deck: hudDeckResultSchema,
   // Plugin 0.11.0 (Masks.lua, issue #59). update_ai_settings: photo:updateAISettings() in its own write
   // gate. A Lightroom without the call answers feature_unavailable. Up to 0.12.0 it waited for the
   // update (call_ms, `gate` what withWriteAccessDo returned); 0.13.0 used an asynchronous gate, which
@@ -362,6 +364,8 @@ export type CommandPayloads = {
   get_prefs: Record<string, never>;
   /** Refused with bad_request when a field is unknown or of the wrong type (hud-protocol.ts). */
   hud_update: HudUpdatePayload;
+  /** Plugin 0.18.0: a Deck is connected to the engine (true) or not. */
+  hud_deck: { connected: boolean };
   /** Plugin 0.11.0: the photo with that uuid, checked against `expect`; the selection is not touched. `watch`: plugin 0.16.0 (params\mask-ops.ts aiWatch). */
   update_ai_settings: { photo_uuid: string; expect?: PhotoExpect; request_id?: string; watch?: AiWatch };
   /** Plugin 0.12.0: on the selected photo, refused with target_mismatch unless it is target_uuid's; waits up to wait_seconds (1-15, default 12) for the mask after createNewMask; switches Lightroom to Develop. */

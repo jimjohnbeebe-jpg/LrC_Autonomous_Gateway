@@ -49,6 +49,7 @@ function Dispatch.handlers(hello)
         import_photo = Transfer.importPhoto,
         get_prefs = Prefs.getPrefs,
         hud_update = Hud.update,
+        hud_deck = Hud.deck,
         update_ai_settings = Masks.updateAISettings,
         create_ai_mask_dc = Masks.createAiMaskDc,
         probe_write_gate = Masks.probeWriteGate,

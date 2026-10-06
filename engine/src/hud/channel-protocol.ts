@@ -97,7 +97,16 @@ export const engineMessageSchema = z.discriminatedUnion("type", [
   /** The reply to get_thumb: a JPEG, or null when the key names no current thumbnail (a newer pass replaced it). */
   z.strictObject({ type: z.literal("thumb"), key: id, jpeg_b64: z.string().nullable() }),
   z.strictObject({ type: z.literal("ping") }),
+  /**
+   * Row 5 (Q4): the user chose "Show Vision Gateway HUD" in Lightroom's menu during edit `session_id`:
+   * show the Deck opened, without taking the keyboard (a show leaves the foreground alone [handle: repo
+   * docs\reports\phase7\S9.md, S9-6]; right after a Lightroom menu [unverified] until the row 5 probe).
+   * Sent only to a Deck from REVEAL_HUD on.
+   */
+  z.strictObject({ type: z.literal("reveal"), session_id: id }),
 ]);
+/** The first Deck that knows `reveal` (an older one logs it as a bad message). */
+export const REVEAL_HUD = "0.3.0";
 export type EngineMessage = z.infer<typeof engineMessageSchema>;
 
 export const deckMessageSchema = z.discriminatedUnion("type", [

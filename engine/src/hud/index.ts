@@ -15,4 +15,7 @@ export * from "./channel-protocol.js";
 export { HudLauncher, findHudExe } from "./launch.js";
 export type { HudLauncherOptions } from "./launch.js";
 export { HudFanOut } from "./sinks.js";
+// Row 5: the menu items and the Deck (hud_deck to the plugin, hud_show to the Deck).
+export { DeckMenu } from "./deck-menu.js";
+export type { DeckMenuRecord } from "./deck-menu.js";
 export type { DeckDeps } from "./sinks.js";

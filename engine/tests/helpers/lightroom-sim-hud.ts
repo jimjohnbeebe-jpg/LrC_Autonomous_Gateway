@@ -16,6 +16,8 @@ export class SimHud {
   readonly refused: unknown[] = [];
   shown = false;
   opened = 0;
+  /** Plugin 0.18.0 (Hud.lua deck): each hud_deck taken, in order (the last is what the plugin holds). */
+  readonly deck: boolean[] = [];
   private readonly seen = new Set<string>();
 
   update(p: Record<string, unknown>): FakeReply {
@@ -46,6 +48,16 @@ export class SimHud {
       this.opened++;
     }
     return { ok: true, payload: { applied: true, shown: this.shown, opened } };
+  }
+
+  /** hud_deck: checked as the plugin checks it (a boolean `connected`, nothing else). */
+  deckUpdate(p: Record<string, unknown>): FakeReply {
+    const keys = Object.keys(p);
+    if (typeof p["connected"] !== "boolean" || keys.length !== 1) {
+      return { ok: false, error: { code: "bad_request", message: "hud_deck takes { connected }", recoverable: false } };
+    }
+    this.deck.push(p["connected"]);
+    return { ok: true, payload: { connected: p["connected"] } };
   }
 
   /** The HUD's state now. */

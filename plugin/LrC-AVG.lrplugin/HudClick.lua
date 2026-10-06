@@ -226,19 +226,26 @@ end
 -- opened behind the HUD [stated: Jim, 2026-09-29].
 HudClick.MENU_WAIT_SECONDS = 20
 
+-- Plugin 0.18.0 (Phase 7 row 5): a Deck is live while the engine is connected and has said one is
+-- connected to it (Hud.deck; reset at each engine connection, Hud.markUnknown).
+function HudClick.deckLive()
+    return H.deck == true and Events.connection().engine
+end
+
 local function mustWait()
     return not Events.connection().engine or HudState.unknown(H.unknownAt, LrDate.currentTime()) == "checking"
 end
 
 function HudClick.menuEvent(name, variant, refresh, show)
     local label = HudState.eventLabel(name, variant, H.state)
-    local line
+    local line, sent, sid
     local refusal = HudState.refusal(H.state, name, variant)
     if refusal then
         line = notSent(label, refusal)
         H.lastAction = line
     else
         local chosen, waited = H.state.session_id, 0
+        sid = chosen
         while mustWait() and waited < HudClick.MENU_WAIT_SECONDS do
             LrTasks.sleep(0.5)
             waited = waited + 0.5
@@ -247,8 +254,7 @@ function HudClick.menuEvent(name, variant, refresh, show)
         local p, why = nil, R.changed
         if H.state.session_id == chosen then p, label, why = begin(name, variant, "menu") end
         if p then
-            local _, sent = finish(p, refresh) -- finish shows its own line while the click is current (PR #45)
-            line = sent
+            sent, line = finish(p, refresh) -- finish shows its own line while the click is current (PR #45)
         else
             local waitedText = waited >= HudClick.MENU_WAIT_SECONDS and string.format(CLICK.waited, HudClick.MENU_WAIT_SECONDS) or ""
             line = notSent(label, why .. waitedText)
@@ -256,7 +262,22 @@ function HudClick.menuEvent(name, variant, refresh, show)
         end
     end
     Log.info("hud: menu " .. name .. ": " .. line)
-    show()
+    -- Row 5 (spec D1, "Known conflict"): with a Deck live, a sent item leaves the classic window closed
+    -- and the Deck shows what follows; a refused or unsent one still opens it, so its reason is never
+    -- hidden [stated: Jim, 2026-10-05, "Go with recommendations", plan decision D1 A].
+    -- The Deck may be hidden (its x), so it is asked to show itself (hud_show), and the outcome is seen
+    -- (Greptile, PR #90); when that ask cannot go out, the classic window opens instead.
+    local asked = false
+    if sent and HudClick.deckLive() then
+        local ok, why = Events.send("hud_show", { session_id = sid })
+        asked = ok
+        if not ok then Log.warn("hud: menu " .. name .. ": the Deck was not asked to show, " .. tostring(why)) end
+    end
+    if asked then
+        Log.info("hud: menu " .. name .. ": the Deck shows the outcome")
+    else
+        show()
+    end
     refresh()
 end
 

@@ -1,0 +1,102 @@
+{
+  "run": "2026-10-06T11-16-43-227Z",
+  "worked": true,
+  "failed": [],
+  "error": null,
+  "outcome": "kept",
+  "results": [
+    {
+      "id": "M1a",
+      "what": "the Deck connected and the plugin heard it (hud: Deck connected)",
+      "ok": true
+    },
+    {
+      "id": "M1b",
+      "what": "the classic window did not open at the edit's start",
+      "ok": true
+    },
+    {
+      "id": "M1c",
+      "what": "Jim: the Deck opened by itself, no classic window",
+      "ok": true
+    },
+    {
+      "id": "M2a",
+      "what": "the menu asked the engine for the Deck, and the Deck showed itself",
+      "ok": true
+    },
+    {
+      "id": "M2b",
+      "what": "the classic window did not open",
+      "ok": true
+    },
+    {
+      "id": "M2c",
+      "what": "Jim: the Deck came back opened; Lightroom kept the keyboard",
+      "ok": true
+    },
+    {
+      "id": "M3a",
+      "what": "the refused Pick A opened the classic window",
+      "ok": true
+    },
+    {
+      "id": "M3b",
+      "what": "Jim: the classic window says why; you closed it",
+      "ok": true
+    },
+    {
+      "id": "M4a",
+      "what": "the menu's Abort was sent and the Deck took the outcome",
+      "ok": true,
+      "detail": "2026-10-06 04:18:17.546 INFO  hud: menu hud_abort: Abort sent; waiting for Claude."
+    },
+    {
+      "id": "M4b",
+      "what": "the edit ended as aborted",
+      "ok": true
+    },
+    {
+      "id": "M4c",
+      "what": "the classic window did not open",
+      "ok": true
+    },
+    {
+      "id": "M4e",
+      "what": "the hidden Deck showed itself for the outcome",
+      "ok": true
+    },
+    {
+      "id": "M4d",
+      "what": "Jim: Done, the photo is back; no classic window",
+      "ok": true
+    },
+    {
+      "id": "M5a",
+      "what": "the plugin heard the Deck went away (hud: Deck not connected)",
+      "ok": true
+    },
+    {
+      "id": "M5b",
+      "what": "with no Deck the classic window opened by itself",
+      "ok": true
+    },
+    {
+      "id": "M5c",
+      "what": "with no Deck, Show opened the classic window",
+      "ok": true
+    },
+    {
+      "id": "M5d",
+      "what": "Jim: the classic window opened from the menu",
+      "ok": true
+    },
+    {
+      "id": "P",
+      "what": "the photo is as it was before the probe (0 settings differ)",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "deck_log": "hud_3648_1791285405318.jsonl"
+}

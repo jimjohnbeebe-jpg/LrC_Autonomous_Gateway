@@ -222,9 +222,11 @@ fn hide_now(reason: &str) {
     write(json!({ "ev": "hide", "reason": reason }));
 }
 
-/// The UI shows the Deck at an edit's start (rule 5): placed afresh, shown unless Lightroom is minimised.
-pub fn show(reason: &str) {
+/// The UI shows the Deck at an edit's start (rule 5): placed afresh, opened or as the bar (row 4c: opened
+/// at each new edit [stated: Jim, 2026-10-05, "Opened by default"]), shown unless Lightroom is minimised.
+pub fn show(reason: &str, open: bool) {
     WANT.store(true, SeqCst);
+    OPEN.store(open, SeqCst);
     place_for_edit();
     let minimised = iconic(MAIN.load(SeqCst));
     MIN_HIDDEN.store(minimised, SeqCst);
@@ -237,4 +239,16 @@ pub fn hide(reason: &str) {
     WANT.store(false, SeqCst);
     MIN_HIDDEN.store(false, SeqCst);
     hide_now(reason);
+}
+
+/// After a pointer action the Deck hands the keyboard back to Lightroom's main window (Option C
+/// docs\hud\option-c\NOTES.md section 3, "Focus"; spec 4.6). The Deck is the foreground window then, the
+/// user having just clicked it, so Windows lets it give the foreground away [handle: MS
+/// nf-winuser-setforegroundwindow.md:94-96, listed in docs\hud\research\SOURCES.md:16: "The calling
+/// process is the foreground process"]. That it does on Jim's machine is [unverified] until the row 4c
+/// probe.
+pub fn focus_lightroom(why: &str) {
+    let main = MAIN.load(SeqCst);
+    let ok = main != 0 && unsafe { SetForegroundWindow(hwnd(main)).as_bool() };
+    write(json!({ "ev": "focus_lightroom", "why": why, "ok": ok }));
 }

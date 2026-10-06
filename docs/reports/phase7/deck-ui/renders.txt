@@ -1,0 +1,102 @@
+Headless renders of the Deck's own drawing code (Phase 7 row 4c, pre-run finding 3 in docs\reports\phase7\deck-ui.md).
+
+Claude Code ran, on branch phase-7/deck-ui, 2026-10-05 local, after `node build-ui.ts` in hud\:
+  node headless.mts            (every state at 1200 CSS px)
+  node headless.mts V-pick 1800 / C-converged 1800
+It copies hud\ui-dist, adds a harness page that calls the Deck's own view() and html() (ui-dist\view.js,
+render.js) for made-up states validated by the engine's hudChannelStateSchema, and screenshots each in
+headless Microsoft Edge (--screenshot), so no window opens on the desktop. The thumbnails are flat colours
+made with sharp. The script ran from Claude Code's scratchpad; it is kept here verbatim, not as a file to run
+(rule 01).
+
+Files: renders\<state>-<css width>.png. States: W working, P approve, C converged (armed: Abort armed with
+the keyboard), cap = all passes used (Q6), V the pick (chosen: card B chosen with the keyboard; after: copy B
+picked), sent = a click waiting for its answer, D = Claude not connected, T = another photo selected,
+undone = a pass undone, Done = accepted; -bar = the 44 px bar.
+
+----- headless.mts, verbatim -----
+// Scratch: renders the Deck's own view.js + render.js (ui-dist) for named states in headless Edge, so
+// nothing opens on Jim's desktop. Not committed. Usage: node headless.mts [stateNamePrefix] [cssWidth]
+import { cpSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { createRequire } from "node:module";
+import path from "node:path";
+
+const REPO = "D:/Developer/LrC_Autonomous_Gateway";
+const SCRATCH = path.dirname(new URL(import.meta.url).pathname).replace(/^\/([A-Z]:)/, "$1");
+const SITE = path.join(SCRATCH, "site");
+const OUT = path.join(SCRATCH, "shots");
+rmSync(SITE, { recursive: true, force: true });
+cpSync(`${REPO}/hud/ui-dist`, SITE, { recursive: true });
+mkdirSync(OUT, { recursive: true });
+const sharp = createRequire(`${REPO}/package.json`)("sharp");
+
+const thumbs: Record<string, string> = {};
+for (const [k, c] of [["A", "#6a7a5a"], ["B", "#8a5a3a"], ["C", "#7a8aa8"]]) {
+  thumbs[`t${k}`] = "data:image/jpeg;base64," + (await sharp({ create: { width: 480, height: 320, channels: 3, background: c } }).jpeg().toBuffer()).toString("base64");
+}
+const copies = ["A", "B", "C"].map((letter, i) => ({ letter, label: ["natural", "dramatic", "soft"][i], copy_name: `AVG landscape_golden_hour ${letter}`, uuid: `U${letter}`, pass: 1, thumb: `t${letter}`, guardrail: i === 1 ? { status: "corrected", reason: "Shadow clipping was 3.47 % (limit 1 %); corrected." } : { status: "green" } }));
+const rows = [
+  { name: "exposure", label: "Exposure", group: "Basic", before: 0.33, after: 0.7, delta: 0.37, min: -5, max: 5, weight: 0.37 },
+  { name: "contrast", label: "Contrast", group: "Basic", before: 0, after: 12, delta: 12, min: -100, max: 100, weight: 0.3 },
+  { name: "highlights", label: "Highlights", group: "Basic", before: -21, after: -41, delta: -20, min: -100, max: 100, weight: 0.5 },
+  { name: "shadows", label: "Shadows", group: "Basic", before: 10, after: 20, delta: 10, min: -100, max: 100, weight: 0.25 },
+  { name: "clarity", label: "Clarity", group: "Basic", before: 2, after: 6, delta: 4, min: -100, max: 100, weight: 0.16 },
+  { name: "vibrance", label: "Vibrance", group: "Basic", before: 10, after: 16, delta: 6, min: -100, max: 100, weight: 0.24 },
+  { name: "temperature", label: "Temp", group: "Basic", before: 5200, after: 5600, delta: 400, min: 2000, max: 50000, weight: 0.5 },
+  { name: "camera_profile", label: "Profile", group: "Basic", before: "Camera Neutral", after: "Adobe Landscape", weight: 1 },
+];
+const target = { uuid: "P1", filename: "_DSC0412.NEF", iso: 100, shutter: "1/250 s", aperture: "f/8", lens: "18.0-105.0 mm f/3.5-5.6", lens_profile: "on" };
+const base = { session_id: "s1", mode: "converge", pass: 2, max_passes: 6, target, lightroom: "connected", snapshot: "AVG pre-session 2026-10-05T18:42:07.311Z", guardrail: { status: "green" }, rows };
+const V = { stage: "awaiting_pick", mode: "variants", pass: 1, variants: ["A", "B", "C"], copies, rows: undefined, guardrail: undefined };
+// [name, state over base, local, ctx over]
+const STATES: [string, Record<string, unknown>, Record<string, unknown>, Record<string, unknown>][] = [
+  ["W-working", { stage: "awaiting_claude" }, {}, {}],
+  ["W-bar", { stage: "awaiting_claude" }, {}, { open: false }],
+  ["P-approve", { stage: "awaiting_approval", approve_pass: 2 }, {}, { focus: true }],
+  ["C-converged", { stage: "converged", pass: 3, guardrail: { status: "clamped", reason: "Clarity: change held to ±4 this pass." } }, {}, {}],
+  ["C-bar", { stage: "converged", pass: 3 }, {}, { open: false }],
+  ["C-armed", { stage: "converged", pass: 3 }, { armedAt: 999 }, { focus: true }],
+  ["cap", { stage: "awaiting_claude", pass: 6, cap_reached: true }, {}, {}],
+  ["V-pick", V, {}, {}],
+  ["V-chosen", V, { chosen: "B" }, { focus: true }],
+  ["V-bar", V, {}, { open: false }],
+  ["V-after", { ...V, stage: "awaiting_claude", picked: "B", note: "Picked B: Claude continues on copy B at its next call.", target: { ...target, copy_name: "AVG landscape_golden_hour B" } }, {}, {}],
+  ["sent", { stage: "converged", pass: 3 }, { pending: { id: "c", label: "Accept", at: 999 } }, {}],
+  ["D-notconn", { stage: "awaiting_claude" }, {}, { connected: false }],
+  ["T-changed", { stage: "awaiting_claude", selection: { uuid: "X", name: "_DSC0413.NEF", in_edit: false } }, {}, {}],
+  ["undone", { stage: "awaiting_claude", guardrail: { status: "undone", reason: "Pass undone: highlight clipping went over the limit." } }, {}, {}],
+  ["Done", { stage: "accepted", close_after: 10 }, {}, {}],
+];
+writeFileSync(path.join(SITE, "states.js"), `export const STATES = ${JSON.stringify(STATES)};\nexport const THUMBS = ${JSON.stringify(thumbs)};\n`);
+writeFileSync(path.join(SITE, "harness.js"), `
+import { view } from "./view.js";
+import { html } from "./render.js";
+import { FRESH } from "./clicks.js";
+import { hudChannelStateSchema } from "./engine/hud/channel-protocol.js";
+import { STATES, THUMBS } from "./states.js";
+const name = location.hash.slice(1);
+const [, over, local, ctx] = STATES.find((s) => s[0] === name);
+const base = ${JSON.stringify(base)};
+const s = hudChannelStateSchema.parse({ ...base, ...over });
+const marks = { 0: "green", 1: "corrected", 2: "green" };
+const v = view(s, { ...FRESH, session: s.session_id, ...local }, { connected: true, gone: false, focus: false, open: true, now: 1000, marks, ...ctx });
+const open = ctx.open ?? true;
+document.getElementById("deck-host").innerHTML = html(v, { open, focus: ctx.focus ?? false, armed: !!local.armedAt, twoColumns: innerWidth >= 1460, thumbs: new Map(Object.entries(THUMBS)) });
+document.body.dataset.done = "1";
+`);
+writeFileSync(path.join(SITE, "harness.html"), readHtml());
+function readHtml(): string {
+  return `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="style.css"><script type="module" src="harness.js"></script></head><body><div id="deck-host"></div></body></html>`;
+}
+const only = process.argv[2] ?? "";
+const width = Number(process.argv[3] ?? 1200);
+const EDGE = "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe";
+for (const [name, , , ctx] of STATES) {
+  if (!name.startsWith(only)) continue;
+  const h = ctx["open"] === false ? 44 : 144;
+  const out = path.join(OUT, `${name}-${width}.png`);
+  const url = "file:///" + path.join(SITE, "harness.html").replace(/\\/g, "/") + "#" + name;
+  execFileSync(EDGE, ["--headless", "--disable-gpu", "--allow-file-access-from-files", `--user-data-dir=${path.join(SCRATCH, "edge-profile")}`, `--window-size=${width},${h}`, "--force-device-scale-factor=1", "--hide-scrollbars", "--virtual-time-budget=3000", `--screenshot=${out}`, url], { stdio: "ignore" });
+  console.log("shot", out);
+}

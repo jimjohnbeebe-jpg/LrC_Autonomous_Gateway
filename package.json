@@ -28,6 +28,7 @@
     "preset:pin": "npm run build && node engine/dist/devtools/preset-pin-cli.js",
     "wb:check": "npm run build && node engine/dist/devtools/wb-check-cli.js",
     "deck:build": "npm run build && npm run build -w hud",
-    "deck:probe": "npm run build && node hud/probe/probe.ts"
+    "deck:probe": "npm run build && node hud/probe/probe.ts",
+    "deck:states": "npm run build && node hud/probe/states.ts"
   }
 }

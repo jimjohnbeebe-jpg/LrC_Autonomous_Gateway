@@ -82,9 +82,10 @@ function click(id: ActionId): void {
   if (name === undefined) return;
   const label = id === "approve" ? approveLabel(s.approve_pass ?? 0) : id === "continue" ? pickLabel(local.chosen ?? "") : id === "accept" ? LABEL.accept : LABEL.abort;
   const cid = C.clickId();
+  const at = Date.now(); // row 6: the click's time before the send, for the click-to-userAction budget (spec 9)
   send({ type: "event", name, payload: { session_id: s.session_id, seq_seen: seq, click_id: cid, source: "hud", ...extra } });
-  local = C.sent(local, cid, label, Date.now());
-  log({ click: name, click_id: cid, ...extra });
+  local = C.sent(local, cid, label, at);
+  log({ click: name, click_id: cid, at, ...extra });
   render();
 }
 
@@ -209,8 +210,12 @@ function onMessage(text: string): void {
   if (!parsed?.success) return log({ bad_message: text.slice(0, 200) });
   const msg = parsed.data;
   if (msg.type === "ping") send({ type: "pong" });
-  else if (msg.type === "state") onEngineState(msg.state, msg.seq);
-  else if (msg.type === "answer") {
+  else if (msg.type === "state") {
+    // Row 6 (phase7:check, spec 9): receipt and first frame after it, in JS time, as S9's `paint` (spikes\S9\tauri\ui\ui.ts).
+    log({ got: msg.seq, session: msg.state.session_id, stage: msg.state.stage, at: Date.now() });
+    onEngineState(msg.state, msg.seq);
+    requestAnimationFrame(() => log({ painted: msg.seq, at: Date.now() }));
+  } else if (msg.type === "answer") {
     local = C.onAnswer(local, msg.click_id);
     log({ answer: msg.click_id });
     render();

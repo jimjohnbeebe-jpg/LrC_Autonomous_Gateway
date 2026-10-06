@@ -2,7 +2,7 @@
 // type stripping turns ui\*.ts into JavaScript, the engine's channel schemas come from engine\dist (built
 // first by `npm run deck:build`), and zod's ESM files are copied beside them, so the Deck validates with
 // the engine's own schemas and zod version (spec 2.7 "From S9").
-import { copyFileSync, cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, cpSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire, stripTypeScriptTypes } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -24,8 +24,11 @@ mkdirSync(join(out, "fonts"), { recursive: true });
 copyFileSync(join(here, "ui", "index.html"), join(out, "index.html"));
 copyFileSync(join(here, "ui", "style.css"), join(out, "style.css"));
 copyFileSync(join(repo, "docs", "hud", "fonts", "inter.woff2"), join(out, "fonts", "inter.woff2"));
-write(join(out, "deck.js"), strip("deck.ts"), { "../../engine/src/hud/channel-protocol.ts": "./engine/hud/channel-protocol.js", "./visibility.ts": "./visibility.js" });
-write(join(out, "visibility.js"), strip("visibility.ts"), {});
+// Every ui\*.ts but the tests; their own imports end in .ts, which become .js here.
+for (const file of readdirSync(join(here, "ui")).filter((f) => f.endsWith(".ts") && !f.endsWith(".test.ts"))) {
+  const js = strip(file).replace(/from "\.\/([\w-]+)\.ts"/g, 'from "./$1.js"');
+  write(join(out, file.replace(/\.ts$/, ".js")), js, { "../../engine/src/hud/channel-protocol.ts": "./engine/hud/channel-protocol.js" });
+}
 write(join(out, "engine", "hud", "channel-protocol.js"), engine("hud/channel-protocol.js"), { zod: "../../vendor/zod/index.js" });
 write(join(out, "engine", "bridge", "hud-protocol.js"), engine("bridge/hud-protocol.js"), { zod: "../../vendor/zod/index.js" });
 

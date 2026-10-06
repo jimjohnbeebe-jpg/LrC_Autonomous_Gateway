@@ -1,29 +1,140 @@
-/* The Deck's shell (Phase 7 row 4b): the instrument tokens of spec 8.1, as spike S9's bar used them. Row 4c
-   draws the Deck's states, cards and keyboard; this is only the frame: a 44 px bar, the opened area
-   below it, and the side grips that resize it. */
+/* The Deck (Phase 7 row 4c): the instrument tokens of spec 8.1 and Option C's measures
+   (docs\hud\option-c\option-c.html, NOTES.md sections 1 and 7), for a free-floating window of any
+   width from 960 px (place.rs MIN_W): the 44 px bar, or the opened 144 px deck in three columns. Square edges, 1 px
+   hairlines, radius 8 on cards, 6 on buttons, 4 on thumbnails. */
 @font-face { font-family: "Inter"; src: url("fonts/inter.woff2") format("woff2"); font-weight: 100 900; }
 
 :root {
-  --bg: #202122; --raised: #2a2b2d; --line: #3a3b3e;
-  --text: #e4e6e8; --text2: #aeb2b6; --text3: #8d9196; --danger: #ee8064;
+  --bg: #202122; --raised: #2a2b2d; --inset: #161718; --line: #3a3b3e;
+  --text: #e4e6e8; --text2: #aeb2b6; --text3: #8d9196;
+  --accent: #eda447; --on-accent: #1d1305; --ok: #86c296; --danger: #ee8064; --working: #9fb7d4;
 }
 html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); }
-.deck {
-  position: relative; box-sizing: border-box; height: 100vh; display: flex; flex-direction: column;
-  border: 1px solid var(--line); background: var(--bg); color: var(--text);
-  font-family: "Inter", "Segoe UI", sans-serif; font-size: 12px; line-height: 16px;
-  -webkit-font-smoothing: antialiased; user-select: none; cursor: default;
+body {
+  color: var(--text); font-family: "Inter", "Segoe UI", sans-serif; font-size: 12px; line-height: 16px;
+  font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; user-select: none; cursor: default;
 }
-.bar { flex: none; height: 42px; display: flex; align-items: center; gap: 8px; padding: 0 16px; }
-.words { flex: 1; font-size: 13px; line-height: 20px; font-weight: 500; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-.words b { font-weight: 600; color: var(--text); }
-/* Clicks on the text reach .words, a drag region: Tauri drags only from the marked element itself. */
-.words * { pointer-events: none; }
-.words .fid { color: var(--text3); font-weight: 400; font-size: 12px; }
-.more { flex: 1; padding: 0 16px 8px; color: var(--text3); overflow: hidden; }
-.rcol { flex: none; display: flex; gap: 8px; padding-left: 16px; border-left: 1px solid var(--line); }
-.btn { height: 28px; border-radius: 6px; border: 1px solid var(--line); background: var(--raised); color: var(--text2); font: inherit; font-size: 13px; font-weight: 500; padding: 0 10px; }
-.btn:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
-.grip { position: absolute; top: 0; bottom: 0; width: 6px; cursor: ew-resize; z-index: 1; }
+*, *::before, *::after { box-sizing: border-box; }
+svg { display: block; flex: none; }
+#deck-host { height: 100vh; }
+.deck { height: 100%; border: 1px solid var(--line); background: var(--bg); position: relative; }
+/* Drag regions (the deck, its columns, the bar's words): Tauri drags only from the marked element itself,
+   so the text inside them lets clicks through to it. Buttons and cards keep theirs. */
+.words *, .cq *, .glyph, .sentence, .step, .band, .tl, .blk, .way, .conseq, .hint, .off, .hintbox, .undo { pointer-events: none; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: default; }
+button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+/* Key hints only while the Deck has the keyboard (deck.ts sets body.kbd). */
+.kf { display: none !important; }
+body.kbd .kf { display: inline-flex !important; }
+body.kbd .nf { display: none; }
+.grip { position: fixed; top: 0; bottom: 0; width: 6px; cursor: ew-resize; z-index: 2; }
 .grip.west { left: 0; }
 .grip.east { right: 0; }
+.hidebtn { position: absolute; right: 8px; top: 7px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 6px; z-index: 1; }
+.hidebtn:hover { box-shadow: inset 0 0 0 1px var(--line); }
+.disc { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; margin: 0 4px 0 -4px; border-radius: 4px; flex: none; }
+.glyph { width: 16px; height: 20px; display: flex; align-items: center; margin-right: 8px; flex: none; }
+.key { display: inline-flex; align-items: center; justify-content: center; min-width: 16px; height: 16px; padding: 0 4px; margin-left: 8px;
+  border: 1px solid var(--line); border-radius: 3px; font-size: 11px; line-height: 14px; font-weight: 500; color: var(--text2); }
+.arrow { display: inline-block; vertical-align: -1px; }
+
+/* ---- buttons ---- */
+.btn { height: 32px; border-radius: 6px; display: flex; align-items: center; font-size: 13px; line-height: 16px; font-weight: 600; white-space: nowrap; padding: 0 12px; }
+.btn.primary { background: var(--accent); color: var(--on-accent); justify-content: space-between; padding: 0 7px 0 12px; }
+.btn.primary .key { color: var(--on-accent); border-color: var(--on-accent); }
+.btn.secondary { border: 1px solid var(--line); color: var(--text); font-weight: 500; }
+.btn.abort { height: 24px; padding: 0 9px; border: 1px solid var(--line); color: var(--danger); font-weight: 500; flex: none; }
+.btn.abort.armed { border-color: var(--danger); padding: 0 8px; }
+.btn.compact { height: 24px; padding: 0 9px; border: 1px solid var(--line); color: var(--text); font-weight: 500; flex: none; }
+.btn.compact.abort { color: var(--danger); }
+.btn.textonly { height: 28px; padding: 0 8px; color: var(--text2); font-weight: 500; }
+.btn:disabled, .btn.primary:disabled { background: none; border: 1px solid var(--line); color: var(--text3); }
+
+/* ---- the bar (44 px) ---- */
+.deck.k { display: flex; align-items: center; gap: 0; padding: 0 44px 0 16px; }
+.deck.k .words { flex: 1; min-width: 0; font-size: 13px; line-height: 20px; font-weight: 500; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.deck.k .words b { font-weight: 600; color: var(--text); }
+.deck.k .words.turn15 b { font-size: 15px; }
+.deck.k .words .fid { color: var(--text3); font-weight: 400; font-size: 12px; }
+.deck.k .cq { flex: 0 1 auto; min-width: 0; padding: 0 16px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-feature-settings: "tnum" 0; }
+.deck.k .acts { flex: none; display: flex; gap: 8px; padding-left: 16px; border-left: 1px solid var(--line); }
+.deck.k .btn { height: 28px; }
+
+/* ---- the opened deck (144 px) ---- */
+/* The centre's 388 px holds one column of slider rows (16 + 356 + 16); the sides grow first (place.rs MIN_W). */
+.deck.open { display: grid; grid-template-columns: minmax(250px, 380px) minmax(388px, 1fr) minmax(230px, 300px); }
+.col { position: relative; min-width: 0; height: 142px; overflow: hidden; }
+.col.c::before, .col.r::before { content: ""; position: absolute; left: 0; top: 11px; width: 1px; height: 120px; background: var(--line); }
+.col.l { padding: 11px 16px 10px 16px; display: flex; flex-direction: column; }
+.turn { display: flex; align-items: flex-start; }
+.sentence { font-size: 15px; line-height: 20px; font-weight: 600; color: var(--text); font-feature-settings: "tnum" 0;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.step { margin: 4px 0 0 44px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.band { margin: 2px 0 0 44px; color: var(--text2); font-feature-settings: "tnum" 0;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.tl { margin-top: auto; margin-left: 44px; display: flex; align-items: flex-start; gap: 12px; height: 25px; }
+.tl .lab { color: var(--text2); font-weight: 500; line-height: 14px; white-space: nowrap; }
+
+.col.c { display: flex; align-items: flex-start; justify-content: center; padding: 11px 16px 0; }
+.col.c.v { padding-top: 14px; }
+.blk-h { height: 16px; margin: 0 0 2px 116px; white-space: nowrap; }
+.blk-h b { font-weight: 600; color: var(--text); }
+.subs { display: flex; gap: 24px; }
+.drow { height: 18px; display: grid; grid-template-columns: 108px 100px 88px 36px; column-gap: 8px; align-items: center; }
+.drow .dl { text-align: right; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.drow .dl.m { color: var(--text3); }
+.drow .ba { text-align: right; color: var(--text3); white-space: nowrap; }
+.drow .dd { text-align: right; color: var(--text); font-weight: 600; }
+.drow .prof, .drow .more { grid-column: 2 / span 2; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-feature-settings: "tnum" 0; }
+.drow .prof b { color: var(--text); font-weight: 400; }
+.drow .more { color: var(--text3); grid-column: 2 / span 3; }
+.blk.undone .drow { grid-template-columns: 108px 100px 88px 48px; }
+.drow.undone .dl, .drow.undone .ba, .drow.undone .dd { color: var(--text3); font-weight: 400; }
+.gline { margin: 2px 0 0 116px; display: flex; gap: 6px; align-items: center; color: var(--text2); height: 16px; white-space: nowrap; font-feature-settings: "tnum" 0; }
+
+.cards { display: flex; gap: 16px; width: 100%; justify-content: center; }
+.card { position: relative; flex: 0 1 368px; min-width: 0; height: 114px; background: var(--raised); border: 1px solid var(--line); border-radius: 8px;
+  padding: 10px; display: flex; gap: 12px; text-align: left; }
+.card.chosen { border-color: var(--accent); }
+.card:disabled { opacity: 1; }
+.card .caret { position: absolute; left: 75px; top: -8px; }
+.card .th { width: 138px; height: 92px; border-radius: 4px; overflow: hidden; flex: none; background: var(--inset); box-shadow: inset 0 0 0 1px var(--line); }
+.card .th img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.card .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cname { height: 18px; display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 13px; font-weight: 600; line-height: 18px; color: var(--text); }
+.cname > span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cname .picked { font-size: 12px; font-weight: 500; color: var(--text2); }
+.cname .key { margin-left: 0; }
+.cguard { margin-top: 6px; display: flex; gap: 6px; color: var(--text2); font-feature-settings: "tnum" 0;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; }
+.cguard svg { display: inline-block; vertical-align: -2px; margin-right: 6px; }
+.cname .gmark { display: none; align-items: center; margin-left: auto; }
+/* Narrow decks: the thumbnail on top, the name under it (Option C NOTES section 8, "Small windows"). */
+@media (max-width: 1400px) {
+  .card { flex-direction: column; padding: 6px; gap: 4px; }
+  .card .th { width: 100%; height: 80px; }
+  .card .caret { left: calc(50% - 6px); }
+  /* No room for the guardrail sentence: its mark stays beside the name; the sentence is the card's tooltip. */
+  .cguard { display: none; }
+  .cname .gmark { display: inline-flex; }
+}
+
+.way { padding-top: 2px; }
+.way .a { font-size: 13px; line-height: 20px; font-weight: 500; color: var(--text2); }
+.way .b { font-size: 15px; line-height: 20px; font-weight: 600; color: var(--text); margin-top: 2px; font-feature-settings: "tnum" 0; }
+.way .c { margin-top: 8px; color: var(--text3); font-feature-settings: "tnum" 0; }
+
+.col.r { padding: 11px 16px 10px 16px; display: flex; flex-direction: column; }
+.col.r > :first-child { margin-right: 36px; width: auto; }
+.col.r .btn.primary, .col.r .btn.secondary { align-self: stretch; }
+.conseq, .hint, .off { margin-top: 4px; color: var(--text2); font-feature-settings: "tnum" 0;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.off { color: var(--text3); }
+.abortrow { margin-top: 6px; display: flex; gap: 10px; align-items: flex-start; min-width: 0; }
+.abortrow .conseq { margin-top: 4px; min-width: 0; }
+.abortrow .hint { font-size: 11px; line-height: 14px; margin-top: 0; -webkit-line-clamp: 3; }
+.pairrow { margin-top: 6px; display: flex; gap: 8px; }
+.hintbox .h1 { height: 32px; display: flex; align-items: center; font-size: 13px; font-weight: 500; color: var(--text2); }
+.hintbox .h2 { margin-top: 4px; color: var(--text3); font-feature-settings: "tnum" 0; }
+.undo { margin-top: auto; color: var(--text2); font-feature-settings: "tnum" 0; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }

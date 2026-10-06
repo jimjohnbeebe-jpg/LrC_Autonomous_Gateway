@@ -82,6 +82,7 @@ npm run s9:build -w spikes  # Phase 7 spike S9: build the Tauri HUD (rustup MSVC
 node spikes\S9\measure.ts   # spike S9 run: Lightroom in Develop and Claude Desktop open (docs\reports\phase7\S9.md)
 npm run deck:build          # the Deck: engine\dist, then hud\ui-dist + the Tauri build + NSIS installer (hud\src-tauri\target\release\bundle\nsis\)
 npm run deck:probe          # row 4b probe: Lightroom in Develop, Claude Desktop quit; installs, checks, uninstalls the Deck (docs\reports\phase7\deck-shell.md)
+npm run deck:states         # row 4c probe: the Deck's states, clicks and keys; keeps the Deck installed only when all YES (docs\reports\phase7\deck-ui.md)
 node engine\dist\mcp\main.js # the stdio MCP server (Claude Desktop starts it; tool log in $env:LRC_AVG_LOG_DIR or %LOCALAPPDATA%\LrC-AVG\logs)
 graphify query "How does X reach Y?"
 ```

@@ -1,4 +1,4 @@
-// Helpers for the Deck shell probe (Phase 7 row 4b; probe.ts): Jim's y/n questions in PowerShell, the
+// Helpers for the Deck probes (Phase 7 row 4b probe.ts, row 4c states.ts): Jim's y/n questions in PowerShell, the
 // stand-in engine (the engine's own HudChannel and HudLauncher from engine\dist), the edits' states,
 // installing the Deck, and reading the Deck's log (%TEMP%\LrC-AVG\hud\hud_<pid>_<start>.jsonl,
 // hud\src-tauri\src\log.rs).
@@ -87,10 +87,11 @@ export function liveEngine(): number | null {
   }
 }
 
-/** The installer `npm run deck:build` made (Tauri's NSIS bundle folder). */
+/** The installer `npm run deck:build` made (Tauri's NSIS bundle folder), for this hud version: older ones stay in the folder. */
 export function installer(): string | null {
   const dir = path.join(REPO, "hud", "src-tauri", "target", "release", "bundle", "nsis");
-  const file = existsSync(dir) ? readdirSync(dir).find((f) => f.endsWith("-setup.exe")) : undefined;
+  const version = (JSON.parse(readFileSync(path.join(REPO, "hud", "package.json"), "utf8")) as { version: string }).version;
+  const file = existsSync(dir) ? readdirSync(dir).find((f) => f.endsWith(`_${version}_x64-setup.exe`)) : undefined;
   return file ? path.join(dir, file) : null;
 }
 
@@ -114,11 +115,17 @@ export function uninstall(exe: string): boolean {
 
 // --- The stand-in engine -------------------------------------------------------------------------
 export type Edit = { id: string; seq: number };
+/** A Deck message as the engine's channel passes it on (channel-protocol.ts deckMessageSchema, after the hello). */
+export type DeckSent = { type: string; [k: string]: unknown };
 
 export class StandIn {
   readonly channel: HudChannel;
   edit: Edit | null = null;
   clientAt: number | null = null;
+  /** What the Deck sent after its hello (row 4c: clicks, `show`, `get_thumb`), with the time it came. */
+  readonly messages: { t: number; msg: DeckSent }[] = [];
+  /** Row 4c: the JPEG for a thumbnail key the Deck asks for (states.ts). */
+  thumbs: Record<string, string> = {};
 
   constructor() {
     this.channel = new HudChannel({
@@ -127,26 +134,41 @@ export class StandIn {
       onClient: (connected: boolean) => {
         if (connected) this.clientAt = Date.now();
       },
+      onMessage: (msg: DeckSent) => {
+        this.messages.push({ t: Date.now(), msg });
+        if (msg.type === "get_thumb") this.channel.send({ type: "thumb", key: String(msg["key"]), jpeg_b64: this.thumbs[String(msg["key"])] ?? null });
+      },
     });
   }
 
-  /** A new edit, working on pass 1. */
-  begin(n: number): void {
+  /** A new edit, working on pass 1 (row 4c: `over` adds fields to its first state). */
+  begin(n: number, over: Record<string, unknown> = {}): void {
     this.edit = { id: `deck-probe-${Date.now().toString(36)}-${n}`, seq: 0 };
-    this.state("awaiting_claude");
+    this.state("awaiting_claude", over);
   }
 
   /** The edit's next state; an end stage carries close_after 10, as the engine's (publisher.ts END_CLOSE_S). */
-  state(stage: "awaiting_claude" | "accepted"): boolean {
+  state(stage: string, over: Record<string, unknown> = {}): boolean {
     const edit = this.edit;
     if (!edit) return false;
+    const end = ["accepted", "aborted", "ended"].includes(stage);
     const state = hudChannelStateSchema.parse({
       session_id: edit.id, stage, mode: "converge", pass: 1, max_passes: 6,
       target: { uuid: "DECK-PROBE-PHOTO", filename: "deck-probe.NEF" }, snapshot: "AVG pre-session (Deck probe: nothing was edited)",
-      lightroom: "connected", ...(stage === "accepted" ? { close_after: 10 } : {}),
+      lightroom: "connected", ...(end ? { close_after: 10 } : {}), ...over,
     });
     edit.seq += 1;
     return this.channel.send({ type: "state", seq: edit.seq, state });
+  }
+
+  /** The first message after `after` that `match` accepts, waiting up to `ms`. */
+  async waitMessage(after: number, match: (m: DeckSent) => boolean, ms: number): Promise<DeckSent | null> {
+    const end = Date.now() + ms;
+    for (;;) {
+      const found = this.messages.find((m) => m.t >= after && match(m.msg));
+      if (found || Date.now() >= end) return found?.msg ?? null;
+      await sleep(100);
+    }
   }
 
   async waitClient(ms: number): Promise<boolean> {

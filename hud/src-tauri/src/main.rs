@@ -32,8 +32,8 @@ fn endpoint() -> Option<Value> {
 // Sync commands run on the main thread, which owns the window and the WinEvent hook [handle:
 // https://raw.githubusercontent.com/tauri-apps/tauri-docs/v2/src/content/docs/develop/calling-rust.mdx:341].
 #[tauri::command]
-fn deck_show(reason: String) {
-    window::show(&reason);
+fn deck_show(reason: String, open: bool) {
+    window::show(&reason, open);
 }
 
 #[tauri::command]
@@ -44,6 +44,11 @@ fn deck_hide(reason: String) {
 #[tauri::command]
 fn deck_set_open(open: bool) {
     window::set_open(open);
+}
+
+#[tauri::command]
+fn deck_focus_lightroom(why: String) {
+    window::focus_lightroom(&why);
 }
 
 #[tauri::command]
@@ -67,7 +72,7 @@ fn main() {
         return;
     }
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![endpoint, deck_show, deck_hide, deck_set_open, deck_log])
+        .invoke_handler(tauri::generate_handler![endpoint, deck_show, deck_hide, deck_set_open, deck_focus_lightroom, deck_log])
         .setup(|app| {
             let window = app.get_webview_window("main").expect("window main");
             log::write(json!({ "ev": "start", "pid": std::process::id(), "version": env!("CARGO_PKG_VERSION") }));

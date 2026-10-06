@@ -66,8 +66,9 @@ export class DeckMenu {
       (result) => {
         this.inFlight = false;
         this.failures = 0;
-        this.told = result.connected;
-        this.record({ ok: result.connected === connected, what: "hud_deck", connected });
+        // What was sent counts as told, so a plugin answering otherwise (a bug) is recorded, not sent to again and again.
+        this.told = connected;
+        this.record({ ok: result.connected === connected, what: "hud_deck", connected, ...(result.connected === connected ? {} : { error: `the plugin holds ${String(result.connected)}` }) });
         this.tell(); // the Deck may have changed meanwhile
       },
       (err: unknown) => {

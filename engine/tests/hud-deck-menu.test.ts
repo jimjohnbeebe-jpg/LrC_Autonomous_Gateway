@@ -74,6 +74,17 @@ describe("hud_deck: the plugin hears whether a Deck is connected", () => {
     expect(rig.menu.map((r) => r.ok)).toEqual([false, true]);
   });
 
+  it("a plugin answering another value is recorded, not sent to again and again", async () => {
+    const rig = await deckRig();
+    plugin.handlers.set("hud_deck", () => ({ ok: true, payload: { connected: false } }));
+    const sim = await SimHudClient.connect(rig.endpoint);
+    await sim.welcomed();
+    await waitUntil(() => rig.menu.length === 1);
+    await sleep(150);
+    expect(deckSent()).toBe(1);
+    expect(rig.menu[0]).toMatchObject({ ok: false, connected: true, error: "the plugin holds false" });
+  });
+
   it("is never sent to a plugin before 0.18.0", async () => {
     lr.pluginVersion = "0.17.0";
     plugin.dropEventClient(); // the next hello reports 0.17.0

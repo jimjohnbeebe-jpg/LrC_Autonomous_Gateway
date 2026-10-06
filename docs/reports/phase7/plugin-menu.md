@@ -54,8 +54,8 @@ Answers and decisions [stated: Jim, 2026-10-05]:
 
 ## Pre-run findings (Claude Code)
 
-1. **Engine tests.** `npm test`: 83 files, 1066 passed, 1 skipped. The new `engine\tests\hud-deck-menu.test.ts` has 9 tests:
-   - hud_deck at each Deck connect and loss, again after a bridge reconnect, the newest value after one in flight, a failed one tried again, none to a plugin before 0.18.0;
+1. **Engine tests.** `npm test`: 83 files, 1067 passed, 1 skipped. The new `engine\tests\hud-deck-menu.test.ts` has 10 tests:
+   - hud_deck at each Deck connect and loss, again after a bridge reconnect, the newest value after one in flight, a failed one tried again, a wrong answer recorded and not resent, none to a plugin before 0.18.0;
    - `reveal` for the open edit only, only to a Deck from 0.3.0;
    - the plugin's menu code read as text.
 
@@ -63,7 +63,9 @@ Answers and decisions [stated: Jim, 2026-10-05]:
 2. **Mutants.** 6 of 6 mutants of `engine\src\hud\deck-menu.ts` were killed by `hud-deck-menu.test.ts`: the plugin version gate, the resend at reconnect, the open-edit check, the Deck version gate, the retry, and the follow-up after an answer [handle: this session's scratchpad `mutants.mts` output, 2026-10-05].
 3. **Deck tests.** `npm test -w hud`: 38 passed (vitest, including the new `onReveal` case in `hud\ui\visibility.test.ts`); cargo 5 passed [handle: output, 2026-10-05].
 4. **Lua.** `engine\tests\lua-plugin.test.ts` parses every plugin file as Lua 5.1 and checks that `Dispatch.lua` handles exactly the engine's commands, `hud_deck` included [handle: `npx vitest run tests/lua-plugin.test.ts`, 2026-10-05]. Whether the menu items behave so in Lightroom is [unverified] until this probe.
-5. **Not dry-run.** The probe makes real edits through the real bridge, so it was not run against a stand-in plugin. Its first live run is Jim's.
+5. **Self-review fix.** Before the first push: a plugin answering hud_deck with another value would have been sent to again and again. Now what was sent counts as told and the answer is recorded as not ok. The new test fails without the fix [handle: `git stash push -- src/hud/deck-menu.ts`, then `npx vitest run tests/hud-deck-menu.test.ts -t "another value"`: "1 failed", 2026-10-05].
+6. **Deck installer.** `npm run deck:build` built `hud\src-tauri\target\release\bundle\nsis\LrC-AVG HUD_0.3.0_x64-setup.exe` (1.35 MiB) [handle: tauri-cli output "Finished 1 bundle at: …\LrC-AVG HUD_0.3.0_x64-setup.exe (1.35 MiB)", 2026-10-05].
+7. **Not dry-run.** The probe makes real edits through the real bridge, so it was not run against a stand-in plugin. Its first live run is Jim's.
 
 ## Observed (Jim)
 

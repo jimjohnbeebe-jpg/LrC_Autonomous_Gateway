@@ -25,6 +25,8 @@ static DECK: AtomicIsize = AtomicIsize::new(0);
 static WINDOW: OnceLock<WebviewWindow> = OnceLock::new();
 static LR_PID: AtomicU32 = AtomicU32::new(0);
 static MAIN: AtomicIsize = AtomicIsize::new(0);
+/// A Lightroom window filling its monitor, e.g. F's full-screen preview (lightroom::cover); 0: none.
+static COVER: AtomicIsize = AtomicIsize::new(0);
 /// The UI wants the Deck shown; a minimised Lightroom hides it without clearing this.
 static WANT: AtomicBool = AtomicBool::new(false);
 static MIN_HIDDEN: AtomicBool = AtomicBool::new(false);
@@ -57,7 +59,8 @@ pub fn init(window: WebviewWindow, app: AppHandle) -> tauri::Result<()> {
     Ok(())
 }
 
-/// Every TICK_MS: exit after Lightroom (spec 3.2 "Lightroom exits"), find its main window, apply rule 3, save a moved Deck.
+/// Every TICK_MS: exit after Lightroom (spec 3.2 "Lightroom exits"), find its main window and any window
+/// filling a monitor (rule 1), apply rule 3, save a moved Deck.
 fn tick(app: &AppHandle) {
     let pid = LR_PID.load(SeqCst);
     if pid != 0 && !lightroom::pid_alive(pid) {
@@ -70,8 +73,16 @@ fn tick(app: &AppHandle) {
         write(json!({ "ev": "lightroom_found", "pid": found }));
     }
     let main = lightroom::main_window(&wins);
-    if MAIN.swap(main, SeqCst) != main {
+    let cover = lightroom::cover(&wins, main);
+    let main_changed = MAIN.swap(main, SeqCst) != main;
+    if main_changed {
         lightroom::log_windows("main_changed", &wins, main);
+    }
+    let cover_changed = COVER.swap(cover, SeqCst) != cover;
+    if cover_changed {
+        write(json!({ "ev": "cover", "hwnd": cover }));
+    }
+    if main_changed || cover_changed {
         topmost_for(unsafe { GetForegroundWindow() });
     }
     let visible = unsafe { IsWindowVisible(deck()).as_bool() };
@@ -101,21 +112,27 @@ pub fn moved(scale_changed: bool) {
 }
 
 unsafe extern "system" fn on_foreground(_: HWINEVENTHOOK, _: u32, h: HWND, _: i32, _: i32, _: u32, _: u32) {
-    let front = topmost_for(h);
     let pid = window_pid(h);
-    write(json!({ "ev": "foreground", "front": front, "fg_pid": pid, "fg_hwnd": h.0 as isize }));
     if pid != 0 && pid == LR_PID.load(SeqCst) {
+        // F's window can appear with this event, before the next tick sees it.
         let (_, wins) = lightroom::windows(pid);
+        COVER.store(lightroom::cover(&wins, MAIN.load(SeqCst)), SeqCst);
         lightroom::log_windows("foreground", &wins, MAIN.load(SeqCst));
     }
+    let front = topmost_for(h);
+    write(json!({ "ev": "foreground", "front": front, "fg_pid": pid, "fg_hwnd": h.0 as isize, "cover": COVER.load(SeqCst) }));
 }
 
 /// Rule 1. Not in front: not topmost, and just below the foreground window, since HWND_NOTOPMOST alone
 /// puts it "above all non-topmost windows" [handle: MS nf-winuser-setwindowpos.md:103-131], e.g. over
-/// Claude Desktop or over F's full-screen window.
+/// Claude Desktop. While a Lightroom window fills its monitor (F), the Deck is never topmost and sits
+/// just below that window: in Jim's probe the main window took the foreground back about 0.1 s after F
+/// opened its window, so "main window in front" put the Deck over F's image (A9a NO; the Deck log's
+/// foreground lines at 178.5 s and 178.6 s, docs/reports/phase7/deck-shell/).
 fn topmost_for(fg: HWND) -> bool {
-    let main = MAIN.load(SeqCst);
-    let front = (main != 0 && fg.0 as isize == main) || window_pid(fg) == std::process::id();
+    let (main, cover) = (MAIN.load(SeqCst), COVER.load(SeqCst));
+    let front = cover == 0 && ((main != 0 && fg.0 as isize == main) || window_pid(fg) == std::process::id());
+    let fg = if cover != 0 { hwnd(cover) } else { fg };
     let flags = SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE;
     unsafe {
         if front {

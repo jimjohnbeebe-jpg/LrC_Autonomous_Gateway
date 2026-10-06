@@ -1,7 +1,7 @@
 ---
 report: AVG-P7-4b the Deck shell probe
 phase: 7
-status: template
+status: observed
 authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-10-05, branch phase-7/deck-shell (vault PHASE7_PLAN row 4b). Observed and Verdict: Jim."
 date: 2026-10-05
 ---
@@ -58,24 +58,38 @@ PHASES.md gives no go/no-go rule for a row probe. The plan's rule [stated: Jim, 
 
 ## Observed (Jim)
 
-*(Filled from Jim's run.)*
+**Run 1: 2026-10-06 01:41 UTC (2026-10-05 18:41 local)**, `npm run deck:probe` on branch `phase-7/deck-shell` at `12e9bea` [handle: `docs\reports\phase7\deck-shell\probe_2026-10-06T01-41-29-632Z.json`; the Deck's log beside it, `probe_2026-10-06T01-41-29-632Z_hud_6764_1791250890666.jsonl`, 225 s, redacted to `%USERPROFILE%`]. Jim said "probe done". The probe's headline: `Deck shell probe: FAILED (A9a)`.
+
+Jim's answers: y to A1e, D1, A5c, A5e, A7a, A7b, R1 and A9b; **n to A9a** ("in F's full-screen preview the Deck is not over the image").
+
+**Why A9a failed (Claude Code, from the Deck's log; seconds from the Deck's start):**
+- 178.5 s: F opened a separate Lightroom window: class `NonActivateWindow`, title "Lightroom", owned by the main window (`AgWinMainFrame`, hwnd 852946), at `0,0,3840,2160`, the whole monitor. It became the foreground window, and the Deck went below it (`front: false`).
+- 178.6 s, 0.1 s later: the main window took the foreground back while F's window stayed visible. The rule "topmost while the main window is in front" made the Deck topmost again, over F's image.
+- 187.8 s: while F was on, the main window's title read just "Lightroom Classic". The title rule found no main window, so the "largest" fallback took F's window as the main one until 188.1 s.
+- So F's window never keeps the foreground, and the title is not a stable mark. The answer to spec 2.7's open point ("how to tell the main window from F's window") is: by class, and F's window by filling its monitor [inference: from this one run].
+
+**Fix (Claude Code, on this branch, for run 2):** the main window is the ownerless window of class `AgWinMainFrame` (title as fallback). While another visible Lightroom window fills its whole monitor, the Deck is not topmost and sits just below that window. This is checked at each foreground change and every 250 ms (`hud\src-tauri\src\lightroom.rs` `cover`, `window.rs` `topmost_for`). Jim runs the probe again.
+
+**Also seen:** the Deck stays opened across edits once opened. Run 1 ended with the 216 px (144 CSS px) deck at both later spots (the log's `place` lines). Row 4c decides whether a new edit starts with the bar.
 
 ## Numbers
 
-*(Filled from the saved results.)*
+Run 1 (from the results file):
 
 | Line | What | Result |
 |---|---|---|
-| C1 | Installed where the engine looks | |
-| A1a-e | Connected ≤ 3 s, shown ≤ 2 s without focus, default spot, Jim: bottom centre | |
-| D1 | Open grows upward, Close shrinks back | |
-| A5a-e | Spot and width saved and reopened there; off-monitor spot falls back | |
-| A7a-c | Lightroom moved: Deck stays; minimised: hidden, restored: back | |
-| R1 | Another window in front covers the Deck | |
-| A9a-b | F: not over the image; Shift+F: visible over Lightroom in each mode | |
-| W1 | Window list logged while F was on | |
-| A12a-b | Hidden about 10 s after each end | |
-| C2 | Uninstalled again | |
+| C1 | Installed where the engine looks | YES, `%USERPROFILE%AppDataLocalLrC-AVG HUDLrC-AVG HUD.exe` |
+| A1a-e | Connected ≤ 3 s, shown ≤ 2 s without focus, default spot, Jim: bottom centre | YES: connected 526 ms, shown 604 ms, foreground stayed with pid 8564, default spot, Jim y |
+| D1 | Open grows upward, Close shrinks back | YES (Jim); log: `1020,2022,1800,66` then `1022,1861,1800,216`, bottom edge 2077 (Jim had moved it 11 px between) |
+| A5a-e | Spot and width saved and reopened there; off-monitor spot falls back | YES: saved, reopened at `[4145, 1242, 2480]` (Jim y), off-monitor `[-100000, -100000, 900]` fell back (Jim y) |
+| A7a-c | Lightroom moved: Deck stays; minimised: hidden, restored: back | YES: Jim y twice; hide and show logged 2.5 s apart |
+| R1 | Another window in front covers the Deck | YES (Jim) |
+| A9a-b | F: not over the image; Shift+F: visible over Lightroom in each mode | **A9a NO**; A9b YES |
+| W1 | Window list logged while F was on | YES, 9 lists |
+| A12a-b | Hidden about 10 s after each end | YES: 10,205 ms and 10,364 ms |
+| C2 | Uninstalled again | YES |
+
+Every placement landed where it was aimed (`target` = `got` in all 4 `place` lines).
 
 ## Verdict
 
@@ -83,5 +97,5 @@ PHASES.md gives no go/no-go rule for a row probe. The plan's rule [stated: Jim, 
 
 ## Consequences / open questions
 
-- The main-window rule (`lightroom.rs`, title holds "Adobe Photoshop Lightroom Classic", ownerless; else the largest) stays [unverified] until W1's window lists are read.
+- Run 1 answered the open point of spec 2.7: F opens a separate, owned window that fills its monitor and never keeps the foreground. The main window is found by class `AgWinMainFrame`. Run 2 checks the fix.
 - Not in this probe: the Deck's own states, copy cards, clicks and keyboard (row 4c), and the budgets of spec section 9 (row 6).

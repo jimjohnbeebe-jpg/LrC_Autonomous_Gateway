@@ -1,0 +1,162 @@
+{
+  "run": "2026-10-06T01-41-29-632Z",
+  "worked": false,
+  "failed": [
+    "A9a"
+  ],
+  "results": [
+    {
+      "id": "C1",
+      "what": "the installer put the Deck where the engine looks for it",
+      "ok": true,
+      "detail": "%USERPROFILE%\\AppData\\Local\\LrC-AVG HUD\\LrC-AVG HUD.exe"
+    },
+    {
+      "id": "A1a",
+      "what": "the Deck connected within 3 s of its start",
+      "ok": true,
+      "detail": 526
+    },
+    {
+      "id": "A1b",
+      "what": "the Deck showed within 2 s of its start",
+      "ok": true,
+      "detail": 604
+    },
+    {
+      "id": "A1c",
+      "what": "it showed without taking the focus",
+      "ok": true,
+      "detail": 8564
+    },
+    {
+      "id": "A1d",
+      "what": "the first time, it took the default spot",
+      "ok": true,
+      "detail": {
+        "ev": "spot",
+        "remembered": false,
+        "saved": null,
+        "t": 1791250890837.6855
+      }
+    },
+    {
+      "id": "A1e",
+      "what": "Jim: bottom centre of Lightroom's monitor",
+      "ok": true
+    },
+    {
+      "id": "D1",
+      "what": "Jim: Open grows upward, Close shrinks back",
+      "ok": true
+    },
+    {
+      "id": "A5a",
+      "what": "the Deck saved its spot and width",
+      "ok": true,
+      "detail": {
+        "bottom": 1504,
+        "left": 432,
+        "width": 2268
+      }
+    },
+    {
+      "id": "A12a",
+      "what": "the Deck hid about 10 s after the edit ended",
+      "ok": true,
+      "detail": 10205
+    },
+    {
+      "id": "A5b",
+      "what": "at the next edit it took the remembered spot",
+      "ok": true,
+      "detail": {
+        "ev": "spot",
+        "remembered": true,
+        "saved": [
+          4145,
+          1242,
+          2480
+        ],
+        "t": 1791250971298.9727
+      }
+    },
+    {
+      "id": "A5c",
+      "what": "Jim: it opened where you left it, at that width",
+      "ok": true
+    },
+    {
+      "id": "A5d",
+      "what": "a spot on no monitor falls back to the default",
+      "ok": true,
+      "detail": {
+        "ev": "spot",
+        "remembered": false,
+        "saved": [
+          -100000,
+          -100000,
+          900
+        ],
+        "t": 1791250993495.6802
+      }
+    },
+    {
+      "id": "A5e",
+      "what": "Jim: it moved to the bottom centre of Lightroom's monitor",
+      "ok": true
+    },
+    {
+      "id": "A7a",
+      "what": "Jim: moving and resizing Lightroom leaves the Deck in place",
+      "ok": true
+    },
+    {
+      "id": "A7b",
+      "what": "Jim: hidden while Lightroom is minimised, back after",
+      "ok": true
+    },
+    {
+      "id": "A7c",
+      "what": "the Deck logged the hide and the show",
+      "ok": true,
+      "detail": {
+        "hide": 1791251041937.436,
+        "show": 1791251044448.5703
+      }
+    },
+    {
+      "id": "R1",
+      "what": "Jim: another window in front covers the Deck",
+      "ok": true
+    },
+    {
+      "id": "A9a",
+      "what": "Jim: in F's full-screen preview the Deck is not over the image",
+      "ok": false
+    },
+    {
+      "id": "A9b",
+      "what": "Jim: visible over Lightroom in each screen mode",
+      "ok": true
+    },
+    {
+      "id": "W1",
+      "what": "Lightroom's window list was logged while F was on",
+      "ok": true,
+      "detail": 9
+    },
+    {
+      "id": "A12b",
+      "what": "the Deck hid about 10 s after the last edit ended",
+      "ok": true,
+      "detail": 10364
+    },
+    {
+      "id": "C2",
+      "what": "the Deck was uninstalled again (real edits keep the classic HUD until row 4c)",
+      "ok": true
+    }
+  ],
+  "deck_log": "hud_6764_1791250890666.jsonl"
+}

@@ -1,11 +1,15 @@
 // Finding Lightroom's main window (spec 2.7 "Finding Lightroom's main window"; window rules 1-3 need it).
 // The process: the one whose image is Lightroom.exe [handle: docs\reports\phase7\S9.md "S9 run 1",
 // `lightroom_found` with exe `C:\Program Files\Adobe\Adobe Lightroom Classic\Lightroom.exe`].
-// The main window: a visible, ownerless top-level window of that process whose title holds TITLE_MARK;
-// when none does, the largest visible one, as S9 took it. S9b run 2's main window title was "Lightroom
-// Catalog-v13-4 - Adobe Photoshop Lightroom Classic - Develop" (S9.md "S9b run 2"). That F's full-screen
-// window has another title or an owner is [unverified]: `windows()` logs every Lightroom window, with
-// class, title and owner, so the row 4b probe records what F opens.
+// The main window: a visible, ownerless top-level window of that process of class MAIN_CLASS, or whose
+// title holds TITLE_MARK; when none is, the largest visible one, as S9 took it. Jim's row 4b probe logged
+// the main window as class "AgWinMainFrame", ownerless, titled "Lightroom Catalog-v13-4 - Adobe Photoshop
+// Lightroom Classic - Develop", and that title briefly read just "Lightroom Classic" while F was on, so
+// the title alone lost the main window to F's (the class is the first test) [handle:
+// docs\reports\phase7\deck-shell\, the Deck log's `windows` lines at 176.7 s and 187.8 s].
+// F's full-screen preview is a separate window (`cover`): class "NonActivateWindow", title "Lightroom",
+// owned by the main window, the size of its whole monitor (same log, 178.5 s). `windows()` logs every
+// Lightroom window, with class, title and owner.
 use crate::log::write;
 use serde_json::{json, Value};
 use windows::core::{BOOL, PWSTR};
@@ -16,6 +20,7 @@ use windows::Win32::System::Threading::{
 use windows::Win32::UI::WindowsAndMessaging::*;
 
 pub const TITLE_MARK: &str = "Adobe Photoshop Lightroom Classic";
+pub const MAIN_CLASS: &str = "AgWinMainFrame";
 const STILL_ACTIVE: u32 = 259;
 
 pub fn hwnd(v: isize) -> HWND {
@@ -70,7 +75,7 @@ impl Win {
         (self.rect.right - self.rect.left) as i64 * (self.rect.bottom - self.rect.top) as i64
     }
     fn is_main(&self) -> bool {
-        self.visible && self.owner == 0 && self.title.contains(TITLE_MARK)
+        self.visible && self.owner == 0 && (self.class == MAIN_CLASS || self.title.contains(TITLE_MARK))
     }
     pub fn json(&self) -> Value {
         let r = self.rect;
@@ -120,6 +125,15 @@ pub fn main_window(wins: &[Win]) -> isize {
         return w.hwnd;
     }
     wins.iter().filter(|w| w.visible).max_by_key(|w| w.area()).map(|w| w.hwnd).unwrap_or(0)
+}
+
+/// A visible Lightroom window other than the main one that fills its whole monitor (F's full-screen
+/// preview), or 0. The Deck is never topmost over it (spec 2.7 rule 1, A9; window.rs topmost_for).
+pub fn cover(wins: &[Win], main: isize) -> isize {
+    wins.iter()
+        .find(|w| w.visible && w.hwnd != main && !iconic(w.hwnd) && crate::monitors::fills_monitor(hwnd(w.hwnd), w.rect))
+        .map(|w| w.hwnd)
+        .unwrap_or(0)
 }
 
 pub fn iconic(h: isize) -> bool {

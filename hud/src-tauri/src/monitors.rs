@@ -40,3 +40,16 @@ pub fn of_window(h: HWND) -> Option<Monitor> {
     };
     monitor(m)
 }
+
+/// Whether `rect` (window `h`'s) covers its whole monitor, taskbar included.
+pub fn fills_monitor(h: HWND, rect: RECT) -> bool {
+    let mut info = MONITORINFO { cbSize: size_of::<MONITORINFO>() as u32, ..Default::default() };
+    unsafe {
+        let m = MonitorFromWindow(h, MONITOR_DEFAULTTONULL);
+        if m.is_invalid() || !GetMonitorInfoW(m, &mut info).as_bool() {
+            return false;
+        }
+    }
+    let r = info.rcMonitor;
+    rect.left <= r.left && rect.top <= r.top && rect.right >= r.right && rect.bottom >= r.bottom
+}

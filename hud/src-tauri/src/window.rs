@@ -130,7 +130,13 @@ unsafe extern "system" fn on_foreground(_: HWINEVENTHOOK, _: u32, h: HWND, _: i3
 /// opened its window, so "main window in front" put the Deck over F's image (A9a NO; the Deck log's
 /// foreground lines at 178.5 s and 178.6 s, docs/reports/phase7/deck-shell/).
 fn topmost_for(fg: HWND) -> bool {
-    let (main, cover) = (MAIN.load(SeqCst), COVER.load(SeqCst));
+    let main = MAIN.load(SeqCst);
+    // Only a cover on the Deck's own monitor counts: on another monitor it cannot hide the Deck, which
+    // then follows the plain rule (Greptile, PR #87 review 2).
+    let cover = match COVER.load(SeqCst) {
+        c if c != 0 && monitors::same_monitor(hwnd(c), deck()) => c,
+        _ => 0,
+    };
     let front = cover == 0 && ((main != 0 && fg.0 as isize == main) || window_pid(fg) == std::process::id());
     let fg = if cover != 0 { hwnd(cover) } else { fg };
     let flags = SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE;

@@ -53,3 +53,8 @@ pub fn fills_monitor(h: HWND, rect: RECT) -> bool {
     let r = info.rcMonitor;
     rect.left <= r.left && rect.top <= r.top && rect.right >= r.right && rect.bottom >= r.bottom
 }
+
+/// Whether windows `a` and `b` are mostly on the same monitor.
+pub fn same_monitor(a: HWND, b: HWND) -> bool {
+    unsafe { MonitorFromWindow(a, MONITOR_DEFAULTTONEAREST) == MonitorFromWindow(b, MONITOR_DEFAULTTONEAREST) }
+}

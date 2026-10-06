@@ -11,7 +11,8 @@ import type { invoke as InvokeFn } from "@tauri-apps/api/core";
 import type { getCurrentWindow as GetCurrentWindowFn } from "@tauri-apps/api/window";
 import { engineMessageSchema, hudEndpointSchema, type HudChannelState } from "../../engine/src/hud/channel-protocol.ts";
 import * as C from "./clicks.ts";
-import { command, type Command } from "./keys.ts";
+import { command, keyCtx, type Command } from "./keys.ts";
+import { startPulse } from "./glyphs.ts";
 import { html } from "./render.ts";
 import { approveLabel, LABEL, pickLabel } from "./text.ts";
 import { primary, view, type ActionId, type View } from "./view.ts";
@@ -57,7 +58,7 @@ function render(): void {
   current = state ? view(state, local, { connected, gone, focus: document.hasFocus(), open, now, marks }) : null;
   const active = document.activeElement as HTMLElement | null;
   const focusKey = active?.dataset["act"] ?? (active?.dataset["card"] ? `card:${active.dataset["card"]}` : null);
-  host.innerHTML = html(current, { open, focus: document.hasFocus(), armed: C.armed(local, now), twoColumns: window.innerWidth >= 1460, thumbs });
+  host.innerHTML = html(current, { open, armed: C.armed(local, now), twoColumns: window.innerWidth >= 1460, thumbs });
   if (focusKey) {
     const sel = focusKey.startsWith("card:") ? `[data-card="${focusKey.slice(5)}"]` : `[data-act="${focusKey}"]`;
     host.querySelector<HTMLElement>(sel)?.focus();
@@ -70,11 +71,6 @@ function setOpen(o: boolean): void {
   render();
 }
 
-function clickId(): string {
-  const b = crypto.getRandomValues(new Uint8Array(12));
-  return `deck-${Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("")}`;
-}
-
 const EVENTS: Partial<Record<ActionId, string>> = { approve: "hud_approve_pass", accept: "hud_accept", abort: "hud_abort", continue: "hud_pick" };
 
 /** Sends a click: spec 3.3's `event` with the bridge event's fields (hud-protocol.ts hudEventSchemas). */
@@ -85,7 +81,7 @@ function click(id: ActionId): void {
   const name = EVENTS[id];
   if (name === undefined) return;
   const label = id === "approve" ? approveLabel(s.approve_pass ?? 0) : id === "continue" ? pickLabel(local.chosen ?? "") : id === "accept" ? LABEL.accept : LABEL.abort;
-  const cid = clickId();
+  const cid = C.clickId();
   send({ type: "event", name, payload: { session_id: s.session_id, seq_seen: seq, click_id: cid, source: "hud", ...extra } });
   local = C.sent(local, cid, label, Date.now());
   log({ click: name, click_id: cid, ...extra });
@@ -114,14 +110,35 @@ function userHide(): void {
   apply(change, "user");
 }
 
-host.addEventListener("click", (e) => {
-  const el = (e.target as HTMLElement).closest<HTMLElement>("[data-act],[data-card]");
-  if (!el || (el as HTMLButtonElement).disabled) return;
-  const pointer = e.detail > 0; // 0: Space or Enter on a focused button
-  if (el.dataset["card"]) {
-    chooseCard(el.dataset["card"] as C.Letter);
+/** What a control does: its data-act, or "card:X". The DOM is redrawn often, so controls are matched by this, not by identity. */
+function keyOf(target: EventTarget | null): string | null {
+  const el = (target as HTMLElement | null)?.closest<HTMLElement>("[data-act],[data-card]");
+  if (!el || (el as HTMLButtonElement).disabled) return null;
+  return el.dataset["card"] ? `card:${el.dataset["card"]}` : (el.dataset["act"] ?? null);
+}
+
+function activate(k: string, pointer: boolean): void {
+  if (k.startsWith("card:")) {
+    chooseCard(k.slice(5) as C.Letter);
     if (pointer) lightroom("pointer_card");
-  } else act(el.dataset["act"] ?? "", pointer);
+  } else act(k, pointer);
+}
+
+// A pointer press is the same control under mouse-down and mouse-up: a state that redrew the Deck in
+// between would make the browser drop the click event.
+let downKey: string | null = null;
+host.addEventListener("pointerdown", (e) => {
+  downKey = e.button === 0 ? keyOf(e.target) : null;
+});
+host.addEventListener("pointerup", (e) => {
+  const k = keyOf(e.target);
+  if (e.button === 0 && k !== null && k === downKey) activate(k, true);
+  downKey = null;
+});
+// Space on a focused control (the keyboard's press; Enter is keys.ts's).
+host.addEventListener("click", (e) => {
+  const k = e.detail === 0 ? keyOf(e.target) : null;
+  if (k !== null) activate(k, false);
 });
 
 function run(cmd: Command): void {
@@ -145,25 +162,15 @@ function run(cmd: Command): void {
 }
 
 window.addEventListener("keydown", (e) => {
-  if (!current) return;
-  const now = Date.now();
-  const abort = current.actions.find((a) => a.id === "abort");
-  const cmd = command(
-    { key: e.key, ctrl: e.ctrlKey, alt: e.altKey, shift: e.shiftKey },
-    {
-      armed: C.armed(local, now),
-      abortOn: abort?.on ?? false,
-      primaryOn: primary(current, false) !== null,
-      choosable: current.cards.filter((c) => c.on).map((c) => c.letter),
-      done: current.closeOnly,
-      open,
-    },
-  );
+  const cmd = current ? command({ key: e.key, ctrl: e.ctrlKey, alt: e.altKey, shift: e.shiftKey }, keyCtx(current, C.armed(local, Date.now()), open)) : null;
   if (!cmd) return;
   e.preventDefault();
   run(cmd);
 });
-for (const ev of ["focus", "blur", "resize"]) window.addEventListener(ev, render);
+window.addEventListener("resize", render);
+const keyboard = (): void => void document.body.classList.toggle("kbd", document.hasFocus());
+window.addEventListener("focus", keyboard);
+window.addEventListener("blur", keyboard);
 
 function onEngineState(next: HudChannelState, nextSeq: number): void {
   if (next.session_id !== state?.session_id) {
@@ -176,9 +183,11 @@ function onEngineState(next: HudChannelState, nextSeq: number): void {
   seq = nextSeq;
   gone = false;
   local = C.onState(local, next);
-  if (next.mode !== "variants" && next.pass !== undefined && next.guardrail) marks = { ...marks, [next.pass]: next.guardrail.status };
+  // A pass's mark, once it is done: while a pass runs, `guardrail` is still the previous pass's.
+  const running = ["begin", "pass0", "applying"].includes(next.stage);
+  if (next.mode !== "variants" && next.pass !== undefined && next.guardrail && !running) marks = { ...marks, [next.pass]: next.guardrail.status };
   for (const c of next.copies ?? []) {
-    if (c.thumb && !asked.has(c.thumb)) {
+    if (c.thumb && !thumbs.has(c.thumb) && !asked.has(c.thumb) && ws?.readyState === WebSocket.OPEN) {
       asked.add(c.thumb);
       send({ type: "get_thumb", key: c.thumb });
     }
@@ -219,6 +228,7 @@ function onMessage(text: string): void {
 
 function disconnect(): void {
   ws = null;
+  asked.clear(); // a thumbnail asked for and not answered is asked again after the reconnect
   if (connected) {
     connected = false;
     render(); // keeps the last state, with the not-connected headline and the undo line (spec 3.2)
@@ -278,15 +288,7 @@ setInterval(() => {
     render();
   }
 }, 500);
-// The working ring's pulse: 8 steps per 1.6 s loop, timer-stepped as in spike S9 (spec 8.4; CSS
-// animations cost more CPU in WebView2 [handle: docs\reports\phase7\S9.md pre-run finding 5]); none under reduced motion.
-const HALO = [0.15, 0.26, 0.37, 0.49, 0.6, 0.49, 0.37, 0.26];
-let haloStep = 0;
-setInterval(() => {
-  const halo = host.querySelector<SVGElement>(".halo");
-  if (!halo || reducedMotion) return;
-  haloStep = (haloStep + 1) % HALO.length;
-  halo.setAttribute("opacity", String(HALO[haloStep]));
-}, 200);
+startPulse(host, reducedMotion);
+keyboard();
 render();
 void connect();

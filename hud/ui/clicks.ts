@@ -56,3 +56,9 @@ export const arm = (l: Local, now: number): Local => ({ ...l, armedAt: now });
 export const disarm = (l: Local): Local => (l.armedAt === null ? l : { ...l, armedAt: null });
 export const armed = (l: Local, now: number): boolean => l.armedAt !== null && now - l.armedAt < ARM_MS;
 export const choose = (l: Local, letter: Letter): Local => ({ ...l, chosen: letter });
+
+/** A click's id: new for every click (hud-protocol.ts eventBase). */
+export function clickId(): string {
+  const b = crypto.getRandomValues(new Uint8Array(12));
+  return `deck-${Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("")}`;
+}

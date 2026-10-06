@@ -23,6 +23,10 @@ svg { display: block; flex: none; }
 .words *, .cq *, .glyph, .sentence, .step, .band, .tl, .blk, .way, .conseq, .hint, .off, .hintbox, .undo { pointer-events: none; }
 button { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: default; }
 button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+/* Key hints only while the Deck has the keyboard (deck.ts sets body.kbd). */
+.kf { display: none !important; }
+body.kbd .kf { display: inline-flex !important; }
+body.kbd .nf { display: none; }
 .grip { position: fixed; top: 0; bottom: 0; width: 6px; cursor: ew-resize; z-index: 2; }
 .grip.west { left: 0; }
 .grip.east { right: 0; }

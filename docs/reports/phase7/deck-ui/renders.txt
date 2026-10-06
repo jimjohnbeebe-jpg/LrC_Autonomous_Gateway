@@ -82,8 +82,8 @@ const s = hudChannelStateSchema.parse({ ...base, ...over });
 const marks = { 0: "green", 1: "corrected", 2: "green" };
 const v = view(s, { ...FRESH, session: s.session_id, ...local }, { connected: true, gone: false, focus: false, open: true, now: 1000, marks, ...ctx });
 const open = ctx.open ?? true;
-document.getElementById("deck-host").innerHTML = html(v, { open, focus: ctx.focus ?? false, armed: !!local.armedAt, twoColumns: innerWidth >= 1460, thumbs: new Map(Object.entries(THUMBS)) });
-document.body.dataset.done = "1";
+document.getElementById("deck-host").innerHTML = html(v, { open, armed: !!local.armedAt, twoColumns: innerWidth >= 1460, thumbs: new Map(Object.entries(THUMBS)) });
+document.body.classList.toggle("kbd", !!ctx.focus);
 `);
 writeFileSync(path.join(SITE, "harness.html"), readHtml());
 function readHtml(): string {

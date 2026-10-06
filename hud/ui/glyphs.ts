@@ -64,3 +64,16 @@ export function timelineSvg(t: Timeline): string {
   }
   return svg(t.max * step + 16, 25, out.join(""));
 }
+
+// The working ring's pulse: 8 steps per 1.6 s loop, timer-stepped as in spike S9 (spec 8.4; CSS
+// animations cost more CPU in WebView2 [handle: docs\reports\phase7\S9.md pre-run finding 5]); none under reduced motion.
+export function startPulse(host: HTMLElement, reducedMotion: boolean): void {
+  const HALO = [0.15, 0.26, 0.37, 0.49, 0.6, 0.49, 0.37, 0.26];
+  let haloStep = 0;
+  setInterval(() => {
+    const halo = host.querySelector<SVGElement>(".halo");
+    if (!halo || reducedMotion) return;
+    haloStep = (haloStep + 1) % HALO.length;
+    halo.setAttribute("opacity", String(HALO[haloStep]));
+  }, 200);
+}

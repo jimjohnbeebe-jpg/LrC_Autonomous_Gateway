@@ -12,15 +12,20 @@ import { shownDelta, shownValue, track } from "./rows.ts";
 import * as T from "./text.ts";
 import type { Action, Card, Guard, View } from "./view.ts";
 
-/** armed: Abort is armed, so the primary shows no Enter keycap (Enter does nothing then). */
-export type Form = { open: boolean; focus: boolean; armed: boolean; twoColumns: boolean; thumbs: ReadonlyMap<string, string> };
+/**
+ * armed: Abort is armed, so the primary shows no Enter keycap (Enter does nothing then). Key hints are
+ * drawn always and shown only while the Deck has the keyboard, by the body's `kbd` class (style.css):
+ * focus changes never redraw, since a redraw between a click's mouse-down and mouse-up would lose it.
+ */
+export type Form = { open: boolean; armed: boolean; twoColumns: boolean; thumbs: ReadonlyMap<string, string> };
 
 export function esc(s: string): string {
   return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c);
 }
 const attr = (name: string, v: string | null | undefined): string => (v ? ` ${name}="${esc(v)}"` : "");
 const ARROW = '<svg width="14" height="8" aria-hidden="true" class="arrow"><path d="M1 4h11M9 1l3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>';
-const key = (k: string): string => `<span class="key">${esc(k)}</span>`;
+/** A key hint, shown only while the Deck has the keyboard (Option C NOTES section 3). */
+const key = (k: string): string => `<span class="key kf">${esc(k)}</span>`;
 
 function toggle(open: boolean): string {
   return `<button class="disc" data-act="toggle" aria-expanded="${open}" aria-label="${open ? T.CLOSE_DECK : T.OPEN_DECK}">${open ? DISC_OPEN : DISC_SHUT}</button>`;
@@ -29,7 +34,7 @@ const hide = `<button class="hidebtn" data-act="hide" aria-label="${T.HIDE}">${C
 
 function button(a: Action, f: Form, bar: boolean): string {
   const cls = a.id === "abort" ? `abort${a.label === T.LABEL.armed ? " armed" : ""}${a.kind === "compact" ? " compact" : ""}` : a.kind === "quiet" ? (bar ? "textonly" : "secondary") : a.kind;
-  const hint = a.kind === "primary" && f.focus && a.on && !f.armed ? key("Enter") : "";
+  const hint = a.kind === "primary" && a.on && !f.armed ? key("Enter") : "";
   return `<button class="btn ${cls}" data-act="${a.id}"${a.on ? "" : " disabled"}${attr("title", a.tip)}>${esc(a.label)}${hint}</button>`;
 }
 
@@ -97,7 +102,7 @@ function rowsBlock(v: View, f: Form): string {
 function card(c: Card, f: Form): string {
   const src = c.thumb ? f.thumbs.get(c.thumb) : undefined;
   const img = src ? `<img src="${esc(src)}" alt="">` : "";
-  const right = c.picked ? `<span class="picked">${T.PICK.picked}</span>` : f.focus && c.on ? key({ A: "1", B: "2", C: "3" }[c.letter]) : "";
+  const right = c.picked ? `<span class="picked">${T.PICK.picked}</span>` : c.on ? key({ A: "1", B: "2", C: "3" }[c.letter]) : "";
   const cls = `card${c.chosen || c.picked ? " chosen" : ""}`;
   return `<button class="${cls}" data-card="${c.letter}"${c.on ? "" : " disabled"}${attr("title", c.copyName)} aria-pressed="${c.chosen}">
 ${c.chosen || c.picked ? `<span class="caret">${CARET}</span>` : ""}<span class="th">${img}</span>
@@ -121,7 +126,7 @@ function right(v: View, f: Form): string {
   for (const a of v.actions.filter((x) => x.kind === "primary" || x.kind === "secondary" || x.kind === "quiet")) {
     parts.push(button(a, f, false) + (a.line ? `<div class="conseq">${esc(a.line)}</div>` : ""));
   }
-  if (v.pickHint) parts.push(`<div class="hintbox"><div class="h1">${T.PICK.choose}</div><div class="h2">${esc(v.pickHint)}</div></div>`);
+  if (v.pickHint) parts.push(`<div class="hintbox"><div class="h1">${T.PICK.choose}</div><div class="h2"><span class="nf">${T.PICK.click}</span><span class="kf">${T.PICK.keys}</span></div></div>`);
   const compact = v.actions.filter((a) => a.kind === "compact");
   const abort = v.actions.find((a) => a.id === "abort" && a.kind === "abort");
   if (compact.length) parts.push(`<div class="pairrow">${compact.map((a) => button(a, f, false)).join("")}</div>`);

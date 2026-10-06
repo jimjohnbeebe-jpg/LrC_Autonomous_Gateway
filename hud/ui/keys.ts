@@ -10,6 +10,7 @@
 //   - 1, 2, 3 choose copy A, B, C at the pick; Left and Right move between the cards (focus is not a choice).
 // Pure, so hud\ui\keys.test.ts covers it; deck.ts carries out the command.
 import type { Letter } from "./clicks.ts";
+import { primary, type View } from "./view.ts";
 
 export type KeyIn = { key: string; ctrl: boolean; alt: boolean; shift: boolean };
 export type KeyCtx = { armed: boolean; abortOn: boolean; primaryOn: boolean; choosable: Letter[]; done: boolean; open: boolean };
@@ -37,4 +38,16 @@ export function command(k: KeyIn, c: KeyCtx): Command | null {
   if (letter !== undefined) return c.choosable.includes(letter) ? { do: "choose", letter } : null;
   if (c.choosable.length > 0 && (k.key === "ArrowLeft" || k.key === "ArrowRight")) return { do: "card", step: k.key === "ArrowLeft" ? -1 : 1 };
   return null;
+}
+
+/** What the keys need to know of the view drawn now. */
+export function keyCtx(v: View, armed: boolean, open: boolean): KeyCtx {
+  return {
+    armed,
+    abortOn: v.actions.find((a) => a.id === "abort")?.on ?? false,
+    primaryOn: primary(v, false) !== null,
+    choosable: v.cards.filter((c) => c.on).map((c) => c.letter),
+    done: v.closeOnly,
+    open,
+  };
 }

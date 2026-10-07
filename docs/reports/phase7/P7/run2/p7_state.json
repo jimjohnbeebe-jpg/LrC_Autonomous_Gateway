@@ -1,0 +1,534 @@
+{
+  "version": 1,
+  "run": "2026-10-07T02-45-32-800Z",
+  "started": 1791341132801,
+  "photo": {
+    "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+    "filename": "20260907-_OZ80099.NEF",
+    "snapshot_id": "90DC40BD-659E-4B53-A5C1-62DCA9B504B1",
+    "start": {
+      "exposure": 0.33,
+      "contrast": 0,
+      "highlights": -21,
+      "shadows": 10,
+      "whites": 0,
+      "blacks": 0,
+      "texture": 4,
+      "clarity": 2,
+      "dehaze": 0,
+      "vibrance": 0,
+      "saturation": 0,
+      "temperature": 4900,
+      "tint": 11,
+      "grading.shadows.hue": 0,
+      "grading.shadows.sat": 0,
+      "grading.shadows.lum": 0,
+      "grading.midtones.hue": 0,
+      "grading.midtones.sat": 0,
+      "grading.midtones.lum": 0,
+      "grading.highlights.hue": 0,
+      "grading.highlights.sat": 0,
+      "grading.highlights.lum": 0,
+      "grading.global.hue": 0,
+      "grading.global.sat": 0,
+      "grading.global.lum": 0,
+      "grading.blending": 50,
+      "grading.balance": 0,
+      "sharpening.amount": 24,
+      "sharpening.radius": 2,
+      "sharpening.detail": 25,
+      "sharpening.masking": 0,
+      "noise.luminance": 48,
+      "noise.color": 25,
+      "lens.corrections_enable": true,
+      "lens.profile_enable": 1,
+      "lens.ca_remove": 1,
+      "tone_curve.master": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "tone_curve.red": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "tone_curve.green": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "tone_curve.blue": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "hsl.red.hue": 0,
+      "hsl.red.sat": 0,
+      "hsl.red.lum": 0,
+      "hsl.orange.hue": 0,
+      "hsl.orange.sat": 0,
+      "hsl.orange.lum": 0,
+      "hsl.yellow.hue": 0,
+      "hsl.yellow.sat": 0,
+      "hsl.yellow.lum": 0,
+      "hsl.green.hue": 0,
+      "hsl.green.sat": 0,
+      "hsl.green.lum": 0,
+      "hsl.aqua.hue": 0,
+      "hsl.aqua.sat": 0,
+      "hsl.aqua.lum": 0,
+      "hsl.blue.hue": 0,
+      "hsl.blue.sat": 0,
+      "hsl.blue.lum": 0,
+      "hsl.purple.hue": 0,
+      "hsl.purple.sat": 0,
+      "hsl.purple.lum": 0,
+      "hsl.magenta.hue": 0,
+      "hsl.magenta.sat": 0,
+      "hsl.magenta.lum": 0,
+      "camera_profile": "Camera Neutral"
+    }
+  },
+  "done": [
+    "E1",
+    "E2",
+    "E3",
+    "E4",
+    "C2",
+    "F1",
+    "F2",
+    "E5",
+    "C1"
+  ],
+  "answers": {
+    "A1.e1.shown": {
+      "ok": true,
+      "at": "2026-10-07T04:04:47.611Z",
+      "detail": {
+        "ms": 688.16552734375
+      }
+    },
+    "A1.e1.classic": {
+      "ok": true,
+      "at": "2026-10-07T04:04:50.577Z"
+    },
+    "A1.e1.jim": {
+      "ok": true,
+      "at": "2026-10-07T04:05:02.323Z"
+    },
+    "A2.jim": {
+      "ok": true,
+      "at": "2026-10-07T04:05:06.008Z"
+    },
+    "A4.log": {
+      "ok": true,
+      "at": "2026-10-07T04:05:36.090Z",
+      "detail": {
+        "passes": 2
+      }
+    },
+    "A4.jim": {
+      "ok": true,
+      "at": "2026-10-07T04:05:58.327Z"
+    },
+    "A2.log": {
+      "ok": true,
+      "at": "2026-10-07T04:05:58.346Z",
+      "detail": {
+        "deck_foreground": 0
+      }
+    },
+    "A19.jim": {
+      "ok": true,
+      "at": "2026-10-07T04:05:22.601Z"
+    },
+    "A22.jim": {
+      "ok": true,
+      "at": "2026-10-07T04:07:33.389Z"
+    },
+    "A23.jim": {
+      "ok": true,
+      "at": "2026-10-07T04:07:36.817Z"
+    },
+    "A12.ended": {
+      "ok": true,
+      "at": "2026-10-07T04:07:42.955Z",
+      "detail": {
+        "outcome": "accept",
+        "source": "hud"
+      }
+    },
+    "A12.hid": {
+      "ok": true,
+      "at": "2026-10-07T04:07:53.262Z",
+      "detail": {
+        "ms": 10389.30224609375
+      }
+    },
+    "A12.jim": {
+      "ok": true,
+      "at": "2026-10-07T04:07:57.167Z"
+    },
+    "A12.hid.jim": {
+      "ok": true,
+      "at": "2026-10-07T04:07:59.385Z"
+    },
+    "back.E1": {
+      "ok": true,
+      "at": "2026-10-07T04:08:59.928Z"
+    },
+    "A7.move.jim": {
+      "ok": true,
+      "at": "2026-10-07T04:10:05.330Z"
+    },
+    "A7.min.log": {
+      "ok": true,
+      "at": "2026-10-07T04:10:15.713Z",
+      "detail": {
+        "hide": "lightroom_minimised",
+        "show": "lightroom_restored"
+      }
+    },
+    "A7.min.jim": {
+      "ok": true,
+      "at": "2026-10-07T04:10:18.228Z"
+    },
+    "A9.modes.jim": {
+      "ok": true,
+      "at": "2026-10-07T04:10:34.840Z"
+    },
+    "A9.f.jim": {
+      "ok": true,
+      "at": "2026-10-07T04:10:54.009Z"
+    },
+    "A9.f2.jim": {
+      "ok": true,
+      "at": "2026-10-07T04:11:25.668Z"
+    },
+    "A5.drag.log": {
+      "ok": true,
+      "at": "2026-10-07T04:11:57.426Z",
+      "detail": {
+        "left": 3933,
+        "bottom": 1957,
+        "width": 1800
+      }
+    },
+    "A16.log": {
+      "ok": true,
+      "at": "2026-10-07T04:12:17.058Z",
+      "detail": {
+        "click_to_answer_ms": 6.489990234375
+      }
+    },
+    "A13.back": {
+      "ok": true,
+      "at": "2026-10-07T04:12:17.085Z",
+      "detail": {
+        "outcome": "aborted",
+        "differing": []
+      }
+    },
+    "A16.jim": {
+      "ok": true,
+      "at": "2026-10-07T04:12:21.111Z"
+    },
+    "A13.jim": {
+      "ok": true,
+      "at": "2026-10-07T04:12:24.643Z"
+    },
+    "A13.snapshot.jim": {
+      "ok": true,
+      "at": "2026-10-07T04:12:33.469Z"
+    },
+    "back.E2": {
+      "ok": true,
+      "at": "2026-10-07T04:12:33.477Z"
+    },
+    "A5.there.log": {
+      "ok": true,
+      "at": "2026-10-07T04:13:25.979Z",
+      "detail": {
+        "saved": {
+          "bottom": 2052,
+          "left": 1790,
+          "width": 1842
+        },
+        "got": [
+          1790,
+          1836,
+          1842,
+          216
+        ]
+      }
+    },
+    "A5.there.jim": {
+      "ok": true,
+      "at": "2026-10-07T04:13:37.871Z"
+    },
+    "A11.jim": {
+      "ok": true,
+      "at": "2026-10-07T04:13:46.065Z"
+    },
+    "A11.enter.log": {
+      "ok": true,
+      "at": "2026-10-07T04:13:53.503Z",
+      "detail": {
+        "pointer": false
+      }
+    },
+    "A14.arm.jim": {
+      "ok": true,
+      "at": "2026-10-07T04:14:28.747Z"
+    },
+    "A15.open.log": {
+      "ok": true,
+      "at": "2026-10-07T04:14:46.190Z"
+    },
+    "A15.jim": {
+      "ok": true,
+      "at": "2026-10-07T04:14:55.616Z"
+    },
+    "A14.abort.log": {
+      "ok": true,
+      "at": "2026-10-07T04:15:03.950Z",
+      "detail": {
+        "outcome": "aborted"
+      }
+    },
+    "A14.abort.jim": {
+      "ok": true,
+      "at": "2026-10-07T04:15:10.432Z"
+    },
+    "back.E3": {
+      "ok": true,
+      "at": "2026-10-07T04:15:23.676Z"
+    },
+    "A18.jim": {
+      "ok": true,
+      "at": "2026-10-07T04:31:20.629Z"
+    },
+    "A17.cards.jim": {
+      "ok": true,
+      "at": "2026-10-07T04:31:24.362Z"
+    },
+    "A21.log": {
+      "ok": true,
+      "at": "2026-10-07T04:31:39.703Z",
+      "detail": {
+        "deck_in_edit_false_ms": 15237.28125,
+        "lightroom_selection_in_edit": false
+      }
+    },
+    "A21.jim": {
+      "ok": true,
+      "at": "2026-10-07T04:31:55.924Z"
+    },
+    "A17.click.log": {
+      "ok": true,
+      "at": "2026-10-07T04:32:03.196Z"
+    },
+    "A17.click.jim": {
+      "ok": true,
+      "at": "2026-10-07T04:32:09.898Z"
+    },
+    "A17.keys.log": {
+      "ok": true,
+      "at": "2026-10-07T04:32:25.998Z",
+      "detail": {
+        "variant": "C",
+        "pointer": false
+      }
+    },
+    "A17.picked.log": {
+      "ok": true,
+      "at": "2026-10-07T04:32:26.003Z"
+    },
+    "A17.picked.jim": {
+      "ok": true,
+      "at": "2026-10-07T04:32:32.556Z"
+    },
+    "copies.removed": {
+      "ok": true,
+      "at": "2026-10-07T04:34:05.025Z"
+    },
+    "back.E4": {
+      "ok": true,
+      "at": "2026-10-07T04:34:05.039Z"
+    },
+    "A5.fallback.log": {
+      "ok": true,
+      "at": "2026-10-07T11:57:51.390Z",
+      "detail": {
+        "saved": [
+          -60000,
+          -60000,
+          1842
+        ]
+      }
+    },
+    "A5.fallback.jim": {
+      "ok": true,
+      "at": "2026-10-07T11:57:58.883Z"
+    },
+    "back.E5": {
+      "ok": true,
+      "at": "2026-10-07T11:58:03.624Z"
+    },
+    "A1.chat.log": {
+      "ok": true,
+      "at": "2026-10-07T12:01:05.814Z",
+      "detail": {
+        "ms": 591.708251953125,
+        "began": "2026-10-07T11:58:46.379Z",
+        "classic": 0
+      }
+    },
+    "A3.log": {
+      "ok": true,
+      "at": "2026-10-07T12:01:05.842Z",
+      "detail": {
+        "deck_foreground": 0
+      }
+    },
+    "A1.chat.jim": {
+      "ok": true,
+      "at": "2026-10-07T12:01:10.770Z"
+    },
+    "A3.jim": {
+      "ok": true,
+      "at": "2026-10-07T12:01:13.151Z"
+    },
+    "A8.log": {
+      "ok": false,
+      "at": "2026-10-07T12:01:33.565Z",
+      "detail": {
+        "foreground": [
+          {
+            "exe": "explorer.exe",
+            "front": false
+          },
+          {
+            "exe": "claude.exe",
+            "front": false
+          },
+          {
+            "exe": "Code - Insiders.exe",
+            "front": false
+          }
+        ]
+      }
+    },
+    "A8.jim": {
+      "ok": true,
+      "at": "2026-10-07T12:01:41.178Z"
+    },
+    "back.C1": {
+      "ok": true,
+      "at": "2026-10-07T12:01:54.337Z"
+    },
+    "A6.log": {
+      "ok": true,
+      "at": "2026-10-07T11:15:06.797Z",
+      "detail": {
+        "deck_shown": true,
+        "desktop_engine": null
+      }
+    },
+    "A6.jim": {
+      "ok": true,
+      "at": "2026-10-07T11:15:11.056Z"
+    },
+    "back.C2": {
+      "ok": true,
+      "at": "2026-10-07T11:15:11.995Z"
+    },
+    "A24.log": {
+      "ok": true,
+      "at": "2026-10-07T11:15:45.351Z"
+    },
+    "A24.abort.log": {
+      "ok": true,
+      "at": "2026-10-07T11:15:52.680Z",
+      "detail": {
+        "outcome": "aborted"
+      }
+    },
+    "A24.jim": {
+      "ok": true,
+      "at": "2026-10-07T11:16:06.231Z"
+    },
+    "deck.restored": {
+      "ok": true,
+      "at": "2026-10-07T11:16:06.234Z"
+    },
+    "back.F1": {
+      "ok": true,
+      "at": "2026-10-07T11:16:06.241Z"
+    },
+    "back.F2": {
+      "ok": true,
+      "at": "2026-10-07T11:16:37.938Z"
+    },
+    "A10.log": {
+      "ok": true,
+      "at": "2026-10-07T11:17:11.158Z",
+      "detail": {
+        "deck_running_before": true,
+        "deck_closed_ms": 126
+      }
+    },
+    "A10.jim": {
+      "ok": true,
+      "at": "2026-10-07T11:17:16.921Z"
+    }
+  },
+  "copies": [],
+  "renamed": false,
+  "mode_changed": false,
+  "spot_backup": null,
+  "cold": [
+    {
+      "pid": 11208,
+      "created": 1791341156553.2988
+    },
+    {
+      "pid": 15068,
+      "created": 1791345858630.1543
+    },
+    {
+      "pid": 23172,
+      "created": 1791347645369.9902
+    },
+    {
+      "pid": 27468,
+      "created": 1791371766508.2324
+    },
+    {
+      "pid": 15824,
+      "created": 1791374235095.7656
+    }
+  ],
+  "samples": {
+    "hidden": {
+      "window_ms": 60010,
+      "private_mib": 111.5546875,
+      "cpu_pct": 0.23433594400933178,
+      "complete": true,
+      "procs": 7
+    },
+    "visible": {
+      "window_ms": 60011,
+      "private_mib": 111.07421875,
+      "cpu_pct": 0.4165902917798403,
+      "complete": true,
+      "procs": 7
+    }
+  },
+  "errors": {}
+}

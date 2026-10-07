@@ -1,9 +1,9 @@
 ---
 report: AVG-P7 Phase 7 acceptance on the Deck
 phase: 7
-status: observed
-authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-10-06, branch phase-7/check (vault PHASE7_PLAN row 6). Observed: Jim's run and answers. Verdict: Jim."
-date: 2026-10-06
+status: accepted
+authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-10-06, branch phase-7/check (vault PHASE7_PLAN row 6). Observed: Jim's runs and answers; log analysis and Numbers: Claude Code (Opus 5.5), 2026-10-07, branch phase-7/results (row 7). Verdict: Jim."
+date: 2026-10-07
 ---
 
 # AVG-P7: Phase 7 acceptance on the Deck
@@ -209,29 +209,92 @@ Evidence: `docs\reports\phase7\P7\run1\`. It holds the state, the summary, the p
 
 **Next** [stated: Jim, 2026-10-07, "Go", to the fix plan]: branch `fix/phase7-check-run1`, which makes Deck 0.3.2 and fixes the check. After it merges, Jim runs `npm run phase7:check -- --redo E1,E2,E3`. That asks E1-E3 again, then goes on from E4.
 
+### Run 2 (2026-10-07 04:04-04:42 and 11:15-11:17 UTC): every step ran
+
+Evidence: `docs\reports\phase7\P7\run2\`. It holds the state (`p7_state.json`, last written by the re-run below), the summary, the plugin's logs, the Deck's logs (`deck\`), the session logs (`sessions\`), the engine's tool logs and Claude Desktop's chat session logs (`chat_sessions\`, copied from the repo's gitignored `logs\`). User paths read `%USERPROFILE%`. Files the same as in `run1\` are not copied again. Photo: `20260907-_OZ80099.NEF` (uuid `CF12AF60-…`). Deck 0.3.2, plugin 0.18.0, engine 0.20.0. Jim ran `npm run phase7:check -- --redo E1,E2,E3`. The analysis of the logs is Claude Code's.
+
+- **Steps:** E1-E4 ran 04:04-04:34 UTC, E5 at 04:35, C1 at 04:36-04:42. Jim rebooted, and C2, F1 and F2 ran at 11:15-11:17 UTC.
+- **Lines:** every line A1-A24 (no A20) was YES, log checks and Jim's answers alike [handle: Jim's run, recorded in vault `LrC_AVG_STATE.md` 2026-10-07 "Jim's run 2 finished every step"; the re-run replaced the E5 and C1 answers in `p7_state.json`].
+- **Run 1's NOs, answered again:** A19 asked after pass 1, A9 screen modes, A9 F with two monitors, A21 and the A5 drag were all YES (`p7_state.json` `A19.jim`, `A9.modes.jim`, `A9.f.jim`, `A9.f2.jim`, `A21.log`, `A21.jim`, `A5.drag.log`).
+- **Headline:** FAILED, only on cleanup. `back.E5` and `back.C1` were NO: the snapshot apply after E5 and after C1 changed nothing while Lightroom was in Library [handle: `docs\reports\phase7\snapshot-library\timeline.txt`]. The photo was put back at the start of the next run, once Jim pressed D (`back.C2`, `back.F1`, `back.F2` YES).
+- **Fix:** PR #93 (`aaa9808`), plugin 0.18.1. It switches Lightroom to Develop before every snapshot apply.
+
+### Re-run of E5 and C1 (2026-10-07 11:57-12:02 UTC, plugin 0.18.1)
+
+Jim followed "Steps for Jim: re-run of E5 and C1", starting in Library, and said "done".
+
+- **The fix works in Lightroom:** `plugin-log_2026-10-07T11-57-13-828Z.txt` "04:57:58.998 INFO develop: switched from library to develop in 0 ms" (local time, 11:57:58 UTC). `back.E5` YES at 11:58:03 UTC and `back.C1` YES at 12:01:54 UTC (`p7_state.json`).
+- **C1:** Claude's edit (session `20261007-c8443a`, `chat_sessions\20261007-c8443a.json`) began 11:58:46 UTC. The Deck showed 591.7 ms later with no classic window (`A1.chat.log`); it never took the foreground (`A3.log`, `deck_foreground` 0). Claude accepted at pass 1 of 8.
+- **Headline:** `Phase 7 acceptance: FAILED (A8 NO)` (`p7_summary.json`). Every other line, cleanup included, is YES.
+
+**A8, what the logs show** (Deck log `deck\hud_25528_1791374326853.jsonl`, times UTC):
+
+| Time | Deck log |
+|---|---|
+| 11:58:46.971 | `show` `edit_start` |
+| 12:00:52.901 | state `accepted` |
+| 12:01:02.945 | `hide` `edit_end` (A12: the Deck hides about 10 s after the end, `A12.hid` 10 389 ms in E1) |
+| 12:01:04.3-12:01:29.8 | four `foreground` lines: explorer, claude, Code, explorer, all `front:false`; none for Lightroom (pid 25260) |
+
+- The A8 question came after `A3.jim` (12:01:13), so the Deck was already hidden for the whole step. Jim [stated: 2026-10-07]: "the hud closed automatically when Claude was done".
+- `A8.log` looks for a `front:true` line after a `front:false` one (`hud\probe\check\chats.ts:105-108`). None came before it was recorded at 12:01:33.6. Why no Lightroom foreground was logged is [unverified]: the record was taken 3.7 s after the last line.
+- **Run 2's A8 had the same timing.** Its YES came from a Lightroom `front:true` line at 04:42:29.3 while the Deck was hidden (hidden at 04:41:44.6 `edit_end`; `deck\hud_33968_1791347810008.jsonl`).
+- **The rule while the Deck was shown:** during run 2's chat edit (session `20261006-96b19e`, 04:36:49-04:41:34), the Deck logged the foreground moving between Lightroom (`front:true`) and Claude Desktop (`front:false`) six times, 04:38:34-04:41:36 (`deck\hud_33968_…jsonl`). Nobody was asked what the screen showed then.
+- **Rule 1 seen by Jim:** row 4b's line R1, "Another window in front covers the Deck", was YES (`docs\reports\phase7\deck-shell.md` "Numbers"). Rule 1 does not depend on which program is in front (`hud\src-tauri\src\window.rs` `topmost_for`), so R1 covers Claude Desktop [inference].
+- **Decision** [stated: Jim, 2026-10-07, "Go with recommendations", option A]: A8 is accepted on R1, run 2's foreground lines while the Deck was shown, and Jim's YES in both runs. The check's flaw (A8 asked after the Deck hides) is carried below.
+
 ## Numbers
+
+From `P7\run2\p7_summary.json` (runs 2 and 3 together) and `p7_state.json`.
 
 | Line | Result | Checks |
 |---|---|---|
-| A1-A24 (no A20) | | |
+| A1 | YES | `A1.e1.shown` 688 ms, `A1.e1.classic`, `A1.e1.jim`; chat: `A1.chat.log` 592 ms, `A1.chat.jim` |
+| A2 | YES | `A2.log` (Deck foreground 0), `A2.jim` |
+| A3 | YES | `A3.log` (Deck foreground 0), `A3.jim` |
+| A4 | YES | `A4.log` (2 passes), `A4.jim` |
+| A5 | YES | `A5.drag.log` (saved 3933, 1957, 1800), `A5.there.log`, `A5.there.jim`, `A5.fallback.log`, `A5.fallback.jim` |
+| A6 | YES | `A6.log` (Deck shown, Desktop's engine gone), `A6.jim` |
+| A7 | YES | `A7.move.jim`, `A7.min.log` (hide on minimise, show on restore), `A7.min.jim` |
+| A8 | accepted by Jim (check NO) | `A8.log` NO (Deck hidden, see above), `A8.jim` YES |
+| A9 | YES | `A9.modes.jim`, `A9.f.jim`, `A9.f2.jim` |
+| A10 | YES | `A10.log` (Deck closed 126 ms after Lightroom quit), `A10.jim` |
+| A11 | YES | `A11.jim`, `A11.enter.log` (keyboard) |
+| A12 | YES | `A12.ended` (accept from the Deck), `A12.hid` 10 389 ms, `A12.jim`, `A12.hid.jim` |
+| A13 | YES | `A13.back` (aborted, 0 differing), `A13.jim`, `A13.snapshot.jim` |
+| A14 | YES | `A14.arm.jim`, `A14.abort.log`, `A14.abort.jim` |
+| A15 | YES | `A15.open.log`, `A15.jim` |
+| A16 | YES | `A16.log` (click to answer 6.5 ms), `A16.jim` |
+| A17 | YES | `A17.cards.jim`, `A17.click.log`, `A17.click.jim`, `A17.keys.log` (C, keyboard), `A17.picked.log`, `A17.picked.jim` |
+| A18 | YES | `A18.jim` |
+| A19 | YES | `A19.jim` |
+| A21 | YES | `A21.log` (Deck `in_edit` false after 15.2 s; Lightroom's selection not in the edit), `A21.jim` |
+| A22 | YES | `A22.jim` |
+| A23 | YES | `A23.jim` |
+| A24 | YES | `A24.log`, `A24.abort.log`, `A24.jim` |
+| cleanup | YES | `back.E1`-`back.F2`, `copies.removed`, `deck.restored` |
 
 | Budget (spec 9) | Target | Measured | n |
 |---|---|---|---|
-| Cold start | ≤ 1500 ms | | |
-| Warm show | ≤ 150 ms p95 | | |
-| Update to paint | ≤ 100 ms p95 | | |
-| Click to userAction | ≤ 50 ms p95 | | |
-| Idle memory, process tree | ≤ 150 MiB | | |
-| CPU hidden / visible | ≤ 0.5 % / ≤ 2 % | | |
+| Cold start | ≤ 1500 ms | 590 ms (max) | 5 |
+| Warm show | ≤ 150 ms p95 | 16 ms | 5 |
+| Update to paint | ≤ 100 ms p95 | 13 ms | 595 |
+| Click to userAction | ≤ 50 ms p95 | 8 ms | 11 |
+| Idle memory, process tree | ≤ 150 MiB | 112 MiB | 1 |
+| CPU hidden / visible | ≤ 0.5 % / ≤ 2 % | 0.23 % / 0.42 % | 1 / 1 |
 
 ## Verdict
 
-*(Jim's: go / conditional / no-go. The check's headline is a suggestion.)*
+**Go** [stated: Jim, 2026-10-07, "Go (Recommended)"]. Phase 7 is accepted on the Deck: every line A1-A24 (no A20) is YES or accepted (A8), cleanup is YES after the Library fix, and every spec 9 budget is measured within its target. The check's headline (`FAILED (A8 NO)`) was a suggestion; its cause is the check's timing, above.
 
 ## Consequences / open questions
 
-- Stays [unverified] after this check unless a line shows it:
+- **Library put-backs:** fixed by PR #93 (plugin 0.18.1) and seen working in Lightroom in the re-run (above).
+- **A8 in the check:** `chats.ts` asks A8 after Claude's edit has ended, when the Deck has hidden itself. If the check runs again, ask A8 while the edit is open. Carried, not fixed [stated: Jim, 2026-10-07, "Go with recommendations"].
+- **A9 Shift+F (run 1):** YES in run 2 with Deck 0.3.2, which re-applies rule 1 every tick. Why Lightroom's full-screen window covered Deck 0.3.1 stays [unverified].
+- **A21 (run 1):** YES in run 2. Why Jim saw no line in run 1 stays [unverified].
+- Stays [unverified] after this check:
   - a Deck before 0.3.0 with plugin 0.18.0;
-  - the Show menu item while the engine is away;
-  - F with the Deck on another monitor, if only one monitor is connected (vault PHASE7_PLAN "From row 4b", "From row 5").
-- Q9 (hide outside Develop / Lights Out) stays open unless this run shows a need (PHASE7_PLAN "Deferred").
+  - the Show menu item while the engine is away.
+- F with the Deck on another monitor: Jim has two monitors and `A9.f2.jim` was YES in run 2.
+- Q9 (hide outside Develop / Lights Out) stays open: no line in this check showed a need (PHASE7_PLAN "Deferred").

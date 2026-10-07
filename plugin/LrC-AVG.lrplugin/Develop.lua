@@ -225,13 +225,14 @@ end
 function Develop.applySnapshot(payload)
     local id = payload.snapshot_id
     if type(id) ~= "string" or id == "" then return fail("bad_request", "snapshot_id must be a non-empty string") end
+    -- First: the switch can wait, and the target and AI-mask checks (writeTarget) run after it (Greptile, PR #93).
+    local notDevelop = Develop.toDevelop()
+    if notDevelop then return nil, notDevelop end
     local catalog, photo, uuid, err = writeTarget(payload)
     if err then return nil, err end
     if #findSnapshots(catalog, photo, "snapshotID", id) == 0 then
         return fail("unknown_snapshot", "the target photo has no snapshot with id " .. id)
     end
-    local notDevelop = Develop.toDevelop()
-    if notDevelop then return nil, notDevelop end
     local gated, busy = Gate.write(catalog, "AVG restore snapshot", function()
         photo:applyDevelopSnapshot(id)
     end)

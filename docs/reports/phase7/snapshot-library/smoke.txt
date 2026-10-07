@@ -1,7 +1,7 @@
 fix/snapshot-develop: Develop.toDevelop (plugin 0.18.1) under fengari 0.1.4 with a fake SDK
 ==========================================================================================
 
-Run by Claude Code on 2026-10-07T11:29Z, branch fix/snapshot-develop, on the working tree before the first commit.
+Run by Claude Code on 2026-10-07T11:44Z, branch fix/snapshot-develop, on the working tree with the Greptile fix (PR #93: toDevelop runs before the checks).
 The fake LrApplicationView switches to Develop a set number of seconds after switchToModule (or never); LrTasks.sleep
 advances a virtual clock. The kit loads the plugin's real Develop.lua; Gate, Pending, Photos and Log are stubs.
 

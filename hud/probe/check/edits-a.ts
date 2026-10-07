@@ -1,5 +1,5 @@
 // Edits 1 and 2 of the Phase 7 check (row 6): real edits by the check's engine on Jim's photo, the Deck
-// installed (hud 0.3.1), Claude Desktop quit. Spec docs\hud\lrc-avg-hud-spec-v2.md 11.1 as 2.7 amends it.
+// installed (hud 0.3.2), Claude Desktop quit. Spec docs\hud\lrc-avg-hud-spec-v2.md 11.1 as 2.7 amends it.
 //   E1: the Deck opens by itself (A1, cold start), the keyboard stays with Lightroom (A2), your turn on a
 //       converged edit (A4), the changes rows (A19), the look (A22, A23), Accept and the hide 10 s later
 //       (A12); memory and CPU shown and hidden (spec 9).
@@ -38,6 +38,9 @@ export async function e1(ctx: Ctx): Promise<void> {
   ctx.record("A1.e1.classic", ctx.plog.count("hud: shown") === 0);
   await ctx.jim("A1.e1.jim", "The Deck appeared by itself, opened at full height: where you last left it (the first time: at the bottom centre of Lightroom's monitor). No window titled \"LrC-AVG - Vision Gateway\" opened.");
   await ctx.jim("A2.jim", "Without a click, \\ switched the photo to Before and back: the keyboard stayed with Lightroom.");
+  // The rows are the shown pass's changes (spec 7; the whole edit is E5, deferred), so A19 is asked while pass 1's
+  // five sliders are shown: run 1 asked after the converging passes, when only Vibrance was left (Jim, 2026-10-07).
+  await ctx.jim("A19.jim", "Look at the rows in the Deck's middle, pass 1's changes: Exposure, Contrast, Highlights, Shadows and Vibrance (some may be in \"+n more\" at a narrow width). They use Lightroom's slider names in the Basic panel's order, and each row's mark sits where that slider sits in Lightroom's Basic panel (right side of Develop).");
   await handToLightroom("When the Deck says \"Your turn\", press \\ twice (Before, then back). Then come back here.");
 
   let converged = false;
@@ -58,7 +61,6 @@ export async function e1(ctx: Ctx): Promise<void> {
     ctx.state.samples.visible = await sampleTree(pid, 60 * SECOND);
     ctx.save();
   }
-  await ctx.jim("A19.jim", "Look at the rows in the Deck's middle. They use Lightroom's slider names (Exposure, Contrast, Highlights, Shadows, Vibrance) in the Basic panel's order, and each row's mark sits where that slider sits in Lightroom's Basic panel (right side of Develop).");
   await ctx.jim("A22.jim", "The Deck's text is readable at a glance, nothing in it is smaller than the key hints, and nothing depends on colour alone (each state also has words or a shape).");
   await ctx.jim("A23.jim", "The Deck looks at home next to Lightroom's panels.");
 
@@ -102,8 +104,11 @@ export async function e2(ctx: Ctx): Promise<void> {
   await enter("Click Lightroom's title bar and press F: the photo shows full screen. Look at the Deck. Then press F again to come back.");
   await ctx.jim("A9.f.jim", "In the full-screen preview, the Deck was not over the image.");
   if (monitorCount() >= 2) {
-    await enter("Drag the Deck (by the words on its bar) onto your other monitor. Click Lightroom's title bar and press F, look at the Deck, then press F again.");
-    await ctx.jim("A9.f2.jim", "With the full-screen preview on Lightroom's monitor, the Deck stayed visible on the other monitor.");
+    // In run 1, F's image showed on the first monitor (0,0, 3840×2160) even with Lightroom's window on the second
+    // [handle: docs\reports\phase7\PHASE7.md "Observed", the Deck log's windows lines 02:59:36 UTC], so the Deck
+    // goes to the monitor without F's image; the Deck under F's image on its own monitor is rule 1 (spec 2.7 A9).
+    await enter("Leave Lightroom where it is. Drag the Deck (by the words on its bar, not Lightroom) onto the monitor where F's full-screen image does not appear (in your last run, F's image appeared on your first monitor). Click Lightroom's title bar and press F, look at the Deck, then press F again.");
+    await ctx.jim("A9.f2.jim", "While F's full-screen image showed on the other monitor, the Deck stayed visible on its own monitor.");
   } else ctx.skip("A9.f2.jim", "one monitor connected");
 
   const td = Date.now();

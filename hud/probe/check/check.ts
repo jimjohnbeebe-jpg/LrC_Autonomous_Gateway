@@ -3,11 +3,11 @@
 // (20260907-_OZ80093.NEF, the plan's), plugin 0.18.0 or later, and Claude Desktop quit. Steps for Jim:
 // docs\reports\phase7\PHASE7.md. Spec docs\hud\lrc-avg-hud-spec-v2.md 11.1 as 2.7 amends it, and the
 // section 9 budgets; summary.ts holds the lines and the verdict.
-// It installs the Deck 0.3.1 (hud\ui\deck.ts logs `got` and `painted` for the budgets), then runs the
+// It installs the Deck 0.3.2 (hud\ui\deck.ts logs `got` and `painted` for the budgets), then runs the
 // steps of summary.ts STEPS in order: five scripted edits (edits-a.ts, edits-b.ts), two Claude Desktop
 // chats (chats.ts), the classic fallback and Lightroom's quit (fallback.ts). After each step the photo
 // is put back with the check's own snapshot, taken at the first run. It resumes where it stopped:
-// finished steps are skipped (`-- --new` starts over; `-- --redo E3` runs one step again). Lightroom's
+// finished steps are skipped (`-- --new` starts over; `-- --redo E1,E2,E3` marks those steps unfinished, then goes on with every unfinished step). Lightroom's
 // quit (F2) runs only once every other step is finished.
 // Results: %TEMP%\LrC-AVG\P7\p7_state.json and the run folder beside it (the Deck's logs, the plugin's
 // log, the session logs, p7_summary.json).
@@ -24,17 +24,17 @@ import { STEPS, acceptance, freshState, type StepId } from "./summary.ts";
 
 const RUN: Record<StepId, (ctx: Ctx) => Promise<void>> = { E1: e1, E2: e2, E3: e3, E4: e4, E5: e5, C1: c1, C2: c2, F1: f1, F2: f2 };
 const argv = process.argv.slice(2);
-const redo = argv.includes("--redo") ? argv[argv.indexOf("--redo") + 1] : undefined;
+const redo = argv.includes("--redo") ? (argv[argv.indexOf("--redo") + 1] ?? "").split(",").filter(Boolean) : [];
 const stop = (why: string): never => {
   console.log(`\nPhase 7 check: FAILED before it started. ${why}`);
   process.exit(1);
 };
 const message = (err: unknown): string => (err instanceof Error ? err.message : String(err));
 
-if (redo !== undefined && !STEPS.some((s) => s.id === redo)) stop(`--redo takes a step: ${STEPS.map((s) => s.id).join(", ")}.`);
+if (redo.some((id) => !STEPS.some((s) => s.id === id))) stop(`--redo takes steps, comma-separated: ${STEPS.map((s) => s.id).join(", ")}.`);
 if (!lightroomRunning()) stop("Lightroom is not running: open Lightroom in Develop, then run this again.");
 if (liveEngine() !== null) stop("Claude Desktop's engine is running: quit Claude Desktop (right-click the Claude icon in the Windows system tray > Quit), then run this again.");
-const setup = installer() ?? stop("The Deck's installer 0.3.1 is not built: Claude Code runs `npm run deck:build` first.");
+const setup = installer() ?? stop("The Deck's installer 0.3.2 is not built: Claude Code runs `npm run deck:build` first.");
 
 // The saved state is used as it is until everything it holds out is back: the Deck renamed, window.json
 // replaced, the photo edited. Only then does `--new` replace it (ctx.reset), so a run stopped on the way
@@ -49,7 +49,7 @@ restoreSpot(ctx);
 // A step's error stays until that step finishes; the rest belong to the run that wrote them.
 for (const k of Object.keys(state.errors)) if (!STEPS.some((s) => s.id === k)) delete state.errors[k];
 saveState(state);
-console.log("Phase 7 check. Installing the Deck 0.3.1 (per user, no admin rights needed)...");
+console.log("Phase 7 check. Installing the Deck 0.3.2 (per user, no admin rights needed)...");
 stopDeck();
 install(setup);
 
@@ -62,7 +62,9 @@ try {
   if (!(await ctx.start(0))) stop("Another engine holds the Lightroom bridge: quit Claude Desktop, wait a minute, then run this again.");
   await firstPhoto();
   if (state.mode_changed) await ctx.ensureMode("autonomous");
-  const todo = redo !== undefined ? STEPS.filter((s) => s.id === redo) : STEPS.filter((s) => !state.done.includes(s.id));
+  // `--redo` steps count as unfinished from here on (run 1, 2026-10-07: E1-E3 asked again after the check's fixes).
+  state.done = state.done.filter((d) => !redo.includes(d));
+  const todo = STEPS.filter((s) => !state.done.includes(s.id));
   for (const step of todo) {
     if (step.id === "F2" && STEPS.some((s) => s.id !== "F2" && !state.done.includes(s.id))) {
       ctx.say("Lightroom's quit (the last step) waits until every other step has finished.");

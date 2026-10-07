@@ -212,7 +212,7 @@ function onMessage(text: string): void {
   if (msg.type === "ping") send({ type: "pong" });
   else if (msg.type === "state") {
     // Row 6 (phase7:check, spec 9): receipt and first frame after it, in JS time, as S9's `paint` (spikes\S9\tauri\ui\ui.ts).
-    log({ got: msg.seq, session: msg.state.session_id, stage: msg.state.stage, at: Date.now() });
+    log({ got: msg.seq, session: msg.state.session_id, stage: msg.state.stage, in_edit: msg.state.selection?.in_edit ?? null, at: Date.now() });
     onEngineState(msg.state, msg.seq);
     requestAnimationFrame(() => log({ painted: msg.seq, at: Date.now() }));
   } else if (msg.type === "answer") {

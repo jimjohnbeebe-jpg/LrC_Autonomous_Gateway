@@ -85,6 +85,7 @@ fn tick(app: &AppHandle) {
     if main_changed || cover_changed {
         topmost_for(unsafe { GetForegroundWindow() });
     }
+    keep_on_top(main, cover);
     let visible = unsafe { IsWindowVisible(deck()).as_bool() };
     if iconic(main) && visible {
         MIN_HIDDEN.store(true, SeqCst);
@@ -100,6 +101,42 @@ fn tick(app: &AppHandle) {
         let saved = Saved { left: r.left, bottom: r.bottom, width: r.width() };
         let ok = store::save(&saved).map_err(|e| e.to_string());
         write(json!({ "ev": "saved", "left": saved.left, "bottom": saved.bottom, "width": saved.width, "error": ok.err() }));
+    }
+}
+
+/// Times the Deck had to take the top back since the last log line ("on_top"), and whether it is losing it now.
+static LOST: AtomicU32 = AtomicU32::new(0);
+static LOSING: AtomicBool = AtomicBool::new(false);
+
+/// Rule 1 between foreground changes. In Jim's Phase 7 check run 1 (2026-10-07 UTC), the Deck was not visible
+/// over Lightroom in Shift+F's full-screen mode [stated: Jim], and the Deck's log has no foreground event while
+/// Jim switched modes, so rule 1 was not applied again [handle: docs\reports\phase7\PHASE7.md "Observed", A9].
+/// What covered it (Lightroom raising its own window, or making it topmost) is [unverified]: `on_top` records it.
+/// Each tick, while the main window is in front, nothing covers the Deck's monitor and the Deck is shown:
+/// a Deck that is not topmost, or has the main window above it, takes the top back.
+fn keep_on_top(main: isize, cover: isize) {
+    let fg = unsafe { GetForegroundWindow() };
+    let shown = unsafe { IsWindowVisible(deck()).as_bool() };
+    if main == 0 || cover != 0 || fg.0 as isize != main || !shown {
+        return;
+    }
+    let topmost = |h: HWND| unsafe { GetWindowLongPtrW(h, GWL_EXSTYLE) } & WS_EX_TOPMOST.0 as isize != 0;
+    let mut above = unsafe { GetWindow(deck(), GW_HWNDPREV) }.ok();
+    let mut main_above = false;
+    while let Some(h) = above {
+        if h.0 as isize == main {
+            main_above = true;
+            break;
+        }
+        above = unsafe { GetWindow(h, GW_HWNDPREV) }.ok();
+    }
+    let losing = main_above || !topmost(deck());
+    if losing {
+        LOST.fetch_add(1, SeqCst);
+        topmost_for(fg);
+    }
+    if LOSING.swap(losing, SeqCst) != losing {
+        write(json!({ "ev": "on_top", "losing": losing, "main_topmost": topmost(hwnd(main)), "main_above": main_above, "times": LOST.swap(0, SeqCst) }));
     }
 }
 

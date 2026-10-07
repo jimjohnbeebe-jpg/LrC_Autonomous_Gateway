@@ -94,12 +94,16 @@ export async function e4(ctx: Ctx): Promise<void> {
 
   const tc = Date.now();
   ctx.say("In Lightroom's Filmstrip (along the bottom), click a different photo: not yours and not one of its copies. Watch the Deck. (The check sees it; nothing to type here.)");
-  const changed = await ctx.deck(tc, (e) => ui(e, "stage") === "target_changed", CLICK_MS);
-  ctx.record("A21.log", changed !== null);
+  // The Deck draws "Target changed" from the state's selection (hud\ui\view.ts bandOf), not from a stage: the stage
+  // stays at the pick. hud 0.3.2 logs `in_edit` with each state (run 1 waited for a stage that never comes).
+  const changed = await ctx.deck(tc, (e) => ui(e, "in_edit") === false, CLICK_MS);
+  const sel = await selected(ctx);
+  const inEdit = sel !== null && [ctx.photo().uuid, ...variants.map((v) => v.uuid)].includes(sel);
+  ctx.record("A21.log", changed !== null, { deck_in_edit_false_ms: changed ? changed.t - tc : null, lightroom_selection_in_edit: inEdit });
   await ctx.jim("A21.jim", "Within about 2 seconds of your click, the Deck showed a line starting \"Target changed:\".");
   const tb = Date.now();
   await ctx.selectPhoto(); // the edit's photo again, so the Deck is back at the pick
-  await ctx.deck(tb, (e) => ui(e, "stage") === "awaiting_pick", 10 * SECOND);
+  await ctx.deck(tb, (e) => ui(e, "in_edit") === true, 10 * SECOND);
 
   const tk = Date.now();
   ctx.say("Click copy B's card in the Deck. (The check sees it; nothing to type here.)");
@@ -108,7 +112,8 @@ export async function e4(ctx: Ctx): Promise<void> {
   await ctx.jim("A17.click.jim", "Lightroom now shows copy B: the photo shows copy B's look, and the selected Filmstrip thumbnail is copy B (with a turned-page corner).");
 
   const tp = Date.now();
-  ctx.say("Click the Deck's sentence to give it the keyboard, then press 3, then Enter. (The check sees it; nothing to type here.)");
+  // After a pick Accept is the Deck's primary button, so a second Enter accepts copy C (run 1, 03:10:25 UTC).
+  ctx.say("Click the Deck's sentence to give it the keyboard, then press 3, then Enter once. Do not press Enter again: after the pick, Enter would accept. (The check sees it; nothing to type here.)");
   const pick = await ctx.deck(tp, (e) => ui(e, "click") === "hud_pick", CLICK_MS);
   const pointer = pick ? ctx.deckBetween(tp, pick.t + SECOND).some((e) => e.ev === "focus_lightroom" && String(e["why"]).startsWith("pointer_")) : true;
   ctx.record("A17.keys.log", pick !== null && ui(pick, "variant") === "C" && !pointer, { variant: pick ? ui(pick, "variant") : null, pointer });
@@ -127,21 +132,27 @@ export async function e4(ctx: Ctx): Promise<void> {
  */
 export async function removeCopies(ctx: Ctx): Promise<void> {
   const name = ctx.photo().filename;
-  for (let round = 0; round < 2 && ctx.state.copies.length > 0; round++) {
+  for (let round = 0; round < 3 && ctx.state.copies.length > 0; round++) {
     await enter([
-      `Remove the ${ctx.state.copies.length} copies of ${name}:`,
+      round === 0 ? `Remove the ${ctx.state.copies.length} copies of ${name}:` : `Lightroom still has ${ctx.state.copies.length} of the copies of ${name}. Do the steps again, and press Enter only after Remove:`,
       "  1. Press G for the Library Grid.",
       `  2. Click the first copy next to ${name} (each copy has a turned-page corner), then Ctrl-click the other copies. Do not select the original.`,
       "  3. Press Delete and click Remove.",
       "  4. Press D for Develop.",
     ].join("\n"));
-    const left: string[] = [];
-    for (const uuid of ctx.state.copies) {
-      const gone = await ctx.engine().client.request("get_settings", { photo_uuid: uuid }).then(() => false, (err: { code?: string }) => err?.code === "unknown_photo");
-      if (!gone) left.push(uuid);
+    // Looked up for up to 10 s: run 1 found all three still there twice, 35 s apart, though Jim removed them
+    // [handle: docs\reports\phase7\PHASE7.md "Observed", run 1, E4]; when they went is [unverified].
+    for (let i = 0; i < 10; i++) {
+      const left: string[] = [];
+      for (const uuid of ctx.state.copies) {
+        const gone = await ctx.engine().client.request("get_settings", { photo_uuid: uuid }).then(() => false, (err: { code?: string }) => err?.code === "unknown_photo");
+        if (!gone) left.push(uuid);
+      }
+      ctx.state.copies = left;
+      ctx.save();
+      if (left.length === 0) break;
+      await new Promise((r) => setTimeout(r, SECOND));
     }
-    ctx.state.copies = left;
-    ctx.save();
   }
   ctx.record("copies.removed", ctx.state.copies.length === 0, ctx.state.copies.length ? { left: ctx.state.copies } : undefined);
   // E4 stays unfinished while copies remain: the next run asks for them again before anything else in E4.

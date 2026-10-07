@@ -1,0 +1,516 @@
+{
+  "at": "2026-10-07T03:11:33.828Z",
+  "worked": false,
+  "lines": [
+    {
+      "line": "A1",
+      "result": "NOT RUN",
+      "failed": [],
+      "missing": [
+        "A1.chat.log",
+        "A1.chat.jim"
+      ]
+    },
+    {
+      "line": "A2",
+      "result": "YES",
+      "failed": [],
+      "missing": []
+    },
+    {
+      "line": "A3",
+      "result": "NOT RUN",
+      "failed": [],
+      "missing": [
+        "A3.jim",
+        "A3.log"
+      ]
+    },
+    {
+      "line": "A4",
+      "result": "YES",
+      "failed": [],
+      "missing": []
+    },
+    {
+      "line": "A5",
+      "result": "NO",
+      "failed": [
+        "A5.drag.log"
+      ],
+      "missing": [
+        "A5.fallback.log",
+        "A5.fallback.jim"
+      ]
+    },
+    {
+      "line": "A6",
+      "result": "NOT RUN",
+      "failed": [],
+      "missing": [
+        "A6.jim",
+        "A6.log"
+      ]
+    },
+    {
+      "line": "A7",
+      "result": "YES",
+      "failed": [],
+      "missing": []
+    },
+    {
+      "line": "A8",
+      "result": "NOT RUN",
+      "failed": [],
+      "missing": [
+        "A8.jim",
+        "A8.log"
+      ]
+    },
+    {
+      "line": "A9",
+      "result": "NO",
+      "failed": [
+        "A9.modes.jim",
+        "A9.f2.jim"
+      ],
+      "missing": []
+    },
+    {
+      "line": "A10",
+      "result": "NOT RUN",
+      "failed": [],
+      "missing": [
+        "A10.log",
+        "A10.jim"
+      ]
+    },
+    {
+      "line": "A11",
+      "result": "YES",
+      "failed": [],
+      "missing": []
+    },
+    {
+      "line": "A12",
+      "result": "YES",
+      "failed": [],
+      "missing": []
+    },
+    {
+      "line": "A13",
+      "result": "YES",
+      "failed": [],
+      "missing": []
+    },
+    {
+      "line": "A14",
+      "result": "YES",
+      "failed": [],
+      "missing": []
+    },
+    {
+      "line": "A15",
+      "result": "YES",
+      "failed": [],
+      "missing": []
+    },
+    {
+      "line": "A16",
+      "result": "YES",
+      "failed": [],
+      "missing": []
+    },
+    {
+      "line": "A17",
+      "result": "YES",
+      "failed": [],
+      "missing": []
+    },
+    {
+      "line": "A18",
+      "result": "YES",
+      "failed": [],
+      "missing": []
+    },
+    {
+      "line": "A19",
+      "result": "NO",
+      "failed": [
+        "A19.jim"
+      ],
+      "missing": []
+    },
+    {
+      "line": "A21",
+      "result": "NO",
+      "failed": [
+        "A21.jim",
+        "A21.log"
+      ],
+      "missing": []
+    },
+    {
+      "line": "A22",
+      "result": "YES",
+      "failed": [],
+      "missing": []
+    },
+    {
+      "line": "A23",
+      "result": "YES",
+      "failed": [],
+      "missing": []
+    },
+    {
+      "line": "A24",
+      "result": "NOT RUN",
+      "failed": [],
+      "missing": [
+        "A24.log",
+        "A24.jim",
+        "A24.abort.log"
+      ]
+    },
+    {
+      "line": "cleanup",
+      "result": "NO",
+      "failed": [
+        "copies.removed"
+      ],
+      "missing": [
+        "deck.restored",
+        "back.E4",
+        "back.E5",
+        "back.C1",
+        "back.C2",
+        "back.F1",
+        "back.F2"
+      ]
+    }
+  ],
+  "budgets": [
+    {
+      "id": "cold_start",
+      "what": "cold start, Deck process created to first paint (max)",
+      "target": 1500,
+      "unit": "ms",
+      "value": 501.701171875,
+      "n": 1,
+      "complete": true,
+      "ok": true
+    },
+    {
+      "id": "warm_show",
+      "what": "warm show, an edit's first state to shown (p95)",
+      "target": 150,
+      "unit": "ms",
+      "value": 15.4140625,
+      "n": 3,
+      "complete": true,
+      "ok": true
+    },
+    {
+      "id": "update_paint",
+      "what": "state update to paint, while shown (p95)",
+      "target": 100,
+      "unit": "ms",
+      "value": 13,
+      "n": 223,
+      "complete": true,
+      "ok": true
+    },
+    {
+      "id": "click_action",
+      "what": "click to userAction in the engine (p95)",
+      "target": 50,
+      "unit": "ms",
+      "value": 1,
+      "n": 6,
+      "complete": true,
+      "ok": true
+    },
+    {
+      "id": "memory",
+      "what": "idle memory, the Deck's process tree, hidden",
+      "target": 150,
+      "unit": "MiB",
+      "value": 116.296875,
+      "n": 1,
+      "complete": true,
+      "ok": true
+    },
+    {
+      "id": "cpu_hidden",
+      "what": "CPU hidden, one core",
+      "target": 0.5,
+      "unit": "%",
+      "value": 0.41665277824072533,
+      "n": 1,
+      "complete": true,
+      "ok": true
+    },
+    {
+      "id": "cpu_visible",
+      "what": "CPU visible, one core",
+      "target": 2,
+      "unit": "%",
+      "value": 0.4166041760402606,
+      "n": 1,
+      "complete": true,
+      "ok": true
+    }
+  ],
+  "headline": "Phase 7 acceptance: FAILED (A1 NOT RUN, A3 NOT RUN, A5 NO, A6 NOT RUN, A8 NOT RUN, A9 NO, A10 NOT RUN, A19 NO, A21 NO, A24 NOT RUN, cleanup NO, E4 error)",
+  "timings": {
+    "cold_start": [
+      501.701171875
+    ],
+    "warm_show": [
+      14.868896484375,
+      15.4140625,
+      10.745361328125
+    ],
+    "update_paint": [
+      1,
+      0,
+      2,
+      1,
+      10,
+      1,
+      1,
+      11,
+      18,
+      2,
+      1,
+      0,
+      2,
+      1,
+      1,
+      2,
+      0,
+      1,
+      8,
+      8,
+      0,
+      0,
+      0,
+      1,
+      0,
+      1,
+      4,
+      1,
+      3,
+      3,
+      1,
+      1,
+      11,
+      0,
+      18,
+      1,
+      13,
+      6,
+      10,
+      9,
+      7,
+      7,
+      1,
+      0,
+      1,
+      1,
+      0,
+      1,
+      0,
+      12,
+      0,
+      5,
+      4,
+      3,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      7,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      2,
+      14,
+      15,
+      1,
+      2,
+      1,
+      0,
+      0,
+      1,
+      1,
+      1,
+      14,
+      1,
+      0,
+      0,
+      1,
+      9,
+      8,
+      0,
+      11,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      9,
+      0,
+      9,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      0,
+      12,
+      1,
+      11,
+      1,
+      0,
+      11,
+      12,
+      8,
+      1,
+      2,
+      2,
+      3,
+      12,
+      1,
+      1,
+      5,
+      1,
+      0,
+      1,
+      1,
+      0,
+      1,
+      2,
+      4,
+      2,
+      1,
+      5,
+      1,
+      1,
+      7,
+      1,
+      2,
+      1,
+      1,
+      2,
+      12,
+      1,
+      1,
+      15,
+      13,
+      2,
+      2,
+      2,
+      2,
+      1,
+      9,
+      2,
+      4,
+      1,
+      2,
+      2,
+      15,
+      3,
+      15,
+      13,
+      5,
+      2,
+      14,
+      2,
+      3,
+      2,
+      7,
+      3,
+      1,
+      1,
+      2,
+      2,
+      13,
+      5,
+      2,
+      8,
+      1,
+      2,
+      13,
+      1,
+      3,
+      4,
+      1,
+      2,
+      6,
+      1,
+      3,
+      15,
+      1,
+      1,
+      2,
+      10,
+      3,
+      2,
+      1,
+      10,
+      3,
+      11,
+      2,
+      20,
+      1,
+      1,
+      2,
+      4,
+      5,
+      1,
+      2,
+      2,
+      7,
+      11,
+      5,
+      4
+    ],
+    "click_action": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ]
+  },
+  "errors": {
+    "E4": "3 copies of 20260907-_OZ80099.NEF are still in the catalog"
+  },
+  "done": [
+    "E1",
+    "E2",
+    "E3"
+  ]
+}

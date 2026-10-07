@@ -1,6 +1,6 @@
 // The Phase 7 check's numbers (row 6; spec docs\hud\lrc-avg-hud-spec-v2.md section 9): the Deck's logs
 // across every Deck process since the check began (%TEMP%\LrC-AVG\hud\hud_<pid>_<start>.jsonl,
-// hud\src-tauri\src\log.rs; hud 0.3.1 adds `got` and `painted`, hud\ui\deck.ts), the engine's session
+// hud\src-tauri\src\log.rs; hud 0.3.1 adds `got` and `painted`, 0.3.2 `in_edit`, hud\ui\deck.ts), the engine's session
 // logs (hud_events), and memory and CPU of the Deck's process tree, sampled as spike S9 did
 // (spikes\S9\auto.ts `sample`, through spikes\S9\win32.ts).
 // Where each number starts and stops:

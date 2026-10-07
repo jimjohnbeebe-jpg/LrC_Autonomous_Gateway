@@ -1,0 +1,386 @@
+{
+  "version": 1,
+  "run": "2026-10-07T02-45-32-800Z",
+  "started": 1791341132801,
+  "photo": {
+    "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+    "filename": "20260907-_OZ80099.NEF",
+    "snapshot_id": "90DC40BD-659E-4B53-A5C1-62DCA9B504B1",
+    "start": {
+      "exposure": 0.33,
+      "contrast": 0,
+      "highlights": -21,
+      "shadows": 10,
+      "whites": 0,
+      "blacks": 0,
+      "texture": 4,
+      "clarity": 2,
+      "dehaze": 0,
+      "vibrance": 0,
+      "saturation": 0,
+      "temperature": 4900,
+      "tint": 11,
+      "grading.shadows.hue": 0,
+      "grading.shadows.sat": 0,
+      "grading.shadows.lum": 0,
+      "grading.midtones.hue": 0,
+      "grading.midtones.sat": 0,
+      "grading.midtones.lum": 0,
+      "grading.highlights.hue": 0,
+      "grading.highlights.sat": 0,
+      "grading.highlights.lum": 0,
+      "grading.global.hue": 0,
+      "grading.global.sat": 0,
+      "grading.global.lum": 0,
+      "grading.blending": 50,
+      "grading.balance": 0,
+      "sharpening.amount": 24,
+      "sharpening.radius": 2,
+      "sharpening.detail": 25,
+      "sharpening.masking": 0,
+      "noise.luminance": 48,
+      "noise.color": 25,
+      "lens.corrections_enable": true,
+      "lens.profile_enable": 1,
+      "lens.ca_remove": 1,
+      "tone_curve.master": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "tone_curve.red": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "tone_curve.green": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "tone_curve.blue": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "hsl.red.hue": 0,
+      "hsl.red.sat": 0,
+      "hsl.red.lum": 0,
+      "hsl.orange.hue": 0,
+      "hsl.orange.sat": 0,
+      "hsl.orange.lum": 0,
+      "hsl.yellow.hue": 0,
+      "hsl.yellow.sat": 0,
+      "hsl.yellow.lum": 0,
+      "hsl.green.hue": 0,
+      "hsl.green.sat": 0,
+      "hsl.green.lum": 0,
+      "hsl.aqua.hue": 0,
+      "hsl.aqua.sat": 0,
+      "hsl.aqua.lum": 0,
+      "hsl.blue.hue": 0,
+      "hsl.blue.sat": 0,
+      "hsl.blue.lum": 0,
+      "hsl.purple.hue": 0,
+      "hsl.purple.sat": 0,
+      "hsl.purple.lum": 0,
+      "hsl.magenta.hue": 0,
+      "hsl.magenta.sat": 0,
+      "hsl.magenta.lum": 0,
+      "camera_profile": "Camera Neutral"
+    }
+  },
+  "done": [
+    "E1",
+    "E2",
+    "E3"
+  ],
+  "answers": {
+    "A1.e1.shown": {
+      "ok": true,
+      "at": "2026-10-07T02:46:25.006Z",
+      "detail": {
+        "ms": 704.393798828125
+      }
+    },
+    "A1.e1.classic": {
+      "ok": true,
+      "at": "2026-10-07T02:46:27.916Z"
+    },
+    "A1.e1.jim": {
+      "ok": true,
+      "at": "2026-10-07T02:46:45.123Z"
+    },
+    "A2.jim": {
+      "ok": true,
+      "at": "2026-10-07T02:46:52.876Z"
+    },
+    "A4.log": {
+      "ok": true,
+      "at": "2026-10-07T02:47:20.454Z",
+      "detail": {
+        "passes": 2
+      }
+    },
+    "A4.jim": {
+      "ok": true,
+      "at": "2026-10-07T02:47:32.927Z"
+    },
+    "A2.log": {
+      "ok": true,
+      "at": "2026-10-07T02:47:32.930Z",
+      "detail": {
+        "deck_foreground": 0
+      }
+    },
+    "A19.jim": {
+      "ok": false,
+      "at": "2026-10-07T02:55:14.936Z"
+    },
+    "A22.jim": {
+      "ok": true,
+      "at": "2026-10-07T02:55:32.901Z"
+    },
+    "A23.jim": {
+      "ok": true,
+      "at": "2026-10-07T02:55:41.666Z"
+    },
+    "A12.ended": {
+      "ok": true,
+      "at": "2026-10-07T02:55:52.245Z",
+      "detail": {
+        "outcome": "accept",
+        "source": "hud"
+      }
+    },
+    "A12.hid": {
+      "ok": true,
+      "at": "2026-10-07T02:56:02.685Z",
+      "detail": {
+        "ms": 10496.2236328125
+      }
+    },
+    "A12.jim": {
+      "ok": true,
+      "at": "2026-10-07T02:56:12.905Z"
+    },
+    "A12.hid.jim": {
+      "ok": true,
+      "at": "2026-10-07T02:56:15.368Z"
+    },
+    "back.E1": {
+      "ok": true,
+      "at": "2026-10-07T02:57:15.824Z"
+    },
+    "A7.move.jim": {
+      "ok": true,
+      "at": "2026-10-07T02:58:26.720Z"
+    },
+    "A7.min.log": {
+      "ok": true,
+      "at": "2026-10-07T02:58:39.273Z",
+      "detail": {
+        "hide": "lightroom_minimised",
+        "show": "lightroom_restored"
+      }
+    },
+    "A7.min.jim": {
+      "ok": true,
+      "at": "2026-10-07T02:58:42.004Z"
+    },
+    "A9.modes.jim": {
+      "ok": false,
+      "at": "2026-10-07T02:59:08.974Z"
+    },
+    "A9.f.jim": {
+      "ok": true,
+      "at": "2026-10-07T02:59:22.270Z"
+    },
+    "A9.f2.jim": {
+      "ok": false,
+      "at": "2026-10-07T03:00:08.486Z"
+    },
+    "A5.drag.log": {
+      "ok": false,
+      "at": "2026-10-07T03:00:32.501Z"
+    },
+    "A16.log": {
+      "ok": true,
+      "at": "2026-10-07T03:00:46.664Z",
+      "detail": {
+        "click_to_answer_ms": 5.605224609375
+      }
+    },
+    "A13.back": {
+      "ok": true,
+      "at": "2026-10-07T03:00:46.720Z",
+      "detail": {
+        "outcome": "aborted",
+        "differing": []
+      }
+    },
+    "A16.jim": {
+      "ok": true,
+      "at": "2026-10-07T03:00:50.874Z"
+    },
+    "A13.jim": {
+      "ok": true,
+      "at": "2026-10-07T03:00:53.930Z"
+    },
+    "A13.snapshot.jim": {
+      "ok": true,
+      "at": "2026-10-07T03:00:59.671Z"
+    },
+    "back.E2": {
+      "ok": true,
+      "at": "2026-10-07T03:00:59.678Z"
+    },
+    "A5.there.log": {
+      "ok": true,
+      "at": "2026-10-07T03:02:19.743Z",
+      "detail": {
+        "saved": {
+          "bottom": 2088,
+          "left": 1020,
+          "width": 1800
+        },
+        "got": [
+          1020,
+          1872,
+          1800,
+          216
+        ]
+      }
+    },
+    "A5.there.jim": {
+      "ok": true,
+      "at": "2026-10-07T03:02:32.634Z"
+    },
+    "A11.jim": {
+      "ok": true,
+      "at": "2026-10-07T03:02:48.860Z"
+    },
+    "A11.enter.log": {
+      "ok": true,
+      "at": "2026-10-07T03:02:57.967Z",
+      "detail": {
+        "pointer": false
+      }
+    },
+    "A14.arm.jim": {
+      "ok": true,
+      "at": "2026-10-07T03:03:26.896Z"
+    },
+    "A15.open.log": {
+      "ok": true,
+      "at": "2026-10-07T03:03:44.051Z"
+    },
+    "A15.jim": {
+      "ok": true,
+      "at": "2026-10-07T03:03:57.981Z"
+    },
+    "A14.abort.log": {
+      "ok": true,
+      "at": "2026-10-07T03:04:05.104Z",
+      "detail": {
+        "outcome": "aborted"
+      }
+    },
+    "A14.abort.jim": {
+      "ok": true,
+      "at": "2026-10-07T03:04:11.639Z"
+    },
+    "back.E3": {
+      "ok": true,
+      "at": "2026-10-07T03:04:24.806Z"
+    },
+    "A18.jim": {
+      "ok": true,
+      "at": "2026-10-07T03:06:39.722Z"
+    },
+    "A17.cards.jim": {
+      "ok": true,
+      "at": "2026-10-07T03:06:46.221Z"
+    },
+    "A21.log": {
+      "ok": false,
+      "at": "2026-10-07T03:09:46.349Z"
+    },
+    "A21.jim": {
+      "ok": false,
+      "at": "2026-10-07T03:09:57.491Z"
+    },
+    "A17.click.log": {
+      "ok": true,
+      "at": "2026-10-07T03:10:01.847Z"
+    },
+    "A17.click.jim": {
+      "ok": true,
+      "at": "2026-10-07T03:10:10.470Z"
+    },
+    "A17.keys.log": {
+      "ok": true,
+      "at": "2026-10-07T03:10:21.295Z",
+      "detail": {
+        "variant": "C",
+        "pointer": false
+      }
+    },
+    "A17.picked.log": {
+      "ok": true,
+      "at": "2026-10-07T03:10:21.301Z"
+    },
+    "A17.picked.jim": {
+      "ok": true,
+      "at": "2026-10-07T03:10:30.832Z"
+    },
+    "copies.removed": {
+      "ok": false,
+      "at": "2026-10-07T03:11:33.628Z",
+      "detail": {
+        "left": [
+          "DA7F6B27-6A1C-43DB-BB68-74CAF516FD71",
+          "24CEAA01-1784-4D13-9E35-891BE35C2DB3",
+          "5912339C-A06E-4C2D-B23B-91C4899AF18D"
+        ]
+      }
+    }
+  },
+  "copies": [
+    "DA7F6B27-6A1C-43DB-BB68-74CAF516FD71",
+    "24CEAA01-1784-4D13-9E35-891BE35C2DB3",
+    "5912339C-A06E-4C2D-B23B-91C4899AF18D"
+  ],
+  "renamed": false,
+  "mode_changed": false,
+  "spot_backup": null,
+  "cold": [
+    {
+      "pid": 11208,
+      "created": 1791341156553.2988
+    }
+  ],
+  "samples": {
+    "hidden": {
+      "window_ms": 60002,
+      "private_mib": 116.296875,
+      "cpu_pct": 0.41665277824072533,
+      "complete": true,
+      "procs": 7
+    },
+    "visible": {
+      "window_ms": 60009,
+      "private_mib": 113.13671875,
+      "cpu_pct": 0.4166041760402606,
+      "complete": true,
+      "procs": 7
+    }
+  },
+  "errors": {
+    "E4": "3 copies of 20260907-_OZ80099.NEF are still in the catalog"
+  }
+}

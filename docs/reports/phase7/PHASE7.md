@@ -1,7 +1,7 @@
 ---
 report: AVG-P7 Phase 7 acceptance on the Deck
 phase: 7
-status: template
+status: observed
 authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-10-06, branch phase-7/check (vault PHASE7_PLAN row 6). Observed: Jim's run and answers. Verdict: Jim."
 date: 2026-10-06
 ---
@@ -41,12 +41,12 @@ The plan for this row [stated: Jim, 2026-10-06, "go", to the recommendations]:
   - Edit 4's copies are removed by Jim, with Phase 5's steps (`docs\reports\phase5\PHASE5.md` "Steps for Jim", step 14), because the bridge has no command that deletes a photo. The check confirms each removal by uuid (line `copies.removed`).
 - **Steps and resuming.**
   - Steps: edits E1-E5, chats C1-C2, F1 (no Deck), F2 (Lightroom quits).
-  - The check resumes where it stopped: finished steps are skipped. `npm run phase7:check -- --new` starts over, and `npm run phase7:check -- --redo E3` runs one step again.
+  - The check resumes where it stopped: finished steps are skipped. `npm run phase7:check -- --new` starts over, and `npm run phase7:check -- --redo E1,E2,E3` marks those steps unfinished, then runs every unfinished step in order.
   - F2 runs only when every other step has finished, because nothing can be put back after Lightroom quits.
   - A run stopped with Ctrl+C, or killed, puts back the photo, the Deck's program name and its `window.json` first: at its end, or else at the next start (also before `--new` starts over). On Ctrl+C the check starts no new edit call and waits for the one in flight before it puts the photo back.
   - The settings page's Mode is read (`get_prefs`) before every edit. If it is not what the edit needs, the check asks Jim to set it. After E3, or after a run stopped during E3, it asks for Autonomous again until it reads it.
   - E4 stays unfinished while any of its copies are still in the catalog. The next run asks for them first, before it makes new ones.
-- **The Deck.** The check installs Deck 0.3.1 at its start. The Deck stays installed.
+- **The Deck.** The check installs Deck 0.3.2 at its start. The Deck stays installed.
 - **Logs.**
   - The Deck's logs: `%TEMP%\LrC-AVG\hud\hud_<pid>_<start>.jsonl`.
   - The plugin's log, `%TEMP%\LrC-AVG\bridge.log`, says whether the classic window opened (`hud: shown`).
@@ -87,7 +87,7 @@ Allow about 60 minutes [inference: five scripted edits with two one-minute measu
    npm run phase7:check
    ```
 
-   It builds, installs the Deck 0.3.1 and says `The check's photo: 20260907-_OZ80093.NEF.`
+   It builds, installs the Deck 0.3.2 and says `The check's photo: 20260907-_OZ80093.NEF.`
 4. Follow the window, step by step. Each instruction ends with `Press Enter when done.` or `Type y or n, then Enter:`, or says `(The check sees it; nothing to type here.)`. Answer y only when what the question describes happened.
 5. **Chat 1.** When the window says `Chat 1`, do the five numbered steps it prints in Claude Desktop. The chat sentence is `Tune the active photo for golden hour landscape.`. Afterwards, leave Claude Desktop open while the check waits for the bridge (up to 2½ minutes).
 6. **Chat 2.** Open a new chat with the same sentence. As soon as the Deck appears, quit Claude Desktop from its tray icon (right-click > Quit), then answer the question.
@@ -147,7 +147,45 @@ Allow about 60 minutes [inference: five scripted edits with two one-minute measu
 
 ## Observed (Jim)
 
-*(Jim's run: the check's output and answers, collected by Claude Code into `docs\reports\phase7\P7\`.)*
+### Run 1 (2026-10-07 02:45-03:11 UTC): stopped in E4
+
+Evidence: `docs\reports\phase7\P7\run1\`. It holds the state, the summary, the plugin's log, the Deck's log `deck\hud_11208_1791341156930.jsonl`, the session logs and the engine's tool log. Photo: `20260907-_OZ80099.NEF`. Deck 0.3.1, plugin 0.18.0, engine 0.20.0. The analysis of the logs is Claude Code's.
+
+- **E1-E3 finished.** E4 stopped with `3 copies of 20260907-_OZ80099.NEF are still in the catalog`.
+- **Jim's NOs:** A19, A9 (screen modes), A9 (F with two monitors) and A21. The log checks A5 drag, A21 and copies removed were also NO.
+- **Steps not reached:** E5, C1, C2, F1 and F2.
+- **Put back:** the cleanup recorded no error, and the Mode was read back at Autonomous after E3.
+
+**Jim's answers, after the run** [stated: Jim, 2026-10-07]:
+1. "Copies are gone, that worked as expected. The Delete > Remove step worked fine."
+2. "Dragging worked."
+3. A19: "there was only one slider visible, the 'Vibrance' slider."
+4. A9: the Deck was not visible over Lightroom "in the full screen mode (shift-f 3rd time)."
+5. A second Enter after 3 and Enter: "Yes."
+6. F with two monitors: "moved LrC to second monitor, then pressed F, actual behaviour was: Deck stayed on monitor 1, then when I pressed F for full screen it disappeared behind the image. So the deck hides behind the F full screen image both when LrC is on the same monitor or the second monitor."
+
+**What the logs show:**
+- **A19.** E1 asked A19 after the converging passes, when the Deck's rows showed only the last pass's change, Vibrance. The rows are the shown pass's changes (spec 7; the whole edit is E5, deferred). This was the check's mistake: the question now comes right after pass 1.
+- **A9, F.** F's window (`NonActivateWindow`) covered 0,0, 3840×2160 in every F press. That includes 02:59:36 UTC, when Lightroom's main window was on the second monitor (x = 3866) [handle: the Deck log's `windows` lines]. The Deck stayed on the first monitor, so it went under F's image, as rule 1 says (spec 2.7 A9). The step asked Jim to drag the Deck to the other monitor. It now says to move the Deck rather than Lightroom, to the monitor without F's image.
+- **A9, Shift+F full screen.** No foreground change is logged while Jim pressed Shift+F (02:58:50-02:59:12 UTC), so the Deck's rule 1 was never applied again. Why Lightroom's full-screen window covered the Deck is [unverified]. Deck 0.3.2 re-applies rule 1 on every 250 ms tick while Lightroom's main window is in front, and logs `on_top` each time it has to take the top back (`hud\src-tauri\src\window.rs` `keep_on_top`).
+- **A21.** The Deck got four new states while Jim had another photo selected (seq 83-86, 03:06:57-03:08:04 UTC). The check waited for a stage `target_changed` that the Deck never gets: it draws "Target changed" from the state's `selection` (`hud\ui\view.ts` `bandOf`). The Deck's own drawing code shows the line in the pick state (`P7\run1\render-pick-target-changed-1800.png`; headless Edge, the harness in `docs\reports\phase7\deck-ui\renders.txt` plus one state with `selection.in_edit: false`). Why Jim saw no line is [unverified]: run 1 did not log what selection the engine sent. Deck 0.3.2 logs `in_edit` with each state, and the check also reads Lightroom's selection itself.
+- **A5 drag.** No move, resize or `saved` line in the Deck's log during E2. The spot stayed 1020, 2088, 1800 px wide at E3's start. The same Deck saved Jim's drags in row 4b (35 `saved` lines, `docs\reports\phase7\deck-shell\`). E2 and E3 are asked again.
+- **E4's end.** The Deck sent `hud_pick` C at 03:10:21 UTC, then `hud_accept` at 03:10:25 from the keyboard. After the pick, Accept is the Deck's primary button. Jim confirmed the second Enter, so the edit was accepted on copy C. The step now says to press Enter once.
+- **Copies.** Lightroom answered both lookups of the three copies (plugin log 20:10:58 and 20:11:33 local, the same as 03:10:58 and 03:11:33 UTC). By then E4's edit had been accepted on copy C. Jim removed the copies; when they went relative to the lookups is [unverified]. The check now looks for up to 10 s after each Enter, asks up to three times, and says how many are left.
+
+**Budgets, run 1:** all measured and within target.
+
+| Budget | Measured | n |
+|---|---|---|
+| Cold start | 502 ms | 1 |
+| Warm show p95 | 15 ms | 3 |
+| Update to paint p95 | 13 ms | 223 |
+| Click to userAction p95 | 1 ms | 6 |
+| Memory, hidden | 116 MiB | 1 |
+| CPU, hidden | 0.42 % | 1 |
+| CPU, visible | 0.42 % | 1 |
+
+**Next** [stated: Jim, 2026-10-07, "Go", to the fix plan]: branch `fix/phase7-check-run1`, which makes Deck 0.3.2 and fixes the check. After it merges, Jim runs `npm run phase7:check -- --redo E1,E2,E3`. That asks E1-E3 again, then goes on from E4.
 
 ## Numbers
 

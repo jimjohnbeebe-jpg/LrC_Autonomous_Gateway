@@ -117,7 +117,9 @@ static LOSING: AtomicBool = AtomicBool::new(false);
 fn keep_on_top(main: isize, cover: isize) {
     let fg = unsafe { GetForegroundWindow() };
     let shown = unsafe { IsWindowVisible(deck()).as_bool() };
-    if main == 0 || cover != 0 || fg.0 as isize != main || !shown {
+    // A cover counts only on the Deck's own monitor, as in topmost_for (Greptile, PR #92).
+    let covered = cover != 0 && monitors::same_monitor(hwnd(cover), deck());
+    if main == 0 || covered || fg.0 as isize != main || !shown {
         return;
     }
     let topmost = |h: HWND| unsafe { GetWindowLongPtrW(h, GWL_EXSTYLE) } & WS_EX_TOPMOST.0 as isize != 0;

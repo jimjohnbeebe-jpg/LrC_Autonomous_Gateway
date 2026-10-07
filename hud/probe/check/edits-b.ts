@@ -142,10 +142,13 @@ export async function removeCopies(ctx: Ctx): Promise<void> {
     ].join("\n"));
     // Looked up for up to 10 s: run 1 found all three still there twice, 35 s apart, though Jim removed them
     // [handle: docs\reports\phase7\PHASE7.md "Observed", run 1, E4]; when they went is [unverified].
-    for (let i = 0; i < 10; i++) {
+    // A deadline, not a count: each lookup gets only the time left, and a failed one keeps the copy (Greptile, PR #92).
+    const deadline = Date.now() + 10 * SECOND;
+    while (Date.now() < deadline) {
       const left: string[] = [];
       for (const uuid of ctx.state.copies) {
-        const gone = await ctx.engine().client.request("get_settings", { photo_uuid: uuid }).then(() => false, (err: { code?: string }) => err?.code === "unknown_photo");
+        const timeoutMs = Math.max(1000, deadline - Date.now());
+        const gone = await ctx.engine().client.request("get_settings", { photo_uuid: uuid }, { timeoutMs }).then(() => false, (err: { code?: string }) => err?.code === "unknown_photo");
         if (!gone) left.push(uuid);
       }
       ctx.state.copies = left;

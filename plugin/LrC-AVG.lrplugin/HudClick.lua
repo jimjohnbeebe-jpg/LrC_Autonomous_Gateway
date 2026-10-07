@@ -11,6 +11,7 @@ local LrDialogs = import 'LrDialogs'
 local LrTasks = import 'LrTasks'
 local LrUUID = import 'LrUUID'
 
+local Develop = require 'Develop'
 local Events = require 'Events'
 local Gate = require 'Gate'
 local HudState = require 'HudState'
@@ -127,6 +128,10 @@ local function putBackTo(pb, sid)
         end
     end)
     if not known then return nil, PB_REASON.no_snapshot, "no snapshot " .. pb.snapshot_id end
+    -- A snapshot applies only in Develop [inference, Develop.lua toDevelop]. The switch can wait up to
+    -- Develop.MODULE_WAIT_SECONDS, so the newer-edit and AI-mask checks run after it (Greptile, PR #93).
+    local notDevelop = Develop.toDevelop()
+    if notDevelop then return nil, PB_REASON.not_in_develop, notDevelop.message end
     if not sameEdit(sid) then return nil, PB_REASON.newer, "a newer edit began" end
     local refused = Pending.refusal(catalog, photo, pb.photo_uuid)
     if refused then return nil, PB_REASON.computing, refused.message end

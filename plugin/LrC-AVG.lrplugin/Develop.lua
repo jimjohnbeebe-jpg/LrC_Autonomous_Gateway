@@ -18,10 +18,12 @@
 -- (engine\src\params\map.ts); this side does not second-guess key names.
 
 local LrApplication = import 'LrApplication'
+local LrApplicationView = import 'LrApplicationView'
 local LrDate = import 'LrDate'
 local LrTasks = import 'LrTasks'
 
 local Gate = require 'Gate'
+local Log = require 'Log'
 local Pending = require 'Pending'
 local Photos = require 'Photos'
 
@@ -185,9 +187,47 @@ function Develop.createSnapshot(payload)
     return { uuid = uuid, snapshot_id = snap.snapshotID, id_global = snap.id_global, name = name, same_name_count = #matches }
 end
 
+-- applyDevelopSnapshot does nothing while Lightroom is in Library [inference]: in Jim's Phase 7 check
+-- run 2 the applies with Develop logged around them worked, and those after Library was logged left
+-- the photo as it was (E5's revert answered in 3.9 ms with 6 settings differing) [handle:
+-- docs\reports\phase7\snapshot-library\timeline.txt]. So Lightroom goes to Develop first and stays
+-- there (fix/snapshot-develop, decisions D1 A, D2 A [stated: Jim, 2026-10-07, "go with
+-- recommendations"]). switchToModule and getCurrentModuleName are from the SDK reference [handle:
+-- https://lrc.mcor.dev/modules/LrApplicationView.html, read 2026-10-03]; MaskProbe.lua switches the
+-- same way. The wait is checked against a fake SDK [handle: docs\reports\phase7\snapshot-library\smoke.txt];
+-- in Lightroom it is [unverified] until Jim's re-run of E5 and C1, and the apply on a photo Develop
+-- does not show stays [unverified]. Runs in a task, outside any gate. Returns nil, or an error table.
+Develop.MODULE_WAIT_SECONDS = 5
+local MODULE_POLL_SECONDS = 0.25
+
+local function moduleName()
+    local ok, name = LrTasks.pcall(LrApplicationView.getCurrentModuleName)
+    return ok and name or nil
+end
+
+function Develop.toDevelop()
+    local before = moduleName()
+    if before == "develop" then return nil end
+    LrTasks.pcall(LrApplicationView.switchToModule, "develop")
+    local t0 = LrDate.currentTime()
+    while moduleName() ~= "develop" do
+        if LrDate.currentTime() - t0 >= Develop.MODULE_WAIT_SECONDS then
+            Log.info("develop: Lightroom stayed in " .. tostring(moduleName()) .. ", not switched to develop")
+            return { code = "not_in_develop", recoverable = true,
+                message = "Lightroom did not switch to Develop, and a snapshot only applies there: press D in Lightroom, then try again" }
+        end
+        LrTasks.sleep(MODULE_POLL_SECONDS)
+    end
+    Log.info(string.format("develop: switched from %s to develop in %d ms", tostring(before), math.floor((LrDate.currentTime() - t0) * 1000)))
+    return nil
+end
+
 function Develop.applySnapshot(payload)
     local id = payload.snapshot_id
     if type(id) ~= "string" or id == "" then return fail("bad_request", "snapshot_id must be a non-empty string") end
+    -- First: the switch can wait, and the target and AI-mask checks (writeTarget) run after it (Greptile, PR #93).
+    local notDevelop = Develop.toDevelop()
+    if notDevelop then return nil, notDevelop end
     local catalog, photo, uuid, err = writeTarget(payload)
     if err then return nil, err end
     if #findSnapshots(catalog, photo, "snapshotID", id) == 0 then

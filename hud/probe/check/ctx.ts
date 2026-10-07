@@ -110,7 +110,7 @@ export class Ctx {
     const e = await startEngine(this.dir, () => true, () => {}, "phase7-check");
     this.engineNow = e;
     const v = e.client.hello()?.plugin_version;
-    if (!pluginVersionAtLeast(v, "0.18.0")) throw new Error(`Lightroom runs plugin ${v ?? "unknown"}, not 0.18.0 or later: File > Plug-in Manager > LrC-AVG > Reload Plug-in, then run this again.`);
+    if (!pluginVersionAtLeast(v, "0.18.1")) throw new Error(`Lightroom runs plugin ${v ?? "unknown"}, not 0.18.1 or later (a snapshot applies only in Develop, fix/snapshot-develop): File > Plug-in Manager > LrC-AVG > Reload Plug-in, then run this again.`);
     return true;
   }
 

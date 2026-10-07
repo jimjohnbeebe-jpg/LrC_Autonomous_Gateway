@@ -104,6 +104,28 @@ Allow about 60 minutes [inference: five scripted edits with two one-minute measu
 - If you need to stop, press Ctrl+C: the check puts things back and saves what it has. Run the command again later to go on.
 - If the last lines say `put_back` in an error, tell Claude Code before you edit that photo.
 
+### Steps for Jim: re-run of E5 and C1 (after `fix/snapshot-develop`)
+
+Run 2's put-backs after E5 and C1 left the photo different while Lightroom was in Library [handle: `docs\reports\phase7\snapshot-library\timeline.txt`]. Plugin 0.18.1 switches Lightroom to Develop before it applies a snapshot. This re-run starts in Library on purpose, so the put-back after E5 has to make that switch. Allow about 15 minutes [inference: E5 plus one chat with up to 2½ minutes' wait].
+
+1. In Lightroom: File > Plug-in Manager > LrC-AVG > **Reload Plug-in**, then **Done**.
+2. Quit Claude Desktop: right-click the Claude icon in the Windows system tray > **Quit**.
+3. In Lightroom, press **G** (Library Grid), then in the Catalog panel on the left click **All Photographs**. Leave Lightroom in Library. The check selects its photo, `20260907-_OZ80099.NEF`, by itself.
+4. In VS Code's PowerShell terminal, at `D:\Developer\LrC_Autonomous_Gateway`, run:
+
+   ```powershell
+   npm run phase7:check -- --redo E5,C1
+   ```
+
+5. Follow the window as in the steps above. At the end of E5, Lightroom switches to Develop by itself: that is the fix at work.
+6. **Chat 1.** Do the five numbered steps the window prints in Claude Desktop, then leave Claude Desktop open while the check waits for the bridge.
+7. The last lines say `Phase 7 acceptance: WORKED` or `FAILED (…)`. Tell Claude Code "done".
+
+If something goes wrong:
+- If it says `not 0.18.1 or later`, do step 1 again and run the command again.
+- If an error line names `select_photo` or the photo, do step 3 again and run the command again.
+- Any other error: tell Claude Code the error line before you run it again.
+
 ## Pre-run findings (Claude Code)
 
 1. **Tests and builds** (2026-10-06, branch `phase-7/check`):

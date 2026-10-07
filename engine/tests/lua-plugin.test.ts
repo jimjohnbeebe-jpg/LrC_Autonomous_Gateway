@@ -201,7 +201,10 @@ describe("lua: LrC-AVG.lrplugin", () => {
     expect(masks).toMatch(/local guard = Pending\.start\(found\.uuid, rec\.request_id, payload\.watch\)\s+LrTasks\.startAsyncTask/);
     expect(masks).toMatch(/if rec\.state == "" or rec\.state == "" then Pending\.clear\(found\.uuid, guard\) end/);
     expect(masks).toMatch(/local refused = Pending\.refusal\(ctx\.catalog, ctx\.photo, ctx\.uuid\)\s+if refused then return nil, refused end\s+MaskProbe\.openMasking\(ctx\)/);
-    expect(read("HudClick.lua")).toMatch(/local refused = Pending\.refusal\(catalog, photo, pb\.photo_uuid\)\s+if refused then return nil, PB_REASON\.computing, refused\.message end\s+local stale = false\s+local gated, busy = Gate\.write/);
+    expect(read("HudClick.lua")).toMatch(/local notDevelop = Develop\.toDevelop\(\)\s+if notDevelop then return nil, PB_REASON\.not_in_develop, notDevelop\.message end\s+if not sameEdit\(sid\) then return nil, PB_REASON\.newer, "" end\s+local refused = Pending\.refusal\(catalog, photo, pb\.photo_uuid\)\s+if refused then return nil, PB_REASON\.computing, refused\.message end\s+local stale = false\s+local gated, busy = Gate\.write/);
+    // Plugin 0.18.1 (fix/snapshot-develop): a snapshot applies only in Develop [inference, Develop.lua toDevelop], so both applies switch
+    // there first, outside the gate, and every check runs after the switch's wait (Greptile, PR #93).
+    expect(develop).toMatch(/function Develop\.applySnapshot\(payload\)\s+local id = payload\.snapshot_id\s+if [^\n]*\s+local notDevelop = Develop\.toDevelop\(\)\s+if notDevelop then return nil, notDevelop end\s+local catalog, photo, uuid, err = writeTarget\(payload\)/);
     // No SDK key in the plugin (rule 03): the guard reads the fields `watch` names, the engine's aiWatch.
     const pending = readFileSync(path.join(avgPlugin, "Pending.lua"), "utf8");
     expect(pending).not.toMatch(/"(MaskGroupBasedCorrections|CorrectionID|CorrectionMasks|MaskDigest|ErrorReason)"/);

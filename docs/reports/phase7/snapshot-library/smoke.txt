@@ -1,0 +1,95 @@
+fix/snapshot-develop: Develop.toDevelop (plugin 0.18.1) under fengari 0.1.4 with a fake SDK
+==========================================================================================
+
+Run by Claude Code on 2026-10-07T11:29Z, branch fix/snapshot-develop, on the working tree before the first commit.
+The fake LrApplicationView switches to Develop a set number of seconds after switchToModule (or never); LrTasks.sleep
+advances a virtual clock. The kit loads the plugin's real Develop.lua; Gate, Pending, Photos and Log are stubs.
+
+--- node run.mjs <repo>\plugin\LrC-AVG.lrplugin ---
+PASS already in develop: no switch | calls=0 module=develop log=-
+PASS library, switch takes 1 s: switched, no error, logged | calls=1 module=develop log=develop: switched from library to develop in 1000 ms
+PASS library, never switches: not_in_develop after the wait: Lightroom did not switch to Develop, and a snapshot only applies there: press D in Lightroom, then try again | calls=1 module=library log=develop: Lightroom stayed in library, not switched to develop
+PASS switch slower than the wait: not_in_develop | calls=1 module=library log=develop: Lightroom stayed in library, not switched to develop
+exit 0
+
+--- mutant: Develop.lua with the switchToModule line replaced by a comment (must fail case 2) ---
+PASS already in develop: no switch | calls=0 module=develop log=-
+FAIL library, switch takes 1 s: switched, no error, logged | calls=0 module=library log=develop: Lightroom stayed in library, not switched to develop
+PASS library, never switches: not_in_develop after the wait: Lightroom did not switch to Develop, and a snapshot only applies there: press D in Lightroom, then try again | calls=0 module=library log=develop: Lightroom stayed in library, not switched to develop
+PASS switch slower than the wait: not_in_develop | calls=0 module=library log=develop: Lightroom stayed in library, not switched to develop
+exit 1
+
+Appendix: the kit, verbatim (scratch; not committed as code, rule 01)
+--- develop-cases.lua ---
+-- Develop.toDevelop (plugin 0.18.1) against a fake LrApplicationView with a virtual clock.
+-- Run by run.mjs, which sets PLUGIN_DIR.
+local clock = 0
+local module = "library"
+local switchAfter = nil   -- seconds after switchToModule at which the module becomes "develop"; nil = never
+local switchedAt = nil
+local switchCalls = 0
+local logs = {}
+
+local fakes = {
+  LrApplication = {},
+  LrApplicationView = {
+    getCurrentModuleName = function()
+      if switchedAt and switchAfter and clock - switchedAt >= switchAfter then module = "develop" end
+      return module
+    end,
+    switchToModule = function(name) switchCalls = switchCalls + 1; switchedAt = clock end,
+  },
+  LrDate = { currentTime = function() return clock end },
+  LrTasks = {
+    pcall = function(f, ...) return pcall(f, ...) end,
+    sleep = function(s) clock = clock + s end,
+  },
+}
+function import(name) return assert(fakes[name], "no fake " .. name) end
+package.preload["Gate"] = function() return {} end
+package.preload["Pending"] = function() return {} end
+package.preload["Photos"] = function() return {} end
+package.preload["Log"] = function() return { info = function(m) logs[#logs + 1] = m end } end
+package.path = PLUGIN_DIR .. "/?.lua;" .. package.path
+local Develop = require "Develop"
+
+local results = {}
+local function case(name, start, after, check)
+  clock, module, switchAfter, switchedAt, switchCalls, logs = 100, start, after, nil, 0, {}
+  local err = Develop.toDevelop()
+  local ok, why = check(err)
+  results[#results + 1] = (ok and "PASS " or "FAIL ") .. name .. (why and (": " .. why) or "")
+          .. " | calls=" .. switchCalls .. " module=" .. module .. " log=" .. (logs[1] or "-")
+end
+
+case("already in develop: no switch", "develop", nil, function(err)
+  return err == nil and switchCalls == 0
+end)
+case("library, switch takes 1 s: switched, no error, logged", "library", 1, function(err)
+  return err == nil and switchCalls == 1 and module == "develop" and (logs[1] or ""):find("switched from library to develop in 1000 ms") ~= nil
+end)
+case("library, never switches: not_in_develop after the wait", "library", nil, function(err)
+  return err ~= nil and err.code == "not_in_develop" and err.recoverable == true
+     and clock - 100 >= Develop.MODULE_WAIT_SECONDS and clock - 100 < Develop.MODULE_WAIT_SECONDS + 0.5,
+     err and err.message
+end)
+case("switch slower than the wait: not_in_develop", "library", 6, function(err)
+  return err ~= nil and err.code == "not_in_develop"
+end)
+return table.concat(results, "\n")
+--- run.mjs ---
+// node run.mjs <plugin dir>: runs develop-cases.lua under fengari (Lua 5.3; the plugin code used here is 5.1-compatible).
+import fs from "node:fs";
+import { lua, lauxlib, lualib, to_luastring } from "fengari";
+const L = lauxlib.luaL_newstate();
+lualib.luaL_openlibs(L);
+lua.lua_pushstring(L, to_luastring(process.argv[2].replace(/\\/g, "/")));
+lua.lua_setglobal(L, to_luastring("PLUGIN_DIR"));
+const src = fs.readFileSync(new URL("./develop-cases.lua", import.meta.url));
+if (lauxlib.luaL_loadbuffer(L, src, null, to_luastring("develop-cases")) !== lua.LUA_OK || lua.lua_pcall(L, 0, 1, 0) !== lua.LUA_OK) {
+  console.error(lua.lua_tojsstring(L, -1));
+  process.exit(1);
+}
+const out = lua.lua_tojsstring(L, -1);
+console.log(out);
+process.exit(out.includes("FAIL") ? 1 : 0);

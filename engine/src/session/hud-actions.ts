@@ -133,7 +133,8 @@ export function abortedNote(s: Session): string {
 }
 
 const settingsCount = (n: number): string => (n === 1 ? "1 setting" : `${n} settings`);
-export const ABORT_WAITS = "Lightroom is still computing the AI mask, so Abort must wait. If it seems stuck, restart Lightroom.";
+export const NOT_IN_DEVELOP = "Lightroom must be in Develop to put the photo back. Press D in Lightroom, then click Abort again.";
+export const ABORT_WAITS ="Lightroom is still computing the AI mask, so Abort must wait. If it seems stuck, restart Lightroom.";
 
 /** Waits for the bridge; a failed wait goes in the log's failures, as the HUD's note names no code. */
 async function connected(ctx: SessionContext, s: Session, stage: string): Promise<void> {
@@ -169,7 +170,9 @@ async function finishAbort(host: ActionHost, s: Session): Promise<void> {
       return;
     }
     by.state = "failed"; // the failure is in the log's failures: connected()'s, or endSession's own (io.ts failed())
-    ctx.deps.hud?.stage(s, "awaiting_claude", { note: "Abort could not put the photo back. Click Abort again." });
+    // Plugin 0.18.1 (Develop.lua toDevelop): a snapshot applies only in Develop [inference, see there], and Lightroom did not switch there.
+    const note = toToolError(err).code === "NOT_IN_DEVELOP" ? NOT_IN_DEVELOP : "Abort could not put the photo back. Click Abort again.";
+    ctx.deps.hud?.stage(s, "awaiting_claude", { note });
     return;
   }
   const differing = s.log.revert?.differing ?? [];

@@ -5,6 +5,7 @@
 
 import { describe, expect, it, vi } from "vitest";
 import { ToolError } from "../src/mcp/errors.js";
+import { NOT_IN_DEVELOP } from "../src/session/hud-actions.js";
 import { waitUntil } from "./helpers/fake-plugin.js";
 import { hudAt, hudRig } from "./helpers/hud-harness.js";
 import { hudEvent } from "./helpers/lightroom-sim-hud.js";
@@ -164,6 +165,24 @@ describe("Abort from the HUD", () => {
     await hudAt("aborted");
     expect(lr.settings).toEqual(start);
     expect(readLog()).toMatchObject({ outcome: "aborted", hud_events: [expect.anything(), expect.anything()] });
+  });
+
+  it("tells the user to press D when Lightroom did not switch to Develop (plugin 0.18.1); a second click tries again", async () => {
+    clean();
+    const start = structuredClone(lr.settings);
+    const rig = hudRig();
+    await rig.manager.begin({ intent_id: "test_prior" });
+    await step(rig, { exposure: 0.2 });
+    await hudAt("awaiting_claude");
+    const snapshot = plugin.handlers.get("apply_snapshot");
+    plugin.handlers.set("apply_snapshot", () => ({ ok: false, error: { code: "not_in_develop", message: "press D", recoverable: true } }));
+    hudEvent(plugin, "hud_abort", { session_id: ID });
+    await waitUntil(() => lr.hud.last()?.note === NOT_IN_DEVELOP);
+    expect(readLog().failures).toEqual([expect.objectContaining({ stage: "end (revert)", error: expect.objectContaining({ code: "NOT_IN_DEVELOP" }) })]);
+    if (snapshot) plugin.handlers.set("apply_snapshot", snapshot);
+    hudEvent(plugin, "hud_abort", { session_id: ID });
+    await hudAt("aborted");
+    expect(lr.settings).toEqual(start);
   });
 
   it("keeps the session open when the photo is only partly back; a second click tries again (Greptile, PR #47)", async () => {

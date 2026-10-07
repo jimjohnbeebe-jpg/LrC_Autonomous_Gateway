@@ -1,0 +1,101 @@
+fix/snapshot-develop: which Lightroom module each snapshot apply of Jim's Phase 7 check ran in
+=========================================================================================
+
+Collected by Claude Code on 2026-10-07 (session for fix/snapshot-develop) from Jim's check run
+`2026-10-07T02-45-32-800Z` (runs 1 and 2, one state). The run files are still in
+%TEMP%\LrC-AVG\P7\ (row 7 commits them under docs\reports\phase7\P7\); the lines below are copied
+from them verbatim.
+
+Question: the check's put-backs after E5 and C1 left the photo different (cleanup NO). Was Lightroom
+in Library each time an apply_snapshot failed, and in Develop each time one worked?
+
+Sources:
+  A. %TEMP%\LrC-AVG\P7\p7_state.json, `answers.back.*`: the check's put-back result after each step.
+  B. %TEMP%\LrC-AVG\bridge.log: the plugin's command log, LOCAL time (UTC-7). UTC = local + 7 h.
+  C. %TEMP%\LrC-AVG\P7\2026-10-07T02-45-32-800Z\deck\hud_*.jsonl: the Deck's `windows` lines. Each
+     lists Lightroom's main window, whose title ends in the module: "... Lightroom Classic - Develop"
+     or "... Lightroom Classic - Library". A Deck logs only while it runs, and only when the window
+     list changes, so a time between two Deck runs has no title.
+  D. %TEMP%\LrC-AVG\P7\2026-10-07T02-45-32-800Z\sessions\20261006-8bebdc.json: E5's session log.
+
+A. Put-back results (p7_state.json)
+-----------------------------------
+answers.back.E1 {"ok":true,"at":"2026-10-07T04:08:59.928Z"}
+answers.A13.back {"ok":true,"at":"2026-10-07T04:12:17.085Z","detail":{"outcome":"aborted","differing":[]}}
+answers.back.E2 {"ok":true,"at":"2026-10-07T04:12:33.477Z"}
+answers.back.E3 {"ok":true,"at":"2026-10-07T04:15:23.676Z"}
+answers.back.E4 {"ok":true,"at":"2026-10-07T04:34:05.039Z"}
+answers.back.E5 {"ok":false,"at":"2026-10-07T04:35:52.784Z","detail":{"differing":["exposure","highlights","shadows","whites","blacks","camera_profile"]}}
+answers.back.C1 {"ok":false,"at":"2026-10-07T04:42:39.033Z","detail":{"differing":["exposure","highlights","shadows","whites","blacks","texture","clarity","vibrance","temperature","tint","grading.highlights.hue","grading.highlights.sat","hsl.orange.lum","hsl.green.hue","hsl.blue.sat","camera_profile"]}}
+answers.back.C2 {"ok":true,"at":"2026-10-07T11:15:11.995Z"}
+answers.back.F1 {"ok":true,"at":"2026-10-07T11:16:06.241Z"}
+answers.back.F2 {"ok":true,"at":"2026-10-07T11:16:37.938Z"}
+
+D. E5's session log: {"outcome":"revert","revert":{"ms":3.9,"differing":["blacks","camera_profile","exposure","highlights","shadows","whites"]},"ended_by":{"source":"claude"}}
+   (started 2026-10-07T04:34:05.344Z, ended 04:35:52.577Z). The revert answered in 3.9 ms; the
+   pre-session snapshot restores took 377-492 ms in Phase 3 (LR_SDK_NOTES "Recorded in Phase 3").
+
+B + C. Each apply_snapshot of run 2, with the last Lightroom title the Deck saw at or before it and
+the first one after it (script mods-at.mjs below)
+----------------------------------------------------------------------------------------------------
+bridge.log (local)                       UTC                       before                              after                               result
+21:08:59.421 apply_snapshot e848bc41...  2026-10-07T04:08:59.421Z  Develop 04:07:42.691Z hud_15068      Develop 04:10:09.087Z hud_15068      back.E1 ok
+21:12:16.781 apply_snapshot bb53e063...  2026-10-07T04:12:16.781Z  Develop 04:12:16.708Z hud_15068      Develop 04:12:16.956Z hud_15068      A13 Abort ok (back.E2 ok)
+21:15:03.581 apply_snapshot 23ce8e7a...  2026-10-07T04:15:03.581Z  Develop 04:12:45.207Z hud_15068      Develop 04:15:13.931Z hud_15068      back.E3 ok
+21:32:33.075 apply_snapshot 032e3bea...  2026-10-07T04:32:33.075Z  Develop 04:32:02.702Z hud_27896      Develop 04:32:38.607Z hud_27896      back.E4 ok
+21:35:52.572 apply_snapshot 65a900c5...  2026-10-07T04:35:52.572Z  Library 04:33:49.217Z hud_27896      Library 04:38:44.480Z hud_33968      E5 revert, 6 differing
+21:35:52.765 apply_snapshot ea386b65...  2026-10-07T04:35:52.765Z  (same)                              (same)                              back.E5 NO
+21:42:39.017 apply_snapshot 06492215...  2026-10-07T04:42:39.017Z  Library 04:42:29.283Z hud_33968      Develop 11:16:43.588Z hud_27468      back.C1 NO
+04:08:09.742 apply_snapshot 70c30a4b...  2026-10-07T11:08:09.742Z  no Deck ran 05:02:55Z-11:14:50Z      -                                    start-of-run put-back; no effect [stated: Jim]
+04:08:10.544 apply_snapshot c605b383...  2026-10-07T11:08:10.544Z  (same)                              -
+04:15:11.584 apply_snapshot c54a7c1f...  2026-10-07T11:15:11.584Z  no title logged 11:14:50Z-11:16:43Z  Develop 11:16:43.588Z hud_27468      back.C2 ok
+04:15:52.388 apply_snapshot 16089f55...  2026-10-07T11:15:52.388Z  (same)                              (same)                              back.F1 ok
+04:16:37.598 apply_snapshot 5098f213...  2026-10-07T11:16:37.598Z  (same)                              (same)                              back.F2 ok
+
+Three more applies, at 04:10:08, 04:10:13 and 04:10:49 local (11:10Z), are not the check's: they are
+the put-back probes Claude Code ran by hand in the previous session [inference: the session memory
+names scratch probes "probe-copies/search-copies/probe-diff/apply-snapshot .mts" from then].
+
+For the 11:08Z-11:16Z part no Deck title exists. That Lightroom was in Library after the reboot and
+that the put-backs worked after Jim pressed D is Jim's account [stated: Jim, 2026-10-07, recorded in
+the vault LrC_AVG_STATE.md "Next action"].
+
+Reading
+-------
+Every apply with a Develop title on both sides worked (E1, the A13 Abort, E3, E4). Every check
+apply with a Library title before it left the photo as it was (E5 twice, C1). Setting writes in
+Library still worked: E5's edit wrote its passes between 04:34:08Z and 04:34:37Z (bridge.log
+21:34:08-21:34:37 apply_settings, each read back by the engine) with Library logged since 04:33:49Z.
+So applyDevelopSnapshot does nothing while Lightroom is in Library [inference from the rows above;
+no Adobe document read says so]. Plugin 0.18.1 switches to Develop before every snapshot apply
+(Develop.lua Develop.toDevelop); Jim's re-run of E5 and C1 with Lightroom in Library tests it.
+
+Lightroom module lookup scripts (scratch, run with node; kept here verbatim per rule 01, not committed as code)
+-------------------------------------------------------------------------------------------------------------
+--- mods-at.mjs ---
+// node mods-at.mjs <deck log dir> <ISO time>...: for each time, the last Lightroom title the Deck logs saw at or
+// before it (module, when, which log) and the first one after it, from the `windows` lines.
+import fs from "node:fs";
+import path from "node:path";
+const [dir, ...times] = process.argv.slice(2);
+const seen = [];
+for (const f of fs.readdirSync(dir).sort()) for (const line of fs.readFileSync(path.join(dir, f), "utf8").split("\n")) {
+  const m = line.match(/Lightroom Classic - (\w+)/);
+  if (!m) continue;
+  let e; try { e = JSON.parse(line); } catch { continue; }
+  seen.push({ t: e.t, f, mod: m[1] });
+}
+seen.sort((a, b) => a.t - b.t);
+const iso = (t) => new Date(t).toISOString();
+for (const at of times) {
+  const t = Date.parse(at);
+  const before = seen.filter((s) => s.t <= t).at(-1);
+  const after = seen.find((s) => s.t > t);
+  console.log(`${at}  before: ${before ? `${before.mod} ${iso(before.t)} ${before.f}` : "-"}  after: ${after ? `${after.mod} ${iso(after.t)} ${after.f}` : "-"}`);
+}
+
+Deck log runs (first line .. last `t`), used for the "no Deck ran" rows:
+hud_11208 start 02:45:56.930Z .. 04:02:06Z   hud_15068 start 04:04:19.038Z .. 04:28:44Z
+hud_27896 start 04:29:17.045Z .. 04:34:04Z   hud_23172 start 04:34:05.787Z .. 04:35:52Z
+hud_33968 start 04:36:50.008Z .. 05:02:55Z   hud_23804 start 11:14:50.464Z .. 11:15:02Z
+hud_27468 start 11:16:06.853Z .. 11:17:10Z

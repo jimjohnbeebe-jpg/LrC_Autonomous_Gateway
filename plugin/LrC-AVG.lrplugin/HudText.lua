@@ -94,6 +94,7 @@ HudText.PUT_BACK_REASON = {
     read_back = "Lightroom could not read the photo back",
     newer = "a newer edit began",
     computing = "Lightroom is still computing an AI mask on this photo: wait, or restart Lightroom",
+    not_in_develop = "Lightroom did not switch to Develop (press D there, then click Put back again)",
 }
 
 HudText.CLIPPING_OK = "Clipping: within limits."

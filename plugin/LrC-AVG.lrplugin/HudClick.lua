@@ -11,6 +11,7 @@ local LrDialogs = import 'LrDialogs'
 local LrTasks = import 'LrTasks'
 local LrUUID = import 'LrUUID'
 
+local Develop = require 'Develop'
 local Events = require 'Events'
 local Gate = require 'Gate'
 local HudState = require 'HudState'
@@ -130,6 +131,8 @@ local function putBackTo(pb, sid)
     if not sameEdit(sid) then return nil, PB_REASON.newer, "a newer edit began" end
     local refused = Pending.refusal(catalog, photo, pb.photo_uuid)
     if refused then return nil, PB_REASON.computing, refused.message end
+    local notDevelop = Develop.toDevelop() -- a snapshot applies only in Develop [inference, Develop.lua toDevelop]
+    if notDevelop then return nil, PB_REASON.not_in_develop, notDevelop.message end
     local stale = false
     local gated, busy = Gate.write(catalog, "AVG put back", function()
         if not sameEdit(sid) then stale = true; return end

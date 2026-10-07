@@ -1,6 +1,6 @@
 // The Phase 7 acceptance check (row 6; vault PHASE7_PLAN.md row 6, plan approved [stated: Jim,
 // 2026-10-06, "go"]): `npm run phase7:check`, with Lightroom open in Develop on one selected photo
-// (20260907-_OZ80093.NEF, the plan's), plugin 0.18.0 or later, and Claude Desktop quit. Steps for Jim:
+// (20260907-_OZ80093.NEF, the plan's), plugin 0.18.1 or later, and Claude Desktop quit. Steps for Jim:
 // docs\reports\phase7\PHASE7.md. Spec docs\hud\lrc-avg-hud-spec-v2.md 11.1 as 2.7 amends it, and the
 // section 9 budgets; summary.ts holds the lines and the verdict.
 // It installs the Deck 0.3.2 (hud\ui\deck.ts logs `got` and `painted` for the budgets), then runs the

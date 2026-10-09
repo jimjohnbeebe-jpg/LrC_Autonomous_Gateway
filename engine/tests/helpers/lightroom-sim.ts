@@ -137,14 +137,16 @@ export class LightroomSim {
     this.previewDir = previewDir;
   }
 
-  /** A photo's settings: a copy's own, else the master's (also for a photo the sim does not know). */
+  /** A photo's settings: a copy's own, a library photo's own (lightroom-sim-library.ts `settings`), else the master's (also for a photo the sim does not know). */
   settingsOf(uuid: string): Record<string, unknown> {
-    return this.copies.get(uuid)?.settings ?? this.settings;
+    return this.copies.get(uuid)?.settings ?? this.library.find(uuid)?.settings ?? this.settings;
   }
 
   private setSettingsOf(uuid: string, settings: Record<string, unknown>): void {
     const copy = this.copies.get(uuid);
+    const other = this.library.find(uuid);
     if (copy) copy.settings = settings;
+    else if (other?.settings) other.settings = settings;
     else this.settings = settings;
   }
 
@@ -227,14 +229,15 @@ export class LightroomSim {
 
   /** get_context of a photo (Develop.lua getContext). */
   private context(uuid: string): FakeReply {
+    const other = uuid === this.uuid ? undefined : this.library.find(uuid);
     return {
       ok: true,
       payload: {
         uuid,
         local_id: 1,
         lrc_version: this.lrcVersion,
-        filename: this.filename,
-        file_format: "RAW",
+        filename: other?.filename ?? this.filename,
+        file_format: other?.file_format ?? "RAW",
         is_virtual_copy: false,
         ...describePhoto(this, uuid),
         width: this.photoSize.width,

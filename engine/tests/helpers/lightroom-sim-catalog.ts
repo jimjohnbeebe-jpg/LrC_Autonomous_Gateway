@@ -30,8 +30,8 @@ export type CatalogSim = {
   readonly copies: Map<string, SimCopy>;
   copyFault: CopyFault | null;
   selectFault: string | null;
-  /** Rating and capture time per photo (plugin 0.8.0, Photos.describe; lightroom-sim-library.ts). */
-  readonly library?: { meta(uuid: string): Record<string, unknown> };
+  /** Rating and capture time per photo (plugin 0.8.0, Photos.describe; lightroom-sim-library.ts); `find` makes its photos Develop targets too (spike S10's census). */
+  readonly library?: { meta(uuid: string): Record<string, unknown>; find?(uuid: string): { local_id: number } | undefined };
 };
 
 export const MASTER_LOCAL_ID = 1;
@@ -42,7 +42,9 @@ const fail = (code: string, message: string, recoverable = false): FakeReply => 
 export function describePhoto(sim: CatalogSim, uuid: string): Record<string, unknown> | null {
   if (uuid === sim.uuid) return { uuid, local_id: MASTER_LOCAL_ID, is_virtual_copy: false, master_local_id: MASTER_LOCAL_ID };
   const copy = sim.copies.get(uuid);
-  return copy ? { uuid, local_id: copy.local_id, is_virtual_copy: true, master_local_id: MASTER_LOCAL_ID, copy_name: copy.copy_name } : null;
+  if (copy) return { uuid, local_id: copy.local_id, is_virtual_copy: true, master_local_id: MASTER_LOCAL_ID, copy_name: copy.copy_name };
+  const other = sim.library?.find?.(uuid);
+  return other ? { uuid, local_id: other.local_id, is_virtual_copy: false, master_local_id: other.local_id } : null;
 }
 
 export function createVirtualCopies(sim: CatalogSim, p: Record<string, unknown>): FakeReply | "silent" {

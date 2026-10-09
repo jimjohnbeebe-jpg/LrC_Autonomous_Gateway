@@ -17,6 +17,7 @@ import {
   type CanonicalSettings,
   type CanonicalValue,
   type ParamMap,
+  type Pipeline,
   type SdkSettings,
 } from "../params/index.js";
 import { applyMask, type MaskGroup } from "../sync/mask.js";
@@ -29,8 +30,13 @@ export type PresetSelection = { entries: PresetEntry[]; written: string[]; also_
 const SHARPEN_DETAILS = ["sharpening.radius", "sharpening.detail", "sharpening.masking"];
 
 /** Why a chosen setting is not written, or null when it is. */
-function leaveOut(map: ParamMap, name: string, value: CanonicalValue, sdk: SdkSettings, copied: CanonicalSettings): string | null {
+function leaveOut(map: ParamMap, name: string, value: CanonicalValue, sdk: SdkSettings, copied: CanonicalSettings, pipeline: Pipeline): string | null {
   if (name === "lens.corrections_enable") return "Lightroom's own presets do not carry it: neither reference file has it";
+  // How Lightroom writes the rendered pipeline's relative white balance into a preset is pinned from Jim's
+  // reference preset in Phase 8 row 5 (PHASE8_PLAN); until then it stays out, as rendered profiles do.
+  if ((name === "temperature" || name === "tint") && pipeline === "rendered") {
+    return "a rendered-pipeline white balance (relative units): how Lightroom writes one into a preset has not been observed";
+  }
   if ((name === "temperature" || name === "tint") && sdk[WHITE_BALANCE_KEY] === AS_SHOT_WHITE_BALANCE) {
     return 'white balance is "As Shot": the preset says so and, like Lightroom\'s two, carries no temperature or tint';
   }
@@ -51,21 +57,21 @@ function leaveOut(map: ParamMap, name: string, value: CanonicalValue, sdk: SdkSe
 }
 
 /** The entry that writes a canonical setting. */
-function entryOf(map: ParamMap, name: string, value: CanonicalValue): PresetEntry {
+function entryOf(map: ParamMap, name: string, value: CanonicalValue, pipeline: Pipeline): PresetEntry {
   if (name === CAMERA_PROFILE_PARAM) return { key: CAMERA_PROFILE_KEY, value: map.cameraProfiles().get(String(value)).camera_profile };
-  const spec = map.spec(name);
+  const spec = map.spec(name, pipeline);
   if (!spec) throw new Error(`no spec for ${name}`);
   return { key: spec.sdkKey, value: typeof value === "boolean" ? Number(value) : value };
 }
 
 /** The keys Lightroom writes with a group, read from the photo's own settings. */
-function companions(sdk: SdkSettings, groups: readonly MaskGroup[]): PresetEntry[] {
+function companions(sdk: SdkSettings, groups: readonly MaskGroup[], pipeline: Pipeline): PresetEntry[] {
   const out: PresetEntry[] = [];
   const add = (key: string): void => {
     const value = sdk[key];
     if (typeof value === "string") out.push({ key, value });
   };
-  if (groups.includes("white_balance")) add(WHITE_BALANCE_KEY);
+  if (groups.includes("white_balance") && pipeline === "raw") add(WHITE_BALANCE_KEY); // rendered: no white balance in presets until row 5
   if (groups.includes("tone_curve")) add(TONE_CURVE_NAME_KEY);
   return out;
 }
@@ -74,7 +80,7 @@ function companions(sdk: SdkSettings, groups: readonly MaskGroup[]): PresetEntry
 export function selectPresetSettings(map: ParamMap, sdk: SdkSettings, groups: readonly MaskGroup[]): PresetSelection {
   const read = map.fromSdk(sdk);
   const { copied } = applyMask(read.settings, groups);
-  const extra: PresetEntry[] = [{ key: PROCESS_VERSION_KEY, value: read.process_version }, ...companions(sdk, groups)];
+  const extra: PresetEntry[] = [{ key: PROCESS_VERSION_KEY, value: read.process_version }, ...companions(sdk, groups, read.pipeline)];
   const entries: PresetEntry[] = [...extra];
   const written: string[] = [];
   const left_out: LeftOut[] = [];
@@ -85,10 +91,10 @@ export function selectPresetSettings(map: ParamMap, sdk: SdkSettings, groups: re
     left_out.push({ name: CAMERA_PROFILE_PARAM, reason: `the photo's profile (${read.camera_profile.camera_profile ?? "none"}) is not one of the pinned profiles` });
   }
   for (const [name, value] of Object.entries(copied)) {
-    const reason = leaveOut(map, name, value, sdk, copied);
+    const reason = leaveOut(map, name, value, sdk, copied, read.pipeline);
     if (reason !== null) left_out.push({ name, reason });
     else {
-      entries.push(entryOf(map, name, value));
+      entries.push(entryOf(map, name, value, read.pipeline));
       written.push(name);
     }
   }

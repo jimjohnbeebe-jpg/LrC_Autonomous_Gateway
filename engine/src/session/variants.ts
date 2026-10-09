@@ -74,6 +74,7 @@ async function copyPass0(ctx: SessionContext, s: Session, t: Target, masterView:
   await focus(ctx, s, t);
   const view = await read(ctx, s, t);
   t.process_version = view.process_version;
+  t.pipeline = view.pipeline;
   t.camera_profile = view.camera_profile.name;
   const same = differingSettings(view.settings, masterView.settings).length === 0;
   const priors = s.intent.intent.variants?.[t.id as "A" | "B" | "C"].priors ?? {};
@@ -92,6 +93,7 @@ function variantJson(s: Session, t: Target, p: Pass0): Record<string, unknown> {
     pass: `${t.passes}/${s.maxPasses}`,
     history_names: p.historyNames,
     pass0_applied: p.applied,
+    ...(p.warnings.length > 0 ? { pass0_warnings: p.warnings } : {}),
     guardrail_actions: p.actions,
     settings: p.view.settings,
     metrics: summarize(p.rendered.metrics),

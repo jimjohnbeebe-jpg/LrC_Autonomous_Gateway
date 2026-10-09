@@ -57,6 +57,7 @@ export async function endSession(ctx: SessionContext, s: Session, args: EndArgs,
         intent_id: s.intent.intent.id,
         source: { uuid: kept.uuid, filename: kept.filename },
         process_version: kept.process_version,
+        pipeline: kept.pipeline,
         settings: finalSettings,
         ...(masks > 0 ? { masks } : {}),
       });

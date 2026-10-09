@@ -162,6 +162,13 @@
         "process_version": {
           "type": "string"
         },
+        "pipeline": {
+          "type": "string",
+          "enum": [
+            "raw",
+            "rendered"
+          ]
+        },
         "camera_profile": {
           "type": [
             "string",
@@ -2373,6 +2380,12 @@
               "after"
             ],
             "additionalProperties": false
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [

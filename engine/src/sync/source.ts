@@ -13,7 +13,7 @@ import { readdirSync, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { recipeSchema, type Recipe } from "../log/index.js";
 import { ToolError } from "../mcp/errors.js";
-import { SUPPORTED_PROCESS_VERSIONS, type CanonicalSettings, type ParamMap } from "../params/index.js";
+import { ParamError, SUPPORTED_PROCESS_VERSIONS, type CanonicalSettings, type ParamMap } from "../params/index.js";
 
 export type SyncSource = { session_id: string } | { recipe_path: string } | { settings: Record<string, unknown> };
 
@@ -30,9 +30,24 @@ export type ResolvedSource = {
 
 const RECIPE_SUFFIX = ".recipe.json";
 
-/** Refuse unknown names, wrong types and out-of-range values now, before any target is touched. */
+/**
+ * Refuse unknown names, wrong types and out-of-range values now, before any target is touched: valid
+ * on either pipeline, as the source may be a JPEG or a raw file. Each target's write then checks the
+ * values against the target's own pipeline (target.ts write) [stated: Jim, 2026-10-09, "Go" to the row 3
+ * plan, decision R1 A].
+ */
 function validated(map: ParamMap, settings: Record<string, unknown>): CanonicalSettings {
-  map.toSdk(settings, { processVersion: SUPPORTED_PROCESS_VERSIONS[0] as string });
+  const processVersion = SUPPORTED_PROCESS_VERSIONS[0] as string;
+  try {
+    map.toSdk(settings, { processVersion, pipeline: "raw" });
+  } catch (err) {
+    if (!(err instanceof ParamError)) throw err;
+    try {
+      map.toSdk(settings, { processVersion, pipeline: "rendered" });
+    } catch {
+      throw err; // the raw pipeline's reason
+    }
+  }
   return settings as CanonicalSettings;
 }
 

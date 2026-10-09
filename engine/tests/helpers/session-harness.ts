@@ -13,7 +13,7 @@ import { BridgeClient } from "../../src/bridge/index.js";
 import { IntentLibrary } from "../../src/intents/index.js";
 import { dayStamp, sessionLogSchema } from "../../src/log/index.js";
 import { toToolError, type ToolError } from "../../src/mcp/errors.js";
-import { loadDefaultParamMap } from "../../src/params/index.js";
+import { loadDefaultParamMap, type Pipeline } from "../../src/params/index.js";
 import { PreviewService } from "../../src/preview/index.js";
 import { SessionManager, type SessionDeps, type SessionOutput } from "../../src/session/index.js";
 import { FakePlugin } from "./fake-plugin.js";
@@ -35,6 +35,15 @@ export const intent = (id: string, extra: Record<string, unknown> = {}): void =>
   mkdirSync(userDir, { recursive: true });
   writeFileSync(path.join(userDir, `${id}.json`), JSON.stringify({ id, label: id, category: "test", brief: `The ${id} brief.`, priors: {}, ...extra }), "utf8");
 };
+
+/**
+ * White balance on a pipeline for the tests: its SDK key, and a Kelvin step as the change that warms
+ * the tonal model as much on that pipeline (2000 K on raw, 40 relative units on rendered: lightroom-sim.ts tonal()).
+ */
+export const wb = (pipeline: Pipeline): { key: string; step: (kelvin: number) => number } => ({
+  key: pipeline === "raw" ? "Temperature" : "IncrementalTemperature",
+  step: (kelvin) => (pipeline === "raw" ? kelvin : kelvin / 50),
+});
 
 /** A photo whose render clips at neither end (the tonal model with whites -20 and blacks +20). */
 export const clean = (): void => {
@@ -65,8 +74,11 @@ export const newManager = (extra: Partial<SessionDeps> = {}): SessionManager => 
   });
 };
 
-/** Register the per-test set-up and clean-up; call once at the top of a session test file. */
-export function useSessionHarness(): void {
+/**
+ * Register the per-test set-up and clean-up; call once at the top of a session test file, or of each
+ * describe.each(PIPELINES) block. "rendered": the master is DSC_0031.JPG (lightroom-sim-rendered.ts).
+ */
+export function useSessionHarness(pipeline: Pipeline = "raw"): void {
   beforeEach(async () => {
     tmp = mkdtempSync(path.join(os.tmpdir(), "lrc-avg-session-"));
     logDir = path.join(tmp, "logs");
@@ -75,6 +87,7 @@ export function useSessionHarness(): void {
     plugin = await FakePlugin.start();
     lr = new LightroomSim(path.join(tmp, "previews"));
     lr.renderModel = "tonal";
+    if (pipeline === "rendered") lr.useRendered();
     lr.install(plugin);
     client = new BridgeClient({ commandPort: plugin.commandPort, eventPort: plugin.eventPort, connectGapMs: 5, reconnectMs: 30, readToken: () => plugin.token });
     client.start();

@@ -22,11 +22,15 @@ export const SESSION_DEFAULTS = {
   quality: 75,
 } as const;
 
+import type { Pipeline } from "../params/index.js";
+
 /**
  * Base maximum |change| per pass for each numeric slider, in canonical units (ARCHITECTURE section 4).
- * Sharpening and noise have no base maximum there: 30 per pass (0.5 for the radius) [inference].
+ * Sharpening and noise have no base maximum there: 30 per pass (0.5 for the radius) [inference]. On
+ * the rendered pipeline temperature is relative, -100..100 like tint, and takes tint's 30 [inference].
  */
-export function baseMaxStep(name: string): number | null {
+export function baseMaxStep(name: string, pipeline: Pipeline = "raw"): number | null {
+  if (name === "temperature" && pipeline === "rendered") return 30;
   const fixed: Record<string, number> = {
     exposure: 1.0,
     contrast: 40,
@@ -56,11 +60,12 @@ export function baseMaxStep(name: string): number | null {
 
 /**
  * The smallest change that counts as moving a slider, for convergence (AVG-009 names it without a
- * value): 0.05 EV, 50 K, 0.1 for the sharpening radius, 1 for everything else [inference].
+ * value): 0.05 EV, 50 K (1 for the rendered pipeline's relative temperature), 0.1 for the sharpening
+ * radius, 1 for everything else [inference].
  */
-export function minStep(name: string): number {
+export function minStep(name: string, pipeline: Pipeline = "raw"): number {
   if (name === "exposure") return 0.05;
-  if (name === "temperature") return 50;
+  if (name === "temperature" && pipeline === "raw") return 50;
   if (name === "sharpening.radius") return 0.1;
   return 1;
 }

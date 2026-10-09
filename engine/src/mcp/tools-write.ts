@@ -33,7 +33,7 @@ export async function setSettings(ctx: ToolContext, args: SetSettingsArgs): Prom
     const before = await client.request("get_settings", { target_uuid: args.uuid });
     const getSettingsMs = ms(t);
     const view = map.fromSdk(before.settings); // refuses an unsupported process version
-    const sdk = map.toSdk(args.settings, { processVersion: view.process_version }); // unknown or out-of-range: refused, nothing written
+    const sdk = map.toSdk(args.settings, { processVersion: view.process_version, pipeline: view.pipeline }); // unknown or out-of-range: refused, nothing written
 
     ctx.writes++;
     const historyName = `${ctx.historyPrefix} set ${ctx.writes}`;

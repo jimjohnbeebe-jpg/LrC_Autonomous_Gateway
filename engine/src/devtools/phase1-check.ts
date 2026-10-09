@@ -206,7 +206,7 @@ export async function runPhase1Check(deps: Phase1Deps): Promise<{ accepted: bool
 
     // 4. Exposure +0.5 (the acceptance write, pass 1).
     const exposureTarget = Math.round((exposureStart + 0.5) * 100) / 100;
-    const exposureSdk = map.toSdk({ exposure: exposureTarget }, { processVersion: view.process_version });
+    const exposureSdk = map.toSdk({ exposure: exposureTarget }, { processVersion: view.process_version, pipeline: view.pipeline });
     const afterExposure = await write(`exposure ${exposureStart} -> ${exposureTarget}`, exposureSdk, {
       expectOnly: Object.keys(exposureSdk),
     });
@@ -215,7 +215,7 @@ export async function runPhase1Check(deps: Phase1Deps): Promise<{ accepted: bool
     // 5. Camera profile pairs (P-07, P-12, P-17).
     const adobe = view.camera_profile.name === "Adobe Landscape" ? "Adobe Neutral" : "Adobe Landscape";
     for (const name of [adobe, "Camera Landscape"]) {
-      const sdk = map.toSdk({ camera_profile: name }, { processVersion: view.process_version });
+      const sdk = map.toSdk({ camera_profile: name }, { processVersion: view.process_version, pipeline: view.pipeline });
       const rb = await write(`camera profile ${name}`, sdk, { expectOnly: ["CameraProfile", "Look"] });
       const last = steps[steps.length - 1] as Step;
       const identified = rb ? map.fromSdk(rb).camera_profile.name : null;
@@ -227,9 +227,9 @@ export async function runPhase1Check(deps: Phase1Deps): Promise<{ accepted: bool
 
     // 6. Lens switches off, then on (P-16).
     await write("lens corrections off",
-      map.toSdk({ "lens.corrections_enable": false, "lens.profile_enable": 0 }, { processVersion: view.process_version }));
+      map.toSdk({ "lens.corrections_enable": false, "lens.profile_enable": 0 }, { processVersion: view.process_version, pipeline: view.pipeline }));
     await write("lens corrections on",
-      map.toSdk({ "lens.corrections_enable": true, "lens.profile_enable": 1 }, { processVersion: view.process_version }));
+      map.toSdk({ "lens.corrections_enable": true, "lens.profile_enable": 1 }, { processVersion: view.process_version, pipeline: view.pipeline }));
 
     // 7. Range probe.
     say("Range probe:");

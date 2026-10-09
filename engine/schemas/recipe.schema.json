@@ -38,6 +38,13 @@
     "process_version": {
       "type": "string"
     },
+    "pipeline": {
+      "type": "string",
+      "enum": [
+        "raw",
+        "rendered"
+      ]
+    },
     "settings": {
       "type": "object",
       "propertyNames": {

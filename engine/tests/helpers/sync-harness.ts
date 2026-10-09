@@ -8,6 +8,7 @@ import { beforeEach } from "vitest";
 import { IntentLibrary } from "../../src/intents/index.js";
 import { Tools, toToolError, type ToolError } from "../../src/mcp/index.js";
 import type { SyncSeriesArgs } from "../../src/mcp/tools-propagation.js";
+import type { Pipeline } from "../../src/params/index.js";
 import { PreviewService } from "../../src/preview/index.js";
 import { client, clean, logDir, lr, map, plugin, tmp, useSessionHarness, userDir } from "./session-harness.js";
 
@@ -16,8 +17,8 @@ export { clean, client, logDir, lr, map, plugin, tmp };
 export let tools: Tools;
 
 /** Register the per-test set-up; call once at the top of a sync test file. */
-export function useSyncHarness(): void {
-  useSessionHarness();
+export function useSyncHarness(pipeline: Pipeline = "raw"): void {
+  useSessionHarness(pipeline);
   beforeEach(() => {
     tools = new Tools({
       client,

@@ -6,7 +6,7 @@
 
 import type { GuardrailAction, PassEntry } from "../log/index.js";
 import { deltaMetrics, summarize, type MetricsDelta } from "../metrics/index.js";
-import { canonicalValuesEqual, type CanonicalSettings, type CanonicalValue, type FromSdkResult, type ParamMap } from "../params/index.js";
+import { CUSTOM_WHITE_BALANCE_PARAMS, WHITE_BALANCE_UNITS, canonicalValuesEqual, type CanonicalSettings, type CanonicalValue, type FromSdkResult, type ParamMap, type Pipeline } from "../params/index.js";
 import { correct } from "./guardrail.js";
 import { historyName, render, write } from "./io.js";
 import type { Change } from "./plan.js";
@@ -26,6 +26,8 @@ export type Pass0 = {
   rendered: Rendered;
   actions: GuardrailAction[];
   delta: MetricsDelta;
+  /** What pass 0 changed of the intent for the photo's pipeline (forPipeline). */
+  warnings: string[];
 };
 
 /**
@@ -38,9 +40,9 @@ export async function pass0(ctx: SessionContext, s: Session, t: Target, view: Fr
   ctx.deps.hud?.stage(s, "pass0");
   if (original) t.last = original;
   const before = original ?? (await render(ctx, s, t, view));
-  const priors = combinedPriors(s.intent.intent.priors, variantPriors ?? {}, ctx.deps.map);
-  const profile = s.intent.intent.default_camera_profile;
-  const changes = pass0Changes(profile, priors, view.settings, ctx.deps.map);
+  const asWritten = combinedPriors(s.intent.intent.priors, variantPriors ?? {}, ctx.deps.map);
+  const { profile, priors, warnings } = forPipeline(s.intent.intent.default_camera_profile, asWritten, t.pipeline, ctx.deps.map);
+  const changes = pass0Changes(profile, priors, view.settings, ctx.deps.map, t.pipeline);
   const historyNames: string[] = [];
   let current = view;
   let rendered = before;
@@ -57,7 +59,35 @@ export async function pass0(ctx: SessionContext, s: Session, t: Target, view: Fr
   });
   const requested = { ...(profile ? { camera_profile: profile } : {}), ...priors };
   const delta = deltaMetrics(before.metrics, corrected.rendered.metrics);
-  return { passStarted, original: before, requested, applied, historyNames, view: corrected.view, rendered: corrected.rendered, actions: corrected.actions, delta };
+  return { passStarted, original: before, requested, applied, historyNames, view: corrected.view, rendered: corrected.rendered, actions: corrected.actions, delta, warnings };
+}
+
+/**
+ * The intent's profile and priors for the photo's pipeline. Schema v1 intents are written for raw
+ * files; until v2 names them per pipeline (Phase 8 row 4), on a rendered photo pass 0 sets the
+ * rendered profile of the same kind (Monochrome for a grayscale one, else Color) and leaves out
+ * temperature and tint, whose priors are Kelvin offsets, and says both in `warnings`
+ * [stated: Jim, 2026-10-08, "Go with recommendations" to PHASE8_PLAN, whose row 3 reads "the loader maps a
+ * v1 intent's raw profile to the rendered default for the transition and warns"; the kind-for-kind choice
+ * and leaving the Kelvin priors out are the row 3 plan, "Go" 2026-10-09].
+ */
+export function forPipeline(profile: string | undefined, priors: Priors, pipeline: Pipeline, map: ParamMap): { profile: string | undefined; priors: Priors; warnings: string[] } {
+  const warnings: string[] = [];
+  const profiles = map.cameraProfiles();
+  let chosen = profile;
+  if (profile !== undefined && profiles.pipeline(profile) !== pipeline) {
+    const grayscale = profiles.get(profile).look?.Parameters["ConvertToGrayscale"] === true;
+    chosen = profiles.names().find((n) => profiles.pipeline(n) === pipeline && profiles.get(n).convert_to_grayscale === grayscale);
+    const instead = chosen === undefined ? "leaves the photo's profile as it is" : `sets "${chosen}" instead`;
+    warnings.push(`The intent's camera profile "${profile}" is a ${profiles.pipeline(profile)}-pipeline profile and this photo is on the ${pipeline} pipeline: pass 0 ${instead}.`);
+  }
+  const kept: Record<string, unknown> = {};
+  for (const [name, value] of Object.entries(priors)) {
+    if (pipeline === "rendered" && CUSTOM_WHITE_BALANCE_PARAMS.includes(name)) {
+      warnings.push(`The intent's ${name} prior (${JSON.stringify(value)}) is in the raw pipeline's units; this photo's white balance is ${WHITE_BALANCE_UNITS[pipeline]}, so pass 0 leaves it out.`);
+    } else kept[name] = value;
+  }
+  return { profile: chosen, priors: kept, warnings };
 }
 
 /** Pass 0's log entry for photo `t`. */
@@ -85,6 +115,7 @@ export function pass0Entry(s: Session, t: Target, beforeView: FromSdkResult, p: 
     preview_source: "export",
     guardrail_actions: p.actions,
     converged_by_metrics: false,
+    ...(p.warnings.length > 0 ? { warnings: p.warnings } : {}),
   };
 }
 
@@ -103,11 +134,11 @@ export function combinedPriors(base: Priors, extra: Priors, map: ParamMap): Reco
 }
 
 /** Pass 0's settings: the camera profile, and the priors (numbers added to the photo's values, within range). */
-function pass0Changes(profile: string | undefined, priors: Priors, current: CanonicalSettings, map: ParamMap): Record<string, CanonicalValue> {
+function pass0Changes(profile: string | undefined, priors: Priors, current: CanonicalSettings, map: ParamMap, pipeline: Pipeline): Record<string, CanonicalValue> {
   const out: Record<string, CanonicalValue> = {};
   if (profile !== undefined && current["camera_profile"] !== profile) out["camera_profile"] = profile;
   for (const [name, value] of Object.entries(priors)) {
-    const spec = map.spec(name);
+    const spec = map.spec(name, pipeline);
     if (spec?.kind === "number") {
       const before = current[name];
       if (typeof before !== "number" || typeof value !== "number") continue; // e.g. dropped by a monochrome profile

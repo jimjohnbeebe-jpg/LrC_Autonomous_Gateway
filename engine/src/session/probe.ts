@@ -66,8 +66,8 @@ export async function probe(ctx: SessionContext, s: Session, args: ProbeArgs): P
 function planProbe(sliders: readonly string[], view: FromSdkResult, magnitude: number, map: ParamMap): ProbePlan {
   const plan: ProbePlan = [];
   for (const name of sliders) {
-    const spec = map.spec(name);
-    const step = baseMaxStep(name);
+    const spec = map.spec(name, view.pipeline);
+    const step = baseMaxStep(name, view.pipeline);
     const before = view.settings[name];
     if (!spec || spec.kind !== "number" || step === null || typeof before !== "number") {
       throw new ToolError("INVALID_ARGUMENTS", `lr_probe takes numeric sliders available on this photo; "${name}" is not one.`, false);

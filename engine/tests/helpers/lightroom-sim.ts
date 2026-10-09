@@ -27,6 +27,7 @@ import { SimHud } from "./lightroom-sim-hud.js";
 import { SimFiles } from "./lightroom-sim-files.js";
 import { SimLibrary } from "./lightroom-sim-library.js";
 import { SimMasks, installMasks } from "./lightroom-sim-masks.js";
+import { isRendered, renderedDumps, writeRendered } from "./lightroom-sim-rendered.js";
 import { defaultSimPrefs, type SimPrefs } from "./lightroom-sim-prefs.js";
 import { HUD_DECK_PLUGIN } from "../../src/bridge/hud-protocol.js";
 import { PLUGIN_VERSION, pluginVersionAtLeast } from "../../src/bridge/version.js";
@@ -119,6 +120,8 @@ export class LightroomSim {
   exportError: string | null = null;
   /** The selected photo's file name in get_context (the Phase 3 check asks for each fixture by name). */
   filename = "20260907-_OZ80093.NEF";
+  /** get_context's file_format (LrPhoto fileFormat) of the master. */
+  fileFormat = "RAW";
   /** The photo's pixel size in get_context (getRawMetadata width/height); a made-up 3:2 size. */
   photoSize = { width: 6000, height: 4000 };
   /**
@@ -135,6 +138,16 @@ export class LightroomSim {
 
   constructor(previewDir: string) {
     this.previewDir = previewDir;
+  }
+
+  /**
+   * Make the master a rendered photo: DSC_0031.JPG as spike S10's census read it, on process version
+   * 15.4 or (the other original of that name) 11.0 (lightroom-sim-rendered.ts).
+   */
+  useRendered(processVersion: "15.4" | "11.0" = "15.4"): void {
+    this.settings = structuredClone(renderedDumps[processVersion].settings);
+    this.filename = "DSC_0031.JPG";
+    this.fileFormat = "JPG";
   }
 
   /** A photo's settings: a copy's own, a library photo's own (lightroom-sim-library.ts `settings`), else the master's (also for a photo the sim does not know). */
@@ -196,6 +209,10 @@ export class LightroomSim {
         this.writes.push({ uuid: u, name: String(p["history_name"]) });
         const settings = this.settingsOf(u);
         const written = p["settings"] as Record<string, unknown>;
+        if (isRendered(settings) && u === this.selected) {
+          writeRendered(settings, written, this.ignored); // Lightroom checks writes on the photo in Develop only (S10)
+          return ok({ uuid: u, apply_ms: 25, read_ms: 300, command_ms: 330, read_back: luaize(settings) });
+        }
         for (const [k, v] of Object.entries(written)) {
           if (this.ignored.has(k)) continue;
           if (k === "Look" && (Array.isArray(v) ? v.length === 0 : Object.keys(v as object).length === 0)) delete settings["Look"];
@@ -237,7 +254,7 @@ export class LightroomSim {
         local_id: 1,
         lrc_version: this.lrcVersion,
         filename: other?.filename ?? this.filename,
-        file_format: other?.file_format ?? "RAW",
+        file_format: other?.file_format ?? this.fileFormat,
         is_virtual_copy: false,
         ...describePhoto(this, uuid),
         width: this.photoSize.width,
@@ -297,7 +314,8 @@ export class LightroomSim {
    */
   private tonal(width: number, height: number, settings: Record<string, unknown>): ReturnType<typeof sharp> {
     const data = new Uint8Array(width * height * 3);
-    const warm = (Number(settings["Temperature"]) - this.neutralTemperature) / 2000;
+    // A rendered photo's relative temperature: 40 units warm about as much as 2000 K [made-up, as the rest of the model].
+    const warm = isRendered(settings) ? Number(settings["IncrementalTemperature"]) / 40 : (Number(settings["Temperature"]) - this.neutralTemperature) / 2000;
     // Saturation -100 turns the orange half grey; 0 leaves it as it is.
     const colour = Math.max(0, 1 + Number(settings["Saturation"] ?? 0) / 100);
     const clamp = (x: number): number => Math.max(0, Math.min(255, Math.round(x)));

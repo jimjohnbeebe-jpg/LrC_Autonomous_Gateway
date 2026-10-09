@@ -56,9 +56,9 @@ async function identify(run: SyncRun, uuid: string): Promise<Photo> {
  * error names it as `maybe_written` [handle: tests\sync.test.ts "stops when a write gets no answer
  * in time"].
  */
-async function write(run: SyncRun, uuid: string, values: Record<string, CanonicalValue>, historyName: string, processVersion: string, names: string[]): Promise<FromSdkResult> {
+async function write(run: SyncRun, uuid: string, values: Record<string, CanonicalValue>, historyName: string, photo: Pick<FromSdkResult, "process_version" | "pipeline">, names: string[]): Promise<FromSdkResult> {
   const { client, map } = run.deps;
-  const sdk = map.toSdk(values, { processVersion });
+  const sdk = map.toSdk(values, { processVersion: photo.process_version, pipeline: photo.pipeline }); // checked against this photo's own pipeline: Lightroom checks writes only on the photo in Develop [handle: docs\reports\phase8\S10.md "Observed", "Run 1"]
   let res;
   try {
     res = await client.request("apply_settings", { photo_uuid: uuid, settings: sdk, history_name: historyName }, { timeoutMs: run.deps.writeTimeoutMs ?? WRITE_TIMEOUT_MS });
@@ -89,7 +89,7 @@ async function adapt(run: SyncRun, uuid: string, view: FromSdkResult, names: str
   let current = view;
   const step = async (exposure: number): Promise<void> => {
     const name = `AVG sync ${run.short} exposure ${names.filter((n) => n.includes(" exposure ")).length + 1}`;
-    current = await write(run, uuid, { exposure }, name, view.process_version, names);
+    current = await write(run, uuid, { exposure }, name, view, names);
   };
   const measure = async (exposure: number): Promise<number> => {
     await step(exposure);
@@ -136,6 +136,7 @@ export async function syncTarget(run: SyncRun, uuid: string): Promise<TargetResu
   const { client, map } = run.deps;
   const photo = await identify(run, uuid);
   const before = map.fromSdk((await client.request("get_settings", { photo_uuid: uuid })).settings);
+  map.toSdk(run.copied, { processVersion: before.process_version, pipeline: before.pipeline }); // a value this photo's pipeline refuses: skipped before its snapshot
   const snapshotName = `AVG pre-sync ${run.short}`;
   let snapshot: { name: string; id: string } | null = null;
   const names: string[] = [];
@@ -143,7 +144,7 @@ export async function syncTarget(run: SyncRun, uuid: string): Promise<TargetResu
     const snap = await client.request("create_snapshot", { photo_uuid: uuid, name: snapshotName }, { timeoutMs: run.deps.writeTimeoutMs ?? WRITE_TIMEOUT_MS });
     snapshot = { name: snapshotName, id: snap.snapshot_id };
     let now = before;
-    if (Object.keys(run.copied).length > 0) now = await write(run, uuid, run.copied, `AVG sync ${run.short}`, before.process_version, names);
+    if (Object.keys(run.copied).length > 0) now = await write(run, uuid, run.copied, `AVG sync ${run.short}`, before, names);
     const adapted = run.goal ? await adapt(run, uuid, now, names) : null;
     if (adapted) now = adapted.view;
     const changed = differingSettings(before.settings, now.settings);

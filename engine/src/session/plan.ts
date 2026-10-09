@@ -4,7 +4,7 @@
 // check every rule directly.
 
 import type { MetricsDelta, MetricsSummary } from "../metrics/index.js";
-import { CAMERA_PROFILE_PARAM, ParamError, SUPPORTED_PROCESS_VERSIONS, type CanonicalSettings, type CanonicalValue, type ParamMap } from "../params/index.js";
+import { CAMERA_PROFILE_PARAM, ParamError, SUPPORTED_PROCESS_VERSIONS, type CanonicalSettings, type CanonicalValue, type ParamMap, type Pipeline } from "../params/index.js";
 import { CONVERGENCE, CRUSHES_SHADOWS, RAISES_HIGHLIGHTS, baseMaxStep, decayFor, minStep, roundForSlider } from "./rules.js";
 
 /** One setting a step changes. `delta` is set for numeric sliders (after - before), null otherwise. */
@@ -28,12 +28,12 @@ const signed = (x: number): string => `${x > 0 ? "+" : ""}${fmt(x)}`;
  * precision. The camera profile, switches, booleans and curves take the value to set. Unknown names
  * and wrong types throw ParamError, so nothing is written for a malformed request.
  */
-export function planStep(requested: Readonly<Record<string, unknown>>, current: Readonly<CanonicalSettings>, pass: number, map: ParamMap, decay?: readonly number[]): StepPlan {
+export function planStep(requested: Readonly<Record<string, unknown>>, current: Readonly<CanonicalSettings>, pass: number, map: ParamMap, decay?: readonly number[], pipeline: Pipeline = "raw"): StepPlan {
   const plan: StepPlan = { changes: [], clamped: [], refused: [], unchanged: [] };
-  const context = { processVersion: SUPPORTED_PROCESS_VERSIONS[0] as string };
+  const context = { processVersion: SUPPORTED_PROCESS_VERSIONS[0] as string, pipeline };
   const factor = decayFor(pass, decay);
   for (const [name, value] of Object.entries(requested)) {
-    const spec = map.spec(name);
+    const spec = map.spec(name, pipeline);
     if (name === CAMERA_PROFILE_PARAM || !spec || spec.kind !== "number") {
       map.toSdk({ [name]: value }, context); // throws for an unknown name, a wrong type or a bad value
       const before = current[name] ?? null;
@@ -49,7 +49,7 @@ export function planStep(requested: Readonly<Record<string, unknown>>, current: 
       plan.refused.push({ name, by: "slider", reason: `${name} is not available on this photo now (e.g. a monochrome profile drops the colour sliders)` });
       continue;
     }
-    const base = baseMaxStep(name) ?? spec.max - spec.min;
+    const base = baseMaxStep(name, pipeline) ?? spec.max - spec.min;
     const cap = base * factor;
     let applied = value;
     if (Math.abs(applied) > cap + EPSILON) {
@@ -77,7 +77,7 @@ export function planStep(requested: Readonly<Record<string, unknown>>, current: 
  * further into a clipping limit that is already reached, and, where lr_probe measured a slope, cap
  * a change the slope says would cross the limit. Changes the plan in place and returns it.
  */
-export function applyProjectedGuardrail(plan: StepPlan, last: MetricsSummary | null, limits: Limits, slopes: ReadonlyMap<string, Slope> = new Map()): StepPlan {
+export function applyProjectedGuardrail(plan: StepPlan, last: MetricsSummary | null, limits: Limits, slopes: ReadonlyMap<string, Slope> = new Map(), pipeline: Pipeline = "raw"): StepPlan {
   if (!last) return plan;
   const kept: Change[] = [];
   for (const change of plan.changes) {
@@ -108,10 +108,10 @@ export function applyProjectedGuardrail(plan: StepPlan, last: MetricsSummary | n
       cap(slope.clip_low_pct, last.clip_low_pct, limits.clipLowPct);
       if (allowed !== change.delta) {
         // Whole minimum steps within the room; the epsilon keeps 0.3 / 0.05 from flooring to 5.
-        const steps = Math.floor(Math.abs(allowed) / minStep(change.name) + 1e-6);
-        const delta = roundForSlider(change.name, sign(change.delta) * steps * minStep(change.name));
-        if (Math.abs(delta) < minStep(change.name) - EPSILON || sign(delta) !== direction) {
-          plan.refused.push({ name: change.name, by: "guardrail", reason: `the probe's slope projects a clipping breach for any ${change.name} change of at least ${fmt(minStep(change.name))}` });
+        const steps = Math.floor(Math.abs(allowed) / minStep(change.name, pipeline) + 1e-6);
+        const delta = roundForSlider(change.name, sign(change.delta) * steps * minStep(change.name, pipeline));
+        if (Math.abs(delta) < minStep(change.name, pipeline) - EPSILON || sign(delta) !== direction) {
+          plan.refused.push({ name: change.name, by: "guardrail", reason: `the probe's slope projects a clipping breach for any ${change.name} change of at least ${fmt(minStep(change.name, pipeline))}` });
           continue;
         }
         plan.clamped.push({ name: change.name, requested: change.requested as number, applied: delta, reason: "the probe's slope projects a clipping breach beyond this change" });
@@ -166,9 +166,9 @@ export function hueDistance(a: number, b: number): number {
  * Converged by metrics (PRD 6.5, AVG-009): mean luma moved less than 1/255 of the range, both
  * clipping figures less than 0.1 point, and no slider more than its minimum step.
  */
-export function convergedByMetrics(delta: MetricsDelta | null, changes: readonly Change[]): boolean {
+export function convergedByMetrics(delta: MetricsDelta | null, changes: readonly Change[], pipeline: Pipeline = "raw"): boolean {
   if (!delta) return false;
   if (Math.abs(delta.luma_mean) >= CONVERGENCE.lumaMean) return false;
   if (Math.abs(delta.clip_high_pct) >= CONVERGENCE.clipPct || Math.abs(delta.clip_low_pct) >= CONVERGENCE.clipPct) return false;
-  return changes.every((c) => c.delta !== null && Math.abs(c.delta) <= minStep(c.name) + EPSILON);
+  return changes.every((c) => c.delta !== null && Math.abs(c.delta) <= minStep(c.name, pipeline) + EPSILON);
 }

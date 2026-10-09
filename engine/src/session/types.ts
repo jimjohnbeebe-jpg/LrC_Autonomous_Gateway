@@ -5,7 +5,7 @@ import type { BridgeClient, HudStage } from "../bridge/index.js";
 import type { IntentLibrary, LoadedIntent } from "../intents/index.js";
 import type { SessionLogData, SessionLogFiles } from "../log/index.js";
 import type { Metrics, Region, RegionBox } from "../metrics/index.js";
-import type { CanonicalSettings, Geometry, ParamMap } from "../params/index.js";
+import type { CanonicalSettings, Geometry, ParamMap, Pipeline } from "../params/index.js";
 import type { RenderedPreview } from "../preview/index.js";
 import type { KnownLogFolders, PageRead } from "../settings/index.js";
 import type { AiJob } from "./ai-masks.js";
@@ -184,6 +184,8 @@ export type Target = {
   filename: string | null;
   copy_name: string | null;
   process_version: string;
+  /** The photo's pipeline (params\pipeline.ts): which keys and ranges its temperature and tint take. */
+  pipeline: Pipeline;
   camera_profile: string | null;
   passes: number;
   endReason: "converged" | "cap_reached" | null;

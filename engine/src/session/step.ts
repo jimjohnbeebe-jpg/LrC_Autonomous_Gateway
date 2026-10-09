@@ -29,27 +29,27 @@ export async function step(ctx: SessionContext, s: Session, args: StepArgs): Pro
   const n = t.passes + 1;
   // approve_each_pass: names and types are checked before the wait, so a typo is not heard of only
   // after it (ParamError: nothing written); then the approval of pass n-1 (approval.ts).
-  if (approveEachPass(s) && t.passes >= 1) planStep(args.settings, t.last?.settings ?? s.startSettings, n, ctx.deps.map, s.decay);
+  if (approveEachPass(s) && t.passes >= 1) planStep(args.settings, t.last?.settings ?? s.startSettings, n, ctx.deps.map, s.decay, t.pipeline);
   const approval = await awaitApproval(ctx, s, t);
   const passStarted = ctx.now().toISOString();
   s.work = { target: t, pass: n };
   await focus(ctx, s, t);
   const beforeView = await read(ctx, s, t);
-  const plan = planStep(args.settings, beforeView.settings, n, ctx.deps.map, s.decay); // ParamError: nothing written
+  const plan = planStep(args.settings, beforeView.settings, n, ctx.deps.map, s.decay, t.pipeline); // ParamError: nothing written
   let baseline: { last: Rendered; refreshed: boolean };
   try {
     baseline = await fresh(ctx, s, t, beforeView);
   } catch (err) {
     throw failed(ctx, s, `step ${n}${label(t)} (render before the step)`, err);
   }
-  applyProjectedGuardrail(plan, summarize(baseline.last.metrics), s.limits, t.slopes);
+  applyProjectedGuardrail(plan, summarize(baseline.last.metrics), s.limits, t.slopes, t.pipeline);
   if (plan.changes.length === 0) refuseEmpty(s, plan);
 
   try {
     const beforeRender = baseline.last;
     const done = await apply(ctx, s, t, n, plan, beforeView, beforeRender);
     const delta = deltaMetrics(beforeRender.metrics, done.rendered.metrics);
-    const converged = convergedByMetrics(delta, plan.changes);
+    const converged = convergedByMetrics(delta, plan.changes, t.pipeline);
     t.passes = n;
     if (converged) t.endReason = "converged";
     else if (n >= s.maxPasses) t.endReason = "cap_reached";

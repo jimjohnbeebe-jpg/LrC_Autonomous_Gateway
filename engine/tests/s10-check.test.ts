@@ -87,14 +87,28 @@ describe("npm run s10:check", () => {
     expect((c["photos"] as J[]).map((p) => [p["filename"], p["pipeline"], p["selected"]])).toEqual([["20260907-_OZ80093.NEF", "raw", true], ["DSC_0031.JPG", "rendered", false]]);
     expect((c["photos"] as J[])[1]).toMatchObject({ file_format: "JPG", process_version: "15.4", extra_keys: expect.arrayContaining(["IncrementalTemperature", "IncrementalTint"]), missing_pinned_keys: expect.arrayContaining(["Temperature", "Tint", "Look"]) });
     expect(c["rendered"]).toMatchObject({ photos: 1, extra_keys_in_all: expect.arrayContaining(["IncrementalTemperature"]) });
-    expect(readdirSync(dirs.dump).sort()).toEqual(["s10_20260907-_OZ80093.NEF.json", "s10_DSC_0031.JPG.json"]);
-    const dump = JSON.parse(readFileSync(path.join(dirs.dump, "s10_DSC_0031.JPG.json"), "utf8")) as J;
+    expect(readdirSync(dirs.dump).sort()).toEqual(["s10_20260907-_OZ80093.NEF__SIM-UUID.json", "s10_DSC_0031.JPG__SIM-JPG.json"]);
+    const dump = JSON.parse(readFileSync(path.join(dirs.dump, "s10_DSC_0031.JPG__SIM-JPG.json"), "utf8")) as J;
     expect(dump["meta"]).toMatchObject({ spike: "S10", filename: "DSC_0031.JPG", pipeline: "rendered" });
     expect(dump["settings"]).toEqual(rendered.settings);
     expect(sent("get_settings").every((p) => typeof p["photo_uuid"] === "string" && p["target_uuid"] === undefined)).toBe(true);
     expect(sent("apply_settings")).toEqual([]);
     expect(sent("create_snapshot")).toEqual([]);
     expect(results).not.toHaveProperty("writes");
+    // Every page of the collection is read (the sim's page is one here); a library-only photo without settings stays unknown to the Develop commands.
+    expect(sent("search_photos").map((p) => [p["collection_id"], p["offset"]])).toEqual([[503, 0]]);
+    const getSettings = plugin.handlers.get("get_settings") as NonNullable<ReturnType<typeof plugin.handlers.get>>;
+    expect(await getSettings({ photo_uuid: "SIM-LIB-2" }, "x")).toMatchObject({ ok: false, error: { code: "unknown_photo" } });
+  });
+
+  it("--fixtures: refuses to add anything while two collections carry the name", async () => {
+    lr.library.collections.push({ local_id: 504, name: COLLECTION, smart: false, photos: [] });
+    const { worked, results } = await run([], { fixtures: true });
+    expect(worked).toBe(false);
+    // The fixtures step refuses first; the census then refuses by the same rule.
+    expect(results["errors"]).toEqual([expect.stringContaining("2 collections named"), expect.stringContaining("2 collections named")]);
+    expect(sent("collection_photos")).toEqual([]);
+    expect(sent("create_collection")).toEqual([]);
   });
 
   it("writes the battery to each photo behind a snapshot, rendered first, and puts every one back", async () => {

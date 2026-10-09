@@ -30,8 +30,8 @@ export type CatalogSim = {
   readonly copies: Map<string, SimCopy>;
   copyFault: CopyFault | null;
   selectFault: string | null;
-  /** Rating and capture time per photo (plugin 0.8.0, Photos.describe; lightroom-sim-library.ts); `find` makes its photos Develop targets too (spike S10's census). */
-  readonly library?: { meta(uuid: string): Record<string, unknown>; find?(uuid: string): { local_id: number } | undefined };
+  /** Rating and capture time per photo (plugin 0.8.0, Photos.describe; lightroom-sim-library.ts); a photo `find` gives with its own `settings` is a Develop target too (spike S10's census). */
+  readonly library?: { meta(uuid: string): Record<string, unknown>; find?(uuid: string): { local_id: number; settings?: Record<string, unknown> | undefined } | undefined };
 };
 
 export const MASTER_LOCAL_ID = 1;
@@ -43,8 +43,9 @@ export function describePhoto(sim: CatalogSim, uuid: string): Record<string, unk
   if (uuid === sim.uuid) return { uuid, local_id: MASTER_LOCAL_ID, is_virtual_copy: false, master_local_id: MASTER_LOCAL_ID };
   const copy = sim.copies.get(uuid);
   if (copy) return { uuid, local_id: copy.local_id, is_virtual_copy: true, master_local_id: MASTER_LOCAL_ID, copy_name: copy.copy_name };
+  // A library-only entry (no settings of its own) stays unknown to the Develop commands, else a write to it would land on the master (Greptile, PR #96).
   const other = sim.library?.find?.(uuid);
-  return other ? { uuid, local_id: other.local_id, is_virtual_copy: false, master_local_id: other.local_id } : null;
+  return other?.settings ? { uuid, local_id: other.local_id, is_virtual_copy: false, master_local_id: other.local_id } : null;
 }
 
 export function createVirtualCopies(sim: CatalogSim, p: Record<string, unknown>): FakeReply | "silent" {

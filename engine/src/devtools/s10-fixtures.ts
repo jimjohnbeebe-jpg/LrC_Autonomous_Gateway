@@ -9,6 +9,7 @@
 
 import { CATALOG_READ_TIMEOUT_MS } from "../library/index.js";
 import type { Json } from "./phase3-config.js";
+import { allPages } from "./s10-census.js";
 import { COLLECTION, type Ctx } from "./s10-config.js";
 
 export const FIXTURE_FILES = [
@@ -38,7 +39,13 @@ export async function addFixtures(ctx: Ctx): Promise<Json> {
   const out: Json = { names: [...FIXTURE_FILES, MADE_PREFIX] };
   say(`Fixtures: the photos of the collection "${COLLECTION}", by file name:`);
   const listed = await client.request("list_collections", {}, { timeoutMs: CATALOG_READ_TIMEOUT_MS });
-  let collection = listed.collections.find((c) => c.name === COLLECTION);
+  const named = listed.collections.filter((c) => c.name === COLLECTION);
+  if (named.length > 1) {
+    // The census's rule, checked before anything is added (Greptile, PR #96).
+    ctx.fail(`Lightroom has ${named.length} collections named "${COLLECTION}"; keep one. Nothing was written.`);
+    return out;
+  }
+  let collection = named[0];
   if (!collection) {
     const made = await client.request("create_collection", { name: COLLECTION, set_path: [] }, { timeoutMs: CATALOG_READ_TIMEOUT_MS });
     collection = { local_id: made.local_id, name: made.name, smart: made.smart, photo_count: made.photo_count };
@@ -53,8 +60,7 @@ export async function addFixtures(ctx: Ctx): Promise<Json> {
   const found: Json[] = [];
   const missing: string[] = [];
   for (const name of out["names"] as string[]) {
-    const page = await client.request("search_photos", { criteria: [{ criteria: "filename", operation: "any", value: name }], offset: 0, limit: 50 }, { timeoutMs: CATALOG_READ_TIMEOUT_MS });
-    const matches = wanted(name, page.photos);
+    const matches = wanted(name, await allPages(ctx, { criteria: [{ criteria: "filename", operation: "any", value: name }] }));
     if (matches.length === 0) {
       missing.push(name);
       say(`  ${name}: not in the catalog`);

@@ -78,7 +78,8 @@ main().then(
   },
   (err: unknown) => {
     console.error(`FAILED: ${describeError(err)}`);
-    console.log(`Results saved automatically: ${redact(save({ check: "s10", errors: [describeError(err)] }))}`);
+    // started_at as the collector requires it (spikes\S10\collect.ts), so a start-up failure is summarised too (Greptile, PR #96).
+    console.log(`Results saved automatically: ${redact(save({ check: "s10", started_at: new Date().toISOString(), errors: [describeError(err)] }))}`);
     process.exitCode = 1;
   },
 );

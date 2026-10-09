@@ -8,7 +8,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import sdkKeysJson from "../params/sdk-keys.lrc15.json" with { type: "json" };
-import type { CommandResult } from "../bridge/index.js";
+import type { CommandPayloads, CommandResult } from "../bridge/index.js";
 import { CATALOG_READ_TIMEOUT_MS, MAX_PAGE } from "../library/index.js";
 import { PROCESS_VERSION_KEY, type SdkSettings } from "../params/index.js";
 import { loadSdkKeys, type SdkKeyMap } from "../params/sdk-keys.js";
@@ -19,10 +19,26 @@ import { COLLECTION, label, pipelineOf, type Ctx, type Photo } from "./s10-confi
 
 export type Census = { collection: { local_id: number; name: string; photo_count: number }; photos: Photo[] };
 
-/** The dump's file name: s10_<file name>[__<copy name>].json, as S5Dump.lua named its (S5Common.lua safeName). */
-export function dumpName(p: Pick<Photo, "filename" | "copy_name">): string {
+/**
+ * The dump's file name: s10_<file name>[__<copy name>]__<uuid's first 8>.json (S5Dump.lua's naming,
+ * S5Common.lua safeName, plus the uuid: two originals of one file name in different folders would
+ * otherwise write the same file; Greptile, PR #96).
+ */
+export function dumpName(p: Pick<Photo, "filename" | "copy_name" | "uuid">): string {
   const safe = (s: string): string => s.replace(/[\\/:*?"<>|]/g, "_");
-  return `s10_${safe(p.filename)}${p.copy_name ? `__${safe(p.copy_name)}` : ""}.json`;
+  return `s10_${safe(p.filename)}${p.copy_name ? `__${safe(p.copy_name)}` : ""}__${safe(p.uuid).slice(0, 8)}.json`;
+}
+
+type Listed = CommandResult<"search_photos">["photos"];
+
+/** Every page of a search (the plugin's page is at most MAX_PAGE; a result past `count` is never asked for). */
+export async function allPages(ctx: Ctx, request: Omit<CommandPayloads["search_photos"], "offset" | "limit">): Promise<Listed> {
+  const photos: Listed = [];
+  for (let offset = 0; ; offset += MAX_PAGE) {
+    const page = await ctx.deps.client.request("search_photos", { ...request, offset, limit: MAX_PAGE }, { timeoutMs: CATALOG_READ_TIMEOUT_MS });
+    photos.push(...page.photos);
+    if (page.photos.length === 0 || photos.length >= page.count) return photos;
+  }
 }
 
 const text = (v: unknown): string | null => (typeof v === "string" ? v : null);
@@ -85,7 +101,7 @@ export async function census(ctx: Ctx): Promise<Census | null> {
   }
   const c = found[0] as (typeof found)[number];
   out["collection"] = { ...c };
-  const page = await client.request("search_photos", { criteria: [], collection_id: c.local_id, offset: 0, limit: MAX_PAGE }, { timeoutMs: CATALOG_READ_TIMEOUT_MS });
+  const listedPhotos = await allPages(ctx, { criteria: [], collection_id: c.local_id });
   let selected: string | null = null;
   try {
     selected = (await client.request("get_context", {})).uuid;
@@ -96,7 +112,7 @@ export async function census(ctx: Ctx): Promise<Census | null> {
   const photos: Photo[] = [];
   const skipped: Json[] = [];
   mkdirSync(dumpDir, { recursive: true });
-  for (const p of page.photos) {
+  for (const p of listedPhotos) {
     if (!p.uuid) {
       skipped.push({ local_id: p.local_id, filename: p.filename ?? null, reason: "the plugin could not read its uuid" });
       continue;

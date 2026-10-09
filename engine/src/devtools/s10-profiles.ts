@@ -22,11 +22,11 @@ export const RAW_CONTROL_PROFILE = "Adobe Color";
 export const WB_SHIFT = { raw: { temperature: 300, tint: 5 }, rendered: 20 } as const;
 const LOOK_KEY = PROFILE_KEYS[1] as string;
 
-/** The file S10Recorder.lua writes (S5Recorder.lua's shape). */
+/** The file S10Recorder.lua writes (S5Recorder.lua's shape). `look` is absent when the photo had no Look: a nil field is no field in Lua. */
 const recordedSchema = z.object({
   recorder: z.string(),
   started_at: z.string(),
-  captures: z.array(z.looseObject({ filename: z.string(), file_format: z.unknown(), camera_profile: z.unknown(), look: z.unknown(), process_version: z.unknown() })),
+  captures: z.array(z.looseObject({ filename: z.string(), file_format: z.unknown(), camera_profile: z.unknown(), look: z.unknown().optional(), process_version: z.unknown() })),
 });
 export type RecordedPair = { name: string; camera_profile: string; look: Record<string, unknown> | null; look_uuid: string | null; recorded_on: string };
 export type Recorded = { file: string | null; pairs: RecordedPair[]; problems: string[] };

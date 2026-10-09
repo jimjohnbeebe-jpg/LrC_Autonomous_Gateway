@@ -12,10 +12,14 @@ import { z } from "zod";
 export const SDK_VALUE_TYPES = ["number", "string", "boolean", "array", "object", "null"] as const;
 export type SdkValueType = (typeof SDK_VALUE_TYPES)[number];
 
-/** Shape written by S5.lrplugin: `{ meta: {...}, settings: { <SdkKey>: <value> } }`. */
+/**
+ * Shape written by S5.lrplugin: `{ meta: {...}, settings: { <SdkKey>: <value> } }`. Spike S10's
+ * census (devtools\s10-census.ts) writes the same shape with spike "S10", one dump per photo of
+ * the "fixtures" collection, so the rendered pipeline's keys are pinned by the same conversion.
+ */
 const s5DumpSchema = z.object({
   meta: z.looseObject({
-    spike: z.literal("S5"),
+    spike: z.enum(["S5", "S10"]),
     filename: z.string().min(1),
     lr_version: z.string().optional(),
     captured_at: z.string().optional(),

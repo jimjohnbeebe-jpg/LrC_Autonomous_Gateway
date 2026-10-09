@@ -5,6 +5,8 @@ fixtures/*.NEF.xmp
 # Lightroom-exported JPEGs Jim drops in for spike S3 (sharp cannot decode the NEFs)
 fixtures/*.jpg
 fixtures/*.jpeg
+# The files Jim makes for spike S10 (PSB, 16/32-bit and CMYK TIFF, JPEG XL): renders of his photos
+fixtures/S10/
 
 # Golden JPEGs are renders of Jim's photos: on disk only, never in the public repo (Phase 3 decision 3,
 # Jim 2026-09-26). Their hashes and expected metrics are committed instead.

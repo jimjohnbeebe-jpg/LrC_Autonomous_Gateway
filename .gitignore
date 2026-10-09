@@ -2,6 +2,7 @@
 fixtures/*.NEF
 fixtures/*.dng
 fixtures/*.NEF.xmp
+fixtures/*.xmp
 # Lightroom-exported JPEGs Jim drops in for spike S3 (sharp cannot decode the NEFs)
 fixtures/*.jpg
 fixtures/*.jpeg

@@ -1,0 +1,43 @@
+// Read-only census: photos per file extension (findPhotos filename-contains), then one photo per
+// extension: file_format, CameraProfile, ProcessVersion, WB keys. Writes nothing to Lightroom.
+import { writeFileSync } from "node:fs";
+import { pathToFileURL } from "node:url";
+
+const dist = "D:/Developer/LrC_Autonomous_Gateway/engine/dist";
+const { BridgeClient } = await import(pathToFileURL(`${dist}/bridge/index.js`).href);
+const { BridgeGate, acquireInstanceLock, devOverrides, ENGINE_VERSION } = await import(pathToFileURL(`${dist}/mcp/index.js`).href);
+
+const out = process.argv[2]!;
+const exts = [".jpg", ".jpeg", ".png", ".tif", ".tiff", ".psd", ".heic", ".webp", ".avif", ".jxl", ".dng", ".nef"];
+const dev = devOverrides();
+const client = new BridgeClient({ engineVersion: ENGINE_VERSION, log: () => {}, ...dev.bridge });
+const gate = new BridgeGate(client, () => acquireInstanceLock(dev.lockPort));
+const report: Record<string, unknown>[] = [];
+try {
+  await gate.ready();
+  for (const ext of exts) {
+    const t0 = Date.now();
+    let row: Record<string, unknown> = { ext };
+    try {
+      const r = await client.request("search_photos", { criteria: [{ criteria: "filename", operation: "any", value: ext }], offset: 0, limit: 3 }, { timeoutMs: 120000 });
+      row = { ext, count: r.count, ms: Date.now() - t0, sample: r.photos.map((p: { filename?: string }) => p.filename) };
+      const first = r.photos.find((p: { uuid?: string }) => p.uuid);
+      if (first?.uuid) {
+        const c = await client.request("get_context", { photo_uuid: first.uuid });
+        const s = (await client.request("get_settings", { photo_uuid: first.uuid })).settings as Record<string, unknown>;
+        row["first"] = {
+          filename: c["filename"], file_format: c["file_format"], is_virtual_copy: c["is_virtual_copy"], size: `${c["width"]}x${c["height"]}`,
+          CameraProfile: s["CameraProfile"], Look: "Look" in s ? "present" : "absent", ProcessVersion: s["ProcessVersion"],
+          Temperature: s["Temperature"] ?? "absent", IncrementalTemperature: s["IncrementalTemperature"] ?? "absent", WhiteBalance: s["WhiteBalance"], keys: Object.keys(s).length,
+        };
+      }
+    } catch (e) {
+      row["error"] = e instanceof Error ? e.message : String(e);
+    }
+    report.push(row);
+    console.log(JSON.stringify(row));
+  }
+} finally {
+  await gate.release();
+  writeFileSync(out, JSON.stringify(report, null, 2));
+}

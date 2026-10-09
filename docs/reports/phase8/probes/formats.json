@@ -1,0 +1,227 @@
+[
+  {
+    "ext": ".jpg",
+    "count": 8537,
+    "ms": 20,
+    "sample": [
+      "20251207-DSC_0014.JPG",
+      "20251207-DSC_0013.JPG",
+      "20251101-PXL_20251101_200724392.jpg"
+    ],
+    "first": {
+      "filename": "20251207-DSC_0014.JPG",
+      "file_format": "JPG",
+      "is_virtual_copy": false,
+      "size": "8256x5504",
+      "CameraProfile": "Embedded",
+      "Look": "absent",
+      "ProcessVersion": "15.4",
+      "Temperature": "absent",
+      "IncrementalTemperature": 0,
+      "WhiteBalance": "As Shot",
+      "keys": 170
+    }
+  },
+  {
+    "ext": ".jpeg",
+    "count": 14,
+    "ms": 23,
+    "sample": [
+      "20211013-driver lic.jpeg",
+      "20211001-image2.jpeg",
+      "20211001-image1-2.jpeg"
+    ],
+    "first": {
+      "filename": "20211013-driver lic.jpeg",
+      "file_format": "HEIC",
+      "is_virtual_copy": false,
+      "size": "4032x1816",
+      "CameraProfile": "Embedded",
+      "Look": "absent",
+      "ProcessVersion": "15.4",
+      "Temperature": "absent",
+      "IncrementalTemperature": 0,
+      "WhiteBalance": "As Shot",
+      "keys": 171
+    }
+  },
+  {
+    "ext": ".png",
+    "count": 74,
+    "ms": 12,
+    "sample": [
+      "20251219-ThreeBeebeBrothers 1994 - Restored.png",
+      "2023-05-28-NorthSister-Second_SequenceV.1.mask.png",
+      "2023-05-28-NorthSister-FirstSequenceV.2.mask.png"
+    ],
+    "first": {
+      "filename": "20251219-ThreeBeebeBrothers 1994 - Restored.png",
+      "file_format": "PNG",
+      "is_virtual_copy": false,
+      "size": "1824x2336",
+      "CameraProfile": "Embedded",
+      "Look": "absent",
+      "ProcessVersion": "15.4",
+      "Temperature": "absent",
+      "IncrementalTemperature": 0,
+      "WhiteBalance": "As Shot",
+      "keys": 171
+    }
+  },
+  {
+    "ext": ".tif",
+    "count": 514,
+    "ms": 13,
+    "sample": [
+      "20260906-_OZ80013-Edit.tif",
+      "20260906-_OZ80005-Rendered-Edit.tif",
+      "20260906-_OZ80004-Edit-Edit.tif"
+    ],
+    "first": {
+      "filename": "20260906-_OZ80013-Edit.tif",
+      "file_format": "TIFF",
+      "is_virtual_copy": false,
+      "size": "8256x5504",
+      "CameraProfile": "Embedded",
+      "Look": "absent",
+      "ProcessVersion": "15.4",
+      "Temperature": "absent",
+      "IncrementalTemperature": 0,
+      "WhiteBalance": "As Shot",
+      "keys": 172
+    }
+  },
+  {
+    "ext": ".tiff",
+    "count": 0,
+    "ms": 3,
+    "sample": []
+  },
+  {
+    "ext": ".psd",
+    "count": 44,
+    "ms": 11,
+    "sample": [
+      "20260906-_OZ80005-Edit-Edit.psd",
+      "20260906-_OZ80005-Edit-Rendered-Edit.psd",
+      "20260906-_OZ80005-Edit.psd"
+    ],
+    "first": {
+      "filename": "20260906-_OZ80005-Edit-Edit.psd",
+      "file_format": "PSD",
+      "is_virtual_copy": false,
+      "size": "4959x3199",
+      "CameraProfile": "Embedded",
+      "Look": "absent",
+      "ProcessVersion": "15.4",
+      "Temperature": "absent",
+      "IncrementalTemperature": 0,
+      "WhiteBalance": "As Shot",
+      "keys": 172
+    }
+  },
+  {
+    "ext": ".heic",
+    "count": 646,
+    "ms": 13,
+    "sample": [
+      "IMG_0027.HEIC",
+      "20231029_171126.heic",
+      "20231029_171123.heic"
+    ],
+    "first": {
+      "filename": "IMG_0027.HEIC",
+      "file_format": "HEIC",
+      "is_virtual_copy": false,
+      "size": "3034x3898",
+      "CameraProfile": "Embedded",
+      "Look": "absent",
+      "ProcessVersion": "15.4",
+      "Temperature": "absent",
+      "IncrementalTemperature": 0,
+      "WhiteBalance": "As Shot",
+      "keys": 170
+    }
+  },
+  {
+    "ext": ".webp",
+    "count": 0,
+    "ms": 3,
+    "sample": []
+  },
+  {
+    "ext": ".avif",
+    "count": 3,
+    "ms": 10,
+    "sample": [
+      "20250414-20250413-_OZ81315-HDR-2.avif",
+      "20250414-20250413-_OZ81315-HDR.avif",
+      "20220109-il_794xN.2505053599_3i9j.avif"
+    ],
+    "first": {
+      "filename": "20250414-20250413-_OZ81315-HDR-2.avif",
+      "file_format": "AVIF",
+      "is_virtual_copy": false,
+      "size": "6258x4172",
+      "CameraProfile": "Embedded",
+      "Look": "absent",
+      "ProcessVersion": "15.4",
+      "Temperature": "absent",
+      "IncrementalTemperature": 0,
+      "WhiteBalance": "As Shot",
+      "keys": 175
+    }
+  },
+  {
+    "ext": ".jxl",
+    "count": 0,
+    "ms": 3,
+    "sample": []
+  },
+  {
+    "ext": ".dng",
+    "count": 464,
+    "ms": 11,
+    "sample": [
+      "20260906-_OZ80005-Rendered.dng",
+      "20260906-_OZ80005-Rendered.dng",
+      "20260906-_OZ80005-Edit-Rendered.dng"
+    ],
+    "first": {
+      "filename": "20260906-_OZ80005-Rendered.dng",
+      "file_format": "DNG",
+      "is_virtual_copy": false,
+      "size": "8256x5504",
+      "CameraProfile": "Embedded",
+      "Look": "absent",
+      "ProcessVersion": "15.4",
+      "Temperature": "absent",
+      "IncrementalTemperature": 4,
+      "WhiteBalance": "Custom",
+      "keys": 174
+    }
+  },
+  {
+    "ext": ".nef",
+    "count": 4852,
+    "ms": 19,
+    "sample": [
+      "20260907-_OZ80139.NEF",
+      "20260907-_OZ80138.NEF",
+      "20260907-_OZ80137.NEF"
+    ],
+    "first": {
+      "filename": "20260907-_OZ80139.NEF",
+      "file_format": "RAW",
+      "is_virtual_copy": false,
+      "size": "8256x5504",
+      "CameraProfile": "Camera Neutral",
+      "Look": "absent",
+      "ProcessVersion": "15.4",
+      "Temperature": 5000,
+      "IncrementalTemperature": "absent",
+      "WhiteBalance": "As Shot",
+      "keys": 177
+    }
+  }
+]

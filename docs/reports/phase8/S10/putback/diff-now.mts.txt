@@ -1,0 +1,34 @@
+// Read-only: for each census dump given, read the photo's settings now and print the differing keys with both values.
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+
+const dist = "D:/Developer/LrC_Autonomous_Gateway/engine/dist";
+const { BridgeClient } = await import(pathToFileURL(`${dist}/bridge/index.js`).href);
+const { BridgeGate, acquireInstanceLock, devOverrides, ENGINE_VERSION } = await import(pathToFileURL(`${dist}/mcp/index.js`).href);
+const { loadDefaultParamMap } = await import(pathToFileURL(`${dist}/params/index.js`).href);
+const { differingKeys } = await import(pathToFileURL(`${dist}/devtools/phase1-check.js`).href);
+
+const map = loadDefaultParamMap();
+const dev = devOverrides();
+const client = new BridgeClient({ engineVersion: ENGINE_VERSION, log: () => {}, ...dev.bridge });
+const gate = new BridgeGate(client, () => acquireInstanceLock(dev.lockPort));
+try {
+  if (!(await gate.start())) throw new Error("another engine holds the bridge");
+  await client.waitConnected(20000);
+  for (const file of process.argv.slice(2)) {
+    const dump = JSON.parse(readFileSync(file, "utf8")) as { meta: { uuid: string }; settings: Record<string, unknown> };
+    const now = (await client.request("get_settings", { photo_uuid: dump.meta.uuid })).settings as Record<string, unknown>;
+    const keys = differingKeys(map, dump.settings, now) as string[];
+    console.log(`== ${path.basename(file)}: ${keys.length} differing`);
+    const nested = (a: unknown, b: unknown, prefix: string): string[] => {
+      if (Array.isArray(a) && Array.isArray(b) && a.length === b.length) return a.flatMap((x, i) => nested(x, b[i], `${prefix}[${i}]`));
+      if (typeof a !== "object" || a === null || typeof b !== "object" || b === null || Array.isArray(a) || Array.isArray(b)) return JSON.stringify(a) === JSON.stringify(b) ? [] : [`${prefix}: ${JSON.stringify(a)?.slice(0, 120)} -> ${JSON.stringify(b)?.slice(0, 120)}`];
+      const ks = new Set([...Object.keys(a), ...Object.keys(b)]);
+      return [...ks].flatMap((k) => nested((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k], `${prefix}.${k}`));
+    };
+    for (const k of keys) console.log(`  ${k}:\n    ${nested(dump.settings[k], now[k], k).join("\n    ")}`);
+  }
+} finally {
+  await gate.release();
+}

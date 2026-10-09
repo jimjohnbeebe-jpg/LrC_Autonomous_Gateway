@@ -1,0 +1,1412 @@
+{
+  "from": "s10_check_2026-10-09T12-24-50-743Z.json",
+  "runs": [
+    "s10_check_2026-10-09T04-50-30-341Z.json",
+    "s10_check_2026-10-09T11-42-15-277Z.json",
+    "s10_check_2026-10-09T11-55-47-680Z.json",
+    "s10_check_2026-10-09T12-24-50-743Z.json"
+  ],
+  "started_at": "2026-10-09T12:24:50.751Z",
+  "finished_at": "2026-10-09T12:29:59.656Z",
+  "census_only": false,
+  "suggestion": "FAILED",
+  "errors": [
+    "_DSC0028.NEF is not as before the check: Look differ. Tell Claude Code.",
+    "_DSC0103.NEF (Copy 1) is not as before the check: RemoveAreas, RetouchAreas differ. Tell Claude Code.",
+    "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng is not as before the check: Look differ. Tell Claude Code."
+  ],
+  "pipelines": {
+    "raw": 13,
+    "rendered": 18,
+    "unknown": 0
+  },
+  "photos": [
+    {
+      "photo": "S10-jxl.jxl",
+      "file_format": "JXL",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "key_count": 172,
+      "extra_keys": [
+        "IncrementalTemperature",
+        "IncrementalTint"
+      ],
+      "missing_pinned_keys": [
+        "LensProfileDigest",
+        "LensProfileDistortionScale",
+        "LensProfileIsEmbedded",
+        "LensProfileName",
+        "LensProfileVignettingScale",
+        "Look",
+        "MaskGroupBasedCorrections",
+        "Temperature",
+        "Tint"
+      ]
+    },
+    {
+      "photo": "20250414-20250413-_OZ81315-HDR-2.avif",
+      "file_format": "AVIF",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "key_count": 176,
+      "extra_keys": [
+        "ExtendedToneCurvePV2012",
+        "ExtendedToneCurvePV2012Blue",
+        "ExtendedToneCurvePV2012Green",
+        "ExtendedToneCurvePV2012Red",
+        "IncrementalTemperature",
+        "IncrementalTint"
+      ],
+      "missing_pinned_keys": [
+        "LensProfileDigest",
+        "LensProfileDistortionScale",
+        "LensProfileIsEmbedded",
+        "LensProfileName",
+        "LensProfileVignettingScale",
+        "Look",
+        "MaskGroupBasedCorrections",
+        "Temperature",
+        "Tint"
+      ]
+    },
+    {
+      "photo": "_DSC0103.NEF",
+      "file_format": "RAW",
+      "pipeline": "raw",
+      "process_version": "15.4",
+      "key_count": 175,
+      "extra_keys": [
+        "CropConstrainAspectRatio",
+        "RemoveAreas",
+        "RetouchAreas"
+      ],
+      "missing_pinned_keys": [
+        "LensProfileDigest",
+        "LensProfileDistortionScale",
+        "LensProfileIsEmbedded",
+        "LensProfileName",
+        "LensProfileVignettingScale",
+        "Look",
+        "MaskGroupBasedCorrections"
+      ]
+    },
+    {
+      "photo": "_DSC0028.NEF",
+      "file_format": "RAW",
+      "pipeline": "raw",
+      "process_version": "11.0",
+      "key_count": 173,
+      "extra_keys": [],
+      "missing_pinned_keys": [
+        "LensProfileDigest",
+        "LensProfileDistortionScale",
+        "LensProfileIsEmbedded",
+        "LensProfileName",
+        "LensProfileVignettingScale",
+        "MaskGroupBasedCorrections"
+      ]
+    },
+    {
+      "photo": "_OZ80660.JPG",
+      "file_format": "JPG",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "key_count": 172,
+      "extra_keys": [
+        "IncrementalTemperature",
+        "IncrementalTint"
+      ],
+      "missing_pinned_keys": [
+        "LensProfileDigest",
+        "LensProfileDistortionScale",
+        "LensProfileIsEmbedded",
+        "LensProfileName",
+        "LensProfileVignettingScale",
+        "Look",
+        "MaskGroupBasedCorrections",
+        "Temperature",
+        "Tint"
+      ]
+    },
+    {
+      "photo": "20260907-S10-tiff32.tif",
+      "file_format": "TIFF",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "key_count": 176,
+      "extra_keys": [
+        "ExtendedToneCurvePV2012",
+        "ExtendedToneCurvePV2012Blue",
+        "ExtendedToneCurvePV2012Green",
+        "ExtendedToneCurvePV2012Red",
+        "IncrementalTemperature",
+        "IncrementalTint"
+      ],
+      "missing_pinned_keys": [
+        "LensProfileDigest",
+        "LensProfileDistortionScale",
+        "LensProfileIsEmbedded",
+        "LensProfileName",
+        "LensProfileVignettingScale",
+        "Look",
+        "MaskGroupBasedCorrections",
+        "Temperature",
+        "Tint"
+      ]
+    },
+    {
+      "photo": "20260907-S10-tiff16.tif",
+      "file_format": "TIFF",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "key_count": 172,
+      "extra_keys": [
+        "IncrementalTemperature",
+        "IncrementalTint"
+      ],
+      "missing_pinned_keys": [
+        "LensProfileDigest",
+        "LensProfileDistortionScale",
+        "LensProfileIsEmbedded",
+        "LensProfileName",
+        "LensProfileVignettingScale",
+        "Look",
+        "MaskGroupBasedCorrections",
+        "Temperature",
+        "Tint"
+      ]
+    },
+    {
+      "photo": "20260906-_OZ80013-Edit.tif",
+      "file_format": "TIFF",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "key_count": 172,
+      "extra_keys": [
+        "IncrementalTemperature",
+        "IncrementalTint"
+      ],
+      "missing_pinned_keys": [
+        "LensProfileDigest",
+        "LensProfileDistortionScale",
+        "LensProfileIsEmbedded",
+        "LensProfileName",
+        "LensProfileVignettingScale",
+        "Look",
+        "MaskGroupBasedCorrections",
+        "Temperature",
+        "Tint"
+      ]
+    },
+    {
+      "photo": "_DSC0103.NEF (Copy 1)",
+      "file_format": "RAW",
+      "pipeline": "raw",
+      "process_version": "15.4",
+      "key_count": 183,
+      "extra_keys": [
+        "CropConstrainAspectRatio",
+        "LensProfileFilename",
+        "RemoveAreas",
+        "RetouchAreas"
+      ],
+      "missing_pinned_keys": []
+    },
+    {
+      "photo": "S10-cmyk.tif",
+      "file_format": "TIFF",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "key_count": 172,
+      "extra_keys": [
+        "IncrementalTemperature",
+        "IncrementalTint"
+      ],
+      "missing_pinned_keys": [
+        "LensProfileDigest",
+        "LensProfileDistortionScale",
+        "LensProfileIsEmbedded",
+        "LensProfileName",
+        "LensProfileVignettingScale",
+        "Look",
+        "MaskGroupBasedCorrections",
+        "Temperature",
+        "Tint"
+      ]
+    },
+    {
+      "photo": "20251219-ThreeBeebeBrothers 1994 - Restored.png",
+      "file_format": "PNG",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "key_count": 172,
+      "extra_keys": [
+        "IncrementalTemperature",
+        "IncrementalTint"
+      ],
+      "missing_pinned_keys": [
+        "LensProfileDigest",
+        "LensProfileDistortionScale",
+        "LensProfileIsEmbedded",
+        "LensProfileName",
+        "LensProfileVignettingScale",
+        "Look",
+        "MaskGroupBasedCorrections",
+        "Temperature",
+        "Tint"
+      ]
+    },
+    {
+      "photo": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+      "file_format": "DNG",
+      "pipeline": "raw",
+      "process_version": "15.4",
+      "key_count": 174,
+      "extra_keys": [
+        "CropConstrainAspectRatio"
+      ],
+      "missing_pinned_keys": [
+        "LensProfileDigest",
+        "LensProfileDistortionScale",
+        "LensProfileIsEmbedded",
+        "LensProfileName",
+        "LensProfileVignettingScale",
+        "MaskGroupBasedCorrections"
+      ]
+    },
+    {
+      "photo": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+      "file_format": "DNG",
+      "pipeline": "raw",
+      "process_version": "15.4",
+      "key_count": 180,
+      "extra_keys": [
+        "ExtendedToneCurvePV2012",
+        "ExtendedToneCurvePV2012Blue",
+        "ExtendedToneCurvePV2012Green",
+        "ExtendedToneCurvePV2012Red",
+        "UprightFourSegments_0",
+        "UprightTransform_5"
+      ],
+      "missing_pinned_keys": [
+        "LensProfileDigest",
+        "LensProfileDistortionScale",
+        "LensProfileIsEmbedded",
+        "LensProfileName",
+        "LensProfileVignettingScale"
+      ]
+    },
+    {
+      "photo": "20260906-_OZ80005.NEF",
+      "file_format": "RAW",
+      "pipeline": "raw",
+      "process_version": "15.4",
+      "key_count": 177,
+      "extra_keys": [],
+      "missing_pinned_keys": [
+        "Look",
+        "MaskGroupBasedCorrections"
+      ]
+    },
+    {
+      "photo": "20260110-_Z8A0173.NEF",
+      "file_format": "RAW",
+      "pipeline": "raw",
+      "process_version": "15.4",
+      "key_count": 177,
+      "extra_keys": [],
+      "missing_pinned_keys": [
+        "Look",
+        "MaskGroupBasedCorrections"
+      ]
+    },
+    {
+      "photo": "20260907-_OZ80093.NEF",
+      "file_format": "RAW",
+      "pipeline": "raw",
+      "process_version": "15.4",
+      "key_count": 177,
+      "extra_keys": [],
+      "missing_pinned_keys": [
+        "Look",
+        "MaskGroupBasedCorrections"
+      ]
+    },
+    {
+      "photo": "20260906-_OZ80005-Edit-Edit.psd",
+      "file_format": "PSD",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "key_count": 172,
+      "extra_keys": [
+        "IncrementalTemperature",
+        "IncrementalTint"
+      ],
+      "missing_pinned_keys": [
+        "LensProfileDigest",
+        "LensProfileDistortionScale",
+        "LensProfileIsEmbedded",
+        "LensProfileName",
+        "LensProfileVignettingScale",
+        "Look",
+        "MaskGroupBasedCorrections",
+        "Temperature",
+        "Tint"
+      ]
+    },
+    {
+      "photo": "PICT0019.DNG",
+      "file_format": "DNG",
+      "pipeline": "raw",
+      "process_version": "15.4",
+      "key_count": 182,
+      "extra_keys": [
+        "CropConstrainAspectRatio",
+        "RemoveAreas",
+        "UprightTransform_0",
+        "UprightTransform_1",
+        "UprightTransform_2",
+        "UprightTransform_3",
+        "UprightTransform_4",
+        "UprightTransform_5"
+      ],
+      "missing_pinned_keys": [
+        "LensProfileDigest",
+        "LensProfileDistortionScale",
+        "LensProfileIsEmbedded",
+        "LensProfileName",
+        "LensProfileVignettingScale"
+      ]
+    },
+    {
+      "photo": "IMG_0027.HEIC",
+      "file_format": "HEIC",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "key_count": 172,
+      "extra_keys": [
+        "IncrementalTemperature",
+        "IncrementalTint"
+      ],
+      "missing_pinned_keys": [
+        "LensProfileDigest",
+        "LensProfileDistortionScale",
+        "LensProfileIsEmbedded",
+        "LensProfileName",
+        "LensProfileVignettingScale",
+        "Look",
+        "MaskGroupBasedCorrections",
+        "Temperature",
+        "Tint"
+      ]
+    },
+    {
+      "photo": "S10-psb.psb",
+      "file_format": "PSB",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "key_count": 172,
+      "extra_keys": [
+        "IncrementalTemperature",
+        "IncrementalTint"
+      ],
+      "missing_pinned_keys": [
+        "LensProfileDigest",
+        "LensProfileDistortionScale",
+        "LensProfileIsEmbedded",
+        "LensProfileName",
+        "LensProfileVignettingScale",
+        "Look",
+        "MaskGroupBasedCorrections",
+        "Temperature",
+        "Tint"
+      ]
+    },
+    {
+      "photo": "20260907-_OZ80099-Edit.tif",
+      "file_format": "TIFF",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "key_count": 172,
+      "extra_keys": [
+        "IncrementalTemperature",
+        "IncrementalTint"
+      ],
+      "missing_pinned_keys": [
+        "LensProfileDigest",
+        "LensProfileDistortionScale",
+        "LensProfileIsEmbedded",
+        "LensProfileName",
+        "LensProfileVignettingScale",
+        "Look",
+        "MaskGroupBasedCorrections",
+        "Temperature",
+        "Tint"
+      ]
+    },
+    {
+      "photo": "DSC_0031.JPG",
+      "file_format": "JPG",
+      "pipeline": "rendered",
+      "process_version": "11.0",
+      "key_count": 172,
+      "extra_keys": [
+        "IncrementalTemperature",
+        "IncrementalTint"
+      ],
+      "missing_pinned_keys": [
+        "LensProfileDigest",
+        "LensProfileDistortionScale",
+        "LensProfileIsEmbedded",
+        "LensProfileName",
+        "LensProfileVignettingScale",
+        "Look",
+        "MaskGroupBasedCorrections",
+        "Temperature",
+        "Tint"
+      ]
+    },
+    {
+      "photo": "_DSC0091.NEF",
+      "file_format": "RAW",
+      "pipeline": "raw",
+      "process_version": "15.4",
+      "key_count": 181,
+      "extra_keys": [
+        "CropConstrainAspectRatio",
+        "LensProfileFilename"
+      ],
+      "missing_pinned_keys": []
+    },
+    {
+      "photo": "IMG_1595.JPG",
+      "file_format": "JPG",
+      "pipeline": "rendered",
+      "process_version": "11.0",
+      "key_count": 172,
+      "extra_keys": [
+        "IncrementalTemperature",
+        "IncrementalTint"
+      ],
+      "missing_pinned_keys": [
+        "LensProfileDigest",
+        "LensProfileDistortionScale",
+        "LensProfileIsEmbedded",
+        "LensProfileName",
+        "LensProfileVignettingScale",
+        "Look",
+        "MaskGroupBasedCorrections",
+        "Temperature",
+        "Tint"
+      ]
+    },
+    {
+      "photo": "20260907-_OZ80099.NEF",
+      "file_format": "RAW",
+      "pipeline": "raw",
+      "process_version": "15.4",
+      "key_count": 177,
+      "extra_keys": [],
+      "missing_pinned_keys": [
+        "Look",
+        "MaskGroupBasedCorrections"
+      ]
+    },
+    {
+      "photo": "DSC_0031.JPG",
+      "file_format": "JPG",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "key_count": 172,
+      "extra_keys": [
+        "IncrementalTemperature",
+        "IncrementalTint"
+      ],
+      "missing_pinned_keys": [
+        "LensProfileDigest",
+        "LensProfileDistortionScale",
+        "LensProfileIsEmbedded",
+        "LensProfileName",
+        "LensProfileVignettingScale",
+        "Look",
+        "MaskGroupBasedCorrections",
+        "Temperature",
+        "Tint"
+      ]
+    },
+    {
+      "photo": "IMG_1595.JPG",
+      "file_format": "JPG",
+      "pipeline": "rendered",
+      "process_version": "11.0",
+      "key_count": 172,
+      "extra_keys": [
+        "IncrementalTemperature",
+        "IncrementalTint"
+      ],
+      "missing_pinned_keys": [
+        "LensProfileDigest",
+        "LensProfileDistortionScale",
+        "LensProfileIsEmbedded",
+        "LensProfileName",
+        "LensProfileVignettingScale",
+        "Look",
+        "MaskGroupBasedCorrections",
+        "Temperature",
+        "Tint"
+      ]
+    },
+    {
+      "photo": "20260906-_OZ80005-Rendered.dng",
+      "file_format": "DNG",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "key_count": 174,
+      "extra_keys": [
+        "GrainSeed",
+        "IncrementalTemperature",
+        "IncrementalTint"
+      ],
+      "missing_pinned_keys": [
+        "LensProfileDigest",
+        "LensProfileDistortionScale",
+        "LensProfileIsEmbedded",
+        "LensProfileName",
+        "LensProfileVignettingScale",
+        "Look",
+        "Temperature",
+        "Tint"
+      ]
+    },
+    {
+      "photo": "DSC_0031.JPG (Copy 1)",
+      "file_format": "JPG",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "key_count": 173,
+      "extra_keys": [
+        "CropConstrainAspectRatio",
+        "IncrementalTemperature",
+        "IncrementalTint"
+      ],
+      "missing_pinned_keys": [
+        "LensProfileDigest",
+        "LensProfileDistortionScale",
+        "LensProfileIsEmbedded",
+        "LensProfileName",
+        "LensProfileVignettingScale",
+        "Look",
+        "MaskGroupBasedCorrections",
+        "Temperature",
+        "Tint"
+      ]
+    },
+    {
+      "photo": "20250413-_OZ81430.NEF",
+      "file_format": "RAW",
+      "pipeline": "raw",
+      "process_version": "15.4",
+      "key_count": 177,
+      "extra_keys": [],
+      "missing_pinned_keys": [
+        "Look",
+        "MaskGroupBasedCorrections"
+      ]
+    },
+    {
+      "photo": "20260907-_OZ80093.NEF",
+      "file_format": "RAW",
+      "pipeline": "raw",
+      "process_version": "15.4",
+      "key_count": 177,
+      "extra_keys": [],
+      "missing_pinned_keys": [
+        "Look",
+        "MaskGroupBasedCorrections"
+      ]
+    }
+  ],
+  "recorded_pairs": [
+    {
+      "name": "Embedded",
+      "camera_profile": "Embedded",
+      "look_uuid": null,
+      "recorded_on": "DSC_0031.JPG",
+      "grayscale": false,
+      "settings": {
+        "CameraProfile": "Embedded",
+        "ConvertToGrayscale": false,
+        "Look": []
+      }
+    },
+    {
+      "name": "Embedded + ConvertToGrayscale",
+      "camera_profile": "Embedded",
+      "look_uuid": null,
+      "recorded_on": "DSC_0031.JPG",
+      "grayscale": true,
+      "settings": {
+        "CameraProfile": "Embedded",
+        "ConvertToGrayscale": true,
+        "Look": []
+      }
+    }
+  ],
+  "recorder_problems": [],
+  "summary": {
+    "suggestion": "FAILED",
+    "census": {
+      "raw": 13,
+      "rendered": 18,
+      "unknown": 0
+    },
+    "writes": [
+      {
+        "photo": "S10-jxl.jxl",
+        "pipeline": "rendered",
+        "process_version": "15.4",
+        "range_limits_taken": "55+55/55x2",
+        "extra_keys_taken": {
+          "IncrementalTemperature": [
+            0
+          ],
+          "IncrementalTint": [
+            0
+          ]
+        },
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: true",
+          "recorded: Embedded + ConvertToGrayscale: true",
+          "control: raw pair Adobe Color: false",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "20250414-20250413-_OZ81315-HDR-2.avif",
+        "pipeline": "rendered",
+        "process_version": "15.4",
+        "range_limits_taken": "55+55/55x2",
+        "extra_keys_taken": {
+          "IncrementalTemperature": [
+            0
+          ],
+          "IncrementalTint": [
+            0
+          ]
+        },
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: true",
+          "recorded: Embedded + ConvertToGrayscale: true",
+          "control: raw pair Adobe Color: false",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "_OZ80660.JPG",
+        "pipeline": "rendered",
+        "process_version": "15.4",
+        "range_limits_taken": "55+55/55x2",
+        "extra_keys_taken": {
+          "IncrementalTemperature": [
+            0
+          ],
+          "IncrementalTint": [
+            0
+          ]
+        },
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: true",
+          "recorded: Embedded + ConvertToGrayscale: true",
+          "control: raw pair Adobe Color: false",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "20260907-S10-tiff32.tif",
+        "pipeline": "rendered",
+        "process_version": "15.4",
+        "range_limits_taken": "55+55/55x2",
+        "extra_keys_taken": {
+          "IncrementalTemperature": [
+            0
+          ],
+          "IncrementalTint": [
+            0
+          ]
+        },
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: true",
+          "recorded: Embedded + ConvertToGrayscale: true",
+          "control: raw pair Adobe Color: false",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "20260907-S10-tiff16.tif",
+        "pipeline": "rendered",
+        "process_version": "15.4",
+        "range_limits_taken": "55+55/55x2",
+        "extra_keys_taken": {
+          "IncrementalTemperature": [
+            0
+          ],
+          "IncrementalTint": [
+            0
+          ]
+        },
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: true",
+          "recorded: Embedded + ConvertToGrayscale: true",
+          "control: raw pair Adobe Color: false",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "20260906-_OZ80013-Edit.tif",
+        "pipeline": "rendered",
+        "process_version": "15.4",
+        "range_limits_taken": "55+55/55x2",
+        "extra_keys_taken": {
+          "IncrementalTemperature": [
+            0
+          ],
+          "IncrementalTint": [
+            0
+          ]
+        },
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: true",
+          "recorded: Embedded + ConvertToGrayscale: true",
+          "control: raw pair Adobe Color: false",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "S10-cmyk.tif",
+        "pipeline": "rendered",
+        "process_version": "15.4",
+        "range_limits_taken": "55+55/55x2",
+        "extra_keys_taken": {
+          "IncrementalTemperature": [
+            0
+          ],
+          "IncrementalTint": [
+            0
+          ]
+        },
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: true",
+          "recorded: Embedded + ConvertToGrayscale: true",
+          "control: raw pair Adobe Color: false",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "20251219-ThreeBeebeBrothers 1994 - Restored.png",
+        "pipeline": "rendered",
+        "process_version": "15.4",
+        "range_limits_taken": "55+55/55x2",
+        "extra_keys_taken": {
+          "IncrementalTemperature": [
+            0
+          ],
+          "IncrementalTint": [
+            0
+          ]
+        },
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: true",
+          "recorded: Embedded + ConvertToGrayscale: true",
+          "control: raw pair Adobe Color: false",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "20260906-_OZ80005-Edit-Edit.psd",
+        "pipeline": "rendered",
+        "process_version": "15.4",
+        "range_limits_taken": "55+55/55x2",
+        "extra_keys_taken": {
+          "IncrementalTemperature": [
+            0
+          ],
+          "IncrementalTint": [
+            0
+          ]
+        },
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: true",
+          "recorded: Embedded + ConvertToGrayscale: true",
+          "control: raw pair Adobe Color: false",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "IMG_0027.HEIC",
+        "pipeline": "rendered",
+        "process_version": "15.4",
+        "range_limits_taken": "55+55/55x2",
+        "extra_keys_taken": {
+          "IncrementalTemperature": [
+            0
+          ],
+          "IncrementalTint": [
+            0
+          ]
+        },
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: true",
+          "recorded: Embedded + ConvertToGrayscale: true",
+          "control: raw pair Adobe Color: false",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "S10-psb.psb",
+        "pipeline": "rendered",
+        "process_version": "15.4",
+        "range_limits_taken": "55+55/55x2",
+        "extra_keys_taken": {
+          "IncrementalTemperature": [
+            0
+          ],
+          "IncrementalTint": [
+            0
+          ]
+        },
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: true",
+          "recorded: Embedded + ConvertToGrayscale: true",
+          "control: raw pair Adobe Color: false",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "20260907-_OZ80099-Edit.tif",
+        "pipeline": "rendered",
+        "process_version": "15.4",
+        "range_limits_taken": "55+55/55x2",
+        "extra_keys_taken": {
+          "IncrementalTemperature": [
+            50,
+            101,
+            -50,
+            -101,
+            100,
+            -100,
+            0
+          ],
+          "IncrementalTint": [
+            50,
+            101,
+            -50,
+            -101,
+            100,
+            -100,
+            0
+          ]
+        },
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: true",
+          "recorded: Embedded + ConvertToGrayscale: true",
+          "control: raw pair Adobe Color: true",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "DSC_0031.JPG",
+        "pipeline": "rendered",
+        "process_version": "11.0",
+        "range_limits_taken": "55+55/55x2",
+        "extra_keys_taken": {
+          "IncrementalTemperature": [
+            0
+          ],
+          "IncrementalTint": [
+            0
+          ]
+        },
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: true",
+          "recorded: Embedded + ConvertToGrayscale: true",
+          "control: raw pair Adobe Color: false",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "IMG_1595.JPG",
+        "pipeline": "rendered",
+        "process_version": "11.0",
+        "range_limits_taken": "55+55/55x2",
+        "extra_keys_taken": {
+          "IncrementalTemperature": [
+            0
+          ],
+          "IncrementalTint": [
+            0
+          ]
+        },
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: true",
+          "recorded: Embedded + ConvertToGrayscale: true",
+          "control: raw pair Adobe Color: false",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "DSC_0031.JPG",
+        "pipeline": "rendered",
+        "process_version": "15.4",
+        "range_limits_taken": "55+55/55x2",
+        "extra_keys_taken": {
+          "IncrementalTemperature": [
+            0
+          ],
+          "IncrementalTint": [
+            0
+          ]
+        },
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: true",
+          "recorded: Embedded + ConvertToGrayscale: true",
+          "control: raw pair Adobe Color: false",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "IMG_1595.JPG",
+        "pipeline": "rendered",
+        "process_version": "11.0",
+        "range_limits_taken": "55+55/55x2",
+        "extra_keys_taken": {
+          "IncrementalTemperature": [
+            0
+          ],
+          "IncrementalTint": [
+            0
+          ]
+        },
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: true",
+          "recorded: Embedded + ConvertToGrayscale: true",
+          "control: raw pair Adobe Color: false",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "20260906-_OZ80005-Rendered.dng",
+        "pipeline": "rendered",
+        "process_version": "15.4",
+        "range_limits_taken": "55+55/55x2",
+        "extra_keys_taken": {
+          "GrainSeed": [
+            50,
+            101,
+            100
+          ],
+          "IncrementalTemperature": [
+            50,
+            -50,
+            100,
+            -100,
+            0
+          ],
+          "IncrementalTint": [
+            50,
+            -50,
+            100,
+            -100,
+            0
+          ]
+        },
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: true",
+          "recorded: Embedded + ConvertToGrayscale: true",
+          "control: raw pair Adobe Color: false",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "DSC_0031.JPG (Copy 1)",
+        "pipeline": "rendered",
+        "process_version": "15.4",
+        "range_limits_taken": "55+55/55x2",
+        "extra_keys_taken": {
+          "IncrementalTemperature": [
+            0
+          ],
+          "IncrementalTint": [
+            0
+          ]
+        },
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: true",
+          "recorded: Embedded + ConvertToGrayscale: true",
+          "control: raw pair Adobe Color: false",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "_DSC0103.NEF",
+        "pipeline": "raw",
+        "process_version": "15.4",
+        "range_limits_taken": "57+57/57x2",
+        "extra_keys_taken": {},
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: false",
+          "recorded: Embedded + ConvertToGrayscale: false",
+          "control: raw pair Adobe Color: true",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "_DSC0028.NEF",
+        "pipeline": "raw",
+        "process_version": "11.0",
+        "range_limits_taken": "57+57/57x2",
+        "extra_keys_taken": {},
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: false",
+          "recorded: Embedded + ConvertToGrayscale: false",
+          "control: raw pair Adobe Color: true",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": false
+      },
+      {
+        "photo": "_DSC0103.NEF (Copy 1)",
+        "pipeline": "raw",
+        "process_version": "15.4",
+        "range_limits_taken": "57+57/57x2",
+        "extra_keys_taken": {},
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: false",
+          "recorded: Embedded + ConvertToGrayscale: false",
+          "control: raw pair Adobe Color: true",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": false
+      },
+      {
+        "photo": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+        "pipeline": "raw",
+        "process_version": "15.4",
+        "range_limits_taken": "57+57/57x2",
+        "extra_keys_taken": {},
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: true",
+          "recorded: Embedded + ConvertToGrayscale: true",
+          "control: raw pair Adobe Color: true",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+        "pipeline": "raw",
+        "process_version": "15.4",
+        "range_limits_taken": "57+57/57x2",
+        "extra_keys_taken": {},
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: true",
+          "recorded: Embedded + ConvertToGrayscale: true",
+          "control: raw pair Adobe Color: true",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": false
+      },
+      {
+        "photo": "20260906-_OZ80005.NEF",
+        "pipeline": "raw",
+        "process_version": "15.4",
+        "range_limits_taken": "57+57/57x2",
+        "extra_keys_taken": {},
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: false",
+          "recorded: Embedded + ConvertToGrayscale: false",
+          "control: raw pair Adobe Color: true",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "20260110-_Z8A0173.NEF",
+        "pipeline": "raw",
+        "process_version": "15.4",
+        "range_limits_taken": "57+57/57x2",
+        "extra_keys_taken": {},
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: false",
+          "recorded: Embedded + ConvertToGrayscale: false",
+          "control: raw pair Adobe Color: true",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "20260907-_OZ80093.NEF",
+        "pipeline": "raw",
+        "process_version": "15.4",
+        "range_limits_taken": "57+57/57x2",
+        "extra_keys_taken": {},
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: false",
+          "recorded: Embedded + ConvertToGrayscale: false",
+          "control: raw pair Adobe Color: true",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "PICT0019.DNG",
+        "pipeline": "raw",
+        "process_version": "15.4",
+        "range_limits_taken": "57+57/57x2",
+        "extra_keys_taken": {},
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: true",
+          "recorded: Embedded + ConvertToGrayscale: true",
+          "control: raw pair Adobe Color: true",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "_DSC0091.NEF",
+        "pipeline": "raw",
+        "process_version": "15.4",
+        "range_limits_taken": "57+57/57x2",
+        "extra_keys_taken": {},
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: false",
+          "recorded: Embedded + ConvertToGrayscale: false",
+          "control: raw pair Adobe Color: true",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "20260907-_OZ80099.NEF",
+        "pipeline": "raw",
+        "process_version": "15.4",
+        "range_limits_taken": "57+57/57x2",
+        "extra_keys_taken": {},
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: false",
+          "recorded: Embedded + ConvertToGrayscale: false",
+          "control: raw pair Adobe Color: true",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "20250413-_OZ81430.NEF",
+        "pipeline": "raw",
+        "process_version": "15.4",
+        "range_limits_taken": "57+57/57x2",
+        "extra_keys_taken": {},
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: false",
+          "recorded: Embedded + ConvertToGrayscale: false",
+          "control: raw pair Adobe Color: true",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      },
+      {
+        "photo": "20260907-_OZ80093.NEF",
+        "pipeline": "raw",
+        "process_version": "15.4",
+        "range_limits_taken": "57+57/57x2",
+        "extra_keys_taken": {},
+        "wb_custom_taken": true,
+        "lens_taken": [
+          true,
+          true
+        ],
+        "profiles_taken": [
+          "recorded: Embedded: false",
+          "recorded: Embedded + ConvertToGrayscale: false",
+          "control: raw pair Adobe Color: true",
+          "Look cleared, CameraProfile as at the start: true"
+        ],
+        "put_back": true
+      }
+    ],
+    "copies": "2 of 2 made of _OZ80660.JPG; each starts as the master: YES",
+    "exports": {
+      "ok": 30,
+      "of": 31
+    },
+    "put_back_all": false
+  }
+}

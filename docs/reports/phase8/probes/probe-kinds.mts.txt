@@ -1,0 +1,39 @@
+// Read-only: full settings key sets of one photo per file_format, diffed against the raw NEF and the JPG. Writes nothing.
+import { writeFileSync } from "node:fs";
+import { pathToFileURL } from "node:url";
+
+const dist = "D:/Developer/LrC_Autonomous_Gateway/engine/dist";
+const { BridgeClient } = await import(pathToFileURL(`${dist}/bridge/index.js`).href);
+const { BridgeGate, acquireInstanceLock, devOverrides, ENGINE_VERSION } = await import(pathToFileURL(`${dist}/mcp/index.js`).href);
+
+const out = process.argv[2]!;
+const exts = [".nef", ".jpg", ".png", ".tif", ".psd", ".heic", ".avif", "-Rendered.dng", "DeepPRIME"];
+const dev = devOverrides();
+const client = new BridgeClient({ engineVersion: ENGINE_VERSION, log: () => {}, ...dev.bridge });
+const gate = new BridgeGate(client, () => acquireInstanceLock(dev.lockPort));
+const dumps: Record<string, { filename: string; file_format: unknown; settings: Record<string, unknown> }> = {};
+try {
+  await gate.ready();
+  for (const ext of exts) {
+    const r = await client.request("search_photos", { criteria: [{ criteria: "filename", operation: "any", value: ext }], offset: 0, limit: 1 }, { timeoutMs: 120000 });
+    const p = r.photos[0];
+    if (!p?.uuid) { console.log(ext, "none"); continue; }
+    const c = await client.request("get_context", { photo_uuid: p.uuid });
+    const s = (await client.request("get_settings", { photo_uuid: p.uuid })).settings as Record<string, unknown>;
+    dumps[ext] = { filename: String(c["filename"]), file_format: c["file_format"], settings: s };
+  }
+  const keys = (e: string) => new Set(Object.keys(dumps[e]!.settings));
+  const raw = keys(".nef"), jpg = keys(".jpg");
+  console.log("RAW keys", raw.size, "| JPG keys", jpg.size);
+  console.log("raw-only:", [...raw].filter((k) => !jpg.has(k)).join(", "));
+  console.log("jpg-only:", [...jpg].filter((k) => !raw.has(k)).join(", "));
+  for (const e of Object.keys(dumps)) {
+    if (e === ".nef" || e === ".jpg") continue;
+    const k = keys(e);
+    const vsJpg = { plus: [...k].filter((x) => !jpg.has(x)), minus: [...jpg].filter((x) => !k.has(x)) };
+    console.log(`${e} (${dumps[e]!.file_format}, ${dumps[e]!.filename}) keys ${k.size} vs JPG: +[${vsJpg.plus.join(", ")}] -[${vsJpg.minus.join(", ")}] Temperature=${JSON.stringify(dumps[e]!.settings["Temperature"])} CameraProfile=${JSON.stringify(dumps[e]!.settings["CameraProfile"])}`);
+  }
+  writeFileSync(out, JSON.stringify(dumps, null, 2));
+} finally {
+  await gate.release();
+}

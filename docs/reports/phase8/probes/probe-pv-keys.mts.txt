@@ -1,0 +1,37 @@
+// Read-only: compare the settings dump of a PV 11.0 JPG with a PV 15.4 JPG (keys, types, values of the canonical ones).
+import { writeFileSync } from "node:fs";
+import { pathToFileURL } from "node:url";
+
+const dist = "D:/Developer/LrC_Autonomous_Gateway/engine/dist";
+const { BridgeClient } = await import(pathToFileURL(`${dist}/bridge/index.js`).href);
+const { BridgeGate, acquireInstanceLock, devOverrides, ENGINE_VERSION } = await import(pathToFileURL(`${dist}/mcp/index.js`).href);
+
+const out = process.argv[2]!;
+const dev = devOverrides();
+const client = new BridgeClient({ engineVersion: ENGINE_VERSION, log: () => {}, ...dev.bridge });
+const gate = new BridgeGate(client, () => acquireInstanceLock(dev.lockPort));
+async function first(year: number): Promise<{ filename: string; settings: Record<string, unknown> }> {
+  const r = await client.request("search_photos", { criteria: [{ criteria: "filename", operation: "any", value: ".jp" }, { criteria: "captureTime", operation: "in", value: `${year}-01-01`, value2: `${year}-12-31` }], offset: 0, limit: 1 }, { timeoutMs: 120000 });
+  const p = r.photos[0]!;
+  const settings = (await client.request("get_settings", { photo_uuid: p.uuid! })).settings as Record<string, unknown>;
+  return { filename: p.filename ?? "?", settings };
+}
+try {
+  await gate.ready();
+  const old = await first(2004);
+  const cur = await first(2025);
+  const ko = new Set(Object.keys(old.settings));
+  const kc = new Set(Object.keys(cur.settings));
+  console.log("old", old.filename, "PV", old.settings["ProcessVersion"], "keys", ko.size);
+  console.log("cur", cur.filename, "PV", cur.settings["ProcessVersion"], "keys", kc.size);
+  console.log("only in PV11:", [...ko].filter((k) => !kc.has(k)).join(", ") || "(none)");
+  console.log("only in PV15.4:", [...kc].filter((k) => !ko.has(k)).join(", ") || "(none)");
+  const typeDiff = [...ko].filter((k) => kc.has(k) && typeof old.settings[k] !== typeof cur.settings[k]);
+  console.log("type differences:", typeDiff.join(", ") || "(none)");
+  for (const k of ["ProcessVersion", "CameraProfile", "WhiteBalance", "Exposure2012", "Contrast2012", "Highlights2012", "Shadows2012", "Whites2012", "Blacks2012", "Texture", "Clarity2012", "Dehaze", "Vibrance", "Saturation", "Sharpness", "ToneCurveName2012", "EnableLensCorrections", "LensProfileEnable", "AutoLateralCA", "IncrementalTemperature", "IncrementalTint", "ColorGradeBlending", "SplitToningBalance"]) {
+    console.log(k.padEnd(24), "PV11:", JSON.stringify(old.settings[k]), "| 15.4:", JSON.stringify(cur.settings[k]));
+  }
+  writeFileSync(out, JSON.stringify({ old, cur }, null, 2));
+} finally {
+  await gate.release();
+}

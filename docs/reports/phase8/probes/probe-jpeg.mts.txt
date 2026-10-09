@@ -1,0 +1,24 @@
+// Read-only probe: raw SDK context + settings of one photo by uuid. Writes nothing to Lightroom.
+import { writeFileSync } from "node:fs";
+import { pathToFileURL } from "node:url";
+
+const dist = "D:/Developer/LrC_Autonomous_Gateway/engine/dist";
+const { BridgeClient } = await import(pathToFileURL(`${dist}/bridge/index.js`).href);
+const { BridgeGate, acquireInstanceLock, devOverrides, ENGINE_VERSION } = await import(pathToFileURL(`${dist}/mcp/index.js`).href);
+
+const uuid = process.argv[2]!;
+const out = process.argv[3]!;
+const dev = devOverrides();
+const client = new BridgeClient({ engineVersion: ENGINE_VERSION, log: () => {}, ...dev.bridge });
+const gate = new BridgeGate(client, () => acquireInstanceLock(dev.lockPort));
+try {
+  await gate.ready();
+  const context = await client.request("get_context", { photo_uuid: uuid });
+  const settings = await client.request("get_settings", { target_uuid: uuid });
+  writeFileSync(out, JSON.stringify({ context, settings }, null, 2));
+  console.log("context keys:", Object.keys(context).join(", "));
+  console.log("file_format:", context["file_format"], "| path:", context["path"], "| size:", context["width"], "x", context["height"]);
+  console.log("settings keys:", Object.keys(settings.settings).length);
+} finally {
+  await gate.release();
+}

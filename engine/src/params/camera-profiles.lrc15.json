@@ -1,12 +1,13 @@
 {
   "schema_version": 1,
   "generated_by": "spikes/S5/pin-profiles.ts",
-  "generated_at": "2026-09-26T19:01:15.678Z",
+  "generated_at": "2026-10-09T12:54:46.573Z",
   "camera_raw_version": "18.5.1",
   "sources": [
     "docs/reports/phase0/S5/run2/s5_profiles_recorded_2026-09-24T20_53_22.json",
     "docs/reports/phase0/S5/run2/s5_profiles_recorded_2026-09-24T20_59_14.json",
-    "docs/reports/phase0/S5/part1/s5_profiles.log"
+    "docs/reports/phase0/S5/part1/s5_profiles.log",
+    "docs/reports/phase8/S10/run1/s10_profiles_recorded_2026-10-09T05_22_07.json"
   ],
   "profiles": [
     {
@@ -466,6 +467,24 @@
       "look": null,
       "evidence": "docs/reports/phase0/S5/part1/s5_profiles.log: logged for 20260110-_Z8A0138-DxO_DeepPRIME XD3.dng and 20260907-_OZ80093.NEF; paired with Look = {} per S5.md Part 2 analysis",
       "write_verified": null
+    },
+    {
+      "name": "Color",
+      "family": "rendered",
+      "camera_profile": "Embedded",
+      "look": null,
+      "convert_to_grayscale": false,
+      "evidence": "docs/reports/phase8/S10/run1/s10_profiles_recorded_2026-10-09T05_22_07.json: recorded on DSC_0031.JPG Copy 1; the Profile row read \"Color\" [stated: Jim, 2026-10-09]",
+      "write_verified": "docs/reports/phase8/S10/s10_check_2026-10-09T12-24-50-743Z.json writes[*].profiles.pairs \"recorded: Embedded\": taken on all 18 rendered photos"
+    },
+    {
+      "name": "Monochrome",
+      "family": "rendered",
+      "camera_profile": "Embedded",
+      "look": null,
+      "convert_to_grayscale": true,
+      "evidence": "docs/reports/phase8/S10/run1/s10_profiles_recorded_2026-10-09T05_22_07.json: recorded on DSC_0031.JPG Copy 1; the Profile row read \"Monochrome\" [stated: Jim, 2026-10-09]",
+      "write_verified": "docs/reports/phase8/S10/s10_check_2026-10-09T12-24-50-743Z.json writes[*].profiles.pairs \"recorded: Embedded + ConvertToGrayscale\": taken on all 18 rendered photos"
     }
   ]
 }

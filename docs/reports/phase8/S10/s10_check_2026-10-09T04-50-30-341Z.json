@@ -1,0 +1,430 @@
+{
+  "check": "s10",
+  "started_at": "2026-10-09T04:50:30.350Z",
+  "collection": "fixtures",
+  "census_only": true,
+  "errors": [],
+  "hello": {
+    "protocol": 1,
+    "plugin_version": "0.18.1",
+    "lrc_version": "15.6",
+    "sdk_declared": 13,
+    "ports": {
+      "receive": 8765,
+      "send": 8766
+    },
+    "process_started_at": "2026-10-09T03:07:35Z"
+  },
+  "census": {
+    "collection": {
+      "local_id": 3927297,
+      "name": "fixtures",
+      "smart": false,
+      "photo_count": 13
+    },
+    "photos": [
+      {
+        "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+        "local_id": 3869534,
+        "filename": "20260907-_OZ80099.NEF",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "RAW",
+        "pipeline": "raw",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": true,
+          "camera_profile": "Camera Neutral",
+          "embedded": false
+        },
+        "process_version": "15.4",
+        "key_count": 177,
+        "extra_keys": [],
+        "missing_pinned_keys": [
+          "Look",
+          "MaskGroupBasedCorrections"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+        "local_id": 25260,
+        "filename": "_DSC0028.NEF",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "RAW",
+        "pipeline": "raw",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": true,
+          "camera_profile": "Adobe Standard",
+          "embedded": false
+        },
+        "process_version": "11.0",
+        "key_count": 173,
+        "extra_keys": [],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale",
+          "MaskGroupBasedCorrections"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "D838903C-EDE1-4C59-A3A2-02AD371F458C",
+        "local_id": 14524,
+        "filename": "_DSC0091.NEF",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "RAW",
+        "pipeline": "raw",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": true,
+          "camera_profile": "Adobe Standard",
+          "embedded": false
+        },
+        "process_version": "15.4",
+        "key_count": 181,
+        "extra_keys": [
+          "CropConstrainAspectRatio",
+          "LensProfileFilename"
+        ],
+        "missing_pinned_keys": [],
+        "selected": false
+      },
+      {
+        "uuid": "23B201BF-A39A-44C6-839B-E13D4C0EA70D",
+        "local_id": 3869529,
+        "filename": "20250413-_OZ81430.NEF",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "RAW",
+        "pipeline": "raw",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": true,
+          "camera_profile": "Group: Camera Standard",
+          "embedded": false
+        },
+        "process_version": "15.4",
+        "key_count": 177,
+        "extra_keys": [],
+        "missing_pinned_keys": [
+          "Look",
+          "MaskGroupBasedCorrections"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "4C1ADCA6-1BC5-442D-B5AE-4B2CCD7BCE67",
+        "local_id": 3869531,
+        "filename": "20260110-_Z8A0173.NEF",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "RAW",
+        "pipeline": "raw",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": true,
+          "camera_profile": "Group: Camera Standard",
+          "embedded": false
+        },
+        "process_version": "15.4",
+        "key_count": 177,
+        "extra_keys": [],
+        "missing_pinned_keys": [
+          "Look",
+          "MaskGroupBasedCorrections"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+        "local_id": 3869533,
+        "filename": "20260907-_OZ80093.NEF",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "RAW",
+        "pipeline": "raw",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": true,
+          "camera_profile": "Camera Neutral",
+          "embedded": false
+        },
+        "process_version": "15.4",
+        "key_count": 177,
+        "extra_keys": [],
+        "missing_pinned_keys": [
+          "Look",
+          "MaskGroupBasedCorrections"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "ACC4F9FE-367B-4ABD-A3E8-0BD9514F4A41",
+        "local_id": 3943215,
+        "filename": "_DSC0103.NEF",
+        "copy_name": "Copy 1",
+        "is_virtual_copy": true,
+        "file_format": "RAW",
+        "pipeline": "raw",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": true,
+          "camera_profile": "Adobe Standard",
+          "embedded": false
+        },
+        "process_version": "15.4",
+        "key_count": 183,
+        "extra_keys": [
+          "CropConstrainAspectRatio",
+          "LensProfileFilename",
+          "RemoveAreas",
+          "RetouchAreas"
+        ],
+        "missing_pinned_keys": [],
+        "selected": false
+      },
+      {
+        "uuid": "12409199-51E4-4AC3-8EE9-6DB994858630",
+        "local_id": 4026422,
+        "filename": "DSC_0031.JPG",
+        "copy_name": "Copy 1",
+        "is_virtual_copy": true,
+        "file_format": "JPG",
+        "pipeline": "rendered",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": false,
+          "camera_profile": "Embedded",
+          "embedded": true
+        },
+        "process_version": "15.4",
+        "key_count": 173,
+        "extra_keys": [
+          "CropConstrainAspectRatio",
+          "IncrementalTemperature",
+          "IncrementalTint"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale",
+          "Look",
+          "MaskGroupBasedCorrections",
+          "Temperature",
+          "Tint"
+        ],
+        "selected": true
+      },
+      {
+        "uuid": "5157A1D2-3E6E-4D0A-A22D-87AC9084DD85",
+        "local_id": 3500451,
+        "filename": "_OZ80660.JPG",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "JPG",
+        "pipeline": "rendered",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": false,
+          "camera_profile": "Embedded",
+          "embedded": true
+        },
+        "process_version": "15.4",
+        "key_count": 172,
+        "extra_keys": [
+          "IncrementalTemperature",
+          "IncrementalTint"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale",
+          "Look",
+          "MaskGroupBasedCorrections",
+          "Temperature",
+          "Tint"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "2E3CFAC0-ACBC-4D35-A202-2866EC67376E",
+        "local_id": 14742,
+        "filename": "PICT0019.DNG",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "DNG",
+        "pipeline": "raw",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": true,
+          "camera_profile": "Adobe Standard",
+          "embedded": false
+        },
+        "process_version": "15.4",
+        "key_count": 182,
+        "extra_keys": [
+          "CropConstrainAspectRatio",
+          "RemoveAreas",
+          "UprightTransform_0",
+          "UprightTransform_1",
+          "UprightTransform_2",
+          "UprightTransform_3",
+          "UprightTransform_4",
+          "UprightTransform_5"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "995935D6-F379-4DDE-A8DC-737465C4A52E",
+        "local_id": 3869530,
+        "filename": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "DNG",
+        "pipeline": "raw",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": true,
+          "camera_profile": "Adobe Standard",
+          "embedded": false
+        },
+        "process_version": "15.4",
+        "key_count": 180,
+        "extra_keys": [
+          "ExtendedToneCurvePV2012",
+          "ExtendedToneCurvePV2012Blue",
+          "ExtendedToneCurvePV2012Green",
+          "ExtendedToneCurvePV2012Red",
+          "UprightFourSegments_0",
+          "UprightTransform_5"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39",
+        "local_id": 3869532,
+        "filename": "20260906-_OZ80005.NEF",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "RAW",
+        "pipeline": "raw",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": true,
+          "camera_profile": "Camera Neutral",
+          "embedded": false
+        },
+        "process_version": "15.4",
+        "key_count": 177,
+        "extra_keys": [],
+        "missing_pinned_keys": [
+          "Look",
+          "MaskGroupBasedCorrections"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "C3006593-AD48-4EDA-ABEF-D38FB51508C1",
+        "local_id": 14459,
+        "filename": "_DSC0103.NEF",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "RAW",
+        "pipeline": "raw",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": true,
+          "camera_profile": "Camera Landscape",
+          "embedded": false
+        },
+        "process_version": "15.4",
+        "key_count": 175,
+        "extra_keys": [
+          "CropConstrainAspectRatio",
+          "RemoveAreas",
+          "RetouchAreas"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale",
+          "Look",
+          "MaskGroupBasedCorrections"
+        ],
+        "selected": false
+      }
+    ],
+    "skipped": [],
+    "pipelines": {
+      "raw": 11,
+      "rendered": 2,
+      "unknown": 0
+    },
+    "rendered": {
+      "photos": 2,
+      "shared_keys": 172,
+      "state_keys": [
+        "CropConstrainAspectRatio"
+      ],
+      "extra_keys_in_all": [
+        "IncrementalTemperature",
+        "IncrementalTint"
+      ],
+      "missing_pinned_in_all": [
+        "LensProfileDigest",
+        "LensProfileDistortionScale",
+        "LensProfileIsEmbedded",
+        "LensProfileName",
+        "LensProfileVignettingScale",
+        "Look",
+        "MaskGroupBasedCorrections",
+        "Temperature",
+        "Tint"
+      ]
+    },
+    "dump_dir": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\S10\\census"
+  },
+  "summary": {
+    "suggestion": "WORKED",
+    "census": {
+      "raw": 11,
+      "rendered": 2,
+      "unknown": 0
+    },
+    "writes": [],
+    "copies": null,
+    "exports": null,
+    "put_back_all": false
+  },
+  "finished_at": "2026-10-09T04:50:33.746Z",
+  "plugin_log_copied": "s10_bridge_log_2026-10-09T04-50-30-341Z.txt",
+  "node": "v24.11.1",
+  "engine_version": "0.20.1"
+}

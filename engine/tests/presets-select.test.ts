@@ -65,6 +65,13 @@ describe("selectPresetSettings", () => {
     expect(adobe.left_out).toEqual([{ name: "camera_profile", reason: expect.stringMatching(/^an Adobe profile/) }]);
   });
 
+  it("leaves a rendered-pipeline profile out: CameraProfile alone cannot tell Color from Monochrome (Greptile, PR #98)", () => {
+    const rendered = (JSON.parse(readFileSync(path.join(import.meta.dirname, "fixtures", "s10-rendered-dsc0031.json"), "utf8")) as { settings: Record<string, unknown> }).settings;
+    const out = selectPresetSettings(map, rendered, ["camera_profile"]);
+    expect(out.entries.map((e) => e.key)).toEqual(["ProcessVersion"]);
+    expect(out.left_out).toEqual([{ name: "camera_profile", reason: expect.stringMatching(/^a rendered-pipeline profile \(Color\)/) }]);
+  });
+
   it("names a profile it cannot pin in left_out", () => {
     const out = selectPresetSettings(map, nef({ CameraProfile: "Someone's Profile" }), ["camera_profile"]);
     expect(out.left_out).toEqual([{ name: "camera_profile", reason: expect.stringContaining("Someone's Profile") }]);

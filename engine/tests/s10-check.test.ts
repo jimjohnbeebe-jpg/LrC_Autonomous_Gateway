@@ -40,9 +40,11 @@ beforeEach(async () => {
   dirs.recorder = path.join(tmp, "run1");
   dirs.previews = path.join(tmp, "previews");
   for (const d of Object.values(dirs)) mkdirSync(d);
+  // Three captures as S10Recorder.lua writes them: Embedded (no Look: the field is absent), Monochrome as a Look, and Monochrome as ConvertToGrayscale (run 1's finding).
   writeFileSync(path.join(dirs.recorder, "s10_profiles_recorded_2026-10-09T10_00_00.json"), recorderFile([
-    { filename: "DSC_0031.JPG", file_format: "JPG", camera_profile: "Embedded", look_name: null, look_uuid: null, look: [], process_version: "15.4" },
-    { filename: "DSC_0031.JPG", file_format: "JPG", camera_profile: "Embedded", look_name: MONO.Name, look_uuid: MONO.UUID, look: MONO, process_version: "15.4" },
+    { filename: "DSC_0031.JPG", file_format: "JPG", camera_profile: "Embedded", look_name: null, look_uuid: null, convert_to_grayscale: false, profile_settings: { CameraProfile: "Embedded", Look: [], ConvertToGrayscale: false }, process_version: "15.4" },
+    { filename: "DSC_0031.JPG", file_format: "JPG", camera_profile: "Embedded", look_name: MONO.Name, look_uuid: MONO.UUID, look: MONO, convert_to_grayscale: false, profile_settings: { CameraProfile: "Embedded", Look: MONO, ConvertToGrayscale: false }, process_version: "15.4" },
+    { filename: "DSC_0031.JPG", file_format: "JPG", camera_profile: "Embedded", look_name: null, look_uuid: null, convert_to_grayscale: true, profile_settings: { CameraProfile: "Embedded", Look: [], ConvertToGrayscale: true }, process_version: "15.4" },
   ]));
   plugin = await FakePlugin.start();
   lr = new LightroomSim(dirs.previews);
@@ -62,7 +64,7 @@ function run(answers: Answer[], options: S10Options = {}) {
   const queue = [...answers];
   client = new BridgeClient({ commandPort: plugin.commandPort, eventPort: plugin.eventPort, connectGapMs: 5, reconnectMs: 30, readToken: () => plugin.token });
   const gate = new BridgeGate(client, async () => ({ ok: true, lock: { port: 8767, release: async () => {} } }), { waitMs: 2000 });
-  return runS10Check({ client, gate, map, ask: async () => queue.shift() ?? "no answer", say: (l) => said.push(l), stamp: "2026-10-09T10-00-00-000Z", dumpDir: dirs.dump, recorderDir: dirs.recorder, previewDir: dirs.previews, connectTimeoutMs: 2000 }, options);
+  return runS10Check({ client, gate, map, ask: async () => queue.shift() ?? "no answer", say: (l) => said.push(l), stamp: "2026-10-09T10-00-00-000Z", dumpDir: dirs.dump, recorderDir: dirs.recorder, previewDir: dirs.previews, connectTimeoutMs: 2000, settleMs: 0 }, options);
 }
 
 type J = Record<string, unknown>;
@@ -127,16 +129,23 @@ describe("npm run s10:check", () => {
     expect(((extra["per_key"] as J[])[0] as J)["results"]).toEqual(EXTRA_VALUES.map((v) => ({ written: v, read_back: v, outcome: "taken" })));
     expect(jpg["white_balance"]).toMatchObject({ keys: ["IncrementalTemperature", "IncrementalTint"], custom_taken: true, values_taken: true });
     expect((jpg["lens"] as J)["steps"]).toMatchObject([{ label: "lens off", taken: true }, { label: "lens on", taken: true }]);
-    // Lightroom keeping Embedded: the recorded Monochrome pair and the raw control are both "not taken".
+    // Lightroom keeping Embedded: the recorded Monochrome Look and the raw control are both "not taken"; the ConvertToGrayscale form is written verbatim and taken.
     const pairs = (jpg["profiles"] as J)["pairs"] as J[];
-    expect(pairs.map((p) => [p["label"], p["taken"]])).toEqual([["recorded: Embedded", true], ["recorded: Adobe Monochrome", false], ["control: raw pair Adobe Color", false], ["Look cleared, CameraProfile as at the start", true]]);
+    expect(pairs.map((p) => [p["label"], p["taken"]])).toEqual([["recorded: Embedded", true], ["recorded: Adobe Monochrome", false], ["recorded: Embedded + ConvertToGrayscale", true], ["control: raw pair Adobe Color", false], ["Look cleared, CameraProfile as at the start", true]]);
+    expect(pairs[2]).toMatchObject({ written: { camera_profile: "Embedded", ConvertToGrayscale: true }, read_back: { ConvertToGrayscale: true } });
     expect(jpg["put_back"]).toMatchObject({ ok: true, differing: [] });
+    // Each photo is selected before its battery (Lightroom checks writes on the photo in Develop only), and Jim's selection is put back at the end.
+    expect(sent("select_photo").map((p) => p["uuid"])).toEqual([JPG, lr.uuid, lr.uuid]);
+    expect(jpg["selected_for_writes"]).toBe(true);
+    expect(results["selection_restored"]).toEqual({ photo: "20260907-_OZ80093.NEF", ok: true });
+    expect(lr.selected).toBe(lr.uuid);
     expect(jpgSettings()).toEqual(rendered.settings);
     expect(lr.settings).toEqual(nefDump.settings);
-    // Every write by uuid; the History names say what each was; Jim was asked about the selected photo only (the raw master: WB twice, profiles twice).
+    // Every write by uuid; the History names say what each was; Jim was asked about his own photo only (the raw master: WB twice, profiles twice).
     expect(sent("apply_settings").every((p) => typeof p["photo_uuid"] === "string")).toBe(true);
     expect(lr.writes.filter((w) => w.uuid === JPG).map((w) => w.name).slice(0, 2)).toEqual(["AVG S10 range 1/4", "AVG S10 range 2/4"]);
     expect(((writes[1] as J)["white_balance"] as J)["jim"]).toEqual({ panel_custom: true, temp_slider: true });
+    expect(((writes[1] as J)["profiles"] as J)["pairs"]).toHaveLength(5);
     expect((jpg["white_balance"] as J)["jim"]).toBeUndefined();
     expect(results["copies"]).toMatchObject({ run: false, summary: expect.stringContaining("is raw, not rendered") });
     expect(said).toContain("  DSC_0031.JPG: PUT BACK YES");

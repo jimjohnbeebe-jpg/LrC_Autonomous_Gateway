@@ -14,7 +14,7 @@
 
 - **`npm run s10:check -- --fixtures`** (engine, no clicks) puts the fixture photos into your "fixtures" collection by file name, then reads every photo there by uuid and prints one line per photo: its format, its pipeline, its process version and the keys it carries beyond the raw pin. It saves one settings dump per photo. Nothing is selected and nothing is written.
 - **The S10 plugin** (`plugin\spikes\S10.lrplugin`) is the S5 profile recorder with its own folder: while it runs, every profile you click on the selected photo is recorded (a message in the middle of the screen confirms each one).
-- **`npm run s10:check`** (engine) does the census again, then, **on every photo in the collection, behind a Develop snapshot**: writes every numeric slider to its limits and 1 % beyond (as the Phase 1 check did on the NEF), writes the rendered keys seven values, a Custom white balance, the lens switches off and on, and each recorded profile pair plus the raw "Adobe Color" pair as a control; reads every write back; then applies the snapshot and compares every setting with the start: **PUT BACK YES/NO** per photo. It also makes two virtual copies of the selected JPEG original and exports every photo through the engine's preview path. It asks you four y/n questions about the selected photo, in the PowerShell window.
+- **`npm run s10:check`** (engine) does the census again, then, **on every photo in the collection, behind a Develop snapshot**: selects the photo (Lightroom checks a write only on the photo loaded in Develop: run 1), writes every numeric slider to its limits and 1 % beyond (as the Phase 1 check did on the NEF), writes the rendered keys seven values, a Custom white balance, the lens switches off and on, and each recorded profile pair plus the raw "Adobe Color" pair as a control; reads every write back; then applies the snapshot and compares every setting with the start: **PUT BACK YES/NO** per photo. The Filmstrip selection jumps from photo to photo while it runs and is put back to your photo at the end. It then makes two virtual copies of your selected JPEG original and exports every photo through the engine's preview path. It asks you four y/n questions about your selected photo, in the PowerShell window.
 - Everything is saved to `%TEMP%\LrC-AVG\S10\`; Claude Code collects it with `node spikes\S10\collect.ts`. There is nothing to copy, paste or screenshot.
 
 Each photo in the collection gets about twenty History steps named `AVG S10 …` and is put back from its snapshot (`AVG S10 before …`); the snapshot stays in its Snapshots panel. That is what the harness is written to do; what Lightroom does with each write is [unverified] until this run.
@@ -46,21 +46,21 @@ Each photo in the collection gets about twenty History steps named `AVG S10 …`
 **Part C: the profile recorder.**
 
 11. In Lightroom: **File > Plug-in Manager**. Click **Add** (bottom left), browse to `D:\Developer\LrC_Autonomous_Gateway\plugin\spikes\S10.lrplugin`, select the folder itself and click **Select Folder**. Check that **LrC-AVG Spike S10 (rendered profiles)** shows **Enabled**. Click **Done**.
-12. Press **G**, click `DSC_0031.JPG` (**the original, not "Copy 1"**: the Copy 1 badge is at the bottom left of the thumbnail), and press **D**.
+12. Press **G**, click `DSC_0031.JPG` **Copy 1** (the Copy 1 badge is at the bottom left of the thumbnail; the catalog holds two originals of that name, so the copy is the one photo this step can name), and press **D**.
 13. **File > Plug-in Extras > AVG S10 - 1. Start profile recorder.** A message "profile recorder started" appears, then "Recorded 1: Embedded".
-14. In the **Basic** panel, open the Profile Browser (the four-squares icon at the right end of the **Profile** row). In the **Basic** group at the top, click **Monochrome**, wait for the message in the middle of the screen ("Recorded 2: …"), then click **Color**, wait for the message ("Already recorded …"). Close the Profile Browser (click **Close** at the top right of it).
-15. **File > Plug-in Extras > AVG S10 - 2. Stop profile recorder.** A window lists what was recorded. Click **OK**.
+14. In the **Basic** panel, open the Profile Browser (the four-squares icon at the right end of the **Profile** row). In the **Basic** group at the top, click **Monochrome**, wait for the message in the middle of the screen ("Recorded 2: Embedded + B&W"), then click **Color**, wait for the message ("Already recorded: Embedded"). Close the Profile Browser (click **Close** at the top right of it). Check that the **Profile** row reads **Color** before going on.
+15. **File > Plug-in Extras > AVG S10 - 2. Stop profile recorder.** A window lists what was recorded, two lines. Click **OK**.
 
 **Part D: the check.**
 
-16. Keep `DSC_0031.JPG` (the original) selected, in the Develop module. In PowerShell run:
+16. Press **G**, click `_OZ80660.JPG` (an original JPEG; the copies step needs an original, and this name is unique), and press **D**. In PowerShell run:
 
     ```powershell
     npm run s10:check
     ```
 
-    It prints the census, then works through every photo in the collection (a few minutes). It asks four questions about `DSC_0031.JPG`, each ending "Type y or n, then Enter:": look at the Basic panel and answer. It ends with `Spike S10: WORKED` or `FAILED` and a `PUT BACK` line per photo.
-17. In Lightroom, press **G**. Two new virtual copies of `DSC_0031.JPG` named `AVG S10 copy A` and `AVG S10 copy B` are in the Filmstrip next to it. Click the first, Ctrl+click the second, press **Backspace**, and in the window click **Remove**.
+    It prints the census, then works through every photo in the collection (a few minutes; the selection jumps from photo to photo). It asks four questions about `_OZ80660.JPG` when its turn comes, each ending "Type y or n, then Enter:": look at the Basic panel and answer. It ends with `Spike S10: WORKED` or `FAILED` and a `PUT BACK` line per photo, with `_OZ80660.JPG` selected again.
+17. In Lightroom, press **G**. Two new virtual copies of `_OZ80660.JPG` named `AVG S10 copy A` and `AVG S10 copy B` are in the Filmstrip next to it. Click the first, Ctrl+click the second, press **Backspace**, and in the window click **Remove**.
 18. Tell Claude Code: **"S10 done."**
 
 ## If something goes wrong
@@ -68,6 +68,7 @@ Each photo in the collection gets about twenty History steps named `AVG S10 …`
 - **Step 10 or 16 says "another LrC-AVG engine is using the Lightroom bridge"**: Claude Desktop is still running. Quit it from the system tray and run the command again.
 - **Step 10 or 16 says "could not connect to Lightroom"**: check that Lightroom is open and that File > Plug-in Manager lists **LrC-AVG** as Enabled, then run the command again.
 - **Step 16 ends with a `PUT BACK: NO` line for a photo**: don't change that photo. The results name the snapshot `AVG S10 before …` in its Snapshots panel. Tell Claude Code first.
+- **Step 16 prints "the bridge did not come back within 30 s"**: the plugin's connection dropped (it did once in run 1, on the last photo) and did not return. Check File > Plug-in Manager lists LrC-AVG as Enabled, then tell Claude Code; the results say which photos were put back.
 - **A step 14 click shows no message within about 2 seconds**: click the other profile, then the one you wanted again.
 - **Step 13 says "the profile recorder is already running"**: run step 15 (stop), then step 13 again.
 - **Step 2's Edit In menu shows no Photoshop**: tell Claude Code; Part A then waits.

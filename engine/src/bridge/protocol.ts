@@ -79,6 +79,13 @@ export const contextResultSchema = z.looseObject({
   local_id: z.number(),
   lrc_version: z.string(),
   metadata_errors: z.array(z.string()).optional(),
+  /**
+   * Plugin 0.19.0 (Photos.lua available): false when the original file is missing; absent from an older
+   * plugin, or when the check failed (`availability_error`). `smart_preview`: the photo has one.
+   */
+  available: z.boolean().optional(),
+  availability_error: z.string().optional(),
+  smart_preview: z.boolean().optional(),
 });
 
 /**

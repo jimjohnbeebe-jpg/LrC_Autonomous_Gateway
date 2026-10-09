@@ -285,6 +285,9 @@ async function finishPick(host: ActionHost, s: Session, v: VariantId, source: Us
   }
 }
 
+/** The HUD's line when the photo's original went missing during the edit (plugin 0.19.0 refuses writes and exports to it). */
+export const MISSING_NOTE = "The photo's original file is missing: reconnect it in Lightroom (Library > Find Missing Photos).";
+
 /**
  * The HUD's stage once an operation of the open session is over (`error`: why it failed, if it did),
  * or null when the HUD is told otherwise (an Abort reports its own stages).
@@ -300,7 +303,8 @@ export function idleStage(s: Session, error: unknown): { stage: HudStage; note?:
     if (e.code === "SESSION_ENDED") return null;
     if (e.code === "TARGET_CHANGED") return at("target_changed", given ?? "Another photo was selected, so nothing was changed; the edit is still open.");
     if (waiting && e.code === "AWAITING_APPROVAL") return at("awaiting_approval", given ?? approvalNote(waiting.pass));
-    return at(waiting ? "awaiting_approval" : "awaiting_claude", given ?? "Claude's last call failed; the edit is still open.");
+    const why = e.code === "ORIGINAL_MISSING" ? MISSING_NOTE : "Claude's last call failed; the edit is still open.";
+    return at(waiting ? "awaiting_approval" : "awaiting_claude", given ?? why);
   }
   if (awaitingPick(s)) return at("awaiting_pick", given ?? "Pick a copy here, or tell Claude which one.");
   const t = s.active;

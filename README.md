@@ -237,6 +237,7 @@ Your edits stay in the Lightroom catalog: History steps, snapshots, virtual copi
 
 - **One PC tested:** Windows 11, Lightroom Classic 15.5.1 and 15.6. Windows only.
 - **Process version:** a photo still on an older Lightroom process version is refused. Update the photo to the current process version in Develop first.
+- **Missing originals:** a photo whose original file Lightroom cannot find is refused, even when it has a smart preview. Claude tells you the file name and its last known folder. Reconnect the file in Lightroom (Library > Find Missing Photos), then ask again. A sync skips such a photo and syncs the rest. If the file goes missing during an edit, the HUD says so, and **Abort** still puts the photo back.
 - **Global Develop settings only:** no masks or local adjustments, no crop or geometry, no HDR.
 - **One session at a time.** Sync, presets, ratings, keywords and GPS positions are not available until it ends.
 - **Keep Plug-in Manager closed during a session.** Lightroom pauses the plugin while Plug-in Manager or a menu is open (2.5 to 15 s in testing). The engine waits up to 60 s for the plugin during a session, but a long pause during a session has not been tested.
@@ -307,6 +308,7 @@ The evidence behind the behaviour this page describes. Paths are in this reposit
 | Where files go | `%TEMP%\LrC-AVG`, `%USERPROFILE%\.lrc-avg` contents | [handle: `Prefs.lua:157-158`; `plugin/LrC-AVG.lrplugin/Log.lua:2`; `Endpoint.lua:2-4`; `log-folders.ts:19`]; previews purged at session end and start [handle: vault `PRD.md` NFR-6; `main.ts:10`] |
 | Uninstall | `--remove`; the order of the two commands; the Plug-in Manager **Remove** button; edits stay in the catalog | [handle: `smoke.txt` sections 2d-2e]; that `npm uninstall` also deletes `lrc-avg-setup` is [inference] (it is the package's own `bin`, `engine/package.json`); **Remove** [unverified]; edits staying is [inference]: uninstalling writes nothing to the catalog |
 | Known limitations | Older process versions refused | [handle: `engine/src/params/canonical.ts:28-33`; `engine/src/mcp/errors.ts:114`] |
+| Known limitations | Missing originals refused, sync skips them, the HUD line, Abort still puts back | [handle: `engine/tests/offline-original.test.ts`, against the simulated plugin]; in Lightroom [unverified] until `docs/reports/phase8/offline.md` is observed; the menu path is [unverified] |
 | Known limitations | No masks, crop, HDR | [handle: vault `PRD.md` §3] |
 | Known limitations | Plug-in Manager pauses; the 60 s allowance untested; Desktop's hold untested | [handle: `PHASE5.md` "Consequences" item 2]; both [unverified] |
 | Known limitations | Undo line after a disconnect; Tab, Space and Enter; a long note cut with "..." | [handle: `HudText.lua:72-73`; `HudView.lua:76-81`]; all three in Lightroom 15.6 [handle: `docs/reports/phase6/hud-p1-check/check.txt` section 3] |

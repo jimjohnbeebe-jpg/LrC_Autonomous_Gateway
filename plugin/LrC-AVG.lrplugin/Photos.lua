@@ -47,6 +47,35 @@ function Photos.describe(catalog, photo)
     return d
 end
 
+-- Whether the photo's original file is there (plugin 0.19.0, fix/offline-original): true, false, or
+-- nil plus the error when the call failed. checkPhotoAvailability "Reports whether this photo is
+-- believed to be present on disk at this time" [handle: https://lrc.mcor.dev/modules/LrPhoto.html,
+-- read 2026-10-09]. It runs outside the read gate, as rule 03 asks of a call that may yield; whether
+-- it yields, and what it answers for an offline photo with a smart preview, are [unverified] until
+-- npm run offline:check (docs\reports\phase8\offline.md).
+function Photos.available(photo)
+    local ok, value = LrTasks.pcall(photo.checkPhotoAvailability, photo)
+    if not ok then return nil, tostring(value) end
+    if type(value) ~= "boolean" then return nil, "checkPhotoAvailability returned " .. tostring(value) end
+    return value, nil
+end
+
+-- The refusal for a photo whose original file is missing, or nil when it is there (or the check
+-- failed). An offline original took every write unchecked and exported nothing in S10 [handle:
+-- docs\reports\phase8\S10.md "Consequences" item 8], so apply_settings and the exports refuse it.
+-- The menu path Library > Find Missing Photos is [unverified] until npm run offline:check asks Jim.
+function Photos.missing(catalog, photo)
+    if Photos.available(photo) ~= false then return nil end
+    local name, path
+    catalog:withReadAccessDo(function()
+        name = read(photo, photo.getFormattedMetadata, "fileName")
+        path = read(photo, photo.getRawMetadata, "path")
+    end)
+    return { code = "original_missing", recoverable = true,
+        message = "The original file of " .. tostring(name) .. " is missing (last known at " .. tostring(path) ..
+            "), so Lightroom cannot edit or export it. Reconnect the file in Lightroom (Library > Find Missing Photos), then try again." }
+end
+
 -- The first way `d` differs from what the engine expects, or nil.
 function Photos.mismatch(d, uuid, expect)
     if d.uuid ~= uuid then return "uuid " .. tostring(d.uuid) end

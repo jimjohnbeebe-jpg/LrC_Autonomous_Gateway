@@ -238,6 +238,8 @@ function Transfer.exportPhoto(payload)
     local catalog = LrApplication.activeCatalog()
     local photo, d = Photos.find(catalog, payload.photo_uuid)
     if not photo then return nil, d end
+    local missing = Photos.missing(catalog, photo)
+    if missing then return nil, missing end
     local dir = LrPathUtils.child(Transfer.exportDirectory(), LrUUID.generateUUID())
     LrFileUtils.createAllDirectories(dir)
     local t0 = LrDate.currentTime()

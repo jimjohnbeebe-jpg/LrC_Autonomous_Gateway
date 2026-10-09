@@ -1,9 +1,10 @@
 {
+  "schema_version": 2,
   "id": "portrait_skin_priority",
   "label": "Portrait — skin first",
   "category": "portrait",
   "brief": "Skin tone comes first. Keep the hue of the skin steady (mostly the orange band) and its saturation moderate; smooth its texture slightly without a plastic look. Change the global tone only as far as it helps the skin. Register the face as a skin region with preserve: true, so its hue and saturation are guarded between passes.",
-  "default_camera_profile": "Adobe Portrait",
+  "profile": { "raw": "Adobe Portrait", "rendered": "Color" },
   "priors": { "lens.profile_enable": 1, "lens.ca_remove": 1, "texture": -15, "clarity": -10, "hsl.orange.sat": -5, "hsl.orange.lum": 5 },
   "variants": {
     "A": { "label": "natural", "priors": {} },

@@ -182,7 +182,7 @@ describe("mcp server", () => {
     expect(listed.intents).toHaveLength(11);
     expect(listed.intents.every((i) => i.source === "bundled")).toBe(true);
     const got = await mcp.callTool({ name: "lr_get_intent", arguments: { id: "landscape_golden_hour" } });
-    expect(textOf(got.content as Content)).toMatchObject({ ok: true, source: "bundled", intent: { default_camera_profile: "Adobe Landscape" } });
+    expect(textOf(got.content as Content)).toMatchObject({ ok: true, source: "bundled", intent: { profile: { raw: "Adobe Landscape", rendered: "Color" } } });
     const missing = await mcp.callTool({ name: "lr_get_intent", arguments: { id: "no_such_intent" } });
     expect(textOf(missing.content as Content)).toMatchObject({ ok: false, error: { code: "INTENT_NOT_FOUND", recoverable: false } });
     const unconfirmed = await mcp.callTool({ name: "lr_save_intent", arguments: { intent: { id: "x" }, confirmed: false } });

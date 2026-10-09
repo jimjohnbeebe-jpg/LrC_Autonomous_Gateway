@@ -1,9 +1,10 @@
 {
+  "schema_version": 2,
   "id": "portrait_natural_light",
   "label": "Portrait — natural light",
   "category": "portrait",
   "brief": "A person in daylight or window light. Skin should look natural and evenly toned: not orange, pink or grey. Eyes and hair keep their detail; the background supports the subject rather than competing with it. Avoid clarity, texture or dehaze increases that roughen skin.",
-  "default_camera_profile": "Adobe Portrait",
+  "profile": { "raw": "Adobe Portrait", "rendered": "Color" },
   "priors": { "lens.profile_enable": 1, "lens.ca_remove": 1, "clarity": -5, "texture": -5, "vibrance": 5 },
   "variants": {
     "A": { "label": "natural", "priors": {} },

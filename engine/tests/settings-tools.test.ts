@@ -105,7 +105,7 @@ describe("the intent tools and the settings page (decision 2A)", () => {
 
   it("save into the page's folder", async () => {
     const tools = makeTools(new PageSettings(client, env));
-    const saved = await tools.saveIntent({ intent: { id: "page_saved", label: "x", category: "test", brief: "b", priors: {} }, confirmed: true });
+    const saved = await tools.saveIntent({ intent: { schema_version: 2, id: "page_saved", label: "x", category: "test", brief: "b", priors: {} }, confirmed: true });
     expect(saved.json).toMatchObject({ path: path.join(userDir, "page_saved.json"), intents_folder: { from: "page" } });
   });
 });

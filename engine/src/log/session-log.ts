@@ -112,7 +112,7 @@ export const passSchema = z.strictObject({
   approval: z.strictObject({ pass: z.number().int(), by: approvalBySchema, waited_ms: z.number() }).optional(),
   /** Engine 0.16.0: a mask pass's change (kind "mask"; its `changes` are empty, its settings unchanged). */
   mask: maskPassSchema.optional(),
-  /** Engine 0.21.0: what pass 0 changed of the intent for the photo's pipeline (session\pass0.ts forPipeline). */
+  /** Engine 0.21.0 only, kept to read its logs: what pass 0 changed of a schema v1 intent for the photo's pipeline (intents v2 from 0.22.0 need no change). */
   warnings: z.array(z.string()).optional(),
 });
 

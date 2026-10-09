@@ -29,6 +29,7 @@ const STARTERS = [
 ];
 
 const minimal = (id: string, extra: Record<string, unknown> = {}): Record<string, unknown> => ({
+  schema_version: 2,
   id,
   label: "Test",
   category: "test",
@@ -65,10 +66,11 @@ describe("intents: the bundled starter set", () => {
     expect(bundledIntentsDir()).toBe(path.resolve(import.meta.dirname, "..", "intents"));
   });
 
-  it("gives every starter a camera profile, lens corrections and A/B/C variants or none at all", () => {
+  it("gives every starter a profile per pipeline, lens corrections and A/B/C variants or none at all", () => {
     for (const id of STARTERS) {
       const { intent } = library.get(id);
-      expect(intent.default_camera_profile, id).toBeDefined();
+      expect(intent.profile?.rendered, id).toBe(id === "bw_conversion" ? "Monochrome" : "Color");
+      expect(intent.schema_version, id).toBe(2);
       expect(intent.priors["lens.profile_enable"], id).toBe(1);
       if (intent.variants) expect(Object.keys(intent.variants).sort(), id).toEqual(["A", "B", "C"]);
     }
@@ -98,10 +100,10 @@ describe("intents: the user folder", () => {
     writeUser("broken.json", "{ not json");
     writeUser("shape.json", { ...minimal("shape"), prior: {} }); // unknown field (misspelt)
     writeUser("unknown_param.json", minimal("unknown_param", { priors: { exposur: 0.3 } }));
-    writeUser("offset.json", minimal("offset", { priors: { temperature: 60000 } }));
+    writeUser("offset.json", minimal("offset", { priors_by_pipeline: { raw: { temperature: 60000 } } }));
     writeUser("switch.json", minimal("switch", { priors: { "lens.profile_enable": 2 } }));
     writeUser("profile_in_priors.json", minimal("profile_in_priors", { priors: { camera_profile: "Adobe Color" } }));
-    writeUser("bad_profile.json", minimal("bad_profile", { default_camera_profile: "Adobe Imaginary" }));
+    writeUser("bad_profile.json", minimal("bad_profile", { profile: { raw: "Adobe Imaginary", rendered: "Color" } }));
     writeUser("wrong_name.json", minimal("other_name"));
     writeUser("variant.json", minimal("variant", { variants: { A: { label: "a", priors: {} }, B: { label: "b", priors: {} } } }));
     writeUser("fine.json", minimal("fine"));
@@ -116,7 +118,7 @@ describe("intents: the user folder", () => {
     expect(byFile.get("unknown_param.json")).toMatch(/Unknown parameter "exposur"/);
     expect(byFile.get("offset.json")).toMatch(/larger than the whole range/);
     expect(byFile.get("switch.json")).toMatch(/0 or 1/);
-    expect(byFile.get("profile_in_priors.json")).toMatch(/default_camera_profile/);
+    expect(byFile.get("profile_in_priors.json")).toMatch(/in profile, not in priors/);
     expect(byFile.get("bad_profile.json")).toMatch(/Adobe Imaginary/);
     expect(byFile.get("wrong_name.json")).toMatch(/other_name\.json/);
     expect(byFile.get("variant.json")).toMatch(/variants\.C/);
@@ -124,8 +126,40 @@ describe("intents: the user folder", () => {
   });
 
   it("accepts a numeric prior as an offset within the parameter's range", () => {
-    writeUser("warm.json", minimal("warm", { priors: { temperature: 300, exposure: -0.5 } }));
-    expect(library.get("warm").intent.priors).toEqual({ temperature: 300, exposure: -0.5 });
+    writeUser("warm.json", minimal("warm", { priors: { exposure: -0.5 }, priors_by_pipeline: { raw: { temperature: 300 }, rendered: { temperature: 10 } } }));
+    expect(library.get("warm").intent).toMatchObject({ priors: { exposure: -0.5 }, priors_by_pipeline: { raw: { temperature: 300 }, rendered: { temperature: 10 } } });
+  });
+
+  it("checks schema v2 per pipeline: the version, white balance per pipeline in its own unit, each profile on its pipeline, colour sliders under a monochrome one", () => {
+    const { schema_version: _, ...v1 } = minimal("v1", { default_camera_profile: "Adobe Color" });
+    writeUser("v1.json", v1);
+    writeUser("v3.json", minimal("v3", { schema_version: 3 }));
+    writeUser("wb_shared.json", minimal("wb_shared", { priors: { tint: 5 } }));
+    writeUser("wb_rendered.json", minimal("wb_rendered", { priors_by_pipeline: { rendered: { temperature: 300 } } }));
+    writeUser("twice.json", minimal("twice", { priors: { exposure: 0.1 }, priors_by_pipeline: { raw: { exposure: 0.2 } } }));
+    writeUser("swapped.json", minimal("swapped", { profile: { raw: "Color", rendered: "Adobe Color" } }));
+    writeUser("half.json", minimal("half", { profile: { raw: "Adobe Color" } }));
+    writeUser("mono.json", minimal("mono", { profile: { raw: "Adobe Color", rendered: "Monochrome" }, priors: { vibrance: 5 } }));
+    writeUser("mono_variant.json", minimal("mono_variant", {
+      profile: { raw: "Camera Monochrome", rendered: "Monochrome" },
+      variants: { A: { label: "a", priors: {} }, B: { label: "b", priors: {} }, C: { label: "c", priors: {}, priors_by_pipeline: { raw: { "hsl.red.sat": 10 } } } },
+    }));
+    writeUser("variant_wb.json", minimal("variant_wb", {
+      variants: { A: { label: "a", priors: {} }, B: { label: "b", priors: { temperature: 100 } }, C: { label: "c", priors: {}, priors_by_pipeline: { rendered: { tint: 5 } } } },
+    }));
+    const byFile = new Map(library.list().warnings.map((w) => [w.file, w.problem]));
+    expect(byFile.get("v1.json")).toMatch(/schema v1 intent.*"profile": {"raw"/);
+    expect(byFile.get("v3.json")).toMatch(/schema_version: 3 is not supported/);
+    expect(byFile.get("wb_shared.json")).toMatch(/priors.tint: tint goes in priors_by_pipeline.*kelvin on raw, relative on rendered/);
+    expect(byFile.get("wb_rendered.json")).toMatch(/priors_by_pipeline.rendered.temperature: an offset of 300 is larger than the whole range -100..100 on the rendered pipeline/);
+    expect(byFile.get("twice.json")).toMatch(/priors_by_pipeline.raw.exposure: exposure is also in priors/);
+    expect(byFile.get("swapped.json")).toMatch(/profile.raw: "Color" is a rendered-pipeline profile.*profile.rendered: "Adobe Color" is a raw-pipeline profile/);
+    expect(byFile.get("half.json")).toMatch(/profile.rendered/);
+    expect(byFile.get("mono.json")).toMatch(/priors.vibrance: the rendered profile "Monochrome" is monochrome/);
+    expect(byFile.get("mono.json")).not.toMatch(/the raw profile/);
+    expect(byFile.get("mono_variant.json")).toMatch(/variants.C.priors_by_pipeline.raw.hsl.red.sat: the raw profile "Camera Monochrome" is monochrome/);
+    expect(byFile.get("variant_wb.json")).toMatch(/variants.B.priors.temperature: temperature goes in priors_by_pipeline/);
+    expect(byFile.get("variant_wb.json")).not.toMatch(/variants.C/);
   });
 
   it("says why an intent it skipped cannot be found", () => {
@@ -246,7 +280,7 @@ describe("schemas", () => {
 
   it("describes the bundled intents: each one validates against the published schema's required fields", () => {
     const schema = JSON.parse(generatedSchemas().get("intent.schema.json") as string) as { required: string[]; additionalProperties: boolean };
-    expect(schema.required.sort()).toEqual(["brief", "category", "id", "label", "priors"]);
+    expect(schema.required.sort()).toEqual(["brief", "category", "id", "label", "priors", "schema_version"]);
     expect(schema.additionalProperties).toBe(false);
   });
 });

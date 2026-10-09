@@ -66,8 +66,9 @@ export type S10Deps = {
   previewDir?: string;
   connectTimeoutMs?: number;
   writeTimeoutMs?: number;
-  /** SELECT_SETTLE_MS; tests shorten it. */
+  /** SELECT_SETTLE_MS and RECONNECT_WAIT_MS; tests shorten them. */
   settleMs?: number;
+  reconnectWaitMs?: number;
   now?: () => Date;
 };
 
@@ -141,13 +142,14 @@ export async function connect(ctx: Ctx): Promise<boolean> {
 
 export const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** True once the bridge is connected, waiting up to RECONNECT_WAIT_MS for a dropped one to come back; false, said, when it does not. */
+/** True once the bridge is connected, waiting up to RECONNECT_WAIT_MS for a dropped one to come back; false, and the check FAILED, when it does not (Greptile, PR #97). */
 export async function ensureConnected(ctx: Ctx, forWhat: string): Promise<boolean> {
+  const waitMs = ctx.deps.reconnectWaitMs ?? RECONNECT_WAIT_MS;
   try {
-    await ctx.deps.client.waitConnected(RECONNECT_WAIT_MS);
+    await ctx.deps.client.waitConnected(waitMs);
     return true;
   } catch (err) {
-    ctx.deps.say(`  the bridge did not come back within ${RECONNECT_WAIT_MS / 1000} s for ${forWhat} (${describeError(err)})`);
+    ctx.fail(`the bridge did not come back within ${waitMs / 1000} s for ${forWhat} (${describeError(err)}). Check File > Plug-in Manager, then tell Claude Code.`);
     return false;
   }
 }

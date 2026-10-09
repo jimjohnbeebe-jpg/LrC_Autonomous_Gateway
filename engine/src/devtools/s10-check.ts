@@ -56,18 +56,19 @@ async function steps(ctx: Ctx, found: Census): Promise<void> {
   if (await ensureConnected(ctx, "the exports")) results["exports"] = await exportAll(ctx, found.photos);
 }
 
-/** Jim's selection as the check found it, put back after the batteries selected every photo in turn. */
+/** Jim's selection as the check found it (in the collection or not: Greptile, PR #97), put back after the batteries selected every photo in turn. */
 async function restoreSelection(ctx: Ctx, photos: Photo[]): Promise<void> {
-  const jims = photos.find((p) => p.selected);
-  const out: Json = { photo: jims ? label(jims) : null, ok: false };
+  const uuid = (ctx.results["census"] as Json)["selected_uuid"];
+  const jims = photos.find((p) => p.uuid === uuid);
+  const out: Json = { uuid: uuid ?? null, photo: jims ? label(jims) : null, ok: false };
   ctx.results["selection_restored"] = out;
-  if (!jims) return;
+  if (typeof uuid !== "string") return;
   try {
-    await ctx.deps.client.request("select_photo", { uuid: jims.uuid, expect: { is_virtual_copy: jims.is_virtual_copy } });
+    await ctx.deps.client.request("select_photo", { uuid });
     out["ok"] = true;
   } catch (err) {
     out["error"] = errorBody(err);
-    ctx.deps.say(`  Your selection (${label(jims)}) could not be put back: ${describeError(err)}. Click it in the Filmstrip.`);
+    ctx.deps.say(`  Your selection (${jims ? label(jims) : uuid}) could not be put back: ${describeError(err)}. Click it in the Filmstrip.`);
   }
 }
 

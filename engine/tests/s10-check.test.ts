@@ -137,7 +137,7 @@ describe("npm run s10:check", () => {
     // Each photo is selected before its battery (Lightroom checks writes on the photo in Develop only), and Jim's selection is put back at the end.
     expect(sent("select_photo").map((p) => p["uuid"])).toEqual([JPG, lr.uuid, lr.uuid]);
     expect(jpg["selected_for_writes"]).toBe(true);
-    expect(results["selection_restored"]).toEqual({ photo: "20260907-_OZ80093.NEF", ok: true });
+    expect(results["selection_restored"]).toEqual({ uuid: lr.uuid, photo: "20260907-_OZ80093.NEF", ok: true });
     expect(lr.selected).toBe(lr.uuid);
     expect(jpgSettings()).toEqual(rendered.settings);
     expect(lr.settings).toEqual(nefDump.settings);
@@ -149,6 +149,21 @@ describe("npm run s10:check", () => {
     expect((jpg["white_balance"] as J)["jim"]).toBeUndefined();
     expect(results["copies"]).toMatchObject({ run: false, summary: expect.stringContaining("is raw, not rendered") });
     expect(said).toContain("  DSC_0031.JPG: PUT BACK YES");
+  });
+
+  it("puts a starting photo outside the collection back, and fails when the bridge stays down", async () => {
+    lr.library.photos.push({ uuid: "SIM-OUT", local_id: 6, filename: "elsewhere.NEF", rating: 0, keywords: [], day: "2026-10-09", gps: null, file_format: "RAW", settings: structuredClone(nefDump.settings) });
+    lr.selected = "SIM-OUT";
+    const { results } = await run([]);
+    expect(results["selection_restored"]).toEqual({ uuid: "SIM-OUT", photo: null, ok: true });
+    expect(lr.selected).toBe("SIM-OUT");
+    expect(sent("select_photo").at(-1)).toEqual({ uuid: "SIM-OUT" });
+    // A bridge that does not come back is a FAILED check, not a WORKED one with the copies and exports skipped.
+    const stuck = { deps: { client: { waitConnected: () => Promise.reject(new Error("still down")) }, reconnectWaitMs: 10 }, results: {}, errors: [] as string[], fail: (m: string) => void stuckErrors.push(m) };
+    const stuckErrors: string[] = [];
+    const { ensureConnected } = await import("../src/devtools/s10-config.js");
+    expect(await ensureConnected(stuck as unknown as Parameters<typeof ensureConnected>[0], "the exports")).toBe(false);
+    expect(stuckErrors).toEqual([expect.stringContaining("did not come back within 0.01 s for the exports")]);
   });
 
   it("makes the copies of the selected rendered original and reads each back as the master", async () => {

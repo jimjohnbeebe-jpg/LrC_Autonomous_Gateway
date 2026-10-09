@@ -141,7 +141,7 @@ describe("FEATURE_UNAVAILABLE", () => {
   });
 
   it("names a slider missing from the read-back in Lightroom's words; a different value stays WRITE_NOT_TAKEN", () => {
-    const written = map.toSdk({ dehaze: 10, exposure: 0.5 }, { processVersion: "15.4" });
+    const written = map.toSdk({ dehaze: 10, exposure: 0.5 }, { processVersion: "15.4", pipeline: "raw" });
     const { Dehaze: _dehaze, ...withoutDehaze } = written;
     const e = readbackError(map, written, withoutDehaze, "AVG x", { lrc_version: "16.0", plugin_version: "0.9.0" });
     expect(e?.body()).toMatchObject({ code: "FEATURE_UNAVAILABLE", recoverable: true, details: { feature: "Dehaze", lrc_version: "16.0", plugin_version: "0.9.0", history_name: "AVG x" } });
@@ -151,7 +151,7 @@ describe("FEATURE_UNAVAILABLE", () => {
     expect(readbackError(map, written, { ...written, Dehaze: 0 }, "AVG x", null)?.code).toBe("WRITE_NOT_TAKEN");
     expect(readbackError(map, written, { Exposure2012: 0 }, "AVG x", null)?.code).toBe("WRITE_NOT_TAKEN"); // one absent, one different
     expect(readbackError(map, written, written, "AVG x", null)).toBeNull();
-    const profile = readbackError(map, map.toSdk({ camera_profile: "Adobe Landscape" }, { processVersion: "15.4" }), {}, "AVG y", null);
+    const profile = readbackError(map, map.toSdk({ camera_profile: "Adobe Landscape" }, { processVersion: "15.4", pipeline: "raw" }), {}, "AVG y", null);
     expect(profile?.message).toMatch(/^Profile is not available with this Lightroom and plugin; .*Leave it out of later steps\.$/);
   });
 

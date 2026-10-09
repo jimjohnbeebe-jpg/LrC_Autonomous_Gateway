@@ -133,6 +133,15 @@ export class CameraProfiles {
   }
 
   /**
+   * The pipeline a profile belongs to: the rendered family on rendered photos, every other on raw. The
+   * rendered photos refused the raw Adobe Color pair, and the NEFs refused Color and Monochrome [handle:
+   * docs/reports/phase8/S10.md "Observed", "Run 2", "Profiles"].
+   */
+  pipeline(name: string): "raw" | "rendered" {
+    return this.get(name).family === "rendered" ? "rendered" : "raw";
+  }
+
+  /**
    * The two SDK settings that select this profile. A profile without a Look writes Look = {}. The
    * Look goes without its Parameters.Version, the version it was recorded under: Lightroom stamps its
    * own on a write (issue #67) [handle: docs\reports\phase6\lrc-version-check\check.txt section 2

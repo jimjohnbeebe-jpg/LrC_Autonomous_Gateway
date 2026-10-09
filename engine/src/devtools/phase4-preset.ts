@@ -85,7 +85,7 @@ async function prepareSource(deps: Phase4Deps, photo: Photo, pick: Picked): Prom
   const from = now["temperature"];
   const temperature = typeof from === "number" && spec?.kind === "number" ? (from + WB_SHIFT <= spec.max ? from + WB_SHIFT : from - WB_SHIFT) : null;
   const values = { camera_profile: PRESET_PROFILE, ...(temperature !== null ? { temperature } : {}) };
-  const settings = deps.map.toSdk(values, { processVersion: photo.process_version });
+  const settings = deps.map.toSdk(values, { processVersion: photo.process_version, pipeline: "raw" });
   const res = await deps.client.request("apply_settings", { photo_uuid: pick.uuid, settings, history_name: PREPARE_HISTORY_NAME }, { timeoutMs: WRITE_TIMEOUT_MS });
   return { camera_profile: { from: now["camera_profile"] ?? null, to: PRESET_PROFILE }, temperature: { from: from ?? null, to: temperature }, white_balance_after: res.read_back[WHITE_BALANCE_KEY] ?? null };
 }
@@ -167,7 +167,7 @@ export async function presetCheck(deps: Phase4Deps, run: Run, photo: Photo, pick
 /** The target takes TARGET_PROFILE when the preset carries a profile, so the click must change the profile too. */
 async function moveProfile(deps: Phase4Deps, photo: Photo, preset: PresetMade, target: ApplyTarget): Promise<Json | null> {
   if (!preset.written.includes("camera_profile")) return null;
-  const settings = deps.map.toSdk({ camera_profile: TARGET_PROFILE }, { processVersion: photo.process_version });
+  const settings = deps.map.toSdk({ camera_profile: TARGET_PROFILE }, { processVersion: photo.process_version, pipeline: "raw" });
   await deps.client.request("apply_settings", { photo_uuid: target.uuid, settings, history_name: PROFILE_HISTORY_NAME }, { timeoutMs: WRITE_TIMEOUT_MS });
   return { to: TARGET_PROFILE, preset: preset.source["camera_profile"] ?? null };
 }

@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { CANONICAL_PARAMS, PROBED_CLAMP, type ParamSpec } from "../src/params/canonical.js";
-import { canonicalValuesEqual, differingSettings, loadDefaultParamMap, ParamError, ParamMap, READBACK_TOLERANCE, UnknownSdkKeyError } from "../src/params/index.js";
+import { canonicalValuesEqual, differingSettings, loadDefaultParamMap, loadDefaultSdkKeys, ParamError, ParamMap, READBACK_TOLERANCE, UnknownSdkKeyError } from "../src/params/index.js";
 import { readCameraProfilesFile } from "../src/params/camera-profiles.js";
 import { loadSdkKeys, readSdkKeysFile } from "../src/params/sdk-keys.js";
 
@@ -15,7 +15,7 @@ const profiles = readCameraProfilesFile(here("../src/params/camera-profiles.lrc1
 const nefDump = JSON.parse(readFileSync(here("../../docs/reports/phase0/S5/s5_20260907-_OZ80093.NEF.json"), "utf8")) as {
   settings: Record<string, unknown>;
 };
-const PV = { processVersion: "15.4" };
+const PV = { processVersion: "15.4", pipeline: "raw" } as const;
 
 function codeOf(fn: () => unknown): string | undefined {
   try {
@@ -103,13 +103,13 @@ describe("params: canonical map", () => {
   it("refuses to build over a key file that lacks a mapped key", () => {
     const pinned = JSON.parse(readFileSync(here("../src/params/sdk-keys.lrc15.json"), "utf8")) as { keys: Array<{ key: string }> };
     pinned.keys = pinned.keys.filter((k) => k.key !== "Dehaze");
-    expect(() => new ParamMap(loadSdkKeys(pinned), profiles)).toThrow(UnknownSdkKeyError);
+    expect(() => new ParamMap({ ...loadDefaultSdkKeys(), raw: loadSdkKeys(pinned) }, profiles)).toThrow(UnknownSdkKeyError);
   });
 
   it("refuses to build over a key file that lacks WhiteBalance, which a temperature write also sets", () => {
     const pinned = JSON.parse(readFileSync(here("../src/params/sdk-keys.lrc15.json"), "utf8")) as { keys: Array<{ key: string }> };
     pinned.keys = pinned.keys.filter((k) => k.key !== "WhiteBalance");
-    expect(() => new ParamMap(loadSdkKeys(pinned), profiles)).toThrow(UnknownSdkKeyError);
+    expect(() => new ParamMap({ ...loadDefaultSdkKeys(), raw: loadSdkKeys(pinned) }, profiles)).toThrow(UnknownSdkKeyError);
   });
 
   describe("toSdk", () => {
@@ -159,8 +159,9 @@ describe("params: canonical map", () => {
       expect(codeOf(() => map.toSdk({ temperature: 60000 }, PV))).toBe("out_of_range"); // validated before anything is added
     });
 
-    it("refuses a process version that was not observed", () => {
-      expect(codeOf(() => map.toSdk({ exposure: 0 }, { processVersion: "11.0" }))).toBe("unsupported_process_version");
+    it("refuses a process version that was not observed (11.0 and 15.4 are supported)", () => {
+      expect(codeOf(() => map.toSdk({ exposure: 0 }, { processVersion: "10.0", pipeline: "raw" }))).toBe("unsupported_process_version");
+      expect(map.toSdk({ exposure: 0 }, { processVersion: "11.0", pipeline: "raw" })).toEqual({ Exposure2012: 0 });
     });
 
     it("throws ParamError with recoverable = false", () => {

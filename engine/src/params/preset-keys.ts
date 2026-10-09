@@ -6,6 +6,7 @@
 
 import { CAMERA_PROFILE_PARAM } from "./canonical.js";
 import type { ParamMap } from "./map.js";
+import type { Pipeline } from "./pipeline.js";
 
 /** The key a Nikon Camera Matching profile is written as (reference-2.lrc15.xmp `crs:CameraProfile`). */
 export const CAMERA_PROFILE_KEY = "CameraProfile";
@@ -30,9 +31,9 @@ export const CUSTOM_WHITE_BALANCE = "Custom";
 /** Lightroom writes the point curve's name ("Linear", …) with the point curves. */
 export const TONE_CURVE_NAME_KEY = "ToneCurveName2012";
 
-/** The SDK keys that carry a canonical name's value; empty for an unknown name. */
-export function sdkKeysOf(map: ParamMap, name: string): string[] {
+/** The SDK keys that carry a canonical name's value on a pipeline; empty for an unknown name. */
+export function sdkKeysOf(map: ParamMap, name: string, pipeline: Pipeline = "raw"): string[] {
   if (name === CAMERA_PROFILE_PARAM) return [...PROFILE_KEYS];
-  const spec = map.spec(name);
+  const spec = map.spec(name, pipeline);
   return spec ? [spec.sdkKey] : [];
 }

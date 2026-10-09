@@ -82,6 +82,8 @@ export const targetIdSchema = z.enum(["master", "A", "B", "C"]);
 export const variantIdSchema = z.enum(["A", "B", "C"]);
 /** Who approved a pass: the HUD (or a menu item), Claude on the user's word in chat, or the user's pick (engine 0.9.0). */
 const approvalBySchema = z.enum(["hud", "menu", "claude", "pick"]);
+/** params\pipeline.ts Pipeline. */
+const pipelineSchema = z.enum(["raw", "rendered"]);
 
 export const passSchema = z.strictObject({
   /** The pass number of its photo: each copy counts its own passes (MCP_TOOLS lr_select_variant). */
@@ -110,6 +112,8 @@ export const passSchema = z.strictObject({
   approval: z.strictObject({ pass: z.number().int(), by: approvalBySchema, waited_ms: z.number() }).optional(),
   /** Engine 0.16.0: a mask pass's change (kind "mask"; its `changes` are empty, its settings unchanged). */
   mask: maskPassSchema.optional(),
+  /** Engine 0.21.0: what pass 0 changed of the intent for the photo's pipeline (session\pass0.ts forPipeline). */
+  warnings: z.array(z.string()).optional(),
 });
 
 export const probeSchema = z.strictObject({
@@ -229,6 +233,8 @@ export const sessionLogSchema = z
       filename: z.string().nullable(),
       copy_name: z.string().nullable(),
       process_version: z.string(),
+      /** Engine 0.21.0 (Phase 8): the photo's pipeline, which says what temperature and tint mean. */
+      pipeline: pipelineSchema.optional(),
       camera_profile: z.string().nullable(),
     }),
     snapshot: z.strictObject({ name: z.string(), id: z.string() }),
@@ -259,6 +265,8 @@ export const recipeSchema = z
     intent_id: z.string(),
     source: z.strictObject({ uuid: z.string(), filename: z.string().nullable() }),
     process_version: z.string(),
+    /** Engine 0.21.0 (Phase 8): the source photo's pipeline; its temperature and tint are in that pipeline's units. */
+    pipeline: pipelineSchema.optional(),
     settings: canonicalSettingsSchema,
     /** Engine 0.16.0: how many masks the photo kept; the recipe carries none of them (lr_sync_series says so). */
     masks: z.number().int().optional(),

@@ -126,7 +126,9 @@ describe("npm run s10:check", () => {
     expect(jpg["range"]).toMatchObject({ completed: true, absent: ["temperature", "tint"], parameters: (jpg["range"] as J)["min_accepted"] });
     const extra = jpg["extra_keys"] as J;
     expect(extra["keys"]).toEqual(expect.arrayContaining(["IncrementalTemperature", "IncrementalTint"]));
-    expect(((extra["per_key"] as J[])[0] as J)["results"]).toEqual(EXTRA_VALUES.map((v) => ({ written: v, read_back: v, outcome: "taken" })));
+    // The sim takes the relative white balance on a selected rendered photo only with "Custom", as S10 run 2
+    // observed (helpers/lightroom-sim-rendered.ts): alone, under "As Shot", each value reads back the photo's 0.
+    expect(((extra["per_key"] as J[])[0] as J)["results"]).toEqual(EXTRA_VALUES.map((v) => (v === 0 ? { written: 0, read_back: 0, outcome: "taken" } : { written: v, read_back: 0, outcome: "ignored" })));
     expect(jpg["white_balance"]).toMatchObject({ keys: ["IncrementalTemperature", "IncrementalTint"], custom_taken: true, values_taken: true });
     expect((jpg["lens"] as J)["steps"]).toMatchObject([{ label: "lens off", taken: true }, { label: "lens on", taken: true }]);
     // Lightroom keeping Embedded: the recorded Monochrome Look and the raw control are both "not taken"; the ConvertToGrayscale form is written verbatim and taken.

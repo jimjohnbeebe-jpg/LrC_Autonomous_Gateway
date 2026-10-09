@@ -3,12 +3,15 @@
 import cameraProfilesJson from "./camera-profiles.lrc15.json" with { type: "json" };
 import presetFormatJson from "./preset-format.lrc15.json" with { type: "json" };
 import sdkKeysJson from "./sdk-keys.lrc15.json" with { type: "json" };
+import renderedSdkKeysJson from "./sdk-keys.lrc15.rendered.json" with { type: "json" };
 import { loadCameraProfiles } from "./camera-profiles.js";
 import { ParamMap } from "./map.js";
 import { parsePresetFormat, type PresetFormat } from "./preset-format.js";
-import { loadSdkKeys } from "./sdk-keys.js";
+import { loadSdkKeys, type SdkKeyMap } from "./sdk-keys.js";
 
-export { CAMERA_PROFILE_PARAM, CANONICAL_PARAMS, SUPPORTED_PROCESS_VERSIONS } from "./canonical.js";
+export { CAMERA_PROFILE_PARAM, CANONICAL_PARAMS, RENDERED_PARAMS, SUPPORTED_PROCESS_VERSIONS } from "./canonical.js";
+export { EMBEDDED_PROFILE, PIPELINES, WHITE_BALANCE_UNITS, pipelineOf, processVersionLabel } from "./pipeline.js";
+export type { Pipeline } from "./pipeline.js";
 export type { ParamSpec } from "./canonical.js";
 export { lightroomLabel } from "./labels.js";
 export { AI_KINDS, KIND_LABELS, LOCAL_PARAMS, MASK_TABLE_KEY, MaskError, aiError, computed, isAiKind, pointOf, readTable, tableInfo, uncaptured, verifyTable } from "./mask-table.js";
@@ -22,7 +25,7 @@ export type { Geometry, MaskOp, OpResult } from "./mask-ops.js";
 export { CameraProfiles, UnknownCameraProfileError, isEmptyLook } from "./camera-profiles.js";
 export type { CameraProfileEntry, ProfileIdentity } from "./camera-profiles.js";
 export { CUSTOM_WHITE_BALANCE_PARAMS, ParamError, ParamMap, READBACK_TOLERANCE, canonicalValuesEqual, differingSettings } from "./map.js";
-export type { CanonicalSettings, CanonicalValue, FromSdkResult, ReadbackMismatch, SdkSettings } from "./map.js";
+export type { CanonicalSettings, CanonicalValue, FromSdkResult, ReadbackMismatch, SdkSettings, WriteContext } from "./map.js";
 export { SdkKeyMap, UnknownSdkKeyError } from "./sdk-keys.js";
 export {
   AS_SHOT_WHITE_BALANCE,
@@ -42,7 +45,12 @@ export function loadDefaultPresetFormat(): PresetFormat {
   return parsePresetFormat(presetFormatJson as unknown);
 }
 
-/** The map over the pinned key dump (sdk-keys.lrc15.json) and profile pairs (camera-profiles.lrc15.json). */
+/** Each pipeline's pinned key dump: sdk-keys.lrc15.json (raw) and sdk-keys.lrc15.rendered.json (S10). */
+export function loadDefaultSdkKeys(): { raw: SdkKeyMap; rendered: SdkKeyMap } {
+  return { raw: loadSdkKeys(sdkKeysJson as unknown), rendered: loadSdkKeys(renderedSdkKeysJson as unknown) };
+}
+
+/** The map over both pipelines' pinned key dumps and the profile pairs (camera-profiles.lrc15.json). */
 export function loadDefaultParamMap(): ParamMap {
-  return new ParamMap(loadSdkKeys(sdkKeysJson as unknown), loadCameraProfiles(cameraProfilesJson as unknown));
+  return new ParamMap(loadDefaultSdkKeys(), loadCameraProfiles(cameraProfilesJson as unknown));
 }

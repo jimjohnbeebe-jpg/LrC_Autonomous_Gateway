@@ -22,7 +22,9 @@ export const CONTEXT_DEFS: ToolDef[] = [
     description:
       "Describe the photo selected in Lightroom Classic: file, EXIF (ISO, shutter in seconds, aperture, focal length, lens, camera), " +
       "rating/label/pick, process version, camera profile, and every Develop setting under its canonical name " +
-      "(`settings`; these names are the ones lr_step takes). Also says whether a session is open on it, and which Lightroom " +
+      "(`settings`; these names are the ones lr_step takes). `pipeline` is \"raw\" (camera raw files) or \"rendered\" (JPEG, TIFF, " +
+      "PNG, PSD, HEIC, AVIF and other non-raw files): `white_balance_unit` says what temperature and tint mean on this photo, " +
+      "Kelvin on raw, a relative -100..100 on rendered. Rendered photos have their own profiles (Color, Monochrome). Also says whether a session is open on it, and which Lightroom " +
       "version runs (`lightroom`; tell the user its `notices`, empty when the version is supported and tested). Changes nothing.",
     schema: noArgs,
     annotations: { readOnlyHint: true, openWorldHint: false },

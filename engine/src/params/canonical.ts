@@ -26,11 +26,21 @@ export type ParamSpec = NumberParam | SwitchParam | BooleanParam | CurveParam;
 export const CAMERA_PROFILE_PARAM = "camera_profile";
 
 /**
- * Process versions the map accepts. Only "15.4" was observed: both S5 dumps report it
- * [handle: engine/src/params/sdk-keys.lrc15.json "sources"]. Anything else, legacy PV2010 included,
- * is refused rather than mapped (ARCHITECTURE section 5).
+ * Process versions the map accepts, newest first. "15.4": both S5 dumps report it [handle:
+ * engine/src/params/sdk-keys.lrc15.json "sources"]. "11.0" (Phase 8, decision D2 A [stated: Jim,
+ * 2026-10-08, "Go with recommendations"]): the same keys and types as 15.4, and two JPGs and one NEF on
+ * it took every write as the 15.4 photos did, same limits and clamps [handle:
+ * docs/reports/phase8/S10/s10_check_2026-10-09T12-24-50-743Z.json writes for DSC_0031.JPG, IMG_1595.JPG,
+ * _DSC0028.NEF; LR_SDK_NOTES "Recorded in Phase 8"]. Anything else, legacy PV2010 included, is refused
+ * rather than mapped (ARCHITECTURE section 5).
  */
-export const SUPPORTED_PROCESS_VERSIONS: readonly string[] = ["15.4"];
+export const SUPPORTED_PROCESS_VERSIONS: readonly string[] = ["15.4", "11.0"];
+
+/**
+ * Lightroom's names for the supported process versions, for messages. "Version 5" for 11.0: LR_SDK_NOTES
+ * "Recorded in Phase 8" (the S10 probes); "Version 6" for 15.4 is [unverified].
+ */
+export const PROCESS_VERSION_LABELS: Readonly<Record<string, string>> = { "15.4": "Version 6", "11.0": "Version 5" };
 
 const RUN3 = "docs/reports/phase1/P1/p1_check_2026-09-26T21-06-50-295Z.json range_probe";
 /** The limits were taken as written; 1 % of the range beyond them was not taken. */
@@ -49,8 +59,8 @@ const S10_RUN2 = "docs/reports/phase8/S10/s10_check_2026-10-09T12-24-50-743Z.jso
  * whose WhiteBalance was already "Custom", 101 read back 100 and -101 read back -100 while ±50, ±100
  * and 0 read back as written; on the 17 other rendered photos (WhiteBalance "As Shot") every value
  * was ignored until written together with WhiteBalance = "Custom", when +20/+20 was taken on all 18
- * [handle: rangeSource below; docs/reports/phase8/S10.md "Observed"]. Not in the map yet: Phase 8
- * row 3 wires them in per pipeline.
+ * [handle: rangeSource below; docs/reports/phase8/S10.md "Observed"]. RENDERED_PARAMS maps
+ * `temperature` and `tint` to them.
  */
 export const RENDERED_WHITE_BALANCE = {
   keys: { temperature: "IncrementalTemperature", tint: "IncrementalTint" },
@@ -74,8 +84,7 @@ const entries: Array<[string, ParamSpec]> = [
   ["saturation", num("Saturation", -100, 100)],
   // White balance on the raw pipeline (Kelvin and tint), probed on the raw NEF. The rendered pipeline
   // (JPEG, TIFF, PNG, PSD, PSB, HEIC, AVIF, JXL, rendered DNG) carries IncrementalTemperature and
-  // IncrementalTint instead, -100..100 (RENDERED_WHITE_BALANCE below); mapping them per pipeline is
-  // Phase 8 row 3.
+  // IncrementalTint instead, -100..100 (RENDERED_WHITE_BALANCE above, RENDERED_PARAMS below).
   ["temperature", num("Temperature", 2000, 50000, PROBED_CLAMP)],
   ["tint", num("Tint", -150, 150, PROBED_CLAMP)],
 
@@ -136,5 +145,21 @@ for (const [band, sdkBand] of HSL_BANDS) {
   entries.push([`hsl.${band}.lum`, num(`LuminanceAdjustment${sdkBand}`, -100, 100)]);
 }
 
-/** Canonical name -> spec. `camera_profile` is not in here: it maps to two keys (camera-profiles.ts). */
+/**
+ * Canonical name -> spec on the raw pipeline. `camera_profile` is not in here: it maps to two keys
+ * (camera-profiles.ts).
+ */
 export const CANONICAL_PARAMS: ReadonlyMap<string, ParamSpec> = new Map(entries);
+
+/**
+ * The rendered pipeline's specs: the same names and keys, except white balance (RENDERED_WHITE_BALANCE).
+ * The battery's other numeric sliders took the raw limits on every rendered photo, selected first, with
+ * 1 % beyond clamped or ignored as on raw [handle: docs/reports/phase8/S10.md "Observed", "Run 2", the per-photo
+ * table, and "Numbers", "Totals" ("limits taken 31 of 31 photos"); LR_SDK_NOTES "Recorded in Phase 8"].
+ */
+const W = RENDERED_WHITE_BALANCE;
+export const RENDERED_PARAMS: ReadonlyMap<string, ParamSpec> = new Map([
+  ...entries,
+  ["temperature", num(W.keys.temperature, W.min, W.max, W.rangeSource)],
+  ["tint", num(W.keys.tint, W.min, W.max, W.rangeSource)],
+]);

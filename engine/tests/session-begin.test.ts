@@ -1,13 +1,17 @@
 // lr_begin_session (src/session/begin.ts) against the simulated Lightroom in its "tonal" model
 // (tests/helpers/session-harness.ts): the snapshot, pass 0, the clipping baseline ("until under",
-// at most 8 corrections), guardrail overrides, and a failed pass 0 that leaves the session open.
+// at most 8 corrections), guardrail overrides, and a failed pass 0 that leaves the session open. Every
+// test runs on a raw photo and on a rendered one (Phase 8 row 3).
 
 import { describe, expect, it } from "vitest";
+import { PIPELINES } from "../src/params/index.js";
 import { ID, SHORT, clean, fails, intent, lr, manager, map, readLog, useSessionHarness } from "./helpers/session-harness.js";
 
-useSessionHarness();
+describe.each(PIPELINES)("lr_begin_session (%s pipeline)", (pipeline) => {
+  useSessionHarness(pipeline);
+  /** test_prior names Adobe Color; on a rendered photo pass 0 sets Color instead (pass0.ts forPipeline). */
+  const profile = pipeline === "raw" ? "Adobe Color" : "Color";
 
-describe("lr_begin_session", () => {
   it("takes a snapshot, then writes pass 0: the intent's profile and priors, a number added to the photo's value", async () => {
     clean();
     const out = await manager.begin({ intent_id: "test_prior" });
@@ -15,7 +19,7 @@ describe("lr_begin_session", () => {
     expect(lr.history).toEqual([`AVG ${SHORT} pass 0/4`]);
     expect(lr.settings["Exposure2012"]).toBe(0.2);
     expect(lr.settings["AutoLateralCA"]).toBe(0);
-    expect(map.fromSdk(lr.settings).camera_profile.name).toBe("Adobe Color");
+    expect(map.fromSdk(lr.settings).camera_profile.name).toBe(profile);
     expect(out.json).toMatchObject({ ok: true, session_id: ID, pass: "0/4", intent_brief: { brief: "The test_prior brief." }, guardrails: { clip_high_pct: 0.5, clip_low_pct: 1 } });
     expect(out.json["pass0_applied"]).toContainEqual({ name: "exposure", before: 0, requested: 0.2, after: 0.2, delta: 0.2 });
     expect(out.image?.subarray(0, 2)).toEqual(Buffer.from([0xff, 0xd8]));
@@ -24,13 +28,13 @@ describe("lr_begin_session", () => {
     expect(log.passes[0]).toMatchObject({ n: 0, kind: "pass0", history_names: [`AVG ${SHORT} pass 0/4`] });
   });
 
-  it("takes pass 0's profile when Lightroom stamps its own Look version, and logs the Lightroom version (issue #67)", async () => {
+  it.runIf(pipeline === "raw")("takes pass 0's profile when Lightroom stamps its own Look version, and logs the Lightroom version (issue #67)", async () => {
     clean();
     lr.lookVersion = "18.7";
     const out = await manager.begin({ intent_id: "test_prior" });
     expect(out.json["ok"]).toBe(true);
     expect((lr.settings["Look"] as { Parameters: Record<string, unknown> }).Parameters["Version"]).toBe("18.7");
-    expect(map.fromSdk(lr.settings).camera_profile.name).toBe("Adobe Color");
+    expect(map.fromSdk(lr.settings).camera_profile.name).toBe(profile);
     expect(readLog().lightroom).toEqual({ lrc_version: "15.5.1", sdk_declared: 13, notices: [] });
   });
 

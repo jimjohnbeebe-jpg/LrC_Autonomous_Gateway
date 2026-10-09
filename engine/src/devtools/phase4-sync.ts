@@ -46,7 +46,7 @@ export async function syncBurst(deps: Phase4Deps, run: Run, photo: Photo, a: Con
   run.results["sync_burst"] = out;
   try {
     for (const [i, uuid] of copies.sync.entries()) {
-      const settings = deps.map.toSdk({ exposure: START_EXPOSURES[i] as number }, { processVersion: photo.process_version });
+      const settings = deps.map.toSdk({ exposure: START_EXPOSURES[i] as number }, { processVersion: photo.process_version, pipeline: "raw" });
       await deps.client.request("apply_settings", { photo_uuid: uuid, settings, history_name: START_HISTORY_NAME }, { timeoutMs: WRITE_TIMEOUT_MS });
     }
     const res = (await deps.tools.syncSeries({ source: { session_id: a.sessionId }, targets: { uuids: copies.sync }, adaptive_exposure: true, return_image: "none" })).json;

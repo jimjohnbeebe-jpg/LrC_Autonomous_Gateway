@@ -14,7 +14,7 @@ import { lightroomNotices, type CommandResult } from "../bridge/index.js";
 import { SESSION_LOG_SCHEMA_ID, SessionLogFiles, type SessionLogData } from "../log/index.js";
 import { ToolError } from "../mcp/errors.js";
 import { summarize } from "../metrics/index.js";
-import type { FromSdkResult } from "../params/index.js";
+import { WHITE_BALANCE_UNITS, type FromSdkResult } from "../params/index.js";
 import { readPage, resolveSessionSettings, type PageRead, type SessionSettings } from "../settings/index.js";
 import { APPROVAL_WAIT_MS } from "./approval.js";
 import { checkVariants } from "./copies.js";
@@ -56,6 +56,7 @@ export async function openSession(ctx: SessionContext, args: BeginArgs): Promise
     filename: text(photo["filename"]),
     copy_name: text(photo["copy_name"]),
     process_version: view.process_version,
+    pipeline: view.pipeline,
     camera_profile: view.camera_profile.name,
   });
   const s: Session = {
@@ -164,6 +165,7 @@ function newLog(ctx: SessionContext, s: Session, variantCount: number | null, no
       filename: master.filename,
       copy_name: master.copy_name,
       process_version: master.process_version,
+      pipeline: master.pipeline,
       camera_profile: master.camera_profile,
     },
     snapshot: s.snapshot,
@@ -207,7 +209,7 @@ export function sessionHeader(opened: Opened): Record<string, unknown> {
     ok: true,
     session_id: s.id,
     mode: s.mode,
-    target: { ...target, exif: { iso: photo["iso"] ?? null, shutter: photo["shutter"] ?? null, aperture: photo["aperture"] ?? null, focal_length: photo["focal_length"] ?? null, lens: photo["lens"] ?? null, camera: photo["camera"] ?? null } },
+    target: { ...target, white_balance_unit: WHITE_BALANCE_UNITS[target.pipeline], exif: { iso: photo["iso"] ?? null, shutter: photo["shutter"] ?? null, aperture: photo["aperture"] ?? null, focal_length: photo["focal_length"] ?? null, lens: photo["lens"] ?? null, camera: photo["camera"] ?? null } },
     intent: { id: intent.id, label: intent.label, source },
     intent_brief: {
       brief: intent.brief,
@@ -229,6 +231,7 @@ function beginJson(opened: Opened, p: Pass0): Record<string, unknown> {
     pass: `0/${s.maxPasses}`,
     history_names: p.historyNames,
     pass0_applied: p.applied,
+    ...(p.warnings.length > 0 ? { pass0_warnings: p.warnings } : {}),
     guardrail_actions: p.actions,
     settings: p.view.settings,
     metrics: summarize(p.rendered.metrics),

@@ -88,7 +88,7 @@ function maybeWritten(err: unknown, historyName: string): unknown {
 /** Write canonical values as one History step and check the read-back (Phase 0, P-12). */
 export async function write(ctx: SessionContext, s: Session, t: Target, values: Record<string, CanonicalValue>, historyName: string): Promise<FromSdkResult> {
   const { client, map } = ctx.deps;
-  const sdk = map.toSdk(values, { processVersion: t.process_version });
+  const sdk = map.toSdk(values, { processVersion: t.process_version, pipeline: t.pipeline });
   const readBack = await writeSdk(ctx, s, t, sdk, historyName);
   const error = readbackError(map, sdk, readBack, historyName, client.hello()); // WRITE_NOT_TAKEN or FEATURE_UNAVAILABLE
   if (error) throw error;

@@ -153,7 +153,7 @@ async function replay(deps: Phase3Deps, fx: Json, snap: Snapshot, recipe: Recipe
   const { client, map } = deps;
   const uuid = photoUuid(fx);
   await client.request("apply_snapshot", { target_uuid: uuid, snapshot_id: snap.id }, { timeoutMs: WRITE_TIMEOUT_MS });
-  const sdk = map.toSdk(recipe.settings, { processVersion: recipe.process_version });
+  const sdk = map.toSdk(recipe.settings, { processVersion: recipe.process_version, pipeline: "raw" }); // the Phase 3 fixtures are raw files
   const replayed = await client.request("apply_settings", { target_uuid: uuid, settings: sdk, history_name: REPLAY_HISTORY_NAME }, { timeoutMs: WRITE_TIMEOUT_MS });
   history.push(REPLAY_HISTORY_NAME);
   const differing = differingSettings(map.fromSdk(replayed.read_back).settings, recipe.settings);

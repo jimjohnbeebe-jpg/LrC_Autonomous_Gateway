@@ -4,7 +4,7 @@
 import { z } from "zod";
 import { lightroomNotices } from "../bridge/index.js";
 import { boxProblem, summarize, type Region, type RegionBox } from "../metrics/index.js";
-import { ParamError, type FromSdkResult } from "../params/index.js";
+import { ParamError, WHITE_BALANCE_UNITS, processVersionLabel, type FromSdkResult } from "../params/index.js";
 import { cropRegion } from "../preview/index.js";
 import type { SessionManager, SessionView, TargetId } from "../session/index.js";
 import { ToolError, toToolError } from "./errors.js";
@@ -88,6 +88,10 @@ export async function getActivePhotoContext(ctx: ToolContext): Promise<ToolOutpu
       label: field("label"),
       pick: field("pick"),
       process_version: view?.process_version ?? (typeof sdk["ProcessVersion"] === "string" ? sdk["ProcessVersion"] : null),
+      process_version_label: typeof sdk["ProcessVersion"] === "string" ? processVersionLabel(sdk["ProcessVersion"]) : null,
+      // Phase 8: from the photo's settings, never its file format (params\pipeline.ts); null when they match neither (settings_error says why).
+      pipeline: view?.pipeline ?? null,
+      white_balance_unit: view ? WHITE_BALANCE_UNITS[view.pipeline] : null,
       camera_profile: view ? (view.camera_profile.name ?? view.camera_profile.camera_profile) : null,
       camera_profile_detail: view?.camera_profile ?? null,
       lens_profile_enabled: view ? view.settings["lens.profile_enable"] === 1 : null,

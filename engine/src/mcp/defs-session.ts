@@ -95,6 +95,9 @@ export const SESSION_DEFS: ToolDef[] = [
       "blacks/shadows/exposure back in fixed steps until under, at most 8 (\"… baseline k\"; a limit still over is `unmet` in " +
       "guardrail_actions). Returns session_id, the intent's brief (follow it), the " +
       "guardrails, pass0_applied, the full settings, metrics, and the preview. Then call lr_step for each pass. " +
+      "`target.pipeline` and `target.white_balance_unit` say how the photo's temperature and tint work (lr_get_active_photo_context). " +
+      "On a rendered photo (JPEG, TIFF, PNG …) pass 0 sets the rendered profile of the intent's kind (Color, or Monochrome for a " +
+      "monochrome profile) and leaves out its temperature and tint priors, which are Kelvin offsets; `pass0_warnings` says so. " +
       "mode \"variants\" (an intent with variants; select the master, not a virtual copy): instead of editing the photo, the engine " +
       "makes virtual copies \"AVG <intent> A\", \"… B\", \"… C\" and runs pass 0 on each with the intent's priors plus that " +
       "variant's (History \"AVG <id> A pass 0/N\"); it returns `variants` (each copy's settings and metrics) and a contact sheet " +
@@ -117,7 +120,8 @@ export const SESSION_DEFS: ToolDef[] = [
       "(e.g. {\"exposure\": 0.3, \"highlights\": -20} adds 0.3 EV and lowers highlights by 20) and to the value to set for " +
       "camera_profile, switches, booleans and curves. Each change is capped at the slider's per-pass maximum × the pass's decay " +
       "(1.0, 0.6, 0.4, 0.25: exposure 1 EV, contrast/texture/clarity/dehaze 40, highlights/shadows/whites/blacks 60, " +
-      "vibrance/saturation 30, temperature 1500 K, tint 30, HSL 40, grading 30) and at the slider's range (`clamped`). " +
+      "vibrance/saturation 30, temperature 1500 K on raw photos and 30 on rendered ones, whose temperature is relative, tint 30, " +
+      "HSL 40, grading 30) and at the slider's range (`clamped`). " +
       "A change that would push further into a clipping limit already reached is refused (`refused`); the rest is written as " +
       "one History step \"AVG <id> pass n/N\", read back, rendered and measured. If clipping then exceeds a limit, the engine " +
       "pulls back the sliders that caused it, else takes fixed steps, at most 3 (\"… guard k\", in `guardrail_actions`). The pass " +

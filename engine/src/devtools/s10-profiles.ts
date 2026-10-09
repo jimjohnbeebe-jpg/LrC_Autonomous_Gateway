@@ -106,9 +106,10 @@ export async function lensWrites(ctx: Ctx, photo: Photo): Promise<Json> {
   const { map } = ctx.deps;
   // toSdk only checks the version it is given (map.ts); the photo's own may be one this spike is recording (e.g. "11.0").
   const pv = SUPPORTED_PROCESS_VERSIONS[0] as string;
+  const pipeline = photo.pipeline === "rendered" ? "rendered" : "raw"; // the lens keys are the same on both
   const steps: Array<[string, SdkSettings]> = [
-    ["lens off", map.toSdk({ "lens.corrections_enable": false, "lens.profile_enable": 0 }, { processVersion: pv })],
-    ["lens on", map.toSdk({ "lens.corrections_enable": true, "lens.profile_enable": 1 }, { processVersion: pv })],
+    ["lens off", map.toSdk({ "lens.corrections_enable": false, "lens.profile_enable": 0 }, { processVersion: pv, pipeline })],
+    ["lens on", map.toSdk({ "lens.corrections_enable": true, "lens.profile_enable": 1 }, { processVersion: pv, pipeline })],
   ];
   const out: Json[] = [];
   for (const [i, [labelText, settings]] of steps.entries()) {

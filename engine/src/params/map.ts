@@ -6,49 +6,34 @@
 // - verifyReadback() compares what was written with what Lightroom reports afterwards. Every write
 //   is read back (Phase 0, P-12): Lightroom silently ignored a malformed CameraProfile
 //   [handle: docs/reports/phase0/S5.md "Part 1 analysis"].
-// A process version other than the ones observed is refused (canonical.ts).
+// A process version other than the ones observed is refused (canonical.ts), and so is a photo whose
+// settings match neither pipeline (pipeline.ts). Each pipeline has its own specs and its own pinned
+// key dump: they differ only in white balance (canonical.ts RENDERED_PARAMS).
 
 import { isDeepStrictEqual } from "node:util";
 import { isEmptyLook, type CameraProfiles, type ProfileIdentity } from "./camera-profiles.js";
-import {
-  CAMERA_PROFILE_PARAM,
-  CANONICAL_PARAMS,
-  SUPPORTED_PROCESS_VERSIONS,
-  type ParamSpec,
-} from "./canonical.js";
+import { CAMERA_PROFILE_PARAM, CANONICAL_PARAMS, RENDERED_PARAMS, type ParamSpec } from "./canonical.js";
 import { tableInfo } from "./mask-table.js";
+import { ParamError } from "./param-error.js";
+import { PIPELINES, checkProcessVersion, describeSignals, pipelineOf, type Pipeline } from "./pipeline.js";
 import { CUSTOM_WHITE_BALANCE, WHITE_BALANCE_KEY } from "./preset-keys.js";
 import type { SdkKeyMap, SdkValueType } from "./sdk-keys.js";
+
+export { ParamError, type ParamErrorCode } from "./param-error.js";
 
 export type CanonicalValue = number | boolean | string | number[];
 export type CanonicalSettings = Record<string, CanonicalValue>;
 export type SdkSettings = Record<string, unknown>;
 
-export type ParamErrorCode =
-  | "unknown_parameter"
-  | "wrong_type"
-  | "out_of_range"
-  /** Older than the supported ones (or none): update the photo in Lightroom. */
-  | "unsupported_process_version"
-  /** Newer than the supported ones: it comes with a Lightroom this engine does not know yet. */
-  | "newer_process_version";
+/** What a write is for: the photo's process version and pipeline (both from its fromSdk read). */
+export type WriteContext = { processVersion: string; pipeline: Pipeline };
 
-/** A structured error ({code, message, recoverable}, PRD NFR-7). */
-export class ParamError extends Error {
-  readonly code: ParamErrorCode;
-  readonly parameter: string | null;
-  readonly recoverable = false;
-
-  constructor(code: ParamErrorCode, message: string, parameter: string | null = null) {
-    super(message);
-    this.name = "ParamError";
-    this.code = code;
-    this.parameter = parameter;
-  }
-}
+const SPECS: Readonly<Record<Pipeline, ReadonlyMap<string, ParamSpec>>> = { raw: CANONICAL_PARAMS, rendered: RENDERED_PARAMS };
 
 export type FromSdkResult = {
   process_version: string;
+  /** The photo's pipeline, from its settings (pipeline.ts). */
+  pipeline: Pipeline;
   /** Canonical settings for every mapped key present; camera_profile only when the pair is pinned. */
   settings: CanonicalSettings;
   camera_profile: ProfileIdentity;
@@ -172,37 +157,47 @@ export function differingSettings(a: Readonly<Record<string, unknown>>, b: Reado
   return [...keys].filter((k) => !canonicalValuesEqual(a[k], b[k])).sort();
 }
 
-export class ParamMap {
-  private readonly sdkKeys: SdkKeyMap;
-  private readonly profiles: CameraProfiles;
-  private readonly params: ReadonlyMap<string, ParamSpec>;
-
-  constructor(sdkKeys: SdkKeyMap, profiles: CameraProfiles, params: ReadonlyMap<string, ParamSpec> = CANONICAL_PARAMS) {
-    const seen = new Map<string, string>();
-    for (const [name, spec] of params) {
-      const entry = sdkKeys.get(spec.sdkKey); // throws UnknownSdkKeyError: the key is not in the live dump
-      const expected = EXPECTED_SDK_TYPE[spec.kind];
-      if (entry.type !== expected) {
-        throw new Error(`${name} -> ${spec.sdkKey}: the pinned dump has type ${entry.type}, the map expects ${expected}`);
-      }
-      const other = seen.get(spec.sdkKey);
-      if (other) throw new Error(`${other} and ${name} both map to ${spec.sdkKey}`);
-      seen.set(spec.sdkKey, name);
+/** Each spec's key in the pipeline's pinned dump with the expected type, and no key mapped twice. */
+function checkSpecs(params: ReadonlyMap<string, ParamSpec>, sdkKeys: SdkKeyMap): void {
+  const seen = new Map<string, string>();
+  for (const [name, spec] of params) {
+    const entry = sdkKeys.get(spec.sdkKey); // throws UnknownSdkKeyError: the key is not in the live dump
+    const expected = EXPECTED_SDK_TYPE[spec.kind];
+    if (entry.type !== expected) {
+      throw new Error(`${name} -> ${spec.sdkKey}: the pinned dump has type ${entry.type}, the map expects ${expected}`);
     }
-    for (const key of ["CameraProfile", "Look", "ProcessVersion", WHITE_BALANCE_KEY]) sdkKeys.get(key);
+    const other = seen.get(spec.sdkKey);
+    if (other) throw new Error(`${other} and ${name} both map to ${spec.sdkKey}`);
+    seen.set(spec.sdkKey, name);
+  }
+}
+
+export class ParamMap {
+  private readonly sdkKeys: Readonly<Record<Pipeline, SdkKeyMap>>;
+  private readonly profiles: CameraProfiles;
+
+  /** `sdkKeys`: each pipeline's pinned dump (sdk-keys.lrc15.json, sdk-keys.lrc15.rendered.json). */
+  constructor(sdkKeys: Readonly<Record<Pipeline, SdkKeyMap>>, profiles: CameraProfiles) {
+    for (const p of PIPELINES) {
+      checkSpecs(SPECS[p], sdkKeys[p]);
+      for (const key of ["CameraProfile", "ProcessVersion", "ConvertToGrayscale", WHITE_BALANCE_KEY]) sdkKeys[p].get(key);
+    }
+    sdkKeys.raw.get("Look"); // rendered photos carry no Look (sdk-keys.lrc15.rendered.json)
     this.sdkKeys = sdkKeys;
     this.profiles = profiles;
-    this.params = params;
   }
 
-  /** Canonical names this map accepts, camera_profile included. */
+  /** Canonical names this map accepts, camera_profile included (the same on both pipelines). */
   names(): string[] {
-    return [...this.params.keys(), CAMERA_PROFILE_PARAM];
+    return [...CANONICAL_PARAMS.keys(), CAMERA_PROFILE_PARAM];
   }
 
-  /** The spec of a canonical name, or undefined (camera_profile has none: see cameraProfiles()). */
-  spec(name: string): ParamSpec | undefined {
-    return this.params.get(name);
+  /**
+   * The spec of a canonical name on a pipeline, or undefined (camera_profile has none: see
+   * cameraProfiles()). Only temperature and tint differ between the pipelines.
+   */
+  spec(name: string, pipeline: Pipeline = "raw"): ParamSpec | undefined {
+    return SPECS[pipeline].get(name);
   }
 
   cameraProfiles(): CameraProfiles {
@@ -210,24 +205,38 @@ export class ParamMap {
   }
 
   /**
-   * Validate canonical settings and return the SDK table to write. A temperature or tint also writes
-   * WhiteBalance "Custom" (CUSTOM_WHITE_BALANCE_PARAMS), read back like every other key.
+   * Validate canonical settings for a photo of `context.pipeline` and return the SDK table to write.
+   * A temperature or tint also writes WhiteBalance "Custom" (CUSTOM_WHITE_BALANCE_PARAMS), read back
+   * like every other key. A profile of the other pipeline is refused: Lightroom checks that only on
+   * the photo loaded in Develop, and stored the raw pair on 30 unselected photos [handle:
+   * docs/reports/phase8/S10.md "Observed", "Run 1"], so the engine checks it for every write.
    */
-  toSdk(settings: Readonly<Record<string, unknown>>, context: { processVersion: string }): SdkSettings {
-    this.checkProcessVersion(context.processVersion);
+  toSdk(settings: Readonly<Record<string, unknown>>, context: WriteContext): SdkSettings {
+    checkProcessVersion(context.processVersion);
     const out: SdkSettings = {};
     for (const [name, value] of Object.entries(settings)) {
       if (name === CAMERA_PROFILE_PARAM) {
         if (typeof value !== "string") throw new ParamError("wrong_type", `${name} must be a profile name`, name);
-        Object.assign(out, this.profiles.toSdk(value)); // throws UnknownCameraProfileError
+        const sdk = this.profiles.toSdk(value); // throws UnknownCameraProfileError
+        const its = this.profiles.pipeline(value);
+        if (its !== context.pipeline) {
+          throw new ParamError("wrong_pipeline", `"${value}" is a ${its}-pipeline profile; this photo is on the ${context.pipeline} pipeline (${this.profileNames(context.pipeline)})`, name);
+        }
+        Object.assign(out, sdk);
         continue;
       }
-      const spec = this.params.get(name);
+      const spec = SPECS[context.pipeline].get(name);
       if (!spec) throw new ParamError("unknown_parameter", `Unknown parameter "${name}"`, name);
       out[spec.sdkKey] = validate(name, spec, value);
     }
     if (CUSTOM_WHITE_BALANCE_PARAMS.some((name) => name in settings)) out[WHITE_BALANCE_KEY] = CUSTOM_WHITE_BALANCE;
     return out;
+  }
+
+  /** "its profiles: Color, Monochrome" (few) or "N profiles" (many), for messages. */
+  private profileNames(pipeline: Pipeline): string {
+    const names = this.profiles.names().filter((n) => this.profiles.pipeline(n) === pipeline);
+    return names.length <= 4 ? `its profiles: ${names.join(", ")}` : `${names.length} pinned profiles`;
   }
 
   /** Canonical view of a getDevelopSettings() table. */
@@ -236,10 +245,14 @@ export class ParamMap {
     if (typeof pv !== "string") {
       throw new ParamError("unsupported_process_version", "The settings carry no ProcessVersion string");
     }
-    this.checkProcessVersion(pv);
+    checkProcessVersion(pv);
+    const { pipeline, signals } = pipelineOf(sdk);
+    if (pipeline === "unknown") {
+      throw new ParamError("pipeline_unknown", `This photo's settings match neither the raw nor the rendered pipeline (${describeSignals(signals)}), so the engine does not edit it.`);
+    }
 
     const settings: CanonicalSettings = {};
-    for (const [name, spec] of this.params) {
+    for (const [name, spec] of SPECS[pipeline]) {
       if (!(spec.sdkKey in sdk)) continue; // e.g. monochrome profiles drop 18 keys (S5.md "Numbers")
       let value = sdk[spec.sdkKey];
       if (spec.kind === "curve" && isEmptyLook(value)) value = []; // Lua's empty table may arrive as {}
@@ -253,14 +266,19 @@ export class ParamMap {
       settings[name] = value as CanonicalValue;
     }
 
-    const cameraProfile = this.profiles.identify(sdk["CameraProfile"], sdk["Look"]);
+    // ConvertToGrayscale tells the rendered Monochrome from Color [handle: camera-profiles.lrc15.json
+    // "Color", "Monochrome" convert_to_grayscale; docs/reports/phase8/S10.md "Observed"]. A pinned pair of the other
+    // pipeline (a raw DNG set to "Embedded") is not named: it was recorded on the other pipeline.
+    const identified = this.profiles.identify(sdk["CameraProfile"], sdk["Look"], sdk["ConvertToGrayscale"]);
+    const cameraProfile = identified.name !== null && this.profiles.pipeline(identified.name) !== pipeline ? { ...identified, name: null } : identified;
     if (cameraProfile.name !== null) settings[CAMERA_PROFILE_PARAM] = cameraProfile.name;
 
     return {
       process_version: pv,
+      pipeline,
       settings,
       camera_profile: cameraProfile,
-      unpinned_keys: Object.keys(sdk).filter((k) => !this.sdkKeys.has(k)).sort(),
+      unpinned_keys: Object.keys(sdk).filter((k) => !this.sdkKeys[pipeline].has(k)).sort(),
       masks: tableInfo(sdk),
     };
   }
@@ -279,28 +297,4 @@ export class ParamMap {
     }
     return mismatches;
   }
-
-  private checkProcessVersion(pv: string): void {
-    if (SUPPORTED_PROCESS_VERSIONS.includes(pv)) return;
-    const supported = `(supported: ${SUPPORTED_PROCESS_VERSIONS.join(", ")})`;
-    // A newer process version comes with a Lightroom update; updating the photo cannot help then [inference].
-    if (SUPPORTED_PROCESS_VERSIONS.every((v) => compareVersions(pv, v) > 0)) {
-      throw new ParamError(
-        "newer_process_version",
-        `Process version ${pv} is newer than this engine knows ${supported}, so editing this photo is unavailable until the engine supports it; reading its context still works.`,
-      );
-    }
-    throw new ParamError("unsupported_process_version", `Process version ${pv} is not supported ${supported}: update the photo's process version in Lightroom first.`);
-  }
-}
-
-/** Dotted versions compared by number per component ("15.10" > "15.4", "15.4.1" > "15.4"); NaN counts as not newer. */
-function compareVersions(a: string, b: string): number {
-  const pa = a.split(".").map(Number);
-  const pb = b.split(".").map(Number);
-  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    const d = (pa[i] ?? 0) - (pb[i] ?? 0);
-    if (d !== 0) return d;
-  }
-  return 0;
 }

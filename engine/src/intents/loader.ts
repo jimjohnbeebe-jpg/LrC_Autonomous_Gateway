@@ -192,7 +192,8 @@ export class IntentLibrary {
           continue;
         }
         try {
-          this.map.toSdk({ [name]: value }, { processVersion: SUPPORTED_PROCESS_VERSIONS[0] as string });
+          // Schema v1 intents are written for the raw pipeline (Phase 8 row 4 brings v2); switches, booleans and curves are the same on both.
+          this.map.toSdk({ [name]: value }, { processVersion: SUPPORTED_PROCESS_VERSIONS[0] as string, pipeline: "raw" });
         } catch (err) {
           if (!(err instanceof ParamError)) throw err;
           problems.push(`${where}.${name}: ${err.message}`);

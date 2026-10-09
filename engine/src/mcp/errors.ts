@@ -1,12 +1,13 @@
 // Every failure reaches Claude as { code, message, recoverable } (PRD NFR-7), never as a stack.
 // Codes follow MCP_TOOLS where it names one (BRIDGE_DISCONNECTED, NO_ACTIVE_PHOTO, TARGET_CHANGED,
 // UNKNOWN_PARAMETER, OUT_OF_RANGE, LEGACY_PROCESS_VERSION, INTENT_NOT_FOUND); the others are the
-// engine's own (Phase 2 and 3; NEWER_PROCESS_VERSION and FEATURE_UNAVAILABLE, Phase 6).
+// engine's own (Phase 2 and 3; NEWER_PROCESS_VERSION and FEATURE_UNAVAILABLE, Phase 6; PIPELINE_UNKNOWN
+// and WRONG_PIPELINE, Phase 8).
 // `recoverable` means the same call may work later without changing it (e.g. once Lightroom is back).
 
 import { BridgeError } from "../bridge/index.js";
 import { IntentError } from "../intents/index.js";
-import { MaskError, ParamError, UnknownCameraProfileError, lightroomLabel, sdkKeysOf, type ParamMap, type SdkSettings } from "../params/index.js";
+import { MaskError, PIPELINES, ParamError, UnknownCameraProfileError, lightroomLabel, sdkKeysOf, type ParamMap, type SdkSettings } from "../params/index.js";
 import { PreviewError } from "../preview/index.js";
 
 export type ToolErrorBody = { code: string; message: string; recoverable: boolean; details?: unknown };
@@ -70,7 +71,7 @@ export function readbackError(map: ParamMap, written: SdkSettings, readBack: Sdk
   if (mismatches.some((m) => m.sdk_key in readBack)) {
     return new ToolError("WRITE_NOT_TAKEN", `Lightroom did not take ${mismatches.map((m) => m.sdk_key).join(", ")} as written in "${historyName}".`, false, details);
   }
-  const label = (key: string): string => lightroomLabel(map.names().find((n) => sdkKeysOf(map, n).includes(key)) ?? key);
+  const label = (key: string): string => lightroomLabel(map.names().find((n) => PIPELINES.some((p) => sdkKeysOf(map, n, p).includes(key))) ?? key);
   const sliders = [...new Set(mismatches.map((m) => label(m.sdk_key)))];
   const it = sliders.length > 1 ? "them" : "it";
   const others = Object.keys(written).length > mismatches.length ? " The step's other values were written." : "";
@@ -109,10 +110,13 @@ function fromParam(err: ParamError, lightroom: LightroomVersions): ToolError {
     unknown_parameter: "UNKNOWN_PARAMETER",
     wrong_type: "WRONG_TYPE",
     out_of_range: "OUT_OF_RANGE",
-    // Only process version 15.4 is mapped (ARCHITECTURE section 5): an older one is refused, a newer
-    // one comes with a Lightroom this engine does not know yet (map.ts checkProcessVersion).
+    // Process versions 15.4 and 11.0 are mapped (ARCHITECTURE section 5, Phase 8 D2): an older one is
+    // refused, a newer one comes with a Lightroom this engine does not know yet (params\pipeline.ts checkProcessVersion).
     unsupported_process_version: "LEGACY_PROCESS_VERSION",
     newer_process_version: "NEWER_PROCESS_VERSION",
+    // Phase 8 (PHASE8_PLAN "The design"): settings that match neither pipeline, or a value of the other one.
+    pipeline_unknown: "PIPELINE_UNKNOWN",
+    wrong_pipeline: "WRONG_PIPELINE",
   };
   const pv = err.code === "unsupported_process_version" || err.code === "newer_process_version";
   const running = pv && lightroom?.lrc_version ? ` Lightroom ${lightroom.lrc_version} is running.` : "";

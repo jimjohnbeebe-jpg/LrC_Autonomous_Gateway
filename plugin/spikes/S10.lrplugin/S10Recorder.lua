@@ -52,11 +52,14 @@ function M.start()
             if photo then
                 local settings, meta = S10.snapshot(catalog, photo)
                 local lookName = S10.lookName(settings)
-                local key = tostring(meta.filename) .. "|" .. tostring(meta.copy_name) .. "|" .. tostring(settings.CameraProfile) .. "|" .. tostring(lookName)
+                -- ConvertToGrayscale is part of the key: on a rendered photo, Monochrome left
+                -- CameraProfile "Embedded" and no Look and set ConvertToGrayscale instead (run 1,
+                -- s10_profiles_recorded_2026-10-09T04_54_46.json: 154 keys, recorded as "Embedded" again).
+                local key = tostring(meta.filename) .. "|" .. tostring(meta.copy_name) .. "|" .. tostring(settings.CameraProfile) .. "|" .. tostring(lookName) .. "|" .. tostring(settings.ConvertToGrayscale)
                 local changed = (key ~= REC.lastKey)
                 REC.lastKey = key
                 if changed and REC.seen[key] then
-                    LrDialogs.showBezel("Already recorded: " .. S10.profileLabel(settings.CameraProfile, lookName), 1.5)
+                    LrDialogs.showBezel("Already recorded: " .. S10.profileLabel(settings.CameraProfile, lookName, settings.ConvertToGrayscale), 1.5)
                 elseif not REC.seen[key] then
                     REC.seen[key] = true
                     local c = {
@@ -69,12 +72,15 @@ function M.start()
                         look_name = lookName,
                         look_uuid = S10.lookUuid(settings),
                         look = settings.Look,
+                        convert_to_grayscale = settings.ConvertToGrayscale,
+                        -- The table the engine writes back verbatim (an absent Look is written as {}: S5's "Look = {} clears it").
+                        profile_settings = { CameraProfile = settings.CameraProfile, Look = settings.Look or {}, ConvertToGrayscale = settings.ConvertToGrayscale },
                         process_version = settings.ProcessVersion,
                         key_count = meta.key_count,
                     }
                     table.insert(REC.captures, c)
                     save()
-                    LrDialogs.showBezel(string.format("Recorded %d: %s", #REC.captures, S10.profileLabel(c.camera_profile, c.look_name)), 1.5)
+                    LrDialogs.showBezel(string.format("Recorded %d: %s", #REC.captures, S10.profileLabel(c.camera_profile, c.look_name, c.convert_to_grayscale)), 1.5)
                 end
             end
             LrTasks.sleep(POLL_S)
@@ -94,7 +100,7 @@ function M.stop()
     save()
     local lines = {}
     for i, c in ipairs(REC.captures) do
-        lines[i] = string.format("%d. %s: %s", i, tostring(c.filename), S10.profileLabel(c.camera_profile, c.look_name))
+        lines[i] = string.format("%d. %s: %s", i, tostring(c.filename), S10.profileLabel(c.camera_profile, c.look_name, c.convert_to_grayscale))
     end
     LrDialogs.message("AVG S10 recorder stopped",
         string.format("Recorded %d profile setting(s):\n%s\n\nSaved automatically. Nothing to copy.",

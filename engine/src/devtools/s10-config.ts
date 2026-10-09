@@ -33,6 +33,17 @@ export const COPY_NAMES = ["AVG S10 copy A", "AVG S10 copy B"] as const;
 export const EMBEDDED_PROFILE = "Embedded";
 /** The session's preview size (PRD 6.8). */
 export const PREVIEW = { long_edge: 1600, quality: 75 } as const;
+/**
+ * Lightroom checks a write (clamps or ignores an out-of-range value, refuses a raw profile pair)
+ * only on the photo loaded in Develop: in Jim's run 1 the selected photo was clamped as in Phase 1,
+ * while every photo written by uuid read every out-of-range value and the raw pair back as written
+ * [handle: %TEMP%\LrC-AVG\S10\s10_check_2026-10-09T11-55-47-680Z.json writes[*].range, collected
+ * into docs\reports\phase8\S10\ in row 2]. So the battery selects each photo first and waits this
+ * long for Develop to load it [inference: the figure], then puts Jim's selection back at the end.
+ */
+export const SELECT_SETTLE_MS = 1500;
+/** A dropped bridge (run 1: ECONNRESET on the last photo) reconnects by itself; a put-back or a step waits this long for it. */
+export const RECONNECT_WAIT_MS = 30000;
 export const snapshotName = (stamp: string): string => `AVG S10 before ${stamp}`;
 export const historyName = (section: string, n: number, of: number): string => `AVG S10 ${section} ${n}/${of}`;
 
@@ -55,6 +66,9 @@ export type S10Deps = {
   previewDir?: string;
   connectTimeoutMs?: number;
   writeTimeoutMs?: number;
+  /** SELECT_SETTLE_MS and RECONNECT_WAIT_MS; tests shorten them. */
+  settleMs?: number;
+  reconnectWaitMs?: number;
   now?: () => Date;
 };
 
@@ -124,6 +138,20 @@ export async function connect(ctx: Ctx): Promise<boolean> {
   }
   deps.say(`Connected (plugin ${String(version)}).`);
   return true;
+}
+
+export const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** True once the bridge is connected, waiting up to RECONNECT_WAIT_MS for a dropped one to come back; false, and the check FAILED, when it does not (Greptile, PR #97). */
+export async function ensureConnected(ctx: Ctx, forWhat: string): Promise<boolean> {
+  const waitMs = ctx.deps.reconnectWaitMs ?? RECONNECT_WAIT_MS;
+  try {
+    await ctx.deps.client.waitConnected(waitMs);
+    return true;
+  } catch (err) {
+    ctx.fail(`the bridge did not come back within ${waitMs / 1000} s for ${forWhat} (${describeError(err)}). Check File > Plug-in Manager, then tell Claude Code.`);
+    return false;
+  }
 }
 
 /**

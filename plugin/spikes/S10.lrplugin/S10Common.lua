@@ -38,10 +38,12 @@ function S10.lookUuid(settings)
     return nil
 end
 
--- What the Profile field in Develop would show, in plain words.
-function S10.profileLabel(cameraProfile, lookName)
-    if lookName then return lookName .. " (base: " .. tostring(cameraProfile) .. ")" end
-    return tostring(cameraProfile)
+-- What the Profile field in Develop would show, in plain words; "+ B&W" when ConvertToGrayscale is set.
+function S10.profileLabel(cameraProfile, lookName, grayscale)
+    local base = tostring(cameraProfile)
+    if lookName then base = lookName .. " (base: " .. base .. ")" end
+    if grayscale then base = base .. " + B&W" end
+    return base
 end
 
 function S10.safeName(s)

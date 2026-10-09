@@ -22,16 +22,23 @@ export const RAW_CONTROL_PROFILE = "Adobe Color";
 export const WB_SHIFT = { raw: { temperature: 300, tint: 5 }, rendered: 20 } as const;
 const LOOK_KEY = PROFILE_KEYS[1] as string;
 
-/** The file S10Recorder.lua writes (S5Recorder.lua's shape). `look` is absent when the photo had no Look: a nil field is no field in Lua. */
+/**
+ * The file S10Recorder.lua writes (S5Recorder.lua's shape). `profile_settings` is the table the
+ * recorder read for the profile, written back verbatim: CameraProfile, Look (absent when the photo
+ * had none: a nil field is no field in Lua) and ConvertToGrayscale, since on the rendered pipeline
+ * Monochrome is ConvertToGrayscale = true with CameraProfile "Embedded" and no Look [handle: Jim's
+ * run 1, %TEMP%\LrC-AVG\S10\run1\s10_profiles_recorded_2026-10-09T04_54_46.json, key_count 154 against
+ * 172 in colour; census dump s10_DSC_0031.JPG__AAFDE261.json ConvertToGrayscale true, Look absent].
+ */
 const recordedSchema = z.object({
   recorder: z.string(),
   started_at: z.string(),
-  captures: z.array(z.looseObject({ filename: z.string(), file_format: z.unknown(), camera_profile: z.unknown(), look: z.unknown().optional(), process_version: z.unknown() })),
+  captures: z.array(z.looseObject({ filename: z.string(), file_format: z.unknown(), camera_profile: z.unknown(), look: z.unknown().optional(), convert_to_grayscale: z.unknown().optional(), profile_settings: z.record(z.string(), z.unknown()).optional(), process_version: z.unknown() })),
 });
-export type RecordedPair = { name: string; camera_profile: string; look: Record<string, unknown> | null; look_uuid: string | null; recorded_on: string };
+export type RecordedPair = { name: string; camera_profile: string; look: Record<string, unknown> | null; look_uuid: string | null; grayscale: boolean; settings: SdkSettings; recorded_on: string };
 export type Recorded = { file: string | null; pairs: RecordedPair[]; problems: string[] };
 
-/** The newest recorder file in `dir`, its pairs deduplicated by (CameraProfile, Look UUID). */
+/** The newest recorder file in `dir`, its pairs deduplicated by (CameraProfile, Look UUID, ConvertToGrayscale). */
 export function readRecorded(dir: string): Recorded {
   let files: string[] = [];
   try {
@@ -53,8 +60,12 @@ export function readRecorded(dir: string): Recorded {
     }
     const look = isEmptyLook(c.look) ? null : (c.look as Record<string, unknown>);
     const uuid = typeof look?.["UUID"] === "string" ? (look["UUID"] as string) : null;
-    if (pairs.some((p) => p.camera_profile === c.camera_profile && p.look_uuid === uuid)) continue;
-    pairs.push({ name: typeof look?.["Name"] === "string" ? (look["Name"] as string) : c.camera_profile, camera_profile: c.camera_profile, look, look_uuid: uuid, recorded_on: c.filename });
+    const grayscale = c.convert_to_grayscale === true;
+    if (pairs.some((p) => p.camera_profile === c.camera_profile && p.look_uuid === uuid && p.grayscale === grayscale)) continue;
+    // The settings written back: the recorder's table, else (a file from before it carried one) the pair alone.
+    const settings: SdkSettings = c.profile_settings ?? { [CAMERA_PROFILE_KEY]: c.camera_profile, [LOOK_KEY]: look ?? {} };
+    const lookName = typeof look?.["Name"] === "string" ? (look["Name"] as string) : null;
+    pairs.push({ name: lookName ?? (grayscale ? `${c.camera_profile} + ConvertToGrayscale` : c.camera_profile), camera_profile: c.camera_profile, look, look_uuid: uuid, grayscale, settings, recorded_on: c.filename });
   }
   return { file, pairs, problems };
 }
@@ -63,12 +74,13 @@ export function readRecorded(dir: string): Recorded {
 async function tryPair(ctx: Ctx, photo: Photo, labelText: string, settings: SdkSettings, n: number, of: number): Promise<Json> {
   const { map } = ctx.deps;
   const lookUuid = (look: unknown): string | null => (typeof look === "object" && look !== null && typeof (look as Json)["UUID"] === "string" ? ((look as Json)["UUID"] as string) : null);
-  const w: Json = { label: labelText, written: { camera_profile: settings[CAMERA_PROFILE_KEY], look_uuid: lookUuid(settings[LOOK_KEY]) } };
+  const others = Object.entries(settings).filter(([k]) => k !== CAMERA_PROFILE_KEY && k !== LOOK_KEY);
+  const w: Json = { label: labelText, written: { camera_profile: settings[CAMERA_PROFILE_KEY], look_uuid: lookUuid(settings[LOOK_KEY]), ...Object.fromEntries(others) } };
   const rb = await write(ctx, photo, settings, historyName("profile", n, of), w);
   if (!rb) return w;
   const id = map.cameraProfiles().identify(rb[CAMERA_PROFILE_KEY], rb[LOOK_KEY]);
-  w["read_back"] = { camera_profile: id.camera_profile, look_name: id.look_name, look_uuid: id.look_uuid, pinned_name: id.name };
-  w["taken"] = rb[CAMERA_PROFILE_KEY] === settings[CAMERA_PROFILE_KEY] && id.look_uuid === lookUuid(settings[LOOK_KEY]);
+  w["read_back"] = { camera_profile: id.camera_profile, look_name: id.look_name, look_uuid: id.look_uuid, pinned_name: id.name, ...Object.fromEntries(others.map(([k]) => [k, rb[k] ?? null])) };
+  w["taken"] = rb[CAMERA_PROFILE_KEY] === settings[CAMERA_PROFILE_KEY] && id.look_uuid === lookUuid(settings[LOOK_KEY]) && others.every(([k, v]) => rb[k] === v);
   w["keys_dropped"] = Object.keys(photo.start).filter((k) => !(k in rb));
   w["keys_appeared"] = Object.keys(rb).filter((k) => !(k in photo.start));
   return w;
@@ -80,7 +92,7 @@ export async function profileWrites(ctx: Ctx, photo: Photo, recorded: Recorded):
   const of = recorded.pairs.length + 2;
   const pairs: Json[] = [];
   for (const [i, p] of recorded.pairs.entries()) {
-    const w = await tryPair(ctx, photo, `recorded: ${p.name}`, { [CAMERA_PROFILE_KEY]: p.camera_profile, [LOOK_KEY]: p.look ?? {} }, i + 1, of);
+    const w = await tryPair(ctx, photo, `recorded: ${p.name}`, p.settings, i + 1, of);
     if (photo.selected && w["taken"] !== undefined) w["jim"] = { panel_reads_name: answered(await ask(`  In Lightroom's Basic panel, does Profile read "${p.name}" now?`)) };
     pairs.push(w);
   }

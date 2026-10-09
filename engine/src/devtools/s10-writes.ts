@@ -3,21 +3,40 @@
 // the lens switches, then the profile pairs last, since a Look can drop keys (a monochrome profile
 // drops 18 [handle: docs\reports\phase0\S5.md "Numbers"]). A failed write is recorded and the battery
 // goes on; the snapshot is applied in every case and every key compared with the start: PUT BACK
-// YES/NO per photo. A snapshot that cannot be made writes nothing to that photo.
+// YES/NO per photo. A snapshot that cannot be made writes nothing to that photo. Each photo is
+// selected first (s10-config.ts SELECT_SETTLE_MS: Lightroom checks writes on the photo in Develop
+// only); s10-check.ts puts Jim's selection back after the last battery.
 
 import { yn, type Json } from "./phase3-config.js";
 import { describeError, differingKeys } from "./phase1-check.js";
 import { errorBody } from "./phase4-config.js";
 import { lensWrites, profileWrites, whiteBalanceWrite, type Recorded } from "./s10-profiles.js";
 import { extraKeysProbe, extraLine, rangeLine, rangeProbe } from "./s10-probe.js";
-import { WRITE_TIMEOUT_MS, label, snapshotName, type Ctx, type Photo } from "./s10-config.js";
+import { SELECT_SETTLE_MS, WRITE_TIMEOUT_MS, ensureConnected, label, sleep, snapshotName, type Ctx, type Photo } from "./s10-config.js";
 
 const taken = (w: Json | undefined): string => (w === undefined ? "not run" : w["taken"] === true ? "YES" : w["taken"] === false ? "NO" : w["error"] !== undefined ? "write failed" : "unknown");
+
+/** Select the photo so Lightroom loads it in Develop and checks the writes (SELECT_SETTLE_MS); false, recorded, when it cannot be selected. */
+async function selectForWrites(ctx: Ctx, photo: Photo, out: Json): Promise<boolean> {
+  const { client } = ctx.deps;
+  try {
+    const expect = { is_virtual_copy: photo.is_virtual_copy, ...(photo.copy_name !== null ? { copy_name: photo.copy_name } : {}) };
+    await client.request("select_photo", { uuid: photo.uuid, expect });
+    await sleep(ctx.deps.settleMs ?? SELECT_SETTLE_MS);
+    out["selected_for_writes"] = true;
+    return true;
+  } catch (err) {
+    out["selected_for_writes"] = { error: errorBody(err) };
+    ctx.fail(`${label(photo)}: could not be selected (${describeError(err)}), so nothing was written to it.`);
+    return false;
+  }
+}
 
 export async function writeBattery(ctx: Ctx, photo: Photo, recorded: Recorded): Promise<Json> {
   const { client, say } = ctx.deps;
   const out: Json = { filename: photo.filename, copy_name: photo.copy_name, uuid: photo.uuid, file_format: photo.file_format, pipeline: photo.pipeline, process_version: photo.process_version, snapshot: null, put_back: null };
   say(`${label(photo)} (${photo.pipeline}, PV ${photo.process_version ?? "?"}):`);
+  if (!(await ensureConnected(ctx, label(photo))) || !(await selectForWrites(ctx, photo, out))) return out;
   const name = snapshotName(ctx.deps.stamp);
   let snapshot: string;
   try {
@@ -56,6 +75,7 @@ async function putBack(ctx: Ctx, photo: Photo, snapshot: string, out: Json): Pro
   const { client, map, say } = ctx.deps;
   const result: Json = { ok: false };
   out["put_back"] = result;
+  await ensureConnected(ctx, `putting ${label(photo)} back`); // a dropped bridge reconnects by itself; the apply below then fails with the reason
   try {
     await client.request("apply_snapshot", { photo_uuid: photo.uuid, snapshot_id: snapshot }, { timeoutMs: ctx.deps.writeTimeoutMs ?? WRITE_TIMEOUT_MS });
     const now = (await client.request("get_settings", { photo_uuid: photo.uuid })).settings;

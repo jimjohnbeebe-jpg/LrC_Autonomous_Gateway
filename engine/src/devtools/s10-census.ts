@@ -108,6 +108,7 @@ export async function census(ctx: Ctx): Promise<Census | null> {
   } catch (err) {
     out["selected"] = { error: errorBody(err) }; // nothing selected: the questions and the copies have no photo
   }
+  out["selected_uuid"] = selected; // Jim's photo, in the collection or not: the batteries put it back at the end (s10-check.ts)
   const pinned = loadSdkKeys(sdkKeysJson as unknown);
   const photos: Photo[] = [];
   const skipped: Json[] = [];

@@ -12,7 +12,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { lightroomNotices, type CommandResult } from "../bridge/index.js";
 import { SESSION_LOG_SCHEMA_ID, SessionLogFiles, type SessionLogData } from "../log/index.js";
-import { ToolError } from "../mcp/errors.js";
+import { ToolError, originalMissing } from "../mcp/errors.js";
 import { summarize } from "../metrics/index.js";
 import { WHITE_BALANCE_UNITS, type FromSdkResult } from "../params/index.js";
 import { readPage, resolveSessionSettings, type PageRead, type SessionSettings } from "../settings/index.js";
@@ -40,6 +40,8 @@ export async function openSession(ctx: SessionContext, args: BeginArgs): Promise
 
   const photo = await client.request("get_context", {});
   if (photo["file_format"] === "VIDEO") throw new ToolError("VIDEO_NOT_SUPPORTED", "The selected item is a video; select a photo.", false);
+  const missing = originalMissing(photo); // before the snapshot: nothing is written
+  if (missing) throw missing;
   const variantCount = mode === "variants" ? checkVariants(ctx, loaded, photo, settings.variantCount) : null;
   const view = map.fromSdk((await client.request("get_settings", { target_uuid: photo.uuid })).settings); // LEGACY_PROCESS_VERSION
 

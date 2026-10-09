@@ -26,9 +26,12 @@ export class SimFiles {
   private nextId = 900;
 
   private readonly library: SimLibrary;
+  /** The refusal for a photo whose original is missing (lightroom-sim.ts missingReply). */
+  private readonly missing: (uuid: string) => FakeReply | null;
 
-  constructor(library: SimLibrary) {
+  constructor(library: SimLibrary, missing: (uuid: string) => FakeReply | null = () => null) {
     this.library = library;
+    this.missing = missing;
   }
 
   install(plugin: FakePlugin): void {
@@ -67,6 +70,8 @@ export class SimFiles {
   private export(p: Record<string, unknown>): FakeReply {
     const photo = this.library.find(String(p["photo_uuid"]));
     if (!photo) return fail("unknown_photo", `no photo in the catalog has uuid ${String(p["photo_uuid"])}`);
+    const missing = this.missing(photo.uuid);
+    if (missing) return missing;
     this.exports.push(p);
     const dir = path.join(this.exportDir, `req-${++this.exportCount}`);
     mkdirSync(dir, { recursive: true });

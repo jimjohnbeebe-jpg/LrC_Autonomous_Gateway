@@ -7,7 +7,7 @@ import { boxProblem, summarize, type Region, type RegionBox } from "../metrics/i
 import { ParamError, WHITE_BALANCE_UNITS, processVersionLabel, type FromSdkResult } from "../params/index.js";
 import { cropRegion } from "../preview/index.js";
 import type { SessionManager, SessionView, TargetId } from "../session/index.js";
-import { ToolError, toToolError } from "./errors.js";
+import { ToolError, originalMissing, toToolError } from "./errors.js";
 import { DEFAULT_LONG_EDGE, PREVIEW_QUALITY, describe, openSession, render, run, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
 /**
@@ -63,6 +63,7 @@ export async function getActivePhotoContext(ctx: ToolContext): Promise<ToolOutpu
     }
     const field = (key: string): unknown => photo[key] ?? null;
     const open = ctx.sessions?.current() ?? null;
+    const missing = originalMissing(photo);
     const json: Record<string, unknown> = {
       ok: true,
       // notices: for the user, empty within the supported and tested versions (bridge\lightroom.ts).
@@ -71,6 +72,10 @@ export async function getActivePhotoContext(ctx: ToolContext): Promise<ToolOutpu
       local_id: photo.local_id,
       filename: field("filename"),
       path: field("path"),
+      // Plugin 0.19.0 (fix/offline-original): null from an older plugin; true means lr_begin_session refuses the photo, and the note says what to tell the user.
+      original_missing: photo.available === undefined ? null : !photo.available,
+      ...(missing ? { original_missing_note: missing.message } : {}),
+      smart_preview: field("smart_preview"),
       copy_name: field("copy_name"),
       is_virtual_copy: field("is_virtual_copy"),
       file_format: field("file_format"),

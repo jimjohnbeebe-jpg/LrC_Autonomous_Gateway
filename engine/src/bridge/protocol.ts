@@ -79,6 +79,13 @@ export const contextResultSchema = z.looseObject({
   local_id: z.number(),
   lrc_version: z.string(),
   metadata_errors: z.array(z.string()).optional(),
+  /**
+   * Plugin 0.19.0 (Photos.lua available): false when the original file is missing; absent from an older
+   * plugin, or when the check failed (`availability_error`). `smart_preview`: the photo has one.
+   */
+  available: z.boolean().optional(),
+  availability_error: z.string().optional(),
+  smart_preview: z.boolean().optional(),
 });
 
 /**
@@ -323,7 +330,8 @@ export type CommandPayloads = {
   ping: { nonce?: string };
   get_context: Target;
   get_settings: Target;
-  apply_settings: Target & { settings: Record<string, unknown>; history_name: string };
+  /** `put_back` (plugin 0.19.0): values the photo held before, let through to a photo whose original is missing (Develop.lua applySettings). */
+  apply_settings: Target & { settings: Record<string, unknown>; history_name: string; put_back?: boolean };
   /** long_edge in pixels; quality 0-100 (the plugin converts it to the export setting's scale). */
   export_preview: Target & { long_edge: number; quality: number };
   create_snapshot: Target & { name: string };

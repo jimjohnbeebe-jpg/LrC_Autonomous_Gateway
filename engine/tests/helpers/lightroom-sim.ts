@@ -95,8 +95,10 @@ export class LightroomSim {
   readonly hud = new SimHud();
   /** The library commands (plugin 0.8.0, Library.lua): search, collections, ratings, keywords (lightroom-sim-library.ts). */
   readonly library = new SimLibrary();
+  /** Photos whose original file is missing (plugin 0.19.0, Photos.lua missing): get_context `available` false; writes and exports refused. */
+  readonly missing = new Set<string>();
   /** The collection and file commands (plugin 0.17.0, Transfer.lua; lightroom-sim-files.ts). */
-  readonly files = new SimFiles(this.library);
+  readonly files = new SimFiles(this.library, (uuid) => this.missingReply(uuid));
   /** The AI-mask commands' behaviour (plugin 0.13.0, Masks.lua; lightroom-sim-masks.ts). */
   readonly masks = new SimMasks();
   /** Virtual copies of the master, by uuid (lightroom-sim-catalog.ts). */
@@ -163,6 +165,13 @@ export class LightroomSim {
     else this.settings = settings;
   }
 
+  /** Photos.lua missing(): the refusal of a write or an export to a photo whose original is missing, else null. */
+  missingReply(uuid: string): FakeReply | null {
+    if (!this.missing.has(uuid)) return null;
+    const name = this.library.find(uuid)?.filename ?? this.filename;
+    return { ok: false, error: { code: "original_missing", message: `The original file of ${name} is missing (last known at D:\\Photos\\${name}), so Lightroom cannot edit or export it.`, recoverable: true } };
+  }
+
   /** The plugin's target_uuid check (C-2): a command naming another photo than the selected one is refused. */
   private guard(p: Record<string, unknown>): FakeReply | null {
     return p["target_uuid"] !== undefined && p["target_uuid"] !== this.selected
@@ -205,6 +214,8 @@ export class LightroomSim {
     plugin.handlers.set("get_settings", (p) => on(p, (u) => ok({ uuid: u, settings: luaize(this.settingsOf(u)) })));
     plugin.handlers.set("apply_settings", (p) =>
       on(p, (u) => {
+        const missing = p["put_back"] === true ? null : this.missingReply(u);
+        if (missing) return missing;
         this.history.push(String(p["history_name"]));
         this.writes.push({ uuid: u, name: String(p["history_name"]) });
         const settings = this.settingsOf(u);
@@ -240,7 +251,7 @@ export class LightroomSim {
         return ok({ uuid: u, read_back: luaize(this.settingsOf(u)) });
       }),
     );
-    plugin.handlers.set("export_preview", (p, id) => on(p, (u) => this.exportPreview(u, p, id)));
+    plugin.handlers.set("export_preview", (p, id) => on(p, (u) => this.missingReply(u) ?? this.exportPreview(u, p, id)));
     installMasks(this, plugin); // last: it holds the writes and exports above while the AI update holds the gate
   }
 
@@ -256,6 +267,9 @@ export class LightroomSim {
         filename: other?.filename ?? this.filename,
         file_format: other?.file_format ?? this.fileFormat,
         is_virtual_copy: false,
+        available: !this.missing.has(uuid),
+        smart_preview: false,
+        path: `D:\\Photos\\${other?.filename ?? this.filename}`,
         ...describePhoto(this, uuid),
         width: this.photoSize.width,
         height: this.photoSize.height,

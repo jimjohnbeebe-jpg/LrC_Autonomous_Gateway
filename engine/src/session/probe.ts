@@ -115,7 +115,7 @@ async function runProbe(
   }
   if (!previous) return;
   const revertName = `${probePrefix(s, t)} revert`;
-  const back = await write(ctx, s, t, { [previous.name]: previous.before }, revertName);
+  const back = await write(ctx, s, t, { [previous.name]: previous.before }, revertName, { putBack: true });
   historyNames.push(revertName);
   for (const p of plan) if (back.settings[p.name] === p.before) outstanding.delete(p.name);
   // Every probed slider is checked, not only those still marked for recovery: one put back
@@ -145,7 +145,7 @@ async function putBack(ctx: SessionContext, s: Session, t: Target, outstanding: 
   const back: Record<string, CanonicalValue> = Object.fromEntries(outstanding);
   const revertName = `${probePrefix(s, t)} revert`;
   try {
-    await write(ctx, s, t, back, revertName);
+    await write(ctx, s, t, back, revertName, { putBack: true });
     historyNames.push(revertName);
   } catch (restoreErr) {
     s.log.failures.push({ at: ctx.now().toISOString(), stage: "probe (put back)", error: toToolError(restoreErr).body() });

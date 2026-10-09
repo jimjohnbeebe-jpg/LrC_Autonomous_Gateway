@@ -175,7 +175,7 @@ export async function undo(
   for (const [key, value] of Object.entries(beforeView.settings)) if (!canonicalValuesEqual(current.settings[key], value)) back[key] = value;
   if (Object.keys(back).length === 0) return null;
   const name = historyName(s, t, n, breach.limit === "region" ? "region revert" : "clip revert");
-  const view = await write(ctx, s, t, back, name);
+  const view = await write(ctx, s, t, back, name, { putBack: true });
   historyNames.push(name);
   const rendered = await render(ctx, s, t, view);
   const changes = Object.fromEntries(Object.entries(back).filter((e): e is [string, number] => typeof e[1] === "number"));

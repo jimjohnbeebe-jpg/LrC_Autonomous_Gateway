@@ -85,11 +85,15 @@ function maybeWritten(err: unknown, historyName: string): unknown {
   });
 }
 
-/** Write canonical values as one History step and check the read-back (Phase 0, P-12). */
-export async function write(ctx: SessionContext, s: Session, t: Target, values: Record<string, CanonicalValue>, historyName: string): Promise<FromSdkResult> {
+/**
+ * Write canonical values as one History step and check the read-back (Phase 0, P-12). `putBack`: the
+ * values are ones the photo held before (a probe's or a pass's revert), which plugin 0.19.0 lets
+ * through to a photo whose original went missing meanwhile (Greptile, PR #101).
+ */
+export async function write(ctx: SessionContext, s: Session, t: Target, values: Record<string, CanonicalValue>, historyName: string, options: { putBack?: boolean } = {}): Promise<FromSdkResult> {
   const { client, map } = ctx.deps;
   const sdk = map.toSdk(values, { processVersion: t.process_version, pipeline: t.pipeline });
-  const readBack = await writeSdk(ctx, s, t, sdk, historyName);
+  const readBack = await writeSdk(ctx, s, t, sdk, historyName, options.putBack === true);
   const error = readbackError(map, sdk, readBack, historyName, client.hello()); // WRITE_NOT_TAKEN or FEATURE_UNAVAILABLE
   if (error) throw error;
   return map.fromSdk(readBack);
@@ -108,13 +112,13 @@ export async function writeTable(ctx: SessionContext, s: Session, t: Target, ent
 }
 
 /** Write an SDK table as one History step and return the read-back for the caller to check. */
-export async function writeSdk(ctx: SessionContext, s: Session, t: Target, sdk: SdkSettings, historyName: string): Promise<SdkSettings> {
+export async function writeSdk(ctx: SessionContext, s: Session, t: Target, sdk: SdkSettings, historyName: string, putBack = false): Promise<SdkSettings> {
   checkAbort(s);
   await settlePending(ctx, s); // refused while Lightroom has not answered an AI mask update (ai-update.ts, D16)
   ctx.deps.hud?.stage(s, "applying");
   const res = await bridge(s, t, () =>
     ctx.deps.client
-      .request("apply_settings", { target_uuid: t.uuid, settings: sdk, history_name: historyName }, { timeoutMs: WRITE_TIMEOUT_MS })
+      .request("apply_settings", { target_uuid: t.uuid, settings: sdk, history_name: historyName, ...(putBack ? { put_back: true } : {}) }, { timeoutMs: WRITE_TIMEOUT_MS })
       .catch((err: unknown) => Promise.reject(maybeWritten(err, historyName))),
   );
   return res.read_back;

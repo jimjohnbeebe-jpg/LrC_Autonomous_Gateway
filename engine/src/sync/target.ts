@@ -7,7 +7,7 @@
 // tests\sync.test.ts "writes to photos by uuid and leaves the selection alone"].
 
 import { BridgeError } from "../bridge/index.js";
-import { ToolError, readbackError, toToolError } from "../mcp/errors.js";
+import { ToolError, originalMissing, readbackError, toToolError } from "../mcp/errors.js";
 import { differingSettings, type CanonicalValue, type FromSdkResult } from "../params/index.js";
 import type { RenderedPreview } from "../preview/index.js";
 import { roundForSlider } from "../session/rules.js";
@@ -46,6 +46,8 @@ async function identify(run: SyncRun, uuid: string): Promise<Photo> {
   const photo = await run.deps.client.request("get_context", { photo_uuid: uuid });
   const found = { uuid, filename: text(photo["filename"]), copy_name: text(photo["copy_name"]) };
   if (photo["file_format"] === "VIDEO") throw new ToolError("VIDEO_NOT_SUPPORTED", `${found.filename ?? uuid} is a video; only photos are synced.`, false);
+  const missing = originalMissing(photo); // skipped before its snapshot [stated: Jim, 2026-10-09, D2 A]
+  if (missing) throw missing; // its details carry `filename` for the skipped entry (sync.ts syncAll)
   return found;
 }
 

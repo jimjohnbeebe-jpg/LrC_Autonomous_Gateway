@@ -2,7 +2,7 @@
 // Codes follow MCP_TOOLS where it names one (BRIDGE_DISCONNECTED, NO_ACTIVE_PHOTO, TARGET_CHANGED,
 // UNKNOWN_PARAMETER, OUT_OF_RANGE, LEGACY_PROCESS_VERSION, INTENT_NOT_FOUND); the others are the
 // engine's own (Phase 2 and 3; NEWER_PROCESS_VERSION and FEATURE_UNAVAILABLE, Phase 6; PIPELINE_UNKNOWN
-// and WRONG_PIPELINE, Phase 8).
+// and WRONG_PIPELINE, Phase 8; ORIGINAL_MISSING, fix/offline-original).
 // `recoverable` means the same call may work later without changing it (e.g. once Lightroom is back).
 
 import { BridgeError } from "../bridge/index.js";
@@ -76,6 +76,29 @@ export function readbackError(map: ParamMap, written: SdkSettings, readBack: Sdk
   const it = sliders.length > 1 ? "them" : "it";
   const others = Object.keys(written).length > mismatches.length ? " The step's other values were written." : "";
   return featureUnavailable(sliders.join(", "), lightroom, `Lightroom did not report ${it} back after "${historyName}", so ${it} could not be checked. Leave ${it} out of later steps.${others}`, details);
+}
+
+/**
+ * ORIGINAL_MISSING for a photo whose get_context says its original file is missing (`available` false,
+ * plugin 0.19.0), else null; an older plugin sends no `available`. Callers check before any write: an
+ * offline original took every write unchecked and exported nothing in S10 [handle:
+ * docs\reports\phase8\S10.md "Consequences" item 8]. Refused with a smart preview too [stated: Jim,
+ * 2026-10-09, "Go with recommendations", D1 A]. The plugin's own refusal of writes and exports
+ * (Photos.lua missing) reaches here as original_missing, so the code is the same either way. The menu
+ * path Library > Find Missing Photos is [unverified] until npm run offline:check asks Jim.
+ */
+export function originalMissing(photo: { available?: boolean | undefined; filename?: unknown; path?: unknown; smart_preview?: boolean | undefined }): ToolError | null {
+  if (photo.available !== false) return null;
+  const filename = typeof photo.filename === "string" ? photo.filename : null;
+  const path = typeof photo.path === "string" ? photo.path : null;
+  const preview = photo.smart_preview ? " (its smart preview is not used for edits)" : "";
+  return new ToolError(
+    "ORIGINAL_MISSING",
+    `The original file of ${filename ?? "this photo"} is missing${path ? ` (last known at ${path})` : ""}, so Lightroom cannot edit or export it${preview}. ` +
+      "Nothing was written. Tell the user, and ask them to reconnect the file in Lightroom (Library > Find Missing Photos), then try again.",
+    true,
+    { filename, path, smart_preview: photo.smart_preview ?? null },
+  );
 }
 
 function fromBridge(err: BridgeError, lightroom: LightroomVersions): ToolError {

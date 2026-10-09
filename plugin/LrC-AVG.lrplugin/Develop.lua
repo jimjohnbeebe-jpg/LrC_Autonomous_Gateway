@@ -131,8 +131,16 @@ function Develop.getContext(payload)
             local ok, value = LrTasks.pcall(photo.getFormattedMetadata, photo, key)
             if ok then ctx[field] = value else errors[#errors + 1] = key .. ": " .. tostring(value) end
         end
+        -- Plugin 0.19.0: smartPreviewInfo is "empty" when the photo has no smart preview [handle: https://lrc.mcor.dev/modules/LrPhoto.html, read 2026-10-09].
+        local ok, info = LrTasks.pcall(photo.getRawMetadata, photo, "smartPreviewInfo")
+        if not ok then errors[#errors + 1] = "smartPreviewInfo: " .. tostring(info)
+        elseif type(info) == "table" then ctx.smart_preview = next(info) ~= nil end
     end)
     if #errors > 0 then ctx.metadata_errors = errors end
+    -- Plugin 0.19.0 (Photos.available): `available` false for a missing original, absent when the check failed.
+    local available, availabilityError = Photos.available(photo)
+    ctx.available = available
+    ctx.availability_error = availabilityError
     return ctx
 end
 
@@ -153,6 +161,10 @@ function Develop.applySettings(payload)
     local tCommand = LrDate.currentTime()
     local catalog, photo, uuid, err = writeTarget(payload)
     if err then return nil, err end
+    -- Snapshots stay allowed, and so does a write with put_back (values the photo held before: a probe's
+    -- or a pass's revert), so a photo whose original went missing mid-edit can still be put back.
+    local missing = payload.put_back ~= true and Photos.missing(catalog, photo)
+    if missing then return nil, missing end
     local t0 = LrDate.currentTime()
     local gated, busy = Gate.write(catalog, historyName, function()
         photo:applyDevelopSettings(payload.settings, historyName)

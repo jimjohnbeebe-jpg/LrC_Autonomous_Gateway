@@ -22,6 +22,7 @@ local LrPathUtils = import 'LrPathUtils'
 local LrUUID = import 'LrUUID'
 
 local Develop = require 'Develop'
+local Photos = require 'Photos'
 
 local Preview = {}
 
@@ -48,8 +49,10 @@ function Preview.exportPreview(payload)
     if not isWhole(quality, 1, 100) then
         return fail("bad_request", "quality must be a whole number from 1 to 100")
     end
-    local _, photo, uuid, err = Develop.target(payload)
+    local catalog, photo, uuid, err = Develop.target(payload)
     if err then return nil, err end
+    local missing = Photos.missing(catalog, photo)
+    if missing then return nil, missing end
 
     local dir = LrPathUtils.child(Preview.directory(), LrUUID.generateUUID())
     LrFileUtils.createAllDirectories(dir)

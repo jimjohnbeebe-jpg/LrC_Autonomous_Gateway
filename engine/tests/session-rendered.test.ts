@@ -9,6 +9,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { sessionLogSchema } from "../src/log/index.js";
 import { toToolError } from "../src/mcp/index.js";
+import { forPipeline } from "../src/session/pass0.js";
 import { intent } from "./helpers/session-harness.js";
 import { addCopy, clean, logDir, lr, map, sync, tools, useSyncHarness } from "./helpers/sync-harness.js";
 
@@ -52,6 +53,18 @@ describe("a rendered photo", () => {
     const out = (await step(json["session_id"] as string, { saturation: 10, exposure: 0.1 })).json;
     expect(out["refused"]).toEqual([expect.objectContaining({ name: "saturation", by: "slider" })]);
     expect(lr.settings["Exposure2012"]).toBeCloseTo(0.1);
+  });
+
+  it("maps every monochrome raw profile to Monochrome and every colour one to Color (Greptile, PR #99)", () => {
+    // The profiles that dropped the colour keys in S5 (docs\reports\phase0\S5\part1\s5_profiles.log: 159 keys), and Adobe Monochrome's Look.
+    const MONO = ["Adobe Monochrome", "Camera Deep Tone Monochrome", "Camera Flat Monochrome", "Camera Monochrome", "Camera Monochrome (Green Filter)", "Camera Monochrome (Orange Filter)", "Camera Monochrome (Red Filter)", "Camera Monochrome (Yellow Filter)"];
+    const profiles = map.cameraProfiles();
+    const raw = profiles.names().filter((n) => profiles.pipeline(n) === "raw");
+    expect(raw).toEqual(expect.arrayContaining(MONO));
+    for (const name of raw) {
+      expect(forPipeline(name, {}, "rendered", map).profile, name).toBe(MONO.includes(name) ? "Monochrome" : "Color");
+      expect(forPipeline(name, {}, "raw", map), name).toEqual({ profile: name, priors: {}, warnings: [] });
+    }
   });
 
   it("pass 0 leaves out a v1 intent's Kelvin temperature and tint priors, and says so", async () => {

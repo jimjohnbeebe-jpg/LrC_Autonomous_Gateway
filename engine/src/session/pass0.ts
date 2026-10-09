@@ -76,7 +76,11 @@ export function forPipeline(profile: string | undefined, priors: Priors, pipelin
   const profiles = map.cameraProfiles();
   let chosen = profile;
   if (profile !== undefined && profiles.pipeline(profile) !== pipeline) {
-    const grayscale = profiles.get(profile).look?.Parameters["ConvertToGrayscale"] === true;
+    // Monochrome raw profiles: an Adobe one's Look sets ConvertToGrayscale; the seven Nikon "… Monochrome …"
+    // ones have no Look, and each dropped the colour keys on the NEF, 159 keys against 177 for the colour
+    // profiles [handle: docs\reports\phase0\S5\part1\s5_profiles.log, keys= per CameraProfile] (Greptile, PR #99).
+    const entry = profiles.get(profile);
+    const grayscale = entry.look?.Parameters["ConvertToGrayscale"] === true || entry.convert_to_grayscale === true || /Monochrome/.test(entry.name);
     chosen = profiles.names().find((n) => profiles.pipeline(n) === pipeline && profiles.get(n).convert_to_grayscale === grayscale);
     const instead = chosen === undefined ? "leaves the photo's profile as it is" : `sets "${chosen}" instead`;
     warnings.push(`The intent's camera profile "${profile}" is a ${profiles.pipeline(profile)}-pipeline profile and this photo is on the ${pipeline} pipeline: pass 0 ${instead}.`);

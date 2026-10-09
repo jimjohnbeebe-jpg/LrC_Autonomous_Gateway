@@ -14,9 +14,10 @@ const pinnedPath = fileURLToPath(new URL("../src/params/camera-profiles.lrc15.js
 describe("params: pinned camera profile pairs (S5)", () => {
   const profiles = readCameraProfilesFile(pinnedPath);
 
-  it("holds the 7 Adobe Raw and 15 Nikon Camera Matching profiles S5 captured", () => {
+  it("holds the 7 Adobe Raw and 15 Nikon Camera Matching profiles S5 captured, and the 2 rendered ones S10 captured", () => {
     const names = profiles.names();
-    expect(names).toHaveLength(22);
+    expect(names).toHaveLength(24);
+    expect(names.filter((n) => profiles.get(n).family === "rendered")).toEqual(["Color", "Monochrome"]);
     expect(names.filter((n) => profiles.get(n).family === "adobe").sort()).toEqual([
       "Adobe Color",
       "Adobe Landscape",
@@ -67,9 +68,29 @@ describe("params: pinned camera profile pairs (S5)", () => {
     expect(profiles.toSdk("Adobe Landscape").CameraProfile).toBe("Adobe Standard");
   });
 
-  it("marks only the two pairs a write test verified", () => {
+  it("marks only the pairs a write test verified: two from S5, both rendered ones from S10", () => {
     const verified = profiles.names().filter((n) => profiles.get(n).write_verified !== null);
-    expect(verified.sort()).toEqual(["Adobe Landscape", "Camera Landscape"]);
+    expect(verified.sort()).toEqual(["Adobe Landscape", "Camera Landscape", "Color", "Monochrome"]);
+  });
+
+  describe("rendered pipeline (S10)", () => {
+    it("writes Color as Embedded, no Look, ConvertToGrayscale false, and Monochrome with it true", () => {
+      expect(profiles.toSdk("Color")).toEqual({ CameraProfile: "Embedded", Look: {}, ConvertToGrayscale: false });
+      expect(profiles.toSdk("Monochrome")).toEqual({ CameraProfile: "Embedded", Look: {}, ConvertToGrayscale: true });
+      expect(profiles.toSdk("Camera Landscape")).not.toHaveProperty("ConvertToGrayscale");
+    });
+
+    it("identifies Embedded by the photo's ConvertToGrayscale, and as Color when it is not given", () => {
+      expect(profiles.identify("Embedded", [], false).name).toBe("Color");
+      expect(profiles.identify("Embedded", {}, true).name).toBe("Monochrome");
+      expect(profiles.identify("Embedded", undefined).name).toBe("Color");
+      expect(profiles.identify("Embedded", profiles.toSdk("Adobe Color").Look, true).name).toBeNull();
+    });
+
+    it("names a raw pair whatever ConvertToGrayscale says: raw profiles do not key on it", () => {
+      expect(profiles.identify("Adobe Standard", profiles.toSdk("Adobe Monochrome").Look, true).name).toBe("Adobe Monochrome");
+      expect(profiles.identify("Group: Camera Flat", {}, true).name).toBe("Camera Flat");
+    });
   });
 
   it("rejects an unknown profile name with a structured error", () => {

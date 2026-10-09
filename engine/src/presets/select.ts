@@ -40,6 +40,12 @@ function leaveOut(map: ParamMap, name: string, value: CanonicalValue, sdk: SdkSe
   if (name === CAMERA_PROFILE_PARAM && map.cameraProfiles().get(String(value)).look !== null) {
     return "an Adobe profile: how Lightroom writes one (with its Look) into a preset has not been observed; the preset keeps each photo's own profile";
   }
+  // A rendered-pipeline profile is CameraProfile "Embedded" plus ConvertToGrayscale (S10): CameraProfile
+  // alone would make Color and Monochrome the same preset (Greptile, PR #98). How Lightroom writes one
+  // into a preset is pinned from Jim's reference preset in Phase 8 row 5 (PHASE8_PLAN).
+  if (name === CAMERA_PROFILE_PARAM && map.cameraProfiles().get(String(value)).convert_to_grayscale !== undefined) {
+    return `a rendered-pipeline profile (${String(value)}): how Lightroom writes one (with ConvertToGrayscale) into a preset has not been observed; the preset keeps each photo's own profile`;
+  }
   if (Array.isArray(value) && value.length === 0) return "the curve is empty";
   return null;
 }

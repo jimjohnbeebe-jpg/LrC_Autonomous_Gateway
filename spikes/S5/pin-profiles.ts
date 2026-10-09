@@ -8,6 +8,9 @@
 // - Nikon Camera Matching profiles: the CameraProfile strings in the part-1 log
 //   (docs/reports/phase0/S5/part1/s5_profiles.log). A string counts only if it was logged for both
 //   the NEF and the DNG (S5.md "Part 1 analysis": "identical for the NEF and the DNG").
+// - Rendered-pipeline profiles (Phase 8, spike S10): Lightroom's Basic group on a JPEG, recorded by
+//   plugin/spikes/S10.lrplugin (docs/reports/phase8/S10/run1/s10_profiles_recorded_*.json): "Color" is
+//   CameraProfile "Embedded" with no Look, "Monochrome" is the same plus ConvertToGrayscale = true.
 //
 // Run (PowerShell, from the repo root):
 //   node spikes/S5/pin-profiles.ts            # writes the file
@@ -134,20 +137,43 @@ for (const [profile, photos] of [...nikonPhotos].sort(([a], [b]) => a.localeComp
   });
 }
 
+// --- Rendered-pipeline profiles (S10) -----------------------------------------------------
+// The names are what the Profile row showed for each pair [stated: Jim, 2026-10-09, the S10 check's
+// y/n answers on _OZ80660.JPG]. Each pair was written and read back on all 18 rendered photos of the
+// "fixtures" collection in S10 run 2 (docs/reports/phase8/S10.md "Observed").
+const S10_RECORDER = "docs/reports/phase8/S10/run1/s10_profiles_recorded_2026-10-09T05_22_07.json";
+const S10_RUN2 = "docs/reports/phase8/S10/s10_check_2026-10-09T12-24-50-743Z.json";
+const s10Schema = z.object({ captures: z.array(z.object({ camera_profile: z.string(), convert_to_grayscale: z.boolean(), filename: z.string() })) });
+const s10 = s10Schema.parse(JSON.parse(readFileSync(path.join(repoRoot, S10_RECORDER), "utf8")));
+for (const [name, grayscale] of [["Color", false], ["Monochrome", true]] as const) {
+  const capture = s10.captures.find((c) => c.convert_to_grayscale === grayscale);
+  if (!capture) throw new Error(`${S10_RECORDER}: no capture with convert_to_grayscale ${String(grayscale)}`);
+  const label = `recorded: Embedded${grayscale ? " + ConvertToGrayscale" : ""}`;
+  profiles.push({
+    name,
+    family: "rendered",
+    camera_profile: capture.camera_profile,
+    look: null,
+    convert_to_grayscale: grayscale,
+    evidence: `${S10_RECORDER}: recorded on ${capture.filename} Copy 1; the Profile row read "${name}" [stated: Jim, 2026-10-09]`,
+    write_verified: `${S10_RUN2} writes[*].profiles.pairs "${label}": taken on all 18 rendered photos`,
+  });
+}
+
 const pinned: PinnedCameraProfiles = {
   schema_version: 1,
   generated_by: "spikes/S5/pin-profiles.ts",
   generated_at: new Date().toISOString(),
   ...(cameraRawVersion !== undefined ? { camera_raw_version: cameraRawVersion } : {}),
-  sources: [...recorderFiles.map(rel), rel(part1Log)],
+  sources: [...recorderFiles.map(rel), rel(part1Log), S10_RECORDER],
   profiles,
 };
 loadCameraProfiles(pinned); // same validation the engine applies at load time
 
 for (const p of profiles) {
-  console.log(`${p.family.padEnd(5)} ${p.name.padEnd(34)} CameraProfile=${JSON.stringify(p.camera_profile)} Look=${p.look ? p.look.UUID : "{}"}${p.write_verified ? "  (write verified)" : ""}`);
+  console.log(`${p.family.padEnd(8)} ${p.name.padEnd(34)} CameraProfile=${JSON.stringify(p.camera_profile)} Look=${p.look ? p.look.UUID : "{}"}${p.convert_to_grayscale === undefined ? "" : ` ConvertToGrayscale=${String(p.convert_to_grayscale)}`}${p.write_verified ? "  (write verified)" : ""}`);
 }
-console.log(`profiles: ${profiles.length} (adobe ${profiles.filter((p) => p.family === "adobe").length}, nikon ${profiles.filter((p) => p.family === "nikon").length}); Camera Raw ${cameraRawVersion ?? "?"}`);
+console.log(`profiles: ${profiles.length} (adobe ${profiles.filter((p) => p.family === "adobe").length}, nikon ${profiles.filter((p) => p.family === "nikon").length}, rendered ${profiles.filter((p) => p.family === "rendered").length}); Camera Raw ${cameraRawVersion ?? "?"}`);
 if (nikonSkipped.length) console.log(`not pinned (seen on one photo only): ${nikonSkipped.join("; ")}`);
 
 if (dryRun) {

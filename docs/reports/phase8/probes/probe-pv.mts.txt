@@ -1,0 +1,31 @@
+// Read-only: ProcessVersion of JPGs by capture year (2 photos per year). Writes nothing to Lightroom.
+import { pathToFileURL } from "node:url";
+
+const dist = "D:/Developer/LrC_Autonomous_Gateway/engine/dist";
+const { BridgeClient } = await import(pathToFileURL(`${dist}/bridge/index.js`).href);
+const { BridgeGate, acquireInstanceLock, devOverrides, ENGINE_VERSION } = await import(pathToFileURL(`${dist}/mcp/index.js`).href);
+
+const dev = devOverrides();
+const client = new BridgeClient({ engineVersion: ENGINE_VERSION, log: () => {}, ...dev.bridge });
+const gate = new BridgeGate(client, () => acquireInstanceLock(dev.lockPort));
+try {
+  await gate.ready();
+  for (let year = 2001; year <= 2026; year++) {
+    const r = await client.request("search_photos", {
+      criteria: [
+        { criteria: "filename", operation: "any", value: ".jp" },
+        { criteria: "captureTime", operation: "in", value: `${year}-01-01`, value2: `${year}-12-31` },
+      ],
+      offset: 0, limit: 2,
+    }, { timeoutMs: 120000 });
+    const pvs: string[] = [];
+    for (const p of r.photos) {
+      if (!p.uuid) continue;
+      const s = (await client.request("get_settings", { photo_uuid: p.uuid })).settings as Record<string, unknown>;
+      pvs.push(`${p.filename}: PV ${String(s["ProcessVersion"])}`);
+    }
+    console.log(year, "count", r.count, "|", pvs.join(" ; "));
+  }
+} finally {
+  await gate.release();
+}

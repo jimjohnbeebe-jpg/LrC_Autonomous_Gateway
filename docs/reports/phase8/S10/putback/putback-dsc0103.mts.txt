@@ -1,0 +1,40 @@
+// Put _DSC0103.NEF (Copy 1) back from its S10 snapshot and verify every key against the census dump.
+import { readFileSync, writeFileSync } from "node:fs";
+import { pathToFileURL } from "node:url";
+
+const dist = "D:/Developer/LrC_Autonomous_Gateway/engine/dist";
+const { BridgeClient } = await import(pathToFileURL(`${dist}/bridge/index.js`).href);
+const { BridgeGate, acquireInstanceLock, devOverrides, ENGINE_VERSION } = await import(pathToFileURL(`${dist}/mcp/index.js`).href);
+const { loadDefaultParamMap } = await import(pathToFileURL(`${dist}/params/index.js`).href);
+const { differingKeys } = await import(pathToFileURL(`${dist}/devtools/phase1-check.js`).href);
+
+const [, , uuid, snapshotId, dumpFile, outFile] = process.argv as string[];
+const dump = JSON.parse(readFileSync(dumpFile!, "utf8")) as { settings: Record<string, unknown> };
+const map = loadDefaultParamMap();
+const dev = devOverrides();
+const client = new BridgeClient({ engineVersion: ENGINE_VERSION, log: (m: string) => console.error(`  (${m})`), ...dev.bridge });
+const gate = new BridgeGate(client, () => acquireInstanceLock(dev.lockPort));
+const out: Record<string, unknown> = { uuid, snapshot_id: snapshotId, started_at: new Date().toISOString() };
+try {
+  if (!(await gate.start())) throw new Error("another engine holds the bridge (Claude Desktop running?)");
+  out["hello"] = await client.waitConnected(20000);
+  const context = await client.request("get_context", { photo_uuid: uuid });
+  out["photo"] = { filename: context["filename"], copy_name: context["copy_name"], is_virtual_copy: context["is_virtual_copy"] };
+  const before = (await client.request("get_settings", { photo_uuid: uuid })).settings;
+  out["differing_before"] = differingKeys(map, dump.settings, before);
+  console.log(`${String(context["filename"])} (${String(context["copy_name"])}): ${(out["differing_before"] as string[]).length} keys differ from the census dump before the put-back`);
+  const res = await client.request("apply_snapshot", { photo_uuid: uuid, snapshot_id: snapshotId }, { timeoutMs: 30000 });
+  const after = (await client.request("get_settings", { photo_uuid: uuid })).settings;
+  out["differing_after"] = differingKeys(map, dump.settings, after);
+  out["read_back_matches_apply"] = differingKeys(map, res.read_back, after).length === 0;
+  const ok = (out["differing_after"] as string[]).length === 0;
+  out["put_back"] = ok;
+  console.log(`PUT BACK: ${ok ? "YES" : "NO"} (${(out["differing_after"] as string[]).length} keys differ after: ${(out["differing_after"] as string[]).join(", ") || "none"})`);
+} catch (err) {
+  out["error"] = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+  console.log(`FAILED: ${String(out["error"])}`);
+} finally {
+  await gate.release();
+  out["finished_at"] = new Date().toISOString();
+  writeFileSync(outFile!, JSON.stringify(out, null, 2));
+}

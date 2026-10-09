@@ -42,6 +42,23 @@ function num(sdkKey: string, min: number, max: number, rangeSource: string = PRO
   return { kind: "number", sdkKey, min, max, rangeSource };
 }
 
+const S10_RUN2 = "docs/reports/phase8/S10/s10_check_2026-10-09T12-24-50-743Z.json";
+/**
+ * The rendered pipeline's white-balance keys (spike S10, Phase 8 row 2), pinned in
+ * sdk-keys.lrc15.rendered.json. Both are relative values in -100..100: on the selected rendered DNG,
+ * whose WhiteBalance was already "Custom", 101 read back 100 and -101 read back -100 while ±50, ±100
+ * and 0 read back as written; on the 17 other rendered photos (WhiteBalance "As Shot") every value
+ * was ignored until written together with WhiteBalance = "Custom", when +20/+20 was taken on all 18
+ * [handle: rangeSource below; docs/reports/phase8/S10.md "Observed"]. Not in the map yet: Phase 8
+ * row 3 wires them in per pipeline.
+ */
+export const RENDERED_WHITE_BALANCE = {
+  keys: { temperature: "IncrementalTemperature", tint: "IncrementalTint" },
+  min: -100,
+  max: 100,
+  rangeSource: `[handle: ${S10_RUN2} writes[20260906-_OZ80005-Rendered.dng].extra_keys.per_key (101 -> 100, -101 -> -100) and writes[*].white_balance (custom_taken and values_taken true on all 18 rendered photos)]`,
+} as const;
+
 const entries: Array<[string, ParamSpec]> = [
   // Basic panel (PV 2012+ keys).
   ["exposure", num("Exposure2012", -5, 5, PROBED_CLAMP)],
@@ -55,8 +72,10 @@ const entries: Array<[string, ParamSpec]> = [
   ["dehaze", num("Dehaze", -100, 100)],
   ["vibrance", num("Vibrance", -100, 100)],
   ["saturation", num("Saturation", -100, 100)],
-  // White balance on the raw scale (Kelvin and tint), probed on the raw NEF. That rendered files
-  // (JPEG, TIFF) use a different -100..100 scale is [unverified] and not supported.
+  // White balance on the raw pipeline (Kelvin and tint), probed on the raw NEF. The rendered pipeline
+  // (JPEG, TIFF, PNG, PSD, PSB, HEIC, AVIF, JXL, rendered DNG) carries IncrementalTemperature and
+  // IncrementalTint instead, -100..100 (RENDERED_WHITE_BALANCE below); mapping them per pipeline is
+  // Phase 8 row 3.
   ["temperature", num("Temperature", 2000, 50000, PROBED_CLAMP)],
   ["tint", num("Tint", -150, 150, PROBED_CLAMP)],
 

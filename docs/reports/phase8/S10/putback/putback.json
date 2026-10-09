@@ -1,0 +1,42 @@
+{
+  "uuid": "ACC4F9FE-367B-4ABD-A3E8-0BD9514F4A41",
+  "snapshot_id": "3EB2B86A-4AE5-4576-8AF2-5E938686DC2B",
+  "started_at": "2026-10-09T12:11:33.072Z",
+  "hello": {
+    "protocol": 1,
+    "plugin_version": "0.18.1",
+    "lrc_version": "15.6",
+    "sdk_declared": 13,
+    "ports": {
+      "receive": 8765,
+      "send": 8766
+    },
+    "process_started_at": "2026-10-09T12:09:43Z"
+  },
+  "photo": {
+    "filename": "_DSC0103.NEF",
+    "copy_name": "Copy 1",
+    "is_virtual_copy": true
+  },
+  "differing_before": [
+    "Clarity2012",
+    "Exposure2012",
+    "Highlights2012",
+    "Look",
+    "LuminanceAdjustmentOrange",
+    "RemoveAreas",
+    "RetouchAreas",
+    "SaturationAdjustmentOrange",
+    "SaturationAdjustmentYellow",
+    "Shadows2012",
+    "SharpenRadius",
+    "Temperature",
+    "Texture",
+    "Tint",
+    "Whites2012"
+  ],
+  "differing_after": [],
+  "read_back_matches_apply": true,
+  "put_back": true,
+  "finished_at": "2026-10-09T12:11:33.662Z"
+}

@@ -1,0 +1,14 @@
+import { readFileSync } from "node:fs";
+
+const [, , jpegFile, repo] = process.argv;
+const j = JSON.parse(readFileSync(jpegFile!, "utf8"));
+const s = j.settings.settings as Record<string, unknown>;
+const pinned = JSON.parse(readFileSync(`${repo}/engine/src/params/sdk-keys.lrc15.json`, "utf8"));
+const list = (pinned.keys ?? pinned.entries ?? pinned.settings) as { key: string }[];
+const pk = new Set(list.map((k) => k.key));
+console.log("pinned keys", pk.size, "| jpeg keys", Object.keys(s).length);
+console.log("IN PINNED, MISSING FROM JPEG:", [...pk].filter((k) => !(k in s)).join(", "));
+console.log("IN JPEG, NOT PINNED:", Object.keys(s).filter((k) => !pk.has(k)).join(", "));
+const show = ["CameraProfile", "Look", "ProcessVersion", "WhiteBalance", "Temperature", "Tint", "Exposure2012", "Sharpness", "SharpenRadius", "SharpenDetail", "SharpenEdgeMasking", "LuminanceSmoothing", "ColorNoiseReduction", "EnableLensCorrections", "LensProfileEnable", "AutoLateralCA", "ConvertToGrayscale", "Contrast2012", "Highlights2012", "Shadows2012", "Whites2012", "Blacks2012", "Texture", "Clarity2012", "Dehaze", "Vibrance", "Saturation", "CameraProfileDigest", "LensProfileSetup", "LensManualDistortionAmount", "EnableCalibration", "EnableColorAdjustments", "EnableDetail", "EnableEffects", "EnableGrayscaleMix"];
+for (const k of show) console.log(k.padEnd(28), k in s ? JSON.stringify(s[k]).slice(0, 120) : "(absent)");
+console.log("context:", JSON.stringify(j.context));

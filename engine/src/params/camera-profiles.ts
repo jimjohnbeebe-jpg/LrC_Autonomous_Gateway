@@ -4,7 +4,12 @@
 // - an Adobe Raw profile is CameraProfile = "Adobe Standard" plus its full Look table;
 // - a Nikon Camera Matching profile is its CameraProfile string plus an empty Look, which clears
 //   any Look left applied.
-// spikes/S5/pin-profiles.ts pins the pairs from the S5 recordings into camera-profiles.lrc15.json.
+// - a rendered-pipeline profile (JPEG, TIFF, PNG, PSD, PSB, HEIC, AVIF, JXL, rendered DNG) is
+//   CameraProfile = "Embedded" with no Look; Lightroom's "Monochrome" is that plus
+//   ConvertToGrayscale = true [handle: docs/reports/phase8/S10/run1/s10_profiles_recorded_2026-10-09T05_22_07.json;
+//   docs/reports/phase8/S10.md "Observed"]. The Profile row shows "Color" / "Monochrome" for them
+//   [stated: Jim, 2026-10-09, the check's y/n answers], so those are the pinned names.
+// spikes/S5/pin-profiles.ts pins the pairs from the S5 and S10 recordings into camera-profiles.lrc15.json.
 // Look tables are kept whole (Name, UUID, LookTable and the rest) until Look identity is settled:
 // the Adobe Color name was seen with two UUIDs (same report).
 //
@@ -24,11 +29,13 @@ export type LookTable = z.infer<typeof lookSchema>;
 const profileSchema = z.object({
   /** The name Claude and the intents use, e.g. "Adobe Landscape" or "Camera Standard". */
   name: z.string().min(1),
-  family: z.enum(["adobe", "nikon"]),
+  family: z.enum(["adobe", "nikon", "rendered"]),
   /** The exact CameraProfile string Lightroom stores, e.g. "Group: Camera Standard". */
   camera_profile: z.string().min(1),
   /** The full Look table, or null for a profile that has no Look. */
   look: lookSchema.nullable(),
+  /** Rendered pipeline only: the ConvertToGrayscale value that, with the pair, makes the profile (S10). Absent on raw profiles. */
+  convert_to_grayscale: z.boolean().optional(),
   /** Where the pair was observed (path under the repo, plus a tag where it is inferred). */
   evidence: z.string().min(1),
   /** Handle of a run that wrote this exact pair and read it back, or null if none has. */
@@ -82,8 +89,8 @@ function lookField(look: unknown, field: "Name" | "UUID"): string | null {
   return typeof value === "string" ? value : null;
 }
 
-function pairKey(cameraProfile: string, lookUuid: string | null): string {
-  return `${cameraProfile}\u0000${lookUuid ?? ""}`;
+function pairKey(cameraProfile: string, lookUuid: string | null, grayscale: boolean): string {
+  return `${cameraProfile}\u0000${lookUuid ?? ""}\u0000${grayscale ? "bw" : ""}`;
 }
 
 /** Freeze an entry and everything inside it, so the pinned pairs cannot be changed through get(). */
@@ -104,7 +111,7 @@ export class CameraProfiles {
     const byPair = new Map<string, CameraProfileEntry>();
     for (const entry of pinned.profiles.map((p) => deepFreeze(structuredClone(p)))) {
       if (byName.has(entry.name)) throw new Error(`Duplicate camera profile name "${entry.name}"`);
-      const key = pairKey(entry.camera_profile, entry.look?.UUID ?? null);
+      const key = pairKey(entry.camera_profile, entry.look?.UUID ?? null, entry.convert_to_grayscale === true);
       const other = byPair.get(key);
       if (other) throw new Error(`Camera profiles "${other.name}" and "${entry.name}" are the same pair`);
       byName.set(entry.name, entry);
@@ -131,27 +138,31 @@ export class CameraProfiles {
    * own on a write (issue #67) [handle: docs\reports\phase6\lrc-version-check\check.txt section 2
    * "2_look", LrC 15.6 read back "18.7"].
    */
-  toSdk(name: string): { CameraProfile: string; Look: Record<string, unknown> } {
+  toSdk(name: string): { CameraProfile: string; Look: Record<string, unknown>; ConvertToGrayscale?: boolean } {
     const entry = this.get(name);
-    if (!entry.look) return { CameraProfile: entry.camera_profile, Look: {} };
+    const grayscale = entry.convert_to_grayscale === undefined ? {} : { ConvertToGrayscale: entry.convert_to_grayscale };
+    if (!entry.look) return { CameraProfile: entry.camera_profile, Look: {}, ...grayscale };
     const look = structuredClone(entry.look);
     delete look.Parameters["Version"];
-    return { CameraProfile: entry.camera_profile, Look: look };
+    return { CameraProfile: entry.camera_profile, Look: look, ...grayscale };
   }
 
   /**
    * Name the profile Lightroom reports. A pair matches only on the exact CameraProfile string and
    * Look UUID; a Look name with an unpinned UUID, or a Nikon profile with a Look still attached,
-   * gives name = null with the raw fields filled in.
+   * gives name = null with the raw fields filled in. `convertToGrayscale` is the photo's
+   * ConvertToGrayscale value; it tells the rendered pipeline's Monochrome from Color (S10), and a
+   * pair that does not key on it (every raw profile) matches whatever it says. Callers that leave it
+   * out read a rendered photo as Color.
    */
-  identify(cameraProfile: unknown, look: unknown): ProfileIdentity {
+  identify(cameraProfile: unknown, look: unknown, convertToGrayscale: unknown = false): ProfileIdentity {
     const profile = typeof cameraProfile === "string" ? cameraProfile : null;
     const emptyLook = isEmptyLook(look);
     const lookName = emptyLook ? null : lookField(look, "Name");
     const lookUuid = emptyLook ? null : lookField(look, "UUID");
     let name: string | null = null;
     if (profile !== null && (emptyLook || lookUuid !== null)) {
-      name = this.byPair.get(pairKey(profile, lookUuid))?.name ?? null;
+      name = (this.byPair.get(pairKey(profile, lookUuid, convertToGrayscale === true)) ?? this.byPair.get(pairKey(profile, lookUuid, false)))?.name ?? null;
     }
     return { name, camera_profile: profile, look_name: lookName, look_uuid: lookUuid };
   }

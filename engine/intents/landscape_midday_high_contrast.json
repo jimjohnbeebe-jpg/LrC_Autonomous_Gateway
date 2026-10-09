@@ -1,9 +1,10 @@
 {
+  "schema_version": 2,
   "id": "landscape_midday_high_contrast",
   "label": "Landscape — midday, high contrast",
   "category": "landscape",
   "brief": "Harsh overhead sun and deep shadows. Hold highlight detail in the sky, bright rock and water, and open the shadows enough to show their texture, without the flat look of over-processed HDR. Midday colour is already strong: keep saturation in check.",
-  "default_camera_profile": "Adobe Landscape",
+  "profile": { "raw": "Adobe Landscape", "rendered": "Color" },
   "priors": { "lens.profile_enable": 1, "lens.ca_remove": 1, "highlights": -40, "shadows": 30, "whites": -10, "blacks": -5, "dehaze": 5 },
   "variants": {
     "A": { "label": "natural", "priors": {} },

@@ -96,8 +96,8 @@ export const SESSION_DEFS: ToolDef[] = [
       "guardrail_actions). Returns session_id, the intent's brief (follow it), the " +
       "guardrails, pass0_applied, the full settings, metrics, and the preview. Then call lr_step for each pass. " +
       "`target.pipeline` and `target.white_balance_unit` say how the photo's temperature and tint work (lr_get_active_photo_context). " +
-      "On a rendered photo (JPEG, TIFF, PNG …) pass 0 sets the rendered profile of the intent's kind (Color, or Monochrome for a " +
-      "monochrome profile) and leaves out its temperature and tint priors, which are Kelvin offsets; `pass0_warnings` says so. " +
+      "Pass 0 takes the intent's profile and priors for that pipeline (`profile.raw` or `profile.rendered`, `priors` plus " +
+      "`priors_by_pipeline`). " +
       "mode \"variants\" (an intent with variants; select the master, not a virtual copy): instead of editing the photo, the engine " +
       "makes virtual copies \"AVG <intent> A\", \"… B\", \"… C\" and runs pass 0 on each with the intent's priors plus that " +
       "variant's (History \"AVG <id> A pass 0/N\"); it returns `variants` (each copy's settings and metrics) and a contact sheet " +

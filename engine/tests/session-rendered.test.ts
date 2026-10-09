@@ -1,6 +1,6 @@
 // A session on a rendered photo (Phase 8 row 3) through the tool layer, against the simulated Lightroom
 // with DSC_0031.JPG as spike S10's census read it (helpers/lightroom-sim-rendered.ts): what the context and
-// the begin result report, pass 0's transition for schema v1 intents (pass0.ts forPipeline), relative
+// the begin result report, pass 0 with an intent's rendered profile and priors (schema v2), relative
 // white balance in lr_step, process version 11.0, a photo of neither pipeline, and lr_sync_series
 // checking each target against its own pipeline (decision R1 A [stated: Jim, 2026-10-09, "Go"]).
 
@@ -9,7 +9,6 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { sessionLogSchema } from "../src/log/index.js";
 import { toToolError } from "../src/mcp/index.js";
-import { forPipeline } from "../src/session/pass0.js";
 import { intent } from "./helpers/session-harness.js";
 import { addCopy, clean, logDir, lr, map, sync, tools, useSyncHarness } from "./helpers/sync-harness.js";
 
@@ -34,45 +33,40 @@ describe("a rendered photo", () => {
     expect(readLog().target).toMatchObject({ pipeline: "rendered", process_version: "15.4" });
   });
 
-  it("pass 0 sets the rendered profile of a v1 intent's raw one, and says so", async () => {
+  it("pass 0 sets the intent's rendered profile", async () => {
     clean();
-    const json = await begin("test_prior"); // Adobe Color, exposure +0.2
+    const json = await begin("test_prior"); // profile.rendered Color, exposure +0.2
     expect(lr.settings).toMatchObject({ CameraProfile: "Embedded", ConvertToGrayscale: false, Exposure2012: 0.2 });
     expect(lr.settings).not.toHaveProperty("Look");
-    expect(json["pass0_warnings"]).toEqual([expect.stringMatching(/"Adobe Color" is a raw-pipeline profile .* sets "Color" instead/)]);
-    expect(readLog().passes[0]?.warnings).toEqual(json["pass0_warnings"]);
+    expect(json).not.toHaveProperty("pass0_warnings");
+    expect(readLog().passes[0]).not.toHaveProperty("warnings");
   });
 
   it("pass 0 sets Monochrome for a monochrome intent; the colour sliders it drops are refused, not written", async () => {
     clean();
-    intent("test_mono", { default_camera_profile: "Adobe Monochrome" });
+    intent("test_mono", { profile: { raw: "Adobe Monochrome", rendered: "Monochrome" } });
     const json = await begin("test_mono");
     expect(map.fromSdk(lr.settings).camera_profile.name).toBe("Monochrome");
     expect(lr.settings).not.toHaveProperty("Saturation");
-    expect(json["pass0_warnings"]).toEqual([expect.stringMatching(/sets "Monochrome" instead/)]);
     const out = (await step(json["session_id"] as string, { saturation: 10, exposure: 0.1 })).json;
     expect(out["refused"]).toEqual([expect.objectContaining({ name: "saturation", by: "slider" })]);
     expect(lr.settings["Exposure2012"]).toBeCloseTo(0.1);
   });
 
-  it("maps every monochrome raw profile to Monochrome and every colour one to Color (Greptile, PR #99)", () => {
-    // The profiles that dropped the colour keys in S5 (docs\reports\phase0\S5\part1\s5_profiles.log: 159 keys), and Adobe Monochrome's Look.
-    const MONO = ["Adobe Monochrome", "Camera Deep Tone Monochrome", "Camera Flat Monochrome", "Camera Monochrome", "Camera Monochrome (Green Filter)", "Camera Monochrome (Orange Filter)", "Camera Monochrome (Red Filter)", "Camera Monochrome (Yellow Filter)"];
+  it("knows every monochrome profile (Greptile, PR #99)", () => {
+    // The profiles that dropped the colour keys in S5 (docs\reports\phase0\S5\part1\s5_profiles.log: 159 keys), Adobe Monochrome's Look, and the rendered Monochrome.
+    const MONO = ["Adobe Monochrome", "Camera Deep Tone Monochrome", "Camera Flat Monochrome", "Camera Monochrome", "Camera Monochrome (Green Filter)", "Camera Monochrome (Orange Filter)", "Camera Monochrome (Red Filter)", "Camera Monochrome (Yellow Filter)", "Monochrome"];
     const profiles = map.cameraProfiles();
-    const raw = profiles.names().filter((n) => profiles.pipeline(n) === "raw");
-    expect(raw).toEqual(expect.arrayContaining(MONO));
-    for (const name of raw) {
-      expect(forPipeline(name, {}, "rendered", map).profile, name).toBe(MONO.includes(name) ? "Monochrome" : "Color");
-      expect(forPipeline(name, {}, "raw", map), name).toEqual({ profile: name, priors: {}, warnings: [] });
-    }
+    expect(profiles.names()).toEqual(expect.arrayContaining(MONO));
+    for (const name of profiles.names()) expect(profiles.monochrome(name), name).toBe(MONO.includes(name));
   });
 
-  it("pass 0 leaves out a v1 intent's Kelvin temperature and tint priors, and says so", async () => {
+  it("pass 0 writes the rendered white-balance priors in relative units, and not the raw ones", async () => {
     clean();
-    intent("test_warm", { priors: { temperature: 300, tint: 5, exposure: 0.1 } });
-    const json = await begin("test_warm");
-    expect(lr.settings).toMatchObject({ IncrementalTemperature: 0, IncrementalTint: 0, WhiteBalance: "As Shot", Exposure2012: 0.1 });
-    expect(json["pass0_warnings"]).toEqual([expect.stringMatching(/temperature prior \(300\).*relative/), expect.stringMatching(/tint prior \(5\)/)]);
+    intent("test_warm", { priors: { exposure: 0.1 }, priors_by_pipeline: { raw: { temperature: 300, tint: 5 }, rendered: { temperature: 10, tint: -3 } } });
+    await begin("test_warm");
+    expect(lr.settings).toMatchObject({ IncrementalTemperature: 10, IncrementalTint: -3, WhiteBalance: "Custom", Exposure2012: 0.1 });
+    expect(lr.settings).not.toHaveProperty("Temperature");
   });
 
   it("steps temperature in relative units: capped at 30 per pass, written with Custom", async () => {

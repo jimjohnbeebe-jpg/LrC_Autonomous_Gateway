@@ -142,6 +142,17 @@ export class CameraProfiles {
   }
 
   /**
+   * True for a monochrome profile: an Adobe one's Look sets ConvertToGrayscale, the rendered Monochrome
+   * carries convert_to_grayscale, and the seven Nikon "… Monochrome …" ones have no Look but each dropped
+   * the colour keys on the NEF, 159 keys against 177 for the colour profiles [handle:
+   * docs\reports\phase0\S5\part1\s5_profiles.log, keys= per CameraProfile] (Greptile, PR #99).
+   */
+  monochrome(name: string): boolean {
+    const entry = this.get(name);
+    return entry.look?.Parameters["ConvertToGrayscale"] === true || entry.convert_to_grayscale === true || /Monochrome/.test(entry.name);
+  }
+
+  /**
    * The two SDK settings that select this profile. A profile without a Look writes Look = {}. The
    * Look goes without its Parameters.Version, the version it was recorded under: Lightroom stamps its
    * own on a write (issue #67) [handle: docs\reports\phase6\lrc-version-check\check.txt section 2

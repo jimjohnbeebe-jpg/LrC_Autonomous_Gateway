@@ -1,9 +1,10 @@
 {
+  "schema_version": 2,
   "id": "landscape_golden_hour",
   "label": "Landscape — golden hour",
   "category": "landscape",
   "brief": "Warm, directional low sun. Protect highlight detail in the sun and the sky around it; let shadows stay rich but open. Keep the warmth of the light: do not neutralise the white balance. Avoid an orange cast on foliage greens. Prefer contrast in the midtones (texture, a little clarity) over global contrast.",
-  "default_camera_profile": "Adobe Landscape",
+  "profile": { "raw": "Adobe Landscape", "rendered": "Color" },
   "priors": { "lens.profile_enable": 1, "lens.ca_remove": 1, "highlights": -20, "shadows": 10, "vibrance": 10 },
   "variants": {
     "A": { "label": "natural", "priors": {} },

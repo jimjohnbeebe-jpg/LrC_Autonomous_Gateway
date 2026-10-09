@@ -1,10 +1,12 @@
 {
+  "schema_version": 2,
   "id": "night_astro",
   "label": "Night — stars and Milky Way",
   "category": "night",
   "brief": "Stars over a dark sky, often above a landscape. Keep the sky dark and neutral to slightly blue, without the green or magenta cast of light pollution. Make the stars and the Milky Way stand out with moderate contrast, clarity and dehaze. Reduce noise before adding detail. A dark image is expected: judge the shadows by the detail in the landscape, not by the histogram.",
-  "default_camera_profile": "Adobe Standard",
-  "priors": { "lens.profile_enable": 1, "lens.ca_remove": 1, "temperature": -300, "dehaze": 10, "clarity": 10, "blacks": -10, "noise.luminance": 20 },
+  "profile": { "raw": "Adobe Standard", "rendered": "Color" },
+  "priors": { "lens.profile_enable": 1, "lens.ca_remove": 1, "dehaze": 10, "clarity": 10, "blacks": -10, "noise.luminance": 20 },
+  "priors_by_pipeline": { "raw": { "temperature": -300 } },
   "variants": {
     "A": { "label": "natural", "priors": {} },
     "B": { "label": "dramatic", "priors": { "dehaze": 10, "contrast": 15, "clarity": 10 } },

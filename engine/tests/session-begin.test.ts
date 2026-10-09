@@ -9,7 +9,7 @@ import { ID, SHORT, clean, fails, intent, lr, manager, map, readLog, useSessionH
 
 describe.each(PIPELINES)("lr_begin_session (%s pipeline)", (pipeline) => {
   useSessionHarness(pipeline);
-  /** test_prior names Adobe Color; on a rendered photo pass 0 sets Color instead (pass0.ts forPipeline). */
+  /** test_prior names Adobe Color on raw and Color on rendered (intent schema v2). */
   const profile = pipeline === "raw" ? "Adobe Color" : "Color";
 
   it("takes a snapshot, then writes pass 0: the intent's profile and priors, a number added to the photo's value", async () => {

@@ -1,10 +1,12 @@
 {
+  "schema_version": 2,
   "id": "landscape_forest_shade",
   "label": "Landscape — forest shade",
   "category": "landscape",
   "brief": "Diffuse, green-tinted light under the canopy. Remove the green or cyan cast from neutral surfaces (bark, stone, paths) without making the foliage unnatural. Open the shadows for texture in leaves and bark; stop lifting blacks before the image looks hazy.",
-  "default_camera_profile": "Adobe Landscape",
-  "priors": { "lens.profile_enable": 1, "lens.ca_remove": 1, "shadows": 20, "texture": 10, "vibrance": 5, "temperature": 200, "tint": 5 },
+  "profile": { "raw": "Adobe Landscape", "rendered": "Color" },
+  "priors": { "lens.profile_enable": 1, "lens.ca_remove": 1, "shadows": 20, "texture": 10, "vibrance": 5 },
+  "priors_by_pipeline": { "raw": { "temperature": 200, "tint": 5 } },
   "variants": {
     "A": { "label": "natural", "priors": {} },
     "B": { "label": "dramatic", "priors": { "contrast": 15, "clarity": 15, "blacks": -10 } },

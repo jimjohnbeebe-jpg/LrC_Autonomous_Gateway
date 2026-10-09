@@ -1,9 +1,10 @@
 {
+  "schema_version": 2,
   "id": "neutral_technical_correction",
   "label": "Neutral technical correction",
   "category": "technical",
   "brief": "An accurate, neutral rendering with no style. Set exposure so the midtones sit near the middle, make neutral surfaces neutral in white balance, keep highlights and shadows within the guardrails, and leave lens corrections on. Make the smallest changes that achieve this.",
-  "default_camera_profile": "Adobe Color",
+  "profile": { "raw": "Adobe Color", "rendered": "Color" },
   "priors": { "lens.profile_enable": 1, "lens.ca_remove": 1 },
   "convergence_hints": [
     "stop when midtones sit near the middle, neutrals are neutral and nothing is clipped beyond the guardrails"

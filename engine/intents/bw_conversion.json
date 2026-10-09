@@ -1,9 +1,10 @@
 {
+  "schema_version": 2,
   "id": "bw_conversion",
   "label": "Black and white",
   "category": "bw",
   "brief": "A black-and-white rendering. Separate the tones by luminance: strong but controlled contrast, a true black and a clean white somewhere in the frame, and midtones with texture. Colour metrics (saturation, hue) do not apply; judge by the luma histogram and percentiles.",
-  "default_camera_profile": "Adobe Monochrome",
+  "profile": { "raw": "Adobe Monochrome", "rendered": "Monochrome" },
   "priors": { "lens.profile_enable": 1, "lens.ca_remove": 1, "contrast": 15, "clarity": 10 },
   "variants": {
     "A": { "label": "natural", "priors": {} },

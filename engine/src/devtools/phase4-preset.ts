@@ -5,7 +5,7 @@
 // digest, and Temperature/Tint with a Custom white balance. So:
 //   1. the pick of the Variants session gets the photo's own profile back, Camera Neutral [handle:
 //      docs\reports\phase3\PHASE3.md:213] (the intent's pass 0 gave it Adobe Landscape [handle:
-//      engine\intents\landscape_golden_hour.json default_camera_profile], an Adobe profile, which a
+//      engine\intents\landscape_golden_hour.json profile.raw], an Adobe profile, which a
 //      preset leaves out: presets\select.ts), and a custom white balance (+300 K); then the preset is
 //      saved from it. It writes the Nikon profile as CameraProfile without a digest [handle:
 //      engine\src\presets\select.ts entryOf];

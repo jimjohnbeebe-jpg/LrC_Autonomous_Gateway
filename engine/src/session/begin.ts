@@ -231,7 +231,6 @@ function beginJson(opened: Opened, p: Pass0): Record<string, unknown> {
     pass: `0/${s.maxPasses}`,
     history_names: p.historyNames,
     pass0_applied: p.applied,
-    ...(p.warnings.length > 0 ? { pass0_warnings: p.warnings } : {}),
     guardrail_actions: p.actions,
     settings: p.view.settings,
     metrics: summarize(p.rendered.metrics),

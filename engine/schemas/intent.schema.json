@@ -3,6 +3,10 @@
   "$id": "lrc-avg/intent.schema.json",
   "type": "object",
   "properties": {
+    "schema_version": {
+      "type": "number",
+      "const": 2
+    },
     "id": {
       "type": "string",
       "pattern": "^[a-z0-9][a-z0-9_]{0,63}$",
@@ -24,10 +28,24 @@
       "maxLength": 2000,
       "description": "prose instructions to Claude"
     },
-    "default_camera_profile": {
-      "description": "a profile name such as \"Adobe Landscape\" or \"Camera Standard\"",
-      "type": "string",
-      "minLength": 1
+    "profile": {
+      "description": "the profile pass 0 sets, per pipeline: raw such as \"Adobe Landscape\" or \"Camera Standard\", rendered \"Color\" or \"Monochrome\"; leave out to keep the photo's",
+      "type": "object",
+      "properties": {
+        "raw": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rendered": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "raw",
+        "rendered"
+      ],
+      "additionalProperties": false
     },
     "priors": {
       "type": "object",
@@ -54,7 +72,68 @@
           }
         ]
       },
-      "description": "canonical parameter name -> value, applied at pass 0: a number is added to the photo's current value; a switch, boolean or curve is set as given (camera_profile goes in default_camera_profile)"
+      "description": "priors for both pipelines (not temperature or tint: see priors_by_pipeline)"
+    },
+    "priors_by_pipeline": {
+      "type": "object",
+      "properties": {
+        "raw": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "description": "canonical parameter name -> value, applied at pass 0: a number is added to the photo's current value; a switch, boolean or curve is set as given"
+        },
+        "rendered": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "description": "canonical parameter name -> value, applied at pass 0: a number is added to the photo's current value; a switch, boolean or curve is set as given"
+        }
+      },
+      "additionalProperties": false,
+      "description": "priors for one pipeline only, added to `priors` on a photo of that pipeline; temperature and tint go here, in Kelvin on raw and in relative units (-100..100) on rendered"
     },
     "variants": {
       "description": "three named prior sets for Variants mode (Phase 4)",
@@ -93,7 +172,68 @@
                   }
                 ]
               },
-              "description": "canonical parameter name -> value, applied at pass 0: a number is added to the photo's current value; a switch, boolean or curve is set as given (camera_profile goes in default_camera_profile)"
+              "description": "canonical parameter name -> value, applied at pass 0: a number is added to the photo's current value; a switch, boolean or curve is set as given"
+            },
+            "priors_by_pipeline": {
+              "type": "object",
+              "properties": {
+                "raw": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "description": "canonical parameter name -> value, applied at pass 0: a number is added to the photo's current value; a switch, boolean or curve is set as given"
+                },
+                "rendered": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "description": "canonical parameter name -> value, applied at pass 0: a number is added to the photo's current value; a switch, boolean or curve is set as given"
+                }
+              },
+              "additionalProperties": false,
+              "description": "priors for one pipeline only, added to `priors` on a photo of that pipeline; temperature and tint go here, in Kelvin on raw and in relative units (-100..100) on rendered"
             }
           },
           "required": [
@@ -135,7 +275,68 @@
                   }
                 ]
               },
-              "description": "canonical parameter name -> value, applied at pass 0: a number is added to the photo's current value; a switch, boolean or curve is set as given (camera_profile goes in default_camera_profile)"
+              "description": "canonical parameter name -> value, applied at pass 0: a number is added to the photo's current value; a switch, boolean or curve is set as given"
+            },
+            "priors_by_pipeline": {
+              "type": "object",
+              "properties": {
+                "raw": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "description": "canonical parameter name -> value, applied at pass 0: a number is added to the photo's current value; a switch, boolean or curve is set as given"
+                },
+                "rendered": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "description": "canonical parameter name -> value, applied at pass 0: a number is added to the photo's current value; a switch, boolean or curve is set as given"
+                }
+              },
+              "additionalProperties": false,
+              "description": "priors for one pipeline only, added to `priors` on a photo of that pipeline; temperature and tint go here, in Kelvin on raw and in relative units (-100..100) on rendered"
             }
           },
           "required": [
@@ -177,7 +378,68 @@
                   }
                 ]
               },
-              "description": "canonical parameter name -> value, applied at pass 0: a number is added to the photo's current value; a switch, boolean or curve is set as given (camera_profile goes in default_camera_profile)"
+              "description": "canonical parameter name -> value, applied at pass 0: a number is added to the photo's current value; a switch, boolean or curve is set as given"
+            },
+            "priors_by_pipeline": {
+              "type": "object",
+              "properties": {
+                "raw": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "description": "canonical parameter name -> value, applied at pass 0: a number is added to the photo's current value; a switch, boolean or curve is set as given"
+                },
+                "rendered": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "description": "canonical parameter name -> value, applied at pass 0: a number is added to the photo's current value; a switch, boolean or curve is set as given"
+                }
+              },
+              "additionalProperties": false,
+              "description": "priors for one pipeline only, added to `priors` on a photo of that pipeline; temperature and tint go here, in Kelvin on raw and in relative units (-100..100) on rendered"
             }
           },
           "required": [
@@ -237,6 +499,7 @@
     }
   },
   "required": [
+    "schema_version",
     "id",
     "label",
     "category",
@@ -244,5 +507,5 @@
     "priors"
   ],
   "additionalProperties": false,
-  "description": "LrC-AVG intent, schema v1"
+  "description": "LrC-AVG intent, schema v2"
 }

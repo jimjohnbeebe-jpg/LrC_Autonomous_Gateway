@@ -33,7 +33,7 @@ export let manager: SessionManager;
 
 export const intent = (id: string, extra: Record<string, unknown> = {}): void => {
   mkdirSync(userDir, { recursive: true });
-  writeFileSync(path.join(userDir, `${id}.json`), JSON.stringify({ id, label: id, category: "test", brief: `The ${id} brief.`, priors: {}, ...extra }), "utf8");
+  writeFileSync(path.join(userDir, `${id}.json`), JSON.stringify({ schema_version: 2, id, label: id, category: "test", brief: `The ${id} brief.`, priors: {}, ...extra }), "utf8");
 };
 
 /**
@@ -93,7 +93,7 @@ export function useSessionHarness(pipeline: Pipeline = "raw"): void {
     client.start();
     await client.waitConnected(2000);
     intent("test_plain", { allow_probe: true });
-    intent("test_prior", { default_camera_profile: "Adobe Color", priors: { exposure: 0.2, "lens.ca_remove": 0 } });
+    intent("test_prior", { profile: { raw: "Adobe Color", rendered: "Color" }, priors: { exposure: 0.2, "lens.ca_remove": 0 } });
     // Variants mode: B adds to the intent's exposure prior, C's exposure clips the highlights (tonal model).
     intent("test_variants", {
       allow_probe: true,

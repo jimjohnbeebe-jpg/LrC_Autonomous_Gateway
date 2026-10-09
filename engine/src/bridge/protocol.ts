@@ -330,7 +330,8 @@ export type CommandPayloads = {
   ping: { nonce?: string };
   get_context: Target;
   get_settings: Target;
-  apply_settings: Target & { settings: Record<string, unknown>; history_name: string };
+  /** `put_back` (plugin 0.19.0): values the photo held before, let through to a photo whose original is missing (Develop.lua applySettings). */
+  apply_settings: Target & { settings: Record<string, unknown>; history_name: string; put_back?: boolean };
   /** long_edge in pixels; quality 0-100 (the plugin converts it to the export setting's scale). */
   export_preview: Target & { long_edge: number; quality: number };
   create_snapshot: Target & { name: string };

@@ -13,7 +13,7 @@ date: 2026-10-09
 **The finding.** In spike S10 the photo `20260907-_OZ80099-Edit.tif`, whose original file is gone [stated: Jim, 2026-10-09, "seems to have disappeared"], took every write unvalidated and exported no JPEG [handle: `docs\reports\phase8\S10.md` "Consequences" item 8]. An edit on it would write values Lightroom never checked and fail at its first preview.
 
 **The fix** (R2 in the row 3 plan [stated: Jim, 2026-10-09, "Go", R2 A]; this PR's plan [stated: Jim, 2026-10-09, "Go with recommendations. Insure that missing files are reported by the MCP and in the UX."]):
-- plugin 0.19.0: `get_context` reports `available` (`photo:checkPhotoAvailability()`) and `smart_preview`; `apply_settings`, `export_preview` and `export_photo` answer `original_missing` for a missing original. Snapshots stay allowed, so a put-back still works;
+- plugin 0.19.0: `get_context` reports `available` (`photo:checkPhotoAvailability()`) and `smart_preview`; `apply_settings`, `export_preview` and `export_photo` answer `original_missing` for a missing original. Snapshots stay allowed, and so does an `apply_settings` marked `put_back` (a probe's or a pass's revert, values the photo held before), so a put-back still works (Greptile, PR #101);
 - engine 0.23.0: `lr_begin_session` refuses it with `ORIGINAL_MISSING` before the snapshot. `lr_sync_series` skips it, gives its reason and syncs the rest (D2 A). `lr_export_photos` lists it under `failed`. `lr_get_active_photo_context` reports `original_missing` and gives a note to pass on to the user;
 - a photo with a smart preview is refused too (D1 A);
 - UX: a refused begin opens no edit, so the chat reports it: the error tells Claude to tell the user and how to reconnect the file. A file lost during an open edit is named in the step's error and on the Deck/HUD ("The photo's original file is missing: reconnect it in Lightroom (Library > Find Missing Photos).") [stated: Jim, 2026-10-09, "Chat + in-edit notes (Recommended)", "Writes + exports (Recommended)"].
@@ -34,9 +34,9 @@ date: 2026-10-09
 **What `npm run offline:check` is written to do** [handle: `engine\src\devtools\offline-check.ts` header]:
 1. It checks that the plugin is 0.19.0 or later.
 2. It reads `get_context` by uuid for `20260907-_OZ80099-Edit.tif` (uuid `F472C80A-31EF-47B1-8C05-6910CC7D90AA`) and for `DSC_0031.JPG` Copy 1 (`12409199-51E4-4AC3-8EE9-6DB994858630`). If the TIFF is not reported missing, the check stops there, so no edit or write reaches a photo that is there.
-3. It selects the TIFF. It calls `lr_get_active_photo_context` (expects `original_missing: true`) and then `lr_begin_session` (expects `ORIGINAL_MISSING`).
+3. It selects the TIFF. It calls `lr_get_active_photo_context` (expects `original_missing: true`) and then `lr_begin_session` (expects `ORIGINAL_MISSING`). If a session is open anyway, the check ends it with revert, which puts the photo back, and reports FAILED (Greptile, PR #101).
 4. It sends `apply_settings` by uuid, with the photo's own exposure, so a write that got through changes no value. It also sends `export_preview`. Both are expected to answer `original_missing`. It compares the photo's settings with those read before step 3.
-5. It selects Jim's photo again. Then it asks whether Lightroom's Library menu has "Find Missing Photos", the menu path the messages name [unverified].
+5. It selects Jim's photo again, releases the bridge, so the command ends and Claude Desktop can connect, and asks whether Lightroom's Library menu has "Find Missing Photos", the menu path the messages name [unverified].
 
 Results go to `%TEMP%\LrC-AVG\offline\`, and Claude Code collects them.
 

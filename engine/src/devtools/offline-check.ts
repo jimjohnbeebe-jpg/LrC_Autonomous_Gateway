@@ -27,8 +27,8 @@ const INTENT = "landscape_forest_shade";
 type Json = Record<string, unknown>;
 export type OfflineDeps = {
   client: BridgeClient;
-  gate: Pick<BridgeGate, "ready">;
-  tools: Pick<Tools, "beginSession" | "getActivePhotoContext">;
+  gate: Pick<BridgeGate, "ready" | "release">;
+  tools: Pick<Tools, "beginSession" | "endSession" | "getActivePhotoContext" | "sessionManager">;
   map: ParamMap;
   ask: (question: string) => Promise<Answer>;
   say: (line: string) => void;
@@ -80,6 +80,14 @@ export async function runOfflineCheck(deps: OfflineDeps): Promise<{ worked: bool
     const begin = await refusal(() => deps.tools.beginSession({ intent_id: INTENT, return_image: "none" }));
     results["begin"] = begin;
     lines["begin_refused"] = begin === "ORIGINAL_MISSING";
+    // A begin that went through (the file came back, or another photo was clicked meanwhile) or failed after
+    // its snapshot leaves a session open: put that photo back (Greptile, PR #101).
+    const open = deps.tools.sessionManager()?.current() ?? null;
+    if (open) {
+      const r = await refusal(() => deps.tools.endSession({ session_id: open.id, outcome: "revert" }));
+      results["session_reverted"] = r === "none";
+      throw new Error(`lr_begin_session left session ${open.id} open; the check ended it with revert: ${r === "none" ? "the photo is put back" : `that failed (${r}), apply its "AVG pre-session" snapshot in Develop > Snapshots`}.`);
+    }
     const exposure = before.settings["exposure"];
     const sdk = deps.map.toSdk({ exposure: typeof exposure === "number" ? exposure : 0 }, { processVersion: before.process_version, pipeline: before.pipeline });
     const write = await refusal(() => client.request("apply_settings", { photo_uuid: MISSING.uuid, settings: sdk, history_name: "AVG offline-check" }));
@@ -97,6 +105,7 @@ export async function runOfflineCheck(deps: OfflineDeps): Promise<{ worked: bool
   lines["selection_restored"] = await restore(deps, selected, errors);
   const menu = await deps.ask('In Lightroom, open the Library menu (menu bar, top). Is there an item named "Find Missing Photos"?');
   results["menu_find_missing_photos"] = menu;
+  await deps.gate.release(); // the bridge and the instance lock, so the command ends and Claude Desktop can connect (Greptile, PR #101)
   return summarize(results, lines, errors, say);
 }
 

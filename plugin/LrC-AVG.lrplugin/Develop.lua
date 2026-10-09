@@ -161,7 +161,9 @@ function Develop.applySettings(payload)
     local tCommand = LrDate.currentTime()
     local catalog, photo, uuid, err = writeTarget(payload)
     if err then return nil, err end
-    local missing = Photos.missing(catalog, photo) -- snapshots stay allowed, so a put-back still works
+    -- Snapshots stay allowed, and so does a write with put_back (values the photo held before: a probe's
+    -- or a pass's revert), so a photo whose original went missing mid-edit can still be put back.
+    local missing = payload.put_back ~= true and Photos.missing(catalog, photo)
     if missing then return nil, missing end
     local t0 = LrDate.currentTime()
     local gated, busy = Gate.write(catalog, historyName, function()

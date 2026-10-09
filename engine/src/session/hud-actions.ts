@@ -303,8 +303,9 @@ export function idleStage(s: Session, error: unknown): { stage: HudStage; note?:
     if (e.code === "SESSION_ENDED") return null;
     if (e.code === "TARGET_CHANGED") return at("target_changed", given ?? "Another photo was selected, so nothing was changed; the edit is still open.");
     if (waiting && e.code === "AWAITING_APPROVAL") return at("awaiting_approval", given ?? approvalNote(waiting.pass));
-    const why = e.code === "ORIGINAL_MISSING" ? MISSING_NOTE : "Claude's last call failed; the edit is still open.";
-    return at(waiting ? "awaiting_approval" : "awaiting_claude", given ?? why);
+    // A missing original outranks any note waiting to be shown, e.g. a version notice (Greptile, PR #101).
+    const why = e.code === "ORIGINAL_MISSING" ? MISSING_NOTE : (given ?? "Claude's last call failed; the edit is still open.");
+    return at(waiting ? "awaiting_approval" : "awaiting_claude", why);
   }
   if (awaitingPick(s)) return at("awaiting_pick", given ?? "Pick a copy here, or tell Claude which one.");
   const t = s.active;

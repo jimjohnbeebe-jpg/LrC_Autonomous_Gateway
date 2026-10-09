@@ -7,6 +7,7 @@
 import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { lightroomNotices } from "../src/bridge/index.js";
 import { Tools, toToolError, type ToolError } from "../src/mcp/index.js";
 import { IntentLibrary } from "../src/intents/index.js";
 import { PreviewService } from "../src/preview/index.js";
@@ -14,7 +15,7 @@ import { MISSING_NOTE } from "../src/session/hud-actions.js";
 import { waitUntil } from "./helpers/fake-plugin.js";
 import { hudRig } from "./helpers/hud-harness.js";
 import { ID, client, map, userDir } from "./helpers/session-harness.js";
-import { addCopy, clean, logDir, lr, sent, sync, tmp, tools, useSyncHarness } from "./helpers/sync-harness.js";
+import { addCopy, clean, logDir, lr, plugin, sent, sync, tmp, tools, useSyncHarness } from "./helpers/sync-harness.js";
 
 useSyncHarness();
 
@@ -82,5 +83,39 @@ describe("a photo whose original file is missing", () => {
     expect(lr.hud.last()?.stage).toBe("awaiting_claude");
     await rig.manager.end({ session_id: ID, outcome: "revert" }); // apply_snapshot stays allowed
     expect(lr.settings).toEqual(before);
+  });
+
+  it("lost during a probe: the probe's put-back still goes through, so no probe value stays (Greptile, PR #101)", async () => {
+    clean();
+    const rig = hudRig();
+    await rig.manager.begin({ intent_id: "test_plain" });
+    const exposure = lr.settings["Exposure2012"];
+    const apply = plugin.handlers.get("apply_settings") as NonNullable<ReturnType<typeof plugin.handlers.get>>;
+    plugin.handlers.set("apply_settings", (p, id) => {
+      const reply = apply(p, id);
+      if (String(p["history_name"]).endsWith("probe exposure")) lr.missing.add("SIM-UUID"); // gone before the probe's render
+      return reply;
+    });
+    const e = await fails(rig.manager.probe({ session_id: ID, sliders: ["exposure"] }));
+    expect(e.code).toBe("ORIGINAL_MISSING");
+    expect(sent("apply_settings").at(-1)).toMatchObject({ put_back: true, history_name: expect.stringMatching(/probe revert$/) });
+    expect(lr.settings["Exposure2012"]).toBe(exposure);
+  });
+
+  it("the HUD's missing-file line outranks a note waiting to be shown, e.g. a version notice (Greptile, PR #101)", async () => {
+    clean();
+    lr.lrcVersion = "99.0"; // outside the tested versions: begin leaves a notice for the HUD
+    plugin.dropEventClient(); // the next hello reports 99.0
+    await waitUntil(() => client.stats.drops === 1);
+    await client.waitConnected(2000);
+    expect(lightroomNotices(client.hello()?.lrc_version)).not.toEqual([]);
+    const snap = plugin.handlers.get("create_snapshot") as NonNullable<ReturnType<typeof plugin.handlers.get>>;
+    plugin.handlers.set("create_snapshot", (p, id) => {
+      lr.missing.add("SIM-UUID"); // gone between the begin's checks and pass 0
+      return snap(p, id);
+    });
+    const rig = hudRig();
+    expect((await fails(rig.manager.begin({ intent_id: "test_plain" }))).code).toBe("ORIGINAL_MISSING");
+    await waitUntil(() => lr.hud.last()?.note === MISSING_NOTE);
   });
 });

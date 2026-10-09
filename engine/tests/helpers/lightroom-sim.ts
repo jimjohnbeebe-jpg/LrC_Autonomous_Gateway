@@ -214,7 +214,7 @@ export class LightroomSim {
     plugin.handlers.set("get_settings", (p) => on(p, (u) => ok({ uuid: u, settings: luaize(this.settingsOf(u)) })));
     plugin.handlers.set("apply_settings", (p) =>
       on(p, (u) => {
-        const missing = this.missingReply(u);
+        const missing = p["put_back"] === true ? null : this.missingReply(u);
         if (missing) return missing;
         this.history.push(String(p["history_name"]));
         this.writes.push({ uuid: u, name: String(p["history_name"]) });

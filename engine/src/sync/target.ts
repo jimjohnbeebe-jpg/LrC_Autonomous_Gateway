@@ -117,7 +117,7 @@ async function adapt(run: SyncRun, uuid: string, view: FromSdkResult, names: str
  * its details the snapshot (or, with no answer, the name it may have), the History steps written and
  * `maybe_written`.
  */
-function failedAfterSnapshot(err: unknown, photo: Photo, snapshotName: string, snapshot: { name: string; id: string } | null, names: string[]): ToolError {
+function failedAfterSnapshot(err: unknown, photo: Photo, snapshotName: string, snapshot: { name: string; id: string } | null, names: string[], not_transferable: TargetResult["not_transferable"]): ToolError {
   const error = toToolError(err);
   const details = typeof error.details === "object" && error.details !== null ? error.details : {};
   const maybeSnapshot = !snapshot && mayHaveLanded(err);
@@ -131,6 +131,7 @@ function failedAfterSnapshot(err: unknown, photo: Photo, snapshotName: string, s
     filename: photo.filename,
     ...(snapshot ? { snapshot } : maybeSnapshot ? { snapshot_name: snapshotName } : {}),
     history_names: names,
+    ...(not_transferable.length > 0 ? { not_transferable } : {}), // what was set aside before the failure, so the skipped entry says it too (Greptile, PR #105)
   });
 }
 
@@ -163,6 +164,6 @@ export async function syncTarget(run: SyncRun, uuid: string): Promise<TargetResu
     const changed = differingSettings(before.settings, now.settings);
     return { ...photo, pipeline: before.pipeline, snapshot, history_names: names, changed, not_transferable, exposure: adapted?.exposure ?? null, luma: adapted?.luma ?? null, render: adapted?.render ?? null };
   } catch (err) {
-    throw failedAfterSnapshot(err, photo, snapshotName, snapshot, names);
+    throw failedAfterSnapshot(err, photo, snapshotName, snapshot, names, not_transferable);
   }
 }

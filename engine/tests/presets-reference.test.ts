@@ -41,10 +41,14 @@ describe.each(REFERENCES)("the preset written from $label's photo", (ref) => {
   const lightroom = presetDescription(parseXml(ref.text));
   const ours = written(ref);
 
-  it("writes each attribute as Lightroom wrote it (all but the preset's own uuid)", () => {
+  it("writes each attribute as Lightroom wrote it (all but the preset's own uuid, and crs:Version for a reference an older Camera Raw wrote)", () => {
+    // The pinned envelope is the newest Lightroom's (devtools\preset-pin.ts): a raw reference written by
+    // 18.5.1 carries that, ours the pinned 18.7 (Phase 8 row 5).
+    const pinnedVersion = format.envelope.find(([k]) => k === "Version")?.[1];
     const differ: string[] = [];
     for (const [k, v] of ours.description.attrs) {
       if (k === "crs:UUID") continue;
+      if (k === "crs:Version" && lightroom.attrs.get(k) !== pinnedVersion) continue;
       if (lightroom.attrs.get(k) !== v) differ.push(`${k}: ours ${JSON.stringify(v)}, Lightroom's ${JSON.stringify(lightroom.attrs.get(k))}`);
     }
     expect(differ).toEqual([]);

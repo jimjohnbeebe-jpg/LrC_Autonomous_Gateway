@@ -65,11 +65,34 @@ describe("selectPresetSettings", () => {
     expect(adobe.left_out).toEqual([{ name: "camera_profile", reason: expect.stringMatching(/^an Adobe profile/) }]);
   });
 
-  it("leaves a rendered-pipeline profile out: CameraProfile alone cannot tell Color from Monochrome (Greptile, PR #98)", () => {
+  it("writes a rendered-pipeline profile as Lightroom does: CameraProfile \"Default Color\" / \"Default Monochrome\" with ConvertToGrayscale (Phase 8 row 5)", () => {
     const rendered = (JSON.parse(readFileSync(path.join(import.meta.dirname, "fixtures", "s10-rendered-dsc0031.json"), "utf8")) as { settings: Record<string, unknown> }).settings;
-    const out = selectPresetSettings(map, rendered, ["camera_profile"]);
-    expect(out.entries.map((e) => e.key)).toEqual(["ProcessVersion"]);
-    expect(out.left_out).toEqual([{ name: "camera_profile", reason: expect.stringMatching(/^a rendered-pipeline profile \(Color\)/) }]);
+    const color = selectPresetSettings(map, rendered, ["camera_profile"]);
+    expect(color.entries).toEqual([
+      { key: "ProcessVersion", value: "15.4" },
+      { key: "ConvertToGrayscale", value: false },
+      { key: "CameraProfile", value: "Default Color" },
+    ]);
+    expect([color.written, color.left_out]).toEqual([["camera_profile"], []]);
+    const mono = selectPresetSettings(map, { ...rendered, ConvertToGrayscale: true }, ["camera_profile"]);
+    expect(mono.entries.slice(1)).toEqual([
+      { key: "ConvertToGrayscale", value: true },
+      { key: "CameraProfile", value: "Default Monochrome" },
+    ]);
+  });
+
+  it("writes a rendered photo's Custom white balance as IncrementalTemperature / IncrementalTint, and none when As Shot (Phase 8 row 5)", () => {
+    const rendered = (JSON.parse(readFileSync(path.join(import.meta.dirname, "fixtures", "s10-rendered-dsc0031.json"), "utf8")) as { settings: Record<string, unknown> }).settings;
+    const custom = selectPresetSettings(map, { ...rendered, WhiteBalance: "Custom", IncrementalTemperature: 20, IncrementalTint: 10 }, ["white_balance"]);
+    expect(custom.entries).toEqual([
+      { key: "ProcessVersion", value: "15.4" },
+      { key: "WhiteBalance", value: "Custom" },
+      { key: "IncrementalTemperature", value: 20 },
+      { key: "IncrementalTint", value: 10 },
+    ]);
+    const asShot = selectPresetSettings(map, rendered, ["white_balance"]);
+    expect(asShot.entries.map((e) => e.key)).toEqual(["ProcessVersion", "WhiteBalance"]);
+    expect(asShot.left_out.map((l) => l.name)).toEqual(["temperature", "tint"]);
   });
 
   it("names a profile it cannot pin in left_out", () => {

@@ -83,6 +83,23 @@ describe("lr_sync_series across pipelines", () => {
     expect(onRaw["changed"]).toEqual(["contrast"]);
   });
 
+  it("a target that fails after its snapshot still names what was set aside (Greptile, PR #105)", async () => {
+    clean();
+    renderedPhoto();
+    const { id } = await acceptedSession([{ contrast: 15 }]);
+    lr.ignored.add("Contrast2012"); // Lightroom drops the value: WRITE_NOT_TAKEN after the snapshot
+    const out = await sync({ source: { session_id: id }, targets: { uuids: [JPEG] }, parameter_mask: ["basic_tone", "white_balance", "camera_profile"], ...quiet });
+    expect(out.json["applied"]).toBe(0);
+    expect(skippedOf(out)).toEqual([
+      expect.objectContaining({
+        uuid: JPEG,
+        code: "WRITE_NOT_TAKEN",
+        snapshot: { name: expect.stringMatching(/^AVG pre-sync /), id: "SNAP-2" }, // SNAP-1 was the session's
+        not_transferable: [expect.objectContaining({ group: "white_balance" }), expect.objectContaining({ group: "camera_profile" })],
+      }),
+    ]);
+  });
+
   it("a target that can take nothing is skipped before its snapshot (NOTHING_TRANSFERABLE)", async () => {
     clean();
     renderedPhoto();

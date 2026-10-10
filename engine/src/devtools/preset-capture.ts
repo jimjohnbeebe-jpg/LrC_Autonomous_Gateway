@@ -15,7 +15,7 @@
 
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { CUSTOM_WHITE_BALANCE, PROCESS_VERSION_KEY, WHITE_BALANCE_KEY, sdkKeysOf, type ParamMap, type Pipeline, type SdkSettings } from "../params/index.js";
+import { CAMERA_PROFILE_KEY, CUSTOM_WHITE_BALANCE, PROCESS_VERSION_KEY, WHITE_BALANCE_KEY, sdkKeysOf, type ParamMap, type Pipeline, type SdkSettings } from "../params/index.js";
 import { findPresetFiles } from "../presets/folder.js";
 import { child, parseXml, presetDescription, seqItems, type XmlNode } from "../presets/xmp-parse.js";
 import { groupOf, MASK_GROUPS } from "../sync/mask.js";
@@ -108,15 +108,27 @@ export function checkReference(map: ParamMap, xmp: string, sdk: SdkSettings, pip
   const description = presetDescription(parseXml(xmp));
   const missing: Record<string, string[]> = {};
   const differ: string[] = [];
+  // A rendered photo holds CameraProfile "Embedded", and Lightroom writes "Default Color" / "Default
+  // Monochrome" into its preset (camera-profiles.lrc15.json preset_camera_profile): the first captures
+  // refused the files for it [handle: %TEMP%\LrC-AVG\presets\capture_2026-10-10T13-04-33-995Z.json and
+  // capture_2026-10-10T13-06-56-214Z.json, `differ: ["CameraProfile"]`].
+  const expectedProfile = pipeline === "rendered" ? presetProfileOf(map, sdk) : undefined;
   for (const [group, keys] of Object.entries(expectedKeys(map, pipeline))) {
     for (const key of keys) {
       const present = description.attrs.has(`crs:${key}`) || child(description, `crs:${key}`) !== undefined;
       if (!present) (missing[group] ??= []).push(key);
       const text = written(description, key);
-      if (text !== undefined && key in sdk && !sameValue(text, sdk[key])) differ.push(key);
+      const expected = key === CAMERA_PROFILE_KEY && expectedProfile !== undefined ? expectedProfile : sdk[key];
+      if (text !== undefined && key in sdk && !sameValue(text, expected)) differ.push(key);
     }
   }
   return { missing, differ };
+}
+
+/** The CameraProfile text a preset of this rendered photo carries, or the photo's own when its profile is not pinned. */
+function presetProfileOf(map: ParamMap, sdk: SdkSettings): unknown {
+  const name = map.fromSdk(sdk).camera_profile.name;
+  return (name === null ? undefined : map.cameraProfiles().get(name).preset_camera_profile) ?? sdk[CAMERA_PROFILE_KEY];
 }
 
 /** What the saved reference lacks or differs in: Claude Code reads these before pinning anything. */

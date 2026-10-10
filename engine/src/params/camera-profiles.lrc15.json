@@ -474,7 +474,8 @@
       "camera_profile": "Embedded",
       "look": null,
       "convert_to_grayscale": false,
-      "evidence": "docs/reports/phase8/S10/run1/s10_profiles_recorded_2026-10-09T05_22_07.json: recorded on DSC_0031.JPG Copy 1; the Profile row read \"Color\" [stated: Jim, 2026-10-09]",
+      "preset_camera_profile": "Default Color",
+      "evidence": "docs/reports/phase8/S10/run1/s10_profiles_recorded_2026-10-09T05_22_07.json: recorded on DSC_0031.JPG Copy 1; the Profile row read \"Color\" [stated: Jim, 2026-10-09]. preset_camera_profile: engine/tests/fixtures/presets/reference-rendered.lrc15.xmp crs:CameraProfile, written by LrC 15.6 from the same photo (CameraProfile Embedded, ConvertToGrayscale false), 2026-10-10 [stated: Jim, \"presets done\"]",
       "write_verified": "docs/reports/phase8/S10/s10_check_2026-10-09T12-24-50-743Z.json writes[*].profiles.pairs \"recorded: Embedded\": taken on all 18 rendered photos"
     },
     {
@@ -483,7 +484,8 @@
       "camera_profile": "Embedded",
       "look": null,
       "convert_to_grayscale": true,
-      "evidence": "docs/reports/phase8/S10/run1/s10_profiles_recorded_2026-10-09T05_22_07.json: recorded on DSC_0031.JPG Copy 1; the Profile row read \"Monochrome\" [stated: Jim, 2026-10-09]",
+      "preset_camera_profile": "Default Monochrome",
+      "evidence": "docs/reports/phase8/S10/run1/s10_profiles_recorded_2026-10-09T05_22_07.json: recorded on DSC_0031.JPG Copy 1; the Profile row read \"Monochrome\" [stated: Jim, 2026-10-09]. preset_camera_profile: engine/tests/fixtures/presets/reference-rendered-mono.lrc15.xmp crs:CameraProfile, written by LrC 15.6 from the same photo (CameraProfile Embedded, ConvertToGrayscale true), 2026-10-10 [stated: Jim, \"presets done\"]",
       "write_verified": "docs/reports/phase8/S10/s10_check_2026-10-09T12-24-50-743Z.json writes[*].profiles.pairs \"recorded: Embedded + ConvertToGrayscale\": taken on all 18 rendered photos"
     }
   ]

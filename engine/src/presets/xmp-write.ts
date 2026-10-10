@@ -27,6 +27,9 @@ function exact(value: number, decimals: number): string {
   return String(value);
 }
 
+/** A boolean as Lightroom writes one [handle: every reference file's crs:ConvertToGrayscale="False" / "True", crs:HasSettings="True"]. */
+export const formatBoolean = (value: boolean): string => (value ? "True" : "False");
+
 /** A number as Lightroom writes that key: "+0.33", "-21", "25", "0.00". */
 export function formatNumber(value: number, format: NumberFormat | undefined): string {
   const text = exact(value, format?.decimals ?? 0);
@@ -55,7 +58,7 @@ function settingsAttributes(format: PresetFormat, entries: PresetEntry[]): Array
     .filter((e) => !Array.isArray(e.value))
     .map((e, i) => ({ e, i }))
     .sort((a, b) => rank(a.e.key) - rank(b.e.key) || a.i - b.i)
-    .map(({ e }): [string, string] => [e.key, typeof e.value === "number" ? formatNumber(e.value, format.numbers[e.key]) : String(e.value)]);
+    .map(({ e }): [string, string] => [e.key, typeof e.value === "number" ? formatNumber(e.value, format.numbers[e.key]) : typeof e.value === "boolean" ? formatBoolean(e.value) : String(e.value)]);
 }
 
 export function renderPreset(format: PresetFormat, preset: PresetText): string {

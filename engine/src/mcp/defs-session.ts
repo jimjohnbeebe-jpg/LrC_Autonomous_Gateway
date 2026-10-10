@@ -146,7 +146,8 @@ export const SESSION_DEFS: ToolDef[] = [
       "Variants mode: name the copy with `target`; each copy takes ONE pass before the pick (a second is refused with " +
       "AWAITING_PICK), and the step that gives the last copy its pass returns `awaiting_pick: true` and the contact sheet: " +
       "then ask the user to pick (lr_select_variant). After the pick, steps go to the pick, whose pass count carries on. " +
-      "`hud_actions` lists what the user did in the HUD since your last call (a pick). " +
+      "`hud_actions` lists what the user did in the HUD since your last call (a pick), and a `deck_fallback` note when the Deck " +
+      "did not start and the classic HUD window opened instead (tell the user). " +
       "approve_each_pass mode (begin's session_settings.approval): pass 1 needs no approval; from pass 2 on, the call first waits " +
       `up to ${APPROVAL_WAIT_MS / 1000} s for the user's Approve of the pass before (the HUD's button, or lr_approve_pass after the user approved in chat), ` +
       "else returns AWAITING_APPROVAL (recoverable; nothing written, the pass not used): tell the user the pass waits for their " +

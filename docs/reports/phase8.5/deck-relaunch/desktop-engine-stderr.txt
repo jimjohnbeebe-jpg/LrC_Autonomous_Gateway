@@ -1,0 +1,48 @@
+[lrc-avg] HUD channel: client dropped, the listener closed
+[lrc-avg] bridge: stopped
+[lrc-avg] took the Lightroom bridge lock
+[lrc-avg] bridge: connecting
+[lrc-avg] HUD channel listening on 127.0.0.1:62260
+[lrc-avg] bridge: handshaking
+[lrc-avg] bridge: connected
+[lrc-avg] no tool call for 60 s; gave the Lightroom bridge back
+[lrc-avg] HUD channel: client dropped, the listener closed
+[lrc-avg] bridge: stopped
+[lrc-avg] took the Lightroom bridge lock
+[lrc-avg] bridge: connecting
+[lrc-avg] HUD channel listening on 127.0.0.1:62306
+[lrc-avg] bridge: handshaking
+[lrc-avg] bridge: connected
+[lrc-avg] no tool call for 60 s; gave the Lightroom bridge back
+[lrc-avg] HUD channel: client dropped, the listener closed
+[lrc-avg] bridge: stopped
+[lrc-avg] took the Lightroom bridge lock
+[lrc-avg] bridge: connecting
+[lrc-avg] HUD channel listening on 127.0.0.1:56081
+[lrc-avg] bridge: handshaking
+[lrc-avg] bridge: connected
+[lrc-avg] no tool call for 60 s; gave the Lightroom bridge back
+[lrc-avg] HUD channel: client dropped, the listener closed
+[lrc-avg] bridge: stopped
+[lrc-avg] took the Lightroom bridge lock
+[lrc-avg] bridge: connecting
+[lrc-avg] HUD channel listening on 127.0.0.1:64141
+[lrc-avg] bridge: handshaking
+[lrc-avg] bridge: connected
+[lrc-avg] no tool call for 60 s; gave the Lightroom bridge back
+[lrc-avg] HUD channel: client dropped, the listener closed
+[lrc-avg] bridge: stopped
+[lrc-avg] took the Lightroom bridge lock
+[lrc-avg] bridge: connecting
+[lrc-avg] HUD channel listening on 127.0.0.1:63279
+[lrc-avg] bridge: handshaking
+[lrc-avg] bridge: connected
+[lrc-avg] bridge: dropped (event socket closed)
+[lrc-avg] bridge: connecting
+[lrc-avg] no tool call for 60 s; gave the Lightroom bridge back
+[lrc-avg] bridge: stopped
+[lrc-avg] took the Lightroom bridge lock
+[lrc-avg] bridge: connecting
+[lrc-avg] HUD channel listening on 127.0.0.1:58734
+[lrc-avg] bridge: handshaking
+[lrc-avg] bridge: connected

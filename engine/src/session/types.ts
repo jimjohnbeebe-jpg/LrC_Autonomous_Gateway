@@ -134,8 +134,14 @@ export type UserEnd = {
   interrupted: string | null;
 };
 
-/** A HUD action Claude has not been told of yet; the next session tool result lists it (`hud_actions`). */
-export type HudNotice = { action: "pick"; variant: VariantId; source: UserSource; at: string };
+/**
+ * A HUD action Claude has not been told of yet; the next session tool result lists it (`hud_actions`).
+ * `deck_fallback`: the Deck was started for this edit but did not connect, or was lost, so the classic
+ * HUD opened (hud\sinks.ts, fix/deck-relaunch).
+ */
+export type HudNotice =
+  | { action: "pick"; variant: VariantId; source: UserSource; at: string }
+  | { action: "deck_fallback"; note: string; at: string };
 
 /** What every session operation works with: the dependencies, with the clock and id source resolved. */
 export type SessionContext = { deps: SessionDeps; now: () => Date; newId: () => string };

@@ -23,6 +23,9 @@ describe("the classic HUD as the fallback", () => {
     expect(lr.hud.taken[0]).toMatchObject({ stage: "begin", open: true, seq: 1 });
     expect(lr.hud.opened).toBe(1);
     expect(rig.started).toEqual([]);
+    // Not installed is no fallback: nothing for the chat.
+    const next = await rig.manager.step({ session_id: ID, settings: { exposure: 0.1 }, rationale: "test", return_image: "none" });
+    expect(next.json["hud_actions"]).toBeUndefined();
   });
 
   it("stays closed when the Deck started at begin connects in time", async () => {
@@ -47,6 +50,9 @@ describe("the classic HUD as the fallback", () => {
     expect(lr.hud.taken[0]?.open).toBeUndefined();
     await waitUntil(() => lr.hud.opened === 1, 2000);
     expect(lr.hud.taken.filter((u) => u.open).length).toBe(1);
+    // fix/deck-relaunch: the chat is told in the next session result.
+    const next = await rig.manager.step({ session_id: ID, settings: { exposure: 0.1 }, rationale: "test", return_image: "none" });
+    expect(next.json["hud_actions"]).toEqual([{ action: "deck_fallback", note: expect.stringMatching(/did not connect.*classic HUD/), at: expect.any(String) }]);
   });
 
   it("with a Deck connected, gets what it got before Phase 7, without `open`", async () => {

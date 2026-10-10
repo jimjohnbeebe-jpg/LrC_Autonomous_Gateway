@@ -10,6 +10,7 @@ mod log;
 mod monitors;
 mod place;
 mod store;
+mod wake;
 mod webview;
 mod window;
 
@@ -56,8 +57,9 @@ fn deck_log(line: Value) {
     log::write(json!({ "ev": "ui", "line": line }));
 }
 
-/// One Deck per user session (spec 3.2 "A second HUD launch": exits at once). A named mutex from the
-/// `windows` crate already in use, in place of the tauri-plugin-single-instance crate.
+/// One Deck per user session (spec 3.2 "A second HUD launch": exits at once, after waking the running
+/// Deck, wake.rs). A named mutex from the `windows` crate already in use, in place of the
+/// tauri-plugin-single-instance crate.
 fn first_instance() -> bool {
     unsafe {
         let made = CreateMutexW(None, false, w!(r"Local\LrC-AVG-HUD"));
@@ -68,15 +70,20 @@ fn first_instance() -> bool {
 
 fn main() {
     if !first_instance() {
-        log::write(json!({ "ev": "second_instance_exit" }));
+        log::write(json!({ "ev": "second_instance_exit", "woke": wake::signal() }));
         return;
     }
+    let wake_event = wake::create();
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![endpoint, deck_show, deck_hide, deck_set_open, deck_focus_lightroom, deck_log])
-        .setup(|app| {
+        .setup(move |app| {
             let window = app.get_webview_window("main").expect("window main");
             log::write(json!({ "ev": "start", "pid": std::process::id(), "version": env!("CARGO_PKG_VERSION") }));
             webview::init(window.clone());
+            match wake_event {
+                Some(event) => wake::listen(event, window.clone()),
+                None => log::write(json!({ "ev": "wake_event_missing" })),
+            }
             window::init(window, app.handle().clone())?;
             Ok(())
         })

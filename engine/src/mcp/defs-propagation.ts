@@ -68,8 +68,11 @@ export const PROPAGATION_DEFS: ToolDef[] = [
       `At most ${MAX_TARGETS} targets per call, ${MAX_ADAPTIVE_TARGETS} with adaptive_exposure: sync more in several calls. ` +
       "Tell the user which photos will change before calling. A target that fails is listed in `skipped` with the reason, and the " +
       "others still sync; if Lightroom stops answering, the call stops and the error names the photo it stopped at and any step " +
-      "that may still have been written (`maybe_written`). Returns applied, skipped, per_target_exposure_offsets (target exposure minus the source's), each target's " +
-      "History steps and snapshot, and a contact sheet. Not while a session is open.",
+      "that may still have been written (`maybe_written`). Across pipelines (a raw recipe onto a JPEG, or the reverse) the shared " +
+      "groups are written and the target's `not_transferable` lists white_balance (Kelvin on raw, relative -100..100 on rendered: the " +
+      "numbers mean different things) and camera_profile (each pipeline has its own profiles) with the reason; a target that could take " +
+      "nothing is skipped (NOTHING_TRANSFERABLE). Returns applied, skipped, per_target_exposure_offsets (target exposure minus the source's), each target's " +
+      "pipeline, History steps, snapshot and not_transferable, and a contact sheet. Not while a session is open.",
     schema: syncArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     run: (tools, args) => tools.syncSeries(args as z.infer<typeof syncArgs>),

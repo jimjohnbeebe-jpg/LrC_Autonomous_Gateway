@@ -4,24 +4,34 @@
 // under %APPDATA%\Adobe\CameraRaw\Settings\ (where S7 found user presets' files [handle:
 // docs\reports\phase4\S7.md "Consequences", row 9]) and saves both as test fixtures, with the user
 // folder written as %USERPROFILE%. `--precheck` only checks the selected photo, read-only.
-// Two references [stated: Jim, 2026-09-28, "One more reference"]: the first, from a photo with an
+// Two raw references [stated: Jim, 2026-09-28, "One more reference"]: the first, from a photo with an
 // Adobe profile, wrote no camera profile, so the second is made from a photo with a Nikon Camera
-// Matching profile (`--second`). The engine's writer is tested against these files
-// (tests\presets-reference.test.ts).
+// Matching profile (`--second`). Two rendered references (Phase 8 row 5, PHASE8_PLAN "Propagation"
+// [stated: Jim, 2026-10-09, "Go" to the row 5 plan, decision P1 B]): from a JPEG with Custom white
+// balance and the profile Color (`--rendered`), and Monochrome (`--rendered-mono`), so the files show
+// how Lightroom writes IncrementalTemperature/IncrementalTint and ConvertToGrayscale, true and false,
+// into a preset (presets\select.ts leaves both out until then). The engine's writer is tested against
+// these files (tests\presets-reference.test.ts).
 
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { PROCESS_VERSION_KEY, WHITE_BALANCE_KEY, sdkKeysOf, type ParamMap, type SdkSettings } from "../params/index.js";
+import { CUSTOM_WHITE_BALANCE, PROCESS_VERSION_KEY, WHITE_BALANCE_KEY, sdkKeysOf, type ParamMap, type Pipeline, type SdkSettings } from "../params/index.js";
 import { findPresetFiles } from "../presets/folder.js";
 import { child, parseXml, presetDescription, seqItems, type XmlNode } from "../presets/xmp-parse.js";
 import { groupOf, MASK_GROUPS } from "../sync/mask.js";
 
 export const REFERENCE_GROUP = "LrC-AVG";
-/** A reference preset: its name in Lightroom, its fixture files' prefix, and whether its photo must have an Adobe profile's Look. */
-export type ReferenceSpec = { name: string; prefix: string; needLook: boolean };
-export const REFERENCES: Readonly<Record<"first" | "second", ReferenceSpec>> = {
-  first: { name: "AVG preset reference", prefix: "reference", needLook: true },
-  second: { name: "AVG preset reference 2", prefix: "reference-2", needLook: false },
+/**
+ * A reference preset: its name in Lightroom, its fixture files' prefix, its photo's pipeline, whether
+ * the photo must have an Adobe profile's Look (raw), and for a rendered one the profile it must have
+ * and a Custom white balance with Temp and Tint above 0 (so the sign form is observed).
+ */
+export type ReferenceSpec = { name: string; prefix: string; pipeline: Pipeline; needLook: boolean; profile?: string; customWhiteBalance?: boolean };
+export const REFERENCES: Readonly<Record<"first" | "second" | "rendered" | "renderedMono", ReferenceSpec>> = {
+  first: { name: "AVG preset reference", prefix: "reference", pipeline: "raw", needLook: true },
+  second: { name: "AVG preset reference 2", prefix: "reference-2", pipeline: "raw", needLook: false },
+  rendered: { name: "AVG preset reference rendered", prefix: "reference-rendered", pipeline: "rendered", needLook: false, profile: "Color", customWhiteBalance: true },
+  renderedMono: { name: "AVG preset reference rendered mono", prefix: "reference-rendered-mono", pipeline: "rendered", needLook: false, profile: "Monochrome", customWhiteBalance: true },
 };
 export const fixtureXmp = (spec: ReferenceSpec): string => `${spec.prefix}.lrc15.xmp`;
 export const fixtureSettings = (spec: ReferenceSpec): string => `${spec.prefix}-settings.lrc15.json`;
@@ -38,28 +48,43 @@ export type CaptureIo = {
 /** worked: the fixtures were saved. problems: why not. findings: what the saved reference lacks or differs in. */
 export type Capture = { worked: boolean; problems: string[]; findings: string[]; report: Record<string, unknown> };
 
-/** The SDK keys a preset of every group should carry, by group ("general": the process version). */
-export function expectedKeys(map: ParamMap): Record<string, string[]> {
+/** The SDK keys a preset of every group should carry on a pipeline, by group ("general": the process version). */
+export function expectedKeys(map: ParamMap, pipeline: Pipeline = "raw"): Record<string, string[]> {
   const byGroup: Record<string, string[]> = { general: [PROCESS_VERSION_KEY] };
   for (const group of MASK_GROUPS) byGroup[group] = [];
   for (const name of map.names()) {
     const group = groupOf(name);
-    if (group !== null) byGroup[group]?.push(...sdkKeysOf(map, name));
+    if (group !== null) byGroup[group]?.push(...sdkKeysOf(map, name, pipeline));
   }
   byGroup["white_balance"]?.push(WHITE_BALANCE_KEY);
   return byGroup;
 }
 
-/** Is the photo a good reference: a supported process version, a pinned profile (with a Look if asked), edits to read? */
-export function checkPhoto(map: ParamMap, sdk: SdkSettings, needLook: boolean): { problems: string[]; facts: Record<string, unknown> } {
+/**
+ * Is the photo a good reference: a supported process version, the spec's pipeline, a pinned profile
+ * (with a Look if asked; the named one for a rendered spec), and for a rendered spec a Custom white
+ * balance with Temp and Tint above 0?
+ */
+export function checkPhoto(map: ParamMap, sdk: SdkSettings, spec: Pick<ReferenceSpec, "pipeline" | "needLook" | "profile" | "customWhiteBalance">): { problems: string[]; facts: Record<string, unknown> } {
   const problems: string[] = [];
   let facts: Record<string, unknown> = {};
   try {
     const read = map.fromSdk(sdk);
     const edited = Object.entries(read.settings).filter(([, v]) => typeof v === "number" && v !== 0).length;
-    facts = { process_version: read.process_version, camera_profile: read.camera_profile, nonzero_numbers: edited };
-    if (needLook && read.camera_profile.look_name === null) problems.push("the photo's profile has no Look: pick a photo with an Adobe profile (e.g. Adobe Color)");
+    facts = { process_version: read.process_version, pipeline: read.pipeline, camera_profile: read.camera_profile, white_balance: sdk[WHITE_BALANCE_KEY] ?? null, nonzero_numbers: edited };
+    if (read.pipeline !== spec.pipeline) {
+      problems.push(`the photo is on the ${read.pipeline} pipeline; this reference needs a ${spec.pipeline} one${spec.pipeline === "rendered" ? " (a JPEG)" : ""}`);
+      return { problems, facts }; // the other checks would only say the same in other words
+    }
+    if (spec.needLook && read.camera_profile.look_name === null) problems.push("the photo's profile has no Look: pick a photo with an Adobe profile (e.g. Adobe Color)");
     else if (read.camera_profile.name === null) problems.push(`the photo's profile "${read.camera_profile.camera_profile ?? "?"}" is not one of the pinned profiles`);
+    else if (spec.profile !== undefined && read.camera_profile.name !== spec.profile) problems.push(`the photo's profile is ${read.camera_profile.name}; this reference needs ${spec.profile} (Basic panel > Profile)`);
+    if (spec.customWhiteBalance) {
+      const [temperature, tint] = [read.settings["temperature"], read.settings["tint"]];
+      if (sdk[WHITE_BALANCE_KEY] !== CUSTOM_WHITE_BALANCE || typeof temperature !== "number" || temperature <= 0 || typeof tint !== "number" || tint <= 0) {
+        problems.push(`the white balance must be Custom with Temp and Tint above 0 (now ${String(sdk[WHITE_BALANCE_KEY])}, ${String(temperature)}, ${String(tint)}): move both sliders to the right`);
+      }
+    }
   } catch (err) {
     problems.push(`its settings cannot be read: ${(err as Error).message}`);
   }
@@ -79,11 +104,11 @@ function sameValue(text: string | string[], value: unknown): boolean {
 }
 
 /** Which expected keys the reference lacks (by group), and which differ from the photo's settings. */
-export function checkReference(map: ParamMap, xmp: string, sdk: SdkSettings): { missing: Record<string, string[]>; differ: string[] } {
+export function checkReference(map: ParamMap, xmp: string, sdk: SdkSettings, pipeline: Pipeline = "raw"): { missing: Record<string, string[]>; differ: string[] } {
   const description = presetDescription(parseXml(xmp));
   const missing: Record<string, string[]> = {};
   const differ: string[] = [];
-  for (const [group, keys] of Object.entries(expectedKeys(map))) {
+  for (const [group, keys] of Object.entries(expectedKeys(map, pipeline))) {
     for (const key of keys) {
       const present = description.attrs.has(`crs:${key}`) || child(description, `crs:${key}`) !== undefined;
       if (!present) (missing[group] ??= []).push(key);
@@ -106,7 +131,7 @@ export async function capturePreset(io: CaptureIo, map: ParamMap, options: { pre
   const { spec } = options;
   const photo = await io.photo();
   const sdk = await io.settings(photo.uuid);
-  const { problems, facts } = checkPhoto(map, sdk, spec.needLook);
+  const { problems, facts } = checkPhoto(map, sdk, spec);
   const report: Record<string, unknown> = { reference_name: spec.name, photo: { filename: photo.filename, ...facts }, lrc_version: photo.lrc_version };
   if (options.precheck) return { worked: problems.length === 0, problems, findings: [], report };
 
@@ -118,7 +143,7 @@ export async function capturePreset(io: CaptureIo, map: ParamMap, options: { pre
   if (problems.length > 0 || !only) return { worked: false, problems, findings: [], report };
 
   const xmp = readFileSync(path.join(io.settingsDir, only.file), "utf8");
-  const check = checkReference(map, xmp, sdk);
+  const check = checkReference(map, xmp, sdk, spec.pipeline);
   Object.assign(report, { missing: check.missing, differ: check.differ });
   // A value that differs means the preset was made from another photo, or the photo changed since:
   // saving would pair the file with the wrong settings (Greptile, PR #36).
@@ -134,7 +159,7 @@ export async function capturePreset(io: CaptureIo, map: ParamMap, options: { pre
     generated_by: "engine/src/devtools/preset-capture.ts (npm run preset:capture)",
     captured_at: io.now().toISOString(),
     lrc_version: photo.lrc_version,
-    photo: { filename: photo.filename },
+    photo: { filename: photo.filename, pipeline: spec.pipeline },
     reference: { file: only.file, name: spec.name, group: only.group, bytes: Buffer.byteLength(xmp) },
     settings: sdk,
   };

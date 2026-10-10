@@ -1,4 +1,4 @@
-// `npm run preset:capture [-- --precheck] [-- --second]` (preset-capture.ts): run from the repo root with
+// `npm run preset:capture [-- --precheck] [-- --second | --rendered | --rendered-mono]` (preset-capture.ts): run from the repo root with
 // Lightroom open, the LrC-AVG plugin enabled and Claude Desktop not using LrC-AVG (this takes the
 // engine's instance lock). It writes nothing to Lightroom. The fixtures go to
 // engine\tests\fixtures\presets\ with the user folder written as %USERPROFILE%; the run's report to
@@ -54,7 +54,8 @@ async function capture(precheck: boolean, spec: ReferenceSpec): Promise<Capture>
 
 async function main(): Promise<number> {
   const precheck = process.argv.includes("--precheck");
-  const spec = process.argv.includes("--second") ? REFERENCES.second : REFERENCES.first;
+  const flags = process.argv.slice(2);
+  const spec = flags.includes("--rendered-mono") ? REFERENCES.renderedMono : flags.includes("--rendered") ? REFERENCES.rendered : flags.includes("--second") ? REFERENCES.second : REFERENCES.first;
   const result = await capture(precheck, spec);
   const what = `${precheck ? "Photo check" : "Preset capture"} ("${spec.name}")`;
   console.log(`${what}: ${result.worked ? "WORKED" : "FAILED"}`);

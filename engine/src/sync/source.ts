@@ -13,13 +13,15 @@ import { readdirSync, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { recipeSchema, type Recipe } from "../log/index.js";
 import { ToolError } from "../mcp/errors.js";
-import { ParamError, SUPPORTED_PROCESS_VERSIONS, type CanonicalSettings, type ParamMap } from "../params/index.js";
+import { ParamError, SUPPORTED_PROCESS_VERSIONS, type CanonicalSettings, type ParamMap, type Pipeline } from "../params/index.js";
 
 export type SyncSource = { session_id: string } | { recipe_path: string } | { settings: Record<string, unknown> };
 
 export type ResolvedSource = {
   kind: "session" | "recipe" | "settings";
   settings: CanonicalSettings;
+  /** The source photo's pipeline (a recipe from engine 0.21.0 on); null when unknown: bare settings, an older recipe (transfer.ts). */
+  pipeline: Pipeline | null;
   /** The photo a recipe was taken from; null for bare settings. */
   photo: { uuid: string; filename: string | null } | null;
   session_id: string | null;
@@ -116,12 +118,13 @@ function readRecipe(logDirs: readonly string[], recipePath: string): { file: str
 /** `logDirs`: the current log folder first, then earlier ones (at least one). */
 export function resolveSource(logDirs: readonly string[], map: ParamMap, source: SyncSource): ResolvedSource {
   if ("settings" in source) {
-    return { kind: "settings", settings: validated(map, source.settings), photo: null, session_id: null, recipe_path: null, masks: 0 };
+    return { kind: "settings", settings: validated(map, source.settings), pipeline: null, photo: null, session_id: null, recipe_path: null, masks: 0 };
   }
   const { file, recipe } = "session_id" in source ? findRecipe(logDirs, source.session_id) : readRecipe(logDirs, source.recipe_path);
   return {
     kind: "session_id" in source ? "session" : "recipe",
     settings: validated(map, recipe.settings),
+    pipeline: recipe.pipeline ?? null,
     photo: recipe.source,
     session_id: recipe.session_id,
     recipe_path: file,

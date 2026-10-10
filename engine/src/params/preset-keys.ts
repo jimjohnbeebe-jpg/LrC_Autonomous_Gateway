@@ -12,6 +12,13 @@ import type { Pipeline } from "./pipeline.js";
 export const CAMERA_PROFILE_KEY = "CameraProfile";
 /** The pair a camera profile is set with through the SDK (camera-profiles.ts toSdk). */
 export const PROFILE_KEYS: readonly string[] = [CAMERA_PROFILE_KEY, "Look"];
+/**
+ * With CameraProfile "Embedded", the key that tells the rendered pipeline's Monochrome from Color
+ * [handle: camera-profiles.lrc15.json "Color", "Monochrome" write_verified; sdk-keys.lrc15.rendered.json].
+ */
+export const CONVERT_TO_GRAYSCALE_KEY = "ConvertToGrayscale";
+/** The keys a rendered-pipeline profile is set with (camera-profiles.ts toSdk). */
+export const RENDERED_PROFILE_KEYS: readonly string[] = [CAMERA_PROFILE_KEY, CONVERT_TO_GRAYSCALE_KEY];
 /** Every preset carries the photo's process version, as both of Lightroom's do. */
 export const PROCESS_VERSION_KEY = "ProcessVersion";
 /** Lightroom writes the white balance mode ("As Shot", …) with the White Balance setting. */
@@ -33,7 +40,7 @@ export const TONE_CURVE_NAME_KEY = "ToneCurveName2012";
 
 /** The SDK keys that carry a canonical name's value on a pipeline; empty for an unknown name. */
 export function sdkKeysOf(map: ParamMap, name: string, pipeline: Pipeline = "raw"): string[] {
-  if (name === CAMERA_PROFILE_PARAM) return [...PROFILE_KEYS];
+  if (name === CAMERA_PROFILE_PARAM) return [...(pipeline === "rendered" ? RENDERED_PROFILE_KEYS : PROFILE_KEYS)];
   const spec = map.spec(name, pipeline);
   return spec ? [spec.sdkKey] : [];
 }

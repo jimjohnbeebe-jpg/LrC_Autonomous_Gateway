@@ -1,11 +1,12 @@
 // The sync module's types and limits (sync.ts has the overview).
 
 import type { BridgeClient } from "../bridge/index.js";
-import type { CanonicalSettings, ParamMap } from "../params/index.js";
+import type { CanonicalSettings, ParamMap, Pipeline } from "../params/index.js";
 import type { PreviewRequest, RenderedPreview } from "../preview/index.js";
 import type { MaskGroup } from "./mask.js";
 import type { SyncSource } from "./source.js";
 import type { SyncTargets } from "./targets.js";
+import type { NotTransferable } from "./transfer.js";
 
 /** get_selection and `photo_uuid` come with plugin 0.4.0 [handle: engine\src\bridge\protocol.ts COMMANDS, Target]. */
 export const SYNC_PLUGIN = "0.4.0";
@@ -51,8 +52,10 @@ export type SyncRun = {
   deps: SyncDeps;
   /** The first 4 hex digits of the sync's id, in its History and snapshot names. */
   short: string;
-  /** The settings written to every target (the mask applied; without exposure when adaptive). */
+  /** The settings to write to every target (the mask applied; without exposure when adaptive); each target takes what its pipeline can (transfer.ts). */
   copied: CanonicalSettings;
+  /** The source photo's pipeline, or null when unknown (source.ts). */
+  sourcePipeline: Pipeline | null;
   /** Adaptive exposure: the source render's mean luma and the source's exposure; null without. */
   goal: { luma: number; exposure: number | null } | null;
   longEdge: number;
@@ -64,10 +67,14 @@ export type TargetResult = {
   uuid: string;
   filename: string | null;
   copy_name: string | null;
+  /** The target's pipeline, from its own settings. */
+  pipeline: Pipeline;
   snapshot: { name: string; id: string };
   history_names: string[];
   /** Canonical names whose value the sync changed. */
   changed: string[];
+  /** The groups this target could not take from the source, with the reason (transfer.ts). */
+  not_transferable: NotTransferable[];
   exposure: { start: number; final: number; offset: number | null } | null;
   luma: { goal: number; start: number; final: number; renders: number; met: boolean; tries: Array<{ exposure: number; luma: number }> } | null;
   render: RenderedPreview | null;

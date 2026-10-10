@@ -12,6 +12,7 @@ import { differingSettings, type CanonicalValue, type FromSdkResult } from "../p
 import type { RenderedPreview } from "../preview/index.js";
 import { roundForSlider } from "../session/rules.js";
 import { solveExposure } from "./exposure.js";
+import { splitTransferable } from "./transfer.js";
 import type { SyncRun, TargetResult } from "./types.js";
 
 /**
@@ -133,12 +134,22 @@ function failedAfterSnapshot(err: unknown, photo: Photo, snapshotName: string, s
   });
 }
 
-/** Sync one target. A failure after its snapshot was asked for is described by failedAfterSnapshot(). */
+/**
+ * Sync one target. Before its snapshot: what the target's pipeline cannot take is set aside
+ * (transfer.ts), a value it refuses skips the target, and a target with nothing left to write and no
+ * exposure to adapt is skipped as NOTHING_TRANSFERABLE. A failure after its snapshot was asked for
+ * is described by failedAfterSnapshot().
+ */
 export async function syncTarget(run: SyncRun, uuid: string): Promise<TargetResult> {
   const { client, map } = run.deps;
   const photo = await identify(run, uuid);
   const before = map.fromSdk((await client.request("get_settings", { photo_uuid: uuid })).settings);
-  map.toSdk(run.copied, { processVersion: before.process_version, pipeline: before.pipeline }); // a value this photo's pipeline refuses: skipped before its snapshot
+  const { writable, not_transferable } = splitTransferable(map, run.copied, run.sourcePipeline, before);
+  map.toSdk(writable, { processVersion: before.process_version, pipeline: before.pipeline }); // a value this photo's pipeline refuses: skipped before its snapshot
+  if (Object.keys(writable).length === 0 && !run.goal) {
+    const groups = not_transferable.map((n) => `${n.group} (${n.names.join(", ")})`).join("; ");
+    throw new ToolError("NOTHING_TRANSFERABLE", `Nothing of the source goes onto ${photo.filename ?? uuid}: ${groups}. Nothing was written to this photo.`, false, { filename: photo.filename, not_transferable });
+  }
   const snapshotName = `AVG pre-sync ${run.short}`;
   let snapshot: { name: string; id: string } | null = null;
   const names: string[] = [];
@@ -146,11 +157,11 @@ export async function syncTarget(run: SyncRun, uuid: string): Promise<TargetResu
     const snap = await client.request("create_snapshot", { photo_uuid: uuid, name: snapshotName }, { timeoutMs: run.deps.writeTimeoutMs ?? WRITE_TIMEOUT_MS });
     snapshot = { name: snapshotName, id: snap.snapshot_id };
     let now = before;
-    if (Object.keys(run.copied).length > 0) now = await write(run, uuid, run.copied, `AVG sync ${run.short}`, before, names);
+    if (Object.keys(writable).length > 0) now = await write(run, uuid, writable, `AVG sync ${run.short}`, before, names);
     const adapted = run.goal ? await adapt(run, uuid, now, names) : null;
     if (adapted) now = adapted.view;
     const changed = differingSettings(before.settings, now.settings);
-    return { ...photo, snapshot, history_names: names, changed, exposure: adapted?.exposure ?? null, luma: adapted?.luma ?? null, render: adapted?.render ?? null };
+    return { ...photo, pipeline: before.pipeline, snapshot, history_names: names, changed, not_transferable, exposure: adapted?.exposure ?? null, luma: adapted?.luma ?? null, render: adapted?.render ?? null };
   } catch (err) {
     throw failedAfterSnapshot(err, photo, snapshotName, snapshot, names);
   }

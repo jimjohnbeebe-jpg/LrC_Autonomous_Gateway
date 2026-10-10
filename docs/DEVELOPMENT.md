@@ -67,7 +67,7 @@ writes the two release assets to `release\`: `lrc-avg-<version>.tgz` (the engine
 | Command | What it does |
 |---|---|
 | `npm run schemas` | Regenerates `engine\schemas\*.schema.json` from the zod schemas (a test fails when they are stale) |
-| `npm run preset:capture` | Copies Lightroom's own reference preset and its photo's settings into `engine\tests\fixtures\presets\` (`--precheck`, `--second`) |
+| `npm run preset:capture` | Copies Lightroom's own reference preset and its photo's settings into `engine\tests\fixtures\presets\` (`--precheck`; `--second` for the second raw reference; `--rendered` and `--rendered-mono` for the two JPEG references, `docs\reports\phase8\presets-rendered.md`) |
 | `npm run preset:pin` | Regenerates `engine\src\params\preset-format.lrc15.json` from those references (a test fails when it is stale) |
 | `npm run goldens` | After a Phase 3 check: golden JPEGs to `tests\golden\` (gitignored) and `golden.json` (committed) |
 | `npm run phase1:check` … `npm run phase5:check`, `npm run wb:check`, `npm run offline:check` | The acceptance checks against Lightroom (and Claude Desktop from Phase 2 on). Each one's steps and results are in its report under `docs\reports\` |

@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 import { PIPELINES } from "../src/params/index.js";
-import { SHORT, clean, fails, lr, manager, plugin, readLog, useSessionHarness } from "./helpers/session-harness.js";
+import { SHORT, clean, fails, intent, lr, manager, plugin, readLog, useSessionHarness } from "./helpers/session-harness.js";
 
 describe.each(PIPELINES)("%s pipeline", (pipeline) => {
   useSessionHarness(pipeline);
@@ -27,6 +27,26 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
   }
 
   describe("Variants mode: begin", () => {
+    it("writes the pipeline's monochrome profile and a variant's priors_by_pipeline white balance to each copy (Phase 8 row 5)", async () => {
+      clean();
+      intent("test_variants_mono", {
+        profile: { raw: "Adobe Monochrome", rendered: "Monochrome" },
+        priors: { contrast: 10 },
+        // Priors are offsets from the photo's values, a variant's added to the intent's (pass0.ts combinedPriors).
+        variants: { A: { label: "cool", priors: {} }, B: { label: "warm", priors: {}, priors_by_pipeline: { raw: { temperature: 500 }, rendered: { temperature: 15 } } }, C: { label: "flat", priors: { contrast: -25 } } },
+      });
+      const out = await manager.begin({ intent_id: "test_variants_mono", mode: "variants", return_image: "none" });
+      expect(out.json).toMatchObject({ ok: true, mode: "variants", pass: "0/4" });
+      const grayscale = pipeline === "rendered" ? (s: Record<string, unknown>) => s["ConvertToGrayscale"] === true : (s: Record<string, unknown>) => (s["Look"] as { Name?: string } | undefined)?.Name === "Adobe Monochrome";
+      expect([1, 2, 3].map((n) => grayscale(copy(n).settings))).toEqual([true, true, true]);
+      expect(grayscale(lr.settings)).toBe(false); // the master is not edited
+      const temperatureKey = pipeline === "rendered" ? "IncrementalTemperature" : "Temperature";
+      const master = lr.settings[temperatureKey] as number;
+      expect([copy(2).settings[temperatureKey], copy(2).settings["WhiteBalance"]]).toEqual([pipeline === "rendered" ? master + 15 : master + 500, "Custom"]);
+      expect(copy(1).settings[temperatureKey]).toBe(master); // A keeps the master's white balance
+      expect([copy(1).settings["Contrast2012"], copy(3).settings["Contrast2012"]]).toEqual([10, -15]);
+    });
+
     it("makes the copies, runs pass 0 on each with the intent's priors plus its variant's, and leaves the master alone", async () => {
       clean();
       const out = await begin();

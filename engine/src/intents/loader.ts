@@ -29,17 +29,18 @@
 // Claude-proposed intents are written only through save(), which the lr_save_intent tool calls
 // after Jim approves in chat (the tool also requires `confirmed: true`).
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { CAMERA_PROFILE_PARAM, CUSTOM_WHITE_BALANCE_PARAMS, PIPELINES, ParamError, SUPPORTED_PROCESS_VERSIONS, UnknownCameraProfileError, WHITE_BALANCE_UNITS, type ParamMap, type Pipeline } from "../params/index.js";
-import { INTENT_SCHEMA_VERSION, intentSchema, type Intent, type PriorSet } from "./schema.js";
+import { INTENT_ID_PATTERN, INTENT_SCHEMA_VERSION, intentSchema, type Intent, type PriorSet } from "./schema.js";
 
 export type IntentSource = "bundled" | "user";
-export type LoadedIntent = { intent: Intent; source: IntentSource; path: string; overrides_bundled: boolean };
+/** "none": a session begun without an intent (session\begin.ts NO_INTENT). */
+export type LoadedIntent = { intent: Intent; source: IntentSource | "none"; path: string; overrides_bundled: boolean };
 export type IntentWarning = { source: IntentSource; file: string; problem: string };
-export type IntentSummary = { id: string; label: string; category: string; source: IntentSource };
+export type IntentSummary = { id: string; label: string; category: string; source: LoadedIntent["source"] };
 
 export type IntentErrorCode = "intent_not_found" | "invalid_intent" | "intent_exists";
 
@@ -159,6 +160,21 @@ export class IntentLibrary {
     writeFileSync(temporary, `${JSON.stringify(intent, null, 2)}\n`, "utf8");
     renameSync(temporary, target);
     return { path: target, replaced, overrides_bundled: overridesBundled };
+  }
+
+  /**
+   * Delete the user file <id>.json, valid or skipped (issue #108). Bundled intents are never deleted;
+   * a bundled intent the file overrode is used again.
+   */
+  delete(id: string): { path: string; restores_bundled: boolean } {
+    if (!INTENT_ID_PATTERN.test(id)) throw new IntentError("intent_not_found", `"${id}" is not an intent id (lower case letters, digits and _).`);
+    const target = path.join(this.userDir, `${id}.json`);
+    if (!existsSync(target)) {
+      const bundled = existsSync(path.join(this.bundledDir, `${id}.json`));
+      throw new IntentError("intent_not_found", bundled ? `"${id}" is a bundled intent; only the user's own intents can be deleted.` : `There is no user intent "${id}" in ${this.userDir}.`);
+    }
+    rmSync(target);
+    return { path: target, restores_bundled: this.load().intents.get(id)?.source === "bundled" };
   }
 
   /** Parse and validate the text of an intent file. */

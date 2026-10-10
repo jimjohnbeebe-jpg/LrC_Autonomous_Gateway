@@ -11,6 +11,7 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { lightroomNotices, type CommandResult } from "../bridge/index.js";
+import type { LoadedIntent } from "../intents/index.js";
 import { SESSION_LOG_SCHEMA_ID, SessionLogFiles, type SessionLogData } from "../log/index.js";
 import { ToolError, originalMissing } from "../mcp/errors.js";
 import { summarize } from "../metrics/index.js";
@@ -21,6 +22,18 @@ import { checkVariants } from "./copies.js";
 import { brief, describe, failed, image, ms, recordPass, saveLog, text } from "./io.js";
 import { pass0, pass0Entry, type Pass0 } from "./pass0.js";
 import { WRITE_TIMEOUT_MS, folderOf, newTarget, type BeginArgs, type Session, type SessionContext, type SessionOutput } from "./types.js";
+
+/**
+ * A session begun without an intent: pass 0 writes no profile and no priors, and Claude edits from the
+ * user's request (issue #108 [stated: Jim, 2026-10-10, "The user prompt MUST take precedence every
+ * time"; plan A+B, "Go with your recommendations"]).
+ */
+const NO_INTENT: LoadedIntent = {
+  intent: { schema_version: 2, id: "none", label: "No intent", category: "none", brief: "No intent: edit as the user's request asks.", priors: {} },
+  source: "none",
+  path: "",
+  overrides_bundled: false,
+};
 
 /** A session just opened: its pre-session settings and the photo's context, for pass 0. */
 export type Opened = { s: Session; view: FromSdkResult; photo: CommandResult<"get_context">; started: number };
@@ -34,7 +47,10 @@ export async function openSession(ctx: SessionContext, args: BeginArgs): Promise
   }
   // The page first: its intents folder is where the intent is looked up (settings\folders.ts).
   const page = await (ctx.deps.readPage ?? (() => readPage(ctx.deps.client)))();
-  const loaded = ctx.deps.intents.get(args.intent_id); // IntentError -> INTENT_NOT_FOUND
+  if (mode === "variants" && args.intent_id === undefined) {
+    throw new ToolError("INVALID_ARGUMENTS", 'mode "variants" takes its looks from an intent with variants: name one with intent_id (lr_list_intents).', false);
+  }
+  const loaded = args.intent_id === undefined ? NO_INTENT : ctx.deps.intents.get(args.intent_id); // IntentError -> INTENT_NOT_FOUND
   const settings = resolveSessionSettings(args, loaded.intent.guardrail_overrides ?? {}, page.values);
   const { client, map } = ctx.deps;
 
@@ -44,6 +60,8 @@ export async function openSession(ctx: SessionContext, args: BeginArgs): Promise
   if (missing) throw missing;
   const variantCount = mode === "variants" ? checkVariants(ctx, loaded, photo, settings.variantCount) : null;
   const view = map.fromSdk((await client.request("get_settings", { target_uuid: photo.uuid })).settings); // LEGACY_PROCESS_VERSION
+  // Before the snapshot: an unknown profile or one of the other pipeline is refused with nothing written.
+  if (args.profile !== undefined) map.toSdk({ camera_profile: args.profile }, { processVersion: view.process_version, pipeline: view.pipeline });
 
   const now = ctx.now();
   const { id, short, files } = pickLogFiles(ctx, now);
@@ -66,6 +84,7 @@ export async function openSession(ctx: SessionContext, args: BeginArgs): Promise
     short,
     startedAt: now,
     intent: loaded,
+    profile: args.profile ?? null,
     mode,
     maxPasses: settings.maxPasses,
     limits: { clipHighPct: settings.clipHighPct, clipLowPct: settings.clipLowPct },

@@ -81,6 +81,7 @@ describe("mcp server", () => {
       "lr_create_collection",
       "lr_create_mask",
       "lr_create_preset_from_active",
+      "lr_delete_intent",
       "lr_delete_mask",
       "lr_edit_mask",
       "lr_end_session",
@@ -118,6 +119,13 @@ describe("mcp server", () => {
     expect(approve?.inputSchema.required).toEqual(["session_id", "confirmed"]);
     expect(approve?.description).toMatch(/ONLY after the user approved/);
     expect(save?.description).toMatch(/ONLY call this after the user has explicitly approved/);
+    // Issue #108: an intent is optional and the user's request comes first; user intents can be deleted.
+    const begin = tools.find((t) => t.name === "lr_begin_session");
+    expect(begin?.inputSchema.required ?? []).not.toContain("intent_id");
+    expect(begin?.description).toMatch(/THE USER'S REQUEST COMES FIRST/);
+    const del = tools.find((t) => t.name === "lr_delete_intent");
+    expect(del?.inputSchema.required).toEqual(["id", "confirmed"]);
+    expect(del?.description).toMatch(/ONLY call this after the user has explicitly approved/);
     const step = tools.find((t) => t.name === "lr_step");
     expect(step?.inputSchema.required).toEqual(["session_id", "settings", "rationale"]);
     expect(step?.description).toMatch(/CHANGE for numeric sliders/);

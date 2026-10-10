@@ -33,7 +33,7 @@ export type Pass0 = {
  * Pass 0 on photo `t`, whose settings are `view`: render it as it is (or take `original`, a render
  * of the same settings), write the changes as one History step, then the clipping baseline. The
  * intent's profile and priors are those of the photo's pipeline (intent schema v2), with `variant`'s
- * priors on top on a copy.
+ * priors on top on a copy; the session's `profile` (lr_begin_session's) replaces the intent's.
  */
 export async function pass0(ctx: SessionContext, s: Session, t: Target, view: FromSdkResult, variant: PriorSet | null, original: Rendered | null): Promise<Pass0> {
   const passStarted = ctx.now().toISOString();
@@ -43,7 +43,7 @@ export async function pass0(ctx: SessionContext, s: Session, t: Target, view: Fr
   const before = original ?? (await render(ctx, s, t, view));
   const intent = s.intent.intent;
   const priors = combinedPriors(priorsFor(intent, t.pipeline), variant ? priorsFor(variant, t.pipeline) : {}, ctx.deps.map);
-  const profile = intent.profile?.[t.pipeline];
+  const profile = s.profile ?? intent.profile?.[t.pipeline];
   const changes = pass0Changes(profile, priors, view.settings, ctx.deps.map, t.pipeline);
   const historyNames: string[] = [];
   let current = view;

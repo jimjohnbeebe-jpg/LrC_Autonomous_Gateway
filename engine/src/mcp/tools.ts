@@ -39,7 +39,7 @@ import {
 import { addToCollection, createCollection, type AddToCollectionArgs, type CreateCollectionArgs } from "./tools-collections.js";
 import { getActivePhotoContext, getMetrics, getPreview, type MetricsArgs, type PreviewArgs } from "./tools-context.js";
 import { exportPhotos, importPhotos, type Budget, type ExportPhotosArgs, type ImportPhotosArgs } from "./tools-files.js";
-import { getIntent, listIntents, saveIntent, type SaveIntentArgs } from "./tools-intents.js";
+import { deleteIntent, getIntent, listIntents, saveIntent, type DeleteIntentArgs, type SaveIntentArgs } from "./tools-intents.js";
 import { createPresetFromActive, syncSeries, type CreatePresetArgs, type SyncSeriesArgs } from "./tools-propagation.js";
 import { approvePass, beginSession, createMask, deleteMask, editMask, endSession, getSessionLog, listMasks, probe, selectVariant, setRegions, step } from "./tools-session.js";
 import { createContext, type LastRender, type ToolContext, type ToolOutput, type ToolsDeps } from "./tools-shared.js";
@@ -160,6 +160,10 @@ export class Tools {
 
   saveIntent(args: SaveIntentArgs): Promise<ToolOutput> {
     return saveIntent(this.ctx, args);
+  }
+
+  deleteIntent(args: DeleteIntentArgs): Promise<ToolOutput> {
+    return deleteIntent(this.ctx, args);
   }
 
   // --- Propagation.

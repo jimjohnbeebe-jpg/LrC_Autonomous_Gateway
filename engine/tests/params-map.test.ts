@@ -258,12 +258,17 @@ describe("params: canonical map", () => {
       expect(map.verifyReadback({ Look: look }, { Look: changed })).toHaveLength(1);
     });
 
-    it("reports a nested empty field that is missing, even when another key makes the counts equal", () => {
+    // Lightroom leaves out a Look's empty Parameters.PointColors when it reads the Look back, so this
+    // reverses PR #13's rule (Greptile P2: a missing empty field is a mismatch) [handle:
+    // docs\reports\phase8.5\issue108\engine-20261009-excerpt.jsonl, 2026-10-10T05:18:58Z lr_begin_session WRITE_NOT_TAKEN on _OZ80005.NEF;
+    // issue #108]. A missing field with a value is still a mismatch.
+    it("takes a nested empty field that Lightroom leaves out, and reports a missing field with a value", () => {
       const look = profiles.toSdk("Adobe Landscape").Look;
-      const { ToneCurvePV2012Blue: _missing, ...params } = look["Parameters"] as Record<string, unknown>;
-      expect(map.verifyReadback({ Look: look }, { Look: { ...look, Parameters: params } })).toHaveLength(1);
-      const swapped = { ...look, Parameters: { ...params, SomethingElse: [] } };
-      expect(map.verifyReadback({ Look: look }, { Look: swapped })).toHaveLength(1);
+      const { PointColors: _empty, ...params } = look["Parameters"] as Record<string, unknown>;
+      expect(_empty).toEqual([]);
+      expect(map.verifyReadback({ Look: look }, { Look: { ...look, Parameters: params } })).toEqual([]);
+      const { Clarity2012: _valued, ...withoutClarity } = params;
+      expect(map.verifyReadback({ Look: look }, { Look: { ...look, Parameters: { ...withoutClarity, SomethingElse: 10 } } })).toHaveLength(1);
     });
 
     describe("a profile swap on another Camera Raw version (issue #67)", () => {

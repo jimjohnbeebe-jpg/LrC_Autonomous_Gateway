@@ -109,6 +109,8 @@ export class LightroomSim {
   readonly ignored = new Set<string>();
   /** Stamp a written Look's Parameters.Version with this, as LrC 15.6 did with "18.7" (issue #67); null: kept as written. */
   lookVersion: string | null = null;
+  /** Leave a written Look's empty Parameters.PointColors out, as Lightroom did on 2026-10-10 (issue #108, docs\reports\phase8.5\issue108\engine-20261009-excerpt.jsonl 05:18:58Z). */
+  dropEmptyPointColors = false;
   /** Add a default LensBlur block to a Look's Parameters when a snapshot is applied, as LrC 15.6 did in capture 5 (docs\reports\phase6\masks-capture\, rowA_put_back). */
   lensBlurStamp = false;
   /** Export at this long edge instead of the requested one (to exercise the resize). */
@@ -231,6 +233,7 @@ export class LightroomSim {
         }
         const look = settings["Look"] as { Parameters?: Record<string, unknown> } | undefined;
         if ("Look" in written && this.lookVersion !== null && look?.Parameters) look.Parameters["Version"] = this.lookVersion;
+        if ("Look" in written && this.dropEmptyPointColors && look?.Parameters && JSON.stringify(look.Parameters["PointColors"]) === "[]") delete look.Parameters["PointColors"];
         return ok({ uuid: u, apply_ms: 25, read_ms: 300, command_ms: 330, read_back: luaize(settings) });
       }),
     );

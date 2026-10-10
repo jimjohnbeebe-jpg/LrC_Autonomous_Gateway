@@ -1,0 +1,36 @@
+# Excerpt of Claude Desktop's MCP log for the lrc-avg server, collected by npm run phase8:check.
+# Source: %LOCALAPPDATA%\Claude\Logs\mcp-server-lrc-avg.log, lines from 2026-10-10T16:30:05.805Z on.
+# Filter: timestamped lines matching Server started|Message from|[error]|[warn], and the engine's [lrc-avg] lines; user folder redacted.
+
+2026-10-10T16:30:18.209Z [lrc-avg] [info] Server started and connected successfully { metadata: undefined }
+[lrc-avg] engine 0.24.0 ready on stdio (node v24.11.1); tool log: D:\Developer\LrC_Autonomous_Gateway\logs\engine-20261010.jsonl; previews: %USERPROFILE%\AppData\Local\Temp\LrC-AVG\previews
+[lrc-avg] shutting down: stdin ended (the client exited)
+2026-10-10T16:30:19.337Z [lrc-avg] [info] Server started and connected successfully { metadata: undefined }
+2026-10-10T16:30:19.346Z [lrc-avg] [info] Message from client: method="initialize" id=0 params { metadata: undefined }
+[lrc-avg] engine 0.24.0 ready on stdio (node v24.11.1); tool log: D:\Developer\LrC_Autonomous_Gateway\logs\engine-20261010.jsonl; previews: %USERPROFILE%\AppData\Local\Temp\LrC-AVG\previews
+[lrc-avg] engine 0.24.0 ready on stdio (node v24.11.1); tool log: D:\Developer\LrC_Autonomous_Gateway\logs\engine-20261010.jsonl; previews: %USERPROFILE%\AppData\Local\Temp\LrC-AVG\previews
+2026-10-10T16:30:20.524Z [lrc-avg] [info] Message from server: id=0 result { metadata: undefined }
+2026-10-10T16:30:20.525Z [lrc-avg] [info] Message from client: method="notifications/initialized" { metadata: undefined }
+2026-10-10T16:30:20.528Z [lrc-avg] [info] Message from client: method="tools/list" id=1 params { metadata: undefined }
+2026-10-10T16:30:20.543Z [lrc-avg] [info] Message from server: id=1 result { metadata: undefined }
+2026-10-10T16:30:39.513Z [lrc-avg] [info] Message from client: method="tools/call" id=2 params { metadata: undefined }
+[lrc-avg] took the Lightroom bridge lock
+[lrc-avg] bridge: connecting
+[lrc-avg] HUD channel listening on 127.0.0.1:58189
+[lrc-avg] bridge: handshaking
+[lrc-avg] bridge: connected
+2026-10-10T16:30:40.068Z [lrc-avg] [info] Message from server: id=2 result(1 blocks) { metadata: undefined }
+2026-10-10T16:30:40.976Z [lrc-avg] [info] Message from client: method="tools/call" id=3 params { metadata: undefined }
+2026-10-10T16:30:40.999Z [lrc-avg] [info] Message from server: id=3 result(1 blocks) { metadata: undefined }
+2026-10-10T16:30:42.809Z [lrc-avg] [info] Message from client: method="tools/call" id=4 params { metadata: undefined }
+2026-10-10T16:30:42.816Z [lrc-avg] [info] Message from server: id=4 result(1 blocks) { metadata: undefined }
+2026-10-10T16:30:45.784Z [lrc-avg] [info] Message from client: method="tools/call" id=5 params { metadata: undefined }
+2026-10-10T16:30:47.600Z [lrc-avg] [info] Message from server: id=5 result(2 blocks) { metadata: undefined }
+2026-10-10T16:30:56.857Z [lrc-avg] [info] Message from client: method="tools/call" id=6 params { metadata: undefined }
+2026-10-10T16:30:58.657Z [lrc-avg] [info] Message from server: id=6 result(2 blocks) { metadata: undefined }
+2026-10-10T16:31:05.142Z [lrc-avg] [info] Message from client: method="tools/call" id=7 params { metadata: undefined }
+2026-10-10T16:31:06.113Z [lrc-avg] [info] Message from server: id=7 result(2 blocks) { metadata: undefined }
+2026-10-10T16:31:10.484Z [lrc-avg] [info] Message from client: method="tools/call" id=8 params { metadata: undefined }
+2026-10-10T16:31:11.397Z [lrc-avg] [info] Message from server: id=8 result(2 blocks) { metadata: undefined }
+2026-10-10T16:31:14.914Z [lrc-avg] [info] Message from client: method="tools/call" id=9 params { metadata: undefined }
+2026-10-10T16:31:14.926Z [lrc-avg] [info] Message from server: id=9 result(1 blocks) { metadata: undefined }

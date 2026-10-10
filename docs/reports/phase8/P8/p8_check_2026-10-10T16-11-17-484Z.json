@@ -1,0 +1,753 @@
+{
+  "check": "phase8",
+  "started_at": "2026-10-10T16:11:17.494Z",
+  "resumed": false,
+  "state_started_at": "2026-10-10T16:11:17.494Z",
+  "errors": [],
+  "hello": {
+    "protocol": 1,
+    "plugin_version": "0.19.1",
+    "lrc_version": "15.6",
+    "sdk_declared": 13,
+    "ports": {
+      "receive": 8765,
+      "send": 8766
+    },
+    "process_started_at": "2026-10-10T16:11:03Z"
+  },
+  "fixtures": [
+    {
+      "uuid": "61EBEDC9-4F2C-4ABC-893D-5F161E7D1625",
+      "filename": "20260906-_OZ80005-Edit-Edit-Rendered.dng",
+      "copy_name": null,
+      "label": "20260906-_OZ80005-Edit-Edit-Rendered.dng",
+      "file_format": "DNG",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "F472C80A-31EF-47B1-8C05-6910CC7D90AA",
+      "filename": "20260907-_OZ80099-Edit.tif",
+      "copy_name": null,
+      "label": "20260907-_OZ80099-Edit.tif",
+      "file_format": "TIFF",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "available": false
+    },
+    {
+      "uuid": "732568D6-E9D9-450C-B812-92DCA3B4CA69",
+      "filename": "20260906-_OZ80013-Edit.tif",
+      "copy_name": null,
+      "label": "20260906-_OZ80013-Edit.tif",
+      "file_format": "TIFF",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "C9967541-0DEA-4CB9-AC2F-EA271695D1DC",
+      "filename": "20260907-_OZ80093.NEF",
+      "copy_name": null,
+      "label": "20260907-_OZ80093.NEF",
+      "file_format": "RAW",
+      "pipeline": "raw",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "DF14E9FC-638C-4EDA-B0BB-FBCA73879F7C",
+      "filename": "_DSC0091.NEF",
+      "copy_name": "Copy 4",
+      "label": "_DSC0091.NEF (Copy 4)",
+      "file_format": "RAW",
+      "pipeline": "raw",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "926A3109-4710-4BF9-8AFF-C54BCAD5632D",
+      "filename": "20250414-20250413-_OZ81315-HDR-2.avif",
+      "copy_name": null,
+      "label": "20250414-20250413-_OZ81315-HDR-2.avif",
+      "file_format": "AVIF",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "3DF3D5E7-E9C4-4B2D-BA04-7C9584F83E11",
+      "filename": "20260906-_OZ80005-Edit-Edit.psd",
+      "copy_name": null,
+      "label": "20260906-_OZ80005-Edit-Edit.psd",
+      "file_format": "PSD",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "C9D05F85-D980-47DD-B3E8-022C0C212751",
+      "filename": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+      "copy_name": null,
+      "label": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+      "file_format": "DNG",
+      "pipeline": "raw",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "699B9DAB-16F0-4985-B48E-BD21CD97477B",
+      "filename": "IMG_1595.JPG",
+      "copy_name": null,
+      "label": "IMG_1595.JPG",
+      "file_format": "JPG",
+      "pipeline": "rendered",
+      "process_version": "11.0",
+      "available": true
+    },
+    {
+      "uuid": "325E99C8-6DC2-4694-AB54-4BF381F45B94",
+      "filename": "_DSC0091-Edit.psd",
+      "copy_name": null,
+      "label": "_DSC0091-Edit.psd",
+      "file_format": "PSD",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "DDABB6F1-8554-4358-AF69-C2AA1B25B569",
+      "filename": "20260906-_OZ80005-Rendered.dng",
+      "copy_name": null,
+      "label": "20260906-_OZ80005-Rendered.dng",
+      "file_format": "DNG",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "89A01AEE-5054-41AC-BD52-754100641E06",
+      "filename": "S10-psb.psb",
+      "copy_name": null,
+      "label": "S10-psb.psb",
+      "file_format": "PSB",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "5157A1D2-3E6E-4D0A-A22D-87AC9084DD85",
+      "filename": "_OZ80660.JPG",
+      "copy_name": null,
+      "label": "_OZ80660.JPG",
+      "file_format": "JPG",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "ACC4F9FE-367B-4ABD-A3E8-0BD9514F4A41",
+      "filename": "_DSC0103.NEF",
+      "copy_name": "Copy 1",
+      "label": "_DSC0103.NEF (Copy 1)",
+      "file_format": "RAW",
+      "pipeline": "raw",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "2E3CFAC0-ACBC-4D35-A202-2866EC67376E",
+      "filename": "PICT0019.DNG",
+      "copy_name": null,
+      "label": "PICT0019.DNG",
+      "file_format": "DNG",
+      "pipeline": "raw",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+      "filename": "_DSC0028.NEF",
+      "copy_name": null,
+      "label": "_DSC0028.NEF",
+      "file_format": "RAW",
+      "pipeline": "raw",
+      "process_version": "11.0",
+      "available": true
+    },
+    {
+      "uuid": "9B787793-478E-47B9-932F-9CD1E0B9EC35",
+      "filename": "S10-jxl.jxl",
+      "copy_name": null,
+      "label": "S10-jxl.jxl",
+      "file_format": "JXL",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "C3006593-AD48-4EDA-ABEF-D38FB51508C1",
+      "filename": "_DSC0103.NEF",
+      "copy_name": null,
+      "label": "_DSC0103.NEF",
+      "file_format": "RAW",
+      "pipeline": "raw",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "995935D6-F379-4DDE-A8DC-737465C4A52E",
+      "filename": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+      "copy_name": null,
+      "label": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+      "file_format": "DNG",
+      "pipeline": "raw",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "B98C6C8B-6FCB-46EC-B2DC-AECAAADF2D39",
+      "filename": "20260906-_OZ80005.NEF",
+      "copy_name": null,
+      "label": "20260906-_OZ80005.NEF",
+      "file_format": "RAW",
+      "pipeline": "raw",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "AAFDE261-CFD7-49C7-8393-65A6BA4BFEF8",
+      "filename": "DSC_0031.JPG",
+      "copy_name": null,
+      "label": "DSC_0031.JPG",
+      "file_format": "JPG",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+      "filename": "20260907-_OZ80093.NEF",
+      "copy_name": null,
+      "label": "20260907-_OZ80093.NEF",
+      "file_format": "RAW",
+      "pipeline": "raw",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "4C1ADCA6-1BC5-442D-B5AE-4B2CCD7BCE67",
+      "filename": "20260110-_Z8A0173.NEF",
+      "copy_name": null,
+      "label": "20260110-_Z8A0173.NEF",
+      "file_format": "RAW",
+      "pipeline": "raw",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "23B201BF-A39A-44C6-839B-E13D4C0EA70D",
+      "filename": "20250413-_OZ81430.NEF",
+      "copy_name": null,
+      "label": "20250413-_OZ81430.NEF",
+      "file_format": "RAW",
+      "pipeline": "raw",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "3242B14D-5B67-49B4-9054-E858E6493647",
+      "filename": "20260907-S10-tiff16.tif",
+      "copy_name": null,
+      "label": "20260907-S10-tiff16.tif",
+      "file_format": "TIFF",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "7139D3E6-1EEA-453D-8FD2-E5919979AC52",
+      "filename": "IMG_1595.JPG",
+      "copy_name": null,
+      "label": "IMG_1595.JPG",
+      "file_format": "JPG",
+      "pipeline": "rendered",
+      "process_version": "11.0",
+      "available": true
+    },
+    {
+      "uuid": "D838903C-EDE1-4C59-A3A2-02AD371F458C",
+      "filename": "_DSC0091.NEF",
+      "copy_name": null,
+      "label": "_DSC0091.NEF",
+      "file_format": "RAW",
+      "pipeline": "raw",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "25F2BB98-2B68-4ED1-B3F7-04E155F8BD84",
+      "filename": "S10-cmyk.tif",
+      "copy_name": null,
+      "label": "S10-cmyk.tif",
+      "file_format": "TIFF",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "81FFC502-9B5E-4B80-B3DF-40103C041EB1",
+      "filename": "DSC_0031.JPG",
+      "copy_name": null,
+      "label": "DSC_0031.JPG",
+      "file_format": "JPG",
+      "pipeline": "rendered",
+      "process_version": "11.0",
+      "available": true
+    },
+    {
+      "uuid": "12409199-51E4-4AC3-8EE9-6DB994858630",
+      "filename": "DSC_0031.JPG",
+      "copy_name": "Copy 1",
+      "label": "DSC_0031.JPG (Copy 1)",
+      "file_format": "JPG",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+      "filename": "20260907-_OZ80099.NEF",
+      "copy_name": null,
+      "label": "20260907-_OZ80099.NEF",
+      "file_format": "RAW",
+      "pipeline": "raw",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "288BCCCA-3515-4D4F-9531-1CB1926F8C73",
+      "filename": "20251219-ThreeBeebeBrothers 1994 - Restored.png",
+      "copy_name": null,
+      "label": "20251219-ThreeBeebeBrothers 1994 - Restored.png",
+      "file_format": "PNG",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "available": true
+    },
+    {
+      "uuid": "F6809EF4-5EB2-49D9-B1AB-5C6FD426EBFB",
+      "filename": "20260907-S10-tiff32.tif",
+      "copy_name": null,
+      "label": "20260907-S10-tiff32.tif",
+      "file_format": "TIFF",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "available": true
+    }
+  ],
+  "intents": [
+    {
+      "id": "bw_conversion",
+      "overridden": false
+    },
+    {
+      "id": "landscape_blue_hour",
+      "overridden": false
+    },
+    {
+      "id": "landscape_forest_shade",
+      "overridden": false
+    },
+    {
+      "id": "landscape_golden_hour",
+      "overridden": false
+    },
+    {
+      "id": "landscape_midday_high_contrast",
+      "overridden": false
+    },
+    {
+      "id": "landscape_overcast_flat",
+      "overridden": false
+    },
+    {
+      "id": "night_astro",
+      "overridden": false
+    },
+    {
+      "id": "pet_fur_detail",
+      "overridden": false
+    },
+    {
+      "id": "portrait_natural_light",
+      "overridden": false
+    },
+    {
+      "id": "portrait_skin_priority",
+      "overridden": false
+    },
+    {
+      "id": "neutral_technical_correction",
+      "overridden": false
+    }
+  ],
+  "cross": {
+    "source": "20260907-_OZ80093.NEF",
+    "target": "DSC_0031.JPG (Copy 1)",
+    "session": {
+      "begin": {
+        "session_id": "d7e4bbe7-074e-441d-b70b-f6fc3a82c16d",
+        "snapshot": {
+          "name": "AVG pre-session 2026-10-10T16:20:37.109Z",
+          "id": "09F186AB-D2A4-4CE4-AFF1-BCE1E72D4499"
+        },
+        "history_names": [
+          "AVG d7e4bb pass 0/2",
+          "AVG d7e4bb pass 0/2 baseline 1",
+          "AVG d7e4bb pass 0/2 baseline 2"
+        ]
+      },
+      "steps": [
+        {
+          "asked": {
+            "vibrance": 6,
+            "clarity": 4
+          },
+          "pass": "1/2",
+          "history_names": [
+            "AVG d7e4bb pass 1/2"
+          ],
+          "applied": [
+            {
+              "name": "vibrance",
+              "before": 5,
+              "requested": 6,
+              "after": 11,
+              "delta": 6
+            },
+            {
+              "name": "clarity",
+              "before": -3,
+              "requested": 4,
+              "after": 1,
+              "delta": 4
+            }
+          ],
+          "refused": [],
+          "guardrail_actions": []
+        },
+        {
+          "asked": {
+            "temperature": 200,
+            "vibrance": -3
+          },
+          "pass": "2/2",
+          "history_names": [
+            "AVG d7e4bb pass 2/2"
+          ],
+          "applied": [
+            {
+              "name": "temperature",
+              "before": 5500,
+              "requested": 200,
+              "after": 5700,
+              "delta": 200
+            },
+            {
+              "name": "vibrance",
+              "before": 11,
+              "requested": -3,
+              "after": 8,
+              "delta": -3
+            }
+          ],
+          "refused": [],
+          "guardrail_actions": []
+        }
+      ],
+      "end": {
+        "outcome": "accept",
+        "passes": "2/2",
+        "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\P8\\p8_sessions_2026-10-10T16-11-17-484Z\\20261010-d7e4bb.json",
+        "recipe_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\P8\\p8_sessions_2026-10-10T16-11-17-484Z\\20261010-d7e4bb.recipe.json"
+      }
+    },
+    "applied": 1,
+    "skipped": [],
+    "target_pipeline": "rendered",
+    "not_transferable": [
+      {
+        "group": "white_balance",
+        "names": [
+          "temperature",
+          "tint"
+        ],
+        "reason": "the source photo is on the raw pipeline (kelvin units) and this photo on the rendered pipeline (relative units): the numbers mean different things, so the white balance is not synced"
+      },
+      {
+        "group": "camera_profile",
+        "names": [
+          "camera_profile"
+        ],
+        "reason": "\"Adobe Portrait\" is a raw-pipeline profile and this photo is on the rendered pipeline: it keeps its own profile"
+      }
+    ],
+    "transferred": 62,
+    "read_back_differing": [],
+    "preset": {
+      "name": "AVG P8check JPEG 2026-10-10T16-11-17-484Z",
+      "written": [
+        "blacks",
+        "camera_profile",
+        "clarity",
+        "contrast",
+        "dehaze",
+        "exposure",
+        "grading.balance",
+        "grading.blending",
+        "grading.global.hue",
+        "grading.global.lum",
+        "grading.global.sat",
+        "grading.highlights.hue",
+        "grading.highlights.lum",
+        "grading.highlights.sat",
+        "grading.midtones.hue",
+        "grading.midtones.lum",
+        "grading.midtones.sat",
+        "grading.shadows.hue",
+        "grading.shadows.lum",
+        "grading.shadows.sat",
+        "highlights",
+        "hsl.aqua.hue",
+        "hsl.aqua.lum",
+        "hsl.aqua.sat",
+        "hsl.blue.hue",
+        "hsl.blue.lum",
+        "hsl.blue.sat",
+        "hsl.green.hue",
+        "hsl.green.lum",
+        "hsl.green.sat",
+        "hsl.magenta.hue",
+        "hsl.magenta.lum",
+        "hsl.magenta.sat",
+        "hsl.orange.hue",
+        "hsl.orange.lum",
+        "hsl.orange.sat",
+        "hsl.purple.hue",
+        "hsl.purple.lum",
+        "hsl.purple.sat",
+        "hsl.red.hue",
+        "hsl.red.lum",
+        "hsl.red.sat",
+        "hsl.yellow.hue",
+        "hsl.yellow.lum",
+        "hsl.yellow.sat",
+        "lens.ca_remove",
+        "lens.profile_enable",
+        "noise.color",
+        "noise.luminance",
+        "saturation",
+        "shadows",
+        "sharpening.amount",
+        "sharpening.detail",
+        "sharpening.masking",
+        "sharpening.radius",
+        "texture",
+        "tone_curve.blue",
+        "tone_curve.green",
+        "tone_curve.master",
+        "tone_curve.red",
+        "vibrance",
+        "whites"
+      ],
+      "problems": []
+    },
+    "jpeg_undone_by_its_snapshot": true,
+    "ok": true
+  },
+  "preset": {
+    "preset": "AVG P8check JPEG 2026-10-10T16-11-17-484Z",
+    "stray_deleted": [],
+    "listed": "y",
+    "differed_before": [
+      "clarity",
+      "contrast",
+      "exposure",
+      "highlights",
+      "hsl.orange.lum",
+      "hsl.orange.sat",
+      "hsl.red.sat",
+      "noise.color",
+      "noise.luminance",
+      "shadows",
+      "sharpening.amount",
+      "sharpening.detail",
+      "sharpening.masking",
+      "sharpening.radius",
+      "texture",
+      "vibrance"
+    ],
+    "differing": [],
+    "applies": true,
+    "put_back_differing": [],
+    "ok": true
+  },
+  "restart": {
+    "ok": true,
+    "connects_before": 1,
+    "connects_after": 2,
+    "wait_ms": 0,
+    "plugin_version": "0.19.1"
+  },
+  "chat": {
+    "lines": {
+      "session_on_the_jpeg": true,
+      "passes": true,
+      "ended": true,
+      "rendered_pipeline": true,
+      "engine_version": true,
+      "jim": true
+    },
+    "answers": [
+      "y",
+      "y",
+      "y"
+    ],
+    "evaluation": {
+      "tool_calls": 11,
+      "invalid_records": 0,
+      "session_begun": true,
+      "session_id": "2f709eca-9ac4-4a00-a207-0d77f9f26f3c",
+      "intent_id": "portrait_natural_light",
+      "target_filename": "DSC_0031.JPG",
+      "passes": 3,
+      "session_ended": "accept",
+      "snapshot": {
+        "id": "919F9ABD-B070-45A6-B067-ACFC30DF3D41",
+        "name": "AVG pre-session 2026-10-10T16:30:45.815Z"
+      },
+      "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261010-2f709e.json",
+      "hud_shown": false,
+      "awaiting": []
+    },
+    "session_log_error": null,
+    "engine_version": "0.24.0",
+    "logs": {
+      "desktop_log": {
+        "found": true,
+        "saved_as": "p8_desktop_mcp_log_2026-10-10T16-11-17-484Z_chat.txt",
+        "lines": 32
+      },
+      "engine_log": {
+        "found": true,
+        "saved_as": "p8_chat_tool_log_2026-10-10T16-11-17-484Z_chat.jsonl"
+      }
+    },
+    "put_back_differing": [],
+    "ok": true
+  },
+  "bridge_back": [
+    {
+      "chat": "the chat",
+      "idle_release": true,
+      "waited_ms": 27625,
+      "ok": true
+    }
+  ],
+  "cleanup": {
+    "presets": [
+      {
+        "name": "AVG preset reference rendered",
+        "files": 0
+      },
+      {
+        "name": "AVG preset reference rendered mono",
+        "files": 0
+      },
+      {
+        "name": "AVG P8check JPEG 2026-10-10T16-11-17-484Z",
+        "files": 0
+      }
+    ],
+    "snapshot_gone": true
+  },
+  "bridge_stats": {
+    "connects": 4,
+    "connect_failures": 9,
+    "last_connect_error": "127.0.0.1:8765: ECONNREFUSED",
+    "drops": 2,
+    "last_drop_reason": "heartbeat: no message from the plugin for 6033 ms",
+    "malformed_lines": 0,
+    "unknown_response_ids": 0,
+    "ports": {
+      "command": 8765,
+      "event": 8766,
+      "from": "ports file"
+    }
+  },
+  "summary": {
+    "acceptance_suggestion": "WORKED",
+    "finished": true,
+    "every_photo": true,
+    "every_intent": true,
+    "raw_to_rendered_sync": true,
+    "preset_click": true,
+    "chat": true,
+    "formats": {
+      "DNG rendered": {
+        "photos": 2,
+        "worked": 2
+      },
+      "TIFF rendered": {
+        "photos": 5,
+        "worked": 5
+      },
+      "RAW raw": {
+        "photos": 11,
+        "worked": 11
+      },
+      "AVIF rendered": {
+        "photos": 1,
+        "worked": 1
+      },
+      "PSD rendered": {
+        "photos": 2,
+        "worked": 2
+      },
+      "DNG raw": {
+        "photos": 3,
+        "worked": 3
+      },
+      "JPG rendered": {
+        "photos": 6,
+        "worked": 6
+      },
+      "PSB rendered": {
+        "photos": 1,
+        "worked": 1
+      },
+      "JXL rendered": {
+        "photos": 1,
+        "worked": 1
+      },
+      "PNG rendered": {
+        "photos": 1,
+        "worked": 1
+      }
+    },
+    "failed_photos": [],
+    "failed_intents": [],
+    "cleanup": {
+      "presetsGone": 3,
+      "presets": 3,
+      "snapshotGone": true
+    },
+    "pending": []
+  },
+  "finished_at": "2026-10-10T16:37:20.917Z",
+  "plugin_log_copied": "p8_bridge_log_2026-10-10T16-11-17-484Z.txt",
+  "node": "v24.11.1",
+  "engine_version": "0.24.0"
+}

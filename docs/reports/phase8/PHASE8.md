@@ -1,8 +1,8 @@
 ---
 report: PHASE8 — does LrC-AVG edit every image format Lightroom Classic develops?
 phase: 8 (row 6, phase-8/check)
-status: template
-authored_by: "Template, harness, pre-run findings: Claude Code (Opus 5.5), 2026-10-10 (phase-8/check). Observed: Jim (to come). Verdict: Jim (to come)."
+status: accepted
+authored_by: "Template, harness, pre-run findings: Claude Code (Opus 5.5), 2026-10-10 (phase-8/check). Observed: Jim ran npm run phase8:check on 2026-10-10 09:11-09:37 local; Claude Code wrote it up from the result files (docs/phase8-check-results). Verdict: Jim (go, 2026-10-10)."
 date: 2026-10-10
 ---
 
@@ -114,27 +114,108 @@ date: 2026-10-10
 
 ## Observed (Jim)
 
-*To be filled from Jim's run.*
+**Run 1, 2026-10-10, 09:11:17-09:37:20 local (16:11:17Z-16:37:20Z), plugin 0.19.1, Lightroom Classic 15.6, engine 0.24.0, node v24.11.1: `Phase 8 acceptance: WORKED`** [handle: `docs\reports\phase8\P8\p8_check_2026-10-10T16-11-17-484Z.json` `summary`, `hello`; `p8_state.json` `finished` true, `runs` one]. Jim ran `npm run phase8:check` once, did the restart, the preset click, the chat and the cleanup, and said "done" [stated: Jim, 2026-10-10]. The run did not resume; `errors` is empty.
+
+The files are in `docs\reports\phase8\P8\`:
+- `p8_check_….json`, the run's results;
+- `p8_state.json`, every photo's and intent's record;
+- `sessions\`, the 44 session logs of Parts 1-3;
+- `check_tool_log.jsonl`, the check's own tool log;
+- `p8_chat_tool_log_…_chat.jsonl`, `p8_desktop_mcp_log_…_chat.txt` and `chat_session_20261010-2f709e.json`, the chat;
+- `plugin_log_excerpt.txt`, the plugin log from 09:08:55 to 09:37:20.
+
+The user folder in the copied files reads `%USERPROFILE%`.
+
+**Part 1: every photo of "fixtures" (09:11-09:20).** The collection held 33 photos: 13 raw and 20 rendered, of which 4 were virtual copies [handle: `p8_check_….json` `fixtures`]. Spike S10's census had counted 31 photos; why there are two more is [unverified].
+- **The 32 available photos:** each one had a session of 2 passes, and the revert left 0 settings differing.
+- **The sync:** its read-back differed in 0 settings on the next photo, which its own snapshot then put back (`undone_by_its_snapshot` true).
+- **The preset:** its file had no problems [handle: `p8_state.json` `photos[].summary`: `session.passes` 2, `revert_exact` true, `put_back_differing` [], `sync.read_back_differing` [], `preset.problems` []].
+- **The missing TIFF:** `20260907-_OZ80099-Edit.tif` was refused with `ORIGINAL_MISSING` [handle: `p8_state.json` `photos[1].summary.missing`].
+- **Process version 11.0 photos:** four photos on 11.0 edited as they are: `_DSC0028.NEF` (raw), `DSC_0031.JPG`, and both `IMG_1595.JPG` entries (rendered) [handle: session logs `20261010-d291b4.json`, `20261010-2ce19e.json`, `20261010-340cdf.json`, `20261010-adcd14.json` `target.process_version` "11.0"].
+- **Selection:** the check selected every photo by uuid while the collection was shown, and none failed.
+
+**Part 2: the 11 bundled intents on `DSC_0031.JPG` (Copy 1) (09:19-09:20).** None was overridden by a user intent. Each one made pass 0 and one pass, and its revert was exact, with 0 settings differing when put back [handle: `p8_state.json` `intents`].
+- `bw_conversion`'s pass 0 set the profile from "Color" to "Monochrome" on the rendered photo [handle: `sessions\20261010-a1b944.json` `passes[0].changes`].
+- The other ten kept "Color".
+- `neutral_technical_correction`'s pass 0 changed nothing.
+
+**Part 3: the raw→rendered sync (09:20).** A session on `20260907-_OZ80093.NEF` ran 2 passes and ended with accept. Its recipe was synced onto `DSC_0031.JPG` (Copy 1) [handle: `p8_check_….json` `cross`]:
+- **Not transferred:** `not_transferable` listed exactly `white_balance` (temperature, tint: "kelvin units" against "relative units") and `camera_profile` ("\"Adobe Portrait\" is a raw-pipeline profile … it keeps its own profile").
+- **Transferred:** the other 62 settings read back as the recipe has them.
+- **The kept preset:** the preset "AVG P8check JPEG …" from the JPEG wrote 62 settings, and its file had no problems.
+- **Put back:** both photos were put back.
+
+**Part 4: the restart and the preset click (09:28).**
+- **The restart:** Jim restarted Lightroom. The plugin's bridge closed at 09:28:27 and started again at 09:28:44; the check reconnected at 09:28:48 (`connects_before` 1, `connects_after` 2) [handle: `plugin_log_excerpt.txt`; `p8_check_….json` `restart`].
+- **The preset:** it was listed (Jim: y). One click applied it: 16 settings differed from the preset before the click and 0 after, and the JPEG was then put back with 0 differing [handle: `p8_check_….json` `preset`].
+
+**Part 5: the Claude Desktop chat (09:30-09:31).**
+- **The handover:** the check gave up the bridge at 09:30:05, and Claude Desktop's engine 0.24.0 connected at 09:30:39 [handle: `plugin_log_excerpt.txt`; `p8_desktop_mcp_log_…_chat.txt`].
+- **The session:** Claude began a session with `portrait_natural_light` on `DSC_0031.JPG` (Copy 1), on the rendered pipeline. It made 3 passes and ended it with accept, in 11 tool calls with 0 invalid records [handle: `p8_check_….json` `chat.evaluation`; `p8_chat_tool_log_…_chat.jsonl`].
+- **The edits:** the first pass asked for exposure +0.25, tint -3 and two HSL saturations. Its next rationale opens "Guard capped exposure at +0.…" [handle: `p8_chat_tool_log_…_chat.jsonl`, lr_step lines].
+- **Jim's answers:** y, y, y to the three questions.
+- **Put back:** the JPEG was put back with 0 differing.
+- **The bridge back:** Claude Desktop's engine gave the bridge back after its minute of idle, and the check took it at 09:32:15, 27.6 s into its wait [handle: `p8_check_….json` `bridge_back`].
+- **The Deck:** the plugin log shows "hud: Deck connected" at 09:30:47, during the chat.
+
+**Cleanup (09:36-09:37).**
+- **Presets:** row 5's two reference presets and the check's preset have no file left (0 files each).
+- **Snapshot:** Jim answered that "before presets" is gone (y) [handle: `p8_check_….json` `cleanup`].
+
+**The bridge** [handle: `p8_check_….json` `bridge_stats`; `plugin_log_excerpt.txt`]:
+- 4 connects and 9 connect failures (the last ECONNREFUSED on 8765), and 2 drops.
+- The last drop reads "heartbeat: no message from the plugin for 6033 ms". It came during the cleanup, between `select_photo` at 09:36:41 and the reconnect at 09:37:10, which took 0.2 s; no command failed.
+- That the failures fell in the restart, and that the other drop is the restart, is [inference] from the times.
 
 ## Numbers
 
 | Line | Result |
 |---|---|
-| every photo of "fixtures" (count, by format) | |
-| every bundled intent on the JPEG (11) | |
-| raw→rendered sync: not_transferable exactly camera_profile, white_balance; the rest read back | |
-| preset listed after the restart; applied by a click | |
-| Claude Desktop chat (engine version, pipeline, Jim's three answers) | |
-| every photo put back | |
-| cleanup: presets removed; "before presets" deleted | |
+| every photo of "fixtures" (count, by format) | **YES**: 33 of 33. 32 edited (2 passes, revert exact, sync exact, preset file right), 1 missing original refused with `ORIGINAL_MISSING`; 10 format/pipeline groups (table below) |
+| every bundled intent on the JPEG (11) | **YES**: 11 of 11, 1 pass each, revert exact; `bw_conversion` set "Monochrome" |
+| raw→rendered sync: not_transferable exactly camera_profile, white_balance; the rest read back | **YES**: exactly those two; 62 settings read back with 0 differing |
+| preset listed after the restart; applied by a click | **YES**: listed (Jim: y); 16 settings differing before the click, 0 after |
+| Claude Desktop chat (engine version, pipeline, Jim's three answers) | **YES**: engine 0.24.0, rendered, 3 passes, accept; Jim y, y, y |
+| every photo put back | **YES**: 0 pending at the end, every put-back with 0 differing |
+| cleanup: presets removed; "before presets" deleted | **YES**: 3 of 3 presets removed; "before presets" deleted (Jim: y) |
+| process version 11.0 photos edit as they are | **YES**: 4 photos, raw and rendered |
+| time | 26 min in all; Parts 1-3 took 9 min (the estimate was 20-30 min) |
 
-| Format | Pipeline | Photos | Worked | Handle |
+| Format | Pipeline | Photos | Worked | Handle (`docs\reports\phase8\P8\sessions\`) |
 |---|---|---|---|---|
-| | | | | |
+| RAW (NEF) | raw | 11 | 11 | `20261010-21dae4`, `35bc14` (Copy 4), `af9dfd` (Copy 1), `d291b4` (PV 11.0), `d46ba4`, `2d5e5c`, `7f2ed9`, `975eb8`, `0bbf72`, `3ae60c`, `60dbd6` |
+| DNG | raw | 3 | 3 | `a902a7`, `42442e` (both `20260110-_Z8A0138-DxO_DeepPRIME XD3.dng`), `cff8ae` (`PICT0019.DNG`) |
+| DNG | rendered | 2 | 2 | `1bc730`, `d9e843` |
+| JPEG | rendered | 6 | 6 | `340cdf`, `adcd14` (both `IMG_1595.JPG`, PV 11.0), `19ca87`, `78ee77`, `2ce19e` (`DSC_0031.JPG` PV 11.0), `683e82` (Copy 1) |
+| TIFF (8-bit, 16-bit, 32-bit, CMYK) | rendered | 5 | 5 | `1f0e98`, `73d637` (16-bit), `338637` (32-bit), `3c4487` (CMYK); `20260907-_OZ80099-Edit.tif` refused, original missing (`p8_state.json` `photos[1]`) |
+| PSD | rendered | 2 | 2 | `61d706`, `da2d30` |
+| PSB | rendered | 1 | 1 | `738ded` |
+| AVIF | rendered | 1 | 1 | `2e5d8a` |
+| JPEG XL | rendered | 1 | 1 | `287466` |
+| PNG | rendered | 1 | 1 | `2c5f28` |
+
+The bit depths and CMYK come from the file names S10 gave them [handle: `docs\reports\phase8\S10.md`]. The session logs do not record them.
+
+## Analysis (Claude Code)
+
+- **The simulator's three stand-ins held in Lightroom** (they were [unverified] in the pre-run findings):
+  - a click on the rendered preset applied all 16 differing settings;
+  - the raw→rendered sync listed exactly the two groups and moved the rest exactly;
+  - Lightroom selected each of the 33 photos by uuid while the collection was shown.
+- **The acceptance lines of PHASES.md Phase 8**, checked against this run:
+  - every format in the collection completed a full session, with a handle per format (table above);
+  - all bundled intents ran on the rendered pipeline here, and on both pipelines in the simulator [handle: `engine\tests\session-bundled-intents.test.ts`];
+  - process version 11.0 photos edited as they are;
+  - the sync reported the non-transferable groups.
+
+  Two lines are not checked by this run: "no decision from `file_format`" is a code property (PR #105 and earlier), and the README's format table is row 7.
+- **Not judged by the check:** the look of the chat's edit. Jim's three answers stand for it.
 
 ## Verdict
 
-*Jim's, after the run.*
+Suggested by the check: **WORKED** (every line YES).
+
+**Jim's verdict: go** [stated: Jim, 2026-10-10, "Go (Recommended)"].
 
 ## Consequences / open questions
 
@@ -144,4 +225,5 @@ date: 2026-10-10
   - the History steps of every session and sync.
 
   These are on the fixture photos, as after every earlier check. The plugin has no command that deletes a snapshot.
+- **A gap in the check's record:** Part 2 writes `pipeline` and `profile` as null for every intent [handle: `p8_check_….json` `intents`, `p8_state.json` `intents[].summary`]. `phase8-intents.ts` reads them from `lr_begin_session`'s answer, which does not carry them. The session logs do carry them (`target.pipeline`, `passes[0].settings_after.camera_profile`), so this report takes them from there. The gap does not change a result.
 - **Row 7** (`phase-8/results`) takes this report's per-format table into the README's "Supported formats" table, and closes issue #95.

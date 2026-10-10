@@ -11,7 +11,7 @@ import type { FakePlugin, FakeReply } from "./fake-plugin.js";
 
 type Gps = { latitude: number; longitude: number } | null;
 /** `settings` and `file_format` make the photo a Develop target of its own (lightroom-sim.ts settingsOf, context); without them it is a library entry only. */
-export type SimLibraryPhoto = { uuid: string; local_id: number; filename: string; rating: number; keywords: string[]; day: string; gps: Gps; settings?: Record<string, unknown>; file_format?: string };
+export type SimLibraryPhoto = { uuid: string; local_id: number; filename: string; rating: number; keywords: string[]; day: string; gps: Gps; settings?: Record<string, unknown>; file_format?: string; copy_name?: string };
 export type SimCollection = { local_id: number; name: string; set_path?: string; smart: boolean; photos: string[] };
 
 const ok = (payload: unknown): FakeReply => ({ ok: true, payload });

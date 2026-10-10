@@ -29,6 +29,7 @@
     "wb:check": "npm run build && node engine/dist/devtools/wb-check-cli.js",
     "s10:check": "npm run build && node engine/dist/devtools/s10-check-cli.js",
     "offline:check": "npm run build && node engine/dist/devtools/offline-check-cli.js",
+    "phase8:check": "npm run build && node engine/dist/devtools/phase8-check-cli.js",
     "deck:build": "npm run build && npm run build -w hud",
     "deck:probe": "npm run build && node hud/probe/probe.ts",
     "deck:states": "npm run build && node hud/probe/states.ts",

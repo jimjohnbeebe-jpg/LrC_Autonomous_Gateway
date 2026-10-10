@@ -31,7 +31,7 @@ export type CatalogSim = {
   copyFault: CopyFault | null;
   selectFault: string | null;
   /** Rating and capture time per photo (plugin 0.8.0, Photos.describe; lightroom-sim-library.ts); a photo `find` gives with its own `settings` is a Develop target too (spike S10's census). */
-  readonly library?: { meta(uuid: string): Record<string, unknown>; find?(uuid: string): { local_id: number; settings?: Record<string, unknown> | undefined } | undefined };
+  readonly library?: { meta(uuid: string): Record<string, unknown>; find?(uuid: string): { local_id: number; settings?: Record<string, unknown> | undefined; copy_name?: string | undefined } | undefined };
 };
 
 export const MASTER_LOCAL_ID = 1;
@@ -45,7 +45,8 @@ export function describePhoto(sim: CatalogSim, uuid: string): Record<string, unk
   if (copy) return { uuid, local_id: copy.local_id, is_virtual_copy: true, master_local_id: MASTER_LOCAL_ID, copy_name: copy.copy_name };
   // A library-only entry (no settings of its own) stays unknown to the Develop commands, else a write to it would land on the master (Greptile, PR #96).
   const other = sim.library?.find?.(uuid);
-  return other?.settings ? { uuid, local_id: other.local_id, is_virtual_copy: false, master_local_id: other.local_id } : null;
+  // `copy_name` makes it a virtual copy of its own master (the Phase 8 check's "DSC_0031.JPG Copy 1").
+  return other?.settings ? { uuid, local_id: other.local_id, is_virtual_copy: other.copy_name !== undefined, master_local_id: other.local_id, ...(other.copy_name ? { copy_name: other.copy_name } : {}) } : null;
 }
 
 export function createVirtualCopies(sim: CatalogSim, p: Record<string, unknown>): FakeReply | "silent" {

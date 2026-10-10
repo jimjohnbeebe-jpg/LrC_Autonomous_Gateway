@@ -1,0 +1,240 @@
+phase-8/check dry run of `npm run phase8:check` (PHASE8_PLAN row 6) - Claude Code (Opus 5.5), 2026-10-10 07:29-07:31 local (UTC-7)
+What ran: the built CLI `engine\dist\devtools\phase8-check-cli.js`, built by `npm run build` on branch phase-8/check
+from the working tree of this PR's first commit, its prompts answered by the driver in the appendix (run alone with
+`npx vitest run tests/zz-scratch-p8-dryrun.test.ts` in engine\, then deleted).
+Lightroom was NOT involved: the CLI talked to the simulated plugin of the engine tests (engine\tests\helpers\fake-plugin.ts
+and lightroom-sim.ts, "tonal" model, a made-up render) on OS-chosen ports with its own token file (LRC_AVG_COMMAND_PORT,
+LRC_AVG_EVENT_PORT, LRC_AVG_TOKEN_FILE). The "fixtures" collection held six simulated photos: the raw master
+20260907-_OZ80093.NEF, a second NEF, DSC_0031.JPG on process versions 15.4 and 11.0 (S10's census dumps), its Copy 1,
+and a TIFF whose original is missing. The restart was the plugin's event socket dropped (the client reconnects); the
+preset click wrote the preset file's crs: attributes onto the selected photo, keeping CameraProfile "Embedded" for
+"Default Color" [inference: Lightroom's behaviour there is what Jim's run observes]. The "Claude Desktop" of Part 5 was
+the real engine `engine\dist\mcp\main.js` over stdio MCP, kept open, so the check took the bridge back by that engine's
+real 60 s idle release. LRC_AVG_LOG_DIR, LRC_AVG_P8_OUT, LRC_AVG_PLUGIN_LOG, LRC_AVG_PRESET_DIR and LOCALAPPDATA pointed
+at a scratch folder, so neither Jim's plugin log, the repo's logs\, %TEMP%\LrC-AVG\P8, Lightroom's preset folder nor
+Claude Desktop's log was read or written. Numbers are the sim's, not Lightroom's. User folder written as %USERPROFILE%.
+Stdin is a pipe, so the answers are not echoed: a prompt and the next output share a line.
+
+== CLI output ==
+LrC-AVG Phase 8 check
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+Connected (plugin 0.19.1).
+The collection "fixtures": 6 photos, 2 raw, 4 rendered, 1 with the original missing.
+
+Part 1: a session, a sync and a preset on every photo of "fixtures". Nothing to do in Lightroom; the check selects each photo itself.
+       preset: 63 settings, form as Lightroom writes it: YES
+   1/6 20260907-_OZ80093.NEF (RAW, raw, PV 15.4): WORKED
+       preset: 63 settings, form as Lightroom writes it: YES
+   2/6 _DSC0103.NEF (RAW, raw, PV 15.4): WORKED
+       preset: 61 settings, form as Lightroom writes it: YES
+   3/6 DSC_0031.JPG (JPG, rendered, PV 15.4): WORKED
+       preset: 61 settings, form as Lightroom writes it: YES
+   4/6 DSC_0031.JPG (JPG, rendered, PV 11.0): WORKED
+       preset: 61 settings, form as Lightroom writes it: YES
+   5/6 DSC_0031.JPG (Copy 1) (JPG, rendered, PV 15.4): WORKED
+   6/6 20260907-_OZ80099-Edit.tif (TIFF, rendered, PV 15.4): refused as expected (the original is missing)
+
+Part 2: the 11 bundled intents on DSC_0031.JPG (Copy 1), one pass each, then revert.
+  bw_conversion: WORKED
+  landscape_blue_hour: WORKED
+  landscape_forest_shade: WORKED
+  landscape_golden_hour: WORKED
+  landscape_midday_high_contrast: WORKED
+  landscape_overcast_flat: WORKED
+  night_astro: WORKED
+  pet_fur_detail: WORKED
+  portrait_natural_light: WORKED
+  portrait_skin_priority: WORKED
+  neutral_technical_correction: WORKED
+
+Part 3: a session on 20260907-_OZ80093.NEF (raw), its recipe synced onto DSC_0031.JPG (Copy 1) (rendered).
+  not_transferable: camera_profile, white_balance (expected camera_profile, white_balance): YES; the other 62 settings read back as the recipe: YES
+  Preset "AVG P8check JPEG 2026-10-10T14-29-33-049Z" from the JPEG: 62 settings, form as Lightroom writes it: YES
+  20260907-_OZ80093.NEF put back as before the check: YES
+Part 3, the raw→rendered sync: WORKED
+
+Part 4: the preset made from the JPEG, listed after a Lightroom restart and applied by your click.
+
+Lightroom restart: Lightroom lists a new preset only after it starts again.
+  1. In Lightroom: File > Exit. Wait until Lightroom has closed.
+  2. Start Lightroom again (Start menu > Adobe Lightroom Classic) and open the Develop module.
+  3. Then press Enter here.   (bridge: dropped (event socket closed))
+  (bridge: connecting)
+  Waiting for the LrC-AVG plugin to connect again (up to 3 minutes)...
+  (bridge: handshaking)
+  (bridge: connected)
+  Connected again (plugin 0.19.1).
+In the Develop module's Presets panel (left side), open the group "LrC-AVG". Is a preset named "AVG P8check JPEG 2026-10-10T14-29-33-049Z" listed? Type y or n, then Enter:   Lightroom now shows DSC_0031.JPG (Copy 1). In the Presets panel, click "AVG P8check JPEG 2026-10-10T14-29-33-049Z" once. Then press Enter here.   Every setting the preset carries matches after the click: YES; the JPEG put back: YES.
+Part 4, the preset listed and applied by a click: WORKED
+
+Part 5: one Claude Desktop chat on DSC_0031.JPG (Copy 1).
+  (bridge: stopped)
+  1. If Claude Desktop is running, quit it: right-click the Claude icon in the Windows system tray > Quit.
+  2. Start Claude Desktop (Start menu > Claude), so it runs the engine this check was built with.
+  3. Open a new chat, type this sentence and press Enter:
+       Edit the active photo as a natural light portrait.
+  4. If Claude Desktop asks whether Claude may use an lrc-avg tool, allow it (Always allow).
+  5. Wait until Claude says it has finished and has ended the session.
+  6. Come back to this window and press Enter. 1. Did Claude finish without an error message in the chat? Type y or n, then Enter: 2. Are Claude's changes visible on the Develop sliders (for example in the Basic panel)? Type y or n, then Enter: 3. Does the result look like a sensible natural-light portrait edit of DSC_0031.JPG to you? Type y or n, then Enter:   Chat: portrait_natural_light on DSC_0031.JPG, 1 pass(es), ended accept; pipeline rendered; engine 0.24.0 (this check: 0.24.0).
+  Waiting for Claude Desktop to give the Lightroom bridge back (a minute after Claude's last call; at most 150 s). Leave Claude Desktop open.
+  (bridge: connecting)
+  (bridge: handshaking)
+  (bridge: connected)
+  DSC_0031.JPG (Copy 1) put back as before the chat: YES.
+Part 5, the Claude Desktop chat: WORKED
+
+Cleanup.
+  Delete these presets in the group "LrC-AVG": "AVG preset reference rendered", "AVG preset reference rendered mono", "AVG P8check JPEG 2026-10-10T14-29-33-049Z".
+  1. In the Develop module's Presets panel (left side), open the group "LrC-AVG".
+  2. Right-click each of them > Delete. If Lightroom asks to confirm, click Delete.
+  3. Press Enter here.   Lightroom now shows DSC_0031.JPG (Copy 1). In the Snapshots panel (Develop, left side), right-click "before presets" > Delete.
+  Is "before presets" gone from the Snapshots panel? Type y or n, then Enter: Cleanup: presets removed 3 of 3; "before presets" deleted: YES.
+  (bridge: stopped)
+
+Phase 8 acceptance: WORKED
+  every photo (6 of 6): YES; every intent on the JPEG (11 of 11): YES
+  raw→rendered sync: YES; preset listed and applied by a click: YES; Claude Desktop chat: YES
+  by format: RAW raw 2/2; JPG rendered 3/3; TIFF rendered 1/1
+Results saved automatically: %USERPROFILE%\AppData\Local\Temp\lrc-avg-p8dry-SCZGtN\out\p8_check_2026-10-10T14-29-33-049Z.json
+Nothing to copy. Tell Claude Code "done".
+
+[driver] preset AVG P8check JPEG 2026-10-10T14-29-33-049Z clicked on SIM-JPG-C1: 61 keys
+[driver] chat: begin true on the undefined pipeline, end accept
+[driver] exit code 0; History steps 70; exports 82; scratch %USERPROFILE%\AppData\Local\Temp\lrc-avg-p8dry-SCZGtN
+
+== Appendix: the driver (engine\tests\zz-scratch-p8-dryrun.test.ts, not committed) ==
+// SCRATCH (not committed): dry run of the built `phase8-check-cli.js` against the simulated plugin on
+// OS-chosen ports with its own token file, so Jim's Lightroom is not touched. The real
+// `engine\dist\mcp\main.js` plays Claude Desktop in Part 5 over stdio MCP, kept open as Claude Desktop
+// keeps its engine, so the check takes the bridge back by the engine's real 60 s idle release.
+// LRC_AVG_LOG_DIR, LRC_AVG_P8_OUT, LRC_AVG_PLUGIN_LOG, LRC_AVG_PRESET_DIR and LOCALAPPDATA point at a
+// scratch folder. "Jim" acts on the CLI's words as tests\helpers\phase8-harness.ts does.
+
+import { spawn } from "node:child_process";
+import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { expect, it } from "vitest";
+import { parseXml, presetDescription } from "../src/presets/index.js";
+import { defaultPreviewDir } from "../src/preview/index.js";
+import { FakePlugin } from "./helpers/fake-plugin.js";
+import { LightroomSim, nefDump } from "./helpers/lightroom-sim.js";
+import { renderedDumps } from "./helpers/lightroom-sim-rendered.js";
+
+const repo = fileURLToPath(new URL("../../", import.meta.url));
+const FIXTURES = fileURLToPath(new URL("./fixtures/presets/", import.meta.url));
+
+it("dry run of npm run phase8:check", { timeout: 1800000 }, async () => {
+  const scratch = mkdtempSync(path.join(os.tmpdir(), "lrc-avg-p8dry-"));
+  for (const d of ["logs", "out", "localappdata", "presets"]) mkdirSync(path.join(scratch, d));
+  const presetDir = path.join(scratch, "presets");
+  copyFileSync(path.join(FIXTURES, "reference-rendered.lrc15.xmp"), path.join(presetDir, "AVG preset reference rendered.xmp"));
+  copyFileSync(path.join(FIXTURES, "reference-rendered-mono.lrc15.xmp"), path.join(presetDir, "AVG preset reference rendered mono.xmp"));
+  const bridgeLog = path.join(scratch, "bridge.log");
+  writeFileSync(bridgeLog, "");
+  const plugin = await FakePlugin.start();
+  plugin.token = "dry-token-p8";
+  const tokenFile = path.join(scratch, "dry_token");
+  writeFileSync(tokenFile, plugin.token);
+  const lr = new LightroomSim(defaultPreviewDir());
+  lr.renderModel = "tonal";
+  const lib = (uuid: string, local_id: number, filename: string, file_format: string, settings: Record<string, unknown>, copy_name?: string) =>
+    lr.library.photos.push({ uuid, local_id, filename, rating: 0, keywords: [], day: "2004-09-25", gps: null, file_format, settings: structuredClone(settings), ...(copy_name ? { copy_name } : {}) });
+  lib("SIM-NEF2", 11, "_DSC0103.NEF", "RAW", nefDump.settings);
+  lib("SIM-JPG", 12, "DSC_0031.JPG", "JPG", renderedDumps["15.4"].settings);
+  lib("SIM-JPG-11", 13, "DSC_0031.JPG", "JPG", renderedDumps["11.0"].settings);
+  lib("SIM-JPG-C1", 14, "DSC_0031.JPG", "JPG", renderedDumps["15.4"].settings, "Copy 1");
+  lib("SIM-TIF", 15, "20260907-_OZ80099-Edit.tif", "TIFF", renderedDumps["15.4"].settings);
+  lr.missing.add("SIM-TIF");
+  lr.library.collections.push({ local_id: 503, name: "fixtures", smart: false, photos: [lr.uuid, "SIM-NEF2", "SIM-JPG", "SIM-JPG-11", "SIM-JPG-C1", "SIM-TIF"] });
+  lr.install(plugin);
+  const env = {
+    ...process.env,
+    LRC_AVG_COMMAND_PORT: String(plugin.commandPort),
+    LRC_AVG_EVENT_PORT: String(plugin.eventPort),
+    LRC_AVG_TOKEN_FILE: tokenFile,
+    LRC_AVG_LOG_DIR: path.join(scratch, "logs"),
+    LRC_AVG_P8_OUT: path.join(scratch, "out"),
+    LRC_AVG_PLUGIN_LOG: bridgeLog,
+    LRC_AVG_PRESET_DIR: presetDir,
+    LOCALAPPDATA: path.join(scratch, "localappdata"),
+  };
+
+  // "Claude Desktop": the real engine over stdio MCP.
+  let desk: Client | null = null;
+  const call = async (name: string, args: Record<string, unknown>): Promise<Record<string, unknown>> => {
+    if (!desk) {
+      desk = new Client({ name: "dry-desktop", version: "0" });
+      await desk.connect(new StdioClientTransport({ command: process.execPath, args: [path.join(repo, "engine/dist/mcp/main.js")], env: env as Record<string, string>, stderr: "pipe" }));
+    }
+    const r = (await desk.callTool({ name, arguments: args }, undefined, { timeout: 180000 })) as { content: Array<{ type: string; text?: string }> };
+    return JSON.parse(r.content.find((x) => x.type === "text")?.text ?? "{}") as Record<string, unknown>;
+  };
+  const chat = async (): Promise<string> => {
+    const begin = await call("lr_begin_session", { intent_id: "portrait_natural_light", return_image: "none" });
+    const sid = String(begin["session_id"]);
+    await call("lr_step", { session_id: sid, settings: { vibrance: 3 }, rationale: "dry run", return_image: "none" });
+    const end = await call("lr_end_session", { session_id: sid, outcome: "accept" });
+    return `chat: begin ${String(begin["ok"])} on the ${String(begin["pipeline"])} pipeline, end ${String(end["outcome"])}`;
+  };
+  const clickPreset = (name: string): string => {
+    const file = readdirSync(presetDir, { recursive: true, encoding: "utf8" }).find((f) => path.basename(f) === `${name}.xmp`);
+    if (!file) return `preset ${name}: no file`;
+    const target = lr.settingsOf(lr.selected);
+    let n = 0;
+    for (const [attr, raw] of presetDescription(parseXml(readFileSync(path.join(presetDir, file), "utf8"))).attrs) {
+      const key = attr.replace(/^crs:/, "");
+      if (!attr.startsWith("crs:") || !(key in target) || (key === "CameraProfile" && raw.startsWith("Default "))) continue;
+      const was = target[key];
+      target[key] = typeof was === "number" ? Number(raw) : typeof was === "boolean" ? raw === "True" : raw;
+      n++;
+    }
+    return `preset ${name} clicked on ${lr.selected}: ${n} keys`;
+  };
+
+  const notes: string[] = [];
+  const cli = spawn(process.execPath, [path.join(repo, "engine/dist/devtools/phase8-check-cli.js")], { env, stdio: ["pipe", "pipe", "pipe"] });
+  let out = "";
+  let tail = "";
+  cli.stderr.on("data", (d) => (out += String(d)));
+  const enter = (s = ""): void => void cli.stdin.write(`${s}\n`);
+  let pending = Promise.resolve();
+  const prompt = async (text: string): Promise<boolean> => {
+    if (/Type y or n, then Enter:\s*$/.test(text)) enter("y");
+    else if (/3\. Then press Enter here\.\s*$/.test(text)) {
+      plugin.dropEventClient(); // Lightroom quit and started again
+      enter();
+    } else if (/click "(AVG P8check [^"]+)" once\. Then press Enter here\.\s*$/.test(text)) {
+      notes.push(clickPreset(/click "(AVG P8check [^"]+)" once/.exec(text)?.[1] as string));
+      enter();
+    } else if (/6\. Come back to this window and press Enter\.\s*$/.test(text)) {
+      notes.push(await chat());
+      enter();
+    } else if (/^ {2}3\. Press Enter here\.\s*$/.test(text)) {
+      for (const f of readdirSync(presetDir)) if (f.endsWith(".xmp")) unlinkSync(path.join(presetDir, f));
+      enter();
+    } else if (/[Pp]ress Enter[^\n]*\.\s*$/.test(text)) enter();
+    else return false;
+    return true;
+  };
+  cli.stdout.on("data", (d) => {
+    const text = String(d);
+    out += text;
+    pending = pending.then(async () => {
+      const lines = (tail + text).split("\n");
+      tail = lines.pop() ?? "";
+      if (tail && (await prompt(tail))) tail = "";
+    });
+  });
+  const code = await new Promise((r) => cli.on("close", r));
+  await (desk as Client | null)?.close();
+  await plugin.close();
+  const transcript = out.split(os.homedir()).join("%USERPROFILE%");
+  writeFileSync(path.join(repo, "logs", "scratch-p8-dryrun-output.txt"), `${transcript}\n[driver] ${notes.join("\n[driver] ")}\n[driver] exit code ${String(code)}; History steps ${lr.history.length}; exports ${lr.exports}; scratch ${scratch.split(os.homedir()).join("%USERPROFILE%")}\n`);
+  expect(code).toBe(0);
+});

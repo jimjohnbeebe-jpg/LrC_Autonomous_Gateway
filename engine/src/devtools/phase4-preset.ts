@@ -91,7 +91,7 @@ async function prepareSource(deps: Phase4Deps, photo: Photo, pick: Picked): Prom
 }
 
 /** 2. Jim quits and starts Lightroom; true once the plugin has connected again. */
-export async function restartLightroom(deps: Phase4Deps, run: Run): Promise<boolean> {
+export async function restartLightroom(deps: Pick<Phase4Deps, "client" | "prompt" | "say" | "restartTimeoutMs">, run: Pick<Run, "results" | "fail">): Promise<boolean> {
   const out: Json = { ok: false };
   run.results["restart"] = out;
   deps.say("");
@@ -113,7 +113,7 @@ export async function restartLightroom(deps: Phase4Deps, run: Run): Promise<bool
 }
 
 /** A connection made after `before` (the client counts each handshake), within `timeoutMs`. */
-async function waitForNewConnection(deps: Phase4Deps, before: number, timeoutMs: number): Promise<boolean> {
+async function waitForNewConnection(deps: Pick<Phase4Deps, "client">, before: number, timeoutMs: number): Promise<boolean> {
   const until = Date.now() + timeoutMs;
   while (Date.now() < until) {
     if (deps.client.stats.connects > before && deps.client.getState() === "connected") return true;

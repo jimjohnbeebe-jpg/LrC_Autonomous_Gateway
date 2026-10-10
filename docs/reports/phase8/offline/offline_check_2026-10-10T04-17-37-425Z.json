@@ -1,0 +1,58 @@
+{
+  "check": "offline",
+  "started": "2026-10-10T04:17:37.436Z",
+  "missing": {
+    "uuid": "F472C80A-31EF-47B1-8C05-6910CC7D90AA",
+    "filename": "20260907-_OZ80099-Edit.tif"
+  },
+  "present": {
+    "uuid": "12409199-51E4-4AC3-8EE9-6DB994858630",
+    "filename": "DSC_0031.JPG Copy 1"
+  },
+  "lines": {
+    "missing_reported": true,
+    "present_reported": true,
+    "context_tool_reports": true,
+    "begin_refused": true,
+    "write_refused": true,
+    "export_refused": true,
+    "nothing_written": true,
+    "selection_restored": true
+  },
+  "errors": [],
+  "plugin_version": "0.19.1",
+  "selected_uuid": "81FFC502-9B5E-4B80-B3DF-40103C041EB1",
+  "contexts": {
+    "missing": {
+      "filename": "20260907-_OZ80099-Edit.tif",
+      "file_format": "TIFF",
+      "available": false,
+      "availability_error": null,
+      "smart_preview": false,
+      "path": "D:\\Developer\\LrC_Autonomous_Gateway\\fixtures\\S10\\20260907-_OZ80099-Edit.tif"
+    },
+    "present": {
+      "filename": "DSC_0031.JPG",
+      "file_format": "JPG",
+      "available": true,
+      "availability_error": null,
+      "smart_preview": true,
+      "path": "G:\\Media\\Photos\\Archive - Jim\\2004\\2004-09-25\\DSC_0031.JPG"
+    }
+  },
+  "selected_by": "check",
+  "context_tool": {
+    "original_missing": true,
+    "original_missing_note": "The original file of 20260907-_OZ80099-Edit.tif is missing (last known at D:\\Developer\\LrC_Autonomous_Gateway\\fixtures\\S10\\20260907-_OZ80099-Edit.tif), so Lightroom cannot edit or export it. Nothing was written. Tell the user, and ask them to reconnect the file in Lightroom (Library > Find All Missing Photos), then try again."
+  },
+  "begin": "ORIGINAL_MISSING",
+  "plugin_refusals": {
+    "apply_settings": "ORIGINAL_MISSING",
+    "export_preview": "ORIGINAL_MISSING"
+  },
+  "differing_after": [],
+  "suggestion": "WORKED",
+  "plugin_log_copied": "offline_bridge_log_2026-10-10T04-17-37-425Z.txt",
+  "node": "v24.11.1",
+  "engine_version": "0.23.1"
+}

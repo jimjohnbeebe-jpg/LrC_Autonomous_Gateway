@@ -1,8 +1,8 @@
 ---
 report: offline — does LrC-AVG refuse a photo whose original file is missing?
 phase: 8 (fix/offline-original and fix/offline-file-exists, between rows 4 and 5)
-status: template
-authored_by: "Template, harness, pre-run findings, the first three runs written up from their files: Claude Code (Opus 5.5), 2026-10-09 (fix/offline-original, fix/offline-file-exists). Observed: Jim ran npm run offline:check three times on 2026-10-09 and reported the menu item; the re-run is blank until he runs it. Verdict: Jim."
+status: accepted
+authored_by: "Template, harness, pre-run findings, the first three runs written up from their files: Claude Code (Opus 5.5), 2026-10-09 (fix/offline-original, fix/offline-file-exists). Observed: Jim ran npm run offline:check three times on 2026-10-09, reported the menu item, and ran the re-run on 2026-10-09 21:17 local; Claude Code wrote both up from the result files (docs/offline-results). Verdict: Jim (go, 2026-10-09)."
 date: 2026-10-09
 ---
 
@@ -45,7 +45,7 @@ date: 2026-10-09
 |---|---|
 | The check | `engine\src\devtools\offline-check.ts` (the steps), `offline-check-cli.ts` (`npm run offline:check`) |
 | Tests | `engine\tests\offline-check.test.ts` (the check against the simulated plugin), `engine\tests\offline-original.test.ts` (the engine's refusals, sync, export, the HUD line) |
-| Runs 1-3 | `docs\reports\phase8\offline\offline_check_*.json` (the check's own result files), `bridge_log_excerpts.txt` (the plugin log lines of the three runs) |
+| Runs | `docs\reports\phase8\offline\offline_check_*.json` (the check's own result files: runs 1-3 and the re-run), `bridge_log_excerpts.txt` (runs 1-3), `bridge_log_excerpts_rerun.txt` (the re-run) |
 
 **What `npm run offline:check` is written to do** [handle: `engine\src\devtools\offline-check.ts` header]:
 1. It checks that the plugin is 0.19.1 or later.
@@ -106,21 +106,28 @@ Results go to `%TEMP%\LrC-AVG\offline\`, and Claude Code collects them.
 - **Selection:** Jim's selection was put back in each run (`selection_restored` true).
 - **The menu item:** "There is a menu item under Library that says 'Find all missing photos,' but not a 'Find Missing Photos.'" [stated: Jim, 2026-10-09]. Jim ran the check several times because the question was ambiguous, so the three y/n answers are not used.
 
-**Re-run:** *blank until Jim runs it.*
+**Re-run, 2026-10-09 21:17 local, plugin 0.19.1, engine 0.23.1: `Offline original check: WORKED`** [handle: `docs\reports\phase8\offline\offline_check_2026-10-10T04-17-37-425Z.json`; `bridge_log_excerpts_rerun.txt`]:
+- **The two photos:** the TIFF read `available` false, the JPG true. The check selected the TIFF itself (`selected_by` "check"), so Jim did not click.
+- **Context tool:** `lr_get_active_photo_context` gave `original_missing` true, with the note: "The original file of 20260907-_OZ80099-Edit.tif is missing (last known at D:\Developer\LrC_Autonomous_Gateway\fixtures\S10\20260907-_OZ80099-Edit.tif), so Lightroom cannot edit or export it. Nothing was written. Tell the user, and ask them to reconnect the file in Lightroom (Library > Find All Missing Photos), then try again."
+- **Begin:** `lr_begin_session` answered `ORIGINAL_MISSING`. The plugin log shows no `create_snapshot`, so the begin stopped before its snapshot [handle: `bridge_log_excerpts_rerun.txt`, 21:17:38.061-.086: get_context, get_settings, get_prefs, get_context].
+- **Plugin refusals:** `apply_settings` and `export_preview` by uuid each answered `original_missing`. Both refusals are in the plugin log (21:17:38.089, 21:17:38.105).
+- **Nothing written:** no setting of the TIFF differed after the check (`differing_after` []).
+- **Selection:** Jim's selection was put back.
+- **Not recorded:** which signal said false (`sdk_available`, `file_exists`). The check's result file leaves both fields out (`offline-check.ts` `pick`), so this stays [unverified].
 
 ## Numbers
 
 | Line | Runs 1-3 | Re-run |
 |---|---|---|
-| missing reported (`available` false for the TIFF) | NO, then YES, YES | |
-| present reported (`available` true for the JPG) | YES ×3 | |
-| context tool reports `original_missing` | not run | |
-| begin refused (`ORIGINAL_MISSING`) | not run | |
-| write refused | not run | |
-| export refused | not run | |
-| nothing written | not run (nothing was sent) | |
-| selection restored | YES ×3 | |
-| TIFF has a smart preview | no | |
+| missing reported (`available` false for the TIFF) | NO, then YES, YES | YES |
+| present reported (`available` true for the JPG) | YES ×3 | YES |
+| context tool reports `original_missing` | not run | YES |
+| begin refused (`ORIGINAL_MISSING`) | not run | YES |
+| write refused | not run | YES |
+| export refused | not run | YES |
+| nothing written | not run (nothing was sent) | YES |
+| selection restored | YES ×3 | YES |
+| TIFF has a smart preview | no | no |
 | the Library menu item | "Find all missing photos" [stated] | — |
 
 ## Analysis (Claude Code)
@@ -130,12 +137,15 @@ Results go to `%TEMP%\LrC-AVG\offline\`, and Claude Code collects them.
 
 ## Verdict
 
-*Jim's, after the re-run.*
+Suggested by the check: **WORKED** (every line YES).
+
+**Jim's verdict: go** [stated: Jim, 2026-10-09, "Go (Recommended)"].
 
 ## Consequences / open questions
 
-- Still [unverified] after the re-run:
+- Still [unverified]:
+  - which of the two signals said false in the re-run (not recorded);
   - the Deck/HUD line for a file lost during an open edit (tested against the simulated plugin only [handle: `engine\tests\offline-original.test.ts` "lost during an edit"]);
   - what either signal says for a missing original that has a smart preview;
   - `LrFileUtils.exists` on a disconnected network drive (how long it takes).
-- After the re-run: vault `MCP_TOOLS.md` gets the `ORIGINAL_MISSING` code and the context fields; `LR_SDK_NOTES.md` gets the stale first answer and the two-signal rule.
+- Done with this report (docs/offline-results): vault `MCP_TOOLS.md` has the `ORIGINAL_MISSING` code and the context fields; `LR_SDK_NOTES.md` has the stale first answer and the two-signal rule.

@@ -1,8 +1,8 @@
 ---
 report: PHASE8 — does LrC-AVG edit every image format Lightroom Classic develops?
 phase: 8 (row 6, phase-8/check)
-status: observed
-authored_by: "Template, harness, pre-run findings: Claude Code (Opus 5.5), 2026-10-10 (phase-8/check). Observed: Jim ran npm run phase8:check on 2026-10-10 09:11-09:37 local; Claude Code wrote it up from the result files (docs/phase8-check-results). Verdict: Jim (to come)."
+status: accepted
+authored_by: "Template, harness, pre-run findings: Claude Code (Opus 5.5), 2026-10-10 (phase-8/check). Observed: Jim ran npm run phase8:check on 2026-10-10 09:11-09:37 local; Claude Code wrote it up from the result files (docs/phase8-check-results). Verdict: Jim (go, 2026-10-10)."
 date: 2026-10-10
 ---
 
@@ -215,7 +215,7 @@ The bit depths and CMYK come from the file names S10 gave them [handle: `docs\re
 
 Suggested by the check: **WORKED** (every line YES).
 
-**Jim's verdict:** *to come.*
+**Jim's verdict: go** [stated: Jim, 2026-10-10, "Go (Recommended)"].
 
 ## Consequences / open questions
 

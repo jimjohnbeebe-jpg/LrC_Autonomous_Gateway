@@ -1,0 +1,26 @@
+Plugin log lines of the re-run, 2026-10-09 21:17 local (from offline_bridge_log_2026-10-10T04-17-37-425Z.txt, saved by the check under %TEMP%\LrC-AVG\offline\).
+
+2026-10-09 21:15:53.468 INFO  bridge: receive: closed
+2026-10-09 21:15:59.632 INFO  bridge: send: closed
+2026-10-09 21:16:16.619 INFO  bridge: starting generation 1 (receive 8765, send 8766)
+2026-10-09 21:16:22.036 INFO  bridge: token written to %USERPROFILE%\.lrc-avg\bridge_token
+2026-10-09 21:16:22.052 INFO  bridge: ports 8765/8766 written to %USERPROFILE%\.lrc-avg\bridge_ports.json
+2026-10-09 21:16:22.054 INFO  bridge: listening (generation 1)
+2026-10-09 21:17:37.456 INFO  bridge: receive: engine connected
+2026-10-09 21:17:37.975 INFO  bridge: send: engine connected
+2026-10-09 21:17:37.975 INFO  bridge: hello fbed472f-dd71-4ed2-b233-54dfb37f8b07
+2026-10-09 21:17:37.979 INFO  bridge: get_selection 2db65e76-7747-4440-a791-5bf3446307e5
+2026-10-09 21:17:37.979 INFO  bridge: get_context 8579bdfc-55d2-4692-9baa-90199b7e2ce3
+2026-10-09 21:17:37.998 INFO  bridge: get_context a82966da-d5b7-426c-ae0c-9991f7eb9bcb
+2026-10-09 21:17:38.006 INFO  bridge: get_settings e4681ac0-7f28-4414-812b-99d918b82f38
+2026-10-09 21:17:38.006 INFO  bridge: select_photo fa367913-c57a-485f-b9f0-f34d404044e1
+2026-10-09 21:17:38.061 INFO  bridge: get_context 35b79fa4-b921-4d95-8f55-aef0a8d7f337
+2026-10-09 21:17:38.069 INFO  bridge: get_settings 74c3bb7f-0a07-47a0-aa8e-a9721dc8f01d
+2026-10-09 21:17:38.076 INFO  bridge: get_prefs 03042919-5971-4fe5-ab76-23a0200ea273
+2026-10-09 21:17:38.086 INFO  bridge: get_context 70b6f499-4bc3-4606-8c31-ea2fe04c0626
+2026-10-09 21:17:38.089 INFO  bridge: apply_settings bc6dc966-7e02-4a24-8cb1-c6216718b1c7
+2026-10-09 21:17:38.089 WARN  bridge: apply_settings failed: original_missing The original file of 20260907-_OZ80099-Edit.tif is missing (last known at D:\Developer\LrC_Autonomous_Gateway\fixtures\S10\20260907-_OZ80099-Edit.tif), so Lightroom cannot edit or export it. Reconnect the file in Lightroom (Library > Find All Missing Photos), then try again.
+2026-10-09 21:17:38.105 INFO  bridge: export_preview f030b151-f7c0-4fa7-ad67-95dc587ce93b
+2026-10-09 21:17:38.105 WARN  bridge: export_preview failed: original_missing The original file of 20260907-_OZ80099-Edit.tif is missing (last known at D:\Developer\LrC_Autonomous_Gateway\fixtures\S10\20260907-_OZ80099-Edit.tif), so Lightroom cannot edit or export it. Reconnect the file in Lightroom (Library > Find All Missing Photos), then try again.
+2026-10-09 21:17:38.114 INFO  bridge: get_settings d33f310f-51a1-4ee0-9ca7-a909eaca40f1
+2026-10-09 21:17:38.121 INFO  bridge: select_photo 95496be3-ab12-4558-a3ba-9448d781382e

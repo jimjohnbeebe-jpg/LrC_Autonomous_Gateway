@@ -85,7 +85,7 @@ export function readbackError(map: ParamMap, written: SdkSettings, readBack: Sdk
  * docs\reports\phase8\S10.md "Consequences" item 8]. Refused with a smart preview too [stated: Jim,
  * 2026-10-09, "Go with recommendations", D1 A]. The plugin's own refusal of writes and exports
  * (Photos.lua missing) reaches here as original_missing, so the code is the same either way. The menu
- * path Library > Find Missing Photos is [unverified] until npm run offline:check asks Jim.
+ * item: Jim saw "Find all missing photos" under Library [stated: Jim, 2026-10-09]; its capitals are [inference].
  */
 export function originalMissing(photo: { available?: boolean | undefined; filename?: unknown; path?: unknown; smart_preview?: boolean | undefined }): ToolError | null {
   if (photo.available !== false) return null;
@@ -95,7 +95,7 @@ export function originalMissing(photo: { available?: boolean | undefined; filena
   return new ToolError(
     "ORIGINAL_MISSING",
     `The original file of ${filename ?? "this photo"} is missing${path ? ` (last known at ${path})` : ""}, so Lightroom cannot edit or export it${preview}. ` +
-      "Nothing was written. Tell the user, and ask them to reconnect the file in Lightroom (Library > Find Missing Photos), then try again.",
+      "Nothing was written. Tell the user, and ask them to reconnect the file in Lightroom (Library > Find All Missing Photos), then try again.",
     true,
     { filename, path, smart_preview: photo.smart_preview ?? null },
   );

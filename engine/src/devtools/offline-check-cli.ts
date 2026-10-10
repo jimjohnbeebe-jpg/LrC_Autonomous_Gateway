@@ -1,7 +1,7 @@
 // `npm run offline:check`: the missing-original check from the command line (the steps are in
 // offline-check.ts). Run from the repo root with Lightroom open on the "fixtures" collection, the LrC-AVG
-// plugin 0.19.0 loaded, and Claude Desktop quit (this takes the engine's instance lock). Jim answers one
-// y/n question in this window. Results, under %TEMP%\LrC-AVG\offline\ (Claude Code collects them):
+// plugin 0.19.1 loaded, and Claude Desktop quit (this takes the engine's instance lock). If Lightroom does
+// not select the TIFF, Jim clicks it and presses Enter in this window. Results, under %TEMP%\LrC-AVG\offline\ (Claude Code collects them):
 //   offline_check_<time>.json        the results
 //   offline_bridge_log_<time>.txt    a copy of the plugin's log, user folder redacted
 
@@ -15,7 +15,7 @@ import { ToolLog } from "../log/index.js";
 import { acquireInstanceLock, BridgeGate, devOverrides, ENGINE_VERSION, Tools } from "../mcp/index.js";
 import { loadDefaultParamMap } from "../params/index.js";
 import { PreviewService } from "../preview/index.js";
-import { describeError, type Answer } from "./phase1-check.js";
+import { describeError } from "./phase1-check.js";
 import { redactHome } from "./phase2-check.js";
 import { runOfflineCheck } from "./offline-check.js";
 
@@ -40,20 +40,16 @@ function save(results: Record<string, unknown>): string {
   return file;
 }
 
-/** y/n questions in this window (wb-check-cli.ts). */
-function terminal(): { ask: (question: string) => Promise<Answer>; close: () => void } {
+/** A line typed in this window (Enter), for the one step where Jim clicks the photo himself. */
+function terminal(): { prompt: (text: string) => Promise<string | null>; close: () => void } {
   const rl = createInterface({ input: process.stdin, terminal: false });
   const lines = rl[Symbol.asyncIterator]();
-  const ask = async (question: string): Promise<Answer> => {
-    for (;;) {
-      process.stdout.write(`${question} Type y or n, then Enter: `);
-      const next = await lines.next();
-      if (next.done) return "no answer";
-      const answer = String(next.value).trim().toLowerCase();
-      if (answer === "y" || answer === "n") return answer;
-    }
+  const prompt = async (text: string): Promise<string | null> => {
+    process.stdout.write(`${text} `);
+    const next = await lines.next();
+    return next.done ? null : String(next.value).trim();
   };
-  return { ask, close: () => rl.close() };
+  return { prompt, close: () => rl.close() };
 }
 
 async function main(): Promise<number> {
@@ -72,7 +68,7 @@ async function main(): Promise<number> {
     ensureBridge: () => gate.ready(),
     log: new ToolLog(path.join(OUT_DIR, `offline_check_tools_${stamp}`)),
   });
-  const { worked, results } = await runOfflineCheck({ client, gate, tools, map, ask: io.ask, say: (line) => console.log(line) });
+  const { worked, results } = await runOfflineCheck({ client, gate, tools, map, prompt: io.prompt, say: (line) => console.log(line) });
   io.close();
   console.log(`Results saved automatically: ${redact(save(results))}`);
   console.log('Nothing to copy. Tell Claude Code "done".');

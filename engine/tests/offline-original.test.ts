@@ -35,7 +35,7 @@ describe("a photo whose original file is missing", () => {
     lr.missing.add("SIM-UUID");
     const e = await fails(tools.beginSession({ intent_id: "test_plain", ...quiet }));
     expect(e.body()).toMatchObject({ code: "ORIGINAL_MISSING", recoverable: true, details: { filename: "20260907-_OZ80093.NEF", path: "D:\\Photos\\20260907-_OZ80093.NEF", smart_preview: false } });
-    expect(e.message).toMatch(/original file of 20260907-_OZ80093\.NEF is missing \(last known at D:\\Photos\\20260907-_OZ80093\.NEF\).*Nothing was written\. Tell the user.*Library > Find Missing Photos/);
+    expect(e.message).toMatch(/original file of 20260907-_OZ80093\.NEF is missing \(last known at D:\\Photos\\20260907-_OZ80093\.NEF\).*Nothing was written\. Tell the user.*Library > Find All Missing Photos/);
     expect([sent("create_snapshot"), sent("apply_settings"), sent("export_preview")]).toEqual([[], [], []]);
     expect(existsSync(logDir) ? readdirSync(logDir) : []).toEqual([]); // no session log either
   });

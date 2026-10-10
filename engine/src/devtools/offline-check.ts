@@ -1,15 +1,18 @@
-// `npm run offline:check` (fix/offline-original, plugin 0.19.0, engine 0.23.0): does Lightroom report a
+// `npm run offline:check` (fix/offline-original; plugin 0.19.1, engine 0.23.1): does Lightroom report a
 // missing original, and does LrC-AVG refuse it before writing? On Jim's catalog, against the TIFF whose
 // original is gone [stated: Jim, 2026-10-09, "seems to have disappeared"; docs\reports\phase8\S10.md]
 // and a photo that is there (the S10 recorder's photo, DSC_0031.JPG Copy 1). Steps:
-//   1. the plugin is 0.19.0 or later;
+//   1. the plugin is 0.19.1 or later (the file-on-disk signal, fix/offline-file-exists);
 //   2. get_context of both by uuid: `available` false for the TIFF, true for the JPG; when the TIFF is
 //      not reported missing the check stops here, so no session or write ever reaches a photo that is there;
-//   3. the TIFF selected: lr_get_active_photo_context says original_missing; lr_begin_session is refused
+//   3. the TIFF selected (by the check, else Jim clicks it: Lightroom did not select it in Jim's runs 2-3,
+//      "active photo nil, 20 selected" [handle: docs\reports\phase8\offline\bridge_log_excerpts.txt]):
+//      lr_get_active_photo_context says original_missing; lr_begin_session is refused
 //      with ORIGINAL_MISSING; its settings are as before;
 //   4. the plugin's own refusals by uuid: apply_settings (the photo's own exposure, so a write that got
 //      through changes no value) and export_preview answer original_missing;
-//   5. Jim's selection put back; one y/n question: is "Find Missing Photos" in Lightroom's Library menu?
+//   5. Jim's selection put back. (The menu question of the first runs is answered: Jim saw "Find all
+//      missing photos" under Library [stated: Jim, 2026-10-09].)
 // Report: docs\reports\phase8\offline.md. The HUD's line for a file lost mid-edit is tested against the
 // sim only [handle: tests\offline-original.test.ts]; in Lightroom [unverified].
 
@@ -17,11 +20,11 @@ import { pluginVersionAtLeast, type BridgeClient } from "../bridge/index.js";
 import type { BridgeGate, Tools } from "../mcp/index.js";
 import { toToolError } from "../mcp/index.js";
 import { differingSettings, type ParamMap } from "../params/index.js";
-import { describeError, type Answer } from "./phase1-check.js";
+import { describeError } from "./phase1-check.js";
 
 export const MISSING = { uuid: "F472C80A-31EF-47B1-8C05-6910CC7D90AA", filename: "20260907-_OZ80099-Edit.tif" };
 export const PRESENT = { uuid: "12409199-51E4-4AC3-8EE9-6DB994858630", filename: "DSC_0031.JPG Copy 1" };
-export const OFFLINE_PLUGIN = "0.19.0";
+export const OFFLINE_PLUGIN = "0.19.1";
 const INTENT = "landscape_forest_shade";
 
 type Json = Record<string, unknown>;
@@ -30,7 +33,8 @@ export type OfflineDeps = {
   gate: Pick<BridgeGate, "ready" | "release">;
   tools: Pick<Tools, "beginSession" | "endSession" | "getActivePhotoContext" | "sessionManager">;
   map: ParamMap;
-  ask: (question: string) => Promise<Answer>;
+  /** Shows `text`, waits for Enter. */
+  prompt: (text: string) => Promise<string | null>;
   say: (line: string) => void;
 };
 
@@ -73,7 +77,7 @@ export async function runOfflineCheck(deps: OfflineDeps): Promise<{ worked: bool
     if (missing.available !== false) throw new Error(`Lightroom does not report ${MISSING.filename} as missing, so nothing was tried on it.`);
 
     const before = deps.map.fromSdk((await client.request("get_settings", { photo_uuid: MISSING.uuid })).settings);
-    await client.request("select_photo", { uuid: MISSING.uuid });
+    results["selected_by"] = await selectMissing(deps);
     const ctx = (await deps.tools.getActivePhotoContext()).json;
     results["context_tool"] = { original_missing: ctx["original_missing"] ?? null, original_missing_note: ctx["original_missing_note"] ?? null };
     lines["context_tool_reports"] = ctx["original_missing"] === true;
@@ -103,12 +107,28 @@ export async function runOfflineCheck(deps: OfflineDeps): Promise<{ worked: bool
     errors.push(describeError(err));
   }
   lines["selection_restored"] = await restore(deps, selected, errors);
-  const menu = await deps.ask('In Lightroom, open the Library menu (menu bar, top). Is there an item named "Find Missing Photos"?');
-  results["menu_find_missing_photos"] = menu;
   await deps.gate.release(); // the bridge and the instance lock, so the command ends and Claude Desktop can connect (Greptile, PR #101)
   return summarize(results, lines, errors, say);
 }
 
+/**
+ * Select the TIFF. When Lightroom does not select it (Jim's runs 2-3; why is [unverified], e.g. a photo
+ * outside the current view), Jim clicks it, and the check reads the selection back: the TIFF alone.
+ */
+async function selectMissing(deps: OfflineDeps): Promise<"check" | "jim"> {
+  try {
+    await deps.client.request("select_photo", { uuid: MISSING.uuid });
+    return "check";
+  } catch (err) {
+    deps.say(`Lightroom did not select ${MISSING.filename} (${describeError(err)}).`);
+  }
+  await deps.prompt(`In Lightroom's Library, click ${MISSING.filename} (only that photo) in the "fixtures" collection, then press Enter here:`);
+  const sel = await deps.client.request("get_selection", { max: 2 });
+  if (sel.count !== 1 || sel.photos[0]?.uuid !== MISSING.uuid) {
+    throw new Error(`the selection is not ${MISSING.filename} alone (${sel.count} selected, active ${String(sel.photos[0]?.filename ?? "none")}), so nothing was tried on it.`);
+  }
+  return "jim";
+}
 function pick(c: Json): Json {
   return { filename: c["filename"] ?? null, file_format: c["file_format"] ?? null, available: c["available"] ?? null, availability_error: c["availability_error"] ?? null, smart_preview: c["smart_preview"] ?? null, path: c["path"] ?? null };
 }

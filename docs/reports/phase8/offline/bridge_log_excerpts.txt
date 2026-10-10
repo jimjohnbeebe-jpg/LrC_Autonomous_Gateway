@@ -1,0 +1,40 @@
+Plugin log lines of the three npm run offline:check runs, 2026-10-09 20:53-20:55 local (from offline_bridge_log_2026-10-10T03-54-46-032Z.txt, saved by the check under %TEMP%\LrC-AVG\offline\; it holds all three runs).
+
+2026-10-09 20:53:15.369 INFO  bridge: starting generation 1 (receive 8765, send 8766)
+2026-10-09 20:53:21.062 INFO  bridge: token written to %USERPROFILE%\.lrc-avg\bridge_token
+2026-10-09 20:53:21.080 INFO  bridge: ports 8765/8766 written to %USERPROFILE%\.lrc-avg\bridge_ports.json
+2026-10-09 20:53:21.080 INFO  bridge: listening (generation 1)
+2026-10-09 20:53:44.141 INFO  bridge: receive: engine connected
+2026-10-09 20:53:44.648 INFO  bridge: send: engine connected
+2026-10-09 20:53:44.648 INFO  bridge: hello 76668d65-5c25-4089-9315-6c3f774dea61
+2026-10-09 20:53:44.648 INFO  bridge: get_selection 686137f0-df3d-4bfc-a355-b1eef5d9e630
+2026-10-09 20:53:44.648 INFO  bridge: get_context ca8021b9-b8ff-4307-9198-12afba6cc0a9
+2026-10-09 20:53:44.666 INFO  bridge: get_context c423a851-c07c-4d23-85f4-0a8e426b34af
+2026-10-09 20:53:44.670 INFO  bridge: select_photo d15db35b-3466-4f5f-86ea-de781279a848
+2026-10-09 20:54:07.954 INFO  bridge: receive: closed
+2026-10-09 20:54:08.765 INFO  bridge: receive: engine connected
+2026-10-09 20:54:09.272 INFO  bridge: send: engine connected
+2026-10-09 20:54:09.272 INFO  bridge: hello 42984823-42eb-4455-b41f-d89cae7ddf32
+2026-10-09 20:54:11.263 INFO  bridge: receive: closed
+2026-10-09 20:54:30.489 INFO  bridge: receive: engine connected
+2026-10-09 20:54:31.007 INFO  bridge: send: engine connected
+2026-10-09 20:54:31.007 INFO  bridge: hello 31076fc8-1574-4dae-a086-5a09ce8d194e
+2026-10-09 20:54:31.007 INFO  bridge: get_selection 69646f0c-6a3a-4ceb-9004-b4e38c038d16
+2026-10-09 20:54:31.015 INFO  bridge: get_context 6d76ff04-9abc-45cc-a62c-24c337a851e8
+2026-10-09 20:54:31.024 INFO  bridge: get_context 88d010c6-6183-413f-a64a-465c793ffc47
+2026-10-09 20:54:31.030 INFO  bridge: get_settings 4a7949ca-7190-4af7-ab7d-298da00c3d5b
+2026-10-09 20:54:31.036 INFO  bridge: select_photo d6575993-c5f7-4cbb-ac40-16842a93444c
+2026-10-09 20:54:31.036 WARN  bridge: select_photo failed: select_failed Lightroom did not select photo 4028328 (active photo nil, 20 selected)
+2026-10-09 20:54:31.058 INFO  bridge: select_photo 3a0bfea6-06d7-499f-ac51-f7030e319b34
+2026-10-09 20:54:38.376 INFO  bridge: receive: closed
+2026-10-09 20:54:46.064 INFO  bridge: receive: engine connected
+2026-10-09 20:54:46.566 INFO  bridge: send: engine connected
+2026-10-09 20:54:46.566 INFO  bridge: hello bc4ce17b-e6b8-40e9-b123-b051f16a0dc8
+2026-10-09 20:54:46.569 INFO  bridge: get_selection 55473c60-6306-40cf-9aea-e83d7d65aa0b
+2026-10-09 20:54:46.569 INFO  bridge: get_context 2af30103-071e-4d81-9309-a51164d453f3
+2026-10-09 20:54:46.585 INFO  bridge: get_context 80762450-281e-42fd-be7c-922c270b87d0
+2026-10-09 20:54:46.589 INFO  bridge: get_settings 24ea3bae-df8d-42f9-92c5-cad5c3a7938b
+2026-10-09 20:54:46.602 INFO  bridge: select_photo 89758d86-2348-4b57-ba92-45949e574a99
+2026-10-09 20:54:46.610 WARN  bridge: select_photo failed: select_failed Lightroom did not select photo 4028328 (active photo nil, 20 selected)
+2026-10-09 20:54:46.621 INFO  bridge: select_photo 086aa3d9-7f30-4c8a-8d5c-2546e0a990c6
+2026-10-09 20:54:49.170 INFO  bridge: receive: closed

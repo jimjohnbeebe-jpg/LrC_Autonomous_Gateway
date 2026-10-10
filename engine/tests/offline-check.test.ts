@@ -16,11 +16,12 @@ function addPhotos(): void {
   }
 }
 
-const run = () => {
+const run = (click: () => void = () => {}) => {
   const said: string[] = [];
+  let prompts = 0;
   const gate = { released: 0, ready: () => client.waitConnected(2000).then(() => undefined), release: async () => void gate.released++ };
-  const out = runOfflineCheck({ client, gate, tools, map, ask: async () => "y", say: (l) => said.push(l) });
-  return out.then((r) => ({ ...r, said, released: gate.released }));
+  const out = runOfflineCheck({ client, gate, tools, map, prompt: async () => (prompts++, click(), ""), say: (l) => said.push(l) });
+  return out.then((r) => ({ ...r, said, released: gate.released, prompts }));
 };
 
 describe("npm run offline:check", () => {
@@ -33,7 +34,7 @@ describe("npm run offline:check", () => {
     expect(worked).toBe(true);
     expect(released).toBe(1); // the command can end, and Claude Desktop connect (Greptile, PR #101)
     expect(results["lines"]).toEqual({ missing_reported: true, present_reported: true, context_tool_reports: true, begin_refused: true, write_refused: true, export_refused: true, nothing_written: true, selection_restored: true });
-    expect(results["menu_find_missing_photos"]).toBe("y");
+    expect(results["selected_by"]).toBe("check");
     expect(lr.writes).toEqual([]);
     expect(sent("create_snapshot")).toEqual([]);
     expect(lr.selected).toBe("SIM-UUID");
@@ -70,14 +71,42 @@ describe("npm run offline:check", () => {
     expect(released).toBe(1);
   });
 
-  it("FAILED, saying what to do, with a plugin older than 0.19.0", async () => {
+  it("asks Jim to click the TIFF when Lightroom does not select it (Jim's runs 2-3), then goes on", async () => {
     clean();
-    lr.pluginVersion = "0.18.1";
-    plugin.dropEventClient(); // the next hello reports 0.18.1
+    addPhotos();
+    lr.missing.add(MISSING.uuid);
+    lr.selectFault = "Lightroom did not select photo 4028328 (active photo nil, 20 selected)";
+    const { worked, results, prompts } = await run(() => {
+      lr.selectFault = null;
+      lr.selected = MISSING.uuid; // Jim's click
+    });
+    expect(prompts).toBe(1);
+    expect(results["selected_by"]).toBe("jim");
+    expect(results["errors"]).toEqual([]);
+    expect(worked).toBe(true);
+  });
+
+  it("stops when Jim's click left another photo selected", async () => {
+    clean();
+    addPhotos();
+    lr.missing.add(MISSING.uuid);
+    lr.selectFault = "not selected";
+    const { worked, results } = await run(() => {
+      lr.selectFault = null;
+    });
+    expect(worked).toBe(false);
+    expect(results["errors"]).toEqual([expect.stringMatching(/the selection is not 20260907-_OZ80099-Edit\.tif alone .* nothing was tried on it/)]);
+    expect([lr.writes, sent("create_snapshot")]).toEqual([[], []]);
+  });
+
+  it("FAILED, saying what to do, with a plugin older than 0.19.1", async () => {
+    clean();
+    lr.pluginVersion = "0.19.0";
+    plugin.dropEventClient(); // the next hello reports 0.19.0
     await waitUntil(() => client.stats.drops === 1);
     await client.waitConnected(2000);
     const { worked, results } = await run();
     expect(worked).toBe(false);
-    expect(results["errors"]).toEqual([expect.stringMatching(/not 0\.19\.0 or later: File > Plug-in Manager > LrC-AVG > Reload Plug-in/)]);
+    expect(results["errors"]).toEqual([expect.stringMatching(/not 0\.19\.1 or later: File > Plug-in Manager > LrC-AVG > Reload Plug-in/)]);
   });
 });

@@ -137,10 +137,13 @@ function Develop.getContext(payload)
         elseif type(info) == "table" then ctx.smart_preview = next(info) ~= nil end
     end)
     if #errors > 0 then ctx.metadata_errors = errors end
-    -- Plugin 0.19.0 (Photos.available): `available` false for a missing original, absent when the check failed.
-    local available, availabilityError = Photos.available(photo)
+    -- Plugin 0.19.0 (Photos.available): `available` false for a missing original, absent when it could not
+    -- be read. Plugin 0.19.1: its two signals as well, sdk_available and file_exists.
+    local available, availabilityError, signals = Photos.available(catalog, photo)
     ctx.available = available
     ctx.availability_error = availabilityError
+    ctx.sdk_available = signals.sdk_available
+    ctx.file_exists = signals.file_exists
     return ctx
 end
 

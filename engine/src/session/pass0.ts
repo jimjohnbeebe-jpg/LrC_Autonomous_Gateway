@@ -6,7 +6,7 @@
 
 import type { GuardrailAction, PassEntry } from "../log/index.js";
 import { deltaMetrics, summarize, type MetricsDelta } from "../metrics/index.js";
-import { priorsFor, type PriorSet } from "../intents/index.js";
+import { isColourParam, priorsFor, type PriorSet } from "../intents/index.js";
 import { canonicalValuesEqual, type CanonicalSettings, type CanonicalValue, type FromSdkResult, type ParamMap, type Pipeline } from "../params/index.js";
 import { correct } from "./guardrail.js";
 import { historyName, render, write } from "./io.js";
@@ -42,8 +42,12 @@ export async function pass0(ctx: SessionContext, s: Session, t: Target, view: Fr
   if (original) t.last = original;
   const before = original ?? (await render(ctx, s, t, view));
   const intent = s.intent.intent;
-  const priors = combinedPriors(priorsFor(intent, t.pipeline), variant ? priorsFor(variant, t.pipeline) : {}, ctx.deps.map);
   const profile = s.profile ?? intent.profile?.[t.pipeline];
+  // A monochrome profile drops the colour sliders: their priors are left out, also when `profile`
+  // replaces a colour one (Greptile, PR #120; the loader checks only an intent's own profile).
+  const mono = profile !== undefined && ctx.deps.map.cameraProfiles().monochrome(profile);
+  const combined = combinedPriors(priorsFor(intent, t.pipeline), variant ? priorsFor(variant, t.pipeline) : {}, ctx.deps.map);
+  const priors = Object.fromEntries(Object.entries(combined).filter(([name]) => !(mono && isColourParam(name))));
   const changes = pass0Changes(profile, priors, view.settings, ctx.deps.map, t.pipeline);
   const historyNames: string[] = [];
   let current = view;

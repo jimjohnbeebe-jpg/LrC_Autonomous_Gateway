@@ -29,7 +29,7 @@
 // Claude-proposed intents are written only through save(), which the lr_save_intent tool calls
 // after Jim approves in chat (the tool also requires `confirmed: true`).
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -168,6 +168,10 @@ export class IntentLibrary {
    */
   delete(id: string): { path: string; restores_bundled: boolean } {
     if (!INTENT_ID_PATTERN.test(id)) throw new IntentError("intent_not_found", `"${id}" is not an intent id (lower case letters, digits and _).`);
+    // The user folder may be set to the bundled folder itself (Greptile, PR #120): its files are never deleted.
+    if (sameFolder(this.userDir, this.bundledDir)) {
+      throw new IntentError("intent_not_found", `The intents folder is the engine's bundled folder (${this.bundledDir}); bundled intents cannot be deleted.`);
+    }
     const target = path.join(this.userDir, `${id}.json`);
     if (!existsSync(target)) {
       const bundled = existsSync(path.join(this.bundledDir, `${id}.json`));
@@ -305,8 +309,17 @@ function versionProblem(candidate: unknown): string | null {
  * keys, on rendered photos [handle: docs\reports\phase8\S10.md "Profiles", run 2 `keys_dropped`] and on
  * raw ones (159 keys against 177 [handle: docs\reports\phase0\S5\part1\s5_profiles.log]).
  */
-function isColourParam(name: string): boolean {
+export function isColourParam(name: string): boolean {
   return name === "saturation" || name === "vibrance" || name.startsWith("hsl.");
+}
+
+/** Two paths to one folder, after links; Windows paths compare without case. */
+function sameFolder(a: string, b: string): boolean {
+  try {
+    return realpathSync.native(a).toLowerCase() === realpathSync.native(b).toLowerCase();
+  } catch {
+    return false; // a folder that does not exist yet is not the bundled one
+  }
 }
 
 function problemText(err: unknown): string {

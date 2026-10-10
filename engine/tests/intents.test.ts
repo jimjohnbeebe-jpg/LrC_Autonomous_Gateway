@@ -286,6 +286,12 @@ describe("intents: tools", () => {
     expect(existsSync(path.join(userDir, "old_v1.json"))).toBe(false);
     expect((await fails(t.deleteIntent({ id: "../escape", confirmed: true }))).code).toBe("INTENT_NOT_FOUND");
   });
+
+  it("never deletes a bundled file when the user folder is the bundled folder (Greptile, PR #120)", () => {
+    const same = new IntentLibrary({ map, userDir: bundledIntentsDir() });
+    expect(() => same.delete("bw_conversion")).toThrow(/bundled folder/);
+    expect(existsSync(path.join(bundledIntentsDir(), "bw_conversion.json"))).toBe(true);
+  });
 });
 
 describe("schemas", () => {

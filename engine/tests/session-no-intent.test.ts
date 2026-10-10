@@ -6,7 +6,7 @@
 
 import { describe, expect, it } from "vitest";
 import { PIPELINES } from "../src/params/index.js";
-import { SHORT, clean, fails, lr, manager, map, readLog, useSessionHarness } from "./helpers/session-harness.js";
+import { SHORT, clean, fails, intent, lr, manager, map, readLog, useSessionHarness } from "./helpers/session-harness.js";
 
 describe.each(PIPELINES)("lr_begin_session, the user's request first (%s pipeline)", (pipeline) => {
   useSessionHarness(pipeline);
@@ -36,6 +36,18 @@ describe.each(PIPELINES)("lr_begin_session, the user's request first (%s pipelin
     await manager.begin({ intent_id: "test_prior", profile: override });
     expect(map.fromSdk(lr.settings).camera_profile.name).toBe(override);
     expect(lr.settings["Exposure2012"]).toBe(0.2);
+  });
+
+  it("leaves the colour priors out when `profile` makes a colour intent monochrome (Greptile, PR #120)", async () => {
+    clean();
+    intent("test_colour", { profile: { raw: "Adobe Color", rendered: "Color" }, priors: { exposure: 0.2, vibrance: 10, "hsl.orange.sat": -20 } });
+    const mono = pipeline === "raw" ? "Adobe Monochrome" : "Monochrome";
+    const out = await manager.begin({ intent_id: "test_colour", profile: mono });
+    expect(map.fromSdk(lr.settings).camera_profile.name).toBe(mono);
+    const applied = (out.json["pass0_applied"] as Array<{ name: string }>).map((c) => c.name);
+    expect(applied).toContain("exposure");
+    expect(applied).not.toContain("vibrance");
+    expect(applied).not.toContain("hsl.orange.sat");
   });
 
   it("refuses a profile of the other pipeline before the snapshot, and Variants mode without an intent", async () => {

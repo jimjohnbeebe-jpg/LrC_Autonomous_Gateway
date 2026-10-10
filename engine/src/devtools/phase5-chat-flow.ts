@@ -95,7 +95,7 @@ function logsSummary(logs: ChatLogs & { desktop_errors?: string[] }, sessionLogE
 }
 
 /** The bridge back from Claude Desktop's engine: by its idle release, else after Jim quits Claude Desktop. */
-export async function takeBridgeBack(deps: Phase5Deps, run: Run, label: string): Promise<boolean> {
+export async function takeBridgeBack(deps: Pick<Phase5Deps, "gate" | "client" | "prompt" | "say" | "bridgeWaitMs" | "pollMs" | "connectTimeoutMs">, run: Pick<Run, "results" | "fail">, label: string): Promise<boolean> {
   const waitMs = deps.bridgeWaitMs ?? BRIDGE_WAIT_MS;
   const started = Date.now();
   deps.say(`  Waiting for Claude Desktop to give the Lightroom bridge back (a minute after Claude's last call; at most ${Math.round(waitMs / 1000)} s). Leave Claude Desktop open.`);

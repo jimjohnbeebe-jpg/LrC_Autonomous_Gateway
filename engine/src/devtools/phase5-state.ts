@@ -37,10 +37,10 @@ export const checkStateSchema = z.object({
 export type CheckState = z.infer<typeof checkStateSchema>;
 export type PendingChat = NonNullable<CheckState["pending_chat"]>;
 
-export type StateStore = {
+export type StateStore<T = CheckState> = {
   /** The saved state, or null for none (or one set aside as unreadable). */
-  load(): CheckState | null;
-  save(state: CheckState): void;
+  load(): T | null;
+  save(state: T): void;
 };
 
 export function newState(startedAt: string): CheckState {
@@ -59,11 +59,16 @@ export function stateToContinue(store: StateStore, startedAt: string, fresh: boo
 
 /** The state in a JSON file; an unreadable one is renamed `<file>.unreadable-<time>` and treated as none. */
 export function fileStateStore(file: string): StateStore {
+  return jsonStateStore(file, checkStateSchema);
+}
+
+/** A state of any schema in a JSON file, as fileStateStore (the Phase 8 check's too, phase8-state.ts). */
+export function jsonStateStore<T>(file: string, schema: z.ZodType<T>): StateStore<T> {
   return {
     load() {
       if (!existsSync(file)) return null;
       try {
-        return checkStateSchema.parse(JSON.parse(readFileSync(file, "utf8")));
+        return schema.parse(JSON.parse(readFileSync(file, "utf8")));
       } catch {
         renameSync(file, `${file}.unreadable-${new Date().toISOString().replace(/[:.]/g, "-")}`);
         return null;
@@ -78,7 +83,7 @@ export function fileStateStore(file: string): StateStore {
     save(state) {
       mkdirSync(path.dirname(file), { recursive: true });
       const temp = `${file}.writing`;
-      writeFileSync(temp, JSON.stringify(checkStateSchema.parse(state), null, 2) + "\n");
+      writeFileSync(temp, JSON.stringify(schema.parse(state), null, 2) + "\n");
       renameSync(temp, file);
     },
   };
@@ -86,11 +91,16 @@ export function fileStateStore(file: string): StateStore {
 
 /** The state in memory (the tests). */
 export function memoryStateStore(initial: CheckState | null = null): StateStore & { saved: CheckState | null } {
+  return memoryStore(checkStateSchema, initial);
+}
+
+/** A state of any schema in memory (the tests). */
+export function memoryStore<T>(schema: z.ZodType<T>, initial: T | null = null): StateStore<T> & { saved: T | null } {
   const store = {
     saved: initial,
-    load: () => (store.saved ? checkStateSchema.parse(structuredClone(store.saved)) : null),
-    save: (state: CheckState) => {
-      store.saved = checkStateSchema.parse(structuredClone(state));
+    load: () => (store.saved ? schema.parse(structuredClone(store.saved)) : null),
+    save: (state: T) => {
+      store.saved = schema.parse(structuredClone(state));
     },
   };
   return store;

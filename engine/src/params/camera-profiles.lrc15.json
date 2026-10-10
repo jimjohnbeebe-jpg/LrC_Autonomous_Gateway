@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated_by": "spikes/S5/pin-profiles.ts",
-  "generated_at": "2026-10-09T12:54:46.573Z",
+  "generated_at": "2026-10-10T13:56:22.197Z",
   "camera_raw_version": "18.5.1",
   "sources": [
     "docs/reports/phase0/S5/run2/s5_profiles_recorded_2026-09-24T20_53_22.json",

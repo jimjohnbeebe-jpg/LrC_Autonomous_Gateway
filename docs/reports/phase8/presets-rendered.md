@@ -1,7 +1,7 @@
 ---
 report: presets-rendered — how Lightroom writes a rendered photo's white balance and profile into a preset
 phase: 8 (row 5, phase-8/propagation)
-status: observed
+status: accepted
 authored_by: "Template, harness and pre-run findings: Claude Code (Fable 5.1), 2026-10-09 (phase-8/propagation). Observed: Jim."
 date: 2026-10-09
 ---
@@ -118,7 +118,7 @@ If a command prints `problem: the preset's values differ from the selected photo
 
 ## Verdict
 
-*(Jim)* Suggested by Claude Code: **go**. Both files show every key the question asked about; the rendered pipeline's white balance and profile are now written as Lightroom writes them, and the pin carries the newest envelope.
+**Go** [stated: Jim, 2026-10-10, "go" to the recommendation]. Suggested by Claude Code: **go**. Both files show every key the question asked about; the rendered pipeline's white balance and profile are now written as Lightroom writes them, and the pin carries the newest envelope.
 
 ## Consequences / open questions
 

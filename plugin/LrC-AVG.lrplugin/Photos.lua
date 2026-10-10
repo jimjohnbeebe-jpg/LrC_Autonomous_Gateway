@@ -11,6 +11,7 @@
 -- passed [handle: docs\reports\phase4\S7.md "Numbers", item 4]. Metadata reads run inside a read
 -- gate with LrTasks.pcall, as in Develop.lua getContext.
 
+local LrFileUtils = import 'LrFileUtils'
 local LrTasks = import 'LrTasks'
 
 local Photos = {}
@@ -47,25 +48,45 @@ function Photos.describe(catalog, photo)
     return d
 end
 
--- Whether the photo's original file is there (plugin 0.19.0, fix/offline-original): true, false, or
--- nil plus the error when the call failed. checkPhotoAvailability "Reports whether this photo is
--- believed to be present on disk at this time" [handle: https://lrc.mcor.dev/modules/LrPhoto.html,
--- read 2026-10-09]. It runs outside the read gate, as rule 03 asks of a call that may yield; whether
--- it yields, and what it answers for an offline photo with a smart preview, are [unverified] until
--- npm run offline:check (docs\reports\phase8\offline.md).
-function Photos.available(photo)
+-- Whether the photo's original file is there: true, false, or nil when neither signal could be read.
+-- Two signals, and a photo is missing when either says so (plugin 0.19.1, fix/offline-file-exists):
+--   * checkPhotoAvailability "Reports whether this photo is believed to be present on disk at this
+--     time" [handle: https://lrc.mcor.dev/modules/LrPhoto.html, read 2026-10-09]. It is Lightroom's
+--     belief, and it was stale once: it said true for a TIFF that was not on disk, then false 46 s later
+--     [handle: docs\reports\phase8\offline\offline_check_2026-10-10T03-53-44-109Z.json vs
+--     ..._03-54-30-473Z.json `contexts.missing.available`; `Test-Path` on its path printed False].
+--   * LrFileUtils.exists on getRawMetadata("path"), "The current path to the photo file if available;
+--     otherwise, the last known path": 'file', 'directory' or false [handle: the LrPhoto page above;
+--     https://lrc.mcor.dev/modules/LrFileUtils.html exists, read 2026-10-09].
+-- Returns available, error, signals { sdk_available, file_exists } for get_context. Both run outside
+-- the read gate, the path read inside it (rule 03); whether checkPhotoAvailability yields is [unverified].
+function Photos.available(catalog, photo)
+    local signals, errors = {}, {}
     local ok, value = LrTasks.pcall(photo.checkPhotoAvailability, photo)
-    if not ok then return nil, tostring(value) end
-    if type(value) ~= "boolean" then return nil, "checkPhotoAvailability returned " .. tostring(value) end
-    return value, nil
+    if ok and type(value) == "boolean" then signals.sdk_available = value
+    else errors[#errors + 1] = "checkPhotoAvailability: " .. tostring(value) end
+    local path
+    catalog:withReadAccessDo(function() path = read(photo, photo.getRawMetadata, "path") end)
+    if type(path) == "string" and path ~= "" then
+        local okExists, exists = LrTasks.pcall(LrFileUtils.exists, path)
+        if okExists then signals.file_exists = exists == "file"
+        else errors[#errors + 1] = "LrFileUtils.exists: " .. tostring(exists) end
+    else
+        errors[#errors + 1] = "no path"
+    end
+    local available = nil
+    if signals.sdk_available == false or signals.file_exists == false then available = false
+    elseif signals.sdk_available == true or signals.file_exists == true then available = true end
+    return available, (#errors > 0 and table.concat(errors, "; ") or nil), signals
 end
 
 -- The refusal for a photo whose original file is missing, or nil when it is there (or the check
 -- failed). An offline original took every write unchecked and exported nothing in S10 [handle:
 -- docs\reports\phase8\S10.md "Consequences" item 8], so apply_settings and the exports refuse it.
--- The menu path Library > Find Missing Photos is [unverified] until npm run offline:check asks Jim.
+-- The menu item: "There is a menu item under Library that says 'Find all missing photos'" [stated: Jim,
+-- 2026-10-09]; its capitals as written here are [inference: Lightroom's menus use title case].
 function Photos.missing(catalog, photo)
-    if Photos.available(photo) ~= false then return nil end
+    if Photos.available(catalog, photo) ~= false then return nil end
     local name, path
     catalog:withReadAccessDo(function()
         name = read(photo, photo.getFormattedMetadata, "fileName")
@@ -73,7 +94,7 @@ function Photos.missing(catalog, photo)
     end)
     return { code = "original_missing", recoverable = true,
         message = "The original file of " .. tostring(name) .. " is missing (last known at " .. tostring(path) ..
-            "), so Lightroom cannot edit or export it. Reconnect the file in Lightroom (Library > Find Missing Photos), then try again." }
+            "), so Lightroom cannot edit or export it. Reconnect the file in Lightroom (Library > Find All Missing Photos), then try again." }
 end
 
 -- The first way `d` differs from what the engine expects, or nil.

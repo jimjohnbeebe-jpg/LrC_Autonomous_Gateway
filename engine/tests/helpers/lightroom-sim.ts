@@ -268,6 +268,8 @@ export class LightroomSim {
         file_format: other?.file_format ?? this.fileFormat,
         is_virtual_copy: false,
         available: !this.missing.has(uuid),
+        sdk_available: !this.missing.has(uuid),
+        file_exists: !this.missing.has(uuid),
         smart_preview: false,
         path: `D:\\Photos\\${other?.filename ?? this.filename}`,
         ...describePhoto(this, uuid),

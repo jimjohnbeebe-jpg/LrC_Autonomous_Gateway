@@ -85,6 +85,9 @@ export const contextResultSchema = z.looseObject({
    */
   available: z.boolean().optional(),
   availability_error: z.string().optional(),
+  /** Plugin 0.19.1: the two signals `available` comes from (Photos.lua available): checkPhotoAvailability, and the file on disk. */
+  sdk_available: z.boolean().optional(),
+  file_exists: z.boolean().optional(),
   smart_preview: z.boolean().optional(),
 });
 

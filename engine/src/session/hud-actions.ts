@@ -286,7 +286,7 @@ async function finishPick(host: ActionHost, s: Session, v: VariantId, source: Us
 }
 
 /** The HUD's line when the photo's original went missing during the edit (plugin 0.19.0 refuses writes and exports to it). */
-export const MISSING_NOTE = "The photo's original file is missing: reconnect it in Lightroom (Library > Find Missing Photos).";
+export const MISSING_NOTE = "The photo's original file is missing: reconnect it in Lightroom (Library > Find All Missing Photos).";
 
 /**
  * The HUD's stage once an operation of the open session is over (`error`: why it failed, if it did),

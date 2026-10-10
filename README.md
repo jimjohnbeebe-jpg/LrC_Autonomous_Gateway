@@ -1,6 +1,6 @@
 # LrC-AVG — Lightroom Classic Autonomous Vision Gateway
 
-LrC-AVG lets Claude, in Claude Desktop, edit a raw photo in Lightroom Classic the way a photographer does: set a few Develop sliders, look at the result, measure it, adjust again, up to a capped number of passes. It uses only Lightroom's own Develop settings, so every change shows on the sliders, sits in History as a named step, and can be undone. A local engine measures each render (clipping, histogram, pass-to-pass changes) and keeps every pass within clipping limits; Claude's vision makes the aesthetic calls.
+LrC-AVG lets Claude, in Claude Desktop, edit a photo in Lightroom Classic, raw or JPEG or any other format Lightroom develops (see [Supported formats](#supported-formats)), the way a photographer does: set a few Develop sliders, look at the result, measure it, adjust again, up to a capped number of passes. It uses only Lightroom's own Develop settings, so every change shows on the sliders, sits in History as a named step, and can be undone. A local engine measures each render (clipping, histogram, pass-to-pass changes) and keeps every pass within clipping limits; Claude's vision makes the aesthetic calls.
 
 It comes in two halves: a Lightroom plugin, and an engine that Claude Desktop starts as an MCP server.
 
@@ -17,6 +17,34 @@ It comes in two halves: a Lightroom plugin, and an engine that Claude Desktop st
 ## Supported Lightroom versions
 
 LrC-AVG supports Lightroom Classic 15.0 and later, and was tested on 15.6. Earlier versions may work but are untested. On a version older than 15.0 or newer than 15.6, nothing is blocked: the HUD says so once when an edit starts, and Claude sees the same notice when it reads the photo's details. If a newer Lightroom no longer offers a setting LrC-AVG uses, Claude is told which one is not available and the edit stays open. A photo on a process version newer than LrC-AVG knows can be described but not edited.
+
+## Supported formats
+
+Lightroom develops every file through one of two pipelines: **raw** (camera raw files and raw DNGs) or **rendered** (JPEG, TIFF, PNG and the others below). LrC-AVG reads which one a photo uses from its Develop settings, not from its file name, so a `.dng` can be either. Both get the same sliders and intents. Two things differ:
+
+- **White balance:** on a raw photo, temperature is in Kelvin; on a rendered photo, temperature and tint are relative, -100 to +100.
+- **Profiles:** a raw photo takes the Adobe and camera-matching profiles; a rendered photo takes Color or Monochrome. Each intent names one of each.
+
+Each format below was tested on one Windows 11 PC with Lightroom Classic 15.6. A full session means: the intent's starting settings, two passes, an exact revert, a sync onto another photo, and a preset made from it.
+
+| Format | Pipeline | Tested |
+|---|---|---|
+| Camera raw (Nikon NEF) | raw | Full session on 11 photos, virtual copies included |
+| DNG | raw | Full session on 3 photos |
+| DNG (rendered, e.g. from Photoshop) | rendered | Full session on 2 photos |
+| JPEG | rendered | Full session on 6 photos; all 11 intents on one JPEG; one Claude Desktop chat |
+| TIFF (8-bit, 16-bit, 32-bit HDR, CMYK) | rendered | Full session on 4 photos, one of each |
+| PSD | rendered | Full session on 2 photos |
+| PSB (Photoshop Large Document) | rendered | Full session on 1 photo |
+| PNG | rendered | Full session on 1 photo |
+| AVIF (HDR) | rendered | Full session on 1 photo |
+| JPEG XL | rendered | Full session on 1 photo |
+| HEIC / HEIF | rendered | On 1 photo: every slider's limits written and read back, Color and Monochrome, an export, and put back; not in the full-session test |
+
+- **Older photos:** Lightroom's process versions 5 and 6 edit as they are. Four photos on version 5, raw and JPEG, were in the test. An older process version is refused; Claude says so.
+- **Between raw and rendered:** a sync from a raw photo onto a JPEG (or back) copies everything except white balance and the profile, and says it left those two out.
+- **HDR photos** (the 32-bit TIFF, the HDR AVIF) edit like the others, with exposure limited to ±5.
+- **Video** is not supported: Lightroom does not develop it.
 
 ## Install
 
@@ -83,7 +111,7 @@ In Lightroom, choose **File > Plug-in Extras > LrC-AVG - Bridge status**. The di
 
 ## Your first session
 
-1. In Lightroom, select one raw photo (in Library or Develop).
+1. In Lightroom, select one photo (in Library or Develop), raw or JPEG or any format in [Supported formats](#supported-formats).
 2. In Claude Desktop, start a new chat and type: **Tune the active photo for golden hour landscape.**
 3. If Claude Desktop asks whether LrC-AVG may use a tool, allow it.
 
@@ -236,9 +264,9 @@ Your edits stay in the Lightroom catalog: History steps, snapshots, virtual copi
 ## Known limitations
 
 - **One PC tested:** Windows 11, Lightroom Classic 15.5.1 and 15.6. Windows only.
-- **Process version:** a photo still on an older Lightroom process version is refused. Update the photo to the current process version in Develop first.
+- **Process version:** a photo on a Lightroom process version older than version 5 is refused. Update the photo to the current process version in Develop first.
 - **Missing originals:** a photo whose original file Lightroom cannot find is refused, even when it has a smart preview. Claude tells you the file name and its last known folder. Reconnect the file in Lightroom (Library > Find All Missing Photos), then ask again. A sync skips such a photo and syncs the rest. If the file goes missing during an edit, the HUD says so, and **Abort** still puts the photo back.
-- **Global Develop settings only:** no masks or local adjustments, no crop or geometry, no HDR.
+- **Global Develop settings only:** no masks or local adjustments, no crop or geometry. HDR photos edit, with exposure limited to ±5.
 - **One session at a time.** Sync, presets, ratings, keywords and GPS positions are not available until it ends.
 - **Keep Plug-in Manager closed during a session.** Lightroom pauses the plugin while Plug-in Manager or a menu is open (2.5 to 15 s in testing). The engine waits up to 60 s for the plugin during a session, but a long pause during a session has not been tested.
 - **Approve and Claude Desktop:** whether Claude Desktop waits the full 60 s for an Approve has not been tested (in testing, Claude asked in the chat instead of waiting).
@@ -265,7 +293,7 @@ The evidence behind the behaviour this page describes. Paths are in this reposit
 | Version | Tested PC and versions | [handle: `docs/reports/phase5/PHASE5.md` "Numbers", "Plugin, engine, connect time": LrC 15.5.1; "Draft for LR_SDK_NOTES": Windows 11]; LrC 15.6 [handle: `docs/reports/phase6/lrc-version-check/check.txt` section 1] |
 | Supported Lightroom versions | 15.0 the supported baseline, earlier versions untested; 15.6 the newest tested | [stated: Jim, 2026-10-03, "Set version 15.0 as the baseline, but note that it might work on earlier versions (untested.)"]; [handle: `docs/reports/phase6/lrc-version-check/check.txt` section 1, "Lightroom 15.6"] |
 | Supported Lightroom versions | The notice outside 15.0-15.6, once in the HUD and in `lr_get_active_photo_context`; a setting Lightroom no longer reports named as not available, the edit kept open; a newer process version read but not edited | [handle: `engine/src/bridge/lightroom.ts`; `engine/src/mcp/errors.ts` `readbackError`, `featureUnavailable`; `engine/src/params/map.ts` `checkProcessVersion`]; tested against the simulated Lightroom [handle: `engine/tests/lrc-baseline.test.ts`]; in a Lightroom outside 15.0-15.6 [unverified] |
-| Version, Install | The whole install from the release on a fresh Windows account (the release URLs, `npm.cmd install -g <URL>`, `Invoke-WebRequest`, the Plug-in Manager steps) | [unverified] until the packaging check (AC-6), now Phase 8 (vault `PHASES.md`). The parts already run: installing the `.tgz` from a file, `lrc-avg-setup.cmd` and `--remove` against scratch configs, the installed engine's tools, and `Expand-Archive` of the zip [handle: `docs/reports/phase6/package-smoke/smoke.txt` sections 1-4] |
+| Version, Install | The whole install from the release on a fresh Windows account (the release URLs, `npm.cmd install -g <URL>`, `Invoke-WebRequest`, the Plug-in Manager steps) | [unverified] until the packaging check (AC-6), now Phase 9 (vault `PHASES.md`). The parts already run: installing the `.tgz` from a file, `lrc-avg-setup.cmd` and `--remove` against scratch configs, the installed engine's tools, and `Expand-Archive` of the zip [handle: `docs/reports/phase6/package-smoke/smoke.txt` sections 1-4] |
 | Install | Release asset URL form `/releases/download/<tag>/<asset>` | [handle: https://docs.github.com/en/repositories/releasing-projects-on-github/linking-to-releases, read 2026-10-01]; the tag `v1.0.0` is set when the release is made [unverified] |
 | What you need | Node ≥ 22 | [handle: `engine/package.json` `engines`] |
 | What you need | The engine connects to Lightroom on 127.0.0.1 only | [handle: `engine/src/bridge/client.ts:52`] |
@@ -296,7 +324,7 @@ The evidence behind the behaviour this page describes. Paths are in this reposit
 | The HUD | Opens by itself; takes the keyboard when it opens | [handle: `PHASE5.md` "Numbers", "HUD opened by itself"; `docs/reports/phase5/S8.md` "Numbers", "Keyboard stayed with the main window"] |
 | The HUD | Abort and Accept timing and behaviour | [handle: `PHASE5.md` "Numbers", "AC-2"; vault `PRD.md` §6.3 "Buttons as built"] |
 | Menu items | Titles, order (Pick A-C and Approve Pass added); 20 s wait, including for an edit being checked; reports in the HUD | [handle: `Info.lua:25-34`; `HudClick.lua:98, 100-102, 113`]; the first three items and the wait in Lightroom [handle: `PHASE5.md` "Numbers", "Menu items"]; Pick B, Approve Pass and the names Accept Edit / Abort Edit in Lightroom 15.6 [handle: `docs/reports/phase6/hud-p1-check/check.txt` section 3] |
-| Menu items, Known limitations | No keyboard shortcuts | [handle: vault `PHASES.md` Phase 8 (was Phase 6) "Carried from Phase 5", hotkeys] |
+| Menu items, Known limitations | No keyboard shortcuts | [handle: vault `PHASES.md` Phase 9 (was Phase 6) "Carried from Phase 5", hotkeys] |
 | Settings | Labels, defaults, ranges, the invalid-value list | [handle: `plugin/LrC-AVG.lrplugin/Prefs.lua:33-46`, `PluginInfoProvider.lua`] |
 | Settings | Saved as edited; read by the next session; the mode reached the engine | [handle: `docs/reports/phase5/S8.md` "Consequences"; `PHASE5.md` "Numbers", "Settings page reached the engine"] |
 | Settings | Argument > intent > page > default; folders remembered | [handle: `defs-session.ts` `lr_begin_session`; `engine/src/settings/log-folders.ts`] |
@@ -307,9 +335,16 @@ The evidence behind the behaviour this page describes. Paths are in this reposit
 | Where files go | Bundled intents read in place, user intents override | [handle: `engine/src/intents/loader.ts:55-56`; vault `PHASE6_PLAN.md` decision 3] |
 | Where files go | `%TEMP%\LrC-AVG`, `%USERPROFILE%\.lrc-avg` contents | [handle: `Prefs.lua:157-158`; `plugin/LrC-AVG.lrplugin/Log.lua:2`; `Endpoint.lua:2-4`; `log-folders.ts:19`]; previews purged at session end and start [handle: vault `PRD.md` NFR-6; `main.ts:10`] |
 | Uninstall | `--remove`; the order of the two commands; the Plug-in Manager **Remove** button; edits stay in the catalog | [handle: `smoke.txt` sections 2d-2e]; that `npm uninstall` also deletes `lrc-avg-setup` is [inference] (it is the package's own `bin`, `engine/package.json`); **Remove** [unverified]; edits staying is [inference]: uninstalling writes nothing to the catalog |
-| Known limitations | Older process versions refused | [handle: `engine/src/params/canonical.ts:28-33`; `engine/src/mcp/errors.ts:114`] |
-| Known limitations | Missing originals refused, sync skips them, the HUD line, Abort still puts back | [handle: `engine/tests/offline-original.test.ts`, against the simulated plugin]; in Lightroom [unverified] until `docs/reports/phase8/offline.md` is observed; the menu item [stated: Jim, 2026-10-09, "a menu item under Library that says 'Find all missing photos'"], its capitals [inference] |
-| Known limitations | No masks, crop, HDR | [handle: vault `PRD.md` §3] |
+| Known limitations, Supported formats | Process versions 5 and 6 edited, older ones refused | [handle: `engine/src/params/canonical.ts:37, 43` (`SUPPORTED_PROCESS_VERSIONS` "15.4", "11.0"; labels "Version 6", "Version 5"); `engine/src/params/pipeline.ts` `checkProcessVersion`]; four version 5 photos edited in Lightroom [handle: `docs/reports/phase8/PHASE8.md` "Observed", Part 1] |
+| Known limitations | Missing originals refused, sync skips them, the HUD line, Abort still puts back | [handle: `engine/tests/offline-original.test.ts`, against the simulated plugin]; in Lightroom [handle: `docs/reports/phase8/offline.md` "Observed", the re-run; `docs/reports/phase8/PHASE8.md` Part 1, `ORIGINAL_MISSING`]; the menu item [stated: Jim, 2026-10-09, "a menu item under Library that says 'Find all missing photos'"], its capitals [inference] |
+| Known limitations | No masks, crop | [handle: vault `PRD.md` §3] |
+| Supported formats | The two pipelines, read from the photo's settings, not its file name; a `.dng` either | [handle: `engine/src/params/pipeline.ts:1-46`; `docs/reports/phase8/S10.md` "Pre-run findings" item 1] |
+| Supported formats | White balance Kelvin on raw, relative -100 to +100 on rendered; Color and Monochrome on rendered; one profile of each per intent | [handle: `engine/src/params/canonical.ts:65-70`; `engine/src/params/camera-profiles.lrc15.json`; `engine/src/intents/schema.ts`; `docs/reports/phase8/S10.md` "Numbers"] |
+| Supported formats | The format table: tested PC and version, full sessions per format and photo counts, the 11 intents and the chat on a JPEG | [handle: `docs/reports/phase8/PHASE8.md` "Observed" (Lightroom Classic 15.6) and "Numbers", the per-format table, with one session log per photo in `docs/reports/phase8/P8/sessions/`]; the bit depths and CMYK from the file names [handle: `PHASE8.md` "Numbers"] |
+| Supported formats | HEIC: every slider's limits written and read back, Color and Monochrome, export, put back; not in the full-session test | [handle: `docs/reports/phase8/S10.md` "Observed", run 2, `IMG_0027.HEIC` rows (limits 55+55, Color and Monochrome YES, export YES, put back YES); it was not in the "fixtures" collection when `PHASE8.md` ran: `docs/reports/phase8/P8/p8_state.json` `photos`] |
+| Supported formats | Raw-to-rendered sync leaves out exactly white balance and the profile and says so | [handle: `PHASE8.md` "Observed", Part 3; `engine/src/sync/transfer.ts`] |
+| Supported formats, Known limitations | HDR photos edit, exposure limited to ±5 | [handle: `PHASE8.md` per-format table, sessions `338637` (32-bit TIFF), `2e5d8a` (HDR AVIF)]; the ±5 limit [handle: `docs/reports/phase8/S10.md` "Numbers"; vault `PHASE8_PLAN.md` row 3, R3 A] |
+| Supported formats | Video not developed by Lightroom | [handle: https://helpx.adobe.com/lightroom-classic/help/supported-file-formats.html, read 2026-10-08 (vault `PHASE8_PLAN.md` finding 6)] |
 | Known limitations | Plug-in Manager pauses; the 60 s allowance untested; Desktop's hold untested | [handle: `PHASE5.md` "Consequences" item 2]; both [unverified] |
 | Known limitations | Undo line after a disconnect; Tab, Space and Enter; a long note cut with "..." | [handle: `HudText.lua:72-73`; `HudView.lua:76-81`]; all three in Lightroom 15.6 [handle: `docs/reports/phase6/hud-p1-check/check.txt` section 3] |
 

@@ -36,6 +36,12 @@ const profileSchema = z.object({
   look: lookSchema.nullable(),
   /** Rendered pipeline only: the ConvertToGrayscale value that, with the pair, makes the profile (S10). Absent on raw profiles. */
   convert_to_grayscale: z.boolean().optional(),
+  /**
+   * Rendered pipeline only: the CameraProfile text Lightroom writes for this profile into a preset
+   * file, which is not the "Embedded" the photo holds [handle: engine/tests/fixtures/presets/reference-rendered.lrc15.xmp
+   * crs:CameraProfile="Default Color", reference-rendered-mono.lrc15.xmp "Default Monochrome", LrC 15.6, 2026-10-10].
+   */
+  preset_camera_profile: z.string().min(1).optional(),
   /** Where the pair was observed (path under the repo, plus a tag where it is inferred). */
   evidence: z.string().min(1),
   /** Handle of a run that wrote this exact pair and read it back, or null if none has. */

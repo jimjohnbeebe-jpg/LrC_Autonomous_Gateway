@@ -145,17 +145,30 @@ const S10_RECORDER = "docs/reports/phase8/S10/run1/s10_profiles_recorded_2026-10
 const S10_RUN2 = "docs/reports/phase8/S10/s10_check_2026-10-09T12-24-50-743Z.json";
 const s10Schema = z.object({ captures: z.array(z.object({ camera_profile: z.string(), convert_to_grayscale: z.boolean(), filename: z.string() })) });
 const s10 = s10Schema.parse(JSON.parse(readFileSync(path.join(repoRoot, S10_RECORDER), "utf8")));
+// The CameraProfile text Lightroom writes for each into a preset file comes from the two JPEG reference
+// presets of Phase 8 row 5 (docs/reports/phase8/presets-rendered.md), so a re-pin keeps it (Greptile, PR #105).
+const PRESET_REFERENCES = { Color: "engine/tests/fixtures/presets/reference-rendered.lrc15.xmp", Monochrome: "engine/tests/fixtures/presets/reference-rendered-mono.lrc15.xmp" } as const;
+function presetCameraProfile(file: string): string {
+  const text = readFileSync(path.join(repoRoot, file), "utf8");
+  const match = /crs:CameraProfile="([^"]+)"/.exec(text);
+  if (!match) throw new Error(`${file}: no crs:CameraProfile attribute`);
+  return match[1] as string;
+}
 for (const [name, grayscale] of [["Color", false], ["Monochrome", true]] as const) {
   const capture = s10.captures.find((c) => c.convert_to_grayscale === grayscale);
   if (!capture) throw new Error(`${S10_RECORDER}: no capture with convert_to_grayscale ${String(grayscale)}`);
   const label = `recorded: Embedded${grayscale ? " + ConvertToGrayscale" : ""}`;
+  const reference = PRESET_REFERENCES[name];
   profiles.push({
     name,
     family: "rendered",
     camera_profile: capture.camera_profile,
     look: null,
     convert_to_grayscale: grayscale,
-    evidence: `${S10_RECORDER}: recorded on ${capture.filename} Copy 1; the Profile row read "${name}" [stated: Jim, 2026-10-09]`,
+    preset_camera_profile: presetCameraProfile(reference),
+    evidence:
+      `${S10_RECORDER}: recorded on ${capture.filename} Copy 1; the Profile row read "${name}" [stated: Jim, 2026-10-09]. ` +
+      `preset_camera_profile: ${reference} crs:CameraProfile, written by LrC 15.6 from the same photo (CameraProfile ${capture.camera_profile}, ConvertToGrayscale ${String(grayscale)}), 2026-10-10 [stated: Jim, "presets done"]`,
     write_verified: `${S10_RUN2} writes[*].profiles.pairs "${label}": taken on all 18 rendered photos`,
   });
 }

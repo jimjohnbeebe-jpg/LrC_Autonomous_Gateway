@@ -7,11 +7,13 @@
 
 import type { BridgeClient } from "../bridge/index.js";
 import { ToolError, toToolError } from "../mcp/errors.js";
+import type { NotTransferable } from "./transfer.js";
 
 export type SyncTargets = "selected" | { uuids: string[] };
 /**
  * A photo the sync did not finish, and why. `snapshot` and `history_names`: a target that failed
- * after its snapshot, with the steps written before the failure.
+ * after its snapshot, with the steps written before the failure. `not_transferable`: a target skipped
+ * because nothing of the source goes onto its pipeline (NOTHING_TRANSFERABLE, transfer.ts).
  */
 export type Skip = {
   uuid: string | null;
@@ -20,6 +22,7 @@ export type Skip = {
   reason: string;
   snapshot?: { name: string; id: string };
   history_names?: string[];
+  not_transferable?: NotTransferable[];
 };
 /** What a failed target's error details can carry (target.ts failedAfterSnapshot). */
 export type FailureDetails = Partial<Skip> & { snapshot_name?: string; maybe_written?: string };

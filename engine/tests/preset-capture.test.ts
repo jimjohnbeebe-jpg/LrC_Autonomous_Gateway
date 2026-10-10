@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { capturePreset, REFERENCES, type CaptureIo } from "../src/devtools/preset-capture.js";
+import { capturePreset, expectedKeys, REFERENCES, type CaptureIo } from "../src/devtools/preset-capture.js";
 import { loadDefaultParamMap } from "../src/params/index.js";
 
 const map = loadDefaultParamMap();
@@ -68,6 +68,25 @@ describe("capturePreset", () => {
       expect(out.problems[0]).toMatch(/need exactly 1/);
       expect(saved.size).toBe(0);
     }
+  });
+
+  it("wants a rendered photo with Custom white balance above 0 and the named profile for the rendered references (Phase 8 row 5)", async () => {
+    const jpeg = (JSON.parse(readFileSync(path.join(import.meta.dirname, "fixtures", "s10-rendered-dsc0031.json"), "utf8")) as { settings: Record<string, unknown> }).settings;
+    const check = async (settings: Record<string, unknown>, spec: (typeof REFERENCES)[keyof typeof REFERENCES]) => (await capturePreset(io(settings, {}).io, map, { precheck: true, spec })).problems;
+    expect(await check(settingsOf("reference-2"), REFERENCES.rendered)).toEqual([expect.stringMatching(/^the photo is on the raw pipeline; this reference needs a rendered one \(a JPEG\)/)]);
+    expect(await check(jpeg, REFERENCES.rendered)).toEqual([expect.stringMatching(/^the white balance must be Custom with Temp and Tint above 0 \(now As Shot, 0, 0\)/)]);
+    const custom = { ...jpeg, WhiteBalance: "Custom", IncrementalTemperature: 20, IncrementalTint: 10 };
+    expect(await check(custom, REFERENCES.rendered)).toEqual([]);
+    expect(await check(custom, REFERENCES.renderedMono)).toEqual(["the photo's profile is Color; this reference needs Monochrome (Basic panel > Profile)"]);
+    expect(await check({ ...custom, ConvertToGrayscale: true }, REFERENCES.renderedMono)).toEqual([]);
+    expect(await check(custom, REFERENCES.second)).toEqual([expect.stringMatching(/^the photo is on the rendered pipeline; this reference needs a raw one$/)]);
+  });
+
+  it("expects the rendered keys of a rendered reference: IncrementalTemperature, IncrementalTint and ConvertToGrayscale", () => {
+    const keys = expectedKeys(map, "rendered");
+    expect(keys["white_balance"]).toEqual(["IncrementalTemperature", "IncrementalTint", "WhiteBalance"]);
+    expect(keys["camera_profile"]).toEqual(["CameraProfile", "ConvertToGrayscale"]);
+    expect(expectedKeys(map)["camera_profile"]).toEqual(["CameraProfile", "Look"]);
   });
 
   it("wants a photo with an Adobe profile's Look for the first reference, not the second", async () => {

@@ -2,6 +2,8 @@
   "schema_version": 1,
   "generated_by": "engine/src/devtools/preset-pin.ts (npm run preset:pin)",
   "sources": [
+    "engine/tests/fixtures/presets/reference-rendered.lrc15.xmp",
+    "engine/tests/fixtures/presets/reference-rendered-mono.lrc15.xmp",
     "engine/tests/fixtures/presets/reference-2.lrc15.xmp",
     "engine/tests/fixtures/presets/reference.lrc15.xmp"
   ],
@@ -77,7 +79,7 @@
     ],
     [
       "Version",
-      "18.5.1"
+      "18.7"
     ],
     [
       "CompatibleVersion",
@@ -93,6 +95,8 @@
   "order": [
     "ProcessVersion",
     "WhiteBalance",
+    "IncrementalTemperature",
+    "IncrementalTint",
     "Exposure2012",
     "Contrast2012",
     "Highlights2012",
@@ -121,6 +125,14 @@
     "ColorNoiseReduction",
     "ColorNoiseReductionDetail",
     "ColorNoiseReductionSmoothness",
+    "GrayMixerRed",
+    "GrayMixerOrange",
+    "GrayMixerYellow",
+    "GrayMixerGreen",
+    "GrayMixerAqua",
+    "GrayMixerBlue",
+    "GrayMixerPurple",
+    "GrayMixerMagenta",
     "HueAdjustmentRed",
     "HueAdjustmentOrange",
     "HueAdjustmentYellow",
@@ -204,8 +216,8 @@
       "signed": true,
       "decimals": 2,
       "observed": [
-        "+0.33",
-        "0.00"
+        "0.00",
+        "+0.33"
       ],
       "basis": "observed"
     },
@@ -213,23 +225,26 @@
       "signed": true,
       "decimals": 0,
       "observed": [
+        "+8",
         "0"
       ],
-      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+      "basis": "observed"
     },
     "Highlights2012": {
       "signed": true,
       "decimals": 0,
       "observed": [
+        "-20",
         "-21",
         "0"
       ],
-      "basis": "inference: only -21, 0 observed; range -100..100, signed when it goes below 0"
+      "basis": "inference: only -20, -21, 0 observed; range -100..100, signed when it goes below 0"
     },
     "Shadows2012": {
       "signed": true,
       "decimals": 0,
       "observed": [
+        "+30",
         "+10",
         "0"
       ],
@@ -239,9 +254,10 @@
       "signed": true,
       "decimals": 0,
       "observed": [
+        "-20",
         "0"
       ],
-      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+      "basis": "inference: only -20, 0 observed; range -100..100, signed when it goes below 0"
     },
     "Blacks2012": {
       "signed": true,
@@ -255,6 +271,7 @@
       "signed": true,
       "decimals": 0,
       "observed": [
+        "-5",
         "+4",
         "+8"
       ],
@@ -264,6 +281,7 @@
       "signed": true,
       "decimals": 0,
       "observed": [
+        "-5",
         "+2",
         "+4"
       ],
@@ -281,9 +299,10 @@
       "signed": true,
       "decimals": 0,
       "observed": [
+        "+11",
         "0"
       ],
-      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+      "basis": "observed"
     },
     "Saturation": {
       "signed": true,
@@ -299,11 +318,27 @@
       "observed": [],
       "basis": "inference: not observed; range 2000..50000, signed when it goes below 0"
     },
+    "IncrementalTemperature": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "+20"
+      ],
+      "basis": "observed"
+    },
     "Tint": {
       "signed": true,
       "decimals": 0,
       "observed": [],
       "basis": "inference: not observed; range -150..150, signed when it goes below 0"
+    },
+    "IncrementalTint": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "+10"
+      ],
+      "basis": "observed"
     },
     "SplitToningShadowHue": {
       "signed": false,
@@ -421,6 +456,7 @@
       "signed": false,
       "decimals": 0,
       "observed": [
+        "60",
         "24",
         "0"
       ],
@@ -430,6 +466,7 @@
       "signed": true,
       "decimals": 1,
       "observed": [
+        "+1.0",
         "+2.0"
       ],
       "basis": "observed"
@@ -438,6 +475,7 @@
       "signed": false,
       "decimals": 0,
       "observed": [
+        "35",
         "25"
       ],
       "basis": "observed"
@@ -446,16 +484,17 @@
       "signed": false,
       "decimals": 0,
       "observed": [
+        "40",
         "0"
       ],
-      "basis": "inference: only 0 observed; range 0..100, signed when it goes below 0"
+      "basis": "observed"
     },
     "LuminanceSmoothing": {
       "signed": false,
       "decimals": 0,
       "observed": [
-        "48",
-        "0"
+        "0",
+        "48"
       ],
       "basis": "observed"
     },
@@ -463,8 +502,8 @@
       "signed": false,
       "decimals": 0,
       "observed": [
-        "25",
-        "0"
+        "0",
+        "25"
       ],
       "basis": "observed"
     },
@@ -498,9 +537,10 @@
       "signed": true,
       "decimals": 0,
       "observed": [
+        "-8",
         "0"
       ],
-      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+      "basis": "inference: only -8, 0 observed; range -100..100, signed when it goes below 0"
     },
     "LuminanceAdjustmentRed": {
       "signed": true,
@@ -522,17 +562,19 @@
       "signed": true,
       "decimals": 0,
       "observed": [
+        "-14",
         "0"
       ],
-      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+      "basis": "inference: only -14, 0 observed; range -100..100, signed when it goes below 0"
     },
     "LuminanceAdjustmentOrange": {
       "signed": true,
       "decimals": 0,
       "observed": [
+        "+8",
         "0"
       ],
-      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+      "basis": "observed"
     },
     "HueAdjustmentYellow": {
       "signed": true,

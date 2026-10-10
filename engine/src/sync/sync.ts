@@ -87,7 +87,14 @@ async function syncAll(run: SyncRun, uuids: readonly string[], skipped: Skip[]):
           { synced: results.map((r) => r.uuid), stopped_at: uuid, ...written },
         );
       }
-      skipped.push({ uuid, filename: d.filename ?? null, code: error.code, reason: error.message, ...(d.snapshot ? { snapshot: d.snapshot, history_names: d.history_names ?? [] } : {}) });
+      skipped.push({
+        uuid,
+        filename: d.filename ?? null,
+        code: error.code,
+        reason: error.message,
+        ...(d.snapshot ? { snapshot: d.snapshot, history_names: d.history_names ?? [] } : {}),
+        ...(d.not_transferable ? { not_transferable: d.not_transferable } : {}),
+      });
     }
   }
   return results;
@@ -130,7 +137,15 @@ export async function syncSeries(deps: SyncDeps, args: SyncArgs): Promise<SyncOu
   const { uuids, skipped } = await resolveTargets(deps.client, args.targets, source.photo?.uuid ?? null, cap);
   const reference = args.adaptive_exposure ? await measureSource(deps, args, source) : null;
   const id = (deps.newId ?? randomUUID)();
-  const run: SyncRun = { deps, short: id.replace(/-/g, "").slice(0, 4), copied, goal: reference && { luma: reference.luma, exposure: reference.exposure }, longEdge: args.long_edge, quality: args.quality };
+  const run: SyncRun = {
+    deps,
+    short: id.replace(/-/g, "").slice(0, 4),
+    copied,
+    sourcePipeline: source.pipeline,
+    goal: reference && { luma: reference.luma, exposure: reference.exposure },
+    longEdge: args.long_edge,
+    quality: args.quality,
+  };
   const results = await syncAll(run, uuids, skipped);
   let image: Awaited<ReturnType<typeof sheet>> = null;
   let imageError: unknown = null;
@@ -160,7 +175,14 @@ type OutputParts = {
 };
 
 function output(p: OutputParts): SyncOutput {
-  const sourceJson = { kind: p.source.kind, session_id: p.source.session_id, recipe_path: p.source.recipe_path, uuid: p.source.photo?.uuid ?? null, filename: p.source.photo?.filename ?? null };
+  const sourceJson = {
+    kind: p.source.kind,
+    session_id: p.source.session_id,
+    recipe_path: p.source.recipe_path,
+    uuid: p.source.photo?.uuid ?? null,
+    filename: p.source.photo?.filename ?? null,
+    pipeline: p.source.pipeline, // null: unknown, each target checks white balance values against its own pipeline (transfer.ts)
+  };
   const offsets = p.args.adaptive_exposure ? Object.fromEntries(p.results.map((t) => [t.uuid, t.exposure?.offset ?? null])) : null;
   const targets = p.results.map(targetJson);
   const json: Record<string, unknown> = {

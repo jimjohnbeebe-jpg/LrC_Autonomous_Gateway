@@ -5,12 +5,18 @@
 // this does too, and says why in `left_out` [handle: engine\tests\fixtures\presets\reference.lrc15.xmp
 // and reference-2.lrc15.xmp, written by LrC 15.5.1, 2026-09-28, from Jim's checklist (Check All; for
 // the second, Profile too) [stated: "reference made", "reference 2 made"]; which boxes were ticked
-// is not recorded]. Each rule below reads two files: it is [inference] beyond them.
+// is not recorded]. A rendered photo's preset follows the two JPEG references of Phase 8 row 5
+// [handle: reference-rendered.lrc15.xmp, reference-rendered-mono.lrc15.xmp, written by LrC 15.6,
+// 2026-10-10, Check All [stated: Jim, "presets done"]]: the relative white balance as
+// IncrementalTemperature/IncrementalTint with WhiteBalance "Custom", and the profile as
+// CameraProfile "Default Color" or "Default Monochrome" with ConvertToGrayscale, not the "Embedded"
+// the photo holds. Each rule below reads these files: it is [inference] beyond them.
 
 import {
   AS_SHOT_WHITE_BALANCE,
   CAMERA_PROFILE_KEY,
   CAMERA_PROFILE_PARAM,
+  CONVERT_TO_GRAYSCALE_KEY,
   PROCESS_VERSION_KEY,
   TONE_CURVE_NAME_KEY,
   WHITE_BALANCE_KEY,
@@ -22,7 +28,8 @@ import {
 } from "../params/index.js";
 import { applyMask, type MaskGroup } from "../sync/mask.js";
 
-export type PresetEntry = { key: string; value: number | string | number[] };
+/** A boolean is written as Lightroom writes one: "True" / "False" (xmp-write.ts). */
+export type PresetEntry = { key: string; value: number | string | boolean | number[] };
 export type LeftOut = { name: string; reason: string };
 /** `written`: the canonical names written; `also_written`: the other keys written with them (the process version, modes). */
 export type PresetSelection = { entries: PresetEntry[]; written: string[]; also_written: Record<string, string>; left_out: LeftOut[]; process_version: string };
@@ -31,14 +38,10 @@ const SHARPEN_DETAILS = ["sharpening.radius", "sharpening.detail", "sharpening.m
 
 /** Why a chosen setting is not written, or null when it is. */
 function leaveOut(map: ParamMap, name: string, value: CanonicalValue, sdk: SdkSettings, copied: CanonicalSettings, pipeline: Pipeline): string | null {
-  if (name === "lens.corrections_enable") return "Lightroom's own presets do not carry it: neither reference file has it";
-  // How Lightroom writes the rendered pipeline's relative white balance into a preset is pinned from Jim's
-  // reference preset in Phase 8 row 5 (PHASE8_PLAN); until then it stays out, as rendered profiles do.
-  if ((name === "temperature" || name === "tint") && pipeline === "rendered") {
-    return "a rendered-pipeline white balance (relative units): how Lightroom writes one into a preset has not been observed";
-  }
+  if (name === "lens.corrections_enable") return "Lightroom's own presets do not carry it: none of the reference files has it";
+  // Observed on raw photos (both raw references); a rendered photo with As Shot is [inference] from them.
   if ((name === "temperature" || name === "tint") && sdk[WHITE_BALANCE_KEY] === AS_SHOT_WHITE_BALANCE) {
-    return 'white balance is "As Shot": the preset says so and, like Lightroom\'s two, carries no temperature or tint';
+    return `white balance is "As Shot": the preset says so and, like Lightroom's ${pipeline === "raw" ? "two raw references" : "raw references"}, carries no temperature or tint`;
   }
   if (SHARPEN_DETAILS.includes(name) && copied["sharpening.amount"] === 0) {
     return "sharpening amount is 0: Lightroom then leaves radius, detail and masking out (reference.lrc15.xmp; reference-2 has them at amount 24)";
@@ -46,32 +49,40 @@ function leaveOut(map: ParamMap, name: string, value: CanonicalValue, sdk: SdkSe
   if (name === CAMERA_PROFILE_PARAM && map.cameraProfiles().get(String(value)).look !== null) {
     return "an Adobe profile: how Lightroom writes one (with its Look) into a preset has not been observed; the preset keeps each photo's own profile";
   }
-  // A rendered-pipeline profile is CameraProfile "Embedded" plus ConvertToGrayscale (S10): CameraProfile
-  // alone would make Color and Monochrome the same preset (Greptile, PR #98). How Lightroom writes one
-  // into a preset is pinned from Jim's reference preset in Phase 8 row 5 (PHASE8_PLAN).
-  if (name === CAMERA_PROFILE_PARAM && map.cameraProfiles().get(String(value)).convert_to_grayscale !== undefined) {
-    return `a rendered-pipeline profile (${String(value)}): how Lightroom writes one (with ConvertToGrayscale) into a preset has not been observed; the preset keeps each photo's own profile`;
-  }
   if (Array.isArray(value) && value.length === 0) return "the curve is empty";
   return null;
 }
 
-/** The entry that writes a canonical setting. */
-function entryOf(map: ParamMap, name: string, value: CanonicalValue, pipeline: Pipeline): PresetEntry {
-  if (name === CAMERA_PROFILE_PARAM) return { key: CAMERA_PROFILE_KEY, value: map.cameraProfiles().get(String(value)).camera_profile };
+/**
+ * The entries that write a canonical setting. A rendered-pipeline profile is written as Lightroom
+ * writes it into a preset: CameraProfile "Default Color" / "Default Monochrome" (the pinned
+ * preset_camera_profile, camera-profiles.lrc15.json) with ConvertToGrayscale, since CameraProfile
+ * alone would make Color and Monochrome the same preset (Greptile, PR #98).
+ */
+function entriesOf(map: ParamMap, name: string, value: CanonicalValue, pipeline: Pipeline): PresetEntry[] {
+  if (name === CAMERA_PROFILE_PARAM) {
+    const entry = map.cameraProfiles().get(String(value));
+    if (entry.convert_to_grayscale !== undefined && entry.preset_camera_profile !== undefined) {
+      return [
+        { key: CONVERT_TO_GRAYSCALE_KEY, value: entry.convert_to_grayscale },
+        { key: CAMERA_PROFILE_KEY, value: entry.preset_camera_profile },
+      ];
+    }
+    return [{ key: CAMERA_PROFILE_KEY, value: entry.camera_profile }];
+  }
   const spec = map.spec(name, pipeline);
   if (!spec) throw new Error(`no spec for ${name}`);
-  return { key: spec.sdkKey, value: typeof value === "boolean" ? Number(value) : value };
+  return [{ key: spec.sdkKey, value: typeof value === "boolean" ? Number(value) : value }];
 }
 
 /** The keys Lightroom writes with a group, read from the photo's own settings. */
-function companions(sdk: SdkSettings, groups: readonly MaskGroup[], pipeline: Pipeline): PresetEntry[] {
+function companions(sdk: SdkSettings, groups: readonly MaskGroup[]): PresetEntry[] {
   const out: PresetEntry[] = [];
   const add = (key: string): void => {
     const value = sdk[key];
     if (typeof value === "string") out.push({ key, value });
   };
-  if (groups.includes("white_balance") && pipeline === "raw") add(WHITE_BALANCE_KEY); // rendered: no white balance in presets until row 5
+  if (groups.includes("white_balance")) add(WHITE_BALANCE_KEY); // "As Shot" or "Custom", on both pipelines
   if (groups.includes("tone_curve")) add(TONE_CURVE_NAME_KEY);
   return out;
 }
@@ -80,7 +91,7 @@ function companions(sdk: SdkSettings, groups: readonly MaskGroup[], pipeline: Pi
 export function selectPresetSettings(map: ParamMap, sdk: SdkSettings, groups: readonly MaskGroup[]): PresetSelection {
   const read = map.fromSdk(sdk);
   const { copied } = applyMask(read.settings, groups);
-  const extra: PresetEntry[] = [{ key: PROCESS_VERSION_KEY, value: read.process_version }, ...companions(sdk, groups, read.pipeline)];
+  const extra: PresetEntry[] = [{ key: PROCESS_VERSION_KEY, value: read.process_version }, ...companions(sdk, groups)];
   const entries: PresetEntry[] = [...extra];
   const written: string[] = [];
   const left_out: LeftOut[] = [];
@@ -94,7 +105,7 @@ export function selectPresetSettings(map: ParamMap, sdk: SdkSettings, groups: re
     const reason = leaveOut(map, name, value, sdk, copied, read.pipeline);
     if (reason !== null) left_out.push({ name, reason });
     else {
-      entries.push(entryOf(map, name, value, read.pipeline));
+      entries.push(...entriesOf(map, name, value, read.pipeline));
       written.push(name);
     }
   }

@@ -104,19 +104,21 @@ describe("a rendered photo", () => {
 describe("lr_sync_series to rendered photos", () => {
   // Lightroom stores a write by uuid to an unselected photo unchecked (S10 run 1; the sim does too), so the
   // engine checks each target's values against the target's own pipeline before writing (sync\target.ts).
-  it("writes relative white balance, and refuses Kelvin values or a raw profile for the target before writing", async () => {
+  // A Kelvin value or a raw profile is not transferable to a rendered photo (sync\transfer.ts, Phase 8 row 5):
+  // with nothing else to write, the target is skipped before its snapshot.
+  it("writes relative white balance, and sets Kelvin values or a raw profile aside before writing", async () => {
     clean();
     const a = addCopy(1);
     const settingsOf = () => (lr.copies.get(a) as { settings: Record<string, unknown> }).settings;
     await tools.syncSeries({ source: { settings: { temperature: 20 } }, targets: { uuids: [a] }, adaptive_exposure: false, return_image: "none" });
     expect(settingsOf()).toMatchObject({ IncrementalTemperature: 20, WhiteBalance: "Custom" });
-    for (const [settings, code] of [
-      [{ temperature: 5500 }, "OUT_OF_RANGE"],
-      [{ camera_profile: "Adobe Color" }, "WRONG_PIPELINE"],
+    for (const [settings, group] of [
+      [{ temperature: 5500 }, "white_balance"],
+      [{ camera_profile: "Adobe Color" }, "camera_profile"],
     ] as const) {
       const out = await sync({ source: { settings }, targets: { uuids: [a] }, adaptive_exposure: false, return_image: "none" });
       expect(out.json["applied"]).toBe(0);
-      expect(out.json["skipped"], JSON.stringify(settings)).toEqual([expect.objectContaining({ uuid: a, code })]);
+      expect(out.json["skipped"], JSON.stringify(settings)).toEqual([expect.objectContaining({ uuid: a, code: "NOTHING_TRANSFERABLE", not_transferable: [expect.objectContaining({ group })] })]);
       expect((out.json["skipped"] as Array<Record<string, unknown>>)[0]).not.toHaveProperty("snapshot"); // refused before its snapshot
     }
     expect(settingsOf()).not.toHaveProperty("Temperature");

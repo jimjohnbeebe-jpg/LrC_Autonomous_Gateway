@@ -102,6 +102,12 @@ export async function selectSettled(deps: Pick<Phase8Deps, "client" | "settleMs"
  * run that stops midway puts the photo back with it first thing (phase8-check.ts putBackPending).
  */
 export async function holdBack(deps: Pick<Phase8Deps, "client" | "map" | "stamp">, run: Run, uuid: string, label: string): Promise<Pending> {
+  // A photo not yet back keeps its first snapshot: a new one of the same name would replace it, as the
+  // plugin creates snapshots with createDevelopSnapshot(name, true) [handle:
+  // plugin\LrC-AVG.lrplugin\Develop.lua:194; that `true` updates a same-named snapshot is Greptile's
+  // reading on PR #106, [unverified]], losing the settings to go back to.
+  const held = run.state.pending.find((p) => p.uuid === uuid);
+  if (held) return held;
   const start = (await settingsOf(deps, uuid)).settings;
   const snap = await deps.client.request("create_snapshot", { photo_uuid: uuid, name: snapshotName(deps.stamp) });
   const pending: Pending = { uuid, label, snapshot_id: snap.snapshot_id, snapshot_name: snapshotName(deps.stamp), start };

@@ -45,7 +45,14 @@ export async function chatPart(deps: Phase8Deps, run: Run, jpeg: Fixture): Promi
     if ((await deps.prompt("  6. Come back to this window and press Enter.")) === null) return false; // the next run asks again
     const answers: Answer[] = [];
     for (const q of QUESTIONS) answers.push(await deps.ask(q));
-    const judged = judge(deps, since, answers, out);
+    // Judged, then the bridge taken back and the JPEG put back even when judging throws (Greptile, PR #106).
+    let judged = false;
+    try {
+      judged = judge(deps, jpeg, since, answers, out);
+    } catch (err) {
+      out["judge_error"] = errorBody(err);
+      run.fail(`Part 5, reading the chat's logs: ${describeError(err)}`);
+    }
     const back = await takeBridgeBack({ ...deps, bridgeWaitMs: deps.bridgeWaitMs ?? BRIDGE_WAIT_MS }, run, "the chat");
     const differing = back ? await putBack(deps, run, held) : ["the bridge"];
     out["put_back_differing"] = differing;
@@ -63,12 +70,13 @@ export async function chatPart(deps: Phase8Deps, run: Run, jpeg: Fixture): Promi
 }
 
 /** The chat from its logs and Jim's answers. */
-function judge(deps: Phase8Deps, since: Date, answers: Answer[], out: Json): boolean {
+function judge(deps: Phase8Deps, jpeg: Fixture, since: Date, answers: Answer[], out: Json): boolean {
   const logs = deps.collectChat(since, "chat");
   const e = evaluateChat(logs.engine_log.records);
   const { log, error } = chatSessionLog(e);
   const lines = {
-    session_on_the_jpeg: e.session_begun && e.target_filename === JPEG.filename,
+    // By uuid: the collection holds three photos named DSC_0031.JPG (Greptile, PR #106).
+    session_on_the_jpeg: e.session_begun && log?.target.uuid === jpeg.uuid,
     passes: e.passes >= 1,
     ended: e.session_ended === "accept" || e.session_ended === "revert",
     rendered_pipeline: log?.target.pipeline === "rendered",

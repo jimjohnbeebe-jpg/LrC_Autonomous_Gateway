@@ -62,29 +62,44 @@ export function deleteStrayPresets(dir: string, keep: string | null): string[] {
 }
 
 /** Part 4: the restart, Jim's y/n and click, the read-back, the JPEG put back. */
-export async function presetPart(deps: Phase8Deps, run: Run): Promise<void> {
+/** Part 4; false when input ended (the part stays to do). */
+export async function presetPart(deps: Phase8Deps, run: Run): Promise<boolean> {
   const kept = run.state.kept_preset;
   const out: Json = { preset: kept?.name ?? null };
   run.results["preset"] = out;
   deps.say("");
   deps.say("Part 4: the preset made from the JPEG, listed after a Lightroom restart and applied by your click.");
   let ok = false;
+  // Input that ends (the window closed) is a pause, not a result: Part 4 stays to do, and the next run
+  // asks again without repeating Parts 1-3 (Greptile, PR #106).
+  let ended = false;
+  const watched: Phase8Deps = { ...deps, prompt: async (text) => {
+    const line = await deps.prompt(text);
+    if (line === null) ended = true;
+    return line;
+  } };
   try {
     if (!kept) throw new Error("Part 3 made no preset to apply");
     out["stray_deleted"] = deleteStrayPresets(deps.presetDir, kept.name);
-    if (await restartLightroom(deps, run)) {
+    if (await restartLightroom(watched, run)) {
       const listed = await deps.ask(`In the Develop module's Presets panel (left side), open the group "LrC-AVG". Is a preset named "${kept.name}" listed?`);
       out["listed"] = listed;
-      ok = listed === "y" && (await clickApplies(deps, run, kept, out));
+      ended ||= listed === "no answer";
+      ok = listed === "y" && (await clickApplies(watched, run, kept, out));
     }
   } catch (err) {
     out["error"] = errorBody(err);
     run.fail(`Part 4: ${describeError(err)}`);
   }
+  if (ended) {
+    deps.say("Part 4 stopped: input ended. Run the command again to continue with it.");
+    return false;
+  }
   out["ok"] = ok;
   run.state.preset = partOf(ok, out);
   run.save();
   deps.say(`Part 4, the preset listed and applied by a click: ${ok ? "WORKED" : "FAILED"}`);
+  return true;
 }
 
 async function clickApplies(deps: Phase8Deps, run: Run, kept: NonNullable<Run["state"]["kept_preset"]>, out: Json): Promise<boolean> {

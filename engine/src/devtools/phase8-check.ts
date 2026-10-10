@@ -74,7 +74,7 @@ async function parts(deps: Phase8Deps, run: Run): Promise<CleanupOutcome | null>
   await photosPart(deps, run, fixtures);
   await intentsPart(deps, run, jpeg);
   if (!state.cross) await crossPart(deps, run, raw, jpeg);
-  if (!state.preset) await presetPart(deps, run);
+  if (!state.preset && !(await presetPart(deps, run))) return null;
   if (!state.chat && !(await chatPart(deps, run, jpeg))) return null;
   const tidy = await cleanup(deps, run, jpeg);
   state.finished = true;

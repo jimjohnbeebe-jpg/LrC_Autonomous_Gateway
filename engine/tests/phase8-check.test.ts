@@ -2,13 +2,13 @@
 // (helpers\phase8-harness.ts): both pipelines, process versions 15.4 and 11.0, a virtual copy, a
 // missing original.
 
-import { existsSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { ringTargets } from "../src/devtools/phase8-photos.js";
 import { presetFileProblems } from "../src/devtools/phase8-presets.js";
 import { canonicalValuesEqual } from "../src/params/index.js";
-import { failures, h, map, runCheck, saved, usePhase8Harness, UUIDS, YES } from "./helpers/phase8-harness.js";
+import { failures, h, map, runCheck, saved, userIntentsDir, usePhase8Harness, UUIDS, YES } from "./helpers/phase8-harness.js";
 import { nefDump } from "./helpers/lightroom-sim.js";
 import { renderedDumps } from "./helpers/lightroom-sim-rendered.js";
 
@@ -91,5 +91,45 @@ describe("the check's parts", () => {
     expect(presetFileProblems(map, file, "rendered", ["temperature", "camera_profile"], source)).toEqual([]);
     expect(presetFileProblems(map, file, "raw", ["temperature"], source)).toEqual(["no crs:Temperature", "crs:IncrementalTemperature on a raw photo"]);
     expect(presetFileProblems(map, file, "rendered", ["camera_profile"], { camera_profile: "Monochrome" })).toEqual(["crs:CameraProfile is Default Color, not Default Monochrome"]);
+  });
+});
+
+describe("npm run phase8:check, Greptile PR #106", () => {
+  it("input ending at the restart leaves Part 4 to do; the next run does it and finishes", { timeout: 120000 }, async () => {
+    h.stopAt = /3\. Then press Enter here/;
+    const first = await runCheck([]);
+    expect(first.finished).toBe(false);
+    expect(saved().preset).toBeNull();
+    h.stopAt = null;
+    const second = await runCheck(YES);
+    expect(second).toMatchObject({ finished: true, accepted: true });
+    expect(saved().preset?.ok).toBe(true);
+  });
+
+  it("a user intent overriding a bundled one fails that intent, so the check cannot pass on 10", { timeout: 120000 }, async () => {
+    mkdirSync(userIntentsDir(), { recursive: true });
+    copyFileSync(new URL("../intents/portrait_natural_light.json", import.meta.url), path.join(userIntentsDir(), "portrait_natural_light.json"));
+    const { accepted } = await runCheck(YES);
+    expect(accepted).toBe(false);
+    expect(saved().intents).toHaveLength(11);
+    expect(saved().intents.find((i) => i.intent === "portrait_natural_light")).toMatchObject({ ok: false, summary: { error: expect.objectContaining({ message: expect.stringContaining("a user intent overrides") }) } });
+  });
+
+  it("a chat that edited another DSC_0031.JPG fails, and the JPEG held back is put back", { timeout: 120000 }, async () => {
+    h.chatOn = UUIDS.jpg;
+    const { accepted } = await runCheck(YES);
+    expect(accepted).toBe(false);
+    expect(saved().chat?.summary["lines"]).toMatchObject({ session_on_the_jpeg: false });
+    expect(saved().pending).toEqual([]);
+  });
+
+  it("chat logs that cannot be read still let the check take the bridge back and put the JPEG back", { timeout: 120000 }, async () => {
+    h.chatLogsThrow = true;
+    const { accepted, finished } = await runCheck(YES);
+    expect(finished).toBe(true);
+    expect(accepted).toBe(false);
+    expect(saved().chat?.summary).toMatchObject({ judge_error: expect.anything(), put_back_differing: [] });
+    expect(saved().pending).toEqual([]);
+    expect(asBefore(UUIDS.copy1, renderedDumps["15.4"].settings)).toBe(true);
   });
 });

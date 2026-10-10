@@ -34,6 +34,7 @@ import { LightroomSim, nefDump } from "./lightroom-sim.js";
 import { renderedDumps } from "./lightroom-sim-rendered.js";
 
 export const map = loadDefaultParamMap();
+export const userIntentsDir = (): string => dir("intents");
 const FIXTURES = fileURLToPath(new URL("../fixtures/presets/", import.meta.url));
 export const UUIDS = { nef2: "SIM-NEF2", jpg: "SIM-JPG", jpg11: "SIM-JPG-11", copy1: "SIM-JPG-C1", tif: "SIM-TIF" } as const;
 
@@ -48,6 +49,10 @@ export const h = {
   /** Simulated Jim stops (input ends) at the first prompt matching this. */
   stopAt: null as RegExp | null,
   clicked: false,
+  /** The chat edits this photo instead of the selected one (Jim clicked another). */
+  chatOn: null as string | null,
+  /** Reading the chat's logs throws. */
+  chatLogsThrow: false,
 };
 const dir = (name: string): string => path.join(h.tmp, name);
 
@@ -74,6 +79,8 @@ export function usePhase8Harness(): void {
     h.state = memoryStore(checkStateSchema);
     h.stopAt = null;
     h.clicked = false;
+    h.chatOn = null;
+    h.chatLogsThrow = false;
   });
   afterEach(async () => {
     for (const c of h.clients.splice(0)) c.stop();
@@ -90,6 +97,7 @@ function newClient(): BridgeClient {
 
 /** Claude Desktop's engine in the chat: a session on the selected photo, one pass, accept. */
 async function simulatedChat(): Promise<void> {
+  if (h.chatOn) h.lr.selected = h.chatOn;
   const client = newClient();
   client.start();
   const desktop = new Tools({
@@ -110,6 +118,7 @@ async function simulatedChat(): Promise<void> {
 }
 
 function collectChat(since: Date): ChatLogs {
+  if (h.chatLogsThrow) throw new Error("the chat log is not readable");
   const records = readdirSync(dir("chat-logs"))
     .flatMap((f) => readFileSync(path.join(dir("chat-logs"), f), "utf8").trim().split("\n"))
     .filter((l) => l.trim() !== "")

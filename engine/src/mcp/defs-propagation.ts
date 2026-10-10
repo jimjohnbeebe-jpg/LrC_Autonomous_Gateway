@@ -86,8 +86,8 @@ export const PROPAGATION_DEFS: ToolDef[] = [
       "preset only after it restarts: tell the user to quit Lightroom (File > Exit) and start it again. `categories` limits which " +
       "setting groups the preset carries. Settings Lightroom's own presets leave out are left out too, and listed in `left_out` with " +
       "the reason (e.g. temperature and tint when white balance is As Shot, i.e. never edited: every temperature or tint this engine " +
-      "writes sets it to Custom; an Adobe camera profile, whose preset form has not been " +
-      "observed). A name another preset already has is refused (PRESET_EXISTS). Returns the file's path, the group, the settings " +
+      "writes sets it to Custom; an Adobe camera profile on a raw photo, whose preset form has not been " +
+      "observed). A JPEG's (rendered pipeline) white balance and profile are written as Lightroom writes them. A name another preset already has is refused (PRESET_EXISTS). Returns the file's path, the group, the settings " +
       "written and left out, and the source photo. Not while a session is open.",
     schema: presetArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },

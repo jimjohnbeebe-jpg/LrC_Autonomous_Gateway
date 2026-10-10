@@ -7,7 +7,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { CANONICAL_PARAMS, loadDefaultParamMap, loadDefaultPresetFormat, sdkKeysOf } from "../src/params/index.js";
+import { CANONICAL_PARAMS, loadDefaultParamMap, loadDefaultPresetFormat, sdkKeysOf, type Pipeline } from "../src/params/index.js";
 import { altText, child, newPresetUuid, parseXml, presetDescription, renderPreset, selectPresetSettings, seqItems, type XmlNode } from "../src/presets/index.js";
 import { MASK_GROUPS } from "../src/sync/index.js";
 
@@ -15,17 +15,17 @@ const FIXTURES = path.join(import.meta.dirname, "fixtures", "presets");
 const map = loadDefaultParamMap();
 const format = loadDefaultPresetFormat();
 
-type Reference = { label: string; text: string; settings: Record<string, unknown>; name: string; group: string };
+type Reference = { label: string; text: string; settings: Record<string, unknown>; name: string; group: string; pipeline: Pipeline };
 
 function reference(prefix: string): Reference {
   const fixture = JSON.parse(readFileSync(path.join(FIXTURES, `${prefix}-settings.lrc15.json`), "utf8")) as {
     settings: Record<string, unknown>;
     reference: { name: string; group: string };
   };
-  return { label: prefix, text: readFileSync(path.join(FIXTURES, `${prefix}.lrc15.xmp`), "utf8"), settings: fixture.settings, ...fixture.reference };
+  return { label: prefix, text: readFileSync(path.join(FIXTURES, `${prefix}.lrc15.xmp`), "utf8"), settings: fixture.settings, ...fixture.reference, pipeline: map.fromSdk(fixture.settings).pipeline };
 }
 
-const REFERENCES = [reference("reference"), reference("reference-2")];
+const REFERENCES = [reference("reference"), reference("reference-2"), reference("reference-rendered"), reference("reference-rendered-mono")];
 const UUID = "0123456789ABCDEF0123456789ABCDEF";
 
 function written(ref: Reference): { description: XmlNode; left_out: string[] } {
@@ -34,8 +34,8 @@ function written(ref: Reference): { description: XmlNode; left_out: string[] } {
   return { description: presetDescription(parseXml(text)), left_out: selection.left_out.map((l) => l.name) };
 }
 
-/** Every SDK key a canonical name writes. */
-const canonicalKeys = new Set([...map.names()].flatMap((n) => sdkKeysOf(map, n)));
+/** Every SDK key a canonical name writes on a pipeline. */
+const canonicalKeys = (pipeline: Pipeline): Set<string> => new Set([...map.names()].flatMap((n) => sdkKeysOf(map, n, pipeline)));
 
 describe.each(REFERENCES)("the preset written from $label's photo", (ref) => {
   const lightroom = presetDescription(parseXml(ref.text));
@@ -64,10 +64,11 @@ describe.each(REFERENCES)("the preset written from $label's photo", (ref) => {
   });
 
   it("leaves out only non-canonical keys, or canonical ones it names in left_out", () => {
-    const left = new Set(ours.left_out.flatMap((n) => sdkKeysOf(map, n)));
+    const left = new Set(ours.left_out.flatMap((n) => sdkKeysOf(map, n, ref.pipeline)));
+    const keys = canonicalKeys(ref.pipeline);
     const missing = [...lightroom.attrs.keys(), ...lightroom.children.map((c) => c.name)]
       .map((k) => k.replace(/^crs:/, ""))
-      .filter((k) => canonicalKeys.has(k) && !ours.description.attrs.has(`crs:${k}`) && !child(ours.description, `crs:${k}`));
+      .filter((k) => keys.has(k) && !ours.description.attrs.has(`crs:${k}`) && !child(ours.description, `crs:${k}`));
     expect(missing.filter((k) => !left.has(k))).toEqual([]);
   });
 
@@ -96,7 +97,11 @@ describe("the preset's uuid (the writer test deferred from PR #30, in row 9's fo
 });
 
 describe("what the references show", () => {
-  it("Lightroom wrote a canonical key it was given in both files, except where a rule leaves it out", () => {
+  it("the four references are two raw and two rendered photos", () => {
+    expect(REFERENCES.map((r) => [r.label, r.pipeline])).toEqual([["reference", "raw"], ["reference-2", "raw"], ["reference-rendered", "rendered"], ["reference-rendered-mono", "rendered"]]);
+  });
+
+  it("Lightroom wrote a canonical key it was given in some file, except where a rule leaves it out", () => {
     // Keys a canonical name maps to that neither file holds: each has a leave-out rule in select.ts.
     const inEither = new Set(REFERENCES.flatMap((r) => [...presetDescription(parseXml(r.text)).attrs.keys(), ...presetDescription(parseXml(r.text)).children.map((c) => c.name)]));
     const never = [...CANONICAL_PARAMS.values()].map((s) => s.sdkKey).filter((k) => !inEither.has(`crs:${k}`));

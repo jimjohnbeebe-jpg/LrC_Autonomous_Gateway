@@ -1,7 +1,7 @@
 ---
 report: presets-rendered — how Lightroom writes a rendered photo's white balance and profile into a preset
 phase: 8 (row 5, phase-8/propagation)
-status: template
+status: observed
 authored_by: "Template, harness and pre-run findings: Claude Code (Fable 5.1), 2026-10-09 (phase-8/propagation). Observed: Jim."
 date: 2026-10-09
 ---
@@ -74,7 +74,12 @@ The two presets stay in Lightroom's preset folder; the Phase 8 check (row 6) rem
 - What the files hold (both): `crs:WhiteBalance="Custom"`, `crs:IncrementalTemperature="+20"`, `crs:IncrementalTint="+10"`; `crs:ProcessVersion="15.4"`; the envelope of the raw references with `crs:Version="18.7"` instead of `"18.5.1"`, nothing else differing. Color: `crs:ConvertToGrayscale="False"`, `crs:CameraProfile="Default Color"`, no `CameraProfileDigest`, no `Look`. Monochrome: `crs:ConvertToGrayscale="True"`, `crs:CameraProfile="Default Monochrome"`, no `Vibrance`, `Saturation` or HSL keys (the capture lists them under `missing`), and the eight `crs:GrayMixer*` keys at 0, which the engine does not map.
 - The `missing` list of the Color capture: `EnableLensCorrections` only, as for the raw references.
 
-**Run 2** (the re-run with the fixed capture, below): *(filled from its capture reports)*
+**Run 2, 2026-10-10, 13:42Z** [stated: Jim, "presets done"], the steps below, written up from the capture reports by Claude Code [handle: `%TEMP%\LrC-AVG\presets\capture_2026-10-10T13-42-36-316Z.json` (Color), `capture_2026-10-10T13-42-51-361Z.json` (Monochrome)]:
+
+- Both `WORKED`, `differ` empty: every key in each file equals the photo's setting (CameraProfile through the pin). The photo as in run 1: rendered, process version 15.4, white balance Custom, profile Color then Monochrome.
+- Saved: `reference-rendered-settings.lrc15.json` and `reference-rendered-mono-settings.lrc15.json` next to the two files (the files themselves unchanged since run 1).
+- Findings, as expected from run 1: the Color file lacks `EnableLensCorrections`; the Monochrome file lacks that, `Vibrance`, `Saturation` and the 24 HSL keys.
+- The engine's writer, given each photo's settings, writes every attribute, element and curve as Lightroom did in all four files, in Lightroom's order, and leaves out only what it names in `left_out` [handle: `engine\tests\presets-reference.test.ts`, 19 tests over the four references].
 
 ## Steps for Jim (the re-run, after the fix is on the branch)
 

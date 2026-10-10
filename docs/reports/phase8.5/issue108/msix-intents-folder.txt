@@ -1,0 +1,30 @@
+# Where the engine's default intents folder really is under Claude Desktop from the Microsoft Store (issue #108)
+# Run by Claude Code on the dev PC, 2026-10-10, PowerShell 7; user folder shown as %USERPROFILE%.
+# The engine reported its user intents folder as %USERPROFILE%\AppData\Local\LrC-AVG\intents and listed two
+# files there (lr_list_intents at 2026-10-10T05:18:43Z and 16:30:39Z, engine-20261009-excerpt.jsonl and the
+# local logs\engine-20261010.jsonl), but outside Claude Desktop that folder does not exist.
+
+PS> Get-ChildItem "$env:LOCALAPPDATA\LrC-AVG" -Recurse -Depth 1 | Select-Object FullName, LastWriteTime
+FullName                                             LastWriteTime
+--------                                             -------------
+%USERPROFILE%\AppData\Local\LrC-AVG\hud              10/10/2026 9:30:47 AM
+%USERPROFILE%\AppData\Local\LrC-AVG\hud\window.json  10/10/2026 9:30:47 AM
+
+PS> Get-Item "$env:LOCALAPPDATA\LrC-AVG" | Select-Object FullName, CreationTimeUtc, LastWriteTimeUtc
+FullName         : %USERPROFILE%\AppData\Local\LrC-AVG
+CreationTimeUtc  : 10/5/2026 8:12:00 PM
+LastWriteTimeUtc : 10/5/2026 8:12:00 PM
+# Nothing was removed from this folder after 2026-10-05: removing an "intents" subfolder would have changed its LastWriteTime.
+
+PS> Get-ChildItem "$env:LOCALAPPDATA\Packages" -Directory -Filter "Claude*" |
+>>   ForEach-Object { Get-ChildItem (Join-Path $_.FullName "LocalCache\Local\LrC-AVG") -Recurse | Select-Object FullName, LastWriteTimeUtc }
+FullName                                                                                                    LastWriteTimeUtc
+--------                                                                                                    ----------------
+%USERPROFILE%\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\LrC-AVG\intents                  10/9/2026 4:05:49 AM
+%USERPROFILE%\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\LrC-AVG\intents\painterly_portrait.json    10/5/2026 12:13:56 AM
+%USERPROFILE%\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\LrC-AVG\intents\portrait_jpeg_natural.json 10/9/2026 4:05:49 AM
+
+# Reading: the engine, started by the Microsoft Store (MSIX) build of Claude Desktop, writes to %LOCALAPPDATA%
+# inside the package's own copy, LocalCache\Local; other programs (File Explorer, PowerShell) do not see it.
+# That this is MSIX file-system virtualization is [inference]; the engine's log folder default
+# (%LOCALAPPDATA%\LrC-AVG\logs) would be redirected the same way [inference]: the dev entry sets LRC_AVG_LOG_DIR.

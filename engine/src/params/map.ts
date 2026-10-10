@@ -117,8 +117,11 @@ function isTable(value: unknown): value is Record<string, unknown> {
 
 /**
  * Equality for values that crossed Lua and JSON. An empty table can arrive as [] or {}. Every field
- * written must read back equal (a missing one is a mismatch); fields Lightroom adds to a table are its
- * own, not a failed write: it stamps a Look's Parameters.Version with its own version (written
+ * written must read back equal (a missing one is a mismatch), except an empty table inside a table:
+ * Lightroom leaves out a Look's empty Parameters.PointColors, so Adobe Landscape on a raw photo failed
+ * pass 0 with WRITE_NOT_TAKEN although it was applied [handle: docs\reports\phase8.5\issue108\engine-20261009-excerpt.jsonl,
+ * 2026-10-10T05:18:58Z lr_begin_session, details.mismatches; issue #108]. Fields Lightroom adds to a
+ * table are its own, not a failed write: it stamps a Look's Parameters.Version with its own version (written
  * "18.5.1", read back "18.7" on LrC 15.6 [handle: https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway/issues/67
  * "Evidence"; docs\reports\phase6\lrc-version-check\check.txt section 2 "2_look"]).
  * Arrays (curves) compare element by element, length included.
@@ -134,7 +137,11 @@ function sdkValuesEqual(written: unknown, readBack: unknown): boolean {
     if (Array.isArray(written) !== Array.isArray(readBack)) return false;
     if (Array.isArray(written) && Array.isArray(readBack) && written.length !== readBack.length) return false;
     for (const k of Object.keys(written)) {
-      if (!(k in readBack) || !sdkValuesEqual(written[k], readBack[k])) return false;
+      if (!(k in readBack)) {
+        if (isEmptyLook(written[k])) continue;
+        return false;
+      }
+      if (!sdkValuesEqual(written[k], readBack[k])) return false;
     }
     return true;
   }

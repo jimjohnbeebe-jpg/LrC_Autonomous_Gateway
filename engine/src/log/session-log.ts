@@ -219,7 +219,8 @@ export const sessionLogSchema = z
     ended: z.string().nullable(),
     /** "aborted" (engine 0.8.0, MCP_TOOLS' log schema): the user's Abort put the photo back. */
     outcome: z.enum(["accept", "revert", "aborted"]).nullable(),
-    intent: z.strictObject({ id: z.string(), label: z.string(), source: z.enum(["bundled", "user"]) }),
+    /** source "none" (engine 0.25.0): begun without an intent (issue #108). */
+    intent: z.strictObject({ id: z.string(), label: z.string(), source: z.enum(["bundled", "user", "none"]) }),
     mode: z.enum(["converge", "variants"]),
     /** Variants mode: the copies asked for; null in Converge mode. */
     variant_count: z.number().int().nullable(),

@@ -10,7 +10,16 @@ const returnImage = z
   .optional()
   .describe('"after" (default): the new preview; "before_after": the previous and the new preview in one labelled image; "none": no image');
 const beginArgs = z.object({
-  intent_id: z.string().min(1).describe("an intent id from lr_list_intents, e.g. landscape_golden_hour"),
+  intent_id: z
+    .string()
+    .min(1)
+    .optional()
+    .describe("an intent id from lr_list_intents, e.g. landscape_golden_hour, as a starting point; leave out when no intent fits the user's request"),
+  profile: z
+    .string()
+    .min(1)
+    .optional()
+    .describe("the profile pass 0 sets, replacing the intent's: a profile of the photo's pipeline (raw: e.g. \"Adobe Color\"; rendered: \"Color\" or \"Monochrome\")"),
   mode: z
     .enum(["converge", "variants"])
     .optional()
@@ -27,7 +36,7 @@ const beginArgs = z.object({
     .object({ clip_high_pct: z.number().min(0).max(100).optional(), clip_low_pct: z.number().min(0).max(100).optional() })
     .optional()
     .describe("clipping limits for this session, replacing the intent's, the settings page's and the defaults (0.5 % high, 1.0 % low)"),
-  notes: z.string().max(2000).optional().describe("the user's own words about the photo, kept in the log"),
+  notes: z.string().max(2000).optional().describe("the user's request in their own words, kept in the log; it takes precedence over the intent's brief"),
   long_edge: longEdge.describe(`Preview long edge in pixels, ${MIN_LONG_EDGE}-${MAX_LONG_EDGE}, for the whole session (default: the settings page's, else ${DEFAULT_LONG_EDGE}).`),
   return_image: returnImage,
 });
@@ -88,12 +97,15 @@ export const SESSION_DEFS: ToolDef[] = [
     name: "lr_begin_session",
     title: "Begin an editing session",
     description:
-      "Start an editing session on the photo selected in Lightroom, following an intent (lr_list_intents). The engine: " +
+      "Start an editing session on the photo selected in Lightroom. THE USER'S REQUEST COMES FIRST: an intent (lr_list_intents) " +
+      "is an optional starting point. Leave intent_id out when none fits the request; when the request and the intent's brief " +
+      "disagree, follow the request (pass `profile` to replace the intent's profile; later passes may undo any prior). When the " +
+      "request wants clipping (high key, crushed blacks), raise `guardrails`. The engine: " +
       "creates a Develop snapshot \"AVG pre-session …\" (lr_end_session revert returns to it); renders the photo as it is; " +
-      "runs pass 0, one History step \"AVG <id> pass 0/N\" with the intent's camera profile, lens corrections and priors " +
+      "runs pass 0, one History step \"AVG <id> pass 0/N\" with the intent's camera profile (or `profile`), lens corrections and priors " +
       "(a numeric prior is added to the photo's value); then, while clipping is over a limit, pulls whites/highlights/exposure or " +
       "blacks/shadows/exposure back in fixed steps until under, at most 8 (\"… baseline k\"; a limit still over is `unmet` in " +
-      "guardrail_actions). Returns session_id, the intent's brief (follow it), the " +
+      "guardrail_actions); without an intent, pass 0 writes no profile or priors (and `profile` alone when given). Returns session_id, the intent's brief (a starting point), the " +
       "guardrails, pass0_applied, the full settings, metrics, and the preview. Then call lr_step for each pass. " +
       "`target.pipeline` and `target.white_balance_unit` say how the photo's temperature and tint work (lr_get_active_photo_context). " +
       "Pass 0 takes the intent's profile and priors for that pipeline (`profile.raw` or `profile.rendered`, `priors` plus " +

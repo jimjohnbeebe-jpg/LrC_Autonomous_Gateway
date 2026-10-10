@@ -24,7 +24,10 @@ export type VariantId = (typeof VARIANT_IDS)[number];
 export type TargetId = "master" | VariantId;
 
 export type BeginArgs = {
-  intent_id: string;
+  /** Optional: without one, pass 0 writes no profile and no priors (issue #108). */
+  intent_id?: string | undefined;
+  /** Replaces the intent's profile at pass 0 (PRD FR-4.3, "unless Claude overrides"); of the photo's pipeline. */
+  profile?: string | undefined;
   mode?: "converge" | "variants" | undefined;
   /** Variants mode: how many copies, 2-3 (A, B, C) [stated: Jim, 2026-09-27, "Go with A"]. */
   variant_count?: number | undefined;
@@ -198,6 +201,8 @@ export type Session = {
   short: string;
   startedAt: Date;
   intent: LoadedIntent;
+  /** BeginArgs.profile: pass 0 writes it in place of the intent's. */
+  profile: string | null;
   mode: "converge" | "variants";
   maxPasses: number;
   limits: Limits;

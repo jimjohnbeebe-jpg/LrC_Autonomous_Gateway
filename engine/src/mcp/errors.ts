@@ -143,7 +143,12 @@ function fromParam(err: ParamError, lightroom: LightroomVersions): ToolError {
   };
   const pv = err.code === "unsupported_process_version" || err.code === "newer_process_version";
   const running = pv && lightroom?.lrc_version ? ` Lightroom ${lightroom.lrc_version} is running.` : "";
-  return new ToolError(codes[err.code], err.message + running, false, err.parameter ? { parameter: err.parameter } : undefined);
+  // Every caller of ParamMap.toSdk checks before its write (e.g. session\plan.ts:44, mcp\tools-write.ts:36,
+  // sync\source.ts:44 and target.ts:149 before the target's snapshot) [inference: read at 4841ad2; issue #129].
+  const unknown = err.code === "unknown_parameter"
+    ? "; nothing was written to the photo and no pass was used. The valid names are the keys of `settings` in lr_get_active_photo_context."
+    : "";
+  return new ToolError(codes[err.code], err.message + unknown + running, false, err.parameter ? { parameter: err.parameter } : undefined);
 }
 
 /** `lightroom`: the plugin's hello, when the caller has it, so that a message can name the versions. */

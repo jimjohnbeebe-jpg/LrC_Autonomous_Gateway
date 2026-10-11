@@ -67,11 +67,20 @@ const editArgs = z.object({
 });
 const deleteArgs = z.object({ ...passFields, mask_id: maskId });
 
+// An undone pass still counts: masks.ts sets t.passes = n after applyPlan, undo or not [handle:
+// engine\src\session\masks.ts:144-145]; a preserved region's drift undoes it too (masks.ts:189-198). Regions
+// are measured on every mask pass's render (session\io.ts:128-141; masks.ts:231-232 return them,
+// metrics\compute.ts:78, :269-271). An AI mask's point: the engine writes 0.5/0.5 (params\mask-ops.ts:156)
+// and Lightroom moved it to 0.767134/0.656632 on mask 524781EC [handle: logs\20261010-72a50c.json:1904-1909,
+// gitignored, read 2026-10-11; issue #129]; that it says nothing of the mask's extent is [inference].
 const PASS_NOTE =
   "Each mask change is ONE pass of the session (it counts against max_passes, so raise max_passes at lr_begin_session when masks " +
   "are planned; it may follow convergence, and approve_each_pass mode gates it like lr_step). It writes the photo's whole mask " +
-  "table as one History step \"AVG <id> pass n/N mask <op>\", reads it back, renders and measures, and is undone (\"… clip revert\") " +
-  "when clipping goes over a limit the photo was within; global sliders are never moved for a mask. If the masks changed in " +
+  "table as one History step \"AVG <id> pass n/N mask <op>\", reads it back, renders and measures, and is undone (\"… clip revert\" / " +
+  "\"… region revert\"; the pass still counts) when clipping goes over a limit the photo was within, or a preserved region " +
+  "drifts; global sliders are never moved for a mask. To measure a local edit, name its area with lr_set_regions first: every " +
+  "mask pass returns its metrics in `metrics.regions[]` and `delta_metrics.regions[]`. An AI mask's geometry.point is Lightroom's reference point " +
+  "(Lightroom may move it while it computes), not where the mask reaches. If the masks changed in " +
   "Lightroom meanwhile: MASKS_CHANGED, nothing written. While the photo has a mask the tools cannot write back safely (several " +
   "components, a blend mode, a kind not listed here): MASKS_UNCAPTURED_KIND, nothing written (lr_list_masks still reads). " +
   "Returns the mask, every mask of the photo (`masks`, with fresh ids), " +
@@ -117,8 +126,9 @@ export const MASK_DEFS: ToolDef[] = [
   {
     name: "lr_edit_mask",
     title: "Edit a mask",
+    // Sliders merge into the stored ones [handle: engine\src\params\mask-ops.ts:235, Object.assign].
     description:
-      "Change one mask by its id: set local sliders (absolute values in panel units), its geometry (linear, radial, luminance), invert it, rename it, " +
+      "Change one mask by its id: set local sliders (absolute values in panel units; sliders not given keep their values), its geometry (linear, radial, luminance), invert it, rename it, " +
       "or hide/show it (`active`). A mask of several components can be renamed, hidden and given sliders, not reshaped or inverted; combining " +
       "components is refused. MASK_NOT_FOUND: call lr_list_masks for the current ids. " +
       PASS_NOTE,

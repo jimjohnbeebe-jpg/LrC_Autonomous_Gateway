@@ -1,0 +1,20 @@
+Windows event log excerpt, read by Claude Code on 2026-10-11 (Get-WinEvent, read-only). Local time (UTC-7).
+
+== Application + System, 2026-10-10 22:45-23:00: Lightroom, NVIDIA driver, Windows Error Reporting ==
+2026-10-10 22:49:56  System      153   nvlddmkm                   x1  
+2026-10-10 22:50:01  Application 1001  Windows Error Reporting    x10  Event Name: LiveKernelEvent, P1 141
+2026-10-10 22:50:02  Application 1001  Windows Error Reporting    x42  Event Name: LiveKernelEvent, P1 193
+2026-10-10 22:52:32  Application 1000  Application Error          x1  Faulting application name: Lightroom.exe, version: 15.6.0.2, time stamp: 0x6ab67335 Faulting module name: ntdll.dll, version: 10.0.26100.9549, time stamp: 0xb396c142 Exception code: 0xc0000374 Fault offset: 0x00000000001181f5 Faulting process id: 0x65B0 Faulti
+2026-10-10 22:54:07  Application 1001  Windows Error Reporting    x1  Event Name: AppHangB1, P1 Lightroom.exe
+2026-10-10 22:54:07  Application 1002  Application Hang           x1  The program Lightroom.exe version 15.6.0.2 stopped interacting with Windows and was closed. To see if more information about the problem is available, check the problem history in the Security and Maintenance control panel. 
+
+== nvlddmkm (NVIDIA driver) events in the System log since 2026-10-08 ==
+2026-10-10 22:49:56  id 153
+
+== Lightroom.exe crashes and hangs since 2026-10-08 (Application, ids 1000/1002) ==
+2026-10-10 22:54:07  id 1002  Lightroom.exe 15.6.0.2  hang
+2026-10-10 22:52:32  id 1000  Lightroom.exe 15.6.0.2  0xc0000374
+2026-10-09 04:57:13  id 1000  Lightroom.exe 15.6.0.2  0xc0000374
+
+== GPU ==
+NVIDIA GeForce RTX 4070 Ti SUPER, driver 32.0.16.1692

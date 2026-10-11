@@ -2819,6 +2819,87 @@
               "recoverable"
             ],
             "additionalProperties": {}
+          },
+          "ai_trace": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string"
+              },
+              "sent": {
+                "type": "string"
+              },
+              "probes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "t_ms": {
+                      "type": "number"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "update": {
+                      "type": "string"
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "t_ms",
+                    "status"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "probes_dropped": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "reads": {
+                "type": "object",
+                "properties": {
+                  "count": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "unanswered": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "slowest_ms": {
+                    "type": "number"
+                  },
+                  "last_t_ms": {
+                    "type": "number"
+                  },
+                  "last_entry": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "count",
+                  "unanswered",
+                  "slowest_ms",
+                  "last_t_ms",
+                  "last_entry"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "kind",
+              "sent",
+              "probes",
+              "probes_dropped",
+              "reads"
+            ],
+            "additionalProperties": false
           }
         },
         "required": [

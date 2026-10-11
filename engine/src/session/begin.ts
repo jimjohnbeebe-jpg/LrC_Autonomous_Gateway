@@ -101,6 +101,7 @@ export async function openSession(ctx: SessionContext, args: BeginArgs): Promise
     startMasks: view.masks.fingerprint,
     aiRoute: null,
     aiPending: null,
+    aiTrace: null,
     endedByEngine: null,
     regions: [],
     files,

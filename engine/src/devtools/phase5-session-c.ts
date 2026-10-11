@@ -28,7 +28,7 @@ export async function sessionC(deps: Phase5Deps, run: Run, photo: Photo): Promis
   deps.say("");
   deps.say("Session C (Variants): three virtual copies, your pick in the HUD, then Accept in the HUD.");
   try {
-    const begin = (await deps.tools.beginSession({ intent_id: INTENT, mode: "variants", variant_count: 3, return_image: "none" })).json;
+    const begin = (await deps.tools.beginSession({ intent_id: INTENT, clip_baseline: true, mode: "variants", variant_count: 3, return_image: "none" })).json;
     const sid = String(begin["session_id"]);
     run.sessions.push({ name: "C", session_id: sid });
     const variants = (begin["variants"] as Variant[] | undefined) ?? [];

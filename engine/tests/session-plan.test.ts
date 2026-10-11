@@ -119,6 +119,15 @@ describe("the projected guardrail", () => {
     expect(lowering.changes[0]?.delta).toBe(-0.5); // lowers clip_high; clip_low rises 0.25, within its room
   });
 
+  it("without clip_baseline leaves an end already over its limit alone, and still guards an end within it (issue #130)", () => {
+    const over = applyProjectedGuardrail(planStep({ exposure: 0.3, blacks: -10 }, current, 1, map), withClip(0.8, 1), limits, new Map(), "raw", false);
+    expect(over.changes.map((c) => c.name)).toEqual(["exposure"]); // high over: left alone; low at its limit: guarded
+    expect(over.refused.map((r) => r.name)).toEqual(["blacks"]);
+    const slopes = new Map([["exposure", { luma_mean: 40, clip_high_pct: 1, clip_low_pct: -0.5 }]]);
+    expect(applyProjectedGuardrail(planStep({ exposure: 0.8 }, current, 1, map), withClip(0.8, 0), limits, slopes, "raw", false).changes[0]?.delta).toBe(0.8);
+    expect(applyProjectedGuardrail(planStep({ exposure: 0.8 }, current, 1, map), withClip(0.2, 0), limits, slopes, "raw", false).changes[0]).toMatchObject({ delta: 0.3, after: 0.63 });
+  });
+
   it("does nothing without metrics", () => {
     const plan = applyProjectedGuardrail(planStep({ exposure: 0.3 }, current, 1, map), null, limits);
     expect(plan.changes).toHaveLength(1);

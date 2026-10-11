@@ -67,6 +67,10 @@ export const intentSchema = z
       .strictObject({ clip_high_pct: percent.optional(), clip_low_pct: percent.optional() })
       .optional()
       .describe("replaces the default clipping limits (0.5 % high, 1.0 % low; AVG-009) for this intent"),
+    clip_baseline: z
+      .boolean()
+      .optional()
+      .describe("true: pass 0 pulls clipping under the limits, and a pass corrects an end over before it (default false: only what the pass caused; issue #130)"),
     regions_expected: z.array(z.enum(REGION_KINDS)).optional(),
     convergence_hints: z.array(z.string().min(1).max(300)).optional(),
     allow_probe: z.boolean().optional().describe("lr_probe is off in autonomous mode unless this is true"),

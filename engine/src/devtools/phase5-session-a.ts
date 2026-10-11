@@ -30,7 +30,7 @@ export async function sessionA(deps: Phase5Deps, run: Run, photo: Photo): Promis
   say("Session A (Autonomous): the HUD opens by itself and follows the work. Watch it; questions come at the end.");
   try {
     const started = Date.now();
-    const begin = (await deps.tools.beginSession({ intent_id: INTENT, return_image: "none" })).json;
+    const begin = (await deps.tools.beginSession({ intent_id: INTENT, clip_baseline: true, return_image: "none" })).json;
     const sid = String(begin["session_id"]);
     run.sessions.push({ name: "A", session_id: sid });
     out["begin"] = { session_id: sid, session_settings: begin["session_settings"] ?? null, snapshot: begin["snapshot"] ?? null };

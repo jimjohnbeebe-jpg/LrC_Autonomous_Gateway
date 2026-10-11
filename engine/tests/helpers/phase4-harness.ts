@@ -106,7 +106,7 @@ async function simulatedChat(): Promise<void> {
     ensureBridge: () => client.waitConnected(2000).then(() => undefined),
     log: new ToolLog(dir("chat-logs")),
   });
-  const begin = async (): Promise<string> => String((await desktop.beginSession({ intent_id: "landscape_golden_hour", mode: "variants", return_image: "none" })).json["session_id"]);
+  const begin = async (): Promise<string> => String((await desktop.beginSession({ intent_id: "landscape_golden_hour", clip_baseline: true, mode: "variants", return_image: "none" })).json["session_id"]);
   if (h.sim.chatTwice) await desktop.endSession({ session_id: await begin(), outcome: "revert" }); // Claude starts over
   const id = await begin();
   for (const target of h.sim.chatRefines) await desktop.step({ session_id: id, target, settings: { clarity: 3 }, rationale: "refine", return_image: "none" });

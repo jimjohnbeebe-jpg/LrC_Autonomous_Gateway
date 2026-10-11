@@ -23,6 +23,10 @@ const limitOf = (limits: Limits, end: End): number => (end === "high" ? limits.c
  * MAX_CORRECTIONS renders in a step, MAX_BASELINE_CORRECTIONS in pass 0 (n = 0, "until under",
  * PRD 6.5). With a step's changes, first pull back half, then all, of the sliders that pushed
  * towards the breach; otherwise, or when none did, the fixed steps (PRD 6.5).
+ * Only with the session's clip_baseline does pass 0 correct at all, and a step an end that was over
+ * its limit in `before` (the render before the pass); otherwise a step corrects only the ends it
+ * pushed over [stated: Jim, 2026-10-11, issue #130: "each pass should follow the prompt and intent",
+ * step guard "Only what the pass caused"]. An end left alone is reported `unmet`.
  */
 export async function correct(
   ctx: SessionContext,
@@ -30,6 +34,7 @@ export async function correct(
   t: Target,
   n: number,
   changes: readonly Change[] | null,
+  before: Metrics,
   view: FromSdkResult,
   rendered: Rendered,
   historyNames: string[],
@@ -37,11 +42,12 @@ export async function correct(
   const actions: GuardrailAction[] = [];
   const state: CorrectionState = { high: { pulls: 0, table: 0 }, low: { pulls: 0, table: 0 } };
   const baseline = n === 0;
+  const guarded = (["high", "low"] as const).filter((end) => s.clipBaseline || (!baseline && clipOf(before, end) <= limitOf(s.limits, end)));
   let current = view;
   let now = rendered;
   for (let round = 1; round <= (baseline ? MAX_BASELINE_CORRECTIONS : MAX_CORRECTIONS); round++) {
     const m = now.metrics;
-    const breached = (["high", "low"] as const).filter((end) => clipOf(m, end) > limitOf(s.limits, end));
+    const breached = guarded.filter((end) => clipOf(m, end) > limitOf(s.limits, end));
     if (breached.length === 0) break;
     const fix = nextFix(breached, state, changes, current.settings, ctx.deps.map, baseline);
     if (Object.keys(fix).length === 0) break;

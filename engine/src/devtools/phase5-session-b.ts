@@ -31,7 +31,7 @@ export async function sessionB(deps: Phase5Deps, run: Run, photo: Photo): Promis
   deps.say("");
   deps.say("Session B (Approve each pass): each of Claude's passes waits for your Approve in the HUD.");
   try {
-    const begin = (await deps.tools.beginSession({ intent_id: INTENT, return_image: "none" })).json;
+    const begin = (await deps.tools.beginSession({ intent_id: INTENT, clip_baseline: true, return_image: "none" })).json;
     const sid = String(begin["session_id"]);
     run.sessions.push({ name: "B", session_id: sid });
     const ss = (begin["session_settings"] ?? {}) as { approval?: unknown; from?: { approval?: unknown } };

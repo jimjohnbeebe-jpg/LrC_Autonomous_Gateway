@@ -63,7 +63,7 @@ async function saveGolden(deps: Phase3Deps, name: string, fx: Json): Promise<voi
 export async function sessionA(deps: Pick<Phase3Deps, "tools" | "say">, fx: Json, history: string[]): Promise<{ begin: Json; end: Json }> {
   const a: Json = { ok: false, passes: [] as Json[] };
   fx["session_a"] = a;
-  const begin = (await deps.tools.beginSession({ intent_id: INTENT_A, return_image: "none" })).json;
+  const begin = (await deps.tools.beginSession({ intent_id: INTENT_A, clip_baseline: true, return_image: "none" })).json;
   const sid = String(begin["session_id"]);
   history.push(...historyOf(begin));
   a["session_id"] = sid;
@@ -202,7 +202,7 @@ async function sessionB(deps: Phase3Deps, name: string, fx: Json, first: boolean
   const { tools } = deps;
   const b: Json = {};
   fx["session_b"] = b;
-  const begin = (await tools.beginSession({ intent_id: INTENT_B, return_image: "none" })).json;
+  const begin = (await tools.beginSession({ intent_id: INTENT_B, clip_baseline: true, return_image: "none" })).json;
   const sid = String(begin["session_id"]);
   history.push(...historyOf(begin));
   b["session_id"] = sid;

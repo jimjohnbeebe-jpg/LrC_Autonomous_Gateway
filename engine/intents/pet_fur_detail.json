@@ -15,5 +15,6 @@
   "convergence_hints": [
     "stop when the fur shows strands in both its brightest and darkest areas"
   ],
-  "allow_probe": false
+  "allow_probe": false,
+  "clip_baseline": true
 }

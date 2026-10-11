@@ -15,7 +15,8 @@
 //   lr_probe          -> per-slider metric slopes, the photo put back afterwards      (probe.ts)
 //   lr_set_regions    -> region boxes measured on every render; `preserve` guards hue and
 //                        saturation                                                  (regions.ts)
-//   lr_end_session    -> accept (log + recipe) or revert (the pre-session snapshot)   (end.ts)
+//   lr_end_session    -> accept (log + recipe) or revert (the pre-session snapshot)   (end.ts);
+//                        abandon: no Lightroom call, the photo left as it is      (abandon.ts)
 //
 // One session at a time per engine. Every command names the session's photo (C-2), so a change of
 // selection in Lightroom can never redirect a write: the plugin refuses it and the session stays
@@ -32,6 +33,7 @@ import { ToolError } from "../mcp/errors.js";
 import type { Region } from "../metrics/index.js";
 import type { RenderedPreview } from "../preview/index.js";
 import { searchOrder } from "../settings/index.js";
+import { abandonedNote, abandonSession } from "./abandon.js";
 import { engineEndedNote } from "./ai-revert.js";
 import { pendingError } from "./ai-update.js";
 import { approvePass } from "./approval.js";
@@ -199,17 +201,28 @@ export class SessionManager {
   }
 
   end(args: EndArgs): Promise<SessionOutput> {
+    const { outcome } = args;
+    if (outcome === "abandon") {
+      // No Lightroom call, so taken in any state the session is in, an AI mask failed or the user's Abort pending (abandon.ts).
+      return this.exclusive(async () => {
+        const s = this.require(args.session_id);
+        const out = await abandonSession(this.ctx, s, null);
+        this.close(s, null);
+        this.ctx.deps.hud?.stage(s, "ended", { note: abandonedNote(false) });
+        return out;
+      });
+    }
     return this.exclusive(() =>
       this.withNotices(args.session_id, async (s) => {
         // After the user's Abort, "revert" still ends the session (the way out when the Abort's own
         // revert failed); "accept" is refused, as the user asked for the photo back.
-        if (s.abort && args.outcome === "accept") throw abortError(s);
-        const out = await endSession(this.ctx, s, args);
+        if (s.abort && outcome === "accept") throw abortError(s);
+        const out = await endSession(this.ctx, s, { session_id: args.session_id, outcome });
         // A revert while the user's Abort is pending ends the session as the user's Abort (end.ts).
-        const user = args.outcome === "revert" ? s.abort : null;
+        const user = outcome === "revert" ? s.abort : null;
         this.close(s, user ? userEnded(this.ctx, s, "aborted", user) : null);
         if (user) this.ctx.deps.hud?.stage(s, "aborted", { note: abortedNote(s) });
-        else if (args.outcome === "accept") this.ctx.deps.hud?.stage(s, "accepted", { note: "Claude accepted: the edit is kept." });
+        else if (outcome === "accept") this.ctx.deps.hud?.stage(s, "accepted", { note: "Claude accepted: the edit is kept." });
         else this.ctx.deps.hud?.stage(s, "ended", { note: "Claude reverted: the photo is back as it was before the edit." });
         return out;
       }, true),

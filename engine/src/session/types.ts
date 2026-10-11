@@ -50,7 +50,10 @@ export type RegionArgs = {
   regions: Array<{ kind: RegionKind; label: string; box: RegionBox; preserve?: boolean | undefined }>;
 };
 export type SelectArgs = { session_id: string; variant: VariantId };
-export type EndArgs = { session_id: string; outcome: "accept" | "revert" };
+/** lr_end_session; "abandon" (engine 0.26.0, issue #124) ends the session without a Lightroom call (abandon.ts). */
+export type EndArgs = { session_id: string; outcome: "accept" | "revert" | "abandon" };
+/** The ends that reach Lightroom (end.ts). */
+export type FinishArgs = EndArgs & { outcome: "accept" | "revert" };
 /**
  * lr_approve_pass: `confirmed` states that the user approved in chat, as lr_save_intent's does
  * [stated: Jim, 2026-09-30, "Go with recommendations" on the PHASE5_PLAN row 6 plan, D2-A].

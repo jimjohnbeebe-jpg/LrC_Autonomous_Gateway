@@ -24,6 +24,7 @@
 //     same hold, then it computes (a cold model); `releaseState` "failed": the update reports it raised
 //     once the hold ends. While the gate is held, writes answer gate_busy
 //     and exports export_failed (each counted in `blocked`); reads answer;
+//   - clear_pending_ai drops the guard on the photo (plugin 0.20.0, issue #124);
 //   - probe_write_gate: "aborted" while the gate is held, else "executed", with the update's record;
 //     `probe` "unknown" answers unknown_command, as a plugin without it;
 //   - create_ai_mask_dc refuses a missing target_uuid or another selected photo (MaskProbe.lua begin);
@@ -221,6 +222,13 @@ export function installMasks(sim: MaskSim, plugin: FakePlugin): void {
   plugin.handlers.set("update_ai_settings", (p) => updateAiSettings(sim, p));
   plugin.handlers.set("probe_write_gate", () => probeWriteGate(sim));
   plugin.handlers.set("create_ai_mask_dc", (p) => createAiMaskDc(sim, p));
+  // Pending.lua clearPhoto (plugin 0.20.0, issue #124).
+  plugin.handlers.set("clear_pending_ai", (p) => {
+    sim.masks.calls.push("clear_pending_ai");
+    const uuid = p["photo_uuid"];
+    if (typeof uuid !== "string" || uuid === "") return fail("bad_request", "photo_uuid must be a non-empty string", false);
+    return { ok: true, payload: { photo_uuid: uuid, cleared: sim.masks.guard.delete(uuid) } };
+  });
   for (const name of ["apply_settings", "apply_snapshot", "create_snapshot", "export_preview", "create_ai_mask_dc"]) {
     const real = plugin.handlers.get(name);
     if (!real) continue;

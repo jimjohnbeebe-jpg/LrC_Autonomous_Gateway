@@ -17,6 +17,7 @@ local Json = require 'Json'
 local Library = require 'Library'
 local Log = require 'Log'
 local Masks = require 'Masks'
+local Pending = require 'Pending'
 local Prefs = require 'Prefs'
 local Preview = require 'Preview'
 local Transfer = require 'Transfer'
@@ -53,6 +54,7 @@ function Dispatch.handlers(hello)
         update_ai_settings = Masks.updateAISettings,
         create_ai_mask_dc = Masks.createAiMaskDc,
         probe_write_gate = Masks.probeWriteGate,
+        clear_pending_ai = Pending.clearPhoto,
     }
     return HANDLERS
 end

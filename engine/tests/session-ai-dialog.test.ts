@@ -105,7 +105,7 @@ describe("AI masks: Lightroom's dialog", () => {
     expect(e.message.startsWith("Lightroom's AI mask computation seems stuck (the AI People - Face Skin mask: no result within 0 minutes, Lightroom's update running).")).toBe(true);
     expect(e.message).toContain("restart Lightroom (File > Exit, then start it again). Once it is back, the engine notices the restart");
     expect(sent("apply_snapshot")).toBe(snapshots);
-    expect(notes.at(-1)).toBe("awaiting_claude: Lightroom's AI mask seems stuck. Restart Lightroom: the photo is then put back by itself.");
+    expect(notes.at(-1)).toBe("awaiting_claude: Lightroom's AI mask seems stuck. Restart Lightroom: the photo is then put back by itself. Or click Abort.");
     expect(m.current()?.id).toBe(ID);
     const step = await fails(m.step({ session_id: ID, settings: { exposure: 0.2 }, rationale: "test", return_image: "none" }));
     expect(step).toMatchObject({ code: "AI_UPDATE_PENDING", recoverable: false });

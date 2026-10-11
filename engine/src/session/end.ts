@@ -16,7 +16,7 @@ import type { EndedByEntry } from "../log/index.js";
 import { settlePending } from "./ai-update.js";
 import { bridge, checkAbort, failed, ms, read, saveLog } from "./io.js";
 import { focus, variant } from "./targets.js";
-import { WRITE_TIMEOUT_MS, type EndArgs, type Session, type SessionContext, type SessionOutput, type Target, type UserEnd } from "./types.js";
+import { WRITE_TIMEOUT_MS, type FinishArgs, type Session, type SessionContext, type SessionOutput, type Target, type UserEnd } from "./types.js";
 
 /** The photo whose settings an accept keeps: the master, or in Variants mode the pick (refused before one). */
 function acceptTarget(s: Session): Target {
@@ -35,7 +35,7 @@ function acceptTarget(s: Session): Target {
  * Finish the session's log (and the recipe on accept). The caller then closes the session. `by`: the
  * user's Accept or Abort from the HUD or the menu; without it, Claude's lr_end_session.
  */
-export async function endSession(ctx: SessionContext, s: Session, args: EndArgs, by: UserEnd | null = null): Promise<SessionOutput> {
+export async function endSession(ctx: SessionContext, s: Session, args: FinishArgs, by: UserEnd | null = null): Promise<SessionOutput> {
   const started = performance.now();
   const { client, map } = ctx.deps;
   const kept = args.outcome === "accept" ? acceptTarget(s) : s.master;
@@ -114,13 +114,13 @@ const MASKS_NOTE = (n: number): string =>
   `The photo keeps its ${n === 1 ? "mask" : `${n} masks`}; the recipe carries the global settings only, so lr_sync_series and lr_create_preset_from_active do not copy masks.`;
 
 /** The log's `ended_by`: Claude, or the user's click with its timings (done_ms: from the event to now, AC-2). */
-function endedBy(by: UserEnd | null): EndedByEntry {
+export function endedBy(by: UserEnd | null): EndedByEntry {
   if (!by) return { source: "claude" };
   return { source: by.source, click_id: by.click_id, received: by.received.toISOString(), interrupted: by.interrupted, done_ms: ms(by.t0) };
 }
 
 /** The copies a Variants session leaves in the catalog, and what the user can do with them. */
-function copiesJson(s: Session, outcome: EndArgs["outcome"]): Record<string, unknown> {
+function copiesJson(s: Session, outcome: FinishArgs["outcome"]): Record<string, unknown> {
   const copies = s.variants.map((v) => ({ id: v.id, label: v.label, uuid: v.uuid, copy_name: v.copy_name, picked: v.id === s.picked }));
   const note =
     outcome === "accept"

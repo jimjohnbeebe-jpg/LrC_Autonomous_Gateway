@@ -72,7 +72,9 @@ const regionsArgs = z.object({
 });
 const endArgs = z.object({
   session_id: sessionId,
-  outcome: z.enum(["accept", "revert"]).describe('"accept" keeps the edit and writes the recipe; "revert" applies the pre-session snapshot'),
+  outcome: z
+    .enum(["accept", "revert", "abandon"])
+    .describe('"accept" keeps the edit and writes the recipe; "revert" applies the pre-session snapshot; "abandon" ends a stuck session without touching the photo'),
 });
 const selectArgs = z.object({
   session_id: sessionId,
@@ -216,7 +218,12 @@ export const SESSION_DEFS: ToolDef[] = [
       "is written next to it. \"revert\": apply the pre-session snapshot, putting every setting back as it was before " +
       "lr_begin_session (the result lists any setting that still differs). Returns the log and recipe paths and the final settings. " +
       "Variants mode: \"accept\" needs a pick and keeps the pick's edit (the recipe is the pick's); \"revert\" puts the master back. " +
-      "Either way the copies stay in the catalog, listed in `copies`. After the user clicked Abort in the HUD, only \"revert\" is taken.",
+      "Either way the copies stay in the catalog, listed in `copies`. After the user clicked Abort in the HUD, only \"revert\" is taken. " +
+      "\"abandon\": only when the session cannot end otherwise and the user agrees: Lightroom is gone or hung, or an AI mask failed " +
+      "or seems stuck (AI_MASK_FAILED, LIGHTROOM_STUCK, AI_UPDATE_PENDING refuse revert). It reads and writes nothing (it does not " +
+      "wait for Lightroom): the photo keeps what the session did, the log's outcome is \"abandoned\", and a new session can begin. " +
+      "The result's `note` says how the user puts the photo back by hand (the pre-session snapshot, `snapshot`) and whether " +
+      "Lightroom still holds writes to the photo (`lightroom_guard`); tell the user both.",
     schema: endArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     run: (tools, args) => tools.endSession(args as z.infer<typeof endArgs>),

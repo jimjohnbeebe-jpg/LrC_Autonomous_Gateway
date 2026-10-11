@@ -35,7 +35,7 @@ async function stuckSession(timings: Record<string, number> = {}) {
 }
 
 describe("D16: nothing written while Lightroom computes an AI mask", () => {
-  it("keeps the mask pending after Lightroom's record says done: no write, revert or Abort until the entry computes, then the session goes on", async () => {
+  it("keeps the mask pending after Lightroom's record says done: no write or revert until the entry computes, then the session goes on", async () => {
     const { rig, e } = await stuckSession();
     expect(e).toMatchObject({ code: "LIGHTROOM_STUCK", details: { reverted: false } });
     expect(e.message).toMatch(/the engine notices the restart, puts the photo back .* by itself; nothing to call/);
@@ -43,11 +43,9 @@ describe("D16: nothing written while Lightroom computes an AI mask", () => {
     const snapshots = sent("apply_snapshot");
     expect(await fails(step(rig.manager))).toMatchObject({ code: "AI_UPDATE_PENDING", recoverable: false, details: { stuck: true } });
     expect(await fails(rig.manager.end({ session_id: ID, outcome: "revert" }))).toMatchObject({ code: "AI_UPDATE_PENDING" });
-    // Idle: the click is taken, its revert re-reads the table, finds the mask still without a result, and writes nothing.
-    expect(abortClick(rig.manager)).toMatch(/^Abort: /);
-    await waitUntil(() => rig.reported.some((r) => r.note === ABORT_WAITS));
     expect(sent("apply_snapshot")).toBe(snapshots);
-    expect(rig.reported.some((r) => r.note === "Lightroom's AI mask seems stuck. Restart Lightroom: the photo is then put back by itself.")).toBe(true);
+    // An Abort click now abandons the edit (issue #124, tests\session-abandon.test.ts).
+    expect(rig.reported.some((r) => r.note === "Lightroom's AI mask seems stuck. Restart Lightroom: the photo is then put back by itself. Or click Abort.")).toBe(true);
     lr.masks.finishLate(); // Lightroom finishes after all
     expect((await step(rig.manager)).json).toMatchObject({ ok: true });
     expect((await rig.manager.end({ session_id: ID, outcome: "revert" })).json).toMatchObject({ outcome: "revert", revert: { differing: [] } });
@@ -85,7 +83,7 @@ describe("issue #123: Lightroom's update over with no result", () => {
     expect(e.message).toMatch(/save your work and restart Lightroom/);
     expect(sent("probe_write_gate")).toBe(1);
     expect(readLog().failures.at(-1)?.ai_trace?.probes).toEqual([expect.objectContaining({ status: "executed", update: "done" })]);
-    expect(rig.reported.some((r) => r.note === "Lightroom's AI mask failed. Save your work and restart Lightroom: the photo is then put back by itself.")).toBe(true);
+    expect(rig.reported.some((r) => r.note === "Lightroom's AI mask failed. Save your work and restart Lightroom: the photo is then put back by itself. Or click Abort.")).toBe(true);
     const toPhoto = (): number => plugin.received.filter((r) => !r.name.startsWith("hud_")).length; // the HUD's notes are no reads
     const received = toPhoto();
     await new Promise((resolve) => setTimeout(resolve, 50));

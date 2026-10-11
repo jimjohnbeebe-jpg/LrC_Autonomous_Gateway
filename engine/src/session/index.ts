@@ -35,6 +35,7 @@ export type {
 export { awaitingPick } from "./pick.js";
 export { MASKS_PLUGIN } from "./masks.js";
 export { AI_TIMINGS, DIALOG_NOTE, WORKING_NOTE } from "./ai-update.js";
+export { abandonedNote } from "./abandon.js";
 export { engineEndedNote } from "./ai-revert.js";
 export { ABORT_WAITS, ACCEPT_AFTER_FAILED } from "./hud-actions.js";
 export type { AiTimings } from "./ai-update.js";

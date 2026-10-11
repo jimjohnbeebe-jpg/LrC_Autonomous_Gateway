@@ -12,7 +12,7 @@
 use crate::lightroom::{self, hwnd, iconic, window_pid};
 use crate::log::write;
 use crate::place::{self, Rect, Saved};
-use crate::{monitors, store, webview};
+use crate::{monitors, over, store, webview};
 use serde_json::json;
 use std::sync::atomic::{AtomicBool, AtomicIsize, AtomicU32, Ordering::SeqCst};
 use std::sync::OnceLock;
@@ -87,6 +87,9 @@ fn tick(app: &AppHandle) {
     }
     keep_on_top(main, cover);
     let visible = unsafe { IsWindowVisible(deck()).as_bool() };
+    if visible {
+        over::check(deck());
+    }
     if iconic(main) && visible {
         MIN_HIDDEN.store(true, SeqCst);
         hide_now("lightroom_minimised");
@@ -249,6 +252,7 @@ fn show_now(reason: &str) {
         let _ = ShowWindow(deck(), SW_SHOWNA);
     }
     webview::set_active(true);
+    over::reset();
     topmost_for(fg);
     write(json!({ "ev": "show", "reason": reason, "fg_pid": window_pid(fg), "fg_hwnd": fg.0 as isize }));
 }

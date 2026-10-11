@@ -19,17 +19,27 @@ pub fn init(window: WebviewWindow) {
     let _ = WINDOW.set(window);
 }
 
+/// Which of the two calls the Deck makes while hidden: both (the default), or one of them left out, for
+/// the hidden-Deck input probe (hud\probe\idle.ts, fix/deck-relaunch) [inference: which call stops the
+/// page's input after minutes hidden is what the probe measures]. LRC_AVG_DECK_IDLE = "no_visible" or
+/// "no_memory".
+fn idle_mode() -> String {
+    std::env::var("LRC_AVG_DECK_IDLE").unwrap_or_else(|_| "both".into())
+}
+
 pub fn set_active(active: bool) {
     let Some(window) = WINDOW.get() else { return };
+    let mode = idle_mode();
     let _ = window.with_webview(move |wv| unsafe {
         let controller = wv.controller();
-        let visible = controller.SetIsVisible(active).is_ok();
+        let visible = mode != "no_visible" && controller.SetIsVisible(active).is_ok();
         let level = if active { COREWEBVIEW2_MEMORY_USAGE_TARGET_LEVEL_NORMAL } else { COREWEBVIEW2_MEMORY_USAGE_TARGET_LEVEL_LOW };
-        let memory = controller
-            .CoreWebView2()
-            .and_then(|core| core.cast::<ICoreWebView2_19>())
-            .and_then(|core| core.SetMemoryUsageTargetLevel(level))
-            .is_ok();
-        write(json!({ "ev": "webview", "active": active, "is_visible_set": visible, "memory_level_set": memory }));
+        let memory = mode != "no_memory"
+            && controller
+                .CoreWebView2()
+                .and_then(|core| core.cast::<ICoreWebView2_19>())
+                .and_then(|core| core.SetMemoryUsageTargetLevel(level))
+                .is_ok();
+        write(json!({ "ev": "webview", "active": active, "is_visible_set": visible, "memory_level_set": memory, "idle_mode": mode }));
     });
 }

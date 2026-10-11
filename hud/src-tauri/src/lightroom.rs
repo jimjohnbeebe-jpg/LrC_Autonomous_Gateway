@@ -84,7 +84,7 @@ impl Win {
     }
 }
 
-fn text(h: HWND, class: bool) -> String {
+pub fn text(h: HWND, class: bool) -> String {
     let mut buf = [0u16; 512];
     let n = unsafe { if class { GetClassNameW(h, &mut buf) } else { GetWindowTextW(h, &mut buf) } };
     String::from_utf16_lossy(&buf[..n.max(0) as usize])

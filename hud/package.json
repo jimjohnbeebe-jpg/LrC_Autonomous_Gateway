@@ -1,6 +1,6 @@
 {
   "name": "lrc-avg-hud",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "private": true,
   "description": "LrC-AVG HUD: the detached Deck (Phase 7). Tauri shell in src-tauri/ (Rust), UI in ui/ (TypeScript), probe in probe/.",
   "type": "module",
@@ -19,6 +19,7 @@
     "@tauri-apps/api": "2.12.1",
     "@tauri-apps/cli": "2.12.1",
     "@types/node": "24.13.6",
+    "koffi": "3.3.2",
     "typescript": "7.0.2",
     "vitest": "5.0.1"
   }

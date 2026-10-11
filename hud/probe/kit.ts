@@ -127,6 +127,8 @@ export type DeckSent = { type: string; [k: string]: unknown };
 export class StandIn {
   readonly channel: HudChannel;
   edit: Edit | null = null;
+  /** The last state sent, sent again to a Deck that connects, as the engine's Deck does (engine\src\hud\deck.ts clientChanged). */
+  private last: { stage: string; over: Record<string, unknown> } | null = null;
   clientAt: number | null = null;
   /** What the Deck sent after its hello (row 4c: clicks, `show`, `get_thumb`), with the time it came. */
   readonly messages: { t: number; msg: DeckSent }[] = [];
@@ -138,7 +140,9 @@ export class StandIn {
       engineVersion: "deck-probe",
       welcome: () => ({ session_id: this.edit?.id ?? null, lightroom: "connected" }),
       onClient: (connected: boolean) => {
-        if (connected) this.clientAt = Date.now();
+        if (!connected) return;
+        this.clientAt = Date.now();
+        if (this.last) this.state(this.last.stage, this.last.over);
       },
       onMessage: (msg: DeckSent) => {
         this.messages.push({ t: Date.now(), msg });
@@ -157,6 +161,7 @@ export class StandIn {
   state(stage: string, over: Record<string, unknown> = {}): boolean {
     const edit = this.edit;
     if (!edit) return false;
+    this.last = { stage, over };
     const end = ["accepted", "aborted", "ended"].includes(stage);
     const state = hudChannelStateSchema.parse({
       session_id: edit.id, stage, mode: "converge", pass: 1, max_passes: 6,

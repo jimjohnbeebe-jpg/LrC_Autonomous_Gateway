@@ -149,7 +149,9 @@ export class SessionManager {
       this.session = opened.s;
       // The HUD opens by itself once, at lr_begin_session (PHASE5_PLAN decision 6).
       this.ctx.deps.hud?.stage(opened.s, "begin", { open: true });
-      return opened.s.mode === "variants" ? runVariants(this.ctx, opened, args) : runPass0(this.ctx, opened, args);
+      const out = await (opened.s.mode === "variants" ? runVariants(this.ctx, opened, args) : runPass0(this.ctx, opened, args));
+      // A Deck fallback queued while pass 0 ran (sinks.ts, a pass 0 longer than the Deck's wait) reaches Claude now (Greptile, PR #122).
+      return withHudActions(opened.s, out);
     });
   }
 
@@ -273,8 +275,7 @@ export class SessionManager {
     } finally {
       this.engineEnded(s);
     }
-    if (s.notices.length === 0) return out;
-    return { ...out, json: { ...out.json, hud_actions: s.notices.splice(0) } };
+    return withHudActions(s, out);
   }
 
   /** lr_get_session_log (no Lightroom call). */
@@ -355,4 +356,10 @@ export class SessionManager {
     const next = idleStage(s, error);
     if (next) this.ctx.deps.hud?.stage(s, next.stage, next.note !== undefined ? { note: next.note } : {});
   }
+}
+
+/** The HUD actions Claude has not heard of yet (a pick, a Deck fallback), added to a session result. */
+function withHudActions(s: Session, out: SessionOutput): SessionOutput {
+  if (s.notices.length === 0) return out;
+  return { ...out, json: { ...out.json, hud_actions: s.notices.splice(0) } };
 }

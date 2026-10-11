@@ -21,6 +21,8 @@ import { HIDDEN, onReveal, onState, onTick, onUserHide, type Change } from "./vi
 declare global {
   interface Window {
     __TAURI__: { core: { invoke: typeof InvokeFn }; window: { getCurrentWindow: typeof GetCurrentWindowFn } };
+    /** A second Deck launch woke this one (hud\src-tauri\src\wake.rs): connect now. */
+    deckWake?: () => void;
   }
 }
 
@@ -49,8 +51,20 @@ const send = (msg: unknown): void => ws?.send(JSON.stringify(msg));
 const lightroom = (why: string): void => void invoke("deck_focus_lightroom", { why });
 
 function apply(change: Change, reason: string): void {
-  if (change === "show") void invoke("deck_show", { reason, open });
-  else if (change === "hide") void invoke("deck_hide", { reason });
+  if (change === "show") {
+    void invoke("deck_show", { reason, open });
+    pointerSinceShow = false;
+    requestAnimationFrame(logAcceptAt);
+  } else if (change === "hide") void invoke("deck_hide", { reason });
+}
+
+// Input diagnostics (fix/deck-relaunch): on 2026-10-10 a Deck shown after minutes hidden took no hover and no
+// click. The log says where Accept was drawn at each show (CSS px and the device pixel ratio; the window's
+// physical origin is the Rust `place` line) and when the pointer first moved over the page after it.
+let pointerSinceShow = false;
+function logAcceptAt(): void {
+  const r = host.querySelector<HTMLElement>('[data-act="accept"]')?.getBoundingClientRect();
+  log({ accept_at: r ? [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)] : null, dpr: window.devicePixelRatio });
 }
 
 function render(): void {
@@ -128,6 +142,11 @@ function activate(k: string, pointer: boolean): void {
 // A pointer press is the same control under mouse-down and mouse-up: a state that redrew the Deck in
 // between would make the browser drop the click event.
 let downKey: string | null = null;
+host.addEventListener("pointermove", () => {
+  if (pointerSinceShow) return;
+  pointerSinceShow = true;
+  log({ pointer_in: true });
+});
 host.addEventListener("pointerdown", (e) => {
   downKey = e.button === 0 ? keyOf(e.target) : null;
 });
@@ -283,6 +302,20 @@ for (const grip of document.querySelectorAll<HTMLElement>("[data-resize]")) {
     if (e.button === 0) void window.__TAURI__.window.getCurrentWindow().startResizeDragging(grip.dataset["resize"] as "East" | "West");
   });
 }
+
+// The engine started the Deck for an edit and this one was running (wake.rs): connect now, without waiting for
+// the 2 s timer below, which ran 23 s and 36 s late while the Deck was hidden (fix/deck-relaunch). A socket
+// that has heard nothing for 1.5 pings is dead (the engine closed its listener): drop it first.
+window.deckWake = () => {
+  const stale = ws !== null && Date.now() - lastMessage > 3000;
+  log({ wake: true, had_socket: ws !== null, stale });
+  if (stale && ws) {
+    const old = ws;
+    disconnect();
+    old.close();
+  }
+  if (!ws) void connect();
+};
 
 // While disconnected, read the endpoint every 2 s (spec 3.3); drop after 3 missed pings (spec 3.7).
 setInterval(() => {

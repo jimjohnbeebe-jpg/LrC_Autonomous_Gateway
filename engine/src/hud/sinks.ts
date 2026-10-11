@@ -10,6 +10,9 @@
 //   - the Deck lost while an edit is open (it crashed): started once more, else the classic HUD opens,
 //     so the user is never left without the buttons.
 // After the listener closes (the engine gave the bridge back, or exits) nothing is started.
+// When the classic HUD opens because a started Deck did not connect or was lost, the chat is told in the next
+// session tool result (`hud_actions` `deck_fallback`, fix/deck-relaunch). A Deck that is not installed is no
+// fallback: nothing is said.
 // [handle: tests\hud-fallback.test.ts, tests\hud-launch.test.ts]
 
 import type { HudStage } from "../bridge/index.js";
@@ -36,6 +39,8 @@ export class HudFanOut implements HudSink {
   private readonly launcher: HudLauncher;
   private readonly waitMs: number;
   private waitTimer: NodeJS.Timeout | null = null;
+  /** The edit the last stage was for: where a fallback note goes. */
+  private session: Session | null = null;
 
   constructor(classic: HudPublisher, deck: Deck, launcher: HudLauncher, options: { waitMs?: number } = {}) {
     this.classic = classic;
@@ -49,6 +54,7 @@ export class HudFanOut implements HudSink {
 
   stage(s: Session, stage: HudStage, options: { note?: string; open?: boolean; closeAfter?: number } = {}): void {
     const { open, ...rest } = options;
+    this.session = s;
     this.deck.stage(s, stage, rest);
     if (open && !this.deck.connected() && !this.startDeck(s.id)) return this.classic.stage(s, stage, options);
     this.classic.stage(s, stage, rest);
@@ -64,7 +70,7 @@ export class HudFanOut implements HudSink {
     if (this.waitTimer) clearTimeout(this.waitTimer);
     this.waitTimer = setTimeout(() => {
       this.waitTimer = null;
-      if (!this.deck.connected()) this.classic.open(sessionId);
+      if (!this.deck.connected()) this.fallBack(sessionId, "The Deck was started but did not connect");
     }, this.waitMs);
     this.waitTimer.unref();
     return true;
@@ -73,6 +79,13 @@ export class HudFanOut implements HudSink {
   private deckLost(): void {
     const id = this.deck.openEdit();
     if (!id || !this.deck.channel.listening()) return;
-    if (!this.startDeck(id)) this.classic.open(id);
+    if (!this.startDeck(id)) this.fallBack(id, "The Deck was lost during the edit and could not be started again");
+  }
+
+  /** Open the classic HUD for edit `sessionId`, and tell the chat why. */
+  private fallBack(sessionId: string, why: string): void {
+    this.classic.open(sessionId);
+    const note = `${why}, so the classic HUD window opened in Lightroom; its buttons work the same. Tell the user.`;
+    if (this.session?.id === sessionId) this.session.notices.push({ action: "deck_fallback", note, at: new Date().toISOString() });
   }
 }

@@ -82,7 +82,8 @@ export async function abandonSession(ctx: SessionContext, s: Session, by: UserEn
     ended_by: s.log.ended_by,
     log_path: s.files.logPath,
     snapshot: s.snapshot.name,
-    ...(ai ? { ai_mask: { kind: ai.kind, since: ai.since, state: ai.failed ? "failed" : ai.stuck ? "stuck" : "pending" }, lightroom_guard: guard } : {}),
+    ...(ai ? { ai_mask: { kind: ai.kind, since: ai.since, state: ai.failed ? "failed" : ai.stuck ? "stuck" : "pending" } } : {}),
+    lightroom_guard: guard,
     note,
   };
   return { json, log: { session_id: s.id, outcome: "abandoned", ended_by: s.log.ended_by, log_path: s.files.logPath, lightroom_guard: guard } };

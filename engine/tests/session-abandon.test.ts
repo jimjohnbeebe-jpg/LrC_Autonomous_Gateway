@@ -92,7 +92,8 @@ describe("issue #124: lr_end_session abandon", () => {
     const before = plugin.received.filter((r) => !r.name.startsWith("hud_")).length;
     const out = (await abandon(rig.manager)).json;
     expect(out).toMatchObject({ outcome: "abandoned" });
-    expect(out).not.toHaveProperty("lightroom_guard");
+    expect(out).toMatchObject({ lightroom_guard: "none" });
+    expect(out).not.toHaveProperty("ai_mask");
     expect(plugin.received.filter((r) => !r.name.startsWith("hud_")).length).toBe(before);
   });
 });

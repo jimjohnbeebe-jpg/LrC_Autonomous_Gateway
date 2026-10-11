@@ -223,7 +223,8 @@ export const SESSION_DEFS: ToolDef[] = [
       "or seems stuck (AI_MASK_FAILED, LIGHTROOM_STUCK, AI_UPDATE_PENDING refuse revert). It reads and writes nothing (it does not " +
       "wait for Lightroom): the photo keeps what the session did, the log's outcome is \"abandoned\", and a new session can begin. " +
       "The result's `note` says how the user puts the photo back by hand (the pre-session snapshot, `snapshot`) and whether " +
-      "Lightroom still holds writes to the photo (`lightroom_guard`); tell the user both.",
+      "Lightroom still holds writes to the photo (`lightroom_guard`: \"none\" when no AI mask was pending, so nothing is held; " +
+      "\"cleared\"; \"not_cleared\" or \"plugin_too_old\": held until Lightroom restarts); tell the user both.",
     schema: endArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     run: (tools, args) => tools.endSession(args as z.infer<typeof endArgs>),

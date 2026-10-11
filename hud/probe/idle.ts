@@ -183,20 +183,26 @@ async function main(): Promise<void> {
   console.log(`Deck idle probe: ${RUNS.length} runs, about ${minutes} minutes. Leave the mouse alone; the probe moves it onto the Deck once per run.`);
   const engine = new StandIn();
   const bridge = CLASSIC ? new BridgeClient({ engineVersion: "deck-idle-probe", log: () => {} }) : null;
-  if (bridge) {
-    bridge.start();
-    await bridge.waitConnected(30000);
-  }
   const logs: string[] = [];
   const runs: Run[] = [];
-  for (const r of RUNS) {
-    const run = await oneRun(exe, engine, r, logs, home, bridge);
-    runs.push(run);
-    console.log(`  ${r.mode}, hidden ${r.hidden_s} s: ${run.verdict}${run.problem ? ` (${run.problem})` : ""}; connected again after ${run.wake_ms ?? "-"} ms`);
+  // Released on every way out: a channel or a bridge client left open keeps Node running (Greptile, PR #122).
+  try {
+    if (bridge) {
+      bridge.start();
+      await bridge.waitConnected(30000).catch(() => {
+        throw new Error("The probe could not reach the plugin's bridge in 30 s: check that the LrC-AVG plugin is enabled (File > Plug-in Manager).");
+      });
+    }
+    for (const r of RUNS) {
+      const run = await oneRun(exe, engine, r, logs, home, bridge);
+      runs.push(run);
+      console.log(`  ${r.mode}, hidden ${r.hidden_s} s: ${run.verdict}${run.problem ? ` (${run.problem})` : ""}; connected again after ${run.wake_ms ?? "-"} ms`);
+    }
+  } finally {
+    bridge?.stop();
+    engine.channel.close();
+    stopDeck();
   }
-  bridge?.stop();
-  engine.channel.close(); // a failed run returns with it open, and its listener would keep Node running
-  stopDeck();
   mkdirSync(OUT, { recursive: true });
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   const file = path.join(OUT, `idle_${stamp}.json`);

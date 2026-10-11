@@ -55,6 +55,13 @@ describe("the classic HUD as the fallback", () => {
     expect(next.json["hud_actions"]).toEqual([{ action: "deck_fallback", note: expect.stringMatching(/did not connect.*classic HUD/), at: expect.any(String) }]);
   });
 
+  it("tells the chat in the begin result when the wait ends while pass 0 runs", async () => {
+    clean();
+    const rig = await deckRig({ waitMs: 1 }); // ends long before pass 0's bridge round trips do
+    const begun = await rig.manager.begin({ intent_id: "test_plain" });
+    expect(begun.json["hud_actions"]).toEqual([{ action: "deck_fallback", note: expect.stringMatching(/did not connect/), at: expect.any(String) }]);
+  });
+
   it("with a Deck connected, gets what it got before Phase 7, without `open`", async () => {
     clean();
     const rig = await deckRig();

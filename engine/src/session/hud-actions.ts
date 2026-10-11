@@ -16,7 +16,8 @@
 //   - Approve pass (approve_each_pass mode, PHASE5_PLAN row 6): approves the pass the HUD showed, at
 //     once and outside the queue, where a step waiting for it holds the queue (approval.ts). Abort and
 //     Accept end such a wait at once, so they do not wait behind it.
-// A session the user ended answers every later call naming it with SESSION_ENDED (endedError).
+// A session the user ended answers every later call naming it with SESSION_ENDED (endedError), but for
+// lr_end_session asking for the user's own outcome, which succeeds (endedAlike, issue #126).
 // The notes are the HUD's, in the photographer's words (PRODUCT.md; fix/hud-p1 copy deck): an "edit",
 // not a session; Claude, not the engine; no error codes. Claude's tool results keep their own words.
 // [handle: tests\hud-abort.test.ts, tests\hud-actions.test.ts, tests\approve-pass-hud.test.ts, against
@@ -31,7 +32,7 @@ import { failed, saveLog } from "./io.js";
 import { awaitingPick, selectVariant } from "./pick.js";
 import { putBackReported } from "./put-back.js";
 import { variant } from "./targets.js";
-import type { Session, SessionContext, UserEnd, UserSource, VariantId } from "./types.js";
+import type { Session, SessionContext, SessionOutput, UserEnd, UserSource, VariantId } from "./types.js";
 
 /** A HUD event as the engine received it: when, and performance.now() then. */
 export type UserAction = HudEvent & { received: Date; t0: number };
@@ -340,4 +341,14 @@ export function endedError(e: UserEnded): ToolError {
   }[e.outcome];
   const where = e.source === "menu" ? "Lightroom's menu" : "the HUD";
   return new ToolError("SESSION_ENDED", `The user ended session ${e.session_id} from ${where} at ${e.at} and ${how}. Start a new session only if the user asks.`, false, e);
+}
+
+/**
+ * lr_end_session on a session the user already ended the way Claude asks (accept after Accept; revert after Abort or
+ * Put back): success, naming the user's end, instead of SESSION_ENDED; null otherwise (issue #126) [stated: Jim, 2026-10-11].
+ */
+export function endedAlike(e: UserEnded | undefined, outcome: "accept" | "revert"): SessionOutput | null {
+  if (!e || (outcome === "accept") !== (e.outcome === "accept") || e.outcome === "abandoned") return null;
+  const { session_id, log_path } = e;
+  return { json: { ok: true, session_id, outcome, already_ended_by_user: { outcome: e.outcome, source: e.source, at: e.at, log_path }, log_path } };
 }

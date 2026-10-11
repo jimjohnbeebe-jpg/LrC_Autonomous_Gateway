@@ -135,7 +135,8 @@ export const SESSION_DEFS: ToolDef[] = [
       "camera_profile, switches, booleans and curves. Each change is capped at the slider's per-pass maximum × the pass's decay " +
       "(1.0, 0.6, 0.4, 0.25: exposure 1 EV, contrast/texture/clarity/dehaze 40, highlights/shadows/whites/blacks 60, " +
       "vibrance/saturation 30, temperature 1500 K on raw photos and 30 on rendered ones, whose temperature is relative, tint 30, " +
-      "HSL 40, grading 30) and at the slider's range (`clamped`). " +
+      "HSL 40, grading 30; a grading hue is an angle: it takes the shorter way round, wraps at 360 and is not capped) " +
+      "and at the slider's range (`clamped`). " +
       "A change that would push further into a clipping limit already reached is refused (`refused`); the rest is written as " +
       "one History step \"AVG <id> pass n/N\", read back, rendered and measured. If clipping then exceeds a limit, the engine " +
       "pulls back the sliders that caused it, else takes fixed steps, at most 3 (\"… guard k\", in `guardrail_actions`). The pass " +

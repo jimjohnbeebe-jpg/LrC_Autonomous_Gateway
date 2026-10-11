@@ -5,7 +5,7 @@
 
 import type { MetricsDelta, MetricsSummary } from "../metrics/index.js";
 import { CAMERA_PROFILE_PARAM, ParamError, SUPPORTED_PROCESS_VERSIONS, type CanonicalSettings, type CanonicalValue, type ParamMap, type Pipeline } from "../params/index.js";
-import { CONVERGENCE, CRUSHES_SHADOWS, RAISES_HIGHLIGHTS, baseMaxStep, decayFor, minStep, roundForSlider } from "./rules.js";
+import { CONVERGENCE, CRUSHES_SHADOWS, RAISES_HIGHLIGHTS, baseMaxStep, decayFor, isCircularHue, minStep, roundForSlider } from "./rules.js";
 
 /** One setting a step changes. `delta` is set for numeric sliders (after - before), null otherwise. */
 export type Change = { name: string; before: CanonicalValue | null; requested: CanonicalValue; after: CanonicalValue; delta: number | null };
@@ -47,6 +47,13 @@ export function planStep(requested: Readonly<Record<string, unknown>>, current: 
     const before = current[name];
     if (typeof before !== "number") {
       plan.refused.push({ name, by: "slider", reason: `${name} is not available on this photo now (e.g. a monochrome profile drops the colour sliders)` });
+      continue;
+    }
+    if (isCircularHue(name)) {
+      // The shorter way round, (-180, 180]; no cap, no clamp; 360 reads as 0 (issue #128).
+      const delta = 180 - ((((180 - Math.round(value)) % 360) + 360) % 360);
+      if (delta === 0) plan.unchanged.push(name);
+      else plan.changes.push({ name, before, requested: value, after: (((Math.round(before) + delta) % 360) + 360) % 360, delta });
       continue;
     }
     const base = baseMaxStep(name, pipeline) ?? spec.max - spec.min;

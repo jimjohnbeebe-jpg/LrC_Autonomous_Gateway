@@ -59,6 +59,15 @@ export function baseMaxStep(name: string, pipeline: Pipeline = "raw"): number | 
 }
 
 /**
+ * The Color Grading hues are angles on a wheel (0..360), not amounts: lr_step takes the shorter way
+ * round, wraps at 360 and caps nothing, since saturation (capped) sets how strong the colour shows
+ * [stated: Jim, 2026-10-11, issue #128 option A]. lr_probe still uses their base step of 30.
+ */
+export function isCircularHue(name: string): boolean {
+  return /^grading\.(shadows|midtones|highlights|global)\.hue$/.test(name);
+}
+
+/**
  * The smallest change that counts as moving a slider, for convergence (AVG-009 names it without a
  * value): 0.05 EV, 50 K (1 for the rendered pipeline's relative temperature), 0.1 for the sharpening
  * radius, 1 for everything else [inference].

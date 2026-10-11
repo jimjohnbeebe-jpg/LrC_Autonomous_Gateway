@@ -179,7 +179,7 @@ export function purgeExports(exportDir: string = defaultExportDir()): void {
     try {
       rmSync(path.join(exportDir, name), { recursive: true, force: true });
     } catch {
-      // A file Lightroom still holds open; the next purge takes it.
+      // A file Lightroom still holds open, the next purge takes it [inference].
     }
   }
 }

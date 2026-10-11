@@ -174,9 +174,18 @@ export class BridgeClient {
     const id = randomUUID();
     const line = JSON.stringify({ id, type: "cmd", name, ts: new Date().toISOString(), token: this.token, payload }) + "\n";
     const raw = await new Promise<unknown>((resolve, reject) => {
+      let waited = false;
       const expire = (): void => {
         if (waitOutPause && this.pluginPaused()) {
+          waited = true;
           waiter.timer = setTimeout(expire, this.opts.heartbeatMs);
+          return;
+        }
+        if (waited) {
+          // The pause is over (a pong came) but the plugin may still be working on this request: give it
+          // its whole timeout again from here, not one more beat (issue #127 review).
+          waited = false;
+          waiter.timer = setTimeout(expire, timeoutMs);
           return;
         }
         this.pending.delete(id);

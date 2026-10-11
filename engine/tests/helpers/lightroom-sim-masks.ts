@@ -220,7 +220,9 @@ function createAiMaskDc(sim: MaskSim, p: Record<string, unknown>): FakeReply {
 /**
  * A written radial stored as Lightroom stores it: Flipped = !MaskInverted (issue #79; MaskInverted true
  * read back with Flipped false [handle: docs\reports\phase8\S10\census\s10__DSC0103.NEF__Copy 1.json
- * "AVG vignette"]; Flipped true when not inverted on every captured radial; un-inverting is [inference]).
+ * "AVG vignette"]; Flipped true when not inverted on every captured radial [handle: grep '"Flipped"' over
+ * docs\reports\phase6 and phase8, 2026-10-11: 11 true, 2 false, both in the DSC0103 "Copy 1" census with
+ * MaskInverted true]; un-inverting is [inference]).
  */
 function flipRadials(p: Record<string, unknown>): void {
   const t = (p["settings"] as Entry | undefined)?.[MASK_TABLE_KEY];

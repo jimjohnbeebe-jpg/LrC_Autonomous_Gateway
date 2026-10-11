@@ -197,8 +197,12 @@ export function reopenLog(s: Session): void {
   saveLog(s);
 }
 
+export const ACCEPT_AFTER_FAILED = "Lightroom's AI mask failed, so Accept must wait: save your work and restart Lightroom; the photo is then put back by itself.";
+
 /** Why Accept cannot end this session now, or null. A Pick already queued counts (Greptile, PR #47). */
 function acceptRefusal(s: Session): string | null {
+  // Accept would close the session that restart.ts puts back after AI_MASK_FAILED (ai-update.ts; Greptile, PR #133 review 2).
+  if (s.aiPending?.failed) return ACCEPT_AFTER_FAILED;
   if (s.mode === "variants" && s.picked === null && s.pendingPick === null) return "Accept keeps the pick's edit: click Pick first, or Abort.";
   return null;
 }

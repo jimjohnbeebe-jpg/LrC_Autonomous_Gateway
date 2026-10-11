@@ -5,7 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 import { MASK_TABLE_KEY, aiWatch } from "../src/params/index.js";
-import { ABORT_WAITS, engineEndedNote, type SessionManager } from "../src/session/index.js";
+import { ABORT_WAITS, ACCEPT_AFTER_FAILED, engineEndedNote, type SessionManager } from "../src/session/index.js";
 import type { FakeHandler } from "./helpers/fake-plugin.js";
 import { waitUntil } from "./helpers/fake-plugin.js";
 import { hudAt, hudRig } from "./helpers/hud-harness.js";
@@ -98,6 +98,9 @@ describe("issue #123: Lightroom's update over with no result", () => {
     expect(await fails(rig.manager.listMasks({ session_id: ID }))).toMatchObject({ code: "AI_UPDATE_PENDING" });
     await expect(rig.manager.preview(ID, 800)).rejects.toMatchObject({ code: "AI_UPDATE_PENDING" });
     expect(await fails(rig.manager.end({ session_id: ID, outcome: "accept" }))).toMatchObject({ code: "AI_UPDATE_PENDING" });
+    // The HUD's or the menu's Accept too (Greptile, PR #133 review 2).
+    const acceptClick = rig.manager.userAction({ name: "hud_accept", payload: { session_id: ID, seq_seen: 1, click_id: "failed-accept", source: "hud" }, received: new Date(), t0: performance.now() });
+    expect(acceptClick).toBe(ACCEPT_AFTER_FAILED);
     expect(rig.manager.current()?.id).toBe(ID);
     expect(toPhoto()).toBe(received);
     lr.masks.finishLate(); // a late result does not lift it: only the restart does

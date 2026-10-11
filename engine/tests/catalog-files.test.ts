@@ -90,6 +90,14 @@ describe("lr_add_to_collection", () => {
     expect(out.json).toMatchObject({ added: [], not_taken: ["SIM-UUID"] });
   });
 
+  it("does not report photos as removed when Lightroom cannot read the collection back (issue #77)", async () => {
+    lr.files.readBackError = "boom";
+    const out = await tools.addToCollection({ collection_id: 501, uuids: ["SIM-LIB-2", "SIM-UUID"], remove: true });
+    expect(out.json).toMatchObject({ removed: [], unchanged: ["SIM-UUID"] });
+    expect(out.json["not_taken"]).toBeUndefined();
+    expect(out.json["warning"]).toMatch(/could not read the collection back: boom/);
+  });
+
   it("refuses a smart collection", async () => {
     expect((await fails(tools.addToCollection({ collection_id: 502, uuids: ["SIM-UUID"] }))).code).toBe("SMART_COLLECTION");
   });

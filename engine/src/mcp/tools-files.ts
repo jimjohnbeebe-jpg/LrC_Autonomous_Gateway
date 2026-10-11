@@ -38,7 +38,7 @@ export type ExportPhotosArgs = {
   height?: number | undefined;
   on_existing?: OnExisting | undefined;
 };
-export type ImportPhotosArgs = { source: string; copy_to?: string | undefined; recursive?: boolean | undefined };
+export type ImportPhotosArgs = { source: string; copy_to?: string | undefined; recursive?: boolean | undefined; resume_after?: string | undefined };
 
 type Failure = { item: string; code: string; message: string };
 
@@ -49,11 +49,16 @@ const realBudget = (): Budget => ({ now: () => performance.now(), ms: CALL_BUDGE
 /**
  * Run `each` on the items in turn until the budget is spent (the first item always runs). A refusal
  * Lightroom answered becomes a failure and the next item runs; a command with no answer stops the call.
- * Returns the failures and the items not started.
+ * Returns the failures and the items not started. `start` is when the budget's clock started.
  */
-async function eachInBudget(items: readonly string[], budget: Budget, done: () => unknown, each: (item: string) => Promise<void>): Promise<{ failed: Failure[]; left: string[] }> {
+async function eachInBudget(
+  items: readonly string[],
+  budget: Budget,
+  done: () => unknown,
+  each: (item: string) => Promise<void>,
+  start = budget.now(),
+): Promise<{ failed: Failure[]; left: string[] }> {
   const failed: Failure[] = [];
-  const start = budget.now();
   for (const [i, item] of items.entries()) {
     if (i > 0 && budget.now() - start > budget.ms) return { failed, left: items.slice(i) };
     try {
@@ -99,7 +104,8 @@ export async function exportPhotos(ctx: ToolContext, args: ExportPhotosArgs, bud
         try {
           exported.push({ uuid, filename: r.filename ?? null, files: await placeExport(exportDir, r.dir, r.files, folder, onExisting) });
         } catch (err) {
-          throw new ToolError("MOVE_FAILED", `Lightroom exported ${r.filename ?? uuid}, but moving it into ${folder} failed: ${(err as Error).message}`, false);
+          const keptIn = `What was not placed is kept in ${r.dir} until the engine next starts.`;
+          throw new ToolError("MOVE_FAILED", `Lightroom exported ${r.filename ?? uuid}, but moving it into ${folder} failed: ${(err as Error).message} ${keptIn}`, false);
         }
       });
       const json = {
@@ -121,12 +127,17 @@ export async function importPhotos(ctx: ToolContext, args: ImportPhotosArgs, bud
     if (rel === "" || (!rel.startsWith("..") && !path.isAbsolute(rel))) {
       throw new ToolError("BAD_ARGUMENTS", "copy_to must not be the source folder or inside it.", false);
     }
-    let files: string[];
+    // The scan counts against the call's time (issue #75): a slow card reader or share spends it too.
+    const start = budget.now();
+    let listed: string[];
     try {
-      files = await importFiles(source, args.recursive ?? true);
+      listed = await importFiles(source, args.recursive ?? true);
     } catch (err) {
       throw new ToolError("NOT_FOUND", `Cannot read ${source}: ${(err as Error).message}`, false);
     }
+    // The listing is sorted (importFiles), so a cursor skips what earlier calls did (issue #75).
+    const after = args.resume_after !== undefined ? expandHome(args.resume_after) : null;
+    const files = after !== null ? listed.filter((f) => f > after) : listed;
     const sessions = sessionTools(ctx);
     await ctx.deps.ensureBridge();
     needPlugin(ctx, "lr_import_photos", TRANSFER_PLUGIN, "it imports photos");
@@ -145,17 +156,18 @@ export async function importPhotos(ctx: ToolContext, args: ImportPhotosArgs, bud
         }
         const r = await ctx.deps.client.request("import_photo", { path: target }, { timeoutMs: IMPORT_PHOTO_TIMEOUT_MS });
         (r.status === "imported" ? imported : already).push({ uuid: r.uuid, filename: r.filename ?? null, path: target });
-      });
+      }, start);
+      const next = `Time is up for this call: call again with resume_after = this resume_after and the same other arguments (${left.length} files left).`;
       const json = {
         source,
         ...(copyTo !== null ? { copied_to: copyTo } : {}),
-        found: files.length,
+        found: listed.length,
         imported,
         already_in_catalog: already,
         failed: failed.map((f) => ({ file: f.item, code: f.code, message: f.message })),
-        ...(left.length > 0 ? { not_yet: left.length, next: `Time is up for this call: call again with the same arguments; the ${files.length - left.length} files done are found in the catalog and skipped.` } : {}),
+        ...(left.length > 0 ? { not_yet: left.length, resume_after: files[files.length - left.length - 1], next } : {}),
       };
-      return { json, log: { found: files.length, imported: imported.length, already: already.length, failed: failed.length, not_yet: left.length } };
+      return { json, log: { found: listed.length, imported: imported.length, already: already.length, failed: failed.length, not_yet: left.length } };
     });
   });
 }

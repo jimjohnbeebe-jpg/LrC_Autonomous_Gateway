@@ -54,7 +54,8 @@
           "enum": [
             "accept",
             "revert",
-            "aborted"
+            "aborted",
+            "abandoned"
           ]
         },
         {

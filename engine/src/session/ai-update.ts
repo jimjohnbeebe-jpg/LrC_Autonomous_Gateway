@@ -78,6 +78,8 @@ export type AiTimings = {
   settleMs: number;
   /** LrDevelopController's mask: how long it may take to show and compute (ai-masks.ts). */
   dcWaitMs: number;
+  /** An abandon's clear_pending_ai: a hard deadline, not extended while the plugin is paused (abandon.ts; Greptile, PR #134). */
+  clearMs: number;
 };
 /**
  * Capture 3's updates took 1.0-1.2 s, the digests 0.3-0.5 s after [handle: docs\reports\phase6\masks-capture\capture3-check.json
@@ -95,6 +97,7 @@ export const AI_TIMINGS: Readonly<AiTimings> = {
   stuckProbesMs: 60_000,
   settleMs: 2000,
   dcWaitMs: 10_000,
+  clearMs: 5000,
 };
 export const aiTimings = (ctx: SessionContext): AiTimings => ({ ...AI_TIMINGS, ...ctx.deps.aiTimings });
 
@@ -290,6 +293,9 @@ export async function updateAndWait(ctx: SessionContext, s: Session, job: AiJob)
 }
 
 /** The error for a write, export, render or revert while an AI update has no result (io.ts settlePending). */
+/** The way out without a restart (abandon.ts, issue #124), named in every error that leaves the session stuck. */
+export const ABANDON_HINT = ' If the user would rather stop now without a restart, lr_end_session "abandon" ends the session and leaves the photo as it is.';
+
 export function pendingError(s: Session): ToolError {
   const p = s.aiPending;
   const restart = `the user restarts Lightroom (File > Exit, then start it again); once it is back, the engine puts the photo back as it was before the session by itself and ends session ${s.id}`;
@@ -298,7 +304,7 @@ export function pendingError(s: Session): ToolError {
     : p?.stuck
     ? `Lightroom's AI ${p.kind} mask computation seems stuck (asked for at ${p.since}): nothing more is written, rendered or reverted in session ${s.id}, so nothing is written under it. Tell the user: ${restart}. If Lightroom finishes the mask first, the session goes on.`
     : `Lightroom has not finished the AI ${p?.kind ?? ""} mask asked for at ${p?.since ?? "?"}: nothing more is written, rendered or reverted in session ${s.id} until its result shows (each call checks again). If it seems stuck, ${restart}.`;
-  return new ToolError("AI_UPDATE_PENDING", message, !p?.stuck, { session_id: s.id, stuck: p?.stuck ?? false });
+  return new ToolError("AI_UPDATE_PENDING", p?.stuck ? message + ABANDON_HINT : message, !p?.stuck, { session_id: s.id, stuck: p?.stuck ?? false });
 }
 
 /**

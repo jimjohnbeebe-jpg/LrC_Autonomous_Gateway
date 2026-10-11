@@ -14,7 +14,7 @@
 // are read with session-log-v1.ts. Later engines only add: optional fields (`settings`, 0.7.0;
 // `ended_by` and `hud_events`, 0.8.0; `approvals` and a pass's `approval`, 0.9.0; `lightroom`,
 // 0.13.0, and its `notices`, 0.14.0; a pass's `mask`, kind "mask", 0.16.0, log\mask-log.ts; `ended_by`
-// source "engine" with its `reason`, and the HUD event hud_put_back, PR C step 2b) and the outcome "aborted" (0.8.0), so earlier v2 logs still read.
+// source "engine" with its `reason`, and the HUD event hud_put_back, PR C step 2b) and the outcomes "aborted" (0.8.0) and "abandoned" (0.26.0), so earlier v2 logs still read.
 
 import { mkdirSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -217,8 +217,11 @@ export const sessionLogSchema = z
     lightroom: z.strictObject({ lrc_version: z.string(), sdk_declared: z.number(), notices: z.array(z.string()).optional() }).optional(),
     started: z.string(),
     ended: z.string().nullable(),
-    /** "aborted" (engine 0.8.0, MCP_TOOLS' log schema): the user's Abort put the photo back. */
-    outcome: z.enum(["accept", "revert", "aborted"]).nullable(),
+    /**
+     * "aborted" (engine 0.8.0, MCP_TOOLS' log schema): the user's Abort put the photo back. "abandoned" (engine
+     * 0.26.0, issue #124): ended without a Lightroom call, the photo as the session left it (session\abandon.ts).
+     */
+    outcome: z.enum(["accept", "revert", "aborted", "abandoned"]).nullable(),
     /** source "none" (engine 0.25.0): begun without an intent (issue #108). */
     intent: z.strictObject({ id: z.string(), label: z.string(), source: z.enum(["bundled", "user", "none"]) }),
     mode: z.enum(["converge", "variants"]),

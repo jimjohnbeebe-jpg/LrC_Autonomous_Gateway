@@ -15,6 +15,7 @@
 --     read; while an entry listed has neither result the write is refused with ai_compute_pending; once the
 --     read shows every result (or the entry is gone), the record is cleared and the write goes ahead.
 --   - Pending.clear: an update Lightroom reported failed, or dropped (abandoned), computes nothing.
+--   - Pending.clearPhoto (bridge command clear_pending_ai, plugin 0.20.0): the engine abandoned the session.
 -- The records live on _G (rule 03: they survive a Reload Plug-in running this module again). A Lightroom
 -- restart starts a new Lua state, so they are gone and writes go ahead [inference: _G is per Lua state;
 -- whether disabling and enabling the plugin also starts one is [unverified]]. Bridge.lua's hello carries
@@ -83,6 +84,19 @@ local function computing(settings, w)
         if type(c) == "table" and not answered(c, w) then return true end
     end
     return false
+end
+
+-- clear_pending_ai (plugin 0.20.0, GitHub issue #124): the engine abandoned the session (engine\src\session\
+-- abandon.ts), so the photo's record is dropped and writes to it go ahead again, before Lightroom answers or
+-- restarts. No SDK call: the records are this module's table. `cleared` says whether there was one.
+function Pending.clearPhoto(payload)
+    local uuid = type(payload) == "table" and payload.photo_uuid
+    if type(uuid) ~= "string" or uuid == "" then
+        return nil, { code = "bad_request", message = "photo_uuid must be a non-empty string", recoverable = false }
+    end
+    local had = records[uuid] ~= nil
+    records[uuid] = nil
+    return { photo_uuid = uuid, cleared = had }
 end
 
 -- Runs in the write's task, before its gate. nil when the write may go ahead, else the error table.

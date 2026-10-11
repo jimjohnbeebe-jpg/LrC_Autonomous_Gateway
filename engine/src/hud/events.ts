@@ -118,8 +118,8 @@ export class HudEvents {
       return false; // SESSION_NOT_FOUND, or a log without a photo
     }
     const t = log.target;
-    // log\session-log.ts outcome: "accept", "revert", "aborted", or null while the edit was open.
-    const stage = log.outcome === "accept" ? "accepted" : log.outcome ? "aborted" : "ended";
+    // log\session-log.ts outcome: "accept", "revert", "aborted", "abandoned" (photo left as it was), or null while the edit was open.
+    const stage = log.outcome === "accept" ? "accepted" : log.outcome && log.outcome !== "abandoned" ? "aborted" : "ended";
     const from: EndedFrom = {
       stage,
       target: { uuid: t.uuid, ...(t.filename ? { filename: t.filename } : {}), ...(t.copy_name ? { copy_name: t.copy_name } : {}) },

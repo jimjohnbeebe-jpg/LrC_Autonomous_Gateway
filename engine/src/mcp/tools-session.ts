@@ -50,7 +50,8 @@ export async function setRegions(ctx: ToolContext, args: RegionArgs): Promise<To
 export async function endSession(ctx: ToolContext, args: EndArgs): Promise<ToolOutput> {
   return run(ctx, "lr_end_session", args, async () => {
     const sessions = sessionTools(ctx);
-    await ctx.deps.ensureBridge();
+    // "abandon" must work with Lightroom gone: it does not wait for the bridge (session\abandon.ts).
+    if (args.outcome !== "abandon") await ctx.deps.ensureBridge();
     return sessions.end(args);
   });
 }

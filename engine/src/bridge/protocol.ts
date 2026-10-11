@@ -307,6 +307,9 @@ export const COMMANDS = {
     ms: z.number(),
     update: z.object({ uuid: z.string().optional(), request_id: z.string().optional(), state: z.string(), error: z.string().optional() }).optional(),
   }),
+  // clear_pending_ai (plugin 0.20.0, issue #124): drops Pending.lua's guard on the photo, so writes to it go
+  // ahead again; `cleared` says whether one was there. Sent when a session is abandoned (session\abandon.ts).
+  clear_pending_ai: z.object({ photo_uuid: z.string(), cleared: z.boolean() }),
 } as const;
 
 export type CommandName = keyof typeof COMMANDS;
@@ -382,4 +385,5 @@ export type CommandPayloads = {
   /** Plugin 0.12.0: on the selected photo, refused with target_mismatch unless it is target_uuid's; waits up to wait_seconds (1-15, default 12) for the mask after createNewMask; switches Lightroom to Develop. */
   create_ai_mask_dc: { target_uuid: string; subtype: string; wait_seconds?: number };
   probe_write_gate: Record<string, never>;
+  clear_pending_ai: { photo_uuid: string };
 };

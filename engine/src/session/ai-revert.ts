@@ -8,6 +8,7 @@
 import { ToolError, toToolError } from "../mcp/errors.js";
 import { KIND_LABELS } from "../params/index.js";
 import type { AiJob } from "./ai-masks.js";
+import { ABANDON_HINT } from "./ai-update.js";
 import { endSession } from "./end.js";
 import { reopenLog } from "./hud-actions.js";
 import { saveLog } from "./io.js";
@@ -78,18 +79,18 @@ export async function autoRevert(ctx: SessionContext, s: Session, job: AiJob, ca
 /** No result from Lightroom (ai-update.ts "stuck"): nothing written; the session stays open, s.aiPending kept, until the result or a restart. */
 export function stuckError(s: Session, job: AiJob, cause: string, failed = false): ToolError {
   if (failed) {
-    s.idleNote = "Lightroom's AI mask failed. Save your work and restart Lightroom: the photo is then put back by itself.";
+    s.idleNote = "Lightroom's AI mask failed. Save your work and restart Lightroom: the photo is then put back by itself. Or click Abort.";
     return new ToolError(
       "AI_MASK_FAILED",
-      `Lightroom's AI ${KIND_LABELS[job.kind]} mask computation failed (${cause}). Nothing was written after the update, and the engine reads and writes nothing more while Lightroom may be unstable. Tell the user: save your work and restart Lightroom (File > Exit, then start it again). Once it is back, the engine notices the restart, puts the photo back as it was before the session (checked) and ends session ${s.id} by itself; nothing to call. Until then session ${s.id} writes, renders and reverts nothing.`,
+      `Lightroom's AI ${KIND_LABELS[job.kind]} mask computation failed (${cause}). Nothing was written after the update, and the engine reads and writes nothing more while Lightroom may be unstable. Tell the user: save your work and restart Lightroom (File > Exit, then start it again). Once it is back, the engine notices the restart, puts the photo back as it was before the session (checked) and ends session ${s.id} by itself; nothing to call. Until then session ${s.id} writes, renders and reverts nothing.${ABANDON_HINT}`,
       false,
       { session_id: s.id, reverted: false, reason: cause },
     );
   }
-  s.idleNote = "Lightroom's AI mask seems stuck. Restart Lightroom: the photo is then put back by itself.";
+  s.idleNote = "Lightroom's AI mask seems stuck. Restart Lightroom: the photo is then put back by itself. Or click Abort.";
   return new ToolError(
     "LIGHTROOM_STUCK",
-    `${STUCK} (the AI ${KIND_LABELS[job.kind]} mask: ${cause}). Nothing was written after the update, so the photo was not put back while Lightroom may still work on it. Tell the user: restart Lightroom (File > Exit, then start it again). Once it is back, the engine notices the restart, puts the photo back as it was before the session (checked) and ends session ${s.id} by itself; nothing to call. If Lightroom finishes the mask first, the session goes on. Until then session ${s.id} writes, renders and reverts nothing.`,
+    `${STUCK} (the AI ${KIND_LABELS[job.kind]} mask: ${cause}). Nothing was written after the update, so the photo was not put back while Lightroom may still work on it. Tell the user: restart Lightroom (File > Exit, then start it again). Once it is back, the engine notices the restart, puts the photo back as it was before the session (checked) and ends session ${s.id} by itself; nothing to call. If Lightroom finishes the mask first, the session goes on. Until then session ${s.id} writes, renders and reverts nothing.${ABANDON_HINT}`,
     false,
     { session_id: s.id, reverted: false, reason: cause },
   );

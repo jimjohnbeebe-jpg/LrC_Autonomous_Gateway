@@ -229,6 +229,8 @@ export const sessionLogSchema = z
     variant_count: z.number().int().nullable(),
     max_passes: z.number().int(),
     guardrails: z.strictObject({ clip_high_pct: z.number(), clip_low_pct: z.number() }),
+    /** Issue #130: the session's resolved clip_baseline (session\guardrail.ts correct). Absent in older logs, whose baseline always ran. */
+    clip_baseline: z.boolean().optional(),
     decay: z.array(z.number()),
     notes: z.string().nullable(),
     target: z.strictObject({

@@ -1,5 +1,5 @@
 // lr_begin_session: open the session (checks, snapshot, log), then pass 0 (camera profile, lens,
-// intent priors, then the clipping baseline) with its preview, metrics and the intent's brief.
+// intent priors, then the clipping baseline when clip_baseline is on) with its preview, metrics and the intent's brief.
 // Converge mode runs pass 0 on the master here (runPass0); Variants mode makes the copies and runs
 // pass 0 on each (variants.ts runVariants) [handle: tests\session-variants.test.ts "makes the
 // copies, runs pass 0 on each with the intent's priors plus its variant's, and leaves the master
@@ -85,6 +85,8 @@ export async function openSession(ctx: SessionContext, args: BeginArgs): Promise
     startedAt: now,
     intent: loaded,
     profile: args.profile ?? null,
+    // The request first, then the intent [stated: Jim, 2026-10-11, issue #130, "Intent or request"].
+    clipBaseline: args.clip_baseline ?? loaded.intent.clip_baseline ?? false,
     mode,
     maxPasses: settings.maxPasses,
     limits: { clipHighPct: settings.clipHighPct, clipLowPct: settings.clipLowPct },
@@ -179,6 +181,7 @@ function newLog(ctx: SessionContext, s: Session, variantCount: number | null, no
     variant_count: variantCount,
     max_passes: s.maxPasses,
     guardrails: { clip_high_pct: s.limits.clipHighPct, clip_low_pct: s.limits.clipLowPct },
+    clip_baseline: s.clipBaseline,
     decay: [...s.decay],
     notes,
     target: {
@@ -240,6 +243,7 @@ export function sessionHeader(opened: Opened): Record<string, unknown> {
       allow_probe: intent.allow_probe ?? false,
     },
     guardrails: s.log.guardrails,
+    clip_baseline: s.clipBaseline,
     max_passes: s.maxPasses,
     ...settingsJson(s),
     snapshot: s.snapshot,

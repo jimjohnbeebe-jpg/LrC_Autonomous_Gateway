@@ -19,6 +19,22 @@ describe("devtools: AC-4 on every session", () => {
     expect(clipCheck(log)).toEqual({ ok: false, passes: [{ n: 0, clip_high_pct: 0.5, clip_low_pct: 1, ok: true }, { n: 1, clip_high_pct: 0.6, clip_low_pct: 0, ok: false }] });
   });
 
+  it("without clip_baseline fails only an end a pass pushed over; with it, every pass over a limit (issue #130)", () => {
+    const pass = (n: number, before: [number, number], after: [number, number]) => ({
+      n,
+      metrics_before: { clip_high_pct: before[0], clip_low_pct: before[1] },
+      metrics_after: { clip_high_pct: after[0], clip_low_pct: after[1] },
+    });
+    const passes = [pass(0, [2, 0], [2, 0]), pass(1, [2, 0], [2.5, 0.5])]; // high over before and after: left alone
+    const log = (clip_baseline: boolean | undefined, extra: unknown[] = []) =>
+      ({ guardrails: { clip_high_pct: 0.5, clip_low_pct: 1 }, ...(clip_baseline === undefined ? {} : { clip_baseline }), passes: [...passes, ...extra] }) as unknown as Parameters<typeof clipCheck>[0];
+    expect(clipCheck(log(false)).ok).toBe(true);
+    const pushed = clipCheck(log(false, [pass(2, [2.5, 0.5], [2.5, 1.5])])); // low within before, over after
+    expect(pushed.passes.map((p) => p.ok)).toEqual([true, true, false]);
+    expect(clipCheck(log(true)).passes.map((p) => p.ok)).toEqual([false, false]);
+    expect(clipCheck(log(undefined)).ok).toBe(false); // a log from before issue #130: the baseline ran
+  });
+
   it("fails a log with no pass: nothing was measured (Greptile, PR #27)", () => {
     const log = { guardrails: { clip_high_pct: 0.5, clip_low_pct: 1 }, passes: [] } as unknown as Parameters<typeof clipCheck>[0];
     expect(clipCheck(log)).toEqual({ ok: false, passes: [] });

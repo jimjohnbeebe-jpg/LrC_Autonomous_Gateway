@@ -94,9 +94,11 @@ export function useSessionHarness(pipeline: Pipeline = "raw"): void {
     await client.waitConnected(2000);
     intent("test_plain", { allow_probe: true });
     intent("test_prior", { profile: { raw: "Adobe Color", rendered: "Color" }, priors: { exposure: 0.2, "lens.ca_remove": 0 } });
-    // Variants mode: B adds to the intent's exposure prior, C's exposure clips the highlights (tonal model).
+    // Variants mode: B adds to the intent's exposure prior, C's exposure clips the highlights (tonal model),
+    // which pass 0's clipping baseline then pulls in (clip_baseline, issue #130).
     intent("test_variants", {
       allow_probe: true,
+      clip_baseline: true,
       priors: { exposure: 0.1, "lens.ca_remove": 1 },
       variants: {
         A: { label: "natural", priors: {} },

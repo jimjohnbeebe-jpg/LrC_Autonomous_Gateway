@@ -42,7 +42,7 @@ export async function step(ctx: SessionContext, s: Session, args: StepArgs): Pro
   } catch (err) {
     throw failed(ctx, s, `step ${n}${label(t)} (render before the step)`, err);
   }
-  applyProjectedGuardrail(plan, summarize(baseline.last.metrics), s.limits, t.slopes, t.pipeline);
+  applyProjectedGuardrail(plan, summarize(baseline.last.metrics), s.limits, t.slopes, t.pipeline, s.clipBaseline);
   if (plan.changes.length === 0) refuseEmpty(s, plan);
 
   try {
@@ -145,7 +145,7 @@ async function apply(ctx: SessionContext, s: Session, t: Target, n: number, plan
   const values: Record<string, CanonicalValue> = Object.fromEntries(plan.changes.map((c) => [c.name, c.after]));
   const written = await write(ctx, s, t, values, name);
   historyNames.push(name);
-  const corrected = await correct(ctx, s, t, n, plan.changes, written, await render(ctx, s, t, written), historyNames);
+  const corrected = await correct(ctx, s, t, n, plan.changes, before.metrics, written, await render(ctx, s, t, written), historyNames);
   const actions = [...corrected.actions];
 
   const drift = regionDrift(s, t, corrected.rendered.metrics);

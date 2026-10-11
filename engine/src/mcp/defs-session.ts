@@ -20,6 +20,7 @@ const beginArgs = z.object({
     .min(1)
     .optional()
     .describe("the profile pass 0 sets, replacing the intent's: a profile of the photo's pipeline (raw: e.g. \"Adobe Color\"; rendered: \"Color\" or \"Monochrome\")"),
+  clip_baseline: z.boolean().optional().describe("true only when the user's request asks pass 0 to pull clipping in; replaces the intent's"),
   mode: z
     .enum(["converge", "variants"])
     .optional()
@@ -105,9 +106,11 @@ export const SESSION_DEFS: ToolDef[] = [
       "request wants clipping (high key, crushed blacks), raise `guardrails`. The engine: " +
       "creates a Develop snapshot \"AVG pre-session …\" (lr_end_session revert returns to it); renders the photo as it is; " +
       "runs pass 0, one History step \"AVG <id> pass 0/N\" with the intent's camera profile (or `profile`), lens corrections and priors " +
-      "(a numeric prior is added to the photo's value); then, while clipping is over a limit, pulls whites/highlights/exposure or " +
-      "blacks/shadows/exposure back in fixed steps until under, at most 8 (\"… baseline k\"; a limit still over is `unmet` in " +
-      "guardrail_actions); without an intent, pass 0 writes no profile or priors (and `profile` alone when given). Returns session_id, the intent's brief (a starting point), the " +
+      "(a numeric prior is added to the photo's value). Only when `clip_baseline` is on (the argument, else the intent's; off by " +
+      "default, and `clip_baseline` in the result) does pass 0 then, while clipping is over a limit, pull whites/highlights/exposure or " +
+      "blacks/shadows/exposure back in fixed steps until under, at most 8 (\"… baseline k\"), and later passes correct clipping " +
+      "they did not cause; otherwise clipping is measured and left as it is, and a pass corrects only the clipping it caused. A limit " +
+      "still over is `unmet` in guardrail_actions. Without an intent, pass 0 writes no profile or priors (and `profile` alone when given). Returns session_id, the intent's brief (a starting point), the " +
       "guardrails, pass0_applied, the full settings, metrics, and the preview. Then call lr_step for each pass. " +
       "`target.pipeline` and `target.white_balance_unit` say how the photo's temperature and tint work (lr_get_active_photo_context). " +
       "Pass 0 takes the intent's profile and priors for that pipeline (`profile.raw` or `profile.rendered`, `priors` plus " +
@@ -140,8 +143,10 @@ export const SESSION_DEFS: ToolDef[] = [
       "vibrance/saturation 30, temperature 1500 K on raw photos and 30 on rendered ones, whose temperature is relative, tint 30, " +
       "HSL 40, grading 30; a grading hue is an angle: it takes the shorter way round, wraps at 360 and is not capped) " +
       "and at the slider's range (`clamped`). " +
-      "A change that would push further into a clipping limit already reached is refused (`refused`); the rest is written as " +
-      "one History step \"AVG <id> pass n/N\", read back, rendered and measured. If clipping then exceeds a limit, the engine " +
+      "The clipping guard covers only an end within its limit before the pass (every end when the session's `clip_baseline` " +
+      "is on; an end already over is left alone and reported `unmet`). A change that would push further into a guarded " +
+      "limit already reached is refused (`refused`); the rest is written as " +
+      "one History step \"AVG <id> pass n/N\", read back, rendered and measured. If clipping then exceeds a guarded limit, the engine " +
       "pulls back the sliders that caused it, else takes fixed steps, at most 3 (\"… guard k\", in `guardrail_actions`). The pass " +
       "is undone (\"… clip revert\" / \"… region revert\", a `reverted` action and `undone` in the result; the pass still counts) " +
       "when clipping is still over a limit the photo was within before the pass, or a preserved region drifts; `applied` then " +

@@ -9,5 +9,6 @@
   "convergence_hints": [
     "stop when midtones sit near the middle, neutrals are neutral and nothing is clipped beyond the guardrails"
   ],
-  "allow_probe": true
+  "allow_probe": true,
+  "clip_baseline": true
 }

@@ -27,7 +27,7 @@ export async function variantsSession(deps: Phase4Deps, run: Run, photo: Photo):
   const out: Json = { ok: false };
   run.results["variants"] = out;
   try {
-    const begin = (await deps.tools.beginSession({ intent_id: INTENT, mode: "variants", variant_count: 3, return_image: "none" })).json;
+    const begin = (await deps.tools.beginSession({ intent_id: INTENT, clip_baseline: true, mode: "variants", variant_count: 3, return_image: "none" })).json;
     const sid = String(begin["session_id"]);
     const variants = (begin["variants"] as Variant[] | undefined) ?? [];
     for (const v of variants) run.copies.push({ uuid: v.uuid, copy_name: v.copy_name, made_by: "variants" });

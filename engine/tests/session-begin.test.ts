@@ -44,10 +44,11 @@ describe.each(PIPELINES)("lr_begin_session (%s pipeline)", (pipeline) => {
     expect((await fails(manager.begin({ intent_id: "test_plain" }))).code).toBe("SESSION_ALREADY_ACTIVE");
   });
 
+  // The baseline runs only with clip_baseline (issue #130; off: tests\session-clip-baseline.test.ts).
   it("pulls clipping back under the limits in pass 0 (the baseline of PRD 6.5), in one write for both ends", async () => {
     clean();
     Object.assign(lr.settings, { Whites2012: 0, Blacks2012: -20 }); // both ends clip in the tonal model
-    const out = await manager.begin({ intent_id: "test_plain" });
+    const out = await manager.begin({ intent_id: "test_plain", clip_baseline: true });
     expect(lr.history).toEqual([`AVG ${SHORT} pass 0/4 baseline 1`]);
     expect(lr.settings["Whites2012"]).toBe(-20);
     expect(lr.settings["Blacks2012"]).toBe(0);
@@ -61,7 +62,7 @@ describe.each(PIPELINES)("lr_begin_session (%s pipeline)", (pipeline) => {
   it("keeps correcting in pass 0 until under, going round each end's fixed table again (PHASE4_PLAN decision 1)", async () => {
     clean();
     Object.assign(lr.settings, { Blacks2012: -60, Shadows2012: -60 }); // crushed shadows three fixed steps do not lift
-    const out = await manager.begin({ intent_id: "test_plain" });
+    const out = await manager.begin({ intent_id: "test_plain", clip_baseline: true });
     expect(lr.history).toEqual([1, 2, 3, 4, 5, 6, 7].map((k) => `AVG ${SHORT} pass 0/4 baseline ${k}`));
     const actions = out.json["guardrail_actions"] as Array<{ kind: string; limit: string; changes: Record<string, number> }>;
     // Shadows: blacks, shadows, exposure, then round again. The exposure steps push the highlights
@@ -84,7 +85,7 @@ describe.each(PIPELINES)("lr_begin_session (%s pipeline)", (pipeline) => {
   it("stops pass 0 after 8 corrections and reports the limit unmet", async () => {
     clean();
     lr.settings["Exposure2012"] = -3; // far too dark for 8 fixed steps
-    const out = await manager.begin({ intent_id: "test_plain" });
+    const out = await manager.begin({ intent_id: "test_plain", clip_baseline: true });
     expect(lr.history).toEqual([1, 2, 3, 4, 5, 6, 7, 8].map((k) => `AVG ${SHORT} pass 0/4 baseline ${k}`));
     const actions = out.json["guardrail_actions"] as Array<{ kind: string; limit: string }>;
     expect(actions).toHaveLength(9);

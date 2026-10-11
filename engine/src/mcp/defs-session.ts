@@ -220,6 +220,8 @@ export const SESSION_DEFS: ToolDef[] = [
       "lr_begin_session (the result lists any setting that still differs). Returns the log and recipe paths and the final settings. " +
       "Variants mode: \"accept\" needs a pick and keeps the pick's edit (the recipe is the pick's); \"revert\" puts the master back. " +
       "Either way the copies stay in the catalog, listed in `copies`. After the user clicked Abort in the HUD, only \"revert\" is taken. " +
+      "Once the user ended the session on the Deck, the outcome matching theirs (\"accept\" after Accept; \"revert\" after Abort or " +
+      "Put back) returns ok with `already_ended_by_user` {outcome, source, at, log_path}; any other outcome gets SESSION_ENDED. " +
       "\"abandon\": only when the session cannot end otherwise and the user agrees: Lightroom is gone or hung, or an AI mask failed " +
       "or seems stuck (AI_MASK_FAILED, LIGHTROOM_STUCK, AI_UPDATE_PENDING refuse revert). It reads and writes nothing (it does not " +
       "wait for Lightroom): the photo keeps what the session did, the log's outcome is \"abandoned\", and a new session can begin. " +

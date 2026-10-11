@@ -39,7 +39,7 @@ import { pendingError } from "./ai-update.js";
 import { approvePass } from "./approval.js";
 import { openSession, runPass0 } from "./begin.js";
 import { endSession, readSessionLog } from "./end.js";
-import { abortedNote, endedError, idleStage, userAction, userEnded, type ActionHost, type UserAction, type UserEnded } from "./hud-actions.js";
+import { abortedNote, endedAlike, endedError, idleStage, userAction, userEnded, type ActionHost, type UserAction, type UserEnded } from "./hud-actions.js";
 import { abortError, checkAbort, read, render } from "./io.js";
 import { createMask, deleteMask, editMask, listMasks } from "./masks.js";
 import { selectVariant } from "./pick.js";
@@ -212,7 +212,8 @@ export class SessionManager {
         return out;
       });
     }
-    return this.exclusive(() =>
+    return this.exclusive(async () =>
+      endedAlike(this.session?.id === args.session_id ? undefined : this.endedByUser.get(args.session_id), outcome) ??
       this.withNotices(args.session_id, async (s) => {
         // After the user's Abort, "revert" still ends the session (the way out when the Abort's own
         // revert failed); "accept" is refused, as the user asked for the photo back.

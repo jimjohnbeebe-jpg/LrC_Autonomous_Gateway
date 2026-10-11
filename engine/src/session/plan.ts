@@ -22,6 +22,12 @@ const sign = (x: number): number => (x > EPSILON ? 1 : x < -EPSILON ? -1 : 0);
 const fmt = (x: number): string => String(Math.round(x * 1000) / 1000);
 const signed = (x: number): string => `${x > 0 ? "+" : ""}${fmt(x)}`;
 
+/** before + delta at the slider's precision; a grading hue wraps into 0..359 (issue #128). */
+function afterChange(name: string, before: number, delta: number): number {
+  const after = roundForSlider(name, before + delta);
+  return isCircularHue(name) ? ((after % 360) + 360) % 360 : after;
+}
+
 /**
  * Turn the requested step into changes. Numeric sliders take a CHANGE (added to the current value),
  * capped at base maximum x the pass's decay and at the slider's range, and rounded to the slider's
@@ -53,7 +59,7 @@ export function planStep(requested: Readonly<Record<string, unknown>>, current: 
       // The shorter way round, (-180, 180]; no cap, no clamp; 360 reads as 0 (issue #128).
       const delta = 180 - ((((180 - Math.round(value)) % 360) + 360) % 360);
       if (delta === 0) plan.unchanged.push(name);
-      else plan.changes.push({ name, before, requested: value, after: (((Math.round(before) + delta) % 360) + 360) % 360, delta });
+      else plan.changes.push({ name, before, requested: value, after: afterChange(name, before, delta), delta });
       continue;
     }
     const base = baseMaxStep(name, pipeline) ?? spec.max - spec.min;
@@ -122,7 +128,7 @@ export function applyProjectedGuardrail(plan: StepPlan, last: MetricsSummary | n
           continue;
         }
         plan.clamped.push({ name: change.name, requested: change.requested as number, applied: delta, reason: "the probe's slope projects a clipping breach beyond this change" });
-        kept.push({ ...change, after: roundForSlider(change.name, change.before + delta), delta });
+        kept.push({ ...change, after: afterChange(change.name, change.before, delta), delta });
         continue;
       }
     }

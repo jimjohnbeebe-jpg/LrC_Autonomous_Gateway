@@ -16,6 +16,13 @@ let client: BridgeClient;
 let allowance: number;
 /** True while the plugin is "paused": it answers nothing, not even pings. */
 let paused: boolean;
+/**
+ * Ends the pause. The late request's answer goes out before any later beat's: a beat answered first made
+ * pluginPaused() false while the late answer still waited on a 5 ms poll, and the request's next timeout
+ * check failed it (issue #127) [handle: a trace of this file under a loaded full suite, 2026-10-11: beat
+ * answered at +436 ms, pluginPaused false at +451 ms, the late request failed with drops 0].
+ */
+let unpause: () => void;
 
 const pong = (nonce: unknown): FakeReply => ({ ok: true, payload: { pong: true, ...(nonce ? { nonce } : {}) } });
 
@@ -23,10 +30,16 @@ beforeEach(async () => {
   plugin = await FakePlugin.start();
   allowance = 0;
   paused = false;
+  const resumed = new Promise<void>((resolve) => {
+    unpause = () => {
+      paused = false;
+      resolve();
+    };
+  });
   plugin.handlers.set("ping", async (p) => {
     if (p["nonce"] === "late") {
       // The request the test waits on: answered once the pause is over.
-      while (paused) await sleep(5);
+      if (paused) await resumed;
       return pong("late");
     }
     return paused ? "silent" : pong(p["nonce"]);
@@ -57,7 +70,7 @@ describe("bridge client: a plugin pause", () => {
     paused = true;
     const late = client.request("ping", { nonce: "late" }, { timeoutMs: 150 });
     await sleep(400); // over three beats (120 ms) and over the request's own timeout
-    paused = false;
+    unpause();
     expect((await late).nonce).toBe("late");
     expect([client.getState(), client.stats.drops]).toEqual(["connected", 0]);
   });
@@ -68,7 +81,7 @@ describe("bridge client: a plugin pause", () => {
     paused = true;
     const late = client.request("ping", { nonce: "late" }, { timeoutMs: 80 });
     await sleep(400);
-    paused = false;
+    unpause();
     expect((await late).nonce).toBe("late");
     expect(client.stats.drops).toBe(0);
   });
@@ -76,7 +89,7 @@ describe("bridge client: a plugin pause", () => {
   it("without the allowance, the same pause drops the bridge and fails the request", async () => {
     paused = true;
     const e = await rejection(client.request("ping", { nonce: "late" }, { timeoutMs: 1000 }));
-    paused = false;
+    unpause();
     expect(e.code).toBe("disconnected");
     expect(client.stats.last_drop_reason).toMatch(/heartbeat/);
   });
@@ -87,7 +100,7 @@ describe("bridge client: a plugin pause", () => {
     const started = Date.now();
     const e = await rejection(client.request("ping", { nonce: "late" }, { timeoutMs: 150 }));
     const waited = Date.now() - started;
-    paused = false;
+    unpause();
     expect(e.code).toBe("disconnected");
     expect(client.stats.last_drop_reason).toMatch(/heartbeat/);
     expect(waited).toBeGreaterThanOrEqual(300);

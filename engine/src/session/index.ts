@@ -54,6 +54,7 @@ export {
   SESSION_DEFAULTS,
   baseMaxStep,
   decayFor,
+  isCircularHue,
   minStep,
   roundForSlider,
 } from "./rules.js";

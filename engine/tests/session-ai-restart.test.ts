@@ -86,13 +86,20 @@ describe("issue #123: Lightroom's update over with no result", () => {
     expect(sent("probe_write_gate")).toBe(1);
     expect(readLog().failures.at(-1)?.ai_trace?.probes).toEqual([expect.objectContaining({ status: "executed", update: "done" })]);
     expect(rig.reported.some((r) => r.note === "Lightroom's AI mask failed. Save your work and restart Lightroom: the photo is then put back by itself.")).toBe(true);
-    const reads = sent("get_settings");
+    const toPhoto = (): number => plugin.received.filter((r) => !r.name.startsWith("hud_")).length; // the HUD's notes are no reads
+    const received = toPhoto();
     await new Promise((resolve) => setTimeout(resolve, 50));
-    expect(sent("get_settings")).toBe(reads);
+    expect(toPhoto()).toBe(received);
     const refused = await fails(rig.manager.end({ session_id: ID, outcome: "revert" }));
     expect(refused).toMatchObject({ code: "AI_UPDATE_PENDING", details: { stuck: true } });
     expect(refused.message).toMatch(/computation failed .* nothing more is read/);
-    expect(sent("get_settings")).toBe(reads);
+    // Every call that would reach Lightroom is refused before its first read, and an accept cannot close the session (Greptile, PR #133).
+    expect(await fails(step(rig.manager))).toMatchObject({ code: "AI_UPDATE_PENDING" });
+    expect(await fails(rig.manager.listMasks({ session_id: ID }))).toMatchObject({ code: "AI_UPDATE_PENDING" });
+    await expect(rig.manager.preview(ID, 800)).rejects.toMatchObject({ code: "AI_UPDATE_PENDING" });
+    expect(await fails(rig.manager.end({ session_id: ID, outcome: "accept" }))).toMatchObject({ code: "AI_UPDATE_PENDING" });
+    expect(rig.manager.current()?.id).toBe(ID);
+    expect(toPhoto()).toBe(received);
     lr.masks.finishLate(); // a late result does not lift it: only the restart does
     expect(await fails(step(rig.manager))).toMatchObject({ code: "AI_UPDATE_PENDING" });
     restartLightroom(lr, plugin);

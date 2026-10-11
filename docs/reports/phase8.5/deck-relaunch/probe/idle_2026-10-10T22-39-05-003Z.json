@@ -1,0 +1,19 @@
+{
+  "probe": "deck-idle",
+  "at": "2026-10-10T22:39:05.003Z",
+  "runs": [
+    {
+      "mode": "both",
+      "hidden_s": 420,
+      "wake": false,
+      "verdict": "FAILED",
+      "problem": "no place or accept_at line after the show",
+      "wake_ms": 35629,
+      "point": null,
+      "under_point": null,
+      "pointer_in": false,
+      "deck_click": false,
+      "engine_got_click": false
+    }
+  ]
+}

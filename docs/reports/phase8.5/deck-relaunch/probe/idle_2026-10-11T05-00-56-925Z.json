@@ -1,0 +1,44 @@
+{
+  "probe": "deck-idle",
+  "at": "2026-10-11T05:00:56.925Z",
+  "runs": [
+    {
+      "mode": "both",
+      "hidden_s": 30,
+      "wake": true,
+      "classic": true,
+      "classic_opened": true,
+      "verdict": "INPUT OK",
+      "problem": null,
+      "wake_ms": 65,
+      "point": {
+        "x": 3065,
+        "y": 1806
+      },
+      "under_point": "msedgewebview2.exe",
+      "in_front": "Code - Insiders.exe",
+      "pointer_in": true,
+      "deck_click": true,
+      "engine_got_click": true
+    },
+    {
+      "mode": "both",
+      "hidden_s": 420,
+      "wake": false,
+      "classic": true,
+      "classic_opened": true,
+      "verdict": "INPUT OK",
+      "problem": null,
+      "wake_ms": 16778,
+      "point": {
+        "x": 3065,
+        "y": 1806
+      },
+      "under_point": "msedgewebview2.exe",
+      "in_front": "Code - Insiders.exe",
+      "pointer_in": true,
+      "deck_click": true,
+      "engine_got_click": true
+    }
+  ]
+}

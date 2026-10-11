@@ -1,0 +1,66 @@
+{
+  "probe": "deck-idle",
+  "at": "2026-10-10T22:02:40.796Z",
+  "runs": [
+    {
+      "mode": "both",
+      "hidden_s": 30,
+      "verdict": "INPUT OK",
+      "problem": null,
+      "wake_ms": 63,
+      "point": {
+        "x": 3065,
+        "y": 1806
+      },
+      "under_point": "msedgewebview2.exe",
+      "pointer_in": true,
+      "deck_click": true,
+      "engine_got_click": true
+    },
+    {
+      "mode": "both",
+      "hidden_s": 420,
+      "verdict": "INPUT OK",
+      "problem": null,
+      "wake_ms": 64,
+      "point": {
+        "x": 3065,
+        "y": 1806
+      },
+      "under_point": "msedgewebview2.exe",
+      "pointer_in": true,
+      "deck_click": true,
+      "engine_got_click": true
+    },
+    {
+      "mode": "no_memory",
+      "hidden_s": 420,
+      "verdict": "INPUT OK",
+      "problem": null,
+      "wake_ms": 64,
+      "point": {
+        "x": 3065,
+        "y": 1806
+      },
+      "under_point": "msedgewebview2.exe",
+      "pointer_in": true,
+      "deck_click": true,
+      "engine_got_click": true
+    },
+    {
+      "mode": "no_visible",
+      "hidden_s": 420,
+      "verdict": "INPUT OK",
+      "problem": null,
+      "wake_ms": 67,
+      "point": {
+        "x": 3065,
+        "y": 1806
+      },
+      "under_point": "msedgewebview2.exe",
+      "pointer_in": true,
+      "deck_click": true,
+      "engine_got_click": true
+    }
+  ]
+}

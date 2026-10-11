@@ -20,7 +20,7 @@ Go when both causes are found with handles, fixed at the cause, and Jim's Lightr
 
 ## Harness
 
-- `npm run deck:idle-probe` (`hud\probe\idle.ts`, mouse helper `hud\probe\input.ts`). It needs Lightroom open and Claude Desktop quit, and runs four runs, about 25 minutes. Each run:
+- `npm run deck:idle-probe` (`hud\probe\idle.ts`, mouse helper `hud\probe\input.ts`, stand-in engine `hud\probe\kit.ts`). It needs Lightroom open and Claude Desktop quit. Without arguments it runs four runs, about 25 minutes. Each run:
   - starts the Deck with `LRC_AVG_DECK_IDLE` set (both, no_memory, no_visible; `hud\src-tauri\src\webview.rs`);
   - shows the Deck for a stand-in edit, ends it, and closes the channel as the engine's idle release does;
   - waits 30 s or 420 s;
@@ -28,6 +28,11 @@ Go when both causes are found with handles, fixed at the cause, and Jim's Lightr
   - moves the mouse onto Accept and clicks.
 
   It records whether the page saw the pointer (`pointer_in`), whether the Deck sent the click and the stand-in engine got it, which process's window was under the point, and how long the Deck took to connect again. Results: `%TEMP%\LrC-AVG\deck-idle\idle_<stamp>.json`, plus a copy of each Deck log.
+
+  Three variants, added after the first run, each closer to the session of 2026-10-10:
+  - `-- --timer`: no second launch. The next edit begins while the Deck is disconnected, and the Deck finds the engine through its page's 2 s timer and joins mid-edit. The stand-in sends a Deck that connects the open edit's state, as the engine does (`engine\src\hud\deck.ts` `clientChanged`).
+  - `-- --front`: a 30 s wake run and a 420 s timer run, with the app the probe was started from (VS Code) put in front by a click on it while the Deck is hidden. Each run records the app in front at the show (`in_front`).
+  - `-- --classic`: the `--front` runs with Lightroom's classic HUD open as well. The edit begins, the probe opens the classic window through the bridge command `hud_update` (`open: true`), as `engine\src\hud\publisher.ts` sends it, and 3 s later puts VS Code in front; then the Deck connects and shows. The classic window closes itself 10 s after the edit ends.
 - The Lightroom check: one Claude Desktop chat after an idle of more than 5 minutes (steps below). Claude Code reads the engine's tool log and the Deck's log.
 
 ## Pre-run findings (Claude Code)
@@ -54,12 +59,14 @@ Evidence in `docs\reports\phase8.5\deck-relaunch\`, copied from Jim's PC on 2026
      | 383 s | none: Accept came from the classic HUD at 19:59:56Z, `via: "bridge"` |
 
      [handle: `deck-11744-excerpt.jsonl` `hide`/`show`/`click` lines; `engine-tools-excerpt.jsonl` `hud_event`]
-   - While hidden, the Deck sets WebView2 `IsVisible` false and its memory target Low (`hud\src-tauri\src\webview.rs`). Which of the two stops input after minutes is [unverified]: the probe measures it.
+   - While hidden, the Deck sets WebView2 `IsVisible` false and its memory target Low (`hud\src-tauri\src\webview.rs`). Whether either stops input after minutes was [unverified] before the probe. The probe found neither does (Observed, Part A).
+   - The app in front at each show [handle: `deck-11744-excerpt.jsonl`, `show` lines, `fg_pid`]: the three shows that took input (19:42:25Z, 19:45:41Z, 19:50:13Z) came while Claude Desktop (pid 29508) was in front; the two that did not (19:57:44Z, 20:04:44Z) came while VS Code Insiders (pid 29256) was. That pid 29256 is VS Code Insiders, running since 2026-10-08, is [handle: `Get-Process -Id 29256` on 2026-10-10: `Code - Insiders`, StartTime 10/8/2026 9:08:48 PM]. Its window (hwnd 401152) is on the right monitor, x 3994 to 7619, so it could not cover the Deck, which was at x 1790 to 3632 on the left monitor [handle: GetWindowRect of hwnd 401152 and `System.Windows.Forms.Screen.AllScreens` on 2026-10-10; the `place` lines].
 
 Built on this branch before the probe (Deck 0.3.3, engine 0.25.1):
 - `wake.rs`: a second launch sets the event `Local\LrC-AVG-HUD-wake` and exits; the running Deck waits on it in a Rust thread and asks its page to connect now (`window.deckWake`, `hud\ui\deck.ts`). Test: `wake::tests` (cargo).
 - `sinks.ts`: when the classic HUD opens because a started Deck did not connect, or was lost, the next session tool result says so in `hud_actions` (`deck_fallback`). A Deck that is not installed is no fallback. Test: `engine\tests\hud-fallback.test.ts`.
 - Diagnostics in the Deck's log: `accept_at` at each show, and `pointer_in` on the first pointer move after it.
+- Added after Part A, since no run reproduced the dead input (Jim's choice, 2026-10-10 [stated: "Go with your recommendations"]): `over.rs`. While the Deck is shown, each 250 ms tick samples a 5 x 3 grid over its window with WindowFromPoint and logs an `over` line at each show and whenever the set of other windows found there changes, with their pid, class, title and number of points. If the dead input comes back, the log names any window over the Deck.
 
 ## Steps for Jim
 
@@ -77,7 +84,22 @@ Built on this branch before the probe (Deck 0.3.3, engine 0.25.1):
 
 ### Part B: the Lightroom check (after the fix is built)
 
-Claude Code writes these steps when the fix from Part A is in.
+About 20 minutes, most of it waiting. It recreates the evening of 2026-10-10: an edit, an idle of more than 5 minutes with VS Code in front, then the next edit.
+
+1. Quit Claude Desktop: **File > Exit** in Claude Desktop.
+2. In PowerShell in VS Code, install the new Deck:
+   ```powershell
+   Stop-Process -Name "LrC-AVG HUD" -ErrorAction SilentlyContinue
+   & "D:\Developer\LrC_Autonomous_Gateway\hud\src-tauri\target\release\bundle\nsis\LrC-AVG HUD_0.3.3_x64-setup.exe" /S
+   ```
+3. Start Claude Desktop. In Lightroom, in **Develop**, select one raw photo.
+4. In a new Claude Desktop chat, ask for an edit of the selected photo. When the Deck shows it, click **Accept** on the Deck.
+5. Click VS Code, so it is in front, and leave everything alone for at least 6 minutes.
+6. In the same chat, ask for another edit of the photo. Watch the Deck and Lightroom: you should see the Deck within a second or two of the edit starting, and no classic HUD window. Move the mouse over the Deck's **Accept**: it should light up. Click it.
+7. Do steps 5 and 6 once more.
+8. Tell Claude Code "done", and answer three questions: Did the classic HUD window appear at any time (yes/no)? Did the Deck's Accept light up and work each time (yes/no)? Did Claude say anything about a fallback to the classic HUD (yes/no)?
+
+Claude Code then collects the engine's tool log and the Deck's log.
 
 ### If something goes wrong
 
@@ -87,18 +109,45 @@ Claude Code writes these steps when the fix from Part A is in.
 
 ## Observed (Jim)
 
-*(Part A: the probe's results, collected by Claude Code from `%TEMP%\LrC-AVG\deck-idle\`.)*
+**Part A: the probe**, run by Jim on 2026-10-10 and 2026-10-11 UTC, results collected by Claude Code from `%TEMP%\LrC-AVG\deck-idle\` [handle: `docs\reports\phase8.5\deck-relaunch\probe\idle_<stamp>.json`, all seven files]:
+- `idle_2026-10-10T22-02-40-796Z.json` (four wake runs): all INPUT OK. The Deck connected again 63 to 67 ms after the second launch.
+- `idle_2026-10-10T22-39-05-003Z.json` and `idle_2026-10-11T00-50-05-083Z.json` (`--timer`): FAILED, "no place or accept_at line after the show". The Deck connected 35.6 s and 38.2 s after the edit began, but never showed: the stand-in did not send the open edit's state to a Deck that connects (fixed in `kit.ts`, as the engine does). The probe also did not exit after a failed run, since the stand-in's channel stayed open (fixed: `idle.ts` closes it after the runs) [stated: Jim, "run is not exiting, I have to CTRL-C"].
+- `idle_2026-10-11T01-34-56-640Z.json` (`--timer`, fixed stand-in): INPUT OK; connected after 30.3 s.
+- `idle_2026-10-11T01-58-56-615Z.json` (`--front`, first version): INPUT OK twice, but Lightroom was in front at both shows (`in_front`), since the Deck's Accept hands the foreground to Lightroom (`focus_lightroom`). It did not test what it was meant to; the probe now clicks VS Code itself.
+- `idle_2026-10-11T04-36-56-612Z.json` (`--front`): INPUT OK twice, VS Code Insiders in front at both shows.
+- `idle_2026-10-11T05-00-56-925Z.json` (`--classic`): INPUT OK twice, VS Code Insiders in front and the classic HUD open (`classic_opened: true`). Jim saw the classic window appear near the end of the run [stated: Jim, 2026-10-11], which is the probe's own (its second run).
+
+In every run that reached the click, the window under the Accept point was the Deck's WebView2 (`under_point` `msedgewebview2.exe`).
+
+One test of Windows notifications, run by Claude Code on 2026-10-11 (`scratchpad\toast.ps1`, not kept): with Lightroom maximised on the left monitor, WindowFromPoint at the Accept point of 2026-10-10, (3378, 1878), returned Lightroom's main window before, during and after a test notification. Whether the notification showed at all is [unverified]: Jim did not see it [stated: Jim, "I don't know"]. Jim does not see Claude Desktop notifications when a reply finishes [stated: Jim, 2026-10-11, "No, not as far as I can tell"].
 
 *(Part B: the Lightroom check.)*
 
 ## Numbers
 
-| Run | Hidden | Verdict | Pointer seen | Click sent | Engine got it | Connected again after |
-|---|---|---|---|---|---|---|
-| both | 30 s | | | | | |
-| both | 420 s | | | | | |
-| no_memory | 420 s | | | | | |
-| no_visible | 420 s | | | | | |
+Part A, every run that reached the click (results files named by their stamp):
+
+| Results | Run | Hidden | Path | In front at the show | Classic HUD open | Verdict | Pointer seen | Click sent | Engine got it | Connected again after |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 22-02-40 | both | 30 s | wake | (not recorded) | no | INPUT OK | yes | yes | yes | 63 ms |
+| 22-02-40 | both | 420 s | wake | (not recorded) | no | INPUT OK | yes | yes | yes | 64 ms |
+| 22-02-40 | no_memory | 420 s | wake | (not recorded) | no | INPUT OK | yes | yes | yes | 64 ms |
+| 22-02-40 | no_visible | 420 s | wake | (not recorded) | no | INPUT OK | yes | yes | yes | 67 ms |
+| 01-34-56 | both | 420 s | timer | (not recorded) | no | INPUT OK | yes | yes | yes | 30.3 s |
+| 04-36-56 | both | 30 s | wake | VS Code Insiders | no | INPUT OK | yes | yes | yes | 63 ms |
+| 04-36-56 | both | 420 s | timer | VS Code Insiders | no | INPUT OK | yes | yes | yes | 4.6 s |
+| 05-00-56 | both | 30 s | wake | VS Code Insiders | yes | INPUT OK | yes | yes | yes | 65 ms |
+| 05-00-56 | both | 420 s | timer | VS Code Insiders | yes | INPUT OK | yes | yes | yes | 16.8 s |
+
+The timer path's reconnect ranged from 4.6 s to 38.2 s across the five timer runs (including the two FAILED ones); the wake's from 63 to 67 ms across six runs.
+
+Part B: *(Jim's check.)*
+
+| Question | Answer |
+|---|---|
+| Classic HUD window appeared | |
+| Deck's Accept lit up and worked each time | |
+| Claude mentioned a fallback | |
 
 ## Verdict
 
@@ -106,5 +155,7 @@ Claude Code writes these steps when the fix from Part A is in.
 
 ## Consequences / open questions
 
-- The input fix follows from the probe's runs, in this PR.
+- **Question 1 is answered and fixed at its cause:** findings 1 to 4. The engine's start of the Deck now wakes a running Deck (`wake.rs`), which connects in 63 to 67 ms (Part A), well inside the engine's 3 s wait, so the classic HUD no longer opens beside an installed Deck. It opens only when a started Deck does not connect or is lost, and the chat is told (`deck_fallback`).
+- **Question 2 is not answered.** No probe run reproduced the dead input. Measured and ruled out: minutes hidden, each WebView2 hide setting, the late reconnect through the page timer, VS Code in front at the show, and the classic HUD open. Not recreated: a real chat's engine and Deck content, a Deck running for many edits, and the Deck at its position of 2026-10-10 (x 1790, y 1836; the probe's Deck was at x 1476, y 1764, from the position saved in between). The `over` lines (`over.rs`) record any window over the Deck while it is shown, for the next time.
+- The fix removes the conditions of 2026-10-10 that came before the dead input: the late reconnect and the classic HUD opening first. Whether the dead input needed them is [unverified]; Part B checks the whole path.
 - That WebView2's timer throttling slowed the hidden Deck's reconnect is [inference]. The wake makes the reconnect independent of it.

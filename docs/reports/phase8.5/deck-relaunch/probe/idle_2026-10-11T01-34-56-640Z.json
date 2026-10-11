@@ -1,0 +1,22 @@
+{
+  "probe": "deck-idle",
+  "at": "2026-10-11T01:34:56.640Z",
+  "runs": [
+    {
+      "mode": "both",
+      "hidden_s": 420,
+      "wake": false,
+      "verdict": "INPUT OK",
+      "problem": null,
+      "wake_ms": 30261,
+      "point": {
+        "x": 3065,
+        "y": 1806
+      },
+      "under_point": "msedgewebview2.exe",
+      "pointer_in": true,
+      "deck_click": true,
+      "engine_got_click": true
+    }
+  ]
+}

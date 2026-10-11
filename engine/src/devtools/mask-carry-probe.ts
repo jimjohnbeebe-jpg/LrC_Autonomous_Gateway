@@ -1,9 +1,9 @@
 // `npm run masks:carry` (issue #121, with the shapes issue #131 needs): does a mask table with hand-made masks
-// survive the engine's kind of write, the whole table written back verbatim beside one new radial? The mask
-// tools refuse any photo whose table holds a mask with several components, a MaskBlendMode other than 0, a
-// brush or a colour range (mask-table.ts `uncaptured`, session\masks.ts), because such entries were never
-// written back [handle: engine\src\params\mask-table.ts `uncaptured`, its comment; docs\reports\phase6\
-// masks-capture.md "Numbers"]. That they survive is [unverified]; this probe is the observation. The pure parts
+// survive the engine's kind of write, the whole table written back verbatim beside one new radial? Before
+// engine 0.28.0 the mask tools refused any photo whose table held a mask with several components, a
+// MaskBlendMode other than 0, a brush or a colour range (mask-table.ts `uncaptured`), as such entries had never
+// been written back. This probe's WORKED run lifted that [handle: docs\reports\phase8.5\mask-carry.md
+// "Numbers"]; only an edit of such a mask is still refused (session\masks.ts). The pure parts
 // (which hand-made masks the photo holds, the per-entry diff) are here; the CLI (mask-carry-probe-cli.ts) asks
 // Jim, puts the photo back and saves the results. Report: docs\reports\phase8.5\mask-carry.md.
 

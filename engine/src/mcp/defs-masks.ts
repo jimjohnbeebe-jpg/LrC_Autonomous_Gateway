@@ -1,7 +1,8 @@
 // The MCP definitions of the mask tools (tools-session.ts; the work is session\masks.ts, GitHub issue
 // #59, engine 0.16.0). The local sliders are params\mask-table.ts LOCAL_PARAMS, in the Masking panel's
-// units [handle: docs\reports\phase6\masks-capture\capture2-calibration.json `fields`]. Inverting a mask
-// (MaskInverted true, captured only as false) and a luminance entry made by the engine are [unverified]
+// units [handle: docs\reports\phase6\masks-capture\capture2-calibration.json `fields`]. An inverted radial
+// reads back MaskInverted true, Flipped false [handle: docs\reports\phase8\S10\census\s10__DSC0103.NEF__Copy 1.json
+// "AVG vignette"; issue #79]. Inverting another kind and a luminance entry made by the engine are [unverified]
 // in Lightroom until Jim's mask tools check (it creates a luminance range; it does not invert).
 
 import { z } from "zod";
@@ -59,7 +60,7 @@ const editArgs = z.object({
   mask_id: maskId,
   name: name.optional().describe("rename"),
   active: z.boolean().optional().describe("false hides the mask (its effect is off), true shows it"),
-  inverted: z.boolean().optional().describe("true inverts the mask (not yet checked in Lightroom: look at the preview)"),
+  inverted: z.boolean().optional().describe("true inverts the mask (a radial's inversion checked in Lightroom; other kinds not yet: look at the preview)"),
   geometry: geometry.optional(),
   sliders: sliders.optional(),
   combine: z.object({ mode: z.enum(["add", "subtract", "intersect"]) }).optional().describe("refused for now: combining components was not captured"),

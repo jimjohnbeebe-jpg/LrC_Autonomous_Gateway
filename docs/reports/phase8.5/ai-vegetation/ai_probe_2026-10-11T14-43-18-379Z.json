@@ -1,0 +1,473 @@
+{
+  "check": "ai-probe",
+  "suggestion": "DONE",
+  "state": {
+    "started": "2026-10-11T14-43-18-379Z",
+    "photo": {
+      "uuid": "76486A34-5ECB-46E5-8676-6CAEA163BCF2",
+      "filename": "20260906-_OZ80085.NEF"
+    },
+    "snapshot_id": "EEFEDF57-A07A-4C12-A795-E2E75958DB95",
+    "process": "2026-10-11T14:22:21Z",
+    "restarts": 0,
+    "before_sdk": {
+      "HueAdjustmentAqua": 0,
+      "EnableLensCorrections": true,
+      "Sharpness": 24,
+      "EnableEffects": true,
+      "ColorGradeBlending": 50,
+      "AILook": [],
+      "SDRWhites": 0,
+      "ColorNoiseReductionDetail": 50,
+      "ChromaticAberrationB": 0,
+      "SharpenEdgeMasking": 0,
+      "ParametricHighlightSplit": 75,
+      "LuminanceNoiseReductionContrast": 0,
+      "UprightFocalLength35mm": 35,
+      "HueAdjustmentOrange": 0,
+      "PerspectiveX": 0,
+      "ParametricMidtoneSplit": 50,
+      "HueAdjustmentPurple": 0,
+      "EnableColorAdjustments": true,
+      "WhiteBalance": "As Shot",
+      "FillLight": 0,
+      "EnableMaskGroupBasedCorrections": true,
+      "RedEyeInfo": [],
+      "LuminanceNoiseReductionDetail": 75,
+      "PostCropVignetteFeather": 50,
+      "ColorNoiseReductionSmoothness": 50,
+      "Contrast": 25,
+      "DefringeGreenAmount": 0,
+      "PerspectiveVertical": 0,
+      "Defringe": 0,
+      "Temperature": 4600,
+      "LensProfileName": "Camera Settings",
+      "LensBlur": [],
+      "PointColors": [],
+      "UprightCenterNormX": 0.5,
+      "UprightFocalMode": 0,
+      "LuminanceAdjustmentPurple": 0,
+      "BlueSaturation": 0,
+      "HueAdjustmentBlue": 0,
+      "ProcessVersion": "15.4",
+      "EnableDistractionRemoval": true,
+      "LensProfileDigest": "276A9AB7DD5D2BF98B0399513EE137FD",
+      "LuminanceAdjustmentRed": 0,
+      "EnableTransform": true,
+      "ParametricHighlights": 0,
+      "SaturationAdjustmentAqua": 0,
+      "SDRShadows": 0,
+      "LensManualDistortionAmount": 0,
+      "AutoShadows": false,
+      "PostCropVignetteMidpoint": 50,
+      "AutoLateralCA": 1,
+      "EnableSplitToning": true,
+      "UprightCenterNormY": 0.5,
+      "Contrast2012": 7,
+      "DefringeGreenHueHi": 60,
+      "Clarity2012": 2,
+      "AutoBrightness": false,
+      "SaturationAdjustmentYellow": 0,
+      "DefringeGreenHueLo": 40,
+      "HDREditMode": 0,
+      "RedHue": 0,
+      "LensProfileVignettingScale": 100,
+      "ToneCurvePV2012": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "Exposure": 0,
+      "ColorNoiseReduction": 25,
+      "ToneCurvePV2012Green": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "orientation": "AB",
+      "EnableDetail": true,
+      "ColorGradeShadowLum": 0,
+      "LensProfileDistortionScale": 100,
+      "Saturation": 4,
+      "PostCropVignetteAmount": 0,
+      "SplitToningHighlightHue": 0,
+      "CropConstrainToWarp": 0,
+      "SaturationAdjustmentBlue": 0,
+      "ParametricLights": 0,
+      "CropTop": 0,
+      "EnableRetouch": true,
+      "SDRBrightness": 0,
+      "ChromaticAberrationR": 0,
+      "PerspectiveHorizontal": 0,
+      "Shadows2012": 39,
+      "UprightTransformCount": 6,
+      "Shadows": 5,
+      "GrainAmount": 0,
+      "PerspectiveAspect": 0,
+      "SDRClarity": 0,
+      "GrainFrequency": 50,
+      "UprightFourSegmentsCount": 0,
+      "SDRBlend": 0,
+      "LensProfileIsEmbedded": true,
+      "ToneCurvePV2012Red": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "EnableToneCurve": true,
+      "SaturationAdjustmentPurple": 0,
+      "ConvertToGrayscale": false,
+      "LuminanceAdjustmentYellow": 0,
+      "VignetteAmount": 0,
+      "Dehaze": 0,
+      "HDRMaxValue": 2.3,
+      "Texture": 4,
+      "ColorGradeMidtoneHue": 0,
+      "RedSaturation": 0,
+      "Tint": 11,
+      "Exposure2012": 0.17,
+      "CropBottom": 1,
+      "HueAdjustmentYellow": 0,
+      "EnableGrayscaleMix": true,
+      "DefringePurpleAmount": 0,
+      "LuminanceAdjustmentMagenta": 0,
+      "LuminanceAdjustmentGreen": 0,
+      "GreenHue": 0,
+      "LensProfileEnable": 1,
+      "Brightness": 50,
+      "LuminanceSmoothing": 48,
+      "ColorGradeGlobalHue": 0,
+      "PostCropVignetteStyle": 1,
+      "ParametricShadowSplit": 25,
+      "FilterList": [],
+      "LensProfileSetup": "LensDefaults",
+      "UprightPreview": false,
+      "SplitToningShadowHue": 0,
+      "SplitToningHighlightSaturation": 0,
+      "CropConstrainToUnitSquare": 1,
+      "ToneCurvePV2012Blue": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "HueAdjustmentGreen": 0,
+      "SDRHighlights": 0,
+      "CropAngle": 0,
+      "HighlightRecovery": 0,
+      "SaturationAdjustmentOrange": 0,
+      "EnableRedEye": true,
+      "Vibrance": 20,
+      "PostCropVignetteRoundness": 0,
+      "GreenSaturation": 0,
+      "ParametricShadows": 0,
+      "SaturationAdjustmentGreen": 0,
+      "ColorGradeHighlightLum": 0,
+      "HueAdjustmentRed": 0,
+      "GrainSize": 25,
+      "PerspectiveRotate": 0,
+      "UprightVersion": 151388160,
+      "SaturationAdjustmentMagenta": 0,
+      "Clarity": 0,
+      "ColorGradeMidtoneLum": 0,
+      "DefringePurpleHueHi": 70,
+      "ToneCurveName2012": "Linear",
+      "SplitToningShadowSaturation": 0,
+      "BlueHue": 0,
+      "ColorGradeGlobalSat": 0,
+      "LuminanceAdjustmentBlue": 0,
+      "LuminanceAdjustmentAqua": 0,
+      "PerspectiveScale": 100,
+      "Whites2012": 49,
+      "SharpenRadius": 2,
+      "ParametricDarks": 0,
+      "CurveRefineSaturation": 100,
+      "PostCropVignetteHighlightContrast": 0,
+      "VignetteMidpoint": 50,
+      "CropRight": 1,
+      "ColorGradeGlobalLum": 0,
+      "Blacks2012": -26,
+      "CameraProfile": "Camera Neutral",
+      "HueAdjustmentMagenta": 0,
+      "CropLeft": 0,
+      "UprightCenterMode": 0,
+      "AutoExposure": false,
+      "SDRContrast": 0,
+      "SharpenDetail": 25,
+      "Highlights2012": -54,
+      "ShadowTint": 0,
+      "DefringePurpleHueLo": 30,
+      "EnableCalibration": true,
+      "ColorGradeMidtoneSat": 0,
+      "PerspectiveUpright": 0,
+      "SaturationAdjustmentRed": 0,
+      "SplitToningBalance": 0,
+      "AutoContrast": false,
+      "LuminanceAdjustmentOrange": 0,
+      "PerspectiveY": 0
+    },
+    "runs": [
+      {
+        "run": "mountains_reads",
+        "kind": "landscape_mountains",
+        "reads": true,
+        "mask_id": "38596BD1-FBAB-4F27-A166-7915505D51F9",
+        "outcome": "computed",
+        "t_ms": 7417,
+        "settled_ms": null,
+        "first_busy_ms": null,
+        "events": [
+          {
+            "t_ms": 106,
+            "what": "update",
+            "took_ms": 106,
+            "result": "started, state started, guarded true"
+          },
+          {
+            "t_ms": 249,
+            "what": "read",
+            "took_ms": 143,
+            "result": "no result yet"
+          },
+          {
+            "t_ms": 518,
+            "what": "read",
+            "took_ms": 7,
+            "result": "no result yet"
+          },
+          {
+            "t_ms": 1038,
+            "what": "read",
+            "took_ms": 10,
+            "result": "no result yet"
+          },
+          {
+            "t_ms": 2059,
+            "what": "read",
+            "took_ms": 7,
+            "result": "no result yet"
+          },
+          {
+            "t_ms": 4043,
+            "what": "read",
+            "took_ms": 971,
+            "result": "no result yet"
+          },
+          {
+            "t_ms": 5065,
+            "what": "read",
+            "took_ms": 17,
+            "result": "no result yet"
+          },
+          {
+            "t_ms": 6072,
+            "what": "read",
+            "took_ms": 7,
+            "result": "no result yet"
+          },
+          {
+            "t_ms": 7417,
+            "what": "read",
+            "took_ms": 332,
+            "result": "computed"
+          }
+        ],
+        "answers": {
+          "dialog_open": "n",
+          "dialog_seen": "n",
+          "responds": "y"
+        },
+        "put_back": {
+          "ok": true,
+          "why": "settings and masks as before"
+        }
+      },
+      {
+        "run": "vegetation_reads",
+        "kind": "landscape_vegetation",
+        "reads": true,
+        "mask_id": "370476B1-010A-492B-8BDB-28FFF718BD6B",
+        "outcome": "computed",
+        "t_ms": 12731,
+        "settled_ms": null,
+        "first_busy_ms": 10481,
+        "events": [
+          {
+            "t_ms": 35,
+            "what": "update",
+            "took_ms": 35,
+            "result": "started, state started, guarded true"
+          },
+          {
+            "t_ms": 238,
+            "what": "read",
+            "took_ms": 203,
+            "result": "no result yet"
+          },
+          {
+            "t_ms": 501,
+            "what": "read",
+            "took_ms": 8,
+            "result": "no result yet"
+          },
+          {
+            "t_ms": 1017,
+            "what": "read",
+            "took_ms": 7,
+            "result": "no result yet"
+          },
+          {
+            "t_ms": 2035,
+            "what": "read",
+            "took_ms": 7,
+            "result": "no result yet"
+          },
+          {
+            "t_ms": 4264,
+            "what": "read",
+            "took_ms": 1216,
+            "result": "no result yet"
+          },
+          {
+            "t_ms": 5286,
+            "what": "read",
+            "took_ms": 10,
+            "result": "no result yet"
+          },
+          {
+            "t_ms": 6303,
+            "what": "read",
+            "took_ms": 9,
+            "result": "no result yet"
+          },
+          {
+            "t_ms": 7347,
+            "what": "read",
+            "took_ms": 32,
+            "result": "no result yet"
+          },
+          {
+            "t_ms": 8384,
+            "what": "read",
+            "took_ms": 36,
+            "result": "no result yet"
+          },
+          {
+            "t_ms": 10459,
+            "what": "read",
+            "took_ms": 1061,
+            "result": "no result yet"
+          },
+          {
+            "t_ms": 10988,
+            "what": "probe",
+            "took_ms": 507,
+            "result": "aborted, update running"
+          },
+          {
+            "t_ms": 12704,
+            "what": "screenshot",
+            "result": "shot_vegetation_reads_gate_busy_2026-10-11T14-44-29-564Z.png"
+          },
+          {
+            "t_ms": 12731,
+            "what": "read",
+            "took_ms": 7,
+            "result": "computed"
+          }
+        ],
+        "answers": {
+          "dialog_open": "n",
+          "dialog_seen": "n",
+          "responds": "y"
+        },
+        "put_back": {
+          "ok": true,
+          "why": "settings and masks as before"
+        }
+      },
+      {
+        "run": "vegetation_no_reads",
+        "kind": "landscape_vegetation",
+        "reads": false,
+        "mask_id": "06EAB857-2AEC-4689-94BA-B5F89B3868AB",
+        "outcome": "computed",
+        "t_ms": 10959,
+        "settled_ms": 10288,
+        "first_busy_ms": 253,
+        "events": [
+          {
+            "t_ms": 11,
+            "what": "update",
+            "took_ms": 11,
+            "result": "started, state started, guarded true"
+          },
+          {
+            "t_ms": 756,
+            "what": "probe",
+            "took_ms": 503,
+            "result": "aborted, update running"
+          },
+          {
+            "t_ms": 2082,
+            "what": "screenshot",
+            "result": "shot_vegetation_no_reads_gate_busy_2026-10-11T14-44-48-740Z.png"
+          },
+          {
+            "t_ms": 2777,
+            "what": "probe",
+            "took_ms": 519,
+            "result": "aborted, update running"
+          },
+          {
+            "t_ms": 4784,
+            "what": "probe",
+            "took_ms": 514,
+            "result": "aborted, update running"
+          },
+          {
+            "t_ms": 6780,
+            "what": "probe",
+            "took_ms": 508,
+            "result": "aborted, update running"
+          },
+          {
+            "t_ms": 9415,
+            "what": "probe",
+            "took_ms": 1135,
+            "result": "aborted, update running"
+          },
+          {
+            "t_ms": 10536,
+            "what": "probe",
+            "took_ms": 248,
+            "result": "executed, update done"
+          },
+          {
+            "t_ms": 10959,
+            "what": "read",
+            "took_ms": 402,
+            "result": "computed"
+          }
+        ],
+        "answers": {
+          "dialog_open": "n",
+          "dialog_seen": "n",
+          "responds": "y"
+        },
+        "put_back": {
+          "ok": true,
+          "why": "settings and masks as before"
+        }
+      }
+    ],
+    "running": null,
+    "done": true
+  },
+  "node": "v24.11.1",
+  "engine_version": "0.25.2",
+  "plugin_log_copied": "ai_probe_bridge_log_2026-10-11T14-43-18-379Z.txt"
+}

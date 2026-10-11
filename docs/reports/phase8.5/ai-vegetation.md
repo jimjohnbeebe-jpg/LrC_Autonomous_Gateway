@@ -1,7 +1,7 @@
 ---
 report: ai-vegetation
 phase: "8.5"
-status: template
+status: observed
 authored_by: "Claude Code (purpose, harness, pre-run findings, steps); Jim (observed, verdict)"
 date: 2026-10-11
 ---
@@ -67,15 +67,72 @@ Jim answers y/n questions in the PowerShell window, not in Lightroom dialogs, be
 
 ## Observed (Jim)
 
-_To be filled from Jim's run._
+Jim's run of `npm run ai:probe` on PR #132's branch (`3db51ee`), 2026-10-11 14:24-14:35Z, Claude Desktop quit. Transcribed by Claude Code from the probe's saved results; the y/n answers are Jim's [handle: `docs\reports\phase8.5\ai-vegetation\ai_probe_2026-10-11T14-24-16-677Z.json`, copied from `%TEMP%\LrC-AVG\ai-probe\`; plugin log lines 13661-13720 in `ai-vegetation\bridge_log_excerpt.txt`].
+
+- Photo: `20260906-_OZ80041.NEF` Copy 2 (a virtual copy), a juniper in front and sagebrush and dry grass on the slope [handle: `ai-vegetation\photo_crop.jpg`, cut from the probe's screenshot `shot_vegetation_reads_gate_busy_2026-10-11T14-31-58-725Z.png`; Jim answered "y" to "Does it show trees, shrubs or grass?"]. The full-screen screenshots stay on Jim's PC (`%TEMP%\LrC-AVG\ai-probe\`): they show his whole desktop.
+- Headline: **AI mask probe: DONE**, 3 of 3 runs, no Lightroom restart, the photo put back after each run ("settings and masks as before").
+- `mountains_reads`: the update answered `started` in 15 ms. The gate read busy (`aborted`, update `running`) at 10.5, 14.2 and 14.9 s. The mask **computed** at 15.8 s, after 12 reads. One read took 2220 ms (at 6.5 s).
+- `vegetation_reads`: the update answered `started` in 44 ms. The gate read busy at 10.5 s. At 12.2 s the entry showed **ErrorReason 1**, after 11 reads.
+- `vegetation_no_reads`: the update answered `started` in 20 ms. The gate read busy from 0.8 to 7.2 s (4 probes). At 8.7 s it read free, with the update `done`. The one read, right after, showed **ErrorReason 1**.
+- Jim's check by hand, same photo, after the probe: Masking > Landscape did not offer Vegetation, "Lightroom did not detect the tree on the first photo. That isn't an issue, but how the MCP responded (crashing LrC) is." [stated: Jim, 2026-10-11].
+- No dialog in any run: "n" to both dialog questions three times, and "y" to "Does Lightroom respond now?" three times. No screenshot was taken for "no result", because every run had a result.
+
+
+### Second photo
+
+Jim asked for a second run on a photo where Lightroom does find Vegetation [stated: Jim, 2026-10-11, "I want to run the probe on a different image … Let's start with the probe on a new image, then go back and troubleshoot the crash"]. Jim's run of `npm run ai:probe -- --new`, 14:43-14:45Z [handle: `ai-vegetation\ai_probe_2026-10-11T14-43-18-379Z.json`; plugin log in `ai-vegetation\bridge_log_excerpt_2.txt`]:
+
+- Photo: `20260906-_OZ80085.NEF` [handle: `ai-vegetation\photo_crop_2.jpg`, cut from `shot_vegetation_reads_gate_busy_2026-10-11T14-44-29-564Z.png`].
+- Headline: **AI mask probe: DONE**, 3 of 3 runs, no restart, the photo put back after each run.
+- `mountains_reads`: **computed** at 7.4 s (8 reads, no probe: the result came before 10 s).
+- `vegetation_reads`: the gate read busy at 10.5 s; **computed** at 12.7 s (11 reads).
+- `vegetation_no_reads`: busy from 0.8 to 9.4 s (5 probes), free with the update `done` at 10.5 s; the one read, 0.4 s later, showed it **computed** (10.96 s).
+- No dialog, and Lightroom responding, in all three runs (Jim's answers).
 
 ## Numbers
 
 | Run | Outcome | Update over at | First busy gate | Dialog | Lightroom responding | Put back |
 |---|---|---|---|---|---|---|
-| mountains_reads | | | | | | |
-| vegetation_reads | | | | | | |
-| vegetation_no_reads | | | | | | |
+| mountains_reads | computed, 15.8 s | (busy until the result) | 10.0 s | n | y | YES |
+| vegetation_reads | ErrorReason 1, 12.2 s | (busy until the result) | 10.0 s | n | y | YES |
+| vegetation_no_reads | ErrorReason 1, 8.7 s | 8.7 s | 0.3 s | n | y | YES |
+| 2nd photo: mountains_reads | computed, 7.4 s | (no probe) | none | n | y | YES |
+| 2nd photo: vegetation_reads | computed, 12.7 s | (busy until the result) | 10.5 s | n | y | YES |
+| 2nd photo: vegetation_no_reads | computed, 11.0 s | 10.5 s | 0.25 s | n | y | YES |
+
+(In the runs with reads, probing starts at 10 s, as in the engine, so the gate was busy from the first probe on.)
+
+## Analysis (Claude Code)
+
+- **The hang did not come back.** Three AI computations in a row, with and without the engine's reads, each ended within 16 s, with no dialog, and Lightroom kept responding. So nothing here shows the engine's reads taking part in a hang (H2) [inference: one photo, one run each].
+- **ErrorReason 1 is Lightroom's own "none found".** The engine reads ErrorReason 1 as "Lightroom found none of that kind" and answers `MASK_NOTHING_FOUND` (`engine\src\session\ai-masks.ts` `byTable`), as with Snow and Water on photos without them [handle: `docs\reports\phase6\masks-capture\capture4-check.json` steps `row4_snow`, `row4_water`]. Lightroom's own Landscape panel found no Vegetation on this photo either (Jim's check above), so that reading holds here. The second photo's run (below) is for a photo where Lightroom does find Vegetation.
+- **What differs from 2026-10-11:** that run never got an ErrorReason or a digest, and Lightroom showed an error dialog [stated: Jim, 2026-10-11]. Today Lightroom answered ErrorReason 1 within 9-12 s. Both photos show junipers in a dry landscape [inference from the photo crop and issue #123's description].
+- Our entry for every landscape kind carries the ReferencePoint `0.500000 0.500000`, the photo's centre (`engine\src\params\mask-ops.ts` `newComponent`, `pin`). Whether Lightroom uses that point for a landscape kind is [unverified].
+
+- **The second photo computed every mask.** Vegetation took 12.7 s with the engine's reads and 11.0 s without. So neither the probe nor the engine's rhythm of reads and probes brings the crash back on a photo where Vegetation exists [inference: one run each].
+
+### The 2026-10-10 crash, from Windows' event log (Claude Code)
+
+Read-only `Get-WinEvent` on Jim's PC, 2026-10-11 [handle: `ai-vegetation\windows-events.txt`; times are local, UTC-7]:
+
+| Local time | Source | What |
+|---|---|---|
+| 22:49:49.028 | plugin log | `update_ai_settings` (Vegetation) arrives |
+| 22:49:56 | System, `nvlddmkm` id 153 | the NVIDIA display driver logs an error. It is the only `nvlddmkm` event since 2026-10-08 |
+| 22:50:01-02 | Windows Error Reporting | `LiveKernelEvent` 141 and 193 (graphics kernel reports) |
+| 22:50:04 | plugin log | the last gate probe. The engine saw the update over with the gate free, and then no result |
+| 22:52:31.864 | plugin log | the last `get_settings` received |
+| 22:52:32 | Application id 1000 | **Lightroom.exe 15.6.0.2 crashed**: `ntdll.dll`, exception `0xc0000374` (heap corruption). The engine's socket got `ECONNRESET` here [handle: repo `logs\engine-20261010.jsonl`, `lr_create_mask` ended after 168.5 s] |
+| 22:54:07 | Application id 1002 | "Lightroom.exe … stopped interacting with Windows and was closed" |
+
+What this shows:
+- **Lightroom crashed on its own at 22:52:32.** The engine did not kill it, and Jim did not either: Jim's force-close is the 22:54:07 entry, the hung window of a process that had already crashed [inference from the order of the events].
+- **The NVIDIA driver failed 7 s into Lightroom's Vegetation computation.** Lightroom's AI masks run on the graphics card [unverified: Adobe does not say so in any source read here]. Lightroom then reported the update over with no result. Its "unexpected error" dialog [stated: Jim, 2026-10-11] fits a computation that failed when the driver did [inference].
+- **The other Lightroom crash since 2026-10-08 has the same code.** On 2026-10-09 at 04:57:13 (11:57:13Z), `0xc0000374`, with no NVIDIA event, during S10 run 1. Jim then saw "LrC closed after the last spike" [handle: `windows-events.txt`; `docs\reports\phase8\S10.md` item 6 (c), run 1 11:55-11:57Z]. That battery wrote settings by uuid and exported; it made no AI mask. So Lightroom 15.6 has crashed with heap corruption twice in three days, both times while the plugin was busy. What causes the heap corruption is [unverified]: the driver error, Lightroom, the plugin's calls, or a mix.
+
+What the engine did wrong (the part Jim names [stated: Jim, 2026-10-11, "how the MCP responded (crashing LrC) is" the issue]):
+- From 22:50:04, Lightroom had reported the update over and the catalog free, and no result came. The engine still treated the mask as "computing" for 150 s. It read the settings once a second, told the user Lightroom was computing (`WORKING_NOTE`), and would have gone on to its 5-minute limit. In every run where Lightroom had a result, the result was in the table at the first read after "done": 0.02 s and 0.4 s in the no-reads runs above, and 0.3-0.5 s after the update returned in capture 3 [handle: the two result files above, `vegetation_no_reads` events; `docs\reports\phase6\masks-capture\capture3-check.json` steps `4_*`]. So "over, free, and no result" meant the computation had failed, and the engine could have known within seconds [inference].
+- Whether the once-a-second reads after the failure helped Lightroom crash is [unverified]. Both runs here kept reading with no crash, but their computations did not fail.
 
 ## Verdict
 
@@ -83,9 +140,7 @@ _Jim's: go / conditional / no-go for the fix PR it points at._
 
 ## Consequences / open questions
 
-The fix PR is chosen from the runs [inference: the candidates from issue #123 and the plan of 2026-10-11]:
-- H1: "update over, gate free, no result" means Lightroom's computation failed. The engine ends the wait then, and puts the photo back.
-- H2: the reads during the computation take part. The engine stops reading while Lightroom computes.
-- H3: the failure belongs to Vegetation on Lightroom's side. The engine reports it plainly and leaves the photo as it was.
-
-Still [unverified]: the dialog's text, and whether Lightroom's window froze.
+- **H1 holds; H2 is not shown; H3 is narrowed** [inference from the runs and the event log above]. The failure was Lightroom's computation, after an NVIDIA driver error. The engine's part is that it did not tell "over with no result" from "still computing".
+- **For the fix PR (Jim decides the shape):** once Lightroom reports the update over with the catalog free, and a read after that shows neither a digest nor an ErrorReason, the engine stops the wait. It tells the user that Lightroom's AI computation failed, and asks them to save and restart Lightroom. It stops reading. It writes nothing to a Lightroom that may be unstable, and the session is put back after the restart (restart.ts) or reset (#124). How long "after that" is, is Jim's call. The measured gap is 0.02-0.5 s.
+- **Open:** whether the plugin's calls take part in the heap corruption (2 crashes, `0xc0000374`, both while the plugin was busy) is [unverified]. The NVIDIA driver `32.0.16.1692` error at 22:49:56 is outside LrC-AVG. A driver update is Jim's decision.
+- Still [unverified]: the dialog's text (no screenshot was taken during the 2026-10-10 run).

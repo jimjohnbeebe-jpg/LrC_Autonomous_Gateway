@@ -26,6 +26,7 @@ import { PROPAGATION_DEFS } from "./defs-propagation.js";
 import { SESSION_DEFS } from "./defs-session.js";
 import type { ToolDef } from "./defs-shared.js";
 import { ToolError, toToolError } from "./errors.js";
+import { capImage } from "./image-cap.js";
 import type { Tools } from "./tools.js";
 import type { ToolOutput } from "./tools-shared.js";
 import { ENGINE_VERSION } from "./version.js";
@@ -43,12 +44,18 @@ function errorResult(error: ToolError): CallToolResult {
   return { isError: true, content: [{ type: "text", text: JSON.stringify({ ok: false, error: error.body() }) }] };
 }
 
-async function respond(fn: () => Promise<ToolOutput>): Promise<CallToolResult> {
+/** A tool's output as MCP content; an image over the cap is reduced and flagged (image-cap.ts, issue #78). Exported for tests. */
+export async function respond(fn: () => Promise<ToolOutput>): Promise<CallToolResult> {
   try {
     const out = await fn();
     const content: CallToolResult["content"] = [];
-    if (out.image) content.push({ type: "image", data: out.image.toString("base64"), mimeType: "image/jpeg" });
-    content.push({ type: "text", text: JSON.stringify(out.json) });
+    let json = out.json;
+    if (out.image) {
+      const capped = await capImage(out.image);
+      if (capped.reduced) json = { ...json, image_reduced: capped.reduced };
+      content.push({ type: "image", data: capped.image.toString("base64"), mimeType: "image/jpeg" });
+    }
+    content.push({ type: "text", text: JSON.stringify(json) });
     return { content };
   } catch (err) {
     return errorResult(toToolError(err));

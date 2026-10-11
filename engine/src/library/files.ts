@@ -238,9 +238,14 @@ export async function copyForImport(file: string, sourceRoot: string, copyTo: st
   const to = path.join(copyTo, rel);
   await fs.mkdir(path.dirname(to), { recursive: true });
   const done = await copyOnce(file, to);
-  // An earlier copy's sidecar is left alone: Lightroom may have written to it since [inference: its
-  // "Automatically write changes into XMP" catalog setting].
-  const xmp = done === "copied" ? await sidecar(file) : null;
-  if (xmp) await copyOnce(xmp, path.join(path.dirname(to), path.basename(xmp)));
+  const xmp = await sidecar(file);
+  if (xmp) {
+    const xmpTo = path.join(path.dirname(to), path.basename(xmp));
+    if (done === "copied") await copyOnce(xmp, xmpTo);
+    // An earlier copy's sidecar is left alone: Lightroom may have written to it since [inference: its
+    // "Automatically write changes into XMP" catalog setting]. One missing there, as when an earlier
+    // call copied the raw but not its sidecar, is copied now (issue #75).
+    else await fs.copyFile(xmp, xmpTo, constants.COPYFILE_EXCL).catch((err: NodeJS.ErrnoException) => { if (err.code !== "EEXIST") throw err; });
+  }
   return { path: to, copied: done === "copied" };
 }

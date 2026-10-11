@@ -92,8 +92,10 @@ async function replace(from: string, to: string): Promise<void> {
   try {
     await fs.rename(staged, to);
   } catch (err) {
-    // Back into the plugin's folder, which a failed placement keeps (issue #76).
-    await move(staged, from).catch(() => fs.rm(staged, { force: true }));
+    // Back into the plugin's folder, which a failed placement keeps (issue #76). If that fails too, the
+    // staged file is the only whole copy: it is kept and named (Greptile, PR #137).
+    const recovered = await move(staged, from).then(() => true, () => false);
+    if (!recovered) throw new Error(`${(err as Error).message}; the export is kept at ${staged}`);
     throw err;
   }
 }

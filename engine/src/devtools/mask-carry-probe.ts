@@ -7,6 +7,8 @@
 // (which hand-made masks the photo holds, the per-entry diff) are here; the CLI (mask-carry-probe-cli.ts) asks
 // Jim, puts the photo back and saves the results. Report: docs\reports\phase8.5\mask-carry.md.
 
+import { existsSync, readFileSync, renameSync } from "node:fs";
+import { z } from "zod";
 import type { BridgeClient } from "../bridge/index.js";
 import { applyOp, differingSettings, loadDefaultParamMap, MASK_TABLE_KEY, readTable, tableSettings, verifyTable, type Correction, type SdkSettings } from "../params/index.js";
 import { C, componentKind, components, M, RANGE, RECOMPUTED, type Component } from "../params/mask-table.js";
@@ -124,4 +126,29 @@ export async function putBack(client: BridgeClient, uuid: string, snapshotId: st
   const [b, a] = [map.fromSdk(before), map.fromSdk(res.read_back)];
   const differing = [...differingSettings(b.settings, a.settings), ...(b.masks.fingerprint !== a.masks.fingerprint ? ["masks"] : [])];
   return { ok: differing.length === 0, why: differing.length ? `differing: ${differing.join(", ")}` : "settings and masks as before" };
+}
+
+const PendingRecord = z.object({ uuid: z.string(), filename: z.string(), snapshot_id: z.string(), before_sdk: z.record(z.string(), z.unknown()) });
+/** The put-back a run still owes, saved before anything is written. */
+export type Pending = z.infer<typeof PendingRecord>;
+
+/**
+ * The put-back owed by an earlier run, from `file`, or null. A record that does not parse or check (an
+ * interrupted write) is moved to `damagedFile` and returned as `damaged`, so it cannot stop every later run
+ * (Greptile, PR #137).
+ */
+export function readPending(file: string, damagedFile: string): { pending: Pending | null; damaged: string | null } {
+  if (!existsSync(file)) return { pending: null, damaged: null };
+  try {
+    const p = PendingRecord.safeParse(JSON.parse(readFileSync(file, "utf8")));
+    if (p.success) return { pending: p.data, damaged: null };
+  } catch {
+    // not JSON: reported as damaged below
+  }
+  try {
+    renameSync(file, damagedFile);
+  } catch {
+    // left in place: the next run reports it again
+  }
+  return { pending: null, damaged: damagedFile };
 }

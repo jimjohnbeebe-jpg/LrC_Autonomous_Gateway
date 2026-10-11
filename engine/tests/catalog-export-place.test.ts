@@ -52,6 +52,24 @@ describe("a failed placement (issue #76)", () => {
     expect(readdirSync(kept)).toEqual(["20260907-_OZ80099.png"]);
   });
 
+  // Greptile, PR #137: when the overwrite and the move back both fail, the staged file is the only whole copy.
+  it("keeps and names the staged export when an overwrite and the move back both fail", async () => {
+    const dest = path.join(tmp, "dest-stuck");
+    mkdirSync(dest, { recursive: true });
+    writeFileSync(path.join(dest, "a.jpg"), "old");
+    const one = exported("a.jpg", "new");
+    const rename = fs.rename.bind(fs);
+    vi.spyOn(fs, "rename").mockImplementation(async (from, to) => {
+      if (String(from).endsWith(".tmp")) throw Object.assign(new Error("EPERM: operation not permitted"), { code: "EPERM" });
+      return rename(from, to);
+    });
+    await expect(placeExport(exportDir, one.dir, [one.file], dest, "overwrite")).rejects.toThrow(/the export is kept at .*\.tmp/);
+    const staged = readdirSync(dest).filter((n) => n.endsWith(".tmp"));
+    expect(staged).toHaveLength(1);
+    expect(readFileSync(path.join(dest, staged[0] ?? ""), "utf8")).toBe("new");
+    expect(readFileSync(path.join(dest, "a.jpg"), "utf8")).toBe("old");
+  });
+
   it("keeps the plugin's folder when the destination folder cannot be made", async () => {
     const notAFolder = path.join(tmp, "a-file");
     writeFileSync(notAFolder, "x");

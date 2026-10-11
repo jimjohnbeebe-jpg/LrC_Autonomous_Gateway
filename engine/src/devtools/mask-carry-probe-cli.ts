@@ -17,8 +17,8 @@ import path from "node:path";
 import { createInterface } from "node:readline";
 import { BridgeClient } from "../bridge/index.js";
 import { acquireInstanceLock, BridgeGate, devOverrides, ENGINE_VERSION } from "../mcp/index.js";
-import { MASK_TABLE_KEY, readTable, type SdkSettings } from "../params/index.js";
-import { carried, diffEntries, diffSummary, putBack, RADIAL_NAME, shapesOf, SNAPSHOT, writeAndRead } from "./mask-carry-probe.js";
+import { MASK_TABLE_KEY, readTable } from "../params/index.js";
+import { carried, diffEntries, diffSummary, putBack, RADIAL_NAME, readPending, shapesOf, SNAPSHOT, writeAndRead, type Pending } from "./mask-carry-probe.js";
 import { describeError, type Answer } from "./phase1-check.js";
 import { redactHome } from "./phase2-check.js";
 
@@ -28,7 +28,6 @@ const PLUGIN_LOG = path.join(os.tmpdir(), "LrC-AVG", "bridge.log");
 const started = new Date().toISOString().replace(/[:.]/g, "-");
 const redact = (text: string): string => redactHome(text, os.homedir());
 
-type Pending = { uuid: string; filename: string; snapshot_id: string; before_sdk: SdkSettings };
 type Results = Record<string, unknown>;
 
 function ask(question: string): Promise<Answer> {
@@ -62,7 +61,13 @@ function save(results: Results): string {
   return file;
 }
 
-const pending = (): Pending | null => (existsSync(STATE) ? (JSON.parse(readFileSync(STATE, "utf8")) as Pending) : null);
+/** Where a damaged put-back record was moved to (readPending), once one was found. */
+let damaged: string | null = null;
+const pending = (): Pending | null => {
+  const read = readPending(STATE, path.join(OUT_DIR, `state.damaged-${started}.json`));
+  damaged ??= read.damaged;
+  return read.pending;
+};
 const setPending = (p: Pending | null): void => {
   mkdirSync(OUT_DIR, { recursive: true });
   if (p) writeFileSync(STATE, JSON.stringify(p, null, 2) + "\n");
@@ -116,6 +121,7 @@ async function main(say: (line: string) => void): Promise<number> {
   try {
     await gate.ready();
     const left = pending();
+    if (damaged) return finish(say, r, false, "the last run's put-back record was damaged");
     if (left) {
       const pb = await back(client, left);
       say(`Put back ${left.filename} from the last run first: ${pb.ok ? "YES" : `NO (${pb.why})`}`);
@@ -140,8 +146,12 @@ function finish(say: (line: string) => void, r: Results, worked: boolean, why: s
   r["headline"] = worked ? "WORKED" : "FAILED";
   say("");
   say(`Mask carry probe: ${worked ? "WORKED" : `FAILED (${why})`}`);
-  say(`put back: ${left ? "NO" : "YES"}`);
+  say(`put back: ${left || damaged ? "NO" : "YES"}`);
   if (left) say(`  To put it back by hand: Lightroom Develop, select ${left.filename}, Snapshots panel (left), click "${SNAPSHOT}". Or run npm run masks:carry again.`);
+  if (damaged) {
+    r["state_damaged"] = redact(damaged);
+    say(`  The last run's put-back record was damaged (moved to ${redact(damaged)}). To put the photo back by hand: Lightroom Develop, select the photo with the hand-made masks, Snapshots panel (left), click "${SNAPSHOT}". Then run npm run masks:carry again.`);
+  }
   say(`Results saved automatically: ${redact(save(r))}`);
   say('Nothing to copy. Tell Claude Code "done".');
   return worked ? 0 : r["refused"] ? 2 : 1;

@@ -78,6 +78,10 @@ describe("lr_end_session after the user ended the session", () => {
     const out = await tools.endSession({ session_id: id, outcome: "accept" });
     expect(out.json).toMatchObject({ ok: true, already_ended_by_user: { outcome: "accept", source: "hud" } });
     expect(waits).toBe(before);
+    // Another outcome is refused as SESSION_ENDED, not as a lost connection (Greptile, PR #137).
+    const err = await fails(tools.endSession({ session_id: id, outcome: "revert" }));
+    expect(err.code).toBe("SESSION_ENDED");
+    expect(waits).toBe(before);
   });
 
   it("revert after the HUD's Put back succeeds", async () => {

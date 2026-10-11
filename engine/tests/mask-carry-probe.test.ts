@@ -3,8 +3,11 @@
 // The entries are shaped after the S10 census's hand-made masks (docs\reports\phase8\S10\census\
 // s10_20260906-_OZ80005-Rendered.dng__DDABB6F1.json: "Cloudsx", "Mountains", " Reds"), trimmed.
 
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { carried, changedPaths, diffEntries, diffSummary, RADIAL_NAME, shapesOf } from "../src/devtools/mask-carry-probe.js";
+import { carried, changedPaths, diffEntries, diffSummary, RADIAL_NAME, readPending, shapesOf } from "../src/devtools/mask-carry-probe.js";
 import { MASK_TABLE_KEY, type Correction } from "../src/params/index.js";
 
 const comp = (what: string, extra: Record<string, unknown> = {}) => ({ What: what, MaskID: `M-${what}`, MaskBlendMode: 0, MaskInverted: false, ...extra });
@@ -61,5 +64,27 @@ describe("masks:carry write and diff", () => {
 
   it("changedPaths compares numbers within 1e-6", () => {
     expect(changedPaths({ a: 1, b: { c: "x" } }, { a: 1 + 1e-9, b: { c: "y" } })).toEqual(["b.c"]);
+  });
+});
+
+// Greptile, PR #137: a damaged put-back record must not stop every later run.
+describe("readPending", () => {
+  const dir = mkdtempSync(path.join(os.tmpdir(), "avg-carry-"));
+  const state = path.join(dir, "state.json");
+  const moved = path.join(dir, "state.damaged.json");
+  const good = { uuid: "U", filename: "a.NEF", snapshot_id: "S", before_sdk: { Exposure2012: 0 } };
+
+  it("returns a valid record and none when there is no file", () => {
+    rmSync(state, { force: true });
+    expect(readPending(state, moved)).toEqual({ pending: null, damaged: null });
+    writeFileSync(state, JSON.stringify(good));
+    expect(readPending(state, moved)).toEqual({ pending: good, damaged: null });
+  });
+
+  it.each([["cut-off JSON", '{"uuid": "U", "file'], ["the wrong shape", JSON.stringify({ uuid: 1 })]])("moves %s aside and reports it", (_, text) => {
+    writeFileSync(state, text);
+    expect(readPending(state, moved)).toEqual({ pending: null, damaged: moved });
+    expect(existsSync(state)).toBe(false);
+    expect(readFileSync(moved, "utf8")).toBe(text);
   });
 });

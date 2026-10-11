@@ -126,7 +126,7 @@ export const MASK_DEFS: ToolDef[] = [
   {
     name: "lr_edit_mask",
     title: "Edit a mask",
-    // Sliders merge into the stored ones [handle: engine\src\params\mask-ops.ts:235, Object.assign].
+    // Sliders merge into the stored ones [handle: engine\src\params\mask-ops.ts:236, Object.assign].
     description:
       "Change one mask by its id: set local sliders (absolute values in panel units; sliders not given keep their values), its geometry (linear, radial, luminance), invert it, rename it, " +
       "or hide/show it (`active`). A mask of several components can be renamed, hidden and given sliders, not reshaped or inverted; combining " +

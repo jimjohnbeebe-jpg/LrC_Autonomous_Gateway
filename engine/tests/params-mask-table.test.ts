@@ -230,6 +230,14 @@ describe("params: mask operations", () => {
     expect(table[0]).toEqual((dump[MASK_TABLE_KEY] as Correction[])[0]); // the input is not changed
   });
 
+  it("inverts a radial as Lightroom stores it: Flipped false with MaskInverted true (issue #79)", () => {
+    const radial = newCorrection("radial", "AVG vignette", { left: 0.05, top: 0.05, right: 0.93, bottom: 0.95 }, null, {}, []);
+    const flip = (inverted: boolean, from: Correction[]) => applyOp(from, { op: "edit", mask_id: String(radial[C.id]), inverted }).entries;
+    const inverted = flip(true, [radial]);
+    expect((inverted[0]?.[C.masks] as Record<string, unknown>[])[0]).toMatchObject({ [M.inverted]: true, [RADIAL.flipped]: false });
+    expect((flip(false, inverted)[0]?.[C.masks] as Record<string, unknown>[])[0]).toMatchObject({ [M.inverted]: false, [RADIAL.flipped]: true });
+  });
+
   it("deletes by id, and refuses an unknown id, combining, a geometry for an AI mask and an empty edit", () => {
     expect(op({ op: "delete", mask_id: id0 }).entries.map((e) => e[C.id])).toEqual(table.slice(1).map((e) => e[C.id]));
     expect(codeOf(() => op({ op: "delete", mask_id: "NOPE" }))).toBe("MASK_NOT_FOUND");

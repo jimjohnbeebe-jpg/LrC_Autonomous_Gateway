@@ -81,6 +81,15 @@ describe("mask tools: list and passes", () => {
     expect(readLog().passes.map((p) => p.mask?.op ?? p.kind)).toEqual(["pass0", "create", "edit", "edit", "delete"]);
   });
 
+  it("inverts a radial mask as one pass, Lightroom storing Flipped false (issue #79)", async () => {
+    clean();
+    await begin();
+    const id = idOf(await create({ kind: "radial", name: "AVG vignette", geometry: { left: 0.05, top: 0.05, right: 0.93, bottom: 0.95 } }));
+    const out = await manager.editMask({ ...pass, mask_id: id, inverted: true });
+    expect(out.json).toMatchObject({ pass: "2/4", mask: { id, inverted: true } });
+    expect((masks()[0]?.["CorrectionMasks"] as Record<string, unknown>[])[0]).toMatchObject({ MaskInverted: true, Flipped: false });
+  });
+
   it("refuses an unknown id, a refused kind and a change to nothing, with nothing written and no pass used", async () => {
     clean();
     await begin();

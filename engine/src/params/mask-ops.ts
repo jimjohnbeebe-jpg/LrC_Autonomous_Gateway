@@ -229,8 +229,9 @@ function edit(entries: Correction[], op: Extract<MaskOp, { op: "edit" }>): OpRes
   if ((op.inverted !== undefined || op.geometry) && !only) throw new MaskError("MASK_OP_NOT_CAPTURED", "Inverting or reshaping a mask of several components was not captured; edit it in Lightroom.");
   if (op.name !== undefined) e[C.name] = op.name;
   if (op.active !== undefined) e[C.active] = op.active;
-  // MaskInverted was captured only as false; what writing true does is [unverified].
-  if (only && op.inverted !== undefined) only[M.inverted] = op.inverted;
+  // An inverted radial reads back MaskInverted true with Flipped false [handle: docs\reports\phase8\S10\census\
+  // s10__DSC0103.NEF__Copy 1.json "AVG vignette"], so write that form (issue #79); Flipped true when un-inverted is [inference].
+  if (only && op.inverted !== undefined) Object.assign(only, { [M.inverted]: op.inverted }, only[M.what] === WHAT.radial ? { [RADIAL.flipped]: !op.inverted } : {});
   if (only && op.geometry) Object.assign(only, geometryFields(String(componentKind(only)), op.geometry, only));
   if (op.sliders) Object.assign(e, storedSliders(op.sliders));
   return { entries, id: op.mask_id, kind: before.kind, before, after: summarize(e) };

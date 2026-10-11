@@ -78,6 +78,8 @@ export type AiTimings = {
   settleMs: number;
   /** LrDevelopController's mask: how long it may take to show and compute (ai-masks.ts). */
   dcWaitMs: number;
+  /** An abandon's clear_pending_ai: a hard deadline, not extended while the plugin is paused (abandon.ts; Greptile, PR #134). */
+  clearMs: number;
 };
 /**
  * Capture 3's updates took 1.0-1.2 s, the digests 0.3-0.5 s after [handle: docs\reports\phase6\masks-capture\capture3-check.json
@@ -95,6 +97,7 @@ export const AI_TIMINGS: Readonly<AiTimings> = {
   stuckProbesMs: 60_000,
   settleMs: 2000,
   dcWaitMs: 10_000,
+  clearMs: 5000,
 };
 export const aiTimings = (ctx: SessionContext): AiTimings => ({ ...AI_TIMINGS, ...ctx.deps.aiTimings });
 

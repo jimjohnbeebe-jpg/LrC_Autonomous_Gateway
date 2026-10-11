@@ -165,8 +165,9 @@ async function finishAbort(host: ActionHost, s: Session): Promise<void> {
     await connected(ctx, s, "abort (reconnect)");
     await endSession(ctx, s, { session_id: s.id, outcome: "revert" }, by);
   } catch (err) {
-    if (toToolError(err).code === "AI_UPDATE_PENDING" && s.aiPending?.stuck) {
-      // The mask is stuck or failed: the Abort ends the edit without a Lightroom write (abandon.ts, issue #124, D1).
+    if (s.aiPending?.stuck) {
+      // The mask is still stuck or failed, so the revert wrote nothing (settlePending refused it, or the reconnect failed:
+      // Greptile, PR #134): the Abort ends the edit without a Lightroom write (abandon.ts, issue #124, D1).
       await abandonSession(ctx, s, by);
       host.close(s, userEnded(ctx, s, "abandoned", by));
       ctx.deps.hud?.stage(s, "ended", { note: abandonedNote(true) });

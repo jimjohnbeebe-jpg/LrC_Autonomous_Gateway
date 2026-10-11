@@ -17,15 +17,14 @@
 // [handle: tests\session-abandon.test.ts, against the Lightroom sim; in Lightroom [unverified] until Jim's check.]
 
 import { pluginVersionAtLeast } from "../bridge/index.js";
-import { toToolError } from "../mcp/errors.js";
+import { ToolError, toToolError } from "../mcp/errors.js";
+import { aiTimings } from "./ai-update.js";
 import { endedBy } from "./end.js";
 import { saveLog } from "./io.js";
 import type { Session, SessionContext, SessionOutput, UserEnd } from "./types.js";
 
-/** The plugin that has clear_pending_ai (Pending.lua). */
+/** The plugin that has clear_pending_ai (Pending.lua); the engine waits for its answer aiTimings' clearMs, 5 s. */
 export const CLEAR_PENDING_PLUGIN = "0.20.0";
-/** How long the engine waits for clear_pending_ai's answer; a hung Lightroom gives none. */
-const CLEAR_TIMEOUT_MS = 5000;
 
 /** What became of the plugin's guard on the photo. */
 export type GuardOutcome = "none" | "cleared" | "not_cleared" | "plugin_too_old";
@@ -37,11 +36,22 @@ async function dropGuard(ctx: SessionContext, s: Session): Promise<{ guard: Guar
   const { client } = ctx.deps;
   if (client.getState() !== "connected") return { guard: "not_cleared", error: "Lightroom is not connected" };
   if (!pluginVersionAtLeast(client.hello()?.plugin_version, CLEAR_PENDING_PLUGIN)) return { guard: "plugin_too_old" };
+  // The bridge's own timeout waits on while the plugin is paused (bridge\client.ts send), so a hung Lightroom with its
+  // socket open would hold the queue until the heartbeat drops it (Greptile, PR #134): a deadline of its own.
+  const ms = aiTimings(ctx).clearMs;
+  const sent = client.request("clear_pending_ai", { photo_uuid: p.job.t.uuid }, { timeoutMs: ms });
+  sent.catch(() => undefined); // an answer after the deadline is dropped
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new ToolError("BRIDGE_TIMEOUT", `clear_pending_ai: no answer within ${ms} ms`, true)), ms);
+  });
   try {
-    await client.request("clear_pending_ai", { photo_uuid: p.job.t.uuid }, { timeoutMs: CLEAR_TIMEOUT_MS });
+    await Promise.race([sent, deadline]);
     return { guard: "cleared" };
   } catch (err) {
     return { guard: "not_cleared", error: toToolError(err).code };
+  } finally {
+    clearTimeout(timer);
   }
 }
 

@@ -185,3 +185,10 @@ export function convergedByMetrics(delta: MetricsDelta | null, changes: readonly
   if (Math.abs(delta.clip_high_pct) >= CONVERGENCE.clipPct || Math.abs(delta.clip_low_pct) >= CONVERGENCE.clipPct) return false;
   return changes.every((c) => c.delta !== null && Math.abs(c.delta) <= minStep(c.name, pipeline) + EPSILON);
 }
+
+/**
+ * A mask pass's convergence (issue #130 item 4): every region's change under convergedByMetrics's
+ * thresholds; false without regions. A signal only: it ends nothing (session\masks.ts).
+ */
+export const convergedByRegions = (delta: MetricsDelta): boolean =>
+  delta.regions.length > 0 && delta.regions.every((r) => convergedByMetrics({ ...r, regions: [] }, []));

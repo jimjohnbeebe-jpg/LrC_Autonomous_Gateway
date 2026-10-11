@@ -48,6 +48,7 @@ import { makeAiMask, type AiResult } from "./ai-masks.js";
 import { awaitApproval } from "./approval.js";
 import { clipBreach, regionDrift, type Breach } from "./guardrail.js";
 import { brief, describe, failed, fresh, historyName, image, ms, readSdk, recordPass, render, writeTable } from "./io.js";
+import { convergedByRegions } from "./plan.js";
 import { checkReady, focus, resolveTarget } from "./targets.js";
 import type { CreateMaskArgs, DeleteMaskArgs, EditMaskArgs, ListMasksArgs, Rendered, ReturnImage, Session, SessionContext, SessionOutput, Target, TargetId } from "./types.js";
 
@@ -101,13 +102,20 @@ function maskTarget(ctx: SessionContext, s: Session, requested: TargetId | undef
 
 const TOOL = { create: "lr_create_mask", edit: "lr_edit_mask", delete: "lr_delete_mask" } as const;
 
-/** The mask tools write the whole table: none writes while it holds a mask the captures did not round-trip. */
-function refuseUncaptured(s: Session, entries: readonly Correction[]): void {
-  const odd = uncaptured(entries);
+/**
+ * An edit of a mask the captures did not round-trip is refused. The other entries are carried: applyOp
+ * copies them unchanged and writeTable checks the read-back (issue #121): Lightroom read five hand-made
+ * masks back unchanged twice beside a new radial [handle: docs\reports\phase8.5\mask-carry\
+ * mask_carry_2026-10-11T22-37-39-161Z.json `diff_lines`, commit 4cd95aa]. A create checks nothing else; a
+ * delete of such a mask writes none of its fields [inference] and is allowed [stated: Jim, 2026-10-11, "Allow"].
+ */
+function refuseUncaptured(s: Session, entries: readonly Correction[], op: MaskOp): void {
+  if (op.op !== "edit") return;
+  const odd = uncaptured(entries.filter((e) => summarize(e).id === op.mask_id));
   if (!odd) return;
   throw new ToolError(
     "MASKS_UNCAPTURED_KIND",
-    `The photo has the mask "${odd.name}", which the mask tools cannot write back safely (${odd.why}). They write the photo's whole mask table, so they change no mask while it is there; the photo's masks are left untouched. lr_list_masks still lists them; the user can edit or remove that mask in Lightroom.`,
+    `Nothing was written: the mask the call names, "${odd.name}", is one the mask tools cannot write back safely (${odd.why}), so they do not edit it; it can be deleted (lr_delete_mask). The user can edit it in Lightroom. The pass is not used.`,
     false,
     { session_id: s.id, mask: odd.name, why: odd.why },
   );
@@ -130,7 +138,7 @@ async function maskPass(ctx: SessionContext, s: Session, args: PassArgs, op: Mas
   await focus(ctx, s, t);
   const first = await readSdk(ctx, s, t);
   const before = readTable(first.sdk);
-  refuseUncaptured(s, before);
+  refuseUncaptured(s, before, op);
   const plan = applyOp(before, op); // MaskError: nothing written
   if (sameTable(before, plan.entries)) throw new ToolError("NO_CHANGE", "Nothing was written: the mask already is as asked. The pass is not used.", false, { session_id: s.id });
   let baseline: Rendered;
@@ -143,8 +151,9 @@ async function maskPass(ctx: SessionContext, s: Session, args: PassArgs, op: Mas
   try {
     const done = await applyPlan(ctx, s, t, n, op, plan, before, baseline);
     t.passes = n;
-    t.endReason = n >= s.maxPasses ? "cap_reached" : null; // a mask pass never converges, and may follow convergence
+    t.endReason = n >= s.maxPasses ? "cap_reached" : null; // never "converged": a mask pass may follow convergence
     const delta = deltaMetrics(baseline.metrics, done.rendered.metrics);
+    const converged = !done.undone && convergedByRegions(delta); // a signal only (issue #130 item 4)
     const masks = readTable(done.sdk).map(summarize);
     const after = masks.find((m) => m.id === done.id) ?? null;
     const mask: MaskPassEntry = { op: op.op, id: done.id, name: (after ?? plan.before ?? plan.after)?.name ?? "", kind: plan.kind, before: plan.before, after, ...(done.ai ? { ai: aiLog(done.ai) } : {}) };
@@ -152,9 +161,9 @@ async function maskPass(ctx: SessionContext, s: Session, args: PassArgs, op: Mas
       n, kind: "mask", target: t.id, started: passStarted, duration_ms: ms(started), history_names: done.historyNames, rationale: args.rationale,
       requested: { ...op }, changes: [], clamped: [], refused: [], unchanged: [], settings_before: first.view.settings, settings_after: done.view.settings,
       metrics_before: metricsOf(baseline.metrics), metrics_after: metricsOf(done.rendered.metrics), delta_metrics: delta, preview_hash: done.rendered.hash,
-      preview_source: "export", guardrail_actions: done.actions, converged_by_metrics: false, ...(approval ? { approval } : {}), mask,
+      preview_source: "export", guardrail_actions: done.actions, converged_by_metrics: converged, ...(approval ? { approval } : {}), mask,
     });
-    const json = passJson(s, t, n, op, { mask, masks, done, delta, started });
+    const json = passJson(s, t, n, op, { mask, masks, done, delta, converged, started });
     const img = await image(s, args.return_image ?? "after", baseline, done.rendered, `pass ${n - 1}`, `pass ${n}`);
     return {
       json: { ...json, ...(approval ? { approval } : {}) },
@@ -214,9 +223,9 @@ async function applyPlan(ctx: SessionContext, s: Session, t: Target, n: number, 
   return { sdk, view, rendered, actions, historyNames, id, ai, undone };
 }
 
-type PassOut = { mask: MaskPassEntry; masks: MaskSummary[]; done: Done; delta: ReturnType<typeof deltaMetrics>; started: number };
+type PassOut = { mask: MaskPassEntry; masks: MaskSummary[]; done: Done; delta: ReturnType<typeof deltaMetrics>; converged: boolean; started: number };
 
-function passJson(s: Session, t: Target, n: number, op: MaskOp, { mask, masks, done, delta, started }: PassOut): Record<string, unknown> {
+function passJson(s: Session, t: Target, n: number, op: MaskOp, { mask, masks, done, delta, converged, started }: PassOut): Record<string, unknown> {
   return {
     ok: true,
     session_id: s.id,
@@ -230,6 +239,7 @@ function passJson(s: Session, t: Target, n: number, op: MaskOp, { mask, masks, d
     guardrail_actions: done.actions,
     metrics: metricsOf(done.rendered.metrics),
     delta_metrics: delta,
+    converged_by_metrics: converged,
     cap_reached: t.endReason === "cap_reached",
     passes_left: s.maxPasses - n,
     ...(done.undone ? { undone: { limit: done.undone.limit, reason: done.undone.reason, note: "the mask change was written, then undone: the masks are as before this pass" } } : {}),

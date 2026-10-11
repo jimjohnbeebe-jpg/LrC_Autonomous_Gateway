@@ -119,6 +119,21 @@ export async function exportPhotos(ctx: ToolContext, args: ExportPhotosArgs, bud
   });
 }
 
+/**
+ * The files after the cursor in the sorted listing (issue #75). The cursor comes back from Claude, so
+ * it is found in the listing, case-insensitively on Windows (its paths are), and refused when it is not
+ * there: comparing it as a string put every file on one side when the case differed (review, 2026-10-11).
+ */
+function afterCursor(listed: string[], cursor: string): string[] {
+  const key = (p: string) => (process.platform === "win32" ? path.normalize(p).toLowerCase() : path.normalize(p));
+  const at = key(expandHome(cursor));
+  const i = listed.findIndex((f) => key(f) === at);
+  if (i < 0) {
+    throw new ToolError("BAD_ARGUMENTS", `resume_after is not one of the files under the source: ${cursor}. Pass the resume_after the last call returned, or omit it to start from the first file.`, false);
+  }
+  return listed.slice(i + 1);
+}
+
 export async function importPhotos(ctx: ToolContext, args: ImportPhotosArgs, budget: Budget = realBudget()): Promise<ToolOutput> {
   return run(ctx, "lr_import_photos", args, async () => {
     const source = expandHome(args.source);
@@ -135,9 +150,7 @@ export async function importPhotos(ctx: ToolContext, args: ImportPhotosArgs, bud
     } catch (err) {
       throw new ToolError("NOT_FOUND", `Cannot read ${source}: ${(err as Error).message}`, false);
     }
-    // The listing is sorted (importFiles), so a cursor skips what earlier calls did (issue #75).
-    const after = args.resume_after !== undefined ? expandHome(args.resume_after) : null;
-    const files = after !== null ? listed.filter((f) => f > after) : listed;
+    const files = args.resume_after !== undefined ? afterCursor(listed, args.resume_after) : listed;
     const sessions = sessionTools(ctx);
     await ctx.deps.ensureBridge();
     needPlugin(ctx, "lr_import_photos", TRANSFER_PLUGIN, "it imports photos");

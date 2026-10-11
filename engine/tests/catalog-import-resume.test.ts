@@ -9,7 +9,7 @@ import { IntentLibrary } from "../src/intents/index.js";
 import { FILE_DEFS } from "../src/mcp/defs-files.js";
 import { Tools } from "../src/mcp/index.js";
 import { PreviewService } from "../src/preview/index.js";
-import { client, logDir, map, plugin, tmp, useSessionHarness, userDir } from "./helpers/session-harness.js";
+import { client, fails, logDir, map, plugin, tmp, useSessionHarness, userDir } from "./helpers/session-harness.js";
 
 useSessionHarness();
 afterEach(() => vi.restoreAllMocks());
@@ -54,6 +54,21 @@ describe("lr_import_photos resume_after (issue #75)", () => {
     expect(imports()).toEqual([raw(3)]);
     expect(rest.json["resume_after"]).toBeUndefined();
     expect(rest.json["not_yet"]).toBeUndefined();
+  });
+
+  // Review, 2026-10-11: compared as a string, a cursor in another case put every file on one side.
+  it.runIf(process.platform === "win32")("finds the cursor whatever its case on Windows", async () => {
+    const source = card();
+    const cursor = path.join(source, "100NIKON", "_DSC0002.NEF").toLowerCase();
+    await tools.importPhotos({ source, resume_after: cursor }, { now: () => 0, ms: 1e9 });
+    expect(imports()).toEqual([path.join(source, "100NIKON", "_DSC0003.NEF")]);
+  });
+
+  it("refuses a cursor that is not one of the source's files, importing nothing", async () => {
+    const source = card();
+    const err = await fails(tools.importPhotos({ source, resume_after: path.join(source, "100NIKON", "_DSC0009.NEF") }));
+    expect(err.code).toBe("BAD_ARGUMENTS");
+    expect(imports()).toEqual([]);
   });
 
   it("is in the tool's arguments", () => {

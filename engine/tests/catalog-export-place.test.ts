@@ -79,6 +79,21 @@ describe("the rename policy (issue #76)", () => {
     expect(readFileSync(path.join(dest, "a-3.jpg"), "utf8")).toBe("new");
     expect(existsSync(one.dir)).toBe(false);
   });
+
+  // Review, 2026-10-11: a source Windows holds open after the copy landed made a placed file a
+  // MOVE_FAILED, and a retry under the rename policy wrote a duplicate a-2.jpg.
+  it("counts the file as placed when removing the plugin's copy fails after the copy", async () => {
+    const dest = path.join(tmp, "dest-busy");
+    const one = exported("a.jpg", "new");
+    const rm = fs.rm.bind(fs);
+    vi.spyOn(fs, "rm").mockImplementation(async (p, o) => {
+      // The held file blocks its folder's removal too [inference].
+      if (String(p) === one.file || String(p) === one.dir) throw Object.assign(new Error("EBUSY: resource busy or locked"), { code: "EBUSY" });
+      return rm(p, o);
+    });
+    expect(await placeExport(exportDir, one.dir, [one.file], dest, "rename")).toEqual([{ file: path.join(dest, "a.jpg"), status: "written" }]);
+    expect(readdirSync(dest)).toEqual(["a.jpg"]);
+  });
 });
 
 describe("purgeExports (issue #76)", () => {

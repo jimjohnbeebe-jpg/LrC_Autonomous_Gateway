@@ -12,7 +12,7 @@ import type { ToolLog } from "../log/index.js";
 import type { Metrics, Region } from "../metrics/index.js";
 import type { ParamMap, PresetFormat } from "../params/index.js";
 import type { PreviewRequest, PreviewService, RenderedPreview } from "../preview/index.js";
-import { SessionManager } from "../session/index.js";
+import { SessionManager, endedError } from "../session/index.js";
 import type { KnownLogFolders, PageSettings } from "../settings/index.js";
 import { ToolError, toToolError } from "./errors.js";
 
@@ -182,8 +182,8 @@ export function sessionTools(ctx: ToolContext): SessionManager {
 
 /** The open session with this id; SESSION_ENDED when the user ended it from the HUD, else SESSION_NOT_ACTIVE. */
 export function openSession(ctx: ToolContext, sessionId: string): { id: string; uuid: string } {
-  const byUser = ctx.sessions?.userEndedError(sessionId) ?? null;
-  if (byUser) throw byUser;
+  const byUser = ctx.sessions?.userEnded(sessionId) ?? null;
+  if (byUser) throw endedError(byUser);
   const open = ctx.sessions?.current() ?? null;
   if (!open || open.id !== sessionId) {
     throw new ToolError("SESSION_NOT_ACTIVE", open ? `Session ${sessionId} is not the open one (${open.id}).` : `No session is open (asked for ${sessionId}).`, false);

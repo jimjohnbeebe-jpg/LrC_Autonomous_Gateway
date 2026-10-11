@@ -2,11 +2,16 @@
 // an outcome matching the user's own (accept after Accept; revert after Abort or Put back) succeeds with
 // `already_ended_by_user`; a mismatch, or "abandon", still answers SESSION_ENDED. Against the Lightroom sim.
 
+import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { IntentLibrary } from "../src/intents/index.js";
+import { ToolError } from "../src/mcp/errors.js";
+import { Tools } from "../src/mcp/index.js";
+import { PreviewService } from "../src/preview/index.js";
 import { waitUntil } from "./helpers/fake-plugin.js";
 import { hudAt, hudRig } from "./helpers/hud-harness.js";
 import { hudEvent } from "./helpers/lightroom-sim-hud.js";
-import { ID, clean, fails, logFile, lr, plugin, useSessionHarness } from "./helpers/session-harness.js";
+import { ID, clean, client, fails, logDir, logFile, lr, map, plugin, tmp, useSessionHarness, userDir } from "./helpers/session-harness.js";
 
 useSessionHarness();
 
@@ -43,6 +48,36 @@ describe("lr_end_session after the user ended the session", () => {
     const out = await rig.manager.end({ session_id: ID, outcome: "revert" });
     expect(out.json).toMatchObject({ ok: true, outcome: "revert", already_ended_by_user: { outcome: "aborted", source: "hud" } });
     expect((await fails(rig.manager.end({ session_id: ID, outcome: "accept" }))).code).toBe("SESSION_ENDED");
+  });
+
+  // Review, 2026-10-11: lr_end_session waited for the bridge first, so with Lightroom quit after the
+  // Deck's Accept the matching outcome failed as not connected.
+  it("lr_end_session answers the user's own outcome without waiting for Lightroom", async () => {
+    clean();
+    let gone = false;
+    let waits = 0;
+    const tools = new Tools({
+      client,
+      map,
+      previews: new PreviewService(client, { previewDir: path.join(tmp, "previews") }),
+      intents: new IntentLibrary({ map, userDir }),
+      sessionLogDir: logDir,
+      engineVersion: "test",
+      ensureBridge: async () => {
+        waits++;
+        if (gone) throw new ToolError("NOT_CONNECTED", "Lightroom is not connected.", true);
+        await client.waitConnected(2000);
+      },
+    });
+    const id = String((await tools.beginSession({ intent_id: "test_plain" })).json["session_id"]);
+    await tools.step({ session_id: id, settings: { exposure: 0.2 }, rationale: "test" });
+    hudEvent(plugin, "hud_accept", { session_id: id });
+    await waitUntil(() => tools.sessionManager()?.current() === null);
+    gone = true;
+    const before = waits;
+    const out = await tools.endSession({ session_id: id, outcome: "accept" });
+    expect(out.json).toMatchObject({ ok: true, already_ended_by_user: { outcome: "accept", source: "hud" } });
+    expect(waits).toBe(before);
   });
 
   it("revert after the HUD's Put back succeeds", async () => {

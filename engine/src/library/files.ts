@@ -102,6 +102,9 @@ async function replace(from: string, to: string): Promise<void> {
  * Copy `from` to `to` only if nothing is there, then remove `from`; false, copying nothing, when
  * something is. COPYFILE_EXCL makes the check and the create one step, so a file another program
  * makes in between is never replaced (issue #76), as fs.rename would replace it on Windows (replace()).
+ * Once the copy landed the file is placed: a source that cannot be removed (EBUSY, EPERM) is left to
+ * placeExport's removal of the plugin's folder and the purge at the next engine start [inference], as
+ * failing here would report a placed file as MOVE_FAILED and a retry would place it twice (review, 2026-10-11).
  */
 async function placeNew(from: string, to: string): Promise<boolean> {
   try {
@@ -112,7 +115,7 @@ async function placeNew(from: string, to: string): Promise<boolean> {
     if ((err as NodeJS.ErrnoException).code === "EEXIST" || (await exists(to))) return false;
     throw err;
   }
-  await fs.rm(from, { force: true });
+  await fs.rm(from, { force: true }).catch(() => undefined);
   return true;
 }
 
@@ -159,7 +162,8 @@ export async function placeExport(exportDir: string, dir: string, files: readonl
     kept.add(topLevel(exportDir, dir));
     throw err;
   }
-  await fs.rm(dir, { recursive: true, force: true });
+  // Everything is placed: a folder that cannot be removed now goes at the next purge (placeNew).
+  await fs.rm(dir, { recursive: true, force: true }).catch(() => undefined);
   return placed;
 }
 

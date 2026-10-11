@@ -37,7 +37,7 @@ export { MASKS_PLUGIN } from "./masks.js";
 export { AI_TIMINGS, DIALOG_NOTE, WORKING_NOTE } from "./ai-update.js";
 export { abandonedNote } from "./abandon.js";
 export { engineEndedNote } from "./ai-revert.js";
-export { ABORT_WAITS, ACCEPT_AFTER_FAILED } from "./hud-actions.js";
+export { ABORT_WAITS, ACCEPT_AFTER_FAILED, endedAlike, endedError } from "./hud-actions.js";
 export type { AiTimings } from "./ai-update.js";
 export { DEFAULT_VARIANT_COUNT, MAX_VARIANT_COUNT, VARIANTS_PLUGIN } from "./copies.js";
 export { applyProjectedGuardrail, convergedByMetrics, fixedCorrection, hueDistance, planStep, pullBack } from "./plan.js";

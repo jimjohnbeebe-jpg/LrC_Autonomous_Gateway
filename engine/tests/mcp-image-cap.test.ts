@@ -23,7 +23,8 @@ describe("image cap on tool results", () => {
     const [img, text] = res.content as Part[];
     expect(img?.type).toBe("image");
     expect(img!.data!.length).toBeLessThanOrEqual(IMAGE_CAP_CHARS);
-    const json = JSON.parse(text!.text!) as { ok: boolean; image_reduced: { from_chars: number; to_chars: number; quality: number; long_edge: number } };
+    type Reduced = { from_chars: number; to_chars: number; quality: number; long_edge: number; from_long_edge: number; note?: string };
+    const json = JSON.parse(text!.text!) as { ok: boolean; image_reduced: Reduced };
     expect(json.ok).toBe(true);
     expect(json.image_reduced.from_chars).toBe(image.toString("base64").length);
     expect(json.image_reduced.to_chars).toBe(img!.data!.length);
@@ -31,6 +32,9 @@ describe("image cap on tool results", () => {
     expect(json.image_reduced.long_edge).toBeLessThan(1600);
     const meta = await sharp(Buffer.from(img!.data!, "base64")).metadata();
     expect(Math.max(meta.width, meta.height)).toBe(json.image_reduced.long_edge);
+    // Review, 2026-10-11: the result's own size fields describe the render, so a smaller image says so.
+    expect(json.image_reduced.from_long_edge).toBe(1600);
+    expect(json.image_reduced.note).toContain(`multiply them by ${json.image_reduced.long_edge}/1600`);
   });
 
   it("passes a small image unchanged, with no flag", async () => {

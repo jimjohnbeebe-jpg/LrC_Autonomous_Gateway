@@ -347,7 +347,7 @@ export function endedError(e: UserEnded): ToolError {
  * lr_end_session on a session the user already ended the way Claude asks (accept after Accept; revert after Abort or
  * Put back): success, naming the user's end, instead of SESSION_ENDED; null otherwise (issue #126) [stated: Jim, 2026-10-11].
  */
-export function endedAlike(e: UserEnded | undefined, outcome: "accept" | "revert"): SessionOutput | null {
+export function endedAlike(e: UserEnded | null, outcome: "accept" | "revert"): SessionOutput | null {
   if (!e || (outcome === "accept") !== (e.outcome === "accept") || e.outcome === "abandoned") return null;
   const { session_id, log_path } = e;
   return { json: { ok: true, session_id, outcome, already_ended_by_user: { outcome: e.outcome, source: e.source, at: e.at, log_path }, log_path } };

@@ -88,6 +88,7 @@ npm run phase7:check        # Phase 7 acceptance on the Deck: five edits, two Cl
 npm run offline:check       # missing-original check: plugin 0.19.1, the "fixtures" collection open, Claude Desktop quit (docs\reports\phase8\offline.md)
 npm run phase8:check        # Phase 8 acceptance: every "fixtures" photo, 11 intents on the JPEG, raw->rendered sync, a preset click, one Claude Desktop chat; resumes (-- --new) (docs\reports\phase8\PHASE8.md)
 npm run ai:probe            # issue #123 probe: three AI masks (Mountains, Vegetation with and without reads) on one photo in Develop, Claude Desktop quit; resumes after a Lightroom restart (-- --new) (docs\reports\phase8.5\ai-vegetation.md)
+npm run masks:carry         # issue #121 probe: the five hand-made masks (Add, Subtract, Intersect, Brush, Color) written back beside one new radial, on one photo in Develop, Claude Desktop quit; puts the photo back, first if an earlier run stopped (docs\reports\phase8.5\mask-carry.md)
 node engine\dist\mcp\main.js # the stdio MCP server (Claude Desktop starts it; tool log in $env:LRC_AVG_LOG_DIR or %LOCALAPPDATA%\LrC-AVG\logs)
 graphify query "How does X reach Y?"
 ```

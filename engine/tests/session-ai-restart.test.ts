@@ -77,6 +77,42 @@ describe("D16: nothing written while Lightroom computes an AI mask", () => {
   });
 });
 
+describe("issue #123: Lightroom's update over with no result", () => {
+  it("is AI_MASK_FAILED settleMs after the probe saw it over: one probe, no more reads, later calls refused unread; a restart puts the photo back", async () => {
+    const { rig, start, e } = await stuckSession({ computeMs: 10_000, settleMs: 50 });
+    expect(e).toMatchObject({ code: "AI_MASK_FAILED", recoverable: false, details: { session_id: ID, reverted: false } });
+    expect(e.message).toMatch(/^Lightroom's AI Vegetation mask computation failed \(Lightroom reported the update over .* no result showed/);
+    expect(e.message).toMatch(/save your work and restart Lightroom/);
+    expect(sent("probe_write_gate")).toBe(1);
+    expect(readLog().failures.at(-1)?.ai_trace?.probes).toEqual([expect.objectContaining({ status: "executed", update: "done" })]);
+    expect(rig.reported.some((r) => r.note === "Lightroom's AI mask failed. Save your work and restart Lightroom: the photo is then put back by itself.")).toBe(true);
+    const reads = sent("get_settings");
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(sent("get_settings")).toBe(reads);
+    const refused = await fails(rig.manager.end({ session_id: ID, outcome: "revert" }));
+    expect(refused).toMatchObject({ code: "AI_UPDATE_PENDING", details: { stuck: true } });
+    expect(refused.message).toMatch(/computation failed .* nothing more is read/);
+    expect(sent("get_settings")).toBe(reads);
+    lr.masks.finishLate(); // a late result does not lift it: only the restart does
+    expect(await fails(step(rig.manager))).toMatchObject({ code: "AI_UPDATE_PENDING" });
+    restartLightroom(lr, plugin);
+    await waitUntil(() => rig.manager.current() === null, 3000);
+    expect(readLog()).toMatchObject({ outcome: "revert", ended_by: { source: "engine" }, revert: { differing: [] } });
+    expect(masks()).toEqual(start[MASK_TABLE_KEY] ?? []);
+  });
+
+  it("a result that shows within settleMs of the update reading over is taken", async () => {
+    clean();
+    const rig = hudRig({ aiTimings: { ...FAST, computeMs: 10_000, settleMs: 400 } });
+    await rig.manager.begin({ intent_id: "test_plain", return_image: "none", max_passes: 4 });
+    lr.masks.tableRoute = "late";
+    const pending = create(rig.manager);
+    await waitUntil(() => sent("probe_write_gate") === 1);
+    lr.masks.finishLate();
+    expect((await pending).json).toMatchObject({ ok: true, ai: { route: "table" } });
+  });
+});
+
 describe("D16: a Lightroom restart puts the photo back", () => {
   it("after LIGHTROOM_STUCK: the engine puts the photo back (checked) and ends the session; the HUD closes 10 s later; later calls get SESSION_ENDED", async () => {
     const { rig, start } = await stuckSession();

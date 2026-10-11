@@ -2,7 +2,7 @@
 // before the session and end it (autoRevert) [stated: Jim, 2026-10-03, "Also auto-revert"] once nothing can
 // be computing: Lightroom reported the update failed or dropped it ("dialog"), or Lightroom restarted
 // ("restart", restart.ts) [stated: Jim, 2026-10-04, "Yes: revert after restart (Recommended)"]; or, while no
-// result came, write nothing and say Lightroom seems stuck (stuckError, D16). Moved out of ai-masks.ts in PR C
+// result came, write nothing and say Lightroom seems stuck, or that its computation failed (stuckError, D16, issue #123). Moved out of ai-masks.ts in PR C
 // step 2c (module size, rule 01). The HUD's notes are in the photographer's words (no "session", no codes).
 
 import { ToolError, toToolError } from "../mcp/errors.js";
@@ -76,7 +76,16 @@ export async function autoRevert(ctx: SessionContext, s: Session, job: AiJob, ca
 }
 
 /** No result from Lightroom (ai-update.ts "stuck"): nothing written; the session stays open, s.aiPending kept, until the result or a restart. */
-export function stuckError(s: Session, job: AiJob, cause: string): ToolError {
+export function stuckError(s: Session, job: AiJob, cause: string, failed = false): ToolError {
+  if (failed) {
+    s.idleNote = "Lightroom's AI mask failed. Save your work and restart Lightroom: the photo is then put back by itself.";
+    return new ToolError(
+      "AI_MASK_FAILED",
+      `Lightroom's AI ${KIND_LABELS[job.kind]} mask computation failed (${cause}). Nothing was written after the update, and the engine reads and writes nothing more while Lightroom may be unstable. Tell the user: save your work and restart Lightroom (File > Exit, then start it again). Once it is back, the engine notices the restart, puts the photo back as it was before the session (checked) and ends session ${s.id} by itself; nothing to call. Until then session ${s.id} writes, renders and reverts nothing.`,
+      false,
+      { session_id: s.id, reverted: false, reason: cause },
+    );
+  }
   s.idleNote = "Lightroom's AI mask seems stuck. Restart Lightroom: the photo is then put back by itself.";
   return new ToolError(
     "LIGHTROOM_STUCK",

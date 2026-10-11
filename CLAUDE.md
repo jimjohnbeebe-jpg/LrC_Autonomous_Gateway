@@ -87,6 +87,7 @@ npm run deck:menu           # row 5 probe: the menu items with the Deck, two rea
 npm run phase7:check        # Phase 7 acceptance on the Deck: five edits, two Claude Desktop chats, no-Deck fallback, Lightroom quit; resumes (-- --new, -- --redo E1,E2,E3) (docs\reports\phase7\PHASE7.md)
 npm run offline:check       # missing-original check: plugin 0.19.1, the "fixtures" collection open, Claude Desktop quit (docs\reports\phase8\offline.md)
 npm run phase8:check        # Phase 8 acceptance: every "fixtures" photo, 11 intents on the JPEG, raw->rendered sync, a preset click, one Claude Desktop chat; resumes (-- --new) (docs\reports\phase8\PHASE8.md)
+npm run ai:probe            # issue #123 probe: three AI masks (Mountains, Vegetation with and without reads) on one photo in Develop, Claude Desktop quit; resumes after a Lightroom restart (-- --new) (docs\reports\phase8.5\ai-vegetation.md)
 node engine\dist\mcp\main.js # the stdio MCP server (Claude Desktop starts it; tool log in $env:LRC_AVG_LOG_DIR or %LOCALAPPDATA%\LrC-AVG\logs)
 graphify query "How does X reach Y?"
 ```

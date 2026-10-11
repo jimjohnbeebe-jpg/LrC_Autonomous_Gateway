@@ -35,7 +35,10 @@
 //     that comes first lets the session go on;
 //   - a failed update with the gate never seen busy is a plugin error, after which the LrDevelopController
 //     route may run (the lead's review of efffd2e, 2026-10-03);
-//   - the reads name the photo by uuid (photo_uuid), so a change of selection does not end the wait.
+//   - the reads name the photo by uuid (photo_uuid), so a change of selection does not end the wait;
+//   - what the wait saw (the update's answer, each probe, the reads summed up) is kept as s.aiTrace and goes
+//     on the log's failure entry when the wait ends without a result (io.ts failed): the 2026-10-11 hang
+//     left no record of what the probes answered (issue #123) [handle: repo logs\20261010-45ea50.json].
 // Every read checks the user's Abort first. [handle: tests\session-ai-dialog.test.ts,
 // tests\session-ai-restart.test.ts, against the Lightroom sim. In Lightroom, capture 4 saw updates compute
 // and ErrorReason answers without a dialog (capture4-check.json); the rest is [unverified] until capture 6.]
@@ -44,6 +47,7 @@ import { randomUUID } from "node:crypto";
 import type { CommandResult } from "../bridge/index.js";
 import { ToolError, toToolError } from "../mcp/errors.js";
 import { aiError, aiWatch, computed, firstComponent, readTable, type SdkSettings } from "../params/index.js";
+import type { AiTrace } from "../log/index.js";
 import type { AiJob } from "./ai-masks.js";
 import { bridge, checkAbort, ms } from "./io.js";
 import type { Session, SessionContext } from "./types.js";
@@ -108,13 +112,15 @@ const ownUpdate = (p: CommandResult<"probe_write_gate"> | null, job: AiJob, toke
 };
 
 /** update_ai_settings; null once it is under way (or may be: no answer in time), else what ended it. */
-async function send(ctx: SessionContext, s: Session, job: AiJob, T: AiTimings, token: string): Promise<Update | null> {
+async function send(ctx: SessionContext, s: Session, job: AiJob, T: AiTimings, token: string, trace: AiTrace): Promise<Update | null> {
   try {
     const res = await bridge(s, job.t, () => ctx.deps.client.request("update_ai_settings", { photo_uuid: job.t.uuid, request_id: token, watch: aiWatch([job.id]) }, { timeoutMs: T.replyMs }));
+    trace.sent = res.state ?? res.status ?? "answered";
     if (res.state === "abandoned") return { kind: "dialog", why: ABANDONED, dialog_ms: 0 };
     return res.state === "failed" ? { kind: "failed", why: "update_ai_settings: the update failed", fallback: true } : null;
   } catch (err) {
     const e = toToolError(err);
+    trace.sent = e.code === "BRIDGE_TIMEOUT" ? "no answer" : e.code;
     if (e.code === "BRIDGE_TIMEOUT") return null; // a dialog may hold the answer too (Masks.lua): watch the table
     if (STOPS.includes(e.code)) throw err;
     return { kind: "failed", why: `update_ai_settings: ${e.message}`, fallback: true };
@@ -130,6 +136,29 @@ async function look(ctx: SessionContext, job: AiJob): Promise<{ sdk: SdkSettings
     if (toToolError(err).code === "BRIDGE_TIMEOUT") return null;
     throw err;
   }
+}
+
+export const newTrace = (kind: string): AiTrace => ({ kind, sent: "not sent", probes: [], probes_dropped: 0, reads: { count: 0, unanswered: 0, slowest_ms: 0, last_t_ms: 0, last_entry: "none" } });
+/** ponytail: the first MAX_PROBES probes only; a gate held for 5 minutes, probed every 2 s, would log 150. */
+const MAX_PROBES = 40;
+
+/** One read of the wait, summed up in the trace: when it ended, how long it took, what the entry showed. */
+function noteRead(trace: AiTrace, seen: Awaited<ReturnType<typeof look>>, t0: number, r0: number): void {
+  const r = trace.reads;
+  r.count++;
+  r.slowest_ms = Math.max(r.slowest_ms, ms(r0));
+  r.last_t_ms = ms(t0);
+  if (!seen) r.unanswered++;
+  const reason = seen?.m ? aiError(seen.m) : null;
+  r.last_entry = !seen ? "no answer" : !seen.m ? "gone" : reason !== null ? `ErrorReason ${reason}` : computed(seen.m) ? "computed" : "no result yet";
+}
+
+function noteProbe(trace: AiTrace, p: CommandResult<"probe_write_gate"> | null, own: ReturnType<typeof ownUpdate>, t0: number): void {
+  if (trace.probes.length >= MAX_PROBES) {
+    trace.probes_dropped++;
+    return;
+  }
+  trace.probes.push({ t_ms: ms(t0), status: p?.status ?? "no answer", ...(own ? { update: own.state } : {}), ...(own?.error ? { error: own.error } : {}) });
 }
 
 /** probe_write_gate; null when the plugin lacks it or did not answer. */
@@ -172,11 +201,13 @@ function decide(w: Watch, T: AiTimings, t0: number, now: number): Update | null 
   return { kind: "stuck", why: `no result within ${Math.round(T.computeMs / 60_000)} minutes${w.state ? `, Lightroom's update ${w.state}` : ""}`, dialog_ms: dms };
 }
 
-async function watch(ctx: SessionContext, s: Session, job: AiJob, T: AiTimings, t0: number, note: string | undefined, token: string): Promise<Update> {
+async function watch(ctx: SessionContext, s: Session, job: AiJob, T: AiTimings, t0: number, note: string | undefined, token: string, trace: AiTrace): Promise<Update> {
   const w: Watch = { dialogAt: null, probed: 0, settled: false, state: null, answered: t0 };
   for (let wait = T.pollMs; ; wait = Math.min(wait * 2, T.pollMaxMs)) {
     checkAbort(s);
+    const r0 = performance.now();
     const seen = await look(ctx, job);
+    noteRead(trace, seen, t0, r0);
     if (seen && !seen.m) return { kind: "failed", why: "the mask's entry is no longer in the table (removed in Lightroom?)", fallback: false };
     const reason = seen?.m ? aiError(seen.m) : null;
     if (reason !== null) return { kind: "not_found", reason };
@@ -190,7 +221,9 @@ async function watch(ctx: SessionContext, s: Session, job: AiJob, T: AiTimings, 
     if (now - t0 >= T.dialogAfterMs && !w.settled && now - w.probed >= T.probeEveryMs) {
       w.probed = now;
       const seenDialog = w.dialogAt !== null;
-      const judged = judge(await probe(ctx, T), job, w, now, token);
+      const p = await probe(ctx, T);
+      noteProbe(trace, p, ownUpdate(p, job, token), t0);
+      const judged = judge(p, job, w, now, token);
       if (judged) return judged;
       if (!seenDialog && w.dialogAt !== null) tell(ctx, s, DIALOG_NOTE);
     }
@@ -212,16 +245,19 @@ export async function updateAndWait(ctx: SessionContext, s: Session, job: AiJob)
   // No connection: the update is not sent, so nothing is pending (else the session could never be put back).
   if (!hello) throw new ToolError("BRIDGE_DISCONNECTED", "Lightroom is not connected; the AI update was not sent.", true);
   s.aiPending = { since: ctx.now().toISOString(), kind: job.kind, job, process: hello.process_started_at ?? null, stuck: false };
+  const trace = newTrace(job.kind);
+  s.aiTrace = trace;
   let out: Update | null = null;
   try {
     const token = randomUUID();
-    const ended = await send(ctx, s, job, T, token);
+    const ended = await send(ctx, s, job, T, token, trace);
     const sent = ms(t0);
     if (!ended) tell(ctx, s, WORKING_NOTE);
-    out = ended ?? (await watch(ctx, s, job, T, t0, note, token));
+    out = ended ?? (await watch(ctx, s, job, T, t0, note, token, trace));
     if (out.kind === "computed") out.update_ms = sent;
     return out;
   } finally {
+    if (out?.kind === "computed") s.aiTrace = null; // a result: nothing to explain
     if (out?.kind === "computed" || out?.kind === "not_found" || out?.kind === "failed") s.aiPending = null;
     else if (out?.kind === "stuck" && s.aiPending) s.aiPending.stuck = true;
   }

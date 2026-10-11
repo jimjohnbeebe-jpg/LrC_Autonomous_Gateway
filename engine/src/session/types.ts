@@ -3,7 +3,7 @@
 
 import type { BridgeClient, HudStage } from "../bridge/index.js";
 import type { IntentLibrary, LoadedIntent } from "../intents/index.js";
-import type { SessionLogData, SessionLogFiles } from "../log/index.js";
+import type { AiTrace, SessionLogData, SessionLogFiles } from "../log/index.js";
 import type { Metrics, Region, RegionBox } from "../metrics/index.js";
 import type { CanonicalSettings, Geometry, ParamMap, Pipeline } from "../params/index.js";
 import type { RenderedPreview } from "../preview/index.js";
@@ -235,6 +235,8 @@ export type Session = {
   aiRoute: "table" | "dc" | null;
   /** An update_ai_settings whose result Lightroom has not shown yet (ai-update.ts, D16): while set, the session writes, exports, renders and reverts nothing (io.ts). */
   aiPending: AiPending | null;
+  /** What the last AI mask wait saw, until a failure log entry takes it (ai-update.ts, io.ts failed; issue #123). */
+  aiTrace: AiTrace | null;
   /** Why the engine itself ended the session (ai-revert.ts autoRevert: a dialog, or a Lightroom restart); the manager then closes it. */
   endedByEngine: string | null;
   regions: RegionState[];

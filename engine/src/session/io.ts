@@ -222,7 +222,9 @@ export function failed(ctx: SessionContext, s: Session, stage: string, err: unkn
     if (s.abort) s.abort.interrupted ??= stage;
     return error;
   }
-  s.log.failures.push({ at: ctx.now().toISOString(), stage, error: error.body() });
+  // An AI mask wait that ended without a result (ai-update.ts): what it saw goes on this entry, once (issue #123).
+  s.log.failures.push({ at: ctx.now().toISOString(), stage, error: error.body(), ...(s.aiTrace ? { ai_trace: s.aiTrace } : {}) });
+  s.aiTrace = null;
   try {
     saveLog(s);
   } catch {

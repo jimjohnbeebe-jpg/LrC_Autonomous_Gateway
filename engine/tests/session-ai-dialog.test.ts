@@ -175,6 +175,17 @@ describe("AI masks: an update Lightroom dropped or that raised", () => {
     expect(m.current()?.id).toBe(ID);
   });
 
+  it("logs what the wait saw on the failure (issue #123): the update's answer, each probe, the reads summed up", async () => {
+    const { create } = await session({ computeMs: 300 });
+    lr.masks.tableRoute = "never";
+    await fails(create("sky"));
+    const trace = readLog().failures.at(-1)?.ai_trace;
+    expect(trace).toMatchObject({ kind: "sky", sent: expect.any(String), probes: [{ status: "executed", update: "done" }], probes_dropped: 0 });
+    expect(trace?.sent).not.toBe("not sent");
+    expect(trace?.reads).toMatchObject({ unanswered: 0, last_entry: "no result yet" });
+    expect(trace?.reads.count).toBeGreaterThan(1);
+  });
+
   it("never puts the photo back while Lightroom's update still runs, though its gate is free again", async () => {
     const { m, create } = await session({ computeMs: 400 });
     [lr.masks.gate, lr.masks.heldProbes, lr.masks.releaseState] = ["dialog", 2, "running"];

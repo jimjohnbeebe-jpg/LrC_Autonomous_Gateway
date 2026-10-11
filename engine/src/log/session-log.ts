@@ -19,7 +19,7 @@
 import { mkdirSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { z } from "zod";
-import { maskPassSchema } from "./mask-log.js";
+import { aiTraceSchema, maskPassSchema } from "./mask-log.js";
 
 export const SESSION_LOG_SCHEMA_ID = "lrc-avg/session-log/2";
 export const RECIPE_SCHEMA_ID = "lrc-avg/recipe/1";
@@ -245,7 +245,7 @@ export const sessionLogSchema = z
     regions: z.array(regionEntrySchema),
     passes: z.array(passSchema),
     probes: z.array(probeSchema),
-    failures: z.array(z.strictObject({ at: z.string(), stage: z.string(), error: z.looseObject({ code: z.string(), message: z.string(), recoverable: z.boolean() }) })),
+    failures: z.array(z.strictObject({ at: z.string(), stage: z.string(), error: z.looseObject({ code: z.string(), message: z.string(), recoverable: z.boolean() }), ai_trace: aiTraceSchema.optional() })),
     final_settings: canonicalSettingsSchema.nullable(),
     recipe_path: z.string().nullable(),
     revert: z.strictObject({ ms: z.number(), differing: z.array(z.string()) }).nullable(),

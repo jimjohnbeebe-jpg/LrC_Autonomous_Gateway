@@ -48,6 +48,7 @@ import { makeAiMask, type AiResult } from "./ai-masks.js";
 import { awaitApproval } from "./approval.js";
 import { clipBreach, regionDrift, type Breach } from "./guardrail.js";
 import { brief, describe, failed, fresh, historyName, image, ms, readSdk, recordPass, render, writeTable } from "./io.js";
+import { convergedByRegions } from "./plan.js";
 import { checkReady, focus, resolveTarget } from "./targets.js";
 import type { CreateMaskArgs, DeleteMaskArgs, EditMaskArgs, ListMasksArgs, Rendered, ReturnImage, Session, SessionContext, SessionOutput, Target, TargetId } from "./types.js";
 
@@ -150,8 +151,9 @@ async function maskPass(ctx: SessionContext, s: Session, args: PassArgs, op: Mas
   try {
     const done = await applyPlan(ctx, s, t, n, op, plan, before, baseline);
     t.passes = n;
-    t.endReason = n >= s.maxPasses ? "cap_reached" : null; // a mask pass never converges, and may follow convergence
+    t.endReason = n >= s.maxPasses ? "cap_reached" : null; // never "converged": a mask pass may follow convergence
     const delta = deltaMetrics(baseline.metrics, done.rendered.metrics);
+    const converged = !done.undone && convergedByRegions(delta); // a signal only (issue #130 item 4)
     const masks = readTable(done.sdk).map(summarize);
     const after = masks.find((m) => m.id === done.id) ?? null;
     const mask: MaskPassEntry = { op: op.op, id: done.id, name: (after ?? plan.before ?? plan.after)?.name ?? "", kind: plan.kind, before: plan.before, after, ...(done.ai ? { ai: aiLog(done.ai) } : {}) };
@@ -159,9 +161,9 @@ async function maskPass(ctx: SessionContext, s: Session, args: PassArgs, op: Mas
       n, kind: "mask", target: t.id, started: passStarted, duration_ms: ms(started), history_names: done.historyNames, rationale: args.rationale,
       requested: { ...op }, changes: [], clamped: [], refused: [], unchanged: [], settings_before: first.view.settings, settings_after: done.view.settings,
       metrics_before: metricsOf(baseline.metrics), metrics_after: metricsOf(done.rendered.metrics), delta_metrics: delta, preview_hash: done.rendered.hash,
-      preview_source: "export", guardrail_actions: done.actions, converged_by_metrics: false, ...(approval ? { approval } : {}), mask,
+      preview_source: "export", guardrail_actions: done.actions, converged_by_metrics: converged, ...(approval ? { approval } : {}), mask,
     });
-    const json = passJson(s, t, n, op, { mask, masks, done, delta, started });
+    const json = passJson(s, t, n, op, { mask, masks, done, delta, converged, started });
     const img = await image(s, args.return_image ?? "after", baseline, done.rendered, `pass ${n - 1}`, `pass ${n}`);
     return {
       json: { ...json, ...(approval ? { approval } : {}) },
@@ -221,9 +223,9 @@ async function applyPlan(ctx: SessionContext, s: Session, t: Target, n: number, 
   return { sdk, view, rendered, actions, historyNames, id, ai, undone };
 }
 
-type PassOut = { mask: MaskPassEntry; masks: MaskSummary[]; done: Done; delta: ReturnType<typeof deltaMetrics>; started: number };
+type PassOut = { mask: MaskPassEntry; masks: MaskSummary[]; done: Done; delta: ReturnType<typeof deltaMetrics>; converged: boolean; started: number };
 
-function passJson(s: Session, t: Target, n: number, op: MaskOp, { mask, masks, done, delta, started }: PassOut): Record<string, unknown> {
+function passJson(s: Session, t: Target, n: number, op: MaskOp, { mask, masks, done, delta, converged, started }: PassOut): Record<string, unknown> {
   return {
     ok: true,
     session_id: s.id,
@@ -237,6 +239,7 @@ function passJson(s: Session, t: Target, n: number, op: MaskOp, { mask, masks, d
     guardrail_actions: done.actions,
     metrics: metricsOf(done.rendered.metrics),
     delta_metrics: delta,
+    converged_by_metrics: converged,
     cap_reached: t.endReason === "cap_reached",
     passes_left: s.maxPasses - n,
     ...(done.undone ? { undone: { limit: done.undone.limit, reason: done.undone.reason, note: "the mask change was written, then undone: the masks are as before this pass" } } : {}),

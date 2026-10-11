@@ -64,7 +64,9 @@ describe("HUD channel", () => {
     expect(await after.welcomed()).toMatchObject({ session_id: ID });
     const state = await after.at("awaiting_claude");
     expect(state).toMatchObject({ session_id: ID, mode: "converge", lightroom: "connected", target: { uuid: "SIM-UUID" }, rows: [] });
-    expect(before.closed).toBe(true); // replaced by the newer client
+    // Replaced by the newer client. Its close event can come after the newer client's state, so wait for it
+    // (issue #127: read at once, it was false once in a loaded full suite, with no client dropped [unverified]).
+    await waitUntil(() => before.closed);
   });
 
   it("sends the whole state at each stage, with seq rising by 1 from 1, and every state valid", async () => {

@@ -3,7 +3,7 @@
 // (Phase 4); approve_each_pass mode's lr_approve_pass (Phase 5); the mask tools lr_list_masks,
 // lr_create_mask, lr_edit_mask and lr_delete_mask (engine 0.16.0, GitHub issue #59).
 
-import type { ApproveArgs, BeginArgs, CreateMaskArgs, DeleteMaskArgs, EditMaskArgs, EndArgs, ListMasksArgs, ProbeArgs, RegionArgs, SelectArgs, StepArgs } from "../session/index.js";
+import { endedAlike, endedError, type ApproveArgs, type BeginArgs, type CreateMaskArgs, type DeleteMaskArgs, type EditMaskArgs, type EndArgs, type ListMasksArgs, type ProbeArgs, type RegionArgs, type SelectArgs, type StepArgs } from "../session/index.js";
 import { pageBridgeUse, readPageFolders, run, sessionTools, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
 export async function beginSession(ctx: ToolContext, args: BeginArgs): Promise<ToolOutput> {
@@ -51,7 +51,16 @@ export async function endSession(ctx: ToolContext, args: EndArgs): Promise<ToolO
   return run(ctx, "lr_end_session", args, async () => {
     const sessions = sessionTools(ctx);
     // "abandon" must work with Lightroom gone: it does not wait for the bridge (session\abandon.ts).
-    if (args.outcome !== "abandon") await ctx.deps.ensureBridge();
+    if (args.outcome === "abandon") return sessions.end(args);
+    // Nor does a session the user already ended on the Deck (issue #126): the same outcome succeeds, another
+    // gets SESSION_ENDED, and neither needs a Lightroom call (Greptile, PR #137).
+    const ended = sessions.userEnded(args.session_id);
+    if (ended) {
+      const alike = endedAlike(ended, args.outcome);
+      if (alike) return alike;
+      throw endedError(ended);
+    }
+    await ctx.deps.ensureBridge();
     return sessions.end(args);
   });
 }

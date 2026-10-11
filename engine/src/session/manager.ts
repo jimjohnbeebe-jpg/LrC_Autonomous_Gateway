@@ -39,7 +39,7 @@ import { pendingError } from "./ai-update.js";
 import { approvePass } from "./approval.js";
 import { openSession, runPass0 } from "./begin.js";
 import { endSession, readSessionLog } from "./end.js";
-import { abortedNote, endedError, idleStage, userAction, userEnded, type ActionHost, type UserAction, type UserEnded } from "./hud-actions.js";
+import { abortedNote, endedAlike, endedError, idleStage, userAction, userEnded, type ActionHost, type UserAction, type UserEnded } from "./hud-actions.js";
 import { abortError, checkAbort, read, render } from "./io.js";
 import { createMask, deleteMask, editMask, listMasks } from "./masks.js";
 import { selectVariant } from "./pick.js";
@@ -212,7 +212,7 @@ export class SessionManager {
         return out;
       });
     }
-    return this.exclusive(() =>
+    return this.exclusive(async () => endedAlike(this.userEnded(args.session_id), outcome) ??
       this.withNotices(args.session_id, async (s) => {
         // After the user's Abort, "revert" still ends the session (the way out when the Abort's own
         // revert failed); "accept" is refused, as the user asked for the photo back.
@@ -253,10 +253,10 @@ export class SessionManager {
     };
   }
 
-  /** SESSION_ENDED for a session the user ended from the HUD or the menu; null otherwise. */
-  userEndedError(sessionId: string): ToolError | null {
+  /** How the user ended a session from the HUD or the menu (endedError gives its SESSION_ENDED); null otherwise. */
+  userEnded(sessionId: string): UserEnded | null {
     const ended = this.endedByUser.get(sessionId);
-    return ended && this.session?.id !== sessionId ? endedError(ended) : null;
+    return ended && this.session?.id !== sessionId ? ended : null;
   }
 
   private close(s: Session, byUser: UserEnded | null): void {
@@ -332,8 +332,8 @@ export class SessionManager {
 
   private require(sessionId: string): Session {
     const s = this.session;
-    const byUser = this.userEndedError(sessionId);
-    if (byUser) throw byUser;
+    const byUser = this.userEnded(sessionId);
+    if (byUser) throw endedError(byUser);
     const byEngine = s?.id === sessionId ? undefined : this.endedByEngine.get(sessionId);
     if (byEngine !== undefined) {
       throw new ToolError("SESSION_ENDED", `The engine ended session ${sessionId}: ${byEngine}. The photo was put back as it was before the session. Start a new session only if the user asks.`, false, { session_id: sessionId, ended_by: "engine", reason: byEngine });

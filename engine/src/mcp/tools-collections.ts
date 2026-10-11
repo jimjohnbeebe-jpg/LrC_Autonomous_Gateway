@@ -35,15 +35,21 @@ export async function createCollection(ctx: ToolContext, args: CreateCollectionA
   });
 }
 
-/** What the read-back shows: the photos changed, those already as asked, and those Lightroom did not take. */
+/**
+ * What the read-back shows: the photos changed, those already as asked, and those Lightroom did not
+ * take. With no read-back (`after_in` absent) nothing is known to have changed, so none are listed as
+ * changed or not taken (issue #77: an absent read-back read as empty listed every photo as removed).
+ */
 function outcome(asked: readonly string[], r: { before_in: string[]; after_in?: string[] | undefined; not_found: string[] }, remove: boolean) {
   const before = new Set(r.before_in);
-  const after = new Set(r.after_in ?? []);
   const found = asked.filter((u) => !r.not_found.includes(u));
+  const unchanged = found.filter((u) => before.has(u) !== remove);
+  if (r.after_in === undefined) return { changed: [], unchanged, not_taken: [] };
+  const after = new Set(r.after_in);
   const wanted = (u: string): boolean => after.has(u) !== remove;
   return {
     changed: found.filter((u) => before.has(u) === remove && wanted(u)),
-    unchanged: found.filter((u) => before.has(u) !== remove),
+    unchanged,
     not_taken: found.filter((u) => before.has(u) === remove && !wanted(u)),
   };
 }

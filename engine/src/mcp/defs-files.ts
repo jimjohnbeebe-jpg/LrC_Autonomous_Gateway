@@ -59,6 +59,12 @@ const importArgs = z.object({
     .optional()
     .describe("copy the files here first, keeping their folders below the source, and import the copies (never overwrites; a same-size file already there counts as the copy). Omit to import the files where they are"),
   recursive: z.boolean().optional().describe("look in the source's subfolders too (default true)"),
+  resume_after: z
+    .string()
+    .trim()
+    .min(1)
+    .optional()
+    .describe("to go on after a call that ran out of time: that call's `resume_after` (a source file's path); the call starts with the file after it. Omit to start from the first file"),
 });
 
 const META_WRITE =
@@ -110,7 +116,8 @@ export const FILE_DEFS: ToolDef[] = [
       "are, or copied first into copy_to (do that for a memory card). A file the catalog already holds at that path is not imported again " +
       "(`already_in_catalog`, with its uuid); a photo imported earlier from another path is not recognised. Returns the uuids, for " +
       "lr_add_to_collection, lr_set_keywords and the other tools. No develop or metadata preset is passed to the import, and no tool can remove a photo from " +
-      `the catalog: the user does that in Lightroom (Library > Remove Photo). ${TIMED} ${META_WRITE}`,
+      `the catalog: the user does that in Lightroom (Library > Remove Photo). ${TIMED} Here \`resume_after\` comes with \`not_yet\`: pass it back to go on ` +
+      `from the next file. ${META_WRITE}`,
     schema: importArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     run: (tools, args) => tools.importPhotos(args as z.infer<typeof importArgs>),

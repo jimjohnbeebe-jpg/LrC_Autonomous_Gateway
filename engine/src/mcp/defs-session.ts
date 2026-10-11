@@ -129,11 +129,14 @@ export const SESSION_DEFS: ToolDef[] = [
   {
     name: "lr_step",
     title: "One editing pass",
+    // Decay: SESSION_DEFAULTS.decay [1.0, 0.6, 0.4, 0.25] and decayFor reusing the last value for later passes
+    // [handle: engine\src\session\rules.ts:20, :94-97]. `recoverable`: engine\src\mcp\errors.ts:6.
     description:
       "Apply one pass to the session's photo. `settings` maps canonical names to a CHANGE for numeric sliders " +
       "(e.g. {\"exposure\": 0.3, \"highlights\": -20} adds 0.3 EV and lowers highlights by 20) and to the value to set for " +
       "camera_profile, switches, booleans and curves. Each change is capped at the slider's per-pass maximum × the pass's decay " +
-      "(1.0, 0.6, 0.4, 0.25: exposure 1 EV, contrast/texture/clarity/dehaze 40, highlights/shadows/whites/blacks 60, " +
+      "(by default 1.0, 0.6, 0.4, 0.25 for passes 1-4, and a later pass takes the last value again; begin's " +
+      "session_settings.decay has the session's. Per-pass maxima: exposure 1 EV, contrast/texture/clarity/dehaze 40, highlights/shadows/whites/blacks 60, " +
       "vibrance/saturation 30, temperature 1500 K on raw photos and 30 on rendered ones, whose temperature is relative, tint 30, " +
       "HSL 40, grading 30; a grading hue is an angle: it takes the shorter way round, wraps at 360 and is not capped) " +
       "and at the slider's range (`clamped`). " +
@@ -146,6 +149,8 @@ export const SESSION_DEFS: ToolDef[] = [
       "metrics, delta_metrics against the previous pass, and the image. " +
       "`converged_by_metrics` (the metrics stopped moving) or `cap_reached` end the passes: then call lr_end_session. " +
       "Unknown names or wrong types are refused before anything is written. " +
+      "Errors are {code, message, recoverable}: `recoverable`: true means the same call may work later unchanged (e.g. once " +
+      "Lightroom is back); false means change the call first. " +
       "Variants mode: name the copy with `target`; each copy takes ONE pass before the pick (a second is refused with " +
       "AWAITING_PICK), and the step that gives the last copy its pass returns `awaiting_pick: true` and the contact sheet: " +
       "then ask the user to pick (lr_select_variant). After the pick, steps go to the pick, whose pass count carries on. " +
@@ -220,6 +225,8 @@ export const SESSION_DEFS: ToolDef[] = [
       "lr_begin_session (the result lists any setting that still differs). Returns the log and recipe paths and the final settings. " +
       "Variants mode: \"accept\" needs a pick and keeps the pick's edit (the recipe is the pick's); \"revert\" puts the master back. " +
       "Either way the copies stay in the catalog, listed in `copies`. After the user clicked Abort in the HUD, only \"revert\" is taken. " +
+      "Once the user ended the session on the Deck, the outcome matching theirs (\"accept\" after Accept; \"revert\" after Abort or " +
+      "Put back) returns ok with `already_ended_by_user` {outcome, source, at, log_path}; any other outcome gets SESSION_ENDED. " +
       "\"abandon\": only when the session cannot end otherwise and the user agrees: Lightroom is gone or hung, or an AI mask failed " +
       "or seems stuck (AI_MASK_FAILED, LIGHTROOM_STUCK, AI_UPDATE_PENDING refuse revert). It reads and writes nothing (it does not " +
       "wait for Lightroom): the photo keeps what the session did, the log's outcome is \"abandoned\", and a new session can begin. " +

@@ -11,16 +11,19 @@ import { ID, clean, lr, plugin, useSessionHarness } from "./helpers/session-harn
 
 useSessionHarness();
 
+// The poll runs on the ping tick, so these tests ping faster than the rig's default, but not at 50 ms: 150 ms
+// of silence dropped the simulated Deck under a loaded full suite (issue #127, tests\helpers\deck-harness.ts RIG_PING_MS).
+const PING = 200;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const selectionReads = (): number => plugin.received.filter((r) => r.name === "get_selection").length;
 
 describe("selection polling", () => {
   it("asks only while an edit is open and a Deck is connected", async () => {
     clean();
-    const rig = await deckRig({ exe: null, pingMs: 50 });
+    const rig = await deckRig({ exe: null, pingMs: PING });
     const sim = await SimHudClient.connect(rig.endpoint);
     await sim.welcomed();
-    await sleep(150);
+    await sleep(2 * PING);
     expect(selectionReads()).toBe(0); // no edit
 
     await rig.manager.begin({ intent_id: "test_plain" });
@@ -29,9 +32,9 @@ describe("selection polling", () => {
 
     sim.close();
     await waitUntil(() => !rig.deck.connected());
-    await sleep(60);
+    await sleep(PING);
     const reads = selectionReads();
-    await sleep(150);
+    await sleep(2 * PING);
     expect(selectionReads()).toBe(reads); // no Deck
 
     const back = await SimHudClient.connect(rig.endpoint);
@@ -41,13 +44,13 @@ describe("selection polling", () => {
     await back.at("ended");
     expect(back.last()?.selection).toBeUndefined();
     const ended = selectionReads();
-    await sleep(150);
+    await sleep(2 * PING);
     expect(selectionReads()).toBe(ended); // the edit is over
   });
 
   it("does not ask while a step runs, and says when the selection is another photo or none", async () => {
     clean();
-    const rig = await deckRig({ pingMs: 50 });
+    const rig = await deckRig({ pingMs: PING });
     const sim = await SimHudClient.connect(rig.endpoint);
     await sim.welcomed();
     await rig.manager.begin({ intent_id: "test_plain" });
@@ -57,7 +60,7 @@ describe("selection polling", () => {
     let during = -1;
     plugin.handlers.set("apply_settings", async (p, id) => {
       const at = selectionReads();
-      await sleep(250); // five ticks
+      await sleep(3 * PING); // three ticks
       during = selectionReads() - at;
       return apply ? apply(p, id) : "silent";
     });
@@ -73,7 +76,7 @@ describe("selection polling", () => {
   it("drops an answer that comes after its edit ended and the next one began (Greptile, PR #85)", async () => {
     clean();
     const ids = [ID, "fedcba98-7654-3210-fedc-ba9876543210"];
-    const rig = await deckRig({ pingMs: 50, newId: () => ids.shift() as string });
+    const rig = await deckRig({ pingMs: PING, newId: () => ids.shift() as string });
     const sim = await SimHudClient.connect(rig.endpoint);
     await sim.welcomed();
     await rig.manager.begin({ intent_id: "test_plain" });
@@ -93,7 +96,7 @@ describe("selection polling", () => {
     await sim.at("awaiting_claude", (st) => st.session_id !== ID);
     if (getSelection) plugin.handlers.set("get_selection", getSelection); // later polls answer as Lightroom would
     release();
-    await sleep(150);
+    await sleep(2 * PING);
     await sim.at("awaiting_claude", (st) => st.session_id !== ID && st.selection?.uuid === "SIM-UUID");
     expect(sim.states().some((m) => m.state.session_id !== ID && m.state.selection?.uuid === "STALE-PHOTO")).toBe(false);
   });

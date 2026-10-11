@@ -16,6 +16,10 @@ let client: BridgeClient;
 let allowance: number;
 /** True while the plugin is "paused": it answers nothing, not even pings. */
 let paused: boolean;
+/** Ends the pause: pings get pongs again, and the late request is answered once `hold` is off. */
+let unpause: () => void;
+/** While true, the late request stays unanswered after the pause, as a command Lightroom is still working on. */
+let hold: boolean;
 
 const pong = (nonce: unknown): FakeReply => ({ ok: true, payload: { pong: true, ...(nonce ? { nonce } : {}) } });
 
@@ -23,10 +27,18 @@ beforeEach(async () => {
   plugin = await FakePlugin.start();
   allowance = 0;
   paused = false;
+  hold = false;
+  const resumed = new Promise<void>((resolve) => {
+    unpause = () => {
+      paused = false;
+      resolve();
+    };
+  });
   plugin.handlers.set("ping", async (p) => {
     if (p["nonce"] === "late") {
       // The request the test waits on: answered once the pause is over.
-      while (paused) await sleep(5);
+      if (paused) await resumed;
+      while (hold) await sleep(5);
       return pong("late");
     }
     return paused ? "silent" : pong(p["nonce"]);
@@ -57,9 +69,25 @@ describe("bridge client: a plugin pause", () => {
     paused = true;
     const late = client.request("ping", { nonce: "late" }, { timeoutMs: 150 });
     await sleep(400); // over three beats (120 ms) and over the request's own timeout
-    paused = false;
+    unpause();
     expect((await late).nonce).toBe("late");
     expect([client.getState(), client.stats.drops]).toEqual(["connected", 0]);
+  });
+
+  it("after the pause, a request Lightroom is still working on gets its timeout again, not one more beat", async () => {
+    // Pongs come at once after the pause, so pluginPaused() turns false while the late answer is held;
+    // the request's next check used to fail it a beat later (issue #127 review).
+    allowance = 1000;
+    paused = true;
+    hold = true;
+    const late = client.request("ping", { nonce: "late" }, { timeoutMs: 300 });
+    await sleep(400);
+    unpause();
+    while (client.pluginPaused()) await sleep(5);
+    await sleep(120); // three beats with the pause over: the old client had failed the request by now
+    hold = false;
+    expect((await late).nonce).toBe("late");
+    expect(client.stats.drops).toBe(0);
   });
 
   it("waits out a pause with a request whose timeout is shorter than three beats", async () => {
@@ -68,7 +96,7 @@ describe("bridge client: a plugin pause", () => {
     paused = true;
     const late = client.request("ping", { nonce: "late" }, { timeoutMs: 80 });
     await sleep(400);
-    paused = false;
+    unpause();
     expect((await late).nonce).toBe("late");
     expect(client.stats.drops).toBe(0);
   });
@@ -76,7 +104,7 @@ describe("bridge client: a plugin pause", () => {
   it("without the allowance, the same pause drops the bridge and fails the request", async () => {
     paused = true;
     const e = await rejection(client.request("ping", { nonce: "late" }, { timeoutMs: 1000 }));
-    paused = false;
+    unpause();
     expect(e.code).toBe("disconnected");
     expect(client.stats.last_drop_reason).toMatch(/heartbeat/);
   });
@@ -87,7 +115,7 @@ describe("bridge client: a plugin pause", () => {
     const started = Date.now();
     const e = await rejection(client.request("ping", { nonce: "late" }, { timeoutMs: 150 }));
     const waited = Date.now() - started;
-    paused = false;
+    unpause();
     expect(e.code).toBe("disconnected");
     expect(client.stats.last_drop_reason).toMatch(/heartbeat/);
     expect(waited).toBeGreaterThanOrEqual(300);

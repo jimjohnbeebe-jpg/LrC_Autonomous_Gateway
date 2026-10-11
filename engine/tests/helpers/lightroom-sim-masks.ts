@@ -37,7 +37,7 @@ import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { boundsOf, pickInstance } from "../../src/params/mask-person.js";
-import { C, IMAGE, M, MASK_TABLE_KEY, WHAT, aiError, computed } from "../../src/params/mask-table.js";
+import { C, IMAGE, M, MASK_TABLE_KEY, RADIAL, WHAT, aiError, computed } from "../../src/params/mask-table.js";
 import type { FakePlugin, FakeReply } from "./fake-plugin.js";
 import { findPhoto, type CatalogSim } from "./lightroom-sim-catalog.js";
 
@@ -217,6 +217,19 @@ function createAiMaskDc(sim: MaskSim, p: Record<string, unknown>): FakeReply {
   return { ok: true, payload: { uuid: target, steps, new_ids: sim.masks.dc === "late" ? [] : [e[C.id]], waited_ms: sim.masks.dc === "late" ? 12000 : 900 } };
 }
 
+/**
+ * A written radial stored as Lightroom stores it: Flipped = !MaskInverted (issue #79; MaskInverted true
+ * read back with Flipped false [handle: docs\reports\phase8\S10\census\s10__DSC0103.NEF__Copy 1.json
+ * "AVG vignette"]; Flipped true when not inverted on every captured radial [handle: grep '"Flipped"' over
+ * docs\reports\phase6 and phase8, 2026-10-11: 11 true, 2 false, both in the DSC0103 "Copy 1" census with
+ * MaskInverted true]; un-inverting is [inference]).
+ */
+function flipRadials(p: Record<string, unknown>): void {
+  const t = (p["settings"] as Entry | undefined)?.[MASK_TABLE_KEY];
+  if (!Array.isArray(t)) return;
+  for (const m of (t as Entry[]).flatMap(parts)) if (m[M.what] === WHAT.radial) m[RADIAL.flipped] = m[M.inverted] !== true;
+}
+
 /** Install the masks commands; call after the Develop commands, whose writes and exports it holds while the gate is held. */
 export function installMasks(sim: MaskSim, plugin: FakePlugin): void {
   plugin.handlers.set("update_ai_settings", (p) => updateAiSettings(sim, p));
@@ -239,6 +252,7 @@ export function installMasks(sim: MaskSim, plugin: FakePlugin): void {
         sim.masks.refusedPending.push(name);
         return refused;
       }
+      if (name === "apply_settings") flipRadials(p);
       if (sim.masks.held === 0 || name === "create_ai_mask_dc") return real(p, id);
       sim.masks.blocked.push(name);
       return name === "export_preview"

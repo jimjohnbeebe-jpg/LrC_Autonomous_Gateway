@@ -22,6 +22,8 @@ export class SimFiles {
   readonly exports: Array<Record<string, unknown>> = [];
   /** collection_photos takes nothing (reads back the old membership). */
   dropCollection = false;
+  /** collection_photos cannot read the collection back: after_error with this text, no after_in. */
+  readBackError: string | null = null;
   private exportCount = 0;
   private nextId = 900;
 
@@ -64,7 +66,7 @@ export class SimFiles {
     if (!this.dropCollection) {
       c.photos = p["remove"] === true ? c.photos.filter((u) => !found.includes(u)) : [...new Set([...c.photos, ...found])];
     }
-    return ok({ collection_id: c.local_id, name: c.name, before_in: before, after_in: members(), not_found: uuids.filter((u) => !found.includes(u)) });
+    return ok({ collection_id: c.local_id, name: c.name, before_in: before, ...(this.readBackError ? { after_error: this.readBackError } : { after_in: members() }), not_found: uuids.filter((u) => !found.includes(u)) });
   }
 
   private export(p: Record<string, unknown>): FakeReply {

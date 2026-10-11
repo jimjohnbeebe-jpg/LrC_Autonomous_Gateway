@@ -74,11 +74,14 @@ describe("Deck clicks", () => {
 
   it("answer a Deck click on an edit that is not open, without an update to the classic HUD", async () => {
     const { rig, sim } = await openEdit();
+    // Count from after the classic HUD took awaiting_claude, which can come after the Deck's [inference]
+    // (issue #127: counted at once, one more update came, twice in five loaded full suites, no client dropped [unverified]).
+    await waitUntil(() => lr.hud.last()?.stage === "awaiting_claude");
     const taken = lr.hud.taken.length;
     const click = sim.click("hud_abort", { session_id: "not-this-edit" });
     await waitUntil(() => sim.received.some((m) => m.type === "answer" && m.click_id === click));
     expect(rig.events.at(-1)).toMatchObject({ via: "channel", answered: true, note: "This edit is no longer open in Claude, so nothing was done." });
     expect(rig.manager.current()?.id).toBe(ID);
-    expect(lr.hud.taken.length).toBe(taken);
+    expect(lr.hud.taken.slice(taken).map((u) => [u.stage, u.seq, u.note ?? null, u.answered_click_id ?? null])).toEqual([]);
   });
 });

@@ -10,6 +10,8 @@
 // why Desktop keeps two engines is unverified]. A call waits up to 15 s for the connection (bridge-gate.ts). Old previews are purged when this engine takes
 // the lock (PRD NFR-6), and again at shutdown if it holds it: an engine without the lock never
 // touches the shared previews folder, where the engine that holds it may have a preview waiting.
+// The plugin's exports folder (lr_export_photos) is purged at the same two points, but for a folder a
+// failed placement kept during this run (library\files.ts purgeExports, issue #76).
 // Settings (PHASE5_PLAN row 3): the bridge client finds the plugin's ports in its ports file unless
 // LRC_AVG_*_PORT sets them (bridge\endpoint.ts); the settings page is read at each session start
 // and by the intent tools, lr_get_session_log and lr_sync_series, and moves the intents and session
@@ -29,6 +31,7 @@
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { BridgeClient } from "../bridge/index.js";
 import { IntentLibrary } from "../intents/index.js";
+import { purgeExports } from "../library/files.js";
 import { ToolLog, defaultLogDir } from "../log/index.js";
 import { loadDefaultParamMap } from "../params/index.js";
 import { defaultPresetDir } from "../presets/index.js";
@@ -65,6 +68,7 @@ const gate = new BridgeGate(client, () => acquireInstanceLock(dev.lockPort), {
   onAcquire: () => {
     say("took the Lightroom bridge lock");
     previews.purge();
+    purgeExports();
     tools
       .deck()
       ?.open()
@@ -103,7 +107,10 @@ const shutdown = (reason: string) => (): void => {
   if (stopping) return;
   stopping = true;
   say(`shutting down: ${reason}`);
-  if (gate.holdsLock()) previews.purge();
+  if (gate.holdsLock()) {
+    previews.purge();
+    purgeExports();
+  }
   tools.deck()?.close();
   void gate.release();
   process.exit(0); // the OS frees the lock port with the process

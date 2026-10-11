@@ -4,7 +4,8 @@
 // Export: the plugin exports one photo into a new folder of its own under <temp>\LrC-AVG\exports
 // (plugin\LrC-AVG.lrplugin\Transfer.lua exportPhoto); placeExport() moves those files into the user's
 // folder, a name already there renamed ("name-2.jpg"), overwritten or skipped as asked, and removes
-// the plugin's folder. It moves only files inside the exports folder, as the preview service reads
+// the plugin's folder, or keeps it when placing fails (issue #76); purgeExports() empties the exports
+// folder at engine start and exit. It moves only files inside the exports folder, as the preview service reads
 // only inside its own (preview\service.ts isInside); the two temp folders are the same
 // (preview\service.ts header, Phase 1 handle).
 // Import: importFiles() lists the photo files under a folder; copyForImport() copies one into
@@ -18,7 +19,7 @@
 // 60000]; whether Claude Desktop uses that default is [unverified] (PHASE5_PLAN "Carried").
 
 import { createHash, randomUUID } from "node:crypto";
-import { constants, createReadStream } from "node:fs";
+import { constants, createReadStream, readdirSync, rmSync } from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -91,56 +92,96 @@ async function replace(from: string, to: string): Promise<void> {
   try {
     await fs.rename(staged, to);
   } catch (err) {
-    await fs.rm(staged, { force: true });
+    // Back into the plugin's folder, which a failed placement keeps (issue #76).
+    await move(staged, from).catch(() => fs.rm(staged, { force: true }));
     throw err;
   }
 }
 
-/** The first "name-n.ext" (n from 2) not in `folder`. */
-async function freeName(folder: string, name: string): Promise<string> {
+/**
+ * Copy `from` to `to` only if nothing is there, then remove `from`; false, copying nothing, when
+ * something is. COPYFILE_EXCL makes the check and the create one step, so a file another program
+ * makes in between is never replaced (issue #76), as fs.rename would replace it on Windows (replace()).
+ */
+async function placeNew(from: string, to: string): Promise<boolean> {
+  try {
+    await fs.copyFile(from, to, constants.COPYFILE_EXCL);
+  } catch (err) {
+    // A folder of that name gives EPERM, not EEXIST [handle: Claude Code, 2026-10-11, Node v24.11.1:
+    // copyFileSync(a, <existing folder>, COPYFILE_EXCL) threw EPERM, onto an existing file EEXIST].
+    if ((err as NodeJS.ErrnoException).code === "EEXIST" || (await exists(to))) return false;
+    throw err;
+  }
+  await fs.rm(from, { force: true });
+  return true;
+}
+
+/** Place `file` in `folder` under its name, or under the first free "name-n.ext" (n from 2). */
+async function placeRenamed(file: string, folder: string): Promise<Placed> {
+  const name = path.basename(file);
+  if (await placeNew(file, path.join(folder, name))) return { file: path.join(folder, name), status: "written" };
   const ext = path.extname(name);
   const stem = name.slice(0, name.length - ext.length);
   for (let n = 2; ; n++) {
-    const candidate = path.join(folder, `${stem}-${n}${ext}`);
-    if (!(await exists(candidate))) return candidate;
+    const to = path.join(folder, `${stem}-${n}${ext}`);
+    if (await placeNew(file, to)) return { file: to, status: "renamed" };
   }
 }
 
+async function placeOne(file: string, folder: string, onExisting: OnExisting): Promise<Placed> {
+  if (onExisting === "rename") return placeRenamed(file, folder);
+  const to = path.join(folder, path.basename(file));
+  if (await placeNew(file, to)) return { file: to, status: "written" };
+  if (onExisting === "skip") return { file: to, status: "skipped" };
+  await replace(file, to);
+  return { file: to, status: "overwritten" };
+}
+
+/** Plugin export folders a failed placement kept, by their first level below the exports folder (lower case). */
+const kept = new Set<string>();
+const topLevel = (exportDir: string, p: string): string => (path.relative(path.resolve(exportDir), path.resolve(p)).split(path.sep)[0] ?? "").toLowerCase();
+
 /**
  * Move the plugin's exported files into `folder` (made if missing), then remove the plugin's folder
- * `dir`. Throws, moving nothing, when `dir` or a file is not inside `exportDir`.
+ * `dir`. Throws, moving nothing, when `dir` or a file is not inside `exportDir`. When placing fails,
+ * `dir` is kept with whatever is left in it (issue #76, decided by Jim: "keep temp"), and
+ * purgeExports() leaves it alone for the rest of this engine's run.
  */
 export async function placeExport(exportDir: string, dir: string, files: readonly string[], folder: string, onExisting: OnExisting): Promise<Placed[]> {
   if (!isInside(exportDir, dir) || files.some((f) => !isInside(dir, f))) {
     throw new Error(`the plugin's export is not inside ${exportDir}: ${dir}`);
   }
-  await fs.mkdir(folder, { recursive: true });
   const placed: Placed[] = [];
   try {
-    for (const file of files) {
-      let to = path.join(folder, path.basename(file));
-      let status: Placed["status"] = "written";
-      if (await exists(to)) {
-        if (onExisting === "skip") {
-          placed.push({ file: to, status: "skipped" });
-          continue;
-        }
-        if (onExisting === "rename") {
-          to = await freeName(folder, path.basename(file));
-          status = "renamed";
-        } else {
-          await replace(file, to);
-          placed.push({ file: to, status: "overwritten" });
-          continue;
-        }
-      }
-      await move(file, to);
-      placed.push({ file: to, status });
-    }
-  } finally {
-    await fs.rm(dir, { recursive: true, force: true });
+    await fs.mkdir(folder, { recursive: true });
+    for (const file of files) placed.push(await placeOne(file, folder, onExisting));
+  } catch (err) {
+    kept.add(topLevel(exportDir, dir));
+    throw err;
   }
+  await fs.rm(dir, { recursive: true, force: true });
   return placed;
+}
+
+/**
+ * Delete what is in the exports folder, but the folders kept by a failed placement during this run:
+ * at engine start and exit, as the previews folder is (PRD NFR-6, preview\service.ts purge). Never throws.
+ */
+export function purgeExports(exportDir: string = defaultExportDir()): void {
+  let names: string[];
+  try {
+    names = readdirSync(exportDir);
+  } catch {
+    return; // no folder yet
+  }
+  for (const name of names) {
+    if (kept.has(name.toLowerCase())) continue;
+    try {
+      rmSync(path.join(exportDir, name), { recursive: true, force: true });
+    } catch {
+      // A file Lightroom still holds open; the next purge takes it.
+    }
+  }
 }
 
 /** The photo files at `source`: the file itself, or those under the folder (below it too when `recursive`), sorted. */

@@ -99,7 +99,8 @@ export async function exportPhotos(ctx: ToolContext, args: ExportPhotosArgs, bud
         try {
           exported.push({ uuid, filename: r.filename ?? null, files: await placeExport(exportDir, r.dir, r.files, folder, onExisting) });
         } catch (err) {
-          throw new ToolError("MOVE_FAILED", `Lightroom exported ${r.filename ?? uuid}, but moving it into ${folder} failed: ${(err as Error).message}`, false);
+          const keptIn = `What was not placed is kept in ${r.dir} until the engine next starts.`;
+          throw new ToolError("MOVE_FAILED", `Lightroom exported ${r.filename ?? uuid}, but moving it into ${folder} failed: ${(err as Error).message} ${keptIn}`, false);
         }
       });
       const json = {

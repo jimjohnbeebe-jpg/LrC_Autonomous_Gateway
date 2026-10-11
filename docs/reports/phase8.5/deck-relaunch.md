@@ -1,7 +1,7 @@
 ---
 report: deck-relaunch
 phase: "8.5"
-status: template
+status: observed
 authored_by: "Claude Code (purpose, harness, pre-run findings, steps); Jim (observed, verdict)"
 date: 2026-10-10
 ---
@@ -121,7 +121,13 @@ In every run that reached the click, the window under the Accept point was the D
 
 One test of Windows notifications, run by Claude Code on 2026-10-11 (`scratchpad\toast.ps1`, not kept): with Lightroom maximised on the left monitor, WindowFromPoint at the Accept point of 2026-10-10, (3378, 1878), returned Lightroom's main window before, during and after a test notification. Whether the notification showed at all is [unverified]: Jim did not see it [stated: Jim, "I don't know"]. Jim does not see Claude Desktop notifications when a reply finishes [stated: Jim, 2026-10-11, "No, not as far as I can tell"].
 
-*(Part B: the Lightroom check.)*
+**Part B: the Lightroom check**, Jim, 2026-10-11 05:04Z to 05:53Z, one Claude Desktop chat with four edits of one photo (the photo was a throwaway [stated: Jim]). Jim: "The first two edits went OK, but I crashed something on the final edit. LrC actually hung and I had to force it closed. Claude Desktop also stopped responding. This began when an 'unexpected error' dialogue popped up in LrC toward the beginning of the edit" [stated: Jim, 2026-10-11]. Collected by Claude Code:
+- The classic HUD never opened: no `hud: shown` line in the plugin's log from the first edit on [handle: `%TEMP%\LrC-AVG\bridge.log` from line 12877, Jim's PC].
+- After each idle, the engine's launch woke the hidden Deck (`second_instance_exit` with `woke: true`, then `wake` and `show` 35 to 36 ms later), and the plugin saw the Deck connect 0.04 to 0.6 s after each edit began [handle: Deck logs `%TEMP%\LrC-AVG\hud\hud_13228_1791696536151.jsonl`, `hud_37288_…`, `hud_5732_…`; `bridge.log` "hud: session" then "hud: Deck connected"].
+- The Deck's Accept took the pointer and the click in both edits that reached it after an idle (`pointer_in`, then `click` `hud_accept` at 05:30:49Z and 05:41:23Z; the engine ended both sessions from the HUD) [handle: the Deck log above; `logs\engine-20261010.jsonl` `SESSION_ENDED` "ended … from the HUD at 2026-10-11T05:30:49.676Z" and "05:41:23.431Z"].
+- No `deck_fallback` note was sent; none was due [handle: `logs\engine-20261010.jsonl`, no `deck_fallback`].
+- The hang: the last edit's AI Vegetation mask (`lr_create_mask` `landscape_vegetation`, 05:49:48Z) brought up Lightroom's error dialog; the engine waited for the result (by design, up to 5 minutes) until Lightroom was force-closed 168.5 s later (`BRIDGE_DISCONNECTED`, `read ECONNRESET`). Not in this PR's code; tracked in GitHub issue #123.
+- The Deck that ran was the 14:23 build without `over.rs`: the installed `LrC-AVG HUD.exe` was dated 2026-10-10 14:23:48, 3489792 bytes, against the 22:09 build's 3492864 bytes [handle: `Get-Item` on both, 2026-10-11]. Step 2's command does replace it: run by Claude Code afterwards, the file became the 22:08:58 build within 8 s [handle: the same `Get-Item` before and after]. Whether step 2 ran in Part B is unknown. So the `over` lines are [unverified] in use; the wake and the classic-HUD rule are in both builds.
 
 ## Numbers
 
@@ -141,21 +147,22 @@ Part A, every run that reached the click (results files named by their stamp):
 
 The timer path's reconnect ranged from 4.6 s to 38.2 s across the five timer runs (including the two FAILED ones); the wake's from 63 to 67 ms across six runs.
 
-Part B: *(Jim's check.)*
+Part B (from the logs above; Jim's answers to the three questions were not given separately):
 
 | Question | Answer |
 |---|---|
-| Classic HUD window appeared | |
-| Deck's Accept lit up and worked each time | |
-| Claude mentioned a fallback | |
+| Classic HUD window appeared | no (no `hud: shown`) |
+| Deck's Accept lit up and worked each time | yes, 2 of 2 after an idle (`pointer_in`, `click`); the fourth edit ended in the mask hang before Accept |
+| Claude mentioned a fallback | no note was sent; none was due |
 
 ## Verdict
 
-*(Jim.)*
+Go, as Claude Code suggests from Parts A and B: question 1 fixed and seen fixed in Lightroom; question 2 not reproduced, and not seen again in Part B. Jim asked for the merge [stated: Jim, 2026-10-11, "squash, merge and close the session"].
 
 ## Consequences / open questions
 
 - **Question 1 is answered and fixed at its cause:** findings 1 to 4. The engine's start of the Deck now wakes a running Deck (`wake.rs`), which connects in 63 to 67 ms (Part A), well inside the engine's 3 s wait, so the classic HUD no longer opens beside an installed Deck. It opens only when a started Deck does not connect or is lost, and the chat is told (`deck_fallback`).
 - **Question 2 is not answered.** No probe run reproduced the dead input. Measured and ruled out: minutes hidden, each WebView2 hide setting, the late reconnect through the page timer, VS Code in front at the show, and the classic HUD open. Not recreated: a real chat's engine and Deck content, a Deck running for many edits, and the Deck at its position of 2026-10-10 (x 1790, y 1836; the probe's Deck was at x 1476, y 1764, from the position saved in between). The `over` lines (`over.rs`) record any window over the Deck while it is shown, for the next time.
 - The fix removes the conditions of 2026-10-10 that came before the dead input: the late reconnect and the classic HUD opening first. Whether the dead input needed them is [unverified]; Part B checks the whole path.
+- Part B ran the Deck without `over.rs` (Observed): its first use in a real chat is still to come.
 - That WebView2's timer throttling slowed the hidden Deck's reconnect is [inference]. The wake makes the reconnect independent of it.

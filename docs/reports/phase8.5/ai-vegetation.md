@@ -136,7 +136,7 @@ What the engine did wrong (the part Jim names [stated: Jim, 2026-10-11, "how the
 
 ## Verdict
 
-_Jim's: go / conditional / no-go for the fix PR it points at._
+**Go** for the fix PR as recommended in "Consequences": the wait ends when Lightroom reports the update over with the catalog free and a read up to 2 s later shows neither a digest nor an ErrorReason; the engine then stops reading, writes nothing, and asks the user to save and restart Lightroom [stated: Jim, 2026-10-11, "Go with recommendations"]. The NVIDIA driver: Jim found no update yet and will check again [stated: Jim, 2026-10-11].
 
 ## Consequences / open questions
 

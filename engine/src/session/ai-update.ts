@@ -143,22 +143,22 @@ export const newTrace = (kind: string): AiTrace => ({ kind, sent: "not sent", pr
 const MAX_PROBES = 40;
 
 /** One read of the wait, summed up in the trace: when it ended, how long it took, what the entry showed. */
-function noteRead(trace: AiTrace, seen: Awaited<ReturnType<typeof look>>, t0: number, r0: number): void {
+function noteRead(trace: AiTrace, seen: Awaited<ReturnType<typeof look>>, t0: number, r0: number, failure?: string): void {
   const r = trace.reads;
   r.count++;
   r.slowest_ms = Math.max(r.slowest_ms, ms(r0));
   r.last_t_ms = ms(t0);
   if (!seen) r.unanswered++;
   const reason = seen?.m ? aiError(seen.m) : null;
-  r.last_entry = !seen ? "no answer" : !seen.m ? "gone" : reason !== null ? `ErrorReason ${reason}` : computed(seen.m) ? "computed" : "no result yet";
+  r.last_entry = failure ?? (!seen ? "no answer" : !seen.m ? "gone" : reason !== null ? `ErrorReason ${reason}` : computed(seen.m) ? "computed" : "no result yet");
 }
 
-function noteProbe(trace: AiTrace, p: CommandResult<"probe_write_gate"> | null, own: ReturnType<typeof ownUpdate>, t0: number): void {
+function noteProbe(trace: AiTrace, p: CommandResult<"probe_write_gate"> | null, own: ReturnType<typeof ownUpdate>, t0: number, failure?: string): void {
   if (trace.probes.length >= MAX_PROBES) {
     trace.probes_dropped++;
     return;
   }
-  trace.probes.push({ t_ms: ms(t0), status: p?.status ?? "no answer", ...(own ? { update: own.state } : {}), ...(own?.error ? { error: own.error } : {}) });
+  trace.probes.push({ t_ms: ms(t0), status: failure ?? p?.status ?? "no answer", ...(own ? { update: own.state } : {}), ...(own?.error ? { error: own.error } : {}) });
 }
 
 /** probe_write_gate; null when the plugin lacks it or did not answer. */
@@ -206,7 +206,10 @@ async function watch(ctx: SessionContext, s: Session, job: AiJob, T: AiTimings, 
   for (let wait = T.pollMs; ; wait = Math.min(wait * 2, T.pollMaxMs)) {
     checkAbort(s);
     const r0 = performance.now();
-    const seen = await look(ctx, job);
+    const seen = await look(ctx, job).catch((err: unknown) => {
+      noteRead(trace, null, t0, r0, toToolError(err).code); // the last read before a dropped bridge counts too (Greptile, PR #132)
+      throw err;
+    });
     noteRead(trace, seen, t0, r0);
     if (seen && !seen.m) return { kind: "failed", why: "the mask's entry is no longer in the table (removed in Lightroom?)", fallback: false };
     const reason = seen?.m ? aiError(seen.m) : null;
@@ -221,7 +224,10 @@ async function watch(ctx: SessionContext, s: Session, job: AiJob, T: AiTimings, 
     if (now - t0 >= T.dialogAfterMs && !w.settled && now - w.probed >= T.probeEveryMs) {
       w.probed = now;
       const seenDialog = w.dialogAt !== null;
-      const p = await probe(ctx, T);
+      const p = await probe(ctx, T).catch((err: unknown) => {
+        noteProbe(trace, null, null, t0, toToolError(err).code);
+        throw err;
+      });
       noteProbe(trace, p, ownUpdate(p, job, token), t0);
       const judged = judge(p, job, w, now, token);
       if (judged) return judged;

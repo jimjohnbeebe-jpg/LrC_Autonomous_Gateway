@@ -211,6 +211,7 @@ export async function makeAiMask(ctx: SessionContext, s: Session, job: AiJob): P
   const dc = refused ?? (await byDevelop(ctx, s, job, AI_KINDS[job.kind].dc as string));
   if (typeof dc !== "string") {
     s.aiRoute = "dc";
+    s.aiTrace = null; // the table route's trace explains no failure now (Greptile, PR #132)
     return { ...dc, fallback: tried[0]?.why ?? "" };
   }
   tried.push({ route: "dc", why: dc });

@@ -121,7 +121,8 @@ async function watch(deps: RunDeps, spec: RunSpec, id: string, token: string, t0
       const seen = "value" in read ? entryOf(read.value.settings, id) : { text: read.error, end: false };
       note("read", seen.text, read.ms);
       if (seen.end) return seen.text;
-      nextRead = since(t0) + (spec.reads ? (wait = Math.min(wait * 2, T.pollMaxMs)) : T.readsAfterMs);
+      nextRead = since(t0) + (spec.reads ? wait : T.readsAfterMs);
+      if (spec.reads) wait = Math.min(wait * 2, T.pollMaxMs);
     }
     if (r.settled_ms === null && now >= nextProbe) {
       const p = await timed(() => deps.client.request("probe_write_gate", {}, { timeoutMs: T.probeReplyMs }));

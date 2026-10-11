@@ -33,7 +33,8 @@ const redact = (text: string): string => redactHome(text, os.homedir());
 
 type Answers = { dialog_open: Answer; dialog_seen: Answer; responds: Answer; screenshot?: string };
 type Run = RunResult & { answers: Answers; put_back: { ok: boolean; why: string } | null };
-type State = { started: string; photo: { uuid: string; filename: string }; snapshot_id: string; process: string | null; restarts: number; before_sdk: SdkSettings; runs: Run[]; done: boolean };
+/** `running`: the run whose mask went out and has no saved result yet (the command stopped during it): put back, then run again. */
+type State = { started: string; photo: { uuid: string; filename: string }; snapshot_id: string; process: string | null; restarts: number; before_sdk: SdkSettings; runs: Run[]; running: string | null; done: boolean };
 
 function terminal(): { prompt: (text: string) => Promise<string | null>; ask: (question: string) => Promise<Answer>; close: () => void } {
   const rl = createInterface({ input: process.stdin, terminal: false });
@@ -58,6 +59,7 @@ function terminal(): { prompt: (text: string) => Promise<string | null>; ask: (q
  * screenshot (rule 04). DPI-aware first, so a scaled screen is not cut off [inference]. Blocks for about a second.
  */
 function shot(label: string): string {
+  mkdirSync(OUT_DIR, { recursive: true });
   const file = path.join(OUT_DIR, `shot_${label}_${stamp()}.png`);
   const ps = [
     `Add-Type -MemberDefinition '[DllImport("user32.dll")] public static extern bool SetProcessDPIAware();' -Name Dpi -Namespace AvgProbe`,
@@ -106,7 +108,7 @@ async function begin(client: BridgeClient, io: ReturnType<typeof terminal>): Pro
   if (answer !== "y") throw new Error("select a photo with trees, shrubs or grass in Develop, then run this again.");
   const before_sdk = (await client.request("get_settings", { photo_uuid: photo.uuid })).settings;
   const snap = await client.request("create_snapshot", { target_uuid: photo.uuid, name: "AVG ai-probe before" });
-  return { started, photo: { uuid: photo.uuid, filename: photo.filename ?? photo.uuid }, snapshot_id: snap.snapshot_id, process: client.hello()?.process_started_at ?? null, restarts: 0, before_sdk, runs: [], done: false };
+  return { started, photo: { uuid: photo.uuid, filename: photo.filename ?? photo.uuid }, snapshot_id: snap.snapshot_id, process: client.hello()?.process_started_at ?? null, restarts: 0, before_sdk, runs: [], running: null, done: false };
 }
 
 /** The photo back to the snapshot, checked as the engine's revert checks it (session\end.ts): settings and masks. */
@@ -154,24 +156,32 @@ async function main(say: (line: string) => void): Promise<number> {
     await gate.ready();
     const version = client.hello()?.plugin_version;
     if (!pluginVersionAtLeast(version, MIN_PLUGIN)) throw new Error(`Lightroom runs plugin ${String(version)}, not ${MIN_PLUGIN} or later.`);
-    if (!st) st = await begin(client, io);
-    else {
+    if (!st) {
+      st = await begin(client, io);
+      save(st, {}); // the snapshot on disk before anything is written (Greptile, PR #132)
+    } else {
       const now = client.hello()?.process_started_at ?? null;
       if (now !== st.process) [st.process, st.restarts] = [now, st.restarts + 1];
       say(`Going on with ${st.photo.filename}: ${st.runs.length} of ${RUNS.length} runs done${st.restarts ? `, Lightroom restarted ${st.restarts} time(s)` : ""}.`);
     }
     const last = st.runs.at(-1);
-    if (last && !last.put_back?.ok) {
-      last.put_back = await putBack(client, st);
-      say(`Put back after ${last.run}: ${last.put_back.ok ? "YES" : `NO (${last.put_back.why})`}`);
-      if (!last.put_back.ok) return stop(st, say, "the photo could not be put back");
+    if (st.running !== null || (last && !last.put_back?.ok)) {
+      const pb = await putBack(client, st);
+      if (last && st.running === null) last.put_back = pb;
+      say(`Put back after ${st.running ?? last?.run}${st.running ? " (stopped before its result; it runs again)" : ""}: ${pb.ok ? "YES" : `NO (${pb.why})`}`);
+      if (!pb.ok) return stop(st, say, "the photo could not be put back");
+      st.running = null;
+      save(st, {});
     }
     for (const spec of RUNS.slice(st.runs.length)) {
       say(`Run ${st.runs.length + 1} of ${RUNS.length}: ${spec.kind}, ${spec.reads ? "reading as the engine does" : "no reads while Lightroom computes"}. Up to 3 minutes; do not click in Lightroom.`);
+      st.running = spec.id;
+      save(st, {});
       const r = await runOne({ client, uuid: st.photo.uuid, shot, say }, spec);
       say(`  Outcome: ${r.outcome} (${Math.round(r.t_ms / 1000)} s)`);
       const run: Run = { ...r, answers: await questions(io, spec.id), put_back: null };
       st.runs.push(run);
+      st.running = null;
       save(st, {});
       if (run.answers.responds !== "y" || !client.hello()) return stop(st, say, "Lightroom does not respond");
       run.put_back = await putBack(client, st);

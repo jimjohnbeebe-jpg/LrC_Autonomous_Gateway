@@ -30,6 +30,25 @@ import { client, newManager, tmp } from "./session-harness.js";
 
 type StateMessage = Extract<EngineMessage, { type: "state" }>;
 
+/**
+ * The rig's ping. The channel drops a client silent for 3 pings (src\hud\channel.ts MISSED_PINGS), and at
+ * 100 ms (300 ms of silence) it dropped the simulated Deck under a loaded full suite, failing the waits after
+ * it (issue #127) [handle: 5 instrumented `npx vitest run` in engine\, 2026-10-11: every SimHudClient wait
+ * that timed out came after a "client dropped, no message for 3 pings" in the same test; the event loop's
+ * largest delay before such a drop was 165 to 245 ms]. 500 ms gives 1.5 s of silence.
+ */
+export const RIG_PING_MS = 500;
+
+/** The last rig's channel log (opened, clients dropped), added to a SimHudClient wait that times out (issue #127). */
+const channelLog: string[] = [];
+async function noted(p: Promise<void>): Promise<void> {
+  try {
+    await p;
+  } catch (err) {
+    throw new Error(`${(err as Error).message}; channel log: ${channelLog.join(" | ") || "none"}`);
+  }
+}
+
 export class SimHudClient {
   readonly received: EngineMessage[] = [];
   /** Messages that failed engineMessageSchema (none expected). */
@@ -84,13 +103,13 @@ export class SimHudClient {
   }
 
   async welcomed(timeoutMs = 2000): Promise<Extract<EngineMessage, { type: "welcome" }>> {
-    await waitUntil(() => this.received.some((m) => m.type === "welcome"), timeoutMs);
+    await noted(waitUntil(() => this.received.some((m) => m.type === "welcome"), timeoutMs));
     return this.received.find((m) => m.type === "welcome") as Extract<EngineMessage, { type: "welcome" }>;
   }
 
   /** Wait until the Deck's state is at `stage` (and `pred` holds); returns that state. */
   async at(stage: string, pred: (s: HudChannelState) => boolean = () => true, timeoutMs = 3000): Promise<HudChannelState> {
-    await waitUntil(() => this.last()?.stage === stage && pred(this.last() as HudChannelState), timeoutMs);
+    await noted(waitUntil(() => this.last()?.stage === stage && pred(this.last() as HudChannelState), timeoutMs));
     return this.last() as HudChannelState;
   }
 
@@ -119,10 +138,11 @@ export type DeckRig = {
 
 /**
  * The rig. `exe`: what the launcher finds (null: no Deck installed); `onStart`: what a start does
- * (default: nothing connects). Times are shortened: ping `pingMs` (default 100 ms), wait `waitMs` (300 ms).
+ * (default: nothing connects). Times are shortened: ping `pingMs` (default RIG_PING_MS), wait `waitMs` (300 ms).
  * `newId`: the edits' ids (the harness's ID for every edit when absent).
  */
 export async function deckRig(options: { exe?: string | null; onStart?: () => void; pingMs?: number; waitMs?: number; newId?: () => string } = {}): Promise<DeckRig> {
+  channelLog.length = 0;
   const endpoint = path.join(tmp, "lrc-avg", "hud_endpoint.json");
   const started: string[] = [];
   const records: DeckRecord[] = [];
@@ -135,7 +155,8 @@ export async function deckRig(options: { exe?: string | null; onStart?: () => vo
     openSession: () => manager?.current()?.id ?? null,
     busy: () => manager?.busy() ?? false,
     endpointPath: endpoint,
-    pingMs: options.pingMs ?? 100,
+    pingMs: options.pingMs ?? RIG_PING_MS,
+    log: (m) => void channelLog.push(`${new Date().toISOString()} ${m}`),
     record: (r) => records.push(r),
   });
   const exe = options.exe === undefined ? "C:\\sim\\LrC-AVG HUD.exe" : options.exe;

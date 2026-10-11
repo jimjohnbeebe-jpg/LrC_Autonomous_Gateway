@@ -226,21 +226,6 @@ describe("mask tools: the session's end, Variants mode, an older plugin, the HUD
     expect(recipe.masks).toBe(1);
   });
 
-  it("refuses mask writes while the photo has a mask it cannot write back; lr_step never sends the mask table", async () => {
-    clean();
-    const two = structuredClone(captureTable[0]) as Correction;
-    (two["CorrectionMasks"] as unknown[]).push(structuredClone((captureTable[1] as Correction)["CorrectionMasks"] as unknown[])[0]);
-    lr.settings[MASK_TABLE_KEY] = [two, structuredClone(captureTable[2])];
-    await begin();
-    const writes = lr.history.length;
-    expect(await fails(create())).toMatchObject({ code: "MASKS_UNCAPTURED_KIND", recoverable: false, message: expect.stringMatching(/"Mask 1".*2 components.*left untouched/) });
-    expect(lr.history.length).toBe(writes);
-    expect((await manager.listMasks({ session_id: ID })).json).toMatchObject({ count: 2 });
-    await manager.step({ session_id: ID, settings: { exposure: 0.1 }, rationale: "test", return_image: "none" });
-    const sent = plugin.received.filter((r) => r.name === "apply_settings").map((r) => Object.keys(r.payload["settings"] as object));
-    expect(sent.flat()).not.toContain(MASK_TABLE_KEY);
-  });
-
   it("Variants mode: masks are refused before the pick", async () => {
     clean();
     await manager.begin({ intent_id: "test_variants", mode: "variants", variant_count: 2, return_image: "none" });

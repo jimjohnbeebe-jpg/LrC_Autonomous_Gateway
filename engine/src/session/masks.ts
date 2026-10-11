@@ -101,13 +101,20 @@ function maskTarget(ctx: SessionContext, s: Session, requested: TargetId | undef
 
 const TOOL = { create: "lr_create_mask", edit: "lr_edit_mask", delete: "lr_delete_mask" } as const;
 
-/** The mask tools write the whole table: none writes while it holds a mask the captures did not round-trip. */
-function refuseUncaptured(s: Session, entries: readonly Correction[]): void {
-  const odd = uncaptured(entries);
+/**
+ * An edit of a mask the captures did not round-trip is refused. The other entries are carried: applyOp
+ * copies them unchanged and writeTable checks the read-back (issue #121): Lightroom read five hand-made
+ * masks back unchanged twice beside a new radial [handle: docs\reports\phase8.5\mask-carry\
+ * mask_carry_2026-10-11T22-37-39-161Z.json `diff_lines`, commit 4cd95aa]. A create checks nothing else; a
+ * delete of such a mask writes none of its fields [inference] and is allowed [stated: Jim, 2026-10-11, "Allow"].
+ */
+function refuseUncaptured(s: Session, entries: readonly Correction[], op: MaskOp): void {
+  if (op.op !== "edit") return;
+  const odd = uncaptured(entries.filter((e) => summarize(e).id === op.mask_id));
   if (!odd) return;
   throw new ToolError(
     "MASKS_UNCAPTURED_KIND",
-    `The photo has the mask "${odd.name}", which the mask tools cannot write back safely (${odd.why}). They write the photo's whole mask table, so they change no mask while it is there; the photo's masks are left untouched. lr_list_masks still lists them; the user can edit or remove that mask in Lightroom.`,
+    `Nothing was written: the mask the call names, "${odd.name}", is one the mask tools cannot write back safely (${odd.why}), so they do not edit it; it can be deleted (lr_delete_mask). The user can edit it in Lightroom. The pass is not used.`,
     false,
     { session_id: s.id, mask: odd.name, why: odd.why },
   );
@@ -130,7 +137,7 @@ async function maskPass(ctx: SessionContext, s: Session, args: PassArgs, op: Mas
   await focus(ctx, s, t);
   const first = await readSdk(ctx, s, t);
   const before = readTable(first.sdk);
-  refuseUncaptured(s, before);
+  refuseUncaptured(s, before, op);
   const plan = applyOp(before, op); // MaskError: nothing written
   if (sameTable(before, plan.entries)) throw new ToolError("NO_CHANGE", "Nothing was written: the mask already is as asked. The pass is not used.", false, { session_id: s.id });
   let baseline: Rendered;

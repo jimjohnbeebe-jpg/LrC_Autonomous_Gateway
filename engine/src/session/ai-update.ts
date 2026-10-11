@@ -33,6 +33,14 @@
 //     written, the session open with aiPending kept (`stuck`); the user restarts Lightroom, and the engine
 //     puts the photo back once the plugin connects from a new Lightroom process (restart.ts); a result
 //     that comes first lets the session go on;
+//   - a probe that reads the gate free with the update "done", then a read SETTLE_MS (2 s) or more after it
+//     with neither a digest nor an ErrorReason: Lightroom's computation failed, AI_MASK_FAILED (issue #123). On
+//     2026-10-10 Lightroom's update was over with no result after an NVIDIA driver error, and the engine read on
+//     for 150 s before Lightroom crashed; where Lightroom had a result, it showed 0.02-0.5 s after "done"
+//     [handle: docs\reports\phase8.5\ai-vegetation.md "Analysis (Claude Code)"]. The 2 s, and that the engine then stops
+//     reading and writes nothing, the user asked to save their work and restart Lightroom, are Jim's [stated:
+//     Jim, 2026-10-11, "Go with recommendations"]. aiPending stays (`stuck`, `failed`): restart.ts puts the
+//     photo back after the restart; later calls are refused without reading (settlePending);
 //   - a failed update with the gate never seen busy is a plugin error, after which the LrDevelopController
 //     route may run (the lead's review of efffd2e, 2026-10-03);
 //   - the reads name the photo by uuid (photo_uuid), so a change of selection does not end the wait;
@@ -66,6 +74,8 @@ export type AiTimings = {
   probeReplyMs: number;
   /** Probes unanswered this long: Lightroom seems stuck [inference]. */
   stuckProbesMs: number;
+  /** After a probe reads the update over and the gate free, how long a result may take to show: a read this long after with none is a failure (the header). */
+  settleMs: number;
   /** LrDevelopController's mask: how long it may take to show and compute (ai-masks.ts). */
   dcWaitMs: number;
 };
@@ -83,6 +93,7 @@ export const AI_TIMINGS: Readonly<AiTimings> = {
   probeEveryMs: 2000,
   probeReplyMs: 5000,
   stuckProbesMs: 60_000,
+  settleMs: 2000,
   dcWaitMs: 10_000,
 };
 export const aiTimings = (ctx: SessionContext): AiTimings => ({ ...AI_TIMINGS, ...ctx.deps.aiTimings });
@@ -97,8 +108,8 @@ export type Update =
   | { kind: "failed"; why: string; fallback: boolean }
   /** Lightroom reported the update failed after a busy gate, or dropped it: put the photo back (nothing computes). */
   | { kind: "dialog"; why: string; dialog_ms: number }
-  /** No result in time, or Lightroom not answering: nothing is written, aiPending stays (stuck). */
-  | { kind: "stuck"; why: string; dialog_ms: number };
+  /** No result in time, or Lightroom not answering: nothing is written, aiPending stays (stuck). `failed`: the update was over with no result (AI_MASK_FAILED). */
+  | { kind: "stuck"; why: string; dialog_ms: number; failed?: true };
 
 const sleep = (t: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, t));
 const STOPS = ["BRIDGE_DISCONNECTED", "TARGET_CHANGED", "SESSION_ENDED"];
@@ -177,8 +188,8 @@ function tell(ctx: SessionContext, s: Session, note: string): void {
   ctx.deps.hud?.stage(s, "applying");
 }
 
-/** What the probes said so far. `settled`: the update is over and the gate read free, so no more probes. */
-type Watch = { dialogAt: number | null; probed: number; settled: boolean; state: string | null; answered: number };
+/** What the probes said so far. `settledAt`: when a probe read the update over and the gate free; no more probes after it. */
+type Watch = { dialogAt: number | null; probed: number; settledAt: number | null; state: string | null; answered: number };
 
 /** What a probe says about this update: an Update to return, or null to read on (`w` updated). */
 function judge(p: CommandResult<"probe_write_gate"> | null, job: AiJob, w: Watch, now: number, token: string): Update | null {
@@ -189,20 +200,26 @@ function judge(p: CommandResult<"probe_write_gate"> | null, job: AiJob, w: Watch
   if (own?.state === "abandoned") return { kind: "dialog", why: ABANDONED, dialog_ms: dms };
   if (own?.state === "failed") return w.dialogAt === null ? { kind: "failed", why: `updateAISettings raised in Lightroom: ${own.error ?? "no message"}`, fallback: true } : { kind: "dialog", why: `Lightroom reported the update failed: ${own.error ?? "no message"}`, dialog_ms: dms };
   if (p?.status === "aborted") w.dialogAt ??= now;
-  else if (p?.status === "executed" && own?.state === "done") w.settled = true;
+  else if (p?.status === "executed" && own?.state === "done") w.settledAt ??= now;
   return null;
 }
 
-/** Whether the wait is over without a result: no answer to the probes, or no result within computeMs. Nothing is written either way. */
-function decide(w: Watch, T: AiTimings, t0: number, now: number): Update | null {
+/**
+ * Whether the wait is over without a result: the update over with none after settleMs (`answered`: this read
+ * showed the entry), no answer to the probes, or no result within computeMs. Nothing is written either way.
+ */
+function decide(w: Watch, T: AiTimings, t0: number, now: number, answered: boolean): Update | null {
   const dms = w.dialogAt === null ? 0 : Math.round(now - w.dialogAt);
-  if (w.probed > 0 && !w.settled && now - Math.max(w.answered, t0 + T.dialogAfterMs) >= T.stuckProbesMs) return { kind: "stuck", why: `Lightroom did not answer the gate probes for ${Math.round((now - w.answered) / 1000)} s`, dialog_ms: dms };
+  if (answered && w.settledAt !== null && now - w.settledAt >= T.settleMs) {
+    return { kind: "stuck", failed: true, why: `Lightroom reported the update over with its catalog free, and no result showed ${((now - w.settledAt) / 1000).toFixed(1)} s later`, dialog_ms: dms };
+  }
+  if (w.probed > 0 && w.settledAt === null && now - Math.max(w.answered, t0 + T.dialogAfterMs) >= T.stuckProbesMs) return { kind: "stuck", why: `Lightroom did not answer the gate probes for ${Math.round((now - w.answered) / 1000)} s`, dialog_ms: dms };
   if (now - t0 < T.computeMs) return null;
   return { kind: "stuck", why: `no result within ${Math.round(T.computeMs / 60_000)} minutes${w.state ? `, Lightroom's update ${w.state}` : ""}`, dialog_ms: dms };
 }
 
 async function watch(ctx: SessionContext, s: Session, job: AiJob, T: AiTimings, t0: number, note: string | undefined, token: string, trace: AiTrace): Promise<Update> {
-  const w: Watch = { dialogAt: null, probed: 0, settled: false, state: null, answered: t0 };
+  const w: Watch = { dialogAt: null, probed: 0, settledAt: null, state: null, answered: t0 };
   for (let wait = T.pollMs; ; wait = Math.min(wait * 2, T.pollMaxMs)) {
     checkAbort(s);
     const r0 = performance.now();
@@ -219,9 +236,9 @@ async function watch(ctx: SessionContext, s: Session, job: AiJob, T: AiTimings, 
       tell(ctx, s, note ?? "Lightroom finished the mask.");
       return { kind: "computed", sdk: seen.sdk, update_ms: 0, computed_ms: ms(t0), ...(w.dialogAt !== null ? { dialog_ms: Math.round(now - w.dialogAt) } : {}) };
     }
-    const out = decide(w, T, t0, now);
+    const out = decide(w, T, t0, now, seen !== null);
     if (out) return out;
-    if (now - t0 >= T.dialogAfterMs && !w.settled && now - w.probed >= T.probeEveryMs) {
+    if (now - t0 >= T.dialogAfterMs && w.settledAt === null && now - w.probed >= T.probeEveryMs) {
       w.probed = now;
       const seenDialog = w.dialogAt !== null;
       const p = await probe(ctx, T).catch((err: unknown) => {
@@ -265,7 +282,10 @@ export async function updateAndWait(ctx: SessionContext, s: Session, job: AiJob)
   } finally {
     if (out?.kind === "computed") s.aiTrace = null; // a result: nothing to explain
     if (out?.kind === "computed" || out?.kind === "not_found" || out?.kind === "failed") s.aiPending = null;
-    else if (out?.kind === "stuck" && s.aiPending) s.aiPending.stuck = true;
+    else if (out?.kind === "stuck" && s.aiPending) {
+      s.aiPending.stuck = true;
+      if (out.failed) s.aiPending.failed = true;
+    }
   }
 }
 
@@ -273,7 +293,9 @@ export async function updateAndWait(ctx: SessionContext, s: Session, job: AiJob)
 export function pendingError(s: Session): ToolError {
   const p = s.aiPending;
   const restart = `the user restarts Lightroom (File > Exit, then start it again); once it is back, the engine puts the photo back as it was before the session by itself and ends session ${s.id}`;
-  const message = p?.stuck
+  const message = p?.failed
+    ? `Lightroom's AI ${p.kind} mask computation failed (asked for at ${p.since}): nothing more is read, written, rendered or reverted in session ${s.id} while Lightroom may be unstable. Tell the user: save your work, then ${restart}.`
+    : p?.stuck
     ? `Lightroom's AI ${p.kind} mask computation seems stuck (asked for at ${p.since}): nothing more is written, rendered or reverted in session ${s.id}, so nothing is written under it. Tell the user: ${restart}. If Lightroom finishes the mask first, the session goes on.`
     : `Lightroom has not finished the AI ${p?.kind ?? ""} mask asked for at ${p?.since ?? "?"}: nothing more is written, rendered or reverted in session ${s.id} until its result shows (each call checks again). If it seems stuck, ${restart}.`;
   return new ToolError("AI_UPDATE_PENDING", message, !p?.stuck, { session_id: s.id, stuck: p?.stuck ?? false });
@@ -282,11 +304,12 @@ export function pendingError(s: Session): ToolError {
 /**
  * Before a write, export or render (io.ts) and a revert (end.ts): refused (AI_UPDATE_PENDING) while the AI
  * update has no result. A read that shows the entry's digest or ErrorReason, or the entry gone, clears
- * s.aiPending first; a read Lightroom does not answer leaves it set.
+ * s.aiPending first; a read Lightroom does not answer leaves it set. After AI_MASK_FAILED nothing is read: only a restart ends it.
  */
 export async function settlePending(ctx: SessionContext, s: Session): Promise<void> {
   const p = s.aiPending;
   if (!p) return;
+  if (p.failed) throw pendingError(s);
   const seen = await look(ctx, p.job).catch(() => null);
   if (seen && (!seen.m || computed(seen.m) || aiError(seen.m) !== null)) {
     s.aiPending = null;

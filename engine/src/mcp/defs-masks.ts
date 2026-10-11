@@ -100,7 +100,8 @@ export const MASK_DEFS: ToolDef[] = [
       "If the mask then computes the pass goes on; if Lightroom reports the update failed or dropped it, the engine puts the photo back as it was before the session and ENDS " +
       "the session (LIGHTROOM_DIALOG). Nothing is written to the photo while Lightroom has not given the mask's result: no result in 5 minutes, or Lightroom not answering, " +
       "is LIGHTROOM_STUCK, the session stays open and refuses writes, renders and reverts (AI_UPDATE_PENDING); tell the user to restart Lightroom: once it is back the engine " +
-      "puts the photo back and ends the session by itself (later calls naming it get SESSION_ENDED). Tell the user what happened, and start a " +
+      "puts the photo back and ends the session by itself (later calls naming it get SESSION_ENDED). If Lightroom reports the update over with no result, AI_MASK_FAILED: " +
+      "the same, and the user should save their work before the restart. Tell the user what happened, and start a " +
       "new session only if they ask. If the update fails with a Lightroom or plugin error, subject, sky and background are made by " +
       "Lightroom's Develop module instead (Lightroom then switches to Develop; `ai.route` \"dc\", `switched_to_develop`); people and " +
       "landscape kinds have no such fallback. If nothing works, FEATURE_UNAVAILABLE (details.routes_tried): the masks are as before and " +

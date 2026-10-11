@@ -274,6 +274,8 @@ export type AiPending = {
   process: string | null;
   /** No result within the wait (LIGHTROOM_STUCK): writes stay refused until the result or a restart. */
   stuck: boolean;
+  /** Lightroom's update was over with no result (AI_MASK_FAILED): nothing is read either, until a restart (ai-update.ts). */
+  failed?: true;
 };
 
 /** What ends a step's wait for an approval; the strongest seen before the step resumes wins (approval.ts). */

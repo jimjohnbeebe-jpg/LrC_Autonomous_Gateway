@@ -164,7 +164,7 @@ describe("AI masks: an update Lightroom dropped or that raised", () => {
     expect(m.current()?.id).toBe(ID);
   });
 
-  it("stops probing once the update is over and the gate reads free; no result in time: Lightroom said to seem stuck, nothing written (D16)", async () => {
+  it("stops probing once the update is over and the gate reads free; no result before computeMs, the sooner of the two (settleMs is longer here): Lightroom said to seem stuck, nothing written (D16)", async () => {
     const { m, create } = await session({ computeMs: 300 });
     lr.masks.tableRoute = "never";
     const snapshots = sent("apply_snapshot");

@@ -106,7 +106,7 @@ async function byTable(ctx: SessionContext, s: Session, job: AiJob): Promise<AiR
     return { sdk: u.sdk, id: job.id, route: "table", update_ms: u.update_ms, computed_ms: u.computed_ms, ...(u.dialog_ms !== undefined ? { dialog_ms: u.dialog_ms } : {}) };
   }
   if (u.kind === "dialog") return autoRevert(ctx, s, job, u.why, "dialog", (j) => takeOut(ctx, s, j));
-  if (u.kind === "stuck") throw stuckError(s, job, u.why);
+  if (u.kind === "stuck") throw stuckError(s, job, u.why, u.failed);
   if (u.kind === "failed") return { why: u.why, fallback: u.fallback };
   const left = await takeOut(ctx, s, job);
   const label = KIND_LABELS[job.kind];

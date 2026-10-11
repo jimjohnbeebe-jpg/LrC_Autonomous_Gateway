@@ -33,6 +33,7 @@ import type { Region } from "../metrics/index.js";
 import type { RenderedPreview } from "../preview/index.js";
 import { searchOrder } from "../settings/index.js";
 import { engineEndedNote } from "./ai-revert.js";
+import { pendingError } from "./ai-update.js";
 import { approvePass } from "./approval.js";
 import { openSession, runPass0 } from "./begin.js";
 import { endSession, readSessionLog } from "./end.js";
@@ -108,7 +109,7 @@ export class SessionManager {
    */
   preview(sessionId: string, longEdge: number, target?: TargetId): Promise<RenderedPreview> {
     return this.exclusive(async () => {
-      const s = this.require(sessionId);
+      const s = this.live(sessionId);
       checkAbort(s);
       const t = resolveTarget(s, target, "read");
       s.work = { target: t, pass: null };
@@ -125,7 +126,7 @@ export class SessionManager {
    */
   withPhoto<T>(sessionId: string, target: TargetId | undefined, fn: (photo: { target: TargetId; uuid: string }) => Promise<T>): Promise<T> {
     return this.exclusive(async () => {
-      const s = this.require(sessionId);
+      const s = this.live(sessionId);
       checkAbort(s); // the region preview renders outside render(), which checks it too
       const t = resolveTarget(s, target, "read");
       s.work = { target: t, pass: null };
@@ -267,7 +268,7 @@ export class SessionManager {
    * Once the user has aborted the session, only lr_end_session runs (`whileAborting`).
    */
   private async withNotices(sessionId: string, fn: (s: Session) => Promise<SessionOutput>, whileAborting = false): Promise<SessionOutput> {
-    const s = this.require(sessionId);
+    const s = this.live(sessionId);
     if (s.abort && !whileAborting) throw abortError(s);
     let out: SessionOutput;
     try {
@@ -304,6 +305,16 @@ export class SessionManager {
       }
       return fn();
     });
+  }
+
+  /**
+   * The open session for a call that may reach Lightroom: refused (AI_UPDATE_PENDING) after AI_MASK_FAILED, before any
+   * read, and an accept too, which would close the session restart.ts puts back (Greptile, PR #133).
+   */
+  private live(sessionId: string): Session {
+    const s = this.require(sessionId);
+    if (s.aiPending?.failed) throw pendingError(s);
+    return s;
   }
 
   private require(sessionId: string): Session {

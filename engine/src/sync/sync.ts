@@ -22,9 +22,11 @@ import { MASK_GROUPS, applyMask } from "./mask.js";
 import { resolveSource, type ResolvedSource } from "./source.js";
 import { UNANSWERED, syncTarget } from "./target.js";
 import { resolveTargets, type FailureDetails, type Skip } from "./targets.js";
-import { MAX_ADAPTIVE_TARGETS, MAX_TARGETS, SHEET_TARGETS, SYNC_PLUGIN, type SyncArgs, type SyncDeps, type SyncOutput, type SyncRun, type TargetResult } from "./types.js";
+import { CALL_BUDGET_MS } from "../library/files.js";
+import { MAX_TARGETS, SHEET_TARGETS, SYNC_PLUGIN, type SyncArgs, type SyncDeps, type SyncOutput, type SyncRun, type TargetResult } from "./types.js";
 
 const ms = (since: number): number => Math.round((performance.now() - since) * 10) / 10;
+type Budget = NonNullable<SyncDeps["budget"]>;
 
 function checkPlugin(deps: SyncDeps): void {
   const version = deps.client.hello()?.plugin_version;
@@ -69,10 +71,13 @@ async function measureSource(deps: SyncDeps, args: SyncArgs, source: ResolvedSou
  * lost bridge) stops the call: Lightroom may still carry it out, so the error names what may have
  * been written and no more is sent to a Lightroom that is not answering (Greptile, PR #35) [handle:
  * tests\sync.test.ts "stops when a write gets no answer in time", "stops when the bridge is lost"].
+ * Once the budget is spent no new target starts (the first always does); those left are returned
+ * (issue #116) [handle: tests\sync-budget.test.ts].
  */
-async function syncAll(run: SyncRun, uuids: readonly string[], skipped: Skip[]): Promise<TargetResult[]> {
+async function syncAll(run: SyncRun, uuids: readonly string[], skipped: Skip[], budget: Budget, start: number): Promise<{ results: TargetResult[]; left: string[] }> {
   const results: TargetResult[] = [];
   for (const [i, uuid] of uuids.entries()) {
+    if (i > 0 && budget.now() - start > budget.ms) return { results, left: uuids.slice(i) };
     try {
       results.push(await syncTarget(run, uuid));
     } catch (err) {
@@ -97,7 +102,7 @@ async function syncAll(run: SyncRun, uuids: readonly string[], skipped: Skip[]):
       });
     }
   }
-  return results;
+  return { results, left: [] };
 }
 
 /** The contact sheet: the source (when it is a photo) and the first targets, as they are now. */
@@ -123,6 +128,8 @@ function targetJson(t: TargetResult): Record<string, unknown> {
 
 export async function syncSeries(deps: SyncDeps, args: SyncArgs): Promise<SyncOutput> {
   const started = performance.now();
+  const budget = deps.budget ?? { now: () => performance.now(), ms: CALL_BUDGET_MS };
+  const budgetStart = budget.now();
   checkPlugin(deps);
   const source = resolveSource([deps.logDir, ...(deps.earlierLogDirs ?? [])], deps.map, args.source);
   const groups = args.parameter_mask ?? [...MASK_GROUPS];
@@ -133,8 +140,7 @@ export async function syncSeries(deps: SyncDeps, args: SyncArgs): Promise<SyncOu
   if (!args.adaptive_exposure && Object.keys(copied).length === 0) {
     throw new ToolError("INVALID_ARGUMENTS", `Nothing to copy: the source has no settings in parameter_mask ${JSON.stringify(groups)}.`, false);
   }
-  const cap = args.adaptive_exposure ? MAX_ADAPTIVE_TARGETS : MAX_TARGETS;
-  const { uuids, skipped } = await resolveTargets(deps.client, args.targets, source.photo?.uuid ?? null, cap);
+  const { uuids, skipped } = await resolveTargets(deps.client, args.targets, source.photo?.uuid ?? null, MAX_TARGETS);
   const reference = args.adaptive_exposure ? await measureSource(deps, args, source) : null;
   const id = (deps.newId ?? randomUUID)();
   const run: SyncRun = {
@@ -146,7 +152,7 @@ export async function syncSeries(deps: SyncDeps, args: SyncArgs): Promise<SyncOu
     longEdge: args.long_edge,
     quality: args.quality,
   };
-  const results = await syncAll(run, uuids, skipped);
+  const { results, left: notYet } = await syncAll(run, uuids, skipped, budget, budgetStart);
   let image: Awaited<ReturnType<typeof sheet>> = null;
   let imageError: unknown = null;
   if (args.return_image !== "none" && results.length > 0) {
@@ -156,7 +162,7 @@ export async function syncSeries(deps: SyncDeps, args: SyncArgs): Promise<SyncOu
       imageError = toToolError(err).body(); // the writes happened; only the picture is missing
     }
   }
-  return output({ id, run, source, groups, left, args, reference, results, skipped, image, imageError, started });
+  return output({ id, run, source, groups, left, args, reference, results, skipped, notYet, image, imageError, started });
 }
 
 type OutputParts = {
@@ -169,6 +175,8 @@ type OutputParts = {
   reference: Reference | null;
   results: TargetResult[];
   skipped: Skip[];
+  /** Targets not started because the budget was spent. */
+  notYet: string[];
   image: { image: Buffer; json: Record<string, unknown> } | null;
   imageError: unknown;
   started: number;
@@ -197,6 +205,9 @@ function output(p: OutputParts): SyncOutput {
     ...(p.source.masks > 0 ? { left_out: [{ name: "masks", reason: `the source photo's ${p.source.masks} mask(s) stay on it; masks are not synced` }] } : {}),
     applied: p.results.length,
     skipped: p.skipped,
+    ...(p.notYet.length > 0
+      ? { not_yet: p.notYet, next: `Time is up for this call: call again with targets {uuids: not_yet} (${p.notYet.length} photos) and the same other arguments.` }
+      : {}),
     per_target_exposure_offsets: offsets,
     ...(p.reference ? { source_luma: p.reference.luma } : {}),
     targets,
@@ -205,6 +216,6 @@ function output(p: OutputParts): SyncOutput {
     ...(p.imageError ? { image_error: p.imageError } : {}),
     timings: { total_ms: ms(p.started) },
   };
-  const log = { sync_id: p.id, source: sourceJson, parameter_mask: p.groups, adaptive_exposure: p.args.adaptive_exposure, applied: p.results.length, skipped: p.skipped, targets, timings: json["timings"] };
+  const log = { sync_id: p.id, source: sourceJson, parameter_mask: p.groups, adaptive_exposure: p.args.adaptive_exposure, applied: p.results.length, skipped: p.skipped, not_yet: p.notYet.length, targets, timings: json["timings"] };
   return { json, ...(p.image ? { image: p.image.image } : {}), log };
 }

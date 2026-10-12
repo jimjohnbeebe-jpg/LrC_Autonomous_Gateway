@@ -61,7 +61,7 @@ Claude can create, change, list and delete masks during an edit: linear and radi
 
 ### 8. Apply an edit across a series
 
-After you accept an edit, Claude can copy it to the selected photos (up to 20 at a time), or match each photo's brightness to the edited one (3 at a time, for bursts of the same scene). Each photo gets its own **AVG pre-sync …** snapshot first. Photos with a missing original file are skipped and reported.
+After you accept an edit, Claude can copy it to the selected photos (up to 500, about 40 seconds of work per request), or match each photo's brightness to the edited one (for bursts of the same scene). Each photo gets its own **AVG pre-sync …** snapshot first. Photos with a missing original file are skipped and reported.
 
 ### 9. More catalog tools
 
@@ -129,7 +129,7 @@ Paths are in this repository. "Original" means the copy under `vendor/automaat/`
 | The Deck was accepted by Jim | `docs/reports/phase7/PHASE7.md` "Verdict" |
 | Eleven intents; per-pipeline profile and white balance | `engine/intents/*.json`; `README.md` "What else you can ask"; `docs/reports/phase8/S10.md`. Behaviour on rendered photos in Lightroom: `[unverified]` |
 | Mask tools and their stuck-Lightroom handling | `engine/src/mcp/defs-masks.ts`. The README's "no masks" limitation line is out of date against this file |
-| Series sync limits (20 and 3) and per-photo snapshot | `README.md` "What else you can ask"; `engine/src/sync/types.ts:18-19` |
+| Series sync limit (500, 40 s per request) and per-photo snapshot | `README.md` "What else you can ask"; `engine/src/sync/types.ts:18`; `engine/src/library/files.ts:35` |
 | Keyword paths and GPS set/remove; the original only reads GPS | `engine/src/mcp/defs-catalog.ts`; `vendor/automaat/server/src/tool-contracts.ts:228-241`. Not yet tried in Lightroom: `[unverified]` |
 | Missing-original refusal | `engine/tests/offline-original.test.ts` (simulated Lightroom). In Lightroom: `[unverified]` until `docs/reports/phase8/offline.md` is observed |
 | Setup backup and no-change rerun; uninstall | `README.md` "Install", "Uninstall"; `docs/reports/phase6/package-smoke/smoke.txt` |

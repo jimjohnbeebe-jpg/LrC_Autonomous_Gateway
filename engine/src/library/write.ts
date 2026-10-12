@@ -13,7 +13,7 @@
 import { ToolError, toToolError } from "../mcp/errors.js";
 import { UNANSWERED, mayHaveLanded } from "../sync/target.js";
 
-/** Photos per call [inference: the figure; lr_sync_series takes 20, sync\types.ts MAX_TARGETS]. */
+/** Photos per call [inference: the figure]. */
 export const MAX_PHOTOS = 100;
 /** Keyword names per call, added and removed each [inference: the figure; Automaat takes 1000, vendor\automaat\server\src\tool-contracts.ts:13]. */
 export const MAX_KEYWORDS = 50;

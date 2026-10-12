@@ -61,11 +61,11 @@ export async function resolveTargets(client: BridgeClient, targets: SyncTargets,
 }
 
 /**
- * How many selected photos the plugin is asked to describe: more than any cap, so the source photo
- * and photos without a uuid can be among them and still leave `cap` photos to write [inference: the
- * figure; it is the plugin's own default, plugin\LrC-AVG.lrplugin\Catalog.lua getSelection].
+ * How many selected photos the plugin is asked to describe: the most it takes (plugin\LrC-AVG.lrplugin\
+ * Catalog.lua MAX_DESCRIBED). A selection larger than that is refused (TOO_MANY_TARGETS), even when
+ * the source photo or a photo without a uuid among them would leave `cap` photos to write.
  */
-export const SELECTION_DESCRIBED = 100;
+export const SELECTION_DESCRIBED = 500;
 
 async function selected(client: BridgeClient): Promise<{ uuids: string[]; skipped: Skip[]; count: number; described: number }> {
   let res;

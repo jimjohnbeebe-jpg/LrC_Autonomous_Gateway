@@ -71,11 +71,12 @@ describe("lr_sync_series: adaptive exposure", () => {
     expect(lr.writes).toEqual([]);
   });
 
-  it("refuses more than three targets", async () => {
+  it("takes more than three targets: the time budget, not a cap of 3, ends a call (issue #116)", async () => {
     clean();
     const { id } = await acceptedSession();
     const uuids = [1, 2, 3, 4].map((n) => addCopy(n));
-    expect(await syncFails({ source: { session_id: id }, targets: { uuids }, ...adaptive })).toMatchObject({ code: "TOO_MANY_TARGETS", details: { targets: 4, cap: 3 } });
+    const out = await sync({ source: { session_id: id }, targets: { uuids }, ...adaptive });
+    expect([out.json["applied"], out.json["not_yet"]]).toEqual([4, undefined]);
   });
 
   it("puts the best try back when the search ends on a worse one, and says the goal was not met", async () => {

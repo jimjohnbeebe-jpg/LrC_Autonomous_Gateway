@@ -2,8 +2,8 @@
 
 import { z } from "zod";
 import { DEFAULT_GROUP, MAX_NAME_LENGTH } from "../presets/index.js";
-import { MASK_GROUPS, MAX_ADAPTIVE_TARGETS, MAX_TARGETS } from "../sync/index.js";
-import { longEdge, type ToolDef } from "./defs-shared.js";
+import { MASK_GROUPS, MAX_TARGETS } from "../sync/index.js";
+import { TIMED, longEdge, type ToolDef } from "./defs-shared.js";
 
 const canonicalValue = z.union([z.number(), z.boolean(), z.string(), z.array(z.number())]);
 const distinct = (list: readonly unknown[]): boolean => new Set(list).size === list.length;
@@ -65,7 +65,7 @@ export const PROPAGATION_DEFS: ToolDef[] = [
       "step \"AVG sync <id>\" and reads them back. adaptive_exposure (for bursts of the same scene): exposure is not copied; each target " +
       "is rendered and its exposure moved (\"AVG sync <id> exposure k\", at most 4 renders of about 3.5 s) until its mean luma is within " +
       "2/255 of the source photo's; the source photo must still hold the recipe's settings (else SOURCE_CHANGED). " +
-      `At most ${MAX_TARGETS} targets per call, ${MAX_ADAPTIVE_TARGETS} with adaptive_exposure: sync more in several calls. ` +
+      `At most ${MAX_TARGETS} targets per call. ${TIMED} Each call has its own sync id, so its photos' snapshots and History steps carry it. ` +
       "Tell the user which photos will change before calling. A target that fails is listed in `skipped` with the reason, and the " +
       "others still sync; if Lightroom stops answering, the call stops and the error names the photo it stopped at and any step " +
       "that may still have been written (`maybe_written`). Across pipelines (a raw recipe onto a JPEG, or the reverse) the shared " +

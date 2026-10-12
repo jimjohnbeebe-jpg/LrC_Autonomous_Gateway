@@ -11,13 +11,12 @@ import type { NotTransferable } from "./transfer.js";
 /** get_selection and `photo_uuid` come with plugin 0.4.0 [handle: engine\src\bridge\protocol.ts COMMANDS, Target]. */
 export const SYNC_PLUGIN = "0.4.0";
 /**
- * Targets per call [stated: Jim, 2026-09-27, "go with recommendations" on the row 8 plan, decision 5].
- * With adaptive exposure a target takes up to 4 renders, so 3 targets and the source are up to 13
- * renders, ~45 s at the Phase 2 pass time [inference: from docs\reports\phase2\PHASE2.md:239-240];
- * Claude Desktop's tool-call timeout is [unverified]. Without it a target is ~4 bridge commands.
+ * Targets per call, with or without adaptive exposure; the time budget (SyncDeps.budget) usually
+ * ends a call sooner, and the photos not started come back as `not_yet` [stated: Jim, 2026-10-12,
+ * issue #116, D3a A, "Go with recommendations"]. The figure is the most get_selection describes
+ * (plugin Catalog.lua MAX_DESCRIBED) and lr_export_photos takes (library\files.ts MAX_EXPORT_PHOTOS).
  */
-export const MAX_TARGETS = 20;
-export const MAX_ADAPTIVE_TARGETS = 3;
+export const MAX_TARGETS = 500;
 /** Contact-sheet panels: the source and up to three targets (preview\composite.ts takes 2-4). */
 export const SHEET_TARGETS = 3;
 
@@ -33,6 +32,8 @@ export type SyncDeps = {
   newId?: () => string;
   /** How long a snapshot or a write may take (tests shorten it); target.ts WRITE_TIMEOUT_MS by default. */
   writeTimeoutMs?: number;
+  /** When the call stops starting targets (tests shorten it); library\files.ts CALL_BUDGET_MS on the real clock by default. */
+  budget?: { now: () => number; ms: number };
 };
 
 export type SyncArgs = {

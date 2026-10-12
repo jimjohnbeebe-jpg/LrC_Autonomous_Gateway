@@ -1,7 +1,7 @@
 ---
 report: effects
 phase: "8.5"
-status: observed
+status: accepted
 authored_by: "Claude Code (purpose, harness, pre-run findings, steps, observed transcribed from the saved results, numbers); Jim (the run, verdict)"
 date: 2026-10-12
 ---
@@ -111,7 +111,7 @@ All from the results file, `photos[*].range.per_parameter`, `.style.steps` and `
 
 ## Verdict
 
-*Jim.* Suggested by the probe: **WORKED**. The candidate limits hold on both pipelines, and a negative Amount darkens the corners.
+**Go** (Jim, 2026-10-12 [stated: "Go with recommendations"]). Suggested by the probe: **WORKED**. The candidate limits hold on both pipelines, and a negative Amount darkens the corners.
 
 ## Consequences / open questions
 
@@ -120,7 +120,7 @@ All from the results file, `photos[*].range.per_parameter`, `.style.steps` and `
   - Midpoint, Feather, Highlights and the three grain keys: 0 to 100;
   - Style: 1, 2 or 3.
 
-  Whether grain goes in with the vignette is Jim's call on #125 (2026-10-12 plan, "Not blocking": option B).
+  Grain goes in with the vignette: option B, all eight keys plus Style (Jim, 2026-10-12 [stated: "Go with recommendations"]).
 - **An out-of-range Effects value is not taken and not clamped.** It reads back as the photo's start value, as most Basic sliders did in S10 [handle: `docs\reports\phase8\S10.md`]. The map refuses out-of-range values before any write (PRD FR-4.2), so the engine never sends one.
   - Both photos started at the defaults, so whether that is the start value or the default is [unverified].
   - All 8 keys were beyond their limits in the same write, so whether Lightroom does this per key or for the whole write is also [unverified].

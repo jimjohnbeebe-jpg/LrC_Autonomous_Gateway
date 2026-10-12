@@ -1,8 +1,8 @@
 ---
 report: effects
 phase: "8.5"
-status: template
-authored_by: "Claude Code (purpose, harness, pre-run findings, steps); Jim (observed, verdict)"
+status: observed
+authored_by: "Claude Code (purpose, harness, pre-run findings, steps, observed transcribed from the saved results, numbers); Jim (the run, verdict)"
 date: 2026-10-12
 ---
 
@@ -73,28 +73,56 @@ Results go under `%TEMP%\LrC-AVG\effects\`: `effects_probe_<time>.json`, `effect
 
 ## Observed (Jim)
 
-*To be filled from the run.*
+Jim ran `npm run effects:probe` on 2026-10-12, 13:17:04-13:17:30Z, Lightroom 15.6, plugin 0.21.0, and said "effects done" [stated]. Claude Code transcribed the run below from the saved files:
+- results: `docs\reports\phase8.5\effects\effects_probe_2026-10-12T13-17-04-307Z.json`;
+- the plugin's log for the run window: `effects\bridge_log_excerpt.txt`, 109 lines, all INFO.
+
+Both photos were found:
+- the raw one: `20260907-_OZ80093.NEF`, uuid `C9967541…`, process version 15.4;
+- the rendered one: `DSC_0031.JPG`, uuid `81FFC502…`, process version 11.0.
+
+Both were selected before their writes. The headline was **Effects probe: WORKED**, with no errors. Both photos were **put back: YES**, 0 keys differing (177 keys compared on the NEF, 172 on the JPEG).
+
+What the probe's outcome labels mean here: every value 1 % beyond a limit read back as the photo's value from **before the probe**. It did not read back the limit, or the previous write's value. The probe labels these reads `other`, `ignored` and `clamped`, depending only on whether that start value happens to equal the previous write or the limit (spike S10 explains the same reading [handle: `docs\reports\phase8\S10.md`, "How to read the 1 % beyond columns"]).
+
+On both photos the start values are those of an untouched Effects panel [inference: they equal the samples in the pinned dump], so this run cannot tell "back to the start value" from "reset to the default" [handle: the run's census dumps, `effects\s10_20260907-_OZ80093.NEF__C9967541.json` and `effects\s10_DSC_0031.JPG__81FFC502.json`]. The start values equal the pinned samples:
+- `PostCropVignetteAmount` 0, `PostCropVignetteMidpoint` 50, `PostCropVignetteRoundness` 0, `PostCropVignetteFeather` 50, `PostCropVignetteHighlightContrast` 0, `PostCropVignetteStyle` 1;
+- `GrainAmount` 0, `GrainSize` 25, `GrainFrequency` 50
+
+[handle: `engine\src\params\sdk-keys.lrc15.json` `sample`].
 
 ## Numbers
 
-| Key | Raw: limits taken / 1 % beyond | Rendered: limits taken / 1 % beyond |
+All from the results file, `photos[*].range.per_parameter`, `.style.steps` and `.luma`.
+
+| Key | Raw (NEF): limits taken / 1 % beyond | Rendered (JPEG): limits taken / 1 % beyond |
 |---|---|---|
-| `PostCropVignetteAmount` | | |
-| `PostCropVignetteMidpoint` | | |
-| `PostCropVignetteRoundness` | | |
-| `PostCropVignetteFeather` | | |
-| `PostCropVignetteHighlightContrast` | | |
-| `GrainAmount` | | |
-| `GrainSize` | | |
-| `GrainFrequency` | | |
-| `PostCropVignetteStyle` values taken | | |
-| Corners darker at Amount -50 (corner/centre luma at 0 and -50) | | |
-| Put back | | |
+| `PostCropVignetteAmount` | -100 and 100 taken / -102 and 102 read back 0 (start) | same |
+| `PostCropVignetteMidpoint` | 0 and 100 taken / -1 and 101 read back 50 (start) | same |
+| `PostCropVignetteRoundness` | -100 and 100 taken / -102 and 102 read back 0 (start) | same |
+| `PostCropVignetteFeather` | 0 and 100 taken / -1 and 101 read back 50 (start) | same |
+| `PostCropVignetteHighlightContrast` | 0 and 100 taken / -1 and 101 read back 0 (start) | same |
+| `GrainAmount` | 0 and 100 taken / -1 and 101 read back 0 (start) | same |
+| `GrainSize` | 0 and 100 taken / -1 and 101 read back 25 (start) | same |
+| `GrainFrequency` | 0 and 100 taken / -1 and 101 read back 50 (start) | same |
+| `PostCropVignetteStyle` | 1, 2 and 3 taken; 0 and 4 read back 1 (start) | same |
+| Corner/centre luma at Amount 0 → -50 | 1.949 → 0.921 (corners 118.9 → 56.2, centre 61.0 → 61.0): darker | 0.757 → 0.259 (corners 83.1 → 28.5, centre 109.8 → 109.8): darker |
+| Put back | YES, 0 differing of 177 | YES, 0 differing of 172 |
 
 ## Verdict
 
-*Jim.*
+*Jim.* Suggested by the probe: **WORKED**. The candidate limits hold on both pipelines, and a negative Amount darkens the corners.
 
 ## Consequences / open questions
 
-*After the run: the canonical names and limits for #125 (vignette, and grain on Jim's decision), and an LR_SDK_NOTES entry.*
+- **For #125:** the eight keys can go into the canonical map with these limits, the same on both pipelines. The limits are:
+  - Amount and Roundness: -100 to 100;
+  - Midpoint, Feather, Highlights and the three grain keys: 0 to 100;
+  - Style: 1, 2 or 3.
+
+  Whether grain goes in with the vignette is Jim's call on #125 (2026-10-12 plan, "Not blocking": option B).
+- **An out-of-range Effects value is not taken and not clamped.** It reads back as the photo's start value, as most Basic sliders did in S10 [handle: `docs\reports\phase8\S10.md`]. The map refuses out-of-range values before any write (PRD FR-4.2), so the engine never sends one.
+  - Both photos started at the defaults, so whether that is the start value or the default is [unverified].
+  - All 8 keys were beyond their limits in the same write, so whether Lightroom does this per key or for the whole write is also [unverified].
+- **The names of Style 1-3 in Lightroom's menu** (the probe only read the numbers back) are [unverified]. Lightroom's Effects panel offers Highlight Priority, Color Priority and Paint Overlay [inference: from the panel, not observed by this probe]. Pin them only from a recorded click, as profiles were pinned.
+- LR_SDK_NOTES gets a "Recorded in Phase 8.5" entry with the limits, the reset to start values, and the corner darkening.

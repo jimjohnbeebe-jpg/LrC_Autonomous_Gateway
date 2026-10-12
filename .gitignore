@@ -7,6 +7,9 @@ fixtures/*.acr
 # Lightroom-exported JPEGs Jim drops in for spike S3 (sharp cannot decode the NEFs)
 fixtures/*.jpg
 fixtures/*.jpeg
+# Photoshop renders of Jim's photos (2026-10-12)
+fixtures/*.psd
+fixtures/*.tif
 # The files Jim makes for spike S10 (PSB, 16/32-bit and CMYK TIFF, JPEG XL): renders of his photos
 fixtures/S10/
 # The two copies spike S11 imports as a stack (spikes\S11\README.md)

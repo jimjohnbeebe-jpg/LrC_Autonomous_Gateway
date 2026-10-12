@@ -97,6 +97,21 @@ describe("starting the Deck during an edit", () => {
     expect(lr.hud.opened).toBe(0);
   });
 
+  it("starts it when Lightroom comes back within the begin wait, the Deck started then having connected (Greptile, PR #141)", async () => {
+    clean();
+    const sims: SimHudClient[] = [];
+    const rig = await deckRig({ waitMs: 5000, onStart: () => void SimHudClient.connect(rig.endpoint).then((s) => sims.push(s)) });
+    await rig.manager.begin({ intent_id: "test_plain" });
+    await waitUntil(() => sims[0]?.last()?.stage === "awaiting_claude");
+    client.stop(); // a drop of the bridge with the begin's 5 s wait still running
+    sims[0]?.close();
+    await waitUntil(() => !rig.deck.connected());
+    client.start();
+    await waitUntil(() => sims[1]?.last()?.session_id === ID);
+    expect(rig.started.length).toBe(2);
+    expect(lr.hud.opened).toBe(0);
+  });
+
   it("starts nothing when the Deck is lost because the listener closed, or with no edit open", async () => {
     clean();
     const rig = await deckRig();

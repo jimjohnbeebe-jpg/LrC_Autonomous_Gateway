@@ -69,7 +69,7 @@ describe("a session an engine that stopped left open", () => {
     expect(log.recipe_path && existsSync(log.recipe_path)).toBe(true);
   });
 
-  it("after AI_MASK_FAILED: revert is refused by the plugin's guard and logged; abandon drops the guard and a session begins", async () => {
+  it("after AI_MASK_FAILED: accept is refused, revert is refused by the plugin's guard and logged; abandon drops the guard and a session begins", async () => {
     clean();
     const old = newManager({ aiTimings: FAST });
     await old.begin({ intent_id: "test_plain", return_image: "none", max_passes: 4 });
@@ -78,6 +78,8 @@ describe("a session an engine that stopped left open", () => {
     const m = newManager({ newId: () => OTHER, aiTimings: FAST });
     expect(leftOpenJson(m.leftOpen())[0]).toMatchObject({ last_failure: "AI_MASK_FAILED" });
 
+    // Accept is refused as long as the AI mask has no result: it would end the log with the guard left (Greptile, PR #141).
+    expect(await fails(m.endLeftOpen({ session_id: ID, outcome: "accept" }) ?? Promise.reject(new Error("not left open")))).toMatchObject({ code: "AI_UPDATE_PENDING" });
     const e = await fails(m.endLeftOpen({ session_id: ID, outcome: "revert" }) ?? Promise.reject(new Error("not left open")));
     expect(e.message).toMatch(/computing an AI mask/);
     expect(readLog()).toMatchObject({ ended: null, failures: expect.arrayContaining([expect.objectContaining({ stage: "end left open (revert)" })]) });

@@ -57,6 +57,11 @@ export class HudFanOut implements HudSink {
     this.lightroom = lightroom;
     this.waitMs = options.waitMs ?? WAIT_MS;
     deck.onClient((connected) => {
+      // waitTimer stands for a started Deck still to connect, no more (Greptile, PR #141).
+      if (connected && this.waitTimer) {
+        clearTimeout(this.waitTimer);
+        this.waitTimer = null;
+      }
       if (!connected) this.deckLost("The Deck was lost during the edit and could not be started again");
     });
     lightroom.onStateChange((state) => {

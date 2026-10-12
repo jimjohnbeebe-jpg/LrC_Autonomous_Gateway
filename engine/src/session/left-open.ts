@@ -31,6 +31,8 @@ import { WRITE_TIMEOUT_MS, type EndArgs, type SessionContext, type SessionOutput
 export type LeftOpen = { file: string; log: SessionLogData };
 
 const LOG_NAME = /^\d{8}-[0-9a-f]{6}\.json$/;
+/** The failures that leave an AI mask without a result (ai-update.ts). */
+const AI_STUCK = ["AI_MASK_FAILED", "LIGHTROOM_STUCK", "AI_UPDATE_PENDING"];
 
 /** The sessions left open in `dir`, oldest first; `openId`, this engine's open session, is not one. Unreadable files are skipped. */
 export function findLeftOpen(dir: string, openId: string | null): LeftOpen[] {
@@ -140,6 +142,12 @@ async function revert(ctx: SessionContext, log: SessionLogData): Promise<Record<
 
 /** The photo accept keeps (the master, or the pick in Variants mode) and its settings now. */
 async function readKept(ctx: SessionContext, log: SessionLogData): Promise<{ uuid: string; filename: string | null; settings: CanonicalSettings; masks: number }> {
+  // An AI mask with no result may still hold the plugin's guard on the photo; an accept would end the log and leave it
+  // there, beyond an abandon's reach (Greptile, PR #141). As the open session's accept is refused then (manager.ts live).
+  const ai = log.failures.at(-1)?.error.code;
+  if (ai && AI_STUCK.includes(ai)) {
+    throw new ToolError("AI_UPDATE_PENDING", `Session ${log.session_id} ended on ${ai}: Lightroom's AI mask has no result, so accept is refused. End it with revert after restarting Lightroom, or with abandon.`, false, { session_id: log.session_id });
+  }
   const pick = log.mode === "variants" ? log.variants.find((v) => v.picked) : null;
   if (log.mode === "variants" && !pick) {
     throw new ToolError("AWAITING_PICK", "No copy was picked in this Variants session, so accept has no edit to keep: end it with revert or abandon.", false, { session_id: log.session_id });
@@ -172,7 +180,8 @@ async function abandon(ctx: SessionContext, log: SessionLogData): Promise<Record
   // Each of its photos: in Variants mode an AI mask may have been on a copy (the review of f5eb667).
   const guards: GuardOutcome[] = [];
   for (const uuid of photosOf(log)) guards.push((await dropGuard(ctx, uuid, true)).guard);
-  const guard = guards.includes("cleared") ? "cleared" : (guards[0] ?? "none");
+  // A guard possibly left beats one cleared (Greptile, PR #141).
+  const guard = guards.includes("not_cleared") ? "not_cleared" : guards.includes("plugin_too_old") ? "plugin_too_old" : guards.includes("cleared") ? "cleared" : "none";
   // Whether the stopped engine left a guard is not known (the log does not say), so "not reached" is said as a maybe.
   const guardNote = guard === "not_cleared" || guard === "plugin_too_old" ? " Lightroom was not reached: if the session was waiting on an AI mask, Lightroom refuses writes to the photo until it restarts." : GUARD_NOTE[guard];
   const note =

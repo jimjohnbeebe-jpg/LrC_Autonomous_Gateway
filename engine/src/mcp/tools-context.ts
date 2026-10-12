@@ -8,7 +8,7 @@ import { ParamError, WHITE_BALANCE_UNITS, processVersionLabel, type FromSdkResul
 import { cropRegion } from "../preview/index.js";
 import { LEFT_OPEN_NOTE, leftOpenJson, type SessionManager, type SessionView, type TargetId } from "../session/index.js";
 import { ToolError, originalMissing, toToolError } from "./errors.js";
-import { DEFAULT_LONG_EDGE, PREVIEW_QUALITY, describe, openSession, render, run, type ToolContext, type ToolOutput } from "./tools-shared.js";
+import { DEFAULT_LONG_EDGE, PREVIEW_QUALITY, describe, openSession, readPageFolders, render, run, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
 /**
  * The largest export a region crop asks for: the plugin refuses a long edge above 4096
@@ -63,7 +63,9 @@ export async function getActivePhotoContext(ctx: ToolContext): Promise<ToolOutpu
     }
     const field = (key: string): unknown => photo[key] ?? null;
     const open = ctx.sessions?.current() ?? null;
-    const left = ctx.sessions?.leftOpen() ?? []; // sessions an engine that stopped left open (session\left-open.ts)
+    // Sessions an engine that stopped left open (session\left-open.ts), in the page's log folder once read (Greptile, PR #141).
+    if (ctx.sessions && ctx.deps.settings && !ctx.deps.settings.last()) await readPageFolders(ctx);
+    const left = ctx.sessions?.leftOpen() ?? [];
     const missing = originalMissing(photo);
     const json: Record<string, unknown> = {
       ok: true,

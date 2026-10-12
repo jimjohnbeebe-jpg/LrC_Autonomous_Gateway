@@ -1,7 +1,7 @@
 ---
 report: mask-combine
 phase: "8.5"
-status: observed
+status: accepted
 authored_by: "Claude Code (purpose, harness, pre-run findings, steps, observed transcribed from the saved results, numbers); Jim (the y/n answers, verdict)"
 date: 2026-10-12
 ---
@@ -128,7 +128,7 @@ One run on 2026-10-12, 04:29:26-04:30:27 UTC (21:29:26-21:30:27 on Jim's clock, 
 
 ## Verdict
 
-Suggested by the probe: **go**, all 10 forms verified. Jim's verdict:
+Suggested by the probe: **go**, all 10 forms verified. Jim's verdict: **go** [stated: Jim, 2026-10-12, "Go (Recommended)"].
 
 ## Consequences / open questions
 

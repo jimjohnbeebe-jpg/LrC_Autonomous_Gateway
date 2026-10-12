@@ -1,15 +1,17 @@
 // `npm run masks:carry` (issue #121, with the shapes issue #131 needs): does a mask table with hand-made masks
 // survive the engine's kind of write, the whole table written back verbatim beside one new radial? Before
 // engine 0.28.0 the mask tools refused any photo whose table held a mask with several components, a
-// MaskBlendMode other than 0, a brush or a colour range (mask-table.ts `uncaptured`), as such entries had never
+// MaskBlendMode other than 0, a brush or a colour range (`uncaptured`, now in params\mask-combine.ts), as such entries had never
 // been written back. This probe's WORKED run lifted that [handle: docs\reports\phase8.5\mask-carry.md
 // "Numbers"]; only an edit of such a mask is still refused (session\masks.ts). The pure parts
 // (which hand-made masks the photo holds, the per-entry diff) are here; the CLI (mask-carry-probe-cli.ts) asks
 // Jim, puts the photo back and saves the results. Report: docs\reports\phase8.5\mask-carry.md.
 
 import { existsSync, readFileSync, renameSync } from "node:fs";
+import { createInterface } from "node:readline";
 import { z } from "zod";
 import type { BridgeClient } from "../bridge/index.js";
+import type { Answer } from "./phase1-check.js";
 import { applyOp, differingSettings, loadDefaultParamMap, MASK_TABLE_KEY, readTable, tableSettings, verifyTable, type Correction, type SdkSettings } from "../params/index.js";
 import { C, componentKind, components, M, RANGE, RECOMPUTED, type Component } from "../params/mask-table.js";
 
@@ -151,4 +153,23 @@ export function readPending(file: string, damagedFile: string): { pending: Pendi
     // left in place: the next run reports it again
   }
   return { pending: null, damaged: damagedFile };
+}
+
+/** Ask Jim in this window until he types y or n (masks:carry, masks:combine); "no answer" when the input ends. */
+export function ask(question: string): Promise<Answer> {
+  const rl = createInterface({ input: process.stdin, terminal: false });
+  const lines = rl[Symbol.asyncIterator]();
+  return (async () => {
+    try {
+      for (;;) {
+        process.stdout.write(`${question} Type y or n, then Enter: `);
+        const next = await lines.next();
+        if (next.done) return "no answer";
+        const a = String(next.value).trim().toLowerCase();
+        if (a === "y" || a === "n") return a;
+      }
+    } finally {
+      rl.close();
+    }
+  })();
 }

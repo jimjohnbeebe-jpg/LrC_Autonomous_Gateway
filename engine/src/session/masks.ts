@@ -8,7 +8,8 @@
 //     MASKS_CHANGED, nothing written, when it changed in between [inference: one bridge round trip
 //     still separates that read from the write; a check inside the plugin's gate would close it];
 //   - writes the whole table as one History step "AVG <id> pass n/N mask <op>", checks the read-back,
-//     makes an AI mask compute (ai-masks.ts), renders and measures;
+//     makes an AI mask, or an AI part added to a mask (mask-parts.ts, issue #131), compute (ai-masks.ts),
+//     renders and measures;
 //   - is undone ("… clip revert" / "… region revert": the table before it, written back) when clipping
 //     goes over a limit the photo was within, or a preserved region drifts. No correction moves the
 //     global sliders for a mask. The undo is written only while the table is still what the pass
@@ -45,6 +46,7 @@ import {
   type SdkSettings,
 } from "../params/index.js";
 import { makeAiMask, type AiResult } from "./ai-masks.js";
+import { checkAiPartPlugin, makeAiPart } from "./mask-parts.js";
 import { awaitApproval } from "./approval.js";
 import { clipBreach, regionDrift, type Breach } from "./guardrail.js";
 import { brief, describe, failed, fresh, historyName, image, ms, readSdk, recordPass, render, writeTable } from "./io.js";
@@ -80,7 +82,7 @@ export async function listMasks(ctx: SessionContext, s: Session, args: ListMasks
 export const createMask = (ctx: SessionContext, s: Session, a: CreateMaskArgs): Promise<SessionOutput> =>
   maskPass(ctx, s, a, { op: "create", kind: a.kind, name: a.name, geometry: a.geometry, point: a.point, sliders: a.sliders });
 export const editMask = (ctx: SessionContext, s: Session, a: EditMaskArgs): Promise<SessionOutput> =>
-  maskPass(ctx, s, a, { op: "edit", mask_id: a.mask_id, name: a.name, active: a.active, inverted: a.inverted, geometry: a.geometry, sliders: a.sliders, combine: a.combine });
+  maskPass(ctx, s, a, { op: "edit", mask_id: a.mask_id, name: a.name, active: a.active, inverted: a.inverted, geometry: a.geometry, sliders: a.sliders, combine: a.combine, part: a.part, remove_part: a.remove_part });
 export const deleteMask = (ctx: SessionContext, s: Session, a: DeleteMaskArgs): Promise<SessionOutput> => maskPass(ctx, s, a, { op: "delete", mask_id: a.mask_id });
 
 /** The photo a mask pass works on, once the plugin, the pick and the pass cap allow it. */
@@ -103,7 +105,8 @@ function maskTarget(ctx: SessionContext, s: Session, requested: TargetId | undef
 const TOOL = { create: "lr_create_mask", edit: "lr_edit_mask", delete: "lr_delete_mask" } as const;
 
 /**
- * An edit of a mask the captures did not round-trip is refused. The other entries are carried: applyOp
+ * An edit of a mask the captures did not round-trip is refused (a mask of several parts unless its form is
+ * verified, params\mask-combine.ts uncaptured; issue #131). The other entries are carried: applyOp
  * copies them unchanged and writeTable checks the read-back (issue #121): Lightroom read five hand-made
  * masks back unchanged twice beside a new radial [handle: docs\reports\phase8.5\mask-carry\
  * mask_carry_2026-10-11T22-37-39-161Z.json `diff_lines`, commit 4cd95aa]. A create checks nothing else; a
@@ -140,6 +143,7 @@ async function maskPass(ctx: SessionContext, s: Session, args: PassArgs, op: Mas
   const before = readTable(first.sdk);
   refuseUncaptured(s, before, op);
   const plan = applyOp(before, op); // MaskError: nothing written
+  if (plan.ai) checkAiPartPlugin(ctx); // issue #131: before the write
   if (sameTable(before, plan.entries)) throw new ToolError("NO_CHANGE", "Nothing was written: the mask already is as asked. The pass is not used.", false, { session_id: s.id });
   let baseline: Rendered;
   try {
@@ -192,6 +196,9 @@ async function applyPlan(ctx: SessionContext, s: Session, t: Target, n: number, 
     const point = AI_KINDS[plan.kind].point ? pointOf(firstComponent(plan.entries, id)) : null;
     ai = await makeAiMask(ctx, s, { t, n, kind: plan.kind, before, id, name: plan.after?.name ?? "", stored: storedSliders(op.sliders ?? {}), historyNames, attempts: new Set([id]), point });
     ({ sdk, id } = ai);
+  } else if (plan.ai) {
+    ai = await makeAiPart(ctx, s, { t, n, kind: plan.ai, before, id, name: plan.after?.name ?? "", stored: {}, historyNames, attempts: new Set(), point: null }); // issue #131
+    ({ sdk } = ai);
   }
   let view = ctx.deps.map.fromSdk(sdk);
   let rendered = await render(ctx, s, t, view);

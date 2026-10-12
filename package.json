@@ -31,6 +31,7 @@
     "offline:check": "npm run build && node engine/dist/devtools/offline-check-cli.js",
     "ai:probe": "npm run build && node engine/dist/devtools/ai-probe-cli.js",
     "masks:carry": "npm run build && node engine/dist/devtools/mask-carry-probe-cli.js",
+    "masks:combine": "npm run build && node engine/dist/devtools/mask-combine-probe-cli.js",
     "phase8:check": "npm run build && node engine/dist/devtools/phase8-check-cli.js",
     "deck:build": "npm run build && npm run build -w hud",
     "deck:probe": "npm run build && node hud/probe/probe.ts",

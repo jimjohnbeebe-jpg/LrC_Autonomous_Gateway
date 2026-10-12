@@ -1,8 +1,10 @@
 // A correction as the tools show it (mask-ops.ts, session\masks.ts, the session log): id, name, kind,
 // on/off, sliders in panel units, geometry, whether an AI mask has computed, and for one person's mask its
-// person (instance) and the boxes of every person Lightroom found (mask-person.ts). Moved out of
+// person (instance) and the boxes of every person Lightroom found (mask-person.ts); for a mask of several parts,
+// each part (issue #131, mask-combine.ts modeOf). Moved out of
 // mask-table.ts in PR C step 2c (module size, rule 01). Field names from mask-table.ts (rule 03).
 
+import { modeOf } from "./mask-combine.js";
 import { boundsOf, instanceOf, type Box } from "./mask-person.js";
 import { C, IMAGE, LINEAR, LOCAL_PARAMS, M, RADIAL, RANGE, WHAT, componentKind, components, computed, type Component, type Correction } from "./mask-table.js";
 
@@ -21,7 +23,10 @@ export type MaskSummary = {
   /** One person's mask: which person (InstanceID), and every person's box Lightroom found. */
   instance?: number;
   people?: Box[];
+  /** A mask of several parts (issue #131): each part in order (lr_edit_mask `part` 1 is the first), its kind, mode after the first ("other": none of the three), inversion and geometry. */
+  parts?: MaskPart[];
 };
+export type MaskPart = { kind: string; mode?: string; inverted: boolean; geometry?: Record<string, unknown> };
 
 const round = (v: number): number => Math.round(v * 100) / 100;
 const nameOf = (e: Correction): string => (typeof e[C.name] === "string" ? (e[C.name] as string) : String(e[C.id]));
@@ -40,6 +45,11 @@ function geometryOf(m: Component): Record<string, unknown> | undefined {
     return { point: { x, y } };
   }
   return undefined;
+}
+
+function partOf(m: Component, i: number): MaskPart {
+  const geometry = geometryOf(m);
+  return { kind: String(componentKind(m)), ...(i > 0 ? { mode: modeOf(m) ?? "other" } : {}), inverted: m[M.inverted] === true, ...(geometry ? { geometry } : {}) };
 }
 
 /** A correction as the tools show it. */
@@ -69,5 +79,6 @@ export function summarize(e: Correction): MaskSummary {
     ...(ai.length > 0 ? { computed: ai.every(computed) } : {}),
     ...(instance !== null ? { instance } : {}),
     ...(people.length > 0 ? { people } : {}),
+    ...(parts.length > 1 ? { parts: parts.map(partOf) } : {}),
   };
 }

@@ -3,11 +3,13 @@
 // units [handle: docs\reports\phase6\masks-capture\capture2-calibration.json `fields`]. An inverted radial
 // reads back MaskInverted true, Flipped false [handle: docs\reports\phase8\S10\census\s10__DSC0103.NEF__Copy 1.json
 // "AVG vignette"; issue #79]. Inverting another kind and a luminance entry made by the engine are [unverified]
-// in Lightroom until Jim's mask tools check (it creates a luminance range; it does not invert).
+// in Lightroom until Jim's mask tools check (it creates a luminance range; it does not invert). Parts of a mask
+// (issue #131): only the forms params\mask-combine.ts VERIFIED_FORMS lists are written, and the tool text names
+// them from that list; how a form renders is checked by `npm run masks:combine` (docs\reports\phase8.5\mask-combine.md).
 
 import { z } from "zod";
-import { AI_KINDS, LOCAL_PARAMS, REFUSED_KINDS } from "../params/index.js";
-import { MASKS_PLUGIN } from "../session/index.js";
+import { AI_KINDS, LOCAL_PARAMS, MODE_NAMES, REFUSED_KINDS, VERIFIED_FORMS } from "../params/index.js";
+import { AI_PART_PLUGIN, MASKS_PLUGIN } from "../session/index.js";
 import { sessionId, target, type ToolDef } from "./defs-shared.js";
 
 const unit = z.number().min(0).max(1);
@@ -63,7 +65,12 @@ const editArgs = z.object({
   inverted: z.boolean().optional().describe("true inverts the mask (a radial's inversion checked in Lightroom; other kinds not yet: look at the preview)"),
   geometry: geometry.optional(),
   sliders: sliders.optional(),
-  combine: z.object({ mode: z.enum(["add", "subtract", "intersect"]) }).optional().describe("refused for now: combining components was not captured"),
+  combine: z
+    .object({ mode: z.enum(MODE_NAMES), kind: z.enum(KINDS).optional(), geometry: geometry.optional() })
+    .optional()
+    .describe("without part: add a part of kind (with its geometry; AI kinds take none) to the mask in mode add, subtract or intersect. With part: that part's new mode (mode only)"),
+  part: z.number().int().min(1).optional().describe("edit one part of the mask (1 = the first, in the order of lr_list_masks `parts`): with exactly one of geometry (reshape), inverted, combine (its mode) or remove_part"),
+  remove_part: z.literal(true).optional().describe("with part (2 or more): remove that part from the mask"),
 });
 const deleteArgs = z.object({ ...passFields, mask_id: maskId });
 
@@ -87,8 +94,9 @@ const PASS_NOTE =
   "was undone; a signal only, the session goes on. An AI mask's geometry.point is Lightroom's reference point " +
   "(Lightroom may move it while it computes), not where the mask reaches. If the masks changed in " +
   "Lightroom meanwhile: MASKS_CHANGED, nothing written. The other masks on the photo, the user's own included, are written back " +
-  "unchanged and checked on read-back. Editing a mask the tools cannot write back safely (several components, a blend mode, a " +
-  "kind not listed here) is refused: MASKS_UNCAPTURED_KIND, nothing written; deleting it is allowed. " +
+  "unchanged and checked on read-back. Editing a mask the tools cannot write back safely (several parts in a form not listed " +
+  "under lr_edit_mask, a blend mode on its first part, a kind not listed here) is refused: MASKS_UNCAPTURED_KIND, nothing " +
+  "written; deleting it is allowed. " +
   "Returns the mask, every mask of the photo (`masks`, with fresh ids), " +
   `metrics, delta_metrics and the image. Needs plugin ${MASKS_PLUGIN}. Not offered: brush painting, Select Objects, colour or ` +
   "depth range sampling, reading mask pixels, mask presets.";
@@ -100,6 +108,7 @@ export const MASK_DEFS: ToolDef[] = [
     description:
       "List the masks on the session's photo: id, name, kind (lr_create_mask's kinds; \"ai\", \"range\" or \"other\" for a kind Lightroom made that the tools do not know; \"mixed\" for components of several kinds), " +
       "on/off, inverted, components, the local sliders not at 0 (Masking panel units), geometry, and for AI masks whether they have computed. " +
+      "A mask of several parts also lists `parts`, in order (lr_edit_mask `part` 1 is the first): each part's kind, mode (add, subtract, intersect; \"other\" for none of them), inverted and geometry. " +
       "Also lists the local sliders and their ranges. Does not use a pass and writes nothing.",
     schema: listArgs,
     annotations: { readOnlyHint: true, openWorldHint: false },
@@ -135,7 +144,12 @@ export const MASK_DEFS: ToolDef[] = [
     // Sliders merge into the stored ones [handle: engine\src\params\mask-ops.ts:236, Object.assign].
     description:
       "Change one mask by its id: set local sliders (absolute values in panel units; sliders not given keep their values), its geometry (linear, radial, luminance), invert it, rename it, " +
-      "or hide/show it (`active`). Combining components is refused. MASK_NOT_FOUND: call lr_list_masks for the current ids. " +
+      "or hide/show it (`active`). MASK_NOT_FOUND: call lr_list_masks for the current ids. " +
+      "Parts: `combine` adds a part (kind, geometry) in mode add, subtract or intersect; `part` names one part to reshape (geometry), invert, set to a mode (combine.mode) " +
+      "or remove (remove_part); a mask of several parts is inverted or reshaped only part by part. Only these forms, which were checked in Lightroom, are written: " +
+      `${[...VERIFIED_FORMS].map((f) => `"${f}"`).join(", ")} (a mask's parts in order, each after the first with its mode; a part edit as "<form>: <edit>"). ` +
+      "Any other form (another kind of part, an AI part, three parts, an edit of one part) is refused: MASK_OP_NOT_CAPTURED names the form, nothing is written and the pass is not used. " +
+      `An AI part needs plugin ${AI_PART_PLUGIN} and is computed by Lightroom as an AI mask is (the same waits and errors); when Lightroom finds nothing, the mask is put back as it was. ` +
       PASS_NOTE,
     schema: editArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },

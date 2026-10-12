@@ -184,6 +184,16 @@ describe("mcp server", () => {
     expect(seen).toEqual(seen.map((_, i) => i + 1));
   });
 
+  it("logs whether each call carried a progressToken (issue #136)", async () => {
+    await mcp.callTool({ name: "lr_get_active_photo_context", arguments: {} }, undefined, { onprogress: () => undefined });
+    await mcp.callTool({ name: "lr_get_active_photo_context", arguments: {} });
+    const logged = readdirSync(logDir).flatMap((f) => readFileSync(path.join(logDir, f), "utf8").trim().split("\n"));
+    expect(logged.map((l) => JSON.parse(l) as { tool: string; progress_token?: boolean })).toEqual([
+      expect.objectContaining({ tool: "lr_get_active_photo_context", progress_token: true }),
+      expect.objectContaining({ tool: "lr_get_active_photo_context", progress_token: false }),
+    ]);
+  });
+
   it("lists and returns the bundled intents without Lightroom, and refuses an unconfirmed save", async () => {
     const list = await mcp.callTool({ name: "lr_list_intents", arguments: {} });
     const listed = textOf(list.content as Content) as { intents: Array<{ id: string; source: string }> };

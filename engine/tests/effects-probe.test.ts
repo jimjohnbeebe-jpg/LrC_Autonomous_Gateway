@@ -68,6 +68,17 @@ describe("effects probe", () => {
     expect(said).toContain("Effects probe: WORKED");
   });
 
+  it("fails when a write fails, though both photos are put back (Greptile, PR #145)", async () => {
+    const apply = plugin.handlers.get("apply_settings")!;
+    plugin.handlers.set("apply_settings", (p, id) => ((p["settings"] as J)["PostCropVignetteStyle"] !== undefined && Object.keys(p["settings"] as J).length === 1
+      ? { ok: false, error: { code: "write_failed", message: "no", recoverable: false } }
+      : apply(p, id)));
+    const { worked, results } = await run();
+    expect(worked).toBe(false);
+    expect((results["errors"] as string[]).join(" ")).toContain("did not complete the style writes");
+    expect((results["photos"] as J[]).map((p) => (p["put_back"] as J)["ok"])).toEqual([true, true]);
+  });
+
   it("fails, writing nothing to it, when a named photo is not in the collection", async () => {
     lr.library.find(JPG)!.filename = "OTHER.JPG";
     const { worked, results } = await run();

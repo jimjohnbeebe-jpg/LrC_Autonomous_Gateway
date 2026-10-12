@@ -86,9 +86,24 @@ async function lumaProbe(ctx: Ctx, photo: Photo): Promise<Json> {
       break;
     }
   }
-  const [a, b] = steps.map((s) => s["corner_to_centre"]);
-  const darker = typeof a === "number" && typeof b === "number" ? b < a : null;
+  // A black centre gives no ratio: null, not a conclusion (Greptile, PR #145).
+  const [a, b] = steps.map((s) => (Number(s["centre_luma"]) > 0 ? s["corner_to_centre"] : null));
+  const darker = Number.isFinite(a) && Number.isFinite(b) ? (b as number) < (a as number) : null;
   return { steps, corners_darker_at_minus_50: darker };
+}
+
+/**
+ * What a photo's probes left unmeasured; empty when every step completed. A failed write is only
+ * recorded by s10-config.ts `write`, so an incomplete step must fail the run here (Greptile, PR #145).
+ */
+export function incomplete(o: Json): string[] {
+  const style = (o["style"] as Json | undefined)?.["steps"] as Json[] | undefined;
+  const luma = (o["luma"] as Json | undefined)?.["steps"] as Json[] | undefined;
+  return [
+    ...((o["range"] as Json | undefined)?.["completed"] === true ? [] : ["the range writes"]),
+    ...(style?.length === STYLES.length && style.every((s) => s["error"] === undefined) ? [] : ["the style writes"]),
+    ...(luma?.length === AMOUNTS.length && luma.every((s) => typeof s["corner_to_centre"] === "number") ? [] : ["the luma exports"]),
+  ];
 }
 
 export async function runEffectsProbe(deps: S10Deps): Promise<{ worked: boolean; results: Json }> {
@@ -114,6 +129,8 @@ export async function runEffectsProbe(deps: S10Deps): Promise<{ worked: boolean;
         o["style"] = await styleProbe(ctx, photo);
         o["luma"] = await lumaProbe(ctx, photo);
         deps.say(`  corners darker at Amount -50: ${String((o["luma"] as Json)["corners_darker_at_minus_50"])}`);
+        const missing = incomplete(o);
+        if (missing.length > 0) ctx.fail(`${photo.filename}: did not complete ${missing.join(", ")} (see the results file)`);
       }));
     }
     if (found) await restoreSelection(ctx, found.photos);

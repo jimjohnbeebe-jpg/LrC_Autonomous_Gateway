@@ -43,5 +43,7 @@ The S11 plugin does not use the bridge. Claude Desktop can stay open.
 
 - If the dialog says **NOT STARTED**, the selected photo is not in "fixtures", or more than one photo is selected. Do step 2 again, then step 3.
 - If the dialog's "Stack made at import" line says the copies are **still in the catalog from an earlier run**, do step 5, then step 3 again.
-- If the dialog says **put back: NO**, tell Claude Code. The next run (step 3) puts the photo back first.
+- If the dialog says **put back: NO** and names another catalog, open that catalog (**File > Open Catalog**), then do step 3 again.
+- If the dialog says **put back: NO** and names no catalog, tell Claude Code. The next run (step 3) puts the photo back first.
+- If the dialog says **a run is still going**, click **OK** and wait for the first run's dialog.
 - If **File > Plug-in Extras** has no "AVG S11" item, open **File > Plug-in Manager…**, click "LrC-AVG Spike S11", make sure it says **Enabled**, then click **Reload Plug-in**.

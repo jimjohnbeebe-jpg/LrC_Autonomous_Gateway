@@ -1,16 +1,16 @@
 ---
 report: mask-combine
 phase: "8.5"
-status: template
-authored_by: "Claude Code (purpose, harness, pre-run findings, steps); Jim (observed, verdict)"
-date: 2026-10-11
+status: observed
+authored_by: "Claude Code (purpose, harness, pre-run findings, steps, observed transcribed from the saved results, numbers); Jim (the y/n answers, verdict)"
+date: 2026-10-12
 ---
 
 # Masks of several parts: which forms Lightroom takes (issue #131, fix/issues-131-136-139)
 
 ## Purpose
 
-Issue #131 asks for a mask made of several parts, for example a radial with the AI sky subtracted from it. The engine now builds a second part of any kind it makes (linear, radial, luminance, the AI kinds) in mode add, subtract or intersect, and edits one part of a mask (reshape, invert, change its mode, remove it) [handle: `engine\src\params\mask-combine.ts` `editParts`, `engine\src\mcp\defs-masks.ts` `combine`, `part`, `remove_part`]. It writes a form only when `VERIFIED_FORMS` lists it [handle: `engine\src\params\mask-combine.ts` `VERIFIED_FORMS`, `checkForm`]. Today that list holds only the three combinations Jim made by hand in the mask-carry run: a linear, then a radial added, subtracted or intersected [handle: `docs\reports\phase8.5\mask-carry\mask_carry_2026-10-11T22-37-39-161Z.json` `table_before[0..2]`, `shapes`]. Every other form is refused with `MASK_OP_NOT_CAPTURED`, which names the form.
+Issue #131 asks for a mask made of several parts, for example a radial with the AI sky subtracted from it. The engine now builds a second part of any kind it makes (linear, radial, luminance, the AI kinds) in mode add, subtract or intersect, and edits one part of a mask (reshape, invert, change its mode, remove it) [handle: `engine\src\params\mask-combine.ts` `editParts`, `engine\src\mcp\defs-masks.ts` `combine`, `part`, `remove_part`]. It writes a form only when `VERIFIED_FORMS` lists it [handle: `engine\src\params\mask-combine.ts` `VERIFIED_FORMS`, `checkForm`]. Before this run that list held only the three combinations Jim made by hand in the mask-carry run: a linear, then a radial added, subtracted or intersected [handle: `docs\reports\phase8.5\mask-carry\mask_carry_2026-10-11T22-37-39-161Z.json` `table_before[0..2]`, `shapes`]. Every other form is refused with `MASK_OP_NOT_CAPTURED`, which names the form.
 
 Question: for each candidate form below, written by the engine's own code, does Lightroom read it back as written, and is the brightened area where the engine means it to be (Jim's eye)?
 
@@ -70,7 +70,7 @@ Jim answers y/n in the PowerShell window, as for `npm run masks:carry` [stated: 
 - The sim is not Lightroom. That Lightroom takes a radial first part, an AI part, two linears, a luminance part, or a part edit is [unverified] until this run.
 - Plugin 0.21.0's guard waits for every AI part of a watched mask (`plugin\LrC-AVG.lrplugin\Pending.lua` `computing`, `isAi`). Plugin 0.20.0 read only the first part. A radial there never shows a digest, so that plugin would refuse every write to the photo until a restart [inference: Pending.lua 0.20.0 `computing`]. That is why the engine refuses an AI part on a plugin before 0.21.0 (`engine\src\session\mask-parts.ts` `checkAiPartPlugin`), and why the probe does too.
 - The menu paths in the steps come from the mask-carry run's steps and Lightroom Classic as Claude Code knows it. Claude Desktop's **File > Exit** is from this PR's plan. Neither has been checked on Jim's PC for this run [unverified].
-- The command has not been run against Lightroom.
+- Before the run, the command had not been run against Lightroom.
 
 ## Steps for Jim
 
@@ -100,29 +100,40 @@ Jim answers y/n in the PowerShell window, as for `npm run masks:carry` [stated: 
 
 ## Observed (Jim)
 
+One run on 2026-10-12, 04:29:26-04:30:27 UTC (21:29:26-21:30:27 on Jim's clock, 2026-10-11), transcribed by Claude Code from the saved results [handle: `docs\reports\phase8.5\mask-combine\mask_combine_2026-10-12T04-29-26-642Z.json`, copied from `%TEMP%\LrC-AVG\masks-combine\`; the plugin's log for the run window is `docs\reports\phase8.5\mask-combine\bridge_log_excerpt.txt`, 56 lines, no warning or error]. Jim said "done" [stated: Jim, 2026-10-12].
+
+- Photo: a virtual copy of `20260923-_OZ80256.NEF` (uuid `CD4D3C23-195D-4699-84C3-645BE97C613B`). Engine 0.30.0, plugin 0.21.0, Node v24.11.1.
+- Each of the 10 forms was written, read back and read again with no problem (`forms[*].problems` is empty), and Jim answered **y**.
+- The four sky parts computed in 3.8 s, 2.6 s, 2.6 s and 2.8 s (`forms[0..3].ai.ms`).
+- Headline: **Mask combine probe: WORKED**; put back: **YES** ("settings and masks as before").
+- The run took 61 s for 10 forms and 10 answers (`started`; the excerpt's first and last lines).
+
 ## Numbers
 
 | # | Form | read back as written (both reads) | AI part | Jim | Verified |
 |---|---|---|---|---|---|
-| 1 | radial, add sky | | | | |
-| 2 | radial, subtract sky | | | | |
-| 3 | radial, intersect sky | | | | |
-| 4 | sky, add radial | | | | |
-| 5 | linear, subtract linear | | — | | |
-| 6 | radial, subtract radial | | — | | |
-| 7 | radial, intersect luminance | | — | | |
-| 8 | radial, subtract radial: reshape part 2 | | — | | |
-| 9 | radial, subtract radial: part 2 to intersect | | — | | |
-| 10 | radial, subtract radial: remove part 2 | | — | | |
+| 1 | radial, add sky | yes | computed, 3.8 s | y | **yes** |
+| 2 | radial, subtract sky | yes | computed, 2.6 s | y | **yes** |
+| 3 | radial, intersect sky | yes | computed, 2.6 s | y | **yes** |
+| 4 | sky, add radial | yes | computed, 2.8 s | y | **yes** |
+| 5 | linear, subtract linear | yes | — | y | **yes** |
+| 6 | radial, subtract radial | yes | — | y | **yes** |
+| 7 | radial, intersect luminance | yes | — | y | **yes** |
+| 8 | radial, subtract radial: reshape part 2 | yes | — | y | **yes** |
+| 9 | radial, subtract radial: part 2 to intersect | yes | — | y | **yes** |
+| 10 | radial, subtract radial: remove part 2 | yes | — | y | **yes** |
 
-- Headline:
-- put back:
+- Headline: WORKED, 10 of 10 forms verified [handle: the results JSON above, `headline`, `form_lines`].
+- put back: YES [handle: the same file, `put_back`].
 
 ## Verdict
 
+Suggested by the probe: **go**, all 10 forms verified. Jim's verdict:
+
 ## Consequences / open questions
 
-- Stage 2 (Claude Code, after the run): add every verified form to `VERIFIED_FORMS` (`engine\src\params\mask-combine.ts`), with this report's results JSON as its handle. A part edit's form is listed with its mask's form: `uncaptured` refuses any edit of a mask whose form is not listed, before the part edit's own check.
-- Forms that fail stay refused and are listed here and on issue #131.
-- Decision for Jim after the run: whether a verified sky form also stands for the other AI kinds (subject, background, landscape and people parts) [inference: they share the `Mask/Image` structure, `mask-ai-kinds.ts`], or each kind needs its own run. Until then, only the forms named in the list are written.
-- Not offered, and not tested here: one person's kinds as a part (they need Lightroom to find the person first, `session\person-masks.ts`), three or more parts, and LrDevelopController for a part.
+- Stage 2 is done. `VERIFIED_FORMS` lists Lightroom's own three forms and the 10 verified here, with this report's results JSON as its handle (`engine\src\params\mask-combine.ts`). A part edit's form is listed with its mask's form: `uncaptured` refuses any edit of a mask whose form is not listed, before the part edit's own check.
+- No form failed.
+- Only sky was probed. A sky form stands for every AI kind in the same place: subject, background, the landscape and the people parts (`mask-combine.ts` `listed`) [stated: Jim, 2026-10-12, "Every AI kind, same modes"; inference: every AI kind writes the same `Mask/Image` component apart from MaskSubType and MaskSubCategoryID, `mask-build.ts` `newComponent`]. The other kinds are unprobed, and the tool text says so (`engine\src\mcp\defs-masks.ts`).
+- Still refused, by name: other kinds or orders of parts (for example a radial added to a radial, or a sky first with a radial subtracted), three or more parts, and the part edits not run here (part 2 inverted on its own, any edit on another form).
+- Not offered, and not tested here: one person's kinds as a part (they need Lightroom to find the person first, `session\person-masks.ts`), and LrDevelopController for a part.

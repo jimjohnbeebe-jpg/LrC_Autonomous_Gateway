@@ -5,8 +5,8 @@
 
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { afterEach, describe, expect, it } from "vitest";
-import { VERIFIED_FORMS, aiPart, formOf, modeOf, uncaptured } from "../src/params/mask-combine.js";
+import { beforeEach, describe, expect, it } from "vitest";
+import { VERIFIED_FORMS, aiPart, formOf, listed, modeOf, uncaptured } from "../src/params/mask-combine.js";
 import { aiWatch, applyOp, firstComponent, newCorrection, precheck, type MaskOp } from "../src/params/mask-ops.js";
 import { summarize } from "../src/params/mask-summary.js";
 import { C, IMAGE, LINEAR, M, MaskError, RADIAL, WHAT, type Component, type Correction } from "../src/params/mask-table.js";
@@ -29,8 +29,19 @@ const linear = (): Correction => newCorrection("linear", "AVG l", LINEAR_G, null
 const radial = (): Correction => newCorrection("radial", "AVG r", BOX, null, {}, []);
 const edit = (e: Correction, extra: Omit<Extract<MaskOp, { op: "edit" }>, "op" | "mask_id">) => applyOp([e], { op: "edit", mask_id: String(e[C.id]), ...extra });
 
-afterEach(() => {
+// The tests below start from Lightroom's own three forms and add what each needs; the shipped list is tested on its own.
+const SHIPPED = [...VERIFIED_FORMS];
+beforeEach(() => {
   for (const f of [...VERIFIED_FORMS]) if (!["linear, add radial", "linear, subtract radial", "linear, intersect radial"].includes(f)) VERIFIED_FORMS.delete(f);
+});
+
+describe("mask combine: the shipped forms", () => {
+  it("lists the masks:combine run's ten forms, sky standing for every AI kind, and nothing else", () => {
+    for (const f of SHIPPED) VERIFIED_FORMS.add(f);
+    expect(SHIPPED).toHaveLength(13);
+    for (const f of ["radial, subtract sky", "radial, intersect landscape_water", "subject, add radial", "radial, subtract radial: remove part 2"]) expect(listed(f), f).toBe(true);
+    for (const f of ["radial, add radial", "sky, subtract radial", "linear, subtract sky", "radial, subtract radial, add sky", "radial, subtract radial: part 2 inverted true"]) expect(listed(f), f).toBe(false);
+  });
 });
 
 describe("mask combine: the captured forms", () => {

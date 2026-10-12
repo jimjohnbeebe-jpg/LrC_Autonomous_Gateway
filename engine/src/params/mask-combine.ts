@@ -33,11 +33,25 @@ const MODES: Readonly<Record<CombineMode, { blend: number; inverted: boolean; va
 
 /**
  * The forms the tools write, in one place: a mask's parts as formOf names them, and a part edit as
- * "<mask's form>: <edit>" (editParts). Stage 1 lists Lightroom's own three (the header). Stage 2 adds what
- * `npm run masks:combine` read back as written and Jim saw as described. A part edit needs its mask's form
- * listed too: an edit of a mask whose form is not listed is refused before it (uncaptured).
+ * "<mask's form>: <edit>" (editParts). Lightroom's own three (the header), then the ten forms
+ * `npm run masks:combine` wrote, read back as written twice and Jim saw as described, all ten YES [handle:
+ * docseportsphase8.5mask-combinemask_combine_2026-10-12T04-29-26-642Z.json `forms`, headline WORKED]. A
+ * part edit needs its mask's form listed too: an edit of a mask whose form is not listed is refused before it
+ * (uncaptured).
  */
-export const VERIFIED_FORMS = new Set<string>(["linear, add radial", "linear, subtract radial", "linear, intersect radial"]);
+export const VERIFIED_FORMS = new Set<string>([
+  "linear, add radial", "linear, subtract radial", "linear, intersect radial",
+  "radial, add sky", "radial, subtract sky", "radial, intersect sky", "sky, add radial",
+  "linear, subtract linear", "radial, subtract radial", "radial, intersect luminance",
+  "radial, subtract radial: reshape part 2", "radial, subtract radial: part 2 to intersect", "radial, subtract radial: remove part 2",
+]);
+
+// The run probed one AI kind, sky. Every AI kind writes the same Mask/Image component apart from its
+// MaskSubType and MaskSubCategoryID (mask-build.ts newComponent) [inference], so a sky form stands for every
+// AI kind in the same place [stated: Jim, 2026-10-12, "Every AI kind, same modes"]; the others are unprobed.
+const AI_NAME = new RegExp(`(?<![\w])(${Object.keys(AI_KINDS).join("|")})(?![\w])`, "g");
+/** Whether VERIFIED_FORMS lists `form`, an AI kind read as sky (the note above). */
+export const listed = (form: string): boolean => VERIFIED_FORMS.has(form) || VERIFIED_FORMS.has(form.replace(AI_NAME, "sky"));
 
 /** A component's fields for `mode`; a radial's Flipped follows MaskInverted, as Lightroom stored it (issue #79). */
 export function modeFields(mode: CombineMode, m: Component): Record<string, unknown> {
@@ -60,9 +74,9 @@ export const formOf = (parts: readonly Component[]): string => parts.map(partLab
 
 /** Refuse a form VERIFIED_FORMS does not list: MASK_OP_NOT_CAPTURED, naming it and the forms written. */
 export function checkForm(form: string): void {
-  if (VERIFIED_FORMS.has(form)) return;
-  const listed = [...VERIFIED_FORMS].map((f) => `"${f}"`).join(", ");
-  throw new MaskError("MASK_OP_NOT_CAPTURED", `Nothing was written: "${form}" is not a mask form verified in Lightroom. The tools write only these forms: ${listed}. The pass is not used.`, { form, verified: [...VERIFIED_FORMS] });
+  if (listed(form)) return;
+  const names = [...VERIFIED_FORMS].map((f) => `"${f}"`).join(", ");
+  throw new MaskError("MASK_OP_NOT_CAPTURED", `Nothing was written: "${form}" is not a mask form verified in Lightroom. The tools write only these forms (sky standing for every AI kind): ${names}. The pass is not used.`, { form, verified: [...VERIFIED_FORMS] });
 }
 
 const invalid = (message: string): never => {
@@ -152,7 +166,7 @@ export function uncaptured(entries: readonly Correction[]): { name: string; why:
     if (first[M.blend] !== undefined && first[M.blend] !== 0) return { name, why: `its MaskBlendMode is ${String(first[M.blend])}` };
     const why = parts.map(untrusted).find((w) => w !== null);
     if (why) return { name, why };
-    if (parts.length > 1 && !VERIFIED_FORMS.has(formOf(parts))) return { name, why: `its ${parts.length} components ("${formOf(parts)}") are not a form verified in Lightroom` };
+    if (parts.length > 1 && !listed(formOf(parts))) return { name, why: `its ${parts.length} components ("${formOf(parts)}") are not a form verified in Lightroom` };
   }
   return null;
 }

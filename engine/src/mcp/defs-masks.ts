@@ -147,8 +147,8 @@ export const MASK_DEFS: ToolDef[] = [
       "or hide/show it (`active`). MASK_NOT_FOUND: call lr_list_masks for the current ids. " +
       "Parts: `combine` adds a part (kind, geometry) in mode add, subtract or intersect; `part` names one part to reshape (geometry), invert, set to a mode (combine.mode) " +
       "or remove (remove_part); a mask of several parts is inverted or reshaped only part by part. Only these forms, which were checked in Lightroom, are written: " +
-      `${[...VERIFIED_FORMS].map((f) => `"${f}"`).join(", ")} (a mask's parts in order, each after the first with its mode; a part edit as "<form>: <edit>"). ` +
-      "Any other form (another kind of part, an AI part, three parts, an edit of one part) is refused: MASK_OP_NOT_CAPTURED names the form, nothing is written and the pass is not used. " +
+      `${[...VERIFIED_FORMS].map((f) => `"${f}"`).join(", ")} (a mask's parts in order, each after the first with its mode; a part edit as "<form>: <edit>"; sky stands for every AI kind, though only sky was checked). ` +
+      "Any other form (other kinds or orders of parts, three parts, other part edits) is refused: MASK_OP_NOT_CAPTURED names the form, nothing is written and the pass is not used. " +
       `An AI part needs plugin ${AI_PART_PLUGIN} and is computed by Lightroom as an AI mask is (the same waits and errors); when Lightroom finds nothing, the mask is put back as it was. ` +
       PASS_NOTE,
     schema: editArgs,

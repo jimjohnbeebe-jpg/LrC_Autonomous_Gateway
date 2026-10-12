@@ -130,7 +130,7 @@ export function createContext(deps: ToolsDeps): ToolContext {
         })
       : null;
   ctx.deck = deck;
-  const sink = hud && deck ? new HudFanOut(hud, deck, new HudLauncher(launcher), waitMs !== undefined ? { waitMs } : {}) : hud;
+  const sink = hud && deck ? new HudFanOut(hud, deck, new HudLauncher(launcher), deps.client, waitMs !== undefined ? { waitMs } : {}) : hud;
   ctx.sessions =
     deps.intents && deps.sessionLogDir
       ? new SessionManager({

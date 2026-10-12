@@ -37,6 +37,18 @@ static PLACED: AtomicBool = AtomicBool::new(false);
 static DIRTY: AtomicBool = AtomicBool::new(false);
 static REFIT: AtomicBool = AtomicBool::new(false);
 const TICK_MS: u64 = 250;
+/// A Deck that has not found Lightroom this long after its start exits: it only ever exits after the Lightroom
+/// it found (spec 3.2 "Lightroom exits"), so one started with no Lightroom ran on. On 2026-10-11 the engine
+/// started one 0.7 s after Lightroom exited [handle: %TEMP%\LrC-AVG\hud\hud_27416_1791765866100.jsonl, no
+/// `lightroom_found`; engine\src\hud\sinks.ts no longer does]. 10 s is [inference]: the S9 starts found
+/// Lightroom on the first tick (docs\reports\phase7\S9.md).
+const NO_LIGHTROOM_EXIT_MS: u128 = 10_000;
+static STARTED: OnceLock<std::time::Instant> = OnceLock::new();
+
+/// Whether to exit for want of a Lightroom: none found yet (`pid` 0), none now, for NO_LIGHTROOM_EXIT_MS.
+fn never_found(pid: u32, found: u32, waited_ms: u128) -> bool {
+    pid == 0 && found == 0 && waited_ms >= NO_LIGHTROOM_EXIT_MS
+}
 
 fn deck() -> HWND {
     hwnd(DECK.load(SeqCst))
@@ -44,6 +56,7 @@ fn deck() -> HWND {
 
 pub fn init(window: WebviewWindow, app: AppHandle) -> tauri::Result<()> {
     DECK.store(window.hwnd()?.0 as isize, SeqCst);
+    let _ = STARTED.set(std::time::Instant::now());
     let _ = WINDOW.set(window);
     unsafe {
         SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, None, Some(on_foreground), 0, 0, WINEVENT_OUTOFCONTEXT);
@@ -68,6 +81,10 @@ fn tick(app: &AppHandle) {
         return app.exit(0);
     }
     let (found, wins) = lightroom::windows(pid);
+    if never_found(pid, found, STARTED.get_or_init(std::time::Instant::now).elapsed().as_millis()) {
+        write(json!({ "ev": "lightroom_not_found", "waited_ms": NO_LIGHTROOM_EXIT_MS }));
+        return app.exit(0);
+    }
     if pid == 0 && found != 0 {
         LR_PID.store(found, SeqCst);
         write(json!({ "ev": "lightroom_found", "pid": found }));
@@ -294,4 +311,17 @@ pub fn focus_lightroom(why: &str) {
     let main = MAIN.load(SeqCst);
     let ok = main != 0 && unsafe { SetForegroundWindow(hwnd(main)).as_bool() };
     write(json!({ "ev": "focus_lightroom", "why": why, "ok": ok }));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn exits_only_when_no_lightroom_was_ever_found_for_10_s() {
+        assert!(!never_found(0, 0, 9_999));
+        assert!(never_found(0, 0, 10_000)); // the 2026-10-11 orphan
+        assert!(!never_found(0, 4242, 60_000)); // found on this tick
+        assert!(!never_found(4242, 0, 60_000)); // found earlier: the exit after it is the pid check's
+    }
 }

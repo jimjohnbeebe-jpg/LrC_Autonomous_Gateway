@@ -29,25 +29,27 @@ export const CLEAR_PENDING_PLUGIN = "0.20.0";
 /** What became of the plugin's guard on the photo. */
 export type GuardOutcome = "none" | "cleared" | "not_cleared" | "plugin_too_old";
 
-/** Drop the plugin's guard on the photo whose AI mask is pending; never throws. */
-async function dropGuard(ctx: SessionContext, s: Session): Promise<{ guard: GuardOutcome; error?: string }> {
-  const p = s.aiPending;
-  if (!p) return { guard: "none" };
+/**
+ * Drop the plugin's guard on photo `uuid`, whose AI mask is pending (null: none is); never throws. `ifAny`: a photo that
+ * may have none (left-open.ts), so the plugin's answer that it had none is "none".
+ */
+export async function dropGuard(ctx: SessionContext, uuid: string | null, ifAny = false): Promise<{ guard: GuardOutcome; error?: string }> {
+  if (!uuid) return { guard: "none" };
   const { client } = ctx.deps;
   if (client.getState() !== "connected") return { guard: "not_cleared", error: "Lightroom is not connected" };
   if (!pluginVersionAtLeast(client.hello()?.plugin_version, CLEAR_PENDING_PLUGIN)) return { guard: "plugin_too_old" };
   // The bridge's own timeout waits on while the plugin is paused (bridge\client.ts send), so a hung Lightroom with its
   // socket open would hold the queue until the heartbeat drops it (Greptile, PR #134): a deadline of its own.
   const ms = aiTimings(ctx).clearMs;
-  const sent = client.request("clear_pending_ai", { photo_uuid: p.job.t.uuid }, { timeoutMs: ms });
+  const sent = client.request("clear_pending_ai", { photo_uuid: uuid }, { timeoutMs: ms });
   sent.catch(() => undefined); // an answer after the deadline is dropped
   let timer: ReturnType<typeof setTimeout> | undefined;
   const deadline = new Promise<never>((_, reject) => {
     timer = setTimeout(() => reject(new ToolError("BRIDGE_TIMEOUT", `clear_pending_ai: no answer within ${ms} ms`, true)), ms);
   });
   try {
-    await Promise.race([sent, deadline]);
-    return { guard: "cleared" };
+    const res = await Promise.race([sent, deadline]);
+    return { guard: ifAny && !res.cleared ? "none" : "cleared" };
   } catch (err) {
     return { guard: "not_cleared", error: toToolError(err).code };
   } finally {
@@ -55,7 +57,7 @@ async function dropGuard(ctx: SessionContext, s: Session): Promise<{ guard: Guar
   }
 }
 
-const GUARD_NOTE: Record<GuardOutcome, string> = {
+export const GUARD_NOTE: Record<GuardOutcome, string> = {
   none: "",
   cleared:
     " Lightroom was told to stop holding writes to the photo for the AI mask; if Lightroom may still be working on it, restarting Lightroom first is the safe way.",
@@ -66,7 +68,7 @@ const GUARD_NOTE: Record<GuardOutcome, string> = {
 /** End `s` without a Lightroom call but clear_pending_ai; the caller closes it. `by`: the user's Abort, else Claude. */
 export async function abandonSession(ctx: SessionContext, s: Session, by: UserEnd | null): Promise<SessionOutput> {
   const ai = s.aiPending;
-  const { guard, error } = await dropGuard(ctx, s);
+  const { guard, error } = await dropGuard(ctx, ai?.job.t.uuid ?? null);
   s.log.outcome = "abandoned";
   s.log.ended = ctx.now().toISOString();
   s.log.ended_by = endedBy(by);

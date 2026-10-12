@@ -181,10 +181,11 @@ const userSource = z.enum(["hud", "menu"]);
  * the HUD or a menu item, with the event's click id, when the engine received it, the operation an
  * Abort stopped, and `done_ms` from the event to the end (for an Abort: the photo back; AC-2).
  * Engine 0.16.0, PR C step 2b: the engine itself, which put the photo back after a Lightroom dialog
- * (session\ai-masks.ts autoRevert), with its `reason`.
+ * (session\ai-masks.ts autoRevert), with its `reason`. Engine 0.29.0: "recovery", a later engine's lr_end_session on a
+ * session an engine that stopped left open (session\left-open.ts), with its `reason`.
  */
 const endedBySchema = z.strictObject({
-  source: z.enum(["claude", "hud", "menu", "engine"]),
+  source: z.enum(["claude", "hud", "menu", "engine", "recovery"]),
   reason: z.string().optional(),
   click_id: z.string().optional(),
   received: z.string().optional(),
@@ -244,6 +245,11 @@ export const sessionLogSchema = z
       camera_profile: z.string().nullable(),
     }),
     snapshot: z.strictObject({ name: z.string(), id: z.string() }),
+    /**
+     * Engine 0.29.0: the master's settings and mask table (its fingerprint, params\mask-table.ts) before the session,
+     * which a revert must bring back: a later engine checks its revert of a session left open against them (session\left-open.ts).
+     */
+    start: z.strictObject({ settings: canonicalSettingsSchema, masks: z.string() }).optional(),
     /** Variants mode: the copies made, A first. */
     variants: z.array(variantEntrySchema),
     picked: variantIdSchema.nullable(),
@@ -294,7 +300,7 @@ export function dayStamp(d: Date): string {
 }
 
 /** Write JSON through a temporary file and a rename, so a reader never sees half a file [inference, as in intents\loader.ts]. */
-function writeJson(file: string, data: unknown): void {
+export function writeJson(file: string, data: unknown): void {
   mkdirSync(path.dirname(file), { recursive: true });
   const temporary = `${file}.${process.pid}.tmp`;
   writeFileSync(temporary, `${JSON.stringify(data, null, 2)}\n`, "utf8");

@@ -1,7 +1,8 @@
 // Starting the Deck (Phase 7 row 3, E8; src\hud\launch.ts, sinks.ts; spec docs\hud\
 // lrc-avg-hud-spec-v2.md 3.2, 11.2 "hud-launch.test.ts"): once at begin when no Deck is connected, once
 // more after a crash, then the classic HUD; none when the executable is missing (the classic HUD opens
-// instead, hud-fallback.test.ts), and none after the listener closed.
+// instead, hud-fallback.test.ts), none after the listener closed, none while Lightroom is gone, and once
+// when Lightroom comes back during the edit.
 
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
@@ -10,7 +11,7 @@ import { describe, expect, it } from "vitest";
 import { HUD_EXE_NAME, HudLauncher, findHudExe } from "../src/hud/launch.js";
 import { SimHudClient, deckRig } from "./helpers/deck-harness.js";
 import { waitUntil } from "./helpers/fake-plugin.js";
-import { ID, clean, lr, useSessionHarness } from "./helpers/session-harness.js";
+import { ID, clean, client, lr, useSessionHarness } from "./helpers/session-harness.js";
 
 useSessionHarness();
 
@@ -74,6 +75,26 @@ describe("starting the Deck during an edit", () => {
     await waitUntil(() => lr.hud.opened === 1);
     expect(rig.started.length).toBe(2);
     expect(rig.manager.current()?.id).toBe(ID);
+  });
+
+  it("starts nothing when the Deck exits after Lightroom, and starts it when Lightroom comes back during the edit (2026-10-11 orphan)", async () => {
+    clean();
+    const sims: SimHudClient[] = [];
+    const rig = await deckRig({ onStart: () => void SimHudClient.connect(rig.endpoint).then((s) => sims.push(s)) });
+    await rig.manager.begin({ intent_id: "test_plain" });
+    await waitUntil(() => sims[0]?.last()?.stage === "awaiting_claude");
+
+    client.stop(); // Lightroom exits: the bridge drops first,
+    sims[0]?.close(); // then the Deck exits after it
+    await waitUntil(() => !rig.deck.connected());
+    await new Promise((resolve) => setTimeout(resolve, 400)); // past the 300 ms wait for the Deck started at begin
+    expect(rig.started.length).toBe(1);
+    expect(lr.hud.opened).toBe(0);
+
+    client.start(); // Lightroom is back, the edit still open
+    await waitUntil(() => sims[1]?.last()?.session_id === ID);
+    expect(rig.started.length).toBe(2);
+    expect(lr.hud.opened).toBe(0);
   });
 
   it("starts nothing when the Deck is lost because the listener closed, or with no edit open", async () => {

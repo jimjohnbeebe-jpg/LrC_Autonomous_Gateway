@@ -50,6 +50,12 @@ export async function setRegions(ctx: ToolContext, args: RegionArgs): Promise<To
 export async function endSession(ctx: ToolContext, args: EndArgs): Promise<ToolOutput> {
   return run(ctx, "lr_end_session", args, async () => {
     const sessions = sessionTools(ctx);
+    // A session an engine that stopped left open (session\left-open.ts): abandon does not wait for the bridge either.
+    if (sessions.leftOpen().some((l) => l.log.session_id === args.session_id)) {
+      if (args.outcome !== "abandon") await ctx.deps.ensureBridge();
+      const left = sessions.endLeftOpen(args);
+      if (left) return left;
+    }
     // "abandon" must work with Lightroom gone: it does not wait for the bridge (session\abandon.ts).
     if (args.outcome === "abandon") return sessions.end(args);
     // Nor does a session the user already ended on the Deck (issue #126): the same outcome succeeds, another

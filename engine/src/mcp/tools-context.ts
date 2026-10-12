@@ -6,7 +6,7 @@ import { lightroomNotices } from "../bridge/index.js";
 import { boxProblem, summarize, type Region, type RegionBox } from "../metrics/index.js";
 import { ParamError, WHITE_BALANCE_UNITS, processVersionLabel, type FromSdkResult } from "../params/index.js";
 import { cropRegion } from "../preview/index.js";
-import type { SessionManager, SessionView, TargetId } from "../session/index.js";
+import { LEFT_OPEN_NOTE, leftOpenJson, type SessionManager, type SessionView, type TargetId } from "../session/index.js";
 import { ToolError, originalMissing, toToolError } from "./errors.js";
 import { DEFAULT_LONG_EDGE, PREVIEW_QUALITY, describe, openSession, render, run, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
@@ -63,6 +63,7 @@ export async function getActivePhotoContext(ctx: ToolContext): Promise<ToolOutpu
     }
     const field = (key: string): unknown => photo[key] ?? null;
     const open = ctx.sessions?.current() ?? null;
+    const left = ctx.sessions?.leftOpen() ?? []; // sessions an engine that stopped left open (session\left-open.ts)
     const missing = originalMissing(photo);
     const json: Record<string, unknown> = {
       ok: true,
@@ -103,6 +104,7 @@ export async function getActivePhotoContext(ctx: ToolContext): Promise<ToolOutpu
       settings: view?.settings ?? null,
       session_active: open?.photos.some((p) => p.uuid === photo.uuid) ?? false,
       ...(open ? { open_session: openSessionJson(open, photo.uuid) } : {}),
+      ...(left.length > 0 ? { left_open: leftOpenJson(left), left_open_note: LEFT_OPEN_NOTE } : {}),
       ...(settingsError ? { settings_error: settingsError } : {}),
       ...(photo.metadata_errors?.length ? { metadata_errors: photo.metadata_errors } : {}),
     };

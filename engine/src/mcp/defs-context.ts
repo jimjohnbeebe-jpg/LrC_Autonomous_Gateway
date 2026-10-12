@@ -25,7 +25,9 @@ export const CONTEXT_DEFS: ToolDef[] = [
       "(`settings`; these names are the ones lr_step takes). `pipeline` is \"raw\" (camera raw files) or \"rendered\" (JPEG, TIFF, " +
       "PNG, PSD, HEIC, AVIF and other non-raw files): `white_balance_unit` says what temperature and tint mean on this photo, " +
       "Kelvin on raw, a relative -100..100 on rendered. Rendered photos have their own profiles (Color, Monochrome). Also says whether a session is open on it, and which Lightroom " +
-      "version runs (`lightroom`; tell the user its `notices`, empty when the version is supported and tested). Changes nothing.",
+      "version runs (`lightroom`; tell the user its `notices`, empty when the version is supported and tested). `left_open` lists sessions an engine " +
+      "that stopped (Claude Desktop closed or restarted it) left open, with `left_open_note`: ask the user, for each, to revert, accept or " +
+      "abandon it, and end it with lr_end_session. Changes nothing.",
     schema: noArgs,
     annotations: { readOnlyHint: true, openWorldHint: false },
     run: (tools) => tools.getActivePhotoContext(),

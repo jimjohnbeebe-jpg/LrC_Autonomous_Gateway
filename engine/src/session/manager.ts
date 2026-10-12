@@ -41,6 +41,7 @@ import { openSession, runPass0 } from "./begin.js";
 import { endSession, readSessionLog } from "./end.js";
 import { abortedNote, endedAlike, endedError, idleStage, userAction, userEnded, type ActionHost, type UserAction, type UserEnded } from "./hud-actions.js";
 import { abortError, checkAbort, read, render } from "./io.js";
+import { endLeftOpen, findLeftOpen, type LeftOpen } from "./left-open.js";
 import { createMask, deleteMask, editMask, listMasks } from "./masks.js";
 import { selectVariant } from "./pick.js";
 import { probe } from "./probe.js";
@@ -290,6 +291,15 @@ export class SessionManager {
       this.engineEnded(s);
     }
     return withHudActions(s, out);
+  }
+
+  /** Sessions an engine that stopped left open (left-open.ts); endLeftOpen ends one in the queue, null when not one. */
+  leftOpen(): LeftOpen[] {
+    return findLeftOpen(folderOf(this.ctx.deps.logDir), this.session?.id ?? null);
+  }
+  endLeftOpen(args: EndArgs): Promise<SessionOutput> | null {
+    const left = this.leftOpen().find((l) => l.log.session_id === args.session_id);
+    return left ? this.exclusive(() => endLeftOpen(this.ctx, left, args.outcome)) : null;
   }
 
   /** lr_get_session_log (no Lightroom call). */

@@ -57,7 +57,7 @@ async function steps(ctx: Ctx, found: Census): Promise<void> {
 }
 
 /** Jim's selection as the check found it (in the collection or not: Greptile, PR #97), put back after the batteries selected every photo in turn. */
-async function restoreSelection(ctx: Ctx, photos: Photo[]): Promise<void> {
+export async function restoreSelection(ctx: Ctx, photos: Photo[]): Promise<void> {
   const uuid = (ctx.results["census"] as Json)["selected_uuid"];
   const jims = photos.find((p) => p.uuid === uuid);
   const out: Json = { uuid: uuid ?? null, photo: jims ? label(jims) : null, ok: false };

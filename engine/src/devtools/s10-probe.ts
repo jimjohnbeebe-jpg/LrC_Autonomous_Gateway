@@ -31,30 +31,39 @@ function outcome(written: number, read: unknown, limit: number, previous: unknow
 
 const tally = (outcomes: string[]): Json => Object.fromEntries(["accepted", "clamped", "ignored", "clamped_or_ignored", "other", "missing"].map((o) => [o, outcomes.filter((x) => x === o).length]));
 
+/** A numeric key and the limits to probe it at. */
+export type Candidate = { name: string; sdkKey: string; min: number; max: number };
+
 /** The pinned limits of every numeric parameter whose key the photo carries, and the parameters whose key it lacks. */
 export async function rangeProbe(ctx: Ctx, photo: Photo): Promise<Json> {
   const { map } = ctx.deps;
   const numeric = map.names().flatMap((name) => {
     const spec = map.spec(name);
-    return spec?.kind === "number" ? [{ name, spec }] : [];
+    return spec?.kind === "number" ? [{ name, sdkKey: spec.sdkKey, min: spec.min, max: spec.max }] : [];
   });
-  const present = numeric.filter(({ spec }) => spec.sdkKey in photo.start);
-  const absent = numeric.filter(({ spec }) => !(spec.sdkKey in photo.start)).map((n) => n.name);
+  return rangeProbeOf(ctx, photo, numeric, (n, of) => historyName("range", n, of));
+}
+
+/** The range probe on any candidate keys (effects-probe.ts passes limits that are not pinned yet). */
+export async function rangeProbeOf(ctx: Ctx, photo: Photo, candidates: Candidate[], history: (n: number, of: number) => string): Promise<Json> {
+  const present = candidates.filter((c) => c.sdkKey in photo.start);
+  const absent = candidates.filter((c) => !(c.sdkKey in photo.start)).map((n) => n.name);
   const out: Json = { parameters: present.length, absent, writes: [] };
   if (present.length === 0) return { ...out, note: "the photo carries none of the numeric parameters' keys" };
   const batch = (pick: (min: number, max: number, delta: number) => number): SdkSettings =>
-    Object.fromEntries(present.map(({ spec }) => [spec.sdkKey, pick(spec.min, spec.max, (spec.max - spec.min) * 0.01)]));
+    Object.fromEntries(present.map((spec) => [spec.sdkKey, pick(spec.min, spec.max, (spec.max - spec.min) * 0.01)]));
   const values = [batch((min) => min), batch((_min, max) => max), batch((min, _max, d) => min - d), batch((_min, max, d) => max + d)];
   const reads: Array<SdkSettings | null> = [];
   for (const [i, settings] of values.entries()) {
     const w: Json = { label: LABELS[i], keys: present.length };
     (out["writes"] as Json[]).push(w);
-    const rb = await write(ctx, photo, settings, historyName("range", i + 1, 4), w);
+    const rb = await write(ctx, photo, settings, history(i + 1, 4), w);
     reads.push(rb);
     if (!rb) break;
   }
   const read = (i: number, key: string): unknown => reads[i]?.[key] ?? null;
-  const per = present.map(({ name, spec }) => {
+  const per = present.map((spec) => {
+    const { name } = spec;
     const delta = (spec.max - spec.min) * 0.01;
     return {
       name, sdk_key: spec.sdkKey, min: spec.min, max: spec.max,

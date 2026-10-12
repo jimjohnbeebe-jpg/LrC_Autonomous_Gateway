@@ -33,22 +33,8 @@ async function selectForWrites(ctx: Ctx, photo: Photo, out: Json): Promise<boole
 }
 
 export async function writeBattery(ctx: Ctx, photo: Photo, recorded: Recorded): Promise<Json> {
-  const { client, say } = ctx.deps;
-  const out: Json = { filename: photo.filename, copy_name: photo.copy_name, uuid: photo.uuid, file_format: photo.file_format, pipeline: photo.pipeline, process_version: photo.process_version, snapshot: null, put_back: null };
-  say(`${label(photo)} (${photo.pipeline}, PV ${photo.process_version ?? "?"}):`);
-  if (!(await ensureConnected(ctx, label(photo))) || !(await selectForWrites(ctx, photo, out))) return out;
-  const name = snapshotName(ctx.deps.stamp);
-  let snapshot: string;
-  try {
-    const res = await client.request("create_snapshot", { photo_uuid: photo.uuid, name }, { timeoutMs: ctx.deps.writeTimeoutMs ?? WRITE_TIMEOUT_MS });
-    snapshot = res.snapshot_id;
-    out["snapshot"] = { name, id: snapshot };
-  } catch (err) {
-    out["snapshot"] = { name, error: errorBody(err) };
-    ctx.fail(`${label(photo)}: the snapshot: ${describeError(err)}. Nothing was written to it.`);
-    return out;
-  }
-  try {
+  const { say } = ctx.deps;
+  return behindSnapshot(ctx, photo, snapshotName(ctx.deps.stamp), async (out) => {
     out["range"] = await rangeProbe(ctx, photo);
     say(`  ${rangeLine(out["range"] as Json)}`);
     out["extra_keys"] = await extraKeysProbe(ctx, photo);
@@ -62,6 +48,27 @@ export async function writeBattery(ctx: Ctx, photo: Photo, recorded: Recorded): 
     const profiles = await profileWrites(ctx, photo, recorded);
     out["profiles"] = profiles;
     say(`  profiles: ${(profiles["pairs"] as Json[]).map((p) => `${String(p["label"])} ${taken(p)}`).join("; ")}`);
+  });
+}
+
+/** Select the photo, make the snapshot `name`, run `body`, then put the photo back from the snapshot (effects-probe.ts too). */
+export async function behindSnapshot(ctx: Ctx, photo: Photo, name: string, body: (out: Json) => Promise<void>): Promise<Json> {
+  const { client, say } = ctx.deps;
+  const out: Json = { filename: photo.filename, copy_name: photo.copy_name, uuid: photo.uuid, file_format: photo.file_format, pipeline: photo.pipeline, process_version: photo.process_version, snapshot: null, put_back: null };
+  say(`${label(photo)} (${photo.pipeline}, PV ${photo.process_version ?? "?"}):`);
+  if (!(await ensureConnected(ctx, label(photo))) || !(await selectForWrites(ctx, photo, out))) return out;
+  let snapshot: string;
+  try {
+    const res = await client.request("create_snapshot", { photo_uuid: photo.uuid, name }, { timeoutMs: ctx.deps.writeTimeoutMs ?? WRITE_TIMEOUT_MS });
+    snapshot = res.snapshot_id;
+    out["snapshot"] = { name, id: snapshot };
+  } catch (err) {
+    out["snapshot"] = { name, error: errorBody(err) };
+    ctx.fail(`${label(photo)}: the snapshot: ${describeError(err)}. Nothing was written to it.`);
+    return out;
+  }
+  try {
+    await body(out);
   } catch (err) {
     out["stopped"] = describeError(err);
     ctx.fail(`${label(photo)}: the writes stopped: ${describeError(err)}`);

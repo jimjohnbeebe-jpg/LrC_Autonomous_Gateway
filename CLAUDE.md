@@ -90,6 +90,7 @@ npm run phase8:check        # Phase 8 acceptance: every "fixtures" photo, 11 int
 npm run ai:probe            # issue #123 probe: three AI masks (Mountains, Vegetation with and without reads) on one photo in Develop, Claude Desktop quit; resumes after a Lightroom restart (-- --new) (docs\reports\phase8.5\ai-vegetation.md)
 npm run masks:carry         # issue #121 probe: the five hand-made masks (Add, Subtract, Intersect, Brush, Color) written back beside one new radial, on one photo in Develop, Claude Desktop quit; puts the photo back, first if an earlier run stopped (docs\reports\phase8.5\mask-carry.md)
 npm run masks:combine       # issue #131 probe: ten two-part mask forms and part edits written one at a time on one virtual copy in Develop, y/n each, Claude Desktop quit; puts the photo back (docs\reports\phase8.5\mask-combine.md)
+npm run effects:probe       # issue #125 probe: post-crop vignette and grain limits on a raw and a rendered "fixtures" photo, Lightroom in Develop, Claude Desktop quit; puts both back (docs\reports\phase8.5\effects.md)
 node engine\dist\mcp\main.js # the stdio MCP server (Claude Desktop starts it; tool log in $env:LRC_AVG_LOG_DIR or %LOCALAPPDATA%\LrC-AVG\logs)
 graphify query "How does X reach Y?"
 ```

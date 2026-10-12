@@ -9,6 +9,8 @@ fixtures/*.jpg
 fixtures/*.jpeg
 # The files Jim makes for spike S10 (PSB, 16/32-bit and CMYK TIFF, JPEG XL): renders of his photos
 fixtures/S10/
+# The two copies spike S11 imports as a stack (spikes\S11\README.md)
+fixtures/S11/
 
 # Golden JPEGs are renders of Jim's photos: on disk only, never in the public repo (Phase 3 decision 3,
 # Jim 2026-09-26). Their hashes and expected metrics are committed instead.

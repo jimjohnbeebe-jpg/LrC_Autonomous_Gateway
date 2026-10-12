@@ -1,6 +1,7 @@
 // Pass 0 on one photo (PRD 6.5): the intent's camera profile and priors, plus a variant's priors on
-// a copy (Variants mode, PRD 6.6 step 2), written as one History step; then the clipping baseline
-// "until under" (guardrail.ts correct, n = 0) [handle: tests\session-begin.test.ts (the master),
+// a copy (Variants mode, PRD 6.6 step 2), written as one History step; then, when the session's
+// clip_baseline is on (issue #130), the clipping baseline "until under" (guardrail.ts correct, n = 0)
+// [handle: tests\session-begin.test.ts, tests\session-clip-baseline.test.ts (the master),
 // tests\session-variants.test.ts "makes the copies, runs pass 0 on each …" (the copies), both
 // against the Lightroom sim].
 
@@ -31,7 +32,7 @@ export type Pass0 = {
 
 /**
  * Pass 0 on photo `t`, whose settings are `view`: render it as it is (or take `original`, a render
- * of the same settings), write the changes as one History step, then the clipping baseline. The
+ * of the same settings), write the changes as one History step, then the clipping baseline (with clip_baseline). The
  * intent's profile and priors are those of the photo's pipeline (intent schema v2), with `variant`'s
  * priors on top on a copy; the session's `profile` (lr_begin_session's) replaces the intent's.
  */
@@ -58,7 +59,7 @@ export async function pass0(ctx: SessionContext, s: Session, t: Target, view: Fr
     historyNames.push(name);
     rendered = await render(ctx, s, t, current);
   }
-  const corrected = await correct(ctx, s, t, 0, null, current, rendered, historyNames);
+  const corrected = await correct(ctx, s, t, 0, null, before.metrics, current, rendered, historyNames); // writes only with clip_baseline
   const applied = Object.entries(changes).map(([name, after]): Change => {
     const was = view.settings[name] ?? null;
     return { name, before: was, requested: after, after, delta: typeof was === "number" && typeof after === "number" ? roundForSlider(name, after - was) : null };
@@ -78,7 +79,7 @@ export function pass0Entry(s: Session, t: Target, beforeView: FromSdkResult, p: 
     started: p.passStarted,
     duration_ms: durationMs,
     history_names: p.historyNames,
-    rationale: `engine: camera profile, lens corrections and intent priors${variant}, then the clipping baseline (PRD 6.5)`,
+    rationale: `engine: camera profile, lens corrections and intent priors${variant}${s.clipBaseline ? ", then the clipping baseline (PRD 6.5)" : "; no clipping baseline (clip_baseline off, issue #130)"}`,
     requested: p.requested,
     changes: p.applied,
     clamped: [],

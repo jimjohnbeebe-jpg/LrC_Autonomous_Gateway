@@ -1,0 +1,10 @@
+2026-10-11 15:37:39.176 INFO  bridge: receive: engine connected
+2026-10-11 15:37:39.686 INFO  bridge: send: engine connected
+2026-10-11 15:37:39.687 INFO  bridge: hello 34d58bb3-d30f-40e4-8a1e-0d722f063770
+2026-10-11 15:37:39.690 INFO  bridge: get_selection d947ee0e-3c03-4a05-bdcf-c85b5a2995ae
+2026-10-11 15:37:39.695 INFO  bridge: get_settings deaf3a04-4b40-404f-95a8-3504a164daf6
+2026-10-11 15:37:39.727 INFO  bridge: create_snapshot 6ea4f529-0bbc-4dd5-a09e-a356ccef67ea
+2026-10-11 15:37:39.811 INFO  bridge: apply_settings 971414f1-0828-4dbc-8298-3ab698134d13
+2026-10-11 15:37:40.194 INFO  bridge: get_settings 6cfadce1-f32e-4be5-9122-f12d957437d8
+2026-10-11 15:37:58.219 INFO  bridge: select_photo 8c2abdf1-5aa4-4772-8177-9748e40d03ff
+2026-10-11 15:37:58.224 INFO  bridge: apply_snapshot bba2c14c-016f-43f3-8a72-c6e2c02e67cf

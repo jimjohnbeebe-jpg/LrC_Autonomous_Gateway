@@ -89,9 +89,13 @@ export function planStep(requested: Readonly<Record<string, unknown>>, current: 
  * The projected guardrail (ARCHITECTURE section 4): before writing, refuse a slider that would push
  * further into a clipping limit that is already reached, and, where lr_probe measured a slope, cap
  * a change the slope says would cross the limit. Changes the plan in place and returns it.
+ * Without `clipBaseline` (the session's), an end already over its limit before the pass is not
+ * guarded: only the clipping the pass causes is [stated: Jim, 2026-10-11, issue #130, "Leave it
+ * alone (Rec.)"]; the guardrail after the write reports it `unmet` (guardrail.ts correct).
  */
-export function applyProjectedGuardrail(plan: StepPlan, last: MetricsSummary | null, limits: Limits, slopes: ReadonlyMap<string, Slope> = new Map(), pipeline: Pipeline = "raw"): StepPlan {
+export function applyProjectedGuardrail(plan: StepPlan, last: MetricsSummary | null, limits: Limits, slopes: ReadonlyMap<string, Slope>, pipeline: Pipeline, clipBaseline: boolean): StepPlan {
   if (!last) return plan;
+  const guards = (now: number, limit: number): boolean => clipBaseline || now <= limit;
   const kept: Change[] = [];
   for (const change of plan.changes) {
     if (change.delta === null || typeof change.before !== "number") {
@@ -100,9 +104,9 @@ export function applyProjectedGuardrail(plan: StepPlan, last: MetricsSummary | n
     }
     const direction = sign(change.delta);
     let refusedFor: string | null = null;
-    if (RAISES_HIGHLIGHTS[change.name] === direction && last.clip_high_pct >= limits.clipHighPct) {
+    if (RAISES_HIGHLIGHTS[change.name] === direction && last.clip_high_pct >= limits.clipHighPct && guards(last.clip_high_pct, limits.clipHighPct)) {
       refusedFor = `clip_high_pct is ${fmt(last.clip_high_pct)} %, at or over the limit of ${fmt(limits.clipHighPct)} %; ${change.name} ${signed(change.delta)} would push it higher`;
-    } else if (CRUSHES_SHADOWS[change.name] === direction && last.clip_low_pct >= limits.clipLowPct) {
+    } else if (CRUSHES_SHADOWS[change.name] === direction && last.clip_low_pct >= limits.clipLowPct && guards(last.clip_low_pct, limits.clipLowPct)) {
       refusedFor = `clip_low_pct is ${fmt(last.clip_low_pct)} %, at or over the limit of ${fmt(limits.clipLowPct)} %; ${change.name} ${signed(change.delta)} would push it higher`;
     }
     if (refusedFor) {
@@ -113,7 +117,7 @@ export function applyProjectedGuardrail(plan: StepPlan, last: MetricsSummary | n
     if (slope) {
       let allowed = change.delta;
       const cap = (slopePerUnit: number, now: number, limit: number): void => {
-        if (slopePerUnit * allowed <= 0) return; // this change lowers that clipping
+        if (slopePerUnit * allowed <= 0 || !guards(now, limit)) return; // this change lowers that clipping, or the end is left alone
         const room = (limit - now) / slopePerUnit; // signed change that reaches the limit
         if (Math.abs(room) < Math.abs(allowed)) allowed = room;
       };
@@ -185,3 +189,10 @@ export function convergedByMetrics(delta: MetricsDelta | null, changes: readonly
   if (Math.abs(delta.clip_high_pct) >= CONVERGENCE.clipPct || Math.abs(delta.clip_low_pct) >= CONVERGENCE.clipPct) return false;
   return changes.every((c) => c.delta !== null && Math.abs(c.delta) <= minStep(c.name, pipeline) + EPSILON);
 }
+
+/**
+ * A mask pass's convergence (issue #130 item 4): every region's change under convergedByMetrics's
+ * thresholds; false without regions. A signal only: it ends nothing (session\masks.ts).
+ */
+export const convergedByRegions = (delta: MetricsDelta): boolean =>
+  delta.regions.length > 0 && delta.regions.every((r) => convergedByMetrics({ ...r, regions: [] }, []));

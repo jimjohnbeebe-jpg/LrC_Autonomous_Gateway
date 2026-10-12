@@ -68,7 +68,7 @@ describe("grading hue under the projected guardrail", () => {
   it("wraps the hue again when a probe's slope shortens the change: 355 + 20 cut to +10 gives 5", () => {
     const last = { ...summarize(computeMetrics(Uint8Array.from([128, 128, 128]), 1, 1, 3)), clip_high_pct: 0.4, clip_low_pct: 0 };
     const slopes = new Map([[HUE, { luma_mean: 0, clip_high_pct: 0.01, clip_low_pct: 0 }]]);
-    const plan = applyProjectedGuardrail(hue(355, 20), last, { clipHighPct: 0.5, clipLowPct: 1 }, slopes);
+    const plan = applyProjectedGuardrail(hue(355, 20), last, { clipHighPct: 0.5, clipLowPct: 1 }, slopes, "raw", true);
     expect(plan.changes[0]).toMatchObject({ after: 5, delta: 10 });
   });
 });

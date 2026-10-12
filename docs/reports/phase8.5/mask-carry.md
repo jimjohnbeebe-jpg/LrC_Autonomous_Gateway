@@ -1,7 +1,7 @@
 ---
 report: mask-carry
 phase: "8.5"
-status: template
+status: accepted
 authored_by: "Claude Code (purpose, harness, pre-run findings, steps); Jim (observed, verdict)"
 date: 2026-10-11
 ---
@@ -18,7 +18,7 @@ Questions:
 3. For #131 (mask combine): which MaskBlendMode and MaskInverted does Lightroom store for each component of an Add, a Subtract and an Intersect? Today that mapping is [unverified]; the S10 census only suggests that a subtracted part is MaskBlendMode 1 with MaskInverted true [inference from "Cloudsx", see below].
 
 Go / no-go, from the plan Jim approved for this batch [stated: Jim, 2026-10-11, batch triage answers]:
-- **WORKED** (every original entry reads back unchanged by the engine's own check, Jim answers "y", and the photo is put back): the #121 fix follows in a later PR. Create no longer refuses a photo because of another mask; edit and delete refuse only when the target mask itself is uncaptured. The engine's read-back check (`verifyTable`) still checks every carried entry after each write.
+- **WORKED** (every original entry reads back unchanged by the engine's own check, Jim answers "y", and the photo is put back): the #121 fix follows in a later PR. Create no longer refuses a photo because of another mask; edit refuses only when the target mask itself is uncaptured; delete is allowed [stated: Jim, 2026-10-11, "Allow (Rec.)"]. The engine's read-back check (`verifyTable`) still checks every carried entry after each write.
 - **FAILED**: the whole-table refusal stays as it is. The saved diff shows which entry or field Lightroom changed, and the next step is decided from it.
 - The combine feature itself (#131) is not built here. This run only records the shapes it needs.
 
@@ -96,28 +96,39 @@ Jim answers y/n in the PowerShell window, as for `npm run ai:probe` [stated: Jim
 
 ## Observed (Jim)
 
-(Jim fills this in, or Claude Code transcribes it from the saved results with Jim's answer.)
+One run on 2026-10-11, 22:37:39-22:37:58 UTC, transcribed by Claude Code from the saved results [handle: `docs\reports\phase8.5\mask-carry\mask_carry_2026-10-11T22-37-39-161Z.json`, copied from `%TEMP%\LrC-AVG\masks-carry\`]. Jim said "done with Tasks for Jim" [stated: Jim, 2026-10-11].
+
+- Photo: `20260907-_OZ80093.NEF` (a virtual copy, uuid `C9967541-0DEA-4CB9-AC2F-EA271695D1DC`). Engine 0.27.0, Node v24.11.1.
+- Table before: 5 entries, the five hand-made masks. Table after the write: 6 entries, the five plus "AVG masks:carry radial".
+- Plugin log for the run [handle: `docs\reports\phase8.5\mask-carry\bridge_log_excerpt.txt`, Lightroom's local time 15:37 = 22:37 UTC]: `get_selection`, `get_settings`, `create_snapshot`, `apply_settings`, `get_settings`, then 18 s for Jim's answer, then `select_photo` and `apply_snapshot`.
+- The Brush mask's single component is `Mask/Aggregate`, with its strokes under `Masks`. The Color mask's is `Mask/RangeMask` with `Type` 1.
 
 ## Numbers
 
 | Mask | Components (What, MaskBlendMode, MaskInverted) | read_back | read_again |
 |---|---|---|---|
-| Add | | | |
-| Subtract | | | |
-| Intersect | | | |
-| Brush | | | |
-| Color | | | |
+| Add | Mask/Gradient (0, false); Mask/CircularGradient (0, false) | unchanged | unchanged |
+| Subtract | Mask/Gradient (0, false); Mask/CircularGradient (1, false) | unchanged | unchanged |
+| Intersect | Mask/Gradient (0, false); Mask/CircularGradient (1, true) | unchanged | unchanged |
+| Brush | Mask/Aggregate (0, false) | unchanged | unchanged |
+| Color | Mask/RangeMask, Type 1 (0, false) | unchanged | unchanged |
+| AVG masks:carry radial (new) | Mask/CircularGradient | unchanged | unchanged |
 
-- Jim's answer, "Do the hand-made masks look unchanged?":
-- Headline:
-- put back:
+- Jim's answer, "Do the hand-made masks look unchanged?": **y**.
+- Headline: **WORKED**.
+- put back: **YES** ("settings and masks as before").
+- For #131, as Lightroom stored them [handle: the same JSON, `shapes`]:
+  - Add: the added component has MaskBlendMode 0.
+  - Subtract: MaskBlendMode 1, MaskInverted false.
+  - Intersect: MaskBlendMode 1, MaskInverted true.
+  - This one run is the only observation; other component kinds are [unverified].
 
 ## Verdict
 
-(Jim decides: go / no-go for the #121 fix. The probe's headline is a suggestion.)
+**Go** for the #121 fix [stated: Jim, 2026-10-11, "Go (Recommended)"]. The fix goes in one engine PR with #130 items 3 and 4 [stated: Jim, "One engine PR (Rec.)"].
 
 ## Consequences / open questions
 
-- On WORKED: the #121 fix PR. It drops the whole-table refusal for create, and edit and delete refuse only an uncaptured target. A regression test: a table of one multi-component mask plus one radial, add a linear, and all three read back. It also updates the tool description (`engine\src\mcp\defs-masks.ts`).
+- On WORKED: the #121 fix PR. It drops the whole-table refusal for create; edit refuses only when the target mask itself is uncaptured; delete is allowed [stated: Jim, 2026-10-11, "Allow (Rec.)"]. A regression test: a table of one multi-component mask plus one radial, add a linear, and all three read back. It also updates the tool description (`engine\src\mcp\defs-masks.ts`).
 - For #131: the five shapes' blend/inverted pairs above are the captured forms a combine path would write. The combine API (its arguments, which kinds can be combined) is planned on its own.
 - Still [unverified] after one run: other brush forms (a brush added to an AI mask, as in "Far Mountain"), Depth Range, and a mask with three or more components.

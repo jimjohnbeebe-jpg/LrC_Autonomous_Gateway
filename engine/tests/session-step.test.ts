@@ -153,7 +153,8 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
     });
 
     it("renders again before a step when the photo was edited in Lightroom since the last render (Greptile, PR #23)", async () => {
-      await manager.begin({ intent_id: "test_plain" });
+      // clip_baseline: the refusal below guards an end already over before the step (issue #130).
+      await manager.begin({ intent_id: "test_plain", clip_baseline: true });
       lr.settings["Exposure2012"] = 1; // Jim drags Exposure: the right end now clips
       const out = await manager.step({ session_id: ID, settings: { exposure: 0.3, shadows: 10 }, rationale: "r" });
       expect(out.json["metrics_refreshed"]).toMatch(/rendered again/);

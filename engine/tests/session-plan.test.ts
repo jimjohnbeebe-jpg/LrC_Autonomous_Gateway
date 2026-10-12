@@ -97,14 +97,14 @@ describe("planStep", () => {
 
 describe("the projected guardrail", () => {
   it("refuses sliders that push further into a limit already reached, and keeps the others", () => {
-    const plan = applyProjectedGuardrail(planStep({ exposure: 0.3, whites: 10, shadows: 20, highlights: -10 }, { ...current, shadows: 0 }, 1, map), withClip(0.8, 0), limits);
+    const plan = applyProjectedGuardrail(planStep({ exposure: 0.3, whites: 10, shadows: 20, highlights: -10 }, { ...current, shadows: 0 }, 1, map), withClip(0.8, 0), limits, new Map(), "raw", true);
     expect(plan.refused.map((r) => r.name)).toEqual(["exposure", "whites"]);
     expect(plan.changes.map((c) => c.name)).toEqual(["shadows", "highlights"]);
     expect(plan.refused[0]?.reason).toMatch(/clip_high_pct is 0.8 %, at or over the limit of 0.5 %/);
   });
 
   it("refuses darkening sliders when the shadows are at their limit", () => {
-    const plan = applyProjectedGuardrail(planStep({ blacks: -10, contrast: 10, exposure: 0.2 }, current, 1, map), withClip(0, 1.2), limits);
+    const plan = applyProjectedGuardrail(planStep({ blacks: -10, contrast: 10, exposure: 0.2 }, current, 1, map), withClip(0, 1.2), limits, new Map(), "raw", true);
     expect(plan.refused.map((r) => r.name)).toEqual(["blacks", "contrast"]);
     expect(plan.changes.map((c) => c.name)).toEqual(["exposure"]);
   });
@@ -112,15 +112,24 @@ describe("the projected guardrail", () => {
   it("caps a change that a probe's slope says would cross the limit", () => {
     // 0.2 % now; +1 % per EV: 0.3 EV of room before 0.5 %.
     const slopes = new Map([["exposure", { luma_mean: 40, clip_high_pct: 1, clip_low_pct: -0.5 }]]);
-    const plan = applyProjectedGuardrail(planStep({ exposure: 0.8 }, current, 1, map), withClip(0.2, 0), limits, slopes);
+    const plan = applyProjectedGuardrail(planStep({ exposure: 0.8 }, current, 1, map), withClip(0.2, 0), limits, slopes, "raw", true);
     expect(plan.changes[0]).toMatchObject({ name: "exposure", delta: 0.3, after: 0.63 });
     expect(plan.clamped.at(-1)?.reason).toMatch(/probe's slope/);
-    const lowering = applyProjectedGuardrail(planStep({ exposure: -0.5 }, current, 1, map), withClip(0.2, 0), limits, slopes);
+    const lowering = applyProjectedGuardrail(planStep({ exposure: -0.5 }, current, 1, map), withClip(0.2, 0), limits, slopes, "raw", true);
     expect(lowering.changes[0]?.delta).toBe(-0.5); // lowers clip_high; clip_low rises 0.25, within its room
   });
 
+  it("without clip_baseline leaves an end already over its limit alone, and still guards an end within it (issue #130)", () => {
+    const over = applyProjectedGuardrail(planStep({ exposure: 0.3, blacks: -10 }, current, 1, map), withClip(0.8, 1), limits, new Map(), "raw", false);
+    expect(over.changes.map((c) => c.name)).toEqual(["exposure"]); // high over: left alone; low at its limit: guarded
+    expect(over.refused.map((r) => r.name)).toEqual(["blacks"]);
+    const slopes = new Map([["exposure", { luma_mean: 40, clip_high_pct: 1, clip_low_pct: -0.5 }]]);
+    expect(applyProjectedGuardrail(planStep({ exposure: 0.8 }, current, 1, map), withClip(0.8, 0), limits, slopes, "raw", false).changes[0]?.delta).toBe(0.8);
+    expect(applyProjectedGuardrail(planStep({ exposure: 0.8 }, current, 1, map), withClip(0.2, 0), limits, slopes, "raw", false).changes[0]).toMatchObject({ delta: 0.3, after: 0.63 });
+  });
+
   it("does nothing without metrics", () => {
-    const plan = applyProjectedGuardrail(planStep({ exposure: 0.3 }, current, 1, map), null, limits);
+    const plan = applyProjectedGuardrail(planStep({ exposure: 0.3 }, current, 1, map), null, limits, new Map(), "raw", true);
     expect(plan.changes).toHaveLength(1);
   });
 });

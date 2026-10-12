@@ -259,12 +259,12 @@ function untrusted(m: Component): string | null {
 }
 
 /**
- * The first correction the engine must not write back, and why: a component whose structure the captures
- * did not round-trip (untrusted), more than one component, or a MaskBlendMode other than 0 (every
- * captured component had one component and MaskBlendMode 0 [handle: 3_dump-1.json;
- * capture2-templates.json; capture3-templates.json; capture4-row6_people_by_hand.json]). The mask tools
- * write the whole table, so such a mask would be written back in a form never shown to survive it
- * [inference]; they refuse instead (session\masks.ts).
+ * The first correction the tools must not edit, and why: an untrusted component, several components, or a
+ * MaskBlendMode other than 0 (every captured mask: one component, blend 0 [handle: 3_dump-1.json; capture2-templates.json;
+ * capture3-templates.json; capture4-row6_people_by_hand.json]). session\masks.ts checks the edited one only:
+ * others are carried unchanged, as Add, Subtract, Intersect, Brush and Color read back twice beside a new radial
+ * [handle: docs\reports\phase8.5\mask-carry\mask_carry_2026-10-11T22-37-39-161Z.json `diff_lines`, issue #121].
+ * A brush inside an AI mask, a Depth Range, 3+ components: [unverified] (mask-carry.md "Consequences").
  */
 export function uncaptured(entries: readonly Correction[]): { name: string; why: string } | null {
   for (const e of entries) {

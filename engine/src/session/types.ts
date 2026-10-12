@@ -28,6 +28,8 @@ export type BeginArgs = {
   intent_id?: string | undefined;
   /** Replaces the intent's profile at pass 0 (PRD FR-4.3, "unless Claude overrides"); of the photo's pipeline. */
   profile?: string | undefined;
+  /** Replaces the intent's clip_baseline (issue #130): true, pass 0 pulls clipping in and a pass corrects an end over before it. */
+  clip_baseline?: boolean | undefined;
   mode?: "converge" | "variants" | undefined;
   /** Variants mode: how many copies, 2-3 (A, B, C) [stated: Jim, 2026-09-27, "Go with A"]. */
   variant_count?: number | undefined;
@@ -88,10 +90,7 @@ export type SessionDeps = {
   render: (request: RenderRequest) => Promise<RenderedPreview>;
   /** The session log folder, or a function giving it at each session start (settings\folders.ts). */
   logDir: string | (() => string);
-  /**
-   * Reads the settings page at lr_begin_session (settings\store.ts PageSettings.read, which also
-   * moves the folders); settings\read.ts readPage on the client when absent.
-   */
+  /** Reads the settings page at lr_begin_session (settings\store.ts PageSettings.read, which also moves the folders); settings\read.ts readPage on the client when absent. */
   readPage?: () => Promise<PageRead>;
   /** The log folders session logs were written to (settings\log-folders.ts): begin records its folder, lr_get_session_log searches them. */
   logFolders?: KnownLogFolders;
@@ -212,6 +211,8 @@ export type Session = {
   intent: LoadedIntent;
   /** BeginArgs.profile: pass 0 writes it in place of the intent's. */
   profile: string | null;
+  /** BeginArgs.clip_baseline ?? the intent's ?? false (issue #130): off, the guardrail corrects only an end the pass pushed over (guardrail.ts correct). */
+  clipBaseline: boolean;
   mode: "converge" | "variants";
   maxPasses: number;
   limits: Limits;

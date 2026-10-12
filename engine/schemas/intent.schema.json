@@ -473,6 +473,10 @@
       },
       "additionalProperties": false
     },
+    "clip_baseline": {
+      "description": "true: pass 0 pulls clipping under the limits, and a pass corrects an end over before it (default false: only what the pass caused; issue #130)",
+      "type": "boolean"
+    },
     "regions_expected": {
       "type": "array",
       "items": {

@@ -48,7 +48,7 @@ async function guarded(deps: Phase5Deps, run: Run, out: Json, part: string, fn: 
 }
 
 async function beginWithPass(deps: Phase5Deps, run: Run, name: string): Promise<{ sid: string; snapshotId: string }> {
-  const begin = (await deps.tools.beginSession({ intent_id: INTENT, return_image: "none" })).json;
+  const begin = (await deps.tools.beginSession({ intent_id: INTENT, clip_baseline: true, return_image: "none" })).json;
   const sid = String(begin["session_id"]);
   run.sessions.push({ name, session_id: sid });
   await deps.tools.step({ session_id: sid, settings: STEPS[3].settings, rationale: STEPS[3].rationale, return_image: "none" });

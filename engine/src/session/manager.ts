@@ -2,7 +2,7 @@
 // ARCHITECTURE section 4, PRD sections 6.5-6.7, 6.12, 6.13, MCP_TOOLS "Session tools").
 //
 //   lr_begin_session  -> snapshot, pass 0 (camera profile, lens, intent priors, then the clipping
-//                        baseline), preview + metrics + the intent's brief               (begin.ts)
+//                        baseline if clip_baseline), preview + metrics + the brief       (begin.ts)
 //                        Variants mode: virtual copies A-C, pass 0 on each with its variant's
 //                        priors, and a contact sheet             (variants.ts, copies.ts, pass0.ts)
 //   lr_step           -> a change per slider, capped by decay and range, checked against the

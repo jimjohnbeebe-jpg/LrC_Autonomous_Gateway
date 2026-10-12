@@ -4,7 +4,7 @@
 import { z } from "zod";
 import { MAX_COLLECTION_PHOTOS, MAX_EXPORT_PHOTOS, isAbsoluteFolder } from "../library/index.js";
 import { setLevels } from "./tools-collections.js";
-import type { ToolDef } from "./defs-shared.js";
+import { TIMED, type ToolDef } from "./defs-shared.js";
 
 const distinct = (list: readonly unknown[]): boolean => new Set(list).size === list.length;
 const uuids = (max: number) =>
@@ -70,9 +70,6 @@ const importArgs = z.object({
 const META_WRITE =
   "Tell the user what will change before calling. Runs only between editing sessions. If Lightroom stops answering, the call stops and the " +
   "error lists what was done.";
-const TIMED =
-  "A call works for about 40 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling " +
-  "until `not_yet` is gone, and tell the user how far along it is.";
 
 export const FILE_DEFS: ToolDef[] = [
   {

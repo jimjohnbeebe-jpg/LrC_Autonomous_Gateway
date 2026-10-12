@@ -10,5 +10,5 @@ export { syncSeries } from "./sync.js";
 export type { Skip, SyncTargets } from "./targets.js";
 export { splitTransferable } from "./transfer.js";
 export type { NotTransferable } from "./transfer.js";
-export { MAX_ADAPTIVE_TARGETS, MAX_TARGETS, SHEET_TARGETS, SYNC_PLUGIN } from "./types.js";
+export { MAX_TARGETS, SHEET_TARGETS, SYNC_PLUGIN } from "./types.js";
 export type { SyncArgs, SyncDeps, SyncOutput, TargetResult } from "./types.js";

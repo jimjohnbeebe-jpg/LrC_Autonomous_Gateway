@@ -104,7 +104,7 @@ describe("lr_sync_series: refused before anything is written", () => {
     writeFileSync(path.join(logDir, "20260101-bad000.recipe.json"), "{}", "utf8");
     writeFileSync(path.join(tmp, "elsewhere.recipe.json"), "{}", "utf8");
     const on = (source: SyncSeriesArgs["source"], extra: Partial<SyncSeriesArgs> = {}): SyncSeriesArgs => ({ source, targets: { uuids: [a] }, ...quiet, ...extra });
-    const many = Array.from({ length: 21 }, (_, i) => `X-${i}`);
+    const many = Array.from({ length: 501 }, (_, i) => `X-${i}`);
     const cases: Array<[SyncSeriesArgs, string]> = [
       [on({ session_id: "no-such-session" }), "RECIPE_NOT_FOUND"],
       [on({ recipe_path: "20260101-bad000.recipe.json" }), "INVALID_RECIPE"],
@@ -133,17 +133,17 @@ describe("lr_sync_series: refused before anything is written", () => {
     expect(await syncFails({ source: { session_id: id }, targets: "selected", ...quiet })).toMatchObject({ code: "NO_ACTIVE_PHOTO", recoverable: true });
     lr.selected = "SIM-UUID";
     expect((await syncFails({ source: { session_id: id }, targets: "selected", ...quiet })).code).toBe("NO_TARGETS");
-    lr.alsoSelected = Array.from({ length: 21 }, (_, i) => addCopy(i + 1));
+    lr.alsoSelected = Array.from({ length: 501 }, (_, i) => addCopy(i + 1));
     expect((await syncFails({ source: { session_id: id }, targets: "selected", ...quiet })).code).toBe("TOO_MANY_TARGETS");
     // More selected than the plugin described: the rest would be neither synced nor skipped.
     lr.alsoSelected = [addCopy(30)];
     const original = plugin.handlers.get("get_selection") as NonNullable<ReturnType<typeof plugin.handlers.get>>;
     plugin.handlers.set("get_selection", async (p, rid) => {
       const reply = await original(p, rid);
-      if (reply !== "silent" && reply.ok) (reply.payload as { count: number }).count = 150;
+      if (reply !== "silent" && reply.ok) (reply.payload as { count: number }).count = 600;
       return reply;
     });
-    expect(await syncFails({ source: { session_id: id }, targets: "selected", ...quiet })).toMatchObject({ code: "TOO_MANY_TARGETS", message: expect.stringMatching(/^150 photos are selected/) });
+    expect(await syncFails({ source: { session_id: id }, targets: "selected", ...quiet })).toMatchObject({ code: "TOO_MANY_TARGETS", message: expect.stringMatching(/^600 photos are selected/) });
     expect(lr.writes.length).toBe(n0);
   });
 });
@@ -156,7 +156,7 @@ describe("lr_sync_series: targets", () => {
     lr.selected = a;
     lr.alsoSelected = ["SIM-UUID", b];
     const out = await sync({ source: { session_id: id }, targets: "selected", ...quiet });
-    expect(sent("get_selection")).toEqual([{ max: 100 }]);
+    expect(sent("get_selection")).toEqual([{ max: 500 }]);
     expect(out.json["skipped"]).toEqual([{ uuid: "SIM-UUID", filename: null, code: "SOURCE", reason: "the source photo is not synced to itself" }]);
     expect(targetsOf(out).map((t) => t["uuid"])).toEqual([a, b]);
     expect([settingsOf(a)["Contrast2012"], settingsOf(b)["Contrast2012"]]).toEqual([20, 20]);

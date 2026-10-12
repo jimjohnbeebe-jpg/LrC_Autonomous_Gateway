@@ -25,6 +25,11 @@ export const MEASURED =
   "0 red, 60 yellow, 120 green, 180 cyan, 240 blue, 300 magenta), % of the chromatic pixels (HSV saturation and value " +
   ">= 0.1, chromatic_pct of all); hue_mean = their circular mean hue in degrees. Percentages are 0-100.";
 
+/** The tools that stop starting photos after library\files.ts CALL_BUDGET_MS (export, import, sync). */
+export const TIMED =
+  "A call works for about 40 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling " +
+  "until `not_yet` is gone, and tell the user how far along it is.";
+
 export const longEdge = z
   .number()
   .int()

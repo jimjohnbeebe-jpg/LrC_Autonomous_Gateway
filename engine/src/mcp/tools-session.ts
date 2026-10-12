@@ -50,6 +50,15 @@ export async function setRegions(ctx: ToolContext, args: RegionArgs): Promise<To
 export async function endSession(ctx: ToolContext, args: EndArgs): Promise<ToolOutput> {
   return run(ctx, "lr_end_session", args, async () => {
     const sessions = sessionTools(ctx);
+    // A session this engine does not hold may be one an engine that stopped left open (session\left-open.ts): it is
+    // looked for in the page's log folder once read (Greptile, PR #141), with the bridge held, so no live engine holds
+    // it, abandon included.
+    if (sessions.current()?.id !== args.session_id && !sessions.userEnded(args.session_id)) {
+      await ctx.deps.ensureBridge();
+      if (ctx.deps.settings && !ctx.deps.settings.last()) await readPageFolders(ctx);
+      const left = sessions.endLeftOpen(args);
+      if (left) return left;
+    }
     // "abandon" must work with Lightroom gone: it does not wait for the bridge (session\abandon.ts).
     if (args.outcome === "abandon") return sessions.end(args);
     // Nor does a session the user already ended on the Deck (issue #126): the same outcome succeeds, another

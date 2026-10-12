@@ -111,6 +111,15 @@ describe("the intent tools and the settings page (decision 2A)", () => {
 });
 
 describe("sessions and the settings page's folders", () => {
+  it("a new engine finds a session left open in the page's log folder, from its first context call, and ends it (Greptile, PR #141)", async () => {
+    clean();
+    const id = (await makeTools(new PageSettings(client, env)).beginSession({ intent_id: "test_plain", return_image: "none" })).json["session_id"] as string;
+    const context = (await makeTools(new PageSettings(client, env)).getActivePhotoContext()).json; // the old engine stopped
+    expect(context["left_open"]).toEqual([expect.objectContaining({ session_id: id, log_path: expect.stringContaining(pageLogs) })]);
+    const ended = await makeTools(new PageSettings(client, env)).endSession({ session_id: id, outcome: "abandon" }); // and another, before any context call
+    expect(ended.json).toMatchObject({ ok: true, left_open: true, outcome: "abandoned" });
+  });
+
   it("lr_begin_session finds its intent and writes its log in the page's folders, and lr_get_session_log of a new engine run reads it there", async () => {
     clean();
     const tools = makeTools(new PageSettings(client, env));

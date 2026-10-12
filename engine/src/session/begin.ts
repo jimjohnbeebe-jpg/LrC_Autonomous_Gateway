@@ -20,6 +20,7 @@ import { readPage, resolveSessionSettings, type PageRead, type SessionSettings }
 import { APPROVAL_WAIT_MS } from "./approval.js";
 import { checkVariants } from "./copies.js";
 import { brief, describe, failed, image, ms, recordPass, saveLog, text } from "./io.js";
+import { refuseLeftOpen } from "./left-open.js";
 import { pass0, pass0Entry, type Pass0 } from "./pass0.js";
 import { WRITE_TIMEOUT_MS, folderOf, newTarget, type BeginArgs, type Session, type SessionContext, type SessionOutput } from "./types.js";
 
@@ -58,6 +59,7 @@ export async function openSession(ctx: SessionContext, args: BeginArgs): Promise
   if (photo["file_format"] === "VIDEO") throw new ToolError("VIDEO_NOT_SUPPORTED", "The selected item is a video; select a photo.", false);
   const missing = originalMissing(photo); // before the snapshot: nothing is written
   if (missing) throw missing;
+  refuseLeftOpen(folderOf(ctx.deps.logDir), null, photo.uuid); // SESSION_LEFT_OPEN, before the snapshot (left-open.ts)
   const variantCount = mode === "variants" ? checkVariants(ctx, loaded, photo, settings.variantCount) : null;
   const view = map.fromSdk((await client.request("get_settings", { target_uuid: photo.uuid })).settings); // LEGACY_PROCESS_VERSION
   // Before the snapshot: an unknown profile or one of the other pipeline is refused with nothing written.
@@ -194,6 +196,7 @@ function newLog(ctx: SessionContext, s: Session, variantCount: number | null, no
       camera_profile: master.camera_profile,
     },
     snapshot: s.snapshot,
+    start: { settings: s.startSettings, masks: s.startMasks },
     variants: [],
     picked: null,
     regions: [],

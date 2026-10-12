@@ -36,6 +36,8 @@ export { awaitingPick } from "./pick.js";
 export { MASKS_PLUGIN } from "./masks.js";
 export { AI_TIMINGS, DIALOG_NOTE, WORKING_NOTE } from "./ai-update.js";
 export { abandonedNote } from "./abandon.js";
+export { LEFT_OPEN_NOTE, leftOpenJson } from "./left-open.js";
+export type { LeftOpen } from "./left-open.js";
 export { engineEndedNote } from "./ai-revert.js";
 export { ABORT_WAITS, ACCEPT_AFTER_FAILED, endedAlike, endedError } from "./hud-actions.js";
 export type { AiTimings } from "./ai-update.js";

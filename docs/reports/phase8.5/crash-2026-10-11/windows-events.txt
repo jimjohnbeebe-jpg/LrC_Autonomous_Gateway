@@ -1,0 +1,55 @@
+# Windows event log, 2026-10-11 17:35-17:50 local (UTC-7), warnings and errors; collected by Claude Code with Get-WinEvent on 2026-10-11
+## System
+2026-10-11 17:41:38  nvlddmkm  id 153
+## Application
+2026-10-11 17:41:46  Windows Error Reporting  id 1001  LiveKernelEvent P1=141
+2026-10-11 17:41:46  Windows Error Reporting  id 1001  LiveKernelEvent P1=141
+2026-10-11 17:41:46  Windows Error Reporting  id 1001  LiveKernelEvent P1=141
+2026-10-11 17:41:46  Windows Error Reporting  id 1001  LiveKernelEvent P1=141
+2026-10-11 17:41:46  Windows Error Reporting  id 1001  LiveKernelEvent P1=141
+2026-10-11 17:41:46  Windows Error Reporting  id 1001  LiveKernelEvent P1=141
+2026-10-11 17:41:46  Windows Error Reporting  id 1001  LiveKernelEvent P1=141
+2026-10-11 17:41:46  Windows Error Reporting  id 1001  LiveKernelEvent P1=141
+2026-10-11 17:41:46  Windows Error Reporting  id 1001  LiveKernelEvent P1=141
+2026-10-11 17:41:46  Windows Error Reporting  id 1001  LiveKernelEvent P1=141
+2026-10-11 17:41:46  Windows Error Reporting  id 1001  LiveKernelEvent P1=141
+2026-10-11 17:41:46  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:46  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:46  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:46  Windows Error Reporting  id 1001  LiveKernelEvent P1=141
+2026-10-11 17:41:46  Windows Error Reporting  id 1001  LiveKernelEvent P1=141
+2026-10-11 17:41:46  Windows Error Reporting  id 1001  LiveKernelEvent P1=141
+2026-10-11 17:41:46  Windows Error Reporting  id 1001  LiveKernelEvent P1=141
+2026-10-11 17:41:46  Windows Error Reporting  id 1001  LiveKernelEvent P1=141
+2026-10-11 17:41:46  Windows Error Reporting  id 1001  LiveKernelEvent P1=141
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=141
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=141
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=141
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=141
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=193
+2026-10-11 17:41:45  Windows Error Reporting  id 1001  LiveKernelEvent P1=141

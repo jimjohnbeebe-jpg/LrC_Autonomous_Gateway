@@ -7,15 +7,22 @@
 //     classic HUD opens;
 //   - no Deck to start (not installed, or started twice already this edit): the classic HUD opens at
 //     once, as before Phase 7 (row 3 decision 1);
-//   - the Deck lost while an edit is open (it crashed): started once more, else the classic HUD opens,
-//     so the user is never left without the buttons.
+//   - the Deck lost while an edit is open and Lightroom connected (it crashed): started once more, else the
+//     classic HUD opens, so the user is never left without the buttons;
+//   - the Deck lost with Lightroom gone: nothing is started, since the Deck exits after Lightroom does
+//     (spec 3.2 "Lightroom exits"). On 2026-10-11 the engine started a Deck 0.7 s after the old one exited
+//     with Lightroom; it never found Lightroom and ran on with neither Lightroom nor the engine [handle:
+//     %TEMP%\LrC-AVG\hud\hud_33752_1791759655490.jsonl `lightroom_exited`, hud_27416_1791765866100.jsonl
+//     with no `lightroom_found`; logs\engine-20261011.jsonl `hud_channel` 00:44:25-26Z];
+//   - Lightroom back (the bridge connects again) with an edit open and no Deck: the Deck is started, as at
+//     begin (spec 3.2 "Lightroom restarts while the engine still has the edit open").
 // After the listener closes (the engine gave the bridge back, or exits) nothing is started.
 // When the classic HUD opens because a started Deck did not connect or was lost, the chat is told in the next
 // session tool result (`hud_actions` `deck_fallback`, fix/deck-relaunch). A Deck that is not installed is no
 // fallback: nothing is said.
 // [handle: tests\hud-fallback.test.ts, tests\hud-launch.test.ts]
 
-import type { HudStage } from "../bridge/index.js";
+import type { BridgeClient, HudStage } from "../bridge/index.js";
 import type { HudSink, Session } from "../session/index.js";
 import type { Deck } from "./deck.js";
 import type { HudLauncher, HudLauncherOptions } from "./launch.js";
@@ -37,18 +44,29 @@ export class HudFanOut implements HudSink {
   private readonly classic: HudPublisher;
   private readonly deck: Deck;
   private readonly launcher: HudLauncher;
+  private readonly lightroom: BridgeClient;
   private readonly waitMs: number;
   private waitTimer: NodeJS.Timeout | null = null;
   /** The edit the last stage was for: where a fallback note goes. */
   private session: Session | null = null;
 
-  constructor(classic: HudPublisher, deck: Deck, launcher: HudLauncher, options: { waitMs?: number } = {}) {
+  constructor(classic: HudPublisher, deck: Deck, launcher: HudLauncher, lightroom: BridgeClient, options: { waitMs?: number } = {}) {
     this.classic = classic;
     this.deck = deck;
     this.launcher = launcher;
+    this.lightroom = lightroom;
     this.waitMs = options.waitMs ?? WAIT_MS;
     deck.onClient((connected) => {
-      if (!connected) this.deckLost();
+      // waitTimer stands for a started Deck still to connect, no more (Greptile, PR #141).
+      if (connected && this.waitTimer) {
+        clearTimeout(this.waitTimer);
+        this.waitTimer = null;
+      }
+      if (!connected) this.deckLost("The Deck was lost during the edit and could not be started again");
+    });
+    lightroom.onStateChange((state) => {
+      // Not while a Deck started already has its wait to connect (the review of f5eb667: a second start for nothing).
+      if (state === "connected" && !this.deck.connected() && !this.waitTimer) this.deckLost("Lightroom came back during the edit, and the Deck could not be started again");
     });
   }
 
@@ -70,16 +88,17 @@ export class HudFanOut implements HudSink {
     if (this.waitTimer) clearTimeout(this.waitTimer);
     this.waitTimer = setTimeout(() => {
       this.waitTimer = null;
-      if (!this.deck.connected()) this.fallBack(sessionId, "The Deck was started but did not connect");
+      if (!this.deck.connected() && this.lightroom.getState() === "connected") this.fallBack(sessionId, "The Deck was started but did not connect");
     }, this.waitMs);
     this.waitTimer.unref();
     return true;
   }
 
-  private deckLost(): void {
+  /** No Deck while an edit is open: start one when there is a Lightroom for it to follow, else the classic HUD (`why`). */
+  private deckLost(why: string): void {
     const id = this.deck.openEdit();
-    if (!id || !this.deck.channel.listening()) return;
-    if (!this.startDeck(id)) this.fallBack(id, "The Deck was lost during the edit and could not be started again");
+    if (!id || !this.deck.channel.listening() || this.lightroom.getState() !== "connected") return;
+    if (!this.startDeck(id)) this.fallBack(id, why);
   }
 
   /** Open the classic HUD for edit `sessionId`, and tell the chat why. */

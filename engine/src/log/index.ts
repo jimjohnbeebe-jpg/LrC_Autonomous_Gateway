@@ -12,6 +12,7 @@ export {
   metricsSummarySchema,
   recipeSchema,
   sessionLogSchema,
+  writeJson,
 } from "./session-log.js";
 export { maskPassSchema } from "./mask-log.js";
 export type { AiTrace, MaskPassEntry } from "./mask-log.js";

@@ -122,7 +122,8 @@ export const SESSION_DEFS: ToolDef[] = [
       "then the user picks with lr_select_variant, and the remaining passes go to the pick. " +
       "The session's numbers (max passes, variant count, clipping limits, decay, preview size and quality) come from the " +
       "arguments, then (clipping limits only) the intent, then the user's settings page in Lightroom, then the defaults; `session_settings` in the result says where each came from. " +
-      "One session at a time; the session stays open until lr_end_session. " +
+      "One session at a time; the session stays open until lr_end_session. A photo with a session an engine that stopped left open " +
+      "(lr_get_active_photo_context `left_open`) is refused with SESSION_LEFT_OPEN, nothing written, until that session is ended. " +
       HUD_NOTE +
       MEASURED,
     schema: beginArgs,
@@ -239,7 +240,9 @@ export const SESSION_DEFS: ToolDef[] = [
       "wait for Lightroom): the photo keeps what the session did, the log's outcome is \"abandoned\", and a new session can begin. " +
       "The result's `note` says how the user puts the photo back by hand (the pre-session snapshot, `snapshot`) and whether " +
       "Lightroom still holds writes to the photo (`lightroom_guard`: \"none\" when no AI mask was pending, so nothing is held; " +
-      "\"cleared\"; \"not_cleared\" or \"plugin_too_old\": held until Lightroom restarts); tell the user both.",
+      "\"cleared\"; \"not_cleared\" or \"plugin_too_old\": held until Lightroom restarts); tell the user both. " +
+      "A session an engine that stopped left open (lr_get_active_photo_context `left_open`) is ended the same three ways, with `left_open: true` " +
+      "and the log's `ended_by` \"recovery\": revert applies its snapshot and says what it `checked`; accept reads the photo as it is now.",
     schema: endArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     run: (tools, args) => tools.endSession(args as z.infer<typeof endArgs>),

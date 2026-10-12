@@ -207,6 +207,44 @@
       ],
       "additionalProperties": false
     },
+    "start": {
+      "type": "object",
+      "properties": {
+        "settings": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              }
+            ]
+          }
+        },
+        "masks": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "settings",
+        "masks"
+      ],
+      "additionalProperties": false
+    },
     "variants": {
       "type": "array",
       "items": {
@@ -3131,7 +3169,8 @@
             "claude",
             "hud",
             "menu",
-            "engine"
+            "engine",
+            "recovery"
           ]
         },
         "reason": {

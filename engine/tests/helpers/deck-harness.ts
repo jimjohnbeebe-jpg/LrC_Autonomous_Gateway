@@ -167,7 +167,7 @@ export async function deckRig(options: { exe?: string | null; onStart?: () => vo
       options.onStart?.();
     },
   });
-  manager = newManager({ hud: new HudFanOut(hud, deck, launcher, { waitMs: options.waitMs ?? 300 }), ...(options.newId ? { newId: options.newId } : {}) });
+  manager = newManager({ hud: new HudFanOut(hud, deck, launcher, client, { waitMs: options.waitMs ?? 300 }), ...(options.newId ? { newId: options.newId } : {}) });
   const hudEvents = new HudEvents(client, manager, hud, { record: (r) => events.push(r), deck });
   deck.onEvent((e) => hudEvents.handle(e, "channel"));
   const shows: ShowRecord[] = [];

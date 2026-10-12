@@ -51,13 +51,15 @@ describe("D16: nothing written while Lightroom computes an AI mask", () => {
     expect((await rig.manager.end({ session_id: ID, outcome: "revert" })).json).toMatchObject({ outcome: "revert", revert: { differing: [] } });
   });
 
-  it("sends the plugin the entry to watch; the plugin then refuses a write to the photo from anyone, a restarted engine's new session too", async () => {
+  it("sends the plugin the entry to watch; the plugin then refuses a write to the photo from anyone, a restarted engine's revert too", async () => {
     await stuckSession();
     const watch = plugin.received.filter((r) => r.name === "update_ai_settings").at(-1)?.payload["watch"];
     expect(watch).toEqual({ ...aiWatch([]), ids: [expect.any(String)] });
     const other = newManager({ newId: () => "fedcba98-7654-3210-fedc-ba9876543210" }); // Claude Desktop started the engine again: it knows nothing of the mask
-    expect(await fails(other.begin({ intent_id: "test_plain", return_image: "none" }))).toMatchObject({ code: "AI_COMPUTE_PENDING", recoverable: false });
-    expect(lr.masks.refusedPending).toContain("create_snapshot");
+    // Engine 0.29.0: it finds the session left open (left-open.ts) and refuses a new one first; its revert reaches the plugin.
+    expect(await fails(other.begin({ intent_id: "test_plain", return_image: "none" }))).toMatchObject({ code: "SESSION_LEFT_OPEN" });
+    expect(await fails(other.endLeftOpen({ session_id: ID, outcome: "revert" }) ?? Promise.reject(new Error("not left open")))).toMatchObject({ code: "AI_COMPUTE_PENDING", recoverable: false });
+    expect(lr.masks.refusedPending).toContain("apply_snapshot");
   });
 
   it("refuses the HUD's Abort while the engine waits for Lightroom, and goes on when the mask computes", async () => {

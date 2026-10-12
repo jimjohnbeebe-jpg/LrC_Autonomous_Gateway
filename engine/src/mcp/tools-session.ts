@@ -50,9 +50,10 @@ export async function setRegions(ctx: ToolContext, args: RegionArgs): Promise<To
 export async function endSession(ctx: ToolContext, args: EndArgs): Promise<ToolOutput> {
   return run(ctx, "lr_end_session", args, async () => {
     const sessions = sessionTools(ctx);
-    // A session an engine that stopped left open (session\left-open.ts): abandon does not wait for the bridge either.
+    // A session an engine that stopped left open (session\left-open.ts): abandon waits for the bridge too, so no live
+    // engine holds that session.
     if (sessions.leftOpen().some((l) => l.log.session_id === args.session_id)) {
-      if (args.outcome !== "abandon") await ctx.deps.ensureBridge();
+      await ctx.deps.ensureBridge();
       const left = sessions.endLeftOpen(args);
       if (left) return left;
     }

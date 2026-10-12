@@ -60,7 +60,8 @@ export class HudFanOut implements HudSink {
       if (!connected) this.deckLost("The Deck was lost during the edit and could not be started again");
     });
     lightroom.onStateChange((state) => {
-      if (state === "connected" && !this.deck.connected()) this.deckLost("Lightroom came back during the edit, and the Deck could not be started again");
+      // Not while a Deck started already has its wait to connect (the review of f5eb667: a second start for nothing).
+      if (state === "connected" && !this.deck.connected() && !this.waitTimer) this.deckLost("Lightroom came back during the edit, and the Deck could not be started again");
     });
   }
 

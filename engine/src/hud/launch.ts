@@ -2,7 +2,8 @@
 // when no Deck is connected, the engine starts the Deck's executable detached, so it outlives the engine
 // (spike S9-9 passed with a detached stub parent [handle: docs\reports\phase7\S9.md "Numbers"]).
 // Without `windowsHide`, as S9's stub started it (S9.md "Design points") [stated: Jim, 2026-10-05, row 3
-// decision 2]. At most MAX_STARTS per edit: the start at begin and one restart after a crash (3.2).
+// decision 2]. At most MAX_STARTS per edit: the start at begin and one more, after a crash or when Lightroom
+// comes back during the edit (3.2; sinks.ts), whichever comes first.
 // No executable found: nothing starts, and the classic HUD opens at once, as before Phase 7 (row 3
 // decision 1).
 // Where: LRC_AVG_HUD_EXE, else `%LOCALAPPDATA%\LrC-AVG HUD\LrC-AVG HUD.exe`, where the Deck's per-user
@@ -16,7 +17,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 
 export const HUD_EXE_NAME = "LrC-AVG HUD.exe";
-/** The start at begin, and one restart after a crash (spec 3.2). */
+/** The start at begin, and one more (the header). */
 const MAX_STARTS = 2;
 
 /** The Deck's executable, or null when it is not there. */

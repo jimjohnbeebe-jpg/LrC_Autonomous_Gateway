@@ -49,6 +49,7 @@ describe("a session an engine that stopped left open", () => {
 
   it("revert: applies its snapshot, checks settings and masks, and finishes its log as a recovery", async () => {
     const m = await leftBehind();
+    lr.selected = ""; // the user has moved on: the photo need not be selected (photo_uuid; the review of f5eb667)
     const out = (await m.endLeftOpen({ session_id: ID, outcome: "revert" }))?.json;
     expect(out).toMatchObject({ ok: true, outcome: "revert", left_open: true, ended_by: { source: "recovery" }, revert: { differing: [] }, checked: "settings and masks" });
     expect(lr.settings["Exposure2012"]).toBe(0);
@@ -59,6 +60,7 @@ describe("a session an engine that stopped left open", () => {
 
   it("accept: keeps the photo as it is now and writes the recipe", async () => {
     const m = await leftBehind();
+    lr.selected = "";
     const out = (await m.endLeftOpen({ session_id: ID, outcome: "accept" }))?.json;
     expect(out).toMatchObject({ outcome: "accept", final_settings: { exposure: 0.2 } });
     expect(lr.settings["Exposure2012"]).toBe(0.2);

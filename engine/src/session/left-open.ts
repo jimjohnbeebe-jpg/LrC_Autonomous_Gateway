@@ -6,8 +6,11 @@
 // the log folder"]:
 //   - a session left open is a log in the current log folder whose `ended` is null, other than the session this
 //     engine has open. An engine keeps the bridge while its session is open [handle: engine\src\mcp\main.ts:20-21,
-//     "no idle release"], so, once this engine holds the bridge, no live engine's session is taken for one; abandon,
-//     which does not wait for the bridge, could name a live one only by an id from the listing, which waits for it;
+//     "no idle release"], so, once this engine holds the bridge, no live engine's session is taken for one. So every
+//     outcome on one waits for the bridge, abandon too (mcp\tools-session.ts): an old engine not yet exited would
+//     otherwise write its log back over the recovery's (the review of f5eb667);
+//   - its photo is named by photo_uuid, so it need not be selected: the snapshot put-backs of the S10 battery named
+//     unselected photos so [handle: engine\src\devtools\s10-writes.ts:80; docs\reports\phase8\S10.md, PUT BACK YES];
 //   - lr_get_active_photo_context lists them (`left_open`), and lr_begin_session refuses a photo that one names
 //     (SESSION_LEFT_OPEN): a new snapshot would hold the half-finished edit;
 //   - lr_end_session takes one: "revert" applies its snapshot to its photo and checks the read-back against the
@@ -21,7 +24,7 @@ import path from "node:path";
 import { RECIPE_SCHEMA_ID, sessionLogSchema, writeJson, type SessionLogData } from "../log/index.js";
 import { ToolError, toToolError } from "../mcp/errors.js";
 import { differingSettings, type CanonicalSettings } from "../params/index.js";
-import { dropGuard, GUARD_NOTE } from "./abandon.js";
+import { dropGuard, GUARD_NOTE, type GuardOutcome } from "./abandon.js";
 import { ms } from "./io.js";
 import { WRITE_TIMEOUT_MS, type EndArgs, type SessionContext, type SessionOutput } from "./types.js";
 
@@ -40,15 +43,18 @@ export function findLeftOpen(dir: string, openId: string | null): LeftOpen[] {
   const found: LeftOpen[] = [];
   for (const name of names) {
     const file = path.join(dir, name);
-    const log = readLog(file);
+    const log = readLog(file, true);
     if (log && log.ended === null && log.session_id !== openId) found.push({ file, log });
   }
   return found.sort((a, b) => a.log.started.localeCompare(b.log.started));
 }
 
-function readLog(file: string): SessionLogData | null {
+/** `open`: only a log still open is parsed (writeJson's `"ended": null`), as the scan runs on every context call. */
+function readLog(file: string, open = false): SessionLogData | null {
   try {
-    const parsed = sessionLogSchema.safeParse(JSON.parse(readFileSync(file, "utf8")));
+    const text = readFileSync(file, "utf8");
+    if (open && !text.includes('"ended": null')) return null;
+    const parsed = sessionLogSchema.safeParse(JSON.parse(text));
     return parsed.success ? parsed.data : null;
   } catch {
     return null;
@@ -122,7 +128,7 @@ export async function endLeftOpen(ctx: SessionContext, left: LeftOpen, outcome: 
 async function revert(ctx: SessionContext, log: SessionLogData): Promise<Record<string, unknown>> {
   const { client, map } = ctx.deps;
   const t = performance.now();
-  const res = await client.request("apply_snapshot", { target_uuid: log.target.uuid, snapshot_id: log.snapshot.id }, { timeoutMs: WRITE_TIMEOUT_MS });
+  const res = await client.request("apply_snapshot", { photo_uuid: log.target.uuid, snapshot_id: log.snapshot.id }, { timeoutMs: WRITE_TIMEOUT_MS });
   const view = map.fromSdk(res.read_back);
   const before = log.start?.settings ?? log.passes[0]?.settings_before ?? null;
   const differing = before ? [...differingSettings(view.settings, before), ...(log.start && view.masks.fingerprint !== log.start.masks ? ["masks"] : [])] : [];
@@ -139,7 +145,7 @@ async function readKept(ctx: SessionContext, log: SessionLogData): Promise<{ uui
     throw new ToolError("AWAITING_PICK", "No copy was picked in this Variants session, so accept has no edit to keep: end it with revert or abandon.", false, { session_id: log.session_id });
   }
   const uuid = pick?.uuid ?? log.target.uuid;
-  const view = ctx.deps.map.fromSdk((await ctx.deps.client.request("get_settings", { target_uuid: uuid })).settings);
+  const view = ctx.deps.map.fromSdk((await ctx.deps.client.request("get_settings", { photo_uuid: uuid })).settings);
   return { uuid, filename: log.target.filename, settings: view.settings, masks: view.masks.count };
 }
 
@@ -163,7 +169,10 @@ function accept(ctx: SessionContext, file: string, log: SessionLogData, kept: Aw
 
 /** Nothing read or written but clear_pending_ai, which never throws: a guard the stopped engine's AI mask left goes. */
 async function abandon(ctx: SessionContext, log: SessionLogData): Promise<Record<string, unknown>> {
-  const { guard } = await dropGuard(ctx, log.target.uuid, true);
+  // Each of its photos: in Variants mode an AI mask may have been on a copy (the review of f5eb667).
+  const guards: GuardOutcome[] = [];
+  for (const uuid of photosOf(log)) guards.push((await dropGuard(ctx, uuid, true)).guard);
+  const guard = guards.includes("cleared") ? "cleared" : (guards[0] ?? "none");
   // Whether the stopped engine left a guard is not known (the log does not say), so "not reached" is said as a maybe.
   const guardNote = guard === "not_cleared" || guard === "plugin_too_old" ? " Lightroom was not reached: if the session was waiting on an AI mask, Lightroom refuses writes to the photo until it restarts." : GUARD_NOTE[guard];
   const note =

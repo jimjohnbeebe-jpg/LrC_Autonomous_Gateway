@@ -67,8 +67,14 @@ export class SimLibrary {
     return { ...(p.rating > 0 ? { rating: p.rating } : {}), capture_time: `${p.day} 12:00:00` };
   }
 
+  /** What Photos.describe adds with opts.where (plugin 0.21.0, the listings and get_context): gps, left out for none as Lua leaves nil out, and path. */
+  where(uuid: string): Record<string, unknown> {
+    const p = this.find(uuid);
+    return p ? { ...(p.gps ? { gps: p.gps } : {}), path: `D:\\Photos\\${p.filename}` } : {};
+  }
+
   private describe(p: SimLibraryPhoto): Record<string, unknown> {
-    return { uuid: p.uuid, local_id: p.local_id, filename: p.filename, is_virtual_copy: false, master_local_id: p.local_id, ...this.meta(p.uuid) };
+    return { uuid: p.uuid, local_id: p.local_id, filename: p.filename, is_virtual_copy: false, master_local_id: p.local_id, ...this.meta(p.uuid), ...this.where(p.uuid) };
   }
 
   private matches(p: SimLibraryPhoto, c: Record<string, unknown>): boolean {

@@ -63,8 +63,16 @@ export function searchCriteria(f: SearchFilters): SearchCriterion[] {
 
 type ListedPhoto = CommandResult<"search_photos">["photos"][number];
 
-/** A photo as the read tools list it; rating 0 when the plugin sent none (unrated). */
-export function listing(p: ListedPhoto): Record<string, unknown> {
+/** Plugin 0.21.0 (Photos.lua describe opts.where, issue #139): a listed photo carries its gps and path. */
+export const WHERE_PLUGIN = "0.21.0";
+/** The notice a listing or the context carries instead, when Lightroom runs an older plugin (issue #139 "Cross-cutting"). */
+export const WHERE_NOTICE = "Lightroom runs an LrC-AVG plugin older than 0.21.0, so photos carry no gps (and listings no path). Restart Lightroom so it loads the current plugin.";
+
+/**
+ * A photo as the read tools list it; rating 0 when the plugin sent none (unrated). With `where` (the
+ * plugin is WHERE_PLUGIN or later) also gps, null for none, and path.
+ */
+export function listing(p: ListedPhoto, where: boolean): Record<string, unknown> {
   return {
     uuid: p.uuid ?? null,
     filename: p.filename ?? null,
@@ -72,5 +80,6 @@ export function listing(p: ListedPhoto): Record<string, unknown> {
     capture_time: p.capture_time ?? null,
     virtual_copy: p.is_virtual_copy ?? null,
     ...(p.copy_name !== undefined ? { copy_name: p.copy_name } : {}),
+    ...(where ? { gps: p.gps ?? null, path: p.path ?? null } : {}),
   };
 }

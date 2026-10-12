@@ -61,7 +61,8 @@ describe("lr_search_photos", () => {
       limit: 100,
     });
     expect(out.json).toMatchObject({ count: 1, returned: 1, has_more: false });
-    expect(out.json["photos"]).toEqual([
+    // toMatchObject: plugin 0.21.0 adds gps and path (catalog-where.test.ts).
+    expect(out.json["photos"]).toMatchObject([
       { uuid: "SIM-LIB-3", filename: "20260908-_OZ80100.NEF", rating: 5, capture_time: "2026-09-08 12:00:00", virtual_copy: false },
     ]);
     expect(out.json["warning"]).toBeUndefined();

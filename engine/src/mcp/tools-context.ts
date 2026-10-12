@@ -2,7 +2,8 @@
 // lr_get_preview, lr_get_metrics. They change nothing in Lightroom.
 
 import { z } from "zod";
-import { lightroomNotices } from "../bridge/index.js";
+import { lightroomNotices, pluginVersionAtLeast } from "../bridge/index.js";
+import { WHERE_NOTICE, WHERE_PLUGIN } from "../library/index.js";
 import { boxProblem, summarize, type Region, type RegionBox } from "../metrics/index.js";
 import { ParamError, WHITE_BALANCE_UNITS, processVersionLabel, type FromSdkResult } from "../params/index.js";
 import { cropRegion } from "../preview/index.js";
@@ -27,6 +28,8 @@ function checkTarget(args: { session_id?: string | undefined; target?: TargetId 
 }
 
 const sizeSchema = z.object({ width: z.number().positive(), height: z.number().positive() });
+/** The context's gps (plugin 0.21.0, Develop.lua RAW_KEYS) is the SDK's table as it came; only latitude and longitude are kept. */
+const gpsSchema = z.object({ latitude: z.number(), longitude: z.number() });
 export type PhotoSize = { width: number; height: number; from: "croppedDimensions" | "width/height" };
 
 /**
@@ -67,6 +70,7 @@ export async function getActivePhotoContext(ctx: ToolContext): Promise<ToolOutpu
     if (ctx.sessions && ctx.deps.settings && !ctx.deps.settings.last()) await readPageFolders(ctx);
     const left = ctx.sessions?.leftOpen() ?? [];
     const missing = originalMissing(photo);
+    const gps = gpsSchema.safeParse(photo["gps"]);
     const json: Record<string, unknown> = {
       ok: true,
       // notices: for the user, empty within the supported and tested versions (bridge\lightroom.ts).
@@ -75,6 +79,8 @@ export async function getActivePhotoContext(ctx: ToolContext): Promise<ToolOutpu
       local_id: photo.local_id,
       filename: field("filename"),
       path: field("path"),
+      // Plugin 0.21.0 (issue #139): null for none; an older plugin sends no gps, and gps_notice says so.
+      ...(pluginVersionAtLeast(hello?.plugin_version, WHERE_PLUGIN) ? { gps: gps.success ? gps.data : null } : { gps_notice: WHERE_NOTICE }),
       // Plugin 0.19.0 (fix/offline-original): null from an older plugin; true means lr_begin_session refuses the photo, and the note says what to tell the user.
       original_missing: photo.available === undefined ? null : !photo.available,
       ...(missing ? { original_missing_note: missing.message } : {}),

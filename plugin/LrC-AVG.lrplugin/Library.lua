@@ -102,7 +102,7 @@ function Library.searchPhotos(payload)
     local photos = {}
     for i = offset + 1, math.min(offset + limit, #matches) do
         if i > offset + 1 then LrTasks.yield() end -- PRD NFR-1: yield between photos
-        photos[#photos + 1] = Photos.describe(catalog, matches[i])
+        photos[#photos + 1] = Photos.describe(catalog, matches[i], { where = true })
     end
     return { count = #matches, photos = photos }
 end
@@ -248,16 +248,8 @@ function Library.setKeywords(payload)
         write_error = writeErr, after_error = afterErr }
 end
 
--- A photo's GPS position { latitude, longitude }, false for none, or nil plus the error.
--- getRawMetadata("gps") is "(table) The location of this photo (for example, { latitude = 37.9362,
--- longitude = 27.3451 })" [handle: LrPhoto page]; nil for a photo without one [inference].
-local function gpsOf(catalog, photo)
-    local ok, value
-    catalog:withReadAccessDo(function() ok, value = LrTasks.pcall(photo.getRawMetadata, photo, "gps") end)
-    if not ok then return nil, tostring(value) end
-    if type(value) ~= "table" or type(value.latitude) ~= "number" or type(value.longitude) ~= "number" then return false end
-    return { latitude = value.latitude, longitude = value.longitude }
-end
+-- A photo's GPS position: Photos.gpsOf (moved there in plugin 0.21.0, so the listings read it too).
+local gpsOf = Photos.gpsOf
 
 local function coordinate(v, limit)
     return type(v) == "number" and v == v and v >= -limit and v <= limit

@@ -43,7 +43,7 @@ const keywords = z
   .optional();
 
 /** A photo listing, as every read tool describes its photos. */
-const LISTED = "Each photo: uuid (what lr_set_rating, lr_set_keywords, lr_set_gps and lr_sync_series take), filename, rating (0 = none), capture_time, virtual_copy and copy_name.";
+const LISTED = "Each photo: uuid (what lr_set_rating, lr_set_keywords, lr_set_gps and lr_sync_series take), filename, rating (0 = none), capture_time, virtual_copy, copy_name, gps ({latitude, longitude}, null for none) and path (the file); `notice` when the plugin is too old for gps and path.";
 /** How lr_set_keywords and lr_list_keywords write a keyword. */
 const PATHS = 'A keyword is a plain name or a hierarchy path, parent first with | between the levels ("Places|Europe|Paris"); levels match case aside.';
 

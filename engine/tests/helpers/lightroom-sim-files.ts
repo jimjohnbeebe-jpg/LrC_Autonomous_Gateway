@@ -86,10 +86,10 @@ export class SimFiles {
     const file = String(p["path"]);
     if (file.endsWith(".bad.jpg")) return fail("import_failed", `Lightroom did not import ${file}: unsupported`);
     const known = this.byPath.get(file);
-    if (known) return ok({ status: "already", uuid: known, filename: path.basename(file) });
+    if (known) return ok({ status: "already", uuid: known, filename: path.basename(file), capture_time: this.library.meta(known)["capture_time"] });
     const uuid = `SIM-IMP-${this.byPath.size + 1}`;
     this.byPath.set(file, uuid);
     this.library.photos.push({ uuid, local_id: 2000 + this.byPath.size, filename: path.basename(file), rating: 0, keywords: [], day: "2026-10-04", gps: null });
-    return ok({ status: "imported", uuid, filename: path.basename(file) });
+    return ok({ status: "imported", uuid, filename: path.basename(file), capture_time: "2026-10-04 12:00:00" });
   }
 }

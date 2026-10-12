@@ -8,9 +8,12 @@
 // paths in lr_set_keywords (library\keywords.ts), lr_list_keywords (a read, as above) and lr_set_gps
 // (a write, as above), all three needing plugin 0.10.0.
 
+import { pluginVersionAtLeast } from "../bridge/index.js";
 import {
   CATALOG_READ_TIMEOUT_MS,
   DEFAULT_PAGE,
+  WHERE_NOTICE,
+  WHERE_PLUGIN,
   gpsNotTaken,
   keywordsNotTaken,
   listing,
@@ -35,6 +38,11 @@ export type SetGpsArgs = { uuids: string[]; position: Gps };
 /** Keyword paths, list_keywords and set_gps came with this plugin (Library.lua, KeywordTree.lua). */
 export const KEYWORD_GPS_PLUGIN = "0.10.0";
 
+/** Whether listed photos carry gps and path (issue #139): true, or the notice that says why not. */
+function where(ctx: ToolContext): { where: boolean; notice?: string } {
+  return pluginVersionAtLeast(ctx.deps.client.hello()?.plugin_version, WHERE_PLUGIN) ? { where: true } : { where: false, notice: WHERE_NOTICE };
+}
+
 const UNFILTERED =
   "No filter was given, so every photo in the catalog was searched. Give a filename, keywords, rating, dates or a collection_id to narrow it.";
 
@@ -56,7 +64,8 @@ export async function searchPhotos(ctx: ToolContext, args: SearchPhotosArgs): Pr
     const limit = args.limit ?? DEFAULT_PAGE;
     const inCollection = args.collection_id !== undefined ? { collection_id: args.collection_id } : {};
     const res = await ctx.deps.client.request("search_photos", { criteria, ...inCollection, offset, limit }, { timeoutMs: CATALOG_READ_TIMEOUT_MS });
-    const photos = res.photos.map(listing);
+    const w = where(ctx);
+    const photos = res.photos.map((p) => listing(p, w.where));
     const json = {
       count: res.count,
       offset,
@@ -64,6 +73,7 @@ export async function searchPhotos(ctx: ToolContext, args: SearchPhotosArgs): Pr
       has_more: offset + photos.length < res.count,
       photos,
       ...(criteria.length === 0 && args.collection_id === undefined ? { warning: UNFILTERED } : {}),
+      ...(w.notice !== undefined ? { notice: w.notice } : {}),
     };
     return { json, log: { count: res.count, returned: photos.length } };
   });
@@ -73,8 +83,10 @@ export async function getSelectedPhotos(ctx: ToolContext, args: { limit?: number
   return run(ctx, "lr_get_selected_photos", args, async () => {
     await ctx.deps.ensureBridge();
     const res = await ctx.deps.client.request("get_selection", { max: args.limit ?? DEFAULT_PAGE });
-    const photos = res.photos.map(listing);
-    return { json: { count: res.count, returned: photos.length, has_more: photos.length < res.count, photos }, log: { count: res.count } };
+    const w = where(ctx);
+    const photos = res.photos.map((p) => listing(p, w.where));
+    const notice = w.notice !== undefined ? { notice: w.notice } : {};
+    return { json: { count: res.count, returned: photos.length, has_more: photos.length < res.count, photos, ...notice }, log: { count: res.count } };
   });
 }
 

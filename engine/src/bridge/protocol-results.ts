@@ -46,6 +46,9 @@ export const contextResultSchema = z.looseObject({
   smart_preview: z.boolean().optional(),
 });
 
+/** A GPS position as the plugin sends it (Photos.lua position). */
+const gpsPosition = z.object({ latitude: z.number(), longitude: z.number() });
+
 /**
  * A photo as Catalog.lua describes it. A photo that is not a virtual copy has no copy_name, and its
  * master_local_id is its own local_id [handle: docs\reports\phase4\S7\s7_run_2026-09-27T12-53-05.json
@@ -70,6 +73,13 @@ const photoIdentity = {
    * docs\reports\phase6\catalog-tools-check\check.txt section 4, `selection`].
    */
   capture_time: z.string().optional(),
+  /**
+   * Plugin 0.21.0 (Photos.lua describe opts.where, issue #139): the listings only (search_photos,
+   * get_selection). Absent gps: none, a failed read, or an older plugin; the tools tell these apart by
+   * the plugin's version (library\search.ts WHERE_PLUGIN).
+   */
+  gps: gpsPosition.optional(),
+  path: z.string().optional(),
 };
 
 /** A photo in a listing (get_selection, search_photos). A photo whose uuid could not be read has none. */
@@ -85,7 +95,7 @@ const probeStep = z.object({ step: z.string(), ok: z.boolean(), result: z.unknow
  * A photo's GPS position as set_gps reads it (plugin 0.10.0, Library.lua gpsOf), `false` for none:
  * a Lua table cannot hold a nil field, so "none" needs a value the plugin's Json.lua writes [inference].
  */
-const gpsWire = z.union([z.object({ latitude: z.number(), longitude: z.number() }), z.literal(false)]);
+const gpsWire = z.union([gpsPosition, z.literal(false)]);
 
 export const COMMAND_RESULTS = {
   hello: helloResultSchema,
@@ -207,8 +217,9 @@ export const COMMAND_RESULTS = {
     files: z.array(z.string().min(1)).min(1),
     export_ms: z.number(),
   }),
-  // import_photo: the photo at that path, added now or already in the catalog.
-  import_photo: z.object({ status: z.enum(["imported", "already"]), uuid: z.string(), filename: z.string().optional() }),
+  // import_photo: the photo at that path, added now or already in the catalog. capture_time (plugin
+  // 0.21.0): as photoIdentity's; absent from an older plugin, or when Lightroom has not read it yet.
+  import_photo: z.object({ status: z.enum(["imported", "already"]), uuid: z.string(), filename: z.string().optional(), capture_time: z.string().optional() }),
   // Plugin 0.5.0 (Prefs.lua getPrefs): the settings page's values, each already checked by the
   // plugin, under their wire names. The engine checks each field again on its own
   // (settings\page.ts parsePage), so one bad field costs only that field; `invalid` lists what the

@@ -34,6 +34,7 @@ export type {
 } from "./types.js";
 export { awaitingPick } from "./pick.js";
 export { MASKS_PLUGIN } from "./masks.js";
+export { AI_PART_PLUGIN } from "./mask-parts.js";
 export { AI_TIMINGS, DIALOG_NOTE, WORKING_NOTE } from "./ai-update.js";
 export { abandonedNote } from "./abandon.js";
 export { LEFT_OPEN_NOTE, leftOpenJson } from "./left-open.js";

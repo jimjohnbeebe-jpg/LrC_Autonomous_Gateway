@@ -10,7 +10,8 @@ import { CANONICAL_PARAMS, loadDefaultParamMap } from "../src/params/index.js";
 import { applyOp, newCorrection, precheck, storedSliders, tableSettings, type MaskOp } from "../src/params/mask-ops.js";
 import { boundsOf, instanceOf, pickInstance, withInstance } from "../src/params/mask-person.js";
 import { summarize } from "../src/params/mask-summary.js";
-import { AI_KINDS, C, CARRIED, CORRECTION, IMAGE, LINEAR, LOCAL_PARAMS, M, MASK_TABLE_KEY, RADIAL, RANGE, RECOMPUTED, WHAT, BOX, IMAGE_KEYS, MaskError, readTable, tableInfo, uncaptured, verifyTable, type Correction } from "../src/params/mask-table.js";
+import { AI_KINDS, C, CARRIED, CORRECTION, IMAGE, LINEAR, LOCAL_PARAMS, M, MASK_TABLE_KEY, RADIAL, RANGE, RECOMPUTED, WHAT, BOX, IMAGE_KEYS, MaskError, readTable, tableInfo, verifyTable, type Correction } from "../src/params/mask-table.js";
+import { uncaptured } from "../src/params/mask-combine.js";
 
 const capture = (name: string): unknown => JSON.parse(readFileSync(fileURLToPath(new URL(`../../docs/reports/phase6/masks-capture/${name}`, import.meta.url)), "utf8"));
 const dump = capture("3_dump-1.json") as Record<string, unknown>;
@@ -143,7 +144,10 @@ describe("params: reading the mask table", () => {
     expect(uncaptured(captured)).toBeNull();
     const two = structuredClone(table[0]) as Correction;
     (two[C.masks] as unknown[]).push(structuredClone((table[1] as Correction)[C.masks] as unknown[])[0]);
-    expect(uncaptured([two])).toEqual({ name: "Mask 1", why: "it has 2 components" });
+    expect(uncaptured([two])).toBeNull(); // "linear, add radial": a verified form (issue #131, params\mask-combine.ts)
+    const radials = structuredClone(table[1]) as Correction;
+    (radials[C.masks] as unknown[]).push(structuredClone((table[1] as Correction)[C.masks] as unknown[])[0]);
+    expect(uncaptured([radials])).toEqual({ name: "Mask 2", why: 'its 2 components ("radial, add radial") are not a form verified in Lightroom' });
     const blend = structuredClone(table[1]) as Correction;
     Object.assign((blend[C.masks] as Record<string, unknown>[])[0] as object, { [M.blend]: 1 });
     expect(uncaptured([table[0] as Correction, blend])?.why).toBe("its MaskBlendMode is 1");
@@ -241,7 +245,7 @@ describe("params: mask operations", () => {
   it("deletes by id, and refuses an unknown id, combining, a geometry for an AI mask and an empty edit", () => {
     expect(op({ op: "delete", mask_id: id0 }).entries.map((e) => e[C.id])).toEqual(table.slice(1).map((e) => e[C.id]));
     expect(codeOf(() => op({ op: "delete", mask_id: "NOPE" }))).toBe("MASK_NOT_FOUND");
-    expect(codeOf(() => op({ op: "edit", mask_id: id0, combine: { mode: "add" } }))).toBe("MASK_OP_NOT_CAPTURED");
+    expect(codeOf(() => op({ op: "edit", mask_id: id0, combine: { mode: "add", kind: "sky" } }))).toBe("MASK_OP_NOT_CAPTURED"); // "linear, add sky": not verified
     expect(codeOf(() => op({ op: "create", kind: "sky", geometry: { left: 0.1 } }))).toBe("INVALID_ARGUMENTS");
     expect(codeOf(() => precheck({ op: "edit", mask_id: id0 }))).toBe("INVALID_ARGUMENTS");
   });

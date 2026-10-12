@@ -31,7 +31,7 @@ export type CatalogSim = {
   copyFault: CopyFault | null;
   selectFault: string | null;
   /** Rating and capture time per photo (plugin 0.8.0, Photos.describe; lightroom-sim-library.ts); a photo `find` gives with its own `settings` is a Develop target too (spike S10's census). */
-  readonly library?: { meta(uuid: string): Record<string, unknown>; find?(uuid: string): { local_id: number; settings?: Record<string, unknown> | undefined; copy_name?: string | undefined } | undefined };
+  readonly library?: { meta(uuid: string): Record<string, unknown>; where?(uuid: string): Record<string, unknown>; find?(uuid: string): { local_id: number; settings?: Record<string, unknown> | undefined; copy_name?: string | undefined } | undefined };
 };
 
 export const MASTER_LOCAL_ID = 1;
@@ -119,6 +119,6 @@ export function getSelection(sim: CatalogSim, p: Record<string, unknown>, filena
   if (typeof max !== "number" || !Number.isInteger(max) || max < 1 || max > 500) return fail("bad_request", "max must be a whole number from 1 to 500");
   if (sim.selected === "") return fail("no_target_photo", "No photo is selected in Lightroom", true);
   const ordered = [sim.selected, ...sim.alsoSelected.filter((u) => u !== sim.selected)];
-  const photos = ordered.slice(0, max).map((uuid) => ({ ...(describePhoto(sim, uuid) ?? { uuid, local_id: 0 }), filename, ...sim.library?.meta(uuid) }));
+  const photos = ordered.slice(0, max).map((uuid) => ({ ...(describePhoto(sim, uuid) ?? { uuid, local_id: 0 }), filename, ...sim.library?.meta(uuid), ...sim.library?.where?.(uuid) }));
   return ok({ count: ordered.length, photos });
 }

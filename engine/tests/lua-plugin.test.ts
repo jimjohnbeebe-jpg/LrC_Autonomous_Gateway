@@ -208,9 +208,9 @@ describe("lua: LrC-AVG.lrplugin", () => {
     // No SDK key in the plugin (rule 03): the guard reads the fields `watch` names, the engine's aiWatch.
     const pending = readFileSync(path.join(avgPlugin, "Pending.lua"), "utf8");
     expect(pending).not.toMatch(/"(MaskGroupBasedCorrections|CorrectionID|CorrectionMasks|MaskDigest|ErrorReason)"/);
-    const fields = pending.match(/local FIELDS = \{([^}]*)\}/)?.[1]?.match(/"[^"]*"/g)?.map((s) => s.slice(1, -1));
+    const listed = (name: string) => pending.match(new RegExp(`local ${name} = \\{([^}]*)\\}`))?.[1]?.match(/"[^"]*"/g)?.map((s) => s.slice(1, -1)) ?? [];
     const { ids: _ids, ...names } = aiWatch([]);
-    expect(fields).toEqual(Object.keys(names));
+    expect([...listed("FIELDS"), ...listed("AI_FIELDS")]).toEqual(Object.keys(names)); // AI_FIELDS: plugin 0.21.0, issue #131
     expect(pending).toMatch(/_G\.LrCAVG_PendingAi = _G\.LrCAVG_PendingAi or \{\}/);
     expect(read("Bridge.lua")).toMatch(/process_started_at = _G\.LrCAVG_ProcessStartedAt,/);
   });

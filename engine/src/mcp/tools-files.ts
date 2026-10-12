@@ -155,8 +155,10 @@ export async function importPhotos(ctx: ToolContext, args: ImportPhotosArgs, bud
     await ctx.deps.ensureBridge();
     needPlugin(ctx, "lr_import_photos", TRANSFER_PLUGIN, "it imports photos");
     return sessions.whenIdle("lr_import_photos", async () => {
-      const imported: Array<{ uuid: string; filename: string | null; path: string }> = [];
-      const already: Array<{ uuid: string; filename: string | null; path: string }> = [];
+      // source: the file found under `source`; path: the file the catalog holds (the copy, with copy_to) (issue #139).
+      type Imported = { uuid: string; filename: string | null; path: string; source: string; capture_time: string | null };
+      const imported: Imported[] = [];
+      const already: Imported[] = [];
       const done = () => ({ imported, already_in_catalog: already });
       const { failed, left } = await eachInBudget(files, budget, done, async (file) => {
         let target = file;
@@ -168,7 +170,7 @@ export async function importPhotos(ctx: ToolContext, args: ImportPhotosArgs, bud
           }
         }
         const r = await ctx.deps.client.request("import_photo", { path: target }, { timeoutMs: IMPORT_PHOTO_TIMEOUT_MS });
-        (r.status === "imported" ? imported : already).push({ uuid: r.uuid, filename: r.filename ?? null, path: target });
+        (r.status === "imported" ? imported : already).push({ uuid: r.uuid, filename: r.filename ?? null, path: target, source: file, capture_time: r.capture_time ?? null });
       }, start);
       const next = `Time is up for this call: call again with resume_after = this resume_after and the same other arguments (${left.length} files left).`;
       const json = {

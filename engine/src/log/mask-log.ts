@@ -19,6 +19,8 @@ const summary = z.strictObject({
   /** PR C step 2c: one person's mask, its person and every person's box Lightroom found (params\mask-summary.ts). */
   instance: z.number().int().optional(),
   people: z.array(box).optional(),
+  /** Issue #131: a mask of several parts, each in order (params\mask-summary.ts MaskPart). */
+  parts: z.array(z.strictObject({ kind: z.string(), mode: z.string().optional(), inverted: z.boolean(), geometry: z.record(z.string(), z.unknown()).optional() })).optional(),
 });
 
 export const maskPassSchema = z.strictObject({

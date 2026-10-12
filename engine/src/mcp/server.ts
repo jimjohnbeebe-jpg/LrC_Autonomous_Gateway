@@ -17,6 +17,7 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { CallToolRequestSchema, ListToolsRequestSchema, type CallToolResult, type Tool } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
+import { withCallContext } from "./call-context.js";
 import { CATALOG_DEFS } from "./defs-catalog.js";
 import { FILE_DEFS } from "./defs-files.js";
 import { CONTEXT_DEFS } from "./defs-context.js";
@@ -64,9 +65,10 @@ export async function respond(fn: () => Promise<ToolOutput>): Promise<CallToolRe
 
 /**
  * How often a call that asked for progress (a progressToken) gets notifications/progress while it runs
- * [inference: often enough to show an AI mask's wait of up to 5 minutes, session\ai-update.ts]. How long
- * Claude Desktop waits for a tool call, whether it sends a token, and whether progress extends its wait, are
- * [unverified].
+ * [inference: often enough to show an AI mask's wait of up to 5 minutes, session\ai-update.ts]. Claude
+ * Desktop's log shows the engine's answers to calls of 74 s and 171 s and no cancel [handle:
+ * docs\reports\phase8.5\desktop-call-limit.md]; whether it sends a token, its own time limit and whether
+ * progress extends it are [unverified] (issue #136). The tool log records progress_token per call (call-context.ts).
  */
 const PROGRESS_MS = 10_000;
 
@@ -118,7 +120,8 @@ export function createServer(tools: Tools, options: { progressMs?: number } = {}
       return errorResult(error);
     }
     const progress = { token: request.params._meta?.progressToken, ms: options.progressMs ?? PROGRESS_MS };
-    return withProgress(progress.token, (n) => extra.sendNotification(n), () => tools.progressNote(), progress.ms, () => respond(() => def.run(tools, parsed.data as Record<string, unknown>)));
+    const call = () => withProgress(progress.token, (n) => extra.sendNotification(n), () => tools.progressNote(), progress.ms, () => respond(() => def.run(tools, parsed.data as Record<string, unknown>)));
+    return withCallContext({ progressToken: progress.token !== undefined }, call);
   });
 
   return server;

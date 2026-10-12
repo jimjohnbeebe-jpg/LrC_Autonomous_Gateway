@@ -109,11 +109,13 @@ end
 -- uncropped; width and height stay at the full size after a crop [handle: docs\reports\phase4\S7.md
 -- Verdict 3; S7\s7_run_2026-09-27T12-53-05.json crop.master_size, crop.size_after_crop]. The engine's
 -- region preview takes the photo's size from it (engine\src\mcp\tools-context.ts photoSize).
+-- gps (plugin 0.21.0, issue #139): the table as getRawMetadata returns it [handle: Photos.lua Photos.position,
+-- the LrPhoto page], nil for none [inference]; its shape here is [unverified] until Jim's chat.
 local RAW_KEYS = {
     path = "path", file_format = "fileFormat", is_virtual_copy = "isVirtualCopy",
     iso = "isoSpeedRating", shutter = "shutterSpeed", aperture = "aperture", focal_length = "focalLength",
     width = "width", height = "height", cropped_dimensions = "croppedDimensions",
-    rating = "rating", pick = "pickStatus", label = "colorNameForLabel",
+    rating = "rating", pick = "pickStatus", label = "colorNameForLabel", gps = "gps",
 }
 local FORMATTED_KEYS = { filename = "fileName", copy_name = "copyName", lens = "lens", camera = "cameraModel" }
 

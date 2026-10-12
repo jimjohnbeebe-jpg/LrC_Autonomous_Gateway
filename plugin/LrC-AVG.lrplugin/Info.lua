@@ -10,6 +10,8 @@
 -- exports and imports. From 0.18.0 (Phase 7 row 5, hud_deck) the menu items leave the classic HUD closed
 -- while the engine says a Deck is connected (HudClick.menuEvent, Hud.showFromMenu). From 0.20.0 (GitHub
 -- issue #124) clear_pending_ai drops Pending.lua's guard on a photo when the engine abandons its session.
+-- From 0.21.0 (GitHub issues #131, #139) Pending.lua waits on every AI part of a mask, listings and the
+-- context carry gps and path (Photos.describe opts.where), and imports return capture_time.
 -- LrSdkVersion 13.0: the five Phase 0 spike plugins declared it and ran on LrC 15.5.1
 -- [handle: docs\reports\phase0\PHASE0.md "Draft for LR_SDK_NOTES", SDK version]; whether it hides
 -- newer develop keys is [unverified].
@@ -37,5 +39,5 @@ return {
         { title = "LrC-AVG - Accept Edit", file = "MenuAccept.lua" },
         { title = "LrC-AVG - Abort Edit", file = "MenuAbort.lua" },
     },
-    VERSION = { major = 0, minor = 20, revision = 0, build = 0 },
+    VERSION = { major = 0, minor = 21, revision = 0, build = 0 },
 }

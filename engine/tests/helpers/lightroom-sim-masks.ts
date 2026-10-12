@@ -2,7 +2,7 @@
 // The sim keeps masks as the table its apply_settings writes (lightroom-sim.ts); here:
 //   - the guard (Pending.lua): an update with `watch` makes apply_settings, apply_snapshot, create_snapshot
 //     and create_ai_mask_dc on that photo answer ai_compute_pending (each counted in `refusedPending`) while
-//     a listed entry's first component has neither digest nor ErrorReason; a read of the table that shows
+//     an AI part of a listed entry (any part, plugin 0.21.0) has neither digest nor ErrorReason; a read of the table that shows
 //     them answered clears it, as does an update that failed or was abandoned. `tableRoute` "late": the
 //     update's record says done at once, and the entry computes only at `finishLate()` (digests came after
 //     the update returned in capture 3, docs\reports\phase6\masks-capture\capture3-check.json `4_*`);
@@ -163,14 +163,11 @@ function updateAiSettings(sim: MaskSim, p: Record<string, unknown>): FakeReply {
   return started(1);
 }
 
-/** Pending.lua's refusal of a write to photo `uuid`: while an entry it waits for has no answer; cleared once none waits. */
+/** Pending.lua's refusal of a write to photo `uuid`: while an AI part of an entry it waits for (any part, plugin 0.21.0) has no answer; cleared once none waits. */
 function refusal(sim: MaskSim, uuid: string): FakeReply | null {
   const ids = sim.masks.guard.get(uuid);
   if (!ids) return null;
-  const waiting = table(sim.settingsOf(uuid)).some((e) => {
-    const m = ids.includes(String(e[C.id])) ? parts(e)[0] : undefined;
-    return m !== undefined && !computed(m) && aiError(m) === null;
-  });
+  const waiting = table(sim.settingsOf(uuid)).some((e) => ids.includes(String(e[C.id])) && parts(e).some((m) => m[M.what] === WHAT.image && !computed(m) && aiError(m) === null));
   if (!waiting) {
     sim.masks.guard.delete(uuid);
     return null;

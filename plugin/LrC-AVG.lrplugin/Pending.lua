@@ -30,6 +30,10 @@ Pending.REFUSED = { code = "ai_compute_pending", recoverable = false,
     message = "Lightroom is still computing an AI mask on this photo: wait, or restart Lightroom" }
 
 local FIELDS = { "table", "id", "masks", "digest", "error" }
+-- Plugin 0.21.0 (GitHub issue #131): the field and the value that tell an AI part (engine\src\params\mask-ops.ts
+-- aiWatch), as an AI part may be any part of a combined mask. A watch without them (an engine before 0.30.0)
+-- has its first part read, as before.
+local AI_FIELDS = { "what", "image" }
 
 -- `w` as the engine sends it, or nil when it is not one.
 local function checked(w)
@@ -39,6 +43,9 @@ local function checked(w)
     end
     for _, f in ipairs(FIELDS) do
         if type(w[f]) ~= "string" or w[f] == "" then return nil end
+    end
+    for _, f in ipairs(AI_FIELDS) do
+        if w[f] ~= nil and (type(w[f]) ~= "string" or w[f] == "") then return nil end
     end
     return w
 end
@@ -71,8 +78,15 @@ local function answered(c, w)
     return e ~= nil and e ~= 0
 end
 
--- True while an entry the record lists still waits: its first component (the AI one, as the engine reads
--- it, params\mask-ops.ts firstComponent) without an answer. An entry no longer in the table waits for nothing.
+-- Whether part `i`, `c`, is one the guard waits for: an AI part (its `what` field is `image`), or the first
+-- part when the watch does not say how to tell one.
+local function isAi(c, i, w)
+    if w.what and w.image then return c[w.what] == w.image end
+    return i == 1
+end
+
+-- True while an entry the record lists still waits: an AI part of it (any part, as the engine reads them,
+-- params\mask-combine.ts aiPart) without an answer. An entry no longer in the table waits for nothing.
 local function computing(settings, w)
     local wanted = {}
     for _, id in ipairs(w.ids) do wanted[id] = true end
@@ -80,8 +94,11 @@ local function computing(settings, w)
     if type(entries) ~= "table" then return false end
     for _, e in ipairs(entries) do
         local parts = type(e) == "table" and wanted[e[w.id]] and e[w.masks]
-        local c = type(parts) == "table" and parts[1]
-        if type(c) == "table" and not answered(c, w) then return true end
+        if type(parts) == "table" then
+            for i, c in ipairs(parts) do
+                if type(c) == "table" and isAi(c, i, w) and not answered(c, w) then return true end
+            end
+        end
     end
     return false
 end

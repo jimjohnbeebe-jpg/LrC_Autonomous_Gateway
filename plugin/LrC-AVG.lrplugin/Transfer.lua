@@ -263,15 +263,17 @@ function Transfer.importPhoto(payload)
     if not okFind then return fail("lookup_failed", "findPhotoByPath: " .. tostring(existing), true) end
     if existing then
         local d = Photos.describe(catalog, existing)
-        return { status = "already", uuid = d.uuid, filename = d.filename }
+        return { status = "already", uuid = d.uuid, filename = d.filename, capture_time = d.capture_time }
     end
     local photo
     local okAdd, status, err = LrTasks.pcall(Gate.write, catalog, "AVG import photo", function() photo = catalog:addPhoto(path) end)
     if not okAdd then return fail("import_failed", "Lightroom did not import " .. path .. ": " .. tostring(status)) end
     if not status then return nil, err end
     if not photo then return fail("import_failed", "Lightroom added no photo for " .. path, true) end
+    -- capture_time (plugin 0.21.0, issue #139): whether Lightroom has read dateTimeOriginal this soon
+    -- after addPhoto is [unverified]; nil leaves it out, and the engine says null.
     local d = Photos.describe(catalog, photo)
-    return { status = "imported", uuid = d.uuid, filename = d.filename }
+    return { status = "imported", uuid = d.uuid, filename = d.filename, capture_time = d.capture_time }
 end
 
 return Transfer

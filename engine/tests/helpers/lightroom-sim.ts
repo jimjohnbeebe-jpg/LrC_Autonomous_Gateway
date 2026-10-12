@@ -273,7 +273,7 @@ export class LightroomSim {
         available: !this.missing.has(uuid),
         sdk_available: !this.missing.has(uuid),
         file_exists: !this.missing.has(uuid),
-        smart_preview: false,
+        smart_preview: false, ...this.library.where(uuid), // gps (plugin 0.21.0); path is set below
         path: `D:\\Photos\\${other?.filename ?? this.filename}`,
         ...describePhoto(this, uuid),
         width: this.photoSize.width,

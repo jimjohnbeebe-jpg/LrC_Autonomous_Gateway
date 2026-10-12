@@ -20,7 +20,7 @@ export const CONTEXT_DEFS: ToolDef[] = [
     name: "lr_get_active_photo_context",
     title: "Active photo context",
     description:
-      "Describe the photo selected in Lightroom Classic: file, EXIF (ISO, shutter in seconds, aperture, focal length, lens, camera), " +
+      "Describe the photo selected in Lightroom Classic: file, GPS position (`gps`, null for none), EXIF (ISO, shutter in seconds, aperture, focal length, lens, camera), " +
       "rating/label/pick, process version, camera profile, and every Develop setting under its canonical name " +
       "(`settings`; these names are the ones lr_step takes). `pipeline` is \"raw\" (camera raw files) or \"rendered\" (JPEG, TIFF, " +
       "PNG, PSD, HEIC, AVIF and other non-raw files): `white_balance_unit` says what temperature and tint mean on this photo, " +

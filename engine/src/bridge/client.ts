@@ -35,8 +35,8 @@ import {
   type CommandPayloads,
   type CommandResult,
   type EventEnvelope,
-  type HelloResult,
 } from "./protocol.js";
+import type { HelloResult } from "./protocol-results.js";
 import { BridgeError, type BridgeClientOptions, type BridgeState, type BridgeStats } from "./types.js";
 
 export { BridgeError, type BridgeClientOptions, type BridgeState, type BridgeStats };

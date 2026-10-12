@@ -225,7 +225,7 @@ local function getSelection(payload)
     for i, photo in ipairs(ordered) do
         if i > max then break end
         if i > 1 then LrTasks.yield() end -- PRD NFR-1: yield between photos
-        photos[#photos + 1] = describe(catalog, photo)
+        photos[#photos + 1] = describe(catalog, photo, { where = true })
     end
     return { count = #ordered, photos = photos }
 end

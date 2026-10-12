@@ -14,12 +14,11 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { createInterface } from "node:readline";
 import { BridgeClient } from "../bridge/index.js";
 import { acquireInstanceLock, BridgeGate, devOverrides, ENGINE_VERSION } from "../mcp/index.js";
 import { MASK_TABLE_KEY, readTable } from "../params/index.js";
-import { carried, diffEntries, diffSummary, putBack, RADIAL_NAME, readPending, shapesOf, SNAPSHOT, writeAndRead, type Pending } from "./mask-carry-probe.js";
-import { describeError, type Answer } from "./phase1-check.js";
+import { ask, carried, diffEntries, diffSummary, putBack, RADIAL_NAME, readPending, shapesOf, SNAPSHOT, writeAndRead, type Pending } from "./mask-carry-probe.js";
+import { describeError } from "./phase1-check.js";
 import { redactHome } from "./phase2-check.js";
 
 const OUT_DIR = path.join(os.tmpdir(), "LrC-AVG", "masks-carry");
@@ -29,24 +28,6 @@ const started = new Date().toISOString().replace(/[:.]/g, "-");
 const redact = (text: string): string => redactHome(text, os.homedir());
 
 type Results = Record<string, unknown>;
-
-function ask(question: string): Promise<Answer> {
-  const rl = createInterface({ input: process.stdin, terminal: false });
-  const lines = rl[Symbol.asyncIterator]();
-  return (async () => {
-    try {
-      for (;;) {
-        process.stdout.write(`${question} Type y or n, then Enter: `);
-        const next = await lines.next();
-        if (next.done) return "no answer";
-        const a = String(next.value).trim().toLowerCase();
-        if (a === "y" || a === "n") return a;
-      }
-    } finally {
-      rl.close();
-    }
-  })();
-}
 
 function save(results: Results): string {
   mkdirSync(OUT_DIR, { recursive: true });

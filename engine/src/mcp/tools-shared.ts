@@ -14,6 +14,7 @@ import type { ParamMap, PresetFormat } from "../params/index.js";
 import type { PreviewRequest, PreviewService, RenderedPreview } from "../preview/index.js";
 import { SessionManager, endedError } from "../session/index.js";
 import type { KnownLogFolders, PageSettings } from "../settings/index.js";
+import { callLogFields } from "./call-context.js";
 import { ToolError, toToolError } from "./errors.js";
 
 /**
@@ -268,10 +269,10 @@ export function describe(preview: RenderedPreview): Record<string, unknown> {
 }
 
 /**
- * Run a tool: log it, and tell the bridge gate a call is in progress. A tool that never uses
- * Lightroom (`usesBridge: false`, the intent tools) leaves the gate alone, so it does not restart
- * the idle release of a bridge lock this engine holds (Greptile, PR #22) [handle: the gate's idle
- * timer is cleared and restarted only in beginUse/endUse, engine\src\mcp\bridge-gate.ts; test
+ * Run a tool: log it (progress_token from call-context.ts), and tell the bridge gate a call is in
+ * progress. A tool that never uses Lightroom (`usesBridge: false`, the intent tools) leaves the gate
+ * alone, so it does not restart the idle release of a bridge lock this engine holds (Greptile, PR #22)
+ * [handle: the gate's idle timer is cleared and restarted only in beginUse/endUse, bridge-gate.ts; test
  * tests\intents.test.ts "leaves the bridge gate alone": three intent calls, 0 gate calls].
  */
 export function run(ctx: ToolContext, tool: string, args: unknown, fn: () => Promise<ToolOutput>): Promise<ToolOutput>;
@@ -285,16 +286,15 @@ export async function run(
 ): Promise<ToolOutput> {
   const fn = typeof optionsOrFn === "function" ? optionsOrFn : (maybeFn as () => Promise<ToolOutput>);
   const usesBridge = typeof optionsOrFn === "function" ? true : optionsOrFn.usesBridge;
-  const ts = ctx.now().toISOString();
-  const started = performance.now();
+  const [ts, started] = [ctx.now().toISOString(), performance.now()];
   if (usesBridge) ctx.deps.onCallStart?.();
   try {
     const out = await fn();
-    ctx.deps.log?.append({ ts, tool, ok: true, duration_ms: ms(started), args, ...out.log });
+    ctx.deps.log?.append({ ts, tool, ok: true, duration_ms: ms(started), args, ...callLogFields(), ...out.log });
     return out;
   } catch (err) {
     const error = toToolError(err, ctx.deps.client.hello());
-    ctx.deps.log?.append({ ts, tool, ok: false, duration_ms: ms(started), args, error: error.body() });
+    ctx.deps.log?.append({ ts, tool, ok: false, duration_ms: ms(started), args, ...callLogFields(), error: error.body() });
     throw error;
   } finally {
     if (usesBridge) ctx.deps.onCallEnd?.();

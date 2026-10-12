@@ -28,6 +28,7 @@ import { ToolError, featureUnavailable, toToolError } from "../mcp/errors.js";
 import { AI_KINDS, KIND_LABELS, computed, correctionIds, firstComponent, named, readTable, type AiKind, type Box, type Correction, type SdkSettings } from "../params/index.js";
 import { aiTimings, updateAndWait } from "./ai-update.js";
 import { autoRevert, stuckError } from "./ai-revert.js";
+import { putBackPart } from "./mask-parts.js";
 import { byPerson } from "./person-masks.js";
 import { bridge, checkAbort, historyName, ms, readSdk, writeTable } from "./io.js";
 import type { Session, SessionContext, Target } from "./types.js";
@@ -56,8 +57,9 @@ export type AiResult = {
 /**
  * What the AI route needs from the pass: the photo, its pass, the table before it, the new entry's
  * id, name and sliders, and `attempts`: the ids of every entry this pass made (taken out on failure).
+ * `part`: an AI part added to mask `id` (mask-parts.ts), which a failure puts back as it was, not takes out.
  */
-export type AiJob = { t: Target; n: number; kind: AiKind; before: Correction[]; id: string; name: string; stored: Record<string, number>; historyNames: string[]; attempts: Set<string>; point?: [number, number] | null };
+export type AiJob = { t: Target; n: number; kind: AiKind; before: Correction[]; id: string; name: string; stored: Record<string, number>; historyNames: string[]; attempts: Set<string>; point?: [number, number] | null; part?: true };
 
 type Failed = { why: string; fallback: boolean };
 
@@ -127,7 +129,7 @@ export async function revertAfterRestart(ctx: SessionContext, s: Session, cause:
   const job = s.aiPending?.job;
   if (!job) return new ToolError("INTERNAL_ERROR", "no AI update was pending", false);
   try {
-    return await autoRevert(ctx, s, job, cause, "restart", (j) => takeOut(ctx, s, j));
+    return await autoRevert(ctx, s, job, cause, "restart", (j) => (j.part ? putBackPart(ctx, s, j) : takeOut(ctx, s, j)));
   } catch (err) {
     return toToolError(err);
   }

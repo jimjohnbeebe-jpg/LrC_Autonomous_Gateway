@@ -247,7 +247,7 @@ const TRUSTED_PAIRS: ReadonlySet<string> = new Set([...Object.values(AI_KINDS).m
  * colour and depth ranges (any other What or RangeMask type) stay refused, and so does Select Objects
  * [unverified: no capture shows its MaskSubType].
  */
-function untrusted(m: Component): string | null {
+export function untrusted(m: Component): string | null {
   const kind = componentKind(m);
   if (kind === "linear" || kind === "radial" || kind === "luminance") return null;
   if (m[M.what] !== WHAT.image) return `its kind (${String(m[M.what])}${kind === "range" ? ", not a luminance range" : ""}) was not round-tripped in the masks captures`;
@@ -256,27 +256,6 @@ function untrusted(m: Component): string | null {
   if (ids !== undefined && (!Array.isArray(ids) || ids.length !== 1)) return `it names ${Array.isArray(ids) ? ids.length : "no list of"} people (InstanceIDs)`;
   const odd = Object.keys(m).filter((k) => !IMAGE_KEYS.has(k));
   return odd.length > 0 ? `it has fields the masks captures never showed (${odd.join(", ")})` : null;
-}
-
-/**
- * The first correction the tools must not edit, and why: an untrusted component, several components, or a
- * MaskBlendMode other than 0 (every captured mask: one component, blend 0 [handle: 3_dump-1.json; capture2-templates.json;
- * capture3-templates.json; capture4-row6_people_by_hand.json]). session\masks.ts checks the edited one only:
- * others are carried unchanged, as Add, Subtract, Intersect, Brush and Color read back twice beside a new radial
- * [handle: docs\reports\phase8.5\mask-carry\mask_carry_2026-10-11T22-37-39-161Z.json `diff_lines`, issue #121].
- * A brush inside an AI mask, a Depth Range, 3+ components: [unverified] (mask-carry.md "Consequences").
- */
-export function uncaptured(entries: readonly Correction[]): { name: string; why: string } | null {
-  for (const e of entries) {
-    const parts = e[C.masks] as Component[];
-    const name = typeof e[C.name] === "string" ? (e[C.name] as string) : String(e[C.id]);
-    if (parts.length !== 1) return { name, why: `it has ${parts.length} components` };
-    const m = parts[0] as Component;
-    if (m[M.blend] !== undefined && m[M.blend] !== 0) return { name, why: `its MaskBlendMode is ${String(m[M.blend])}` };
-    const why = untrusted(m);
-    if (why) return { name, why };
-  }
-  return null;
 }
 
 /** A new id in the captured formats: CorrectionID / MaskID as an upper-case UUID, the sync ids as 32 upper-case hex digits. */

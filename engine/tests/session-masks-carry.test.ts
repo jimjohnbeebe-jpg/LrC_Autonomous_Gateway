@@ -43,6 +43,13 @@ async function beginWithAdd(): Promise<void> {
 }
 
 describe("mask tools: the user's own masks are carried (issue #121)", () => {
+  it("edits the sliders of Jim's hand-made Add, a verified form (issue #131), and keeps its parts as they were", async () => {
+    await beginWithAdd();
+    const out = await manager.editMask({ ...pass, mask_id: ADD_ID, sliders: { "local.exposure": 0.5 } });
+    expect(out.json).toMatchObject({ pass: "1/4", mask: { id: ADD_ID, kind: "mixed", parts: [{ kind: "linear", inverted: false }, { kind: "radial", mode: "add", inverted: false }] } });
+    expect(masks()[0]?.["CorrectionMasks"]).toEqual(ADD["CorrectionMasks"]);
+  });
+
   it("creates a mask beside a mask of two components, which reads back unchanged; lr_step never sends the table", async () => {
     await beginWithAdd();
     expect(((await manager.listMasks({ session_id: ID })).json["masks"] as Array<{ kind: string }>).map((m) => m.kind)).toEqual(["mixed", "radial"]);
@@ -58,17 +65,20 @@ describe("mask tools: the user's own masks are carried (issue #121)", () => {
 
   it("refuses an edit of the uncaptured mask, edits the radial beside it, and deletes the uncaptured mask", async () => {
     await beginWithAdd();
+    // A radial first is not a verified form (params\mask-combine.ts VERIFIED_FORMS); Jim's own "linear, add radial" is (issue #131).
+    const parts = ((lr.settings[MASK_TABLE_KEY] as Correction[])[0] as Correction)["CorrectionMasks"] as Array<Record<string, unknown>>;
+    parts[0] = structuredClone(parts[1]) as Record<string, unknown>;
     const writes = lr.history.length;
     expect(await fails(manager.editMask({ ...pass, mask_id: ADD_ID, sliders: { "local.exposure": 0.5 } }))).toMatchObject({
       code: "MASKS_UNCAPTURED_KIND",
       recoverable: false,
-      message: expect.stringMatching(/the mask the call names, "Add".*2 components/),
+      message: expect.stringMatching(/the mask the call names, "Add".*"radial, add radial"/),
     });
     expect(lr.history.length).toBe(writes);
     expect(manager.current()?.pass).toBe("0/4");
     const edited = await manager.editMask({ ...pass, mask_id: RADIAL_ID, sliders: { "local.exposure": 0.5 } });
     expect(edited.json).toMatchObject({ pass: "1/4", mask: { id: RADIAL_ID, sliders: { "local.exposure": 0.5 } } });
-    expect(masks()[0]).toEqual(ADD);
+    expect(masks()[0]?.["CorrectionMasks"]).toEqual([parts[1], parts[1]]);
     const deleted = await manager.deleteMask({ ...pass, mask_id: ADD_ID });
     expect(deleted.json).toMatchObject({ pass: "2/4", op: "delete", deleted: true });
     expect(masks().map((e) => e["CorrectionID"])).toEqual([RADIAL_ID]);

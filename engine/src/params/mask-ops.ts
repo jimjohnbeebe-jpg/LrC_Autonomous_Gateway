@@ -2,14 +2,16 @@
 // correction of each kind, and create / edit / delete applied to a copy of the corrections. Field names
 // come only from mask-table.ts (rule 03). A new entry is built in the captured shape: every correction
 // field the captures show, its sliders at 0 but those asked for, and one component of its kind
-// [handle: docs\reports\phase6\masks-capture\3_dump-1.json]; an AI component in Adobe's own form
-// (mask-table.ts AI_KINDS). Combining components (add, subtract, intersect), inverting a mask of several
-// components, and the kinds below are refused with a reason: the captures saw only single-component
-// masks, each with MaskBlendMode 0. One person's mask is placed by a point on the person (its
+// [handle: docs\reports\phase6\masks-capture\3_dump-1.json] (mask-build.ts); an AI component in Adobe's own
+// form (mask-table.ts AI_KINDS). A part added to a mask, and an edit of one part, are mask-combine.ts's (issue
+// #131): written only in the forms verified in Lightroom. Inverting or reshaping a mask of several parts as a
+// whole is refused: name the part. One person's mask is placed by a point on the person (its
 // ReferencePoint, as both captured people masks carry one [handle:
 // docs\reports\phase6\masks-capture\capture3-templates.json]); every other AI kind gets the photo's
 // centre, "0.500000 0.500000", as in every Adobe adaptive preset (mask-ai-kinds.ts).
 
+import { checkKind, geometryFields, newComponent, unit, type Geometry, type Point } from "./mask-build.js";
+import { aiPart, editParts, precheckParts, type Combine } from "./mask-combine.js";
 import {
   AI_KINDS,
   C,
@@ -17,69 +19,45 @@ import {
   CORRECTION,
   IMAGE,
   KIND_LABELS,
-  LINEAR,
   LOCAL_PARAMS,
   M,
   MASK_TABLE_KEY,
   MaskError,
   RADIAL,
-  RANGE,
   WHAT,
   componentKind,
   components,
   isAiKind,
   newMaskId,
   newSyncId,
+  type AiKind,
   type Component,
   type Correction,
   type MaskKind,
 } from "./mask-table.js";
-import { personFields } from "./mask-person.js";
 import { summarize, type MaskSummary } from "./mask-summary.js";
 
-export type Point = { x: number; y: number };
-/**
- * Image-normalised 0-1 coordinates from the top-left of the uncropped photo [handle:
- * docs\reports\phase6\masks-capture\check.json `8_geometry_plan`; Jim's y, y]; on a cropped or rotated
- * photo the frame is [unverified].
- */
-export type Geometry = {
-  zero?: Point | undefined;
-  full?: Point | undefined;
-  left?: number | undefined;
-  top?: number | undefined;
-  right?: number | undefined;
-  bottom?: number | undefined;
-  feather?: number | undefined;
-  lum_range?: number[] | undefined;
+export type { Geometry, Point } from "./mask-build.js";
+/** An edit: one mask's name, visibility, sliders, inversion and geometry; `combine` adds a part, `part` (1 = the first) edits one part (mask-combine.ts). */
+export type EditOp = {
+  op: "edit";
+  mask_id: string;
+  name?: string | undefined;
+  active?: boolean | undefined;
+  inverted?: boolean | undefined;
+  geometry?: Geometry | undefined;
+  sliders?: Record<string, number> | undefined;
+  combine?: Combine | undefined;
+  part?: number | undefined;
+  remove_part?: true | undefined;
 };
 export type MaskOp =
   | { op: "create"; kind: string; name?: string | undefined; geometry?: Geometry | undefined; point?: Point | undefined; sliders?: Record<string, number> | undefined }
-  | {
-      op: "edit";
-      mask_id: string;
-      name?: string | undefined;
-      active?: boolean | undefined;
-      inverted?: boolean | undefined;
-      geometry?: Geometry | undefined;
-      sliders?: Record<string, number> | undefined;
-      combine?: { mode: string } | undefined;
-    }
+  | EditOp
   | { op: "delete"; mask_id: string };
 
-export type OpResult = { entries: Correction[]; id: string; kind: string; before: MaskSummary | null; after: MaskSummary | null };
-
-/** Kinds Claude may ask for that are refused, each with its reason (the reasons are [inference]). */
-export const REFUSED_KINDS: Readonly<Record<string, string>> = {
-  people: "name the part: people_<part> for every person in the photo (people_face_skin, people_hair, ...), or person_entire / person_face_skin with a point on one person",
-  landscape: "name the category: landscape_<category> (landscape_sky, landscape_vegetation, landscape_water, ...), one mask each",
-  brush: "brush painting needs strokes, which the mask table cannot be given",
-  objects: "Select Objects needs a stroke or a box drawn in Lightroom",
-  color_range: "colour range needs a colour sampled on the photo in Lightroom",
-  depth_range: "depth range needs depth data sampled in Lightroom",
-};
-const COMBINE_REFUSED = "combining components (add, subtract, intersect) was not captured: every captured mask has one component, with MaskBlendMode 0";
-
+/** `ai`: an added part of an AI kind, which Lightroom must compute (session\mask-parts.ts). */
+export type OpResult = { entries: Correction[]; id: string; kind: string; before: MaskSummary | null; after: MaskSummary | null; ai?: AiKind };
 
 /** Panel values -> stored fields; unknown names and values outside the panel's range are refused. */
 export function storedSliders(sliders: Readonly<Record<string, number>>): Record<string, number> {
@@ -91,76 +69,6 @@ export function storedSliders(sliders: Readonly<Record<string, number>>): Record
     out[p.field] = value / p.scale;
   }
   return out;
-}
-
-const unit = (v: unknown, what: string): number => {
-  if (typeof v !== "number" || !Number.isFinite(v) || v < 0 || v > 1) throw new MaskError("INVALID_ARGUMENTS", `${what} must be a number in 0-1 of the image.`);
-  return v;
-};
-
-/** The geometry fields to write into a component of `kind`, checked; `old`: the component's current ones (an edit). */
-function geometryFields(kind: string, g: Geometry, old: Component | null): Record<string, unknown> {
-  const has = (k: keyof Geometry): boolean => g[k] !== undefined;
-  const refuse = (msg: string): never => {
-    throw new MaskError("INVALID_ARGUMENTS", msg);
-  };
-  if (kind === "linear") {
-    if (!old && !(g.zero && g.full)) refuse("A linear gradient needs geometry.zero and geometry.full ({x, y} in 0-1).");
-    const out: Record<string, unknown> = {};
-    if (g.zero) Object.assign(out, { [LINEAR.zeroX]: unit(g.zero.x, "zero.x"), [LINEAR.zeroY]: unit(g.zero.y, "zero.y") });
-    if (g.full) Object.assign(out, { [LINEAR.fullX]: unit(g.full.x, "full.x"), [LINEAR.fullY]: unit(g.full.y, "full.y") });
-    return out;
-  }
-  if (kind === "radial") {
-    const sides = ["left", "top", "right", "bottom"] as const;
-    if (!old && !sides.every(has)) refuse("A radial gradient needs geometry.left, top, right and bottom (0-1).");
-    const v = (k: (typeof sides)[number], field: string): number => (g[k] !== undefined ? unit(g[k], k) : (old?.[field] as number));
-    const box = { left: v("left", RADIAL.left), top: v("top", RADIAL.top), right: v("right", RADIAL.right), bottom: v("bottom", RADIAL.bottom) };
-    if (!(box.left < box.right && box.top < box.bottom)) refuse("A radial gradient needs left < right and top < bottom.");
-    const out: Record<string, unknown> = { [RADIAL.left]: box.left, [RADIAL.top]: box.top, [RADIAL.right]: box.right, [RADIAL.bottom]: box.bottom };
-    if (has("feather")) out[RADIAL.feather] = feather(g.feather);
-    return out;
-  }
-  if (kind === "luminance") {
-    const r = g.lum_range;
-    if (!r || r.length !== 4 || r.some((x, i) => unit(x, `lum_range[${i}]`) < (i > 0 ? (r[i - 1] as number) : 0))) refuse("lum_range needs 4 numbers in 0-1, each at least the one before.");
-    return { [RANGE.holder]: { ...((old?.[RANGE.holder] as object | undefined) ?? rangeTemplate()), [RANGE.lumRange]: (r as number[]).map((x) => x.toFixed(6)).join(" ") } };
-  }
-  return refuse(`A ${kind} mask has no geometry to set.`);
-}
-
-function feather(v: unknown): number {
-  if (typeof v !== "number" || !Number.isFinite(v) || v < 0 || v > 100) throw new MaskError("INVALID_ARGUMENTS", "geometry.feather must be 0-100.");
-  return v;
-}
-
-/**
- * The captured luminance range's fixed fields; the sample point at the photo's centre is [inference]. A
- * luminance entry made by the engine (not by Lightroom's own sampling) is [unverified] until Jim's mask
- * tools check creates one.
- */
-const rangeTemplate = (): Record<string, unknown> => ({ [RANGE.type]: 2, [RANGE.version]: 3, [RANGE.sampleType]: 0, [RANGE.sampleInfo]: "0 0.500000 0.500000", [RANGE.invert]: false });
-
-/**
- * One component of a new correction, as captured for its kind (radial: 3_dump-1.json entry 1; feather
- * 50 is [inference]). An AI kind in Adobe's form: its AI_KINDS fields, ReferencePoint (a person's point,
- * else the centre), written "x y" with 6 decimals as Lightroom writes it ("0.539062 0.650000",
- * capture3-templates.json), and ErrorReason 0. The ids (MaskID here, CorrectionID in newCorrection) are
- * not in Adobe's presets, but the engine needs them to find the entry again, and Lightroom kept the
- * ids written in captures 1-3 [handle: docs\reports\phase6\masks-capture\capture3-4_landscape_1.json `written` and `after_write`
- * CorrectionID, MaskID].
- */
-function newComponent(kind: MaskKind, name: string, g: Geometry, point: Point | null): Component {
-  const base: Component = { [M.id]: newMaskId(), [M.syncId]: newSyncId(), [M.name]: name, [M.active]: true, [M.inverted]: false, [M.blend]: 0, [M.value]: 1 };
-  if (isAiKind(kind)) {
-    const at = point ?? { x: 0.5, y: 0.5 };
-    // One person's kinds start as the probe, Entire Person of instance 0 (mask-person.ts); the pass then writes the kind itself.
-    const fields = AI_KINDS[kind].point ? personFields("person_entire", 0) : AI_KINDS[kind].fields;
-    return { ...base, [M.what]: WHAT.image, ...fields, [IMAGE.referencePoint]: `${at.x.toFixed(6)} ${at.y.toFixed(6)}`, [IMAGE.errorReason]: 0 };
-  }
-  const what = kind === "linear" ? WHAT.linear : kind === "radial" ? WHAT.radial : WHAT.range;
-  const fixed = kind === "radial" ? { [RADIAL.angle]: 0, [RADIAL.feather]: 50, [RADIAL.midpoint]: 50, [RADIAL.roundness]: 0, [RADIAL.flipped]: true, [RADIAL.version]: 2 } : {};
-  return { ...base, [M.what]: what, ...fixed, ...geometryFields(kind, g, null) };
 }
 
 /**
@@ -186,8 +94,6 @@ export function newCorrection(kind: MaskKind, name: string, g: Geometry, point: 
   return out as Correction;
 }
 
-const KINDS: readonly MaskKind[] = ["linear", "radial", "luminance", ...(Object.keys(AI_KINDS) as MaskKind[])];
-
 /** A person's point, required for one-person kinds and refused for the others. */
 function pointFor(kind: MaskKind, point: Point | undefined): Point | null {
   const needs = isAiKind(kind) && AI_KINDS[kind].point;
@@ -196,45 +102,41 @@ function pointFor(kind: MaskKind, point: Point | undefined): Point | null {
   return point ? { x: unit(point.x, "point.x"), y: unit(point.y, "point.y") } : null;
 }
 
-/** The kind asked for, or why it is refused. */
-export function checkKind(kind: string): MaskKind {
-  if ((KINDS as readonly string[]).includes(kind)) return kind as MaskKind;
-  const why = REFUSED_KINDS[kind];
-  throw new MaskError("MASK_KIND_NOT_SUPPORTED", why ? `A ${kind} mask is not offered: ${why}.` : `Unknown mask kind "${kind}" (kinds: ${KINDS.join(", ")}).`, { kind });
-}
-
 function find(entries: readonly Correction[], id: string): number {
   const i = entries.findIndex((e) => e[C.id] === id);
   if (i < 0) throw new MaskError("MASK_NOT_FOUND", `No mask has id ${id} on this photo; call lr_list_masks for the current ids.`, { mask_id: id });
   return i;
 }
 
-/** Refuse what can be refused without the photo's table (before a pass waits for its approval): kinds, sliders, combining, an empty edit. */
+/** Refuse what can be refused without the photo's table (before a pass waits for its approval): kinds, sliders, a part's arguments, an empty edit. */
 export function precheck(op: MaskOp): void {
   if (op.op === "create") applyOp([], op);
   if (op.op !== "edit") return;
-  if (op.combine) throw new MaskError("MASK_OP_NOT_CAPTURED", `Not offered: ${COMBINE_REFUSED}.`);
-  const fields = [op.name, op.active, op.inverted, op.geometry, op.sliders];
-  if (fields.every((f) => f === undefined)) throw new MaskError("INVALID_ARGUMENTS", "Name at least one change: name, active, inverted, geometry or sliders.");
+  precheckParts(op);
+  const fields = [op.name, op.active, op.inverted, op.geometry, op.sliders, op.combine, op.remove_part];
+  if (fields.every((f) => f === undefined)) throw new MaskError("INVALID_ARGUMENTS", "Name at least one change: name, active, inverted, geometry, sliders, combine or remove_part.");
   if (op.sliders) storedSliders(op.sliders);
 }
 
-function edit(entries: Correction[], op: Extract<MaskOp, { op: "edit" }>): OpResult {
+function edit(entries: Correction[], op: EditOp): OpResult {
   const i = find(entries, op.mask_id);
   const e = entries[i] as Correction;
   const before = summarize(e);
   precheck(op);
   const parts = components(e);
   const only = parts.length === 1 ? (parts[0] as Component) : null;
-  if ((op.inverted !== undefined || op.geometry) && !only) throw new MaskError("MASK_OP_NOT_CAPTURED", "Inverting or reshaping a mask of several components was not captured; edit it in Lightroom.");
+  // `part` 1 of a one-part mask is the mask itself; any other `part`, and `combine`, go to mask-combine.ts.
+  const byPart = op.combine !== undefined || (op.part !== undefined && !(op.part === 1 && only));
+  const ai = byPart ? editParts(e, op) : null;
+  if (!byPart && (op.inverted !== undefined || op.geometry) && !only) throw new MaskError("MASK_OP_NOT_CAPTURED", "This mask has several parts: name the part to invert or reshape (part, 1 for the first; lr_list_masks `parts`).");
   if (op.name !== undefined) e[C.name] = op.name;
   if (op.active !== undefined) e[C.active] = op.active;
   // An inverted radial reads back MaskInverted true with Flipped false [handle: docs\reports\phase8\S10\census\
   // s10__DSC0103.NEF__Copy 1.json "AVG vignette"], so write that form (issue #79); Flipped true when un-inverted is [inference].
-  if (only && op.inverted !== undefined) Object.assign(only, { [M.inverted]: op.inverted }, only[M.what] === WHAT.radial ? { [RADIAL.flipped]: !op.inverted } : {});
-  if (only && op.geometry) Object.assign(only, geometryFields(String(componentKind(only)), op.geometry, only));
+  if (!byPart && only && op.inverted !== undefined) Object.assign(only, { [M.inverted]: op.inverted }, only[M.what] === WHAT.radial ? { [RADIAL.flipped]: !op.inverted } : {});
+  if (!byPart && only && op.geometry) Object.assign(only, geometryFields(String(componentKind(only)), op.geometry, only));
   if (op.sliders) Object.assign(e, storedSliders(op.sliders));
-  return { entries, id: op.mask_id, kind: before.kind, before, after: summarize(e) };
+  return { entries, id: op.mask_id, kind: before.kind, before, after: summarize(e), ...(ai ? { ai } : {}) };
 }
 
 /** Apply one operation to a copy of the corrections (create: `ai` kinds too; the caller computes them). */
@@ -267,14 +169,16 @@ export function tableSettings(entries: readonly Correction[], emptyOk: boolean):
 
 /**
  * update_ai_settings' `watch` (plugin 0.16.0, Pending.lua): the entries `ids` and the field names the
- * plugin's guard reads them by (it reads their first component's digest and ErrorReason, as below).
+ * plugin's guard reads them by. `what` and `image` (plugin 0.21.0, issue #131): the guard waits for every
+ * part whose What is Mask/Image, as an AI part may be any part of a combined mask; a plugin before 0.21.0
+ * reads the first part only.
  */
-export const aiWatch = (ids: string[]) => ({ ids, table: MASK_TABLE_KEY, id: C.id, masks: C.masks, digest: IMAGE.digest, error: IMAGE.errorReason });
+export const aiWatch = (ids: string[]) => ({ ids, table: MASK_TABLE_KEY, id: C.id, masks: C.masks, digest: IMAGE.digest, error: IMAGE.errorReason, what: M.what, image: WHAT.image });
 
-/** The component of correction `id` (its first), for the AI route's checks. */
+/** The part of correction `id` the AI route's checks read (mask-combine.ts aiPart: an AI part wherever it is), or null. */
 export function firstComponent(entries: readonly Correction[], id: string): Component | null {
   const e = entries.find((x) => x[C.id] === id);
-  return e ? (components(e)[0] ?? null) : null;
+  return e ? aiPart(components(e)) : null;
 }
 
 /** Set name and stored sliders on correction `id` (after Lightroom made it through LrDevelopController). */

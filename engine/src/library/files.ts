@@ -16,7 +16,9 @@
 // Both tools stop starting photos after CALL_BUDGET_MS and say which are left, because Claude
 // Desktop's tool call has a time limit: the MCP SDK's default request timeout is 60 s [handle:
 // node_modules\@modelcontextprotocol\sdk\dist\esm\shared\protocol.js:8 DEFAULT_REQUEST_TIMEOUT_MSEC =
-// 60000]; whether Claude Desktop uses that default is [unverified] (PHASE5_PLAN "Carried").
+// 60000]. Claude Desktop's log shows the engine's answers to calls of 74 s and 171 s and no cancel
+// [handle: docs\reports\phase8.5\desktop-call-limit.md]; whether Desktop uses that default, and its
+// own limit, are [unverified] (issue #136).
 
 import { createHash, randomUUID } from "node:crypto";
 import { constants, createReadStream, readdirSync, rmSync } from "node:fs";

@@ -33,7 +33,10 @@ end
 -- rating and capture_time (plugin 0.8.0, Library.lua's listings): getRawMetadata("rating") is "either
 -- nil or number of stars", nil for none; getFormattedMetadata("dateTimeOriginal") is "the date and time
 -- of capture (for example, "09/15/2005 17:32:50")" [handle: https://lrc.mcor.dev/modules/LrPhoto.html].
-function Photos.describe(catalog, photo)
+-- opts.where (plugin 0.21.0, issue #139; only the listings, Library.lua search_photos and Catalog.lua
+-- get_selection, pass it): gps and path as well, in the same read gate. What reading them costs for a
+-- page of 500 photos is [unverified].
+function Photos.describe(catalog, photo, opts)
     local d = { local_id = photo.localIdentifier }
     catalog:withReadAccessDo(function()
         d.uuid = read(photo, photo.getRawMetadata, "uuid")
@@ -44,8 +47,29 @@ function Photos.describe(catalog, photo)
         d.filename = read(photo, photo.getFormattedMetadata, "fileName")
         d.rating = read(photo, photo.getRawMetadata, "rating")
         d.capture_time = read(photo, photo.getFormattedMetadata, "dateTimeOriginal")
+        if opts and opts.where then
+            d.gps = Photos.position(read(photo, photo.getRawMetadata, "gps"))
+            d.path = read(photo, photo.getRawMetadata, "path")
+        end
     end)
     return d
+end
+
+-- A GPS table as { latitude, longitude }, or nil for none. getRawMetadata("gps") is "(table) The
+-- location of this photo (for example, { latitude = 37.9362, longitude = 27.3451 })" [handle: LrPhoto
+-- page above]; nil for a photo without one [inference].
+function Photos.position(value)
+    if type(value) ~= "table" or type(value.latitude) ~= "number" or type(value.longitude) ~= "number" then return nil end
+    return { latitude = value.latitude, longitude = value.longitude }
+end
+
+-- A photo's GPS position { latitude, longitude }, false for none, or nil plus the error (set_gps,
+-- Library.lua; it lived there until plugin 0.21.0).
+function Photos.gpsOf(catalog, photo)
+    local ok, value
+    catalog:withReadAccessDo(function() ok, value = LrTasks.pcall(photo.getRawMetadata, photo, "gps") end)
+    if not ok then return nil, tostring(value) end
+    return Photos.position(value) or false
 end
 
 -- Whether the photo's original file is there: true, false, or nil when neither signal could be read.

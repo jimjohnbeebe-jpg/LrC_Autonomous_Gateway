@@ -2223,6 +2223,35 @@
                           ],
                           "additionalProperties": false
                         }
+                      },
+                      "parts": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string"
+                            },
+                            "mode": {
+                              "type": "string"
+                            },
+                            "inverted": {
+                              "type": "boolean"
+                            },
+                            "geometry": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {}
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "inverted"
+                          ],
+                          "additionalProperties": false
+                        }
                       }
                     },
                     "required": [
@@ -2313,6 +2342,35 @@
                             "left",
                             "bottom",
                             "right"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "parts": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string"
+                            },
+                            "mode": {
+                              "type": "string"
+                            },
+                            "inverted": {
+                              "type": "boolean"
+                            },
+                            "geometry": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {}
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "inverted"
                           ],
                           "additionalProperties": false
                         }

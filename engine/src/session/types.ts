@@ -5,7 +5,7 @@ import type { BridgeClient, HudStage } from "../bridge/index.js";
 import type { IntentLibrary, LoadedIntent } from "../intents/index.js";
 import type { AiTrace, SessionLogData, SessionLogFiles } from "../log/index.js";
 import type { Metrics, Region, RegionBox } from "../metrics/index.js";
-import type { CanonicalSettings, Geometry, ParamMap, Pipeline } from "../params/index.js";
+import type { CanonicalSettings, EditOp, Geometry, ParamMap, Pipeline } from "../params/index.js";
 import type { RenderedPreview } from "../preview/index.js";
 import type { KnownLogFolders, PageRead } from "../settings/index.js";
 import type { AiJob } from "./ai-masks.js";
@@ -72,15 +72,8 @@ export type CreateMaskArgs = MaskPassArgs & {
   point?: { x: number; y: number } | undefined;
   sliders?: Record<string, number> | undefined;
 };
-export type EditMaskArgs = MaskPassArgs & {
-  mask_id: string;
-  name?: string | undefined;
-  active?: boolean | undefined;
-  inverted?: boolean | undefined;
-  geometry?: Geometry | undefined;
-  sliders?: Record<string, number> | undefined;
-  combine?: { mode: string } | undefined;
-};
+/** lr_edit_mask: the edit as params\mask-ops.ts takes it (issue #131: `combine` adds a part, `part` edits one). */
+export type EditMaskArgs = MaskPassArgs & Omit<EditOp, "op">;
 export type DeleteMaskArgs = MaskPassArgs & { mask_id: string };
 
 export type SessionDeps = {

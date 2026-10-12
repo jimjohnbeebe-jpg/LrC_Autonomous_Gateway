@@ -26,7 +26,7 @@ const limitOf = (limits: Limits, end: End): number => (end === "high" ? limits.c
  * Only with the session's clip_baseline does pass 0 correct at all, and a step an end that was over
  * its limit in `before` (the render before the pass); otherwise a step corrects only the ends it
  * pushed over [stated: Jim, 2026-10-11, issue #130: "each pass should follow the prompt and intent",
- * step guard "Only what the pass caused"]. An end left alone is reported `unmet`.
+ * step guard "Only what the pass caused"]. An end left alone is reported `unmet`, with its own reason.
  */
 export async function correct(
   ctx: SessionContext,
@@ -66,7 +66,7 @@ export async function correct(
       });
     }
   }
-  actions.push(...unmet(now.metrics, s.limits));
+  actions.push(...unmet(now.metrics, s.limits, guarded, before, baseline));
   return { view: current, rendered: now, actions };
 }
 
@@ -102,17 +102,24 @@ function nextFix(
   return fix;
 }
 
-/** An "unmet" action for each end still over its limit after the corrections. */
-function unmet(m: Metrics, limits: Limits): GuardrailAction[] {
+/**
+ * An "unmet" action for each end still over its limit after the corrections. An end the pass did not
+ * guard (clip_baseline off) says it was left alone, and why: hud\payload.ts hudGuardrail ranks it
+ * below a correction by its "left alone".
+ */
+function unmet(m: Metrics, limits: Limits, guarded: readonly End[], before: Metrics, baseline: boolean): GuardrailAction[] {
   const actions: GuardrailAction[] = [];
   for (const end of ["high", "low"] as const) {
     const value = clipOf(m, end);
     const limit = limitOf(limits, end);
     if (value > limit) {
+      const why = baseline ? "pass 0 corrects no clipping" : `it was ${clipOf(before, end)} % before this pass`;
       actions.push({
         kind: "unmet",
         limit: end === "high" ? "clip_high" : "clip_low",
-        reason: `clip_${end}_pct is still ${value} %, over the limit of ${limit} %, after the corrections this pass allows`,
+        reason: guarded.includes(end)
+          ? `clip_${end}_pct is still ${value} %, over the limit of ${limit} %, after the corrections this pass allows`
+          : `clip_${end}_pct is ${value} %, over the limit of ${limit} %; left alone (clip_baseline off): ${why}`,
         history_name: null,
         changes: {},
         metrics_after: summarize(m),

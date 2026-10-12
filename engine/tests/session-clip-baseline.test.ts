@@ -5,6 +5,8 @@
 // Lightroom in its "tonal" model (tests/helpers/session-harness.ts).
 
 import { describe, expect, it } from "vitest";
+import { hudGuardrail } from "../src/hud/index.js";
+import type { GuardrailAction } from "../src/log/index.js";
 import { PIPELINES } from "../src/params/index.js";
 import { ID, SHORT, clean, fails, intent, lr, manager, map, useSessionHarness } from "./helpers/session-harness.js";
 
@@ -25,6 +27,7 @@ describe.each(PIPELINES)("clip_baseline (%s pipeline)", (pipeline) => {
     expect([lr.settings["Whites2012"], lr.settings["Blacks2012"], lr.settings["Exposure2012"]]).toEqual([0, -20, 0.2]);
     expect(map.fromSdk(lr.settings).camera_profile.name).toBe(pipeline === "raw" ? "Adobe Color" : "Color");
     expect(actionsOf(out.json).map((a) => [a.kind, a.limit])).toEqual([["unmet", "clip_high"], ["unmet", "clip_low"]]);
+    expect((actionsOf(out.json)[0] as Action & { reason: string }).reason).toMatch(/; left alone \(clip_baseline off\): pass 0 corrects no clipping$/);
     expect(out.json["clip_baseline"]).toBe(false);
   });
 
@@ -99,5 +102,10 @@ describe.each(PIPELINES)("clip_baseline (%s pipeline)", (pipeline) => {
     expect(lr.history[1]).toBe(`AVG ${SHORT} pass 1/4 guard 1`);
     expect(lr.settings["Blacks2012"]).toBe(-20);
     expect((out.json["metrics"] as { clip_high_pct: number }).clip_high_pct).toBeLessThanOrEqual(0.5);
+    // The low end has its own reason, and the HUD names the correction, not the end left alone.
+    const actions = out.json["guardrail_actions"] as Array<Action & { reason: string }>;
+    expect(actions.find((a) => a.kind === "unmet")?.reason).toMatch(/^clip_low_pct is [\d.]+ %, over the limit of 1 %; left alone \(clip_baseline off\): it was [\d.]+ % before this pass$/);
+    const hud = hudGuardrail({ guardrail_actions: actions as unknown as GuardrailAction[], refused: [], clamped: [] }, { clipHighPct: 0.5, clipLowPct: 1 });
+    expect(hud).toMatchObject({ status: "corrected", reason: expect.stringMatching(/^Highlight clipping was .*; corrected\.$/) });
   });
 });

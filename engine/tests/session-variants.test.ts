@@ -75,6 +75,19 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
       expect(out.json).toMatchObject({ ok: true, mode: "variants", pass: "0/4", target: { uuid: "SIM-UUID" }, intent_brief: { brief: "The test_variants brief." } });
     });
 
+    it("with lr_begin_session's clip_baseline false over the intent's true, leaves C's clipping alone at pass 0 and in its step (issue #130)", async () => {
+      clean();
+      const out = await manager.begin({ intent_id: "test_variants", mode: "variants", clip_baseline: false });
+      expect(lr.history.filter((h) => h.includes("baseline"))).toEqual([]);
+      const c = (out.json["variants"] as Array<Record<string, unknown>>)[2]?.["guardrail_actions"] as Array<{ kind: string; limit: string; reason: string }>;
+      expect(c.map((a) => [a.kind, a.limit])).toEqual([["unmet", "clip_high"]]); // C's exposure +1.1 clips the highlights
+      expect(c[0]?.reason).toMatch(/; left alone \(clip_baseline off\): pass 0 corrects no clipping$/);
+      const stepped = await step("C"); // exposure +0.1 pushes further into the high end that was over before
+      expect(stepped.json).toMatchObject({ refused: [], applied: [expect.objectContaining({ name: "exposure", delta: 0.1 })] });
+      expect(lr.history.filter((h) => h.startsWith(`AVG ${SHORT} C pass 1/4`))).toEqual([`AVG ${SHORT} C pass 1/4`]);
+      expect((stepped.json["guardrail_actions"] as Array<{ reason: string }>).map((a) => a.reason)).toEqual([expect.stringMatching(/^clip_high_pct is .*; left alone \(clip_baseline off\): it was [\d.]+ % before this pass$/)]);
+    });
+
     it("returns a contact sheet of the copies as the image", async () => {
       clean();
       const out = await begin();

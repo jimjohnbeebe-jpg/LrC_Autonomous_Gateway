@@ -1,5 +1,6 @@
-// AC-4 (PRD section 10, reworded for issue #130: no pass pushes an end over a limit it was within
-// before the pass; with clip_baseline on, no pass leaves clipping over the session's limits), counted on every
+// AC-4 (PRD section 10, reworded for issue #130: from pass 1 on, no pass pushes an end over a limit
+// it was within before the pass; with clip_baseline on, no pass (pass 0 included) leaves clipping
+// over the session's limits), counted on every
 // session an acceptance check runs, not only the first one (PHASE4_PLAN decision 1; Phase 3's check
 // counted session A only [handle: docs\reports\phase3\PHASE3.md "AC-4, what happened"]). Shared by
 // the Phase 3 check and, from PHASE4_PLAN row 10, Phase 4's.
@@ -15,10 +16,12 @@ export type SessionClip = ClipResult & { session: string; log_path: string; erro
 export type ClipSummary = { ok: boolean; sessions: SessionClip[]; over: Array<{ session: string } & ClipPass> };
 
 /**
- * AC-4 on every pass of a session log: no pass pushes an end over a limit it was within before the
- * pass; with clip_baseline on, no pass leaves clipping over the session's limits [stated: Jim,
- * 2026-10-11, issue #130, "Reword AC-4 + scripts on (Rec.)"]. A log without `clip_baseline` (before
- * issue #130, when the baseline always ran) counts as on; a pass without `metrics_before` as within
+ * AC-4 on every pass of a session log: from pass 1 on, no pass pushes an end over a limit it was
+ * within before the pass; with clip_baseline on, no pass (pass 0 included) leaves clipping over the
+ * session's limits [stated: Jim, 2026-10-11, issue #130, "Reword AC-4 + scripts on (Rec.)"]. Without
+ * it pass 0 (each copy's, in Variants mode) corrects nothing, so it is not counted [stated: Jim,
+ * 2026-10-11, "Leave it; AC-4 skips pass 0 (Rec.)"]. A log without `clip_baseline` (before issue
+ * #130, when the baseline always ran) counts as on; a pass without `metrics_before` as within
  * before. A log with no pass fails: nothing was measured (Greptile, PR #27). Such a log exists when
  * pass 0 fails [handle: engine\src\session\begin.ts runPass0 saves the log before pass 0 runs;
  * tests\session-begin.test.ts "keeps the session open when pass 0 fails after the snapshot ..."].
@@ -29,7 +32,7 @@ export function clipCheck(log: Pick<AnySessionLog, "guardrails" | "passes" | "cl
     const m = p.metrics_after;
     const within = (key: "clip_high_pct" | "clip_low_pct"): boolean => {
       const limit = log.guardrails[key];
-      return m[key] <= limit || (!strict && p.metrics_before !== null && p.metrics_before[key] > limit);
+      return m[key] <= limit || (!strict && (p.n === 0 || (p.metrics_before !== null && p.metrics_before[key] > limit)));
     };
     const ok = within("clip_high_pct") && within("clip_low_pct");
     return { n: p.n, ...(p.target && p.target !== "master" ? { target: p.target } : {}), clip_high_pct: m.clip_high_pct, clip_low_pct: m.clip_low_pct, ok };

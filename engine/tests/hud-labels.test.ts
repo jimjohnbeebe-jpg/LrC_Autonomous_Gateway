@@ -47,7 +47,7 @@ describe("The guardrail sentence", () => {
   it("clamped: by the pass's limit, the slider's range, or the probe's slope", () => {
     expect(of(planStep({ clarity: 100 }, { clarity: 0 }, 1, map))).toEqual({ status: "clamped", reason: "Clarity: change held to ±40 this pass." });
     expect(of(planStep({ exposure: 0.5 }, { exposure: 4.8 }, 1, map))).toEqual({ status: "clamped", reason: "Exposure: held at the end of its range." });
-    const sloped = applyProjectedGuardrail(planStep({ exposure: 0.5 }, { exposure: 0 }, 1, map), last(0.2), limits, new Map([["exposure", { luma_mean: 0, clip_high_pct: 1, clip_low_pct: 0 }]]));
+    const sloped = applyProjectedGuardrail(planStep({ exposure: 0.5 }, { exposure: 0 }, 1, map), last(0.2), limits, new Map([["exposure", { luma_mean: 0, clip_high_pct: 1, clip_low_pct: 0 }]]), "raw", true);
     expect(of(sloped)).toEqual({ status: "clamped", reason: "Exposure: change held back to keep clipping within limits." });
   });
 
@@ -55,7 +55,7 @@ describe("The guardrail sentence", () => {
     expect(of(planStep({ "hsl.red.sat": 10 }, {}, 1, map))).toEqual({ status: "refused", reason: "Red Saturation: not available on this photo, not changed." });
     expect(of(planStep({ exposure: 0.5 }, { exposure: 5 }, 1, map))).toEqual({ status: "refused", reason: "Exposure: not changed, it is already at the end of its range." });
     expect(of(planStep({ exposure: 0.001 }, { exposure: 0 }, 1, map))).toEqual({ status: "refused", reason: "Exposure: not changed, no room left within its limits." });
-    expect(of(applyProjectedGuardrail(planStep({ exposure: 0.3 }, { exposure: 0 }, 1, map), last(0.8), limits))).toEqual({
+    expect(of(applyProjectedGuardrail(planStep({ exposure: 0.3 }, { exposure: 0 }, 1, map), last(0.8), limits, new Map(), "raw", true))).toEqual({
       status: "refused",
       reason: "Exposure: not changed, it would push clipping over the limit.",
     });
@@ -70,6 +70,9 @@ describe("The guardrail sentence", () => {
       status: "unmet",
       reason: "Shadow clipping is still 3 % (limit 1 %) after corrections.",
     });
+    const alone = { kind: "unmet", limit: "clip_low", reason: "clip_low_pct is 3 %, over the limit of 1 %; left alone (clip_baseline off): it was 3 % before this pass" } as const;
+    expect(acted({ kind: "corrected", limit: "clip_high", reason: "clip_high_pct was 2 %, over the limit of 0.5 %" }, alone)).toMatchObject({ status: "corrected" });
+    expect(acted(alone)).toEqual({ status: "unmet", reason: "Shadow clipping is 3 % (limit 1 %); left alone." });
     expect(acted({ kind: "reverted", limit: "clip_high", reason: "clip_high_pct is 2 % after the corrections" })).toEqual({ status: "undone", reason: "Pass undone: highlight clipping went over the limit." });
     expect(acted({ kind: "reverted", limit: "region", reason: 'region "face" drifted' })).toEqual({ status: "undone", reason: "Pass undone: a region changed more than allowed." });
   });
@@ -85,6 +88,7 @@ describe("The guardrail sentence", () => {
       }
     }
     sentences.push(String(acted({ kind: "unmet", limit: "clip_high", reason: "clip_high_pct is still 100 %, over the limit of 0.5 %" }).reason));
+    sentences.push(String(acted({ kind: "unmet", limit: "clip_low", reason: "clip_low_pct is 100 %, over the limit of 1 %; left alone (clip_baseline off): it was 100 % before this pass" }).reason));
     expect(sentences.filter((s) => bytes(s) > HUD_LIMITS.text)).toEqual([]);
     expect(sentences.filter((s) => hudWordProblems(s).length > 0)).toEqual([]);
   });

@@ -35,6 +35,20 @@ describe("devtools: AC-4 on every session", () => {
     expect(clipCheck(log(undefined)).ok).toBe(false); // a log from before issue #130: the baseline ran
   });
 
+  it("without clip_baseline exempts pass 0, which corrects nothing; from pass 1 an end pushed over fails (issue #130)", () => {
+    const pass = (n: number, before: number, after: number, target?: string) => ({
+      n,
+      ...(target ? { target } : {}),
+      metrics_before: { clip_high_pct: before, clip_low_pct: 0 },
+      metrics_after: { clip_high_pct: after, clip_low_pct: 0 },
+    });
+    const log = (clip_baseline: boolean, passes: unknown[]) => ({ guardrails: { clip_high_pct: 0.5, clip_low_pct: 1 }, clip_baseline, passes }) as unknown as Parameters<typeof clipCheck>[0];
+    const pass0 = [pass(0, 0.2, 2), pass(0, 0.2, 3, "C")]; // the priors push the high end over on the master and on copy C
+    expect(clipCheck(log(false, pass0)).passes.map((p) => p.ok)).toEqual([true, true]);
+    expect(clipCheck(log(false, [...pass0, pass(1, 0.2, 2)])).passes.map((p) => p.ok)).toEqual([true, true, false]);
+    expect(clipCheck(log(true, pass0)).passes.map((p) => p.ok)).toEqual([false, false]);
+  });
+
   it("fails a log with no pass: nothing was measured (Greptile, PR #27)", () => {
     const log = { guardrails: { clip_high_pct: 0.5, clip_low_pct: 1 }, passes: [] } as unknown as Parameters<typeof clipCheck>[0];
     expect(clipCheck(log)).toEqual({ ok: false, passes: [] });

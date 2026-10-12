@@ -152,10 +152,14 @@ export function hudGuardrail(p: Pick<PassEntry, "guardrail_actions" | "refused" 
     const why = reverted.limit === "region" ? "a region changed more than allowed" : `${end(reverted).toLowerCase()} clipping went over the limit`;
     return { status: "undone", reason: `Pass undone: ${why}.` };
   }
-  const unmet = action("unmet");
+  // An end left alone (clip_baseline off, session\guardrail.ts unmet()) ranks below a correction.
+  const alone = (a: GuardrailAction): boolean => a.kind === "unmet" && a.reason.includes("left alone");
+  const unmet = p.guardrail_actions.find((a) => a.kind === "unmet" && !alone(a));
   if (unmet) return { status: "unmet", reason: `${end(unmet)} clipping is still ${clip(unmet, limits)} after corrections.` };
   const corrected = action("corrected");
   if (corrected) return { status: "corrected", reason: `${end(corrected)} clipping was ${clip(corrected, limits)}; corrected.` };
+  const leftAlone = p.guardrail_actions.find(alone);
+  if (leftAlone) return { status: "unmet", reason: `${end(leftAlone)} clipping is ${clip(leftAlone, limits)}; left alone.` };
   const refused = p.refused[0];
   if (refused) return { status: "refused", reason: `${lightroomLabel(refused.name)}: ${refusedWhy(refused, p.clamped)}.` };
   const clamped = p.clamped[0];
@@ -168,7 +172,7 @@ const end = (a: GuardrailAction): string => (a.limit === "clip_low" ? "Shadow" :
 
 /**
  * "<x> % (limit <y> %)". The clipping is the first percentage in the action's reason, which
- * session\guardrail.ts correct() and unmet() write as "clip_<end>_pct was|is still <x> %, over the
+ * session\guardrail.ts correct() and unmet() write as "clip_<end>_pct was|is [still] <x> %, over the
  * limit of <y> %"; the log keeps no other field with it for a correction (the reading before it).
  */
 function clip(a: GuardrailAction, limits: Limits): string {

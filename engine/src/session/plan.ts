@@ -93,7 +93,7 @@ export function planStep(requested: Readonly<Record<string, unknown>>, current: 
  * guarded: only the clipping the pass causes is [stated: Jim, 2026-10-11, issue #130, "Leave it
  * alone (Rec.)"]; the guardrail after the write reports it `unmet` (guardrail.ts correct).
  */
-export function applyProjectedGuardrail(plan: StepPlan, last: MetricsSummary | null, limits: Limits, slopes: ReadonlyMap<string, Slope> = new Map(), pipeline: Pipeline = "raw", clipBaseline = true): StepPlan {
+export function applyProjectedGuardrail(plan: StepPlan, last: MetricsSummary | null, limits: Limits, slopes: ReadonlyMap<string, Slope>, pipeline: Pipeline, clipBaseline: boolean): StepPlan {
   if (!last) return plan;
   const guards = (now: number, limit: number): boolean => clipBaseline || now <= limit;
   const kept: Change[] = [];

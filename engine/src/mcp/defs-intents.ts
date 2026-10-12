@@ -39,7 +39,8 @@ export const INTENT_DEFS: ToolDef[] = [
       "photo of that pipeline: temperature and tint, Kelvin on raw, relative -100..100 on rendered), `variants` (A/B/C prior sets, " +
       "each with `priors` and optionally `priors_by_pipeline`), " +
       "`guardrail_overrides` (clipping limits replacing the defaults of 0.5 % high and 1.0 % low), `regions_expected`, " +
-      "`convergence_hints` and `allow_probe`. Changes nothing; does not need Lightroom.",
+      "`convergence_hints`, `allow_probe` and `clip_baseline` (true: pass 0 pulls clipping in to the guardrails; off by default). " +
+      "Changes nothing; does not need Lightroom.",
     schema: getIntentArgs,
     annotations: { readOnlyHint: true, openWorldHint: false },
     run: (tools, args) => tools.getIntent(args as z.infer<typeof getIntentArgs>),

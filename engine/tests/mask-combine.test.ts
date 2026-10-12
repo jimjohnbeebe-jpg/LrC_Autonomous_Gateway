@@ -96,6 +96,8 @@ describe("mask combine: the gate", () => {
       { part: 2, inverted: true, geometry: BOX },
       { part: 0, inverted: true },
       { remove_part: true },
+      { inverted: true, combine: { mode: "add", kind: "radial", geometry: BOX } }, // combine with a whole-mask change
+      { geometry: BOX, combine: { mode: "add", kind: "radial", geometry: BOX } },
     ]) expect(fail(op(extra)).code, JSON.stringify(extra)).toBe("INVALID_ARGUMENTS");
     expect(fail(op({ combine: { mode: "add", kind: "brush" } })).code).toBe("MASK_KIND_NOT_SUPPORTED");
   });

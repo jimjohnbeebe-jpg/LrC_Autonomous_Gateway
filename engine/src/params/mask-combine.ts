@@ -86,6 +86,7 @@ export function precheckParts(op: EditOp): void {
   if (op.remove_part !== undefined && part === undefined) invalid("remove_part needs part: the number of the part to remove.");
   if (c && !(MODE_NAMES as readonly string[]).includes(c.mode)) invalid("combine.mode is add, subtract or intersect.");
   if (c && part !== undefined && (c.kind !== undefined || c.geometry !== undefined)) invalid("With part, combine takes only mode: the part's new mode.");
+  if (c && part === undefined && (op.inverted !== undefined || op.geometry !== undefined)) invalid("combine adds a part; invert or reshape in a separate edit, or name the part.");
   if (c && part === undefined) partKind(c);
   if (part === undefined) return;
   if ([op.geometry, op.inverted, c, op.remove_part].filter((x) => x !== undefined).length !== 1) invalid("With part, name one change of that part: geometry, inverted, combine (its mode) or remove_part.");

@@ -32,13 +32,16 @@ export function checkAiPartPlugin(ctx: SessionContext): void {
 
 const STOPS = ["BRIDGE_DISCONNECTED", "BRIDGE_TIMEOUT", "TARGET_CHANGED", "SESSION_ENDED"];
 
-/** The mask `job.id` as it was before the pass, written into the table as it is now; null when done (or the mask is gone), else why it may not be. */
+const GONE = "the mask is no longer in the table, so nothing was put back";
+
+/** The mask `job.id` as it was before the pass, written into the table as it is now; null when done, GONE when the mask is gone, else why it may not be. */
 async function putBack(ctx: SessionContext, s: Session, job: AiJob): Promise<string | null> {
   try {
     const now = readTable((await readSdk(ctx, s, job.t)).sdk);
     const i = correctionIds(now).indexOf(job.id);
     const was = job.before[correctionIds(job.before).indexOf(job.id)];
-    if (i < 0 || !was) return null;
+    if (i < 0) return GONE;
+    if (!was) return null;
     now[i] = was;
     const name = historyName(s, job.t, job.n, "mask ai revert");
     await writeTable(ctx, s, job.t, now, name, true);
@@ -57,7 +60,7 @@ export async function makeAiPart(ctx: SessionContext, s: Session, job: AiJob): P
   if (u.kind === "dialog") return autoRevert(ctx, s, job, u.why, "dialog", (j) => putBack(ctx, s, j));
   if (u.kind === "stuck") throw stuckError(s, job, u.why, u.failed);
   const left = await putBack(ctx, s, job);
-  const back = left ? `the mask may still hold the part (${left}): lr_list_masks shows it` : "the mask was put back as it was before this pass";
+  const back = left === GONE ? GONE : left ? `the mask may still hold the part (${left}): lr_list_masks shows it` : "the mask was put back as it was before this pass";
   if (u.kind === "not_found") {
     throw new ToolError("MASK_NOTHING_FOUND", `Lightroom found no ${KIND_LABELS[job.kind]} in this photo (its ErrorReason ${u.reason}), so ${back}; the pass is not used. Try another kind of part.`, true, {
       session_id: s.id, kind: job.kind, error_reason: u.reason, history_names: job.historyNames, ...(left ? { left } : {}),

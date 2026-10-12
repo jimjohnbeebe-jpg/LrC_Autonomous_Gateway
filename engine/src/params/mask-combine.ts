@@ -35,7 +35,7 @@ const MODES: Readonly<Record<CombineMode, { blend: number; inverted: boolean; va
  * The forms the tools write, in one place: a mask's parts as formOf names them, and a part edit as
  * "<mask's form>: <edit>" (editParts). Lightroom's own three (the header), then the ten forms
  * `npm run masks:combine` wrote, read back as written twice and Jim saw as described, all ten YES [handle:
- * docseportsphase8.5mask-combinemask_combine_2026-10-12T04-29-26-642Z.json `forms`, headline WORKED]. A
+ * docs\reports\phase8.5\mask-combine\mask_combine_2026-10-12T04-29-26-642Z.json `forms`, headline WORKED]. A
  * part edit needs its mask's form listed too: an edit of a mask whose form is not listed is refused before it
  * (uncaptured).
  */
@@ -44,12 +44,13 @@ export const VERIFIED_FORMS = new Set<string>([
   "radial, add sky", "radial, subtract sky", "radial, intersect sky", "sky, add radial",
   "linear, subtract linear", "radial, subtract radial", "radial, intersect luminance",
   "radial, subtract radial: reshape part 2", "radial, subtract radial: part 2 to intersect", "radial, subtract radial: remove part 2",
+  "radial, intersect radial", // what "part 2 to intersect" leaves, read back as written in the same run (`forms[8]`)
 ]);
 
 // The run probed one AI kind, sky. Every AI kind writes the same Mask/Image component apart from its
 // MaskSubType and MaskSubCategoryID (mask-build.ts newComponent) [inference], so a sky form stands for every
 // AI kind in the same place [stated: Jim, 2026-10-12, "Every AI kind, same modes"]; the others are unprobed.
-const AI_NAME = new RegExp(`(?<![\w])(${Object.keys(AI_KINDS).join("|")})(?![\w])`, "g");
+const AI_NAME = new RegExp(String.raw`(?<!\w)(${Object.keys(AI_KINDS).join("|")})(?!\w)`, "g");
 /** Whether VERIFIED_FORMS lists `form`, an AI kind read as sky (the note above). */
 export const listed = (form: string): boolean => VERIFIED_FORMS.has(form) || VERIFIED_FORMS.has(form.replace(AI_NAME, "sky"));
 

@@ -197,7 +197,7 @@ async function applyPlan(ctx: SessionContext, s: Session, t: Target, n: number, 
     ai = await makeAiMask(ctx, s, { t, n, kind: plan.kind, before, id, name: plan.after?.name ?? "", stored: storedSliders(op.sliders ?? {}), historyNames, attempts: new Set([id]), point });
     ({ sdk, id } = ai);
   } else if (plan.ai) {
-    ai = await makeAiPart(ctx, s, { t, n, kind: plan.ai, before, id, name: plan.after?.name ?? "", stored: {}, historyNames, attempts: new Set(), point: null }); // issue #131
+    ai = await makeAiPart(ctx, s, { t, n, kind: plan.ai, before, id, name: plan.after?.name ?? "", stored: {}, historyNames, attempts: new Set(), point: null, part: true }); // issue #131
     ({ sdk } = ai);
   }
   let view = ctx.deps.map.fromSdk(sdk);

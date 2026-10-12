@@ -38,9 +38,17 @@ beforeEach(() => {
 describe("mask combine: the shipped forms", () => {
   it("lists the masks:combine run's ten forms, sky standing for every AI kind, and nothing else", () => {
     for (const f of SHIPPED) VERIFIED_FORMS.add(f);
-    expect(SHIPPED).toHaveLength(13);
+    expect(SHIPPED).toHaveLength(14);
     for (const f of ["radial, subtract sky", "radial, intersect landscape_water", "subject, add radial", "radial, subtract radial: remove part 2"]) expect(listed(f), f).toBe(true);
     for (const f of ["radial, add radial", "sky, subtract radial", "linear, subtract sky", "radial, subtract radial, add sky", "radial, subtract radial: part 2 inverted true"]) expect(listed(f), f).toBe(false);
+  });
+
+  it("lists what every listed part edit leaves, so the mask stays editable after it (Greptile, PR #143)", () => {
+    for (const f of SHIPPED) VERIFIED_FORMS.add(f);
+    const two = edit(radial(), { combine: { mode: "subtract", kind: "radial", geometry: { left: 0.4, top: 0.4, right: 0.5, bottom: 0.5 } } }).entries[0] as Correction;
+    for (const change of [{ part: 2, geometry: { left: 0.3 } }, { part: 2, combine: { mode: "intersect" } }, { part: 2, remove_part: true as const }]) {
+      expect(uncaptured(edit(two, change).entries), JSON.stringify(change)).toBeNull();
+    }
   });
 });
 

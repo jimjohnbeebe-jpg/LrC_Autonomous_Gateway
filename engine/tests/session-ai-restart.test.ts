@@ -181,6 +181,25 @@ describe("D16: a Lightroom restart puts the photo back", () => {
     expect(lr.hud.refused).toEqual([]);
   });
 
+  it("an AI part stuck on the picked copy: the restart puts that mask back as it was, not left with the part (Greptile, PR #143)", async () => {
+    clean();
+    const rig = hudRig({ aiTimings: FAST });
+    await rig.manager.begin({ intent_id: "test_variants", mode: "variants", variant_count: 2, return_image: "none" });
+    const sid = readLog().session_id;
+    for (const target of ["A", "B"] as const) await rig.manager.step({ session_id: sid, target, settings: { exposure: 0.1 }, rationale: "test", return_image: "none" });
+    await rig.manager.selectVariant({ session_id: sid, variant: "B" });
+    const made = await rig.manager.createMask({ session_id: sid, rationale: "test", return_image: "none", kind: "radial", geometry: { left: 0.2, top: 0.3, right: 0.7, bottom: 0.9 } });
+    const id = String((made.json["mask"] as { id: string }).id);
+    const copyMasks = (): unknown => lr.copies.get("SIM-COPY-2")?.settings[MASK_TABLE_KEY];
+    const before = structuredClone(copyMasks());
+    lr.masks.tableRoute = "late";
+    expect(await fails(rig.manager.editMask({ session_id: sid, rationale: "test", return_image: "none", mask_id: id, combine: { mode: "subtract", kind: "sky" } }))).toMatchObject({ code: "LIGHTROOM_STUCK" });
+    expect(copyMasks()).not.toEqual(before); // the part is in the copy's table, uncomputed
+    restartLightroom(lr, plugin);
+    await waitUntil(() => rig.manager.current() === null, 3000);
+    expect(copyMasks()).toEqual(before);
+  });
+
   it("the HUD's note after an engine end names the restart or the dialog", () => {
     expect(engineEndedNote("Lightroom restarted while it computed the AI Sky mask (x)")).toBe("Lightroom restarted while it computed the mask, so the photo was put back as it was before the edit.");
     expect(engineEndedNote("Lightroom was busy or showed a dialog while it computed the AI Sky mask (x)")).toBe("Lightroom was busy or showed a dialog, so the photo was put back as it was before the edit.");

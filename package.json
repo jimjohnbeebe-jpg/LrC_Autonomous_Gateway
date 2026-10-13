@@ -39,6 +39,12 @@
     "deck:states": "npm run build && node hud/probe/states.ts",
     "deck:idle-probe": "npm run build && node hud/probe/idle.ts",
     "deck:menu": "npm run build && node hud/probe/menu.ts",
-    "phase7:check": "npm run build && node hud/probe/check/check.ts"
+    "phase7:check": "npm run build && node hud/probe/check/check.ts",
+    "arch:check": "depcruise engine/src --config .dependency-cruiser.cjs --ignore-known",
+    "arch:graph": "node tools/arch-graph.ts"
+  },
+  "devDependencies": {
+    "@swc/core": "1.16.18",
+    "dependency-cruiser": "18.6.0"
   }
 }

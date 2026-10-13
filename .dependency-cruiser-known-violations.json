@@ -1,0 +1,3583 @@
+[
+  {
+    "type": "cycle",
+    "from": "engine/src/bridge/hud-protocol.ts",
+    "to": "engine/src/bridge/protocol.ts",
+    "unresolvedTo": "./protocol.js",
+    "dependencyTypes": [
+      "local",
+      "import",
+      "type-only"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/bridge/protocol.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/bridge/hud-protocol.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/bridge/protocol-results.ts",
+    "to": "engine/src/bridge/hud-protocol.ts",
+    "unresolvedTo": "./hud-protocol.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/bridge/hud-protocol.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/bridge/protocol.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/bridge/protocol-results.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/devtools/phase5-config.ts",
+    "to": "engine/src/devtools/phase5-readback.ts",
+    "unresolvedTo": "./phase5-readback.js",
+    "dependencyTypes": [
+      "local",
+      "import",
+      "type-only"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/devtools/phase5-readback.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/devtools/phase5-config.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/params/map.ts",
+    "to": "engine/src/params/pipeline.ts",
+    "unresolvedTo": "./pipeline.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/params/pipeline.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/params/preset-keys.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/params/map.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/params/map.ts",
+    "to": "engine/src/params/preset-keys.ts",
+    "unresolvedTo": "./preset-keys.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/params/preset-keys.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/params/map.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/params/mask-combine.ts",
+    "to": "engine/src/params/mask-ops.ts",
+    "unresolvedTo": "./mask-ops.js",
+    "dependencyTypes": [
+      "local",
+      "import",
+      "type-only"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/params/mask-ops.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/params/mask-combine.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/params/mask-ops.ts",
+    "to": "engine/src/params/mask-summary.ts",
+    "unresolvedTo": "./mask-summary.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/params/mask-summary.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/params/mask-combine.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/params/mask-ops.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/params/pipeline.ts",
+    "to": "engine/src/params/preset-keys.ts",
+    "unresolvedTo": "./preset-keys.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/params/preset-keys.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/params/pipeline.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/abandon.ts",
+    "to": "engine/src/session/ai-update.ts",
+    "unresolvedTo": "./ai-update.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/abandon.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/abandon.ts",
+    "to": "engine/src/session/end.ts",
+    "unresolvedTo": "./end.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/end.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/abandon.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/abandon.ts",
+    "to": "engine/src/session/io.ts",
+    "unresolvedTo": "./io.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/abandon.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/abandon.ts",
+    "to": "engine/src/session/types.ts",
+    "unresolvedTo": "./types.js",
+    "dependencyTypes": [
+      "local",
+      "import",
+      "type-only"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/types.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/abandon.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/ai-masks.ts",
+    "to": "engine/src/session/ai-revert.ts",
+    "unresolvedTo": "./ai-revert.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/ai-masks.ts",
+    "to": "engine/src/session/ai-update.ts",
+    "unresolvedTo": "./ai-update.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/ai-masks.ts",
+    "to": "engine/src/session/io.ts",
+    "unresolvedTo": "./io.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/ai-masks.ts",
+    "to": "engine/src/session/mask-parts.ts",
+    "unresolvedTo": "./mask-parts.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/mask-parts.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/ai-masks.ts",
+    "to": "engine/src/session/person-masks.ts",
+    "unresolvedTo": "./person-masks.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/person-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/ai-masks.ts",
+    "to": "engine/src/session/types.ts",
+    "unresolvedTo": "./types.js",
+    "dependencyTypes": [
+      "local",
+      "import",
+      "type-only"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/types.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/ai-revert.ts",
+    "to": "engine/src/session/ai-update.ts",
+    "unresolvedTo": "./ai-update.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/ai-revert.ts",
+    "to": "engine/src/session/end.ts",
+    "unresolvedTo": "./end.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/end.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/ai-revert.ts",
+    "to": "engine/src/session/io.ts",
+    "unresolvedTo": "./io.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/ai-revert.ts",
+    "to": "engine/src/session/types.ts",
+    "unresolvedTo": "./types.js",
+    "dependencyTypes": [
+      "local",
+      "import",
+      "type-only"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/types.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/ai-update.ts",
+    "to": "engine/src/session/io.ts",
+    "unresolvedTo": "./io.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/ai-update.ts",
+    "to": "engine/src/session/types.ts",
+    "unresolvedTo": "./types.js",
+    "dependencyTypes": [
+      "local",
+      "import",
+      "type-only"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/types.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/approval.ts",
+    "to": "engine/src/session/io.ts",
+    "unresolvedTo": "./io.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/approval.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/approval.ts",
+    "to": "engine/src/session/targets.ts",
+    "unresolvedTo": "./targets.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/targets.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/approval.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/approval.ts",
+    "to": "engine/src/session/types.ts",
+    "unresolvedTo": "./types.js",
+    "dependencyTypes": [
+      "local",
+      "import",
+      "type-only"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/types.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/approval.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/begin.ts",
+    "to": "engine/src/session/approval.ts",
+    "unresolvedTo": "./approval.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/approval.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/pick.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/variants.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/begin.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/begin.ts",
+    "to": "engine/src/session/copies.ts",
+    "unresolvedTo": "./copies.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/copies.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/pick.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/variants.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/begin.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/begin.ts",
+    "to": "engine/src/session/io.ts",
+    "unresolvedTo": "./io.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/pick.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/variants.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/begin.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/begin.ts",
+    "to": "engine/src/session/left-open.ts",
+    "unresolvedTo": "./left-open.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/left-open.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/abandon.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/pick.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/variants.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/begin.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/begin.ts",
+    "to": "engine/src/session/pass0.ts",
+    "unresolvedTo": "./pass0.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/pass0.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/guardrail.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/pick.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/variants.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/begin.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/begin.ts",
+    "to": "engine/src/session/types.ts",
+    "unresolvedTo": "./types.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/types.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/pick.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/variants.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/begin.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/copies.ts",
+    "to": "engine/src/session/io.ts",
+    "unresolvedTo": "./io.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/pick.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/copies.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/copies.ts",
+    "to": "engine/src/session/types.ts",
+    "unresolvedTo": "./types.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/types.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/pick.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/copies.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/end.ts",
+    "to": "engine/src/session/io.ts",
+    "unresolvedTo": "./io.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/end.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/end.ts",
+    "to": "engine/src/session/targets.ts",
+    "unresolvedTo": "./targets.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/targets.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/end.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/end.ts",
+    "to": "engine/src/session/types.ts",
+    "unresolvedTo": "./types.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/types.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/end.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/guardrail.ts",
+    "to": "engine/src/session/types.ts",
+    "unresolvedTo": "./types.js",
+    "dependencyTypes": [
+      "local",
+      "import",
+      "type-only"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/types.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/pick.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/variants.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/begin.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/pass0.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/guardrail.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/hud-actions.ts",
+    "to": "engine/src/session/end.ts",
+    "unresolvedTo": "./end.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/end.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/hud-actions.ts",
+    "to": "engine/src/session/io.ts",
+    "unresolvedTo": "./io.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/hud-actions.ts",
+    "to": "engine/src/session/pick.ts",
+    "unresolvedTo": "./pick.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/pick.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/approval.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/hud-actions.ts",
+    "to": "engine/src/session/put-back.ts",
+    "unresolvedTo": "./put-back.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/put-back.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/hud-actions.ts",
+    "to": "engine/src/session/targets.ts",
+    "unresolvedTo": "./targets.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/targets.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/hud-actions.ts",
+    "to": "engine/src/session/types.ts",
+    "unresolvedTo": "./types.js",
+    "dependencyTypes": [
+      "local",
+      "import",
+      "type-only"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/types.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/io.ts",
+    "to": "engine/src/session/types.ts",
+    "unresolvedTo": "./types.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/types.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/left-open.ts",
+    "to": "engine/src/session/io.ts",
+    "unresolvedTo": "./io.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/pick.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/variants.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/begin.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/left-open.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/left-open.ts",
+    "to": "engine/src/session/types.ts",
+    "unresolvedTo": "./types.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/types.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/pick.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/variants.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/begin.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/left-open.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/mask-parts.ts",
+    "to": "engine/src/session/ai-revert.ts",
+    "unresolvedTo": "./ai-revert.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/mask-parts.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/mask-parts.ts",
+    "to": "engine/src/session/ai-update.ts",
+    "unresolvedTo": "./ai-update.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/mask-parts.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/mask-parts.ts",
+    "to": "engine/src/session/io.ts",
+    "unresolvedTo": "./io.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/mask-parts.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/mask-parts.ts",
+    "to": "engine/src/session/types.ts",
+    "unresolvedTo": "./types.js",
+    "dependencyTypes": [
+      "local",
+      "import",
+      "type-only"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/types.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/mask-parts.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/pass0.ts",
+    "to": "engine/src/session/guardrail.ts",
+    "unresolvedTo": "./guardrail.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/guardrail.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/pick.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/variants.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/pass0.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/pass0.ts",
+    "to": "engine/src/session/io.ts",
+    "unresolvedTo": "./io.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/pick.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/variants.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/pass0.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/pass0.ts",
+    "to": "engine/src/session/types.ts",
+    "unresolvedTo": "./types.js",
+    "dependencyTypes": [
+      "local",
+      "import",
+      "type-only"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/types.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/pick.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/variants.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/pass0.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/person-masks.ts",
+    "to": "engine/src/session/io.ts",
+    "unresolvedTo": "./io.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/person-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/person-masks.ts",
+    "to": "engine/src/session/types.ts",
+    "unresolvedTo": "./types.js",
+    "dependencyTypes": [
+      "local",
+      "import",
+      "type-only"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/types.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/person-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/pick.ts",
+    "to": "engine/src/session/io.ts",
+    "unresolvedTo": "./io.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/pick.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/pick.ts",
+    "to": "engine/src/session/targets.ts",
+    "unresolvedTo": "./targets.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/targets.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/pick.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/pick.ts",
+    "to": "engine/src/session/types.ts",
+    "unresolvedTo": "./types.js",
+    "dependencyTypes": [
+      "local",
+      "import",
+      "type-only"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/types.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/pick.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/put-back.ts",
+    "to": "engine/src/session/approval.ts",
+    "unresolvedTo": "./approval.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/approval.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/put-back.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/put-back.ts",
+    "to": "engine/src/session/io.ts",
+    "unresolvedTo": "./io.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/put-back.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/put-back.ts",
+    "to": "engine/src/session/types.ts",
+    "unresolvedTo": "./types.js",
+    "dependencyTypes": [
+      "local",
+      "import",
+      "type-only"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/types.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/put-back.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/targets.ts",
+    "to": "engine/src/session/types.ts",
+    "unresolvedTo": "./types.js",
+    "dependencyTypes": [
+      "local",
+      "import",
+      "type-only"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/types.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/end.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/targets.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/variants.ts",
+    "to": "engine/src/session/copies.ts",
+    "unresolvedTo": "./copies.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/copies.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/pick.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/variants.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/variants.ts",
+    "to": "engine/src/session/io.ts",
+    "unresolvedTo": "./io.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/pick.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/variants.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/variants.ts",
+    "to": "engine/src/session/targets.ts",
+    "unresolvedTo": "./targets.js",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/targets.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/io.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-update.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/pick.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/variants.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "engine/src/session/variants.ts",
+    "to": "engine/src/session/types.ts",
+    "unresolvedTo": "./types.js",
+    "dependencyTypes": [
+      "local",
+      "import",
+      "type-only"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "engine/src/session/types.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-masks.ts",
+        "dependencyTypes": [
+          "local",
+          "import",
+          "type-only"
+        ]
+      },
+      {
+        "name": "engine/src/session/ai-revert.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/hud-actions.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/pick.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "engine/src/session/variants.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  }
+]

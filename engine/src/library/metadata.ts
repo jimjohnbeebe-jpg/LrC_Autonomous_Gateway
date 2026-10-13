@@ -41,8 +41,12 @@ export function textNotTaken(after: IptcText, want: Partial<IptcText>): string |
 export const NO_STACK_WRITE =
   "Lightroom's plugin SDK cannot stack photos that are already in the catalog, so no tool makes or breaks a stack: use Photo > Stacking in Lightroom.";
 
-/** A folder path without trailing separators, a drive root ("D:\") kept as it is. */
+/**
+ * A folder path with Windows separators and none trailing, a drive root kept as "D:\". Whether
+ * getFolderByPath takes "/" or a path in other case is [unverified]: S11 passed it a path from
+ * LrPathUtils.parent [handle: plugin\spikes\S11.lrplugin\S11Stack.lua:59-60].
+ */
 export function folderPath(path: string): string {
-  const trimmed = path.trim();
-  return /^[A-Za-z]:[\\/]$/.test(trimmed) ? trimmed : trimmed.replace(/[\\/]+$/, "");
+  const p = path.trim().replace(/\//g, "\\").replace(/\\+$/, "");
+  return /^[A-Za-z]:$/.test(p) ? `${p}\\` : p;
 }

@@ -32,7 +32,8 @@ describe("the helpers (library\\metadata.ts)", () => {
   it("names pickStatus values, drops trailing separators from a folder but keeps a drive root, and checks a text read-back", () => {
     expect([flagName(1), flagName(0), flagName(-1), flagName(2)]).toEqual(["pick", "none", "reject", 2]);
     expect(folderPath(" D:\\Photos\\2026\\ ")).toBe("D:\\Photos\\2026");
-    expect(folderPath("D:/Photos//")).toBe("D:/Photos");
+    expect(folderPath("D:/Photos/2026//")).toBe("D:\\Photos\\2026");
+    expect(folderPath("D:\\\\")).toBe("D:\\");
     expect(folderPath("D:\\")).toBe("D:\\");
     expect(textNotTaken({ title: "a", caption: "b", headline: "" }, { title: "a", headline: "" })).toBeNull();
     expect(textNotTaken({ title: "a ", caption: "b", headline: "" }, { title: "a", caption: "b" })).toBe('Lightroom read back title "a ", not what was written.');

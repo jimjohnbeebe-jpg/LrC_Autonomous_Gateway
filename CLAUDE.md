@@ -40,7 +40,7 @@ Repo: https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway (public; `main`
 3. Open the PR with `gh pr create --fill`.
 4. Wait for Greptile's review (one automatic review when the PR opens; its summary goes into the PR body, its findings inline). A PR Greptile did not review gets the PR comment `@greptileai`. One review per PR, on code defects only (`greptile.json`). All fixes from it go in one push. Claude Code asks Jim before requesting a re-review. Sourcing (rule 02) is checked by Claude Code before the first push.
 5. Triage **every** Greptile comment in a table posted as a PR comment, with columns: `file:line` | Greptile finding | decision (`fix` \| `reject` \| `defer`) | reason | commit hash if fixed. Post the table even when Greptile reports no issues.
-6. Merge only when the triage table is posted and no `fix` decision is still open.
+6. Merge only when the triage table is posted, no `fix` decision is still open and `arch-check` passes (a required status check on `main`).
 7. Merge with `gh pr merge --squash --delete-branch` (Jim may choose `--merge` for phase branches with meaningful history).
 8. After the merge, update the vault `LrC_AVG_STATE.md` "Next action".
 
@@ -68,7 +68,7 @@ The TS core is `engine\src`; each top-level folder is a module. `npm run arch:ch
 
 Standing rules:
 
-- **(a) A new top-level module or a new cross-module edge updates this table and `MODULES` in `.dependency-cruiser.cjs` in the same PR** (and `npm run arch:graph`). The baseline `.dependency-cruiser-known-violations.json` holds the file cycles that existed on 2026-10-12. Never add to it; after fixing one, shrink it with `npx depcruise engine/src --config .dependency-cruiser.cjs --baseline --baseline-mode shrink-only`.
+- **(a) A new top-level module or a new cross-module edge is Jim's decision; then it updates this table and `MODULES` in `.dependency-cruiser.cjs` in the same PR** (and `npm run arch:graph`), and the PR description lists the edge under "Module Map changes" (`.claude\rules\04-workflow.md`, "STOP markers and decisions"). The baseline `.dependency-cruiser-known-violations.json` holds the file cycles that existed on 2026-10-12. Never add to it; after fixing one, shrink it with `npx depcruise engine/src --config .dependency-cruiser.cjs --baseline --baseline-mode shrink-only`.
 - **(b) The Lua plugin is a thin adapter.** It relays requests and results between Lightroom and the TS core; decision logic (what to change, by how much, when to stop) lives in TS.
 
 ## Layout

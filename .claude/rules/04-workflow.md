@@ -2,7 +2,7 @@
 
 Source: `C:\Users\jimbe\Documents\Obsidian Vault\Projects\LrC_Autonomous_Gateway\PHASES.md`, `C:\Users\jimbe\Documents\Obsidian Vault\Projects\LrC_Autonomous_Gateway\CLAUDE_CODE_LAUNCH.md`, `C:\Users\jimbe\Documents\Obsidian Vault\Projects\LrC_Autonomous_Gateway\LrC_AVG_STATE.md`; PR + review rule decided by Jim 2026-09-23 (Phase 0b directive); reviewer switched from Greptile to CodeRabbit by Jim 2026-10-03 [stated: "switch the reviewer for the remainder of this phase to CodeRabbit from Greptile … I will switch back when needed"]; switched back to Greptile by Jim 2026-10-04 [stated: PR #73, "I am going to switch back to Greptile, I am tired of Coderabbit already!"].
 
-Repo: https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway (public). `main` is branch-protected: PRs required, no force pushes, no deletions. GitHub requires 0 approvals because Jim works alone; **the reviewer triage is the gate, and this rule enforces it, not GitHub**.
+Repo: https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway (public). `main` is branch-protected: PRs required, no force pushes, no deletions. GitHub requires 0 approvals because Jim works alone; **the reviewer triage is the gate, and this rule enforces it, not GitHub**. GitHub does enforce one status check: `arch-check` (`.github\workflows\arch.yml`, `npm run arch:check`), required on `main` since 2026-10-12, not strict [stated: Jim, 2026-10-12, "add arch-check to the gh rules"; handle: `gh api repos/jimjohnbeebe-jpg/LrC_Autonomous_Gateway/branches/main/protection` → `required_status_checks.checks` `[{"context":"arch-check","app_id":15368}]`, `strict: false`].
 
 **The reviewer is Greptile** (GitHub App, login contains `greptile`), configured by `greptile.json` in the repo root, read from the PR's source branch [handle: https://www.greptile.com/docs/code-review/greptile-json-reference, read 2026-09-28: settings are read from the PR's source branch and override the dashboard]. Greptile reviewed PRs #1-#62; CodeRabbit reviewed PRs #63-#73 (2026-10-03 to 2026-10-04) and is off: `.coderabbit.yaml` has `reviews.auto_review.enabled: false` and stays for switching again. Greptile works only while Jim gives its GitHub App access to this repo (https://github.com/settings/installations, Greptile Apps > Configure) [stated: Jim, 2026-10-03]: with access removed it stopped; `autoReview` `[]` in `greptile.json` alone did not stop it on PR #62 [handle: check run "Greptile Review" on `7df697a`, 13:13:17Z-13:15:39Z UTC], why is [unverified]. **To switch to CodeRabbit again** (Jim's call): in one PR, set `autoReview` to `[]` in `greptile.json`, `reviews.auto_review.enabled: true` in `.coderabbit.yaml`, and use the CodeRabbit steps of this rule at commit `d688889` (`git show d688889:.claude/rules/04-workflow.md`) in steps 4-6 and in `CLAUDE.md`.
 
@@ -20,7 +20,7 @@ Repo: https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway (public). `main
    |---|---|---|---|---|
 
    `decision` is exactly one of **fix**, **reject**, **defer**. Each summary finding and each inline comment gets its own row. When Greptile reports no issues, post the table anyway with a single "no findings" row. A **defer** names where it is tracked (report, handover or issue). A **reject** gives a sourced reason (handle or tag, per `02-sourcing.md`).
-6. **A PR merges only when** the triage table is posted **and no fix decisions remain open**. Every **fix** row carries the hash of the commit that fixed it, pushed to the PR branch. **All fixes from one review go in one push.** Pushing fixes does not start a new review (step 4). Claude Code asks Jim before requesting a re-review (`@greptileai`), and does so only when a fix changed code logic in a way the first review did not see; if Greptile reviews again, triage the new comments the same way, in an updated or additional table.
+6. **A PR merges only when** the triage table is posted, **no fix decisions remain open** and `arch-check` passes (GitHub blocks the merge otherwise). Every **fix** row carries the hash of the commit that fixed it, pushed to the PR branch. **All fixes from one review go in one push.** Pushing fixes does not start a new review (step 4). Claude Code asks Jim before requesting a re-review (`@greptileai`), and does so only when a fix changed code logic in a way the first review did not see; if Greptile reviews again, triage the new comments the same way, in an updated or additional table.
 7. **Merge** with `gh pr merge <n> --squash --delete-branch`. Jim may choose `--merge` for phase branches whose history is worth keeping. Then `git switch main && git pull`.
 8. **After the merge, update** the vault `LrC_AVG_STATE.md` "Next action".
 
@@ -34,6 +34,7 @@ Repo: https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway (public). `main
 
 - When a directive says **STOP**, stop: report what was done and what is pending, then wait for Jim.
 - When a decision belongs to Jim (scope, a spec contradiction, a rule conflict, anything destructive or outward-facing), lay out the options with a recommendation and stop. Do not pick one and carry on.
+- **A change to the CLAUDE.md "Module Map" is Jim's decision** [stated: Jim, 2026-10-13, "Yes, please run that PR"]: a new cross-module import, a new module, or a removed one. When `npm run arch:check` fails with `not-in-allowed` or `engine/src entries not in the Module Map`, first try to move the code so the import is not needed. If the edge still looks right, stop and ask Jim, naming the edge (`A → B`, the files), why it is needed, and the alternative. After his yes, the PR changes the Module Map table and `MODULES` in `.dependency-cruiser.cjs` together, reruns `npm run arch:graph`, and lists each added or removed edge in its description under a "Module Map changes" heading. Never add entries to `.dependency-cruiser-known-violations.json`, and never loosen a rule in `.dependency-cruiser.cjs` to turn `arch-check` green.
 - Open decisions go in the handover or report under "Decisions for Jim".
 
 ## Steps for Jim (decided by Jim 2026-09-23 and 2026-09-24)
@@ -58,5 +59,5 @@ Any procedure Jim carries out (spike runs, Lightroom actions, PowerShell command
 ## Commits
 
 - Commit only what the task needs. Fixtures and `logs\*` are never committed; check `git status` before every commit.
-- Before pushing: `npm run build`, `npm test`, `npm run typecheck`.
+- Before pushing: `npm run build`, `npm test`, `npm run typecheck`, `npm run arch:check`.
 - End commit messages with the attribution line the session's instructions give.

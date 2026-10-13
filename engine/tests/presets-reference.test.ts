@@ -105,6 +105,10 @@ describe("what the references show", () => {
     // Keys a canonical name maps to that neither file holds: each has a leave-out rule in select.ts.
     const inEither = new Set(REFERENCES.flatMap((r) => [...presetDescription(parseXml(r.text)).attrs.keys(), ...presetDescription(parseXml(r.text)).children.map((c) => c.name)]));
     const never = [...CANONICAL_PARAMS.values()].map((s) => s.sdkKey).filter((k) => !inEither.has(`crs:${k}`));
-    expect(never.sort()).toEqual(["EnableLensCorrections", "Temperature", "Tint"]);
+    // The Effects keys beyond the two amounts (both 0 in the files) are left out by select.ts's Effects rule.
+    expect(never.sort()).toEqual([
+      "EnableLensCorrections", "GrainFrequency", "GrainSize", "PostCropVignetteFeather", "PostCropVignetteHighlightContrast",
+      "PostCropVignetteMidpoint", "PostCropVignetteRoundness", "PostCropVignetteStyle", "Temperature", "Tint",
+    ]);
   });
 });

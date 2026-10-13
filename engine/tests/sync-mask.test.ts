@@ -11,7 +11,7 @@ describe("sync: parameter_mask groups", () => {
     const unplaced = map.names().filter((n) => groupOf(n) === null);
     expect(unplaced).toEqual([]);
     const sizes = Object.fromEntries(MASK_GROUPS.map((g) => [g, map.names().filter((n) => groupOf(n) === g).length]));
-    expect(sizes).toEqual({ basic_tone: 11, white_balance: 2, tone_curve: 4, hsl: 24, grading: 14, detail: 6, lens: 3, camera_profile: 1 });
+    expect(sizes).toEqual({ basic_tone: 11, white_balance: 2, tone_curve: 4, hsl: 24, grading: 14, detail: 6, lens: 3, effects: 9, camera_profile: 1 });
   });
 
   it("places the names MCP_TOOLS' groups stand for", () => {

@@ -19,8 +19,8 @@
 -- these yield is [unverified]. Automaat found LrKeyword getters yielding [upstream claim: commit 11c0b93
 -- message, "Yielding is not allowed within a C or metamethod call" from a sort comparator], so names
 -- are read before sorting, never in a table.sort comparator. The walk yields every YIELD_EVERY
--- keywords (PRD NFR-1). A photo's own keywords get their paths outside the gate too (Library.lua
--- keywordsOf); plugin 0.8.0 read their names inside a read gate in Lightroom [handle: vault
+-- keywords (PRD NFR-1). A photo's own keywords get their paths outside the gate too
+-- (KeywordTree.ofPhoto); plugin 0.8.0 read their names inside a read gate in Lightroom [handle: vault
 -- LR_SDK_NOTES "Recorded in Phase 6", catalog search and metadata].
 --
 -- Creating levels: a keyword made by createKeyword "is not available for access until that function
@@ -184,6 +184,25 @@ function KeywordTree.resolve(catalog, paths)
         leaves[i] = findChild(catalog, parents[i], parts[#parts])
     end
     return parents, leaves
+end
+
+-- A photo's keywords: { paths, objects } in the same order, or nil plus the error (Library.lua
+-- set_keywords, Metadata.lua get_metadata; it lived in Library.lua until plugin 0.22.0).
+-- getRawMetadata("keywords") is "the list of keyword objects for the photo" [handle:
+-- https://lrc.mcor.dev/modules/LrPhoto.html], read in a read gate as every metadata read here; the
+-- paths (getName, getParent) are read outside it, by this file's rule for keyword getters.
+function KeywordTree.ofPhoto(catalog, photo)
+    local ok, list
+    catalog:withReadAccessDo(function() ok, list = LrTasks.pcall(photo.getRawMetadata, photo, "keywords") end)
+    if not ok then return nil, tostring(list) end
+    local paths, objects = {}, {}
+    for _, keyword in ipairs(list or {}) do
+        local okPath, path = LrTasks.pcall(KeywordTree.pathOf, keyword)
+        if not okPath then return nil, tostring(path) end
+        paths[#paths + 1] = path
+        objects[#objects + 1] = keyword
+    end
+    return { paths = paths, objects = objects }
 end
 
 return KeywordTree

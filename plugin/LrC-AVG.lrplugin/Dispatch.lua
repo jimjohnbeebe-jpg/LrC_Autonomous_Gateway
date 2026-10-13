@@ -17,6 +17,7 @@ local Json = require 'Json'
 local Library = require 'Library'
 local Log = require 'Log'
 local Masks = require 'Masks'
+local Metadata = require 'Metadata'
 local Pending = require 'Pending'
 local Prefs = require 'Prefs'
 local Preview = require 'Preview'
@@ -44,6 +45,9 @@ function Dispatch.handlers(hello)
         set_rating = Library.setRating,
         set_keywords = Library.setKeywords,
         set_gps = Library.setGps,
+        set_flag = Metadata.setFlag,
+        set_iptc = Metadata.setIptc,
+        get_metadata = Metadata.getMetadata,
         create_collection = Transfer.createCollection,
         collection_photos = Transfer.collectionPhotos,
         export_photo = Transfer.exportPhoto,

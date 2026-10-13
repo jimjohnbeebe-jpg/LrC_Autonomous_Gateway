@@ -7,6 +7,7 @@
 
 import { z } from "zod";
 import { hudDeckResultSchema, hudUpdateResultSchema } from "./hud-protocol.js";
+import { gpsPosition, gpsWire } from "./protocol-metadata.js";
 
 /** A getDevelopSettings() table as the plugin sends it. */
 export const sdkSettingsSchema = z.record(z.string(), z.unknown());
@@ -45,9 +46,6 @@ export const contextResultSchema = z.looseObject({
   file_exists: z.boolean().optional(),
   smart_preview: z.boolean().optional(),
 });
-
-/** A GPS position as the plugin sends it (Photos.lua position). */
-const gpsPosition = z.object({ latitude: z.number(), longitude: z.number() });
 
 /**
  * A photo as Catalog.lua describes it. A photo that is not a virtual copy has no copy_name, and its
@@ -90,12 +88,6 @@ const listedPhoto = z.object({ ...photoIdentity, uuid: z.string().optional() });
  * call, its result as the SDK gave it (functions and userdata as "<type>"), or the error it raised.
  */
 const probeStep = z.object({ step: z.string(), ok: z.boolean(), result: z.unknown().optional(), error: z.string().optional(), ms: z.number() });
-
-/**
- * A photo's GPS position as set_gps reads it (plugin 0.10.0, Library.lua gpsOf), `false` for none:
- * a Lua table cannot hold a nil field, so "none" needs a value the plugin's Json.lua writes [inference].
- */
-const gpsWire = z.union([gpsPosition, z.literal(false)]);
 
 export const COMMAND_RESULTS = {
   hello: helloResultSchema,

@@ -12,8 +12,10 @@ import { pluginVersionAtLeast } from "../bridge/index.js";
 import {
   CATALOG_READ_TIMEOUT_MS,
   DEFAULT_PAGE,
+  METADATA_PLUGIN,
   WHERE_NOTICE,
   WHERE_PLUGIN,
+  folderPath,
   gpsNotTaken,
   keywordsNotTaken,
   listing,
@@ -29,7 +31,7 @@ import { WRITE_TIMEOUT_MS } from "../sync/target.js";
 import { needPlugin, run, sessionTools, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
 type Page = { limit?: number | undefined; offset?: number | undefined };
-export type SearchPhotosArgs = SearchFilters & Page & { collection_id?: number | undefined };
+export type SearchPhotosArgs = SearchFilters & Page & { collection_id?: number | undefined; folder?: string | undefined; include_subfolders?: boolean | undefined };
 export type ListKeywordsArgs = Page & { query?: string | undefined };
 export type SetRatingArgs = { uuids: string[]; rating: number };
 export type SetKeywordsArgs = { uuids: string[]; add?: string[] | undefined; remove?: string[] | undefined };
@@ -44,7 +46,7 @@ function where(ctx: ToolContext): { where: boolean; notice?: string } {
 }
 
 const UNFILTERED =
-  "No filter was given, so every photo in the catalog was searched. Give a filename, keywords, rating, dates or a collection_id to narrow it.";
+  "No filter was given, so every photo in the catalog was searched. Give a filename, keywords, rating, dates, a collection_id or a folder to narrow it.";
 
 /**
  * Refuses before anything is sent when Lightroom runs an older plugin: it has neither new command, it
@@ -59,11 +61,13 @@ function needKeywordPlugin(ctx: ToolContext, tool: string, why: string): void {
 export async function searchPhotos(ctx: ToolContext, args: SearchPhotosArgs): Promise<ToolOutput> {
   return run(ctx, "lr_search_photos", args, async () => {
     await ctx.deps.ensureBridge();
+    if (args.folder !== undefined) needPlugin(ctx, "lr_search_photos", METADATA_PLUGIN, "for its folder filter");
     const criteria = searchCriteria(args);
     const offset = args.offset ?? 0;
     const limit = args.limit ?? DEFAULT_PAGE;
     const inCollection = args.collection_id !== undefined ? { collection_id: args.collection_id } : {};
-    const res = await ctx.deps.client.request("search_photos", { criteria, ...inCollection, offset, limit }, { timeoutMs: CATALOG_READ_TIMEOUT_MS });
+    const inFolder = args.folder !== undefined ? { folder: folderPath(args.folder), include_subfolders: args.include_subfolders === true } : {};
+    const res = await ctx.deps.client.request("search_photos", { criteria, ...inCollection, ...inFolder, offset, limit }, { timeoutMs: CATALOG_READ_TIMEOUT_MS });
     const w = where(ctx);
     const photos = res.photos.map((p) => listing(p, w.where));
     const json = {
@@ -72,7 +76,7 @@ export async function searchPhotos(ctx: ToolContext, args: SearchPhotosArgs): Pr
       returned: photos.length,
       has_more: offset + photos.length < res.count,
       photos,
-      ...(criteria.length === 0 && args.collection_id === undefined ? { warning: UNFILTERED } : {}),
+      ...(criteria.length === 0 && args.collection_id === undefined && args.folder === undefined ? { warning: UNFILTERED } : {}),
       ...(w.notice !== undefined ? { notice: w.notice } : {}),
     };
     return { json, log: { count: res.count, returned: photos.length } };
@@ -118,7 +122,7 @@ export async function listKeywords(ctx: ToolContext, args: ListKeywordsArgs): Pr
 }
 
 /** A write tool's answer: how many photos changed, each photo's before and after, and the failures. */
-function written<T>(out: WriteResult<T>, extra: Record<string, unknown>): ToolOutput {
+export function written<T>(out: WriteResult<T>, extra: Record<string, unknown>): ToolOutput {
   const changed = out.photos.filter((p) => p.changed).length;
   return { json: { ...extra, changed, photos: out.photos, failed: out.failed }, log: { changed, failed: out.failed.length } };
 }

@@ -11,6 +11,8 @@
 //   catalog  (tools-catalog.ts): lr_search_photos, lr_get_selected_photos, lr_list_collections,
 //            lr_set_rating, lr_set_keywords (Phase 6, kept from Automaat; library\); lr_list_keywords
 //            and lr_set_gps (GitHub issue #60, from later Automaat commits).
+//   metadata (tools-metadata.ts): lr_set_flag, lr_set_iptc, lr_get_metadata (GitHub issues #111,
+//            #112, #139; library\metadata.ts).
 //   files    (tools-collections.ts, tools-files.ts): lr_create_collection, lr_add_to_collection,
 //            lr_export_photos, lr_import_photos (GitHub issue #55; library\files.ts).
 //   write    (tools-write.ts): setSettings, Phase 2's lr_set_settings, for the Phase 2 check only.
@@ -40,6 +42,7 @@ import { addToCollection, createCollection, type AddToCollectionArgs, type Creat
 import { getActivePhotoContext, getMetrics, getPreview, type MetricsArgs, type PreviewArgs } from "./tools-context.js";
 import { exportPhotos, importPhotos, type Budget, type ExportPhotosArgs, type ImportPhotosArgs } from "./tools-files.js";
 import { deleteIntent, getIntent, listIntents, saveIntent, type DeleteIntentArgs, type SaveIntentArgs } from "./tools-intents.js";
+import { getMetadata, setFlag, setIptc, type GetMetadataArgs, type SetFlagArgs, type SetIptcArgs } from "./tools-metadata.js";
 import { createPresetFromActive, syncSeries, type CreatePresetArgs, type SyncSeriesArgs } from "./tools-propagation.js";
 import { approvePass, beginSession, createMask, deleteMask, editMask, endSession, getSessionLog, listMasks, probe, selectVariant, setRegions, step } from "./tools-session.js";
 import { createContext, type LastRender, type ToolContext, type ToolOutput, type ToolsDeps } from "./tools-shared.js";
@@ -204,6 +207,20 @@ export class Tools {
 
   setGps(args: SetGpsArgs): Promise<ToolOutput> {
     return setGps(this.ctx, args);
+  }
+
+  // --- Catalog metadata (GitHub issues #111, #112, #139).
+
+  setFlag(args: SetFlagArgs): Promise<ToolOutput> {
+    return setFlag(this.ctx, args);
+  }
+
+  setIptc(args: SetIptcArgs): Promise<ToolOutput> {
+    return setIptc(this.ctx, args);
+  }
+
+  getMetadata(args: GetMetadataArgs): Promise<ToolOutput> {
+    return getMetadata(this.ctx, args);
   }
 
   // --- Collections and files (GitHub issue #55).

@@ -64,6 +64,15 @@ No new package or crate: the `hud` workspace pins the versions already in the re
 
 **Phase 8.5, fix/deck-relaunch (2026-10-10):** `koffi` 3.3.2 is added to the hud workspace's devDependencies, the version spikes already pins (link in the S9 table above). It is used by the hidden-Deck input probe, `hud\probe\input.ts`: SetCursorPos, mouse_event and WindowFromPoint. As in S9, npm 11 did not run koffi's install script (`npm warn install-scripts koffi@3.3.2` from `npm install`, 2026-10-10). The prebuilt binary loads without it [handle: `node -e "import('./hud/probe/input.ts')…"` printed `dpi true`, the cursor position and a pid, 2026-10-10]. No crate is added: the wake event (`wake.rs`) uses `CreateEventW`, `OpenEventW`, `SetEvent` and `WaitForSingleObject`, all behind the `Win32_System_Threading` feature already enabled [handle: `cargo test` builds and passes `wake::tests`].
 
+## workspace root (`lrc-avg-workspace`; architecture gate, issue #148, 2026-10-12)
+
+| Package | Pinned | Kind | License | `engines.node` | npm registry |
+|---|---|---|---|---|---|
+| `dependency-cruiser` | 18.6.0 | devDependency | MIT | `^22\|\|^24\|\|>=26` | https://www.npmjs.com/package/dependency-cruiser/v/18.6.0 |
+| `@swc/core` | 1.16.18 | devDependency | Apache-2.0 | `>=10` | https://www.npmjs.com/package/@swc/core/v/1.16.18 |
+
+Both were the npm `latest` tag [handle: `npm view dependency-cruiser@18.6.0 version license engines dist-tags.latest` → `18.6.0`, `MIT`, `{ node: '^22||^24||>=26' }`, `18.6.0`; `npm view @swc/core@1.16.18 version license engines dist-tags.latest` → `1.16.18`, `Apache-2.0`, `{ node: '>=10' }`, `1.16.18`; 2026-10-12]. `npm install -D -E` at the root; `npm ls dependency-cruiser @swc/core --depth=0` shows both. They run `npm run arch:check` and `npm run arch:graph` (`.dependency-cruiser.cjs`, CLAUDE.md "Module Map"). dependency-cruiser was set by Jim's directive (issue #148). `@swc/core` is its parser, since dependency-cruiser 18.6.0 reads `.ts` only through `typescript` `>=2.0.0 <7.0.0` and the repo pins 7.0.2. Without a parser it cruised 0 files [handle: `npx depcruise engine/src --no-config --output-type json` → `totalCruised: 0`, typescript `available: false`, 2026-10-12]. Jim chose swc over a second `typescript` 6.0.3 or cruising `engine\dist` [stated: Jim, 2026-10-12, "go with recommendations"]. `@swc/core` loads a prebuilt platform package from its `optionalDependencies` (all twelve are in `package-lock.json`), so CI runs `npm ci --ignore-scripts`.
+
 ## Notes
 
 - **zod 4 with the MCP SDK:** SDK 1.30.1 declares `zod: "^3.25 || ^4.0"` as dependency and peer (`npm view @modelcontextprotocol/sdk@1.30.1 dependencies peerDependencies`), so zod 4.6.5 is supported. SDK 1.32.0 declares the same (`npm view @modelcontextprotocol/sdk@1.32.0 dependencies peerDependencies`, 2026-10-03).

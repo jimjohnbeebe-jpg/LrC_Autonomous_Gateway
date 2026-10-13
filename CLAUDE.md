@@ -44,10 +44,37 @@ Repo: https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway (public; `main`
 7. Merge with `gh pr merge --squash --delete-branch` (Jim may choose `--merge` for phase branches with meaningful history).
 8. After the merge, update the vault `LrC_AVG_STATE.md` "Next action".
 
+## Module Map
+
+The TS core is `engine\src`; each top-level folder is a module. `npm run arch:check` (dependency-cruiser, `.dependency-cruiser.cjs`, run in CI on every PR to `main`) fails any import that this table does not allow, any file-level import cycle, any `enginesrc` folder or file this table does not name, and any edit to this table that its `MODULES` does not match. `npm run arch:graph` redraws `docs\architecture\modules.md`. The table was taken from the imports as they stood on 2026-10-12 [handle: the PR for issue #148, "Survey" section]. "May import" lists other modules; a module may always import its own files, Node built-ins and npm packages. `mcp/errors` is the one file of `mcp` that other modules may import (`ToolError`).
+
+| Module | Responsibility | May import |
+|---|---|---|
+| `bridge` | The engine <-> Lightroom plugin link: client, endpoint, protocol schemas | — |
+| `params` | The pinned LrC 15.5.1 key and preset files and the canonical parameter map | — |
+| `metrics` | Measurements of rendered JPEGs (sharp) | — |
+| `log` | Provenance logs | — |
+| `setup` | `lrc-avg-setup`: writes the Claude Desktop config | — |
+| `intents` | The intent library | `params` |
+| `preview` | Rendered previews and their files | `bridge`, `metrics` |
+| `settings` | The Plug-in Manager values and their precedence for a session | `bridge`, `intents`, `log`, `session` |
+| `library` | The catalog tools kept from Automaat | `bridge`, `mcp/errors`, `preview`, `sync` |
+| `sync` | `lr_sync_series` | `bridge`, `library`, `log`, `mcp/errors`, `params`, `preview`, `session` |
+| `presets` | Develop presets from the selected photo | `bridge`, `mcp/errors`, `params`, `sync` |
+| `session` | The edit session: begin/step/end, passes, guardrails, masks, copies, approval | `bridge`, `intents`, `log`, `mcp/errors`, `metrics`, `params`, `preview`, `settings` |
+| `hud` | The HUD channel and the Deck | `bridge`, `log`, `mcp/errors`, `params`, `session` |
+| `mcp` | The stdio MCP server: tool definitions and handlers, `ToolError` | `bridge`, `hud`, `intents`, `library`, `log`, `metrics`, `params`, `presets`, `preview`, `session`, `settings`, `sync` |
+| `devtools` | The `npm run *:check` and probe harnesses (not in the npm package); imported by nothing | `bridge`, `hud`, `intents`, `library`, `log`, `mcp`, `metrics`, `params`, `presets`, `preview`, `session`, `settings`, `setup`, `sync` |
+
+Standing rules:
+
+- **(a) A new top-level module or a new cross-module edge updates this table and `MODULES` in `.dependency-cruiser.cjs` in the same PR** (and `npm run arch:graph`). The baseline `.dependency-cruiser-known-violations.json` holds the file cycles that existed on 2026-10-12. Never add to it; after fixing one, shrink it with `npx depcruise engine/src --config .dependency-cruiser.cjs --baseline --baseline-mode shrink-only`.
+- **(b) The Lua plugin is a thin adapter.** It relays requests and results between Lightroom and the TS core; decision logic (what to change, by how much, when to stop) lives in TS.
+
 ## Layout
 
 ```
-engine\                   Node/TS MCP server (src\{mcp,session,params,metrics,preview,intents,log,bridge}, tests\, intents\, schemas\)
+engine\                   Node/TS MCP server (src\ modules: see "Module Map"; tests\, intents\, schemas\)
 plugin\LrC-AVG.lrplugin\  Lua plugin (Phase 1: bridge on 8765/8766 + Develop commands)
 hud\                      the Deck (Phase 7): src-tauri\ Rust window shell, ui\ TypeScript UI + channel client, probe\ row 4b probe
 plugin\spikes\S1-S6.lrplugin\  Phase 0 spike plugins (throwaway)
@@ -66,6 +93,8 @@ npm run build               # tsc -> engine\dist
 npm test                    # vitest (engine)
 npm test -w hud             # vitest (hud\ui) + cargo test (hud\src-tauri; rustup MSVC needed)
 npm run typecheck           # engine src+tests, spikes, hud
+npm run arch:check          # module boundaries + no import cycles in engine\src (see "Module Map"; CI runs it on every PR)
+npm run arch:graph          # redraw docs\architecture\modules.md (Mermaid, one node per module)
 node spikes\S1\measure.ts   # spike scripts run directly (Node type stripping)
 npm run phase1:check        # Phase 1 acceptance check against Lightroom (docs\reports\phase1\PHASE1.md)
 npm run desktop:install     # register the engine in Claude Desktop as lrc-avg (backup first; removes lrc-avg-spike-s3)

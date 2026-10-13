@@ -46,7 +46,7 @@ Repo: https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway (public; `main`
 
 ## Module Map
 
-The TS core is `engine\src`; each top-level folder is a module. `npm run arch:check` (dependency-cruiser, `.dependency-cruiser.cjs`, run in CI on every PR to `main`) fails any import that this table does not allow, any file-level import cycle, and any edit to this table that its `MODULES` does not match. `npm run arch:graph` redraws `docs\architecture\modules.md`. The table was taken from the imports as they stood on 2026-10-12 [handle: the PR for issue #148, "Survey" section]. "May import" lists other modules; a module may always import its own files, Node built-ins and npm packages. `mcp/errors` is the one file of `mcp` that other modules may import (`ToolError`).
+The TS core is `engine\src`; each top-level folder is a module. `npm run arch:check` (dependency-cruiser, `.dependency-cruiser.cjs`, run in CI on every PR to `main`) fails any import that this table does not allow, any file-level import cycle, any `enginesrc` folder or file this table does not name, and any edit to this table that its `MODULES` does not match. `npm run arch:graph` redraws `docs\architecture\modules.md`. The table was taken from the imports as they stood on 2026-10-12 [handle: the PR for issue #148, "Survey" section]. "May import" lists other modules; a module may always import its own files, Node built-ins and npm packages. `mcp/errors` is the one file of `mcp` that other modules may import (`ToolError`).
 
 | Module | Responsibility | May import |
 |---|---|---|

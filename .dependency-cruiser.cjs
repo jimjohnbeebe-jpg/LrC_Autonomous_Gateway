@@ -52,7 +52,22 @@ function checkModuleMap() {
     );
   }
 }
+
+/** Every entry of engine\src is a folder named in MODULES: a module that imports only Node built-ins or npm
+ *  packages, or a file directly under engine\src, would otherwise pass the import rules below. */
+function checkSourceFolders() {
+  const entries = fs.readdirSync(path.join(__dirname, "engine", "src"), { withFileTypes: true });
+  const stray = entries.filter((e) => !e.isDirectory() || !Object.hasOwn(MODULES, e.name)).map((e) => e.name);
+  if (stray.length > 0) {
+    throw new Error(
+      `engine/src entries not in the Module Map: ${stray.join(", ")}. A new module needs a CLAUDE.md "Module Map" row ` +
+        `and a MODULES entry in .dependency-cruiser.cjs (same PR); files belong inside a module folder.`,
+    );
+  }
+}
+
 checkModuleMap();
+checkSourceFolders();
 
 /** @type {import('dependency-cruiser').IConfiguration} */
 module.exports = {

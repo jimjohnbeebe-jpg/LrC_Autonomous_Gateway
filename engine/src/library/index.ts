@@ -3,6 +3,8 @@
 
 export { CATALOG_READ_TIMEOUT_MS, DEFAULT_PAGE, MAX_PAGE, WHERE_NOTICE, WHERE_PLUGIN, isCalendarDay, listing, searchCriteria, shiftDay } from "./search.js";
 export type { SearchFilters } from "./search.js";
+export { FLAGS, MAX_TEXT, METADATA_PLUGIN, NO_STACK_WRITE, TEXT_FIELDS, flagName, folderPath, textNotTaken } from "./metadata.js";
+export type { FlagName, IptcText, TextField } from "./metadata.js";
 export { KEYWORD_SEPARATOR, keywordKey, keywordLevels, keywordsNotTaken, normalizeKeyword } from "./keywords.js";
 export { GPS_TOLERANCE, MAX_KEYWORDS, MAX_KEYWORD_LENGTH, MAX_KEYWORD_PATH_LENGTH, MAX_PHOTOS, gpsNotTaken, writeEach } from "./write.js";
 export type { Failed, Gps, PhotoWrite, WriteResult } from "./write.js";

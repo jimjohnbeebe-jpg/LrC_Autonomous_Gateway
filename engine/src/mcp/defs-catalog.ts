@@ -23,7 +23,7 @@ const keys = (list: readonly string[] | undefined): string[] => (list ?? []).map
 const limit = z.number().int().min(1).max(MAX_PAGE).optional().describe(`how many to return, 1-${MAX_PAGE} (default ${DEFAULT_PAGE})`);
 const offset = z.number().int().min(0).optional().describe("how many to skip, for the next page (default 0)");
 const day = z.string().refine(isCalendarDay, "must be a calendar day, YYYY-MM-DD");
-const uuids = z
+export const uuids = z
   .array(z.string().min(1))
   .min(1)
   .max(MAX_PHOTOS)
@@ -55,10 +55,13 @@ const searchArgs = z
     start_date: day.optional().describe("captured on or after this day, YYYY-MM-DD"),
     end_date: day.optional().describe("captured on or before this day, YYYY-MM-DD"),
     collection_id: z.number().int().min(0).optional().describe("only photos in this collection (its id from lr_list_collections)"),
+    folder: z.string().trim().min(1).optional().describe("only photos in the catalog folder at this full path, as a listing's `path` shows its folder (D:\\Photos\\2026\\2026-09-07)"),
+    include_subfolders: z.boolean().optional().describe("with folder: the photos of its subfolders too (default false)"),
     limit,
     offset,
   })
-  .refine((a) => !(a.start_date && a.end_date && a.start_date > a.end_date), "start_date must be on or before end_date");
+  .refine((a) => !(a.start_date && a.end_date && a.start_date > a.end_date), "start_date must be on or before end_date")
+  .refine((a) => a.include_subfolders === undefined || a.folder !== undefined, "include_subfolders needs a folder");
 
 const selectedArgs = z.object({ limit });
 const collectionArgs = z.object({ limit, offset });
@@ -93,8 +96,8 @@ const gpsArgs = z.object({
     .describe("the position to set, replacing any the photos have; null removes their position"),
 });
 
-const WRITE_RULES =
-  "Tell the user which photos will change before calling. Ratings, keywords and GPS positions are catalog metadata, not Develop settings: " +
+export const WRITE_RULES =
+  "Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags and title, caption and headline are catalog metadata, not Develop settings: " +
   "no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for " +
   "keywords: remove exactly the names and paths that were added, or add back those removed). A photo " +
   "that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the " +
@@ -106,7 +109,7 @@ export const CATALOG_DEFS: ToolDef[] = [
     title: "Search the catalog",
     description:
       "Search the Lightroom catalog for photos: by part of the file name, keywords (all of them), an exact star rating, capture dates " +
-      "(YYYY-MM-DD, inclusive) and a collection; the filters combine (all must match). With no filter it searches every photo and says so. " +
+      "(YYYY-MM-DD, inclusive), a collection and a folder (its full path; UNKNOWN_FOLDER when the catalog has none there); the filters combine (all must match). With no filter it searches every photo and says so. " +
       `Paged: \`count\` is how many matched, \`photos\` at most \`limit\` of them from \`offset\`, \`has_more\` whether more follow. ${LISTED} Changes nothing.`,
     schema: searchArgs,
     annotations: { readOnlyHint: true, openWorldHint: false },

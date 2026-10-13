@@ -9,7 +9,8 @@
 --   entries (engine\src\library\search.ts); this side runs them, intersected, through findPhotos.
 --   With no criteria and no collection, every photo (getAllPhotos), as Automaat does [upstream claim:
 --   vendor\automaat\plugin\LightroomMCP.lrplugin\HandlerSearch.lua:110-114]. `count` is how many
---   matched; `photos` describes those from offset + 1, at most `limit`.
+--   matched; `photos` describes those from offset + 1, at most `limit`. Plugin 0.22.0: `folder` (a
+--   full path) and `include_subfolders` keep only that folder's photos (folderPhotos).
 -- list_collections {}: every collection, top level and inside collection sets, with the set path.
 -- list_keywords { query, offset, limit }: the keyword tree's paths, paged as search_photos.
 -- set_rating { photo_uuid, rating }, set_keywords { photo_uuid, add, remove } and set_gps
@@ -60,6 +61,20 @@ local function collectionPhotos(catalog, id)
     return photos
 end
 
+-- The photos of the folder at this full path, or nil plus an error (plugin 0.22.0, issue #139 gap 2).
+-- findPhotos' "folder" criterion matches a folder's name, not its path; getFolderByPath + getPhotos
+-- took the path [handle: docs\reports\phase8.5\S11.md "Consequences"]. Both run outside any gate, as
+-- S11 ran them [handle: plugin\spikes\S11.lrplugin\S11Stack.lua:60-68]. getPhotos(true), the
+-- subfolders' photos too, is [unverified]: S11 ran getPhotos(false) only.
+local function folderPhotos(catalog, path, includeChildren)
+    local ok, folder = LrTasks.pcall(function() return catalog:getFolderByPath(path) end)
+    if not ok then return fail("lookup_failed", "getFolderByPath: " .. tostring(folder), true) end
+    if not folder then return fail("unknown_folder", "no folder in the catalog has the path " .. path) end
+    local okPhotos, photos = LrTasks.pcall(function() return folder:getPhotos(includeChildren) end)
+    if not okPhotos then return fail("read_failed", "getPhotos: " .. tostring(photos), true) end
+    return photos or {}
+end
+
 local function intersect(photos, within)
     local keep = {}
     for _, photo in ipairs(within) do keep[photo.localIdentifier] = true end
@@ -86,6 +101,8 @@ function Library.searchPhotos(payload)
         return fail("bad_request", "offset must be a whole number from 0, limit from 1 to " .. Library.MAX_PAGE)
     end
     if collectionId ~= nil and not wholeNumber(collectionId, 0) then return fail("bad_request", "collection_id must be a whole number") end
+    local folder = payload.folder
+    if folder ~= nil and (type(folder) ~= "string" or folder == "") then return fail("bad_request", "folder must be a non-empty path") end
     local catalog = LrApplication.activeCatalog()
     local matches
     if #criteria > 0 then
@@ -97,6 +114,11 @@ function Library.searchPhotos(payload)
         local inCollection, err = collectionPhotos(catalog, collectionId)
         if not inCollection then return nil, err end
         matches = matches and intersect(matches, inCollection) or inCollection
+    end
+    if folder ~= nil then
+        local inFolder, err = folderPhotos(catalog, folder, payload.include_subfolders == true)
+        if not inFolder then return nil, err end
+        matches = matches and intersect(matches, inFolder) or inFolder
     end
     if not matches then matches = catalog:getAllPhotos() or {} end
     local photos = {}
@@ -188,23 +210,8 @@ function Library.setRating(payload)
     return { uuid = d.uuid, filename = d.filename, before = before, after = after, write_error = writeErr, after_error = afterErr }
 end
 
--- A photo's keywords: { paths, objects } in the same order, or nil plus the error. getRawMetadata
--- ("keywords") is "the list of keyword objects for the photo" [handle: LrPhoto page], read in the read
--- gate as every metadata read here; the paths (getName, getParent) are read outside it, by
--- KeywordTree.lua's rule for keyword getters.
-local function keywordsOf(catalog, photo)
-    local ok, list
-    catalog:withReadAccessDo(function() ok, list = LrTasks.pcall(photo.getRawMetadata, photo, "keywords") end)
-    if not ok then return nil, tostring(list) end
-    local paths, objects = {}, {}
-    for _, keyword in ipairs(list or {}) do
-        local okPath, path = LrTasks.pcall(KeywordTree.pathOf, keyword)
-        if not okPath then return nil, tostring(path) end
-        paths[#paths + 1] = path
-        objects[#objects + 1] = keyword
-    end
-    return { paths = paths, objects = objects }
-end
+-- A photo's keywords: KeywordTree.ofPhoto (moved there in plugin 0.22.0, so get_metadata reads them too).
+local keywordsOf = KeywordTree.ofPhoto
 
 -- Each added path's missing parents first, and its last level found case aside (KeywordTree.resolve),
 -- then one gate adds and removes. A last level not found is made by createKeyword with returnExisting

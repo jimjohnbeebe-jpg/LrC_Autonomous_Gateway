@@ -5,13 +5,15 @@
 // "Animals|bird". Its matching of the search descriptor (filename contains, rating ==, keywords all,
 // captureTime in / > / < by day) is made up to test the engine, not a claim about how Lightroom
 // matches; its keyword rules copy KeywordTree.lua's changes(). As the plugin does, a write that would
-// change nothing is not made (Library.lua setRating, setKeywords, setGps).
+// change nothing is not made (Library.lua setRating, setKeywords, setGps). Plugin 0.22.0: a folder
+// filter in search_photos, and the metadata commands (lightroom-sim-metadata.ts).
 
 import type { FakePlugin, FakeReply } from "./fake-plugin.js";
+import { SimMetadata, type SimPhotoMetadata } from "./lightroom-sim-metadata.js";
 
 type Gps = { latitude: number; longitude: number } | null;
 /** `settings` and `file_format` make the photo a Develop target of its own (lightroom-sim.ts settingsOf, context); without them it is a library entry only. */
-export type SimLibraryPhoto = { uuid: string; local_id: number; filename: string; rating: number; keywords: string[]; day: string; gps: Gps; settings?: Record<string, unknown>; file_format?: string; copy_name?: string };
+export type SimLibraryPhoto = { uuid: string; local_id: number; filename: string; rating: number; keywords: string[]; day: string; gps: Gps; settings?: Record<string, unknown>; file_format?: string; copy_name?: string } & SimPhotoMetadata;
 export type SimCollection = { local_id: number; name: string; set_path?: string; smart: boolean; photos: string[] };
 
 const ok = (payload: unknown): FakeReply => ({ ok: true, payload });
@@ -70,8 +72,16 @@ export class SimLibrary {
   /** What Photos.describe adds with opts.where (plugin 0.21.0, the listings and get_context): gps, left out for none as Lua leaves nil out, and path. */
   where(uuid: string): Record<string, unknown> {
     const p = this.find(uuid);
-    return p ? { ...(p.gps ? { gps: p.gps } : {}), path: `D:\\Photos\\${p.filename}` } : {};
+    return p ? { ...(p.gps ? { gps: p.gps } : {}), path: `${this.folderOf(p)}\\${p.filename}` } : {};
   }
+
+  /** The photo's catalog folder (plugin 0.22.0's search_photos `folder`); D:\Photos unless set. */
+  folderOf(p: SimLibraryPhoto): string {
+    return p.folder ?? "D:\\Photos";
+  }
+
+  /** Plugin 0.22.0's set_flag, set_iptc and get_metadata (lightroom-sim-metadata.ts). */
+  readonly metadata = new SimMetadata(this);
 
   private describe(p: SimLibraryPhoto): Record<string, unknown> {
     return { uuid: p.uuid, local_id: p.local_id, filename: p.filename, is_virtual_copy: false, master_local_id: p.local_id, ...this.meta(p.uuid), ...this.where(p.uuid) };
@@ -108,6 +118,7 @@ export class SimLibrary {
     plugin.handlers.set("set_gps", (p) =>
       this.write(p, (photo) => this.locate(photo, p["clear"] === true ? null : { latitude: Number(p["latitude"]), longitude: Number(p["longitude"]) })),
     );
+    this.metadata.install(plugin);
   }
 
   private listKeywords(p: Record<string, unknown>): FakeReply {
@@ -135,11 +146,19 @@ export class SimLibrary {
       if (!collection) return fail("unknown_collection", `no collection has id ${String(p["collection_id"])}`);
       found = found.filter((photo) => collection.photos.includes(photo.uuid));
     }
+    if (typeof p["folder"] === "string") {
+      // Library.lua folderPhotos: getFolderByPath, then getPhotos(include_subfolders). The sim knows a
+      // folder only when a photo is in it, and matches paths as written.
+      const folder = p["folder"];
+      const within = (photo: SimLibraryPhoto): boolean => this.folderOf(photo) === folder || (p["include_subfolders"] === true && this.folderOf(photo).startsWith(`${folder}\\`));
+      if (!this.photos.some((photo) => this.folderOf(photo) === folder)) return fail("unknown_folder", `no folder in the catalog has the path ${folder}`);
+      found = found.filter(within);
+    }
     const offset = Number(p["offset"]);
     return ok({ count: found.length, photos: found.slice(offset, offset + Number(p["limit"])).map((photo) => this.describe(photo)) });
   }
 
-  private write(p: Record<string, unknown>, fn: (photo: SimLibraryPhoto) => FakeReply): FakeReply {
+  write(p: Record<string, unknown>, fn: (photo: SimLibraryPhoto) => FakeReply): FakeReply {
     const uuid = String(p["photo_uuid"]);
     const photo = this.find(uuid);
     if (!photo) return fail("unknown_photo", `no photo in the catalog has uuid ${uuid}`);

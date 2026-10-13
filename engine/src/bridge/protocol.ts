@@ -15,6 +15,7 @@
 
 import { z } from "zod";
 import type { HudUpdatePayload } from "./hud-protocol.js";
+import { METADATA_RESULTS } from "./protocol-metadata.js";
 import { COMMAND_RESULTS } from "./protocol-results.js";
 
 export const PROTOCOL_VERSION = 1;
@@ -54,8 +55,8 @@ export type InboundEnvelope = z.infer<typeof inboundSchema>;
 /** One entry of a findPhotos search descriptor (engine\src\library\search.ts builds them). */
 export type SearchCriterion = { criteria: string; operation: string; value: string | number; value2?: string };
 
-/** Every command the engine sends, by name, with the schema of its result (protocol-results.ts). */
-export const COMMANDS = COMMAND_RESULTS;
+/** Every command the engine sends, by name, with the schema of its result (protocol-results.ts, protocol-metadata.ts). */
+export const COMMANDS = { ...COMMAND_RESULTS, ...METADATA_RESULTS };
 
 export type CommandName = keyof typeof COMMANDS;
 export type CommandResult<N extends CommandName> = z.infer<(typeof COMMANDS)[N]>;
@@ -93,8 +94,8 @@ export type CommandPayloads = {
   select_photo: { uuid: string; expect?: PhotoExpect };
   /** max: how many photos to describe, 1-500 (the plugin's default 100). Refused with no_target_photo when none is selected. */
   get_selection: { max?: number };
-  /** The criteria intersected; with `collection_id`, only that collection's photos. limit 1-500. */
-  search_photos: { criteria: SearchCriterion[]; collection_id?: number; offset: number; limit: number };
+  /** The criteria intersected; with `collection_id`, only that collection's photos; with `folder` (plugin 0.22.0, a full path), only that folder's. limit 1-500. */
+  search_photos: { criteria: SearchCriterion[]; collection_id?: number; folder?: string; include_subfolders?: boolean; offset: number; limit: number };
   list_collections: Record<string, never>;
   /** query: only paths that contain it, case aside. limit 1-500. */
   list_keywords: { query?: string; offset: number; limit: number };
@@ -104,6 +105,12 @@ export type CommandPayloads = {
   set_keywords: { photo_uuid: string; add: string[]; remove: string[] };
   /** A position in decimal degrees, or clear: true to remove the photo's position. */
   set_gps: { photo_uuid: string; latitude: number; longitude: number } | { photo_uuid: string; clear: true };
+  /** Plugin 0.22.0 (Metadata.lua): the pick flag, 1 picked, 0 none, -1 rejected. */
+  set_flag: { photo_uuid: string; flag: -1 | 0 | 1 };
+  /** Plugin 0.22.0: at least one field; "" empties it. */
+  set_iptc: { photo_uuid: string; title?: string; caption?: string; headline?: string };
+  /** Plugin 0.22.0: one photo's title, caption, headline, flag, keywords, gps and stack. */
+  get_metadata: { photo_uuid: string };
   /** set_path: the collection sets, top level first; [] for the top level. */
   create_collection: { name: string; set_path: string[] };
   /** 1-500 uuids; remove: true takes them out. Refused with smart_collection for a smart collection. */

@@ -67,4 +67,13 @@ describe("params: Effects (issue #125)", () => {
     expect(after).toEqual({ "vignette.amount": -100, "vignette.style": 3, "grain.amount": 30 });
     expect(plan.clamped.map((c) => c.name).sort()).toEqual(["grain.amount", "vignette.amount"]);
   });
+
+  it("takes a style change on the last pass too, without decay (Greptile, PR #147)", () => {
+    const map = loadDefaultParamMap();
+    const down = planStep({ "vignette.style": -1 }, { "vignette.style": 2 }, 4, map);
+    expect(down.changes.map((c) => [c.name, c.after])).toEqual([["vignette.style", 1]]);
+    const up = planStep({ "vignette.style": 2 }, { "vignette.style": 1 }, 4, map);
+    expect(up.changes.map((c) => [c.name, c.after])).toEqual([["vignette.style", 3]]);
+    expect(up.clamped).toEqual([]);
+  });
 });

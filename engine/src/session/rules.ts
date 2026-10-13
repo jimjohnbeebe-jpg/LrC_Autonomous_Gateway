@@ -56,7 +56,7 @@ export function baseMaxStep(name: string, pipeline: Pipeline = "raw"): number | 
   if (name.startsWith("hsl.")) return 40;
   if (name.startsWith("grading.")) return 30;
   // Effects (issue #125): 30 per pass like the Detail sliders [inference]. vignette.style is a choice,
-  // not an amount: no base step (its full range per pass), so lr_probe refuses it.
+  // not an amount: no base step, so lr_probe refuses it, and planStep does not cap it (isChoice).
   if (name === "vignette.style") return null;
   if (name.startsWith("vignette.") || name.startsWith("grain.")) return 30;
   return null;
@@ -69,6 +69,11 @@ export function baseMaxStep(name: string, pipeline: Pipeline = "raw"): number | 
  */
 export function isCircularHue(name: string): boolean {
   return /^grading\.(shadows|midtones|highlights|global)\.hue$/.test(name);
+}
+
+/** A numeric setting that picks one of a few values (vignette.style 1..3): lr_step takes it in one pass, uncapped. */
+export function isChoice(name: string): boolean {
+  return name === "vignette.style";
 }
 
 /**

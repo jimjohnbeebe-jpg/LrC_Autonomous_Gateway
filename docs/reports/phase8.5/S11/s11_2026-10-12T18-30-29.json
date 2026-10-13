@@ -1,0 +1,312 @@
+{
+  "finished_at": "2026-10-12T18:30:34",
+  "folders": {
+    "dir": "D:\\Developer\\LrC_Autonomous_Gateway\\fixtures",
+    "find_photos": [
+      {
+        "contains_photo": true,
+        "count": 13,
+        "ms": 0,
+        "ok": true,
+        "operation": "any",
+        "value": "fixtures"
+      },
+      {
+        "contains_photo": true,
+        "count": 13,
+        "ms": 0,
+        "ok": true,
+        "operation": "==",
+        "value": "fixtures"
+      },
+      {
+        "contains_photo": true,
+        "count": 13,
+        "ms": 0,
+        "ok": true,
+        "operation": "beginsWith",
+        "value": "fixtures"
+      },
+      {
+        "contains_photo": false,
+        "count": 0,
+        "ms": 0,
+        "ok": true,
+        "operation": "any",
+        "value": "D:\\Developer\\LrC_Autonomous_Gateway\\fixtures"
+      },
+      {
+        "contains_photo": false,
+        "count": 0,
+        "ms": 0,
+        "ok": true,
+        "operation": "==",
+        "value": "D:\\Developer\\LrC_Autonomous_Gateway\\fixtures"
+      },
+      {
+        "contains_photo": false,
+        "count": 0,
+        "ms": 0,
+        "ok": true,
+        "operation": "beginsWith",
+        "value": "D:\\Developer\\LrC_Autonomous_Gateway\\fixtures"
+      }
+    ],
+    "folder_name": "fixtures",
+    "folder_path": "D:\\Developer\\LrC_Autonomous_Gateway\\fixtures",
+    "get_folder_by_path": {
+      "found": true,
+      "ms": 16,
+      "ok": true
+    },
+    "get_photos": {
+      "contains_photo": true,
+      "count": 9,
+      "ms": 0,
+      "ok": true
+    }
+  },
+  "import_stack": {
+    "a": {
+      "stack": {
+        "countStackInFolderMembers": {
+          "value": 2,
+          "via": "raw"
+        },
+        "isInStackInFolder": {
+          "value": true,
+          "via": "raw"
+        },
+        "member_uuids": [
+          "8F0CE716-4D53-4976-B2B7-A91A12CAF7D9",
+          "00B32A52-7D69-446E-AA10-8A7C277DA585"
+        ],
+        "stackInFolderIsCollapsed": {
+          "value": false,
+          "via": "raw"
+        },
+        "stackPositionInFolder": {
+          "value": 1,
+          "via": "raw"
+        },
+        "top_uuid": "8F0CE716-4D53-4976-B2B7-A91A12CAF7D9"
+      },
+      "uuid": "8F0CE716-4D53-4976-B2B7-A91A12CAF7D9"
+    },
+    "add_photo_a": {
+      "ms": 1680,
+      "ok": true
+    },
+    "add_photo_b": {
+      "ms": 2454,
+      "ok": true
+    },
+    "b": {
+      "stack": {
+        "countStackInFolderMembers": {
+          "value": 2,
+          "via": "raw"
+        },
+        "isInStackInFolder": {
+          "value": true,
+          "via": "raw"
+        },
+        "member_uuids": [
+          "8F0CE716-4D53-4976-B2B7-A91A12CAF7D9",
+          "00B32A52-7D69-446E-AA10-8A7C277DA585"
+        ],
+        "stackInFolderIsCollapsed": {
+          "value": false,
+          "via": "raw"
+        },
+        "stackPositionInFolder": {
+          "value": 2,
+          "via": "raw"
+        },
+        "top_uuid": "8F0CE716-4D53-4976-B2B7-A91A12CAF7D9"
+      },
+      "uuid": "00B32A52-7D69-446E-AA10-8A7C277DA585"
+    },
+    "files": [
+      "D:\\Developer\\LrC_Autonomous_Gateway\\fixtures\\S11\\S11-stack-a.NEF",
+      "D:\\Developer\\LrC_Autonomous_Gateway\\fixtures\\S11\\S11-stack-b.NEF"
+    ],
+    "stacked": true
+  },
+  "lr_version": "15.6",
+  "metadata": {
+    "reads": {
+      "gps": {
+        "via": "raw"
+      },
+      "gpsAltitude": {
+        "via": "raw"
+      }
+    },
+    "writes": [
+      {
+        "key": "pickStatus",
+        "ms": 29,
+        "ok": true,
+        "read_back": {
+          "value": 1,
+          "via": "raw"
+        },
+        "taken": true,
+        "written": 1
+      },
+      {
+        "key": "pickStatus",
+        "ms": 16,
+        "ok": true,
+        "read_back": {
+          "value": -1,
+          "via": "raw"
+        },
+        "taken": true,
+        "written": -1
+      },
+      {
+        "key": "pickStatus",
+        "ms": 16,
+        "ok": true,
+        "read_back": {
+          "value": 0,
+          "via": "raw"
+        },
+        "taken": true,
+        "written": 0
+      },
+      {
+        "key": "title",
+        "ms": 16,
+        "ok": true,
+        "read_back": {
+          "value": "AVG S11 title",
+          "via": "formatted"
+        },
+        "taken": true,
+        "written": "AVG S11 title"
+      },
+      {
+        "key": "caption",
+        "ms": 32,
+        "ok": true,
+        "read_back": {
+          "value": "AVG S11 caption",
+          "via": "formatted"
+        },
+        "taken": true,
+        "written": "AVG S11 caption"
+      },
+      {
+        "key": "headline",
+        "ms": 16,
+        "ok": true,
+        "read_back": {
+          "value": "AVG S11 headline",
+          "via": "formatted"
+        },
+        "taken": true,
+        "written": "AVG S11 headline"
+      }
+    ]
+  },
+  "photo": {
+    "filename": "20260907-_OZ80099.NEF",
+    "path": "D:\\Developer\\LrC_Autonomous_Gateway\\fixtures\\20260907-_OZ80099.NEF",
+    "uuid": "CF12AF60-0858-4181-9562-376D16B89126"
+  },
+  "prior": [
+    {
+      "key": "pickStatus",
+      "value": 0
+    },
+    {
+      "key": "title",
+      "value": ""
+    },
+    {
+      "key": "caption",
+      "value": ""
+    },
+    {
+      "key": "headline",
+      "value": ""
+    }
+  ],
+  "put_back": {
+    "ok": true,
+    "steps": [
+      {
+        "key": "pickStatus",
+        "ms": 0,
+        "ok": true,
+        "read_back": {
+          "value": 0,
+          "via": "raw"
+        },
+        "taken": true,
+        "written": 0
+      },
+      {
+        "key": "title",
+        "ms": 16,
+        "ok": true,
+        "read_back": {
+          "value": "",
+          "via": "formatted"
+        },
+        "taken": true,
+        "written": ""
+      },
+      {
+        "key": "caption",
+        "ms": 24,
+        "ok": true,
+        "read_back": {
+          "value": "",
+          "via": "formatted"
+        },
+        "taken": true,
+        "written": ""
+      },
+      {
+        "key": "headline",
+        "ms": 16,
+        "ok": true,
+        "read_back": {
+          "value": "",
+          "via": "formatted"
+        },
+        "taken": true,
+        "written": ""
+      }
+    ]
+  },
+  "spike": "S11",
+  "stack_of_photo": {
+    "countStackInFolderMembers": {
+      "value": 2,
+      "via": "raw"
+    },
+    "isInStackInFolder": {
+      "value": true,
+      "via": "raw"
+    },
+    "member_uuids": [
+      "EE66F45E-9B46-4D81-A54C-8EE933F163DD",
+      "CF12AF60-0858-4181-9562-376D16B89126"
+    ],
+    "stackInFolderIsCollapsed": {
+      "value": false,
+      "via": "raw"
+    },
+    "stackPositionInFolder": {
+      "value": 2,
+      "via": "raw"
+    },
+    "top_uuid": "EE66F45E-9B46-4D81-A54C-8EE933F163DD"
+  },
+  "started_at": "2026-10-12T18:30:29"
+}

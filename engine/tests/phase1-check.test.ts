@@ -116,8 +116,8 @@ describe("devtools: Phase 1 check against a simulated plugin", () => {
       min_accepted: number;
       per_parameter: Array<{ sdk_key: string; below_outcome: string; above_outcome: string }>;
     };
-    expect(probe.parameters).toBe(57);
-    expect(probe.min_accepted).toBe(57);
+    expect(probe.parameters).toBe(66); // 57 from Phase 1 + 9 Effects (issue #125)
+    expect(probe.min_accepted).toBe(66);
     const byKey = new Map(probe.per_parameter.map((p) => [p.sdk_key, p]));
     expect(byKey.get("Exposure2012")).toMatchObject({ below_outcome: "clamped", above_outcome: "clamped" });
     // Dehaze stays at 100 from the "maximum" write, so below is "ignored"; above then reads 100,

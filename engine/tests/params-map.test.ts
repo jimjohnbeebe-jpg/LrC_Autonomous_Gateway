@@ -3,7 +3,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { CANONICAL_PARAMS, PROBED_CLAMP, type ParamSpec } from "../src/params/canonical.js";
+import { CANONICAL_PARAMS, EFFECTS_RUN, PROBED_CLAMP, type ParamSpec } from "../src/params/canonical.js";
 import { canonicalValuesEqual, differingSettings, loadDefaultParamMap, loadDefaultSdkKeys, ParamError, ParamMap, READBACK_TOLERANCE, UnknownSdkKeyError } from "../src/params/index.js";
 import { readCameraProfilesFile } from "../src/params/camera-profiles.js";
 import { loadSdkKeys, readSdkKeysFile } from "../src/params/sdk-keys.js";
@@ -37,8 +37,8 @@ describe("params: canonical map", () => {
     }
   });
 
-  it("sources every numeric range from the Phase 1 range probe (run 3)", () => {
-    const numeric = [...CANONICAL_PARAMS].filter(([, spec]) => spec.kind === "number") as Array<[string, ParamSpec & { kind: "number" }]>;
+  it("sources every numeric range outside Effects from the Phase 1 range probe (run 3)", () => {
+    const numeric = [...CANONICAL_PARAMS].filter(([, spec]) => spec.kind === "number" && !spec.rangeSource.includes(EFFECTS_RUN)) as Array<[string, ParamSpec & { kind: "number" }]>;
     expect(numeric).toHaveLength(57);
     for (const [name, spec] of numeric) {
       expect(spec.rangeSource, name).toMatch(/^\[handle: docs\/reports\/phase1\/P1\/p1_check_2026-09-26T21-06-50-295Z\.json range_probe\]/);
@@ -67,7 +67,7 @@ describe("params: canonical map", () => {
       };
     };
     const records = new Map(probe.range_probe.per_parameter.map((r) => [r.name, r]));
-    const numeric = [...CANONICAL_PARAMS].filter(([, spec]) => spec.kind === "number") as Array<[string, ParamSpec & { kind: "number" }]>;
+    const numeric = [...CANONICAL_PARAMS].filter(([, spec]) => spec.kind === "number" && !spec.rangeSource.includes(EFFECTS_RUN)) as Array<[string, ParamSpec & { kind: "number" }]>;
     expect(records.size).toBe(numeric.length);
     for (const [name, spec] of numeric) {
       const r = records.get(name);

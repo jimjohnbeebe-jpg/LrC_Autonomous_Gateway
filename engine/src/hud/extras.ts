@@ -28,6 +28,7 @@ const PANELS: ReadonlyArray<[string, string[]]> = [
   ["Color Grading", [...ZONES.flatMap((z) => ["hue", "sat", "lum"].map((k) => `grading.${z}.${k}`)), "grading.blending", "grading.balance"]],
   ["Detail", ["sharpening.amount", "sharpening.radius", "sharpening.detail", "sharpening.masking", "noise.luminance", "noise.color"]],
   ["Lens Corrections", ["lens.ca_remove", "lens.profile_enable", "lens.corrections_enable"]],
+  ["Effects", ["vignette.style", "vignette.amount", "vignette.midpoint", "vignette.roundness", "vignette.feather", "vignette.highlight_contrast", "grain.amount", "grain.size", "grain.frequency"]],
 ];
 const ORDER: ReadonlyMap<string, number> = new Map(PANELS.flatMap(([, names]) => names).map((name, rank) => [name, rank]));
 function groupOf(name: string): string {
@@ -42,6 +43,8 @@ function fullScale(name: string, before: unknown): number | null {
   if (["texture", "clarity", "dehaze", "vibrance", "saturation", "sharpening.detail", "sharpening.masking"].includes(name) || name.startsWith("noise.")) return 25;
   if (name === "tint") return 20;
   if (name === "sharpening.radius") return 0.5;
+  if (name === "vignette.style") return 1;
+  if (name.startsWith("vignette.") || name.startsWith("grain.")) return 25;
   if (name.startsWith("hsl.")) return 30;
   if (name.startsWith("grading.")) return name.endsWith(".hue") ? 60 : name.endsWith(".sat") ? 20 : 30;
   return null;

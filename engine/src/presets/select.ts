@@ -39,6 +39,10 @@ const SHARPEN_DETAILS = ["sharpening.radius", "sharpening.detail", "sharpening.m
 /** Why a chosen setting is not written, or null when it is. */
 function leaveOut(map: ParamMap, name: string, value: CanonicalValue, sdk: SdkSettings, copied: CanonicalSettings, pipeline: Pipeline): string | null {
   if (name === "lens.corrections_enable") return "Lightroom's own presets do not carry it: none of the reference files has it";
+  // ponytail: Effects left out of presets until the preset harness (#113, #118) records how Lightroom writes them.
+  if (name.startsWith("vignette.") || name.startsWith("grain.")) {
+    return "how Lightroom writes vignette and grain into a preset has not been observed: the reference files hold only GrainAmount and PostCropVignetteAmount, both 0";
+  }
   // Observed on raw photos (both raw references); a rendered photo with As Shot is [inference] from them.
   if ((name === "temperature" || name === "tint") && sdk[WHITE_BALANCE_KEY] === AS_SHOT_WHITE_BALANCE) {
     return `white balance is "As Shot": the preset says so and, like Lightroom's ${pipeline === "raw" ? "two raw references" : "raw references"}, carries no temperature or tint`;

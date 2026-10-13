@@ -35,7 +35,7 @@ describe("Lightroom's labels", () => {
   });
 
   it("fall back to the name itself for a name they do not know", () => {
-    expect(lightroomLabel("vignette.amount")).toBe("vignette.amount");
+    expect(lightroomLabel("crop.angle")).toBe("crop.angle");
   });
 });
 

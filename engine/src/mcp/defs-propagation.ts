@@ -34,7 +34,7 @@ const syncArgs = z.object({
     .min(1)
     .refine(distinct, "groups must differ")
     .optional()
-    .describe("the groups to copy (default: all): basic_tone (exposure, contrast, highlights, shadows, whites, blacks, texture, clarity, dehaze, vibrance, saturation), white_balance, tone_curve, hsl, grading, detail (sharpening, noise), lens, camera_profile"),
+    .describe("the groups to copy (default: all): basic_tone (exposure, contrast, highlights, shadows, whites, blacks, texture, clarity, dehaze, vibrance, saturation), white_balance, tone_curve, hsl, grading, detail (sharpening, noise), lens, effects (post-crop vignette, grain), camera_profile"),
   adaptive_exposure: z
     .boolean()
     .describe("true (same-scene bursts): exposure is not copied; each target's exposure is moved until its mean luma matches the source photo's within 2/255"),
@@ -50,7 +50,7 @@ const presetArgs = z.object({
     .min(1)
     .refine(distinct, "categories must differ")
     .optional()
-    .describe("the setting groups the preset carries (default: all), as in lr_sync_series' parameter_mask: basic_tone, white_balance, tone_curve, hsl, grading, detail, lens, camera_profile"),
+    .describe("the setting groups the preset carries (default: all), as in lr_sync_series' parameter_mask: basic_tone, white_balance, tone_curve, hsl, grading, detail, lens, effects, camera_profile"),
 });
 
 export const PROPAGATION_DEFS: ToolDef[] = [

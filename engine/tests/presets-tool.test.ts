@@ -69,7 +69,7 @@ describe("lr_create_preset_from_active", () => {
       path: file,
       name: "AVG test look",
       group: "LrC-AVG",
-      categories: ["basic_tone", "white_balance", "tone_curve", "hsl", "grading", "detail", "lens", "camera_profile"],
+      categories: ["basic_tone", "white_balance", "tone_curve", "hsl", "grading", "detail", "lens", "effects", "camera_profile"],
       source: { uuid: "SIM-UUID", filename: "20260907-_OZ80093.NEF", process_version: "15.4" },
       restart_required: true,
       note: RESTART_NOTE,

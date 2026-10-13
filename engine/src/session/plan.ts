@@ -5,7 +5,7 @@
 
 import type { MetricsDelta, MetricsSummary } from "../metrics/index.js";
 import { CAMERA_PROFILE_PARAM, ParamError, SUPPORTED_PROCESS_VERSIONS, type CanonicalSettings, type CanonicalValue, type ParamMap, type Pipeline } from "../params/index.js";
-import { CONVERGENCE, CRUSHES_SHADOWS, RAISES_HIGHLIGHTS, baseMaxStep, decayFor, isCircularHue, minStep, roundForSlider } from "./rules.js";
+import { CONVERGENCE, CRUSHES_SHADOWS, RAISES_HIGHLIGHTS, baseMaxStep, decayFor, isChoice, isCircularHue, minStep, roundForSlider } from "./rules.js";
 
 /** One setting a step changes. `delta` is set for numeric sliders (after - before), null otherwise. */
 export type Change = { name: string; before: CanonicalValue | null; requested: CanonicalValue; after: CanonicalValue; delta: number | null };
@@ -63,7 +63,8 @@ export function planStep(requested: Readonly<Record<string, unknown>>, current: 
       continue;
     }
     const base = baseMaxStep(name, pipeline) ?? spec.max - spec.min;
-    const cap = base * factor;
+    // A choice (vignette.style) is not an amount: no per-pass cap or decay, only its range (Greptile, PR #147).
+    const cap = isChoice(name) ? Infinity : base * factor;
     let applied = value;
     if (Math.abs(applied) > cap + EPSILON) {
       applied = sign(applied) * cap;

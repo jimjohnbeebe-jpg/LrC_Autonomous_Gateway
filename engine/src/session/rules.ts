@@ -26,7 +26,7 @@ import type { Pipeline } from "../params/index.js";
 
 /**
  * Base maximum |change| per pass for each numeric slider, in canonical units (ARCHITECTURE section 4).
- * Sharpening and noise have no base maximum there: 30 per pass (0.5 for the radius) [inference]. On
+ * Sharpening, noise and Effects have no base maximum there: 30 per pass (0.5 for the radius) [inference]. On
  * the rendered pipeline temperature is relative, -100..100 like tint, and takes tint's 30 [inference].
  */
 export function baseMaxStep(name: string, pipeline: Pipeline = "raw"): number | null {
@@ -55,6 +55,10 @@ export function baseMaxStep(name: string, pipeline: Pipeline = "raw"): number | 
   if (name in fixed) return fixed[name] as number;
   if (name.startsWith("hsl.")) return 40;
   if (name.startsWith("grading.")) return 30;
+  // Effects (issue #125): 30 per pass like the Detail sliders [inference]. vignette.style is a choice,
+  // not an amount: no base step, so lr_probe refuses it, and planStep does not cap it (isChoice).
+  if (name === "vignette.style") return null;
+  if (name.startsWith("vignette.") || name.startsWith("grain.")) return 30;
   return null;
 }
 
@@ -65,6 +69,11 @@ export function baseMaxStep(name: string, pipeline: Pipeline = "raw"): number | 
  */
 export function isCircularHue(name: string): boolean {
   return /^grading\.(shadows|midtones|highlights|global)\.hue$/.test(name);
+}
+
+/** A numeric setting that picks one of a few values (vignette.style 1..3): lr_step takes it in one pass, uncapped. */
+export function isChoice(name: string): boolean {
+  return name === "vignette.style";
 }
 
 /**

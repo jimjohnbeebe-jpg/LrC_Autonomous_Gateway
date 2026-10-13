@@ -33,13 +33,13 @@ describe("tool descriptions (issue #129)", () => {
   it("UNKNOWN_PARAMETER says nothing was written and where the valid names are", () => {
     let err: unknown;
     try {
-      loadDefaultParamMap().toSdk({ "vignette.amount": 10 }, { processVersion: "15.4", pipeline: "raw" });
+      loadDefaultParamMap().toSdk({ "crop.angle": 10 }, { processVersion: "15.4", pipeline: "raw" });
     } catch (e) {
       err = e;
     }
     const tool = toToolError(err);
     expect(tool.code).toBe("UNKNOWN_PARAMETER");
-    expect(tool.message).toContain('Unknown parameter "vignette.amount"');
+    expect(tool.message).toContain('Unknown parameter "crop.angle"');
     expect(tool.message).toContain("nothing was written to the photo and no pass was used");
     expect(tool.message).toContain("lr_get_active_photo_context");
   });

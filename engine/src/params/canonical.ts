@@ -52,7 +52,17 @@ function num(sdkKey: string, min: number, max: number, rangeSource: string = PRO
   return { kind: "number", sdkKey, min, max, rangeSource };
 }
 
-const S10_RUN2 = "docs/reports/phase8/S10/s10_check_2026-10-09T12-24-50-743Z.json";
+/**
+ * The effects probe (issue #125; docs/reports/phase8.5/effects.md, verdict Go [stated: Jim, 2026-10-12]):
+ * on the raw 20260907-_OZ80093.NEF and the rendered DSC_0031.JPG, each limit read back as written and
+ * 1 % beyond read back as the value before the probe. Names follow the SDK keys (Jim, D1 B, 2026-10-12).
+ */
+export const EFFECTS_RUN = "docs/reports/phase8.5/effects/effects_probe_2026-10-12T13-17-04-307Z.json";
+const EFFECTS = `[handle: ${EFFECTS_RUN} photos[*].range.per_parameter] min and max read back as written on both pipelines; 1 % beyond was not taken`;
+/** Style: whole numbers only; what 1-3 are called in Lightroom's menu is [unverified]. */
+const EFFECTS_STYLE = `[handle: ${EFFECTS_RUN} photos[*].style.steps] 1, 2 and 3 read back as written on both pipelines; 0 and 4 were not taken`;
+
+const S10_RUN2 ="docs/reports/phase8/S10/s10_check_2026-10-09T12-24-50-743Z.json";
 /**
  * The rendered pipeline's white-balance keys (spike S10, Phase 8 row 2), pinned in
  * sdk-keys.lrc15.rendered.json. Both are relative values in -100..100: on the selected rendered DNG,
@@ -120,6 +130,17 @@ const entries: Array<[string, ParamSpec]> = [
   ["lens.corrections_enable", { kind: "boolean", sdkKey: "EnableLensCorrections" }],
   ["lens.profile_enable", { kind: "switch", sdkKey: "LensProfileEnable" }],
   ["lens.ca_remove", { kind: "switch", sdkKey: "AutoLateralCA" }],
+
+  // Effects: post-crop vignette and grain (issue #125), the same limits on both pipelines (EFFECTS).
+  ["vignette.amount", num("PostCropVignetteAmount", -100, 100, EFFECTS)],
+  ["vignette.midpoint", num("PostCropVignetteMidpoint", 0, 100, EFFECTS)],
+  ["vignette.roundness", num("PostCropVignetteRoundness", -100, 100, EFFECTS)],
+  ["vignette.feather", num("PostCropVignetteFeather", 0, 100, EFFECTS)],
+  ["vignette.highlight_contrast", num("PostCropVignetteHighlightContrast", 0, 100, EFFECTS)],
+  ["vignette.style", num("PostCropVignetteStyle", 1, 3, EFFECTS_STYLE)],
+  ["grain.amount", num("GrainAmount", 0, 100, EFFECTS)],
+  ["grain.size", num("GrainSize", 0, 100, EFFECTS)],
+  ["grain.frequency", num("GrainFrequency", 0, 100, EFFECTS)],
 
   // Point curves.
   ["tone_curve.master", { kind: "curve", sdkKey: "ToneCurvePV2012" }],

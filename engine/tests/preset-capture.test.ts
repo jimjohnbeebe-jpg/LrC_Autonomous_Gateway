@@ -37,7 +37,9 @@ describe("capturePreset", () => {
     const { io: fake, saved } = io(settingsOf("reference-2"), { "AVG preset reference 2.xmp": read("reference-2.lrc15.xmp"), "Painted Hills LUT.xmp": "<x/>" });
     const out = await capturePreset(fake, map, { precheck: false, spec: REFERENCES.second });
     expect(out.worked).toBe(true);
-    expect(out.findings).toEqual(["the preset file has no Temperature, Tint (group white_balance)", "the preset file has no EnableLensCorrections (group lens)", "the preset file has no Look (group camera_profile)"]);
+    expect(out.findings).toEqual(["the preset file has no Temperature, Tint (group white_balance)", "the preset file has no EnableLensCorrections (group lens)",
+      "the preset file has no PostCropVignetteMidpoint, PostCropVignetteRoundness, PostCropVignetteFeather, PostCropVignetteHighlightContrast, PostCropVignetteStyle, GrainSize, GrainFrequency (group effects)",
+      "the preset file has no Look (group camera_profile)"]);
     expect(saved.get("reference-2.lrc15.xmp")).toBe(read("reference-2.lrc15.xmp"));
     const fixture = JSON.parse(saved.get("reference-2-settings.lrc15.json") as string) as Record<string, unknown>;
     expect(fixture).toMatchObject({ captured_at: "2026-09-28T02:00:00.000Z", photo: { filename: "photo.NEF" }, reference: { file: "AVG preset reference 2.xmp", group: "LrC-AVG" } });

@@ -14,11 +14,10 @@
 // run goes on where it stopped.
 //
 // Both tools stop starting photos after CALL_BUDGET_MS and say which are left, because Claude
-// Desktop's tool call has a time limit: the MCP SDK's default request timeout is 60 s [handle:
-// node_modules\@modelcontextprotocol\sdk\dist\esm\shared\protocol.js:8 DEFAULT_REQUEST_TIMEOUT_MSEC =
-// 60000]. Claude Desktop's log shows the engine's answers to calls of 74 s and 171 s and no cancel
-// [handle: docs\reports\phase8.5\desktop-call-limit.md]; whether Desktop uses that default, and its
-// own limit, are [unverified] (issue #136).
+// Desktop's tool call has a time limit, not measured (issue #136). A 168.5 s call's result most likely
+// reached the model, and Desktop has never sent a cancel [inference, handle:
+// docs\reports\phase8.5\desktop-call-limit.md row 5 and Observed]. The longest call these limits allow,
+// the budget plus one slow photo, is 160 s for an export and 130 s for an import.
 
 import { createHash, randomUUID } from "node:crypto";
 import { constants, createReadStream, readdirSync, rmSync } from "node:fs";
@@ -31,7 +30,11 @@ import { isInside } from "../preview/index.js";
 export const MAX_COLLECTION_PHOTOS = 500;
 /** Photos per lr_export_photos call; the time budget usually ends a call sooner. */
 export const MAX_EXPORT_PHOTOS = 500;
-/** When a call stops starting photos [inference: the figure, 20 s under the 60 s default above]. */
+/**
+ * When a call stops starting photos [inference: the figure, 20 s under the MCP SDK's default request
+ * timeout, handle: node_modules\@modelcontextprotocol\sdk\dist\esm\shared\protocol.js:8
+ * DEFAULT_REQUEST_TIMEOUT_MSEC = 60000].
+ */
 export const CALL_BUDGET_MS = 40_000;
 /** One photo's export, full size included [inference: the figure; a 1600 px preview takes ~2.6 s, docs\reports\phase0\S1.md]. */
 export const EXPORT_PHOTO_TIMEOUT_MS = 120_000;

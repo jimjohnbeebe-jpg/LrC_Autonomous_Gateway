@@ -1,9 +1,9 @@
 ---
 report: desktop-call-limit
 phase: "8.5"
-status: template
-authored_by: "Claude Code (purpose, harness, pre-run findings, consequences); Jim (observed, verdict)"
-date: 2026-10-11
+status: observed
+authored_by: "Claude Code (purpose, harness, pre-run findings, observed collected from the tool log 2026-10-15, numbers, consequences); Jim (the chats, verdict)"
+date: 2026-10-15
 ---
 
 # How long Claude Desktop waits for a tool call (issue #136)
@@ -76,28 +76,36 @@ The table holds the 6 answered calls of 30 s or more (the longest is 171.2 s; 3 
 
 ## Observed (Jim)
 
-_Filled after one Claude Desktop chat on engine 0.30.0 (the plan's verification step 2). Claude Code then reads `progress_token` from `logs\engine-<yyyymmdd>.jsonl` for that chat's calls._
+Jim's Claude Desktop chats on engine 0.30.0 and later, 2026-10-12 to 2026-10-14 (among them the PR #147 effects chat and the PR #152 metadata chat), collected by Claude Code from the tool log on 2026-10-15 (rule 04: the harness saves, Claude Code collects).
 
-- Chat date and time:
-- `progress_token` on that chat's calls (true / false / mixed):
+- Chat dates: 2026-10-12, 2026-10-13, 2026-10-14 (UTC).
+- `progress_token` on those calls: **false on every call**: 194 calls, 0 true [handle: `grep -c '"progress_token":false'` gives 28, 128 and 38 on `logs\engine-20261012.jsonl`, `engine-20261013.jsonl`, `engine-20261014.jsonl`; `grep -c '"progress_token":true'` gives 0 on each].
+- The calls came from Claude Desktop: the PR #152 chat's first call, `lr_search_photos` at `2026-10-13T12:17:58.873Z` in `logs\engine-20261013.jsonl`, is `tools/call id=2` at `2026-10-13T12:17:58.871Z` in `$L:10075` (Desktop's log at 10,814 lines, last written 2026-10-14).
+- Desktop's log after the copy above (lines 9,203-10,814): 214 tool calls, all answered, none of 30 s or more [handle: pairing rule above, run with awk over `$L` from line 9,203, 2026-10-15]; cancels in the whole log: 0 (`Select-String -Path $L -Pattern 'notifications/cancelled' -SimpleMatch`).
+
+**What happened after the two longest calls.** Taken from the engine's tool log records that follow each one.
+- Row 5: the 168.5 s `lr_create_mask` answer (`BRIDGE_DISCONNECTED`) was followed 3.2 s later by `lr_list_masks` in the same session [handle: `logs\engine-20261010.jsonl`, records with ts `2026-10-11T05:49:48.588Z` and `05:52:40`]. Listing the masks fits a model that read the disconnect, so the result most likely reached the model after 168.5 s [inference].
+- Row 6: after the 171.2 s answer (`AI_MASK_FAILED`), Claude made no further call in session `7ae27134` [handle: `logs\engine-20261011.jsonl`, records from ts `2026-10-12T00:41:27.541Z` on: only `hud_channel` follows]. The call 139.6 s into it (`lr_get_active_photo_context`) could be a timeout on Desktop's side, a new message from Jim, or a parallel call [unverified]. So row 6 says nothing either way about the limit.
 
 ## Numbers
 
 | Field | Value | Handle |
 |---|---|---|
 | Longest tool call Desktop logged an answer for | 171.2 s | row 6 |
+| Longest tool call whose result most likely reached the model | 168.5 s | row 5, Observed [inference] |
 | Calls of 60 s or more, answered | 3 | rows 1, 5, 6 |
-| Cancels sent by Desktop | 0 | count table |
-| Desktop sends a progressToken | [unverified] | to fill from Observed |
-| Desktop's tool-call time limit | [unverified] | |
+| Cancels sent by Desktop | 0 | count table, Observed |
+| Desktop sends a progressToken | no (194 of 194 calls without one) | Observed |
+| Desktop's tool-call time limit | not measured; at least 168.5 s [inference] | row 5 |
+| Longest `lr_export_photos` / `lr_import_photos` call the engine allows | 160 s / 130 s (budget 40 s, then one photo of up to 120 s / 90 s) | `engine\src\library\files.ts` constants |
 
 ## Verdict
 
-_Jim decides. No verdict is suggested: the time limit is still unknown._
+_Jim decides. Suggestion (Claude Code): close #136 with the constants unchanged. Both tools' longest call fits under the 168.5 s call whose result most likely got through, and a call that ends early leaves `not_yet` / `resume_after` to go on from._
 
 ## Consequences / open questions
 
-- The timeout constants stay: `CALL_BUDGET_MS` 40 s, `IMPORT_PHOTO_TIMEOUT_MS` 90 s, `EXPORT_PHOTO_TIMEOUT_MS` 120 s (`engine\src\library\files.ts`) [stated: Jim, 2026-10-11, D2 = A].
-- `engine\src\library\files.ts` (header) and `engine\src\mcp\server.ts` (`PROGRESS_MS`) now point here instead of carrying their own [unverified] note.
-- The #116 change (PR-2) should cite this table for the call budget, not the SDK's 60 s default.
-- Open: whether Desktop sends a progressToken (answered by `progress_token` in the tool log after the next chat); Desktop's time limit and whether progress extends it (needs a probe that holds a call open for a set time, issue #136 "Direction").
+- The timeout constants stay: `CALL_BUDGET_MS` 40 s, `IMPORT_PHOTO_TIMEOUT_MS` 90 s, `EXPORT_PHOTO_TIMEOUT_MS` 120 s (`engine\src\library\files.ts`) [stated: Jim, 2026-10-11, D2 = A; again 2026-10-15, "Go with A1"].
+- Shorter per-photo timeouts were rejected: a timeout does not stop Lightroom's export or import, so the call would end with `maybe_done` and the next call would meet a busy Lightroom [inference].
+- The engine's progress notifications (`engine\src\mcp\server.ts` `withProgress`) never run under Claude Desktop, which sends no token. They stay, for clients that send one.
+- Still open: Desktop's actual time limit. If it is under 160 s, a full-size export can still outlast the call; the measurement would be a probe that holds a call open for set times and checks the result reached the model (option A2 of the 2026-10-15 plan, not chosen).

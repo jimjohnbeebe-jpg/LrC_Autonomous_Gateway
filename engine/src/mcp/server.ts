@@ -67,9 +67,8 @@ export async function respond(fn: () => Promise<ToolOutput>): Promise<CallToolRe
 /**
  * How often a call that asked for progress (a progressToken) gets notifications/progress while it runs
  * [inference: often enough to show an AI mask's wait of up to 5 minutes, session\ai-update.ts]. Claude
- * Desktop's log shows the engine's answers to calls of 74 s and 171 s and no cancel [handle:
- * docs\reports\phase8.5\desktop-call-limit.md]; whether it sends a token, its own time limit and whether
- * progress extends it are [unverified] (issue #136). The tool log records progress_token per call (call-context.ts).
+ * Desktop sends no token, so this never runs there: 194 of 194 calls logged progress_token false [handle:
+ * docs\reports\phase8.5\desktop-call-limit.md, Observed]. It stays for clients that send one.
  */
 const PROGRESS_MS = 10_000;
 

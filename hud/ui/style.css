@@ -16,11 +16,13 @@ body {
 }
 *, *::before, *::after { box-sizing: border-box; }
 svg { display: block; flex: none; }
+/* Read by a screen reader, not drawn (deck.ts's status line, the arrow's "to"). */
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 #deck-host { height: 100vh; }
 .deck { height: 100%; border: 1px solid var(--line); background: var(--bg); position: relative; }
 /* Drag regions (the deck, its columns, the bar's words): Tauri drags only from the marked element itself,
    so the text inside them lets clicks through to it. Buttons and cards keep theirs. */
-.words *, .cq *, .glyph, .sentence, .step, .band, .tl, .blk, .way, .conseq, .hint, .off, .hintbox, .undo { pointer-events: none; }
+.words *, .cq *, .glyph, .sentence, .step, .band, .tl, .blk, .way, .conseq, .hint, .off, .hintbox { pointer-events: none; }
 button { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: default; }
 button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 /* Key hints only while the Deck has the keyboard (deck.ts sets body.kbd). */
@@ -69,6 +71,8 @@ body.kbd .nf { display: none; }
 .turn { display: flex; align-items: flex-start; }
 .sentence { font-size: 15px; line-height: 20px; font-weight: 600; color: var(--text); font-feature-settings: "tnum" 0;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+/* With no band there is room for a third line ("LrC-AVG is not running: reload it in …" needs it at 960 px). */
+.col.l:not(:has(.band)) .sentence { -webkit-line-clamp: 3; }
 .step { margin: 4px 0 0 44px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .band { margin: 2px 0 0 44px; color: var(--text2); font-feature-settings: "tnum" 0;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -109,8 +113,11 @@ body.kbd .nf { display: none; }
   overflow: hidden; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; }
 .cguard svg { display: inline-block; vertical-align: -2px; margin-right: 6px; }
 .cname .gmark { display: none; align-items: center; margin-left: auto; }
-/* Narrow decks: the thumbnail on top, the name under it (Option C NOTES section 8, "Small windows"). */
-@media (max-width: 1400px) {
+/* Narrow decks: the thumbnail on top, the name under it (Option C NOTES section 8, "Small windows"). Side
+   by side, a card's name and guardrail sentence need about 300 px each, so up to 1700 px; the 1, 2, 3 keys
+   are then named in the right column only, so the names keep the card's width (critique 2026-10-15). */
+@media (max-width: 1700px) {
+  .card .cname .key { display: none !important; }
   .card { flex-direction: column; padding: 6px; gap: 4px; }
   .card .th { width: 100%; height: 80px; }
   .card .caret { left: calc(50% - 6px); }
@@ -136,5 +143,7 @@ body.kbd .nf { display: none; }
 .pairrow { margin-top: 6px; display: flex; gap: 8px; }
 .hintbox .h1 { height: 32px; display: flex; align-items: center; font-size: 13px; font-weight: 500; color: var(--text2); }
 .hintbox .h2 { margin-top: 4px; color: var(--text3); font-feature-settings: "tnum" 0; }
-.undo { margin-top: auto; color: var(--text2); font-feature-settings: "tnum" 0; overflow-wrap: anywhere;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+/* One line; the whole of it is the tooltip, so the line takes the pointer (and drags, render.ts). */
+.undo { margin-top: auto; flex: none; color: var(--text2); font-feature-settings: "tnum" 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: auto; }
+.col.r > * { flex-shrink: 0; }

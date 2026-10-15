@@ -101,7 +101,7 @@ function stageActions(s: HudChannelState, l: Local, c: Ctx): Action[] {
   const abort = abortAction(s, l, c);
   if (s.approve_pass !== undefined) {
     const n = s.approve_pass;
-    return [{ id: "approve", label: T.approveLabel(n), kind: "primary", on: true, line: T.LINE.approve(n) }, { id: "accept", label: T.LABEL.accept, kind: "compact", on: true, tip: T.LINE.acceptNow }, { ...abort, kind: "compact" }];
+    return [{ id: "approve", label: T.approveLabel(n), kind: "primary", on: true, line: T.LINE.approve(n) }, { id: "accept", label: T.LABEL.accept, kind: "compact", on: true, line: T.LINE.acceptNow }, { ...abort, kind: "compact" }];
   }
   if (s.stage === "awaiting_pick") {
     if (!c.open) return [{ id: "show_copies", label: T.LABEL.showCopies, kind: "primary", on: true }, abort];
@@ -117,7 +117,8 @@ function stageActions(s: HudChannelState, l: Local, c: Ctx): Action[] {
 function actionsOf(s: HudChannelState, l: Local, c: Ctx, phase: Phase): [Action[], string | null] {
   if (phase === "done") return [[], null];
   const actions = stageActions(s, l, c);
-  const off = s.lightroom === "down" || !c.connected || c.gone ? T.LINE.offConnected : l.pending ? T.LINE.offAnswer : null;
+  // One line per cause, in sentenceOf's order.
+  const off = s.lightroom === "down" ? T.LINE.offLightroom : !c.connected ? T.LINE.offConnected : c.gone ? T.LINE.offGone : l.pending ? T.LINE.offAnswer : null;
   if (off === null) return [actions, null];
   // "Show the copies" sends nothing, so it stays on.
   return [actions.map((a) => (a.id === "show_copies" ? a : { ...a, on: false })), off];
@@ -145,9 +146,8 @@ function timelineOf(s: HudChannelState, phase: Phase, c: Ctx): Timeline | null {
   if (s.max_passes === undefined) return null;
   const current = s.pass ?? 0;
   const running = ["begin", "pass0", "applying"].includes(s.stage);
-  const n = s.copies?.length ?? 0;
-  const label =
-    s.mode !== "variants" ? T.passOf(current, s.max_passes) : s.picked ? T.copyPass(s.picked, current) : T.passCopies(current, n);
+  // Before a pick the cards show the copies, so the label is the pass alone (it clipped with the count).
+  const label = s.mode === "variants" && s.picked ? T.copyPass(s.picked, current) : T.passOf(current, s.max_passes);
   return { max: s.max_passes, current, done: running ? current - 1 : current, ring: phase, marks: s.mode === "variants" ? {} : c.marks, label };
 }
 

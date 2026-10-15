@@ -14,7 +14,7 @@ import * as C from "./clicks.ts";
 import { command, keyCtx, type Command } from "./keys.ts";
 import { startPulse } from "./glyphs.ts";
 import { html } from "./render.ts";
-import { approveLabel, LABEL, pickLabel } from "./text.ts";
+import { approveLabel, LABEL, NO_EDIT, NO_EDIT_OPEN, pickLabel } from "./text.ts";
 import { primary, view, type ActionId, type View } from "./view.ts";
 import { HIDDEN, onReveal, onState, onTick, onUserHide, type Change } from "./visibility.ts";
 
@@ -28,6 +28,7 @@ declare global {
 
 const invoke = window.__TAURI__.core.invoke;
 const host = document.getElementById("deck-host") as HTMLElement;
+const status = document.getElementById("deck-status") as HTMLElement;
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 let ws: WebSocket | null = null;
@@ -72,7 +73,10 @@ function render(): void {
   current = state ? view(state, local, { connected, gone, focus: document.hasFocus(), open, now, marks }) : null;
   const active = document.activeElement as HTMLElement | null;
   const focusKey = active?.dataset["act"] ?? (active?.dataset["card"] ? `card:${active.dataset["card"]}` : null);
-  host.innerHTML = html(current, { open, armed: C.armed(local, now), twoColumns: window.innerWidth >= 1460, thumbs });
+  host.innerHTML = html(current, { open, armed: C.armed(local, now), twoColumns: window.innerWidth >= 1460, thumbs, connected });
+  // The host is redrawn on every state, tick and resize; a screen reader hears only a new sentence.
+  const say = current?.sentence ?? (connected ? NO_EDIT_OPEN : NO_EDIT);
+  if (status.textContent !== say) status.textContent = say;
   if (focusKey) {
     const sel = focusKey.startsWith("card:") ? `[data-card="${focusKey.slice(5)}"]` : `[data-act="${focusKey}"]`;
     host.querySelector<HTMLElement>(sel)?.focus();

@@ -29,7 +29,7 @@ describe("spec 5.2, in its order", () => {
 
   it("Lightroom down (1b): not running, every action off, the undo line", () => {
     const v = show(st({ lightroom: "down" }));
-    expect([v.phase, v.sentence, v.centre, v.offLine, v.putBack]).toEqual(["problem", T.HEADLINE.not_running, "way", T.LINE.offConnected, null]);
+    expect([v.phase, v.sentence, v.centre, v.offLine, v.putBack]).toEqual(["problem", T.HEADLINE.not_running, "way", T.LINE.offLightroom, null]);
     expect(v.actions.every((a) => !a.on)).toBe(true);
     expect(v.way).toBe(`${T.UNDO}AVG pre-session X`);
   });
@@ -42,7 +42,8 @@ describe("spec 5.2, in its order", () => {
   });
 
   it("the edit gone (8)", () => {
-    expect(show(st(), undefined, ctx({ gone: true })).sentence).toBe(T.HEADLINE.gone);
+    const v = show(st(), undefined, ctx({ gone: true }));
+    expect([v.sentence, v.offLine]).toEqual([T.HEADLINE.gone, T.LINE.offGone]);
   });
 
   it("a sent click (5.3): the working ring, the click line, every action off until the answer", () => {
@@ -151,7 +152,7 @@ describe("spec 5.3 and 6", () => {
 
   it("the timeline: the current pass not yet done while it is applied; marks in Converge only", () => {
     expect(show(st({ stage: "applying" }), undefined, ctx({ marks: { 1: "green" } })).timeline).toMatchObject({ max: 6, current: 2, done: 1, marks: { 1: "green" }, label: "pass 2 of 6" });
-    expect(show(variants(), undefined, ctx({ marks: { 1: "green" } })).timeline).toMatchObject({ marks: {}, label: "pass 2 · 3 copies" });
+    expect(show(variants(), undefined, ctx({ marks: { 1: "green" } })).timeline).toMatchObject({ marks: {}, label: "pass 2 of 6" });
   });
 });
 

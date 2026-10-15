@@ -152,6 +152,7 @@ export async function getPreview(ctx: ToolContext, args: PreviewArgs = {}): Prom
     const manager = ctx.sessions as SessionManager;
     const regions = session ? manager.regionsOf(session.id) : [];
     const longEdge = args.long_edge ?? DEFAULT_LONG_EDGE;
+    const ignored = args.session_id !== undefined && !session ? { session_id_note: "No session is open, so session_id was ignored: this is the selected photo." } : {};
     if (!args.region) {
       // With a session, the manager renders it and keeps it as that photo's last render, so
       // lr_get_metrics and the next step describe this image (Greptile, PR #23) [handle:
@@ -159,11 +160,14 @@ export async function getPreview(ctx: ToolContext, args: PreviewArgs = {}): Prom
       // lr_get_metrics from the session's last render"].
       const preview = session ? await manager.preview(session.id, longEdge, args.target) : await render(ctx, longEdge, undefined, regions);
       const photo = session ? { target: manager.current()?.target } : {};
-      const json = { ok: true, ...(session ? { session_id: session.id } : {}), ...photo, ...describe(preview), metrics: summarize(preview.metrics), timings: preview.timings };
+      const json = { ok: true, ...(session ? { session_id: session.id } : {}), ...ignored, ...photo, ...describe(preview), metrics: summarize(preview.metrics), timings: preview.timings };
       return { json, image: preview.jpeg, log: { uuid: preview.uuid, preview_hash: preview.sha256, metrics: json.metrics, timings: preview.timings } };
     }
     const region = args.region;
-    if (!session) return regionPreview(ctx, null, regions, longEdge, region);
+    if (!session) {
+      const out = await regionPreview(ctx, null, regions, longEdge, region);
+      return { ...out, json: { ...out.json, ...ignored } };
+    }
     return manager.withPhoto(session.id, args.target, (photo) => regionPreview(ctx, { id: session.id, ...photo }, regions, longEdge, region));
   });
 }

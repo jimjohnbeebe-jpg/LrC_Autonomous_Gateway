@@ -9,7 +9,7 @@ const sessionTarget = target.describe(
 );
 const previewArgs = z.object({
   long_edge: longEdge,
-  session_id: sessionId.optional().describe("render the session's photo, with its region metrics; refused if another photo is selected"),
+  session_id: sessionId.optional().describe("render the session's photo, with its region metrics; refused if another photo is selected; ignored when no session is open"),
   target: sessionTarget,
   region: box.optional().describe("return a crop of this box, exported large enough to show it at up to 100 %; see effective_scale"),
 });

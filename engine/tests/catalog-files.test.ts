@@ -138,15 +138,16 @@ describe("lr_export_photos", () => {
     expect((e.details as { done: unknown[] }).done).toHaveLength(1);
   });
 
-  it("checks the arguments: a relative folder, width without height, quality on png, a resized original", () => {
+  it("checks the arguments: a relative folder, width without height; ignores quality on png and a resized original (issue #155)", () => {
     const s = schema("lr_export_photos");
     const base = { uuids: ["A"], folder: "C:\\Out", format: "jpeg" };
     expect(s.safeParse(base).success).toBe(true);
     expect(s.safeParse({ ...base, folder: "~/Desktop/Out" }).success).toBe(true);
     expect(s.safeParse({ ...base, folder: "Out" }).success).toBe(false);
     expect(s.safeParse({ ...base, width: 100 }).success).toBe(false);
-    expect(s.safeParse({ ...base, format: "png", quality: 80 }).success).toBe(false);
-    expect(s.safeParse({ ...base, format: "original", long_edge: 100 }).success).toBe(false);
+    expect(s.safeParse({ ...base, width: 100, long_edge: 50 }).success).toBe(true);
+    expect(s.safeParse({ ...base, format: "png", quality: 80 }).success).toBe(true);
+    expect(s.safeParse({ ...base, format: "original", long_edge: 100 }).success).toBe(true);
   });
 });
 

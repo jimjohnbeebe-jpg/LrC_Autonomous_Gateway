@@ -18,7 +18,7 @@ const ID = (): string => readLog().session_id;
 const sent = (name: string) => plugin.received.filter((r) => r.name === name);
 
 describe("Variants mode: refused before anything is written", () => {
-  it("refuses a plugin before 0.3.0, an intent without variants, 4 copies, and variant_count in Converge mode", async () => {
+  it("refuses a plugin before 0.3.0, an intent without variants and 4 copies", async () => {
     clean();
     const hello = client.hello();
     const old = vi.spyOn(client, "hello").mockReturnValue(hello ? { ...hello, plugin_version: "0.2.0" } : null);
@@ -26,7 +26,6 @@ describe("Variants mode: refused before anything is written", () => {
     old.mockRestore();
     expect((await fails(manager.begin({ intent_id: "test_plain", mode: "variants" }))).message).toMatch(/has no variants/);
     expect((await fails(begin({ variant_count: 4 }))).message).toMatch(/variant_count must be 2-3/);
-    expect((await fails(manager.begin({ intent_id: "test_variants", variant_count: 3 }))).message).toMatch(/for mode "variants"/);
     expect(lr.snapshots.size).toBe(0);
     expect(sent("create_virtual_copies")).toEqual([]);
   });

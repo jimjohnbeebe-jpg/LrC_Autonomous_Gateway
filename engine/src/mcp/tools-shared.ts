@@ -181,14 +181,19 @@ export function sessionTools(ctx: ToolContext): SessionManager {
   return ctx.sessions;
 }
 
-/** The open session with this id; SESSION_ENDED when the user ended it from the HUD, else SESSION_NOT_ACTIVE. */
-export function openSession(ctx: ToolContext, sessionId: string): { id: string; uuid: string } {
+/**
+ * For the read tools' optional session_id (lr_get_preview, lr_get_metrics): the open session with this id;
+ * SESSION_ENDED when the user ended it from the HUD; SESSION_NOT_ACTIVE when another session is open. With
+ * no session open, null: the id is ignored and the tool reads the selected photo, since a model that fills
+ * every optional field sent a placeholder ("selected") and got no image [handle:
+ * docs\reports\phase8.5\clients-probe.json clients[1], OpenCode with openrouter/openai/gpt-6-luna].
+ */
+export function openSession(ctx: ToolContext, sessionId: string): { id: string; uuid: string } | null {
   const byUser = ctx.sessions?.userEnded(sessionId) ?? null;
   if (byUser) throw endedError(byUser);
   const open = ctx.sessions?.current() ?? null;
-  if (!open || open.id !== sessionId) {
-    throw new ToolError("SESSION_NOT_ACTIVE", open ? `Session ${sessionId} is not the open one (${open.id}).` : `No session is open (asked for ${sessionId}).`, false);
-  }
+  if (!open) return null;
+  if (open.id !== sessionId) throw new ToolError("SESSION_NOT_ACTIVE", `Session ${sessionId} is not the open one (${open.id}).`, false);
   return open;
 }
 

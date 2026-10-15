@@ -40,12 +40,18 @@ const NO_INTENT: LoadedIntent = {
 export type Opened = { s: Session; view: FromSdkResult; photo: CommandResult<"get_context">; started: number };
 
 /** Check the call, read the photo, take the pre-session snapshot and build the session (not yet logged). */
-export async function openSession(ctx: SessionContext, args: BeginArgs): Promise<Opened> {
+export async function openSession(ctx: SessionContext, given: BeginArgs): Promise<Opened> {
   const started = performance.now();
-  const mode = args.mode ?? "converge";
-  if (mode === "converge" && args.variant_count !== undefined) {
-    throw new ToolError("INVALID_ARGUMENTS", 'variant_count is for mode "variants"; Converge mode edits the selected photo itself.', false);
-  }
+  const mode = given.mode ?? "converge";
+  // An argument that does not apply is ignored, not refused: a model that fills every optional field sent
+  // variant_count in Converge mode and intent_id "none", and never got a session [handle:
+  // docs\reports\phase8.5\clients-probe.json clients[1], OpenCode with openrouter/openai/gpt-6-luna].
+  const { variant_count, intent_id, ...rest } = given;
+  const args: BeginArgs = {
+    ...rest,
+    ...(mode === "variants" && variant_count !== undefined ? { variant_count } : {}),
+    ...(intent_id !== undefined && intent_id !== NO_INTENT.intent.id ? { intent_id } : {}),
+  };
   // The page first: its intents folder is where the intent is looked up (settings\folders.ts).
   const page = await (ctx.deps.readPage ?? (() => readPage(ctx.deps.client)))();
   if (mode === "variants" && args.intent_id === undefined) {

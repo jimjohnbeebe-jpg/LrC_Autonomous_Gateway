@@ -41,18 +41,20 @@ const exportArgs = z
     uuids: uuids(MAX_EXPORT_PHOTOS),
     folder: folder.describe("the folder to write the files into, made if missing; an absolute path, a leading ~ being the user's home folder"),
     format: z.enum(["jpeg", "png", "tiff", "original"]).describe("jpeg, png, tiff, or original (the photo's own file, unedited)"),
-    quality: z.number().int().min(1).max(100).optional().describe("JPEG quality 1-100 (default 90)"),
-    bit_depth: z.union([z.literal(8), z.literal(16)]).optional().describe("PNG and TIFF bits per channel, 8 or 16 (default 8)"),
-    long_edge: pixels.optional().describe("resize so the long edge is at most this many pixels"),
-    width: pixels.optional().describe("with height: resize to fit inside width x height pixels, keeping the aspect ratio"),
+    quality: z.number().int().min(1).max(100).optional().describe("JPEG quality 1-100 (default 90); ignored for the other formats"),
+    bit_depth: z.union([z.literal(8), z.literal(16)]).optional().describe("PNG and TIFF bits per channel, 8 or 16 (default 8); ignored for jpeg and original"),
+    long_edge: pixels.optional().describe("resize so the long edge is at most this many pixels; wins over width and height; ignored for original"),
+    width: pixels.optional().describe("with height: resize to fit inside width x height pixels, keeping the aspect ratio; ignored with long_edge and for original"),
     height: pixels.optional().describe("with width, as above"),
     on_existing: z.enum(["rename", "overwrite", "skip"]).optional().describe('a file of that name already in the folder: rename the new one ("name-2.jpg", default), overwrite it, or skip'),
   })
-  .refine((a) => (a.width === undefined) === (a.height === undefined), "give width and height together")
-  .refine((a) => !(a.long_edge !== undefined && a.width !== undefined), "give long_edge, or width and height, not both")
-  .refine((a) => a.format === "jpeg" || a.quality === undefined, "quality is for jpeg only")
-  .refine((a) => a.format === "png" || a.format === "tiff" || a.bit_depth === undefined, "bit_depth is for png and tiff only")
-  .refine((a) => a.format !== "original" || (a.long_edge === undefined && a.width === undefined), "an original cannot be resized");
+  // Only a lone width or height that would be used is refused. An argument that does not apply is ignored
+  // (tools-files.ts exportPayload): a model that fills every optional field could not export while these
+  // were refused [handle: docs\reports\phase8.5\clients-probe.json clients[1], OpenCode].
+  .refine(
+    (a) => a.format === "original" || a.long_edge !== undefined || (a.width === undefined) === (a.height === undefined),
+    "give width and height together",
+  );
 const importArgs = z.object({
   source: folder.describe("a photo file, or a folder of them (an absolute path; ~ is the user's home folder)"),
   copy_to: folder

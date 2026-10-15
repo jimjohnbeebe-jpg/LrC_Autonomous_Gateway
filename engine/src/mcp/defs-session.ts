@@ -14,7 +14,7 @@ const beginArgs = z.object({
     .string()
     .min(1)
     .optional()
-    .describe("an intent id from lr_list_intents, e.g. landscape_golden_hour, as a starting point; leave out when no intent fits the user's request"),
+    .describe("an intent id from lr_list_intents, e.g. landscape_golden_hour, as a starting point; leave out (or give \"none\") when no intent fits the user's request"),
   profile: z
     .string()
     .min(1)
@@ -31,7 +31,7 @@ const beginArgs = z.object({
     .min(2)
     .max(3)
     .optional()
-    .describe('mode "variants" only: how many copies, 2-3 (default: the settings page\'s, else 3); A, B, C take the intent\'s variants of those letters'),
+    .describe('mode "variants" only (ignored in Converge mode): how many copies, 2-3 (default: the settings page\'s, else 3); A, B, C take the intent\'s variants of those letters'),
   max_passes: z.number().int().min(1).max(8).optional().describe("passes after pass 0, 1-8 (default: the settings page's, else 4)"),
   guardrails: z
     .object({ clip_high_pct: z.number().min(0).max(100).optional(), clip_low_pct: z.number().min(0).max(100).optional() })

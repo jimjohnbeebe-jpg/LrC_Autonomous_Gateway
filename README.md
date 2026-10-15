@@ -183,7 +183,7 @@ args = ['<main.js>']
 tool_timeout_sec = 120
 ```
 
-Start the client again after you change its configuration.
+Start the client again after you change its configuration [inference: the clients above read their MCP configuration when they start].
 
 ## Your first session
 

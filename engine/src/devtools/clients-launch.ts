@@ -37,7 +37,8 @@ const ENV_KEYS = ["PATH", "SystemRoot", "WINDIR", "ComSpec", "PATHEXT", "USERPRO
  * The environment the engine gets from a client entry. Some clients pass a server only its entry's
  * env plus a filtered set (Hermes: tools\mcp_tool_config.py:147-192 under %LOCALAPPDATA%\hermes\
  * hermes-agent, `_build_safe_env`) [inference: others may pass less]; without SystemRoot and PATH the
- * engine may not start on Windows [inference]. Names are matched without case, as Windows does.
+ * engine may not start on Windows [inference]. Names are matched without case, as Windows does [handle:
+ * `node -e "console.log(process.env.path === process.env.PATH)"` printed true, Node 24.11.1, 2026-10-15].
  */
 export function baseEnv(): Record<string, string> {
   const out: Record<string, string> = {};

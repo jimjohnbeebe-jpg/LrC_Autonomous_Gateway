@@ -1,7 +1,7 @@
 // Registering the engine in a client for one probe or check run (ISSUE155_PLAN R5/R6), and putting
 // Jim's config back afterwards. Claude Code, OpenCode and Codex take a per-run config, so nothing of
 // Jim's is edited (register returns null; clients-launch.ts passes the config). Hermes reads only its
-// config.yaml `mcp_servers:` (tools\mcp_tool_config.py:638 under %LOCALAPPDATA%\hermes\hermes-agent),
+// config.yaml `mcp_servers:` [handle: tools\mcp_tool_config.py:635 under %LOCALAPPDATA%\hermes\hermes-agent],
 // so its file is backed up byte for byte and one top-level block appended; a file that already has
 // the key is refused, never given a second one. `hermes mcp add` is not used (interactive and
 // discovery-first [unverified]). Antigravity first gets a workspace config in the run folder; the

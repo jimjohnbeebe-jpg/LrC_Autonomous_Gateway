@@ -1054,6 +1054,15 @@ All of these are replaced by the strings in 10.2.
 | Chips | %s %s (letter, label from `copies[].label`, e.g. "B dramatic") |
 | Island undo, short form | Undo: Snapshots > %s (with "…" when long; the full name is in the details) |
 
+The Deck's strings as built are in `hud\ui\text.ts`. Changed in Deck 0.3.5 after the Impeccable critique of 2026-10-15 (`.impeccable\critique\2026-10-15T01-13-53Z__hud-ui-index-html.md`, issues 1-3):
+
+- One off line per cause: "Off until LrC-AVG runs in Lightroom." (Lightroom down), "Off until Claude is connected.", "Off: Claude no longer has this edit open." (gone), "Off until Claude answers.".
+- No edit while connected: "No edit open. Ask Claude in the chat to edit a photo." ("Not connected to Claude." only when it is not).
+- Abort's line: "Puts the photo back." (was "Puts the pre-session snapshot back."; two lines did not fit beside the button).
+- At Approve, Accept's "Accept keeps the edit as it is now." is a line under the pair, not only a tooltip.
+- In Variants before a pick the timeline says "pass %d of %d" (the copy count clipped; the cards show the copies).
+- The undo line in the right column is one line ending in "…", the whole of it in its tooltip.
+
 ### 10.3 Engine notes, shown as given (owned by the engine)
 
 These are passed in `note` and shown on one line:

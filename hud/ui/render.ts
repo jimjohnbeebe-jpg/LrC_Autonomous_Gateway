@@ -17,13 +17,13 @@ import type { Action, Card, Guard, View } from "./view.ts";
  * drawn always and shown only while the Deck has the keyboard, by the body's `kbd` class (style.css):
  * focus changes never redraw, since a redraw between a click's mouse-down and mouse-up would lose it.
  */
-export type Form = { open: boolean; armed: boolean; twoColumns: boolean; thumbs: ReadonlyMap<string, string> };
+export type Form = { open: boolean; armed: boolean; twoColumns: boolean; thumbs: ReadonlyMap<string, string>; connected: boolean };
 
 export function esc(s: string): string {
   return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c);
 }
 const attr = (name: string, v: string | null | undefined): string => (v ? ` ${name}="${esc(v)}"` : "");
-const ARROW = '<svg width="14" height="8" aria-hidden="true" class="arrow"><path d="M1 4h11M9 1l3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>';
+const ARROW = `<svg width="14" height="8" aria-hidden="true" class="arrow"><path d="M1 4h11M9 1l3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.2"/></svg><span class="sr">${T.TO}</span>`;
 /** A key hint, shown only while the Deck has the keyboard (Option C NOTES section 3). */
 const key = (k: string): string => `<span class="key kf">${esc(k)}</span>`;
 
@@ -32,11 +32,14 @@ function toggle(open: boolean): string {
 }
 const hide = `<button class="hidebtn" data-act="hide" aria-label="${T.HIDE}">${CLOSE}</button>`;
 
-function button(a: Action, f: Form, bar: boolean): string {
+/** described: the id of the line that says what the button does, read with it by a screen reader. */
+function button(a: Action, f: Form, bar: boolean, described = ""): string {
   const cls = a.id === "abort" ? `abort${a.label === T.LABEL.armed ? " armed" : ""}${a.kind === "compact" ? " compact" : ""}` : a.kind === "quiet" ? (bar ? "textonly" : "secondary") : a.kind;
   const hint = a.kind === "primary" && a.on && !f.armed ? key("Enter") : "";
-  return `<button class="btn ${cls}" data-act="${a.id}"${a.on ? "" : " disabled"}${attr("title", a.tip)}>${esc(a.label)}${hint}</button>`;
+  return `<button class="btn ${cls}" data-act="${a.id}"${a.on ? "" : " disabled"}${attr("title", a.tip)}${attr("aria-describedby", described)}>${esc(a.label)}${hint}</button>`;
 }
+/** A button's line, with the id its button points at. */
+const lineOf = (a: Action, cls: string): string => (a.line ? `<div class="${cls}" id="say-${a.id}">${esc(a.line)}</div>` : "");
 
 function guardLine(g: Guard | null, cls: string): string {
   if (!g || g.text === null) return "";
@@ -60,7 +63,8 @@ function left(v: View, f: Form): string {
   // One block, wrapped to two lines; the column's tooltip has all of it.
   const band = v.band.length ? `<div class="band">${esc(v.band.join(" "))}</div>` : "";
   const tip = [v.identityTip, ...v.band].filter(Boolean).join("\n");
-  const tl = v.timeline ? `<div class="tl">${timelineSvg(v.timeline)}<span class="lab">${esc(v.timeline.label)}</span></div>` : "";
+  const t = v.timeline;
+  const tl = t ? `<div class="tl" role="img" aria-label="${esc(T.timelineSpoken(t.label, t.marks))}">${timelineSvg(t)}<span class="lab" aria-hidden="true">${esc(t.label)}</span></div>` : "";
   return `<div class="col l" data-tauri-drag-region${attr("title", tip)}>
 <div class="turn">${toggle(f.open)}<span class="glyph">${phaseGlyph(v.phase)}</span><div class="sentence">${esc(v.sentence)}</div></div>
 <div class="step">${esc(v.line2)}</div>${band}${tl}</div>`;
@@ -123,23 +127,31 @@ function centre(v: View, f: Form): string {
 }
 
 // --- Right column: the actions -------------------------------------------------------------------
+// The column holds 121 px. Its line budget (critique 2026-10-15, issue 1): while the buttons are off,
+// the off line stands in for their lines; while Abort is armed, its hint stands in for the primary's;
+// the way back is one line, all of it in its tooltip.
 function right(v: View, f: Form): string {
   const parts: string[] = [];
-  for (const a of v.actions.filter((x) => x.kind === "primary" || x.kind === "secondary" || x.kind === "quiet")) {
-    parts.push(button(a, f, false) + (a.line ? `<div class="conseq">${esc(a.line)}</div>` : ""));
+  const budget = (a: Action): Action => (v.offLine || (f.armed && a.kind === "primary") ? { ...a, line: "" } : a);
+  const shown = v.actions.map(budget);
+  for (const a of shown.filter((x) => x.kind === "primary" || x.kind === "secondary" || x.kind === "quiet")) {
+    parts.push(button(a, f, false, a.line ? `say-${a.id}` : "") + lineOf(a, "conseq"));
   }
   if (v.pickHint) parts.push(`<div class="hintbox"><div class="h1">${T.PICK.choose}</div><div class="h2"><span class="nf">${T.PICK.click}</span><span class="kf">${T.PICK.keys}</span></div></div>`);
-  const compact = v.actions.filter((a) => a.kind === "compact");
-  const abort = v.actions.find((a) => a.id === "abort" && a.kind === "abort");
-  if (compact.length) parts.push(`<div class="pairrow">${compact.map((a) => button(a, f, false)).join("")}</div>`);
-  else if (abort) parts.push(`<div class="abortrow">${button(abort, f, false)}<div class="${abort.label === T.LABEL.armed ? "hint" : "conseq"}">${esc(abort.line ?? "")}</div></div>`);
+  const compact = shown.filter((a) => a.kind === "compact");
+  const abort = shown.find((a) => a.id === "abort" && a.kind === "abort");
+  if (compact.length) {
+    parts.push(`<div class="pairrow">${compact.map((a) => button(a, f, false, a.line && a.id === "accept" ? "say-accept" : "")).join("")}</div>`);
+    const accept = compact.find((a) => a.id === "accept");
+    if (accept) parts.push(lineOf(accept, "conseq"));
+  } else if (abort) parts.push(`<div class="abortrow">${button(abort, f, false, abort.line ? "say-abort" : "")}${lineOf(abort, abort.label === T.LABEL.armed ? "hint" : "conseq")}</div>`);
   if (v.offLine) parts.push(`<div class="off">${esc(v.offLine)}</div>`);
-  if (v.centre !== "way" && v.way) parts.push(`<div class="undo">${esc(v.way)}</div>`);
+  if (v.centre !== "way" && v.way) parts.push(`<div class="undo" data-tauri-drag-region title="${esc(v.way)}">${esc(v.way)}</div>`);
   return `<div class="col r" data-tauri-drag-region>${parts.join("")}</div>`;
 }
 
 export function html(v: View | null, f: Form): string {
-  if (v === null) return `<div class="deck k" data-tauri-drag-region>${toggle(false)}<div class="words" data-tauri-drag-region><b>${T.NO_EDIT}</b></div>${hide}</div>`;
+  if (v === null) return `<div class="deck k" data-tauri-drag-region>${toggle(false)}<div class="words" data-tauri-drag-region><b>${f.connected ? T.NO_EDIT_OPEN : T.NO_EDIT}</b></div>${hide}</div>`;
   if (!f.open) return bar(v, f);
   return `<div class="deck open" data-tauri-drag-region>${left(v, f)}${centre(v, f)}${right(v, f)}${hide}</div>`;
 }

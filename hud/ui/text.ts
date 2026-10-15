@@ -20,6 +20,8 @@ export const approveHeadline = (pass: number): string => `Your turn: approve pas
 /** The cap read as the user's turn (Q6; NOTES section 6). */
 export const capHeadline = (passes: number): string => `Your turn: all ${passes} passes are used.`;
 export const NO_EDIT = "Not connected to Claude.";
+/** Connected, but no edit is open (critique 2026-10-15, issue 3: NO_EDIT named the wrong cause). */
+export const NO_EDIT_OPEN = "No edit open. Ask Claude in the chat to edit a photo.";
 
 export const STEP: Record<string, string> = {
   begin: "Starting", pass0: "Setting profile, lens corrections and baseline", applying: "Applying pass",
@@ -54,12 +56,14 @@ export const LINE = {
   acceptCopy: (letter: string) => `Keeps copy ${letter}; the other copies stay.`,
   acceptWorking: "Ends the edit after Claude's current step.",
   acceptNow: "Accept keeps the edit as it is now.",
-  abort: "Puts the pre-session snapshot back.",
+  abort: "Puts the photo back.",
   abortCopies: "Leaves the master as it was; the copies stay in the catalog.",
   continue: (letter: string) => `Claude continues on copy ${letter} at its next call.`,
   armed: "Ctrl+Backspace again; Esc or 3 s cancels.",
   offAnswer: "Off until Claude answers.",
   offConnected: "Off until Claude is connected.",
+  offLightroom: "Off until LrC-AVG runs in Lightroom.",
+  offGone: "Off: Claude no longer has this edit open.",
   offPick: "Comes back after a pick.",
 } as const;
 
@@ -71,7 +75,13 @@ export const PICK = {
 } as const;
 export const copiesLine = (first: string, last: string): string => `Copies: “${first}–${last}”`;
 export const passOf = (pass: number, max: number): string => `pass ${pass} of ${max}`;
-export const passCopies = (pass: number, n: number): string => `pass ${pass} · ${n} copies`;
+/** The timeline read aloud: its label, then each done pass's guardrail mark in words (glyphs.ts MARK). */
+const MARK_WORD: Record<string, string> = { green: "within limits", corrected: "corrected", clamped: "limited", refused: "limited", unmet: "problem", undone: "undone" };
+export function timelineSpoken(label: string, marks: Record<number, string>): string {
+  return [label, ...Object.entries(marks).map(([p, m]) => `pass ${p} ${MARK_WORD[m] ?? m}`)].join("; ");
+}
+/** Read aloud for the drawn before → after arrow. */
+export const TO = "to";
 export const copyPass = (letter: string, pass: number): string => `copy ${letter} · pass ${pass}`;
 export const blockHeader = (pass: number, undone: boolean): string => `Pass ${pass}${undone ? " · undone" : ""}`;
 export const NOT_KEPT = "not kept";

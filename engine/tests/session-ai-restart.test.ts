@@ -164,7 +164,7 @@ describe("D16: a Lightroom restart puts the photo back", () => {
     const real = plugin.handlers.get("apply_snapshot") as FakeHandler;
     plugin.handlers.set("apply_snapshot", () => ({ ok: false, error: { code: "gate_busy", message: "Lightroom's catalog stayed busy for 60 s", recoverable: true } }));
     restartLightroom(lr, plugin);
-    await waitUntil(() => rig.reported.some((r) => r.note === "Lightroom restarted, but the photo could not be put back. Ask Claude to put it back."), 3000);
+    await waitUntil(() => rig.reported.some((r) => r.note === "Lightroom restarted, but the photo could not be put back. Ask the AI to put it back."), 3000);
     expect(rig.manager.current()?.id).toBe(ID);
     expect(readLog().failures.at(-1)).toMatchObject({ stage: "revert after a Lightroom restart", error: { code: "LIGHTROOM_RESTARTED" } });
     plugin.handlers.set("apply_snapshot", real);

@@ -37,17 +37,17 @@ HudText.SLOTS = {
 -- Fixed copy. "%d" and "%s" are filled with string.format; the longest values are pass 99 and the
 -- label "Approve pass 99".
 HudText.HEADLINE = {
-    none = "No edit running. In Claude Desktop, ask Claude to edit a photo.",
+    none = "No edit running. Ask the AI to edit a photo.",
     not_running = "LrC-AVG is not running: reload it in File > Plug-in Manager.",
-    not_connected = "Claude is not connected. Your edit so far stays.",
-    checking = "Checking this edit with Claude...",
-    gone = "This edit is no longer open in Claude. Your edit so far stays.",
-    stopped = "Claude stopped during the edit. Your edit so far stays.",
+    not_connected = "{AI} is not connected. Your edit so far stays.",
+    checking = "Checking this edit with {ai}...",
+    gone = "This edit is no longer open in {ai}. Your edit so far stays.",
+    stopped = "{AI} stopped during the edit. Your edit so far stays.",
     putting_back = "Putting the photo back...",
-    working = "Claude is working. Nothing needed from you.",
-    awaiting_pick = "Your turn: pick a copy, or tell Claude which one.",
-    approve = "Your turn: approve pass %d so Claude can go on.",
-    converged = "Your turn: Claude thinks the edit is done.",
+    working = "{AI} is working. Nothing needed from you.",
+    awaiting_pick = "Your turn: pick a copy, or tell {ai} which one.",
+    approve = "Your turn: approve pass %d so {ai} can go on.",
+    converged = "Your turn: {ai} thinks the edit is done.",
     target_changed = "Your turn: select the edit's photo again.",
     accepted = "Done: the edit is kept.",
     aborted = "Done: the photo is back as it was.",
@@ -59,18 +59,20 @@ HudText.HEADLINE = {
 HudText.STEP = {
     begin = "Starting", pass0 = "Setting profile, lens corrections and baseline", applying = "Applying pass",
     acquiring_preview = "Rendering a preview", metrics = "Measuring the preview",
-    awaiting_claude = "Claude is looking at the result", awaiting_pick = "Waiting for your pick",
-    awaiting_approval = "Waiting for your approval", converged = "Claude thinks the edit is done",
+    awaiting_claude = "{AI} is looking at the result", awaiting_pick = "Waiting for your pick",
+    awaiting_approval = "Waiting for your approval", converged = "{AI} thinks the edit is done",
     target_changed = "Another photo is selected", accepted = "Accepted", aborted = "Aborted", ended = "Ended",
 }
 
 HudText.CONNECTION = {
-    connected = "Connected to Claude.",
-    not_connected = "Not connected to Claude.",
+    connected = "Connected to {ai}.",
+    -- The plugin's one "name · model" place (issue #155), HudView.lua connectionLine.
+    connected_model = "Connected to {ai} · %s.",
+    not_connected = "Not connected to {ai}.",
     not_running = "LrC-AVG is not running in Lightroom.",
 }
 
--- The feedback line while Claude is not connected or the edit is no longer open in Claude.
+-- The feedback line while the AI is not connected or the edit is no longer open in it.
 HudText.UNDO = "To undo it: Develop > Snapshots > %s"
 HudText.UNDO_NO_SNAPSHOT = "the newest AVG pre-session snapshot"
 
@@ -99,26 +101,39 @@ HudText.PUT_BACK_REASON = {
 
 HudText.CLIPPING_OK = "Clipping: within limits."
 
--- Click lines: "<Label> sent; waiting for Claude.", "<Label> not sent: <reason>.", and the line
--- when Claude does not answer a click. A menu item that waited adds WAITED to its reason.
+-- Click lines: "<Label> sent; waiting for {ai}.", "<Label> not sent: <reason>.", and the line
+-- when the AI does not answer a click. A menu item that waited adds WAITED to its reason.
 HudText.CLICK = {
-    sent = "%s sent; waiting for Claude.",
+    sent = "%s sent; waiting for {ai}.",
     not_sent = "%s not sent: %s.",
-    no_answer = "%s: no answer from Claude within %d s; the buttons are on again.",
+    no_answer = "%s: no answer from {ai} within %d s; the buttons are on again.",
     waited = " (waited %d s)",
 }
 HudText.REASON = {
-    not_connected = "Claude is not connected",
+    not_connected = "{ai} is not connected",
     not_running = "LrC-AVG is not running",
     no_edit = "no edit is open",
     ended = "the edit has ended",
     no_pick = "no pick is waiting",
     no_approval = "no pass is waiting for approval",
-    pending = "the %s is still waiting for Claude",
+    pending = "the %s is still waiting for {ai}",
     changed = "the edit changed before it could be sent",
-    gone = "this edit is no longer open in Claude",
+    gone = "this edit is no longer open in {ai}",
     encode = "LrC-AVG could not encode it",
 }
+
+-- Issue #155: the texts above name the AI client by token, filled once at the display boundary
+-- (HudView.lua put): "{ai}" becomes the client's name from the engine's update (ai_name), else
+-- "the AI"; "{AI}" the same with its first letter upper-cased. The name is escaped for gsub, so a
+-- "%" in it is shown, not read as a capture. A text that is not a string comes back as it was.
+function HudText.ai(text, name)
+    if type(text) ~= "string" then return text end
+    if type(name) ~= "string" or name == "" then name = "the AI" end
+    local upper = name:sub(1, 1):upper() .. name:sub(2)
+    local out = text:gsub("{ai}", (name:gsub("%%", "%%%%")))
+    out = out:gsub("{AI}", (upper:gsub("%%", "%%%%")))
+    return out
+end
 
 function HudText.notSent(label, reason)
     return string.format(HudText.CLICK.not_sent, label, reason)

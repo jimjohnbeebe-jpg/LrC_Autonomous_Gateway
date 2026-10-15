@@ -105,6 +105,10 @@ local FIELDS = {
     snapshot = TEXT,
     put_back = { kind = "object", fields = PUT_BACK },
     close_after = { kind = "int", min = 1, max = 60 },
+    -- Plugin 0.23.0 (issue #155): the AI client's display name and its model, for HudText.ai and the
+    -- connection line (HudView.lua). Hud.lua keeps the last update, so the name outlasts a disconnect.
+    ai_name = TEXT,
+    ai_model = TEXT,
 }
 
 local checkObject
@@ -193,8 +197,8 @@ end
 
 -- Whether the HUD offers Put back (a plain true or false): the open edit carries `put_back`, no
 -- put-back is running or done (`hud.putBack`, HudClick.lua; one that failed may be tried again), and
--- Claude cannot reach the edit: the engine away AWAY_SECONDS (`hud.away`), or the edit no longer open
--- in Claude (`hud.unknown` "gone"). `conn` and `hud` are HudView.props's.
+-- the AI cannot reach the edit: the engine away AWAY_SECONDS (`hud.away`), or the edit no longer open
+-- in it (`hud.unknown` "gone"). `conn` and `hud` are HudView.props's.
 function HudState.canPutBack(s, conn, hud)
     if s == nil or HudState.isEnd(s.stage) or s.put_back == nil then return false end
     if hud.putBack and hud.putBack.state ~= "failed" then return false end
@@ -253,7 +257,7 @@ function HudState.targetChangedLine(s, uuid, name)
     local photos = s.session_photos or { s.target.uuid }
     if uuid ~= nil and (uuid == s.target.uuid or has(photos, uuid)) then return HudState.SELECTION_OK end
     local selected = uuid == nil and "No photo is selected" or ((name or uuid) .. " is selected")
-    local again = s.mode == "variants" and "Claude's next call selects the edit's photo again"
+    local again = s.mode == "variants" and "{AI}'s next call selects the edit's photo again"
         or ("Select " .. HudState.targetName(s) .. " again")
     return "Target changed: " .. selected .. ". " .. again .. "; the edit is still open."
 end

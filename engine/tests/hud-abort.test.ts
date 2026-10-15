@@ -257,7 +257,7 @@ describe("Events not acted on", () => {
     plugin.send({ id: "evt-bad", type: "evt", name: "hud_abort", payload: { session_id: ID } });
     await waitUntil(() => rig.events.length === 4);
     expect(rig.events.map((e) => [e.ok, e.note ?? e.error])).toEqual([
-      [true, "This edit is no longer open in Claude, so nothing was done."],
+      [true, "This edit is no longer open in the AI, so nothing was done."],
       [true, "This edit runs in autonomous mode, so its passes need no approval."],
       [false, "a repeat of a click already handled"],
       [false, expect.stringMatching(/^hud_abort: .*click_id/)],

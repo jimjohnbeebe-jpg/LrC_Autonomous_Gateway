@@ -20,7 +20,7 @@ const step = (rig: HudRig, settings: Record<string, unknown> = { exposure: 0.2 }
 const count = (command: string): number => plugin.received.filter((r) => r.name === command).length;
 const note = (): string => String(lr.hud.last()?.note ?? "");
 /** A step waiting for the approval of pass 1: the HUD says so. */
-const waitingFor = (pass: number) => waitUntil(() => lr.hud.last()?.stage === "awaiting_approval" && note().startsWith(`Claude's pass ${pass + 1} waits`));
+const waitingFor = (pass: number) => waitUntil(() => lr.hud.last()?.stage === "awaiting_approval" && note().startsWith(`The AI's pass ${pass + 1} waits`));
 
 /** A session in approve_each_pass mode with pass 1 made; the HUD offers Approve pass 1. */
 async function afterPass1(waitMs: number): Promise<HudRig> {
@@ -38,26 +38,26 @@ async function afterPass1(waitMs: number): Promise<HudRig> {
 describe("approve_each_pass: the HUD's Approve", () => {
   it("is offered once a pass is shown, and a step waiting for it goes ahead on the click", async () => {
     const rig = await afterPass1(20000);
-    expect(lr.hud.last()).toMatchObject({ pass: 1, approve_pass: 1, note: "Approve pass 1 to let Claude make the next pass, or tell Claude in chat." });
+    expect(lr.hud.last()).toMatchObject({ pass: 1, approve_pass: 1, note: "Approve pass 1 to let the AI make the next pass, or tell it in chat." });
     const waiting = step(rig, { exposure: -0.1 });
     await waitingFor(1);
     expect(lr.hud.last()).toMatchObject({ pass: 1, approve_pass: 1 });
     const click = hudEvent(plugin, "hud_approve_pass", { session_id: ID, pass: 1 });
     const out = await waiting;
     expect(out.json).toMatchObject({ pass: "2/4", approval: { pass: 1, by: "hud" } });
-    expect(rig.events).toEqual([expect.objectContaining({ ok: true, name: "hud_approve_pass", click_id: click, answered: true, note: "Approved pass 1: Claude's next pass goes ahead." })]);
+    expect(rig.events).toEqual([expect.objectContaining({ ok: true, name: "hud_approve_pass", click_id: click, answered: true, note: "Approved pass 1: the AI's next pass goes ahead." })]);
     await waitUntil(() => lr.hud.last()?.approve_pass === 2);
     expect(lr.hud.last()).toMatchObject({ stage: "awaiting_approval", pass: 2 });
     const log = readLog();
     expect(log.approvals).toEqual([{ at: expect.any(String), target: "master", pass: 1, by: "hud" }]);
-    expect(log.hud_events).toEqual([expect.objectContaining({ name: "hud_approve_pass", pass: 1, note: "Approved pass 1: Claude's next pass goes ahead." })]);
+    expect(log.hud_events).toEqual([expect.objectContaining({ name: "hud_approve_pass", pass: 1, note: "Approved pass 1: the AI's next pass goes ahead." })]);
   });
 
   it("before Claude's next call: the HUD goes to awaiting Claude, and the next step does not wait", async () => {
     const rig = await afterPass1(20000);
     const click = hudEvent(plugin, "hud_approve_pass", { session_id: ID, pass: 1 });
     await waitUntil(() => lr.hud.last()?.answered_click_id === click);
-    expect(lr.hud.last()).toMatchObject({ stage: "awaiting_claude", note: "Approved pass 1: Claude goes on at its next call." });
+    expect(lr.hud.last()).toMatchObject({ stage: "awaiting_claude", note: "Approved pass 1: the AI goes on at its next call." });
     expect(lr.hud.last()?.approve_pass).toBeUndefined();
     const out = await step(rig, { exposure: -0.1 });
     expect(out.json).toMatchObject({ pass: "2/4", approval: { pass: 1, by: "hud", waited_ms: 0 } });
@@ -67,7 +67,7 @@ describe("approve_each_pass: the HUD's Approve", () => {
     const rig = await afterPass1(20000);
     await rig.manager.approvePass({ session_id: ID, confirmed: true });
     await waitUntil(() => lr.hud.last()?.stage === "awaiting_claude");
-    expect(lr.hud.last()).toMatchObject({ note: "Pass 1 approved in chat: Claude goes on at its next call." });
+    expect(lr.hud.last()).toMatchObject({ note: "Pass 1 approved in chat: the AI goes on at its next call." });
     expect(lr.hud.last()?.approve_pass).toBeUndefined();
   });
 
@@ -88,7 +88,7 @@ describe("approve_each_pass: the HUD's Approve", () => {
     expect(rig.events.map((e) => e.note)).toEqual([
       "No pass is waiting for approval.",
       "Pass 2 is not the one waiting for approval; pass 1 is.",
-      "Approved pass 1: Claude goes on at its next call.",
+      "Approved pass 1: the AI goes on at its next call.",
       "Pass 1 is approved already.",
     ]);
     expect(readLog().approvals?.length).toBe(1);
@@ -153,7 +153,7 @@ describe("approve_each_pass: Abort and Accept while a step waits", () => {
   // two clicks must end the wait with nothing written.
   it.each([
     ["Accept then Approve", ["hud_accept", "hud_approve_pass"], "Accept came first: the edit is being kept, and no further pass is made."],
-    ["Approve then Accept", ["hud_approve_pass", "hud_accept"], "Approved pass 1: Claude's next pass goes ahead."],
+    ["Approve then Accept", ["hud_approve_pass", "hud_accept"], "Approved pass 1: the AI's next pass goes ahead."],
   ])("%s in one bridge read: Accept ends the wait, and nothing more is written", async (_order, names, approveNote) => {
     const rig = await afterPass1(30000);
     const applies = count("apply_settings");

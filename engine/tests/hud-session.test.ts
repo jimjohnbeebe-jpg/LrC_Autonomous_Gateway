@@ -69,7 +69,7 @@ describe("HUD updates from a Converge session", () => {
     expect(lr.hud.last()?.guardrail).toMatchObject({ status: "clamped", reason: expect.stringMatching(/^Clarity: change held to ±\d+(\.\d+)? this pass\.$/) });
     await rig.manager.end({ session_id: ID, outcome: "accept" });
     const accepted = await hudAt("accepted");
-    expect(accepted.note).toBe("Claude accepted: the edit is kept.");
+    expect(accepted.note).toBe("The AI accepted: the edit is kept.");
     expect(accepted.close_after).toBe(10); // every end closes the HUD after 10 s, not only the engine's
     expect(accepted.put_back).toBeUndefined(); // an ended session has nothing to put back
   });
@@ -84,12 +84,12 @@ describe("HUD updates from a Converge session", () => {
     lr.selected = "SIM-UUID";
     lr.exportError = "disk full";
     await fails(step(rig, { exposure: 0.1 }));
-    await waitUntil(() => lr.hud.last()?.note === "Claude's last call failed; the edit is still open.");
+    await waitUntil(() => lr.hud.last()?.note === "The AI's last call failed; the edit is still open.");
     expect(lr.hud.last()?.stage).toBe("awaiting_claude");
     lr.exportError = null;
     await rig.manager.end({ session_id: ID, outcome: "revert" });
     const ended = await hudAt("ended");
-    expect(ended.note).toMatch(/Claude reverted/);
+    expect(ended.note).toMatch(/The AI reverted/);
     expect(ended.close_after).toBe(10);
   });
 

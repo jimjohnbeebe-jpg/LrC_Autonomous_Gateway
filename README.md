@@ -2,7 +2,7 @@
 
 LrC-AVG lets Claude, in Claude Desktop, edit a photo in Lightroom Classic, raw or JPEG or any other format Lightroom develops (see [Supported formats](#supported-formats)), the way a photographer does: set a few Develop sliders, look at the result, measure it, adjust again, up to a capped number of passes. It uses only Lightroom's own Develop settings, so every change shows on the sliders, sits in History as a named step, and can be undone. A local engine measures each render (clipping, histogram, pass-to-pass changes) and keeps every pass within clipping limits; Claude's vision makes the aesthetic calls.
 
-It comes in two halves: a Lightroom plugin, and an engine that Claude Desktop starts as an MCP server.
+It comes in two halves: a Lightroom plugin, and an engine that Claude Desktop starts as an MCP server. Other MCP clients can start it too: see [Clients](#clients).
 
 **Prototype: there is no release yet.** The [Install](#install) section below describes the planned 1.0.0 release; its download links do not work yet. To run the prototype, build it from source as in [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md). From [Your first session](#your-first-session) on, this page describes the prototype as it is. Built and tested on one Windows 11 PC with Lightroom Classic 15.5.1 and 15.6. Where this page states how something behaves, the evidence is listed under [Sources](#sources).
 
@@ -77,6 +77,8 @@ Next: quit Claude Desktop (right-click the Claude icon in the Windows system tra
 
 If Claude Desktop had no config file yet, the first line ends in `(new file)` and there is no backup. Do what the last line says. Running `lrc-avg-setup.cmd` a second time changes nothing: it prints `Nothing to change`.
 
+To use another AI client instead of Claude Desktop, see [Clients](#clients) after section 4.
+
 ### 3. Install the Lightroom plugin
 
 Download the plugin and unpack it into `%LOCALAPPDATA%\LrC-AVG\plugin`:
@@ -109,6 +111,80 @@ In Lightroom, choose **File > Plug-in Extras > LrC-AVG - Bridge status**. The di
 - If **Bridge status** says **NOT RUNNING**, quit Lightroom and start it again, then choose the menu item again. The dialog also shows the path of the plugin's log.
 - If Claude says the LrC-AVG tools are missing, quit Claude Desktop (right-click the Claude icon in the system tray > Quit) and start it again.
 
+## Clients
+
+LrC-AVG is a standard MCP server that runs on this computer (stdio). Claude Desktop is the client the steps above set up. Other MCP clients can start the same engine; each one needs an entry that runs Node with the engine's `main.js`. **A vision-capable model is required:** the AI judges each pass by looking at a render.
+
+Every entry uses two paths. To get them, run:
+
+```powershell
+lrc-avg-setup.cmd --dry-run
+```
+
+It changes nothing. Its last line reads `"lrc-avg" runs: <node> <main.js>`, for example `C:\Program Files\nodejs\node.exe` and `…\lrc-avg\dist\mcp\main.js`. Put them where the snippets below say `<node>` and `<main.js>`. If it says **Claude Desktop's folder was not found** (no Claude Desktop on this PC), give it an empty file to read instead; it still writes nothing:
+
+```powershell
+'{}' | Set-Content "$env:TEMP\lrc-avg-paths.json"
+lrc-avg-setup.cmd --dry-run --config "$env:TEMP\lrc-avg-paths.json"
+```
+
+In JSON, write each `\` as `\\`; the YAML and TOML snippets use single quotes, which take `\` as it is.
+
+When an edit starts, the AI can name its own model; the HUD and the Deck then show **name · model**.
+
+| Client | Status |
+|---|---|
+| Claude Desktop | Tested: `lrc-avg-setup.cmd` (Install, section 2) |
+| Claude Code | [unverified] until `npm run clients:check` |
+| OpenCode | [unverified] until `npm run clients:check` |
+| Hermes Agent | [unverified] until `npm run clients:check` |
+| Antigravity CLI | [unverified] until `npm run clients:check` |
+| Codex CLI | Inferred, not tested |
+
+**Claude Code**, for every project of this Windows account:
+
+```powershell
+claude mcp add --scope user lrc-avg -- "<node>" "<main.js>"
+```
+
+Or, for one project, a `.mcp.json` in its folder:
+
+```json
+{ "mcpServers": { "lrc-avg": { "command": "<node>", "args": ["<main.js>"] } } }
+```
+
+**OpenCode**, in `opencode.json`:
+
+```json
+{ "mcp": { "lrc-avg": { "type": "local", "command": ["<node>", "<main.js>"] } } }
+```
+
+**Hermes Agent**, in `%LOCALAPPDATA%\hermes\config.yaml`:
+
+```yaml
+mcp_servers:
+  lrc_avg:
+    command: '<node>'
+    args: ['<main.js>']
+```
+
+**Antigravity CLI**, in `%USERPROFILE%\.gemini\config\mcp_config.json`:
+
+```json
+{ "mcpServers": { "lrc-avg": { "command": "<node>", "args": ["<main.js>"] } } }
+```
+
+**Codex CLI** (inferred, not tested), in `%USERPROFILE%\.codex\config.toml`. Codex gives a tool call 60 s by default; `tool_timeout_sec` raises it, and whether LrC-AVG needs more is [unverified]:
+
+```toml
+[mcp_servers.lrc_avg]
+command = '<node>'
+args = ['<main.js>']
+tool_timeout_sec = 120
+```
+
+Start the client again after you change its configuration.
+
 ## Your first session
 
 1. In Lightroom, select one photo (in Library or Develop), raw or JPEG or any format in [Supported formats](#supported-formats).
@@ -130,7 +206,7 @@ Claude Desktop shows the renders Claude looks at only inside the tool-call boxes
 
 - **Other looks.** Eleven intents come with the engine: Black and white; Landscape — blue hour, forest shade, golden hour, midday high contrast, overcast flat light; Neutral technical correction; Night — stars and Milky Way; Pet — fur detail; Portrait — natural light, skin first. Ask "Which intents are there?" to see them, with your own.
 - **Variants.** "Make three golden-hour variants of this photo." The engine makes virtual copies **AVG \<intent\> A**, **B** and **C** with different looks and shows them side by side. You pick one, with **Pick A/B/C** in the HUD or in the chat, and the remaining passes go to your pick. Select the original photo, not a virtual copy, before you ask. Every intent except Neutral technical correction has variants.
-- **Sync a burst.** After a session you accepted: "Sync this edit to the selected photos." It copies the settings to the photos selected in Lightroom, up to 500. For a burst of the same scene, Claude can instead match each photo's brightness to the edited one. A request works for about 40 seconds; Claude then asks again for the photos left, until all are done. Each photo gets its own snapshot **AVG pre-sync …** first.
+- **Sync a burst.** After a session you accepted: "Sync this edit to the selected photos." It copies the settings to the photos selected in Lightroom, up to 500. For a burst of the same scene, Claude can instead match each photo's brightness to the edited one. A request works for about 30 seconds; Claude then asks again for the photos left, until all are done. Each photo gets its own snapshot **AVG pre-sync …** first.
 - **Vignette and grain.** "Add a soft dark vignette and a little grain." Claude uses the Effects panel's Post-Crop Vignetting sliders (Amount, Midpoint, Roundness, Feather, Highlights and the Style, by number 1 to 3) and its Grain sliders (Amount, Size, Roughness), on raw and rendered photos alike.
 - **Save a preset.** "Save this photo's settings as a preset called …". It is saved in the group **LrC-AVG**, and Lightroom lists it after a restart.
 - **Save your own intent.** Describe the look you want and ask Claude to save it as an intent. Claude shows you the intent first and saves it only after you approve. An intent names one profile for raw photos and one for JPEG, TIFF, PNG and the other rendered photos (`"profile": { "raw": "Adobe Landscape", "rendered": "Color" }`), and keeps white-balance starting values for each in `"priors_by_pipeline"`, because a raw photo's temperature is in Kelvin and a JPEG's is relative. Intent files written for engines before 0.22.0 are skipped with a warning that says how to rewrite them.
@@ -146,7 +222,7 @@ Claude Desktop shows the renders Claude looks at only inside the tool-call boxes
 - **Collections.** "Create a collection 2026-10-04 in the set 2026 > Trips and put the selected photos in it." Claude creates a collection (and any missing collection sets), and adds photos to it or takes them out, up to 500 per request. Smart collections are refused: Lightroom fills them by their rules. No tool deletes a collection.
 - **Export.** "Export the five-star photos of the collection Ella's Wedding to a new folder Ella Wedding Exports on my desktop, as PNG files that fit 2040 x 1080." Claude exports with your edits as JPEG, PNG or TIFF, full size or resized, or the original file. A file of the same name already in the folder gets a new name (`name-2.png`) unless you ask to overwrite or skip it.
 - **Import.** "Import the photos on G:\DCIM that are not in the catalog yet, copied into D:\Photos\2026." Claude imports the photo files of a folder, where they are or copied first (never overwriting), and skips files the catalog already holds at that path. A photo imported earlier from another folder is not recognised as the same photo. No tool removes photos from the catalog: use Library > Remove Photo.
-- Export and import work for about 40 seconds per request, then Claude goes on with another request until all are done. Each imported photo is listed with the file it came from (`source`), the file the catalog holds (`path`, the copy when copying first) and its capture time (empty if Lightroom has not read it yet).
+- Export and import work for about 30 seconds per request, then Claude goes on with another request until all are done. Each imported photo is listed with the file it came from (`source`), the file the catalog holds (`path`, the copy when copying first) and its capture time (empty if Lightroom has not read it yet).
 
 Sync, presets, ratings, keywords, GPS positions, collections, exports and imports are not available while a session is open.
 
@@ -154,19 +230,21 @@ Sync, presets, ratings, keywords, GPS positions, collections, exports and import
 
 The HUD opens by itself when an edit starts (if it is not open already), and from **File > Plug-in Extras > LrC-AVG - Show Vision Gateway HUD**. It takes the keyboard when it opens: click Lightroom's main window before you use keyboard shortcuts.
 
+Below, **\<AI\>** stands for the name of the AI client you edit with (for example Claude Code or OpenCode), or "the AI" when the client gives no name or no engine is connected.
+
 From top to bottom it shows:
 
-- **The headline:** whose turn it is. **Claude is working. Nothing needed from you.** while Claude works. When something is needed from you it starts with "Your turn": **Your turn: pick a copy, or tell Claude which one.**; **Your turn: approve pass n so Claude can go on.**; **Your turn: Claude thinks the edit is done.**; **Your turn: select the edit's photo again.** After an edit ends: **Done: the edit is kept.** or **Done: the photo is back as it was.**
+- **The headline:** whose turn it is. **\<AI\> is working. Nothing needed from you.** while the AI works. When something is needed from you it starts with "Your turn": **Your turn: pick a copy, or tell \<AI\> which one.**; **Your turn: approve pass n so \<AI\> can go on.**; **Your turn: \<AI\> thinks the edit is done.**; **Your turn: select the edit's photo again.** After an edit ends: **Done: the edit is kept.** or **Done: the photo is back as it was.**
 - **The buttons** (below).
-- **A feedback line:** what your last click did (for example "Accept sent; waiting for Claude."), or the plugin's latest note.
+- **A feedback line:** what your last click did (for example "Accept sent; waiting for \<AI\>."), or the plugin's latest note.
 - **Photo:** the file name (and copy name).
 - **Camera:** ISO, shutter speed, aperture, lens and lens-profile status.
-- **Step:** what is happening, for example Setting profile, lens corrections and baseline; Applying pass 2 of 4; Rendering a preview; Measuring the preview; Claude is looking at the result; Waiting for your pick; Waiting for your approval; Claude thinks the edit is done; Accepted; Aborted. From pass 1 on, the label is followed by the pass, for example "(pass 2 of 4)".
+- **Step:** what is happening, for example Setting profile, lens corrections and baseline; Applying pass 2 of 4; Rendering a preview; Measuring the preview; \<AI\> is looking at the result; Waiting for your pick; Waiting for your approval; \<AI\> thinks the edit is done; Accepted; Aborted. From pass 1 on, the label is followed by the pass, for example "(pass 2 of 4)".
 - **The selection line:** **Selection: the edit's photo.**, or **Target changed: …** if you select a different photo during the edit.
 - **Changes in the latest pass:** a grid with the slider, before, after and change, up to 12 rows. Sliders carry the names Lightroom's Develop panel shows, such as Orange Saturation.
 - **The clipping sentence:** **Clipping: within limits.**, or one sentence saying what the guardrails did, for example that a pass was undone, a clipping was corrected, or a slider was held back.
 - **The settings** the edit uses (between edits, the settings page's).
-- **The connection line:** Connected to Claude., Not connected to Claude., or LrC-AVG is not running in Lightroom.
+- **The connection line:** Connected to \<AI\> · \<model\>. (the model the AI named when the edit began; Connected to \<AI\>. without one), Not connected to \<AI\>., or LrC-AVG is not running in Lightroom. The HUD keeps the name from the last edit after the AI disconnects. The Deck shows the same **\<AI\> · \<model\>** under its step line.
 
 A line that is too long for the window continues on a second line, and ends with "..." if it still does not fit.
 
@@ -200,7 +278,7 @@ There are no keyboard shortcuts.
 
 ## Settings
 
-**File > Plug-in Manager**, select **LrC-AVG (Autonomous Vision Gateway)**: the **LrC-AVG settings** section. Values are saved as you change them, and Claude's next session reads them; a session already open keeps its own. Claude can override a value for one session if you ask (for example "use 6 passes"), and an intent's own clipping limits come before the page's.
+**File > Plug-in Manager**, select **LrC-AVG (Autonomous Vision Gateway)**: the **LrC-AVG settings** section. Values are saved as you change them, and the AI's next session reads them; a session already open keeps its own. Claude can override a value for one session if you ask (for example "use 6 passes"), and an intent's own clipping limits come before the page's.
 
 | Setting | Default | Allowed |
 |---|---|---|
@@ -224,7 +302,7 @@ A value that is not valid is not used: the default takes its place, and the bott
 Set **Mode** to **Approve each pass** to see each pass before Claude makes the next one.
 
 - Pass 1 needs no approval.
-- From pass 2 on, Claude's next pass waits up to 60 s for **Approve pass n** in the HUD.
+- From pass 2 on, Claude's next pass waits up to 40 s for **Approve pass n** in the HUD.
 - If you have not approved by then, nothing is written, and Claude is told to let you know the pass waits for your approval. Click **Approve pass n** in the HUD, or approve in the chat; Claude then records your approval and goes on.
 - In Variants mode, picking a copy approves the pass it was picked at.
 
@@ -277,14 +355,15 @@ Your edits stay in the Lightroom catalog: History steps, snapshots, virtual copi
 - **No crop or geometry.** HDR photos edit, with exposure limited to ±5.
 - **One session at a time.** Sync, presets, ratings, keywords and GPS positions are not available until it ends.
 - **Keep Plug-in Manager closed during a session.** Lightroom pauses the plugin while Plug-in Manager or a menu is open (2.5 to 15 s in testing). The engine waits up to 60 s for the plugin during a session, but a long pause during a session has not been tested.
-- **Approve and Claude Desktop:** whether Claude Desktop waits the full 60 s for an Approve has not been tested (in testing, Claude asked in the chat instead of waiting).
-- **If the engine disconnects during an edit** (for example, Claude Desktop is quit), the HUD says "Not connected to Claude" and names the **AVG pre-session …** snapshot to apply in Develop > Snapshots. When Claude connects again, the HUD shows "Checking this edit with Claude..."; if Claude no longer has the edit, it says so and the same snapshot line stays.
+- **Approve and Claude Desktop:** whether Claude Desktop waits the full 40 s for an Approve has not been tested (in testing, Claude asked in the chat instead of waiting).
+- **Long calls answer within 50 s.** A tool call that is still working after 50 s (a slow export, an AI mask) answers that Lightroom is still working; the work goes on, and the AI gets the result when it makes the same call again. Whether every client's model makes that call again has not been tested.
+- **If the engine disconnects during an edit** (for example, Claude Desktop is quit), the HUD says "Not connected to \<AI\>" and names the **AVG pre-session …** snapshot to apply in Develop > Snapshots. When the AI connects again, the HUD shows "Checking this edit with \<AI\>..."; if the AI no longer has the edit, it says so and the same snapshot line stays.
 - **The HUD takes the keyboard when it opens.** Every HUD button has a menu item. Inside the HUD, Tab moves to the first button that is switched on, and Space or Enter clicks it.
 - **A long note or clipping sentence can end in "..."** in Lightroom, cut off at the window's right side. A later change fixes it.
 - **Renders show only inside the expanded tool-call boxes** in Claude Desktop, not in Claude's answer.
 - **Presets:** a new preset shows only after Lightroom restarts. Only the group "LrC-AVG" has been tested. Adobe camera profiles (Adobe Color, Adobe Landscape, …) are left out of presets, as are temperature and tint while white balance is As Shot, and vignette and grain.
 - **Virtual copies** from Variants mode are never removed by LrC-AVG.
-- **Sync:** at most 500 photos; Claude works through them about 40 seconds at a time.
+- **Sync:** at most 500 photos; Claude works through them about 30 seconds at a time.
 - **Keywords:** a plain name always means the top-level keyword of that name, for adding and removing alike, even when a nested keyword has the same name; give the path to reach a nested keyword. Upper and lower case count as the same. A keyword removed from photos, and every level created, stays in the Keyword List; delete it there if you no longer want it.
 - **Keyword paths and GPS positions** have not yet been tried in Lightroom. Keywords and GPS positions need plugin 0.10.0.
 - **Stacks:** Claude can read a photo's stack but cannot make or break one: Lightroom's plugin interface has no way to stack photos already in the catalog. Use Lightroom's own stacking commands.
@@ -318,7 +397,7 @@ The evidence behind the behaviour this page describes. Paths are in this reposit
 | Your first session | Renders show only inside the expanded tool-call box | [handle: `docs/reports/phase0/S3.md` "Analysis"; stated by Jim there] |
 | What else you can ask | The eleven intents and which have variants | [handle: `engine/intents/*.json` `label`, `variants`] |
 | What else you can ask | Variants, copy names, the pick | [handle: `defs-session.ts` `lr_begin_session`, `lr_select_variant`]; the HUD pick in Lightroom [handle: `PHASE5.md` "Numbers", "AC-3"] |
-| What else you can ask | Sync: limit 500, about 40 s per request, snapshots, not during a session | [handle: `engine/src/sync/types.ts:18`, `engine/src/library/files.ts:35`, `engine/tests/sync-budget.test.ts`; `engine/src/mcp/defs-propagation.ts` `lr_sync_series`] |
+| What else you can ask | Sync: limit 500, about 30 s per request, snapshots, not during a session | [handle: `engine/src/sync/types.ts:18`, `engine/src/library/files.ts:42`, `engine/tests/sync-budget.test.ts`; `engine/src/mcp/defs-propagation.ts` `lr_sync_series`] |
 | What else you can ask, Known limitations | Vignette and grain: the nine sliders, limits on both pipelines, left out of presets | [handle: `engine/src/params/canonical.ts` (Effects entries), `docs/reports/phase8.5/effects.md` "Numbers" (verdict Go); `engine/src/presets/select.ts` `leaveOut`; `engine/tests/params-effects.test.ts`]; the slider names as Lightroom shows them, and Claude using them in a chat, [unverified] until Jim checks with engine 0.32.0 |
 | What else you can ask, Known limitations | Presets: group, folder, shown after a restart, what is left out; only the "LrC-AVG" group tested | [handle: `defs-propagation.ts` `lr_create_preset_from_active`; `engine/src/presets/folder.ts`; `docs/reports/phase4/S7.md` "Consequences"; `docs/reports/phase4/WB.md`]; groups other than "LrC-AVG" [unverified] |
 | What else you can ask | Saving an intent only after approval | [handle: `engine/src/mcp/defs-intents.ts` `lr_save_intent`] |
@@ -328,7 +407,7 @@ The evidence behind the behaviour this page describes. Paths are in this reposit
 | What else you can ask, Known limitations | Search filters, collections, ratings and keywords: limit 100, before and after values, not during a session, exact names, removed keywords kept | [handle: `engine/src/mcp/defs-catalog.ts`; `engine/src/library/write.ts` `MAX_PHOTOS`; `plugin/LrC-AVG.lrplugin/Library.lua`; `docs/reports/phase6/catalog-tools-smoke/smoke.txt`]; in Lightroom [handle: `docs/reports/phase6/catalog-tools-check/check.txt`] |
 | What else you can ask | History and snapshots don't cover ratings and keywords | [inference]: they are catalog metadata, written with `setRawMetadata` and `addKeyword`, not `applyDevelopSettings` (`Library.lua`) |
 | What else you can ask, Known limitations | Keyword paths, the `\|` separator, the ambiguity rules, levels created and kept; GPS set or removed, altitude not written, limit 100; neither tried in Lightroom yet | [handle: `engine/src/mcp/defs-catalog.ts` `lr_set_keywords`, `lr_list_keywords`, `lr_set_gps`; `engine/src/library/keywords.ts`; `plugin/LrC-AVG.lrplugin/KeywordTree.lua`, `Library.lua` `setGps`; `engine/tests/catalog-keywords-gps.test.ts`]; the separator [upstream claim: Automaat `KeywordTree.lua:3-6` at `11c0b93`]; in Lightroom [unverified] |
-| What else you can ask | Collections, export, import: limits 500, smart collections refused, rename/overwrite/skip, copy without overwriting, skipped by path only, 40 s per request, no delete or remove tool, not during a session; source and capture_time per imported photo (plugin 0.21.0) | [handle: `engine/src/mcp/defs-files.ts`; `engine/src/library/files.ts`; `plugin/LrC-AVG.lrplugin/Transfer.lua`; `engine/tests/catalog-files.test.ts`, `engine/tests/catalog-where.test.ts`]; in Lightroom 15.6 [handle: `docs/reports/phase6/automaat-files-check/check.txt`]; no SDK call removes a photo from the catalog [handle: https://lrc.mcor.dev/modules/LrCatalog.html]; source and capture_time in Lightroom [unverified]; Claude Desktop's own time limit for a call [unverified]: it logged answers to calls of up to 171 s with no cancel [handle: `docs/reports/phase8.5/desktop-call-limit.md`] |
+| What else you can ask | Collections, export, import: limits 500, smart collections refused, rename/overwrite/skip, copy without overwriting, skipped by path only, 30 s per request, no delete or remove tool, not during a session; source and capture_time per imported photo (plugin 0.21.0) | [handle: `engine/src/mcp/defs-files.ts`; `engine/src/library/files.ts`; `plugin/LrC-AVG.lrplugin/Transfer.lua`; `engine/tests/catalog-files.test.ts`, `engine/tests/catalog-where.test.ts`]; in Lightroom 15.6 [handle: `docs/reports/phase6/automaat-files-check/check.txt`]; no SDK call removes a photo from the catalog [handle: https://lrc.mcor.dev/modules/LrCatalog.html]; source and capture_time in Lightroom [unverified]; Claude Desktop's own time limit for a call [unverified]: it logged answers to calls of up to 171 s with no cancel [handle: `docs/reports/phase8.5/desktop-call-limit.md`] |
 | What else you can ask, Known limitations | Pick flags, title, caption, headline (2000 characters, "" empties), reading them with keywords, GPS and the stack, the folder search with subfolders, limit 100, plugin 0.22.0; no stack write | [handle: `engine/src/mcp/defs-metadata.ts`, `engine/src/library/metadata.ts`, `plugin/LrC-AVG.lrplugin/Metadata.lua`, `Library.lua` `folderPhotos`; `engine/tests/catalog-metadata.test.ts`, against the simulated plugin]; the SDK calls in Lightroom 15.6, and no SDK call stacking photos already in the catalog [handle: `docs/reports/phase8.5/S11.md` "Observed (Jim)", "Consequences"]; through the tools in Lightroom: folder search, flag, title and a two-line caption written, read back and put back [handle: PR #152 comment "Lightroom check", 2026-10-13]; a folder outside the catalog answered UNKNOWN_FOLDER (same comment); that the Folders panel lists the catalog's folders is [inference]; `getPhotos` with subfolders [unverified] |
 | What else you can ask | GPS position in search results, the selected photos and the photo in Develop, path in the first two, plugin 0.21.0, a notice with an older plugin | [handle: `plugin/LrC-AVG.lrplugin/Photos.lua` `describe` `opts.where`; `engine/src/library/search.ts` `WHERE_PLUGIN`; `engine/tests/catalog-where.test.ts`, against the simulated plugin]; in Lightroom [unverified] until Jim's chat |
 | The HUD | Window order, headlines, step labels, connection line, click lines, undo line, wrapping onto a second line | [handle: `plugin/LrC-AVG.lrplugin/HudView.lua:200-210`; `HudText.lua:39-96`, `HudText.lua:162-172`]; in Lightroom 15.6 [handle: `docs/reports/phase6/hud-p1-check/check.txt` section 3] |
@@ -343,7 +422,7 @@ The evidence behind the behaviour this page describes. Paths are in this reposit
 | Settings | Labels, defaults, ranges, the invalid-value list | [handle: `plugin/LrC-AVG.lrplugin/Prefs.lua:33-46`, `PluginInfoProvider.lua`] |
 | Settings | Saved as edited; read by the next session; the mode reached the engine | [handle: `docs/reports/phase5/S8.md` "Consequences"; `PHASE5.md` "Numbers", "Settings page reached the engine"] |
 | Settings | Argument > intent > page > default; folders remembered | [handle: `defs-session.ts` `lr_begin_session`; `engine/src/settings/log-folders.ts`] |
-| Approve each pass | Pass 1 free, 60 s wait, `AWAITING_APPROVAL`, approval in chat, a pick approves its pass | [handle: `defs-session.ts` `lr_step`, `lr_approve_pass`; `PHASE5.md` "Numbers", "Approve", "Wait in vain"] |
+| Approve each pass | Pass 1 free, 40 s wait, `AWAITING_APPROVAL`, approval in chat, a pick approves its pass | [handle: `defs-session.ts` `lr_step`, `lr_approve_pass`; `PHASE5.md` "Numbers", "Approve", "Wait in vain"] |
 | Approve each pass | Claude asked in the chat before each pass | [handle: `PHASE5.md` "Numbers", "Approve chat"] |
 | Undoing an edit | No SDK call that removes a photo was found; **Photo > Remove Photos… > Remove** removed only the copies | [handle: `docs/reports/phase4/S7.md` "Verdict" item 2, 19 names tried; `docs/reports/phase0/S6.md:37`, stated by Jim] |
 | Where files go | Log, recipe and tool-log names and folder | [handle: `engine/src/log/tool-log.ts:5-7`, `session-log.ts:4-7`] |
@@ -362,7 +441,16 @@ The evidence behind the behaviour this page describes. Paths are in this reposit
 | Supported formats, Known limitations | HDR photos edit, exposure limited to ±5 | [handle: `PHASE8.md` per-format table, sessions `338637` (32-bit TIFF), `2e5d8a` (HDR AVIF)]; the ±5 limit [handle: `docs/reports/phase8/S10.md` "Numbers"; vault `PHASE8_PLAN.md` row 3, R3 A] |
 | Supported formats | Video not developed by Lightroom | [handle: https://helpx.adobe.com/lightroom-classic/help/supported-file-formats.html, read 2026-10-08 (vault `PHASE8_PLAN.md` finding 6)] |
 | Known limitations | Plug-in Manager pauses; the 60 s allowance untested; Desktop's hold untested | [handle: `PHASE5.md` "Consequences" item 2]; both [unverified] |
+| Known limitations | A call still working at 50 s answers `pending` and hands the result to the same call made again | [handle: `engine/src/mcp/deadline.ts` `CALL_DEADLINE_MS`, `createDeadline`; `engine/tests/mcp-deadline.test.ts`, against the simulated plugin]; that every client's model calls again [unverified] until `npm run clients:check` |
 | Known limitations | Undo line after a disconnect; Tab, Space and Enter; a long note cut with "..." | [handle: `HudText.lua:72-73`; `HudView.lua:76-81`]; all three in Lightroom 15.6 [handle: `docs/reports/phase6/hud-p1-check/check.txt` section 3] |
+| Clients | The entry every client needs: Node and the engine's `main.js`, no environment; the `--dry-run` line that names both; `--config` with a file holding `{}` | [handle: `engine/src/setup/setup-cli.ts:30-38`, `engine/src/setup/desktop-config.ts:34-36`; `node engine/dist/setup/setup-cli.js --dry-run --config <a file holding {}>` printed `"lrc-avg" runs: C:\Program Files\nodejs\node.exe D:\Developer\LrC_Autonomous_Gateway\engine\dist\mcp\main.js` and left the file as `{}`, 2026-10-15]; that the installed `lrc-avg-setup.cmd` prints the same [inference] |
+| Clients | A vision-capable model is required | [inference]: the AI judges each pass by looking at the render the engine returns (`lr_step`, `engine/src/mcp/defs-session.ts`) |
+| Clients, The HUD | The client's name and the model it names, "name · model" on the HUD's connection line and under the Deck's step line; "the AI" without a name | [handle: `plugin/LrC-AVG.lrplugin/HudView.lua` `connectionLine`, `put`; `HudText.lua` `HudText.ai`; `hud/ui/view.ts` `fillAi`, `aiLine`; `hud/ui/render.ts` `bar`, `left`; `hud/ui/view.test.ts`, `hud/ui/render.test.ts`, `engine/tests/lua-plugin.test.ts`]; in Lightroom and the Deck [unverified] until `npm run clients:check` |
+| Clients | Claude Code: `claude mcp add --scope user`, `.mcp.json` | [handle: https://code.claude.com/docs/en/mcp, read 2026-10-15 (vault `ISSUE155_PLAN.md` "The clients")]; with LrC-AVG [unverified] until `npm run clients:check` |
+| Clients | OpenCode: `opencode.json` `mcp.<name>` with `type: "local"` and `command` | [handle: https://opencode.ai/docs/mcp-servers/, read 2026-10-15 (`ISSUE155_PLAN.md`)]; with LrC-AVG [unverified] until `npm run clients:check` |
+| Clients | Hermes Agent: `%LOCALAPPDATA%\hermes\config.yaml` `mcp_servers:` | [handle: https://hermes-agent.nousresearch.com/docs/user-guide/features/mcp, read 2026-10-15 (`ISSUE155_PLAN.md`)]; the file's place on this PC [handle: `ISSUE155_PLAN.md` "The clients", Hermes row]; with LrC-AVG [unverified] until `npm run clients:check` |
+| Clients | Antigravity CLI: `~/.gemini/config/mcp_config.json` `mcpServers` | [handle: https://antigravity.google/docs/mcp?tab=cli, read 2026-10-15 (`ISSUE155_PLAN.md`)]; with LrC-AVG [unverified] until `npm run clients:check` |
+| Clients | Codex CLI: `~/.codex/config.toml` `[mcp_servers.<name>]`, `tool_timeout_sec` default 60 s; not tested | [handle: https://learn.chatgpt.com/docs/extend/mcp?surface=cli, read 2026-10-15 (`ISSUE155_PLAN.md`)]; not tested [stated: Jim, 2026-10-15, "I do not have Codex or ChatGPT … these will have to be inferred"]; whether 120 s is needed [unverified] |
 
 ## License
 

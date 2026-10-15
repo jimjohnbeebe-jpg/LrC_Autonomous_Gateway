@@ -2,46 +2,48 @@
 // docs\hud\option-c\NOTES.md section 6). The HudText strings are used verbatim from
 // plugin\LrC-AVG.lrplugin\HudText.lua (spec 10.1); the rest are the spec's and Option C's new strings
 // (10.2, NOTES section 6). The words "session", "engine", "stage", "seq" and "payload" never appear
-// (spec 10; hud\ui\view.test.ts scans every string here).
+// (spec 10; hud\ui\view.test.ts scans every string here). Header: strings match HudText.lua with the
+// {ai}/{AI} tokens (issue #155); view.ts fillAi fills them with the AI client's name, else "the AI",
+// and engine\tests\lua-plugin.test.ts keeps the shared ones equal on both sides.
 
 export const HEADLINE = {
   not_running: "LrC-AVG is not running: reload it in File > Plug-in Manager.",
-  not_connected: "Claude is not connected. Your edit so far stays.",
-  gone: "This edit is no longer open in Claude. Your edit so far stays.",
-  working: "Claude is working. Nothing needed from you.",
-  awaiting_pick: "Your turn: pick a copy, or tell Claude which one.",
-  converged: "Your turn: Claude thinks the edit is done.",
+  not_connected: "{AI} is not connected. Your edit so far stays.",
+  gone: "This edit is no longer open in {ai}. Your edit so far stays.",
+  working: "{AI} is working. Nothing needed from you.",
+  awaiting_pick: "Your turn: pick a copy, or tell {ai} which one.",
+  converged: "Your turn: {ai} thinks the edit is done.",
   target_changed: "Your turn: select the edit's photo again.",
   accepted: "Done: the edit is kept.",
   aborted: "Done: the photo is back as it was.",
   ended: "The edit has ended.",
 } as const;
-export const approveHeadline = (pass: number): string => `Your turn: approve pass ${pass} so Claude can go on.`;
+export const approveHeadline = (pass: number): string => `Your turn: approve pass ${pass} so {ai} can go on.`;
 /** The cap read as the user's turn (Q6; NOTES section 6). */
 export const capHeadline = (passes: number): string => `Your turn: all ${passes} passes are used.`;
-export const NO_EDIT = "Not connected to Claude.";
+export const NO_EDIT = "Not connected to the AI.";
 /** Connected, but no edit is open (critique 2026-10-15, issue 3: NO_EDIT named the wrong cause). */
-export const NO_EDIT_OPEN = "No edit open. Ask Claude in the chat to edit a photo.";
+export const NO_EDIT_OPEN = "No edit open. Ask the AI in the chat to edit a photo.";
 
 export const STEP: Record<string, string> = {
   begin: "Starting", pass0: "Setting profile, lens corrections and baseline", applying: "Applying pass",
-  acquiring_preview: "Rendering a preview", metrics: "Measuring the preview", awaiting_claude: "Claude is looking at the result",
-  awaiting_pick: "Waiting for your pick", awaiting_approval: "Waiting for your approval", converged: "Claude thinks the edit is done",
+  acquiring_preview: "Rendering a preview", metrics: "Measuring the preview", awaiting_claude: "{AI} is looking at the result",
+  awaiting_pick: "Waiting for your pick", awaiting_approval: "Waiting for your approval", converged: "{AI} thinks the edit is done",
   target_changed: "Another photo is selected", accepted: "Accepted", aborted: "Aborted", ended: "Ended",
 };
 
 export const UNDO = "To undo it: Develop > Snapshots > ";
 export const UNDO_NO_SNAPSHOT = "the newest AVG pre-session snapshot";
-/** Where the plugin's own Put back is while Claude is away (spec D5, "Put back"; menu item plugin\LrC-AVG.lrplugin\Info.lua:30). */
+/** Where the plugin's own Put back is while the AI is away (spec D5, "Put back"; menu item plugin\LrC-AVG.lrplugin\Info.lua:30). */
 export const PUT_BACK_PATH = "To put the photo back: File > Plug-in Extras > LrC-AVG - Show Vision Gateway HUD, then Put back";
 export const CLIPPING_OK = "Clipping: within limits.";
-export const clickSent = (label: string): string => `${label} sent; waiting for Claude.`;
-export const clickNoAnswer = (label: string, s: number): string => `${label}: no answer from Claude within ${s} s; the buttons are on again.`;
+export const clickSent = (label: string): string => `${label} sent; waiting for {ai}.`;
+export const clickNoAnswer = (label: string, s: number): string => `${label}: no answer from {ai} within ${s} s; the buttons are on again.`;
 
 /** HudState.targetChangedLine (plugin\LrC-AVG.lrplugin\HudState.lua:251-259), the Deck's to build (row 3 decision 3). */
 export function targetChanged(selected: string | null, variants: boolean, target: string): string {
   const what = selected === null ? "No photo is selected" : `${selected} is selected`;
-  const again = variants ? "Claude's next call selects the edit's photo again" : `Select ${target} again`;
+  const again = variants ? "{AI}'s next call selects the edit's photo again" : `Select ${target} again`;
   return `Target changed: ${what}. ${again}; the edit is still open.`;
 }
 
@@ -51,19 +53,19 @@ export const approveLabel = (pass: number): string => `Approve pass ${pass}`;
 export const continueLabel = (letter: string): string => `Continue on copy ${letter}`;
 export const pickLabel = (letter: string): string => `Pick ${letter}`;
 export const LINE = {
-  approve: (pass: number) => `Lets Claude write pass ${pass + 1}.`,
+  approve: (pass: number) => `Lets {ai} write pass ${pass + 1}.`,
   accept: "Ends the edit; the sliders stay as they are.",
   acceptCopy: (letter: string) => `Keeps copy ${letter}; the other copies stay.`,
-  acceptWorking: "Ends the edit after Claude's current step.",
+  acceptWorking: "Ends the edit after {ai}'s current step.",
   acceptNow: "Accept keeps the edit as it is now.",
   abort: "Puts the photo back.",
   abortCopies: "Leaves the master as it was; the copies stay in the catalog.",
-  continue: (letter: string) => `Claude continues on copy ${letter} at its next call.`,
+  continue: (letter: string) => `{AI} continues on copy ${letter} at its next call.`,
   armed: "Ctrl+Backspace again; Esc or 3 s cancels.",
-  offAnswer: "Off until Claude answers.",
-  offConnected: "Off until Claude is connected.",
+  offAnswer: "Off until {ai} answers.",
+  offConnected: "Off until {ai} is connected.",
   offLightroom: "Off until LrC-AVG runs in Lightroom.",
-  offGone: "Off: Claude no longer has this edit open.",
+  offGone: "Off: {ai} no longer has this edit open.",
   offPick: "Comes back after a pick.",
 } as const;
 

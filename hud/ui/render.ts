@@ -54,7 +54,7 @@ function bar(v: View, f: Form): string {
   const cq = v.offLine ?? primary?.line ?? abort?.line ?? "";
   const acts = v.actions.filter((a) => a.kind !== "compact" || a.id !== "accept").map((a) => button(a, f, true)).join("");
   return `<div class="deck k" data-tauri-drag-region>${toggle(false)}<span class="glyph">${phaseGlyph(v.phase)}</span>
-<div class="words${turn}" data-tauri-drag-region><b>${esc(v.sentence)}</b> <span class="fid">· ${esc(v.line2)}</span></div>
+<div class="words${turn}" data-tauri-drag-region><b>${esc(v.sentence)}</b> <span class="fid">· ${esc(v.line2)}${v.ai !== null ? ` · ${esc(v.ai)}` : ""}</span></div>
 <div class="cq" data-tauri-drag-region>${esc(cq)}</div><div class="acts">${acts}</div>${hide}</div>`;
 }
 
@@ -63,11 +63,14 @@ function left(v: View, f: Form): string {
   // One block, wrapped to two lines; the column's tooltip has all of it.
   const band = v.band.length ? `<div class="band">${esc(v.band.join(" "))}</div>` : "";
   const tip = [v.identityTip, ...v.band].filter(Boolean).join("\n");
+  // The AI client and its model, as text under the step (issue #155), not only a tooltip; styled as the
+  // step line (style.css .step), so it lines up and passes drags through.
+  const ai = v.ai !== null ? `<div class="step ai">${esc(v.ai)}</div>` : "";
   const t = v.timeline;
   const tl = t ? `<div class="tl" role="img" aria-label="${esc(T.timelineSpoken(t.label, t.marks))}">${timelineSvg(t)}<span class="lab" aria-hidden="true">${esc(t.label)}</span></div>` : "";
   return `<div class="col l" data-tauri-drag-region${attr("title", tip)}>
 <div class="turn">${toggle(f.open)}<span class="glyph">${phaseGlyph(v.phase)}</span><div class="sentence">${esc(v.sentence)}</div></div>
-<div class="step">${esc(v.line2)}</div>${band}${tl}</div>`;
+<div class="step">${esc(v.line2)}</div>${ai}${band}${tl}</div>`;
 }
 
 // --- Centre: rows, cards or the way back -----------------------------------------------------------

@@ -75,7 +75,7 @@ local function headline(s, conn, hud)
 end
 
 -- The put-back's line, while there is one; the offer while Put back is on; the undo line while an
--- open edit cannot reach Claude (not connected, or no longer open in Claude); else the click line;
+-- open edit cannot reach the AI (not connected, or no longer open in it); else the click line;
 -- else the update's note (fix/hud-p1 "Feedback rule").
 local function feedback(s, conn, hud)
     if hud.putBack then return hud.putBack.line end
@@ -112,15 +112,18 @@ local function guardrailLine(s)
     return g.status == "green" and HudText.CLIPPING_OK or ""
 end
 
-local function connectionLine(conn)
+-- Issue #155: connected, the model after the name when the update carries one ("name · model").
+local function connectionLine(conn, s)
     local C = HudText.CONNECTION
     if not conn.running then return C.not_running end
-    return conn.engine and C.connected or C.not_connected
+    if not conn.engine then return C.not_connected end
+    return (s and s.ai_model) and string.format(C.connected_model, s.ai_model) or C.connected
 end
 
--- `text` into its slots: v.key1 .. v.keyN.
-local function put(v, key, text)
-    for i, line in ipairs(HudText.wrap(text, SLOTS[key], HudText.budget(WIDTH))) do v[key .. i] = line end
+-- `text` into its slots: v.key1 .. v.keyN. Every text the window shows passes here, so the {ai} tokens
+-- (HudText.ai, issue #155) are filled here once, with `name` (the update's ai_name, or nil).
+local function put(v, key, text, name)
+    for i, line in ipairs(HudText.wrap(HudText.ai(text, name), SLOTS[key], HudText.budget(WIDTH))) do v[key .. i] = line end
 end
 
 -- The settings page's values under their wire names (Prefs.read checks each one), for props().
@@ -140,15 +143,15 @@ end
 -- engine is not connected (decision 2) or the edit is unknown (fix/hud-p1 P1-3); Put back is on only
 -- then (HudState.canPutBack).
 function HudView.props(s, conn, pending, page, hud)
-    local v = {}
-    put(v, "headline", headline(s, conn, hud))
-    put(v, "feedback", feedback(s, conn, hud))
-    put(v, "photo", s and ("Photo: " .. HudState.targetName(s)) or "")
-    put(v, "camera", s and cameraLine(s.target) or "")
-    put(v, "step", s and stepLine(s) or "")
-    -- An edit Claude no longer has is not "still open": no selection line then (fix/hud-p1 review).
-    put(v, "selection", hud.unknown ~= "gone" and hud.selection or "")
-    put(v, "guardrail", guardrailLine(s))
+    local v, name = {}, s and s.ai_name
+    put(v, "headline", headline(s, conn, hud), name)
+    put(v, "feedback", feedback(s, conn, hud), name)
+    put(v, "photo", s and ("Photo: " .. HudState.targetName(s)) or "", name)
+    put(v, "camera", s and cameraLine(s.target) or "", name)
+    put(v, "step", s and stepLine(s) or "", name)
+    -- An edit the AI no longer has is not "still open": no selection line then (fix/hud-p1 review).
+    put(v, "selection", hud.unknown ~= "gone" and hud.selection or "", name)
+    put(v, "guardrail", guardrailLine(s), name)
     local rows = (s and s.deltas) or {}
     for i = 1, HudState.LIMITS.rows do
         local r = rows[i] or {}
@@ -157,11 +160,11 @@ function HudView.props(s, conn, pending, page, hud)
         end
     end
     local sessionSettings = s and s.settings and next(s.settings) ~= nil
-    put(v, "settingsTitle", sessionSettings and "Session settings:" or "Settings page (the next session reads them):")
+    put(v, "settingsTitle", sessionSettings and "Session settings:" or "Settings page (the next session reads them):", name)
     local a, b = settingsLines(sessionSettings and s.settings or page)
-    put(v, "settingsA", a)
-    put(v, "settingsB", b)
-    put(v, "connection", connectionLine(conn))
+    put(v, "settingsA", a, name)
+    put(v, "settingsB", b, name)
+    put(v, "connection", connectionLine(conn, s), name)
     -- A plain true or false: a bound `enabled` never gets nil.
     local live = (s ~= nil and not isEnd(s.stage) and conn.engine == true and pending == nil and hud.unknown == nil) and true or false
     v.abortEnabled = live

@@ -52,7 +52,7 @@ export const intentSchema = z
     id: z.string().regex(INTENT_ID_PATTERN).describe("lower case letters, digits and _; the file is <id>.json"),
     label: z.string().min(1).max(80),
     category: z.string().min(1).max(40),
-    brief: z.string().min(1).max(2000).describe("prose instructions to Claude"),
+    brief: z.string().min(1).max(2000).describe("prose instructions to the AI"),
     profile: z
       .strictObject({ raw: z.string().min(1), rendered: z.string().min(1) })
       .optional()

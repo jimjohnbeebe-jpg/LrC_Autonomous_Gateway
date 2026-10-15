@@ -39,7 +39,7 @@ import { pendingError } from "./ai-update.js";
 import { approvePass } from "./approval.js";
 import { openSession, runPass0 } from "./begin.js";
 import { endSession, readSessionLog } from "./end.js";
-import { abortedNote, endedAlike, endedError, idleStage, userAction, userEnded, type ActionHost, type UserAction, type UserEnded } from "./hud-actions.js";
+import { abortedNote, closeNote, endedAlike, endedError, idleStage, userAction, userEnded, type ActionHost, type UserAction, type UserEnded } from "./hud-actions.js";
 import { abortError, checkAbort, read, render } from "./io.js";
 import { endLeftOpen, findLeftOpen, type LeftOpen } from "./left-open.js";
 import { createMask, deleteMask, editMask, listMasks } from "./masks.js";
@@ -209,7 +209,7 @@ export class SessionManager {
         const s = this.require(args.session_id);
         const out = await abandonSession(this.ctx, s, null);
         this.close(s, null);
-        this.ctx.deps.hud?.stage(s, "ended", { note: abandonedNote(false) });
+        this.ctx.deps.hud?.stage(s, "ended", { note: abandonedNote(s, false) });
         return out;
       });
     }
@@ -223,8 +223,8 @@ export class SessionManager {
         const user = outcome === "revert" ? s.abort : null;
         this.close(s, user ? userEnded(this.ctx, s, "aborted", user) : null);
         if (user) this.ctx.deps.hud?.stage(s, "aborted", { note: abortedNote(s) });
-        else if (outcome === "accept") this.ctx.deps.hud?.stage(s, "accepted", { note: "Claude accepted: the edit is kept." });
-        else this.ctx.deps.hud?.stage(s, "ended", { note: "Claude reverted: the photo is back as it was before the edit." });
+        else if (outcome === "accept") this.ctx.deps.hud?.stage(s, "accepted", { note: closeNote(s, outcome) });
+        else this.ctx.deps.hud?.stage(s, "ended", { note: closeNote(s, outcome) });
         return out;
       }, true),
     );

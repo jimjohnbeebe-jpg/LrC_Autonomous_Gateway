@@ -23,7 +23,7 @@ import { defaultHudEndpointPath, hudEndpointSchema } from "../hud/index.js";
 import { AI_NAME_PLUGIN } from "../hud/publisher.js";
 import { acquireInstanceLock, BridgeGate, devOverrides, ENGINE_VERSION } from "../mcp/index.js";
 import { loadDefaultParamMap } from "../params/index.js";
-import { restoreLeftovers } from "./clients-config.js";
+import { hermesRefused, restoreLeftovers } from "./clients-config.js";
 import { installDeck } from "./clients-deck.js";
 import { desktopChat } from "./clients-desktop.js";
 import { findClient } from "./clients-launch.js";
@@ -97,9 +97,11 @@ async function preflight(deps: ClientsDeps, run: Run): Promise<Installed[] | nul
   const installed: Installed[] = [];
   for (const id of CHECK_CLIENTS) {
     const exe = findClient(id);
-    rowOf(run.state, id).not_run = exe ? null : "not installed";
-    if (exe) installed.push({ id, exe, name: NAMES[id] });
-    deps.say(`  ${NAMES[id]}: ${exe ? "found" : "not installed (not run)"}`);
+    // Hermes with its own mcp_servers: is not registered (clients-config.ts), so it is not run either.
+    const why = !exe ? "not installed" : id === "hermes" && hermesRefused() ? "its config.yaml already has mcp_servers:, left as it is" : null;
+    rowOf(run.state, id).not_run = why;
+    if (exe && !why) installed.push({ id, exe, name: NAMES[id] });
+    deps.say(`  ${NAMES[id]}: ${why ? `${why} (not run)` : "found"}`);
   }
   run.save();
   const deck = installDeck();
@@ -132,10 +134,10 @@ async function tests(deps: ClientsDeps, run: Run, installed: Installed[]): Promi
   return true;
 }
 
-/** Every client's tests and the chat, in this window and the results; accepted when every one ran is YES. */
-function summary(deps: ClientsDeps, s: ClientsState, results: Record<string, unknown>): boolean {
+/** Every client's tests and the chat, in this window and the results; accepted when every one ran is YES, the photo is back and nothing failed. */
+function summary(deps: ClientsDeps, s: ClientsState, results: Record<string, unknown>, errors: string[]): boolean {
   const table: Record<string, Record<string, string>> = {};
-  let all = s.finished && s.desktop?.ok === true;
+  let all = s.finished && s.desktop?.ok === true && s.pending.length === 0 && errors.length === 0;
   for (const id of CHECK_CLIENTS) {
     const row = rowOf(s, id);
     table[id] = Object.fromEntries(TESTS.map((t) => [t, row.not_run ? "not run" : row[t] ? (row[t].ok ? "YES" : "NO") : "to do"]));
@@ -179,7 +181,7 @@ async function main(): Promise<number> {
   await gate.release();
   io.close();
   results["state"] = state;
-  const accepted = summary(deps, state, results);
+  const accepted = summary(deps, state, results, errors);
   console.log(`Results saved automatically: ${save(results)}`);
   console.log(state.finished ? 'Nothing to copy. Tell Claude Code "done".' : "Nothing to copy. Run the same command again to continue, or tell Claude Code what happened.");
   return accepted ? 0 : state.finished ? 1 : 2;

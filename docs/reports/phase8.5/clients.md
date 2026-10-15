@@ -47,7 +47,7 @@ Jim answers y/n in the PowerShell window, as in Phase 1 [stated: Jim, 2026-09-26
   - no other LrC-AVG engine is running (`%USERPROFILE%\.lrc-avg\hud_endpoint.json`);
   - Lightroom connects, and the plugin is 0.23.0 or later;
   - it notes the selected photo (every client edits that photo);
-  - it finds each client;
+  - it finds each client (Hermes is "not run" when its `config.yaml` already has `mcp_servers:`, since the check does not add a second one);
   - it installs the Deck built for this branch and reads its version (0.3.6).
 - For each run, the check selects the photo, takes its own snapshot "AVG clients check before <time>" and gives the bridge up. It registers the engine in the client: a per-run config for Claude Code and OpenCode, a workspace config in the run folder for Antigravity, and for Hermes Jim's `config.yaml` backed up, appended to and restored afterwards (`clients-config.ts` header). The engine logs to the run's own folder (`LRC_AVG_LOG_DIR`). The check starts the client with its prompt, with output to files only, and waits for it to exit (20 minutes at most). Then it takes the bridge back and reads the logs. It prints the client's last words, asks Jim, and puts the photo back with its snapshot.
 - Order:

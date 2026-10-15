@@ -72,9 +72,16 @@ function hermesBlock(entry: McpEntry, eol: string): string {
   return `mcp_servers:${eol}  lrc_avg: ${JSON.stringify(body)}${eol}`;
 }
 
+const HAS_SERVERS = /^mcp_servers\s*:/m;
+
+/** True when Hermes's config already has `mcp_servers:`, so register() would refuse it (the check then skips Hermes). */
+export function hermesRefused(file: string = defaultConfigPaths().hermes): boolean {
+  return existsSync(file) && HAS_SERVERS.test(readFileSync(file, "utf8"));
+}
+
 function registerHermes(entry: McpEntry, runDir: string, file: string): Registration {
   const text = readFileSync(file, "utf8");
-  if (/^mcp_servers\s*:/m.test(text)) return backUp("hermes", "refused", file, runDir, false);
+  if (HAS_SERVERS.test(text)) return backUp("hermes", "refused", file, runDir, false);
   const reg = backUp("hermes", "append", file, runDir, true);
   const eol = text.includes("\r\n") ? "\r\n" : "\n";
   writeFileSync(file, text + (text === "" || text.endsWith("\n") ? "" : eol) + hermesBlock(entry, eol));

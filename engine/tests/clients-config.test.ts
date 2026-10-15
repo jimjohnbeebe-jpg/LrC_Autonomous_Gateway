@@ -7,7 +7,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "no
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { register, restore, restoreLeftovers, type ConfigPaths } from "../src/devtools/clients-config.js";
+import { hermesRefused, register, restore, restoreLeftovers, type ConfigPaths } from "../src/devtools/clients-config.js";
 import { baseEnv, clientEntry, launchFor } from "../src/devtools/clients-launch.js";
 
 let tmp: string;
@@ -27,6 +27,8 @@ describe("Hermes", () => {
   it("appends one mcp_servers block, keeps the file's line ends, and restores the exact bytes", () => {
     writeFileSync(paths.hermes, "model:\r\n  default: x/y\r\n");
     const before = sha(paths.hermes);
+    expect(hermesRefused(paths.hermes)).toBe(false);
+    expect(hermesRefused(path.join(tmp, "missing.yaml"))).toBe(false);
     const reg = register("hermes", entry, runDir, { paths });
     expect(reg?.method).toBe("append");
     const text = readFileSync(paths.hermes, "utf8");
@@ -43,6 +45,7 @@ describe("Hermes", () => {
     const before = sha(paths.hermes);
     const reg = register("hermes", entry, runDir, { paths });
     expect(reg?.method).toBe("refused");
+    expect(hermesRefused(paths.hermes)).toBe(true); // clients:check skips Hermes on this
     expect(sha(paths.hermes)).toBe(before);
     restore(reg!);
     expect(restoreLeftovers(runDir)).toEqual([]);

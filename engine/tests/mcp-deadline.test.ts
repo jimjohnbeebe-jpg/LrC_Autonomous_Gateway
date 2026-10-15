@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BridgeClient } from "../src/bridge/index.js";
 import { IntentLibrary } from "../src/intents/index.js";
 import { ToolLog } from "../src/log/index.js";
-import { CALL_DEADLINE_MS } from "../src/mcp/deadline.js";
+import { CALL_DEADLINE_MS, createDeadline } from "../src/mcp/deadline.js";
 import { createServer, ENGINE_VERSION, Tools } from "../src/mcp/index.js";
 import { loadDefaultParamMap } from "../src/params/index.js";
 import { PreviewService } from "../src/preview/index.js";
@@ -186,5 +186,46 @@ describe("against the simulated Lightroom", () => {
     const dir = path.join(tmp, "sessions");
     const log = readdirSync(dir).filter((f) => f.endsWith(".json") && !f.endsWith(".recipe.json")).map((f) => JSON.parse(readFileSync(path.join(dir, f), "utf8")) as { passes: Array<{ kind: string; rationale: string }>; outcome: string });
     expect(log.map((l) => ({ outcome: l.outcome, passes: l.passes.map((p) => `${p.kind}:${p.rationale}`) }))).toEqual([{ outcome: "revert", passes: [expect.stringMatching(/^pass0:/), "step:brighter"] }]);
+  });
+});
+
+describe("createDeadline alone", () => {
+  const ok = (text: string) => ({ content: [{ type: "text" as const, text }] });
+  /** A run that resolves when `finish` is called; `runs` counts starts. */
+  const gate = () => {
+    const g = { runs: 0, finish: () => undefined as void };
+    const run = () => {
+      g.runs++;
+      return new Promise<ReturnType<typeof ok>>((resolve) => (g.finish = () => resolve(ok(`run ${g.runs}`))));
+    };
+    return { g, run };
+  };
+
+  it("drops a kept read-only result when another call arrives, and keeps a writing tool's", async () => {
+    const deadline = createDeadline({ ms: 20, readOnly: (t) => t === "read", log: () => undefined });
+    const read = gate();
+    const write = gate();
+    expect(isPending(await deadline("read", {}, read.run))).toBe(true);
+    expect(isPending(await deadline("write", {}, write.run))).toBe(true);
+    read.g.finish();
+    write.g.finish();
+    await deadline("other", {}, async () => ok("other"));
+    expect(isPending(await deadline("read", {}, read.run))).toBe(true);
+    expect(read.g.runs).toBe(2);
+    expect((await deadline("write", {}, write.run)).content).toEqual([{ type: "text", text: "run 1" }]);
+    expect(write.g.runs).toBe(1);
+  });
+
+  it("keeps the result of a cancelled call for the next identical call", async () => {
+    const deadline = createDeadline({ ms: 1000, log: () => undefined });
+    const w = gate();
+    const abort = new AbortController();
+    const first = deadline("write", {}, w.run, abort.signal);
+    abort.abort();
+    w.g.finish();
+    await first;
+    const second = await deadline("write", {}, w.run);
+    expect((second.content as Content)[0]?.text).toBe("run 1");
+    expect(w.g.runs).toBe(1);
   });
 });

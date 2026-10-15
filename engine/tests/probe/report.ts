@@ -67,7 +67,7 @@ function findings(r: ProbeReport): string {
     "| Client | Status | Model (asked / reported) | clientInfo | progressToken | T1 tools | T2 identity | T3 word | T4 session | T5 slow export |",
     "|---|---|---|---|---|---|---|---|---|---|",
     ...r.clients.map((c, i) =>
-      `| ${c.client} [${HANDLE} \`clients[${i}]\`] | ${esc(c.status + (c.reason ? `: ${c.reason}` : ""))} | ${esc(`${c.model_requested ?? "default"} / ${c.model_reported ?? "-"}`)} | ` +
+      `| ${c.client} [${HANDLE} \`clients[${i}]\`] | ${esc(c.status + (c.reason ? `: ${c.reason}` : ""))} | ${esc(`${c.status === "not run" ? "-" : (c.model_requested ?? "default")} / ${c.model_reported ?? "-"}`)} | ` +
         `${c.client_info ? esc(`${c.client_info.name} ${c.client_info.version}`) : "-"} | ${c.progress_token ?? "-"} | ${[c.t1, c.t2, c.t3, c.t4, c.t5].map((t) => esc(cell(t))).join(" | ")} |`,
     ),
   ];

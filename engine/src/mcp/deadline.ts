@@ -7,11 +7,17 @@
 // entry is stored when the call starts, so two overlapping identical calls share one run.
 //
 // What this means for callers [inference: from the code below, ISSUE155_PLAN.md R3]:
-// (a) an identical call made after a detach for a new purpose (another lr_get_preview, say) receives the
-//     earlier, not yet delivered result, not a new one;
+// (a) a read-only tool's run (readOnlyHint) is kept only until a call with another key arrives: after an
+//     lr_step, say, the next lr_get_preview starts a new render instead of receiving the one from
+//     before the step. Its run is not cancelled, its result is dropped. A tool that changes something
+//     keeps its result for the next identical call (until RESULT_TTL_MS), so a repeated call does not
+//     apply or export twice;
 // (b) a client that changes an optional argument on its retry does not attach: it starts a second run;
 // (c) the work itself keeps running after a detach: the AI mask's 5 minutes and the 90 s write
 //     timeouts are unchanged, and nothing is cancelled.
+// (d) a call the client cancelled (notifications/cancelled) gets no response: the MCP SDK drops it
+//     [handle: node_modules/@modelcontextprotocol/sdk/dist/esm/shared/protocol.js:396-399,
+//     `if (abortController.signal.aborted) return;`]. Its result is then kept as after a detach.
 // No tool is exempt. respond() never rejects (a failure is an isError result), so a failed run is
 // stored and delivered like any other.
 
@@ -26,9 +32,9 @@ export const CALL_DEADLINE_MS = 50_000;
 export const RESULT_TTL_MS = 600_000;
 
 export type PendingEvent = "detached" | "attached" | "delivered" | "expired";
-export type Deadline = (tool: string, parsedArgs: unknown, run: () => Promise<CallToolResult>) => Promise<CallToolResult>;
+export type Deadline = (tool: string, parsedArgs: unknown, run: () => Promise<CallToolResult>, signal?: AbortSignal) => Promise<CallToolResult>;
 
-type Entry = { result: Promise<CallToolResult>; expiry?: NodeJS.Timeout };
+type Entry = { result: Promise<CallToolResult>; readOnly: boolean; expiry?: NodeJS.Timeout };
 
 /** The answer of a call whose run is still busy at the deadline. */
 export function pendingResult(tool: string): CallToolResult {
@@ -59,13 +65,15 @@ async function within<T>(p: Promise<T>, ms: number): Promise<T | typeof TIMED_OU
   }
 }
 
-export function createDeadline(opts: { ms?: number; ttlMs?: number; log: (tool: string, args: unknown, pending: PendingEvent) => void }): Deadline {
+type DeadlineOptions = { ms?: number; ttlMs?: number; readOnly?: (tool: string) => boolean; log: (tool: string, args: unknown, pending: PendingEvent) => void };
+
+export function createDeadline(opts: DeadlineOptions): Deadline {
   const ms = opts.ms ?? CALL_DEADLINE_MS;
   const ttlMs = opts.ttlMs ?? RESULT_TTL_MS;
   const entries = new Map<string, Entry>();
 
   const start = (key: string, tool: string, args: unknown, run: () => Promise<CallToolResult>): Entry => {
-    const entry: Entry = { result: run() };
+    const entry: Entry = { result: run(), readOnly: opts.readOnly?.(tool) === true };
     entries.set(key, entry);
     void entry.result.then(() => {
       if (entries.get(key) !== entry) return;
@@ -78,8 +86,18 @@ export function createDeadline(opts: { ms?: number; ttlMs?: number; log: (tool: 
     return entry;
   };
 
-  return async (tool, parsedArgs, run) => {
+  /** Comment (a): any other call makes a kept read-only result stale. */
+  const dropReadOnly = (key: string): void => {
+    for (const [k, e] of entries) {
+      if (k === key || !e.readOnly) continue;
+      clearTimeout(e.expiry);
+      entries.delete(k);
+    }
+  };
+
+  return async (tool, parsedArgs, run, signal) => {
     const key = `${tool} ${stableJson(parsedArgs)}`;
+    dropReadOnly(key);
     let entry = entries.get(key);
     const attached = entry !== undefined;
     if (entry) opts.log(tool, parsedArgs, "attached");
@@ -88,6 +106,11 @@ export function createDeadline(opts: { ms?: number; ttlMs?: number; log: (tool: 
     if (result === TIMED_OUT) {
       opts.log(tool, parsedArgs, "detached");
       return pendingResult(tool);
+    }
+    if (signal?.aborted) {
+      // Comment (d): this response is never sent, so the entry and its TTL stay for the next call.
+      opts.log(tool, parsedArgs, "detached");
+      return result;
     }
     if (entries.get(key) === entry) {
       clearTimeout(entry.expiry);

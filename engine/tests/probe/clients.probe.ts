@@ -75,18 +75,23 @@ const sessionLogs = (dir: string): Line[] =>
     .map((f) => JSON.parse(readFileSync(path.join(dir, f), "utf8")) as Line)
     .filter((j) => typeof j["session_id"] === "string");
 
-/** Claude Code's stream-json init event lists the tools it loaded; other clients: the model's TOOLS= line. */
-function toolCount(stdout: string): number | null {
+/**
+ * The tools the client loaded, and where the count came from. Claude Code's stream-json system/init
+ * event has a `tools` array with MCP tools named mcp__<server>__<tool> [handle:
+ * docs/reports/phase0/S3/s3_cli_run_redacted.jsonl:1, Claude Code 2.1.283; spikes/S3/summarize-cli-run.ts:131-133]
+ * ([unverified] for 2.1.300); without it, and for the other clients, the model's TOOLS= line.
+ */
+function toolCount(stdout: string): { count: number | null; source: "init event" | "model" | "none" } {
   for (const line of stdout.split("\n")) {
     try {
       const e = JSON.parse(line) as { type?: string; subtype?: string; tools?: string[] };
-      if (e.type === "system" && e.subtype === "init" && Array.isArray(e.tools)) return e.tools.filter((t) => t.startsWith("mcp__lrc-avg__")).length;
+      if (e.type === "system" && e.subtype === "init" && Array.isArray(e.tools)) return { count: e.tools.filter((t) => t.startsWith("mcp__lrc-avg__")).length, source: "init event" };
     } catch {
       // not a JSON line
     }
   }
   const said = [...stdout.matchAll(/TOOLS\s*=\s*(\d+)/g)].at(-1);
-  return said ? Number(said[1]) : null;
+  return said ? { count: Number(said[1]), source: "model" } : { count: null, source: "none" };
 }
 
 const check = (yes: boolean, detail: string): Check => ({ yes, detail });
@@ -97,7 +102,7 @@ function judge(id: ClientId, run: Run, h: Harness, word: string, registration: s
   const client = lines.map((l) => l["client"]).find((c): c is { name: string; version: string } => typeof c === "object" && c !== null) ?? null;
   const tokens = lines.map((l) => l["progress_token"]).filter((t): t is boolean => typeof t === "boolean");
   const model = sessions.map((s) => s["model"]).find((m): m is string => typeof m === "string") ?? null;
-  const count = toolCount(run.stdout);
+  const { count, source } = toolCount(run.stdout);
   const schemaError = /(invalid|error)[^\n]{0,80}schema|schema[^\n]{0,80}(invalid|error)/i.test(run.stdout + run.stderr);
   const stepped = sessions.some((s) => Array.isArray(s["passes"]) && (s["passes"] as Line[]).some((p) => p["kind"] === "step") && s["ended"] !== null);
   const exports = lines.filter((l) => l["tool"] === "lr_export_photos");
@@ -114,7 +119,7 @@ function judge(id: ClientId, run: Run, h: Harness, word: string, registration: s
     exit_code: run.code,
     duration_ms: run.ms,
     excerpt: run.stdout.slice(-1500),
-    t1: check(count === TOOL_COUNT && !schemaError, `tools ${count ?? "unknown"}, schema error ${schemaError}, ${lines.length} tool-log lines`),
+    t1: check(count === TOOL_COUNT && !schemaError, `tools ${count ?? "unknown"} (from ${source}), schema error ${schemaError}, ${lines.length} tool-log lines`),
     t2: check(client !== null && model !== null, `client ${client ? client.name : "none"}, model ${model ?? "none"}, progress_token ${JSON.stringify([...new Set(tokens)])}`),
     t3: check(new RegExp(`\\b${word}\\b`, "i").test(run.stdout), `word ${word}`),
     t4: check(stepped, `${sessions.length} session logs, a step and an end: ${stepped}`),
@@ -182,7 +187,7 @@ describe("client probe", () => {
       } catch (err) {
         // Recorded as a NO on every row, with the reason; the other clients still run.
         const no: Check = { yes: false, detail: `probe error: ${err instanceof Error ? err.message : String(err)}` };
-        report.clients.push({ ...notRun(id, no.detail), status: "run", t1: no, t2: no, t3: no, t4: no, t5: no });
+        report.clients.push({ ...notRun(id, no.detail), status: "run", model_requested: MODELS[id] ?? null, t1: no, t2: no, t3: no, t4: no, t5: no });
       }
     });
   }

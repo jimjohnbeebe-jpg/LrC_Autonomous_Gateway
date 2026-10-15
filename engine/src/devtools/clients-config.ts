@@ -51,14 +51,17 @@ function writeRegistry(runDir: string, regs: Registration[]): void {
   else writeFileSync(file, JSON.stringify(regs, null, 2) + "\n");
 }
 
-/** Byte copy of `file` into <runDir>\backup\, listed in the registry before anything is changed. */
+/**
+ * Byte copy of `file` into <runDir>\backup\, listed in the registry before anything is changed. A file
+ * that does not exist gets sha256 "" and no backup file; restore deletes it again.
+ */
 function backUp(client: ClientId, method: Registration["method"], file: string, runDir: string, listed: boolean): Registration {
-  const bytes = readFileSync(file);
   const dir = path.join(runDir, "backup");
   mkdirSync(dir, { recursive: true });
   const backup = path.join(dir, `${client}-${path.basename(file)}`);
-  writeFileSync(backup, bytes);
-  const reg: Registration = { client, method, file, backup, sha256: sha256(bytes) };
+  const bytes = existsSync(file) ? readFileSync(file) : null;
+  if (bytes) writeFileSync(backup, bytes);
+  const reg: Registration = { client, method, file, backup, sha256: bytes ? sha256(bytes) : "" };
   if (listed) writeRegistry(runDir, [...readRegistry(runDir).filter((r) => r.file !== file), reg]);
   return reg;
 }
@@ -86,6 +89,12 @@ function registerAntigravity(entry: McpEntry, runDir: string, global: boolean, f
     return { client: "antigravity", method: "workspace", file: ws, backup: "", sha256: "" };
   }
   const reg = backUp("antigravity", "global", file, runDir, true);
+  if (reg.sha256 === "") {
+    // No global config yet; applyDesktopConfig refuses a configPath that does not exist (apply-config.ts locate).
+    mkdirSync(path.dirname(file), { recursive: true });
+    writeFileSync(file, JSON.stringify({ mcpServers: { "lrc-avg": entry } }, null, 2) + "\n");
+    return reg;
+  }
   const result = applyDesktopConfig({ entry, configPath: file });
   // Our byte backup is the one restore uses; apply-config's own copy next to Jim's file is not needed.
   if (result.backup) rmSync(path.join(path.dirname(file), result.backup), { force: true });
@@ -116,9 +125,12 @@ export function register(id: ClientId, entry: McpEntry, runDir: string, o: { glo
 /** Put the backed-up bytes back and check them; a refused or workspace registration changed nothing of Jim's. */
 export function restore(r: Registration): void {
   if (r.method === "refused" || r.method === "workspace") return;
-  copyFileSync(r.backup, r.file);
-  const now = sha256(readFileSync(r.file));
-  if (now !== r.sha256) throw new Error(`restoring ${r.file} from ${r.backup}: sha256 ${now}, expected ${r.sha256}`);
+  if (r.sha256 === "") rmSync(r.file, { force: true });
+  else {
+    copyFileSync(r.backup, r.file);
+    const now = sha256(readFileSync(r.file));
+    if (now !== r.sha256) throw new Error(`restoring ${r.file} from ${r.backup}: sha256 ${now}, expected ${r.sha256}`);
+  }
   const runDir = path.dirname(path.dirname(r.backup));
   writeRegistry(runDir, readRegistry(runDir).filter((x) => x.file !== r.file));
 }

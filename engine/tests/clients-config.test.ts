@@ -73,6 +73,16 @@ describe("leftovers of a stopped run", () => {
   });
 });
 
+describe("a global Antigravity config that does not exist yet", () => {
+  it("is created for the run and deleted again on restore", () => {
+    const reg = register("antigravity", entry, runDir, { paths, global: true });
+    expect(JSON.parse(readFileSync(paths.antigravity, "utf8")).mcpServers["lrc-avg"]).toEqual(entry);
+    restore(reg!);
+    expect(existsSync(paths.antigravity)).toBe(false);
+    expect(restoreLeftovers(runDir)).toEqual([]);
+  });
+});
+
 describe("per-run configs", () => {
   it("Antigravity's workspace config and Claude Code's file go into the run folder only", () => {
     const ws = register("antigravity", entry, runDir, { paths });

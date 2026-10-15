@@ -97,7 +97,7 @@ async function withProgress<T>(token: string | number | undefined, notify: Notif
 export function createServer(tools: Tools, options: { progressMs?: number; deadlineMs?: number } = {}): Server {
   const server = new Server({ name: "lrc-avg", version: ENGINE_VERSION }, { capabilities: { tools: {} } });
   const byName = new Map(DEFS.map((d) => [d.name, d]));
-  const deadline = createDeadline({ ...(options.deadlineMs !== undefined ? { ms: options.deadlineMs } : {}), log: (t, a, p) => tools.recordPending(t, a, p) });
+  const deadline = createDeadline({ ...(options.deadlineMs !== undefined ? { ms: options.deadlineMs } : {}), readOnly: (t) => byName.get(t)?.annotations?.readOnlyHint === true, log: (t, a, p) => tools.recordPending(t, a, p) });
 
   server.setRequestHandler(ListToolsRequestSchema, () => ({
     tools: DEFS.map((d) => ({
@@ -129,7 +129,7 @@ export function createServer(tools: Tools, options: { progressMs?: number; deadl
         return errorResult(error);
       }
       const run = () => respond(() => def.run(tools, parsed.data as Record<string, unknown>));
-      return withProgress(progress.token, (n) => extra.sendNotification(n), () => tools.progressNote(), progress.ms, () => deadline(name, parsed.data, run));
+      return withProgress(progress.token, (n) => extra.sendNotification(n), () => tools.progressNote(), progress.ms, () => deadline(name, parsed.data, run, extra.signal));
     });
   });
 

@@ -25,7 +25,9 @@ export const cleanText = (s: string, max: number): string => s.replace(/[\u0000-
 
 /** The display name, at most 32 characters. */
 export function displayName(client?: ClientIdentity | null): string {
-  const raw = client?.title || (client && KNOWN_CLIENTS[client.name]) || client?.name || UNNAMED;
+  // Own keys only: a clientInfo.name such as "constructor" would otherwise find Object.prototype's.
+  const known = client && Object.hasOwn(KNOWN_CLIENTS, client.name) ? KNOWN_CLIENTS[client.name] : undefined;
+  const raw = client?.title || known || client?.name || UNNAMED;
   return cleanText(raw, 32) || UNNAMED;
 }
 

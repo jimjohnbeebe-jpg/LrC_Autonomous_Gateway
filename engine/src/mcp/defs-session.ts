@@ -38,7 +38,7 @@ const beginArgs = z.object({
     .optional()
     .describe("clipping limits for this session, replacing the intent's, the settings page's and the defaults (0.5 % high, 1.0 % low)"),
   notes: z.string().max(2000).optional().describe("the user's request in their own words, kept in the log; it takes precedence over the intent's brief"),
-  model: z.string().min(1).max(80).optional().describe("Your own model name or id, shown to the user and logged; never used for decisions."),
+  model: z.string().max(80).optional().describe("Your own model name or id, shown to the user and logged; never used for decisions."),
   long_edge: longEdge.describe(`Preview long edge in pixels, ${MIN_LONG_EDGE}-${MAX_LONG_EDGE}, for the whole session (default: the settings page's, else ${DEFAULT_LONG_EDGE}).`),
   return_image: returnImage,
 });

@@ -44,11 +44,11 @@ Written by `npm run clients:probe` on 2026-10-15T13:25:49.201Z; every value belo
 
 | Client | Status | Model (asked / reported) | clientInfo | progressToken | T1 tools | T2 identity | T3 word | T4 session | T5 slow export |
 |---|---|---|---|---|---|---|---|---|---|
-| claude-code [docs\reports\phase8.5\clients-probe.json `clients[0]`] | not run: not selected (LRC_AVG_PROBE_CLIENTS=none) | default / - | - | - | not run | not run | not run | not run | not run |
-| opencode [docs\reports\phase8.5\clients-probe.json `clients[1]`] | not run: not selected (LRC_AVG_PROBE_CLIENTS=none) | default / - | - | - | not run | not run | not run | not run | not run |
-| hermes [docs\reports\phase8.5\clients-probe.json `clients[2]`] | not run: not selected (LRC_AVG_PROBE_CLIENTS=none) | default / - | - | - | not run | not run | not run | not run | not run |
-| antigravity [docs\reports\phase8.5\clients-probe.json `clients[3]`] | not run: not selected (LRC_AVG_PROBE_CLIENTS=none) | default / - | - | - | not run | not run | not run | not run | not run |
-| codex [docs\reports\phase8.5\clients-probe.json `clients[4]`] | not run: not selected (LRC_AVG_PROBE_CLIENTS=none) | default / - | - | - | not run | not run | not run | not run | not run |
+| claude-code [docs\reports\phase8.5\clients-probe.json `clients[0]`] | not run: not selected (LRC_AVG_PROBE_CLIENTS=none) | - / - | - | - | not run | not run | not run | not run | not run |
+| opencode [docs\reports\phase8.5\clients-probe.json `clients[1]`] | not run: not selected (LRC_AVG_PROBE_CLIENTS=none) | - / - | - | - | not run | not run | not run | not run | not run |
+| hermes [docs\reports\phase8.5\clients-probe.json `clients[2]`] | not run: not selected (LRC_AVG_PROBE_CLIENTS=none) | - / - | - | - | not run | not run | not run | not run | not run |
+| antigravity [docs\reports\phase8.5\clients-probe.json `clients[3]`] | not run: not selected (LRC_AVG_PROBE_CLIENTS=none) | - / - | - | - | not run | not run | not run | not run | not run |
+| codex [docs\reports\phase8.5\clients-probe.json `clients[4]`] | not run: not selected (LRC_AVG_PROBE_CLIENTS=none) | - / - | - | - | not run | not run | not run | not run | not run |
 
 ## Observed (Jim)
 

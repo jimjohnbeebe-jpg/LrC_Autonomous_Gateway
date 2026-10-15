@@ -9,6 +9,7 @@ describe("displayName", () => {
     expect(displayName({ name: "opencode", version: "1" })).toBe("OpenCode");
     expect(displayName({ name: "codex-mcp-client", version: "1" })).toBe("Codex");
     expect(displayName({ name: "some-agent", version: "" })).toBe("some-agent");
+    for (const name of ["constructor", "toString", "__proto__", "hasOwnProperty"]) expect(displayName({ name, version: "1" })).toBe(name);
   });
 
   it("says 'the AI' for no client and for the MCP SDK's default name", () => {

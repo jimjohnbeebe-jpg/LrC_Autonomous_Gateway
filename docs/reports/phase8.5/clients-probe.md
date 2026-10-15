@@ -37,7 +37,7 @@ npm run clients:probe
 
 ## Pre-run findings (Claude Code)
 
-Written by `npm run clients:probe` on 2026-10-15T13:43:20.221Z; every value below is in `docs\reports\phase8.5\clients-probe.json` (the path in brackets).
+Written by `npm run clients:probe` on 2026-10-15T14:00:50.403Z; every value below is in `docs\reports\phase8.5\clients-probe.json` (the path in brackets).
 
 - Self-checks, no client [handle: docs\reports\phase8.5\clients-probe.json `self_checks`]: {"a_word":{"word":"PELICAN","noise":{"mean":118,"min":78},"printed":{"mean":212,"min":0},"ok":true},"b_engine":{"server":{"name":"lrc-avg","version":"0.34.0"},"tools":35,"preview_image":true,"ok":true}}
 - sharp draws the SVG box and text on the preview: the box's mean grey 212 against 118 on plain noise, its darkest pixel 0 (the text) [handle: docs\reports\phase8.5\clients-probe.json `self_checks.a_word`].
@@ -45,14 +45,28 @@ Written by `npm run clients:probe` on 2026-10-15T13:43:20.221Z; every value belo
 | Client | Status | Model (asked / reported) | clientInfo | progressToken | T1 tools | T2 identity | T3 word | T4 session | T5 slow export |
 |---|---|---|---|---|---|---|---|---|---|
 | claude-code [docs\reports\phase8.5\clients-probe.json `clients[0]`] | run | default / claude-opus-5-5 | claude-code 2.1.300 | true | YES | YES | YES | YES | YES |
-| opencode [docs\reports\phase8.5\clients-probe.json `clients[1]`] | run | openrouter/openai/gpt-6-luna / - | opencode 1.18.35 | true | YES | NO (client opencode, model none, progress_token [true]) | NO (word LANTERN) | NO (0 session logs, a step and an end: false) | NO (3 export lines, continued false, files none) |
+| opencode [docs\reports\phase8.5\clients-probe.json `clients[1]`] | run | openrouter/openai/gpt-6-luna / openai/gpt-6-luna | opencode 1.18.35 | true | YES | YES | YES | YES | YES |
 | hermes [docs\reports\phase8.5\clients-probe.json `clients[2]`] | run | mistralai/mistral-large-4-0 / mistralai/mistral-large-4-0 | mcp 0.1.0 | false | YES | YES | YES | YES | YES |
 | antigravity [docs\reports\phase8.5\clients-probe.json `clients[3]`] | not run: not installed | - / - | - | - | not run | not run | not run | not run | not run |
-| codex [docs\reports\phase8.5\clients-probe.json `clients[4]`] | run | default / - | - | - | NO (tools unknown (from none), schema error false, 0 tool-log lines) | NO (client none, model none, progress_token []) | NO (word VIOLIN) | NO (0 session logs, a step and an end: false) | NO (0 export lines, continued false, files none) |
+| codex [docs\reports\phase8.5\clients-probe.json `clients[4]`] | run | default / - | - | - | NO (tools unknown (from none), schema error false, 0 tool-log lines) | NO (client none, model none, progress_token []) | NO (word MEADOW) | NO (0 session logs, a step and an end: false) | NO (0 export lines, continued false, files none) |
+
+### Round 2: after the fix in `aad6b5e` (Claude Code, 2026-10-15)
+
+The table above is round 2: one run per client, `npm run build` then `npm run clients:probe` at commit `aad6b5e` (vitest: 7 of 7 tests passed in 363.9 s; a NO is a recorded result, not a test failure). Each client's full stdout and stderr: `%TEMP%\lrc-avg-probe-runs\<client>\stdout.txt` and `stderr.txt` (not committed).
+
+- **Claude Code 2.1.300**, default model `claude-opus-5-5`: T1-T5 YES, progressToken sent, 90.0 s [handle: clients-probe.json `clients[0]`: t1 "tools 35 (from init event)", t3 "word GLACIER", t5 "4 export lines, continued true"].
+- **OpenCode 1.18.35**, `openrouter/openai/gpt-6-luna` (reported `openai/gpt-6-luna`): T1-T5 YES, progressToken sent, 123.0 s [handle: clients-probe.json `clients[1]`: t2 "client opencode, model openai/gpt-6-luna", t3 "word PELICAN", t4 "1 session logs, a step and an end: true", t5 "4 export lines, continued true"]. Round 1's four NOs (T2-T5) are gone: the engine defect fixed in `aad6b5e` (optional arguments that do not apply are ignored) was their cause.
+- **Hermes Agent**, `mistralai/mistral-large-4-0` through OpenRouter: T1-T5 YES, no progressToken, 144.0 s [handle: clients-probe.json `clients[2]`: t3 "word MEADOW", t5 "4 export lines, continued true"]. Its clientInfo is still `mcp 0.1.0` (see round 1 and "Consequences"). Its config was registered by appending (`registration` "append") and restored in the probe's `finally` (`engine\tests\probe\clients.probe.ts:149,157`).
+- **Antigravity CLI**: not run, `agy` is not installed [handle: clients-probe.json `clients[3].reason` "not installed"; `which agy` found nothing, 2026-10-15].
+- **Codex CLI 0.154.0**, default model: T1-T5 NO, exit code 1 after 3.9 s, 0 engine tool-log lines. **Client limitation (theirs: the sign-in on this machine)**, unchanged from round 1: the turn failed before any tool call with "Your access token could not be refreshed. Please log out and sign in again." [handle: clients-probe.json `clients[4].excerpt`, `clients[4].exit_code` 1]. No engine defect: the engine was never called.
+
+Engine defects found in round 2: none.
 
 ### Round 1: what each NO is (Claude Code, 2026-10-15)
 
-One run per client, `npm run build` then `npm run clients:probe` (vitest: 7 of 7 tests passed in 370 s; a NO is a recorded result, not a test failure). Each client's full stdout and stderr: `%TEMP%\lrc-avg-probe-runs\<client>\stdout.txt` and `stderr.txt` (not committed).
+Round 1's table and JSON are in commit `aad6b5e` (`git show aad6b5e:docs/reports/phase8.5/clients-probe.json`); its `clients-probe.json` handles below point there.
+
+One run per client, `npm run build` then `npm run clients:probe` (vitest: 7 of 7 tests passed in 370 s; a NO is a recorded result, not a test failure). Each client's full stdout and stderr were in `%TEMP%\lrc-avg-probe-runs\<client>\stdout.txt` and `stderr.txt` (not committed; round 2 overwrote them).
 
 - **Claude Code 2.1.300**, default model `claude-opus-5-5` (self-reported, and `modelUsage` in its result event): T1-T5 YES; progressToken sent [handle: clients-probe.json `clients[0]`].
 - **Hermes Agent**, `mistralai/mistral-large-4-0` through OpenRouter: T1-T5 YES; no progressToken [handle: clients-probe.json `clients[2]`]. Its clientInfo is `mcp 0.1.0`, not `hermes-agent`: Hermes passes `ClientSession` no `client_info` [handle: `%LOCALAPPDATA%\hermes\hermes-agent\tools\mcp_tool_transport.py:169-179`, `_session_kwargs`], so the name is the Python MCP SDK's default [inference]. R1's display name then falls back to `clientInfo.name`, so the Deck shows "mcp" for Hermes [inference: from the R1 rule; not seen on a Deck]. That is not a NO; it is listed under "Consequences".
@@ -87,6 +101,6 @@ One run per client, `npm run build` then `npm run clients:probe` (vitest: 7 of 7
 - What Claude Desktop sends as `clientInfo` stays [unverified] here: Desktop is covered by `npm run clients:check` (R6), not by this probe.
 - Antigravity's command line and workspace config are [unverified] until a run with `agy` installed.
 - Round 1 (Claude Code, 2026-10-15): OpenCode's NOs are an engine defect. `lr_begin_session` (`session\begin.ts:47`) and `lr_export_photos` (`mcp\defs-files.ts:52,54`) refuse optional arguments that a model fills in, and `lr_get_preview` refuses a placeholder `session_id`. The fix is not part of this round.
-- Fixed after round 1 (Claude Code, 2026-10-15): an argument that does not apply is now ignored, not refused. `lr_begin_session` ignores `variant_count` in Converge mode and treats `intent_id` "none" as no intent; `lr_export_photos` sends the plugin only what applies to the format (`long_edge` wins over width and height; quality on jpeg only, bit_depth on png and tiff only; no resize for an original) and still refuses a lone width or height that would be used; `lr_get_preview` and `lr_get_metrics` ignore a `session_id` while no session is open, and `lr_get_preview` says so in `session_id_note` [handle: `engine\tests\mcp-filled-args.test.ts`, OpenCode's own arguments from round 1, 4 passed; all 4 failed on the code before the fix]. Whether OpenCode now reaches T2-T5 YES is [unverified] until a second probe run.
+- Fixed after round 1 (Claude Code, 2026-10-15): an argument that does not apply is now ignored, not refused. `lr_begin_session` ignores `variant_count` in Converge mode and treats `intent_id` "none" as no intent; `lr_export_photos` sends the plugin only what applies to the format (`long_edge` wins over width and height; quality on jpeg only, bit_depth on png and tiff only; no resize for an original) and still refuses a lone width or height that would be used; `lr_get_preview` and `lr_get_metrics` ignore a `session_id` while no session is open, and `lr_get_preview` says so in `session_id_note` [handle: `engine\tests\mcp-filled-args.test.ts`, OpenCode's own arguments from round 1, 4 passed; all 4 failed on the code before the fix]. Round 2 confirms it: OpenCode reached T1-T5 YES [handle: clients-probe.json `clients[1]`, `npm run clients:probe` at `aad6b5e`].
 - Hermes identifies itself as `mcp 0.1.0`. `engine\src\session\client.ts` maps that name, the Python MCP SDK's default, to "the AI", so the Deck says "the AI" for Hermes, not "mcp" [handle: `engine\tests\session-client.test.ts` "says 'the AI' for no client and for the MCP SDK's default name"]. Naming it "Hermes" would need a guess about the client, which D1 rules out [inference].
 - Codex: re-run once Jim signs Codex in again (`codex login`). Codex is an inferred client (D4), so that step is not required.

@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-15T13:43:20.221Z",
+  "date": "2026-10-15T14:00:50.403Z",
   "self_checks": {
     "a_word": {
       "word": "PELICAN",
@@ -36,8 +36,8 @@
       },
       "progress_token": true,
       "exit_code": 0,
-      "duration_ms": 89738,
-      "excerpt": "\"service_tier\":\"standard\",\"cache_creation\":{\"ephemeral_1h_input_tokens\":36462,\"ephemeral_5m_input_tokens\":0},\"inference_geo\":\"global\",\"iterations\":[{\"input_tokens\":2,\"output_tokens\":27,\"cache_read_input_tokens\":51830,\"cache_creation_input_tokens\":383,\"cache_creation\":{\"ephemeral_5m_input_tokens\":0,\"ephemeral_1h_input_tokens\":383},\"type\":\"message\"}],\"speed\":\"standard\",\"fallback_credit\":null},\"modelUsage\":{\"claude-opus-5-5\":{\"inputTokens\":16,\"outputTokens\":1214,\"cacheReadInputTokens\":342505,\"cacheCreationInputTokens\":36462,\"webSearchRequests\":0,\"costUSD\":0.38454099999999997,\"contextWindow\":1000000,\"maxOutputTokens\":128000,\"thinkingTokens\":230,\"canonicalModel\":\"claude-opus-5-5\",\"provider\":\"firstParty\",\"costBasis\":\"list\"}},\"permission_denials\":[],\"terminal_reason\":\"completed\",\"fast_mode_state\":\"off\",\"fast_mode_disabled_reason\":\"sdk_opt_in_required\",\"subagent_stats\":{\"spawned\":0,\"requested\":{\"background\":0,\"foreground\":0,\"unset\":0},\"started_in_background\":0,\"max_depth\":0,\"spawned_by_subagents\":0,\"completed\":0,\"failed\":0,\"killed\":{\"parent\":0,\"user\":0,\"system\":0},\"refused\":{\"depth_limit\":0,\"concurrency_limit\":0,\"budget\":0},\"by_type\":{}},\"safety_stops\":0,\"is_error\":false,\"num_turns\":8,\"subtype\":\"success\",\"api_error_status\":null,\"result\":\"TOOLS=35\\nWORD=ORCHID\\nEXPORT=done\",\"ttft_ms\":4108,\"type\":\"result\",\"duration_ms\":87972,\"uuid\":\"9ab5661c-42ca-47a1-868f-5a2a9229210c\",\"ttft_stream_ms\":1387,\"time_to_request_ms\":220,\"first_content_frame_ms\":1388,\"queued_turn_count\":0,\"result_index\":0}\n",
+      "duration_ms": 89953,
+      "excerpt": "uests\":0},\"service_tier\":\"standard\",\"cache_creation\":{\"ephemeral_1h_input_tokens\":37222,\"ephemeral_5m_input_tokens\":0},\"inference_geo\":\"global\",\"iterations\":[{\"input_tokens\":2,\"output_tokens\":27,\"cache_read_input_tokens\":54409,\"cache_creation_input_tokens\":380,\"cache_creation\":{\"ephemeral_5m_input_tokens\":0,\"ephemeral_1h_input_tokens\":380},\"type\":\"message\"}],\"speed\":\"standard\",\"fallback_credit\":null},\"modelUsage\":{\"claude-opus-5-5\":{\"inputTokens\":16,\"outputTokens\":1314,\"cacheReadInputTokens\":355035,\"cacheCreationInputTokens\":37222,\"webSearchRequests\":0,\"costUSD\":0.395127,\"contextWindow\":1000000,\"maxOutputTokens\":128000,\"thinkingTokens\":350,\"canonicalModel\":\"claude-opus-5-5\",\"provider\":\"firstParty\",\"costBasis\":\"list\"}},\"permission_denials\":[],\"terminal_reason\":\"completed\",\"fast_mode_state\":\"off\",\"fast_mode_disabled_reason\":\"sdk_opt_in_required\",\"subagent_stats\":{\"spawned\":0,\"requested\":{\"background\":0,\"foreground\":0,\"unset\":0},\"started_in_background\":0,\"max_depth\":0,\"spawned_by_subagents\":0,\"completed\":0,\"failed\":0,\"killed\":{\"parent\":0,\"user\":0,\"system\":0},\"refused\":{\"depth_limit\":0,\"concurrency_limit\":0,\"budget\":0},\"by_type\":{}},\"safety_stops\":0,\"is_error\":false,\"num_turns\":8,\"subtype\":\"success\",\"api_error_status\":null,\"result\":\"TOOLS=35\\nWORD=GLACIER\\nEXPORT=done\",\"ttft_ms\":4823,\"type\":\"result\",\"duration_ms\":88104,\"uuid\":\"0f6bf0b2-6f72-4bb4-be6b-e4ff80bfca26\",\"ttft_stream_ms\":1483,\"time_to_request_ms\":226,\"first_content_frame_ms\":1484,\"queued_turn_count\":0,\"result_index\":0}\n",
       "t1": {
         "yes": true,
         "detail": "tools 35 (from init event), schema error false, 10 tool-log lines"
@@ -48,7 +48,7 @@
       },
       "t3": {
         "yes": true,
-        "detail": "word ORCHID"
+        "detail": "word GLACIER"
       },
       "t4": {
         "yes": true,
@@ -65,34 +65,34 @@
       "status": "run",
       "registration": "per-run config",
       "model_requested": "openrouter/openai/gpt-6-luna",
-      "model_reported": null,
+      "model_reported": "openai/gpt-6-luna",
       "client_info": {
         "name": "opencode",
         "version": "1.18.35"
       },
       "progress_token": true,
       "exit_code": 0,
-      "duration_ms": 122190,
-      "excerpt": "mestamp\":1792072007223,\"sessionID\":\"ses_ec030ff2cffejpD4bw3VYGcXA7\",\"part\":{\"id\":\"prt_13fd0be34001ATOsR5ww2Qghgs\",\"reason\":\"tool-calls\",\"snapshot\":\"fe15cb882407fc2e391ec92257743c5e87150128\",\"messageID\":\"msg_13fd0a07d0011bS0DjSSzVKyoh\",\"sessionID\":\"ses_ec030ff2cffejpD4bw3VYGcXA7\",\"type\":\"step-finish\",\"tokens\":{\"total\":35043,\"input\":3,\"output\":91,\"reasoning\":23,\"cache\":{\"write\":194,\"read\":34732}},\"cost\":0.00042887}}\r\n{\"type\":\"step_start\",\"timestamp\":1792072012851,\"sessionID\":\"ses_ec030ff2cffejpD4bw3VYGcXA7\",\"part\":{\"id\":\"prt_13fd0d432001JiB36zJDJ05EM0\",\"messageID\":\"msg_13fd0bedf00127abH9Lm9tuUTU\",\"sessionID\":\"ses_ec030ff2cffejpD4bw3VYGcXA7\",\"snapshot\":\"fe15cb882407fc2e391ec92257743c5e87150128\",\"type\":\"step-start\"}}\r\n{\"type\":\"text\",\"timestamp\":1792072013568,\"sessionID\":\"ses_ec030ff2cffejpD4bw3VYGcXA7\",\"part\":{\"id\":\"prt_13fd0d43b001pctGJ03wewPBtB\",\"messageID\":\"msg_13fd0bedf00127abH9Lm9tuUTU\",\"sessionID\":\"ses_ec030ff2cffejpD4bw3VYGcXA7\",\"type\":\"text\",\"text\":\"TOOLS=35\\nWORD=unknown\\nEXPORT=failed\",\"time\":{\"start\":1792072012859,\"end\":1792072013566}}}\r\n{\"type\":\"step_finish\",\"timestamp\":1792072013758,\"sessionID\":\"ses_ec030ff2cffejpD4bw3VYGcXA7\",\"part\":{\"id\":\"prt_13fd0d7bb001aaRrZI6eR7mZO3\",\"reason\":\"stop\",\"snapshot\":\"fe15cb882407fc2e391ec92257743c5e87150128\",\"messageID\":\"msg_13fd0bedf00127abH9Lm9tuUTU\",\"sessionID\":\"ses_ec030ff2cffejpD4bw3VYGcXA7\",\"type\":\"step-finish\",\"tokens\":{\"total\":35193,\"input\":3,\"output\":17,\"reasoning\":62,\"cache\":{\"write\":185,\"read\":34926}},\"cost\":0.000412185}}\r\n",
+      "duration_ms": 122968,
+      "excerpt": "timestamp\":1792073059776,\"sessionID\":\"ses_ec020f81affeGKxgnxc0V9LjKD\",\"part\":{\"id\":\"prt_13fe0cdbd0012QE5SRNRTCH4Vf\",\"reason\":\"tool-calls\",\"snapshot\":\"aafe5f16e46574d5f108e79ae687ac336b4f3fd0\",\"messageID\":\"msg_13fe08044001S7XPfhpV82HxMM\",\"sessionID\":\"ses_ec020f81affeGKxgnxc0V9LjKD\",\"type\":\"step-finish\",\"tokens\":{\"total\":38521,\"input\":3,\"output\":92,\"reasoning\":13,\"cache\":{\"write\":285,\"read\":38128}},\"cost\":0.000469705}}\r\n{\"type\":\"step_start\",\"timestamp\":1792073064470,\"sessionID\":\"ses_ec020f81affeGKxgnxc0V9LjKD\",\"part\":{\"id\":\"prt_13fe0e013001yvhmYyo4dGKbgd\",\"messageID\":\"msg_13fe0ce79001iK7zTk4MzFQMOi\",\"sessionID\":\"ses_ec020f81affeGKxgnxc0V9LjKD\",\"snapshot\":\"aafe5f16e46574d5f108e79ae687ac336b4f3fd0\",\"type\":\"step-start\"}}\r\n{\"type\":\"text\",\"timestamp\":1792073064730,\"sessionID\":\"ses_ec020f81affeGKxgnxc0V9LjKD\",\"part\":{\"id\":\"prt_13fe0e01f001b7XGhEJRaw0b2K\",\"messageID\":\"msg_13fe0ce79001iK7zTk4MzFQMOi\",\"sessionID\":\"ses_ec020f81affeGKxgnxc0V9LjKD\",\"type\":\"text\",\"text\":\"TOOLS=35\\nWORD=PELICAN\\nEXPORT=done\",\"time\":{\"start\":1792073064479,\"end\":1792073064727}}}\r\n{\"type\":\"step_finish\",\"timestamp\":1792073064927,\"sessionID\":\"ses_ec020f81affeGKxgnxc0V9LjKD\",\"part\":{\"id\":\"prt_13fe0e1db001wSYX54aWrt5BLH\",\"reason\":\"stop\",\"snapshot\":\"aafe5f16e46574d5f108e79ae687ac336b4f3fd0\",\"messageID\":\"msg_13fe0ce79001iK7zTk4MzFQMOi\",\"sessionID\":\"ses_ec020f81affeGKxgnxc0V9LjKD\",\"type\":\"step-finish\",\"tokens\":{\"total\":38704,\"input\":3,\"output\":19,\"reasoning\":39,\"cache\":{\"write\":230,\"read\":38413}},\"cost\":0.00044218}}\r\n",
       "t1": {
         "yes": true,
-        "detail": "tools 35 (from model), schema error false, 19 tool-log lines"
+        "detail": "tools 35 (from model), schema error false, 11 tool-log lines"
       },
       "t2": {
-        "yes": false,
-        "detail": "client opencode, model none, progress_token [true]"
+        "yes": true,
+        "detail": "client opencode, model openai/gpt-6-luna, progress_token [true]"
       },
       "t3": {
-        "yes": false,
-        "detail": "word LANTERN"
+        "yes": true,
+        "detail": "word PELICAN"
       },
       "t4": {
-        "yes": false,
-        "detail": "0 session logs, a step and an end: false"
+        "yes": true,
+        "detail": "1 session logs, a step and an end: true"
       },
       "t5": {
-        "yes": false,
-        "detail": "3 export lines, continued false, files none"
+        "yes": true,
+        "detail": "4 export lines, continued true, files 20260907-_OZ80093.jpg"
       },
       "exe": "C:\\Users\\jimbe\\AppData\\Roaming\\npm\\node_modules\\opencode-ai\\bin\\opencode.exe"
     },
@@ -108,8 +108,8 @@
       },
       "progress_token": false,
       "exit_code": 0,
-      "duration_ms": 150225,
-      "excerpt": "TOOLS=35\r\nWORD=ORCHID\r\nEXPORT=done\r\n",
+      "duration_ms": 144016,
+      "excerpt": "TOOLS=35\r\nWORD=MEADOW\r\nEXPORT=done\r\n",
       "t1": {
         "yes": true,
         "detail": "tools 35 (from model), schema error false, 10 tool-log lines"
@@ -120,7 +120,7 @@
       },
       "t3": {
         "yes": true,
-        "detail": "word ORCHID"
+        "detail": "word MEADOW"
       },
       "t4": {
         "yes": true,
@@ -170,8 +170,8 @@
       "client_info": null,
       "progress_token": null,
       "exit_code": 1,
-      "duration_ms": 4939,
-      "excerpt": "{\"type\":\"thread.started\",\"thread_id\":\"01a13fd3-2ad7-7af1-8e8e-811abcbaacf2\"}\n{\"type\":\"turn.started\"}\n{\"type\":\"error\",\"message\":\"Your access token could not be refreshed. Please log out and sign in again.\"}\n{\"type\":\"turn.failed\",\"error\":{\"message\":\"Your access token could not be refreshed. Please log out and sign in again.\"}}\n",
+      "duration_ms": 3883,
+      "excerpt": "{\"type\":\"thread.started\",\"thread_id\":\"01a13fe3-194d-77b3-9acb-26b56332b168\"}\n{\"type\":\"turn.started\"}\n{\"type\":\"error\",\"message\":\"Your access token could not be refreshed. Please log out and sign in again.\"}\n{\"type\":\"turn.failed\",\"error\":{\"message\":\"Your access token could not be refreshed. Please log out and sign in again.\"}}\n",
       "t1": {
         "yes": false,
         "detail": "tools unknown (from none), schema error false, 0 tool-log lines"
@@ -182,7 +182,7 @@
       },
       "t3": {
         "yes": false,
-        "detail": "word VIOLIN"
+        "detail": "word MEADOW"
       },
       "t4": {
         "yes": false,

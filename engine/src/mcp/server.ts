@@ -13,11 +13,16 @@
 // so neither the error shape nor the log would cover it (Greptile, PR #17).
 // A call whose request carries a progressToken gets notifications/progress while it runs (withProgress;
 // GitHub issue #59, PR C step 2d: an AI mask's wait may take minutes).
+// Issue #155: each call runs in its context with the client's clientInfo from the handshake (R1), the
+// rejected ones included, and answers within the call deadline (deadline.ts, R3): a run still busy
+// then answers `pending`, and its progress notifications stop with that answer.
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { CallToolRequestSchema, ListToolsRequestSchema, type CallToolResult, type Tool } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { withCallContext } from "./call-context.js";
+import { clientIdentity } from "./client-info.js";
+import { createDeadline } from "./deadline.js";
 import { CATALOG_DEFS } from "./defs-catalog.js";
 import { METADATA_DEFS } from "./defs-metadata.js";
 import { FILE_DEFS } from "./defs-files.js";
@@ -89,9 +94,10 @@ async function withProgress<T>(token: string | number | undefined, notify: Notif
   }
 }
 
-export function createServer(tools: Tools, options: { progressMs?: number } = {}): Server {
+export function createServer(tools: Tools, options: { progressMs?: number; deadlineMs?: number } = {}): Server {
   const server = new Server({ name: "lrc-avg", version: ENGINE_VERSION }, { capabilities: { tools: {} } });
   const byName = new Map(DEFS.map((d) => [d.name, d]));
+  const deadline = createDeadline({ ...(options.deadlineMs !== undefined ? { ms: options.deadlineMs } : {}), log: (t, a, p) => tools.recordPending(t, a, p) });
 
   server.setRequestHandler(ListToolsRequestSchema, () => ({
     tools: DEFS.map((d) => ({
@@ -103,25 +109,28 @@ export function createServer(tools: Tools, options: { progressMs?: number } = {}
     })),
   }));
 
-  server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
+  server.setRequestHandler(CallToolRequestSchema, (request, extra) => {
     const { name } = request.params;
     const args: unknown = request.params.arguments ?? {};
-    const def = byName.get(name);
-    if (!def) {
-      const error = new ToolError("UNKNOWN_TOOL", `There is no tool named "${name}" (tools: ${[...byName.keys()].join(", ")}).`, false);
-      tools.recordRejected(name, args, error);
-      return errorResult(error);
-    }
-    const parsed = def.schema.safeParse(args);
-    if (!parsed.success) {
-      const issues = parsed.error.issues.map((i) => `${i.path.length ? i.path.join(".") : "arguments"}: ${i.message}`).join("; ");
-      const error = new ToolError("INVALID_ARGUMENTS", `Invalid arguments for ${name}: ${issues}`, false);
-      tools.recordRejected(name, args, error);
-      return errorResult(error);
-    }
     const progress = { token: request.params._meta?.progressToken, ms: options.progressMs ?? PROGRESS_MS };
-    const call = () => withProgress(progress.token, (n) => extra.sendNotification(n), () => tools.progressNote(), progress.ms, () => respond(() => def.run(tools, parsed.data as Record<string, unknown>)));
-    return withCallContext({ progressToken: progress.token !== undefined }, call);
+    const context = { progressToken: progress.token !== undefined, client: clientIdentity(server.getClientVersion()) };
+    return withCallContext(context, async () => {
+      const def = byName.get(name);
+      if (!def) {
+        const error = new ToolError("UNKNOWN_TOOL", `There is no tool named "${name}" (tools: ${[...byName.keys()].join(", ")}).`, false);
+        tools.recordRejected(name, args, error);
+        return errorResult(error);
+      }
+      const parsed = def.schema.safeParse(args);
+      if (!parsed.success) {
+        const issues = parsed.error.issues.map((i) => `${i.path.length ? i.path.join(".") : "arguments"}: ${i.message}`).join("; ");
+        const error = new ToolError("INVALID_ARGUMENTS", `Invalid arguments for ${name}: ${issues}`, false);
+        tools.recordRejected(name, args, error);
+        return errorResult(error);
+      }
+      const run = () => respond(() => def.run(tools, parsed.data as Record<string, unknown>));
+      return withProgress(progress.token, (n) => extra.sendNotification(n), () => tools.progressNote(), progress.ms, () => deadline(name, parsed.data, run));
+    });
   });
 
   return server;

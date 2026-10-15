@@ -23,6 +23,8 @@
 
 import type { Deck, HudPublisher } from "../hud/index.js";
 import type { ApproveArgs, BeginArgs, CreateMaskArgs, DeleteMaskArgs, EditMaskArgs, EndArgs, ListMasksArgs, ProbeArgs, RegionArgs, SelectArgs, SessionManager, StepArgs } from "../session/index.js";
+import type { ToolLogPendingRecord } from "../log/index.js";
+import { callLogFields } from "./call-context.js";
 import type { ToolError } from "./errors.js";
 import {
   getSelectedPhotos,
@@ -82,7 +84,12 @@ export class Tools {
 
   /** Log a call refused before it reached a tool (unknown tool, invalid arguments; server.ts). */
   recordRejected(tool: string, args: unknown, error: ToolError): void {
-    this.ctx.deps.log?.append({ ts: this.ctx.now().toISOString(), tool, ok: false, duration_ms: 0, args, error: error.body() });
+    this.ctx.deps.log?.append({ ts: this.ctx.now().toISOString(), tool, ok: false, duration_ms: 0, args, ...callLogFields(), error: error.body() });
+  }
+
+  /** Log a call deadline event (deadline.ts, issue #155): no `ok`, the run's own line follows when it ends. */
+  recordPending(tool: string, args: unknown, pending: ToolLogPendingRecord["pending"]): void {
+    this.ctx.deps.log?.append({ ts: this.ctx.now().toISOString(), tool, pending, args, ...callLogFields() });
   }
 
   // --- Context.

@@ -30,7 +30,7 @@ const START_STEPS = [
 const APPROVE_STEPS = [
   ...START_STEPS,
   '  4. After Claude\'s pass 1, the HUD\'s button reads "Approve pass 1". Do NOT click it yet.',
-  `     Wait until Claude's answer in the chat says pass 1 is waiting for your approval (about ${Math.round(APPROVAL_WAIT_MS / 60000)} minute).`,
+  `     Wait until Claude's answer in the chat says pass 1 is waiting for your approval (about ${APPROVAL_WAIT_MS / 1000} seconds).`,
   `  5. Then click "Approve pass 1" in the HUD, and type in the chat: ${GO_ON}`,
   "  6. For each later pass, click the HUD's Approve button when it lights up.",
   "  7. Wait until Claude says it has finished and has ended the session.",

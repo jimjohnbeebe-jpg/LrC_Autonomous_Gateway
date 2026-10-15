@@ -16,10 +16,11 @@
 //     again without a new click [inference: the approval is of the pass the user saw, which is
 //     still the photo's last].
 // [handle: tests\approve-pass.test.ts, tests\approve-pass-hud.test.ts, against the Lightroom sim; in
-// Lightroom [unverified] until PHASE5_PLAN row 7.] The HUD's notes say "edit" where Claude's results
-// say "session" (fix/hud-p1 copy deck).
+// Lightroom [unverified] until PHASE5_PLAN row 7.] The HUD's notes say "edit" where the AI's results
+// say "session" (fix/hud-p1 copy deck), and name the AI by its client (client.ts, issue #155 R2).
 
 import { ToolError } from "../mcp/errors.js";
+import { displayName, sentenceName } from "./client.js";
 import { abortError, saveLog } from "./io.js";
 import { variant } from "./targets.js";
 import type { ApprovalBy, ApprovalWait, ApprovalWake, ApproveArgs, Session, SessionContext, SessionOutput, Target } from "./types.js";
@@ -29,9 +30,12 @@ import type { ApprovalBy, ApprovalWait, ApprovalWake, ApproveArgs, Session, Sess
  * "Go with recommendations"]; the number itself is [inference]. It is under the 73.6 s tool call
  * Claude Desktop completed in Phase 4 [handle: vault ARCHITECTURE.md section 6 "Phase 4"]; the
  * step's own work comes on top, and Desktop's timeout is [unverified] (PHASE5_PLAN row 7 records
- * what held).
+ * what held). Issue #155 R3 took it from 60 s to 40 s, so a waiting lr_step answers AWAITING_APPROVAL
+ * (the continuation: call lr_step again) before the 50 s call deadline (mcp CALL_DEADLINE_MS) and under
+ * the 60 s call timeouts of the MCP SDK, OpenCode v1 and Codex [inference: vault ISSUE155_PLAN.md R3,
+ * from their docs; a decision for Jim].
  */
-export const APPROVAL_WAIT_MS = 60000;
+export const APPROVAL_WAIT_MS = 40_000;
 
 /** What a step went ahead on: the pass approved, by whom, and how long the step waited for it. */
 export type StepApproval = { pass: number; by: ApprovalBy; waited_ms: number };
@@ -61,7 +65,7 @@ export function pendingApproval(s: Session): { target: Target; pass: number } | 
 }
 
 /** The HUD's note while a pass waits for approval. */
-export const approvalNote = (pass: number): string => `Approve pass ${pass} to let Claude make the next pass, or tell Claude in chat.`;
+export const approvalNote = (s: Session, pass: number): string => `Approve pass ${pass} to let ${displayName(s.client)} make the next pass, or tell it in chat.`;
 
 /** Record the approval of photo `t`'s pass `pass` in the session and its log. */
 export function recordApproval(ctx: SessionContext, s: Session, t: Target, pass: number, by: ApprovalBy): void {
@@ -153,7 +157,7 @@ export async function awaitApproval(ctx: SessionContext, s: Session, t: Target, 
   if (already) return already;
   const started = performance.now();
   s.work = { target: t, pass: t.passes };
-  ctx.deps.hud?.stage(s, "awaiting_approval", { note: `Claude's pass ${t.passes + 1} waits for your Approve of pass ${t.passes}.` });
+  ctx.deps.hud?.stage(s, "awaiting_approval", { note: `${sentenceName(s.client)}'s pass ${t.passes + 1} waits for your Approve of pass ${t.passes}.` });
   const why = await waitForWake(s, ctx.deps.approvalWaitMs ?? APPROVAL_WAIT_MS);
   const waited = Math.round(performance.now() - started);
   if (s.abort) {
@@ -183,7 +187,7 @@ export function approvePass(ctx: SessionContext, s: Session, args: ApproveArgs, 
   }
   const r = approve(ctx, s, "claude");
   if (!r.ok) throw new ToolError("NOT_AWAITING_APPROVAL", r.reason, false, { session_id: s.id });
-  if (!r.already && !r.woke && !busy) ctx.deps.hud?.stage(s, "awaiting_claude", { note: `Pass ${r.pass} approved in chat: Claude goes on at its next call.` });
+  if (!r.already && !r.woke && !busy) ctx.deps.hud?.stage(s, "awaiting_claude", { note: `Pass ${r.pass} approved in chat: ${displayName(s.client)} goes on at its next call.` });
   const next = r.woke ? "The waiting lr_step goes ahead now." : "Call lr_step for the next pass.";
   return {
     json: { ok: true, session_id: s.id, approved_pass: r.pass, ...(r.already ? { already_approved: true } : {}), next },

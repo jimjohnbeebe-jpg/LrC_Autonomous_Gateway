@@ -1,11 +1,11 @@
 {
-  "date": "2026-10-15T13:25:49.201Z",
+  "date": "2026-10-15T13:43:20.221Z",
   "self_checks": {
     "a_word": {
       "word": "PELICAN",
       "noise": {
         "mean": 118,
-        "min": 75
+        "min": 78
       },
       "printed": {
         "mean": 212,
@@ -26,95 +26,116 @@
   "clients": [
     {
       "client": "claude-code",
-      "status": "not run",
-      "reason": "not selected (LRC_AVG_PROBE_CLIENTS=none)",
+      "status": "run",
+      "registration": "per-run config",
       "model_requested": null,
-      "model_reported": null,
-      "client_info": null,
-      "progress_token": null,
+      "model_reported": "claude-opus-5-5",
+      "client_info": {
+        "name": "claude-code",
+        "version": "2.1.300"
+      },
+      "progress_token": true,
+      "exit_code": 0,
+      "duration_ms": 89738,
+      "excerpt": "\"service_tier\":\"standard\",\"cache_creation\":{\"ephemeral_1h_input_tokens\":36462,\"ephemeral_5m_input_tokens\":0},\"inference_geo\":\"global\",\"iterations\":[{\"input_tokens\":2,\"output_tokens\":27,\"cache_read_input_tokens\":51830,\"cache_creation_input_tokens\":383,\"cache_creation\":{\"ephemeral_5m_input_tokens\":0,\"ephemeral_1h_input_tokens\":383},\"type\":\"message\"}],\"speed\":\"standard\",\"fallback_credit\":null},\"modelUsage\":{\"claude-opus-5-5\":{\"inputTokens\":16,\"outputTokens\":1214,\"cacheReadInputTokens\":342505,\"cacheCreationInputTokens\":36462,\"webSearchRequests\":0,\"costUSD\":0.38454099999999997,\"contextWindow\":1000000,\"maxOutputTokens\":128000,\"thinkingTokens\":230,\"canonicalModel\":\"claude-opus-5-5\",\"provider\":\"firstParty\",\"costBasis\":\"list\"}},\"permission_denials\":[],\"terminal_reason\":\"completed\",\"fast_mode_state\":\"off\",\"fast_mode_disabled_reason\":\"sdk_opt_in_required\",\"subagent_stats\":{\"spawned\":0,\"requested\":{\"background\":0,\"foreground\":0,\"unset\":0},\"started_in_background\":0,\"max_depth\":0,\"spawned_by_subagents\":0,\"completed\":0,\"failed\":0,\"killed\":{\"parent\":0,\"user\":0,\"system\":0},\"refused\":{\"depth_limit\":0,\"concurrency_limit\":0,\"budget\":0},\"by_type\":{}},\"safety_stops\":0,\"is_error\":false,\"num_turns\":8,\"subtype\":\"success\",\"api_error_status\":null,\"result\":\"TOOLS=35\\nWORD=ORCHID\\nEXPORT=done\",\"ttft_ms\":4108,\"type\":\"result\",\"duration_ms\":87972,\"uuid\":\"9ab5661c-42ca-47a1-868f-5a2a9229210c\",\"ttft_stream_ms\":1387,\"time_to_request_ms\":220,\"first_content_frame_ms\":1388,\"queued_turn_count\":0,\"result_index\":0}\n",
       "t1": {
-        "yes": null,
-        "detail": "not run"
+        "yes": true,
+        "detail": "tools 35 (from init event), schema error false, 10 tool-log lines"
       },
       "t2": {
-        "yes": null,
-        "detail": "not run"
+        "yes": true,
+        "detail": "client claude-code, model claude-opus-5-5, progress_token [true]"
       },
       "t3": {
-        "yes": null,
-        "detail": "not run"
+        "yes": true,
+        "detail": "word ORCHID"
       },
       "t4": {
-        "yes": null,
-        "detail": "not run"
+        "yes": true,
+        "detail": "1 session logs, a step and an end: true"
       },
       "t5": {
-        "yes": null,
-        "detail": "not run"
-      }
+        "yes": true,
+        "detail": "4 export lines, continued true, files 20260907-_OZ80093.jpg"
+      },
+      "exe": "C:\\Users\\jimbe\\.local\\bin\\claude.exe"
     },
     {
       "client": "opencode",
-      "status": "not run",
-      "reason": "not selected (LRC_AVG_PROBE_CLIENTS=none)",
-      "model_requested": null,
+      "status": "run",
+      "registration": "per-run config",
+      "model_requested": "openrouter/openai/gpt-6-luna",
       "model_reported": null,
-      "client_info": null,
-      "progress_token": null,
+      "client_info": {
+        "name": "opencode",
+        "version": "1.18.35"
+      },
+      "progress_token": true,
+      "exit_code": 0,
+      "duration_ms": 122190,
+      "excerpt": "mestamp\":1792072007223,\"sessionID\":\"ses_ec030ff2cffejpD4bw3VYGcXA7\",\"part\":{\"id\":\"prt_13fd0be34001ATOsR5ww2Qghgs\",\"reason\":\"tool-calls\",\"snapshot\":\"fe15cb882407fc2e391ec92257743c5e87150128\",\"messageID\":\"msg_13fd0a07d0011bS0DjSSzVKyoh\",\"sessionID\":\"ses_ec030ff2cffejpD4bw3VYGcXA7\",\"type\":\"step-finish\",\"tokens\":{\"total\":35043,\"input\":3,\"output\":91,\"reasoning\":23,\"cache\":{\"write\":194,\"read\":34732}},\"cost\":0.00042887}}\r\n{\"type\":\"step_start\",\"timestamp\":1792072012851,\"sessionID\":\"ses_ec030ff2cffejpD4bw3VYGcXA7\",\"part\":{\"id\":\"prt_13fd0d432001JiB36zJDJ05EM0\",\"messageID\":\"msg_13fd0bedf00127abH9Lm9tuUTU\",\"sessionID\":\"ses_ec030ff2cffejpD4bw3VYGcXA7\",\"snapshot\":\"fe15cb882407fc2e391ec92257743c5e87150128\",\"type\":\"step-start\"}}\r\n{\"type\":\"text\",\"timestamp\":1792072013568,\"sessionID\":\"ses_ec030ff2cffejpD4bw3VYGcXA7\",\"part\":{\"id\":\"prt_13fd0d43b001pctGJ03wewPBtB\",\"messageID\":\"msg_13fd0bedf00127abH9Lm9tuUTU\",\"sessionID\":\"ses_ec030ff2cffejpD4bw3VYGcXA7\",\"type\":\"text\",\"text\":\"TOOLS=35\\nWORD=unknown\\nEXPORT=failed\",\"time\":{\"start\":1792072012859,\"end\":1792072013566}}}\r\n{\"type\":\"step_finish\",\"timestamp\":1792072013758,\"sessionID\":\"ses_ec030ff2cffejpD4bw3VYGcXA7\",\"part\":{\"id\":\"prt_13fd0d7bb001aaRrZI6eR7mZO3\",\"reason\":\"stop\",\"snapshot\":\"fe15cb882407fc2e391ec92257743c5e87150128\",\"messageID\":\"msg_13fd0bedf00127abH9Lm9tuUTU\",\"sessionID\":\"ses_ec030ff2cffejpD4bw3VYGcXA7\",\"type\":\"step-finish\",\"tokens\":{\"total\":35193,\"input\":3,\"output\":17,\"reasoning\":62,\"cache\":{\"write\":185,\"read\":34926}},\"cost\":0.000412185}}\r\n",
       "t1": {
-        "yes": null,
-        "detail": "not run"
+        "yes": true,
+        "detail": "tools 35 (from model), schema error false, 19 tool-log lines"
       },
       "t2": {
-        "yes": null,
-        "detail": "not run"
+        "yes": false,
+        "detail": "client opencode, model none, progress_token [true]"
       },
       "t3": {
-        "yes": null,
-        "detail": "not run"
+        "yes": false,
+        "detail": "word LANTERN"
       },
       "t4": {
-        "yes": null,
-        "detail": "not run"
+        "yes": false,
+        "detail": "0 session logs, a step and an end: false"
       },
       "t5": {
-        "yes": null,
-        "detail": "not run"
-      }
+        "yes": false,
+        "detail": "3 export lines, continued false, files none"
+      },
+      "exe": "C:\\Users\\jimbe\\AppData\\Roaming\\npm\\node_modules\\opencode-ai\\bin\\opencode.exe"
     },
     {
       "client": "hermes",
-      "status": "not run",
-      "reason": "not selected (LRC_AVG_PROBE_CLIENTS=none)",
-      "model_requested": null,
-      "model_reported": null,
-      "client_info": null,
-      "progress_token": null,
+      "status": "run",
+      "registration": "append",
+      "model_requested": "mistralai/mistral-large-4-0",
+      "model_reported": "mistralai/mistral-large-4-0",
+      "client_info": {
+        "name": "mcp",
+        "version": "0.1.0"
+      },
+      "progress_token": false,
+      "exit_code": 0,
+      "duration_ms": 150225,
+      "excerpt": "TOOLS=35\r\nWORD=ORCHID\r\nEXPORT=done\r\n",
       "t1": {
-        "yes": null,
-        "detail": "not run"
+        "yes": true,
+        "detail": "tools 35 (from model), schema error false, 10 tool-log lines"
       },
       "t2": {
-        "yes": null,
-        "detail": "not run"
+        "yes": true,
+        "detail": "client mcp, model mistralai/mistral-large-4-0, progress_token [false]"
       },
       "t3": {
-        "yes": null,
-        "detail": "not run"
+        "yes": true,
+        "detail": "word ORCHID"
       },
       "t4": {
-        "yes": null,
-        "detail": "not run"
+        "yes": true,
+        "detail": "1 session logs, a step and an end: true"
       },
       "t5": {
-        "yes": null,
-        "detail": "not run"
-      }
+        "yes": true,
+        "detail": "4 export lines, continued true, files 20260907-_OZ80093.jpg"
+      },
+      "exe": "C:\\Users\\jimbe\\AppData\\Local\\hermes\\bin\\hermes.cmd"
     },
     {
       "client": "antigravity",
       "status": "not run",
-      "reason": "not selected (LRC_AVG_PROBE_CLIENTS=none)",
+      "reason": "not installed",
       "model_requested": null,
       "model_reported": null,
       "client_info": null,
@@ -142,32 +163,36 @@
     },
     {
       "client": "codex",
-      "status": "not run",
-      "reason": "not selected (LRC_AVG_PROBE_CLIENTS=none)",
+      "status": "run",
+      "registration": "per-run config",
       "model_requested": null,
       "model_reported": null,
       "client_info": null,
       "progress_token": null,
+      "exit_code": 1,
+      "duration_ms": 4939,
+      "excerpt": "{\"type\":\"thread.started\",\"thread_id\":\"01a13fd3-2ad7-7af1-8e8e-811abcbaacf2\"}\n{\"type\":\"turn.started\"}\n{\"type\":\"error\",\"message\":\"Your access token could not be refreshed. Please log out and sign in again.\"}\n{\"type\":\"turn.failed\",\"error\":{\"message\":\"Your access token could not be refreshed. Please log out and sign in again.\"}}\n",
       "t1": {
-        "yes": null,
-        "detail": "not run"
+        "yes": false,
+        "detail": "tools unknown (from none), schema error false, 0 tool-log lines"
       },
       "t2": {
-        "yes": null,
-        "detail": "not run"
+        "yes": false,
+        "detail": "client none, model none, progress_token []"
       },
       "t3": {
-        "yes": null,
-        "detail": "not run"
+        "yes": false,
+        "detail": "word VIOLIN"
       },
       "t4": {
-        "yes": null,
-        "detail": "not run"
+        "yes": false,
+        "detail": "0 session logs, a step and an end: false"
       },
       "t5": {
-        "yes": null,
-        "detail": "not run"
-      }
+        "yes": false,
+        "detail": "0 export lines, continued false, files none"
+      },
+      "exe": "C:\\Users\\jimbe\\AppData\\Roaming\\npm\\node_modules\\@openai\\codex\\node_modules\\@openai\\codex-win32-x64\\vendor\\x86_64-pc-windows-msvc\\bin\\codex.exe"
     }
   ]
 }

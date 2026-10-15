@@ -119,6 +119,9 @@ export async function openSession(ctx: SessionContext, args: BeginArgs): Promise
     notices: [],
     approval: null,
     approvalWait: null,
+    // Who asked (issue #155 R1): logged and shown, never used for decisions.
+    ...(args.client ? { client: args.client } : {}),
+    ...(args.model ? { model: args.model } : {}),
   };
   s.log = newLog(ctx, s, variantCount, args.notes ?? null);
   s.log.settings = settingsEntry(settings, page);
@@ -174,6 +177,8 @@ function newLog(ctx: SessionContext, s: Session, variantCount: number | null, no
     session_id: s.id,
     short_id: s.short,
     engine_version: ctx.deps.engineVersion,
+    ...(s.client ? { client: s.client } : {}),
+    ...(s.model ? { model: s.model } : {}),
     ...(hello ? { lightroom: { lrc_version: hello.lrc_version, sdk_declared: hello.sdk_declared, notices: lightroomNotices(hello.lrc_version) } } : {}),
     started: s.startedAt.toISOString(),
     ended: null,

@@ -32,6 +32,7 @@ export type {
   UserSource,
   VariantId,
 } from "./types.js";
+export { KNOWN_CLIENTS, UNNAMED, cleanText, displayModel, displayName, sentenceName } from "./client.js";
 export { awaitingPick } from "./pick.js";
 export { MASKS_PLUGIN } from "./masks.js";
 export { AI_PART_PLUGIN } from "./mask-parts.js";

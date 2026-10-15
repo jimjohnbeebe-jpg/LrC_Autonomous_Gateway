@@ -38,6 +38,28 @@
       ],
       "additionalProperties": false
     },
+    "client": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "model": {
+      "type": "string"
+    },
     "started": {
       "type": "string"
     },

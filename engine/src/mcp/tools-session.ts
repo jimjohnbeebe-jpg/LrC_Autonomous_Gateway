@@ -4,13 +4,15 @@
 // lr_create_mask, lr_edit_mask and lr_delete_mask (engine 0.16.0, GitHub issue #59).
 
 import { endedAlike, endedError, type ApproveArgs, type BeginArgs, type CreateMaskArgs, type DeleteMaskArgs, type EditMaskArgs, type EndArgs, type ListMasksArgs, type ProbeArgs, type RegionArgs, type SelectArgs, type StepArgs } from "../session/index.js";
+import { callClient } from "./call-context.js";
 import { pageBridgeUse, readPageFolders, run, sessionTools, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
 export async function beginSession(ctx: ToolContext, args: BeginArgs): Promise<ToolOutput> {
   return run(ctx, "lr_begin_session", args, async () => {
     const sessions = sessionTools(ctx);
     await ctx.deps.ensureBridge();
-    return sessions.begin(args);
+    // The client that sent the call (clientInfo, issue #155 R1); run() has logged the args as sent.
+    return sessions.begin({ ...args, client: callClient() });
   });
 }
 

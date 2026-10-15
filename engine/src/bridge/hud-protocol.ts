@@ -122,6 +122,9 @@ export const hudUpdatePayloadSchema = z.strictObject({
    * came; sent when the engine itself ended the session [stated: Jim, 2026-10-04, "Show, then close"].
    */
   close_after: int(1, 60).optional(),
+  /** Issue #155 R2: the AI's display name and model (session\client.ts), shown from plugin 0.23.0, which checks them. */
+  ai_name: text.optional(),
+  ai_model: text.optional(),
 });
 export type HudUpdatePayload = z.infer<typeof hudUpdatePayloadSchema>;
 

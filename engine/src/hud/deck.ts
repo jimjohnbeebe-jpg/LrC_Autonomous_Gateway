@@ -20,13 +20,13 @@
 // [handle: tests\hud-channel.test.ts, tests\hud-channel-events.test.ts, tests\hud-thumbs.test.ts,
 // tests\hud-selection-poll.test.ts, tests\hud-show-copy.test.ts]
 
-import { HUD_END_STAGES, type BridgeClient, type HudStage } from "../bridge/index.js";
+import { HUD_END_STAGES, pluginVersionAtLeast, type BridgeClient, type HudStage } from "../bridge/index.js";
 import type { Session } from "../session/index.js";
 import { HudChannel } from "./channel.js";
-import { hudChannelStateSchema, type DeckMessage, type HudChannelState } from "./channel-protocol.js";
+import { AI_NAME_DECK, hudChannelStateSchema, type DeckMessage, type HudChannelState } from "./channel-protocol.js";
 import { deckCopies, deckRows, fit, lightroomState } from "./extras.js";
 import { hudState } from "./payload.js";
-import { END_CLOSE_S } from "./publisher.js";
+import { END_CLOSE_S, aiFields } from "./publisher.js";
 import { SelectionPoll, type Selected } from "./selection.js";
 import { ThumbCache } from "./thumbs.js";
 
@@ -178,8 +178,10 @@ export class Deck {
     const base = this.base;
     if (!base || !this.channel.connected()) return;
     const answer = this.answer;
+    const { ai_name: _name, ai_model: _model, ...rest } = base;
     const body = {
-      ...base,
+      ...rest,
+      ...aiFields(base, pluginVersionAtLeast(this.channel.clientVersion(), AI_NAME_DECK)),
       lightroom: lightroomState(this.opts.client),
       ...this.selection(base),
       ...(answer ? { answered_click_id: answer.clickId, note: answer.note } : {}),

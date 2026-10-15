@@ -24,6 +24,7 @@
 import { HUD_END_STAGES, hudUpdatePayloadSchema, pluginVersionAtLeast, type BridgeClient, type HudStage, type HudUpdatePayload } from "../bridge/index.js";
 import { toToolError } from "../mcp/errors.js";
 import type { HudSink, Session } from "../session/index.js";
+import { fit } from "./extras.js";
 import { hudState, type HudState } from "./payload.js";
 
 /**
@@ -34,6 +35,18 @@ import { hudState, type HudState } from "./payload.js";
  */
 export const HUD_PLUGIN = "0.13.0";
 const CLOSE_AFTER_PLUGIN = "0.15.0";
+/** `ai_name` and `ai_model` (issue #155 R2) go only to plugin 0.23.0 or later, which knows them. */
+export const AI_NAME_PLUGIN = "0.23.0";
+
+/** A state's ai_name and ai_model, cut to the text limit, when the receiver knows them (`known`); else none. */
+export function aiFields(state: Pick<HudState, "ai_name" | "ai_model">, known: boolean): Pick<HudState, "ai_name" | "ai_model"> {
+  if (!known) return {};
+  return {
+    ...(state.ai_name !== undefined ? { ai_name: fit(String(state.ai_name)) } : {}),
+    ...(state.ai_model !== undefined ? { ai_model: fit(String(state.ai_model)) } : {}),
+  };
+}
+
 /** Seconds an ended HUD stays up before it closes itself (any end: Jim, Claude or the engine). */
 export const END_CLOSE_S = 10;
 /**
@@ -216,11 +229,13 @@ export class HudPublisher implements HudSink {
   /** The next update of the channel, or null when there is nothing new or it fails the contract. */
   private payload(ch: Channel, state: HudState): HudUpdatePayload | null {
     const answer = this.answer?.sessionId === ch.sessionId ? this.answer : null;
-    const { close_after: closeAfter, ...rest } = state;
-    const closes = closeAfter !== undefined && pluginVersionAtLeast(this.client.hello()?.plugin_version, CLOSE_AFTER_PLUGIN);
+    const { close_after: closeAfter, ai_name: _name, ai_model: _model, ...rest } = state;
+    const version = this.client.hello()?.plugin_version;
+    const closes = closeAfter !== undefined && pluginVersionAtLeast(version, CLOSE_AFTER_PLUGIN);
     const body = {
       ...rest,
       ...(closes ? { close_after: closeAfter } : {}),
+      ...aiFields(state, pluginVersionAtLeast(version, AI_NAME_PLUGIN)),
       ...(ch.open ? { open: true } : {}),
       ...(answer ? { answered_click_id: answer.clickId, note: answer.note } : {}),
     };

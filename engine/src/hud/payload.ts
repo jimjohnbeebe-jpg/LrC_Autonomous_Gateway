@@ -12,7 +12,7 @@
 import { HUD_END_STAGES, HUD_LIMITS, type HudStage, type HudUpdatePayload } from "../bridge/index.js";
 import type { PassEntry } from "../log/index.js";
 import { lightroomLabel, type CanonicalValue } from "../params/index.js";
-import { pendingApproval, type Limits, type Session, type Target, type VariantId } from "../session/index.js";
+import { UNNAMED, displayModel, displayName, pendingApproval, type Limits, type Session, type Target, type VariantId } from "../session/index.js";
 
 /** An update without what the publisher adds: seq, open and answered_click_id. */
 export type HudState = Omit<HudUpdatePayload, "seq" | "open" | "answered_click_id">;
@@ -45,6 +45,7 @@ export function hudState(s: Session, stage: HudStage, note?: string, closeAfter?
     ...(waiting ? { approve_pass: clamp(waiting.pass, 1, HUD_LIMITS.pass) } : {}),
     ...(last ? { deltas: (last.mask ? maskDeltas(last.mask, last.guardrail_actions.some((a) => a.kind === "reverted")) : last.changes.map(delta)).slice(0, HUD_LIMITS.rows), guardrail: hudGuardrail(last, s.limits) } : {}),
     ...(text ? { note: text } : {}),
+    ...ai(s),
     settings: settings(s),
     snapshot: s.snapshot.name,
     // The snapshot lr_begin_session took on the master, which a revert applies (session\end.ts).
@@ -52,6 +53,17 @@ export function hudState(s: Session, stage: HudStage, note?: string, closeAfter?
     // A session the engine ended: the HUD closes itself this many seconds after taking the update (D15, plugin 0.15.0).
     ...(closeAfter ? { close_after: closeAfter } : {}),
   };
+}
+
+/**
+ * Who edits (issue #155 R1, R2): the client's display name unless it is "the AI", and the model the AI
+ * gave lr_begin_session. Not cut to the text limit here, as extras.ts (fit) imports this file: each
+ * sender cuts them (publisher.ts aiFields).
+ */
+function ai(s: Session): Pick<HudState, "ai_name" | "ai_model"> {
+  const name = displayName(s.client);
+  const model = displayModel(s.model);
+  return { ...(s.client && name !== UNNAMED ? { ai_name: name } : {}), ...(model !== null ? { ai_model: model } : {}) };
 }
 
 /** The last pass of photo `t` (pass 0 included), or null before its pass 0. */

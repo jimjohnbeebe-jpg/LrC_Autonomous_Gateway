@@ -25,6 +25,19 @@ export type ToolLogRecord = {
   [field: string]: unknown;
 };
 
+/**
+ * A call still running at its deadline (issue #155 R3): its result waits for a later identical call.
+ * No `ok` and no `duration_ms` on purpose: every reader of finished calls filters on `ok`
+ * (hud\probe\check\chats.ts toolRecord, the devtools phase2-8 checks, phase5-chat-eval), so a pending
+ * line must not look like a finished call.
+ */
+export type ToolLogPendingRecord = {
+  ts: string;
+  tool: string;
+  pending: "detached" | "attached" | "delivered" | "expired";
+  [field: string]: unknown;
+};
+
 export class ToolLog {
   private readonly dir: string;
   private readonly now: () => Date;
@@ -45,7 +58,7 @@ export class ToolLog {
   }
 
   /** Append one record. A failed write is reported once on stderr and never fails the tool call. */
-  append(record: ToolLogRecord): void {
+  append(record: ToolLogRecord | ToolLogPendingRecord): void {
     try {
       mkdirSync(this.dir, { recursive: true });
       appendFileSync(this.file(), JSON.stringify(record) + "\n");

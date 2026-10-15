@@ -107,6 +107,8 @@ export const engineMessageSchema = z.discriminatedUnion("type", [
 ]);
 /** The first Deck that knows `reveal` (an older one logs it as a bad message). */
 export const REVEAL_HUD = "0.3.0";
+/** The first Deck that knows the state's `ai_name` and `ai_model` (issue #155 R2); an older one refuses them [inference: the state schema is a strictObject]. */
+export const AI_NAME_DECK = "0.3.6";
 export type EngineMessage = z.infer<typeof engineMessageSchema>;
 
 export const deckMessageSchema = z.discriminatedUnion("type", [

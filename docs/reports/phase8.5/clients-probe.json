@@ -1,0 +1,173 @@
+{
+  "date": "2026-10-15T13:25:49.201Z",
+  "self_checks": {
+    "a_word": {
+      "word": "PELICAN",
+      "noise": {
+        "mean": 118,
+        "min": 75
+      },
+      "printed": {
+        "mean": 212,
+        "min": 0
+      },
+      "ok": true
+    },
+    "b_engine": {
+      "server": {
+        "name": "lrc-avg",
+        "version": "0.34.0"
+      },
+      "tools": 35,
+      "preview_image": true,
+      "ok": true
+    }
+  },
+  "clients": [
+    {
+      "client": "claude-code",
+      "status": "not run",
+      "reason": "not selected (LRC_AVG_PROBE_CLIENTS=none)",
+      "model_requested": null,
+      "model_reported": null,
+      "client_info": null,
+      "progress_token": null,
+      "t1": {
+        "yes": null,
+        "detail": "not run"
+      },
+      "t2": {
+        "yes": null,
+        "detail": "not run"
+      },
+      "t3": {
+        "yes": null,
+        "detail": "not run"
+      },
+      "t4": {
+        "yes": null,
+        "detail": "not run"
+      },
+      "t5": {
+        "yes": null,
+        "detail": "not run"
+      }
+    },
+    {
+      "client": "opencode",
+      "status": "not run",
+      "reason": "not selected (LRC_AVG_PROBE_CLIENTS=none)",
+      "model_requested": null,
+      "model_reported": null,
+      "client_info": null,
+      "progress_token": null,
+      "t1": {
+        "yes": null,
+        "detail": "not run"
+      },
+      "t2": {
+        "yes": null,
+        "detail": "not run"
+      },
+      "t3": {
+        "yes": null,
+        "detail": "not run"
+      },
+      "t4": {
+        "yes": null,
+        "detail": "not run"
+      },
+      "t5": {
+        "yes": null,
+        "detail": "not run"
+      }
+    },
+    {
+      "client": "hermes",
+      "status": "not run",
+      "reason": "not selected (LRC_AVG_PROBE_CLIENTS=none)",
+      "model_requested": null,
+      "model_reported": null,
+      "client_info": null,
+      "progress_token": null,
+      "t1": {
+        "yes": null,
+        "detail": "not run"
+      },
+      "t2": {
+        "yes": null,
+        "detail": "not run"
+      },
+      "t3": {
+        "yes": null,
+        "detail": "not run"
+      },
+      "t4": {
+        "yes": null,
+        "detail": "not run"
+      },
+      "t5": {
+        "yes": null,
+        "detail": "not run"
+      }
+    },
+    {
+      "client": "antigravity",
+      "status": "not run",
+      "reason": "not selected (LRC_AVG_PROBE_CLIENTS=none)",
+      "model_requested": null,
+      "model_reported": null,
+      "client_info": null,
+      "progress_token": null,
+      "t1": {
+        "yes": null,
+        "detail": "not run"
+      },
+      "t2": {
+        "yes": null,
+        "detail": "not run"
+      },
+      "t3": {
+        "yes": null,
+        "detail": "not run"
+      },
+      "t4": {
+        "yes": null,
+        "detail": "not run"
+      },
+      "t5": {
+        "yes": null,
+        "detail": "not run"
+      }
+    },
+    {
+      "client": "codex",
+      "status": "not run",
+      "reason": "not selected (LRC_AVG_PROBE_CLIENTS=none)",
+      "model_requested": null,
+      "model_reported": null,
+      "client_info": null,
+      "progress_token": null,
+      "t1": {
+        "yes": null,
+        "detail": "not run"
+      },
+      "t2": {
+        "yes": null,
+        "detail": "not run"
+      },
+      "t3": {
+        "yes": null,
+        "detail": "not run"
+      },
+      "t4": {
+        "yes": null,
+        "detail": "not run"
+      },
+      "t5": {
+        "yes": null,
+        "detail": "not run"
+      }
+    }
+  ]
+}

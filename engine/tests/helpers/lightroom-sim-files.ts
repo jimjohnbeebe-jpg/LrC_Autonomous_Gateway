@@ -16,6 +16,8 @@ const EXT: Record<string, string> = { jpeg: ".jpg", png: ".png", tiff: ".tif", o
 export class SimFiles {
   /** Where export_photo writes; the test's Tools gets the same folder as exportDir. */
   exportDir = "";
+  /** export_photo waits this long before it answers (the client probe's slow export, T5). */
+  delayMs = 0;
   /** Catalog photos by path (import_photo). */
   readonly byPath = new Map<string, string>();
   /** The export_photo payloads, in order. */
@@ -69,7 +71,8 @@ export class SimFiles {
     return ok({ collection_id: c.local_id, name: c.name, before_in: before, ...(this.readBackError ? { after_error: this.readBackError } : { after_in: members() }), not_found: uuids.filter((u) => !found.includes(u)) });
   }
 
-  private export(p: Record<string, unknown>): FakeReply {
+  private async export(p: Record<string, unknown>): Promise<FakeReply> {
+    if (this.delayMs > 0) await new Promise((resolve) => setTimeout(resolve, this.delayMs));
     const photo = this.library.find(String(p["photo_uuid"]));
     if (!photo) return fail("unknown_photo", `no photo in the catalog has uuid ${String(p["photo_uuid"])}`);
     const missing = this.missing(photo.uuid);

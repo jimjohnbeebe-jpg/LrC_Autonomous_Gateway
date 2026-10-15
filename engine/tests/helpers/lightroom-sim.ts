@@ -25,6 +25,7 @@ import type { FakePlugin, FakeReply } from "./fake-plugin.js";
 import { createVirtualCopies, describePhoto, findPhoto, getSelection, selectPhoto, type CopyFault, type SimCopy } from "./lightroom-sim-catalog.js";
 import { SimHud } from "./lightroom-sim-hud.js";
 import { SimFiles } from "./lightroom-sim-files.js";
+import { overlayWord } from "./lightroom-sim-word.js";
 import { SimLibrary } from "./lightroom-sim-library.js";
 import { SimMasks, installMasks } from "./lightroom-sim-masks.js";
 import { isRendered, renderedDumps, writeRendered } from "./lightroom-sim-rendered.js";
@@ -120,6 +121,8 @@ export class LightroomSim {
   exports = 0;
   /** "grey": noise around a level set by exposure (Phase 2); "tonal": the gradient of tonalLevel(). */
   renderModel: "grey" | "tonal" = "grey";
+  /** A word printed on the grey preview (lightroom-sim-word.ts; the client probe's T3); null: none. */
+  previewWord: string | null = null;
   /** Answer export_preview with this error instead (to exercise failures mid-session). */
   exportError: string | null = null;
   /** The selected photo's file name in get_context (the Phase 3 check asks for each fixture by name). */
@@ -312,15 +315,8 @@ export class LightroomSim {
     }
     // Grey noise around the level: its mean follows exposure, and, unlike a flat image, its JPEG
     // size follows the quality, as a photo's does.
-    await sharp({
-      create: {
-        width,
-        height,
-        channels: 3,
-        background: { r: level, g: level, b: level },
-        noise: { type: "gaussian", mean: level, sigma: 12 },
-      },
-    })
+    const noise = sharp({ create: { width, height, channels: 3, background: { r: level, g: level, b: level }, noise: { type: "gaussian", mean: level, sigma: 12 } } });
+    await overlayWord(noise, this.previewWord, width, height)
       .jpeg({ quality: Number(p["quality"]) })
       .toFile(file);
     return done;

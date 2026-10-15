@@ -1,6 +1,7 @@
 // A stand-in for the Lightroom plugin's two listeners (plugin\LrC-AVG.lrplugin\Bridge.lua), for
 // bridge contract tests: it reads command lines on one port and writes response/event lines on the
-// other, like the real plugin. Ports are chosen by the OS (port 0).
+// other, like the real plugin. Ports are chosen by the OS (port 0), unless start() is given fixed
+// ones (the client probe, engine\tests\probe\harness.ts).
 
 import net from "node:net";
 
@@ -10,9 +11,10 @@ export type FakeReply =
   | "silent";
 export type FakeHandler = (payload: Record<string, unknown>, id: string) => FakeReply | Promise<FakeReply>;
 
-function listen(server: net.Server): Promise<number> {
-  return new Promise((resolve) => {
-    server.listen(0, "127.0.0.1", () => resolve((server.address() as net.AddressInfo).port));
+function listen(server: net.Server, port = 0): Promise<number> {
+  return new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(port, "127.0.0.1", () => resolve((server.address() as net.AddressInfo).port));
   });
 }
 
@@ -72,10 +74,10 @@ export class FakePlugin {
     });
   }
 
-  static async start(): Promise<FakePlugin> {
+  static async start(ports?: { command: number; event: number }): Promise<FakePlugin> {
     const plugin = new FakePlugin();
-    plugin.commandPort = await listen(plugin.commandServer);
-    plugin.eventPort = await listen(plugin.eventServer);
+    plugin.commandPort = await listen(plugin.commandServer, ports?.command);
+    plugin.eventPort = await listen(plugin.eventServer, ports?.event);
     return plugin;
   }
 

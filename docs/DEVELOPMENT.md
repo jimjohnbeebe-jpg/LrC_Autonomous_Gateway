@@ -71,6 +71,8 @@ writes the two release assets to `release\`: `lrc-avg-<version>.tgz` (the engine
 | `npm run preset:pin` | Regenerates `engine\src\params\preset-format.lrc15.json` from those references (a test fails when it is stale) |
 | `npm run goldens` | After a Phase 3 check: golden JPEGs to `tests\golden\` (gitignored) and `golden.json` (committed) |
 | `npm run phase1:check` … `npm run phase5:check`, `npm run wb:check`, `npm run offline:check`, `npm run phase8:check` | The acceptance checks against Lightroom (and Claude Desktop from Phase 2 on). Each one's steps and results are in its report under `docs\reports\` |
+| `npm run clients:probe` | Issue #155 R5: each installed AI client CLI (Claude Code, OpenCode, Hermes, Antigravity, Codex) started headless against the built engine and the Lightroom simulator, no Lightroom; run by Claude Code (`docs\reports\phase8.5\clients-probe.md`) |
+| `npm run clients:check` | Issue #155 R6: builds the Deck, then every installed client CLI (not Codex) edits the selected photo in Lightroom, T2-T7 with Jim's y/n, plus one Claude Desktop chat; resumes after a stop (`-- --new` starts over) (`docs\reports\phase8.5\clients.md`) |
 | `node spikes\S1\measure.ts` | Spike scripts run directly (Node type stripping) |
 | `node engine\dist\mcp\main.js` | The stdio MCP server, as Claude Desktop starts it |
 

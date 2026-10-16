@@ -135,11 +135,13 @@ When an edit starts, the AI can name its own model; the HUD and the Deck then sh
 | Client | Status |
 |---|---|
 | Claude Desktop | Tested: `lrc-avg-setup.cmd` (Install, section 2) |
-| Claude Code | [unverified] until `npm run clients:check` |
-| OpenCode | [unverified] until `npm run clients:check` |
-| Hermes Agent | [unverified] until `npm run clients:check` |
-| Antigravity CLI | [unverified] until `npm run clients:check` |
+| Claude Code | Tested 2026-10-16 (`docs\reports\phase8.5\clients.md`) |
+| OpenCode | Tested 2026-10-16 (`docs\reports\phase8.5\clients.md`) |
+| Hermes Agent | Tested 2026-10-16 (`docs\reports\phase8.5\clients.md`) |
+| Antigravity CLI | Tested 2026-10-16 (`docs\reports\phase8.5\clients.md`) |
 | Codex CLI | Inferred, not tested |
+
+**Add the entry before the first edit.** Without it the client has no LrC-AVG tools, and the AI may go looking for the engine on disk instead: on 2026-10-16 Antigravity ran the engine's files directly and OpenCode wrote its own MCP client for them, both from the source folder on this PC [handle: OpenCode session `ses_ebb672f73ffeZ0SEbaG7NU9115`, `opencode session export`; Antigravity transcript `%USERPROFILE%\.gemini\antigravity-cli\brain\e8187652-…\.system_generated\logs\transcript.jsonl`]. If the AI starts reading folders or writing scripts when you ask for an edit, stop it and check the entry.
 
 **Claude Code**, for every project of this Windows account:
 
@@ -153,11 +155,18 @@ Or, for one project, a `.mcp.json` in its folder:
 { "mcpServers": { "lrc-avg": { "command": "<node>", "args": ["<main.js>"] } } }
 ```
 
-**OpenCode**, in `opencode.json`:
+**OpenCode** 2.x, in `%USERPROFILE%\.config\opencode\opencode.jsonc` [handle: `opencode debug config` lists that file, OpenCode 2.0.30, 2026-10-16]. OpenCode allows most tools without asking by default [handle: https://opencode.ai/docs/permissions/, read 2026-10-16], so the entry below also makes it ask before anything except LrC-AVG's own tools:
 
 ```json
-{ "mcp": { "lrc-avg": { "type": "local", "command": ["<node>", "<main.js>"] } } }
+{
+  "permission": { "*": "ask", "lrc-avg_*": "allow" },
+  "mcp": { "servers": { "lrc-avg": { "type": "local", "command": ["<node>", "<main.js>"] } } }
+}
 ```
+
+`opencode mcp list` should then show `✓ lrc-avg  connected` [handle: run from `%USERPROFILE%\Documents`, 2026-10-16]. Whether `lrc-avg_*` matches the names OpenCode gives LrC-AVG's tools is [unverified]: if OpenCode asks before every `lr_` call, it does not. OpenCode 1.x took `mcp.lrc-avg` without `servers`; 2.x still reads that form but marks it deprecated [handle: https://opencode.ai/config.json, read 2026-10-16].
+
+OpenCode 2 runs its sessions in a background service, so an edit can go on after you close the OpenCode window [stated: Jim, 2026-10-16]. To stop it, run `opencode service stop`. `opencode --standalone` runs a private server instead of the background service [handle: `opencode --help`, 2.0.30]; whether that ends the edit when the window closes is [unverified].
 
 **Hermes Agent**, in `%LOCALAPPDATA%\hermes\config.yaml`:
 

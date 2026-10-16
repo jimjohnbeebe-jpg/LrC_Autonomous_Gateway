@@ -1,0 +1,1092 @@
+{
+  "check": "clients",
+  "started_at": "2026-10-16T02:24:13.073Z",
+  "resumed": false,
+  "state_started_at": "2026-10-16T02:24:13.073Z",
+  "restored_configs": [],
+  "errors": [],
+  "hello": {
+    "protocol": 1,
+    "plugin_version": "0.23.0",
+    "lrc_version": "15.6",
+    "sdk_declared": 13,
+    "ports": {
+      "receive": 8765,
+      "send": 8766
+    },
+    "process_started_at": "2026-10-16T02:22:04Z"
+  },
+  "deck": {
+    "installer": "D:\\Developer\\LrC_Autonomous_Gateway\\hud\\src-tauri\\target\\release\\bundle\\nsis\\LrC-AVG HUD_0.3.6_x64-setup.exe",
+    "exe": "%USERPROFILE%\\AppData\\Local\\LrC-AVG HUD\\LrC-AVG HUD.exe",
+    "version": "0.3.6",
+    "ok": true,
+    "error": null
+  },
+  "bridge_back": [
+    {
+      "chat": "the Claude Desktop chat",
+      "idle_release": true,
+      "waited_ms": 30774,
+      "ok": true
+    }
+  ],
+  "state": {
+    "schema": "lrc-avg/clients-check-state/v1",
+    "started_at": "2026-10-16T02:24:13.073Z",
+    "runs": [
+      "2026-10-16T02-24-13-068Z"
+    ],
+    "log_dir": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\logs_2026-10-16T02-24-13-068Z",
+    "photo": {
+      "uuid": "544AD529-E847-47E9-A2B0-A92107C84775",
+      "filename": "20260906-OZ80005-edited.dng"
+    },
+    "clients": {
+      "claude-code": {
+        "not_run": null,
+        "T2": {
+          "at": "2026-10-16T02:25:24.396Z",
+          "ok": true,
+          "summary": {
+            "exit": 0,
+            "timed_out": false,
+            "error": null,
+            "judged": {
+              "begun": true,
+              "session_id": "5dbec430-1a2d-4b19-a515-cd69310fdfe3",
+              "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\logs_2026-10-16T02-24-13-068Z\\20261015-5dbec4.json",
+              "client_logged": "claude-code",
+              "passes": 1,
+              "ended": "accept",
+              "pending_lines": 0,
+              "invalid": 0,
+              "calls": 7
+            },
+            "facts": {
+              "client": {
+                "name": "claude-code",
+                "title": "Claude Code",
+                "version": "2.1.301"
+              },
+              "model": "claude-opus-5-5",
+              "deck_line": "Claude Code · claude-opus-5-5",
+              "outcome": "accept",
+              "ended_by": "claude",
+              "approvals_by_hud": 0,
+              "passes": 2
+            },
+            "answers": {
+              "T3": "y",
+              "T4": "y",
+              "T2": "y"
+            },
+            "put_back_differing": []
+          }
+        },
+        "T3": {
+          "at": "2026-10-16T02:25:24.396Z",
+          "ok": true,
+          "summary": {
+            "exit": 0,
+            "timed_out": false,
+            "error": null,
+            "judged": {
+              "begun": true,
+              "session_id": "5dbec430-1a2d-4b19-a515-cd69310fdfe3",
+              "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\logs_2026-10-16T02-24-13-068Z\\20261015-5dbec4.json",
+              "client_logged": "claude-code",
+              "passes": 1,
+              "ended": "accept",
+              "pending_lines": 0,
+              "invalid": 0,
+              "calls": 7
+            },
+            "facts": {
+              "client": {
+                "name": "claude-code",
+                "title": "Claude Code",
+                "version": "2.1.301"
+              },
+              "model": "claude-opus-5-5",
+              "deck_line": "Claude Code · claude-opus-5-5",
+              "outcome": "accept",
+              "ended_by": "claude",
+              "approvals_by_hud": 0,
+              "passes": 2
+            },
+            "answers": {
+              "T3": "y",
+              "T4": "y",
+              "T2": "y"
+            },
+            "put_back_differing": []
+          }
+        },
+        "T4": {
+          "at": "2026-10-16T02:25:24.396Z",
+          "ok": true,
+          "summary": {
+            "exit": 0,
+            "timed_out": false,
+            "error": null,
+            "judged": {
+              "begun": true,
+              "session_id": "5dbec430-1a2d-4b19-a515-cd69310fdfe3",
+              "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\logs_2026-10-16T02-24-13-068Z\\20261015-5dbec4.json",
+              "client_logged": "claude-code",
+              "passes": 1,
+              "ended": "accept",
+              "pending_lines": 0,
+              "invalid": 0,
+              "calls": 7
+            },
+            "facts": {
+              "client": {
+                "name": "claude-code",
+                "title": "Claude Code",
+                "version": "2.1.301"
+              },
+              "model": "claude-opus-5-5",
+              "deck_line": "Claude Code · claude-opus-5-5",
+              "outcome": "accept",
+              "ended_by": "claude",
+              "approvals_by_hud": 0,
+              "passes": 2
+            },
+            "answers": {
+              "T3": "y",
+              "T4": "y",
+              "T2": "y"
+            },
+            "put_back_differing": []
+          }
+        },
+        "T6": {
+          "at": "2026-10-16T02:30:23.948Z",
+          "ok": true,
+          "summary": {
+            "exit": 0,
+            "timed_out": false,
+            "error": null,
+            "judged": {
+              "begun": true,
+              "session_id": "101d5ae7-35bc-470a-80d8-b54dc178114c",
+              "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\logs_2026-10-16T02-24-13-068Z\\20261015-101d5a.json",
+              "client_logged": "claude-code",
+              "passes": 2,
+              "ended": "accept",
+              "pending_lines": 0,
+              "invalid": 0,
+              "calls": 9
+            },
+            "facts": {
+              "client": {
+                "name": "claude-code",
+                "title": "Claude Code",
+                "version": "2.1.301"
+              },
+              "model": "claude-opus-5-5",
+              "deck_line": "Claude Code · claude-opus-5-5",
+              "outcome": "accept",
+              "ended_by": "claude",
+              "approvals_by_hud": 1,
+              "passes": 3
+            },
+            "put_back_differing": []
+          }
+        },
+        "T7": {
+          "at": "2026-10-16T02:37:30.308Z",
+          "ok": true,
+          "summary": {
+            "first": {
+              "since": 1792118091418,
+              "exit": 1,
+              "timed_out": false,
+              "error": null,
+              "stdout": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\claude-code_t7-ended_2026-10-16T02-24-13-068Z_stdout.txt",
+              "judged": {
+                "begun": true,
+                "session_id": "75bc89c9-4184-4ea9-9f09-8c8d5920a83f",
+                "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\logs_2026-10-16T02-24-13-068Z\\20261015-75bc89.json",
+                "client_logged": "claude-code",
+                "passes": 1,
+                "ended": null,
+                "pending_lines": 0,
+                "invalid": 0,
+                "calls": 5
+              },
+              "facts": {
+                "client": {
+                  "name": "claude-code",
+                  "title": "Claude Code",
+                  "version": "2.1.301"
+                },
+                "model": "claude-opus-5-5",
+                "deck_line": "Claude Code · claude-opus-5-5",
+                "outcome": null,
+                "ended_by": null,
+                "approvals_by_hud": 0,
+                "passes": 2
+              },
+              "back": true
+            },
+            "second": {
+              "since": 1792118118274,
+              "exit": 0,
+              "timed_out": false,
+              "error": null,
+              "stdout": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\claude-code_t7-recover_2026-10-16T02-24-13-068Z_stdout.txt",
+              "judged": {
+                "begun": true,
+                "session_id": "75bc89c9-4184-4ea9-9f09-8c8d5920a83f",
+                "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\logs_2026-10-16T02-24-13-068Z\\20261015-75bc89.json",
+                "client_logged": "claude-code",
+                "passes": 0,
+                "ended": "revert",
+                "pending_lines": 0,
+                "invalid": 0,
+                "calls": 6
+              },
+              "facts": {
+                "client": {
+                  "name": "claude-code",
+                  "title": "Claude Code",
+                  "version": "2.1.301"
+                },
+                "model": "claude-opus-5-5",
+                "deck_line": "Claude Code · claude-opus-5-5",
+                "outcome": "revert",
+                "ended_by": "recovery",
+                "approvals_by_hud": 0,
+                "passes": 2
+              },
+              "back": true
+            },
+            "killed": [
+              40292
+            ],
+            "first_session": {
+              "client": {
+                "name": "claude-code",
+                "title": "Claude Code",
+                "version": "2.1.301"
+              },
+              "model": "claude-opus-5-5",
+              "deck_line": "Claude Code · claude-opus-5-5",
+              "outcome": "revert",
+              "ended_by": "recovery",
+              "approvals_by_hud": 0,
+              "passes": 2
+            },
+            "differing_after_revert": [],
+            "answer": "y",
+            "put_back_differing": []
+          }
+        }
+      },
+      "opencode": {
+        "not_run": null,
+        "T2": {
+          "at": "2026-10-16T02:26:12.467Z",
+          "ok": true,
+          "summary": {
+            "exit": 0,
+            "timed_out": false,
+            "error": null,
+            "judged": {
+              "begun": true,
+              "session_id": "3ebb7e34-9eed-46a3-815d-d57961b26eb7",
+              "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\logs_2026-10-16T02-24-13-068Z\\20261015-3ebb7e.json",
+              "client_logged": "opencode",
+              "passes": 1,
+              "ended": "accept",
+              "pending_lines": 0,
+              "invalid": 0,
+              "calls": 7
+            },
+            "facts": {
+              "client": {
+                "name": "opencode",
+                "version": "1.18.35"
+              },
+              "model": "openrouter/openai/gpt-6-luna",
+              "deck_line": "OpenCode · openrouter/openai/gpt-6-luna",
+              "outcome": "accept",
+              "ended_by": "claude",
+              "approvals_by_hud": 0,
+              "passes": 2
+            },
+            "answers": {
+              "T3": "y",
+              "T4": "y",
+              "T2": "y"
+            },
+            "put_back_differing": []
+          }
+        },
+        "T3": {
+          "at": "2026-10-16T02:26:12.467Z",
+          "ok": true,
+          "summary": {
+            "exit": 0,
+            "timed_out": false,
+            "error": null,
+            "judged": {
+              "begun": true,
+              "session_id": "3ebb7e34-9eed-46a3-815d-d57961b26eb7",
+              "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\logs_2026-10-16T02-24-13-068Z\\20261015-3ebb7e.json",
+              "client_logged": "opencode",
+              "passes": 1,
+              "ended": "accept",
+              "pending_lines": 0,
+              "invalid": 0,
+              "calls": 7
+            },
+            "facts": {
+              "client": {
+                "name": "opencode",
+                "version": "1.18.35"
+              },
+              "model": "openrouter/openai/gpt-6-luna",
+              "deck_line": "OpenCode · openrouter/openai/gpt-6-luna",
+              "outcome": "accept",
+              "ended_by": "claude",
+              "approvals_by_hud": 0,
+              "passes": 2
+            },
+            "answers": {
+              "T3": "y",
+              "T4": "y",
+              "T2": "y"
+            },
+            "put_back_differing": []
+          }
+        },
+        "T4": {
+          "at": "2026-10-16T02:26:12.467Z",
+          "ok": true,
+          "summary": {
+            "exit": 0,
+            "timed_out": false,
+            "error": null,
+            "judged": {
+              "begun": true,
+              "session_id": "3ebb7e34-9eed-46a3-815d-d57961b26eb7",
+              "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\logs_2026-10-16T02-24-13-068Z\\20261015-3ebb7e.json",
+              "client_logged": "opencode",
+              "passes": 1,
+              "ended": "accept",
+              "pending_lines": 0,
+              "invalid": 0,
+              "calls": 7
+            },
+            "facts": {
+              "client": {
+                "name": "opencode",
+                "version": "1.18.35"
+              },
+              "model": "openrouter/openai/gpt-6-luna",
+              "deck_line": "OpenCode · openrouter/openai/gpt-6-luna",
+              "outcome": "accept",
+              "ended_by": "claude",
+              "approvals_by_hud": 0,
+              "passes": 2
+            },
+            "answers": {
+              "T3": "y",
+              "T4": "y",
+              "T2": "y"
+            },
+            "put_back_differing": []
+          }
+        },
+        "T6": {
+          "at": "2026-10-16T02:31:36.458Z",
+          "ok": true,
+          "summary": {
+            "exit": 0,
+            "timed_out": false,
+            "error": null,
+            "judged": {
+              "begun": true,
+              "session_id": "046a35f4-d0d5-44ca-914c-7d19a74478e5",
+              "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\logs_2026-10-16T02-24-13-068Z\\20261015-046a35.json",
+              "client_logged": "opencode",
+              "passes": 2,
+              "ended": "accept",
+              "pending_lines": 0,
+              "invalid": 0,
+              "calls": 11
+            },
+            "facts": {
+              "client": {
+                "name": "opencode",
+                "version": "1.18.35"
+              },
+              "model": "openrouter/openai/gpt-6-luna",
+              "deck_line": "OpenCode · openrouter/openai/gpt-6-luna",
+              "outcome": "accept",
+              "ended_by": "claude",
+              "approvals_by_hud": 1,
+              "passes": 3
+            },
+            "put_back_differing": []
+          }
+        },
+        "T7": {
+          "at": "2026-10-16T02:38:51.491Z",
+          "ok": true,
+          "summary": {
+            "first": {
+              "since": 1792118251982,
+              "exit": 1,
+              "timed_out": false,
+              "error": null,
+              "stdout": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\opencode_t7-ended_2026-10-16T02-24-13-068Z_stdout.txt",
+              "judged": {
+                "begun": true,
+                "session_id": "905722be-b94a-4d5d-be07-7b5ceb9fbedc",
+                "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\logs_2026-10-16T02-24-13-068Z\\20261015-905722.json",
+                "client_logged": "opencode",
+                "passes": 1,
+                "ended": null,
+                "pending_lines": 0,
+                "invalid": 0,
+                "calls": 8
+              },
+              "facts": {
+                "client": {
+                  "name": "opencode",
+                  "version": "1.18.35"
+                },
+                "model": "openrouter/openai/gpt-6-luna",
+                "deck_line": "OpenCode · openrouter/openai/gpt-6-luna",
+                "outcome": null,
+                "ended_by": null,
+                "approvals_by_hud": 0,
+                "passes": 2
+              },
+              "back": true
+            },
+            "second": {
+              "since": 1792118306146,
+              "exit": 0,
+              "timed_out": false,
+              "error": null,
+              "stdout": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\opencode_t7-recover_2026-10-16T02-24-13-068Z_stdout.txt",
+              "judged": {
+                "begun": true,
+                "session_id": "905722be-b94a-4d5d-be07-7b5ceb9fbedc",
+                "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\logs_2026-10-16T02-24-13-068Z\\20261015-905722.json",
+                "client_logged": "opencode",
+                "passes": 0,
+                "ended": "revert",
+                "pending_lines": 0,
+                "invalid": 0,
+                "calls": 6
+              },
+              "facts": {
+                "client": {
+                  "name": "opencode",
+                  "version": "1.18.35"
+                },
+                "model": "openrouter/openai/gpt-6-luna",
+                "deck_line": "OpenCode · openrouter/openai/gpt-6-luna",
+                "outcome": "revert",
+                "ended_by": "recovery",
+                "approvals_by_hud": 0,
+                "passes": 2
+              },
+              "back": true
+            },
+            "killed": [
+              37248
+            ],
+            "first_session": {
+              "client": {
+                "name": "opencode",
+                "version": "1.18.35"
+              },
+              "model": "openrouter/openai/gpt-6-luna",
+              "deck_line": "OpenCode · openrouter/openai/gpt-6-luna",
+              "outcome": "revert",
+              "ended_by": "recovery",
+              "approvals_by_hud": 0,
+              "passes": 2
+            },
+            "differing_after_revert": [],
+            "answer": "y",
+            "put_back_differing": []
+          }
+        }
+      },
+      "hermes": {
+        "not_run": null,
+        "T2": {
+          "at": "2026-10-16T02:28:00.631Z",
+          "ok": true,
+          "summary": {
+            "exit": 0,
+            "timed_out": false,
+            "error": null,
+            "judged": {
+              "begun": true,
+              "session_id": "f0ef844f-6e2e-4488-9894-4375fbb4cd53",
+              "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\logs_2026-10-16T02-24-13-068Z\\20261015-f0ef84.json",
+              "client_logged": "mcp",
+              "passes": 1,
+              "ended": "accept",
+              "pending_lines": 0,
+              "invalid": 0,
+              "calls": 9
+            },
+            "facts": {
+              "client": {
+                "name": "mcp",
+                "version": "0.1.0"
+              },
+              "model": "mistralai/mistral-large-4-0",
+              "deck_line": "the AI · mistralai/mistral-large-4-0",
+              "outcome": "accept",
+              "ended_by": "claude",
+              "approvals_by_hud": 0,
+              "passes": 2
+            },
+            "answers": {
+              "T3": "y",
+              "T4": "y",
+              "T2": "y"
+            },
+            "put_back_differing": []
+          }
+        },
+        "T3": {
+          "at": "2026-10-16T02:28:00.631Z",
+          "ok": true,
+          "summary": {
+            "exit": 0,
+            "timed_out": false,
+            "error": null,
+            "judged": {
+              "begun": true,
+              "session_id": "f0ef844f-6e2e-4488-9894-4375fbb4cd53",
+              "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\logs_2026-10-16T02-24-13-068Z\\20261015-f0ef84.json",
+              "client_logged": "mcp",
+              "passes": 1,
+              "ended": "accept",
+              "pending_lines": 0,
+              "invalid": 0,
+              "calls": 9
+            },
+            "facts": {
+              "client": {
+                "name": "mcp",
+                "version": "0.1.0"
+              },
+              "model": "mistralai/mistral-large-4-0",
+              "deck_line": "the AI · mistralai/mistral-large-4-0",
+              "outcome": "accept",
+              "ended_by": "claude",
+              "approvals_by_hud": 0,
+              "passes": 2
+            },
+            "answers": {
+              "T3": "y",
+              "T4": "y",
+              "T2": "y"
+            },
+            "put_back_differing": []
+          }
+        },
+        "T4": {
+          "at": "2026-10-16T02:28:00.631Z",
+          "ok": true,
+          "summary": {
+            "exit": 0,
+            "timed_out": false,
+            "error": null,
+            "judged": {
+              "begun": true,
+              "session_id": "f0ef844f-6e2e-4488-9894-4375fbb4cd53",
+              "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\logs_2026-10-16T02-24-13-068Z\\20261015-f0ef84.json",
+              "client_logged": "mcp",
+              "passes": 1,
+              "ended": "accept",
+              "pending_lines": 0,
+              "invalid": 0,
+              "calls": 9
+            },
+            "facts": {
+              "client": {
+                "name": "mcp",
+                "version": "0.1.0"
+              },
+              "model": "mistralai/mistral-large-4-0",
+              "deck_line": "the AI · mistralai/mistral-large-4-0",
+              "outcome": "accept",
+              "ended_by": "claude",
+              "approvals_by_hud": 0,
+              "passes": 2
+            },
+            "answers": {
+              "T3": "y",
+              "T4": "y",
+              "T2": "y"
+            },
+            "put_back_differing": []
+          }
+        },
+        "T6": {
+          "at": "2026-10-16T02:33:22.195Z",
+          "ok": true,
+          "summary": {
+            "exit": 0,
+            "timed_out": false,
+            "error": null,
+            "judged": {
+              "begun": true,
+              "session_id": "7b33558d-8960-4480-b309-86f37cdec15c",
+              "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\logs_2026-10-16T02-24-13-068Z\\20261015-7b3355.json",
+              "client_logged": "mcp",
+              "passes": 2,
+              "ended": "accept",
+              "pending_lines": 0,
+              "invalid": 0,
+              "calls": 11
+            },
+            "facts": {
+              "client": {
+                "name": "mcp",
+                "version": "0.1.0"
+              },
+              "model": "mistralai/mistral-large-4-0",
+              "deck_line": "the AI · mistralai/mistral-large-4-0",
+              "outcome": "accept",
+              "ended_by": "claude",
+              "approvals_by_hud": 1,
+              "passes": 3
+            },
+            "put_back_differing": []
+          }
+        },
+        "T7": {
+          "at": "2026-10-16T02:40:24.647Z",
+          "ok": true,
+          "summary": {
+            "first": {
+              "since": 1792118333164,
+              "exit": 1,
+              "timed_out": false,
+              "error": null,
+              "stdout": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\hermes_t7-ended_2026-10-16T02-24-13-068Z_stdout.txt",
+              "judged": {
+                "begun": true,
+                "session_id": "dedab3d0-0778-48c2-ae5a-1262a3cf27be",
+                "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\logs_2026-10-16T02-24-13-068Z\\20261015-dedab3.json",
+                "client_logged": "mcp",
+                "passes": 1,
+                "ended": null,
+                "pending_lines": 0,
+                "invalid": 0,
+                "calls": 6
+              },
+              "facts": {
+                "client": {
+                  "name": "mcp",
+                  "version": "0.1.0"
+                },
+                "model": "mistralai/mistral-large-4-0",
+                "deck_line": "the AI · mistralai/mistral-large-4-0",
+                "outcome": null,
+                "ended_by": null,
+                "approvals_by_hud": 0,
+                "passes": 2
+              },
+              "back": true
+            },
+            "second": {
+              "since": 1792118391243,
+              "exit": 0,
+              "timed_out": false,
+              "error": null,
+              "stdout": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\hermes_t7-recover_2026-10-16T02-24-13-068Z_stdout.txt",
+              "judged": {
+                "begun": true,
+                "session_id": "dedab3d0-0778-48c2-ae5a-1262a3cf27be",
+                "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\logs_2026-10-16T02-24-13-068Z\\20261015-dedab3.json",
+                "client_logged": "mcp",
+                "passes": 0,
+                "ended": "revert",
+                "pending_lines": 0,
+                "invalid": 0,
+                "calls": 6
+              },
+              "facts": {
+                "client": {
+                  "name": "mcp",
+                  "version": "0.1.0"
+                },
+                "model": "mistralai/mistral-large-4-0",
+                "deck_line": "the AI · mistralai/mistral-large-4-0",
+                "outcome": "revert",
+                "ended_by": "recovery",
+                "approvals_by_hud": 0,
+                "passes": 2
+              },
+              "back": true
+            },
+            "killed": [
+              276
+            ],
+            "first_session": {
+              "client": {
+                "name": "mcp",
+                "version": "0.1.0"
+              },
+              "model": "mistralai/mistral-large-4-0",
+              "deck_line": "the AI · mistralai/mistral-large-4-0",
+              "outcome": "revert",
+              "ended_by": "recovery",
+              "approvals_by_hud": 0,
+              "passes": 2
+            },
+            "differing_after_revert": [],
+            "answer": "y",
+            "put_back_differing": []
+          }
+        }
+      },
+      "antigravity": {
+        "not_run": null,
+        "T2": {
+          "at": "2026-10-16T02:29:27.988Z",
+          "ok": true,
+          "summary": {
+            "exit": 0,
+            "timed_out": false,
+            "error": null,
+            "judged": {
+              "begun": true,
+              "session_id": "41f4a452-65f8-4817-91aa-6d10af371ef5",
+              "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\logs_2026-10-16T02-24-13-068Z\\20261015-41f4a4.json",
+              "client_logged": "antigravity-client",
+              "passes": 1,
+              "ended": "accept",
+              "pending_lines": 0,
+              "invalid": 0,
+              "calls": 7
+            },
+            "facts": {
+              "client": {
+                "name": "antigravity-client",
+                "version": "v1.0.0"
+              },
+              "model": "Gemini 3.8 Flash",
+              "deck_line": "antigravity-client · Gemini 3.8 Flash",
+              "outcome": "accept",
+              "ended_by": "claude",
+              "approvals_by_hud": 0,
+              "passes": 2
+            },
+            "answers": {
+              "T3": "y",
+              "T4": "y",
+              "T2": "y"
+            },
+            "put_back_differing": []
+          }
+        },
+        "T3": {
+          "at": "2026-10-16T02:29:27.988Z",
+          "ok": true,
+          "summary": {
+            "exit": 0,
+            "timed_out": false,
+            "error": null,
+            "judged": {
+              "begun": true,
+              "session_id": "41f4a452-65f8-4817-91aa-6d10af371ef5",
+              "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\logs_2026-10-16T02-24-13-068Z\\20261015-41f4a4.json",
+              "client_logged": "antigravity-client",
+              "passes": 1,
+              "ended": "accept",
+              "pending_lines": 0,
+              "invalid": 0,
+              "calls": 7
+            },
+            "facts": {
+              "client": {
+                "name": "antigravity-client",
+                "version": "v1.0.0"
+              },
+              "model": "Gemini 3.8 Flash",
+              "deck_line": "antigravity-client · Gemini 3.8 Flash",
+              "outcome": "accept",
+              "ended_by": "claude",
+              "approvals_by_hud": 0,
+              "passes": 2
+            },
+            "answers": {
+              "T3": "y",
+              "T4": "y",
+              "T2": "y"
+            },
+            "put_back_differing": []
+          }
+        },
+        "T4": {
+          "at": "2026-10-16T02:29:27.988Z",
+          "ok": true,
+          "summary": {
+            "exit": 0,
+            "timed_out": false,
+            "error": null,
+            "judged": {
+              "begun": true,
+              "session_id": "41f4a452-65f8-4817-91aa-6d10af371ef5",
+              "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\logs_2026-10-16T02-24-13-068Z\\20261015-41f4a4.json",
+              "client_logged": "antigravity-client",
+              "passes": 1,
+              "ended": "accept",
+              "pending_lines": 0,
+              "invalid": 0,
+              "calls": 7
+            },
+            "facts": {
+              "client": {
+                "name": "antigravity-client",
+                "version": "v1.0.0"
+              },
+              "model": "Gemini 3.8 Flash",
+              "deck_line": "antigravity-client · Gemini 3.8 Flash",
+              "outcome": "accept",
+              "ended_by": "claude",
+              "approvals_by_hud": 0,
+              "passes": 2
+            },
+            "answers": {
+              "T3": "y",
+              "T4": "y",
+              "T2": "y"
+            },
+            "put_back_differing": []
+          }
+        },
+        "T6": {
+          "at": "2026-10-16T02:34:30.883Z",
+          "ok": true,
+          "summary": {
+            "exit": 0,
+            "timed_out": false,
+            "error": null,
+            "judged": {
+              "begun": true,
+              "session_id": "8fe1ff38-c25e-44fd-9861-b4317e9b9bc7",
+              "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\logs_2026-10-16T02-24-13-068Z\\20261015-8fe1ff.json",
+              "client_logged": "antigravity-client",
+              "passes": 2,
+              "ended": "accept",
+              "pending_lines": 0,
+              "invalid": 0,
+              "calls": 8
+            },
+            "facts": {
+              "client": {
+                "name": "antigravity-client",
+                "version": "v1.0.0"
+              },
+              "model": "Gemini 3.8 Flash",
+              "deck_line": "antigravity-client · Gemini 3.8 Flash",
+              "outcome": "accept",
+              "ended_by": "claude",
+              "approvals_by_hud": 1,
+              "passes": 3
+            },
+            "put_back_differing": []
+          }
+        },
+        "T7": {
+          "at": "2026-10-16T02:41:50.529Z",
+          "ok": true,
+          "summary": {
+            "first": {
+              "since": 1792118426333,
+              "exit": 1,
+              "timed_out": false,
+              "error": null,
+              "stdout": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\antigravity_t7-ended_2026-10-16T02-24-13-068Z_stdout.txt",
+              "judged": {
+                "begun": true,
+                "session_id": "cb74a373-6e77-43ee-8a8b-133539fa2471",
+                "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\logs_2026-10-16T02-24-13-068Z\\20261015-cb74a3.json",
+                "client_logged": "antigravity-client",
+                "passes": 1,
+                "ended": null,
+                "pending_lines": 0,
+                "invalid": 0,
+                "calls": 5
+              },
+              "facts": {
+                "client": {
+                  "name": "antigravity-client",
+                  "version": "v1.0.0"
+                },
+                "model": "Gemini 3.8 Flash (High)",
+                "deck_line": "antigravity-client · Gemini 3.8 Flash (High)",
+                "outcome": null,
+                "ended_by": null,
+                "approvals_by_hud": 0,
+                "passes": 2
+              },
+              "back": true
+            },
+            "second": {
+              "since": 1792118486600,
+              "exit": 0,
+              "timed_out": false,
+              "error": null,
+              "stdout": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\antigravity_t7-recover_2026-10-16T02-24-13-068Z_stdout.txt",
+              "judged": {
+                "begun": true,
+                "session_id": "cb74a373-6e77-43ee-8a8b-133539fa2471",
+                "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\clients\\logs_2026-10-16T02-24-13-068Z\\20261015-cb74a3.json",
+                "client_logged": "antigravity-client",
+                "passes": 0,
+                "ended": "revert",
+                "pending_lines": 0,
+                "invalid": 0,
+                "calls": 6
+              },
+              "facts": {
+                "client": {
+                  "name": "antigravity-client",
+                  "version": "v1.0.0"
+                },
+                "model": "Gemini 3.8 Flash (High)",
+                "deck_line": "antigravity-client · Gemini 3.8 Flash (High)",
+                "outcome": "revert",
+                "ended_by": "recovery",
+                "approvals_by_hud": 0,
+                "passes": 2
+              },
+              "back": true
+            },
+            "killed": [
+              34784
+            ],
+            "first_session": {
+              "client": {
+                "name": "antigravity-client",
+                "version": "v1.0.0"
+              },
+              "model": "Gemini 3.8 Flash (High)",
+              "deck_line": "antigravity-client · Gemini 3.8 Flash (High)",
+              "outcome": "revert",
+              "ended_by": "recovery",
+              "approvals_by_hud": 0,
+              "passes": 2
+            },
+            "differing_after_revert": [],
+            "answer": "y",
+            "put_back_differing": []
+          }
+        }
+      }
+    },
+    "desktop": {
+      "at": "2026-10-16T02:43:57.717Z",
+      "ok": true,
+      "summary": {
+        "lines": {
+          "session_on_the_photo": true,
+          "passes": true,
+          "ended": true,
+          "engine_version": true,
+          "jim": true
+        },
+        "answers": [
+          "y",
+          "y"
+        ],
+        "client": {
+          "name": "claude-ai",
+          "version": "0.1.0"
+        },
+        "model": "claude-opus-5-5",
+        "session_log_error": null,
+        "evaluation": {
+          "tool_calls": 6,
+          "invalid_records": 0,
+          "session_begun": true,
+          "session_id": "0b32cfb6-2df1-48d8-a8d4-a3cd8d4ec7ec",
+          "intent_id": "neutral_technical_correction",
+          "target_filename": "20260906-OZ80005-edited.dng",
+          "passes": 1,
+          "session_ended": "accept",
+          "snapshot": {
+            "id": "561470A9-6A42-4811-87C7-75A3B1D2F23A",
+            "name": "AVG pre-session 2026-10-16T02:42:30.680Z"
+          },
+          "log_path": "D:\\Developer\\LrC_Autonomous_Gateway\\logs\\20261015-0b32cf.json",
+          "hud_shown": false,
+          "awaiting": []
+        },
+        "logs": {
+          "desktop_log": {
+            "found": true,
+            "saved_as": "clients_desktop_mcp_log_2026-10-16T02-24-13-068Z_desktop.txt",
+            "lines": 21
+          },
+          "engine_log": {
+            "found": true,
+            "saved_as": "clients_chat_tool_log_2026-10-16T02-24-13-068Z_desktop.jsonl"
+          }
+        },
+        "put_back_differing": []
+      }
+    },
+    "registrations": [],
+    "pending": [],
+    "mode_changed": false,
+    "finished": true
+  },
+  "summary": {
+    "suggestion": "WORKED",
+    "clients": {
+      "claude-code": {
+        "T2": "YES",
+        "T3": "YES",
+        "T4": "YES",
+        "T6": "YES",
+        "T7": "YES"
+      },
+      "opencode": {
+        "T2": "YES",
+        "T3": "YES",
+        "T4": "YES",
+        "T6": "YES",
+        "T7": "YES"
+      },
+      "hermes": {
+        "T2": "YES",
+        "T3": "YES",
+        "T4": "YES",
+        "T6": "YES",
+        "T7": "YES"
+      },
+      "antigravity": {
+        "T2": "YES",
+        "T3": "YES",
+        "T4": "YES",
+        "T6": "YES",
+        "T7": "YES"
+      }
+    },
+    "desktop": true,
+    "pending": []
+  },
+  "node": "v24.11.1",
+  "engine_version": "0.34.0"
+}

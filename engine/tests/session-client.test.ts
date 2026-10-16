@@ -8,6 +8,7 @@ describe("displayName", () => {
     expect(displayName({ name: "opencode", title: "My Client", version: "1" })).toBe("My Client");
     expect(displayName({ name: "opencode", version: "1" })).toBe("OpenCode");
     expect(displayName({ name: "codex-mcp-client", version: "1" })).toBe("Codex");
+    expect(displayName({ name: "antigravity-client", version: "v1.0.0" })).toBe("Antigravity");
     expect(displayName({ name: "some-agent", version: "" })).toBe("some-agent");
     for (const name of ["constructor", "toString", "__proto__", "hasOwnProperty"]) expect(displayName({ name, version: "1" })).toBe(name);
   });

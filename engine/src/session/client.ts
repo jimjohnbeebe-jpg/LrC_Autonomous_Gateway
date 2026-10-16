@@ -7,10 +7,12 @@ import type { ClientIdentity } from "../log/index.js";
 export const UNNAMED = "the AI";
 
 export const KNOWN_CLIENTS: Record<string, string> = {
-  // [unverified] until clients:probe / clients:check T2 records these clientInfo names.
+  // [handle: docs\reports\phase8.5\clients.md "Observed", clientInfo names recorded by clients:check, 2026-10-16]
   "claude-code": "Claude Code",
   opencode: "OpenCode",
   "claude-ai": "Claude",
+  "antigravity-client": "Antigravity",
+  // [unverified]: Hermes 0.21.5 sent "mcp" (below), not this name.
   // [inference: the string appears in codex.exe]
   "codex-mcp-client": "Codex",
   "hermes-agent": "Hermes",

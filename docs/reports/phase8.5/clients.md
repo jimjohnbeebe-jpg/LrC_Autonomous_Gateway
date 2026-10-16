@@ -1,9 +1,9 @@
 ---
 report: clients
 phase: "8.5"
-status: template
-authored_by: "Claude Code (Opus 5.5), issue-155 workflow, 2026-10-15 (purpose, harness, steps, pre-run findings); Jim (Observed, Verdict)"
-date: 2026-10-15
+status: accepted
+authored_by: "Claude Code (Opus 5.5), issue-155 workflow, 2026-10-15 (purpose, harness, steps, pre-run findings); Jim (Observed answers via the harness, Verdict); Claude Code (Opus 5.5) transcribed Observed and Numbers from the results file, 2026-10-16"
+date: 2026-10-16
 ---
 
 # Clients check: every installed AI client edits a photo in Lightroom (issue #155, R6)
@@ -94,29 +94,36 @@ Jim answers y/n in the PowerShell window, as in Phase 1 [stated: Jim, 2026-09-26
 
 ## Observed (Jim)
 
+Jim ran `npm run clients:check -- --new` on 2026-10-16 (run `2026-10-16T02-24-13-068Z`, 02:24-02:43 UTC). Claude Code copied the table below from the results file, where the harness saved Jim's y/n answers and the session-log judgements. Jim edited nothing by hand.
+
 | Client | T2 | T3 | T4 | T6 | T7 | Notes |
 |---|---|---|---|---|---|---|
-| Claude Code | | | | | | |
-| OpenCode | | | | | | |
-| Hermes | | | | | | |
-| Antigravity | | | | | | |
+| Claude Code | YES | YES | YES | YES | YES | Deck line `Claude Code · claude-opus-5-5`; T6: 1 approval on the Deck, 3 passes |
+| OpenCode | YES | YES | YES | YES | YES | Deck line `OpenCode · openrouter/openai/gpt-6-luna`; T6: 1 approval on the Deck |
+| Hermes | YES | YES | YES | YES | YES | Deck line `the AI · mistralai/mistral-large-4-0` (Hermes sends clientInfo `mcp`); T6: 1 approval on the Deck |
+| Antigravity | YES | YES | YES | YES | YES | Deck line `antigravity-client · Gemini 3.8 Flash` (the raw name: it was not in the name map then); T6: 1 approval on the Deck |
 
-Claude Desktop chat:
+In T7, each client was ended mid-edit (exit 1, its session left open). The next run recovered it: `ended_by: recovery`, outcome `revert`, and no setting differed after the revert. Jim answered y to "does the photo look as before?" for all four.
 
-Results file:
+Claude Desktop chat: YES. Both answers were y. The session ran on `20260906-OZ80005-edited.dng`: 1 pass, ended `accept`, 6 tool calls.
+
+Results file: `docs\reports\phase8.5\clients\clients_check_2026-10-16T02-24-13-068Z.json` (copied from `%TEMP%\LrC-AVG\clients\`). The harness's suggestion: **WORKED**. Nothing stayed un-put-back, and the run recorded no errors.
 
 ## Numbers
 
-- Clients run / not run:
-- Model each client named (session log `model`):
-- `clientInfo` each client sent (session log `client`), Claude Desktop's included:
-- Pending lines per run (calls that hit the 50 s deadline):
+- Clients run / not run: 4 run (Claude Code, OpenCode, Hermes, Antigravity) plus the Claude Desktop chat. Codex is not part of the check (D4).
+- Model each client named (session log `model`): Claude Code `claude-opus-5-5`; OpenCode `openrouter/openai/gpt-6-luna`; Hermes `mistralai/mistral-large-4-0`; Antigravity `Gemini 3.8 Flash` (`Gemini 3.8 Flash (High)` in T7); Claude Desktop `claude-opus-5-5`.
+- `clientInfo` each client sent (session log `client`): Claude Code `claude-code` 2.1.301 with title `Claude Code`; OpenCode `opencode` 1.18.35; Hermes `mcp` 0.1.0; Antigravity `antigravity-client` v1.0.0; Claude Desktop `claude-ai` 0.1.0.
+- Pending lines per run (calls that hit the 50 s deadline): 0 in every run. No call in this check reached the deadline, so whether a client calls again after a real `pending` in Lightroom is still [unverified]. The simulator's tests cover the engine side (`engine\tests\mcp-deadline.test.ts`).
 
 ## Verdict
 
-(Jim)
+**Go** [stated: Jim, 2026-10-16, "Go with recommendations", in answer to Claude Code's question about the verdict, after the all-YES summary above].
 
 ## Consequences / open questions
+
+- `antigravity-client` -> "Antigravity" was added to the name map (`engine\src\session\client.ts`). `claude-ai`, `claude-code` and `opencode` are now confirmed by this run. `hermes-agent` stays [unverified]: Hermes 0.21.5 sends `mcp`.
+- Jim accepted Claude Code's recommendation on the four build decisions, keeping each one as built [stated: Jim, 2026-10-16, "Go with recommendations"]: the 50 s call deadline for every client; APPROVAL_WAIT_MS lowered to 40 s; neutral "the AI client" wording in tool descriptions; and the `hud\probe\**` prompts and the Deck spec quotes keeping "Claude".
 
 ### Decisions for Jim
 

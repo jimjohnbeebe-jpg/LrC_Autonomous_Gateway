@@ -9,6 +9,7 @@
 // lists what was done, and the photo that may still be exported or imported (`maybe_done`).
 
 import path from "node:path";
+import type { CommandPayloads } from "../bridge/index.js";
 import {
   CALL_BUDGET_MS,
   EXPORT_PHOTO_TIMEOUT_MS,
@@ -80,8 +81,16 @@ async function eachInBudget(
   return { failed, left: [] };
 }
 
-const size = (a: ExportPhotosArgs) =>
-  a.long_edge !== undefined ? { long_edge: a.long_edge } : a.width !== undefined && a.height !== undefined ? { width: a.width, height: a.height } : {};
+/** What the plugin gets: only the arguments that apply to the format; long_edge wins over width and height (defs-files.ts). */
+export function exportPayload(a: ExportPhotosArgs): Omit<CommandPayloads["export_photo"], "photo_uuid"> {
+  const resize = a.long_edge !== undefined ? { long_edge: a.long_edge } : a.width !== undefined && a.height !== undefined ? { width: a.width, height: a.height } : {};
+  return {
+    format: a.format,
+    ...(a.format === "jpeg" && a.quality !== undefined ? { quality: a.quality } : {}),
+    ...((a.format === "png" || a.format === "tiff") && a.bit_depth !== undefined ? { bit_depth: a.bit_depth } : {}),
+    ...(a.format === "original" ? {} : resize),
+  };
+}
 
 export async function exportPhotos(ctx: ToolContext, args: ExportPhotosArgs, budget: Budget = realBudget()): Promise<ToolOutput> {
   return run(ctx, "lr_export_photos", args, async () => {
@@ -91,12 +100,7 @@ export async function exportPhotos(ctx: ToolContext, args: ExportPhotosArgs, bud
     const sessions = sessionTools(ctx);
     await ctx.deps.ensureBridge();
     needPlugin(ctx, "lr_export_photos", TRANSFER_PLUGIN, "it exports to a folder of your choice");
-    const payload = {
-      format: args.format,
-      ...(args.quality !== undefined ? { quality: args.quality } : {}),
-      ...(args.bit_depth !== undefined ? { bit_depth: args.bit_depth } : {}),
-      ...size(args),
-    };
+    const payload = exportPayload(args);
     return sessions.whenIdle("lr_export_photos", async () => {
       const exported: Array<{ uuid: string; filename: string | null; files: Placed[] }> = [];
       const { failed, left } = await eachInBudget(args.uuids, budget, () => exported, async (uuid) => {

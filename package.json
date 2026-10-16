@@ -40,6 +40,8 @@
     "deck:idle-probe": "npm run build && node hud/probe/idle.ts",
     "deck:menu": "npm run build && node hud/probe/menu.ts",
     "phase7:check": "npm run build && node hud/probe/check/check.ts",
+    "clients:probe": "npm run build && npm run probe -w engine",
+    "clients:check": "npm run deck:build && node engine/dist/devtools/clients-check-cli.js",
     "arch:check": "depcruise engine/src --config .dependency-cruiser.cjs --ignore-known",
     "arch:graph": "node tools/arch-graph.ts"
   },

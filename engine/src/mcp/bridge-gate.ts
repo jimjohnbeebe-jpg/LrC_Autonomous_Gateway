@@ -133,7 +133,7 @@ export class BridgeGate {
       throw new ToolError(
         "ENGINE_BUSY",
         `Another LrC-AVG engine (process ${busy?.pid ?? "unknown"}) is using the Lightroom bridge. ` +
-          "Close the other one (another Claude Desktop window, or the Phase 2 check), then try again.",
+          "Close the other one (another AI client using LrC-AVG, or a dev check), then try again.",
         true,
         busy ?? undefined,
       );

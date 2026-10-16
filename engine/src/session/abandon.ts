@@ -19,6 +19,7 @@
 import { pluginVersionAtLeast } from "../bridge/index.js";
 import { ToolError, toToolError } from "../mcp/errors.js";
 import { aiTimings } from "./ai-update.js";
+import { sentenceName } from "./client.js";
 import { endedBy } from "./end.js";
 import { saveLog } from "./io.js";
 import type { Session, SessionContext, SessionOutput, UserEnd } from "./types.js";
@@ -91,8 +92,8 @@ export async function abandonSession(ctx: SessionContext, s: Session, by: UserEn
   return { json, log: { session_id: s.id, outcome: "abandoned", ended_by: s.log.ended_by, log_path: s.files.logPath, lightroom_guard: guard } };
 }
 
-/** The HUD's note once an edit was abandoned, by the user's Abort or by Claude (the photographer's words, within HUD_LIMITS.text). */
-export function abandonedNote(byUser: boolean): string {
-  const why = byUser ? "Ended as it is, as Lightroom's AI mask is stuck." : "Claude ended the edit as it is.";
+/** The HUD's note once edit `s` was abandoned, by the user's Abort or by the AI (the photographer's words, within HUD_LIMITS.text). */
+export function abandonedNote(s: Session, byUser: boolean): string {
+  const why = byUser ? "Ended as it is, as Lightroom's AI mask is stuck." : `${sentenceName(s.client)} ended the edit as it is.`;
   return `${why} To undo, click its AVG snapshot in Develop > Snapshots.`;
 }

@@ -13,7 +13,7 @@ import { ID, clean, client, lr, newManager, plugin, useSessionHarness } from "./
 
 useSessionHarness();
 
-const NOTE = "This edit is no longer open in Claude, so nothing was done.";
+const NOTE = "This edit is no longer open in the AI, so nothing was done.";
 
 /** A new engine on the same bridge: a manager without a session, and its own publisher and events. */
 function restartedEngine(): { events: HudEvents; eventRecords: HudEventRecord[]; records: HudRecord[] } {

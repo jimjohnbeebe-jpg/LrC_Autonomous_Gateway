@@ -14,7 +14,7 @@ const beginArgs = z.object({
     .string()
     .min(1)
     .optional()
-    .describe("an intent id from lr_list_intents, e.g. landscape_golden_hour, as a starting point; leave out when no intent fits the user's request"),
+    .describe("an intent id from lr_list_intents, e.g. landscape_golden_hour, as a starting point; leave out (or give \"none\") when no intent fits the user's request"),
   profile: z
     .string()
     .min(1)
@@ -31,13 +31,14 @@ const beginArgs = z.object({
     .min(2)
     .max(3)
     .optional()
-    .describe('mode "variants" only: how many copies, 2-3 (default: the settings page\'s, else 3); A, B, C take the intent\'s variants of those letters'),
+    .describe('mode "variants" only (ignored in Converge mode): how many copies, 2-3 (default: the settings page\'s, else 3); A, B, C take the intent\'s variants of those letters'),
   max_passes: z.number().int().min(1).max(8).optional().describe("passes after pass 0, 1-8 (default: the settings page's, else 4)"),
   guardrails: z
     .object({ clip_high_pct: z.number().min(0).max(100).optional(), clip_low_pct: z.number().min(0).max(100).optional() })
     .optional()
     .describe("clipping limits for this session, replacing the intent's, the settings page's and the defaults (0.5 % high, 1.0 % low)"),
   notes: z.string().max(2000).optional().describe("the user's request in their own words, kept in the log; it takes precedence over the intent's brief"),
+  model: z.string().max(80).optional().describe("Your own model name or id, shown to the user and logged; never used for decisions."),
   long_edge: longEdge.describe(`Preview long edge in pixels, ${MIN_LONG_EDGE}-${MAX_LONG_EDGE}, for the whole session (default: the settings page's, else ${DEFAULT_LONG_EDGE}).`),
   return_image: returnImage,
 });

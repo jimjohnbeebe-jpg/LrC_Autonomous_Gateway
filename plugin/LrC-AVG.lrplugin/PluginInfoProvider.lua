@@ -119,7 +119,7 @@ function Provider.sectionsForTopOfDialog(f, _propertyTable)
     return {
         {
             title = "LrC-AVG settings",
-            f:static_text { title = "Saved as you change them. Claude's next session reads them; a session already open keeps its own." },
+            f:static_text { title = "Saved as you change them. The AI's next session reads them; a session already open keeps its own." },
             sessionBox(f, prefs),
             guardrailBox(f, prefs),
             previewBox(f, prefs),

@@ -4,7 +4,7 @@ import { hudChannelStateSchema, type HudChannelState } from "../../engine/src/hu
 import { arm, FRESH, onState, sent, type Local } from "./clicks.ts";
 import { esc, html, type Form } from "./render.ts";
 import * as T from "./text.ts";
-import { view, type Ctx } from "./view.ts";
+import { fillAi, view, type Ctx } from "./view.ts";
 
 const ctx: Ctx = { connected: true, gone: false, focus: false, open: true, now: 1000, marks: { 1: "corrected" } };
 const form = (over: Partial<Form> = {}): Form => ({ open: true, armed: false, twoColumns: false, thumbs: new Map(), connected: true, ...over });
@@ -22,7 +22,7 @@ describe("the right column", () => {
 
   it("buttons off: the off line stands in for their lines", () => {
     const h = draw(st(), (l) => sent(l, "c1", "Accept", 1000));
-    expect(h).toContain(T.LINE.offAnswer);
+    expect(h).toContain(fillAi(T.LINE.offAnswer, undefined));
     expect(h).not.toContain(T.LINE.accept);
     expect(h).not.toContain("aria-describedby");
   });
@@ -39,6 +39,19 @@ describe("the right column", () => {
 
   it("the way back is one line, all of it in its tooltip", () => {
     expect(draw(st())).toContain(`<div class="undo" data-tauri-drag-region title="${esc(T.UNDO)}AVG pre-session X">`);
+  });
+});
+
+describe("the AI's name (issue #155)", () => {
+  it("'name · model' is visible text in the bar and the opened deck, not a title attribute", () => {
+    const s = st({ ai_name: "OpenCode", ai_model: "openai/gpt-6-luna" });
+    for (const open of [false, true]) {
+      const h = draw(s, undefined, { open });
+      const text = h.replace(/<[^>]*>/g, "");
+      expect(text).toContain("OpenCode · openai/gpt-6-luna");
+      expect(h).not.toMatch(/title="[^"]*OpenCode · openai/);
+    }
+    expect(draw(st())).not.toContain(`class="step ai"`);
   });
 });
 

@@ -13,7 +13,8 @@
 -- From 0.21.0 (GitHub issues #131, #139) Pending.lua waits on every AI part of a mask, listings and the
 -- context carry gps and path (Photos.describe opts.where), and imports return capture_time. From 0.22.0
 -- (GitHub issues #111, #112, #139) Metadata.lua sets flags and title/caption/headline and reads a photo's
--- metadata and stack; search_photos takes a folder path.
+-- metadata and stack; search_photos takes a folder path. From 0.23.0 (GitHub issue #155) the HUD names
+-- the AI client and its model (hud_update ai_name, ai_model; HudText.ai), or says "the AI".
 -- LrSdkVersion 13.0: the five Phase 0 spike plugins declared it and ran on LrC 15.5.1
 -- [handle: docs\reports\phase0\PHASE0.md "Draft for LR_SDK_NOTES", SDK version]; whether it hides
 -- newer develop keys is [unverified].
@@ -41,5 +42,5 @@ return {
         { title = "LrC-AVG - Accept Edit", file = "MenuAccept.lua" },
         { title = "LrC-AVG - Abort Edit", file = "MenuAbort.lua" },
     },
-    VERSION = { major = 0, minor = 22, revision = 0, build = 0 },
+    VERSION = { major = 0, minor = 23, revision = 0, build = 0 },
 }

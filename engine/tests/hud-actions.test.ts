@@ -53,7 +53,7 @@ describe("Accept from the HUD", () => {
     await waitUntil(() => plugin.received.some((r) => r.name === "apply_settings"));
     hudEvent(plugin, "hud_accept", { session_id: ID });
     await waitUntil(() => rig.events.length === 1);
-    expect(rig.events[0]?.note).toBe("Accept: keeping the edit once Claude's current step is done.");
+    expect(rig.events[0]?.note).toBe("Accept: keeping the edit once the AI's current step is done.");
     if (apply) plugin.handlers.set("apply_settings", apply);
     release();
     expect((await pending).json).toMatchObject({ ok: true, pass: "1/4" });
@@ -80,7 +80,7 @@ describe("Pick from the HUD", () => {
     const rig = hudRig();
     await awaitingPick(rig);
     hudEvent(plugin, "hud_pick", { session_id: ID, variant: "B" });
-    await waitUntil(() => lr.hud.last()?.note === "Picked B: Claude continues on copy B at its next call.");
+    await waitUntil(() => lr.hud.last()?.note === "Picked B: the AI continues on copy B at its next call.");
     expect(lr.hud.last()).toMatchObject({ stage: "awaiting_claude", pass: 1, target: { uuid: "SIM-COPY-2", copy_name: "AVG test_variants B" } });
     expect(lr.selected).toBe("SIM-COPY-2");
     expect(rig.events[0]?.note).toBe("Pick B: selecting copy B.");
@@ -111,7 +111,7 @@ describe("Pick from the HUD", () => {
     hudEvent(plugin, "hud_pick", { session_id: ID, variant: "C" });
     hudEvent(plugin, "hud_accept", { session_id: ID });
     await waitUntil(() => rig.events.length === 3);
-    expect(rig.events.map((e) => e.note)).toEqual(["Pick B: selecting copy B.", "Copy B is being picked.", "Accept: keeping the edit once Claude's current step is done."]);
+    expect(rig.events.map((e) => e.note)).toEqual(["Pick B: selecting copy B.", "Copy B is being picked.", "Accept: keeping the edit once the AI's current step is done."]);
     if (select) plugin.handlers.set("select_photo", select);
     release();
     expect((await hudAt("accepted")).note).toBe("Accepted: copy B is kept; the other copies stay in the catalog.");

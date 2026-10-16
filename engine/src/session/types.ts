@@ -3,7 +3,7 @@
 
 import type { BridgeClient, HudStage } from "../bridge/index.js";
 import type { IntentLibrary, LoadedIntent } from "../intents/index.js";
-import type { AiTrace, SessionLogData, SessionLogFiles } from "../log/index.js";
+import type { AiTrace, ClientIdentity, SessionLogData, SessionLogFiles } from "../log/index.js";
 import type { Metrics, Region, RegionBox } from "../metrics/index.js";
 import type { CanonicalSettings, EditOp, Geometry, ParamMap, Pipeline } from "../params/index.js";
 import type { RenderedPreview } from "../preview/index.js";
@@ -38,6 +38,10 @@ export type BeginArgs = {
   notes?: string | undefined;
   long_edge?: number | undefined;
   return_image?: ReturnImage | undefined;
+  /** Issue #155 R1: the AI's own model name; logged and shown, never used for decisions. */
+  model?: string | undefined;
+  /** The MCP client (mcp\client-info.ts); set by the mcp layer, never by the tool schema. */
+  client?: ClientIdentity | null | undefined;
 };
 export type StepArgs = {
   session_id: string;
@@ -201,6 +205,9 @@ export type Session = {
   id: string;
   short: string;
   startedAt: Date;
+  /** BeginArgs.client and .model (issue #155 R1), when given. */
+  client?: ClientIdentity;
+  model?: string;
   intent: LoadedIntent;
   /** BeginArgs.profile: pass 0 writes it in place of the intent's. */
   profile: string | null;

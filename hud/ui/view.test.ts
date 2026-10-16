@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { hudChannelStateSchema, type HudChannelState } from "../../engine/src/hud/channel-protocol.ts";
 import { arm, choose, FRESH, onState, sent, type Local } from "./clicks.ts";
 import * as T from "./text.ts";
-import { primary, view, type Ctx, type View } from "./view.ts";
+import { fillAi, primary, view, type Ctx, type View } from "./view.ts";
 
 const ctx = (over: Partial<Ctx> = {}): Ctx => ({ connected: true, gone: false, focus: false, open: true, now: 1000, marks: {}, ...over });
 const base = { session_id: "s1", mode: "converge", pass: 2, max_passes: 6, target: { uuid: "P1", filename: "f.NEF", iso: 100, shutter: "1/250 s", aperture: "f/8" }, lightroom: "connected", snapshot: "AVG pre-session X" };
@@ -15,6 +15,8 @@ const local = (s: HudChannelState, f: (l: Local) => Local = (l) => l): Local => 
 const show = (s: HudChannelState, l: Local = local(s), c: Ctx = ctx()): View => view(s, l, c);
 const primaries = (v: View) => v.actions.filter((a) => a.kind === "primary");
 const ids = (v: View) => v.actions.map((a) => `${a.id}:${a.kind}:${a.on ? "on" : "off"}`);
+/** A text.ts string as the View shows it with no AI name (issue #155). */
+const ai = (t: string): string => fillAi(t, undefined);
 
 describe("spec 5.2, in its order", () => {
   it("an end stage is Done, with no actions", () => {
@@ -36,34 +38,34 @@ describe("spec 5.2, in its order", () => {
 
   it("Claude not connected (6): the undo line and the way to the plugin's Put back (D5)", () => {
     const v = show(st({ stage: "converged" }), undefined, ctx({ connected: false }));
-    expect([v.phase, v.sentence, v.putBack, v.offLine]).toEqual(["problem", T.HEADLINE.not_connected, T.PUT_BACK_PATH, T.LINE.offConnected]);
+    expect([v.phase, v.sentence, v.putBack, v.offLine]).toEqual(["problem", ai(T.HEADLINE.not_connected), T.PUT_BACK_PATH, ai(T.LINE.offConnected)]);
     expect(v.actions.every((a) => !a.on)).toBe(true);
     expect(show(st({ snapshot: undefined }), undefined, ctx({ connected: false })).way).toBe(T.UNDO + T.UNDO_NO_SNAPSHOT);
   });
 
   it("the edit gone (8)", () => {
     const v = show(st(), undefined, ctx({ gone: true }));
-    expect([v.sentence, v.offLine]).toEqual([T.HEADLINE.gone, T.LINE.offGone]);
+    expect([v.sentence, v.offLine]).toEqual([ai(T.HEADLINE.gone), ai(T.LINE.offGone)]);
   });
 
   it("a sent click (5.3): the working ring, the click line, every action off until the answer", () => {
     const s = st({ stage: "converged" });
     const v = show(s, local(s, (l) => sent(l, "c1", "Accept", 0)));
-    expect([v.phase, v.sentence, v.offLine]).toEqual(["working", T.clickSent("Accept"), T.LINE.offAnswer]);
+    expect([v.phase, v.sentence, v.offLine]).toEqual(["working", ai(T.clickSent("Accept")), ai(T.LINE.offAnswer)]);
     expect(v.actions.every((a) => !a.on)).toBe(true);
   });
 
   it("approve (10): Approve pass n is the one primary; Accept and Abort as a compact pair", () => {
     const v = show(st({ stage: "awaiting_approval", approve_pass: 1 }));
-    expect(v.sentence).toBe(T.approveHeadline(1));
+    expect(v.sentence).toBe(ai(T.approveHeadline(1)));
     expect(ids(v)).toEqual(["approve:primary:on", "accept:compact:on", "abort:compact:on"]);
-    expect(primaries(v)[0]?.line).toBe(T.LINE.approve(1));
+    expect(primaries(v)[0]?.line).toBe(ai(T.LINE.approve(1)));
   });
 
   it("the pick (9), opened: cards, no primary until a card is chosen, no Accept", () => {
     const s = variants();
     const v = show(s);
-    expect([v.sentence, v.centre, v.pickHint]).toEqual([T.HEADLINE.awaiting_pick, "cards", T.PICK.click]);
+    expect([v.sentence, v.centre, v.pickHint]).toEqual([ai(T.HEADLINE.awaiting_pick), "cards", T.PICK.click]);
     expect(ids(v)).toEqual(["abort:abort:on"]);
     expect(v.actions[0]?.line).toBe(T.LINE.abortCopies);
     expect(v.cards.map((c) => [c.letter, c.on, c.chosen])).toEqual([["A", true, false], ["B", true, false], ["C", true, false]]);
@@ -105,7 +107,7 @@ describe("spec 5.2, in its order", () => {
 
   it("working (13-18): Accept quiet, off in Variants before a pick", () => {
     const v = show(st({ stage: "applying" }));
-    expect([v.phase, v.sentence, v.line2]).toEqual(["working", T.HEADLINE.working, "Applying pass 2 of 6"]);
+    expect([v.phase, v.sentence, v.line2]).toEqual(["working", ai(T.HEADLINE.working), "Applying pass 2 of 6"]);
     expect(ids(v)).toEqual(["accept:quiet:on", "abort:abort:on"]);
     expect(show(st({ stage: "metrics" })).line2).toBe("Measuring the preview · pass 2 of 6");
     const unpicked = show(st({ mode: "variants", copies, stage: "metrics" }));
@@ -138,7 +140,7 @@ describe("spec 5.3 and 6", () => {
     const v = show(st({ selection: { uuid: "X", name: "other.NEF", in_edit: false } }));
     expect(v.band[0]).toBe("Target changed: other.NEF is selected. Select f.NEF again; the edit is still open.");
     const none = show(variants({ selection: { uuid: null, name: null, in_edit: false } }));
-    expect(none.band[0]).toBe("Target changed: No photo is selected. Claude's next call selects the edit's photo again; the edit is still open.");
+    expect(none.band[0]).toBe("Target changed: No photo is selected. The AI's next call selects the edit's photo again; the edit is still open.");
   });
 
   it("the photo's identity, and a copy's name after the pick", () => {
@@ -153,6 +155,28 @@ describe("spec 5.3 and 6", () => {
   it("the timeline: the current pass not yet done while it is applied; marks in Converge only", () => {
     expect(show(st({ stage: "applying" }), undefined, ctx({ marks: { 1: "green" } })).timeline).toMatchObject({ max: 6, current: 2, done: 1, marks: { 1: "green" }, label: "pass 2 of 6" });
     expect(show(variants(), undefined, ctx({ marks: { 1: "green" } })).timeline).toMatchObject({ marks: {}, label: "pass 2 of 6" });
+  });
+});
+
+describe("the AI's name (issue #155)", () => {
+  it("no name: 'the AI', 'The AI' at the start; ai is null", () => {
+    const v = show(st({ stage: "metrics" }));
+    expect([v.sentence, v.ai]).toEqual(["The AI is working. Nothing needed from you.", null]);
+  });
+
+  it("a name fills every string; ai is 'name · model'", () => {
+    const v = show(st({ stage: "awaiting_claude", ai_name: "OpenCode", ai_model: "openai/gpt-6-luna" }));
+    expect([v.sentence, v.line2, v.ai]).toEqual(["OpenCode is working. Nothing needed from you.", "OpenCode is looking at the result · pass 2 of 6", "OpenCode · openai/gpt-6-luna"]);
+    expect(v.actions[0]?.tip).toBe("Ends the edit after OpenCode's current step.");
+    const off = show(st({ ai_name: "OpenCode" }), undefined, ctx({ connected: false }));
+    expect([off.sentence, off.offLine, off.ai]).toEqual(["OpenCode is not connected. Your edit so far stays.", "Off until OpenCode is connected.", "OpenCode"]);
+    expect(show(st({ ai_model: "m1" })).ai).toBe("the AI · m1");
+  });
+
+  it("fillAi: {AI} upper-cases the first letter; a dollar sign in the name is shown as it is", () => {
+    expect(fillAi("{AI} and {ai}", "hermes")).toBe("Hermes and hermes");
+    expect(fillAi("{ai}", "a$&b")).toBe("a$&b");
+    expect(fillAi("{ai}", "")).toBe("the AI");
   });
 });
 

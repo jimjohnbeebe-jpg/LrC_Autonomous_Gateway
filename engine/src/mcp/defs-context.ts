@@ -9,7 +9,7 @@ const sessionTarget = target.describe(
 );
 const previewArgs = z.object({
   long_edge: longEdge,
-  session_id: sessionId.optional().describe("render the session's photo, with its region metrics; refused if another photo is selected"),
+  session_id: sessionId.optional().describe("render the session's photo, with its region metrics; refused if another photo is selected; ignored when no session is open"),
   target: sessionTarget,
   region: box.optional().describe("return a crop of this box, exported large enough to show it at up to 100 %; see effective_scale"),
 });
@@ -26,7 +26,7 @@ export const CONTEXT_DEFS: ToolDef[] = [
       "PNG, PSD, HEIC, AVIF and other non-raw files): `white_balance_unit` says what temperature and tint mean on this photo, " +
       "Kelvin on raw, a relative -100..100 on rendered. Rendered photos have their own profiles (Color, Monochrome). Also says whether a session is open on it, and which Lightroom " +
       "version runs (`lightroom`; tell the user its `notices`, empty when the version is supported and tested). `left_open` lists sessions an engine " +
-      "that stopped (Claude Desktop closed or restarted it) left open, with `left_open_note`: ask the user, for each, to revert, accept or " +
+      "that stopped (the AI client closed or restarted it) left open, with `left_open_note`: ask the user, for each, to revert, accept or " +
       "abandon it, and end it with lr_end_session. Changes nothing.",
     schema: noArgs,
     annotations: { readOnlyHint: true, openWorldHint: false },

@@ -67,7 +67,7 @@ function readLog(file: string, open = false): SessionLogData | null {
 const photosOf = (log: SessionLogData): string[] => [log.target.uuid, ...log.variants.map((v) => v.uuid)];
 
 export const LEFT_OPEN_NOTE =
-  "An engine that stopped (Claude Desktop closed or restarted it) left these sessions open: their photos keep what the sessions did. " +
+  "An engine that stopped (the AI client closed or restarted it) left these sessions open: their photos keep what the sessions did. " +
   'Tell the user and ask, for each, what to do, then call lr_end_session with its session_id: "revert" puts the photo back to the ' +
   "pre-session snapshot (any later change to it, by hand too, is lost); \"accept\" keeps the photo as it is now and writes the recipe; " +
   '"abandon" ends it and leaves the photo as it is. lr_begin_session refuses a photo with a session left open until then.';

@@ -10,6 +10,7 @@
 // Lightroom sim; in Lightroom [unverified] until capture 6.]
 
 import { revertAfterRestart } from "./ai-masks.js";
+import { displayName } from "./client.js";
 import { saveLog } from "./io.js";
 import type { Session, SessionContext } from "./types.js";
 
@@ -48,5 +49,5 @@ async function afterRestart(host: RestartHost, s: Session): Promise<void> {
   } catch {
     // the HUD's note matters more than the log write
   }
-  s.idleNote = "Lightroom restarted, but the photo could not be put back. Ask Claude to put it back.";
+  s.idleNote = `Lightroom restarted, but the photo could not be put back. Ask ${displayName(s.client)} to put it back.`;
 }

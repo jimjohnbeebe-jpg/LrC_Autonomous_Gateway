@@ -283,6 +283,40 @@ describe("lua: LrC-AVG.lrplugin", () => {
     expect(codeOnly(readFileSync(path.join(avgPlugin, "HudView.lua"), "utf8"))).toMatch(/v\.putBackEnabled = HudState\.canPutBack\(s, conn, hud\)/);
   });
 
+  it("checks the AI's name and model as HUD fields, as the engine sends them (issue #155, plugin 0.23.0)", () => {
+    const fields = readFileSync(path.join(avgPlugin, "HudState.lua"), "utf8").match(/local FIELDS = \{([\s\S]*?)\n\}/)?.[1] ?? "";
+    for (const key of ["ai_name", "ai_model"]) {
+      expect(fields, key).toMatch(new RegExp(`\\b${key} = TEXT,`));
+      expect(Object.keys(hudUpdatePayloadSchema.shape), key).toContain(key);
+    }
+  });
+
+  it("keeps the HUD's and the Deck's shared words equal, with the {ai} tokens and no 'Claude' (issue #155)", () => {
+    // %d/%s (Lua) and ${...} (TypeScript) are the parameters: both read as "#".
+    const normalize = (t: string): string => t.replace(/%[ds]/g, "#").replace(/\$\{[^}]*\}/g, "#");
+    const SHARED = [
+      "{AI} is not connected. Your edit so far stays.",
+      "This edit is no longer open in {ai}. Your edit so far stays.",
+      "{AI} is working. Nothing needed from you.",
+      "Your turn: pick a copy, or tell {ai} which one.",
+      "Your turn: {ai} thinks the edit is done.",
+      "Your turn: approve pass # so {ai} can go on.",
+      "{AI} is looking at the result",
+      "{AI} thinks the edit is done",
+      "# sent; waiting for {ai}.",
+      "#: no answer from {ai} within # s; the buttons are on again.",
+      "{AI}'s next call selects the edit's photo again",
+    ];
+    const hudText = readFileSync(path.join(avgPlugin, "HudText.lua"), "utf8");
+    const lua = normalize(hudText + readFileSync(path.join(avgPlugin, "HudState.lua"), "utf8"));
+    const deck = normalize(readFileSync(fileURLToPath(new URL("../../hud/ui/text.ts", import.meta.url)), "utf8"));
+    for (const words of SHARED) {
+      expect(lua, `plugin: ${words}`).toContain(words);
+      expect(deck, `Deck: ${words}`).toContain(words);
+    }
+    expect((hudText.match(/"[^"\n]*"/g) ?? []).filter((q) => q.includes("Claude"))).toEqual([]);
+  });
+
   it("keeps KeywordTree.lua's separator and Library.lua's page limit equal to the engine's (engine\\src\\library\\)", () => {
     expect(readFileSync(path.join(avgPlugin, "KeywordTree.lua"), "utf8")).toMatch(new RegExp(`KeywordTree\\.SEPARATOR = "\\${KEYWORD_SEPARATOR}"`));
     expect(readFileSync(path.join(avgPlugin, "Library.lua"), "utf8")).toMatch(new RegExp(`Library\\.MAX_PAGE = ${MAX_PAGE}\\b`));

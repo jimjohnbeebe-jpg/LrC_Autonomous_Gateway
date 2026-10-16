@@ -7,10 +7,12 @@ import { describe, expect, it } from "vitest";
 import { HUD_LIMITS } from "../src/bridge/index.js";
 import { hudGuardrail } from "../src/hud/index.js";
 import { deckRows } from "../src/hud/extras.js";
-import type { GuardrailAction } from "../src/log/index.js";
+import type { ClientIdentity, GuardrailAction } from "../src/log/index.js";
 import type { MetricsSummary } from "../src/metrics/index.js";
 import { CAMERA_PROFILE_PARAM, CANONICAL_PARAMS, lightroomLabel, loadDefaultParamMap } from "../src/params/index.js";
-import { applyProjectedGuardrail, planStep, type Limits, type Session, type StepPlan } from "../src/session/index.js";
+import { abandonedNote, applyProjectedGuardrail, displayName, planStep, type Limits, type Session, type StepPlan } from "../src/session/index.js";
+import { approvalNote } from "../src/session/approval.js";
+import { closeNote, idleStage } from "../src/session/hud-actions.js";
 import { hudWordProblems } from "./helpers/hud-harness.js";
 
 const map = loadDefaultParamMap();
@@ -105,5 +107,21 @@ describe("the Deck's rows (Phase 7 row 3, src/hud/extras.ts)", () => {
     expect(rows.filter((r) => r?.group === "Other").map((r) => r?.name)).toEqual([]);
     const shown = rows.flatMap((r) => [r?.label ?? "", r?.group ?? ""]);
     expect(shown.filter((t) => hudWordProblems(t).length > 0 || bytes(t) > HUD_LIMITS.text)).toEqual([]);
+  });
+});
+
+describe("the notes that name the AI (issue #155 R2, src/session/client.ts)", () => {
+  const by = (client?: ClientIdentity): Session => ({ client, mode: "converge", abort: null, idleNote: null, log: {} }) as unknown as Session;
+
+  it("stay within the HUD's text limit with a 32-character name, in the photographer's words", () => {
+    const s = by({ name: "x", title: "W".repeat(32), version: "1" });
+    expect(displayName(s.client)).toHaveLength(32);
+    const notes = [approvalNote(s, 99), closeNote(s, "accept"), closeNote(s, "revert"), abandonedNote(s, false), abandonedNote(s, true), String(idleStage(s, new Error("x"))?.note)];
+    expect(notes.filter((n) => bytes(n) > HUD_LIMITS.text || hudWordProblems(n).length > 0)).toEqual([]);
+  });
+
+  it("name the client, or the AI when there is none", () => {
+    expect(approvalNote(by({ name: "opencode", version: "1" }), 2)).toBe("Approve pass 2 to let OpenCode make the next pass, or tell it in chat.");
+    expect(closeNote(by(), "accept")).toBe("The AI accepted: the edit is kept.");
   });
 });

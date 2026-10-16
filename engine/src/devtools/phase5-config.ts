@@ -90,7 +90,7 @@ export type Phase5Deps = {
   bridgeWaitMs?: number;
   /** Polling step for the waits (tests shorten it). */
   pollMs?: number;
-  /** The approval wait the engines run with: APPROVAL_WAIT_MS (60 s) unless a test gave the Tools a shorter one (ToolsDeps.approvalWaitMs). */
+  /** The approval wait the engines run with: APPROVAL_WAIT_MS (40 s) unless a test gave the Tools a shorter one (ToolsDeps.approvalWaitMs). */
   approvalWaitMs?: number;
   now?: () => Date;
 };

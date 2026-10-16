@@ -32,7 +32,10 @@ export type SyncDeps = {
   newId?: () => string;
   /** How long a snapshot or a write may take (tests shorten it); target.ts WRITE_TIMEOUT_MS by default. */
   writeTimeoutMs?: number;
-  /** When the call stops starting targets (tests shorten it); library\files.ts CALL_BUDGET_MS on the real clock by default. */
+  /**
+   * When the call stops starting targets (tests shorten it); library\files.ts CALL_BUDGET_MS (30 s) on
+   * the real clock by default. A call still busy at the 50 s call deadline answers `pending` (mcp\deadline.ts).
+   */
   budget?: { now: () => number; ms: number };
 };
 

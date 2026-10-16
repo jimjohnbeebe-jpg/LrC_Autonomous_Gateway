@@ -41,6 +41,8 @@ export type View = {
   way: string;
   /** While Claude is away, the plugin's Put back. */
   putBack: string | null;
+  /** The AI client and its model, "name · model" (issue #155), drawn as text; null when the engine sent neither. */
+  ai: string | null;
   timeline: Timeline | null;
   closeOnly: boolean;
 };
@@ -167,6 +169,36 @@ function bandOf(s: HudChannelState, l: Local, claudes: boolean, sentenceIsNote: 
   return band.slice(0, 2);
 }
 
+/**
+ * The {ai}/{AI} tokens of text.ts (issue #155), as HudText.ai in the plugin: `name`, else "the AI"; {AI}
+ * with its first letter upper-cased. A replacer function, so a "$" in the name is not read as a pattern.
+ */
+export function fillAi(text: string, name: string | undefined): string {
+  const n = name || "the AI";
+  const upper = n.charAt(0).toUpperCase() + n.slice(1);
+  return text.replaceAll("{ai}", () => n).replaceAll("{AI}", () => upper);
+}
+
+/** "name · model" when the engine sent either; the name falls back to "the AI" when only the model is known. */
+function aiLine(s: HudChannelState): string | null {
+  if (s.ai_name === undefined && s.ai_model === undefined) return null;
+  const name = s.ai_name !== undefined ? String(s.ai_name) : "the AI";
+  return s.ai_model !== undefined ? `${name} · ${String(s.ai_model)}` : name;
+}
+
+/** Every string the View shows, with the tokens filled once (issue #155). */
+function filled(v: View, name: string | undefined): View {
+  const f = (t: string): string => fillAi(t, name);
+  const opt = (t: string | null): string | null => (t === null ? null : f(t));
+  const act = (a: Action): Action => {
+    const out: Action = { ...a, label: f(a.label) };
+    if (a.line !== undefined) out.line = f(a.line);
+    if (a.tip !== undefined) out.tip = f(a.tip);
+    return out;
+  };
+  return { ...v, sentence: f(v.sentence), line2: f(v.line2), band: v.band.map(f), actions: v.actions.map(act), offLine: opt(v.offLine), pickHint: opt(v.pickHint), way: f(v.way) };
+}
+
 export function view(s: HudChannelState, l: Local, c: Ctx): View {
   const [phase, sentence] = sentenceOf(s, l, c);
   const [actions, offLine] = actionsOf(s, l, c, phase);
@@ -178,7 +210,7 @@ export function view(s: HudChannelState, l: Local, c: Ctx): View {
   const rows = s.rows ?? [];
   const undone = s.guardrail?.status === "undone";
   const pickHint = s.stage === "awaiting_pick" && c.open && live && !actions.some((a) => a.kind === "primary") ? (c.focus ? T.PICK.keys : T.PICK.click) : null;
-  return {
+  return filled({
     phase,
     sentence,
     line2: claudes && WORKING.includes(s.stage) ? stepLine(s) : id,
@@ -197,7 +229,8 @@ export function view(s: HudChannelState, l: Local, c: Ctx): View {
     putBack: problem && s.lightroom !== "down" ? T.PUT_BACK_PATH : null,
     timeline: timelineOf(s, phase, c),
     closeOnly: phase === "done",
-  };
+    ai: aiLine(s),
+  }, s.ai_name !== undefined ? String(s.ai_name) : undefined);
 }
 
 /** The action Enter presses: the turn's primary, when it is on and Abort is not armed (NOTES section 3). */

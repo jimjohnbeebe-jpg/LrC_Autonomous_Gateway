@@ -27,8 +27,8 @@ export const MEASURED =
 
 /** The tools that stop starting photos after library\files.ts CALL_BUDGET_MS (export, import, sync). */
 export const TIMED =
-  "A call works for about 40 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling " +
-  "until `not_yet` is gone, and tell the user how far along it is.";
+  "A call works for about 30 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling " +
+  "until `not_yet` is gone, and tell the user how far along it is. A call still busy at 50 seconds returns `pending` with `next`.";
 
 export const longEdge = z
   .number()

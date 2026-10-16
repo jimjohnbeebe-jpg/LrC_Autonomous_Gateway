@@ -14,7 +14,8 @@
 // are read with session-log-v1.ts. Later engines only add: optional fields (`settings`, 0.7.0;
 // `ended_by` and `hud_events`, 0.8.0; `approvals` and a pass's `approval`, 0.9.0; `lightroom`,
 // 0.13.0, and its `notices`, 0.14.0; a pass's `mask`, kind "mask", 0.16.0, log\mask-log.ts; `ended_by`
-// source "engine" with its `reason`, and the HUD event hud_put_back, PR C step 2b) and the outcomes "aborted" (0.8.0) and "abandoned" (0.26.0), so earlier v2 logs still read.
+// source "engine" with its `reason`, and the HUD event hud_put_back, PR C step 2b; top-level `client` and `model`,
+// engine 0.34.0, issue #155) and the outcomes "aborted" (0.8.0) and "abandoned" (0.26.0), so earlier v2 logs still read.
 
 import { mkdirSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -204,6 +205,10 @@ const hudEventSchema = z.strictObject({
   note: z.string(),
 });
 
+/** The MCP client that ran a session, from its initialize clientInfo (issue #155 R1; mcp\client-info.ts cleans it). */
+export const clientIdentitySchema = z.strictObject({ name: z.string(), title: z.string().optional(), version: z.string() });
+export type ClientIdentity = z.infer<typeof clientIdentitySchema>;
+
 export const sessionLogSchema = z
   .strictObject({
     schema: z.literal(SESSION_LOG_SCHEMA_ID),
@@ -216,6 +221,9 @@ export const sessionLogSchema = z
      * within the supported and tested versions.
      */
     lightroom: z.strictObject({ lrc_version: z.string(), sdk_declared: z.number(), notices: z.array(z.string()).optional() }).optional(),
+    /** Engine 0.34.0 (issue #155 R1): the MCP client, and the model the AI named at lr_begin_session. */
+    client: clientIdentitySchema.optional(),
+    model: z.string().optional(),
     started: z.string(),
     ended: z.string().nullable(),
     /**

@@ -19,7 +19,8 @@
 // A session the user ended answers every later call naming it with SESSION_ENDED (endedError), but for
 // lr_end_session asking for the user's own outcome, which succeeds (endedAlike, issue #126).
 // The notes are the HUD's, in the photographer's words (PRODUCT.md; fix/hud-p1 copy deck): an "edit",
-// not a session; Claude, not the engine; no error codes. Claude's tool results keep their own words.
+// not a session; the AI by its client's name (client.ts, issue #155 R2), not the engine; no error codes.
+// The AI's tool results keep their own words.
 // [handle: tests\hud-abort.test.ts, tests\hud-actions.test.ts, tests\approve-pass-hud.test.ts, against
 // the Lightroom sim; in Lightroom [unverified] until the row 5 probe and PHASE5_PLAN row 7.]
 
@@ -27,6 +28,7 @@ import type { HudEvent, HudStage } from "../bridge/index.js";
 import { ToolError, toToolError } from "../mcp/errors.js";
 import { approvalNote, approve, pendingApproval, wakeApproval } from "./approval.js";
 import { abandonedNote, abandonSession } from "./abandon.js";
+import { displayName, sentenceName, UNNAMED } from "./client.js";
 import { endSession } from "./end.js";
 import { failed, saveLog } from "./io.js";
 import { awaitingPick, selectVariant } from "./pick.js";
@@ -66,7 +68,7 @@ export function userAction(host: ActionHost, a: UserAction): string {
   if (!s || s.id !== a.payload.session_id) {
     const ended = host.ended(a.payload.session_id);
     if (ended) return `This edit had already ended: ${ended.outcome === "accept" ? "the edit was kept" : ended.outcome === "abandoned" ? "the photo was left as it was" : "the photo was put back"}.`;
-    return "This edit is no longer open in Claude, so nothing was done."; // hud\events.ts answers it with an `ended` update
+    return `This edit is no longer open in ${UNNAMED}, so nothing was done.`; // hud\events.ts answers it with an `ended` update
   }
   const note = act(host, s, a);
   record(s, a, note);
@@ -92,8 +94,8 @@ function approveFromHud(host: ActionHost, s: Session, pass: number, source: User
   const r = approve(host.ctx, s, source, pass);
   if (!r.ok) return r.hud;
   if (r.already) return `Pass ${r.pass} is approved already.`;
-  if (r.woke) return `Approved pass ${r.pass}: Claude's next pass goes ahead.`;
-  const note = `Approved pass ${r.pass}: Claude goes on at its next call.`;
+  if (r.woke) return `Approved pass ${r.pass}: ${displayName(s.client)}'s next pass goes ahead.`;
+  const note = `Approved pass ${r.pass}: ${displayName(s.client)} goes on at its next call.`;
   if (!host.busy()) host.ctx.deps.hud?.stage(s, "awaiting_claude", { note });
   return note;
 }
@@ -171,7 +173,7 @@ async function finishAbort(host: ActionHost, s: Session): Promise<void> {
       // Greptile, PR #134): the Abort ends the edit without a Lightroom write (abandon.ts, issue #124, D1).
       await abandonSession(ctx, s, by);
       host.close(s, userEnded(ctx, s, "abandoned", by));
-      ctx.deps.hud?.stage(s, "ended", { note: abandonedNote(true) });
+      ctx.deps.hud?.stage(s, "ended", { note: abandonedNote(s, true) });
       return;
     }
     if (toToolError(err).code === "AI_UPDATE_PENDING") {
@@ -230,7 +232,7 @@ function accept(host: ActionHost, s: Session, a: UserAction): string {
   const counted = s.picked === null ? s.pendingPick : null;
   host.queue(() => finishAccept(host, s, by, counted));
   wakeApproval(s, "accept"); // a step waiting for an approval ends now, nothing written
-  return running ? "Accept: keeping the edit once Claude's current step is done." : "Accept: keeping the edit.";
+  return running ? `Accept: keeping the edit once ${displayName(s.client)}'s current step is done.` : "Accept: keeping the edit.";
 }
 
 async function finishAccept(host: ActionHost, s: Session, by: UserEnd, counted: VariantId | null): Promise<void> {
@@ -292,7 +294,7 @@ async function finishPick(host: ActionHost, s: Session, v: VariantId, source: Us
     s.pendingPick = v;
     await selectVariant(host.ctx, s, { session_id: s.id, variant: v }, source);
     s.notices.push({ action: "pick", variant: v, source, at: host.ctx.now().toISOString() });
-    s.idleNote = `Picked ${v}: Claude continues on copy ${v} at its next call.`;
+    s.idleNote = `Picked ${v}: ${displayName(s.client)} continues on copy ${v} at its next call.`;
   } catch {
     s.idleNote = `Pick ${v} did not go through. Click Pick ${v} again.`;
   } finally {
@@ -317,18 +319,24 @@ export function idleStage(s: Session, error: unknown): { stage: HudStage; note?:
     const e = toToolError(error);
     if (e.code === "SESSION_ENDED") return null;
     if (e.code === "TARGET_CHANGED") return at("target_changed", given ?? "Another photo was selected, so nothing was changed; the edit is still open.");
-    if (waiting && e.code === "AWAITING_APPROVAL") return at("awaiting_approval", given ?? approvalNote(waiting.pass));
+    if (waiting && e.code === "AWAITING_APPROVAL") return at("awaiting_approval", given ?? approvalNote(s, waiting.pass));
     // A missing original outranks any note waiting to be shown, e.g. a version notice (Greptile, PR #101).
-    const why = e.code === "ORIGINAL_MISSING" ? MISSING_NOTE : (given ?? "Claude's last call failed; the edit is still open.");
+    const why = e.code === "ORIGINAL_MISSING" ? MISSING_NOTE : (given ?? `${sentenceName(s.client)}'s last call failed; the edit is still open.`);
     return at(waiting ? "awaiting_approval" : "awaiting_claude", why);
   }
-  if (awaitingPick(s)) return at("awaiting_pick", given ?? "Pick a copy here, or tell Claude which one.");
+  if (awaitingPick(s)) return at("awaiting_pick", given ?? `Pick a copy here, or tell ${displayName(s.client)} which one.`);
   const t = s.active;
   const finish = "Accept keeps the edit; Abort puts the photo back.";
   if (t.endReason === "converged") return at("converged", given ?? finish);
   if (t.endReason === "cap_reached") return at("awaiting_claude", given ?? `All ${s.maxPasses} passes are used. ${finish}`);
-  if (waiting) return at("awaiting_approval", given ?? approvalNote(waiting.pass));
+  if (waiting) return at("awaiting_approval", given ?? approvalNote(s, waiting.pass));
   return at("awaiting_claude", given);
+}
+
+/** The HUD's note once the AI ended the edit with lr_end_session (manager.ts). */
+export function closeNote(s: Session, outcome: "accept" | "revert"): string {
+  const name = sentenceName(s.client);
+  return outcome === "accept" ? `${name} accepted: the edit is kept.` : `${name} reverted: the photo is back as it was before the edit.`;
 }
 
 /** The answer to a call naming a session the user ended from the HUD or the menu. */

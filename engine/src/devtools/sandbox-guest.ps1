@@ -69,6 +69,10 @@ function EngineTools() {
   # by Claude Code 2026-10-17, output not kept, showed SyntaxError at the first JSON.parse; with [Console]::InputEncoding
   # set to UTF8Encoding($false) before Process.Start the same stub answered tools/list]. The encoding is set above.
   $utf8 = New-Object System.Text.UTF8Encoding $false
+  # The initialized notification goes only after the initialize reply, as MCP clients do: sent in one
+  # burst, the engine saw the notification before the request and wrote last-start.json with no client
+  # name [handle: scratch repro in Windows PowerShell 5.1 against build\setup's engine, 2026-10-17:
+  # client_name null in one burst, "sandbox-check" when waiting; SDK server\index.js:53, 259-262].
   foreach ($json in @(
     '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"sandbox-check","version":"1.0.0"}}}',
     '{"jsonrpc":"2.0","method":"notifications/initialized"}',
@@ -76,8 +80,12 @@ function EngineTools() {
   )) {
     $bytes = $utf8.GetBytes($json + "`n")
     $proc.StandardInput.BaseStream.Write($bytes, 0, $bytes.Length)
+    $proc.StandardInput.BaseStream.Flush()
+    if ($json -match '"method":"initialize"') {
+      $reply = $proc.StandardOutput.ReadLineAsync()
+      if (-not $reply.Wait(40000) -or $null -eq $reply.Result) { try { $proc.Kill() } catch { }; return -1 }
+    }
   }
-  $proc.StandardInput.BaseStream.Flush()
   $tools = -1
   $pending = $null
   $deadline = (Get-Date).AddSeconds(40)

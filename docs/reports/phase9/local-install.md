@@ -51,7 +51,7 @@ The 0.99.0 test build carries the same engine and plugin as 1.0.0: `--version` o
 
 **Results** go to `%TEMP%\LrC-AVG-phase9\`, and Claude Code collects them: `local-state.json`, `local_<time>.json` (the headline, every check and every answer, user folder redacted) and, from the clean room, `%TEMP%\LrC-AVG\cleanroom\*.json`.
 
-**The Sandbox check** (`npm run sandbox:check`, Claude Code runs it, Jim does not): starts Windows Sandbox with no network, `release\` read-only and a writable results folder. A PowerShell script inside installs `LrC-AVG-Setup-<version>.exe /S`, checks the files, the HKCU uninstall key, `setup-result.json` (expected `not_found`: no Claude Desktop in a clean Windows), the Modules copy and the bundled `node.exe --version`. It then seeds a Claude Desktop config and runs `setup-cli --installer` (expected `added`), starts the bundled engine over stdio (initialize, tools/list), uninstalls, and lists the leftovers. It prints `SANDBOX: PASS` or `FAIL` with each check and saves `%TEMP%\LrC-AVG-phase9\sandbox_<time>.json`. No Lightroom is in the Sandbox, so the plugin and the Status dialog are tested only here, in `phase9:local`.
+**The Sandbox check** (`npm run sandbox:check`, Claude Code runs it, Jim does not): starts Windows Sandbox with the network on (the Sandbox has no WebView2 runtime and the setup downloads it; see pre-run finding 11), `release\` read-only and a writable results folder. A PowerShell script inside installs `LrC-AVG-Setup-<version>.exe /S`, checks the files, the HKCU uninstall key, `setup-result.json` (expected `not_found`: no Claude Desktop in a clean Windows), the Modules copy and the bundled `node.exe --version`. It then seeds a Claude Desktop config and runs `setup-cli --installer` (expected `added`), starts the bundled engine over stdio (initialize, tools/list), uninstalls, and lists the leftovers. It prints `SANDBOX: PASS` or `FAIL` with each check and saves `%TEMP%\LrC-AVG-phase9\sandbox_<time>.json`. No Lightroom is in the Sandbox, so the plugin and the Status dialog are tested only here, in `phase9:local`.
 
 ## Steps for Jim
 
@@ -110,10 +110,25 @@ Checks Claude Code ran itself before Jim's run, each with its handle. Add the re
 4. **`npx tsc -p engine/tsconfig.json --noEmit`** printed nothing, and **`npx tsc -p engine/tsconfig.test.json --noEmit`** printed nothing, 2026-10-17. **`npx depcruise engine/src --config .dependency-cruiser.cjs --ignore-known`** printed `no dependency violations found (284 modules, 1503 dependencies cruised)`. **`npx vitest run tests/module-size.test.ts`**: 3 passed. The new phase9-local and sandbox files are 71-178 lines each.
 5. **Dry run of `npm run sandbox:check`'s first branch** (the built script, compiled to a scratch folder and run): it printed the enable instructions and `SANDBOX: NOT RUN (Windows Sandbox is not enabled)`, exit code 2.
 6. **`C:\Windows\System32\WindowsSandbox.exe` is missing on this PC** [handle: item 5's run; plan "Found" 9: `Test-Path`, 2026-10-17].
-7. **Sandbox result:** *(blank until Claude Code runs `npm run sandbox:check`: paste `SANDBOX: PASS` or `FAIL` with the failing checks, and the saved file path)*.
+7. **Sandbox result: `SANDBOX: PASS`, 18 of 18 checks** (2026-10-17, the 1.0.0 setup built from `main` 8660b66) [handle: `%TEMP%\LrC-AVG-phase9\sandbox_2026-10-17T19-17-41-544Z.json`].
+   - The silent install exits 0. The Deck exe is ProductVersion 1.0.0, there is one HKCU uninstall key, the plugin is in Modules, and the bundled `node.exe` is v24.11.1.
+   - `setup-result.json` reads `not_found` without Claude Desktop. `setup-cli --installer` adds the entry to a seeded config.
+   - The bundled engine answers with 36 tools and writes `last-start.json` with the client name.
+   - The uninstall keeps only the listed data, removes the plugin, the uninstall key and the shortcut, and takes the entry out.
+   - 4,001 files, 133,953,899 bytes installed.
+   - Two earlier runs failed on test problems, now fixed:
+     - The Sandbox had no network and no WebView2, so the setup exited with code 2 (finding 11).
+     - The guest sent `initialized` before the initialize reply, so `last-start.json` had no client name. A Windows PowerShell 5.1 repro on this PC showed `client_name` null in one burst and `"sandbox-check"` when waiting, and the guest now waits.
 8. **`npm run phase9:local` against a real PC has not been run by Claude Code**, by design: it quits and moves Jim's setup. Everything in "Harness" that touches Lightroom, Claude Desktop, NSIS wizards and the registry is [unverified] until Jim's run.
 9. **Plug-in Manager wording** in the instructions ("green dot", "Installed and running", "Enable" button) is from memory of Lightroom's dialog [unverified], and so are the Windows wordings ("Windows protected your PC", "More info", "Run anyway", Settings > Apps > Installed apps, the three dots > Uninstall) [unverified]; Jim's answer to the y/n questions is what counts, and he may report different wording.
 10. **The clean room does not park or check the Store build's redirected data copy** (`%LOCALAPPDATA%\Packages\Claude_*\LocalCache\Local\LrC-AVG\`): `MenuStatus.lua` reads `last-start.json` there, so the engine started by the Store build of Claude Desktop probably writes its data there too [handle: `plugin\LrC-AVG.lrplugin\MenuStatus.lua` `lastStart()` comment; LR_SDK_NOTES "MSIX"; the redirect itself is [inference]]. Step 5 reads both places; `--verify-gone` does not look in the second. Open point for the clean room's owner.
+11. **Windows Sandbox has no WebView2 runtime, so the check runs with the network on.**
+    - The first sandbox run (2026-10-17, network off) failed: `setup /S` exited with code 2 and nothing was installed [handle: `%TEMP%\LrC-AVG-phase9\sandbox_2026-10-17T18-47-21-176Z.json`].
+    - A probe `.wsb` found no EdgeUpdate `pv` key for WebView2 in the Sandbox (HKLM, WOW6432Node or HKCU) and no `C:\Program Files (x86)\Microsoft\EdgeWebView\Application`. Jim's PC has `pv` 155.0.4283.60 [handle: probe output `%TEMP%\LrC-AVG-phase9\probe\wv2.txt`, 2026-10-17; `reg query` on the host].
+    - Tauri's setup downloads the WebView2 bootstrapper when the runtime is missing, and aborts when it cannot (`installer.nsi:554-563`, `INSTALLWEBVIEW2MODE "downloadBootstrapper"`).
+    - With the network on, the Sandbox run also exercises that download path, which is the one a PC without WebView2 takes.
+    - Windows 11 normally ships WebView2 [unverified].
+    - An earlier run never started its guest. The Sandbox itself was crashing until Jim changed a GPU setting and rebooted [stated: Jim, 2026-10-17, "windows sandbox keeps crashing"]. After the reboot a one-file probe ran in 15 s.
 
 ## Observed (Jim)
 

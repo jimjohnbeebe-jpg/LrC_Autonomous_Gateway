@@ -2,7 +2,7 @@
 // results file and the verdict. The guest script itself is sandbox-guest.ps1 (PowerShell, no Python).
 // Windows Sandbox facts used here [unverified: Microsoft's .wsb schema as remembered, learn.microsoft.com
 // "Windows Sandbox configuration"; not fetched in this session; the first run is the observation]:
-// <Networking>Disable, <MappedFolders> with <ReadOnly>, <LogonCommand><Command>.
+// <VGpu>Disable, <MappedFolders> with <ReadOnly>, <LogonCommand><Command>.
 
 import { z } from "zod";
 
@@ -15,7 +15,12 @@ export const MIN_CHECKS = 12;
 
 const xml = (s: string): string => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-/** The .wsb: release\ read-only, the results folder writable, no network, the guest script at logon. */
+/**
+ * The .wsb: release\ read-only, the results folder writable, the guest script at logon. Network on: the
+ * Sandbox has no WebView2 runtime, so the setup downloads it, as on a PC without one, and aborts with
+ * exit code 2 when it cannot [handle: probe .wsb 2026-10-17, no EdgeUpdate pv key and no EdgeWebView
+ * folder in the Sandbox; host pv 155.0.4283.60; installer.nsi:554-563 downloadBootstrapper].
+ */
 export function wsbText(releaseDir: string, resultsDir: string, version: string, nodeVersion: string): string {
   const folder = (host: string, guest: string, readOnly: boolean): string =>
     `    <MappedFolder>\n      <HostFolder>${xml(host)}</HostFolder>\n      <SandboxFolder>${xml(guest)}</SandboxFolder>\n      <ReadOnly>${readOnly}</ReadOnly>\n    </MappedFolder>\n`;
@@ -23,7 +28,6 @@ export function wsbText(releaseDir: string, resultsDir: string, version: string,
   return [
     "<Configuration>",
     "  <VGpu>Disable</VGpu>",
-    "  <Networking>Disable</Networking>",
     "  <MappedFolders>",
     folder(releaseDir, SANDBOX_RELEASE, true) + folder(resultsDir, SANDBOX_RESULTS, false) + "  </MappedFolders>",
     "  <LogonCommand>",

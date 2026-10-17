@@ -1,7 +1,7 @@
 ---
 report: PHASE9 local install — does the local, unsigned LrC-AVG setup install, run, upgrade and uninstall cleanly on Jim's PC?
 phase: 9 (PR 1, phase-9/installer; plan "Jim run 1")
-status: template
+status: observed
 authored_by: "Template, harness and pre-run findings: Claude Code (Sonnet 5.5, workflow agent for D2+D3), 2026-10-17 (phase-9/installer). Observed: Jim (blank until he runs it). Verdict: Jim (blank)."
 date: 2026-10-17
 ---
@@ -136,19 +136,38 @@ Checks Claude Code ran itself before Jim's run, each with its handle. Add the re
 
 *(Filled by Jim only. Raw answers and pasted output. The harness saves every answer and check to `%TEMP%\LrC-AVG-phase9\local_<time>.json`; Claude Code collects it.)*
 
-**Run 1, date and time:**
+*Collected by Claude Code from Jim's messages and the saved results files on 2026-10-17. Jim's words are quoted. Every y/n is his answer in the harness.*
 
-- Plugin version, Lightroom Classic version, Claude Desktop version, Windows build:
-- Step 1 (build): minutes taken, size of `release\LrC-AVG-Setup-1.0.0.exe`:
-- Step 2 (park): CLEAN: YES/NO, what was listed:
-- Step 3 (install 0.99.0): boxes the wizard showed, errors:
-- Step 4 (Lightroom): listed y/n, "Installed and running" y/n, Status headline:
-- Step 5 (chat): Claude's answer in one line, `last-start.json` client:
-- Step 6 (upgrade over running): boxes shown, what closed by itself, errors, Status headline after the restart:
-- Step 7 (uninstall, box unticked): the uninstaller's pages, GONE: YES/NO and the LEFT lines:
-- Step 8 (reinstall, box ticked): INSTALLED: YES/NO, GONE: YES/NO and the LEFT lines:
-- Step 9 (restore): RESTORED: YES/NO, dev plugin "Installed and running" y/n:
-- Anything else you saw:
+**Run 1, 2026-10-17, 19:33-19:47 UTC: FAILED** [handle: `%TEMP%\LrC-AVG-phase9\local_2026-10-17T19-33-46-282Z.json`]. Lightroom Classic 15.6, plugin 1.0.0.
+- Park: stuck at the plugin step until the clean room fix in `cbbba29`. Jim: "there an no more LrC-AVG entries in Plugin Manager, and it still comes back to the same prompt."
+- Install 0.99.0: worked; `setup-result.json` outcome `added`.
+- Lightroom: the plugin was listed but **disabled**. Jim: "When the plugin was installed via the installer it was never enabled in LrC, and the plugin did not show up in Plug-in Extras. When viewed in Plugin Manager it showed as disabled. But when it was added manually via the LrC Add function the plugin did default to Enabled."
+- Chat: failed. The engine log shows `BRIDGE_DISCONNECTED`, "Lightroom plugin enabled".
+- Upgrade over the running install, both uninstalls and the restore: worked.
+- Jim: "several steps failed but were not called out." The harness went on after a failed step.
+- Cause: the dev plugin shared the ID `com.lrcavg.gateway` and had just been removed. Fixed in `d4e5271` (dev ID `com.lrcavg.gateway.dev`); the harness now stops loudly.
+
+**Run 1b (`-- --new --quick`), 2026-10-17, 20:2x UTC: stopped at the chat step.**
+- The installed plugin was "Installed and running" without a click.
+- Claude Desktop: `BRIDGE_DISCONNECTED`, "127.0.0.1:8765: ECONNREFUSED".
+- Cause: Lightroom started the plugin twice, 16 s apart, and the second bridge was left with no listener [handle: `%TEMP%\LrC-AVG\bridge.log` 13:32:28-13:32:54; netstat at 13:37:58]. Fixed in `e114600`.
+
+**Run 1b again, 2026-10-17, 20:48 UTC: WORKED, put back YES** [handle: `%TEMP%\LrC-AVG-phase9\local_2026-10-17T20-48-24-597Z.json`]. Every check passed; the upgrade and the second uninstall were skipped by `--quick`.
+- Install 0.99.0: Jim saw the setup's own message box about Claude Desktop's config, and the wizard's last page had a box to run the Deck.
+- Lightroom: "LrC-AVG (Autonomous Vision Gateway)" was listed and showed "Installed and running" without a click. Status headline: "ENGINE NOT CONNECTED (normal outside a chat)".
+- Chat: Claude described the selected photo.
+- Uninstall with the box unticked: GONE: YES. The uninstaller showed the "Delete the application data" box and asked to close a running program.
+- Restore: RESTORED: YES; "LrC-AVG (dev)" was Installed and running.
+
+**Jim, after run 1b:**
+- "At no time when running the setup .exe for any version have I been flagged by Windows Protection. The install runs without a protection prompt each time."
+- "Claude Desktop did NOT ask for permission to run the plugin."
+- "Test is done without errors."
+
+What explains the missing prompt (Claude Code, 2026-10-17):
+- Smart App Control is off on this PC [handle: `HKLM\SYSTEM\CurrentControlSet\Control\CI\Policy` `VerifiedAndReputablePolicyState` = 0].
+- `release\LrC-AVG-Setup-1.0.0.exe` has no `Zone.Identifier` stream, only `:$DATA` [handle: `Get-Item ... -Stream *`]. It was built on this PC, not downloaded, so it carries no Mark of the Web.
+- SmartScreen checks files that carry that mark [inference: Microsoft's SmartScreen and Mark of the Web behaviour, not tested here]. So no prompt is expected for a local build, and it says nothing about a download from GitHub. That is what the signed `v1.0.0-rc.1` download in PR 3 tests.
 
 ## Numbers
 
@@ -156,18 +175,20 @@ Filled from the Observed section and the saved results file.
 
 | Line | Result |
 |---|---|
-| Plugin in Modules listed in Plug-in Manager (Lightroom 15.6) | |
-| It starts enabled ("Installed and running") | |
-| Status headline at first start | |
-| Wizard 0.99.0: finished, `setup-result.json` outcome, entry names the bundled node | |
-| First chat: client has "claude", engine version, `node.exe` and `main.js` inside the install folder | |
-| Upgrade over a running install: boxes shown, finished, no missing or stale file, one uninstall key | |
-| Status after the Lightroom restart | |
-| Uninstall, data box unticked: GONE YES/NO; kept data present | |
-| Silent reinstall INSTALLED YES/NO; uninstall with the box ticked: GONE YES/NO with the data folders | |
-| Restore: RESTORED YES/NO; dev plugin works again | |
-| Headline of the run, `put back` | |
-| Total time after the build | |
+| Plugin in Modules listed in Plug-in Manager (Lightroom 15.6) | yes (runs 1 and 1b) |
+| It starts enabled ("Installed and running") | run 1: no (dev plugin with the same ID); run 1b: yes, without a click |
+| Status headline at first start | "ENGINE NOT CONNECTED (normal outside a chat)" (run 1b) |
+| Wizard 0.99.0: finished, `setup-result.json` outcome, entry names the bundled node | yes, `added`, yes (runs 1 and 1b) |
+| First chat: Claude Desktop client, engine version, `node.exe` and `main.js` inside the install folder | run 1b: yes (after `e114600`) |
+| Upgrade over a running install: boxes shown, finished, no missing or stale file, one uninstall key | run 1: yes; `setup-result.json` `unchanged` |
+| Status after the Lightroom restart | run 1: no `status.txt` (the plugin was disabled) |
+| Uninstall, data box unticked: GONE YES/NO; kept data present | YES; kept `setup-result.json`, `setup-result.txt` (run 1) |
+| Silent reinstall INSTALLED YES/NO; uninstall with the box ticked: GONE YES/NO with the data folders | run 1: YES, YES |
+| Restore: RESTORED YES/NO; dev plugin works again | YES, yes (runs 1 and 1b) |
+| Headline of the run, `put back` | run 1: FAILED, YES; run 1b: WORKED, YES |
+| Windows prompt at install | none in any run [stated: Jim]; local build, no Mark of the Web, Smart App Control off |
+| Claude Desktop permission prompt for LrC-AVG | none [stated: Jim] |
+| Total time after the build | not measured |
 
 ## Verdict
 

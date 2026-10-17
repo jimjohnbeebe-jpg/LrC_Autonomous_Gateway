@@ -15,7 +15,7 @@ Runtime this was built and tested on: Node `v24.11.1`, npm `11.19.1` (Windows 11
 | Package | Pinned | Kind | License | `engines.node` | npm registry |
 |---|---|---|---|---|---|
 | `@modelcontextprotocol/sdk` | 1.32.0 | dependency | MIT | `>=18` | https://www.npmjs.com/package/@modelcontextprotocol/sdk/v/1.32.0 |
-| `sharp` | 0.35.4 | dependency | Apache-2.0 | `>=20.9.0` | https://www.npmjs.com/package/sharp/v/0.35.4 |
+| `sharp` | 0.35.5 | dependency | Apache-2.0 | `>=20.9.0` | https://www.npmjs.com/package/sharp/v/0.35.5 |
 | `zod` | 4.6.5 | dependency | MIT | — | https://www.npmjs.com/package/zod/v/4.6.5 |
 | `vitest` | 5.0.1 | devDependency | MIT | `^22.12.0 \|\| ^24.0.0 \|\| >=26.0.0` | https://www.npmjs.com/package/vitest/v/5.0.1 |
 | `typescript` | 7.0.2 | devDependency | Apache-2.0 | `>=16.20.0` | https://www.npmjs.com/package/typescript/v/7.0.2 |
@@ -84,12 +84,12 @@ No new npm package or crate: `tools\setup\*.ts` use `zod` 4.6.5 from the root `n
 | `node-LICENSE.txt` | Node 24.11.1 | THIRD_PARTY_NOTICES.txt | https://raw.githubusercontent.com/nodejs/node/v24.11.1/LICENSE | `537308465103a306d0e3eecf42632b4ff1b48aaaec044e9fc10a78c81fd00b34` |
 | `lgpl-3.0.txt` | gnu.org | THIRD_PARTY_NOTICES.txt (libvips) | https://www.gnu.org/licenses/lgpl-3.0.txt | `e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118` |
 | `gpl-3.0.txt` | gnu.org | THIRD_PARTY_NOTICES.txt (LGPL refers to it) | https://www.gnu.org/licenses/gpl-3.0.txt | `3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986` |
-| `sharp-libvips-THIRD-PARTY-NOTICES.md` | sharp-libvips v1.3.3 | THIRD_PARTY_NOTICES.txt | https://raw.githubusercontent.com/lovell/sharp-libvips/v1.3.3/THIRD-PARTY-NOTICES.md | `25ffcfa69e28b1913ced27ec778b90f24911a1bb3021253577e8b0af55db0d49` |
+| `sharp-libvips-THIRD-PARTY-NOTICES.md` | sharp-libvips v1.3.4 | THIRD_PARTY_NOTICES.txt | https://raw.githubusercontent.com/lovell/sharp-libvips/v1.3.4/THIRD-PARTY-NOTICES.md | `6f0d5086e3bcbee12bcdacf5878b31d1104002aeecaeb241d3fff466108082fe` |
 
 ## Notes
 
 - **zod 4 with the MCP SDK:** SDK 1.30.1 declares `zod: "^3.25 || ^4.0"` as dependency and peer (`npm view @modelcontextprotocol/sdk@1.30.1 dependencies peerDependencies`), so zod 4.6.5 is supported. SDK 1.32.0 declares the same (`npm view @modelcontextprotocol/sdk@1.32.0 dependencies peerDependencies`, 2026-10-03).
 - **TypeScript 7.0.2** is the npm `latest` tag (`npm view typescript dist-tags` → `latest: 7.0.2`). It is the native-compiled `tsc`, installed through platform packages such as `@typescript/typescript-win32-x64`. `tsc --version` → `Version 7.0.2`, and `npm run build` compiles `engine\src` cleanly. Automaat still pins TS 6 for `typescript` and loads TS 7 as `@typescript/native` (`vendor\automaat\server\package.json:60, 65`), apparently for its ESLint tooling. We have no ESLint yet; revisit if we add typed lint rules.
-- **sharp** bundles libvips 8.18.6 (`sharp.versions` at runtime). It cannot decode the Z8 NEF fixtures, and it decodes only the 258×172 IFD0 thumbnail of the DxO DNG (see `docs\reports\phase0\S3.md`, "Pre-run findings"). No other decoder is added; this follows the stack rule.
+- **sharp** bundles libvips 8.18.7 since 0.35.5 (`sharp.versions` at runtime, 2026-10-17; 8.18.6 in 0.35.4). With 0.35.4 it could not decode the Z8 NEF fixtures, and it decoded only the 258×172 IFD0 thumbnail of the DxO DNG (see `docs\reports\phase0\S3.md`, "Pre-run findings"). Not rerun on 0.35.5 [unverified]; the engine measures only JPEGs Lightroom rendered, so it does not depend on it. No other decoder is added; this follows the stack rule. 0.35.4 → 0.35.5 on 2026-10-17 for GHSA-wq5f-xc86-pv6w (high, librsvg in libvips) [handle: https://github.com/advisories/GHSA-wq5f-xc86-pv6w, Dependabot alerts #4-#6].
 - **Spike scripts run with Node's built-in TypeScript type stripping** (`node file.ts`; confirmed on v24.11.1), so no `tsx`/`ts-node` dependency is needed. This requires erasable-only TS syntax (`erasableSyntaxOnly: true` in both tsconfigs).
 - **Workspace layout:** the root `package.json` declares npm workspaces `engine` and `spikes`, so one `npm install` at the repo root installs both.

@@ -35,13 +35,13 @@ lrc-avg-workspace@ D:\Developer\LrC_Autonomous_Gateway
 ├─┬ lrc-avg-spikes@0.0.0 -> .\spikes
 │ ├── @modelcontextprotocol/sdk@1.30.1
 │ ├── @types/node@24.13.6
-│ ├── sharp@0.35.4
+│ ├── sharp@0.35.5
 │ ├── typescript@7.0.2
 │ └── zod@4.6.5
 └─┬ lrc-avg@0.0.0 -> .\engine
   ├── @modelcontextprotocol/sdk@1.30.1 deduped
   ├── @types/node@24.13.6 deduped
-  ├── sharp@0.35.4 deduped
+  ├── sharp@0.35.5 deduped
   ├── typescript@7.0.2 deduped
   ├── vitest@5.0.1
   └── zod@4.6.5 deduped

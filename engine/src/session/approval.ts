@@ -185,7 +185,7 @@ export function approvePass(ctx: SessionContext, s: Session, args: ApproveArgs, 
   if (args.confirmed !== true) {
     throw new ToolError("NOT_CONFIRMED", "Ask the user to approve the pass in the chat first, then call again with confirmed: true.", false);
   }
-  const r = approve(ctx, s, "claude");
+  const r = approve(ctx, s, "ai");
   if (!r.ok) throw new ToolError("NOT_AWAITING_APPROVAL", r.reason, false, { session_id: s.id });
   if (!r.already && !r.woke && !busy) ctx.deps.hud?.stage(s, "awaiting_claude", { note: `Pass ${r.pass} approved in chat: ${displayName(s.client)} goes on at its next call.` });
   const next = r.woke ? "The waiting lr_step goes ahead now." : "Call lr_step for the next pass.";

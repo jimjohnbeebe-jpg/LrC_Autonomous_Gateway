@@ -36,13 +36,13 @@ describe("issue #124: lr_end_session abandon", () => {
     expect((await fails(rig.manager.end({ session_id: ID, outcome: "revert" }))).message).toMatch(/"abandon"/);
     const before = toPhoto();
     const out = (await abandon(rig.manager)).json;
-    expect(out).toMatchObject({ ok: true, outcome: "abandoned", ended_by: { source: "claude" }, ai_mask: { kind: "landscape_vegetation", state: "failed" }, lightroom_guard: "cleared" });
+    expect(out).toMatchObject({ ok: true, outcome: "abandoned", ended_by: { source: "ai" }, ai_mask: { kind: "landscape_vegetation", state: "failed" }, lightroom_guard: "cleared" });
     expect(out["snapshot"]).toMatch(/^AVG pre-session /);
     expect(out["note"]).toMatch(/Nothing was read from or written to the photo.*Snapshots panel/);
     expect(toPhoto()).toBe(before);
     expect(sent("clear_pending_ai")).toBe(1);
     expect(lr.masks.guard.size).toBe(0);
-    expect(readLog()).toMatchObject({ outcome: "abandoned", ended_by: { source: "claude" }, revert: null, recipe_path: null });
+    expect(readLog()).toMatchObject({ outcome: "abandoned", ended_by: { source: "ai" }, revert: null, recipe_path: null });
     expect(rig.manager.current()).toBeNull();
     expect(await hudAt("ended")).toMatchObject({ note: abandonedNote(UNNAMED, false) });
     lr.masks.tableRoute = "computes";

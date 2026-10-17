@@ -4,7 +4,7 @@
 import { z } from "zod";
 import { lightroomNotices, pluginVersionAtLeast } from "../bridge/index.js";
 import { WHERE_NOTICE, WHERE_PLUGIN } from "../library/index.js";
-import { boxProblem, summarize, type Region, type RegionBox } from "../metrics/index.js";
+import { boxProblem, summarize, type Metrics, type Region, type RegionBox, type RegionStats } from "../metrics/index.js";
 import { ParamError, WHITE_BALANCE_UNITS, processVersionLabel, type FromSdkResult } from "../params/index.js";
 import { cropRegion } from "../preview/index.js";
 import { LEFT_OPEN_NOTE, leftOpenJson, type SessionManager, type SessionView, type TargetId } from "../session/index.js";
@@ -192,8 +192,13 @@ async function regionPreview(ctx: ToolContext, session: { id: string; target: Ta
   const fraction = size && photoWidth ? Math.max(region.w * (size.width / photoWidth), region.h * (size.height / photoWidth)) : Math.max(region.w, region.h);
   // The epsilon keeps 800 / 0.26666666666666666 (= 3000.0000000000005) at 3000.
   const edgeFor = (f: number): number => Math.min(REGION_EXPORT_MAX, Math.max(longEdge, Math.ceil(longEdge / f - 1e-6)));
+  // The box rides along as one more region, so crop_metrics come from the same decode as the frame's,
+  // on the export at export resolution and upright (the service rotates before measuring) [handle:
+  // src\preview\service.ts render(), measureImage after .rotate(); tests\batch1-region-metrics.test.ts].
+  // It is the last region, so a session region with the same label cannot be mistaken for it.
+  const measured = [...regions, { label: "region preview", box: region }];
   let exportEdge = edgeFor(fraction);
-  let preview = await render(ctx, exportEdge, photo.uuid, regions);
+  let preview = await render(ctx, exportEdge, photo.uuid, measured);
   let crop = await cropRegion(preview.jpeg, region, { longEdge, quality: PREVIEW_QUALITY });
   // The export follows a Lightroom crop, as croppedDimensions does [handle: docs\reports\phase4\S7.md
   // Numbers, item 3: export 1600 x 800, aspect 2.0, both runs]. The export can still have another
@@ -208,11 +213,12 @@ async function regionPreview(ctx: ToolContext, session: { id: string; target: Ta
     const needed = edgeFor(Math.max(region.w * (preview.width / long), region.h * (preview.height / long)));
     if (needed > exportEdge) {
       exportEdge = needed;
-      preview = await render(ctx, exportEdge, photo.uuid, regions);
+      preview = await render(ctx, exportEdge, photo.uuid, measured);
       crop = await cropRegion(preview.jpeg, region, { longEdge, quality: PREVIEW_QUALITY });
       retried = true;
     }
   }
+  const { frame, box } = splitCrop(ctx, preview.metrics, preview.sha256);
   const previewLong = Math.max(preview.width, preview.height);
   const effectiveScale = photoWidth ? Math.round(crop.scale * (previewLong / photoWidth) * 10000) / 10000 : null;
   const note = !size
@@ -235,10 +241,27 @@ async function regionPreview(ctx: ToolContext, session: { id: string; target: Ta
     scale_in_export: crop.scale,
     preview_source: preview.source,
     preview_hash: preview.sha256,
-    metrics: summarize(preview.metrics),
+    // metrics: the whole export; crop_metrics: the requested box on that export (engine 0.35.0, hands-on batch 1).
+    metrics_scope: "frame",
+    metrics: summarize(frame),
+    crop_metrics: box,
     timings: preview.timings,
   };
   return { json, image: crop.jpeg, log: { uuid: preview.uuid, region, effective_scale: effectiveScale, photo_size: size, timings: preview.timings } };
+}
+
+/**
+ * Splits the region preview's box (the last region) out of its export's metrics: the frame with the
+ * session's regions only, and the box's stats without label, box and rect (the json has region and
+ * rect_in_export). The engine's last render keeps the frame too, so lr_get_metrics does not list the box.
+ */
+function splitCrop(ctx: ToolContext, metrics: Metrics, hash: string): { frame: Metrics; box: Omit<RegionStats, "label" | "box" | "rect"> } {
+  const last = metrics.regions.at(-1);
+  if (!last) throw new ToolError("INTERNAL_ERROR", "the region preview's box was not measured.", false);
+  const frame = { ...metrics, regions: metrics.regions.slice(0, -1) };
+  if (ctx.last?.preview_hash === hash) ctx.last.metrics = frame;
+  const { label: _label, box: _box, rect: _rect, ...box } = last;
+  return { frame, box };
 }
 
 /**

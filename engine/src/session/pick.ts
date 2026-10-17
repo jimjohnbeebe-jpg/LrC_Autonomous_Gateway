@@ -62,12 +62,12 @@ export function checkVariantStep(s: Session, t: Target): void {
  * lr_select_variant with the same letter confirms it, selecting the copy again [handle:
  * tests\hud-actions.test.ts "Pick from the HUD: the session continues on the copy …"].
  */
-export async function selectVariant(ctx: SessionContext, s: Session, args: SelectArgs, by: "claude" | UserSource = "claude"): Promise<SessionOutput> {
+export async function selectVariant(ctx: SessionContext, s: Session, args: SelectArgs, by: "ai" | UserSource = "ai"): Promise<SessionOutput> {
   if (s.mode !== "variants") throw new ToolError("INVALID_ARGUMENTS", "lr_select_variant is for a Variants session (lr_begin_session mode \"variants\").", false);
   checkReady(s);
-  const confirming = s.picked !== null && s.picked === args.variant && s.pickedBy !== "claude" && by === "claude";
+  const confirming = s.picked !== null && s.picked === args.variant && s.pickedBy !== "ai" && by === "ai";
   if (s.picked !== null && !confirming) {
-    const where = s.pickedBy === "claude" || s.pickedBy === null ? "" : ` by the user in the ${s.pickedBy === "menu" ? "menu" : "HUD"}`;
+    const where = s.pickedBy === "ai" || s.pickedBy === null ? "" : ` by the user in the ${s.pickedBy === "menu" ? "menu" : "HUD"}`;
     throw new ToolError("INVALID_ARGUMENTS", `Copy ${s.picked} is already picked${where}; the session continues on it.`, false, { session_id: s.id });
   }
   const t = variant(s, args.variant);
@@ -99,7 +99,7 @@ export async function selectVariant(ctx: SessionContext, s: Session, args: Selec
     converged_by_metrics: t.endReason === "converged",
     cap_reached: t.endReason === "cap_reached",
     ...(unrefined.length ? { picked_before_refining: unrefined } : {}),
-    ...(s.pickedBy !== "claude" && s.pickedBy !== null ? { picked_by: s.pickedBy } : {}),
+    ...(s.pickedBy !== "ai" && s.pickedBy !== null ? { picked_by: s.pickedBy } : {}),
     unpicked: s.variants.filter((v) => v !== t).map(brief),
     note:
       `Copy ${t.id} is selected in Lightroom, and lr_step works on it from now on (target may be left out). ` +

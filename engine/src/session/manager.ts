@@ -351,8 +351,8 @@ export class SessionManager {
     if (!s || s.id !== sessionId) {
       throw new ToolError(
         "SESSION_NOT_ACTIVE",
-        s ? `Session ${sessionId} is not the open one (${s.id}).` : `No session is open (asked for ${sessionId}); start one with lr_begin_session.`,
-        false,
+        s ? `Session ${sessionId} is not the open one: call again with session_id "${s.id}".` : `No session is open (asked for ${sessionId}); start one with lr_begin_session.`,
+        true, { session_id: sessionId, open_session_id: s?.id ?? null },
       );
     }
     return s;

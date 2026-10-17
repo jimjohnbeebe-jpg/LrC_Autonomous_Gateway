@@ -52,10 +52,10 @@ describe("approve_each_pass: Converge mode", () => {
     const ok = await approve(m);
     expect(ok.json).toEqual({ ok: true, session_id: ID, approved_pass: 1, next: "Call lr_step for the next pass." });
     const out = await step(m, { exposure: -0.1 });
-    expect(out.json).toMatchObject({ pass: "2/4", approval: { pass: 1, by: "claude", waited_ms: 0 } });
+    expect(out.json).toMatchObject({ pass: "2/4", approval: { pass: 1, by: "ai", waited_ms: 0 } });
     const log = readLog();
-    expect(log.approvals).toEqual([{ at: expect.any(String), target: "master", pass: 1, by: "claude" }]);
-    expect(log.passes.at(-1)).toMatchObject({ n: 2, approval: { pass: 1, by: "claude", waited_ms: 0 } });
+    expect(log.approvals).toEqual([{ at: expect.any(String), target: "master", pass: 1, by: "ai" }]);
+    expect(log.passes.at(-1)).toMatchObject({ n: 2, approval: { pass: 1, by: "ai", waited_ms: 0 } });
     // Pass 2 now waits for its own approval.
     expect(await fails(step(m, { exposure: 0.1 }))).toMatchObject({ code: "AWAITING_APPROVAL", details: { pass: 2 } });
   });
@@ -74,7 +74,7 @@ describe("approve_each_pass: Converge mode", () => {
     const ok = await approve(m);
     expect(ok.json).toMatchObject({ approved_pass: 1, next: "The waiting lr_step goes ahead now." });
     const out = await waiting;
-    expect(out.json).toMatchObject({ pass: "2/4", approval: { pass: 1, by: "claude" } });
+    expect(out.json).toMatchObject({ pass: "2/4", approval: { pass: 1, by: "ai" } });
     expect((out.json["approval"] as { waited_ms: number }).waited_ms).toBeGreaterThanOrEqual(90);
     expect(performance.now() - started).toBeLessThan(10000);
   });
@@ -104,7 +104,7 @@ describe("approve_each_pass: Converge mode", () => {
     expect(e.code).not.toBe("AWAITING_APPROVAL");
     if (apply) plugin.handlers.set("apply_settings", apply);
     const out = await step(m, { exposure: -0.1 });
-    expect(out.json).toMatchObject({ pass: "2/4", approval: { pass: 1, by: "claude", waited_ms: 0 } });
+    expect(out.json).toMatchObject({ pass: "2/4", approval: { pass: 1, by: "ai", waited_ms: 0 } });
   });
 
   it("lr_approve_pass: refused without confirmed, when no pass waits, in autonomous mode; a repeat says so", async () => {

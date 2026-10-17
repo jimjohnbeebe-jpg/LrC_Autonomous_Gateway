@@ -27,6 +27,7 @@ import { CATALOG_DEFS } from "./defs-catalog.js";
 import { METADATA_DEFS } from "./defs-metadata.js";
 import { FILE_DEFS } from "./defs-files.js";
 import { CONTEXT_DEFS } from "./defs-context.js";
+import { HELP_DEFS, INSTRUCTIONS } from "./defs-help.js";
 import { INTENT_DEFS } from "./defs-intents.js";
 import { MASK_DEFS } from "./defs-masks.js";
 import { PROPAGATION_DEFS } from "./defs-propagation.js";
@@ -39,7 +40,7 @@ import type { ToolOutput } from "./tools-shared.js";
 import { ENGINE_VERSION } from "./version.js";
 
 /** The tool groups, in the order the server lists them. */
-const DEFS: ToolDef[] = [...CONTEXT_DEFS, ...SESSION_DEFS, ...MASK_DEFS, ...INTENT_DEFS, ...PROPAGATION_DEFS, ...CATALOG_DEFS, ...METADATA_DEFS, ...FILE_DEFS];
+const DEFS: ToolDef[] = [...HELP_DEFS, ...CONTEXT_DEFS, ...SESSION_DEFS, ...MASK_DEFS, ...INTENT_DEFS, ...PROPAGATION_DEFS, ...CATALOG_DEFS, ...METADATA_DEFS, ...FILE_DEFS];
 
 /** The advertised JSON Schema of a tool's arguments, from the same zod schema that validates them. */
 function inputSchema(schema: z.ZodObject): Tool["inputSchema"] {
@@ -95,7 +96,9 @@ async function withProgress<T>(token: string | number | undefined, notify: Notif
 }
 
 export function createServer(tools: Tools, options: { progressMs?: number; deadlineMs?: number } = {}): Server {
-  const server = new Server({ name: "lrc-avg", version: ENGINE_VERSION }, { capabilities: { tools: {} } });
+  // `instructions` go out in the initialize result: OpenCode appends them to its prompt [handle:
+  // https://github.com/anomalyco/opencode/issues/39574]; how Claude Desktop and Claude Code use them is [unverified].
+  const server = new Server({ name: "lrc-avg", version: ENGINE_VERSION }, { capabilities: { tools: {} }, instructions: INSTRUCTIONS });
   const byName = new Map(DEFS.map((d) => [d.name, d]));
   const deadline = createDeadline({ ...(options.deadlineMs !== undefined ? { ms: options.deadlineMs } : {}), readOnly: (t) => byName.get(t)?.annotations?.readOnlyHint === true, log: (t, a, p) => tools.recordPending(t, a, p) });
 

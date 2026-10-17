@@ -56,12 +56,15 @@ it("answers every tool within the deadline when its work never ends", async () =
     }),
   );
   await mcp.close();
-  for (const a of answers) {
+  // lr_help (engine 0.35.0) returns static text without Tools, so it answers at once, not pending.
+  const help = answers.find((a) => a.name === "lr_help");
+  expect(help?.body["help"]).toEqual(expect.any(String));
+  for (const a of answers.filter((x) => x !== help)) {
     expect(a.pending || a.code === "INVALID_ARGUMENTS", `${a.name}: ${JSON.stringify(a)}`).toBe(true);
     expect(a.ms, a.name).toBeLessThan(1000);
   }
   // Every tool that takes {} answers pending (9 of the 35 on 2026-10-15); the others refuse {}.
-  const takesNoArgs = tools.filter((t) => (t.inputSchema.required ?? []).length === 0).map((t) => t.name);
+  const takesNoArgs = tools.filter((t) => t.name !== "lr_help" && (t.inputSchema.required ?? []).length === 0).map((t) => t.name);
   expect(answers.filter((a) => a.pending).map((a) => a.name)).toEqual(takesNoArgs);
   expect(takesNoArgs.length).toBeGreaterThanOrEqual(9);
   expect(answers.find((a) => a.name === "lr_get_preview")?.body).toMatchObject({ ok: true, pending: true, tool: "lr_get_preview", next: expect.stringMatching(/Call lr_get_preview again with exactly the same arguments/) });

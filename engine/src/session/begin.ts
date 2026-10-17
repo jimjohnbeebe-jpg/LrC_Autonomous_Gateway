@@ -15,7 +15,7 @@ import type { LoadedIntent } from "../intents/index.js";
 import { SESSION_LOG_SCHEMA_ID, SessionLogFiles, type SessionLogData } from "../log/index.js";
 import { ToolError, originalMissing } from "../mcp/errors.js";
 import { summarize } from "../metrics/index.js";
-import { WHITE_BALANCE_UNITS, type FromSdkResult } from "../params/index.js";
+import { WHITE_BALANCE_UNITS, type CanonicalSettings, type FromSdkResult } from "../params/index.js";
 import { readPage, resolveSessionSettings, type PageRead, type SessionSettings } from "../settings/index.js";
 import { APPROVAL_WAIT_MS } from "./approval.js";
 import { checkVariants } from "./copies.js";
@@ -261,7 +261,29 @@ export function sessionHeader(opened: Opened): Record<string, unknown> {
     max_passes: s.maxPasses,
     ...settingsJson(s),
     snapshot: s.snapshot,
+    log_path: s.files.logPath,
+    start_off_zero: startOffZero(s.startSettings),
   };
+}
+
+/**
+ * The zero-neutral sliders: basic tone, presence, HSL, color grading saturation, luminance and balance,
+ * vignette and grain amounts. Left out: white balance, profile, sharpening, noise reduction, lens,
+ * curves, masks, and sliders whose neutral is not 0 (grading hues and blending, vignette midpoint …).
+ */
+const ZERO_NEUTRAL = /^(exposure|contrast|highlights|shadows|whites|blacks|texture|clarity|dehaze|vibrance|saturation|hsl\.\w+\.\w+|grading\.\w+\.(sat|lum)|grading\.balance|(vignette|grain)\.amount)$/;
+
+/**
+ * The begin result's `start_off_zero` (engine 0.35.0): the zero-neutral sliders that are not 0 on the photo at begin,
+ * with their values. These are settings found on the photo, which may be import defaults or earlier
+ * edits, never an "edited" verdict: 0 is the neutral value [inference], and a photo read before any AVG
+ * edit had Exposure2012 to Blacks2012 at 0 but Texture 8 and Clarity2012 4 [handle:
+ * docs\reports\phase0\S5\s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json].
+ */
+export function startOffZero(settings: CanonicalSettings): Record<string, number> {
+  const off: Record<string, number> = {};
+  for (const [name, value] of Object.entries(settings)) if (ZERO_NEUTRAL.test(name) && typeof value === "number" && value !== 0) off[name] = value;
+  return off;
 }
 
 function beginJson(opened: Opened, p: Pass0): Record<string, unknown> {

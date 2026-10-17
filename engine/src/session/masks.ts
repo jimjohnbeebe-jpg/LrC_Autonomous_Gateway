@@ -1,6 +1,7 @@
 // The mask tools inside an editing session (GitHub issue #59, PR C step 2): lr_list_masks reads the
 // photo's masks; lr_create_mask, lr_edit_mask and lr_delete_mask each make one pass [stated: Jim,
-// 2026-10-03, "Inside sessions (Recommended)", "Own pass (Recommended)"]. A mask pass:
+// 2026-10-03, "Inside sessions (Recommended)", "Own pass (Recommended)"], except an lr_edit_mask that only
+// renames (renameMask below: no pass). A mask pass:
 //   - counts against max_passes like a step, may follow convergence (it never sets it and clears it),
 //     and in approve_each_pass mode waits for the approval of the pass before (approval.ts);
 //   - reads the table, applies the operation to a copy (params\mask-ops.ts), renders the photo as it
@@ -82,11 +83,11 @@ export async function listMasks(ctx: SessionContext, s: Session, args: ListMasks
 export const createMask = (ctx: SessionContext, s: Session, a: CreateMaskArgs): Promise<SessionOutput> =>
   maskPass(ctx, s, a, { op: "create", kind: a.kind, name: a.name, geometry: a.geometry, point: a.point, sliders: a.sliders });
 export const editMask = (ctx: SessionContext, s: Session, a: EditMaskArgs): Promise<SessionOutput> =>
-  maskPass(ctx, s, a, { op: "edit", mask_id: a.mask_id, name: a.name, active: a.active, inverted: a.inverted, geometry: a.geometry, sliders: a.sliders, combine: a.combine, part: a.part, remove_part: a.remove_part });
+  renameOnly(a) ? renameMask(ctx, s, a) : maskPass(ctx, s, a, { op: "edit", mask_id: a.mask_id, name: a.name, active: a.active, inverted: a.inverted, geometry: a.geometry, sliders: a.sliders, combine: a.combine, part: a.part, remove_part: a.remove_part });
 export const deleteMask = (ctx: SessionContext, s: Session, a: DeleteMaskArgs): Promise<SessionOutput> => maskPass(ctx, s, a, { op: "delete", mask_id: a.mask_id });
 
-/** The photo a mask pass works on, once the plugin, the pick and the pass cap allow it. */
-function maskTarget(ctx: SessionContext, s: Session, requested: TargetId | undefined): Target {
+/** The photo a mask pass works on, once the plugin, the pick and the pass cap (unless `cap` is false: a rename) allow it. */
+function maskTarget(ctx: SessionContext, s: Session, requested: TargetId | undefined, cap = true): Target {
   if (s.mode === "variants") {
     checkReady(s);
     if (!s.picked) throw new ToolError("MASKS_AFTER_PICK", "Masks are made on the pick: let the user pick a copy (lr_select_variant) first; the copies before the pick take one lr_step each.", false, { session_id: s.id });
@@ -96,7 +97,7 @@ function maskTarget(ctx: SessionContext, s: Session, requested: TargetId | undef
   if (version !== undefined && !pluginVersionAtLeast(version, MASKS_PLUGIN)) {
     throw new ToolError("PLUGIN_TOO_OLD", `The mask tools need the LrC-AVG plugin ${MASKS_PLUGIN} or later; Lightroom runs ${version}. Restart Lightroom so it loads the current plugin.`, false);
   }
-  if (t.endReason === "cap_reached" || t.passes >= s.maxPasses) {
+  if (cap && (t.endReason === "cap_reached" || t.passes >= s.maxPasses)) {
     throw new ToolError("CAP_REACHED", `All ${s.maxPasses} passes are used, and each mask change is a pass. Call lr_end_session; next time raise max_passes at lr_begin_session when masks are planned.`, false, { session_id: s.id });
   }
   return t;
@@ -129,6 +130,46 @@ const masksChanged = (s: Session): ToolError =>
 
 const sameTable = (a: readonly Correction[], b: readonly Correction[]): boolean =>
   tableInfo({ [MASK_TABLE_KEY]: a }).fingerprint === tableInfo({ [MASK_TABLE_KEY]: b }).fingerprint;
+
+/** An lr_edit_mask that gives a new name and no other change (target, rationale and return_image aside). */
+const renameOnly = (a: EditMaskArgs): a is EditMaskArgs & { name: string } =>
+  a.name !== undefined && [a.active, a.inverted, a.geometry, a.sliders, a.combine, a.part, a.remove_part].every((f) => f === undefined);
+
+/**
+ * A rename alone is not a pass (engine 0.35.0) [stated: Jim, 2026-10-16, handover "name-only lr_edit_mask does not consume a
+ * pass"]: a name does not change pixels [inference], so there is no approval wait, render or guardrail check,
+ * and it works at the pass cap. It writes the table as one History step with the current pass number
+ * ("AVG <id> pass n/N mask rename"). Only the tool log (the call's args) and Lightroom's History record it: the
+ * session log has no entry for it, and the recipe carries a mask count, no names (end.ts). The last render
+ * still stands for the photo, so its mask fingerprint moves to the renamed table (io.ts fresh would render
+ * again otherwise). Variants mode: on the pick only, as for a pass.
+ */
+async function renameMask(ctx: SessionContext, s: Session, a: EditMaskArgs & { name: string }): Promise<SessionOutput> {
+  const started = performance.now();
+  const t = maskTarget(ctx, s, a.target, false);
+  const op: MaskOp = { op: "edit", mask_id: a.mask_id, name: a.name };
+  s.work = { target: t, pass: null, note: "Renaming a mask" };
+  await focus(ctx, s, t);
+  const first = await readSdk(ctx, s, t);
+  const before = readTable(first.sdk);
+  refuseUncaptured(s, before, op);
+  const plan = applyOp(before, op); // MaskError: nothing written
+  if (sameTable(before, plan.entries)) throw new ToolError("NO_CHANGE", "Nothing was written: the mask already has this name. A rename uses no pass.", false, { session_id: s.id });
+  const name = historyName(s, t, t.passes, "mask rename");
+  let sdk: SdkSettings;
+  try {
+    sdk = await writeTable(ctx, s, t, plan.entries, name, false);
+  } catch (err) {
+    throw failed(ctx, s, `mask rename (pass ${t.passes})`, err);
+  }
+  if (t.last?.masks === first.view.masks.fingerprint) t.last = { ...t.last, masks: ctx.deps.map.fromSdk(sdk).masks.fingerprint };
+  const masks = readTable(sdk).map(summarize);
+  const mask = masks.find((m) => m.id === plan.id) ?? plan.after ?? plan.before;
+  return {
+    json: { ok: true, session_id: s.id, target: t.id, pass: `${t.passes}/${s.maxPasses}`, pass_used: false, op: "rename", mask, masks, history_names: [name], passes_left: s.maxPasses - t.passes, timings: { total_ms: ms(started) } },
+    log: { session_id: s.id, op: "rename", mask_id: plan.id, history_names: [name] },
+  };
+}
 
 async function maskPass(ctx: SessionContext, s: Session, args: PassArgs, op: MaskOp): Promise<SessionOutput> {
   const started = performance.now();

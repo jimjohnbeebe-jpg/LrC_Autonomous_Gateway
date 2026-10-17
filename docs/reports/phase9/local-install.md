@@ -2,7 +2,7 @@
 report: PHASE9 local install — does the local, unsigned LrC-AVG setup install, run, upgrade and uninstall cleanly on Jim's PC?
 phase: 9 (PR 1, phase-9/installer; plan "Jim run 1")
 status: observed
-authored_by: "Template, harness and pre-run findings: Claude Code (Sonnet 5.5, workflow agent for D2+D3), 2026-10-17 (phase-9/installer). Observed: Jim (blank until he runs it). Verdict: Jim (blank)."
+authored_by: "Template, harness and pre-run findings: Claude Code (Sonnet 5.5, workflow agent for D2+D3), 2026-10-17 (phase-9/installer). Observed: Jim's answers and words, collected by Claude Code (Opus 5.5) from his messages and the saved results, 2026-10-17 (phase-9/release). Verdict: Jim (blank)."
 date: 2026-10-17
 ---
 

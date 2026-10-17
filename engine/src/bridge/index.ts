@@ -6,7 +6,7 @@ export { DEFAULT_COMMAND_PORT, DEFAULT_EVENT_PORT, TOKEN_CHECK_CHARS, defaultPor
 export type { BridgePorts, PortsChoice } from "./endpoint.js";
 export { DEFAULT_MAX_LINE_CHARS, LineSplitter, LineTooLongError } from "./lines.js";
 export { COMMANDS, PROTOCOL_VERSION } from "./protocol.js";
-export { PLUGIN_VERSION, pluginVersionAtLeast } from "./version.js";
+export { PLUGIN_VERSION, UPDATE_HUD_NOTE, pluginVersionAtLeast, updateNotices } from "./version.js";
 export { MIN_SUPPORTED_LRC, TESTED_LRC, lightroomNotices } from "./lightroom.js";
 export { HUD_END_STAGES, HUD_EVENTS, HUD_GUARDRAIL, HUD_LIMITS, HUD_STAGES, HUD_VARIANTS, hudEventSchemas, hudUpdatePayloadSchema, hudUpdateResultSchema, parseHudEvent, HUD_DECK_PLUGIN, HUD_SHOW_EVENT, hudDeckPayloadSchema, hudDeckResultSchema, hudShowSchema } from "./hud-protocol.js";
 export type { HudEvent, HudEventName, HudStage, HudUpdatePayload } from "./hud-protocol.js";

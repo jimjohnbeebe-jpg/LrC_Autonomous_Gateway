@@ -2,7 +2,7 @@
 // lr_get_preview, lr_get_metrics. They change nothing in Lightroom.
 
 import { z } from "zod";
-import { lightroomNotices, pluginVersionAtLeast } from "../bridge/index.js";
+import { lightroomNotices, pluginVersionAtLeast, updateNotices } from "../bridge/index.js";
 import { WHERE_NOTICE, WHERE_PLUGIN } from "../library/index.js";
 import { boxProblem, summarize, type Metrics, type Region, type RegionBox, type RegionStats } from "../metrics/index.js";
 import { ParamError, WHITE_BALANCE_UNITS, processVersionLabel, type FromSdkResult } from "../params/index.js";
@@ -73,8 +73,13 @@ export async function getActivePhotoContext(ctx: ToolContext): Promise<ToolOutpu
     const gps = gpsSchema.safeParse(photo["gps"]);
     const json: Record<string, unknown> = {
       ok: true,
-      // notices: for the user, empty within the supported and tested versions (bridge\lightroom.ts).
-      lightroom: { lrc_version: photo.lrc_version, sdk_declared: hello?.sdk_declared ?? null, notices: lightroomNotices(photo.lrc_version) },
+      // notices: for the user, empty within the supported and tested versions (bridge\lightroom.ts) and when
+      // plugin and engine are one version (bridge\version.ts updateNotices, Phase 9 D10).
+      lightroom: {
+        lrc_version: photo.lrc_version,
+        sdk_declared: hello?.sdk_declared ?? null,
+        notices: [...lightroomNotices(photo.lrc_version), ...updateNotices(hello?.plugin_version, ctx.deps.engineVersion)],
+      },
       uuid: photo.uuid,
       local_id: photo.local_id,
       filename: field("filename"),

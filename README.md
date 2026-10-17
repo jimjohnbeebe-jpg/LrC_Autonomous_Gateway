@@ -101,14 +101,14 @@ Then, in Lightroom Classic:
 
 ### 4. Check the connection
 
-In Lightroom, choose **File > Plug-in Extras > LrC-AVG - Bridge status**. The dialog should read **LrC-AVG bridge: RUNNING, engine NOT connected**. That is the normal state outside a chat: the engine connects at Claude's first LrC-AVG tool call and lets go after a minute without one. During a chat it reads **ENGINE CONNECTED**.
+In Lightroom, choose **File > Plug-in Extras > LrC-AVG - Status**. The dialog should read **LrC-AVG status: ENGINE NOT CONNECTED (normal outside a chat)**. That is the normal state outside a chat: the engine connects at Claude's first LrC-AVG tool call and lets go after a minute without one. During a chat it reads **LrC-AVG status: READY**.
 
 ### If something goes wrong
 
 - If `lrc-avg-setup.cmd` says **Claude Desktop's folder was not found**, start Claude Desktop once in this Windows account, quit it, then run the command again.
 - If it says it **found 2 Claude Desktop config files**, it does not know which one Claude Desktop uses and has changed nothing. It lists both paths: run it again with the one your Claude Desktop uses, `lrc-avg-setup.cmd --config "<that path>"`.
 - If PowerShell says **`… cannot be loaded because running scripts is disabled on this system`**, you typed `npm` or `lrc-avg-setup` without `.cmd`. Type the command with `.cmd`.
-- If **Bridge status** says **NOT RUNNING**, quit Lightroom and start it again, then choose the menu item again. The dialog also shows the path of the plugin's log.
+- If **Status** says **BRIDGE NOT RUNNING**, quit Lightroom and start it again, then choose the menu item again. The dialog also shows the path of the plugin's log.
 - If Claude says the LrC-AVG tools are missing, quit Claude Desktop (right-click the Claude icon in the system tray > Quit) and start it again.
 
 ## Clients
@@ -274,7 +274,7 @@ Under **File > Plug-in Extras**, in this order:
 
 | Menu item | What it does |
 |---|---|
-| **LrC-AVG - Bridge status** | Says whether the plugin's bridge runs and whether the engine is connected; shows the ports and the plugin log's path. |
+| **LrC-AVG - Status** | Says whether the plugin's bridge runs and whether the engine is connected; shows the plugin and engine versions, the Claude Desktop entry, whether the Deck is installed, the ports and the plugin log, and saves the same text as `%LOCALAPPDATA%LrC-AVGstatus.txt` to attach to a GitHub issue. |
 | **LrC-AVG - Show Vision Gateway HUD** | Opens the HUD. |
 | **LrC-AVG - Pick A**, **Pick B**, **Pick C** | The HUD's Pick buttons. |
 | **LrC-AVG - Approve Pass** | The HUD's Approve pass n. |
@@ -402,7 +402,7 @@ The evidence behind the behaviour this page describes. Paths are in this reposit
 | Install | `.cmd` instead of `.ps1`: with no policy set, PowerShell's effective policy on Windows clients is Restricted, which runs no script files | [handle: https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_execution_policies, read 2026-10-01]; npm makes both a `.cmd` and a `.ps1` for each command [handle: `%APPDATA%\npm` listing on the dev PC, 2026-10-01; `smoke.txt:173`]. That the plain name picks the `.ps1` is [community] |
 | Install | What `lrc-avg-setup` does and prints; the backup; other entries kept; nothing changed the second time; the two refusals | [handle: `engine/src/setup/apply-config.ts:41-55, 119-125`, `setup-cli.ts:4-6, 15`; `smoke.txt` sections 2a-2f] |
 | Install | Lightroom loads the plugin at its start | [handle: `plugin/LrC-AVG.lrplugin/Info.lua` `LrForceInitPlugin`]; restarting after Add is a precaution [inference] |
-| Check the connection | Bridge status headlines | [handle: `plugin/LrC-AVG.lrplugin/MenuStatus.lua`] |
+| Check the connection | Status headlines and contents | [handle: `plugin/LrC-AVG.lrplugin/MenuStatus.lua`] |
 | Check the connection | The engine connects at the first tool call and lets go after 60 s without one | [handle: `engine/src/mcp/main.ts:6-7`, `IDLE_RELEASE_MS`; `docs/reports/phase5/PHASE5.md` "Numbers", "Bridge back after each chat"] |
 | Your first session | Snapshot name, pass 0, History step names, per-pass caps, clipping limits and defaults | [handle: `engine/src/mcp/defs-session.ts` `lr_begin_session`, `lr_step`; `engine/src/mcp/defs-help.ts` `HELP_TEXT` item 5, clip_baseline]; AC-4 held on every pass of the Phase 5 check [handle: `PHASE5.md` "Numbers", "AC-4"] |
 | Your first session | The golden-hour chat ran on six photos | [handle: `PHASE5.md` "Numbers", "The six golden-hour chats"] |

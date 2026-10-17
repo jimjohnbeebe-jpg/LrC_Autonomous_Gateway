@@ -1,3 +1,7 @@
 # Lightroom's own preset files, kept byte for byte as Lightroom wrote them (LF endings), so the
 # engine's writer is compared with exactly what Lightroom wrote (engine\tests\presets-reference.test.ts).
 engine/tests/fixtures/presets/*.xmp -text
+
+# The GNU license texts the setup ships, byte for byte as gnu.org serves them (tools\setup\node-pin.json
+# pins their SHA-256; gnu.org answers 403 to GitHub's runners, PR #173).
+tools/setup/licenses/*.txt -text

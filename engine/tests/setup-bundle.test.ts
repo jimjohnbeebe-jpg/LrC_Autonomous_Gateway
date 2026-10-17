@@ -14,7 +14,7 @@ const lockfile = fileURLToPath(new URL("../../package-lock.json", import.meta.ur
 const BUNDLED = [
   "@hono/node-server@2.1.1",
   "@img/colour@1.1.0",
-  "@img/sharp-win32-x64@0.35.4",
+  "@img/sharp-win32-x64@0.35.5",
   "@modelcontextprotocol/sdk@1.32.0",
   "accepts@2.0.0",
   "ajv@8.20.0",
@@ -94,7 +94,7 @@ const BUNDLED = [
   "send@1.2.1",
   "serve-static@2.2.1",
   "setprototypeof@1.2.0",
-  "sharp@0.35.4",
+  "sharp@0.35.5",
   "shebang-command@2.0.0",
   "shebang-regex@3.0.0",
   "side-channel@1.1.1",

@@ -1,0 +1,63 @@
+# The unsigned LrC-AVG setup (Phase 9 PR 2, plan D12 with D6 changed: no signing until issue #171).
+# A v* tag builds release\LrC-AVG-Setup-<version>.exe and SHA256SUMS.txt and attaches them to a draft
+# GitHub release (a pre-release when the tag has a suffix, v1.0.0-rc.1); Jim publishes the draft.
+# A PR that touches the setup, the Deck or this file builds the same setup without releasing it.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/release.yml
+      - tools/setup/**
+      - hud/src-tauri/**
+      - package-lock.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  setup:
+    runs-on: windows-latest
+    permissions:
+      contents: write # gh release create
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: "24.11.1"
+          cache: npm
+      # The toolchain the Deck and the setup were built with on Jim's PC (rustc 1.99.0, 2026-10-17).
+      - run: rustup toolchain install 1.99.0 --profile minimal && rustup default 1.99.0
+      - name: Tag matches the product version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          version=$(node -p "require('./engine/package.json').version")
+          case "$GITHUB_REF_NAME" in
+            "v$version" | "v$version"-rc.*) echo "tag $GITHUB_REF_NAME, version $version" ;;
+            *) echo "tag $GITHUB_REF_NAME does not match engine version $version"; exit 1 ;;
+          esac
+      - run: npm ci
+      - run: npm run setup:build
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: setup
+          path: |
+            release/LrC-AVG-Setup-*.exe
+            release/SHA256SUMS.txt
+          if-no-files-found: error
+      - name: Draft release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pre=""
+          case "$GITHUB_REF_NAME" in *-*) pre="--prerelease" ;; esac
+          gh release create "$GITHUB_REF_NAME" release/LrC-AVG-Setup-*.exe release/SHA256SUMS.txt \
+            --draft $pre --verify-tag --title "LrC-AVG $GITHUB_REF_NAME" --generate-notes

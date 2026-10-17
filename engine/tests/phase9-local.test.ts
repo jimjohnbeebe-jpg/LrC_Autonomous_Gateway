@@ -169,7 +169,7 @@ describe("phase9:local runner", () => {
           await ctx.yn("expected yes again?", "y");
         },
       },
-      ["n", "y", "no answer"],
+      ["n", "y", "y", "no answer"], // the third is "go on after the failed step?"
     );
     const out = await runLocal(h.deps, h.all);
     const steps = (out.results["state"] as LocalState).steps;
@@ -178,6 +178,15 @@ describe("phase9:local runner", () => {
     expect(install?.checks).toEqual([{ check: "expected yes?", ok: false, detail: "you answered n, expected y" }]);
     expect(install?.answers.map((a) => [a.answer, a.expected])).toEqual([["n", "y"], ["y", null]]);
     expect(steps.find((s) => s.id === "lightroom")).toMatchObject({ stopped: true });
+    expect(out.headline).toBe("NOT FINISHED");
+  });
+
+  it("says a failed step loudly and stops there unless Jim answers y", async () => {
+    const h = harness({ install: async (ctx) => void (await ctx.yn("expected yes?", "y")), lightroom: async () => {} }, ["n", "n"]);
+    const out = await runLocal(h.deps, h.all);
+    const steps = (out.results["state"] as LocalState).steps;
+    expect(steps.map((s) => s.id)).not.toContain("lightroom");
+    expect(h.said.join("\n")).toMatch(/\*\*\* STEP \d FAILED \*\*\*/);
     expect(out.headline).toBe("NOT FINISHED");
   });
 

@@ -1,8 +1,8 @@
 ---
 report: PHASE9 local install — does the local, unsigned LrC-AVG setup install, run, upgrade and uninstall cleanly on Jim's PC?
 phase: 9 (PR 1, phase-9/installer; plan "Jim run 1")
-status: template
-authored_by: "Template, harness and pre-run findings: Claude Code (Sonnet 5.5, workflow agent for D2+D3), 2026-10-17 (phase-9/installer). Observed: Jim (blank until he runs it). Verdict: Jim (blank)."
+status: accepted
+authored_by: "Template, harness and pre-run findings: Claude Code (Sonnet 5.5, workflow agent for D2+D3), 2026-10-17 (phase-9/installer). Observed: Jim's answers and words, collected by Claude Code (Opus 5.5) from his messages and the saved results, 2026-10-17 (phase-9/release). Verdict: Jim (blank)."
 date: 2026-10-17
 ---
 
@@ -51,7 +51,7 @@ The 0.99.0 test build carries the same engine and plugin as 1.0.0: `--version` o
 
 **Results** go to `%TEMP%\LrC-AVG-phase9\`, and Claude Code collects them: `local-state.json`, `local_<time>.json` (the headline, every check and every answer, user folder redacted) and, from the clean room, `%TEMP%\LrC-AVG\cleanroom\*.json`.
 
-**The Sandbox check** (`npm run sandbox:check`, Claude Code runs it, Jim does not): starts Windows Sandbox with no network, `release\` read-only and a writable results folder. A PowerShell script inside installs `LrC-AVG-Setup-<version>.exe /S`, checks the files, the HKCU uninstall key, `setup-result.json` (expected `not_found`: no Claude Desktop in a clean Windows), the Modules copy and the bundled `node.exe --version`. It then seeds a Claude Desktop config and runs `setup-cli --installer` (expected `added`), starts the bundled engine over stdio (initialize, tools/list), uninstalls, and lists the leftovers. It prints `SANDBOX: PASS` or `FAIL` with each check and saves `%TEMP%\LrC-AVG-phase9\sandbox_<time>.json`. No Lightroom is in the Sandbox, so the plugin and the Status dialog are tested only here, in `phase9:local`.
+**The Sandbox check** (`npm run sandbox:check`, Claude Code runs it, Jim does not): starts Windows Sandbox with the network on (the Sandbox has no WebView2 runtime and the setup downloads it; see pre-run finding 11), `release\` read-only and a writable results folder. A PowerShell script inside installs `LrC-AVG-Setup-<version>.exe /S`, checks the files, the HKCU uninstall key, `setup-result.json` (expected `not_found`: no Claude Desktop in a clean Windows), the Modules copy and the bundled `node.exe --version`. It then seeds a Claude Desktop config and runs `setup-cli --installer` (expected `added`), starts the bundled engine over stdio (initialize, tools/list), uninstalls, and lists the leftovers. It prints `SANDBOX: PASS` or `FAIL` with each check and saves `%TEMP%\LrC-AVG-phase9\sandbox_<time>.json`. No Lightroom is in the Sandbox, so the plugin and the Status dialog are tested only here, in `phase9:local`.
 
 ## Steps for Jim
 
@@ -71,16 +71,18 @@ The 0.99.0 test build carries the same engine and plugin as 1.0.0: `--version` o
    npm run phase9:local
    ```
 
+   Run 1b (2026-10-17) used `npm run phase9:local -- --new --quick`: the same steps without the upgrade (6) and the second uninstall (8).
+
 3. **Do what the window asks, in order.** Each step prints its numbered instructions and waits for Enter. In short:
    - **Step 1 builds** (nothing to do, several minutes the first time).
-   - **Step 2 parks** your development setup: quit Lightroom (File > Exit) and Claude Desktop (right-click the Claude icon in the Windows system tray, bottom right > Quit). If the window lists "dev plugin in Lightroom's preferences", in Lightroom choose File > Plug-in Manager, select LrC-AVG, click **Remove**, quit Lightroom, press Enter.
+   - **Step 2 parks** your development setup: quit Lightroom (File > Exit) and Claude Desktop (right-click the Claude icon in the Windows system tray, bottom right > Quit). Before anything is moved, if Lightroom has the dev plugin on, the window asks: in Lightroom choose File > Plug-in Manager, select "LrC-AVG (dev)", click **Disable**, quit Lightroom, press Enter.
    - **Step 3** double-click `D:\Developer\LrC_Autonomous_Gateway\release\LrC-AVG-Setup-0.99.0.exe` and click through the wizard. If a blue box "Windows protected your PC" appears, click **More info**, then **Run anyway**.
-   - **Step 4** start Lightroom, open File > Plug-in Manager, answer two y/n questions, then File > Plug-in Extras > LrC-AVG - Status and click OK.
+   - **Step 4** start Lightroom, open File > Plug-in Manager, click "LrC-AVG (Autonomous Vision Gateway)" without clicking Enable, answer two y/n questions, then File > Plug-in Extras > LrC-AVG - Status and click OK.
    - **Step 5** select one photo in Lightroom, start Claude Desktop, send the one line the window prints.
    - **Step 6** with Lightroom, Claude Desktop and the Deck open, double-click `LrC-AVG-Setup-1.0.0.exe`. A box "Please close: ..." with Retry, Ignore and Abort: click **Ignore**. A box "The LrC-AVG engine is running ...": click **OK**. Then restart Lightroom and open the Status dialog again.
    - **Step 7** quit Lightroom and Claude Desktop, then Settings > Apps > Installed apps > LrC-AVG > Uninstall with "Delete the application data" **unticked**.
    - **Step 8** the check reinstalls 1.0.0 by itself; uninstall again with the box **ticked**. Do not start Lightroom or Claude Desktop.
-   - **Step 9** the check puts your development setup back; start Lightroom, File > Plug-in Manager > Add, pick `D:\Developer\LrC_Autonomous_Gateway\plugin\LrC-AVG.lrplugin`, click Done.
+   - **Step 9** the check puts your development setup back; start Lightroom, File > Plug-in Manager, select "LrC-AVG (dev)" and click **Enable** (if it is not listed: Add, pick `D:\Developer\LrC_Autonomous_Gateway\plugin\LrC-AVG.lrplugin`), click Done.
 4. When the window shows `Phase 9 local install: WORKED` or `FAILED` and `put back: YES`, tell Claude Code "done". About 30-45 minutes after the build [inference: nine steps with two wizards and two uninstalls; not measured].
 
 ### If something goes wrong
@@ -110,28 +112,62 @@ Checks Claude Code ran itself before Jim's run, each with its handle. Add the re
 4. **`npx tsc -p engine/tsconfig.json --noEmit`** printed nothing, and **`npx tsc -p engine/tsconfig.test.json --noEmit`** printed nothing, 2026-10-17. **`npx depcruise engine/src --config .dependency-cruiser.cjs --ignore-known`** printed `no dependency violations found (284 modules, 1503 dependencies cruised)`. **`npx vitest run tests/module-size.test.ts`**: 3 passed. The new phase9-local and sandbox files are 71-178 lines each.
 5. **Dry run of `npm run sandbox:check`'s first branch** (the built script, compiled to a scratch folder and run): it printed the enable instructions and `SANDBOX: NOT RUN (Windows Sandbox is not enabled)`, exit code 2.
 6. **`C:\Windows\System32\WindowsSandbox.exe` is missing on this PC** [handle: item 5's run; plan "Found" 9: `Test-Path`, 2026-10-17].
-7. **Sandbox result:** *(blank until Claude Code runs `npm run sandbox:check`: paste `SANDBOX: PASS` or `FAIL` with the failing checks, and the saved file path)*.
+7. **Sandbox result: `SANDBOX: PASS`, 18 of 18 checks** (2026-10-17, the 1.0.0 setup built from `main` 8660b66) [handle: `%TEMP%\LrC-AVG-phase9\sandbox_2026-10-17T19-17-41-544Z.json`].
+   - The silent install exits 0. The Deck exe is ProductVersion 1.0.0, there is one HKCU uninstall key, the plugin is in Modules, and the bundled `node.exe` is v24.11.1.
+   - `setup-result.json` reads `not_found` without Claude Desktop. `setup-cli --installer` adds the entry to a seeded config.
+   - The bundled engine answers with 36 tools and writes `last-start.json` with the client name.
+   - The uninstall keeps only the listed data, removes the plugin, the uninstall key and the shortcut, and takes the entry out.
+   - 4,001 files, 133,953,899 bytes installed.
+   - Two earlier runs failed on test problems, now fixed:
+     - The Sandbox had no network and no WebView2, so the setup exited with code 2 (finding 11).
+     - The guest sent `initialized` before the initialize reply, so `last-start.json` had no client name. A Windows PowerShell 5.1 repro on this PC showed `client_name` null in one burst and `"sandbox-check"` when waiting, and the guest now waits.
 8. **`npm run phase9:local` against a real PC has not been run by Claude Code**, by design: it quits and moves Jim's setup. Everything in "Harness" that touches Lightroom, Claude Desktop, NSIS wizards and the registry is [unverified] until Jim's run.
 9. **Plug-in Manager wording** in the instructions ("green dot", "Installed and running", "Enable" button) is from memory of Lightroom's dialog [unverified], and so are the Windows wordings ("Windows protected your PC", "More info", "Run anyway", Settings > Apps > Installed apps, the three dots > Uninstall) [unverified]; Jim's answer to the y/n questions is what counts, and he may report different wording.
 10. **The clean room does not park or check the Store build's redirected data copy** (`%LOCALAPPDATA%\Packages\Claude_*\LocalCache\Local\LrC-AVG\`): `MenuStatus.lua` reads `last-start.json` there, so the engine started by the Store build of Claude Desktop probably writes its data there too [handle: `plugin\LrC-AVG.lrplugin\MenuStatus.lua` `lastStart()` comment; LR_SDK_NOTES "MSIX"; the redirect itself is [inference]]. Step 5 reads both places; `--verify-gone` does not look in the second. Open point for the clean room's owner.
+11. **Windows Sandbox has no WebView2 runtime, so the check runs with the network on.**
+    - The first sandbox run (2026-10-17, network off) failed: `setup /S` exited with code 2 and nothing was installed [handle: `%TEMP%\LrC-AVG-phase9\sandbox_2026-10-17T18-47-21-176Z.json`].
+    - A probe `.wsb` found no EdgeUpdate `pv` key for WebView2 in the Sandbox (HKLM, WOW6432Node or HKCU) and no `C:\Program Files (x86)\Microsoft\EdgeWebView\Application`. Jim's PC has `pv` 155.0.4283.60 [handle: probe output `%TEMP%\LrC-AVG-phase9\probe\wv2.txt`, 2026-10-17; `reg query` on the host].
+    - Tauri's setup downloads the WebView2 bootstrapper when the runtime is missing, and aborts when it cannot (`installer.nsi:554-563`, `INSTALLWEBVIEW2MODE "downloadBootstrapper"`).
+    - With the network on, the Sandbox run also exercises that download path, which is the one a PC without WebView2 takes.
+    - Windows 11 normally ships WebView2 [unverified].
+    - An earlier run never started its guest. The Sandbox itself was crashing until Jim changed a GPU setting and rebooted [stated: Jim, 2026-10-17, "windows sandbox keeps crashing"]. After the reboot a one-file probe ran in 15 s.
 
 ## Observed (Jim)
 
 *(Filled by Jim only. Raw answers and pasted output. The harness saves every answer and check to `%TEMP%\LrC-AVG-phase9\local_<time>.json`; Claude Code collects it.)*
 
-**Run 1, date and time:**
+*Collected by Claude Code from Jim's messages and the saved results files on 2026-10-17. Jim's words are quoted. Every y/n is his answer in the harness.*
 
-- Plugin version, Lightroom Classic version, Claude Desktop version, Windows build:
-- Step 1 (build): minutes taken, size of `release\LrC-AVG-Setup-1.0.0.exe`:
-- Step 2 (park): CLEAN: YES/NO, what was listed:
-- Step 3 (install 0.99.0): boxes the wizard showed, errors:
-- Step 4 (Lightroom): listed y/n, "Installed and running" y/n, Status headline:
-- Step 5 (chat): Claude's answer in one line, `last-start.json` client:
-- Step 6 (upgrade over running): boxes shown, what closed by itself, errors, Status headline after the restart:
-- Step 7 (uninstall, box unticked): the uninstaller's pages, GONE: YES/NO and the LEFT lines:
-- Step 8 (reinstall, box ticked): INSTALLED: YES/NO, GONE: YES/NO and the LEFT lines:
-- Step 9 (restore): RESTORED: YES/NO, dev plugin "Installed and running" y/n:
-- Anything else you saw:
+**Run 1, 2026-10-17, 19:33-19:47 UTC: FAILED** [handle: `%TEMP%\LrC-AVG-phase9\local_2026-10-17T19-33-46-282Z.json`]. Lightroom Classic 15.6, plugin 1.0.0.
+- Park: stuck at the plugin step until the clean room fix in `cbbba29`. Jim: "there an no more LrC-AVG entries in Plugin Manager, and it still comes back to the same prompt."
+- Install 0.99.0: worked; `setup-result.json` outcome `added`.
+- Lightroom: the plugin was listed but **disabled**. Jim: "When the plugin was installed via the installer it was never enabled in LrC, and the plugin did not show up in Plug-in Extras. When viewed in Plugin Manager it showed as disabled. But when it was added manually via the LrC Add function the plugin did default to Enabled."
+- Chat: failed. The engine log shows `BRIDGE_DISCONNECTED`, "Lightroom plugin enabled".
+- Upgrade over the running install, both uninstalls and the restore: worked.
+- Jim: "several steps failed but were not called out." The harness went on after a failed step.
+- Cause: the dev plugin shared the ID `com.lrcavg.gateway` and had just been removed. Fixed in `d4e5271` (dev ID `com.lrcavg.gateway.dev`); the harness now stops loudly.
+
+**Run 1b (`-- --new --quick`), 2026-10-17, 20:2x UTC: stopped at the chat step.**
+- The installed plugin was "Installed and running" without a click.
+- Claude Desktop: `BRIDGE_DISCONNECTED`, "127.0.0.1:8765: ECONNREFUSED".
+- Cause: Lightroom started the plugin twice, 16 s apart, and the second bridge was left with no listener [handle: `%TEMP%\LrC-AVG\bridge.log` 13:32:28-13:32:54; netstat at 13:37:58]. Fixed in `e114600`.
+
+**Run 1b again, 2026-10-17, 20:48 UTC: WORKED, put back YES** [handle: `%TEMP%\LrC-AVG-phase9\local_2026-10-17T20-48-24-597Z.json`]. Every check passed; the upgrade and the second uninstall were skipped by `--quick`.
+- Install 0.99.0: Jim saw the setup's own message box about Claude Desktop's config, and the wizard's last page had a box to run the Deck.
+- Lightroom: "LrC-AVG (Autonomous Vision Gateway)" was listed and showed "Installed and running" without a click. Status headline: "ENGINE NOT CONNECTED (normal outside a chat)".
+- Chat: Claude described the selected photo.
+- Uninstall with the box unticked: GONE: YES. The uninstaller showed the "Delete the application data" box and asked to close a running program.
+- Restore: RESTORED: YES; "LrC-AVG (dev)" was Installed and running.
+
+**Jim, after run 1b:**
+- "At no time when running the setup .exe for any version have I been flagged by Windows Protection. The install runs without a protection prompt each time."
+- "Claude Desktop did NOT ask for permission to run the plugin."
+- "Test is done without errors."
+
+What explains the missing prompt (Claude Code, 2026-10-17):
+- Smart App Control is off on this PC [handle: `HKLM\SYSTEM\CurrentControlSet\Control\CI\Policy` `VerifiedAndReputablePolicyState` = 0].
+- `release\LrC-AVG-Setup-1.0.0.exe` has no `Zone.Identifier` stream, only `:$DATA` [handle: `Get-Item ... -Stream *`]. It was built on this PC, not downloaded, so it carries no Mark of the Web.
+- SmartScreen checks files that carry that mark [inference: Microsoft's SmartScreen and Mark of the Web behaviour, not tested here]. So no prompt is expected for a local build, and it says nothing about a download from GitHub. That is what the signed `v1.0.0-rc.1` download in PR 3 tests.
 
 ## Numbers
 
@@ -139,26 +175,28 @@ Filled from the Observed section and the saved results file.
 
 | Line | Result |
 |---|---|
-| Plugin in Modules listed in Plug-in Manager (Lightroom 15.6) | |
-| It starts enabled ("Installed and running") | |
-| Status headline at first start | |
-| Wizard 0.99.0: finished, `setup-result.json` outcome, entry names the bundled node | |
-| First chat: client has "claude", engine version, `node.exe` and `main.js` inside the install folder | |
-| Upgrade over a running install: boxes shown, finished, no missing or stale file, one uninstall key | |
-| Status after the Lightroom restart | |
-| Uninstall, data box unticked: GONE YES/NO; kept data present | |
-| Silent reinstall INSTALLED YES/NO; uninstall with the box ticked: GONE YES/NO with the data folders | |
-| Restore: RESTORED YES/NO; dev plugin works again | |
-| Headline of the run, `put back` | |
-| Total time after the build | |
+| Plugin in Modules listed in Plug-in Manager (Lightroom 15.6) | yes (runs 1 and 1b) |
+| It starts enabled ("Installed and running") | run 1: no (dev plugin with the same ID); run 1b: yes, without a click |
+| Status headline at first start | "ENGINE NOT CONNECTED (normal outside a chat)" (run 1b) |
+| Wizard 0.99.0: finished, `setup-result.json` outcome, entry names the bundled node | yes, `added`, yes (runs 1 and 1b) |
+| First chat: Claude Desktop client, engine version, `node.exe` and `main.js` inside the install folder | run 1b: yes (after `e114600`) |
+| Upgrade over a running install: boxes shown, finished, no missing or stale file, one uninstall key | run 1: yes; `setup-result.json` `unchanged` |
+| Status after the Lightroom restart | run 1: no `status.txt` (the plugin was disabled) |
+| Uninstall, data box unticked: GONE YES/NO; kept data present | YES; kept `setup-result.json`, `setup-result.txt` (run 1) |
+| Silent reinstall INSTALLED YES/NO; uninstall with the box ticked: GONE YES/NO with the data folders | run 1: YES, YES |
+| Restore: RESTORED YES/NO; dev plugin works again | YES, yes (runs 1 and 1b) |
+| Headline of the run, `put back` | run 1: FAILED, YES; run 1b: WORKED, YES |
+| Windows prompt at install | none in any run [stated: Jim]; local build, no Mark of the Web, Smart App Control off |
+| Claude Desktop permission prompt for LrC-AVG | none [stated: Jim] |
+| Total time after the build | not measured |
 
 ## Verdict
 
 *(Jim decides. A script's suggestion is labelled as one: the run's headline is `WORKED` / `FAILED` / `NOT FINISHED` and is a suggestion, not the verdict.)*
 
-- Verdict: go / conditional / no-go
-- Decided by Jim on:
-- Reason:
+- Verdict: **go** [stated: Jim, 2026-10-17, "Go."]
+- Decided by Jim on: 2026-10-17, after run 1b WORKED
+- Reason: run 1b passed every check after the fixes (`d4e5271`, `e114600`); the upgrade and the ticked uninstall passed in run 1 and are run again on the signed build in PR 3.
 
 ## Consequences / open questions
 

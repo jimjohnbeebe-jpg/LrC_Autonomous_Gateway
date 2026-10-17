@@ -2,17 +2,16 @@
 
 LrC-AVG lets Claude, in Claude Desktop, edit a photo in Lightroom Classic, raw or JPEG or any other format Lightroom develops (see [Supported formats](#supported-formats)), the way a photographer does: set a few Develop sliders, look at the result, measure it, adjust again, up to a capped number of passes. It uses only Lightroom's own Develop settings, so every change shows on the sliders, sits in History as a named step, and can be undone. A local engine measures each render (clipping, histogram, pass-to-pass changes) and keeps every pass within clipping limits; Claude's vision makes the aesthetic calls.
 
-It comes in two halves: a Lightroom plugin, and an engine that Claude Desktop starts as an MCP server. Other MCP clients can start it too: see [Clients](#clients).
+One setup file installs everything: a Lightroom plugin, the engine that Claude Desktop starts (an MCP server), and the Deck, a small window that follows an edit. Other AI apps can start the engine too: see [Other AI apps](#other-ai-apps).
 
-**Prototype: there is no release yet.** The [Install](#install) section below describes the planned 1.0.0 release; its download links do not work yet. To run the prototype, build it from source as in [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md). From [Your first session](#your-first-session) on, this page describes the prototype as it is. Built and tested on one Windows 11 PC with Lightroom Classic 15.5.1 and 15.6. Where this page states how something behaves, the evidence is listed under [Sources](#sources).
+Built and tested on one Windows 11 PC with Lightroom Classic 15.5.1 and 15.6. Where this page states how something behaves, the evidence is listed under [Sources](#sources).
 
 ## What you need
 
-- Windows 10 or 11 (tested on Windows 11 only).
+- Windows 10 or 11, 64-bit (tested on Windows 11 only).
 - Lightroom Classic 15.0 or later (see [Supported Lightroom versions](#supported-lightroom-versions)).
-- Claude Desktop, signed in, and started at least once in this Windows account.
-- Node.js 22 or newer, from https://nodejs.org. To check, run `node --version` in PowerShell.
-- An internet connection for the install: npm downloads the engine's dependencies. LrC-AVG itself talks to Lightroom only on this computer (127.0.0.1).
+- Claude Desktop, signed in, and started at least once in this Windows account, or another AI app from [`docs/CLIENTS.md`](docs/CLIENTS.md). The AI model must be able to see images.
+- Nothing else: the setup brings its own copy of Node.js, and no administrator rights are needed.
 
 ## Supported Lightroom versions
 
@@ -48,151 +47,54 @@ Each format below was tested on one Windows 11 PC with Lightroom Classic 15.6. A
 
 ## Install
 
-Run the commands in PowerShell. They call `npm.cmd` and `lrc-avg-setup.cmd` rather than `npm` and `lrc-avg-setup`: on a new Windows account PowerShell refuses to run `.ps1` scripts, and the plain names can resolve to the `.ps1` versions.
+1. Download **`LrC-AVG-Setup-<version>.exe`** from the [latest release](https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway/releases/latest).
+2. Double-click it. Windows will probably show **Windows protected your PC**. Click **More info**, check that the app is `LrC-AVG-Setup-<version>.exe`, then click **Run anyway**. [Why the setup is not signed](#why-the-setup-is-not-signed) explains this.
+3. If Lightroom Classic or Claude Desktop is open, the setup asks you to close them. Close them, then click **Retry**.
+4. Click through the setup. It installs into your own Windows account, so Windows does not ask for an administrator.
+5. At the end, a message says what the setup did with Claude Desktop's settings. Click **OK**, then **Finish**.
+6. Start Lightroom Classic and Claude Desktop again.
 
-### 1. Install the engine
+The setup does three things:
 
-```powershell
-npm.cmd install -g https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway/releases/download/v1.0.0/lrc-avg-1.0.0.tgz
-```
+- It puts the plugin into Lightroom's plugin folder, `%APPDATA%\Adobe\Lightroom\Modules\LrC-AVG.lrplugin`. Lightroom lists it as **LrC-AVG (Autonomous Vision Gateway)**, switched on.
+- It adds an entry named `lrc-avg` to Claude Desktop's settings file and keeps a backup of the old file next to it. Your other entries stay as they are.
+- It installs the program files, with the Deck, into `%LOCALAPPDATA%\LrC-AVG`, and adds **LrC-AVG** to Windows' installed apps.
 
-npm prints `added … packages` when it is done.
+To check the download, compare its SHA-256 with the `SHA256SUMS.txt` file on the release page. In PowerShell: `Get-FileHash "$env:USERPROFILE\Downloads\LrC-AVG-Setup-<version>.exe"`.
 
-### 2. Add the engine to Claude Desktop
+**Updating:** download the new setup and run it the same way. It replaces the old version and keeps your settings, intents and logs.
 
-```powershell
-lrc-avg-setup.cmd
-```
+### Check that it works
 
-It finds Claude Desktop's config file, saves a backup next to it, adds an entry named `lrc-avg`, and reads the file back. Other entries in the file stay as they are. It prints:
-
-```
-Claude Desktop config: C:\Users\…\claude_desktop_config.json
-MCP servers before: …
-Done: add "lrc-avg" (backup of the old file: claude_desktop_config.json.backup-<time>).
-MCP servers now: …, lrc-avg
-"lrc-avg" runs: C:\Program Files\nodejs\node.exe …\lrc-avg\dist\mcp\main.js
-Next: quit Claude Desktop (right-click the Claude icon in the Windows system tray > Quit), then start it again.
-```
-
-If Claude Desktop had no config file yet, the first line ends in `(new file)` and there is no backup. Do what the last line says. Running `lrc-avg-setup.cmd` a second time changes nothing: it prints `Nothing to change`.
-
-To use another AI client instead of Claude Desktop, see [Clients](#clients) after section 4.
-
-### 3. Install the Lightroom plugin
-
-Download the plugin and unpack it into `%LOCALAPPDATA%\LrC-AVG\plugin`:
-
-```powershell
-Invoke-WebRequest -UseBasicParsing `
-  -Uri https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway/releases/download/v1.0.0/LrC-AVG.lrplugin-1.0.0.zip `
-  -OutFile "$env:TEMP\LrC-AVG.lrplugin-1.0.0.zip"
-Expand-Archive -Force `
-  -LiteralPath "$env:TEMP\LrC-AVG.lrplugin-1.0.0.zip" `
-  -DestinationPath "$env:LOCALAPPDATA\LrC-AVG\plugin"
-```
-
-Then, in Lightroom Classic:
-
-1. Choose **File > Plug-in Manager**.
-2. Click **Add**. In the folder dialog, type `%LOCALAPPDATA%\LrC-AVG\plugin` into the address bar and press Enter, select the `LrC-AVG.lrplugin` folder, and click **Select Folder**.
-3. Check that **LrC-AVG (Autonomous Vision Gateway)** is in the list, then click **Done**.
-4. Quit Lightroom (**File > Exit**) and start it again.
-
-### 4. Check the connection
-
-In Lightroom, choose **File > Plug-in Extras > LrC-AVG - Status**. The dialog should read **LrC-AVG status: ENGINE NOT CONNECTED (normal outside a chat)**. That is the normal state outside a chat: the engine connects at Claude's first LrC-AVG tool call and lets go after a minute without one. During a chat it reads **LrC-AVG status: READY**.
+In Lightroom, choose **File > Plug-in Extras > LrC-AVG - Status**. Outside a chat, it reads **LrC-AVG status: ENGINE NOT CONNECTED (normal outside a chat)**. That is normal: the engine connects at Claude's first LrC-AVG tool call and lets go after a minute without one. During a chat it reads **LrC-AVG status: READY**.
 
 ### If something goes wrong
 
-- If `lrc-avg-setup.cmd` says **Claude Desktop's folder was not found**, start Claude Desktop once in this Windows account, quit it, then run the command again.
-- If it says it **found 2 Claude Desktop config files**, it does not know which one Claude Desktop uses and has changed nothing. It lists both paths: run it again with the one your Claude Desktop uses, `lrc-avg-setup.cmd --config "<that path>"`.
-- If PowerShell says **`… cannot be loaded because running scripts is disabled on this system`**, you typed `npm` or `lrc-avg-setup` without `.cmd`. Type the command with `.cmd`.
-- If **Status** says **BRIDGE NOT RUNNING**, quit Lightroom and start it again, then choose the menu item again. The dialog also shows the path of the plugin's log.
-- If Claude says the LrC-AVG tools are missing, quit Claude Desktop (right-click the Claude icon in the system tray > Quit) and start it again.
+- If **Status** says **BRIDGE NOT RUNNING**, quit Lightroom (**File > Exit**), start it again, then choose the menu item again.
+- If **Status** says **RESTART LIGHTROOM TO FINISH THE UPDATE**, quit Lightroom and start it again.
+- If **Status** says **the AI client has not started LrC-AVG yet**, or Claude says it has no LrC-AVG tools: quit Claude Desktop (right-click the Claude icon in the system tray > **Quit**) and start it again. If that does not help, run the setup again and read its last message.
+- If there is no **LrC-AVG - Status** under **File > Plug-in Extras**, open **File > Plug-in Manager**, select **LrC-AVG (Autonomous Vision Gateway)** and click **Enable**.
+- To report a problem, choose **LrC-AVG - Status** first: it saves its text as `%LOCALAPPDATA%\LrC-AVG\status.txt`. Then [open an issue](https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway/issues/new/choose) and attach that file.
 
-## Clients
+### Why the setup is not signed
 
-LrC-AVG is a standard MCP server that runs on this computer (stdio). Claude Desktop is the client the steps above set up. Other MCP clients can start the same engine; each one needs an entry that runs Node with the engine's `main.js`. **A vision-capable model is required:** the AI judges each pass by looking at a render.
+Windows trusts a program more when its publisher has signed it with a code-signing certificate. LrC-AVG is a free project by one person, and a certificate costs money every month, so the setup is not signed yet. Free signing for open-source projects (SignPath Foundation) is planned once people use LrC-AVG: [issue #171](https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway/issues/171).
 
-Every entry uses two paths. To get them, run:
+What that means for you:
 
-```powershell
-lrc-avg-setup.cmd --dry-run
-```
+- **SmartScreen** shows **Windows protected your PC** for the downloaded setup. **More info > Run anyway** starts it. Every new version starts out unknown to SmartScreen again.
+- **Smart App Control** blocks unsigned programs, and Windows has no "Run anyway" for it. If it is on (Windows Security > App & browser control > Smart App Control), LrC-AVG cannot be installed on that PC for now.
+- The setup is built from this repository's source by GitHub Actions ([`.github/workflows/release.yml`](.github/workflows/release.yml)), and the release page lists its SHA-256.
 
-It changes nothing. Its last line reads `"lrc-avg" runs: <node> <main.js>`, for example `C:\Program Files\nodejs\node.exe` and `…\lrc-avg\dist\mcp\main.js`. Put them where the snippets below say `<node>` and `<main.js>`. If it says **Claude Desktop's folder was not found** (no Claude Desktop on this PC), give it an empty file to read instead; it still writes nothing:
+### What leaves your PC
 
-```powershell
-'{}' | Set-Content "$env:TEMP\lrc-avg-paths.json"
-lrc-avg-setup.cmd --dry-run --config "$env:TEMP\lrc-avg-paths.json"
-```
+- The engine and the plugin talk to each other only on this PC (127.0.0.1). The engine makes no internet connections, and LrC-AVG sends no usage data.
+- To judge an edit, the AI looks at preview JPEGs of your photo (1600 pixels on the long side by default). Your AI app sends them, with your chat, to its AI provider (Anthropic for Claude), as it does with any image you share in a chat.
+- Your original files are never changed. Every edit is a Develop setting in your Lightroom catalog.
 
-In JSON, write each `\` as `\\`; the YAML and TOML snippets use single quotes, which take `\` as it is.
+## Other AI apps
 
-When an edit starts, the AI can name its own model; the HUD and the Deck then show **name · model**.
-
-| Client | Status |
-|---|---|
-| Claude Desktop | Tested: `lrc-avg-setup.cmd` (Install, section 2) |
-| Claude Code | Tested 2026-10-16 (`docs\reports\phase8.5\clients.md`) |
-| OpenCode | Tested 2026-10-16 (`docs\reports\phase8.5\clients.md`) |
-| Hermes Agent | Tested 2026-10-16 (`docs\reports\phase8.5\clients.md`) |
-| Antigravity CLI | Tested 2026-10-16 (`docs\reports\phase8.5\clients.md`) |
-| Codex CLI | Inferred, not tested |
-
-**Add the entry before the first edit.** Without it the client has no LrC-AVG tools, and the AI may go looking for the engine on disk instead: on 2026-10-16 Antigravity ran the engine's files directly and OpenCode wrote its own MCP client for them, both from the source folder on this PC [handle: OpenCode session `ses_ebb672f73ffeZ0SEbaG7NU9115`, `opencode session export`; Antigravity transcript `%USERPROFILE%\.gemini\antigravity-cli\brain\e8187652-…\.system_generated\logs\transcript.jsonl`]. If the AI starts reading folders or writing scripts when you ask for an edit, stop it and check the entry.
-
-**Claude Code**, for every project of this Windows account:
-
-```powershell
-claude mcp add --scope user lrc-avg -- "<node>" "<main.js>"
-```
-
-Or, for one project, a `.mcp.json` in its folder:
-
-```json
-{ "mcpServers": { "lrc-avg": { "command": "<node>", "args": ["<main.js>"] } } }
-```
-
-**OpenCode** 2.x, in `%USERPROFILE%\.config\opencode\opencode.jsonc` [handle: `opencode debug config` lists that file, OpenCode 2.0.30, 2026-10-16]. OpenCode allows most tools without asking by default [handle: https://opencode.ai/docs/permissions/, read 2026-10-16], so the entry below also makes it ask before anything except LrC-AVG's own tools:
-
-```json
-{
-  "permission": { "*": "ask", "lrc-avg_*": "allow" },
-  "mcp": { "servers": { "lrc-avg": { "type": "local", "command": ["<node>", "<main.js>"] } } }
-}
-```
-
-`opencode mcp list` should then show `✓ lrc-avg  connected` [handle: run from `%USERPROFILE%\Documents`, 2026-10-16]. Whether `lrc-avg_*` matches the names OpenCode gives LrC-AVG's tools is [unverified]: if OpenCode asks before every `lr_` call, it does not. OpenCode 1.x took `mcp.lrc-avg` without `servers`; 2.x still reads that form but marks it deprecated [handle: https://opencode.ai/config.json, read 2026-10-16].
-
-OpenCode 2 runs its sessions in a background service, so an edit can go on after you close the OpenCode window [stated: Jim, 2026-10-16]. To stop it, run `opencode service stop`. `opencode --standalone` runs a private server instead of the background service [handle: `opencode --help`, 2.0.30]; whether that ends the edit when the window closes is [unverified].
-
-**Hermes Agent**, in `%LOCALAPPDATA%\hermes\config.yaml`:
-
-```yaml
-mcp_servers:
-  lrc_avg:
-    command: '<node>'
-    args: ['<main.js>']
-```
-
-**Antigravity CLI**, in `%USERPROFILE%\.gemini\config\mcp_config.json`:
-
-```json
-{ "mcpServers": { "lrc-avg": { "command": "<node>", "args": ["<main.js>"] } } }
-```
-
-**Codex CLI** (inferred, not tested), in `%USERPROFILE%\.codex\config.toml`. Codex gives a tool call 60 s by default; `tool_timeout_sec` raises it, and whether LrC-AVG needs more is [unverified]:
-
-```toml
-[mcp_servers.lrc_avg]
-command = '<node>'
-args = ['<main.js>']
-tool_timeout_sec = 120
-```
-
-Start the client again after you change its configuration [inference: the clients above read their MCP configuration when they start].
+LrC-AVG is a standard MCP server, so other MCP clients can start it as well: Claude Code, OpenCode, Hermes Agent and Antigravity CLI were tested. The setup writes only Claude Desktop's entry. The entries for the others, with the paths the setup installs to, are in [`docs/CLIENTS.md`](docs/CLIENTS.md).
 
 ## Your first session
 
@@ -330,33 +232,28 @@ In testing, Claude also asked in the chat before each pass on its own.
 | `%LOCALAPPDATA%\LrC-AVG\logs` | `engine-<yyyymmdd>.jsonl`, a record of every tool call (see "Which log folder" below) |
 | `%LOCALAPPDATA%\LrC-AVG\logs` (or the log folder set on the settings page) | `<yyyymmdd>-<id>.json`, each session's full log; `<yyyymmdd>-<id>.recipe.json`, each accepted session's final settings |
 | `%LOCALAPPDATA%\LrC-AVG\intents` (or the intents folder set on the page) | Your own intents, `<id>.json`. One with the id of a bundled intent replaces it. The bundled intents stay inside the installed engine. With Claude Desktop from the Microsoft Store, Windows keeps this folder inside Claude's own data (`%LOCALAPPDATA%\Packages\Claude_<id>\LocalCache\Local\LrC-AVG\intents`), and File Explorer shows `%LOCALAPPDATA%\LrC-AVG\intents` empty. To see your intents, set the **Intents folder** on the settings page. |
-| `%LOCALAPPDATA%\LrC-AVG\plugin` | The plugin, if you installed it as above |
+| `%LOCALAPPDATA%\LrC-AVG` | The program: `LrC-AVG Deck.exe`, the uninstaller, and `resources\` with Node.js, the engine and a copy of the plugin; `status.txt` from **LrC-AVG - Status**; `setup-result.txt`, the setup's last message |
+| `%APPDATA%\Adobe\Lightroom\Modules\LrC-AVG.lrplugin` | The plugin Lightroom loads |
 | `%APPDATA%\Adobe\CameraRaw\Settings` | Presets LrC-AVG saves, `<name>.xmp` (Lightroom's own preset folder) |
 | `%TEMP%\LrC-AVG` | `previews\`, the renders (deleted when a session ends and when the engine starts); `bridge.log`, the plugin's log; `bridge_status.json` |
 | `%USERPROFILE%\.lrc-avg` | `bridge_token` and `bridge_ports.json`, written by the plugin at each Lightroom start; `log_folders.json`, the log folders used |
-| Claude Desktop's folder | `claude_desktop_config.json` with the `lrc-avg` entry, and the backups `lrc-avg-setup` made (`claude_desktop_config.json.backup-<time>`) |
+| Claude Desktop's folder | `claude_desktop_config.json` with the `lrc-avg` entry, and the backups the setup made (`claude_desktop_config.json.backup-<time>`) |
 
 **Which log folder.** Session logs and recipes go to the **Log folder** on the settings page, or to `%LOCALAPPDATA%\LrC-AVG\logs` when it is blank. If the `LRC_AVG_LOG_DIR` environment variable is set for the engine (in a client's `lrc-avg` entry), that folder is used instead of both. The record of tool calls, `engine-<yyyymmdd>.jsonl`, is written to `LRC_AVG_LOG_DIR` or `%LOCALAPPDATA%\LrC-AVG\logs`, not to the settings-page folder. Each session's start names its own log file (`log_path`), so you can ask the AI where the log of a session is.
 
 ## Uninstall
 
-1. Remove the engine from Claude Desktop, then uninstall it, in this order (the second command deletes `lrc-avg-setup`):
+1. Quit Lightroom Classic.
+2. Open **Settings > Apps > Installed apps**, find **LrC-AVG**, and choose **… > Uninstall**.
+3. The uninstaller has a box, **Delete the application data**:
+   - Leave it unticked to keep your own intents, session logs and recipes in `%LOCALAPPDATA%\LrC-AVG`, for a later install.
+   - Tick it to delete them too, with `%TEMP%\LrC-AVG` and `%USERPROFILE%\.lrc-avg`.
+4. If it says the LrC-AVG engine is running, click **OK** to close it.
+5. Quit Claude Desktop from the tray icon and start it again.
 
-   ```powershell
-   lrc-avg-setup.cmd --remove
-   npm.cmd uninstall -g lrc-avg
-   ```
+The uninstaller removes the program, the plugin from Lightroom's plugin folder, and the `lrc-avg` entry from Claude Desktop's settings. Entries you added to other AI apps ([`docs/CLIENTS.md`](docs/CLIENTS.md)) stay; delete them there.
 
-2. Quit Claude Desktop from the tray icon and start it again.
-3. In Lightroom: **File > Plug-in Manager**, select **LrC-AVG (Autonomous Vision Gateway)**, click **Remove**, then **Done**. Quit Lightroom.
-4. Delete LrC-AVG's folders. This also deletes the session logs and your own intents:
-
-   ```powershell
-   Remove-Item -Recurse -Force -ErrorAction SilentlyContinue `
-     "$env:LOCALAPPDATA\LrC-AVG", "$env:USERPROFILE\.lrc-avg", "$env:TEMP\LrC-AVG"
-   ```
-
-Your edits stay in the Lightroom catalog: History steps, snapshots, virtual copies and presets are Lightroom's own, and uninstalling does not touch them.
+Your edits stay in the Lightroom catalog: History steps, snapshots, virtual copies and presets are Lightroom's own, and uninstalling does not touch them. The plugin's settings stay in Lightroom's preferences.
 
 ## Known limitations
 
@@ -394,16 +291,20 @@ The evidence behind the behaviour this page describes. Paths are in this reposit
 | Version | Tested PC and versions | [handle: `docs/reports/phase5/PHASE5.md` "Numbers", "Plugin, engine, connect time": LrC 15.5.1; "Draft for LR_SDK_NOTES": Windows 11]; LrC 15.6 [handle: `docs/reports/phase6/lrc-version-check/check.txt` section 1] |
 | Supported Lightroom versions | 15.0 the supported baseline, earlier versions untested; 15.6 the newest tested | [stated: Jim, 2026-10-03, "Set version 15.0 as the baseline, but note that it might work on earlier versions (untested.)"]; [handle: `docs/reports/phase6/lrc-version-check/check.txt` section 1, "Lightroom 15.6"] |
 | Supported Lightroom versions | The notice outside 15.0-15.6, once in the HUD and in `lr_get_active_photo_context`; a setting Lightroom no longer reports named as not available, the edit kept open; a newer process version read but not edited | [handle: `engine/src/bridge/lightroom.ts`; `engine/src/mcp/errors.ts` `readbackError`, `featureUnavailable`; `engine/src/params/map.ts` `checkProcessVersion`]; tested against the simulated Lightroom [handle: `engine/tests/lrc-baseline.test.ts`]; in a Lightroom outside 15.0-15.6 [unverified] |
-| Version, Install | The whole install from the release on a fresh Windows account (the release URLs, `npm.cmd install -g <URL>`, `Invoke-WebRequest`, the Plug-in Manager steps) | [unverified] until the packaging check (AC-6), now Phase 9 (vault `PHASES.md`). The parts already run: installing the `.tgz` from a file, `lrc-avg-setup.cmd` and `--remove` against scratch configs, the installed engine's tools, and `Expand-Archive` of the zip [handle: `docs/reports/phase6/package-smoke/smoke.txt` sections 1-4] |
-| Install | Release asset URL form `/releases/download/<tag>/<asset>` | [handle: https://docs.github.com/en/repositories/releasing-projects-on-github/linking-to-releases, read 2026-10-01]; the tag `v1.0.0` is set when the release is made [unverified] |
-| What you need | Node ≥ 22 | [handle: `engine/package.json` `engines`] |
-| What you need | The engine connects to Lightroom on 127.0.0.1 only | [handle: `engine/src/bridge/client.ts:52`] |
-| What you need, Install | npm downloads dependencies at install | [handle: `smoke.txt` section 1, "added 100 packages"]; that it needs a network connection is [inference] |
-| Install | `.cmd` instead of `.ps1`: with no policy set, PowerShell's effective policy on Windows clients is Restricted, which runs no script files | [handle: https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_execution_policies, read 2026-10-01]; npm makes both a `.cmd` and a `.ps1` for each command [handle: `%APPDATA%\npm` listing on the dev PC, 2026-10-01; `smoke.txt:173`]. That the plain name picks the `.ps1` is [community] |
-| Install | What `lrc-avg-setup` does and prints; the backup; other entries kept; nothing changed the second time; the two refusals | [handle: `engine/src/setup/apply-config.ts:41-55, 119-125`, `setup-cli.ts:4-6, 15`; `smoke.txt` sections 2a-2f] |
-| Install | Lightroom loads the plugin at its start | [handle: `plugin/LrC-AVG.lrplugin/Info.lua` `LrForceInitPlugin`]; restarting after Add is a precaution [inference] |
-| Check the connection | Status headlines and contents | [handle: `plugin/LrC-AVG.lrplugin/MenuStatus.lua`]; the 1.0.0 dialog in Lightroom is [unverified] until `docs/reports/phase9/local-install.md` step 4 |
-| Check the connection | The engine connects at the first tool call and lets go after 60 s without one | [handle: `engine/src/mcp/main.ts:6-7`, `IDLE_RELEASE_MS`; `docs/reports/phase5/PHASE5.md` "Numbers", "Bridge back after each chat"] |
+| What you need, Install | One setup with its own Node.js, the plugin, the engine and the Deck; installed per user, no administrator | [handle: `tools/setup/build.ts:1-12`; `tools/setup/node-pin.json` (Node 24.11.1 win-x64); `hud/src-tauri/tauri.setup.conf.json` `installMode: currentUser`]; the install on Windows 11 [handle: `docs/reports/phase9/local-install.md` "Numbers"]; Windows 10 [unverified] |
+| Install | The setup from the latest GitHub release; SmartScreen's **Windows protected your PC**, **More info > Run anyway** | [unverified] until the first release is downloaded from GitHub (vault `PHASE9_PLAN.md` "PR 3"): a local build showed no prompt because it carries no Mark of the Web [handle: `docs/reports/phase9/local-install.md` "Observed", Jim after run 1b] |
+| Install | The request to close Lightroom and Claude Desktop with **Retry**; the message about Claude Desktop's settings; the restart line | [handle: `hud/src-tauri/windows/hooks.nsh:80-131`]; the message box and the wizard's last page [handle: `docs/reports/phase9/local-install.md` "Observed", run 1b] |
+| Install | Plugin into Modules, listed and switched on; the `lrc-avg` entry with a backup, other entries kept; program files in `%LOCALAPPDATA%\LrC-AVG`; **LrC-AVG** in installed apps | [handle: `hooks.nsh:105-125`; `engine/src/setup/apply-config.ts:41-55`; `hud/src-tauri/tauri.conf.json` `productName`]; listed and "Installed and running" without a click [handle: `docs/reports/phase9/local-install.md` "Numbers", run 1b] |
+| Install | An update replaces the old version and keeps the data | [handle: `hooks.nsh:133-178`, no removal when a new setup runs the old uninstaller]; the upgrade over a running install [handle: `docs/reports/phase9/local-install.md` "Numbers", run 1, before the last fixes] |
+| Install | `SHA256SUMS.txt` beside the setup; `Get-FileHash` gives SHA-256 | [handle: `tools/setup/build.ts` `main`; `.github/workflows/release.yml`]; `(Get-FileHash README.md).Algorithm` printed `SHA256` (PowerShell 7, 2026-10-17) |
+| Install | Lightroom loads the plugin at its start | [handle: `plugin/LrC-AVG.lrplugin/Info.lua` `LrForceInitPlugin`] |
+| If something goes wrong | The Status headlines and the "has not started LrC-AVG yet" line; `status.txt` | [handle: `plugin/LrC-AVG.lrplugin/MenuStatus.lua:114-156, 132`]; Plug-in Manager's **Enable** button [unverified] |
+| Why the setup is not signed | Not signed for cost; SignPath Foundation once people use it | [stated: Jim, 2026-10-17, "it is just a waste of money, I might as well wait to see if it is downloaded by anyone and then do the SignPath signing if so"]; issue #171; SignPath's conditions [handle: https://signpath.org/terms] |
+| Why the setup is not signed | Smart App Control blocks unsigned programs with no override | [handle: https://support.microsoft.com/en-us/topic/what-is-smart-app-control-285ea03d-fa88-4d56-882e-6698afdb7003, read 2026-10-17: "There is currently no way to bypass Smart App Control protection for individual apps"]; the Windows Security path [unverified]; each new version unknown to SmartScreen again [inference: unsigned reputation goes by the file] |
+| What leaves your PC | Engine and plugin on 127.0.0.1 only; no internet connections from the engine; no usage data | [handle: `engine/src/bridge/client.ts:52`; vault `PRD.md` NFR-4; `grep -rn "fetch(\|node:https\|node:http" engine/src` found nothing, 2026-10-17] |
+| What leaves your PC | Previews go to the AI as images, 1600 px by default; the client sends them to its provider | [handle: `engine/src/mcp/server.ts:64`; `plugin/LrC-AVG.lrplugin/Prefs.lua:37`]; what the client does with them is [inference] |
+| Check that it works | Status headlines and contents | [handle: `plugin/LrC-AVG.lrplugin/MenuStatus.lua`]; the headline outside a chat in Lightroom 15.6 [handle: `docs/reports/phase9/local-install.md` "Numbers", run 1b] |
+| Check that it works | The engine connects at the first tool call and lets go after 60 s without one | [handle: `engine/src/mcp/main.ts:6-7`, `IDLE_RELEASE_MS`; `docs/reports/phase5/PHASE5.md` "Numbers", "Bridge back after each chat"] |
 | Your first session | Snapshot name, pass 0, History step names, per-pass caps, clipping limits and defaults | [handle: `engine/src/mcp/defs-session.ts` `lr_begin_session`, `lr_step`; `engine/src/mcp/defs-help.ts` `HELP_TEXT` item 5, clip_baseline]; AC-4 held on every pass of the Phase 5 check [handle: `PHASE5.md` "Numbers", "AC-4"] |
 | Your first session | The golden-hour chat ran on six photos | [handle: `PHASE5.md` "Numbers", "The six golden-hour chats"] |
 | Your first session | Renders show only inside the expanded tool-call box | [handle: `docs/reports/phase0/S3.md` "Analysis"; stated by Jim there] |
@@ -441,7 +342,7 @@ The evidence behind the behaviour this page describes. Paths are in this reposit
 | Where files go | Which log folder: `LRC_AVG_LOG_DIR`, then the page, then the default for session logs and recipes; the tool log the env variable or the default only; `log_path` at begin | [handle: `engine/src/settings/folders.ts:49-51` `log()`; `engine/src/log/tool-log.ts:13-18` `defaultLogDir`; `engine/src/session/begin.ts:264`; `engine/tests/batch1-logs-begin.test.ts`] |
 | Where files go | Bundled intents read in place, user intents override | [handle: `engine/src/intents/loader.ts:55-56`; vault `PHASE6_PLAN.md` decision 3] |
 | Where files go | `%TEMP%\LrC-AVG`, `%USERPROFILE%\.lrc-avg` contents | [handle: `Prefs.lua:157-158`; `plugin/LrC-AVG.lrplugin/Log.lua:2`; `Endpoint.lua:2-4`; `log-folders.ts:19`]; previews purged at session end and start [handle: vault `PRD.md` NFR-6; `main.ts:10`] |
-| Uninstall | `--remove`; the order of the two commands; the Plug-in Manager **Remove** button; edits stay in the catalog | [handle: `smoke.txt` sections 2d-2e]; that `npm uninstall` also deletes `lrc-avg-setup` is [inference] (it is the package's own `bin`, `engine/package.json`); **Remove** [unverified]; edits staying is [inference]: uninstalling writes nothing to the catalog |
+| Uninstall | Installed apps; the **Delete the application data** box and what it deletes; closing the engine; the program, the plugin and the Claude Desktop entry removed, other clients kept; edits stay | [handle: `hud/src-tauri/windows/hooks.nsh:35-62, 133-178`]; GONE: YES with the box unticked and ticked, the box and the close request shown [handle: `docs/reports/phase9/local-install.md` "Observed" and "Numbers", runs 1 and 1b]; the Settings menu wording [unverified]; edits staying is [inference]: uninstalling writes nothing to the catalog; the plugin settings in Lightroom's preferences [inference] |
 | Known limitations, Supported formats | Process versions 5 and 6 edited, older ones refused | [handle: `engine/src/params/canonical.ts:37, 43` (`SUPPORTED_PROCESS_VERSIONS` "15.4", "11.0"; labels "Version 6", "Version 5"); `engine/src/params/pipeline.ts` `checkProcessVersion`]; four version 5 photos edited in Lightroom [handle: `docs/reports/phase8/PHASE8.md` "Observed", Part 1] |
 | Known limitations | Missing originals refused, sync skips them, the HUD line, Abort still puts back | [handle: `engine/tests/offline-original.test.ts`, against the simulated plugin]; in Lightroom [handle: `docs/reports/phase8/offline.md` "Observed", the re-run; `docs/reports/phase8/PHASE8.md` Part 1, `ORIGINAL_MISSING`]; the menu item [stated: Jim, 2026-10-09, "a menu item under Library that says 'Find all missing photos'"], its capitals [inference] |
 | Known limitations | No crop | [handle: vault `PRD.md` §3] |
@@ -456,14 +357,8 @@ The evidence behind the behaviour this page describes. Paths are in this reposit
 | Known limitations | Plug-in Manager pauses; the 60 s allowance untested; Desktop's hold untested | [handle: `PHASE5.md` "Consequences" item 2]; both [unverified] |
 | Known limitations | A call still working at 50 s answers `pending` and hands the result to the same call made again | [handle: `engine/src/mcp/deadline.ts` `CALL_DEADLINE_MS`, `createDeadline`; `engine/tests/mcp-deadline.test.ts`, against the simulated plugin]; that every client's model calls again [unverified] until `npm run clients:check` |
 | Known limitations | Undo line after a disconnect; Tab, Space and Enter; a long note cut with "..." | [handle: `HudText.lua:72-73`; `HudView.lua:76-81`]; all three in Lightroom 15.6 [handle: `docs/reports/phase6/hud-p1-check/check.txt` section 3] |
-| Clients | The entry every client needs: Node and the engine's `main.js`, no environment; the `--dry-run` line that names both; `--config` with a file holding `{}` | [handle: `engine/src/setup/setup-cli.ts:30-38`, `engine/src/setup/desktop-config.ts:34-36`; `node engine/dist/setup/setup-cli.js --dry-run --config <a file holding {}>` printed `"lrc-avg" runs: C:\Program Files\nodejs\node.exe D:\Developer\LrC_Autonomous_Gateway\engine\dist\mcp\main.js` and left the file as `{}`, 2026-10-15]; that the installed `lrc-avg-setup.cmd` prints the same [inference] |
-| Clients | A vision-capable model is required | [inference]: the AI judges each pass by looking at the render the engine returns (`lr_step`, `engine/src/mcp/defs-session.ts`) |
-| Clients, The HUD | The client's name and the model it names, "name · model" on the HUD's connection line and under the Deck's step line; "the AI" without a name | [handle: `plugin/LrC-AVG.lrplugin/HudView.lua` `connectionLine`, `put`; `HudText.lua` `HudText.ai`; `hud/ui/view.ts` `fillAi`, `aiLine`; `hud/ui/render.ts` `bar`, `left`; `hud/ui/view.test.ts`, `hud/ui/render.test.ts`, `engine/tests/lua-plugin.test.ts`]; in Lightroom and the Deck [unverified] until `npm run clients:check` |
-| Clients | Claude Code: `claude mcp add --scope user`, `.mcp.json` | [handle: https://code.claude.com/docs/en/mcp, read 2026-10-15 (vault `ISSUE155_PLAN.md` "The clients")]; with LrC-AVG [unverified] until `npm run clients:check` |
-| Clients | OpenCode: `opencode.json` `mcp.<name>` with `type: "local"` and `command` | [handle: https://opencode.ai/docs/mcp-servers/, read 2026-10-15 (`ISSUE155_PLAN.md`)]; with LrC-AVG [unverified] until `npm run clients:check` |
-| Clients | Hermes Agent: `%LOCALAPPDATA%\hermes\config.yaml` `mcp_servers:` | [handle: https://hermes-agent.nousresearch.com/docs/user-guide/features/mcp, read 2026-10-15 (`ISSUE155_PLAN.md`)]; the file's place on this PC [handle: `ISSUE155_PLAN.md` "The clients", Hermes row]; with LrC-AVG [unverified] until `npm run clients:check` |
-| Clients | Antigravity CLI: `~/.gemini/config/mcp_config.json` `mcpServers` | [handle: https://antigravity.google/docs/mcp?tab=cli, read 2026-10-15 (`ISSUE155_PLAN.md`)]; with LrC-AVG [unverified] until `npm run clients:check` |
-| Clients | Codex CLI: `~/.codex/config.toml` `[mcp_servers.<name>]`, `tool_timeout_sec` default 60 s; not tested | [handle: https://learn.chatgpt.com/docs/extend/mcp?surface=cli, read 2026-10-15 (`ISSUE155_PLAN.md`)]; not tested [stated: Jim, 2026-10-15, "I do not have Codex or ChatGPT … these will have to be inferred"]; whether 120 s is needed [unverified] |
+| What you need | A vision-capable model is required | [inference]: the AI judges each pass by looking at the render the engine returns (`lr_step`, `engine/src/mcp/defs-session.ts`) |
+| The HUD | The client's name and the model it names, "name · model" on the HUD's connection line and under the Deck's step line; "the AI" without a name | [handle: `plugin/LrC-AVG.lrplugin/HudView.lua` `connectionLine`, `put`; `HudText.lua` `HudText.ai`; `hud/ui/view.ts` `fillAi`, `aiLine`; `hud/ui/render.ts` `bar`, `left`; `hud/ui/view.test.ts`, `hud/ui/render.test.ts`, `engine/tests/lua-plugin.test.ts`]; in Lightroom and the Deck [unverified] until `npm run clients:check` |
 
 ## License
 

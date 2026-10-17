@@ -20,11 +20,13 @@
 -- LrSdkVersion 13.0: the five Phase 0 spike plugins declared it and ran on LrC 15.5.1
 -- [handle: docs\reports\phase0\PHASE0.md "Draft for LR_SDK_NOTES", SDK version]; whether it hides
 -- newer develop keys is [unverified].
+-- This repo copy is the development plugin, with its own ID and name; the setup build ships it as
+-- com.lrcavg.gateway, "LrC-AVG (Autonomous Vision Gateway)" (tools\setup\plugin-id.ts says why).
 return {
     LrSdkVersion = 13.0,
     LrSdkMinimumVersion = 13.0,
-    LrToolkitIdentifier = 'com.lrcavg.gateway',
-    LrPluginName = "LrC-AVG (Autonomous Vision Gateway)",
+    LrToolkitIdentifier = 'com.lrcavg.gateway.dev',
+    LrPluginName = "LrC-AVG (dev)",
     LrInitPlugin = 'PluginInit.lua',
     -- The settings section in File > Plug-in Manager (PRD section 6.2, AVG-006).
     LrPluginInfoProvider = 'PluginInfoProvider.lua',

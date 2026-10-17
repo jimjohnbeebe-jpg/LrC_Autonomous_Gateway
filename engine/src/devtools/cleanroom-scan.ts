@@ -12,7 +12,9 @@ export type Check = { check: string; ok: boolean; detail: string };
 /** What the product keeps in its install folder after an uninstall (the data; SHARED NAMES of PR 1). */
 export const KEPT_DATA = ["logs", "intents", "last-start.json", "setup-result.json", "setup-result.txt", "status.txt"];
 
-export const PLUGIN_STEP = 'in Lightroom choose File > Plug-in Manager, select LrC-AVG, click Remove, quit Lightroom, then run "npm run cleanroom -- --status"';
+export const PLUGIN_STEP = 'in Lightroom choose File > Plug-in Manager, select "LrC-AVG (dev)", click Disable, quit Lightroom, then run "npm run cleanroom -- --status"';
+/** The repo plugin's ID (plugin\LrC-AVG.lrplugin\Info.lua; tools\setup\plugin-id.ts DEV_ID). */
+const DEV_ID = "com.lrcavg.gateway.dev";
 
 const list = (dir: string): string[] => {
   try {
@@ -47,19 +49,34 @@ function dataLeft(p: Paths, folders: string[]): string[] {
   return folders.filter((f) => existsSync(f) && !(f === p.tempData && list(f).every((n) => n === "cleanroom")));
 }
 
+/** One AgSdkPluginLoader_* value of Lightroom's preferences text, lower-cased ("" when absent). */
+function prefsValue(text: string, key: string): string {
+  const m = new RegExp(`AgSdkPluginLoader_${key}\\s*=\\s*"((?:[^"\\\\]|\\\\[\\s\\S])*)"`).exec(text);
+  return m ? m[1]!.toLowerCase() : "";
+}
+
 /**
- * Lightroom's preferences that name the dev plugin. The .agprefs files are Lua-like text holding the
- * Plug-in Manager's plugin paths [unverified: the format is not documented; observed only as text
- * containing "LrC-AVG.lrplugin", grep -c on Jim's "Lightroom Classic CC 7 Preferences.agprefs",
- * 2026-10-17]. Read only: Lightroom's files are never edited.
+ * Whether Lightroom's preferences text has the repo's dev plugin on: a dev path in installedPluginPaths
+ * that is not itself in disabledPluginPaths (another checkout's disabled path does not count), and its ID
+ * not in disabledPluginIDs. After Plug-in Manager > Remove the installed list was empty while disabledPluginPaths still named the path [handle: Jim's
+ * "Lightroom Classic CC 7 Preferences.agprefs" lines 1188-1211, 2026-10-17]; which list Disable writes,
+ * and the format beyond that, are [unverified], so either list counts as off.
  */
-function prefsNaming(p: Paths): string[] {
+export function prefsListInstalled(text: string): boolean {
+  const dev = /plugin\\+lrc-avg\.lrplugin/;
+  const paths = (key: string): string[] => [...prefsValue(text, key).matchAll(/\[\\"(.*?)\\"\]/g)].map((m) => m[1]!);
+  const disabled = new Set(paths("disabledPluginPaths"));
+  return paths("installedPluginPaths").some((p) => dev.test(p) && !disabled.has(p)) && !prefsValue(text, "disabledPluginIDs").includes(`"${DEV_ID}\\"`);
+}
+
+/** Lightroom's preferences files that have the dev plugin on. Read only: Lightroom's files are never edited. */
+export function prefsNaming(p: Paths): string[] {
   return list(p.prefs)
     .filter((n) => n.toLowerCase().endsWith(".agprefs"))
     .map((n) => path.join(p.prefs, n))
     .filter((f) => {
       try {
-        return readFileSync(f, "latin1").toLowerCase().includes("lrc-avg.lrplugin");
+        return prefsListInstalled(readFileSync(f, "latin1"));
       } catch {
         return false;
       }
@@ -86,7 +103,7 @@ export function cleanChecks(sys: Sys): Check[] {
     check("Start menu and Desktop shortcuts", shortcuts(p)),
     ...entryChecks(sys),
     check("data folders", dataLeft(p, p.dataFolders)),
-    { check: "dev plugin in Lightroom's preferences", ok: prefs.length === 0, detail: prefs.length === 0 ? "none" : `${prefs.join("; ")} names LrC-AVG.lrplugin: ${PLUGIN_STEP}` },
+    { check: "dev plugin on in Lightroom", ok: prefs.length === 0, detail: prefs.length === 0 ? "off" : `${prefs.join("; ")} has LrC-AVG (dev) on: ${PLUGIN_STEP}` },
   ];
 }
 

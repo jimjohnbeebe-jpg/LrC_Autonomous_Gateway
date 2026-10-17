@@ -16,8 +16,8 @@ const results = (over: Record<string, unknown> = {}) => JSON.stringify({ finishe
 describe("sandbox .wsb", () => {
   const wsb = wsbText("D:\\Developer\\Lr & C\\release", "C:\\Temp\\LrC-AVG\\phase9\\sandbox_1", "1.0.0", "24.11.1");
 
-  it("maps release read-only and the results folder writable, with no network", () => {
-    expect(wsb).toContain("<Networking>Disable</Networking>");
+  it("maps release read-only and the results folder writable, with the network on for the WebView2 download", () => {
+    expect(wsb).not.toContain("<Networking>");
     expect(wsb).toContain("<HostFolder>D:\\Developer\\Lr &amp; C\\release</HostFolder>\n      <SandboxFolder>C:\\Release</SandboxFolder>\n      <ReadOnly>true</ReadOnly>");
     expect(wsb).toContain("<HostFolder>C:\\Temp\\LrC-AVG\\phase9\\sandbox_1</HostFolder>\n      <SandboxFolder>C:\\Results</SandboxFolder>\n      <ReadOnly>false</ReadOnly>");
   });

@@ -7,6 +7,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } fr
 import path from "node:path";
 import { z } from "zod";
 import { lockSchema, productionPackages, type Staged } from "./lock.ts";
+import { productInfoLua } from "./plugin-id.ts";
 
 export const REPO = path.resolve(import.meta.dirname, "..", "..");
 export const CACHE = path.join(REPO, "build", "cache");
@@ -20,7 +21,11 @@ const pinSchema = z.object({
 
 export const sha256 = (file: string): string => createHash("sha256").update(readFileSync(file)).digest("hex");
 
-/** Every pinned file in build\cache\, downloaded when missing, each checked against its hash. Returns file -> path. */
+/**
+ * Every pinned file in build\cache\, downloaded when missing, each checked against its hash. Returns file -> path.
+ * A file kept in tools\setup\licenses\ is copied from there instead: gnu.org answers HTTP 403 to GitHub's
+ * Windows runner [handle: PR #173, Actions run 39072188283 attempt 2, "lgpl-3.0.txt: HTTP 403"].
+ */
 export async function fetchPinned(): Promise<{ nodeVersion: string; files: Map<string, string> }> {
   const pin = pinSchema.parse(JSON.parse(readFileSync(path.join(import.meta.dirname, "node-pin.json"), "utf8")));
   mkdirSync(CACHE, { recursive: true });
@@ -28,10 +33,15 @@ export async function fetchPinned(): Promise<{ nodeVersion: string; files: Map<s
   for (const d of pin.downloads) {
     const file = path.join(CACHE, d.file);
     if (!existsSync(file) || sha256(file) !== d.sha256) {
-      console.log(`download ${d.url}`);
-      const res = await fetch(d.url);
-      if (!res.ok) throw new Error(`${d.url}: HTTP ${res.status}`);
-      writeFileSync(file, Buffer.from(await res.arrayBuffer()));
+      const kept = path.join(import.meta.dirname, "licenses", d.file);
+      if (existsSync(kept)) {
+        cpSync(kept, file);
+      } else {
+        console.log(`download ${d.url}`);
+        const res = await fetch(d.url);
+        if (!res.ok) throw new Error(`${d.url}: HTTP ${res.status}`);
+        writeFileSync(file, Buffer.from(await res.arrayBuffer()));
+      }
     }
     const got = sha256(file);
     if (got !== d.sha256) throw new Error(`${d.file}: SHA-256 ${got}, tools\\setup\\node-pin.json pins ${d.sha256}`);
@@ -82,6 +92,8 @@ export function stageResources(nodeExe: string): Staged[] {
   const engine = stageEnginePack();
   const packages = stageEngineModules(engine);
   cpSync(path.join(REPO, "plugin", "LrC-AVG.lrplugin"), path.join(RESOURCES, "plugin", "LrC-AVG.lrplugin"), { recursive: true });
+  const info = path.join(RESOURCES, "plugin", "LrC-AVG.lrplugin", "Info.lua");
+  writeFileSync(info, productInfoLua(readFileSync(info, "utf8")));
   // Smoke check with the bundled node: sharp loads from the staged tree (its win32 binary and libvips DLLs).
   const vips = execFileSync(path.join(RESOURCES, "node", "node.exe"), ["-e", "process.stdout.write(require('sharp').versions.vips)"], { cwd: engine, encoding: "utf8" });
   console.log(`staged: node.exe, engine (${packages.length} packages, sharp with libvips ${vips}), plugin`);

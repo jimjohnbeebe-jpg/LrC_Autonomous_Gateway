@@ -73,7 +73,7 @@ function devSetup(w: World): void {
   put(at("Local", "LrC-AVG", "logs", "a.log"), "log");
   put(at("Temp", "LrC-AVG", "bridge.log"), "bridge");
   put(at("home", ".lrc-avg", "bridge_token"), "token");
-  put(at("Roaming", "Adobe", "Lightroom", "Preferences", "Lightroom Classic CC 7 Preferences.agprefs"), 'x = "D:\\\\dev\\\\plugin\\\\LrC-AVG.lrplugin"');
+  put(at("Roaming", "Adobe", "Lightroom", "Preferences", "Lightroom Classic CC 7 Preferences.agprefs"), '\tAgSdkPluginLoader_installedPluginPaths = "t = {\\\n\t[\\"D:\\\\\\\\dev\\\\\\\\plugin\\\\\\\\LrC-AVG.lrplugin\\"] = true,\\\n}\\\n",');
   const dir = at("Local", "LrC-AVG HUD");
   w.keys.push({ key: "HKEY_CURRENT_USER\\...\\LrC-AVG HUD", displayName: "LrC-AVG HUD", installLocation: dir, uninstallString: path.join(dir, "uninstall.exe"), mainBinary: "LrC-AVG HUD.exe" });
 }
@@ -106,7 +106,7 @@ describe("cleanroom: park, check, restore", () => {
     const parked = await runCleanroom(w.sys, "--park", false, false);
     expect(parked.ok).toBe(false);
     expect(parked.headline).toBe("CLEAN: NO");
-    expect(parked.checks.filter((c) => !c.ok).map((c) => c.check)).toEqual(["dev plugin in Lightroom's preferences"]);
+    expect(parked.checks.filter((c) => !c.ok).map((c) => c.check)).toEqual(["dev plugin on in Lightroom"]);
     expect(parked.checks.find((c) => !c.ok)?.detail).toContain(PLUGIN_STEP);
     expect(w.ran).toEqual([`${at("Local", "LrC-AVG HUD", "uninstall.exe")} /S`]);
     expect(existsSync(at("Local", "LrC-AVG"))).toBe(false);

@@ -128,8 +128,8 @@ npm run setup:build         # Phase 9: the unsigned setup: clean engine build, p
 npm run setup:install       # clean room only (needs %TEMP%\LrC-AVG-cleanroom\park.json): installs release\LrC-AVG-Setup-<engine version>.exe /S, prints INSTALLED: YES/NO
 npm run setup:lock-check    # self-check of the lockfile resolver used by setup:build
 npm run cleanroom -- --park # clean room: parks Jim's dev setup (client lrc-avg entries, dev Deck, %LOCALAPPDATA%\LrC-AVG, %TEMP%\LrC-AVG) into %TEMP%\LrC-AVG-cleanroom\, CLEAN: YES/NO; also --status, --verify-gone [--expect-data-gone], --restore; --dry-run; Lightroom and Claude Desktop quit first
-npm run sandbox:check       # Phase 9: the unsigned setup in Windows Sandbox (no network): install, files, entry, bundled engine over stdio, uninstall; SANDBOX: PASS/FAIL; run by Claude Code (docs\reports\phase9\local-install.md)
-npm run phase9:local        # Phase 9 local-install check: 0.99.0 + 1.0.0 setups, park, install, Lightroom y/n, a Claude Desktop chat, upgrade, uninstall twice, restore; resumes (-- --new) (docs\reports\phase9\local-install.md)
+npm run sandbox:check       # Phase 9: the unsigned setup in Windows Sandbox (network on, for the WebView2 download): install, files, entry, bundled engine over stdio, uninstall; SANDBOX: PASS/FAIL; run by Claude Code (docs\reports\phase9\local-install.md)
+npm run phase9:local        # Phase 9 local-install check: 0.99.0 + 1.0.0 setups, park, install, Lightroom y/n, a Claude Desktop chat, upgrade, uninstall twice, restore; stops loudly on a failed step; resumes (-- --new; -- --quick skips the upgrade and the second uninstall) (docs\reports\phase9\local-install.md)
 node engine\dist\mcp\main.js # the stdio MCP server (Claude Desktop starts it; tool log in $env:LRC_AVG_LOG_DIR or %LOCALAPPDATA%\LrC-AVG\logs)
 graphify query "How does X reach Y?"
 ```

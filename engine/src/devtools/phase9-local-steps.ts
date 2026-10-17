@@ -6,7 +6,7 @@
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { blockers, pathsOf } from "./cleanroom-sys.js";
-import { PLUGIN_STEP } from "./cleanroom-scan.js";
+import { PLUGIN_STEP, prefsNaming } from "./cleanroom-scan.js";
 import { installChecks, installPaths, mtimeMs, newestLastStart, statusProblems } from "./phase9-local-checks.js";
 import type { Ctx, Step } from "./phase9-local.js";
 
@@ -61,6 +61,15 @@ export const parkStep: Step = {
   async run(ctx) {
     const parkFile = pathsOf(ctx.sys).parkFile;
     if (existsSync(parkFile)) ctx.note(`Already parked (${parkFile}): checking that nothing LrC-AVG is left.`);
+    // The dev plugin goes first: removing it means starting Lightroom, which loads it once more and writes
+    // its bridge files into the data folders; after a park those come back as left-over data.
+    for (let i = 0; i < 4 && !existsSync(parkFile) && prefsNaming(pathsOf(ctx.sys)).length > 0; i++) {
+      await ctx.pause(`Before anything is moved, do this: ${PLUGIN_STEP.replace(/, then run .*$/, "")}.`);
+    }
+    if (!existsSync(parkFile) && prefsNaming(pathsOf(ctx.sys)).length > 0) {
+      ctx.check("the dev plugin is removed in Plug-in Manager", false, "Lightroom still lists it as installed");
+      return { stop: true };
+    }
     for (let i = 0; i < 5 && blockers(ctx.sys).length > 0; i++) {
       ctx.say(`Quit these first: ${blockers(ctx.sys).join(" and ")}.`);
       await ctx.pause("Lightroom: File > Exit. Claude Desktop: right-click the Claude icon in the Windows system tray (bottom right) > Quit.");
@@ -118,10 +127,10 @@ export const lightroomStep: Step = {
   async run(ctx) {
     const ip = installPaths(ctx.sys);
     ctx.say("  1. Start Lightroom Classic.");
-    ctx.say("  2. Choose File > Plug-in Manager. In the list on the left, click LrC-AVG.");
+    ctx.say('  2. Choose File > Plug-in Manager. In the list on the left, click "LrC-AVG (Autonomous Vision Gateway)" (the installed one; "LrC-AVG (dev)" stays disabled). Do not click Enable.');
     await ctx.pause("Do steps 1 and 2.");
-    await ctx.yn("Is LrC-AVG listed in the Plug-in Manager's list on the left?", "y");
-    await ctx.yn('Does it show a green dot and "Installed and running" under Status on the right (and no "Enable" button)?', "y");
+    await ctx.yn('Is "LrC-AVG (Autonomous Vision Gateway)" listed in the Plug-in Manager\'s list on the left?', "y");
+    await ctx.yn('Does it show a green dot and "Installed and running" under Status on the right (and no "Enable" button), without you clicking anything?', "y");
     ctx.say("  3. Click Done. Choose File > Plug-in Extras > LrC-AVG - Status. A dialog opens. Click OK to close it.");
     await ctx.pause("Do step 3.");
     reportStatus(ctx, ip.status, ctx.version);
@@ -157,7 +166,9 @@ export const chatStep: Step = {
       return;
     }
     const s = found.start;
-    ctx.check("the client that started the engine is Claude Desktop", /claude/i.test(s.client_name ?? ""), `client ${s.client_name ?? "(none)"} ${s.client_version ?? ""} [${found.file}]`);
+    // Claude Desktop names itself "claude-ai" in a chat and "local-agent-mode-lrc-avg" when its agent mode
+    // starts the server [handle: engine-20261017.jsonl client "claude-ai" and last-start.json, Jim's runs 1 and 1b].
+    ctx.check("the client that started the engine is Claude Desktop", /claude|local-agent-mode/i.test(s.client_name ?? ""), `client ${s.client_name ?? "(none)"} ${s.client_version ?? ""} [${found.file}]`);
     ctx.check("the engine is the product's version", s.engine_version === ctx.version, `${s.engine_version}, expected ${ctx.version}`);
     ctx.check("Claude Desktop ran the bundled Node and engine", s.exec_path.toLowerCase() === installPaths(ctx.sys).node.toLowerCase() && s.main_js.toLowerCase() === installPaths(ctx.sys).mainJs.toLowerCase(), `${s.exec_path} ${s.main_js}`);
   },

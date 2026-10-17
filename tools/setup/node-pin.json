@@ -7,6 +7,6 @@
     { "file": "node-LICENSE.txt", "url": "https://raw.githubusercontent.com/nodejs/node/v24.11.1/LICENSE", "sha256": "537308465103a306d0e3eecf42632b4ff1b48aaaec044e9fc10a78c81fd00b34" },
     { "file": "lgpl-3.0.txt", "url": "https://www.gnu.org/licenses/lgpl-3.0.txt", "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118" },
     { "file": "gpl-3.0.txt", "url": "https://www.gnu.org/licenses/gpl-3.0.txt", "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986" },
-    { "file": "sharp-libvips-THIRD-PARTY-NOTICES.md", "url": "https://raw.githubusercontent.com/lovell/sharp-libvips/v1.3.3/THIRD-PARTY-NOTICES.md", "sha256": "25ffcfa69e28b1913ced27ec778b90f24911a1bb3021253577e8b0af55db0d49" }
+    { "file": "sharp-libvips-THIRD-PARTY-NOTICES.md", "url": "https://raw.githubusercontent.com/lovell/sharp-libvips/v1.3.4/THIRD-PARTY-NOTICES.md", "sha256": "6f0d5086e3bcbee12bcdacf5878b31d1104002aeecaeb241d3fff466108082fe" }
   ]
 }

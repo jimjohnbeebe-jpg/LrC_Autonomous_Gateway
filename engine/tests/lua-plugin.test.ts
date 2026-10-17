@@ -213,6 +213,9 @@ describe("lua: LrC-AVG.lrplugin", () => {
     expect([...listed("FIELDS"), ...listed("AI_FIELDS")]).toEqual(Object.keys(names)); // AI_FIELDS: plugin 0.21.0, issue #131
     expect(pending).toMatch(/_G\.LrCAVG_PendingAi = _G\.LrCAVG_PendingAi or \{\}/);
     expect(read("Bridge.lua")).toMatch(/process_started_at = _G\.LrCAVG_ProcessStartedAt,/);
+    // Phase 9 run 1b: a bridge left with no listener heals itself; it binds afresh while no engine is connected.
+    expect(read("Bridge.lua")).toMatch(/if not S\.receiveConnected and S\.boundAt and \(LrDate\.currentTime\(\) - S\.boundAt\) > IDLE_REBIND_SECONDS then\s+S\.boundAt = nil\s+S\.receiveNeedsRebind, S\.sendNeedsRebind = true, true/);
+    expect(read("Sockets.lua")).toMatch(/S\.receiveSocket = bindReceive\(B, S\.receiveGen\)[\s\S]{0,120}S\.boundAt = LrDate\.currentTime\(\)/);
   });
 
   it("passes a History name to every applyDevelopSettings call (rule 03-lightroom)", () => {

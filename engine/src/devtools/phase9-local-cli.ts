@@ -22,7 +22,7 @@ import { realSys } from "./cleanroom-sys.js";
 import { describeError, type Answer } from "./phase1-check.js";
 import { redactHome } from "./phase2-check.js";
 import { jsonStateStore } from "./phase5-state.js";
-import { GIVE_UP, runLocal, saveResults, type LocalDeps } from "./phase9-local.js";
+import { GIVE_UP, runLocal, saveResults, type LocalDeps, type Step } from "./phase9-local.js";
 import { localStateSchema } from "./phase9-local-state.js";
 import { chatStep, installStep, lightroomStep, buildStep, parkStep } from "./phase9-local-steps.js";
 import { reinstallClearStep, restoreStep, uninstallKeepStep, upgradeStep } from "./phase9-local-upgrade.js";
@@ -34,6 +34,9 @@ const stamp = new Date().toISOString().replace(/[:.]/g, "-");
 /** The test build's number (npm run setup:build -- --version 0.99.0): below the product's, so the second setup is an upgrade. */
 const TEST_VERSION = "0.99.0";
 const STEPS = [buildStep, parkStep, installStep, lightroomStep, chatStep, upgradeStep, uninstallKeepStep, reinstallClearStep, restoreStep];
+/** `-- --quick`: install, Lightroom, chat, one uninstall, restore; the upgrade and the second uninstall are skipped and say so. */
+const QUICK_SKIP: ReadonlySet<string> = new Set(["upgrade", "reinstall_clear"]);
+const skipped = (s: Step): Step => ({ id: s.id, title: `${s.title} (skipped: --quick)`, run: async (ctx) => ctx.note("Skipped by --quick.") });
 
 /** Questions and prompts in this window, from a buffered line iterator (phase8-check-cli.ts terminal(); a CLI module cannot be imported). */
 function terminal(): { prompt: (text: string) => Promise<string | null>; ask: (question: string) => Promise<Answer>; close: () => void } {
@@ -68,9 +71,9 @@ function exec(command: string): number {
 }
 
 async function main(): Promise<number> {
-  const unknown = process.argv.slice(2).filter((a) => a !== "--new");
+  const unknown = process.argv.slice(2).filter((a) => a !== "--new" && a !== "--quick");
   if (unknown.length > 0) {
-    console.error(`unknown argument ${unknown.join(" ")}. Usage: npm run phase9:local [-- --new]`);
+    console.error(`unknown argument ${unknown.join(" ")}. Usage: npm run phase9:local [-- --new] [--quick]`);
     return 2;
   }
   const version = z.object({ version: z.string() }).parse(JSON.parse(readFileSync(path.join(REPO, "engine", "package.json"), "utf8"))).version;
@@ -97,7 +100,8 @@ async function main(): Promise<number> {
     stamp,
   };
   try {
-    const outcome = await runLocal(deps, STEPS, { fresh: process.argv.includes("--new") });
+    const steps = process.argv.includes("--quick") ? STEPS.map((s) => (QUICK_SKIP.has(s.id) ? skipped(s) : s)) : STEPS;
+    const outcome = await runLocal(deps, steps, { fresh: process.argv.includes("--new") });
     console.log(`Results saved automatically: ${saveResults(OUT_DIR, stamp, JSON.parse(redact(JSON.stringify(outcome.results))) as Record<string, unknown>)}`);
     console.log(outcome.finished ? 'Nothing to copy. Tell Claude Code "done".' : "Nothing to copy. Run the same command again to continue, or tell Claude Code what happened.");
     return outcome.headline === "WORKED" ? 0 : outcome.headline === "FAILED" ? 1 : 2;

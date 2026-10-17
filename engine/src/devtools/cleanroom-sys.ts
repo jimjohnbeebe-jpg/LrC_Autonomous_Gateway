@@ -4,6 +4,7 @@
 // with fakes and never touch the real registry, processes or configs.
 
 import { execFileSync, spawnSync } from "node:child_process";
+import { readdirSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -33,6 +34,17 @@ export type Sys = {
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 const UNINSTALL = "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
 
+/** The engine's data folder as the Microsoft Store Claude Desktop redirects it, one per Claude package. */
+function storeData(local: string): string[] {
+  try {
+    return readdirSync(path.join(local, "Packages"))
+      .filter((n) => n.toLowerCase().startsWith("claude_"))
+      .map((n) => path.join(local, "Packages", n, "LocalCache", "Local", "LrC-AVG"));
+  } catch {
+    return [];
+  }
+}
+
 /** Every place the clean room parks or checks. */
 export function pathsOf(sys: Sys) {
   const local = sys.env["LOCALAPPDATA"] ?? path.join(sys.home, "AppData", "Local");
@@ -51,9 +63,11 @@ export function pathsOf(sys: Sys) {
     /**
      * The data folders parked, and checked by --verify-gone --expect-data-gone; the com.lrcavg.desktop two are the
      * WebView2 data of that identifier [handle: vault PHASE9_PLAN.md "Found" 5, installer.nsi:871-884]; ~\.lrc-avg
-     * holds the bridge token and ports (engine\src\bridge\endpoint.ts) and hud_endpoint.json (engine\src\hud\channel.ts).
+     * holds the bridge token and ports (engine\src\bridge\endpoint.ts) and hud_endpoint.json (engine\src\hud\channel.ts);
+     * the Microsoft Store Claude Desktop redirects the engine's %LOCALAPPDATA%\LrC-AVG into its package [handle: Jim's
+     * run 1, 2026-10-17: last-start.json and logs\ in Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\LrC-AVG\].
      */
-    dataFolders: [install, path.join(temp, "LrC-AVG"), path.join(local, "com.lrcavg.desktop"), path.join(appData, "com.lrcavg.desktop"), path.join(sys.home, ".lrc-avg")],
+    dataFolders: [install, path.join(temp, "LrC-AVG"), path.join(local, "com.lrcavg.desktop"), path.join(appData, "com.lrcavg.desktop"), path.join(sys.home, ".lrc-avg"), ...storeData(local)],
     modules: path.join(appData, "Adobe", "Lightroom", "Modules"),
     prefs: path.join(appData, "Adobe", "Lightroom", "Preferences"),
     startMenu: path.join(appData, "Microsoft", "Windows", "Start Menu", "Programs"),

@@ -113,10 +113,11 @@ export const restoreStep: Step = {
     ctx.check("RESTORED: YES", back, back ? "everything parked is back" : `${parkFile} is still there: run npm run cleanroom -- --restore`);
     if (!back) return { stop: true };
     ctx.say("  1. Start Lightroom Classic. Choose File > Plug-in Manager.");
-    ctx.say("  2. Click Add (bottom left). Pick the folder below (type it in the File name box, press Enter, then click Add Plug-in):");
+    ctx.say('  2. If "LrC-AVG (dev)" is in the list on the left: select it and click Enable (under Status, on the right).');
+    ctx.say("     If it is not in the list: click Add (bottom left), pick the folder below (type it in the File name box, press Enter, then click Add Plug-in):");
     ctx.say(`       ${path.join(ctx.repo, "plugin", "LrC-AVG.lrplugin")}`);
     ctx.say("  3. Click Done. Start Claude Desktop again when you want it: its LrC-AVG entry is back.");
     await ctx.pause("Do the three steps.");
-    await ctx.yn('Does the Plug-in Manager list LrC-AVG with "Installed and running"?', "y");
+    await ctx.yn('Does the Plug-in Manager list "LrC-AVG (dev)" with "Installed and running"?', "y");
   },
 };

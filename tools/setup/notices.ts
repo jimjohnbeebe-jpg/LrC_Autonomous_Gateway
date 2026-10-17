@@ -86,7 +86,7 @@ export function writeNotices(version: string, nodeVersion: string, packages: Sta
     section("4. npm packages (resources\\engine\\node_modules)", npmItems(engine, packages)),
     // sharp's Windows package is "Apache-2.0 AND LGPL-3.0-or-later" and holds libvips and its libraries as
     // DLLs; the package carries the Apache text only [handle: node_modules\@img\sharp-win32-x64\package.json,
-    // its LICENSE file]. Their notices come from the sharp-libvips release sharp 0.35.4 pins (1.3.3,
+    // its LICENSE file]. Their notices come from the sharp-libvips release sharp 0.35.5 pins (1.3.4,
     // node_modules\sharp\package.json optionalDependencies) [inference: the win32 DLLs are built from it].
     rule("5. libvips and the libraries in @img/sharp-win32-x64 (lib\\*.dll)") +
       `Library versions (versions.json in the package):\n${vips}\n\n` +

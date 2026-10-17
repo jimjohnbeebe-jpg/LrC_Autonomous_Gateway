@@ -1,7 +1,7 @@
 // `npm run sandbox:check` (vault PHASE9_PLAN.md D9.2): installs the unsigned setup in a disposable Windows
 // (Windows Sandbox), checks what it did, uninstalls and checks the leftovers. Claude Code runs this, not
 // Jim; Jim only enables Windows Sandbox once (ENABLE_SANDBOX prints the one administrator command).
-// The Sandbox has no network, release\ read-only and a writable results folder:
+// The Sandbox has the network on (the setup downloads WebView2, see sandbox-model.ts wsbText), release\ read-only and a writable results folder:
 //   %TEMP%\LrC-AVG-phase9\sandbox_<time>\   guest.ps1, sandbox.wsb, progress.txt, results.json, installed-files.txt
 //   %TEMP%\LrC-AVG-phase9\sandbox_<time>.json   this run's verdict and the guest's results
 // Prints SANDBOX: PASS or FAIL with each check. Exit 0 on PASS, 1 on FAIL, 2 when it could not run.

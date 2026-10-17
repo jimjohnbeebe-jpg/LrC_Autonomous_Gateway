@@ -30,7 +30,7 @@ import { z } from "zod";
 export const SERVER_NAME = "lrc-avg";
 export const RETIRED_SERVERS = ["lrc-avg-spike-s3"] as const;
 export const CONFIG_FILE = "claude_desktop_config.json";
-/** An empty file Claude Desktop leaves in a data folder it moved away from (see the layouts above). */
+/** An empty file Claude Desktop leaves in a data folder it moved away from [inference] (see the layouts above). */
 const LEFT_MARKER = ".user-data-left.";
 
 export const desktopConfigSchema = z.looseObject({

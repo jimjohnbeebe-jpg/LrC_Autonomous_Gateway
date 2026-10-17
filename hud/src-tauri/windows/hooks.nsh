@@ -17,7 +17,7 @@
 ;     is preselected, PageReinstall/PageLeaveReinstall), but always with "_?=<install folder>" (generated
 ;     target\release\nsis\x64\installer.nsi:355). _?= makes an uninstaller run in place instead of from a
 ;     copy in %TEMP% [handle: https://nsis.sourceforge.io/Docs/Chapter3.html#installerusageuninstaller];
-;     Settings > Apps and a direct /S run start uninstall.exe without it. So "$EXEDIR" == "$INSTDIR" in the
+;     Settings > Apps and a direct /S run start uninstall.exe without it (installer.nsi:5238 writes the UninstallString with no _?=). So "$EXEDIR" == "$INSTDIR" in the
 ;     uninstaller means a new setup is replacing this one [inference; unverified until Jim's upgrade run].
 ; Everything a hook does on a real PC is [unverified] until Jim's run 1 (plan "Jim run 1").
 ; ASCII only, so the file reads the same in any NSIS code page [inference].
@@ -73,12 +73,12 @@
     StrCpy $2 "$SYSDIR\WindowsPowerShell\v1.0\powershell.exe"
   ${EndIf}
   nsExec::ExecToStack `"$2" -NoProfile -NonInteractive -Command "$$n=@(); $$p=@(Get-CimInstance Win32_Process | Where-Object { $$_.Name -in 'Lightroom.exe','Claude.exe' }); if ($$p | Where-Object { $$_.Name -eq 'Lightroom.exe' }) { $$n+='Lightroom Classic' }; if ($$p | Where-Object { $$_.ExecutablePath -match '\\WindowsApps\\Claude_|\\AnthropicClaude\\' }) { $$n+='Claude Desktop' }; Write-Output ($$n -join ' and '); exit $$n.Count"`
-  Pop $0 ; exit code, or "error"/"timeout" (then 0 below)
+  Pop $0 ; exit code, or "error"/"timeout" (then 0 below) [upstream claim: https://nsis.sourceforge.io/Docs/nsExec/nsExec.txt]
   Pop $1
 !macroend
 
 !macro NSIS_HOOK_PREINSTALL
-  ; Lightroom and Claude Desktop load the plugin and the entry only when they start: ask to close them.
+  ; Lightroom and Claude Desktop load the plugin and the entry only when they start [inference]: ask to close them.
   ; Ignore goes on (they are restarted afterwards). No box under /S or /P.
   ${IfNot} ${Silent}
   ${AndIf} $PassiveMode <> 1
@@ -148,7 +148,7 @@
   ; "Delete the application data" ticked (plan D5): the template removed only $APPDATA\<identifier> and
   ; $LOCALAPPDATA\<identifier> (installer.nsi:871-884). This removes LrC-AVG's own data, by name, and
   ; nothing else in %LOCALAPPDATA%\LrC-AVG; that the box's state reaches this hook is [unverified].
-  ; Never when a new setup runs this uninstaller (the box shows then too): an upgrade keeps the data.
+  ; Never when a new setup runs this uninstaller (the box shows then too [unverified]): an upgrade keeps the data.
   ; %USERPROFILE%\.lrc-avg holds the bridge token, the ports file and hud_endpoint.json; the plugin
   ; and the engine write them again on their next start (Endpoint.lua, engine\src\hud\channel.ts).
   ${If} $DeleteAppDataCheckboxState = 1

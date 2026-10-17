@@ -48,7 +48,7 @@
     "cleanroom": "npm run build && node engine/dist/devtools/cleanroom-cli.js",
     "sandbox:check": "npm run build && node engine/dist/devtools/sandbox-cli.js",
     "phase9:local": "npm run build && node engine/dist/devtools/phase9-local-cli.js",
-    "arch:check":"depcruise engine/src --config .dependency-cruiser.cjs --ignore-known",
+    "arch:check": "depcruise engine/src --config .dependency-cruiser.cjs --ignore-known",
     "arch:graph": "node tools/arch-graph.ts"
   },
   "devDependencies": {

@@ -77,7 +77,7 @@ describe("last-start record", () => {
     await server.connect(serverSide);
     const client = new Client({ name: "test-client", version: "9.9.9" });
     await client.connect(clientSide);
-    // the client sends notifications/initialized after connect() resolves
+    // the client sends notifications/initialized after connect() resolves (handle in mcp/main.ts oninitialized)
     await vi.waitFor(() => readFileSync(file, "utf8"));
     expect(JSON.parse(readFileSync(file, "utf8"))).toMatchObject({ client_name: "test-client", client_version: "9.9.9" });
     await client.close();

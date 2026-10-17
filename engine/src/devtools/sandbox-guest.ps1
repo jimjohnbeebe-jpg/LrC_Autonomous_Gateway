@@ -1,9 +1,9 @@
 # The script Windows Sandbox runs at logon (npm run sandbox:check; sandbox-cli.ts copies it to the results
 # folder and sandbox-model.ts wsbText() names it in the .wsb LogonCommand). PowerShell 5.1 syntax: that is
-# what a clean Windows has [handle: Windows 11 ships Windows PowerShell 5.1; the version is recorded in
+# what a clean Windows has [inference; unverified until the first sandbox:check, which records the version in
 # results.json "powershell"]. It installs the setup silently, checks what the setup should have done, runs
 # the bundled engine over stdio, uninstalls, checks the leftovers, writes results.json and shuts the
-# Sandbox down. No Python, no Node on the PATH (a clean Windows has none).
+# Sandbox down. No Python, no Node on the PATH (a clean Windows has none [inference]).
 param(
   [Parameter(Mandatory = $true)][string]$Version,
   [Parameter(Mandatory = $true)][string]$NodeVersion
@@ -65,9 +65,9 @@ function EngineTools() {
   $proc = [System.Diagnostics.Process]::Start($psi)
   $null = $proc.StandardError.ReadToEndAsync()
   # Raw UTF-8 bytes. Windows PowerShell 5.1 starts the redirected stdin with a byte order mark, so the first
-  # message reaches Node as "BOM{...}" and fails to parse [handle: smoke test against a stub MCP server run by
-  # Claude Code 2026-10-17: SyntaxError at the first JSON.parse; with [Console]::InputEncoding set to
-  # UTF8Encoding($false) before Process.Start the same stub answered tools/list]. The encoding is set above.
+  # message reaches Node as "BOM{...}" and fails to parse [unverified: a smoke test against a stub MCP server run
+  # by Claude Code 2026-10-17, output not kept, showed SyntaxError at the first JSON.parse; with [Console]::InputEncoding
+  # set to UTF8Encoding($false) before Process.Start the same stub answered tools/list]. The encoding is set above.
   $utf8 = New-Object System.Text.UTF8Encoding $false
   foreach ($json in @(
     '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"sandbox-check","version":"1.0.0"}}}',
@@ -151,7 +151,7 @@ try {
   $ls = ReadJson (Join-Path $Inst 'last-start.json')
   Check 'the engine wrote last-start.json for the client "sandbox-check"' ($null -ne $ls -and $ls.client_name -eq 'sandbox-check' -and $ls.engine_version -eq $Version) $(if ($null -eq $ls) { 'no last-start.json' } else { 'engine ' + $ls.engine_version + ', client ' + $ls.client_name })
 
-  # 4. Uninstall (the uninstaller hands over to a copy of itself, so wait for the files to go).
+  # 4. Uninstall (the uninstaller hands over to a copy of itself [inference: hooks.nsh header, NSIS docs], so wait for the files to go).
   Step 'uninstall'
   $null = Start-Process -FilePath (Join-Path $Inst 'uninstall.exe') -ArgumentList '/S' -Wait -PassThru
   Settle { -not (Test-Path -LiteralPath (Join-Path $Inst 'resources')) -and -not (Test-Path -LiteralPath (Join-Path $Inst 'uninstall.exe')) } 90

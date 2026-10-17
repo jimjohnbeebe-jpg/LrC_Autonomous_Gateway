@@ -1,6 +1,6 @@
 // The pure parts of `npm run sandbox:check` (sandbox-cli.ts runs them): the .wsb text, the guest's
 // results file and the verdict. The guest script itself is sandbox-guest.ps1 (PowerShell, no Python).
-// Windows Sandbox facts used here [upstream claim: Microsoft's .wsb schema as remembered, learn.microsoft.com
+// Windows Sandbox facts used here [unverified: Microsoft's .wsb schema as remembered, learn.microsoft.com
 // "Windows Sandbox configuration"; not fetched in this session; the first run is the observation]:
 // <Networking>Disable, <MappedFolders> with <ReadOnly>, <LogonCommand><Command>.
 
@@ -44,7 +44,7 @@ export const guestResultsSchema = z.object({
 });
 export type GuestResults = z.infer<typeof guestResultsSchema>;
 
-/** The guest's results.json; Windows PowerShell 5.1 may write a BOM, which is dropped. */
+/** The guest's results.json; Windows PowerShell 5.1 may write a BOM [inference], which is dropped. */
 export function parseGuestResults(text: string): GuestResults {
   return guestResultsSchema.parse(JSON.parse(text.replace(/^\uFEFF/, "")));
 }

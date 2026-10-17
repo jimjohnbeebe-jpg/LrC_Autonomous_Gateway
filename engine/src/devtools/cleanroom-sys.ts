@@ -48,8 +48,12 @@ export function pathsOf(sys: Sys) {
     /** The Deck before 1.0.0 (Deck 0.3.x, "LrC-AVG HUD"). */
     oldDeck: path.join(local, "LrC-AVG HUD"),
     tempData: path.join(temp, "LrC-AVG"),
-    /** The data folders parked, and checked by --verify-gone --expect-data-gone; the last two are the WebView2 data of identifier com.lrcavg.desktop [handle: vault PHASE9_PLAN.md "Found" 5, installer.nsi:871-884]. */
-    dataFolders: [install, path.join(temp, "LrC-AVG"), path.join(local, "com.lrcavg.desktop"), path.join(appData, "com.lrcavg.desktop")],
+    /**
+     * The data folders parked, and checked by --verify-gone --expect-data-gone; the com.lrcavg.desktop two are the
+     * WebView2 data of that identifier [handle: vault PHASE9_PLAN.md "Found" 5, installer.nsi:871-884]; ~\.lrc-avg
+     * holds the bridge token and ports (engine\src\bridge\endpoint.ts) and hud_endpoint.json (engine\src\hud\channel.ts).
+     */
+    dataFolders: [install, path.join(temp, "LrC-AVG"), path.join(local, "com.lrcavg.desktop"), path.join(appData, "com.lrcavg.desktop"), path.join(sys.home, ".lrc-avg")],
     modules: path.join(appData, "Adobe", "Lightroom", "Modules"),
     prefs: path.join(appData, "Adobe", "Lightroom", "Preferences"),
     startMenu: path.join(appData, "Microsoft", "Windows", "Start Menu", "Programs"),

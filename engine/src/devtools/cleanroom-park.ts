@@ -17,7 +17,8 @@ import { deckInstaller } from "./clients-deck.js";
 const PARK_SCHEMA = "lrc-avg/cleanroom-park/v1";
 const folderItem = z.object({ kind: z.literal("folder"), from: z.string(), to: z.string(), state: z.enum(["moving", "moved", "restored"]) });
 const deckItem = z.object({ kind: z.literal("deck"), name: z.string(), version: z.string().nullable(), install_dir: z.string(), uninstaller: z.string(), state: z.enum(["recorded", "uninstalled", "reinstalled", "manual"]) });
-const parkSchema = z.object({ schema: z.literal(PARK_SCHEMA), parked_at: z.string(), dir: z.string(), items: z.array(z.discriminatedUnion("kind", [configItemSchema, folderItem, deckItem])) });
+// `complete`: true only after the last item is parked; `npm run setup:install` (tools\setup\install.ts) requires it.
+const parkSchema = z.object({ schema: z.literal(PARK_SCHEMA), parked_at: z.string(), dir: z.string(), complete: z.boolean().default(false), items:z.array(z.discriminatedUnion("kind", [configItemSchema, folderItem, deckItem])) });
 type Park = z.infer<typeof parkSchema>;
 type DeckItem = z.infer<typeof deckItem>;
 type FolderItem = z.infer<typeof folderItem>;
@@ -105,7 +106,7 @@ export async function park(sys: Sys, dryRun: boolean): Promise<Outcome> {
   ];
   if (dryRun) return { ok: true, refused: false, actions: plan.map((a) => `would ${a}`), messages: plan.length === 0 ? ["Nothing to park."] : [] };
   mkdirSync(dir, { recursive: true });
-  const state: Park = { schema: PARK_SCHEMA, parked_at: sys.now().toISOString(), dir, items: [] };
+  const state: Park = { schema: PARK_SCHEMA, parked_at: sys.now().toISOString(), dir, complete: false, items: [] };
   save(p.parkFile, state);
   const actions: string[] = [];
   try {
@@ -137,6 +138,8 @@ export async function park(sys: Sys, dryRun: boolean): Promise<Outcome> {
   } catch (err) {
     return { ok: false, refused: false, actions, messages: [`Stopped: ${(err as Error).message}`, `What was parked so far is recorded in ${p.parkFile}; "npm run cleanroom -- --restore" puts it back.`] };
   }
+  state.complete = true;
+  save(p.parkFile, state);
   return { ok: true, refused: false, actions, messages: [] };
 }
 
@@ -146,7 +149,7 @@ function restoreFolder(item: FolderItem, dir: string, stamp: string, messages: s
     if (item.state === "moving" && existsSync(item.from)) return void (item.state = "restored");
     throw new Error(`the parked folder ${item.to} is missing`);
   }
-  // %TEMP%LrC-AVG holding only the clean room's own results: those are merged into the restored folder.
+  // %TEMP%\LrC-AVG holding only the clean room's own results: those are merged into the restored folder.
   let results: string | null = null;
   if (existsSync(item.from)) {
     if (readdirSync(item.from).every((n) => n === "cleanroom")) {
@@ -233,5 +236,11 @@ export async function restore(sys: Sys, dryRun: boolean): Promise<Outcome> {
   }
   if (failed > 0) return { ok: false, refused: false, actions, messages: [...messages, `${p.parkFile} is kept; fix the above and run "npm run cleanroom -- --restore" again.`] };
   rmSync(p.parkFile);
+  // The byte copies of the parked configs hold other servers' env values too [inference]: gone once all is back.
+  const copies = path.join(state.dir, "configs");
+  if (existsSync(copies)) {
+    rmSync(copies, { recursive: true });
+    actions.push(`deleted the config copies in ${copies}`);
+  }
   return { ok: true, refused: false, actions, messages };
 }

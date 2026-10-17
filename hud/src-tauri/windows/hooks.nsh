@@ -13,6 +13,12 @@
 ;     removal (871-888);
 ;   - $UpdateMode is 1 only with /UPDATE on the command line (installer.nsi:489-491, 771-773), which the
 ;     template passes to the old uninstaller only when the new installer itself runs with /UPDATE (358).
+;     A double-clicked newer setup runs the old uninstaller without /UPDATE ("uninstall before installing"
+;     is preselected, PageReinstall/PageLeaveReinstall), but always with "_?=<install folder>" (generated
+;     target\release\nsis\x64\installer.nsi:355). _?= makes an uninstaller run in place instead of from a
+;     copy in %TEMP% [handle: https://nsis.sourceforge.io/Docs/Chapter3.html#installerusageuninstaller];
+;     Settings > Apps and a direct /S run start uninstall.exe without it. So "$EXEDIR" == "$INSTDIR" in the
+;     uninstaller means a new setup is replacing this one [inference; unverified until Jim's upgrade run].
 ; Everything a hook does on a real PC is [unverified] until Jim's run 1 (plan "Jim run 1").
 ; ASCII only, so the file reads the same in any NSIS code page [inference].
 
@@ -88,6 +94,14 @@
 !macroend
 
 !macro NSIS_HOOK_POSTINSTALL
+  ; The Deck's version for the plugin's Status dialog (plan D10; MenuStatus.lua). ${VERSION} is the
+  ; template's tauri.conf.json version (generated installer.nsi:38).
+  ClearErrors
+  FileOpen $2 "$INSTDIR\deck-version.txt" w
+  ${IfNot} ${Errors}
+    FileWrite $2 "${VERSION}"
+    FileClose $2
+  ${EndIf}
   ; The plugin into Lightroom's Modules folder (plan D3), replacing an older copy. CopyFiles of a folder
   ; puts it inside the target folder [inference: SHFileOperation semantics].
   CreateDirectory "${LRCAVG_MODULES}"
@@ -118,8 +132,12 @@
 
 !macro NSIS_HOOK_PREUNINSTALL
   !insertmacro LrcAvgCloseEngine
-  ; Not when an /UPDATE install runs this uninstaller first: the new version keeps entry and plugin.
+  Delete "$INSTDIR\deck-version.txt"
+  ; Not when a new setup runs this uninstaller first (/UPDATE, or in place with _?=, see the top): the
+  ; new version's POSTINSTALL writes entry and plugin again, and a new setup that stops before that
+  ; leaves them in place, so running it again repairs the install.
   ${If} $UpdateMode <> 1
+  ${AndIf} "$EXEDIR" != "$INSTDIR"
     nsExec::ExecToLog `"${LRCAVG_NODE}" "${LRCAVG_SETUP_CLI}" --remove --installer`
     Pop $0
     RMDir /r "${LRCAVG_MODULES}\LrC-AVG.lrplugin"
@@ -130,8 +148,12 @@
   ; "Delete the application data" ticked (plan D5): the template removed only $APPDATA\<identifier> and
   ; $LOCALAPPDATA\<identifier> (installer.nsi:871-884). This removes LrC-AVG's own data, by name, and
   ; nothing else in %LOCALAPPDATA%\LrC-AVG; that the box's state reaches this hook is [unverified].
+  ; Never when a new setup runs this uninstaller (the box shows then too): an upgrade keeps the data.
+  ; %USERPROFILE%\.lrc-avg holds the bridge token, the ports file and hud_endpoint.json; the plugin
+  ; and the engine write them again on their next start (Endpoint.lua, engine\src\hud\channel.ts).
   ${If} $DeleteAppDataCheckboxState = 1
   ${AndIf} $UpdateMode <> 1
+  ${AndIf} "$EXEDIR" != "$INSTDIR"
     RMDir /r "${LRCAVG_DATA}\logs"
     RMDir /r "${LRCAVG_DATA}\intents"
     RMDir /r "${LRCAVG_DATA}\previews"
@@ -142,5 +164,6 @@
     Delete "${LRCAVG_DATA}\status.txt"
     RMDir "${LRCAVG_DATA}" ; only when empty
     RMDir /r "$TEMP\LrC-AVG"
+    RMDir /r "$PROFILE\.lrc-avg"
   ${EndIf}
 !macroend

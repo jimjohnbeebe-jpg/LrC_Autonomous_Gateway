@@ -42,12 +42,25 @@ local function decode(text)
     return nil
 end
 
-local function readJson(path)
+local function readText(path)
     local fh = io.open(path, "r")
     if not fh then return nil end
     local text = fh:read("*a")
     fh:close()
-    return decode(text)
+    return text
+end
+
+local function readJson(path)
+    local text = readText(path)
+    return text and decode(text) or nil
+end
+
+-- deck-version.txt is written by the setup's POSTINSTALL hook (hud\src-tauri\windows\hooks.nsh); a
+-- Deck-only dev build has no hooks, so it has no version file.
+local function deckLine(appDir)
+    if LrFileUtils.exists(join(appDir, "LrC-AVG Deck.exe")) ~= "file" then return "Deck installed: NO" end
+    local version = (readText(join(appDir, "deck-version.txt")) or ""):match("^%s*([%d%.]+)")
+    return "Deck installed: YES, version " .. (version or "not recorded (not installed by the LrC-AVG setup)")
 end
 
 -- The engine's record of its latest start. Under Claude Desktop from the Microsoft Store (MSIX) the engine
@@ -153,7 +166,7 @@ LrTasks.startAsyncTask(function()
     for _, line in ipairs(bridgeLines(status, age)) do add(line) end
     add(engineLine(start))
     for _, line in ipairs(entryLines(readJson(join(appDir, "setup-result.json")))) do add(line) end
-    add("Deck installed: " .. (LrFileUtils.exists(join(appDir, "LrC-AVG Deck.exe")) == "file" and "YES" or "NO"))
+    add(deckLine(appDir))
     local logFolder = Prefs.read().logFolder
     add("Session logs: " .. ((logFolder and logFolder ~= "") and logFolder or join(appDir, "logs")))
     add("Plugin log: " .. Log.path())

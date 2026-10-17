@@ -1,7 +1,8 @@
 // `npm run setup:install` (Phase 9 PR 1; issue #54 comment, the `deck:install` slice): installs
 // release\LrC-AVG-Setup-<engine version>.exe silently (NSIS /S), then prints INSTALLED: YES/NO with the
 // installed Deck's version. Only inside the clean room: it refuses unless `npm run cleanroom -- --park`
-// has parked Jim's development setup (%TEMP%\LrC-AVG-cleanroom\park.json, plan D9).
+// has parked all of Jim's development setup (%TEMP%\LrC-AVG-cleanroom\park.json with "complete": true,
+// which a park writes only after its last item; a stopped park leaves it false, plan D9).
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -10,8 +11,9 @@ import { z } from "zod";
 
 const REPO = path.resolve(import.meta.dirname, "..", "..");
 const park = path.join(tmpdir(), "LrC-AVG-cleanroom", "park.json");
-if (!existsSync(park)) {
-  console.log(`INSTALLED: NO\nRefused: ${park} is missing. Run npm run cleanroom -- --park first, so the setup does not mix with the development setup.`);
+const parked = existsSync(park) && z.object({ complete: z.literal(true) }).safeParse(JSON.parse(readFileSync(park, "utf8"))).success;
+if (!parked) {
+  console.log(`INSTALLED: NO\nRefused: ${park} is missing or the park did not finish. Run npm run cleanroom -- --park (after a stopped park: --restore first), so the setup does not mix with the development setup.`);
   process.exit(1);
 }
 

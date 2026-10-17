@@ -51,7 +51,7 @@ export const upgradeStep: Step = {
     ctx.check("Lightroom, Claude Desktop, the Deck and the engine are all running before the upgrade", before.lightroom && before.claudeDesktop && before.deck && before.engine, sayRunning(before));
     ctx.say(`  1. Open File Explorer, go to ${path.join(ctx.repo, "release")} and double-click LrC-AVG-Setup-${ctx.version}.exe. ${SMARTSCREEN}`);
     ctx.say('  2. Answer the setup like this. A box "Please close: ..." with Retry, Ignore and Abort: click Ignore. A box "The LrC-AVG engine is running ...": click OK.');
-    ctx.say("  3. A page about the version already installed (a maintenance page, or an offer to uninstall the old version first): keep what is selected and click Next or Install. On the last page leave every box as it is, then click Finish.");
+    ctx.say("  3. A page about the version already installed (a maintenance page, or an offer to uninstall the old version first): keep what is selected and click Next or Install. If an uninstall window of the old version opens, leave \"Delete the application data\" unticked and click Uninstall. On the last page leave every box as it is, then click Finish.");
     await ctx.pause("Do the three steps, and wait until the wizard has closed.");
     await ctx.yn("Did the wizard finish without an error message?", "y");
     await ctx.yn("Did a box ask you to close Lightroom or Claude Desktop?");

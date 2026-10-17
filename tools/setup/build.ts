@@ -5,11 +5,14 @@
 //   3. THIRD_PARTY_NOTICES.txt and LICENSE.txt beside them;
 //   4. the Deck's UI, then `tauri build` with hud\src-tauri\tauri.setup.conf.json merged (resources and
 //      the hooks in hud\src-tauri\windows\hooks.nsh), plus a version overlay for --version;
-//   5. Tauri's NSIS output copied to release\, older LrC-AVG-Setup-* files removed first.
+//   5. Tauri's NSIS output moved to release\, older LrC-AVG-Setup-* files removed first. Moved, not
+//      copied: the Deck-only build writes the same file name into the bundle folder, and the dev probes
+//      and the clean room's restore install the Deck from there (hud\probe\kit.ts installer(),
+//      engine\src\devtools\clients-deck.ts deckInstaller()).
 // Usage: node tools/setup/build.ts [--version 0.99.0]   (a test build under another version number)
 // Needs: npm ci done, Rust (rustup MSVC) as for `npm run deck:build`.
 import { execFileSync, execSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { z } from "zod";
@@ -30,10 +33,12 @@ const TAURI_DIR = path.join(HUD, "src-tauri");
 function productVersion(): string {
   const engine = versionOf(path.join("engine", "package.json"));
   const deck = versionOf(path.join("hud", "src-tauri", "tauri.conf.json"));
+  const hud = versionOf(path.join("hud", "package.json"));
+  const crate = /^version\s*=\s*"([^"]+)"/m.exec(readFileSync(path.join(TAURI_DIR, "Cargo.toml"), "utf8"))?.[1] ?? "(not found)";
   const info = readFileSync(path.join(REPO, "plugin", "LrC-AVG.lrplugin", "Info.lua"), "utf8");
   const m = /VERSION\s*=\s*\{\s*major\s*=\s*(\d+),\s*minor\s*=\s*(\d+),\s*revision\s*=\s*(\d+)/.exec(info);
   const plugin = m ? `${m[1]}.${m[2]}.${m[3]}` : "(not found)";
-  if (engine !== deck || engine !== plugin) throw new Error(`versions differ: engine ${engine}, Deck ${deck}, plugin ${plugin}`);
+  if ([deck, hud, crate, plugin].some((v) => v !== engine)) throw new Error(`versions differ: engine ${engine}, Deck ${deck} (hud package.json ${hud}, Cargo.toml ${crate}), plugin ${plugin}`);
   return engine;
 }
 
@@ -80,7 +85,7 @@ async function main(): Promise<void> {
   for (const f of readdirSync(release)) if (f.startsWith("LrC-AVG-Setup-") || f === "SHA256SUMS.txt") rmSync(path.join(release, f));
   const name = `LrC-AVG-Setup-${version}.exe`;
   const out = path.join(release, name);
-  copyFileSync(nsisOutput(version), out);
+  renameSync(nsisOutput(version), out); // one volume: both are in the repo
   writeFileSync(path.join(release, "SHA256SUMS.txt"), `${sha256(out)}  ${name}\n`); // sha256sum's format
   console.log(`\nBUILT: ${out} (unsigned)\n${readFileSync(path.join(release, "SHA256SUMS.txt"), "utf8")}`);
 }

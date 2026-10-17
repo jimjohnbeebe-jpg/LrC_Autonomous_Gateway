@@ -274,7 +274,7 @@ Under **File > Plug-in Extras**, in this order:
 
 | Menu item | What it does |
 |---|---|
-| **LrC-AVG - Status** | Says whether the plugin's bridge runs and whether the engine is connected; shows the plugin and engine versions, the Claude Desktop entry, whether the Deck is installed, the ports and the plugin log, and saves the same text as `%LOCALAPPDATA%LrC-AVGstatus.txt` to attach to a GitHub issue. |
+| **LrC-AVG - Status** | Says whether the plugin's bridge runs and whether the engine is connected; shows the plugin and engine versions, the Claude Desktop entry, whether the Deck is installed and its version, the ports and the plugin log, and saves the same text as `%LOCALAPPDATA%\LrC-AVG\status.txt` to attach to a GitHub issue. |
 | **LrC-AVG - Show Vision Gateway HUD** | Opens the HUD. |
 | **LrC-AVG - Pick A**, **Pick B**, **Pick C** | The HUD's Pick buttons. |
 | **LrC-AVG - Approve Pass** | The HUD's Approve pass n. |

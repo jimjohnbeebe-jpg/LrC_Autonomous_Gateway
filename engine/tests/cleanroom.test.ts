@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { parseArgs, runCleanroom } from "../src/devtools/cleanroom-run.js";
 import { PLUGIN_STEP } from "../src/devtools/cleanroom-scan.js";
 import { parseRegQuery, type Proc, type Sys, type UninstallKey } from "../src/devtools/cleanroom-sys.js";
+import { DECK_ONLY_MAX_BYTES, deckVersionOk } from "../src/devtools/clients-deck.js";
 
 let root: string;
 const at = (...p: string[]) => path.join(root, ...p);
@@ -71,6 +72,7 @@ function devSetup(w: World): void {
   put(at("Roaming", "Microsoft", "Windows", "Start Menu", "Programs", "LrC-AVG HUD.lnk"), "lnk");
   put(at("Local", "LrC-AVG", "logs", "a.log"), "log");
   put(at("Temp", "LrC-AVG", "bridge.log"), "bridge");
+  put(at("home", ".lrc-avg", "bridge_token"), "token");
   put(at("Roaming", "Adobe", "Lightroom", "Preferences", "Lightroom Classic CC 7 Preferences.agprefs"), 'x = "D:\\\\dev\\\\plugin\\\\LrC-AVG.lrplugin"');
   const dir = at("Local", "LrC-AVG HUD");
   w.keys.push({ key: "HKEY_CURRENT_USER\\...\\LrC-AVG HUD", displayName: "LrC-AVG HUD", installLocation: dir, uninstallString: path.join(dir, "uninstall.exe"), mainBinary: "LrC-AVG HUD.exe" });
@@ -108,6 +110,10 @@ describe("cleanroom: park, check, restore", () => {
     expect(parked.checks.find((c) => !c.ok)?.detail).toContain(PLUGIN_STEP);
     expect(w.ran).toEqual([`${at("Local", "LrC-AVG HUD", "uninstall.exe")} /S`]);
     expect(existsSync(at("Local", "LrC-AVG"))).toBe(false);
+    expect(existsSync(at("home", ".lrc-avg"))).toBe(false);
+    const park = JSON.parse(read(at("Temp", "LrC-AVG-cleanroom", "park.json"))) as { complete: boolean; dir: string };
+    expect(park.complete).toBe(true);
+    expect(existsSync(path.join(park.dir, "configs"))).toBe(true);
     expect(read(at("home", ".config", "opencode", "opencode.jsonc"))).toBe(`{\n  // keep me\n  "mcp": {\n  }\n}\n`);
     expect(Object.keys(JSON.parse(read(at("Local", "Claude-Data", "claude_x", "claude_desktop_config.json"))).mcpServers)).toEqual(["github"]);
     expect(readdirSync(at("Local", "Claude-Data", "claude_x"))).toEqual(["claude_desktop_config.json"]);
@@ -125,6 +131,16 @@ describe("cleanroom: park, check, restore", () => {
     // The uninstalled Deck stays uninstalled (no built installer here); its folder and shortcut are the only difference.
     for (const [file, text] of Object.entries(rest)) if (!file.includes("LrC-AVG HUD")) expect([file, after[file]]).toEqual([file, text]);
     expect(existsSync(at("Temp", "LrC-AVG-cleanroom", "park.json"))).toBe(false);
+    expect(existsSync(path.join(park.dir, "configs"))).toBe(false);
+  });
+
+  it("marks a park that stopped half way as not complete (setup:install refuses it)", async () => {
+    const w = world();
+    devSetup(w);
+    w.sys.run = () => 1;
+    const r = await runCleanroom(w.sys, "--park", false, false);
+    expect(r.messages.join("\n")).toMatch(/Stopped: .*exited with 1/);
+    expect((JSON.parse(read(at("Temp", "LrC-AVG-cleanroom", "park.json"))) as { complete: boolean }).complete).toBe(false);
   });
 
   it("merges entries into files that changed while parked, and renames a test's leftovers aside", async () => {
@@ -156,6 +172,19 @@ describe("cleanroom: park, check, restore", () => {
     expect(restored.ok).toBe(true);
     expect(w.ran.at(-1)).toMatch(/LrC-AVG_1\.0\.0_x64-setup\.exe \/S$/);
   });
+
+  it("never runs the full product setup that setup:build left under the Deck's file name", async () => {
+    const w = world();
+    devSetup(w);
+    put(at("repo", "hud", "package.json"), JSON.stringify({ version: "1.0.0" }));
+    const nsis = at("repo", "hud", "src-tauri", "target", "release", "bundle", "nsis");
+    mkdirSync(nsis, { recursive: true });
+    writeFileSync(path.join(nsis, "LrC-AVG_1.0.0_x64-setup.exe"), Buffer.alloc(DECK_ONLY_MAX_BYTES));
+    await runCleanroom(w.sys, "--park", false, false);
+    const restored = await runCleanroom(w.sys, "--restore", false, false);
+    expect(restored.messages.join("\n")).toMatch(/no built installer was found/);
+    expect(w.ran.some((r) => r.includes("x64-setup.exe"))).toBe(false);
+  });
 });
 
 describe("cleanroom: refusals and dry runs", () => {
@@ -175,7 +204,7 @@ describe("cleanroom: refusals and dry runs", () => {
     devSetup(w);
     const before = snapshot();
     const dry = await runCleanroom(w.sys, "--park", true, false);
-    expect(dry.actions).toHaveLength(5 + 1 + 2);
+    expect(dry.actions).toHaveLength(5 + 1 + 3);
     expect(snapshot()).toEqual(before);
     await runCleanroom(w.sys, "--park", false, false);
     put(at("Local", "LrC-AVG", "uninstall.exe"), "product");
@@ -198,6 +227,10 @@ describe("cleanroom: --verify-gone and arguments", () => {
     put(at("Roaming", "Adobe", "Lightroom", "Modules", "LrC-AVG.lrplugin", "Info.lua"), "x");
     const r = await runCleanroom(w.sys, "--verify-gone", false, false);
     expect(r.checks.filter((c) => !c.ok).map((c) => c.check)).toEqual(["install folder (except the kept data)", "Lightroom Modules copies"]);
+  });
+
+  it("clients:check takes the 1.0.0 Deck as AI_NAME_DECK (0.3.6) or later", () => {
+    expect(["1.0.0", "1.0.0.0", "0.3.6", "0.3.5", null].map(deckVersionOk)).toEqual([true, true, true, false, false]);
   });
 
   it("parses the commands and reg query output", () => {

@@ -8,12 +8,20 @@
 // The S3 test server "lrc-avg-spike-s3" is removed (the Phase 1/2 set-up item in PHASES.md). Every
 // other server is left exactly as it is.
 //
-// Where the config lives on Windows:
-//   Microsoft Store (MSIX) install: %LOCALAPPDATA%\Packages\Claude_<id>\LocalCache\Roaming\Claude\claude_desktop_config.json
-//     [handle: docs\reports\phase0\S3.md "Steps 2-3"; Jim's machine has Claude_pzs8sxrjxfjjc]
-//   Classic install: %APPDATA%\Claude\claude_desktop_config.json [unverified on this machine: absent there]
-// Whether a fresh Windows account has the folder, but not the file, after Claude Desktop's first
-// start is [unverified] (PHASE6_PLAN row 1, decision D1; the AC-6 run in row 3 shows it).
+// Where the config lives on Windows (three layouts seen so far; Claude Desktop moved on 2026-10-16):
+//   1. %LOCALAPPDATA%\Claude-Data\claude_<id>\claude_desktop_config.json: where Jim's Microsoft Store build
+//      (package family Claude_pzs8sxrjxfjjc, 2.42304.0.0) reads and wrote its config on 2026-10-16
+//      [handle: vault PHASE9_PLAN.md "Found" 1; Get-ChildItem -Filter 'claude_desktop_config*.json' over
+//      %APPDATA% and %LOCALAPPDATA%, 2026-10-17]
+//   2. %LOCALAPPDATA%\Packages\Claude_<id>\LocalCache\Roaming\Claude\claude_desktop_config.json: the older
+//      Microsoft Store (MSIX) location [handle: docs\reports\phase0\S3.md "Steps 2-3"]. That folder now holds
+//      only an empty ".user-data-left.claude_pzs8sxrjxfjjc", written 3 s before the layout-1 config [handle:
+//      same listing as 1]; that the marker means "the data moved" is [inference], so a folder holding a
+//      ".user-data-left.*" file is skipped, config or not
+//   3. %APPDATA%\Claude\claude_desktop_config.json: the classic install [unverified on this machine: absent there]
+// A folder that holds a config file wins over one that does not (apply-config.ts). Whether a fresh Windows
+// account has the folder but not the file after Claude Desktop's first start is [unverified] (PHASE6_PLAN
+// row 1, decision D1; the AC-6 run shows it).
 
 import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
@@ -22,6 +30,8 @@ import { z } from "zod";
 export const SERVER_NAME = "lrc-avg";
 export const RETIRED_SERVERS = ["lrc-avg-spike-s3"] as const;
 export const CONFIG_FILE = "claude_desktop_config.json";
+/** An empty file Claude Desktop leaves in a data folder it moved away from [inference] (see the layouts above). */
+const LEFT_MARKER = ".user-data-left.";
 
 export const desktopConfigSchema = z.looseObject({
   mcpServers: z.record(z.string(), z.unknown()).optional(),
@@ -63,18 +73,38 @@ export function planConfig(config: DesktopConfig, entry: ServerEntry | null): Co
   };
 }
 
-/** Every Claude Desktop data folder that exists (MSIX first, then the classic location). */
+
+/** The names of the folders inside `dir` that start with `prefix` (any letter case); empty when `dir` cannot be read. */
+function subfolders(dir: string, prefix: string): string[] {
+  try {
+    return readdirSync(dir, { withFileTypes: true })
+      .filter((e) => e.isDirectory() && e.name.toLowerCase().startsWith(prefix))
+      .map((e) => path.join(dir, e.name));
+  } catch {
+    return [];
+  }
+}
+
+function hasLeftMarker(folder: string): boolean {
+  try {
+    return readdirSync(folder).some((name) => name.startsWith(LEFT_MARKER));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Every Claude Desktop data folder that exists, newest layout first: Claude-Data, the MSIX Packages
+ * folder (skipped when it holds a ".user-data-left.*" marker), then the classic location.
+ */
 export function findClaudeFolders(env: NodeJS.ProcessEnv = process.env): string[] {
   const found: string[] = [];
   const localAppData = env["LOCALAPPDATA"];
   if (localAppData) {
-    const packages = path.join(localAppData, "Packages");
-    if (existsSync(packages)) {
-      for (const dir of readdirSync(packages)) {
-        if (!dir.startsWith("Claude_")) continue;
-        const candidate = path.join(packages, dir, "LocalCache", "Roaming", "Claude");
-        if (existsSync(candidate)) found.push(candidate);
-      }
+    found.push(...subfolders(path.join(localAppData, "Claude-Data"), "claude_"));
+    for (const pkg of subfolders(path.join(localAppData, "Packages"), "claude_")) {
+      const candidate = path.join(pkg, "LocalCache", "Roaming", "Claude");
+      if (existsSync(candidate) && !hasLeftMarker(candidate)) found.push(candidate);
     }
   }
   const appData = env["APPDATA"];
@@ -85,7 +115,7 @@ export function findClaudeFolders(env: NodeJS.ProcessEnv = process.env): string[
   return found;
 }
 
-/** Every Claude Desktop config file found (MSIX first, then the classic location). */
+/** Every Claude Desktop config file found, in the order of findClaudeFolders. */
 export function findDesktopConfigs(env: NodeJS.ProcessEnv = process.env): string[] {
   return findClaudeFolders(env)
     .map((folder) => path.join(folder, CONFIG_FILE))

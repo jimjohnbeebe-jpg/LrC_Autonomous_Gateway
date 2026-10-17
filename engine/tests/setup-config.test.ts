@@ -6,7 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { applyDesktopConfig, describeResult, SetupError } from "../src/setup/apply-config.js";
-import { CONFIG_FILE, engineEntry, findDesktopConfigs, planConfig, SERVER_NAME } from "../src/setup/desktop-config.js";
+import { CONFIG_FILE, engineEntry, findClaudeFolders, findDesktopConfigs, planConfig, SERVER_NAME } from "../src/setup/desktop-config.js";
 
 const NODE = "C:\\Program Files\\nodejs\\node.exe";
 const devMain = path.join("D:\\Developer\\LrC_Autonomous_Gateway", "engine", "dist", "mcp", "main.js");
@@ -122,5 +122,97 @@ describe("setup: finding and writing Claude Desktop's config", () => {
     mkdirSync(msix, { recursive: true });
     expect(applyDesktopConfig({ entry: null, env })).toMatchObject({ created: false, changes: [] });
     expect(existsSync(path.join(msix, CONFIG_FILE))).toBe(false);
+  });
+});
+
+// The layouts: Claude Desktop's data moved on 2026-10-16 [handle: vault PHASE9_PLAN.md "Found" 1; the same
+// folder names are used here, not read from this machine].
+describe("setup: where Claude Desktop reads its config (Claude-Data, the left-behind marker)", () => {
+  const PACKAGE_FAMILY = "pzs8sxrjxfjjc";
+  let tmp: string;
+  let env: NodeJS.ProcessEnv;
+  let claudeData: string;
+  let packages: string;
+  let classic: string;
+  const marker = (folder: string): void => writeFileSync(path.join(folder, `.user-data-left.claude_${PACKAGE_FAMILY}`), "");
+  beforeEach(() => {
+    tmp = mkdtempSync(path.join(os.tmpdir(), "lrc-avg-claude-data-"));
+    env = { LOCALAPPDATA: path.join(tmp, "local"), APPDATA: path.join(tmp, "roaming") };
+    claudeData = path.join(tmp, "local", "Claude-Data", `claude_${PACKAGE_FAMILY}`);
+    packages = path.join(tmp, "local", "Packages", `Claude_${PACKAGE_FAMILY}`, "LocalCache", "Roaming", "Claude");
+    classic = path.join(tmp, "roaming", "Claude");
+  });
+  afterEach(() => rmSync(tmp, { recursive: true, force: true }));
+
+  it("finds the Claude-Data config and not the Packages folder that only holds the marker (Jim's layout)", () => {
+    mkdirSync(claudeData, { recursive: true });
+    mkdirSync(packages, { recursive: true });
+    marker(packages);
+    writeFileSync(path.join(claudeData, CONFIG_FILE), JSON.stringify({ mcpServers: { github } }));
+    expect(findDesktopConfigs(env)).toEqual([path.join(claudeData, CONFIG_FILE)]);
+    const r = applyDesktopConfig({ entry, env });
+    expect(r).toMatchObject({ configPath: path.join(claudeData, CONFIG_FILE), created: false, entryChanged: true });
+    expect(JSON.parse(readFileSync(r.configPath, "utf8"))).toEqual({ mcpServers: { github, [SERVER_NAME]: entry } });
+    expect(readdirSync(packages)).toEqual([`.user-data-left.claude_${PACKAGE_FAMILY}`]);
+  });
+
+  it("skips a marked Packages folder even when an old config is still in it", () => {
+    mkdirSync(claudeData, { recursive: true });
+    mkdirSync(packages, { recursive: true });
+    marker(packages);
+    writeFileSync(path.join(packages, CONFIG_FILE), "{}");
+    expect(findDesktopConfigs(env)).toEqual([]);
+    // the one folder that is left gets the new file, as before a config exists anywhere (decision D1)
+    expect(applyDesktopConfig({ entry, env })).toMatchObject({ configPath: path.join(claudeData, CONFIG_FILE), created: true });
+    expect(readFileSync(path.join(packages, CONFIG_FILE), "utf8")).toBe("{}");
+  });
+
+  it("refuses when only a marked Packages folder exists: there is nowhere Claude Desktop reads from", () => {
+    mkdirSync(packages, { recursive: true });
+    marker(packages);
+    expect(() => applyDesktopConfig({ entry, env })).toThrow(/Start Claude Desktop once/);
+  });
+
+  it("still finds the older layouts: an unmarked Packages folder, and the classic folder", () => {
+    mkdirSync(packages, { recursive: true });
+    writeFileSync(path.join(packages, CONFIG_FILE), "{}");
+    expect(findDesktopConfigs(env)).toEqual([path.join(packages, CONFIG_FILE)]);
+    rmSync(path.join(tmp, "local"), { recursive: true });
+    mkdirSync(classic, { recursive: true });
+    writeFileSync(path.join(classic, CONFIG_FILE), "{}");
+    expect(findDesktopConfigs(env)).toEqual([path.join(classic, CONFIG_FILE)]);
+  });
+
+  it("prefers a folder that holds a config file over a Claude-Data folder that does not", () => {
+    mkdirSync(claudeData, { recursive: true });
+    mkdirSync(packages, { recursive: true });
+    writeFileSync(path.join(packages, CONFIG_FILE), "{}");
+    expect(applyDesktopConfig({ entry, env }).configPath).toBe(path.join(packages, CONFIG_FILE));
+  });
+
+  it("refuses two config files across layouts, as before", () => {
+    mkdirSync(claudeData, { recursive: true });
+    mkdirSync(classic, { recursive: true });
+    writeFileSync(path.join(claudeData, CONFIG_FILE), "{}");
+    writeFileSync(path.join(classic, CONFIG_FILE), "{}");
+    expect(() => applyDesktopConfig({ entry, env })).toThrow(/found 2 Claude Desktop config files/);
+  });
+
+  it("matches the Claude-Data folder name in any letter case and ignores plain files and other folders there", () => {
+    const root = path.join(tmp, "local", "Claude-Data");
+    mkdirSync(path.join(root, "CLAUDE_Upper"), { recursive: true });
+    mkdirSync(path.join(root, "cache"), { recursive: true });
+    writeFileSync(path.join(root, "claude_file"), "");
+    expect(findClaudeFolders(env)).toEqual([path.join(root, "CLAUDE_Upper")]);
+  });
+
+  it("gives a SetupError the kind the installer result needs", () => {
+    expect(() => applyDesktopConfig({ entry, env })).toThrowError(expect.objectContaining({ kind: "not_found" }));
+    mkdirSync(claudeData, { recursive: true });
+    mkdirSync(classic, { recursive: true });
+    expect(() => applyDesktopConfig({ entry, env })).toThrowError(expect.objectContaining({ kind: "ambiguous" }));
+    writeFileSync(path.join(claudeData, CONFIG_FILE), "{bad");
+    rmSync(classic, { recursive: true });
+    expect(() => applyDesktopConfig({ entry, env })).toThrowError(expect.objectContaining({ kind: "error" }));
   });
 });

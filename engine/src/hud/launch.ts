@@ -6,23 +6,24 @@
 // comes back during the edit (3.2; sinks.ts), whichever comes first.
 // No executable found: nothing starts, and the classic HUD opens at once, as before Phase 7 (row 3
 // decision 1).
-// Where: LRC_AVG_HUD_EXE, else `%LOCALAPPDATA%\LrC-AVG HUD\LrC-AVG HUD.exe`, where the Deck's per-user
-// installer puts it (row 4b). Tauri's NSIS per-user folder is `$LOCALAPPDATA\${PRODUCTNAME}` [inference:
-// the string in @tauri-apps/cli-win32-x64-msvc 2.12.1; the row 4b probe checks it]; the product and
-// executable are named in hud\src-tauri\tauri.conf.json. The final install path is Phase 8's (spec Q10).
+// Where: LRC_AVG_HUD_EXE, else `%LOCALAPPDATA%\LrC-AVG\LrC-AVG Deck.exe`, where the LrC-AVG setup and the
+// Deck-only installer put it (Phase 9 plan D8, the rename; before it `LrC-AVG HUD\LrC-AVG HUD.exe`).
+// Tauri's NSIS per-user folder is `$LOCALAPPDATA\${PRODUCTNAME}` [handle: tauri-cli-v2.12.1
+// crates/tauri-bundler/src/bundle/windows/nsis/installer.nsi:515, read 2026-10-17]; the product and
+// executable are named in hud\src-tauri\tauri.conf.json.
 // [handle: tests\hud-launch.test.ts]
 
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import path from "node:path";
 
-export const HUD_EXE_NAME = "LrC-AVG HUD.exe";
+export const HUD_EXE_NAME = "LrC-AVG Deck.exe";
 /** The start at begin, and one more (the header). */
 const MAX_STARTS = 2;
 
 /** The Deck's executable, or null when it is not there. */
 export function findHudExe(env: NodeJS.ProcessEnv = process.env): string | null {
-  const exe = env["LRC_AVG_HUD_EXE"] ?? (env["LOCALAPPDATA"] ? path.join(env["LOCALAPPDATA"], "LrC-AVG HUD", HUD_EXE_NAME) : null);
+  const exe = env["LRC_AVG_HUD_EXE"] ?? (env["LOCALAPPDATA"] ? path.join(env["LOCALAPPDATA"], "LrC-AVG", HUD_EXE_NAME) : null);
   return exe && existsSync(exe) ? exe : null;
 }
 

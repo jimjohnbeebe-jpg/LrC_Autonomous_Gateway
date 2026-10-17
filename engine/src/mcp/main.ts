@@ -33,11 +33,13 @@ import { BridgeClient } from "../bridge/index.js";
 import { IntentLibrary } from "../intents/index.js";
 import { purgeExports } from "../library/files.js";
 import { ToolLog, defaultLogDir } from "../log/index.js";
+import { writeLastStart } from "../log/last-start.js";
 import { loadDefaultParamMap } from "../params/index.js";
 import { defaultPresetDir } from "../presets/index.js";
 import { PreviewService } from "../preview/index.js";
 import { KnownLogFolders, PageSettings } from "../settings/index.js";
 import { BridgeGate, SESSION_SILENCE_MS } from "./bridge-gate.js";
+import { clientIdentity } from "./client-info.js";
 import { devOverrides } from "./dev-overrides.js";
 import { acquireInstanceLock } from "./instance-lock.js";
 import { createServer } from "./server.js";
@@ -100,7 +102,14 @@ const tools = new Tools({
   deck: { log: say },
 });
 sessionOpen = () => (tools.sessionManager()?.current() ?? null) !== null;
-await createServer(tools).connect(new StdioServerTransport());
+const server = createServer(tools);
+// The record that a client really started this engine, and which one, for the Status dialog and the
+// setup check (log/last-start.ts, PHASE9_PLAN decision D4). Written once the handshake is done, so
+// clientInfo is known: the SDK calls oninitialized on the client's initialized notification and keeps
+// clientInfo from the initialize request [handle: node_modules\@modelcontextprotocol\sdk\dist\esm\server\
+// index.js:53, 259-280, SDK 1.32.0]. A failed write is logged and ignored.
+server.oninitialized = () => writeLastStart({ engineVersion: ENGINE_VERSION, client: clientIdentity(server.getClientVersion()), log: say });
+await server.connect(new StdioServerTransport());
 
 let stopping = false;
 const shutdown = (reason: string) => (): void => {

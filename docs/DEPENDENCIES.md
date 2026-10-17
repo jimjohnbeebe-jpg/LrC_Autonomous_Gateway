@@ -73,6 +73,19 @@ No new package or crate: the `hud` workspace pins the versions already in the re
 
 Both were the npm `latest` tag [handle: `npm view dependency-cruiser@18.6.0 version license engines dist-tags.latest` → `18.6.0`, `MIT`, `{ node: '^22||^24||>=26' }`, `18.6.0`; `npm view @swc/core@1.16.18 version license engines dist-tags.latest` → `1.16.18`, `Apache-2.0`, `{ node: '>=10' }`, `1.16.18`; 2026-10-12]. `npm install -D -E` at the root; `npm ls dependency-cruiser @swc/core --depth=0` shows both. They run `npm run arch:check` and `npm run arch:graph` (`.dependency-cruiser.cjs`, CLAUDE.md "Module Map"). dependency-cruiser was set by Jim's directive (issue #148). `@swc/core` is its parser, since dependency-cruiser 18.6.0 reads `.ts` only through `typescript` `>=2.0.0 <7.0.0` and the repo pins 7.0.2. Without a parser it cruised 0 files [handle: `npx depcruise engine/src --no-config --output-type json` → `totalCruised: 0`, typescript `available: false`, 2026-10-12]. Jim chose swc over a second `typescript` 6.0.3 or cruising `engine\dist` [stated: Jim, 2026-10-12, "go with recommendations"]. `@swc/core` loads a prebuilt platform package from its `optionalDependencies` (all twelve are in `package-lock.json`), so CI runs `npm ci --ignore-scripts`.
 
+## setup build downloads (Phase 9 PR 1, 2026-10-17)
+
+No new npm package or crate: `tools\setup\*.ts` use `zod` 4.6.5 from the root `node_modules`, Node built-ins and the existing `@tauri-apps/cli` 2.12.1. `npm run setup:build` downloads these files into `build\cache\` (gitignored) and refuses any whose SHA-256 differs from `tools\setup\node-pin.json`. The hashes were taken 2026-10-17 with `sha256sum` after one download each; node.exe's also equals its `win-x64/node.exe` line in the release's SHASUMS256.txt [handle: `tools\setup\node-pin.json` `_comment`, https://nodejs.org/dist/v24.11.1/SHASUMS256.txt].
+
+| File | Pinned | Used for | URL | SHA-256 |
+|---|---|---|---|---|
+| `node.exe` | Node 24.11.1 win-x64 | the bundled runtime, `resources\node\node.exe` | https://nodejs.org/dist/v24.11.1/win-x64/node.exe | `f13ac3ca23248dc389507e8fe38c34489ab7edb3e6d6700eb6da6a0b7e128eaf` |
+| `SHASUMS256.txt` | Node 24.11.1 | cross-check of node.exe | https://nodejs.org/dist/v24.11.1/SHASUMS256.txt | `ed0ec6c5c648a0489edebf2f21f5913e3d6e469c77d19cb4f50a729b66e77883` |
+| `node-LICENSE.txt` | Node 24.11.1 | THIRD_PARTY_NOTICES.txt | https://raw.githubusercontent.com/nodejs/node/v24.11.1/LICENSE | `537308465103a306d0e3eecf42632b4ff1b48aaaec044e9fc10a78c81fd00b34` |
+| `lgpl-3.0.txt` | gnu.org | THIRD_PARTY_NOTICES.txt (libvips) | https://www.gnu.org/licenses/lgpl-3.0.txt | `e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118` |
+| `gpl-3.0.txt` | gnu.org | THIRD_PARTY_NOTICES.txt (LGPL refers to it) | https://www.gnu.org/licenses/gpl-3.0.txt | `3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986` |
+| `sharp-libvips-THIRD-PARTY-NOTICES.md` | sharp-libvips v1.3.3 | THIRD_PARTY_NOTICES.txt | https://raw.githubusercontent.com/lovell/sharp-libvips/v1.3.3/THIRD-PARTY-NOTICES.md | `25ffcfa69e28b1913ced27ec778b90f24911a1bb3021253577e8b0af55db0d49` |
+
 ## Notes
 
 - **zod 4 with the MCP SDK:** SDK 1.30.1 declares `zod: "^3.25 || ^4.0"` as dependency and peer (`npm view @modelcontextprotocol/sdk@1.30.1 dependencies peerDependencies`), so zod 4.6.5 is supported. SDK 1.32.0 declares the same (`npm view @modelcontextprotocol/sdk@1.32.0 dependencies peerDependencies`, 2026-10-03).

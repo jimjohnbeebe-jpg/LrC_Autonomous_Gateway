@@ -1,9 +1,10 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "rootDir": ".",
-    "noEmit": true
+    "rootDir": "..",
+    "noEmit": true,
+    "allowImportingTsExtensions": true
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts", "vitest.config.ts", "vitest.probe.config.ts"],
+  "include": ["src/**/*.ts", "tests/**/*.ts", "vitest.config.ts", "vitest.probe.config.ts", "../tools/setup/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }

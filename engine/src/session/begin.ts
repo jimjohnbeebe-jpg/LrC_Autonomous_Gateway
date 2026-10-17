@@ -10,7 +10,7 @@
 
 import { existsSync } from "node:fs";
 import path from "node:path";
-import { lightroomNotices, type CommandResult } from "../bridge/index.js";
+import { UPDATE_HUD_NOTE, lightroomNotices, updateNotices, type CommandResult } from "../bridge/index.js";
 import type { LoadedIntent } from "../intents/index.js";
 import { SESSION_LOG_SCHEMA_ID, SessionLogFiles, type SessionLogData } from "../log/index.js";
 import { ToolError, originalMissing } from "../mcp/errors.js";
@@ -131,8 +131,9 @@ export async function openSession(ctx: SessionContext, given: BeginArgs): Promis
   };
   s.log = newLog(ctx, s, variantCount, args.notes ?? null);
   s.log.settings = settingsEntry(settings, page);
-  // A Lightroom outside the supported and tested versions: the HUD says so once, after lr_begin_session.
-  s.idleNote = s.log.lightroom?.notices?.[0] ?? null;
+  // A plugin that is not the engine's version (restart Lightroom), else a Lightroom outside the supported
+  // and tested versions: the HUD says so once, after lr_begin_session. The update first: it can be acted on.
+  s.idleNote = updateNotices(client.hello()?.plugin_version, ctx.deps.engineVersion).length > 0 ? UPDATE_HUD_NOTE : (s.log.lightroom?.notices?.[0] ?? null);
   return { s, view, photo, started };
 }
 
@@ -185,7 +186,15 @@ function newLog(ctx: SessionContext, s: Session, variantCount: number | null, no
     engine_version: ctx.deps.engineVersion,
     ...(s.client ? { client: s.client } : {}),
     ...(s.model ? { model: s.model } : {}),
-    ...(hello ? { lightroom: { lrc_version: hello.lrc_version, sdk_declared: hello.sdk_declared, notices: lightroomNotices(hello.lrc_version) } } : {}),
+    ...(hello
+      ? {
+          lightroom: {
+            lrc_version: hello.lrc_version,
+            sdk_declared: hello.sdk_declared,
+            notices: [...lightroomNotices(hello.lrc_version), ...updateNotices(hello.plugin_version, ctx.deps.engineVersion)],
+          },
+        }
+      : {}),
     started: s.startedAt.toISOString(),
     ended: null,
     outcome: null,

@@ -162,7 +162,7 @@ async function oneRun(exe: string, engine: StandIn, r: Case, logs: string[], hom
   if (r.classic && bridge) await classic(bridge, engine, 2, "accepted");
   await waitEvent(file, Date.now(), (e) => e.ev === "hide", 20000);
   engine.channel.close();
-  const ours = ["LrC-AVG HUD.exe", "msedgewebview2.exe"].includes(run.under_point);
+  const ours = ["LrC-AVG Deck.exe", "msedgewebview2.exe"].includes(run.under_point);
   run.verdict = run.pointer_in && run.deck_click && run.engine_got_click ? "INPUT OK" : ours ? "NO INPUT" : "COVERED";
   return run;
 }

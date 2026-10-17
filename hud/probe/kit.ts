@@ -15,7 +15,7 @@ export const REPO = path.join(path.dirname(fileURLToPath(import.meta.url)), ".."
 export const DECK_LOGS = path.join(tmpdir(), "LrC-AVG", "hud");
 export const WINDOW_JSON = path.join(process.env["LOCALAPPDATA"] ?? "", "LrC-AVG", "hud", "window.json");
 export const ENDPOINT = path.join(homedir(), ".lrc-avg", "hud_endpoint.json");
-export const DECK_IMAGE = "LrC-AVG HUD.exe";
+export const DECK_IMAGE = "LrC-AVG Deck.exe";
 const LR_IMAGE = process.env["LRC_AVG_HUD_LR_EXE"] ?? "Lightroom.exe";
 
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
@@ -93,16 +93,26 @@ export function liveEngine(): number | null {
   }
 }
 
-/** The installer `npm run deck:build` made (Tauri's NSIS bundle folder), for this hud version: older ones stay in the folder. */
+/**
+ * Above this size the file is the full LrC-AVG setup (`npm run setup:build`, with hooks), not the Deck-only
+ * build; both share one name (engine\src\devtools\clients-deck.ts DECK_ONLY_MAX_BYTES has the handle).
+ */
+const DECK_ONLY_MAX_BYTES = 10_000_000;
+
+/** The Deck-only installer `npm run deck:build` made (Tauri's NSIS bundle folder), for this hud version: older ones stay in the folder. */
 export function installer(): string | null {
   const dir = path.join(REPO, "hud", "src-tauri", "target", "release", "bundle", "nsis");
   const version = (JSON.parse(readFileSync(path.join(REPO, "hud", "package.json"), "utf8")) as { version: string }).version;
-  const file = existsSync(dir) ? readdirSync(dir).find((f) => f.endsWith(`_${version}_x64-setup.exe`)) : undefined;
+  const file = existsSync(dir) ? readdirSync(dir).find((f) => f.endsWith(`_${version}_x64-setup.exe`) && statSync(path.join(dir, f)).size < DECK_ONLY_MAX_BYTES) : undefined;
   return file ? path.join(dir, file) : null;
 }
 
-/** Runs the per-user installer silently (NSIS `/S`); throws when it fails. */
+/**
+ * Runs the per-user installer silently (NSIS `/S`); throws when it fails, or when the LrC-AVG product is
+ * installed (its resources\ folder): the Deck-only install would replace the product's uninstaller [inference].
+ */
 export function install(setup: string): void {
+  if (existsSync(path.join(process.env["LOCALAPPDATA"] ?? "", "LrC-AVG", "resources"))) throw new Error("The LrC-AVG product is installed: uninstall it first (Settings > Apps > Installed apps > LrC-AVG).");
   execFileSync(setup, ["/S"], { stdio: "ignore", timeout: 120_000 });
 }
 

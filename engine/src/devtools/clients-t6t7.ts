@@ -94,7 +94,7 @@ export function killClient(s: Started): number[] {
   const pid = s.child.pid;
   if (pid === undefined) return [];
   const targets = s.shell
-    ? childrenOf(pid).filter((p) => !(p.Name.toLowerCase() === "node.exe" && /main\.js/i.test(p.CommandLine ?? "")) && p.Name !== "LrC-AVG HUD.exe").map((p) => p.ProcessId)
+    ? childrenOf(pid).filter((p) => !(p.Name.toLowerCase() === "node.exe" && /main\.js/i.test(p.CommandLine ?? "")) && p.Name !== "LrC-AVG Deck.exe").map((p) => p.ProcessId)
     : [pid];
   for (const t of targets) process.kill(t);
   return targets;

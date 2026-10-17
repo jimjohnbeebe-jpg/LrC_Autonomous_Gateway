@@ -86,6 +86,8 @@ No new npm package or crate: `tools\setup\*.ts` use `zod` 4.6.5 from the root `n
 | `gpl-3.0.txt` | gnu.org | THIRD_PARTY_NOTICES.txt (LGPL refers to it) | https://www.gnu.org/licenses/gpl-3.0.txt | `3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986` |
 | `sharp-libvips-THIRD-PARTY-NOTICES.md` | sharp-libvips v1.3.4 | THIRD_PARTY_NOTICES.txt | https://raw.githubusercontent.com/lovell/sharp-libvips/v1.3.4/THIRD-PARTY-NOTICES.md | `6f0d5086e3bcbee12bcdacf5878b31d1104002aeecaeb241d3fff466108082fe` |
 
+`lgpl-3.0.txt` and `gpl-3.0.txt` are also kept in `tools\setup\licenses\` (verbatim, `-text` in `.gitattributes` so their bytes and hashes survive a Windows checkout), and the build copies them from there: gnu.org answers HTTP 403 to GitHub's Windows runner [handle: PR #173, Actions run 39072188283 attempt 2]. Same hashes as above (`sha256sum tools/setup/licenses/*.txt`, 2026-10-17).
+
 ## Notes
 
 - **zod 4 with the MCP SDK:** SDK 1.30.1 declares `zod: "^3.25 || ^4.0"` as dependency and peer (`npm view @modelcontextprotocol/sdk@1.30.1 dependencies peerDependencies`), so zod 4.6.5 is supported. SDK 1.32.0 declares the same (`npm view @modelcontextprotocol/sdk@1.32.0 dependencies peerDependencies`, 2026-10-03).

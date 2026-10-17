@@ -56,15 +56,17 @@ function prefsValue(text: string, key: string): string {
 }
 
 /**
- * Whether Lightroom's preferences text has the repo's dev plugin on: listed in installedPluginPaths and
- * neither its path in disabledPluginPaths nor its ID in disabledPluginIDs. After Plug-in Manager >
- * Remove the installed list was empty while disabledPluginPaths still named the path [handle: Jim's
+ * Whether Lightroom's preferences text has the repo's dev plugin on: a dev path in installedPluginPaths
+ * that is not itself in disabledPluginPaths (another checkout's disabled path does not count), and its ID
+ * not in disabledPluginIDs. After Plug-in Manager > Remove the installed list was empty while disabledPluginPaths still named the path [handle: Jim's
  * "Lightroom Classic CC 7 Preferences.agprefs" lines 1188-1211, 2026-10-17]; which list Disable writes,
  * and the format beyond that, are [unverified], so either list counts as off.
  */
 export function prefsListInstalled(text: string): boolean {
   const dev = /plugin\\+lrc-avg\.lrplugin/;
-  return dev.test(prefsValue(text, "installedPluginPaths")) && !dev.test(prefsValue(text, "disabledPluginPaths")) && !prefsValue(text, "disabledPluginIDs").includes(`"${DEV_ID}\\"`);
+  const paths = (key: string): string[] => [...prefsValue(text, key).matchAll(/\[\\"(.*?)\\"\]/g)].map((m) => m[1]!);
+  const disabled = new Set(paths("disabledPluginPaths"));
+  return paths("installedPluginPaths").some((p) => dev.test(p) && !disabled.has(p)) && !prefsValue(text, "disabledPluginIDs").includes(`"${DEV_ID}\\"`);
 }
 
 /** Lightroom's preferences files that have the dev plugin on. Read only: Lightroom's files are never edited. */

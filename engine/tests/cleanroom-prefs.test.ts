@@ -18,6 +18,11 @@ describe("prefsListInstalled", () => {
     expect(prefsListInstalled(prefs([other, dev], []))).toBe(true);
   });
 
+  it("is true when another checkout's path is the disabled one", () => {
+    const old = "C:\\\\old\\\\plugin\\\\LrC-AVG.lrplugin";
+    expect(prefsListInstalled(prefs([dev], [old]))).toBe(true);
+  });
+
   it("is false when Disable put the path or the ID in a disabled list", () => {
     expect(prefsListInstalled(prefs([dev], [dev]))).toBe(false);
     const byId = prefs([dev], []).replace("prefs = {\n", `prefs = {\n\tAgSdkPluginLoader_disabledPluginIDs = "t = {\\\n\t[\\"com.lrcavg.gateway.dev\\"] = true,\\\n}\\\n",\n`);

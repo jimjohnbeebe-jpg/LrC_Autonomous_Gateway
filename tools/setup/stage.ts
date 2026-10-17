@@ -21,7 +21,11 @@ const pinSchema = z.object({
 
 export const sha256 = (file: string): string => createHash("sha256").update(readFileSync(file)).digest("hex");
 
-/** Every pinned file in build\cache\, downloaded when missing, each checked against its hash. Returns file -> path. */
+/**
+ * Every pinned file in build\cache\, downloaded when missing, each checked against its hash. Returns file -> path.
+ * A file kept in tools\setup\licenses\ is copied from there instead: gnu.org answers HTTP 403 to GitHub's
+ * Windows runner [handle: PR #173, Actions run 39072188283 attempt 2, "lgpl-3.0.txt: HTTP 403"].
+ */
 export async function fetchPinned(): Promise<{ nodeVersion: string; files: Map<string, string> }> {
   const pin = pinSchema.parse(JSON.parse(readFileSync(path.join(import.meta.dirname, "node-pin.json"), "utf8")));
   mkdirSync(CACHE, { recursive: true });
@@ -29,10 +33,15 @@ export async function fetchPinned(): Promise<{ nodeVersion: string; files: Map<s
   for (const d of pin.downloads) {
     const file = path.join(CACHE, d.file);
     if (!existsSync(file) || sha256(file) !== d.sha256) {
-      console.log(`download ${d.url}`);
-      const res = await fetch(d.url);
-      if (!res.ok) throw new Error(`${d.url}: HTTP ${res.status}`);
-      writeFileSync(file, Buffer.from(await res.arrayBuffer()));
+      const kept = path.join(import.meta.dirname, "licenses", d.file);
+      if (existsSync(kept)) {
+        cpSync(kept, file);
+      } else {
+        console.log(`download ${d.url}`);
+        const res = await fetch(d.url);
+        if (!res.ok) throw new Error(`${d.url}: HTTP ${res.status}`);
+        writeFileSync(file, Buffer.from(await res.arrayBuffer()));
+      }
     }
     const got = sha256(file);
     if (got !== d.sha256) throw new Error(`${d.file}: SHA-256 ${got}, tools\\setup\\node-pin.json pins ${d.sha256}`);

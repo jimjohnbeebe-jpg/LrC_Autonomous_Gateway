@@ -1,0 +1,56 @@
+name: Something does not work
+description: LrC-AVG did not install, did not connect, or did something wrong in an edit.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting it. First, in Lightroom, choose **File > Plug-in Extras > LrC-AVG - Status**.
+        It saves what it shows as `%LOCALAPPDATA%\LrC-AVG\status.txt`: attach that file below.
+        Paste `%LOCALAPPDATA%\LrC-AVG\status.txt` into the File Explorer address bar to open it.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead. The words you typed to the AI help.
+    validations:
+      required: true
+  - type: textarea
+    id: status
+    attributes:
+      label: status.txt
+      description: Drag `status.txt` here, or paste its text. If the Status menu item is missing, say so.
+    validations:
+      required: true
+  - type: input
+    id: lightroom
+    attributes:
+      label: Lightroom Classic version
+      description: Only if you have no status.txt; the file lists it.
+      placeholder: "15.6"
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: "Windows 11 24H2"
+    validations:
+      required: true
+  - type: dropdown
+    id: client
+    attributes:
+      label: AI app
+      options:
+        - Claude Desktop
+        - Claude Code
+        - OpenCode
+        - Hermes Agent
+        - Antigravity CLI
+        - Codex CLI
+        - Another one (say which below)
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: AI model, if you know it
+      placeholder: "Claude Sonnet 5.5"

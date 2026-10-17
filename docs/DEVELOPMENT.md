@@ -46,21 +46,35 @@ All four pass before every commit (rule 04).
 
 ## Development install
 
-Use this instead of the README's install, not next to it: both write the same Claude Desktop entry, `lrc-avg`, and the last command run wins [handle: `engine/src/setup/desktop-config.ts:4-7, 22` `SERVER_NAME`].
+Use this instead of the README's setup, not next to it: both write the same Claude Desktop entry, `lrc-avg`, and the last one run wins [handle: `engine/src/setup/desktop-config.ts:4-7, 22` `SERVER_NAME`]. The repo's plugin is **LrC-AVG (dev)**, `com.lrcavg.gateway.dev`; the setup stages it as `com.lrcavg.gateway` [handle: `plugin/LrC-AVG.lrplugin/Info.lua:28-29`, `tools/setup/plugin-id.ts`]. To test the setup on a development PC, use the clean room (`npm run cleanroom -- --park`, then `--restore`; see `CLAUDE.md` "Commands").
 
 1. **Plugin:** in Lightroom, **File > Plug-in Manager > Add**, and choose this repo's `plugin\LrC-AVG.lrplugin` folder. Never copy it into Lightroom's `Modules` folder.
-2. **Engine:** `npm run desktop:install`. It builds the engine and points the `lrc-avg` entry at this repo's `engine\dist\mcp\main.js`, with `LRC_AVG_LOG_DIR` set to the repo's `logs\` folder [handle: `engine/src/devtools/install-desktop-config-cli.ts:31`], so the dev Claude Desktop sessions log there. The other clients' entries (README "Clients") set no `LRC_AVG_LOG_DIR`, so their engines log to the default folder, `%LOCALAPPDATA%\LrC-AVG\logs`, or the settings page's Log folder [handle: `engine/src/settings/folders.ts` `log()`]. Then quit Claude Desktop from its tray icon and start it again.
+2. **Engine:** `npm run desktop:install`. It builds the engine and points the `lrc-avg` entry at this repo's `engine\dist\mcp\main.js`, with `LRC_AVG_LOG_DIR` set to the repo's `logs\` folder [handle: `engine/src/devtools/install-desktop-config-cli.ts:31`], so the dev Claude Desktop sessions log there. The other clients' entries ([`CLIENTS.md`](CLIENTS.md)) set no `LRC_AVG_LOG_DIR`, so their engines log to the default folder, `%LOCALAPPDATA%\LrC-AVG\logs`, or the settings page's Log folder [handle: `engine/src/settings/folders.ts` `log()`]. Then quit Claude Desktop from its tray icon and start it again.
 3. After each `npm run build`, restart Claude Desktop to run the new engine; after a plugin change, restart Lightroom. Claude Desktop starts the engine and keeps it running [handle: `engine/src/mcp/main.ts:6-10`]; that a running engine does not pick up a rebuilt `dist` is [inference] (Node loads the modules once).
 
 Development overrides are read from `LRC_AVG_*` environment variables: the ports and token file in `engine/src/mcp/dev-overrides.ts`, the folders in `engine/src/settings/folders.ts` and `engine/src/presets/folder.ts`. The Deck's executable (Phase 7) is `LRC_AVG_HUD_EXE` (`engine/src/hud/launch.ts`).
 
 ## Packaging
 
+### The setup
+
+```powershell
+npm run setup:build
+```
+
+builds the unsigned `releaseLrC-AVG-Setup-<version>.exe` and `releaseSHA256SUMS.txt`: a clean engine build, the pinned Node.js (`tools/setup/node-pin.json`, each download checked by SHA-256), the engine with its production packages from the lockfile, the plugin, the notices, then the Tauri NSIS build with `hud/src-tauri/tauri.setup.conf.json` [handle: `tools/setup/build.ts:1-13`]. It needs Rust (rustup, MSVC) as `npm run deck:build` does. `-- --version 0.99.0` makes a test build under another version.
+
+### A release
+
+[`.github/workflows/release.yml`](../.github/workflows/release.yml) builds the same setup on GitHub's Windows runner. A tag `v<version>` (or `v<version>-rc.<n>`, a pre-release) that matches `engine/package.json` attaches the setup and `SHA256SUMS.txt` to a draft release, which is then published by hand. A pull request that changes `tools/setup/`, `hud/src-tauri/`, the lockfile or the workflow builds the setup without releasing it; its run keeps the files as the `setup` artifact. The setup is not signed: README "Why the setup is not signed", issue #171.
+
+### The npm package and the plugin zip
+
 ```powershell
 npm run package
 ```
 
-writes the two release assets to `release\`: `lrc-avg-<version>.tgz` (the engine, its file list checked against `engine/src`) and `LrC-AVG.lrplugin-<version>.zip` (the plugin folder plus `LICENSE`). It packs the working tree [handle: `engine/src/devtools/package-cli.ts:11`], so build release assets from a clean checkout of the tagged commit. The install it makes is described in the README; the package smoke test is `docs/reports/phase6/package-smoke/smoke.txt`.
+writes the two release assets to `release\`: `lrc-avg-<version>.tgz` (the engine, its file list checked against `engine/src`) and `LrC-AVG.lrplugin-<version>.zip` (the plugin folder plus `LICENSE`). It packs the working tree [handle: `engine/src/devtools/package-cli.ts:11`], so build release assets from a clean checkout of the tagged commit. These two assets are not part of a release since the setup (Phase 9); installing from npm is issue #172. The package smoke test is `docs/reports/phase6/package-smoke/smoke.txt`.
 
 ## Other commands
 
@@ -78,4 +92,4 @@ writes the two release assets to `release\`: `lrc-avg-<version>.tgz` (the engine
 
 ## Workflow
 
-Every change reaches `main` through a pull request from a `phase-<n>/<topic>` or `fix/<topic>` branch, reviewed by CodeRabbit (Greptile until 2026-10-03), with every finding triaged in a table on the PR before the merge. The full rule is [`.claude/rules/04-workflow.md`](../.claude/rules/04-workflow.md); a summary is [`REVIEW_WORKFLOW.md`](REVIEW_WORKFLOW.md). Source files are kept to 300 lines (400 enforced by `engine/tests/module-size.test.ts`), as rule 01 sets out.
+Every change reaches `main` through a pull request from a `phase-<n>/<topic>` or `fix/<topic>` branch, reviewed by Greptile (CodeRabbit from 2026-10-03 to 2026-10-04), with every finding triaged in a table on the PR before the merge. The full rule is [`.claude/rules/04-workflow.md`](../.claude/rules/04-workflow.md); a summary is [`REVIEW_WORKFLOW.md`](REVIEW_WORKFLOW.md). Source files are kept to 300 lines (400 enforced by `engine/tests/module-size.test.ts`), as rule 01 sets out.

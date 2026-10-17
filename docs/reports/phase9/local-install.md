@@ -1,7 +1,7 @@
 ---
 report: PHASE9 local install — does the local, unsigned LrC-AVG setup install, run, upgrade and uninstall cleanly on Jim's PC?
 phase: 9 (PR 1, phase-9/installer; plan "Jim run 1")
-status: observed
+status: accepted
 authored_by: "Template, harness and pre-run findings: Claude Code (Sonnet 5.5, workflow agent for D2+D3), 2026-10-17 (phase-9/installer). Observed: Jim's answers and words, collected by Claude Code (Opus 5.5) from his messages and the saved results, 2026-10-17 (phase-9/release). Verdict: Jim (blank)."
 date: 2026-10-17
 ---
@@ -194,9 +194,9 @@ Filled from the Observed section and the saved results file.
 
 *(Jim decides. A script's suggestion is labelled as one: the run's headline is `WORKED` / `FAILED` / `NOT FINISHED` and is a suggestion, not the verdict.)*
 
-- Verdict: go / conditional / no-go
-- Decided by Jim on:
-- Reason:
+- Verdict: **go** [stated: Jim, 2026-10-17, "Go."]
+- Decided by Jim on: 2026-10-17, after run 1b WORKED
+- Reason: run 1b passed every check after the fixes (`d4e5271`, `e114600`); the upgrade and the ticked uninstall passed in run 1 and are run again on the signed build in PR 3.
 
 ## Consequences / open questions
 

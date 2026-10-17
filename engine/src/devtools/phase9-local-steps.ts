@@ -166,7 +166,9 @@ export const chatStep: Step = {
       return;
     }
     const s = found.start;
-    ctx.check("the client that started the engine is Claude Desktop", /claude/i.test(s.client_name ?? ""), `client ${s.client_name ?? "(none)"} ${s.client_version ?? ""} [${found.file}]`);
+    // Claude Desktop names itself "claude-ai" in a chat and "local-agent-mode-lrc-avg" when its agent mode
+    // starts the server [handle: engine-20261017.jsonl client "claude-ai" and last-start.json, Jim's runs 1 and 1b].
+    ctx.check("the client that started the engine is Claude Desktop", /claude|local-agent-mode/i.test(s.client_name ?? ""), `client ${s.client_name ?? "(none)"} ${s.client_version ?? ""} [${found.file}]`);
     ctx.check("the engine is the product's version", s.engine_version === ctx.version, `${s.engine_version}, expected ${ctx.version}`);
     ctx.check("Claude Desktop ran the bundled Node and engine", s.exec_path.toLowerCase() === installPaths(ctx.sys).node.toLowerCase() && s.main_js.toLowerCase() === installPaths(ctx.sys).mainJs.toLowerCase(), `${s.exec_path} ${s.main_js}`);
   },

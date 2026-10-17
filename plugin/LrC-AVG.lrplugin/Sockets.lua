@@ -137,6 +137,7 @@ function Sockets.rebindReceive(B)
     LrTasks.sleep(0.1)
     S.receiveSocket = bindReceive(B, S.receiveGen)
     S.receiveNeedsRebind, S.receiveNeedsReconnect = false, false
+    S.boundAt = LrDate.currentTime() -- Bridge.lua IDLE_REBIND_SECONDS counts from here
 end
 
 function Sockets.rebindSend(B)

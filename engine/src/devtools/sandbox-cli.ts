@@ -2,8 +2,8 @@
 // (Windows Sandbox), checks what it did, uninstalls and checks the leftovers. Claude Code runs this, not
 // Jim; Jim only enables Windows Sandbox once (ENABLE_SANDBOX prints the one administrator command).
 // The Sandbox has no network, release\ read-only and a writable results folder:
-//   %TEMP%\LrC-AVG\phase9\sandbox_<time>\   guest.ps1, sandbox.wsb, progress.txt, results.json, installed-files.txt
-//   %TEMP%\LrC-AVG\phase9\sandbox_<time>.json   this run's verdict and the guest's results
+//   %TEMP%\LrC-AVG-phase9\sandbox_<time>\   guest.ps1, sandbox.wsb, progress.txt, results.json, installed-files.txt
+//   %TEMP%\LrC-AVG-phase9\sandbox_<time>.json   this run's verdict and the guest's results
 // Prints SANDBOX: PASS or FAIL with each check. Exit 0 on PASS, 1 on FAIL, 2 when it could not run.
 // No Lightroom is in the Sandbox, so the plugin and its Status dialog are not tested here (phase9:local).
 
@@ -20,7 +20,7 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", ".
 // The .ps1 is not compiled into engine/dist: it is read from the source tree (devtools are not in the npm package).
 const GUEST_SCRIPT = path.join(REPO, "engine", "src", "devtools", "sandbox-guest.ps1");
 const SANDBOX_EXE = path.join(process.env["windir"] ?? "C:\\Windows", "System32", "WindowsSandbox.exe");
-const OUT_ROOT = process.env["LRC_AVG_P9_OUT"] || path.join(os.tmpdir(), "LrC-AVG", "phase9");
+const OUT_ROOT = process.env["LRC_AVG_P9_OUT"] || path.join(os.tmpdir(), "LrC-AVG-phase9");
 const TIMEOUT_MIN = Number(process.env["LRC_AVG_SANDBOX_TIMEOUT_MIN"] ?? "20");
 const POLL_MS = 3000;
 

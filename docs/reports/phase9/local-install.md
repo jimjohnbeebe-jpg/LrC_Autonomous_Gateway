@@ -33,7 +33,7 @@ date: 2026-10-17
 | Disposable Windows (`npm run sandbox:check`, run by Claude Code) | `sandbox-cli.ts`, `sandbox-model.ts` (the .wsb, the verdict), `sandbox-guest.ps1` (PowerShell inside the Sandbox) |
 | Tests | `engine\tests\phase9-local.test.ts`, `engine\tests\sandbox.test.ts` |
 
-**Steps of `npm run phase9:local`** (resumable: state in `%TEMP%\LrC-AVG\phase9\local-state.json`; `-- --new` starts over):
+**Steps of `npm run phase9:local`** (resumable: state in `%TEMP%\LrC-AVG-phase9\local-state.json`; `-- --new` starts over):
 
 | # | Step | Jim does | The harness checks itself |
 |---|---|---|---|
@@ -49,9 +49,9 @@ date: 2026-10-17
 
 The 0.99.0 test build carries the same engine and plugin as 1.0.0: `--version` only changes the Tauri version overlay, so the setup and the Deck are numbered 0.99.0 and the engine is 1.0.0 [handle: `tools\setup\build.ts` `tauriBuild()`, `stageResources()` take no version]. Step 5 therefore expects engine 1.0.0.
 
-**Results** go to `%TEMP%\LrC-AVG\phase9\`, and Claude Code collects them: `local-state.json`, `local_<time>.json` (the headline, every check and every answer, user folder redacted) and, from the clean room, `%TEMP%\LrC-AVG\cleanroom\*.json`.
+**Results** go to `%TEMP%\LrC-AVG-phase9\`, and Claude Code collects them: `local-state.json`, `local_<time>.json` (the headline, every check and every answer, user folder redacted) and, from the clean room, `%TEMP%\LrC-AVG\cleanroom\*.json`.
 
-**The Sandbox check** (`npm run sandbox:check`, Claude Code runs it, Jim does not): starts Windows Sandbox with no network, `release\` read-only and a writable results folder. A PowerShell script inside installs `LrC-AVG-Setup-<version>.exe /S`, checks the files, the HKCU uninstall key, `setup-result.json` (expected `not_found`: no Claude Desktop in a clean Windows), the Modules copy and the bundled `node.exe --version`. It then seeds a Claude Desktop config and runs `setup-cli --installer` (expected `added`), starts the bundled engine over stdio (initialize, tools/list), uninstalls, and lists the leftovers. It prints `SANDBOX: PASS` or `FAIL` with each check and saves `%TEMP%\LrC-AVG\phase9\sandbox_<time>.json`. No Lightroom is in the Sandbox, so the plugin and the Status dialog are tested only here, in `phase9:local`.
+**The Sandbox check** (`npm run sandbox:check`, Claude Code runs it, Jim does not): starts Windows Sandbox with no network, `release\` read-only and a writable results folder. A PowerShell script inside installs `LrC-AVG-Setup-<version>.exe /S`, checks the files, the HKCU uninstall key, `setup-result.json` (expected `not_found`: no Claude Desktop in a clean Windows), the Modules copy and the bundled `node.exe --version`. It then seeds a Claude Desktop config and runs `setup-cli --installer` (expected `added`), starts the bundled engine over stdio (initialize, tools/list), uninstalls, and lists the leftovers. It prints `SANDBOX: PASS` or `FAIL` with each check and saves `%TEMP%\LrC-AVG-phase9\sandbox_<time>.json`. No Lightroom is in the Sandbox, so the plugin and the Status dialog are tested only here, in `phase9:local`.
 
 ## Steps for Jim
 
@@ -117,7 +117,7 @@ Checks Claude Code ran itself before Jim's run, each with its handle. Add the re
 
 ## Observed (Jim)
 
-*(Filled by Jim only. Raw answers and pasted output. The harness saves every answer and check to `%TEMP%\LrC-AVG\phase9\local_<time>.json`; Claude Code collects it.)*
+*(Filled by Jim only. Raw answers and pasted output. The harness saves every answer and check to `%TEMP%\LrC-AVG-phase9\local_<time>.json`; Claude Code collects it.)*
 
 **Run 1, date and time:**
 

@@ -4,7 +4,7 @@
 // in Lightroom or Claude Desktop. It builds the two local setups when they are missing, moves the
 // development setup aside (the clean room), installs and uninstalls LrC-AVG as a user would, and puts
 // everything back; Jim does the clicking and answers y/n here. Run again after a stop, it continues at the
-// step that stopped; `-- --new` starts over. Results, all under %TEMP%\LrC-AVG\phase9\ (LRC_AVG_P9_OUT),
+// step that stopped; `-- --new` starts over. Results, all under %TEMP%\LrC-AVG-phase9\ (LRC_AVG_P9_OUT),
 // user folder redacted (Claude Code collects them; nothing to copy by hand):
 //   local-state.json       what is done so far (the next run continues from it)
 //   local_<time>.json      each run's results: the headline (WORKED/FAILED, put back YES/NO) and every check and answer
@@ -28,7 +28,8 @@ import { chatStep, installStep, lightroomStep, buildStep, parkStep } from "./pha
 import { reinstallClearStep, restoreStep, uninstallKeepStep, upgradeStep } from "./phase9-local-upgrade.js";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
-const OUT_DIR = process.env["LRC_AVG_P9_OUT"] || path.join(os.tmpdir(), "LrC-AVG", "phase9");
+// Beside %TEMP%\LrC-AVG, never in it: the clean room parks and scans that folder and a ticked uninstall deletes it.
+const OUT_DIR = process.env["LRC_AVG_P9_OUT"] || path.join(os.tmpdir(), "LrC-AVG-phase9");
 const stamp = new Date().toISOString().replace(/[:.]/g, "-");
 /** The test build's number (npm run setup:build -- --version 0.99.0): below the product's, so the second setup is an upgrade. */
 const TEST_VERSION = "0.99.0";

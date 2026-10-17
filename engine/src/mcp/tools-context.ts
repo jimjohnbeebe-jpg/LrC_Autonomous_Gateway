@@ -199,6 +199,8 @@ async function regionPreview(ctx: ToolContext, session: { id: string; target: Ta
   const measured = [...regions, { label: "region preview", box: region }];
   let exportEdge = edgeFor(fraction);
   let preview = await render(ctx, exportEdge, photo.uuid, measured);
+  // Split at once, before the next await, so a concurrent lr_get_metrics never sees the box (Greptile, PR #160).
+  let split = splitCrop(ctx, preview.metrics, preview.sha256);
   let crop = await cropRegion(preview.jpeg, region, { longEdge, quality: PREVIEW_QUALITY });
   // The export follows a Lightroom crop, as croppedDimensions does [handle: docs\reports\phase4\S7.md
   // Numbers, item 3: export 1600 x 800, aspect 2.0, both runs]. The export can still have another
@@ -214,11 +216,12 @@ async function regionPreview(ctx: ToolContext, session: { id: string; target: Ta
     if (needed > exportEdge) {
       exportEdge = needed;
       preview = await render(ctx, exportEdge, photo.uuid, measured);
+      split = splitCrop(ctx, preview.metrics, preview.sha256);
       crop = await cropRegion(preview.jpeg, region, { longEdge, quality: PREVIEW_QUALITY });
       retried = true;
     }
   }
-  const { frame, box } = splitCrop(ctx, preview.metrics, preview.sha256);
+  const { frame, box } = split;
   const previewLong = Math.max(preview.width, preview.height);
   const effectiveScale = photoWidth ? Math.round(crop.scale * (previewLong / photoWidth) * 10000) / 10000 : null;
   const note = !size

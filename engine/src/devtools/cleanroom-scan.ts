@@ -48,18 +48,25 @@ function dataLeft(p: Paths, folders: string[]): string[] {
 }
 
 /**
- * Lightroom's preferences that name the dev plugin. The .agprefs files are Lua-like text holding the
- * Plug-in Manager's plugin paths [unverified: the format is not documented; observed only as text
- * containing "LrC-AVG.lrplugin", grep -c on Jim's "Lightroom Classic CC 7 Preferences.agprefs",
- * 2026-10-17]. Read only: Lightroom's files are never edited.
+ * Whether Lightroom's preferences text lists the dev plugin as installed. Only the
+ * AgSdkPluginLoader_installedPluginPaths value counts: after Plug-in Manager > Remove that list was
+ * empty while AgSdkPluginLoader_disabledPluginPaths still named the path [handle: Jim's "Lightroom
+ * Classic CC 7 Preferences.agprefs" lines 1188-1211, 2026-10-17; the format is otherwise undocumented
+ * [unverified]].
  */
-function prefsNaming(p: Paths): string[] {
+export function prefsListInstalled(text: string): boolean {
+  const m = /AgSdkPluginLoader_installedPluginPaths\s*=\s*"((?:[^"\\]|\\[\s\S])*)"/.exec(text);
+  return m !== null && m[1]!.toLowerCase().includes("lrc-avg.lrplugin");
+}
+
+/** Lightroom's preferences files that list the dev plugin as installed. Read only: Lightroom's files are never edited. */
+export function prefsNaming(p: Paths): string[] {
   return list(p.prefs)
     .filter((n) => n.toLowerCase().endsWith(".agprefs"))
     .map((n) => path.join(p.prefs, n))
     .filter((f) => {
       try {
-        return readFileSync(f, "latin1").toLowerCase().includes("lrc-avg.lrplugin");
+        return prefsListInstalled(readFileSync(f, "latin1"));
       } catch {
         return false;
       }

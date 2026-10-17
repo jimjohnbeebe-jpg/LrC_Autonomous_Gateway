@@ -12,7 +12,9 @@ export type Check = { check: string; ok: boolean; detail: string };
 /** What the product keeps in its install folder after an uninstall (the data; SHARED NAMES of PR 1). */
 export const KEPT_DATA = ["logs", "intents", "last-start.json", "setup-result.json", "setup-result.txt", "status.txt"];
 
-export const PLUGIN_STEP = 'in Lightroom choose File > Plug-in Manager, select LrC-AVG, click Remove, quit Lightroom, then run "npm run cleanroom -- --status"';
+export const PLUGIN_STEP = 'in Lightroom choose File > Plug-in Manager, select "LrC-AVG (dev)", click Disable, quit Lightroom, then run "npm run cleanroom -- --status"';
+/** The repo plugin's ID (plugin\LrC-AVG.lrplugin\Info.lua; tools\setup\plugin-id.ts DEV_ID). */
+const DEV_ID = "com.lrcavg.gateway.dev";
 
 const list = (dir: string): string[] => {
   try {
@@ -47,19 +49,25 @@ function dataLeft(p: Paths, folders: string[]): string[] {
   return folders.filter((f) => existsSync(f) && !(f === p.tempData && list(f).every((n) => n === "cleanroom")));
 }
 
-/**
- * Whether Lightroom's preferences text lists the dev plugin as installed. Only the
- * AgSdkPluginLoader_installedPluginPaths value counts: after Plug-in Manager > Remove that list was
- * empty while AgSdkPluginLoader_disabledPluginPaths still named the path [handle: Jim's "Lightroom
- * Classic CC 7 Preferences.agprefs" lines 1188-1211, 2026-10-17; the format is otherwise undocumented
- * [unverified]].
- */
-export function prefsListInstalled(text: string): boolean {
-  const m = /AgSdkPluginLoader_installedPluginPaths\s*=\s*"((?:[^"\\]|\\[\s\S])*)"/.exec(text);
-  return m !== null && m[1]!.toLowerCase().includes("lrc-avg.lrplugin");
+/** One AgSdkPluginLoader_* value of Lightroom's preferences text, lower-cased ("" when absent). */
+function prefsValue(text: string, key: string): string {
+  const m = new RegExp(`AgSdkPluginLoader_${key}\\s*=\\s*"((?:[^"\\\\]|\\\\[\\s\\S])*)"`).exec(text);
+  return m ? m[1]!.toLowerCase() : "";
 }
 
-/** Lightroom's preferences files that list the dev plugin as installed. Read only: Lightroom's files are never edited. */
+/**
+ * Whether Lightroom's preferences text has the repo's dev plugin on: listed in installedPluginPaths and
+ * neither its path in disabledPluginPaths nor its ID in disabledPluginIDs. After Plug-in Manager >
+ * Remove the installed list was empty while disabledPluginPaths still named the path [handle: Jim's
+ * "Lightroom Classic CC 7 Preferences.agprefs" lines 1188-1211, 2026-10-17]; which list Disable writes,
+ * and the format beyond that, are [unverified], so either list counts as off.
+ */
+export function prefsListInstalled(text: string): boolean {
+  const dev = /plugin\\+lrc-avg\.lrplugin/;
+  return dev.test(prefsValue(text, "installedPluginPaths")) && !dev.test(prefsValue(text, "disabledPluginPaths")) && !prefsValue(text, "disabledPluginIDs").includes(`"${DEV_ID}\\"`);
+}
+
+/** Lightroom's preferences files that have the dev plugin on. Read only: Lightroom's files are never edited. */
 export function prefsNaming(p: Paths): string[] {
   return list(p.prefs)
     .filter((n) => n.toLowerCase().endsWith(".agprefs"))
@@ -93,7 +101,7 @@ export function cleanChecks(sys: Sys): Check[] {
     check("Start menu and Desktop shortcuts", shortcuts(p)),
     ...entryChecks(sys),
     check("data folders", dataLeft(p, p.dataFolders)),
-    { check: "dev plugin in Lightroom's preferences", ok: prefs.length === 0, detail: prefs.length === 0 ? "none" : `${prefs.join("; ")} names LrC-AVG.lrplugin: ${PLUGIN_STEP}` },
+    { check: "dev plugin on in Lightroom", ok: prefs.length === 0, detail: prefs.length === 0 ? "off" : `${prefs.join("; ")} has LrC-AVG (dev) on: ${PLUGIN_STEP}` },
   ];
 }
 

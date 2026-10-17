@@ -127,10 +127,10 @@ export const lightroomStep: Step = {
   async run(ctx) {
     const ip = installPaths(ctx.sys);
     ctx.say("  1. Start Lightroom Classic.");
-    ctx.say("  2. Choose File > Plug-in Manager. In the list on the left, click LrC-AVG.");
+    ctx.say('  2. Choose File > Plug-in Manager. In the list on the left, click "LrC-AVG (Autonomous Vision Gateway)" (the installed one; "LrC-AVG (dev)" stays disabled). Do not click Enable.');
     await ctx.pause("Do steps 1 and 2.");
-    await ctx.yn("Is LrC-AVG listed in the Plug-in Manager's list on the left?", "y");
-    await ctx.yn('Does it show a green dot and "Installed and running" under Status on the right (and no "Enable" button)?', "y");
+    await ctx.yn('Is "LrC-AVG (Autonomous Vision Gateway)" listed in the Plug-in Manager\'s list on the left?', "y");
+    await ctx.yn('Does it show a green dot and "Installed and running" under Status on the right (and no "Enable" button), without you clicking anything?', "y");
     ctx.say("  3. Click Done. Choose File > Plug-in Extras > LrC-AVG - Status. A dialog opens. Click OK to close it.");
     await ctx.pause("Do step 3.");
     reportStatus(ctx, ip.status, ctx.version);

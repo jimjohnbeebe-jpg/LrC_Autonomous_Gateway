@@ -165,5 +165,14 @@
     RMDir "${LRCAVG_DATA}" ; only when empty
     RMDir /r "$TEMP\LrC-AVG"
     RMDir /r "$PROFILE\.lrc-avg"
+    ; The Microsoft Store Claude Desktop redirects the engine's %LOCALAPPDATA% writes into its package
+    ; [handle: Jim's run 1, 2026-10-17: last-start.json and logs\ in
+    ; %LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\LrC-AVG\].
+    FindFirst $R0 $R1 "$LOCALAPPDATA\Packages\Claude_*"
+    ${DoWhile} $R1 != ""
+      RMDir /r "$LOCALAPPDATA\Packages\$R1\LocalCache\Local\LrC-AVG"
+      FindNext $R0 $R1
+    ${Loop}
+    FindClose $R0
   ${EndIf}
 !macroend

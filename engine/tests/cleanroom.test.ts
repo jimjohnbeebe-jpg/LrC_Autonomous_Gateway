@@ -106,7 +106,7 @@ describe("cleanroom: park, check, restore", () => {
     const parked = await runCleanroom(w.sys, "--park", false, false);
     expect(parked.ok).toBe(false);
     expect(parked.headline).toBe("CLEAN: NO");
-    expect(parked.checks.filter((c) => !c.ok).map((c) => c.check)).toEqual(["dev plugin in Lightroom's preferences"]);
+    expect(parked.checks.filter((c) => !c.ok).map((c) => c.check)).toEqual(["dev plugin on in Lightroom"]);
     expect(parked.checks.find((c) => !c.ok)?.detail).toContain(PLUGIN_STEP);
     expect(w.ran).toEqual([`${at("Local", "LrC-AVG HUD", "uninstall.exe")} /S`]);
     expect(existsSync(at("Local", "LrC-AVG"))).toBe(false);

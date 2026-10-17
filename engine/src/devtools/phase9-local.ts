@@ -142,6 +142,12 @@ export async function runLocal(deps: LocalDeps, steps: readonly Step[], options:
     const rec = await runStep(deps, step, STEP_IDS.indexOf(id) + 1, state);
     ran.push(id);
     if (rec.stopped) break;
+    // A failed check is said loudly and waits for Jim, so a failure cannot scroll past (rule 04).
+    if (!rec.ok) {
+      deps.say(`  *** STEP ${STEP_IDS.indexOf(id) + 1} FAILED ***`);
+      for (const c of rec.checks.filter((x) => !x.ok)) deps.say(`  FAILED: ${c.check}: ${c.detail}`);
+      if ((await deps.ask("Go on to the next step anyway? (n stops here; the same command later goes on from the next step)")) !== "y") break;
+    }
   }
   state.finished = nextStep(state) === null;
   deps.save(state);

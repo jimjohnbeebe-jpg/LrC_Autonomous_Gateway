@@ -18,6 +18,17 @@ describe("prefsListInstalled", () => {
     expect(prefsListInstalled(prefs([other, dev], []))).toBe(true);
   });
 
+  it("is false when Disable put the path or the ID in a disabled list", () => {
+    expect(prefsListInstalled(prefs([dev], [dev]))).toBe(false);
+    const byId = prefs([dev], []).replace("prefs = {\n", `prefs = {\n\tAgSdkPluginLoader_disabledPluginIDs = "t = {\\\n\t[\\"com.lrcavg.gateway.dev\\"] = true,\\\n}\\\n",\n`);
+    expect(prefsListInstalled(byId)).toBe(false);
+  });
+
+  it("ignores the product's ID in the disabled list", () => {
+    const product = prefs([dev], []).replace("prefs = {\n", `prefs = {\n\tAgSdkPluginLoader_disabledPluginIDs = "t = {\\\n\t[\\"com.lrcavg.gateway\\"] = true,\\\n}\\\n",\n`);
+    expect(prefsListInstalled(product)).toBe(true);
+  });
+
   it("is false without the installed key", () => {
     expect(prefsListInstalled('prefs = {\n\tx = "LrC-AVG.lrplugin",\n}\n')).toBe(false);
   });

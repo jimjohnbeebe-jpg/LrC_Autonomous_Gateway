@@ -7,6 +7,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } fr
 import path from "node:path";
 import { z } from "zod";
 import { lockSchema, productionPackages, type Staged } from "./lock.ts";
+import { productInfoLua } from "./plugin-id.ts";
 
 export const REPO = path.resolve(import.meta.dirname, "..", "..");
 export const CACHE = path.join(REPO, "build", "cache");
@@ -82,6 +83,8 @@ export function stageResources(nodeExe: string): Staged[] {
   const engine = stageEnginePack();
   const packages = stageEngineModules(engine);
   cpSync(path.join(REPO, "plugin", "LrC-AVG.lrplugin"), path.join(RESOURCES, "plugin", "LrC-AVG.lrplugin"), { recursive: true });
+  const info = path.join(RESOURCES, "plugin", "LrC-AVG.lrplugin", "Info.lua");
+  writeFileSync(info, productInfoLua(readFileSync(info, "utf8")));
   // Smoke check with the bundled node: sharp loads from the staged tree (its win32 binary and libvips DLLs).
   const vips = execFileSync(path.join(RESOURCES, "node", "node.exe"), ["-e", "process.stdout.write(require('sharp').versions.vips)"], { cwd: engine, encoding: "utf8" });
   console.log(`staged: node.exe, engine (${packages.length} packages, sharp with libvips ${vips}), plugin`);

@@ -71,16 +71,18 @@ The 0.99.0 test build carries the same engine and plugin as 1.0.0: `--version` o
    npm run phase9:local
    ```
 
+   Run 1b (2026-10-17) used `npm run phase9:local -- --new --quick`: the same steps without the upgrade (6) and the second uninstall (8).
+
 3. **Do what the window asks, in order.** Each step prints its numbered instructions and waits for Enter. In short:
    - **Step 1 builds** (nothing to do, several minutes the first time).
-   - **Step 2 parks** your development setup: quit Lightroom (File > Exit) and Claude Desktop (right-click the Claude icon in the Windows system tray, bottom right > Quit). If the window lists "dev plugin in Lightroom's preferences", in Lightroom choose File > Plug-in Manager, select LrC-AVG, click **Remove**, quit Lightroom, press Enter.
+   - **Step 2 parks** your development setup: quit Lightroom (File > Exit) and Claude Desktop (right-click the Claude icon in the Windows system tray, bottom right > Quit). Before anything is moved, if Lightroom has the dev plugin on, the window asks: in Lightroom choose File > Plug-in Manager, select "LrC-AVG (dev)", click **Disable**, quit Lightroom, press Enter.
    - **Step 3** double-click `D:\Developer\LrC_Autonomous_Gateway\release\LrC-AVG-Setup-0.99.0.exe` and click through the wizard. If a blue box "Windows protected your PC" appears, click **More info**, then **Run anyway**.
-   - **Step 4** start Lightroom, open File > Plug-in Manager, answer two y/n questions, then File > Plug-in Extras > LrC-AVG - Status and click OK.
+   - **Step 4** start Lightroom, open File > Plug-in Manager, click "LrC-AVG (Autonomous Vision Gateway)" without clicking Enable, answer two y/n questions, then File > Plug-in Extras > LrC-AVG - Status and click OK.
    - **Step 5** select one photo in Lightroom, start Claude Desktop, send the one line the window prints.
    - **Step 6** with Lightroom, Claude Desktop and the Deck open, double-click `LrC-AVG-Setup-1.0.0.exe`. A box "Please close: ..." with Retry, Ignore and Abort: click **Ignore**. A box "The LrC-AVG engine is running ...": click **OK**. Then restart Lightroom and open the Status dialog again.
    - **Step 7** quit Lightroom and Claude Desktop, then Settings > Apps > Installed apps > LrC-AVG > Uninstall with "Delete the application data" **unticked**.
    - **Step 8** the check reinstalls 1.0.0 by itself; uninstall again with the box **ticked**. Do not start Lightroom or Claude Desktop.
-   - **Step 9** the check puts your development setup back; start Lightroom, File > Plug-in Manager > Add, pick `D:\Developer\LrC_Autonomous_Gateway\plugin\LrC-AVG.lrplugin`, click Done.
+   - **Step 9** the check puts your development setup back; start Lightroom, File > Plug-in Manager, select "LrC-AVG (dev)" and click **Enable** (if it is not listed: Add, pick `D:\Developer\LrC_Autonomous_Gateway\plugin\LrC-AVG.lrplugin`), click Done.
 4. When the window shows `Phase 9 local install: WORKED` or `FAILED` and `put back: YES`, tell Claude Code "done". About 30-45 minutes after the build [inference: nine steps with two wizards and two uninstalls; not measured].
 
 ### If something goes wrong

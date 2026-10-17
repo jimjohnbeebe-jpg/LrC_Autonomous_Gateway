@@ -113,9 +113,9 @@ export async function endSession(ctx: SessionContext, s: Session, args: FinishAr
 const MASKS_NOTE = (n: number): string =>
   `The photo keeps its ${n === 1 ? "mask" : `${n} masks`}; the recipe carries the global settings only, so lr_sync_series and lr_create_preset_from_active do not copy masks.`;
 
-/** The log's `ended_by`: Claude, or the user's click with its timings (done_ms: from the event to now, AC-2). */
+/** The log's `ended_by`: the AI client ("ai"), or the user's click with its timings (done_ms: from the event to now, AC-2). */
 export function endedBy(by: UserEnd | null): EndedByEntry {
-  if (!by) return { source: "claude" };
+  if (!by) return { source: "ai" };
   return { source: by.source, click_id: by.click_id, received: by.received.toISOString(), interrupted: by.interrupted, done_ms: ms(by.t0) };
 }
 

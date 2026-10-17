@@ -52,7 +52,9 @@ const createArgs = z.object({
         `${group("landscape_")}; every person in the photo, one part per mask: ${group("people_")}; one person, with point on them: ` +
         `${group("person_")}. people, landscape (name the part or category), brush, objects, color_range and depth_range are refused, with the reason`,
     ),
-  name: name.optional().describe('the name the Masks panel shows (default "AVG <kind>")'),
+  name: name
+    .optional()
+    .describe('the name the Masks panel shows (default "AVG <kind>"); a suggested style is "N. Subject - Purpose", for example "4. Lone Juniper - Foliage Separation"; any clear name works'),
   geometry: geometry.optional(),
   point: point.optional().describe(`${group("person_")} only: a point on that person (on the face, for face skin), in 0-1 of the photo`),
   sliders: sliders.optional(),
@@ -60,7 +62,7 @@ const createArgs = z.object({
 const editArgs = z.object({
   ...passFields,
   mask_id: maskId,
-  name: name.optional().describe("rename"),
+  name: name.optional().describe('rename (a rename alone uses no pass); the same suggested style, "N. Subject - Purpose"'),
   active: z.boolean().optional().describe("false hides the mask (its effect is off), true shows it"),
   inverted: z.boolean().optional().describe("true inverts the mask (a radial's inversion checked in Lightroom; other kinds not yet: look at the preview)"),
   geometry: geometry.optional(),
@@ -75,17 +77,20 @@ const editArgs = z.object({
 const deleteArgs = z.object({ ...passFields, mask_id: maskId });
 
 // An undone pass still counts: masks.ts sets t.passes = n after applyPlan, undo or not [handle:
-// engine\src\session\masks.ts:152-153]; a preserved region's drift undoes it too (masks.ts:198-207). Regions
-// are measured on every mask pass's render (session\io.ts:128-141; masks.ts:240-241 return them,
+// engine\src\session\masks.ts maskPass `t.passes = n`]; a preserved region's drift undoes it too (masks.ts
+// applyPlan `regionDrift` and the undo after it). Regions are measured on every mask pass's render
+// (session\io.ts:128-141; masks.ts applyPlan `render` returns them,
 // metrics\compute.ts:78, :269-271). An AI mask's point: the engine writes 0.5/0.5 (params\mask-ops.ts:156)
 // and Lightroom moved it to 0.767134/0.656632 on mask 524781EC [handle: logs\20261010-72a50c.json:1904-1909,
 // gitignored, read 2026-10-11; issue #129]; that it says nothing of the mask's extent is [inference].
-// converged_by_metrics is session\plan.ts convergedByRegions, never an end reason (masks.ts:154-156; issue
+// converged_by_metrics is session\plan.ts convergedByRegions, never an end reason (masks.ts maskPass `convergedByRegions`; issue
 // #130 item 4) [handle: tests\session-masks-converge.test.ts]; a mask that overlaps no region reads as
-// converged [inference].
+// converged [inference]. A rename alone goes through session\masks.ts renameMask (engine 0.35.0, hands-on batch 1): no pass, no
+// render; a name does not change pixels [inference].
 const PASS_NOTE =
   "Each mask change is ONE pass of the session (it counts against max_passes, so raise max_passes at lr_begin_session when masks " +
-  "are planned; it may follow convergence, and approve_each_pass mode gates it like lr_step). It writes the photo's whole mask " +
+  "are planned; it may follow convergence, and approve_each_pass mode gates it like lr_step). A rename alone (lr_edit_mask " +
+  "with only mask_id and name) is not a pass: one History step, no render, and it works at the pass cap. A mask change writes the photo's whole mask " +
   "table as one History step \"AVG <id> pass n/N mask <op>\", reads it back, renders and measures, and is undone (\"… clip revert\" / " +
   "\"… region revert\"; the pass still counts) when clipping goes over a limit the photo was within, or a preserved region " +
   "drifts; global sliders are never moved for a mask. To measure a local edit, name its area with lr_set_regions first: every " +

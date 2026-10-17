@@ -1,6 +1,6 @@
 // `npm run clients:probe` (ISSUE155_PLAN R5): each installed AI client, started headless with one
 // prompt against the built engine and the Lightroom simulator (harness.ts), never Jim's Lightroom.
-// Per client: T1 the tools listed (35) with no schema error; T2 clientInfo, progressToken and the
+// Per client: T1 the tools listed (36) with no schema error; T2 clientInfo, progressToken and the
 // self-reported model, read from the scratch tool and session logs; T3 a random word printed on the
 // preview read back by the model; T4 begin -> step -> end in the session log; T5 a 70 s export that
 // finishes through continuations (`pending` lines or `not_yet` in the tool log). A client that is not

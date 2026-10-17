@@ -2135,6 +2135,7 @@
                 "enum": [
                   "hud",
                   "menu",
+                  "ai",
                   "claude",
                   "pick"
                 ]
@@ -3246,6 +3247,7 @@
         "source": {
           "type": "string",
           "enum": [
+            "ai",
             "claude",
             "hud",
             "menu",
@@ -3365,6 +3367,7 @@
             "enum": [
               "hud",
               "menu",
+              "ai",
               "claude",
               "pick"
             ]

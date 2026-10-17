@@ -81,8 +81,9 @@ export const guardrailActionSchema = z.strictObject({
 /** The photo a pass edited: the master (Converge mode) or a copy (Variants mode). */
 export const targetIdSchema = z.enum(["master", "A", "B", "C"]);
 export const variantIdSchema = z.enum(["A", "B", "C"]);
-/** Who approved a pass: the HUD (or a menu item), Claude on the user's word in chat, or the user's pick (engine 0.9.0). */
-const approvalBySchema = z.enum(["hud", "menu", "claude", "pick"]);
+/** Who approved a pass: the HUD (or a menu item), the AI client on the user's word in chat ("ai"), or the user's pick (engine 0.9.0).
+ * Engine 0.35.0 writes "ai" where older logs wrote "claude"; "claude" still parses so those logs read [stated: Jim, 2026-10-16, "Rename to \"ai\""]. */
+const approvalBySchema = z.enum(["hud", "menu", "ai", "claude", "pick"]);
 /** params\pipeline.ts Pipeline. */
 const pipelineSchema = z.enum(["raw", "rendered"]);
 
@@ -186,7 +187,8 @@ const userSource = z.enum(["hud", "menu"]);
  * session an engine that stopped left open (session\left-open.ts), with its `reason`.
  */
 const endedBySchema = z.strictObject({
-  source: z.enum(["claude", "hud", "menu", "engine", "recovery"]),
+  // "ai": the AI client ended it (engine 0.35.0); "claude" is the same in older logs [stated: Jim, 2026-10-16, "Rename to \"ai\""].
+  source: z.enum(["ai", "claude", "hud", "menu", "engine", "recovery"]),
   reason: z.string().optional(),
   click_id: z.string().optional(),
   received: z.string().optional(),

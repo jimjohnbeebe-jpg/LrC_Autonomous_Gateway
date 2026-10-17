@@ -20,7 +20,7 @@ import { overlayWord, wordBox, type Img } from "../helpers/lightroom-sim-word.js
 
 /** Fixed ports nothing else of the project uses; the lock is the event port + 1 (mcp\dev-overrides.ts). */
 export const PROBE_PORTS = { command: 47651, event: 47652, lock: 47653 } as const;
-export const TOOL_COUNT = 35;
+export const TOOL_COUNT = 36;
 
 export type Harness = {
   scratch: string;

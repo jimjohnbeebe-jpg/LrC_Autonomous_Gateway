@@ -193,7 +193,7 @@ export function openSession(ctx: ToolContext, sessionId: string): { id: string; 
   if (byUser) throw endedError(byUser);
   const open = ctx.sessions?.current() ?? null;
   if (!open) return null;
-  if (open.id !== sessionId) throw new ToolError("SESSION_NOT_ACTIVE", `Session ${sessionId} is not the open one (${open.id}).`, false);
+  if (open.id !== sessionId) throw new ToolError("SESSION_NOT_ACTIVE", `Session ${sessionId} is not the open one: call again with session_id "${open.id}".`, true, { session_id: sessionId, open_session_id: open.id });
   return open;
 }
 

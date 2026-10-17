@@ -41,7 +41,9 @@ export const CONTEXT_DEFS: ToolDef[] = [
       "With `session_id`: the session's photo (refused with TARGET_CHANGED if another photo is selected) and its region metrics; " +
       "in Variants mode `target` names the copy, which is selected in Lightroom first. " +
       "With `region`: a crop of that box for judging sharpness, noise or fringing; the photo is exported larger (up to 4096 px) " +
-      "so the crop fills `long_edge`, never enlarged; `effective_scale` = output pixels per photo pixel (1 = 100 %). Changes nothing. " +
+      "so the crop fills `long_edge`, never enlarged; `effective_scale` = output pixels per photo pixel (1 = 100 %). With `region`, " +
+      "the result's `metrics` describe the whole export (`metrics_scope` \"frame\") and `crop_metrics` the requested box, both " +
+      "measured at export resolution. Changes nothing. " +
       MEASURED,
     schema: previewArgs,
     annotations: { readOnlyHint: true, openWorldHint: false },

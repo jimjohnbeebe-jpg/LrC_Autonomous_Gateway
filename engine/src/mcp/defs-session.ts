@@ -37,7 +37,7 @@ const beginArgs = z.object({
     .object({ clip_high_pct: z.number().min(0).max(100).optional(), clip_low_pct: z.number().min(0).max(100).optional() })
     .optional()
     .describe("clipping limits for this session, replacing the intent's, the settings page's and the defaults (0.5 % high, 1.0 % low)"),
-  notes: z.string().max(2000).optional().describe("the user's request in their own words, kept in the log; it takes precedence over the intent's brief"),
+  notes: z.string().max(2000).optional().describe("the user's request in their own words, kept in the log; suggested on every session; it takes precedence over the intent's brief"),
   model: z.string().max(80).optional().describe("Your own model name or id, shown to the user and logged; never used for decisions."),
   long_edge: longEdge.describe(`Preview long edge in pixels, ${MIN_LONG_EDGE}-${MAX_LONG_EDGE}, for the whole session (default: the settings page's, else ${DEFAULT_LONG_EDGE}).`),
   return_image: returnImage,
@@ -101,32 +101,17 @@ export const SESSION_DEFS: ToolDef[] = [
     name: "lr_begin_session",
     title: "Begin an editing session",
     description:
-      "Start an editing session on the photo selected in Lightroom. THE USER'S REQUEST COMES FIRST: an intent (lr_list_intents) " +
-      "is an optional starting point. Leave intent_id out when none fits the request; when the request and the intent's brief " +
-      "disagree, follow the request (pass `profile` to replace the intent's profile; later passes may undo any prior). When the " +
-      "request wants clipping (high key, crushed blacks), raise `guardrails`. The engine: " +
-      "creates a Develop snapshot \"AVG pre-session …\" (lr_end_session revert returns to it); renders the photo as it is; " +
-      "runs pass 0, one History step \"AVG <id> pass 0/N\" with the intent's camera profile (or `profile`), lens corrections and priors " +
-      "(a numeric prior is added to the photo's value). Only when `clip_baseline` is on (the argument, else the intent's; off by " +
-      "default, and `clip_baseline` in the result) does pass 0 then, while clipping is over a limit, pull whites/highlights/exposure or " +
-      "blacks/shadows/exposure back in fixed steps until under, at most 8 (\"… baseline k\"), and later passes correct clipping " +
-      "they did not cause; otherwise clipping is measured and left as it is, and a pass corrects only the clipping it caused. A limit " +
-      "still over is `unmet` in guardrail_actions. Without an intent, pass 0 writes no profile or priors (and `profile` alone when given). Returns session_id, the intent's brief (a starting point), the " +
-      "guardrails, pass0_applied, the full settings, metrics, and the preview. Then call lr_step for each pass. " +
-      "`target.pipeline` and `target.white_balance_unit` say how the photo's temperature and tint work (lr_get_active_photo_context). " +
-      "Pass 0 takes the intent's profile and priors for that pipeline (`profile.raw` or `profile.rendered`, `priors` plus " +
-      "`priors_by_pipeline`). " +
-      "mode \"variants\" (an intent with variants; select the master, not a virtual copy): instead of editing the photo, the engine " +
-      "makes virtual copies \"AVG <intent> A\", \"… B\", \"… C\" and runs pass 0 on each with the intent's priors plus that " +
-      "variant's (History \"AVG <id> A pass 0/N\"); it returns `variants` (each copy's settings and metrics) and a contact sheet " +
-      "of the copies side by side as the image, and leaves the master as it is. Then one lr_step per copy (target \"A\", …), " +
-      "then the user picks with lr_select_variant, and the remaining passes go to the pick. " +
-      "The session's numbers (max passes, variant count, clipping limits, decay, preview size and quality) come from the " +
-      "arguments, then (clipping limits only) the intent, then the user's settings page in Lightroom, then the defaults; `session_settings` in the result says where each came from. " +
-      "One session at a time; the session stays open until lr_end_session. A photo with a session an engine that stopped left open " +
+      "Start an editing session on the photo selected in Lightroom. THE USER'S REQUEST COMES FIRST: put it in `notes` in their " +
+      "own words. An intent (lr_list_intents) is an optional starting point: leave intent_id out when none fits; pass `profile` " +
+      "or `guardrails` when the request needs them (e.g. high key or crushed blacks). The engine makes a Develop snapshot " +
+      "\"AVG pre-session …\" (lr_end_session revert returns to it), renders the photo, and runs pass 0 as one History step " +
+      "\"AVG <id> pass 0/N\". Returns session_id, the intent's brief, guardrails, pass0_applied, the full settings, metrics, the " +
+      "preview, `log_path`, and `start_off_zero` (settings found on the photo, which may be import defaults or earlier edits). " +
+      "Then call lr_step once per pass, up to max_passes. " +
+      "One session at a time; it stays open until lr_end_session. A photo with a session an engine that stopped left open " +
       "(lr_get_active_photo_context `left_open`) is refused with SESSION_LEFT_OPEN, nothing written, until that session is ended. " +
-      HUD_NOTE +
-      MEASURED,
+      "lr_help explains passes, variants mode, clipping guardrails, metrics and previews. " +
+      HUD_NOTE,
     schema: beginArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     run: (tools, args) => tools.beginSession(args as z.infer<typeof beginArgs>),

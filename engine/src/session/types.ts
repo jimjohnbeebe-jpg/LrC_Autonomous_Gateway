@@ -117,8 +117,8 @@ export type HudSink = {
 
 /** Where an end by the user came from: a HUD button or a menu item (PRD FR-1.1). */
 export type UserSource = "hud" | "menu";
-/** Who approved a pass (approval.ts): the HUD (or menu), Claude on the user's word in chat, or the user's pick. */
-export type ApprovalBy = UserSource | "claude" | "pick";
+/** Who approved a pass (approval.ts): the HUD (or menu), the AI client on the user's word in chat, or the user's pick. */
+export type ApprovalBy = UserSource | "ai" | "pick";
 
 /** An Abort or Accept from the HUD or the menu, as the session keeps it until the session ends. */
 export type UserEnd = {
@@ -255,7 +255,7 @@ export type Session = {
   /** An Abort from the HUD or the menu (PHASE5_PLAN decision 3): while set, writes and exports are refused. */
   abort: UserEnd | null;
   /** Who picked the copy (Variants mode): lr_select_variant, the HUD or the menu. */
-  pickedBy: "claude" | UserSource | null;
+  pickedBy: "ai" | UserSource | null;
   /** A HUD Pick answered and queued but not yet made (an Accept after it counts on it). */
   pendingPick: VariantId | null;
   notices: HudNotice[];

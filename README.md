@@ -327,13 +327,16 @@ In testing, Claude also asked in the chat before each pass on its own.
 
 | Folder | What is there |
 |---|---|
-| `%LOCALAPPDATA%\LrC-AVG\logs` (or the log folder set on the settings page) | `engine-<yyyymmdd>.jsonl`, a record of every tool call; `<yyyymmdd>-<id>.json`, each session's full log; `<yyyymmdd>-<id>.recipe.json`, each accepted session's final settings |
+| `%LOCALAPPDATA%\LrC-AVG\logs` | `engine-<yyyymmdd>.jsonl`, a record of every tool call (see "Which log folder" below) |
+| `%LOCALAPPDATA%\LrC-AVG\logs` (or the log folder set on the settings page) | `<yyyymmdd>-<id>.json`, each session's full log; `<yyyymmdd>-<id>.recipe.json`, each accepted session's final settings |
 | `%LOCALAPPDATA%\LrC-AVG\intents` (or the intents folder set on the page) | Your own intents, `<id>.json`. One with the id of a bundled intent replaces it. The bundled intents stay inside the installed engine. With Claude Desktop from the Microsoft Store, Windows keeps this folder inside Claude's own data (`%LOCALAPPDATA%\Packages\Claude_<id>\LocalCache\Local\LrC-AVG\intents`), and File Explorer shows `%LOCALAPPDATA%\LrC-AVG\intents` empty. To see your intents, set the **Intents folder** on the settings page. |
 | `%LOCALAPPDATA%\LrC-AVG\plugin` | The plugin, if you installed it as above |
 | `%APPDATA%\Adobe\CameraRaw\Settings` | Presets LrC-AVG saves, `<name>.xmp` (Lightroom's own preset folder) |
 | `%TEMP%\LrC-AVG` | `previews\`, the renders (deleted when a session ends and when the engine starts); `bridge.log`, the plugin's log; `bridge_status.json` |
 | `%USERPROFILE%\.lrc-avg` | `bridge_token` and `bridge_ports.json`, written by the plugin at each Lightroom start; `log_folders.json`, the log folders used |
 | Claude Desktop's folder | `claude_desktop_config.json` with the `lrc-avg` entry, and the backups `lrc-avg-setup` made (`claude_desktop_config.json.backup-<time>`) |
+
+**Which log folder.** Session logs and recipes go to the **Log folder** on the settings page, or to `%LOCALAPPDATA%\LrC-AVG\logs` when it is blank. If the `LRC_AVG_LOG_DIR` environment variable is set for the engine (in a client's `lrc-avg` entry), that folder is used instead of both. The record of tool calls, `engine-<yyyymmdd>.jsonl`, is written to `LRC_AVG_LOG_DIR` or `%LOCALAPPDATA%\LrC-AVG\logs`, not to the settings-page folder. Each session's start names its own log file (`log_path`), so you can ask the AI where the log of a session is.
 
 ## Uninstall
 
@@ -401,11 +404,11 @@ The evidence behind the behaviour this page describes. Paths are in this reposit
 | Install | Lightroom loads the plugin at its start | [handle: `plugin/LrC-AVG.lrplugin/Info.lua` `LrForceInitPlugin`]; restarting after Add is a precaution [inference] |
 | Check the connection | Bridge status headlines | [handle: `plugin/LrC-AVG.lrplugin/MenuStatus.lua`] |
 | Check the connection | The engine connects at the first tool call and lets go after 60 s without one | [handle: `engine/src/mcp/main.ts:6-7`, `IDLE_RELEASE_MS`; `docs/reports/phase5/PHASE5.md` "Numbers", "Bridge back after each chat"] |
-| Your first session | Snapshot name, pass 0, History step names, per-pass caps, clipping limits and defaults | [handle: `engine/src/mcp/defs-session.ts` `lr_begin_session`, `lr_step`]; AC-4 held on every pass of the Phase 5 check [handle: `PHASE5.md` "Numbers", "AC-4"] |
+| Your first session | Snapshot name, pass 0, History step names, per-pass caps, clipping limits and defaults | [handle: `engine/src/mcp/defs-session.ts` `lr_begin_session`, `lr_step`; `engine/src/mcp/defs-help.ts` `HELP_TEXT` item 5, clip_baseline]; AC-4 held on every pass of the Phase 5 check [handle: `PHASE5.md` "Numbers", "AC-4"] |
 | Your first session | The golden-hour chat ran on six photos | [handle: `PHASE5.md` "Numbers", "The six golden-hour chats"] |
 | Your first session | Renders show only inside the expanded tool-call box | [handle: `docs/reports/phase0/S3.md` "Analysis"; stated by Jim there] |
 | What else you can ask | The eleven intents and which have variants | [handle: `engine/intents/*.json` `label`, `variants`] |
-| What else you can ask | Variants, copy names, the pick | [handle: `defs-session.ts` `lr_begin_session`, `lr_select_variant`]; the HUD pick in Lightroom [handle: `PHASE5.md` "Numbers", "AC-3"] |
+| What else you can ask | Variants, copy names, the pick | [handle: `engine/src/mcp/defs-help.ts` `HELP_TEXT` "Variants mode", `defs-session.ts` `lr_select_variant`]; the HUD pick in Lightroom [handle: `PHASE5.md` "Numbers", "AC-3"] |
 | What else you can ask | Sync: limit 500, about 30 s per request, snapshots, not during a session | [handle: `engine/src/sync/types.ts:18`, `engine/src/library/files.ts:42`, `engine/tests/sync-budget.test.ts`; `engine/src/mcp/defs-propagation.ts` `lr_sync_series`] |
 | What else you can ask, Known limitations | Vignette and grain: the nine sliders, limits on both pipelines, left out of presets | [handle: `engine/src/params/canonical.ts` (Effects entries), `docs/reports/phase8.5/effects.md` "Numbers" (verdict Go); `engine/src/presets/select.ts` `leaveOut`; `engine/tests/params-effects.test.ts`]; the slider names as Lightroom shows them, and Claude using them in a chat, [unverified] until Jim checks with engine 0.32.0 |
 | What else you can ask, Known limitations | Presets: group, folder, shown after a restart, what is left out; only the "LrC-AVG" group tested | [handle: `defs-propagation.ts` `lr_create_preset_from_active`; `engine/src/presets/folder.ts`; `docs/reports/phase4/S7.md` "Consequences"; `docs/reports/phase4/WB.md`]; groups other than "LrC-AVG" [unverified] |
@@ -430,11 +433,12 @@ The evidence behind the behaviour this page describes. Paths are in this reposit
 | Menu items, Known limitations | No keyboard shortcuts | [handle: vault `PHASES.md` Phase 9 (was Phase 6) "Carried from Phase 5", hotkeys] |
 | Settings | Labels, defaults, ranges, the invalid-value list | [handle: `plugin/LrC-AVG.lrplugin/Prefs.lua:33-46`, `PluginInfoProvider.lua`] |
 | Settings | Saved as edited; read by the next session; the mode reached the engine | [handle: `docs/reports/phase5/S8.md` "Consequences"; `PHASE5.md` "Numbers", "Settings page reached the engine"] |
-| Settings | Argument > intent > page > default; folders remembered | [handle: `defs-session.ts` `lr_begin_session`; `engine/src/settings/log-folders.ts`] |
+| Settings | Argument > intent > page > default; folders remembered | [handle: `engine/src/mcp/defs-help.ts` `HELP_TEXT` item 5; `engine/src/settings/log-folders.ts`] |
 | Approve each pass | Pass 1 free, 40 s wait, `AWAITING_APPROVAL`, approval in chat, a pick approves its pass | [handle: `defs-session.ts` `lr_step`, `lr_approve_pass`; `PHASE5.md` "Numbers", "Approve", "Wait in vain"] |
 | Approve each pass | Claude asked in the chat before each pass | [handle: `PHASE5.md` "Numbers", "Approve chat"] |
 | Undoing an edit | No SDK call that removes a photo was found; **Photo > Remove Photos… > Remove** removed only the copies | [handle: `docs/reports/phase4/S7.md` "Verdict" item 2, 19 names tried; `docs/reports/phase0/S6.md:37`, stated by Jim] |
 | Where files go | Log, recipe and tool-log names and folder | [handle: `engine/src/log/tool-log.ts:5-7`, `session-log.ts:4-7`] |
+| Where files go | Which log folder: `LRC_AVG_LOG_DIR`, then the page, then the default for session logs and recipes; the tool log the env variable or the default only; `log_path` at begin | [handle: `engine/src/settings/folders.ts:49-51` `log()`; `engine/src/log/tool-log.ts:13-18` `defaultLogDir`; `engine/src/session/begin.ts:264`; `engine/tests/batch1-logs-begin.test.ts`] |
 | Where files go | Bundled intents read in place, user intents override | [handle: `engine/src/intents/loader.ts:55-56`; vault `PHASE6_PLAN.md` decision 3] |
 | Where files go | `%TEMP%\LrC-AVG`, `%USERPROFILE%\.lrc-avg` contents | [handle: `Prefs.lua:157-158`; `plugin/LrC-AVG.lrplugin/Log.lua:2`; `Endpoint.lua:2-4`; `log-folders.ts:19`]; previews purged at session end and start [handle: vault `PRD.md` NFR-6; `main.ts:10`] |
 | Uninstall | `--remove`; the order of the two commands; the Plug-in Manager **Remove** button; edits stay in the catalog | [handle: `smoke.txt` sections 2d-2e]; that `npm uninstall` also deletes `lrc-avg-setup` is [inference] (it is the package's own `bin`, `engine/package.json`); **Remove** [unverified]; edits staying is [inference]: uninstalling writes nothing to the catalog |

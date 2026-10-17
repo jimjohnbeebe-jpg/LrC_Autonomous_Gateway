@@ -93,6 +93,7 @@ describe("mcp server", () => {
       "lr_get_preview",
       "lr_get_selected_photos",
       "lr_get_session_log",
+      "lr_help",
       "lr_import_photos",
       "lr_list_collections",
       "lr_list_intents",
@@ -170,7 +171,7 @@ describe("mcp server", () => {
     expect(res.isError).toBe(true);
     const body = textOf(res.content as Content);
     expect(body["ok"]).toBe(false);
-    expect(body["error"]).toMatchObject({ code: "SESSION_NOT_ACTIVE", recoverable: false });
+    expect(body["error"]).toMatchObject({ code: "SESSION_NOT_ACTIVE", recoverable: true });
     expect(String((body["error"] as { message: string }).message)).not.toMatch(/\n\s+at /); // no stack
   });
 

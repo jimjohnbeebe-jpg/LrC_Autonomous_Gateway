@@ -194,7 +194,7 @@ describe("mask tools: the photo changing, the guardrail, convergence and the cap
     await m.step({ session_id: ID, settings: { exposure: 0.02 }, rationale: "test", return_image: "none" });
     expect(await fails(create(LINEAR, m))).toMatchObject({ code: "AWAITING_APPROVAL", message: expect.stringMatching(/call lr_create_mask again/) });
     await m.approvePass({ session_id: ID, confirmed: true });
-    expect((await create(LINEAR, m)).json).toMatchObject({ pass: "2/4", approval: { pass: 1, by: "claude" } });
+    expect((await create(LINEAR, m)).json).toMatchObject({ pass: "2/4", approval: { pass: 1, by: "ai" } });
   });
 });
 

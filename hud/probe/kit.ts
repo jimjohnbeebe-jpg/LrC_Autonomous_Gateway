@@ -15,7 +15,7 @@ export const REPO = path.join(path.dirname(fileURLToPath(import.meta.url)), ".."
 export const DECK_LOGS = path.join(tmpdir(), "LrC-AVG", "hud");
 export const WINDOW_JSON = path.join(process.env["LOCALAPPDATA"] ?? "", "LrC-AVG", "hud", "window.json");
 export const ENDPOINT = path.join(homedir(), ".lrc-avg", "hud_endpoint.json");
-export const DECK_IMAGE = "LrC-AVG HUD.exe";
+export const DECK_IMAGE = "LrC-AVG Deck.exe";
 const LR_IMAGE = process.env["LRC_AVG_HUD_LR_EXE"] ?? "Lightroom.exe";
 
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));

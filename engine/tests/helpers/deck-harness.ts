@@ -159,7 +159,7 @@ export async function deckRig(options: { exe?: string | null; onStart?: () => vo
     log: (m) => void channelLog.push(`${new Date().toISOString()} ${m}`),
     record: (r) => records.push(r),
   });
-  const exe = options.exe === undefined ? "C:\\sim\\LrC-AVG HUD.exe" : options.exe;
+  const exe = options.exe === undefined ? "C:\\sim\\LrC-AVG Deck.exe" : options.exe;
   const launcher = new HudLauncher({
     exe: () => exe,
     start: (e) => {

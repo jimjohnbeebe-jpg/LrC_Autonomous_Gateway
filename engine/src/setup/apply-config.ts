@@ -2,18 +2,25 @@
 // desktop-config.ts). Behaviour, as in the S3 installer: validates the file, writes a timestamped
 // backup next to it before changing anything, reads the result back (and puts the original back if
 // it does not match), and changes nothing the second time. When no config file exists but exactly
-// one Claude Desktop folder does, the file is created there (PHASE6_PLAN row 1, decision D1).
+// one Claude Desktop folder does, the file is created there (PHASE6_PLAN row 1, decision D1). Which
+// folders count (Claude-Data, the Packages folder unless marked as left, the classic one) is in
+// desktop-config.ts.
 // Results name servers only, never env values (another server's env may hold a token).
 
 import { copyFileSync, existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { CONFIG_FILE, desktopConfigSchema, findClaudeFolders, findDesktopConfigs, planConfig, SERVER_NAME, type DesktopConfig, type ServerEntry } from "./desktop-config.js";
 
+/** Why a setup failed, for `--installer`'s result file: no Claude Desktop (or no file) to work on, more than one candidate, anything else. */
+export type SetupErrorKind = "not_found" | "ambiguous" | "error";
+
 /** A failure that left the config as it was; the message says why. */
 export class SetupError extends Error {
-  constructor(message: string) {
+  readonly kind: SetupErrorKind;
+  constructor(message: string, kind: SetupErrorKind = "error") {
     super(message);
     this.name = "SetupError";
+    this.kind = kind;
   }
 }
 
@@ -34,6 +41,8 @@ export type ApplyResult = {
   after: string[];
   /** What changed, e.g. `add "lrc-avg"`; empty when nothing did. */
   changes: string[];
+  /** The "lrc-avg" entry itself was added, updated or (for `--remove`) taken out; false when only a retired server went or nothing did. */
+  entryChanged: boolean;
   /** The backup's file name, when one was written. */
   backup: string | null;
 };
@@ -41,16 +50,16 @@ export type ApplyResult = {
 function locate(explicit: string | undefined, env: NodeJS.ProcessEnv): { file: string; exists: boolean } {
   if (explicit !== undefined) {
     const file = path.resolve(explicit);
-    if (!existsSync(file)) throw new SetupError(`config file not found: ${file}`);
+    if (!existsSync(file)) throw new SetupError(`config file not found: ${file}`, "not_found");
     return { file, exists: true };
   }
   const found = findDesktopConfigs(env);
   // Writing to the wrong one would "succeed" while Claude Desktop keeps reading the other.
-  if (found.length > 1) throw new SetupError(`found ${found.length} Claude Desktop config files, so it is not clear which one Claude Desktop uses:\n  ${found.join("\n  ")}`);
+  if (found.length > 1) throw new SetupError(`found ${found.length} Claude Desktop config files, so it is not clear which one Claude Desktop uses:\n  ${found.join("\n  ")}`, "ambiguous");
   if (found.length === 1) return { file: found[0] as string, exists: true };
   const folders = findClaudeFolders(env);
-  if (folders.length === 0) throw new SetupError("Claude Desktop's folder was not found. Start Claude Desktop once in this Windows account, quit it, then run this again.");
-  if (folders.length > 1) throw new SetupError(`found ${folders.length} Claude Desktop folders and no config file, so it is not clear which one Claude Desktop uses:\n  ${folders.join("\n  ")}`);
+  if (folders.length === 0) throw new SetupError("Claude Desktop's folder was not found. Start Claude Desktop once in this Windows account, quit it, then run this again.", "not_found");
+  if (folders.length > 1) throw new SetupError(`found ${folders.length} Claude Desktop folders and no config file, so it is not clear which one Claude Desktop uses:\n  ${folders.join("\n  ")}`, "ambiguous");
   return { file: path.join(folders[0] as string, CONFIG_FILE), exists: false };
 }
 
@@ -78,7 +87,8 @@ export function applyDesktopConfig(options: ApplyOptions): ApplyResult {
     plan.added ? `add "${SERVER_NAME}"` : plan.updatedEntry ? `update "${SERVER_NAME}"` : null,
     ...plan.removed.map((name) => `remove "${name}"`),
   ].filter((c): c is string => c !== null);
-  const result: ApplyResult = { configPath: file, created: !exists && !plan.unchanged, before, after, changes, backup: null };
+  const entryChanged = plan.added || plan.updatedEntry || plan.removed.includes(SERVER_NAME);
+  const result: ApplyResult = { configPath: file, created: !exists && !plan.unchanged, before, after, changes, entryChanged, backup: null };
   if (plan.unchanged || options.dryRun) return result;
 
   const text = JSON.stringify(plan.updated, null, 2) + "\n";

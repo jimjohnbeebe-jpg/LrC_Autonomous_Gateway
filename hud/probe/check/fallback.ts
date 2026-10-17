@@ -14,7 +14,7 @@ import type { Ctx } from "./ctx.ts";
 
 const SECOND = 1000;
 /** The executable the engine starts, as launch.ts findHudExe looks for it (LRC_AVG_HUD_EXE, else the per-user install). */
-const EXE = process.env["LRC_AVG_HUD_EXE"] ?? path.join(process.env["LOCALAPPDATA"] ?? "", "LrC-AVG HUD", HUD_EXE_NAME);
+const EXE = process.env["LRC_AVG_HUD_EXE"] ?? path.join(process.env["LOCALAPPDATA"] ?? "", "LrC-AVG", HUD_EXE_NAME);
 const OFF = `${EXE}.p7check-off`;
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
 

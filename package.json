@@ -42,7 +42,13 @@
     "phase7:check": "npm run build && node hud/probe/check/check.ts",
     "clients:probe": "npm run build && npm run probe -w engine",
     "clients:check": "npm run deck:build && node engine/dist/devtools/clients-check-cli.js",
-    "arch:check": "depcruise engine/src --config .dependency-cruiser.cjs --ignore-known",
+    "setup:build": "node tools/setup/build.ts",
+    "setup:install": "node tools/setup/install.ts",
+    "setup:lock-check": "node tools/setup/lock-check.ts",
+    "cleanroom": "npm run build && node engine/dist/devtools/cleanroom-cli.js",
+    "sandbox:check": "npm run build && node engine/dist/devtools/sandbox-cli.js",
+    "phase9:local": "npm run build && node engine/dist/devtools/phase9-local-cli.js",
+    "arch:check":"depcruise engine/src --config .dependency-cruiser.cjs --ignore-known",
     "arch:graph": "node tools/arch-graph.ts"
   },
   "devDependencies": {

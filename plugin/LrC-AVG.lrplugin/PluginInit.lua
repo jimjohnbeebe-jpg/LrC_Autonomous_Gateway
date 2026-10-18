@@ -8,7 +8,14 @@
 local Bridge = require 'Bridge'
 local Log = require 'Log'
 
-local ok, err = pcall(Bridge.start) -- plain pcall: not a task, Bridge.start does not yield
-if not ok then
-    Log.error("bridge start failed: " .. tostring(err))
+-- Lightroom runs this at its start for a disabled plugin too (LrForceInitPlugin), with _PLUGIN.enabled
+-- false: the bridge used to bind and rebind there [handle: docs\reports\phase9\stall-174.md "Observed,
+-- run 3"]. A disabled plugin starts nothing; Enable starts it (PluginEnable.lua).
+if _PLUGIN.enabled == false then
+    Log.info("bridge: not started (plugin disabled)")
+else
+    local ok, err = pcall(Bridge.start) -- plain pcall: not a task, Bridge.start does not yield
+    if not ok then
+        Log.error("bridge start failed: " .. tostring(err))
+    end
 end

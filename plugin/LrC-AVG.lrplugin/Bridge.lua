@@ -43,6 +43,7 @@ local Json = require 'Json'
 local Log = require 'Log'
 local Prefs = require 'Prefs'
 local Sockets = require 'Sockets'
+local Stall = require 'Stall'
 
 local Bridge = {}
 
@@ -57,13 +58,15 @@ local STALE_REBIND_SECONDS = 20    -- silent this long while connected: rebind b
 local SEND_WAIT_SECONDS = 5        -- how long a reply waits for the send socket to be connected
 local STATUS_EVERY_SECONDS = 2
 local SETTLE_SECONDS = 0.6         -- lets a replaced instance close its sockets before we bind
--- No engine connected for this long since the last bind: bind both sockets afresh, quietly. A bridge
--- that bound while a replaced instance still held 8765/8766 was left with no listener and no error:
--- the replaced one stopped 10 s later, the new loop kept running, nothing listened [handle: Jim's run
--- 1b, %TEMP%\LrC-AVG\bridge.log 2026-10-17 13:32:28-13:32:54, two "starting generation 1"; netstat at
--- 13:37:58 showed nothing on 8765/8766 while bridge_status.json was still written]. 10 s stays inside
--- the engine's 15 s wait, during which it retries every 2 s (engine\src\bridge\client.ts:53, 56).
-local IDLE_REBIND_SECONDS = 10
+-- No engine connected this long after the first bind: bind both sockets afresh, once. A bridge that
+-- bound while a replaced instance still held 8765/8766 was left with no listener and no error: the
+-- replaced one stopped 10 s later, the new loop kept running, nothing listened [handle: Jim's run 1b,
+-- %TEMP%\LrC-AVG\bridge.log 2026-10-17 13:32:28-13:32:54, two "starting generation 1"; netstat at
+-- 13:37:58 showed nothing on 8765/8766 while bridge_status.json was still written]. Only once: a rebind
+-- every 10 s while idle (PR #173) spent 10-12 s in the socket work each time and Lightroom stuttered;
+-- with it off, neither [handle: docs\reports\phase9\stall-174.md "Observed", issue #174]. An engine
+-- connection also counts as the check done: the listener works.
+local STARTUP_REBIND_SECONDS = 20
 
 -- Only a generation number lives on _G. A Reload Plug-in runs the init script again in the same Lua
 -- state [upstream claim: vendor\automaat\plugin\LightroomMCP.lrplugin\PluginInit.lua:8-15]; the old
@@ -232,12 +235,17 @@ end
 
 local function monitor(B)
     local S = B.S
-    while B.current() do
+    local D = Stall.new(LOOP_SECONDS) -- issue #174 diagnosis (Stall.lua)
+    -- Disable ends this loop through Bridge.stop (PluginDisable.lua). _PLUGIN.enabled was false in a
+    -- disabled plugin's init [handle: docs\reports\phase9\stall-174.md "Observed, run 3"]; that it turns
+    -- false on Disable, for a bridge whose _G the disable script does not share, is [unverified].
+    while B.current() and _PLUGIN.enabled ~= false do
+        Stall.tick(D)
         if LrDate.currentTime() - B.lastStatus >= STATUS_EVERY_SECONDS and replacedOnDisk(S) then
             Log.info("bridge: generation " .. B.generation .. " replaced by a newer start (token file)")
             return
         end
-        if LrDate.currentTime() >= B.retryAt then tendSockets(B) end
+        if LrDate.currentTime() >= B.retryAt then Stall.timed(D, function() tendSockets(B) end) end
         -- Windows may not report a vanished engine at all [upstream claim: PluginInfoProvider.lua:558-560].
         -- The engine pings every 2 s, so a long silence means it is gone: start both sockets afresh.
         if S.receiveConnected and S.lastInbound and (LrDate.currentTime() - S.lastInbound) > STALE_REBIND_SECONDS then
@@ -245,8 +253,10 @@ local function monitor(B)
             S.lastInbound = nil
             S.receiveNeedsRebind, S.sendNeedsRebind = true, true
         end
-        if not S.receiveConnected and S.boundAt and (LrDate.currentTime() - S.boundAt) > IDLE_REBIND_SECONDS then
-            S.boundAt = nil
+        if S.receiveConnected then S.startupRebindDone = true end
+        if not S.startupRebindDone and S.boundAt and (LrDate.currentTime() - S.boundAt) > STARTUP_REBIND_SECONDS then
+            Stall.rebind()
+            S.startupRebindDone = true
             S.receiveNeedsRebind, S.sendNeedsRebind = true, true
         end
         if LrDate.currentTime() - B.lastStatus >= STATUS_EVERY_SECONDS then writeStatus(B) end
@@ -254,7 +264,14 @@ local function monitor(B)
     end
 end
 
+-- Disable: the running bridge sees a newer generation, leaves its loop and closes both sockets.
+function Bridge.stop()
+    _G.LrCAVG_BridgeStopped = true
+    _G.LrCAVG_BridgeGeneration = _G.LrCAVG_BridgeGeneration + 1
+end
+
 function Bridge.start()
+    _G.LrCAVG_BridgeStopped = false
     _G.LrCAVG_BridgeGeneration = _G.LrCAVG_BridgeGeneration + 1
     local generation = _G.LrCAVG_BridgeGeneration
     local receivePort, sendPort = Prefs.ports()
@@ -267,7 +284,7 @@ function Bridge.start()
             receiveGen = 0, sendGen = 0,
             receiveConnected = false, sendConnected = false,
             receiveNeedsReconnect = false, sendNeedsReconnect = false,
-            receiveNeedsRebind = false, sendNeedsRebind = false,
+            receiveNeedsRebind = false, sendNeedsRebind = false, startupRebindDone = false,
             lastInbound = nil, handled = 0, failed = 0, malformed = 0, unauthorized = 0,
             startedAt = isoNow(),
             token = nil, tokenFile = Endpoint.tokenPath(),
@@ -319,7 +336,9 @@ function Bridge.start()
         if not okPorts then Log.error("bridge: ports file failed: " .. tostring(portsOrErr)) end
         Log.info("bridge: listening (generation " .. generation .. ")")
         monitor(B)
-        Log.info("bridge: generation " .. generation .. " replaced; loop exiting")
+        -- Returning ends the task, so the cleanup handler closes both sockets.
+        if _PLUGIN.enabled == false or _G.LrCAVG_BridgeStopped then Log.info("bridge: stopped (plugin disabled)")
+        else Log.info("bridge: generation " .. generation .. " replaced; loop exiting") end
     end)
 end
 

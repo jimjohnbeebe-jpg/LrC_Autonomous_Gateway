@@ -4,7 +4,9 @@
 // questions in this window, not in Lightroom dialogs, since a hung Lightroom shows none [stated: Jim,
 // 2026-10-11, "go" to the plan's decision 4]. A snapshot "AVG ai-probe before" is taken first and applied after
 // each run. When Lightroom must be restarted, the command says so and stops; run it again after the restart
-// and it goes on where it stopped (`-- --new` starts over). Under %TEMP%\LrC-AVG\ai-probe\ (Claude Code collects them):
+// and it goes on where it stopped (`-- --new` starts over). Options (ai-probe-plan.ts, issue #181): `--kind <kind> --repeat <n>
+// --sky-first` run one AI kind n times instead of the three runs, on a photo that shows it; a run that computes asks nothing.
+// Under %TEMP%\LrC-AVG\ai-probe\ (Claude Code collects them):
 //   state.json                       the runs so far (what a second start goes on from)
 //   ai_probe_<time>.json             the results, saved at every stop
 //   ai_probe_bridge_log_<time>.txt   a copy of the plugin's log, user folder redacted
@@ -18,7 +20,8 @@ import { createInterface } from "node:readline";
 import { BridgeClient, pluginVersionAtLeast } from "../bridge/index.js";
 import { acquireInstanceLock, BridgeGate, devOverrides, ENGINE_VERSION } from "../mcp/index.js";
 import { differingSettings, loadDefaultParamMap, type SdkSettings } from "../params/index.js";
-import { RUNS, runOne, type RunResult } from "./ai-probe.js";
+import { LIMIT_MS, RUNS, runOne, type RunResult, type RunSpec } from "./ai-probe.js";
+import { parseArgs, photoQuestions, plan, summarize, summaryLine, type Options } from "./ai-probe-plan.js";
 import { describeError, type Answer } from "./phase1-check.js";
 import { redactHome } from "./phase2-check.js";
 
@@ -31,10 +34,15 @@ const stamp = (): string => new Date().toISOString().replace(/[:.]/g, "-");
 const started = stamp();
 const redact = (text: string): string => redactHome(text, os.homedir());
 
-type Answers = { dialog_open: Answer; dialog_seen: Answer; responds: Answer; screenshot?: string };
+/** "not asked": a run of `--kind` that computed (issue #181) asks nothing, as ten runs of three questions would be a chore. */
+type Asked = Answer | "not asked";
+type Answers = { dialog_open: Asked; dialog_seen: Asked; responds: Asked; screenshot?: string };
 type Run = RunResult & { answers: Answers; put_back: { ok: boolean; why: string } | null };
-/** `running`: the run whose mask went out and has no saved result yet (the command stopped during it): put back, then run again. */
-type State = { started: string; photo: { uuid: string; filename: string }; snapshot_id: string; process: string | null; restarts: number; before_sdk: SdkSettings; runs: Run[]; running: string | null; done: boolean };
+/**
+ * `running`: the run whose mask went out and has no saved result yet (the command stopped during it): put back, then run again.
+ * `plan`: the runs (ai-probe-plan.ts), kept so that a start after a Lightroom restart goes on with them; a state without one is the three runs of issue #123.
+ */
+type State = { started: string; photo: { uuid: string; filename: string }; snapshot_id: string; process: string | null; restarts: number; before_sdk: SdkSettings; runs: Run[]; running: string | null; done: boolean; plan?: RunSpec[] };
 
 function terminal(): { prompt: (text: string) => Promise<string | null>; ask: (question: string) => Promise<Answer>; close: () => void } {
   const rl = createInterface({ input: process.stdin, terminal: false });
@@ -97,18 +105,19 @@ const RESTART = (filename: string): string[] => [
   "Lightroom needs a restart before the next run:",
   "  1. In Lightroom: File > Exit. If it has not closed after 1 minute: press Ctrl+Shift+Esc, select Adobe Lightroom Classic, click End task.",
   `  2. Start Lightroom, open Develop, and select ${filename} (only that photo).`,
-  "  3. Run the same command again: npm run ai:probe",
+  "  3. Run the command again with no options: npm run ai:probe (it goes on with the saved runs)",
 ];
 
-async function begin(client: BridgeClient, io: ReturnType<typeof terminal>): Promise<State> {
+async function begin(client: BridgeClient, io: ReturnType<typeof terminal>, o: Options): Promise<State> {
   const sel = await client.request("get_selection", { max: 2 });
   const photo = sel.photos[0];
   if (sel.count !== 1 || !photo?.uuid) throw new Error(`select one photo in Lightroom's Develop (${sel.count} selected), then run this again.`);
-  const answer = await io.ask(`The probe runs on ${photo.filename ?? photo.uuid}. Does it show trees, shrubs or grass?`);
-  if (answer !== "y") throw new Error("select a photo with trees, shrubs or grass in Develop, then run this again.");
+  for (const question of photoQuestions(o, photo.filename ?? photo.uuid)) {
+    if ((await io.ask(question)) !== "y") throw new Error("select a photo that shows what the question named, in Develop, then run this again.");
+  }
   const before_sdk = (await client.request("get_settings", { photo_uuid: photo.uuid })).settings;
   const snap = await client.request("create_snapshot", { target_uuid: photo.uuid, name: "AVG ai-probe before" });
-  return { started, photo: { uuid: photo.uuid, filename: photo.filename ?? photo.uuid }, snapshot_id: snap.snapshot_id, process: client.hello()?.process_started_at ?? null, restarts: 0, before_sdk, runs: [], running: null, done: false };
+  return { started, photo: { uuid: photo.uuid, filename: photo.filename ?? photo.uuid }, snapshot_id: snap.snapshot_id, process: client.hello()?.process_started_at ?? null, restarts: 0, before_sdk, runs: [], running: null, done: false, plan: plan(o) };
 }
 
 /** The photo back to the snapshot, checked as the engine's revert checks it (session\end.ts): settings and masks. */
@@ -137,15 +146,65 @@ async function questions(io: ReturnType<typeof terminal>, run: string): Promise<
   return { dialog_open: open, dialog_seen: seen, responds, ...(screenshot ? { screenshot } : {}) };
 }
 
+/** The command line, read once. */
+const options = parseArgs(process.argv.slice(2));
+
 function load(): State | null {
-  if (process.argv.includes("--new") || !existsSync(STATE)) return null;
+  if ((typeof options !== "string" && options.fresh) || !existsSync(STATE)) return null;
   return JSON.parse(readFileSync(STATE, "utf8")) as State;
 }
 
+/** The photo put back first, when the last start stopped after a run or during one; null once it is, else the exit code. */
+async function putBackFirst(client: BridgeClient, st: State, say: (line: string) => void): Promise<number | null> {
+  const last = st.runs.at(-1);
+  if (st.running === null && (!last || last.put_back?.ok)) return null;
+  const pb = await putBack(client, st);
+  if (last && st.running === null) last.put_back = pb;
+  say(`Put back after ${st.running ?? last?.run}${st.running ? " (stopped before its result; it runs again)" : ""}: ${pb.ok ? "YES" : `NO (${pb.why})`}`);
+  if (!pb.ok) return stop(st, say, "the photo could not be put back");
+  st.running = null;
+  save(st, {});
+  return null;
+}
+
+/** The runs left: each one, then the photo put back; the exit code. A run that computed in `--kind` mode asks Jim nothing. */
+async function runAll(client: BridgeClient, io: ReturnType<typeof terminal>, st: State, say: (line: string) => void): Promise<number> {
+  const specs = st.plan ?? RUNS;
+  for (const spec of specs.slice(st.runs.length)) {
+    const minutes = Math.round((spec.waitMs ?? LIMIT_MS) / 60_000);
+    say(`Run ${st.runs.length + 1} of ${specs.length}: ${spec.kind}${spec.skyFirst ? " after a Sky mask" : ""}, ${spec.reads ? "reading as the engine does" : "no reads while Lightroom computes"}. Up to ${minutes} minutes; do not click in Lightroom.`);
+    st.running = spec.id;
+    save(st, {});
+    const r = await runOne({ client, uuid: st.photo.uuid, shot, say }, spec);
+    say(`  Outcome: ${r.outcome} (${r.t_ms} ms${r.sky_first_ms !== undefined ? `; the Sky mask before it ${r.sky_first_ms} ms` : ""})`);
+    const quiet = spec.waitMs !== undefined && r.outcome === "computed";
+    const run: Run = { ...r, answers: quiet ? { dialog_open: "not asked", dialog_seen: "not asked", responds: "not asked" } : await questions(io, spec.id), put_back: null };
+    st.runs.push(run);
+    st.running = null;
+    save(st, {});
+    if ((run.answers.responds !== "y" && run.answers.responds !== "not asked") || !client.hello()) return stop(st, say, "Lightroom does not respond");
+    run.put_back = await putBack(client, st);
+    say(`  Put back: ${run.put_back.ok ? "YES" : `NO (${run.put_back.why})`}`);
+    if (!run.put_back.ok) return stop(st, say, "the photo could not be put back");
+  }
+  st.done = true;
+  say("");
+  for (const r of st.runs) say(`  ${r.run}: ${r.outcome} (${r.t_ms} ms); dialog ${r.answers.dialog_seen}; Lightroom responding ${r.answers.responds}; put back ${r.put_back?.ok ? "YES" : "NO"}`);
+  say(`Summary: ${summaryLine(summarize(st.runs))}`);
+  say(`AI mask probe: DONE, ${st.runs.length} of ${specs.length} runs, photo put back: YES`);
+  say(`Results saved automatically: ${redact(save(st, { suggestion: "DONE", summary: summarize(st.runs) }))}`);
+  say('Nothing to copy. Tell Claude Code "done".');
+  return 0;
+}
+
 async function main(say: (line: string) => void): Promise<number> {
+  if (typeof options === "string") {
+    say(`FAILED: ${options}`);
+    return 1;
+  }
   let st = load();
   if (st?.done) {
-    say("The probe is finished already (all three runs). To run it again from the start: npm run ai:probe -- --new");
+    say("The probe is finished already (all its runs). To run it again from the start: npm run ai:probe -- --new");
     return 0;
   }
   const io = terminal();
@@ -157,44 +216,14 @@ async function main(say: (line: string) => void): Promise<number> {
     const version = client.hello()?.plugin_version;
     if (!pluginVersionAtLeast(version, MIN_PLUGIN)) throw new Error(`Lightroom runs plugin ${String(version)}, not ${MIN_PLUGIN} or later.`);
     if (!st) {
-      st = await begin(client, io);
+      st = await begin(client, io, options);
       save(st, {}); // the snapshot on disk before anything is written (Greptile, PR #132)
     } else {
       const now = client.hello()?.process_started_at ?? null;
       if (now !== st.process) [st.process, st.restarts] = [now, st.restarts + 1];
-      say(`Going on with ${st.photo.filename}: ${st.runs.length} of ${RUNS.length} runs done${st.restarts ? `, Lightroom restarted ${st.restarts} time(s)` : ""}.`);
+      say(`Going on with ${st.photo.filename}: ${st.runs.length} of ${(st.plan ?? RUNS).length} runs done${st.restarts ? `, Lightroom restarted ${st.restarts} time(s)` : ""}.`);
     }
-    const last = st.runs.at(-1);
-    if (st.running !== null || (last && !last.put_back?.ok)) {
-      const pb = await putBack(client, st);
-      if (last && st.running === null) last.put_back = pb;
-      say(`Put back after ${st.running ?? last?.run}${st.running ? " (stopped before its result; it runs again)" : ""}: ${pb.ok ? "YES" : `NO (${pb.why})`}`);
-      if (!pb.ok) return stop(st, say, "the photo could not be put back");
-      st.running = null;
-      save(st, {});
-    }
-    for (const spec of RUNS.slice(st.runs.length)) {
-      say(`Run ${st.runs.length + 1} of ${RUNS.length}: ${spec.kind}, ${spec.reads ? "reading as the engine does" : "no reads while Lightroom computes"}. Up to 3 minutes; do not click in Lightroom.`);
-      st.running = spec.id;
-      save(st, {});
-      const r = await runOne({ client, uuid: st.photo.uuid, shot, say }, spec);
-      say(`  Outcome: ${r.outcome} (${Math.round(r.t_ms / 1000)} s)`);
-      const run: Run = { ...r, answers: await questions(io, spec.id), put_back: null };
-      st.runs.push(run);
-      st.running = null;
-      save(st, {});
-      if (run.answers.responds !== "y" || !client.hello()) return stop(st, say, "Lightroom does not respond");
-      run.put_back = await putBack(client, st);
-      say(`  Put back: ${run.put_back.ok ? "YES" : `NO (${run.put_back.why})`}`);
-      if (!run.put_back.ok) return stop(st, say, "the photo could not be put back");
-    }
-    st.done = true;
-    say("");
-    for (const r of st.runs) say(`  ${r.run}: ${r.outcome}; dialog ${r.answers.dialog_seen}; Lightroom responding ${r.answers.responds}; put back ${r.put_back?.ok ? "YES" : "NO"}`);
-    say(`AI mask probe: DONE, ${st.runs.length} of ${RUNS.length} runs, photo put back: YES`);
-    say(`Results saved automatically: ${redact(save(st, { suggestion: "DONE" }))}`);
-    say('Nothing to copy. Tell Claude Code "done".');
-    return 0;
+    return (await putBackFirst(client, st, say)) ?? (await runAll(client, io, st, say));
   } finally {
     io.close();
     await gate.release();
@@ -202,9 +231,9 @@ async function main(say: (line: string) => void): Promise<number> {
 }
 
 function stop(st: State, say: (line: string) => void, why: string): number {
-  say(`AI mask probe: STOPPED after run ${st.runs.length} of ${RUNS.length} (${why}).`);
+  say(`AI mask probe: STOPPED after run ${st.runs.length} of ${(st.plan ?? RUNS).length} (${why}).`);
   for (const line of RESTART(st.photo.filename)) say(line);
-  say(`Results so far saved automatically: ${redact(save(st, { suggestion: "STOPPED", why }))}`);
+  say(`Results so far saved automatically: ${redact(save(st, { suggestion: "STOPPED", why, summary: summarize(st.runs) }))}`);
   return 2;
 }
 

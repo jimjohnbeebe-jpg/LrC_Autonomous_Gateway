@@ -12,13 +12,20 @@
 // Each run writes one entry with the 2026-10-11 sliders (History "AVG ai-probe <run>"), then update_ai_settings
 // with the plugin's guard (`watch`), and watches for LIMIT_MS at most. Putting the photo back, the screenshots
 // and Jim's answers are the CLI's (ai-probe-cli.ts). Report: docs\reports\phase8.5\ai-vegetation.md.
+// Issue #181 (a Water mask whose update held Lightroom's write gate past the engine's 5 minutes): `--kind`, `--repeat`
+// and `--sky-first` (ai-probe-plan.ts) run any one AI kind N times, each after an AI Sky mask when asked; a run's time and
+// outcome are in its result, and the plan sums them up. Report: docs\reports\phase9\issue181.md.
 
 import { randomUUID } from "node:crypto";
 import type { BridgeClient, CommandResult } from "../bridge/index.js";
 import { toToolError } from "../mcp/index.js";
-import { aiError, aiWatch, applyOp, computed, firstComponent, readTable, tableSettings } from "../params/index.js";
+import { aiError, aiWatch, applyOp, computed, firstComponent, readTable, tableSettings, type AiKind } from "../params/index.js";
 
-export type RunSpec = { id: string; kind: "landscape_mountains" | "landscape_vegetation"; reads: boolean };
+/**
+ * `sliders`: the mask's, else the 2026-10-11 call's; `skyFirst`: an AI Sky mask is made and waited for first (issue #181);
+ * `waitMs`: how long the run waits for a result, else PROBE_TIMINGS' limit (ai-probe-plan.ts gives the engine's 5 minutes).
+ */
+export type RunSpec = { id: string; kind: AiKind; reads: boolean; sliders?: Record<string, number>; skyFirst?: true; waitMs?: number };
 export const RUNS: readonly RunSpec[] = [
   { id: "mountains_reads", kind: "landscape_mountains", reads: true },
   { id: "vegetation_reads", kind: "landscape_vegetation", reads: true },
@@ -33,7 +40,8 @@ export type ProbeTimings = typeof PROBE_TIMINGS;
 const SLIDERS = { "local.saturation": 15, "local.temperature": -10 };
 
 export type ProbeEvent = { t_ms: number; what: "update" | "read" | "probe" | "screenshot"; took_ms?: number; result: string };
-export type RunResult = { run: string; kind: string; reads: boolean; mask_id: string; outcome: string; t_ms: number; settled_ms: number | null; first_busy_ms: number | null; events: ProbeEvent[] };
+/** `t_ms`: how long the run waited; `sky_first_ms`: the Sky mask made before it took that long (a Sky mask that did not compute ends the run: outcome "sky first: …"). */
+export type RunResult = { run: string; kind: string; reads: boolean; mask_id: string; outcome: string; t_ms: number; settled_ms: number | null; first_busy_ms: number | null; events: ProbeEvent[]; sky_first_ms?: number };
 export type RunDeps = {
   client: BridgeClient;
   uuid: string;
@@ -50,10 +58,12 @@ const since = (t0: number): number => Math.round(performance.now() - t0);
 /** Run `spec` on the photo; ends on a result, the time limit or a dropped bridge, never throws after the update went out. */
 export async function runOne(deps: RunDeps, spec: RunSpec): Promise<RunResult> {
   const { client, uuid } = deps;
+  const sky = spec.skyFirst ? await runOne(deps, { id: `${spec.id}_sky`, kind: "sky", reads: true, ...(spec.waitMs !== undefined ? { waitMs: spec.waitMs } : {}) }) : null;
+  if (sky && sky.outcome !== "computed") return { ...sky, run: spec.id, kind: spec.kind, outcome: `sky first: ${sky.outcome}`, sky_first_ms: sky.t_ms };
   const before = readTable((await client.request("get_settings", { photo_uuid: uuid })).settings);
-  const plan = applyOp(before, { op: "create", kind: spec.kind, name: `AVG probe ${spec.id}`, sliders: SLIDERS });
+  const plan = applyOp(before, { op: "create", kind: spec.kind, name: `AVG probe ${spec.id}`, sliders: spec.sliders ?? SLIDERS });
   await client.request("apply_settings", { target_uuid: uuid, settings: tableSettings(plan.entries, false), history_name: `AVG ai-probe ${spec.id}` });
-  const r: RunResult = { run: spec.id, kind: spec.kind, reads: spec.reads, mask_id: plan.id, outcome: "", t_ms: 0, settled_ms: null, first_busy_ms: null, events: [] };
+  const r: RunResult = { run: spec.id, kind: spec.kind, reads: spec.reads, mask_id: plan.id, outcome: "", t_ms: 0, settled_ms: null, first_busy_ms: null, events: [], ...(sky ? { sky_first_ms: sky.t_ms } : {}) };
   const t0 = performance.now();
   const token = randomUUID();
   const note = (what: ProbeEvent["what"], result: string, took?: number): void => {
@@ -105,7 +115,7 @@ async function lastRead(deps: RunDeps, id: string, note: (what: ProbeEvent["what
 }
 
 async function watch(deps: RunDeps, spec: RunSpec, id: string, token: string, t0: number, r: RunResult, note: (what: ProbeEvent["what"], result: string, took?: number) => void): Promise<string> {
-  const T = deps.timings ?? PROBE_TIMINGS;
+  const T = { ...(deps.timings ?? PROBE_TIMINGS), ...(spec.waitMs !== undefined ? { limitMs: spec.waitMs } : {}) };
   let wait = T.pollMs;
   let nextRead = spec.reads ? 0 : Infinity;
   let nextProbe = spec.reads ? T.probeFromMs : T.pollMs;

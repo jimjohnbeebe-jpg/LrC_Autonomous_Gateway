@@ -25,10 +25,11 @@
 //     never on a thrown error (a dropped bridge, another photo selected): a later call reads the table again first;
 //   - after DIALOG_AFTER_MS with nothing in the table, probe_write_gate: "aborted" (the gate is held) means
 //     Lightroom is busy or shows a dialog [inference: a cold model holds the gate as long], and the HUD says
-//     so (DIALOG_NOTE). From then on the HUD's note shows the time waited, once a second (tick, issue #181). The photo is put back (ai-revert.ts autoRevert) [stated: Jim, 2026-10-03, "Also
-//     auto-revert"] only when Lightroom reports the update failed after a busy gate, or dropped it
-//     (abandoned): then nothing computes [inference]. D13's put-backs 60 s after the gate was free again and
-//     after 5 minutes are gone: they could write under a running computation (D16);
+//     so (DIALOG_NOTE). From then on the HUD's note shows the time waited, once a second (tick, issue #181).
+//     The photo is put back (ai-revert.ts autoRevert) [stated: Jim, 2026-10-03, "Also auto-revert"] only when
+//     Lightroom reports the update failed after a busy gate, or dropped it (abandoned): then nothing computes
+//     [inference]. D13's put-backs 60 s after the gate was free again and after 5 minutes are gone: they could
+//     write under a running computation (D16). The one write after a "done" record without a digest is the next bullet's;
 //   - no result within COMPUTE_MS, or gate probes unanswered for STUCK_PROBES_MS: LIGHTROOM_STUCK, nothing
 //     written, the session open with aiPending kept (`stuck`). In the 2026-10-18 session Lightroom's update was still
 //     "running" when the wait ended at 5 minutes [handle: logs\20261018-441ee2.json:1360-1368, 1573-1581; the 40
@@ -38,7 +39,9 @@
 //     that came meanwhile lets the session go on; an update over with the gate free and no result SETTLE_MS later
 //     frees it as a failed mask, and the next result says so; the Deck's Abort puts the photo back then, else (the
 //     gate still held) abandons the edit (abandon.ts). A Lightroom restart still puts the photo back by itself
-//     (restart.ts);
+//     (restart.ts). This reverses D16 for that case: capture 5's row E (above) is the evidence against writing after a
+//     "done" record with no digest, and no run has shown that Lightroom's computation is over then [unverified]. It waits
+//     for Jim's pick [handle: docs\reports\phase9\issue181.md "Decisions for Jim" 1];
 //   - a probe that reads the gate free with the update "done", then a read SETTLE_MS (2 s) or more after it
 //     with neither a digest nor an ErrorReason: Lightroom's computation failed, AI_MASK_FAILED (issue #123). On
 //     2026-10-10 Lightroom's update was over with no result after an NVIDIA driver error, and the engine read on
@@ -195,11 +198,13 @@ export const ABANDON_HINT = ' If the user would rather stop now without a restar
 export const putBackByHand = (snapshot: string): string => `To put it back, the user selects it in Develop and clicks the snapshot "${snapshot}" in the Snapshots panel.`;
 
 /**
- * What Claude tells the user while an AI mask has no result (issue #181): no restart is needed, as the session frees
- * itself once Lightroom is done; Abort in the Deck puts the photo back then, else leaves it as it is and names the snapshot.
+ * What Claude is told while an AI mask has no result (issue #181): no restart is needed, as the session frees itself once
+ * Lightroom is done, but only a call checks (nothing notifies), and not the same AI mask again; Abort in the Deck puts the photo
+ * back then, else leaves it as it is and names the snapshot.
  */
 export const waitAdvice = (s: Session): string =>
   ` The session unfreezes by itself when Lightroom has finished, with no restart: each call checks (a result lets the session go on; none frees it and the result's hud_actions says the mask failed). ` +
+  `Lightroom does not notify you: when the user says to go on, call lr_step, lr_end_session or lr_create_mask with a linear or radial kind to check, and not the same AI mask again (it would add a second one). ` +
   `Tell the user to wait, or to press Abort in the Deck: it puts the photo back as it was before the session if Lightroom has finished, and otherwise ends the edit as it is and names the snapshot "${s.snapshot.name}" that puts it back.`;
 
 /** What a restart does (restart.ts), as the other way out, and what to do with AI masks meanwhile. */
@@ -253,7 +258,7 @@ async function endFailed(ctx: SessionContext, s: Session, p: AiPending): Promise
     // the notice matters more than the log write
   }
   s.notices.push({ action: "ai_mask_failed", note, at });
-  s.idleNote = "Lightroom's AI mask did not finish, so it was left out. The edit goes on.";
+  s.idleNote = "Lightroom's AI mask did not finish; its empty mask stays in the list. The edit goes on.";
 }
 
 /**

@@ -26,7 +26,8 @@ const abortClick = (m: SessionManager): string =>
 /**
  * A session whose AI mask got no result in time (LIGHTROOM_STUCK). By default Lightroom's update still runs and holds the gate (a
  * session that is frozen until it ends, issue #181); `late`: its record says done and the entry has no digest (then the next call
- * frees the session as a failed mask: tests\session-ai-unfreeze.test.ts).
+ * frees the session as a failed mask: tests\session-ai-unfreeze.test.ts). On main this "late" case kept the session pending
+ * (D16); that it no longer does is Jim's to confirm (docs\reports\phase9\issue181.md "Decisions for Jim" 1).
  */
 async function stuckSession(timings: Record<string, number> = {}, late = false) {
   clean();

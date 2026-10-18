@@ -23,7 +23,7 @@ const stuckSession = { id: "441ee225", snapshot: { name: SNAPSHOT }, aiPending: 
 const job = { kind: "landscape_water" } as AiJob;
 
 /** The clauses every text for the stuck case carries. */
-const CLAUSES = [/still computing/, /unfreezes by itself/, /no restart/i, /press Abort in the Deck/, /prefer linear or radial masks to AI masks/];
+const CLAUSES = [/still computing/, /unfreezes by itself/, /no restart/i, /press Abort in the Deck/, /prefer linear or radial masks to AI masks/, /does not notify/, /not the same AI mask again/];
 
 describe("the errors while an AI mask has no result", () => {
   it("LIGHTROOM_STUCK says Lightroom is still computing, that the session frees itself, what Abort does, the snapshot, and the restart as the other way", () => {
@@ -52,10 +52,11 @@ describe("the errors while an AI mask has no result", () => {
 });
 
 describe("the HUD's notes", () => {
-  it("say the AI mask is still computing, the edit resumes, and what Abort does, within 120 bytes and without engine words", () => {
+  it("say the AI mask is still computing, that the user asks the AI to go on (nothing polls), and the other ways out, within 120 bytes and without engine words", () => {
     expect(STUCK_NOTE).toMatch(/^Lightroom's AI mask is still computing\./);
-    expect(STUCK_NOTE).toMatch(/resumes when it is done/);
-    expect(STUCK_NOTE).toMatch(/Abort puts the photo back, or leaves it as is/);
+    expect(STUCK_NOTE).toMatch(/When it is done, ask the AI to go on/);
+    expect(STUCK_NOTE).toMatch(/Abort or a restart also ends the wait/);
+    expect(STUCK_NOTE).not.toMatch(/resumes/);
     for (const note of [STUCK_NOTE, ABORT_WAITS]) {
       expect(Buffer.byteLength(note)).toBeLessThanOrEqual(120);
       expect(hudWordProblems(note)).toEqual([]);
@@ -88,6 +89,7 @@ describe("the tool descriptions and lr_help", () => {
     expect(HELP_TEXT).toContain("9. An AI mask Lightroom has not finished (LIGHTROOM_STUCK, AI_UPDATE_PENDING)");
     for (const clause of CLAUSES) expect(HELP_TEXT).toMatch(clause);
     expect(HELP_TEXT).toContain("the HUD shows the time waited (m:ss)");
+    expect(HELP_TEXT).toContain("These errors say recoverable false, but they end when Lightroom finishes");
     expect(HELP_TEXT).toContain("says the photo was NOT put back and names the snapshot that puts it back");
     expect(HELP_TEXT).toContain("A Lightroom restart also works");
     expect(HELP_TEXT).toContain("the user saves their work and restarts Lightroom");

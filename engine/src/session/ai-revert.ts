@@ -16,8 +16,12 @@ import { saveLog } from "./io.js";
 import type { Session, SessionContext } from "./types.js";
 
 const RESTARTED = "Lightroom restarted";
-/** The HUD's note after LIGHTROOM_STUCK (issue #181): no restart needed; Abort puts the photo back, or leaves it as it is (abandon.ts). */
-export const STUCK_NOTE = "Lightroom's AI mask is still computing. The edit resumes when it is done. Abort puts the photo back, or leaves it as is.";
+/**
+ * The HUD's note after LIGHTROOM_STUCK (issue #181). Nothing polls once the wait is over: settlePending runs only on Claude's
+ * next write, render or revert (io.ts, end.ts), and Claude's turn has ended [inference], so the user has to prompt the AI. Abort (abandon.ts)
+ * or a Lightroom restart (restart.ts) also end it. At most 120 bytes (bridge\hud-protocol.ts).
+ */
+export const STUCK_NOTE = "Lightroom's AI mask is still computing. When it is done, ask the AI to go on. Abort or a restart also ends the wait.";
 /** The HUD's last note when the engine ended the session; the HUD then closes itself (manager.ts, D15). */
 export function engineEndedNote(reason: string): string {
   return reason.startsWith(RESTARTED)

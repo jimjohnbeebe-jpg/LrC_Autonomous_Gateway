@@ -1,7 +1,7 @@
 // `npm run masks:crop` (GitHub issue #179): the steps on one photo (the CLI, mask-crop-probe-cli.ts, holds the
-// snapshot and puts the photo back). Case A: the photo as it is, its own crop. Case B: the same crop with
-// CropAngle ANGLE_B, written through apply_settings; the case reads the crop back from Lightroom and maps with
-// what it read. In each case: a render without new masks; for each point, the photo's masks plus one radial
+// snapshot and puts the photo back). Case A: the photo as it is, its own crop. Case B: the same crop turned to
+// CropAngle ANGLE_B and shrunk to stay on the photo (turnCrop), written through apply_settings; the case reads
+// the crop back from Lightroom and maps with what it read. In each case: a render without new masks; for each point, the photo's masks plus one radial
 // placed by the engine's own path (session\crop.ts frameFor, params applyOp: what lr_create_mask writes), read
 // back as lr_list_masks shows it (summarize), rendered and the blob located; then the issue's foreground
 // gradient, its frame delta luma. Each write replaces the whole table, so each radial is alone on the photo.
@@ -67,5 +67,24 @@ export async function oneCase(run: Run, which: "A" | "B", sdk: SdkSettings): Pro
   return out;
 }
 
-/** Case B's settings: the photo's crop turned by ANGLE_B, as Lightroom read it back. */
-export const turnCrop = (run: Run): Promise<SdkSettings> => write(run, { [CROP.angle]: ANGLE_B }, `B crop angle ${ANGLE_B}`);
+/**
+ * Case B's settings, as Lightroom read them back: the photo's crop (`sdk`) turned to ANGLE_B about its centre and
+ * shrunk until the turned rectangle lies inside the photo, its corners written as crop-frame.ts reads them. The
+ * angle alone would leave the turned corners past the photo, and whether Lightroom then fits the crop again is
+ * [unverified].
+ */
+export async function turnCrop(run: Run, sdk: SdkSettings): Promise<SdkSettings> {
+  const f = await frameFor({ ...sdk, [CROP.angle]: ANGLE_B }, () => run.client.request("get_context", { target_uuid: run.uuid }));
+  const k = f.aspect; // the stored photo's width / height
+  const turn = (deg: number): [number, number] => [Math.cos((deg * Math.PI) / 180), Math.sin((deg * Math.PI) / 180)];
+  const [c0, s0] = turn(Number(sdk[CROP.angle] ?? 0));
+  const [dx, dy] = [(f.right - f.left) * k, f.bottom - f.top];
+  const [ws, hs] = [dx * c0 + dy * s0, -dx * s0 + dy * c0]; // the crop's sides, as crop-frame.ts basis
+  const [c, s] = turn(ANGLE_B);
+  const [cx, cy] = [((f.left + f.right) / 2) * k, (f.top + f.bottom) / 2];
+  const [ex, ey] = [(Math.abs(ws) * c + Math.abs(hs) * s) / 2, (Math.abs(ws) * s + Math.abs(hs) * c) / 2];
+  const fit = 0.98 * Math.min(1, cx / ex, (k - cx) / ex, cy / ey, (1 - cy) / ey); // 2 % for Lightroom's rounding [inference]
+  const [ox, oy] = [((ws * c - hs * s) / 2) * fit, ((ws * s + hs * c) / 2) * fit];
+  const crop = { [CROP.left]: (cx - ox) / k, [CROP.top]: cy - oy, [CROP.right]: (cx + ox) / k, [CROP.bottom]: cy + oy, [CROP.angle]: ANGLE_B };
+  return write(run, crop, `B crop angle ${ANGLE_B}`);
+}

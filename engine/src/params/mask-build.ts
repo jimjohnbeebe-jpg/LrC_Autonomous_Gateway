@@ -61,15 +61,19 @@ export function geometryFields(kind: string, g: Geometry, old: Component | null,
   }
   if (kind === "radial") {
     const sides = ["left", "top", "right", "bottom"] as const;
-    if (!old && !sides.every(has)) refuse("A radial gradient needs geometry.left, top, right and bottom (0-1).");
-    const was = old && !sides.every(has) ? radialToBox(frame, ellipseOf(old)) : null;
+    const given = sides.filter(has).length;
+    if (!old && given < 4) refuse("A radial gradient needs geometry.left, top, right and bottom (0-1).");
+    const out: Record<string, unknown> = has("feather") ? { [RADIAL.feather]: feather(g.feather) } : {};
+    if (given === 0) return out; // feather only: the ellipse stays as it is, its Angle included
+    // A box of the preview holds an ellipse square to it: one side of a radial turned otherwise cannot move alone.
+    const turned = old && given < 4 && !frame.refused ? ellipseOf(old).angle - frame.angle : 0;
+    if (Math.abs(turned) > 1e-6) refuse(`This radial is turned ${Math.round(turned * 100) / 100} degrees to the preview, so one side cannot move alone: give left, top, right and bottom (it is then written square to the preview), or only feather.`);
+    const was = old && given < 4 ? radialToBox(frame, ellipseOf(old)) : null;
     const v = (k: (typeof sides)[number]): number => (g[k] !== undefined ? unit(g[k], k) : (was?.[k] as number));
     const box = { left: v("left"), top: v("top"), right: v("right"), bottom: v("bottom") };
     if (!(box.left < box.right && box.top < box.bottom)) refuse("A radial gradient needs left < right and top < bottom.");
     const e = boxToRadial(frame, box);
-    const out: Record<string, unknown> = { [RADIAL.left]: e.left, [RADIAL.top]: e.top, [RADIAL.right]: e.right, [RADIAL.bottom]: e.bottom, [RADIAL.angle]: e.angle };
-    if (has("feather")) out[RADIAL.feather] = feather(g.feather);
-    return out;
+    return { [RADIAL.left]: e.left, [RADIAL.top]: e.top, [RADIAL.right]: e.right, [RADIAL.bottom]: e.bottom, [RADIAL.angle]: e.angle, ...out };
   }
   if (kind === "luminance") {
     const r = g.lum_range;

@@ -3,7 +3,8 @@
 // photos selected in the Filmstrip (one cropped landscape, one portrait photo), the LrC-AVG plugin loaded, and
 // Claude Desktop quit (this takes the engine's instance lock). It asks nothing: the renders are measured with
 // sharp. For each photo: snapshot "AVG masks:crop before", case A, put back from the snapshot, case B (its crop
-// at CropAngle 10), put back again. A run that stopped before the put-back is put back first on the next start.
+// turned to CropAngle 10, shrunk to stay on the photo), put back again; a photo not put back ends the run. A
+// run that stopped before the put-back is put back first on the next start.
 // Under %TEMP%\LrC-AVG\masks-crop\ (Claude Code collects them):
 //   state.json                        the snapshot to put back, until it is put back
 //   mask_crop_<time>.json             the results: each photo, each case, each point
@@ -15,7 +16,7 @@ import path from "node:path";
 import { BridgeClient } from "../bridge/index.js";
 import { acquireInstanceLock, BridgeGate, devOverrides, ENGINE_VERSION } from "../mcp/index.js";
 import { putBack, readPending, type Pending } from "./mask-carry-probe.js";
-import { SNAPSHOT, verdict, type PhotoResult } from "./mask-crop-probe.js";
+import { SNAPSHOT, eachPhoto, verdict, type PhotoResult } from "./mask-crop-probe.js";
 import { oneCase, runFor, turnCrop } from "./mask-crop-run.js";
 import { describeError } from "./phase1-check.js";
 import { redactHome } from "./phase2-check.js";
@@ -74,7 +75,7 @@ async function onePhoto(client: BridgeClient, uuid: string, filename: string, sa
   if (!out.put_back.ok) return out;
   setPending(p);
   try {
-    out.cases.push(await oneCase(run, "B", await turnCrop(run)));
+    out.cases.push(await oneCase(run, "B", await turnCrop(run, before_sdk)));
   } catch (err) {
     out.cases.push({ case: "B", ok: false, error: describeError(err) });
   }
@@ -88,7 +89,7 @@ async function run(client: BridgeClient, say: (line: string) => void, r: Results
   if (sel.count < 1 || sel.count > 2 || photos.length !== sel.count) throw new Error(`select two photos in Lightroom's Develop Filmstrip, one cropped landscape and one portrait (${sel.count} selected), then run this again. Nothing was written.`);
   const results: PhotoResult[] = [];
   r["photos"] = results;
-  for (const x of photos) results.push(await onePhoto(client, x.uuid, x.filename ?? x.uuid, say));
+  await eachPhoto(photos, (x) => onePhoto(client, x.uuid, x.filename ?? x.uuid, say), results);
   await client.request("select_photo", { uuid: (photos[0] as { uuid: string }).uuid }).catch(() => undefined);
   const v = verdict(results);
   r["lines"] = v.lines;
@@ -126,10 +127,11 @@ async function main(say: (line: string) => void): Promise<number> {
 
 function finish(say: (line: string) => void, r: Results, worked: boolean, why: string): number {
   const left = pending(); // a snapshot still to apply: written and not put back (back() clears it only on success)
+  const notBack = ((r["photos"] as PhotoResult[] | undefined) ?? []).some((p) => p.put_back?.ok === false);
   r["headline"] = worked ? "WORKED" : "FAILED";
   say("");
   say(`Mask crop probe: ${worked ? "WORKED" : `FAILED (${why})`}`);
-  say(`put back: ${left || damaged ? "NO" : "YES"}`);
+  say(`put back: ${left || damaged || notBack ? "NO" : "YES"}`);
   if (left) say(`  To put it back by hand: Lightroom Develop, select ${left.filename}, Snapshots panel (left), click "${SNAPSHOT}". Or run npm run masks:crop again.`);
   if (damaged) {
     r["state_damaged"] = redact(damaged);

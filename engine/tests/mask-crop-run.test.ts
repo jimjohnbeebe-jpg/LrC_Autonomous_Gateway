@@ -10,7 +10,7 @@ import { BridgeClient } from "../src/bridge/index.js";
 import { ANGLE_B, POINTS } from "../src/devtools/mask-crop-probe.js";
 import { oneCase, runFor, turnCrop } from "../src/devtools/mask-crop-run.js";
 import { BridgeGate } from "../src/mcp/index.js";
-import { MASK_TABLE_KEY } from "../src/params/index.js";
+import { MASK_TABLE_KEY, toPhoto } from "../src/params/index.js";
 import { FakePlugin } from "./helpers/fake-plugin.js";
 import { LightroomSim } from "./helpers/lightroom-sim.js";
 
@@ -48,8 +48,12 @@ describe("masks:crop steps", () => {
     expect(a.linear).toMatchObject({ readback_ok: true, ok: false }); // the sim's noise only
     expect(Math.abs(a.linear?.delta_luma ?? 99)).toBeLessThan(0.5);
     expect(lr.settings[MASK_TABLE_KEY]).toHaveLength(1); // each write is the whole table: the last mask alone
-    const b = await oneCase(run, "B", await turnCrop(run));
+    const b = await oneCase(run, "B", await turnCrop(run, sdk));
     expect(b.frame.angle).toBe(ANGLE_B);
+    for (const p of [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 1, y: 1 }, { x: 0, y: 1 }]) {
+      const q = toPhoto(b.frame, p); // the turned crop's corners stay on the photo
+      for (const v of [q.x, q.y]) expect(v >= 0 && v <= 1).toBe(true);
+    }
     expect(b.error).toBeUndefined();
     expect(b.points.every((p) => p.readback_ok)).toBe(true);
     expect(lr.history.at(-1)).toBe("AVG masks:crop B foreground");

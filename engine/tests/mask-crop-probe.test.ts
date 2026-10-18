@@ -3,7 +3,7 @@
 
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
-import { blobOf, grey, linearVerdict, pointVerdict, radialOp, sameGeometry, verdict, type Grey, type PhotoResult } from "../src/devtools/mask-crop-probe.js";
+import { blobOf, eachPhoto, grey, linearVerdict, pointVerdict, radialOp, sameGeometry, verdict, type Grey, type PhotoResult } from "../src/devtools/mask-crop-probe.js";
 
 const W = 300;
 const H = 200;
@@ -79,5 +79,20 @@ describe("masks:crop verdicts", () => {
     expect(verdict([photo("land.NEF", "AB", crop)]).lines.at(-1)).toMatch(/portrait/);
     expect(verdict([photo("port.NEF", "DA", full)]).lines.at(-1)).toMatch(/cropped/);
     expect(verdict([{ ...photo("land.NEF", "AB", crop), put_back: { ok: false, why: "x" } }, photo("port.NEF", "BC", full)]).worked).toBe(false);
+  });
+
+  it("stops at the first photo not put back, so its put-back record is not overwritten by the next photo's", async () => {
+    const seen: string[] = [];
+    const one = async (name: string): Promise<PhotoResult> => {
+      seen.push(name);
+      return { filename: name, orientation: "AB", cases: [], put_back: { ok: name !== "land.NEF", why: "" } };
+    };
+    const results: PhotoResult[] = [];
+    await eachPhoto(["land.NEF", "port.NEF"], one, results);
+    expect(seen).toEqual(["land.NEF"]);
+    expect(verdict(results).lines[0]).toMatch(/put back: NO$/);
+    const all: PhotoResult[] = [];
+    await eachPhoto(["port.NEF", "port2.NEF"], one, all);
+    expect(all).toHaveLength(2);
   });
 });

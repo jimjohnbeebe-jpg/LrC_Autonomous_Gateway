@@ -33,7 +33,7 @@ export const CROP = { left: "CropLeft", top: "CropTop", right: "CropRight", bott
 
 const TURNS = ["AB", "BC", "CD", "DA"] as const;
 type Turn = (typeof TURNS)[number];
-/** The preview's (p, q) -> the crop's own axes (u, v), and back [community] [handle: the research, Q2 "Cropped output to uncropped frame"]. */
+/** The preview's (p, q) -> the crop's own axes (u, v), and back [community] [handle: the first URL above; https://github.com/storytold/lightcraft/issues/483]; CD is [inference]. */
 const UNTURN: Record<Turn, (p: number, q: number) => [number, number]> = { AB: (p, q) => [p, q], BC: (p, q) => [q, 1 - p], CD: (p, q) => [1 - p, 1 - q], DA: (p, q) => [1 - q, p] };
 const TURN: Record<Turn, (u: number, v: number) => [number, number]> = { AB: (u, v) => [u, v], BC: (u, v) => [1 - v, u], CD: (u, v) => [1 - u, 1 - v], DA: (u, v) => [v, 1 - u] };
 
@@ -147,9 +147,13 @@ export function boxToRadial(f: CropFrame, box: Box): Ellipse {
   return { left: p0.x, top: p0.y, right: p1.x, bottom: p1.y, angle: f.angle };
 }
 
-/** A radial's fields in the photo -> the box of the preview that holds its ellipse (exact for one boxToRadial wrote). */
+/**
+ * A radial's fields in the photo -> the box of the preview that holds its ellipse (exact for one boxToRadial
+ * wrote). A radial turned other than the crop is boxed with the frame's aspect, 1 on a crop without an angle:
+ * whether Lightroom turns it in pixels or in 0-1 is [unverified].
+ */
 export function radialToBox(f: CropFrame, e: Ellipse): Box {
-  if (isIdentity(f)) return { left: e.left, top: e.top, right: e.right, bottom: e.bottom };
+  if (isIdentity(f) && e.angle === 0) return { left: e.left, top: e.top, right: e.right, bottom: e.bottom };
   const k = f.aspect;
   const th = (e.angle * Math.PI) / 180;
   const [c, s] = [Math.cos(th), Math.sin(th)];

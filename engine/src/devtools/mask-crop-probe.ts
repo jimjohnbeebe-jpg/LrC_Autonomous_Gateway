@@ -123,3 +123,12 @@ export function verdict(photos: readonly PhotoResult[]): { worked: boolean; line
   const worked = photos.length > 0 && missing.length === 0 && photos.every((p) => p.cases.length === 2 && p.cases.every((c) => c.ok) && p.put_back?.ok === true);
   return { worked, lines: [...lines, ...missing] };
 }
+
+/** Each photo in turn into `results`, stopping at the first one not put back: the CLI's state.json then keeps that photo's record, for its line and the next run's put-back. */
+export async function eachPhoto<T>(photos: readonly T[], one: (x: T) => Promise<PhotoResult>, results: PhotoResult[]): Promise<void> {
+  for (const x of photos) {
+    const r = await one(x);
+    results.push(r);
+    if (r.put_back?.ok !== true) return;
+  }
+}

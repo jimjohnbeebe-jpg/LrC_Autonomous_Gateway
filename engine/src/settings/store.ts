@@ -11,9 +11,10 @@ export class PageSettings {
   private readonly client: BridgeClient;
   private lastRead: PageRead | null = null;
 
-  constructor(client: BridgeClient, env: NodeJS.ProcessEnv = process.env) {
+  /** `documents`: Windows' Documents folder, for the tests (folders.ts). */
+  constructor(client: BridgeClient, env: NodeJS.ProcessEnv = process.env, documents?: () => string) {
     this.client = client;
-    this.folders = new EngineFolders(env);
+    this.folders = new EngineFolders(env, documents);
   }
 
   /**

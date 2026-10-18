@@ -1,6 +1,6 @@
 // The intents and log folders (PRD section 6.2; PHASE5_PLAN decision 2d): the environment variable
 // when it is set, else the settings page's folder when it holds a full path, else the default
-// (%LOCALAPPDATA%\LrC-AVG\intents, ...\logs). The dev Claude Desktop entry sets LRC_AVG_LOG_DIR
+// (<Documents>\LrC-AVG\intents since issue #180, intents\folder.ts; %LOCALAPPDATA%\LrC-AVG\logs). The dev Claude Desktop entry sets LRC_AVG_LOG_DIR
 // to the repo's logs\ folder [handle: engine\src\devtools\install-desktop-config-cli.ts, the
 // engineEntry call], so there the variable wins, as decided; the user entry written by
 // `lrc-avg-setup` sets no variable (setup\setup-cli.ts). A page folder applies from the next read
@@ -9,7 +9,7 @@
 // own tool log stays where it opened at start (mcp\main.ts).
 
 import { defaultLogDir } from "../log/index.js";
-import { defaultUserIntentsDir } from "../intents/index.js";
+import { defaultUserIntentsDir, documentsFolder, locateFolder, type FolderLocation } from "../intents/index.js";
 import type { PageValues } from "./page.js";
 
 export type FolderFrom = "environment" | "page" | "default";
@@ -30,10 +30,13 @@ function choose(envValue: string | undefined, pageValue: string | undefined, fal
 
 export class EngineFolders {
   private readonly env: NodeJS.ProcessEnv;
+  private readonly documents: () => string;
   private page: { intents: string | undefined; log: string | undefined } = { intents: undefined, log: undefined };
 
-  constructor(env: NodeJS.ProcessEnv = process.env) {
+  /** `documents`: Windows' Documents folder, for the tests. */
+  constructor(env: NodeJS.ProcessEnv = process.env, documents: () => string = documentsFolder) {
     this.env = env;
+    this.documents = documents;
   }
 
   /** Take the folders of a page read; a failed read keeps the ones read before. */
@@ -42,8 +45,13 @@ export class EngineFolders {
   }
 
   intents(): FolderChoice {
-    const fallback = defaultUserIntentsDir({ ...this.env, LRC_AVG_INTENTS_DIR: undefined });
+    const fallback = defaultUserIntentsDir({ ...this.env, LRC_AVG_INTENTS_DIR: undefined }, this.documents);
     return choose(this.env["LRC_AVG_INTENTS_DIR"], this.page.intents, fallback);
+  }
+
+  /** Where `dir` really is on disk for this engine, and whether Windows redirects it (intents\folder.ts locateFolder). */
+  locate(dir: string): FolderLocation {
+    return locateFolder(dir, this.env);
   }
 
   log(): FolderChoice {

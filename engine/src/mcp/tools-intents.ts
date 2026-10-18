@@ -2,9 +2,13 @@
 // lr_save_intent, lr_delete_intent (issue #108). They read and write intent files. With the settings page (PHASE5_PLAN row 3) they
 // first ask Lightroom for the page's intents folder (tools-shared.ts readPageFolders, at most
 // PAGE_WAIT_MS); without an answer they use the folder read before, else the variable's or the
-// default, and the result names the folder and why. An engine without the page (the checks, the
-// tests) never needs Lightroom here.
+// default, and the result names the folder and why, where it really is on disk (`real_path`), whether
+// Windows redirects this engine's AppData files (`virtualized`, `package`, and a `warning` when the
+// folder is under AppData; issue #180) and, once, what moved into the default folder from the older
+// ones (`notes`; intents\migrate.ts). An engine without the page (the checks, the tests) never needs
+// Lightroom here.
 
+import { takeMigrationNotes } from "../intents/index.js";
 import { ToolError } from "./errors.js";
 import { library, pageBridgeUse, readPageFolders, run, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
@@ -17,7 +21,15 @@ const notConfirmed = (what: string) => new ToolError("NOT_CONFIRMED", `Ask the u
 async function intentsFolder(ctx: ToolContext): Promise<Record<string, unknown>> {
   const page = await readPageFolders(ctx);
   const settings = ctx.deps.settings;
-  return page === null || !settings ? {} : { intents_folder: { ...settings.folders.intents(), page } };
+  if (page === null || !settings) return {};
+  const choice = settings.folders.intents();
+  return { intents_folder: { ...choice, ...settings.folders.locate(choice.path), page } };
+}
+
+/** What moved into the default folder since the last call, as the field the result adds (empty when nothing did). */
+function migrationNotes(): Record<string, unknown> {
+  const notes = takeMigrationNotes();
+  return notes.length ? { notes } : {};
 }
 
 export async function listIntents(ctx: ToolContext): Promise<ToolOutput> {
@@ -25,8 +37,9 @@ export async function listIntents(ctx: ToolContext): Promise<ToolOutput> {
     const folder = await intentsFolder(ctx);
     const lib = library(ctx);
     const { intents, warnings } = lib.list();
-    const json: Record<string, unknown> = { ok: true, intents, folders: lib.directories(), ...folder, ...(warnings.length ? { warnings } : {}) };
-    return { json, log: { count: intents.length, warnings, ...folder } };
+    const notes = migrationNotes();
+    const json: Record<string, unknown> = { ok: true, intents, folders: lib.directories(), ...folder, ...(warnings.length ? { warnings } : {}), ...notes };
+    return { json, log: { count: intents.length, warnings, ...folder, ...notes } };
   });
 }
 
@@ -48,7 +61,8 @@ export async function saveIntent(ctx: ToolContext, args: SaveIntentArgs): Promis
     const folder = await intentsFolder(ctx);
     const saved = library(ctx).save(args.intent, { replace: args.replace === true });
     const id = (args.intent as { id?: unknown }).id;
-    return { json: { ok: true, id, ...saved, ...folder }, log: { id, ...saved, ...folder } };
+    const notes = migrationNotes();
+    return { json: { ok: true, id, ...saved, ...folder, ...notes }, log: { id, ...saved, ...folder, ...notes } };
   });
 }
 

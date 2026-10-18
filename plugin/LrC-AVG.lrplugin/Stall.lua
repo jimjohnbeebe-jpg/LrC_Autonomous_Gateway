@@ -6,12 +6,9 @@
 --          ran for that long [inference: plugin tasks run on Lightroom's main thread], logged with what the
 --          previous tick did ("tend" when it bound or re-armed a socket, "idle" otherwise)
 --   tend   a tick whose socket work took over TEND_LOG_SECONDS (the two rebinds sleep 0.1 s each)
---   idle rebind  each idle rebind, so the check can count them
--- The file <temp>\LrC-AVG\no-idle-rebind turns the idle rebind off; it is looked for every FLAG_EVERY_SECONDS.
+--   startup rebind  the one rebind after start (Bridge.lua STARTUP_REBIND_SECONDS)
 
 local LrDate = import 'LrDate'
-local LrFileUtils = import 'LrFileUtils'
-local LrPathUtils = import 'LrPathUtils'
 
 local Log = require 'Log'
 
@@ -19,19 +16,12 @@ local Stall = {}
 
 local STALL_SECONDS = 1
 local TEND_LOG_SECONDS = 0.3
-local FLAG_EVERY_SECONDS = 2
-Stall.FLAG_FILE = "no-idle-rebind"
 
 local function ms(seconds) return math.floor(seconds * 1000 + 0.5) end
 
-local function flagOn()
-    return LrFileUtils.exists(LrPathUtils.child(Log.outDir(), Stall.FLAG_FILE)) == "file"
-end
-
 function Stall.new(loopSeconds)
-    local D = { loop = loopSeconds, lastTick = nil, lastWhat = "start", flagAt = LrDate.currentTime(), off = flagOn() }
-    Log.info("stall-diag: on (idle rebind " .. (D.off and "off" or "on") .. ")")
-    return D
+    Log.info("stall-diag: on")
+    return { loop = loopSeconds, lastTick = nil, lastWhat = "start" }
 end
 
 -- At the top of every monitor tick.
@@ -42,12 +32,6 @@ function Stall.tick(D)
         if late > STALL_SECONDS then Log.warn(string.format("stall-diag: stall %d ms after %s", ms(late), D.lastWhat)) end
     end
     D.lastTick, D.lastWhat = now, "idle"
-    if now - D.flagAt >= FLAG_EVERY_SECONDS then
-        D.flagAt = now
-        local off = flagOn()
-        if off ~= D.off then Log.info("stall-diag: idle rebind " .. (off and "off" or "on") .. " (flag file)") end
-        D.off = off
-    end
 end
 
 -- Runs fn (the monitor's socket work), logs it when slow, and marks the tick as "tend" when it did any work.
@@ -61,8 +45,6 @@ function Stall.timed(D, fn)
     D.lastTick = LrDate.currentTime()
 end
 
-function Stall.idleRebindOff(D) return D.off end
-
-function Stall.idleRebind() Log.info("stall-diag: idle rebind") end
+function Stall.rebind() Log.info("stall-diag: startup rebind") end
 
 return Stall

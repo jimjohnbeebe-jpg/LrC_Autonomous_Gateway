@@ -27,21 +27,26 @@ date: 2026-10-17
 What the plugin logs to `%TEMP%\LrC-AVG\bridge.log`:
 - `stall-diag: stall <ms> after <tend|idle>`: the monitor loop woke more than 1 s late, so no plugin task ran for that long. That this also means Lightroom's window froze is [inference]: plugin tasks run on Lightroom's main thread.
 - `stall-diag: tend <ms>`: a tick whose socket work took over 0.3 s. Its two rebinds sleep 0.1 s each.
-- `stall-diag: idle rebind`: one idle rebind.
-- The file `%TEMP%\LrC-AVG\no-idle-rebind` turns the idle rebind off. The plugin looks for it every 2 s.
+- `stall-diag: idle rebind` (runs 1-2) or `stall-diag: startup rebind` (run 3): one rebind.
+- Runs 1-2 only: the file `%TEMP%\LrC-AVG\no-idle-rebind` turned the idle rebind off. The plugin looked for it every 2 s. Removed for run 3.
+- Run 3: `bridge: stopped (plugin disabled)` when the monitor loop sees Disable.
 
-**Steps for Jim.** Lightroom open, the LrC-AVG (dev) plugin disabled, Claude Desktop quit.
+**Steps for Jim, runs 1-2.** Lightroom open, the plugin disabled, Claude Desktop quit. `npm run stall:check`; Enable when asked; 2 min, y/n; the window turns the idle rebind off; 2 min, y/n; Disable when asked, Enter.
+
+**Steps for Jim, run 3** (plugin with the Disable stop). Claude Desktop quit, the LrC-AVG (dev) plugin disabled.
 
 1. In PowerShell, in `D:\Developer\LrC_Autonomous_Gateway`, run `npm run stall:check`.
-2. When it asks, in Lightroom: File > Plug-in Manager, select LrC-AVG (dev), click Enable, then Done.
-3. Use Lightroom normally for 2 minutes (the window counts down), then answer y/n.
-4. The window turns the idle rebind off. Use Lightroom normally for 2 more minutes, then answer y/n.
-5. When it asks, in Lightroom: File > Plug-in Manager, select LrC-AVG (dev), click Disable, then Done. Press Enter.
-6. Tell Claude Code "done".
+2. When it asks: quit Lightroom with File > Exit. The window waits until Lightroom has fully closed.
+3. Start Lightroom. Leave LrC-AVG (dev) disabled. Press Enter when Lightroom shows your photos.
+4. Use Lightroom normally for 2 minutes (the window counts down), then answer y/n.
+5. When it asks: File > Plug-in Manager, select LrC-AVG (dev), click Enable, then Done. Use Lightroom normally for 2 minutes, then answer y/n.
+6. When it asks: File > Plug-in Manager, select LrC-AVG (dev), click Disable, then Done. The window checks that the bridge stops and stays quiet (about 45 s).
+7. Tell Claude Code "done".
 
 ### If something goes wrong
 
 - If the window says "FAILED: the plugin did not start", check that Plug-in Manager shows LrC-AVG (dev) with the path `D:\Developer\LrC_Autonomous_Gateway\plugin\LrC-AVG.lrplugin`. Then run step 1 again.
+- If the window says "Disable stopped the bridge: NO", quit Lightroom and start it again before using it.
 
 ## Pre-run findings (Claude Code)
 
@@ -79,7 +84,16 @@ Run of 2026-10-17 18:46-18:52 local time, Claude Desktop quit (`engine_connected
 
 **Verification:** the same `npm run stall:check`, same steps. Pass: no stutter in either phase, and at most one `idle rebind` (about 20 s after the plugin starts) with at most one slow socket tick.
 
-Observed (Jim): (blank)
+Observed, run 2 (2026-10-17 19:01-19:07, plugin at `89c6ccd`; answers and lines collected by Claude Code [handle: `%TEMP%\LrC-AVG\stall\stall_check_2026-10-18T02-01-37-429Z.json`, `%TEMP%\LrC-AVG\bridge.log`]):
+
+- **Stutter: phase 1 YES, phase 2 NO.** Lightroom was already stuttering **with the plugin disabled, before the run started**, and it stopped only at step 3 [stated: Jim, 2026-10-17, "Lightroom was displaying the stuttering with the plugin-disabled before the test started, as well as the first part of the test, it only stopped with step 3"].
+- **The fix restarted once.** The new bridge logged one `idle rebind` (19:02:51, 20 s after its bind) and no slow socket tick. But phase 1 still logged 13 late wake-ups, among them **`stall 31358 ms`** (19:03:37), 48 s in all. Phase 2 logged 3, at most 1309 ms.
+- **Disable did not stop the old bridge.** Run 1 ended with Jim's Disable by 18:52:02. Yet the run 1 bridge (plugin at `da9395e`, 10 s rebind) kept rebinding every 10 s until 18:58:21. Its stalls grew (`13616`, `9514`, `8655`, `26417 ms`), and it then logged nothing until the new start at 19:02:30 [handle: `bridge.log` 18:52:02-19:02:30]. So run 2's phase 1 ran beside a disabled-but-running old bridge. The monitor loop stops only on a newer generation or token (`Bridge.lua` `monitor`). Automaat says Lightroom cancels the function context on disable [upstream claim: `vendor\automaat\README.md:280`, macOS], but a cancelled context does not end a `while` loop that only sleeps [inference].
+- So run 2 does not tell whether the fixed bridge alone stutters.
+
+**Run 3** (decided by Jim 2026-10-17 [stated: "Go with 1 + 2"]): the monitor loop also stops when `_PLUGIN.enabled` is false, and returning ends the task, so the cleanup handler closes both sockets (`Bridge.lua` `monitor`). The check now starts from a restarted Lightroom: 2 min with the plugin disabled (does Lightroom stutter with no LrC-AVG at all?), 2 min enabled, then Disable. Pass: no stutter in either phase, at most one rebind, and `Disable stopped the bridge: YES`, quiet afterwards.
+
+Observed, run 3 (Jim): (blank)
 
 ## Verdict
 

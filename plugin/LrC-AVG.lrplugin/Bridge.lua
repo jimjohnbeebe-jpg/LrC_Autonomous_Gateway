@@ -236,7 +236,10 @@ end
 local function monitor(B)
     local S = B.S
     local D = Stall.new(LOOP_SECONDS) -- issue #174 diagnosis (Stall.lua)
-    while B.current() do
+    -- Disable in Plug-in Manager did not end this loop: a disabled bridge kept rebinding for 6 min
+    -- [handle: docs\reports\phase9\stall-174.md "Observed, run 2"]. That _PLUGIN.enabled turns false on
+    -- Disable is [unverified] until stall:check run 3; nil (no such field) keeps the bridge running.
+    while B.current() and _PLUGIN.enabled ~= false do
         Stall.tick(D)
         if LrDate.currentTime() - B.lastStatus >= STATUS_EVERY_SECONDS and replacedOnDisk(S) then
             Log.info("bridge: generation " .. B.generation .. " replaced by a newer start (token file)")
@@ -251,9 +254,8 @@ local function monitor(B)
             S.receiveNeedsRebind, S.sendNeedsRebind = true, true
         end
         if S.receiveConnected then S.startupRebindDone = true end
-        if not S.startupRebindDone and S.boundAt and (LrDate.currentTime() - S.boundAt) > STARTUP_REBIND_SECONDS
-            and not Stall.idleRebindOff(D) then
-            Stall.idleRebind()
+        if not S.startupRebindDone and S.boundAt and (LrDate.currentTime() - S.boundAt) > STARTUP_REBIND_SECONDS then
+            Stall.rebind()
             S.startupRebindDone = true
             S.receiveNeedsRebind, S.sendNeedsRebind = true, true
         end
@@ -327,7 +329,9 @@ function Bridge.start()
         if not okPorts then Log.error("bridge: ports file failed: " .. tostring(portsOrErr)) end
         Log.info("bridge: listening (generation " .. generation .. ")")
         monitor(B)
-        Log.info("bridge: generation " .. generation .. " replaced; loop exiting")
+        -- Returning ends the task, so the cleanup handler closes both sockets.
+        if _PLUGIN.enabled == false then Log.info("bridge: stopped (plugin disabled)")
+        else Log.info("bridge: generation " .. generation .. " replaced; loop exiting") end
     end)
 end
 

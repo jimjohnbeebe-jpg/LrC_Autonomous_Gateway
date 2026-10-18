@@ -215,9 +215,11 @@ describe("lua: LrC-AVG.lrplugin", () => {
     expect(read("Bridge.lua")).toMatch(/process_started_at = _G\.LrCAVG_ProcessStartedAt,/);
     // Phase 9 run 1b: a bridge left with no listener heals itself; it binds afresh while no engine is connected.
     // Issue #174: only once, since every rebind spent ~10 s in the socket work and Lightroom stuttered.
-    expect(read("Bridge.lua")).toMatch(/if S\.receiveConnected then S\.startupRebindDone = true end\s+if not S\.startupRebindDone and S\.boundAt and \(LrDate\.currentTime\(\) - S\.boundAt\) > STARTUP_REBIND_SECONDS\s+and not Stall\.idleRebindOff\(D\) then\s+Stall\.idleRebind\(\)\s+S\.startupRebindDone = true\s+S\.receiveNeedsRebind, S\.sendNeedsRebind = true, true/);
+    expect(read("Bridge.lua")).toMatch(/if S\.receiveConnected then S\.startupRebindDone = true end\s+if not S\.startupRebindDone and S\.boundAt and \(LrDate\.currentTime\(\) - S\.boundAt\) > STARTUP_REBIND_SECONDS then\s+Stall\.rebind\(\)\s+S\.startupRebindDone = true\s+S\.receiveNeedsRebind, S\.sendNeedsRebind = true, true/);
     // Issue #174 diagnosis: every monitor tick is timed, its socket work too (Stall.lua).
-    expect(read("Bridge.lua")).toMatch(/while B\.current\(\) do\s+Stall\.tick\(D\)[\s\S]*Stall\.timed\(D, function\(\) tendSockets\(B\) end\)/);
+    // Issue #174 run 2: Disable did not end the loop; it now stops when the plugin is disabled.
+    expect(read("Bridge.lua")).toMatch(/monitor\(B\)[\s\S]{0,120}if _PLUGIN\.enabled == false then Log\.info\(/);
+    expect(read("Bridge.lua")).toMatch(/while B\.current\(\) and _PLUGIN\.enabled ~= false do\s+Stall\.tick\(D\)[\s\S]*Stall\.timed\(D, function\(\) tendSockets\(B\) end\)/);
     expect(read("Sockets.lua")).toMatch(/S\.receiveSocket = bindReceive\(B, S\.receiveGen\)[\s\S]{0,120}S\.boundAt = LrDate\.currentTime\(\)/);
   });
 

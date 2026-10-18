@@ -88,6 +88,20 @@ describe("crop frame", () => {
     expect(code(() => photoPoint(past, { x: 0, y: 0.5 }, "zero"))).toBe("INVALID_ARGUMENTS");
   });
 
+  it("matches Lightroom on a photo turned BC at a 10-degree crop: the size's aspect, not swapped", () => {
+    // Jim's masks:crop run 2026-10-18T20-49-52Z, IMG_1595.JPG case B: where Lightroom drew the radials asked at these
+    // preview points, given the size get_context reported (width / height 4/3).
+    const f = cropFrame({ CropLeft: 0.196544, CropTop: 0.050806, CropRight: 0.803456, CropBottom: 0.949194, CropAngle: 10, orientation: "BC" }, { width: 4032, height: 3024 });
+    const seen = [[{ x: 0.3, y: 0.35 }, { x: 0.2611, y: 0.3102 }], [{ x: 0.65, y: 0.5 }, { x: 0.6667, y: 0.5164 }], [{ x: 0.45, y: 0.7 }, { x: 0.4655, y: 0.7167 }]] as const;
+    const swapped = { ...f, aspect: 3024 / 4032 };
+    for (const [asked, blob] of seen) {
+      const drawn = toView(f, toPhoto(swapped, asked));
+      expect(Math.abs(drawn.x - blob.x)).toBeLessThan(0.002);
+      expect(Math.abs(drawn.y - blob.y)).toBeLessThan(0.002);
+    }
+    expect(f.aspect).toBeCloseTo(4032 / 3024, 9);
+  });
+
   it("names crop keys that are pinned in both key files (rule 03)", () => {
     for (const file of ["sdk-keys.lrc15.json", "sdk-keys.lrc15.rendered.json"]) {
       const pinned = readFileSync(new URL(`../src/params/${file}`, import.meta.url), "utf8");

@@ -37,7 +37,7 @@ type Turn = (typeof TURNS)[number];
 const UNTURN: Record<Turn, (p: number, q: number) => [number, number]> = { AB: (p, q) => [p, q], BC: (p, q) => [q, 1 - p], CD: (p, q) => [1 - p, 1 - q], DA: (p, q) => [1 - q, p] };
 const TURN: Record<Turn, (u: number, v: number) => [number, number]> = { AB: (u, v) => [u, v], BC: (u, v) => [1 - v, u], CD: (u, v) => [1 - u, 1 - v], DA: (u, v) => [v, 1 - u] };
 
-/** `aspect`: the stored photo's width / height (only a crop angle needs it); `refused`: why no geometry can be mapped on this photo, else null. */
+/** `aspect`: getRawMetadata width / height (only a crop angle needs it); `refused`: why no geometry can be mapped on this photo, else null. */
 export type CropFrame = Box & { angle: number; turn: Turn; aspect: number; refused: string | null };
 
 export const IDENTITY: CropFrame = { left: 0, top: 0, right: 1, bottom: 1, angle: 0, turn: "AB", aspect: 1, refused: null };
@@ -53,8 +53,11 @@ const num = (sdk: SdkSettings, key: string, fallback: number): number => {
 export const needsSize = (sdk: SdkSettings): boolean => num(sdk, CROP.angle, 0) !== 0;
 
 /**
- * The crop frame of a photo from its develop settings; `size` (getRawMetadata width/height, of the photo
- * as shown [inference: the first URL above swaps them for a quarter turn]) when needsSize. A missing key
+ * The crop frame of a photo from its develop settings; `size` (getRawMetadata width/height) when needsSize.
+ * Its width / height is the aspect as it comes, not swapped for a quarter turn: on a photo turned BC with a
+ * 10-degree crop, the swapped aspect put radials off by up to 0.04 and the unswapped one predicts all three
+ * blobs within 0.001 [handle: Jim's masks:crop run %TEMP%\LrC-AVG\masks-crop\mask_crop_2026-10-18T20-49-52-931Z.json,
+ * IMG_1595.JPG case B]; DA is the same by symmetry [inference]. A missing key
  * reads as uncropped, and a missing orientation as "AB" [inference: every recorded dump carries it,
  * params\sdk-keys.lrc15.json `orientation`; the Lightroom simulator leaves it out].
  */
@@ -67,7 +70,7 @@ export function cropFrame(sdk: SdkSettings, size: { width: number; height: numbe
   let aspect = 1;
   if (base.angle !== 0) {
     if (!size || !(size.width > 0 && size.height > 0)) return refuse("the photo has a crop angle and its pixel size is not known");
-    aspect = turn === "BC" || turn === "DA" ? size.height / size.width : size.width / size.height;
+    aspect = size.width / size.height;
   }
   const f: CropFrame = { ...base, turn, aspect, refused: null };
   const b = basis(f);

@@ -166,7 +166,7 @@ Buttons:
 | **Pick A / B / C** | Variants mode, while a pick is awaited: continue on that copy. |
 | **Approve pass n** | Approve-each-pass mode, while pass n waits for you ([below](#approve-each-pass)). |
 | **Accept** | Ends the session and keeps the edit, once the running step has finished. |
-| **Abort** | Stops the running step before its next write, then puts the photo back to the **AVG pre-session …** snapshot. It is the last button. |
+| **Abort** | Stops the running step before its next write, then puts the photo back to the **AVG pre-session …** snapshot. It is the last button. While Lightroom computes an AI mask, Abort ends the wait within a few seconds; it puts the photo back only if the mask's result has shown, otherwise it leaves the photo as it is and names the snapshot: wait until the mask's shape shows in Lightroom before you click that snapshot. |
 
 The buttons are greyed out while the engine is not connected, and while the HUD checks an edit after a reconnect. After a click they all stay off until the engine answers that click, or for at most 10 s. When an edit ends, the HUD stays open and shows the outcome until you close it or the next edit starts.
 

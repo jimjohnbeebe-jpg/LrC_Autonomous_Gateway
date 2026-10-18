@@ -76,8 +76,8 @@ date: 2026-10-18
 ## Pre-run findings (Claude Code)
 
 1. **Node reads the Mark of the Web on this PC.** `zoneId()` read `ZoneId=3` back from a `Zone.Identifier` stream written to a file in `%TEMP%` [handle: `npx vitest run --root engine tests/phase9-local.test.ts`, 2026-10-18: 21 passed, including "zoneId reads the Mark of the Web from the Zone.Identifier stream"]. That a browser download writes `ZoneId=3` is [unverified] until step 1.
-2. **The release workflow's draft** (assets, pre-release flag): *(filled after the tag)*.
-3. **Sandbox run on the downloaded setup:** *(filled after the tag)*.
+2. **The release workflow built the draft pre-release.** Jim pushed the tag `v1.0.0-rc.1` on `5070467` [stated: Jim, 2026-10-18, "Tagged"]. Workflow run 39130650276 ended `completed success` [handle: `gh run view 39130650276 --json status,conclusion`]. `gh release view v1.0.0-rc.1` printed: draft true, pre-release true, name "LrC-AVG v1.0.0-rc.1", assets `LrC-AVG-Setup-1.0.0.exe` (32,819,775 bytes, sha256 `2585d222b1cf6a319f4f0a2c17cc996898a760cbab9e591f63915910cd609705`) and `SHA256SUMS.txt` (90 bytes) [handle: run 2026-10-18]. `gh release download v1.0.0-rc.1 -D release`, then `sha256sum release/LrC-AVG-Setup-1.0.0.exe`, printed the same hash that `SHA256SUMS.txt` lists.
+3. **SANDBOX: PASS on the CI-built setup.** `npm run sandbox:check` ran the downloaded `release\LrC-AVG-Setup-1.0.0.exe` in Windows Sandbox: 19 of 19 checks ok. Among them: no Node on PATH; `/S` exit 0; Deck ProductVersion "1.0.0"; the plugin in Modules; bundled `node --version` v24.11.1; the bundled engine answered `initialize` and `tools/list` with 36 tools; the uninstall removed the plugin, the uninstall key, the shortcut and the Claude Desktop entry, and kept only the documented data [handle: `%TEMP%\LrC-AVG-phase9\sandbox_2026-10-18T13-20-45-966Z.json`, console output 2026-10-18]. A file fetched by `gh` carries no Mark of the Web [inference], so this run does not test SmartScreen; Jim's run 2 does.
 
 ## Observed (Jim)
 

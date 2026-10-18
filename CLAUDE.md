@@ -25,24 +25,11 @@ Repo-side records: `docs\PHASE0_HANDOVER.md` (start here in a fresh session), `d
 - **Stack rule.** Lua for the plugin, Node ≥ 22 / TypeScript for the engine, Rust for the HUD shell only (Phase 7, Tauri). **No Python anywhere, including tooling scripts.** `sharp` does all image work. → `.claude\rules\01-stack.md`
 - **Sourcing rule.** Every claim about SDK or runtime behaviour, in reports and in commit messages, carries a handle (script path + observed output, screenshot path, or URL) or is tagged `[unverified]`. Do not write results you did not observe. → `.claude\rules\02-sourcing.md`
 - **Interaction rule.** Jim sets direction. When a decision is needed, present the options with a recommendation and stop. Never proceed past a STOP marker. → `.claude\rules\04-workflow.md`
-- **Every change reaches `main` through a reviewer-triaged pull request** (reviewer: Greptile; CodeRabbit 2026-10-03 to 2026-10-04). See the "Pull request + review workflow" section below.
+- **Every change reaches `main` through a reviewer-triaged pull request** (reviewer: Greptile, `greptile.json`). Branch `phase-<n>/<topic>` or `fix/<topic>`, never commit to `main`, triage every finding in a PR-comment table, merge only with `arch-check` green. → `.claude\rules\04-workflow.md`
 - **Read `LR_SDK_NOTES.md` before touching Lua.** → `.claude\rules\03-lightroom.md`
 - **Query Graphify before grepping for structural questions.** The per-repo graph exists: run `graphify query "<question>"` (or `graphify path "A" "B"`, `graphify explain "X"`) from the repo root. After code changes, refresh it with `graphify update .`. Graph answers point you at code; they are not sourced facts. See `docs\MCP_AVAILABILITY.md`.
 - **Lightroom-side results are Jim's observations: ask, do not assume.** Claude Code writes harnesses and report templates; Jim runs Lightroom and fills in the "Observed" sections.
 - `vendor\automaat\` is a read-only upstream snapshot (MIT, commit `a160e7a`). Never modify it. Its `CLAUDE.md`/`AGENTS.md` are upstream's contributor notes and **do not apply to this project**.
-
-## Pull request + review workflow (from Phase 0b on)
-
-Repo: https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway (public; `main` is protected: PR required, 0 approvals, no force pushes or deletions). Full rule: `.claude\rules\04-workflow.md`. The reviewer is **Greptile** (`greptile.json`), again from 2026-10-04; CodeRabbit (2026-10-03 to 2026-10-04) is off, `.coderabbit.yaml` kept; how to switch is in rule 04.
-
-1. Work on a branch named `phase-<n>/<topic>` or `fix/<topic>`.
-2. Never commit to `main` directly.
-3. Open the PR with `gh pr create --fill`.
-4. Wait for Greptile's review (one automatic review when the PR opens; its summary goes into the PR body, its findings inline). A PR Greptile did not review gets the PR comment `@greptileai`. One review per PR, on code defects only (`greptile.json`). All fixes from it go in one push. Claude Code asks Jim before requesting a re-review. Sourcing (rule 02) is checked by Claude Code before the first push.
-5. Triage **every** Greptile comment in a table posted as a PR comment, with columns: `file:line` | Greptile finding | decision (`fix` \| `reject` \| `defer`) | reason | commit hash if fixed. Post the table even when Greptile reports no issues.
-6. Merge only when the triage table is posted, no `fix` decision is still open and `arch-check` passes (a required status check on `main`).
-7. Merge with `gh pr merge --squash --delete-branch` (Jim may choose `--merge` for phase branches with meaningful history).
-8. After the merge, update the vault `LrC_AVG_STATE.md` "Next action".
 
 ## Module Map
 
@@ -71,23 +58,9 @@ Standing rules:
 - **(a) A new top-level module or a new cross-module edge is Jim's decision; then it updates this table and `MODULES` in `.dependency-cruiser.cjs` in the same PR** (and `npm run arch:graph`), and the PR description lists the edge under "Module Map changes" (`.claude\rules\04-workflow.md`, "STOP markers and decisions"). The baseline `.dependency-cruiser-known-violations.json` holds the file cycles that existed on 2026-10-12. Never add to it; after fixing one, shrink it with `npx depcruise engine/src --config .dependency-cruiser.cjs --baseline --baseline-mode shrink-only`.
 - **(b) The Lua plugin is a thin adapter.** It relays requests and results between Lightroom and the TS core; decision logic (what to change, by how much, when to stop) lives in TS.
 
-## Layout
-
-```
-engine\                   Node/TS MCP server (src\ modules: see "Module Map"; tests\, intents\, schemas\)
-plugin\LrC-AVG.lrplugin\  Lua plugin (Phase 1: bridge on 8765/8766 + Develop commands)
-hud\                      the Deck (Phase 7): src-tauri\ Rust window shell, ui\ TypeScript UI + channel client, probe\ row 4b probe
-plugin\spikes\S1-S6.lrplugin\  Phase 0 spike plugins (throwaway)
-spikes\S1-S6\             Phase 0 spike READMEs + Node scripts (throwaway)
-docs\                     survey, availability, dependencies, handover, reports\ (mirror of vault Reports\)
-tools\setup\              the setup build (Phase 9): staging, notices, lockfile resolver, pinned downloads (node-pin.json)
-build\                    setup staging (setup\) and download cache (cache\), gitignored
-vendor\automaat\          upstream reference (read-only)
-fixtures\                 NEF/DNG test images — on disk only, gitignored
-logs\  tests\golden\      dev logs (gitignored) / golden JPEG renders (later phases)
-```
-
 ## Commands (PowerShell, repo root)
+
+The Lightroom / Claude Desktop acceptance checks, probes, Deck and setup commands (`npm run phase<n>:check`, `deck:*`, `masks:*`, `setup:*`, `cleanroom`, …) and their prerequisites are in the `lrc-avg-checks` skill (`.claude\skills\lrc-avg-checks\SKILL.md`).
 
 ```powershell
 npm install                 # installs engine + spikes + hud workspaces
@@ -97,40 +70,9 @@ npm test -w hud             # vitest (hud\ui) + cargo test (hud\src-tauri; rustu
 npm run typecheck           # engine src+tests, spikes, hud
 npm run arch:check          # module boundaries + no import cycles in engine\src (see "Module Map"; CI runs it on every PR)
 npm run arch:graph          # redraw docs\architecture\modules.md (Mermaid, one node per module)
-node spikes\S1\measure.ts   # spike scripts run directly (Node type stripping)
-npm run phase1:check        # Phase 1 acceptance check against Lightroom (docs\reports\phase1\PHASE1.md)
+npm run schemas             # regenerate engine\schemas\*.schema.json from the zod schemas (a test fails when stale)
 npm run desktop:install     # register the engine in Claude Desktop as lrc-avg (backup first; removes lrc-avg-spike-s3)
 npm run package             # release assets to release\ (gitignored): lrc-avg-<v>.tgz (file list checked) + LrC-AVG.lrplugin-<v>.zip
-npm run phase2:check        # Phase 2 acceptance check: Lightroom + the Claude Desktop chat (docs\reports\phase2\PHASE2.md)
-npm run schemas             # regenerate engine\schemas\*.schema.json from the zod schemas (a test fails when stale)
-npm run phase3:check        # Phase 3 acceptance check: six fixtures + one Claude Desktop chat (docs\reports\phase3\PHASE3.md)
-npm run goldens             # after the check: golden JPEGs to tests\golden\ (gitignored) + golden.json (committed)
-npm run phase4:check        # Phase 4 acceptance check: one photo, a Lightroom restart, one Claude Desktop chat, cleanup (docs\reports\phase4\PHASE4.md)
-npm run preset:capture      # Lightroom's own reference preset + its photo's settings -> engine\tests\fixtures\presets\ (--precheck, --second)
-npm run preset:pin          # regenerate engine\src\params\preset-format.lrc15.json from those references (a test fails when stale)
-npm run phase5:check        # Phase 5 acceptance check: HUD sessions on one photo, an approve chat, six Claude Desktop chats; resumes after a stop (-- --new starts over) (docs\reports\phase5\PHASE5.md)
-npm run s9:build -w spikes  # Phase 7 spike S9: build the Tauri HUD (rustup MSVC needed; spikes\S9\prereqs.ps1 checks)
-node spikes\S9\measure.ts   # spike S9 run: Lightroom in Develop and Claude Desktop open (docs\reports\phase7\S9.md)
-npm run deck:build          # the Deck: engine\dist, then hud\ui-dist + the Tauri build + NSIS installer (hud\src-tauri\target\release\bundle\nsis\)
-npm run deck:probe          # row 4b probe: Lightroom in Develop, Claude Desktop quit; installs, checks, uninstalls the Deck (docs\reports\phase7\deck-shell.md)
-npm run deck:states         # row 4c probe: the Deck's states, clicks and keys; keeps the Deck installed only when all YES (docs\reports\phase7\deck-ui.md)
-npm run deck:menu           # row 5 probe: the menu items with the Deck, two real edits on the selected photo, put back; plugin 0.18.0 (docs\reports\phase7\plugin-menu.md)
-npm run phase7:check        # Phase 7 acceptance on the Deck: five edits, two Claude Desktop chats, no-Deck fallback, Lightroom quit; resumes (-- --new, -- --redo E1,E2,E3) (docs\reports\phase7\PHASE7.md)
-npm run offline:check       # missing-original check: plugin 0.19.1, the "fixtures" collection open, Claude Desktop quit (docs\reports\phase8\offline.md)
-npm run phase8:check        # Phase 8 acceptance: every "fixtures" photo, 11 intents on the JPEG, raw->rendered sync, a preset click, one Claude Desktop chat; resumes (-- --new) (docs\reports\phase8\PHASE8.md)
-npm run ai:probe            # issue #123 probe: three AI masks (Mountains, Vegetation with and without reads) on one photo in Develop, Claude Desktop quit; resumes after a Lightroom restart (-- --new) (docs\reports\phase8.5\ai-vegetation.md)
-npm run masks:carry         # issue #121 probe: the five hand-made masks (Add, Subtract, Intersect, Brush, Color) written back beside one new radial, on one photo in Develop, Claude Desktop quit; puts the photo back, first if an earlier run stopped (docs\reports\phase8.5\mask-carry.md)
-npm run masks:combine       # issue #131 probe: ten two-part mask forms and part edits written one at a time on one virtual copy in Develop, y/n each, Claude Desktop quit; puts the photo back (docs\reports\phase8.5\mask-combine.md)
-npm run effects:probe       # issue #125 probe: post-crop vignette and grain limits on a raw and a rendered "fixtures" photo, Lightroom in Develop, Claude Desktop quit; puts both back (docs\reports\phase8.5\effects.md)
-npm run stall:check         # issue #174: Lightroom quit and restarted, 2 min plugin disabled, 2 min enabled, y/n each, then Disable must stop the bridge; Claude Desktop quit (docs\reports\phase9\stall-174.md)
-npm run clients:probe       # issue #155 R5: each installed AI client CLI headless against the built engine and the Lightroom simulator; no Lightroom, run by Claude Code (docs\reports\phase8.5\clients-probe.md)
-npm run clients:check       # issue #155 R6: Deck build, then each installed client CLI (not Codex) edits the selected photo in Lightroom, T2-T7 y/n, one Claude Desktop chat; resumes (-- --new) (docs\reports\phase8.5\clients.md)
-npm run setup:build         # Phase 9: the unsigned setup: clean engine build, pinned Node + engine (lockfile production packages) + plugin staged in build\setup\resources\, notices, Tauri build with tauri.setup.conf.json -> release\LrC-AVG-Setup-<v>.exe + release\SHA256SUMS.txt (-- --version 0.99.0 for a test build)
-npm run setup:install       # clean room only (needs %TEMP%\LrC-AVG-cleanroom\park.json): installs release\LrC-AVG-Setup-<engine version>.exe /S, prints INSTALLED: YES/NO
-npm run setup:lock-check    # self-check of the lockfile resolver used by setup:build
-npm run cleanroom -- --park # clean room: parks Jim's dev setup (client lrc-avg entries, dev Deck, %LOCALAPPDATA%\LrC-AVG, %TEMP%\LrC-AVG) into %TEMP%\LrC-AVG-cleanroom\, CLEAN: YES/NO; also --status, --verify-gone [--expect-data-gone], --restore; --dry-run; Lightroom and Claude Desktop quit first
-npm run sandbox:check       # Phase 9: the unsigned setup in Windows Sandbox (network on, for the WebView2 download): install, files, entry, bundled engine over stdio, uninstall; SANDBOX: PASS/FAIL; run by Claude Code (docs\reports\phase9\local-install.md)
-npm run phase9:local        # Phase 9 local-install check: 0.99.0 + 1.0.0 setups, park, install, Lightroom y/n, a Claude Desktop chat, upgrade, uninstall twice, restore; stops loudly on a failed step; resumes (-- --new; -- --quick skips the upgrade and the second uninstall) (docs\reports\phase9\local-install.md)
 node engine\dist\mcp\main.js # the stdio MCP server (Claude Desktop starts it; tool log in $env:LRC_AVG_LOG_DIR or %LOCALAPPDATA%\LrC-AVG\logs)
 graphify query "How does X reach Y?"
 ```

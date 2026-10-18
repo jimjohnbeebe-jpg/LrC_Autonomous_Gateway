@@ -57,14 +57,29 @@ A made-up log (ten `idle rebind` lines, each followed by `stall 3000 ms after te
 
 ## Observed (Jim)
 
-(blank)
+Run of 2026-10-17 18:46-18:52 local time, Claude Desktop quit (`engine_connected_at_start: false`). Jim's answers and the plugin's lines were collected by Claude Code from the saved results [handle: `%TEMP%\LrC-AVG\stall\stall_check_2026-10-18T01-46-31-367Z.json`].
+
+- **Stutter with the idle rebind on: YES. With it off: NO** [stated: Jim, the two y/n answers].
+- With it on, **5 of the 6 idle rebinds spent 10.0-11.8 s in the socket work**: `tend 10498 ms`, `10417`, `11830`, `10041`, `10302`, plus `10024` and `10016` just after the phase window. The first rebind after start (18:47:01) logged no slow tick. So the bridge cycled about 10 s in close/bind, then 10 s idle, then rebound.
+- With it off, there was no slow socket tick in the window. The loop woke late once (`stall 3823 ms after idle`, 18:51:22). Three more came after the window, while Jim was answering. Jim saw no stutter, so a late wake-up alone is not a freeze he notices. Lightroom being busy (Develop rendering) delays plugin tasks too [inference].
+- After the flag was removed (18:51:43), the next rebind took 8144 ms. The `reconnect` (a nil value) error came back once at 18:52:02.
 
 ## Numbers
 
 | Phase | Jim saw stutter | Freezes logged | Longest (ms) | Total (ms) | After socket work | Idle rebinds | Slow socket ticks, longest (ms) |
 |---|---|---|---|---|---|---|---|
-| Idle rebind on | | | | | | | |
-| Idle rebind off | | | | | | | |
+| Idle rebind on | YES | 1 | 2342 | 2342 | 0 | 6 | 5, 11830 |
+| Idle rebind off | NO | 1 | 3823 | 3823 | 0 | 0 | 0, 0 |
+
+**The idle rebind took about 10 s of socket work each time and lines up with the stutter Jim saw. With it off, both the slow socket work and the stutter were gone.** Whether those 10 s block Lightroom's window, or the close/bind only waits while something else freezes the UI, is [inference]. The detector cannot see inside a tick. That close() waits out LrSocket's ~10 s no-client cycle (P-13, `Bridge.lua:15-16`) is [inference] too.
+
+## Fix and verification run
+
+**Fix** (option 1, chosen by Jim 2026-10-17 [stated: "Go with option 1"]): the bridge rebinds both sockets **once**, 20 s after its first bind, and only if no engine has connected by then. An engine connection marks the check done (`Bridge.lua`, `STARTUP_REBIND_SECONDS`, `startupRebindDone`). The run 1b case is still covered: the replaced instance there let go 10 s after the new start [handle: run 1b lines quoted at `STARTUP_REBIND_SECONDS`].
+
+**Verification:** the same `npm run stall:check`, same steps. Pass: no stutter in either phase, and at most one `idle rebind` (about 20 s after the plugin starts) with at most one slow socket tick.
+
+Observed (Jim): (blank)
 
 ## Verdict
 

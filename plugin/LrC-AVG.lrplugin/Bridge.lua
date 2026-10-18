@@ -58,13 +58,15 @@ local STALE_REBIND_SECONDS = 20    -- silent this long while connected: rebind b
 local SEND_WAIT_SECONDS = 5        -- how long a reply waits for the send socket to be connected
 local STATUS_EVERY_SECONDS = 2
 local SETTLE_SECONDS = 0.6         -- lets a replaced instance close its sockets before we bind
--- No engine connected for this long since the last bind: bind both sockets afresh, quietly. A bridge
--- that bound while a replaced instance still held 8765/8766 was left with no listener and no error:
--- the replaced one stopped 10 s later, the new loop kept running, nothing listened [handle: Jim's run
--- 1b, %TEMP%\LrC-AVG\bridge.log 2026-10-17 13:32:28-13:32:54, two "starting generation 1"; netstat at
--- 13:37:58 showed nothing on 8765/8766 while bridge_status.json was still written]. 10 s stays inside
--- the engine's 15 s wait, during which it retries every 2 s (engine\src\bridge\client.ts:53, 56).
-local IDLE_REBIND_SECONDS = 10
+-- No engine connected this long after the first bind: bind both sockets afresh, once. A bridge that
+-- bound while a replaced instance still held 8765/8766 was left with no listener and no error: the
+-- replaced one stopped 10 s later, the new loop kept running, nothing listened [handle: Jim's run 1b,
+-- %TEMP%\LrC-AVG\bridge.log 2026-10-17 13:32:28-13:32:54, two "starting generation 1"; netstat at
+-- 13:37:58 showed nothing on 8765/8766 while bridge_status.json was still written]. Only once: a rebind
+-- every 10 s while idle (PR #173) spent 10-12 s in the socket work each time and Lightroom stuttered;
+-- with it off, neither [handle: docs\reports\phase9\stall-174.md "Observed", issue #174]. An engine
+-- connection also counts as the check done: the listener works.
+local STARTUP_REBIND_SECONDS = 20
 
 -- Only a generation number lives on _G. A Reload Plug-in runs the init script again in the same Lua
 -- state [upstream claim: vendor\automaat\plugin\LightroomMCP.lrplugin\PluginInit.lua:8-15]; the old
@@ -248,10 +250,11 @@ local function monitor(B)
             S.lastInbound = nil
             S.receiveNeedsRebind, S.sendNeedsRebind = true, true
         end
-        if not S.receiveConnected and S.boundAt and (LrDate.currentTime() - S.boundAt) > IDLE_REBIND_SECONDS
+        if S.receiveConnected then S.startupRebindDone = true end
+        if not S.startupRebindDone and S.boundAt and (LrDate.currentTime() - S.boundAt) > STARTUP_REBIND_SECONDS
             and not Stall.idleRebindOff(D) then
             Stall.idleRebind()
-            S.boundAt = nil
+            S.startupRebindDone = true
             S.receiveNeedsRebind, S.sendNeedsRebind = true, true
         end
         if LrDate.currentTime() - B.lastStatus >= STATUS_EVERY_SECONDS then writeStatus(B) end
@@ -272,7 +275,7 @@ function Bridge.start()
             receiveGen = 0, sendGen = 0,
             receiveConnected = false, sendConnected = false,
             receiveNeedsReconnect = false, sendNeedsReconnect = false,
-            receiveNeedsRebind = false, sendNeedsRebind = false,
+            receiveNeedsRebind = false, sendNeedsRebind = false, startupRebindDone = false,
             lastInbound = nil, handled = 0, failed = 0, malformed = 0, unauthorized = 0,
             startedAt = isoNow(),
             token = nil, tokenFile = Endpoint.tokenPath(),

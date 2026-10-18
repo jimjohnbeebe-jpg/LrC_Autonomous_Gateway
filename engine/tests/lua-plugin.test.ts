@@ -214,7 +214,8 @@ describe("lua: LrC-AVG.lrplugin", () => {
     expect(pending).toMatch(/_G\.LrCAVG_PendingAi = _G\.LrCAVG_PendingAi or \{\}/);
     expect(read("Bridge.lua")).toMatch(/process_started_at = _G\.LrCAVG_ProcessStartedAt,/);
     // Phase 9 run 1b: a bridge left with no listener heals itself; it binds afresh while no engine is connected.
-    expect(read("Bridge.lua")).toMatch(/if not S\.receiveConnected and S\.boundAt and \(LrDate\.currentTime\(\) - S\.boundAt\) > IDLE_REBIND_SECONDS\s+and not Stall\.idleRebindOff\(D\) then\s+Stall\.idleRebind\(\)\s+S\.boundAt = nil\s+S\.receiveNeedsRebind, S\.sendNeedsRebind = true, true/);
+    // Issue #174: only once, since every rebind spent ~10 s in the socket work and Lightroom stuttered.
+    expect(read("Bridge.lua")).toMatch(/if S\.receiveConnected then S\.startupRebindDone = true end\s+if not S\.startupRebindDone and S\.boundAt and \(LrDate\.currentTime\(\) - S\.boundAt\) > STARTUP_REBIND_SECONDS\s+and not Stall\.idleRebindOff\(D\) then\s+Stall\.idleRebind\(\)\s+S\.startupRebindDone = true\s+S\.receiveNeedsRebind, S\.sendNeedsRebind = true, true/);
     // Issue #174 diagnosis: every monitor tick is timed, its socket work too (Stall.lua).
     expect(read("Bridge.lua")).toMatch(/while B\.current\(\) do\s+Stall\.tick\(D\)[\s\S]*Stall\.timed\(D, function\(\) tendSockets\(B\) end\)/);
     expect(read("Sockets.lua")).toMatch(/S\.receiveSocket = bindReceive\(B, S\.receiveGen\)[\s\S]{0,120}S\.boundAt = LrDate\.currentTime\(\)/);

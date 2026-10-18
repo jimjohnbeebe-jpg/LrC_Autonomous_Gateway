@@ -43,6 +43,7 @@ local Json = require 'Json'
 local Log = require 'Log'
 local Prefs = require 'Prefs'
 local Sockets = require 'Sockets'
+local Stall = require 'Stall'
 
 local Bridge = {}
 
@@ -232,12 +233,14 @@ end
 
 local function monitor(B)
     local S = B.S
+    local D = Stall.new(LOOP_SECONDS) -- issue #174 diagnosis (Stall.lua)
     while B.current() do
+        Stall.tick(D)
         if LrDate.currentTime() - B.lastStatus >= STATUS_EVERY_SECONDS and replacedOnDisk(S) then
             Log.info("bridge: generation " .. B.generation .. " replaced by a newer start (token file)")
             return
         end
-        if LrDate.currentTime() >= B.retryAt then tendSockets(B) end
+        if LrDate.currentTime() >= B.retryAt then Stall.timed(D, function() tendSockets(B) end) end
         -- Windows may not report a vanished engine at all [upstream claim: PluginInfoProvider.lua:558-560].
         -- The engine pings every 2 s, so a long silence means it is gone: start both sockets afresh.
         if S.receiveConnected and S.lastInbound and (LrDate.currentTime() - S.lastInbound) > STALE_REBIND_SECONDS then
@@ -245,7 +248,9 @@ local function monitor(B)
             S.lastInbound = nil
             S.receiveNeedsRebind, S.sendNeedsRebind = true, true
         end
-        if not S.receiveConnected and S.boundAt and (LrDate.currentTime() - S.boundAt) > IDLE_REBIND_SECONDS then
+        if not S.receiveConnected and S.boundAt and (LrDate.currentTime() - S.boundAt) > IDLE_REBIND_SECONDS
+            and not Stall.idleRebindOff(D) then
+            Stall.idleRebind()
             S.boundAt = nil
             S.receiveNeedsRebind, S.sendNeedsRebind = true, true
         end

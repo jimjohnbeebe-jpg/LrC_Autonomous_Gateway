@@ -86,7 +86,7 @@ describe("lua: every plugin file", () => {
       "Bridge.lua", "Catalog.lua", "Develop.lua", "Dispatch.lua", "Endpoint.lua", "Events.lua", "Gate.lua", "Hud.lua", "HudClick.lua", "HudSelection.lua", "HudState.lua", "HudText.lua", "HudView.lua",
       "Info.lua", "Json.lua", "KeywordTree.lua", "Library.lua", "Log.lua", "MaskProbe.lua", "Masks.lua", "MenuAbort.lua", "MenuAccept.lua", "MenuApprove.lua", "MenuHud.lua",
       "MenuPickA.lua", "MenuPickB.lua", "MenuPickC.lua", "MenuStatus.lua", "Metadata.lua", "Pending.lua", "Photos.lua",
-      "PluginInfoProvider.lua", "PluginInit.lua", "Prefs.lua", "Preview.lua", "Sockets.lua", "Transfer.lua",
+      "PluginInfoProvider.lua", "PluginInit.lua", "Prefs.lua", "Preview.lua", "Sockets.lua", "Stall.lua", "Transfer.lua",
     ]);
   });
 
@@ -214,7 +214,9 @@ describe("lua: LrC-AVG.lrplugin", () => {
     expect(pending).toMatch(/_G\.LrCAVG_PendingAi = _G\.LrCAVG_PendingAi or \{\}/);
     expect(read("Bridge.lua")).toMatch(/process_started_at = _G\.LrCAVG_ProcessStartedAt,/);
     // Phase 9 run 1b: a bridge left with no listener heals itself; it binds afresh while no engine is connected.
-    expect(read("Bridge.lua")).toMatch(/if not S\.receiveConnected and S\.boundAt and \(LrDate\.currentTime\(\) - S\.boundAt\) > IDLE_REBIND_SECONDS then\s+S\.boundAt = nil\s+S\.receiveNeedsRebind, S\.sendNeedsRebind = true, true/);
+    expect(read("Bridge.lua")).toMatch(/if not S\.receiveConnected and S\.boundAt and \(LrDate\.currentTime\(\) - S\.boundAt\) > IDLE_REBIND_SECONDS\s+and not Stall\.idleRebindOff\(D\) then\s+Stall\.idleRebind\(\)\s+S\.boundAt = nil\s+S\.receiveNeedsRebind, S\.sendNeedsRebind = true, true/);
+    // Issue #174 diagnosis: every monitor tick is timed, its socket work too (Stall.lua).
+    expect(read("Bridge.lua")).toMatch(/while B\.current\(\) do\s+Stall\.tick\(D\)[\s\S]*Stall\.timed\(D, function\(\) tendSockets\(B\) end\)/);
     expect(read("Sockets.lua")).toMatch(/S\.receiveSocket = bindReceive\(B, S\.receiveGen\)[\s\S]{0,120}S\.boundAt = LrDate\.currentTime\(\)/);
   });
 

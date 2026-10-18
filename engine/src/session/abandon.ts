@@ -4,8 +4,9 @@
 // one, until the user restarted Lightroom [handle: GitHub issue #124, the lr_create_mask error at
 // 2026-10-11T05:49:48.588Z in logs\engine-20261010.jsonl]. The shape is Jim's [stated: Jim, 2026-10-11, "go" on
 // the #123/#124 plan; "Go with recommendations" on D1-D3 of the #124 plan]:
-//   - nothing is read from or written to the photo: it keeps what the session wrote, and the result names the
-//     pre-session snapshot, which the user applies in Develop's Snapshots panel to put it back by hand;
+//   - nothing is read from or written to the photo: it keeps what the session wrote (the AI mask's entry in the
+//     mask table included), and the result and the HUD say so and name the pre-session snapshot, which the user
+//     applies in Develop's Snapshots panel to put it back by hand (issue #181);
 //   - the log is finished with the outcome "abandoned"; the session closes, so a new one can begin;
 //   - the plugin's guard on the photo (plugin 0.20.0, Pending.lua) is dropped with clear_pending_ai, once and
 //     best-effort, when an AI mask was pending: without that, Lightroom refuses every write to the photo, a new
@@ -16,55 +17,16 @@
 //     ends the session this way when its revert is refused because the AI mask is stuck (hud-actions.ts).
 // [handle: tests\session-abandon.test.ts, against the Lightroom sim; in Lightroom [unverified] until Jim's check.]
 
-import { pluginVersionAtLeast } from "../bridge/index.js";
-import { ToolError, toToolError } from "../mcp/errors.js";
-import { aiTimings } from "./ai-update.js";
+import { HUD_LIMITS } from "../bridge/index.js";
+import { GUARD_NOTE, dropGuard } from "./ai-guard.js";
+import { putBackByHand } from "./ai-update.js";
 import { sentenceName } from "./client.js";
 import { endedBy } from "./end.js";
 import { saveLog } from "./io.js";
 import type { Session, SessionContext, SessionOutput, UserEnd } from "./types.js";
 
-/** The plugin that has clear_pending_ai (Pending.lua); the engine waits for its answer aiTimings' clearMs, 5 s. */
-export const CLEAR_PENDING_PLUGIN = "0.20.0";
-
-/** What became of the plugin's guard on the photo. */
-export type GuardOutcome = "none" | "cleared" | "not_cleared" | "plugin_too_old";
-
-/**
- * Drop the plugin's guard on photo `uuid`, whose AI mask is pending (null: none is); never throws. `ifAny`: a photo that
- * may have none (left-open.ts), so the plugin's answer that it had none is "none".
- */
-export async function dropGuard(ctx: SessionContext, uuid: string | null, ifAny = false): Promise<{ guard: GuardOutcome; error?: string }> {
-  if (!uuid) return { guard: "none" };
-  const { client } = ctx.deps;
-  if (client.getState() !== "connected") return { guard: "not_cleared", error: "Lightroom is not connected" };
-  if (!pluginVersionAtLeast(client.hello()?.plugin_version, CLEAR_PENDING_PLUGIN)) return { guard: "plugin_too_old" };
-  // The bridge's own timeout waits on while the plugin is paused (bridge\client.ts send), so a hung Lightroom with its
-  // socket open would hold the queue until the heartbeat drops it (Greptile, PR #134): a deadline of its own.
-  const ms = aiTimings(ctx).clearMs;
-  const sent = client.request("clear_pending_ai", { photo_uuid: uuid }, { timeoutMs: ms });
-  sent.catch(() => undefined); // an answer after the deadline is dropped
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const deadline = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => reject(new ToolError("BRIDGE_TIMEOUT", `clear_pending_ai: no answer within ${ms} ms`, true)), ms);
-  });
-  try {
-    const res = await Promise.race([sent, deadline]);
-    return { guard: ifAny && !res.cleared ? "none" : "cleared" };
-  } catch (err) {
-    return { guard: "not_cleared", error: toToolError(err).code };
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-export const GUARD_NOTE: Record<GuardOutcome, string> = {
-  none: "",
-  cleared:
-    " Lightroom was told to stop holding writes to the photo for the AI mask; if Lightroom may still be working on it, restarting Lightroom first is the safe way.",
-  not_cleared: " Lightroom could not be told to stop holding writes to the photo for the AI mask: it refuses them until it restarts.",
-  plugin_too_old: ` Lightroom refuses writes to the photo until it restarts (the plugin before ${CLEAR_PENDING_PLUGIN} cannot be told to stop).`,
-};
+// dropGuard and the guard's notes moved to ai-guard.ts (a leaf file, issue #181); left-open.ts still takes them from here.
+export { GUARD_NOTE, dropGuard, type GuardOutcome } from "./ai-guard.js";
 
 /** End `s` without a Lightroom call but clear_pending_ai; the caller closes it. `by`: the user's Abort, else Claude. */
 export async function abandonSession(ctx: SessionContext, s: Session, by: UserEnd | null): Promise<SessionOutput> {
@@ -75,15 +37,17 @@ export async function abandonSession(ctx: SessionContext, s: Session, by: UserEn
   s.log.ended_by = endedBy(by);
   if (error) s.log.failures.push({ at: s.log.ended, stage: "abandon (clear_pending_ai)", error: { code: error, message: GUARD_NOTE.not_cleared.trim(), recoverable: false } });
   saveLog(s);
+  const entry = ai ? " The AI mask's entry stays in the photo's mask list (it may have no shape yet)." : "";
   const note =
-    `Nothing was read from or written to the photo: it keeps what the session did. To put it back, the user selects it in Develop ` +
-    `and clicks the snapshot "${s.snapshot.name}" in the Snapshots panel.${GUARD_NOTE[guard]}`;
+    `The photo was NOT put back. Nothing was read from or written to the photo: it keeps what the session did.${entry} ` +
+    `${putBackByHand(s.snapshot.name)}${GUARD_NOTE[guard]}`;
   const json = {
     ok: true,
     session_id: s.id,
     outcome: "abandoned",
     ended_by: s.log.ended_by,
     log_path: s.files.logPath,
+    photo_put_back: false,
     snapshot: s.snapshot.name,
     ...(ai ? { ai_mask: { kind: ai.kind, since: ai.since, state: ai.failed ? "failed" : ai.stuck ? "stuck" : "pending" } } : {}),
     lightroom_guard: guard,
@@ -92,8 +56,12 @@ export async function abandonSession(ctx: SessionContext, s: Session, by: UserEn
   return { json, log: { session_id: s.id, outcome: "abandoned", ended_by: s.log.ended_by, log_path: s.files.logPath, lightroom_guard: guard } };
 }
 
-/** The HUD's note once edit `s` was abandoned, by the user's Abort or by the AI (the photographer's words, within HUD_LIMITS.text). */
+/**
+ * The HUD's note once edit `s` was abandoned, by the user's Abort or by the AI (the photographer's words): the photo was
+ * not put back, and the snapshot that puts it back, when that fits HUD_LIMITS.text (else the panel alone).
+ */
 export function abandonedNote(s: Session, byUser: boolean): string {
-  const why = byUser ? "Ended as it is, as Lightroom's AI mask is stuck." : `${sentenceName(s.client)} ended the edit as it is.`;
-  return `${why} To undo, click its AVG snapshot in Develop > Snapshots.`;
+  const why = byUser ? "Photo not put back (AI mask stuck)." : `${sentenceName(s.client)} ended the edit; not put back.`;
+  const named = `${why} To undo: Develop > Snapshots > "${s.snapshot.name}".`;
+  return Buffer.byteLength(named) <= HUD_LIMITS.text ? named : `${why} To undo, click its AVG snapshot in Develop > Snapshots.`;
 }

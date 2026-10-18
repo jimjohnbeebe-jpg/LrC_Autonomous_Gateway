@@ -41,7 +41,7 @@ export type UserAction = HudEvent & { received: Date; t0: number };
 
 /** A session the user ended from the HUD or the menu, for the calls that still name it. */
 /** `put_back`: the HUD's Put back put the photo back itself and told the engine (put-back.ts); `abandoned`: an Abort while the AI mask was stuck (abandon.ts). */
-export type UserEnded = { session_id: string; outcome: "aborted" | "accept" | "put_back" | "abandoned"; source: UserSource; at: string; log_path: string };
+export type UserEnded = { session_id: string; outcome: "aborted" | "accept" | "put_back" | "abandoned"; source: UserSource; at: string; log_path: string; snapshot: string };
 
 /** What the actions need from the session manager (manager.ts). */
 export type ActionHost = {
@@ -127,7 +127,7 @@ function userEnd(a: UserAction, previous: UserEnd | null): UserEnd {
 
 /** The record of a session the user ended, for the calls that still name it. */
 export function userEnded(ctx: SessionContext, s: Session, outcome: UserEnded["outcome"], by: UserEnd): UserEnded {
-  return { session_id: s.id, outcome, source: by.source, at: ctx.now().toISOString(), log_path: s.files.logPath };
+  return { session_id: s.id, outcome, source: by.source, at: ctx.now().toISOString(), log_path: s.files.logPath, snapshot: s.snapshot.name };
 }
 
 /** The HUD's note once an Abort has put the photo back. */
@@ -139,7 +139,7 @@ export function abortedNote(s: Session): string {
 
 const settingsCount = (n: number): string => (n === 1 ? "1 setting" : `${n} settings`);
 export const NOT_IN_DEVELOP = "Lightroom must be in Develop to put the photo back. Press D in Lightroom, then click Abort again.";
-export const ABORT_WAITS ="Lightroom is still computing the AI mask, so Abort must wait. If it seems stuck, restart Lightroom.";
+export const ABORT_WAITS = "Lightroom is still computing the AI mask, so Abort must wait: click it again once this wait is over.";
 
 /** Waits for the bridge; a failed wait goes in the log's failures, as the HUD's note names no code. */
 async function connected(ctx: SessionContext, s: Session, stage: string): Promise<void> {
@@ -345,7 +345,7 @@ export function endedError(e: UserEnded): ToolError {
     aborted: "aborted it: the photo is back as it was before the session",
     put_back: "put the photo back with the HUD's Put back: it is as it was before the session",
     accept: "accepted it: the edit is kept and the recipe written",
-    abandoned: "abandoned it while Lightroom's AI mask was stuck: nothing was put back (the log names the pre-session snapshot)",
+    abandoned: `abandoned it while Lightroom's AI mask was still computing: the photo was NOT put back, it keeps the session's edits; the snapshot "${e.snapshot}" puts it back`,
   }[e.outcome];
   const where = e.source === "menu" ? "Lightroom's menu" : "the HUD";
   return new ToolError("SESSION_ENDED", `The user ended session ${e.session_id} from ${where} at ${e.at} and ${how}. Start a new session only if the user asks.`, false, e);

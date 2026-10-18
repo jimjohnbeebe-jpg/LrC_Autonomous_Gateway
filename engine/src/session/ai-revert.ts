@@ -2,20 +2,26 @@
 // before the session and end it (autoRevert) [stated: Jim, 2026-10-03, "Also auto-revert"] once nothing can
 // be computing: Lightroom reported the update failed or dropped it ("dialog"), or Lightroom restarted
 // ("restart", restart.ts) [stated: Jim, 2026-10-04, "Yes: revert after restart (Recommended)"]; or, while no
-// result came, write nothing and say Lightroom seems stuck, or that its computation failed (stuckError, D16, issue #123). Moved out of ai-masks.ts in PR C
+// result came, write nothing and say Lightroom's mask is still computing, or that its computation failed (stuckError, D16, issue #123;
+// the session frees itself when Lightroom's update ends, ai-update.ts settlePending, issue #181). Moved out of ai-masks.ts in PR C
 // step 2c (module size, rule 01). The HUD's notes are in the photographer's words (no "session", no codes).
 
 import { ToolError, toToolError } from "../mcp/errors.js";
 import { KIND_LABELS } from "../params/index.js";
 import type { AiJob } from "./ai-masks.js";
-import { ABANDON_HINT } from "./ai-update.js";
+import { ABANDON_HINT, restartAdvice, waitAdvice } from "./ai-update.js";
 import { endSession } from "./end.js";
 import { reopenLog } from "./hud-actions.js";
 import { saveLog } from "./io.js";
 import type { Session, SessionContext } from "./types.js";
 
-const STUCK = "Lightroom's AI mask computation seems stuck";
 const RESTARTED = "Lightroom restarted";
+/**
+ * The HUD's note after LIGHTROOM_STUCK (issue #181). Nothing polls once the wait is over: settlePending runs only on Claude's
+ * next write, render or revert (io.ts, end.ts), and Claude's turn has ended [inference], so the user has to prompt the AI. Abort (abandon.ts)
+ * or a Lightroom restart (restart.ts) also end it. At most 120 bytes (bridge\hud-protocol.ts).
+ */
+export const STUCK_NOTE = "Lightroom's AI mask is still computing. When it is done, ask the AI to go on. Abort or a restart also ends the wait.";
 /** The HUD's last note when the engine ended the session; the HUD then closes itself (manager.ts, D15). */
 export function engineEndedNote(reason: string): string {
   return reason.startsWith(RESTARTED)
@@ -76,7 +82,7 @@ export async function autoRevert(ctx: SessionContext, s: Session, job: AiJob, ca
   throw new ToolError(mode.code, `${told}${onCopy} Tell the user what happened; start a new session only if they ask.`, false, { session_id: s.id, reverted: true, outcome: "revert", ended_by: "engine", reason });
 }
 
-/** No result from Lightroom (ai-update.ts "stuck"): nothing written; the session stays open, s.aiPending kept, until the result or a restart. */
+/** No result from Lightroom (ai-update.ts "stuck"): nothing written; the session stays open, s.aiPending kept, until the result, Lightroom's end of the update (settlePending, issue #181) or a restart. */
 export function stuckError(s: Session, job: AiJob, cause: string, failed = false): ToolError {
   if (failed) {
     s.idleNote = "Lightroom's AI mask failed. Save your work and restart Lightroom: the photo is then put back by itself. Or click Abort.";
@@ -87,10 +93,10 @@ export function stuckError(s: Session, job: AiJob, cause: string, failed = false
       { session_id: s.id, reverted: false, reason: cause },
     );
   }
-  s.idleNote = "Lightroom's AI mask seems stuck. Restart Lightroom: the photo is then put back by itself. Or click Abort.";
+  s.idleNote = STUCK_NOTE;
   return new ToolError(
     "LIGHTROOM_STUCK",
-    `${STUCK} (the AI ${KIND_LABELS[job.kind]} mask: ${cause}). Nothing was written after the update, so the photo was not put back while Lightroom may still work on it. Tell the user: restart Lightroom (File > Exit, then start it again). Once it is back, the engine notices the restart, puts the photo back as it was before the session (checked) and ends session ${s.id} by itself; nothing to call. If Lightroom finishes the mask first, the session goes on. Until then session ${s.id} writes, renders and reverts nothing.${ABANDON_HINT}`,
+    `Lightroom's AI ${KIND_LABELS[job.kind]} mask is still computing (${cause}). Nothing was written after the update, so the photo was not put back while Lightroom may still work on it. Session ${s.id} writes, renders and reverts nothing until Lightroom is done.${waitAdvice(s)}${restartAdvice(s.id)}${ABANDON_HINT}`,
     false,
     { session_id: s.id, reverted: false, reason: cause },
   );

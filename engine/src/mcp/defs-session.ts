@@ -147,7 +147,7 @@ export const SESSION_DEFS: ToolDef[] = [
       "AWAITING_PICK), and the step that gives the last copy its pass returns `awaiting_pick: true` and the contact sheet: " +
       "then ask the user to pick (lr_select_variant). After the pick, steps go to the pick, whose pass count carries on. " +
       "`hud_actions` lists what the user did in the HUD since your last call (a pick), and a `deck_fallback` note when the Deck " +
-      "did not start and the classic HUD window opened instead (tell the user). " +
+      "did not start and the classic HUD window opened instead, and an `ai_mask_failed` note (a stuck AI mask ended with no result): tell the user. " +
       "approve_each_pass mode (begin's session_settings.approval): pass 1 needs no approval; from pass 2 on, the call first waits " +
       `up to ${APPROVAL_WAIT_MS / 1000} s for the user's Approve of the pass before (the HUD's button, or lr_approve_pass after the user approved in chat), ` +
       "else returns AWAITING_APPROVAL (recoverable; nothing written, the pass not used): tell the user the pass waits for their " +
@@ -223,7 +223,8 @@ export const SESSION_DEFS: ToolDef[] = [
       "Put back) returns ok with `already_ended_by_user` {outcome, source, at, log_path}; any other outcome gets SESSION_ENDED. " +
       "\"abandon\": only when the session cannot end otherwise and the user agrees: Lightroom is gone or hung, or an AI mask failed " +
       "or seems stuck (AI_MASK_FAILED, LIGHTROOM_STUCK, AI_UPDATE_PENDING refuse revert). It reads and writes nothing (it does not " +
-      "wait for Lightroom): the photo keeps what the session did, the log's outcome is \"abandoned\", and a new session can begin. " +
+      "wait for Lightroom): the photo keeps what the session did and is NOT put back (`photo_put_back` false), the log's outcome is \"abandoned\", and a new session can begin. " +
+      "LIGHTROOM_STUCK and AI_UPDATE_PENDING lift by themselves when Lightroom finishes, so try \"revert\" again first if the user can wait. " +
       "The result's `note` says how the user puts the photo back by hand (the pre-session snapshot, `snapshot`) and whether " +
       "Lightroom still holds writes to the photo (`lightroom_guard`: \"none\" when no AI mask was pending, so nothing is held; " +
       "\"cleared\"; \"not_cleared\" or \"plugin_too_old\": held until Lightroom restarts); tell the user both. " +

@@ -7,7 +7,7 @@
 
 import { describe, expect, it } from "vitest";
 import { MASK_TABLE_KEY, type Correction } from "../src/params/index.js";
-import { DIALOG_NOTE, WORKING_NOTE, type HudSink } from "../src/session/index.js";
+import { DIALOG_NOTE, STUCK_NOTE, WORKING_NOTE, type HudSink } from "../src/session/index.js";
 import type { FakeHandler } from "./helpers/fake-plugin.js";
 import { ID, clean, fails, lr, newManager, plugin, readLog, useSessionHarness } from "./helpers/session-harness.js";
 
@@ -102,10 +102,10 @@ describe("AI masks: Lightroom's dialog", () => {
     const snapshots = sent("apply_snapshot");
     const e = await fails(create("people_face_skin"));
     expect(e).toMatchObject({ code: "LIGHTROOM_STUCK", details: { reverted: false } });
-    expect(e.message.startsWith("Lightroom's AI mask computation seems stuck (the AI People - Face Skin mask: no result within 0 minutes, Lightroom's update running).")).toBe(true);
-    expect(e.message).toContain("restart Lightroom (File > Exit, then start it again). Once it is back, the engine notices the restart");
+    expect(e.message.startsWith("Lightroom's AI People - Face Skin mask is still computing (no result within 0 minutes, Lightroom's update running).")).toBe(true);
+    expect(e.message).toContain("Restarting Lightroom (File > Exit, then start it again) also frees it: once it is back, the engine notices the restart");
     expect(sent("apply_snapshot")).toBe(snapshots);
-    expect(notes.at(-1)).toBe("awaiting_claude: Lightroom's AI mask seems stuck. Restart Lightroom: the photo is then put back by itself. Or click Abort.");
+    expect(notes.at(-1)).toBe(`awaiting_claude: ${STUCK_NOTE}`);
     expect(m.current()?.id).toBe(ID);
     const step = await fails(m.step({ session_id: ID, settings: { exposure: 0.2 }, rationale: "test", return_image: "none" }));
     expect(step).toMatchObject({ code: "AI_UPDATE_PENDING", recoverable: false });

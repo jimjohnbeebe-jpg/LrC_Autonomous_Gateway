@@ -126,12 +126,13 @@ export const MASK_DEFS: ToolDef[] = [
       "Create one mask on the session's photo, with its local sliders set in the same pass. linear and radial take geometry; luminance takes " +
       "geometry.lum_range; the AI kinds are found by Lightroom: the engine adds the mask to the table and asks Lightroom to compute it " +
       "(the call waits up to 5 minutes for Lightroom, and the HUD says it is working). If the photo has none of that kind, MASK_NOTHING_FOUND: " +
-      "the mask is taken out again and the pass is not used. If Lightroom stays busy or shows a dialog, the HUD says: \"Lightroom is busy or shows a dialog: if a dialog is open in Lightroom, click OK.\" " +
+      "the mask is taken out again and the pass is not used. If Lightroom stays busy or shows a dialog, the HUD tells the user to click OK in it. " +
       "If the mask then computes the pass goes on; if Lightroom reports the update failed or dropped it, the engine puts the photo back as it was before the session and ENDS " +
-      "the session (LIGHTROOM_DIALOG). Nothing is written to the photo while Lightroom has not given the mask's result: no result in 5 minutes, or Lightroom not answering, " +
-      "is LIGHTROOM_STUCK, the session stays open and refuses writes, renders and reverts (AI_UPDATE_PENDING); tell the user to restart Lightroom: once it is back the engine " +
-      "puts the photo back and ends the session by itself (later calls naming it get SESSION_ENDED). If Lightroom reports the update over with no result, AI_MASK_FAILED: " +
-      "the same, and the user should save their work before the restart. Tell the user what happened, and start a " +
+      "the session (LIGHTROOM_DIALOG). No result in 5 minutes, or Lightroom not answering, is LIGHTROOM_STUCK: Lightroom's AI mask is still computing, " +
+      "nothing is written to the photo, and the session stays open and refuses writes, renders and reverts (AI_UPDATE_PENDING). It unfreezes by itself " +
+      "when Lightroom finishes, with no restart, but Lightroom does not notify you: when the user says to go on, your next call (lr_step, lr_end_session or a linear or radial mask; not the same AI mask again) picks it up. Tell the user to wait, or to press Abort in the Deck (lr_help, 9, says what it does). " +
+      "For the rest of the session prefer linear or radial masks to AI masks. If Lightroom reports the update over with no result, AI_MASK_FAILED: " +
+      "the user should save their work and restart Lightroom. Tell the user; start a " +
       "new session only if they ask. If the update fails with a Lightroom or plugin error, subject, sky and background are made by " +
       "Lightroom's Develop module instead (Lightroom then switches to Develop; `ai.route` \"dc\", `switched_to_develop`); people and " +
       "landscape kinds have no such fallback. If nothing works, FEATURE_UNAVAILABLE (details.routes_tried): the masks are as before and " +

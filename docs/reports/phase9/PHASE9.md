@@ -12,7 +12,7 @@ date: 2026-10-18
 
 **The question.** Run 1 installed a setup built on Jim's PC (`docs\reports\phase9\local-install.md`, verdict go). A photographer gets a different file: the one GitHub's release workflow builds from the tag, downloaded in a browser, so Windows marks it as coming from the internet and SmartScreen checks it [inference: PHASE9_PLAN "How to apply": a local build carries no Mark of the Web]. 1.0.0 ships unsigned (PHASE9_PLAN, D6 changed 2026-10-17). This run answers:
 
-1. Does the `v1.0.0-rc.1` pre-release carry the setup and `SHA256SUMS.txt`, and does the downloaded setup match its listed SHA-256?
+1. Does the `v1.0.0-rc.2` pre-release carry the setup and `SHA256SUMS.txt`, and does the downloaded setup match its listed SHA-256?
 2. Does the downloaded file carry the Mark of the Web (`Zone.Identifier`, `ZoneId=3`)?
 3. Does SmartScreen show "Windows protected your PC", and does "More info > Run anyway" start the wizard, as the README's "Why the setup is not signed" says?
 4. With that file, do install, Lightroom's Plug-in Manager and Status dialog, the first Claude Desktop chat, the uninstall (**GONE: YES**) and the restore (**RESTORED: YES**) pass as in run 1?
@@ -33,7 +33,7 @@ date: 2026-10-18
 |---|---|
 | The check (`npm run phase9:local -- --download`) | `engine\src\devtools\phase9-download.ts` (the download and install steps, the Mark of the Web and SHA-256 checks), wired in `phase9-local-cli.ts`; the other steps are run 1's (`phase9-local-steps.ts`, `phase9-local-upgrade.ts`) |
 | The release | `.github\workflows\release.yml` (a `v*` tag builds the setup and drafts the release) |
-| Disposable Windows (Claude Code) | `npm run sandbox:check` on `release\LrC-AVG-Setup-1.0.0.exe`, fetched with `gh release download v1.0.0-rc.1 -D release` |
+| Disposable Windows (Claude Code) | `npm run sandbox:check` on `release\LrC-AVG-Setup-1.0.0.exe`, fetched with `gh release download v1.0.0-rc.2 -D release` |
 | Tests | `engine\tests\phase9-local.test.ts` ("phase9:local --download") |
 
 **Steps of `npm run phase9:local -- --download`** (state in `%TEMP%\LrC-AVG-phase9\download-state.json`, separate from run 1's; `--new` starts over):
@@ -60,7 +60,7 @@ date: 2026-10-18
    ```
 
 2. **Do what the window asks, in order.** In short:
-   - **Step 1:** open https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway/releases, click "LrC-AVG v1.0.0-rc.1", and under Assets click `LrC-AVG-Setup-1.0.0.exe`, then `SHA256SUMS.txt`. If the browser warns about the file, choose Keep (Edge: the three dots next to the file > Keep > Show more > Keep anyway). Do not open the setup yet.
+   - **Step 1:** open https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway/releases, click "LrC-AVG v1.0.0-rc.2", and under Assets click `LrC-AVG-Setup-1.0.0.exe`, then `SHA256SUMS.txt`. If the browser warns about the file, choose Keep (Edge: the three dots next to the file > Keep > Show more > Keep anyway). Do not open the setup yet.
    - **Step 2:** quit Lightroom (File > Exit) and Claude Desktop (tray icon > Quit); remove the dev plugin when the window asks.
    - **Step 3:** double-click `LrC-AVG-Setup-1.0.0.exe` in your Downloads folder. On the blue box "Windows protected your PC", click **More info**, then **Run anyway**. Click through the wizard with the defaults.
    - **Steps 4, 5, 7, 9:** as in run 1: Plug-in Manager and Status; one chat line in Claude Desktop; uninstall with "Delete the application data" unticked; restore, then re-add the dev plugin.
@@ -75,6 +75,8 @@ date: 2026-10-18
 
 ## Pre-run findings (Claude Code)
 
+**Run 2 is on `v1.0.0-rc.2`.** That build carries the fixes for #179, #180 and #181 (PR #183, `main` `19ae50f`) [stated: Jim, 2026-10-18, "go with the update and merge, then I will do the tag and push"]. Findings 2 and 3 below were made on rc.1. Claude Code repeats them on rc.2 (`gh release view v1.0.0-rc.2`, `npm run sandbox:check`) before Jim's run 2.
+
 1. **Node reads the Mark of the Web on this PC.** `zoneId()` read `ZoneId=3` back from a `Zone.Identifier` stream written to a file in `%TEMP%` [handle: `npx vitest run --root engine tests/phase9-local.test.ts`, 2026-10-18: 21 passed, including "zoneId reads the Mark of the Web from the Zone.Identifier stream"]. That a browser download writes `ZoneId=3` is [unverified] until step 1.
 2. **The release workflow built the draft pre-release.** Jim pushed the tag `v1.0.0-rc.1` on `5070467` [stated: Jim, 2026-10-18, "Tagged"]. Workflow run 39130650276 ended `completed success` [handle: `gh run view 39130650276 --json status,conclusion`]. `gh release view v1.0.0-rc.1` printed: draft true, pre-release true, name "LrC-AVG v1.0.0-rc.1", assets `LrC-AVG-Setup-1.0.0.exe` (32,819,775 bytes, sha256 `2585d222b1cf6a319f4f0a2c17cc996898a760cbab9e591f63915910cd609705`) and `SHA256SUMS.txt` (90 bytes) [handle: run 2026-10-18]. `gh release download v1.0.0-rc.1 -D release`, then `sha256sum release/LrC-AVG-Setup-1.0.0.exe`, printed the same hash that `SHA256SUMS.txt` lists.
 3. **SANDBOX: PASS on the CI-built setup.** `npm run sandbox:check` ran the downloaded `release\LrC-AVG-Setup-1.0.0.exe` in Windows Sandbox: 19 of 19 checks ok. Among them: no Node on PATH; `/S` exit 0; Deck ProductVersion "1.0.0"; the plugin in Modules; bundled `node --version` v24.11.1; the bundled engine answered `initialize` and `tools/list` with 36 tools; the uninstall removed the plugin, the uninstall key, the shortcut and the Claude Desktop entry, and kept only the documented data [handle: `%TEMP%\LrC-AVG-phase9\sandbox_2026-10-18T13-20-45-966Z.json`, console output 2026-10-18]. A file fetched by `gh` carries no Mark of the Web [inference], so this run does not test SmartScreen; Jim's run 2 does.
@@ -87,7 +89,7 @@ date: 2026-10-18
 
 | Line | Result |
 |---|---|
-| Pre-release `v1.0.0-rc.1`: setup and `SHA256SUMS.txt` attached | |
+| Pre-release `v1.0.0-rc.2`: setup and `SHA256SUMS.txt` attached | |
 | Downloaded setup: SHA-256 matches | |
 | Mark of the Web (`ZoneId`) | |
 | SmartScreen box shown; Run anyway started the wizard | |
@@ -109,7 +111,7 @@ date: 2026-10-18
 
 ## Consequences / open questions
 
-- On go: tag `v1.0.0` on the commit `v1.0.0-rc.1` points at, Jim publishes it as the full release, and the vault close-out in PHASE9_PLAN "Vault updates at the Phase 9 close" follows (plan row 6).
+- On go: tag `v1.0.0` on the commit `v1.0.0-rc.2` points at, Jim publishes it as the full release, and the vault close-out in PHASE9_PLAN "Vault updates at the Phase 9 close" follows (plan row 6).
 - Run 1's report said the upgrade and the ticked uninstall would run again "on the signed build in PR 3". Both are out of scope now: 1.0.0 is unsigned (D6 changed) and Jim chose run 1 as the upgrade evidence (Purpose).
 - Still [unverified] after this run: Smart App Control with the unsigned setup; signing (issue #171).
 - After Jim's verdict: copy the final report to the vault `Reports\Phase9\` folder and update `LrC_AVG_STATE.md` "Next action".

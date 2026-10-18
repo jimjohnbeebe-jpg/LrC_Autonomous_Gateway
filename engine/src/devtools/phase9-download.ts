@@ -46,7 +46,7 @@ export const downloadStep: Step = {
     const dir = downloadsDir();
     const setup = downloadedSetup(dir, ctx.version);
     const sumsFile = path.join(dir, "SHA256SUMS.txt");
-    ctx.say(`  1. In Microsoft Edge (or your usual browser), open ${RELEASE_URL} and click "LrC-AVG v${ctx.version}-rc.1".`);
+    ctx.say(`  1. In Microsoft Edge (or your usual browser), open ${RELEASE_URL} and click "LrC-AVG v${ctx.version}-rc.2".`);
     ctx.say(`  2. Under "Assets", click LrC-AVG-Setup-${ctx.version}.exe, then SHA256SUMS.txt. Both go to your Downloads folder.`);
     // Edge's wording for an unsigned download is [unverified]: no download from the release has been made yet.
     ctx.say('  3. If the browser warns that the file "isn\'t commonly downloaded" or could harm your device, choose Keep (in Edge: the three dots next to the file > Keep > Show more > Keep anyway).');

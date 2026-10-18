@@ -15,6 +15,8 @@
 //     goes over a limit the photo was within, or a preserved region drifts. No correction moves the
 //     global sliders for a mask. The undo is written only while the table is still what the pass
 //     left; otherwise the breach is reported `unmet`.
+// Geometry and points are given and shown in the preview's frame, mapped through the photo's crop as read in
+// the same call (crop.ts, params\crop-frame.ts; issue #179); a mask mostly outside the crop warns.
 // Variants mode: masks only on the pick (MASKS_AFTER_PICK before it). [handle: tests\session-masks.test.ts,
 // tests\session-ai-masks.test.ts, against the Lightroom sim; in Lightroom [unverified] until Jim's
 // mask tools check.]
@@ -31,6 +33,7 @@ import {
   applyOp,
   firstComponent,
   isAiKind,
+  outsideWarnings,
   pointOf,
   precheck,
   readTable,
@@ -39,18 +42,19 @@ import {
   tableInfo,
   uncaptured,
   type Correction,
-  type FromSdkResult,
+  type CropFrame,
   type MaskKind,
   type MaskOp,
-  type MaskSummary,
   type OpResult,
   type SdkSettings,
 } from "../params/index.js";
 import { makeAiMask, type AiResult } from "./ai-masks.js";
 import { checkAiPartPlugin, makeAiPart } from "./mask-parts.js";
 import { awaitApproval } from "./approval.js";
+import { frameOf } from "./crop.js";
 import { clipBreach, regionDrift, type Breach } from "./guardrail.js";
-import { brief, describe, failed, fresh, historyName, image, ms, readSdk, recordPass, render, writeTable } from "./io.js";
+import { brief, failed, fresh, historyName, image, ms, readSdk, recordPass, render, writeTable } from "./io.js";
+import { aiLog, passJson, type Done } from "./mask-result.js";
 import { convergedByRegions } from "./plan.js";
 import { checkReady, focus, resolveTarget } from "./targets.js";
 import type { CreateMaskArgs, DeleteMaskArgs, EditMaskArgs, ListMasksArgs, Rendered, ReturnImage, Session, SessionContext, SessionOutput, Target, TargetId } from "./types.js";
@@ -63,17 +67,19 @@ import type { CreateMaskArgs, DeleteMaskArgs, EditMaskArgs, ListMasksArgs, Rende
 export const MASKS_PLUGIN = "0.16.0";
 
 type PassArgs = { session_id: string; target?: TargetId | undefined; rationale: string; return_image?: ReturnImage | undefined };
-/** What a mask pass wrote and measured. */
-type Done = { sdk: SdkSettings; view: FromSdkResult; rendered: Rendered; actions: GuardrailAction[]; historyNames: string[]; id: string; ai: AiResult | null; undone: Breach | null };
 
 const sliderRanges = (): Record<string, [number, number]> => Object.fromEntries([...LOCAL_PARAMS].map(([k, p]) => [k, [p.min, p.max]]));
+
+/** The photo's masks as the tools show them: geometry in the preview's frame (issue #179, crop.ts). */
+const summaries = (sdk: SdkSettings, frame: CropFrame) => readTable(sdk).map((e) => summarize(e, frame));
 
 /** lr_list_masks: the photo's masks, no pass. */
 export async function listMasks(ctx: SessionContext, s: Session, args: ListMasksArgs): Promise<SessionOutput> {
   const t = resolveTarget(s, args.target, "read");
   s.work = { target: t, pass: null };
   await focus(ctx, s, t);
-  const masks = readTable((await readSdk(ctx, s, t)).sdk).map(summarize);
+  const { sdk } = await readSdk(ctx, s, t);
+  const masks = summaries(sdk, await frameOf(ctx, s, t, sdk));
   return {
     json: { ok: true, session_id: s.id, target: t.id, pass: `${t.passes}/${s.maxPasses}`, count: masks.length, masks, local_sliders: sliderRanges() },
     log: { session_id: s.id, target: t.id, count: masks.length },
@@ -153,7 +159,8 @@ async function renameMask(ctx: SessionContext, s: Session, a: EditMaskArgs & { n
   const first = await readSdk(ctx, s, t);
   const before = readTable(first.sdk);
   refuseUncaptured(s, before, op);
-  const plan = applyOp(before, op); // MaskError: nothing written
+  const frame = await frameOf(ctx, s, t, first.sdk);
+  const plan = applyOp(before, op, frame); // MaskError: nothing written
   if (sameTable(before, plan.entries)) throw new ToolError("NO_CHANGE", "Nothing was written: the mask already has this name. A rename uses no pass.", false, { session_id: s.id });
   const name = historyName(s, t, t.passes, "mask rename");
   let sdk: SdkSettings;
@@ -163,7 +170,7 @@ async function renameMask(ctx: SessionContext, s: Session, a: EditMaskArgs & { n
     throw failed(ctx, s, `mask rename (pass ${t.passes})`, err);
   }
   if (t.last?.masks === first.view.masks.fingerprint) t.last = { ...t.last, masks: ctx.deps.map.fromSdk(sdk).masks.fingerprint };
-  const masks = readTable(sdk).map(summarize);
+  const masks = summaries(sdk, frame);
   const mask = masks.find((m) => m.id === plan.id) ?? plan.after ?? plan.before;
   return {
     json: { ok: true, session_id: s.id, target: t.id, pass: `${t.passes}/${s.maxPasses}`, pass_used: false, op: "rename", mask, masks, history_names: [name], passes_left: s.maxPasses - t.passes, timings: { total_ms: ms(started) } },
@@ -183,7 +190,8 @@ async function maskPass(ctx: SessionContext, s: Session, args: PassArgs, op: Mas
   const first = await readSdk(ctx, s, t);
   const before = readTable(first.sdk);
   refuseUncaptured(s, before, op);
-  const plan = applyOp(before, op); // MaskError: nothing written
+  const frame = await frameOf(ctx, s, t, first.sdk);
+  const plan = applyOp(before, op, frame); // MaskError: nothing written
   if (plan.ai) checkAiPartPlugin(ctx); // issue #131: before the write
   if (sameTable(before, plan.entries)) throw new ToolError("NO_CHANGE", "Nothing was written: the mask already is as asked. The pass is not used.", false, { session_id: s.id });
   let baseline: Rendered;
@@ -194,39 +202,35 @@ async function maskPass(ctx: SessionContext, s: Session, args: PassArgs, op: Mas
   }
   if ((await readSdk(ctx, s, t)).view.masks.fingerprint !== first.view.masks.fingerprint) throw masksChanged(s);
   try {
-    const done = await applyPlan(ctx, s, t, n, op, plan, before, baseline);
+    const done = await applyPlan(ctx, s, t, n, op, plan, before, baseline, frame);
     t.passes = n;
     t.endReason = n >= s.maxPasses ? "cap_reached" : null; // never "converged": a mask pass may follow convergence
     const delta = deltaMetrics(baseline.metrics, done.rendered.metrics);
     const converged = !done.undone && convergedByRegions(delta); // a signal only (issue #130 item 4)
-    const masks = readTable(done.sdk).map(summarize);
+    const masks = summaries(done.sdk, frame);
     const after = masks.find((m) => m.id === done.id) ?? null;
     const mask: MaskPassEntry = { op: op.op, id: done.id, name: (after ?? plan.before ?? plan.after)?.name ?? "", kind: plan.kind, before: plan.before, after, ...(done.ai ? { ai: aiLog(done.ai) } : {}) };
+    const warnings = op.op === "delete" || done.undone ? [] : outsideWarnings(frame, after); // issue #179
     recordPass(s, {
       n, kind: "mask", target: t.id, started: passStarted, duration_ms: ms(started), history_names: done.historyNames, rationale: args.rationale,
       requested: { ...op }, changes: [], clamped: [], refused: [], unchanged: [], settings_before: first.view.settings, settings_after: done.view.settings,
       metrics_before: metricsOf(baseline.metrics), metrics_after: metricsOf(done.rendered.metrics), delta_metrics: delta, preview_hash: done.rendered.hash,
-      preview_source: "export", guardrail_actions: done.actions, converged_by_metrics: converged, ...(approval ? { approval } : {}), mask,
+      preview_source: "export", guardrail_actions: done.actions, converged_by_metrics: converged, ...(approval ? { approval } : {}), mask, ...(warnings.length > 0 ? { warnings } : {}),
     });
-    const json = passJson(s, t, n, op, { mask, masks, done, delta, converged, started });
+    const json = passJson(s, t, n, op, { mask, masks, done, delta, converged, started, warnings });
     const img = await image(s, args.return_image ?? "after", baseline, done.rendered, `pass ${n - 1}`, `pass ${n}`);
     return {
       json: { ...json, ...(approval ? { approval } : {}) },
       ...(img ? { image: img } : {}),
-      log: { session_id: s.id, pass: json["pass"], op: op.op, mask_id: done.id, kind: plan.kind, history_names: done.historyNames, metrics: brief(done.rendered.metrics), ...(done.ai ? { ai: aiLog(done.ai) } : {}), ...(done.undone ? { undone: done.undone.limit } : {}) },
+      log: { session_id: s.id, pass: json["pass"], op: op.op, mask_id: done.id, kind: plan.kind, history_names: done.historyNames, metrics: brief(done.rendered.metrics), ...(done.ai ? { ai: aiLog(done.ai) } : {}), ...(done.undone ? { undone: done.undone.limit } : {}), ...(warnings.length > 0 ? { warnings } : {}) },
     };
   } catch (err) {
     throw failed(ctx, s, `mask pass ${n} (${op.op})`, err);
   }
 }
 
-const aiLog = (ai: AiResult): NonNullable<MaskPassEntry["ai"]> => {
-  const { sdk: _sdk, id: _id, ...rest } = ai;
-  return rest;
-};
-
 /** Write the table, make an AI mask compute, render, and undo the pass when it breaches a limit. */
-async function applyPlan(ctx: SessionContext, s: Session, t: Target, n: number, op: MaskOp, plan: OpResult, before: Correction[], baseline: Rendered): Promise<Done> {
+async function applyPlan(ctx: SessionContext, s: Session, t: Target, n: number, op: MaskOp, plan: OpResult, before: Correction[], baseline: Rendered, frame: CropFrame): Promise<Done> {
   const historyNames: string[] = [];
   const name = historyName(s, t, n, `mask ${op.op}`);
   let sdk = await writeTable(ctx, s, t, plan.entries, name, op.op === "delete");
@@ -235,7 +239,7 @@ async function applyPlan(ctx: SessionContext, s: Session, t: Target, n: number, 
   let ai: AiResult | null = null;
   if (op.op === "create" && isAiKind(plan.kind)) {
     const point = AI_KINDS[plan.kind].point ? pointOf(firstComponent(plan.entries, id)) : null;
-    ai = await makeAiMask(ctx, s, { t, n, kind: plan.kind, before, id, name: plan.after?.name ?? "", stored: storedSliders(op.sliders ?? {}), historyNames, attempts: new Set([id]), point });
+    ai = await makeAiMask(ctx, s, { t, n, kind: plan.kind, before, id, name: plan.after?.name ?? "", stored: storedSliders(op.sliders ?? {}), historyNames, attempts: new Set([id]), point, frame });
     ({ sdk, id } = ai);
   } else if (plan.ai) {
     ai = await makeAiPart(ctx, s, { t, n, kind: plan.ai, before, id, name: plan.after?.name ?? "", stored: {}, historyNames, attempts: new Set(), point: null, part: true }); // issue #131
@@ -271,28 +275,3 @@ async function applyPlan(ctx: SessionContext, s: Session, t: Target, n: number, 
   return { sdk, view, rendered, actions, historyNames, id, ai, undone };
 }
 
-type PassOut = { mask: MaskPassEntry; masks: MaskSummary[]; done: Done; delta: ReturnType<typeof deltaMetrics>; converged: boolean; started: number };
-
-function passJson(s: Session, t: Target, n: number, op: MaskOp, { mask, masks, done, delta, converged, started }: PassOut): Record<string, unknown> {
-  return {
-    ok: true,
-    session_id: s.id,
-    target: t.id,
-    pass: `${n}/${s.maxPasses}`,
-    op: op.op,
-    mask: mask.after ?? mask.before,
-    ...(op.op === "delete" ? { deleted: !done.undone } : {}),
-    masks,
-    history_names: done.historyNames,
-    guardrail_actions: done.actions,
-    metrics: metricsOf(done.rendered.metrics),
-    delta_metrics: delta,
-    converged_by_metrics: converged,
-    cap_reached: t.endReason === "cap_reached",
-    passes_left: s.maxPasses - n,
-    ...(done.undone ? { undone: { limit: done.undone.limit, reason: done.undone.reason, note: "the mask change was written, then undone: the masks are as before this pass" } } : {}),
-    ...(done.ai ? { ai: { route: done.ai.route, ...(done.ai.route === "dc" ? { switched_to_develop: true, fallback: done.ai.fallback } : {}), ...(done.ai.instance !== undefined ? { instance: done.ai.instance, people: done.ai.people } : {}), ...(done.ai.probe ? { probe: done.ai.probe } : {}) } } : {}),
-    ...describe(done.rendered),
-    timings: { total_ms: ms(started) },
-  };
-}

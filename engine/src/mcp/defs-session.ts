@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { APPROVAL_WAIT_MS } from "../session/index.js";
-import { MEASURED, box, longEdge, sessionId, target, type ToolDef } from "./defs-shared.js";
+import { FRAME, MEASURED, box, longEdge, sessionId, target, type ToolDef } from "./defs-shared.js";
 import { DEFAULT_LONG_EDGE, MAX_LONG_EDGE, MIN_LONG_EDGE } from "./tools-shared.js";
 
 const returnImage = z
@@ -174,7 +174,7 @@ export const SESSION_DEFS: ToolDef[] = [
     name: "lr_set_regions",
     title: "Set measured regions",
     description:
-      "Name parts of the photo (skin, fur, sky or custom) as boxes in 0-1 of the image; their metrics appear in every later " +
+      `Name parts of the photo (skin, fur, sky or custom) as boxes in ${FRAME}, as mask geometry is; their metrics appear in every later ` +
       "`metrics.regions[]`, starting with the last preview (returned now). `preserve: true` guards a region: a pass that moves " +
       "its mean hue more than 6 degrees or its mean saturation more than 8 points from now is undone. A mask pass's " +
       "converged_by_metrics: every region's change is under the convergence thresholds (mean luma < 1/255, clipping < 0.1 point); " +

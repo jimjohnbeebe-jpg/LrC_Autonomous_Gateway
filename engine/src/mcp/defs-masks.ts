@@ -6,11 +6,14 @@
 // in Lightroom until Jim's mask tools check (it creates a luminance range; it does not invert). Parts of a mask
 // (issue #131): only the forms params\mask-combine.ts VERIFIED_FORMS lists are written, and the tool text names
 // them from that list; how a form renders is checked by `npm run masks:combine` (docs\reports\phase8.5\mask-combine.md).
+// Every point and box is in the preview's frame (FRAME, issue #179), mapped to the uncropped photo by
+// params\crop-frame.ts; where Lightroom puts it on a cropped, angled or turned photo is [unverified] until
+// `npm run masks:crop` (docs\reports\phase9\issue179.md).
 
 import { z } from "zod";
 import { AI_KINDS, LOCAL_PARAMS, MODE_NAMES, REFUSED_KINDS, VERIFIED_FORMS } from "../params/index.js";
 import { AI_PART_PLUGIN, MASKS_PLUGIN } from "../session/index.js";
-import { sessionId, target, type ToolDef } from "./defs-shared.js";
+import { FRAME, sessionId, target, type ToolDef } from "./defs-shared.js";
 
 const unit = z.number().min(0).max(1);
 const point = z.object({ x: unit, y: unit });
@@ -25,7 +28,10 @@ const geometry = z
     feather: z.number().min(0).max(100).optional().describe("radial: feather 0-100 (new radial: 50)"),
     lum_range: z.array(unit).length(4).optional().describe("luminance: [a, b, c, d] in 0-1, each at least the one before: luminance a..d is masked, fully from b to c"),
   })
-  .describe("In 0-1 of the uncropped photo, from its top-left corner. linear: zero and full points; radial: the ellipse's box left, top, right, bottom; luminance: lum_range. AI kinds take none.");
+  .describe(
+    `In ${FRAME}, as lr_get_preview \`region\` and lr_set_regions are; the engine maps it through the photo's crop (its angle included). ` +
+      "linear: zero and full points; radial: the ellipse's box left, top, right, bottom (the ellipse is square to the preview); luminance: lum_range (tones, not a place). AI kinds take none.",
+  );
 const sliders = z
   .record(z.string(), z.number())
   .describe(`local slider -> the value to SET (not a change), in the Masking panel's units: ${[...LOCAL_PARAMS].map(([k, p]) => `${k} ${p.min}..${p.max}`).join(", ")}`);
@@ -56,7 +62,7 @@ const createArgs = z.object({
     .optional()
     .describe('the name the Masks panel shows (default "AVG <kind>"); a suggested style is "N. Subject - Purpose", for example "4. Lone Juniper - Foliage Separation"; any clear name works'),
   geometry: geometry.optional(),
-  point: point.optional().describe(`${group("person_")} only: a point on that person (on the face, for face skin), in 0-1 of the photo`),
+  point: point.optional().describe(`${group("person_")} only: a point on that person (on the face, for face skin), in ${FRAME}`),
   sliders: sliders.optional(),
 });
 const editArgs = z.object({
@@ -101,7 +107,8 @@ const PASS_NOTE =
   "Lightroom meanwhile: MASKS_CHANGED, nothing written. The other masks on the photo, the user's own included, are written back " +
   "unchanged and checked on read-back. Editing a mask the tools cannot write back safely (several parts in a form not listed " +
   "under lr_edit_mask, a blend mode on its first part, a kind not listed here) is refused: MASKS_UNCAPTURED_KIND, nothing " +
-  "written; deleting it is allowed. " +
+  "written; deleting it is allowed. A mirrored photo refuses geometry and points (CROP_FRAME_UNSUPPORTED). " +
+  "`warnings`: a mask 90 % or more outside the preview (the crop). " +
   "Returns the mask, every mask of the photo (`masks`, with fresh ids), " +
   `metrics, delta_metrics and the image. Needs plugin ${MASKS_PLUGIN}. Not offered: brush painting, Select Objects, colour or ` +
   "depth range sampling, reading mask pixels, mask presets.";
@@ -113,6 +120,8 @@ export const MASK_DEFS: ToolDef[] = [
     description:
       "List the masks on the session's photo: id, name, kind (lr_create_mask's kinds; \"ai\", \"range\" or \"other\" for a kind Lightroom made that the tools do not know; \"mixed\" for components of several kinds), " +
       "on/off, inverted, components, the local sliders not at 0 (Masking panel units), geometry, and for AI masks whether they have computed. " +
+      `Geometry, points and people's boxes are in ${FRAME}, as lr_create_mask takes them; a mask drawn past the crop in Lightroom reads outside 0-1. ` +
+      "On a mirrored photo geometry reads { unavailable: <why> }. " +
       "A mask of several parts also lists `parts`, in order (lr_edit_mask `part` 1 is the first): each part's kind, mode (add, subtract, intersect; \"other\" for none of them), inverted and geometry. " +
       "Also lists the local sliders and their ranges. Does not use a pass and writes nothing.",
     schema: listArgs,
@@ -137,7 +146,7 @@ export const MASK_DEFS: ToolDef[] = [
       "Lightroom's Develop module instead (Lightroom then switches to Develop; `ai.route` \"dc\", `switched_to_develop`); people and " +
       "landscape kinds have no such fallback. If nothing works, FEATURE_UNAVAILABLE (details.routes_tried): the masks are as before and " +
       "the pass is not used. One person's kinds (person_*) take the person whose box holds the point: `ai.people` lists every person's " +
-      "box Lightroom found (left, top, right, bottom in 0-1 of the photo) and `ai.instance` the one chosen (lr_list_masks shows both); " +
+      "box Lightroom found (left, top, right, bottom, in the same frame as geometry) and `ai.instance` the one chosen (lr_list_masks shows both); " +
       "no person at the point: MASK_NOTHING_FOUND with the boxes, so a point inside the right box can be given. " +
       PASS_NOTE,
     schema: createArgs,

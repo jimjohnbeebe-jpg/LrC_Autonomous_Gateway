@@ -4,7 +4,7 @@
 // The clip_baseline, Variants, precedence and pipeline text moved here from lr_begin_session's description.
 // Item 3's "downscaling understates clipping at print size" is [inference]; "clip at export resolution" is tracked in issue #159.
 
-import { MEASURED, noArgs, type ToolDef } from "./defs-shared.js";
+import { FRAME, MEASURED, noArgs, type ToolDef } from "./defs-shared.js";
 import { DEFAULT_LONG_EDGE } from "./tools-shared.js";
 
 export const HELP_TEXT = [
@@ -21,7 +21,8 @@ export const HELP_TEXT = [
   `3. Previews. Session previews are ${DEFAULT_LONG_EDGE} px on the long edge by default: downscaling averages pixels, so ` +
     "they understate clipping and fine detail at print size. lr_get_preview with `region` exports the photo " +
     "larger and returns a crop of that box, for finer detail (sharpness, noise, fringing). Its `metrics` describe the whole " +
-    "export (`metrics_scope` \"frame\") and `crop_metrics` the requested box, measured at export resolution.",
+    "export (`metrics_scope` \"frame\") and `crop_metrics` the requested box, measured at export resolution. " +
+    `Every point and box a tool takes or gives (\`region\`, lr_set_regions, mask geometry, points and people's boxes) is in ${FRAME}.`,
   "",
   `4. Metrics. ${MEASURED}`,
   "",

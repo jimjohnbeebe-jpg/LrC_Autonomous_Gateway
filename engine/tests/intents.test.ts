@@ -76,9 +76,9 @@ describe("intents: the bundled starter set", () => {
     }
   });
 
-  it("uses the user folder from LRC_AVG_INTENTS_DIR, else %LOCALAPPDATA%\\LrC-AVG\\intents", () => {
-    expect(defaultUserIntentsDir({ LRC_AVG_INTENTS_DIR: "D:\\x" })).toBe("D:\\x");
-    expect(defaultUserIntentsDir({ LOCALAPPDATA: "C:\\L" })).toBe(path.join("C:\\L", "LrC-AVG", "intents"));
+  it("uses the user folder from LRC_AVG_INTENTS_DIR, else <Documents>\\LrC-AVG\\intents (issue #180)", () => {
+    expect(defaultUserIntentsDir({ LRC_AVG_INTENTS_DIR: "D:\\x" }, () => "unused")).toBe("D:\\x");
+    expect(defaultUserIntentsDir({ LOCALAPPDATA: "C:\\L" }, () => "D:\\Docs")).toBe(path.join("D:\\Docs", "LrC-AVG", "intents"));
   });
 });
 
@@ -148,7 +148,7 @@ describe("intents: the user folder", () => {
       variants: { A: { label: "a", priors: {} }, B: { label: "b", priors: { temperature: 100 } }, C: { label: "c", priors: {}, priors_by_pipeline: { rendered: { tint: 5 } } } },
     }));
     const byFile = new Map(library.list().warnings.map((w) => [w.file, w.problem]));
-    expect(byFile.get("v1.json")).toMatch(/schema v1 intent.*"profile": {"raw"/);
+    expect(byFile.get("v1.json")).toMatch(/schema v1 intent.*ask Claude: "Rewrite this intent as schema v2 and save it over the old file\.".*replace: true.*"profile": {"raw"/);
     expect(byFile.get("v3.json")).toMatch(/schema_version: 3 is not supported/);
     expect(byFile.get("wb_shared.json")).toMatch(/priors.tint: tint goes in priors_by_pipeline.*kelvin on raw, relative on rendered/);
     expect(byFile.get("wb_rendered.json")).toMatch(/priors_by_pipeline.rendered.temperature: an offset of 300 is larger than the whole range -100..100 on the rendered pipeline/);

@@ -4,7 +4,7 @@
 // The clip_baseline, Variants, precedence and pipeline text moved here from lr_begin_session's description.
 // Item 3's "downscaling understates clipping at print size" is [inference]; "clip at export resolution" is tracked in issue #159.
 
-import { MEASURED, noArgs, type ToolDef } from "./defs-shared.js";
+import { FRAME, MEASURED, noArgs, type ToolDef } from "./defs-shared.js";
 import { DEFAULT_LONG_EDGE } from "./tools-shared.js";
 
 export const HELP_TEXT = [
@@ -21,7 +21,8 @@ export const HELP_TEXT = [
   `3. Previews. Session previews are ${DEFAULT_LONG_EDGE} px on the long edge by default: downscaling averages pixels, so ` +
     "they understate clipping and fine detail at print size. lr_get_preview with `region` exports the photo " +
     "larger and returns a crop of that box, for finer detail (sharpness, noise, fringing). Its `metrics` describe the whole " +
-    "export (`metrics_scope` \"frame\") and `crop_metrics` the requested box, measured at export resolution.",
+    "export (`metrics_scope` \"frame\") and `crop_metrics` the requested box, measured at export resolution. " +
+    `Every point and box a tool takes or gives (\`region\`, lr_set_regions, mask geometry, points and people's boxes) is in ${FRAME}.`,
   "",
   `4. Metrics. ${MEASURED}`,
   "",
@@ -53,6 +54,19 @@ export const HELP_TEXT = [
   "",
   "8. Errors. Errors are {code, message, recoverable, details?}. A recoverable error says what to do, for example " +
     "SESSION_NOT_ACTIVE names the open session in `details.open_session_id`; recoverable false means change the call first.",
+  "",
+  "9. An AI mask Lightroom has not finished (LIGHTROOM_STUCK, AI_UPDATE_PENDING). Lightroom's AI mask is still computing: the " +
+    "session stays open and writes, renders and reverts nothing; the HUD shows the time waited (m:ss). These errors say recoverable " +
+    "false, but they end when Lightroom's result shows: the session then goes on; nothing else frees it. Lightroom does not notify you: " +
+    "when the user says to go on, call lr_step, lr_end_session or lr_create_mask with a linear or radial kind (not the same AI mask " +
+    "again, which would add a second one); each call checks. Tell the user to wait, or to press Abort in the Deck: it puts the photo " +
+    "back if the result has shown, and otherwise ends the edit as it is, says the photo was NOT put back and names the snapshot that puts it back. " +
+    "Abort also works during lr_create_mask's wait (up to 5 minutes): the wait ends within a few seconds and the call fails with " +
+    "SESSION_ENDED, which says the same; do not call lr_create_mask again then. Lightroom may still be finishing that mask: the user " +
+    "waits until its shape shows in Lightroom before clicking the snapshot or starting a new session. " +
+    "A Lightroom restart also works: the engine then puts the photo back and ends the session (later calls naming it get SESSION_ENDED). " +
+    "For the rest of the session prefer linear or radial masks to AI masks. AI_MASK_FAILED (Lightroom's update over, no result " +
+    "within the wait) is different: the user saves their work and restarts Lightroom.",
 ].join("\n");
 
 /** The server's instructions (MCP initialize result): a pointer to lr_help, kept short. */

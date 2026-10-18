@@ -11,7 +11,7 @@ import { lightroomNotices } from "../src/bridge/index.js";
 import { Tools, toToolError, type ToolError } from "../src/mcp/index.js";
 import { IntentLibrary } from "../src/intents/index.js";
 import { PreviewService } from "../src/preview/index.js";
-import { MISSING_NOTE } from "../src/session/hud-actions.js";
+import { MISSING_NOTE } from "../src/session/hud-notes.js";
 import { waitUntil } from "./helpers/fake-plugin.js";
 import { hudRig } from "./helpers/hud-harness.js";
 import { ID, client, map, userDir } from "./helpers/session-harness.js";

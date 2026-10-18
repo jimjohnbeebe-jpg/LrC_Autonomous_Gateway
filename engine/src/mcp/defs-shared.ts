@@ -42,6 +42,12 @@ export const noArgs = z.object({});
 /** A session photo: the master, or a copy of a Variants session. */
 export const target = z.enum(["master", "A", "B", "C"]).optional();
 export const sessionId = z.string().min(1).describe("the session_id from lr_begin_session");
+/**
+ * The one frame of every point and box the tools take or give (GitHub issue #179): the preview, which follows
+ * a Lightroom crop [handle: src\mcp\tools-context.ts regionPreview, "The export follows a Lightroom crop"];
+ * mask geometry is mapped to the uncropped photo by params\crop-frame.ts.
+ */
+export const FRAME = "0-1 of the preview you see (the photo as cropped in Lightroom, upright), from its top-left corner";
 export const box = z
   .object({ x: z.number(), y: z.number(), w: z.number(), h: z.number() })
-  .describe("a box in 0-1 of the image's width and height, from the top-left corner: {x, y, w, h}");
+  .describe(`a box in ${FRAME}: {x, y, w, h}`);

@@ -1,6 +1,10 @@
 // Tool description clauses Claude needs (issue #129) and the UNKNOWN_PARAMETER message.
 
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
+import { CONTEXT_DEFS } from "../src/mcp/defs-context.js";
+import { HELP_TEXT } from "../src/mcp/defs-help.js";
+import { FRAME } from "../src/mcp/defs-shared.js";
 import { MASK_DEFS } from "../src/mcp/defs-masks.js";
 import { SESSION_DEFS } from "../src/mcp/defs-session.js";
 import { toToolError } from "../src/mcp/errors.js";
@@ -42,5 +46,16 @@ describe("tool descriptions (issue #129)", () => {
     expect(tool.message).toContain('Unknown parameter "crop.angle"');
     expect(tool.message).toContain("nothing was written to the photo and no pass was used");
     expect(tool.message).toContain("lr_get_active_photo_context");
+  });
+});
+
+describe("one coordinate frame (issue #179)", () => {
+  const defs = [...CONTEXT_DEFS, ...SESSION_DEFS, ...MASK_DEFS];
+  const def = (name: string) => defs.find((d) => d.name === name);
+  it("region, regions, mask geometry, a person's point, lr_list_masks and lr_help all name the preview's frame", () => {
+    for (const name of ["lr_get_preview", "lr_set_regions", "lr_create_mask", "lr_edit_mask"]) expect(JSON.stringify(z.toJSONSchema(def(name)?.schema ?? z.object({})))).toContain(FRAME);
+    for (const name of ["lr_get_preview", "lr_set_regions", "lr_list_masks"]) expect(def(name)?.description).toContain(FRAME);
+    expect(JSON.stringify(z.toJSONSchema(def("lr_create_mask")?.schema ?? z.object({})))).not.toContain("uncropped");
+    expect(HELP_TEXT).toContain(FRAME);
   });
 });

@@ -15,6 +15,7 @@
 // candidate, reads it back and asks Jim (docs\reports\phase8.5\mask-combine.md); until then it is refused
 // with MASK_OP_NOT_CAPTURED naming the form.
 
+import type { CropFrame } from "./crop-frame.js";
 import { checkKind, geometryFields, newComponent, type Geometry } from "./mask-build.js";
 import type { EditOp } from "./mask-ops.js";
 import { AI_KINDS, C, KIND_LABELS, M, MaskError, RADIAL, WHAT, aiError, componentKind, components, computed, isAiKind, untrusted, type AiKind, type Component, type Correction, type MaskKind } from "./mask-table.js";
@@ -109,10 +110,10 @@ export function precheckParts(op: EditOp): void {
 }
 
 /** A new part of `c.kind` in `c.mode` at the end of `parts`, once its form is verified; the AI kind Lightroom must compute, or null. */
-function addPart(parts: Component[], c: Combine): AiKind | null {
+function addPart(parts: Component[], c: Combine, frame?: CropFrame): AiKind | null {
   const kind = partKind(c);
   const same = parts.filter((m) => componentKind(m) === kind).length;
-  const m = newComponent(kind, `${KIND_LABELS[kind]} ${same + 1}`, c.geometry ?? {}, null);
+  const m = newComponent(kind, `${KIND_LABELS[kind]} ${same + 1}`, c.geometry ?? {}, null, frame);
   parts.push(Object.assign(m, modeFields(c.mode as CombineMode, m)));
   checkForm(formOf(parts));
   return isAiKind(kind) ? kind : null;
@@ -120,19 +121,19 @@ function addPart(parts: Component[], c: Combine): AiKind | null {
 
 /**
  * An edit with `combine` (add a part) or `part` (that part reshaped, inverted, set to a mode, or removed), applied
- * to correction `e` (a copy), once its form is verified. Returns the AI kind of an added part Lightroom must
- * compute, or null.
+ * to correction `e` (a copy), once its form is verified; geometry through `frame`, the photo's crop frame (issue
+ * #179). Returns the AI kind of an added part Lightroom must compute, or null.
  */
-export function editParts(e: Correction, op: EditOp): AiKind | null {
+export function editParts(e: Correction, op: EditOp, frame?: CropFrame): AiKind | null {
   precheckParts(op);
   const parts = components(e);
-  if (op.part === undefined) return addPart(parts, op.combine as Combine);
+  if (op.part === undefined) return addPart(parts, op.combine as Combine, frame);
   const i = op.part - 1;
   const m = parts[i];
   if (!m) return invalid(`Mask ${String(e[C.id])} has ${parts.length} part(s): there is no part ${op.part} (lr_list_masks \`parts\`).`);
   const change = op.geometry ? `reshape part ${op.part}` : op.inverted !== undefined ? `part ${op.part} inverted ${op.inverted}` : op.combine ? `part ${op.part} to ${op.combine.mode}` : `remove part ${op.part}`;
   checkForm(`${formOf(parts)}: ${change}`);
-  if (op.geometry) Object.assign(m, geometryFields(String(componentKind(m)), op.geometry, m));
+  if (op.geometry) Object.assign(m, geometryFields(String(componentKind(m)), op.geometry, m, frame));
   else if (op.inverted !== undefined) Object.assign(m, { [M.inverted]: op.inverted }, m[M.what] === WHAT.radial ? { [RADIAL.flipped]: !op.inverted } : {});
   else if (op.combine) Object.assign(m, modeFields(op.combine.mode as CombineMode, m));
   else parts.splice(i, 1);

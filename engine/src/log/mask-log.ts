@@ -59,7 +59,7 @@ export const aiTraceSchema = z.strictObject({
   /** update_ai_settings' answer: its `state`, "no answer" (timed out) or the error. */
   sent: z.string(),
   probes: z.array(z.strictObject({ t_ms: z.number(), status: z.string(), update: z.string().optional(), error: z.string().optional() })),
-  /** Probes beyond the ones listed (the list is capped). */
+  /** Probes dropped from the middle of the list: the first 20 and the last 20 are kept (session\ai-trace.ts, issue #181). */
   probes_dropped: z.number().int(),
   reads: z.strictObject({ count: z.number().int(), unanswered: z.number().int(), slowest_ms: z.number(), last_t_ms: z.number(), last_entry: z.string() }),
 });

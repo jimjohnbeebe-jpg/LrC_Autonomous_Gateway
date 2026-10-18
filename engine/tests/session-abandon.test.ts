@@ -13,17 +13,21 @@ useSessionHarness();
 const FAST = { computeMs: 300, dcWaitMs: 300, pollMs: 5, pollMaxMs: 10, dialogAfterMs: 30, probeEveryMs: 10, probeReplyMs: 50, stuckProbesMs: 10_000, clearMs: 100 };
 const sent = (name: string): number => plugin.received.filter((r) => r.name === name).length;
 const toPhoto = (): number => plugin.received.filter((r) => !r.name.startsWith("hud_") && r.name !== "clear_pending_ai").length;
-/** The harness begins its sessions without an MCP client, so the notes name "the AI" (session/client.ts). */
-const UNNAMED = {} as Session;
+/** The abandon note as the harness's session gets it: it has no MCP client, so the notes name "the AI" (session/client.ts). */
+const noteOf = (byUser: boolean): string => abandonedNote({ snapshot: readLog().snapshot } as Session, byUser);
 const abandon = (m: SessionManager) => m.end({ session_id: ID, outcome: "abandon" });
 
-/** A session whose AI mask got no result: LIGHTROOM_STUCK, or AI_MASK_FAILED with `failed`. */
+/**
+ * A session whose AI mask got no result: LIGHTROOM_STUCK with Lightroom's update still running and holding the gate (the session
+ * stays frozen, issue #181), or AI_MASK_FAILED with `failed` (the update over, no result).
+ */
 async function stuck(failed = false) {
   let begun = 0; // a second session gets its own id, so its own log
   clean();
   const rig = hudRig({ aiTimings: { ...FAST, ...(failed ? { computeMs: 10_000, settleMs: 50 } : {}) }, newId: () => (begun++ === 0 ? ID : "fedcba98-7654-3210-fedc-ba9876543210") });
   await rig.manager.begin({ intent_id: "test_plain", return_image: "none", max_passes: 4 });
-  lr.masks.tableRoute = "late";
+  if (failed) lr.masks.tableRoute = "late";
+  else [lr.masks.gate, lr.masks.heldProbes] = ["slow", 1_000_000];
   const e = await fails(rig.manager.createMask({ session_id: ID, rationale: "test", return_image: "none", kind: "landscape_vegetation" }));
   expect(e.code).toBe(failed ? "AI_MASK_FAILED" : "LIGHTROOM_STUCK");
   expect(e.message).toMatch(/lr_end_session "abandon" ends the session and leaves the photo as it is\./);
@@ -44,7 +48,7 @@ describe("issue #124: lr_end_session abandon", () => {
     expect(lr.masks.guard.size).toBe(0);
     expect(readLog()).toMatchObject({ outcome: "abandoned", ended_by: { source: "ai" }, revert: null, recipe_path: null });
     expect(rig.manager.current()).toBeNull();
-    expect(await hudAt("ended")).toMatchObject({ note: abandonedNote(UNNAMED, false) });
+    expect(await hudAt("ended")).toMatchObject({ note: noteOf(false) });
     lr.masks.tableRoute = "computes";
     expect((await rig.manager.begin({ intent_id: "test_plain", return_image: "none" })).json).toMatchObject({ ok: true });
     expect(lr.masks.refusedPending).not.toContain("create_snapshot");
@@ -110,10 +114,11 @@ describe("issue #124: the HUD's Abort while the AI mask is stuck", () => {
     expect(sent("apply_snapshot")).toBe(before);
     expect(sent("clear_pending_ai")).toBe(1);
     expect(readLog()).toMatchObject({ outcome: "abandoned", ended_by: { source: "hud", click_id: "abandon-1" } });
-    expect(await hudAt("ended")).toMatchObject({ note: abandonedNote(UNNAMED, true) });
+    expect(await hudAt("ended")).toMatchObject({ note: noteOf(true) });
     const later = await fails(rig.manager.step({ session_id: ID, settings: { exposure: 0.2 }, rationale: "test", return_image: "none" }));
     expect(later).toMatchObject({ code: "SESSION_ENDED" });
-    expect(later.message).toMatch(/abandoned it while Lightroom's AI mask was stuck/);
+    expect(later.message).toMatch(/abandoned it while Lightroom's AI mask was still computing: the photo was NOT put back, it keeps the session's edits; the snapshot "AVG pre-session .*" puts it back/);
+    expect(later.details).toMatchObject({ outcome: "abandoned", snapshot: readLog().snapshot.name });
   });
 
   it("abandons the edit with Lightroom gone too, where the reconnect fails before any revert (Greptile, PR #134)", async () => {

@@ -1,5 +1,5 @@
 // What `lrc-avg-setup --installer` leaves for the Windows setup (PHASE9_PLAN row 2, decision D4), in the
-// product's data folder %LOCALAPPDATA%\LrC-AVG\ (the folder of logs\ and intents\):
+// product's data folder %LOCALAPPDATA%\LrC-AVG\ (the folder of logs\; the intents moved to Documents, issue #180):
 //   setup-result.json  the record {time, version, action, outcome, config_path, message}
 //   setup-result.txt   the same message as one plain line, for an NSIS MessageBox
 // The command exits 0 whatever happened, so the setup reads these files, not the exit code. Both are

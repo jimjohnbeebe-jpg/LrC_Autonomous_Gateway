@@ -24,7 +24,8 @@ export const INTENT_DEFS: ToolDef[] = [
     description:
       "List the editing intents: optional starting points for a session, never rules over the user's request (id, label, category, and whether it is bundled with the engine " +
       "or the user's own; a user intent with the same id replaces the bundled one). Files that failed validation are listed " +
-      "under `warnings` and are not usable. Changes nothing; does not need Lightroom.",
+      "under `warnings` and are not usable. `intents_folder` names the user's folder (`path`, `real_path` where it is on disk, `virtualized` and a `warning` " +
+      "when Windows redirects it into Claude Desktop's package); `notes` says which intents were copied in from the older folders. Changes nothing; does not need Lightroom.",
     schema: noArgs,
     annotations: { readOnlyHint: true, openWorldHint: false },
     run: (tools) => tools.listIntents(),
@@ -55,7 +56,7 @@ export const INTENT_DEFS: ToolDef[] = [
       "raw profile and `profile.rendered` \"Color\" or \"Monochrome\", no colour-slider priors on a monochrome profile) and nothing is written if it is invalid (INVALID_INTENT, with " +
       "`details.problems`). An existing user intent with the same id is replaced only with `replace: true` (else INTENT_EXISTS); " +
       "a bundled intent with the same id is overridden, and its file is not changed. To copy an intent, lr_get_intent it and save it " +
-      "under a new id; to rename one, copy it, then lr_delete_intent the old id. Does not touch Lightroom.",
+      "under a new id; to rename one, copy it, then lr_delete_intent the old id. The result's `intents_folder.real_path` is the folder as File Explorer shows it. Does not touch Lightroom.",
     schema: saveIntentArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     run: (tools, args) => tools.saveIntent(args as z.infer<typeof saveIntentArgs>),

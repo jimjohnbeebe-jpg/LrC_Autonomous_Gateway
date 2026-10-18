@@ -86,7 +86,7 @@ end
 local function folderBox(f, prefs)
     return box(f, prefs, "Folders (blank: the default; the engine's LRC_AVG_* variable wins when set)", {
         row(f, prefs, "Intents folder:", f:edit_field { value = LrView.bind("intentsFolder"), width_in_chars = 45 }),
-        f:static_text { title = "Default: %LOCALAPPDATA%\\LrC-AVG\\intents. Variable: LRC_AVG_INTENTS_DIR." },
+        f:static_text { title = "Default: LrC-AVG\\intents in your Documents folder. Variable: LRC_AVG_INTENTS_DIR." },
         row(f, prefs, "Log folder:", f:edit_field { value = LrView.bind("logFolder"), width_in_chars = 45 }),
         f:static_text { title = "Default: %LOCALAPPDATA%\\LrC-AVG\\logs. Variable: LRC_AVG_LOG_DIR (the development Claude Desktop entry sets it)." },
     })

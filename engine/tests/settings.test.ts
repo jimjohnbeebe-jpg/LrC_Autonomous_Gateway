@@ -118,18 +118,19 @@ describe("settings: a session's values in order", () => {
 
 describe("settings: folders", () => {
   const env = { LOCALAPPDATA: "C:\\Users\\U\\AppData\\Local" };
+  const documents = () => "D:\\OneDrive\\Documents";
   const read = (values: Record<string, string>) => ({ read: true, values });
 
   it("uses the defaults until the page names a folder", () => {
-    const f = new EngineFolders(env);
-    expect(f.intents()).toEqual({ path: path.join(env.LOCALAPPDATA, "LrC-AVG", "intents"), from: "default" });
+    const f = new EngineFolders(env, documents);
+    expect(f.intents()).toEqual({ path: path.join(documents(), "LrC-AVG", "intents"), from: "default" });
     expect(f.log()).toEqual({ path: path.join(env.LOCALAPPDATA, "LrC-AVG", "logs"), from: "default" });
     f.update(read({ intents_dir: "", log_dir: "" }));
     expect(f.log().from).toBe("default");
   });
 
   it("uses the page's full paths, and keeps them when a later read fails", () => {
-    const f = new EngineFolders(env);
+    const f = new EngineFolders(env, documents);
     f.update(read({ intents_dir: "D:\\Photos\\intents", log_dir: "\\\\nas\\share\\logs" }));
     expect(f.intents()).toEqual({ path: "D:\\Photos\\intents", from: "page" });
     expect(f.logDir()).toBe("\\\\nas\\share\\logs");
@@ -138,7 +139,7 @@ describe("settings: folders", () => {
   });
 
   it("refuses a page folder that is not a full path, and says so", () => {
-    const f = new EngineFolders(env);
+    const f = new EngineFolders(env, documents);
     f.update(read({ intents_dir: "intents", log_dir: "C:logs" }));
     expect(f.intents()).toMatchObject({ from: "default", problem: 'the page\'s folder "intents" is not a full path' });
     expect(f.log().from).toBe("default");
@@ -146,7 +147,7 @@ describe("settings: folders", () => {
   });
 
   it("lets the environment variables win (decision 2d)", () => {
-    const f = new EngineFolders({ ...env, LRC_AVG_LOG_DIR: "D:\\repo\\logs", LRC_AVG_INTENTS_DIR: "D:\\repo\\intents" });
+    const f = new EngineFolders({ ...env, LRC_AVG_LOG_DIR: "D:\\repo\\logs", LRC_AVG_INTENTS_DIR: "D:\\repo\\intents" }, documents);
     f.update(read({ intents_dir: "D:\\Photos\\intents", log_dir: "D:\\Photos\\logs" }));
     expect(f.log()).toEqual({ path: "D:\\repo\\logs", from: "environment" });
     expect(f.intents()).toEqual({ path: "D:\\repo\\intents", from: "environment" });

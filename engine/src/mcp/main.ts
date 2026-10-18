@@ -89,7 +89,7 @@ const tools = new Tools({
   client,
   map,
   previews,
-  intents: new IntentLibrary({ map, userDir: () => settings.folders.intentsDir() }),
+  intents: new IntentLibrary({ map, userDir: () => settings.folders.intentsDirMigrating() }),
   sessionLogDir: () => settings.folders.logDir(),
   settings,
   logFolders: new KnownLogFolders(),

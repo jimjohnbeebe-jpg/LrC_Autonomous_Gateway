@@ -34,6 +34,7 @@
     "masks:combine": "npm run build && node engine/dist/devtools/mask-combine-probe-cli.js",
     "effects:probe": "npm run build && node engine/dist/devtools/effects-probe-cli.js",
     "stall:check": "npm run build && node engine/dist/devtools/stall-check-cli.js",
+    "intents:check": "npm run build && node engine/dist/devtools/intents-check-cli.js",
     "phase8:check": "npm run build && node engine/dist/devtools/phase8-check-cli.js",
     "deck:build": "npm run build && npm run build -w hud",
     "deck:probe": "npm run build && node hud/probe/probe.ts",

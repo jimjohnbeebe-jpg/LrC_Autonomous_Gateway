@@ -18,6 +18,8 @@ function put(dir: string, file: string, text: string): void {
   writeFileSync(path.join(dir, file), text);
 }
 const text = (dir: string, file: string): string => readFileSync(path.join(dir, file), "utf8");
+const MARKER_HEAD =
+  'Looked at the older intents folders on 2026-10-18T12:00:00.000Z (issue #180). Files this folder lacked were copied, one per line below as "file <- from"; the old files were left where they are. Delete this file to look again.';
 
 beforeEach(() => {
   tmp = mkdtempSync(path.join(os.tmpdir(), "lrcavg-migrate-"));
@@ -60,9 +62,7 @@ describe("intents migration", () => {
   it("writes a marker that lists each file and where it came from, and copies nothing more while it exists", () => {
     put(real(), "a.json", "a");
     migrateIntents(target, env, new Date("2026-10-18T12:00:00Z"));
-    expect(text(target, MIGRATION_MARKER)).toBe(
-      `Copied by LrC-AVG on 2026-10-18T12:00:00.000Z (issue #180). The old files were left where they are. Delete this file to copy again.\na.json <- ${real()}\n`,
-    );
+    expect(text(target, MIGRATION_MARKER)).toBe(`${MARKER_HEAD}\na.json <- ${real()}\n`);
     put(real(), "later.json", "later");
     expect(migrateIntents(target, env).copied).toEqual([]);
     expect(existsSync(path.join(target, "later.json"))).toBe(false);
@@ -70,7 +70,17 @@ describe("intents migration", () => {
     expect(migrateIntents(target, env).copied).toEqual([{ file: "later.json", from: real() }]);
   });
 
-  it("leaves the new folder alone, marker included, when there is nothing to copy", () => {
+  it("writes the marker also when an old folder held nothing to copy, so a file deleted from the new folder does not come back", () => {
+    put(target, "old.json", "new");
+    put(packaged("Claude_abc"), "old.json", "v1");
+    expect(migrateIntents(target, env, new Date("2026-10-18T12:00:00Z"))).toEqual({ copied: [] });
+    expect(text(target, MIGRATION_MARKER)).toBe(`${MARKER_HEAD}\n`);
+    rmSync(path.join(target, "old.json")); // lr_delete_intent, or the rename: save under a new id, delete the old one
+    expect(migrateIntents(target, env)).toEqual({ copied: [] });
+    expect(existsSync(path.join(target, "old.json"))).toBe(false);
+  });
+
+  it("leaves the new folder alone, marker included, when there is no older folder to look at", () => {
     expect(migrateIntents(target, env)).toEqual({ copied: [] });
     expect(existsSync(target)).toBe(false);
     expect(migrateIntents(target, {})).toEqual({ copied: [] });

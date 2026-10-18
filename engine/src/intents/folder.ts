@@ -101,7 +101,13 @@ function probe(local: string, create: (file: string) => void): Virtualization {
   } catch {
     return { virtualized: false };
   } finally {
-    for (const file of found === undefined ? [here] : [here, inPackage(found)]) rmSync(file, { force: true });
+    for (const file of found === undefined ? [here] : [here, inPackage(found)]) {
+      try {
+        rmSync(file, { force: true });
+      } catch {
+        // force ignores only a missing path [handle: https://nodejs.org/api/fs.html#fsrmsyncpath-options]; a probe left behind is harmless, a failed intent tool is not [inference]
+      }
+    }
   }
 }
 

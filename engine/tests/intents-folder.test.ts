@@ -74,6 +74,11 @@ describe("intents folder: virtualization", () => {
     ).toEqual({ virtualized: false });
   });
 
+  it("does not throw when the probe file cannot be deleted", () => {
+    // a directory where the file should be: rmSync(dir, { force: true }) still throws [handle: node 24.11.1, 2026-10-18, a one-line script printed "throws ERR_FS_EISDIR"]
+    expect(detectVirtualization(local, (file) => mkdirSync(file))).toEqual({ virtualized: false });
+  });
+
   it("asks once per process and folder", () => {
     let probes = 0;
     const count = (file: string): void => {

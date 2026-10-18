@@ -9,7 +9,7 @@
 // own tool log stays where it opened at start (mcp\main.ts).
 
 import { defaultLogDir } from "../log/index.js";
-import { defaultUserIntentsDir, documentsFolder, locateFolder, type FolderLocation } from "../intents/index.js";
+import { defaultUserIntentsDir, documentsFolder, locateFolder, migrateOnce, type FolderLocation } from "../intents/index.js";
 import type { PageValues } from "./page.js";
 
 export type FolderFrom = "environment" | "page" | "default";
@@ -47,6 +47,18 @@ export class EngineFolders {
   intents(): FolderChoice {
     const fallback = defaultUserIntentsDir({ ...this.env, LRC_AVG_INTENTS_DIR: undefined }, this.documents);
     return choose(this.env["LRC_AVG_INTENTS_DIR"], this.page.intents, fallback);
+  }
+
+  /**
+   * The intents folder for the library. When it is the default (not the environment's, not the page's),
+   * the intents of the older folders are copied into it first, once per process (intents\migrate.ts, issue #180).
+   * Before the first page read it is the default even if the page names a folder; the copy then lands in the
+   * default folder, which a later page value leaves unused.
+   */
+  intentsDirMigrating(): string {
+    const folder = this.intents();
+    if (folder.from === "default") migrateOnce(folder.path, this.env);
+    return folder.path;
   }
 
   /** Where `dir` really is on disk for this engine, and whether Windows redirects it (intents\folder.ts locateFolder). */

@@ -2,11 +2,13 @@
 // intents that are missing there from the two places the old default put them, the real
 // %LOCALAPPDATA%\LrC-AVG\intents (written by programs that are not packaged) and the private copy of each
 // Claude Desktop package, %LOCALAPPDATA%\Packages\Claude_*\LocalCache\Local\LrC-AVG\intents. Files are
-// never overwritten and the old ones are never deleted. A marker file in the new folder lists what was
-// copied and from where; while it exists, nothing is copied again. It is not a .json file, which the
-// loader would read as an intent (loader.ts jsonFiles). A packaged engine is assumed to see the real
-// folder too, as the doc in folder.ts describes the merged view [inference]; if it does not, the intents
-// of the real folder are missing here and the marker blocks a second look: deleting it copies again.
+// never overwritten and the old ones are never deleted. A marker file in the new folder says the old
+// folders were looked at and lists what was copied and from where; it is written after every look, also
+// when nothing was copied, and while it exists nothing is copied again, so an intent deleted or renamed
+// in the new folder does not come back from an old one. It is not a .json file, which the loader would
+// read as an intent (loader.ts jsonFiles). A packaged engine is assumed to see the real folder too, as
+// the doc in folder.ts describes the merged view [inference]; if it does not, the intents of the real
+// folder are missing here and the marker blocks a second look: deleting it copies again.
 
 import { constants, copyFileSync, existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -34,16 +36,18 @@ export function oldIntentFolders(env: NodeJS.ProcessEnv): OldFolder[] {
   ];
 }
 
-/** Copy what `target` is missing; returns what was copied, or why it stopped. Does nothing once the marker exists. Never throws. */
+/** Copy what `target` is missing; returns what was copied, or why it stopped (then no marker is written, so the next start tries again). Does nothing once the marker exists, and leaves `target` alone when no old folder exists. Never throws. */
 export function migrateIntents(target: string, env: NodeJS.ProcessEnv = process.env, now: Date = new Date()): { copied: Copied[]; problem?: string } {
   const copied: Copied[] = [];
   try {
     if (existsSync(path.join(target, MIGRATION_MARKER))) return { copied };
+    let looked = false;
     for (const { dir: from } of oldIntentFolders(env)) {
       if (path.resolve(from).toLowerCase() === path.resolve(target).toLowerCase() || !existsSync(from)) continue;
+      looked = true;
+      mkdirSync(target, { recursive: true });
       for (const entry of readdirSync(from, { withFileTypes: true })) {
         if (!entry.isFile() || !entry.name.toLowerCase().endsWith(".json")) continue;
-        mkdirSync(target, { recursive: true });
         try {
           copyFileSync(path.join(from, entry.name), path.join(target, entry.name), constants.COPYFILE_EXCL); // fails when the file is there
           copied.push({ file: entry.name, from });
@@ -52,9 +56,9 @@ export function migrateIntents(target: string, env: NodeJS.ProcessEnv = process.
         }
       }
     }
-    if (copied.length > 0) {
-      const lines = copied.map((c) => `${c.file} <- ${c.from}`);
-      writeFileSync(path.join(target, MIGRATION_MARKER), [`Copied by LrC-AVG on ${now.toISOString()} (issue #180). The old files were left where they are. Delete this file to copy again.`, ...lines, ""].join("\n"), "utf8");
+    if (looked) {
+      const head = `Looked at the older intents folders on ${now.toISOString()} (issue #180). Files this folder lacked were copied, one per line below as "file <- from"; the old files were left where they are. Delete this file to look again.`;
+      writeFileSync(path.join(target, MIGRATION_MARKER), [head, ...copied.map((c) => `${c.file} <- ${c.from}`), ""].join("\n"), "utf8");
     }
     return { copied };
   } catch (err) {

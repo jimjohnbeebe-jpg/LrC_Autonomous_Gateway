@@ -30,7 +30,7 @@
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { BridgeClient } from "../bridge/index.js";
-import { IntentLibrary, migrateOnce } from "../intents/index.js";
+import { IntentLibrary } from "../intents/index.js";
 import { purgeExports } from "../library/files.js";
 import { ToolLog, defaultLogDir } from "../log/index.js";
 import { writeLastStart } from "../log/last-start.js";
@@ -85,17 +85,11 @@ const gate = new BridgeGate(client, () => acquireInstanceLock(dev.lockPort), {
 });
 
 const map = loadDefaultParamMap();
-/** The user intents folder; when it is the default, the intents of the older folders are copied into it first, once (intents\migrate.ts, issue #180). */
-const userIntentsDir = (): string => {
-  const folder = settings.folders.intents();
-  if (folder.from === "default") migrateOnce(folder.path);
-  return folder.path;
-};
 const tools = new Tools({
   client,
   map,
   previews,
-  intents: new IntentLibrary({ map, userDir: userIntentsDir }),
+  intents: new IntentLibrary({ map, userDir: () => settings.folders.intentsDirMigrating() }),
   sessionLogDir: () => settings.folders.logDir(),
   settings,
   logFolders: new KnownLogFolders(),

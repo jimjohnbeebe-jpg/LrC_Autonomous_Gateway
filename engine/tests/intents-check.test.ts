@@ -1,7 +1,7 @@
 // The pure parts of `npm run intents:check` (issue #180; src/devtools/intents-check.ts).
 
 import { describe, expect, it } from "vitest";
-import { CHAT_PROMPT, PAINTED_HILLS, TEST_ID, describeFindings, judge, type Findings, type Place } from "../src/devtools/intents-check.js";
+import { CHAT_PROMPT, PAINTED_HILLS, TEST_ID, describeFindings, judge, withoutTestLine, type Findings, type Place } from "../src/devtools/intents-check.js";
 import { INTENT_ID_PATTERN } from "../src/intents/index.js";
 
 const place = (kind: Place["kind"], ids: string[], exists = true): Place => ({ kind, dir: `C:\\${kind}`, exists, ids });
@@ -15,6 +15,12 @@ describe("intents:check", () => {
   it("asks for an intent id the engine accepts", () => {
     expect(INTENT_ID_PATTERN.test(TEST_ID)).toBe(true);
     expect(CHAT_PROMPT).toContain(`id "${TEST_ID}"`);
+  });
+
+  it("asks to replace a copy the migration may have made, and does not ask Jim to relay output", () => {
+    expect(CHAT_PROMPT).toContain("replace true");
+    const lines = [...describeFindings(findings(["mine"], ["gone"], [])), judge(findings([], [], [])).headline];
+    expect(lines.join("\n")).not.toMatch(/Tell Claude Code/);
   });
 
   it("works when the test intent is in the new folder", () => {
@@ -31,6 +37,15 @@ describe("intents:check", () => {
     const copied = `Copied by LrC-AVG.\n${TEST_ID}.json <- C:\\real\n`;
     expect(judge(findings([TEST_ID], [TEST_ID], [], copied)).worked).toBe(false);
     expect(judge(findings([TEST_ID], [], [], "Copied by LrC-AVG.\nother.json <- C:\\real\n")).worked).toBe(true);
+    expect(judge(findings([TEST_ID], [], [], copied)).headline).toMatch(/^FAILED: .* was copied there from an old folder/);
+  });
+
+  it("works again after a re-save once the marker line of a deleted copy is taken out", () => {
+    const marker = `Looked at the older folders.\nother.json <- C:\\real\n${TEST_ID}.json <- C:\\package\n`;
+    expect(judge(findings([TEST_ID], [], [], marker)).worked).toBe(false);
+    expect(withoutTestLine(marker)).toBe("Looked at the older folders.\nother.json <- C:\\real\n");
+    expect(judge(findings([TEST_ID], [], [], withoutTestLine(marker))).worked).toBe(true);
+    expect(withoutTestLine("Looked at the older folders.\n")).toBe("Looked at the older folders.\n");
   });
 
   it("lists every place, painted_hills_crimson_gold, what the new folder lacks and the marker", () => {

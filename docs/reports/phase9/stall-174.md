@@ -1,8 +1,8 @@
 ---
 report: Issue #174 — does the bridge's idle rebind make Lightroom stutter and freeze?
 phase: 9 (fix/lightroom-stall-174, before PR 3)
-status: template
-authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-10-17. Observed: Jim (blank). Verdict: Jim (blank)."
+status: observed
+authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-10-17. Observed: Jim, runs 1-4 (collected by Claude Code from the saved results). Verdict: Jim, 2026-10-18."
 date: 2026-10-17
 ---
 
@@ -111,13 +111,28 @@ Observed, run 3 (2026-10-18 04:29-04:35, plugin at `aac415c`; collected by Claud
 
 **Run 4**: the same `npm run stall:check` and the same steps, with the same pass rule as run 3.
 
-Observed, run 4 (Jim): (blank)
+Observed, run 4 (2026-10-18 04:55-05:01, plugin at `74de940`; collected by Claude Code [handle: `%TEMP%\LrC-AVG\stall\stall_check_2026-10-18T11-55-04-541Z.json`, `%TEMP%\LrC-AVG\bridge.log` 04:57:55-05:00:31]; the file says `"run": 3`, since the harness label was not changed):
+
+- **Stutter: plugin disabled NO, enabled NO** [stated: Jim, the two y/n answers]. But **"Lightroom did freeze at least once per session, just not at the rate it was freezing before"** [stated: Jim, 2026-10-18].
+- **Lightroom ran both scripts.** At Lightroom start: `bridge: not started (plugin disabled)` (04:57:55). On Enable: `plugin: enabled in Plug-in Manager`, then `starting generation 1` (04:57:59). On Disable: `plugin: disabled in Plug-in Manager` (05:00:24), `bridge: stopped (plugin disabled)` 3.6 s later, `sockets closed (task ended)` 3.6 s after that. No line in the 30 s check window after that (`disable_stopped: true`, `quiet_after_stop: true`).
+- **Plugin disabled (2 min): no bridge line at all.**
+- **Plugin enabled (2 min): one startup rebind (04:58:23, 20 s after the bind). Its socket work took 11.9 s (`tend 11864 ms`), as each rebind did in run 1.** Late wake-ups: 2003 ms, 1631, 2214, and 5798 ms at 05:00:21, while Jim was answering the question. None came right after socket work.
+- That the one freeze per session Jim saw is the 12 s startup rebind is [inference]: the timings fit, but the detector cannot see inside a tick.
+
+**Numbers, run 4**
+
+| Phase | Jim saw stutter | Late wake-ups | Longest (ms) | Total (ms) | After socket work | Rebinds | Slow socket ticks, longest (ms) |
+|---|---|---|---|---|---|---|---|
+| Plugin disabled | NO | 0 | 0 | 0 | 0 | 0 | 0, 0 |
+| Plugin enabled | NO | 3 | 2214 | 5848 | 0 | 1 | 1, 11864 |
+| After Disable (30 s) | — | 0 | 0 | 0 | 0 | 0 | 0, 0 |
 
 ## Verdict
 
-(Jim)
+**Go with this fix for now** [stated: Jim, 2026-10-18, "Let's go with this fix for now and return later if it is a persistent problem"]. Issue #174's freezes went from many per session to at least one per session. Disable now stops the bridge, and a disabled plugin starts nothing.
 
 ## Consequences / open questions
 
-- If the idle rebind is the cause, the fix is to rebind only when no listener is actually left (the run 1b case), not on a timer. That needs its own plan.
-- `Stall.lua` is diagnosis only. Whether it stays in 1.0.0 is decided with the fix.
+- **Open: the remaining freeze.** If it persists, the candidate is the one startup rebind (12 s of socket work, run 4). The fix would rebind only when no listener is actually left (the run 1b case), not on a timer, and needs its own plan. It is deferred by Jim to "return later if it is a persistent problem".
+- **`Stall.lua` and `npm run stall:check` stay**, so the same check can run again when this returns. Stall.lua writes a line only when the loop wakes more than 1 s late, or a tick's socket work takes over 0.3 s.
+- LR_SDK_NOTES gets: (1) LrForceInitPlugin runs the init of a disabled plugin at Lightroom start, with `_PLUGIN.enabled` false (run 3); (2) LrC 15.6 runs LrEnablePlugin and LrDisablePlugin (run 4); (3) a sleeping task loop outlives Disable (run 2).

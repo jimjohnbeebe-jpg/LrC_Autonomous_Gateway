@@ -12,7 +12,7 @@ import type { MetricsSummary } from "../src/metrics/index.js";
 import { CAMERA_PROFILE_PARAM, CANONICAL_PARAMS, lightroomLabel, loadDefaultParamMap } from "../src/params/index.js";
 import { abandonedNote, applyProjectedGuardrail, displayName, planStep, type Limits, type Session, type StepPlan } from "../src/session/index.js";
 import { approvalNote } from "../src/session/approval.js";
-import { closeNote, idleStage } from "../src/session/hud-actions.js";
+import { closeNote, idleStage } from "../src/session/hud-notes.js";
 import { hudWordProblems } from "./helpers/hud-harness.js";
 
 const map = loadDefaultParamMap();

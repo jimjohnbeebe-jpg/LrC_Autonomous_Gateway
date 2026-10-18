@@ -30,10 +30,11 @@ What the plugin logs to `%TEMP%\LrC-AVG\bridge.log`:
 - `stall-diag: idle rebind` (runs 1-2) or `stall-diag: startup rebind` (run 3): one rebind.
 - Runs 1-2 only: the file `%TEMP%\LrC-AVG\no-idle-rebind` turned the idle rebind off. The plugin looked for it every 2 s. Removed for run 3.
 - Run 3: `bridge: stopped (plugin disabled)` when the monitor loop sees Disable.
+- Run 4: also `bridge: not started (plugin disabled)` (init of a disabled plugin) and `plugin: enabled in Plug-in Manager` / `plugin: disabled in Plug-in Manager` (PluginEnable.lua, PluginDisable.lua).
 
 **Steps for Jim, runs 1-2.** Lightroom open, the plugin disabled, Claude Desktop quit. `npm run stall:check`; Enable when asked; 2 min, y/n; the window turns the idle rebind off; 2 min, y/n; Disable when asked, Enter.
 
-**Steps for Jim, run 3** (plugin with the Disable stop). Claude Desktop quit, the LrC-AVG (dev) plugin disabled.
+**Steps for Jim, runs 3-4** (plugin with the Disable stop; run 4 also with the Enable and Disable scripts). Claude Desktop quit, the LrC-AVG (dev) plugin disabled.
 
 1. In PowerShell, in `D:\Developer\LrC_Autonomous_Gateway`, run `npm run stall:check`.
 2. When it asks: quit Lightroom with File > Exit. The window waits until Lightroom has fully closed.
@@ -93,7 +94,24 @@ Observed, run 2 (2026-10-17 19:01-19:07, plugin at `89c6ccd`; answers and lines 
 
 **Run 3** (decided by Jim 2026-10-17 [stated: "Go with 1 + 2"]): the monitor loop also stops when `_PLUGIN.enabled` is false, and returning ends the task, so the cleanup handler closes both sockets (`Bridge.lua` `monitor`). The check now starts from a restarted Lightroom: 2 min with the plugin disabled (does Lightroom stutter with no LrC-AVG at all?), 2 min enabled, then Disable. Pass: no stutter in either phase, at most one rebind, and `Disable stopped the bridge: YES`, quiet afterwards.
 
-Observed, run 3 (Jim): (blank)
+Observed, run 3 (2026-10-18 04:29-04:35, plugin at `aac415c`; collected by Claude Code [handle: `%TEMP%\LrC-AVG\stall\stall_check_2026-10-18T11-29-28-077Z.json`, `%TEMP%\LrC-AVG\bridge.log` 04:30:15-04:30:16]):
+
+- **The check stopped at step 4: `the plugin did not start within 3 minutes`.** Jim enabled the plugin, and nothing more was written to `bridge.log` [stated: Jim, 2026-10-18, "The plug-in was enabled but the test never picked it up"]. Claude Desktop then got `BRIDGE_DISCONNECTED ... 127.0.0.1:8765: ECONNREFUSED` [stated: Jim, the pasted Claude Desktop reply].
+- **Lightroom ran the init script of the disabled plugin when it started.** At 04:30:15, before the baseline began (`plugin_started_during_baseline: false`), the log shows `starting generation 1`, `listening`, `stall-diag: on`, then within the same millisecond `bridge: stopped (plugin disabled)` and `sockets closed (task ended)`. So `_PLUGIN.enabled` was false in that init. The plugin had been disabled since run 2 ended. LrForceInitPlugin runs init at startup [handle: Lightroom Classic SDK Guide, chapter 2, Info.lua table, `LrForceInitPlugin`], and disabled plugins evidently get it too.
+- **So, before this fix, a "disabled" plugin bound and rebound the sockets for the whole Lightroom session.** That fits Jim's stutter with the plugin disabled before run 2 [inference].
+- **Enable did not run the init script again in this case**: no line after 04:30:16.318 (the `bridge.log` mtime is 04:30). In run 2, Enable did start a bridge (19:02:30). Why the two runs differ is [unverified].
+- The baseline (2 min, plugin disabled, no bridge) was not summed, because the check stopped before the summary.
+
+**Fix after run 3.** Info.lua gets `LrEnablePlugin = 'PluginEnable.lua'` and `LrDisablePlugin = 'PluginDisable.lua'`, scripts that the SDK says run on Enable and Disable in Plug-in Manager [handle: Lightroom Classic SDK Guide, chapter 2, "Customizing plug-in load behavior"]. Adobe's `remote_control_socket` sample stops its socket loop the same way (`stop.lua`).
+- PluginInit.lua starts nothing while `_PLUGIN.enabled` is false (it logs `bridge: not started (plugin disabled)`).
+- PluginEnable.lua starts the bridge.
+- PluginDisable.lua calls `Bridge.stop()`, which bumps the generation so the loop leaves at its next tick.
+- The loop's `_PLUGIN.enabled` check stays as a second stop.
+- Both scripts log a line (`plugin: enabled/disabled in Plug-in Manager`), so the next run shows that Lightroom ran them.
+
+**Run 4**: the same `npm run stall:check` and the same steps, with the same pass rule as run 3.
+
+Observed, run 4 (Jim): (blank)
 
 ## Verdict
 

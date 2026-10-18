@@ -33,6 +33,9 @@ return {
     -- Load at Lightroom start, not on first use. Automaat notes this needs at least one menu item
     -- [upstream claim: vendor\automaat\plugin\LightroomMCP.lrplugin\Info.lua:14-17].
     LrForceInitPlugin = true,
+    -- Enable and Disable in Plug-in Manager start and stop the bridge (issue #174).
+    LrEnablePlugin = 'PluginEnable.lua',
+    LrDisablePlugin = 'PluginDisable.lua',
     -- File > Plug-in Extras (PRD FR-1.1; PHASE5_PLAN decision 7 for the HUD's first three; Approve
     -- Pass and Pick A-C from fix/hud-p1 P1-4, so every HUD button has a menu item; Abort last, as on
     -- the HUD).

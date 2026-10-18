@@ -125,7 +125,7 @@ async function main(prompt: Prompt): Promise<number> {
   console.log(`Disable stopped the bridge: ${stopped ? "YES" : "NO"}; quiet afterwards: ${quiet ? "YES" : "NO"} (${after.bridge_lines} line(s))`);
   console.log(`Suggestion (Jim decides): ${suggest(off.stutter, on.stutter, stopped, quiet)}.`);
   if (!quiet) console.log("If Lightroom still stutters now: quit Lightroom and start it again.");
-  const since = off.from - 60_000;
+  const since = Date.parse(String(results["started_at"])); // from Step 1, so Lightroom's start (PluginInit) is in
   Object.assign(results, {
     worked: true, answers: { stutter_plugin_off: off.stutter, stutter_plugin_on: on.stutter }, disable_stopped: stopped, quiet_after_stop: quiet, phases: sums,
     bridge_log_lines: (existsSync(PLUGIN_LOG) ? readFileSync(PLUGIN_LOG, "utf8") : "").split(/\r?\n/).filter((l) => (parseLog(l)[0]?.at ?? 0) >= since),

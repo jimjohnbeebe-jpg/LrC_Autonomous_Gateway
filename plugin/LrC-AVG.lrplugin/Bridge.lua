@@ -236,9 +236,9 @@ end
 local function monitor(B)
     local S = B.S
     local D = Stall.new(LOOP_SECONDS) -- issue #174 diagnosis (Stall.lua)
-    -- Disable in Plug-in Manager did not end this loop: a disabled bridge kept rebinding for 6 min
-    -- [handle: docs\reports\phase9\stall-174.md "Observed, run 2"]. That _PLUGIN.enabled turns false on
-    -- Disable is [unverified] until stall:check run 3; nil (no such field) keeps the bridge running.
+    -- Disable ends this loop through Bridge.stop (PluginDisable.lua). _PLUGIN.enabled was false in a
+    -- disabled plugin's init [handle: docs\reports\phase9\stall-174.md "Observed, run 3"]; that it turns
+    -- false on Disable, for a bridge whose _G the disable script does not share, is [unverified].
     while B.current() and _PLUGIN.enabled ~= false do
         Stall.tick(D)
         if LrDate.currentTime() - B.lastStatus >= STATUS_EVERY_SECONDS and replacedOnDisk(S) then
@@ -264,7 +264,14 @@ local function monitor(B)
     end
 end
 
+-- Disable: the running bridge sees a newer generation, leaves its loop and closes both sockets.
+function Bridge.stop()
+    _G.LrCAVG_BridgeStopped = true
+    _G.LrCAVG_BridgeGeneration = _G.LrCAVG_BridgeGeneration + 1
+end
+
 function Bridge.start()
+    _G.LrCAVG_BridgeStopped = false
     _G.LrCAVG_BridgeGeneration = _G.LrCAVG_BridgeGeneration + 1
     local generation = _G.LrCAVG_BridgeGeneration
     local receivePort, sendPort = Prefs.ports()
@@ -330,7 +337,7 @@ function Bridge.start()
         Log.info("bridge: listening (generation " .. generation .. ")")
         monitor(B)
         -- Returning ends the task, so the cleanup handler closes both sockets.
-        if _PLUGIN.enabled == false then Log.info("bridge: stopped (plugin disabled)")
+        if _PLUGIN.enabled == false or _G.LrCAVG_BridgeStopped then Log.info("bridge: stopped (plugin disabled)")
         else Log.info("bridge: generation " .. generation .. " replaced; loop exiting") end
     end)
 end

@@ -86,7 +86,7 @@ describe("lua: every plugin file", () => {
       "Bridge.lua", "Catalog.lua", "Develop.lua", "Dispatch.lua", "Endpoint.lua", "Events.lua", "Gate.lua", "Hud.lua", "HudClick.lua", "HudSelection.lua", "HudState.lua", "HudText.lua", "HudView.lua",
       "Info.lua", "Json.lua", "KeywordTree.lua", "Library.lua", "Log.lua", "MaskProbe.lua", "Masks.lua", "MenuAbort.lua", "MenuAccept.lua", "MenuApprove.lua", "MenuHud.lua",
       "MenuPickA.lua", "MenuPickB.lua", "MenuPickC.lua", "MenuStatus.lua", "Metadata.lua", "Pending.lua", "Photos.lua",
-      "PluginInfoProvider.lua", "PluginInit.lua", "Prefs.lua", "Preview.lua", "Sockets.lua", "Stall.lua", "Transfer.lua",
+      "PluginDisable.lua", "PluginEnable.lua", "PluginInfoProvider.lua", "PluginInit.lua", "Prefs.lua", "Preview.lua", "Sockets.lua", "Stall.lua", "Transfer.lua",
     ]);
   });
 
@@ -217,8 +217,14 @@ describe("lua: LrC-AVG.lrplugin", () => {
     // Issue #174: only once, since every rebind spent ~10 s in the socket work and Lightroom stuttered.
     expect(read("Bridge.lua")).toMatch(/if S\.receiveConnected then S\.startupRebindDone = true end\s+if not S\.startupRebindDone and S\.boundAt and \(LrDate\.currentTime\(\) - S\.boundAt\) > STARTUP_REBIND_SECONDS then\s+Stall\.rebind\(\)\s+S\.startupRebindDone = true\s+S\.receiveNeedsRebind, S\.sendNeedsRebind = true, true/);
     // Issue #174 diagnosis: every monitor tick is timed, its socket work too (Stall.lua).
-    // Issue #174 run 2: Disable did not end the loop; it now stops when the plugin is disabled.
-    expect(read("Bridge.lua")).toMatch(/monitor\(B\)[\s\S]{0,120}if _PLUGIN\.enabled == false then Log\.info\(/);
+    // Issue #174 runs 2-3: Disable did not end the loop, a disabled plugin's init started the bridge and Enable
+    // did not start it. Now Enable and Disable have their own scripts, and init starts nothing while disabled.
+    expect(read("Bridge.lua")).toMatch(/monitor\(B\)[\s\S]{0,120}if _PLUGIN\.enabled == false or _G\.LrCAVG_BridgeStopped then Log\.info\(/);
+    expect(read("Bridge.lua")).toMatch(/function Bridge\.stop\(\)\s+_G\.LrCAVG_BridgeStopped = true\s+_G\.LrCAVG_BridgeGeneration = _G\.LrCAVG_BridgeGeneration \+ 1/);
+    expect(readFileSync(path.join(avgPlugin, "Info.lua"), "utf8")).toMatch(/LrEnablePlugin = 'PluginEnable\.lua',\s+LrDisablePlugin = 'PluginDisable\.lua',/);
+    expect(read("PluginInit.lua")).toMatch(/if _PLUGIN\.enabled == false then\s+Log\.info\([^)]*\)\s+else\s+local ok, err = pcall\(Bridge\.start\)/);
+    expect(read("PluginEnable.lua")).toMatch(/pcall\(Bridge\.start\)/);
+    expect(read("PluginDisable.lua")).toMatch(/pcall\(Bridge\.stop\)/);
     expect(read("Bridge.lua")).toMatch(/while B\.current\(\) and _PLUGIN\.enabled ~= false do\s+Stall\.tick\(D\)[\s\S]*Stall\.timed\(D, function\(\) tendSockets\(B\) end\)/);
     expect(read("Sockets.lua")).toMatch(/S\.receiveSocket = bindReceive\(B, S\.receiveGen\)[\s\S]{0,120}S\.boundAt = LrDate\.currentTime\(\)/);
   });

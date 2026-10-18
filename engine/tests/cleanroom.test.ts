@@ -124,12 +124,23 @@ describe("cleanroom: park, check, restore", () => {
     expect((await runCleanroom(w.sys, "--park", false, false)).messages[0]).toMatch(/Already parked/);
 
     const restored = await runCleanroom(w.sys, "--restore", false, false);
-    expect(restored.headline).toBe("RESTORED: YES");
-    expect(restored.messages.join("\n")).toMatch(/npm run deck:build/);
+    // No built Deck installer: the Deck is still owed, so NO, and park.json stays for the next restore.
+    expect(restored.headline).toBe("RESTORED: NO");
+    expect(restored.messages.join("\n")).toMatch(/no built installer was found.*npm run deck:build, then npm run cleanroom -- --restore again/);
+    expect(existsSync(at("Temp", "LrC-AVG-cleanroom", "park.json"))).toBe(true);
     const { ["Roaming\\Adobe\\Lightroom\\Preferences\\Lightroom Classic CC 7 Preferences.agprefs"]: _prefs, ...rest } = before;
     const after = snapshot();
-    // The uninstalled Deck stays uninstalled (no built installer here); its folder and shortcut are the only difference.
+    // The uninstalled Deck's folder and shortcut are the only difference.
     for (const [file, text] of Object.entries(rest)) if (!file.includes("LrC-AVG HUD")) expect([file, after[file]]).toEqual([file, text]);
+
+    // Once the installer is built, a second restore reinstalls the Deck only (the entries and data are back already).
+    put(at("repo", "hud", "package.json"), JSON.stringify({ version: "1.0.0" }));
+    put(at("repo", "hud", "src-tauri", "target", "release", "bundle", "nsis", "LrC-AVG_1.0.0_x64-setup.exe"), "setup");
+    const again = await runCleanroom(w.sys, "--restore", false, false);
+    expect(again.headline).toBe("RESTORED: YES");
+    expect(again.actions.filter((a) => !a.startsWith("deleted the config copies"))).toEqual([expect.stringMatching(/^reinstalled the dev Deck/)]);
+    const later = snapshot();
+    for (const [file, text] of Object.entries(after)) expect([file, later[file]]).toEqual([file, text]);
     expect(existsSync(at("Temp", "LrC-AVG-cleanroom", "park.json"))).toBe(false);
     expect(existsSync(path.join(park.dir, "configs"))).toBe(false);
   });
@@ -154,7 +165,7 @@ describe("cleanroom: park, check, restore", () => {
     writeFileSync(hermes, "# added\r\n" + read(hermes));
     put(at("Local", "LrC-AVG", "logs", "product.log"), "test");
     const restored = await runCleanroom(w.sys, "--restore", false, false);
-    expect(restored.headline).toBe("RESTORED: YES");
+    expect(restored.headline).toBe("RESTORED: NO"); // only the Deck is owed (no built installer here)
     expect(Object.keys(JSON.parse(read(desktop)).mcpServers)).toEqual(["github", "newer", "lrc-avg"]);
     expect(read(hermes)).toBe("# added\r\n" + HERMES);
     expect(read(at("Local", "LrC-AVG", "logs", "a.log"))).toBe("log");

@@ -180,8 +180,10 @@ function restoreDeck(d: DeckItem, sys: Sys): string {
     installer = null;
   }
   if (installer === null) {
+    // Still owed: the restore fails, park.json stays and the next --restore tries again. Not by hand:
+    // restore would then refuse the Deck as an install still present (restoreRefusal).
     d.state = "manual";
-    return `A dev Deck (${d.name} ${d.version ?? ""}) was uninstalled at park and no built installer was found. To reinstall it: ${REINSTALL}.`;
+    throw new Error(`a dev Deck (${d.name} ${d.version ?? ""}) was uninstalled at park and no built installer was found. To put it back: npm run deck:build, then npm run cleanroom -- --restore again (it runs the installer under hud\\src-tauri\\target\\release\\bundle\\nsis\\ with /S)`);
   }
   const code = sys.run(installer, ["/S"]);
   if (code !== 0) throw new Error(`the Deck installer ${installer} /S exited with ${String(code)}; to reinstall by hand: ${REINSTALL}`);
@@ -205,7 +207,8 @@ export async function restore(sys: Sys, dryRun: boolean): Promise<Outcome> {
   if (refusal) return refusal;
   const state = readPark(p.parkFile);
   // A Deck still "recorded" (its uninstall timed out) is gone by now: restoreRefusal saw no install.
-  const todo = state.items.filter((i) => i.state !== "restored" && i.state !== "reinstalled" && i.state !== "manual");
+  // A "manual" Deck (no installer last time) is tried again; what is back already is not redone.
+  const todo = state.items.filter((i) => i.state !== "restored" && i.state !== "reinstalled");
   // Folders first, so the data is back before an entry or the Deck uses it.
   const ordered = [...todo.filter((i) => i.kind === "folder"), ...todo.filter((i) => i.kind === "config"), ...todo.filter((i) => i.kind === "deck")];
   if (dryRun) {
@@ -225,8 +228,7 @@ export async function restore(sys: Sys, dryRun: boolean): Promise<Outcome> {
         actions.push(restoreConfig(item, sys));
         item.state = "restored";
       } else {
-        const line = restoreDeck(item, sys);
-        (item.state === "manual" ? messages : actions).push(line);
+        actions.push(restoreDeck(item, sys));
       }
     } catch (err) {
       failed++;

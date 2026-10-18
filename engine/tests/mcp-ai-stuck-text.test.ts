@@ -92,7 +92,7 @@ describe("the tool descriptions and lr_help", () => {
     expect(HELP_TEXT).toContain("the HUD shows the time waited (m:ss)");
     expect(HELP_TEXT).toContain("These errors say recoverable false, but they end when Lightroom's result shows: the session then goes on; nothing else frees it");
     expect(HELP_TEXT).toContain("says the photo was NOT put back and names the snapshot that puts it back");
-    expect(HELP_TEXT).toContain("Abort also works during lr_create_mask's wait (up to 5 minutes): the wait ends at once and the call fails with SESSION_ENDED");
+    expect(HELP_TEXT).toContain("Abort also works during lr_create_mask's wait (up to 5 minutes): the wait ends within a few seconds and the call fails with SESSION_ENDED");
     expect(HELP_TEXT).toContain("A Lightroom restart also works");
     expect(HELP_TEXT).toContain("the user saves their work and restarts Lightroom");
   });

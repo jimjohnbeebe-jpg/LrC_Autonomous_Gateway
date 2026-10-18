@@ -48,7 +48,7 @@ import { selectVariant } from "./pick.js";
 import { probe } from "./probe.js";
 import { setRegions } from "./regions.js";
 import { showCopy, type ShowRecord } from "./show-copy.js";
-import { watchRestarts } from "./restart.js";
+import { revertIfRestarted, watchRestarts, type RestartHost } from "./restart.js";
 import { step } from "./step.js";
 import { focus, resolveTarget } from "./targets.js";
 import { folderOf, type ApproveArgs, type BeginArgs, type CreateMaskArgs, type DeleteMaskArgs, type EditMaskArgs, type EndArgs, type ListMasksArgs, type ProbeArgs, type RegionArgs, type SelectArgs, type Session, type SessionContext, type SessionDeps, type SessionOutput, type StepArgs, type TargetId, type VariantId } from "./types.js";
@@ -71,11 +71,13 @@ export class SessionManager {
   private tail: Promise<unknown> = Promise.resolve();
   /** Operations of the queue running now (0 or 1). */
   private running = 0;
+  private readonly restartHost: RestartHost;
 
   constructor(deps: SessionDeps) {
     this.ctx = { deps, now: deps.now ?? (() => new Date()), newId: deps.newId ?? (() => randomUUID()) };
     // A Lightroom restart while an AI mask had no result puts the photo back (restart.ts, D16).
-    watchRestarts({ ctx: this.ctx, session: () => this.session, queue: (fn) => void this.exclusive(fn).catch(() => undefined), endedByEngine: (s) => this.engineEnded(s) });
+    this.restartHost = { ctx: this.ctx, session: () => this.session, queue: (fn) => void this.exclusive(fn).catch(() => undefined), endedByEngine: (s) => this.engineEnded(s) };
+    watchRestarts(this.restartHost);
   }
 
   /** The open session, if any: what the other tools need to know about it. */
@@ -252,6 +254,7 @@ export class SessionManager {
       busy: () => this.running > 0,
       queue: (fn) => void this.exclusive(fn).catch(() => undefined),
       close: (s, ended) => this.close(s, ended),
+      restarted: (s) => revertIfRestarted(this.restartHost, s),
     };
   }
 

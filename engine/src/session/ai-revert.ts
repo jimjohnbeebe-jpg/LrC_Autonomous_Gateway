@@ -11,8 +11,7 @@ import { KIND_LABELS } from "../params/index.js";
 import type { AiJob } from "./ai-masks.js";
 import { ABANDON_HINT, restartAdvice, waitAdvice } from "./ai-update.js";
 import { endSession } from "./end.js";
-import { reopenLog } from "./hud-actions.js";
-import { saveLog } from "./io.js";
+import { reopenLog, saveLog } from "./io.js";
 import type { Session, SessionContext } from "./types.js";
 
 const RESTARTED = "Lightroom restarted";

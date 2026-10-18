@@ -31,7 +31,7 @@ import { approve, wakeApproval } from "./approval.js";
 import { abandonedNote, abandonSession } from "./abandon.js";
 import { displayName, UNNAMED } from "./client.js";
 import { endSession } from "./end.js";
-import { failed, saveLog } from "./io.js";
+import { failed, reopenLog, saveLog } from "./io.js";
 import { selectVariant } from "./pick.js";
 import { putBackReported } from "./put-back.js";
 import { variant } from "./targets.js";
@@ -40,9 +40,8 @@ import type { Session, SessionContext, UserEnd, UserSource, VariantId } from "./
 /** A HUD event as the engine received it: when, and performance.now() then. */
 export type UserAction = HudEvent & { received: Date; t0: number };
 
-/** A session the user ended from the HUD or the menu, for the calls that still name it. */
-/** `put_back`: the HUD's Put back put the photo back itself and told the engine (put-back.ts); `abandoned`: an Abort while the AI mask was stuck (abandon.ts). */
-export type UserEnded = { session_id: string; outcome: "aborted" | "accept" | "put_back" | "abandoned"; source: UserSource; at: string; log_path: string; snapshot: string };
+/** A session the user ended from the HUD or the menu, for the calls that still name it. `put_back`: the HUD's Put back did it (put-back.ts); `abandoned`: an Abort while an AI mask had no result (abandon.ts), `ai_finishing` when Lightroom was likely still computing it (guard "kept"). */
+export type UserEnded = { session_id: string; outcome: "aborted" | "accept" | "put_back" | "abandoned"; source: UserSource; at: string; log_path: string; snapshot: string; ai_finishing?: true };
 
 /** What the actions need from the session manager (manager.ts). */
 export type ActionHost = {
@@ -55,6 +54,8 @@ export type ActionHost = {
   queue(fn: () => Promise<void>): void;
   /** The session is over: forget it, and answer later calls naming it with SESSION_ENDED. */
   close(s: Session, ended: UserEnded): void;
+  /** Lightroom restarted under the session's AI mask: the photo put back as restart.ts does (true); false when it did not restart. */
+  restarted(s: Session): Promise<boolean>;
 };
 
 /**
@@ -172,10 +173,14 @@ async function finishAbort(host: ActionHost, s: Session): Promise<void> {
     if (s.aiPending) {
       // The AI mask still has no result (its wait ended by this Abort, LIGHTROOM_STUCK or AI_MASK_FAILED), so the revert wrote
       // nothing (settlePending refused it, or the reconnect failed: Greptile, PR #134): the Abort ends the edit without a
-      // Lightroom write (abandon.ts; issue #124, D1; issue #181).
-      await abandonSession(ctx, s, by);
-      host.close(s, userEnded(ctx, s, "abandoned", by));
-      ctx.deps.hud?.stage(s, "ended", { note: abandonedNote(s, true) });
+      // Lightroom write (abandon.ts; issue #124, D1; issue #181), unless Lightroom restarted: then restart.ts puts it back.
+      if (await host.restarted(s)) {
+        if (!s.endedByEngine) by.state = "failed"; // the put-back did not go through: a second click tries again
+        return;
+      }
+      const kept = (await abandonSession(ctx, s, by)).json["lightroom_guard"] === "kept";
+      host.close(s, { ...userEnded(ctx, s, "abandoned", by), ...(kept ? { ai_finishing: true as const } : {}) });
+      ctx.deps.hud?.stage(s, "ended", { note: abandonedNote(s, true, kept) });
       return;
     }
     by.state = "failed"; // the failure is in the log's failures: connected()'s, or endSession's own (io.ts failed())
@@ -197,14 +202,6 @@ async function finishAbort(host: ActionHost, s: Session): Promise<void> {
   ctx.deps.hud?.stage(s, "aborted", { note: abortedNote(s) });
 }
 
-/** The log of a session an Abort (or the engine's put-back, ai-masks.ts) did not end after all: open again, with the revert tried kept. */
-export function reopenLog(s: Session): void {
-  s.log.outcome = null;
-  s.log.ended = null;
-  s.log.final_settings = null;
-  delete s.log.ended_by;
-  saveLog(s);
-}
 
 export const ACCEPT_AFTER_FAILED = "Lightroom's AI mask failed, so Accept must wait: save your work and restart Lightroom; the photo is then put back by itself.";
 

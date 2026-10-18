@@ -227,7 +227,7 @@ export const SESSION_DEFS: ToolDef[] = [
       "LIGHTROOM_STUCK and AI_UPDATE_PENDING lift once Lightroom's result shows, so try \"revert\" again first if the user can wait. " +
       "The result's `note` says how the user puts the photo back by hand (the pre-session snapshot, `snapshot`) and whether " +
       "Lightroom still holds writes to the photo (`lightroom_guard`: \"none\" when no AI mask was pending, so nothing is held; " +
-      "\"cleared\"; \"not_cleared\" or \"plugin_too_old\": held until Lightroom restarts); tell the user both. " +
+      "\"cleared\"; \"not_cleared\" or \"plugin_too_old\": held until Lightroom restarts; \"kept\": held until the mask's shape shows, so the user waits for it first); tell the user both. " +
       "A session an engine that stopped left open (lr_get_active_photo_context `left_open`) is ended the same three ways, with `left_open: true` " +
       "and the log's `ended_by` \"recovery\": revert applies its snapshot and says what it `checked`; accept reads the photo as it is now.",
     schema: endArgs,

@@ -54,8 +54,9 @@
 //   - what the wait saw (the update's answer, each probe, the reads summed up) is kept as s.aiTrace and goes
 //     on the log's failure entry when the wait ends without a result (io.ts failed): the 2026-10-11 hang
 //     left no record of what the probes answered (issue #123) [handle: repo logs\20261010-45ea50.json].
-// Every read checks the user's Abort first, so an Abort ends the wait at the next read, within a poll (POLL_MS up to 1 s) and the
-// read or probe in flight [inference: from watch below]: the call fails with SESSION_ENDED (io.ts abortError), aiPending stays,
+// Every read checks the user's Abort first, so an Abort ends the wait at the next read: within a poll (POLL_MS up to 1 s) plus the
+// read or probe in flight, get_settings up to 15 s (bridge\client.ts requestTimeoutMs) and a probe up to probeReplyMs, 5 s; a few
+// seconds at most, about one when Lightroom answers reads [inference: from watch below]: the call fails with SESSION_ENDED (io.ts abortError), aiPending stays,
 // and the Abort's revert goes ahead if the result has shown, else it abandons the edit (hud-actions.ts finishAbort) [stated: Jim,
 // 2026-10-18, "Abort ends the wait now"; docs\reports\phase9\issue181.md "Decisions for Jim" 2]. [handle: tests\session-ai-dialog.test.ts,
 // tests\session-ai-restart.test.ts, tests\session-ai-stuck.test.ts, tests\session-ai-abort-wait.test.ts, against the Lightroom sim. In Lightroom,

@@ -1,7 +1,8 @@
 // GitHub issue #181, decision 2 [stated: Jim, 2026-10-18, "Abort ends the wait now"]: the Deck's Abort during the engine's
 // wait for an AI mask (src/session/ai-update.ts watch) ends the wait at its next read; the Abort's revert then goes ahead if
 // Lightroom's result has shown, else the edit is abandoned (src/session/hud-actions.ts finishAbort, abandon.ts): nothing
-// written, the photo NOT put back, the pre-session snapshot named. The pending lr_create_mask fails with SESSION_ENDED, not
+// written, the photo NOT put back, the pre-session snapshot named, and the plugin's guard kept while Lightroom likely still
+// computes (D16; the review of #181); a Lightroom restart under the wait puts the photo back instead (restart.ts). The pending lr_create_mask fails with SESSION_ENDED, not
 // LIGHTROOM_STUCK. Races: Abort before the update is sent, during the wait, after the result arrived, and pressed twice.
 // Against the Lightroom sim (helpers/lightroom-sim-masks.ts): gate "slow" holds the gate with the update "running" for
 // `heldProbes` probes, and `release()` computes the mask.
@@ -9,8 +10,10 @@
 import { describe, expect, it } from "vitest";
 import { MASK_TABLE_KEY } from "../src/params/index.js";
 import { ABORT_AI, abandonedNote, type Session, type SessionManager } from "../src/session/index.js";
+import { FINISHING_NOTE } from "../src/session/abandon.js";
 import { waitUntil, type FakeHandler } from "./helpers/fake-plugin.js";
 import { hudAt, hudRig } from "./helpers/hud-harness.js";
+import { restartLightroom } from "./helpers/lightroom-sim-masks.js";
 import { ID, clean, fails, lr, plugin, readLog, useSessionHarness } from "./helpers/session-harness.js";
 
 useSessionHarness();
@@ -38,7 +41,7 @@ async function waiting() {
 }
 
 describe("issue #181: Abort during the AI mask's wait", () => {
-  it("ends the wait within about a second and abandons the edit: nothing written, the photo NOT put back, the snapshot named", async () => {
+  it("ends the wait within about a second (Lightroom answering reads) and abandons the edit: nothing written, the photo NOT put back, the guard kept, the trace logged", async () => {
     const { m, pending } = await waiting();
     const snapshot = readLog().snapshot.name;
     const [writes, snapshots] = [sent("apply_settings"), sent("apply_snapshot")];
@@ -48,23 +51,30 @@ describe("issue #181: Abort during the AI mask's wait", () => {
     expect(performance.now() - t0).toBeLessThan(1500); // the next read, at most pollMaxMs (1 s) later [the read in flight in the sim is ~0 ms]
     expect(e).toMatchObject({ code: "SESSION_ENDED", details: { outcome: "aborted", state: "ending", snapshot, ai_mask: { kind: "landscape_water" } } });
     expect(e.message).toContain("Lightroom's AI Water mask had no result, so the wait for it ended. The session ends now");
-    expect(e.message).toContain(`otherwise it is NOT put back, it keeps the session's edits, and the snapshot "${snapshot}" puts it back`);
+    expect(e.message).toContain(`otherwise it is NOT put back, it keeps the session's edits, and the snapshot "${snapshot}" puts it back (Develop > Snapshots) once the mask's shape shows in Lightroom`);
     await waitUntil(() => m.current() === null, 3000);
-    expect(readLog()).toMatchObject({ outcome: "abandoned", ended_by: { source: "hud" }, revert: null });
-    expect([sent("apply_settings"), sent("apply_snapshot"), sent("clear_pending_ai")]).toEqual([writes, snapshots, 1]);
+    const log = readLog();
+    expect(log).toMatchObject({ outcome: "abandoned", ended_by: { source: "hud" }, revert: null });
+    const trace = log.failures.find((f) => f.stage === "ai mask (wait ended by the user's Abort)");
+    expect(trace).toMatchObject({ error: { code: "SESSION_ENDED" }, ai_trace: { kind: "landscape_water", sent: expect.any(String) } });
+    expect([sent("apply_settings"), sent("apply_snapshot"), sent("clear_pending_ai")]).toEqual([writes, snapshots, 0]); // the guard kept
+    expect(lr.masks.guard.size).toBe(1);
     expect(masks()).toHaveLength(1); // the AI mask's entry, still without a result
-    expect((await hudAt("ended")).note).toBe(abandonedNote({ snapshot: { name: snapshot } } as Session, true));
+    expect((await hudAt("ended")).note).toBe(FINISHING_NOTE);
+    expect(abandonedNote({ snapshot: { name: snapshot } } as Session, true, true)).toBe(FINISHING_NOTE);
+    expect(Buffer.byteLength(FINISHING_NOTE)).toBeLessThanOrEqual(120);
     const later = await fails(step(m));
-    expect(later).toMatchObject({ code: "SESSION_ENDED", details: { outcome: "abandoned", snapshot } });
+    expect(later).toMatchObject({ code: "SESSION_ENDED", details: { outcome: "abandoned", snapshot, ai_finishing: true } });
+    expect(later.message).toContain("Lightroom is still finishing the AI mask: tell the user to wait until its shape shows in Lightroom before clicking the snapshot");
   });
 
-  it("pressed twice: the second click says it is under way, one abandon, one clear_pending_ai; a click after the end says the photo was left", async () => {
+  it("pressed twice: the second click says it is under way, one abandon, no clear_pending_ai (the guard kept); a click after the end says the photo was left", async () => {
     const { m, pending } = await waiting();
     expect(abortClick(m)).toBe(ABORT_AI);
     expect(abortClick(m)).toBe("Abort is already under way.");
     expect(await fails(pending)).toMatchObject({ code: "SESSION_ENDED" });
     await waitUntil(() => m.current() === null, 3000);
-    expect(sent("clear_pending_ai")).toBe(1);
+    expect(sent("clear_pending_ai")).toBe(0);
     expect(readLog().outcome).toBe("abandoned");
     expect(abortClick(m)).toBe("This edit had already ended: the photo was left as it was.");
   });
@@ -120,6 +130,17 @@ describe("issue #181: Abort during the AI mask's wait", () => {
     expect(sent("update_ai_settings")).toBe(0);
     await waitUntil(() => rig.manager.current() === null, 3000);
     expect(readLog()).toMatchObject({ outcome: "aborted", revert: { differing: [] } });
+    expect(masks()).toEqual(start[MASK_TABLE_KEY] ?? []);
+  });
+
+  it("Lightroom restarting under the wait (the bridge dropped), then Abort: the photo is put back as after a restart, not abandoned", async () => {
+    const { m, start, pending } = await waiting();
+    restartLightroom(lr, plugin); // the user restarts a Lightroom that seemed hung: the bridge drops, the wait ends
+    expect(abortClick(m)).toBe(ABORT_AI); // before the new Lightroom connects: the Abort's revert runs before the restart's
+    expect(await fails(pending)).toMatchObject({ code: "SESSION_ENDED" });
+    await waitUntil(() => m.current() === null, 5000);
+    expect(readLog()).toMatchObject({ revert: { differing: [] }, ended_by: { source: "engine", reason: expect.stringMatching(/^Lightroom restarted/) } });
+    expect(readLog().outcome).not.toBe("abandoned");
     expect(masks()).toEqual(start[MASK_TABLE_KEY] ?? []);
   });
 });

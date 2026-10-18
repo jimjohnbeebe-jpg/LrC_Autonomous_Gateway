@@ -56,8 +56,12 @@ export function endedError(e: UserEnded): ToolError {
     accept: "accepted it: the edit is kept and the recipe written",
     abandoned: `abandoned it while Lightroom's AI mask was still computing: the photo was NOT put back, it keeps the session's edits; the snapshot "${e.snapshot}" puts it back`,
   }[e.outcome];
+  // Abort during the mask's first wait keeps the plugin's guard (abandon.ts "kept"): Lightroom likely still computes it (review of #181).
+  const finishing = e.ai_finishing
+    ? ". Lightroom is still finishing the AI mask: tell the user to wait until its shape shows in Lightroom before clicking the snapshot or starting a new session (or to restart Lightroom)"
+    : "";
   const where = e.source === "menu" ? "Lightroom's menu" : "the HUD";
-  return new ToolError("SESSION_ENDED", `The user ended session ${e.session_id} from ${where} at ${e.at} and ${how}. Start a new session only if the user asks.`, false, e);
+  return new ToolError("SESSION_ENDED", `The user ended session ${e.session_id} from ${where} at ${e.at} and ${how}${finishing}. Start a new session only if the user asks.`, false, e);
 }
 
 /**

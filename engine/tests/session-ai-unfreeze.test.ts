@@ -1,8 +1,8 @@
-// GitHub issue #181: an AI mask whose Lightroom update stayed in the write gate past the engine's wait (LIGHTROOM_STUCK) frees
-// the session by itself once Lightroom lets go, with no restart (src/session/ai-update.ts settlePending); the Deck's Abort then
-// puts the photo back, and while the gate stays held it abandons the edit and says the photo was NOT put back
-// (src/session/abandon.ts). Against the Lightroom sim (helpers/lightroom-sim-masks.ts): "dialog" holds the gate with the update
-// "running" for `heldProbes` probes; `release()` is Lightroom finishing, and the update's record then says done.
+// GitHub issue #181: an AI mask whose Lightroom update stayed in the write gate past the engine's wait (LIGHTROOM_STUCK). D16 kept
+// [stated: Jim, 2026-10-18, "Keep D16 (Recommended)"]: only a late result lets the session go on (src/session/ai-update.ts
+// settlePending); an update that ends with no result frees nothing; the Deck's Abort while no result has shown abandons the edit and
+// says the photo was NOT put back (src/session/abandon.ts). Against the Lightroom sim (helpers/lightroom-sim-masks.ts): "dialog" holds
+// the gate with the update "running" for `heldProbes` probes; `release()` is Lightroom finishing, and the update's record then says done.
 
 import { describe, expect, it } from "vitest";
 import { MASK_TABLE_KEY } from "../src/params/index.js";
@@ -39,7 +39,7 @@ function lightroomEnds(): void {
   lr.masks.held = 0;
 }
 
-describe("issue #181: a stuck AI mask frees the session when Lightroom lets go", () => {
+describe("issue #181: a stuck AI mask, D16 kept: only the result lets the session go on", () => {
   it("while the update still runs: every write, render and revert is refused, the plugin's guard stays", async () => {
     const { m } = await stuck();
     const writes = sent("apply_settings");
@@ -58,38 +58,18 @@ describe("issue #181: a stuck AI mask frees the session when Lightroom lets go",
     expect(sent("clear_pending_ai")).toBe(0);
   });
 
-  it("an update that ends with no result: the guard is dropped, the next call writes, and its result says the mask failed and how to put the photo back", async () => {
+  it("an update that ends with no result frees nothing (D16): writes, renders and reverts stay refused, the guard stays, no notice", async () => {
     const { m } = await stuck();
     lightroomEnds();
-    const out = (await step(m)).json;
-    expect(out).toMatchObject({ ok: true });
-    expect(sent("clear_pending_ai")).toBe(1);
-    const note = (out["hud_actions"] as Array<{ action: string; note: string }>)[0];
-    expect(note?.action).toBe("ai_mask_failed");
-    expect(note?.note).toMatch(/^Lightroom's AI Water mask \(asked for at .*\) did not finish/);
-    expect(note?.note).toMatch(/writes, renders and reverts work/);
-    expect(note?.note).toMatch(/lr_end_session with outcome "revert" \(snapshot "AVG pre-session .*"\)/);
-    expect(note?.note).toMatch(/prefer linear or radial masks/);
-    expect(readLog().failures.at(-1)).toMatchObject({ stage: "ai mask (Lightroom's update ended with no result)", error: { code: "AI_MASK_NO_RESULT", recoverable: true } });
-    expect((await step(m)).json).not.toHaveProperty("hud_actions"); // told once; the session is free
-  });
-
-  it("a revert once the gate is free puts the photo back to the pre-session snapshot, with no restart of Lightroom", async () => {
-    const { m, start } = await stuck();
-    const process = lr.processStartedAt;
+    const [writes, snapshots] = [sent("apply_settings"), sent("apply_snapshot")];
+    expect(await fails(step(m))).toMatchObject({ code: "AI_UPDATE_PENDING", details: { stuck: true } });
     expect(await fails(m.end({ session_id: ID, outcome: "revert" }))).toMatchObject({ code: "AI_UPDATE_PENDING" });
-    lightroomEnds();
-    const out = (await m.end({ session_id: ID, outcome: "revert" })).json;
-    expect(out).toMatchObject({ ok: true, outcome: "revert", revert: { differing: [] } });
-    expect(sent("apply_snapshot")).toBe(1);
-    expect(masks()).toEqual(start[MASK_TABLE_KEY] ?? []);
-    expect(lr.settings["Exposure2012"]).toBe(start["Exposure2012"]);
-    expect(lr.processStartedAt).toBe(process);
-    expect(m.current()).toBeNull();
+    expect([sent("apply_settings"), sent("apply_snapshot"), sent("clear_pending_ai")]).toEqual([writes, snapshots, 0]);
+    expect(m.current()?.id).toBe(ID);
   });
 
-  it("the Deck's Abort once the gate is free puts the photo back; it does not abandon the edit", async () => {
-    const { rig, start } = await stuck();
+  it("the Deck's Abort once the result has shown puts the photo back; it does not abandon the edit", async () => {
+    const { rig, start } = await stuck(true);
     lightroomEnds();
     expect(abortClick(rig.manager)).toMatch(/^Abort: /);
     await waitUntil(() => rig.manager.current() === null, 3000);
@@ -97,28 +77,6 @@ describe("issue #181: a stuck AI mask frees the session when Lightroom lets go",
     expect(sent("apply_snapshot")).toBe(1);
     expect(masks()).toEqual(start[MASK_TABLE_KEY] ?? []);
     expect((await hudAt("aborted")).note).toBe("Aborted: the photo is back as it was before the edit.");
-  });
-
-  it("does not free the session when the plugin's guard cannot be dropped: it stays refused, and goes on once it can", async () => {
-    const { m } = await stuck();
-    lightroomEnds();
-    const real = plugin.handlers.get("clear_pending_ai");
-    plugin.handlers.set("clear_pending_ai", () => "silent");
-    expect(await fails(step(m))).toMatchObject({ code: "AI_UPDATE_PENDING", details: { stuck: true } });
-    expect(readLog().failures.at(-1)?.stage).not.toBe("ai mask (Lightroom's update ended with no result)");
-    plugin.handlers.set("clear_pending_ai", real ?? (() => "silent"));
-    expect((await step(m)).json).toMatchObject({ ok: true });
-  });
-
-  it("does not free the session when the plugin has no probe, or the update record is another request's", async () => {
-    const { m } = await stuck();
-    lightroomEnds();
-    lr.masks.probe = "unknown";
-    expect(await fails(step(m))).toMatchObject({ code: "AI_UPDATE_PENDING" });
-    lr.masks.probe = "known";
-    lr.masks.update = lr.masks.update && { ...lr.masks.update, request_id: "another-request" };
-    expect(await fails(step(m))).toMatchObject({ code: "AI_UPDATE_PENDING" });
-    expect(sent("clear_pending_ai")).toBe(0);
   });
 });
 

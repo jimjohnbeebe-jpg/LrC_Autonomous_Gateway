@@ -103,7 +103,7 @@ describe("AI masks: Lightroom's dialog", () => {
     const e = await fails(create("people_face_skin"));
     expect(e).toMatchObject({ code: "LIGHTROOM_STUCK", details: { reverted: false } });
     expect(e.message.startsWith("Lightroom's AI People - Face Skin mask is still computing (no result within 0 minutes, Lightroom's update running).")).toBe(true);
-    expect(e.message).toContain("Restarting Lightroom (File > Exit, then start it again) also frees it: once it is back, the engine notices the restart");
+    expect(e.message).toContain("Restarting Lightroom (File > Exit, then start it again) also ends the wait: once it is back, the engine notices the restart");
     expect(sent("apply_snapshot")).toBe(snapshots);
     expect(notes.at(-1)).toBe(`awaiting_claude: ${STUCK_NOTE}`);
     expect(m.current()?.id).toBe(ID);

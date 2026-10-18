@@ -138,8 +138,8 @@ export const MASK_DEFS: ToolDef[] = [
       "the mask is taken out again and the pass is not used. If Lightroom stays busy or shows a dialog, the HUD tells the user to click OK in it. " +
       "If the mask then computes the pass goes on; if Lightroom reports the update failed or dropped it, the engine puts the photo back as it was before the session and ENDS " +
       "the session (LIGHTROOM_DIALOG). No result in 5 minutes, or Lightroom not answering, is LIGHTROOM_STUCK: Lightroom's AI mask is still computing, " +
-      "nothing is written to the photo, and the session stays open and refuses writes, renders and reverts (AI_UPDATE_PENDING). It unfreezes by itself " +
-      "when Lightroom finishes, with no restart, but Lightroom does not notify you: when the user says to go on, your next call (lr_step, lr_end_session or a linear or radial mask; not the same AI mask again) picks it up. Tell the user to wait, or to press Abort in the Deck (lr_help, 9, says what it does). " +
+      "nothing is written to the photo, and the session stays open and refuses writes, renders and reverts (AI_UPDATE_PENDING) until Lightroom's " +
+      "result shows. Lightroom does not notify you: when the user says to go on, your next call (lr_step, lr_end_session or a linear or radial mask; not the same AI mask again) picks it up. Tell the user to wait, or to press Abort in the Deck (lr_help, 9, says what it does). " +
       "For the rest of the session prefer linear or radial masks to AI masks. If Lightroom reports the update over with no result, AI_MASK_FAILED: " +
       "the user should save their work and restart Lightroom; start a " +
       "new session only if they ask. If the update fails with a Lightroom or plugin error, subject, sky and background are made by " +

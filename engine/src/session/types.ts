@@ -137,13 +137,10 @@ export type UserEnd = {
  * A HUD action Claude has not been told of yet; the next session tool result lists it (`hud_actions`).
  * `deck_fallback`: the Deck was started for this edit but did not connect, or was lost, so the classic
  * HUD opened (hud\sinks.ts, fix/deck-relaunch).
- * `ai_mask_failed`: an AI mask Lightroom had not finished (LIGHTROOM_STUCK) ended with no result, so the session
- * is free again (ai-update.ts settlePending, issue #181); `note` says what happened and how to put the photo back.
  */
 export type HudNotice =
   | { action: "pick"; variant: VariantId; source: UserSource; at: string }
-  | { action: "deck_fallback"; note: string; at: string }
-  | { action: "ai_mask_failed"; note: string; at: string };
+  | { action: "deck_fallback"; note: string; at: string };
 
 /** What every session operation works with: the dependencies, with the clock and id source resolved. */
 export type SessionContext = { deps: SessionDeps; now: () => Date; newId: () => string };
@@ -266,10 +263,8 @@ export type AiPending = {
   job: AiJob;
   /** hello's process_started_at when the update was sent: another one at a reconnect is a Lightroom restart (restart.ts). */
   process: string | null;
-  /** No result within the wait (LIGHTROOM_STUCK): writes stay refused until the result, Lightroom's end of the update (ai-update.ts settlePending, issue #181) or a restart. */
+  /** No result within the wait (LIGHTROOM_STUCK): writes stay refused until the result shows, an abandon or a restart (D16, ai-update.ts settlePending). */
   stuck: boolean;
-  /** The update_ai_settings request_id: how a probe's record of the update is told from another one's. None for a mask LrDevelopController made (no update of ours). */
-  token?: string;
   /** Lightroom's update was over with no result (AI_MASK_FAILED): nothing is read either, until a restart (ai-update.ts). */
   failed?: true;
 };

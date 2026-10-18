@@ -20,28 +20,26 @@
 //     other than 0 (nothing to mask: Snow and Water came back with 1 [handle: docs\reports\phase6\
 //     masks-capture\capture4-check.json steps `row4_snow`, `row4_water`]), for up to COMPUTE_MS, 5 minutes;
 //   - s.aiPending is set meanwhile: the session writes, exports, renders and reverts nothing (io.ts
-//     settlePending). It is cleared when the entry computes, answers an ErrorReason or is gone, when
-//     Lightroom reports the update failed, or when the update ended with no result (settlePending, below);
-//     never on a thrown error (a dropped bridge, another photo selected): a later call reads the table again first;
+//     settlePending). It is cleared when the entry computes, answers an ErrorReason or is gone, or when
+//     Lightroom reports the update failed; never on a thrown error (a dropped bridge, another photo
+//     selected): a later call reads the table again first (settlePending);
 //   - after DIALOG_AFTER_MS with nothing in the table, probe_write_gate: "aborted" (the gate is held) means
 //     Lightroom is busy or shows a dialog [inference: a cold model holds the gate as long], and the HUD says
 //     so (DIALOG_NOTE). From then on the HUD's note shows the time waited, once a second (tick, issue #181).
 //     The photo is put back (ai-revert.ts autoRevert) [stated: Jim, 2026-10-03, "Also auto-revert"] only when
 //     Lightroom reports the update failed after a busy gate, or dropped it (abandoned): then nothing computes
 //     [inference]. D13's put-backs 60 s after the gate was free again and after 5 minutes are gone: they could
-//     write under a running computation (D16). The one write after a "done" record without a digest is the next bullet's;
+//     write under a running computation (D16);
 //   - no result within COMPUTE_MS, or gate probes unanswered for STUCK_PROBES_MS: LIGHTROOM_STUCK, nothing
-//     written, the session open with aiPending kept (`stuck`). In the 2026-10-18 session Lightroom's update was still
-//     "running" when the wait ended at 5 minutes [handle: logs\20261018-441ee2.json:1360-1368, 1573-1581; the 40
-//     probes kept all read "aborted" with the update "running"], and the Abort recovered the session without a
-//     restart [stated: Jim, 2026-10-18, GitHub issue #181]. So the session does not wait for a restart (issue #181):
-//     each later write, render and revert first asks the plugin whether the update is over (settlePending). A result
-//     that came meanwhile lets the session go on; an update over with the gate free and no result SETTLE_MS later
-//     frees it as a failed mask, and the next result says so; the Deck's Abort puts the photo back then, else (the
-//     gate still held) abandons the edit (abandon.ts). A Lightroom restart still puts the photo back by itself
-//     (restart.ts). This reverses D16 for that case: capture 5's row E (above) is the evidence against writing after a
-//     "done" record with no digest, and no run has shown that Lightroom's computation is over then [unverified]. It waits
-//     for Jim's pick [handle: docs\reports\phase9\issue181.md "Decisions for Jim" 1];
+//     written, the session open with aiPending kept (`stuck`). Each later write, render and revert reads the table
+//     first (settlePending): a result that came meanwhile lets the session go on. Otherwise the session ends only by
+//     the user's Abort or lr_end_session "abandon" (abandon.ts: nothing written, the photo NOT put back), or by a
+//     Lightroom restart, after which the engine puts the photo back (restart.ts). Jim kept D16 here [stated: Jim,
+//     2026-10-18, "Keep D16 (Recommended)"; docs\reports\phase9\issue181.md "Decisions for Jim" 1]: a "done" record
+//     without a digest frees nothing, as capture 5's row E (above) is the evidence against writing then. In the
+//     2026-10-18 session Lightroom's update was still "running" when the wait ended at 5 minutes [handle:
+//     logs\20261018-441ee2.json:1360-1368, 1573-1581; the 40 probes kept all read "aborted" with the update
+//     "running"], and the Abort (an abandon) ended the session without a restart [stated: Jim, 2026-10-18, GitHub issue #181];
 //   - a probe that reads the gate free with the update "done", then a read SETTLE_MS (2 s) or more after it
 //     with neither a digest nor an ErrorReason: Lightroom's computation failed, AI_MASK_FAILED (issue #123). On
 //     2026-10-10 Lightroom's update was over with no result after an NVIDIA driver error, and the engine read on
@@ -64,14 +62,13 @@
 import { randomUUID } from "node:crypto";
 import type { AiTrace } from "../log/index.js";
 import { ToolError, toToolError } from "../mcp/errors.js";
-import { KIND_LABELS, aiError, aiWatch, computed } from "../params/index.js";
-import { dropGuard } from "./ai-guard.js";
+import { aiError, aiWatch, computed } from "../params/index.js";
 import type { AiJob } from "./ai-masks.js";
 import { look, ownUpdate, probe } from "./ai-reads.js";
 import { aiTimings, type AiTimings } from "./ai-timings.js";
 import { newTrace, noteProbe, noteRead } from "./ai-trace.js";
 import { ABANDONED, decide, elapsedNote, judge, type Update, type Watch } from "./ai-verdict.js";
-import { bridge, checkAbort, ms, saveLog } from "./io.js";
+import { bridge, checkAbort, ms } from "./io.js";
 import type { AiPending, Session, SessionContext } from "./types.js";
 
 // types.ts and the callers import the timings' type from here: the edge was theirs before the timings moved to ai-timings.ts,
@@ -170,7 +167,7 @@ export async function updateAndWait(ctx: SessionContext, s: Session, job: AiJob)
   // No connection: the update is not sent, so nothing is pending (else the session could never be put back).
   if (!hello) throw new ToolError("BRIDGE_DISCONNECTED", "Lightroom is not connected; the AI update was not sent.", true);
   const token = randomUUID();
-  s.aiPending = { since: ctx.now().toISOString(), kind: job.kind, job, process: hello.process_started_at ?? null, stuck: false, token };
+  s.aiPending = { since: ctx.now().toISOString(), kind: job.kind, job, process: hello.process_started_at ?? null, stuck: false };
   const trace = newTrace(job.kind);
   s.aiTrace = trace;
   let out: Update | null = null;
@@ -198,18 +195,18 @@ export const ABANDON_HINT = ' If the user would rather stop now without a restar
 export const putBackByHand = (snapshot: string): string => `To put it back, the user selects it in Develop and clicks the snapshot "${snapshot}" in the Snapshots panel.`;
 
 /**
- * What Claude is told while an AI mask has no result (issue #181): no restart is needed, as the session frees itself once
- * Lightroom is done, but only a call checks (nothing notifies), and not the same AI mask again; Abort in the Deck puts the photo
- * back then, else leaves it as it is and names the snapshot.
+ * What Claude is told while an AI mask has no result (issue #181): the session goes on once Lightroom's result shows, but only
+ * a call checks (nothing notifies), and not the same AI mask again; Abort in the Deck puts the photo back if the result has
+ * shown, else ends the edit as it is (abandon.ts) and names the snapshot. Only that, an abandon or a restart end it otherwise (D16).
  */
 export const waitAdvice = (s: Session): string =>
-  ` The session unfreezes by itself when Lightroom has finished, with no restart: each call checks (a result lets the session go on; none frees it and the result's hud_actions says the mask failed). ` +
+  ` The session goes on when Lightroom's result shows: each call checks, and nothing else frees it. ` +
   `Lightroom does not notify you: when the user says to go on, call lr_step, lr_end_session or lr_create_mask with a linear or radial kind to check, and not the same AI mask again (it would add a second one). ` +
-  `Tell the user to wait, or to press Abort in the Deck: it puts the photo back as it was before the session if Lightroom has finished, and otherwise ends the edit as it is and names the snapshot "${s.snapshot.name}" that puts it back.`;
+  `Tell the user to wait, or to press Abort in the Deck: it puts the photo back as it was before the session if Lightroom's result has shown, and otherwise ends the edit as it is, the photo NOT put back, and names the snapshot "${s.snapshot.name}" that puts it back.`;
 
 /** What a restart does (restart.ts), as the other way out, and what to do with AI masks meanwhile. */
 export const restartAdvice = (id: string): string =>
-  ` Restarting Lightroom (File > Exit, then start it again) also frees it: once it is back, the engine notices the restart, puts the photo back as it was before the session (checked) and ends session ${id} by itself; nothing to call.` +
+  ` Restarting Lightroom (File > Exit, then start it again) also ends the wait: once it is back, the engine notices the restart, puts the photo back as it was before the session (checked) and ends session ${id} by itself; nothing to call.` +
   ` For the rest of the session prefer linear or radial masks to AI masks.`;
 
 /** The error for a write, export, render or revert while an AI update has no result (io.ts settlePending). */
@@ -230,56 +227,15 @@ async function answered(ctx: SessionContext, p: AiPending): Promise<boolean> {
   return seen !== null && (!seen.m || computed(seen.m) || aiError(seen.m) !== null);
 }
 
-/** A probe says Lightroom's update (this request's) is over and the catalog free. False when it does not say so (no answer, an older plugin, a restart, the LrDevelopController route's mask: no update of ours). */
-async function updateOver(ctx: SessionContext, p: AiPending): Promise<boolean> {
-  if (p.token === undefined) return false;
-  const pr = await probe(ctx, aiTimings(ctx)).catch(() => null);
-  const own = ownUpdate(pr, p.job, p.token);
-  return pr?.status === "executed" && own !== null && own.state !== "started" && own.state !== "running";
-}
-
-/**
- * Lightroom's update is over, its catalog free, and no result showed settleMs later: the mask failed. The plugin's guard is
- * dropped (clear_pending_ai), so writes go ahead again, and the next session result carries the notice (hud_actions
- * `ai_mask_failed`) and the log a failure entry. If the guard cannot be dropped the session stays as it was (issue #181).
- */
-async function endFailed(ctx: SessionContext, s: Session, p: AiPending): Promise<void> {
-  if ((await dropGuard(ctx, p.job.t.uuid)).guard !== "cleared") throw pendingError(s);
-  s.aiPending = null;
-  const at = ctx.now().toISOString();
-  const note =
-    `Lightroom's AI ${KIND_LABELS[p.job.kind]} mask (asked for at ${p.since}) did not finish: Lightroom's update ended and no result came, so the mask has no shape. ` +
-    `The session is open again: writes, renders and reverts work. The mask's entry (id ${p.job.id}) stays in the photo's mask list (lr_list_masks). ` +
-    `To put the photo back as it was before the session, call lr_end_session with outcome "revert" (snapshot "${s.snapshot.name}"); or go on, and prefer linear or radial masks to AI masks.`;
-  s.log.failures.push({ at, stage: "ai mask (Lightroom's update ended with no result)", error: new ToolError("AI_MASK_NO_RESULT", note, true, { session_id: s.id, mask_id: p.job.id }).body() });
-  try {
-    saveLog(s);
-  } catch {
-    // the notice matters more than the log write
-  }
-  s.notices.push({ action: "ai_mask_failed", note, at });
-  s.idleNote = "Lightroom's AI mask did not finish; its empty mask stays in the list. The edit goes on.";
-}
-
 /**
  * Before a write, export or render (io.ts) and a revert (end.ts): refused (AI_UPDATE_PENDING) while the AI
  * update has no result. A read that shows the entry's digest or ErrorReason, or the entry gone, clears
- * s.aiPending first; a read Lightroom does not answer leaves it set. Then a probe asks whether Lightroom's update is over:
- * if it is, with the gate free, and no result shows settleMs later, the mask failed and the session is freed (endFailed,
- * issue #181). After AI_MASK_FAILED nothing is read: only a restart ends it (or an abandon).
+ * s.aiPending first; a read Lightroom does not answer leaves it set, and so does a "done" record with no digest (D16,
+ * kept for issue #181). After AI_MASK_FAILED nothing is read: only a restart ends it (or an abandon).
  */
 export async function settlePending(ctx: SessionContext, s: Session): Promise<void> {
   const p = s.aiPending;
   if (!p) return;
-  if (p.failed) throw pendingError(s);
-  const done = async (): Promise<boolean> => {
-    if (!(await answered(ctx, p))) return false;
-    s.aiPending = null;
-    return true;
-  };
-  if (await done()) return;
-  if (!(await updateOver(ctx, p))) throw pendingError(s);
-  await sleep(aiTimings(ctx).settleMs); // a result shows 0.02-0.5 s after "done", where Lightroom has one (the header)
-  if (await done()) return;
-  await endFailed(ctx, s, p);
+  if (p.failed || !(await answered(ctx, p))) throw pendingError(s);
+  s.aiPending = null;
 }

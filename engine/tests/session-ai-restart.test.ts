@@ -24,10 +24,9 @@ const abortClick = (m: SessionManager): string =>
   m.userAction({ name: "hud_abort", payload: { session_id: ID, seq_seen: 1, click_id: `restart-${++clicks}`, source: "hud" }, received: new Date(), t0: performance.now() });
 
 /**
- * A session whose AI mask got no result in time (LIGHTROOM_STUCK). By default Lightroom's update still runs and holds the gate (a
- * session that is frozen until it ends, issue #181); `late`: its record says done and the entry has no digest (then the next call
- * frees the session as a failed mask: tests\session-ai-unfreeze.test.ts). On main this "late" case kept the session pending
- * (D16); that it no longer does is Jim's to confirm (docs\reports\phase9\issue181.md "Decisions for Jim" 1).
+ * A session whose AI mask got no result in time (LIGHTROOM_STUCK). By default Lightroom's update still runs and holds the gate;
+ * `late`: its record says done and the entry has no digest. Either way the session stays pending until the entry computes (D16,
+ * kept for issue #181 [stated: Jim, 2026-10-18, "Keep D16 (Recommended)"]).
  */
 async function stuckSession(timings: Record<string, number> = {}, late = false) {
   clean();
@@ -54,6 +53,23 @@ describe("D16: nothing written while Lightroom computes an AI mask", () => {
     expect(rig.reported.some((r) => r.note === STUCK_NOTE)).toBe(true);
     lr.masks.release(); // Lightroom finishes after all: its update ends and the mask computes
     lr.masks.held = 0;
+    expect((await step(rig.manager)).json).toMatchObject({ ok: true });
+    expect((await rig.manager.end({ session_id: ID, outcome: "revert" })).json).toMatchObject({ outcome: "revert", revert: { differing: [] } });
+  });
+
+  it("keeps the mask pending after Lightroom's record says done: no write or revert until the entry computes, then the session goes on", async () => {
+    const { rig, e } = await stuckSession({}, true);
+    expect(e).toMatchObject({ code: "LIGHTROOM_STUCK", details: { reverted: false } });
+    expect(e.message).toMatch(/the engine notices the restart, puts the photo back .* by itself; nothing to call/);
+    expect(lr.masks.update?.state).toBe("done");
+    const snapshots = sent("apply_snapshot");
+    expect(await fails(step(rig.manager))).toMatchObject({ code: "AI_UPDATE_PENDING", recoverable: false, details: { stuck: true } });
+    expect(await fails(rig.manager.end({ session_id: ID, outcome: "revert" }))).toMatchObject({ code: "AI_UPDATE_PENDING" });
+    expect(sent("apply_snapshot")).toBe(snapshots);
+    expect(sent("clear_pending_ai")).toBe(0);
+    // An Abort click now abandons the edit (issue #124, tests\session-abandon.test.ts).
+    expect(rig.reported.some((r) => r.note === STUCK_NOTE)).toBe(true);
+    lr.masks.finishLate(); // Lightroom finishes after all
     expect((await step(rig.manager)).json).toMatchObject({ ok: true });
     expect((await rig.manager.end({ session_id: ID, outcome: "revert" })).json).toMatchObject({ outcome: "revert", revert: { differing: [] } });
   });

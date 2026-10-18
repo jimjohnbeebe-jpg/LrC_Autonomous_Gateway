@@ -57,11 +57,10 @@ export const HELP_TEXT = [
   "",
   "9. An AI mask Lightroom has not finished (LIGHTROOM_STUCK, AI_UPDATE_PENDING). Lightroom's AI mask is still computing: the " +
     "session stays open and writes, renders and reverts nothing; the HUD shows the time waited (m:ss). These errors say recoverable " +
-    "false, but they end when Lightroom finishes: the session unfreezes by itself, with no restart. Lightroom does not notify you: " +
+    "false, but they end when Lightroom's result shows: the session then goes on; nothing else frees it. Lightroom does not notify you: " +
     "when the user says to go on, call lr_step, lr_end_session or lr_create_mask with a linear or radial kind (not the same AI mask " +
-    "again, which would add a second one); each call checks, and a result lets the session go on (`hud_actions` has an `ai_mask_failed` " +
-    "note when Lightroom ended with none). Tell the user to wait, or to press Abort in the Deck: it puts the photo back if Lightroom " +
-    "has finished, and otherwise ends the edit as it is, says the photo was NOT put back and names the snapshot that puts it back. " +
+    "again, which would add a second one); each call checks. Tell the user to wait, or to press Abort in the Deck: it puts the photo " +
+    "back if the result has shown, and otherwise ends the edit as it is, says the photo was NOT put back and names the snapshot that puts it back. " +
     "A Lightroom restart also works: the engine then puts the photo back and ends the session (later calls naming it get SESSION_ENDED). " +
     "For the rest of the session prefer linear or radial masks to AI masks. AI_MASK_FAILED (Lightroom's update over, no result " +
     "within the wait) is different: the user saves their work and restarts Lightroom.",

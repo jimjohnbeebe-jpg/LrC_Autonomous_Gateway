@@ -17,16 +17,56 @@
 //     ends the session this way when its revert is refused because the AI mask is stuck (hud-actions.ts).
 // [handle: tests\session-abandon.test.ts, against the Lightroom sim; in Lightroom [unverified] until Jim's check.]
 
-import { HUD_LIMITS } from "../bridge/index.js";
-import { GUARD_NOTE, dropGuard } from "./ai-guard.js";
+import { HUD_LIMITS, pluginVersionAtLeast } from "../bridge/index.js";
+import { ToolError, toToolError } from "../mcp/errors.js";
+import { aiTimings } from "./ai-timings.js";
 import { putBackByHand } from "./ai-update.js";
 import { sentenceName } from "./client.js";
 import { endedBy } from "./end.js";
 import { saveLog } from "./io.js";
 import type { Session, SessionContext, SessionOutput, UserEnd } from "./types.js";
 
-// dropGuard and the guard's notes moved to ai-guard.ts (a leaf file, issue #181); left-open.ts still takes them from here.
-export { GUARD_NOTE, dropGuard, type GuardOutcome } from "./ai-guard.js";
+/** The plugin that has clear_pending_ai (Pending.lua); the engine waits for its answer aiTimings' clearMs, 5 s. */
+export const CLEAR_PENDING_PLUGIN = "0.20.0";
+
+/** What became of the plugin's guard on the photo. */
+export type GuardOutcome = "none" | "cleared" | "not_cleared" | "plugin_too_old";
+
+/**
+ * Drop the plugin's guard on photo `uuid`, whose AI mask is pending (null: none is); never throws. `ifAny`: a photo that
+ * may have none (left-open.ts), so the plugin's answer that it had none is "none".
+ */
+export async function dropGuard(ctx: SessionContext, uuid: string | null, ifAny = false): Promise<{ guard: GuardOutcome; error?: string }> {
+  if (!uuid) return { guard: "none" };
+  const { client } = ctx.deps;
+  if (client.getState() !== "connected") return { guard: "not_cleared", error: "Lightroom is not connected" };
+  if (!pluginVersionAtLeast(client.hello()?.plugin_version, CLEAR_PENDING_PLUGIN)) return { guard: "plugin_too_old" };
+  // The bridge's own timeout waits on while the plugin is paused (bridge\client.ts send), so a hung Lightroom with its
+  // socket open would hold the queue until the heartbeat drops it (Greptile, PR #134): a deadline of its own.
+  const ms = aiTimings(ctx).clearMs;
+  const sent = client.request("clear_pending_ai", { photo_uuid: uuid }, { timeoutMs: ms });
+  sent.catch(() => undefined); // an answer after the deadline is dropped
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new ToolError("BRIDGE_TIMEOUT", `clear_pending_ai: no answer within ${ms} ms`, true)), ms);
+  });
+  try {
+    const res = await Promise.race([sent, deadline]);
+    return { guard: ifAny && !res.cleared ? "none" : "cleared" };
+  } catch (err) {
+    return { guard: "not_cleared", error: toToolError(err).code };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export const GUARD_NOTE: Record<GuardOutcome, string> = {
+  none: "",
+  cleared:
+    " Lightroom was told to stop holding writes to the photo for the AI mask; if Lightroom may still be working on it, restarting Lightroom first is the safe way.",
+  not_cleared: " Lightroom could not be told to stop holding writes to the photo for the AI mask: it refuses them until it restarts.",
+  plugin_too_old: ` Lightroom refuses writes to the photo until it restarts (the plugin before ${CLEAR_PENDING_PLUGIN} cannot be told to stop).`,
+};
 
 /** End `s` without a Lightroom call but clear_pending_ai; the caller closes it. `by`: the user's Abort, else Claude. */
 export async function abandonSession(ctx: SessionContext, s: Session, by: UserEnd | null): Promise<SessionOutput> {

@@ -1,5 +1,5 @@
 // The AI mask wait's timings (ai-update.ts), moved out of it in issue #181 (module size, rule 01). A leaf file on
-// purpose: arch-check fails any new import cycle, and the files that read these (types.ts, ai-guard.ts) are
+// purpose: arch-check fails any new import cycle, and the files that read these (types.ts, abandon.ts) are
 // reached from ai-update.ts, so this one imports nothing of the session.
 
 export type AiTimings = {
@@ -22,7 +22,7 @@ export type AiTimings = {
   noteEveryMs: number;
   /** LrDevelopController's mask: how long it may take to show and compute (ai-masks.ts). */
   dcWaitMs: number;
-  /** An abandon's clear_pending_ai: a hard deadline, not extended while the plugin is paused (ai-guard.ts; Greptile, PR #134). */
+  /** An abandon's clear_pending_ai: a hard deadline, not extended while the plugin is paused (abandon.ts; Greptile, PR #134). */
   clearMs: number;
 };
 /**

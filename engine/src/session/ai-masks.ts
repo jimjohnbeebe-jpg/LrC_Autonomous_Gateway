@@ -26,7 +26,8 @@
 
 import { ToolError, featureUnavailable, toToolError } from "../mcp/errors.js";
 import { AI_KINDS, KIND_LABELS, computed, correctionIds, firstComponent, named, readTable, type AiKind, type Box, type Correction, type SdkSettings } from "../params/index.js";
-import { aiTimings, updateAndWait } from "./ai-update.js";
+import { aiTimings } from "./ai-timings.js";
+import { updateAndWait } from "./ai-update.js";
 import { autoRevert, stuckError } from "./ai-revert.js";
 import { putBackPart } from "./mask-parts.js";
 import { byPerson } from "./person-masks.js";

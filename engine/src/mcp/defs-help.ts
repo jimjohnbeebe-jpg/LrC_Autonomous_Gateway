@@ -53,6 +53,15 @@ export const HELP_TEXT = [
   "",
   "8. Errors. Errors are {code, message, recoverable, details?}. A recoverable error says what to do, for example " +
     "SESSION_NOT_ACTIVE names the open session in `details.open_session_id`; recoverable false means change the call first.",
+  "",
+  "9. An AI mask Lightroom has not finished (LIGHTROOM_STUCK, AI_UPDATE_PENDING). Lightroom's AI mask is still computing: the " +
+    "session stays open and writes, renders and reverts nothing; the HUD shows the time waited (m:ss). It unfreezes by itself when " +
+    "Lightroom finishes, with no restart: each call checks, and a result lets the session go on (`hud_actions` has an `ai_mask_failed` " +
+    "note when Lightroom ended with none). Tell the user to wait, or to press Abort in the Deck: it puts the photo back if Lightroom " +
+    "has finished, and otherwise ends the edit as it is, says the photo was NOT put back and names the snapshot that puts it back. " +
+    "A Lightroom restart also works: the engine then puts the photo back and ends the session (later calls naming it get SESSION_ENDED). " +
+    "For the rest of the session prefer linear or radial masks to AI masks. AI_MASK_FAILED (Lightroom's update over, no result " +
+    "within the wait) is different: the user saves their work and restarts Lightroom.",
 ].join("\n");
 
 /** The server's instructions (MCP initialize result): a pointer to lr_help, kept short. */

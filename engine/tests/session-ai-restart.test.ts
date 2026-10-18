@@ -5,7 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 import { MASK_TABLE_KEY, aiWatch } from "../src/params/index.js";
-import { ABORT_WAITS, ACCEPT_AFTER_FAILED, engineEndedNote, type SessionManager } from "../src/session/index.js";
+import { ABORT_WAITS, ACCEPT_AFTER_FAILED, STUCK_NOTE, engineEndedNote, type SessionManager } from "../src/session/index.js";
 import type { FakeHandler } from "./helpers/fake-plugin.js";
 import { waitUntil } from "./helpers/fake-plugin.js";
 import { hudAt, hudRig } from "./helpers/hud-harness.js";
@@ -23,30 +23,36 @@ let clicks = 0;
 const abortClick = (m: SessionManager): string =>
   m.userAction({ name: "hud_abort", payload: { session_id: ID, seq_seen: 1, click_id: `restart-${++clicks}`, source: "hud" }, received: new Date(), t0: performance.now() });
 
-/** A session whose AI mask got no result in time: Lightroom's record says done, the entry has no digest (LIGHTROOM_STUCK). */
-async function stuckSession(timings: Record<string, number> = {}) {
+/**
+ * A session whose AI mask got no result in time (LIGHTROOM_STUCK). By default Lightroom's update still runs and holds the gate (a
+ * session that is frozen until it ends, issue #181); `late`: its record says done and the entry has no digest (then the next call
+ * frees the session as a failed mask: tests\session-ai-unfreeze.test.ts).
+ */
+async function stuckSession(timings: Record<string, number> = {}, late = false) {
   clean();
   const rig = hudRig({ aiTimings: { ...FAST, ...timings } });
   await rig.manager.begin({ intent_id: "test_plain", return_image: "none", max_passes: 4 });
   const start = structuredClone(lr.settings);
-  lr.masks.tableRoute = "late";
+  if (late) lr.masks.tableRoute = "late";
+  else [lr.masks.gate, lr.masks.heldProbes] = ["slow", 1_000_000];
   const e = await fails(create(rig.manager));
   return { rig, start, e };
 }
 
 describe("D16: nothing written while Lightroom computes an AI mask", () => {
-  it("keeps the mask pending after Lightroom's record says done: no write or revert until the entry computes, then the session goes on", async () => {
+  it("keeps the mask pending while Lightroom's update runs: no write or revert until the entry computes, then the session goes on", async () => {
     const { rig, e } = await stuckSession();
     expect(e).toMatchObject({ code: "LIGHTROOM_STUCK", details: { reverted: false } });
     expect(e.message).toMatch(/the engine notices the restart, puts the photo back .* by itself; nothing to call/);
-    expect(lr.masks.update?.state).toBe("done");
+    expect(lr.masks.update?.state).toBe("running");
     const snapshots = sent("apply_snapshot");
     expect(await fails(step(rig.manager))).toMatchObject({ code: "AI_UPDATE_PENDING", recoverable: false, details: { stuck: true } });
     expect(await fails(rig.manager.end({ session_id: ID, outcome: "revert" }))).toMatchObject({ code: "AI_UPDATE_PENDING" });
     expect(sent("apply_snapshot")).toBe(snapshots);
     // An Abort click now abandons the edit (issue #124, tests\session-abandon.test.ts).
-    expect(rig.reported.some((r) => r.note === "Lightroom's AI mask seems stuck. Restart Lightroom: the photo is then put back by itself. Or click Abort.")).toBe(true);
-    lr.masks.finishLate(); // Lightroom finishes after all
+    expect(rig.reported.some((r) => r.note === STUCK_NOTE)).toBe(true);
+    lr.masks.release(); // Lightroom finishes after all: its update ends and the mask computes
+    lr.masks.held = 0;
     expect((await step(rig.manager)).json).toMatchObject({ ok: true });
     expect((await rig.manager.end({ session_id: ID, outcome: "revert" })).json).toMatchObject({ outcome: "revert", revert: { differing: [] } });
   });
@@ -79,7 +85,7 @@ describe("D16: nothing written while Lightroom computes an AI mask", () => {
 
 describe("issue #123: Lightroom's update over with no result", () => {
   it("is AI_MASK_FAILED settleMs after the probe saw it over: one probe, no more reads, later calls refused unread; a restart puts the photo back", async () => {
-    const { rig, start, e } = await stuckSession({ computeMs: 10_000, settleMs: 50 });
+    const { rig, start, e } = await stuckSession({ computeMs: 10_000, settleMs: 50 }, true);
     expect(e).toMatchObject({ code: "AI_MASK_FAILED", recoverable: false, details: { session_id: ID, reverted: false } });
     expect(e.message).toMatch(/^Lightroom's AI Vegetation mask computation failed \(Lightroom reported the update over .* no result showed/);
     expect(e.message).toMatch(/save your work and restart Lightroom/);

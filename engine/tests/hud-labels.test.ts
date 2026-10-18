@@ -111,7 +111,7 @@ describe("the Deck's rows (Phase 7 row 3, src/hud/extras.ts)", () => {
 });
 
 describe("the notes that name the AI (issue #155 R2, src/session/client.ts)", () => {
-  const by = (client?: ClientIdentity): Session => ({ client, mode: "converge", abort: null, idleNote: null, log: {} }) as unknown as Session;
+  const by = (client?: ClientIdentity): Session => ({ client, mode: "converge", abort: null, idleNote: null, log: {}, snapshot: { name: "AVG pre-session 2026-10-18T14:34:05.123Z" } }) as unknown as Session;
 
   it("stay within the HUD's text limit with a 32-character name, in the photographer's words", () => {
     const s = by({ name: "x", title: "W".repeat(32), version: "1" });

@@ -6,9 +6,10 @@
 //     (io.ts checkAbort), then the pre-session snapshot is applied, as lr_end_session "revert" does;
 //     the log's outcome is "aborted". A revert that fails, or leaves a setting different, keeps the
 //     session open, and a second click tries again; Claude's revert while an Abort is pending is
-//     logged as the user's (end.ts). While Lightroom computes an AI mask (s.aiPending) it is refused
-//     with a note, nothing written (D16, ai-update.ts); once the mask is stuck or failed, the Abort
-//     abandons the edit, nothing written either (abandon.ts, issue #124);
+//     logged as the user's (end.ts). While an AI mask has no result (s.aiPending: the engine's wait for
+//     it, or after LIGHTROOM_STUCK or AI_MASK_FAILED) the wait ends at its next read (ai-update.ts watch),
+//     and if the revert is refused for want of the result (D16) the Abort abandons the edit, nothing
+//     written (abandon.ts; issue #124, and issue #181 [stated: Jim, 2026-10-18, "Abort ends the wait now"]);
 //   - Accept: after the running operation, as lr_end_session "accept" (Variants mode: after a pick);
 //     it waits rather than stops, so no pass is left half done (a write without its corrections);
 //   - Pick: as lr_select_variant; Claude learns of it in its next session tool result
@@ -139,7 +140,8 @@ export function abortedNote(s: Session): string {
 
 const settingsCount = (n: number): string => (n === 1 ? "1 setting" : `${n} settings`);
 export const NOT_IN_DEVELOP = "Lightroom must be in Develop to put the photo back. Press D in Lightroom, then click Abort again.";
-export const ABORT_WAITS = "Lightroom is still computing the AI mask, so Abort must wait: click it again once this wait is over.";
+/** Abort's answer while an AI mask has no result (issue #181): the wait ends now, and the photo goes back only if the result has shown. */
+export const ABORT_AI = "Abort: ending the wait for the AI mask. The photo is put back only if Lightroom has finished it.";
 
 /** Waits for the bridge; a failed wait goes in the log's failures, as the HUD's note names no code. */
 async function connected(ctx: SessionContext, s: Session, stage: string): Promise<void> {
@@ -149,14 +151,13 @@ async function connected(ctx: SessionContext, s: Session, stage: string): Promis
 
 function abort(host: ActionHost, s: Session, a: UserAction): string {
   if (s.abort?.state === "pending") return "Abort is already under way.";
-  // Nothing is put back while Lightroom computes an AI mask on the photo (ai-update.ts, D16). While a call runs
-  // the answer is plain; when idle, the queued revert re-reads the table (endSession's settlePending) and
-  // goes ahead if Lightroom has finished meanwhile, else it reports ABORT_WAITS (finishAbort).
-  if (s.aiPending && host.busy()) return ABORT_WAITS;
   s.abort = userEnd(a, s.abort); // a second click after a failed revert tries again
   const running = host.busy();
   host.queue(() => finishAbort(host, s));
   wakeApproval(s, "abort"); // a step waiting for an approval stops now, and the revert runs next
+  // An AI mask's wait (ai-update.ts watch) stops at its next read (checkAbort); the queued revert then goes ahead if the result
+  // has shown, else the edit is abandoned (finishAbort; issue #181).
+  if (s.aiPending) return ABORT_AI;
   return running ? "Abort: stopping before the next change or preview, then putting the photo back." : "Abort: putting the photo back as it was before the edit.";
 }
 
@@ -168,18 +169,13 @@ async function finishAbort(host: ActionHost, s: Session): Promise<void> {
     await connected(ctx, s, "abort (reconnect)");
     await endSession(ctx, s, { session_id: s.id, outcome: "revert" }, by);
   } catch (err) {
-    if (s.aiPending?.stuck) {
-      // The mask is still stuck or failed, so the revert wrote nothing (settlePending refused it, or the reconnect failed:
-      // Greptile, PR #134): the Abort ends the edit without a Lightroom write (abandon.ts, issue #124, D1).
+    if (s.aiPending) {
+      // The AI mask still has no result (its wait ended by this Abort, LIGHTROOM_STUCK or AI_MASK_FAILED), so the revert wrote
+      // nothing (settlePending refused it, or the reconnect failed: Greptile, PR #134): the Abort ends the edit without a
+      // Lightroom write (abandon.ts; issue #124, D1; issue #181).
       await abandonSession(ctx, s, by);
       host.close(s, userEnded(ctx, s, "abandoned", by));
       ctx.deps.hud?.stage(s, "ended", { note: abandonedNote(s, true) });
-      return;
-    }
-    if (toToolError(err).code === "AI_UPDATE_PENDING") {
-      // Nothing was written: the session goes on as before the click (D16), and Abort works again once the mask has its result.
-      s.abort = null;
-      ctx.deps.hud?.stage(s, "awaiting_claude", { note: ABORT_WAITS });
       return;
     }
     by.state = "failed"; // the failure is in the log's failures: connected()'s, or endSession's own (io.ts failed())

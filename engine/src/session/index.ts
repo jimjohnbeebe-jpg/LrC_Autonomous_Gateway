@@ -42,7 +42,7 @@ export { abandonedNote } from "./abandon.js";
 export { LEFT_OPEN_NOTE, leftOpenJson } from "./left-open.js";
 export type { LeftOpen } from "./left-open.js";
 export { STUCK_NOTE, engineEndedNote } from "./ai-revert.js";
-export { ABORT_WAITS, ACCEPT_AFTER_FAILED } from "./hud-actions.js";
+export { ABORT_AI, ACCEPT_AFTER_FAILED } from "./hud-actions.js";
 export { endedAlike, endedError } from "./hud-notes.js";
 export type { AiTimings } from "./ai-timings.js";
 export { DEFAULT_VARIANT_COUNT, MAX_VARIANT_COUNT, VARIANTS_PLUGIN } from "./copies.js";

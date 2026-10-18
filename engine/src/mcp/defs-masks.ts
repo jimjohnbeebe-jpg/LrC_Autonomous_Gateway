@@ -133,7 +133,7 @@ export const MASK_DEFS: ToolDef[] = [
     title: "Create a mask",
     description:
       "Create one mask on the session's photo, with its local sliders set in the same pass. linear and radial take geometry; luminance takes " +
-      "geometry.lum_range; Lightroom finds and computes the AI kinds (the call waits up to 5 minutes). " +
+      "geometry.lum_range; Lightroom finds and computes the AI kinds (the call waits up to 5 minutes; the Deck's Abort ends the wait: SESSION_ENDED). " +
       "If the photo has none of that kind, MASK_NOTHING_FOUND: " +
       "the mask is taken out again and the pass is not used. If Lightroom stays busy or shows a dialog, the HUD tells the user to click OK in it. " +
       "If the mask then computes the pass goes on; if Lightroom reports the update failed or dropped it, the engine puts the photo back as it was before the session and ENDS " +

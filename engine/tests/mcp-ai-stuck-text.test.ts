@@ -10,7 +10,7 @@ import { SESSION_DEFS } from "../src/mcp/defs-session.js";
 import type { AiJob } from "../src/session/ai-masks.js";
 import { STUCK_NOTE, stuckError } from "../src/session/ai-revert.js";
 import { pendingError } from "../src/session/ai-update.js";
-import { ABORT_WAITS, abandonedNote, type Session } from "../src/session/index.js";
+import { ABORT_AI, abandonedNote, type Session } from "../src/session/index.js";
 import { hudWordProblems } from "./helpers/hud-harness.js";
 
 const description = (name: string): string => {
@@ -57,16 +57,16 @@ describe("the HUD's notes", () => {
     expect(STUCK_NOTE).toMatch(/When done, ask the AI to go on/);
     expect(STUCK_NOTE).toMatch(/Abort leaves it as is; a restart puts it back/);
     expect(STUCK_NOTE).not.toMatch(/resumes/);
-    for (const note of [STUCK_NOTE, ABORT_WAITS]) {
+    for (const note of [STUCK_NOTE, ABORT_AI]) {
       expect(Buffer.byteLength(note)).toBeLessThanOrEqual(120);
       expect(hudWordProblems(note)).toEqual([]);
     }
-    expect(ABORT_WAITS).not.toMatch(/restart/i);
+    expect(ABORT_AI).not.toMatch(/must wait|restart/i);
   });
 
   it("an Abort that leaves the photo as it is says so, with the snapshot to click when it fits, else where to find it", () => {
     const named = abandonedNote(stuckSession, true);
-    expect(named).toBe(`Photo not put back (AI mask stuck). To undo: Develop > Snapshots > "${SNAPSHOT}".`);
+    expect(named).toBe(`Photo not put back (AI mask unfinished). To undo: Develop > Snapshots > "${SNAPSHOT}".`);
     const long = { snapshot: { name: SNAPSHOT }, client: { name: "x", title: "W".repeat(32), version: "1" } } as unknown as Session;
     const plain = abandonedNote(long, false);
     expect(plain).toMatch(/not put back\. To undo, click its AVG snapshot in Develop > Snapshots\.$/);
@@ -82,6 +82,7 @@ describe("the tool descriptions and lr_help", () => {
     const text = description("lr_create_mask");
     for (const clause of CLAUSES) expect(text).toMatch(clause);
     expect(text).toContain("(lr_help, 9, says what it does)");
+    expect(text).toContain("the call waits up to 5 minutes; the Deck's Abort ends the wait: SESSION_ENDED"); // issue #181, decision 2
     expect(text).toContain("AI_MASK_FAILED: the user should save their work and restart Lightroom");
   });
 
@@ -91,6 +92,7 @@ describe("the tool descriptions and lr_help", () => {
     expect(HELP_TEXT).toContain("the HUD shows the time waited (m:ss)");
     expect(HELP_TEXT).toContain("These errors say recoverable false, but they end when Lightroom's result shows: the session then goes on; nothing else frees it");
     expect(HELP_TEXT).toContain("says the photo was NOT put back and names the snapshot that puts it back");
+    expect(HELP_TEXT).toContain("Abort also works during lr_create_mask's wait (up to 5 minutes): the wait ends at once and the call fails with SESSION_ENDED");
     expect(HELP_TEXT).toContain("A Lightroom restart also works");
     expect(HELP_TEXT).toContain("the user saves their work and restarts Lightroom");
   });

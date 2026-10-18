@@ -101,7 +101,7 @@ describe("issue #181: the Abort while the gate is still held", () => {
     await waitUntil(() => rig.manager.current() === null, 3000);
     expect(readLog()).toMatchObject({ outcome: "abandoned" });
     const note = (await hudAt("ended")).note;
-    expect(note).toBe(`Photo not put back (AI mask stuck). To undo: Develop > Snapshots > "${snapshot}".`);
+    expect(note).toBe(`Photo not put back (AI mask unfinished). To undo: Develop > Snapshots > "${snapshot}".`);
     expect(note).toBe(abandonedNote({ snapshot: { name: snapshot } } as Session, true));
     expect(Buffer.byteLength(String(note))).toBeLessThanOrEqual(120);
     const later = await fails(step(rig.manager));

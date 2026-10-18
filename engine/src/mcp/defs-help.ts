@@ -61,6 +61,8 @@ export const HELP_TEXT = [
     "when the user says to go on, call lr_step, lr_end_session or lr_create_mask with a linear or radial kind (not the same AI mask " +
     "again, which would add a second one); each call checks. Tell the user to wait, or to press Abort in the Deck: it puts the photo " +
     "back if the result has shown, and otherwise ends the edit as it is, says the photo was NOT put back and names the snapshot that puts it back. " +
+    "Abort also works during lr_create_mask's wait (up to 5 minutes): the wait ends at once and the call fails with SESSION_ENDED, " +
+    "which says the same; do not call lr_create_mask again then. " +
     "A Lightroom restart also works: the engine then puts the photo back and ends the session (later calls naming it get SESSION_ENDED). " +
     "For the rest of the session prefer linear or radial masks to AI masks. AI_MASK_FAILED (Lightroom's update over, no result " +
     "within the wait) is different: the user saves their work and restarts Lightroom.",

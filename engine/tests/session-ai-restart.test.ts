@@ -5,7 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 import { MASK_TABLE_KEY, aiWatch } from "../src/params/index.js";
-import { ABORT_WAITS, ACCEPT_AFTER_FAILED, STUCK_NOTE, engineEndedNote, type SessionManager } from "../src/session/index.js";
+import { ACCEPT_AFTER_FAILED, STUCK_NOTE, engineEndedNote, type SessionManager } from "../src/session/index.js";
 import type { FakeHandler } from "./helpers/fake-plugin.js";
 import { waitUntil } from "./helpers/fake-plugin.js";
 import { hudAt, hudRig } from "./helpers/hud-harness.js";
@@ -83,20 +83,6 @@ describe("D16: nothing written while Lightroom computes an AI mask", () => {
     expect(await fails(other.begin({ intent_id: "test_plain", return_image: "none" }))).toMatchObject({ code: "SESSION_LEFT_OPEN" });
     expect(await fails(other.endLeftOpen({ session_id: ID, outcome: "revert" }) ?? Promise.reject(new Error("not left open")))).toMatchObject({ code: "AI_COMPUTE_PENDING", recoverable: false });
     expect(lr.masks.refusedPending).toContain("apply_snapshot");
-  });
-
-  it("refuses the HUD's Abort while the engine waits for Lightroom, and goes on when the mask computes", async () => {
-    clean();
-    const rig = hudRig({ aiTimings: { ...FAST, computeMs: 10_000 } });
-    await rig.manager.begin({ intent_id: "test_plain", return_image: "none", max_passes: 4 });
-    lr.masks.tableRoute = "late";
-    const pending = create(rig.manager);
-    await waitUntil(() => sent("update_ai_settings") === 1);
-    expect(abortClick(rig.manager)).toBe(ABORT_WAITS);
-    lr.masks.finishLate();
-    expect((await pending).json).toMatchObject({ ok: true, ai: { route: "table" } });
-    expect(sent("apply_snapshot")).toBe(0);
-    expect(rig.manager.current()?.id).toBe(ID);
   });
 });
 

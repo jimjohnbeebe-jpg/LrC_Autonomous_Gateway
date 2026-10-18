@@ -101,7 +101,7 @@ export async function abandonSession(ctx: SessionContext, s: Session, by: UserEn
  * not put back, and the snapshot that puts it back, when that fits HUD_LIMITS.text (else the panel alone).
  */
 export function abandonedNote(s: Session, byUser: boolean): string {
-  const why = byUser ? "Photo not put back (AI mask stuck)." : `${sentenceName(s.client)} ended the edit; not put back.`;
+  const why = byUser ? "Photo not put back (AI mask unfinished)." : `${sentenceName(s.client)} ended the edit; not put back.`;
   const named = `${why} To undo: Develop > Snapshots > "${s.snapshot.name}".`;
   return Buffer.byteLength(named) <= HUD_LIMITS.text ? named : `${why} To undo, click its AVG snapshot in Develop > Snapshots.`;
 }

@@ -10,7 +10,7 @@ import { BridgeError } from "../bridge/index.js";
 import type { PassEntry } from "../log/index.js";
 import { ToolError, readbackError, toToolError } from "../mcp/errors.js";
 import type { Metrics } from "../metrics/index.js";
-import { differingSettings, tableSettings, verifyTable, type CanonicalValue, type Correction, type FromSdkResult, type SdkSettings } from "../params/index.js";
+import { KIND_LABELS, differingSettings, tableSettings, verifyTable, type CanonicalValue, type Correction, type FromSdkResult, type SdkSettings } from "../params/index.js";
 import { composite } from "../preview/index.js";
 import { settlePending } from "./ai-update.js";
 import { WRITE_TIMEOUT_MS, type Rendered, type ReturnImage, type Session, type SessionContext, type Target } from "./types.js";
@@ -52,17 +52,25 @@ export async function readSdk(ctx: SessionContext, s: Session, t: Target): Promi
 
 /**
  * The error for a session the user is aborting from the HUD or the menu: the running operation stops
- * here, and the session's queue puts the photo back next (session\hud-actions.ts).
+ * here, and the session's queue puts the photo back next (session\hud-actions.ts). With an AI mask that has no result (an
+ * Abort during its wait, issue #181) the photo goes back only if the result shows now, else the edit is abandoned (abandon.ts).
  */
 export function abortError(s: Session): ToolError {
   const a = s.abort;
+  const ai = s.aiPending;
   const from = a?.source === "menu" ? "the Abort Session menu item" : "the HUD";
-  const failedNote = a?.state === "failed" ? " Putting the photo back failed: end the session with lr_end_session outcome \"revert\"." : " The engine is putting the photo back as it was before the session.";
-  return new ToolError("SESSION_ENDED", `The user aborted session ${s.id} from ${from}; nothing more is written.${failedNote} Start a new session only if the user asks.`, false, {
+  const next =
+    a?.state === "failed"
+      ? " Putting the photo back failed: end the session with lr_end_session outcome \"revert\"."
+      : ai
+        ? ` Lightroom's AI ${KIND_LABELS[ai.job.kind]} mask had no result, so the wait for it ended. The session ends now: the photo is put back as it was before the session only if Lightroom's result has shown; otherwise it is NOT put back, it keeps the session's edits, and the snapshot "${s.snapshot.name}" puts it back (Develop > Snapshots). Do not call lr_create_mask again for this session.`
+        : " The engine is putting the photo back as it was before the session.";
+  return new ToolError("SESSION_ENDED", `The user aborted session ${s.id} from ${from}; nothing more is written.${next} Start a new session only if the user asks.`, false, {
     session_id: s.id,
     outcome: "aborted",
     source: a?.source ?? "hud",
-    state: a?.state === "failed" ? "revert_failed" : "reverting",
+    state: a?.state === "failed" ? "revert_failed" : ai ? "ending" : "reverting",
+    ...(ai ? { ai_mask: { kind: ai.kind, since: ai.since }, snapshot: s.snapshot.name } : {}),
   });
 }
 

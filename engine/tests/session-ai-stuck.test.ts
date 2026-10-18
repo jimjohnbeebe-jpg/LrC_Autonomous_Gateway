@@ -19,7 +19,7 @@ const masks = (): unknown[] => (lr.settings[MASK_TABLE_KEY] ?? []) as unknown[];
 const step = (m: SessionManager) => m.step({ session_id: ID, settings: { exposure: 0.2 }, rationale: "test", return_image: "none" });
 let clicks = 0;
 const abortClick = (m: SessionManager): string =>
-  m.userAction({ name: "hud_abort", payload: { session_id: ID, seq_seen: 1, click_id: `unfreeze-${++clicks}`, source: "hud" }, received: new Date(), t0: performance.now() });
+  m.userAction({ name: "hud_abort", payload: { session_id: ID, seq_seen: 1, click_id: `stuck-${++clicks}`, source: "hud" }, received: new Date(), t0: performance.now() });
 
 /** A session stuck on a Water mask: Lightroom's update still runs, holding the gate (`slow`: the mask computes when it ends). */
 async function stuck(slow = false) {

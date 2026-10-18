@@ -1,6 +1,7 @@
 // The HUD's notes once an operation of the open session is over (idleStage, closeNote), and the answers to calls that name a
 // session the user ended from the HUD or the menu (endedError, endedAlike, issue #126). Moved out of hud-actions.ts unchanged
-// (module size, rule 01). Only manager.ts and the tests import this file, so it joins none of the session's import cycles.
+// (module size, rule 01), with withHudActions from manager.ts. Only manager.ts, index.ts and the tests import this file, so it joins
+// none of the session's import cycles.
 
 import type { HudStage } from "../bridge/index.js";
 import { ToolError, toToolError } from "../mcp/errors.js";
@@ -67,4 +68,10 @@ export function endedAlike(e: UserEnded | null, outcome: "accept" | "revert"): S
   if (!e || (outcome === "accept") !== (e.outcome === "accept") || e.outcome === "abandoned") return null;
   const { session_id, log_path } = e;
   return { json: { ok: true, session_id, outcome, already_ended_by_user: { outcome: e.outcome, source: e.source, at: e.at, log_path }, log_path } };
+}
+
+/** The HUD actions Claude has not heard of yet (a pick, a Deck fallback), added to a session result. Moved from manager.ts (module size). */
+export function withHudActions(s: Session, out: SessionOutput): SessionOutput {
+  if (s.notices.length === 0) return out;
+  return { ...out, json: { ...out.json, hud_actions: s.notices.splice(0) } };
 }

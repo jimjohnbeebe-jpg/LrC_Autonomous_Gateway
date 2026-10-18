@@ -58,7 +58,7 @@
 // read or probe in flight [inference: from watch below]: the call fails with SESSION_ENDED (io.ts abortError), aiPending stays,
 // and the Abort's revert goes ahead if the result has shown, else it abandons the edit (hud-actions.ts finishAbort) [stated: Jim,
 // 2026-10-18, "Abort ends the wait now"; docs\reports\phase9\issue181.md "Decisions for Jim" 2]. [handle: tests\session-ai-dialog.test.ts,
-// tests\session-ai-restart.test.ts, tests\session-ai-unfreeze.test.ts, tests\session-ai-abort-wait.test.ts, against the Lightroom sim. In Lightroom,
+// tests\session-ai-restart.test.ts, tests\session-ai-stuck.test.ts, tests\session-ai-abort-wait.test.ts, against the Lightroom sim. In Lightroom,
 // capture 4 saw updates compute and ErrorReason answers without a dialog (capture4-check.json); the rest is
 // [unverified] until capture 6 and Jim's run of issue #181.]
 

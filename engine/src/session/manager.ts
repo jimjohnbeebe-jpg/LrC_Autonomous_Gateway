@@ -40,7 +40,7 @@ import { approvePass } from "./approval.js";
 import { openSession, runPass0 } from "./begin.js";
 import { endSession, readSessionLog } from "./end.js";
 import { abortedNote, userAction, userEnded, type ActionHost, type UserAction, type UserEnded } from "./hud-actions.js";
-import { closeNote, endedAlike, endedError, idleStage } from "./hud-notes.js";
+import { closeNote, endedAlike, endedError, idleStage, withHudActions } from "./hud-notes.js";
 import { abortError, checkAbort, read, render } from "./io.js";
 import { endLeftOpen, findLeftOpen, type LeftOpen } from "./left-open.js";
 import { createMask, deleteMask, editMask, listMasks } from "./masks.js";
@@ -393,8 +393,3 @@ export class SessionManager {
   }
 }
 
-/** The HUD actions Claude has not heard of yet (a pick, a Deck fallback), added to a session result. */
-function withHudActions(s: Session, out: SessionOutput): SessionOutput {
-  if (s.notices.length === 0) return out;
-  return { ...out, json: { ...out.json, hud_actions: s.notices.splice(0) } };
-}

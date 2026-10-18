@@ -133,6 +133,6 @@ Observed, run 4 (2026-10-18 04:55-05:01, plugin at `74de940`; collected by Claud
 
 ## Consequences / open questions
 
-- **Open: the remaining freeze.** If it persists, the candidate is the one startup rebind (12 s of socket work, run 4). The fix would rebind only when no listener is actually left (the run 1b case), not on a timer, and needs its own plan. It is deferred by Jim to "return later if it is a persistent problem".
+- **Open: the remaining freeze.** If it persists, the candidate is the one startup rebind (12 s of socket work, run 4). The fix would rebind only when no listener is actually left (the run 1b case), not on a timer, and needs its own plan. It is deferred by Jim to "return later if it is a persistent problem". The same plan settles Greptile's PR #175 finding: in the run 1b case (a bind left with no listener), the engine's 15 s wait (`engine\src\bridge\client.ts:56`, `engine\src\mcp\bridge-gate.ts:25`) ends before the rebind at 20 s, so the first tool call fails with the recoverable `BRIDGE_DISCONNECTED` and a retry works [inference].
 - **`Stall.lua` and `npm run stall:check` stay**, so the same check can run again when this returns. Stall.lua writes a line only when the loop wakes more than 1 s late, or a tick's socket work takes over 0.3 s.
 - LR_SDK_NOTES gets: (1) LrForceInitPlugin runs the init of a disabled plugin at Lightroom start, with `_PLUGIN.enabled` false (run 3); (2) LrC 15.6 runs LrEnablePlugin and LrDisablePlugin (run 4); (3) a sleeping task loop outlives Disable (run 2).

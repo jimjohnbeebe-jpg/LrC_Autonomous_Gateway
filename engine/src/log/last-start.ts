@@ -23,7 +23,7 @@ export const lastStartSchema = z.strictObject({
 });
 export type LastStart = z.infer<typeof lastStartSchema>;
 
-/** %LOCALAPPDATA%\LrC-AVG (the folder of logs\ and intents\); ~\.lrc-avg without LOCALAPPDATA, as defaultLogDir has it. */
+/** %LOCALAPPDATA%\LrC-AVG (the folder of logs\; the intents moved to Documents, issue #180); ~\.lrc-avg without LOCALAPPDATA, as defaultLogDir has it. */
 export function lastStartPath(env: NodeJS.ProcessEnv = process.env): string {
   const localAppData = env["LOCALAPPDATA"];
   return path.join(localAppData ? path.join(localAppData, "LrC-AVG") : path.join(os.homedir(), ".lrc-avg"), LAST_START_FILE);

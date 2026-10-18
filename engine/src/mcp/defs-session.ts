@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { APPROVAL_WAIT_MS } from "../session/index.js";
-import { MEASURED, box, longEdge, sessionId, target, type ToolDef } from "./defs-shared.js";
+import { FRAME, MEASURED, box, longEdge, sessionId, target, type ToolDef } from "./defs-shared.js";
 import { DEFAULT_LONG_EDGE, MAX_LONG_EDGE, MIN_LONG_EDGE } from "./tools-shared.js";
 
 const returnImage = z
@@ -174,7 +174,7 @@ export const SESSION_DEFS: ToolDef[] = [
     name: "lr_set_regions",
     title: "Set measured regions",
     description:
-      "Name parts of the photo (skin, fur, sky or custom) as boxes in 0-1 of the image; their metrics appear in every later " +
+      `Name parts of the photo (skin, fur, sky or custom) as boxes in ${FRAME}, as mask geometry is; their metrics appear in every later ` +
       "`metrics.regions[]`, starting with the last preview (returned now). `preserve: true` guards a region: a pass that moves " +
       "its mean hue more than 6 degrees or its mean saturation more than 8 points from now is undone. A mask pass's " +
       "converged_by_metrics: every region's change is under the convergence thresholds (mean luma < 1/255, clipping < 0.1 point); " +
@@ -223,10 +223,11 @@ export const SESSION_DEFS: ToolDef[] = [
       "Put back) returns ok with `already_ended_by_user` {outcome, source, at, log_path}; any other outcome gets SESSION_ENDED. " +
       "\"abandon\": only when the session cannot end otherwise and the user agrees: Lightroom is gone or hung, or an AI mask failed " +
       "or seems stuck (AI_MASK_FAILED, LIGHTROOM_STUCK, AI_UPDATE_PENDING refuse revert). It reads and writes nothing (it does not " +
-      "wait for Lightroom): the photo keeps what the session did, the log's outcome is \"abandoned\", and a new session can begin. " +
+      "wait for Lightroom): the photo keeps what the session did and is NOT put back (`photo_put_back` false), the log's outcome is \"abandoned\", and a new session can begin. " +
+      "LIGHTROOM_STUCK and AI_UPDATE_PENDING lift once Lightroom's result shows, so try \"revert\" again first if the user can wait. " +
       "The result's `note` says how the user puts the photo back by hand (the pre-session snapshot, `snapshot`) and whether " +
       "Lightroom still holds writes to the photo (`lightroom_guard`: \"none\" when no AI mask was pending, so nothing is held; " +
-      "\"cleared\"; \"not_cleared\" or \"plugin_too_old\": held until Lightroom restarts); tell the user both. " +
+      "\"cleared\"; \"not_cleared\" or \"plugin_too_old\": held until Lightroom restarts; \"kept\": held until the mask's shape shows, so the user waits for it first); tell the user both. " +
       "A session an engine that stopped left open (lr_get_active_photo_context `left_open`) is ended the same three ways, with `left_open: true` " +
       "and the log's `ended_by` \"recovery\": revert applies its snapshot and says what it `checked`; accept reads the photo as it is now.",
     schema: endArgs,

@@ -10,6 +10,7 @@
 // docs\reports\phase6\masks-capture\capture3-templates.json]); every other AI kind gets the photo's
 // centre, "0.500000 0.500000", as in every Adobe adaptive preset (mask-ai-kinds.ts).
 
+import { IDENTITY, photoPoint, type CropFrame } from "./crop-frame.js";
 import { checkKind, geometryFields, newComponent, unit, type Geometry, type Point } from "./mask-build.js";
 import { aiPart, editParts, precheckParts, type Combine } from "./mask-combine.js";
 import {
@@ -19,6 +20,7 @@ import {
   CORRECTION,
   IMAGE,
   KIND_LABELS,
+  LINEAR,
   LOCAL_PARAMS,
   M,
   MASK_TABLE_KEY,
@@ -72,34 +74,37 @@ export function storedSliders(sliders: Readonly<Record<string, number>>): Record
 }
 
 /**
- * Where the panel's pin goes: the geometry's centre (as on every captured gradient), a person's point
- * (as on both captured people masks, CorrectionReferenceX/Y = ReferencePoint), else the photo's centre [inference].
+ * Where the panel's pin goes, in the photo: the written geometry's centre (as on every captured gradient; a
+ * radial's corners' midpoint is its centre at any Angle), a person's point (as on both captured people masks,
+ * CorrectionReferenceX/Y = ReferencePoint), else the photo's centre [inference].
  */
-function pin(kind: MaskKind, g: Geometry, point: Point | null): Point {
+function pin(m: Component, point: Point | null): Point {
   if (point) return point;
-  if (kind === "linear" && g.zero && g.full) return { x: (g.zero.x + g.full.x) / 2, y: (g.zero.y + g.full.y) / 2 };
-  if (kind === "radial") return { x: ((g.left ?? 0) + (g.right ?? 1)) / 2, y: ((g.top ?? 0) + (g.bottom ?? 1)) / 2 };
+  const mid = (a: string, b: string): number => (Number(m[a]) + Number(m[b])) / 2;
+  if (m[M.what] === WHAT.linear) return { x: mid(LINEAR.zeroX, LINEAR.fullX), y: mid(LINEAR.zeroY, LINEAR.fullY) };
+  if (m[M.what] === WHAT.radial) return { x: mid(RADIAL.left, RADIAL.right), y: mid(RADIAL.top, RADIAL.bottom) };
   return { x: 0.5, y: 0.5 };
 }
 
-/** A new correction of `kind`, named `name`, with the sliders asked for (stored values). */
-export function newCorrection(kind: MaskKind, name: string, g: Geometry, point: Point | null, stored: Record<string, number>, existing: readonly Correction[]): Correction {
+/** A new correction of `kind`, named `name`, with the sliders asked for (stored values); `g` in the preview's frame, `point` in the photo's (pointFor). */
+export function newCorrection(kind: MaskKind, name: string, g: Geometry, point: Point | null, stored: Record<string, number>, existing: readonly Correction[], frame: CropFrame = IDENTITY): Correction {
   const label = KIND_LABELS[kind];
   const same = existing.flatMap(components).filter((m) => componentKind(m) === kind).length;
-  const at = pin(kind, g, point);
+  const m = newComponent(kind, `${label} ${same + 1}`, g, point, frame);
+  const at = pin(m, point);
   const out: Record<string, unknown> = { [C.what]: CORRECTION, [C.id]: newMaskId(), [C.syncId]: newSyncId(), [C.name]: name, [C.active]: true, [C.amount]: 1, [C.refX]: at.x, [C.refY]: at.y, [C.refineSaturation]: 100 };
   for (const f of CARRIED) out[f] = 0;
   for (const p of LOCAL_PARAMS.values()) out[p.field] = 0;
-  Object.assign(out, stored, { [C.masks]: [newComponent(kind, `${label} ${same + 1}`, g, point)] });
+  Object.assign(out, stored, { [C.masks]: [m] });
   return out as Correction;
 }
 
-/** A person's point, required for one-person kinds and refused for the others. */
-function pointFor(kind: MaskKind, point: Point | undefined): Point | null {
+/** A person's point, required for one-person kinds and refused for the others; given in the preview's frame, returned in the photo's. */
+function pointFor(kind: MaskKind, point: Point | undefined, frame: CropFrame): Point | null {
   const needs = isAiKind(kind) && AI_KINDS[kind].point;
   if (needs && !point) throw new MaskError("INVALID_ARGUMENTS", `A ${kind} mask needs point: {x, y} in 0-1 on the person (the face, for face skin).`);
   if (!needs && point) throw new MaskError("INVALID_ARGUMENTS", `A ${kind} mask takes no point.`);
-  return point ? { x: unit(point.x, "point.x"), y: unit(point.y, "point.y") } : null;
+  return point ? photoPoint(frame, { x: unit(point.x, "point.x"), y: unit(point.y, "point.y") }, "point") : null;
 }
 
 function find(entries: readonly Correction[], id: string): number {
@@ -118,42 +123,46 @@ export function precheck(op: MaskOp): void {
   if (op.sliders) storedSliders(op.sliders);
 }
 
-function edit(entries: Correction[], op: EditOp): OpResult {
+function edit(entries: Correction[], op: EditOp, frame: CropFrame): OpResult {
   const i = find(entries, op.mask_id);
   const e = entries[i] as Correction;
-  const before = summarize(e);
+  const before = summarize(e, frame);
   precheck(op);
   const parts = components(e);
   const only = parts.length === 1 ? (parts[0] as Component) : null;
   // `part` 1 of a one-part mask is the mask itself; any other `part`, and `combine`, go to mask-combine.ts.
   const byPart = op.combine !== undefined || (op.part !== undefined && !(op.part === 1 && only));
-  const ai = byPart ? editParts(e, op) : null;
+  const ai = byPart ? editParts(e, op, frame) : null;
   if (!byPart && (op.inverted !== undefined || op.geometry) && !only) throw new MaskError("MASK_OP_NOT_CAPTURED", "This mask has several parts: name the part to invert or reshape (part, 1 for the first; lr_list_masks `parts`).");
   if (op.name !== undefined) e[C.name] = op.name;
   if (op.active !== undefined) e[C.active] = op.active;
   // An inverted radial reads back MaskInverted true with Flipped false [handle: docs\reports\phase8\S10\census\
   // s10__DSC0103.NEF__Copy 1.json "AVG vignette"], so write that form (issue #79); Flipped true when un-inverted is [inference].
   if (!byPart && only && op.inverted !== undefined) Object.assign(only, { [M.inverted]: op.inverted }, only[M.what] === WHAT.radial ? { [RADIAL.flipped]: !op.inverted } : {});
-  if (!byPart && only && op.geometry) Object.assign(only, geometryFields(String(componentKind(only)), op.geometry, only));
+  if (!byPart && only && op.geometry) Object.assign(only, geometryFields(String(componentKind(only)), op.geometry, only, frame));
   if (op.sliders) Object.assign(e, storedSliders(op.sliders));
-  return { entries, id: op.mask_id, kind: before.kind, before, after: summarize(e), ...(ai ? { ai } : {}) };
+  return { entries, id: op.mask_id, kind: before.kind, before, after: summarize(e, frame), ...(ai ? { ai } : {}) };
 }
 
-/** Apply one operation to a copy of the corrections (create: `ai` kinds too; the caller computes them). */
-export function applyOp(current: readonly Correction[], op: MaskOp): OpResult {
+/**
+ * Apply one operation to a copy of the corrections (create: `ai` kinds too; the caller computes them).
+ * `frame`: the photo's crop frame (crop-frame.ts, issue #179); the op's geometry and point, and the
+ * summaries, are in the preview's frame.
+ */
+export function applyOp(current: readonly Correction[], op: MaskOp, frame: CropFrame = IDENTITY): OpResult {
   const entries = structuredClone(current) as Correction[];
   if (op.op === "delete") {
     const i = find(entries, op.mask_id);
-    const before = summarize(entries[i] as Correction);
+    const before = summarize(entries[i] as Correction, frame);
     entries.splice(i, 1);
     return { entries, id: op.mask_id, kind: before.kind, before, after: null };
   }
-  if (op.op === "edit") return edit(entries, op);
+  if (op.op === "edit") return edit(entries, op, frame);
   const kind = checkKind(op.kind);
   if (isAiKind(kind) && op.geometry) throw new MaskError("INVALID_ARGUMENTS", `A ${kind} mask is found by Lightroom's AI; it takes no geometry.`);
-  const entry = newCorrection(kind, op.name ?? `AVG ${KIND_LABELS[kind]}`, op.geometry ?? {}, pointFor(kind, op.point), storedSliders(op.sliders ?? {}), entries);
+  const entry = newCorrection(kind, op.name ?? `AVG ${KIND_LABELS[kind]}`, op.geometry ?? {}, pointFor(kind, op.point, frame), storedSliders(op.sliders ?? {}), entries, frame);
   entries.push(entry);
-  return { entries, id: String(entry[C.id]), kind, before: null, after: summarize(entry) };
+  return { entries, id: String(entry[C.id]), kind, before: null, after: summarize(entry, frame) };
 }
 
 /**

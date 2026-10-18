@@ -34,15 +34,22 @@ function restartOf(ctx: SessionContext, s: Session): { before: string; now: stri
 export function watchRestarts(host: RestartHost): void {
   host.ctx.deps.client.onStateChange((state) => {
     const s = host.session();
-    if (state === "connected" && s && restartOf(host.ctx, s)) host.queue(() => afterRestart(host, s));
+    if (state === "connected" && s && restartOf(host.ctx, s)) host.queue(async () => void (await revertIfRestarted(host, s)));
   });
 }
 
-async function afterRestart(host: RestartHost, s: Session): Promise<void> {
+/**
+ * Put the photo back after a Lightroom restart under `s`'s AI update; false when there was none (the result came first, or
+ * the session ended meanwhile). Also the user's Abort's, when it finds Lightroom restarted (hud-actions.ts; review of #181).
+ */
+export async function revertIfRestarted(host: RestartHost, s: Session): Promise<boolean> {
   const restart = host.session() === s ? restartOf(host.ctx, s) : null;
-  if (!restart) return; // the result came first, or the session ended meanwhile
+  if (!restart) return false;
   const err = await revertAfterRestart(host.ctx, s, `the plugin now runs in a Lightroom started at ${restart.now}; the update went to the one started at ${restart.before}`);
-  if (s.endedByEngine) return host.endedByEngine(s);
+  if (s.endedByEngine) {
+    host.endedByEngine(s);
+    return true;
+  }
   s.log.failures.push({ at: host.ctx.now().toISOString(), stage: "revert after a Lightroom restart", error: err.body() });
   try {
     saveLog(s);
@@ -50,4 +57,5 @@ async function afterRestart(host: RestartHost, s: Session): Promise<void> {
     // the HUD's note matters more than the log write
   }
   s.idleNote = `Lightroom restarted, but the photo could not be put back. Ask ${displayName(s.client)} to put it back.`;
+  return true;
 }

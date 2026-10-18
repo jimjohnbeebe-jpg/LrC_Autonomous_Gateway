@@ -7,7 +7,7 @@
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
-import { IntentLibrary } from "../src/intents/index.js";
+import { IntentLibrary, detectVirtualization, migrateOnce } from "../src/intents/index.js";
 import { Tools, toToolError } from "../src/mcp/index.js";
 import { PAGE_WAIT_MS } from "../src/mcp/tools-shared.js";
 import { PreviewService } from "../src/preview/index.js";
@@ -65,7 +65,7 @@ describe("the intent tools and the settings page (decision 2A)", () => {
     const tools = makeTools(new PageSettings(client, env));
     const { ids, folder } = await listed(tools);
     expect(ids).toContain("test_plain");
-    expect(folder).toEqual({ path: userDir, from: "page", page: "read now" });
+    expect(folder).toEqual({ path: userDir, from: "page", page: "read now", real_path: userDir, virtualized: false });
     expect(waits).toEqual([PAGE_WAIT_MS]);
     expect(gateCalls).toBe(2);
     expect((await tools.getIntent({ id: "test_plain" })).json).toMatchObject({ source: "user", intents_folder: { from: "page" } });
@@ -80,9 +80,37 @@ describe("the intent tools and the settings page (decision 2A)", () => {
   });
 
   it("use the default folder before any page read, and say so", async () => {
-    const { ids, folder } = await listed(makeTools(new PageSettings(client, env), { bridge: false }));
+    const { ids, folder } = await listed(makeTools(new PageSettings(client, env, () => path.join(tmp, "docs")), { bridge: false }));
     expect(ids).not.toContain("test_plain");
-    expect(folder).toMatchObject({ path: path.join(tmp, "local", "LrC-AVG", "intents"), from: "default", page: expect.stringContaining("no page read yet") });
+    expect(folder).toMatchObject({ path: path.join(tmp, "docs", "LrC-AVG", "intents"), from: "default", page: expect.stringContaining("no page read yet") });
+  });
+
+  it.runIf(process.platform === "win32")("report the real path of a folder under AppData when the engine is virtualized, with a warning (issue #180)", async () => {
+    const local = path.join(tmp, "local");
+    detectVirtualization(local, (file) => {
+      const there = path.join(local, "Packages", "Claude_abc", "LocalCache", "Local", "LrC-AVG");
+      mkdirSync(there, { recursive: true });
+      writeFileSync(path.join(there, path.basename(file)), "");
+    });
+    lr.prefs = { ...defaultSimPrefs(), intents_dir: path.join(local, "LrC-AVG", "intents") };
+    const tools = makeTools(new PageSettings(client, { ...env, APPDATA: path.join(tmp, "roaming") }));
+    const real = path.join(local, "Packages", "Claude_abc", "LocalCache", "Local", "LrC-AVG", "intents");
+    const saved = await tools.saveIntent({ intent: { schema_version: 2, id: "private_one", label: "x", category: "test", brief: "b", priors: {} }, confirmed: true });
+    expect(saved.json["intents_folder"]).toMatchObject({ from: "page", real_path: real, virtualized: true, package: "Claude_abc", warning: expect.stringContaining(real) });
+    expect((await tools.listIntents()).json["intents_folder"]).toMatchObject({ real_path: real, virtualized: true });
+  });
+
+  it("tell once what moved into the default folder from the older ones (issue #180)", async () => {
+    const old = path.join(tmp, "local", "LrC-AVG", "intents");
+    mkdirSync(old, { recursive: true });
+    writeFileSync(path.join(old, "kept.json"), JSON.stringify({ schema_version: 2, id: "kept", label: "x", category: "test", brief: "b", priors: {} }));
+    const target = path.join(tmp, "docs", "LrC-AVG", "intents");
+    migrateOnce(target, env);
+    const tools = makeTools(new PageSettings(client, env, () => path.join(tmp, "docs")), { bridge: false });
+    const first = (await tools.listIntents()).json as { intents: Array<{ id: string }>; notes?: string[] };
+    expect(first.intents.map((i) => i.id)).toContain("kept");
+    expect(first.notes).toEqual([`Copied 1 intent file(s) into ${target} from the older folders: kept.json (from ${old}). The old files were left where they are.`]);
+    expect(((await tools.listIntents()).json as { notes?: string[] }).notes).toBeUndefined();
   });
 
   it("let LRC_AVG_INTENTS_DIR win over the page", async () => {

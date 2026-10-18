@@ -190,6 +190,23 @@ describe("against the simulated Lightroom", () => {
     const log = readdirSync(dir).filter((f) => f.endsWith(".json") && !f.endsWith(".recipe.json")).map((f) => JSON.parse(readFileSync(path.join(dir, f), "utf8")) as { passes: Array<{ kind: string; rationale: string }>; outcome: string });
     expect(log.map((l) => ({ outcome: l.outcome, passes: l.passes.map((p) => `${p.kind}:${p.rationale}`) }))).toEqual([{ outcome: "revert", passes: [expect.stringMatching(/^pass0:/), "step:brighter"] }]);
   });
+
+  it("issue #181: an AI mask's call detached (pending), the Deck's Abort, then the identical call gets SESSION_ENDED, not LIGHTROOM_STUCK", async () => {
+    mcp = await connect(tools, 300);
+    const sessionId = String(body(await settle("lr_begin_session", { intent_id: "neutral_technical_correction", max_passes: 3 }))["session_id"]);
+    [lr.masks.gate, lr.masks.heldProbes] = ["slow", 1_000_000]; // Lightroom computes on and on
+    const args = { session_id: sessionId, kind: "landscape_water", rationale: "water", return_image: "none" };
+    expect(isPending((await mcp.callTool({ name: "lr_create_mask", arguments: args })) as Answer)).toBe(true);
+    const note = tools.sessionManager()?.userAction({ name: "hud_abort", payload: { session_id: sessionId, seq_seen: 1, click_id: "deadline-181", source: "hud" }, received: new Date(), t0: performance.now() });
+    expect(note).toMatch(/^Abort: ending the wait for the AI mask/);
+    const again = await settle("lr_create_mask", args); // the client follows `next`: the same call again
+    expect(again.isError).toBe(true);
+    expect(body(again)["error"]).toMatchObject({ code: "SESSION_ENDED", details: { state: "ending" } });
+    expect(String((body(again)["error"] as { message: string }).message)).toContain("so the wait for it ended. The session ends now");
+    await vi.waitFor(() => expect(tools.sessionManager()?.current()).toBeNull(), { timeout: 3000 });
+    const after = (await mcp.callTool({ name: "lr_create_mask", arguments: args })) as Answer; // delivered once: a new run
+    expect(body(after)["error"]).toMatchObject({ code: "SESSION_ENDED", details: { outcome: "abandoned" } });
+  });
 });
 
 describe("createDeadline alone", () => {

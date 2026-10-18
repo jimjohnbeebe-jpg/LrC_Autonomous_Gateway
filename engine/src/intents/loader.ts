@@ -3,7 +3,8 @@
 // Intents come from two folders, read again on every call so that a file edited between calls is
 // seen at once:
 //   1. bundled: engine\intents\ (shipped with the engine);
-//   2. user: %LOCALAPPDATA%\LrC-AVG\intents\ (PRD section 6.2), or LRC_AVG_INTENTS_DIR when set;
+//   2. user: <Documents>\LrC-AVG\intents\ (folder.ts; issue #180 moved it out of %LOCALAPPDATA%, which
+//      Claude Desktop from the Microsoft Store redirects), or LRC_AVG_INTENTS_DIR when set;
 //      in the engine, the folder settings\folders.ts chooses (the variable, else the settings page's
 //      folder, else the default), looked up again on every call (PHASE5_PLAN row 3).
 // A user file with the same id replaces the bundled intent. A file that fails validation is
@@ -30,11 +31,12 @@
 // after Jim approves in chat (the tool also requires `confirmed: true`).
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { CAMERA_PROFILE_PARAM, CUSTOM_WHITE_BALANCE_PARAMS, PIPELINES, ParamError, SUPPORTED_PROCESS_VERSIONS, UnknownCameraProfileError, WHITE_BALANCE_UNITS, type ParamMap, type Pipeline } from "../params/index.js";
-import { INTENT_ID_PATTERN, INTENT_SCHEMA_VERSION, intentSchema, type Intent, type PriorSet } from "./schema.js";
+import { defaultUserIntentsDir } from "./folder.js";
+import { INTENT_ID_PATTERN, intentSchema, type Intent, type PriorSet } from "./schema.js";
+import { versionProblem } from "./version.js";
 
 export type IntentSource = "bundled" | "user";
 /** "none": a session begun without an intent (session\begin.ts NO_INTENT). */
@@ -60,13 +62,6 @@ export class IntentError extends Error {
 /** engine\intents\, next to src\ and dist\ (this file is <engine>\{src,dist}\intents\loader.*). */
 export function bundledIntentsDir(): string {
   return path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "intents");
-}
-
-export function defaultUserIntentsDir(env: NodeJS.ProcessEnv = process.env): string {
-  const explicit = env["LRC_AVG_INTENTS_DIR"];
-  if (explicit) return explicit;
-  const localAppData = env["LOCALAPPDATA"];
-  return localAppData ? path.join(localAppData, "LrC-AVG", "intents") : path.join(os.homedir(), ".lrc-avg", "intents");
 }
 
 export class IntentLibrary {
@@ -294,14 +289,6 @@ export class IntentLibrary {
       return [];
     }
   }
-}
-
-/** Null for a schema v2 intent; else how to rewrite it (schema v1 is not read: decision I1 A [stated: Jim, 2026-10-09, "Go"]). */
-function versionProblem(candidate: unknown): string | null {
-  const version = typeof candidate === "object" && candidate !== null ? (candidate as Record<string, unknown>)["schema_version"] : undefined;
-  if (version === INTENT_SCHEMA_VERSION) return null;
-  const which = version === undefined ? "missing, so this is a schema v1 intent" : `${JSON.stringify(version)} is not supported`;
-  return `schema_version: ${which}; write it as schema v2: "schema_version": 2, "default_camera_profile" becomes "profile": {"raw": …, "rendered": "Color" or "Monochrome"}, and temperature and tint priors move to "priors_by_pipeline": {"raw": {…}}`;
 }
 
 /**

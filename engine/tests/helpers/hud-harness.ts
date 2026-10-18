@@ -47,9 +47,10 @@ export function hudRig(extra: Partial<SessionDeps> = {}, publisher: { retryMs?: 
 /** Words the HUD must not show: "session", "engine", snake_case or CODE_NAMES, a code in parentheses, canonical names. */
 const ENGINE_WORDS = [/\bsessions?\b/i, /\bengine\b/i, /\w+_\w+/, /\([A-Z0-9_ ]{3,}\)/, /\b(?:hsl|grading|sharpening|noise|lens)\.\w/];
 
-/** The engine words in a text the HUD shows (none: []). */
+/** The engine words in a text the HUD shows (none: []). A snapshot's name ("AVG pre-session <time>") is Lightroom's label for it, which the user clicks in Snapshots (issue #181): not engine speak. */
 export function hudWordProblems(text: string): string[] {
-  return ENGINE_WORDS.filter((re) => re.test(text)).map(String);
+  const shown = text.replace(/"AVG pre-session \S+"/g, "the snapshot");
+  return ENGINE_WORDS.filter((re) => re.test(shown)).map(String);
 }
 
 /** Wait until the HUD's state is at `stage`; returns that state. */

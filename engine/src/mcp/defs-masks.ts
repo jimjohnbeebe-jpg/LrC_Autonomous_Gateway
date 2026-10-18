@@ -107,8 +107,8 @@ const PASS_NOTE =
   "Lightroom meanwhile: MASKS_CHANGED, nothing written. The other masks on the photo, the user's own included, are written back " +
   "unchanged and checked on read-back. Editing a mask the tools cannot write back safely (several parts in a form not listed " +
   "under lr_edit_mask, a blend mode on its first part, a kind not listed here) is refused: MASKS_UNCAPTURED_KIND, nothing " +
-  "written; deleting it is allowed. A mirrored photo refuses geometry and points (CROP_FRAME_UNSUPPORTED). " +
-  "`warnings`: a mask 90 % or more outside the preview (the crop). " +
+  "written; deleting it is allowed. A mirrored photo refuses geometry and points (CROP_FRAME_UNSUPPORTED); " +
+  "`warnings` flags a mask 90 % or more outside the preview. " +
   "Returns the mask, every mask of the photo (`masks`, with fresh ids), " +
   `metrics, delta_metrics and the image. Needs plugin ${MASKS_PLUGIN}. Not offered: brush painting, Select Objects, colour or ` +
   "depth range sampling, reading mask pixels, mask presets.";
@@ -133,21 +133,21 @@ export const MASK_DEFS: ToolDef[] = [
     title: "Create a mask",
     description:
       "Create one mask on the session's photo, with its local sliders set in the same pass. linear and radial take geometry; luminance takes " +
-      "geometry.lum_range; the AI kinds are found by Lightroom: the engine adds the mask to the table and asks Lightroom to compute it " +
-      "(the call waits up to 5 minutes for Lightroom, and the HUD says it is working). If the photo has none of that kind, MASK_NOTHING_FOUND: " +
+      "geometry.lum_range; Lightroom finds and computes the AI kinds (the call waits up to 5 minutes). " +
+      "If the photo has none of that kind, MASK_NOTHING_FOUND: " +
       "the mask is taken out again and the pass is not used. If Lightroom stays busy or shows a dialog, the HUD tells the user to click OK in it. " +
       "If the mask then computes the pass goes on; if Lightroom reports the update failed or dropped it, the engine puts the photo back as it was before the session and ENDS " +
       "the session (LIGHTROOM_DIALOG). No result in 5 minutes, or Lightroom not answering, is LIGHTROOM_STUCK: Lightroom's AI mask is still computing, " +
       "nothing is written to the photo, and the session stays open and refuses writes, renders and reverts (AI_UPDATE_PENDING). It unfreezes by itself " +
       "when Lightroom finishes, with no restart, but Lightroom does not notify you: when the user says to go on, your next call (lr_step, lr_end_session or a linear or radial mask; not the same AI mask again) picks it up. Tell the user to wait, or to press Abort in the Deck (lr_help, 9, says what it does). " +
       "For the rest of the session prefer linear or radial masks to AI masks. If Lightroom reports the update over with no result, AI_MASK_FAILED: " +
-      "the user should save their work and restart Lightroom. Tell the user; start a " +
+      "the user should save their work and restart Lightroom; start a " +
       "new session only if they ask. If the update fails with a Lightroom or plugin error, subject, sky and background are made by " +
       "Lightroom's Develop module instead (Lightroom then switches to Develop; `ai.route` \"dc\", `switched_to_develop`); people and " +
       "landscape kinds have no such fallback. If nothing works, FEATURE_UNAVAILABLE (details.routes_tried): the masks are as before and " +
       "the pass is not used. One person's kinds (person_*) take the person whose box holds the point: `ai.people` lists every person's " +
-      "box Lightroom found (left, top, right, bottom, in the same frame as geometry) and `ai.instance` the one chosen (lr_list_masks shows both); " +
-      "no person at the point: MASK_NOTHING_FOUND with the boxes, so a point inside the right box can be given. " +
+      "box Lightroom found (left, top, right, bottom, in geometry's frame) and `ai.instance` the one chosen (lr_list_masks shows both); " +
+      "no person at the point: MASK_NOTHING_FOUND with the boxes. " +
       PASS_NOTE,
     schema: createArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },

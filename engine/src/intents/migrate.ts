@@ -10,12 +10,13 @@
 // the doc in folder.ts describes the merged view [inference]; if it does not, the intents of the real
 // folder are missing here and the marker blocks a second look: deleting it copies again.
 
-import { constants, copyFileSync, existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
+import { constants, copyFileSync, existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 export const MIGRATION_MARKER = "migrated-from-appdata.txt";
 
-export type Copied = { file: string; from: string };
+/** `older`: the other old folders that held this file name, with an older copy (left where they are). */
+export type Copied = { file: string; from: string; older?: string[] };
 
 export type OldFolder = { kind: "real" | "package"; dir: string };
 
@@ -41,24 +42,35 @@ export function migrateIntents(target: string, env: NodeJS.ProcessEnv = process.
   const copied: Copied[] = [];
   try {
     if (existsSync(path.join(target, MIGRATION_MARKER))) return { copied };
+    // A name held by more than one old folder is taken from the one where it was changed last, so a newer save in
+    // Claude Desktop's private folder beats an older one in the real folder, and the reverse (Greptile, PR #183).
+    const newest = new Map<string, { from: string; mtime: number; older: string[] }>();
     let looked = false;
     for (const { dir: from } of oldIntentFolders(env)) {
       if (path.resolve(from).toLowerCase() === path.resolve(target).toLowerCase() || !existsSync(from)) continue;
       looked = true;
-      mkdirSync(target, { recursive: true });
       for (const entry of readdirSync(from, { withFileTypes: true })) {
         if (!entry.isFile() || !entry.name.toLowerCase().endsWith(".json")) continue;
-        try {
-          copyFileSync(path.join(from, entry.name), path.join(target, entry.name), constants.COPYFILE_EXCL); // fails when the file is there
-          copied.push({ file: entry.name, from });
-        } catch (err) {
-          if ((err as NodeJS.ErrnoException).code !== "EEXIST") throw err;
-        }
+        const mtime = statSync(path.join(from, entry.name)).mtimeMs;
+        const had = newest.get(entry.name);
+        if (!had) newest.set(entry.name, { from, mtime, older: [] });
+        else if (mtime > had.mtime) newest.set(entry.name, { from, mtime, older: [...had.older, had.from] });
+        else had.older.push(from);
+      }
+    }
+    if (looked) mkdirSync(target, { recursive: true });
+    for (const [file, { from, older }] of newest) {
+      try {
+        copyFileSync(path.join(from, file), path.join(target, file), constants.COPYFILE_EXCL); // fails when the file is there
+        copied.push({ file, from, ...(older.length > 0 ? { older } : {}) });
+      } catch (err) {
+        if ((err as NodeJS.ErrnoException).code !== "EEXIST") throw err;
       }
     }
     if (looked) {
-      const head = `Looked at the older intents folders on ${now.toISOString()} (issue #180). Files this folder lacked were copied, one per line below as "file <- from"; the old files were left where they are. Delete this file to look again.`;
-      writeFileSync(path.join(target, MIGRATION_MARKER), [head, ...copied.map((c) => `${c.file} <- ${c.from}`), ""].join("\n"), "utf8");
+      const head = `Looked at the older intents folders on ${now.toISOString()} (issue #180). Files this folder lacked were copied, one per line below as "file <- from"; where several old folders held a file, the newest copy was taken and the older ones are named. The old files were left where they are. Delete this file to look again.`;
+      const line = (c: Copied): string => `${c.file} <- ${c.from}${c.older ? ` (newer than the copy in ${c.older.join(", ")})` : ""}`;
+      writeFileSync(path.join(target, MIGRATION_MARKER), [head, ...copied.map(line), ""].join("\n"), "utf8");
     }
     return { copied };
   } catch (err) {

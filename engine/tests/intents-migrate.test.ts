@@ -1,7 +1,7 @@
 // Moving the intents of the older default folders into the new default (issue #180; src/intents/migrate.ts),
 // with temporary folders standing in for %LOCALAPPDATA% and Documents.
 
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -19,7 +19,7 @@ function put(dir: string, file: string, text: string): void {
 }
 const text = (dir: string, file: string): string => readFileSync(path.join(dir, file), "utf8");
 const MARKER_HEAD =
-  'Looked at the older intents folders on 2026-10-18T12:00:00.000Z (issue #180). Files this folder lacked were copied, one per line below as "file <- from"; the old files were left where they are. Delete this file to look again.';
+  'Looked at the older intents folders on 2026-10-18T12:00:00.000Z (issue #180). Files this folder lacked were copied, one per line below as "file <- from"; where several old folders held a file, the newest copy was taken and the older ones are named. The old files were left where they are. Delete this file to look again.';
 
 beforeEach(() => {
   tmp = mkdtempSync(path.join(os.tmpdir(), "lrcavg-migrate-"));
@@ -47,15 +47,22 @@ describe("intents migration", () => {
     expect(text(target, "from_real.json")).toBe("real");
   });
 
-  it("never overwrites a file in the new folder and never deletes an old one; the first folder wins a name both hold", () => {
+  it("never overwrites a file in the new folder and never deletes an old one; the newest copy wins a name both hold", () => {
     put(target, "mine.json", "mine, new");
     put(real(), "mine.json", "mine, old");
     put(real(), "both.json", "real");
     put(packaged("Claude_abc"), "both.json", "package");
-    migrateIntents(target, env);
+    put(real(), "other.json", "real, newer");
+    put(packaged("Claude_abc"), "other.json", "package, older");
+    utimesSync(path.join(real(), "both.json"), new Date("2026-10-01"), new Date("2026-10-01"));
+    utimesSync(path.join(packaged("Claude_abc"), "other.json"), new Date("2026-10-01"), new Date("2026-10-01"));
+    const { copied } = migrateIntents(target, env, new Date("2026-10-18T12:00:00Z"));
     expect(text(target, "mine.json")).toBe("mine, new");
-    expect(text(target, "both.json")).toBe("real");
-    expect(readdirSync(real()).sort()).toEqual(["both.json", "mine.json"]);
+    expect(text(target, "both.json")).toBe("package"); // Claude Desktop's later save, not the real folder's older one (Greptile, PR #183)
+    expect(text(target, "other.json")).toBe("real, newer");
+    expect(copied).toContainEqual({ file: "both.json", from: packaged("Claude_abc"), older: [real()] });
+    expect(text(target, MIGRATION_MARKER)).toContain(`both.json <- ${packaged("Claude_abc")} (newer than the copy in ${real()})`);
+    expect(readdirSync(real()).sort()).toEqual(["both.json", "mine.json", "other.json"]);
     expect(existsSync(path.join(packaged("Claude_abc"), "both.json"))).toBe(true);
   });
 

@@ -143,4 +143,15 @@ describe("issue #181: Abort during the AI mask's wait", () => {
     expect(readLog().outcome).not.toBe("abandoned");
     expect(masks()).toEqual(start[MASK_TABLE_KEY] ?? []);
   });
+
+  it("Lightroom restarting under the wait, then Abort whose put-back fails: the Deck says so and the edit stays open for a second click (Greptile, PR #183)", async () => {
+    const { m, pending } = await waiting();
+    plugin.handlers.set("apply_snapshot", () => ({ ok: false, error: { code: "snapshot_failed", message: "test: the snapshot did not apply", recoverable: true } }));
+    restartLightroom(lr, plugin);
+    expect(abortClick(m)).toBe(ABORT_AI);
+    expect(await fails(pending)).toMatchObject({ code: "SESSION_ENDED" });
+    await waitUntil(() => String(lr.hud.last()?.note ?? "").startsWith("Lightroom restarted, but Abort could not put the photo back"), 5000);
+    expect(lr.hud.last()).toMatchObject({ stage: "awaiting_claude", note: "Lightroom restarted, but Abort could not put the photo back. Click Abort again." });
+    expect(m.current()).not.toBeNull(); // not abandoned: a second click tries again
+  });
 });

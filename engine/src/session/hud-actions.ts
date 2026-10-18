@@ -175,7 +175,9 @@ async function finishAbort(host: ActionHost, s: Session): Promise<void> {
       // nothing (settlePending refused it, or the reconnect failed: Greptile, PR #134): the Abort ends the edit without a
       // Lightroom write (abandon.ts; issue #124, D1; issue #181), unless Lightroom restarted: then restart.ts puts it back.
       if (await host.restarted(s)) {
-        if (!s.endedByEngine) by.state = "failed"; // the put-back did not go through: a second click tries again
+        if (s.endedByEngine) return;
+        by.state = "failed"; // the put-back did not go through: a second click tries again, and the Deck says so (Greptile, PR #183)
+        ctx.deps.hud?.stage(s, "awaiting_claude", { note: "Lightroom restarted, but Abort could not put the photo back. Click Abort again." });
         return;
       }
       const kept = (await abandonSession(ctx, s, by)).json["lightroom_guard"] === "kept";

@@ -32,12 +32,12 @@ export async function write(run: Run, settings: SdkSettings, label: string): Pro
 
 const render = (run: Run) => run.previews.render({ ...RENDER, targetUuid: run.uuid });
 
-/** Write the photo's masks plus `op`'s mask, as the engine places it; whether lr_list_masks-style read-back gives back `asked`. */
-async function place(run: Run, before: Correction[], frame: CropFrame, op: MaskOp, asked: unknown, label: string): Promise<boolean> {
+/** Write the photo's masks plus `op`'s mask, as the engine places it; whether lr_list_masks-style read-back gives back `asked`, and what it gave. */
+async function place(run: Run, before: Correction[], frame: CropFrame, op: MaskOp, asked: unknown, label: string): Promise<{ ok: boolean; shown: unknown }> {
   const plan = applyOp(before, op, frame);
   const back = await write(run, tableSettings(plan.entries, false), label);
   const shown = readTable(back).map((e) => summarize(e, frame)).find((m) => m.id === plan.id);
-  return sameGeometry(asked, shown?.geometry);
+  return { ok: sameGeometry(asked, shown?.geometry), shown: shown?.geometry };
 }
 
 /** One case on the photo whose settings are `sdk` (its masks `before`). */
@@ -52,12 +52,12 @@ export async function oneCase(run: Run, which: "A" | "B", sdk: SdkSettings): Pro
     for (const [i, p] of POINTS.entries()) {
       const op = radialOp(p, i + 1);
       const readBack = await place(run, before, frame, op, op.geometry, `${which} radial ${i + 1}`);
-      const r = pointVerdict(p, blobOf(baseGrey, await grey((await render(run)).jpeg)), readBack);
-      out.points.push(r);
+      const r = pointVerdict(p, blobOf(baseGrey, await grey((await render(run)).jpeg)), readBack.ok);
+      out.points.push(readBack.ok ? r : { ...r, shown: readBack.shown });
       run.say(`    radial at (${p.x}, ${p.y}): ${r.ok ? "PASS" : "FAIL"} (${r.why})`);
     }
     const readBack = await place(run, before, frame, linearOp, LINEAR_GEOMETRY, `${which} foreground`);
-    out.linear = linearVerdict((await render(run)).metrics.luma_mean - base.metrics.luma_mean, readBack);
+    out.linear = linearVerdict((await render(run)).metrics.luma_mean - base.metrics.luma_mean, readBack.ok);
     run.say(`    foreground gradient: ${out.linear.ok ? "PASS" : "FAIL"} (${out.linear.why})`);
   } catch (err) {
     out.error = describeError(err);

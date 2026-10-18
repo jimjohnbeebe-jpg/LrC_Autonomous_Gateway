@@ -66,6 +66,7 @@ describe("masks:crop verdicts", () => {
     const op = radialOp({ x: 0.3, y: 0.35 }, 1);
     expect(sameGeometry({ left: 0.25, top: 0.325, right: 0.35, bottom: 0.375 }, op.geometry)).toBe(true);
     expect(sameGeometry(op.geometry, { left: 0.2500004, top: 0.325, right: 0.35, bottom: 0.375, feather: 50 })).toBe(true);
+    expect(sameGeometry(op.geometry, { left: 0.2500011, top: 0.325, right: 0.35, bottom: 0.375 })).toBe(true);
     expect(sameGeometry(op.geometry, { left: 0.251, top: 0.325, right: 0.35, bottom: 0.375 })).toBe(false);
     expect(sameGeometry({ zero: { x: 0.5, y: 0.64 } }, undefined)).toBe(false);
   });

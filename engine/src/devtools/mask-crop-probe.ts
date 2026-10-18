@@ -21,7 +21,14 @@ export const NEAR = 0.03;
 export const LEVEL_DEG = 8;
 /** The issue's A/B gradient: frame delta luma about -2 on the uncropped DNG; under 0.5 is the bug [handle: GitHub issue #179 "Evidence", sessions d4372429 and 4c9a8a79]. */
 export const MIN_LINEAR_DELTA = 0.5;
-export const READBACK_TOLERANCE = 1e-6;
+/**
+ * Read-back agrees within this, per number, in 0-1 of the preview. Summaries round to 6 decimals and Lightroom's
+ * stored values are rounded too, so mapping back through a crop angle drifts by about 1e-6 [handle: masks:crop run
+ * 2026-10-18T20-27-46Z, one radial at 10 degrees FAILED read-back only, its blob on the point; inference: a 6-decimal
+ * round trip through crop-frame.ts gives up to 6.2e-7 before the summary's own rounding]. 1e-5 is 0.08 px on an
+ * 8256-px photo, far under any frame error.
+ */
+export const READBACK_TOLERANCE = 1e-5;
 
 export const radialOp = (p: { x: number; y: number }, n: number): Extract<MaskOp, { op: "create" }> => ({
   op: "create",
@@ -72,7 +79,7 @@ export function blobOf(before: Grey, after: Grey): Blob | null {
   return { x: cx / width, y: cy / height, axis_deg: Math.round(axis * 10) / 10, pixels: kept.length, peak };
 }
 
-export type PointResult = { asked: { x: number; y: number }; blob: Blob | null; readback_ok: boolean; ok: boolean; why: string };
+export type PointResult = { asked: { x: number; y: number }; blob: Blob | null; readback_ok: boolean; ok: boolean; why: string; shown?: unknown };
 
 /** A radial is right when its blob is within NEAR of the point, level within LEVEL_DEG, and it read back as written. */
 export function pointVerdict(asked: { x: number; y: number }, blob: Blob | null, readbackOk: boolean): PointResult {

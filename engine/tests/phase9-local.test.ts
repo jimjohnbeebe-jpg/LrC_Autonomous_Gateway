@@ -10,6 +10,7 @@ import type { Sys } from "../src/devtools/cleanroom-sys.js";
 import { entryProblem, installChecks, listFiles, newestLastStart, running, statusProblems, treeDiff } from "../src/devtools/phase9-local-checks.js";
 import { headlineOf, localStateSchema, nextStep, newState, recordStep, stateToContinue, STEP_IDS, type LocalState, type StepId } from "../src/devtools/phase9-local-state.js";
 import { runLocal, type Ctx, type LocalDeps, type Step } from "../src/devtools/phase9-local.js";
+import { fileSha256, listedSha256, zoneId } from "../src/devtools/phase9-download.js";
 
 let root: string;
 const at = (...p: string[]) => path.join(root, ...p);
@@ -275,5 +276,25 @@ describe("phase9:local checks", () => {
     expect(run().failed).toEqual([]);
     put(path.join(inst, "resources", "engine", "dist", "old-file.js"), "stale");
     expect(run().failed).toEqual(["resources\\ holds exactly the staged files (none missing, none stale)"]);
+  });
+});
+
+describe("phase9:local --download", () => {
+  it("zoneId reads the Mark of the Web from the Zone.Identifier stream, null without one", () => {
+    const file = at("LrC-AVG-Setup-1.0.0.exe");
+    put(file);
+    expect(zoneId(file)).toBeNull();
+    writeFileSync(`${file}:Zone.Identifier`, "[ZoneTransfer]\r\nZoneId=3\r\nHostUrl=https://github.com/\r\n");
+    expect(zoneId(file)).toBe(3);
+  });
+
+  it("listedSha256 finds the setup's line in sha256sum's format and matches fileSha256", () => {
+    const file = at("LrC-AVG-Setup-1.0.0.exe");
+    put(file, "setup");
+    const sum = fileSha256(file);
+    expect(sum).toBe("8fb6d5f37e8055ce720bd0b1d56587f88c0071f285966ba17e72b2b12672aa73"); // node: createHash("sha256").update("setup")
+    const sums = `${"0".repeat(64)}  other.exe\r\n${sum}  LrC-AVG-Setup-1.0.0.exe\r\n`;
+    expect(listedSha256(sums, "LrC-AVG-Setup-1.0.0.exe")).toBe(sum);
+    expect(listedSha256(sums, "LrC-AVG-Setup-0.99.0.exe")).toBeNull();
   });
 });

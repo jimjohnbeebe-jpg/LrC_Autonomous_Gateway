@@ -57,7 +57,8 @@ export const downloadStep: Step = {
     ctx.check("the setup carries the Mark of the Web (downloaded from the internet)", zone === 3, zone === null ? "no Zone.Identifier stream: SmartScreen will not check it" : `ZoneId=${zone}, expected 3`);
     const listed = existsSync(sumsFile) ? listedSha256(readFileSync(sumsFile, "utf8"), path.basename(setup)) : null;
     const got = fileSha256(setup);
-    ctx.check("its SHA-256 matches SHA256SUMS.txt", listed === got, listed === null ? `${sumsFile} is missing or does not list the setup` : `file ${got}, listed ${listed}`);
+    // A bad or missing sum stops here, so the next run checks the new download before the install step.
+    if (!ctx.check("its SHA-256 matches SHA256SUMS.txt", listed === got, listed === null ? `${sumsFile} is missing or does not list the setup` : `file ${got}, listed ${listed}`)) return { stop: true };
   },
 };
 

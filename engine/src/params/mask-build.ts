@@ -3,14 +3,16 @@
 // mask-ops.ts in issue #131 so mask-combine.ts can build parts without an import cycle (module size, rule 01).
 // Field names come only from mask-table.ts (rule 03).
 
+import { IDENTITY, boxToRadial, photoPoint, radialToBox, type CropFrame, type Point } from "./crop-frame.js";
 import { AI_KINDS, IMAGE, LINEAR, M, MaskError, RADIAL, RANGE, WHAT, isAiKind, newMaskId, newSyncId, type Component, type MaskKind } from "./mask-table.js";
 import { personFields } from "./mask-person.js";
 
-export type Point = { x: number; y: number };
+export type { Point } from "./crop-frame.js";
 /**
- * Image-normalised 0-1 coordinates from the top-left of the uncropped photo [handle:
- * docs\reports\phase6\masks-capture\check.json `8_geometry_plan`; Jim's y, y]; on a cropped or rotated
- * photo the frame is [unverified].
+ * 0-1 coordinates of the preview the agent sees (the cropped photo, upright), from its top-left; written
+ * in 0-1 of the uncropped photo through the photo's crop frame (crop-frame.ts, issue #179). On an
+ * uncropped upright photo the two are one [handle: docs\reports\phase6\masks-capture\check.json
+ * `8_geometry_plan`; Jim's y, y]; on a cropped, angled or turned photo the mapping is [unverified].
  */
 export type Geometry = {
   zero?: Point | undefined;
@@ -28,8 +30,17 @@ export const unit = (v: unknown, what: string): number => {
   return v;
 };
 
-/** The geometry fields to write into a component of `kind`, checked; `old`: the component's current ones (an edit). */
-export function geometryFields(kind: string, g: Geometry, old: Component | null): Record<string, unknown> {
+/** A radial component's fields as crop-frame.ts reads them (Angle 0 when absent). */
+export const ellipseOf = (m: Component): { left: number; top: number; right: number; bottom: number; angle: number } => ({
+  left: Number(m[RADIAL.left]), top: Number(m[RADIAL.top]), right: Number(m[RADIAL.right]), bottom: Number(m[RADIAL.bottom]), angle: Number(m[RADIAL.angle] ?? 0),
+});
+
+/**
+ * The geometry fields to write into a component of `kind`, checked; `old`: the component's current ones (an
+ * edit). `g` is in the preview's frame and is written through `frame` (issue #179); a radial is written
+ * square to the preview, its Angle the crop's (crop-frame.ts boxToRadial).
+ */
+export function geometryFields(kind: string, g: Geometry, old: Component | null, frame: CropFrame = IDENTITY): Record<string, unknown> {
   const has = (k: keyof Geometry): boolean => g[k] !== undefined;
   const refuse = (msg: string): never => {
     throw new MaskError("INVALID_ARGUMENTS", msg);
@@ -37,17 +48,26 @@ export function geometryFields(kind: string, g: Geometry, old: Component | null)
   if (kind === "linear") {
     if (!old && !(g.zero && g.full)) refuse("A linear gradient needs geometry.zero and geometry.full ({x, y} in 0-1).");
     const out: Record<string, unknown> = {};
-    if (g.zero) Object.assign(out, { [LINEAR.zeroX]: unit(g.zero.x, "zero.x"), [LINEAR.zeroY]: unit(g.zero.y, "zero.y") });
-    if (g.full) Object.assign(out, { [LINEAR.fullX]: unit(g.full.x, "full.x"), [LINEAR.fullY]: unit(g.full.y, "full.y") });
+    const at = (p: Point, what: string): Point => photoPoint(frame, { x: unit(p.x, `${what}.x`), y: unit(p.y, `${what}.y`) }, `geometry.${what}`);
+    if (g.zero) {
+      const p = at(g.zero, "zero");
+      Object.assign(out, { [LINEAR.zeroX]: p.x, [LINEAR.zeroY]: p.y });
+    }
+    if (g.full) {
+      const p = at(g.full, "full");
+      Object.assign(out, { [LINEAR.fullX]: p.x, [LINEAR.fullY]: p.y });
+    }
     return out;
   }
   if (kind === "radial") {
     const sides = ["left", "top", "right", "bottom"] as const;
     if (!old && !sides.every(has)) refuse("A radial gradient needs geometry.left, top, right and bottom (0-1).");
-    const v = (k: (typeof sides)[number], field: string): number => (g[k] !== undefined ? unit(g[k], k) : (old?.[field] as number));
-    const box = { left: v("left", RADIAL.left), top: v("top", RADIAL.top), right: v("right", RADIAL.right), bottom: v("bottom", RADIAL.bottom) };
+    const was = old && !sides.every(has) ? radialToBox(frame, ellipseOf(old)) : null;
+    const v = (k: (typeof sides)[number]): number => (g[k] !== undefined ? unit(g[k], k) : (was?.[k] as number));
+    const box = { left: v("left"), top: v("top"), right: v("right"), bottom: v("bottom") };
     if (!(box.left < box.right && box.top < box.bottom)) refuse("A radial gradient needs left < right and top < bottom.");
-    const out: Record<string, unknown> = { [RADIAL.left]: box.left, [RADIAL.top]: box.top, [RADIAL.right]: box.right, [RADIAL.bottom]: box.bottom };
+    const e = boxToRadial(frame, box);
+    const out: Record<string, unknown> = { [RADIAL.left]: e.left, [RADIAL.top]: e.top, [RADIAL.right]: e.right, [RADIAL.bottom]: e.bottom, [RADIAL.angle]: e.angle };
     if (has("feather")) out[RADIAL.feather] = feather(g.feather);
     return out;
   }
@@ -80,7 +100,7 @@ const rangeTemplate = (): Record<string, unknown> => ({ [RANGE.type]: 2, [RANGE.
  * ids written in captures 1-3 [handle: docs\reports\phase6\masks-capture\capture3-4_landscape_1.json `written` and `after_write`
  * CorrectionID, MaskID].
  */
-export function newComponent(kind: MaskKind, name: string, g: Geometry, point: Point | null): Component {
+export function newComponent(kind: MaskKind, name: string, g: Geometry, point: Point | null, frame: CropFrame = IDENTITY): Component {
   const base: Component = { [M.id]: newMaskId(), [M.syncId]: newSyncId(), [M.name]: name, [M.active]: true, [M.inverted]: false, [M.blend]: 0, [M.value]: 1 };
   if (isAiKind(kind)) {
     const at = point ?? { x: 0.5, y: 0.5 };
@@ -90,7 +110,7 @@ export function newComponent(kind: MaskKind, name: string, g: Geometry, point: P
   }
   const what = kind === "linear" ? WHAT.linear : kind === "radial" ? WHAT.radial : WHAT.range;
   const fixed = kind === "radial" ? { [RADIAL.angle]: 0, [RADIAL.feather]: 50, [RADIAL.midpoint]: 50, [RADIAL.roundness]: 0, [RADIAL.flipped]: true, [RADIAL.version]: 2 } : {};
-  return { ...base, [M.what]: what, ...fixed, ...geometryFields(kind, g, null) };
+  return { ...base, [M.what]: what, ...fixed, ...geometryFields(kind, g, null, frame) };
 }
 
 /** Kinds Claude may ask for that are refused, each with its reason (the reasons are [inference]). */

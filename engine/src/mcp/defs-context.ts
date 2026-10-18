@@ -1,7 +1,7 @@
 // The MCP definitions of the context tools (tools-context.ts).
 
 import { z } from "zod";
-import { MEASURED, box, longEdge, noArgs, sessionId, target, type ToolDef } from "./defs-shared.js";
+import { FRAME, MEASURED, box, longEdge, noArgs, sessionId, target, type ToolDef } from "./defs-shared.js";
 import { PREVIEW_QUALITY } from "./tools-shared.js";
 
 const sessionTarget = target.describe(
@@ -11,7 +11,7 @@ const previewArgs = z.object({
   long_edge: longEdge,
   session_id: sessionId.optional().describe("render the session's photo, with its region metrics; refused if another photo is selected; ignored when no session is open"),
   target: sessionTarget,
-  region: box.optional().describe("return a crop of this box, exported large enough to show it at up to 100 %; see effective_scale"),
+  region: box.optional().describe(`return a crop of this box {x, y, w, h} in ${FRAME}, exported large enough to show it at up to 100 %; see effective_scale`),
 });
 const metricsArgs = z.object({ session_id: sessionId.optional(), target: sessionTarget });
 
@@ -40,7 +40,7 @@ export const CONTEXT_DEFS: ToolDef[] = [
       "which takes about 3 seconds) and return it as an image, with its uuid, SHA-256 hash, size, metrics and timings. " +
       "With `session_id`: the session's photo (refused with TARGET_CHANGED if another photo is selected) and its region metrics; " +
       "in Variants mode `target` names the copy, which is selected in Lightroom first. " +
-      "With `region`: a crop of that box for judging sharpness, noise or fringing; the photo is exported larger (up to 4096 px) " +
+      `With \`region\` (a box in ${FRAME}, as mask geometry and lr_set_regions are): a crop of that box for judging sharpness, noise or fringing; the photo is exported larger (up to 4096 px) ` +
       "so the crop fills `long_edge`, never enlarged; `effective_scale` = output pixels per photo pixel (1 = 100 %). With `region`, " +
       "the result's `metrics` describe the whole export (`metrics_scope` \"frame\") and `crop_metrics` the requested box, both " +
       "measured at export resolution. Changes nothing. " +

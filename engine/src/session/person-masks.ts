@@ -12,7 +12,7 @@
 // against the Lightroom sim; in Lightroom [unverified] until capture 5.]
 
 import { ToolError, toToolError } from "../mcp/errors.js";
-import { AI_KINDS, boundsOf, firstComponent, instanceOf, pickInstance, readTable, withInstance, type Box, type SdkSettings } from "../params/index.js";
+import { AI_KINDS, IDENTITY, boundsOf, boxToView, firstComponent, instanceOf, pickInstance, readTable, toView, withInstance, type Box, type SdkSettings } from "../params/index.js";
 import type { AiJob, AiResult } from "./ai-masks.js";
 import { historyName, readSdk, writeTable } from "./io.js";
 import type { Session, SessionContext } from "./types.js";
@@ -43,17 +43,21 @@ export async function byPerson(ctx: SessionContext, s: Session, job: AiJob, ops:
   const probed = firstComponent(readTable(probe.sdk), job.id);
   const people = boundsOf(probed);
   if (people.length === 0) return { why: "Lightroom computed the person mask but gave no people boxes (InstanceBounds)", fallback: false };
-  const n = pickInstance(people, point);
+  const n = pickInstance(people, point); // in the photo's frame, as Lightroom's boxes are
+  // What the agent is told is in the preview's frame (issue #179, params\crop-frame.ts).
+  const frame = job.frame ?? IDENTITY;
+  const shown = people.map((b) => boxToView(frame, b));
   if (n === null) {
     const left = await ops.takeOut(job);
+    const at = toView(frame, { x: point[0], y: point[1] });
     throw new ToolError(
       "MASK_NOTHING_FOUND",
-      `No person at the point (${point[0]}, ${point[1]}): Lightroom found ${people.length === 1 ? "1 person" : `${people.length} people`} (${people.map(boxText).join("; ")}, in 0-1 of the photo), so the mask was taken out again${left ? ` (${left})` : ""}; the pass is not used. Give a point inside the box of the person meant.`,
+      `No person at the point (${at.x}, ${at.y}): Lightroom found ${people.length === 1 ? "1 person" : `${people.length} people`} (${shown.map(boxText).join("; ")}, in 0-1 of the preview), so the mask was taken out again${left ? ` (${left})` : ""}; the pass is not used. Give a point inside the box of the person meant.`,
       true,
-      { session_id: s.id, kind: job.kind, point: { x: point[0], y: point[1] }, people, history_names: job.historyNames, ...(left ? { left } : {}) },
+      { session_id: s.id, kind: job.kind, point: at, people: shown, history_names: job.historyNames, ...(left ? { left } : {}) },
     );
   }
-  if (job.kind === "person_entire" && instanceOf(probed) === n) return { ...probe, people, instance: n };
+  if (job.kind === "person_entire" && instanceOf(probed) === n) return { ...probe, people: shown, instance: n };
   const probeTimes = { update_ms: probe.update_ms ?? 0, computed_ms: probe.computed_ms ?? 0 };
   try {
     const now = readTable((await readSdk(ctx, s, job.t)).sdk);
@@ -71,5 +75,5 @@ export async function byPerson(ctx: SessionContext, s: Session, job: AiJob, ops:
   if (!("route" in real)) return real;
   const drift = drifted(real.sdk, job, job.kind, n);
   if (drift) return { why: drift, fallback: false };
-  return { ...real, people, instance: n, probe: probeTimes };
+  return { ...real, people: shown, instance: n, probe: probeTimes };
 }

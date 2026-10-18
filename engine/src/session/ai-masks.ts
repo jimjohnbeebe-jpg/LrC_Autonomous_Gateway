@@ -25,7 +25,7 @@
 // tests\session-ai-dialog.test.ts, against the Lightroom sim; in Lightroom [unverified] until capture 4.]
 
 import { ToolError, featureUnavailable, toToolError } from "../mcp/errors.js";
-import { AI_KINDS, KIND_LABELS, computed, correctionIds, firstComponent, named, readTable, type AiKind, type Box, type Correction, type SdkSettings } from "../params/index.js";
+import { AI_KINDS, KIND_LABELS, computed, correctionIds, firstComponent, named, readTable, type AiKind, type Box, type Correction, type CropFrame, type SdkSettings } from "../params/index.js";
 import { aiTimings, updateAndWait } from "./ai-update.js";
 import { autoRevert, stuckError } from "./ai-revert.js";
 import { putBackPart } from "./mask-parts.js";
@@ -59,7 +59,7 @@ export type AiResult = {
  * id, name and sliders, and `attempts`: the ids of every entry this pass made (taken out on failure).
  * `part`: an AI part added to mask `id` (mask-parts.ts), which a failure puts back as it was, not takes out.
  */
-export type AiJob = { t: Target; n: number; kind: AiKind; before: Correction[]; id: string; name: string; stored: Record<string, number>; historyNames: string[]; attempts: Set<string>; point?: [number, number] | null; part?: true };
+export type AiJob = { t: Target; n: number; kind: AiKind; before: Correction[]; id: string; name: string; stored: Record<string, number>; historyNames: string[]; attempts: Set<string>; point?: [number, number] | null; part?: true; /** The photo's crop frame, for what a result reports (issue #179); the point is in the photo. */ frame?: CropFrame };
 
 type Failed = { why: string; fallback: boolean };
 

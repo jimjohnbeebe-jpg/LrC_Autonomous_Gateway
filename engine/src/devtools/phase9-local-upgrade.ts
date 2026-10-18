@@ -106,8 +106,8 @@ export const restoreStep: Step = {
       const run = await ctx.cleanroom("--restore");
       ctx.say(`  ${run.headline}`);
       for (const line of [...run.actions, ...run.messages]) ctx.say(`    ${line}`);
-      if (run.ok || i === 2) break;
-      await ctx.pause("Fix what is listed above first (if LrC-AVG is still installed, uninstall it in Settings > Apps > Installed apps), then retry.");
+      if (run.ok || i === 2 || !existsSync(parkFile)) break;
+      await ctx.pause("Fix what is listed above first (if LrC-AVG is still installed, uninstall it in Settings > Apps > Installed apps; if no built Deck installer was found, run npm run deck:build in a second PowerShell window in this folder), then retry: this step runs the restore again.");
     }
     const back = !existsSync(parkFile);
     ctx.check("RESTORED: YES", back, back ? "everything parked is back" : `${parkFile} is still there: run npm run cleanroom -- --restore`);

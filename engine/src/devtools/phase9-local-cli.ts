@@ -9,6 +9,8 @@
 //   local-state.json       what is done so far (the next run continues from it)
 //   local_<time>.json      each run's results: the headline (WORKED/FAILED, put back YES/NO) and every check and answer
 //   %TEMP%\LrC-AVG\cleanroom\*.json   the clean room's own runs (cleanroom-run.ts saveRun)
+// `-- --download` (run 2, docs\reports\phase9\PHASE9.md): the setup Jim downloads from GitHub instead of the
+// local builds (phase9-download.ts); the upgrade steps are skipped; its state is download-state.json.
 
 import { execSync, spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
@@ -24,6 +26,7 @@ import { redactHome } from "./phase2-check.js";
 import { jsonStateStore } from "./phase5-state.js";
 import { GIVE_UP, runLocal, saveResults, type LocalDeps, type Step } from "./phase9-local.js";
 import { localStateSchema } from "./phase9-local-state.js";
+import { downloadInstallStep, downloadStep } from "./phase9-download.js";
 import { chatStep, installStep, lightroomStep, buildStep, parkStep } from "./phase9-local-steps.js";
 import { reinstallClearStep, restoreStep, uninstallKeepStep, upgradeStep } from "./phase9-local-upgrade.js";
 
@@ -36,7 +39,9 @@ const TEST_VERSION = "0.99.0";
 const STEPS = [buildStep, parkStep, installStep, lightroomStep, chatStep, upgradeStep, uninstallKeepStep, reinstallClearStep, restoreStep];
 /** `-- --quick`: install, Lightroom, chat, one uninstall, restore; the upgrade and the second uninstall are skipped and say so. */
 const QUICK_SKIP: ReadonlySet<string> = new Set(["upgrade", "reinstall_clear"]);
-const skipped = (s: Step): Step => ({ id: s.id, title: `${s.title} (skipped: --quick)`, run: async (ctx) => ctx.note("Skipped by --quick.") });
+const skipped = (s: Step, flag: string): Step => ({ id: s.id, title: `${s.title} (skipped: ${flag})`, run: async (ctx) => ctx.note(`Skipped by ${flag}.`) });
+/** `-- --download`: these steps replace build and install; the --quick steps are skipped too. */
+const DOWNLOAD: ReadonlyMap<string, Step> = new Map([downloadStep, downloadInstallStep].map((s) => [s.id, s]));
 
 /** Questions and prompts in this window, from a buffered line iterator (phase8-check-cli.ts terminal(); a CLI module cannot be imported). */
 function terminal(): { prompt: (text: string) => Promise<string | null>; ask: (question: string) => Promise<Answer>; close: () => void } {
@@ -71,15 +76,16 @@ function exec(command: string): number {
 }
 
 async function main(): Promise<number> {
-  const unknown = process.argv.slice(2).filter((a) => a !== "--new" && a !== "--quick");
+  const unknown = process.argv.slice(2).filter((a) => a !== "--new" && a !== "--quick" && a !== "--download");
   if (unknown.length > 0) {
-    console.error(`unknown argument ${unknown.join(" ")}. Usage: npm run phase9:local [-- --new] [--quick]`);
+    console.error(`unknown argument ${unknown.join(" ")}. Usage: npm run phase9:local [-- --new] [--quick] [--download]`);
     return 2;
   }
   const version = z.object({ version: z.string() }).parse(JSON.parse(readFileSync(path.join(REPO, "engine", "package.json"), "utf8"))).version;
   const sys = realSys();
   const io = terminal();
-  const store = jsonStateStore(path.join(OUT_DIR, "local-state.json"), localStateSchema);
+  const download = process.argv.includes("--download");
+  const store = jsonStateStore(path.join(OUT_DIR, download ? "download-state.json" : "local-state.json"), localStateSchema);
   const deps: LocalDeps = {
     sys,
     repo: REPO,
@@ -100,7 +106,8 @@ async function main(): Promise<number> {
     stamp,
   };
   try {
-    const steps = process.argv.includes("--quick") ? STEPS.map((s) => (QUICK_SKIP.has(s.id) ? skipped(s) : s)) : STEPS;
+    const flag = download ? "--download" : process.argv.includes("--quick") ? "--quick" : null;
+    const steps = STEPS.map((s) => (download ? DOWNLOAD.get(s.id) : undefined) ?? (flag && QUICK_SKIP.has(s.id) ? skipped(s, flag) : s));
     const outcome = await runLocal(deps, steps, { fresh: process.argv.includes("--new") });
     console.log(`Results saved automatically: ${saveResults(OUT_DIR, stamp, JSON.parse(redact(JSON.stringify(outcome.results))) as Record<string, unknown>)}`);
     console.log(outcome.finished ? 'Nothing to copy. Tell Claude Code "done".' : "Nothing to copy. Run the same command again to continue, or tell Claude Code what happened.");

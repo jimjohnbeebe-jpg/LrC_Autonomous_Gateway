@@ -37,7 +37,7 @@ export function expandEnv(value: string, env: NodeJS.ProcessEnv): string | null 
   return missing ? null : text;
 }
 
-let documents: string | undefined;
+const known = new Map<string, string>();
 
 /**
  * Windows' Documents folder, where OneDrive or the user may have moved it: the "Personal" value of
@@ -47,17 +47,28 @@ let documents: string | undefined;
  * non-ASCII characters in the value may come back garbled from reg.exe's code page, which the
  * existence check turns into the fallback [unverified].
  */
-export function documentsFolder(): string {
-  documents ??= lookupDocuments();
-  return documents;
+export const documentsFolder = (): string => shellFolder("Personal", "Documents");
+
+/**
+ * Windows' Downloads folder, the same way: the value named by FOLDERID_Downloads [handle:
+ * https://learn.microsoft.com/en-us/windows/win32/shell/knownfolderid, FOLDERID_Downloads], else ~\Downloads.
+ * Jim's is D:\Downloads [handle: `reg query` of that key on the dev PC, 2026-10-18], where the phase9:local
+ * --download check did not look before.
+ */
+export const downloadsFolder = (): string => shellFolder("{374DE290-123F-4565-9164-39C4925E467B}", "Downloads");
+
+function shellFolder(value: string, leaf: string): string {
+  let folder = known.get(value);
+  if (folder === undefined) known.set(value, (folder = lookupShellFolder(value, leaf)));
+  return folder;
 }
 
-function lookupDocuments(): string {
-  const fallback = path.join(os.homedir(), "Documents");
+function lookupShellFolder(value: string, leaf: string): string {
+  const fallback = path.join(os.homedir(), leaf);
   if (process.platform !== "win32") return fallback;
   try {
-    const out = execFileSync("reg.exe", ["query", SHELL_FOLDERS_KEY, "/v", "Personal"], { encoding: "utf8", windowsHide: true, timeout: 5000, stdio: ["ignore", "pipe", "ignore"] });
-    const folder = expandEnv(parseRegValue(out, "Personal") ?? "", process.env);
+    const out = execFileSync("reg.exe", ["query", SHELL_FOLDERS_KEY, "/v", value], { encoding: "utf8", windowsHide: true, timeout: 5000, stdio: ["ignore", "pipe", "ignore"] });
+    const folder = expandEnv(parseRegValue(out, value) ?? "", process.env);
     return folder && existsSync(folder) ? folder : fallback;
   } catch {
     return fallback;

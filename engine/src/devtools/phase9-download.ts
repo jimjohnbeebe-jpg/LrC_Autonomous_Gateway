@@ -6,13 +6,14 @@
 
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
-import os from "node:os";
 import path from "node:path";
+import { downloadsFolder } from "../intents/index.js";
 import { installChecks, installPaths } from "./phase9-local-checks.js";
 import type { Ctx, Step } from "./phase9-local.js";
 
 export const RELEASE_URL = "https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway/releases";
-export const downloadsDir = (): string => path.join(os.homedir(), "Downloads");
+/** Windows' Downloads folder, where the browser saves (Jim's is D:\Downloads, not ~\Downloads). */
+export const downloadsDir = downloadsFolder;
 export const downloadedSetup = (dir: string, version: string): string => path.join(dir, `LrC-AVG-Setup-${version}.exe`);
 
 /**

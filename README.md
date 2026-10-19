@@ -60,7 +60,7 @@ The setup does three things:
 - It adds an entry named `lrc-avg` to Claude Desktop's settings file and keeps a backup of the old file next to it. Your other entries stay as they are.
 - It installs the program files, with the Deck, into `%LOCALAPPDATA%\LrC-AVG`, and adds **LrC-AVG** to Windows' installed apps.
 
-To check the download, compare its SHA-256 with the `SHA256SUMS.txt` file on the release page. In PowerShell: `Get-FileHash "$env:USERPROFILE\Downloads\LrC-AVG-Setup-<version>.exe"`.
+To check the download, compare its SHA-256 with the `SHA256SUMS.txt` file on the release page. In File Explorer, hold Shift, right-click the setup and choose **Copy as path**. Then in PowerShell type `Get-FileHash ` and paste the path, for example `Get-FileHash "D:\Downloads\LrC-AVG-Setup-<version>.exe"`. Your Downloads folder may not be under `C:\Users\<you>`.
 
 **Updating:** download the new setup and run it the same way. It replaces the old version and keeps your settings, intents and logs.
 

@@ -17,6 +17,12 @@ describe("intents folder: the Documents folder from the registry text", () => {
     expect(parseRegValue("    personal    REG_SZ    D:\\My Docs\\Files  \r\n", "Personal")).toBe("D:\\My Docs\\Files");
   });
 
+  it("reads the Downloads folder's value, named by its FOLDERID (Jim's: D:\\Downloads, the phase9:local --download check)", () => {
+    const downloads = "{374DE290-123F-4565-9164-39C4925E467B}";
+    expect(parseRegValue(`\r\nHKEY_CURRENT_USER\\...\\User Shell Folders\r\n    ${downloads}    REG_EXPAND_SZ    D:\\Downloads\r\n\r\n`, downloads)).toBe("D:\\Downloads");
+    expect(parseRegValue(REG_OUTPUT, downloads)).toBeNull();
+  });
+
   it("finds no value in an error, in another value or in nothing", () => {
     expect(parseRegValue("ERROR: The system was unable to find the specified registry key or value.\r\n", "Personal")).toBeNull();
     expect(parseRegValue("    Desktop    REG_EXPAND_SZ    %USERPROFILE%\\Desktop\r\n", "Personal")).toBeNull();

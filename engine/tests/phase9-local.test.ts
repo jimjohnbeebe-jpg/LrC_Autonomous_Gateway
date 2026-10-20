@@ -267,15 +267,17 @@ describe("phase9:local checks", () => {
     put(config, JSON.stringify({ mcpServers: { "lrc-avg": { command: nodeExe, args: [mainJs] } } }));
     const now = new Date();
     put(path.join(inst, "setup-result.json"), JSON.stringify({ time: now.toISOString(), version: "1.0.0", action: "add", outcome: "added", config_path: config, message: "ok" }));
-    const run = (): { failed: string[] } => {
+    const run = (compareStaged = true): { failed: string[] } => {
       const failed: string[] = [];
       const ctx = { sys, version: "1.0.0", since: new Date(now.getTime() - 1000), check: (n: string, ok: boolean) => (ok || failed.push(n), ok), note: () => {} } as unknown as Ctx;
-      installChecks(ctx, "1.0.0", ["added"]);
+      installChecks(ctx, "1.0.0", ["added"], compareStaged);
       return { failed };
     };
     expect(run().failed).toEqual([]);
     put(path.join(inst, "resources", "engine", "dist", "old-file.js"), "stale");
     expect(run().failed).toEqual(["resources\\ holds exactly the staged files (none missing, none stale)"]);
+    // --download: GitHub built the setup, so the local staged tree is not its reference (run 2, 2026-10-19).
+    expect(run(false).failed).toEqual([]);
   });
 });
 

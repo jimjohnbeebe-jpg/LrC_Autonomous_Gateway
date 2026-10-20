@@ -129,16 +129,19 @@ export function newestLastStart(sys: Sys, since: Date): { start: LastStart; file
 /**
  * The checks every install has to pass, after the wizard or a silent install: the Deck's version, the
  * key files, the resources against the staged tree (no stale or missing file), the Modules copy, one
- * uninstall key, setup-result.json from this step, the Claude Desktop entry.
+ * uninstall key, setup-result.json from this step, the Claude Desktop entry. `compareStaged` is false for a
+ * setup GitHub built (--download): this PC's build\setup\resources\ is not what went into it.
  */
-export function installChecks(ctx: Ctx, deckVersion: string, outcomes: readonly string[]): SetupResult | null {
+export function installChecks(ctx: Ctx, deckVersion: string, outcomes: readonly string[], compareStaged = true): SetupResult | null {
   const ip = installPaths(ctx.sys);
   const version = existsSync(ip.deck) ? ctx.sys.exeVersion(ip.deck) : null;
   ctx.check("the Deck is installed at the expected version", (version ?? "").startsWith(deckVersion), `${ip.deck}: ${version ?? "missing"}, expected ${deckVersion}`);
   const keyFiles = [ip.uninstall, ip.node, ip.mainJs, path.join(ip.resources, "engine", "dist", "setup", "setup-cli.js"), path.join(ip.plugin, "Info.lua"), path.join(ip.resources, "THIRD_PARTY_NOTICES.txt"), path.join(ip.resources, "LICENSE.txt")];
   const absent = keyFiles.filter((f) => !existsSync(f));
   ctx.check("the key files are installed", absent.length === 0, absent.length === 0 ? `${keyFiles.length} found` : `missing: ${absent.map((f) => path.relative(ip.dir, f)).join(", ")}`);
-  if (existsSync(ip.staged)) {
+  if (!compareStaged) {
+    ctx.note("The setup was built by GitHub, not from this PC's build\\setup\\resources\\, so the file list was not compared (its SHA-256 was checked against SHA256SUMS.txt).");
+  } else if (existsSync(ip.staged)) {
     const diff = treeDiff(listFiles(ip.resources), listFiles(ip.staged));
     ctx.check("resources\\ holds exactly the staged files (none missing, none stale)", diff.missing.length + diff.extra.length === 0, `missing ${diff.missing.length}${diff.missing.length ? ` (${sample(diff.missing)})` : ""}; extra ${diff.extra.length}${diff.extra.length ? ` (${sample(diff.extra)})` : ""}`);
   } else {

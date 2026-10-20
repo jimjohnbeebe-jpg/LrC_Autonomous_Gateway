@@ -74,7 +74,7 @@ export const downloadInstallStep: Step = {
     await ctx.yn('Did the blue box "Windows protected your PC" appear?', "y");
     await ctx.yn('After "More info", did "Run anyway" start the wizard?', "y");
     await ctx.yn("Did the wizard finish without an error message?", "y");
-    installChecks(ctx, ctx.version, ["added"]);
+    installChecks(ctx, ctx.version, ["added"], false);
     return existsSync(installPaths(ctx.sys).uninstall) ? undefined : { stop: true };
   },
 };

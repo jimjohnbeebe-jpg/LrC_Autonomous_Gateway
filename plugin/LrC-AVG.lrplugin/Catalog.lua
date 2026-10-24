@@ -242,4 +242,8 @@ function Catalog.getSelection(payload)
     return exclusive("get_selection", function() return getSelection(payload) end)
 end
 
+-- Shared with Denoise.lua (issue #190): the selection lock, and selecting one photo alone.
+Catalog.exclusive = exclusive
+Catalog.selectOnly = selectOnly
+
 return Catalog

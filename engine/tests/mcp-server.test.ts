@@ -76,6 +76,7 @@ describe("mcp server", () => {
     const { tools } = await mcp.listTools();
     expect(tools.map((t) => t.name).sort()).toEqual([
       "lr_add_to_collection",
+      "lr_apply_denoise",
       "lr_approve_pass",
       "lr_begin_session",
       "lr_create_collection",

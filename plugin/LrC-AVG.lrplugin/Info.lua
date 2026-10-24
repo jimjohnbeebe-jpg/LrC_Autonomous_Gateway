@@ -49,5 +49,5 @@ return {
         { title = "LrC-AVG - Accept Edit", file = "MenuAccept.lua" },
         { title = "LrC-AVG - Abort Edit", file = "MenuAbort.lua" },
     },
-    VERSION = { major = 1, minor = 0, revision = 0, build = 0 },
+    VERSION = { major = 1, minor = 1, revision = 0, build = 0 },
 }

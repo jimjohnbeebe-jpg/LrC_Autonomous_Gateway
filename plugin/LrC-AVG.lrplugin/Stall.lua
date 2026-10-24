@@ -6,7 +6,7 @@
 --          ran for that long [inference: plugin tasks run on Lightroom's main thread], logged with what the
 --          previous tick did ("tend" when it bound or re-armed a socket, "idle" otherwise)
 --   tend   a tick whose socket work took over TEND_LOG_SECONDS (the two rebinds sleep 0.1 s each)
---   startup rebind  the one rebind after start (Bridge.lua STARTUP_REBIND_SECONDS)
+--   rebind  each rebind an event asked for (Sockets.lua rebindOr), or an overlapping start's (Bridge.lua)
 
 local LrDate = import 'LrDate'
 
@@ -45,6 +45,8 @@ function Stall.timed(D, fn)
     D.lastTick = LrDate.currentTime()
 end
 
-function Stall.rebind() Log.info("stall-diag: startup rebind") end
+function Stall.rebind(side, why, generation)
+    Log.info(string.format("stall-diag: rebind %s (%s, generation %s)", tostring(side), tostring(why), tostring(generation)))
+end
 
 return Stall

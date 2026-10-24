@@ -3,7 +3,10 @@
 // LrC-AVG (dev) plugin disabled. Jim quits and restarts Lightroom (so no bridge is left running from before), uses it
 // 2 minutes with the plugin disabled and 2 minutes enabled, answers y/n after each, then disables it; the harness
 // waits for the bridge's "stopped (plugin disabled)" line and 30 s of silence. The plugin's lines are summed per
-// phase (stall-check.ts). Results, under %TEMP%\LrC-AVG\stall\ (Claude Code collects them):
+// phase (stall-check.ts). Issue #176 (plugin 1.1.0): after the enabled phase Jim clicks Reload Plug-in, and the
+// harness checks with netstat (no connection of its own, which would itself make the bridge rebind) that the bridge
+// listens on both ports again within RELOAD_SECONDS, counting the rebinds it logged.
+// Results, under %TEMP%\LrC-AVG\stall\ (Claude Code collects them):
 //   stall_check_<time>.json   answers, the per-phase sums and the bridge lines of the run, user folder redacted
 
 import { execFileSync } from "node:child_process";
@@ -21,7 +24,8 @@ const PLUGIN_LOG = path.join(LRC_DIR, "bridge.log");
 const OUT_DIR = path.join(LRC_DIR, "stall");
 const PHASE_SECONDS = 120;
 const QUIET_SECONDS = 30;
-const CLOSE_SECONDS = 15; // closing the sockets took up to ~12 s in run 1 (stall-174.md, run 1)
+const CLOSE_SECONDS = 15;
+const RELOAD_SECONDS = 40; // closing the sockets took up to ~12 s in run 1 (stall-174.md, run 1)
 const stamp = new Date().toISOString().replace(/[:.]/g, "-");
 const redact = (text: string): string => redactHome(text, os.homedir());
 type Prompt = (text: string) => Promise<string | null>;
@@ -88,6 +92,35 @@ function fail(results: Record<string, unknown>, why: string): number {
   return 1;
 }
 
+/** The bridge's ports (the ports file, Endpoint.lua), else the defaults. */
+function ports(): [number, number] {
+  try {
+    const p = JSON.parse(readFileSync(path.join(os.homedir(), ".lrc-avg", "bridge_ports.json"), "utf8")) as { receive?: number; send?: number };
+    return [p.receive ?? 8765, p.send ?? 8766];
+  } catch {
+    return [8765, 8766];
+  }
+}
+
+/** Whether something listens on 127.0.0.1 at both ports, read from netstat. */
+function listening(): boolean {
+  const out = execFileSync("netstat", ["-an", "-p", "TCP"], { encoding: "utf8" });
+  return ports().every((p) => new RegExp(`127\\.0\\.0\\.1:${p}\\s+\\S+\\s+LISTENING`, "i").test(out));
+}
+
+/** Step 5b (issue #176): Reload Plug-in, then both listeners back within RELOAD_SECONDS. */
+async function reloadStep(prompt: Prompt): Promise<{ listening: boolean; seconds: number; rebinds: number }> {
+  console.log("\nStep 5b. In Lightroom: File > Plug-in Manager, select LrC-AVG (dev), click Reload Plug-in, then Done.");
+  await prompt("Press Enter right after you clicked Reload Plug-in.");
+  const t0 = Date.now();
+  await sleep(2000); // the old instance closes its sockets first
+  const ok = await until(listening, RELOAD_SECONDS);
+  const seconds = Math.round((Date.now() - t0) / 1000);
+  const rebinds = events().filter((e) => e.kind === "rebind" && e.at >= t0).length;
+  console.log(`LISTENER AFTER RELOAD: ${ok ? "YES" : "NO"} (${seconds} s, ${rebinds} rebind(s))`);
+  return { listening: ok, seconds, rebinds };
+}
+
 /** Steps 1-2: Lightroom quit and started again, then 2 minutes with the plugin disabled. */
 async function restartAndBaseline(prompt: Prompt, results: Record<string, unknown>) {
   console.log("Step 1. Quit Lightroom: File > Exit. Waiting until it has fully closed (up to 5 minutes) ...");
@@ -101,7 +134,7 @@ async function restartAndBaseline(prompt: Prompt, results: Record<string, unknow
 }
 
 async function main(prompt: Prompt): Promise<number> {
-  const results: Record<string, unknown> = { check: "stall", issue: 174, run: 3, started_at: new Date().toISOString(), node: process.version };
+  const results: Record<string, unknown> = { check: "stall", issue: 176, run: 5, started_at: new Date().toISOString(), node: process.version };
   const off = await restartAndBaseline(prompt, results);
   if (!off) return fail(results, "Lightroom did not close, or did not start again, within 5 minutes");
 
@@ -109,6 +142,7 @@ async function main(prompt: Prompt): Promise<number> {
   const enabledAt = Date.now();
   if (!(await until(() => firstSince("on", enabledAt) !== undefined, 180))) return fail(results, "the plugin did not start within 3 minutes");
   const on = await usePhase(prompt, "Step 5 (LrC-AVG enabled)");
+  const reload = await reloadStep(prompt);
 
   console.log("\nStep 6. In Lightroom: File > Plug-in Manager, select LrC-AVG (dev), click Disable, then Done.");
   const disabledAt = Date.now();
@@ -127,7 +161,7 @@ async function main(prompt: Prompt): Promise<number> {
   if (!quiet) console.log("If Lightroom still stutters now: quit Lightroom and start it again.");
   const since = Date.parse(String(results["started_at"])); // from Step 1, so Lightroom's start (PluginInit) is in
   Object.assign(results, {
-    worked: true, answers: { stutter_plugin_off: off.stutter, stutter_plugin_on: on.stutter }, disable_stopped: stopped, quiet_after_stop: quiet, phases: sums,
+    worked: true, reload, answers: { stutter_plugin_off: off.stutter, stutter_plugin_on: on.stutter }, disable_stopped: stopped, quiet_after_stop: quiet, phases: sums,
     bridge_log_lines: (existsSync(PLUGIN_LOG) ? readFileSync(PLUGIN_LOG, "utf8") : "").split(/\r?\n/).filter((l) => (parseLog(l)[0]?.at ?? 0) >= since),
   });
   console.log(`Results saved automatically: ${redact(save(results))}`);

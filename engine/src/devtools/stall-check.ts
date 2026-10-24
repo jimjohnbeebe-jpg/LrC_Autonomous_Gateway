@@ -30,7 +30,7 @@ export function parseLine(line: string): StallEvent | null {
   let r: RegExpExecArray | null;
   if ((r = /^stall-diag: stall (\d+) ms after (\w+)/.exec(text))) return { at, kind: "stall", ms: Number(r[1]), after: r[2] ?? "" };
   if ((r = /^stall-diag: tend (\d+) ms/.exec(text))) return { at, kind: "tend", ms: Number(r[1]) };
-  if (/^stall-diag: (startup|idle) rebind$/.test(text)) return { at, kind: "rebind" };
+  if (/^stall-diag: ((startup|idle) rebind$|rebind \S+ \()/.test(text)) return { at, kind: "rebind" };
   if (/^stall-diag: on\b/.test(text)) return { at, kind: "on" };
   if (text.startsWith("bridge: starting generation")) return { at, kind: "start" };
   if (text === "bridge: stopped (plugin disabled)") return { at, kind: "stopped" };

@@ -76,6 +76,10 @@ local function bindReceive(B, myGen)
         onConnected = function()
             if not live() then return end
             S.receiveConnected = true
+            -- The listener works: drop a rebind asked for on the last close. Left queued, the monitor ran it
+            -- 1.7 s after the engine reconnected and closed that connection [handle: %TEMP%\LrC-AVG\bridge.log
+            -- 2026-10-24 10:11:00.819-10:11:02.791, denoise_check_2026-10-24T17-09-00-151Z.json put_back].
+            S.receiveNeedsRebind = false
             S.lastInbound = LrDate.currentTime()
             -- A new engine connection. If the send socket still looks connected, that is the
             -- old client it never noticed leaving (P-13): rebind it for the new one.

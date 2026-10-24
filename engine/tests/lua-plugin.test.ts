@@ -221,6 +221,8 @@ describe("lua: LrC-AVG.lrplugin", () => {
     expect(read("Bridge.lua")).toMatch(/LrTasks\.pcall\(Endpoint\.recentStart, OVERLAP_SECONDS\)[\s\S]{0,400}LrTasks\.pcall\(Endpoint\.newToken\)/);
     // codeOnly blanks string literals to "".
     expect(read("Sockets.lua")).toMatch(/S\.receiveConnected = false\s+Log\.info\(""\)\s+rebindOr\(B, "", ""\)/);
+    // PR #191 denoise:check pass 2: a new connection cancels that rebind, which otherwise closed it.
+    expect(read("Sockets.lua")).toMatch(/S\.receiveConnected = true\s+(--[^\n]*\s+)*S\.receiveNeedsRebind = false/);
     expect(read("Sockets.lua")).toMatch(/if S\.rebindAt\[side\] and now - S\.rebindAt\[side\] < REBIND_MIN_SECONDS then\s+S\[side \.\. ""\] = true/);
     // Issue #174 diagnosis: every monitor tick is timed, its socket work too (Stall.lua).
     // Issue #174 runs 2-3: Disable did not end the loop, a disabled plugin's init started the bridge and Enable

@@ -2,7 +2,7 @@
 report: Issue #190 (Automaat ports), #186 (one-channel clipping) and #176 (freeze rebind) in Lightroom
 phase: 9 (phase-9/upstream-ports, engine and plugin 1.1.0)
 status: observed
-authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-10-24. Observed: Jim, run 1 of the three checks, 2026-10-24 (collected by Claude Code from the result files); denoise:check run 2 pending. Numbers: filled from Observed. Verdict: Jim."
+authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-10-24. Observed: Jim, run 1 of the three checks, 2026-10-24 (collected by Claude Code from the result files); denoise:check run 2 pass 2 is the official Denoise result [stated: Jim, 2026-10-24]. Numbers: filled from Observed. Verdict: Jim."
 date: 2026-10-24
 ---
 
@@ -104,9 +104,35 @@ Jim's notes [stated: Jim, 2026-10-24]:
 - The first try did not complete because step 1 assumed the plugin was disabled already. Step 1 now tells Jim to disable it in the Plug-in Manager before quitting Lightroom.
 - The log confirms that Lightroom on Windows fires the receive socket's `onClosed` when the engine disconnects, whether or not Lightroom is idle: `bridge.log` lines 48126 and 48180 [handle].
 
-### Run 2 (denoise:check only)
+### Run 2 (denoise:check only), 2026-10-24 (Jim)
 
-*(left blank for the run)*
+Jim: "Let's go with the second pass as official results" [stated: Jim, 2026-10-24]. Jim ran the check twice, with the fixed check from `e65fe88`.
+
+**Pass 2, the official result: WORKED, put back YES** [handle: `%TEMP%\LrC-AVG\denoise-check\denoise_check_2026-10-24T17-13-45-712Z.json`, `lines`, `put_back`]. The photos were `_DSC1070.ARW` and `_DSC1071.ARW`.
+
+| Step | Answers | Time per photo |
+|---|---|---|
+| First Denoise, amount 30 | applied, applied | 8.7 s and 10.2 s |
+| Amount 30 again | unchanged, unchanged | 2.7 s and 3.4 s |
+| Amount 50 | amount_changed on both | 2.5 s and 6.2 s |
+
+- The selection was as it was, and Jim answered y to "Is Lightroom in the module it was in before this check".
+- Each photo's first snapshot put its FilterList back as it was before: empty before, `Enhance` after Denoise, empty again after the put-back. Jim answered y to "is Denoise off ... on both".
+- `lr_get_preview` by uuid rendered `_DSC1071.ARW` (800 × 533) while it was not the active photo.
+
+**Pass 1: FAILED** [handle: `denoise_check_2026-10-24T17-09-00-151Z.json`]. Jim's note: "the selected files were .arw raw files, and I tested that denoise was available when running manually, but failed on the test" [stated: Jim, 2026-10-24]. The result file names the two photos `DSC00199-Edit.tif` and `DSC00202-HDR.dng`: a TIFF and an HDR merge, which may have been made from ARW files [inference: from the names].
+- **`DSC00199-Edit.tif`:** skipped all three times with "Lightroom says Denoise is not available for this photo". Lightroom's Enhance panel state for it had `denoiseEnabled` false [handle: `bridge.log` lines 48241, 48253, 48261]. Nothing was written, as designed. Whether Lightroom offers Denoise on a TIFF at all is [unverified].
+- **`DSC00202-HDR.dng`:** applied, then unchanged, then amount_changed, as expected.
+- **A bug in this branch's #176 change, now fixed.** The order of events [handle: `bridge.log` lines 48270-48277]:
+  1. The preview render of the HDR DNG, just after its Denoise, held Lightroom for 17 s (`stall 17043 ms`).
+  2. The engine dropped the connection after 7.4 s without a heartbeat.
+  3. The plugin's receive `onClosed` queued a rebind.
+  4. The engine reconnected 0.3 s later.
+  5. The monitor then ran the queued rebind, which closed the new connection at 10:11:02.791.
+  6. The put-back failed with `not_connected: bridge is connecting`, and the HDR DNG was left with Denoise at 50.
+
+  `main` re-arms the socket on that close instead of rebinding, so a reconnect survives there [handle: `git show main:plugin/LrC-AVG.lrplugin/Sockets.lua`, receive `onClosed`]. Fix: receive `onConnected` now cancels a queued rebind (`plugin\LrC-AVG.lrplugin\Sockets.lua`; static test in `engine\tests\lua-plugin.test.ts`). Lightroom has not run the fix: it needs a heartbeat drop to show [unverified].
+- A preview right after Denoise can hold Lightroom for long enough to drop the bridge (17 s here). The engine reconnects on its own, but a Claude session sees the call fail [inference: from step 2 above and `engine\src\bridge\client.ts:7`, 3 heartbeats of 2 s].
 
 ## Numbers
 
@@ -114,10 +140,10 @@ Jim's notes [stated: Jim, 2026-10-24]:
 |---|---|
 | masks:kinds colour range / brush / depth range | YES / YES / skipped (no depth map) |
 | Brush dabs as Lightroom read them back (tokens added or dropped) | identical; none added or dropped |
-| denoise:check steps (applied, unchanged, amount_changed) | as expected on 2 of 2 photos (run 1) |
-| Selection and module put back | the selection yes (harness); the module yes, from the log (run 1); Jim's answer is pending (run 2) |
+| denoise:check steps (applied, unchanged, amount_changed) | as expected on 2 of 2 photos (run 2 pass 2) |
+| Selection and module put back | YES (harness and Jim, run 2 pass 2) |
 | FilterList after Denoise (the live key dump, rule 03) | a filter `Name "Enhance"`, `Title "$$$/CRaw/Filter/Title/Denoise=Denoise"`, with `CompressedSettings`, `Table_<id>`, `Images` (run 1 `filters_after`). Both photos had the same `CompressedSettings` value. |
-| Snapshot undid Denoise | pending (run 2); run 1's check deleted the snapshot it needed |
+| Snapshot undid Denoise | YES: FilterList back to empty on 2 of 2 photos (run 2 pass 2) |
 | Preview by uuid of a photo not active | YES (800 × 531) |
 | stall:check: freezes with the plugin enabled; rebinds logged | none seen by Jim; 2 stalls of at most 2.4 s; 0 rebinds |
 | LISTENER AFTER RELOAD | YES, 2 s |
@@ -137,4 +163,5 @@ Jim's notes [stated: Jim, 2026-10-24]:
 - **Left on #190** for a later PR: mask tone curve and point color (Automaat #328), one AI mask on many photos (#329), IPTC creator, copyright and location fields (#258, #265), `rename_keyword` (#264), `export_photo_metadata` (#249).
 - **Hand-painted brushes.** Lightroom stored Jim's brush on the masks:kinds photo as a compressed `MaskBrushTable`, not as Dabs (run 1). The engine counts any `Mask/Aggregate` as a brush. Whether whole-mask edits (sliders, name, on/off, invert) carry such a brush through unchanged is [unverified]. No check has edited one.
 - **The crash in run 1.** Lightroom crashed while Jim made virtual copies, with no bridge command running. Watch for a repeat; the log has nothing more on it.
+- **The bridge after a dropped heartbeat.** The fix for the queued rebind (run 2 pass 1) is checked by a static test only [unverified in Lightroom].
 - **#165.** This branch adds one tool (36 to 37). A smaller default tool profile stays open.

@@ -1,8 +1,8 @@
 ---
 report: Issue #190 (Automaat ports), #186 (one-channel clipping) and #176 (freeze rebind) in Lightroom
 phase: 9 (phase-9/upstream-ports, engine and plugin 1.1.0)
-status: template
-authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-10-24. Observed: Jim, from the three checks below. Numbers: filled from Observed. Verdict: Jim."
+status: observed
+authored_by: "Template, harness and pre-run findings: Claude Code (Opus 5.5), 2026-10-24. Observed: Jim, run 1 of the three checks, 2026-10-24 (collected by Claude Code from the result files); denoise:check run 2 pending. Numbers: filled from Observed. Verdict: Jim."
 date: 2026-10-24
 ---
 
@@ -57,21 +57,70 @@ Steps for Jim, in this order. Reload the plugin first: File > Plug-in Manager, L
 
 Say "done" after each one. Claude Code collects the files under `%TEMP%\LrC-AVG\masks-kinds\`, `%TEMP%\LrC-AVG\denoise-check\` and `%TEMP%\LrC-AVG\stall\`.
 
-*(left blank for the runs)*
+### Run 1, 2026-10-24 (Jim)
+
+Jim's notes [stated: Jim, 2026-10-24]:
+- "at the beginning of test 2 LrC crashed to the desktop without warning and had to be restarted. This happened during the create copy process."
+- "I believe the tests results on test 2 were negative."
+- On test 3: "the test directed me to 'leave LrC-AVG Disabled' but it was enabled, test would not complete, I Ctrl-C, restarted LrC, disabled the plug-in manually and started the test, whereafter it completed successfully."
+
+**1. masks:kinds: WORKED, put back YES** [handle: `%TEMP%\LrC-AVG\masks-kinds\mask_kinds_2026-10-24T16-08-01-960Z.json`, `form_lines`, `put_back`]. The photo was `20220904-_DSC1617-20220904-DxO_DeepPRIME XD3-HDR.dng`.
+- Colour range: Jim answered y. The read-back and a fresh read match what was written (`problems` empty). The sample read from the preview was `0.085490 0.112941 0.136471` at the centre, ColorAmount 0.5.
+- Brush: Jim answered y. Both strokes' Dabs (65 and 36 entries, the second with a leading `f 0.5000`) read back identical, on both reads [handle: same file, `forms[1]`; compared by a `node -e` script in this session, "dabs same: true true"]. Lightroom added no `r` or `h` tokens.
+- Depth range: skipped, because this photo has no depth map (no `LuminanceDepthSampleInfo` in the read-back). Lightroom stored the written `DepthRange "0.000000 0.000000 0.300000 0.500000"`, Type -1, unchanged [handle: same file, `forms[2].read_back`]. Whether it draws on a photo with depth data stays [unverified]. The summary line printed "YES depth_range" for this skip; it now prints "SKIP" (`mask-combine-probe.ts` `verdict`).
+- A side finding: the brush Jim painted by hand on this photo is stored as a compressed `MaskBrushTable` / `BrushTable_<id>` field, not as `Masks` of `Mask/Paint` with Dabs [handle: same file, `table_before[0].CorrectionMasks[1]`]. The Phase 8.5 capture's hand-made brush had Dabs.
+
+**The crash.** Lightroom closed between the two checks. No bridge command was running: the last one, masks:kinds' put-back, ended at 09:08:28. The plugin's next start is at 09:09:47 [handle: `%TEMP%\LrC-AVG\bridge.log` lines 48123-48131]. Windows recorded no Application Error for Lightroom that morning [handle: `Get-WinEvent` Application log, ids 1000-1002 from 08:30, run by Claude Code 2026-10-24, no Lightroom entry]. The log alone cannot show whether the plugin's idle loop played a part [inference]. One thing preceded it: the first rebind of the new kind (`rebind receive (closed, generation 1)`, when the check's engine disconnected) ran at 09:08:28, about a minute before.
+
+**2. denoise:check: FAILED, put back NO** [handle: `%TEMP%\LrC-AVG\denoise-check\denoise_check_2026-10-24T16-10-22-533Z.json`, `lines`, `put_back`]. The photos were `PICT0019.DNG` and `_DSC0028.NEF`.
+- All three Denoise steps answered as expected on both photos:
+
+  | Step | Answers | Time per photo |
+  |---|---|---|
+  | First Denoise, amount 30 | applied, applied | 8.0 s and 7.0 s |
+  | Amount 30 again | unchanged, unchanged | 1.4 s and 2.5 s |
+  | Amount 50 | amount_changed (from 30) on both | 2.5 s and 4.7 s |
+- Denoise put the module back after every photo: each `apply_denoise` logs "switched from library to develop" [handle: `bridge.log` lines 48144, 48148, 48155, 48159, 48163, 48168]. The harness found the same two photos selected.
+- `lr_get_preview` by uuid rendered `_DSC0028.NEF` at 800 × 531 while it was not the active photo.
+- **The put-back failed:** `unknown_snapshot` on both photos. **The cause is the check, not `lr_apply_denoise`.** The check gave every step's snapshot one name, and `Develop.createSnapshot` calls `createDevelopSnapshot(name, true)`, which replaces a snapshot of the same name. The amount-50 step's snapshot therefore deleted the first one [inference, from `plugin\LrC-AVG.lrplugin\Develop.lua` `createSnapshot` and the snapshot ids in `steps`]. `lr_apply_denoise` itself takes a new name on every call (`AVG pre-denoise <6 hex>`, `engine\src\mcp\tools-denoise.ts`). Fixed: the check now names each step's snapshot separately.
+- Jim's two answers were n:
+  - "Denoise off on both": expected after the failed put-back.
+  - "Back in the module": the question came after the put-back, and the put-back's `apply_snapshot` switches to Develop and stays there (`Develop.lua` `applySnapshot`; `bridge.log` line 48175). Fixed: the check now asks it before the put-back.
+- The two photos were left with Denoise at 50.
+
+**3. stall:check: WORKED, on the second try** [handle: `%TEMP%\LrC-AVG\stall\stall_check_2026-10-24T16-47-28-778Z.json`, run 5].
+- Jim saw no stutter, with the plugin disabled or enabled.
+- With the plugin enabled for 120 s:
+
+  | Measure | Run 5 (this branch) | Run 4, 2026-10-18 (main) |
+  |---|---|---|
+  | Rebinds | 0 | 1 |
+  | Stalls | 2 (max 2.4 s, total 3.6 s) | 3 (total 5.8 s) |
+  | Slow tends | 0 | 1 (11.9 s) |
+
+  Run 4: [handle: `stall_check_2026-10-18T11-55-04-541Z.json` `phases.plugin_on`].
+- LISTENER AFTER RELOAD: YES, in 2 s, with no rebind.
+- The Reload retired the old generation ("replaced by a newer start (token file)"). Its receive socket's close then logged one `rebind receive` that nothing acted on: its loop had exited 1.2 s before.
+- The first try did not complete because step 1 assumed the plugin was disabled already. Step 1 now tells Jim to disable it in the Plug-in Manager before quitting Lightroom.
+- The log confirms that Lightroom on Windows fires the receive socket's `onClosed` when the engine disconnects, whether or not Lightroom is idle: `bridge.log` lines 48126 and 48180 [handle].
+
+### Run 2 (denoise:check only)
+
+*(left blank for the run)*
 
 ## Numbers
 
 | Field | Value |
 |---|---|
-| masks:kinds colour range / brush / depth range | |
-| Brush dabs as Lightroom read them back (tokens added or dropped) | |
-| denoise:check steps (applied, unchanged, amount_changed) | |
-| Selection and module put back | |
-| FilterList after Denoise (the live key dump, rule 03) | |
-| Snapshot undid Denoise | |
-| Preview by uuid of a photo not active | |
-| stall:check: freezes with the plugin enabled; rebinds logged | |
-| LISTENER AFTER RELOAD | |
+| masks:kinds colour range / brush / depth range | YES / YES / skipped (no depth map) |
+| Brush dabs as Lightroom read them back (tokens added or dropped) | identical; none added or dropped |
+| denoise:check steps (applied, unchanged, amount_changed) | as expected on 2 of 2 photos (run 1) |
+| Selection and module put back | the selection yes (harness); the module yes, from the log (run 1); Jim's answer is pending (run 2) |
+| FilterList after Denoise (the live key dump, rule 03) | a filter `Name "Enhance"`, `Title "$$$/CRaw/Filter/Title/Denoise=Denoise"`, with `CompressedSettings`, `Table_<id>`, `Images` (run 1 `filters_after`). Both photos had the same `CompressedSettings` value. |
+| Snapshot undid Denoise | pending (run 2); run 1's check deleted the snapshot it needed |
+| Preview by uuid of a photo not active | YES (800 × 531) |
+| stall:check: freezes with the plugin enabled; rebinds logged | none seen by Jim; 2 stalls of at most 2.4 s; 0 rebinds |
+| LISTENER AFTER RELOAD | YES, 2 s |
 
 ## Verdict
 
@@ -86,4 +135,6 @@ Say "done" after each one. Claude Code collects the files under `%TEMP%\LrC-AVG\
   - whether `onClosed` fires while idle (the stall:check log).
 - **AVG-005 (snapshots for rollback).** Does a snapshot undo AI Denoise (denoise:check "filters_back")?
 - **Left on #190** for a later PR: mask tone curve and point color (Automaat #328), one AI mask on many photos (#329), IPTC creator, copyright and location fields (#258, #265), `rename_keyword` (#264), `export_photo_metadata` (#249).
+- **Hand-painted brushes.** Lightroom stored Jim's brush on the masks:kinds photo as a compressed `MaskBrushTable`, not as Dabs (run 1). The engine counts any `Mask/Aggregate` as a brush. Whether whole-mask edits (sliders, name, on/off, invert) carry such a brush through unchanged is [unverified]. No check has edited one.
+- **The crash in run 1.** Lightroom crashed while Jim made virtual copies, with no bridge command running. Watch for a repeat; the log has nothing more on it.
 - **#165.** This branch adds one tool (36 to 37). A smaller default tool profile stays open.

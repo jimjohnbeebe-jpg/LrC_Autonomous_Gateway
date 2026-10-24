@@ -123,7 +123,7 @@ async function reloadStep(prompt: Prompt): Promise<{ listening: boolean; seconds
 
 /** Steps 1-2: Lightroom quit and started again, then 2 minutes with the plugin disabled. */
 async function restartAndBaseline(prompt: Prompt, results: Record<string, unknown>) {
-  console.log("Step 1. Quit Lightroom: File > Exit. Waiting until it has fully closed (up to 5 minutes) ...");
+  console.log("Step 1. In Lightroom: File > Plug-in Manager, select LrC-AVG (dev). If its Status says Enabled, click Disable. Click Done.\nThen quit Lightroom: File > Exit. Waiting until it has fully closed (up to 5 minutes) ...");
   if (!(await until(() => !lightroomRunning(), 300))) return null;
   console.log("Lightroom is closed.\nStep 2. Start Lightroom. Leave LrC-AVG (dev) disabled.");
   if (!(await until(lightroomRunning, 300))) return null;

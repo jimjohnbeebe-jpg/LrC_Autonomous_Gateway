@@ -35,7 +35,9 @@ async function filters(client: BridgeClient, uuid: string): Promise<unknown> {
 async function denoise(client: BridgeClient, taken: Taken, amount: number, step: Step, say: (l: string) => void): Promise<void> {
   say(`${step.step}: Denoise ${amount} on ${taken.uuids.length} photos. Lightroom switches to Develop for each; do not click in Lightroom.`);
   for (const uuid of taken.uuids) {
-    const a: DenoiseAnswer = await client.request("apply_denoise", { photo_uuid: uuid, amount, snapshot_name: SNAPSHOT }, { timeoutMs: 90_000 });
+    // One name per step: Lightroom replaces a snapshot of the same name (createDevelopSnapshot(name, true), Develop.lua),
+    // which in Jim's run 1 deleted the first Denoise's snapshot before the put-back [handle: denoise_check_2026-10-24T16-10-22-533Z.json put_back].
+    const a: DenoiseAnswer = await client.request("apply_denoise", { photo_uuid: uuid, amount, snapshot_name: `${SNAPSHOT} ${step.step}` }, { timeoutMs: 90_000 });
     if (a.snapshot && !taken.snaps.has(uuid)) taken.snaps.set(uuid, a.snapshot.id);
     step.answers.push(a);
     say(`  ${a.uuid}: ${a.status}${a.reason ? ` (${a.reason})` : ""}, ${a.ms} ms`);
@@ -90,13 +92,12 @@ async function run(client: BridgeClient, say: (l: string) => void, r: Results, t
   const preview = await new PreviewService(client).render({ longEdge: 800, quality: 80, photoUuid: uuids[1] as string }).catch((err: unknown) => describeError(err));
   const previewOk = typeof preview !== "string" && preview.uuid === uuids[1];
   r["preview"] = typeof preview === "string" ? { error: preview } : { uuid: preview.uuid, width: preview.width, height: preview.height };
+  // Asked before the put-back: apply_snapshot switches to Develop and stays there (Develop.lua applySnapshot).
+  const backInModule = await ask("Is Lightroom in the module it was in before this check, with the same two photos selected?");
   const putBack = await putBackAll(client, taken, say);
   r["put_back"] = putBack;
   taken.snaps.clear(); // put back: main's finally has nothing left to do
-  const answers = [
-    await ask("Is Lightroom back in the module it was in before this check, with the same two photos selected?"),
-    await ask("Open each photo in Develop: is Denoise off in the Detail panel on both (as before the check)?"),
-  ];
+  const answers = [backInModule, await ask("Open each photo in Develop: is Denoise off in the Detail panel on both (as before the check)?")];
   const v = verdict({ steps, selection_back: selectionBack, filters_back: putBack.every((p) => p.ok), preview_ok: previewOk, answers });
   Object.assign(r, { answers, lines: v.lines });
   say("");
@@ -131,7 +132,7 @@ async function main(say: (l: string) => void): Promise<number> {
   say("");
   say(`Denoise check: ${worked ? "WORKED" : "FAILED"}`);
   say(`put back: ${back ? "YES" : "NO"}`);
-  if (!back) say(`  To put a photo back by hand: Lightroom Develop, select it, Snapshots panel (left), click "${SNAPSHOT}".`);
+  if (!back) say(`  To put a photo back by hand: Lightroom Develop, select it, Snapshots panel (left), click "${SNAPSHOT} first Denoise".`);
   say(`Results saved automatically: ${redactHome(file, os.homedir())}`);
   say('Nothing to copy. Tell Claude Code "done".');
   return worked ? 0 : 1;

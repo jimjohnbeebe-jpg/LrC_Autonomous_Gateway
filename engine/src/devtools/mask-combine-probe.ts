@@ -150,7 +150,7 @@ export function judge(c: Candidate, written: Correction[], id: string, reads: { 
 
 /** The run's verdict: every candidate tried and each one ok; the lines name each form's result. */
 export function verdict(results: readonly FormResult[], tried: number, candidates: readonly Candidate[] = CANDIDATES): { worked: boolean; lines: string[] } {
-  const lines = results.map((r) => `${r.ok ? "YES" : "NO "} ${r.form}${r.ok ? "" : ` (${[...r.problems.slice(0, 2), ...(r.ai && !r.ai.ok ? [`AI part: ${r.ai.outcome}`] : []), ...(r.answer !== "y" ? [`Jim: ${r.answer}`] : [])].join("; ")})`}`);
+  const lines = results.map((r) => `${r.answer.startsWith("skipped") ? "SKIP" : r.ok ? "YES" : "NO "} ${r.form}${r.ok ? "" : ` (${[...r.problems.slice(0, 2), ...(r.ai && !r.ai.ok ? [`AI part: ${r.ai.outcome}`] : []), ...(r.answer !== "y" ? [`Jim: ${r.answer}`] : [])].join("; ")})`}`);
   for (const c of candidates.slice(tried)) lines.push(`--- ${c.forms.at(-1) ?? c.id} (not tried)`);
   return { worked: tried === candidates.length && results.every((r) => r.ok), lines };
 }

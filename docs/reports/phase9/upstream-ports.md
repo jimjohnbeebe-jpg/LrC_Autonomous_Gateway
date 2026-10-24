@@ -154,12 +154,18 @@ Jim: "Let's go with the second pass as official results" [stated: Jim, 2026-10-2
 
 ## Consequences / open questions
 
-- **PRD 6.7.** The highlight guard and the `clip_high` limit now act on `clip_high_tone_pct` (two or more channels); `clip_high_pct` (any channel) is still reported. This changes the PRD 6.7 definition, and the vault PRD is to be updated after the verdict.
-- **LR_SDK_NOTES.** Record, from the runs:
-  - the Enhance filter key names in FilterList (the denoise:check dumps);
-  - the depth range's stored form, if a photo with depth data was used;
-  - whether `onClosed` fires while idle (the stall:check log).
-- **AVG-005 (snapshots for rollback).** Does a snapshot undo AI Denoise (denoise:check "filters_back")?
+- **PRD 6.7. Done 2026-10-24.** The vault PRD now names `clip_high_tone_pct` in 6.7 and in the guardrail table. The old definition is struck through, not deleted, as for the Phase 0 changes.
+- **LR_SDK_NOTES. Done 2026-10-24**, in the vault section "Recorded in Phase 9 — 2026-10-24, AI Denoise, three mask kinds and the receive socket". It records:
+  - the Denoise calls and the Enhance filter in FilterList;
+  - Denoise not available on a TIFF;
+  - the 17 s preview after Denoise;
+  - same-named snapshots;
+  - the colour, brush and depth range forms as read back, and the hand-painted `MaskBrushTable` form;
+  - `onClosed` on an engine disconnect.
+
+  The depth range on a photo with depth data stays [unverified].
+- **AVG-005 (snapshots for rollback).** It holds for Denoise: the snapshot taken before Denoise removed the Enhance filter on 2 of 2 photos (run 2 pass 2). This is recorded in LR_SDK_NOTES; AVG-005 itself is unchanged.
+- **Verdict.** Jim has not given one in the Verdict section. He chose run 2 pass 2 as the official Denoise result and asked for the merge [stated: Jim, 2026-10-24, "Let's go with the second pass as official results", "Please merge"].
 - **Left on #190** for a later PR: mask tone curve and point color (Automaat #328), one AI mask on many photos (#329), IPTC creator, copyright and location fields (#258, #265), `rename_keyword` (#264), `export_photo_metadata` (#249).
 - **Hand-painted brushes.** Lightroom stored Jim's brush on the masks:kinds photo as a compressed `MaskBrushTable`, not as Dabs (run 1). The engine counts any `Mask/Aggregate` as a brush. Whether whole-mask edits (sliders, name, on/off, invert) carry such a brush through unchanged is [unverified]. No check has edited one.
 - **The crash in run 1.** Lightroom crashed while Jim made virtual copies, with no bridge command running. Watch for a repeat; the log has nothing more on it.

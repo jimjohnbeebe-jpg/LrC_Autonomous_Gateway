@@ -8,10 +8,12 @@
 // every AI part shows its digest or an ErrorReason, as the engine reads them), then Jim says whether the bright
 // area is where the description says. The pure parts are here; the CLI (mask-combine-probe-cli.ts) asks Jim,
 // puts the photo back from a snapshot and saves the results. Report: docs\reports\phase8.5\mask-combine.md.
+// `npm run masks:kinds` (issue #190) runs the same steps over KIND_CANDIDATES: one colour range, brush and depth
+// range mask each (report: docs\reports\phase9\upstream-ports.md).
 
 import { randomUUID } from "node:crypto";
 import type { BridgeClient } from "../bridge/index.js";
-import { VERIFIED_FORMS, aiError, aiWatch, applyOp, computed, firstComponent, readTable, type Correction, type EditOp, type Geometry, type SdkSettings } from "../params/index.js";
+import { VERIFIED_FORMS, aiError, aiWatch, applyOp, computed, depthMapMissing, firstComponent, readTable, type Correction, type EditOp, type Geometry, type SdkSettings } from "../params/index.js";
 import { C, M, WHAT, components } from "../params/mask-table.js";
 import { diffEntries } from "./mask-carry-probe.js";
 
@@ -22,7 +24,7 @@ const SLIDERS = { "local.exposure": 2 };
 
 type Edit = Omit<EditOp, "op" | "mask_id">;
 /** A candidate: the mask's first part, the edits that make the form, each edit's form (the last is the one under test), and what Jim should see. */
-export type Candidate = { id: string; first: { kind: string; geometry?: Geometry }; edits: Edit[]; forms: string[]; ask: string };
+export type Candidate = { id: string; first: { kind: string; geometry?: Geometry; point?: { x: number; y: number } }; edits: Edit[]; forms: string[]; ask: string };
 
 const BIG = { left: 0.15, top: 0.15, right: 0.85, bottom: 0.85 };
 const SMALL = { left: 0.4, top: 0.4, right: 0.6, bottom: 0.6 };
@@ -50,6 +52,25 @@ export const CANDIDATES: readonly Candidate[] = [
   { id: "part2_remove", first: { kind: "radial", geometry: BIG }, edits: [HOLE, { part: 2, remove_part: true }], forms: ["radial, subtract radial", "radial, subtract radial: remove part 2"], ask: "Is the whole large oval in the centre bright, with no hole?" },
 ];
 
+/** masks:kinds (issue #190): one mask of each new kind; the colour range's colour is sampled by the CLI from a render (withSample). */
+export const KIND_CANDIDATES: readonly Candidate[] = [
+  { id: "color_range", first: { kind: "color_range", point: { x: 0.5, y: 0.5 } }, edits: [], forms: ["color_range"], ask: "Is the colour at the centre of the photo brighter, there and wherever else the photo has it, and other colours as before?" },
+  {
+    id: "brush",
+    first: { kind: "brush", geometry: { strokes: [{ points: [{ x: 0.1, y: 0.5 }, { x: 0.9, y: 0.5 }] }, { points: [{ x: 0.1, y: 0.1 }, { x: 0.4, y: 0.4 }], flow: 0.5 }] } },
+    edits: [],
+    forms: ["brush"],
+    ask: "Is a band across the middle of the photo bright, and a short diagonal in the top-left fainter?",
+  },
+  { id: "depth_range", first: { kind: "depth_range", geometry: { depth_range: [0, 0, 0.3, 0.5] } }, edits: [], forms: ["depth_range"], ask: "Are the nearest parts of the scene brighter, and the far parts as before?" },
+];
+
+/** `c` with its colour range's colour: `sample` is the render's colour at the point (metrics\pixel.ts sampleColor). */
+export const withSample = (c: Candidate, sample: [number, number, number]): Candidate => (c.first.kind === "color_range" ? { ...c, first: { ...c.first, geometry: { ...c.first.geometry, sample } } } : c);
+
+/** A depth range Lightroom read back without its depth sample: the photo has no depth map, so Jim is not asked. */
+export const noDepthMap = (c: Candidate, readBack: SdkSettings, id: string): boolean => c.first.kind === "depth_range" && depthMapMissing(readTable(readBack), id);
+
 /** `forms` listed in VERIFIED_FORMS while `f` runs, and taken out again after (only those that were not listed before). */
 function withForms<T>(forms: readonly string[], f: () => T): T {
   const added = forms.filter((x) => !VERIFIED_FORMS.has(x));
@@ -64,7 +85,8 @@ function withForms<T>(forms: readonly string[], f: () => T): T {
 /** The table to write for candidate `c`: the photo's masks as read, untouched, then the candidate's mask (its id). */
 export function build(before: readonly Correction[], c: Candidate): { entries: Correction[]; id: string } {
   return withForms(c.forms, () => {
-    let plan = applyOp(before, { op: "create", kind: c.first.kind, name: `AVG combine ${c.id}`, ...(c.first.geometry ? { geometry: c.first.geometry } : {}), sliders: SLIDERS });
+    const first = { ...(c.first.geometry ? { geometry: c.first.geometry } : {}), ...(c.first.point ? { point: c.first.point } : {}) };
+    let plan = applyOp(before, { op: "create", kind: c.first.kind, name: `AVG combine ${c.id}`, ...first, sliders: SLIDERS });
     for (const e of c.edits) plan = applyOp(plan.entries, { op: "edit", mask_id: plan.id, ...e });
     return { entries: plan.entries, id: plan.id };
   });
@@ -122,13 +144,13 @@ export function judge(c: Candidate, written: Correction[], id: string, reads: { 
     const d = diffEntries(written, sdk);
     return [...d.table, ...d.entries.filter((e) => !e.ok).map((e) => `${e.name}: ${e.problems.join("; ")}${e.changed.length ? ` (${e.changed.slice(0, 5).join(", ")})` : ""}`)].map((p) => `${read}: ${p}`);
   });
-  const ok = problems.length === 0 && (ai?.ok ?? true) && answer === "y";
+  const ok = problems.length === 0 && (ai?.ok ?? true) && (answer === "y" || answer === "skipped: no depth map");
   return { id: c.id, form: c.forms.at(-1) ?? "", ask: c.ask, written: written.find((e) => e[C.id] === id) ?? null, read_back: entryIn(reads.read_back, id), read_again: entryIn(reads.read_again, id), problems, ...(ai ? { ai } : {}), answer, ok };
 }
 
 /** The run's verdict: every candidate tried and each one ok; the lines name each form's result. */
-export function verdict(results: readonly FormResult[], tried: number): { worked: boolean; lines: string[] } {
-  const lines = results.map((r) => `${r.ok ? "YES" : "NO "} ${r.form}${r.ok ? "" : ` (${[...r.problems.slice(0, 2), ...(r.ai && !r.ai.ok ? [`AI part: ${r.ai.outcome}`] : []), ...(r.answer !== "y" ? [`Jim: ${r.answer}`] : [])].join("; ")})`}`);
-  for (const c of CANDIDATES.slice(tried)) lines.push(`--- ${c.forms.at(-1) ?? c.id} (not tried)`);
-  return { worked: tried === CANDIDATES.length && results.every((r) => r.ok), lines };
+export function verdict(results: readonly FormResult[], tried: number, candidates: readonly Candidate[] = CANDIDATES): { worked: boolean; lines: string[] } {
+  const lines = results.map((r) => `${r.answer.startsWith("skipped") ? "SKIP" : r.ok ? "YES" : "NO "} ${r.form}${r.ok ? "" : ` (${[...r.problems.slice(0, 2), ...(r.ai && !r.ai.ok ? [`AI part: ${r.ai.outcome}`] : []), ...(r.answer !== "y" ? [`Jim: ${r.answer}`] : [])].join("; ")})`}`);
+  for (const c of candidates.slice(tried)) lines.push(`--- ${c.forms.at(-1) ?? c.id} (not tried)`);
+  return { worked: tried === candidates.length && results.every((r) => r.ok), lines };
 }

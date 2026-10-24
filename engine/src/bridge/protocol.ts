@@ -138,4 +138,6 @@ export type CommandPayloads = {
   create_ai_mask_dc: { target_uuid: string; subtype: string; wait_seconds?: number };
   probe_write_gate: Record<string, never>;
   clear_pending_ai: { photo_uuid: string };
+  /** Plugin 1.1.0 (Denoise.lua): AI Denoise at `amount` 1-100 on the photo with that uuid, after a snapshot named snapshot_name ("AVG …"); switches Lightroom to Develop and selects the photo, then puts both back. */
+  apply_denoise: { photo_uuid: string; amount: number; snapshot_name: string };
 };

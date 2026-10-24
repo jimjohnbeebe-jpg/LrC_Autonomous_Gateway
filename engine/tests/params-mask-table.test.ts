@@ -10,7 +10,7 @@ import { CANONICAL_PARAMS, loadDefaultParamMap } from "../src/params/index.js";
 import { applyOp, newCorrection, precheck, storedSliders, tableSettings, type MaskOp } from "../src/params/mask-ops.js";
 import { boundsOf, instanceOf, pickInstance, withInstance } from "../src/params/mask-person.js";
 import { summarize } from "../src/params/mask-summary.js";
-import { AI_KINDS, C, CARRIED, CORRECTION, IMAGE, LINEAR, LOCAL_PARAMS, M, MASK_TABLE_KEY, RADIAL, RANGE, RECOMPUTED, WHAT, BOX, IMAGE_KEYS, MaskError, readTable, tableInfo, verifyTable, type Correction } from "../src/params/mask-table.js";
+import { AI_KINDS, BRUSH, C, CARRIED, CORRECTION, IMAGE, LINEAR, LOCAL_PARAMS, M, MASK_TABLE_KEY, RADIAL, RANGE, RECOMPUTED, WHAT, BOX, IMAGE_KEYS, MaskError, readTable, tableInfo, verifyTable, type Correction } from "../src/params/mask-table.js";
 import { uncaptured } from "../src/params/mask-combine.js";
 
 const capture = (name: string): unknown => JSON.parse(readFileSync(fileURLToPath(new URL(`../../docs/reports/phase6/masks-capture/${name}`, import.meta.url)), "utf8"));
@@ -23,6 +23,11 @@ const captured: Correction[] = [...table, background, ...Object.values(people)];
 const copies = ["people_entire", "people_part", "landscape_1", "landscape_2"].map((k) => capture(`capture3-4_${k}.json`) as { written: Correction; after_write: Correction; final: Correction });
 /** Capture 4, row 6: Jim's two Entire Person masks on a photo of two people (left, right). */
 const twoPeople = (capture("capture4-row6_people_by_hand.json") as { entries: Correction[] }).entries;
+
+/** Jim's hand-made Brush and Color Range masks, read back by masks:carry (issue #121): the colour range and brush fields (issue #190). */
+const carried = JSON.parse(readFileSync(fileURLToPath(new URL("../../docs/reports/phase8.5/mask-carry/mask_carry_2026-10-11T22-37-39-161Z.json", import.meta.url)), "utf8")) as unknown;
+/** In no capture here: a depth range's field [upstream claim: Automaat PR #334]. */
+const UNCAPTURED = new Set([RANGE.depthRange]);
 
 /** Every key and every string value at any depth. */
 function words(v: unknown, out = new Set<string>()): Set<string> {
@@ -43,9 +48,9 @@ const codeOf = (fn: () => unknown): string => {
 
 describe("params: the mask table's field names (rule 03)", () => {
   it("names only fields and type strings that appear in the committed capture dumps", () => {
-    const seen = words({ dump, captured, copies, twoPeople });
-    const constants = [MASK_TABLE_KEY, CORRECTION, ...CARRIED, ...RECOMPUTED, ...IMAGE_KEYS, ...[C, M, WHAT, LINEAR, RADIAL, IMAGE, RANGE, BOX].flatMap((o) => Object.values(o)), ...[...LOCAL_PARAMS.values()].map((p) => p.field)];
-    expect(constants.filter((c) => !seen.has(c))).toEqual([]);
+    const seen = words({ dump, captured, copies, twoPeople, carried });
+    const constants = [MASK_TABLE_KEY, CORRECTION, ...CARRIED, ...RECOMPUTED, ...IMAGE_KEYS, ...[C, M, WHAT, LINEAR, RADIAL, IMAGE, RANGE, BOX, BRUSH].flatMap((o) => Object.values(o)), ...[...LOCAL_PARAMS.values()].map((p) => p.field)];
+    expect(constants.filter((c) => !seen.has(c) && !UNCAPTURED.has(c as never))).toEqual([]);
   });
 
   it("keeps the local sliders apart from the canonical names and from the top-level keys", () => {
@@ -151,9 +156,9 @@ describe("params: reading the mask table", () => {
     const blend = structuredClone(table[1]) as Correction;
     Object.assign((blend[C.masks] as Record<string, unknown>[])[0] as object, { [M.blend]: 1 });
     expect(uncaptured([table[0] as Correction, blend])?.why).toBe("its MaskBlendMode is 1");
-    const brush = structuredClone(table[0]) as Correction;
-    Object.assign((brush[C.masks] as Record<string, unknown>[])[0] as object, { [M.what]: "Mask/Paint" });
-    expect(uncaptured([brush])?.why).toBe("its kind (Mask/Paint) was not round-tripped in the masks captures");
+    const paint = structuredClone(table[0]) as Correction;
+    Object.assign((paint[C.masks] as Record<string, unknown>[])[0] as object, { [M.what]: "Mask/Paint" });
+    expect(uncaptured([paint])?.why).toBe("its kind (Mask/Paint) was not round-tripped in the masks captures");
     // Every Mask/Image of MaskSubType 0-3 is trusted (capture 4's round trips), whatever its category or instance; other range types are not.
     const subtype13 = structuredClone(table[2]) as Correction;
     Object.assign((subtype13[C.masks] as Record<string, unknown>[])[0] as object, { [IMAGE.subType]: 3, [IMAGE.subCategory]: 13 });
@@ -172,7 +177,10 @@ describe("params: reading the mask table", () => {
     expect(uncaptured([oddKey])?.why).toBe("it has fields the masks captures never showed (NewLightroomField)");
     const colour = structuredClone(table[4]) as Correction;
     Object.assign(((colour[C.masks] as Record<string, unknown>[])[0] as Record<string, Record<string, unknown>>)[RANGE.holder] as object, { [RANGE.type]: 1 });
-    expect(uncaptured([colour])?.why).toBe("its kind (Mask/RangeMask, not a luminance range) was not round-tripped in the masks captures");
+    expect(uncaptured([colour])).toBeNull(); // a colour range is trusted since engine 1.1.0 (issue #190)
+    const depth = structuredClone(table[4]) as Correction;
+    Object.assign(((depth[C.masks] as Record<string, unknown>[])[0] as Record<string, Record<string, unknown>>)[RANGE.holder] as object, { [RANGE.type]: -1 });
+    expect(uncaptured([depth])?.why).toBe("its kind (Mask/RangeMask) was not round-tripped in the masks captures");
   });
 
   it("gives the same fingerprint to two equal tables whatever their key order", () => {
@@ -251,7 +259,7 @@ describe("params: mask operations", () => {
   });
 
   it("refuses the kinds that were not captured or cannot be made from the table, each with its reason", () => {
-    for (const kind of ["people", "landscape", "brush", "objects", "color_range", "depth_range"]) {
+    for (const kind of ["people", "landscape", "objects"]) {
       let message = "";
       try {
         precheck({ op: "create", kind });

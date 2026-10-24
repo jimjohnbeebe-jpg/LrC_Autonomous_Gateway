@@ -83,7 +83,7 @@ describe("lua: every plugin file", () => {
   it("finds the LrC-AVG plugin files", () => {
     const names = files.filter((f) => f.startsWith(avgPlugin)).map((f) => path.basename(f)).sort();
     expect(names).toEqual([
-      "Bridge.lua", "Catalog.lua", "Develop.lua", "Dispatch.lua", "Endpoint.lua", "Events.lua", "Gate.lua", "Hud.lua", "HudClick.lua", "HudSelection.lua", "HudState.lua", "HudText.lua", "HudView.lua",
+      "Bridge.lua", "Catalog.lua", "Denoise.lua", "Develop.lua", "Dispatch.lua", "Endpoint.lua", "Events.lua", "Gate.lua", "Hud.lua", "HudClick.lua", "HudSelection.lua", "HudState.lua", "HudText.lua", "HudView.lua",
       "Info.lua", "Json.lua", "KeywordTree.lua", "Library.lua", "Log.lua", "MaskProbe.lua", "Masks.lua", "MenuAbort.lua", "MenuAccept.lua", "MenuApprove.lua", "MenuHud.lua",
       "MenuPickA.lua", "MenuPickB.lua", "MenuPickC.lua", "MenuStatus.lua", "Metadata.lua", "Pending.lua", "Photos.lua",
       "PluginDisable.lua", "PluginEnable.lua", "PluginInfoProvider.lua", "PluginInit.lua", "Prefs.lua", "Preview.lua", "Sockets.lua", "Stall.lua", "Transfer.lua",
@@ -214,8 +214,16 @@ describe("lua: LrC-AVG.lrplugin", () => {
     expect(pending).toMatch(/_G\.LrCAVG_PendingAi = _G\.LrCAVG_PendingAi or \{\}/);
     expect(read("Bridge.lua")).toMatch(/process_started_at = _G\.LrCAVG_ProcessStartedAt,/);
     // Phase 9 run 1b: a bridge left with no listener heals itself; it binds afresh while no engine is connected.
-    // Issue #174: only once, since every rebind spent ~10 s in the socket work and Lightroom stuttered.
-    expect(read("Bridge.lua")).toMatch(/if S\.receiveConnected then S\.startupRebindDone = true end\s+if not S\.startupRebindDone and S\.boundAt and \(LrDate\.currentTime\(\) - S\.boundAt\) > STARTUP_REBIND_SECONDS then\s+Stall\.rebind\(\)\s+S\.startupRebindDone = true\s+S\.receiveNeedsRebind, S\.sendNeedsRebind = true, true/);
+    // Issue #174: only once, since every rebind spent ~10 s in the socket work and Lightroom stuttered. Issue #176:
+    // only after a start that overlapped another, not on every start; other lost listeners rebind on their events.
+    expect(read("Bridge.lua")).not.toMatch(/STARTUP_REBIND|startupRebind/);
+    expect(read("Bridge.lua")).toMatch(/if S\.receiveConnected then S\.overlapped = false end\s+if S\.overlapped and S\.boundAt and \(LrDate\.currentTime\(\) - S\.boundAt\) > OVERLAP_REBIND_SECONDS then\s+Stall\.rebind\([^)]*\)\s+S\.overlapped = false\s+S\.receiveNeedsRebind, S\.sendNeedsRebind = true, true/);
+    expect(read("Bridge.lua")).toMatch(/LrTasks\.pcall\(Endpoint\.recentStart, OVERLAP_SECONDS\)[\s\S]{0,400}LrTasks\.pcall\(Endpoint\.newToken\)/);
+    // codeOnly blanks string literals to "".
+    expect(read("Sockets.lua")).toMatch(/S\.receiveConnected = false\s+Log\.info\(""\)\s+rebindOr\(B, "", ""\)/);
+    // PR #191 denoise:check pass 2: a new connection cancels that rebind, which otherwise closed it.
+    expect(read("Sockets.lua")).toMatch(/S\.receiveConnected = true\s+(--[^\n]*\s+)*S\.receiveNeedsRebind = false/);
+    expect(read("Sockets.lua")).toMatch(/if S\.rebindAt\[side\] and now - S\.rebindAt\[side\] < REBIND_MIN_SECONDS then\s+S\[side \.\. ""\] = true/);
     // Issue #174 diagnosis: every monitor tick is timed, its socket work too (Stall.lua).
     // Issue #174 runs 2-3: Disable did not end the loop, a disabled plugin's init started the bridge and Enable
     // did not start it. Now Enable and Disable have their own scripts, and init starts nothing while disabled.

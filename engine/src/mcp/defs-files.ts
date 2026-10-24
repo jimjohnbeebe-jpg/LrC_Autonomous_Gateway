@@ -1,5 +1,6 @@
 // The MCP definitions of the collection and file tools (GitHub issue #55; tools-collections.ts,
-// tools-files.ts): lr_create_collection, lr_add_to_collection, lr_export_photos and lr_import_photos.
+// tools-files.ts): lr_create_collection, lr_add_to_collection, lr_export_photos and lr_import_photos; and
+// lr_apply_denoise (tools-denoise.ts, issue #190), which works through photos the same way.
 
 import { z } from "zod";
 import { MAX_COLLECTION_PHOTOS, MAX_EXPORT_PHOTOS, isAbsoluteFolder } from "../library/index.js";
@@ -69,6 +70,11 @@ const importArgs = z.object({
     .describe("to go on after a call that ran out of time: that call's `resume_after` (a source file's path); the call starts with the file after it. Omit to start from the first file"),
 });
 
+const denoiseArgs = z.object({
+  uuids: uuids(100),
+  amount: z.number().int().min(1).max(100).describe("Denoise amount, 1-100, as Lightroom's Detail panel shows it (50 is its default)"),
+});
+
 const META_WRITE =
   "Tell the user what will change before calling. Runs only between editing sessions. If Lightroom stops answering, the call stops and the " +
   "error lists what was done.";
@@ -120,5 +126,19 @@ export const FILE_DEFS: ToolDef[] = [
     schema: importArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     run: (tools, args) => tools.importPhotos(args as z.infer<typeof importArgs>),
+  },
+  {
+    name: "lr_apply_denoise",
+    title: "Apply AI Denoise",
+    description:
+      "Turn on Lightroom's AI Denoise (Detail panel) at `amount` on photos named by uuid, or change the amount where it is on; Lightroom Classic 15 or later. " +
+      "For each photo Lightroom switches to Develop and selects it, then the module and the selection are put back. Each photo's `status`: applied, " +
+      "amount_changed (`previous_amount`), unchanged (already at that amount), skipped (Lightroom says Denoise is not available for it, `reason`) or " +
+      "failed (`reason`; Lightroom can show a change and not save it while it still computes: try again later). A changed photo first gets a snapshot " +
+      "(`snapshot`, \"AVG pre-denoise …\"), which puts it back. Lightroom computes Denoise in the background, about 10 s a photo. Not while a session is open. " +
+      `${TIMED}`,
+    schema: denoiseArgs,
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    run: (tools, args) => tools.applyDenoise(args as z.infer<typeof denoiseArgs>),
   },
 ];

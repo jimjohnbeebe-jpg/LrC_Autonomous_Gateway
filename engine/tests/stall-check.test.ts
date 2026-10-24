@@ -4,7 +4,7 @@ import { parseLog, suggest, summarize } from "../src/devtools/stall-check.js";
 const LOG = [
   "2026-10-17 18:00:00.000 INFO  bridge: starting generation 1 (receive 8765, send 8766)",
   "2026-10-17 18:00:00.100 INFO  stall-diag: on",
-  "2026-10-17 18:00:20.500 INFO  stall-diag: startup rebind",
+  "2026-10-17 18:00:20.500 INFO  stall-diag: rebind receive (closed, generation 1)",
   "2026-10-17 18:00:30.900 INFO  stall-diag: tend 10420 ms",
   "2026-10-17 18:00:32.000 WARN  stall-diag: stall 4800 ms after tend",
   "2026-10-17 18:00:40.000 INFO  bridge: receive: closed",

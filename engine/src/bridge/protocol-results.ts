@@ -265,4 +265,13 @@ export const COMMAND_RESULTS = {
   // clear_pending_ai (plugin 0.20.0, issue #124): drops Pending.lua's guard on the photo, so writes to it go
   // ahead again; `cleared` says whether one was there. Sent when a session is abandoned (session\abandon.ts).
   clear_pending_ai: z.object({ photo_uuid: z.string(), cleared: z.boolean() }),
+  // apply_denoise (plugin 1.1.0, issue #190, Denoise.lua): one photo's outcome; `snapshot` once one was taken.
+  apply_denoise: z.object({
+    uuid: z.string(),
+    status: z.enum(["applied", "amount_changed", "unchanged", "skipped", "failed"]),
+    reason: z.string().optional(),
+    previous_amount: z.number().optional(),
+    snapshot: z.object({ id: z.string(), name: z.string() }).optional(),
+    ms: z.number(),
+  }),
 } as const;

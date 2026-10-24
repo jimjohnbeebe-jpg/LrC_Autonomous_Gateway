@@ -15,7 +15,9 @@ type CorrectionState = Record<End, { pulls: number; table: number }>;
 /** Why a pass is undone: the limit it breached, described. */
 export type Breach = { limit: GuardrailAction["limit"]; reason: string };
 
-const clipOf = (m: Metrics, end: End): number => (end === "high" ? m.clip_high_pct : m.clip_low_pct);
+// The high end is blown tone, two or more channels clipped (issue #186); one channel alone is an advisory.
+const clipOf = (m: Metrics, end: End): number => (end === "high" ? m.clip_high_tone_pct : m.clip_low_pct);
+const clipName = (end: End): string => (end === "high" ? "clip_high_tone_pct" : "clip_low_pct");
 const limitOf = (limits: Limits, end: End): number => (end === "high" ? limits.clipHighPct : limits.clipLowPct);
 
 /**
@@ -59,14 +61,14 @@ export async function correct(
       actions.push({
         kind: "corrected",
         limit: end === "high" ? "clip_high" : "clip_low",
-        reason: `clip_${end}_pct was ${clipOf(m, end)} %, over the limit of ${limitOf(s.limits, end)} %`,
+        reason: `${clipName(end)} was ${clipOf(m, end)} %, over the limit of ${limitOf(s.limits, end)} %`,
         history_name: name,
         changes: fix,
         metrics_after: summarize(now.metrics),
       });
     }
   }
-  actions.push(...unmet(now.metrics, s.limits, guarded, before, baseline));
+  actions.push(...unmet(now.metrics, s.limits, guarded, before, baseline), ...advisory(now.metrics, s.limits));
   return { view: current, rendered: now, actions };
 }
 
@@ -118,8 +120,8 @@ function unmet(m: Metrics, limits: Limits, guarded: readonly End[], before: Metr
         kind: "unmet",
         limit: end === "high" ? "clip_high" : "clip_low",
         reason: guarded.includes(end)
-          ? `clip_${end}_pct is still ${value} %, over the limit of ${limit} %, after the corrections this pass allows`
-          : `clip_${end}_pct is ${value} %, over the limit of ${limit} %; left alone (clip_baseline off): ${why}`,
+          ? `${clipName(end)} is still ${value} %, over the limit of ${limit} %, after the corrections this pass allows`
+          : `${clipName(end)} is ${value} %, over the limit of ${limit} %; left alone (clip_baseline off): ${why}`,
         history_name: null,
         changes: {},
         metrics_after: summarize(m),
@@ -127,6 +129,20 @@ function unmet(m: Metrics, limits: Limits, guarded: readonly End[], before: Metr
     }
   }
   return actions;
+}
+
+/**
+ * Clipping over the high limit in single channels only (blown tone within it): saturated colour,
+ * not blown highlights, so no slider is moved; the row names the channel for Claude to judge
+ * [stated: Jim, 2026-10-24, issue #186, "advisory only"].
+ */
+function advisory(m: Metrics, limits: Limits): GuardrailAction[] {
+  if (m.clip_high_pct <= limits.clipHighPct || m.clip_high_tone_pct > limits.clipHighPct) return [];
+  const [channel, pct] = (Object.entries(m.clip_high_pct_by_channel) as [string, number][]).reduce((a, b) => (b[1] > a[1] ? b : a));
+  const reason =
+    `clip_high_pct is ${m.clip_high_pct} % (over the limit of ${limits.clipHighPct} %), mostly the ${channel} channel alone (${pct} %), ` +
+    `while blown tone (clip_high_tone_pct) is ${m.clip_high_tone_pct} %: saturated colour, not blown highlights; nothing was moved`;
+  return [{ kind: "advisory", limit: "clip_high", reason, history_name: null, changes: {}, metrics_after: summarize(m) }];
 }
 
 /**
@@ -140,7 +156,7 @@ export function clipBreach(s: Session, before: Metrics, after: Metrics): Breach 
     if (clipOf(after, end) > limit && clipOf(before, end) <= limit) {
       return {
         limit: end === "high" ? "clip_high" : "clip_low",
-        reason: `clip_${end}_pct is ${clipOf(after, end)} % after the corrections, over the limit of ${limit} %; it was ${clipOf(before, end)} % before the pass`,
+        reason: `${clipName(end)} is ${clipOf(after, end)} % after the corrections, over the limit of ${limit} %; it was ${clipOf(before, end)} % before the pass`,
       };
     }
   }

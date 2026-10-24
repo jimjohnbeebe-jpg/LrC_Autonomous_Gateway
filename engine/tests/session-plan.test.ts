@@ -22,7 +22,7 @@ const map = loadDefaultParamMap();
 const current: CanonicalSettings = { exposure: 0.33, whites: 0, highlights: -21, blacks: 0, contrast: 0, temperature: 5500, "lens.profile_enable": 1, camera_profile: "Camera Neutral" };
 const limits = { clipHighPct: 0.5, clipLowPct: 1.0 };
 /** A metrics summary with the given clipping. */
-const withClip = (high: number, low: number): MetricsSummary => ({ ...summarize(computeMetrics(Uint8Array.from([128, 128, 128]), 1, 1, 3)), clip_high_pct: high, clip_low_pct: low });
+const withClip = (high: number, low: number): MetricsSummary => ({ ...summarize(computeMetrics(Uint8Array.from([128, 128, 128]), 1, 1, 3)), clip_high_pct: high, clip_high_tone_pct: high, clip_low_pct: low });
 
 describe("session rules", () => {
   it("decays per pass: 1.0, 0.6, 0.4, 0.25, then 0.25", () => {
@@ -100,7 +100,7 @@ describe("the projected guardrail", () => {
     const plan = applyProjectedGuardrail(planStep({ exposure: 0.3, whites: 10, shadows: 20, highlights: -10 }, { ...current, shadows: 0 }, 1, map), withClip(0.8, 0), limits, new Map(), "raw", true);
     expect(plan.refused.map((r) => r.name)).toEqual(["exposure", "whites"]);
     expect(plan.changes.map((c) => c.name)).toEqual(["shadows", "highlights"]);
-    expect(plan.refused[0]?.reason).toMatch(/clip_high_pct is 0.8 %, at or over the limit of 0.5 %/);
+    expect(plan.refused[0]?.reason).toMatch(/clip_high_tone_pct is 0.8 %, at or over the limit of 0.5 %/);
   });
 
   it("refuses darkening sliders when the shadows are at their limit", () => {
@@ -117,6 +117,11 @@ describe("the projected guardrail", () => {
     expect(plan.clamped.at(-1)?.reason).toMatch(/probe's slope/);
     const lowering = applyProjectedGuardrail(planStep({ exposure: -0.5 }, current, 1, map), withClip(0.2, 0), limits, slopes, "raw", true);
     expect(lowering.changes[0]?.delta).toBe(-0.5); // lowers clip_high; clip_low rises 0.25, within its room
+  });
+
+  it("caps by the two-channel slope, so a probe that raised one-channel clipping only caps nothing (issue #186, Greptile, PR #191)", () => {
+    const slopes = new Map([["exposure", { luma_mean: 40, clip_high_pct: 20, clip_high_tone_pct: 0, clip_low_pct: 0 }]]);
+    expect(applyProjectedGuardrail(planStep({ exposure: 0.8 }, current, 1, map), withClip(0.2, 0), limits, slopes, "raw", true).changes[0]?.delta).toBe(0.8);
   });
 
   it("without clip_baseline leaves an end already over its limit alone, and still guards an end within it (issue #130)", () => {

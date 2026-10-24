@@ -5,7 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 import type { BridgeClient } from "../src/bridge/index.js";
-import { CANDIDATES, build, computeAi, hasAi, judge, verdict } from "../src/devtools/mask-combine-probe.js";
+import { CANDIDATES, KIND_CANDIDATES, build, computeAi, hasAi, judge, noDepthMap, verdict, withSample } from "../src/devtools/mask-combine-probe.js";
 import { VERIFIED_FORMS, formOf } from "../src/params/index.js";
 import { newCorrection } from "../src/params/mask-ops.js";
 import { C, IMAGE, MASK_TABLE_KEY, type Component, type Correction } from "../src/params/mask-table.js";
@@ -32,6 +32,19 @@ describe("masks:combine candidates", () => {
 
   it("knows which candidates hold an AI part", () => {
     expect(CANDIDATES.filter((c) => { const b = build([], c); return hasAi(b.entries, b.id); }).map((c) => c.id)).toEqual(["radial_add_sky", "radial_subtract_sky", "radial_intersect_sky", "sky_add_radial"]);
+  });
+});
+
+describe("masks:kinds candidates (issue #190)", () => {
+  it("builds a colour range with the sampled colour, a brush and a depth range, and skips the depth range on a photo without a depth map", () => {
+    const kinds = KIND_CANDIDATES.map((raw) => {
+      const c = withSample(raw, [0.8, 0.5, 0.2]);
+      const { entries, id } = build([theirs], c);
+      expect(entries[0], c.id).toEqual(theirs);
+      return { c, kind: parts(entries.find((e) => e[C.id] === id))[0]?.["What"], skip: noDepthMap(c, sdk(entries), id) };
+    });
+    expect(kinds.map((k) => [k.c.id, k.kind, k.skip])).toEqual([["color_range", "Mask/RangeMask", false], ["brush", "Mask/Aggregate", false], ["depth_range", "Mask/RangeMask", true]]);
+    expect(verdict([], 0, KIND_CANDIDATES).lines).toHaveLength(3);
   });
 });
 

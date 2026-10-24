@@ -63,29 +63,21 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
       expect(readLog().passes[1]?.guardrail_actions).toHaveLength(2);
     });
 
-    it("undoes a step still over a limit after its 3 corrections when the photo was within it before (PHASE4_PLAN decision 1)", async () => {
+    it("leaves one-channel clipping alone and says so in an advisory: no correction, no revert (issue #186)", async () => {
       lr.settings["Whites2012"] = -10; // bright, but within the limits
       await manager.begin({ intent_id: "test_plain" });
-      const before = structuredClone(lr.settings);
-      // Warming clips the red channel in the tonal model; temperature is not a slider the pull-back
-      // knows, and the three fixed steps do not bring it back under.
+      // Warming clips the red channel alone in the tonal model: saturated colour, not blown tone.
       const out = await manager.step({ session_id: ID, settings: { temperature: wb(pipeline).step(1500) }, rationale: "much warmer" });
-      expect(lr.history).toEqual([`AVG ${SHORT} pass 1/4`, ...[1, 2, 3].map((k) => `AVG ${SHORT} pass 1/4 guard ${k}`), `AVG ${SHORT} pass 1/4 clip revert`]);
-      const actions = out.json["guardrail_actions"] as Array<{ kind: string; limit: string; reason: string }>;
-      expect(actions.map((a) => [a.kind, a.limit])).toEqual([
-        ["corrected", "clip_high"],
-        ["corrected", "clip_high"],
-        ["corrected", "clip_high"],
-        ["unmet", "clip_high"],
-        ["reverted", "clip_high"],
-      ]);
-      expect(actions[4]?.reason).toMatch(/before the pass/);
-      expect(out.json["undone"]).toMatchObject({ limit: "clip_high", reason: actions[4]?.reason }); // Greptile, PR #27
-      for (const key of [wb(pipeline).key, "Whites2012", "Highlights2012", "Exposure2012"]) expect(lr.settings[key]).toBe(before[key]);
-      expect((out.json["metrics"] as { clip_high_pct: number }).clip_high_pct).toBeLessThanOrEqual(0.5);
-      const log = readLog();
-      expect(log.passes[1]?.metrics_after.clip_high_pct).toBeLessThanOrEqual(0.5);
-      expect(out.json["pass"]).toBe("1/4");
+      expect(lr.history).toEqual([`AVG ${SHORT} pass 1/4`]);
+      const actions = out.json["guardrail_actions"] as Array<{ kind: string; limit: string; reason: string; changes: Record<string, number> }>;
+      expect(actions.map((a) => [a.kind, a.limit])).toEqual([["advisory", "clip_high"]]);
+      expect(actions[0]?.reason).toMatch(/mostly the r channel alone .*nothing was moved$/);
+      expect(actions[0]?.changes).toEqual({});
+      expect(out.json["undone"]).toBeUndefined();
+      const metrics = out.json["metrics"] as { clip_high_pct: number; clip_high_tone_pct: number };
+      expect(metrics.clip_high_pct).toBeGreaterThan(0.5);
+      expect(metrics.clip_high_tone_pct).toBeLessThanOrEqual(0.5);
+      expect(readLog().passes[1]?.guardrail_actions.map((a) => a.kind)).toEqual(["advisory"]);
     });
 
     it("does not undo a step when the photo was already over the limit before it", async () => {

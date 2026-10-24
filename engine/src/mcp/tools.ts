@@ -42,6 +42,7 @@ import {
 } from "./tools-catalog.js";
 import { addToCollection, createCollection, type AddToCollectionArgs, type CreateCollectionArgs } from "./tools-collections.js";
 import { getActivePhotoContext, getMetrics, getPreview, type MetricsArgs, type PreviewArgs } from "./tools-context.js";
+import { applyDenoise, type ApplyDenoiseArgs } from "./tools-denoise.js";
 import { exportPhotos, importPhotos, type Budget, type ExportPhotosArgs, type ImportPhotosArgs } from "./tools-files.js";
 import { deleteIntent, getIntent, listIntents, saveIntent, type DeleteIntentArgs, type SaveIntentArgs } from "./tools-intents.js";
 import { getMetadata, setFlag, setIptc, type GetMetadataArgs, type SetFlagArgs, type SetIptcArgs } from "./tools-metadata.js";
@@ -246,6 +247,10 @@ export class Tools {
 
   importPhotos(args: ImportPhotosArgs, budget?: Budget): Promise<ToolOutput> {
     return importPhotos(this.ctx, args, budget);
+  }
+
+  applyDenoise(args: ApplyDenoiseArgs, budget?: Budget): Promise<ToolOutput> {
+    return applyDenoise(this.ctx, args, budget);
   }
 
   // --- Phase 2's write, for the Phase 2 check (not offered over MCP).

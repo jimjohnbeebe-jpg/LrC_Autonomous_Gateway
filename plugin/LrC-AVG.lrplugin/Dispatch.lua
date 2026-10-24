@@ -11,6 +11,7 @@
 local LrTasks = import 'LrTasks'
 
 local Catalog = require 'Catalog'
+local Denoise = require 'Denoise'
 local Develop = require 'Develop'
 local Hud = require 'Hud'
 local Json = require 'Json'
@@ -59,6 +60,7 @@ function Dispatch.handlers(hello)
         create_ai_mask_dc = Masks.createAiMaskDc,
         probe_write_gate = Masks.probeWriteGate,
         clear_pending_ai = Pending.clearPhoto,
+        apply_denoise = Denoise.apply,
     }
     return HANDLERS
 end

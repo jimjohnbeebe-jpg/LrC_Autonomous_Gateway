@@ -15,7 +15,8 @@ export type Refusal = { name: string; reason: string; by: "guardrail" | "slider"
 export type StepPlan = { changes: Change[]; clamped: Clamp[]; refused: Refusal[]; unchanged: string[] };
 export type Limits = { clipHighPct: number; clipLowPct: number };
 /** Metric change per unit of a slider, from lr_probe. */
-export type Slope = { luma_mean: number; clip_high_pct: number; clip_low_pct: number };
+/** `clip_high_tone_pct`: engine 1.1.0 (issue #186); a probe logged before it has only clip_high_pct. */
+export type Slope = { luma_mean: number; clip_high_pct: number; clip_high_tone_pct?: number | undefined; clip_low_pct: number };
 
 const EPSILON = 1e-9;
 const sign = (x: number): number => (x > EPSILON ? 1 : x < -EPSILON ? -1 : 0);
@@ -105,8 +106,10 @@ export function applyProjectedGuardrail(plan: StepPlan, last: MetricsSummary | n
     }
     const direction = sign(change.delta);
     let refusedFor: string | null = null;
-    if (RAISES_HIGHLIGHTS[change.name] === direction && last.clip_high_pct >= limits.clipHighPct && guards(last.clip_high_pct, limits.clipHighPct)) {
-      refusedFor = `clip_high_pct is ${fmt(last.clip_high_pct)} %, at or over the limit of ${fmt(limits.clipHighPct)} %; ${change.name} ${signed(change.delta)} would push it higher`;
+    // The high end is blown tone (issue #186); a log summary from before engine 1.1.0 has only clip_high_pct.
+    const high = last.clip_high_tone_pct ?? last.clip_high_pct;
+    if (RAISES_HIGHLIGHTS[change.name] === direction && high >= limits.clipHighPct && guards(high, limits.clipHighPct)) {
+      refusedFor = `clip_high_tone_pct is ${fmt(high)} %, at or over the limit of ${fmt(limits.clipHighPct)} %; ${change.name} ${signed(change.delta)} would push it higher`;
     } else if (CRUSHES_SHADOWS[change.name] === direction && last.clip_low_pct >= limits.clipLowPct && guards(last.clip_low_pct, limits.clipLowPct)) {
       refusedFor = `clip_low_pct is ${fmt(last.clip_low_pct)} %, at or over the limit of ${fmt(limits.clipLowPct)} %; ${change.name} ${signed(change.delta)} would push it higher`;
     }
@@ -122,7 +125,8 @@ export function applyProjectedGuardrail(plan: StepPlan, last: MetricsSummary | n
         const room = (limit - now) / slopePerUnit; // signed change that reaches the limit
         if (Math.abs(room) < Math.abs(allowed)) allowed = room;
       };
-      cap(slope.clip_high_pct, last.clip_high_pct, limits.clipHighPct);
+      // The tone slope, so clipping in one channel alone caps nothing (Greptile, PR #191).
+      cap(slope.clip_high_tone_pct ?? slope.clip_high_pct, high, limits.clipHighPct);
       cap(slope.clip_low_pct, last.clip_low_pct, limits.clipLowPct);
       if (allowed !== change.delta) {
         // Whole minimum steps within the room; the epsilon keeps 0.3 / 0.05 from flooring to 5.

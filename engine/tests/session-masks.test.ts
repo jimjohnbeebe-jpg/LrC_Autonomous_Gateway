@@ -96,7 +96,7 @@ describe("mask tools: list and passes", () => {
     const id = idOf(await create());
     const writes = lr.history.length;
     expect(await fails(manager.deleteMask({ ...pass, mask_id: "NOPE" }))).toMatchObject({ code: "MASK_NOT_FOUND", recoverable: false });
-    expect(await fails(create({ kind: "brush" }))).toMatchObject({ code: "MASK_KIND_NOT_SUPPORTED", message: expect.stringMatching(/strokes/) });
+    expect(await fails(create({ kind: "objects" }))).toMatchObject({ code: "MASK_KIND_NOT_SUPPORTED", message: expect.stringMatching(/a stroke or a box/) });
     expect(await fails(manager.editMask({ ...pass, mask_id: id, name: "AVG bottom" }))).toMatchObject({ code: "NO_CHANGE" });
     expect(lr.history.length).toBe(writes);
     expect(manager.current()?.pass).toBe("1/4");

@@ -73,6 +73,7 @@ function Endpoint.writePorts(receivePort, sendPort, pluginVersion, token)
         token_check = token:sub(1, Endpoint.TOKEN_CHECK_CHARS),
         plugin_version = pluginVersion,
         written_at = os.date("!%Y-%m-%dT%H:%M:%SZ"),
+        written_epoch = os.time(), -- plugin 1.1.0: Endpoint.recentStart
     })
     local ok, err = write(path, text)
     if not ok then
@@ -81,6 +82,18 @@ function Endpoint.writePorts(receivePort, sendPort, pluginVersion, token)
     end
     Log.info(string.format("bridge: ports %d/%d written to %s", receivePort, sendPort, path))
     return path
+end
+
+-- Whether the ports file was written by a start under `seconds` ago (Bridge.lua: an overlapping start, issue
+-- #176). A file from before plugin 1.1.0 has no written_epoch and counts as old.
+function Endpoint.recentStart(seconds)
+    local fh = io.open(Endpoint.portsPath(), "r")
+    if not fh then return false end
+    local text = fh:read("*a")
+    fh:close()
+    local ok, data = pcall(Json.decode, text) -- plain pcall: pure Lua, no yield
+    local at = ok and type(data) == "table" and tonumber(data.written_epoch) or nil
+    return at ~= nil and os.time() - at < seconds
 end
 
 return Endpoint

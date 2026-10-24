@@ -52,7 +52,7 @@ const realBudget = (): Budget => ({ now: () => performance.now(), ms: CALL_BUDGE
  * Lightroom answered becomes a failure and the next item runs; a command with no answer stops the call.
  * Returns the failures and the items not started. `start` is when the budget's clock started.
  */
-async function eachInBudget(
+export async function eachInBudget(
   items: readonly string[],
   budget: Budget,
   done: () => unknown,

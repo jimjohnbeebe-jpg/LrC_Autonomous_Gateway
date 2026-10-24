@@ -15,6 +15,7 @@ local LrSocket = import 'LrSocket'
 local LrTasks = import 'LrTasks'
 
 local Log = require 'Log'
+local Stall = require 'Stall'
 
 local Sockets = {}
 
@@ -42,6 +43,28 @@ local function logBindFailure(B, side, port, err)
         .. "process or a leftover instance of this plugin may hold it", side, port, err, B.generation))
 end
 
+-- Issue #176: a listener is bound afresh when an event says it is gone (the receive socket closed, or a bind
+-- "failed to open" while no engine is connected), instead of on a timer after start: the one startup rebind
+-- cost 10-12 s of socket work and lined up with Lightroom's freezes [handle: docs\reports\phase9\stall-174.md
+-- "Fix and verification run"]. Automaat rebinds its request socket on the same events [upstream claim: Automaat
+-- commit 4a30a85, PR #296]. At most once per REBIND_MIN_SECONDS per side; within it the side re-arms instead, so a
+-- Lightroom that reports such events on every idle re-arm cannot turn them into a rebind every 10 s (#174)
+-- [inference: whether it does on Windows is what npm run stall:check shows].
+local REBIND_MIN_SECONDS = 60
+
+local function rebindOr(B, side, why)
+    local S, now = B.S, LrDate.currentTime()
+    S.rebindAt = S.rebindAt or {}
+    if S.rebindAt[side] and now - S.rebindAt[side] < REBIND_MIN_SECONDS then
+        S[side .. "NeedsReconnect"] = true
+        return
+    end
+    S.rebindAt[side] = now
+    S[side .. "NeedsRebind"] = true
+    Stall.rebind(side, why, B.generation)
+end
+Sockets.rebindOr = rebindOr
+
 local function bindReceive(B, myGen)
     local S = B.S
     local function live() return S.receiveGen == myGen and B.current() end
@@ -53,6 +76,10 @@ local function bindReceive(B, myGen)
         onConnected = function()
             if not live() then return end
             S.receiveConnected = true
+            -- The listener works: drop a rebind asked for on the last close. Left queued, the monitor ran it
+            -- 1.7 s after the engine reconnected and closed that connection [handle: %TEMP%\LrC-AVG\bridge.log
+            -- 2026-10-24 10:11:00.819-10:11:02.791, denoise_check_2026-10-24T17-09-00-151Z.json put_back].
+            S.receiveNeedsRebind = false
             S.lastInbound = LrDate.currentTime()
             -- A new engine connection. If the send socket still looks connected, that is the
             -- old client it never noticed leaving (P-13): rebind it for the new one.
@@ -72,15 +99,16 @@ local function bindReceive(B, myGen)
         onClosed = function()
             if not live() then return end
             S.receiveConnected = false
-            S.receiveNeedsReconnect = true
             Log.info("bridge: receive: closed")
+            rebindOr(B, "receive", "closed")
         end,
         onError = function(_, err)
             if not live() then return end
             local e = tostring(err)
             logBindFailure(B, "receive", B.receivePort, e)
             if isNoClientError(e) then
-                if not S.receiveConnected then S.receiveNeedsReconnect = true end
+                if not S.receiveConnected and e:find("failed to open", 1, true) then rebindOr(B, "receive", "failed to open")
+                elseif not S.receiveConnected then S.receiveNeedsReconnect = true end
             else
                 S.receiveConnected = false
                 S.receiveNeedsReconnect = true
@@ -115,7 +143,8 @@ local function bindSend(B, myGen)
             local e = tostring(err)
             logBindFailure(B, "send", B.sendPort, e)
             if isNoClientError(e) then
-                if not S.sendConnected then S.sendNeedsReconnect = true end
+                if not S.sendConnected and e:find("failed to open", 1, true) then rebindOr(B, "send", "failed to open")
+                elseif not S.sendConnected then S.sendNeedsReconnect = true end
             else
                 S.sendConnected = false
                 S.sendNeedsRebind = true
@@ -137,7 +166,7 @@ function Sockets.rebindReceive(B)
     LrTasks.sleep(0.1)
     S.receiveSocket = bindReceive(B, S.receiveGen)
     S.receiveNeedsRebind, S.receiveNeedsReconnect = false, false
-    S.boundAt = LrDate.currentTime() -- Bridge.lua STARTUP_REBIND_SECONDS counts from here
+    S.boundAt = LrDate.currentTime() -- Bridge.lua OVERLAP_REBIND_SECONDS counts from here
 end
 
 function Sockets.rebindSend(B)

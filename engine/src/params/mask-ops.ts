@@ -12,6 +12,7 @@
 
 import { IDENTITY, photoPoint, type CropFrame } from "./crop-frame.js";
 import { checkKind, geometryFields, newComponent, unit, type Geometry, type Point } from "./mask-build.js";
+import { brushPin } from "./mask-brush.js";
 import { aiPart, editParts, precheckParts, type Combine } from "./mask-combine.js";
 import {
   AI_KINDS,
@@ -83,7 +84,7 @@ function pin(m: Component, point: Point | null): Point {
   const mid = (a: string, b: string): number => (Number(m[a]) + Number(m[b])) / 2;
   if (m[M.what] === WHAT.linear) return { x: mid(LINEAR.zeroX, LINEAR.fullX), y: mid(LINEAR.zeroY, LINEAR.fullY) };
   if (m[M.what] === WHAT.radial) return { x: mid(RADIAL.left, RADIAL.right), y: mid(RADIAL.top, RADIAL.bottom) };
-  return { x: 0.5, y: 0.5 };
+  return brushPin(m) ?? { x: 0.5, y: 0.5 };
 }
 
 /** A new correction of `kind`, named `name`, with the sliders asked for (stored values); `g` in the preview's frame, `point` in the photo's (pointFor). */
@@ -99,10 +100,10 @@ export function newCorrection(kind: MaskKind, name: string, g: Geometry, point: 
   return out as Correction;
 }
 
-/** A person's point, required for one-person kinds and refused for the others; given in the preview's frame, returned in the photo's. */
+/** A person's point, or a colour range's (the colour to select): required for those kinds, refused for the others; given in the preview's frame, returned in the photo's. */
 function pointFor(kind: MaskKind, point: Point | undefined, frame: CropFrame): Point | null {
-  const needs = isAiKind(kind) && AI_KINDS[kind].point;
-  if (needs && !point) throw new MaskError("INVALID_ARGUMENTS", `A ${kind} mask needs point: {x, y} in 0-1 on the person (the face, for face skin).`);
+  const needs = kind === "color_range" || (isAiKind(kind) && AI_KINDS[kind].point);
+  if (needs && !point) throw new MaskError("INVALID_ARGUMENTS", kind === "color_range" ? "A color_range mask needs point: {x, y} in 0-1 on the colour to select." : `A ${kind} mask needs point: {x, y} in 0-1 on the person (the face, for face skin).`);
   if (!needs && point) throw new MaskError("INVALID_ARGUMENTS", `A ${kind} mask takes no point.`);
   return point ? photoPoint(frame, { x: unit(point.x, "point.x"), y: unit(point.y, "point.y") }, "point") : null;
 }

@@ -8,7 +8,7 @@ import { IDENTITY, boxToView, isIdentity, radialToBox, toView, type CropFrame } 
 import { ellipseOf } from "./mask-build.js";
 import { modeOf } from "./mask-combine.js";
 import { boundsOf, instanceOf, type Box } from "./mask-person.js";
-import { C, IMAGE, LINEAR, LOCAL_PARAMS, M, RADIAL, RANGE, WHAT, componentKind, components, computed, type Component, type Correction } from "./mask-table.js";
+import { BRUSH, C, IMAGE, LINEAR, LOCAL_PARAMS, M, RADIAL, RANGE, WHAT, componentKind, components, computed, type Component, type Correction } from "./mask-table.js";
 
 export type MaskSummary = {
   id: string;
@@ -54,9 +54,19 @@ const viewOf = (f: CropFrame) => {
 
 function geometryOf(m: Component, f: CropFrame): Record<string, unknown> | undefined {
   const kind = componentKind(m);
-  if (kind === "luminance") {
-    const lum = (m[RANGE.holder] as Record<string, unknown>)[RANGE.lumRange];
-    return { lum_range: typeof lum === "string" ? lum.split(/\s+/).map(Number) : lum };
+  const range = m[RANGE.holder] as Record<string, unknown> | undefined;
+  const numbers = (v: unknown): unknown => (typeof v === "string" ? v.split(/\s+/).map(Number) : v);
+  if (kind === "luminance") return { lum_range: numbers(range?.[RANGE.lumRange]) };
+  if (kind === "depth_range") return { depth_range: numbers(range?.[RANGE.depthRange]) };
+  if (kind === "brush") {
+    const strokes = (m[BRUSH.masks] as Component[] | undefined) ?? [];
+    return { strokes: strokes.length, dabs: strokes.reduce((n, s) => n + ((s[BRUSH.dabs] as unknown[] | undefined) ?? []).filter((t) => String(t).startsWith("d ")).length, 0) };
+  }
+  if (kind === "color_range") {
+    const model = (range?.[RANGE.pointModels] as unknown[] | undefined)?.[0];
+    const [r, g, b, x, y] = typeof model === "string" ? model.split(/\s+/).map(Number) : [];
+    if (f.refused) return { unavailable: `not shown: ${f.refused}` };
+    return { point: viewOf(f).point(x, y), color: [r, g, b], color_amount: range?.[RANGE.colorAmount] };
   }
   const at = m[IMAGE.referencePoint];
   const placed = kind === "linear" || kind === "radial" || typeof at === "string";

@@ -85,7 +85,7 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
       const stepped = await step("C"); // exposure +0.1 pushes further into the high end that was over before
       expect(stepped.json).toMatchObject({ refused: [], applied: [expect.objectContaining({ name: "exposure", delta: 0.1 })] });
       expect(lr.history.filter((h) => h.startsWith(`AVG ${SHORT} C pass 1/4`))).toEqual([`AVG ${SHORT} C pass 1/4`]);
-      expect((stepped.json["guardrail_actions"] as Array<{ reason: string }>).map((a) => a.reason)).toEqual([expect.stringMatching(/^clip_high_pct is .*; left alone \(clip_baseline off\): it was [\d.]+ % before this pass$/)]);
+      expect((stepped.json["guardrail_actions"] as Array<{ reason: string }>).map((a) => a.reason)).toEqual([expect.stringMatching(/^clip_high_tone_pct is .*; left alone \(clip_baseline off\): it was [\d.]+ % before this pass$/)]);
     });
 
     it("returns a contact sheet of the copies as the image", async () => {

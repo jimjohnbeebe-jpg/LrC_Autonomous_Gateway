@@ -13,5 +13,6 @@ export {
   summarize,
 } from "./compute.js";
 export type { Metrics, MetricsDelta, MetricsSummary, PerChannel, Percentiles, RegionStats, Stats, StatsDelta } from "./compute.js";
+export { sampleColor } from "./pixel.js";
 export { boxProblem, boxToRect } from "./regions.js";
 export type { PixelRect, Region, RegionBox } from "./regions.js";

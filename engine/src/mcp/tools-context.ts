@@ -6,10 +6,10 @@ import { lightroomNotices, pluginVersionAtLeast, updateNotices } from "../bridge
 import { WHERE_NOTICE, WHERE_PLUGIN } from "../library/index.js";
 import { boxProblem, summarize, type Metrics, type Region, type RegionBox, type RegionStats } from "../metrics/index.js";
 import { ParamError, WHITE_BALANCE_UNITS, processVersionLabel, type FromSdkResult } from "../params/index.js";
-import { cropRegion } from "../preview/index.js";
+import { cropRegion, type RenderedPreview } from "../preview/index.js";
 import { LEFT_OPEN_NOTE, leftOpenJson, type SessionManager, type SessionView, type TargetId } from "../session/index.js";
 import { ToolError, originalMissing, toToolError } from "./errors.js";
-import { DEFAULT_LONG_EDGE, PREVIEW_QUALITY, describe, openSession, readPageFolders, render, run, type ToolContext, type ToolOutput } from "./tools-shared.js";
+import { DEFAULT_LONG_EDGE, PREVIEW_QUALITY, describe, openSession, readPageFolders, render, renderRequest, run, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
 /**
  * The largest export a region crop asks for: the plugin refuses a long edge above 4096
@@ -17,7 +17,7 @@ import { DEFAULT_LONG_EDGE, PREVIEW_QUALITY, describe, openSession, readPageFold
  */
 export const REGION_EXPORT_MAX = 4096;
 
-export type PreviewArgs = { long_edge?: number | undefined; session_id?: string | undefined; target?: TargetId | undefined; region?: RegionBox | undefined };
+export type PreviewArgs = { long_edge?: number | undefined; session_id?: string | undefined; target?: TargetId | undefined; region?: RegionBox | undefined; uuid?: string | undefined };
 export type MetricsArgs = { session_id?: string | undefined; target?: TargetId | undefined };
 
 /** `target` names a photo of an open session; without session_id it has nothing to name. */
@@ -152,6 +152,9 @@ function openSessionJson(open: SessionView, selectedUuid: string): Record<string
 export async function getPreview(ctx: ToolContext, args: PreviewArgs = {}): Promise<ToolOutput> {
   return run(ctx, "lr_get_preview", args, async () => {
     checkTarget(args);
+    if (args.uuid !== undefined && args.session_id !== undefined) {
+      throw new ToolError("INVALID_ARGUMENTS", "uuid names any photo outside a session: give uuid or session_id, not both.", false);
+    }
     await ctx.deps.ensureBridge();
     const session = args.session_id !== undefined ? openSession(ctx, args.session_id) : null;
     const manager = ctx.sessions as SessionManager;
@@ -163,14 +166,14 @@ export async function getPreview(ctx: ToolContext, args: PreviewArgs = {}): Prom
       // lr_get_metrics and the next step describe this image (Greptile, PR #23) [handle:
       // tests\mcp-tools.test.ts "says a session is open on the selected photo, and answers
       // lr_get_metrics from the session's last render"].
-      const preview = session ? await manager.preview(session.id, longEdge, args.target) : await render(ctx, longEdge, undefined, regions);
+      const preview = session ? await manager.preview(session.id, longEdge, args.target) : await renderPhoto(ctx, longEdge, args.uuid, regions);
       const photo = session ? { target: manager.current()?.target } : {};
       const json = { ok: true, ...(session ? { session_id: session.id } : {}), ...ignored, ...photo, ...describe(preview), metrics: summarize(preview.metrics), timings: preview.timings };
       return { json, image: preview.jpeg, log: { uuid: preview.uuid, preview_hash: preview.sha256, metrics: json.metrics, timings: preview.timings } };
     }
     const region = args.region;
     if (!session) {
-      const out = await regionPreview(ctx, null, regions, longEdge, region);
+      const out = await regionPreview(ctx, args.uuid !== undefined ? { photoUuid: args.uuid } : null, regions, longEdge, region);
       return { ...out, json: { ...out.json, ...ignored } };
     }
     return manager.withPhoto(session.id, args.target, (photo) => regionPreview(ctx, { id: session.id, ...photo }, regions, longEdge, region));
@@ -182,11 +185,18 @@ export async function getPreview(ctx: ToolContext, args: PreviewArgs = {}): Prom
  * REGION_EXPORT_MAX), the crop is never enlarged, and `effective_scale` says how many output pixels
  * it has per pixel of the photo (1 = 100 %).
  */
-async function regionPreview(ctx: ToolContext, session: { id: string; target: TargetId; uuid: string } | null, regions: Region[], longEdge: number, region: RegionBox): Promise<ToolOutput> {
+async function regionPreview(
+  ctx: ToolContext,
+  owner: { id: string; target: TargetId; uuid: string } | { photoUuid: string } | null,
+  regions: Region[],
+  longEdge: number,
+  region: RegionBox,
+): Promise<ToolOutput> {
   const problem = boxProblem(region);
   if (problem) throw new ToolError("INVALID_ARGUMENTS", `region: ${problem}`, false);
-  const target = session?.uuid;
-  const photo = await ctx.deps.client.request("get_context", target !== undefined ? { target_uuid: target } : {});
+  const session = owner && "id" in owner ? owner : null;
+  const byUuid = owner && "photoUuid" in owner ? owner.photoUuid : undefined;
+  const photo = await ctx.deps.client.request("get_context", byUuid !== undefined ? { photo_uuid: byUuid } : session ? { target_uuid: session.uuid } : {});
   // The cropped size when the plugin sent it, so a crop in Lightroom does not lower effective_scale
   // [handle: tests\mcp-tools.test.ts "takes the photo's size from croppedDimensions"].
   const size = photoSize(photo);
@@ -203,7 +213,7 @@ async function regionPreview(ctx: ToolContext, session: { id: string; target: Ta
   // It is the last region, so a session region with the same label cannot be mistaken for it.
   const measured = [...regions, { label: "region preview", box: region }];
   let exportEdge = edgeFor(fraction);
-  let preview = await render(ctx, exportEdge, photo.uuid, measured);
+  let preview = await renderPhoto(ctx, exportEdge, byUuid, measured, photo.uuid);
   // Split at once, before the next await, so a concurrent lr_get_metrics never sees the box (Greptile, PR #160).
   let split = splitCrop(ctx, preview.metrics, preview.sha256);
   let crop = await cropRegion(preview.jpeg, region, { longEdge, quality: PREVIEW_QUALITY });
@@ -220,7 +230,7 @@ async function regionPreview(ctx: ToolContext, session: { id: string; target: Ta
     const needed = edgeFor(Math.max(region.w * (preview.width / long), region.h * (preview.height / long)));
     if (needed > exportEdge) {
       exportEdge = needed;
-      preview = await render(ctx, exportEdge, photo.uuid, measured);
+      preview = await renderPhoto(ctx, exportEdge, byUuid, measured, photo.uuid);
       split = splitCrop(ctx, preview.metrics, preview.sha256);
       crop = await cropRegion(preview.jpeg, region, { longEdge, quality: PREVIEW_QUALITY });
       retried = true;
@@ -256,6 +266,15 @@ async function regionPreview(ctx: ToolContext, session: { id: string; target: Ta
     timings: preview.timings,
   };
   return { json, image: crop.jpeg, log: { uuid: preview.uuid, region, effective_scale: effectiveScale, photo_size: size, timings: preview.timings } };
+}
+
+/**
+ * Render `photoUuid` (lr_get_preview `uuid`: that photo, selected or not, the selection untouched,
+ * Develop.lua target()), else the selected photo, guarded by `selectedUuid` when given.
+ */
+function renderPhoto(ctx: ToolContext, longEdge: number, photoUuid: string | undefined, regions: readonly Region[], selectedUuid?: string): Promise<RenderedPreview> {
+  if (photoUuid === undefined) return render(ctx, longEdge, selectedUuid, regions);
+  return renderRequest(ctx, { longEdge, quality: PREVIEW_QUALITY, photoUuid, regions });
 }
 
 /**

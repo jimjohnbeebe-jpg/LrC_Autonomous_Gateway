@@ -48,7 +48,7 @@ local Stall = require 'Stall'
 local Bridge = {}
 
 Bridge.PROTOCOL = 1
-Bridge.PLUGIN_VERSION = "1.0.0"
+Bridge.PLUGIN_VERSION = "1.1.0"
 Bridge.SDK_DECLARED = 13.0 -- Info.lua LrSdkVersion; the SDK version LrC 15.5.1 ships is [unverified]
 Bridge.STATUS_FILE = "bridge_status.json"
 
@@ -58,15 +58,18 @@ local STALE_REBIND_SECONDS = 20    -- silent this long while connected: rebind b
 local SEND_WAIT_SECONDS = 5        -- how long a reply waits for the send socket to be connected
 local STATUS_EVERY_SECONDS = 2
 local SETTLE_SECONDS = 0.6         -- lets a replaced instance close its sockets before we bind
--- No engine connected this long after the first bind: bind both sockets afresh, once. A bridge that
--- bound while a replaced instance still held 8765/8766 was left with no listener and no error: the
--- replaced one stopped 10 s later, the new loop kept running, nothing listened [handle: Jim's run 1b,
--- %TEMP%\LrC-AVG\bridge.log 2026-10-17 13:32:28-13:32:54, two "starting generation 1"; netstat at
--- 13:37:58 showed nothing on 8765/8766 while bridge_status.json was still written]. Only once: a rebind
--- every 10 s while idle (PR #173) spent 10-12 s in the socket work each time and Lightroom stuttered;
--- with it off, neither [handle: docs\reports\phase9\stall-174.md "Observed", issue #174]. An engine
--- connection also counts as the check done: the listener works.
-local STARTUP_REBIND_SECONDS = 20
+-- A start that overlapped another: bind both sockets afresh, once, this long after the first bind, if no
+-- engine has connected by then. A bridge that bound while a replaced instance still held 8765/8766 was
+-- left with no listener and no error: the replaced one stopped 10 s later, the new loop kept running,
+-- nothing listened [handle: Jim's run 1b, %TEMP%\LrC-AVG\bridge.log 2026-10-17 13:32:28-13:32:54, two
+-- "starting generation 1"; netstat at 13:37:58 showed nothing on 8765/8766 while bridge_status.json was
+-- still written]. Until 1.1.0 every start rebound once after 20 s; that rebind took 10-12 s of socket work
+-- and is the candidate cause of the freeze once per session (issue #176) [handle: docs\reports\phase9\
+-- stall-174.md "Fix and verification run"]. Now only a start within OVERLAP_SECONDS of another one's ports
+-- file (Endpoint.recentStart) rebinds [stated: Jim, 2026-10-24, "Targeted one-shot"]; other lost listeners
+-- rebind on their own events (Sockets.lua rebindOr). An engine connection counts as the check done.
+local OVERLAP_SECONDS = 60
+local OVERLAP_REBIND_SECONDS = 15
 
 -- Only a generation number lives on _G. A Reload Plug-in runs the init script again in the same Lua
 -- state [upstream claim: vendor\automaat\plugin\LightroomMCP.lrplugin\PluginInit.lua:8-15]; the old
@@ -253,10 +256,10 @@ local function monitor(B)
             S.lastInbound = nil
             S.receiveNeedsRebind, S.sendNeedsRebind = true, true
         end
-        if S.receiveConnected then S.startupRebindDone = true end
-        if not S.startupRebindDone and S.boundAt and (LrDate.currentTime() - S.boundAt) > STARTUP_REBIND_SECONDS then
-            Stall.rebind()
-            S.startupRebindDone = true
+        if S.receiveConnected then S.overlapped = false end
+        if S.overlapped and S.boundAt and (LrDate.currentTime() - S.boundAt) > OVERLAP_REBIND_SECONDS then
+            Stall.rebind("both", "this start overlapped another", B.generation)
+            S.overlapped = false
             S.receiveNeedsRebind, S.sendNeedsRebind = true, true
         end
         if LrDate.currentTime() - B.lastStatus >= STATUS_EVERY_SECONDS then writeStatus(B) end
@@ -284,7 +287,7 @@ function Bridge.start()
             receiveGen = 0, sendGen = 0,
             receiveConnected = false, sendConnected = false,
             receiveNeedsReconnect = false, sendNeedsReconnect = false,
-            receiveNeedsRebind = false, sendNeedsRebind = false, startupRebindDone = false,
+            receiveNeedsRebind = false, sendNeedsRebind = false, overlapped = false,
             lastInbound = nil, handled = 0, failed = 0, malformed = 0, unauthorized = 0,
             startedAt = isoNow(),
             token = nil, tokenFile = Endpoint.tokenPath(),
@@ -322,6 +325,10 @@ function Bridge.start()
 
         LrTasks.sleep(SETTLE_SECONDS)
         if not B.current() then return end
+        -- Read before this start writes its own ports file.
+        local okRecent, recent = LrTasks.pcall(Endpoint.recentStart, OVERLAP_SECONDS)
+        B.S.overlapped = okRecent and recent == true
+        if B.S.overlapped then Log.info("bridge: another start wrote the ports file under " .. OVERLAP_SECONDS .. " s ago; one rebind follows if no engine connects") end
         local okToken, tokenOrErr = LrTasks.pcall(Endpoint.newToken)
         B.S.token = okToken and tokenOrErr or nil
         -- No token: every command would be refused, and a bridge without one could never see a newer

@@ -26,7 +26,7 @@ describe("masks:carry shapes", () => {
     const { shapes, missing } = shapesOf(handMade());
     expect(missing).toEqual([]);
     expect(shapes.find((s) => s.name === "Subtract")?.parts[1]).toMatchObject({ what: "Mask/Image", blend: 1, inverted: true });
-    expect(shapes.find((s) => s.name === "Color")?.parts[0]).toMatchObject({ kind: "range", range_type: 1 });
+    expect(shapes.find((s) => s.name === "Color")?.parts[0]).toMatchObject({ kind: "color_range", range_type: 1 });
   });
 
   it("says what is missing or not as the steps make it", () => {

@@ -107,6 +107,7 @@ async function runProbe(
     const perUnit: Slope = {
       luma_mean: Math.round((d.luma_mean / p.delta) * 10000) / 10000,
       clip_high_pct: Math.round((d.clip_high_pct / p.delta) * 10000) / 10000,
+      clip_high_tone_pct: Math.round((d.clip_high_tone_pct / p.delta) * 10000) / 10000,
       clip_low_pct: Math.round((d.clip_low_pct / p.delta) * 10000) / 10000,
     };
     t.slopes.set(p.name, perUnit);

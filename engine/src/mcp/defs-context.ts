@@ -12,6 +12,7 @@ const previewArgs = z.object({
   session_id: sessionId.optional().describe("render the session's photo, with its region metrics; refused if another photo is selected; ignored when no session is open"),
   target: sessionTarget,
   region: box.optional().describe(`return a crop of this box {x, y, w, h} in ${FRAME}, exported large enough to show it at up to 100 %; see effective_scale`),
+  uuid: z.string().min(1).optional().describe("render this photo (a uuid from lr_search_photos, lr_get_selected_photos or lr_import_photos), selected or not; the selection is not touched; not with session_id"),
 });
 const metricsArgs = z.object({ session_id: sessionId.optional(), target: sessionTarget });
 
@@ -38,6 +39,7 @@ export const CONTEXT_DEFS: ToolDef[] = [
     description:
       `Render the photo selected in Lightroom with its current Develop settings (a JPEG export, quality ${PREVIEW_QUALITY}, ` +
       "which takes about 3 seconds) and return it as an image, with its uuid, SHA-256 hash, size, metrics and timings. " +
+        "With `uuid`: that photo instead, without selecting it (to look through a shoot, for culling or keywording). " +
       "With `session_id`: the session's photo (refused with TARGET_CHANGED if another photo is selected) and its region metrics; " +
       "in Variants mode `target` names the copy, which is selected in Lightroom first. " +
       `With \`region\` (a box in ${FRAME}, as mask geometry and lr_set_regions are): a crop of that box for judging sharpness, noise or fringing; the photo is exported larger (up to 4096 px) ` +

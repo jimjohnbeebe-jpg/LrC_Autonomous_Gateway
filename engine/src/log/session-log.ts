@@ -38,6 +38,8 @@ const deltaShape = {
   channel_mean: perChannel,
   rb_ratio: z.number().nullable(),
   clip_high_pct: z.number(),
+  // Engine 1.1.0 (issue #186); logs written before it have none.
+  clip_high_tone_pct: z.number().optional(),
   clip_low_pct: z.number(),
   clip_high_pct_by_channel: perChannel,
   clip_low_pct_by_channel: perChannel,
@@ -70,7 +72,7 @@ const clamp = z.strictObject({ name: z.string(), requested: z.number(), applied:
 const refusal = z.strictObject({ name: z.string(), reason: z.string(), by: z.enum(["guardrail", "slider"]) });
 
 export const guardrailActionSchema = z.strictObject({
-  kind: z.enum(["corrected", "unmet", "reverted"]),
+  kind: z.enum(["corrected", "unmet", "reverted", "advisory"]),
   limit: z.enum(["clip_high", "clip_low", "region"]),
   reason: z.string(),
   history_name: z.string().nullable(),

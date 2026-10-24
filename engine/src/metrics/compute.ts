@@ -14,6 +14,9 @@
 //   rb_ratio          channel_mean.r / channel_mean.b, the white-balance proxy of PRD 6.7; null when
 //                     the blue mean is 0
 //   clip_high_pct     pixels with any channel >= 253 (PRD 6.7)
+//   clip_high_tone_pct pixels with two or more channels >= 253: blown tone, which the highlight
+//                     guard acts on; one channel alone is saturated colour, not blown highlights
+//                     [stated: Jim, 2026-10-24, issue #186, "2+ channels >= 253"]
 //   clip_low_pct      pixels with all channels <= 2 (PRD 6.7)
 //   *_by_channel      the same thresholds per channel, each channel on its own
 //   saturation_mean   mean HSV saturation, (max - min) / max, over every pixel, 0-100
@@ -50,6 +53,7 @@ export type Stats = {
   channel_mean: PerChannel;
   rb_ratio: number | null;
   clip_high_pct: number;
+  clip_high_tone_pct: number;
   clip_low_pct: number;
   clip_high_pct_by_channel: PerChannel;
   clip_low_pct_by_channel: PerChannel;
@@ -93,6 +97,7 @@ type Accumulator = {
   lumaSquares: number;
   sum: PerChannel;
   high: number;
+  highTone: number;
   low: number;
   highBy: PerChannel;
   lowBy: PerChannel;
@@ -112,6 +117,7 @@ function accumulate(data: Uint8Array, width: number, channels: number, rect: Pix
     lumaSquares: 0,
     sum: { r: 0, g: 0, b: 0 },
     high: 0,
+    highTone: 0,
     low: 0,
     highBy: { r: 0, g: 0, b: 0 },
     lowBy: { r: 0, g: 0, b: 0 },
@@ -143,7 +149,9 @@ function accumulate(data: Uint8Array, width: number, channels: number, rect: Pix
       if (r <= CLIP_LOW) acc.lowBy.r++;
       if (g <= CLIP_LOW) acc.lowBy.g++;
       if (b <= CLIP_LOW) acc.lowBy.b++;
-      if (r >= CLIP_HIGH || g >= CLIP_HIGH || b >= CLIP_HIGH) acc.high++;
+      const clipped = (r >= CLIP_HIGH ? 1 : 0) + (g >= CLIP_HIGH ? 1 : 0) + (b >= CLIP_HIGH ? 1 : 0);
+      if (clipped > 0) acc.high++;
+      if (clipped >= 2) acc.highTone++;
       if (r <= CLIP_LOW && g <= CLIP_LOW && b <= CLIP_LOW) acc.low++;
 
       const max = r > g ? (r > b ? r : b) : g > b ? g : b;
@@ -218,6 +226,7 @@ function finish(acc: Accumulator): Stats {
     channel_mean: { r: round(channelMean.r, 3), g: round(channelMean.g, 3), b: round(channelMean.b, 3) },
     rb_ratio: channelMean.b === 0 ? null : round(channelMean.r / channelMean.b),
     clip_high_pct: pct(acc.high),
+    clip_high_tone_pct: pct(acc.highTone),
     clip_low_pct: pct(acc.low),
     clip_high_pct_by_channel: { r: pct(acc.highBy.r), g: pct(acc.highBy.g), b: pct(acc.highBy.b) },
     clip_low_pct_by_channel: { r: pct(acc.lowBy.r), g: pct(acc.lowBy.g), b: pct(acc.lowBy.b) },
@@ -292,6 +301,7 @@ function deltaStats(before: Stats, after: Stats): StatsDelta {
     channel_mean: dc(after.channel_mean, before.channel_mean, 3),
     rb_ratio: after.rb_ratio === null || before.rb_ratio === null ? null : d(after.rb_ratio, before.rb_ratio),
     clip_high_pct: d(after.clip_high_pct, before.clip_high_pct),
+    clip_high_tone_pct: d(after.clip_high_tone_pct, before.clip_high_tone_pct),
     clip_low_pct: d(after.clip_low_pct, before.clip_low_pct),
     clip_high_pct_by_channel: dc(after.clip_high_pct_by_channel, before.clip_high_pct_by_channel),
     clip_low_pct_by_channel: dc(after.clip_low_pct_by_channel, before.clip_low_pct_by_channel),

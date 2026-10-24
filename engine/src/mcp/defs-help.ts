@@ -35,6 +35,8 @@ export const HELP_TEXT = [
     "clipping is over a limit, pulls whites/highlights/exposure or blacks/shadows/exposure back in fixed steps until under, at " +
     "most 8 (\"… baseline k\"), and later passes correct clipping they did not cause. When off, clipping is measured and left " +
     "as it is, and a pass corrects only the clipping it caused. A limit still over is `unmet` in guardrail_actions. " +
+    "The high end counts blown tone (clip_high_tone_pct, two or more channels); clipping in one channel alone (a saturated colour) " +
+    "moves no slider and is an `advisory` row naming the channel: judge it yourself, for example with that hue's HSL luminance or saturation. " +
     "The session's numbers (max passes, variant count, clipping limits, decay, preview size and quality) come from the " +
     "arguments, then (clipping limits only) the intent, then the user's settings page in Lightroom, then the defaults; " +
     "`session_settings` in the begin result says where each came from.",

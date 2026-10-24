@@ -26,6 +26,7 @@
         },
         "rb_ratio": 1.4613,
         "clip_high_pct": 3.419,
+        "clip_high_tone_pct": 0.3513,
         "clip_low_pct": 0.1717,
         "clip_high_pct_by_channel": {
           "r": 3.3771,
@@ -80,6 +81,7 @@
         },
         "rb_ratio": 1.0017,
         "clip_high_pct": 0,
+        "clip_high_tone_pct": 0,
         "clip_low_pct": 2.2037,
         "clip_high_pct_by_channel": {
           "r": 0,
@@ -134,6 +136,7 @@
         },
         "rb_ratio": 0.7546,
         "clip_high_pct": 4.0934,
+        "clip_high_tone_pct": 0.0002,
         "clip_low_pct": 0,
         "clip_high_pct_by_channel": {
           "r": 0,
@@ -188,6 +191,7 @@
         },
         "rb_ratio": 1.0408,
         "clip_high_pct": 0.0008,
+        "clip_high_tone_pct": 0.0001,
         "clip_low_pct": 0,
         "clip_high_pct_by_channel": {
           "r": 0,
@@ -242,6 +246,7 @@
         },
         "rb_ratio": 0.7464,
         "clip_high_pct": 19.3307,
+        "clip_high_tone_pct": 0.7104,
         "clip_low_pct": 0.1608,
         "clip_high_pct_by_channel": {
           "r": 0.7125,
@@ -296,6 +301,7 @@
         },
         "rb_ratio": 0.738,
         "clip_high_pct": 4.4078,
+        "clip_high_tone_pct": 0.0069,
         "clip_low_pct": 16.2382,
         "clip_high_pct_by_channel": {
           "r": 0.0186,

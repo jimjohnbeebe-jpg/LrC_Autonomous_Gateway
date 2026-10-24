@@ -40,6 +40,12 @@ describe("metrics: luma, histograms and clipping", () => {
     expect(m.clip_low_pct_by_channel).toEqual({ r: 50, g: 75, b: 50 });
   });
 
+  it("counts blown tone only when two or more channels reach 253: a saturated red is not blown (issue #186)", () => {
+    expect(row([255, 40, 40], [255, 40, 40])).toMatchObject({ clip_high_pct: 100, clip_high_tone_pct: 0 });
+    expect(row([255, 255, 40], [255, 40, 40])).toMatchObject({ clip_high_pct: 100, clip_high_tone_pct: 50 });
+    expect(row([255, 255, 255], [10, 10, 10])).toMatchObject({ clip_high_pct: 50, clip_high_tone_pct: 50 });
+  });
+
   it("weighs luma with Rec. 709 coefficients", () => {
     const m = row([255, 0, 0], [0, 255, 0], [0, 0, 255]);
     // 0.2126 * 255 = 54.2, 0.7152 * 255 = 182.4, 0.0722 * 255 = 18.4

@@ -343,7 +343,9 @@ export class LightroomSim {
       const orange = y >= height / 2;
       for (let x = 0; x < width; x++) {
         const level = (rows[x] as [number, number, number])[0];
-        const g = orange ? level * (1 - 0.3 * colour) : level;
+        // Where red clips, the orange blows out to yellow (green clips too), as a render's highlights
+        // roll off towards white: the sim's clipping is blown tone, which the guard counts (issue #186).
+        const g = orange && level < 253 ? level * (1 - 0.3 * colour) : level;
         const b = orange ? level * (1 - 0.6 * colour) : level;
         const i = (y * width + x) * 3;
         data[i] = clamp(level * (1 + 0.3 * warm));

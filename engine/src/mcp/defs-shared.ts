@@ -18,7 +18,9 @@ export type ToolDef = {
 export const MEASURED =
   "Metrics are measured on the rendered preview (8-bit sRGB, as Lightroom exported it), not on the raw file: " +
   "clipping here can often be recovered from the raw data with highlights/whites or shadows/blacks. " +
-  "clip_high_pct = % of pixels with any channel >= 253; clip_low_pct = % of pixels with all channels <= 2; " +
+  "clip_high_pct = % of pixels with any channel >= 253; clip_high_tone_pct = % with two or more channels >= 253 (blown tone: the " +
+  "highlight guardrail and the clip_high limit use this one; one channel alone is saturated colour, reported as an `advisory`); " +
+  "clip_low_pct = % of pixels with all channels <= 2; " +
   "luma = Rec. 709 weights on the 8-bit values (0-255); luma_percentiles p1-p99 by nearest rank; " +
   "dynamic_range = (p99 - p1) / 255; rb_ratio = mean red / mean blue (a white-balance proxy); " +
   "saturation_mean = mean HSV saturation, 0-100; hue_histogram = 12 bins of 30 degrees (bin i centred on i*30: " +

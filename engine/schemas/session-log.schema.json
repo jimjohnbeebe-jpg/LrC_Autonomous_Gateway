@@ -727,6 +727,9 @@
                   "clip_high_pct": {
                     "type": "number"
                   },
+                  "clip_high_tone_pct": {
+                    "type": "number"
+                  },
                   "clip_low_pct": {
                     "type": "number"
                   },
@@ -915,6 +918,9 @@
                         "clip_high_pct": {
                           "type": "number"
                         },
+                        "clip_high_tone_pct": {
+                          "type": "number"
+                        },
                         "clip_low_pct": {
                           "type": "number"
                         },
@@ -1094,6 +1100,9 @@
                 ]
               },
               "clip_high_pct": {
+                "type": "number"
+              },
+              "clip_high_tone_pct": {
                 "type": "number"
               },
               "clip_low_pct": {
@@ -1284,6 +1293,9 @@
                     "clip_high_pct": {
                       "type": "number"
                     },
+                    "clip_high_tone_pct": {
+                      "type": "number"
+                    },
                     "clip_low_pct": {
                       "type": "number"
                     },
@@ -1462,6 +1474,9 @@
                   "clip_high_pct": {
                     "type": "number"
                   },
+                  "clip_high_tone_pct": {
+                    "type": "number"
+                  },
                   "clip_low_pct": {
                     "type": "number"
                   },
@@ -1591,6 +1606,9 @@
                         "clip_high_pct": {
                           "type": "number"
                         },
+                        "clip_high_tone_pct": {
+                          "type": "number"
+                        },
                         "clip_low_pct": {
                           "type": "number"
                         },
@@ -1707,7 +1725,8 @@
                   "enum": [
                     "corrected",
                     "unmet",
-                    "reverted"
+                    "reverted",
+                    "advisory"
                   ]
                 },
                 "limit": {
@@ -1805,6 +1824,9 @@
                           ]
                         },
                         "clip_high_pct": {
+                          "type": "number"
+                        },
+                        "clip_high_tone_pct": {
                           "type": "number"
                         },
                         "clip_low_pct": {
@@ -1993,6 +2015,9 @@
                                 ]
                               },
                               "clip_high_pct": {
+                                "type": "number"
+                              },
+                              "clip_high_tone_pct": {
                                 "type": "number"
                               },
                               "clip_low_pct": {
@@ -2647,6 +2672,9 @@
                     "clip_high_pct": {
                       "type": "number"
                     },
+                    "clip_high_tone_pct": {
+                      "type": "number"
+                    },
                     "clip_low_pct": {
                       "type": "number"
                     },
@@ -2774,6 +2802,9 @@
                             ]
                           },
                           "clip_high_pct": {
+                            "type": "number"
+                          },
+                          "clip_high_tone_pct": {
                             "type": "number"
                           },
                           "clip_low_pct": {

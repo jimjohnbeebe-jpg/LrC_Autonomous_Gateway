@@ -42,9 +42,10 @@ function dabs(s: Stroke, radius: number, frame: CropFrame, k: number): string[] 
   for (let i = 1; i < at.length; i++) {
     const [a, b] = [at[i - 1] as Point, at[i] as Point];
     const steps = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / (radius * SPACING)));
+    // Before the dabs are made, so a stroke far over the cap is refused at once (Greptile, PR #191).
+    if (out.length + steps > BRUSH_LIMITS.dabs) invalid(`strokes[${k}] needs more than ${BRUSH_LIMITS.dabs} dabs at this radius: split it or use a larger radius.`);
     for (let j = 1; j <= steps; j++) out.push({ x: a.x + ((b.x - a.x) * j) / steps, y: a.y + ((b.y - a.y) * j) / steps });
   }
-  if (out.length > BRUSH_LIMITS.dabs) invalid(`strokes[${k}] needs ${out.length} dabs at this radius, over ${BRUSH_LIMITS.dabs}: split it or use a larger radius.`);
   return out.map((p) => `d ${p.x.toFixed(6)} ${p.y.toFixed(6)}`);
 }
 

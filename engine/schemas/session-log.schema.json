@@ -2910,6 +2910,9 @@
                     "clip_high_pct": {
                       "type": "number"
                     },
+                    "clip_high_tone_pct": {
+                      "type": "number"
+                    },
                     "clip_low_pct": {
                       "type": "number"
                     }

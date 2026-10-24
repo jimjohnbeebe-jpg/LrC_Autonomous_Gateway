@@ -127,7 +127,8 @@ local function denoiseSelected(catalog, photo, amount, snapshotName, uuid)
     end, CONFIRM_SECONDS)
     local saved = shown and waitFor(function() local d = digest(catalog, photo); return d ~= nil and d ~= before end, SAVE_SECONDS)
     if not saved then
-        if has then LrTasks.pcall(LrDevelopController.changeDenoiseAmount, panel.denoiseAmount) end
+        -- Only on this photo: a click in Lightroom may have made another one active meanwhile (Greptile, PR #191).
+        if has and catalog:getTargetPhoto() == photo then LrTasks.pcall(LrDevelopController.changeDenoiseAmount, panel.denoiseAmount) end
         return { status = "failed", snapshot = snapshot, reason = shown and "Lightroom did not save the change (it can drop a change made while it still computes Denoise for this photo; try again once the Activity Center is idle)" or "the Develop panel did not show the new amount" }
     end
     return { status = has and "amount_changed" or "applied", previous_amount = has and panel.denoiseAmount or nil, snapshot = snapshot }

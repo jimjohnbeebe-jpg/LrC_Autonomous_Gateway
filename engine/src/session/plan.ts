@@ -15,7 +15,8 @@ export type Refusal = { name: string; reason: string; by: "guardrail" | "slider"
 export type StepPlan = { changes: Change[]; clamped: Clamp[]; refused: Refusal[]; unchanged: string[] };
 export type Limits = { clipHighPct: number; clipLowPct: number };
 /** Metric change per unit of a slider, from lr_probe. */
-export type Slope = { luma_mean: number; clip_high_pct: number; clip_low_pct: number };
+/** `clip_high_tone_pct`: engine 1.1.0 (issue #186); a probe logged before it has only clip_high_pct. */
+export type Slope = { luma_mean: number; clip_high_pct: number; clip_high_tone_pct?: number | undefined; clip_low_pct: number };
 
 const EPSILON = 1e-9;
 const sign = (x: number): number => (x > EPSILON ? 1 : x < -EPSILON ? -1 : 0);
@@ -124,8 +125,8 @@ export function applyProjectedGuardrail(plan: StepPlan, last: MetricsSummary | n
         const room = (limit - now) / slopePerUnit; // signed change that reaches the limit
         if (Math.abs(room) < Math.abs(allowed)) allowed = room;
       };
-      // ponytail: the slope is any-channel clipping, at least the tone slope, so the cap is conservative; probe a tone slope (probe.ts) if it bites.
-      cap(slope.clip_high_pct, high, limits.clipHighPct);
+      // The tone slope, so clipping in one channel alone caps nothing (Greptile, PR #191).
+      cap(slope.clip_high_tone_pct ?? slope.clip_high_pct, high, limits.clipHighPct);
       cap(slope.clip_low_pct, last.clip_low_pct, limits.clipLowPct);
       if (allowed !== change.delta) {
         // Whole minimum steps within the room; the epsilon keeps 0.3 / 0.05 from flooring to 5.

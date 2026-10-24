@@ -119,6 +119,11 @@ describe("the projected guardrail", () => {
     expect(lowering.changes[0]?.delta).toBe(-0.5); // lowers clip_high; clip_low rises 0.25, within its room
   });
 
+  it("caps by the two-channel slope, so a probe that raised one-channel clipping only caps nothing (issue #186, Greptile, PR #191)", () => {
+    const slopes = new Map([["exposure", { luma_mean: 40, clip_high_pct: 20, clip_high_tone_pct: 0, clip_low_pct: 0 }]]);
+    expect(applyProjectedGuardrail(planStep({ exposure: 0.8 }, current, 1, map), withClip(0.2, 0), limits, slopes, "raw", true).changes[0]?.delta).toBe(0.8);
+  });
+
   it("without clip_baseline leaves an end already over its limit alone, and still guards an end within it (issue #130)", () => {
     const over = applyProjectedGuardrail(planStep({ exposure: 0.3, blacks: -10 }, current, 1, map), withClip(0.8, 1), limits, new Map(), "raw", false);
     expect(over.changes.map((c) => c.name)).toEqual(["exposure"]); // high over: left alone; low at its limit: guarded

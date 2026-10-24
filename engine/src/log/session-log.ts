@@ -135,7 +135,7 @@ export const probeSchema = z.strictObject({
       name: z.string(),
       delta_applied: z.number(),
       delta_metrics: metricsDeltaSchema,
-      per_unit: z.strictObject({ luma_mean: z.number(), clip_high_pct: z.number(), clip_low_pct: z.number() }),
+      per_unit: z.strictObject({ luma_mean: z.number(), clip_high_pct: z.number(), clip_high_tone_pct: z.number().optional(), clip_low_pct: z.number() }),
     }),
   ),
 });

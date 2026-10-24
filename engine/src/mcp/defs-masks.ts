@@ -11,7 +11,7 @@
 // `npm run masks:crop` (docs\reports\phase9\issue179.md).
 
 import { z } from "zod";
-import { AI_KINDS, LOCAL_PARAMS, MODE_NAMES, REFUSED_KINDS, VERIFIED_FORMS } from "../params/index.js";
+import { AI_KINDS, BRUSH_LIMITS, BRUSH_RADIUS, LOCAL_PARAMS, MODE_NAMES, REFUSED_KINDS, VERIFIED_FORMS } from "../params/index.js";
 import { AI_PART_PLUGIN, MASKS_PLUGIN } from "../session/index.js";
 import { FRAME, sessionId, target, type ToolDef } from "./defs-shared.js";
 
@@ -26,11 +26,26 @@ const geometry = z
     right: unit.optional(),
     bottom: unit.optional(),
     feather: z.number().min(0).max(100).optional().describe("radial: feather 0-100 (new radial: 50)"),
-    lum_range: z.array(unit).length(4).optional().describe("luminance: [a, b, c, d] in 0-1, each at least the one before: luminance a..d is masked, fully from b to c"),
+    lum_range: z.array(unit).length(4).optional().describe("luminance: [a, b, c, d] in 0-1, each at least the one before: luminance a..d is masked, fully from b to c (at least 0.01 wide)"),
+    depth_range: z.array(unit).length(4).optional().describe("depth_range: as lum_range, in distances, 0 the nearest; only on photos with a depth map (DEPTH_MAP_MISSING otherwise)"),
+    color_amount: z.number().gt(0).max(1).optional().describe("color_range: how far the selection reaches from the colour at `point` (Lightroom's Refine), above 0 to 1, default 0.5"),
+    strokes: z
+      .array(
+        z.object({
+          points: z.array(point).min(1).max(BRUSH_LIMITS.points).describe("the stroke's path; the engine fills in dabs between the points"),
+          radius: z.number().min(0.001).max(1).optional().describe(`the brush's radius as a fraction of the whole photo's long edge (before any crop), default ${BRUSH_RADIUS}`),
+          flow: z.number().min(0.01).max(1).optional().describe("0.01-1, default 1"),
+        }),
+      )
+      .min(1)
+      .max(BRUSH_LIMITS.strokes)
+      .optional()
+      .describe(`brush: 1-${BRUSH_LIMITS.strokes} strokes painted with the mask's sliders (no erase)`),
   })
   .describe(
     `In ${FRAME}, as lr_get_preview \`region\` and lr_set_regions are; the engine maps it through the photo's crop (its angle included). ` +
-      "linear: zero and full points; radial: the ellipse's box left, top, right, bottom (the ellipse is square to the preview); luminance: lum_range (tones, not a place). AI kinds take none.",
+      "linear: zero and full points; radial: the ellipse's box left, top, right, bottom (the ellipse is square to the preview); luminance: lum_range (tones, not a place); " +
+        "depth_range: depth_range; color_range: color_amount (the colour is `point`'s); brush: strokes. AI kinds take none.",
   );
 const sliders = z
   .record(z.string(), z.number())
@@ -54,15 +69,15 @@ const createArgs = z.object({
   kind: z
     .enum(KINDS)
     .describe(
-      "linear, radial, luminance (geometry). Found by Lightroom's AI: subject, sky, background; landscape, one category per mask: " +
+      "linear, radial, luminance, depth_range, brush (geometry); color_range (point, color_amount). Found by Lightroom's AI: subject, sky, background; landscape, one category per mask: " +
         `${group("landscape_")}; every person in the photo, one part per mask: ${group("people_")}; one person, with point on them: ` +
-        `${group("person_")}. people, landscape (name the part or category), brush, objects, color_range and depth_range are refused, with the reason`,
+        `${group("person_")}. people, landscape (name the part or category) and objects are refused, with the reason`,
     ),
   name: name
     .optional()
     .describe('the name the Masks panel shows (default "AVG <kind>"); a suggested style is "N. Subject - Purpose", for example "4. Lone Juniper - Foliage Separation"; any clear name works'),
   geometry: geometry.optional(),
-  point: point.optional().describe(`${group("person_")} only: a point on that person (on the face, for face skin), in ${FRAME}`),
+  point: point.optional().describe(`${group("person_")}: a point on that person (on the face, for face skin); color_range: a point on the colour to select (sampled from the preview there); in ${FRAME}`),
   sliders: sliders.optional(),
 });
 const editArgs = z.object({
@@ -110,8 +125,8 @@ const PASS_NOTE =
   "written; deleting it is allowed. A mirrored photo refuses geometry and points (CROP_FRAME_UNSUPPORTED); " +
   "`warnings` flags a mask 90 % or more outside the preview. " +
   "Returns the mask, every mask of the photo (`masks`, with fresh ids), " +
-  `metrics, delta_metrics and the image. Needs plugin ${MASKS_PLUGIN}. Not offered: brush painting, Select Objects, colour or ` +
-  "depth range sampling, reading mask pixels, mask presets.";
+  `metrics, delta_metrics and the image. Needs plugin ${MASKS_PLUGIN}. color_range, depth_range, brush: not reshaped, not parts. ` +
+  "Not offered: Select Objects, brush erase, mask pixels, mask presets.";
 
 export const MASK_DEFS: ToolDef[] = [
   {

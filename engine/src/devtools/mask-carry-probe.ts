@@ -43,13 +43,13 @@ export type Shape = { name: string; id: string | null; parts: Part[]; ok: boolea
 const partOf = (m: Component): Part => {
   const kind = componentKind(m);
   const range = m[RANGE.holder] as Record<string, unknown> | undefined;
-  return { what: String(m[M.what]), kind, blend: m[M.blend] ?? null, inverted: m[M.inverted] ?? null, ...(kind === "range" ? { range_type: range?.[RANGE.type] ?? null } : {}) };
+  return { what: String(m[M.what]), kind, blend: m[M.blend] ?? null, inverted: m[M.inverted] ?? null, ...(kind === "range" || kind === "color_range" ? { range_type: range?.[RANGE.type] ?? null } : {}) };
 };
 
 function fits(need: (typeof SHAPES)[number]["need"], parts: Part[]): string {
   if (need === "combined") return parts.length >= 2 ? "" : `it has ${parts.length} component; make it with Add, Subtract or Intersect`;
   if (need === "brush") return parts.some((p) => BRUSH_WHATS.has(p.what)) ? "" : `no brush component (kinds: ${parts.map((p) => p.what).join(", ")})`;
-  return parts.some((p) => p.kind === "range") ? "" : `no Color Range component (kinds: ${parts.map((p) => p.kind).join(", ")})`;
+  return parts.some((p) => p.kind === "color_range") ? "" : `no Color Range component (kinds: ${parts.map((p) => p.kind).join(", ")})`;
 }
 
 /** Each SHAPES mask, found by its name (case and spaces aside), and whether it is what the steps made; `missing` says why not. */

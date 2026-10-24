@@ -10,6 +10,9 @@
 //   state.json                           the snapshot to put back, until it is put back
 //   mask_combine_<time>.json             the results: each form's mask written, read back, read again, Jim's answer
 //   mask_combine_bridge_log_<time>.txt   a copy of the plugin's log, user folder redacted
+// `--kinds` (npm run masks:kinds, issue #190): the colour range, brush and depth range masks instead
+// (mask-combine-probe.ts KIND_CANDIDATES), plugin 0.16.0 (masks), files under %TEMP%\LrC-AVG\masks-kinds\
+// named mask_kinds_*. A photo without a depth map skips the depth range ("skipped: no depth map", not asked).
 
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
@@ -17,13 +20,20 @@ import path from "node:path";
 import { BridgeClient, pluginVersionAtLeast } from "../bridge/index.js";
 import { acquireInstanceLock, BridgeGate, devOverrides, ENGINE_VERSION } from "../mcp/index.js";
 import { readTable, tableSettings } from "../params/index.js";
+import { sampleColor } from "../metrics/index.js";
+import { PreviewService } from "../preview/index.js";
+import { MASKS_PLUGIN } from "../session/index.js";
 import { AI_PART_PLUGIN } from "../session/mask-parts.js";
 import { ask, putBack, readPending, type Pending } from "./mask-carry-probe.js";
-import { build, CANDIDATES, computeAi, hasAi, HISTORY, judge, SNAPSHOT, verdict, type FormResult } from "./mask-combine-probe.js";
+import { build, CANDIDATES, computeAi, hasAi, HISTORY, judge, KIND_CANDIDATES, noDepthMap, SNAPSHOT, verdict, withSample, type FormResult } from "./mask-combine-probe.js";
 import { describeError } from "./phase1-check.js";
 import { redactHome } from "./phase2-check.js";
 
-const OUT_DIR = path.join(os.tmpdir(), "LrC-AVG", "masks-combine");
+const KINDS = process.argv.includes("--kinds");
+const SET = KINDS
+  ? { dir: "masks-kinds", file: "mask_kinds", check: "masks-kinds", title: "Mask kinds probe", cmd: "npm run masks:kinds", history: "AVG masks:kinds", snapshot: "AVG masks:kinds before", candidates: KIND_CANDIDATES, plugin: MASKS_PLUGIN }
+  : { dir: "masks-combine", file: "mask_combine", check: "masks-combine", title: "Mask combine probe", cmd: "npm run masks:combine", history: HISTORY, snapshot: SNAPSHOT, candidates: CANDIDATES, plugin: AI_PART_PLUGIN };
+const OUT_DIR = path.join(os.tmpdir(), "LrC-AVG", SET.dir);
 const STATE = path.join(OUT_DIR, "state.json");
 const PLUGIN_LOG = path.join(os.tmpdir(), "LrC-AVG", "bridge.log");
 const started = new Date().toISOString().replace(/[:.]/g, "-");
@@ -33,13 +43,13 @@ type Results = Record<string, unknown>;
 
 function save(results: Results): string {
   mkdirSync(OUT_DIR, { recursive: true });
-  const out: Results = { check: "masks-combine", ...results, node: process.version, engine_version: ENGINE_VERSION };
+  const out: Results = { check: SET.check, ...results, node: process.version, engine_version: ENGINE_VERSION };
   if (existsSync(PLUGIN_LOG)) {
-    const copy = path.join(OUT_DIR, `mask_combine_bridge_log_${started}.txt`);
+    const copy = path.join(OUT_DIR, `${SET.file}_bridge_log_${started}.txt`);
     writeFileSync(copy, redact(readFileSync(PLUGIN_LOG, "utf8")));
     out["plugin_log_copied"] = path.basename(copy);
   }
-  const file = path.join(OUT_DIR, `mask_combine_${started}.json`);
+  const file = path.join(OUT_DIR, `${SET.file}_${started}.json`);
   writeFileSync(file, redact(JSON.stringify(out, null, 2)) + "\n");
   return file;
 }
@@ -65,15 +75,19 @@ async function back(client: BridgeClient, p: Pending): Promise<{ ok: boolean; wh
 
 /** Each candidate in turn; stops early when an AI part gave no result (Lightroom refuses writes to the photo until it does, Pending.lua). */
 async function tryAll(client: BridgeClient, uuid: string, say: (line: string) => void, before: ReturnType<typeof readTable>, results: FormResult[]): Promise<void> {
-  for (const [i, c] of CANDIDATES.entries()) {
+  const sample = KINDS ? await sampleColor((await new PreviewService(client).render({ longEdge: 800, quality: 80, photoUuid: uuid })).jpeg, { x: 0.5, y: 0.5 }) : null;
+  for (const [i, raw] of SET.candidates.entries()) {
+    const c = sample ? withSample(raw, sample) : raw;
     const form = c.forms.at(-1) ?? c.id;
-    say(`${i + 1}/${CANDIDATES.length} "${form}": writing it. Do not click in Lightroom.`);
+    say(`${i + 1}/${SET.candidates.length} "${form}": writing it. Do not click in Lightroom.`);
     const { entries, id } = build(before, c);
-    const res = await client.request("apply_settings", { target_uuid: uuid, settings: tableSettings(entries, false), history_name: `${HISTORY} ${i + 1}` });
+    const res = await client.request("apply_settings", { target_uuid: uuid, settings: tableSettings(entries, false), history_name: `${SET.history} ${i + 1}` });
     const ai = hasAi(entries, id) ? await computeAi(client, uuid, id) : undefined;
     if (ai) say(`  Lightroom's AI part: ${ai.outcome} (${Math.round(ai.ms / 1000)} s)`);
     const again = (await client.request("get_settings", { photo_uuid: uuid })).settings;
-    const answer = ai && !ai.ok ? "not asked" : await ask(`  ${c.ask}`);
+    const skip = noDepthMap(c, res.read_back, id) ? "skipped: no depth map" : null;
+    if (skip) say(`  ${skip}: Lightroom read the depth range back without its depth sample (not asked).`);
+    const answer = skip ?? (ai && !ai.ok ? "not asked" : await ask(`  ${c.ask}`));
     const r = judge(c, entries, id, { read_back: res.read_back, read_again: again }, ai, answer);
     for (const p of r.problems) say(`  ${p}`);
     results.push(r);
@@ -83,7 +97,7 @@ async function tryAll(client: BridgeClient, uuid: string, say: (line: string) =>
 
 async function run(client: BridgeClient, say: (line: string) => void, r: Results): Promise<boolean> {
   const version = client.hello()?.plugin_version;
-  if (!pluginVersionAtLeast(version, AI_PART_PLUGIN)) throw new Error(`reload the LrC-AVG plugin ${AI_PART_PLUGIN} (Lightroom runs ${String(version)}): File > Plug-in Manager, LrC-AVG, Reload Plug-in. Nothing was written.`);
+  if (!pluginVersionAtLeast(version, SET.plugin)) throw new Error(`reload the LrC-AVG plugin ${SET.plugin} (Lightroom runs ${String(version)}): File > Plug-in Manager, LrC-AVG, Reload Plug-in. Nothing was written.`);
   const sel = await client.request("get_selection", { max: 2 });
   const photo = sel.photos[0];
   if (sel.count !== 1 || !photo?.uuid) throw new Error(`select one photo in Lightroom's Develop (${sel.count} selected), then run this again.`);
@@ -91,16 +105,16 @@ async function run(client: BridgeClient, say: (line: string) => void, r: Results
   const before_sdk = (await client.request("get_settings", { photo_uuid: photo.uuid })).settings;
   const before = readTable(before_sdk);
   Object.assign(r, { photo: { uuid: photo.uuid, filename }, table_before: before });
-  const snap = await client.request("create_snapshot", { target_uuid: photo.uuid, name: SNAPSHOT });
+  const snap = await client.request("create_snapshot", { target_uuid: photo.uuid, name: SET.snapshot });
   const p: Pending = { uuid: photo.uuid, filename, snapshot_id: snap.snapshot_id, before_sdk };
   setPending(p); // on disk before anything is written (Greptile, PR #132, for ai:probe)
-  say(`${filename}: ${CANDIDATES.length} mask forms, one at a time. Each mask brightens its area by +2 EV; look at the photo in Lightroom, then answer.`);
+  say(`${filename}: ${SET.candidates.length} mask forms, one at a time. Each mask brightens its area by +2 EV; look at the photo in Lightroom, then answer.`);
   const results: FormResult[] = [];
   await tryAll(client, photo.uuid, say, before, results).catch((err: unknown) => {
     r["errors"] = [describeError(err)]; // the forms tried so far are kept
   });
   const pb = await back(client, p);
-  const v = verdict(results, results.length);
+  const v = verdict(results, results.length, SET.candidates);
   Object.assign(r, { forms: results, form_lines: v.lines, put_back: pb });
   say("");
   for (const line of v.lines) say(`  ${line}`);
@@ -141,12 +155,12 @@ function finish(say: (line: string) => void, r: Results, worked: boolean, why: s
   const left = pending(); // a snapshot still to apply: written and not put back (back() clears it only on success)
   r["headline"] = worked ? "WORKED" : "FAILED";
   say("");
-  say(`Mask combine probe: ${worked ? "WORKED" : `FAILED (${why})`}`);
+  say(`${SET.title}: ${worked ? "WORKED" : `FAILED (${why})`}`);
   say(`put back: ${left || damaged ? "NO" : "YES"}`);
-  if (left) say(`  To put it back by hand: Lightroom Develop, select ${left.filename}, Snapshots panel (left), click "${SNAPSHOT}". Or run npm run masks:combine again.`);
+  if (left) say(`  To put it back by hand: Lightroom Develop, select ${left.filename}, Snapshots panel (left), click "${SET.snapshot}". Or run ${SET.cmd} again.`);
   if (damaged) {
     r["state_damaged"] = redact(damaged);
-    say(`  The last run's put-back record was damaged (moved to ${redact(damaged)}). To put the photo back by hand: Lightroom Develop, select the virtual copy, Snapshots panel (left), click "${SNAPSHOT}". Then run npm run masks:combine again.`);
+    say(`  The last run's put-back record was damaged (moved to ${redact(damaged)}). To put the photo back by hand: Lightroom Develop, select the virtual copy, Snapshots panel (left), click "${SET.snapshot}". Then run ${SET.cmd} again.`);
   }
   say(`Results saved automatically: ${redact(save(r))}`);
   say('Nothing to copy. Tell Claude Code "done".');

@@ -43,7 +43,7 @@ export const CARRIED = ["LocalExposure", "LocalContrast", "LocalClarity", "Local
 
 /** A component's fields (CorrectionMasks entries). */
 export const M = { what: "What", id: "MaskID", syncId: "MaskSyncID", name: "MaskName", active: "MaskActive", inverted: "MaskInverted", blend: "MaskBlendMode", value: "MaskValue" } as const;
-export const WHAT = { linear: "Mask/Gradient", radial: "Mask/CircularGradient", image: "Mask/Image", range: "Mask/RangeMask" } as const;
+export const WHAT = { linear: "Mask/Gradient", radial: "Mask/CircularGradient", image: "Mask/Image", range: "Mask/RangeMask", aggregate: "Mask/Aggregate", paint: "Mask/Paint" } as const;
 export const LINEAR = { zeroX: "ZeroX", zeroY: "ZeroY", fullX: "FullX", fullY: "FullY" } as const;
 export const RADIAL = { top: "Top", left: "Left", bottom: "Bottom", right: "Right", angle: "Angle", feather: "Feather", midpoint: "Midpoint", roundness: "Roundness", flipped: "Flipped", version: "Version" } as const;
 /**
@@ -65,7 +65,22 @@ export const IMAGE = {
 } as const;
 /** An InstanceBounds box, in 0-1 of the photo [handle: same file]. */
 export const BOX = { top: "Top", left: "Left", bottom: "Bottom", right: "Right" } as const;
-export const RANGE = { holder: "CorrectionRangeMask", lumRange: "LumRange", type: "Type", version: "Version", sampleType: "SampleType", sampleInfo: "LuminanceDepthSampleInfo", invert: "Invert" } as const;
+export const RANGE = {
+  holder: "CorrectionRangeMask",
+  lumRange: "LumRange",
+  type: "Type",
+  version: "Version",
+  sampleType: "SampleType",
+  sampleInfo: "LuminanceDepthSampleInfo",
+  invert: "Invert",
+  // A colour range and a brush, as Lightroom wrote them [handle: docs\reports\phase8.5\mask-carry\mask_carry_2026-10-11T22-37-39-161Z.json].
+  pointModels: "PointModels",
+  colorAmount: "ColorAmount",
+  // In no capture here [upstream claim: Automaat PR #334]; params-mask-table.test.ts lists it as the one exception.
+  depthRange: "DepthRange",
+} as const;
+/** A brush's fields: the Aggregate's Masks, and each Mask/Paint's [handle: the mask-carry capture above, "Brush 1"]. */
+export const BRUSH = { masks: "Masks", flow: "Flow", radius: "Radius", centerWeight: "CenterWeight", dabs: "Dabs" } as const;
 /**
  * Fields Lightroom computes for an AI component: the digests (new ones appeared after
  * update_ai_settings [handle: docs\reports\phase6\masks-capture\check.json `7_sky.new_digests`]) and,
@@ -163,13 +178,17 @@ export function tableInfo(sdk: Readonly<Record<string, unknown>>): { count: numb
   return { count: Array.isArray(raw) ? raw.length : 0, fingerprint: stable(raw) };
 }
 
+/** A brush stroke's dabs as places only: Lightroom may add or drop its "r", "f" and "h" tokens [upstream claim: Automaat PR #326]. */
+const dabsOf = (v: unknown): string | null => (Array.isArray(v) && v.every((t) => typeof t === "string") ? (v as string[]).filter((t) => t.startsWith("d ")).join("|") : null);
+
 /** `written`'s fields all in `got` with equal values (numbers within 1e-6); fields Lightroom adds or recomputes are its own. */
-function covers(written: unknown, got: unknown): boolean {
+function covers(written: unknown, got: unknown, key?: string): boolean {
+  if (key === BRUSH.dabs) return dabsOf(written) !== null && dabsOf(written) === dabsOf(got);
   if (typeof written === "number" && typeof got === "number") return Math.abs(written - got) <= 1e-6;
   if (written && typeof written === "object" && got && typeof got === "object") {
     if (isEmpty(written) || isEmpty(got)) return isEmpty(written) && isEmpty(got);
     if (Array.isArray(written) && (!Array.isArray(got) || written.length !== got.length)) return false;
-    return Object.entries(written).every(([k, x]) => recomputed.has(k) || settling.has(k) || (k in got && covers(x, (got as Record<string, unknown>)[k])));
+    return Object.entries(written).every(([k, x]) => recomputed.has(k) || settling.has(k) || (k in got && covers(x, (got as Record<string, unknown>)[k], k)));
   }
   return written === got;
 }
@@ -199,7 +218,7 @@ export function verifyTable(written: readonly Correction[], readBack: Readonly<R
  * own form, as Lightroom's adaptive presets carry it: these fields, ReferencePoint, ErrorReason 0; no
  * digests and none of the photo's own fields (ModelVersion, Origin, FullMaskSize, WholeImageArea).
  */
-export type MaskKind = "linear" | "radial" | "luminance" | AiKind;
+export type MaskKind = "linear" | "radial" | "luminance" | "color_range" | "depth_range" | "brush" | AiKind;
 type AiSpec = { dc: string | null; label: string; point: boolean; fields: Readonly<Record<string, number>> };
 export const AI_KINDS = Object.fromEntries(
   Object.entries(AI_KIND_DATA).map(([k, d]) => [
@@ -212,6 +231,9 @@ export const KIND_LABELS: Readonly<Record<MaskKind, string>> = {
   linear: "Linear Gradient",
   radial: "Radial Gradient",
   luminance: "Luminance Range",
+  color_range: "Color Range",
+  depth_range: "Depth Range",
+  brush: "Brush",
   ...(Object.fromEntries(Object.entries(AI_KINDS).map(([k, v]) => [k, v.label])) as Record<AiKind, string>),
 };
 
@@ -219,7 +241,11 @@ export const KIND_LABELS: Readonly<Record<MaskKind, string>> = {
 export function componentKind(m: Component): MaskKind | "ai" | "range" | "other" {
   if (m[M.what] === WHAT.linear) return "linear";
   if (m[M.what] === WHAT.radial) return "radial";
-  if (m[M.what] === WHAT.range) return (m[RANGE.holder] as Record<string, unknown> | undefined)?.[RANGE.type] === 2 ? "luminance" : "range";
+  if (m[M.what] === WHAT.aggregate) return "brush";
+  if (m[M.what] === WHAT.range) {
+    const type = (m[RANGE.holder] as Record<string, unknown> | undefined)?.[RANGE.type];
+    return type === 2 ? "luminance" : type === 1 ? "color_range" : type === -1 ? "depth_range" : "range";
+  }
   if (m[M.what] !== WHAT.image) return "other";
   const tells = (k: AiKind): boolean => m[IMAGE.subType] === AI_KINDS[k].fields[IMAGE.subType] && m[IMAGE.subCategory] === AI_KINDS[k].fields[IMAGE.subCategory];
   return (Object.keys(AI_KINDS) as AiKind[]).find(tells) ?? "ai";
@@ -243,14 +269,16 @@ const TRUSTED_PAIRS: ReadonlySet<string> = new Set([...Object.values(AI_KINDS).m
  * (2) and subject (1) unchanged [handle: docs\reports\phase6\masks-capture\check.json `4_write_back`];
  * capture 4's read back unchanged landscape vegetation, mountains and sky, every person's face skin and
  * hair, Entire Person with InstanceIDs and the 3 + 13 entry [handle: capture4-check.json `round_trip`,
- * steps `row*_round_trip`]; the other known pairs share those structures [inference]. Brush strokes,
- * colour and depth ranges (any other What or RangeMask type) stay refused, and so does Select Objects
- * [unverified: no capture shows its MaskSubType].
+ * steps `row*_round_trip`]; the other known pairs share those structures [inference]. A colour range and a
+ * brush are trusted too (engine 1.1.0, issue #190): Lightroom read a hand-made one of each back unchanged
+ * twice beside a new radial [handle: docs\reports\phase8.5\mask-carry\mask_carry_2026-10-11T22-37-39-161Z.json
+ * `diff_lines`] [stated: Jim, 2026-10-24, "Whole-mask edits"]. A depth range (no capture) and any other What or
+ * RangeMask type stay refused, and so does Select Objects [unverified: no capture shows its MaskSubType].
  */
 export function untrusted(m: Component): string | null {
   const kind = componentKind(m);
-  if (kind === "linear" || kind === "radial" || kind === "luminance") return null;
-  if (m[M.what] !== WHAT.image) return `its kind (${String(m[M.what])}${kind === "range" ? ", not a luminance range" : ""}) was not round-tripped in the masks captures`;
+  if (kind === "linear" || kind === "radial" || kind === "luminance" || kind === "color_range" || kind === "brush") return null;
+  if (m[M.what] !== WHAT.image) return `its kind (${String(m[M.what])}) was not round-tripped in the masks captures`;
   if (!TRUSTED_PAIRS.has(pairOf(m[IMAGE.subType], m[IMAGE.subCategory]))) return `its AI kind (MaskSubType ${String(m[IMAGE.subType])}, category ${String(m[IMAGE.subCategory] ?? "none")}) is not one the masks captures round-tripped`;
   const ids = m[IMAGE.instanceIds];
   if (ids !== undefined && (!Array.isArray(ids) || ids.length !== 1)) return `it names ${Array.isArray(ids) ? ids.length : "no list of"} people (InstanceIDs)`;

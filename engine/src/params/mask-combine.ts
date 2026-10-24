@@ -89,6 +89,7 @@ const invalid = (message: string): never => {
 function partKind(c: Combine): MaskKind {
   if (c.kind === undefined) return invalid("combine needs kind: the new part's kind (linear, radial, luminance or an AI kind), or name the part to change its mode (part).");
   const kind = checkKind(c.kind);
+  if (kind === "color_range" || kind === "depth_range" || kind === "brush") invalid(`A ${kind} part is not offered (no combined form with one was checked in Lightroom); make it a mask of its own (lr_create_mask).`);
   if (isAiKind(kind) && AI_KINDS[kind].point) invalid(`A ${kind} part is not offered: one person's mask needs Lightroom to find the person first; make it a mask of its own (lr_create_mask).`);
   if (isAiKind(kind) && c.geometry) invalid(`A ${kind} part is found by Lightroom's AI; it takes no geometry.`);
   if (!isAiKind(kind)) geometryFields(kind, c.geometry ?? {}, null);

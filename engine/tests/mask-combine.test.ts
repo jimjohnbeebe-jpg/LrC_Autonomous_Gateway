@@ -118,7 +118,8 @@ describe("mask combine: the gate", () => {
       { inverted: true, combine: { mode: "add", kind: "radial", geometry: BOX } }, // combine with a whole-mask change
       { geometry: BOX, combine: { mode: "add", kind: "radial", geometry: BOX } },
     ]) expect(fail(op(extra)).code, JSON.stringify(extra)).toBe("INVALID_ARGUMENTS");
-    expect(fail(op({ combine: { mode: "add", kind: "brush" } })).code).toBe("MASK_KIND_NOT_SUPPORTED");
+    expect(fail(op({ combine: { mode: "add", kind: "objects" } })).code).toBe("MASK_KIND_NOT_SUPPORTED");
+    for (const kind of ["brush", "color_range", "depth_range"]) expect(fail(op({ combine: { mode: "add", kind } })).code).toBe("INVALID_ARGUMENTS");
   });
 
   it("writes a part edit once the table lists it (stage 2), and treats part 1 of a one-part mask as the mask", () => {

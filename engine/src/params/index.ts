@@ -24,6 +24,8 @@ export type { CropFrame } from "./crop-frame.js";
 export { OUTSIDE_WARN, outsideShare, outsideWarnings } from "./crop-share.js";
 export type { Box } from "./mask-person.js";
 export { REFUSED_KINDS, checkKind } from "./mask-build.js";
+export { depthMapMissing } from "./mask-range.js";
+export { BRUSH_LIMITS, BRUSH_RADIUS } from "./mask-brush.js";
 export { aiWatch, applyOp, correctionIds, firstComponent, named, precheck, storedSliders, tableSettings } from "./mask-ops.js";
 export type { EditOp, Geometry, MaskOp, OpResult } from "./mask-ops.js";
 export { MODE_NAMES, VERIFIED_FORMS, formOf, uncaptured } from "./mask-combine.js";

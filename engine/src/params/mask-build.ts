@@ -5,7 +5,9 @@
 
 import { IDENTITY, boxToRadial, photoPoint, radialToBox, type CropFrame, type Point } from "./crop-frame.js";
 import { AI_KINDS, IMAGE, LINEAR, M, MaskError, RADIAL, RANGE, WHAT, isAiKind, newMaskId, newSyncId, type Component, type MaskKind } from "./mask-table.js";
+import { brushFields, type Stroke } from "./mask-brush.js";
 import { personFields } from "./mask-person.js";
+import { colorFields, depthFields, trapezoid, type Rgb } from "./mask-range.js";
 
 export type { Point } from "./crop-frame.js";
 /**
@@ -23,6 +25,13 @@ export type Geometry = {
   bottom?: number | undefined;
   feather?: number | undefined;
   lum_range?: number[] | undefined;
+  /** depth_range: as lum_range, in distances (0 the nearest). */
+  depth_range?: number[] | undefined;
+  /** color_range: how far the selection reaches from the sampled colour, above 0 to 1 (Lightroom's Refine). */
+  color_amount?: number | undefined;
+  strokes?: Stroke[] | undefined;
+  /** color_range, set by the engine (session\masks.ts): the preview's colour at the point, 0-1. */
+  sample?: Rgb | undefined;
 };
 
 export const unit = (v: unknown, what: string): number => {
@@ -76,10 +85,9 @@ export function geometryFields(kind: string, g: Geometry, old: Component | null,
     return { [RADIAL.left]: e.left, [RADIAL.top]: e.top, [RADIAL.right]: e.right, [RADIAL.bottom]: e.bottom, [RADIAL.angle]: e.angle, ...out };
   }
   if (kind === "luminance") {
-    const r = g.lum_range;
-    if (!r || r.length !== 4 || r.some((x, i) => unit(x, `lum_range[${i}]`) < (i > 0 ? (r[i - 1] as number) : 0))) refuse("lum_range needs 4 numbers in 0-1, each at least the one before.");
-    return { [RANGE.holder]: { ...((old?.[RANGE.holder] as object | undefined) ?? rangeTemplate()), [RANGE.lumRange]: (r as number[]).map((x) => x.toFixed(6)).join(" ") } };
+    return { [RANGE.holder]: { ...((old?.[RANGE.holder] as object | undefined) ?? rangeTemplate()), [RANGE.lumRange]: trapezoid(g.lum_range, "lum_range") } };
   }
+  if (kind === "color_range" || kind === "depth_range" || kind === "brush") refuse(`A ${kind} mask is not reshaped: delete it and create it again.`);
   return refuse(`A ${kind} mask has no geometry to set.`);
 }
 
@@ -112,6 +120,9 @@ export function newComponent(kind: MaskKind, name: string, g: Geometry, point: P
     const fields = AI_KINDS[kind].point ? personFields("person_entire", 0) : AI_KINDS[kind].fields;
     return { ...base, [M.what]: WHAT.image, ...fields, [IMAGE.referencePoint]: `${at.x.toFixed(6)} ${at.y.toFixed(6)}`, [IMAGE.errorReason]: 0 };
   }
+  if (kind === "brush") return { ...base, [M.what]: WHAT.aggregate, ...brushFields(g.strokes, frame) };
+  if (kind === "color_range") return { ...base, [M.what]: WHAT.range, ...colorFields(g.sample ?? [0, 0, 0], point ?? { x: 0.5, y: 0.5 }, g.color_amount) };
+  if (kind === "depth_range") return { ...base, [M.what]: WHAT.range, ...depthFields(g.depth_range) };
   const what = kind === "linear" ? WHAT.linear : kind === "radial" ? WHAT.radial : WHAT.range;
   const fixed = kind === "radial" ? { [RADIAL.angle]: 0, [RADIAL.feather]: 50, [RADIAL.midpoint]: 50, [RADIAL.roundness]: 0, [RADIAL.flipped]: true, [RADIAL.version]: 2 } : {};
   return { ...base, [M.what]: what, ...fixed, ...geometryFields(kind, g, null, frame) };
@@ -121,13 +132,10 @@ export function newComponent(kind: MaskKind, name: string, g: Geometry, point: P
 export const REFUSED_KINDS: Readonly<Record<string, string>> = {
   people: "name the part: people_<part> for every person in the photo (people_face_skin, people_hair, ...), or person_entire / person_face_skin with a point on one person",
   landscape: "name the category: landscape_<category> (landscape_sky, landscape_vegetation, landscape_water, ...), one mask each",
-  brush: "brush painting needs strokes, which the mask table cannot be given",
   objects: "Select Objects needs a stroke or a box drawn in Lightroom",
-  color_range: "colour range needs a colour sampled on the photo in Lightroom",
-  depth_range: "depth range needs depth data sampled in Lightroom",
 };
 
-const KINDS: readonly MaskKind[] = ["linear", "radial", "luminance", ...(Object.keys(AI_KINDS) as MaskKind[])];
+const KINDS: readonly MaskKind[] = ["linear", "radial", "luminance", "color_range", "depth_range", "brush", ...(Object.keys(AI_KINDS) as MaskKind[])];
 
 /** The kind asked for, or why it is refused. */
 export function checkKind(kind: string): MaskKind {

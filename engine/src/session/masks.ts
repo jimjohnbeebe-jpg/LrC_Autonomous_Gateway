@@ -24,13 +24,14 @@
 import { pluginVersionAtLeast } from "../bridge/index.js";
 import type { GuardrailAction, MaskPassEntry } from "../log/index.js";
 import { ToolError, toToolError } from "../mcp/errors.js";
-import { deltaMetrics, summarize as metricsOf } from "../metrics/index.js";
+import { deltaMetrics, sampleColor, summarize as metricsOf } from "../metrics/index.js";
 import {
   AI_KINDS,
   KIND_LABELS,
   LOCAL_PARAMS,
   MASK_TABLE_KEY,
   applyOp,
+  depthMapMissing,
   firstComponent,
   isAiKind,
   outsideWarnings,
@@ -191,7 +192,7 @@ async function maskPass(ctx: SessionContext, s: Session, args: PassArgs, op: Mas
   const before = readTable(first.sdk);
   refuseUncaptured(s, before, op);
   const frame = await frameOf(ctx, s, t, first.sdk);
-  const plan = applyOp(before, op, frame); // MaskError: nothing written
+  let plan = applyOp(before, op, frame); // MaskError: nothing written
   if (plan.ai) checkAiPartPlugin(ctx); // issue #131: before the write
   if (sameTable(before, plan.entries)) throw new ToolError("NO_CHANGE", "Nothing was written: the mask already is as asked. The pass is not used.", false, { session_id: s.id });
   let baseline: Rendered;
@@ -201,6 +202,8 @@ async function maskPass(ctx: SessionContext, s: Session, args: PassArgs, op: Mas
     throw failed(ctx, s, `mask pass ${n} (render before the change)`, err);
   }
   if ((await readSdk(ctx, s, t)).view.masks.fingerprint !== first.view.masks.fingerprint) throw masksChanged(s);
+  // A colour range selects the colour the preview shows at its point (issue #190).
+  if (op.op === "create" && op.kind === "color_range" && op.point) plan = applyOp(before, { ...op, geometry: { ...op.geometry, sample: await sampleColor(baseline.jpeg, op.point) } }, frame);
   try {
     const done = await applyPlan(ctx, s, t, n, op, plan, before, baseline, frame);
     t.passes = n;
@@ -235,6 +238,11 @@ async function applyPlan(ctx: SessionContext, s: Session, t: Target, n: number, 
   const name = historyName(s, t, n, `mask ${op.op}`);
   let sdk = await writeTable(ctx, s, t, plan.entries, name, op.op === "delete");
   historyNames.push(name);
+  if (op.op === "create" && plan.kind === "depth_range" && depthMapMissing(readTable(sdk), plan.id)) {
+    const back = historyName(s, t, n, "mask depth revert");
+    await writeTable(ctx, s, t, before, back, true);
+    throw new ToolError("DEPTH_MAP_MISSING", `This photo has no depth map (Lightroom read the depth range back without its depth sample), so a depth range selects nothing; it was taken out again ("${back}") and the pass is not used. Depth ranges work on photos that carry depth data, such as iPhone Portrait HEIC files.`, false, { session_id: s.id });
+  }
   let id = plan.id;
   let ai: AiResult | null = null;
   if (op.op === "create" && isAiKind(plan.kind)) {

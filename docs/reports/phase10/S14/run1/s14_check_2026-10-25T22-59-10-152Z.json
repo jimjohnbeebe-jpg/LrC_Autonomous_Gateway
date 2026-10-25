@@ -1,0 +1,2805 @@
+{
+  "check": "s14",
+  "started_at": "2026-10-25T22:59:10.161Z",
+  "errors": [
+    "20260907-_OZ80093.NEF: mixer did not complete (see the results file)",
+    "S14-grey-wedge.png: could not be selected (select_failed: Lightroom did not select photo 4319347 (active photo nil, 31 selected)), so nothing was written to it.",
+    "S14-hue-chart.png: could not be selected (select_failed: Lightroom did not select photo 4319515 (active photo nil, 31 selected)), so nothing was written to it."
+  ],
+  "questions": [],
+  "hello": {
+    "protocol": 1,
+    "plugin_version": "1.1.0",
+    "lrc_version": "15.6",
+    "sdk_declared": 13,
+    "ports": {
+      "receive": 8765,
+      "send": 8766
+    },
+    "process_started_at": "2026-10-25T20:59:45Z"
+  },
+  "census": {
+    "collection": {
+      "local_id": 3927297,
+      "name": "fixtures",
+      "smart": false,
+      "photo_count": 31
+    },
+    "selected_uuid": "AAFDE261-CFD7-49C7-8393-65A6BA4BFEF8",
+    "photos": [
+      {
+        "uuid": "9B787793-478E-47B9-932F-9CD1E0B9EC35",
+        "local_id": 4028472,
+        "filename": "S10-jxl.jxl",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "JXL",
+        "pipeline": "rendered",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": false,
+          "camera_profile": "Embedded",
+          "embedded": true
+        },
+        "process_version": "15.4",
+        "key_count": 172,
+        "extra_keys": [
+          "IncrementalTemperature",
+          "IncrementalTint"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale",
+          "Look",
+          "MaskGroupBasedCorrections",
+          "Temperature",
+          "Tint"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "926A3109-4710-4BF9-8AFF-C54BCAD5632D",
+        "local_id": 3570728,
+        "filename": "20250414-20250413-_OZ81315-HDR-2.avif",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "AVIF",
+        "pipeline": "rendered",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": false,
+          "camera_profile": "Embedded",
+          "embedded": true
+        },
+        "process_version": "15.4",
+        "key_count": 176,
+        "extra_keys": [
+          "ExtendedToneCurvePV2012",
+          "ExtendedToneCurvePV2012Blue",
+          "ExtendedToneCurvePV2012Green",
+          "ExtendedToneCurvePV2012Red",
+          "IncrementalTemperature",
+          "IncrementalTint"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale",
+          "Look",
+          "MaskGroupBasedCorrections",
+          "Temperature",
+          "Tint"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "12837A3F-E676-4A2D-9249-2BA53601EB43",
+        "local_id": 4102997,
+        "filename": "IMG_1595-Edit.JPG",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "JPG",
+        "pipeline": "rendered",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": false,
+          "camera_profile": "Embedded",
+          "embedded": true
+        },
+        "process_version": "11.0",
+        "key_count": 172,
+        "extra_keys": [
+          "IncrementalTemperature",
+          "IncrementalTint"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale",
+          "Look",
+          "MaskGroupBasedCorrections",
+          "Temperature",
+          "Tint"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "268D3EFD-034F-4555-99CF-D355707B5153",
+        "local_id": 25260,
+        "filename": "_DSC0028.NEF",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "RAW",
+        "pipeline": "raw",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": true,
+          "camera_profile": "Adobe Standard",
+          "embedded": false
+        },
+        "process_version": "11.0",
+        "key_count": 173,
+        "extra_keys": [],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale",
+          "MaskGroupBasedCorrections"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "5157A1D2-3E6E-4D0A-A22D-87AC9084DD85",
+        "local_id": 3500451,
+        "filename": "_OZ80660.JPG",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "JPG",
+        "pipeline": "rendered",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": false,
+          "camera_profile": "Embedded",
+          "embedded": true
+        },
+        "process_version": "15.4",
+        "key_count": 172,
+        "extra_keys": [
+          "IncrementalTemperature",
+          "IncrementalTint"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale",
+          "Look",
+          "MaskGroupBasedCorrections",
+          "Temperature",
+          "Tint"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "F6809EF4-5EB2-49D9-B1AB-5C6FD426EBFB",
+        "local_id": 4028546,
+        "filename": "20260907-S10-tiff32.tif",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "TIFF",
+        "pipeline": "rendered",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": false,
+          "camera_profile": "Embedded",
+          "embedded": true
+        },
+        "process_version": "15.4",
+        "key_count": 176,
+        "extra_keys": [
+          "ExtendedToneCurvePV2012",
+          "ExtendedToneCurvePV2012Blue",
+          "ExtendedToneCurvePV2012Green",
+          "ExtendedToneCurvePV2012Red",
+          "IncrementalTemperature",
+          "IncrementalTint"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale",
+          "Look",
+          "MaskGroupBasedCorrections",
+          "Temperature",
+          "Tint"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "3242B14D-5B67-49B4-9054-E858E6493647",
+        "local_id": 4028545,
+        "filename": "20260907-S10-tiff16.tif",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "TIFF",
+        "pipeline": "rendered",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": false,
+          "camera_profile": "Embedded",
+          "embedded": true
+        },
+        "process_version": "15.4",
+        "key_count": 172,
+        "extra_keys": [
+          "IncrementalTemperature",
+          "IncrementalTint"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale",
+          "Look",
+          "MaskGroupBasedCorrections",
+          "Temperature",
+          "Tint"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "ACC4F9FE-367B-4ABD-A3E8-0BD9514F4A41",
+        "local_id": 3943215,
+        "filename": "_DSC0103.NEF",
+        "copy_name": "Copy 1",
+        "is_virtual_copy": true,
+        "file_format": "RAW",
+        "pipeline": "raw",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": true,
+          "camera_profile": "Adobe Standard",
+          "embedded": false
+        },
+        "process_version": "15.4",
+        "key_count": 183,
+        "extra_keys": [
+          "CropConstrainAspectRatio",
+          "LensProfileFilename",
+          "RemoveAreas",
+          "RetouchAreas"
+        ],
+        "missing_pinned_keys": [],
+        "selected": false
+      },
+      {
+        "uuid": "12409199-51E4-4AC3-8EE9-6DB994858630",
+        "local_id": 4026422,
+        "filename": "DSC_0031.JPG",
+        "copy_name": "Copy 1",
+        "is_virtual_copy": true,
+        "file_format": "JPG",
+        "pipeline": "rendered",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": false,
+          "camera_profile": "Embedded",
+          "embedded": true
+        },
+        "process_version": "15.4",
+        "key_count": 176,
+        "extra_keys": [
+          "CropConstrainAspectRatio",
+          "IncrementalTemperature",
+          "IncrementalTint"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "Look",
+          "Temperature",
+          "Tint"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "7139D3E6-1EEA-453D-8FD2-E5919979AC52",
+        "local_id": 18025,
+        "filename": "IMG_1595.JPG",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "JPG",
+        "pipeline": "rendered",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": false,
+          "camera_profile": "Embedded",
+          "embedded": true
+        },
+        "process_version": "11.0",
+        "key_count": 172,
+        "extra_keys": [
+          "IncrementalTemperature",
+          "IncrementalTint"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale",
+          "Look",
+          "MaskGroupBasedCorrections",
+          "Temperature",
+          "Tint"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "EE66F45E-9B46-4D81-A54C-8EE933F163DD",
+        "local_id": 4102646,
+        "filename": "20260907-_OZ80099-Edit.tif",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "TIFF",
+        "pipeline": "rendered",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": false,
+          "camera_profile": "Embedded",
+          "embedded": true
+        },
+        "process_version": "15.4",
+        "key_count": 172,
+        "extra_keys": [
+          "IncrementalTemperature",
+          "IncrementalTint"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale",
+          "Look",
+          "MaskGroupBasedCorrections",
+          "Temperature",
+          "Tint"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "C9D05F85-D980-47DD-B3E8-022C0C212751",
+        "local_id": 3848820,
+        "filename": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "DNG",
+        "pipeline": "raw",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": true,
+          "camera_profile": "Group: Camera Standard",
+          "embedded": false
+        },
+        "process_version": "15.4",
+        "key_count": 174,
+        "extra_keys": [
+          "CropConstrainAspectRatio"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale",
+          "MaskGroupBasedCorrections"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "995935D6-F379-4DDE-A8DC-737465C4A52E",
+        "local_id": 3869530,
+        "filename": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "DNG",
+        "pipeline": "raw",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": true,
+          "camera_profile": "Adobe Standard",
+          "embedded": false
+        },
+        "process_version": "15.4",
+        "key_count": 180,
+        "extra_keys": [
+          "ExtendedToneCurvePV2012",
+          "ExtendedToneCurvePV2012Blue",
+          "ExtendedToneCurvePV2012Green",
+          "ExtendedToneCurvePV2012Red",
+          "UprightFourSegments_0",
+          "UprightTransform_5"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "23B201BF-A39A-44C6-839B-E13D4C0EA70D",
+        "local_id": 3869529,
+        "filename": "20250413-_OZ81430.NEF",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "RAW",
+        "pipeline": "raw",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": true,
+          "camera_profile": "Group: Camera Standard",
+          "embedded": false
+        },
+        "process_version": "15.4",
+        "key_count": 177,
+        "extra_keys": [],
+        "missing_pinned_keys": [
+          "Look",
+          "MaskGroupBasedCorrections"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "4C1ADCA6-1BC5-442D-B5AE-4B2CCD7BCE67",
+        "local_id": 3869531,
+        "filename": "20260110-_Z8A0173.NEF",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "RAW",
+        "pipeline": "raw",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": true,
+          "camera_profile": "Group: Camera Standard",
+          "embedded": false
+        },
+        "process_version": "15.4",
+        "key_count": 177,
+        "extra_keys": [],
+        "missing_pinned_keys": [
+          "Look",
+          "MaskGroupBasedCorrections"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+        "local_id": 3869533,
+        "filename": "20260907-_OZ80093.NEF",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "RAW",
+        "pipeline": "raw",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": true,
+          "camera_profile": "Camera Neutral",
+          "embedded": false
+        },
+        "process_version": "15.4",
+        "key_count": 177,
+        "extra_keys": [],
+        "missing_pinned_keys": [
+          "Look",
+          "MaskGroupBasedCorrections"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "D838903C-EDE1-4C59-A3A2-02AD371F458C",
+        "local_id": 14524,
+        "filename": "_DSC0091.NEF",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "RAW",
+        "pipeline": "raw",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": true,
+          "camera_profile": "Adobe Standard",
+          "embedded": false
+        },
+        "process_version": "15.4",
+        "key_count": 181,
+        "extra_keys": [
+          "CropConstrainAspectRatio",
+          "LensProfileFilename"
+        ],
+        "missing_pinned_keys": [],
+        "selected": false
+      },
+      {
+        "uuid": "2E3CFAC0-ACBC-4D35-A202-2866EC67376E",
+        "local_id": 14742,
+        "filename": "PICT0019.DNG",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "DNG",
+        "pipeline": "raw",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": true,
+          "camera_profile": "Adobe Standard",
+          "embedded": false
+        },
+        "process_version": "15.4",
+        "key_count": 182,
+        "extra_keys": [
+          "CropConstrainAspectRatio",
+          "RemoveAreas",
+          "UprightTransform_0",
+          "UprightTransform_1",
+          "UprightTransform_2",
+          "UprightTransform_3",
+          "UprightTransform_4",
+          "UprightTransform_5"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "CF12AF60-0858-4181-9562-376D16B89126",
+        "local_id": 3869534,
+        "filename": "20260907-_OZ80099.NEF",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "RAW",
+        "pipeline": "raw",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": true,
+          "camera_profile": "Camera Neutral",
+          "embedded": false
+        },
+        "process_version": "15.4",
+        "key_count": 177,
+        "extra_keys": [],
+        "missing_pinned_keys": [
+          "Look",
+          "MaskGroupBasedCorrections"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "89A01AEE-5054-41AC-BD52-754100641E06",
+        "local_id": 4028385,
+        "filename": "S10-psb.psb",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "PSB",
+        "pipeline": "rendered",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": false,
+          "camera_profile": "Embedded",
+          "embedded": true
+        },
+        "process_version": "15.4",
+        "key_count": 172,
+        "extra_keys": [
+          "IncrementalTemperature",
+          "IncrementalTint"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale",
+          "Look",
+          "MaskGroupBasedCorrections",
+          "Temperature",
+          "Tint"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "F472C80A-31EF-47B1-8C05-6910CC7D90AA",
+        "local_id": 4028328,
+        "filename": "20260907-_OZ80099-Edit.tif",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "TIFF",
+        "pipeline": "rendered",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": false,
+          "camera_profile": "Embedded",
+          "embedded": true
+        },
+        "process_version": "15.4",
+        "key_count": 172,
+        "extra_keys": [
+          "IncrementalTemperature",
+          "IncrementalTint"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale",
+          "Look",
+          "MaskGroupBasedCorrections",
+          "Temperature",
+          "Tint"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "81FFC502-9B5E-4B80-B3DF-40103C041EB1",
+        "local_id": 26742,
+        "filename": "DSC_0031.JPG",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "JPG",
+        "pipeline": "rendered",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": false,
+          "camera_profile": "Embedded",
+          "embedded": true
+        },
+        "process_version": "11.0",
+        "key_count": 172,
+        "extra_keys": [
+          "IncrementalTemperature",
+          "IncrementalTint"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale",
+          "Look",
+          "MaskGroupBasedCorrections",
+          "Temperature",
+          "Tint"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "C3006593-AD48-4EDA-ABEF-D38FB51508C1",
+        "local_id": 14459,
+        "filename": "_DSC0103.NEF",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "RAW",
+        "pipeline": "raw",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": true,
+          "camera_profile": "Camera Landscape",
+          "embedded": false
+        },
+        "process_version": "15.4",
+        "key_count": 175,
+        "extra_keys": [
+          "CropConstrainAspectRatio",
+          "RemoveAreas",
+          "RetouchAreas"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale",
+          "Look",
+          "MaskGroupBasedCorrections"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "699B9DAB-16F0-4985-B48E-BD21CD97477B",
+        "local_id": 26629,
+        "filename": "IMG_1595.JPG",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "JPG",
+        "pipeline": "rendered",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": false,
+          "camera_profile": "Embedded",
+          "embedded": true
+        },
+        "process_version": "11.0",
+        "key_count": 172,
+        "extra_keys": [
+          "IncrementalTemperature",
+          "IncrementalTint"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale",
+          "Look",
+          "MaskGroupBasedCorrections",
+          "Temperature",
+          "Tint"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "8AADF170-132B-4F09-8966-D56F25B124C9",
+        "local_id": 4196666,
+        "filename": "IMG_1595.JPG",
+        "copy_name": "Copy 1",
+        "is_virtual_copy": true,
+        "file_format": "JPG",
+        "pipeline": "rendered",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": false,
+          "camera_profile": "Embedded",
+          "embedded": true
+        },
+        "process_version": "11.0",
+        "key_count": 172,
+        "extra_keys": [
+          "IncrementalTemperature",
+          "IncrementalTint"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale",
+          "Look",
+          "MaskGroupBasedCorrections",
+          "Temperature",
+          "Tint"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "AAFDE261-CFD7-49C7-8393-65A6BA4BFEF8",
+        "local_id": 633582,
+        "filename": "DSC_0031.JPG",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "JPG",
+        "pipeline": "rendered",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": false,
+          "camera_profile": "Embedded",
+          "embedded": true
+        },
+        "process_version": "15.4",
+        "key_count": 172,
+        "extra_keys": [
+          "IncrementalTemperature",
+          "IncrementalTint"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale",
+          "Look",
+          "MaskGroupBasedCorrections",
+          "Temperature",
+          "Tint"
+        ],
+        "selected": true
+      },
+      {
+        "uuid": "325E99C8-6DC2-4694-AB54-4BF381F45B94",
+        "local_id": 4043747,
+        "filename": "_DSC0091-Edit.psd",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "PSD",
+        "pipeline": "rendered",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": false,
+          "camera_profile": "Embedded",
+          "embedded": true
+        },
+        "process_version": "15.4",
+        "key_count": 172,
+        "extra_keys": [
+          "IncrementalTemperature",
+          "IncrementalTint"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale",
+          "Look",
+          "MaskGroupBasedCorrections",
+          "Temperature",
+          "Tint"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "8DB6BB8D-A1B5-44D2-B1AE-E7A609D98221",
+        "local_id": 4060484,
+        "filename": "20251219-ThreeBeebeBrothers 1994 - Restored.png",
+        "copy_name": "Copy 1",
+        "is_virtual_copy": true,
+        "file_format": "PNG",
+        "pipeline": "rendered",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": false,
+          "camera_profile": "Embedded",
+          "embedded": true
+        },
+        "process_version": "15.4",
+        "key_count": 172,
+        "extra_keys": [
+          "IncrementalTemperature",
+          "IncrementalTint"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale",
+          "Look",
+          "MaskGroupBasedCorrections",
+          "Temperature",
+          "Tint"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "DF14E9FC-638C-4EDA-B0BB-FBCA73879F7C",
+        "local_id": 4043593,
+        "filename": "_DSC0091.NEF",
+        "copy_name": "Copy 4",
+        "is_virtual_copy": true,
+        "file_format": "RAW",
+        "pipeline": "raw",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": true,
+          "camera_profile": "Adobe Standard",
+          "embedded": false
+        },
+        "process_version": "15.4",
+        "key_count": 181,
+        "extra_keys": [
+          "CropConstrainAspectRatio",
+          "LensProfileFilename"
+        ],
+        "missing_pinned_keys": [],
+        "selected": false
+      },
+      {
+        "uuid": "288BCCCA-3515-4D4F-9531-1CB1926F8C73",
+        "local_id": 3777825,
+        "filename": "20251219-ThreeBeebeBrothers 1994 - Restored.png",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "PNG",
+        "pipeline": "rendered",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": false,
+          "camera_profile": "Embedded",
+          "embedded": true
+        },
+        "process_version": "15.4",
+        "key_count": 172,
+        "extra_keys": [
+          "IncrementalTemperature",
+          "IncrementalTint"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale",
+          "Look",
+          "MaskGroupBasedCorrections",
+          "Temperature",
+          "Tint"
+        ],
+        "selected": false
+      },
+      {
+        "uuid": "25F2BB98-2B68-4ED1-B3F7-04E155F8BD84",
+        "local_id": 4028427,
+        "filename": "S10-cmyk.tif",
+        "copy_name": null,
+        "is_virtual_copy": false,
+        "file_format": "TIFF",
+        "pipeline": "rendered",
+        "signals": {
+          "temperature_key": "Temperature",
+          "temperature_present": false,
+          "camera_profile": "Embedded",
+          "embedded": true
+        },
+        "process_version": "15.4",
+        "key_count": 172,
+        "extra_keys": [
+          "IncrementalTemperature",
+          "IncrementalTint"
+        ],
+        "missing_pinned_keys": [
+          "LensProfileDigest",
+          "LensProfileDistortionScale",
+          "LensProfileIsEmbedded",
+          "LensProfileName",
+          "LensProfileVignettingScale",
+          "Look",
+          "MaskGroupBasedCorrections",
+          "Temperature",
+          "Tint"
+        ],
+        "selected": false
+      }
+    ],
+    "skipped": [],
+    "pipelines": {
+      "raw": 12,
+      "rendered": 19,
+      "unknown": 0
+    },
+    "rendered": {
+      "photos": 19,
+      "shared_keys": 172,
+      "state_keys": [
+        "CropConstrainAspectRatio",
+        "ExtendedToneCurvePV2012",
+        "ExtendedToneCurvePV2012Blue",
+        "ExtendedToneCurvePV2012Green",
+        "ExtendedToneCurvePV2012Red",
+        "LensProfileDistortionScale",
+        "LensProfileVignettingScale",
+        "MaskGroupBasedCorrections"
+      ],
+      "extra_keys_in_all": [
+        "IncrementalTemperature",
+        "IncrementalTint"
+      ],
+      "missing_pinned_in_all": [
+        "LensProfileDigest",
+        "LensProfileIsEmbedded",
+        "LensProfileName",
+        "Look",
+        "Temperature",
+        "Tint"
+      ]
+    },
+    "dump_dir": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\S14\\census"
+  },
+  "charts": {
+    "dir": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\S14\\charts",
+    "collection": "LrC-AVG S14 charts",
+    "wedge": {
+      "uuid": "60EDD083-4598-4D05-B5CF-636860CCD45F",
+      "pipeline": "rendered"
+    },
+    "hue": {
+      "uuid": "1F191350-2E87-4F54-8A07-8CCE3A4830D3",
+      "pipeline": "rendered"
+    }
+  },
+  "selection_restored": {
+    "uuid": "AAFDE261-CFD7-49C7-8393-65A6BA4BFEF8",
+    "photo": "DSC_0031.JPG",
+    "ok": true
+  },
+  "photos": [
+    {
+      "filename": "20260907-_OZ80093.NEF",
+      "copy_name": null,
+      "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+      "file_format": "RAW",
+      "pipeline": "raw",
+      "process_version": "15.4",
+      "snapshot": {
+        "name": "AVG S14 before 2026-10-25T22-59-10-152Z",
+        "id": "D13A4B0B-0187-4F3A-9CCB-F5589F5D0A55"
+      },
+      "put_back": {
+        "ok": true,
+        "differing": [],
+        "compared": 177
+      },
+      "selected_for_writes": true,
+      "curve": {
+        "base_levels": [
+          [
+            81,
+            86.9,
+            88.1
+          ],
+          [
+            95.5,
+            100.6,
+            100.7
+          ],
+          [
+            68.9,
+            71.2,
+            72.7
+          ],
+          [
+            83.3,
+            83.9,
+            83.1
+          ],
+          [
+            79.7,
+            81.1,
+            82.2
+          ],
+          [
+            90,
+            90.9,
+            89.9
+          ],
+          [
+            98.3,
+            99.7,
+            98.1
+          ],
+          [
+            75.7,
+            78.6,
+            79.2
+          ],
+          [
+            55.9,
+            60.6,
+            65.7
+          ],
+          [
+            36,
+            40.6,
+            47.6
+          ],
+          [
+            60.2,
+            64.5,
+            69.9
+          ],
+          [
+            56.3,
+            59.6,
+            63.9
+          ],
+          [
+            65.9,
+            69,
+            73.1
+          ],
+          [
+            49.5,
+            54.7,
+            61
+          ],
+          [
+            53,
+            57.8,
+            63.7
+          ],
+          [
+            85.2,
+            88.9,
+            93.6
+          ],
+          [
+            72.4,
+            79.7,
+            89.1
+          ],
+          [
+            77.8,
+            85.7,
+            95.2
+          ],
+          [
+            72.1,
+            79.6,
+            90.2
+          ],
+          [
+            62.1,
+            70,
+            79.7
+          ],
+          [
+            61.4,
+            71.6,
+            83.2
+          ]
+        ],
+        "variants": [
+          {
+            "label": "issue187 (curve alone)",
+            "written": {
+              "ToneCurvePV2012": [
+                0,
+                0,
+                64,
+                56,
+                128,
+                128,
+                192,
+                200,
+                255,
+                255
+              ]
+            },
+            "history_name": "AVG S14 curve 1/7",
+            "apply_ms": 41.041612625122,
+            "read_back": {
+              "ToneCurvePV2012": [
+                0,
+                0,
+                64,
+                56,
+                128,
+                128,
+                192,
+                200,
+                255,
+                255
+              ]
+            },
+            "name_read": "Custom",
+            "taken": true,
+            "render_delta": 1.9,
+            "render_changed": true,
+            "levels": [
+              [
+                80.5,
+                86,
+                86.5
+              ],
+              [
+                95.7,
+                100.3,
+                99.4
+              ],
+              [
+                67.4,
+                69.4,
+                70.2
+              ],
+              [
+                82.6,
+                82.7,
+                81.1
+              ],
+              [
+                78.9,
+                79.9,
+                80.3
+              ],
+              [
+                89.8,
+                90.3,
+                88.6
+              ],
+              [
+                97.9,
+                99,
+                97
+              ],
+              [
+                74.7,
+                77.1,
+                76.7
+              ],
+              [
+                53.9,
+                58,
+                62.2
+              ],
+              [
+                33.8,
+                37.7,
+                43.6
+              ],
+              [
+                57.8,
+                61.4,
+                66.3
+              ],
+              [
+                54.4,
+                57.2,
+                61
+              ],
+              [
+                63.9,
+                66.6,
+                70.1
+              ],
+              [
+                47,
+                51.5,
+                57.1
+              ],
+              [
+                50.4,
+                54.7,
+                60.1
+              ],
+              [
+                84,
+                87.1,
+                91.4
+              ],
+              [
+                71,
+                77.6,
+                86.4
+              ],
+              [
+                76.1,
+                83.7,
+                93
+              ],
+              [
+                70.4,
+                77.8,
+                88.5
+              ],
+              [
+                59.7,
+                67.7,
+                77.7
+              ],
+              [
+                59,
+                69.3,
+                81.1
+              ]
+            ]
+          },
+          {
+            "label": "issue187 + name Custom",
+            "written": {
+              "ToneCurveName2012": "Custom",
+              "ToneCurvePV2012": [
+                0,
+                0,
+                64,
+                56,
+                128,
+                128,
+                192,
+                200,
+                255,
+                255
+              ]
+            },
+            "history_name": "AVG S14 curve 2/7",
+            "apply_ms": 16.852855682373,
+            "read_back": {
+              "ToneCurveName2012": "Custom",
+              "ToneCurvePV2012": [
+                0,
+                0,
+                64,
+                56,
+                128,
+                128,
+                192,
+                200,
+                255,
+                255
+              ]
+            },
+            "name_read": "Custom",
+            "taken": true,
+            "render_delta": 1.9,
+            "render_changed": true,
+            "levels": [
+              [
+                80.5,
+                86,
+                86.5
+              ],
+              [
+                95.7,
+                100.3,
+                99.4
+              ],
+              [
+                67.4,
+                69.4,
+                70.2
+              ],
+              [
+                82.6,
+                82.7,
+                81.1
+              ],
+              [
+                78.9,
+                79.9,
+                80.3
+              ],
+              [
+                89.8,
+                90.3,
+                88.6
+              ],
+              [
+                97.9,
+                99,
+                97
+              ],
+              [
+                74.7,
+                77.1,
+                76.7
+              ],
+              [
+                53.9,
+                58,
+                62.2
+              ],
+              [
+                33.8,
+                37.7,
+                43.6
+              ],
+              [
+                57.8,
+                61.4,
+                66.3
+              ],
+              [
+                54.4,
+                57.2,
+                61
+              ],
+              [
+                63.9,
+                66.6,
+                70.1
+              ],
+              [
+                47,
+                51.5,
+                57.1
+              ],
+              [
+                50.4,
+                54.7,
+                60.1
+              ],
+              [
+                84,
+                87.1,
+                91.4
+              ],
+              [
+                71,
+                77.6,
+                86.4
+              ],
+              [
+                76.1,
+                83.7,
+                93
+              ],
+              [
+                70.4,
+                77.8,
+                88.5
+              ],
+              [
+                59.7,
+                67.7,
+                77.7
+              ],
+              [
+                59,
+                69.3,
+                81.1
+              ]
+            ]
+          },
+          {
+            "label": "issue187 + name Custom + EnableToneCurve",
+            "written": {
+              "ToneCurveName2012": "Custom",
+              "ToneCurvePV2012": [
+                0,
+                0,
+                64,
+                56,
+                128,
+                128,
+                192,
+                200,
+                255,
+                255
+              ],
+              "EnableToneCurve": true
+            },
+            "history_name": "AVG S14 curve 3/7",
+            "apply_ms": 24.563193321228,
+            "read_back": {
+              "ToneCurveName2012": "Custom",
+              "ToneCurvePV2012": [
+                0,
+                0,
+                64,
+                56,
+                128,
+                128,
+                192,
+                200,
+                255,
+                255
+              ],
+              "EnableToneCurve": true
+            },
+            "name_read": "Custom",
+            "taken": true,
+            "render_delta": 1.9,
+            "render_changed": true,
+            "levels": [
+              [
+                80.5,
+                86,
+                86.5
+              ],
+              [
+                95.7,
+                100.3,
+                99.4
+              ],
+              [
+                67.4,
+                69.4,
+                70.2
+              ],
+              [
+                82.6,
+                82.7,
+                81.1
+              ],
+              [
+                78.9,
+                79.9,
+                80.3
+              ],
+              [
+                89.8,
+                90.3,
+                88.6
+              ],
+              [
+                97.9,
+                99,
+                97
+              ],
+              [
+                74.7,
+                77.1,
+                76.7
+              ],
+              [
+                53.9,
+                58,
+                62.2
+              ],
+              [
+                33.8,
+                37.7,
+                43.6
+              ],
+              [
+                57.8,
+                61.4,
+                66.3
+              ],
+              [
+                54.4,
+                57.2,
+                61
+              ],
+              [
+                63.9,
+                66.6,
+                70.1
+              ],
+              [
+                47,
+                51.5,
+                57.1
+              ],
+              [
+                50.4,
+                54.7,
+                60.1
+              ],
+              [
+                84,
+                87.1,
+                91.4
+              ],
+              [
+                71,
+                77.6,
+                86.4
+              ],
+              [
+                76.1,
+                83.7,
+                93
+              ],
+              [
+                70.4,
+                77.8,
+                88.5
+              ],
+              [
+                59.7,
+                67.7,
+                77.7
+              ],
+              [
+                59,
+                69.3,
+                81.1
+              ]
+            ]
+          },
+          {
+            "label": "3 points + name Custom",
+            "written": {
+              "ToneCurveName2012": "Custom",
+              "ToneCurvePV2012": [
+                0,
+                0,
+                128,
+                160,
+                255,
+                255
+              ]
+            },
+            "history_name": "AVG S14 curve 4/7",
+            "apply_ms": 20.153522491455,
+            "read_back": {
+              "ToneCurveName2012": "Custom",
+              "ToneCurvePV2012": [
+                0,
+                0,
+                128,
+                160,
+                255,
+                255
+              ]
+            },
+            "name_read": "Custom",
+            "taken": true,
+            "render_delta": 15.7,
+            "render_changed": true,
+            "levels": [
+              [
+                99.7,
+                105.3,
+                106.5
+              ],
+              [
+                115.1,
+                119.8,
+                120.2
+              ],
+              [
+                84.8,
+                87.8,
+                90.5
+              ],
+              [
+                101.6,
+                102.8,
+                103.1
+              ],
+              [
+                96.9,
+                99.5,
+                101.8
+              ],
+              [
+                108.6,
+                110.4,
+                110.7
+              ],
+              [
+                118.8,
+                120.8,
+                120.3
+              ],
+              [
+                91.6,
+                95.8,
+                98
+              ],
+              [
+                69.2,
+                75.7,
+                82.9
+              ],
+              [
+                45.3,
+                52,
+                61.3
+              ],
+              [
+                75.3,
+                81.1,
+                88.4
+              ],
+              [
+                70,
+                74.6,
+                80.4
+              ],
+              [
+                81.3,
+                85.8,
+                91.3
+              ],
+              [
+                62.2,
+                69.3,
+                77.7
+              ],
+              [
+                65.8,
+                72.2,
+                79.9
+              ],
+              [
+                99.2,
+                103.6,
+                109.4
+              ],
+              [
+                82.9,
+                91.4,
+                102.1
+              ],
+              [
+                91.8,
+                100.3,
+                110.7
+              ],
+              [
+                85.3,
+                93.2,
+                104.6
+              ],
+              [
+                73.6,
+                82.2,
+                92.3
+              ],
+              [
+                73.3,
+                84.5,
+                96.8
+              ]
+            ]
+          },
+          {
+            "label": "16 points + name Custom",
+            "written": {
+              "ToneCurveName2012": "Custom",
+              "ToneCurvePV2012": [
+                0,
+                0,
+                17,
+                7,
+                34,
+                16,
+                51,
+                28,
+                68,
+                44,
+                85,
+                64,
+                102,
+                88,
+                119,
+                114,
+                136,
+                141,
+                153,
+                167,
+                170,
+                191,
+                187,
+                211,
+                204,
+                227,
+                221,
+                239,
+                238,
+                248,
+                255,
+                255
+              ]
+            },
+            "history_name": "AVG S14 curve 5/7",
+            "apply_ms": 29.267191886902,
+            "read_back": {
+              "ToneCurveName2012": "Custom",
+              "ToneCurvePV2012": [
+                0,
+                0,
+                17,
+                7,
+                34,
+                16,
+                51,
+                28,
+                68,
+                44,
+                85,
+                64,
+                102,
+                88,
+                119,
+                114,
+                136,
+                141,
+                153,
+                167,
+                170,
+                191,
+                187,
+                211,
+                204,
+                227,
+                221,
+                239,
+                238,
+                248,
+                255,
+                255
+              ]
+            },
+            "name_read": "Custom",
+            "taken": true,
+            "render_delta": 5.7,
+            "render_changed": true,
+            "levels": [
+              [
+                79.5,
+                84.4,
+                83.4
+              ],
+              [
+                96.4,
+                100,
+                97
+              ],
+              [
+                64.1,
+                65.5,
+                65.1
+              ],
+              [
+                81,
+                80.3,
+                77.3
+              ],
+              [
+                77.2,
+                77.3,
+                76.4
+              ],
+              [
+                89.3,
+                89,
+                86.1
+              ],
+              [
+                97,
+                97.8,
+                94.7
+              ],
+              [
+                72.6,
+                73.8,
+                71.7
+              ],
+              [
+                49.6,
+                52.4,
+                55
+              ],
+              [
+                29.3,
+                31.3,
+                35.2
+              ],
+              [
+                52.7,
+                55.3,
+                59
+              ],
+              [
+                50.5,
+                52.2,
+                54.9
+              ],
+              [
+                59.8,
+                61.6,
+                64.2
+              ],
+              [
+                41.6,
+                44.9,
+                49
+              ],
+              [
+                44.9,
+                48.2,
+                52.7
+              ],
+              [
+                81.4,
+                83.6,
+                86.9
+              ],
+              [
+                68.3,
+                73.3,
+                80.7
+              ],
+              [
+                72.5,
+                79.6,
+                88.4
+              ],
+              [
+                66.6,
+                74.2,
+                84.8
+              ],
+              [
+                54.5,
+                63.1,
+                73.5
+              ],
+              [
+                53.3,
+                64.4,
+                76.9
+              ]
+            ]
+          },
+          {
+            "label": "red channel, 3 points + name Custom",
+            "written": {
+              "ToneCurveName2012": "Custom",
+              "ToneCurvePV2012Red": [
+                0,
+                0,
+                128,
+                160,
+                255,
+                255
+              ]
+            },
+            "history_name": "AVG S14 curve 6/7",
+            "apply_ms": 28.622388839722,
+            "read_back": {
+              "ToneCurveName2012": "Custom",
+              "ToneCurvePV2012Red": [
+                0,
+                0,
+                128,
+                160,
+                255,
+                255
+              ]
+            },
+            "name_read": "Custom",
+            "taken": true,
+            "render_delta": 3.3,
+            "render_changed": true,
+            "levels": [
+              [
+                115.7,
+                82,
+                87.9
+              ],
+              [
+                131.9,
+                95.5,
+                100.5
+              ],
+              [
+                99.6,
+                66.9,
+                72.6
+              ],
+              [
+                118,
+                78.8,
+                82.9
+              ],
+              [
+                113.1,
+                76.3,
+                81.9
+              ],
+              [
+                125.6,
+                85.7,
+                89.8
+              ],
+              [
+                137.1,
+                94,
+                97.9
+              ],
+              [
+                107.4,
+                74.2,
+                79
+              ],
+              [
+                84.1,
+                56.7,
+                65.6
+              ],
+              [
+                57.4,
+                37.7,
+                47.4
+              ],
+              [
+                91.2,
+                60,
+                69.7
+              ],
+              [
+                84,
+                55.6,
+                63.8
+              ],
+              [
+                96.8,
+                64.6,
+                72.9
+              ],
+              [
+                76.9,
+                50.9,
+                60.9
+              ],
+              [
+                80,
+                54,
+                63.6
+              ],
+              [
+                112.9,
+                85,
+                93.4
+              ],
+              [
+                95.4,
+                76.7,
+                89.1
+              ],
+              [
+                106.6,
+                81.9,
+                95.1
+              ],
+              [
+                99.1,
+                76,
+                90.1
+              ],
+              [
+                86,
+                66.9,
+                79.6
+              ],
+              [
+                87.1,
+                68.4,
+                83.1
+              ]
+            ]
+          },
+          {
+            "label": "parametric darks -30, lights +30",
+            "written": {
+              "ParametricDarks": -30,
+              "ParametricLights": 30
+            },
+            "history_name": "AVG S14 curve 7/7",
+            "apply_ms": 29.107213020325,
+            "read_back": {
+              "ParametricDarks": -30,
+              "ParametricLights": 30
+            },
+            "name_read": "Linear",
+            "taken": true,
+            "render_delta": 4.9,
+            "render_changed": true,
+            "levels": [
+              [
+                79.8,
+                84.8,
+                84.4
+              ],
+              [
+                95.5,
+                99.5,
+                97.5
+              ],
+              [
+                64.5,
+                66.3,
+                66.7
+              ],
+              [
+                80.7,
+                80.5,
+                78.3
+              ],
+              [
+                77,
+                77.7,
+                77.4
+              ],
+              [
+                88.8,
+                89,
+                86.7
+              ],
+              [
+                96.7,
+                97.9,
+                95.3
+              ],
+              [
+                72.3,
+                74.4,
+                73.3
+              ],
+              [
+                49.7,
+                53.6,
+                57.4
+              ],
+              [
+                29.1,
+                32.3,
+                37.5
+              ],
+              [
+                53.5,
+                57.1,
+                61.6
+              ],
+              [
+                51,
+                53.4,
+                56.7
+              ],
+              [
+                60.4,
+                62.9,
+                66.1
+              ],
+              [
+                42.4,
+                46.7,
+                51.9
+              ],
+              [
+                46,
+                50.2,
+                55.3
+              ],
+              [
+                81.9,
+                84.7,
+                88.5
+              ],
+              [
+                68.2,
+                74.2,
+                82.4
+              ],
+              [
+                73,
+                80.6,
+                89.8
+              ],
+              [
+                67,
+                74.7,
+                85.6
+              ],
+              [
+                55.7,
+                64,
+                74.2
+              ],
+              [
+                55.1,
+                65.6,
+                77.5
+              ]
+            ]
+          }
+        ],
+        "completed": true
+      },
+      "calibration": {
+        "parameters": 7,
+        "absent": [],
+        "writes": [
+          {
+            "label": "at minimum",
+            "keys": 7,
+            "history_name": "AVG S14 calibration 1/4",
+            "apply_ms": 26.878356933594
+          },
+          {
+            "label": "at maximum",
+            "keys": 7,
+            "history_name": "AVG S14 calibration 2/4",
+            "apply_ms": 23.353576660156
+          },
+          {
+            "label": "1 % below minimum",
+            "keys": 7,
+            "history_name": "AVG S14 calibration 3/4",
+            "apply_ms": 23.046374320984
+          },
+          {
+            "label": "1 % above maximum",
+            "keys": 7,
+            "history_name": "AVG S14 calibration 4/4",
+            "apply_ms": 22.865533828735
+          }
+        ],
+        "completed": true,
+        "min_accepted": 7,
+        "max_accepted": 7,
+        "below_min": {
+          "accepted": 0,
+          "clamped": 0,
+          "ignored": 0,
+          "clamped_or_ignored": 0,
+          "other": 7,
+          "missing": 0
+        },
+        "above_max": {
+          "accepted": 0,
+          "clamped": 0,
+          "ignored": 7,
+          "clamped_or_ignored": 0,
+          "other": 0,
+          "missing": 0
+        },
+        "per_parameter": [
+          {
+            "name": "ShadowTint",
+            "sdk_key": "ShadowTint",
+            "min": -100,
+            "max": 100,
+            "min_read": -100,
+            "max_read": 100,
+            "below_written": -102,
+            "below_read": 0,
+            "below_outcome": "other",
+            "above_written": 102,
+            "above_read": 0,
+            "above_outcome": "ignored"
+          },
+          {
+            "name": "RedHue",
+            "sdk_key": "RedHue",
+            "min": -100,
+            "max": 100,
+            "min_read": -100,
+            "max_read": 100,
+            "below_written": -102,
+            "below_read": 0,
+            "below_outcome": "other",
+            "above_written": 102,
+            "above_read": 0,
+            "above_outcome": "ignored"
+          },
+          {
+            "name": "RedSaturation",
+            "sdk_key": "RedSaturation",
+            "min": -100,
+            "max": 100,
+            "min_read": -100,
+            "max_read": 100,
+            "below_written": -102,
+            "below_read": 0,
+            "below_outcome": "other",
+            "above_written": 102,
+            "above_read": 0,
+            "above_outcome": "ignored"
+          },
+          {
+            "name": "GreenHue",
+            "sdk_key": "GreenHue",
+            "min": -100,
+            "max": 100,
+            "min_read": -100,
+            "max_read": 100,
+            "below_written": -102,
+            "below_read": 0,
+            "below_outcome": "other",
+            "above_written": 102,
+            "above_read": 0,
+            "above_outcome": "ignored"
+          },
+          {
+            "name": "GreenSaturation",
+            "sdk_key": "GreenSaturation",
+            "min": -100,
+            "max": 100,
+            "min_read": -100,
+            "max_read": 100,
+            "below_written": -102,
+            "below_read": 0,
+            "below_outcome": "other",
+            "above_written": 102,
+            "above_read": 0,
+            "above_outcome": "ignored"
+          },
+          {
+            "name": "BlueHue",
+            "sdk_key": "BlueHue",
+            "min": -100,
+            "max": 100,
+            "min_read": -100,
+            "max_read": 100,
+            "below_written": -102,
+            "below_read": 0,
+            "below_outcome": "other",
+            "above_written": 102,
+            "above_read": 0,
+            "above_outcome": "ignored"
+          },
+          {
+            "name": "BlueSaturation",
+            "sdk_key": "BlueSaturation",
+            "min": -100,
+            "max": 100,
+            "min_read": -100,
+            "max_read": 100,
+            "below_written": -102,
+            "below_read": 0,
+            "below_outcome": "other",
+            "above_written": 102,
+            "above_read": 0,
+            "above_outcome": "ignored"
+          }
+        ]
+      },
+      "mixer": {
+        "profile": "Adobe Monochrome",
+        "history_name": "AVG S14 monochrome 1/1",
+        "apply_ms": 21.937608718872,
+        "taken": true,
+        "profile_read": {
+          "CameraProfile": "Adobe Standard",
+          "ConvertToGrayscale": false
+        },
+        "keys_appeared": [
+          "Look"
+        ],
+        "keys_dropped": [],
+        "mixer_keys": [],
+        "mixer_start": {},
+        "dump": "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "range": {
+          "parameters": 0,
+          "completed": false,
+          "note": "no GrayMixer key appeared"
+        },
+        "completed": false
+      }
+    },
+    {
+      "filename": "DSC_0031.JPG",
+      "copy_name": null,
+      "uuid": "81FFC502-9B5E-4B80-B3DF-40103C041EB1",
+      "file_format": "JPG",
+      "pipeline": "rendered",
+      "process_version": "11.0",
+      "snapshot": {
+        "name": "AVG S14 before 2026-10-25T22-59-10-152Z",
+        "id": "75060BDF-49C5-44E7-BC34-7C0C507D8801"
+      },
+      "put_back": {
+        "ok": true,
+        "differing": [],
+        "compared": 172
+      },
+      "selected_for_writes": true,
+      "calibration": {
+        "parameters": 7,
+        "absent": [],
+        "writes": [
+          {
+            "label": "at minimum",
+            "keys": 7,
+            "history_name": "AVG S14 calibration 1/4",
+            "apply_ms": 23.702383041382
+          },
+          {
+            "label": "at maximum",
+            "keys": 7,
+            "history_name": "AVG S14 calibration 2/4",
+            "apply_ms": 158.14566612244
+          },
+          {
+            "label": "1 % below minimum",
+            "keys": 7,
+            "history_name": "AVG S14 calibration 3/4",
+            "apply_ms": 35.555243492126
+          },
+          {
+            "label": "1 % above maximum",
+            "keys": 7,
+            "history_name": "AVG S14 calibration 4/4",
+            "apply_ms": 147.5088596344
+          }
+        ],
+        "completed": true,
+        "min_accepted": 7,
+        "max_accepted": 7,
+        "below_min": {
+          "accepted": 0,
+          "clamped": 0,
+          "ignored": 0,
+          "clamped_or_ignored": 0,
+          "other": 7,
+          "missing": 0
+        },
+        "above_max": {
+          "accepted": 0,
+          "clamped": 0,
+          "ignored": 7,
+          "clamped_or_ignored": 0,
+          "other": 0,
+          "missing": 0
+        },
+        "per_parameter": [
+          {
+            "name": "ShadowTint",
+            "sdk_key": "ShadowTint",
+            "min": -100,
+            "max": 100,
+            "min_read": -100,
+            "max_read": 100,
+            "below_written": -102,
+            "below_read": 0,
+            "below_outcome": "other",
+            "above_written": 102,
+            "above_read": 0,
+            "above_outcome": "ignored"
+          },
+          {
+            "name": "RedHue",
+            "sdk_key": "RedHue",
+            "min": -100,
+            "max": 100,
+            "min_read": -100,
+            "max_read": 100,
+            "below_written": -102,
+            "below_read": 0,
+            "below_outcome": "other",
+            "above_written": 102,
+            "above_read": 0,
+            "above_outcome": "ignored"
+          },
+          {
+            "name": "RedSaturation",
+            "sdk_key": "RedSaturation",
+            "min": -100,
+            "max": 100,
+            "min_read": -100,
+            "max_read": 100,
+            "below_written": -102,
+            "below_read": 0,
+            "below_outcome": "other",
+            "above_written": 102,
+            "above_read": 0,
+            "above_outcome": "ignored"
+          },
+          {
+            "name": "GreenHue",
+            "sdk_key": "GreenHue",
+            "min": -100,
+            "max": 100,
+            "min_read": -100,
+            "max_read": 100,
+            "below_written": -102,
+            "below_read": 0,
+            "below_outcome": "other",
+            "above_written": 102,
+            "above_read": 0,
+            "above_outcome": "ignored"
+          },
+          {
+            "name": "GreenSaturation",
+            "sdk_key": "GreenSaturation",
+            "min": -100,
+            "max": 100,
+            "min_read": -100,
+            "max_read": 100,
+            "below_written": -102,
+            "below_read": 0,
+            "below_outcome": "other",
+            "above_written": 102,
+            "above_read": 0,
+            "above_outcome": "ignored"
+          },
+          {
+            "name": "BlueHue",
+            "sdk_key": "BlueHue",
+            "min": -100,
+            "max": 100,
+            "min_read": -100,
+            "max_read": 100,
+            "below_written": -102,
+            "below_read": 0,
+            "below_outcome": "other",
+            "above_written": 102,
+            "above_read": 0,
+            "above_outcome": "ignored"
+          },
+          {
+            "name": "BlueSaturation",
+            "sdk_key": "BlueSaturation",
+            "min": -100,
+            "max": 100,
+            "min_read": -100,
+            "max_read": 100,
+            "below_written": -102,
+            "below_read": 0,
+            "below_outcome": "other",
+            "above_written": 102,
+            "above_read": 0,
+            "above_outcome": "ignored"
+          }
+        ]
+      },
+      "mixer": {
+        "profile": "Monochrome",
+        "history_name": "AVG S14 monochrome 1/1",
+        "apply_ms": 21.849632263184,
+        "taken": true,
+        "profile_read": {
+          "CameraProfile": "Embedded",
+          "ConvertToGrayscale": true
+        },
+        "keys_appeared": [
+          "GrayMixerAqua",
+          "GrayMixerBlue",
+          "GrayMixerGreen",
+          "GrayMixerMagenta",
+          "GrayMixerOrange",
+          "GrayMixerPurple",
+          "GrayMixerRed",
+          "GrayMixerYellow"
+        ],
+        "keys_dropped": [
+          "HueAdjustmentAqua",
+          "HueAdjustmentBlue",
+          "HueAdjustmentGreen",
+          "HueAdjustmentMagenta",
+          "HueAdjustmentOrange",
+          "HueAdjustmentPurple",
+          "HueAdjustmentRed",
+          "HueAdjustmentYellow",
+          "LuminanceAdjustmentAqua",
+          "LuminanceAdjustmentBlue",
+          "LuminanceAdjustmentGreen",
+          "LuminanceAdjustmentMagenta",
+          "LuminanceAdjustmentOrange",
+          "LuminanceAdjustmentPurple",
+          "LuminanceAdjustmentRed",
+          "LuminanceAdjustmentYellow",
+          "Saturation",
+          "SaturationAdjustmentAqua",
+          "SaturationAdjustmentBlue",
+          "SaturationAdjustmentGreen",
+          "SaturationAdjustmentMagenta",
+          "SaturationAdjustmentOrange",
+          "SaturationAdjustmentPurple",
+          "SaturationAdjustmentRed",
+          "SaturationAdjustmentYellow",
+          "Vibrance"
+        ],
+        "mixer_keys": [
+          "GrayMixerAqua",
+          "GrayMixerBlue",
+          "GrayMixerGreen",
+          "GrayMixerMagenta",
+          "GrayMixerOrange",
+          "GrayMixerPurple",
+          "GrayMixerRed",
+          "GrayMixerYellow"
+        ],
+        "mixer_start": {
+          "GrayMixerAqua": 0,
+          "GrayMixerBlue": 0,
+          "GrayMixerGreen": 0,
+          "GrayMixerMagenta": 0,
+          "GrayMixerOrange": 0,
+          "GrayMixerPurple": 0,
+          "GrayMixerRed": 0,
+          "GrayMixerYellow": 0
+        },
+        "dump": "s14_monochrome_DSC_0031.JPG__81FFC502.json",
+        "range": {
+          "parameters": 8,
+          "absent": [],
+          "writes": [
+            {
+              "label": "at minimum",
+              "keys": 8,
+              "history_name": "AVG S14 mixer 1/4",
+              "apply_ms": 156.08155727386
+            },
+            {
+              "label": "at maximum",
+              "keys": 8,
+              "history_name": "AVG S14 mixer 2/4",
+              "apply_ms": 27.59838104248
+            },
+            {
+              "label": "1 % below minimum",
+              "keys": 8,
+              "history_name": "AVG S14 mixer 3/4",
+              "apply_ms": 12.291193008423
+            },
+            {
+              "label": "1 % above maximum",
+              "keys": 8,
+              "history_name": "AVG S14 mixer 4/4",
+              "apply_ms": 26.460766792297
+            }
+          ],
+          "completed": true,
+          "min_accepted": 8,
+          "max_accepted": 8,
+          "below_min": {
+            "accepted": 0,
+            "clamped": 0,
+            "ignored": 0,
+            "clamped_or_ignored": 0,
+            "other": 8,
+            "missing": 0
+          },
+          "above_max": {
+            "accepted": 0,
+            "clamped": 0,
+            "ignored": 8,
+            "clamped_or_ignored": 0,
+            "other": 0,
+            "missing": 0
+          },
+          "per_parameter": [
+            {
+              "name": "GrayMixerAqua",
+              "sdk_key": "GrayMixerAqua",
+              "min": -100,
+              "max": 100,
+              "min_read": -100,
+              "max_read": 100,
+              "below_written": -102,
+              "below_read": 0,
+              "below_outcome": "other",
+              "above_written": 102,
+              "above_read": 0,
+              "above_outcome": "ignored"
+            },
+            {
+              "name": "GrayMixerBlue",
+              "sdk_key": "GrayMixerBlue",
+              "min": -100,
+              "max": 100,
+              "min_read": -100,
+              "max_read": 100,
+              "below_written": -102,
+              "below_read": 0,
+              "below_outcome": "other",
+              "above_written": 102,
+              "above_read": 0,
+              "above_outcome": "ignored"
+            },
+            {
+              "name": "GrayMixerGreen",
+              "sdk_key": "GrayMixerGreen",
+              "min": -100,
+              "max": 100,
+              "min_read": -100,
+              "max_read": 100,
+              "below_written": -102,
+              "below_read": 0,
+              "below_outcome": "other",
+              "above_written": 102,
+              "above_read": 0,
+              "above_outcome": "ignored"
+            },
+            {
+              "name": "GrayMixerMagenta",
+              "sdk_key": "GrayMixerMagenta",
+              "min": -100,
+              "max": 100,
+              "min_read": -100,
+              "max_read": 100,
+              "below_written": -102,
+              "below_read": 0,
+              "below_outcome": "other",
+              "above_written": 102,
+              "above_read": 0,
+              "above_outcome": "ignored"
+            },
+            {
+              "name": "GrayMixerOrange",
+              "sdk_key": "GrayMixerOrange",
+              "min": -100,
+              "max": 100,
+              "min_read": -100,
+              "max_read": 100,
+              "below_written": -102,
+              "below_read": 0,
+              "below_outcome": "other",
+              "above_written": 102,
+              "above_read": 0,
+              "above_outcome": "ignored"
+            },
+            {
+              "name": "GrayMixerPurple",
+              "sdk_key": "GrayMixerPurple",
+              "min": -100,
+              "max": 100,
+              "min_read": -100,
+              "max_read": 100,
+              "below_written": -102,
+              "below_read": 0,
+              "below_outcome": "other",
+              "above_written": 102,
+              "above_read": 0,
+              "above_outcome": "ignored"
+            },
+            {
+              "name": "GrayMixerRed",
+              "sdk_key": "GrayMixerRed",
+              "min": -100,
+              "max": 100,
+              "min_read": -100,
+              "max_read": 100,
+              "below_written": -102,
+              "below_read": 0,
+              "below_outcome": "other",
+              "above_written": 102,
+              "above_read": 0,
+              "above_outcome": "ignored"
+            },
+            {
+              "name": "GrayMixerYellow",
+              "sdk_key": "GrayMixerYellow",
+              "min": -100,
+              "max": 100,
+              "min_read": -100,
+              "max_read": 100,
+              "below_written": -102,
+              "below_read": 0,
+              "below_outcome": "other",
+              "above_written": 102,
+              "above_read": 0,
+              "above_outcome": "ignored"
+            }
+          ]
+        },
+        "completed": true
+      }
+    },
+    {
+      "filename": "S14-grey-wedge.png",
+      "copy_name": null,
+      "uuid": "60EDD083-4598-4D05-B5CF-636860CCD45F",
+      "file_format": "PNG",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "snapshot": null,
+      "put_back": null,
+      "selected_for_writes": {
+        "error": {
+          "code": "SELECT_FAILED",
+          "message": "Lightroom did not select photo 4319347 (active photo nil, 31 selected)",
+          "recoverable": true
+        }
+      }
+    },
+    {
+      "filename": "S14-hue-chart.png",
+      "copy_name": null,
+      "uuid": "1F191350-2E87-4F54-8A07-8CCE3A4830D3",
+      "file_format": "PNG",
+      "pipeline": "rendered",
+      "process_version": "15.4",
+      "snapshot": null,
+      "put_back": null,
+      "selected_for_writes": {
+        "error": {
+          "code": "SELECT_FAILED",
+          "message": "Lightroom did not select photo 4319515 (active photo nil, 31 selected)",
+          "recoverable": true
+        }
+      }
+    }
+  ],
+  "suggestion": "FAILED",
+  "finished_at": "2026-10-25T23:00:17.812Z",
+  "plugin_log_copied": "s14_bridge_log_2026-10-25T22-59-10-152Z.txt",
+  "node": "v24.11.1",
+  "engine_version": "1.1.0"
+}

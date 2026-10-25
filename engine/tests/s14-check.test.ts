@@ -59,7 +59,7 @@ describe("S14 colour maths", () => {
     });
     const band = bandOf(base, after);
     expect(band?.["centre_deg"]).toBe(120);
-    expect(Number(band?.["fwhm_deg"])).toBeGreaterThanOrEqual(19);
+    expect(Number(band?.["fwhm_deg"])).toBeGreaterThanOrEqual(17); // 20 degrees, less 8-bit rounding at the ends
     expect(Number(band?.["fwhm_deg"])).toBeLessThanOrEqual(23);
     expect(bandOf(base, base)).toBeNull();
   });
@@ -106,11 +106,12 @@ describe("S14 check (simulated plugin)", () => {
     lr.library.collections.push({ local_id: 503, name: COLLECTION, smart: false, photos: [lr.uuid, "SIM-JPG"] });
     lr.exportLongEdge = 240; // small renders: the run makes about 70
     lr.install(plugin);
-    // Lightroom adds the GrayMixer keys under a monochrome profile (S10); the sim does not, so this does.
+    // Lightroom adds the GrayMixer keys with ConvertToGrayscale true, and not for the raw Adobe Monochrome pair alone
+    // (S10; Jim's first S14 run); the sim does neither, so this does.
     const apply = plugin.handlers.get("apply_settings")!;
     plugin.handlers.set("apply_settings", (p, id) => {
       const s = p["settings"] as J;
-      if (s["ConvertToGrayscale"] === true || JSON.stringify(s["Look"] ?? {}).includes("Monochrome")) Object.assign(lr.settingsOf(String(p["photo_uuid"])), MIXER);
+      if (s["ConvertToGrayscale"] === true) Object.assign(lr.settingsOf(String(p["photo_uuid"])), MIXER);
       return apply(p, id);
     });
     said.length = 0;
@@ -137,11 +138,14 @@ describe("S14 check (simulated plugin)", () => {
     expect(photos.every((p) => (p["put_back"] as J)["ok"] === true)).toBe(true);
     expect(((photos[0]?.["curve"] as J)["variants"] as J[]).map((v) => v["taken"])).toEqual(CURVE_VARIANTS.map(() => true));
     expect((photos[1]?.["mixer"] as J)["mixer_keys"]).toEqual(Object.keys(MIXER).sort());
+    expect(photos.slice(0, 2).map((p) => ((p["mixer"] as J)["steps"] as J[]).length)).toEqual([2, 1]); // the NEF needed ConvertToGrayscale too
     expect(((photos[2]?.["grading"] as J)["wheels"] as J[]).map((w) => w["wheel"])).toEqual(["shadows", "midtones", "highlights"]);
     expect(((photos[3]?.["hsl"] as J)["bands"] as J[])).toHaveLength(8);
     expect((results["questions"] as J[]).map((q) => q["id"])).toEqual(["grading"]); // the sim's renders never change, so no curve question
     expect(["SIM-JPG", "SIM-WEDGE", "SIM-HUE"].map((u) => lr.library.find(u)?.settings)).toEqual(before);
     expect(lr.library.collections.find((c) => c.name === CHART_COLLECTION)?.photos).toEqual(["SIM-WEDGE", "SIM-HUE"]);
+    expect(lr.library.collections.find((c) => c.name === COLLECTION)?.photos).toEqual([lr.uuid, "SIM-JPG"]); // in "fixtures" for the run only
+    expect(results["charts_out_of_fixtures"]).toBe(true);
     expect(said).toContain("Spike S14: WORKED");
   });
 

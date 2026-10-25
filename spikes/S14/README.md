@@ -5,7 +5,7 @@ Phase 10 row 1 (vault `PHASE10_PLAN.md`); report `docs\reports\phase10\S14.md`. 
 What it does, in about 3 minutes [inference: about 80 writes and 62 exports at 0.5 s each, docs\reports\phase8\S10.md "Exports"]:
 
 1. It reads the "fixtures" collection and takes `20260907-_OZ80093.NEF` (raw) and `DSC_0031.JPG` (rendered).
-2. It makes two test charts, a grey wedge and a hue chart, in `%TEMP%\LrC-AVG\S14\charts\`. It imports them in place and puts them in a new collection, **LrC-AVG S14 charts**. A second run finds them there and imports nothing.
+2. It makes two test charts, a grey wedge and a hue chart, in `%TEMP%\LrC-AVG\S14\charts\`. It imports them in place and puts them in a new collection, **LrC-AVG S14 charts**. A second run finds them there and imports nothing. For the run they are also added to "fixtures", because Lightroom selects only photos in the open collection; they are taken out of "fixtures" at the end.
 3. Each of the four photos is selected, gets a snapshot "AVG S14 before …", and is put back from that snapshot at the end (**PUT BACK YES/NO**). Every History step is named `AVG S14 …`.
    - The NEF gets the tone curve writes, the Calibration keys, then Adobe Monochrome and the B&W mixer keys.
    - The JPEG gets the Calibration keys, then Monochrome and the B&W mixer keys.

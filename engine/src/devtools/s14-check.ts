@@ -24,8 +24,14 @@ import { calibrationProbe, mixerProbe } from "./s14-keys.js";
 /** The grading question's values: a wheel position Jim can read in the panel. */
 export const ASK_GRADE = { SplitToningShadowHue: 120, SplitToningShadowSaturation: 80 } as const;
 
-/** Both charts imported (or found) and in CHART_COLLECTION, read as census entries. */
-async function charts(ctx: Ctx, chartDir: string, selected: string | null): Promise<{ wedge: Photo; hue: Photo }> {
+/**
+ * Both charts imported (or found), kept in CHART_COLLECTION, and added to "fixtures" for the run:
+ * Lightroom selects only photos in the view, and Jim has "fixtures" open. In his first run each chart
+ * outside it failed select_photo and Lightroom selected all 31 photos of "fixtures" instead [handle:
+ * docs\reports\phase10\S14\run1\bridge_log_excerpt.txt 16:00:17]. That the charts become selectable
+ * once in "fixtures" is [unverified] until the next run. outOfFixtures takes them out again.
+ */
+async function charts(ctx: Ctx, chartDir: string, selected: string | null, fixturesId: number): Promise<{ wedge: Photo; hue: Photo }> {
   const { client } = ctx.deps;
   const files = await makeCharts(chartDir);
   const pinned = loadSdkKeys(sdkKeysJson as unknown);
@@ -39,9 +45,21 @@ async function charts(ctx: Ctx, chartDir: string, selected: string | null): Prom
   const hue = await read(files.hue);
   const c = await client.request("create_collection", { name: CHART_COLLECTION, set_path: [] }, { timeoutMs: CATALOG_READ_TIMEOUT_MS });
   await client.request("collection_photos", { collection_id: c.local_id, uuids: [wedge.uuid, hue.uuid], remove: false }, { timeoutMs: CATALOG_READ_TIMEOUT_MS });
+  await client.request("collection_photos", { collection_id: fixturesId, uuids: [wedge.uuid, hue.uuid], remove: false }, { timeoutMs: CATALOG_READ_TIMEOUT_MS });
   ctx.results["charts"] = { dir: chartDir, collection: CHART_COLLECTION, wedge: { uuid: wedge.uuid, pipeline: wedge.pipeline }, hue: { uuid: hue.uuid, pipeline: hue.pipeline } };
   ctx.deps.say(`Charts in "${CHART_COLLECTION}": ${wedge.filename} (${wedge.pipeline}), ${hue.filename} (${hue.pipeline})`);
   return { wedge, hue };
+}
+
+/** The charts out of "fixtures" again, whatever happened (charts above). */
+async function outOfFixtures(ctx: Ctx, fixturesId: number, uuids: string[]): Promise<void> {
+  try {
+    const r = await ctx.deps.client.request("collection_photos", { collection_id: fixturesId, uuids, remove: true }, { timeoutMs: CATALOG_READ_TIMEOUT_MS });
+    ctx.results["charts_out_of_fixtures"] = r.after_in === undefined ? null : r.after_in.length === 0;
+    if (r.after_in?.length !== 0) ctx.fail("the charts may still be in \"fixtures\": in Library, select them there > right-click > Remove from Collection");
+  } catch (err) {
+    ctx.fail(`taking the charts out of "fixtures": ${describeError(err)}. In Library, select them there > right-click > Remove from Collection.`);
+  }
 }
 
 /** Write `settings`, ask Jim `question` about what Develop shows, and record both. */
@@ -82,24 +100,28 @@ export async function runS14Check(deps: S10Deps, chartDir: string): Promise<{ wo
     if (!found) throw new Error("the census of \"fixtures\" found nothing");
     const [nef, jpg] = FIXTURES.map((w) => found.photos.find((p) => p.filename === w.name && !p.is_virtual_copy && p.pipeline === w.pipeline));
     if (!nef || !jpg) throw new Error(`the collection "fixtures" lacks ${FIXTURES.map((f) => `${f.name} (${f.pipeline})`).join(" or ")}. Run npm run s10:check -- --fixtures, then this again.`);
-    const { wedge, hue } = await charts(ctx, chartDir, (results["census"] as Json)["selected_uuid"] as string | null);
-    out.push(await battery(ctx, nef, [["curve", (p, o) => curveProbe(ctx, p, o)], ["calibration", (p) => calibrationProbe(ctx, p)], ["mixer", (p) => mixerProbe(ctx, p)]]));
-    out.push(await battery(ctx, jpg, [["calibration", (p) => calibrationProbe(ctx, p)], ["mixer", (p) => mixerProbe(ctx, p)]]));
-    out.push(await battery(ctx, wedge, [
-      ["curve", (p, o) => curveProbe(ctx, p, o)],
-      ["curve_question", async (p, o) => {
-        const v = firstWorking(o["curve"] as Json);
-        if (!v) return { completed: true, note: "no variant was taken with a changed render: nothing to ask" };
-        await askAbout(ctx, p, o, "curve", v.settings, `Lightroom shows ${p.filename} in Develop. In the Tone Curve panel, is the curve bent (not a straight diagonal line)?`);
-        return { completed: true, variant: v.label };
-      }],
-      ["grading", (p, o) => gradingProbe(ctx, p, o)],
-      ["grading_question", async (p, o) => {
-        await askAbout(ctx, p, o, "grading", { ...ASK_GRADE }, `In the Color Grading panel, click the Shadows circle in the Adjust row. Do its Hue and Saturation read ${ASK_GRADE.SplitToningShadowHue} and ${ASK_GRADE.SplitToningShadowSaturation}?`);
-        return { completed: true };
-      }],
-    ]));
-    out.push(await battery(ctx, hue, [["hsl", (p, o) => hslProbe(ctx, p, o)]]));
+    const { wedge, hue } = await charts(ctx, chartDir, (results["census"] as Json)["selected_uuid"] as string | null, found.collection.local_id);
+    try {
+      out.push(await battery(ctx, nef, [["curve", (p, o) => curveProbe(ctx, p, o)], ["calibration", (p) => calibrationProbe(ctx, p)], ["mixer", (p) => mixerProbe(ctx, p)]]));
+      out.push(await battery(ctx, jpg, [["calibration", (p) => calibrationProbe(ctx, p)], ["mixer", (p) => mixerProbe(ctx, p)]]));
+      out.push(await battery(ctx, wedge, [
+        ["curve", (p, o) => curveProbe(ctx, p, o)],
+        ["curve_question", async (p, o) => {
+          const v = firstWorking(o["curve"] as Json);
+          if (!v) return { completed: true, note: "no variant was taken with a changed render: nothing to ask" };
+          await askAbout(ctx, p, o, "curve", v.settings, `Lightroom shows ${p.filename} in Develop. In the Tone Curve panel, is the curve bent (not a straight diagonal line)?`);
+          return { completed: true, variant: v.label };
+        }],
+        ["grading", (p, o) => gradingProbe(ctx, p, o)],
+        ["grading_question", async (p, o) => {
+          await askAbout(ctx, p, o, "grading", { ...ASK_GRADE }, `In the Color Grading panel, click the Shadows circle in the Adjust row. Do its Hue and Saturation read ${ASK_GRADE.SplitToningShadowHue} and ${ASK_GRADE.SplitToningShadowSaturation}?`);
+          return { completed: true };
+        }],
+      ]));
+      out.push(await battery(ctx, hue, [["hsl", (p, o) => hslProbe(ctx, p, o)]]));
+    } finally {
+      await outOfFixtures(ctx, found.collection.local_id, [wedge.uuid, hue.uuid]);
+    }
     await restoreSelection(ctx, found.photos);
   } catch (err) {
     ctx.fail(`the check stopped: ${describeError(err)}`);

@@ -16,7 +16,7 @@ What it does, in about 3 minutes [inference: about 80 writes and 62 exports at 0
 ## Steps for Jim
 
 1. Quit Claude Desktop: right-click the Claude icon in the Windows system tray > **Quit**.
-2. In Lightroom, press **D** (Develop).
+2. In Lightroom, open the **fixtures** collection (Library > Collections panel > fixtures), then press **D** (Develop).
 3. In PowerShell in VS Code, in `D:\Developer\LrC_Autonomous_Gateway`, run:
 
    ```powershell

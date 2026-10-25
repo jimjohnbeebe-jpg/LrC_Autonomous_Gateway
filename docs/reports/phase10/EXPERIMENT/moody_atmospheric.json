@@ -1,0 +1,62 @@
+{
+  "schema_version": 2,
+  "id": "moody_atmospheric",
+  "label": "Look — moody atmospheric (subtractive palette, split grade)",
+  "category": "look",
+  "brief": "Editorial Pacific-Northwest mood: low-key, quiet, rolled-off highlights, colour by subtraction. Teal/slate shadows against amber/gold highlights; foliage tamed toward olive, skies toward slate. Colour intensity comes only from grading and selective HSL, never from global Saturation. Limits (keep within them on every pass): Saturation -15..0, never positive; Vibrance +5..+20; Contrast at most +10 (no tone curve yet, so build depth with Blacks, Highlights and masks, not Contrast); Clarity -10..+5, never crunchy; no harsh digital whites. Tones (luma 0-255): deep but not crushed floor, p1/p5 about 15-25; low-key middle, p50 about 80-100; highlight ceiling held down, p95 about 185-200 and p99 under about 215. Masks, in this order when the scene allows: (1) vignette: radial over the focal point, inverted: exposure -0.45, highlights -35, dehaze +8, saturation -15. (2) Atmospheric light bleed: radial at the light source or horizon gap: exposure +0.35, temperature +12 (warm), dehaze -15, texture -20, clarity -15 (a soft bloom, not haze over the whole frame). (3) Foreground anchor: linear from the bottom: exposure -0.30, shadows -15, clarity +10. Pass 0 sets the hues of the palette; the variant sets its strength (A subtle, B full, C bold). Keep the palette's hues; refine amounts. The user's own request wins wherever it disagrees with this look.",
+  "profile": { "raw": "Adobe Landscape", "rendered": "Color" },
+  "priors": {
+    "lens.profile_enable": 1,
+    "lens.ca_remove": 1,
+    "highlights": -30,
+    "whites": -15,
+    "hsl.green.hue": -25,
+    "hsl.yellow.hue": -12,
+    "hsl.blue.hue": -10,
+    "grading.shadows.hue": 215,
+    "grading.midtones.hue": 42,
+    "grading.highlights.hue": 40,
+    "grading.balance": -15
+  },
+  "variants": {
+    "A": {
+      "label": "subtle",
+      "priors": {
+        "saturation": -4, "vibrance": 6,
+        "hsl.green.sat": -25, "hsl.green.lum": -8, "hsl.yellow.sat": -10,
+        "hsl.blue.sat": -15, "hsl.blue.lum": -10, "hsl.orange.sat": 8, "hsl.orange.lum": 5,
+        "grading.shadows.sat": 10, "grading.shadows.lum": -5, "grading.midtones.sat": 4,
+        "grading.highlights.sat": 10, "grading.blending": 10
+      }
+    },
+    "B": {
+      "label": "full",
+      "priors": {
+        "saturation": -8, "vibrance": 12,
+        "hsl.green.sat": -40, "hsl.green.lum": -18, "hsl.yellow.sat": -20,
+        "hsl.blue.sat": -30, "hsl.blue.lum": -22, "hsl.orange.sat": 18, "hsl.orange.lum": 12,
+        "grading.shadows.sat": 18, "grading.shadows.lum": -10, "grading.midtones.sat": 8,
+        "grading.highlights.sat": 20, "grading.highlights.lum": -5, "grading.blending": 20,
+        "vignette.amount": -10
+      }
+    },
+    "C": {
+      "label": "bold",
+      "priors": {
+        "saturation": -12, "vibrance": 18, "contrast": 8,
+        "hsl.green.sat": -55, "hsl.green.lum": -25, "hsl.yellow.sat": -30,
+        "hsl.blue.sat": -40, "hsl.blue.lum": -30, "hsl.orange.sat": 25, "hsl.orange.lum": 18,
+        "grading.shadows.sat": 24, "grading.shadows.lum": -15, "grading.midtones.sat": 12,
+        "grading.highlights.sat": 28, "grading.highlights.lum": -10, "grading.blending": 30,
+        "vignette.amount": -20
+      }
+    }
+  },
+  "regions_expected": ["sky"],
+  "convergence_hints": [
+    "stop when p50 sits about 80-100 and p99 under about 215 with no high clip: low-key, highlights rolled off",
+    "stop when shadows read teal/slate and highlights amber, and foliage is olive, not bright green",
+    "never raise global Saturation or push Clarity past +5 to add punch: use grading, HSL or a mask"
+  ],
+  "allow_probe": false
+}

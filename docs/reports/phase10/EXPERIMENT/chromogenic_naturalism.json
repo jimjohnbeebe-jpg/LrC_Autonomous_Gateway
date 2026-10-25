@@ -1,0 +1,49 @@
+{
+  "schema_version": 2,
+  "id": "chromogenic_naturalism",
+  "label": "Look — chromogenic naturalism (large-format colour film)",
+  "category": "look",
+  "brief": "Large-format colour film, in the spirit of Portra 160 / Ektar 100 sheet film: accurate, well-separated colour, natural shadow falloff, neutral-warm midtones, gentle contrast. It should look photographed, not processed. No HDR shadow lifting, no haze tricks, no edge crunch. Limits (keep within them on every pass): Shadows at most +25; Highlights -15..-45; Dehaze 0; Clarity 0; Texture +5..+15; Saturation and Vibrance small, colour comes from separation, not intensity. Reds a touch warmer and richer, blues slightly deeper and never magenta; a faint warm paper tint in the highlights. Tones (luma 0-255): a real black, p1/p5 about 10-20; open, true middle, p50 about 110-130; bright but unclipped highlights, p95 about 215-230 and p99 under about 240. White balance: neutral-warm; correct a cast, keep the light's character. Masks only where the scene needs them, and gently: a subtle radial or linear to balance a bright sky or a dark foreground, never to sculpt drama. Pass 0 sets the hues; the variant sets its strength (A subtle, B full, C bold). Keep the hues; refine amounts. The user's own request wins wherever it disagrees with this look.",
+  "profile": { "raw": "Adobe Color", "rendered": "Color" },
+  "priors": {
+    "lens.profile_enable": 1,
+    "lens.ca_remove": 1,
+    "highlights": -25,
+    "shadows": 10,
+    "texture": 8,
+    "hsl.red.hue": 8,
+    "hsl.blue.hue": -8,
+    "grading.highlights.hue": 45
+  },
+  "variants": {
+    "A": {
+      "label": "subtle",
+      "priors": {
+        "hsl.red.sat": 5, "hsl.blue.sat": -5, "hsl.blue.lum": -6,
+        "grading.highlights.sat": 4
+      }
+    },
+    "B": {
+      "label": "full",
+      "priors": {
+        "contrast": 5,
+        "hsl.red.sat": 10, "hsl.blue.sat": -8, "hsl.blue.lum": -12,
+        "grading.highlights.sat": 8
+      }
+    },
+    "C": {
+      "label": "bold",
+      "priors": {
+        "contrast": 10, "highlights": -15, "texture": 5,
+        "hsl.red.sat": 15, "hsl.blue.sat": -10, "hsl.blue.lum": -16,
+        "grading.highlights.sat": 12
+      }
+    }
+  },
+  "convergence_hints": [
+    "stop when p50 sits about 110-130, p1 shows a real black and p99 is under about 240 with no high clip",
+    "stop when colours are separated and believable: skies blue not magenta, skin and reds warm not orange",
+    "do not reach for Dehaze or Clarity: they break this look"
+  ],
+  "allow_probe": false
+}

@@ -165,7 +165,8 @@ describe("A failed update", () => {
   });
 });
 
-describe("HUD updates from a Variants session", () => {
+// A Variants edit with three passes: seconds under a full parallel run, as in hud-show-copy.test.ts (issue #196).
+describe("HUD updates from a Variants session", { timeout: 30000 }, () => {
   it("lists every copy before selecting it, and offers the pick once each copy has its pass", async () => {
     clean();
     const rig = hudRig();

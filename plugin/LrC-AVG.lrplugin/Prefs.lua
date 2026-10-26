@@ -167,10 +167,22 @@ function Prefs.fillDefaults(prefs)
     end
 end
 
+-- Engine 1.2.0 raised the pass budget's default from 4 to 8 (vault PHASE10_PLAN.md row 3, decision Q3
+-- [stated: Jim, 2026-10-25]). fillDefaults stored the old default on every page opened before, so a
+-- stored 4 is most likely not a choice: once, it becomes 8, and the marker keeps a 4 set after that
+-- [stated: Jim, 2026-10-25, "One-time migration"]. A 4 chosen on purpose before 1.2.0 is moved too.
+function Prefs.migrate(prefs)
+    if prefs.maxPassesMigrated then return end
+    if prefs.maxPasses == 4 then prefs.maxPasses = 8 end
+    prefs.maxPassesMigrated = true
+end
+
 -- Bridge command get_prefs (engine\src\bridge\protocol.ts COMMANDS.get_prefs): every setting under
 -- its wire name, checked; `invalid` lists what was replaced by its default.
 function Prefs.getPrefs(_payload)
-    local values, invalid = Prefs.read()
+    local prefs = LrPrefs.prefsForPlugin()
+    Prefs.migrate(prefs)
+    local values, invalid = Prefs.read(prefs)
     local out = { temp_preview_dir = Prefs.tempPreviewDir(), invalid = invalid }
     for _, spec in ipairs(Prefs.SPECS) do out[spec.wire] = values[spec.key] end
     return out

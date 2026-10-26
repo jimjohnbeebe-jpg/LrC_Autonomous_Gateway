@@ -115,6 +115,7 @@ end
 
 function Provider.sectionsForTopOfDialog(f, _propertyTable)
     local prefs = LrPrefs.prefsForPlugin()
+    Prefs.migrate(prefs)
     Prefs.fillDefaults(prefs)
     return {
         {

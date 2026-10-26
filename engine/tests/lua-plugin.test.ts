@@ -277,6 +277,14 @@ describe("lua: LrC-AVG.lrplugin", () => {
     expect(source).toMatch(new RegExp(`Prefs\\.DECAY_MAX_VALUES = ${DECAY_MAX_VALUES}\\b`));
   });
 
+  it("moves a stored 4 passes (the pre-1.2.0 default fillDefaults stored) to 8 once, before every read of the settings", () => {
+    const prefs = readFileSync(path.join(avgPlugin, "Prefs.lua"), "utf8");
+    expect(prefs).toMatch(/if prefs\.maxPassesMigrated then return end\s+if prefs\.maxPasses == 4 then prefs\.maxPasses = 8 end\s+prefs\.maxPassesMigrated = true/);
+    expect(prefs).toMatch(/Prefs\.migrate\(prefs\)\s+local values, invalid = Prefs\.read\(prefs\)/);
+    const page = readFileSync(path.join(avgPlugin, "PluginInfoProvider.lua"), "utf8");
+    expect(page).toMatch(/Prefs\.migrate\(prefs\)\s+Prefs\.fillDefaults\(prefs\)/);
+  });
+
   it("keeps HudState.lua's stage, event, guardrail and variant lists and its limits equal to the engine's (engine\\src\\bridge\\hud-protocol.ts)", () => {
     const source = readFileSync(path.join(avgPlugin, "HudState.lua"), "utf8");
     const list = (name: string) => source.match(new RegExp(`HudState\\.${name} = \\{([^}]*)\\}`))?.[1]?.match(/"[^"]*"/g)?.map((s) => s.slice(1, -1));

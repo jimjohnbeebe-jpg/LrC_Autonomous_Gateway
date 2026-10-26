@@ -1,0 +1,349 @@
+{
+  "check": "curve-probe",
+  "started_at": "2026-10-26T03:06:50.873Z",
+  "errors": [],
+  "questions": [
+    {
+      "id": "point_curve",
+      "question": "In Develop > Tone Curve, click the Point Curve button (the second of the curve-type icons at the top of the panel). Does the curve show raised in the middle?",
+      "answer": "not asked: no profile took the curve, so the panel has no taken curve to show"
+    }
+  ],
+  "hello": {
+    "protocol": 1,
+    "plugin_version": "1.2.0",
+    "lrc_version": "15.6",
+    "sdk_declared": 13,
+    "ports": {
+      "receive": 8765,
+      "send": 8766
+    },
+    "process_started_at": "2026-10-26T02:36:39Z"
+  },
+  "settings_dump": {
+    "file": "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json",
+    "key_count": 184,
+    "not_in_raw_pin": [
+      "ExtendedToneCurvePV2012",
+      "ExtendedToneCurvePV2012Blue",
+      "ExtendedToneCurvePV2012Green",
+      "ExtendedToneCurvePV2012Red",
+      "LensProfileFilename"
+    ],
+    "pinned_not_in_photo": [
+      "GrayMixerAqua",
+      "GrayMixerBlue",
+      "GrayMixerGreen",
+      "GrayMixerMagenta",
+      "GrayMixerOrange",
+      "GrayMixerPurple",
+      "GrayMixerRed",
+      "GrayMixerYellow"
+    ]
+  },
+  "photo": {
+    "filename": "20220828-_DSC1159-HDR.dng",
+    "copy_name": null,
+    "uuid": "65937445-C308-4B2E-B1CD-F38C7EE40E0D",
+    "file_format": "DNG",
+    "pipeline": "raw",
+    "process_version": "15.4",
+    "snapshot": {
+      "name": "AVG curve probe before 2026-10-26T03-06-50-864Z",
+      "id": "6E5D31EB-6A19-4495-9A62-C6D3794CDD3F"
+    },
+    "put_back": {
+      "ok": true,
+      "differing": [],
+      "compared": 184
+    },
+    "selected_for_writes": true,
+    "session_step": {
+      "step": {
+        "tone_curve.master": [
+          0,
+          0,
+          64,
+          56,
+          128,
+          128,
+          192,
+          200,
+          255,
+          255
+        ],
+        "vibrance": 7
+      },
+      "session_id": "0528fb21-c574-4156-a397-78327d8eb5b9",
+      "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\curve\\sessions\\20261025-0528fb.json",
+      "outcome": "WRITE_NOT_TAKEN",
+      "error": {
+        "code": "WRITE_NOT_TAKEN",
+        "message": "Lightroom did not take ToneCurvePV2012 as written in \"AVG 0528fb pass 1/8\". The step was undone: the values Lightroom did take were written back (\"AVG 0528fb pass 1/8 revert\"), so the photo is as it was before this step, and the pass is not used. (session 0528fb21-c574-4156-a397-78327d8eb5b9 is still open; lr_end_session with outcome \"revert\" puts the photo back.)",
+        "recoverable": false,
+        "details": {
+          "history_name": "AVG 0528fb pass 1/8",
+          "mismatches": [
+            {
+              "sdk_key": "ToneCurvePV2012",
+              "written": [
+                0,
+                0,
+                64,
+                56,
+                128,
+                128,
+                192,
+                200,
+                255,
+                255
+              ],
+              "read_back": [
+                0,
+                0,
+                255,
+                255
+              ]
+            }
+          ],
+          "undone": true,
+          "revert_history_name": "AVG 0528fb pass 1/8 revert",
+          "session_id": "0528fb21-c574-4156-a397-78327d8eb5b9"
+        }
+      },
+      "back_at_pre_step": {
+        "ok": true,
+        "differing": []
+      },
+      "after_step": {
+        "ToneCurvePV2012": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "ToneCurveName2012": "Linear",
+        "Vibrance": 12
+      },
+      "completed": true
+    },
+    "direct": {
+      "writes": [
+        {
+          "label": "direct curve",
+          "written": {
+            "ToneCurvePV2012": [
+              0,
+              0,
+              64,
+              56,
+              128,
+              128,
+              192,
+              200,
+              255,
+              255
+            ]
+          },
+          "history_name": "AVG curve probe direct curve",
+          "apply_ms": 21.531224250793,
+          "read_back": {
+            "ToneCurvePV2012": [
+              0,
+              0,
+              255,
+              255
+            ]
+          },
+          "name_read": "Linear",
+          "taken": false
+        },
+        {
+          "label": "direct curve + vibrance",
+          "written": {
+            "ToneCurvePV2012": [
+              0,
+              0,
+              64,
+              56,
+              128,
+              128,
+              192,
+              200,
+              255,
+              255
+            ],
+            "Vibrance": 19
+          },
+          "history_name": "AVG curve probe direct curve + vibrance",
+          "apply_ms": 31.9904088974,
+          "read_back": {
+            "ToneCurvePV2012": [
+              0,
+              0,
+              255,
+              255
+            ],
+            "Vibrance": 19
+          },
+          "name_read": "Linear",
+          "taken": false
+        }
+      ],
+      "completed": true
+    },
+    "profile_sweep": {
+      "profiles": [
+        {
+          "profile": "Adobe Color",
+          "profile_write": {
+            "label": "profile Adobe Color",
+            "history_name": "AVG curve probe profile Adobe Color",
+            "apply_ms": 35.188794136047,
+            "read_back": {
+              "name": "Adobe Color",
+              "camera_profile": "Adobe Standard",
+              "look_name": "Adobe Color",
+              "look_uuid": "B952C231111CD8E0ECCF14B86BAA7077"
+            },
+            "taken": true
+          },
+          "curve": {
+            "label": "sweep curve under Adobe Color",
+            "written": {
+              "ToneCurvePV2012": [
+                0,
+                0,
+                64,
+                56,
+                128,
+                128,
+                192,
+                200,
+                255,
+                255
+              ]
+            },
+            "history_name": "AVG curve probe sweep curve under Adobe Color",
+            "apply_ms": 15.182375907898,
+            "read_back": {
+              "ToneCurvePV2012": [
+                0,
+                0,
+                255,
+                255
+              ]
+            },
+            "name_read": "Linear",
+            "taken": false
+          },
+          "curve_taken": false
+        },
+        {
+          "profile": "Adobe Standard",
+          "profile_write": {
+            "label": "profile Adobe Standard",
+            "history_name": "AVG curve probe profile Adobe Standard",
+            "apply_ms": 31.825542449951,
+            "read_back": {
+              "name": "Adobe Standard",
+              "camera_profile": "Adobe Standard",
+              "look_name": null,
+              "look_uuid": null
+            },
+            "taken": true
+          },
+          "curve": {
+            "label": "sweep curve under Adobe Standard",
+            "written": {
+              "ToneCurvePV2012": [
+                0,
+                0,
+                64,
+                56,
+                128,
+                128,
+                192,
+                200,
+                255,
+                255
+              ]
+            },
+            "history_name": "AVG curve probe sweep curve under Adobe Standard",
+            "apply_ms": 19.76478099823,
+            "read_back": {
+              "ToneCurvePV2012": [
+                0,
+                0,
+                255,
+                255
+              ]
+            },
+            "name_read": "Linear",
+            "taken": false
+          },
+          "curve_taken": false
+        },
+        {
+          "profile": "Adobe Landscape",
+          "profile_write": {
+            "label": "profile Adobe Landscape",
+            "history_name": "AVG curve probe profile Adobe Landscape",
+            "apply_ms": 23.361682891846,
+            "read_back": {
+              "name": "Adobe Landscape",
+              "camera_profile": "Adobe Standard",
+              "look_name": "Adobe Landscape",
+              "look_uuid": "6F9C877E84273F4E8271E6B91BEB36A1"
+            },
+            "taken": true
+          },
+          "curve": {
+            "label": "sweep curve under Adobe Landscape",
+            "written": {
+              "ToneCurvePV2012": [
+                0,
+                0,
+                64,
+                56,
+                128,
+                128,
+                192,
+                200,
+                255,
+                255
+              ]
+            },
+            "history_name": "AVG curve probe sweep curve under Adobe Landscape",
+            "apply_ms": 24.201631546021,
+            "read_back": {
+              "ToneCurvePV2012": [
+                0,
+                0,
+                255,
+                255
+              ]
+            },
+            "name_read": "Linear",
+            "taken": false
+          },
+          "curve_taken": false
+        }
+      ],
+      "photo_profile": "Adobe Landscape",
+      "suggestion": "photo is the cause",
+      "completed": true
+    },
+    "point_curve": {
+      "id": "point_curve",
+      "question": "In Develop > Tone Curve, click the Point Curve button (the second of the curve-type icons at the top of the panel). Does the curve show raised in the middle?",
+      "answer": "not asked: no profile took the curve, so the panel has no taken curve to show",
+      "completed": true
+    }
+  },
+  "headline": "WORKED",
+  "finished_at": "2026-10-26T03:07:06.522Z",
+  "plugin_log_copied": "curve_bridge_log_2026-10-26T03-06-50-864Z.txt",
+  "node": "v24.11.1",
+  "engine_version": "1.2.0"
+}

@@ -10,11 +10,15 @@
 //      session and by the bridge [stated: Jim, 2026-10-26, "Keep #187 open, isolate now"]): from the snapshot,
 //      each raw profile of SWEEP_PROFILES written through the params map, then #187's curve by the bridge;
 //      a suggested reading of which matters, the profile or the photo;
-//   d. a visible 3-point lift under the first profile that took the curve, and Jim's answer on what the Tone
-//      Curve panel shows in its Point Curve view (S14's "the curve was still straight" may be the panel opening
-//      on the Parametric view [inference]); skipped, with the reason, when no profile took the curve, so the
-//      question is only asked on a curve that read back taken (run 1 asked it on a refused one);
-//   e. the photo put back from the snapshot, every key compared: PUT BACK YES/NO.
+//   e. the extended curve (run 3, after run 2 had the curve refused under every profile [stated: Jim, 2026-10-26,
+//      "Run 3: write the extended curve (Recommended)"]): from the snapshot, #187's curve, then a 3-point lift,
+//      written to ExtendedToneCurvePV2012, which HDR-mode photos carry beside ToneCurvePV2012 (EXTENDED below);
+//      the lift stays on the photo for part d; skipped, with the reason, on a photo without that key;
+//   d. (run after e) Jim's answer on what the Tone Curve panel shows in its Point Curve view (S14's "the curve was
+//      still straight" may be the panel opening on the Parametric view [inference]), asked on the first state where
+//      a curve read back taken: a 3-point lift under the first profile of the sweep that took the curve, else the
+//      extended lift of part e; not asked, with the reason, otherwise (run 1 asked it on a refused curve);
+//   f. the photo put back from the snapshot, every key compared: PUT BACK YES/NO.
 // Before any write, the photo's settings are saved as census\curve_probe_settings_<file>__<uuid8>.json, with
 // the keys it carries beyond the raw pin and the pinned keys it lacks (an HDR DNG against S5's NEF).
 
@@ -43,6 +47,13 @@ export const LIFT3 = [0, 0, 128, 160, 255, 255];
 export const QUESTION = "In Develop > Tone Curve, click the Point Curve button (the second of the curve-type icons at the top of the panel). Does the curve show raised in the middle?";
 /** The raw profiles of the sweep, #187's photo's own last [handle: docs\reports\phase10\curve-probe.md "Purpose"]. */
 export const SWEEP_PROFILES = ["Adobe Color", "Adobe Standard", "Adobe Landscape"] as const;
+/**
+ * The point curve key of HDR edit mode [inference: what run 3 tests]. #187's photo has HDREditMode 1 and carries it
+ * beside ToneCurvePV2012, both [0,0,255,255] [handle: docs\reports\phase10\curve-probe\run2\curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json];
+ * S5's dumps have HDREditMode 0 and no such key [handle: docs\reports\phase0\S5\*.json:86], and S10 saw the
+ * ExtendedToneCurvePV2012* keys only on HDR photos [handle: vault LR_SDK_NOTES "Recorded in Phase 8"].
+ */
+export const EXTENDED = "ExtendedToneCurvePV2012";
 const PHOTO_PROFILE = "Adobe Landscape";
 const REFUSED = ["WRITE_NOT_TAKEN", "FEATURE_UNAVAILABLE"];
 const history = (what: string): string => `AVG curve probe ${what}`;
@@ -188,21 +199,60 @@ async function profileSweep(ctx: Ctx, photo: Photo, out: Json): Promise<Json> {
   return { profiles: rows, photo_profile: PHOTO_PROFILE, suggestion, completed: rows.every((r) => typeof r["curve_taken"] === "boolean") };
 }
 
-/** d. The 3-point lift under the first profile that took the curve, and Jim's answer on the Point Curve view. */
-async function question(ctx: Ctx, photo: Photo, out: Json, sweep: Json): Promise<Json> {
+/** The suggested reading of part e against the standard curve writes of parts b and c (a suggestion, rule 02). */
+export function extendedSuggestion(standard: readonly unknown[], extended: readonly unknown[]): string {
+  const refused = standard.every((t) => t === false);
+  if (refused && extended.every((t) => t === true)) return "HDR mode uses ExtendedToneCurvePV2012";
+  if (refused && extended.every((t) => t === false)) return "extended curve refused too";
+  return "mixed";
+}
+
+/** e. #187's curve, then the 3-point lift, written to EXTENDED from the snapshot; the lift stays on the photo for part d. */
+async function extendedCurve(ctx: Ctx, photo: Photo, out: Json): Promise<Json> {
+  const { say } = ctx.deps;
+  if (!(EXTENDED in photo.start)) {
+    const skipped = `the photo's settings have no ${EXTENDED} (HDREditMode ${String(photo.start["HDREditMode"] ?? null)})`;
+    say(`  e. extended curve skipped: ${skipped}`);
+    return { skipped, completed: true };
+  }
+  const curve = await direct(ctx, photo, out, "extended curve", { [EXTENDED]: STEP_187["tone_curve.master"] });
+  curve["standard_after"] = curveOf(await read(ctx, photo)); // does the extended write move ToneCurvePV2012 or the name?
+  const lift = await direct(ctx, photo, out, "extended lift", { [EXTENDED]: LIFT3 });
+  const writes = ((out["direct"] as Json)["writes"] as Json[]).map((w) => w["taken"]);
+  const standard = [...writes, ...((out["profile_sweep"] as Json)["profiles"] as Json[]).map((r) => r["curve_taken"])];
+  const suggestion = extendedSuggestion(standard, [curve["taken"], lift["taken"]]);
+  const after = curve["standard_after"] as Json;
+  say(`  e. extended curve taken ${String(curve["taken"])} (ToneCurvePV2012 then ${JSON.stringify(after["ToneCurvePV2012"])}, name ${JSON.stringify(after["ToneCurveName2012"])}); extended lift taken ${String(lift["taken"])}`);
+  say(`     suggestion (not a verdict): ${suggestion}`);
+  return { key: EXTENDED, curve, lift, suggestion, completed: typeof curve["taken"] === "boolean" && typeof lift["taken"] === "boolean" };
+}
+
+/** d. Jim's answer on the Point Curve view, on the first taken curve: under a sweep profile, else part e's extended lift. */
+async function question(ctx: Ctx, photo: Photo, out: Json): Promise<Json> {
   const q: Json = { id: "point_curve", question: QUESTION };
   (ctx.results["questions"] as Json[]).push(q);
-  const first = (sweep["profiles"] as Json[]).find((r) => r["curve_taken"] === true);
-  if (!first) {
-    q["answer"] = "not asked: no profile took the curve, so the panel has no taken curve to show";
-    ctx.deps.say(`  d. Point Curve question ${String(q["answer"])}`);
+  const first = ((out["profile_sweep"] as Json)["profiles"] as Json[]).find((r) => r["curve_taken"] === true);
+  if (first) return onSweepLift(ctx, photo, out, q, String(first["profile"]));
+  const lift = (out["extended_curve"] as Json)["lift"] as Json | undefined;
+  if (lift?.["taken"] === true) {
+    Object.assign(q, { asked_on: EXTENDED, write: lift, answer: await ctx.deps.ask(QUESTION) });
+    await toSnapshot(ctx, photo, out); // the extended lift off the photo again
+    ctx.deps.say(`  d. extended lift on the photo; Point Curve raised: ${String(q["answer"])}`);
     return { ...q, completed: true };
   }
-  const r = await underProfile(ctx, photo, out, String(first["profile"]), LIFT3, "lift");
+  q["answer"] = `not asked: no profile took the curve, and the extended lift was ${lift ? "not taken" : "not written"}, so the panel has no taken curve to show`;
+  ctx.deps.say(`  d. Point Curve question ${String(q["answer"])}`);
+  return { ...q, completed: true };
+}
+
+/** d. under `profile`, the first of the sweep that took the curve: the 3-point lift, and the question if it was taken. */
+async function onSweepLift(ctx: Ctx, photo: Photo, out: Json, q: Json, profile: string): Promise<Json> {
+  const r = await underProfile(ctx, photo, out, profile, LIFT3, "lift");
   const taken = r["curve_taken"];
-  Object.assign(q, { profile: first["profile"], profile_write: r["profile_write"], write: r["curve"] });
-  q["answer"] = taken === true ? await ctx.deps.ask(QUESTION) : `not asked: the lift under ${String(first["profile"])} read back ${taken === false ? "not taken" : "nothing (a write failed)"}`;
-  ctx.deps.say(`  d. lift under ${String(first["profile"])} taken ${String(taken)}; Point Curve raised: ${String(q["answer"])}`);
+  Object.assign(q, { profile, profile_write: r["profile_write"], write: r["curve"] });
+  if (taken === true) Object.assign(q, { asked_on: `ToneCurvePV2012 under ${profile}`, answer: await ctx.deps.ask(QUESTION) });
+  else q["answer"] = `not asked: the lift under ${profile} read back ${taken === false ? "not taken" : "nothing (a write failed)"}`;
+  ctx.deps.say(`  d. lift under ${profile} taken ${String(taken)}; Point Curve raised: ${String(q["answer"])}`);
   return { ...q, completed: taken !== null };
 }
 
@@ -226,7 +276,7 @@ export async function runCurveProbe(deps: CurveDeps): Promise<{ worked: boolean;
     errors.push(m);
     deps.say(`FAILED: ${m}`);
   } };
-  deps.say("LrC-AVG curve probe (issue #187): the session step, the direct write, the profile sweep, the Point Curve view");
+  deps.say("LrC-AVG curve probe (issue #187): the session step, the direct write, the profile sweep, the extended curve, the Point Curve view");
   if (!(await connect(ctx))) return finish(ctx, null);
   let out: Json | null = null;
   try {
@@ -236,7 +286,8 @@ export async function runCurveProbe(deps: CurveDeps): Promise<{ worked: boolean;
       o["session_step"] = await sessionStep(ctx, photo);
       o["direct"] = await directWrites(ctx, photo, o);
       o["profile_sweep"] = await profileSweep(ctx, photo, o);
-      o["point_curve"] = await question(ctx, photo, o, o["profile_sweep"] as Json);
+      o["extended_curve"] = await extendedCurve(ctx, photo, o);
+      o["point_curve"] = await question(ctx, photo, o);
     });
   } catch (err) {
     ctx.fail(`the probe stopped: ${describeError(err)}`);
@@ -248,7 +299,7 @@ export async function runCurveProbe(deps: CurveDeps): Promise<{ worked: boolean;
 /** WORKED: no error, every part completed, the photo put back. */
 function finish(ctx: Ctx, out: Json | null): { worked: boolean; results: Json } {
   const putBack = (out?.["put_back"] as Json | null | undefined)?.["ok"] === true;
-  const parts = ["session_step", "direct", "profile_sweep", "point_curve"].map((k) => (out?.[k] as Json | undefined)?.["completed"] === true);
+  const parts = ["session_step", "direct", "profile_sweep", "extended_curve", "point_curve"].map((k) => (out?.[k] as Json | undefined)?.["completed"] === true);
   const worked = ctx.errors.length === 0 && putBack && parts.every(Boolean);
   Object.assign(ctx.results, { photo: out, headline: worked ? "WORKED" : "FAILED", finished_at: (ctx.deps.now ?? (() => new Date()))().toISOString() });
   ctx.deps.say("");

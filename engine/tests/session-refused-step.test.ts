@@ -16,7 +16,7 @@ describe("a refused step is undone whole (issue #187)", () => {
   beforeEach(() => clean());
 
   it("WRITE_NOT_TAKEN: the curve is not taken, the vibrance written with it is put back, and the pass is not used", async () => {
-    await manager.begin({ intent_id: "test_plain" });
+    await manager.begin({ intent_id: "test_plain", max_passes: 4 });
     const before = structuredClone(lr.settings);
     const steps = lr.history.length;
     lr.ignored.add("ToneCurvePV2012"); // read back as it was, like #187's linear curve
@@ -37,7 +37,7 @@ describe("a refused step is undone whole (issue #187)", () => {
   });
 
   it("FEATURE_UNAVAILABLE: a key Lightroom does not report back is named, and the rest is put back", async () => {
-    await manager.begin({ intent_id: "test_plain" });
+    await manager.begin({ intent_id: "test_plain", max_passes: 4 });
     const before = structuredClone(lr.settings);
     const apply = plugin.handlers.get("apply_settings")!;
     plugin.handlers.set("apply_settings", async (p, id) => {
@@ -55,7 +55,7 @@ describe("a refused step is undone whole (issue #187)", () => {
   });
 
   it("undoes the step when a correction write after it is refused (review, PR B)", async () => {
-    await manager.begin({ intent_id: "test_plain" });
+    await manager.begin({ intent_id: "test_plain", max_passes: 4 });
     const before = structuredClone(lr.settings);
     const apply = plugin.handlers.get("apply_settings")!;
     plugin.handlers.set("apply_settings", async (p, id) => {
@@ -76,7 +76,7 @@ describe("a refused step is undone whole (issue #187)", () => {
   });
 
   it("says so when the undo fails too", async () => {
-    await manager.begin({ intent_id: "test_plain" });
+    await manager.begin({ intent_id: "test_plain", max_passes: 4 });
     lr.ignored.add("ToneCurvePV2012");
     const apply = plugin.handlers.get("apply_settings")!;
     plugin.handlers.set("apply_settings", (p, id) =>
@@ -89,7 +89,7 @@ describe("a refused step is undone whole (issue #187)", () => {
   });
 
   it("writes raw Adobe Monochrome with ConvertToGrayscale true, and its undo writes the colour profile with false", async () => {
-    await manager.begin({ intent_id: "test_plain" });
+    await manager.begin({ intent_id: "test_plain", max_passes: 4 });
     lr.ignored.add("ToneCurvePV2012");
     const e = await fails(manager.step({ session_id: ID, settings: { camera_profile: "Adobe Monochrome", "tone_curve.master": [0, 0, 128, 160, 255, 255] }, rationale: "B&W" }));
     expect(e.details).toMatchObject({ undone: true });
@@ -101,7 +101,7 @@ describe("a refused step is undone whole (issue #187)", () => {
 
   it("puts a black-and-white photo with a colour profile (Treatment) back in black and white (review, PR B)", async () => {
     lr.settings["ConvertToGrayscale"] = true;
-    await manager.begin({ intent_id: "test_plain" });
+    await manager.begin({ intent_id: "test_plain", max_passes: 4 });
     lr.ignored.add("ToneCurvePV2012");
     const e = await fails(manager.step({ session_id: ID, settings: { camera_profile: "Adobe Monochrome", "tone_curve.master": [0, 0, 128, 160, 255, 255] }, rationale: "B&W" }));
     expect(e.details).toMatchObject({ undone: true });
@@ -114,7 +114,7 @@ describe("a refused step is undone whole (issue #187)", () => {
     lr.lookVersion = "18.7"; // Lightroom stamps its own (issue #67): the pair goes back without it
     lr.settings["CameraProfile"] = "Adobe Standard";
     lr.settings["Look"] = { Name: "Someone's Look", UUID: "0000UNPINNED", Amount: 1, Parameters: { Version: "18.7", Vibrance: 5 } };
-    await manager.begin({ intent_id: "test_plain" });
+    await manager.begin({ intent_id: "test_plain", max_passes: 4 });
     const before = structuredClone(lr.settings);
     lr.ignored.add("ToneCurvePV2012");
     const e = await fails(manager.step({ session_id: ID, settings: { camera_profile: "Adobe Color", "tone_curve.master": [0, 0, 128, 160, 255, 255] }, rationale: "colour" }));
@@ -124,7 +124,7 @@ describe("a refused step is undone whole (issue #187)", () => {
 
   it("puts the white balance mode back after a refused step that changed the temperature (Greptile, PR #200)", async () => {
     expect(lr.settings["WhiteBalance"]).toBe("As Shot");
-    await manager.begin({ intent_id: "test_plain" });
+    await manager.begin({ intent_id: "test_plain", max_passes: 4 });
     const before = structuredClone(lr.settings);
     lr.ignored.add("ToneCurvePV2012");
     const e = await fails(manager.step({ session_id: ID, settings: { temperature: Number(before["Temperature"]) + 200, "tone_curve.master": [0, 0, 128, 160, 255, 255] }, rationale: "warmer" }));

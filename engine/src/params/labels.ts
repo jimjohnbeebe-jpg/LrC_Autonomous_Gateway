@@ -52,6 +52,10 @@ const LABELS: ReadonlyMap<string, string> = new Map([
   ["grain.amount", "Grain Amount"],
   ["grain.size", "Grain Size"],
   ["grain.frequency", "Grain Roughness"],
+  // B&W and Calibration panels (Phase 10 row 2): [unverified] until Jim compares them with his panels.
+  ...COLOURS.map((c) => [`bw.${c}`, `B&W ${title(c)}`] as const),
+  ["calibration.shadow_tint", "Shadows Tint"],
+  ...(["red", "green", "blue"] as const).flatMap((c) => Object.entries({ hue: "Hue", sat: "Saturation" }).map(([k, v]) => [`calibration.${c}.${k}`, `${title(c)} Primary ${v}`] as const)),
   ["tone_curve.master", "Point Curve"],
   ["tone_curve.red", "Point Curve Red"],
   ["tone_curve.green", "Point Curve Green"],

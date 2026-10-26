@@ -10,8 +10,9 @@ import type { Pipeline } from "./pipeline.js";
 
 /** The key a Nikon Camera Matching profile is written as (reference-2.lrc15.xmp `crs:CameraProfile`). */
 export const CAMERA_PROFILE_KEY = "CameraProfile";
+export const LOOK_KEY = "Look";
 /** The pair a camera profile is set with through the SDK (camera-profiles.ts toSdk). */
-export const PROFILE_KEYS: readonly string[] = [CAMERA_PROFILE_KEY, "Look"];
+export const PROFILE_KEYS: readonly string[] = [CAMERA_PROFILE_KEY, LOOK_KEY];
 /**
  * With CameraProfile "Embedded", the key that tells the rendered pipeline's Monochrome from Color
  * [handle: camera-profiles.lrc15.json "Color", "Monochrome" write_verified; sdk-keys.lrc15.rendered.json].
@@ -35,6 +36,12 @@ export const AS_SHOT_WHITE_BALANCE = "As Shot";
  * [stated: Jim, in the same run, temperature_custom.jim.panel_custom].
  */
 export const CUSTOM_WHITE_BALANCE = "Custom";
+/**
+ * The keys a canonical name's write sets besides its own (camera_profile its pair and ConvertToGrayscale,
+ * temperature and tint WhiteBalance "Custom"): fromSdk keeps them as read, for a revert to put back
+ * (put-back.ts companionsBack).
+ */
+export const COMPANION_KEYS: readonly string[] = [...PROFILE_KEYS, CONVERT_TO_GRAYSCALE_KEY, WHITE_BALANCE_KEY];
 /** Lightroom writes the point curve's name ("Linear", …) with the point curves. */
 export const TONE_CURVE_NAME_KEY = "ToneCurveName2012";
 

@@ -11,11 +11,11 @@ describe("sync: parameter_mask groups", () => {
     const unplaced = map.names().filter((n) => groupOf(n) === null);
     expect(unplaced).toEqual([]);
     const sizes = Object.fromEntries(MASK_GROUPS.map((g) => [g, map.names().filter((n) => groupOf(n) === g).length]));
-    expect(sizes).toEqual({ basic_tone: 11, white_balance: 2, tone_curve: 4, hsl: 24, grading: 14, detail: 6, lens: 3, effects: 9, camera_profile: 1 });
+    expect(sizes).toEqual({ basic_tone: 11, white_balance: 2, tone_curve: 4, hsl: 24, grading: 14, detail: 6, lens: 3, effects: 9, bw: 8, calibration: 7, camera_profile: 1 });
   });
 
   it("places the names MCP_TOOLS' groups stand for", () => {
-    expect(["exposure", "dehaze", "temperature", "tone_curve.red", "hsl.aqua.lum", "grading.balance", "noise.color", "lens.ca_remove", "camera_profile"].map(groupOf)).toEqual([
+    expect(["exposure", "dehaze", "temperature", "tone_curve.red", "hsl.aqua.lum", "grading.balance", "noise.color", "lens.ca_remove", "bw.aqua", "calibration.shadow_tint", "camera_profile"].map(groupOf)).toEqual([
       "basic_tone",
       "basic_tone",
       "white_balance",
@@ -24,6 +24,8 @@ describe("sync: parameter_mask groups", () => {
       "grading",
       "detail",
       "lens",
+      "bw",
+      "calibration",
       "camera_profile",
     ]);
     expect(groupOf("no.such")).toBeNull();

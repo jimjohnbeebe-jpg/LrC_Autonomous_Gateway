@@ -39,6 +39,8 @@ describe("capturePreset", () => {
     expect(out.worked).toBe(true);
     expect(out.findings).toEqual(["the preset file has no Temperature, Tint (group white_balance)", "the preset file has no EnableLensCorrections (group lens)",
       "the preset file has no PostCropVignetteMidpoint, PostCropVignetteRoundness, PostCropVignetteFeather, PostCropVignetteHighlightContrast, PostCropVignetteStyle, GrainSize, GrainFrequency (group effects)",
+      // A colour photo carries no B&W mixer, so neither does its preset (S14.md "d. B&W mixer").
+      "the preset file has no GrayMixerRed, GrayMixerOrange, GrayMixerYellow, GrayMixerGreen, GrayMixerAqua, GrayMixerBlue, GrayMixerPurple, GrayMixerMagenta (group bw)",
       "the preset file has no Look (group camera_profile)"]);
     expect(saved.get("reference-2.lrc15.xmp")).toBe(read("reference-2.lrc15.xmp"));
     const fixture = JSON.parse(saved.get("reference-2-settings.lrc15.json") as string) as Record<string, unknown>;

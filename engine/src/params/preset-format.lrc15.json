@@ -452,6 +452,62 @@
       ],
       "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
     },
+    "ShadowTint": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "RedHue": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "RedSaturation": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "GreenHue": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "GreenSaturation": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "BlueHue": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "BlueSaturation": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
     "Sharpness": {
       "signed": false,
       "decimals": 0,
@@ -771,6 +827,70 @@
       "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
     },
     "LuminanceAdjustmentMagenta": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "GrayMixerRed": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "GrayMixerOrange": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "GrayMixerYellow": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "GrayMixerGreen": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "GrayMixerAqua": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "GrayMixerBlue": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "GrayMixerPurple": {
+      "signed": true,
+      "decimals": 0,
+      "observed": [
+        "0"
+      ],
+      "basis": "inference: only 0 observed; range -100..100, signed when it goes below 0"
+    },
+    "GrayMixerMagenta": {
       "signed": true,
       "decimals": 0,
       "observed": [

@@ -25,6 +25,25 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
       expect(readLog().probes).toHaveLength(1);
     });
 
+    it("puts the white balance mode back after a temperature probe, also when a later slider's write ends it (Greptile, PR #200)", async () => {
+      await manager.begin({ intent_id: "test_plain" });
+      const before = structuredClone(lr.settings);
+      expect(before["WhiteBalance"]).toBe("As Shot");
+      await manager.probe({ session_id: ID, sliders: ["temperature", "exposure"] });
+      expect(lr.settings["WhiteBalance"]).toBe("As Shot"); // the temperature write set "Custom"
+      expect(lr.settings).toEqual(before);
+    });
+
+    it("puts the white balance mode back when a temperature probe fails half-way (Greptile, PR #200)", async () => {
+      await manager.begin({ intent_id: "test_plain" });
+      const before = structuredClone(lr.settings);
+      lr.exportError = "disk full";
+      await fails(manager.probe({ session_id: ID, sliders: ["temperature"] }));
+      lr.exportError = null;
+      expect(lr.history.at(-1)).toBe(`AVG ${SHORT} probe revert`);
+      expect(lr.settings).toEqual(before);
+    });
+
     it("puts the probed sliders back when a probe fails half-way (Greptile, PR #23)", async () => {
       await manager.begin({ intent_id: "test_plain" });
       const before = lr.settings["Exposure2012"];
@@ -101,6 +120,7 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
       expect(actions.at(-1)?.reason).toMatch(/region "orange" drifted/);
       expect(out.json["undone"]).toMatchObject({ limit: "region" }); // Greptile, PR #27
       expect(lr.settings[wb(pipeline).key]).toBe(pipeline === "raw" ? 5500 : 0); // the photo's own: the NEF dump's 5500 K, DSC_0031.JPG's 0
+      expect(lr.settings["WhiteBalance"]).toBe("As Shot"); // not the step's "Custom" (Greptile, PR #200)
       expect(lr.history.at(-1)).toBe(`AVG ${SHORT} pass 2/4 region revert`);
       expect(readLog().regions[0]).toMatchObject({ label: "orange", preserve: true, baselines: { master: { hue_mean: expect.any(Number) } } });
     });

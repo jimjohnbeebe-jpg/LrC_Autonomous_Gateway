@@ -42,5 +42,8 @@ export function writeRendered(settings: Record<string, unknown>, written: Record
     }
     settings[k] = structuredClone(v);
   }
+  // "As Shot" written (a revert's, session\guardrail.ts settingsBack) puts the relative white balance at 0, the
+  // value every As Shot photo of the census holds [inference; what Lightroom does is [unverified]].
+  if (written["WhiteBalance"] === "As Shot" && !ignored.has("WhiteBalance")) for (const k of INCREMENTAL) settings[k] = 0;
   if (settings["ConvertToGrayscale"] === true) for (const k of Object.keys(settings)) if (GRAYSCALE_DROPS.test(k)) delete settings[k];
 }

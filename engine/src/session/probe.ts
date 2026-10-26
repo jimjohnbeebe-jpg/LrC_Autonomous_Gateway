@@ -5,7 +5,7 @@
 
 import { ToolError, toToolError } from "../mcp/errors.js";
 import { deltaMetrics, type MetricsDelta } from "../metrics/index.js";
-import { lightroomLabel, type CanonicalValue, type FromSdkResult, type ParamMap } from "../params/index.js";
+import { companionsBack, lightroomLabel, type CanonicalValue, type FromSdkResult, type ParamMap } from "../params/index.js";
 import { failed, fresh, ms, read, render, saveLog, write } from "./io.js";
 import type { Slope } from "./plan.js";
 import { baseMaxStep, roundForSlider } from "./rules.js";
@@ -39,10 +39,10 @@ export async function probe(ctx: SessionContext, s: Session, args: ProbeArgs): P
   /** Sliders that may hold a probe value now, with the value to put back. */
   const outstanding = new Map<string, number>();
   try {
-    await runProbe(ctx, s, t, plan, base, { historyNames, results, outstanding });
+    await runProbe(ctx, s, t, plan, base, view, { historyNames, results, outstanding });
   } catch (err) {
     // After the user's Abort, the pre-session snapshot puts every slider back (hud-actions.ts).
-    if (!s.abort) await putBack(ctx, s, t, outstanding, historyNames);
+    if (!s.abort) await putBack(ctx, s, t, view, outstanding, historyNames);
     throw failed(ctx, s, "probe", err);
   }
   s.log.probes.push({ target: t.id, started: probeStarted, duration_ms: ms(started), magnitude, history_names: historyNames, results });
@@ -82,7 +82,9 @@ function planProbe(sliders: readonly string[], view: FromSdkResult, magnitude: n
 
 /**
  * Probe the sliders one after the other (each write also puts the previous slider back), record
- * each slope, then put the last slider back and check that every probed slider is back.
+ * each slope, then put the last slider back and check that every probed slider is back. The last
+ * write also puts back what the probe writes changed besides the sliders (params companionsBack): a
+ * temperature or tint write sets WhiteBalance "Custom" (Greptile, PR #200, for the step undo).
  */
 async function runProbe(
   ctx: SessionContext,
@@ -90,16 +92,19 @@ async function runProbe(
   t: Target,
   plan: ProbePlan,
   base: Rendered,
+  before: FromSdkResult,
   out: { historyNames: string[]; results: ProbeResult[]; outstanding: Map<string, number> },
 ): Promise<void> {
   const { historyNames, results, outstanding } = out;
   let previous: { name: string; before: number } | null = null;
+  let current = before;
   for (const p of plan) {
     const values: Record<string, CanonicalValue> = { [p.name]: roundForSlider(p.name, p.before + p.delta) };
     if (previous) values[previous.name] = previous.before;
     const name = `${probePrefix(s, t)} ${p.name}`;
     outstanding.set(p.name, p.before); // before the write: a failed write may still have changed it
     const probedView = await write(ctx, s, t, values, name);
+    current = probedView;
     if (previous) outstanding.delete(previous.name); // this write put the previous slider back
     historyNames.push(name);
     const probed = await render(ctx, s, t, probedView, { keep: false });
@@ -116,20 +121,22 @@ async function runProbe(
   }
   if (!previous) return;
   const revertName = `${probePrefix(s, t)} revert`;
-  const back = await write(ctx, s, t, { [previous.name]: previous.before }, revertName, { putBack: true });
+  const values = { [previous.name]: previous.before };
+  const companions = companionsBack(before, current, values);
+  const back = await write(ctx, s, t, values, revertName, { putBack: true, companions: companions.sdk });
   historyNames.push(revertName);
   for (const p of plan) if (back.settings[p.name] === p.before) outstanding.delete(p.name);
   // Every probed slider is checked, not only those still marked for recovery: one put back
   // earlier may have been changed in Lightroom since (Greptile, PR #23) [handle:
   // tests\session-probe.test.ts "reports a probed slider changed in Lightroom after it was put back"].
   const differing = plan.filter((p) => back.settings[p.name] !== p.before).map((p) => ({ name: p.name, before: p.before, now: back.settings[p.name] ?? null }));
-  if (differing.length > 0) {
-    throw new ToolError(
-      "PROBE_NOT_PUT_BACK",
-      `After the probe, ${differing.map((d) => `${d.name} is ${String(d.now)}, not ${d.before}`).join("; ")}: changed in Lightroom during the probe, or not taken.`,
-      false,
-      { differing },
-    );
+  const lost = companions.not_restored;
+  if (differing.length > 0 || lost.length > 0) {
+    const what = [
+      ...(differing.length > 0 ? [`${differing.map((d) => `${d.name} is ${String(d.now)}, not ${d.before}`).join("; ")}: changed in Lightroom during the probe, or not taken`] : []),
+      ...(lost.length > 0 ? [`${lost.join(", ")} could not be put back: Lightroom did not report it before the probe`] : []),
+    ];
+    throw new ToolError("PROBE_NOT_PUT_BACK", `After the probe, ${what.join("; and ")}.`, false, { differing, ...(lost.length > 0 ? { not_restored: lost } : {}) });
   }
 }
 
@@ -141,13 +148,19 @@ async function runProbe(
  * changed"]. If the write fails too, the next step renders the photo again before it plans
  * (fresh()), because the settings then differ from the last render's.
  */
-async function putBack(ctx: SessionContext, s: Session, t: Target, outstanding: Map<string, number>, historyNames: string[]): Promise<void> {
+async function putBack(ctx: SessionContext, s: Session, t: Target, before: FromSdkResult, outstanding: Map<string, number>, historyNames: string[]): Promise<void> {
   if (outstanding.size === 0) return;
   const back: Record<string, CanonicalValue> = Object.fromEntries(outstanding);
   const revertName = `${probePrefix(s, t)} revert`;
   try {
-    await write(ctx, s, t, back, revertName, { putBack: true });
+    // With what the probe's writes changed besides the sliders (WhiteBalance "Custom"), read from the photo now.
+    const companions = companionsBack(before, await read(ctx, s, t), back);
+    await write(ctx, s, t, back, revertName, { putBack: true, companions: companions.sdk });
     historyNames.push(revertName);
+    if (companions.not_restored.length > 0) {
+      const lost = new ToolError("PROBE_NOT_PUT_BACK", `${companions.not_restored.join(", ")} could not be put back: Lightroom did not report it before the probe.`, false, { not_restored: companions.not_restored });
+      s.log.failures.push({ at: ctx.now().toISOString(), stage: "probe (put back)", error: lost.body() });
+    }
   } catch (restoreErr) {
     s.log.failures.push({ at: ctx.now().toISOString(), stage: "probe (put back)", error: toToolError(restoreErr).body() });
   }

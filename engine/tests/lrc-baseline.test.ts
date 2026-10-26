@@ -155,17 +155,18 @@ describe("FEATURE_UNAVAILABLE", () => {
     expect(profile?.message).toMatch(/^Profile is not available with this Lightroom and plugin; .*Leave it out of later steps\.$/);
   });
 
-  it("keeps the session open after a slider Lightroom no longer reports; the step's other values are written", async () => {
+  it("keeps the session open after a slider Lightroom no longer reports; the step's other values are undone (issue #187)", async () => {
     clean();
     await manager.begin({ intent_id: "test_plain" });
     dropFromReadBack("Clarity2012");
     const e = await fails(manager.step({ session_id: ID, settings: { clarity: 10, shadows: 10 }, rationale: "r" }));
-    expect(e.body()).toMatchObject({ code: "FEATURE_UNAVAILABLE", recoverable: true, details: { feature: "Clarity", lrc_version: "15.5.1", plugin_version: PLUGIN_VERSION, session_id: ID } });
-    expect(e.message).toMatch(/^Clarity is not available with Lightroom 15\.5\.1 \/ plugin .* The step's other values were written\. \(session .* is still open/);
-    expect(lr.settings["Shadows2012"]).toBe(10);
+    expect(e.body()).toMatchObject({ code: "FEATURE_UNAVAILABLE", recoverable: true, details: { feature: "Clarity", lrc_version: "15.5.1", plugin_version: PLUGIN_VERSION, session_id: ID, undone: true } });
+    expect(e.message).toMatch(/^Clarity is not available with Lightroom 15\.5\.1 \/ plugin .* Clarity2012 could not be checked, so it was not written back\. The step was undone: .* \(session .* is still open/);
+    expect(e.message).not.toMatch(/other values were written/);
+    expect(lr.settings["Shadows2012"]).toBe(0);
     expect(manager.current()?.id).toBe(ID);
     expect(readLog().failures.map((f) => f.error.code)).toEqual(["FEATURE_UNAVAILABLE"]);
-    // The failed pass is not counted; the next one goes on from what the photo holds.
-    expect((await manager.step({ session_id: ID, settings: { shadows: 20 }, rationale: "r" })).json).toMatchObject({ pass: "1/4", applied: [{ name: "shadows", before: 10 }] });
+    // The failed pass is not counted; the next one goes on from the pre-step settings.
+    expect((await manager.step({ session_id: ID, settings: { shadows: 20 }, rationale: "r" })).json).toMatchObject({ pass: "1/4", applied: [{ name: "shadows", before: 0 }] });
   });
 });

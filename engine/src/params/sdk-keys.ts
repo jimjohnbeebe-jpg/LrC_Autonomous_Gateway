@@ -15,11 +15,12 @@ export type SdkValueType = (typeof SDK_VALUE_TYPES)[number];
 /**
  * Shape written by S5.lrplugin: `{ meta: {...}, settings: { <SdkKey>: <value> } }`. Spike S10's
  * census (devtools\s10-census.ts) writes the same shape with spike "S10", one dump per photo of
- * the "fixtures" collection, so the rendered pipeline's keys are pinned by the same conversion.
+ * the "fixtures" collection, so the rendered pipeline's keys are pinned by the same conversion. Spike S14
+ * (devtools\s14-keys.ts) writes it with spike "S14" for its Monochrome dumps (the GrayMixer* keys).
  */
 const s5DumpSchema = z.object({
   meta: z.looseObject({
-    spike: z.enum(["S5", "S10"]),
+    spike: z.enum(["S5", "S10", "S14"]),
     filename: z.string().min(1),
     lr_version: z.string().optional(),
     captured_at: z.string().optional(),

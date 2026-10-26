@@ -233,9 +233,10 @@ export async function runPhase1Check(deps: Phase1Deps): Promise<{ accepted: bool
 
     // 7. Range probe.
     say("Range probe:");
+    // Only the sliders the photo carries: the B&W mixer is there only on a black-and-white photo (S14.md "d. B&W mixer").
     const numeric = map.names().flatMap((name) => {
       const spec = map.spec(name);
-      return spec?.kind === "number" ? [{ name, spec }] : [];
+      return spec?.kind === "number" && name in view.settings ? [{ name, spec }] : [];
     });
     const batch = (pick: (min: number, max: number, delta: number) => number): SdkSettings =>
       Object.fromEntries(numeric.map(({ spec }) => [spec.sdkKey, pick(spec.min, spec.max, (spec.max - spec.min) * 0.01)]));

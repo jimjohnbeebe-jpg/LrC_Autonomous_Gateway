@@ -12,7 +12,7 @@ import { ToolError } from "../mcp/errors.js";
 import { deltaMetrics, summarize, type MetricsDelta } from "../metrics/index.js";
 import type { CanonicalValue, FromSdkResult } from "../params/index.js";
 import { approveEachPass, awaitApproval } from "./approval.js";
-import { clipBreach, correct, regionDrift, undo } from "./guardrail.js";
+import { clipBreach, correct, regionDrift, undo, undoRefused } from "./guardrail.js";
 import { brief, describe, failed, fresh, historyName, image, ms, read, recordPass, render, write } from "./io.js";
 import { awaitingPick, checkVariantStep, pickRound } from "./pick.js";
 import { applyProjectedGuardrail, convergedByMetrics, planStep, type StepPlan } from "./plan.js";
@@ -137,9 +137,18 @@ function refuseEmpty(s: Session, plan: StepPlan): never {
 /**
  * Write the plan as one History step, render it, then the corrections. The pass is undone when
  * clipping is still over a limit the photo was within before it, or a preserved region drifted
- * too far.
+ * too far. A write Lightroom took only in part, the step's own or a correction or revert after it, is
+ * undone at once and the step fails (undoRefused, issue #187).
  */
 async function apply(ctx: SessionContext, s: Session, t: Target, n: number, plan: StepPlan, beforeView: FromSdkResult, before: Rendered): Promise<Applied> {
+  try {
+    return await applyPass(ctx, s, t, n, plan, beforeView, before);
+  } catch (err) {
+    throw await undoRefused(ctx, s, t, n, beforeView, err);
+  }
+}
+
+async function applyPass(ctx: SessionContext, s: Session, t: Target, n: number, plan: StepPlan, beforeView: FromSdkResult, before: Rendered): Promise<Applied> {
   const historyNames: string[] = [];
   const name = historyName(s, t, n);
   const values: Record<string, CanonicalValue> = Object.fromEntries(plan.changes.map((c) => [c.name, c.after]));

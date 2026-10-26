@@ -3,7 +3,10 @@
 // through the same validation the engine uses, and keep the keys the S5 run observed. Its third source
 // (engine 0.16.0, GitHub issue #59) is Jim's masks capture 1 dump, docs\reports\phase6\masks-capture\3_dump-1.json,
 // given to spikes\S5\pin.ts in the S5 shape ({ meta: { spike: "S5", filename, lr_version: "15.6" }, settings }) as
-// masks-capture_3_dump-1.json; it adds one key, MaskGroupBasedCorrections (the mask table, params\mask-table.ts).
+// masks-capture_3_dump-1.json; it adds one key, MaskGroupBasedCorrections (the mask table, params\mask-table.ts). Its
+// fourth (Phase 10 row 2) is spike S14's raw Monochrome dump,
+// docs\reports\phase10\S14\run2\s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json; it adds the eight GrayMixer*
+// keys (docs\reports\phase10\S14.md "d. B&W mixer").
 
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -15,8 +18,16 @@ const pinnedPath = fileURLToPath(new URL("../src/params/sdk-keys.lrc15.json", im
 describe("params: pinned LrC 15.5.1 key file (spike S5)", () => {
   const map = readSdkKeysFile(pinnedPath);
 
-  it("loads with 179 keys: the S5 run's 178 and the mask table", () => {
-    expect(map.size).toBe(179);
+  it("loads with 187 keys: the S5 run's 178, the mask table and the eight B&W mixer keys", () => {
+    expect(map.size).toBe(187);
+  });
+
+  it("pins the B&W mixer keys from S14's raw Monochrome dump only", () => {
+    for (const band of ["Red", "Orange", "Yellow", "Green", "Aqua", "Blue", "Purple", "Magenta"]) {
+      const entry = map.get(`GrayMixer${band}`);
+      expect(entry.type).toBe("number");
+      expect(entry.seen_in).toEqual(["s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"]);
+    }
   });
 
   it("pins the mask table from the masks capture's committed dump", () => {

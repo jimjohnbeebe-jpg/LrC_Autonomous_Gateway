@@ -96,11 +96,12 @@ function maybeWritten(err: unknown, historyName: string): unknown {
 /**
  * Write canonical values as one History step and check the read-back (Phase 0, P-12). `putBack`: the
  * values are ones the photo held before (a probe's or a pass's revert), which plugin 0.19.0 lets
- * through to a photo whose original went missing meanwhile (Greptile, PR #101).
+ * through to a photo whose original went missing meanwhile (Greptile, PR #101). `companions`: SDK values
+ * written over the canonical values' own, a revert's (params companionsBack, guardrail.ts settingsBack).
  */
-export async function write(ctx: SessionContext, s: Session, t: Target, values: Record<string, CanonicalValue>, historyName: string, options: { putBack?: boolean } = {}): Promise<FromSdkResult> {
+export async function write(ctx: SessionContext, s: Session, t: Target, values: Record<string, CanonicalValue>, historyName: string, options: { putBack?: boolean; companions?: SdkSettings } = {}): Promise<FromSdkResult> {
   const { client, map } = ctx.deps;
-  const sdk = map.toSdk(values, { processVersion: t.process_version, pipeline: t.pipeline });
+  const sdk = { ...map.toSdk(values, { processVersion: t.process_version, pipeline: t.pipeline }), ...options.companions };
   const readBack = await writeSdk(ctx, s, t, sdk, historyName, options.putBack === true);
   const error = readbackError(map, sdk, readBack, historyName, client.hello()); // WRITE_NOT_TAKEN or FEATURE_UNAVAILABLE
   if (error) throw error;

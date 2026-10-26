@@ -25,10 +25,13 @@ const PANELS: ReadonlyArray<[string, string[]]> = [
   ["Basic", ["camera_profile", "temperature", "tint", "exposure", "contrast", "highlights", "shadows", "whites", "blacks", "texture", "clarity", "dehaze", "vibrance", "saturation"]],
   ["Tone Curve", ["tone_curve.master", "tone_curve.red", "tone_curve.green", "tone_curve.blue"]],
   ["HSL / Color", ["hue", "sat", "lum"].flatMap((k) => COLOURS.map((c) => `hsl.${c}.${k}`))],
+  // Under a monochrome profile Lightroom shows the B&W mixer where HSL / Color is [inference].
+  ["B&W", COLOURS.map((c) => `bw.${c}`)],
   ["Color Grading", [...ZONES.flatMap((z) => ["hue", "sat", "lum"].map((k) => `grading.${z}.${k}`)), "grading.blending", "grading.balance"]],
   ["Detail", ["sharpening.amount", "sharpening.radius", "sharpening.detail", "sharpening.masking", "noise.luminance", "noise.color"]],
   ["Lens Corrections", ["lens.ca_remove", "lens.profile_enable", "lens.corrections_enable"]],
   ["Effects", ["vignette.style", "vignette.amount", "vignette.midpoint", "vignette.roundness", "vignette.feather", "vignette.highlight_contrast", "grain.amount", "grain.size", "grain.frequency"]],
+  ["Calibration", ["calibration.shadow_tint", ...["red", "green", "blue"].flatMap((c) => [`calibration.${c}.hue`, `calibration.${c}.sat`])]],
 ];
 const ORDER: ReadonlyMap<string, number> = new Map(PANELS.flatMap(([, names]) => names).map((name, rank) => [name, rank]));
 function groupOf(name: string): string {
@@ -45,7 +48,8 @@ function fullScale(name: string, before: unknown): number | null {
   if (name === "sharpening.radius") return 0.5;
   if (name === "vignette.style") return 1;
   if (name.startsWith("vignette.") || name.startsWith("grain.")) return 25;
-  if (name.startsWith("hsl.")) return 30;
+  if (name.startsWith("hsl.") || name.startsWith("bw.")) return 30;
+  if (name.startsWith("calibration.")) return 20;
   if (name.startsWith("grading.")) return name.endsWith(".hue") ? 60 : name.endsWith(".sat") ? 20 : 30;
   return null;
 }

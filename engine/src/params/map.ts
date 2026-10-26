@@ -16,7 +16,7 @@ import { CAMERA_PROFILE_PARAM, CANONICAL_PARAMS, RENDERED_PARAMS, type ParamSpec
 import { tableInfo } from "./mask-table.js";
 import { ParamError } from "./param-error.js";
 import { PIPELINES, checkProcessVersion, describeSignals, pipelineOf, type Pipeline } from "./pipeline.js";
-import { CUSTOM_WHITE_BALANCE, WHITE_BALANCE_KEY } from "./preset-keys.js";
+import { COMPANION_KEYS, CUSTOM_WHITE_BALANCE, WHITE_BALANCE_KEY } from "./preset-keys.js";
 import type { SdkKeyMap, SdkValueType } from "./sdk-keys.js";
 
 export { ParamError, type ParamErrorCode } from "./param-error.js";
@@ -37,6 +37,11 @@ export type FromSdkResult = {
   /** Canonical settings for every mapped key present; camera_profile only when the pair is pinned. */
   settings: CanonicalSettings;
   camera_profile: ProfileIdentity;
+  /**
+   * The COMPANION_KEYS Lightroom reported (profile pair, ConvertToGrayscale, WhiteBalance), as read: what no
+   * canonical name holds, e.g. an unpinned profile's pair, for a revert to put back (put-back.ts companionsBack).
+   */
+  companions: SdkSettings;
   /** Keys Lightroom returned that are not in the pinned dump (reported, not fatal). */
   unpinned_keys: string[];
   /** The mask table: how many masks, and a fingerprint that changes when any of it does (mask-table.ts tableInfo). */
@@ -285,6 +290,7 @@ export class ParamMap {
       pipeline,
       settings,
       camera_profile: cameraProfile,
+      companions: Object.fromEntries(COMPANION_KEYS.filter((k) => k in sdk).map((k) => [k, sdk[k]])),
       unpinned_keys: Object.keys(sdk).filter((k) => !this.sdkKeys[pipeline].has(k)).sort(),
       masks: tableInfo(sdk),
     };

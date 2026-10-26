@@ -2,7 +2,7 @@
 report: Phase 10 row 4 (re-planned), experiment 0b (does a look taken from an edit Jim likes beat no intent?)
 phase: 10 (row 4 after the 2026-10-26 re-plan; no engine change; engine and plugin 1.2.1)
 status: observed
-authored_by: "Harness steps, look save prompt and session analysis: Claude Code (Opus 5.5), 2026-10-26. Observed (the source edit, the seven chats, the verdicts and the reasons): Jim, 2026-10-26. Verdict: by the rule Jim approved in the re-plan."
+authored_by: "Harness steps, look save prompt and session analysis: Claude Code (Opus 5.5), 2026-10-26. Observed (the source edit, the seven chats, the verdicts and the reasons): Jim, 2026-10-26. Verdict and the decision to continue Phase 10: Jim."
 date: 2026-10-26
 ---
 
@@ -12,7 +12,7 @@ date: 2026-10-26
 
 **The question** (vault `PHASE10_PLAN.md`, "Re-plan of rows 4-10", row 4): row 0's looks were written from the spec and lost on 3 of 3 photos ([EXPERIMENT.md](EXPERIMENT.md)). Does a look taken from an edit Jim finished and likes, with the character settings only and the tones left to Claude per photo, beat an edit with no intent?
 
-**Rule** (same row, approved by Jim on 2026-10-26 [stated: "Go with recommendations"]): "the look wins on at least 2 of 3 photos → build rows 5-8; otherwise the build stops after row 3, #194 is closed with the findings, and the looks stay user intents."
+**Rule** (same row, approved by Jim on 2026-10-26 [stated: "Go with recommendations"]): "the look wins on at least 2 of 3 photos → build rows 5-8; otherwise the build stops after row 3, #194 is closed with the findings, and the looks stay user intents." This rule was withdrawn after the run [stated: Jim, 2026-10-26, "Go with A"]; see "Verdict".
 
 ## Harness
 
@@ -58,11 +58,11 @@ From the session logs (repo `logs\20261026-<id>.json`, gitignored, local) [handl
 
 ## Verdict
 
-**The look lost on 2 of 3 photos, so the rule's threshold (2 of 3) is not met** [stated: Jim's verdicts; the rule as approved 2026-10-26]. By the rule, the Phase 10 build stops after row 3, #194 is closed with these findings, and `my_look_0b` (with row 0's two looks) stays a user intent in Jim's folder.
+**The look lost on 2 of 3 photos, so the rule's threshold (2 of 3) is not met** [stated: Jim's verdicts; the rule as approved 2026-10-26]. **Phase 10 continues** [stated: Jim, 2026-10-26, "Go with A"]: the re-plan's stop rule is withdrawn, #194 stays open, and rows 4 onward are re-planned from this report and row 0's, for Jim's approval. Meanwhile `my_look_0b` (with row 0's two looks) stays a user intent in Jim's folder.
 
 ## Consequences / open questions
 
-1. **Rows 5-8 are not built**: no v3 `set`, no "save this edit as a look" tool path, no MCP prompts for looks, no bundled looks. Phase 10 closes with L-1, L-2, L-10 and the two experiment reports (re-plan, "Acceptance after the re-plan").
+1. **Rows 5-8 of the lean re-plan are not approved to build as written** (v3 `set`, "save this edit as a look", looks as MCP prompts, bundled looks). The next plan for rows 4 onward weighs them against these findings and row 0's.
 2. **`set` would not have changed this result.** On these photos the character settings started at their defaults, so the added priors landed exactly as written. Absolute values would have written the same numbers (see Numbers).
 3. **Why the look lost** [inference: Claude Code's reading of the logs against Jim's reasons, not tested]. The look's curve lowers the midtones (97 → 91) and its vignette (-28) darkens the edges. Claude worked on top of both and never added the presence settings (texture, clarity) it reached for unaided. The brief's "gentle" and "soft" wording may have steered it away from them. That matches "too dark/heavy" and "no-intent crisper".
 4. **Small defect, not fixed here: `lr_save_intent`'s description does not say that `category` is required.** The first save failed on it. A fix is one line in `engine/src/mcp/defs-intents.ts` (name the required fields), in a `fix/` PR when Jim picks it.

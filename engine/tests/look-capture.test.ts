@@ -33,9 +33,12 @@ describe.each(PIPELINES)("save this edit as a look (%s pipeline)", (pipeline) =>
     expect(existsSync(path.join(userDir, "my_edit.json"))).toBe(false);
   });
 
-  it("saves the look after approval, and pass 0 writes its values as given on a photo with other settings", async () => {
+  it("saves the previewed look unchanged, refuses a capture that would save at once, and pass 0 writes its values as given", async () => {
     edit();
-    await tools.saveIntent({ intent: candidate, confirmed: true, from_photo: true });
+    const preview = (await tools.saveIntent({ intent: candidate, confirmed: false, from_photo: true, dry_run: true })).json["intent"] as Record<string, unknown>;
+    await expect(tools.saveIntent({ intent: candidate, confirmed: true, from_photo: true })).rejects.toMatchObject({ code: "INVALID_ARGUMENTS" });
+    Object.assign(lr.settings, { Exposure2012: 2 }); // changed after the preview: not saved
+    await tools.saveIntent({ intent: preview, confirmed: true });
     clean();
     Object.assign(lr.settings, { Exposure2012: -0.4, Contrast2012: -10, Clarity2012: 0 });
     const begun = await tools.beginSession({ intent_id: "my_edit", return_image: "none" });

@@ -60,6 +60,11 @@ export async function saveIntent(ctx: ToolContext, args: SaveIntentArgs): Promis
     if (args.confirmed !== true && args.dry_run !== true) {
       throw notConfirmed("this intent");
     }
+    // A capture is only a preview: the save takes the returned intent, so what is written is what the user
+    // approved, even if the photo or its settings changed meanwhile (Greptile, PR #206).
+    if (args.from_photo === true && args.dry_run !== true) {
+      throw new ToolError("INVALID_ARGUMENTS", "from_photo works only with dry_run: true. Show the user the intent it returns, then save that intent unchanged (without from_photo) with confirmed: true.", false);
+    }
     const { intent, photo } = args.from_photo === true ? await fromPhoto(ctx, args.intent) : { intent: args.intent, photo: null };
     const id = (intent as { id?: unknown }).id;
     const from = photo ? { from_photo: photo } : {};

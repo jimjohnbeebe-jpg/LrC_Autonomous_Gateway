@@ -19,7 +19,7 @@ const saveIntentArgs = z.object({
   from_photo: z
     .boolean()
     .optional()
-    .describe("true: take the look of the photo selected in Lightroom (profile, tone, presence, white balance, curves, HSL, grading, effects, B&W mixer, calibration) into `set`"),
+    .describe("true: take the look of the photo selected in Lightroom (profile, tone, presence, white balance, curves, HSL, grading, effects, B&W mixer, calibration) into `set`; only with dry_run (save the returned intent)"),
   dry_run: z.boolean().optional().describe("true: validate and return the intent as it would be saved; nothing is written"),
 });
 const deleteIntentArgs = z.object({
@@ -63,7 +63,7 @@ export const INTENT_DEFS: ToolDef[] = [
       "Save a new or changed intent as <id>.json in the user's intents folder. ONLY call this after the user has explicitly " +
       "approved the exact intent in this chat; `confirmed: true` states that they did. " +
       "To save the edit of the photo selected in Lightroom as a look (\"save this edit as a look\"): call with `from_photo: true` and " +
-      "`dry_run: true` first, show the user the intent the result returns, then save it after they approve. `set` holds absolute values, " +
+      "`dry_run: true` (from_photo works only with dry_run), show the user the intent the result returns, then save that intent unchanged, without from_photo, after they approve. `set` holds absolute values, " +
       "written at pass 0 as given (`priors` are added to the photo's values); a name is in one of them, not both. " +
       "The intent is validated first (schema v3, or v2 without set; " +
       "canonical parameter names and values on each pipeline, temperature and tint only in `priors_by_pipeline` / `set_by_pipeline`, `profile.raw` a " +

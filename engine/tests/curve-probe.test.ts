@@ -7,7 +7,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { BridgeClient } from "../src/bridge/index.js";
-import { ISSUE_PHOTO, LIFT3, QUESTION, runCurveProbe, SWEEP_PROFILES } from "../src/devtools/curve-probe.js";
+import { EXTENDED, ISSUE_PHOTO, LIFT3, QUESTION, runCurveProbe, SWEEP_PROFILES } from "../src/devtools/curve-probe.js";
 import { BridgeGate } from "../src/mcp/index.js";
 import { loadDefaultParamMap } from "../src/params/index.js";
 import { findLeftOpen } from "../src/session/left-open.js";
@@ -23,6 +23,7 @@ describe("curve probe (simulated plugin)", () => {
   let client: BridgeClient;
   const said: string[] = [];
   const asked: string[] = [];
+  const extendedWhenAsked: unknown[] = [];
 
   beforeEach(async () => {
     tmp = mkdtempSync(path.join(os.tmpdir(), "lrc-avg-curve-"));
@@ -34,6 +35,7 @@ describe("curve probe (simulated plugin)", () => {
     lr.install(plugin);
     said.length = 0;
     asked.length = 0;
+    extendedWhenAsked.length = 0;
   });
 
   afterEach(async () => {
@@ -49,6 +51,7 @@ describe("curve probe (simulated plugin)", () => {
       client, gate, map: loadDefaultParamMap(), say: (l) => said.push(l), stamp: "2026-10-25T10-00-00-000Z",
       ask: async (q) => {
         asked.push(q);
+        extendedWhenAsked.push(structuredClone(lr.settings[EXTENDED]));
         return "y";
       },
       dumpDir: tmp, recorderDir: tmp, sessionDir: path.join(tmp, "sessions"), previewDir: path.join(tmp, "previews"), connectTimeoutMs: 2000, settleMs: 0,
@@ -58,7 +61,7 @@ describe("curve probe (simulated plugin)", () => {
   const sweepOf = (photo: J) => photo["profile_sweep"] as J;
   const sweepTaken = (photo: J) => (sweepOf(photo)["profiles"] as J[]).map((r) => [r["profile"], (r["profile_write"] as J)["taken"], r["curve_taken"]]);
 
-  it("a curve refused on the photo: WRITE_NOT_TAKEN, back at its pre-step settings, refused under every profile: photo is the cause, no question, put back", async () => {
+  it("a curve refused on a photo without ExtendedToneCurvePV2012: WRITE_NOT_TAKEN, back at its pre-step settings, refused under every profile: photo is the cause, part e skipped, no question, put back", async () => {
     const before = structuredClone(lr.settings);
     lr.ignored.add("ToneCurvePV2012");
     const { worked, results } = await run();
@@ -69,7 +72,9 @@ describe("curve probe (simulated plugin)", () => {
     expect(((photo["direct"] as J)["writes"] as J[]).map((w) => w["taken"])).toEqual([false, false]);
     expect(sweepTaken(photo)).toEqual(SWEEP_PROFILES.map((p) => [p, true, false]));
     expect(sweepOf(photo)["suggestion"]).toBe("photo is the cause");
-    expect(photo["point_curve"]).toMatchObject({ answer: expect.stringContaining("not asked: no profile took the curve"), completed: true });
+    expect(photo["extended_curve"]).toEqual({ skipped: `the photo's settings have no ${EXTENDED} (HDREditMode 0)`, completed: true });
+    expect(said).toContain(`  e. extended curve skipped: the photo's settings have no ${EXTENDED} (HDREditMode 0)`);
+    expect(photo["point_curve"]).toMatchObject({ answer: expect.stringContaining("not asked: no profile took the curve, and the extended lift was not written"), completed: true });
     expect(asked).toEqual([]);
     expect(photo["put_back"]).toMatchObject({ ok: true });
     expect(lr.settings).toEqual(before);
@@ -92,8 +97,32 @@ describe("curve probe (simulated plugin)", () => {
     const photo = results["photo"] as J;
     expect(sweepTaken(photo)).toEqual([["Adobe Color", true, true], ["Adobe Standard", true, true], ["Adobe Landscape", true, false]]);
     expect(sweepOf(photo)["suggestion"]).toBe("profile is the cause");
-    expect(photo["point_curve"]).toMatchObject({ profile: "Adobe Color", answer: "y", write: { written: { ToneCurvePV2012: LIFT3 }, taken: true } });
+    expect(photo["point_curve"]).toMatchObject({ profile: "Adobe Color", asked_on: "ToneCurvePV2012 under Adobe Color", answer: "y", write: { written: { ToneCurvePV2012: LIFT3 }, taken: true } });
     expect(asked).toEqual([QUESTION]);
+    expect(photo["put_back"]).toMatchObject({ ok: true });
+    expect(lr.settings).toEqual(before);
+    expect(said).toContain("put back: YES");
+  });
+
+  it("an HDR-mode photo that refuses ToneCurvePV2012 and takes ExtendedToneCurvePV2012: part e taken, the question asked on the extended lift, put back (#187 run 3)", async () => {
+    Object.assign(lr.settings, { HDREditMode: 1, [EXTENDED]: [0, 0, 255, 255] });
+    const before = structuredClone(lr.settings);
+    lr.ignored.add("ToneCurvePV2012");
+    const { worked, results } = await run();
+    expect(results["errors"]).toEqual([]);
+    expect(worked).toBe(true);
+    const photo = results["photo"] as J;
+    expect(sweepOf(photo)["suggestion"]).toBe("photo is the cause");
+    const ext = photo["extended_curve"] as J;
+    expect(ext).toMatchObject({
+      key: EXTENDED, suggestion: "HDR mode uses ExtendedToneCurvePV2012", completed: true,
+      curve: { taken: true, read_back: { [EXTENDED]: [0, 0, 64, 56, 128, 128, 192, 200, 255, 255] }, standard_after: { ToneCurvePV2012: [0, 0, 255, 255] } },
+      lift: { written: { [EXTENDED]: LIFT3 }, taken: true },
+    });
+    expect(photo["point_curve"]).toMatchObject({ asked_on: EXTENDED, answer: "y", write: { taken: true }, completed: true });
+    expect(asked).toEqual([QUESTION]);
+    expect(extendedWhenAsked).toEqual([LIFT3]);
+    expect(said).toContain("     suggestion (not a verdict): HDR mode uses ExtendedToneCurvePV2012");
     expect(photo["put_back"]).toMatchObject({ ok: true });
     expect(lr.settings).toEqual(before);
     expect(said).toContain("put back: YES");

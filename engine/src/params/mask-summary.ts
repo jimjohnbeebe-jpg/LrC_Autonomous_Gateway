@@ -81,10 +81,15 @@ function geometryOf(m: Component, f: CropFrame): Record<string, unknown> | undef
   return undefined;
 }
 
+// Lightroom stores an ordinary Intersect part as MaskBlendMode 1 + MaskInverted true + MaskValue 0 [handle:
+// docs\reports\phase8.5\mask-combine.md:62; docs\reports\phase8.5\mask-carry\mask_carry_2026-10-11T22-37-39-161Z.json
+// `table_before[2]`], so a part after the first reads inverted only when its fields are none of the three modes (issue #193).
+const invertedOf = (m: Component, i: number): boolean => m[M.inverted] === true && (i === 0 || modeOf(m) === null);
+
 function partOf(f: CropFrame) {
   return (m: Component, i: number): MaskPart => {
     const geometry = geometryOf(m, f);
-    return { kind: String(componentKind(m)), ...(i > 0 ? { mode: modeOf(m) ?? "other" } : {}), inverted: m[M.inverted] === true, ...(geometry ? { geometry } : {}) };
+    return { kind: String(componentKind(m)), ...(i > 0 ? { mode: modeOf(m) ?? "other" } : {}), inverted: invertedOf(m, i), ...(geometry ? { geometry } : {}) };
   };
 }
 
@@ -108,7 +113,7 @@ export function summarize(e: Correction, frame: CropFrame = IDENTITY): MaskSumma
     name: nameOf(e),
     kind: kinds.length === 1 ? (kinds[0] as string) : "mixed",
     active: e[C.active] !== false,
-    inverted: parts.length > 0 && parts.every((m) => m[M.inverted] === true),
+    inverted: parts.length > 0 && parts.every(invertedOf),
     components: parts.length,
     sliders,
     ...(geometry ? { geometry } : {}),

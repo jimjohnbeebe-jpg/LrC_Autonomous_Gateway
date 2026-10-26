@@ -160,13 +160,12 @@ async function profileWrite(ctx: Ctx, photo: Photo, name: string): Promise<Json>
   return Object.assign(w, { read_back: id, taken: id === null ? null : id.name === name });
 }
 
-/** From the snapshot: the profile, then the curve (not written when the profile write failed). */
+/** From the snapshot: the profile, then the curve (written only when Lightroom took the profile). */
 async function underProfile(ctx: Ctx, photo: Photo, out: Json, name: string, curve: number[], what: string): Promise<Json> {
   await toSnapshot(ctx, photo, out);
   const profile = await profileWrite(ctx, photo, name);
-  const w = profile["taken"] === null ? null : await writeOne(ctx, photo, `${what} under ${name}`, { ToneCurvePV2012: curve });
-  // The curve counts for this profile only when the profile itself was taken.
-  return { profile: name, profile_write: profile, curve: w, curve_taken: profile["taken"] === true ? ((w?.["taken"] as boolean | null | undefined) ?? null) : null };
+  const w = profile["taken"] === true ? await writeOne(ctx, photo, `${what} under ${name}`, { ToneCurvePV2012: curve }) : null;
+  return { profile: name, profile_write: profile, curve: w, curve_taken: (w?.["taken"] as boolean | null | undefined) ?? null };
 }
 
 /** The suggested reading of the sweep (a suggestion; the verdict is Jim's, rule 02). */
@@ -185,7 +184,8 @@ async function profileSweep(ctx: Ctx, photo: Photo, out: Json): Promise<Json> {
   const cell = (r: Json): string => `${String(r["profile"])} (profile taken ${String((r["profile_write"] as Json)["taken"])}) curve taken ${String((r["curve"] as Json | null)?.["taken"] ?? null)}`;
   ctx.deps.say(`  c. profile sweep: ${rows.map(cell).join("; ")}`);
   ctx.deps.say(`     suggestion (not a verdict): ${suggestion}`);
-  return { profiles: rows, photo_profile: PHOTO_PROFILE, suggestion, completed: rows.every((r) => typeof (r["curve"] as Json | null)?.["taken"] === "boolean") };
+  // Complete only when every profile was taken and its curve read back (Greptile, PR #201).
+  return { profiles: rows, photo_profile: PHOTO_PROFILE, suggestion, completed: rows.every((r) => typeof r["curve_taken"] === "boolean") };
 }
 
 /** d. The 3-point lift under the first profile that took the curve, and Jim's answer on the Point Curve view. */

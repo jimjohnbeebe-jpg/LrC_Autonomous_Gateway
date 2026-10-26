@@ -99,6 +99,23 @@ describe("curve probe (simulated plugin)", () => {
     expect(said).toContain("put back: YES");
   });
 
+  it("a profile Lightroom refuses: no curve written under it, the sweep not completed, FAILED (Greptile, PR #201)", async () => {
+    const apply = plugin.handlers.get("apply_settings")!;
+    plugin.handlers.set("apply_settings", (p, id) => {
+      const look = ((p["settings"] as J)["Look"] as { Name?: unknown } | undefined)?.Name;
+      for (const k of ["CameraProfile", "Look"]) (look === "Adobe Color" ? lr.ignored.add(k) : lr.ignored.delete(k));
+      return apply(p, id);
+    });
+    const { worked, results } = await run();
+    const photo = results["photo"] as J;
+    const color = (sweepOf(photo)["profiles"] as J[])[0]!;
+    expect([color["profile"], (color["profile_write"] as J)["taken"], color["curve"], color["curve_taken"]]).toEqual(["Adobe Color", false, null, null]);
+    expect(sweepOf(photo)["completed"]).toBe(false);
+    expect(worked).toBe(false);
+    expect(said).toContain("Curve probe: FAILED");
+    expect(photo["put_back"]).toMatchObject({ ok: true });
+  });
+
   it("a taken curve: the session step is taken, then reverted with the session; the sweep reads mixed; the settings are saved before any write", async () => {
     const before = structuredClone(lr.settings);
     const { worked, results } = await run();

@@ -163,10 +163,19 @@ export class CameraProfiles {
    * Look goes without its Parameters.Version, the version it was recorded under: Lightroom stamps its
    * own on a write (issue #67) [handle: docs\reports\phase6\lrc-version-check\check.txt section 2
    * "2_look", LrC 15.6 read back "18.7"].
+   *
+   * ConvertToGrayscale goes with it (Phase 10 row 2 [stated: Jim, 2026-10-25]): the rendered pair's own value;
+   * true for a raw Look that sets it (Adobe Monochrome), since the pair alone renders grey but leaves the key
+   * false and brings no B&W mixer key, and true brings the eight GrayMixer* keys [handle:
+   * docs\reports\phase10\S14.md "d. B&W mixer"]; false for every other raw colour profile, so a later write
+   * of one (a revert included) turns the photo back to colour [inference: false is what each colour dump
+   * holds, e.g. docs\reports\phase0\S5\s5_20260907-_OZ80093.NEF.json]. The Nikon monochrome profiles
+   * (no Look) leave it as Lightroom sets it: what they do to it was not recorded.
    */
   toSdk(name: string): { CameraProfile: string; Look: Record<string, unknown>; ConvertToGrayscale?: boolean } {
     const entry = this.get(name);
-    const grayscale = entry.convert_to_grayscale === undefined ? {} : { ConvertToGrayscale: entry.convert_to_grayscale };
+    const gray = entry.convert_to_grayscale ?? (entry.look?.Parameters["ConvertToGrayscale"] === true ? true : this.monochrome(name) ? undefined : false);
+    const grayscale = gray === undefined ? {} : { ConvertToGrayscale: gray };
     if (!entry.look) return { CameraProfile: entry.camera_profile, Look: {}, ...grayscale };
     const look = structuredClone(entry.look);
     delete look.Parameters["Version"];

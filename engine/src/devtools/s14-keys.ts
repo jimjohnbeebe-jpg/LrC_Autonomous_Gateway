@@ -54,7 +54,8 @@ async function monoStep(ctx: Ctx, photo: Photo, settings: SdkSettings, n: number
  * left ConvertToGrayscale false and brought no GrayMixer key [handle: docs\reports\phase10\S14\run1\
  * s14_check_2026-10-25T22-59-10-152Z.json photos[0].mixer]; so when no GrayMixer key appears,
  * ConvertToGrayscale true is written as well, and each step's render saturation says whether the
- * photo turned black and white.
+ * photo turned black and white. Since Phase 10 row 2 the pinned raw pair carries ConvertToGrayscale true
+ * itself (params\camera-profiles.ts toSdk), so a rerun needs the first step only.
  */
 export async function mixerProbe(ctx: Ctx, photo: Photo): Promise<Json> {
   const profile = monochromeProfile(photo);

@@ -1,12 +1,13 @@
 // lr_sync_series' parameter_mask: which canonical settings a sync copies, by group (MCP_TOOLS
 // lr_sync_series). MCP_TOOLS names six groups; `white_balance` and `tone_curve` are added, and `effects` (issue #125), because
 // PRD 6.10 copies white balance ("white balance copied absolute") and the curves belong to no other
-// group [stated: Jim, 2026-09-27, "go with recommendations" on the row 8 plan, decision 3]. Every canonical
+// group [stated: Jim, 2026-09-27, "go with recommendations" on the row 8 plan, decision 3]. `bw` and
+// `calibration` (Phase 10 row 2) hold the B&W mixer and Calibration sliders spike S14 pinned. Every canonical
 // name has exactly one group [handle: tests\sync-mask.test.ts "puts every canonical name in one group"].
 
 import { CAMERA_PROFILE_PARAM, type CanonicalSettings } from "../params/index.js";
 
-export const MASK_GROUPS = ["basic_tone", "white_balance", "tone_curve", "hsl", "grading", "detail", "lens", "effects", "camera_profile"] as const;
+export const MASK_GROUPS = ["basic_tone", "white_balance", "tone_curve", "hsl", "grading", "detail", "lens", "effects", "bw", "calibration", "camera_profile"] as const;
 export type MaskGroup = (typeof MASK_GROUPS)[number];
 
 /** The Basic panel's tone and presence sliders (canonical.ts "Basic panel"), white balance aside. */
@@ -21,6 +22,8 @@ const BY_PREFIX: ReadonlyArray<[string, MaskGroup]> = [
   ["lens.", "lens"],
   ["vignette.", "effects"], // post-crop vignette and grain (issue #125)
   ["grain.", "effects"],
+  ["bw.", "bw"],
+  ["calibration.", "calibration"],
 ];
 
 /** The group of a canonical name, or null for a name no group holds. */

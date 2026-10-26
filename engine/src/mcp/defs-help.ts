@@ -16,7 +16,9 @@ export const HELP_TEXT = [
   "",
   "2. What uses a pass. Each lr_step, and each mask create, edit or delete (lr_create_mask, lr_edit_mask, lr_delete_mask), " +
     "uses one pass, an undone one included. A rename alone (lr_edit_mask with only mask_id and name) uses no pass. " +
-    "lr_probe, lr_set_regions, lr_list_masks, lr_get_preview and lr_get_metrics use none.",
+    "lr_probe, lr_set_regions, lr_list_masks, lr_get_preview and lr_get_metrics use none. An lr_step that Lightroom takes only " +
+    "in part (WRITE_NOT_TAKEN, FEATURE_UNAVAILABLE) is undone whole and uses no pass (`details.undone`). The B&W mixer " +
+    "(bw.red … bw.magenta) is there only on a black-and-white photo: set a monochrome camera_profile in an earlier step.",
   "",
   `3. Previews. Session previews are ${DEFAULT_LONG_EDGE} px on the long edge by default: downscaling averages pixels, so ` +
     "they understate clipping and fine detail at print size. lr_get_preview with `region` exports the photo " +

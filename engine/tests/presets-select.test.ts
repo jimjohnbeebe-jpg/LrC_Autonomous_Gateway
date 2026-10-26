@@ -102,7 +102,8 @@ describe("selectPresetSettings", () => {
 
   it("covers every group by default in the tool, and writes every canonical name of those groups but the ones it names", () => {
     const out = selectPresetSettings(map, nef(), MASK_GROUPS);
-    expect(out.written.length + out.left_out.length).toBe(map.names().length);
+    // The B&W mixer is not on a colour photo: its names are absent from the settings (S14).
+    expect(out.written.length + out.left_out.length).toBe(map.names().filter((n) => !n.startsWith("bw.")).length);
   });
 
   it("refuses an unsupported process version", () => {

@@ -1,10 +1,12 @@
 // The checks after a write: the actual clipping guardrail (corrections, ARCHITECTURE section 4),
-// region preservation, and the undo of a pass that breaches either.
+// region preservation, the undo of a pass that breaches either, and the undo of a step Lightroom
+// took only in part (issue #187).
 
 import type { GuardrailAction } from "../log/index.js";
+import { OTHERS_WRITTEN, ToolError, toToolError } from "../mcp/errors.js";
 import { summarize, type Metrics } from "../metrics/index.js";
-import { canonicalValuesEqual, type CanonicalSettings, type CanonicalValue, type FromSdkResult, type ParamMap } from "../params/index.js";
-import { historyName, render, write } from "./io.js";
+import { canonicalValuesEqual, type CanonicalSettings, type CanonicalValue, type FromSdkResult, type ParamMap, type ReadbackMismatch } from "../params/index.js";
+import { historyName, read, render, write } from "./io.js";
 import { fixedCorrection, hueDistance, pullBack, type Change, type Limits } from "./plan.js";
 import { HIGH_CORRECTIONS, LOW_CORRECTIONS, MAX_BASELINE_CORRECTIONS, MAX_CORRECTIONS, REGION_PRESERVE } from "./rules.js";
 import type { Rendered, Session, SessionContext, Target } from "./types.js";
@@ -185,6 +187,42 @@ export function regionDrift(s: Session, t: Target, metrics: Metrics): string | n
   return null;
 }
 
+/** The settings from before a pass that differ on the photo now (a name missing now differs): writing them back puts it back. */
+export function settingsBack(before: FromSdkResult, current: FromSdkResult): Record<string, CanonicalValue> {
+  const back: Record<string, CanonicalValue> = {};
+  for (const [key, value] of Object.entries(before.settings)) if (!canonicalValuesEqual(current.settings[key], value)) back[key] = value;
+  return back;
+}
+
+/**
+ * A step Lightroom took only in part (issue #187 part 2): WRITE_NOT_TAKEN (a key read back otherwise) or
+ * FEATURE_UNAVAILABLE (a key not read back at all) after the step's write. Both leave the step's other
+ * values on the photo, so both are undone: the photo is read, every pre-step value that differs is written
+ * back as "… pass n/N revert", and the error says so with `undone`. A key Lightroom did not report back
+ * cannot be checked, so it is not written back, and the message names it. The pass is not used, as with the
+ * depth revert (masks.ts). Returns the error to throw; any other error as it is.
+ */
+export async function undoRefused(ctx: SessionContext, s: Session, t: Target, n: number, beforeView: FromSdkResult, err: unknown): Promise<unknown> {
+  const e = toToolError(err);
+  if (e.code !== "WRITE_NOT_TAKEN" && e.code !== "FEATURE_UNAVAILABLE") return err;
+  const name = historyName(s, t, n, "revert");
+  const details = typeof e.details === "object" && e.details !== null ? e.details : {};
+  const unreported = new Set(((details as { mismatches?: ReadbackMismatch[] }).mismatches ?? []).filter((m) => m.read_back === null).map((m) => m.sdk_key));
+  const what = e.message.replace(OTHERS_WRITTEN, "") + (unreported.size > 0 ? ` ${[...unreported].join(", ")} could not be checked, so it was not written back.` : "");
+  try {
+    const all = settingsBack(beforeView, await read(ctx, s, t));
+    const back = Object.fromEntries(Object.entries(all).filter(([k]) => !unreported.has(ctx.deps.map.spec(k, t.pipeline)?.sdkKey ?? "")));
+    const wrote = Object.keys(back).length > 0;
+    if (wrote) await write(ctx, s, t, back, name, { putBack: true });
+    const how = wrote ? `the values Lightroom did take were written back ("${name}")` : "none of its values stayed on the photo";
+    return new ToolError(e.code, `${what} The step was undone: ${how}, so the photo is as it was before this step, and the pass is not used.`, e.recoverable, { ...details, undone: true, revert_history_name: wrote ? name : null });
+  } catch (undoErr) {
+    const u = toToolError(undoErr);
+    if (u.code === "SESSION_ENDED") return u;
+    return new ToolError(e.code, `${what} Undoing the step ("${name}") failed too (${u.message}): some of its values may be on the photo. The pass is not used.`, e.recoverable, { ...details, undone: false, revert_history_name: name, revert_error: u.body() });
+  }
+}
+
 /**
  * Undo pass n of photo `t`: write back the settings from before it as one History step ("… clip
  * revert" or "… region revert"), render again, and describe it as a "reverted" action. Null when no
@@ -200,8 +238,7 @@ export async function undo(
   breach: Breach,
   historyNames: string[],
 ): Promise<{ view: FromSdkResult; rendered: Rendered; action: GuardrailAction } | null> {
-  const back: Record<string, CanonicalValue> = {};
-  for (const [key, value] of Object.entries(beforeView.settings)) if (!canonicalValuesEqual(current.settings[key], value)) back[key] = value;
+  const back = settingsBack(beforeView, current);
   if (Object.keys(back).length === 0) return null;
   const name = historyName(s, t, n, breach.limit === "region" ? "region revert" : "clip revert");
   const view = await write(ctx, s, t, back, name, { putBack: true });

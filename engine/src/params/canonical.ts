@@ -62,6 +62,17 @@ const EFFECTS = `[handle: ${EFFECTS_RUN} photos[*].range.per_parameter] min and 
 /** Style: whole numbers only; what 1-3 are called in Lightroom's menu is [unverified]. */
 const EFFECTS_STYLE = `[handle: ${EFFECTS_RUN} photos[*].style.steps] 1, 2 and 3 read back as written on both pipelines; 0 and 4 were not taken`;
 
+/**
+ * Spike S14 run 2 (Phase 10 row 1; docs/reports/phase10/S14.md, verdict Go [stated: Jim, 2026-10-25]): on the
+ * raw 20260907-_OZ80093.NEF and the rendered DSC_0031.JPG, each limit read back as written and 1 % beyond read
+ * back as the value before the probe. The B&W mixer keys exist only while ConvertToGrayscale is true [handle:
+ * docs/reports/phase10/S14.md "d. B&W mixer"], so lr_step refuses a bw.* change on a colour photo before writing
+ * (session\plan.ts); what Lightroom does with a GrayMixer* key written to a colour photo is [unverified].
+ */
+export const S14_RUN = "docs/reports/phase10/S14/run2/s14_check_2026-10-25T23-35-11-636Z.json";
+const S14_MIXER = `[handle: ${S14_RUN} photos[0..1].mixer.range.per_parameter] -100 and 100 read back as written under Monochrome on both pipelines; 1 % beyond was not taken`;
+const S14_CALIBRATION = `[handle: ${S14_RUN} photos[0..1].calibration.per_parameter] -100 and 100 read back as written on both pipelines; 1 % beyond was not taken`;
+
 const S10_RUN2 ="docs/reports/phase8/S10/s10_check_2026-10-09T12-24-50-743Z.json";
 /**
  * The rendered pipeline's white-balance keys (spike S10, Phase 8 row 2), pinned in
@@ -100,8 +111,8 @@ const entries: Array<[string, ParamSpec]> = [
 
   // Color grading. The dump has ColorGrade* keys for midtones, global, blending and the shadow
   // and highlight luminance, but no ColorGrade hue/saturation keys for shadows and highlights.
-  // Mapping those four to the SplitToning* keys is [inference]: the probe showed the keys are writable
-  // with these limits, not that they drive the Color Grading wheels. Unverified until a render shows it.
+  // The SplitToning* keys drive the Shadows and Highlights wheels [stated: Jim, 2026-10-25, S14 run 2,
+  // the Shadows wheel read 120 / 80 after the write; handle: docs/reports/phase10/S14.md "b. Grading wheels"].
   ["grading.shadows.hue", num("SplitToningShadowHue", 0, 360)],
   ["grading.shadows.sat", num("SplitToningShadowSaturation", 0, 100)],
   ["grading.shadows.lum", num("ColorGradeShadowLum", -100, 100)],
@@ -116,6 +127,15 @@ const entries: Array<[string, ParamSpec]> = [
   ["grading.global.lum", num("ColorGradeGlobalLum", -100, 100)],
   ["grading.blending", num("ColorGradeBlending", 0, 100)],
   ["grading.balance", num("SplitToningBalance", -100, 100)],
+
+  // Calibration (spike S14, Phase 10 row 2): the same limits on both pipelines (S14_CALIBRATION).
+  ["calibration.shadow_tint", num("ShadowTint", -100, 100, S14_CALIBRATION)],
+  ["calibration.red.hue", num("RedHue", -100, 100, S14_CALIBRATION)],
+  ["calibration.red.sat", num("RedSaturation", -100, 100, S14_CALIBRATION)],
+  ["calibration.green.hue", num("GreenHue", -100, 100, S14_CALIBRATION)],
+  ["calibration.green.sat", num("GreenSaturation", -100, 100, S14_CALIBRATION)],
+  ["calibration.blue.hue", num("BlueHue", -100, 100, S14_CALIBRATION)],
+  ["calibration.blue.sat", num("BlueSaturation", -100, 100, S14_CALIBRATION)],
 
   // Detail.
   ["sharpening.amount", num("Sharpness", 0, 150)],
@@ -165,6 +185,8 @@ for (const [band, sdkBand] of HSL_BANDS) {
   entries.push([`hsl.${band}.sat`, num(`SaturationAdjustment${sdkBand}`, -100, 100)]);
   entries.push([`hsl.${band}.lum`, num(`LuminanceAdjustment${sdkBand}`, -100, 100)]);
 }
+// The B&W mixer: one slider per band, there only under a monochrome profile (S14_MIXER).
+for (const [band, sdkBand] of HSL_BANDS) entries.push([`bw.${band}`, num(`GrayMixer${sdkBand}`, -100, 100, S14_MIXER)]);
 
 /**
  * Canonical name -> spec on the raw pipeline. `camera_profile` is not in here: it maps to two keys

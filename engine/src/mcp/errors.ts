@@ -56,6 +56,9 @@ export function featureUnavailable(feature: string, lightroom: LightroomVersions
   });
 }
 
+/** readbackError's last sentence when other keys were written; an lr_step undoes them and drops it (session\guardrail.ts undoRefused). */
+export const OTHERS_WRITTEN = " The step's other values were written.";
+
 /**
  * The error for a write whose read-back differs, or null when it took as sent (every write is read
  * back, Phase 0 P-12). A key written but missing from the read-back is one this Lightroom does not
@@ -74,7 +77,7 @@ export function readbackError(map: ParamMap, written: SdkSettings, readBack: Sdk
   const label = (key: string): string => lightroomLabel(map.names().find((n) => PIPELINES.some((p) => sdkKeysOf(map, n, p).includes(key))) ?? key);
   const sliders = [...new Set(mismatches.map((m) => label(m.sdk_key)))];
   const it = sliders.length > 1 ? "them" : "it";
-  const others = Object.keys(written).length > mismatches.length ? " The step's other values were written." : "";
+  const others = Object.keys(written).length > mismatches.length ? OTHERS_WRITTEN : "";
   return featureUnavailable(sliders.join(", "), lightroom, `Lightroom did not report ${it} back after "${historyName}", so ${it} could not be checked. Leave ${it} out of later steps.${others}`, details);
 }
 

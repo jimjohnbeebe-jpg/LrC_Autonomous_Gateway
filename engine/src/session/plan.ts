@@ -53,7 +53,9 @@ export function planStep(requested: Readonly<Record<string, unknown>>, current: 
     }
     const before = current[name];
     if (typeof before !== "number") {
-      plan.refused.push({ name, by: "slider", reason: `${name} is not available on this photo now (e.g. a monochrome profile drops the colour sliders)` });
+      // The B&W mixer keys exist only while the photo is black and white [handle: docs\reports\phase10\S14.md "d. B&W mixer"].
+      const why = name.startsWith("bw.") ? "the B&W mixer is there only on a black-and-white photo: set a monochrome camera_profile in an earlier step" : "e.g. a monochrome profile drops the colour sliders";
+      plan.refused.push({ name, by: "slider", reason: `${name} is not available on this photo now (${why})` });
       continue;
     }
     if (isCircularHue(name)) {

@@ -1,5 +1,6 @@
 // The rendered pipeline's pinned key dump, sdk-keys.lrc15.rendered.json: the 18 rendered photos of
-// the "fixtures" collection as spike S10's census read them (Phase 8 row 2; docs/reports/phase8/S10.md),
+// the "fixtures" collection as spike S10's census read them (Phase 8 row 2; docs/reports/phase8/S10.md), plus
+// spike S14's Monochrome dump of DSC_0031.JPG (Phase 10 row 2: the GrayMixer* keys; docs/reports/phase10/S14.md),
 // pinned with spikes/S5/pin.ts --out. Not loaded by the engine yet: row 3 builds the pipeline into the
 // map. These tests keep the pin honest until then.
 
@@ -18,13 +19,15 @@ const RAW_ONLY = ["LensProfileDigest", "LensProfileDistortionScale", "LensProfil
 describe("params: the rendered pipeline's pinned key dump (S10)", () => {
   const rendered = readSdkKeysFile(renderedPath);
   const raw = readSdkKeysFile(rawPath);
-  const file = JSON.parse(readFileSync(renderedPath, "utf8")) as { sources: Array<{ filename: string; process_version?: string; camera_profile?: string; lr_version?: string }> };
+  const file = JSON.parse(readFileSync(renderedPath, "utf8")) as { sources: Array<{ label: string; filename: string; process_version?: string; camera_profile?: string; lr_version?: string }> };
 
-  it("comes from 18 rendered dumps, all CameraProfile Embedded, on process versions 15.4 and 11.0", () => {
-    expect(file.sources).toHaveLength(18);
+  it("comes from 19 rendered dumps (18 S10, 1 S14), all CameraProfile Embedded, on process versions 15.4 and 11.0", () => {
+    expect(file.sources).toHaveLength(19);
     expect(new Set(file.sources.map((s) => s.camera_profile))).toEqual(new Set(["Embedded"]));
     expect(new Set(file.sources.map((s) => s.process_version))).toEqual(new Set(["15.4", "11.0"]));
-    expect(new Set(file.sources.map((s) => s.lr_version))).toEqual(new Set(["15.6"]));
+    // S14's dump meta has no lr_version (devtools\s14-keys.ts); its run was on Lightroom 15.6 [stated: S14.md "Run 2"].
+    expect(new Set(file.sources.slice(0, 18).map((s) => s.lr_version))).toEqual(new Set(["15.6"]));
+    expect(file.sources[18]?.label).toBe("s14_monochrome_DSC_0031.JPG__81FFC502.json");
     const formats = file.sources.map((s) => s.filename.replace(/^.*\./, "").toLowerCase());
     for (const f of ["jpg", "png", "tif", "psd", "psb", "heic", "avif", "jxl", "dng"]) expect(formats).toContain(f);
   });

@@ -138,7 +138,7 @@ describe("S14 check (simulated plugin)", () => {
     expect(photos.every((p) => (p["put_back"] as J)["ok"] === true)).toBe(true);
     expect(((photos[0]?.["curve"] as J)["variants"] as J[]).map((v) => v["taken"])).toEqual(CURVE_VARIANTS.map(() => true));
     expect((photos[1]?.["mixer"] as J)["mixer_keys"]).toEqual(Object.keys(MIXER).sort());
-    expect(photos.slice(0, 2).map((p) => ((p["mixer"] as J)["steps"] as J[]).length)).toEqual([2, 1]); // the NEF needed ConvertToGrayscale too
+    expect(photos.slice(0, 2).map((p) => ((p["mixer"] as J)["steps"] as J[]).length)).toEqual([1, 1]); // the raw pair carries ConvertToGrayscale since Phase 10 row 2
     expect(((photos[2]?.["grading"] as J)["wheels"] as J[]).map((w) => w["wheel"])).toEqual(["shadows", "midtones", "highlights"]);
     expect(((photos[3]?.["hsl"] as J)["bands"] as J[])).toHaveLength(8);
     expect((results["questions"] as J[]).map((q) => q["id"])).toEqual(["grading"]); // the sim's renders never change, so no curve question

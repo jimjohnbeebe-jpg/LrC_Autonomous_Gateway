@@ -59,6 +59,10 @@ export function baseMaxStep(name: string, pipeline: Pipeline = "raw"): number | 
   // not an amount: no base step, so lr_probe refuses it, and planStep does not cap it (isChoice).
   if (name === "vignette.style") return null;
   if (name.startsWith("vignette.") || name.startsWith("grain.")) return 30;
+  // Phase 10 row 2 [inference]: a B&W mixer band is the grey-tone counterpart of an HSL band, same -100..100
+  // range, so it takes HSL's 40; Calibration shifts every colour of the photo at once, so it moves in 20s.
+  if (name.startsWith("bw.")) return 40;
+  if (name.startsWith("calibration.")) return 20;
   return null;
 }
 

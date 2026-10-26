@@ -122,8 +122,8 @@ describe("npm run s10:check", () => {
     const writes = results["writes"] as J[];
     expect(writes.map((w) => [w["filename"], w["pipeline"]])).toEqual([["DSC_0031.JPG", "rendered"], ["20260907-_OZ80093.NEF", "raw"]]);
     const jpg = writes[0] as J;
-    // The range probe skips the two Kelvin parameters the photo lacks; the keys beyond the pin get every value.
-    expect(jpg["range"]).toMatchObject({ completed: true, absent: ["temperature", "tint"], parameters: (jpg["range"] as J)["min_accepted"] });
+    // The range probe skips the two Kelvin parameters and the B&W mixer (no colour photo has it) the photo lacks; the keys beyond the pin get every value.
+    expect(jpg["range"]).toMatchObject({ completed: true, absent: ["temperature", "tint", ...["red", "orange", "yellow", "green", "aqua", "blue", "purple", "magenta"].map((b) => `bw.${b}`)], parameters: (jpg["range"] as J)["min_accepted"] });
     const extra = jpg["extra_keys"] as J;
     expect(extra["keys"]).toEqual(expect.arrayContaining(["IncrementalTemperature", "IncrementalTint"]));
     // The sim takes the relative white balance on a selected rendered photo only with "Custom", as S10 run 2

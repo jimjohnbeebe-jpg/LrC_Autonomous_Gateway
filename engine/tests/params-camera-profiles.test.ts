@@ -44,9 +44,10 @@ describe("params: pinned camera profile pairs (S5)", () => {
   });
 
   it("writes a Nikon profile as its stored string plus an empty Look", () => {
-    expect(profiles.toSdk("Camera Landscape")).toEqual({ CameraProfile: "Camera Landscape", Look: {} });
-    expect(profiles.toSdk("Camera Standard")).toEqual({ CameraProfile: "Group: Camera Standard", Look: {} });
-    expect(profiles.toSdk("Adobe Standard")).toEqual({ CameraProfile: "Adobe Standard", Look: {} });
+    // ConvertToGrayscale false: a colour profile turns a B&W photo back to colour (Phase 10 row 2).
+    expect(profiles.toSdk("Camera Landscape")).toEqual({ CameraProfile: "Camera Landscape", Look: {}, ConvertToGrayscale: false });
+    expect(profiles.toSdk("Camera Standard")).toEqual({ CameraProfile: "Group: Camera Standard", Look: {}, ConvertToGrayscale: false });
+    expect(profiles.toSdk("Adobe Standard")).toEqual({ CameraProfile: "Adobe Standard", Look: {}, ConvertToGrayscale: false });
   });
 
   it("returns a copy of the Look, so callers cannot change the pinned table", () => {
@@ -77,8 +78,30 @@ describe("params: pinned camera profile pairs (S5)", () => {
     it("writes Color as Embedded, no Look, ConvertToGrayscale false, and Monochrome with it true", () => {
       expect(profiles.toSdk("Color")).toEqual({ CameraProfile: "Embedded", Look: {}, ConvertToGrayscale: false });
       expect(profiles.toSdk("Monochrome")).toEqual({ CameraProfile: "Embedded", Look: {}, ConvertToGrayscale: true });
-      expect(profiles.toSdk("Camera Landscape")).not.toHaveProperty("ConvertToGrayscale");
     });
+  });
+
+  describe("raw pipeline ConvertToGrayscale (Phase 10 row 2, S14)", () => {
+    it("writes Adobe Monochrome with ConvertToGrayscale true, which brings the B&W mixer keys", () => {
+      const sdk = profiles.toSdk("Adobe Monochrome");
+      expect(sdk).toMatchObject({ CameraProfile: "Adobe Standard", ConvertToGrayscale: true });
+      expect((sdk.Look as { Name: string }).Name).toBe("Adobe Monochrome");
+    });
+
+    it("writes every raw colour profile with ConvertToGrayscale false, so it turns a B&W photo back to colour", () => {
+      for (const name of ["Adobe Color", "Adobe Landscape", "Adobe Standard", "Camera Landscape", "Camera Standard"]) {
+        expect(profiles.toSdk(name).ConvertToGrayscale, name).toBe(false);
+      }
+    });
+
+    it("leaves ConvertToGrayscale to Lightroom for the Nikon monochrome profiles, which have no Look", () => {
+      for (const name of ["Camera Monochrome", "Camera Deep Tone Monochrome", "Camera Monochrome (Red Filter)"]) {
+        expect(profiles.toSdk(name), name).not.toHaveProperty("ConvertToGrayscale");
+      }
+    });
+  });
+
+  describe("rendered pipeline identify (S10)", () => {
 
     it("identifies Embedded by the photo's ConvertToGrayscale, and as Color when it is not given", () => {
       expect(profiles.identify("Embedded", [], false).name).toBe("Color");

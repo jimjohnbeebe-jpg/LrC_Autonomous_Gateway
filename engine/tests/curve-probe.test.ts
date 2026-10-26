@@ -10,6 +10,7 @@ import { BridgeClient } from "../src/bridge/index.js";
 import { ISSUE_PHOTO, LIFT3, QUESTION, runCurveProbe } from "../src/devtools/curve-probe.js";
 import { BridgeGate } from "../src/mcp/index.js";
 import { loadDefaultParamMap } from "../src/params/index.js";
+import { findLeftOpen } from "../src/session/left-open.js";
 import { FakePlugin } from "./helpers/fake-plugin.js";
 import { LightroomSim } from "./helpers/lightroom-sim.js";
 
@@ -79,6 +80,47 @@ describe("curve probe (simulated plugin)", () => {
     expect(photo["session_step"]).toMatchObject({ outcome: "taken", after_step: { ToneCurvePV2012: [0, 0, 64, 56, 128, 128, 192, 200, 255, 255] } });
     expect(((photo["direct"] as J)["writes"] as J[]).map((w) => w["taken"])).toEqual([true, true]);
     expect(lr.settings).toEqual(before);
+  });
+
+  const leftOpen = () => findLeftOpen(path.join(tmp, "sessions"), null);
+
+  it("ends the session when its begin fails in pass 0, so the next run is not refused SESSION_LEFT_OPEN (Greptile, PR #200)", async () => {
+    const before = structuredClone(lr.settings);
+    lr.exportError = "the export failed";
+    const first = await run();
+    expect(first.worked).toBe(false);
+    expect((first.results["photo"] as J)["put_back"]).toMatchObject({ ok: true });
+    expect(leftOpen()).toEqual([]);
+    client.stop();
+    lr.exportError = null;
+    const second = await run();
+    expect(second.results["errors"]).toEqual([]);
+    expect(second.worked).toBe(true);
+    expect(lr.settings).toEqual(before);
+  });
+
+  it("ends the session when a read throws before its end (Greptile, PR #200)", async () => {
+    const apply = plugin.handlers.get("apply_settings")!;
+    const get = plugin.handlers.get("get_settings")!;
+    let failNext = false;
+    plugin.handlers.set("apply_settings", (p, id) => {
+      if (String(p["history_name"]).endsWith("pass 1/4")) failNext = true;
+      return apply(p, id);
+    });
+    plugin.handlers.set("get_settings", (p, id) => {
+      if (!failNext || !("photo_uuid" in p)) return get(p, id);
+      failNext = false;
+      return { ok: false, error: { code: "read_failed", message: "no", recoverable: true } };
+    });
+    const first = await run();
+    expect(first.worked).toBe(false);
+    expect(leftOpen()).toEqual([]);
+    client.stop();
+    plugin.handlers.set("apply_settings", apply);
+    plugin.handlers.set("get_settings", get);
+    const second = await run();
+    expect(second.results["errors"]).toEqual([]);
+    expect(second.worked).toBe(true);
   });
 
   it("fails, writing nothing, when the selected photo is not issue #187's", async () => {

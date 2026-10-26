@@ -53,19 +53,52 @@ async function selectedPhoto(ctx: Ctx): Promise<Photo> {
 const read = async (ctx: Ctx, photo: Photo) => (await ctx.deps.client.request("get_settings", { photo_uuid: photo.uuid })).settings;
 const curveOf = (s: Record<string, unknown>): Json => ({ ToneCurvePV2012: s["ToneCurvePV2012"] ?? null, ToneCurveName2012: s["ToneCurveName2012"] ?? null, Vibrance: s["Vibrance"] ?? null });
 
-/** a. Issue #187's step in a real engine session, which is then ended with revert. */
-async function sessionStep(ctx: Ctx & { deps: CurveDeps }, photo: Photo): Promise<Json> {
+function newManager(ctx: Ctx & { deps: CurveDeps }): SessionManager {
   const { client, map } = ctx.deps;
   const previews = new PreviewService(client, { exportTimeoutMs: EXPORT_TIMEOUT_MS, ...(ctx.deps.previewDir ? { previewDir: ctx.deps.previewDir } : {}) });
   const userDir = path.join(ctx.deps.sessionDir, "intents");
   mkdirSync(userDir, { recursive: true });
-  const manager = new SessionManager({
+  return new SessionManager({
     client, map, intents: new IntentLibrary({ map, userDir }), logDir: ctx.deps.sessionDir, engineVersion: ENGINE_VERSION,
     render: (r) => previews.render({ longEdge: r.longEdge, quality: r.quality, targetUuid: r.targetUuid, regions: r.regions }),
   });
+}
+
+/**
+ * End the session with revert when the probe left it open (a begin whose pass 0 failed, a read that threw): its log
+ * would stay open in the sessions folder, and every later run on this photo would get SESSION_LEFT_OPEN (Greptile,
+ * PR #200; the pattern of phase4-config.ts closeOpenSession). The revert checks the read-back before it ends the log.
+ */
+async function closeLeftOpen(ctx: Ctx, manager: SessionManager, out: Json): Promise<void> {
+  const open = manager.current();
+  if (!open) return;
+  try {
+    const end = await manager.end({ session_id: open.id, outcome: "revert" });
+    out["closed_after_error"] = { session_id: open.id, revert: end.json["revert"] ?? null };
+  } catch (err) {
+    out["closed_after_error"] = { session_id: open.id, error: toToolError(err).body() };
+    ctx.fail(`the probe's session ${open.id} could not be ended (${describeError(err)}): end it with lr_end_session outcome "revert". Tell Claude Code.`);
+  }
+}
+
+/** a. Issue #187's step in a real engine session, which is then ended with revert, also after an error. */
+async function sessionStep(ctx: Ctx & { deps: CurveDeps }, photo: Photo): Promise<Json> {
+  const manager = newManager(ctx);
+  const out: Json = { step: STEP_187 };
+  try {
+    await stepAndEnd(ctx, manager, photo, out);
+  } finally {
+    await closeLeftOpen(ctx, manager, out);
+  }
+  ctx.deps.say(`  a. session step: ${String(out["outcome"])}${out["back_at_pre_step"] ? `; photo back at its pre-step settings: ${yn((out["back_at_pre_step"] as Json)["ok"] === true)}` : ""}`);
+  return out;
+}
+
+async function stepAndEnd(ctx: Ctx, manager: SessionManager, photo: Photo, out: Json): Promise<void> {
+  const { map } = ctx.deps;
   const begun = await manager.begin({ notes: "npm run curve:probe: issue #187's step" });
   const id = String(begun.json["session_id"]);
-  const out: Json = { step: STEP_187, session_id: id, log_path: begun.json["log_path"] ?? null };
+  Object.assign(out, { session_id: id, log_path: begun.json["log_path"] ?? null });
   const pre = await read(ctx, photo);
   try {
     const r = await manager.step({ session_id: id, settings: STEP_187, rationale: "issue #187's step (npm run curve:probe)" });
@@ -81,8 +114,6 @@ async function sessionStep(ctx: Ctx & { deps: CurveDeps }, photo: Photo): Promis
   out["after_step"] = curveOf(await read(ctx, photo));
   await manager.end({ session_id: id, outcome: "revert" });
   out["completed"] = true;
-  ctx.deps.say(`  a. session step: ${String(out["outcome"])}${out["back_at_pre_step"] ? `; photo back at its pre-step settings: ${yn((out["back_at_pre_step"] as Json)["ok"] === true)}` : ""}`);
-  return out;
 }
 
 /** One write by uuid from the snapshot, and whether every key read back as written. */

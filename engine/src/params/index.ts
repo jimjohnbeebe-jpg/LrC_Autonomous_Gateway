@@ -34,6 +34,7 @@ export { CameraProfiles, UnknownCameraProfileError, isEmptyLook } from "./camera
 export type { CameraProfileEntry, ProfileIdentity } from "./camera-profiles.js";
 export { CUSTOM_WHITE_BALANCE_PARAMS, ParamError, ParamMap, READBACK_TOLERANCE, canonicalValuesEqual, differingSettings } from "./map.js";
 export type { CanonicalSettings, CanonicalValue, FromSdkResult, ReadbackMismatch, SdkSettings, WriteContext } from "./map.js";
+export { companionsBack, type CompanionsBack } from "./put-back.js";
 export { SdkKeyMap, UnknownSdkKeyError } from "./sdk-keys.js";
 export {
   AS_SHOT_WHITE_BALANCE,

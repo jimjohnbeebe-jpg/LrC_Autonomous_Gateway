@@ -4,6 +4,7 @@
 // row 2): Adobe Monochrome carries ConvertToGrayscale true, and undoing it turns the photo back to colour.
 
 import { beforeEach, describe, expect, it } from "vitest";
+import { companionsBack, type FromSdkResult } from "../src/params/index.js";
 import { ID, SHORT, clean, fails, lr, manager, plugin, readLog, useSessionHarness } from "./helpers/session-harness.js";
 
 type J = Record<string, unknown>;
@@ -107,5 +108,44 @@ describe("a refused step is undone whole (issue #187)", () => {
     const writes = plugin.received.filter((r) => r.name === "apply_settings").map((r) => r.payload["settings"] as J);
     expect(writes.at(-1)).toMatchObject({ CameraProfile: "Camera Neutral", ConvertToGrayscale: true });
     expect(lr.settings["ConvertToGrayscale"]).toBe(true);
+  });
+
+  it("puts an unpinned profile back: its pair, as read, not the step's pinned one (Greptile, PR #200)", async () => {
+    lr.lookVersion = "18.7"; // Lightroom stamps its own (issue #67): the pair goes back without it
+    lr.settings["CameraProfile"] = "Adobe Standard";
+    lr.settings["Look"] = { Name: "Someone's Look", UUID: "0000UNPINNED", Amount: 1, Parameters: { Version: "18.7", Vibrance: 5 } };
+    await manager.begin({ intent_id: "test_plain" });
+    const before = structuredClone(lr.settings);
+    lr.ignored.add("ToneCurvePV2012");
+    const e = await fails(manager.step({ session_id: ID, settings: { camera_profile: "Adobe Color", "tone_curve.master": [0, 0, 128, 160, 255, 255] }, rationale: "colour" }));
+    expect(e.details).toMatchObject({ undone: true });
+    expect(lr.settings).toEqual(before);
+  });
+
+  it("puts the white balance mode back after a refused step that changed the temperature (Greptile, PR #200)", async () => {
+    expect(lr.settings["WhiteBalance"]).toBe("As Shot");
+    await manager.begin({ intent_id: "test_plain" });
+    const before = structuredClone(lr.settings);
+    lr.ignored.add("ToneCurvePV2012");
+    const e = await fails(manager.step({ session_id: ID, settings: { temperature: Number(before["Temperature"]) + 200, "tone_curve.master": [0, 0, 128, 160, 255, 255] }, rationale: "warmer" }));
+    expect(e.details).toMatchObject({ undone: true });
+    const writes = plugin.received.filter((r) => r.name === "apply_settings").map((r) => r.payload["settings"] as J);
+    expect(writes.at(-2)).toMatchObject({ WhiteBalance: "Custom" });
+    expect(writes.at(-1)).toMatchObject({ Temperature: before["Temperature"], WhiteBalance: "As Shot" });
+    expect(lr.settings).toEqual(before);
+  });
+});
+
+describe("companionsBack (params)", () => {
+  const view = (companions: J): FromSdkResult => ({ companions }) as unknown as FromSdkResult;
+
+  it("names a key the photo did not report before, which cannot be written back as absent", () => {
+    const r = companionsBack(view({}), view({ WhiteBalance: "Custom" }), { temperature: 5000 });
+    expect(r).toEqual({ sdk: {}, not_restored: ["WhiteBalance"] });
+  });
+
+  it("writes nothing for a group neither written back nor changed", () => {
+    const same = { CameraProfile: "Camera Neutral", ConvertToGrayscale: false, WhiteBalance: "As Shot" };
+    expect(companionsBack(view(same), view(same), { exposure: 0 })).toEqual({ sdk: {}, not_restored: [] });
   });
 });

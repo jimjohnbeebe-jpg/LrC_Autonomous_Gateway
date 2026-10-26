@@ -1,0 +1,29 @@
+{
+  "schema_version": 2,
+  "id": "my_look_0b",
+  "label": "My look 0b",
+  "category": "look",
+  "brief": "A warm, gentle look where the highlights carry a soft peachy tint and the brightest whites are rolled off so they never feel harsh. A light S-shape in the tone curve shapes the midtones, oranges are a touch richer and yellows a touch quieter. The edges fall off into a moderate dark vignette that draws the eye inward.",
+  "profile": {
+    "raw": "Adobe Color",
+    "rendered": "Color"
+  },
+  "priors": {
+    "hsl.orange.sat": 9,
+    "hsl.yellow.sat": -6,
+    "grading.highlights.hue": 12,
+    "grading.highlights.sat": 22,
+    "grading.blending": 9,
+    "tone_curve.master": [
+      0,
+      0,
+      97,
+      91,
+      216,
+      219,
+      255,
+      250
+    ],
+    "vignette.amount": -28
+  }
+}

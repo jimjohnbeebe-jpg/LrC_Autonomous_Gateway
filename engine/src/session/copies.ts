@@ -83,6 +83,7 @@ export async function makeCopies(ctx: SessionContext, s: Session, count: number)
         copy_name: names[i] as string,
         process_version: s.master.process_version,
         pipeline: s.master.pipeline,
+        hdr: s.master.hdr,
         camera_profile: s.master.camera_profile,
       }),
     );

@@ -74,6 +74,9 @@ function entriesOf(map: ParamMap, name: string, value: CanonicalValue, pipeline:
     }
     return [{ key: CAMERA_PROFILE_KEY, value: entry.camera_profile }];
   }
+  // A point curve goes in under its standard key (ToneCurvePV2012*), the one the reference files carry, also from a
+  // photo in HDR edit mode: Lightroom mirrored the extended master curve into ToneCurvePV2012 there [handle:
+  // curve-probe run 3, photo.extended_curve.curve.standard_after; issue #187]. How a preset's curve lands on an HDR photo is [unverified].
   const spec = map.spec(name, pipeline);
   if (!spec) throw new Error(`no spec for ${name}`);
   return [{ key: spec.sdkKey, value: typeof value === "boolean" ? Number(value) : value }];

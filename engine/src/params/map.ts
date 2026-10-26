@@ -17,7 +17,8 @@ import { tableInfo } from "./mask-table.js";
 import { ParamError } from "./param-error.js";
 import { PIPELINES, checkProcessVersion, describeSignals, pipelineOf, type Pipeline } from "./pipeline.js";
 import { COMPANION_KEYS, CUSTOM_WHITE_BALANCE, WHITE_BALANCE_KEY } from "./preset-keys.js";
-import type { SdkKeyMap, SdkValueType } from "./sdk-keys.js";
+import type { SdkKeyMap } from "./sdk-keys.js";
+import { EXPECTED_SDK_TYPE, describe, validate } from "./validate.js";
 
 export { ParamError, type ParamErrorCode } from "./param-error.js";
 
@@ -25,8 +26,21 @@ export type CanonicalValue = number | boolean | string | number[];
 export type CanonicalSettings = Record<string, CanonicalValue>;
 export type SdkSettings = Record<string, unknown>;
 
-/** What a write is for: the photo's process version and pipeline (both from its fromSdk read). */
-export type WriteContext = { processVersion: string; pipeline: Pipeline };
+/** What a write is for: the photo's process version, pipeline and HDR edit mode (all from its fromSdk read; no `hdr`: off). */
+export type WriteContext = { processVersion: string; pipeline: Pipeline; hdr?: boolean };
+
+/**
+ * Lightroom's HDR edit mode: 1 on the HDR DNG of issue #187, whose point curves are the ExtendedToneCurvePV2012
+ * keys (canonical.ts "Point curves") [handle: docs\reports\phase10\curve-probe\run2\curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json];
+ * 0 in the raw pin's other four sources (sdk-keys.lrc15.json "sources"). In the S10 census the four dumps with 1 are
+ * the four with the extended keys [handle: grep of docs\reports\phase8\S10\census\*.json, 2026-10-25].
+ */
+const HDR_EDIT_MODE_KEY = "HDREditMode";
+
+/** The SDK key a spec writes and reads: a point curve's extended key on a photo in HDR edit mode. */
+function keyOf(spec: ParamSpec, hdr: boolean): string {
+  return hdr && spec.kind === "curve" ? spec.hdrSdkKey : spec.sdkKey;
+}
 
 const SPECS: Readonly<Record<Pipeline, ReadonlyMap<string, ParamSpec>>> = { raw: CANONICAL_PARAMS, rendered: RENDERED_PARAMS };
 
@@ -34,6 +48,8 @@ export type FromSdkResult = {
   process_version: string;
   /** The photo's pipeline, from its settings (pipeline.ts). */
   pipeline: Pipeline;
+  /** HDREditMode is 1: the point curves are read from, and written to, the extended keys (WriteContext.hdr). */
+  hdr: boolean;
   /** Canonical settings for every mapped key present; camera_profile only when the pair is pinned. */
   settings: CanonicalSettings;
   camera_profile: ProfileIdentity;
@@ -61,60 +77,6 @@ export const READBACK_TOLERANCE = 1e-6;
  * docs\reports\phase4\WB\wb_check_2026-09-28T12-19-08-508Z.json temperature_alone, temperature_custom, tint_custom].
  */
 export const CUSTOM_WHITE_BALANCE_PARAMS: readonly string[] = ["temperature", "tint"];
-
-const EXPECTED_SDK_TYPE: Record<ParamSpec["kind"], SdkValueType> = {
-  number: "number",
-  switch: "number",
-  boolean: "boolean",
-  curve: "array",
-};
-
-function describe(value: unknown): string {
-  if (Array.isArray(value)) return "array";
-  if (value === null) return "null";
-  return typeof value;
-}
-
-function validateCurve(name: string, value: unknown): number[] {
-  if (!Array.isArray(value) || !value.every((v) => typeof v === "number" && Number.isFinite(v))) {
-    throw new ParamError("wrong_type", `${name} must be an array of numbers [x0, y0, x1, y1, ...]`, name);
-  }
-  const points = value as number[];
-  // Shape rules inferred from the dump samples ([0, 0, 255, 255] and the Adobe Landscape Look's
-  // [0, 0, 64, 60, ...]) [inference]: pairs on 0..255 with strictly increasing x.
-  if (points.length < 4 || points.length % 2 !== 0) {
-    throw new ParamError("wrong_type", `${name} needs at least two (x, y) points`, name);
-  }
-  for (let i = 0; i < points.length; i++) {
-    const v = points[i] as number;
-    if (v < 0 || v > 255) throw new ParamError("out_of_range", `${name}[${i}] = ${v} is outside 0..255`, name);
-    if (i % 2 === 0 && i > 0 && v <= (points[i - 2] as number)) {
-      throw new ParamError("wrong_type", `${name}: x values must increase (index ${i})`, name);
-    }
-  }
-  return [...points];
-}
-
-function validate(name: string, spec: ParamSpec, value: unknown): unknown {
-  switch (spec.kind) {
-    case "number":
-      if (typeof value !== "number" || !Number.isFinite(value)) {
-        throw new ParamError("wrong_type", `${name} must be a finite number, got ${describe(value)}`, name);
-      }
-      if (value < spec.min || value > spec.max) {
-        throw new ParamError("out_of_range", `${name} = ${value} is outside ${spec.min}..${spec.max}`, name);
-      }
-      return value;
-    case "switch":
-      if (value !== 0 && value !== 1) throw new ParamError("wrong_type", `${name} must be 0 or 1`, name);
-      return value;
-    case "boolean":
-      if (typeof value !== "boolean") throw new ParamError("wrong_type", `${name} must be true or false`, name);
-      return value;
-    case "curve":
-      return validateCurve(name, value);
-  }
-}
 
 function isTable(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -169,18 +131,18 @@ export function differingSettings(a: Readonly<Record<string, unknown>>, b: Reado
   return [...keys].filter((k) => !canonicalValuesEqual(a[k], b[k])).sort();
 }
 
-/** Each spec's key in the pipeline's pinned dump with the expected type, and no key mapped twice. */
+/** Each spec's keys (a point curve's HDR key too) in the pipeline's pinned dump with the expected type, and no key mapped twice. */
 function checkSpecs(params: ReadonlyMap<string, ParamSpec>, sdkKeys: SdkKeyMap): void {
   const seen = new Map<string, string>();
   for (const [name, spec] of params) {
-    const entry = sdkKeys.get(spec.sdkKey); // throws UnknownSdkKeyError: the key is not in the live dump
-    const expected = EXPECTED_SDK_TYPE[spec.kind];
-    if (entry.type !== expected) {
-      throw new Error(`${name} -> ${spec.sdkKey}: the pinned dump has type ${entry.type}, the map expects ${expected}`);
+    for (const key of new Set([keyOf(spec, false), keyOf(spec, true)])) {
+      const entry = sdkKeys.get(key); // throws UnknownSdkKeyError: the key is not in the live dump
+      const expected = EXPECTED_SDK_TYPE[spec.kind];
+      if (entry.type !== expected) throw new Error(`${name} -> ${key}: the pinned dump has type ${entry.type}, the map expects ${expected}`);
+      const other = seen.get(key);
+      if (other) throw new Error(`${other} and ${name} both map to ${key}`);
+      seen.set(key, name);
     }
-    const other = seen.get(spec.sdkKey);
-    if (other) throw new Error(`${other} and ${name} both map to ${spec.sdkKey}`);
-    seen.set(spec.sdkKey, name);
   }
 }
 
@@ -192,7 +154,7 @@ export class ParamMap {
   constructor(sdkKeys: Readonly<Record<Pipeline, SdkKeyMap>>, profiles: CameraProfiles) {
     for (const p of PIPELINES) {
       checkSpecs(SPECS[p], sdkKeys[p]);
-      for (const key of ["CameraProfile", "ProcessVersion", "ConvertToGrayscale", WHITE_BALANCE_KEY]) sdkKeys[p].get(key);
+      for (const key of ["CameraProfile", "ProcessVersion", "ConvertToGrayscale", WHITE_BALANCE_KEY, HDR_EDIT_MODE_KEY]) sdkKeys[p].get(key);
     }
     sdkKeys.raw.get("Look"); // rendered photos carry no Look (sdk-keys.lrc15.rendered.json)
     this.sdkKeys = sdkKeys;
@@ -212,6 +174,12 @@ export class ParamMap {
     return SPECS[pipeline].get(name);
   }
 
+  /** The SDK key a canonical name writes and reads on a photo of `pipeline`, in HDR edit mode or not; undefined for none. */
+  sdkKey(name: string, pipeline: Pipeline = "raw", hdr = false): string | undefined {
+    const spec = SPECS[pipeline].get(name);
+    return spec ? keyOf(spec, hdr) : undefined;
+  }
+
   cameraProfiles(): CameraProfiles {
     return this.profiles;
   }
@@ -221,7 +189,8 @@ export class ParamMap {
    * A temperature or tint also writes WhiteBalance "Custom" (CUSTOM_WHITE_BALANCE_PARAMS), read back
    * like every other key. A profile of the other pipeline is refused: Lightroom checks that only on
    * the photo loaded in Develop, and stored the raw pair on 30 unselected photos [handle:
-   * docs/reports/phase8/S10.md "Observed", "Run 1"], so the engine checks it for every write.
+   * docs/reports/phase8/S10.md "Observed", "Run 1"], so the engine checks it for every write. With
+   * `context.hdr` the point curves go to their extended keys (canonical.ts "Point curves", issue #187).
    */
   toSdk(settings: Readonly<Record<string, unknown>>, context: WriteContext): SdkSettings {
     checkProcessVersion(context.processVersion);
@@ -239,7 +208,7 @@ export class ParamMap {
       }
       const spec = SPECS[context.pipeline].get(name);
       if (!spec) throw new ParamError("unknown_parameter", `Unknown parameter "${name}"`, name);
-      out[spec.sdkKey] = validate(name, spec, value);
+      out[keyOf(spec, context.hdr === true)] = validate(name, spec, value);
     }
     if (CUSTOM_WHITE_BALANCE_PARAMS.some((name) => name in settings)) out[WHITE_BALANCE_KEY] = CUSTOM_WHITE_BALANCE;
     return out;
@@ -263,15 +232,17 @@ export class ParamMap {
       throw new ParamError("pipeline_unknown", `This photo's settings match neither the raw nor the rendered pipeline (${describeSignals(signals)}), so the engine does not edit it.`);
     }
 
+    const hdr = sdk[HDR_EDIT_MODE_KEY] === 1;
     const settings: CanonicalSettings = {};
     for (const [name, spec] of SPECS[pipeline]) {
-      if (!(spec.sdkKey in sdk)) continue; // e.g. monochrome profiles drop 18 keys (S5.md "Numbers")
-      let value = sdk[spec.sdkKey];
+      const key = keyOf(spec, hdr);
+      if (!(key in sdk)) continue; // e.g. monochrome profiles drop 18 keys (S5.md "Numbers")
+      let value = sdk[key];
       if (spec.kind === "curve" && isEmptyLook(value)) value = []; // Lua's empty table may arrive as {}
       if (describe(value) !== EXPECTED_SDK_TYPE[spec.kind]) {
         throw new ParamError(
           "wrong_type",
-          `Lightroom returned ${describe(value)} for ${spec.sdkKey}; the pinned dump has ${EXPECTED_SDK_TYPE[spec.kind]}`,
+          `Lightroom returned ${describe(value)} for ${key}; the pinned dump has ${EXPECTED_SDK_TYPE[spec.kind]}`,
           name,
         );
       }
@@ -288,6 +259,7 @@ export class ParamMap {
     return {
       process_version: pv,
       pipeline,
+      hdr,
       settings,
       camera_profile: cameraProfile,
       companions: Object.fromEntries(COMPANION_KEYS.filter((k) => k in sdk).map((k) => [k, sdk[k]])),

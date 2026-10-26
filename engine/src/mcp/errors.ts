@@ -74,7 +74,7 @@ export function readbackError(map: ParamMap, written: SdkSettings, readBack: Sdk
   if (mismatches.some((m) => m.sdk_key in readBack)) {
     return new ToolError("WRITE_NOT_TAKEN", `Lightroom did not take ${mismatches.map((m) => m.sdk_key).join(", ")} as written in "${historyName}".`, false, details);
   }
-  const label = (key: string): string => lightroomLabel(map.names().find((n) => PIPELINES.some((p) => sdkKeysOf(map, n, p).includes(key))) ?? key);
+  const label = (key: string): string => lightroomLabel(map.names().find((n) => PIPELINES.some((p) => [false, true].some((hdr) => sdkKeysOf(map, n, p, hdr).includes(key)))) ?? key);
   const sliders = [...new Set(mismatches.map((m) => label(m.sdk_key)))];
   const it = sliders.length > 1 ? "them" : "it";
   const others = Object.keys(written).length > mismatches.length ? OTHERS_WRITTEN : "";

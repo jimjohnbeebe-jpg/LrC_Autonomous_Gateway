@@ -18,8 +18,8 @@ export type NumberParam = { kind: "number"; sdkKey: string; min: number; max: nu
 /** A number that is either 0 or 1 in the dump, e.g. LensProfileEnable. */
 export type SwitchParam = { kind: "switch"; sdkKey: string };
 export type BooleanParam = { kind: "boolean"; sdkKey: string };
-/** A point curve as a flat array [x0, y0, x1, y1, ...], e.g. ToneCurvePV2012. */
-export type CurveParam = { kind: "curve"; sdkKey: string };
+/** A point curve as a flat array [x0, y0, x1, y1, ...], e.g. ToneCurvePV2012; `hdrSdkKey` on a photo in HDR edit mode (map.ts). */
+export type CurveParam = { kind: "curve"; sdkKey: string; hdrSdkKey: string };
 export type ParamSpec = NumberParam | SwitchParam | BooleanParam | CurveParam;
 
 /** The canonical name of the camera profile; it maps to a (CameraProfile, Look) pair (camera-profiles.ts). */
@@ -162,11 +162,18 @@ const entries: Array<[string, ParamSpec]> = [
   ["grain.size", num("GrainSize", 0, 100, EFFECTS)],
   ["grain.frequency", num("GrainFrequency", 0, 100, EFFECTS)],
 
-  // Point curves.
-  ["tone_curve.master", { kind: "curve", sdkKey: "ToneCurvePV2012" }],
-  ["tone_curve.red", { kind: "curve", sdkKey: "ToneCurvePV2012Red" }],
-  ["tone_curve.green", { kind: "curve", sdkKey: "ToneCurvePV2012Green" }],
-  ["tone_curve.blue", { kind: "curve", sdkKey: "ToneCurvePV2012Blue" }],
+  // Point curves. On a photo in HDR edit mode (HDREditMode 1, map.ts HDR_EDIT_MODE_KEY) Lightroom refused
+  // ToneCurvePV2012 under every profile [handle: docs\reports\phase10\curve-probe\run2\curve_probe_2026-10-26T03-06-50-864Z.json
+  // photo.profile_sweep] and took ExtendedToneCurvePV2012, read back as written, ToneCurveName2012 "Custom",
+  // ToneCurvePV2012 then the same points; Jim saw a lift written there raised in Develop > Tone Curve > Point Curve
+  // [stated: Jim, "y"; handle: curve-probe run 3, docs\reports\phase10\curve-probe\run3\curve_probe_2026-10-26T03-46-42-653Z.json
+  // photo.extended_curve, questions[0] point_curve; issue #187]. The keys are from that photo's live dump
+  // (docs\reports\phase10\curve-probe\run2\curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json).
+  // Only the master was written: the Red, Green and Blue extended curves are [unverified] beyond their names there.
+  ["tone_curve.master", { kind: "curve", sdkKey: "ToneCurvePV2012", hdrSdkKey: "ExtendedToneCurvePV2012" }],
+  ["tone_curve.red", { kind: "curve", sdkKey: "ToneCurvePV2012Red", hdrSdkKey: "ExtendedToneCurvePV2012Red" }],
+  ["tone_curve.green", { kind: "curve", sdkKey: "ToneCurvePV2012Green", hdrSdkKey: "ExtendedToneCurvePV2012Green" }],
+  ["tone_curve.blue", { kind: "curve", sdkKey: "ToneCurvePV2012Blue", hdrSdkKey: "ExtendedToneCurvePV2012Blue" }],
 ];
 
 // HSL: the eight colour bands, each with hue, saturation and luminance.

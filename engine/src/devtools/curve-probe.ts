@@ -261,7 +261,7 @@ function saveSettings(ctx: Ctx, photo: Photo): Json {
   const { dumpDir, now, say } = ctx.deps;
   mkdirSync(dumpDir, { recursive: true });
   const file = path.join(dumpDir, dumpName(photo).replace(/^s10_/, "curve_probe_settings_"));
-  // No meta.spike: the dump is read for comparison, never pinned, so it need not pass s5DumpSchema.
+  // meta.check "curve-probe" in place of meta.spike: s5DumpSchema takes it, so spikes\S5\pin.ts can pin the dump (#187).
   const meta = { check: "curve-probe", ...summary(photo), captured_at: (now ?? (() => new Date()))().toISOString() };
   writeFileSync(file, `${JSON.stringify({ meta, settings: photo.start }, null, 2)}\n`);
   const out = { file: path.basename(file), key_count: photo.key_count, not_in_raw_pin: photo.extra_keys, pinned_not_in_photo: photo.missing_pinned_keys };

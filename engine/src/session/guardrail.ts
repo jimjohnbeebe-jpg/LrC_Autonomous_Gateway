@@ -225,7 +225,7 @@ export async function undoRefused(ctx: SessionContext, s: Session, t: Target, n:
   try {
     const all = settingsBack(beforeView, await read(ctx, s, t));
     const back: Back = {
-      values: Object.fromEntries(Object.entries(all.values).filter(([k]) => !unreported.has(ctx.deps.map.spec(k, t.pipeline)?.sdkKey ?? ""))),
+      values: Object.fromEntries(Object.entries(all.values).filter(([k]) => !unreported.has(ctx.deps.map.sdkKey(k, t.pipeline, t.hdr) ?? ""))),
       companions: Object.fromEntries(Object.entries(all.companions).filter(([k]) => !unreported.has(k))),
       notRestored: all.notRestored,
     };

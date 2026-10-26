@@ -45,9 +45,9 @@ export const COMPANION_KEYS: readonly string[] = [...PROFILE_KEYS, CONVERT_TO_GR
 /** Lightroom writes the point curve's name ("Linear", …) with the point curves. */
 export const TONE_CURVE_NAME_KEY = "ToneCurveName2012";
 
-/** The SDK keys that carry a canonical name's value on a pipeline; empty for an unknown name. */
-export function sdkKeysOf(map: ParamMap, name: string, pipeline: Pipeline = "raw"): string[] {
+/** The SDK keys that carry a canonical name's value on a pipeline (`hdr`: a photo in HDR edit mode); empty for an unknown name. */
+export function sdkKeysOf(map: ParamMap, name: string, pipeline: Pipeline = "raw", hdr = false): string[] {
   if (name === CAMERA_PROFILE_PARAM) return [...(pipeline === "rendered" ? RENDERED_PROFILE_KEYS : PROFILE_KEYS)];
-  const spec = map.spec(name, pipeline);
-  return spec ? [spec.sdkKey] : [];
+  const key = map.sdkKey(name, pipeline, hdr);
+  return key !== undefined ? [key] : [];
 }

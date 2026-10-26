@@ -85,6 +85,7 @@ export async function openSession(ctx: SessionContext, given: BeginArgs): Promis
     copy_name: text(photo["copy_name"]),
     process_version: view.process_version,
     pipeline: view.pipeline,
+    hdr: view.hdr,
     camera_profile: view.camera_profile.name,
   });
   const s: Session = {

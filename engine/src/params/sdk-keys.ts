@@ -17,14 +17,19 @@ export type SdkValueType = (typeof SDK_VALUE_TYPES)[number];
  * census (devtools\s10-census.ts) writes the same shape with spike "S10", one dump per photo of
  * the "fixtures" collection, so the rendered pipeline's keys are pinned by the same conversion. Spike S14
  * (devtools\s14-keys.ts) writes it with spike "S14" for its Monochrome dumps (the GrayMixer* keys).
+ * The curve probe (devtools\curve-probe.ts, issue #187) writes it with check "curve-probe" and no
+ * spike, for an HDR-mode photo's dump (the ExtendedToneCurvePV2012* keys); it is taken as written.
  */
 const s5DumpSchema = z.object({
-  meta: z.looseObject({
-    spike: z.enum(["S5", "S10", "S14"]),
-    filename: z.string().min(1),
-    lr_version: z.string().optional(),
-    captured_at: z.string().optional(),
-  }),
+  meta: z
+    .looseObject({
+      spike: z.enum(["S5", "S10", "S14"]).optional(),
+      check: z.literal("curve-probe").optional(),
+      filename: z.string().min(1),
+      lr_version: z.string().optional(),
+      captured_at: z.string().optional(),
+    })
+    .refine((m) => m.spike !== undefined || m.check !== undefined, { message: 'meta needs spike "S5", "S10" or "S14", or check "curve-probe"' }),
   settings: z.record(z.string().min(1), z.unknown()),
 });
 export type S5Dump = z.infer<typeof s5DumpSchema>;

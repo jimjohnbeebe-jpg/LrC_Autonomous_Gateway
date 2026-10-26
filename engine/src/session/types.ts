@@ -181,6 +181,8 @@ export type Target = {
   process_version: string;
   /** The photo's pipeline (params\pipeline.ts): which keys and ranges its temperature and tint take. */
   pipeline: Pipeline;
+  /** The photo is in HDR edit mode (params FromSdkResult.hdr), as of its last read (io.ts readSdk): its point curves' keys. */
+  hdr: boolean;
   camera_profile: string | null;
   passes: number;
   endReason: "converged" | "cap_reached" | null;

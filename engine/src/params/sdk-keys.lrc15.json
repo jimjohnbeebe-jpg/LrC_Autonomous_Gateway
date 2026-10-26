@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated_by": "spikes/S5/pin.ts",
-  "generated_at": "2026-10-26T00:42:18.962Z",
+  "generated_at": "2026-10-26T03:50:57.935Z",
   "sources": [
     {
       "label": "s5_20260907-_OZ80093.NEF.json",
@@ -29,6 +29,12 @@
       "filename": "20260907-_OZ80093.NEF",
       "process_version": "15.4",
       "camera_profile": "Adobe Standard"
+    },
+    {
+      "label": "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json",
+      "filename": "20220828-_DSC1159-HDR.dng",
+      "process_version": "15.4",
+      "camera_profile": "Adobe Standard"
     }
   ],
   "keys": [
@@ -40,7 +46,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -51,7 +58,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -62,7 +70,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -73,7 +82,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -84,7 +94,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -95,7 +106,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -106,7 +118,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -117,7 +130,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -128,7 +142,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -139,7 +154,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -150,7 +166,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -161,7 +178,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -172,7 +190,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -183,7 +202,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -194,7 +214,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -205,7 +226,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -216,7 +238,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -227,7 +250,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -238,7 +262,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -249,7 +274,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -260,7 +286,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -271,7 +298,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -282,7 +310,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -293,7 +322,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -304,7 +334,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -315,7 +346,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -326,7 +358,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -337,7 +370,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -348,7 +382,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -359,7 +394,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -370,7 +406,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -381,7 +418,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -392,7 +430,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -403,7 +442,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -414,7 +454,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -425,7 +466,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -436,7 +478,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -447,7 +490,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -458,7 +502,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -469,7 +514,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -480,7 +526,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -491,7 +538,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -502,7 +550,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -513,7 +562,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -524,7 +574,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -535,7 +586,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -546,7 +598,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -557,7 +610,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -568,7 +622,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -579,7 +634,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -590,7 +646,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -601,7 +658,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -612,7 +670,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -623,7 +682,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -634,7 +694,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -645,7 +706,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -656,7 +718,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -667,7 +730,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -678,7 +742,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -689,7 +754,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -700,7 +766,60 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
+      ]
+    },
+    {
+      "key": "ExtendedToneCurvePV2012",
+      "type": "array",
+      "sample": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "seen_in": [
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
+      ]
+    },
+    {
+      "key": "ExtendedToneCurvePV2012Blue",
+      "type": "array",
+      "sample": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "seen_in": [
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
+      ]
+    },
+    {
+      "key": "ExtendedToneCurvePV2012Green",
+      "type": "array",
+      "sample": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "seen_in": [
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
+      ]
+    },
+    {
+      "key": "ExtendedToneCurvePV2012Red",
+      "type": "array",
+      "sample": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "seen_in": [
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -711,7 +830,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -722,7 +842,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -733,7 +854,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -744,7 +866,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -755,7 +878,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -830,7 +954,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -841,7 +966,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -852,7 +978,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -863,7 +990,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -874,7 +1002,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -885,7 +1014,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -895,7 +1025,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -905,7 +1036,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -915,7 +1047,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -925,7 +1058,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -935,7 +1069,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -945,7 +1080,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -955,7 +1091,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -965,7 +1102,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -976,7 +1114,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -987,7 +1126,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -997,7 +1137,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1007,7 +1148,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1018,7 +1160,16 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
+      ]
+    },
+    {
+      "key": "LensProfileFilename",
+      "type": "string",
+      "sample": "SONY (Zeiss Batis 2.8_18) - RAW.lcp",
+      "seen_in": [
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1028,7 +1179,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1038,7 +1190,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1049,7 +1202,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1059,7 +1213,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1101,7 +1256,8 @@
       },
       "seen_in": [
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1111,7 +1267,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1121,7 +1278,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1131,7 +1289,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1141,7 +1300,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1151,7 +1311,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1161,7 +1322,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1171,7 +1333,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1181,7 +1344,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1192,7 +1356,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1203,7 +1368,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1214,7 +1380,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1504,7 +1671,8 @@
         }
       ],
       "seen_in": [
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1515,7 +1683,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1526,7 +1695,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1537,7 +1707,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1548,7 +1719,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1559,7 +1731,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1570,7 +1743,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1581,7 +1755,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1592,7 +1767,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1603,7 +1779,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1614,7 +1791,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1625,7 +1803,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1636,7 +1815,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1647,7 +1827,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1658,7 +1839,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1669,7 +1851,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1680,7 +1863,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1691,7 +1875,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1702,7 +1887,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1713,7 +1899,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1724,7 +1911,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1735,7 +1923,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1746,7 +1935,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1757,7 +1947,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1768,7 +1959,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1779,7 +1971,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1790,7 +1983,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1801,7 +1995,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1812,7 +2007,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1823,7 +2019,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1834,7 +2031,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1845,7 +2043,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1856,7 +2055,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1867,7 +2067,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1877,7 +2078,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1887,7 +2089,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1897,7 +2100,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1907,7 +2111,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1917,7 +2122,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1927,7 +2133,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1937,7 +2144,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1947,7 +2155,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1957,7 +2166,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1968,7 +2178,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1979,7 +2190,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -1990,7 +2202,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2001,7 +2214,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2012,7 +2226,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2023,7 +2238,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2034,7 +2250,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2045,7 +2262,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2056,7 +2274,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2067,7 +2286,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2078,7 +2298,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2089,7 +2310,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2100,7 +2322,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2111,7 +2334,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2122,7 +2346,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2133,7 +2358,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2149,7 +2375,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2165,7 +2392,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2181,7 +2409,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2197,7 +2426,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2208,7 +2438,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2219,7 +2450,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2230,7 +2462,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2241,7 +2474,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2252,7 +2486,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2263,7 +2498,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2274,7 +2510,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2285,7 +2522,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2296,7 +2534,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2306,7 +2545,8 @@
       "seen_in": [
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
-        "masks-capture_3_dump-1.json"
+        "masks-capture_3_dump-1.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2317,7 +2557,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2328,7 +2569,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2339,7 +2581,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2350,7 +2593,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     },
     {
@@ -2361,7 +2605,8 @@
         "s5_20260907-_OZ80093.NEF.json",
         "s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json",
         "masks-capture_3_dump-1.json",
-        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json"
+        "s14_monochrome_20260907-_OZ80093.NEF__C19DDC67.json",
+        "curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json"
       ]
     }
   ]

@@ -62,6 +62,13 @@ describe("params: S5 dump -> pinned SDK key table", () => {
     expect(() => pinFromDumps([{ label: "bad", dump: { settings: {} } }], META)).toThrow();
     expect(() => pinFromDumps([], META)).toThrow(/at least one dump/);
   });
+
+  it("takes the curve probe's dump (meta.check, no spike) and refuses meta with neither (issue #187)", () => {
+    const curve = { meta: { check: "curve-probe", filename: "x.dng" }, settings: { K: 1 } };
+    expect(pinFromDumps([{ label: "c", dump: curve }], META).keys).toHaveLength(1);
+    expect(() => pinFromDumps([{ label: "n", dump: { meta: { filename: "x" }, settings: {} } }], META)).toThrow(/spike/);
+    expect(() => pinFromDumps([{ label: "o", dump: { meta: { check: "other", filename: "x" }, settings: {} } }], META)).toThrow();
+  });
 });
 
 describe("params: pinned key table loader", () => {

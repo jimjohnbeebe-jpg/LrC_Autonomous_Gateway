@@ -59,9 +59,9 @@ async function identify(run: SyncRun, uuid: string): Promise<Photo> {
  * error names it as `maybe_written` [handle: tests\sync.test.ts "stops when a write gets no answer
  * in time"].
  */
-async function write(run: SyncRun, uuid: string, values: Record<string, CanonicalValue>, historyName: string, photo: Pick<FromSdkResult, "process_version" | "pipeline">, names: string[]): Promise<FromSdkResult> {
+async function write(run: SyncRun, uuid: string, values: Record<string, CanonicalValue>, historyName: string, photo: Pick<FromSdkResult, "process_version" | "pipeline" | "hdr">, names: string[]): Promise<FromSdkResult> {
   const { client, map } = run.deps;
-  const sdk = map.toSdk(values, { processVersion: photo.process_version, pipeline: photo.pipeline }); // checked against this photo's own pipeline: Lightroom checks writes only on the photo in Develop [handle: docs\reports\phase8\S10.md "Observed", "Run 1"]
+  const sdk = map.toSdk(values, { processVersion: photo.process_version, pipeline: photo.pipeline, hdr: photo.hdr }); // checked against this photo's own pipeline: Lightroom checks writes only on the photo in Develop [handle: docs\reports\phase8\S10.md "Observed", "Run 1"]
   let res;
   try {
     res = await client.request("apply_settings", { photo_uuid: uuid, settings: sdk, history_name: historyName }, { timeoutMs: run.deps.writeTimeoutMs ?? WRITE_TIMEOUT_MS });

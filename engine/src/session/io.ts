@@ -47,7 +47,9 @@ export async function read(ctx: SessionContext, s: Session, t: Target): Promise<
 /** The photo's settings as Lightroom gives them (the mask table included), and their canonical view. */
 export async function readSdk(ctx: SessionContext, s: Session, t: Target): Promise<{ sdk: SdkSettings; view: FromSdkResult }> {
   const res = await bridge(s, t, () => ctx.deps.client.request("get_settings", { target_uuid: t.uuid }));
-  return { sdk: res.settings, view: ctx.deps.map.fromSdk(res.settings) };
+  const view = ctx.deps.map.fromSdk(res.settings);
+  t.hdr = view.hdr; // HDR edit mode is a switch the user may flip between steps: the next write follows the photo
+  return { sdk: res.settings, view };
 }
 
 /**
@@ -101,7 +103,7 @@ function maybeWritten(err: unknown, historyName: string): unknown {
  */
 export async function write(ctx: SessionContext, s: Session, t: Target, values: Record<string, CanonicalValue>, historyName: string, options: { putBack?: boolean; companions?: SdkSettings } = {}): Promise<FromSdkResult> {
   const { client, map } = ctx.deps;
-  const sdk = { ...map.toSdk(values, { processVersion: t.process_version, pipeline: t.pipeline }), ...options.companions };
+  const sdk = { ...map.toSdk(values, { processVersion: t.process_version, pipeline: t.pipeline, hdr: t.hdr }), ...options.companions };
   const readBack = await writeSdk(ctx, s, t, sdk, historyName, options.putBack === true);
   const error = readbackError(map, sdk, readBack, historyName, client.hello()); // WRITE_NOT_TAKEN or FEATURE_UNAVAILABLE
   if (error) throw error;

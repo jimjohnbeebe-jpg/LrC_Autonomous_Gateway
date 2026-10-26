@@ -104,7 +104,7 @@ describe("curve probe (simulated plugin)", () => {
     const get = plugin.handlers.get("get_settings")!;
     let failNext = false;
     plugin.handlers.set("apply_settings", (p, id) => {
-      if (String(p["history_name"]).endsWith("pass 1/4")) failNext = true;
+      if (/ pass 1\/\d+$/.test(String(p["history_name"]))) failNext = true;
       return apply(p, id);
     });
     plugin.handlers.set("get_settings", (p, id) => {

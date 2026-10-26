@@ -27,7 +27,7 @@ async function afterPass1(waitMs: number): Promise<HudRig> {
   clean();
   approveMode();
   const rig = hudRig({ approvalWaitMs: waitMs });
-  await rig.manager.begin({ intent_id: "test_plain", return_image: "none" });
+  await rig.manager.begin({ max_passes: 4, intent_id: "test_plain", return_image: "none" });
   await hudAt("awaiting_claude");
   expect(lr.hud.last()?.approve_pass).toBeUndefined(); // pass 0: nothing to approve
   await step(rig);
@@ -75,7 +75,7 @@ describe("approve_each_pass: the HUD's Approve", () => {
     clean();
     approveMode();
     const rig = hudRig({ approvalWaitMs: 20000 });
-    await rig.manager.begin({ intent_id: "test_plain", return_image: "none" });
+    await rig.manager.begin({ max_passes: 4, intent_id: "test_plain", return_image: "none" });
     await hudAt("awaiting_claude");
     hudEvent(plugin, "hud_approve_pass", { session_id: ID, pass: 1 });
     await waitUntil(() => rig.events.length === 1);
@@ -104,7 +104,7 @@ describe("approve_each_pass: the HUD's Approve", () => {
   it("autonomous mode offers no Approve", async () => {
     clean();
     const rig = hudRig({ approvalWaitMs: 20000 });
-    await rig.manager.begin({ intent_id: "test_plain", return_image: "none" });
+    await rig.manager.begin({ max_passes: 4, intent_id: "test_plain", return_image: "none" });
     await step(rig);
     await hudAt("awaiting_claude");
     expect(lr.hud.last()?.approve_pass).toBeUndefined();

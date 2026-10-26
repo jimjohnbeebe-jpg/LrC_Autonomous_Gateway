@@ -75,9 +75,9 @@ describe("lr_begin_session: the settings page", () => {
 
   it("does not use a value the plugin replaced by its default, and lists it", async () => {
     clean();
-    page({ max_passes: 4, invalid: [{ key: "maxPasses", value: "12", reason: "outside 1-8" }] });
+    page({ max_passes: 4, invalid: [{ key: "maxPasses", value: "20", reason: "outside 1-16" }] });
     const out = await manager.begin({ intent_id: "test_plain", return_image: "none" });
-    expect(out.json["session_settings"]).toMatchObject({ from: { max_passes: "default" }, page: { read: true, problems: ["maxPasses = 12: outside 1-8 (the page's value is not used)"] } });
+    expect(out.json["session_settings"]).toMatchObject({ from: { max_passes: "default" }, page: { read: true, problems: ["maxPasses = 20: outside 1-16 (the page's value is not used)"] } });
     expect(readLog().settings?.page.problems).toHaveLength(1);
   });
 
@@ -85,7 +85,7 @@ describe("lr_begin_session: the settings page", () => {
     clean();
     lr.prefs = null; // the sim answers unknown_command
     const out = await manager.begin({ intent_id: "test_plain", return_image: "none" });
-    expect(out.json).toMatchObject({ pass: "0/4", guardrails: { clip_high_pct: 0.5, clip_low_pct: 1 } });
+    expect(out.json).toMatchObject({ pass: "0/8", guardrails: { clip_high_pct: 0.5, clip_low_pct: 1 } });
     expect(out.json["session_settings"]).toMatchObject({ from: { max_passes: "default", decay: "default" }, page: { read: false, note: expect.stringContaining("get_prefs failed (unknown_command") } });
   });
 

@@ -7,7 +7,7 @@ import { ID, SHORT, clean, fails, lr, manager, useSessionHarness } from "./helpe
 
 useSessionHarness();
 
-const begin = () => manager.begin({ intent_id: "test_plain", return_image: "none" });
+const begin = () => manager.begin({ max_passes: 4, intent_id: "test_plain", return_image: "none" });
 const masks = (): Correction[] => (lr.settings[MASK_TABLE_KEY] ?? []) as Correction[];
 const create = (args: Record<string, unknown>) => manager.createMask({ session_id: ID, rationale: "test", return_image: "none", kind: "linear", ...args });
 const holder = (e: Correction | undefined): Record<string, unknown> => ((e?.["CorrectionMasks"] as Record<string, unknown>[])[0] as Record<string, Record<string, unknown>>)["CorrectionRangeMask"] as Record<string, unknown>;

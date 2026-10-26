@@ -16,7 +16,7 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
     beforeEach(() => clean());
 
     it("accept: finalises the log and writes a recipe that reproduces the final settings (AC-5, same photo)", async () => {
-      await manager.begin({ intent_id: "test_prior" });
+      await manager.begin({ max_passes: 4, intent_id: "test_prior" });
       await manager.step({ session_id: ID, settings: { shadows: 30, vibrance: 10 }, rationale: "r" });
       const final = map.fromSdk(lr.settings).settings;
       const out = await manager.end({ session_id: ID, outcome: "accept" });
@@ -38,7 +38,7 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
 
     it("revert: applies the pre-session snapshot and lists no differing setting", async () => {
       const start = map.fromSdk(lr.settings).settings;
-      await manager.begin({ intent_id: "test_prior" });
+      await manager.begin({ max_passes: 4, intent_id: "test_prior" });
       await manager.step({ session_id: ID, settings: { shadows: 30 }, rationale: "r" });
       const out = await manager.end({ session_id: ID, outcome: "revert" });
       expect(out.json).toMatchObject({ outcome: "revert", recipe_path: null, revert: { ms: expect.any(Number), differing: [] }, final_settings: start });
@@ -47,7 +47,7 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
     });
 
     it("returns the log while open, after the end, and from the file to a new engine", async () => {
-      await manager.begin({ intent_id: "test_plain" });
+      await manager.begin({ max_passes: 4, intent_id: "test_plain" });
       expect(manager.getLog({ session_id: ID }).json).toMatchObject({ open: true, log: { session_id: ID } });
       await manager.end({ session_id: ID, outcome: "accept" });
       expect(manager.getLog({ session_id: ID }).json).toMatchObject({ open: false, log: { outcome: "accept" } });

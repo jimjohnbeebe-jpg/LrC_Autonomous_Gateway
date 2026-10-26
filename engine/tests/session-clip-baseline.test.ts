@@ -22,7 +22,7 @@ describe.each(PIPELINES)("clip_baseline (%s pipeline)", (pipeline) => {
 
   it("pass 0 writes no correction without clip_baseline: only the profile and priors, the clipping reported unmet", async () => {
     clips();
-    const out = await manager.begin({ intent_id: "test_prior" });
+    const out = await manager.begin({ max_passes: 4, intent_id: "test_prior" });
     expect(lr.history).toEqual([`AVG ${SHORT} pass 0/4`]);
     expect([lr.settings["Whites2012"], lr.settings["Blacks2012"], lr.settings["Exposure2012"]]).toEqual([0, -20, 0.2]);
     expect(map.fromSdk(lr.settings).camera_profile.name).toBe(pipeline === "raw" ? "Adobe Color" : "Color");
@@ -33,7 +33,7 @@ describe.each(PIPELINES)("clip_baseline (%s pipeline)", (pipeline) => {
 
   it("pass 0 corrects as before when lr_begin_session asks for clip_baseline", async () => {
     clips();
-    const out = await manager.begin({ intent_id: "test_plain", clip_baseline: true });
+    const out = await manager.begin({ max_passes: 4, intent_id: "test_plain", clip_baseline: true });
     expect(lr.history).toEqual([`AVG ${SHORT} pass 0/4 baseline 1`]);
     expect([lr.settings["Whites2012"], lr.settings["Blacks2012"]]).toEqual([-20, 0]);
     expect(actionsOf(out.json).map((a) => [a.kind, a.limit])).toEqual([["corrected", "clip_high"], ["corrected", "clip_low"]]);
@@ -43,14 +43,14 @@ describe.each(PIPELINES)("clip_baseline (%s pipeline)", (pipeline) => {
   it("pass 0 corrects when the intent sets clip_baseline", async () => {
     clips();
     intent("test_baseline", { clip_baseline: true });
-    await manager.begin({ intent_id: "test_baseline" });
+    await manager.begin({ max_passes: 4, intent_id: "test_baseline" });
     expect(lr.history).toEqual([`AVG ${SHORT} pass 0/4 baseline 1`]);
   });
 
   it("lr_begin_session's clip_baseline false replaces the intent's true", async () => {
     clips();
     intent("test_baseline", { clip_baseline: true });
-    const off = await manager.begin({ intent_id: "test_baseline", clip_baseline: false });
+    const off = await manager.begin({ max_passes: 4, intent_id: "test_baseline", clip_baseline: false });
     expect(actionsOf(off.json).some((a) => a.kind === "corrected")).toBe(false);
     expect([lr.settings["Whites2012"], lr.settings["Blacks2012"]]).toEqual([0, -20]);
   });
@@ -58,7 +58,7 @@ describe.each(PIPELINES)("clip_baseline (%s pipeline)", (pipeline) => {
   it("a step leaves an end that was over before it alone without clip_baseline: no fixed-table write", async () => {
     clean();
     lr.settings["Blacks2012"] = -20; // the dark end clips
-    await manager.begin({ intent_id: "test_plain" });
+    await manager.begin({ max_passes: 4, intent_id: "test_plain" });
     const out = await manager.step({ session_id: ID, settings: { highlights: -10 }, rationale: "softer highlights" });
     expect(lr.history).toEqual([`AVG ${SHORT} pass 1/4`]);
     expect(lr.settings["Blacks2012"]).toBe(-20);
@@ -67,7 +67,7 @@ describe.each(PIPELINES)("clip_baseline (%s pipeline)", (pipeline) => {
 
   it("with clip_baseline, a step still corrects an end that was over before it", async () => {
     clean();
-    await manager.begin({ intent_id: "test_plain", clip_baseline: true });
+    await manager.begin({ max_passes: 4, intent_id: "test_plain", clip_baseline: true });
     lr.settings["Blacks2012"] = -20; // Jim drags Blacks: the dark end now clips
     const out = await manager.step({ session_id: ID, settings: { highlights: -10 }, rationale: "softer highlights" });
     expect(lr.history).toContain(`AVG ${SHORT} pass 1/4 guard 1`);
@@ -77,7 +77,7 @@ describe.each(PIPELINES)("clip_baseline (%s pipeline)", (pipeline) => {
   it("without clip_baseline, a step pushing towards an end already over is written, not refused; the end is reported unmet", async () => {
     clean();
     lr.settings["Whites2012"] = 0; // the bright end clips
-    await manager.begin({ intent_id: "test_plain" });
+    await manager.begin({ max_passes: 4, intent_id: "test_plain" });
     const out = await manager.step({ session_id: ID, settings: { vibrance: 5 }, rationale: "a little more colour" });
     expect(out.json).toMatchObject({ refused: [], applied: [expect.objectContaining({ name: "vibrance", delta: 5 })] });
     expect(lr.history).toEqual([`AVG ${SHORT} pass 1/4`]);
@@ -86,7 +86,7 @@ describe.each(PIPELINES)("clip_baseline (%s pipeline)", (pipeline) => {
 
   it("with clip_baseline, that step is refused as before", async () => {
     clean();
-    await manager.begin({ intent_id: "test_plain", clip_baseline: true });
+    await manager.begin({ max_passes: 4, intent_id: "test_plain", clip_baseline: true });
     lr.settings["Whites2012"] = 0; // Jim drags Whites: the bright end now clips
     expect((await fails(manager.step({ session_id: ID, settings: { vibrance: 5 }, rationale: "a little more colour" }))).code).toBe("GUARDRAIL_REFUSED");
   });
@@ -94,7 +94,7 @@ describe.each(PIPELINES)("clip_baseline (%s pipeline)", (pipeline) => {
   it("a step that pushes a fine end over is corrected, its own slider first, while an end over before stays", async () => {
     clean();
     lr.settings["Blacks2012"] = -20; // the dark end clips; the bright end is fine
-    await manager.begin({ intent_id: "test_plain" });
+    await manager.begin({ max_passes: 4, intent_id: "test_plain" });
     const out = await manager.step({ session_id: ID, settings: { whites: 20 }, rationale: "brighter whites" });
     const corrected = actionsOf(out.json).filter((a) => a.kind === "corrected");
     expect(corrected.length).toBeGreaterThan(0);

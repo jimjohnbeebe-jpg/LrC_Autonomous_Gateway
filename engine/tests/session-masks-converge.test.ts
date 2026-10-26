@@ -17,7 +17,7 @@ const REGIONS = { session_id: ID, regions: [{ kind: "custom" as const, label: "t
 
 async function begin(regions: boolean): Promise<void> {
   clean();
-  await manager.begin({ intent_id: "test_plain", return_image: "none" });
+  await manager.begin({ max_passes: 4, intent_id: "test_plain", return_image: "none" });
   if (regions) await manager.setRegions(REGIONS);
 }
 

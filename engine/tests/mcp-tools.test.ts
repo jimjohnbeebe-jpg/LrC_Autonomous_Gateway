@@ -338,7 +338,7 @@ describe("mcp tools: Phase 3 additions", () => {
 
   it("says a session is open on the selected photo, and answers lr_get_metrics from the session's last render", async () => {
     const t = withSessions();
-    const begin = await t.beginSession({ intent_id: "neutral_technical_correction" });
+    const begin = await t.beginSession({ intent_id: "neutral_technical_correction", max_passes: 4 });
     const id = String(begin.json["session_id"]);
     expect((await t.getActivePhotoContext()).json).toMatchObject({ session_active: true, open_session: { session_id: id, pass: "0/4" } });
     expect((await t.getMetrics()).json).toMatchObject({ session_id: id, preview_hash: begin.json["preview_hash"] });

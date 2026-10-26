@@ -12,7 +12,7 @@ import { SHORT, clean, fails, intent, lr, manager, plugin, readLog, useSessionHa
 describe.each(PIPELINES)("%s pipeline", (pipeline) => {
   useSessionHarness(pipeline);
 
-  const begin = () => manager.begin({ intent_id: "test_variants", mode: "variants" });
+  const begin = () => manager.begin({ max_passes: 4, intent_id: "test_variants", mode: "variants" });
   const step = (target: "A" | "B" | "C" | "master" | undefined, settings: Record<string, unknown> = { exposure: 0.1 }) =>
     manager.step({ session_id: ID(), ...(target ? { target } : {}), settings, rationale: "test" });
   const ID = (): string => readLog().session_id;
@@ -35,7 +35,7 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
         // Priors are offsets from the photo's values, a variant's added to the intent's (pass0.ts combinedPriors).
         variants: { A: { label: "cool", priors: {} }, B: { label: "warm", priors: {}, priors_by_pipeline: { raw: { temperature: 500 }, rendered: { temperature: 15 } } }, C: { label: "flat", priors: { contrast: -25 } } },
       });
-      const out = await manager.begin({ intent_id: "test_variants_mono", mode: "variants", return_image: "none" });
+      const out = await manager.begin({ max_passes: 4, intent_id: "test_variants_mono", mode: "variants", return_image: "none" });
       expect(out.json).toMatchObject({ ok: true, mode: "variants", pass: "0/4" });
       const grayscale = pipeline === "rendered" ? (s: Record<string, unknown>) => s["ConvertToGrayscale"] === true : (s: Record<string, unknown>) => (s["Look"] as { Name?: string } | undefined)?.Name === "Adobe Monochrome";
       expect([1, 2, 3].map((n) => grayscale(copy(n).settings))).toEqual([true, true, true]);
@@ -77,7 +77,7 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
 
     it("with lr_begin_session's clip_baseline false over the intent's true, leaves C's clipping alone at pass 0 and in its step (issue #130)", async () => {
       clean();
-      const out = await manager.begin({ intent_id: "test_variants", mode: "variants", clip_baseline: false });
+      const out = await manager.begin({ max_passes: 4, intent_id: "test_variants", mode: "variants", clip_baseline: false });
       expect(lr.history.filter((h) => h.includes("baseline"))).toEqual([]);
       const c = (out.json["variants"] as Array<Record<string, unknown>>)[2]?.["guardrail_actions"] as Array<{ kind: string; limit: string; reason: string }>;
       expect(c.map((a) => [a.kind, a.limit])).toEqual([["unmet", "clip_high"]]); // C's exposure +1.1 clips the highlights
@@ -100,7 +100,7 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
 
     it("with before_after puts the master before the session first; makes 2 copies when asked", async () => {
       clean();
-      const out = await manager.begin({ intent_id: "test_variants", mode: "variants", return_image: "before_after", variant_count: 2 });
+      const out = await manager.begin({ max_passes: 4, intent_id: "test_variants", mode: "variants", return_image: "before_after", variant_count: 2 });
       expect((out.json["contact_sheet"] as { panels: Array<{ label: string }> }).panels.map((p) => p.label)).toEqual(["before", "A natural - pass 0", "B dramatic - pass 0"]);
       expect(lr.copies.size).toBe(2);
       expect(readLog().variant_count).toBe(2);
@@ -108,7 +108,7 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
 
     it("sends no image with return_image none", async () => {
       clean();
-      const out = await manager.begin({ intent_id: "test_variants", mode: "variants", return_image: "none" });
+      const out = await manager.begin({ max_passes: 4, intent_id: "test_variants", mode: "variants", return_image: "none" });
       expect(out.image).toBeUndefined();
       expect(out.json["contact_sheet"]).toBeUndefined();
     });
@@ -222,14 +222,14 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
 
     it("refuses a copy the session does not have", async () => {
       clean();
-      await manager.begin({ intent_id: "test_variants", mode: "variants", variant_count: 2 });
+      await manager.begin({ max_passes: 4, intent_id: "test_variants", mode: "variants", variant_count: 2 });
       expect((await fails(manager.selectVariant({ session_id: ID(), variant: "C" }))).code).toBe("INVALID_ARGUMENTS");
       expect((await fails(step("C"))).code).toBe("INVALID_ARGUMENTS");
     });
 
     it("refuses the pick and the copies in Converge mode", async () => {
       clean();
-      await manager.begin({ intent_id: "test_plain" });
+      await manager.begin({ max_passes: 4, intent_id: "test_plain" });
       expect((await fails(manager.selectVariant({ session_id: ID(), variant: "A" }))).code).toBe("INVALID_ARGUMENTS");
       expect((await fails(step("A"))).code).toBe("INVALID_ARGUMENTS");
       expect(sent("select_photo")).toEqual([]);

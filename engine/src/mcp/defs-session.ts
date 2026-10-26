@@ -1,7 +1,7 @@
 // The MCP definitions of the session tools (tools-session.ts).
 
 import { z } from "zod";
-import { APPROVAL_WAIT_MS } from "../session/index.js";
+import { APPROVAL_WAIT_MS, SESSION_DEFAULTS } from "../session/index.js";
 import { FRAME, MEASURED, box, longEdge, sessionId, target, type ToolDef } from "./defs-shared.js";
 import { DEFAULT_LONG_EDGE, MAX_LONG_EDGE, MIN_LONG_EDGE } from "./tools-shared.js";
 
@@ -32,7 +32,13 @@ const beginArgs = z.object({
     .max(3)
     .optional()
     .describe('mode "variants" only (ignored in Converge mode): how many copies, 2-3 (default: the settings page\'s, else 3); A, B, C take the intent\'s variants of those letters'),
-  max_passes: z.number().int().min(1).max(8).optional().describe("passes after pass 0, 1-8 (default: the settings page's, else 4)"),
+  max_passes: z
+    .number()
+    .int()
+    .min(1)
+    .max(SESSION_DEFAULTS.maxPassesLimit)
+    .optional()
+    .describe(`passes after pass 0, 1-${SESSION_DEFAULTS.maxPassesLimit} (default: the settings page's, else ${SESSION_DEFAULTS.maxPasses})`),
   guardrails: z
     .object({ clip_high_pct: z.number().min(0).max(100).optional(), clip_low_pct: z.number().min(0).max(100).optional() })
     .optional()

@@ -42,7 +42,7 @@ describe("settings page: parsePage", () => {
   });
 
   it.each([
-    ["max_passes", 9],
+    ["max_passes", 17],
     ["max_passes", 2.5],
     ["variant_count", 4],
     ["long_edge", 799],
@@ -72,9 +72,9 @@ describe("settings page: parsePage", () => {
   });
 
   it("does not count a value the plugin replaced by its default as the page's (`invalid`)", () => {
-    const { values, problems } = page({ max_passes: 4, invalid: [{ key: "maxPasses", value: "12", reason: "outside 1-8" }] });
+    const { values, problems } = page({ max_passes: 4, invalid: [{ key: "maxPasses", value: "20", reason: "outside 1-16" }] });
     expect(values).not.toHaveProperty("max_passes");
-    expect(problems).toEqual(["maxPasses = 12: outside 1-8 (the page's value is not used)"]);
+    expect(problems).toEqual(["maxPasses = 20: outside 1-16 (the page's value is not used)"]);
   });
 
   it("leaves out both ports when they are the same", () => {
@@ -93,7 +93,7 @@ describe("settings page: parsePage", () => {
 describe("settings: a session's values in order", () => {
   it("uses the defaults with nothing given", () => {
     const s = resolveSessionSettings({}, {}, {});
-    expect(s).toMatchObject({ approval: "autonomous", maxPasses: 4, variantCount: 3, longEdge: 1600, quality: 75, clipHighPct: 0.5, clipLowPct: 1, decay: [1, 0.6, 0.4, 0.25] });
+    expect(s).toMatchObject({ approval: "autonomous", maxPasses: 8, variantCount: 3, longEdge: 1600, quality: 75, clipHighPct: 0.5, clipLowPct: 1, decay: [1, 0.6, 0.4, 0.25] });
     expect(new Set(Object.values(s.from))).toEqual(new Set(["default"]));
   });
 

@@ -17,7 +17,7 @@ import { ID, SHORT, clean, client, fails, logDir, lr, manager, plugin, readLog, 
 
 useSessionHarness();
 
-const begin = (extra: Record<string, unknown> = {}, m = manager) => m.begin({ intent_id: "test_plain", return_image: "none", ...extra });
+const begin = (extra: Record<string, unknown> = {}, m = manager) => m.begin({ max_passes: 4, intent_id: "test_plain", return_image: "none", ...extra });
 const masks = (): Correction[] => (lr.settings[MASK_TABLE_KEY] ?? []) as Correction[];
 const pass = { session_id: ID, rationale: "test", return_image: "none" as const };
 const LINEAR = { kind: "linear", name: "AVG bottom", geometry: { zero: { x: 0.5, y: 0.67 }, full: { x: 0.5, y: 0.9 } }, sliders: { "local.exposure": 1 } };
@@ -228,7 +228,7 @@ describe("mask tools: the session's end, Variants mode, an older plugin, the HUD
 
   it("Variants mode: masks are refused before the pick", async () => {
     clean();
-    await manager.begin({ intent_id: "test_variants", mode: "variants", variant_count: 2, return_image: "none" });
+    await manager.begin({ max_passes: 4, intent_id: "test_variants", mode: "variants", variant_count: 2, return_image: "none" });
     expect(await fails(create({ ...LINEAR, target: "A" }))).toMatchObject({ code: "MASKS_AFTER_PICK" });
   });
 

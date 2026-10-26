@@ -32,7 +32,7 @@ Prefs.LOCK_PORT = 8767
 -- ports Windows does not reserve for system services [inference].
 Prefs.SPECS = {
     { key = "mode", wire = "mode", kind = "choice", default = "autonomous", choices = { "autonomous", "approve_each_pass" } },
-    { key = "maxPasses", wire = "max_passes", kind = "int", default = 4, min = 1, max = 8 },
+    { key = "maxPasses", wire = "max_passes", kind = "int", default = 8, min = 1, max = 16 },
     { key = "variantCount", wire = "variant_count", kind = "int", default = 3, min = 2, max = 3 },
     { key = "previewLongEdge", wire = "long_edge", kind = "int", default = 1600, min = 800, max = 1920 },
     { key = "previewQuality", wire = "quality", kind = "int", default = 75, min = 60, max = 90 },
@@ -167,10 +167,22 @@ function Prefs.fillDefaults(prefs)
     end
 end
 
+-- Engine 1.2.0 raised the pass budget's default from 4 to 8 (vault PHASE10_PLAN.md row 3, decision Q3
+-- [stated: Jim, 2026-10-25]). fillDefaults stored the old default on every page opened before, so a
+-- stored 4 is most likely not a choice: once, it becomes 8, and the marker keeps a 4 set after that
+-- [stated: Jim, 2026-10-25, "One-time migration"]. A 4 chosen on purpose before 1.2.0 is moved too.
+function Prefs.migrate(prefs)
+    if prefs.maxPassesMigrated then return end
+    if prefs.maxPasses == 4 then prefs.maxPasses = 8 end
+    prefs.maxPassesMigrated = true
+end
+
 -- Bridge command get_prefs (engine\src\bridge\protocol.ts COMMANDS.get_prefs): every setting under
 -- its wire name, checked; `invalid` lists what was replaced by its default.
 function Prefs.getPrefs(_payload)
-    local values, invalid = Prefs.read()
+    local prefs = LrPrefs.prefsForPlugin()
+    Prefs.migrate(prefs)
+    local values, invalid = Prefs.read(prefs)
     local out = { temp_preview_dir = Prefs.tempPreviewDir(), invalid = invalid }
     for _, spec in ipairs(Prefs.SPECS) do out[spec.wire] = values[spec.key] end
     return out

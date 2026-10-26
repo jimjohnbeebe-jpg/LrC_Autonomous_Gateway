@@ -29,10 +29,10 @@ describe("HUD updates from a Converge session", () => {
       session_id: ID,
       mode: "converge",
       pass: 0,
-      max_passes: 4,
+      max_passes: 8,
       session_photos: ["SIM-UUID"],
       target: { uuid: "SIM-UUID", filename: "20260907-_OZ80093.NEF", iso: 64, shutter: "1/250 s", aperture: "f/8", lens: "NIKKOR Z 24-120mm f/4 S", lens_profile: "on" },
-      settings: { mode: "autonomous", max_passes: 4, long_edge: 1600, quality: 75, clip_high_pct: 0.5, clip_low_pct: 1, decay: [1, 0.6, 0.4, 0.25] },
+      settings: { mode: "autonomous", max_passes: 8, long_edge: 1600, quality: 75, clip_high_pct: 0.5, clip_low_pct: 1, decay: [1, 0.6, 0.4, 0.25] },
       deltas: [],
       guardrail: { status: "green" },
       snapshot: expect.stringMatching(/^AVG pre-session \d{4}-\d\d-\d\dT/),
@@ -204,7 +204,7 @@ describe("A session rides out a drop", () => {
   it("a write cut off by a drop says it may have been written; the session stays open", async () => {
     clean();
     const rig = hudRig();
-    await rig.manager.begin({ intent_id: "test_plain" });
+    await rig.manager.begin({ intent_id: "test_plain", max_passes: 4 });
     const apply = plugin.handlers.get("apply_settings");
     plugin.handlers.set("apply_settings", () => "silent");
     const pending = step(rig, { exposure: 0.2 });

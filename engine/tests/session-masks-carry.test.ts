@@ -39,7 +39,7 @@ const LINEAR = { kind: "linear", name: "AVG bottom", geometry: { zero: { x: 0.5,
 async function beginWithAdd(): Promise<void> {
   clean();
   lr.settings[MASK_TABLE_KEY] = [structuredClone(ADD), structuredClone(RADIAL)];
-  await manager.begin({ intent_id: "test_plain", return_image: "none" });
+  await manager.begin({ max_passes: 4, intent_id: "test_plain", return_image: "none" });
 }
 
 describe("mask tools: the user's own masks are carried (issue #121)", () => {

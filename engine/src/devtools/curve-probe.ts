@@ -6,22 +6,31 @@
 //   b. the same curve written straight through the bridge, as S14 wrote it, alone and with the step's vibrance:
 //      separates the write path from the photo and its profile (S14.md "a. Tone curve": S14's curve was taken on
 //      another photo, so which of the three matters is [unverified]);
-//   c. a visible 3-point lift, and Jim's answer on what the Tone Curve panel shows in its Point Curve view
-//      (S14's "the curve was still straight" may be the panel opening on the Parametric view [inference]);
-//   d. the photo put back from the snapshot, every key compared: PUT BACK YES/NO.
+//   c. the profile sweep (run 2, after run 1 on 2026-10-26 had every curve write refused on this photo, by the
+//      session and by the bridge [stated: Jim, 2026-10-26, "Keep #187 open, isolate now"]): from the snapshot,
+//      each raw profile of SWEEP_PROFILES written through the params map, then #187's curve by the bridge;
+//      a suggested reading of which matters, the profile or the photo;
+//   d. a visible 3-point lift under the first profile that took the curve, and Jim's answer on what the Tone
+//      Curve panel shows in its Point Curve view (S14's "the curve was still straight" may be the panel opening
+//      on the Parametric view [inference]); skipped, with the reason, when no profile took the curve, so the
+//      question is only asked on a curve that read back taken (run 1 asked it on a refused one);
+//   e. the photo put back from the snapshot, every key compared: PUT BACK YES/NO.
+// Before any write, the photo's settings are saved as census\curve_probe_settings_<file>__<uuid8>.json, with
+// the keys it carries beyond the raw pin and the pinned keys it lacks (an HDR DNG against S5's NEF).
 
-import { mkdirSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import sdkKeysJson from "../params/sdk-keys.lrc15.json" with { type: "json" };
 import { IntentLibrary } from "../intents/index.js";
 import { ENGINE_VERSION } from "../mcp/index.js";
 import { toToolError } from "../mcp/errors.js";
+import { CAMERA_PROFILE_KEY, PROFILE_KEYS } from "../params/index.js";
 import { loadSdkKeys } from "../params/sdk-keys.js";
 import { PreviewService } from "../preview/index.js";
 import { SessionManager } from "../session/index.js";
 import { describeError, differingKeys } from "./phase1-check.js";
 import { yn, type Json } from "./phase3-config.js";
-import { describe } from "./s10-census.js";
+import { describe, dumpName, summary } from "./s10-census.js";
 import { connect, EXPORT_TIMEOUT_MS, write, type Ctx, type Photo, type S10Deps } from "./s10-config.js";
 import { behindSnapshot } from "./s10-writes.js";
 import { readOf, takenAll, toSnapshot } from "./s14-config.js";
@@ -32,6 +41,9 @@ export const STEP_187 = { "tone_curve.master": [0, 0, 64, 56, 128, 128, 192, 200
 /** The midtones lifted by 32 levels (S14's LIFT3): a bend Jim cannot miss. */
 export const LIFT3 = [0, 0, 128, 160, 255, 255];
 export const QUESTION = "In Develop > Tone Curve, click the Point Curve button (the second of the curve-type icons at the top of the panel). Does the curve show raised in the middle?";
+/** The raw profiles of the sweep, #187's photo's own last [handle: docs\reports\phase10\curve-probe.md "Purpose"]. */
+export const SWEEP_PROFILES = ["Adobe Color", "Adobe Standard", "Adobe Landscape"] as const;
+const PHOTO_PROFILE = "Adobe Landscape";
 const REFUSED = ["WRITE_NOT_TAKEN", "FEATURE_UNAVAILABLE"];
 const history = (what: string): string => `AVG curve probe ${what}`;
 
@@ -116,13 +128,18 @@ async function stepAndEnd(ctx: Ctx, manager: SessionManager, photo: Photo, out: 
   out["completed"] = true;
 }
 
-/** One write by uuid from the snapshot, and whether every key read back as written. */
-async function direct(ctx: Ctx, photo: Photo, out: Json, label: string, settings: Record<string, unknown>): Promise<Json> {
-  await toSnapshot(ctx, photo, out);
+/** One write by uuid, and whether every key read back as written. */
+async function writeOne(ctx: Ctx, photo: Photo, label: string, settings: Record<string, unknown>): Promise<Json> {
   const w: Json = { label, written: settings };
   const rb = await write(ctx, photo, settings, history(label), w);
   Object.assign(w, { read_back: readOf(settings, rb), name_read: rb?.["ToneCurveName2012"] ?? null, taken: takenAll(settings, rb) });
   return w;
+}
+
+/** One write by uuid from the snapshot. */
+async function direct(ctx: Ctx, photo: Photo, out: Json, label: string, settings: Record<string, unknown>): Promise<Json> {
+  await toSnapshot(ctx, photo, out);
+  return writeOne(ctx, photo, label, settings);
 }
 
 /** b. The curve straight through the bridge (the S14 path): alone, and with the step's vibrance. */
@@ -134,14 +151,72 @@ async function directWrites(ctx: Ctx, photo: Photo, out: Json): Promise<Json> {
   return { writes, completed: writes.every((w) => typeof w["taken"] === "boolean") };
 }
 
-/** c. The 3-point lift, and Jim's answer on the Point Curve view. */
-async function question(ctx: Ctx, photo: Photo, out: Json): Promise<Json> {
-  const w = await direct(ctx, photo, out, "lift", { ToneCurvePV2012: LIFT3 });
-  const q: Json = { id: "point_curve", question: QUESTION, write: w };
+/** A profile pair written through the params map; taken when Lightroom reads back that pinned pair. */
+async function profileWrite(ctx: Ctx, photo: Photo, name: string): Promise<Json> {
+  const profiles = ctx.deps.map.cameraProfiles();
+  const w: Json = { label: `profile ${name}` };
+  const rb = await write(ctx, photo, profiles.toSdk(name), history(`profile ${name}`), w);
+  const id = rb ? profiles.identify(rb[CAMERA_PROFILE_KEY], rb[PROFILE_KEYS[1] as string]) : null;
+  return Object.assign(w, { read_back: id, taken: id === null ? null : id.name === name });
+}
+
+/** From the snapshot: the profile, then the curve (not written when the profile write failed). */
+async function underProfile(ctx: Ctx, photo: Photo, out: Json, name: string, curve: number[], what: string): Promise<Json> {
+  await toSnapshot(ctx, photo, out);
+  const profile = await profileWrite(ctx, photo, name);
+  const w = profile["taken"] === null ? null : await writeOne(ctx, photo, `${what} under ${name}`, { ToneCurvePV2012: curve });
+  // The curve counts for this profile only when the profile itself was taken.
+  return { profile: name, profile_write: profile, curve: w, curve_taken: profile["taken"] === true ? ((w?.["taken"] as boolean | null | undefined) ?? null) : null };
+}
+
+/** The suggested reading of the sweep (a suggestion; the verdict is Jim's, rule 02). */
+export function sweepSuggestion(rows: ReadonlyArray<{ profile: string; curve_taken: boolean | null }>): string {
+  const own = rows.find((r) => r.profile === PHOTO_PROFILE)?.curve_taken;
+  if (rows.some((r) => r.curve_taken === true) && own === false) return "profile is the cause";
+  if (rows.every((r) => r.curve_taken === false)) return "photo is the cause";
+  return "mixed";
+}
+
+/** c. #187's curve under each raw profile of SWEEP_PROFILES. */
+async function profileSweep(ctx: Ctx, photo: Photo, out: Json): Promise<Json> {
+  const rows: Json[] = [];
+  for (const name of SWEEP_PROFILES) rows.push(await underProfile(ctx, photo, out, name, STEP_187["tone_curve.master"], "sweep curve"));
+  const suggestion = sweepSuggestion(rows as Array<{ profile: string; curve_taken: boolean | null }>);
+  const cell = (r: Json): string => `${String(r["profile"])} (profile taken ${String((r["profile_write"] as Json)["taken"])}) curve taken ${String((r["curve"] as Json | null)?.["taken"] ?? null)}`;
+  ctx.deps.say(`  c. profile sweep: ${rows.map(cell).join("; ")}`);
+  ctx.deps.say(`     suggestion (not a verdict): ${suggestion}`);
+  return { profiles: rows, photo_profile: PHOTO_PROFILE, suggestion, completed: rows.every((r) => typeof (r["curve"] as Json | null)?.["taken"] === "boolean") };
+}
+
+/** d. The 3-point lift under the first profile that took the curve, and Jim's answer on the Point Curve view. */
+async function question(ctx: Ctx, photo: Photo, out: Json, sweep: Json): Promise<Json> {
+  const q: Json = { id: "point_curve", question: QUESTION };
   (ctx.results["questions"] as Json[]).push(q);
-  q["answer"] = w["taken"] === null ? "not asked: the write failed" : await ctx.deps.ask(QUESTION);
-  ctx.deps.say(`  c. lift taken ${String(w["taken"])}; Point Curve raised: ${String(q["answer"])}`);
-  return { ...q, completed: w["taken"] !== null };
+  const first = (sweep["profiles"] as Json[]).find((r) => r["curve_taken"] === true);
+  if (!first) {
+    q["answer"] = "not asked: no profile took the curve, so the panel has no taken curve to show";
+    ctx.deps.say(`  d. Point Curve question ${String(q["answer"])}`);
+    return { ...q, completed: true };
+  }
+  const r = await underProfile(ctx, photo, out, String(first["profile"]), LIFT3, "lift");
+  const taken = r["curve_taken"];
+  Object.assign(q, { profile: first["profile"], profile_write: r["profile_write"], write: r["curve"] });
+  q["answer"] = taken === true ? await ctx.deps.ask(QUESTION) : `not asked: the lift under ${String(first["profile"])} read back ${taken === false ? "not taken" : "nothing (a write failed)"}`;
+  ctx.deps.say(`  d. lift under ${String(first["profile"])} taken ${String(taken)}; Point Curve raised: ${String(q["answer"])}`);
+  return { ...q, completed: taken !== null };
+}
+
+/** The photo's settings before any write, in the S5 dump's layout ({ meta, settings }), and its keys against the raw pin. */
+function saveSettings(ctx: Ctx, photo: Photo): Json {
+  const { dumpDir, now, say } = ctx.deps;
+  mkdirSync(dumpDir, { recursive: true });
+  const file = path.join(dumpDir, dumpName(photo).replace(/^s10_/, "curve_probe_settings_"));
+  // No meta.spike: the dump is read for comparison, never pinned, so it need not pass s5DumpSchema.
+  const meta = { check: "curve-probe", ...summary(photo), captured_at: (now ?? (() => new Date()))().toISOString() };
+  writeFileSync(file, `${JSON.stringify({ meta, settings: photo.start }, null, 2)}\n`);
+  const out = { file: path.basename(file), key_count: photo.key_count, not_in_raw_pin: photo.extra_keys, pinned_not_in_photo: photo.missing_pinned_keys };
+  say(`  settings saved: ${out.file}; ${photo.key_count} keys, ${photo.extra_keys.length} not in the raw pin, ${photo.missing_pinned_keys.length} pinned keys absent`);
+  return out;
 }
 
 export async function runCurveProbe(deps: CurveDeps): Promise<{ worked: boolean; results: Json }> {
@@ -151,15 +226,17 @@ export async function runCurveProbe(deps: CurveDeps): Promise<{ worked: boolean;
     errors.push(m);
     deps.say(`FAILED: ${m}`);
   } };
-  deps.say("LrC-AVG curve probe (issue #187): the session step, the direct write, the Point Curve view");
+  deps.say("LrC-AVG curve probe (issue #187): the session step, the direct write, the profile sweep, the Point Curve view");
   if (!(await connect(ctx))) return finish(ctx, null);
   let out: Json | null = null;
   try {
     const photo = await selectedPhoto(ctx);
+    results["settings_dump"] = saveSettings(ctx, photo);
     out = await behindSnapshot(ctx, photo, `AVG curve probe before ${deps.stamp}`, async (o) => {
       o["session_step"] = await sessionStep(ctx, photo);
       o["direct"] = await directWrites(ctx, photo, o);
-      o["point_curve"] = await question(ctx, photo, o);
+      o["profile_sweep"] = await profileSweep(ctx, photo, o);
+      o["point_curve"] = await question(ctx, photo, o, o["profile_sweep"] as Json);
     });
   } catch (err) {
     ctx.fail(`the probe stopped: ${describeError(err)}`);
@@ -171,7 +248,7 @@ export async function runCurveProbe(deps: CurveDeps): Promise<{ worked: boolean;
 /** WORKED: no error, every part completed, the photo put back. */
 function finish(ctx: Ctx, out: Json | null): { worked: boolean; results: Json } {
   const putBack = (out?.["put_back"] as Json | null | undefined)?.["ok"] === true;
-  const parts = ["session_step", "direct", "point_curve"].map((k) => (out?.[k] as Json | undefined)?.["completed"] === true);
+  const parts = ["session_step", "direct", "profile_sweep", "point_curve"].map((k) => (out?.[k] as Json | undefined)?.["completed"] === true);
   const worked = ctx.errors.length === 0 && putBack && parts.every(Boolean);
   Object.assign(ctx.results, { photo: out, headline: worked ? "WORKED" : "FAILED", finished_at: (ctx.deps.now ?? (() => new Date()))().toISOString() });
   ctx.deps.say("");

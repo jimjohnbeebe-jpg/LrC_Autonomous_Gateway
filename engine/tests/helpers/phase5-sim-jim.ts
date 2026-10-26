@@ -2,7 +2,7 @@
 // would on the window's:
 //   - the Plug-in Manager visit: Lightroom stops answering pings for 1.8 s (Plug-in Manager paused the
 //     plugin in Lightroom [handle: vault PHASE5_PLAN.md row 3 "Probe done"]); "set Mode to ..." sets the
-//     page's mode, as Jim does in the "Sessions" box;
+//     page's mode and "Max passes per photo" to n its passes, as Jim does in the "Sessions" box;
 //   - "click Abort / Approve / Pick / Accept in the HUD" and the menu items: the HUD's event with its
 //     "sent" line (phase5-harness.ts click), Approve after 1.1 s ("wait about 10 seconds");
 //   - "click <photo> (the original": the photo selected, under that file name;
@@ -34,6 +34,8 @@ export function jimSays(line: string): void {
   }
   const mode = /set Mode to "(Approve each pass|Autonomous)"/.exec(line);
   if (mode && !(h.sim.pageUnchanged && mode[1] === "Approve each pass") && h.lr.prefs) h.lr.prefs["mode"] = mode[1] === "Autonomous" ? "autonomous" : "approve_each_pass";
+  const passes = /"Max passes per photo" to (\d+)/.exec(line);
+  if (passes && h.lr.prefs) h.lr.prefs["max_passes"] = Number(passes[1]);
   if (/^ {2}Now click Abort in the HUD\./.test(line)) unless("abort-a", () => later(20, () => click("hud_abort")));
   if (/then click "Approve pass 1" in the HUD/.test(line)) unless("approve", () => later(1100, () => click("hud_approve_pass", { pass: 1 })));
   if (/This time click Abort in the HUD/.test(line)) unless("abort-wait", () => later(50, () => click("hud_abort")));

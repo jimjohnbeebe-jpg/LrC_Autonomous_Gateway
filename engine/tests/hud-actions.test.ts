@@ -17,7 +17,7 @@ const step = (rig: Rig, settings: Record<string, unknown> = { exposure: 0.1 }, t
 
 /** A Variants session whose copies have each had their refined pass. */
 async function awaitingPick(rig: Rig): Promise<void> {
-  await rig.manager.begin({ intent_id: "test_variants", mode: "variants" });
+  await rig.manager.begin({ max_passes: 4, intent_id: "test_variants", mode: "variants" });
   for (const t of ["A", "B", "C"] as const) await step(rig, { exposure: 0.1 }, t);
   await hudAt("awaiting_pick");
 }
@@ -26,7 +26,7 @@ describe("Accept from the HUD", () => {
   it("keeps the edit, writes the recipe, and ends the session", async () => {
     clean();
     const rig = hudRig();
-    await rig.manager.begin({ intent_id: "test_plain" });
+    await rig.manager.begin({ max_passes: 4, intent_id: "test_plain" });
     await step(rig, { exposure: 0.2 });
     const click = hudEvent(plugin, "hud_accept", { session_id: ID });
     expect((await hudAt("accepted")).note).toBe("Accepted: the edit is kept.");
@@ -41,7 +41,7 @@ describe("Accept from the HUD", () => {
   it("during a step waits for it: the step's result reaches Claude, then the session ends", async () => {
     clean();
     const rig = hudRig();
-    await rig.manager.begin({ intent_id: "test_plain" });
+    await rig.manager.begin({ max_passes: 4, intent_id: "test_plain" });
     const apply = plugin.handlers.get("apply_settings");
     let release = (): void => {};
     const held = new Promise<void>((resolve) => (release = resolve));

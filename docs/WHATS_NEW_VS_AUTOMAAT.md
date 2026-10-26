@@ -23,7 +23,7 @@ LrC-AVG keeps the idea of connecting Claude to Lightroom, and adds an **editing 
 
 ### 1. Claude edits in rounds and looks at the result
 
-The original has Claude set sliders directly, with no way to see the outcome. In LrC-AVG, Claude edits in short rounds (up to 4 by default, 1–8 in settings). Before each round it looks at a fresh preview of your photo and at measurements of it, then decides what to change next. The first round, "pass 0", sets the camera profile and lens corrections.
+The original has Claude set sliders directly, with no way to see the outcome. In LrC-AVG, Claude edits in short rounds (up to 8 by default, 1–16 in settings). Before each round it looks at a fresh preview of your photo and at measurements of it, then decides what to change next. The first round, "pass 0", sets the camera profile and lens corrections.
 
 ### 2. Guardrails keep the edit in bounds
 

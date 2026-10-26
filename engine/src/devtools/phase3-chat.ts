@@ -78,7 +78,7 @@ export async function runChat(deps: Phase3Deps, results: Json, errors: string[],
     errors.push("input ended before the chat was done");
     return { ok: false, putBack: false, ac4: null };
   }
-  const steps = await ask("3. While Claude worked, did steps named like \"AVG ... pass 1/4\" appear in the History panel?");
+  const steps = await ask("3. While Claude worked, did steps named like \"AVG ... pass 1/n\" (n the session's pass cap) appear in the History panel?");
   const sliders = await ask("4. Are Claude's changes visible on the Develop sliders (for example Exposure or Highlights in the Basic panel)?");
   const look = await ask("5. Does the result look like a sensible golden-hour landscape edit to you?");
   results["jim_part2"] = { history_steps_seen: steps, settings_on_sliders: sliders, looks_golden_hour: look };

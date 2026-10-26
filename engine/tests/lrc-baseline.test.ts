@@ -72,7 +72,7 @@ describe("Lightroom notices in the results", () => {
     await lightroom("16.0");
     clean();
     const rig = hudRig();
-    await rig.manager.begin({ intent_id: "test_plain" });
+    await rig.manager.begin({ max_passes: 4, intent_id: "test_plain" });
     const [notice] = lightroomNotices("16.0");
     expect(readLog().lightroom).toEqual({ lrc_version: "16.0", sdk_declared: 13, notices: [notice] });
     expect((await hudAt("awaiting_claude")).note).toBe(notice);
@@ -85,7 +85,7 @@ describe("Lightroom notices in the results", () => {
   it("shows no HUD line and logs no notice within the tested versions", async () => {
     clean();
     const rig = hudRig();
-    await rig.manager.begin({ intent_id: "test_plain" });
+    await rig.manager.begin({ max_passes: 4, intent_id: "test_plain" });
     expect(readLog().lightroom?.notices).toEqual([]);
     expect((await hudAt("awaiting_claude")).note).toBeUndefined();
   });
@@ -157,7 +157,7 @@ describe("FEATURE_UNAVAILABLE", () => {
 
   it("keeps the session open after a slider Lightroom no longer reports; the step's other values are undone (issue #187)", async () => {
     clean();
-    await manager.begin({ intent_id: "test_plain" });
+    await manager.begin({ max_passes: 4, intent_id: "test_plain" });
     dropFromReadBack("Clarity2012");
     const e = await fails(manager.step({ session_id: ID, settings: { clarity: 10, shadows: 10 }, rationale: "r" }));
     expect(e.body()).toMatchObject({ code: "FEATURE_UNAVAILABLE", recoverable: true, details: { feature: "Clarity", lrc_version: "15.5.1", plugin_version: PLUGIN_VERSION, session_id: ID, undone: true } });

@@ -32,7 +32,7 @@ Prefs.LOCK_PORT = 8767
 -- ports Windows does not reserve for system services [inference].
 Prefs.SPECS = {
     { key = "mode", wire = "mode", kind = "choice", default = "autonomous", choices = { "autonomous", "approve_each_pass" } },
-    { key = "maxPasses", wire = "max_passes", kind = "int", default = 4, min = 1, max = 8 },
+    { key = "maxPasses", wire = "max_passes", kind = "int", default = 8, min = 1, max = 16 },
     { key = "variantCount", wire = "variant_count", kind = "int", default = 3, min = 2, max = 3 },
     { key = "previewLongEdge", wire = "long_edge", kind = "int", default = 1600, min = 800, max = 1920 },
     { key = "previewQuality", wire = "quality", kind = "int", default = 75, min = 60, max = 90 },

@@ -107,7 +107,7 @@ What happens next:
 - The engine saves a Develop snapshot of the photo, named **AVG pre-session …**. Aborting goes back to it.
 - The **HUD**, a small floating window, opens in Lightroom and follows the session ([below](#the-hud)).
 - **Your words come first.** Claude starts from an intent (a set of starting values, below) only when one fits what you asked for, and leaves it when you ask for something else; with no intent, pass 0 changes nothing but clipping.
-- **Pass 0** sets the intent's camera profile, lens corrections and starting values. Claude then makes up to 4 more passes (the **Max passes** setting). Before each pass it looks at a fresh render and the engine's measurements. Each pass is one History step, named **AVG \<id\> pass n/N**.
+- **Pass 0** sets the intent's camera profile, lens corrections and starting values. Claude then makes up to 8 more passes (the **Max passes** setting). Before each pass it looks at a fresh render and the engine's measurements. Each pass is one History step, named **AVG \<id\> pass n/N**.
 - The engine caps how far each slider moves per pass, and keeps clipping within limits: by default at most 0.5 % of pixels blown out and 1.0 % crushed to black. Blown out means two or more colour channels at the top; a saturated colour with one channel at the top (bright orange leaves, a red sign) is not corrected, and Claude is told which channel it is.
 - The session ends when Claude accepts the edit, or when you click **Accept** or **Abort** in the HUD.
 
@@ -154,7 +154,7 @@ From top to bottom it shows:
 - **A feedback line:** what your last click did (for example "Accept sent; waiting for \<AI\>."), or the plugin's latest note.
 - **Photo:** the file name (and copy name).
 - **Camera:** ISO, shutter speed, aperture, lens and lens-profile status.
-- **Step:** what is happening, for example Setting profile, lens corrections and baseline; Applying pass 2 of 4; Rendering a preview; Measuring the preview; \<AI\> is looking at the result; Waiting for your pick; Waiting for your approval; \<AI\> thinks the edit is done; Accepted; Aborted. From pass 1 on, the label is followed by the pass, for example "(pass 2 of 4)".
+- **Step:** what is happening, for example Setting profile, lens corrections and baseline; Applying pass 2 of 8; Rendering a preview; Measuring the preview; \<AI\> is looking at the result; Waiting for your pick; Waiting for your approval; \<AI\> thinks the edit is done; Accepted; Aborted. From pass 1 on, the label is followed by the pass, for example "(pass 2 of 8)".
 - **The selection line:** **Selection: the edit's photo.**, or **Target changed: …** if you select a different photo during the edit.
 - **Changes in the latest pass:** a grid with the slider, before, after and change, up to 12 rows. Sliders carry the names Lightroom's Develop panel shows, such as Orange Saturation.
 - **The clipping sentence:** **Clipping: within limits.**, or one sentence saying what the guardrails did, for example that a pass was undone, a clipping was corrected, or a slider was held back.
@@ -198,7 +198,7 @@ There are no keyboard shortcuts.
 | Setting | Default | Allowed |
 |---|---|---|
 | Mode | Autonomous | Autonomous, Approve each pass |
-| Max passes per photo | 4 | 1-8, not counting pass 0 |
+| Max passes per photo | 8 | 1-16, not counting pass 0 |
 | Variant count | 3 | 2-3 copies in Variants mode |
 | Step decay per pass | 1.0, 0.6, 0.4, 0.25 | 1 to 8 numbers, each above 0 and at most 1: the share of each slider's per-pass maximum that pass 1, 2, 3, … may use |
 | Highlight clipping, % of pixels | 0.5 | 0-100; pixels at 253 or above |
@@ -357,6 +357,7 @@ The evidence behind the behaviour this page describes. Paths are in this reposit
 | What else you can ask | A photo seen by id without selecting it (engine 1.1.0) | [handle: `engine/src/mcp/tools-context.ts` `renderPhoto`; `engine/tests/preview-by-uuid.test.ts`, against the simulated plugin]; on an original in Lightroom [unverified] until `npm run denoise:check` (S7 showed virtual copies only, `Develop.lua` `target`) |
 | What else you can ask | AI Denoise: LrC 15, Develop and the selection put back, a snapshot per changed photo, about 10 s a photo (engine and plugin 1.1.0) | [handle: `plugin/LrC-AVG.lrplugin/Denoise.lua`; `engine/src/mcp/tools-denoise.ts`; `engine/tests/catalog-denoise.test.ts`, against a fake plugin]; the calls and the time [upstream claim: Automaat PR #288]; in Lightroom [unverified] until `npm run denoise:check` (`docs/reports/phase9/upstream-ports.md`) |
 | What else you can ask, Known limitations | Colour range, depth range and brush masks: whole-mask edits only, one colour sample, no erase, depth on photos with depth data (engine 1.1.0) | [handle: `engine/src/params/mask-range.ts`, `mask-brush.ts`; `engine/tests/params-mask-kinds.test.ts` (the same fields as Jim's hand-made Color Range 1 and Brush 1, `docs/reports/phase8.5/mask-carry/`)]; one sample and no erase [upstream claim: Automaat PRs #324, #326]; the depth range's form [upstream claim: Automaat PR #334]; in Lightroom [unverified] until `npm run masks:kinds` |
+| Your first session, Settings | Max passes 8 by default, 1-16 (engine and plugin 1.2.0) | [stated: Jim, 2026-10-25, vault `PHASE10_PLAN.md` row 3, decision Q3]; [handle: `engine/src/session/rules.ts` `SESSION_DEFAULTS`; `engine/src/settings/page.ts` and `plugin/LrC-AVG.lrplugin/Prefs.lua` `maxPasses`; `engine/tests/session-pass-budget.test.ts`]; the Deck shows its pass dots up to 8 passes only [handle: `hud/ui/glyphs.ts`] |
 | Known limitations | Masks: the two-part forms, sky standing for every AI kind, hand-made brush and colour masks kept | [handle: `engine/src/params/mask-combine.ts` `VERIFIED_FORMS`, `listed`; `docs/reports/phase8.5/mask-combine.md` "Numbers" (10 of 10 verified); `docs/reports/phase8.5/mask-carry.md` "Observed" (Add, Subtract, Intersect, Brush, Color read back beside a new radial)]; every AI kind beyond sky [stated: Jim, 2026-10-12, "Every AI kind, same modes"; unprobed] |
 | Supported formats | The two pipelines, read from the photo's settings, not its file name; a `.dng` either | [handle: `engine/src/params/pipeline.ts:1-46`; `docs/reports/phase8/S10.md` "Pre-run findings" item 1] |
 | Supported formats | White balance Kelvin on raw, relative -100 to +100 on rendered; Color and Monochrome on rendered; one profile of each per intent | [handle: `engine/src/params/canonical.ts:65-70`; `engine/src/params/camera-profiles.lrc15.json`; `engine/src/intents/schema.ts`; `docs/reports/phase8/S10.md` "Numbers"] |

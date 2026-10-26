@@ -16,7 +16,7 @@ describe.each(PIPELINES)("lr_begin_session, the user's request first (%s pipelin
   it("begins without an intent: no profile, no priors, the request kept in the log", async () => {
     clean();
     const profileBefore = map.fromSdk(lr.settings).camera_profile.name;
-    const out = await manager.begin({ notes: "make it moody and cool" });
+    const out = await manager.begin({ max_passes: 4, notes: "make it moody and cool" });
     expect(out.json).toMatchObject({ ok: true, intent: { id: "none", source: "none" }, pass0_applied: [] });
     expect(lr.snapshots.size).toBe(1);
     expect(lr.history).toEqual([]);
@@ -26,14 +26,14 @@ describe.each(PIPELINES)("lr_begin_session, the user's request first (%s pipelin
 
   it("writes `profile` at pass 0, without an intent and in place of the intent's", async () => {
     clean();
-    await manager.begin({ profile: override });
+    await manager.begin({ max_passes: 4, profile: override });
     expect(lr.history).toEqual([`AVG ${SHORT} pass 0/4`]);
     expect(map.fromSdk(lr.settings).camera_profile.name).toBe(override);
   });
 
   it("keeps the intent's priors when `profile` replaces its profile", async () => {
     clean();
-    await manager.begin({ intent_id: "test_prior", profile: override });
+    await manager.begin({ max_passes: 4, intent_id: "test_prior", profile: override });
     expect(map.fromSdk(lr.settings).camera_profile.name).toBe(override);
     expect(lr.settings["Exposure2012"]).toBe(0.2);
   });
@@ -42,7 +42,7 @@ describe.each(PIPELINES)("lr_begin_session, the user's request first (%s pipelin
     clean();
     intent("test_colour", { profile: { raw: "Adobe Color", rendered: "Color" }, priors: { exposure: 0.2, vibrance: 10, "hsl.orange.sat": -20 } });
     const mono = pipeline === "raw" ? "Adobe Monochrome" : "Monochrome";
-    const out = await manager.begin({ intent_id: "test_colour", profile: mono });
+    const out = await manager.begin({ max_passes: 4, intent_id: "test_colour", profile: mono });
     expect(map.fromSdk(lr.settings).camera_profile.name).toBe(mono);
     const applied = (out.json["pass0_applied"] as Array<{ name: string }>).map((c) => c.name);
     expect(applied).toContain("exposure");
@@ -52,8 +52,8 @@ describe.each(PIPELINES)("lr_begin_session, the user's request first (%s pipelin
 
   it("refuses a profile of the other pipeline before the snapshot, and Variants mode without an intent", async () => {
     clean();
-    expect((await fails(manager.begin({ profile: other }))).code).toBe("WRONG_PIPELINE");
-    expect((await fails(manager.begin({ mode: "variants" }))).code).toBe("INVALID_ARGUMENTS");
+    expect((await fails(manager.begin({ max_passes: 4, profile: other }))).code).toBe("WRONG_PIPELINE");
+    expect((await fails(manager.begin({ max_passes: 4, mode: "variants" }))).code).toBe("INVALID_ARGUMENTS");
     expect(lr.snapshots.size).toBe(0);
     expect(lr.history).toEqual([]);
   });
@@ -61,7 +61,7 @@ describe.each(PIPELINES)("lr_begin_session, the user's request first (%s pipelin
   it.runIf(pipeline === "raw")("takes Adobe Landscape when Lightroom leaves the Look's empty PointColors out", async () => {
     clean();
     lr.dropEmptyPointColors = true;
-    const out = await manager.begin({ profile: "Adobe Landscape" });
+    const out = await manager.begin({ max_passes: 4, profile: "Adobe Landscape" });
     expect(out.json["ok"]).toBe(true);
     expect((lr.settings["Look"] as { Parameters: Record<string, unknown> }).Parameters).not.toHaveProperty("PointColors");
     expect(map.fromSdk(lr.settings).camera_profile.name).toBe("Adobe Landscape");

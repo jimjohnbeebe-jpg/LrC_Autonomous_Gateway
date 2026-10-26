@@ -12,8 +12,8 @@
  */
 export const SESSION_DEFAULTS = {
   approval: "autonomous",
-  maxPasses: 4,
-  maxPassesLimit: 8,
+  maxPasses: 8,
+  maxPassesLimit: 16,
   variantCount: 3,
   clipHighPct: 0.5,
   clipLowPct: 1.0,

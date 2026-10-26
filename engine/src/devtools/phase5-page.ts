@@ -1,8 +1,9 @@
 // The settings page in the Phase 5 check (PHASE5_PLAN row 7: "a setting changed on the page reaches
 // the engine"). The check reads the page as the engine does (get_prefs through settings\PageSettings)
 // and, when it is not as a part needs it, gives Jim the steps to set it and reads again:
-//   - at the start: Mode "Autonomous" and 4 passes, the defaults [handle: engine\src\settings\page.ts
-//     PAGE_SPECS], so session A runs autonomous and the chats hold to AC-1's "≤ 4 passes";
+//   - at the start: Mode "Autonomous" and 4 passes (the page's defaults until engine 1.2.0, now 8
+//     [handle: engine\src\settings\page.ts PAGE_SPECS]), so session A runs autonomous and the chats
+//     hold to AC-1's "≤ 4 passes";
 //   - during session A, Jim sets Mode to "Approve each pass" (phase5-pause.ts); session B's begin
 //     must then report the mode as the page's (phase5-approve.ts);
 //   - before the six chats, Mode back to "Autonomous".
@@ -14,7 +15,7 @@ import { ROUNDS, type Json, type Phase5Deps, type Run } from "./phase5-config.js
 
 export type Mode = PageValues["mode"];
 export const MODE_TITLE: Record<Mode, string> = { autonomous: "Autonomous", approve_each_pass: "Approve each pass" };
-/** AC-1: "≤ 4 passes" (PRD section 10); the page's default. */
+/** AC-1: "≤ 4 passes" (PRD section 10); the page's default until engine 1.2.0 (now 8). */
 export const PASSES = 4;
 
 /** Jim's steps to set the page's Mode (and the passes back to 4), ending with Enter in this window. */

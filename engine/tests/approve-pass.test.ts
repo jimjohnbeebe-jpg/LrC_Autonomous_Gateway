@@ -26,7 +26,7 @@ describe("approve_each_pass: Converge mode", () => {
     clean();
     approveMode();
     const m = newManager({ approvalWaitMs: 150 });
-    await m.begin({ intent_id: "test_plain", return_image: "none" });
+    await m.begin({ max_passes: 4, intent_id: "test_plain", return_image: "none" });
     const first = await step(m);
     expect(first.json).toMatchObject({ pass: "1/4" });
     expect(first.json["approval"]).toBeUndefined();
@@ -47,7 +47,7 @@ describe("approve_each_pass: Converge mode", () => {
     clean();
     approveMode();
     const m = newManager({ approvalWaitMs: 150 });
-    await m.begin({ intent_id: "test_plain", return_image: "none" });
+    await m.begin({ max_passes: 4, intent_id: "test_plain", return_image: "none" });
     await step(m);
     const ok = await approve(m);
     expect(ok.json).toEqual({ ok: true, session_id: ID, approved_pass: 1, next: "Call lr_step for the next pass." });
@@ -64,7 +64,7 @@ describe("approve_each_pass: Converge mode", () => {
     clean();
     approveMode();
     const m = newManager({ approvalWaitMs: 20000 });
-    await m.begin({ intent_id: "test_plain", return_image: "none" });
+    await m.begin({ max_passes: 4, intent_id: "test_plain", return_image: "none" });
     await step(m);
     const sent = commands().length;
     const started = performance.now();
@@ -83,7 +83,7 @@ describe("approve_each_pass: Converge mode", () => {
     clean();
     approveMode();
     const m = newManager({ approvalWaitMs: 20000 });
-    await m.begin({ intent_id: "test_plain", return_image: "none" });
+    await m.begin({ max_passes: 4, intent_id: "test_plain", return_image: "none" });
     await step(m);
     const started = performance.now();
     const e = await fails(step(m, { exposur: 0.1 }));
@@ -95,7 +95,7 @@ describe("approve_each_pass: Converge mode", () => {
     clean();
     approveMode();
     const m = newManager({ approvalWaitMs: 150 });
-    await m.begin({ intent_id: "test_plain", return_image: "none" });
+    await m.begin({ max_passes: 4, intent_id: "test_plain", return_image: "none" });
     await step(m);
     await approve(m);
     const apply = plugin.handlers.get("apply_settings");
@@ -128,7 +128,7 @@ describe("approve_each_pass: Converge mode", () => {
     clean();
     approveMode();
     const m = newManager({ approvalWaitMs: 150 });
-    await m.begin({ intent_id: "test_plain", return_image: "none" });
+    await m.begin({ max_passes: 4, intent_id: "test_plain", return_image: "none" });
     expect((await step(m, { exposure: 0.02 })).json).toMatchObject({ pass: "1/4", converged_by_metrics: true });
     expect((await approve(m)).json).toMatchObject({ approved_pass: 1 });
     expect(await fails(step(m, { exposure: 0.1 }))).toMatchObject({ code: "CONVERGED" });
@@ -137,7 +137,7 @@ describe("approve_each_pass: Converge mode", () => {
   it("autonomous mode (the default): no wait, no approval, and lr_approve_pass is refused", async () => {
     clean();
     const m = newManager({ approvalWaitMs: 20000 });
-    await m.begin({ intent_id: "test_plain", return_image: "none" });
+    await m.begin({ max_passes: 4, intent_id: "test_plain", return_image: "none" });
     await step(m);
     const out = await step(m, { exposure: -0.1 });
     expect(out.json).toMatchObject({ pass: "2/4" });
@@ -152,7 +152,7 @@ describe("approve_each_pass: Variants mode", () => {
     clean();
     approveMode();
     const m = newManager({ approvalWaitMs: 150 });
-    await m.begin({ intent_id: "test_variants", mode: "variants", return_image: "none" });
+    await m.begin({ max_passes: 4, intent_id: "test_variants", mode: "variants", return_image: "none" });
     await stepCopy(m, "A");
     await stepCopy(m, "B");
     await stepCopy(m, "C");
@@ -168,7 +168,7 @@ describe("approve_each_pass: Variants mode", () => {
     clean();
     approveMode();
     const m = newManager({ approvalWaitMs: 150 });
-    await m.begin({ intent_id: "test_variants", mode: "variants", return_image: "none" });
+    await m.begin({ max_passes: 4, intent_id: "test_variants", mode: "variants", return_image: "none" });
     await m.selectVariant({ session_id: ID, variant: "A" });
     expect(readLog().approvals).toBeUndefined();
     expect((await step(m, { exposure: 0.1 })).json).toMatchObject({ target: "A", pass: "1/4" });

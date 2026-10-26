@@ -21,7 +21,7 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
     beforeEach(() => clean());
 
     it("adds each change, capped at the base maximum x decay, as one named History step per pass", async () => {
-      await manager.begin({ intent_id: "test_plain" });
+      await manager.begin({ max_passes: 4, intent_id: "test_plain" });
       const one = await manager.step({ session_id: ID, settings: { shadows: 100 }, rationale: "open the shadows" });
       expect(one.json).toMatchObject({ pass: "1/4", applied: [{ name: "shadows", before: 0, after: 60, delta: 60 }], clamped: [expect.objectContaining({ name: "shadows", applied: 60 })] });
       const two = await manager.step({ session_id: ID, settings: { shadows: -100 }, rationale: "too much" });
@@ -32,7 +32,7 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
 
     it("refuses a change that pushes into a limit already reached, and writes nothing when all are refused", async () => {
       lr.settings["Exposure2012"] = -0.5; // no pixel near 253, JPEG artefacts included, so 0 % is reached, not exceeded
-      await manager.begin({ intent_id: "test_plain", guardrails: { clip_high_pct: 0 } });
+      await manager.begin({ max_passes: 4, intent_id: "test_plain", guardrails: { clip_high_pct: 0 } });
       const steps = lr.history.length; // pass 0 may lift the (now crushed) dark end first
       const e = await fails(manager.step({ session_id: ID, settings: { exposure: 0.3 }, rationale: "brighter" }));
       expect(e.code).toBe("GUARDRAIL_REFUSED");
@@ -43,14 +43,14 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
 
     it("answers NO_CHANGE, not GUARDRAIL_REFUSED, when only a slider's own limits leave nothing to do", async () => {
       lr.settings["Highlights2012"] = -100;
-      await manager.begin({ intent_id: "test_plain" });
+      await manager.begin({ max_passes: 4, intent_id: "test_plain" });
       const e = await fails(manager.step({ session_id: ID, settings: { highlights: -10 }, rationale: "darker highlights" }));
       expect(e.code).toBe("NO_CHANGE");
       expect(e.message).toMatch(/no change is left/);
     });
 
     it("pulls back the slider that broke a limit: half, then all (the actual guardrail)", async () => {
-      await manager.begin({ intent_id: "test_plain" });
+      await manager.begin({ max_passes: 4, intent_id: "test_plain" });
       const out = await manager.step({ session_id: ID, settings: { exposure: 1 }, rationale: "much brighter" });
       expect(lr.history).toEqual([`AVG ${SHORT} pass 1/4`, `AVG ${SHORT} pass 1/4 guard 1`, `AVG ${SHORT} pass 1/4 guard 2`]);
       const actions = out.json["guardrail_actions"] as Array<{ kind: string; changes: Record<string, number> }>;
@@ -65,7 +65,7 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
 
     it("leaves one-channel clipping alone and says so in an advisory: no correction, no revert (issue #186)", async () => {
       lr.settings["Whites2012"] = -10; // bright, but within the limits
-      await manager.begin({ intent_id: "test_plain" });
+      await manager.begin({ max_passes: 4, intent_id: "test_plain" });
       // Warming clips the red channel alone in the tonal model: saturated colour, not blown tone.
       const out = await manager.step({ session_id: ID, settings: { temperature: wb(pipeline).step(1500) }, rationale: "much warmer" });
       expect(lr.history).toEqual([`AVG ${SHORT} pass 1/4`]);
@@ -82,7 +82,7 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
 
     it("does not undo a step when the photo was already over the limit before it", async () => {
       lr.settings["Exposure2012"] = -5; // neither pass 0 nor the step can lift it under the shadow limit
-      await manager.begin({ intent_id: "test_plain" });
+      await manager.begin({ max_passes: 4, intent_id: "test_plain" });
       const out = await manager.step({ session_id: ID, settings: { temperature: wb(pipeline).step(500) }, rationale: "warmer" });
       const actions = out.json["guardrail_actions"] as Array<{ kind: string; limit: string }>;
       expect(actions.map((a) => [a.kind, a.limit]).at(-1)).toEqual(["unmet", "clip_low"]);
@@ -91,7 +91,7 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
     });
 
     it("reports converged_by_metrics after a step too small to move the metrics, then refuses further steps", async () => {
-      await manager.begin({ intent_id: "test_plain" });
+      await manager.begin({ max_passes: 4, intent_id: "test_plain" });
       const out = await manager.step({ session_id: ID, settings: { exposure: 0.02 }, rationale: "a touch" });
       expect(out.json).toMatchObject({ converged_by_metrics: true, passes_left: 0 });
       expect((await fails(manager.step({ session_id: ID, settings: { exposure: 0.02 }, rationale: "again" }))).code).toBe("CONVERGED");
@@ -104,7 +104,7 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
     });
 
     it("writes nothing when another photo is selected, and keeps the session open (PRD 6.13)", async () => {
-      await manager.begin({ intent_id: "test_plain" });
+      await manager.begin({ max_passes: 4, intent_id: "test_plain" });
       lr.selected = "OTHER-UUID";
       const e = await fails(manager.step({ session_id: ID, settings: { shadows: 20 }, rationale: "r" }));
       expect(e).toMatchObject({ code: "TARGET_CHANGED", recoverable: true });
@@ -114,7 +114,7 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
     });
 
     it("refuses unknown names before writing, and reports a value Lightroom did not take", async () => {
-      await manager.begin({ intent_id: "test_plain" });
+      await manager.begin({ max_passes: 4, intent_id: "test_plain" });
       expect((await fails(manager.step({ session_id: ID, settings: { exposur: 0.2 }, rationale: "r" }))).code).toBe("UNKNOWN_PARAMETER");
       expect(lr.history).toEqual([]);
       lr.ignored.add("Shadows2012");
@@ -125,7 +125,7 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
     });
 
     it("returns the previous and the new preview in one labelled image with before_after", async () => {
-      await manager.begin({ intent_id: "test_plain" });
+      await manager.begin({ max_passes: 4, intent_id: "test_plain" });
       const out = await manager.step({ session_id: ID, settings: { shadows: 20 }, rationale: "r", return_image: "before_after" });
       const meta = await sharp(out.image as Buffer).metadata();
       expect([meta.width, meta.height]).toEqual([1169, 2 * (18 + 779) + 4]);
@@ -134,7 +134,7 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
     });
 
     it("runs steps sent at the same time one after the other, each with its own pass number (Greptile, PR #23)", async () => {
-      await manager.begin({ intent_id: "test_plain" });
+      await manager.begin({ max_passes: 4, intent_id: "test_plain" });
       const [a, b] = await Promise.all([
         manager.step({ session_id: ID, settings: { shadows: 10 }, rationale: "one" }),
         manager.step({ session_id: ID, settings: { shadows: 10 }, rationale: "two" }),
@@ -146,7 +146,7 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
 
     it("renders again before a step when the photo was edited in Lightroom since the last render (Greptile, PR #23)", async () => {
       // clip_baseline: the refusal below guards an end already over before the step (issue #130).
-      await manager.begin({ intent_id: "test_plain", clip_baseline: true });
+      await manager.begin({ max_passes: 4, intent_id: "test_plain", clip_baseline: true });
       lr.settings["Exposure2012"] = 1; // Jim drags Exposure: the right end now clips
       const out = await manager.step({ session_id: ID, settings: { exposure: 0.3, shadows: 10 }, rationale: "r" });
       expect(out.json["metrics_refreshed"]).toMatch(/rendered again/);
@@ -171,7 +171,7 @@ describe.each(PIPELINES)("%s pipeline", (pipeline) => {
         engineVersion: "test",
         newId: () => ids.shift() ?? "ffffffff-0000-0000-0000-000000000000",
       });
-      const out = await other.begin({ intent_id: "test_plain" });
+      const out = await other.begin({ max_passes: 4, intent_id: "test_plain" });
       expect(out.json["session_id"]).toBe("123456ab-0000-0000-0000-000000000000");
       expect(readFileSync(logFile(), "utf8")).toBe("{}");
     });

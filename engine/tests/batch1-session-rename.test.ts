@@ -42,7 +42,7 @@ describe("lr_edit_mask with only a new name", () => {
 
   it("leaves the last render standing: the next step does not render again first", async () => {
     clean();
-    await manager.begin({ intent_id: "test_plain", return_image: "none" });
+    await manager.begin({ max_passes: 4, intent_id: "test_plain", return_image: "none" });
     const id = ((await manager.createMask({ ...pass, ...LINEAR, name: "a" })).json["mask"] as { id: string }).id;
     await manager.editMask({ ...pass, mask_id: id, name: "b" });
     const before = renders();
@@ -53,7 +53,7 @@ describe("lr_edit_mask with only a new name", () => {
 
   it("a name with another change is still a pass", async () => {
     clean();
-    await manager.begin({ intent_id: "test_plain", return_image: "none" });
+    await manager.begin({ max_passes: 4, intent_id: "test_plain", return_image: "none" });
     const id = ((await manager.createMask({ ...pass, ...LINEAR, name: "a" })).json["mask"] as { id: string }).id;
     const out = await manager.editMask({ ...pass, mask_id: id, name: "b", inverted: true });
     expect(out.json).toMatchObject({ pass: "2/4", op: "edit", mask: { name: "b", inverted: true } });
@@ -64,7 +64,7 @@ describe("lr_edit_mask with only a new name", () => {
     clean();
     lr.prefs = { ...defaultSimPrefs(), mode: "approve_each_pass" };
     const m = newManager({ approvalWaitMs: 150 });
-    await m.begin({ intent_id: "test_plain", return_image: "none" });
+    await m.begin({ max_passes: 4, intent_id: "test_plain", return_image: "none" });
     const id = ((await m.createMask({ ...pass, ...LINEAR, name: "a" })).json["mask"] as { id: string }).id;
     expect((await m.editMask({ ...pass, mask_id: id, name: "b" })).json).toMatchObject({ pass: "1/4", pass_used: false });
   });
@@ -74,7 +74,7 @@ describe("SESSION_NOT_ACTIVE", () => {
   it("from a session tool: recoverable, naming the open session", async () => {
     clean();
     expect(await fails(manager.step({ session_id: "nope", settings: { shadows: 1 }, rationale: "r" }))).toMatchObject({ code: "SESSION_NOT_ACTIVE", recoverable: true, details: { session_id: "nope", open_session_id: null } });
-    await manager.begin({ intent_id: "test_plain", return_image: "none" });
+    await manager.begin({ max_passes: 4, intent_id: "test_plain", return_image: "none" });
     const err = await fails(manager.listMasks({ session_id: "nope" }));
     expect(err).toMatchObject({ code: "SESSION_NOT_ACTIVE", recoverable: true, details: { session_id: "nope", open_session_id: ID } });
     expect(err.message).toContain(ID);

@@ -13,7 +13,7 @@ import { SHORT, clean, client, fails, logDir, lr, manager, map, newManager, plug
 
 useSessionHarness();
 
-const begin = (extra: Record<string, unknown> = {}) => manager.begin({ intent_id: "test_variants", mode: "variants", ...extra });
+const begin = (extra: Record<string, unknown> = {}) => manager.begin({ max_passes: 4, intent_id: "test_variants", mode: "variants", ...extra });
 const ID = (): string => readLog().session_id;
 const sent = (name: string) => plugin.received.filter((r) => r.name === name);
 
@@ -24,7 +24,7 @@ describe("Variants mode: refused before anything is written", () => {
     const old = vi.spyOn(client, "hello").mockReturnValue(hello ? { ...hello, plugin_version: "0.2.0" } : null);
     expect(await fails(begin())).toMatchObject({ code: "PLUGIN_TOO_OLD", message: expect.stringMatching(/0\.3\.0 or later.*runs 0\.2\.0/) });
     old.mockRestore();
-    expect((await fails(manager.begin({ intent_id: "test_plain", mode: "variants" }))).message).toMatch(/has no variants/);
+    expect((await fails(manager.begin({ max_passes: 4, intent_id: "test_plain", mode: "variants" }))).message).toMatch(/has no variants/);
     expect((await fails(begin({ variant_count: 4 }))).message).toMatch(/variant_count must be 2-3/);
     expect(lr.snapshots.size).toBe(0);
     expect(sent("create_virtual_copies")).toEqual([]);
@@ -78,7 +78,7 @@ describe("Variants mode: create_virtual_copies fails", () => {
     clean();
     lr.copyFault = { kind: "silent" };
     const m = newManager({ copiesTimeoutMs: 300 });
-    const error = await fails(m.begin({ intent_id: "test_variants", mode: "variants" }));
+    const error = await fails(m.begin({ max_passes: 4, intent_id: "test_variants", mode: "variants" }));
     expect(error).toMatchObject({ code: "BRIDGE_TIMEOUT", recoverable: false });
     expect(error.message).toMatch(/within 0\.3 s\. It may still be making the copies named "AVG test_variants A", "AVG test_variants B", "AVG test_variants C"/);
     expect(error.details).toMatchObject({ names: ["AVG test_variants A", "AVG test_variants B", "AVG test_variants C"] });
@@ -145,7 +145,7 @@ describe("Variants mode: the context tools' target", () => {
   it("previews and measures a named copy, and says a copy is a session photo", async () => {
     clean();
     const t = tools();
-    const begun = await t.beginSession({ intent_id: "test_variants", mode: "variants", return_image: "none" });
+    const begun = await t.beginSession({ max_passes: 4, intent_id: "test_variants", mode: "variants", return_image: "none" });
     const id = begun.json["session_id"] as string;
     const preview = await t.getPreview({ session_id: id, target: "B", long_edge: 800 });
     expect(preview.json).toMatchObject({ target: "B", uuid: "SIM-COPY-2", width: 800 });
@@ -180,7 +180,7 @@ describe("Variants mode: the context tools' target", () => {
   it("runs a region preview of one copy and a step on another sent at the same time one after the other", async () => {
     clean();
     const t = tools();
-    const id = (await t.beginSession({ intent_id: "test_variants", mode: "variants", return_image: "none" })).json["session_id"] as string;
+    const id = (await t.beginSession({ max_passes: 4, intent_id: "test_variants", mode: "variants", return_image: "none" })).json["session_id"] as string;
     const [region, stepped] = await Promise.all([
       t.getPreview({ session_id: id, target: "A", region: { x: 0, y: 0, w: 0.5, h: 0.5 }, long_edge: 800 }),
       t.step({ session_id: id, target: "B", settings: { contrast: 5 }, rationale: "x", return_image: "none" }),

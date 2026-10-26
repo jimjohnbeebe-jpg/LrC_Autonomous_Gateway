@@ -130,10 +130,27 @@ describe("intents: the user folder", () => {
     expect(library.get("warm").intent).toMatchObject({ priors: { exposure: -0.5 }, priors_by_pipeline: { raw: { temperature: 300 }, rendered: { temperature: 10 } } });
   });
 
+  it("checks schema v3 set values: absolute within the range, white balance per pipeline, not also a prior, not in a v2 file", () => {
+    const v3 = (id: string, extra: Record<string, unknown>) => minimal(id, { schema_version: 3, ...extra });
+    writeUser("look.json", v3("look", { set: { exposure: 1.2, contrast: 15, "tone_curve.master": [0, 0, 128, 140, 255, 255] }, set_by_pipeline: { raw: { temperature: 5200 } } }));
+    writeUser("set_v2.json", minimal("set_v2", { set: { exposure: 1 } }));
+    writeUser("set_range.json", v3("set_range", { set: { contrast: 101 } }));
+    writeUser("set_wb.json", v3("set_wb", { set: { temperature: 5200 } }));
+    writeUser("set_prior.json", v3("set_prior", { set: { exposure: 1 }, priors: { exposure: 0.5 } }));
+    writeUser("set_twice.json", v3("set_twice", { set: { exposure: 1 }, set_by_pipeline: { rendered: { exposure: 0.5 } } }));
+    expect(library.get("look").intent).toMatchObject({ schema_version: 3, set: { exposure: 1.2, contrast: 15 }, set_by_pipeline: { raw: { temperature: 5200 } } });
+    const byFile = new Map(library.list().warnings.map((w) => [w.file, w.problem]));
+    expect(byFile.get("set_v2.json")).toMatch(/set and set_by_pipeline need schema_version 3/);
+    expect(byFile.get("set_range.json")).toMatch(/set.contrast: 101 is outside the range -100..100/);
+    expect(byFile.get("set_wb.json")).toMatch(/set.temperature: temperature goes in set_by_pipeline/);
+    expect(byFile.get("set_prior.json")).toMatch(/set.exposure: exposure is also a prior/);
+    expect(byFile.get("set_twice.json")).toMatch(/set_by_pipeline.rendered.exposure: exposure is also in set/);
+  });
+
   it("checks schema v2 per pipeline: the version, white balance per pipeline in its own unit, each profile on its pipeline, colour sliders under a monochrome one", () => {
     const { schema_version: _, ...v1 } = minimal("v1", { default_camera_profile: "Adobe Color" });
     writeUser("v1.json", v1);
-    writeUser("v3.json", minimal("v3", { schema_version: 3 }));
+    writeUser("v4.json", minimal("v4", { schema_version: 4 }));
     writeUser("wb_shared.json", minimal("wb_shared", { priors: { tint: 5 } }));
     writeUser("wb_rendered.json", minimal("wb_rendered", { priors_by_pipeline: { rendered: { temperature: 300 } } }));
     writeUser("twice.json", minimal("twice", { priors: { exposure: 0.1 }, priors_by_pipeline: { raw: { exposure: 0.2 } } }));
@@ -148,8 +165,8 @@ describe("intents: the user folder", () => {
       variants: { A: { label: "a", priors: {} }, B: { label: "b", priors: { temperature: 100 } }, C: { label: "c", priors: {}, priors_by_pipeline: { rendered: { tint: 5 } } } },
     }));
     const byFile = new Map(library.list().warnings.map((w) => [w.file, w.problem]));
-    expect(byFile.get("v1.json")).toMatch(/schema v1 intent.*ask Claude: "Rewrite this intent as schema v2 and save it over the old file\.".*replace: true.*"profile": {"raw"/);
-    expect(byFile.get("v3.json")).toMatch(/schema_version: 3 is not supported/);
+    expect(byFile.get("v1.json")).toMatch(/schema v1 intent.*ask Claude: "Rewrite this intent as schema v3 and save it over the old file\.".*replace: true.*"profile": {"raw"/);
+    expect(byFile.get("v4.json")).toMatch(/schema_version: 4 is not supported/);
     expect(byFile.get("wb_shared.json")).toMatch(/priors.tint: tint goes in priors_by_pipeline.*kelvin on raw, relative on rendered/);
     expect(byFile.get("wb_rendered.json")).toMatch(/priors_by_pipeline.rendered.temperature: an offset of 300 is larger than the whole range -100..100 on the rendered pipeline/);
     expect(byFile.get("twice.json")).toMatch(/priors_by_pipeline.raw.exposure: exposure is also in priors/);

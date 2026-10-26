@@ -1,4 +1,4 @@
-// Pass 0 on one photo (PRD 6.5): the intent's camera profile and priors, plus a variant's priors on
+// Pass 0 on one photo (PRD 6.5): the intent's camera profile, set values (schema v3) and priors, plus a variant's priors on
 // a copy (Variants mode, PRD 6.6 step 2), written as one History step; then, when the session's
 // clip_baseline is on (issue #130), the clipping baseline "until under" (guardrail.ts correct, n = 0)
 // [handle: tests\session-begin.test.ts, tests\session-clip-baseline.test.ts (the master),
@@ -7,7 +7,7 @@
 
 import type { GuardrailAction, PassEntry } from "../log/index.js";
 import { deltaMetrics, summarize, type MetricsDelta } from "../metrics/index.js";
-import { isColourParam, priorsFor, type PriorSet } from "../intents/index.js";
+import { isColourParam, priorsFor, setFor, type PriorSet } from "../intents/index.js";
 import { canonicalValuesEqual, type CanonicalSettings, type CanonicalValue, type FromSdkResult, type ParamMap, type Pipeline } from "../params/index.js";
 import { correct } from "./guardrail.js";
 import { historyName, render, write } from "./io.js";
@@ -33,7 +33,7 @@ export type Pass0 = {
 /**
  * Pass 0 on photo `t`, whose settings are `view`: render it as it is (or take `original`, a render
  * of the same settings), write the changes as one History step, then the clipping baseline (with clip_baseline). The
- * intent's profile and priors are those of the photo's pipeline (intent schema v2), with `variant`'s
+ * intent's profile, set values and priors are those of the photo's pipeline (intent schema v2, v3), with `variant`'s
  * priors on top on a copy; the session's `profile` (lr_begin_session's) replaces the intent's.
  */
 export async function pass0(ctx: SessionContext, s: Session, t: Target, view: FromSdkResult, variant: PriorSet | null, original: Rendered | null): Promise<Pass0> {
@@ -48,8 +48,12 @@ export async function pass0(ctx: SessionContext, s: Session, t: Target, view: Fr
   // replaces a colour one (Greptile, PR #120; the loader checks only an intent's own profile).
   const mono = profile !== undefined && ctx.deps.map.cameraProfiles().monochrome(profile);
   const combined = combinedPriors(priorsFor(intent, t.pipeline), variant ? priorsFor(variant, t.pipeline) : {}, ctx.deps.map);
-  const priors = Object.fromEntries(Object.entries(combined).filter(([name]) => !(mono && isColourParam(name))));
-  const changes = pass0Changes(profile, priors, view.settings, ctx.deps.map, t.pipeline);
+  const dropMono = (values: Priors): Record<string, unknown> => Object.fromEntries(Object.entries(values).filter(([name]) => !(mono && isColourParam(name))));
+  const priors = dropMono(combined);
+  const set = dropMono(setFor(intent, t.pipeline));
+  // A prior (a variant's, on a look) is added on top of the set value, not the photo's old one.
+  const fromSet = setChanges(set, view.settings, ctx.deps.map, t.pipeline);
+  const changes = { ...fromSet, ...pass0Changes(profile, priors, { ...view.settings, ...fromSet }, ctx.deps.map, t.pipeline) };
   const historyNames: string[] = [];
   let current = view;
   let rendered = before;
@@ -64,7 +68,7 @@ export async function pass0(ctx: SessionContext, s: Session, t: Target, view: Fr
     const was = view.settings[name] ?? null;
     return { name, before: was, requested: after, after, delta: typeof was === "number" && typeof after === "number" ? roundForSlider(name, after - was) : null };
   });
-  const requested = { ...(profile ? { camera_profile: profile } : {}), ...priors };
+  const requested = { ...(profile ? { camera_profile: profile } : {}), ...set, ...priors };
   const delta = deltaMetrics(before.metrics, corrected.rendered.metrics);
   return { passStarted, original: before, requested, applied, historyNames, view: corrected.view, rendered: corrected.rendered, actions: corrected.actions, delta };
 }
@@ -107,6 +111,17 @@ export function combinedPriors(base: Priors, extra: Priors, map: ParamMap): Reco
   for (const [name, value] of Object.entries(extra)) {
     const was = out[name];
     out[name] = map.spec(name)?.kind === "number" && typeof was === "number" && typeof value === "number" ? was + value : value;
+  }
+  return out;
+}
+
+/** A v3 intent's `set` values as pass 0 writes them: as given, numbers rounded and clamped to the range (the loader refuses a name in both set and priors). */
+function setChanges(set: Priors, current: CanonicalSettings, map: ParamMap, pipeline: Pipeline): Record<string, CanonicalValue> {
+  const out: Record<string, CanonicalValue> = {};
+  for (const [name, value] of Object.entries(set)) {
+    const spec = map.spec(name, pipeline);
+    const after = spec?.kind === "number" && typeof value === "number" ? roundForSlider(name, Math.min(spec.max, Math.max(spec.min, value))) : (value as CanonicalValue);
+    if (!canonicalValuesEqual(current[name], after)) out[name] = after;
   }
   return out;
 }

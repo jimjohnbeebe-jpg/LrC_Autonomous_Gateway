@@ -1,7 +1,7 @@
 ---
 report: curve-probe
 phase: "10"
-status: observed
+status: accepted
 authored_by: "Claude Code (purpose, harness, pre-run findings, steps); Jim (the run, the y/n answer, Observed, verdict)"
 date: 2026-10-26
 ---
@@ -98,6 +98,16 @@ Jim ran `npm run curve:probe` again on 2026-10-26, 03:06:50-03:07:07Z, Lightroom
 - **d. The Point Curve question was not asked:** no profile took a curve [handle: run 2 results `photo.point_curve.answer`].
 - **The settings dump shows the photo is in HDR edit mode:** `HDREditMode` 1, `HDRMaxValue` 2.3, and four keys the raw pin lacks, `ExtendedToneCurvePV2012`, `ExtendedToneCurvePV2012Red`, `Green` and `Blue`, all `[0, 0, 255, 255]` [handle: run 2 dump `settings`; run 2 results `settings_dump.not_in_raw_pin`]. The S5 dumps of a NEF and a DNG have `HDREditMode` 0 [handle: `docs\reports\phase0\S5\s5_20260907-_OZ80093.NEF.json:86`, `s5_20260110-_Z8A0138-DxO_DeepPRIME XD3.dng.json:86`], and S10 found the four `ExtendedToneCurvePV2012*` keys only on HDR photos (an HDR AVIF, a 32-bit TIFF) [handle: vault LR_SDK_NOTES "Recorded in Phase 8"].
 
+### Run 3
+
+Jim ran `npm run curve:probe` a third time on 2026-10-26, 03:46:42-03:47:22Z, Lightroom 15.6, plugin and engine 1.2.0, the same photo selected in Develop, and said "curve probe done" [stated]. The probe was at `8b8369a` (PR #202). Claude Code collected the files in `docs\reports\phase10\curve-probe\run3\`: the results `curve_probe_2026-10-26T03-46-42-653Z.json` (cited below as "run 3 results"), the session log `20261025-b8d7e0.json`, and `bridge_log_excerpt.txt` (from 20:46:42 local; no WARN or ERROR).
+
+- **Headline: WORKED**, no errors; **put back: YES**, 184 keys compared, none differing [handle: run 3 results `headline`, `errors`, `photo.put_back`].
+- **a to c as in run 2:** the session step refused and undone ("AVG b8d7e0 pass 1/8 revert", back at its pre-step settings); both direct writes refused; every profile taken and the curve refused under each [handle: run 3 results `photo.session_step`, `photo.direct`, `photo.profile_sweep`].
+- **e. The extended curve was taken.** `ExtendedToneCurvePV2012` written as #187's five points read back exactly as written, `ToneCurveName2012` "Custom", and `ToneCurvePV2012` then read back the same five points: Lightroom mirrors the extended curve into the standard key [handle: run 3 results `photo.extended_curve.curve`, `standard_after`]. The 3-point lift into it was taken too [handle: `photo.extended_curve.lift`]. The probe's suggestion: "HDR mode uses ExtendedToneCurvePV2012".
+- **d. Point Curve, asked on the extended lift: y.** With the lift on the photo, Jim saw the curve raised in the middle in Develop > Tone Curve > Point Curve [stated: Jim's "y"; handle: run 3 results `photo.point_curve` `asked_on` "ExtendedToneCurvePV2012", `answer` "y"].
+- Vibrance was 12 when run 3 started, 7 in runs 1 and 2 [handle: run 3 session log `start.settings.vibrance`; run 2 results `photo.direct.writes[1]`, 7 + 7 = 14]. Run 2 put the photo back exactly, so the change was made between the runs, outside the probe [inference].
+
 ## Numbers
 
 ### Run 1
@@ -129,15 +139,28 @@ All from run 1's results, `docs\reports\phase10\curve-probe\run1\curve_probe_202
 
 All from run 2's results and dump, `docs\reports\phase10\curve-probe\run2\`.
 
+### Run 3
+
+| Field | Value |
+|---|---|
+| a-c | as run 2: session step refused and undone; direct and sweep curves refused; profiles taken |
+| e. `ExtendedToneCurvePV2012` (#187's curve): taken | yes; `ToneCurvePV2012` then reads the same points, name "Custom" |
+| e. Extended lift: taken | yes |
+| d. Point Curve raised (Jim), asked on | y, `ExtendedToneCurvePV2012` |
+| Put back | YES (184 keys) |
+
+All from run 3's results, `docs\reports\phase10\curve-probe\run3\`.
+
 ## Verdict
 
 - Run 1: **Go** [stated: Jim, 2026-10-26, "Go (Recommended)"]: the probe answered its question. The engine's write path is not #187's cause, the photo (or its profile) is, and a refused step is undone whole.
 - Run 2: **Go** [stated: Jim, 2026-10-26, "Go (Recommended)"]: the profile is not the cause; the photo is, and it is in HDR edit mode.
+- Run 3: **Go** [stated: Jim, 2026-10-26, "Go (Recommended)"]: in HDR edit mode the point curve is `ExtendedToneCurvePV2012`; it is taken and shows in the Point Curve view.
 
 ## Consequences / open questions
 
-- **#187's cause: the photo is in HDR edit mode** (`HDREditMode` 1). Every `ToneCurvePV2012` write is refused there, through a session, directly, and under three raw profiles [handle: run 1 and run 2 results]. S14 took the same writes on photos in SDR mode [handle: `docs\reports\phase10\S14.md` "a. Tone curve"]. That in HDR mode Lightroom's point curve is `ExtendedToneCurvePV2012` is [inference] from the dump; **run 3** writes it on this photo and asks the Point Curve question on it [stated: Jim, 2026-10-26, "Run 3: write the extended curve (Recommended)"].
-- If run 3 takes the extended curve and the panel shows it: the params map writes `tone_curve.*` to the `ExtendedToneCurvePV2012*` keys when `HDREditMode` is 1 (pinned from this dump), and #187 closes on L-2. If it is refused too: the engine refuses `tone_curve.*` upfront on HDR-mode photos with a reason, and HDR curves become their own issue.
-- **L-2:** "a refused step leaves nothing on the photo" holds on this photo, twice [handle: run 1 and run 2 `back_at_pre_step`]; "a curve write is taken" holds on SDR photos (S14), not yet in HDR mode.
-- **S14's panel question** (a taken curve that the panel showed straight, on an SDR NEF) is still open: this photo cannot answer it unless run 3 takes a curve. A run on an SDR photo would.
-- `LensProfileFilename` is also on this photo and not in the raw pin [handle: run 2 `settings_dump.not_in_raw_pin`]; nothing writes it.
+- **#187's cause: on a photo in HDR edit mode (`HDREditMode` 1) Lightroom's point curve is `ExtendedToneCurvePV2012`**, and every `ToneCurvePV2012` write is refused there [handle: runs 1-3 results]. Written to the extended key, the curve is taken, Lightroom mirrors it into `ToneCurvePV2012`, and the Point Curve view shows it [handle: run 3 results `photo.extended_curve`; stated: Jim's "y"].
+- **The fix** (its own PR, `fix/hdr-tone-curve-187`, closing #187 [stated: Jim, 2026-10-26, "Run 3: write the extended curve (Recommended)"]): the four `ExtendedToneCurvePV2012*` keys are pinned from run 2's live dump, and the params map writes and reads `tone_curve.*` through them when `HDREditMode` is 1. Only the master curve was tried; the Red, Green and Blue extended curves are [unverified] beyond their names in the dump, and each write is read back.
+- **L-2:** "a refused step leaves nothing on the photo" holds on this photo, three times [handle: runs 1-3 `back_at_pre_step`]; "a curve write is taken" holds on SDR photos (S14) and, through the extended key, in HDR mode (run 3).
+- **S14's panel question** (a curve taken on an SDR NEF that the panel showed straight) is still open: run 3 shows the panel does show a taken curve in its Point Curve view, which supports the inference that S14's look was at the Parametric view, but no SDR photo was checked [inference].
+- `LensProfileFilename` is on this photo and not in the raw pin [handle: run 2 `settings_dump.not_in_raw_pin`]; nothing writes it.

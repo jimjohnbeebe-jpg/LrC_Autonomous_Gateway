@@ -166,7 +166,7 @@ const entries: Array<[string, ParamSpec]> = [
   // ToneCurvePV2012 under every profile [handle: docs\reports\phase10\curve-probe\run2\curve_probe_2026-10-26T03-06-50-864Z.json
   // photo.profile_sweep] and took ExtendedToneCurvePV2012, read back as written, ToneCurveName2012 "Custom",
   // ToneCurvePV2012 then the same points; Jim saw a lift written there raised in Develop > Tone Curve > Point Curve
-  // [stated: Jim, "y"; handle: curve-probe run 3, %TEMP%\LrC-AVG\curve\curve_probe_2026-10-26T03-46-42-653Z.json
+  // [stated: Jim, "y"; handle: curve-probe run 3, docs\reports\phase10\curve-probe\run3\curve_probe_2026-10-26T03-46-42-653Z.json
   // photo.extended_curve, questions[0] point_curve; issue #187]. The keys are from that photo's live dump
   // (docs\reports\phase10\curve-probe\run2\curve_probe_settings_20220828-_DSC1159-HDR.dng__65937445.json).
   // Only the master was written: the Red, Green and Blue extended curves are [unverified] beyond their names there.

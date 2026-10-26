@@ -16,7 +16,7 @@ import { CAMERA_PROFILE_PARAM, CANONICAL_PARAMS, RENDERED_PARAMS, type ParamSpec
 import { tableInfo } from "./mask-table.js";
 import { ParamError } from "./param-error.js";
 import { PIPELINES, checkProcessVersion, describeSignals, pipelineOf, type Pipeline } from "./pipeline.js";
-import { CUSTOM_WHITE_BALANCE, WHITE_BALANCE_KEY } from "./preset-keys.js";
+import { CONVERT_TO_GRAYSCALE_KEY, CUSTOM_WHITE_BALANCE, WHITE_BALANCE_KEY } from "./preset-keys.js";
 import type { SdkKeyMap, SdkValueType } from "./sdk-keys.js";
 
 export { ParamError, type ParamErrorCode } from "./param-error.js";
@@ -26,7 +26,8 @@ export type CanonicalSettings = Record<string, CanonicalValue>;
 export type SdkSettings = Record<string, unknown>;
 
 /** What a write is for: the photo's process version and pipeline (both from its fromSdk read). */
-export type WriteContext = { processVersion: string; pipeline: Pipeline };
+/** `grayscale`: the ConvertToGrayscale to write with a camera_profile instead of the profile's own (a revert puts the photo's back). */
+export type WriteContext = { processVersion: string; pipeline: Pipeline; grayscale?: boolean };
 
 const SPECS: Readonly<Record<Pipeline, ReadonlyMap<string, ParamSpec>>> = { raw: CANONICAL_PARAMS, rendered: RENDERED_PARAMS };
 
@@ -37,6 +38,8 @@ export type FromSdkResult = {
   /** Canonical settings for every mapped key present; camera_profile only when the pair is pinned. */
   settings: CanonicalSettings;
   camera_profile: ProfileIdentity;
+  /** The photo's ConvertToGrayscale; null when Lightroom did not report it. A revert writes it back with the profile. */
+  convert_to_grayscale: boolean | null;
   /** Keys Lightroom returned that are not in the pinned dump (reported, not fatal). */
   unpinned_keys: string[];
   /** The mask table: how many masks, and a fingerprint that changes when any of it does (mask-table.ts tableInfo). */
@@ -229,7 +232,7 @@ export class ParamMap {
         if (its !== context.pipeline) {
           throw new ParamError("wrong_pipeline", `"${value}" is a ${its}-pipeline profile; this photo is on the ${context.pipeline} pipeline (${this.profileNames(context.pipeline)})`, name);
         }
-        Object.assign(out, sdk);
+        Object.assign(out, sdk, context.grayscale === undefined ? {} : { [CONVERT_TO_GRAYSCALE_KEY]: context.grayscale });
         continue;
       }
       const spec = SPECS[context.pipeline].get(name);
@@ -285,6 +288,7 @@ export class ParamMap {
       pipeline,
       settings,
       camera_profile: cameraProfile,
+      convert_to_grayscale: typeof sdk[CONVERT_TO_GRAYSCALE_KEY] === "boolean" ? (sdk[CONVERT_TO_GRAYSCALE_KEY] as boolean) : null,
       unpinned_keys: Object.keys(sdk).filter((k) => !this.sdkKeys[pipeline].has(k)).sort(),
       masks: tableInfo(sdk),
     };

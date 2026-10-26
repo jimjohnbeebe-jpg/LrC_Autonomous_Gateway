@@ -9,7 +9,7 @@ import { loadDefaultParamMap } from "../src/params/index.js";
 import { lightroomLabel } from "../src/params/labels.js";
 import { planStep } from "../src/session/plan.js";
 import { baseMaxStep } from "../src/session/rules.js";
-import { groupOf } from "../src/sync/index.js";
+import { groupOf, splitTransferable } from "../src/sync/index.js";
 
 type Record_ = { sdk_key: string; min: number; max: number; min_read: number; max_read: number; below_written: number; below_read: number; above_written: number; above_read: number };
 type Photo = { pipeline: string; mixer?: { range: { per_parameter: Record_[] } }; calibration?: { per_parameter: Record_[] } };
@@ -62,5 +62,23 @@ describe("params: the B&W mixer and Calibration (spike S14)", () => {
     const plan = planStep({ "bw.blue": -20 }, { "hsl.blue.sat": 0 }, 1, loadDefaultParamMap());
     expect(plan.changes).toEqual([]);
     expect(plan.refused).toEqual([expect.objectContaining({ name: "bw.blue", reason: expect.stringMatching(/only on a black-and-white photo/) })]);
+  });
+
+  it("refuses a colour slider in the step that sets a monochrome profile, which drops it (review, PR B)", () => {
+    const plan = planStep({ camera_profile: "Adobe Monochrome", vibrance: 5, "hsl.red.sat": 3, exposure: 0.1 }, { vibrance: 0, "hsl.red.sat": 0, exposure: 0 }, 1, loadDefaultParamMap());
+    expect(plan.changes.map((c) => c.name)).toEqual(["camera_profile", "exposure"]);
+    expect(plan.refused.map((r) => [r.name, r.by])).toEqual([["vibrance", "slider"], ["hsl.red.sat", "slider"]]);
+    expect(plan.refused[0]?.reason).toMatch(/monochrome camera_profile drops vibrance: set it in an earlier step/);
+    expect(planStep({ camera_profile: "Adobe Color", vibrance: 5 }, { vibrance: 0 }, 1, loadDefaultParamMap()).refused).toEqual([]);
+  });
+
+  it("syncs the B&W mixer only onto a photo that has it, or with a monochrome profile (review, PR B)", () => {
+    const map = loadDefaultParamMap();
+    const colour = { pipeline: "raw" as const, process_version: "15.4", settings: { vibrance: 0 } };
+    const out = splitTransferable(map, { "bw.red": 10, exposure: 0.2 }, "raw", colour);
+    expect(out.writable).toEqual({ exposure: 0.2 });
+    expect(out.not_transferable).toEqual([{ group: "bw", names: ["bw.red"], reason: expect.stringMatching(/only on a black-and-white photo/) }]);
+    expect(splitTransferable(map, { "bw.red": 10, camera_profile: "Adobe Monochrome" }, "raw", colour).writable).toEqual({ "bw.red": 10, camera_profile: "Adobe Monochrome" });
+    expect(splitTransferable(map, { "bw.red": 10 }, "raw", { ...colour, settings: { "bw.red": 0 } }).writable).toEqual({ "bw.red": 10 });
   });
 });

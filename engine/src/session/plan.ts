@@ -3,6 +3,7 @@
 // pull back after a breach, and when a session has converged by metrics. No I/O, so the tests can
 // check every rule directly.
 
+import { isColourParam } from "../intents/index.js";
 import type { MetricsDelta, MetricsSummary } from "../metrics/index.js";
 import { CAMERA_PROFILE_PARAM, ParamError, SUPPORTED_PROCESS_VERSIONS, type CanonicalSettings, type CanonicalValue, type ParamMap, type Pipeline } from "../params/index.js";
 import { CONVERGENCE, CRUSHES_SHADOWS, RAISES_HIGHLIGHTS, baseMaxStep, decayFor, isChoice, isCircularHue, minStep, roundForSlider } from "./rules.js";
@@ -39,7 +40,15 @@ export function planStep(requested: Readonly<Record<string, unknown>>, current: 
   const plan: StepPlan = { changes: [], clamped: [], refused: [], unchanged: [] };
   const context = { processVersion: SUPPORTED_PROCESS_VERSIONS[0] as string, pipeline };
   const factor = decayFor(pass, decay);
+  // A monochrome profile drops Saturation, Vibrance and the HSL keys (as pass0.ts): one set in the same step
+  // would not read back, and the step would fail on a slider that is fine [handle: docs\reports\phase10\S14.md "d. B&W mixer"].
+  const profile = requested[CAMERA_PROFILE_PARAM];
+  const toMono = typeof profile === "string" && map.cameraProfiles().monochrome(profile);
   for (const [name, value] of Object.entries(requested)) {
+    if (toMono && isColourParam(name)) {
+      plan.refused.push({ name, by: "slider", reason: `a monochrome camera_profile drops ${name}: set it in an earlier step, before the profile` });
+      continue;
+    }
     const spec = map.spec(name, pipeline);
     if (name === CAMERA_PROFILE_PARAM || !spec || spec.kind !== "number") {
       map.toSdk({ [name]: value }, context); // throws for an unknown name, a wrong type or a bad value

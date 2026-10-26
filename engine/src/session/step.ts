@@ -137,18 +137,22 @@ function refuseEmpty(s: Session, plan: StepPlan): never {
 /**
  * Write the plan as one History step, render it, then the corrections. The pass is undone when
  * clipping is still over a limit the photo was within before it, or a preserved region drifted
- * too far. A write Lightroom took only in part is undone at once and the step fails (undoRefused).
+ * too far. A write Lightroom took only in part, the step's own or a correction or revert after it, is
+ * undone at once and the step fails (undoRefused, issue #187).
  */
 async function apply(ctx: SessionContext, s: Session, t: Target, n: number, plan: StepPlan, beforeView: FromSdkResult, before: Rendered): Promise<Applied> {
+  try {
+    return await applyPass(ctx, s, t, n, plan, beforeView, before);
+  } catch (err) {
+    throw await undoRefused(ctx, s, t, n, beforeView, err);
+  }
+}
+
+async function applyPass(ctx: SessionContext, s: Session, t: Target, n: number, plan: StepPlan, beforeView: FromSdkResult, before: Rendered): Promise<Applied> {
   const historyNames: string[] = [];
   const name = historyName(s, t, n);
   const values: Record<string, CanonicalValue> = Object.fromEntries(plan.changes.map((c) => [c.name, c.after]));
-  let written: FromSdkResult;
-  try {
-    written = await write(ctx, s, t, values, name);
-  } catch (err) {
-    throw await undoRefused(ctx, s, t, n, beforeView, err); // a refused step is undone whole (issue #187)
-  }
+  const written = await write(ctx, s, t, values, name);
   historyNames.push(name);
   const corrected = await correct(ctx, s, t, n, plan.changes, before.metrics, written, await render(ctx, s, t, written), historyNames);
   const actions = [...corrected.actions];

@@ -35,10 +35,16 @@ function whiteBalanceReason(map: ParamMap, name: string, value: unknown, source:
 
 /**
  * Split the copied settings for one target: `writable` is checked against the target's pipeline by the
- * caller (map.toSdk); `not_transferable` lists the white balance and camera profile left out, by group.
+ * caller (map.toSdk); `not_transferable` lists the white balance and camera profile left out, by group, and
+ * the B&W mixer when `target.settings` (its read) has none and no monochrome profile goes with it.
  */
-export function splitTransferable(map: ParamMap, copied: Readonly<CanonicalSettings>, source: Pipeline | null, target: { pipeline: Pipeline; process_version: string }): Transferable {
+export function splitTransferable(map: ParamMap, copied: Readonly<CanonicalSettings>, source: Pipeline | null, target: { pipeline: Pipeline; process_version: string; settings?: CanonicalSettings }): Transferable {
   const writable: CanonicalSettings = {};
+  // The B&W mixer is there only on a black-and-white photo [handle: docs\reports\phase10\S14.md "d. B&W mixer"]:
+  // it goes onto a target that has it, or with a monochrome profile copied onto this pipeline.
+  const profile = copied[CAMERA_PROFILE_PARAM];
+  const profiles = map.cameraProfiles();
+  const toMono = typeof profile === "string" && profiles.pipeline(profile) === target.pipeline && profiles.monochrome(profile);
   const reasons = new Map<MaskGroup, { names: string[]; reason: string }>();
   const leaveOut = (name: string, reason: string): void => {
     const group = groupOf(name) as MaskGroup;
@@ -53,6 +59,9 @@ export function splitTransferable(map: ParamMap, copied: Readonly<CanonicalSetti
         leaveOut(name, `"${value}" is a ${its}-pipeline profile and this photo is on the ${target.pipeline} pipeline: it keeps its own profile`);
         continue;
       }
+    } else if (name.startsWith("bw.") && !toMono && target.settings !== undefined && !(name in target.settings)) {
+      leaveOut(name, "the B&W mixer exists only on a black-and-white photo, and this photo is in colour");
+      continue;
     } else if (WHITE_BALANCE_NAMES.has(name)) {
       const reason = whiteBalanceReason(map, name, value, source, target);
       if (reason !== null) {

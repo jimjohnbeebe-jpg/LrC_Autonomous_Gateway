@@ -98,9 +98,10 @@ function maybeWritten(err: unknown, historyName: string): unknown {
  * values are ones the photo held before (a probe's or a pass's revert), which plugin 0.19.0 lets
  * through to a photo whose original went missing meanwhile (Greptile, PR #101).
  */
-export async function write(ctx: SessionContext, s: Session, t: Target, values: Record<string, CanonicalValue>, historyName: string, options: { putBack?: boolean } = {}): Promise<FromSdkResult> {
+export async function write(ctx: SessionContext, s: Session, t: Target, values: Record<string, CanonicalValue>, historyName: string, options: { putBack?: boolean; grayscale?: boolean | null } = {}): Promise<FromSdkResult> {
   const { client, map } = ctx.deps;
-  const sdk = map.toSdk(values, { processVersion: t.process_version, pipeline: t.pipeline });
+  const grayscale = typeof options.grayscale === "boolean" ? { grayscale: options.grayscale } : {}; // a revert's (guardrail.ts grayscaleBack)
+  const sdk = map.toSdk(values, { processVersion: t.process_version, pipeline: t.pipeline, ...grayscale });
   const readBack = await writeSdk(ctx, s, t, sdk, historyName, options.putBack === true);
   const error = readbackError(map, sdk, readBack, historyName, client.hello()); // WRITE_NOT_TAKEN or FEATURE_UNAVAILABLE
   if (error) throw error;

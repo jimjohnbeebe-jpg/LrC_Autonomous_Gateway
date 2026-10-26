@@ -5,7 +5,7 @@
 import type { GuardrailAction } from "../log/index.js";
 import { OTHERS_WRITTEN, ToolError, toToolError } from "../mcp/errors.js";
 import { summarize, type Metrics } from "../metrics/index.js";
-import { canonicalValuesEqual, type CanonicalSettings, type CanonicalValue, type FromSdkResult, type ParamMap, type ReadbackMismatch } from "../params/index.js";
+import { CAMERA_PROFILE_PARAM, canonicalValuesEqual, type CanonicalSettings, type CanonicalValue, type FromSdkResult, type ParamMap, type ReadbackMismatch } from "../params/index.js";
 import { historyName, read, render, write } from "./io.js";
 import { fixedCorrection, hueDistance, pullBack, type Change, type Limits } from "./plan.js";
 import { HIGH_CORRECTIONS, LOW_CORRECTIONS, MAX_BASELINE_CORRECTIONS, MAX_CORRECTIONS, REGION_PRESERVE } from "./rules.js";
@@ -195,6 +195,15 @@ export function settingsBack(before: FromSdkResult, current: FromSdkResult): Rec
 }
 
 /**
+ * A camera profile written back takes the photo's ConvertToGrayscale from before with it: a raw colour profile
+ * writes false (camera-profiles.ts toSdk), and a photo made black and white with a colour profile (Treatment)
+ * names that colour profile, so the revert would leave it in colour (review, PR B) [inference].
+ */
+export function grayscaleBack(before: FromSdkResult, back: Readonly<Record<string, CanonicalValue>>): boolean | null {
+  return CAMERA_PROFILE_PARAM in back ? before.convert_to_grayscale : null;
+}
+
+/**
  * A step Lightroom took only in part (issue #187 part 2): WRITE_NOT_TAKEN (a key read back otherwise) or
  * FEATURE_UNAVAILABLE (a key not read back at all) after the step's write. Both leave the step's other
  * values on the photo, so both are undone: the photo is read, every pre-step value that differs is written
@@ -208,14 +217,18 @@ export async function undoRefused(ctx: SessionContext, s: Session, t: Target, n:
   const name = historyName(s, t, n, "revert");
   const details = typeof e.details === "object" && e.details !== null ? e.details : {};
   const unreported = new Set(((details as { mismatches?: ReadbackMismatch[] }).mismatches ?? []).filter((m) => m.read_back === null).map((m) => m.sdk_key));
-  const what = e.message.replace(OTHERS_WRITTEN, "") + (unreported.size > 0 ? ` ${[...unreported].join(", ")} could not be checked, so it was not written back.` : "");
+  const keys = [...unreported].join(", ");
+  const what = e.message.replace(OTHERS_WRITTEN, "") + (unreported.size > 0 ? ` ${keys} could not be checked, so it was not written back.` : "");
   try {
     const all = settingsBack(beforeView, await read(ctx, s, t));
     const back = Object.fromEntries(Object.entries(all).filter(([k]) => !unreported.has(ctx.deps.map.spec(k, t.pipeline)?.sdkKey ?? "")));
     const wrote = Object.keys(back).length > 0;
-    if (wrote) await write(ctx, s, t, back, name, { putBack: true });
-    const how = wrote ? `the values Lightroom did take were written back ("${name}")` : "none of its values stayed on the photo";
-    return new ToolError(e.code, `${what} The step was undone: ${how}, so the photo is as it was before this step, and the pass is not used.`, e.recoverable, { ...details, undone: true, revert_history_name: wrote ? name : null });
+    if (wrote) await write(ctx, s, t, back, name, { putBack: true, grayscale: grayscaleBack(beforeView, back) });
+    const how = wrote ? `the values Lightroom did take were written back ("${name}")` : "no value Lightroom reports had stayed on the photo";
+    // A key Lightroom does not report may still hold the step's value: say so, not "as it was" (review, PR B).
+    const state = unreported.size > 0 ? `the photo is as it was before this step except possibly ${keys}, which Lightroom does not report` : "the photo is as it was before this step";
+    const unverified = unreported.size > 0 ? { unverified_keys: [...unreported] } : {};
+    return new ToolError(e.code, `${what} The step was undone: ${how}, so ${state}, and the pass is not used.`, e.recoverable, { ...details, undone: true, ...unverified, revert_history_name: wrote ? name : null });
   } catch (undoErr) {
     const u = toToolError(undoErr);
     if (u.code === "SESSION_ENDED") return u;
@@ -241,7 +254,7 @@ export async function undo(
   const back = settingsBack(beforeView, current);
   if (Object.keys(back).length === 0) return null;
   const name = historyName(s, t, n, breach.limit === "region" ? "region revert" : "clip revert");
-  const view = await write(ctx, s, t, back, name, { putBack: true });
+  const view = await write(ctx, s, t, back, name, { putBack: true, grayscale: grayscaleBack(beforeView, back) });
   historyNames.push(name);
   const rendered = await render(ctx, s, t, view);
   const changes = Object.fromEntries(Object.entries(back).filter((e): e is [string, number] => typeof e[1] === "number"));

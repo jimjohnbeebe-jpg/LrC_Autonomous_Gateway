@@ -48,8 +48,30 @@ describe("a refused step is undone whole (issue #187)", () => {
     expect(e.code).toBe("FEATURE_UNAVAILABLE");
     expect(e.message).toMatch(/Dehaze could not be checked, so it was not written back/);
     expect(e.message).not.toMatch(/other values were written/);
-    expect(e.details).toMatchObject({ undone: true });
+    expect(e.message).toMatch(/the photo is as it was before this step except possibly Dehaze, which Lightroom does not report/);
+    expect(e.details).toMatchObject({ undone: true, unverified_keys: ["Dehaze"] });
     expect(lr.settings["Vibrance"]).toBe(before["Vibrance"]);
+  });
+
+  it("undoes the step when a correction write after it is refused (review, PR B)", async () => {
+    await manager.begin({ intent_id: "test_plain" });
+    const before = structuredClone(lr.settings);
+    const apply = plugin.handlers.get("apply_settings")!;
+    plugin.handlers.set("apply_settings", async (p, id) => {
+      const guard = String(p["history_name"]).endsWith("guard 1");
+      if (guard) lr.ignored.add("Exposure2012");
+      try {
+        return await apply(p, id);
+      } finally {
+        if (guard) lr.ignored.delete("Exposure2012");
+      }
+    });
+    const e = await fails(manager.step({ session_id: ID, settings: { exposure: 1, shadows: 10 }, rationale: "much brighter" }));
+    expect(e.code).toBe("WRITE_NOT_TAKEN");
+    expect(e.details).toMatchObject({ undone: true, revert_history_name: `AVG ${SHORT} pass 1/4 revert` });
+    expect(lr.settings).toEqual(before);
+    expect(lr.history.at(-1)).toBe(`AVG ${SHORT} pass 1/4 revert`);
+    expect(readLog().passes).toHaveLength(1); // pass 0 only
   });
 
   it("says so when the undo fails too", async () => {
@@ -74,5 +96,16 @@ describe("a refused step is undone whole (issue #187)", () => {
     expect(writes.at(-2)).toMatchObject({ CameraProfile: "Adobe Standard", ConvertToGrayscale: true });
     expect(writes.at(-1)).toMatchObject({ CameraProfile: "Camera Neutral", ConvertToGrayscale: false });
     expect(lr.settings["ConvertToGrayscale"]).toBe(false);
+  });
+
+  it("puts a black-and-white photo with a colour profile (Treatment) back in black and white (review, PR B)", async () => {
+    lr.settings["ConvertToGrayscale"] = true;
+    await manager.begin({ intent_id: "test_plain" });
+    lr.ignored.add("ToneCurvePV2012");
+    const e = await fails(manager.step({ session_id: ID, settings: { camera_profile: "Adobe Monochrome", "tone_curve.master": [0, 0, 128, 160, 255, 255] }, rationale: "B&W" }));
+    expect(e.details).toMatchObject({ undone: true });
+    const writes = plugin.received.filter((r) => r.name === "apply_settings").map((r) => r.payload["settings"] as J);
+    expect(writes.at(-1)).toMatchObject({ CameraProfile: "Camera Neutral", ConvertToGrayscale: true });
+    expect(lr.settings["ConvertToGrayscale"]).toBe(true);
   });
 });

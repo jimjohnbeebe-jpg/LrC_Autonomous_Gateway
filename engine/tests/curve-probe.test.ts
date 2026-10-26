@@ -2,12 +2,12 @@
 // step, the direct writes, the question and the put-back. The sim takes or drops a key as told (`ignored`), so
 // this checks the steps and the put-back, not what Lightroom does with the curve.
 
-import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { BridgeClient } from "../src/bridge/index.js";
-import { ISSUE_PHOTO, LIFT3, QUESTION, runCurveProbe } from "../src/devtools/curve-probe.js";
+import { ISSUE_PHOTO, LIFT3, QUESTION, runCurveProbe, SWEEP_PROFILES } from "../src/devtools/curve-probe.js";
 import { BridgeGate } from "../src/mcp/index.js";
 import { loadDefaultParamMap } from "../src/params/index.js";
 import { findLeftOpen } from "../src/session/left-open.js";
@@ -55,7 +55,10 @@ describe("curve probe (simulated plugin)", () => {
     });
   };
 
-  it("a refused curve: the session step is WRITE_NOT_TAKEN, the photo is back at its pre-step settings, and put back", async () => {
+  const sweepOf = (photo: J) => photo["profile_sweep"] as J;
+  const sweepTaken = (photo: J) => (sweepOf(photo)["profiles"] as J[]).map((r) => [r["profile"], (r["profile_write"] as J)["taken"], r["curve_taken"]]);
+
+  it("a curve refused on the photo: WRITE_NOT_TAKEN, back at its pre-step settings, refused under every profile: photo is the cause, no question, put back", async () => {
     const before = structuredClone(lr.settings);
     lr.ignored.add("ToneCurvePV2012");
     const { worked, results } = await run();
@@ -64,21 +67,68 @@ describe("curve probe (simulated plugin)", () => {
     const photo = results["photo"] as J;
     expect(photo["session_step"]).toMatchObject({ outcome: "WRITE_NOT_TAKEN", back_at_pre_step: { ok: true, differing: [] }, error: { details: expect.objectContaining({ undone: true }) } });
     expect(((photo["direct"] as J)["writes"] as J[]).map((w) => w["taken"])).toEqual([false, false]);
-    expect(photo["point_curve"]).toMatchObject({ answer: "y", write: { written: { ToneCurvePV2012: LIFT3 }, taken: false } });
-    expect(asked).toEqual([QUESTION]);
+    expect(sweepTaken(photo)).toEqual(SWEEP_PROFILES.map((p) => [p, true, false]));
+    expect(sweepOf(photo)["suggestion"]).toBe("photo is the cause");
+    expect(photo["point_curve"]).toMatchObject({ answer: expect.stringContaining("not asked: no profile took the curve"), completed: true });
+    expect(asked).toEqual([]);
     expect(photo["put_back"]).toMatchObject({ ok: true });
     expect(lr.settings).toEqual(before);
     expect(said).toContain("Curve probe: WORKED");
     expect(said).toContain("put back: YES");
   });
 
-  it("a taken curve: the session step is taken, then reverted with the session", async () => {
+  it("a curve refused under Adobe Landscape only: profile is the cause, the question asked on the lift taken under Adobe Color, put back", async () => {
+    const before = structuredClone(lr.settings);
+    const apply = plugin.handlers.get("apply_settings")!;
+    plugin.handlers.set("apply_settings", (p, id) => {
+      const look = (lr.settings["Look"] as { Name?: unknown } | undefined)?.Name;
+      if (look === "Adobe Landscape") lr.ignored.add("ToneCurvePV2012");
+      else lr.ignored.delete("ToneCurvePV2012");
+      return apply(p, id);
+    });
+    const { worked, results } = await run();
+    expect(results["errors"]).toEqual([]);
+    expect(worked).toBe(true);
+    const photo = results["photo"] as J;
+    expect(sweepTaken(photo)).toEqual([["Adobe Color", true, true], ["Adobe Standard", true, true], ["Adobe Landscape", true, false]]);
+    expect(sweepOf(photo)["suggestion"]).toBe("profile is the cause");
+    expect(photo["point_curve"]).toMatchObject({ profile: "Adobe Color", answer: "y", write: { written: { ToneCurvePV2012: LIFT3 }, taken: true } });
+    expect(asked).toEqual([QUESTION]);
+    expect(photo["put_back"]).toMatchObject({ ok: true });
+    expect(lr.settings).toEqual(before);
+    expect(said).toContain("put back: YES");
+  });
+
+  it("a profile Lightroom refuses: no curve written under it, the sweep not completed, FAILED (Greptile, PR #201)", async () => {
+    const apply = plugin.handlers.get("apply_settings")!;
+    plugin.handlers.set("apply_settings", (p, id) => {
+      const look = ((p["settings"] as J)["Look"] as { Name?: unknown } | undefined)?.Name;
+      for (const k of ["CameraProfile", "Look"]) (look === "Adobe Color" ? lr.ignored.add(k) : lr.ignored.delete(k));
+      return apply(p, id);
+    });
+    const { worked, results } = await run();
+    const photo = results["photo"] as J;
+    const color = (sweepOf(photo)["profiles"] as J[])[0]!;
+    expect([color["profile"], (color["profile_write"] as J)["taken"], color["curve"], color["curve_taken"]]).toEqual(["Adobe Color", false, null, null]);
+    expect(sweepOf(photo)["completed"]).toBe(false);
+    expect(worked).toBe(false);
+    expect(said).toContain("Curve probe: FAILED");
+    expect(photo["put_back"]).toMatchObject({ ok: true });
+  });
+
+  it("a taken curve: the session step is taken, then reverted with the session; the sweep reads mixed; the settings are saved before any write", async () => {
     const before = structuredClone(lr.settings);
     const { worked, results } = await run();
     expect(worked).toBe(true);
     const photo = results["photo"] as J;
     expect(photo["session_step"]).toMatchObject({ outcome: "taken", after_step: { ToneCurvePV2012: [0, 0, 64, 56, 128, 128, 192, 200, 255, 255] } });
     expect(((photo["direct"] as J)["writes"] as J[]).map((w) => w["taken"])).toEqual([true, true]);
+    expect(sweepOf(photo)["suggestion"]).toBe("mixed");
+    const dump = results["settings_dump"] as J;
+    expect(dump).toMatchObject({ file: `curve_probe_settings_${ISSUE_PHOTO.filename}__${String(photo["uuid"]).slice(0, 8)}.json`, not_in_raw_pin: expect.any(Array), pinned_not_in_photo: expect.any(Array) });
+    const saved = JSON.parse(readFileSync(path.join(tmp, String(dump["file"])), "utf8")) as { meta: J; settings: J };
+    expect(saved.settings).toEqual(before);
+    expect(saved.meta).toMatchObject({ check: "curve-probe", filename: ISSUE_PHOTO.filename });
     expect(lr.settings).toEqual(before);
   });
 

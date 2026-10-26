@@ -1,12 +1,13 @@
 // `npm run curve:probe` (GitHub issue #187): the curve probe from the command line (the steps are in
 // curve-probe.ts). Run from the repo root with Lightroom open in Develop, issue #187's photo
 // (20220828-_DSC1159-HDR.dng) selected in the open collection, the LrC-AVG plugin enabled, and Claude Desktop
-// quit (this takes the engine's instance lock). Jim answers one y/n question in this window
+// quit (this takes the engine's instance lock). Jim answers at most one y/n question in this window
 // (docs\reports\phase10\curve-probe.md, "Steps for Jim"). Results, under %TEMP%\LrC-AVG\curve\ (Claude Code
 // collects them into docs\reports\phase10\curve-probe\):
 //   curve_probe_<time>.json        the results
 //   curve_bridge_log_<time>.txt    a copy of the plugin's log, user folder redacted
 //   sessions\                      the engine session's provenance log (part a)
+//   census\curve_probe_settings_<file>__<uuid8>.json   the photo's settings before any write
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
@@ -43,7 +44,7 @@ async function main(): Promise<number> {
   const gate = new BridgeGate(client, () => acquireInstanceLock(dev.lockPort));
   const { worked, results } = await runCurveProbe({
     client, gate, map: loadDefaultParamMap(), ask, say: (line) => console.log(line), stamp,
-    dumpDir: OUT_DIR, recorderDir: OUT_DIR, sessionDir: path.join(OUT_DIR, "sessions"),
+    dumpDir: path.join(OUT_DIR, "census"), recorderDir: OUT_DIR, sessionDir: path.join(OUT_DIR, "sessions"),
   });
   console.log(`Results saved automatically: ${redact(save(results))}`);
   console.log('Nothing to copy. Tell Claude Code "curve probe done".');

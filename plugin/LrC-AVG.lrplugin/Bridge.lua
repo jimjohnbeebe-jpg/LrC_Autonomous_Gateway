@@ -48,7 +48,7 @@ local Stall = require 'Stall'
 local Bridge = {}
 
 Bridge.PROTOCOL = 1
-Bridge.PLUGIN_VERSION = "1.2.1"
+Bridge.PLUGIN_VERSION = "1.3.0"
 Bridge.SDK_DECLARED = 13.0 -- Info.lua LrSdkVersion; the SDK version LrC 15.5.1 ships is [unverified]
 Bridge.STATUS_FILE = "bridge_status.json"
 

@@ -9,10 +9,12 @@
 // Lightroom here.
 
 import { takeMigrationNotes } from "../intents/index.js";
+import { PIPELINES } from "../params/index.js";
 import { ToolError } from "./errors.js";
+import { LOOK_LEFT_OUT, captureLook } from "./look-capture.js";
 import { library, pageBridgeUse, readPageFolders, run, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
-export type SaveIntentArgs = { intent: unknown; confirmed: boolean; replace?: boolean | undefined };
+export type SaveIntentArgs = { intent: Record<string, unknown>; confirmed: boolean; replace?: boolean | undefined; from_photo?: boolean | undefined; dry_run?: boolean | undefined };
 export type DeleteIntentArgs = { id: string; confirmed: boolean };
 
 const notConfirmed = (what: string) => new ToolError("NOT_CONFIRMED", `Ask the user to approve ${what} in the chat first, then call again with confirmed: true.`, false);
@@ -53,17 +55,62 @@ export async function getIntent(ctx: ToolContext, args: { id: string }): Promise
 }
 
 export async function saveIntent(ctx: ToolContext, args: SaveIntentArgs): Promise<ToolOutput> {
-  return run(ctx, "lr_save_intent", args, pageBridgeUse(ctx), async () => {
-    // The tool's schema requires `confirmed` to be a boolean; false is refused here.
-    if (args.confirmed !== true) {
+  return run(ctx, "lr_save_intent", args, args.from_photo === true ? { usesBridge: true } : pageBridgeUse(ctx), async () => {
+    // The tool's schema requires `confirmed` to be a boolean; false is refused here. A dry run writes nothing, so needs no approval.
+    if (args.confirmed !== true && args.dry_run !== true) {
       throw notConfirmed("this intent");
     }
+    // A capture is only a preview: the save takes the returned intent, so what is written is what the user
+    // approved, even if the photo or its settings changed meanwhile (Greptile, PR #206).
+    if (args.from_photo === true && args.dry_run !== true) {
+      throw new ToolError("INVALID_ARGUMENTS", "from_photo works only with dry_run: true. Show the user the intent it returns, then save that intent unchanged (without from_photo) with confirmed: true.", false);
+    }
+    const { intent, photo } = args.from_photo === true ? await fromPhoto(ctx, args.intent) : { intent: args.intent, photo: null };
+    const id = (intent as { id?: unknown }).id;
+    const from = photo ? { from_photo: photo } : {};
+    if (args.dry_run === true) {
+      const checked = library(ctx).check(intent);
+      return { json: { ok: true, dry_run: true, written: false, id, intent: checked, ...from }, log: { id, dry_run: true, ...from } };
+    }
     const folder = await intentsFolder(ctx);
-    const saved = library(ctx).save(args.intent, { replace: args.replace === true });
-    const id = (args.intent as { id?: unknown }).id;
+    const saved = library(ctx).save(intent, { replace: args.replace === true });
     const notes = migrationNotes();
-    return { json: { ok: true, id, ...saved, ...folder, ...notes }, log: { id, ...saved, ...folder, ...notes } };
+    return { json: { ok: true, id, ...saved, ...from, ...folder, ...notes }, log: { id, ...saved, ...from, ...folder, ...notes } };
   });
+}
+
+/**
+ * The candidate with the look of the photo selected in Lightroom (look-capture.ts): schema v3, the
+ * photo's profile unless the candidate names one, and the photo's values under the candidate's own `set` values.
+ */
+async function fromPhoto(ctx: ToolContext, candidate: Record<string, unknown>): Promise<{ intent: Record<string, unknown>; photo: Record<string, unknown> }> {
+  const { client, map } = ctx.deps;
+  await ctx.deps.ensureBridge();
+  const photo = await client.request("get_context", {});
+  const view = map.fromSdk((await client.request("get_settings", { target_uuid: photo.uuid })).settings);
+  const look = captureLook(view, map.cameraProfiles());
+  const own = (key: string): Record<string, unknown> => (candidate[key] as Record<string, unknown> | undefined) ?? {};
+  const byPipeline = own("set_by_pipeline");
+  const setByPipeline = Object.fromEntries(
+    PIPELINES.map((p) => [p, { ...look.set_by_pipeline[p], ...(byPipeline[p] as Record<string, unknown> | undefined) }]).filter(([, v]) => Object.keys(v as object).length > 0),
+  );
+  const intent: Record<string, unknown> = {
+    priors: {},
+    ...candidate,
+    schema_version: 3,
+    ...(candidate["profile"] === undefined && look.profile ? { profile: look.profile } : {}),
+    set: { ...look.set, ...own("set") },
+    ...(Object.keys(setByPipeline).length ? { set_by_pipeline: setByPipeline } : {}),
+  };
+  const info = {
+    uuid: photo.uuid,
+    filename: photo.filename ?? null,
+    pipeline: view.pipeline,
+    captured: Object.keys(look.set).length + Object.keys(look.set_by_pipeline[view.pipeline] ?? {}).length,
+    left_out: LOOK_LEFT_OUT,
+    ...(look.profile ? {} : { note: "the photo's camera profile is not one the engine has pinned, so the look keeps each photo's profile" }),
+  };
+  return { intent, photo: info };
 }
 
 export async function deleteIntent(ctx: ToolContext, args: DeleteIntentArgs): Promise<ToolOutput> {

@@ -29,7 +29,7 @@ export const HELP_TEXT = [
   `4. Metrics. ${MEASURED}`,
   "",
   "5. Settings at begin. Pass 0 is one History step with the intent's camera profile (or `profile`), lens corrections and " +
-    "priors (a numeric prior is added to the photo's value; later passes may undo any prior); without an intent it writes no profile or priors (only `profile` " +
+    "set values and priors (a look's `set` value is written as given; a numeric prior is added to the photo's value; later passes may undo either); without an intent it writes no profile or priors (only `profile` " +
     "when given). `target.pipeline` and `target.white_balance_unit` say how the photo's temperature and tint work " +
     "(lr_get_active_photo_context); pass 0 takes the intent's profile and priors for that pipeline (`profile.raw` or " +
     "`profile.rendered`, `priors` plus `priors_by_pipeline`). " +

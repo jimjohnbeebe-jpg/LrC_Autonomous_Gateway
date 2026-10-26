@@ -1,0 +1,236 @@
+{
+  "check": "curve-probe",
+  "started_at": "2026-10-26T02:41:19.242Z",
+  "errors": [],
+  "questions": [
+    {
+      "id": "point_curve",
+      "question": "In Develop > Tone Curve, click the Point Curve button (the second of the curve-type icons at the top of the panel). Does the curve show raised in the middle?",
+      "write": {
+        "label": "lift",
+        "written": {
+          "ToneCurvePV2012": [
+            0,
+            0,
+            128,
+            160,
+            255,
+            255
+          ]
+        },
+        "history_name": "AVG curve probe lift",
+        "apply_ms": 20.057678222656,
+        "read_back": {
+          "ToneCurvePV2012": [
+            0,
+            0,
+            255,
+            255
+          ]
+        },
+        "name_read": "Linear",
+        "taken": false
+      },
+      "answer": "n"
+    }
+  ],
+  "hello": {
+    "protocol": 1,
+    "plugin_version": "1.2.0",
+    "lrc_version": "15.6",
+    "sdk_declared": 13,
+    "ports": {
+      "receive": 8765,
+      "send": 8766
+    },
+    "process_started_at": "2026-10-26T02:36:39Z"
+  },
+  "photo": {
+    "filename": "20220828-_DSC1159-HDR.dng",
+    "copy_name": null,
+    "uuid": "65937445-C308-4B2E-B1CD-F38C7EE40E0D",
+    "file_format": "DNG",
+    "pipeline": "raw",
+    "process_version": "15.4",
+    "snapshot": {
+      "name": "AVG curve probe before 2026-10-26T02-41-19-233Z",
+      "id": "F7711A05-80C9-428C-AA24-B8D3FECBF5A9"
+    },
+    "put_back": {
+      "ok": true,
+      "differing": [],
+      "compared": 184
+    },
+    "selected_for_writes": true,
+    "session_step": {
+      "step": {
+        "tone_curve.master": [
+          0,
+          0,
+          64,
+          56,
+          128,
+          128,
+          192,
+          200,
+          255,
+          255
+        ],
+        "vibrance": 7
+      },
+      "session_id": "5a7f30c9-0df4-41d6-ab7d-9cc0a4b73c02",
+      "log_path": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\curve\\sessions\\20261025-5a7f30.json",
+      "outcome": "WRITE_NOT_TAKEN",
+      "error": {
+        "code": "WRITE_NOT_TAKEN",
+        "message": "Lightroom did not take ToneCurvePV2012 as written in \"AVG 5a7f30 pass 1/8\". The step was undone: the values Lightroom did take were written back (\"AVG 5a7f30 pass 1/8 revert\"), so the photo is as it was before this step, and the pass is not used. (session 5a7f30c9-0df4-41d6-ab7d-9cc0a4b73c02 is still open; lr_end_session with outcome \"revert\" puts the photo back.)",
+        "recoverable": false,
+        "details": {
+          "history_name": "AVG 5a7f30 pass 1/8",
+          "mismatches": [
+            {
+              "sdk_key": "ToneCurvePV2012",
+              "written": [
+                0,
+                0,
+                64,
+                56,
+                128,
+                128,
+                192,
+                200,
+                255,
+                255
+              ],
+              "read_back": [
+                0,
+                0,
+                255,
+                255
+              ]
+            }
+          ],
+          "undone": true,
+          "revert_history_name": "AVG 5a7f30 pass 1/8 revert",
+          "session_id": "5a7f30c9-0df4-41d6-ab7d-9cc0a4b73c02"
+        }
+      },
+      "back_at_pre_step": {
+        "ok": true,
+        "differing": []
+      },
+      "after_step": {
+        "ToneCurvePV2012": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "ToneCurveName2012": "Linear",
+        "Vibrance": 7
+      },
+      "completed": true
+    },
+    "direct": {
+      "writes": [
+        {
+          "label": "direct curve",
+          "written": {
+            "ToneCurvePV2012": [
+              0,
+              0,
+              64,
+              56,
+              128,
+              128,
+              192,
+              200,
+              255,
+              255
+            ]
+          },
+          "history_name": "AVG curve probe direct curve",
+          "apply_ms": 31.083226203918,
+          "read_back": {
+            "ToneCurvePV2012": [
+              0,
+              0,
+              255,
+              255
+            ]
+          },
+          "name_read": "Linear",
+          "taken": false
+        },
+        {
+          "label": "direct curve + vibrance",
+          "written": {
+            "ToneCurvePV2012": [
+              0,
+              0,
+              64,
+              56,
+              128,
+              128,
+              192,
+              200,
+              255,
+              255
+            ],
+            "Vibrance": 14
+          },
+          "history_name": "AVG curve probe direct curve + vibrance",
+          "apply_ms": 41.311979293823,
+          "read_back": {
+            "ToneCurvePV2012": [
+              0,
+              0,
+              255,
+              255
+            ],
+            "Vibrance": 14
+          },
+          "name_read": "Linear",
+          "taken": false
+        }
+      ],
+      "completed": true
+    },
+    "point_curve": {
+      "id": "point_curve",
+      "question": "In Develop > Tone Curve, click the Point Curve button (the second of the curve-type icons at the top of the panel). Does the curve show raised in the middle?",
+      "write": {
+        "label": "lift",
+        "written": {
+          "ToneCurvePV2012": [
+            0,
+            0,
+            128,
+            160,
+            255,
+            255
+          ]
+        },
+        "history_name": "AVG curve probe lift",
+        "apply_ms": 20.057678222656,
+        "read_back": {
+          "ToneCurvePV2012": [
+            0,
+            0,
+            255,
+            255
+          ]
+        },
+        "name_read": "Linear",
+        "taken": false
+      },
+      "answer": "n",
+      "completed": true
+    }
+  },
+  "headline": "WORKED",
+  "finished_at": "2026-10-26T02:42:28.933Z",
+  "plugin_log_copied": "curve_bridge_log_2026-10-26T02-41-19-233Z.txt",
+  "node": "v24.11.1",
+  "engine_version": "1.2.0"
+}

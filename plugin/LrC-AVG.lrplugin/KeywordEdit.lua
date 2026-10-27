@@ -74,14 +74,22 @@ function KeywordEdit.rename(payload)
     local before = KeywordTree.pathOf(keyword)
     if oldName == newName then return fail("bad_request", "the keyword is already named " .. newName) end
     local clash = KeywordTree.findChild(catalog, parent, newName)
-    if clash and clash ~= keyword then
+    -- By localIdentifier, not Lua identity: whether the SDK returns the same keyword object from two
+    -- getChildren() calls is [unverified]; localIdentifier is "unique within this catalog" [handle:
+    -- modules\LrKeyword.html, localIdentifier]. A case-only rename finds the keyword itself here.
+    if clash and clash ~= keyword and clash.localIdentifier ~= keyword.localIdentifier then
         return fail("keyword_exists", "a keyword " .. KeywordTree.pathOf(clash) .. " is already there: a rename cannot merge keywords")
     end
     local photoCount = #(keyword:getPhotos() or {})
     local writeErr
     if KeywordTree.fold(oldName) == KeywordTree.fold(newName) then
         writeErr = setName(catalog, keyword, tempName(catalog, parent, newName))
-        if not writeErr then writeErr = setName(catalog, keyword, newName) end
+        -- If the final name fails, put the old one back rather than leave "<new> (renaming)"; `after`
+        -- below reads whatever name the keyword ended up with.
+        if not writeErr then
+            writeErr = setName(catalog, keyword, newName)
+            if writeErr then setName(catalog, keyword, oldName) end
+        end
     else
         writeErr = setName(catalog, keyword, newName)
     end

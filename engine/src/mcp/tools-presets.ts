@@ -24,6 +24,8 @@ import {
   type LrPreset,
   type PresetSelector,
 } from "../presets/index.js";
+import { ToolError } from "./errors.js";
+import { leftOpenOn, leftOpenReason } from "./tools-develop.js";
 import { eachInBudget, type Budget } from "./tools-files.js";
 import { run, sessionTools, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
@@ -115,6 +117,9 @@ export function applyPresetTool(ctx: ToolContext, args: ApplyPresetArgs, budget:
       const applied: ApplyOutcome[] = [];
       const deps = { client: ctx.deps.client, map: ctx.deps.map };
       const { failed, left } = await eachInBudget(args.uuids, budget, () => applied, async (uuid) => {
+        // As the develop tools: ending a left-open session with revert would wipe the preset.
+        const open = leftOpenOn(ctx, uuid);
+        if (open) throw new ToolError("SESSION_LEFT_OPEN", leftOpenReason(open.session_id), false);
         applied.push(await applyPresetToPhoto(deps, p, ai, uuid, names));
       });
       const json = {

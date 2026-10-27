@@ -102,7 +102,8 @@ export const ORGANIZE_DEFS: ToolDef[] = [
       "lr_get_metadata reads, keyword paths included. The file is new each time (lrc-avg-metadata-<time>.json); no file is ever overwritten. " +
       "Returns its path. Photos not reached in about 30 seconds are in `not_yet`. Changes nothing in the catalog.",
     schema: exportArgs,
-    annotations: { readOnlyHint: true, openWorldHint: false },
+    // Not read-only: each call writes a new file (a retry after `pending` must not be treated as disposable).
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
     run: (tools, args) => tools.call(exportMetadata, args as z.infer<typeof exportArgs>),
   },
 ];

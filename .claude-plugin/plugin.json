@@ -1,9 +1,19 @@
 {
   "name": "lrc-avg",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Edit the photo selected in Lightroom Classic with native Develop settings, one measured pass at a time.",
-  "author": { "name": "Jim Beebe" },
+  "author": {
+    "name": "Jim Beebe"
+  },
   "homepage": "https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway#readme",
   "repository": "https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway",
-  "license": "MIT"
+  "license": "MIT",
+  "mcpServers": {
+    "lrc-avg": {
+      "command": "node",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/engine/dist/mcp/main.js"
+      ]
+    }
+  }
 }

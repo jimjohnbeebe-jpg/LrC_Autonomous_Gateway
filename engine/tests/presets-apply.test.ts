@@ -2,7 +2,7 @@
 // fake plugin (helpers\presets-sim.ts): the safety layer (snapshot, "AVG …" History name, before and after, the AI
 // update in its own command, refusal while a session is open), the budget, and the versioned checkpoint.
 
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Tools } from "../src/mcp/index.js";
 import { installPresets, newTools, SKY_TABLE } from "./helpers/presets-sim.js";
 import { fails, lr, plugin, useSessionHarness } from "./helpers/session-harness.js";
@@ -14,6 +14,7 @@ beforeEach(() => {
   sim = installPresets();
   tools = newTools();
 });
+afterEach(() => vi.restoreAllMocks());
 const sent = (name: string) => plugin.received.filter((r) => r.name === name).map((r) => r.payload as Record<string, unknown>);
 const order = () => plugin.received.map((r) => r.name).filter((n) => ["create_snapshot", "apply_preset", "update_ai_settings"].includes(n));
 const ticking = (step: number, ms: number) => {
@@ -66,6 +67,14 @@ describe("lr_apply_preset", () => {
     expect(sent("apply_preset").map((p) => p["scope"])).toEqual(["plugin"]);
     const timed = (await tools.applyPreset({ preset_uuid: "P-1", uuids: ["SIM-UUID", "B", "C"] }, ticking(20_000, 30_000))).json;
     expect(timed["not_yet"]).toEqual(["C"]);
+  });
+
+  it("refuses a photo a stopped engine's session was left open on, and writes nothing to it", async () => {
+    const left = [{ file: "x.json", log: { session_id: "20261027-aaaaaa", target: { uuid: "SIM-UUID" }, variants: [], snapshot: { name: "AVG pre-session", id: "S-LEFT" } } }];
+    vi.spyOn(tools.sessionManager()!, "leftOpen").mockReturnValue(left as never);
+    const out = (await tools.applyPreset({ preset_uuid: "U-WARM", uuids: ["SIM-UUID"] })).json;
+    expect(out["failed"]).toEqual([{ uuid: "SIM-UUID", code: "SESSION_LEFT_OPEN", message: expect.stringContaining("20261027-aaaaaa") }]);
+    expect(order()).toEqual([]);
   });
 
   it("refuses an ambiguous name and an open session before anything is written", async () => {

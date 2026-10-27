@@ -76,6 +76,7 @@ export async function setIptc(ctx: ToolContext, args: SetIptcArgs): Promise<Tool
     const sessions = sessionTools(ctx);
     await ctx.deps.ensureBridge();
     needPlugin(ctx, "lr_set_iptc", METADATA_PLUGIN, "it writes title, caption and headline");
+    if (Object.keys(want).some((f) => !["title", "caption", "headline"].includes(f))) needPlugin(ctx, "lr_set_iptc", "1.5.0", "it writes creator, copyright, location and alt text");
     return sessions.whenIdle("lr_set_iptc", async () => {
       const out = await writeEach(
         args.uuids,

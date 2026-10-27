@@ -153,7 +153,8 @@ local function copyOnce(catalog, master, masterInfo, name, owns)
     copy.identity_ok = copy.is_virtual_copy == true and copy.master_local_id == masterInfo.local_id
         and (name == nil or copy.copy_name == name) and type(copy.uuid) == "string"
     if not copy.identity_ok then
-        return copy, { code = "identity_mismatch", message = "the new photo is not a virtual copy of the master named " .. name }
+        return copy, { code = "identity_mismatch", message = "the new photo is not a virtual copy of the master" ..
+            (name and (" named " .. name) or "") }
     end
     return copy, nil
 end

@@ -6,18 +6,14 @@
 
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
-import { PLUGIN_VERSION } from "../bridge/index.js";
 import { CALL_BUDGET_MS } from "../library/index.js";
 import { ParamError, differingSettings, tableInfo, type ParamMap, type SdkSettings } from "../params/index.js";
 import { WRITE_TIMEOUT_MS } from "../sync/target.js";
 import { eachInBudget, type Budget } from "./tools-files.js";
 import { needPlugin, run, sessionTools, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
-/**
- * The plugin with the issue #214 commands (DevelopTools.lua, Snapshots.lua, Copies.lua). It ships with this engine's
- * version bump; ponytail: pinned to PLUGIN_VERSION until then, set it to that release's number at the bump.
- */
-export const DEVELOP_PLUGIN = PLUGIN_VERSION;
+/** The plugin with the issue #214 commands (DevelopTools.lua, Snapshots.lua, Copies.lua). */
+export const DEVELOP_PLUGIN = "1.5.0";
 
 export type ApplyAutoArgs = { uuids: string[]; tone?: boolean | undefined; white_balance?: boolean | undefined };
 export type ResetArgs = { uuids: string[]; confirm: true };

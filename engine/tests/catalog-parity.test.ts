@@ -7,6 +7,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { BridgeError, type CommandName } from "../src/bridge/index.js";
 import { searchCriteria } from "../src/library/index.js";
 import { CATALOG_DEFS } from "../src/mcp/defs-catalog.js";
 import { ORGANIZE_DEFS } from "../src/mcp/defs-organize.js";
@@ -17,7 +18,7 @@ import { exportMetadata } from "../src/mcp/tools-export-metadata.js";
 import { removeKeywordSubtree, renameKeyword } from "../src/mcp/tools-keywords.js";
 import { setColorLabel } from "../src/mcp/tools-metadata.js";
 import type { ToolOutput } from "../src/mcp/tools-shared.js";
-import { lr, plugin, sent, tmp, tools, useSyncHarness } from "./helpers/sync-harness.js";
+import { client, lr, plugin, sent, tmp, tools, useSyncHarness } from "./helpers/sync-harness.js";
 
 useSyncHarness();
 afterEach(() => vi.restoreAllMocks());
@@ -186,6 +187,24 @@ describe("row 5: keywords", () => {
     expect(sent("set_keywords")).toEqual([{ photo_uuid: "SIM-UUID", add: [], remove: ["Animals", "Animals|bird"] }]);
     expect(photos(out)[0]).toMatchObject({ before: ["Animals|bird", "heron"], after: ["heron"], changed: true });
     expect(out.json).toMatchObject({ keywords: ["Animals", "Animals|bird"], undo: expect.stringContaining("lr_set_keywords") });
+  });
+
+  it("when Lightroom stops answering in a later chunk, the error lists the earlier chunks' photos and the later ones", async () => {
+    const uuids = Array.from({ length: 15 }, (_, i) => `U${i + 1}`);
+    plugin.handlers.set("keyword_subtree", () => ok({ paths: ["bird"] }));
+    const real = client.request.bind(client);
+    vi.spyOn(client, "request").mockImplementation(((name: CommandName, payload: Record<string, unknown>, options?: { timeoutMs?: number }) => {
+      if (name !== "set_keywords") return real(name, payload as never, options);
+      if (payload["photo_uuid"] === "U12") return Promise.reject(new BridgeError("timeout", "set_keywords: no response", true, "set_keywords"));
+      return Promise.resolve({ filename: "x.NEF", before: ["bird"], after: [] });
+    }) as typeof client.request);
+    const e = await fails(tools.call(removeKeywordSubtree, { path: "bird", uuids }));
+    expect(e.code).toBe("BRIDGE_TIMEOUT");
+    const d = e.details as { written: Array<{ uuid: string; before: string[] }>; maybe_written: string; not_sent: string[] };
+    expect(d.written.map((w) => w.uuid)).toEqual(uuids.slice(0, 11));
+    expect(d.written[0]?.before).toEqual(["bird"]);
+    expect(d.maybe_written).toBe("U12");
+    expect(d.not_sent).toEqual(["U13", "U14", "U15"]);
   });
 
   it("catalog_wide needs confirm, then takes the holders from keyword_subtree; a spent budget leaves the rest for the next call", async () => {

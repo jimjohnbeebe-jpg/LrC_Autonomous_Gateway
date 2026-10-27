@@ -1,6 +1,8 @@
 // MCP prompts and the .mcpb manifest (issue #219) through a real MCP client over the in-memory transport.
 // Neither touches Lightroom, so the server gets no real Tools.
 
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { buildManifest } from "../src/devtools/mcpb-manifest.js";
@@ -47,6 +49,8 @@ describe(".mcpb manifest", () => {
     const { tools } = await mcp.listTools();
     expect(manifestToolProblems(manifest, tools.map((t) => t.name))).toEqual([]);
     expect(manifest.version).toBe(ENGINE_VERSION);
+    const plugin = JSON.parse(readFileSync(path.join(import.meta.dirname, "..", "..", ".claude-plugin", "plugin.json"), "utf8")) as { version: string };
+    expect(plugin.version).toBe(ENGINE_VERSION);
     expect(manifest.tools.every((t) => t.description.length > 0)).toBe(true);
   });
 

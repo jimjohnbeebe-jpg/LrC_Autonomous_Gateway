@@ -75,7 +75,6 @@ local function target(payload)
 end
 -- Preview.lua exports the same target photo; DevelopTools.lua (issue #214) writes with the same AI-mask guard.
 Develop.target = target
-Develop.writeTarget = writeTarget
 
 local function readSettings(catalog, photo)
     local settings

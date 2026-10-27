@@ -5,7 +5,7 @@
 // catalog_wide every photo holding one; at most MAX_PHOTOS a call, within CALL_BUDGET_MS. No keyword is deleted.
 
 import { CALL_BUDGET_MS, CATALOG_READ_TIMEOUT_MS, MAX_PHOTOS, keywordsNotTaken, normalizeKeyword, writeEach, type WriteResult } from "../library/index.js";
-import { WRITE_TIMEOUT_MS } from "../sync/target.js";
+import { UNANSWERED, WRITE_TIMEOUT_MS } from "../sync/target.js";
 import { ToolError } from "./errors.js";
 import { written } from "./tools-catalog.js";
 import { run, sessionTools, type ToolContext, type ToolOutput } from "./tools-shared.js";
@@ -47,6 +47,13 @@ async function targets(ctx: ToolContext, args: RemoveSubtreeArgs, holders: strin
   return sel.photos.map((p) => p.uuid).filter((u): u is string => typeof u === "string");
 }
 
+/** writeEach's "Lightroom stopped answering" error lists only its own chunk: add the chunks before and after it. */
+function withEarlier(err: unknown, out: WriteResult<string[]>, later: string[]): unknown {
+  if (!(err instanceof ToolError) || !UNANSWERED.has(err.code)) return err;
+  const d = err.details as { written: unknown[]; failed: unknown[]; not_sent: string[] };
+  return new ToolError(err.code, err.message, err.recoverable, { ...d, written: [...out.photos, ...d.written], failed: [...out.failed, ...d.failed], not_sent: [...d.not_sent, ...later] });
+}
+
 export async function removeKeywordSubtree(ctx: ToolContext, args: RemoveSubtreeArgs, budgetMs = CALL_BUDGET_MS): Promise<ToolOutput> {
   return run(ctx, "lr_remove_keyword_subtree", args, async () => {
     if (args.catalog_wide === true && args.confirm !== true) {
@@ -68,7 +75,9 @@ export async function removeKeywordSubtree(ctx: ToolContext, args: RemoveSubtree
           (w) => keywordsNotTaken(w.after, [], tree.paths),
           "keywords",
           "KEYWORDS_NOT_TAKEN",
-        );
+        ).catch((err: unknown) => {
+          throw withEarlier(err, out, all.slice(done + chunk.length, Math.min(all.length, MAX_PHOTOS)));
+        });
         out.photos.push(...r.photos);
         out.failed.push(...r.failed);
         done += chunk.length;

@@ -1,9 +1,9 @@
 ---
 report: MCP SDK v2 (issue #208)
 phase: 11
-status: template
-authored_by: "Template + pre-run findings: Claude Code (Opus 5.5 coordinating, Sonnet 5.5 and Haiku 5.5 subagents), 2026-10-26. Observed: Jim (empty)."
-date: 2026-10-26 (template)
+status: accepted
+authored_by: "Template + pre-run findings: Claude Code (Opus 5.5 coordinating, Sonnet 5.5 and Haiku 5.5 subagents), 2026-10-26. Observed: Jim's chat and answers, the start record and tool log collected by Claude Code, 2026-10-27. Verdict: Jim."
+date: 2026-10-27
 ---
 
 # MCP SDK v2 — the engine on `@modelcontextprotocol/server` 2.4.0
@@ -22,7 +22,8 @@ No new harness: the engine Claude Desktop already starts (`npm run desktop:insta
 1. Quit Claude Desktop: right-click the Claude icon in the Windows system tray > **Quit**. Start Claude Desktop again.
 2. In Lightroom Classic, select one photo in the Library grid.
 3. In a new Claude Desktop chat, type: **Use lrc-avg to show me a preview of the selected photo.** Allow the tool when Claude Desktop asks.
-4. Tell Claude Code **"SDK v2 check done"** and whether the photo's preview was shown in the chat (**yes** or **no**).
+4. Click the `lr_get_preview` tool-call box in the chat to expand it. Claude Desktop shows a tool's image there, not in Claude's answer (`docs\reports\phase0\S3.md`, "Verdict").
+5. Tell Claude Code **"SDK v2 check done"** and whether the photo is in the expanded box (**yes** or **no**).
 
 ### If something goes wrong
 
@@ -40,24 +41,29 @@ No new harness: the engine Claude Desktop already starts (`npm run desktop:insta
 
 ## Observed (Jim)
 
-- Preview shown in the Claude Desktop chat (yes/no):
-- Collected by Claude Code after the chat: `last-start.json` engine version and client; the tool log line of the call.
+Jim ran the chat on 2026-10-27 at `main` `cc867a8` (built), with steps 1-4 as they then were: step 4 asked whether the preview was "shown in the chat".
+- **Preview in Claude's answer: no** [stated: Jim, "The preview did NOT show up in the Claude Desktop window, even though Claude said that it did"]. This is the S3 behaviour: Claude Desktop shows a tool's image in the tool-call box, not in the answer (`docs\reports\phase0\S3.md:111`). The step was reworded afterwards (steps 4-5 above).
+- **Preview in the expanded tool-call box: yes** [stated: Jim, "Everything looks good, so yes, go.", in answer to that question].
+- **Start record:** `%LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\LrC-AVG\last-start.json`: `time` 2026-10-27T12:07:18.235Z, `engine_version` 1.3.0, `client_name` `local-agent-mode-lrc-avg` 1.0.0, `main_js` `D:\Developer\LrC_Autonomous_Gateway\engine\dist\mcp\main.js`. The copy at `%LOCALAPPDATA%\LrC-AVG\last-start.json` was last written on 2026-10-18 (by opencode) [handle: both files, read 2026-10-27].
+- **Tool log:** `D:\Developer\LrC_Autonomous_Gateway\logs\engine-20261027.jsonl` (Claude Desktop's entry sets `LRC_AVG_LOG_DIR` to the repo `logs\`), lines 2 and 4: `lr_get_preview`, `ok: true`, 1,653 ms and 1,618 ms, client `claude-ai` 0.1.0, photo uuid `8DB6BB8D-A1B5-44D2-B1AE-E7A609D98221`.
 
 ## Numbers
 
 | Field | Value |
 |---|---|
-| Engine version in `last-start.json` | |
-| Client in `last-start.json` | |
-| Tool called, result `ok` | |
-| Image block in the result | |
+| Engine version in `last-start.json` | 1.3.0 (`main` `cc867a8`, SDK 2.4.0) |
+| Client in `last-start.json` | `local-agent-mode-lrc-avg` 1.0.0 (the tool log names `claude-ai` 0.1.0) |
+| Tool called, result `ok` | `lr_get_preview`, ok, twice |
+| Image block in the result | yes: Jim saw the photo in the tool-call box; `engine\src\mcp\server.ts:70` adds the JPEG as an `image` block |
 
 ## Verdict
 
-(Jim)
+**Go** (Jim, 2026-10-27) [stated: "Everything looks good, so yes, go."].
 
 ## Consequences / open questions
 
 - `serveStdio` and the 2026-07-28 protocol revision are not adopted [stated: Jim, 2026-10-26, decision 2 of the #208/#209 plan]; which revision Claude Desktop speaks is [unverified].
 - SDK 2.4.0 marks the low-level `Server` `@deprecated`; the engine keeps it for its own argument errors (`engine\src\mcp\server.ts` header).
 - `spikes\` stays on SDK 1.32.0 [stated: Jim, 2026-10-26, decision 4].
+- **The start record Claude Desktop's engine writes is not where the plugin looks.** This Claude Desktop is a packaged (MSIX) app: its config is under `%LOCALAPPDATA%\Claude-Data\claude_pzs8sxrjxfjjc\`, and the `last-start.json` its engine wrote is under `%LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\LrC-AVG\` [handle: both paths, 2026-10-27]. That Windows redirects a packaged app's `%LOCALAPPDATA%` writes there is [inference]. The plugin's Status dialog and the setup check read `%LOCALAPPDATA%\LrC-AVG\last-start.json` (`engine\src\log\last-start.ts:1-4`), so they may report an old start for Claude Desktop [unverified]. The intents folder has moved to Documents (#180); whether the packaged app redirects writes there too is [unverified].
+- Why `last-start.json` and the tool log name different clients (`local-agent-mode-lrc-avg` vs `claude-ai`) is [unverified].

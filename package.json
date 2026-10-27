@@ -38,6 +38,7 @@
     "masks:crop": "npm run build && node engine/dist/devtools/mask-crop-probe-cli.js",
     "masks:kinds": "npm run build && node engine/dist/devtools/mask-combine-probe-cli.js --kinds",
     "denoise:check": "npm run build && node engine/dist/devtools/denoise-check-cli.js",
+    "develop:check": "npm run build && node engine/dist/devtools/develop-check-cli.js",
     "effects:probe": "npm run build && node engine/dist/devtools/effects-probe-cli.js",
     "stall:check": "npm run build && node engine/dist/devtools/stall-check-cli.js",
     "intents:check": "npm run build && node engine/dist/devtools/intents-check-cli.js",

@@ -46,6 +46,8 @@ const deltaShape = {
   saturation_mean: z.number(),
   chromatic_pct: z.number(),
   hue_mean: z.number().nullable(),
+  // Issue #216 (metrics\sharpness.ts, the engine after 1.4.0); logs written before it have none.
+  sharpness: z.number().nullable().optional(),
 };
 const statsShape = { ...deltaShape, hue_histogram: z.array(z.number()).length(12) };
 
@@ -73,7 +75,8 @@ const refusal = z.strictObject({ name: z.string(), reason: z.string(), by: z.enu
 
 export const guardrailActionSchema = z.strictObject({
   kind: z.enum(["corrected", "unmet", "reverted", "advisory"]),
-  limit: z.enum(["clip_high", "clip_low", "region"]),
+  // "sharpness" (issue #216): an advisory only (session\sharpness-advice.ts).
+  limit: z.enum(["clip_high", "clip_low", "region", "sharpness"]),
   reason: z.string(),
   history_name: z.string().nullable(),
   changes: z.record(z.string(), z.number()),

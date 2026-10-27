@@ -99,6 +99,7 @@ describe("mcp server", () => {
       "lr_get_intent",
       "lr_get_metadata",
       "lr_get_metrics",
+      "lr_get_photo_stats",
       "lr_get_preset",
       "lr_get_preview",
       "lr_get_selected_photos",

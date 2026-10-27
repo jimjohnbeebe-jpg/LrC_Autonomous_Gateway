@@ -88,6 +88,8 @@ export type CommandPayloads = {
   apply_settings: Target & { settings: Record<string, unknown>; history_name: string; put_back?: boolean };
   /** long_edge in pixels; quality 0-100 (the plugin converts it to the export setting's scale). */
   export_preview: Target & { long_edge: number; quality: number };
+  /** Issue #216: Lightroom's cached preview of at least long_edge (it may be larger, and stale), written as a file like export_preview. */
+  thumbnail_preview: Target & { long_edge: number };
   create_snapshot: Target & { name: string };
   /** restore_view (issue #214, Snapshots.lua): the photo made active in Develop, then the module, sources and selection put back; else Lightroom stays in Develop. */
   apply_snapshot: Target & { snapshot_id: string; restore_view?: boolean };

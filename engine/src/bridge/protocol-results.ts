@@ -111,6 +111,13 @@ export const COMMAND_RESULTS = {
     path: z.string().min(1),
     export_ms: z.number(),
   }),
+  // Lightroom's cached preview (issue #216, Preview.lua thumbnailPreview), as a file like export_preview;
+  // export_ms is the wait for requestJpegThumbnail's callback.
+  thumbnail_preview: z.object({
+    ...targeted,
+    path: z.string().min(1),
+    export_ms: z.number(),
+  }),
   create_snapshot: z.object({
     ...targeted,
     snapshot_id: z.string().min(1),

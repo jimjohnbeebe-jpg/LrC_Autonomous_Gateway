@@ -16,6 +16,7 @@ import { clipBreach, correct, regionDrift, undo, undoRefused } from "./guardrail
 import { brief, describe, failed, fresh, historyName, image, ms, read, recordPass, render, write } from "./io.js";
 import { awaitingPick, checkVariantStep, pickRound } from "./pick.js";
 import { applyProjectedGuardrail, convergedByMetrics, planStep, type StepPlan } from "./plan.js";
+import { sharpnessAdvisory } from "./sharpness-advice.js";
 import { focus, resolveTarget } from "./targets.js";
 import type { Rendered, Session, SessionContext, SessionOutput, StepArgs, Target } from "./types.js";
 
@@ -49,6 +50,7 @@ export async function step(ctx: SessionContext, s: Session, args: StepArgs): Pro
     const beforeRender = baseline.last;
     const done = await apply(ctx, s, t, n, plan, beforeView, beforeRender);
     const delta = deltaMetrics(beforeRender.metrics, done.rendered.metrics);
+    done.actions.push(...sharpnessAdvisory(plan.changes, beforeRender.metrics, done.rendered.metrics)); // issue #216
     const converged = convergedByMetrics(delta, plan.changes, t.pipeline);
     t.passes = n;
     if (converged) t.endReason = "converged";

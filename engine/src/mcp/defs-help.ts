@@ -24,6 +24,9 @@ export const HELP_TEXT = [
     "they understate clipping and fine detail at print size. lr_get_preview with `region` exports the photo " +
     "larger and returns a crop of that box, for finer detail (sharpness, noise, fringing). Its `metrics` describe the whole " +
     "export (`metrics_scope` \"frame\") and `crop_metrics` the requested box, measured at export resolution. " +
+    "For browsing, lr_get_preview with `quality` \"fast\" returns Lightroom's cached preview (quick, possibly stale), and " +
+    "lr_get_photo_stats measures up to 20 photos at once. A pass that changed sharpening or noise and lowered `sharpness` " +
+    "markedly gets an `advisory` row (limit \"sharpness\"): look at a crop. " +
     `Every point and box a tool takes or gives (\`region\`, lr_set_regions, mask geometry, points and people's boxes) is in ${FRAME}.`,
   "",
   `4. Metrics. ${MEASURED}`,

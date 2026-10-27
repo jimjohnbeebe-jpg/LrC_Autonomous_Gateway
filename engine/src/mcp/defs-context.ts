@@ -1,8 +1,9 @@
 // The MCP definitions of the context tools (tools-context.ts).
 
 import { z } from "zod";
-import { FRAME, MEASURED, box, longEdge, noArgs, sessionId, target, type ToolDef } from "./defs-shared.js";
+import { FRAME, MEASURED, TIMED, box, longEdge, noArgs, sessionId, target, type ToolDef } from "./defs-shared.js";
 import { PREVIEW_QUALITY } from "./tools-shared.js";
+import { MAX_STATS_PHOTOS, STATS_LONG_EDGE } from "./tools-stats.js";
 
 const sessionTarget = target.describe(
   'with session_id, in Variants mode: the photo, "A", "B", "C" or "master" (default: the photo the last session call worked on, the pick once there is one)',
@@ -13,8 +14,15 @@ const previewArgs = z.object({
   target: sessionTarget,
   region: box.optional().describe(`return a crop of this box {x, y, w, h} in ${FRAME}, exported large enough to show it at up to 100 %; see effective_scale`),
   uuid: z.string().min(1).optional().describe("render this photo (a uuid from lr_search_photos, lr_get_selected_photos or lr_import_photos), selected or not; the selection is not touched; not with session_id"),
+  quality: z
+    .enum(["exact", "fast"])
+    .optional()
+    .describe('"exact" (default): the export, about 3 s. "fast": Lightroom\'s cached preview, quicker but possibly stale (source "thumbnail", stale_possible true); for browsing, not for judging an edit; not with session_id, target or region'),
 });
 const metricsArgs = z.object({ session_id: sessionId.optional(), target: sessionTarget });
+const statsArgs = z.object({
+  uuids: z.array(z.string().min(1)).min(1).max(MAX_STATS_PHOTOS).describe(`1-${MAX_STATS_PHOTOS} photo uuids (from lr_search_photos or lr_get_selected_photos)`),
+});
 
 export const CONTEXT_DEFS: ToolDef[] = [
   {
@@ -61,5 +69,17 @@ export const CONTEXT_DEFS: ToolDef[] = [
     schema: metricsArgs,
     annotations: { readOnlyHint: true, openWorldHint: false },
     run: (tools, args) => tools.getMetrics(args as z.infer<typeof metricsArgs>),
+  },
+  {
+    name: "lr_get_photo_stats",
+    title: "Metrics of several photos",
+    description:
+      `Measure up to ${MAX_STATS_PHOTOS} photos named by uuid, without a session and without selecting them: each is exported at ${STATS_LONG_EDGE} px ` +
+      "(about 1-3 s a photo) and measured. Returns `photos` in the order given, each with `metrics` (the summary lr_get_preview returns, " +
+      "sharpness included) or its own `error`. For culling: compare sharpness and exposure across frames of one scene. Returns no images. " +
+      `Not while a session is open. Changes nothing. ${TIMED} ${MEASURED}`,
+    schema: statsArgs,
+    annotations: { readOnlyHint: true, openWorldHint: false },
+    run: (tools, args) => tools.getPhotoStats(args as z.infer<typeof statsArgs>),
   },
 ];

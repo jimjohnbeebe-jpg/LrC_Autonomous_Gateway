@@ -17,14 +17,15 @@ export type ToolDef = {
 
 export const MEASURED =
   "Metrics are measured on the rendered preview (8-bit sRGB, as Lightroom exported it), not on the raw file: " +
-  "clipping here can often be recovered from the raw data with highlights/whites or shadows/blacks. " +
+  "clipping here can often be recovered with highlights/whites or shadows/blacks. " +
   "clip_high_pct = % of pixels with any channel >= 253; clip_high_tone_pct = % with 2+ channels >= 253 (the high guard's); " +
-  "clip_low_pct = % of pixels with all channels <= 2; " +
-  "luma = Rec. 709 weights on the 8-bit values (0-255); luma_percentiles p1-p99 by nearest rank; " +
-  "dynamic_range = (p99 - p1) / 255; rb_ratio = mean red / mean blue (a white-balance proxy); " +
+  "clip_low_pct = % with all channels <= 2; " +
+  "luma = Rec. 709 on the 8-bit values; luma_percentiles p1-p99 by nearest rank; " +
+  "dynamic_range = (p99 - p1) / 255; rb_ratio = mean red / mean blue; " +
   "saturation_mean = mean HSV saturation, 0-100; hue_histogram = 12 bins of 30 degrees (bin i centred on i*30: " +
   "0 red, 60 yellow, 120 green, 180 cyan, 240 blue, 300 magenta), % of the chromatic pixels (HSV saturation and value " +
-  ">= 0.1, chromatic_pct of all); hue_mean = their circular mean hue in degrees. Percentages are 0-100.";
+  ">= 0.1, chromatic_pct of all); hue_mean = their circular mean hue in degrees; " +
+  "sharpness = Laplacian variance of luma at 512 px (more = detail or noise). Percentages are 0-100.";
 
 /** The tools that stop starting photos after library\files.ts CALL_BUDGET_MS (export, import, sync). */
 export const TIMED =

@@ -25,6 +25,8 @@
 //   hue_histogram     12 bins of 30 degrees over the chromatic pixels, percent of them; bin i is centred
 //                     on i * 30 degrees (0 red, 60 yellow, 120 green, 180 cyan, 240 blue, 300 magenta)
 //   hue_mean          circular mean hue of the chromatic pixels, degrees 0-360; null when there are none
+//   sharpness         Laplacian variance of the luma at a 512 px long edge (sharpness.ts, issue #216); null
+//                     for a region too small to measure
 // Percentages are 0-100. Hue is counted in 1-degree bins (each taken at its centre) before the
 // 12-bin histogram and the circular mean are formed from them [inference: each hue moves by less
 // than 0.5 degree to its bin centre, so their circular mean moves by less than 0.5 degree too].
@@ -32,10 +34,12 @@
 
 import sharp from "sharp";
 import { boxToRect, type PixelRect, type Region, type RegionBox } from "./regions.js";
+import { LUMA_WEIGHTS, laplacianVariance, resampleLuma } from "./sharpness.js";
+
+export { LUMA_WEIGHTS };
 
 export const CLIP_HIGH = 253;
 export const CLIP_LOW = 2;
-export const LUMA_WEIGHTS = { r: 0.2126, g: 0.7152, b: 0.0722 } as const;
 /** HSV saturation and value (0-1) a pixel needs for its hue to count. */
 export const CHROMATIC_MIN = { saturation: 0.1, value: 0.1 } as const;
 export const HUE_BINS = 12;
@@ -61,6 +65,7 @@ export type Stats = {
   chromatic_pct: number;
   hue_mean: number | null;
   hue_histogram: number[];
+  sharpness: number | null;
 };
 
 export type RegionStats = { label: string; box: RegionBox; rect: PixelRect; pixels: number } & Stats;
@@ -204,7 +209,7 @@ function hueStats(hue: Float64Array, chromatic: number): { mean: number | null; 
   return { mean, histogram: histogram.map((count) => round((count / chromatic) * 100)) };
 }
 
-function finish(acc: Accumulator): Stats {
+function finish(acc: Accumulator): Omit<Stats, "sharpness"> {
   const n = acc.pixels;
   const pct = (count: number): number => round((count / n) * 100);
   const mean = acc.lumaSum / n;
@@ -248,9 +253,11 @@ export function computeMetrics(data: Uint8Array, width: number, height: number, 
     throw new Error(`pixel buffer is ${data.length} bytes; ${width}x${height}x${channels} needs ${pixels * channels}`);
   }
   const whole = accumulate(data, width, channels, { left: 0, top: 0, width, height });
+  const grid = resampleLuma(data, width, height, channels);
   const regionStats = regions.map((region): RegionStats => {
     const rect = boxToRect(region.box, width, height);
-    return { label: region.label, box: { ...region.box }, rect, pixels: rect.width * rect.height, ...finish(accumulate(data, width, channels, rect)) };
+    const stats = finish(accumulate(data, width, channels, rect));
+    return { label: region.label, box: { ...region.box }, rect, pixels: rect.width * rect.height, ...stats, sharpness: laplacianVariance(grid, rect) };
   });
   return {
     width,
@@ -258,6 +265,7 @@ export function computeMetrics(data: Uint8Array, width: number, height: number, 
     pixels,
     histograms: { luma: Array.from(whole.luma), r: Array.from(whole.r), g: Array.from(whole.g), b: Array.from(whole.b) },
     ...finish(whole),
+    sharpness: laplacianVariance(grid),
     regions: regionStats,
   };
 }
@@ -308,6 +316,7 @@ function deltaStats(before: Stats, after: Stats): StatsDelta {
     saturation_mean: d(after.saturation_mean, before.saturation_mean, 3),
     chromatic_pct: d(after.chromatic_pct, before.chromatic_pct),
     hue_mean: after.hue_mean === null || before.hue_mean === null ? null : round(hueTurn(before.hue_mean, after.hue_mean), 2),
+    sharpness: after.sharpness === null || before.sharpness === null ? null : d(after.sharpness, before.sharpness, 3),
   };
 }
 

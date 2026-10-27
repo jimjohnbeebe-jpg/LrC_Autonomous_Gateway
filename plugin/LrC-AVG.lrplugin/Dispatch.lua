@@ -41,6 +41,7 @@ function Dispatch.handlers(hello)
         create_snapshot = Develop.createSnapshot,
         apply_snapshot = Snapshots.apply,
         export_preview = Preview.exportPreview,
+        thumbnail_preview = Preview.thumbnailPreview,
         create_virtual_copies = Catalog.createVirtualCopies,
         select_photo = Catalog.selectPhoto,
         get_selection = Catalog.getSelection,

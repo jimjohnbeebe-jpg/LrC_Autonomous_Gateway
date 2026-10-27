@@ -1,0 +1,2306 @@
+[
+  {
+    "name": "lr_help",
+    "title": "How LrC-AVG works",
+    "description": "Explain how LrC-AVG works: sessions and session_id, what uses a pass, previews and region previews, the metrics, Variants mode, clipping guardrails, mask names, logs and errors. Static text; touches nothing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_get_active_photo_context",
+    "title": "Active photo context",
+    "description": "Describe the photo selected in Lightroom Classic: file, GPS position (`gps`, null for none), EXIF (ISO, shutter in seconds, aperture, focal length, lens, camera), rating/label/pick, process version, camera profile, and every Develop setting under its canonical name (`settings`; these names are the ones lr_step takes). `pipeline` is \"raw\" (camera raw files) or \"rendered\" (JPEG, TIFF, PNG, PSD, HEIC, AVIF and other non-raw files): `white_balance_unit` says what temperature and tint mean on this photo, Kelvin on raw, a relative -100..100 on rendered. Rendered photos have their own profiles (Color, Monochrome). Also says whether a session is open on it, and which Lightroom version runs (`lightroom`; tell the user its `notices`, empty when the version is supported and tested). `left_open` lists sessions an engine that stopped (the AI client closed or restarted it) left open, with `left_open_note`: ask the user, for each, to revert, accept or abandon it, and end it with lr_end_session. Changes nothing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_get_preview",
+    "title": "Preview of the active photo",
+    "description": "Render the photo selected in Lightroom with its current Develop settings (a JPEG export, quality 75, which takes about 3 seconds) and return it as an image, with its uuid, SHA-256 hash, size, metrics and timings. With `uuid`: that photo instead, without selecting it (to look through a shoot, for culling or keywording). With `session_id`: the session's photo (refused with TARGET_CHANGED if another photo is selected) and its region metrics; in Variants mode `target` names the copy, which is selected in Lightroom first. With `region` (a box in 0-1 of the preview you see (the photo as cropped in Lightroom, upright), from its top-left corner, as mask geometry and lr_set_regions are): a crop of that box for judging sharpness, noise or fringing; the photo is exported larger (up to 4096 px) so the crop fills `long_edge`, never enlarged; `effective_scale` = output pixels per photo pixel (1 = 100 %). With `region`, the result's `metrics` describe the whole export (`metrics_scope` \"frame\") and `crop_metrics` the requested box, both measured at export resolution. Changes nothing. Metrics are measured on the rendered preview (8-bit sRGB, as Lightroom exported it), not on the raw file: clipping here can often be recovered from the raw data with highlights/whites or shadows/blacks. clip_high_pct = % of pixels with any channel >= 253; clip_high_tone_pct = % with 2+ channels >= 253 (the high guard's); clip_low_pct = % of pixels with all channels <= 2; luma = Rec. 709 weights on the 8-bit values (0-255); luma_percentiles p1-p99 by nearest rank; dynamic_range = (p99 - p1) / 255; rb_ratio = mean red / mean blue (a white-balance proxy); saturation_mean = mean HSV saturation, 0-100; hue_histogram = 12 bins of 30 degrees (bin i centred on i*30: 0 red, 60 yellow, 120 green, 180 cyan, 240 blue, 300 magenta), % of the chromatic pixels (HSV saturation and value >= 0.1, chromatic_pct of all); hue_mean = their circular mean hue in degrees. Percentages are 0-100.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "long_edge": {
+          "description": "Preview long edge in pixels, 800-1920 (default 1600).",
+          "type": "integer",
+          "minimum": 800,
+          "maximum": 1920
+        },
+        "session_id": {
+          "description": "render the session's photo, with its region metrics; refused if another photo is selected; ignored when no session is open",
+          "type": "string",
+          "minLength": 1
+        },
+        "target": {
+          "description": "with session_id, in Variants mode: the photo, \"A\", \"B\", \"C\" or \"master\" (default: the photo the last session call worked on, the pick once there is one)",
+          "type": "string",
+          "enum": [
+            "master",
+            "A",
+            "B",
+            "C"
+          ]
+        },
+        "region": {
+          "description": "return a crop of this box {x, y, w, h} in 0-1 of the preview you see (the photo as cropped in Lightroom, upright), from its top-left corner, exported large enough to show it at up to 100 %; see effective_scale",
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "w": {
+              "type": "number"
+            },
+            "h": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "x",
+            "y",
+            "w",
+            "h"
+          ]
+        },
+        "uuid": {
+          "description": "render this photo (a uuid from lr_search_photos, lr_get_selected_photos or lr_import_photos), selected or not; the selection is not touched; not with session_id",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_get_metrics",
+    "title": "Metrics of the last preview",
+    "description": "Return the full metrics of the last preview (the open session's, of `target` in Variants mode, or else this engine's last render): the metrics lr_get_preview returns plus 256-bin luma, red, green and blue histograms, without rendering again. Metrics are measured on the rendered preview (8-bit sRGB, as Lightroom exported it), not on the raw file: clipping here can often be recovered from the raw data with highlights/whites or shadows/blacks. clip_high_pct = % of pixels with any channel >= 253; clip_high_tone_pct = % with 2+ channels >= 253 (the high guard's); clip_low_pct = % of pixels with all channels <= 2; luma = Rec. 709 weights on the 8-bit values (0-255); luma_percentiles p1-p99 by nearest rank; dynamic_range = (p99 - p1) / 255; rb_ratio = mean red / mean blue (a white-balance proxy); saturation_mean = mean HSV saturation, 0-100; hue_histogram = 12 bins of 30 degrees (bin i centred on i*30: 0 red, 60 yellow, 120 green, 180 cyan, 240 blue, 300 magenta), % of the chromatic pixels (HSV saturation and value >= 0.1, chromatic_pct of all); hue_mean = their circular mean hue in degrees. Percentages are 0-100.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the session_id from lr_begin_session"
+        },
+        "target": {
+          "description": "with session_id, in Variants mode: the photo, \"A\", \"B\", \"C\" or \"master\" (default: the photo the last session call worked on, the pick once there is one)",
+          "type": "string",
+          "enum": [
+            "master",
+            "A",
+            "B",
+            "C"
+          ]
+        }
+      }
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_begin_session",
+    "title": "Begin an editing session",
+    "description": "Start an editing session on the photo selected in Lightroom. THE USER'S REQUEST COMES FIRST: put it in `notes` in their own words. An intent (lr_list_intents) is an optional starting point: leave intent_id out when none fits; pass `profile` or `guardrails` when the request needs them (e.g. high key or crushed blacks). The engine makes a Develop snapshot \"AVG pre-session …\" (lr_end_session revert returns to it), renders the photo, and runs pass 0 as one History step \"AVG <id> pass 0/N\". Returns session_id, the intent's brief, guardrails, pass0_applied, the full settings, metrics, the preview, `log_path`, and `start_off_zero` (settings found on the photo, which may be import defaults or earlier edits). Then call lr_step once per pass, up to max_passes. One session at a time; it stays open until lr_end_session. A photo with a session an engine that stopped left open (lr_get_active_photo_context `left_open`) is refused with SESSION_LEFT_OPEN, nothing written, until that session is ended. lr_help explains passes, variants mode, clipping guardrails, metrics and previews. The LrC-AVG HUD in Lightroom opens and follows the session; there the user can Abort (the photo goes back to the pre-session snapshot, and a running call stops before its next write), Accept (after the running call), Pick a copy, or Approve a pass (approve_each_pass mode). A session the user ended answers every later call with SESSION_ENDED (details: outcome, source); tell the user, and start a new session only if they ask. ",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "intent_id": {
+          "description": "an intent id from lr_list_intents, e.g. landscape_golden_hour, as a starting point; leave out (or give \"none\") when no intent fits the user's request",
+          "type": "string",
+          "minLength": 1
+        },
+        "profile": {
+          "description": "the profile pass 0 sets, replacing the intent's: a profile of the photo's pipeline (raw: e.g. \"Adobe Color\"; rendered: \"Color\" or \"Monochrome\")",
+          "type": "string",
+          "minLength": 1
+        },
+        "clip_baseline": {
+          "description": "true only when the user's request asks pass 0 to pull clipping in; replaces the intent's",
+          "type": "boolean"
+        },
+        "mode": {
+          "description": "\"converge\" (default): edit the selected photo; \"variants\": make virtual copies A, B (and C) with the intent's variant looks, then the user picks one",
+          "type": "string",
+          "enum": [
+            "converge",
+            "variants"
+          ]
+        },
+        "variant_count": {
+          "description": "mode \"variants\" only (ignored in Converge mode): how many copies, 2-3 (default: the settings page's, else 3); A, B, C take the intent's variants of those letters",
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 3
+        },
+        "max_passes": {
+          "description": "passes after pass 0, 1-16 (default: the settings page's, else 8)",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16
+        },
+        "guardrails": {
+          "description": "clipping limits for this session, replacing the intent's, the settings page's and the defaults (0.5 % high, 1.0 % low)",
+          "type": "object",
+          "properties": {
+            "clip_high_pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "clip_low_pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          }
+        },
+        "notes": {
+          "description": "the user's request in their own words, kept in the log; suggested on every session; it takes precedence over the intent's brief",
+          "type": "string",
+          "maxLength": 2000
+        },
+        "model": {
+          "description": "Your own model name or id, shown to the user and logged; never used for decisions.",
+          "type": "string",
+          "maxLength": 80
+        },
+        "long_edge": {
+          "description": "Preview long edge in pixels, 800-1920, for the whole session (default: the settings page's, else 1600).",
+          "type": "integer",
+          "minimum": 800,
+          "maximum": 1920
+        },
+        "return_image": {
+          "description": "\"after\" (default): the new preview; \"before_after\": the previous and the new preview in one labelled image; \"none\": no image",
+          "type": "string",
+          "enum": [
+            "after",
+            "before_after",
+            "none"
+          ]
+        }
+      }
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_step",
+    "title": "One editing pass",
+    "description": "Apply one pass to the session's photo. `settings` maps canonical names to a CHANGE for numeric sliders (e.g. {\"exposure\": 0.3, \"highlights\": -20} adds 0.3 EV and lowers highlights by 20) and to the value to set for camera_profile, switches, booleans and curves. Each change is capped at the slider's per-pass maximum × the pass's decay (by default 1.0, 0.6, 0.4, 0.25 for passes 1-4, and a later pass takes the last value again; begin's session_settings.decay has the session's. Per-pass maxima: exposure 1 EV, contrast/texture/clarity/dehaze 40, highlights/shadows/whites/blacks 60, vibrance/saturation 30, temperature 1500 K on raw photos and 30 on rendered ones, whose temperature is relative, tint 30, HSL 40, grading 30; a grading hue is an angle: it takes the shorter way round, wraps at 360 and is not capped) and at the slider's range (`clamped`). The clipping guard covers only an end within its limit before the pass (every end when the session's `clip_baseline` is on; an end already over is left alone and reported `unmet`). A change that would push further into a guarded limit already reached is refused (`refused`); the rest is written as one History step \"AVG <id> pass n/N\", read back, rendered and measured. If clipping then exceeds a guarded limit, the engine pulls back the sliders that caused it, else takes fixed steps, at most 3 (\"… guard k\", in `guardrail_actions`). The pass is undone (\"… clip revert\" / \"… region revert\", a `reverted` action and `undone` in the result; the pass still counts) when clipping is still over a limit the photo was within before the pass, or a preserved region drifts; `applied` then lists what was written before the undo. Returns the applied changes, full settings, metrics, delta_metrics against the previous pass, and the image. `converged_by_metrics` (the metrics stopped moving) or `cap_reached` end the passes: then call lr_end_session. Unknown names or wrong types are refused before anything is written. Errors are {code, message, recoverable}: `recoverable`: true means the same call may work later unchanged (e.g. once Lightroom is back); false means change the call first. Variants mode: name the copy with `target`; each copy takes ONE pass before the pick (a second is refused with AWAITING_PICK), and the step that gives the last copy its pass returns `awaiting_pick: true` and the contact sheet: then ask the user to pick (lr_select_variant). After the pick, steps go to the pick, whose pass count carries on. `hud_actions` lists what the user did in the HUD since your last call (a pick), and a `deck_fallback` note when the Deck did not start and the classic HUD window opened instead (tell the user). approve_each_pass mode (begin's session_settings.approval): pass 1 needs no approval; from pass 2 on, the call first waits up to 40 s for the user's Approve of the pass before (the HUD's button, or lr_approve_pass after the user approved in chat), else returns AWAITING_APPROVAL (recoverable; nothing written, the pass not used): tell the user the pass waits for their Approve, then call again. Unknown names are refused before the wait. `approval` in the result says which pass was approved, by whom, and how long the call waited. Metrics are measured on the rendered preview (8-bit sRGB, as Lightroom exported it), not on the raw file: clipping here can often be recovered from the raw data with highlights/whites or shadows/blacks. clip_high_pct = % of pixels with any channel >= 253; clip_high_tone_pct = % with 2+ channels >= 253 (the high guard's); clip_low_pct = % of pixels with all channels <= 2; luma = Rec. 709 weights on the 8-bit values (0-255); luma_percentiles p1-p99 by nearest rank; dynamic_range = (p99 - p1) / 255; rb_ratio = mean red / mean blue (a white-balance proxy); saturation_mean = mean HSV saturation, 0-100; hue_histogram = 12 bins of 30 degrees (bin i centred on i*30: 0 red, 60 yellow, 120 green, 180 cyan, 240 blue, 300 magenta), % of the chromatic pixels (HSV saturation and value >= 0.1, chromatic_pct of all); hue_mean = their circular mean hue in degrees. Percentages are 0-100.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the session_id from lr_begin_session"
+        },
+        "target": {
+          "description": "Variants mode: the copy, \"A\", \"B\" or \"C\" (after lr_select_variant, the pick; it may be left out). Converge mode: \"master\" or left out",
+          "type": "string",
+          "enum": [
+            "master",
+            "A",
+            "B",
+            "C"
+          ]
+        },
+        "settings": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              }
+            ]
+          },
+          "description": "canonical name -> CHANGE for numeric sliders (e.g. {\"exposure\": 0.3, \"highlights\": -20}); the value to set for camera_profile, switches, booleans and curves"
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "description": "one line: what you saw and why this change"
+        },
+        "return_image": {
+          "description": "\"after\" (default): the new preview; \"before_after\": the previous and the new preview in one labelled image; \"none\": no image",
+          "type": "string",
+          "enum": [
+            "after",
+            "before_after",
+            "none"
+          ]
+        }
+      },
+      "required": [
+        "session_id",
+        "settings",
+        "rationale"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_probe",
+    "title": "Probe slider sensitivity",
+    "description": "Measure how 1-3 numeric sliders move the metrics on this photo: each is changed by `magnitude` × its per-pass maximum, rendered and measured (about 3.5 s each), and the photo is put back (History: \"AVG <id> probe <slider>\" … \"probe revert\"). Returns the metric change per unit of each slider; later lr_step calls use it to cap changes that would cross a clipping limit. Does not use a pass. Only when the intent sets allow_probe.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the session_id from lr_begin_session"
+        },
+        "target": {
+          "description": "Variants mode: the copy to probe, as for lr_step. Converge mode: \"master\" or left out",
+          "type": "string",
+          "enum": [
+            "master",
+            "A",
+            "B",
+            "C"
+          ]
+        },
+        "sliders": {
+          "minItems": 1,
+          "maxItems": 3,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "1-3 numeric sliders, e.g. [\"exposure\", \"whites\"]"
+        },
+        "magnitude": {
+          "description": "the probe's size as a fraction of the slider's per-pass maximum (default 0.5)",
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "session_id",
+        "sliders"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_set_regions",
+    "title": "Set measured regions",
+    "description": "Name parts of the photo (skin, fur, sky or custom) as boxes in 0-1 of the preview you see (the photo as cropped in Lightroom, upright), from its top-left corner, as mask geometry is; their metrics appear in every later `metrics.regions[]`, starting with the last preview (returned now). `preserve: true` guards a region: a pass that moves its mean hue more than 6 degrees or its mean saturation more than 8 points from now is undone. A mask pass's converged_by_metrics: every region's change is under the convergence thresholds (mean luma < 1/255, clipping < 0.1 point); false without regions or when the pass was undone; a signal only, the session goes on. The list replaces any earlier one. Does not touch Lightroom.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the session_id from lr_begin_session"
+        },
+        "regions": {
+          "maxItems": 8,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "skin",
+                  "fur",
+                  "sky",
+                  "custom"
+                ]
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 40,
+                "description": "a short name, e.g. \"face\""
+              },
+              "box": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  },
+                  "w": {
+                    "type": "number"
+                  },
+                  "h": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "x",
+                  "y",
+                  "w",
+                  "h"
+                ],
+                "description": "a box in 0-1 of the preview you see (the photo as cropped in Lightroom, upright), from its top-left corner: {x, y, w, h}"
+              },
+              "preserve": {
+                "description": "true: guard this region's hue and saturation from here on",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "kind",
+              "label",
+              "box"
+            ]
+          },
+          "description": "the whole set of regions (it replaces any earlier set); [] removes them"
+        }
+      },
+      "required": [
+        "session_id",
+        "regions"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_select_variant",
+    "title": "Pick a variant",
+    "description": "Variants mode: continue the session on the copy the user picked (ask the user; do not pick for them). The copy is selected in Lightroom, later lr_step calls go to it, and its pass count carries on from its own passes. The other copies stay in the catalog as they are; the user removes them in Lightroom when they want. Returns the pick, its passes left and its last preview. Also accepted before every copy has had its refined pass. Does not render. If the user already picked in the HUD, calling this with that letter confirms it (`picked_by: \"hud\"`); another letter is refused.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the session_id from lr_begin_session"
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "A",
+            "B",
+            "C"
+          ],
+          "description": "the copy the user picked"
+        }
+      },
+      "required": [
+        "session_id",
+        "variant"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_approve_pass",
+    "title": "Approve the pass shown",
+    "description": "approve_each_pass mode only: the user approves the pass they last saw, so the next lr_step may go ahead (the same as the HUD's Approve button). Call it ONLY after the user approved that pass in this chat, and set `confirmed: true` to state that they did; never call it on your own to get past AWAITING_APPROVAL. A waiting lr_step goes ahead at once. Returns `approved_pass`. Refused with NOT_AWAITING_APPROVAL in autonomous mode or when no pass waits for approval (pass 1 needs none; a Variants pick approves the pass it was picked at). Does not touch Lightroom.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the session_id from lr_begin_session"
+        },
+        "confirmed": {
+          "type": "boolean",
+          "description": "true only after the user approved the pass in this chat"
+        }
+      },
+      "required": [
+        "session_id",
+        "confirmed"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_end_session",
+    "title": "End the editing session",
+    "description": "End the session. \"accept\": keep the edit; the log is finalised and a recipe (the final settings under canonical names) is written next to it. \"revert\": apply the pre-session snapshot, putting every setting back as it was before lr_begin_session (the result lists any setting that still differs). Returns the log and recipe paths and the final settings. Variants mode: \"accept\" needs a pick and keeps the pick's edit (the recipe is the pick's); \"revert\" puts the master back. Either way the copies stay in the catalog, listed in `copies`. After the user clicked Abort in the HUD, only \"revert\" is taken. Once the user ended the session on the Deck, the outcome matching theirs (\"accept\" after Accept; \"revert\" after Abort or Put back) returns ok with `already_ended_by_user` {outcome, source, at, log_path}; any other outcome gets SESSION_ENDED. \"abandon\": only when the session cannot end otherwise and the user agrees: Lightroom is gone or hung, or an AI mask failed or seems stuck (AI_MASK_FAILED, LIGHTROOM_STUCK, AI_UPDATE_PENDING refuse revert). It reads and writes nothing (it does not wait for Lightroom): the photo keeps what the session did and is NOT put back (`photo_put_back` false), the log's outcome is \"abandoned\", and a new session can begin. LIGHTROOM_STUCK and AI_UPDATE_PENDING lift once Lightroom's result shows, so try \"revert\" again first if the user can wait. The result's `note` says how the user puts the photo back by hand (the pre-session snapshot, `snapshot`) and whether Lightroom still holds writes to the photo (`lightroom_guard`: \"none\" when no AI mask was pending, so nothing is held; \"cleared\"; \"not_cleared\" or \"plugin_too_old\": held until Lightroom restarts; \"kept\": held until the mask's shape shows, so the user waits for it first); tell the user both. A session an engine that stopped left open (lr_get_active_photo_context `left_open`) is ended the same three ways, with `left_open: true` and the log's `ended_by` \"recovery\": revert applies its snapshot and says what it `checked`; accept reads the photo as it is now.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the session_id from lr_begin_session"
+        },
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "accept",
+            "revert",
+            "abandon"
+          ],
+          "description": "\"accept\" keeps the edit and writes the recipe; \"revert\" applies the pre-session snapshot; \"abandon\" ends a stuck session without touching the photo"
+        }
+      },
+      "required": [
+        "session_id",
+        "outcome"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_get_session_log",
+    "title": "Session log",
+    "description": "Return a session's provenance log (every pass: settings before/after, changes, metrics, preview hash, rationale, guardrail actions), open or ended. Does not touch Lightroom.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the session_id from lr_begin_session"
+        }
+      },
+      "required": [
+        "session_id"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_list_masks",
+    "title": "List the photo's masks",
+    "description": "List the masks on the session's photo: id, name, kind (lr_create_mask's kinds; \"ai\", \"range\" or \"other\" for a kind Lightroom made that the tools do not know; \"mixed\" for components of several kinds), on/off, inverted, components, the local sliders not at 0 (Masking panel units), geometry, and for AI masks whether they have computed. Geometry, points and people's boxes are in 0-1 of the preview you see (the photo as cropped in Lightroom, upright), from its top-left corner, as lr_create_mask takes them; a mask drawn past the crop in Lightroom reads outside 0-1. On a mirrored photo geometry reads { unavailable: <why> }. A mask of several parts also lists `parts`, in order (lr_edit_mask `part` 1 is the first): each part's kind, mode (add, subtract, intersect; \"other\" for none of them), inverted and geometry. Also lists the local sliders and their ranges. Does not use a pass and writes nothing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the session_id from lr_begin_session"
+        },
+        "target": {
+          "description": "Variants mode: which photo (\"master\", \"A\", …); default the photo the last call worked on",
+          "type": "string",
+          "enum": [
+            "master",
+            "A",
+            "B",
+            "C"
+          ]
+        }
+      },
+      "required": [
+        "session_id"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_create_mask",
+    "title": "Create a mask",
+    "description": "Create one mask on the session's photo, with its local sliders set in the same pass. linear and radial take geometry; luminance takes geometry.lum_range; Lightroom finds and computes the AI kinds (the call waits up to 5 minutes; the Deck's Abort ends the wait: SESSION_ENDED). If the photo has none of that kind, MASK_NOTHING_FOUND: the mask is taken out again and the pass is not used. If Lightroom stays busy or shows a dialog, the HUD tells the user to click OK in it. If the mask then computes the pass goes on; if Lightroom reports the update failed or dropped it, the engine puts the photo back as it was before the session and ENDS the session (LIGHTROOM_DIALOG). No result in 5 minutes, or Lightroom not answering, is LIGHTROOM_STUCK: Lightroom's AI mask is still computing, nothing is written to the photo, and the session stays open and refuses writes, renders and reverts (AI_UPDATE_PENDING) until Lightroom's result shows. Lightroom does not notify you: when the user says to go on, your next call (lr_step, lr_end_session or a linear or radial mask; not the same AI mask again) picks it up. Tell the user to wait, or to press Abort in the Deck (lr_help, 9, says what it does). For the rest of the session prefer linear or radial masks to AI masks. If Lightroom reports the update over with no result, AI_MASK_FAILED: the user should save their work and restart Lightroom; start a new session only if they ask. If the update fails with a Lightroom or plugin error, subject, sky and background are made by Lightroom's Develop module instead (Lightroom then switches to Develop; `ai.route` \"dc\", `switched_to_develop`); people and landscape kinds have no such fallback. If nothing works, FEATURE_UNAVAILABLE (details.routes_tried): the masks are as before and the pass is not used. One person's kinds (person_*) take the person whose box holds the point: `ai.people` lists every person's box Lightroom found (left, top, right, bottom, in geometry's frame) and `ai.instance` the one chosen (lr_list_masks shows both); no person at the point: MASK_NOTHING_FOUND with the boxes. Each mask change is ONE pass of the session (it counts against max_passes, so raise max_passes at lr_begin_session when masks are planned; it may follow convergence, and approve_each_pass mode gates it like lr_step). A rename alone (lr_edit_mask with only mask_id and name) is not a pass: one History step, no render, and it works at the pass cap. A mask change writes the photo's whole mask table as one History step \"AVG <id> pass n/N mask <op>\", reads it back, renders and measures, and is undone (\"… clip revert\" / \"… region revert\"; the pass still counts) when clipping goes over a limit the photo was within, or a preserved region drifts; global sliders are never moved for a mask. To measure a local edit, name its area with lr_set_regions first: every mask pass returns its metrics in `metrics.regions[]` and `delta_metrics.regions[]`. converged_by_metrics: every region's change is under the convergence thresholds (mean luma < 1/255, clipping < 0.1 point); false without regions or when the pass was undone; a signal only, the session goes on. An AI mask's geometry.point is Lightroom's reference point (Lightroom may move it while it computes), not where the mask reaches. If the masks changed in Lightroom meanwhile: MASKS_CHANGED, nothing written. The other masks on the photo, the user's own included, are written back unchanged and checked on read-back. Editing a mask the tools cannot write back safely (several parts in a form not listed under lr_edit_mask, a blend mode on its first part, a kind not listed here) is refused: MASKS_UNCAPTURED_KIND, nothing written; deleting it is allowed. A mirrored photo refuses geometry and points (CROP_FRAME_UNSUPPORTED); `warnings` flags a mask 90 % or more outside the preview. Returns the mask, every mask of the photo (`masks`, with fresh ids), metrics, delta_metrics and the image. Needs plugin 0.16.0. color_range, depth_range, brush: not reshaped, not parts. Not offered: Select Objects, brush erase, mask pixels, mask presets.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the session_id from lr_begin_session"
+        },
+        "target": {
+          "description": "Variants mode: masks go on the pick only (after lr_select_variant). Converge mode: \"master\" or left out",
+          "type": "string",
+          "enum": [
+            "master",
+            "A",
+            "B",
+            "C"
+          ]
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "description": "one line: what you saw and why this mask change"
+        },
+        "return_image": {
+          "description": "\"after\" (default), \"before_after\" or \"none\"",
+          "type": "string",
+          "enum": [
+            "after",
+            "before_after",
+            "none"
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "linear",
+            "radial",
+            "luminance",
+            "subject",
+            "sky",
+            "background",
+            "landscape_architecture",
+            "landscape_mountains",
+            "landscape_artificial_ground",
+            "landscape_natural_ground",
+            "landscape_vegetation",
+            "landscape_sky",
+            "landscape_water",
+            "landscape_snow",
+            "people_face_skin",
+            "people_iris_pupil",
+            "people_body_skin",
+            "people_hair",
+            "people_lips",
+            "people_facial_hair",
+            "people_eye_sclera",
+            "people_eyebrows",
+            "people_clothes",
+            "people_teeth",
+            "person_entire",
+            "person_face_skin",
+            "person_iris_pupil",
+            "person_body_skin",
+            "person_hair",
+            "person_lips",
+            "person_facial_hair",
+            "person_eye_sclera",
+            "person_eyebrows",
+            "person_clothes",
+            "person_teeth",
+            "people",
+            "landscape",
+            "objects"
+          ],
+          "description": "linear, radial, luminance, depth_range, brush (geometry); color_range (point, color_amount). Found by Lightroom's AI: subject, sky, background; landscape, one category per mask: landscape_architecture, landscape_mountains, landscape_artificial_ground, landscape_natural_ground, landscape_vegetation, landscape_sky, landscape_water, landscape_snow; every person in the photo, one part per mask: people_face_skin, people_iris_pupil, people_body_skin, people_hair, people_lips, people_facial_hair, people_eye_sclera, people_eyebrows, people_clothes, people_teeth; one person, with point on them: person_entire, person_face_skin, person_iris_pupil, person_body_skin, person_hair, person_lips, person_facial_hair, person_eye_sclera, person_eyebrows, person_clothes, person_teeth. people, landscape (name the part or category) and objects are refused, with the reason"
+        },
+        "name": {
+          "description": "the name the Masks panel shows (default \"AVG <kind>\"); a suggested style is \"N. Subject - Purpose\", for example \"4. Lone Juniper - Foliage Separation\"; any clear name works",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "geometry": {
+          "type": "object",
+          "properties": {
+            "zero": {
+              "description": "linear: where the effect fades to nothing",
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ]
+            },
+            "full": {
+              "description": "linear: where the effect is full",
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ]
+            },
+            "left": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "top": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "right": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "bottom": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "feather": {
+              "description": "radial: feather 0-100 (new radial: 50)",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "lum_range": {
+              "description": "luminance: [a, b, c, d] in 0-1, each at least the one before: luminance a..d is masked, fully from b to c (at least 0.01 wide)",
+              "minItems": 4,
+              "maxItems": 4,
+              "type": "array",
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "depth_range": {
+              "description": "depth_range: as lum_range, in distances, 0 the nearest; only on photos with a depth map (DEPTH_MAP_MISSING otherwise)",
+              "minItems": 4,
+              "maxItems": 4,
+              "type": "array",
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "color_amount": {
+              "description": "color_range: how far the selection reaches from the colour at `point` (Lightroom's Refine), above 0 to 1, default 0.5",
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 1
+            },
+            "strokes": {
+              "description": "brush: 1-50 strokes painted with the mask's sliders (no erase)",
+              "minItems": 1,
+              "maxItems": 50,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "points": {
+                    "minItems": 1,
+                    "maxItems": 1000,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y"
+                      ]
+                    },
+                    "description": "the stroke's path; the engine fills in dabs between the points"
+                  },
+                  "radius": {
+                    "description": "the brush's radius as a fraction of the whole photo's long edge (before any crop), default 0.05",
+                    "type": "number",
+                    "minimum": 0.001,
+                    "maximum": 1
+                  },
+                  "flow": {
+                    "description": "0.01-1, default 1",
+                    "type": "number",
+                    "minimum": 0.01,
+                    "maximum": 1
+                  }
+                },
+                "required": [
+                  "points"
+                ]
+              }
+            }
+          },
+          "description": "In 0-1 of the preview you see (the photo as cropped in Lightroom, upright), from its top-left corner, as lr_get_preview `region` and lr_set_regions are; the engine maps it through the photo's crop (its angle included). linear: zero and full points; radial: the ellipse's box left, top, right, bottom (the ellipse is square to the preview); luminance: lum_range (tones, not a place); depth_range: depth_range; color_range: color_amount (the colour is `point`'s); brush: strokes. AI kinds take none."
+        },
+        "point": {
+          "description": "person_entire, person_face_skin, person_iris_pupil, person_body_skin, person_hair, person_lips, person_facial_hair, person_eye_sclera, person_eyebrows, person_clothes, person_teeth: a point on that person (on the face, for face skin); color_range: a point on the colour to select (sampled from the preview there); in 0-1 of the preview you see (the photo as cropped in Lightroom, upright), from its top-left corner",
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "y": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "required": [
+            "x",
+            "y"
+          ]
+        },
+        "sliders": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "number"
+          },
+          "description": "local slider -> the value to SET (not a change), in the Masking panel's units: local.temperature -100..100, local.tint -100..100, local.exposure -4..4, local.contrast -100..100, local.highlights -100..100, local.shadows -100..100, local.whites -100..100, local.blacks -100..100, local.texture -100..100, local.clarity -100..100, local.dehaze -100..100, local.hue -180..180, local.saturation -100..100, local.sharpness -100..100, local.noise -100..100, local.moire -100..100, local.defringe -100..100, local.toning_hue 0..360, local.toning_saturation 0..100, local.grain -100..100"
+        }
+      },
+      "required": [
+        "session_id",
+        "rationale",
+        "kind"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_edit_mask",
+    "title": "Edit a mask",
+    "description": "Change one mask by its id: set local sliders (absolute values in panel units; sliders not given keep their values), its geometry (linear, radial, luminance), invert it, rename it, or hide/show it (`active`). MASK_NOT_FOUND: call lr_list_masks for the current ids. Parts: `combine` adds a part (kind, geometry) in mode add, subtract or intersect; `part` names one part to reshape (geometry), invert, set to a mode (combine.mode) or remove (remove_part); a mask of several parts is inverted or reshaped only part by part. Only these forms, which were checked in Lightroom, are written: \"linear, add radial\", \"linear, subtract radial\", \"linear, intersect radial\", \"radial, add sky\", \"radial, subtract sky\", \"radial, intersect sky\", \"sky, add radial\", \"linear, subtract linear\", \"radial, subtract radial\", \"radial, intersect luminance\", \"radial, subtract radial: reshape part 2\", \"radial, subtract radial: part 2 to intersect\", \"radial, subtract radial: remove part 2\", \"radial, intersect radial\" (a mask's parts in order, each after the first with its mode; a part edit as \"<form>: <edit>\"; sky stands for every AI kind, though only sky was checked). Any other form (other kinds or orders of parts, three parts, other part edits) is refused: MASK_OP_NOT_CAPTURED names the form, nothing is written and the pass is not used. An AI part needs plugin 0.21.0 and is computed by Lightroom as an AI mask is (the same waits and errors); when Lightroom finds nothing, the mask is put back as it was. Each mask change is ONE pass of the session (it counts against max_passes, so raise max_passes at lr_begin_session when masks are planned; it may follow convergence, and approve_each_pass mode gates it like lr_step). A rename alone (lr_edit_mask with only mask_id and name) is not a pass: one History step, no render, and it works at the pass cap. A mask change writes the photo's whole mask table as one History step \"AVG <id> pass n/N mask <op>\", reads it back, renders and measures, and is undone (\"… clip revert\" / \"… region revert\"; the pass still counts) when clipping goes over a limit the photo was within, or a preserved region drifts; global sliders are never moved for a mask. To measure a local edit, name its area with lr_set_regions first: every mask pass returns its metrics in `metrics.regions[]` and `delta_metrics.regions[]`. converged_by_metrics: every region's change is under the convergence thresholds (mean luma < 1/255, clipping < 0.1 point); false without regions or when the pass was undone; a signal only, the session goes on. An AI mask's geometry.point is Lightroom's reference point (Lightroom may move it while it computes), not where the mask reaches. If the masks changed in Lightroom meanwhile: MASKS_CHANGED, nothing written. The other masks on the photo, the user's own included, are written back unchanged and checked on read-back. Editing a mask the tools cannot write back safely (several parts in a form not listed under lr_edit_mask, a blend mode on its first part, a kind not listed here) is refused: MASKS_UNCAPTURED_KIND, nothing written; deleting it is allowed. A mirrored photo refuses geometry and points (CROP_FRAME_UNSUPPORTED); `warnings` flags a mask 90 % or more outside the preview. Returns the mask, every mask of the photo (`masks`, with fresh ids), metrics, delta_metrics and the image. Needs plugin 0.16.0. color_range, depth_range, brush: not reshaped, not parts. Not offered: Select Objects, brush erase, mask pixels, mask presets.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the session_id from lr_begin_session"
+        },
+        "target": {
+          "description": "Variants mode: masks go on the pick only (after lr_select_variant). Converge mode: \"master\" or left out",
+          "type": "string",
+          "enum": [
+            "master",
+            "A",
+            "B",
+            "C"
+          ]
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "description": "one line: what you saw and why this mask change"
+        },
+        "return_image": {
+          "description": "\"after\" (default), \"before_after\" or \"none\"",
+          "type": "string",
+          "enum": [
+            "after",
+            "before_after",
+            "none"
+          ]
+        },
+        "mask_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the mask's id from lr_list_masks or a mask tool's result (`masks[].id`)"
+        },
+        "name": {
+          "description": "rename (a rename alone uses no pass); the same suggested style, \"N. Subject - Purpose\"",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "active": {
+          "description": "false hides the mask (its effect is off), true shows it",
+          "type": "boolean"
+        },
+        "inverted": {
+          "description": "true inverts the mask (a radial's inversion checked in Lightroom; other kinds not yet: look at the preview)",
+          "type": "boolean"
+        },
+        "geometry": {
+          "type": "object",
+          "properties": {
+            "zero": {
+              "description": "linear: where the effect fades to nothing",
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ]
+            },
+            "full": {
+              "description": "linear: where the effect is full",
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ]
+            },
+            "left": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "top": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "right": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "bottom": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "feather": {
+              "description": "radial: feather 0-100 (new radial: 50)",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "lum_range": {
+              "description": "luminance: [a, b, c, d] in 0-1, each at least the one before: luminance a..d is masked, fully from b to c (at least 0.01 wide)",
+              "minItems": 4,
+              "maxItems": 4,
+              "type": "array",
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "depth_range": {
+              "description": "depth_range: as lum_range, in distances, 0 the nearest; only on photos with a depth map (DEPTH_MAP_MISSING otherwise)",
+              "minItems": 4,
+              "maxItems": 4,
+              "type": "array",
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "color_amount": {
+              "description": "color_range: how far the selection reaches from the colour at `point` (Lightroom's Refine), above 0 to 1, default 0.5",
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 1
+            },
+            "strokes": {
+              "description": "brush: 1-50 strokes painted with the mask's sliders (no erase)",
+              "minItems": 1,
+              "maxItems": 50,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "points": {
+                    "minItems": 1,
+                    "maxItems": 1000,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y"
+                      ]
+                    },
+                    "description": "the stroke's path; the engine fills in dabs between the points"
+                  },
+                  "radius": {
+                    "description": "the brush's radius as a fraction of the whole photo's long edge (before any crop), default 0.05",
+                    "type": "number",
+                    "minimum": 0.001,
+                    "maximum": 1
+                  },
+                  "flow": {
+                    "description": "0.01-1, default 1",
+                    "type": "number",
+                    "minimum": 0.01,
+                    "maximum": 1
+                  }
+                },
+                "required": [
+                  "points"
+                ]
+              }
+            }
+          },
+          "description": "In 0-1 of the preview you see (the photo as cropped in Lightroom, upright), from its top-left corner, as lr_get_preview `region` and lr_set_regions are; the engine maps it through the photo's crop (its angle included). linear: zero and full points; radial: the ellipse's box left, top, right, bottom (the ellipse is square to the preview); luminance: lum_range (tones, not a place); depth_range: depth_range; color_range: color_amount (the colour is `point`'s); brush: strokes. AI kinds take none."
+        },
+        "sliders": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "number"
+          },
+          "description": "local slider -> the value to SET (not a change), in the Masking panel's units: local.temperature -100..100, local.tint -100..100, local.exposure -4..4, local.contrast -100..100, local.highlights -100..100, local.shadows -100..100, local.whites -100..100, local.blacks -100..100, local.texture -100..100, local.clarity -100..100, local.dehaze -100..100, local.hue -180..180, local.saturation -100..100, local.sharpness -100..100, local.noise -100..100, local.moire -100..100, local.defringe -100..100, local.toning_hue 0..360, local.toning_saturation 0..100, local.grain -100..100"
+        },
+        "combine": {
+          "description": "without part: add a part of kind (with its geometry; AI kinds take none) to the mask in mode add, subtract or intersect. With part: that part's new mode (mode only)",
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "add",
+                "subtract",
+                "intersect"
+              ]
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "radial",
+                "luminance",
+                "subject",
+                "sky",
+                "background",
+                "landscape_architecture",
+                "landscape_mountains",
+                "landscape_artificial_ground",
+                "landscape_natural_ground",
+                "landscape_vegetation",
+                "landscape_sky",
+                "landscape_water",
+                "landscape_snow",
+                "people_face_skin",
+                "people_iris_pupil",
+                "people_body_skin",
+                "people_hair",
+                "people_lips",
+                "people_facial_hair",
+                "people_eye_sclera",
+                "people_eyebrows",
+                "people_clothes",
+                "people_teeth",
+                "person_entire",
+                "person_face_skin",
+                "person_iris_pupil",
+                "person_body_skin",
+                "person_hair",
+                "person_lips",
+                "person_facial_hair",
+                "person_eye_sclera",
+                "person_eyebrows",
+                "person_clothes",
+                "person_teeth",
+                "people",
+                "landscape",
+                "objects"
+              ]
+            },
+            "geometry": {
+              "type": "object",
+              "properties": {
+                "zero": {
+                  "description": "linear: where the effect fades to nothing",
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y"
+                  ]
+                },
+                "full": {
+                  "description": "linear: where the effect is full",
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y"
+                  ]
+                },
+                "left": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "top": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "right": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "bottom": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "feather": {
+                  "description": "radial: feather 0-100 (new radial: 50)",
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "lum_range": {
+                  "description": "luminance: [a, b, c, d] in 0-1, each at least the one before: luminance a..d is masked, fully from b to c (at least 0.01 wide)",
+                  "minItems": 4,
+                  "maxItems": 4,
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                },
+                "depth_range": {
+                  "description": "depth_range: as lum_range, in distances, 0 the nearest; only on photos with a depth map (DEPTH_MAP_MISSING otherwise)",
+                  "minItems": 4,
+                  "maxItems": 4,
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                },
+                "color_amount": {
+                  "description": "color_range: how far the selection reaches from the colour at `point` (Lightroom's Refine), above 0 to 1, default 0.5",
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 1
+                },
+                "strokes": {
+                  "description": "brush: 1-50 strokes painted with the mask's sliders (no erase)",
+                  "minItems": 1,
+                  "maxItems": 50,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "points": {
+                        "minItems": 1,
+                        "maxItems": 1000,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            }
+                          },
+                          "required": [
+                            "x",
+                            "y"
+                          ]
+                        },
+                        "description": "the stroke's path; the engine fills in dabs between the points"
+                      },
+                      "radius": {
+                        "description": "the brush's radius as a fraction of the whole photo's long edge (before any crop), default 0.05",
+                        "type": "number",
+                        "minimum": 0.001,
+                        "maximum": 1
+                      },
+                      "flow": {
+                        "description": "0.01-1, default 1",
+                        "type": "number",
+                        "minimum": 0.01,
+                        "maximum": 1
+                      }
+                    },
+                    "required": [
+                      "points"
+                    ]
+                  }
+                }
+              },
+              "description": "In 0-1 of the preview you see (the photo as cropped in Lightroom, upright), from its top-left corner, as lr_get_preview `region` and lr_set_regions are; the engine maps it through the photo's crop (its angle included). linear: zero and full points; radial: the ellipse's box left, top, right, bottom (the ellipse is square to the preview); luminance: lum_range (tones, not a place); depth_range: depth_range; color_range: color_amount (the colour is `point`'s); brush: strokes. AI kinds take none."
+            }
+          },
+          "required": [
+            "mode"
+          ]
+        },
+        "part": {
+          "description": "edit one part of the mask (1 = the first, in the order of lr_list_masks `parts`): with exactly one of geometry (reshape), inverted, combine (its mode) or remove_part",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "remove_part": {
+          "description": "with part (2 or more): remove that part from the mask",
+          "type": "boolean",
+          "const": true
+        }
+      },
+      "required": [
+        "session_id",
+        "rationale",
+        "mask_id"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_delete_mask",
+    "title": "Delete a mask",
+    "description": "Delete one mask by its id (the table is written without it; History and the session's revert bring it back). Each mask change is ONE pass of the session (it counts against max_passes, so raise max_passes at lr_begin_session when masks are planned; it may follow convergence, and approve_each_pass mode gates it like lr_step). A rename alone (lr_edit_mask with only mask_id and name) is not a pass: one History step, no render, and it works at the pass cap. A mask change writes the photo's whole mask table as one History step \"AVG <id> pass n/N mask <op>\", reads it back, renders and measures, and is undone (\"… clip revert\" / \"… region revert\"; the pass still counts) when clipping goes over a limit the photo was within, or a preserved region drifts; global sliders are never moved for a mask. To measure a local edit, name its area with lr_set_regions first: every mask pass returns its metrics in `metrics.regions[]` and `delta_metrics.regions[]`. converged_by_metrics: every region's change is under the convergence thresholds (mean luma < 1/255, clipping < 0.1 point); false without regions or when the pass was undone; a signal only, the session goes on. An AI mask's geometry.point is Lightroom's reference point (Lightroom may move it while it computes), not where the mask reaches. If the masks changed in Lightroom meanwhile: MASKS_CHANGED, nothing written. The other masks on the photo, the user's own included, are written back unchanged and checked on read-back. Editing a mask the tools cannot write back safely (several parts in a form not listed under lr_edit_mask, a blend mode on its first part, a kind not listed here) is refused: MASKS_UNCAPTURED_KIND, nothing written; deleting it is allowed. A mirrored photo refuses geometry and points (CROP_FRAME_UNSUPPORTED); `warnings` flags a mask 90 % or more outside the preview. Returns the mask, every mask of the photo (`masks`, with fresh ids), metrics, delta_metrics and the image. Needs plugin 0.16.0. color_range, depth_range, brush: not reshaped, not parts. Not offered: Select Objects, brush erase, mask pixels, mask presets.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the session_id from lr_begin_session"
+        },
+        "target": {
+          "description": "Variants mode: masks go on the pick only (after lr_select_variant). Converge mode: \"master\" or left out",
+          "type": "string",
+          "enum": [
+            "master",
+            "A",
+            "B",
+            "C"
+          ]
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "description": "one line: what you saw and why this mask change"
+        },
+        "return_image": {
+          "description": "\"after\" (default), \"before_after\" or \"none\"",
+          "type": "string",
+          "enum": [
+            "after",
+            "before_after",
+            "none"
+          ]
+        },
+        "mask_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the mask's id from lr_list_masks or a mask tool's result (`masks[].id`)"
+        }
+      },
+      "required": [
+        "session_id",
+        "rationale",
+        "mask_id"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_list_intents",
+    "title": "List editing intents",
+    "description": "List the editing intents: optional starting points for a session, never rules over the user's request (id, label, category, and whether it is bundled with the engine or the user's own; a user intent with the same id replaces the bundled one). Files that failed validation are listed under `warnings` and are not usable. `intents_folder` names the user's folder (`path`, `real_path` where it is on disk, `virtualized` and a `warning` when Windows redirects it into Claude Desktop's package); `notes` says which intents were copied in from the older folders. Changes nothing; does not need Lightroom.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_get_intent",
+    "title": "Get an editing intent",
+    "description": "Return one intent in full (schema v3, or v2): `brief` (instructions for the edit), `profile` (the profile pass 0 sets on a raw photo and on a rendered one: JPEG, TIFF, PNG …), `set` and `set_by_pipeline` (v3, a look: values written at pass 0 as given), `priors` (both pipelines; applied at pass 0: a number is added to the photo's current value; a switch, boolean or curve is set as given), `priors_by_pipeline` (`raw` / `rendered`, added on a photo of that pipeline: temperature and tint, Kelvin on raw, relative -100..100 on rendered), `variants` (A/B/C prior sets, each with `priors` and optionally `priors_by_pipeline`), `guardrail_overrides` (clipping limits replacing the defaults of 0.5 % high and 1.0 % low), `regions_expected`, `convergence_hints`, `allow_probe` and `clip_baseline` (true: pass 0 pulls clipping in to the guardrails; off by default). Changes nothing; does not need Lightroom.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the intent's id, from lr_list_intents"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_save_intent",
+    "title": "Save an editing intent",
+    "description": "Save a new or changed intent as <id>.json in the user's intents folder. ONLY call this after the user has explicitly approved the exact intent in this chat; `confirmed: true` states that they did. To save the edit of the photo selected in Lightroom as a look (\"save this edit as a look\"): call with `from_photo: true` and `dry_run: true` (from_photo works only with dry_run), show the user the intent the result returns, then save that intent unchanged, without from_photo, after they approve. `set` holds absolute values, written at pass 0 as given (`priors` are added to the photo's values); a name is in one of them, not both. The intent is validated first (schema v3, or v2 without set; canonical parameter names and values on each pipeline, temperature and tint only in `priors_by_pipeline` / `set_by_pipeline`, `profile.raw` a raw profile and `profile.rendered` \"Color\" or \"Monochrome\", no colour-slider priors on a monochrome profile) and nothing is written if it is invalid (INVALID_INTENT, with `details.problems`). An existing user intent with the same id is replaced only with `replace: true` (else INTENT_EXISTS); a bundled intent with the same id is overridden, and its file is not changed. To copy an intent, lr_get_intent it and save it under a new id; to rename one, copy it, then lr_delete_intent the old id. The result's `intents_folder.real_path` is the folder as File Explorer shows it. Does not touch Lightroom.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "intent": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {},
+          "description": "the intent object (schema v3, `schema_version: 3`; see lr_get_intent for an example). Required fields: schema_version, id, label, category, brief, priors (may be {}). With from_photo, give id, label, category, brief (and priors {}); the engine fills profile, set and set_by_pipeline"
+        },
+        "confirmed": {
+          "type": "boolean",
+          "description": "true only after the user approved this exact intent in the chat (not needed with dry_run)"
+        },
+        "replace": {
+          "description": "true to replace an existing user intent with the same id",
+          "type": "boolean"
+        },
+        "from_photo": {
+          "description": "true: take the look of the photo selected in Lightroom (profile, tone, presence, white balance, curves, HSL, grading, effects, B&W mixer, calibration) into `set`; only with dry_run (save the returned intent)",
+          "type": "boolean"
+        },
+        "dry_run": {
+          "description": "true: validate and return the intent as it would be saved; nothing is written",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "intent",
+        "confirmed"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_delete_intent",
+    "title": "Delete an editing intent",
+    "description": "Delete one of the user's own intents (<id>.json in the user's intents folder, also one that failed validation). ONLY call this after the user has explicitly approved deleting it in this chat; `confirmed: true` states that they did. Bundled intents cannot be deleted (INTENT_NOT_FOUND says so); deleting a user intent that overrode a bundled one brings the bundled one back (`restores_bundled`). Does not touch Lightroom.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_]{0,63}$",
+          "description": "the user intent's id, from lr_list_intents (source \"user\")"
+        },
+        "confirmed": {
+          "type": "boolean",
+          "description": "true only after the user approved deleting this intent in the chat"
+        }
+      },
+      "required": [
+        "id",
+        "confirmed"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_sync_series",
+    "title": "Sync settings to other photos",
+    "description": "Copy settings onto other photos: the recipe of a session that ended with accept ({session_id}), a recipe file ({recipe_path}), or canonical settings as absolute values ({settings}). Targets are the photos selected in Lightroom (\"selected\") or {uuids}; the photos are written by uuid and the selection is not changed. `parameter_mask` limits what is copied, by group. For each target the engine takes a Develop snapshot \"AVG pre-sync <id>\" (applying it undoes the sync), writes the copied settings as one History step \"AVG sync <id>\" and reads them back. adaptive_exposure (for bursts of the same scene): exposure is not copied; each target is rendered and its exposure moved (\"AVG sync <id> exposure k\", at most 4 renders of about 3.5 s) until its mean luma is within 2/255 of the source photo's; the source photo must still hold the recipe's settings (else SOURCE_CHANGED). At most 500 targets per call. A call works for about 30 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling until `not_yet` is gone, and tell the user how far along it is. A call still busy at 50 seconds returns `pending` with `next`. Each call has its own sync id, so its photos' snapshots and History steps carry it. Tell the user which photos will change before calling. A target that fails is listed in `skipped` with the reason, and the others still sync; if Lightroom stops answering, the call stops and the error names the photo it stopped at and any step that may still have been written (`maybe_written`). Across pipelines (a raw recipe onto a JPEG, or the reverse) the shared groups are written and the target's `not_transferable` lists white_balance (Kelvin on raw, relative -100..100 on rendered: the numbers mean different things) and camera_profile (each pipeline has its own profiles) with the reason; a target that could take nothing is skipped (NOTHING_TRANSFERABLE). Returns applied, skipped, per_target_exposure_offsets (target exposure minus the source's), each target's pipeline, History steps, snapshot and not_transferable, and a contact sheet. Not while a session is open.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "session_id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "an accepted session's id: its recipe is synced"
+                }
+              },
+              "required": [
+                "session_id"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "recipe_path": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "a .recipe.json file in the log folder (lr_end_session returns recipe_path)"
+                }
+              },
+              "required": [
+                "recipe_path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "settings": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        }
+                      }
+                    ]
+                  },
+                  "description": "canonical name -> ABSOLUTE value, e.g. {\"contrast\": 15, \"vibrance\": 10}"
+                }
+              },
+              "required": [
+                "settings"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "where the settings come from: {session_id}, {recipe_path} or {settings}"
+        },
+        "targets": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "selected"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "uuids": {
+                  "minItems": 1,
+                  "maxItems": 500,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "description": "the photos' uuids (from lr_get_active_photo_context or an earlier result)"
+                }
+              },
+              "required": [
+                "uuids"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "\"selected\": the photos selected in Lightroom; or {uuids: [...]}. The source photo is left out"
+        },
+        "parameter_mask": {
+          "description": "the groups to copy (default: all): basic_tone (exposure, contrast, highlights, shadows, whites, blacks, texture, clarity, dehaze, vibrance, saturation), white_balance, tone_curve, hsl, grading, detail (sharpening, noise), lens, effects (post-crop vignette, grain), bw (the B&W mixer), calibration, camera_profile",
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "basic_tone",
+              "white_balance",
+              "tone_curve",
+              "hsl",
+              "grading",
+              "detail",
+              "lens",
+              "effects",
+              "bw",
+              "calibration",
+              "camera_profile"
+            ]
+          }
+        },
+        "adaptive_exposure": {
+          "type": "boolean",
+          "description": "true (same-scene bursts): exposure is not copied; each target's exposure is moved until its mean luma matches the source photo's within 2/255"
+        },
+        "return_image": {
+          "description": "\"sheet\" (default): the source and the first three targets side by side; \"none\"",
+          "type": "string",
+          "enum": [
+            "sheet",
+            "none"
+          ]
+        },
+        "long_edge": {
+          "description": "Preview long edge in pixels, 800-1920 (default 1600).",
+          "type": "integer",
+          "minimum": 800,
+          "maximum": 1920
+        }
+      },
+      "required": [
+        "source",
+        "targets",
+        "adaptive_exposure"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_create_preset_from_active",
+    "title": "Save the photo's settings as a Develop preset",
+    "description": "Save the selected photo's current Develop settings as a Lightroom Develop preset: an .xmp preset file in Lightroom's preset folder, listed under the group `folder` (default \"LrC-AVG\"). Nothing in Lightroom changes. Lightroom shows the new preset only after it restarts: tell the user to quit Lightroom (File > Exit) and start it again. `categories` limits which setting groups the preset carries. Settings Lightroom's own presets leave out are left out too, and listed in `left_out` with the reason (e.g. temperature and tint when white balance is As Shot, i.e. never edited: every temperature or tint this engine writes sets it to Custom; an Adobe camera profile on a raw photo, whose preset form has not been observed). A JPEG's (rendered pipeline) white balance and profile are written as Lightroom writes them. A name another preset already has is refused (PRESET_EXISTS). Returns the file's path, the group, the settings written and left out, and the source photo. Not while a session is open.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "the preset's name in the Develop Presets panel; also its file name, so none of < > : \" / \\ | ? *"
+        },
+        "folder": {
+          "description": "the preset group it is listed under (default \"LrC-AVG\")",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "categories": {
+          "description": "the setting groups the preset carries (default: all), as in lr_sync_series' parameter_mask: basic_tone, white_balance, tone_curve, hsl, grading, detail, lens, effects, bw, calibration, camera_profile",
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "basic_tone",
+              "white_balance",
+              "tone_curve",
+              "hsl",
+              "grading",
+              "detail",
+              "lens",
+              "effects",
+              "bw",
+              "calibration",
+              "camera_profile"
+            ]
+          }
+        }
+      },
+      "required": [
+        "name"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_search_photos",
+    "title": "Search the catalog",
+    "description": "Search the Lightroom catalog for photos: by part of the file name, keywords (all of them), an exact star rating, capture dates (YYYY-MM-DD, inclusive), a collection and a folder (its full path; UNKNOWN_FOLDER when the catalog has none there); the filters combine (all must match). With no filter it searches every photo and says so. Paged: `count` is how many matched, `photos` at most `limit` of them from `offset`, `has_more` whether more follow. Each photo: uuid (what lr_set_rating, lr_set_keywords, lr_set_gps and lr_sync_series take), filename, rating (0 = none), capture_time, virtual_copy, copy_name, gps ({latitude, longitude}, null for none) and path (the file); `notice` when the plugin is too old for gps and path. Changes nothing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "filename": {
+          "description": "part of the file name",
+          "type": "string",
+          "minLength": 1
+        },
+        "keywords": {
+          "description": "keywords the photo has, all of them",
+          "minItems": 1,
+          "maxItems": 50,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "rating": {
+          "description": "exactly this many stars, 0-5",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "start_date": {
+          "description": "captured on or after this day, YYYY-MM-DD",
+          "type": "string"
+        },
+        "end_date": {
+          "description": "captured on or before this day, YYYY-MM-DD",
+          "type": "string"
+        },
+        "collection_id": {
+          "description": "only photos in this collection (its id from lr_list_collections)",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "folder": {
+          "description": "only photos in the catalog folder at this full path, as a listing's `path` shows its folder (D:\\Photos\\2026\\2026-09-07)",
+          "type": "string",
+          "minLength": 1
+        },
+        "include_subfolders": {
+          "description": "with folder: the photos of its subfolders too (default false)",
+          "type": "boolean"
+        },
+        "limit": {
+          "description": "how many to return, 1-500 (default 100)",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        },
+        "offset": {
+          "description": "how many to skip, for the next page (default 0)",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_get_selected_photos",
+    "title": "The photos selected in Lightroom",
+    "description": "List the photos selected in Lightroom, the active one first. `count` is how many are selected, `photos` at most `limit` of them. Each photo: uuid (what lr_set_rating, lr_set_keywords, lr_set_gps and lr_sync_series take), filename, rating (0 = none), capture_time, virtual_copy, copy_name, gps ({latitude, longitude}, null for none) and path (the file); `notice` when the plugin is too old for gps and path. Refused with NO_ACTIVE_PHOTO when none is selected. Changes nothing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "description": "how many to return, 1-500 (default 100)",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        }
+      }
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_list_collections",
+    "title": "The catalog's collections",
+    "description": "List the catalog's collections, those inside collection sets too: id (what lr_search_photos' collection_id takes), name, set (the collection sets it is in, \"Set / Subset\", null at the top level), smart (a smart collection) and photo_count. Paged like lr_search_photos. Changes nothing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "description": "how many to return, 1-500 (default 100)",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        },
+        "offset": {
+          "description": "how many to skip, for the next page (default 0)",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_list_keywords",
+    "title": "The catalog's keywords",
+    "description": "List the catalog's keyword tree as paths, the form lr_set_keywords takes: parent first with | between the levels (\"Places|Europe|Paris\"; a top-level keyword is its name), a parent before its children, siblings by name. `query` keeps the paths that contain it, case aside. Paged like lr_search_photos: `count` is how many matched, and when more follow, `has_more` is true and `truncated` says how to get the rest. Changes nothing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "description": "only the paths that contain this text, case aside",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "limit": {
+          "description": "how many to return, 1-500 (default 100)",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        },
+        "offset": {
+          "description": "how many to skip, for the next page (default 0)",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_set_rating",
+    "title": "Set star ratings",
+    "description": "Set the star rating of photos named by uuid: 0-5 stars, 0 removes the rating. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags and title, caption and headline are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-100 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "rating": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "stars, 0-5; 0 removes the rating"
+        }
+      },
+      "required": [
+        "uuids",
+        "rating"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_set_keywords",
+    "title": "Add or remove keywords",
+    "description": "Add keywords to and/or remove keywords from photos named by uuid. A keyword is a plain name or a hierarchy path, parent first with | between the levels (\"Places|Europe|Paris\"); levels match case aside. A plain name always means the top-level keyword of that name, to add (created there if missing) and to remove alike, never a deeper keyword of the same name: to reach a nested keyword, give its path (lr_list_keywords lists them). `before` and `after` give each photo's keywords as paths. A removed keyword, and every level created, stays in the catalog's Keyword List: this tool deletes no keyword. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags and title, caption and headline are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-100 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "add": {
+          "description": "keywords to add, at most 50 (100 characters a level, 1000 a path): a plain name is the top-level keyword of that name, created there if missing; a path is the keyword at that place, its missing levels created",
+          "maxItems": 50,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        },
+        "remove": {
+          "description": "keywords to take off the photos, at most 50: a plain name takes off the top-level keyword of that name only; a path the keyword at that place. The keywords stay in the catalog",
+          "maxItems": 50,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        }
+      },
+      "required": [
+        "uuids"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_set_gps",
+    "title": "Set or remove GPS positions",
+    "description": "Set the GPS position of photos named by uuid, in decimal degrees, replacing any position they have; `position` null removes it. This tool neither reads nor writes altitude. `before` and `after` give each photo's position ({latitude, longitude}, or null for none). Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags and title, caption and headline are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-100 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "position": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "latitude": {
+                  "type": "number",
+                  "minimum": -90,
+                  "maximum": 90,
+                  "description": "decimal degrees, -90 to 90, north positive"
+                },
+                "longitude": {
+                  "type": "number",
+                  "minimum": -180,
+                  "maximum": 180,
+                  "description": "decimal degrees, -180 to 180, east positive"
+                }
+              },
+              "required": [
+                "latitude",
+                "longitude"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "the position to set, replacing any the photos have; null removes their position"
+        }
+      },
+      "required": [
+        "uuids",
+        "position"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_set_flag",
+    "title": "Set pick flags",
+    "description": "Set the pick flag of photos named by uuid: pick, reject or none. `before` and `after` give each photo's flag. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags and title, caption and headline are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-100 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "flag": {
+          "type": "string",
+          "enum": [
+            "pick",
+            "none",
+            "reject"
+          ],
+          "description": "\"pick\" (flagged), \"reject\" or \"none\" (unflagged)"
+        }
+      },
+      "required": [
+        "uuids",
+        "flag"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_set_iptc",
+    "title": "Set title, caption and headline",
+    "description": "Set the IPTC title, caption and/or headline of photos named by uuid; a field left out is not touched, \"\" empties it. `before` and `after` give each photo's three fields. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags and title, caption and headline are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-100 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "title": {
+          "description": "the photos' title, at most 2000 characters; \"\" empties it; left out, it stays as it is",
+          "type": "string",
+          "maxLength": 2000
+        },
+        "caption": {
+          "description": "the photos' caption (the description), at most 2000 characters; \"\" empties it; left out, it stays as it is",
+          "type": "string",
+          "maxLength": 2000
+        },
+        "headline": {
+          "description": "the photos' headline, at most 2000 characters; \"\" empties it; left out, it stays as it is",
+          "type": "string",
+          "maxLength": 2000
+        }
+      },
+      "required": [
+        "uuids"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_get_metadata",
+    "title": "Read photos' metadata",
+    "description": "Read the catalog metadata of photos named by uuid: title, caption, headline (\"\" for none), flag (pick, reject or none), keywords (as paths, the form lr_set_keywords takes), gps ({latitude, longitude}, null for none) and stack (null outside one, else position (1 = top), count, collapsed and top_uuid). Read these before a write so the user sees what will change. A photo Lightroom could not find is listed in `failed`; a part it could not read is left out and named in `errors`. Lightroom's plugin SDK cannot stack photos that are already in the catalog, so no tool makes or breaks a stack: use Photo > Stacking in Lightroom. Changes nothing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-100 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        }
+      },
+      "required": [
+        "uuids"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_create_collection",
+    "title": "Create a collection",
+    "description": "Create a collection (not a smart collection), at the top level or inside collection sets, which are created when missing. If one of that name is already there (case aside), it is returned with `created` false and nothing is made. Returns its id, for lr_add_to_collection and lr_search_photos' collection_id. Set names containing \"/\" cannot be given. Collections are not deleted by any tool. Tell the user what will change before calling. Runs only between editing sessions. If Lightroom stops answering, the call stops and the error lists what was done.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "description": "the collection's name"
+        },
+        "set": {
+          "description": "the collection sets to put it in, top level first, as lr_list_collections writes them (\"2026 / Trips\"); missing sets are created. Omit for the top level",
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "name"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_add_to_collection",
+    "title": "Add photos to a collection",
+    "description": "Put photos named by uuid into a collection named by id, or take them out with remove: true. Refused for a smart collection. Returns the photos `added` (or `removed`), those `unchanged` (already as asked), `not_found` (no photo has that uuid) and `not_taken` (Lightroom read them back unchanged). Only collection membership changes, never the photos. Tell the user what will change before calling. Runs only between editing sessions. If Lightroom stops answering, the call stops and the error lists what was done.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "collection_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "the collection's id, from lr_list_collections or lr_create_collection"
+        },
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 500,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-500 (from lr_search_photos, lr_get_selected_photos or lr_import_photos)"
+        },
+        "remove": {
+          "description": "true takes the photos out of the collection instead (to undo an add); default false",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "collection_id",
+        "uuids"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_export_photos",
+    "title": "Export photos to a folder",
+    "description": "Export photos named by uuid, with their Lightroom edits, to files in a folder: JPEG, PNG, TIFF (sRGB, no output sharpening) or the original file; full size, or resized by long_edge or to fit width x height. Each photo's `files` give the paths written, and whether a name already there was renamed, overwritten or skipped. Writes only into that folder; the catalog and the photos are unchanged. A call works for about 30 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling until `not_yet` is gone, and tell the user how far along it is. A call still busy at 50 seconds returns `pending` with `next`. Tell the user what will change before calling. Runs only between editing sessions. If Lightroom stops answering, the call stops and the error lists what was done.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 500,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-500 (from lr_search_photos, lr_get_selected_photos or lr_import_photos)"
+        },
+        "folder": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the folder to write the files into, made if missing; an absolute path, a leading ~ being the user's home folder"
+        },
+        "format": {
+          "type": "string",
+          "enum": [
+            "jpeg",
+            "png",
+            "tiff",
+            "original"
+          ],
+          "description": "jpeg, png, tiff, or original (the photo's own file, unedited)"
+        },
+        "quality": {
+          "description": "JPEG quality 1-100 (default 90); ignored for the other formats",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "bit_depth": {
+          "description": "PNG and TIFF bits per channel, 8 or 16 (default 8); ignored for jpeg and original",
+          "anyOf": [
+            {
+              "type": "number",
+              "const": 8
+            },
+            {
+              "type": "number",
+              "const": 16
+            }
+          ]
+        },
+        "long_edge": {
+          "description": "resize so the long edge is at most this many pixels; wins over width and height; ignored for original",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65000
+        },
+        "width": {
+          "description": "with height: resize to fit inside width x height pixels, keeping the aspect ratio; ignored with long_edge and for original",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65000
+        },
+        "height": {
+          "description": "with width, as above",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65000
+        },
+        "on_existing": {
+          "description": "a file of that name already in the folder: rename the new one (\"name-2.jpg\", default), overwrite it, or skip",
+          "type": "string",
+          "enum": [
+            "rename",
+            "overwrite",
+            "skip"
+          ]
+        }
+      },
+      "required": [
+        "uuids",
+        "folder",
+        "format"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_import_photos",
+    "title": "Import photos into the catalog",
+    "description": "Import a photo file, or the photo files in a folder (raw, DNG, JPEG, TIFF, PNG, HEIC, PSD), into the Lightroom catalog: where they are, or copied first into copy_to (do that for a memory card). A file the catalog already holds at that path is not imported again (`already_in_catalog`, with its uuid); a photo imported earlier from another path is not recognised. Returns the uuids, each with its source file, its path in the catalog and capture_time, for lr_add_to_collection, lr_set_keywords and the other tools. No develop or metadata preset is passed to the import, and no tool can remove a photo from the catalog: the user does that in Lightroom (Library > Remove Photo). A call works for about 30 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling until `not_yet` is gone, and tell the user how far along it is. A call still busy at 50 seconds returns `pending` with `next`. Here `resume_after` comes with `not_yet`: pass it back to go on from the next file. Tell the user what will change before calling. Runs only between editing sessions. If Lightroom stops answering, the call stops and the error lists what was done.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "description": "a photo file, or a folder of them (an absolute path; ~ is the user's home folder)"
+        },
+        "copy_to": {
+          "description": "copy the files here first, keeping their folders below the source, and import the copies (never overwrites; a same-size file already there counts as the copy). Omit to import the files where they are",
+          "type": "string",
+          "minLength": 1
+        },
+        "recursive": {
+          "description": "look in the source's subfolders too (default true)",
+          "type": "boolean"
+        },
+        "resume_after": {
+          "description": "to go on after a call that ran out of time: that call's `resume_after` (a source file's path); the call starts with the file after it. Omit to start from the first file",
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "source"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_apply_denoise",
+    "title": "Apply AI Denoise",
+    "description": "Turn on Lightroom's AI Denoise (Detail panel) at `amount` on photos named by uuid, or change the amount where it is on; Lightroom Classic 15 or later. For each photo Lightroom switches to Develop and selects it, then the module and the selection are put back. Each photo's `status`: applied, amount_changed (`previous_amount`), unchanged (already at that amount), skipped (Lightroom says Denoise is not available for it, `reason`) or failed (`reason`; Lightroom can show a change and not save it while it still computes: try again later). A changed photo first gets a snapshot (`snapshot`, \"AVG pre-denoise …\"), which puts it back. Lightroom computes Denoise in the background, about 10 s a photo. Not while a session is open. A call works for about 30 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling until `not_yet` is gone, and tell the user how far along it is. A call still busy at 50 seconds returns `pending` with `next`.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-100 (from lr_search_photos, lr_get_selected_photos or lr_import_photos)"
+        },
+        "amount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Denoise amount, 1-100, as Lightroom's Detail panel shows it (50 is its default)"
+        }
+      },
+      "required": [
+        "uuids",
+        "amount"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  }
+]

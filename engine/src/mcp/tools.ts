@@ -1,6 +1,7 @@
 // The engine's tools (contracts in MCP_TOOLS), one module per group:
 //   context  (tools-context.ts): lr_get_active_photo_context, lr_get_preview, lr_get_metrics (Phase 2;
-//            Phase 3 added `session_id` and `region` to lr_get_preview, `session_id` to lr_get_metrics).
+//            Phase 3 added `session_id` and `region` to lr_get_preview, `session_id` to lr_get_metrics);
+//            lr_get_photo_stats (tools-stats.ts) and lr_get_preview `quality` "fast" (tools-preview-fast.ts), issue #216.
 //   session  (tools-session.ts): lr_begin_session, lr_step, lr_probe, lr_set_regions, lr_end_session,
 //            lr_get_session_log (Phase 3; the loop is session\manager.ts); lr_select_variant (Phase 4);
 //            lr_approve_pass (Phase 5); lr_list_masks, lr_create_mask, lr_edit_mask, lr_delete_mask
@@ -49,6 +50,7 @@ import { getMetadata, setFlag, setIptc, type GetMetadataArgs, type SetFlagArgs, 
 import { createPresetFromActive, syncSeries, type CreatePresetArgs, type SyncSeriesArgs } from "./tools-propagation.js";
 import { approvePass, beginSession, createMask, deleteMask, editMask, endSession, getSessionLog, listMasks, probe, selectVariant, setRegions, step } from "./tools-session.js";
 import { createContext, type LastRender, type ToolContext, type ToolOutput, type ToolsDeps } from "./tools-shared.js";
+import { getPhotoStats, type PhotoStatsArgs } from "./tools-stats.js";
 import { setSettings, type SetSettingsArgs } from "./tools-write.js";
 
 export class Tools {
@@ -105,6 +107,10 @@ export class Tools {
 
   getMetrics(args: MetricsArgs = {}): Promise<ToolOutput> {
     return getMetrics(this.ctx, args);
+  }
+
+  getPhotoStats(args: PhotoStatsArgs, budget?: Budget): Promise<ToolOutput> {
+    return getPhotoStats(this.ctx, args, budget);
   }
 
   // --- Sessions.

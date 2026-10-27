@@ -122,7 +122,7 @@ export function createServer(tools: Tools, options: { progressMs?: number; deadl
     const { name } = request.params;
     const args: unknown = request.params.arguments ?? {};
     const progress = { token: request.params._meta?.progressToken, ms: options.progressMs ?? PROGRESS_MS };
-    const context = { progressToken: progress.token !== undefined, client: clientIdentity(server.getClientVersion()) };
+    const context = { progressToken: progress.token !== undefined, client: clientIdentity(server.getClientVersion()), signal: ctx.mcpReq.signal };
     return withCallContext(context, async () => {
       const def = byName.get(name);
       if (!def) {

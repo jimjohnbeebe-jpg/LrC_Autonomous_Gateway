@@ -128,6 +128,33 @@
     }
   },
   {
+    "name": "lr_get_photo_stats",
+    "title": "Metrics of several photos",
+    "description": "Measure up to 20 photos named by uuid, without a session and without selecting them: each is exported at 800 px (about 1-3 s a photo) and measured. Returns `photos` in the order given, each with `metrics` (the summary lr_get_preview returns, sharpness included) or its own `error`. For culling: compare sharpness and exposure across frames of one scene. Returns no images. Not while a session is open. Changes nothing. A call works for about 30 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling until `not_yet` is gone, and tell the user how far along it is. A call still busy at 50 seconds returns `pending` with `next`. Metrics are measured on the rendered preview (8-bit sRGB, as Lightroom exported it), not on the raw file: clipping here can often be recovered with highlights/whites or shadows/blacks. clip_high_pct = % of pixels with any channel >= 253; clip_high_tone_pct = % with 2+ channels >= 253 (the high guard's); clip_low_pct = % with all channels <= 2; luma = Rec. 709 on the 8-bit values; luma_percentiles p1-p99 by nearest rank; dynamic_range = (p99 - p1) / 255; rb_ratio = mean red / mean blue; saturation_mean = mean HSV saturation, 0-100; hue_histogram = 12 bins of 30 degrees (bin i centred on i*30: 0 red, 60 yellow, 120 green, 180 cyan, 240 blue, 300 magenta), % of the chromatic pixels (HSV saturation and value >= 0.1, chromatic_pct of all); hue_mean = their circular mean hue in degrees; sharpness = Laplacian variance of luma at 512 px (more = detail or noise). Percentages are 0-100.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "1-20 photo uuids (from lr_search_photos or lr_get_selected_photos)"
+        }
+      },
+      "required": [
+        "uuids"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
     "name": "lr_begin_session",
     "title": "Begin an editing session",
     "description": "Start an editing session on the photo selected in Lightroom. THE USER'S REQUEST COMES FIRST: put it in `notes` in their own words. An intent (lr_list_intents) is an optional starting point: leave intent_id out when none fits; pass `profile` or `guardrails` when the request needs them (e.g. high key or crushed blacks). The engine makes a Develop snapshot \"AVG pre-session …\" (lr_end_session revert returns to it), renders the photo, and runs pass 0 as one History step \"AVG <id> pass 0/N\". Returns session_id, the intent's brief, guardrails, pass0_applied, the full settings, metrics, the preview, `log_path`, and `start_off_zero` (settings found on the photo, which may be import defaults or earlier edits). Then call lr_step once per pass, up to max_passes. One session at a time; it stays open until lr_end_session. A photo with a session an engine that stopped left open (lr_get_active_photo_context `left_open`) is refused with SESSION_LEFT_OPEN, nothing written, until that session is ended. lr_help explains passes, variants mode, clipping guardrails, metrics and previews. The LrC-AVG HUD in Lightroom opens and follows the session; there the user can Abort (the photo goes back to the pre-session snapshot, and a running call stops before its next write), Accept (after the running call), Pick a copy, or Approve a pass (approve_each_pass mode). A session the user ended answers every later call with SESSION_ENDED (details: outcome, source); tell the user, and start a new session only if they ask. ",

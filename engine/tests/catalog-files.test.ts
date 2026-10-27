@@ -7,7 +7,7 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BridgeError, type CommandName, type HelloResult } from "../src/bridge/index.js";
 import { IntentLibrary } from "../src/intents/index.js";
-import { copyForImport, importFiles, placeExport } from "../src/library/index.js";
+import { PHOTO_EXTENSIONS, copyForImport, importFiles, placeExport } from "../src/library/index.js";
 import { FILE_DEFS } from "../src/mcp/defs-files.js";
 import { Tools, toToolError, type ToolError } from "../src/mcp/index.js";
 import type { ToolOutput } from "../src/mcp/tools-shared.js";
@@ -184,6 +184,14 @@ describe("placeExport (library\\files.ts)", () => {
 });
 
 describe("lr_import_photos", () => {
+  it("offers Lightroom every file type upstream imports (issue #218 row 11, Automaat PR #294)", () => {
+    // Automaat/lightroom-mcp@1040453 plugin/LightroomMCP.lrplugin/HandlerImport.lua:10-17 [upstream claim].
+    const upstream = `3fr ari arw bay cap cr2 cr3 crw dcr dcs dng drf eip erf fff gpr iiq k25 kdc mdc mef mos mrw
+      nef nrw orf ori pef ptx pxn raf raw rw2 rwl sr2 srf srw x3f avif heic heif hif jpe jpeg jpg jxl png psb psd tif tiff`;
+    const missing = upstream.split(/\s+/).filter((ext) => !PHOTO_EXTENSIONS.has(`.${ext}`));
+    expect(missing).toEqual([]);
+  });
+
   const card = () => {
     const dir = path.join(tmp, "DCIM");
     mkdirSync(path.join(dir, "100NIKON"), { recursive: true });

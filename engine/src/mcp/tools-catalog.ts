@@ -28,10 +28,12 @@ import {
 } from "../library/index.js";
 import { WRITE_TIMEOUT_MS } from "../sync/target.js";
 
+import { findCollection } from "./tools-collections.js";
 import { needPlugin, run, sessionTools, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
 type Page = { limit?: number | undefined; offset?: number | undefined };
-export type SearchPhotosArgs = SearchFilters & Page & { collection_id?: number | undefined; folder?: string | undefined; include_subfolders?: boolean | undefined };
+export type SearchPhotosArgs = SearchFilters &
+  Page & { collection_id?: number | undefined; collection?: string | undefined; folder?: string | undefined; include_subfolders?: boolean | undefined };
 export type ListKeywordsArgs = Page & { query?: string | undefined };
 export type SetRatingArgs = { uuids: string[]; rating: number };
 export type SetKeywordsArgs = { uuids: string[]; add?: string[] | undefined; remove?: string[] | undefined };
@@ -65,7 +67,8 @@ export async function searchPhotos(ctx: ToolContext, args: SearchPhotosArgs): Pr
     const criteria = searchCriteria(args);
     const offset = args.offset ?? 0;
     const limit = args.limit ?? DEFAULT_PAGE;
-    const inCollection = args.collection_id !== undefined ? { collection_id: args.collection_id } : {};
+    const collectionId = args.collection !== undefined ? (await findCollection(ctx, args.collection)).local_id : args.collection_id;
+    const inCollection = collectionId !== undefined ? { collection_id: collectionId } : {};
     const inFolder = args.folder !== undefined ? { folder: folderPath(args.folder), include_subfolders: args.include_subfolders === true } : {};
     const res = await ctx.deps.client.request("search_photos", { criteria, ...inCollection, ...inFolder, offset, limit }, { timeoutMs: CATALOG_READ_TIMEOUT_MS });
     const w = where(ctx);
@@ -76,7 +79,7 @@ export async function searchPhotos(ctx: ToolContext, args: SearchPhotosArgs): Pr
       returned: photos.length,
       has_more: offset + photos.length < res.count,
       photos,
-      ...(criteria.length === 0 && args.collection_id === undefined && args.folder === undefined ? { warning: UNFILTERED } : {}),
+      ...(criteria.length === 0 && collectionId === undefined && args.folder === undefined ? { warning: UNFILTERED } : {}),
       ...(w.notice !== undefined ? { notice: w.notice } : {}),
     };
     return { json, log: { count: res.count, returned: photos.length } };
@@ -118,6 +121,17 @@ export async function listKeywords(ctx: ToolContext, args: ListKeywordsArgs): Pr
     const truncated = `${returned} of ${res.count} keywords from offset ${offset}: call again with offset ${offset + returned}, or narrow with query.`;
     const json = { count: res.count, offset, returned, has_more: more, keywords: res.keywords, ...(more ? { truncated } : {}) };
     return { json, log: { count: res.count, returned } };
+  });
+}
+
+/** Issue #218 row 6 (plugin 1.5.0, Folders.lua): the folder tree, paged; a folder's photos are lr_search_photos' `folder`. */
+export async function listFolders(ctx: ToolContext, args: Page): Promise<ToolOutput> {
+  return run(ctx, "lr_list_folders", args, async () => {
+    await ctx.deps.ensureBridge();
+    const offset = args.offset ?? 0;
+    const res = await ctx.deps.client.request("list_folders", { offset, limit: args.limit ?? DEFAULT_PAGE }, { timeoutMs: CATALOG_READ_TIMEOUT_MS });
+    const returned = res.folders.length;
+    return { json: { count: res.count, offset, returned, has_more: offset + returned < res.count, folders: res.folders }, log: { count: res.count, returned } };
   });
 }
 

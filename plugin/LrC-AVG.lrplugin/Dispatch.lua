@@ -11,17 +11,21 @@
 local LrTasks = import 'LrTasks'
 
 local Catalog = require 'Catalog'
+local CollectionEdit = require 'CollectionEdit'
 local Copies = require 'Copies'
 local Denoise = require 'Denoise'
 local Develop = require 'Develop'
 local DevelopTools = require 'DevelopTools'
+local Folders = require 'Folders'
 local Hud = require 'Hud'
 local Json = require 'Json'
+local KeywordEdit = require 'KeywordEdit'
 local Library = require 'Library'
 local Log = require 'Log'
 local Masks = require 'Masks'
 local Metadata = require 'Metadata'
 local Pending = require 'Pending'
+local PluginMetadata = require 'PluginMetadata'
 local Prefs = require 'Prefs'
 local Presets = require 'Presets'
 local Preview = require 'Preview'
@@ -76,6 +80,14 @@ function Dispatch.handlers(hello)
         get_preset = Presets.get,
         apply_preset = Presets.apply,
         create_checkpoint = Presets.createCheckpoint,
+        set_color_label = Metadata.setColorLabel,
+        create_smart_collection = CollectionEdit.createSmart,
+        delete_collection = CollectionEdit.delete,
+        list_folders = Folders.list,
+        rename_keyword = KeywordEdit.rename,
+        keyword_subtree = KeywordEdit.subtree,
+        set_plugin_metadata = PluginMetadata.set,
+        get_plugin_metadata = PluginMetadata.get,
     }
     return HANDLERS
 end

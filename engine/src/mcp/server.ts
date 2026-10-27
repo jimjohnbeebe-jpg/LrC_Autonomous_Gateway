@@ -37,6 +37,8 @@ import { DEVELOP_DEFS } from "./defs-develop.js";
 import { HELP_DEFS, INSTRUCTIONS } from "./defs-help.js";
 import { INTENT_DEFS } from "./defs-intents.js";
 import { MASK_DEFS } from "./defs-masks.js";
+import { ORGANIZE_DEFS } from "./defs-organize.js";
+import { AI_METADATA_DEFS } from "./defs-ai-metadata.js";
 import { PROPAGATION_DEFS } from "./defs-propagation.js";
 import { PRESET_DEFS } from "./defs-presets.js";
 import { SESSION_DEFS } from "./defs-session.js";
@@ -48,7 +50,7 @@ import type { ToolOutput } from "./tools-shared.js";
 import { ENGINE_VERSION } from "./version.js";
 
 /** The tool groups, in the order the server lists them. */
-const DEFS: ToolDef[] = [...HELP_DEFS, ...CONTEXT_DEFS, ...SESSION_DEFS, ...MASK_DEFS, ...INTENT_DEFS, ...PROPAGATION_DEFS, ...PRESET_DEFS, ...CATALOG_DEFS, ...METADATA_DEFS, ...FILE_DEFS, ...DEVELOP_DEFS];
+const DEFS: ToolDef[] = [...HELP_DEFS, ...CONTEXT_DEFS, ...SESSION_DEFS, ...MASK_DEFS, ...INTENT_DEFS, ...PROPAGATION_DEFS, ...PRESET_DEFS, ...CATALOG_DEFS, ...METADATA_DEFS, ...FILE_DEFS, ...DEVELOP_DEFS, ...ORGANIZE_DEFS, ...AI_METADATA_DEFS];
 
 /** The advertised JSON Schema of a tool's arguments, from the same zod schema that validates them. */
 function inputSchema(schema: z.ZodObject): Tool["inputSchema"] {

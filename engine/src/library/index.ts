@@ -1,10 +1,24 @@
 // Entry point of the library module: the catalog tools kept from Automaat (PHASE6_PROTOTYPE_PLAN
 // row 2; the MCP side is mcp\tools-catalog.ts and mcp\defs-catalog.ts).
 
-export { CATALOG_READ_TIMEOUT_MS, DEFAULT_PAGE, MAX_PAGE, WHERE_NOTICE, WHERE_PLUGIN, isCalendarDay, listing, searchCriteria, shiftDay } from "./search.js";
-export type { SearchFilters } from "./search.js";
-export { FLAGS, MAX_TEXT, METADATA_PLUGIN, NO_STACK_WRITE, TEXT_FIELDS, flagName, folderPath, textNotTaken } from "./metadata.js";
-export type { FlagName, IptcText, TextField } from "./metadata.js";
+export { CATALOG_READ_TIMEOUT_MS, DEFAULT_PAGE, FILE_TYPES, LABEL_VALUES, MAX_PAGE, WHERE_NOTICE, WHERE_PLUGIN, isCalendarDay, listing, searchCriteria, shiftDay } from "./search.js";
+export type { FileType, LabelName, SearchFilters } from "./search.js";
+export {
+  ACCESSIBILITY_FIELDS,
+  COLOR_LABELS,
+  FLAGS,
+  MAX_TEXT,
+  METADATA_PLUGIN,
+  NO_STACK_WRITE,
+  TEXT_FIELDS,
+  TEXT_KEYS,
+  flagName,
+  folderPath,
+  textFromWire,
+  textNotTaken,
+  textToWire,
+} from "./metadata.js";
+export type { ColorLabel, FlagName, IptcText, TextField } from "./metadata.js";
 export { KEYWORD_SEPARATOR, keywordKey, keywordLevels, keywordsNotTaken, normalizeKeyword } from "./keywords.js";
 export { GPS_TOLERANCE, MAX_KEYWORDS, MAX_KEYWORD_LENGTH, MAX_KEYWORD_PATH_LENGTH, MAX_PHOTOS, gpsNotTaken, writeEach } from "./write.js";
 export type { Failed, Gps, PhotoWrite, WriteResult } from "./write.js";

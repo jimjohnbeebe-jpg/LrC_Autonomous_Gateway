@@ -10,7 +10,9 @@
 --   With no criteria and no collection, every photo (getAllPhotos), as Automaat does [upstream claim:
 --   vendor\automaat\plugin\LightroomMCP.lrplugin\HandlerSearch.lua:110-114]. `count` is how many
 --   matched; `photos` describes those from offset + 1, at most `limit`. Plugin 0.22.0: `folder` (a
---   full path) and `include_subfolders` keep only that folder's photos (folderPhotos).
+--   full path) and `include_subfolders` keep only that folder's photos (folderPhotos). Plugin 1.5.0 (issue
+--   #218): the engine's criteria also name camera, lens, ISO, flag, label, edits and file type; this side
+--   passes every entry to findPhotos as it came.
 -- list_collections {}: every collection, top level and inside collection sets, with the set path.
 -- list_keywords { query, offset, limit }: the keyword tree's paths, paged as search_photos.
 -- set_rating { photo_uuid, rating }, set_keywords { photo_uuid, add, remove } and set_gps
@@ -52,13 +54,11 @@ end
 local function collectionPhotos(catalog, id)
     local collection = catalog:getCollectionByLocalIdentifier(id)
     if not collection then return fail("unknown_collection", "no collection has id " .. tostring(id)) end
-    local kind, photos
-    catalog:withReadAccessDo(function()
-        kind = collection:type()
-        if kind == "LrCollection" or kind == "LrSmartCollection" then photos = collection:getPhotos() end
-    end)
-    if not photos then return fail("unknown_collection", "id " .. tostring(id) .. " is a " .. tostring(kind) .. ", not a collection") end
-    return photos
+    local kind
+    catalog:withReadAccessDo(function() kind = collection:type() end)
+    if kind ~= "LrCollection" and kind ~= "LrSmartCollection" then return fail("unknown_collection", "id " .. tostring(id) .. " is a " .. tostring(kind) .. ", not a collection") end
+    -- After the gate (plugin 1.5.0): a smart collection's getPhotos searches (Transfer.describeCollection says why).
+    return collection:getPhotos() or {}
 end
 
 -- The photos of the folder at this full path, or nil plus an error (plugin 0.22.0, issue #139 gap 2).
@@ -131,10 +131,11 @@ end
 
 function Library.listCollections()
     local catalog = LrApplication.activeCatalog()
-    local list = {}
+    local list, objects = {}, {}
     local function add(collection, setPath)
         list[#list + 1] = { local_id = collection.localIdentifier, name = collection:getName(), set_path = setPath,
-            smart = collection:isSmartCollection() == true, photo_count = #(collection:getPhotos() or {}) }
+            smart = collection:isSmartCollection() == true }
+        objects[#list] = collection
     end
     local function walk(set, setPath)
         for _, collection in ipairs(set:getChildCollections() or {}) do add(collection, setPath) end
@@ -144,6 +145,11 @@ function Library.listCollections()
         for _, collection in ipairs(catalog:getChildCollections() or {}) do add(collection, nil) end
         for _, set in ipairs(catalog:getChildCollectionSets() or {}) do walk(set, set:getName()) end
     end)
+    -- Counted after the gate (plugin 1.5.0), as collectionPhotos reads them.
+    for i, c in ipairs(list) do
+        if i > 1 then LrTasks.yield() end -- PRD NFR-1
+        c.photo_count = #(objects[i]:getPhotos() or {})
+    end
     return { collections = list }
 end
 

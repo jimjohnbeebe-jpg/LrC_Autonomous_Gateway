@@ -15,8 +15,11 @@ export const gpsWire = z.union([gpsPosition, z.literal(false)]);
 
 const targeted = { uuid: z.string().min(1) };
 
-/** A photo's title, caption and headline as Metadata.lua reads them, "" for none. */
-const iptcText = z.object({ title: z.string(), caption: z.string(), headline: z.string() });
+/**
+ * A photo's text fields as Metadata.lua reads them, "" for none, by SDK metadata key: title, caption and headline;
+ * plugin 1.5.0 adds creator, copyright, the location fields and (Lightroom 13.2 or later) the accessibility texts.
+ */
+const iptcText = z.record(z.string(), z.string());
 
 /** One photo before and after a write, as set_rating's result (protocol-results.ts). */
 const written = <T extends z.ZodType>(value: T) =>
@@ -34,8 +37,16 @@ export const METADATA_RESULTS = {
   // photo already held them.
   set_flag: written(z.number()),
   set_iptc: written(iptcText),
-  // A part whose read failed is absent and named in `errors`. `stack` is false outside a stack.
-  get_metadata: z.object({
+  // A part whose read failed is absent and named in `errors`. `stack` is false outside a stack. Loose: plugin
+  // 1.5.0 sends every text field of iptcText by its SDK key, and label, rating, capture_time, path, copy_name
+  // and virtual_copy.
+  get_metadata: z.looseObject({
+    label: z.string().optional(),
+    rating: z.number().optional(),
+    capture_time: z.string().optional(),
+    path: z.string().optional(),
+    copy_name: z.string().optional(),
+    virtual_copy: z.boolean().optional(),
     ...targeted,
     filename: z.string().optional(),
     title: z.string().optional(),

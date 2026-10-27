@@ -28,6 +28,16 @@ From upstream at `1040453` (2026-10-26; GitHub issue #214), rewritten, not copie
 | `Snapshots.lua` | `HandlerSnapshots.lua` | Listing, applying in Develop and deleting snapshots by id, with the deletion read back. |
 | `Copies.lua` | `HandlerVirtualCopies.lua` | One virtual copy per photo with an optional name, the selection and source put back. |
 
+From upstream commit `1040453` (plugin 1.5.0, GitHub issue #218), rewritten, not copied:
+
+| File in this plugin | Derived from | What was taken |
+|---|---|---|
+| `CollectionEdit.lua` | `HandlerCollections.lua` (`createSmartCollection`, `deleteCollection`, `getCollectionPhotos`) | A smart collection from a search descriptor; deleting a collection in a write gate; a smart collection's `getPhotos` outside the read gate (also in `Library.lua`, `Transfer.lua`). |
+| `Folders.lua` | `HandlerFolders.lua` (`listFolders`) | The depth-first folder walk from `getFolders` with each folder's own photo count. |
+| `KeywordEdit.lua` | `HandlerKeywords.lua` (`renameKeyword`), `HandlerOrganization.lua` (`removeKeywordSubtree`) | Rename by `setAttributes({ keywordName })`, the sibling clash check, the case-only rename through a temporary name; the subtree's photos for a catalog-wide removal. |
+| `MetadataDefinition.lua`, `PluginMetadata.lua` | `AiMetadataDefinition.lua`, `HandlerAiMetadata.lua` | The private fields `aiScore` and `aiReason` (schema version 1) and writing them with `setPropertyForPlugin`, nil to clear. |
+| `Metadata.lua` (`setIptc`, `setColorLabel`) | `HandlerMetadata.lua` (`setMetadata`, `setLocation`), `HandlerOrganization.lua` (`setColorLabel`) | The creator, copyright, location and accessibility keys, the 13.2 accessibility gate, `colorNameForLabel`. |
+
 The engine's derived files are listed in `engine\THIRD_PARTY_NOTICES.md`.
 
 ## Automaat/lightroom-mcp licence

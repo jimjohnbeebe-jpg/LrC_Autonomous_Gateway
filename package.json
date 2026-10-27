@@ -41,6 +41,7 @@
     "develop:check": "npm run build && node engine/dist/devtools/develop-check-cli.js",
     "presets:check": "npm run build && node engine/dist/devtools/presets-check-cli.js",
     "stats:check": "npm run build && node engine/dist/devtools/stats-check-cli.js",
+    "catalog:check": "npm run build && node engine/dist/devtools/catalog-check-cli.js",
     "effects:probe": "npm run build && node engine/dist/devtools/effects-probe-cli.js",
     "stall:check": "npm run build && node engine/dist/devtools/stall-check-cli.js",
     "intents:check": "npm run build && node engine/dist/devtools/intents-check-cli.js",

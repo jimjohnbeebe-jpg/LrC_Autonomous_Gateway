@@ -2050,7 +2050,7 @@
   {
     "name": "lr_search_photos",
     "title": "Search the catalog",
-    "description": "Search the Lightroom catalog for photos: by part of the file name, keywords (all of them), an exact star rating, capture dates (YYYY-MM-DD, inclusive), a collection and a folder (its full path; UNKNOWN_FOLDER when the catalog has none there); the filters combine (all must match). With no filter it searches every photo and says so. Paged: `count` is how many matched, `photos` at most `limit` of them from `offset`, `has_more` whether more follow. Each photo: uuid (what lr_set_rating, lr_set_keywords, lr_set_gps and lr_sync_series take), filename, rating (0 = none), capture_time, virtual_copy, copy_name, gps ({latitude, longitude}, null for none) and path (the file); `notice` when the plugin is too old for gps and path. Changes nothing.",
+    "description": "Search the Lightroom catalog for photos: by part of the file name, keywords (all of them), an exact star rating, capture dates (YYYY-MM-DD, inclusive), a collection (regular or smart: its members) and a folder (its full path; UNKNOWN_FOLDER when the catalog has none there), camera and lens (exact indexed names), ISO, focal length, flag, colour label, edited or not, and file type; the filters combine (all must match) through Lightroom's own search. With no filter it searches every photo and says so. Paged: `count` is how many matched, `photos` at most `limit` of them from `offset`, `has_more` whether more follow. Each photo: uuid (what lr_set_rating, lr_set_keywords, lr_set_gps and lr_sync_series take), filename, rating (0 = none), capture_time, virtual_copy, copy_name, gps ({latitude, longitude}, null for none) and path (the file); `notice` when the plugin is too old for gps and path. Changes nothing.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -2083,11 +2083,80 @@
           "description": "captured on or before this day, YYYY-MM-DD",
           "type": "string"
         },
+        "camera": {
+          "description": "the camera model exactly as Lightroom indexes it (Library filter bar > Metadata > Camera): \"ILCE-7M3\" matches, \"Sony ILCE-7M3\" does not",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "lens": {
+          "description": "the lens exactly as Lightroom indexes it (Library filter bar > Metadata > Lens)",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "iso": {
+          "description": "this ISO speed",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "focal_length": {
+          "description": "this focal length in mm",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "flag": {
+          "description": "this pick flag",
+          "type": "string",
+          "enum": [
+            "pick",
+            "reject",
+            "none"
+          ]
+        },
+        "color_label": {
+          "description": "this colour label; \"none\" for no label",
+          "type": "string",
+          "enum": [
+            "red",
+            "yellow",
+            "green",
+            "blue",
+            "purple",
+            "none"
+          ]
+        },
+        "edited": {
+          "description": "true: only photos with Develop edits; false: only unedited ones",
+          "type": "boolean"
+        },
+        "file_type": {
+          "description": "this file type",
+          "type": "string",
+          "enum": [
+            "DNG",
+            "RAW",
+            "JPG",
+            "TIFF",
+            "PNG",
+            "PSD",
+            "VIDEO",
+            "PSB",
+            "AVIF",
+            "JXL"
+          ]
+        },
         "collection_id": {
           "description": "only photos in this collection (its id from lr_list_collections)",
           "type": "integer",
           "minimum": 0,
           "maximum": 9007199254740991
+        },
+        "collection": {
+          "description": "only photos in the collection of this name or path (its name, or \"Set / Name\" as lr_list_collections shows its set; a name that several collections share is refused with the candidates); not with collection_id",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
         },
         "folder": {
           "description": "only photos in the catalog folder at this full path, as a listing's `path` shows its folder (D:\\Photos\\2026\\2026-09-07)",
@@ -2198,7 +2267,7 @@
   {
     "name": "lr_set_rating",
     "title": "Set star ratings",
-    "description": "Set the star rating of photos named by uuid: 0-5 stars, 0 removes the rating. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags and title, caption and headline are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
+    "description": "Set the star rating of photos named by uuid: 0-5 stars, 0 removes the rating. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags, colour labels and text fields are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -2234,7 +2303,7 @@
   {
     "name": "lr_set_keywords",
     "title": "Add or remove keywords",
-    "description": "Add keywords to and/or remove keywords from photos named by uuid. A keyword is a plain name or a hierarchy path, parent first with | between the levels (\"Places|Europe|Paris\"); levels match case aside. A plain name always means the top-level keyword of that name, to add (created there if missing) and to remove alike, never a deeper keyword of the same name: to reach a nested keyword, give its path (lr_list_keywords lists them). `before` and `after` give each photo's keywords as paths. A removed keyword, and every level created, stays in the catalog's Keyword List: this tool deletes no keyword. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags and title, caption and headline are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
+    "description": "Add keywords to and/or remove keywords from photos named by uuid. A keyword is a plain name or a hierarchy path, parent first with | between the levels (\"Places|Europe|Paris\"); levels match case aside. A plain name always means the top-level keyword of that name, to add (created there if missing) and to remove alike, never a deeper keyword of the same name: to reach a nested keyword, give its path (lr_list_keywords lists them). `before` and `after` give each photo's keywords as paths. A removed keyword, and every level created, stays in the catalog's Keyword List: this tool deletes no keyword. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags, colour labels and text fields are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -2283,7 +2352,7 @@
   {
     "name": "lr_set_gps",
     "title": "Set or remove GPS positions",
-    "description": "Set the GPS position of photos named by uuid, in decimal degrees, replacing any position they have; `position` null removes it. This tool neither reads nor writes altitude. `before` and `after` give each photo's position ({latitude, longitude}, or null for none). Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags and title, caption and headline are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
+    "description": "Set the GPS position of photos named by uuid, in decimal degrees, replacing any position they have; `position` null removes it. This tool neither reads nor writes altitude. `before` and `after` give each photo's position ({latitude, longitude}, or null for none). Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags, colour labels and text fields are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -2342,7 +2411,7 @@
   {
     "name": "lr_set_flag",
     "title": "Set pick flags",
-    "description": "Set the pick flag of photos named by uuid: pick, reject or none. `before` and `after` give each photo's flag. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags and title, caption and headline are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
+    "description": "Set the pick flag of photos named by uuid: pick, reject or none. `before` and `after` give each photo's flag. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags, colour labels and text fields are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -2379,9 +2448,51 @@
     }
   },
   {
+    "name": "lr_set_color_label",
+    "title": "Set colour labels",
+    "description": "Set the colour label of photos named by uuid: red, yellow, green, blue, purple or none. `before` and `after` give each photo's label. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags, colour labels and text fields are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-100 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "label": {
+          "type": "string",
+          "enum": [
+            "red",
+            "yellow",
+            "green",
+            "blue",
+            "purple",
+            "none"
+          ],
+          "description": "the colour label; \"none\" removes it"
+        }
+      },
+      "required": [
+        "uuids",
+        "label"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
     "name": "lr_set_iptc",
-    "title": "Set title, caption and headline",
-    "description": "Set the IPTC title, caption and/or headline of photos named by uuid; a field left out is not touched, \"\" empties it. `before` and `after` give each photo's three fields. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags and title, caption and headline are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
+    "title": "Set IPTC text, location and alt text",
+    "description": "Set text metadata of photos named by uuid: title, caption, headline, creator, copyright, the IPTC location (sublocation, city, state, country, iso_country_code; GPS is lr_set_gps) and the accessibility alt_text and extended_description (Lightroom Classic 13.2 or later, else FEATURE_UNAVAILABLE). A field left out is not touched, \"\" empties it. `before` and `after` give each photo's text fields. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags, colour labels and text fields are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -2409,6 +2520,51 @@
           "description": "the photos' headline, at most 2000 characters; \"\" empties it; left out, it stays as it is",
           "type": "string",
           "maxLength": 2000
+        },
+        "creator": {
+          "description": "the photos' IPTC creator, at most 2000 characters; \"\" empties it; left out, it stays as it is",
+          "type": "string",
+          "maxLength": 2000
+        },
+        "copyright": {
+          "description": "the photos' copyright notice, at most 2000 characters; \"\" empties it; left out, it stays as it is",
+          "type": "string",
+          "maxLength": 2000
+        },
+        "sublocation": {
+          "description": "the photos' IPTC sublocation, at most 2000 characters; \"\" empties it; left out, it stays as it is",
+          "type": "string",
+          "maxLength": 2000
+        },
+        "city": {
+          "description": "the photos' IPTC city, at most 2000 characters; \"\" empties it; left out, it stays as it is",
+          "type": "string",
+          "maxLength": 2000
+        },
+        "state": {
+          "description": "the photos' IPTC state / province, at most 2000 characters; \"\" empties it; left out, it stays as it is",
+          "type": "string",
+          "maxLength": 2000
+        },
+        "country": {
+          "description": "the photos' IPTC country, at most 2000 characters; \"\" empties it; left out, it stays as it is",
+          "type": "string",
+          "maxLength": 2000
+        },
+        "iso_country_code": {
+          "description": "the photos' IPTC ISO country code (2 or 3 letters), at most 2000 characters; \"\" empties it; left out, it stays as it is",
+          "type": "string",
+          "maxLength": 2000
+        },
+        "alt_text": {
+          "description": "the photos' accessibility alt text (Lightroom Classic 13.2 or later), at most 2000 characters; \"\" empties it; left out, it stays as it is",
+          "type": "string",
+          "maxLength": 2000
+        },
+        "extended_description": {
+          "description": "the photos' accessibility extended description (Lightroom Classic 13.2 or later), at most 2000 characters; \"\" empties it; left out, it stays as it is",
+          "type": "string",
+          "maxLength": 2000
         }
       },
       "required": [
@@ -2425,7 +2581,7 @@
   {
     "name": "lr_get_metadata",
     "title": "Read photos' metadata",
-    "description": "Read the catalog metadata of photos named by uuid: title, caption, headline (\"\" for none), flag (pick, reject or none), keywords (as paths, the form lr_set_keywords takes), gps ({latitude, longitude}, null for none) and stack (null outside one, else position (1 = top), count, collapsed and top_uuid). Read these before a write so the user sees what will change. A photo Lightroom could not find is listed in `failed`; a part it could not read is left out and named in `errors`. With raw: true, also every Develop setting (`develop`). Lightroom's plugin SDK cannot stack photos that are already in the catalog, so no tool makes or breaks a stack: use Photo > Stacking in Lightroom. Changes nothing.",
+    "description": "Read the catalog metadata of photos named by uuid: the text fields lr_set_iptc writes (\"\" for none; alt_text and extended_description from Lightroom Classic 13.2), flag (pick, reject or none), label (the colour label, none for none), rating, capture_time, path, copy_name and virtual_copy, keywords (as paths, the form lr_set_keywords takes), gps ({latitude, longitude}, null for none) and stack (null outside one, else position (1 = top), count, collapsed and top_uuid). Read these before a write so the user sees what will change. A photo Lightroom could not find is listed in `failed`; a part it could not read is left out and named in `errors`. With raw: true, also every Develop setting (`develop`). Lightroom's plugin SDK cannot stack photos that are already in the catalog, so no tool makes or breaks a stack: use Photo > Stacking in Lightroom. Changes nothing.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -2456,7 +2612,7 @@
   {
     "name": "lr_create_collection",
     "title": "Create a collection",
-    "description": "Create a collection (not a smart collection), at the top level or inside collection sets, which are created when missing. If one of that name is already there (case aside), it is returned with `created` false and nothing is made. Returns its id, for lr_add_to_collection and lr_search_photos' collection_id. Set names containing \"/\" cannot be given. Collections are not deleted by any tool. Tell the user what will change before calling. Runs only between editing sessions. If Lightroom stops answering, the call stops and the error lists what was done.",
+    "description": "Create a collection (not a smart collection), at the top level or inside collection sets, which are created when missing. If one of that name is already there (case aside), it is returned with `created` false and nothing is made. Returns its id, for lr_add_to_collection and lr_search_photos' collection_id. Set names containing \"/\" cannot be given. lr_create_smart_collection makes a smart one, lr_delete_collection deletes one. Tell the user what will change before calling. Runs only between editing sessions. If Lightroom stops answering, the call stops and the error lists what was done.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -2960,6 +3116,374 @@
       "readOnlyHint": false,
       "destructiveHint": false,
       "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_create_smart_collection",
+    "title": "Create a smart collection",
+    "description": "Create a smart collection whose rules are lr_search_photos' filters (all must match; at least one; no folder or collection rule), at the top level or inside collection sets, which are created when missing. A collection of that name already there is refused (ALREADY_EXISTS): nothing is replaced. Returns its id, photo_count and the rules; Lightroom keeps it filled. Tell the user what will change before calling. Runs only between editing sessions. If Lightroom stops answering, the call stops and the error lists what was done.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "description": "the collection's name"
+        },
+        "set": {
+          "description": "the collection sets to put it in, top level first, as lr_list_collections writes them (\"2026 / Trips\"); missing sets are created. Omit for the top level",
+          "type": "string",
+          "minLength": 1
+        },
+        "filename": {
+          "description": "part of the file name",
+          "type": "string",
+          "minLength": 1
+        },
+        "keywords": {
+          "description": "keywords the photo has, all of them",
+          "minItems": 1,
+          "maxItems": 50,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "rating": {
+          "description": "exactly this many stars, 0-5",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "start_date": {
+          "description": "captured on or after this day, YYYY-MM-DD",
+          "type": "string"
+        },
+        "end_date": {
+          "description": "captured on or before this day, YYYY-MM-DD",
+          "type": "string"
+        },
+        "camera": {
+          "description": "the camera model exactly as Lightroom indexes it (Library filter bar > Metadata > Camera): \"ILCE-7M3\" matches, \"Sony ILCE-7M3\" does not",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "lens": {
+          "description": "the lens exactly as Lightroom indexes it (Library filter bar > Metadata > Lens)",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "iso": {
+          "description": "this ISO speed",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "focal_length": {
+          "description": "this focal length in mm",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "flag": {
+          "description": "this pick flag",
+          "type": "string",
+          "enum": [
+            "pick",
+            "reject",
+            "none"
+          ]
+        },
+        "color_label": {
+          "description": "this colour label; \"none\" for no label",
+          "type": "string",
+          "enum": [
+            "red",
+            "yellow",
+            "green",
+            "blue",
+            "purple",
+            "none"
+          ]
+        },
+        "edited": {
+          "description": "true: only photos with Develop edits; false: only unedited ones",
+          "type": "boolean"
+        },
+        "file_type": {
+          "description": "this file type",
+          "type": "string",
+          "enum": [
+            "DNG",
+            "RAW",
+            "JPG",
+            "TIFF",
+            "PNG",
+            "PSD",
+            "VIDEO",
+            "PSB",
+            "AVIF",
+            "JXL"
+          ]
+        }
+      },
+      "required": [
+        "name"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_delete_collection",
+    "title": "Delete a collection",
+    "description": "Delete a collection or smart collection, named by id or by name; its photos stay in the catalog. Needs confirm: true: ask the user first. `before` gives what makes it again (member_uuids of a collection, search_description of a smart one) and `undo` how. Tell the user what will change before calling. Runs only between editing sessions. If Lightroom stops answering, the call stops and the error lists what was done.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "collection_id": {
+          "description": "the collection's id from lr_list_collections",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "collection": {
+          "description": "or the collection by its name, or \"Set / Name\" as lr_list_collections shows its set; a name that several collections share is refused with the candidates",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "confirm": {
+          "type": "boolean",
+          "description": "must be true: the user agreed to delete this collection"
+        }
+      },
+      "required": [
+        "confirm"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_list_folders",
+    "title": "The catalog's folders",
+    "description": "List the catalog's folders as a tree in order, a parent before its children: path (the full path lr_search_photos' folder takes), name, depth (0 for a root) and photo_count (the folder's own photos, not its subfolders'). Paged like lr_search_photos. For a folder's photos call lr_search_photos with folder (and include_subfolders). Changes nothing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "description": "how many to return, 1-500 (default 100)",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        },
+        "offset": {
+          "description": "how many to skip, for the next page (default 0)",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_rename_keyword",
+    "title": "Rename a keyword",
+    "description": "Rename one keyword in place: every photo that holds it shows the new name; its parent, children and synonyms stay. A sibling of the new name (case aside) is refused: a rename never merges keywords. A change of case only works too. `before` and `after` are its paths; `undo` says how to put it back. Tell the user what will change before calling. Runs only between editing sessions. If Lightroom stops answering, the call stops and the error lists what was done.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "description": "the keyword: a plain name is the top-level keyword, a path (\"Places|Europe|Paris\") the keyword at that place"
+        },
+        "new_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "its new name (one level)"
+        }
+      },
+      "required": [
+        "path",
+        "new_name"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_remove_keyword_subtree",
+    "title": "Take a keyword and its children off photos",
+    "description": "Take a keyword and every keyword under it off photos: those named by uuid, else those selected in Lightroom, or with catalog_wide and confirm: true every photo that holds one. The keywords stay in the Keyword List. At most 100 photos a call; `not_yet` or `remaining` with `next` say how to go on. `before` and `after` give each photo's keywords. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags, colour labels and text fields are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "description": "the keyword whose subtree comes off: it and every keyword under it (a plain name is the top-level keyword)"
+        },
+        "uuids": {
+          "description": "the photos to take them off, 1-100; left out (and no catalog_wide), the photos selected in Lightroom",
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "catalog_wide": {
+          "description": "true: every photo in the catalog that holds one of them; needs confirm: true",
+          "type": "boolean"
+        },
+        "confirm": {
+          "description": "true when the user agreed to a catalog_wide removal",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "path"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_export_metadata",
+    "title": "Export photos' metadata to a JSON file",
+    "description": "Write the catalog metadata of photos (named by uuid, else the selection; at most 500) to a new JSON file: per photo what lr_get_metadata reads, keyword paths included. The file is new each time (lrc-avg-metadata-<time>.json); no file is ever overwritten. Returns its path. Photos not reached in about 30 seconds are in `not_yet`. Changes nothing in the catalog.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "description": "the photos, 1-500; left out, the photos selected in Lightroom",
+          "minItems": 1,
+          "maxItems": 500,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "folder": {
+          "description": "an absolute folder for the file; left out, %TEMP%\\LrC-AVG\\metadata",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_set_ai_metadata",
+    "title": "Keep an AI score and reason on photos",
+    "description": "Keep an AI's score (0-100) and reason on photos named by uuid, in LrC-AVG's private plug-in metadata (not IPTC, not shown in Lightroom's panels). `before` and `after` give each photo's {score, reason}. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags, colour labels and text fields are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-100 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "score": {
+          "description": "an AI score, 0-100; null clears it; left out, it stays",
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "description": "why, at most 1024 characters; null clears it; left out, it stays",
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "uuids"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_get_ai_metadata",
+    "title": "Read photos' AI score and AVG edit stamp",
+    "description": "Read the AI score and reason lr_set_ai_metadata kept on photos named by uuid (null for none), and avg_edit: the session_id, look (the intent) and date an accepted LrC-AVG edit left on the photo (null when none did; Lightroom shows these as AVG session, AVG look and AVG edit date in the Metadata panel and can search them). A photo Lightroom could not find is listed in `failed`. Changes nothing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-100 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        }
+      },
+      "required": [
+        "uuids"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": true,
       "openWorldHint": false
     }
   }

@@ -23,15 +23,60 @@ export function flagName(value: number): FlagName | number {
   return found ?? value;
 }
 
-export const TEXT_FIELDS = ["title", "caption", "headline"] as const;
-export type TextField = (typeof TEXT_FIELDS)[number];
+/**
+ * The text fields by tool name, each with the SDK metadata key the plugin reads and writes (Metadata.lua
+ * TEXT_FIELDS and ACCESSIBILITY). Plugin 1.5.0 (issue #218 rows 3-4) added creator to alt_text, upstream's
+ * set_metadata and set_location fields [upstream claim: Automaat/lightroom-mcp@1040453
+ * plugin/LightroomMCP.lrplugin/HandlerMetadata.lua:359-365, 427-438]; the keys are on the SDK's LrPhoto page
+ * [handle: D:\Developer\LightRoom Classic Dev Kit\API Reference\modules\LrPhoto.html, setRawMetadata]. These
+ * are metadata keys, not Develop keys, so rule 03's params map does not hold them.
+ */
+export const TEXT_KEYS = {
+  title: "title",
+  caption: "caption",
+  headline: "headline",
+  creator: "creator",
+  copyright: "copyright",
+  sublocation: "location",
+  city: "city",
+  state: "stateProvince",
+  country: "country",
+  iso_country_code: "isoCountryCode",
+  alt_text: "altTextAccessibility",
+  extended_description: "extDescrAccessibility",
+} as const;
+export type TextField = keyof typeof TEXT_KEYS;
+export const TEXT_FIELDS = Object.keys(TEXT_KEYS) as TextField[];
 export type IptcText = Record<TextField, string>;
+/** Written only from Lightroom Classic 13.2 (Needs.release in Metadata.lua). */
+export const ACCESSIBILITY_FIELDS: readonly TextField[] = ["alt_text", "extended_description"];
 
-/** What a title/caption/headline read-back shows Lightroom did not take, or null. */
-export function textNotTaken(after: IptcText, want: Partial<IptcText>): string | null {
-  const off = TEXT_FIELDS.filter((f) => want[f] !== undefined && after[f] !== want[f]);
-  return off.length === 0 ? null : `Lightroom read back ${off.map((f) => `${f} ${JSON.stringify(after[f])}`).join(", ")}, not what was written.`;
+/** The plugin's fields (by SDK key) by tool name; a key the plugin did not send is left out. */
+export function textFromWire(wire: Record<string, unknown>): Partial<IptcText> {
+  const out: Partial<IptcText> = {};
+  for (const f of TEXT_FIELDS) {
+    const v = wire[TEXT_KEYS[f]];
+    if (typeof v === "string") out[f] = v;
+  }
+  return out;
 }
+
+/** The fields to write, by SDK key. */
+export function textToWire(want: Partial<IptcText>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const f of TEXT_FIELDS) if (want[f] !== undefined) out[TEXT_KEYS[f]] = want[f];
+  return out;
+}
+
+/** What a text read-back shows Lightroom did not take, or null; a field not read back at all counts as not taken. */
+export function textNotTaken(after: Partial<IptcText>, want: Partial<IptcText>): string | null {
+  const off = TEXT_FIELDS.filter((f) => want[f] !== undefined && after[f] !== want[f]);
+  return off.length === 0 ? null : `Lightroom read back ${off.map((f) => `${f} ${after[f] === undefined ? "(not read)" : JSON.stringify(after[f])}`).join(", ")}, not what was written.`;
+}
+
+/** The colour labels lr_set_color_label writes, as colorNameForLabel names them [handle: LrPhoto.html above, setRawMetadata colorNameForLabel]. */
+export const COLOR_LABELS = ["red", "yellow", "green", "blue", "purple", "none"] as const;
+export type ColorLabel = (typeof COLOR_LABELS)[number];
 
 /**
  * Why there is no stack tool (issue #139 "Cross-cutting": say so, do not fail silently): the SDK

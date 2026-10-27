@@ -16,6 +16,7 @@
 import { z } from "zod";
 import type { HudUpdatePayload } from "./hud-protocol.js";
 import { DEVELOP_RESULTS } from "./protocol-develop.js";
+import { CATALOG_RESULTS, type CatalogPayloads, type SearchCriterion } from "./protocol-catalog.js";
 import { METADATA_RESULTS } from "./protocol-metadata.js";
 import { PRESET_RESULTS, type PresetScope } from "./protocol-presets.js";
 import { COMMAND_RESULTS } from "./protocol-results.js";
@@ -54,11 +55,10 @@ export type EventEnvelope = z.infer<typeof eventSchema>;
 export const inboundSchema = z.discriminatedUnion("type", [responseSchema, eventSchema]);
 export type InboundEnvelope = z.infer<typeof inboundSchema>;
 
-/** One entry of a findPhotos search descriptor (engine\src\library\search.ts builds them). */
-export type SearchCriterion = { criteria: string; operation: string; value: string | number; value2?: string };
+export type { SearchCriterion } from "./protocol-catalog.js";
 
-/** Every command the engine sends, by name, with the schema of its result (protocol-results.ts, protocol-metadata.ts, protocol-develop.ts, protocol-presets.ts). */
-export const COMMANDS = { ...COMMAND_RESULTS, ...METADATA_RESULTS, ...DEVELOP_RESULTS, ...PRESET_RESULTS };
+/** Every command the engine sends, by name, with the schema of its result (protocol-results.ts, protocol-metadata.ts, protocol-develop.ts, protocol-presets.ts, protocol-catalog.ts). */
+export const COMMANDS = { ...COMMAND_RESULTS, ...METADATA_RESULTS, ...DEVELOP_RESULTS, ...PRESET_RESULTS, ...CATALOG_RESULTS };
 
 export type CommandName = keyof typeof COMMANDS;
 export type CommandResult<N extends CommandName> = z.infer<(typeof COMMANDS)[N]>;
@@ -112,8 +112,8 @@ export type CommandPayloads = {
   set_gps: { photo_uuid: string; latitude: number; longitude: number } | { photo_uuid: string; clear: true };
   /** Plugin 0.22.0 (Metadata.lua): the pick flag, 1 picked, 0 none, -1 rejected. */
   set_flag: { photo_uuid: string; flag: -1 | 0 | 1 };
-  /** Plugin 0.22.0: at least one field; "" empties it. */
-  set_iptc: { photo_uuid: string; title?: string; caption?: string; headline?: string };
+  /** Plugin 0.22.0: at least one field; "" empties it. Plugin 1.5.0: any key of Metadata.lua TEXT_FIELDS and ACCESSIBILITY (library\metadata.ts TEXT_KEYS). */
+  set_iptc: { photo_uuid: string } & { [key: string]: string };
   /** Plugin 0.22.0: one photo's title, caption, headline, flag, keywords, gps and stack. */
   get_metadata: { photo_uuid: string };
   /** set_path: the collection sets, top level first; [] for the top level. */
@@ -163,4 +163,4 @@ export type CommandPayloads = {
   apply_preset: { photo_uuid: string; expect?: PhotoExpect; preset_uuid: string; scope: PresetScope; history_name: string };
   /** addDevelopPresetForPlugin(_PLUGIN, name, settings): refused when a checkpoint of that name exists. */
   create_checkpoint: { name: string; settings: Record<string, unknown> };
-};
+} & CatalogPayloads;

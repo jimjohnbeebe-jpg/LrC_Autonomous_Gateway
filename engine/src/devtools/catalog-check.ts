@@ -95,9 +95,11 @@ async function smart(c: CheckCtx) {
 
 async function regular(c: CheckCtx) {
   const made = json(await c.tools.call(createCollection, { name: PREFIX }));
+  // A collection of that name already there (created: false) is someone's: never changed or deleted (PR #231 review).
+  if (made["created"] !== true) return { ok: false, detail: { made, refused: `a collection named "${PREFIX}" already exists; remove or rename it in Lightroom, then run again` } };
   c.taken.collections.add(made["id"] as number);
   await c.tools.call(addToCollection, { collection_id: made["id"] as number, uuids: [c.uuid] });
-  const deleted = json(await c.tools.call(deleteCollection, { collection: PREFIX, confirm: true }));
+  const deleted = json(await c.tools.call(deleteCollection, { collection_id: made["id"] as number, confirm: true }));
   if (deleted["deleted"] === true) c.taken.collections.delete(made["id"] as number);
   const members = (deleted["before"] as { member_uuids?: string[] }).member_uuids ?? [];
   return { ok: deleted["deleted"] === true && members.includes(c.uuid), detail: { made, deleted } };

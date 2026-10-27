@@ -89,7 +89,7 @@ local function uuidsOf(catalog, photos)
         local r = raw[photo]
         if r and type(r.uuid) == "string" then out[#out + 1] = r.uuid end
     end
-    return out, #photos > #slice
+    return out, #photos > #slice or #out < #slice
 end
 
 function CollectionEdit.delete(payload)
@@ -106,11 +106,17 @@ function CollectionEdit.delete(payload)
     local before = Transfer.describeCollection(catalog, collection)
     if kind == "LrSmartCollection" then
         local ok, desc = LrTasks.pcall(function() return collection:getSearchDescription() end)
-        if ok then before.search_description = plain(desc, 0) else before.search_error = tostring(desc) end
+        -- Refused, not deleted, when `before` could not rebuild it (PR #231 review): nothing is lost.
+        if not ok then return fail("read_failed", "the smart collection's rules could not be read, so it was not deleted: " .. tostring(desc), true) end
+        before.search_description = plain(desc, 0)
     else
         local ok, uuids, truncated = LrTasks.pcall(uuidsOf, catalog, collection:getPhotos() or {})
         if not ok then return fail("read_failed", "members: " .. tostring(uuids), true) end
-        before.member_uuids, before.members_truncated = uuids, truncated
+        if truncated then
+            return fail("too_large", "not deleted: only " .. #uuids .. " of its photos could be listed for putting it back (at most "
+                .. CollectionEdit.MAX_MEMBERS .. "); delete it in Lightroom if that is intended")
+        end
+        before.member_uuids, before.members_truncated = uuids, false
     end
     local status, err = Gate.write(catalog, "AVG delete collection", function() collection:delete() end)
     if not status then return nil, err end

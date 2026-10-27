@@ -34,7 +34,7 @@ const QUESTIONS = [
   `In the Library grid there is a new virtual copy named "${COPY_NAME}". Remove it now (select only it, then Photo > Remove Photo, Remove). Is it gone?`,
 ];
 
-type Check = { tools: Tools; client: BridgeClient; say: (l: string) => void; r: Record<string, unknown>; steps: Step[]; uuids: string[]; before: Map<string, SdkSettings>; start: Map<string, string> };
+type Check = { tools: Tools; client: BridgeClient; say: (l: string) => void; r: Record<string, unknown>; steps: Step[]; uuids: string[]; before: Map<string, SdkSettings>; start: Map<string, string>; existing: Map<string, Set<string>> };
 
 /** One tool call as a step of the check; its result is kept under its name. Returns the result's JSON, or null. */
 async function step(c: Check, name: string, expect: string[], call: () => Promise<ToolOutput>, statuses = statusesOf): Promise<Record<string, unknown> | null> {
@@ -76,7 +76,8 @@ async function tryTools(c: Check): Promise<void> {
   await step(c, "lr_create_virtual_copies", ["copied"], () => c.tools.createVirtualCopies({ uuids: [first], copy_name: COPY_NAME }));
 }
 
-/** Each photo back to its start snapshot, compared with the settings read first. True when both are as before. */
+/** Each photo back to its start snapshot, compared with the settings read first. True when both are as before.
+ *  A photo that did not come back keeps its entry in c.start, so its start snapshot is never deleted. */
 async function putBack(c: Check): Promise<boolean> {
   c.say("Putting both photos back from their start snapshot ...");
   await c.client.waitConnected(SESSION_SILENCE_MS).catch(() => undefined);
@@ -88,22 +89,25 @@ async function putBack(c: Check): Promise<boolean> {
     } catch (err) {
       back[uuid] = { error: describeError(err) };
     }
+    const x = back[uuid] as { changed?: object; masks?: object };
+    if (x.changed !== undefined && Object.keys(x.changed).length === 0 && x.masks === undefined) c.start.delete(uuid);
   }
   c.r["put_back"] = back;
-  c.start.clear();
-  return Object.values(back).every((b) => { const x = b as { changed?: object; masks?: object }; return x.changed !== undefined && Object.keys(x.changed).length === 0 && x.masks === undefined; });
+  return c.start.size === 0;
 }
 
-/** Every snapshot the check and its tools made, deleted. True when none is left. */
+const snapshotList = async (c: Check, uuid: string) => (await c.tools.listSnapshots({ uuid })).json["snapshots"] as Array<{ id: string; name: string }>;
+
+/** The snapshots this run made (not there before it started), deleted. True when none of them is left. */
 async function cleanSnapshots(c: Check): Promise<boolean> {
   let left = 0;
   for (const uuid of c.uuids) {
-    const list = (await c.tools.listSnapshots({ uuid })).json["snapshots"] as Array<{ id: string; name: string }>;
-    for (const s of list.filter((x) => CHECK_SNAPSHOTS.some((p) => x.name.startsWith(p)))) {
+    const before = c.existing.get(uuid) ?? new Set<string>();
+    const ours = (list: Array<{ id: string; name: string }>) => list.filter((x) => !before.has(x.id) && CHECK_SNAPSHOTS.some((p) => x.name.startsWith(p)));
+    for (const s of ours(await snapshotList(c, uuid))) {
       await step(c, `lr_delete_snapshot "${s.name}"`, ["ok"], () => c.tools.deleteSnapshot({ uuid, snapshot_id: s.id, confirm: true }));
     }
-    const after = (await c.tools.listSnapshots({ uuid })).json["snapshots"] as Array<{ name: string }>;
-    left += after.filter((x) => CHECK_SNAPSHOTS.some((p) => x.name.startsWith(p))).length;
+    left += ours(await snapshotList(c, uuid)).length;
   }
   return left === 0;
 }
@@ -115,13 +119,18 @@ async function run(c: Check): Promise<boolean> {
   c.uuids = sel.photos.map((p) => p.uuid).filter((u): u is string => typeof u === "string");
   if (sel.count !== 2 || c.uuids.length !== 2) throw new Error(`select two raw photos in Lightroom's Library grid (${sel.count} selected), then run this again. Nothing was written.`);
   c.r["photos"] = sel.photos.map((p) => ({ uuid: p.uuid, filename: p.filename ?? null }));
-  for (const uuid of c.uuids) c.before.set(uuid, await settings(c, uuid));
+  for (const uuid of c.uuids) {
+    c.before.set(uuid, await settings(c, uuid));
+    c.existing.set(uuid, new Set((await snapshotList(c, uuid)).map((s) => s.id)));
+  }
   c.say("Lightroom switches to Develop for each photo and back; do not click in Lightroom until the questions.");
   await tryTools(c);
   const now = await c.client.request("get_selection", { max: 3 });
   const selectionBack = now.count === 2 && now.photos.every((p) => c.uuids.includes(String(p.uuid)));
   const settingsBack = await putBack(c);
-  const snapshotsBack = await cleanSnapshots(c);
+  // A photo not put back keeps every snapshot, its start snapshot included, for putting it back by hand.
+  const snapshotsBack = settingsBack ? await cleanSnapshots(c) : false;
+  if (!settingsBack) c.say("  Not every photo came back, so no snapshot was deleted.");
   const answers: string[] = [];
   for (const q of QUESTIONS) answers.push(await ask(q));
   const v = verdict({ steps: c.steps, selection_back: selectionBack, settings_back: settingsBack, snapshots_back: snapshotsBack, answers, questions: QUESTIONS.length });
@@ -137,7 +146,7 @@ async function main(say: (l: string) => void): Promise<number> {
   const gate = new BridgeGate(client, () => acquireInstanceLock(dev.lockPort));
   const tools = new Tools({ client, map, previews: new PreviewService(client), intents: new IntentLibrary({ map }), sessionLogDir: mkdtempSync(path.join(os.tmpdir(), "lrc-avg-develop-check-")), engineVersion: ENGINE_VERSION, ensureBridge: (waitMs) => gate.ready(waitMs), hud: false });
   const r: Record<string, unknown> = { check: "develop-check", started, node: process.version, engine_version: ENGINE_VERSION, results: {} };
-  const c: Check = { tools, client, say, r, steps: [], uuids: [], before: new Map(), start: new Map() };
+  const c: Check = { tools, client, say, r, steps: [], uuids: [], before: new Map(), start: new Map(), existing: new Map() };
   let worked = false;
   try {
     await gate.ready();

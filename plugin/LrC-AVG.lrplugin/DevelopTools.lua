@@ -51,6 +51,12 @@ local function snapshot(uuid, name)
     return { id = snap.snapshot_id, name = name }
 end
 
+-- Checked right before each controller write: the user can change the selection while a snapshot waits for the write
+-- gate, and LrDevelopController acts on whichever photo is active [inference: PR #231 review].
+local function moved(catalog, photo)
+    return catalog:getTargetPhoto() ~= photo
+end
+
 -- The checks, then `body(catalog, photo, uuid, snapshotName)` on the photo active in Develop; the answer with read_back.
 local function run(name, payload, body)
     if type(payload.photo_uuid) ~= "string" then return fail("bad_request", "photo_uuid must name the photo") end
@@ -75,6 +81,7 @@ end
 
 -- One Auto call, then the settings read until they settle. Returns "applied" | "unchanged" | "failed", reason.
 local function autoOnce(catalog, photo, call)
+    if moved(catalog, photo) then return "failed", "another photo became active in Develop before Auto ran; nothing was changed" end
     local before = Develop.readSettings(catalog, photo)
     local ok, err = LrTasks.pcall(call)
     if not ok then return "failed", tostring(err) end
@@ -121,9 +128,10 @@ function DevelopTools.reset(payload)
     if payload.confirm ~= true then return fail("bad_request", "confirm must be true: Reset discards every Develop adjustment") end
     local present, unavailable = Needs.check("Reset", "6.0", "LrDevelopController.", LrDevelopController, { "resetAllDevelopAdjustments", "stopTracking" })
     if not present then return nil, unavailable end
-    return run("reset_develop", payload, function(_, _, uuid, snapshotName)
+    return run("reset_develop", payload, function(catalog, photo, uuid, snapshotName)
         local snap, failed = snapshot(uuid, snapshotName)
         if not snap then return failed end
+        if moved(catalog, photo) then return { status = "failed", reason = "another photo became active in Develop before Reset; nothing was changed", snapshot = snap } end
         local ok, err = LrTasks.pcall(LrDevelopController.resetAllDevelopAdjustments)
         if not ok then return { status = "failed", reason = tostring(err), snapshot = snap } end
         DevelopSession.flush()
@@ -160,6 +168,7 @@ function DevelopTools.setProcessVersion(payload)
         end
         local snap, failed = snapshot(uuid, snapshotName)
         if not snap then failed.previous = previous; return failed end
+        if moved(catalog, photo) then return { status = "failed", previous = previous, actual = previous, snapshot = snap, reason = "another photo became active in Develop before the change; nothing was changed" } end
         local ok, err = LrTasks.pcall(LrDevelopController.setProcessVersion, payload.version)
         local confirmed = ok and DevelopSession.waitFor(function() return catalog:getTargetPhoto() == photo and currentVersion() == payload.version end, VERSION_SECONDS)
         local actual = catalog:getTargetPhoto() == photo and currentVersion() or nil

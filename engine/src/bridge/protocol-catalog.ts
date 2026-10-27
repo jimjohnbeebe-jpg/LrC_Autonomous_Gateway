@@ -23,7 +23,13 @@ export type CatalogPayloads = {
   rename_keyword: { path: string; new_name: string };
   /** With photos: the uuids of the photos holding a keyword of the subtree too. */
   keyword_subtree: { path: string; photos: boolean };
+  /** Row 9 (PluginMetadata.lua): fields of PLUGIN_FIELDS, each a string; "" clears it. */
+  set_plugin_metadata: { photo_uuid: string; fields: Record<string, string> };
+  get_plugin_metadata: { photo_uuid: string };
 };
+
+/** The plugin's private metadata fields (plugin\LrC-AVG.lrplugin\MetadataDefinition.lua), every one "" for none. */
+const pluginFields = z.object({ aiScore: z.string(), aiReason: z.string(), avgSession: z.string(), avgLook: z.string(), avgDate: z.string() });
 
 export const CATALOG_RESULTS = {
   // The label's name before and after; not written when the photo already held it.
@@ -59,4 +65,13 @@ export const CATALOG_RESULTS = {
     write_error: z.string().optional(),
   }),
   keyword_subtree: z.object({ paths: z.array(z.string()), uuids: z.array(z.string()).optional(), photo_count: z.number().optional() }),
+  set_plugin_metadata: z.object({
+    uuid: z.string().min(1),
+    filename: z.string().optional(),
+    before: pluginFields,
+    after: pluginFields.optional(),
+    write_error: z.string().optional(),
+    after_error: z.string().optional(),
+  }),
+  get_plugin_metadata: z.object({ uuid: z.string().min(1), filename: z.string().optional(), fields: pluginFields }),
 } as const;

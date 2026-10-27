@@ -2745,5 +2745,86 @@
       "readOnlyHint": true,
       "openWorldHint": false
     }
+  },
+  {
+    "name": "lr_set_ai_metadata",
+    "title": "Keep an AI score and reason on photos",
+    "description": "Keep an AI's score (0-100) and reason on photos named by uuid, in LrC-AVG's private plug-in metadata (not IPTC, not shown in Lightroom's panels). `before` and `after` give each photo's {score, reason}. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags, colour labels and text fields are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-100 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "score": {
+          "description": "an AI score, 0-100; null clears it; left out, it stays",
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "description": "why, at most 1024 characters; null clears it; left out, it stays",
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "uuids"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_get_ai_metadata",
+    "title": "Read photos' AI score and AVG edit stamp",
+    "description": "Read the AI score and reason lr_set_ai_metadata kept on photos named by uuid (null for none), and avg_edit: the session_id, look (the intent) and date an accepted LrC-AVG edit left on the photo (null when none did; Lightroom shows these as AVG session, AVG look and AVG edit date in the Metadata panel and can search them). A photo Lightroom could not find is listed in `failed`. Changes nothing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-100 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        }
+      },
+      "required": [
+        "uuids"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false
+    }
   }
 ]

@@ -119,6 +119,8 @@ describe("mcp server", () => {
       "lr_rename_keyword",
       "lr_remove_keyword_subtree",
       "lr_export_metadata",
+      "lr_set_ai_metadata",
+      "lr_get_ai_metadata",
     ].sort());
     const sync = tools.find((t) => t.name === "lr_sync_series");
     expect(sync?.inputSchema.required).toEqual(["source", "targets", "adaptive_exposure"]);

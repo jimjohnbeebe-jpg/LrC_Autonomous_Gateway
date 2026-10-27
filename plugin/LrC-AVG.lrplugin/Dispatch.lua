@@ -23,6 +23,7 @@ local Log = require 'Log'
 local Masks = require 'Masks'
 local Metadata = require 'Metadata'
 local Pending = require 'Pending'
+local PluginMetadata = require 'PluginMetadata'
 local Prefs = require 'Prefs'
 local Preview = require 'Preview'
 local Transfer = require 'Transfer'
@@ -70,6 +71,8 @@ function Dispatch.handlers(hello)
         list_folders = Folders.list,
         rename_keyword = KeywordEdit.rename,
         keyword_subtree = KeywordEdit.subtree,
+        set_plugin_metadata = PluginMetadata.set,
+        get_plugin_metadata = PluginMetadata.get,
     }
     return HANDLERS
 end

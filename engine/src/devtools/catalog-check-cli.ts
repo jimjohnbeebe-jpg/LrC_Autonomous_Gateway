@@ -75,6 +75,9 @@ async function main(say: (l: string) => void): Promise<number> {
   if (c && steps.length > 0) {
     answers.push(await ask(`In Lightroom's Collections panel, is there no collection whose name starts with "${PREFIX}"?`));
     answers.push(await ask("Select the photo in Lightroom: do its colour label and its IPTC Creator and Location (Metadata panel, IPTC) read as before the check?"));
+    // Row 9 (MetadataDefinition.lua): whether Lightroom took the metadata provider is Jim's to see [unverified].
+    answers.push(await ask("When you reloaded the plugin before this check, did Lightroom finish without an error dialog?"));
+    answers.push(await ask('In the Metadata panel, open the list at its top left (where "Default" is) and pick "All Plug-in Metadata": are "AVG session", "AVG look" and "AVG edit date" listed?'));
   }
   await gate.release();
   const v = verdict(steps, back, answers);

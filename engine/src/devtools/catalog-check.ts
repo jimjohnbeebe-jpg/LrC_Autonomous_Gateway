@@ -11,13 +11,14 @@ import { listFolders } from "../mcp/tools-catalog.js";
 import { exportMetadata } from "../mcp/tools-export-metadata.js";
 import { removeKeywordSubtree, renameKeyword } from "../mcp/tools-keywords.js";
 import { setColorLabel } from "../mcp/tools-metadata.js";
+import { getAiMetadata, setAiMetadata } from "../mcp/tools-ai-metadata.js";
 
 export const PREFIX = "AVG catalog check";
 const ROOT = `${PREFIX} kw`;
 /** The text fields written and put back (lr_set_iptc names). */
 export const TEXT = { creator: "AVG check creator", copyright: "AVG check copyright", sublocation: "AVG Pike Place", city: "Seattle", state: "WA", country: "United States", iso_country_code: "USA" };
 
-export type Taken = { label?: string; text?: Record<string, string>; keywords?: string[]; collections: Set<number> };
+export type Taken = { label?: string; text?: Record<string, string>; keywords?: string[]; collections: Set<number>; ai?: { score: number | null; reason: string | null } };
 export type CheckCtx = { tools: Tools; uuid: string; dir: string; taken: Taken };
 export type Step = { step: string; ok: boolean; detail: unknown };
 type CheckStep = { step: string; run: (c: CheckCtx) => Promise<{ ok: boolean; detail: unknown }> };
@@ -112,6 +113,15 @@ async function exported(c: CheckCtx) {
   return { ok: out["exported"] === 1 && typeof out["file"] === "string", detail: out };
 }
 
+/** Row 9: a score and reason in the plugin's private metadata, read back; the earlier values kept for the put-back. */
+async function aiMetadata(c: CheckCtx) {
+  const before = first(await c.tools.call(getAiMetadata, { uuids: [c.uuid] }));
+  c.taken.ai = { score: (before["score"] as number | null) ?? null, reason: (before["reason"] as string | null) ?? null };
+  const out = json(await c.tools.call(setAiMetadata, { uuids: [c.uuid], score: 42, reason: PREFIX }));
+  const after = first(await c.tools.call(getAiMetadata, { uuids: [c.uuid] }));
+  return { ok: after["score"] === 42 && after["reason"] === PREFIX, detail: { before, written: out, after } };
+}
+
 /** The steps in order; each runs whether the one before worked or not (a step that throws is a NO). */
 export const STEPS: CheckStep[] = [
   { step: "lr_get_metadata reads label, the new text fields, rating and copy name", run: readBefore },
@@ -123,6 +133,7 @@ export const STEPS: CheckStep[] = [
   { step: "lr_create_smart_collection, its members by name, lr_delete_collection", run: smart },
   { step: "lr_delete_collection by name gives back its member uuids", run: regular },
   { step: "lr_export_metadata writes a JSON file", run: exported },
+  { step: "lr_set_ai_metadata keeps a score and reason, lr_get_ai_metadata reads them", run: aiMetadata },
 ];
 
 export async function runSteps(c: CheckCtx, say: (l: string) => void): Promise<Step[]> {
@@ -142,6 +153,8 @@ export async function putBack(c: CheckCtx): Promise<Step[]> {
     out.push({ step, ...(await fn().then((ok) => ({ ok, detail: null }), (err: unknown) => ({ ok: false, detail: (err as Error).message })))});
   };
   if (c.taken.label !== undefined) await attempt("label put back", async () => (json(await c.tools.call(setColorLabel, { uuids: [c.uuid], label: c.taken.label as "none" }))["failed"] as unknown[]).length === 0);
+  const ai = c.taken.ai;
+  if (ai !== undefined) await attempt("AI score and reason put back", async () => (json(await c.tools.call(setAiMetadata, { uuids: [c.uuid], ...ai }))["failed"] as unknown[]).length === 0);
   if (c.taken.text !== undefined) await attempt("text fields put back", async () => ((json(await c.tools.setIptc({ uuids: [c.uuid], ...c.taken.text })))["failed"] as unknown[]).length === 0);
   const now = (await c.tools.getMetadata({ uuids: [c.uuid] }).then(first, (): Record<string, unknown> => ({})))["keywords"] as string[] | undefined;
   if (now?.some((k) => k.startsWith(ROOT))) await attempt("test keywords taken off", async () => (json(await c.tools.call(removeKeywordSubtree, { path: ROOT, uuids: [c.uuid] }))["failed"] as unknown[]).length === 0);

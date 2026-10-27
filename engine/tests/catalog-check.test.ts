@@ -14,7 +14,7 @@ describe("catalog:check verdict", () => {
     expect(verdict([step(true)], [step(true)], ["y"]).lines).toEqual(["YES s", "YES s", "YES Jim's answer 1: y"]);
   });
 
-  it("has a step for each tool group of rows 1-8", () => {
-    expect(STEPS.map((s) => s.step).join(" ")).toMatch(/lr_get_metadata[\s\S]*lr_list_folders[\s\S]*lr_set_color_label[\s\S]*filters[\s\S]*lr_set_iptc[\s\S]*lr_rename_keyword[\s\S]*lr_create_smart_collection[\s\S]*lr_delete_collection[\s\S]*lr_export_metadata/);
+  it("has a step for each tool group of rows 1-9", () => {
+    expect(STEPS.map((s) => s.step).join(" ")).toMatch(/lr_get_metadata[\s\S]*lr_list_folders[\s\S]*lr_set_color_label[\s\S]*filters[\s\S]*lr_set_iptc[\s\S]*lr_rename_keyword[\s\S]*lr_create_smart_collection[\s\S]*lr_delete_collection[\s\S]*lr_export_metadata[\s\S]*lr_set_ai_metadata/);
   });
 });

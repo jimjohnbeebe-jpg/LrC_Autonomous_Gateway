@@ -1,0 +1,365 @@
+{
+  "check": "denoise-check",
+  "started": "2026-10-27T12-03-41-353Z",
+  "node": "v24.11.1",
+  "engine_version": "1.3.0",
+  "photos": [
+    {
+      "uuid": "5AC318D2-326E-4B44-9B52-79398AFAA2FC",
+      "filename": "20260110-_Z8A0173.NEF"
+    },
+    {
+      "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+      "filename": "20260907-_OZ80093.NEF"
+    }
+  ],
+  "filters_before": [
+    [],
+    []
+  ],
+  "steps": [
+    {
+      "step": "first Denoise",
+      "expect": [
+        "applied",
+        "amount_changed"
+      ],
+      "answers": [
+        {
+          "uuid": "5AC318D2-326E-4B44-9B52-79398AFAA2FC",
+          "status": "applied",
+          "snapshot": {
+            "id": "B2230409-BF61-4ECC-9939-5F98F3719CDF",
+            "name": "AVG denoise:check before first Denoise"
+          },
+          "ms": 11578
+        },
+        {
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "status": "applied",
+          "snapshot": {
+            "id": "9178C10F-147F-4B76-9BB6-ADD24DFB3814",
+            "name": "AVG denoise:check before first Denoise"
+          },
+          "ms": 14063
+        }
+      ]
+    },
+    {
+      "step": "same amount again",
+      "expect": [
+        "unchanged"
+      ],
+      "answers": [
+        {
+          "uuid": "5AC318D2-326E-4B44-9B52-79398AFAA2FC",
+          "status": "unchanged",
+          "ms": 544
+        },
+        {
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "status": "unchanged",
+          "ms": 1842
+        }
+      ]
+    },
+    {
+      "step": "a new amount",
+      "expect": [
+        "amount_changed"
+      ],
+      "answers": [
+        {
+          "uuid": "5AC318D2-326E-4B44-9B52-79398AFAA2FC",
+          "status": "amount_changed",
+          "previous_amount": 30,
+          "snapshot": {
+            "id": "A1D5B7B0-A5F8-4BC6-BF7F-4CB7F804DE50",
+            "name": "AVG denoise:check before a new amount"
+          },
+          "ms": 7917
+        },
+        {
+          "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+          "status": "amount_changed",
+          "previous_amount": 30,
+          "snapshot": {
+            "id": "08BB394B-4D5A-439A-B68D-D64328C4F36B",
+            "name": "AVG denoise:check before a new amount"
+          },
+          "ms": 12240
+        }
+      ]
+    }
+  ],
+  "filters_after": [
+    {
+      "Filters": [
+        {
+          "FilterID": 1,
+          "Table_A8320194E3EFB1B3FD3D5ACEC3C27E51": "n5000pY/cqgVcVfV.v5/PunbM=h8GP%xck.z/`Hxn[v)Be315LYq{3]$n{Gn+9b+'iw@S{/u!dxxvw/CZ30f{Pv`hmY+HoyH^!j`!*L6+9tDRFfCWtPb.8639u6q-odS%BIin(nVfD9+$K%@V*Bwlg4^%I.+|jf*}gcR*#eUc.p^WO{)QH'Bg:%$Qc6Lot|J7o|1@y(pTLTl{HR=iUWp$0w@[wKrcI^!sMAO5tP{yg-C3?^^7iHiYVP?HeTaV+6kJe#i*YD8ovr%43hzJ0r*LzM!a-Qq*EqJHzCMZYA3MZ^?zV7G@cR6AisfXhz0'A4QbigDRzIl`hOsNOhd)h*]E/=ypUuoY2]^S$TUWWjvYEq([|Hp$G-0",
+          "Images": [
+            {
+              "GlobalInputDigest": "B2C97AE425DD751B0E48A3ACAE79CF4A",
+              "Opacity": "1,1",
+              "ReferenceImageAreaRight": 8280,
+              "ReferenceImageAreaBottom": 5520,
+              "ReferenceDefaultCropAreaTop": 8,
+              "ColorVariations": [
+                {
+                  "ImageGroup": [
+                    {
+                      "Stage3Y": 5504,
+                      "Stage3X": 8256,
+                      "PixelType": 3,
+                      "SizeY": 5520,
+                      "OriginalInstanceDigest": "A91B149A4BD83ED8497CE02C065BBE9B",
+                      "Planes": 3,
+                      "SizeX": 8280,
+                      "GroupDigest": "CAE4638CA05C6C37DD0B0918E02000A2"
+                    }
+                  ],
+                  "BlackLevels": [
+                    {
+                      "Black": "0,1"
+                    },
+                    {
+                      "Black": "0,1"
+                    },
+                    {
+                      "Black": "0,1"
+                    }
+                  ],
+                  "Linearization": [
+                    {
+                      "MapPolynomial": [
+                        "2869003/1073741824",
+                        "13007823/1073741824",
+                        "0/1",
+                        "195117344/1073741824"
+                      ]
+                    },
+                    {
+                      "MapPolynomial": [
+                        "8344600/1073741824",
+                        "35174806/1073741824",
+                        "0/1",
+                        "527622095/1073741824"
+                      ]
+                    },
+                    {
+                      "MapPolynomial": [
+                        "7609855/1073741824",
+                        "39616075/1073741824",
+                        "0/1",
+                        "594241129/1073741824"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "BlendType": 1,
+              "BlendWhiteBalanceMode": 2,
+              "MatrixTypeA": 1,
+              "ReferenceDefaultCropAreaLeft": 12,
+              "ReferenceImageAreaLeft": 0,
+              "MatrixParamsB": [
+                "25/100",
+                "25/100"
+              ],
+              "ReferenceImageAreaTop": 0,
+              "ReferenceDefaultCropAreaBottom": 5512,
+              "ReferenceDefaultCropAreaRight": 8268,
+              "MatrixTypeC": 4,
+              "MatrixTypeB": 1,
+              "BlendParams": [
+                "536870912/1073741824",
+                "603979776/1073741824",
+                "32768/32768",
+                "32768/32768"
+              ],
+              "MatrixParamsA": [
+                "25/100",
+                "25/100"
+              ]
+            }
+          ],
+          "SrcBoundsRight": 8280,
+          "ShouldDeleteImagesDueToUpstream": true,
+          "MinDisplayVersion": 285212672,
+          "SrcBoundsLeft": 0,
+          "DstDefaultCropAreaTop": 8,
+          "DstBoundsBottom": 5520,
+          "DstDefaultCropAreaRight": 8268,
+          "SrcBoundsBottom": 5520,
+          "SrcBoundsTop": 0,
+          "OrderIndexD": 1,
+          "MinEditVersion": 285212672,
+          "SrcDefaultCropAreaLeft": 12,
+          "SrcDefaultCropAreaBottom": 5512,
+          "Name": "Enhance",
+          "DstBoundsRight": 8280,
+          "CompressedSettings": "A8320194E3EFB1B3FD3D5ACEC3C27E51",
+          "DstBoundsTop": 0,
+          "Title": "$$$/CRaw/Filter/Title/Denoise=Denoise",
+          "SrcDefaultCropAreaTop": 8,
+          "DstDefaultCropAreaBottom": 5512,
+          "SrcDefaultCropAreaRight": 8268,
+          "DstBoundsLeft": 0,
+          "OrderIndexN": 100000,
+          "DstDefaultCropAreaLeft": 12
+        }
+      ]
+    },
+    {
+      "Filters": [
+        {
+          "FilterID": 1,
+          "Table_A8320194E3EFB1B3FD3D5ACEC3C27E51": "n5000pY/cqgVcVfV.v5/PunbM=h8GP%xck.z/`Hxn[v)Be315LYq{3]$n{Gn+9b+'iw@S{/u!dxxvw/CZ30f{Pv`hmY+HoyH^!j`!*L6+9tDRFfCWtPb.8639u6q-odS%BIin(nVfD9+$K%@V*Bwlg4^%I.+|jf*}gcR*#eUc.p^WO{)QH'Bg:%$Qc6Lot|J7o|1@y(pTLTl{HR=iUWp$0w@[wKrcI^!sMAO5tP{yg-C3?^^7iHiYVP?HeTaV+6kJe#i*YD8ovr%43hzJ0r*LzM!a-Qq*EqJHzCMZYA3MZ^?zV7G@cR6AisfXhz0'A4QbigDRzIl`hOsNOhd)h*]E/=ypUuoY2]^S$TUWWjvYEq([|Hp$G-0",
+          "DstBoundsBottom": 5520,
+          "SrcBoundsRight": 8280,
+          "ShouldDeleteImagesDueToUpstream": true,
+          "MinDisplayVersion": 285212672,
+          "DstDefaultCropAreaTop": 8,
+          "Title": "$$$/CRaw/Filter/Title/Denoise=Denoise",
+          "SrcBoundsLeft": 0,
+          "DstDefaultCropAreaRight": 8268,
+          "Images": [
+            {
+              "MatrixParamsA": [
+                "25/100",
+                "25/100"
+              ],
+              "Opacity": "1,1",
+              "ReferenceImageAreaRight": 8280,
+              "ReferenceImageAreaBottom": 5520,
+              "ReferenceDefaultCropAreaTop": 8,
+              "ReferenceImageAreaTop": 0,
+              "BlendType": 1,
+              "BlendWhiteBalanceMode": 2,
+              "MatrixTypeA": 1,
+              "ReferenceDefaultCropAreaLeft": 12,
+              "ReferenceImageAreaLeft": 0,
+              "MatrixParamsB": [
+                "25/100",
+                "25/100"
+              ],
+              "ColorVariations": [
+                {
+                  "ImageGroup": [
+                    {
+                      "Stage3Y": 5504,
+                      "Stage3X": 8256,
+                      "PixelType": 3,
+                      "SizeY": 5520,
+                      "OriginalInstanceDigest": "711BE221F8A18775B23B2853D4EFC1D1",
+                      "Planes": 3,
+                      "SizeX": 8280,
+                      "GroupDigest": "5EF4AD8AFA19CFE514372BC922434F44"
+                    }
+                  ],
+                  "BlackLevels": [
+                    {
+                      "Black": "0,1"
+                    },
+                    {
+                      "Black": "0,1"
+                    },
+                    {
+                      "Black": "0,1"
+                    }
+                  ],
+                  "Linearization": [
+                    {
+                      "MapPolynomial": [
+                        "17494/1073741824",
+                        "67107771/1073741824",
+                        "0/1",
+                        "1006616559/1073741824"
+                      ]
+                    },
+                    {
+                      "MapPolynomial": [
+                        "332384/1073741824",
+                        "67088090/1073741824",
+                        "0/1",
+                        "1006321350/1073741824"
+                      ]
+                    },
+                    {
+                      "MapPolynomial": [
+                        "332384/1073741824",
+                        "67088090/1073741824",
+                        "0/1",
+                        "1006321350/1073741824"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "ReferenceDefaultCropAreaBottom": 5512,
+              "ReferenceDefaultCropAreaRight": 8268,
+              "MatrixTypeC": 4,
+              "MatrixTypeB": 1,
+              "BlendParams": [
+                "536870912/1073741824",
+                "603979776/1073741824",
+                "32768/32768",
+                "32768/32768"
+              ],
+              "GlobalInputDigest": "B2C97AE425DD751B0E48A3ACAE79CF4A"
+            }
+          ],
+          "SrcBoundsTop": 0,
+          "OrderIndexD": 1,
+          "MinEditVersion": 285212672,
+          "SrcDefaultCropAreaLeft": 12,
+          "DstBoundsTop": 0,
+          "SrcDefaultCropAreaRight": 8268,
+          "SrcBoundsBottom": 5520,
+          "CompressedSettings": "A8320194E3EFB1B3FD3D5ACEC3C27E51",
+          "SrcDefaultCropAreaBottom": 5512,
+          "SrcDefaultCropAreaTop": 8,
+          "Name": "Enhance",
+          "DstDefaultCropAreaBottom": 5512,
+          "DstBoundsRight": 8280,
+          "DstBoundsLeft": 0,
+          "OrderIndexN": 100000,
+          "DstDefaultCropAreaLeft": 12
+        }
+      ]
+    }
+  ],
+  "preview": {
+    "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+    "width": 800,
+    "height": 533
+  },
+  "put_back": [
+    {
+      "uuid": "5AC318D2-326E-4B44-9B52-79398AFAA2FC",
+      "ok": true,
+      "filters": []
+    },
+    {
+      "uuid": "C19DDC67-D61F-4ED0-B02D-CD6BBA121DA9",
+      "ok": true,
+      "filters": []
+    }
+  ],
+  "answers": [
+    "y",
+    "y"
+  ],
+  "lines": [
+    "YES first Denoise: applied, applied (expected applied or amount_changed)",
+    "YES same amount again: unchanged, unchanged (expected unchanged)",
+    "YES a new amount: amount_changed, amount_changed (expected amount_changed)",
+    "YES the selection is as it was",
+    "YES the snapshots put each photo's FilterList back as it was",
+    "YES lr_get_preview by uuid rendered a photo that is not the active one",
+    "YES Jim's answer 1: y",
+    "YES Jim's answer 2: y"
+  ],
+  "headline": "WORKED"
+}

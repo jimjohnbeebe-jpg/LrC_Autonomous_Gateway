@@ -1,9 +1,9 @@
 ---
 report: SDK152-CHECKS
 phase: "11"
-status: observed
-authored_by: "Claude Code (Opus 5.5): purpose, harness, results collected from Jim's result files, 2026-10-26. Jim: the runs, the y/n answers, the verdict."
-date: 2026-10-26
+status: accepted
+authored_by: "Claude Code (Opus 5.5): purpose, harness, results collected from Jim's result files, 2026-10-26 and 2026-10-27. Jim: the runs, the y/n answers, the verdict (2026-10-27)."
+date: 2026-10-27
 ---
 
 # The plugin checks with `LrSdkVersion` 15.2 (#209 item 5)
@@ -47,6 +47,12 @@ Jim ran the three checks on 2026-10-26 between 21:25 and 21:36 local time, then 
 - Full timeline and cause: issue #226. Fix: PR #227.
 - Claude Code gave Jim the steps to put both photos back from their snapshots "AVG denoise:check before first Denoise". Whether he did is not recorded.
 
+**3b. denoise:check, run again after PR #227 (`main` `cc867a8`): WORKED** [handle: `SDK152-CHECKS\denoise_check_2026-10-27T12-03-41-353Z.json`, `headline` and `lines`; stated: Jim, 2026-10-27, "Checks done."]. Photos: two new virtual copies, of `20260110-_Z8A0173.NEF` and `20260907-_OZ80093.NEF`.
+- First Denoise: applied on both, in 11,578 ms and 14,063 ms. The bridge held.
+- Same amount again: unchanged on both. New amount: amount_changed on both, previous amount 30.
+- The selection was put back, the snapshots put each photo's Denoise filter list back as it was, and `lr_get_preview` by uuid rendered a photo that was not the active one (800 x 533).
+- Jim answered y to both questions.
+
 ## Numbers
 
 | Field | Value |
@@ -54,15 +60,15 @@ Jim ran the three checks on 2026-10-26 between 21:25 and 21:36 local time, then 
 | Plugin loads with 15.2 (Plug-in Manager, Reload) | yes: every check connected with `sdk_declared` 15.2 |
 | phase1:check | WORKED |
 | masks:kinds | FAILED on an HDR AVIF (colour range n); WORKED on a DNG |
-| denoise:check | FAILED (bridge drop after Denoise, #226); both Denoise calls passed the gate and applied |
-| `Needs.lua` gates passed in Lightroom | AI Denoise (14.5): yes, 2 photos. updateAISettings (13.3): not exercised by these checks |
+| denoise:check | FAILED (bridge drop after Denoise, #226); WORKED when run again after PR #227 |
+| `Needs.lua` gates passed in Lightroom | AI Denoise (14.5): yes, 4 photos over the two runs. updateAISettings (13.3): not exercised by these checks |
 
 ## Verdict
 
-_Jim's; not given yet. Claude Code's suggestion: #209's acceptance lines are met (phase1:check and masks:kinds WORKED with 15.2). The denoise:check failure is #226, not 15.2. denoise:check is run again after PR #227._
+**Go** (Jim, 2026-10-27) [stated: "Everything looks good, so yes, go."]. Claude Code had suggested it: phase1:check and masks:kinds WORKED with 15.2, and the denoise:check failure was #226, not 15.2.
 
 ## Consequences / open questions
 
 - **Colour range on the HDR AVIF:** the mask stored as written, but Jim saw no change, while the same mask worked on a DNG. Whether colour range masks behave differently on HDR or AVIF photos is `[unverified]`. It belongs to #210, which already questions colour range.
 - `updateAISettings` (13.3) has still not run behind its gate in Lightroom; an AI mask probe (`npm run ai:probe`) would exercise it.
-- denoise:check is run again after PR #227 merges.
+- denoise:check was run again after PR #227 merged, and WORKED (3b). Still open from #226: the plugin runs a command it received from a connection that has since closed [handle: issue #226 thread].

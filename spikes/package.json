@@ -12,7 +12,7 @@
     "s9:build": "node S9/tauri/build-ui.ts && cd S9/tauri && tauri build --bundles nsis"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.32.0",
+    "@modelcontextprotocol/sdk": "1.32.2",
     "sharp": "0.35.5",
     "ws": "8.22.0",
     "zod": "4.6.5"

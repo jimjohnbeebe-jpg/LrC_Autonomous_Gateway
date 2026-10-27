@@ -3,9 +3,7 @@
 // clients), descriptions at most 4,096 characters (Claude Code's upfront cut), and no inputSchema has
 // anyOf/oneOf/allOf at its root [inference: the limits, ISSUE155_PLAN.md R4 and its client table].
 
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { Client, InMemoryTransport, type Tool } from "@modelcontextprotocol/client";
 import { beforeAll, describe, expect, it } from "vitest";
 import { createServer, type Tools } from "../src/mcp/index.js";
 

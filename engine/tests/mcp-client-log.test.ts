@@ -4,8 +4,7 @@
 import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 import { afterEach, beforeEach, expect, it } from "vitest";
 import { IntentLibrary } from "../src/intents/index.js";
 import { ToolLog } from "../src/log/index.js";

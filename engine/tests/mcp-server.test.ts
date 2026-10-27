@@ -5,8 +5,7 @@ import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { BridgeClient } from "../src/bridge/index.js";
 import { IntentLibrary } from "../src/intents/index.js";
@@ -183,14 +182,14 @@ describe("mcp server", () => {
       return real(p, id);
     });
     const seen: number[] = [];
-    const res = await mcp.callTool({ name: "lr_get_active_photo_context", arguments: {} }, undefined, { onprogress: (p) => void seen.push(p.progress) });
+    const res = await mcp.callTool({ name: "lr_get_active_photo_context", arguments: {} }, { onprogress: (p) => void seen.push(p.progress) });
     expect(res.isError).toBeFalsy();
     expect(seen.length).toBeGreaterThanOrEqual(2);
     expect(seen).toEqual(seen.map((_, i) => i + 1));
   });
 
   it("logs whether each call carried a progressToken (issue #136)", async () => {
-    await mcp.callTool({ name: "lr_get_active_photo_context", arguments: {} }, undefined, { onprogress: () => undefined });
+    await mcp.callTool({ name: "lr_get_active_photo_context", arguments: {} }, { onprogress: () => undefined });
     await mcp.callTool({ name: "lr_get_active_photo_context", arguments: {} });
     const logged = readdirSync(logDir).flatMap((f) => readFileSync(path.join(logDir, f), "utf8").trim().split("\n"));
     expect(logged.map((l) => JSON.parse(l) as { tool: string; progress_token?: boolean })).toEqual([

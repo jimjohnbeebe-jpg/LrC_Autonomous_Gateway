@@ -1,7 +1,7 @@
 // What the MCP tool definitions share (server.ts has the list of groups): the definition type, the
 // metrics note, and the argument schemas more than one group uses.
 
-import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+import type { Tool } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import type { Tools } from "./tools.js";
 import { DEFAULT_LONG_EDGE, MAX_LONG_EDGE, MIN_LONG_EDGE, type ToolOutput } from "./tools-shared.js";

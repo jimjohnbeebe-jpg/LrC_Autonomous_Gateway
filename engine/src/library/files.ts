@@ -35,8 +35,8 @@ export const MAX_COLLECTION_PHOTOS = 500;
 export const MAX_EXPORT_PHOTOS = 500;
 /**
  * When a call stops starting photos [inference: the figure, 30 s under the MCP SDK's default request
- * timeout, handle: node_modules\@modelcontextprotocol\sdk\dist\esm\shared\protocol.js:8
- * DEFAULT_REQUEST_TIMEOUT_MSEC = 60000; issue #155 R3 took it from 40 s so that the bridge wait, the
+ * timeout, handle: node_modules\@modelcontextprotocol\server\dist\src-DdvbAHrR.mjs:6070
+ * DEFAULT_REQUEST_TIMEOUT_MSEC = 6e4, SDK 2.4.0; issue #155 R3 took it from 40 s so that the bridge wait, the
  * budget and a photo of normal length end before the 50 s call deadline, mcp\deadline.ts].
  */
 export const CALL_BUDGET_MS = 30_000;

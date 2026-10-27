@@ -2,8 +2,7 @@
 // pinned in a file, so an MCP SDK upgrade that changes what clients see fails here. A tool change made
 // on purpose updates the file: `npx vitest run tests/mcp-tools-list.test.ts -u` in engine\.
 
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 import { expect, it } from "vitest";
 import { createServer, type Tools } from "../src/mcp/index.js";
 

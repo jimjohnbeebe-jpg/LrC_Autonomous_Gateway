@@ -9,16 +9,22 @@
 // This uses the SDK's low-level Server, as Automaat does [upstream claim:
 // vendor\automaat\server\src\create-server.ts:18-32], not McpServer: McpServer validates arguments
 // itself and answers a failure with its own plain-text error before the tool handler runs
-// [handle: node_modules\@modelcontextprotocol\sdk\dist\esm\server\mcp.js:125, 141, 166-178, SDK 1.30.1],
-// so neither the error shape nor the log would cover it (Greptile, PR #17).
+// [handle: node_modules\@modelcontextprotocol\server\dist\mcp-oHn3ureC.mjs:1608-1615, 1638-1642, SDK 2.4.0;
+// v1: node_modules\@modelcontextprotocol\sdk\dist\esm\server\mcp.js:125, 141, 166-178, SDK 1.30.1],
+// so neither the error shape nor the log would cover it (Greptile, PR #17). SDK 2.4.0 marks Server
+// @deprecated in favour of McpServer, "only use Server for advanced use cases" [handle:
+// node_modules\@modelcontextprotocol\server\dist\mcp-BCJHyo7l.d.mts:2939]; this is one (issue #208).
+// The call's context is the handler's second argument: ctx.mcpReq.signal aborts when the client cancels
+// or the transport closes, and ctx.mcpReq.notify sends a notification tied to the request [handle:
+// node_modules\@modelcontextprotocol\server\dist\mcp-BCJHyo7l.d.mts:2183, 2204 and src-DdvbAHrR.mjs:6348-6351,
+// 6427-6436, 6510-6531, SDK 2.4.0]; in SDK 1.x they were extra.signal and extra.sendNotification.
 // A call whose request carries a progressToken gets notifications/progress while it runs (withProgress;
 // GitHub issue #59, PR C step 2d: an AI mask's wait may take minutes).
 // Issue #155: each call runs in its context with the client's clientInfo from the handshake (R1), the
 // rejected ones included, and answers within the call deadline (deadline.ts, R3): a run still busy
 // then answers `pending`, and its progress notifications stop with that answer.
 
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { CallToolRequestSchema, ListToolsRequestSchema, type CallToolResult, type Tool } from "@modelcontextprotocol/sdk/types.js";
+import { Server, type CallToolResult, type Tool } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { withCallContext } from "./call-context.js";
 import { clientIdentity } from "./client-info.js";
@@ -102,7 +108,7 @@ export function createServer(tools: Tools, options: { progressMs?: number; deadl
   const byName = new Map(DEFS.map((d) => [d.name, d]));
   const deadline = createDeadline({ ...(options.deadlineMs !== undefined ? { ms: options.deadlineMs } : {}), readOnly: (t) => byName.get(t)?.annotations?.readOnlyHint === true, log: (t, a, p) => tools.recordPending(t, a, p) });
 
-  server.setRequestHandler(ListToolsRequestSchema, () => ({
+  server.setRequestHandler("tools/list", () => ({
     tools: DEFS.map((d) => ({
       name: d.name,
       title: d.title,
@@ -112,7 +118,7 @@ export function createServer(tools: Tools, options: { progressMs?: number; deadl
     })),
   }));
 
-  server.setRequestHandler(CallToolRequestSchema, (request, extra) => {
+  server.setRequestHandler("tools/call", (request, ctx) => {
     const { name } = request.params;
     const args: unknown = request.params.arguments ?? {};
     const progress = { token: request.params._meta?.progressToken, ms: options.progressMs ?? PROGRESS_MS };
@@ -132,7 +138,7 @@ export function createServer(tools: Tools, options: { progressMs?: number; deadl
         return errorResult(error);
       }
       const run = () => respond(() => def.run(tools, parsed.data as Record<string, unknown>));
-      return withProgress(progress.token, (n) => extra.sendNotification(n), () => tools.progressNote(), progress.ms, () => deadline(name, parsed.data, run, extra.signal));
+      return withProgress(progress.token, (n) => ctx.mcpReq.notify(n), () => tools.progressNote(), progress.ms, () => deadline(name, parsed.data, run, ctx.mcpReq.signal));
     });
   });
 

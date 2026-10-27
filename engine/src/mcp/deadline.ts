@@ -16,12 +16,12 @@
 // (c) the work itself keeps running after a detach: the AI mask's 5 minutes and the 90 s write
 //     timeouts are unchanged, and nothing is cancelled.
 // (d) a call the client cancelled (notifications/cancelled) gets no response: the MCP SDK drops it
-//     [handle: node_modules/@modelcontextprotocol/sdk/dist/esm/shared/protocol.js:396-399,
-//     `if (abortController.signal.aborted) return;`]. Its result is then kept as after a detach.
+//     [handle: node_modules/@modelcontextprotocol/server/dist/src-DdvbAHrR.mjs:6348-6351, 6546, 6562,
+//     `if (abortController.signal.aborted) return;`, SDK 2.4.0]. Its result is then kept as after a detach.
 // No tool is exempt. respond() never rejects (a failure is an isError result), so a failed run is
 // stored and delivered like any other.
 
-import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import type { CallToolResult } from "@modelcontextprotocol/server";
 
 /**
  * How long a call may run before it answers `pending` [inference: under the 60 s request timeouts of

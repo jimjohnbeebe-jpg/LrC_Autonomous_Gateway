@@ -1,9 +1,7 @@
 // Hands-on batch 1, guidance: lr_help (src/mcp/defs-help.ts), the server's instructions, the shorter
 // lr_begin_session description and the suggested mask name style, through a real MCP client.
 
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { Client, InMemoryTransport, type Tool } from "@modelcontextprotocol/client";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { HELP_TEXT, INSTRUCTIONS } from "../src/mcp/defs-help.js";
 import { createServer, type Tools } from "../src/mcp/index.js";

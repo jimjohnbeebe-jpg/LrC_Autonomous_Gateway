@@ -11,8 +11,10 @@
 local LrTasks = import 'LrTasks'
 
 local Catalog = require 'Catalog'
+local Copies = require 'Copies'
 local Denoise = require 'Denoise'
 local Develop = require 'Develop'
+local DevelopTools = require 'DevelopTools'
 local Hud = require 'Hud'
 local Json = require 'Json'
 local Library = require 'Library'
@@ -22,6 +24,7 @@ local Metadata = require 'Metadata'
 local Pending = require 'Pending'
 local Prefs = require 'Prefs'
 local Preview = require 'Preview'
+local Snapshots = require 'Snapshots'
 local Transfer = require 'Transfer'
 
 local Dispatch = {}
@@ -35,7 +38,7 @@ function Dispatch.handlers(hello)
         get_settings = Develop.getSettings,
         apply_settings = Develop.applySettings,
         create_snapshot = Develop.createSnapshot,
-        apply_snapshot = Develop.applySnapshot,
+        apply_snapshot = Snapshots.apply,
         export_preview = Preview.exportPreview,
         create_virtual_copies = Catalog.createVirtualCopies,
         select_photo = Catalog.selectPhoto,
@@ -61,6 +64,12 @@ function Dispatch.handlers(hello)
         probe_write_gate = Masks.probeWriteGate,
         clear_pending_ai = Pending.clearPhoto,
         apply_denoise = Denoise.apply,
+        apply_auto = DevelopTools.applyAuto,
+        reset_develop = DevelopTools.reset,
+        set_process_version = DevelopTools.setProcessVersion,
+        list_snapshots = Snapshots.list,
+        delete_snapshot = Snapshots.delete,
+        copy_photo = Copies.copyPhoto,
     }
     return HANDLERS
 end

@@ -15,6 +15,7 @@
 
 import { z } from "zod";
 import type { HudUpdatePayload } from "./hud-protocol.js";
+import { DEVELOP_RESULTS } from "./protocol-develop.js";
 import { METADATA_RESULTS } from "./protocol-metadata.js";
 import { COMMAND_RESULTS } from "./protocol-results.js";
 
@@ -55,8 +56,8 @@ export type InboundEnvelope = z.infer<typeof inboundSchema>;
 /** One entry of a findPhotos search descriptor (engine\src\library\search.ts builds them). */
 export type SearchCriterion = { criteria: string; operation: string; value: string | number; value2?: string };
 
-/** Every command the engine sends, by name, with the schema of its result (protocol-results.ts, protocol-metadata.ts). */
-export const COMMANDS = { ...COMMAND_RESULTS, ...METADATA_RESULTS };
+/** Every command the engine sends, by name, with the schema of its result (protocol-results.ts, protocol-metadata.ts, protocol-develop.ts). */
+export const COMMANDS = { ...COMMAND_RESULTS, ...METADATA_RESULTS, ...DEVELOP_RESULTS };
 
 export type CommandName = keyof typeof COMMANDS;
 export type CommandResult<N extends CommandName> = z.infer<(typeof COMMANDS)[N]>;
@@ -87,7 +88,8 @@ export type CommandPayloads = {
   /** long_edge in pixels; quality 0-100 (the plugin converts it to the export setting's scale). */
   export_preview: Target & { long_edge: number; quality: number };
   create_snapshot: Target & { name: string };
-  apply_snapshot: Target & { snapshot_id: string };
+  /** restore_view (issue #214, Snapshots.lua): the photo made active in Develop, then the module, sources and selection put back; else Lightroom stays in Develop. */
+  apply_snapshot: Target & { snapshot_id: string; restore_view?: boolean };
   /** target_uuid is required here: the selected photo must be the master (PRD section 6.6 step 1). 2-4 names, each "AVG …". */
   create_virtual_copies: { target_uuid: string; names: string[] };
   /** Refused with identity_mismatch when the photo found differs from a field given in `expect`. */
@@ -140,4 +142,14 @@ export type CommandPayloads = {
   clear_pending_ai: { photo_uuid: string };
   /** Plugin 1.1.0 (Denoise.lua): AI Denoise at `amount` 1-100 on the photo with that uuid, after a snapshot named snapshot_name ("AVG …"); switches Lightroom to Develop and selects the photo, then puts both back. */
   apply_denoise: { photo_uuid: string; amount: number; snapshot_name: string };
+  /** Issue #214 (DevelopTools.lua): on the photo with that uuid, made active in Develop, then the view put back; snapshot_name "AVG …" taken before a change. */
+  apply_auto: { photo_uuid: string; tone: boolean; white_balance: boolean; snapshot_name: string };
+  reset_develop: { photo_uuid: string; confirm: true; snapshot_name: string };
+  /** version "Version 1" .. "Version 6"; masked: the engine read masks on the photo, so a downgrade is skipped. */
+  set_process_version: { photo_uuid: string; version: string; masked: boolean; confirm: true; snapshot_name: string };
+  /** Issue #214 (Snapshots.lua). */
+  list_snapshots: { photo_uuid: string };
+  delete_snapshot: { photo_uuid: string; snapshot_id: string };
+  /** Issue #214 (Copies.lua): one virtual copy, named copy_name or by Lightroom; the selection put back. */
+  copy_photo: { photo_uuid: string; copy_name?: string };
 };

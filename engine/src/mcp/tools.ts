@@ -15,6 +15,8 @@
 //            #112, #139; library\metadata.ts).
 //   files    (tools-collections.ts, tools-files.ts): lr_create_collection, lr_add_to_collection,
 //            lr_export_photos, lr_import_photos (GitHub issue #55; library\files.ts).
+//   develop  (tools-develop.ts, tools-snapshots.ts): lr_apply_auto, lr_reset, lr_set_process_version, the snapshot
+//            tools and lr_create_virtual_copies (GitHub issue #214).
 //   write    (tools-write.ts): setSettings, Phase 2's lr_set_settings, for the Phase 2 check only.
 // What they share is in tools-shared.ts. The MCP definitions are the defs-*.ts modules, by the same
 // groups.
@@ -43,6 +45,18 @@ import {
 import { addToCollection, createCollection, type AddToCollectionArgs, type CreateCollectionArgs } from "./tools-collections.js";
 import { getActivePhotoContext, getMetrics, getPreview, type MetricsArgs, type PreviewArgs } from "./tools-context.js";
 import { applyDenoise, type ApplyDenoiseArgs } from "./tools-denoise.js";
+import { applyAuto, resetDevelop, setProcessVersion, type ApplyAutoArgs, type ProcessVersionArgs, type ResetArgs } from "./tools-develop.js";
+import {
+  applySnapshot,
+  createSnapshot,
+  createVirtualCopies,
+  deleteSnapshot,
+  listSnapshots,
+  type CreateSnapshotArgs,
+  type SnapshotArgs,
+  type SnapshotListArgs,
+  type VirtualCopiesArgs,
+} from "./tools-snapshots.js";
 import { exportPhotos, importPhotos, type Budget, type ExportPhotosArgs, type ImportPhotosArgs } from "./tools-files.js";
 import { deleteIntent, getIntent, listIntents, saveIntent, type DeleteIntentArgs, type SaveIntentArgs } from "./tools-intents.js";
 import { getMetadata, setFlag, setIptc, type GetMetadataArgs, type SetFlagArgs, type SetIptcArgs } from "./tools-metadata.js";
@@ -251,6 +265,40 @@ export class Tools {
 
   applyDenoise(args: ApplyDenoiseArgs, budget?: Budget): Promise<ToolOutput> {
     return applyDenoise(this.ctx, args, budget);
+  }
+
+  // --- Develop parity (GitHub issue #214; tools-develop.ts, tools-snapshots.ts).
+
+  applyAuto(args: ApplyAutoArgs, budget?: Budget): Promise<ToolOutput> {
+    return applyAuto(this.ctx, args, budget);
+  }
+
+  resetDevelop(args: ResetArgs, budget?: Budget): Promise<ToolOutput> {
+    return resetDevelop(this.ctx, args, budget);
+  }
+
+  setProcessVersion(args: ProcessVersionArgs, budget?: Budget): Promise<ToolOutput> {
+    return setProcessVersion(this.ctx, args, budget);
+  }
+
+  listSnapshots(args: SnapshotListArgs): Promise<ToolOutput> {
+    return listSnapshots(this.ctx, args);
+  }
+
+  createSnapshot(args: CreateSnapshotArgs): Promise<ToolOutput> {
+    return createSnapshot(this.ctx, args);
+  }
+
+  applySnapshot(args: SnapshotArgs): Promise<ToolOutput> {
+    return applySnapshot(this.ctx, args);
+  }
+
+  deleteSnapshot(args: SnapshotArgs): Promise<ToolOutput> {
+    return deleteSnapshot(this.ctx, args);
+  }
+
+  createVirtualCopies(args: VirtualCopiesArgs, budget?: Budget): Promise<ToolOutput> {
+    return createVirtualCopies(this.ctx, args, budget);
   }
 
   // --- Phase 2's write, for the Phase 2 check (not offered over MCP).

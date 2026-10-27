@@ -13,6 +13,7 @@ import os from "node:os";
 import path from "node:path";
 import { BridgeClient, pluginVersionAtLeast } from "../bridge/index.js";
 import { acquireInstanceLock, BridgeGate, devOverrides, ENGINE_VERSION } from "../mcp/index.js";
+import { SESSION_SILENCE_MS } from "../mcp/bridge-gate.js";
 import { DENOISE_PLUGIN } from "../mcp/tools-denoise.js";
 import { PreviewService } from "../preview/index.js";
 import { FILTER_LIST, verdict, type DenoiseAnswer, type Step } from "./denoise-check.js";
@@ -47,6 +48,8 @@ async function denoise(client: BridgeClient, taken: Taken, amount: number, step:
 /** Each photo put back from the first snapshot taken on it, and its FilterList compared with the one before. */
 async function putBackAll(client: BridgeClient, taken: Taken, say: (l: string) => void): Promise<Array<{ uuid: string; ok: boolean; why?: string; filters?: unknown }>> {
   say("Putting both photos back from the snapshot their first Denoise took ...");
+  // A dropped bridge reconnects on its own once Lightroom answers again: wait for it, not give up (issue #226).
+  await client.waitConnected(SESSION_SILENCE_MS).catch(() => undefined);
   const out = [];
   for (const [i, uuid] of taken.uuids.entries()) {
     const id = taken.snaps.get(uuid);
@@ -107,7 +110,8 @@ async function run(client: BridgeClient, say: (l: string) => void, r: Results, t
 
 async function main(say: (l: string) => void): Promise<number> {
   const dev = devOverrides();
-  const client = new BridgeClient({ engineVersion: ENGINE_VERSION, log: (m) => console.error(`  (${m})`), ...dev.bridge });
+  // The whole check rides out a Lightroom pause as a session does: one after a Denoise lasted 11 s (issue #226).
+  const client = new BridgeClient({ engineVersion: ENGINE_VERSION, log: (m) => console.error(`  (${m})`), silenceAllowanceMs: () => SESSION_SILENCE_MS, ...dev.bridge });
   const gate = new BridgeGate(client, () => acquireInstanceLock(dev.lockPort));
   const r: Results = { check: "denoise-check", started, node: process.version, engine_version: ENGINE_VERSION };
   let worked = false;

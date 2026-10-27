@@ -65,6 +65,18 @@ describe("lr_apply_denoise", () => {
     expect(out.json["not_yet"]).toBeUndefined();
   });
 
+  it("opens the quiet window before and after each photo's command, also when the command fails (issue #226)", async () => {
+    const events: string[] = [];
+    plugin.handlers.set("apply_denoise", (p) => {
+      events.push(`cmd ${String(p["photo_uuid"])}`);
+      if (p["photo_uuid"] === "GONE") return { ok: false, error: { code: "unknown_photo", message: "no photo has that uuid", recoverable: false } };
+      return { ok: true, payload: { uuid: String(p["photo_uuid"]), ms: 10, status: "applied" } };
+    });
+    const quiet = new Tools({ client, map, previews: new PreviewService(client, { previewDir: path.join(tmp, "previews") }), intents: new IntentLibrary({ map, userDir }), sessionLogDir: logDir, engineVersion: "test", ensureBridge: () => client.waitConnected(2000).then(() => undefined), allowQuiet: () => events.push("quiet") });
+    await quiet.applyDenoise({ uuids: ["A", "GONE"], amount: 30 });
+    expect(events).toEqual(["quiet", "cmd A", "quiet", "quiet", "cmd GONE", "quiet"]);
+  });
+
   it("stops starting photos when the budget is spent and says how to go on", async () => {
     const out = await tools.applyDenoise({ uuids: ["A", "B", "C"], amount: 40 }, ticking(20_000, 30_000));
     expect(out.json["not_yet"]).toEqual(["C"]);

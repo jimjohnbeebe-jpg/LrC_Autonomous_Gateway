@@ -76,6 +76,8 @@ export type ToolsDeps = {
   /** Called when a tool call begins and ends (the gate's idle release, bridge-gate.ts). */
   onCallStart?: () => void;
   onCallEnd?: () => void;
+  /** Lets the plugin be silent for a session's SESSION_SILENCE_MS over the next SESSION_SILENCE_MS, outside a session (main.ts; issue #226). */
+  allowQuiet?: () => void;
   now?: () => Date;
   /** false: no HUD updates and no HUD events (PHASE5_PLAN row 5); on by default. */
   hud?: boolean;

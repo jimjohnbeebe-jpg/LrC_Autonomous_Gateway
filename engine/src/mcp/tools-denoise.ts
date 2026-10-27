@@ -26,8 +26,16 @@ export async function applyDenoise(ctx: ToolContext, args: ApplyDenoiseArgs, bud
     const snapshotName = `AVG pre-denoise ${randomUUID().slice(0, 6)}`;
     return sessions.whenIdle("lr_apply_denoise", async () => {
       const photos: Outcome[] = [];
+      // Lightroom can stop answering for 11 s or more just after a Denoise, more than the 6 s heartbeat
+      // allowed outside a session [handle: issue #226, bridge.log "stall 10962 ms" after a Z8 NEF]: ride
+      // it out, during the command and for a while after it.
       const { failed, left } = await eachInBudget(args.uuids, budget, () => photos, async (uuid) => {
-        photos.push(await ctx.deps.client.request("apply_denoise", { photo_uuid: uuid, amount: args.amount, snapshot_name: snapshotName }, { timeoutMs: WRITE_TIMEOUT_MS }));
+        ctx.deps.allowQuiet?.();
+        try {
+          photos.push(await ctx.deps.client.request("apply_denoise", { photo_uuid: uuid, amount: args.amount, snapshot_name: snapshotName }, { timeoutMs: WRITE_TIMEOUT_MS }));
+        } finally {
+          ctx.deps.allowQuiet?.();
+        }
       });
       const count = (s: string): number => photos.filter((p) => p.status === s).length;
       const json = {

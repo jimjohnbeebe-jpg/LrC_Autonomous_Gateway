@@ -30,6 +30,7 @@
     "s10:check": "npm run build && node engine/dist/devtools/s10-check-cli.js",
     "s14:check": "npm run build && node engine/dist/devtools/s14-check-cli.js",
     "curve:probe": "npm run build && node engine/dist/devtools/curve-probe-cli.js",
+    "perf:check": "npm run build && node engine/dist/devtools/perf-check-cli.js",
     "sdkver:check": "npm run build && node engine/dist/devtools/sdkver-check-cli.js",
     "offline:check": "npm run build && node engine/dist/devtools/offline-check-cli.js",
     "ai:probe": "npm run build && node engine/dist/devtools/ai-probe-cli.js",

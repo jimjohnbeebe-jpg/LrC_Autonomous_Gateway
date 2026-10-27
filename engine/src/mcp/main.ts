@@ -28,7 +28,7 @@
 // engine would keep the plugin's single-client sockets and the lock [upstream claim:
 // vendor\automaat\server\src\index.ts:194-206].
 
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 import { BridgeClient } from "../bridge/index.js";
 import { IntentLibrary } from "../intents/index.js";
 import { purgeExports } from "../library/files.js";
@@ -106,8 +106,8 @@ const server = createServer(tools);
 // The record that a client really started this engine, and which one, for the Status dialog and the
 // setup check (log/last-start.ts, PHASE9_PLAN decision D4). Written once the handshake is done, so
 // clientInfo is known: the SDK calls oninitialized on the client's initialized notification and keeps
-// clientInfo from the initialize request [handle: node_modules\@modelcontextprotocol\sdk\dist\esm\server\
-// index.js:53, 259-280, SDK 1.32.0]. A failed write is logged and ignored.
+// clientInfo from the initialize request [handle: node_modules\@modelcontextprotocol\server\dist\
+// mcp-oHn3ureC.mjs:854, 871, 1169, SDK 2.4.0]. A failed write is logged and ignored.
 server.oninitialized = () => writeLastStart({ engineVersion: ENGINE_VERSION, client: clientIdentity(server.getClientVersion()), log: say });
 await server.connect(new StdioServerTransport());
 

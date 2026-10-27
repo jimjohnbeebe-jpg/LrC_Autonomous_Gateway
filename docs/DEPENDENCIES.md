@@ -14,7 +14,9 @@ Runtime this was built and tested on: Node `v24.11.1`, npm `11.19.1` (Windows 11
 
 | Package | Pinned | Kind | License | `engines.node` | npm registry |
 |---|---|---|---|---|---|
-| `@modelcontextprotocol/sdk` | 1.32.0 | dependency | MIT | `>=18` | https://www.npmjs.com/package/@modelcontextprotocol/sdk/v/1.32.0 |
+| `@modelcontextprotocol/server` | 2.4.0 | dependency | Apache-2.0 | `>=20` | https://www.npmjs.com/package/@modelcontextprotocol/server/v/2.4.0 |
+| `@modelcontextprotocol/client` | 2.4.0 | devDependency | Apache-2.0 | `>=20` | https://www.npmjs.com/package/@modelcontextprotocol/client/v/2.4.0 |
+| `@modelcontextprotocol/sdk` | 1.32.0 | devDependency | MIT | `>=18` | https://www.npmjs.com/package/@modelcontextprotocol/sdk/v/1.32.0 |
 | `sharp` | 0.35.5 | dependency | Apache-2.0 | `>=20.9.0` | https://www.npmjs.com/package/sharp/v/0.35.5 |
 | `zod` | 4.6.5 | dependency | MIT | — | https://www.npmjs.com/package/zod/v/4.6.5 |
 | `vitest` | 5.0.1 | devDependency | MIT | `^22.12.0 \|\| ^24.0.0 \|\| >=26.0.0` | https://www.npmjs.com/package/vitest/v/5.0.1 |
@@ -23,6 +25,8 @@ Runtime this was built and tested on: Node `v24.11.1`, npm `11.19.1` (Windows 11
 | `luaparse` | 0.3.1 | devDependency | MIT | — | https://www.npmjs.com/package/luaparse/v/0.3.1 |
 | `ws` | 8.22.0 | dependency | MIT | `>=10.0.0` | https://www.npmjs.com/package/ws/v/8.22.0 |
 | `@types/ws` | 8.18.2 | devDependency | MIT | — | https://www.npmjs.com/package/@types/ws/v/8.18.2 |
+
+**MCP SDK v2 (issue #208, 2026-10-26):** `@modelcontextprotocol/server` 2.4.0 is now the engine's MCP dependency (it pulls `@modelcontextprotocol/core` 2.4.0, Apache-2.0, `engines.node` `>=20`). `@modelcontextprotocol/client` 2.4.0 (Apache-2.0, `>=20`) is a devDependency, for the tests and probe harness. `@modelcontextprotocol/sdk` 1.32.0 moved from the engine's dependencies to its devDependencies, kept for the v1-client compatibility test; `spikes` keeps it as a dependency. Reason: issue #208. Each version was the one on the registry at the time [handle: `npm view @modelcontextprotocol/server@2.4.0 version license engines`, `npm view @modelcontextprotocol/client@2.4.0 version license engines`, 2026-10-26; the licence and `engines` read back from `node_modules\@modelcontextprotocol\*\package.json`]. Note the licence change: the v2 packages are Apache-2.0 where the v1 SDK was MIT, so `THIRD_PARTY_NOTICES.txt` generated at build time carries their own licence text. The setup bundle's npm list fell from 100 packages to 9 (`@img/colour`, `@img/sharp-win32-x64`, `@modelcontextprotocol/core`, `@modelcontextprotocol/server`, `detect-libc`, `semver`, `sharp`, `ws`, `zod`) because the SDK's express, hono, ajv and jose tree is gone [handle: commit `13b4700` message, the setup-bundle list].
 
 `ws` and `@types/ws` were added in Phase 7 row 3 (2026-10-05) for the HUD channel the engine hosts for the Deck (`engine\src\hud\channel.ts`; vault AVG-014), at the versions spike S9 pinned (below), so npm keeps one copy. 8.22.0 was still the npm `latest` tag [handle: `npm view ws@8.22.0 version license engines` → `8.22.0`, `MIT`, `{ node: '>=10.0.0' }`; `npm view ws dist-tags.latest` → `8.22.0`; `npm view @types/ws@8.18.2 version license` → `8.18.2`, `MIT`; 2026-10-05]. `npm install -E ws@8.22.0 -w engine` and `npm install -E -D @types/ws@8.18.2 -w engine`; `npm ls ws @types/ws` shows both `deduped` for the engine.
 

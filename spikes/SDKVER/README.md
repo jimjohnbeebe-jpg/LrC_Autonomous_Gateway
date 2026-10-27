@@ -20,18 +20,18 @@ Results go under `%TEMP%\LrC-AVG\sdkver\` (`sdkver_<declared>_<time>.json`, `dum
 ### Run 1
 
 1. Quit Claude Desktop: right-click the Claude icon in the Windows system tray > **Quit**. Lightroom Classic stays open (any module).
-2. In PowerShell in VS Code, in `D:\Developer\LrC_Autonomous_Gateway`, run:
+2. In PowerShell in VS Code, run (the check lives in the #209 branch's folder until the PR is merged; Lightroom keeps the 13.0 plugin from `D:\Developer\LrC_Autonomous_Gateway` for this run):
 
    ```powershell
-   npm run sdkver:check
+   cd "D:\Developer\LrC_Autonomous_Gateway\.claude\worktrees\lr-sdk-version"; npm run sdkver:check
    ```
 
-   The window prints `The loaded plugin declares LrSdkVersion 13.0`, one line per photo, then `This is run 1 (declared 13.0).` and ends with **SDKVER: WORKED**.
+   The window prints `The loaded plugin declares LrSdkVersion 13.0`, then a `NOTE:` line saying this folder's `Info.lua` declares 15.2 (expected in run 1), one line per photo, then `This is run 1 (declared 13.0).` and ends with **SDKVER: WORKED**.
 3. Tell Claude Code **"sdkver run 1 done"**.
 
 ### Run 2
 
-Start only after Claude Code says the plugin with the new `LrSdkVersion` is in the plugin folder.
+Start only after Claude Code says the #209 PR is merged and `D:\Developer\LrC_Autonomous_Gateway` is up to date (the plugin there then declares 15.2).
 
 4. In Lightroom Classic, open **File > Plug-in Manager**. In the list on the left, click **LrC-AVG (dev)**, then click **Reload Plug-in**. Click **Done**, then wait 20 seconds.
 5. In PowerShell in VS Code, in `D:\Developer\LrC_Autonomous_Gateway`, run `npm run sdkver:check` again. The window prints `The loaded plugin declares LrSdkVersion` followed by the new value, one line per photo, the comparison with run 1, and ends with **SDKVER: WORKED**.

@@ -46,7 +46,10 @@ export async function runSdkverCheck(d: SdkverDeps): Promise<{ worked: boolean; 
     for (const n of notes) deps.say(`NOTE: ${n}`);
     deps.say(`Census of the collection "${COLLECTION}" (read only):`);
     const found = await census(ctx);
-    if (found) report(ctx, buildRun(hello, found.photos, now().toISOString()), notes, d.previous);
+    // A photo the census skipped would be missing from this run and its comparison: no run is kept (Greptile, PR #223).
+    const skipped = ((results["census"] as Json | undefined)?.["skipped"] as Json[] | undefined)?.length ?? 0;
+    if (found && skipped > 0) ctx.fail(`${photos(skipped)} could not be read, so this run is not kept; run the command again.`);
+    else if (found) report(ctx, buildRun(hello, found.photos, now().toISOString()), notes, d.previous);
   } catch (err) {
     ctx.fail(`the check stopped: ${describeError(err)}`);
   }

@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { BridgeClient, type HelloResult } from "../src/bridge/index.js";
 import { COLLECTION, type Photo } from "../src/devtools/s10-config.js";
 import { readRuns, runSdkverCheck } from "../src/devtools/sdkver-check.js";
-import { buildRun, compareRuns, fmtSdk, labelNotes, newVsPinned, parseInfoLua, pickPrevious, type Run } from "../src/devtools/sdkver-diff.js";
+import { buildRun, compareRuns, digest, fmtSdk, labelNotes, newVsPinned, parseInfoLua, pickPrevious, type Run } from "../src/devtools/sdkver-diff.js";
 import { BridgeGate } from "../src/mcp/index.js";
 import { loadDefaultParamMap } from "../src/params/index.js";
 import { FakePlugin } from "./helpers/fake-plugin.js";
@@ -84,6 +84,11 @@ describe("sdkver: comparing two runs", () => {
     expect(c).toMatchObject({ photos_compared: 1, photos_only_a: ["b.JPG"], photos_only_b: ["c.DNG"], same_lrc_version: false });
     expect(c.suggestion).toContain("Lightroom differs between the runs (15.5.1, 15.6).");
     expect(compareRuns(runOf(13, [photos()[0] as Spec]), runOf(14.3, [photos()[1] as Spec])).suggestion).toBe("no photo is in both runs: nothing was compared");
+  });
+
+  it("hashes a table the same whatever its key order, and keeps array order (Greptile, PR #223)", () => {
+    expect(digest({ a: 1, b: { c: [1, 2], d: 2 } })).toBe(digest({ b: { d: 2, c: [1, 2] }, a: 1 }));
+    expect(digest([1, 2])).not.toBe(digest([2, 1]));
   });
 
   it("lists the keys new against the pinned file once, over all the photos", () => {
@@ -189,6 +194,21 @@ describe("npm run sdkver:check against the simulated plugin", () => {
     expect(results).toMatchObject({ headline: "FAILED", errors: [expect.stringContaining(`no collection named "${COLLECTION}"`)] });
     expect(results).not.toHaveProperty("run");
     expect(said.at(-1)).toBe("SDKVER: FAILED");
+  });
+
+  it("FAILED, and no run kept, when a photo could not be read (Greptile, PR #223)", async () => {
+    // A second photo in the collection that the simulated plugin cannot read; the first still reads.
+    lr.library.photos.push({ uuid: "unreadable", local_id: 2999, filename: "gone.NEF", rating: 0, keywords: [], day: "2026-10-26", gps: null });
+    lr.library.collections.find((c) => c.name === COLLECTION)?.photos.push("unreadable");
+    const orig = plugin.handlers.get("get_settings") as NonNullable<ReturnType<typeof plugin.handlers.get>>;
+    plugin.handlers.set("get_settings", async (p, id) => ((p as { photo_uuid?: string }).photo_uuid === "unreadable"
+      ? { ok: false, error: { code: "photo_not_found", message: "no photo", recoverable: false } }
+      : orig(p, id)));
+    const { worked, results } = await run(1, []);
+    expect(said.some((l) => l.includes("gone.NEF"))).toBe(true);
+    expect(worked).toBe(false);
+    expect(results).not.toHaveProperty("run");
+    expect(results["errors"]).toEqual([expect.stringContaining("1 photo could not be read, so this run is not kept")]);
   });
 
   it("readRuns reads the runs a saved results file holds and skips anything else", async () => {

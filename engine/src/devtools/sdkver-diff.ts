@@ -47,7 +47,13 @@ export function parseInfoLua(text: string): { sdk: number | null; min: number | 
   return { sdk: num("LrSdkVersion"), min: num("LrSdkMinimumVersion") };
 }
 
-const digest = (value: unknown): string => createHash("sha1").update(JSON.stringify(value) ?? "undefined").digest("hex").slice(0, 10);
+// Object keys sorted at every level, arrays kept in order: the plugin builds objects with Lua's pairs, whose order
+// is not promised to stay the same across reloads [inference], so an unchanged table must hash the same (Greptile, PR #223).
+const sorted = (value: unknown): unknown =>
+  Array.isArray(value) ? value.map(sorted)
+  : value !== null && typeof value === "object" ? Object.fromEntries(Object.keys(value).sort().map((k) => [k, sorted((value as Record<string, unknown>)[k])]))
+  : value;
+export const digest = (value: unknown): string => createHash("sha1").update(JSON.stringify(sorted(value)) ?? "undefined").digest("hex").slice(0, 10);
 
 /** One run from the hello of the plugin and the census's photos (each with its settings in `start`). */
 export function buildRun(hello: HelloResult, photos: readonly Photo[], capturedAt: string): Run {

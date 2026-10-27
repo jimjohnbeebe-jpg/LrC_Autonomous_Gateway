@@ -42,7 +42,7 @@ Start only after Claude Code says the #209 PR is merged and `D:\Developer\LrC_Au
 - **The window says "another LrC-AVG engine is using the Lightroom bridge":** do step 1 again, then run the command again.
 - **It says "could not connect to Lightroom":** check that Lightroom is open and that **File > Plug-in Manager** lists LrC-AVG (dev) as Enabled, then run the command again.
 - **It says `Lightroom has no collection named "fixtures"`:** nothing was read. Tell Claude Code.
-- **A photo line says "could not be read":** the run is still saved. Tell Claude Code.
+- **A photo line says "could not be read":** the run ends with SDKVER: FAILED and is not kept. Run the same command again; if the same photo fails again, tell Claude Code.
 - **Step 2 prints a `declares LrSdkVersion` value other than 13.0:** the plugin Lightroom has loaded is not the 13.0 one. Tell Claude Code before doing anything else.
 - **Step 5 prints `NOTE: the loaded plugin declares …` or `Every earlier run declared … too`:** Lightroom is still running the old plugin. In Lightroom: **File > Exit**, start Lightroom again, wait 20 seconds, then run step 5 again. If the same line is printed again, tell Claude Code.
 - **The window ends with SDKVER: FAILED for any other reason, or a Lightroom error window appears:** click OK and tell Claude Code.

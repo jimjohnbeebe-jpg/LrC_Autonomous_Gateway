@@ -66,5 +66,5 @@ export async function makeAiPart(ctx: SessionContext, s: Session, job: AiJob): P
       session_id: s.id, kind: job.kind, error_reason: u.reason, history_names: job.historyNames, ...(left ? { left } : {}),
     });
   }
-  throw featureUnavailable(`An AI ${job.kind} part`, ctx.deps.client.hello(), `the mask table route did not make it, and a part has no LrDevelopController route; ${back}; the pass is not used.`, { routes_tried: [{ route: "table", why: u.why }] });
+  throw featureUnavailable(`An AI ${job.kind} part`, ctx.deps.client.hello(), `the mask table route did not make it (${u.why}), and a part has no LrDevelopController route; ${back}; the pass is not used.`, { routes_tried: [{ route: "table", why: u.why }] });
 }

@@ -17,13 +17,20 @@
 -- the AI client and its model (hud_update ai_name, ai_model; HudText.ai), or says "the AI". From 1.0.0
 -- (Phase 9) the plugin, the engine and the Deck share one version, and "LrC-AVG - Status" (MenuStatus.lua)
 -- shows both and writes status.txt.
--- LrSdkVersion 13.0: the five Phase 0 spike plugins declared it and ran on LrC 15.5.1
--- [handle: docs\reports\phase0\PHASE0.md "Draft for LR_SDK_NOTES", SDK version]; whether it hides
--- newer develop keys is [unverified].
+-- LrSdkVersion 15.2 is the newest SDK confirmed [handle: D:\Developer\LightRoom Classic Dev Kit\Readme.txt:1,
+-- "Adobe Lightroom Classic 15.2 Software Development Kit"; a newer one is [unverified]]; the guide says to set it
+-- "to latest version" and LrSdkMinimumVersion to the oldest Lightroom the plug-in works with [handle:
+-- Manual\Lightroom Classic SDK Guide.pdf pp. 22-23 (pdftotext), "set this value to 8.0 and LrSdkVersion to 11.0"].
+-- LrSdkMinimumVersion stays 13.0, which the Phase 0 spike plugins declared and ran on LrC 15.5.1 [handle:
+-- docs\reports\phase0\PHASE0.md "Draft for LR_SDK_NOTES", SDK version] (Jim, issue #209: refuse at runtime). A
+-- feature from a later release checks its call first and answers feature_unavailable ("needs Lightroom Classic
+-- N or later") through Needs.lua. The guide documents no hiding of calls or develop keys by the declared
+-- version; whether 15.2 changes the keys getDevelopSettings() returns is answered by `npm run sdkver:check`
+-- (docs\reports\phase11\SDKVER.md) and is [unverified] until Jim runs it.
 -- This repo copy is the development plugin, with its own ID and name; the setup build ships it as
 -- com.lrcavg.gateway, "LrC-AVG (Autonomous Vision Gateway)" (tools\setup\plugin-id.ts says why).
 return {
-    LrSdkVersion = 13.0,
+    LrSdkVersion = 15.2,
     LrSdkMinimumVersion = 13.0,
     LrToolkitIdentifier = 'com.lrcavg.gateway.dev',
     LrPluginName = "LrC-AVG (dev)",

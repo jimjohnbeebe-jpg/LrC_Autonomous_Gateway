@@ -10,72 +10,7 @@ import { COMMANDS, HUD_END_STAGES, HUD_EVENTS, HUD_GUARDRAIL, HUD_LIMITS, HUD_ST
 import { KEYWORD_SEPARATOR, MAX_COLLECTION_PHOTOS, MAX_PAGE } from "../src/library/index.js";
 import { aiWatch } from "../src/params/index.js";
 import { DECAY_MAX_VALUES, LOCK_PORT, PAGE_SPECS } from "../src/settings/index.js";
-
-const pluginRoot = fileURLToPath(new URL("../../plugin/", import.meta.url));
-const avgPlugin = path.join(pluginRoot, "LrC-AVG.lrplugin");
-
-function luaFiles(dir: string): string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) return luaFiles(full);
-    return entry.name.endsWith(".lua") ? [full] : [];
-  });
-}
-
-// Code without comments and string contents, for the token checks below. One left-to-right pass,
-// in the order Lua's lexer reads the source, so a "[[" inside a quoted string or a line comment
-// does not start a long string. Every string becomes "" and every comment disappears; line breaks
-// inside block comments and long strings are kept, so line numbers match the source.
-function codeOnly(source: string): string {
-  let out = "";
-  let i = 0;
-  // Level of a long bracket ("[", "="*, "[") starting at `at`, or -1.
-  const longBracket = (at: number): number => {
-    if (source[at] !== "[") return -1;
-    let j = at + 1;
-    while (source[j] === "=") j++;
-    return source[j] === "[" ? j - at - 1 : -1;
-  };
-  // Skip the body of a long bracket whose opening ends at `from`; returns the index after its close.
-  const skipLong = (from: number, level: number): number => {
-    const close = `]${"=".repeat(level)}]`;
-    const end = source.indexOf(close, from);
-    const stop = end === -1 ? source.length : end + close.length;
-    out += source.slice(from, stop).replace(/[^\n]/g, "");
-    return stop;
-  };
-  while (i < source.length) {
-    const c = source[i] as string;
-    if (c === "-" && source[i + 1] === "-") {
-      const level = longBracket(i + 2);
-      if (level >= 0) {
-        i = skipLong(i + 2 + level + 2, level);
-      } else {
-        const newline = source.indexOf("\n", i);
-        i = newline === -1 ? source.length : newline;
-      }
-      continue;
-    }
-    const level = longBracket(i);
-    if (level >= 0) {
-      out += '""';
-      i = skipLong(i + level + 2, level);
-      continue;
-    }
-    if (c === '"' || c === "'") {
-      let j = i + 1;
-      while (j < source.length && source[j] !== c && source[j] !== "\n") j += source[j] === "\\" ? 2 : 1;
-      const end = source[j] === c ? j + 1 : j; // an unterminated string stops at the line break
-      // A backslash before a line break continues the string on the next line; keep that break.
-      out += `""${source.slice(i, end).replace(/[^\n]/g, "")}`;
-      i = end;
-      continue;
-    }
-    out += c;
-    i++;
-  }
-  return out;
-}
+import { avgPlugin, codeOnly, luaFiles, pluginRoot } from "./helpers/lua-code.js";
 
 const files = luaFiles(pluginRoot);
 
@@ -85,7 +20,7 @@ describe("lua: every plugin file", () => {
     expect(names).toEqual([
       "Bridge.lua", "Catalog.lua", "Denoise.lua", "Develop.lua", "Dispatch.lua", "Endpoint.lua", "Events.lua", "Gate.lua", "Hud.lua", "HudClick.lua", "HudSelection.lua", "HudState.lua", "HudText.lua", "HudView.lua",
       "Info.lua", "Json.lua", "KeywordTree.lua", "Library.lua", "Log.lua", "MaskProbe.lua", "Masks.lua", "MenuAbort.lua", "MenuAccept.lua", "MenuApprove.lua", "MenuHud.lua",
-      "MenuPickA.lua", "MenuPickB.lua", "MenuPickC.lua", "MenuStatus.lua", "Metadata.lua", "Pending.lua", "Photos.lua",
+      "MenuPickA.lua", "MenuPickB.lua", "MenuPickC.lua", "MenuStatus.lua", "Metadata.lua", "Needs.lua", "Pending.lua", "Photos.lua",
       "PluginDisable.lua", "PluginEnable.lua", "PluginInfoProvider.lua", "PluginInit.lua", "Prefs.lua", "Preview.lua", "Sockets.lua", "Stall.lua", "Transfer.lua",
     ]);
   });

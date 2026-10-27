@@ -136,7 +136,7 @@ function updateAiSettings(sim: MaskSim, p: Record<string, unknown>): FakeReply {
   if (typeof uuid !== "string") return uuid;
   const rid = sm.foreignUpdate ? "another-request" : typeof p["request_id"] === "string" ? (p["request_id"] as string) : undefined;
   const rec = (state: string, error?: string) => ({ uuid, ...(rid ? { request_id: rid } : {}), state, ...(error ? { error } : {}) });
-  if (sm.tableRoute === "unavailable") return fail("feature_unavailable", "photo:updateAISettings (SDK 13.3) is not available in this Lightroom (or not to this plugin)", true);
+  if (sm.tableRoute === "unavailable") return fail("feature_unavailable", "Computing an AI mask needs Lightroom Classic 13.3 or later: photo:updateAISettings not found in this Lightroom Classic 13.1", true); // Needs.lua's wording
   const ids = (p["watch"] as { ids?: unknown } | undefined)?.ids;
   const guarded = Array.isArray(ids) && ids.length > 0;
   if (guarded) sm.guard.set(uuid, [...(sm.guard.get(uuid) ?? []), ...(ids as string[])]);

@@ -220,7 +220,7 @@ export async function makeAiMask(ctx: SessionContext, s: Session, job: AiJob): P
   tried.push({ route: "dc", why: dc });
   const left = refused ? stuck : await takeOut(ctx, s, job);
   const gone = left === null ? "The last read of the mask table showed this pass's attempts gone (they stay in History)" : `This pass's attempt may still be in the mask table (${left}): lr_list_masks shows it, and lr_end_session revert removes it`;
-  throw featureUnavailable(`An AI ${job.kind} mask`, ctx.deps.client.hello(), `the mask table route did not make it, and LrDevelopController did not either or was not tried (routes_tried says why); linear, radial and luminance masks still work. ${gone}; the pass is not used.`, {
+  throw featureUnavailable(`An AI ${job.kind} mask`, ctx.deps.client.hello(), `the mask table route did not make it (${tried[0]?.why ?? "no reason kept"}), and LrDevelopController did not either or was not tried (routes_tried says why); linear, radial and luminance masks still work. ${gone}; the pass is not used.`, {
     routes_tried: tried,
     waited_ms: ms(started),
   });

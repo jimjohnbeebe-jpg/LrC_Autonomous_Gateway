@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "lrc-avg": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/engine/dist/mcp/main.js"]
+    }
+  }
+}

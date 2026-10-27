@@ -74,6 +74,18 @@ describe("plugin: every call newer than 13.0 goes through Needs.check", () => {
     expect(callers).toEqual([DENOISE.file]);
   });
 
+  it("reads and writes the accessibility keys (13.2, issue #218) only after Needs.release, and names them in no other file", () => {
+    const code = codeOnly(lua("Metadata.lua"));
+    expect(lua("Metadata.lua")).toContain('Needs.release("Accessibility text", 13, 2)');
+    const set = code.slice(code.indexOf("function Metadata.setIptc("));
+    expect(set.indexOf("accessible()")).toBeGreaterThan(0);
+    expect(set.indexOf("accessible()")).toBeLessThan(set.indexOf("Gate.run("));
+    const text = code.slice(code.indexOf("local function textOf("));
+    expect(text).toMatch(/^local function textOf\(catalog, photo\)\s+local withAccessibility = accessible\(\)[\s\S]*?if withAccessibility then/);
+    const callers = own.filter((f) => /altTextAccessibility|extDescrAccessibility/.test(readFileSync(f, "utf8"))).map((f) => path.basename(f));
+    expect(callers).toEqual(["Metadata.lua"]);
+  });
+
   it("keeps the mask calls (SDK 11.0, below the minimum) without a gate of their own, probed by MaskProbe.begin only to name a build that lacks one", () => {
     expect(lua("MaskProbe.lua")).toContain('Needs.check("Masking through LrDevelopController", "11.0", "LrDevelopController.", LrDevelopController, { "getAllMasks" })');
   });

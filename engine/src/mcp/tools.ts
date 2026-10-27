@@ -253,6 +253,11 @@ export class Tools {
     return applyDenoise(this.ctx, args, budget);
   }
 
+  /** Any tool function by reference (issue #218's catalog tools: tools-metadata.ts, tools-collections.ts, tools-keywords.ts, ...). */
+  call<A>(fn: (ctx: ToolContext, args: A) => Promise<ToolOutput>, args: A): Promise<ToolOutput> {
+    return fn(this.ctx, args);
+  }
+
   // --- Phase 2's write, for the Phase 2 check (not offered over MCP).
 
   setSettings(args: SetSettingsArgs): Promise<ToolOutput> {

@@ -47,4 +47,19 @@ function Needs.check(feature, version, prefix, obj, names)
             " not found in this Lightroom Classic " .. tostring(LrApplication.versionString()) }
 end
 
+-- true when this Lightroom Classic is `major`.`minor` or later; else nil plus feature_unavailable, as check. For a
+-- feature that is a metadata key, not a call, so there is no function to probe (plugin 1.5.0: the accessibility
+-- texts, "first supported in version 13.2" [handle: API Reference\modules\LrPhoto.html, getFormattedMetadata and
+-- setRawMetadata, SDK 15.2]). LrApplication.versionTable() gives major and minor [handle: modules\LrApplication.html
+-- versionTable]; a Lightroom whose version cannot be read is refused.
+function Needs.release(feature, major, minor)
+    local ok, v = LrTasks.pcall(LrApplication.versionTable)
+    if ok and type(v) == "table" and type(v.major) == "number" then
+        if v.major > major or (v.major == major and (tonumber(v.minor) or 0) >= minor) then return true end
+    end
+    return nil, { code = "feature_unavailable", recoverable = true,
+        message = feature .. " needs Lightroom Classic " .. major .. "." .. minor .. " or later; this is Lightroom Classic " ..
+            tostring(LrApplication.versionString()) }
+end
+
 return Needs

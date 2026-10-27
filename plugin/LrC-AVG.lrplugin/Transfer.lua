@@ -81,12 +81,14 @@ local function childNamed(owner, name, sets)
 end
 
 -- The collection's id, name, set path ("Set / Subset", nil at the top level), smart flag and photo count.
-local function describeCollection(catalog, collection)
+-- Plugin 1.5.0 (issue #218): getPhotos runs after the read gate, since a smart collection's getPhotos runs a
+-- catalog search, which deadlocks inside the gate on Windows [upstream claim: Automaat/lightroom-mcp@1040453
+-- plugin/LightroomMCP.lrplugin/HandlerCollections.lua:443-446] (rule 03: yielding queries outside the gate).
+function Transfer.describeCollection(catalog, collection)
     local d = { local_id = collection.localIdentifier }
     catalog:withReadAccessDo(function()
         d.name = collection:getName()
         d.smart = collection:type() == "LrSmartCollection"
-        d.photo_count = #(collection:getPhotos() or {})
         local names, parent = {}, collection:getParent()
         while parent do
             table.insert(names, 1, parent:getName())
@@ -94,17 +96,23 @@ local function describeCollection(catalog, collection)
         end
         if #names > 0 then d.set_path = table.concat(names, " / ") end
     end)
+    d.photo_count = #(collection:getPhotos() or {})
     return d
 end
+local describeCollection = Transfer.describeCollection
 
-function Transfer.createCollection(payload)
-    local name, setPath = payload.name, payload.set_path or {}
-    if not nonEmpty(name) then return fail("bad_request", "name must be a non-empty string") end
-    if type(setPath) ~= "table" then return fail("bad_request", "set_path must be a list of names") end
+-- Checks `name` and `set_path` of a create command; returns nil, or the error table.
+function Transfer.badName(name, setPath)
+    if not nonEmpty(name) then return { code = "bad_request", message = "name must be a non-empty string", recoverable = false } end
+    if type(setPath) ~= "table" then return { code = "bad_request", message = "set_path must be a list of names", recoverable = false } end
     for _, level in ipairs(setPath) do
-        if not nonEmpty(level) then return fail("bad_request", "every set_path level must be a non-empty string") end
+        if not nonEmpty(level) then return { code = "bad_request", message = "every set_path level must be a non-empty string", recoverable = false } end
     end
-    local catalog = LrApplication.activeCatalog()
+    return nil
+end
+
+-- The collection `name` inside the sets `setPath`, case aside, or nil (read in a read gate).
+function Transfer.existing(catalog, setPath, name)
     local existing
     catalog:withReadAccessDo(function()
         local owner = catalog
@@ -114,6 +122,15 @@ function Transfer.createCollection(payload)
         end
         existing = childNamed(owner, name, false)
     end)
+    return existing
+end
+
+function Transfer.createCollection(payload)
+    local name, setPath = payload.name, payload.set_path or {}
+    local bad = Transfer.badName(name, setPath)
+    if bad then return nil, bad end
+    local catalog = LrApplication.activeCatalog()
+    local existing = Transfer.existing(catalog, setPath, name)
     if existing then
         local d = describeCollection(catalog, existing)
         if d.smart then return fail("smart_collection", "a smart collection named " .. d.name .. " is already there") end

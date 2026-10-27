@@ -11,10 +11,13 @@
 local LrTasks = import 'LrTasks'
 
 local Catalog = require 'Catalog'
+local CollectionEdit = require 'CollectionEdit'
 local Denoise = require 'Denoise'
 local Develop = require 'Develop'
+local Folders = require 'Folders'
 local Hud = require 'Hud'
 local Json = require 'Json'
+local KeywordEdit = require 'KeywordEdit'
 local Library = require 'Library'
 local Log = require 'Log'
 local Masks = require 'Masks'
@@ -61,6 +64,12 @@ function Dispatch.handlers(hello)
         probe_write_gate = Masks.probeWriteGate,
         clear_pending_ai = Pending.clearPhoto,
         apply_denoise = Denoise.apply,
+        set_color_label = Metadata.setColorLabel,
+        create_smart_collection = CollectionEdit.createSmart,
+        delete_collection = CollectionEdit.delete,
+        list_folders = Folders.list,
+        rename_keyword = KeywordEdit.rename,
+        keyword_subtree = KeywordEdit.subtree,
     }
     return HANDLERS
 end

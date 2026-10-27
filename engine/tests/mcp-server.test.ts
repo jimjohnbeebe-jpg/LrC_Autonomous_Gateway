@@ -111,7 +111,15 @@ describe("mcp server", () => {
       "lr_set_regions",
       "lr_step",
       "lr_sync_series",
-    ]);
+      // Issue #218 (plugin 1.5.0).
+      "lr_set_color_label",
+      "lr_create_smart_collection",
+      "lr_delete_collection",
+      "lr_list_folders",
+      "lr_rename_keyword",
+      "lr_remove_keyword_subtree",
+      "lr_export_metadata",
+    ].sort());
     const sync = tools.find((t) => t.name === "lr_sync_series");
     expect(sync?.inputSchema.required).toEqual(["source", "targets", "adaptive_exposure"]);
     const preset = tools.find((t) => t.name === "lr_create_preset_from_active");

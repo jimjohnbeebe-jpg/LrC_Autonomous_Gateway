@@ -49,7 +49,7 @@ If something goes wrong:
 ### .mcpb bundle
 
 7. In PowerShell, in the repo root: `npm run package`. You should see `mcpb bundle: manifest tools equal the server's tool list` and the `.mcpb` in the asset list.
-8. Quit Claude Desktop, open it, and drag `release\lrc-avg-<version>.mcpb` onto Settings > Extensions (the install route is `[unverified]`; use whatever Claude Desktop offers for a .mcpb file). Write down whether it installs, whether the 37 tools show, and whether `lr_help` runs (Lightroom open, plug-in enabled). Remove the extension afterwards if you do not want two `lrc-avg` servers (the setup's entry and the extension).
+8. Quit Claude Desktop, open it, and drag `release\lrc-avg-<version>.mcpb` onto Settings > Extensions (the install route is `[unverified]`; use whatever Claude Desktop offers for a .mcpb file). Write down whether it installs, whether the 61 tools show (37 before #207 batch 1, which added 24), and whether `lr_help` runs (Lightroom open, plug-in enabled). Remove the extension afterwards if you do not want two `lrc-avg` servers (the setup's entry and the extension).
 
 ## Observed
 

@@ -49,11 +49,14 @@ export const IMPORT_PHOTO_TIMEOUT_MS = 90_000;
  * File types offered to Lightroom's addPhoto [inference: Automaat's list, vendor\automaat\plugin\
  * LightroomMCP.lrplugin\HandlerImport.lua:36-41, plus the raw formats of current Canon, Fujifilm,
  * Olympus/OM, Panasonic, Pentax, Samsung and Nikon cameras and HEIC]. A file Lightroom refuses is
- * listed in `failed`, the others still imported.
+ * listed in `failed`, the others still imported. Issue #218 row 11 added the rest of upstream's list (Automaat PR
+ * #294) [upstream claim: Automaat/lightroom-mcp@1040453 plugin/LightroomMCP.lrplugin/HandlerImport.lua:10-17];
+ * which of them Lightroom imports is [unverified] (engine\tests\catalog-files.test.ts keeps the lists aligned).
  */
 export const PHOTO_EXTENSIONS = new Set([
-  ".jpg", ".jpeg", ".png", ".tif", ".tiff", ".dng", ".heic", ".psd",
-  ".nef", ".nrw", ".cr2", ".cr3", ".crw", ".arw", ".srf", ".sr2", ".raf", ".orf", ".rw2", ".pef", ".srw", ".x3f",
+  ".jpg", ".jpeg", ".jpe", ".png", ".tif", ".tiff", ".dng", ".heic", ".heif", ".hif", ".avif", ".jxl", ".psd", ".psb",
+  ".nef", ".nrw", ".cr2", ".cr3", ".crw", ".arw", ".srf", ".sr2", ".raf", ".orf", ".ori", ".rw2", ".rwl", ".pef", ".ptx", ".srw", ".x3f",
+  ".3fr", ".fff", ".ari", ".bay", ".cap", ".iiq", ".eip", ".dcr", ".dcs", ".drf", ".k25", ".kdc", ".erf", ".gpr", ".mdc", ".mef", ".mos", ".mrw", ".pxn", ".raw",
 ]);
 
 /** The plugin's export folder: <temp>\LrC-AVG\exports. */

@@ -1,6 +1,6 @@
 ---
 name: lrc-avg-checks
-description: LrC-AVG acceptance checks, probes, spike runs, Deck builds and the Phase 9 setup/clean-room/sandbox commands, with what each needs (Lightroom in Develop, Claude Desktop quit, plugin version) and its report path. Use before running, writing or explaining any `npm run phase<n>:check`, `*:probe`, `deck:*`, `masks:*`, `setup:*`, `cleanroom`, `sandbox:check`, `goldens` or `preset:*` command.
+description: LrC-AVG acceptance checks, probes, spike runs, Deck builds and the Phase 9 setup/clean-room/sandbox commands, with what each needs (Lightroom in Develop, Claude Desktop quit, plugin version) and its report path. Use before running, writing or explaining any `npm run phase<n>:check`, `*:probe`, `deck:*`, `masks:*`, `setup:*`, `cleanroom`, `sandbox:check`, `goldens` or `preset:*` command, and before writing or editing any report under `docs\reports\`.
 ---
 
 # LrC-AVG checks and probes (PowerShell, repo root)
@@ -49,3 +49,18 @@ npm run sandbox:check       # Phase 9: the unsigned setup in Windows Sandbox (ne
 npm run phase9:local        # Phase 9 local-install check: 0.99.0 + 1.0.0 setups, park, install, Lightroom y/n, a Claude Desktop chat, upgrade, uninstall twice, restore; stops loudly on a failed step; resumes (-- --new; -- --quick skips the upgrade and the second uninstall) (docs\reports\phase9\local-install.md)
 npm run phase9:local -- --download   # Phase 9 run 2: the setup Jim downloads from the GitHub release instead of the local builds; checks the Mark of the Web and SHA256SUMS.txt, asks about SmartScreen; skips the upgrades; state download-state.json (docs\reports\phase9\PHASE9.md)
 ```
+
+## Reports
+
+Moved out of `.claude\rules\02-sourcing.md` and `04-workflow.md` so it loads only when needed. The sourcing markers in `02-sourcing.md` apply to every line of a report.
+
+- The repo copy lives at `docs\reports\<phase>\<id>.md`, where Jim fills in "Observed". When a report is final, copy it to the vault `C:\Users\jimbe\Documents\Obsidian Vault\Projects\LrC_Autonomous_Gateway\Reports\` (same file name, under a phase subfolder) and keep both identical. If they ever differ, the vault copy wins.
+- Sections, in order:
+  1. Front matter: `report`, `phase`, `status` (`template` | `observed` | `accepted`), `authored_by` (who wrote each part), `date`.
+  2. **Purpose**: the question the spike or phase answers, and the PHASES.md go/conditional/no-go rule, quoted.
+  3. **Harness**: the files involved and how to run them (link the README).
+  4. **Pre-run findings (Claude Code)**: checks Claude Code ran itself, each with its handle.
+  5. **Observed (Jim)**: filled by Jim only; raw numbers and pasted output, screenshot paths.
+  6. **Numbers**: the report fields the directive asks for, filled from the Observed section.
+  7. **Verdict**: go / conditional / no-go, decided by Jim; a script's suggested verdict is labelled as a suggestion.
+  8. **Consequences / open questions**: which decisions (AVG-0xx) or docs change, and what stays `[unverified]`.

@@ -16,6 +16,7 @@ From upstream commits after the snapshot (plugin 0.10.0, GitHub issue #60), rewr
 | `KeywordTree.lua`, `Library.lua` (`setKeywords`, `listKeywords`) | `KeywordTree.lua`, `HandlerKeywords.lua`, `HandlerOrganization.lua` at `11c0b93` | Keyword paths with `\|`, missing levels created one write gate per depth, case-aside matching, the sorted depth-first walk. |
 | `Library.lua` (`setGps`) | `HandlerMetadata.lua` at `9ba2ed6` | `setRawMetadata("gps", { latitude, longitude })` in a write gate, with range checks. |
 | `Sockets.lua` (`logBindFailure`) | `PluginInfoProvider.lua` at `923f27d` | The throttled log line for a socket that failed to open. |
+| `Preview.lua` (`thumbnailPreview`, issue #216) | `HandlerPreview.lua` at `1040453` | `requestJpegThumbnail` held until its first callback, polled with `LrTasks.sleep`, within a 20 s wait. |
 
 The engine's derived files are listed in `engine\THIRD_PARTY_NOTICES.md`.
 

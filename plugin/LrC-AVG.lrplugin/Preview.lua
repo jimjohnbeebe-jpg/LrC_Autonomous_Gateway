@@ -19,6 +19,7 @@ local LrDate = import 'LrDate'
 local LrExportSession = import 'LrExportSession'
 local LrFileUtils = import 'LrFileUtils'
 local LrPathUtils = import 'LrPathUtils'
+local LrTasks = import 'LrTasks'
 local LrUUID = import 'LrUUID'
 
 local Develop = require 'Develop'
@@ -85,6 +86,66 @@ function Preview.exportPreview(payload)
         end
     end
     return fail("export_failed", "the export wrote no JPEG into " .. dir, true)
+end
+
+-- Bridge command thumbnail_preview (issue #216, lr_get_preview quality "fast"): Lightroom's own cached
+-- preview through photo:requestJpegThumbnail, written as a JPEG into a new folder under Preview.directory()
+-- like export_preview, so the engine takes it the same way. The SDK returns "the smallest preview that
+-- satisfies either" size, possibly larger than asked, and calls back with the JPEG data or nil and an error;
+-- the request object must be held until the callback fires [handle: D:\Developer\LightRoom Classic Dev
+-- Kit\API Reference\modules\LrPhoto.html, requestJpegThumbnail]. It may be stale: after a write spike S1 got
+-- no image within 30 s, every request answered "error loading thumb" [handle: docs\reports\phase0\S1.md
+-- Run 2], and Automaat says to wait about 3.5 s after a photo enters Develop and fetch twice [upstream claim:
+-- Automaat/lightroom-mcp 1040453 CLAUDE.md:100]. Here the first callback wins (as Automaat's HandlerPreview.lua
+-- getPhotoPreview does); a failure or no callback within THUMBNAIL_WAIT_SECONDS is refused, and the engine
+-- falls back to export_preview. No write gate: nothing is written to the catalog.
+
+-- Under the engine's 30 s command timeout, so a stuck request is refused here [inference: Automaat's 20 s, HandlerPreview.lua:19].
+Preview.THUMBNAIL_WAIT_SECONDS = 20
+-- Requests whose callback had not fired when the wait ended, held until it fires (rule 03).
+local unanswered = {}
+
+local function requestThumbnail(photo, longEdge)
+    local state = { done = false }
+    local request = photo:requestJpegThumbnail(longEdge, longEdge, function(data, reason)
+        if state.done then return end
+        state.done, state.data, state.reason = true, data, reason
+        unanswered[state] = nil
+    end)
+    if not state.done then unanswered[state] = request end -- the callback may have fired already
+    local deadline = LrDate.currentTime() + Preview.THUMBNAIL_WAIT_SECONDS
+    while not state.done and LrDate.currentTime() < deadline do
+        LrTasks.sleep(0.05)
+    end
+    return state
+end
+
+function Preview.thumbnailPreview(payload)
+    local longEdge = payload.long_edge
+    if not isWhole(longEdge, Preview.MIN_LONG_EDGE, Preview.MAX_LONG_EDGE) then
+        return fail("bad_request", string.format("long_edge must be a whole number from %d to %d", Preview.MIN_LONG_EDGE, Preview.MAX_LONG_EDGE))
+    end
+    local _, photo, uuid, err = Develop.target(payload)
+    if err then return nil, err end
+
+    local t0 = LrDate.currentTime()
+    local state = requestThumbnail(photo, longEdge)
+    local waitMs = (LrDate.currentTime() - t0) * 1000
+    if not state.done then
+        return fail("thumbnail_timeout", string.format("Lightroom sent no thumbnail within %d s", Preview.THUMBNAIL_WAIT_SECONDS), true)
+    end
+    if type(state.data) ~= "string" or #state.data == 0 then
+        return fail("thumbnail_failed", "Lightroom sent no thumbnail: " .. tostring(state.reason or "no image data"), true)
+    end
+
+    local dir = LrPathUtils.child(Preview.directory(), LrUUID.generateUUID())
+    LrFileUtils.createAllDirectories(dir)
+    local file = LrPathUtils.child(dir, "thumbnail.jpg")
+    local fh, ioErr = io.open(file, "wb")
+    if not fh then return fail("thumbnail_failed", "cannot write the thumbnail: " .. tostring(ioErr), true) end
+    fh:write(state.data)
+    fh:close()
+    return { uuid = uuid, path = file, export_ms = waitMs }
 end
 
 return Preview

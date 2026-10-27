@@ -19,6 +19,15 @@ Three commits made upstream after the snapshot were rewritten into this project'
 | `9ba2ed613bfef1a1c76b89404694632bde04deaa` (#247, "add set_gps tool") | Writing a photo's position with `setRawMetadata("gps", { latitude, longitude })`, range-checked | `src/mcp/tools-catalog.ts`, `src/mcp/defs-catalog.ts` (`lr_set_gps`), `src/library/write.ts`; plugin `Library.lua` |
 | `923f27d29a61f66b4690ee82a2a8373d01544a9d` (#236, "diagnose hijacked plugin ports"), the plugin half only | Logging a socket's "failed to open", throttled to once per 10 s per socket, naming the port and the likely holder | plugin `Sockets.lua` |
 
+### Issue #216 (metrics and preview parity), from upstream commit `1040453`
+
+Rewritten, not copied, in this project's patterns (sharp decodes; the preview crosses as a file):
+
+| Upstream file at `1040453` | What was taken | Files here |
+|---|---|---|
+| `server/src/photo-stats.ts` (`photoStats`) | The sharpness definition: four-neighbour Laplacian variance of the Rec. 709 luma after area resampling to a 512 px long edge | `src/metrics/sharpness.ts` |
+| `plugin/LightroomMCP.lrplugin/HandlerPreview.lua` | The image limits (3.5 MB, 2000 px) checked against `src/mcp/image-cap.ts`; the thumbnail request held until its first callback, with a 20 s wait | `src/mcp/image-cap.ts`, plugin `Preview.lua` (`thumbnailPreview`) |
+
 npm dependencies keep their own licences; they are listed with their versions in `docs\DEPENDENCIES.md`.
 
 ## Automaat/lightroom-mcp licence

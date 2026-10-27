@@ -28,6 +28,10 @@ import { measureImage, type Metrics, type Region } from "../metrics/index.js";
 export const PREVIEW_SOURCE = "export";
 /** An export took ~2.6 s at 1600 px in S1 [handle: docs\reports\phase0\S1.md]; allow for a slow first one. */
 const EXPORT_TIMEOUT_MS = 60000;
+/** thumbnail_preview: over the plugin's own 20 s wait (Preview.lua THUMBNAIL_WAIT_SECONDS), so the plugin's refusal arrives first. */
+const THUMBNAIL_TIMEOUT_MS = 30000;
+/** Where a preview came from: the exact export (the default), or Lightroom's cached preview (fast, possibly stale; issue #216). */
+export type PreviewSource = typeof PREVIEW_SOURCE | "thumbnail";
 
 export function defaultPreviewDir(): string {
   return path.join(os.tmpdir(), "LrC-AVG", "previews");
@@ -51,7 +55,7 @@ export class PreviewError extends Error {
  * the selected photo; `photoUuid` (plugin 0.4.0, lr_sync_series) exports the photo with that uuid,
  * selected or not, and leaves the selection alone (engine\src\bridge\protocol.ts Target). Not both.
  */
-export type PreviewRequest = { longEdge: number; quality: number; targetUuid?: string; photoUuid?: string; regions?: readonly Region[] };
+export type PreviewRequest = { longEdge: number; quality: number; targetUuid?: string; photoUuid?: string; regions?: readonly Region[]; fast?: boolean };
 
 export type RenderedPreview = {
   uuid: string;
@@ -62,11 +66,11 @@ export type RenderedPreview = {
   sha256: string;
   /** False when the export was passed on as Lightroom wrote it. */
   reencoded: boolean;
-  source: typeof PREVIEW_SOURCE;
+  source: PreviewSource;
   metrics: Metrics;
   rendered_at: string;
   timings: {
-    /** The export inside the plugin (LrExportSession). */
+    /** The export inside the plugin (LrExportSession); for a thumbnail, the wait for Lightroom's callback. */
     export_ms: number;
     /** The export_preview command, sent to answered, as the engine saw it. */
     command_ms: number;
@@ -125,7 +129,10 @@ export class PreviewService {
       request.photoUuid !== undefined
         ? { ...size, photo_uuid: request.photoUuid }
         : { ...size, ...(request.targetUuid !== undefined ? { target_uuid: request.targetUuid } : {}) };
-    const res = await this.client.request("export_preview", payload, { timeoutMs: this.exportTimeoutMs });
+    const { quality: _quality, ...thumbnail } = payload;
+    const res = request.fast
+      ? await this.client.request("thumbnail_preview", thumbnail, { timeoutMs: THUMBNAIL_TIMEOUT_MS })
+      : await this.client.request("export_preview", payload, { timeoutMs: this.exportTimeoutMs });
     const commandMs = ms(started);
 
     const fileStarted = performance.now();
@@ -164,7 +171,7 @@ export class PreviewService {
       bytes: jpeg.length,
       sha256: createHash("sha256").update(jpeg).digest("hex"),
       reencoded,
-      source: PREVIEW_SOURCE,
+      source: request.fast ? "thumbnail" : PREVIEW_SOURCE,
       metrics,
       rendered_at: new Date().toISOString(),
       timings: { export_ms: Math.round(res.export_ms * 10) / 10, command_ms: commandMs, file_ms: fileMs, metrics_ms: metricsMs, total_ms: ms(started) },

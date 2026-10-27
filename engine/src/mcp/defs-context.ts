@@ -13,6 +13,10 @@ const previewArgs = z.object({
   target: sessionTarget,
   region: box.optional().describe(`return a crop of this box {x, y, w, h} in ${FRAME}, exported large enough to show it at up to 100 %; see effective_scale`),
   uuid: z.string().min(1).optional().describe("render this photo (a uuid from lr_search_photos, lr_get_selected_photos or lr_import_photos), selected or not; the selection is not touched; not with session_id"),
+  quality: z
+    .enum(["exact", "fast"])
+    .optional()
+    .describe('"exact" (default): the export, about 3 s. "fast": Lightroom\'s cached preview, quicker but possibly stale (source "thumbnail", stale_possible true); for browsing, not for judging an edit; not with session_id, target or region'),
 });
 const metricsArgs = z.object({ session_id: sessionId.optional(), target: sessionTarget });
 

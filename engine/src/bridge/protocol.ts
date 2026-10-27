@@ -86,6 +86,8 @@ export type CommandPayloads = {
   apply_settings: Target & { settings: Record<string, unknown>; history_name: string; put_back?: boolean };
   /** long_edge in pixels; quality 0-100 (the plugin converts it to the export setting's scale). */
   export_preview: Target & { long_edge: number; quality: number };
+  /** Issue #216: Lightroom's cached preview of at least long_edge (it may be larger, and stale), written as a file like export_preview. */
+  thumbnail_preview: Target & { long_edge: number };
   create_snapshot: Target & { name: string };
   apply_snapshot: Target & { snapshot_id: string };
   /** target_uuid is required here: the selected photo must be the master (PRD section 6.6 step 1). 2-4 names, each "AVG …". */

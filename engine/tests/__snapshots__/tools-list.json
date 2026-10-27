@@ -82,6 +82,14 @@
           "description": "render this photo (a uuid from lr_search_photos, lr_get_selected_photos or lr_import_photos), selected or not; the selection is not touched; not with session_id",
           "type": "string",
           "minLength": 1
+        },
+        "quality": {
+          "description": "\"exact\" (default): the export, about 3 s. \"fast\": Lightroom's cached preview, quicker but possibly stale (source \"thumbnail\", stale_possible true); for browsing, not for judging an edit; not with session_id, target or region",
+          "type": "string",
+          "enum": [
+            "exact",
+            "fast"
+          ]
         }
       }
     },

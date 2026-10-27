@@ -51,7 +51,11 @@ What it does not test: whether a declared version hides **API functions** (the o
 
 ### Run 1 (plugin as loaded, declared 13.0)
 
-_Jim ran `npm run sdkver:check` on ____, Lightroom ____, plugin ____, and said "sdkver run 1 done". Claude Code collects the files into `docs\reports\phase11\SDKVER\run1\`. Left blank until then._
+Jim ran `npm run sdkver:check` from `.claude\worktrees\lr-sdk-version` at `f52c41a` on 2026-10-27 04:00 UTC (2026-10-26 local), Lightroom Classic 15.6, plugin 1.3.0, and said "sdkver run 1 done". Claude Code collected the files into `docs\reports\phase11\SDKVER\run1\` (the run, its 31 dumps, and the first attempt's FAILED record). The two bridge logs, about 4.8 MB each, stay in `%TEMP%\LrC-AVG\sdkver\` (logs are not committed, rule 04).
+
+- **First attempt, 04:00:00Z: FAILED**, "could not connect to Lightroom (127.0.0.1:8765: ECONNREFUSED)" [handle: `run1\sdkver_failed_2026-10-27T04-00-00-474Z.json`]. The plugin's `process_started_at` in the next attempt is 04:00:22Z, so the bridge was not listening yet at 04:00:00 `[inference]`. Nothing was saved, as the harness intends.
+- **Second attempt, 04:00:32Z: WORKED** [handle: `run1\sdkver_13.0_2026-10-27T04-00-32-563Z.json`, `headline` "WORKED", `errors` `[]`]. `hello.sdk_declared` 13, `info_lua.sdk` 15.2, so one `NOTE:` line, as the README expects for run 1. 31 photos read, 0 skipped (12 raw, 19 rendered).
+- 12 keys are new against the pinned file: `CropConstrainAspectRatio`, `IncrementalTemperature`, `IncrementalTint`, `RemoveAreas`, `RetouchAreas`, `UprightFourSegments_0`, `UprightTransform_0` to `_5` [handle: same file, `new_vs_pinned`]. These are under 13.0, so the declared version does not explain them. They come from photo states the five pinned dumps lack (Pre-run findings, pinned-file bullet) `[inference]`.
 
 ### Run 2 (after Reload Plug-in, declared ____)
 
@@ -61,14 +65,14 @@ _Jim reloaded the plugin and ran `npm run sdkver:check` on ____, and said "sdkve
 
 | Field | Run 1 (A) | Run 2 (B) |
 |---|---|---|
-| Declared `LrSdkVersion` (`hello.sdk_declared`) | | |
-| `NOTE:` lines about Info.lua (none / text) | | |
-| Lightroom Classic (`lrc_version`) | | |
-| Plugin version | | |
-| `process_started_at` | | |
-| Photos read ("fixtures") | | |
-| Keys per photo (file: count) | | |
-| Keys new against the pinned file | | |
+| Declared `LrSdkVersion` (`hello.sdk_declared`) | 13 | |
+| `NOTE:` lines about Info.lua (none / text) | 1: the loaded plugin declares 13.0, the worktree's `Info.lua` 15.2 (expected) | |
+| Lightroom Classic (`lrc_version`) | 15.6 | |
+| Plugin version | 1.3.0 | |
+| `process_started_at` | 2026-10-27T04:00:22Z | |
+| Photos read ("fixtures") | 31 (12 raw, 19 rendered), 0 skipped | |
+| Keys per photo (file: count) | 172: 16 rendered photos; 173-177: 10 photos; 180-183: 5 photos (`_DSC0103.NEF (Copy 1)` 183, `PICT0019.DNG` 182). Full list in `run1\sdkver_13.0_*.json` `run.photos[].key_types` | |
+| Keys new against the pinned file | 12 (listed in Observed, run 1) | |
 | Photos in one run only | n/a | |
 | Keys only under A | n/a | |
 | Keys only under B | n/a | |

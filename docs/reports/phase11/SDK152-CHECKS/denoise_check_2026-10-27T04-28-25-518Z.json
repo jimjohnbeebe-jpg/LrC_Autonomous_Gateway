@@ -1,0 +1,70 @@
+{
+  "check": "denoise-check",
+  "started": "2026-10-27T04-28-25-518Z",
+  "node": "v24.11.1",
+  "engine_version": "1.3.0",
+  "photos": [
+    {
+      "uuid": "8B90F81E-4CDF-42D5-A5B6-3B57671B7646",
+      "filename": "20250413-_OZ81430.NEF"
+    },
+    {
+      "uuid": "CB7AF747-BE2A-47A3-9BDB-94777CFAA1BE",
+      "filename": "20260110-_Z8A0138-DxO_DeepPRIME XD3.dng"
+    }
+  ],
+  "filters_before": [
+    [],
+    []
+  ],
+  "steps": [
+    {
+      "step": "first Denoise",
+      "expect": [
+        "applied",
+        "amount_changed"
+      ],
+      "answers": [
+        {
+          "uuid": "8B90F81E-4CDF-42D5-A5B6-3B57671B7646",
+          "status": "applied",
+          "snapshot": {
+            "id": "2675DB79-A166-40A2-9B3B-0CFCE2AD506B",
+            "name": "AVG denoise:check before first Denoise"
+          },
+          "ms": 13840
+        }
+      ]
+    },
+    {
+      "step": "same amount again",
+      "expect": [
+        "unchanged"
+      ],
+      "answers": []
+    },
+    {
+      "step": "a new amount",
+      "expect": [
+        "amount_changed"
+      ],
+      "answers": []
+    }
+  ],
+  "errors": [
+    "disconnected: bridge dropped: heartbeat: no message from the plugin for 6139 ms"
+  ],
+  "put_back": [
+    {
+      "uuid": "8B90F81E-4CDF-42D5-A5B6-3B57671B7646",
+      "ok": false,
+      "why": "not_connected: bridge is connecting"
+    },
+    {
+      "uuid": "CB7AF747-BE2A-47A3-9BDB-94777CFAA1BE",
+      "ok": false,
+      "why": "no snapshot was taken on this photo"
+    }
+  ],
+  "headline": "FAILED"
+}

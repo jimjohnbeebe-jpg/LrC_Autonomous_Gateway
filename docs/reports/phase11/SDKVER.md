@@ -1,7 +1,7 @@
 ---
 report: SDKVER
 phase: "11"
-status: template
+status: observed
 authored_by: "Claude Code (purpose, harness, pre-run findings, steps); Jim (the two runs, Observed, verdict)"
 date: 2026-10-26
 ---
@@ -57,32 +57,37 @@ Jim ran `npm run sdkver:check` from `.claude\worktrees\lr-sdk-version` at `f52c4
 - **Second attempt, 04:00:32Z: WORKED** [handle: `run1\sdkver_13.0_2026-10-27T04-00-32-563Z.json`, `headline` "WORKED", `errors` `[]`]. `hello.sdk_declared` 13, `info_lua.sdk` 15.2, so one `NOTE:` line, as the README expects for run 1. 31 photos read, 0 skipped (12 raw, 19 rendered).
 - 12 keys are new against the pinned file: `CropConstrainAspectRatio`, `IncrementalTemperature`, `IncrementalTint`, `RemoveAreas`, `RetouchAreas`, `UprightFourSegments_0`, `UprightTransform_0` to `_5` [handle: same file, `new_vs_pinned`]. These are under 13.0, so the declared version does not explain them. They come from photo states the five pinned dumps lack (Pre-run findings, pinned-file bullet) `[inference]`.
 
-### Run 2 (after Reload Plug-in, declared ____)
+### Run 2 (after Reload Plug-in, declared 15.2)
 
-_Jim reloaded the plugin and ran `npm run sdkver:check` on ____, and said "sdkver run 2 done". Files in `docs\reports\phase11\SDKVER\run2\`. Left blank until then._
+Jim reloaded the plugin, ran `npm run sdkver:check` from `D:\Developer\LrC_Autonomous_Gateway` at `ec2adbb` on 2026-10-27 04:21 UTC (2026-10-26 local), and said "sdkver run 2 done". Claude Code collected the run and its 29 dumps into `docs\reports\phase11\SDKVER\run2\`. The bridge log stays in `%TEMP%\LrC-AVG\sdkver\`.
+
+- **WORKED** [handle: `run2\sdkver_15.2_2026-10-27T04-21-17-106Z.json`, `headline` "WORKED", `errors` `[]`]. `hello.sdk_declared` 15.2, `info_lua.sdk` 15.2, and no `NOTE:` line. The Reload Plug-in made Lightroom read the new `Info.lua`, and `process_started_at` moved from 04:00:22Z to 04:19:59Z [handle: `hello` in both run files]. This answers the open question under "Consequences" for this Lightroom.
+- 29 photos read, 0 skipped (12 raw, 17 rendered). The two photos missing from run 2, `20260907-S10-tiff16.tif` and `20260907-S10-tiff32.tif`, were removed from the catalog by Jim between the runs [stated: Jim, 2026-10-26, "Yes, I removed them"]. After run 2, a read by uuid answered `unknown_photo` for both [handle: a read-only bridge script run by Claude Code, 2026-10-26].
+- **Comparison with run 1 on the 29 shared photos:** no key only under 13.0, none only under 15.2, no type changed, no value changed [handle: same file, `comparison`]. The suggestion line: "the same keys, with the same types, under 13.0 and 15.2 on 29 photos: the declared version hid none of them."
+- The same 12 keys as in run 1 are new against the pinned file.
 
 ## Numbers
 
 | Field | Run 1 (A) | Run 2 (B) |
 |---|---|---|
-| Declared `LrSdkVersion` (`hello.sdk_declared`) | 13 | |
-| `NOTE:` lines about Info.lua (none / text) | 1: the loaded plugin declares 13.0, the worktree's `Info.lua` 15.2 (expected) | |
-| Lightroom Classic (`lrc_version`) | 15.6 | |
-| Plugin version | 1.3.0 | |
-| `process_started_at` | 2026-10-27T04:00:22Z | |
-| Photos read ("fixtures") | 31 (12 raw, 19 rendered), 0 skipped | |
-| Keys per photo (file: count) | 172: 16 rendered photos; 173-177: 10 photos; 180-183: 5 photos (`_DSC0103.NEF (Copy 1)` 183, `PICT0019.DNG` 182). Full list in `run1\sdkver_13.0_*.json` `run.photos[].key_types` | |
-| Keys new against the pinned file | 12 (listed in Observed, run 1) | |
-| Photos in one run only | n/a | |
-| Keys only under A | n/a | |
-| Keys only under B | n/a | |
-| Keys with another type | n/a | |
-| Values that differ on shared keys | n/a | |
-| Suggestion line | n/a | |
+| Declared `LrSdkVersion` (`hello.sdk_declared`) | 13 | 15.2 |
+| `NOTE:` lines about Info.lua (none / text) | 1: the loaded plugin declares 13.0, the worktree's `Info.lua` 15.2 (expected) | none |
+| Lightroom Classic (`lrc_version`) | 15.6 | 15.6 |
+| Plugin version | 1.3.0 | 1.3.0 |
+| `process_started_at` | 2026-10-27T04:00:22Z | 2026-10-27T04:19:59Z |
+| Photos read ("fixtures") | 31 (12 raw, 19 rendered), 0 skipped | 29 (12 raw, 17 rendered), 0 skipped |
+| Keys per photo (file: count) | 172: 16 rendered photos; 173-177: 10 photos; 180-183: 5 photos (`_DSC0103.NEF (Copy 1)` 183, `PICT0019.DNG` 182). Full list in `run1\sdkver_13.0_*.json` `run.photos[].key_types` | 172: 15 rendered photos; the other 14 photos as in run 1. The two removed TIFFs had 172 and 176 |
+| Keys new against the pinned file | 12 (listed in Observed, run 1) | the same 12 |
+| Photos in one run only | n/a | 2, only in A: the two S10 TIFFs (removed by Jim) |
+| Keys only under A | n/a | 0 |
+| Keys only under B | n/a | 0 |
+| Keys with another type | n/a | 0 |
+| Values that differ on shared keys | n/a | 0 |
+| Suggestion line | n/a | "the declared version hid none of them" (29 photos) |
 
 ## Verdict
 
-_Jim's. Blank until both runs are in. A script's suggestion is labelled as such: "Go" if the key sets are the same, "conditional" if keys only under B, "no-go for the new value" if keys only under A._
+_Jim's; not given yet. The script's suggestion: **Go**, because the keys and types are the same under 13.0 and 15.2 on the 29 photos both runs read. This is a suggestion only._
 
 ## Consequences / open questions
 

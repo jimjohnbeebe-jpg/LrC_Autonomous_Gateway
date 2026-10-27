@@ -57,10 +57,12 @@ const IDLE_RELEASE_MS = 60000;
 const dev = devOverrides();
 /** Whether a session is open; set once the tools exist (the client and the gate are made first). */
 let sessionOpen = (): boolean => false;
+/** Until when a tool outside a session (lr_apply_denoise) asked for the session's allowance (issue #226). */
+let quietUntil = 0;
 const client = new BridgeClient({
   engineVersion: ENGINE_VERSION,
   log: say,
-  silenceAllowanceMs: () => (sessionOpen() ? SESSION_SILENCE_MS : 0),
+  silenceAllowanceMs: () => (sessionOpen() || Date.now() < quietUntil ? SESSION_SILENCE_MS : 0),
   ...dev.bridge,
 });
 const previews = new PreviewService(client);
@@ -99,6 +101,9 @@ const tools = new Tools({
   log: toolLog,
   onCallStart: () => gate.beginUse(),
   onCallEnd: () => gate.endUse(),
+  allowQuiet: () => {
+    quietUntil = Date.now() + SESSION_SILENCE_MS;
+  },
   deck: { log: say },
 });
 sessionOpen = () => (tools.sessionManager()?.current() ?? null) !== null;

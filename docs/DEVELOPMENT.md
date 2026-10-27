@@ -62,7 +62,7 @@ Development overrides are read from `LRC_AVG_*` environment variables: the ports
 npm run setup:build
 ```
 
-builds the unsigned `releaseLrC-AVG-Setup-<version>.exe` and `releaseSHA256SUMS.txt`: a clean engine build, the pinned Node.js (`tools/setup/node-pin.json`, each download checked by SHA-256), the engine with its production packages from the lockfile, the plugin, the notices, then the Tauri NSIS build with `hud/src-tauri/tauri.setup.conf.json` [handle: `tools/setup/build.ts:1-13`]. It needs Rust (rustup, MSVC) as `npm run deck:build` does. `-- --version 0.99.0` makes a test build under another version.
+builds the unsigned `release\LrC-AVG-Setup-<version>.exe` and `release\SHA256SUMS.txt`: a clean engine build, the pinned Node.js (`tools/setup/node-pin.json`, each download checked by SHA-256), the engine with its production packages from the lockfile, the plugin, the notices, then the Tauri NSIS build with `hud/src-tauri/tauri.setup.conf.json` [handle: `tools/setup/build.ts:1-13`]. It needs Rust (rustup, MSVC) as `npm run deck:build` does. `-- --version 0.99.0` makes a test build under another version.
 
 ### A release
 
@@ -87,8 +87,16 @@ writes the two release assets to `release\`: `lrc-avg-<version>.tgz` (the engine
 | `npm run phase1:check` … `npm run phase5:check`, `npm run wb:check`, `npm run offline:check`, `npm run phase8:check` | The acceptance checks against Lightroom (and Claude Desktop from Phase 2 on). Each one's steps and results are in its report under `docs\reports\` |
 | `npm run clients:probe` | Issue #155 R5: each installed AI client CLI (Claude Code, OpenCode, Hermes, Antigravity, Codex) started headless against the built engine and the Lightroom simulator, no Lightroom; run by Claude Code (`docs\reports\phase8.5\clients-probe.md`) |
 | `npm run clients:check` | Issue #155 R6: builds the Deck, then every installed client CLI (not Codex) edits the selected photo in Lightroom, T2-T7 with Jim's y/n, plus one Claude Desktop chat; resumes after a stop (`-- --new` starts over) (`docs\reports\phase8.5\clients.md`) |
+| `npm run develop:check` | Issue #214: the Develop parity tools (Auto, Reset, process version, snapshots, virtual copies, `lr_get_metadata raw`) on two raw virtual copies selected in Library (`docs\reports\phase11\DEVELOP-PARITY.md`) |
+| `npm run presets:check` | Issue #215: the six Develop preset tools on one selected virtual copy (`docs\reports\phase11\PRESET-PARITY.md`) |
+| `npm run stats:check` | Issue #216: `lr_get_photo_stats` on 2-20 selected photos, fast against exact previews (`docs\reports\phase11\METRICS-PARITY.md`) |
+| `npm run catalog:check` | Issue #218: the new catalog and metadata tools on one photo in a throwaway or copied catalog (`docs\reports\phase11\CATALOG-PARITY.md`) |
+| `npm run perf:check` | Issue #212: read-only timings of the catalog reads, p50/p95; `-- --label baseline` before the speed-up, `-- --label after` after it (`docs\reports\phase11\PERF.md`) |
+| `npm test` (`engine\tests\parity-map.test.ts`) | Issue #220: [`PARITY.md`](PARITY.md) has a row for every pinned upstream tool and names every registered `lr_*` tool; renewing the pin: [`UPSTREAM_SYNC.md`](UPSTREAM_SYNC.md) |
 | `node spikes\S1\measure.ts` | Spike scripts run directly (Node type stripping) |
 | `node engine\dist\mcp\main.js` | The stdio MCP server, as Claude Desktop starts it |
+
+The Lightroom checks of epic #207 parity batch 1, in the order Jim runs them: [`reports/phase11/PARITY-BATCH1-CHECKS.md`](reports/phase11/PARITY-BATCH1-CHECKS.md). `npm run package` also writes `release\lrc-avg-<version>.mcpb` (issue #219, `docs\reports\phase11\DISTRIBUTION.md`).
 
 ## Workflow
 

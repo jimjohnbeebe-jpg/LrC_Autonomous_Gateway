@@ -19,6 +19,12 @@ From upstream commits after the snapshot (plugin 0.10.0, GitHub issue #60), rewr
 | `Presets.lua` | `HandlerDevelop.lua` at `1040453` (preset handlers from `92b0b55`, the AI-mask note from `efce08f`) | Listing `developPresetFolders` and `getDevelopPresetsForPlugin` presets, a plain copy of `getSetting()`, `applyDevelopPreset` with `_PLUGIN` for a checkpoint and without `updateAISettings`, `addDevelopPresetForPlugin` refused over an existing name. |
 | `Preview.lua` (`thumbnailPreview`, issue #216) | `HandlerPreview.lua` at `1040453` | `requestJpegThumbnail` held until its first callback, polled with `LrTasks.sleep`, within a 20 s wait. |
 
+From upstream commit `05b7a39` (PR #288; GitHub issue #190, plugin 1.1.0), rewritten, not copied:
+
+| File in this plugin | Derived from | What was taken |
+|---|---|---|
+| `Denoise.lua` | `HandlerDevelop.lua` at `05b7a39` (`apply_denoise`) | AI Denoise through `LrDevelopController` on the photo active in Develop, one photo per command, the amount read back. |
+
 From upstream at `1040453` (2026-10-26; GitHub issue #214), rewritten, not copied:
 
 | File in this plugin | Derived from | What was taken |

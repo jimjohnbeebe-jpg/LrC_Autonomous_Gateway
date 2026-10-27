@@ -1,11 +1,13 @@
 ---
 name: lrc-avg-checks
-description: LrC-AVG acceptance checks, probes, spike runs, Deck builds and the Phase 9 setup/clean-room/sandbox commands, with what each needs (Lightroom in Develop, Claude Desktop quit, plugin version) and its report path. Use before running, writing or explaining any `npm run phase<n>:check`, `*:probe`, `deck:*`, `masks:*`, `setup:*`, `cleanroom`, `sandbox:check`, `goldens`, `preset:*` or `presets:check` command, and before writing or editing any report under `docs\reports\`.
+description: LrC-AVG acceptance checks, probes, spike runs, Deck builds and the Phase 9 setup/clean-room/sandbox commands, with what each needs (Lightroom in Develop, Claude Desktop quit, plugin version) and its report path. Use before running, writing or explaining any `npm run phase<n>:check`, `*:probe`, `deck:*`, `masks:*`, `setup:*`, `cleanroom`, `sandbox:check`, `goldens`, `preset:*`, `presets:check`, `develop:check`, `stats:check`, `catalog:check` or `perf:check` command, and before writing or editing any report under `docs\reports\`.
 ---
 
 # LrC-AVG checks and probes (PowerShell, repo root)
 
 Moved out of `CLAUDE.md` so it loads only when needed. The everyday commands (install, build, test, typecheck, arch:check/graph, schemas, package, desktop:install) stay in `CLAUDE.md`.
+
+Epic #207 parity batch 1 (`develop:check`, `presets:check`, `stats:check`, `catalog:check`, `perf:check`, and the `DISTRIBUTION.md` steps): the order Jim runs them in is `docs\reports\phase11\PARITY-BATCH1-CHECKS.md`.
 
 ```powershell
 node spikes\S1\measure.ts   # spike scripts run directly (Node type stripping)
@@ -34,7 +36,7 @@ npm run masks:crop          # issue #179 probe: radials at three preview points 
 npm run effects:probe       # issue #125 probe: post-crop vignette and grain limits on a raw and a rendered "fixtures" photo, Lightroom in Develop, Claude Desktop quit; puts both back (docs\reports\phase8.5\effects.md)
 npm run s14:check           # Phase 10 row 1 spike: tone curve (#187), grading wheels, HSL bands, B&W mixer and calibration keys on the "fixtures" NEF and JPEG plus two sharp-made charts (imported into "LrC-AVG S14 charts"), Lightroom in Develop, two y/n, plugin 0.17.0, Claude Desktop quit; puts all four back (spikes\S14\README.md, docs\reports\phase10\S14.md)
 npm run curve:probe         # issue #187 / Phase 10 row 2 probe on 20220828-_DSC1159-HDR.dng selected in Develop (in the open collection): #187's lr_step through a real engine session (taken or refused, and if refused whether the photo is back at its pre-step settings), the same curve written straight through the bridge, then a 3-point lift and one y/n on the Point Curve view; Claude Desktop quit; puts the photo back (docs\reports\phase10\curve-probe.md)
-npm run perf:check          # issue #212 Work 1: read-only timings (p50/p95 over N runs) of ping, search_photos with and without a filter, get_metadata, get_selection (max 500) and list_keywords; Lightroom open, plugin enabled, Claude Desktop quit; -- --label baseline|after --runs N; select 1,000 photos for the selection case (docseportsphase11PERF.md)
+npm run perf:check          # issue #212 Work 1: read-only timings (p50/p95 over N runs) of ping, search_photos with and without a filter, get_metadata, get_selection (max 500) and list_keywords; Lightroom open, plugin enabled, Claude Desktop quit; -- --label baseline|after --runs N; select 1,000 photos for the selection case (docs\reports\phase11\PERF.md)
 npm run sdkver:check        # issue #209: the full getDevelopSettings() keys of every "fixtures" photo, read only, stamped with the LrSdkVersion the loaded plugin declares; run twice, before and after the plugin declares another version (Reload Plug-in between), the second run diffs the two and lists keys new against the pinned file; Lightroom open, plugin enabled, Claude Desktop quit (spikes\SDKVER\README.md, docs\reports\phase11\SDKVER.md)
 npm run stall:check         # issue #174: Lightroom quit and restarted, 2 min plugin disabled, 2 min enabled, y/n each, then (issue #176) Reload Plug-in, both listeners back within 40 s (netstat), then Disable must stop the bridge; Claude Desktop quit (docs\reports\phase9\stall-174.md, docs\reports\phase9\upstream-ports.md)
 npm run masks:kinds         # issue #190: one colour range, brush and depth range mask written one at a time on one virtual copy in Develop, y/n each (depth skipped on a photo without depth data), plugin 0.16.0, Claude Desktop quit; puts the photo back (docs\reports\phase9\upstream-ports.md)

@@ -39,6 +39,18 @@ Rewritten, not copied, in this project's patterns (sharp decodes; the preview cr
 | `server/src/photo-stats.ts` (`photoStats`) | The sharpness definition: four-neighbour Laplacian variance of the Rec. 709 luma after area resampling to a 512 px long edge | `src/metrics/sharpness.ts` |
 | `plugin/LightroomMCP.lrplugin/HandlerPreview.lua` | The image limits (3.5 MB, 2000 px) checked against `src/mcp/image-cap.ts`; the thumbnail request held until its first callback, with a 20 s wait | `src/mcp/image-cap.ts`, plugin `Preview.lua` (`thumbnailPreview`) |
 
+### Issue #190 (PR #191, engine 1.1.0) and issue #219, from upstream PRs after the snapshot
+
+Rewritten, not copied; same MIT licence and copyright as below.
+
+| Upstream commit (PR) | What was taken | Files here |
+|---|---|---|
+| `336c77d` (#259, `get_photo_preview`) | A preview of any catalog photo by uuid, without selecting it | `src/mcp/tools-context.ts`, `src/preview/service.ts` (`lr_get_preview` `uuid`) |
+| `05b7a39` (#288, `apply_denoise`) | AI Denoise one photo at a time in Develop, the amount read back, about 10 s per photo | `src/mcp/tools-denoise.ts`; plugin `Denoise.lua` |
+| `2abacea` (#324) and `0e9efcb` (#334), range masks | The colour range and depth range component fields | `src/params/mask-range.ts`, `src/params/mask-table.ts` |
+| `d102ced` (#326, brush masks from strokes) | Brush components written from strokes, the radius as a fraction of the long edge | `src/params/mask-brush.ts`, `src/params/mask-table.ts` |
+| `server/src/skill-prompt.ts` at `1040453` (#219) | The shape of an MCP prompt that carries the usage text | `src/mcp/prompts.ts` |
+
 npm dependencies keep their own licences; they are listed with their versions in `docs\DEPENDENCIES.md`.
 
 ## Automaat/lightroom-mcp licence

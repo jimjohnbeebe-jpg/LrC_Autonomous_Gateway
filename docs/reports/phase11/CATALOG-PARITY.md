@@ -58,7 +58,7 @@ Four questions in the PowerShell window (the last two for row 9: no error dialog
 2. In Lightroom Classic: File > Open Catalog, open a throwaway catalog or a copy of one (not your real catalog). It needs at least one photo.
 3. File > Plug-in Manager, select LrC-AVG, click **Reload Plug-in**, close the dialog.
 4. In the Library grid, click one photo so that exactly one is selected.
-5. In PowerShell, from `D:\Developer\LrC_Autonomous_Gateway\.claude\worktrees\wf_48475b44-36a-4`:
+5. In PowerShell, from `D:\Developer\LrC_Autonomous_Gateway`:
 
    ```powershell
    npm run catalog:check

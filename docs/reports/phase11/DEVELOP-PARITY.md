@@ -48,7 +48,7 @@ What it does, in order:
 1. In PowerShell, update the repo and install:
    ```powershell
    cd D:\Developer\LrC_Autonomous_Gateway
-   git switch phase-11/develop-parity
+   git switch phase-11/parity-batch-1
    git pull
    npm install
    ```

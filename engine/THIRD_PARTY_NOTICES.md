@@ -19,6 +19,15 @@ Three commits made upstream after the snapshot were rewritten into this project'
 | `9ba2ed613bfef1a1c76b89404694632bde04deaa` (#247, "add set_gps tool") | Writing a photo's position with `setRawMetadata("gps", { latitude, longitude })`, range-checked | `src/mcp/tools-catalog.ts`, `src/mcp/defs-catalog.ts` (`lr_set_gps`), `src/library/write.ts`; plugin `Library.lua` |
 | `923f27d29a61f66b4690ee82a2a8373d01544a9d` (#236, "diagnose hijacked plugin ports"), the plugin half only | Logging a socket's "failed to open", throttled to once per 10 s per socket, naming the port and the likely holder | plugin `Sockets.lua` |
 
+### Develop parity (GitHub issue #214, epic #207)
+
+Rewritten from upstream at `1040453` (2026-10-26; PRs #405, #407, #410, #411, #412), not copied; same MIT licence and copyright as below.
+
+| Upstream | What was taken | Files here |
+|---|---|---|
+| `server/src/tool-contracts.ts` `apply_auto_adjustments`, `reset_develop_adjustments`, `set_process_version`, `list/create/apply/delete_develop_snapshot`, `create_virtual_copies` | The tools' scope: Auto Tone / Auto WB, Reset with `confirm`, Version 1-6 with masked downgrades refused, snapshots by id, up to 25 virtual copies with an optional name, per-photo outcomes within a time budget | `src/mcp/tools-develop.ts`, `src/mcp/tools-snapshots.ts`, `src/mcp/defs-develop.ts`; plugin `DevelopTools.lua`, `Snapshots.lua`, `Copies.lua` |
+| `plugin/LightroomMCP.lrplugin/DevelopSession.lua` | One photo at a time in Develop, the view (module, sources, selection) put back | plugin `DevelopSession.lua` (out of `Denoise.lua`, which ported PR #288 for issue #190) |
+
 npm dependencies keep their own licences; they are listed with their versions in `docs\DEPENDENCIES.md`.
 
 ## Automaat/lightroom-mcp licence

@@ -23,7 +23,22 @@ import { needPlugin, run, sessionTools, type ToolContext, type ToolOutput } from
 
 export type SetFlagArgs = { uuids: string[]; flag: FlagName };
 export type SetIptcArgs = { uuids: string[] } & { [F in keyof IptcText]?: string | undefined };
-export type GetMetadataArgs = { uuids: string[] };
+export type GetMetadataArgs = { uuids: string[]; raw?: boolean | undefined };
+
+/**
+ * raw: true (issue #214, upstream get_photo_metadata's develop settings, PR #347 [upstream claim]): the photo's
+ * getDevelopSettings() table as Lightroom sent it (`sdk`), and by canonical name where the map reads it (params\map.ts
+ * fromSdk); a photo the map refuses (a legacy process version, an unknown pipeline) has `settings` null and `settings_error`.
+ */
+async function developOf(ctx: ToolContext, uuid: string): Promise<Record<string, unknown>> {
+  const sdk = (await ctx.deps.client.request("get_settings", { photo_uuid: uuid })).settings;
+  try {
+    const r = ctx.deps.map.fromSdk(sdk);
+    return { process_version: r.process_version, pipeline: r.pipeline, settings: r.settings, sdk };
+  } catch (err) {
+    return { settings: null, settings_error: toToolError(err).body(), sdk };
+  }
+}
 
 export async function setFlag(ctx: ToolContext, args: SetFlagArgs): Promise<ToolOutput> {
   return run(ctx, "lr_set_flag", args, async () => {
@@ -82,6 +97,7 @@ export async function getMetadata(ctx: ToolContext, args: GetMetadataArgs): Prom
           ...(flag !== undefined ? { flag: flagName(flag) } : {}),
           ...(gps !== undefined ? { gps: gps === false ? null : gps } : {}),
           ...(stack !== undefined ? { stack: stack === false ? null : stack } : {}),
+          ...(args.raw === true ? { develop: await developOf(ctx, uuid) } : {}),
         });
       } catch (err) {
         const error = toToolError(err);

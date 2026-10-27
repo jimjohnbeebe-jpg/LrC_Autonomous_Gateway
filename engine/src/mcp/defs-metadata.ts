@@ -14,7 +14,13 @@ const text = (what: string) => z.string().max(MAX_TEXT).optional().describe(`the
 const iptcArgs = z
   .object({ uuids, title: text("title"), caption: text("caption (the description)"), headline: text("headline") })
   .refine((a) => TEXT_FIELDS.some((f) => a[f] !== undefined), "give at least one of title, caption, headline");
-const metadataArgs = z.object({ uuids });
+const metadataArgs = z.object({
+  uuids,
+  raw: z
+    .boolean()
+    .optional()
+    .describe("true: also each photo's Develop settings, `develop`: by setting name (`settings`, as lr_step takes them) and as Lightroom reports them (`sdk`, its own key names); default false"),
+});
 
 export const METADATA_DEFS: ToolDef[] = [
   {
@@ -42,7 +48,8 @@ export const METADATA_DEFS: ToolDef[] = [
       "Read the catalog metadata of photos named by uuid: title, caption, headline (\"\" for none), flag (pick, reject or none), " +
       "keywords (as paths, the form lr_set_keywords takes), gps ({latitude, longitude}, null for none) and stack (null outside one, else " +
       "position (1 = top), count, collapsed and top_uuid). Read these before a write so the user sees what will change. A photo Lightroom " +
-      `could not find is listed in \`failed\`; a part it could not read is left out and named in \`errors\`. ${NO_STACK_WRITE} Changes nothing.`,
+      `could not find is listed in \`failed\`; a part it could not read is left out and named in \`errors\`. With raw: true, also every Develop ` +
+      `setting (\`develop\`). ${NO_STACK_WRITE} Changes nothing.`,
     schema: metadataArgs,
     annotations: { readOnlyHint: true, openWorldHint: false },
     run: (tools, args) => tools.getMetadata(args as z.infer<typeof metadataArgs>),

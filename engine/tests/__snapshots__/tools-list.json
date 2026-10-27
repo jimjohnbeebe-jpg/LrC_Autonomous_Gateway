@@ -2043,7 +2043,7 @@
   {
     "name": "lr_get_metadata",
     "title": "Read photos' metadata",
-    "description": "Read the catalog metadata of photos named by uuid: title, caption, headline (\"\" for none), flag (pick, reject or none), keywords (as paths, the form lr_set_keywords takes), gps ({latitude, longitude}, null for none) and stack (null outside one, else position (1 = top), count, collapsed and top_uuid). Read these before a write so the user sees what will change. A photo Lightroom could not find is listed in `failed`; a part it could not read is left out and named in `errors`. Lightroom's plugin SDK cannot stack photos that are already in the catalog, so no tool makes or breaks a stack: use Photo > Stacking in Lightroom. Changes nothing.",
+    "description": "Read the catalog metadata of photos named by uuid: title, caption, headline (\"\" for none), flag (pick, reject or none), keywords (as paths, the form lr_set_keywords takes), gps ({latitude, longitude}, null for none) and stack (null outside one, else position (1 = top), count, collapsed and top_uuid). Read these before a write so the user sees what will change. A photo Lightroom could not find is listed in `failed`; a part it could not read is left out and named in `errors`. With raw: true, also every Develop setting (`develop`). Lightroom's plugin SDK cannot stack photos that are already in the catalog, so no tool makes or breaks a stack: use Photo > Stacking in Lightroom. Changes nothing.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -2056,6 +2056,10 @@
             "minLength": 1
           },
           "description": "the photos' uuids, 1-100 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "raw": {
+          "description": "true: also each photo's Develop settings, `develop`: by setting name (`settings`, as lr_step takes them) and as Lightroom reports them (`sdk`, its own key names); default false",
+          "type": "boolean"
         }
       },
       "required": [
@@ -2300,6 +2304,280 @@
       "readOnlyHint": false,
       "destructiveHint": false,
       "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_apply_auto",
+    "title": "Apply Lightroom's Auto",
+    "description": "Apply Lightroom's own Auto Tone and/or Auto white balance to photos named by uuid, as its Basic panel buttons do. Each photo's `status`: applied, unchanged (Auto gave the settings it had) or failed (`reason`). Use it as a baseline to compare against. Each photo is made the active one in Develop in turn; Lightroom's module, folder or collection and selection are put back after each. Each photo's result names what `changed` (by setting name; by Lightroom's own key names, `names: \"sdk\"`, when the photo's process version is older than this engine reads), with the `snapshot` taken just before, which puts it back; `undo` says how. Not while a session is open, and a photo a stopped session left open is refused. A call works for about 30 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling until `not_yet` is gone, and tell the user how far along it is. A call still busy at 50 seconds returns `pending` with `next`.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-100 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "tone": {
+          "description": "Lightroom's Auto Tone (Basic panel Auto): exposure, contrast, highlights, shadows, whites, blacks, and more",
+          "type": "boolean"
+        },
+        "white_balance": {
+          "description": "Lightroom's Auto white balance",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "uuids"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_reset",
+    "title": "Reset Develop settings",
+    "description": "Lightroom's Reset on photos named by uuid: every Develop setting back to Lightroom's default, which also clears the crop and the masks. Ask the user first and pass confirm: true. Each photo's `status`: reset or failed. Each photo is made the active one in Develop in turn; Lightroom's module, folder or collection and selection are put back after each. Each photo's result names what `changed` (by setting name; by Lightroom's own key names, `names: \"sdk\"`, when the photo's process version is older than this engine reads), with the `snapshot` taken just before, which puts it back; `undo` says how. Not while a session is open, and a photo a stopped session left open is refused. A call works for about 30 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling until `not_yet` is gone, and tell the user how far along it is. A call still busy at 50 seconds returns `pending` with `next`.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-100 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "confirm": {
+          "type": "boolean",
+          "const": true,
+          "description": "must be true: the user agreed to this change"
+        }
+      },
+      "required": [
+        "uuids",
+        "confirm"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_set_process_version",
+    "title": "Set the process version",
+    "description": "Set the process version (Version 1-6) of photos named by uuid, as Develop's Settings > Process does; updating an old photo to Version 6 lets the sessions edit it. A new version can change how the photo looks: ask the user first and pass confirm: true. A lower version on a photo with masks is refused (`status` skipped). Each photo's `status`: changed, unchanged, skipped or failed, with `previous` and `actual` (Lightroom's \"Version N\"). Each photo is made the active one in Develop in turn; Lightroom's module, folder or collection and selection are put back after each. Each photo's result names what `changed` (by setting name; by Lightroom's own key names, `names: \"sdk\"`, when the photo's process version is older than this engine reads), with the `snapshot` taken just before, which puts it back; `undo` says how. Not while a session is open, and a photo a stopped session left open is refused. A call works for about 30 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling until `not_yet` is gone, and tell the user how far along it is. A call still busy at 50 seconds returns `pending` with `next`.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-100 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 6,
+          "description": "Lightroom's process Version 1-6 (Settings > Process); 6 is the current one, and this engine edits photos at 6 and 5"
+        },
+        "confirm": {
+          "type": "boolean",
+          "const": true,
+          "description": "must be true: the user agreed to this change"
+        }
+      },
+      "required": [
+        "uuids",
+        "version",
+        "confirm"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_list_snapshots",
+    "title": "List a photo's snapshots",
+    "description": "List the Develop snapshots of a photo named by uuid: id and name; `by_avg` true for those LrC-AVG made (\"AVG …\", e.g. a session's \"AVG pre-session …\"); `session` names the session that puts the photo back with it (open, or left open by an engine that stopped). Changes nothing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the photo's uuid (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_create_snapshot",
+    "title": "Create a snapshot",
+    "description": "Save a photo's current Develop settings as a snapshot (Develop, Snapshots panel), named \"AVG <name>\". A name the photo already has is refused, nothing changed. Returns its id, for lr_apply_snapshot. Not while a session is open.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the photo's uuid (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "the snapshot's name; \"AVG \" is put in front unless it starts with it"
+        }
+      },
+      "required": [
+        "uuid",
+        "name"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_apply_snapshot",
+    "title": "Apply a snapshot",
+    "description": "Put a photo's Develop settings back to one of its snapshots (ids from lr_list_snapshots), replacing what it has now: ask the user first and pass confirm: true. A snapshot of the settings just before (`snapshot`) is taken first, so this can be undone; `changed` names what moved. Lightroom shows the photo in Develop meanwhile, then its module and selection are put back. Not while a session is open.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the photo's uuid (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "snapshot_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the snapshot's id, from lr_list_snapshots"
+        },
+        "confirm": {
+          "type": "boolean",
+          "const": true,
+          "description": "must be true: the user agreed to this change"
+        }
+      },
+      "required": [
+        "uuid",
+        "snapshot_id",
+        "confirm"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_delete_snapshot",
+    "title": "Delete a snapshot",
+    "description": "Delete one snapshot of a photo (id from lr_list_snapshots); the photo's settings do not change, but the snapshot cannot be brought back by a tool: ask the user first and pass confirm: true. A snapshot a session puts the photo back with is refused (SNAPSHOT_IN_USE). Not while a session is open.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the photo's uuid (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "snapshot_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the snapshot's id, from lr_list_snapshots"
+        },
+        "confirm": {
+          "type": "boolean",
+          "const": true,
+          "description": "must be true: the user agreed to this change"
+        }
+      },
+      "required": [
+        "uuid",
+        "snapshot_id",
+        "confirm"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_create_virtual_copies",
+    "title": "Create virtual copies",
+    "description": "Make one virtual copy of each photo named by uuid (up to 25), named copy_name or by Lightroom. Each photo's `copy_uuid` is the new copy, for the other tools; `status` copied or failed (`reason`). The photo is selected for the copy, then Lightroom's folder or collection and selection are put back. The masters do not change. Not while a session is open. A call works for about 30 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling until `not_yet` is gone, and tell the user how far along it is. A call still busy at 50 seconds returns `pending` with `next`.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 25,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-25 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "copy_name": {
+          "description": "the name of each new copy (Lightroom's Copy Name); omitted, Lightroom names it",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      },
+      "required": [
+        "uuids"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
       "openWorldHint": false
     }
   }

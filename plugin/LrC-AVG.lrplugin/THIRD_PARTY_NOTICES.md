@@ -17,6 +17,15 @@ From upstream commits after the snapshot (plugin 0.10.0, GitHub issue #60), rewr
 | `Library.lua` (`setGps`) | `HandlerMetadata.lua` at `9ba2ed6` | `setRawMetadata("gps", { latitude, longitude })` in a write gate, with range checks. |
 | `Sockets.lua` (`logBindFailure`) | `PluginInfoProvider.lua` at `923f27d` | The throttled log line for a socket that failed to open. |
 
+From upstream at `1040453` (2026-10-26; GitHub issue #214), rewritten, not copied:
+
+| File in this plugin | Derived from | What was taken |
+|---|---|---|
+| `DevelopSession.lua` (used by `Denoise.lua`) | `DevelopSession.lua` | One photo at a time in Develop: select it alone, retried, through All Photographs when outside the source; the module, sources and selection put back. |
+| `DevelopTools.lua` | `HandlerDevelop.lua` (`applyAutoAdjustments`, `resetDevelopAdjustments`, `setProcessVersion`) | Auto Tone / Auto WB with the settle wait (2 s, 1 s still, 8 s), Reset, `getProcessVersion`/`setProcessVersion` with "Version N" and the masked-downgrade refusal. |
+| `Snapshots.lua` | `HandlerSnapshots.lua` | Listing, applying in Develop and deleting snapshots by id, with the deletion read back. |
+| `Copies.lua` | `HandlerVirtualCopies.lua` | One virtual copy per photo with an optional name, the selection and source put back. |
+
 The engine's derived files are listed in `engine\THIRD_PARTY_NOTICES.md`.
 
 ## Automaat/lightroom-mcp licence

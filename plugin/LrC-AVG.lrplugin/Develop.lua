@@ -81,6 +81,8 @@ local function readSettings(catalog, photo)
     catalog:withReadAccessDo(function() settings = photo:getDevelopSettings() end)
     return settings
 end
+-- Presets.lua (issue #215) writes and reads back the same way.
+Develop.writeTarget, Develop.readSettings = writeTarget, readSettings
 
 local function findSnapshots(catalog, photo, field, value)
     local matches = {}

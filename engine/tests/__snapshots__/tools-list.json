@@ -1666,6 +1666,353 @@
     }
   },
   {
+    "name": "lr_list_presets",
+    "title": "List Develop presets",
+    "description": "List the Develop presets Lightroom has (built-in and the user's, scope \"lightroom\") and LrC-AVG checkpoints (scope \"plugin\", which the Develop Presets panel does not show), grouped by folder, each with its uuid. Filter by folder, scope or a part of the name; page with offset and limit (`next_offset`). Changes nothing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "folder": {
+          "description": "only this folder (preset group)",
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "description": "\"lightroom\" or \"plugin\" (checkpoints)",
+          "type": "string",
+          "enum": [
+            "lightroom",
+            "plugin"
+          ]
+        },
+        "query": {
+          "description": "only presets whose name contains this, case aside",
+          "type": "string",
+          "minLength": 1
+        },
+        "offset": {
+          "description": "skip this many (default 0)",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "limit": {
+          "description": "at most this many (default 200)",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        }
+      }
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_get_preset",
+    "title": "Read a Develop preset",
+    "description": "Read one preset's settings in canonical names (the names lr_sync_series and lr_create_checkpoint take), its file (`file`, `exportable`), the SDK keys no canonical name holds (`other_keys`), its masks and whether any is an AI mask. raw: true adds the SDK keys and values. Name the preset by preset_uuid (from lr_list_presets) or preset_name. Changes nothing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "preset_uuid": {
+          "description": "the preset's uuid from lr_list_presets (exact; preferred)",
+          "type": "string",
+          "minLength": 1
+        },
+        "preset_name": {
+          "description": "the preset's name as Lightroom lists it; refused with the candidates when several presets have it",
+          "type": "string",
+          "minLength": 1
+        },
+        "preset_folder": {
+          "description": "the folder (preset group) to look in, to tell same-named presets apart",
+          "type": "string",
+          "minLength": 1
+        },
+        "preset_scope": {
+          "description": "\"lightroom\" (the Develop Presets panel) or \"plugin\" (LrC-AVG checkpoints)",
+          "type": "string",
+          "enum": [
+            "lightroom",
+            "plugin"
+          ]
+        },
+        "raw": {
+          "description": "true: also the SDK keys and values as Lightroom gives them",
+          "type": "boolean"
+        }
+      }
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_compare_presets",
+    "title": "Compare two Develop presets",
+    "description": "Diff two presets (e.g. an approved one as `base` and a new checkpoint as `candidate`): `changes` lists each canonical setting that differs with both values (null: that preset does not carry it); `other_changes` the other SDK keys that differ (with values when raw: true). Mask ids Lightroom renews on every read are not compared. Changes nothing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "base": {
+          "type": "object",
+          "properties": {
+            "preset_uuid": {
+              "description": "the preset's uuid from lr_list_presets (exact; preferred)",
+              "type": "string",
+              "minLength": 1
+            },
+            "preset_name": {
+              "description": "the preset's name as Lightroom lists it; refused with the candidates when several presets have it",
+              "type": "string",
+              "minLength": 1
+            },
+            "preset_folder": {
+              "description": "the folder (preset group) to look in, to tell same-named presets apart",
+              "type": "string",
+              "minLength": 1
+            },
+            "preset_scope": {
+              "description": "\"lightroom\" (the Develop Presets panel) or \"plugin\" (LrC-AVG checkpoints)",
+              "type": "string",
+              "enum": [
+                "lightroom",
+                "plugin"
+              ]
+            }
+          },
+          "description": "the preset compared from (e.g. the approved one)"
+        },
+        "candidate": {
+          "type": "object",
+          "properties": {
+            "preset_uuid": {
+              "description": "the preset's uuid from lr_list_presets (exact; preferred)",
+              "type": "string",
+              "minLength": 1
+            },
+            "preset_name": {
+              "description": "the preset's name as Lightroom lists it; refused with the candidates when several presets have it",
+              "type": "string",
+              "minLength": 1
+            },
+            "preset_folder": {
+              "description": "the folder (preset group) to look in, to tell same-named presets apart",
+              "type": "string",
+              "minLength": 1
+            },
+            "preset_scope": {
+              "description": "\"lightroom\" (the Develop Presets panel) or \"plugin\" (LrC-AVG checkpoints)",
+              "type": "string",
+              "enum": [
+                "lightroom",
+                "plugin"
+              ]
+            }
+          },
+          "description": "the preset compared to"
+        },
+        "raw": {
+          "description": "true: also the SDK keys and values as Lightroom gives them",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "base",
+        "candidate"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_export_preset",
+    "title": "Copy a preset's file to a folder",
+    "description": "Copy a user preset's or checkpoint's own file (.xmp or .lrtemplate) into `destination_dir`, to keep or share it. Never replaces a file: an existing one is refused (PRESET_EXISTS). Built-in presets may have no file (PRESET_NOT_EXPORTABLE). Nothing in Lightroom changes.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "preset_uuid": {
+          "description": "the preset's uuid from lr_list_presets (exact; preferred)",
+          "type": "string",
+          "minLength": 1
+        },
+        "preset_name": {
+          "description": "the preset's name as Lightroom lists it; refused with the candidates when several presets have it",
+          "type": "string",
+          "minLength": 1
+        },
+        "preset_folder": {
+          "description": "the folder (preset group) to look in, to tell same-named presets apart",
+          "type": "string",
+          "minLength": 1
+        },
+        "preset_scope": {
+          "description": "\"lightroom\" (the Develop Presets panel) or \"plugin\" (LrC-AVG checkpoints)",
+          "type": "string",
+          "enum": [
+            "lightroom",
+            "plugin"
+          ]
+        },
+        "destination_dir": {
+          "type": "string",
+          "minLength": 1,
+          "description": "a full folder path, made if missing, e.g. D:\\Presets"
+        },
+        "filename": {
+          "description": "the copy's file name (default: the preset file's own); its extension must be the preset file's",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "destination_dir"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_apply_preset",
+    "title": "Apply a Develop preset to photos",
+    "description": "Apply one exact preset (preset_uuid, or a preset_name only one preset has) to photos named by uuid; the selection and the module stay as they are. Each photo first gets a snapshot \"AVG pre-preset <id>\" (applying it puts the photo back), then the preset as the History step \"AVG preset <id>: <name>\". Each applied photo lists the canonical settings the preset changed, before and after. A preset with AI masks has them recomputed for each photo (Lightroom Classic 13.3 or later; `ai_update`). At most 100 photos. A call works for about 30 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling until `not_yet` is gone, and tell the user how far along it is. A call still busy at 50 seconds returns `pending` with `next`. Tell the user which photos will change before calling. A photo that fails is in `failed` and the others go on. Not while a session is open.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "preset_uuid": {
+          "description": "the preset's uuid from lr_list_presets (exact; preferred)",
+          "type": "string",
+          "minLength": 1
+        },
+        "preset_name": {
+          "description": "the preset's name as Lightroom lists it; refused with the candidates when several presets have it",
+          "type": "string",
+          "minLength": 1
+        },
+        "preset_folder": {
+          "description": "the folder (preset group) to look in, to tell same-named presets apart",
+          "type": "string",
+          "minLength": 1
+        },
+        "preset_scope": {
+          "description": "\"lightroom\" (the Develop Presets panel) or \"plugin\" (LrC-AVG checkpoints)",
+          "type": "string",
+          "enum": [
+            "lightroom",
+            "plugin"
+          ]
+        },
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids (lr_get_selected_photos, lr_search_photos)"
+        }
+      },
+      "required": [
+        "uuids"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_create_checkpoint",
+    "title": "Save a preset checkpoint",
+    "description": "Save a photo's current settings (the selected photo, or photo_uuid; `categories` limits the groups), or exactly the canonical `settings` given, as an LrC-AVG checkpoint: a versioned Develop preset kept by the plugin. Lightroom does not show checkpoints in the Develop Presets panel; lr_list_presets lists them (scope \"plugin\"), lr_apply_preset applies them, lr_compare_presets compares them, lr_export_preset copies their file. For a preset in the panel use lr_create_preset_from_active. A name in use is refused with a suggested next version. Nothing on the photo changes. Not while a session is open.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "a new name, versioned (e.g. \"Warm look v3\"); a name in use is refused; none of < > : \" / \\ | ? *"
+        },
+        "photo_uuid": {
+          "description": "the photo to capture (default: the selected photo)",
+          "type": "string",
+          "minLength": 1
+        },
+        "settings": {
+          "description": "canonical name -> ABSOLUTE value, e.g. {\"contrast\": 15}: the checkpoint holds exactly these (for the photo's pipeline) instead of the photo's settings",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              }
+            ]
+          }
+        },
+        "categories": {
+          "description": "without `settings`: the groups of the photo's settings to capture (default: all), as in lr_create_preset_from_active",
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "basic_tone",
+              "white_balance",
+              "tone_curve",
+              "hsl",
+              "grading",
+              "detail",
+              "lens",
+              "effects",
+              "bw",
+              "calibration",
+              "camera_profile"
+            ]
+          }
+        }
+      },
+      "required": [
+        "name"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
     "name": "lr_search_photos",
     "title": "Search the catalog",
     "description": "Search the Lightroom catalog for photos: by part of the file name, keywords (all of them), an exact star rating, capture dates (YYYY-MM-DD, inclusive), a collection and a folder (its full path; UNKNOWN_FOLDER when the catalog has none there); the filters combine (all must match). With no filter it searches every photo and says so. Paged: `count` is how many matched, `photos` at most `limit` of them from `offset`, `has_more` whether more follow. Each photo: uuid (what lr_set_rating, lr_set_keywords, lr_set_gps and lr_sync_series take), filename, rating (0 = none), capture_time, virtual_copy, copy_name, gps ({latitude, longitude}, null for none) and path (the file); `notice` when the plugin is too old for gps and path. Changes nothing.",

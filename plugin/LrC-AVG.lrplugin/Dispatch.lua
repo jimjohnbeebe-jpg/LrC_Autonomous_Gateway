@@ -21,6 +21,7 @@ local Masks = require 'Masks'
 local Metadata = require 'Metadata'
 local Pending = require 'Pending'
 local Prefs = require 'Prefs'
+local Presets = require 'Presets'
 local Preview = require 'Preview'
 local Transfer = require 'Transfer'
 
@@ -61,6 +62,10 @@ function Dispatch.handlers(hello)
         probe_write_gate = Masks.probeWriteGate,
         clear_pending_ai = Pending.clearPhoto,
         apply_denoise = Denoise.apply,
+        list_presets = Presets.list,
+        get_preset = Presets.get,
+        apply_preset = Presets.apply,
+        create_checkpoint = Presets.createCheckpoint,
     }
     return HANDLERS
 end

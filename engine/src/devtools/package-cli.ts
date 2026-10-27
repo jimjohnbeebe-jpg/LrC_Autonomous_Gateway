@@ -8,6 +8,7 @@
 //     zip_check below and docs\reports\phase6\package-smoke\smoke.txt]). Git Bash's `tar` comes
 //     first on its PATH and is GNU tar 1.35 [handle: `tar --version` in Git Bash, 2026-10-01], which
 //     has no zip format [inference], so the path is given in full. No Python (rule 01).
+// A third asset, lrc-avg-<version>.mcpb (mcpb-build.ts, issue #219), is the Claude Desktop extension bundle.
 // Both assets are built from the working tree: package a clean checkout for a release.
 // Prints each file's size and SHA-256, for the release notes.
 
@@ -18,6 +19,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { PLUGIN_VERSION } from "../bridge/version.js";
+import { ENGINE_VERSION } from "../mcp/index.js";
+import { buildMcpb } from "./mcpb-build.js";
 import { expectedPackFiles, packProblems } from "./package-check.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
@@ -73,6 +76,11 @@ if (zipProblems.length > 0) {
 }
 console.log(`plugin zip: ${entries.length} files, list as expected (zip_check)`);
 
+// 3. The Claude Desktop extension bundle (issue #219).
+const mcpb = buildMcpb(engineDir, releaseDir, tar, ENGINE_VERSION);
+console.log("mcpb bundle: manifest tools equal the server's tool list");
+
 console.log(`Release assets in ${releaseDir}:`);
 console.log(`  ${assetLine(tgz)}`);
 console.log(`  ${assetLine(zip)}`);
+console.log(`  ${assetLine(mcpb)}`);

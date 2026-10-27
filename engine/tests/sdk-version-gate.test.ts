@@ -65,7 +65,7 @@ describe("plugin: every call newer than 13.0 goes through Needs.check", () => {
     const code = codeOnly(lua(DENOISE.file));
     const entry = code.indexOf("function Denoise.apply(");
     const check = code.indexOf("Needs.check(", entry);
-    const work = code.indexOf("Catalog.exclusive(", entry);
+    const work = code.indexOf("DevelopSession.withPhoto(", entry); // issue #214: the lock and the view, moved out of Denoise.lua
     expect([entry, check, work].every((i) => i >= 0) && check < work).toBe(true);
     expect([...code.matchAll(/^function Denoise\.(\w+)/gm)].map((m) => m[1])).toEqual(["apply"]);
     const used = new Set([...code.matchAll(/\b(getEnhancePanelState|setEnhance|toggleEnhance|changeDenoiseAmount)\b/g)].map((m) => m[1]));

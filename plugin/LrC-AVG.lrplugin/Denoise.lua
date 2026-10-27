@@ -18,37 +18,28 @@
 -- docs\reports\phase8\S10\census\s10_PICT0019.DNG.json "FilterList"]; the "Enhance" name, getEnhancePanelState
 -- and its fields, getActiveSources and setActiveSources are [upstream claim] and [unverified] here until Jim's
 -- `npm run denoise:check`. The History step is Lightroom's own: these calls take no History name.
+-- Steps 2 and 6 are DevelopSession.withPhoto (issue #214), moved out of this file with no change in behaviour.
 
 local LrApplication = import 'LrApplication'
-local LrApplicationView = import 'LrApplicationView'
 local LrDate = import 'LrDate'
 local LrDevelopController = import 'LrDevelopController'
-local LrSelection = import 'LrSelection'
 local LrTasks = import 'LrTasks'
 
-local Catalog = require 'Catalog'
 local Develop = require 'Develop'
+local DevelopSession = require 'DevelopSession'
 local Log = require 'Log'
 local Needs = require 'Needs'
 local Photos = require 'Photos'
 
 local Denoise = {}
 
--- Upstream's waits [upstream claim: Automaat PR #288, HandlerDevelop.lua DENOISE_*_SECONDS].
-local SELECT_SECONDS, SETTLE_SECONDS, PANEL_SECONDS, CONFIRM_SECONDS, SAVE_SECONDS = 10, 0.5, 8, 1.5, 5
-local POLL_SECONDS = 0.1
+-- Upstream's waits [upstream claim: Automaat PR #288, HandlerDevelop.lua DENOISE_*_SECONDS]; selecting the photo
+-- (10 s, polled every 0.1 s) is DevelopSession.lua's.
+local SETTLE_SECONDS, PANEL_SECONDS, CONFIRM_SECONDS, SAVE_SECONDS = 0.5, 8, 1.5, 5
+local waitFor = DevelopSession.waitFor
 
 local function fail(code, message, recoverable)
     return nil, { code = code, message = message, recoverable = recoverable == true }
-end
-
-local function waitFor(done, seconds)
-    local t0 = LrDate.currentTime()
-    while LrDate.currentTime() - t0 < seconds do
-        if done() then return true end
-        LrTasks.sleep(POLL_SECONDS)
-    end
-    return done()
 end
 
 -- The Enhance filter's CompressedSettings, or nil when the photo has none (no Denoise).
@@ -66,35 +57,6 @@ end
 local function panelState()
     local ok, state = LrTasks.pcall(LrDevelopController.getEnhancePanelState)
     return ok and state or nil
-end
-
-local function captureView(catalog)
-    local active = catalog:getTargetPhoto()
-    local okSources, sources = LrTasks.pcall(function() return catalog:getActiveSources() end)
-    return { module = LrApplicationView.getCurrentModuleName(), sources = okSources and sources or nil, active = active, selection = active and catalog:getTargetPhotos() or nil }
-end
-
-local function restoreView(catalog, view, switchedSource)
-    if switchedSource and view.sources then LrTasks.pcall(function() catalog:setActiveSources(view.sources) end) end
-    if view.active then
-        LrTasks.pcall(function() catalog:setSelectedPhotos(view.active, view.selection or { view.active }) end)
-    else
-        LrTasks.pcall(LrSelection.selectNone)
-    end
-    if view.module and view.module ~= LrApplicationView.getCurrentModuleName() then
-        LrTasks.pcall(LrApplicationView.switchToModule, view.module)
-    end
-end
-
--- Select `photo` alone, again each second until it sticks (Lightroom drops a selection made while it is
--- still switching [upstream claim: same PR]); once more through All Photographs. Returns ok, switchedSource.
-local function selectAlone(catalog, photo)
-    local function tryFor(seconds)
-        return waitFor(function() return Catalog.selectOnly(catalog, photo) end, seconds)
-    end
-    if tryFor(SELECT_SECONDS) then return true, false end
-    local ok = LrTasks.pcall(function() catalog:setActiveSources({ catalog.kAllPhotos }) end)
-    return ok and tryFor(SELECT_SECONDS), true
 end
 
 -- Steps 3-5 on the selected photo in Develop; a result table.
@@ -142,23 +104,13 @@ function Denoise.apply(payload)
     local photo, found = Photos.find(catalog, payload.photo_uuid, payload.expect)
     if not photo then return nil, found end
     local t0 = LrDate.currentTime()
-    return Catalog.exclusive("apply_denoise", function()
-        local view = captureView(catalog)
-        local switched = false
-        local ok, result = LrTasks.pcall(function()
-            local notDevelop = Develop.toDevelop()
-            if notDevelop then return { status = "failed", reason = notDevelop.message } end
-            local selected
-            selected, switched = selectAlone(catalog, photo)
-            if not selected then return { status = "skipped", reason = "Lightroom did not select the photo in Develop" } end
-            return denoiseSelected(catalog, photo, amount, name, found.uuid)
-        end)
-        restoreView(catalog, view, switched)
-        if not ok then error(result, 0) end
-        result.uuid, result.ms = found.uuid, math.floor((LrDate.currentTime() - t0) * 1000)
-        Log.info(string.format("denoise: %s %s at %d (%s)", found.uuid, result.status, amount, tostring(result.reason or "")))
-        return result
+    local result, busy = DevelopSession.withPhoto("apply_denoise", catalog, photo, function()
+        return denoiseSelected(catalog, photo, amount, name, found.uuid)
     end)
+    if not result then return nil, busy end
+    result.uuid, result.ms = found.uuid, math.floor((LrDate.currentTime() - t0) * 1000)
+    Log.info(string.format("denoise: %s %s at %d (%s)", found.uuid, result.status, amount, tostring(result.reason or "")))
+    return result
 end
 
 return Denoise

@@ -51,8 +51,7 @@ Any procedure Jim carries out (spike runs, Lightroom actions, PowerShell command
 
 ## Reports
 
-- Every phase and spike gets a report (format in `02-sourcing.md`).
-- The repo copy lives at `docs\reports\<phase>\<id>.md`, where Jim fills in "Observed". Report changes go through the PR workflow above. When a report is final, copy it to the vault `C:\Users\jimbe\Documents\Obsidian Vault\Projects\LrC_Autonomous_Gateway\Reports\` (same file name, under a phase subfolder) and keep both identical. If they ever differ, the vault copy wins.
+- Every phase and spike gets a report (format, repo and vault copies: the `lrc-avg-checks` skill, "Reports"). Report changes go through the PR workflow above.
 - Handover documents (`docs\PHASE<n>_HANDOVER.md`) open with explicit self-attribution: which session wrote it, what was built, what Jim must run, what is still unverified. A fresh session reads the handover first and trusts it over re-deriving from code.
 - At the end of a directive, update `LrC_AVG_STATE.md` (status and "Next action").
 

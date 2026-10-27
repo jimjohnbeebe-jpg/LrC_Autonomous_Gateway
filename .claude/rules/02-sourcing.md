@@ -22,16 +22,7 @@ Any claim about SDK behaviour or runtime behaviour (Lightroom, Node, sharp, MCP 
 
 ## Report format
 
-Reports live in `docs\reports\<phase>\<id>.md` and in the vault `Reports\` folder (see 04-workflow). Sections, in order:
-
-1. Front matter: `report`, `phase`, `status` (`template` | `observed` | `accepted`), `authored_by` (who wrote each part), `date`.
-2. **Purpose**: the question the spike or phase answers, and the PHASES.md go/conditional/no-go rule, quoted.
-3. **Harness**: the files involved and how to run them (link the README).
-4. **Pre-run findings (Claude Code)**: checks Claude Code ran itself, each with its handle.
-5. **Observed (Jim)**: filled by Jim only; raw numbers and pasted output, screenshot paths.
-6. **Numbers**: the report fields the directive asks for, filled from the Observed section.
-7. **Verdict**: go / conditional / no-go, decided by Jim; a script's suggested verdict is labelled as a suggestion.
-8. **Consequences / open questions**: which decisions (AVG-0xx) or docs change, and what stays `[unverified]`.
+The report sections, and where the repo and vault copies live, are in the `lrc-avg-checks` skill ("Reports"). Load it before writing or editing any report.
 
 ## Commit messages
 

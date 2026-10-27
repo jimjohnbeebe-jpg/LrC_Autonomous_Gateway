@@ -1,0 +1,28 @@
+# Dependabot version updates, for the MCP SDK only (issue #208).
+#
+# Why: the engine's MCP SDK (@modelcontextprotocol/*) is the one dependency we want
+# Dependabot to bring in. Each Dependabot PR costs a Greptile review, so this allows
+# one grouped PR per month at most (open-pull-requests-limit 1, schedule monthly).
+# Every other npm dependency stays pinned by hand, as docs/DEPENDENCIES.md records.
+#
+# Each SDK bump still needs a docs/DEPENDENCIES.md entry (name, version, licence,
+# registry URL) and the PR workflow of .claude/rules/04-workflow.md: triage the
+# Greptile review, merge only with arch-check green.
+#
+# Keys checked against GitHub's Dependabot options reference:
+# https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    # The root package.json declares the npm workspaces (engine, spikes, hud), one lockfile.
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 1
+    versioning-strategy: increase
+    allow:
+      - dependency-name: "@modelcontextprotocol/*"
+    groups:
+      mcp-sdk:
+        patterns:
+          - "@modelcontextprotocol/*"

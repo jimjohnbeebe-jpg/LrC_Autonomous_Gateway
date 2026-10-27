@@ -4,7 +4,7 @@
 -- through the Develop panel's own calls, LrDevelopController.setEnhance("denoise", true, amount) and
 -- changeDenoiseAmount, which act on the photo active in Develop [upstream claim: Automaat PR #288,
 -- HandlerDevelop.lua]. So this command, under the selection lock (Catalog.exclusive):
---   1. checks the LrC 15 calls exist (feature_unavailable otherwise; nothing changed);
+--   1. checks the Enhance calls exist, through Needs.lua (feature_unavailable otherwise; nothing changed);
 --   2. notes the module, the sources and the selection, switches to Develop and selects the photo alone
 --      (through All Photographs when it is outside the current source);
 --   3. waits for the Enhance panel; reads the photo's own Enhance digest, since right after a switch the
@@ -29,6 +29,7 @@ local LrTasks = import 'LrTasks'
 local Catalog = require 'Catalog'
 local Develop = require 'Develop'
 local Log = require 'Log'
+local Needs = require 'Needs'
 local Photos = require 'Photos'
 
 local Denoise = {}
@@ -48,13 +49,6 @@ local function waitFor(done, seconds)
         LrTasks.sleep(POLL_SECONDS)
     end
     return done()
-end
-
-local function supported()
-    for _, name in ipairs({ "getEnhancePanelState", "setEnhance", "changeDenoiseAmount" }) do
-        if type(LrDevelopController[name]) ~= "function" then return false end
-    end
-    return true
 end
 
 -- The Enhance filter's CompressedSettings, or nil when the photo has none (no Denoise).
@@ -139,7 +133,11 @@ function Denoise.apply(payload)
     if type(amount) ~= "number" or amount ~= math.floor(amount) or amount < 1 or amount > 100 then return fail("bad_request", "amount must be a whole number from 1 to 100") end
     local name = payload.snapshot_name
     if type(name) ~= "string" or name:sub(1, 4) ~= "AVG " then return fail("bad_request", "snapshot_name must start with 'AVG '") end
-    if not supported() then return fail("feature_unavailable", "AI Denoise through the SDK needs Lightroom Classic 15 or later (LrDevelopController.setEnhance)") end
+    -- 14.5: getEnhancePanelState and changeDenoiseAmount are "First supported in version 14.5" [handle: API Reference\modules\
+    -- LrDevelopController.html:1131, 730, SDK 15.2]. setEnhance is not in that reference, so its release is [unverified]; this
+    -- replaces "needs Lightroom Classic 15", an [upstream claim: Automaat PR #288] the reference does not bear out for the other two.
+    local present, unavailable = Needs.check("AI Denoise", "14.5", "LrDevelopController.", LrDevelopController, { "getEnhancePanelState", "setEnhance", "changeDenoiseAmount" })
+    if not present then return nil, unavailable end
     local catalog = LrApplication.activeCatalog()
     local photo, found = Photos.find(catalog, payload.photo_uuid, payload.expect)
     if not photo then return nil, found end

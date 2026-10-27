@@ -57,6 +57,7 @@ local LrTasks = import 'LrTasks'
 
 local Gate = require 'Gate'
 local MaskProbe = require 'MaskProbe'
+local Needs = require 'Needs'
 local Pending = require 'Pending'
 local Photos = require 'Photos'
 
@@ -81,7 +82,9 @@ function Masks.updateAISettings(payload)
     local catalog = LrApplication.activeCatalog()
     local photo, found = Photos.find(catalog, payload.photo_uuid, payload.expect)
     if not photo then return nil, found end
-    if MaskProbe.kind(photo, "updateAISettings") ~= "function" then return MaskProbe.unavailable("photo:updateAISettings (SDK 13.3)") end
+    -- 13.3 is above LrSdkMinimumVersion 13.0, so the call is checked first [handle: API Reference\modules\LrPhoto.html:1308].
+    local present, unavailable = Needs.check("Computing an AI mask", "13.3", "photo:", photo, { "updateAISettings" })
+    if not present then return nil, unavailable end
     local rec = { uuid = found.uuid, state = "started", request_id = type(payload.request_id) == "string" and payload.request_id or nil }
     _G.AVG_LAST_AI_UPDATE = rec
     local guard = Pending.start(found.uuid, rec.request_id, payload.watch)

@@ -15,7 +15,7 @@
 -- table's CorrectionID, and each entry's Tools carry the MaskID [handle: Jim's capture 1 run,
 -- docs\reports\phase6\masks-capture\12_probe_dc.json, getAllMasks_after_sky (8E077BDB…, tool
 -- 2DB0B254…) against getDevelopSettings_after_sky]. A method is
--- looked up with type(obj[name]) inside LrTasks.pcall, as spike S7 did; it saw "function" for methods
+-- looked up with type(obj[name]) inside LrTasks.pcall (Needs.kind), as spike S7 did; it saw "function" for methods
 -- that exist [handle: docs\reports\phase4\S7\s7_run_2026-09-27T12-53-05.json removal_probe.photo.controls].
 
 local LrApplicationView = import 'LrApplicationView'
@@ -24,6 +24,7 @@ local LrDevelopController = import 'LrDevelopController'
 local LrTasks = import 'LrTasks'
 
 local Develop = require 'Develop'
+local Needs = require 'Needs'
 local Photos = require 'Photos'
 
 local MaskProbe = {}
@@ -33,20 +34,9 @@ local MODULE_WAIT_SECONDS = 5
 MaskProbe.SETTLE_SECONDS = 2
 local COPY_DEPTH = 8
 
-function MaskProbe.unavailable(what)
-    return nil, { code = "feature_unavailable", recoverable = true,
-        message = what .. " is not available in this Lightroom (or not to this plugin)" }
-end
-
--- type(obj[name]), or nil when the lookup raises.
-function MaskProbe.kind(obj, name)
-    local ok, t = LrTasks.pcall(function() return type(obj[name]) end)
-    return ok and t or nil
-end
-
 -- obj[name](...), or an error naming the missing call (record() below turns it into ok = false).
 local function call(obj, label, name, ...)
-    if MaskProbe.kind(obj, name) ~= "function" then error(label .. "." .. name .. " is not available", 0) end
+    if Needs.kind(obj, name) ~= "function" then error(label .. "." .. name .. " is not available", 0) end
     return obj[name](...)
 end
 function MaskProbe.dc(name, ...) return call(LrDevelopController, "LrDevelopController", name, ...) end
@@ -76,9 +66,10 @@ function MaskProbe.begin(payload, seconds)
     if type(payload.target_uuid) ~= "string" or payload.target_uuid == "" then
         return nil, { code = "bad_request", message = "target_uuid must be a non-empty string", recoverable = false }
     end
-    if MaskProbe.kind(LrDevelopController, "getAllMasks") ~= "function" then
-        return MaskProbe.unavailable("LrDevelopController.getAllMasks")
-    end
+    -- The mask calls are from SDK 11.0, below LrSdkMinimumVersion 13.0 (Needs.lua says where): this probe only names a
+    -- build that lacks one [handle: API Reference\modules\LrDevelopController.html, getAllMasks "First supported in version 11.0"].
+    local present, unavailable = Needs.check("Masking through LrDevelopController", "11.0", "LrDevelopController.", LrDevelopController, { "getAllMasks" })
+    if not present then return nil, unavailable end
     local catalog, photo, uuid, err = Develop.target({ target_uuid = payload.target_uuid })
     if err then return nil, err end
     return { steps = {}, catalog = catalog, photo = photo, uuid = uuid, seconds = seconds,

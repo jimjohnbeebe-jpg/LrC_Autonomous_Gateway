@@ -127,7 +127,7 @@ describe("AI masks: the fall back to LrDevelopController", () => {
   it("goes to LrDevelopController when the plugin lacks update_ai_settings, and keeps that route for the session", async () => {
     const { create } = await session();
     lr.masks.tableRoute = "unavailable";
-    expect((await create("background")).json).toMatchObject({ ai: { route: "dc", fallback: expect.stringMatching(/not available/) } });
+    expect((await create("background")).json).toMatchObject({ ai: { route: "dc", fallback: expect.stringMatching(/needs Lightroom Classic 13\.3 or later/) } });
     const updates = sent("update_ai_settings");
     expect((await create("sky")).json).toMatchObject({ ai: { route: "dc", fallback: expect.stringMatching(/skipped/) } });
     expect(sent("update_ai_settings")).toBe(updates);

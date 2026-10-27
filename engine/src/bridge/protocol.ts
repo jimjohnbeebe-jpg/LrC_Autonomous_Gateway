@@ -17,6 +17,7 @@ import { z } from "zod";
 import type { HudUpdatePayload } from "./hud-protocol.js";
 import { DEVELOP_RESULTS } from "./protocol-develop.js";
 import { METADATA_RESULTS } from "./protocol-metadata.js";
+import { PRESET_RESULTS, type PresetScope } from "./protocol-presets.js";
 import { COMMAND_RESULTS } from "./protocol-results.js";
 
 export const PROTOCOL_VERSION = 1;
@@ -56,8 +57,8 @@ export type InboundEnvelope = z.infer<typeof inboundSchema>;
 /** One entry of a findPhotos search descriptor (engine\src\library\search.ts builds them). */
 export type SearchCriterion = { criteria: string; operation: string; value: string | number; value2?: string };
 
-/** Every command the engine sends, by name, with the schema of its result (protocol-results.ts, protocol-metadata.ts, protocol-develop.ts). */
-export const COMMANDS = { ...COMMAND_RESULTS, ...METADATA_RESULTS, ...DEVELOP_RESULTS };
+/** Every command the engine sends, by name, with the schema of its result (protocol-results.ts, protocol-metadata.ts, protocol-develop.ts, protocol-presets.ts). */
+export const COMMANDS = { ...COMMAND_RESULTS, ...METADATA_RESULTS, ...DEVELOP_RESULTS, ...PRESET_RESULTS };
 
 export type CommandName = keyof typeof COMMANDS;
 export type CommandResult<N extends CommandName> = z.infer<(typeof COMMANDS)[N]>;
@@ -152,4 +153,12 @@ export type CommandPayloads = {
   delete_snapshot: { photo_uuid: string; snapshot_id: string };
   /** Issue #214 (Copies.lua): one virtual copy, named copy_name or by Lightroom; the selection put back. */
   copy_photo: { photo_uuid: string; copy_name?: string };
+  /** Issue #215 (Presets.lua): every preset Lightroom lists, and this plugin's checkpoints. */
+  list_presets: Record<string, never>;
+  /** One preset by getUuid() and scope, with its getSetting() table. */
+  get_preset: { uuid: string; scope: PresetScope };
+  /** applyDevelopPreset on the photo with that uuid, in a write gate named history_name ("AVG …"); never with its updateAISettings argument. */
+  apply_preset: { photo_uuid: string; expect?: PhotoExpect; preset_uuid: string; scope: PresetScope; history_name: string };
+  /** addDevelopPresetForPlugin(_PLUGIN, name, settings): refused when a checkpoint of that name exists. */
+  create_checkpoint: { name: string; settings: Record<string, unknown> };
 };

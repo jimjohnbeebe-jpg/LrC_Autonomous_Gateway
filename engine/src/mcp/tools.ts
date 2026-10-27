@@ -8,7 +8,9 @@
 //   intents  (tools-intents.ts): lr_list_intents, lr_get_intent, lr_save_intent (Phase 3).
 //   propagation (tools-propagation.ts): lr_sync_series (Phase 4; the sync is sync\sync.ts) and
 //            lr_create_preset_from_active (Phase 4; the preset is presets\create.ts).
-//   catalog  (tools-catalog.ts): lr_search_photos, lr_get_selected_photos, lr_list_collections,
+//   presets  (tools-presets.ts): lr_list_presets, lr_get_preset, lr_compare_presets, lr_export_preset,
+//            lr_apply_preset, lr_create_checkpoint (GitHub issue #215; presets\lightroom.ts and its neighbours).
+//   catalog (tools-catalog.ts): lr_search_photos, lr_get_selected_photos, lr_list_collections,
 //            lr_set_rating, lr_set_keywords (Phase 6, kept from Automaat; library\); lr_list_keywords
 //            and lr_set_gps (GitHub issue #60, from later Automaat commits).
 //   metadata (tools-metadata.ts): lr_set_flag, lr_set_iptc, lr_get_metadata (GitHub issues #111,
@@ -60,6 +62,7 @@ import {
 import { exportPhotos, importPhotos, type Budget, type ExportPhotosArgs, type ImportPhotosArgs } from "./tools-files.js";
 import { deleteIntent, getIntent, listIntents, saveIntent, type DeleteIntentArgs, type SaveIntentArgs } from "./tools-intents.js";
 import { getMetadata, setFlag, setIptc, type GetMetadataArgs, type SetFlagArgs, type SetIptcArgs } from "./tools-metadata.js";
+import * as presets from "./tools-presets.js";
 import { createPresetFromActive, syncSeries, type CreatePresetArgs, type SyncSeriesArgs } from "./tools-propagation.js";
 import { approvePass, beginSession, createMask, deleteMask, editMask, endSession, getSessionLog, listMasks, probe, selectVariant, setRegions, step } from "./tools-session.js";
 import { createContext, type LastRender, type ToolContext, type ToolOutput, type ToolsDeps } from "./tools-shared.js";
@@ -199,6 +202,32 @@ export class Tools {
 
   createPresetFromActive(args: CreatePresetArgs): Promise<ToolOutput> {
     return createPresetFromActive(this.ctx, args);
+  }
+
+  // --- Develop presets and checkpoints (issue #215).
+
+  listPresets(args: presets.ListPresetsArgs = {}): Promise<ToolOutput> {
+    return presets.listPresetsTool(this.ctx, args);
+  }
+
+  getPreset(args: presets.GetPresetArgs): Promise<ToolOutput> {
+    return presets.getPresetTool(this.ctx, args);
+  }
+
+  comparePresets(args: presets.ComparePresetsArgs): Promise<ToolOutput> {
+    return presets.comparePresetsTool(this.ctx, args);
+  }
+
+  exportPreset(args: presets.ExportPresetArgs): Promise<ToolOutput> {
+    return presets.exportPresetTool(this.ctx, args);
+  }
+
+  applyPreset(args: presets.ApplyPresetArgs, budget?: Budget): Promise<ToolOutput> {
+    return presets.applyPresetTool(this.ctx, args, budget);
+  }
+
+  createCheckpoint(args: presets.CheckpointArgs): Promise<ToolOutput> {
+    return presets.createCheckpointTool(this.ctx, args);
   }
 
   // --- Catalog.

@@ -23,6 +23,7 @@ local Masks = require 'Masks'
 local Metadata = require 'Metadata'
 local Pending = require 'Pending'
 local Prefs = require 'Prefs'
+local Presets = require 'Presets'
 local Preview = require 'Preview'
 local Snapshots = require 'Snapshots'
 local Transfer = require 'Transfer'
@@ -70,6 +71,10 @@ function Dispatch.handlers(hello)
         list_snapshots = Snapshots.list,
         delete_snapshot = Snapshots.delete,
         copy_photo = Copies.copyPhoto,
+        list_presets = Presets.list,
+        get_preset = Presets.get,
+        apply_preset = Presets.apply,
+        create_checkpoint = Presets.createCheckpoint,
     }
     return HANDLERS
 end

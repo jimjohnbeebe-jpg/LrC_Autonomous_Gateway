@@ -20,6 +20,7 @@ import { FILTER_LIST, verdict, type DenoiseAnswer, type Step } from "./denoise-c
 import { ask } from "./mask-carry-probe.js";
 import { describeError } from "./phase1-check.js";
 import { redactHome } from "./phase2-check.js";
+import { requireThrowaway } from "./throwaway.js";
 
 const OUT_DIR = path.join(os.tmpdir(), "LrC-AVG", "denoise-check");
 const SNAPSHOT = "AVG denoise:check before";
@@ -118,6 +119,7 @@ async function main(say: (l: string) => void): Promise<number> {
   const taken: Taken = { uuids: [], before: [], snaps: new Map() };
   try {
     await gate.ready();
+    requireThrowaway(client); // issue #213: a catalog not marked throwaway is refused before anything is written
     worked = await run(client, say, r, taken);
   } catch (err) {
     r["errors"] = [describeError(err)];

@@ -20,6 +20,7 @@ import { SNAPSHOT, eachPhoto, verdict, type PhotoResult } from "./mask-crop-prob
 import { oneCase, runFor, turnCrop } from "./mask-crop-run.js";
 import { describeError } from "./phase1-check.js";
 import { redactHome } from "./phase2-check.js";
+import { requireThrowaway } from "./throwaway.js";
 
 const OUT_DIR = path.join(os.tmpdir(), "LrC-AVG", "masks-crop");
 const STATE = path.join(OUT_DIR, "state.json");
@@ -105,6 +106,7 @@ async function main(say: (line: string) => void): Promise<number> {
   const r: Results = { started };
   try {
     await gate.ready();
+    requireThrowaway(client); // issue #213: a catalog not marked throwaway is refused before anything is written
     const left = pending();
     if (damaged) return finish(say, r, false, "the last run's put-back record was damaged");
     if (left) {

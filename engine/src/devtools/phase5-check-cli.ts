@@ -30,6 +30,7 @@ import { PreviewService } from "../preview/index.js";
 import { PageSettings } from "../settings/index.js";
 import { SERVER_NAME } from "../setup/desktop-config.js";
 import { describeError, type Answer } from "./phase1-check.js";
+import { throwawayPreflight } from "./throwaway.js";
 import { redactHome } from "./phase2-check.js";
 import { collectChatLogs } from "./phase2-collect.js";
 import { runPhase5Check } from "./phase5-check.js";
@@ -111,6 +112,12 @@ async function main(): Promise<number> {
     log: new ToolLog(path.join(OUT_DIR, `p5_check_tools_${stamp}`)),
   });
   sessionOpen = () => (tools.sessionManager()?.current() ?? null) !== null;
+  // Issue #213: a catalog not marked throwaway is refused before the check starts.
+  const refused = await throwawayPreflight(gate, client);
+  if (refused) {
+    io.close();
+    throw new Error(refused);
+  }
   const { accepted, finished, results } = await runPhase5Check(
     {
       client,

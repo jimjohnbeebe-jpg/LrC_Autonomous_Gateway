@@ -24,6 +24,8 @@ export const helloResultSchema = z.looseObject({
    * (session\restart.ts, D16).
    */
   process_started_at: z.string().optional(),
+  /** Issue #213 (Bridge.lua catalogPath): the open catalog's .lrcat path, for the dev checks' throwaway guard (devtools\throwaway.ts). */
+  catalog_path: z.string().optional(),
 });
 export type HelloResult = z.infer<typeof helloResultSchema>;
 

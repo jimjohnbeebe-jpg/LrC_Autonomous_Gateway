@@ -28,6 +28,7 @@ import { ask, putBack, readPending, type Pending } from "./mask-carry-probe.js";
 import { build, CANDIDATES, computeAi, hasAi, HISTORY, judge, KIND_CANDIDATES, noDepthMap, SNAPSHOT, verdict, withSample, type FormResult } from "./mask-combine-probe.js";
 import { describeError } from "./phase1-check.js";
 import { redactHome } from "./phase2-check.js";
+import { requireThrowaway } from "./throwaway.js";
 
 const KINDS = process.argv.includes("--kinds");
 const SET = KINDS
@@ -128,6 +129,7 @@ async function main(say: (line: string) => void): Promise<number> {
   const r: Results = { started };
   try {
     await gate.ready();
+    requireThrowaway(client); // issue #213: a catalog not marked throwaway is refused before anything is written
     const left = pending();
     if (damaged) return finish(say, r, false, "the last run's put-back record was damaged");
     if (left) {

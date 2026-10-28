@@ -49,6 +49,8 @@ From upstream at `1040453` (plugin 1.6.0, GitHub issue #217), rewritten, not cop
 | File in this plugin | Derived from | What was taken |
 |---|---|---|
 | `MaskClean.lua` | `HandlerMaskDelete.lua` (`deleteEmptyMasks`) | `catalog:deleteAllEmptyMasks` with the photos always passed, in a write gate, checked to exist first. |
+| `MaskControl.lua` | `MaskSelection.lua`, `HandlerMaskCurves.lua`, `MaskCurves.lua`, `MaskSettle.lua` (commit `581ad7c`, #328) | Selecting a mask by id in Develop (listed by `getAllMasks`, Masking opened, `selectMask` again each second until it reads selected, the mask before put back); a local curve set with `setValue` and confirmed by `getValue` within 1, tried twice, every curve put back on a failure, `stopTracking(true)`, the wait for the photo's settings to change. Here the names and values come from the engine. |
+| `MaskSwatches.lua` | `HandlerMaskPointColors.lua`, `MaskPointColors.lua` (commit `581ad7c`, #328) | Point Color add, update, delete and clear through the `*PointColorSwatch` calls with `isForMasking`, each confirmed by `getValue("local_PointColors")` within 0.01, a swatch Lightroom did not keep deleted again or put back. Here the field names come from the engine. |
 
 The engine's derived files are listed in `engine\THIRD_PARTY_NOTICES.md`.
 

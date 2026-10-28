@@ -23,6 +23,7 @@ local KeywordEdit = require 'KeywordEdit'
 local Library = require 'Library'
 local Log = require 'Log'
 local MaskClean = require 'MaskClean'
+local MaskControl = require 'MaskControl'
 local Masks = require 'Masks'
 local Metadata = require 'Metadata'
 local Pending = require 'Pending'
@@ -71,6 +72,7 @@ function Dispatch.handlers(hello)
         probe_write_gate = Masks.probeWriteGate,
         clear_pending_ai = Pending.clearPhoto,
         delete_empty_masks = MaskClean.deleteEmptyMasks,
+        mask_controller = MaskControl.run,
         apply_denoise = Denoise.apply,
         apply_auto = DevelopTools.applyAuto,
         reset_develop = DevelopTools.reset,

@@ -89,10 +89,10 @@ end
 -- Ends Develop's tracking state, so a change made through LrDevelopController becomes one History step now
 -- ("Causes Develop module to exit its tracking state immediately, creating a single history state" [handle:
 -- API Reference\modules\LrDevelopController.html stopTracking, SDK 6.0]); upstream calls it after Auto and Reset
--- [upstream claim: DevelopSession.flushPendingEdits, which passes isLocalParam true]. Called with isLocalParam nil here:
--- Auto and Reset change global settings [inference].
-function DevelopSession.flush()
-    LrTasks.pcall(LrDevelopController.stopTracking)
+-- [upstream claim: DevelopSession.flushPendingEdits, which passes isLocalParam true]. Auto and Reset call it with
+-- isLocalParam nil, as they change global settings [inference]; MaskControl.lua with true, after a mask's curves or swatches.
+function DevelopSession.flush(isLocalParam)
+    LrTasks.pcall(LrDevelopController.stopTracking, isLocalParam)
 end
 
 return DevelopSession

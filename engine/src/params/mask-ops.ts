@@ -145,9 +145,9 @@ function edit(entries: Correction[], op: EditOp, frame: CropFrame): OpResult {
   const before = summarize(e, frame);
   precheck(op);
   if (op.copy) {
-    const c = invertedCopy(e, op.name, storedSliders(op.sliders ?? {}), frame);
+    const c = invertedCopy(e, op.name, storedSliders(op.sliders ?? {}));
     entries.push(c.entry);
-    return { entries, id: String(c.entry[C.id]), kind: before.kind, before: null, after: c.after, ...(c.ai ? { ai: c.ai } : {}) };
+    return { entries, id: String(c.entry[C.id]), kind: before.kind, before: null, after: summarize(c.entry, frame), ...(c.ai ? { ai: c.ai } : {}) };
   }
   const parts = components(e);
   const only = parts.length === 1 ? (parts[0] as Component) : null;

@@ -10,9 +10,7 @@
 // computes it afresh; nothing of the source's computed mask is copied [inference: a digest names the computed
 // pixels]. A mask of several parts is not copied, as it is not inverted whole (mask-ops.ts edit).
 
-import type { CropFrame } from "./crop-frame.js";
 import { BRUSH, C, M, MaskError, RADIAL, RECOMPUTED, WHAT, componentKind, components, isAiKind, newMaskId, newSyncId, type AiKind, type Component, type Correction } from "./mask-table.js";
-import { summarize, type MaskSummary } from "./mask-summary.js";
 
 /** A component with fresh MaskID / MaskSyncID, a brush's strokes too, and no computed AI fields. */
 function fresh(m: Component): Component {
@@ -23,10 +21,10 @@ function fresh(m: Component): Component {
   return out;
 }
 
-export type CopyResult = { entry: Correction; after: MaskSummary; ai: AiKind | null };
+export type CopyResult = { entry: Correction; ai: AiKind | null };
 
 /** The inverted copy of correction `e`, named `name` (default "<name> inverted"), with `stored` slider fields over the source's. */
-export function invertedCopy(e: Correction, name: string | undefined, stored: Record<string, number>, frame: CropFrame): CopyResult {
+export function invertedCopy(e: Correction, name: string | undefined, stored: Record<string, number>): CopyResult {
   const parts = components(e);
   if (parts.length !== 1) throw new MaskError("MASK_OP_NOT_CAPTURED", "This mask has several parts; an inverted copy is made of a mask of one part only.");
   const part = fresh(parts[0] as Component);
@@ -36,5 +34,5 @@ export function invertedCopy(e: Correction, name: string | undefined, stored: Re
   const copy = structuredClone(e) as Correction;
   Object.assign(copy, stored, { [C.id]: newMaskId(), [C.syncId]: newSyncId(), [C.name]: name ?? `${String(e[C.name] ?? "Mask")} inverted`, [C.masks]: [part] });
   const kind = componentKind(part);
-  return { entry: copy, after: summarize(copy, frame), ai: isAiKind(kind) ? kind : null };
+  return { entry: copy, ai: isAiKind(kind) ? kind : null };
 }

@@ -4,8 +4,10 @@
 // applyPlan: the plugin's mask_controller (plugin\LrC-AVG.lrplugin\MaskControl.lua) selects the mask on the photo open
 // in Develop, writes, confirms each value through getValue and puts back what it wrote when one fails; then the photo is
 // read and rendered, and a clipping or region breach is undone by a second mask_controller writing the values read
-// before. Lightroom names the History steps of these writes itself, so `history_names` stays empty [inference:
-// setValue and the swatch calls take no name, LrDevelopController.html]. lr_list_masks `live_mask_id` reads the same
+// before, refused (and reported unmet) when Lightroom no longer holds what the pass wrote (the mask-table undo's check,
+// masks.ts maskPass): the undo would erase a change made in Lightroom meanwhile. Lightroom names the History steps of
+// these writes itself, so `history_names` stays empty [inference: setValue and the swatch calls take no name,
+// LrDevelopController.html]. lr_list_masks `live_mask_id` reads the same
 // values without writing. In Lightroom [unverified] until `npm run masks:parity` (docs\reports\phase11\MASK-CONTROLLER.md).
 
 import { isDeepStrictEqual } from "node:util";
@@ -61,7 +63,11 @@ export async function applyController(ctx: SessionContext, s: Session, t: Target
   let live = r.after;
   if (breach) {
     try {
-      const back = await send(ctx, s, t, { mask_id: op.mask_id, curves: curveRestore(r.before, r.written), ...(op.point_colors ? { swatches: swatchRestore(r.before) } : {}) });
+      const curves = curveRestore(r.before, r.written);
+      const swatches = op.point_colors ? swatchRestore(r.before) : null;
+      // What the pass left, for the plugin to check before it writes the undo (MaskControl.lua `expect`).
+      const expect = Object.fromEntries([...curves.map((c) => c.param), ...(swatches ? [swatches.param] : [])].filter((p) => r.after[p] != null).map((p) => [p, r.after[p]]));
+      const back = await send(ctx, s, t, { mask_id: op.mask_id, curves, ...(swatches ? { swatches } : {}), expect });
       ({ sdk, view } = await readSdk(ctx, s, t));
       rendered = await render(ctx, s, t, view);
       live = back.after;

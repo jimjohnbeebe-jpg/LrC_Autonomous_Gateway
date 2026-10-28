@@ -14,7 +14,10 @@
 --   swatches = { param, action = "add" | "update" | "delete" | "clear" | "set", index?, swatch?, list?, max? }: one
 --              change through the *PointColorSwatch calls with isForMasking true, confirmed by getValue(param); "set"
 --              (the engine's undo) clears the swatches and adds `list` back;
---   read     = { param, ... }: values to read too.
+--   read     = { param, ... }: values to read too;
+--   expect   = { [param] = value }: the engine's undo sends what the pass left; a value that reads otherwise now was
+--              changed in Lightroom since, and the undo would erase that change: refused, nothing written (write_not_taken),
+--              as the mask-table undo does (engine\src\session\masks.ts maskPass, fingerprint check).
 --   Answers { uuid, mask_id, before, after (getValue of every param named, before and after), written, index?,
 --   settled, ms }. `settled`: the photo's settings changed within SETTLE_SECONDS of the writes (upstream waits for the
 --   stored mask to change before it answers [upstream claim: MaskSettle.lua]; whether Lightroom stores a local curve in
@@ -84,6 +87,33 @@ local function listed(id)
     return false
 end
 
+-- Selects mask `id` (again each RESELECT_SECONDS until it reads selected); whether it did.
+local function selectMask(id)
+    local last = -math.huge
+    return DevelopSession.waitFor(function()
+        if selectedMask() == id then return true end
+        if LrDate.currentTime() - last >= RESELECT_SECONDS then
+            LrTasks.pcall(LrDevelopController.selectMask, id)
+            last = LrDate.currentTime()
+        end
+        return false
+    end, SELECT_SECONDS)
+end
+
+-- Catalog.exclusive holds off this plugin's other commands, not a click in Lightroom, which can change the photo or the
+-- selected mask at any time, and setValue and the swatch calls act on the selected mask [inference: they take no mask
+-- argument, LrDevelopController.html] (Greptile on PR #248). Run before each write and each read that confirms one:
+-- raises when another photo is selected, selects mask `id` again when another mask is.
+local function guardOf(uuid, id)
+    return function()
+        local _, _, _, err = Develop.target({ target_uuid = uuid })
+        if err then error("the photo selected in Lightroom changed while writing: " .. tostring(err.message), 0) end
+        if selectedMask() == id then return end
+        if not selectMask(id) then error("another mask became selected while writing, and Lightroom did not select mask " .. id .. " again", 0) end
+        LrTasks.sleep(SELECTED_SETTLE)
+    end
+end
+
 -- Opens Masking, selects mask `id` (again each RESELECT_SECONDS until it reads selected), runs body, then puts back
 -- the mask and the tool that were selected. Returns body's results.
 local function withMask(id, body)
@@ -93,15 +123,7 @@ local function withMask(id, body)
     local okTool, tool = LrTasks.pcall(LrDevelopController.getSelectedTool)
     if not (okTool and tool == "masking") then LrTasks.pcall(LrDevelopController.goToMasking) end
     local previous = selectedMask()
-    local last = -math.huge
-    local selected = DevelopSession.waitFor(function()
-        if selectedMask() == id then return true end
-        if LrDate.currentTime() - last >= RESELECT_SECONDS then
-            LrTasks.pcall(LrDevelopController.selectMask, id)
-            last = LrDate.currentTime()
-        end
-        return false
-    end, SELECT_SECONDS)
+    local selected = selectMask(id)
     local ok, result, err
     if selected then
         LrTasks.sleep(SELECTED_SETTLE)
@@ -115,8 +137,9 @@ local function withMask(id, body)
     return result, err
 end
 
-local function writeCurve(param, points)
+local function writeCurve(param, points, guard)
     for _ = 1, ATTEMPTS do
+        guard()
         local ok, err = LrTasks.pcall(LrDevelopController.setValue, param, copy(points))
         if not ok then error("Lightroom refused " .. param .. ": " .. tostring(err), 0) end
         if DevelopSession.waitFor(function() return sameCurve(getValue(param), points) end, CONFIRM_SECONDS) then return true end
@@ -159,10 +182,13 @@ end
 local function apply(payload, params, catalog, photo, uuid)
     local t0 = LrDate.currentTime()
     local mask = payload.mask_id
+    local guard = guardOf(uuid, mask)
+    local onTarget, off = LrTasks.pcall(guard) -- the sleep in withMask left time for a click
+    if not onTarget then return fail("write_not_taken", tostring(off) .. "; nothing was written") end
     local before = valuesOf(params)
     local settingsBefore = Develop.readSettings(catalog, photo)
     local curves = type(payload.curves) == "table" and payload.curves or {}
-    local written, swatched, index = {}, false, nil
+    local written, swatched, index, swatchesBack = {}, false, nil, false
     -- A curve whose value before does not read could not be put back: refused before anything is written, as upstream
     -- does [upstream claim: HandlerMaskCurves.lua applyToSelectedMask, "cannot be read ... nothing was written"].
     for _, c in ipairs(curves) do
@@ -170,43 +196,55 @@ local function apply(payload, params, catalog, photo, uuid)
             return fail("feature_unavailable", "Lightroom gives no " .. c.param .. " for mask " .. mask .. ", so it could not be put back; nothing was written", true)
         end
     end
+    for p, v in pairs(type(payload.expect) == "table" and payload.expect or {}) do
+        if not MaskSwatches.same(before[p], v) then
+            return fail("write_not_taken", p .. " of mask " .. mask .. " changed in Lightroom after the pass wrote it, so the undo would erase that change; nothing was written")
+        end
+    end
     local ok, why = LrTasks.pcall(function()
         for _, c in ipairs(curves) do
             if not sameCurve(before[c.param], c.points) then
                 written[#written + 1] = c.param -- first, so a half-taken write is put back too
-                if not writeCurve(c.param, c.points) then error("Lightroom did not keep the " .. c.param .. " curve", 0) end
+                if not writeCurve(c.param, c.points, guard) then error("Lightroom did not keep the " .. c.param .. " curve", 0) end
             end
         end
         local op = payload.swatches
         if op then
             local list = type(before[op.param]) == "table" and before[op.param] or {}
-            index = MaskSwatches.edit(op, list)
-            swatched = true
+            swatched = true -- first: a call that fails after it changed the list (a "set" that cleared it) is put back too
+            index = MaskSwatches.edit(op, list, guard)
             written[#written + 1] = op.param
         end
         if #written == 0 then return end
         DevelopSession.flush(true)
         LrTasks.sleep(PERSIST_SECONDS)
+        guard()
         for _, c in ipairs(curves) do
             if not sameCurve(getValue(c.param), c.points) then error("Lightroom did not keep the " .. c.param .. " curve", 0) end
         end
-        if selectedMask() ~= mask then error("another mask became selected while writing", 0) end
     end)
     if not ok then
         why = tostring(why)
-        -- setValue acts on the selected mask: with another one selected, putting back would write onto that mask.
-        local onMask = selectedMask() == mask
+        -- Put back only on this photo with this mask selected again (guard), never onto a mask the user clicked.
+        local onMask = LrTasks.pcall(guard)
         for i = onMask and #written or 0, 1, -1 do
             local p = written[i]
-            if type(before[p]) == "table" and (not payload.swatches or p ~= payload.swatches.param) then LrTasks.pcall(LrDevelopController.setValue, p, copy(before[p])) end
+            if type(before[p]) == "table" and (not payload.swatches or p ~= payload.swatches.param) then
+                LrTasks.pcall(function() guard(); LrDevelopController.setValue(p, copy(before[p])) end)
+            end
         end
         if swatched and onMask then
             local param = payload.swatches.param
             local list = type(before[param]) == "table" and before[param] or {}
-            LrTasks.pcall(function() MaskSwatches.edit({ param = param, action = "set", list = list }, MaskSwatches.readList(param)) end)
+            LrTasks.pcall(function()
+                local now = MaskSwatches.readList(param)
+                if MaskSwatches.same(now, list) then return end
+                swatchesBack = true
+                MaskSwatches.edit({ param = param, action = "set", list = list }, now, guard)
+            end)
         end
         Log.warn("mask_controller: " .. uuid .. " " .. mask .. ": " .. why)
-        local back = #written == 0 and "; nothing was written" or onMask and "; what was written was put back" or "; another mask is selected, so what was written was NOT put back"
+        local back = #written == 0 and not swatchesBack and "; nothing was written" or onMask and "; what was written was put back" or "; Lightroom shows another photo or mask, so what was written was NOT put back"
         if why:sub(1, #REFUSED) == REFUSED then return fail("invalid_arguments", why:sub(#REFUSED + 1) .. back) end
         return fail("write_not_taken", why .. back)
     end
@@ -214,6 +252,7 @@ local function apply(payload, params, catalog, photo, uuid)
         return not DevelopTools.same(settingsBefore, Develop.readSettings(catalog, photo))
     end, SETTLE_SECONDS)
     Log.info(string.format("mask_controller: %s %s, %d written", uuid, mask, #written))
+    LrTasks.pcall(guard) -- `after` reads the selected mask
     return { uuid = uuid, mask_id = mask, before = before, after = valuesOf(params), written = written, index = index,
         settled = settled == true, ms = math.floor((LrDate.currentTime() - t0) * 1000) }
 end

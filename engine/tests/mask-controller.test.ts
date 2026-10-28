@@ -10,8 +10,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { HelloResult } from "../src/bridge/index.js";
 import { MAIN, RED, curvesHold, swatchHeld } from "../src/devtools/masks-verify-controller.js";
 import { CONTROLLER_PARAMS, MASK_TABLE_KEY, curveWrites, curvesOf, precheck, swatchRequest, swatchesOf, type Correction } from "../src/params/index.js";
+import type { FakeHandler } from "./helpers/fake-plugin.js";
 import { avgPlugin, codeOnly } from "./helpers/lua-code.js";
-import { ID, client, fails, lr, newManager, plugin, useSessionHarness } from "./helpers/session-harness.js";
+import { ID, clean, client, fails, lr, newManager, plugin, useSessionHarness } from "./helpers/session-harness.js";
 
 useSessionHarness();
 afterEach(() => vi.restoreAllMocks());
@@ -52,11 +53,14 @@ describe("params: the controller's names and values", () => {
   });
 });
 
-/** The plugin's mask_controller, per mask: curves and swatches as getValue would read them. */
+/** The plugin's mask_controller, per mask: curves and swatches as getValue would read them; `expect` refused as MaskControl.lua does. */
 function installController(state: Record<string, Record<string, unknown>> = {}): void {
   plugin.handlers.set("mask_controller", (p) => {
     const id = String(p["mask_id"]);
     const values = (state[id] ??= { local_Maincurve: [0, 0, 255, 255], local_PointColors: [] });
+    if (Object.entries((p["expect"] ?? {}) as Record<string, unknown>).some(([k, v]) => JSON.stringify(values[k]) !== JSON.stringify(v))) {
+      return { ok: false, error: { code: "write_not_taken", message: "local_Maincurve changed in Lightroom after the pass wrote it; nothing was written", recoverable: false } };
+    }
     const read = (p["read"] as string[]).reduce<Record<string, unknown>>((o, k) => ({ ...o, [k]: structuredClone(values[k] ?? null) }), {});
     const written: string[] = [];
     for (const c of (p["curves"] ?? []) as Array<{ param: string; points: number[] }>) {
@@ -112,6 +116,49 @@ describe("session: lr_edit_mask curves and point_colors", () => {
     expect(sent()).toHaveLength(1);
   });
 
+  /** The sim renders global settings only: while the mask's main curve is not straight, render 3 EV brighter (it clips); `meanwhile` runs once, at that render. */
+  function curveBrightens(state: Record<string, Record<string, unknown>>, meanwhile = (): void => {}): void {
+    const real = plugin.handlers.get("export_preview") as FakeHandler;
+    let once = true;
+    plugin.handlers.set("export_preview", async (q, id) => {
+      const curve = state[maskId]?.["local_Maincurve"];
+      if (curve === undefined || JSON.stringify(curve) === "[0,0,255,255]") return real(q, id);
+      if (once) (once = false), meanwhile();
+      const saved = lr.settings["Exposure2012"];
+      lr.settings["Exposure2012"] = Number(saved) + 3;
+      try {
+        return await real(q, id);
+      } finally {
+        lr.settings["Exposure2012"] = saved;
+      }
+    });
+  }
+
+  it("undoes a curve that clips, telling the plugin what the pass left", async () => {
+    const state: Record<string, Record<string, unknown>> = {};
+    installController(state);
+    clean();
+    curveBrightens(state);
+    const m = newManager();
+    await m.begin({ intent_id: "test_plain", return_image: "none", max_passes: 4 });
+    const out = await m.editMask({ ...pass, mask_id: maskId, curves: { main: LIFT } });
+    expect(sent()[1]).toMatchObject({ curves: [{ param: "local_Maincurve", points: [0, 0, 255, 255] }], expect: { local_Maincurve: [0, 0, 128, 150, 255, 255] } });
+    expect(out.json).toMatchObject({ guardrail_actions: [{ kind: "reverted", limit: "clip_high" }], controller: { curves: { main: [[0, 0], [255, 255]] } } });
+  });
+
+  it("leaves a curve changed in Lightroom while the pass rendered, and reports the undo unmet", async () => {
+    const state: Record<string, Record<string, unknown>> = {};
+    installController(state);
+    const mine = [0, 0, 100, 160, 255, 255];
+    clean();
+    curveBrightens(state, () => void ((state[maskId] as Record<string, unknown>)["local_Maincurve"] = mine));
+    const m = newManager();
+    await m.begin({ intent_id: "test_plain", return_image: "none", max_passes: 4 });
+    const out = await m.editMask({ ...pass, mask_id: maskId, curves: { main: LIFT } });
+    expect(out.json).toMatchObject({ guardrail_actions: [{ kind: "unmet", reason: expect.stringMatching(/changed in Lightroom.*the mask change stays/) }] });
+    expect(state[maskId]?.["local_Maincurve"]).toEqual(mine);
+  });
+
   it("passes the plugin's refusal on (not in Develop)", async () => {
     plugin.handlers.set("mask_controller", () => ({ ok: false, error: { code: "not_in_develop", message: "press D", recoverable: true } }));
     const m = newManager();
@@ -140,7 +187,21 @@ describe("plugin: mask_controller is a thin adapter", () => {
     const refuse = apply.indexOf('if type(before[c.param]) ~= "" then');
     expect(refuse).toBeGreaterThan(0);
     expect(refuse).toBeLessThan(apply.indexOf("LrTasks.pcall(function()"));
-    expect(apply).toMatch(/local onMask = selectedMask\(\) == mask/);
+    expect(apply).toMatch(/local onMask = LrTasks\.pcall\(guard\)/);
+    // The undo's `expect` is checked before the writes; a swatch change counts as possibly made before its call returns.
+    expect(apply.indexOf("payload.expect")).toBeGreaterThan(0);
+    expect(apply.indexOf("payload.expect")).toBeLessThan(apply.indexOf("LrTasks.pcall(function()"));
+    expect(apply.indexOf("swatched = true")).toBeLessThan(apply.indexOf("MaskSwatches.edit(op, list, guard)"));
+    expect(apply).toMatch(/if MaskSwatches\.same\(now, list\) then return end/);
+  });
+
+  it("checks the photo and the selected mask (guard) before every write, the put-backs included", () => {
+    for (const f of ["MaskControl.lua", "MaskSwatches.lua"]) {
+      const lines = codeOnly(lua(f)).split("\n");
+      const writes = lines.flatMap((l, i) => (/\bcall\(""|LrDevelopController\.(setValue|addPointColorSwatch|deletePointColorSwatch|updateSelectedPointColorSwatch)\b/.test(l) ? [i] : []));
+      expect(writes.length, f).toBeGreaterThan(f === "MaskControl.lua" ? 1 : 5);
+      for (const i of writes) expect(lines.slice(Math.max(0, i - 3), i + 1).join("\n"), `${f}:${i + 1}`).toContain("guard()");
+    }
   });
 });
 

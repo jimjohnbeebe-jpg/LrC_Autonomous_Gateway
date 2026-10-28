@@ -156,7 +156,7 @@ export type CommandPayloads = {
   /** Issue #217 row 1 (plugin 1.6.0, MaskClean.lua): catalog:deleteAllEmptyMasks on the photo with that uuid, after a snapshot named snapshot_name ("AVG …"). */
   delete_empty_masks: { photo_uuid: string; snapshot_name: string };
   /** Issue #217 (MaskControl.lua): one mask's local_* values through LrDevelopController on the selected photo, open in Develop (params\mask-controller.ts builds them). */
-  mask_controller: { target_uuid: string; mask_id: string; curves?: Array<{ param: string; points: number[] }>; swatches?: SwatchOp; read?: readonly string[] };
+  mask_controller: { target_uuid: string; mask_id: string; curves?: Array<{ param: string; points: number[] }>; swatches?: SwatchOp; read?: readonly string[]; expect?: Record<string, unknown> };
   /** Issue #214 (Snapshots.lua). */
   list_snapshots: { photo_uuid: string };
   delete_snapshot: { photo_uuid: string; snapshot_id: string };

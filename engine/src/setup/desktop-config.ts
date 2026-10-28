@@ -55,10 +55,26 @@ export type ConfigPlan = {
   unchanged: boolean;
 };
 
-/** What the config becomes: the engine entry set (or, with `entry` null, removed), the retired servers gone, the rest untouched. */
-export function planConfig(config: DesktopConfig, entry: ServerEntry | null): ConfigPlan {
+/**
+ * The engine's tool profile variable and values (mcp\profiles.ts PROFILE_ENV and PROFILES, issue #165). setup imports
+ * no other module (CLAUDE.md "Module Map"), so they are repeated here; engine\tests\tool-profiles.test.ts compares them.
+ */
+export const TOOLS_ENV = "LRC_AVG_TOOLS";
+export const TOOL_PROFILES = ["full", "edit"] as const;
+
+/** `entry`, keeping the existing entry's tool profile when `entry` sets none: running the setup again keeps the user's choice. */
+function keepProfile(existing: unknown, entry: ServerEntry): ServerEntry {
+  if (entry.env?.[TOOLS_ENV] !== undefined) return entry;
+  const env = typeof existing === "object" && existing !== null ? (existing as { env?: unknown }).env : undefined;
+  const old = typeof env === "object" && env !== null ? (env as Record<string, unknown>)[TOOLS_ENV] : undefined;
+  return typeof old === "string" ? { ...entry, env: { ...entry.env, [TOOLS_ENV]: old } } : entry;
+}
+
+/** What the config becomes: the engine entry set (or, with `wanted` null, removed; an existing tool profile kept), the retired servers gone, the rest untouched. */
+export function planConfig(config: DesktopConfig, wanted: ServerEntry | null): ConfigPlan {
   const servers: Record<string, unknown> = { ...(config.mcpServers ?? {}) };
   const existing = servers[SERVER_NAME];
+  const entry = wanted === null ? null : keepProfile(existing, wanted);
   const same = entry !== null && JSON.stringify(existing) === JSON.stringify(entry);
   const names: string[] = entry === null ? [SERVER_NAME, ...RETIRED_SERVERS] : [...RETIRED_SERVERS];
   const removed = names.filter((name) => name in servers);

@@ -5,6 +5,7 @@
 // in this repo; Claude Desktop's install of the bundle is Jim's run].
 
 import type { ToolDef } from "../mcp/defs-shared.js";
+import { DEFAULT_PROFILE, EDIT_TOOLS, PROFILE_ENV } from "../mcp/profiles.js";
 
 export type McpbManifest = {
   manifest_version: string;
@@ -15,8 +16,9 @@ export type McpbManifest = {
   author: { name: string };
   license: string;
   repository: { type: string; url: string };
-  server: { type: "node"; entry_point: string; mcp_config: { command: string; args: string[] } };
+  server: { type: "node"; entry_point: string; mcp_config: { command: string; args: string[]; env: Record<string, string> } };
   tools: Array<{ name: string; description: string }>;
+  user_config: Record<string, { type: "string"; title: string; description: string; default: string; required: boolean }>;
   compatibility: { platforms: string[]; runtimes: { node: string } };
 };
 
@@ -40,8 +42,23 @@ export function buildManifest(version: string, defs: ToolDef[]): McpbManifest {
     author: { name: "Jim Beebe" },
     license: "MIT",
     repository: { type: "git", url: "https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway" },
-    server: { type: "node", entry_point: MCPB_ENTRY, mcp_config: { command: "node", args: ["${__dirname}/" + MCPB_ENTRY] } },
+    server: {
+      type: "node",
+      entry_point: MCPB_ENTRY,
+      mcp_config: { command: "node", args: ["${__dirname}/" + MCPB_ENTRY], env: { [PROFILE_ENV]: "${user_config.tool_profile}" } },
+    },
+    // Every tool, whatever the profile: the user picks the profile at install (issue #165). The user_config and env
+    // shape is upstream's [upstream claim: Automaat mcpb/manifest.json at 1040453, user_config.request_port].
     tools: defs.map((d) => ({ name: d.name, description: firstSentence(d.description) })),
+    user_config: {
+      tool_profile: {
+        type: "string",
+        title: "Tool profile",
+        description: `Which tools the AI sees: "${DEFAULT_PROFILE}" (every tool) or "edit" (${EDIT_TOOLS.length} tools for editing the selected photo).`,
+        default: DEFAULT_PROFILE,
+        required: false,
+      },
+    },
     compatibility: { platforms: ["win32"], runtimes: { node: ">=22" } },
   };
 }

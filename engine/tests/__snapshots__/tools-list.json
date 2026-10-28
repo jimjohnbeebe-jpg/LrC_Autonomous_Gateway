@@ -2,7 +2,7 @@
   {
     "name": "lr_help",
     "title": "How LrC-AVG works",
-    "description": "Explain how LrC-AVG works: sessions and session_id, what uses a pass, previews and region previews, the metrics, Variants mode, clipping guardrails, mask names, logs and errors. Static text; touches nothing.",
+    "description": "Explain how LrC-AVG works: sessions and session_id, what uses a pass, previews and region previews, the metrics, Variants mode, clipping guardrails, mask names, logs and errors, and the tool profile in force (`tool_profile`). Static text; touches nothing.",
     "inputSchema": {
       "type": "object",
       "properties": {}

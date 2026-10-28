@@ -4,10 +4,10 @@
 
 import { existsSync } from "node:fs";
 import { applyDesktopConfig, describeResult, SetupError, type ApplyResult } from "./apply-config.js";
-import { engineEntry } from "./desktop-config.js";
+import { engineEntry, TOOL_PROFILES, TOOLS_ENV } from "./desktop-config.js";
 import { clearSetupResult, dataDir, failureOf, resultOf, writeSetupResult, type SetupAction, type SetupResult } from "./setup-result.js";
 
-const USAGE = "Usage: lrc-avg-setup [--remove] [--dry-run] [--config <path>] [--installer]";
+const USAGE = `Usage: lrc-avg-setup [--remove] [--dry-run] [--config <path>] [--installer] [--tools <${TOOL_PROFILES.join("|")}>]`;
 const RESTART = "Next: quit Claude Desktop (right-click the Claude icon in the Windows system tray > Quit), then start it again.";
 
 export type SetupContext = {
@@ -23,29 +23,35 @@ export type SetupContext = {
 
 export type SetupOutput = { exitCode: 0 | 1; out: string[]; err: string[] };
 
-type Options = { remove: boolean; dryRun: boolean; installer: boolean; configPath: string | undefined };
+/** `tools`: the tool profile to write (issue #165); undefined keeps the entry's own, or none (the engine's default). */
+type Options = { remove: boolean; dryRun: boolean; installer: boolean; configPath: string | undefined; tools?: string | undefined };
 
 /** The options, or the sentence that says what is wrong with the arguments. */
 function parseArgs(argv: string[]): Options | string {
-  const known = ["--remove", "--dry-run", "--installer", "--config"];
+  const known = ["--remove", "--dry-run", "--installer", "--config", "--tools"];
   let configPath: string | undefined;
+  let tools: string | undefined;
   const unknown: string[] = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i] as string;
     if (a === "--config") {
       configPath = argv[++i];
       if (configPath === undefined || configPath.startsWith("--")) return `--config needs a file path. ${USAGE}`;
+    } else if (a === "--tools") {
+      tools = argv[++i];
+      if (!TOOL_PROFILES.some((p) => p === tools)) return `--tools needs one of ${TOOL_PROFILES.join(", ")}. ${USAGE}`;
     } else if (!known.includes(a)) unknown.push(a);
   }
   if (unknown.length > 0) return `unknown argument ${unknown.join(" ")}. ${USAGE}`;
-  const options = { remove: argv.includes("--remove"), dryRun: argv.includes("--dry-run"), installer: argv.includes("--installer"), configPath };
+  const options = { remove: argv.includes("--remove"), dryRun: argv.includes("--dry-run"), installer: argv.includes("--installer"), configPath, tools };
   if (options.installer && options.dryRun) return `--installer writes the result files, so it cannot be combined with --dry-run. ${USAGE}`;
   return options;
 }
 
 function apply(o: Options, ctx: SetupContext): ApplyResult {
   if (!o.remove && !existsSync(ctx.mainJs)) throw new SetupError(`the engine is incomplete: ${ctx.mainJs} is missing. Install lrc-avg again.`);
-  return applyDesktopConfig({ entry: o.remove ? null : engineEntry(ctx.mainJs, ctx.execPath), configPath: o.configPath, dryRun: o.dryRun, ...(ctx.env ? { env: ctx.env } : {}) });
+  const env = o.tools !== undefined ? { [TOOLS_ENV]: o.tools } : undefined;
+  return applyDesktopConfig({ entry: o.remove ? null : engineEntry(ctx.mainJs, ctx.execPath, env), configPath: o.configPath, dryRun: o.dryRun, ...(ctx.env ? { env: ctx.env } : {}) });
 }
 
 /** `--installer`: the outcome goes to the result files and the exit code is 0, whatever happened. `badArgs` is what parseArgs objected to. */
@@ -77,6 +83,7 @@ function runPlain(o: Options, ctx: SetupContext): SetupOutput {
     const result = apply(o, ctx);
     const out = describeResult(result, o.dryRun);
     if (!o.remove) out.push(`"lrc-avg" runs: ${ctx.execPath} ${ctx.mainJs}`);
+    if (!o.remove && o.tools !== undefined) out.push(`Tool profile: ${o.tools} (${TOOLS_ENV})`);
     if (!o.dryRun) out.push(RESTART);
     return { exitCode: 0, out, err: [] };
   } catch (err) {

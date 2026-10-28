@@ -45,12 +45,13 @@ import { SESSION_DEFS } from "./defs-session.js";
 import type { ToolDef } from "./defs-shared.js";
 import { ToolError, toToolError } from "./errors.js";
 import { getPrompt, PROMPTS } from "./prompts.js";
+import { PROFILE_ENV, profileDefs, toolProfile } from "./profiles.js";
 import { capImage } from "./image-cap.js";
 import type { Tools } from "./tools.js";
 import type { ToolOutput } from "./tools-shared.js";
 import { ENGINE_VERSION } from "./version.js";
 
-/** The tool groups, in the order the server lists them. */
+/** Every registered tool, the tool groups in the order the server lists them; the profile in force (profiles.ts) lists all or some. */
 export const TOOL_DEFS: ToolDef[] = [...HELP_DEFS, ...CONTEXT_DEFS, ...SESSION_DEFS, ...MASK_DEFS, ...INTENT_DEFS, ...PROPAGATION_DEFS, ...PRESET_DEFS, ...CATALOG_DEFS, ...METADATA_DEFS, ...FILE_DEFS, ...DEVELOP_DEFS, ...ORGANIZE_DEFS, ...AI_METADATA_DEFS];
 
 /** The advertised JSON Schema of a tool's arguments, from the same zod schema that validates them. */
@@ -110,11 +111,13 @@ export function createServer(tools: Tools, options: { progressMs?: number; deadl
   // `instructions` go out in the initialize result: OpenCode appends them to its prompt [handle:
   // https://github.com/anomalyco/opencode/issues/39574]; how Claude Desktop and Claude Code use them is [unverified].
   const server = new Server({ name: "lrc-avg", version: ENGINE_VERSION }, { capabilities: { tools: {}, prompts: {} }, instructions: INSTRUCTIONS });
-  const byName = new Map(TOOL_DEFS.map((d) => [d.name, d]));
+  const profile = toolProfile().name;
+  const defs = profileDefs(TOOL_DEFS, profile);
+  const byName = new Map(defs.map((d) => [d.name, d]));
   const deadline = createDeadline({ ...(options.deadlineMs !== undefined ? { ms: options.deadlineMs } : {}), readOnly: (t) => byName.get(t)?.annotations?.readOnlyHint === true, log: (t, a, p) => tools.recordPending(t, a, p) });
 
   server.setRequestHandler("tools/list", () => ({
-    tools: TOOL_DEFS.map((d) => ({
+    tools: defs.map((d) => ({
       name: d.name,
       title: d.title,
       description: d.description,
@@ -134,7 +137,8 @@ export function createServer(tools: Tools, options: { progressMs?: number; deadl
     return withCallContext(context, async () => {
       const def = byName.get(name);
       if (!def) {
-        const error = new ToolError("UNKNOWN_TOOL", `There is no tool named "${name}" (tools: ${[...byName.keys()].join(", ")}).`, false);
+        const hidden = TOOL_DEFS.some((d) => d.name === name) ? ` ${name} is in the full profile, not in "${profile}": ${PROFILE_ENV}=full in this server's config turns it on.` : "";
+        const error = new ToolError("UNKNOWN_TOOL", `There is no tool named "${name}" (tools: ${[...byName.keys()].join(", ")}).${hidden}`, false);
         tools.recordRejected(name, args, error);
         return errorResult(error);
       }

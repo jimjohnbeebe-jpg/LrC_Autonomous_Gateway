@@ -5,6 +5,7 @@
 // Item 3's "downscaling understates clipping at print size" is [inference]; "clip at export resolution" is tracked in issue #159.
 
 import { FRAME, MEASURED, noArgs, type ToolDef } from "./defs-shared.js";
+import { describeProfile } from "./profiles.js";
 import { DEFAULT_LONG_EDGE } from "./tools-shared.js";
 
 export const HELP_TEXT = [
@@ -88,10 +89,10 @@ export const HELP_DEFS: ToolDef[] = [
     title: "How LrC-AVG works",
     description:
       "Explain how LrC-AVG works: sessions and session_id, what uses a pass, previews and region previews, the metrics, " +
-      "Variants mode, clipping guardrails, mask names, logs and errors. Static text; touches nothing.",
+      "Variants mode, clipping guardrails, mask names, logs and errors, and the tool profile in force (`tool_profile`). Static text; touches nothing.",
     schema: noArgs,
     annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     // Static text, so it returns here and not through Tools: the call is not in the tool log.
-    run: () => Promise.resolve({ json: { help: HELP_TEXT } }),
+    run: () => Promise.resolve({ json: { help: HELP_TEXT, tool_profile: describeProfile() } }),
   },
 ];

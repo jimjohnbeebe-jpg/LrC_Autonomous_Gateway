@@ -571,7 +571,7 @@
   {
     "name": "lr_list_masks",
     "title": "List the photo's masks",
-    "description": "List the masks on the session's photo: id, name, kind (lr_create_mask's kinds; \"ai\", \"range\" or \"other\" for a kind Lightroom made that the tools do not know; \"mixed\" for components of several kinds), on/off, inverted, components, the local sliders not at 0 (Masking panel units), geometry, and for AI masks whether they have computed. Geometry, points and people's boxes are in 0-1 of the preview you see (the photo as cropped in Lightroom, upright), from its top-left corner, as lr_create_mask takes them; a mask drawn past the crop in Lightroom reads outside 0-1. A colour range's geometry has `sample` (Lightroom's stored l, a, b, for lr_create_mask geometry.sample or copy_sample_from) and color_amount; a depth range's, depth_range. On a mirrored photo geometry reads { unavailable: <why> } (a colour range's sample still shows). A mask of several parts also lists `parts`, in order (lr_edit_mask `part` 1 is the first): each part's kind, mode (add, subtract, intersect; \"other\" for none of them), inverted and geometry. Also lists the local sliders and their ranges. Does not use a pass and writes nothing.",
+    "description": "List the masks on the session's photo: id, name, kind (lr_create_mask's kinds; \"ai\", \"range\" or \"other\" for a kind Lightroom made that the tools do not know; \"mixed\" for components of several kinds), on/off, inverted, components, the local sliders not at 0 (Masking panel units), geometry, and for AI masks whether they have computed. Geometry, points and people's boxes are in 0-1 of the preview you see (the photo as cropped in Lightroom, upright), from its top-left corner, as lr_create_mask takes them; a mask drawn past the crop in Lightroom reads outside 0-1. A colour range's geometry has `sample` (Lightroom's stored l, a, b, for lr_create_mask geometry.sample or copy_sample_from) and color_amount; a depth range's, depth_range. On a mirrored photo geometry reads { unavailable: <why> } (a colour range's sample still shows). `point_colors`: the mask's Point Color swatches, if any (lr_edit_mask point_colors changes them). A mask of several parts also lists `parts`, in order (lr_edit_mask `part` 1 is the first): each part's kind, mode (add, subtract, intersect; \"other\" for none of them), inverted and geometry. Also lists the local sliders and their ranges. Does not use a pass and writes nothing.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -1438,6 +1438,106 @@
           "description": "with inverted: true, keep the mask and add an inverted copy of it (\"everything but the subject\"), with its sliders, `name` (default \"<name> inverted\") and `sliders` set on the copy; one-part masks only. An AI copy is computed by Lightroom afresh, as an AI part is (when it finds nothing, the copy is taken out). The result's mask is the copy",
           "type": "boolean",
           "const": true
+        },
+        "point_colors": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "add",
+                "update",
+                "delete",
+                "clear"
+              ]
+            },
+            "index": {
+              "description": "update, delete: the swatch, 1 = the first in lr_list_masks `point_colors`",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 8
+            },
+            "swatch": {
+              "type": "object",
+              "properties": {
+                "src_hue": {
+                  "description": "the source colour's hue, 0-6 (6 = all the way round)",
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 6
+                },
+                "src_sat": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "src_lum": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "hue_shift": {
+                  "type": "number",
+                  "minimum": -1,
+                  "maximum": 1
+                },
+                "sat_scale": {
+                  "type": "number",
+                  "minimum": -1,
+                  "maximum": 1
+                },
+                "lum_scale": {
+                  "type": "number",
+                  "minimum": -1,
+                  "maximum": 1
+                },
+                "range_amount": {
+                  "description": "how far the selection reaches around the source (new: 0.5)",
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "hue_range": {
+                  "minItems": 4,
+                  "maxItems": 4,
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "description": "[a, b, c, d] in 0-1, each at least the one before: fully selected from b to c, fading to nothing at a and d"
+                },
+                "sat_range": {
+                  "minItems": 4,
+                  "maxItems": 4,
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "description": "[a, b, c, d] in 0-1, each at least the one before: fully selected from b to c, fading to nothing at a and d"
+                },
+                "lum_range": {
+                  "minItems": 4,
+                  "maxItems": 4,
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "description": "[a, b, c, d] in 0-1, each at least the one before: fully selected from b to c, fading to nothing at a and d"
+                }
+              },
+              "description": "add: src_hue, src_sat and src_lum are needed, the rest default to no shift and ranges [0, 0.33, 0.67, 1]; update: only the fields to change"
+            }
+          },
+          "required": [
+            "action"
+          ],
+          "description": "one change to the mask's Point Color swatches (up to 8): add, update or delete one, or clear them all. lr_list_masks shows them as `point_colors`. Written in the form Lightroom stores them; how Lightroom reads a written swatch is [unverified]: look at the result"
         }
       },
       "required": [

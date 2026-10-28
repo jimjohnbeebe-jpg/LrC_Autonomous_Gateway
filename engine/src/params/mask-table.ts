@@ -36,6 +36,8 @@ export const C = {
   refY: "CorrectionReferenceY",
   masks: "CorrectionMasks",
   refineSaturation: "LocalCurveRefineSaturation",
+  // Point Color swatches, as Lightroom stored Jim's [handle: docs\reports\phase8\probes\kinds.json "Mountains"] (mask-point-colors.ts).
+  pointColors: "LocalPointColors",
 } as const;
 export const CORRECTION = "Correction";
 /** Older-process sliders every captured correction carries at 0: kept as they are, never offered. */
@@ -185,9 +187,11 @@ const dabsOf = (v: unknown): string | null => (Array.isArray(v) && v.every((t) =
  * A local adjustment written as 0 that Lightroom leaves out of the read-back: its inverted copy of a mask carries
  * LocalGlow 0 and omits it again after a write [upstream claim: Automaat PR #345, `git show f58f22e`, LrC 15.6].
  * The carried entries are written back as read (issue #121), so such a copy failed every mask pass here too
- * [inference]. Only a zero, only a "Local" field; anything else missing still fails.
+ * [inference]. Only a zero or an empty list (cleared Point Color swatches, issue #217: Lightroom left a Look's empty
+ * PointColors out of the read-back [handle: LR_SDK_NOTES "Recorded in Phase 8.5 — 2026-10-10"], so the same for a
+ * mask's is [inference]), only a "Local" field; anything else missing still fails.
  */
-const omittedZero = (k: string, x: unknown): boolean => x === 0 && k.startsWith("Local");
+const omittedZero = (k: string, x: unknown): boolean => (x === 0 || (Array.isArray(x) && x.length === 0)) && k.startsWith("Local");
 
 /** `written`'s fields all in `got` with equal values (numbers within 1e-6); fields Lightroom adds or recomputes are its own. */
 function covers(written: unknown, got: unknown, key?: string): boolean {

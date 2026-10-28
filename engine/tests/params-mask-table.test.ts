@@ -26,6 +26,8 @@ const twoPeople = (capture("capture4-row6_people_by_hand.json") as { entries: Co
 
 /** Jim's hand-made Brush and Color Range masks, read back by masks:carry (issue #121): the colour range and brush fields (issue #190). */
 const carried = JSON.parse(readFileSync(fileURLToPath(new URL("../../docs/reports/phase8.5/mask-carry/mask_carry_2026-10-11T22-37-39-161Z.json", import.meta.url)), "utf8")) as unknown;
+/** The phase 8 kinds probe: Jim's "Mountains" mask with two Point Color swatches, LocalPointColors (issue #217 row 4). */
+const kinds = JSON.parse(readFileSync(fileURLToPath(new URL("../../docs/reports/phase8/probes/kinds.json", import.meta.url)), "utf8")) as unknown;
 /** In no capture here: a depth range's field [upstream claim: Automaat PR #334]. */
 const UNCAPTURED = new Set([RANGE.depthRange]);
 
@@ -48,7 +50,7 @@ const codeOf = (fn: () => unknown): string => {
 
 describe("params: the mask table's field names (rule 03)", () => {
   it("names only fields and type strings that appear in the committed capture dumps", () => {
-    const seen = words({ dump, captured, copies, twoPeople, carried });
+    const seen = words({ dump, captured, copies, twoPeople, carried, kinds });
     const constants = [MASK_TABLE_KEY, CORRECTION, ...CARRIED, ...RECOMPUTED, ...IMAGE_KEYS, ...[C, M, WHAT, LINEAR, RADIAL, IMAGE, RANGE, BOX, BRUSH].flatMap((o) => Object.values(o)), ...[...LOCAL_PARAMS.values()].map((p) => p.field)];
     expect(constants.filter((c) => !seen.has(c) && !UNCAPTURED.has(c as never))).toEqual([]);
   });

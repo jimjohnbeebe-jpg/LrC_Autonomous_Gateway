@@ -88,11 +88,11 @@ Every `lr_*` write tool runs only when no edit session is open, and returns the 
 | `create_landscape_mask` | `lr_create_mask` | have | |
 | `set_mask_curves` | none | planned #217 | |
 | `get_mask_curves` | none | planned #217 | |
-| `edit_mask_point_colors` | none | planned #217 | |
-| `get_mask_point_colors` | none | planned #217 | |
+| `edit_mask_point_colors` | `lr_edit_mask` | have | `point_colors` add, update, delete or clear, on the mask table in the form Lightroom stores (#217) |
+| `get_mask_point_colors` | `lr_list_masks` | have | `point_colors` of each mask (#217) |
 | `combine_mask` | `lr_edit_mask` | have | `combine` add, subtract, intersect, in the forms checked in Lightroom |
 
-Count: 48 `have`, 9 `ours+`, 8 `planned` (#217: 7, #218: 1), 3 `decision` [handle: `engine/tests/parity-map.test.ts` pins these counts].
+Count: 50 `have`, 9 `ours+`, 6 `planned` (#217: 5, #218: 1), 3 `decision` [handle: `engine/tests/parity-map.test.ts` pins these counts].
 
 ## LrC-AVG tools with no upstream counterpart
 

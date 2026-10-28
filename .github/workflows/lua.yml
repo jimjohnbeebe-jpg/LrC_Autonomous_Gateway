@@ -1,0 +1,45 @@
+# The plugin's Lua quality gate (issue #213; selene and busted under rule 01-stack): selene lints
+# plugin/LrC-AVG.lrplugin (selene.toml, lightroom.yml) and busted runs plugin/spec on Lua 5.1 (.busted),
+# the Lua that Lightroom embeds. Not a required check: whether it becomes one is Jim's call.
+name: lua
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - plugin/**
+      - selene.toml
+      - lightroom.yml
+      - .busted
+      - .github/workflows/lua.yml
+
+permissions:
+  contents: read
+
+jobs:
+  selene:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      # The release zip, refused unless its SHA-256 is the one in docs/DEPENDENCIES.md.
+      - name: Install selene 0.32.0
+        run: |
+          curl -sSfL -o selene.zip https://github.com/Kampfkarren/selene/releases/download/0.32.0/selene-0.32.0-linux.zip
+          echo "d3773393578580074386e69337d35b7acddfbaa9fc38964c07fa3e28436ade9b  selene.zip" | sha256sum -c -
+          unzip -q selene.zip -d "$RUNNER_TEMP/selene"
+          chmod +x "$RUNNER_TEMP/selene/selene"
+          echo "$RUNNER_TEMP/selene" >> "$GITHUB_PATH"
+      - run: selene --version
+      - run: selene plugin/LrC-AVG.lrplugin
+
+  busted:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Install Lua 5.1, LuaRocks and busted 2.3.0-1
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lua5.1 liblua5.1-0-dev luarocks
+          sudo luarocks --lua-version=5.1 install busted 2.3.0-1
+      - run: busted --version
+      - run: busted

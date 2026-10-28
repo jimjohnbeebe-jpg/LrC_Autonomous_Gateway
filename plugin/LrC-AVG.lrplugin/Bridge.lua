@@ -88,8 +88,19 @@ end
 -- generation note above), so a reload also reads as a restart. One second's resolution.
 _G.LrCAVG_ProcessStartedAt = _G.LrCAVG_ProcessStartedAt or isoNow()
 
+-- The open catalog's .lrcat path, "the absolute path of the .lrcat file" [handle: D:\Developer\LightRoom Classic
+-- Dev Kit\API Reference\modules\LrCatalog.html, catalog:getPath], for the dev checks' throwaway guard (issue #213,
+-- engine\src\devtools\throwaway.ts). That it does not yield is [inference]; if it does, or fails, hello goes
+-- without it and the checks refuse to run, so the handshake never fails on it.
+local function catalogPath()
+    local ok, p = pcall(function() return LrApplication.activeCatalog():getPath() end) -- plain pcall: a path getter, see above
+    if ok and type(p) == "string" then return p end
+    return nil
+end
+
 function Bridge.helloPayload(receivePort, sendPort)
     return {
+        catalog_path = catalogPath(),
         protocol = Bridge.PROTOCOL,
         plugin_version = Bridge.PLUGIN_VERSION,
         lrc_version = LrApplication.versionString(),

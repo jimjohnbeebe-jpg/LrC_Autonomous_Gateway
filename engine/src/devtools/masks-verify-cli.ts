@@ -25,6 +25,7 @@ import { personPart } from "./masks-verify-person.js";
 import { parityPart } from "./masks-verify-parity.js";
 import { describeError } from "./phase1-check.js";
 import { redactHome } from "./phase2-check.js";
+import { throwawayRefusal } from "./throwaway.js";
 
 const OUT_DIR = path.join(os.tmpdir(), "LrC-AVG", "masks-verify");
 const STATE = path.join(OUT_DIR, "state.json");
@@ -147,6 +148,10 @@ async function main(say: (line: string) => void): Promise<number> {
   try {
     if (RUN.length === 0) return finish(say, r, false, `--part must be one of ${PARTS.join(", ")}`);
     await gate.ready();
+    // Issue #213: a catalog not marked throwaway is refused before anything is written, and outside the catch,
+    // which puts back a pending record (Greptile, PR #247).
+    const refused = throwawayRefusal(client.hello()?.catalog_path);
+    if (refused) return finish(say, r, false, refused);
     const version = client.hello()?.plugin_version;
     Object.assign(r, { plugin_version: version ?? null, lrc_version: client.hello()?.lrc_version ?? null }); // the 2026-10-28 runs kept neither
     if (!pluginVersionAtLeast(version, MASKS_PLUGIN)) return finish(say, r, false, `reload the LrC-AVG plugin ${MASKS_PLUGIN} or later (Lightroom runs ${String(version)}): File > Plug-in Manager, LrC-AVG, Reload Plug-in. Nothing was written.`);

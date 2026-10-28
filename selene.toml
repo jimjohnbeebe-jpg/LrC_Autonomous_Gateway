@@ -1,0 +1,14 @@
+# selene (Lua linter, rule 01-stack; issue #213) for the LrC-AVG plugin: `npm run lua:lint`, CI lua.yml.
+# Lightroom runs Lua 5.1; the globals it adds are in lightroom.yml (std "lightroom", base lua51).
+std = "lightroom"
+
+[lints]
+# One-line guards and short statement runs (`if not ok then return nil, err end`, `a = 1; b = 2`) are this
+# plugin's house style: 333 hits on the first run [handle: selene 0.32.0 on plugin\LrC-AVG.lrplugin, 2026-10-28],
+# all of that layout, none a defect [inference].
+multiple_statements = "allow"
+# State that must outlive a module body lives on _G on purpose (rule 03-lightroom "Plugin hygiene").
+global_usage = "allow"
+# LrView builds a view from one table holding its child widgets and its named properties (PluginInfoProvider.lua,
+# HudView.lua); the SDK takes that shape [upstream claim: Automaat selene.toml "mixed_table"].
+mixed_table = "allow"

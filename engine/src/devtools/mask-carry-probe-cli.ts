@@ -20,6 +20,7 @@ import { MASK_TABLE_KEY, readTable } from "../params/index.js";
 import { ask, carried, diffEntries, diffSummary, putBack, RADIAL_NAME, readPending, shapesOf, SNAPSHOT, writeAndRead, type Pending } from "./mask-carry-probe.js";
 import { describeError } from "./phase1-check.js";
 import { redactHome } from "./phase2-check.js";
+import { throwawayRefusal } from "./throwaway.js";
 
 const OUT_DIR = path.join(os.tmpdir(), "LrC-AVG", "masks-carry");
 const STATE = path.join(OUT_DIR, "state.json");
@@ -101,6 +102,10 @@ async function main(say: (line: string) => void): Promise<number> {
   const r: Results = { started };
   try {
     await gate.ready();
+    // Issue #213: a catalog not marked throwaway is refused before anything is written, and outside the catch,
+    // which puts back a pending record (Greptile, PR #247).
+    const refused = throwawayRefusal(client.hello()?.catalog_path);
+    if (refused) return finish(say, r, false, refused);
     const left = pending();
     if (damaged) return finish(say, r, false, "the last run's put-back record was damaged");
     if (left) {

@@ -29,6 +29,7 @@ import { defaultPresetDir } from "../presets/index.js";
 import { PreviewService } from "../preview/index.js";
 import { SERVER_NAME } from "../setup/desktop-config.js";
 import { describeError, type Answer } from "./phase1-check.js";
+import { throwawayPreflight } from "./throwaway.js";
 import { redactHome } from "./phase2-check.js";
 import { collectChatLogs } from "./phase2-collect.js";
 import { runPhase8Check } from "./phase8-check.js";
@@ -100,6 +101,12 @@ async function main(): Promise<number> {
     log: new ToolLog(path.join(OUT_DIR, `p8_check_tools_${stamp}`)),
     hud: false,
   });
+  // Issue #213: a catalog not marked throwaway is refused before the check starts.
+  const refused = await throwawayPreflight(gate, client);
+  if (refused) {
+    io.close();
+    throw new Error(refused);
+  }
   const { accepted, finished, results } = await runPhase8Check(
     {
       client,

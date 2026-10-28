@@ -25,6 +25,7 @@ import { loadDefaultParamMap } from "../params/index.js";
 import { PreviewService } from "../preview/index.js";
 import { SERVER_NAME } from "../setup/desktop-config.js";
 import { describeError } from "./phase1-check.js";
+import { throwawayPreflight } from "./throwaway.js";
 import { redactHome } from "./phase2-check.js";
 import { goldenName } from "./goldens.js";
 import { collectChatLogs } from "./phase2-collect.js";
@@ -91,6 +92,12 @@ async function main(): Promise<number> {
   // takes the newest run that captured all six (goldens.ts).
   const goldenFolder = `golden_${stamp}`;
   const goldenDir = path.join(OUT_DIR, goldenFolder);
+  // Issue #213: a catalog not marked throwaway is refused before the check starts.
+  const refused = await throwawayPreflight(gate, client);
+  if (refused) {
+    rl.close();
+    throw new Error(refused);
+  }
   const { accepted, results } = await runPhase3Check({
     client,
     gate,

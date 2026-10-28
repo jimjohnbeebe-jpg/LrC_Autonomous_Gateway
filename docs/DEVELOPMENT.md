@@ -22,6 +22,7 @@ The loop is Claude-orchestrated (`lr_begin_session` → `lr_step` … → `lr_en
 | `engine/src/devtools/` | Check harnesses and build scripts; not in the package |
 | `engine/src/setup/` | `lrc-avg-setup`, which writes the Claude Desktop entry |
 | `plugin/LrC-AVG.lrplugin/` | The Lightroom plugin (Lua) |
+| `plugin/spec/` | busted specs of the plugin's Lua, run outside Lightroom ("Lua lint and specs" below) |
 | `plugin/spikes/`, `spikes/` | Phase 0-5 spike plugins and scripts (throwaway) |
 | `docs/` | Reports (`reports/<phase>/`), the Automaat survey, environment and dependency records, the Phase 0 handover |
 | `vendor/automaat/` | Upstream reference snapshot (read-only) |
@@ -53,6 +54,23 @@ Use this instead of the README's setup, not next to it: both write the same Clau
 3. After each `npm run build`, restart Claude Desktop to run the new engine; after a plugin change, restart Lightroom. Claude Desktop starts the engine and keeps it running [handle: `engine/src/mcp/main.ts:6-10`]; that a running engine does not pick up a rebuilt `dist` is [inference] (Node loads the modules once).
 
 Development overrides are read from `LRC_AVG_*` environment variables: the ports and token file in `engine/src/mcp/dev-overrides.ts`, the folders in `engine/src/settings/folders.ts` and `engine/src/presets/folder.ts`. The Deck's executable (Phase 7) is `LRC_AVG_HUD_EXE` (`engine/src/hud/launch.ts`).
+
+## Lua lint and specs
+
+The plugin's Lua has its own gate (issue #213): selene lints `plugin/LrC-AVG.lrplugin/` with `selene.toml` and the Lightroom globals in `lightroom.yml`, and busted runs the specs in `plugin/spec/` (`.busted`). The CI workflow `.github/workflows/lua.yml` runs both on Ubuntu, Lua 5.1, on every pull request that touches `plugin/`. Pinned versions: [`DEPENDENCIES.md`](DEPENDENCIES.md) "Lua tooling".
+
+```powershell
+npm run lua:lint     # selene; says where to get it when selene.exe is not on PATH
+npm run lua:test     # busted; says so when it is not on PATH (CI runs it)
+```
+
+- **selene on Windows** is one file: download `selene-0.32.0-windows.zip` from https://github.com/Kampfkarren/selene/releases/tag/0.32.0, unzip `selene.exe` into a folder on your `PATH` (for example `$env:USERPROFILE\bin`), and check with `selene --version` (it prints `selene 0.32.0`). With it on PATH, `npm run lua:lint` printed `0 errors`, `0 warnings` [handle: `npm run lua:lint` on branch `phase-11/lua-quality-gate`, 2026-10-28].
+- **busted on Windows** needs Lua 5.1 and LuaRocks, and LuaRocks builds busted's C module (luasystem) with a C compiler. That set-up was not tried on a Windows PC [unverified], so the specs run in CI for now. Where Lua 5.1 and LuaRocks are installed: `luarocks --lua-version=5.1 install busted 2.3.0-1`, then `npm run lua:test` from the repo root.
+- A spec loads a plugin module outside Lightroom: `plugin/spec/spec_helper.lua` stubs `import` (each SDK namespace is an empty table the spec fills) and `LrTasks.pcall`, and `helper.load(name, stubs)` loads a module with stand-ins for the modules it requires. The specs cover `Json.lua`, the path helpers of `KeywordTree.lua`, `Pending.lua` and `Dispatch.handleLine`.
+
+## Live checks on a throwaway catalog
+
+The checks that write to photos (`masks:carry`, `masks:combine`, `masks:kinds`, `masks:crop`, `masks:verify`, `masks:parity`, `denoise:check`, `phase2:check` to `phase5:check`, `phase8:check`) refuse to run unless the catalog open in Lightroom is marked as a throwaway one (issue #213). Mark it once with `npm run catalog:throwaway`: it shows the open catalog's path, asks y/n, and writes `lrc-avg-throwaway.json` beside the `.lrcat`. To run a check on an unmarked catalog anyway, add `-- --i-know` (`npm run masks:verify -- --i-know`). The path comes from the plugin's hello (`catalog:getPath()`, `plugin/LrC-AVG.lrplugin/Bridge.lua`), so a plugin loaded before this change is refused until it is reloaded. Report: [`reports/phase11/THROWAWAY.md`](reports/phase11/THROWAWAY.md).
 
 ## Packaging
 
@@ -91,6 +109,8 @@ writes the two release assets to `release\`: `lrc-avg-<version>.tgz` (the engine
 | `npm run presets:check` | Issue #215: the six Develop preset tools on one selected virtual copy (`docs\reports\phase11\PRESET-PARITY.md`) |
 | `npm run stats:check` | Issue #216: `lr_get_photo_stats` on 2-20 selected photos, fast against exact previews (`docs\reports\phase11\METRICS-PARITY.md`) |
 | `npm run catalog:check` | Issue #218: the new catalog and metadata tools on one photo in a throwaway or copied catalog (`docs\reports\phase11\CATALOG-PARITY.md`) |
+| `npm run catalog:throwaway` | Issue #213: marks the open catalog as a throwaway one, so the live checks run on it ("Live checks on a throwaway catalog" above; `docs\reports\phase11\THROWAWAY.md`) |
+| `npm run lua:lint`, `npm run lua:test` | Issue #213: selene and busted on the plugin's Lua ("Lua lint and specs" above) |
 | `npm run perf:check` | Issue #212: read-only timings of the catalog reads, p50/p95; `-- --label baseline` before the speed-up, `-- --label after` after it (`docs\reports\phase11\PERF.md`) |
 | `npm test` (`engine\tests\parity-map.test.ts`) | Issue #220: [`PARITY.md`](PARITY.md) has a row for every pinned upstream tool and names every registered `lr_*` tool; renewing the pin: [`UPSTREAM_SYNC.md`](UPSTREAM_SYNC.md) |
 | `node spikes\S1\measure.ts` | Spike scripts run directly (Node type stripping) |

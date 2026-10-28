@@ -25,6 +25,7 @@ import { loadDefaultParamMap } from "../params/index.js";
 import { PreviewService } from "../preview/index.js";
 import { SERVER_NAME } from "../setup/desktop-config.js";
 import { describeError } from "./phase1-check.js";
+import { throwawayPreflight } from "./throwaway.js";
 import { collectChatLogs } from "./phase2-collect.js";
 import { HISTORY_PREFIX, redactHome, runPhase2Check, type Answer, type ChatLogs } from "./phase2-check.js";
 
@@ -95,6 +96,12 @@ async function main(): Promise<number> {
     log: new ToolLog(path.join(OUT_DIR, `p2_check_tools_${stamp}`)),
     historyPrefix: HISTORY_PREFIX,
   });
+  // Issue #213: a catalog not marked throwaway is refused before the check starts.
+  const refused = await throwawayPreflight(gate, client);
+  if (refused) {
+    rl.close();
+    throw new Error(refused);
+  }
   const { accepted, results } = await runPhase2Check({
     client,
     gate,

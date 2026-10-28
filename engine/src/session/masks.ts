@@ -21,10 +21,10 @@
 // tests\session-ai-masks.test.ts, against the Lightroom sim; in Lightroom [unverified] until Jim's
 // mask tools check.]
 
-import { pluginVersionAtLeast } from "../bridge/index.js";
+import { maskVersionWarnings, pluginVersionAtLeast } from "../bridge/index.js";
 import type { GuardrailAction, MaskPassEntry } from "../log/index.js";
 import { ToolError, toToolError } from "../mcp/errors.js";
-import { deltaMetrics, sampleColor, summarize as metricsOf } from "../metrics/index.js";
+import { deltaMetrics, summarize as metricsOf } from "../metrics/index.js";
 import {
   AI_KINDS,
   KIND_LABELS,
@@ -46,7 +46,6 @@ import {
   type Correction,
   type CreateOp,
   type CropFrame,
-  type Lab,
   type MaskKind,
   type MaskOp,
   type OpResult,
@@ -196,7 +195,7 @@ async function maskPass(ctx: SessionContext, s: Session, args: PassArgs, op: Mas
   refuseUncaptured(s, before, op);
   const frame = await frameOf(ctx, s, t, first.sdk);
   if (op.op === "create" && op.copy_sample_from) op = await copySample(ctx, s, t, op, { entries: before, frame });
-  let plan = applyOp(before, op, frame); // MaskError: nothing written
+  const plan = applyOp(before, op, frame); // MaskError: nothing written
   if (plan.ai) checkAiPartPlugin(ctx); // issue #131: before the write
   if (sameTable(before, plan.entries)) throw new ToolError("NO_CHANGE", "Nothing was written: the mask already is as asked. The pass is not used.", false, { session_id: s.id });
   let baseline: Rendered;
@@ -206,9 +205,6 @@ async function maskPass(ctx: SessionContext, s: Session, args: PassArgs, op: Mas
     throw failed(ctx, s, `mask pass ${n} (render before the change)`, err);
   }
   if ((await readSdk(ctx, s, t)).view.masks.fingerprint !== first.view.masks.fingerprint) throw masksChanged(s);
-  // A colour range without a given or copied sample takes the preview's sRGB at its point (issue #190) where Lightroom
-  // stores its own l, a, b: [unverified] until `npm run masks:verify` (issue #210, params\mask-range.ts).
-  if (op.op === "create" && op.kind === "color_range" && op.point && !op.geometry?.sample) plan = applyOp(before, { ...op, geometry: { ...op.geometry, sample: asLab(await sampleColor(baseline.jpeg, op.point)) } }, frame);
   try {
     const done = await applyPlan(ctx, s, t, n, op, plan, before, baseline, frame);
     t.passes = n;
@@ -218,7 +214,8 @@ async function maskPass(ctx: SessionContext, s: Session, args: PassArgs, op: Mas
     const masks = summaries(done.sdk, frame);
     const after = masks.find((m) => m.id === done.id) ?? null;
     const mask: MaskPassEntry = { op: op.op, id: done.id, name: (after ?? plan.before ?? plan.after)?.name ?? "", kind: plan.kind, before: plan.before, after, ...(done.ai ? { ai: aiLog(done.ai) } : {}) };
-    const warnings = op.op === "delete" || done.undone ? [] : outsideWarnings(frame, after); // issue #179
+    // issue #179 (outside the preview); the Lightroom version upstream refuses on, as a warning (bridge\lightroom.ts)
+    const warnings = done.undone ? [] : [...maskVersionWarnings(ctx.deps.client.hello()?.lrc_version), ...(op.op === "delete" ? [] : outsideWarnings(frame, after))];
     recordPass(s, {
       n, kind: "mask", target: t.id, started: passStarted, duration_ms: ms(started), history_names: done.historyNames, rationale: args.rationale,
       requested: { ...op }, changes: [], clamped: [], refused: [], unchanged: [], settings_before: first.view.settings, settings_after: done.view.settings,
@@ -236,9 +233,6 @@ async function maskPass(ctx: SessionContext, s: Session, args: PassArgs, op: Mas
     throw failed(ctx, s, `mask pass ${n} (${op.op})`, err);
   }
 }
-
-/** The preview's sRGB, written where Lightroom keeps its l, a, b [unverified] (issue #210). */
-const asLab = ([l, a, b]: [number, number, number]): Lab => ({ l, a, b });
 
 /**
  * A create's copy_sample_from resolved from the colour range it names, on this photo (`here`) or on its `target`.

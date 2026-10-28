@@ -40,3 +40,15 @@ export function lightroomNotices(lrcVersion: unknown): string[] {
   }
   return [];
 }
+
+/**
+ * Upstream writes mask geometry only on Lightroom Classic 15.6 and refuses any other version [upstream claim:
+ * Automaat/lightroom-mcp 1040453, plugin\LightroomMCP.lrplugin\GuardedMaskWrite.lua:8, :385-392]. Here that check is
+ * a warning on a mask change, never a refusal; the session's own guard (read-back, MASKS_CHANGED, revert) stays
+ * [stated: Jim, 2026-10-28, "Go with recommendation": keep ours, add upstream's version check as a warning only].
+ */
+export function maskVersionWarnings(lrcVersion: unknown): string[] {
+  const v = typeof lrcVersion === "string" ? majorMinor(lrcVersion) : null;
+  if (v && compare(v, majorMinor(TESTED_LRC) as [number, number]) === 0) return [];
+  return [`Masks were checked in Lightroom Classic ${TESTED_LRC} only, and this is ${v ? v.join(".") : "a version that could not be read"}: look at the mask in Lightroom.`];
+}

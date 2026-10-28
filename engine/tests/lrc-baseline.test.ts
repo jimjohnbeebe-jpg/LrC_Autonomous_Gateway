@@ -6,7 +6,7 @@
 
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { BridgeError, HUD_LIMITS, PLUGIN_VERSION, lightroomNotices } from "../src/bridge/index.js";
+import { BridgeError, HUD_LIMITS, PLUGIN_VERSION, lightroomNotices, maskVersionWarnings } from "../src/bridge/index.js";
 import { Tools, toToolError } from "../src/mcp/index.js";
 import { readbackError } from "../src/mcp/errors.js";
 import { PreviewService } from "../src/preview/index.js";
@@ -38,6 +38,15 @@ function dropFromReadBack(key: string): void {
     return reply;
   });
 }
+
+describe("maskVersionWarnings (upstream's mask version check, a warning here)", () => {
+  it("says nothing on 15.6 and its patch releases; warns on any other version or an unreadable one", () => {
+    for (const v of ["15.6", "15.6.2", "15.6 [ 1234 ]"]) expect(maskVersionWarnings(v), v).toEqual([]);
+    expect(maskVersionWarnings("15.5.1")).toEqual(["Masks were checked in Lightroom Classic 15.6 only, and this is 15.5: look at the mask in Lightroom."]);
+    expect(maskVersionWarnings("16.0")[0]).toMatch(/this is 16\.0:/);
+    expect(maskVersionWarnings(undefined)[0]).toMatch(/this is a version that could not be read:/);
+  });
+});
 
 describe("lightroomNotices", () => {
   it("says nothing from 15.0 to 15.6, patch releases included", () => {

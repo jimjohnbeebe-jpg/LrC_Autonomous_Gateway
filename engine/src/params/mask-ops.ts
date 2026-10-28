@@ -106,6 +106,18 @@ export function newCorrection(kind: MaskKind, name: string, g: Geometry, point: 
   return out as Correction;
 }
 
+/**
+ * A colour range sampled from the preview at its point is refused (Jim's decision, 2026-10-28): in `npm run masks:verify`
+ * the engine's point sample selected the red asked for on one photo and not on the other, while a copy of Lightroom's
+ * own sample worked, and Lightroom's sample for red (l 0.79, a 0.84, b 0.66) is on another scale than the preview's
+ * sRGB at that place [handle: docs\reports\phase11\MASKS-VERIFY.md "Observed"; inference: the scale].
+ */
+export const COLOR_SAMPLE_NEEDED =
+  "A color_range mask needs its colour as Lightroom stores it, given one of two ways: copy_sample_from (the mask_id of a colour range made in " +
+  "Lightroom: Tools > Create New Mask > Color Range in Develop, click the colour; lr_list_masks shows its id), or geometry.sample (l, a, b as " +
+  "lr_list_masks shows them for a colour range). A colour taken from the preview at point is not written: it did not select the colour asked for in a " +
+  "Lightroom check. Nothing was written.";
+
 /** A person's point, or a colour range's (the colour to select): required for those kinds, refused for the others; given in the preview's frame, returned in the photo's. */
 function pointFor(kind: MaskKind, point: Point | undefined, frame: CropFrame): Point | null {
   const needs = kind === "color_range" || (isAiKind(kind) && AI_KINDS[kind].point);
@@ -183,6 +195,7 @@ export function applyOp(current: readonly Correction[], op: MaskOp, frame: CropF
   const kind = checkKind(op.kind);
   if (op.copy_sample_from) throw new MaskError("INTERNAL_ERROR", "copy_sample_from is resolved (withCopiedSample) before the mask is built.");
   if (isAiKind(kind) && op.geometry) throw new MaskError("INVALID_ARGUMENTS", `A ${kind} mask is found by Lightroom's AI; it takes no geometry.`);
+  if (kind === "color_range" && !op.geometry?.sample) throw new MaskError("INVALID_ARGUMENTS", COLOR_SAMPLE_NEEDED);
   const entry = newCorrection(kind, op.name ?? `AVG ${KIND_LABELS[kind]}`, op.geometry ?? {}, pointFor(kind, op.point, frame), storedSliders(op.sliders ?? {}), entries, frame);
   entries.push(entry);
   return { entries, id: String(entry[C.id]), kind, before: null, after: summarize(entry, frame) };

@@ -13,14 +13,16 @@ const create = (args: Record<string, unknown>) => manager.createMask({ session_i
 const holder = (e: Correction | undefined): Record<string, unknown> => ((e?.["CorrectionMasks"] as Record<string, unknown>[])[0] as Record<string, Record<string, unknown>>)["CorrectionRangeMask"] as Record<string, unknown>;
 
 describe("new mask kinds in a session", () => {
-  it("samples a colour range's colour from the preview at its point: orange in the orange half", async () => {
+  it("refuses a colour range with a point only (no sample from the preview, Jim 2026-10-28), naming both ways to give the colour; nothing written", async () => {
     clean();
     await begin();
-    const out = await create({ kind: "color_range", point: { x: 0.5, y: 0.75 }, sliders: { "local.saturation": -20 } });
-    expect(out.json["mask"]).toMatchObject({ kind: "color_range" });
-    const [r, g, b] = String((holder(masks()[0])["PointModels"] as string[])[0]).split(" ").map(Number) as [number, number, number];
-    expect(r).toBeGreaterThan(g);
-    expect(g).toBeGreaterThan(b);
+    const err = await fails(create({ kind: "color_range", point: { x: 0.5, y: 0.75 }, sliders: { "local.saturation": -20 } }));
+    expect(err.code).toBe("INVALID_ARGUMENTS");
+    expect(err.message).toMatch(/copy_sample_from/);
+    expect(err.message).toMatch(/geometry\.sample/);
+    expect(masks()).toEqual([]);
+    const ok = await create({ kind: "color_range", point: { x: 0.5, y: 0.75 }, geometry: { sample: { l: 0.5, a: 0.8, b: 0.7 } } });
+    expect(ok.json["pass"]).toBe("1/4"); // the refusal used no pass
     expect(lr.history.at(-1)).toBe(`AVG ${SHORT} pass 1/4 mask create`);
   });
 

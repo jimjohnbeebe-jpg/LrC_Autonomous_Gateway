@@ -29,6 +29,7 @@ Rewritten from upstream at `1040453` (2026-10-26; PRs #405, #407, #410, #411, #4
 |---|---|---|
 | `server/src/tool-contracts.ts` `apply_auto_adjustments`, `reset_develop_adjustments`, `set_process_version`, `list/create/apply/delete_develop_snapshot`, `create_virtual_copies` | The tools' scope: Auto Tone / Auto WB, Reset with `confirm`, Version 1-6 with masked downgrades refused, snapshots by id, up to 25 virtual copies with an optional name, per-photo outcomes within a time budget | `src/mcp/tools-develop.ts`, `src/mcp/tools-snapshots.ts`, `src/mcp/defs-develop.ts`; plugin `DevelopTools.lua`, `Snapshots.lua`, `Copies.lua` |
 | `plugin/LightroomMCP.lrplugin/DevelopSession.lua` | One photo at a time in Develop, the view (module, sources, selection) put back | plugin `DevelopSession.lua` (out of `Denoise.lua`, which ported PR #288 for issue #190) |
+| `server/src/tool-contracts.ts` `set_develop_settings`, `undo_last_step`, `remove_photos_from_catalog` (PR #424); `HandlerUndo.lua`, `HandlerRemoveFromCatalog.lua` (decisions D1-D3 of epic #207) | Develop settings by SDK key; one global undo behind `confirm`; removal from the catalog behind `confirm` and LrC 14.3, 100 photos at most, a master refused without all its virtual copies, the selection checked before and after | `src/params/sdk-passthrough.ts`, `src/mcp/tools-develop.ts`, `src/mcp/tools-remove.ts`, `src/mcp/defs-develop.ts`; plugin `DevelopTools.lua`, `Remove.lua` |
 
 ### Issue #216 (metrics and preview parity), from upstream commit `1040453`
 

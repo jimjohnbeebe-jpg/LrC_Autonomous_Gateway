@@ -123,7 +123,7 @@ export function createVirtualCopies(ctx: ToolContext, args: VirtualCopiesArgs, b
       const json = {
         photos,
         failed: failed.map((f) => ({ uuid: f.item, code: f.code, message: f.message })),
-        undo: "No tool removes photos: the user removes a copy in Lightroom (Library > Remove Photo), the master stays.",
+        undo: "lr_remove_photos with a copy_uuid and confirm: true removes that copy from the catalog; the master stays.",
         ...(left.length > 0 ? { not_yet: left, next: `Time is up for this call: call again with uuids = not_yet (${left.length} photos) and the same copy_name.` } : {}),
       };
       return { json, log: { copied: photos.filter((p) => p["status"] === "copied").length, failed: failed.length, not_yet: left.length } };

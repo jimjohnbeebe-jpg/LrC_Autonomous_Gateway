@@ -24,6 +24,8 @@ const GATES = [
   { feature: "Deleting empty masks", version: "14.0", prefix: "catalog:", object: "catalog", names: ["deleteAllEmptyMasks"], file: "MaskClean.lua" },
   // Issue #217 Point Color through the controller [handle: API Reference\modules\LrDevelopController.html, addPointColorSwatch and the four beside it, "First supported in version 13.2"].
   { feature: "Mask Point Color", version: "13.2", prefix: "LrDevelopController.", object: "LrDevelopController", names: ["getSelectedPointColorSwatchIndex", "selectPointColorSwatch", "addPointColorSwatch", "updateSelectedPointColorSwatch", "deletePointColorSwatch"], file: "MaskControl.lua" },
+  // Decision D3 of epic #207 [handle: API Reference\modules\LrSelection.html:641-643, "First supported in version 14.3"].
+  { feature: "Removing photos from the catalog", version: "14.3", prefix: "LrSelection.", object: "LrSelection", names: ["removeFromCatalog"], file: "Remove.lua" },
 ] as const;
 const [AI_MASK, DENOISE] = GATES;
 
@@ -95,6 +97,16 @@ describe("plugin: every call newer than 13.0 goes through Needs.check", () => {
     expect(code.indexOf("Needs.check(")).toBeLessThan(code.indexOf("Gate.write("));
     const callers = own.filter((f) => /deleteAllEmptyMasks\s*\(/.test(codeOnly(readFileSync(f, "utf8")))).map((f) => path.basename(f));
     expect(callers).toEqual(["MaskClean.lua"]);
+  });
+
+  it("checks LrSelection.removeFromCatalog before Remove.photos selects anything, and no other file calls it", () => {
+    const code = codeOnly(lua("Remove.lua"));
+    const entry = code.indexOf("function Remove.photos(");
+    const check = code.indexOf("Needs.check(", entry);
+    const work = code.indexOf("Catalog.exclusive(", entry);
+    expect([entry, check, work].every((i) => i >= 0) && check < work).toBe(true);
+    const callers = own.filter((f) => /removeFromCatalog\s*\(/.test(codeOnly(readFileSync(f, "utf8")))).map((f) => path.basename(f));
+    expect(callers).toEqual(["Remove.lua"]);
   });
 
   it("keeps the mask calls (SDK 11.0, below the minimum) without a gate of their own, probed by MaskProbe.begin only to name a build that lacks one", () => {

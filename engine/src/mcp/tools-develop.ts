@@ -1,5 +1,6 @@
 // The Develop parity tools that drive LrDevelopController (issue #214; plugin DevelopTools.lua): lr_apply_auto,
-// lr_reset and lr_set_process_version. As lr_apply_denoise (tools-denoise.ts): only between sessions
+// lr_reset, lr_set_process_version and lr_set_develop_settings (decision D1 of epic #207), and lr_undo_last_step (D2).
+// As lr_apply_denoise (tools-denoise.ts): only between sessions
 // (SessionManager.whenIdle), one plugin command per photo named by uuid, within the call budget (`not_yet`), each
 // changed photo snapshotted first. On top: a photo a stopped engine's session left open is refused (SESSION_LEFT_OPEN,
 // session\left-open.ts), and each photo's settings are read before the command so the result names what changed.
@@ -7,8 +8,9 @@
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { CALL_BUDGET_MS } from "../library/index.js";
-import { ParamError, differingSettings, tableInfo, type ParamMap, type SdkSettings } from "../params/index.js";
+import { ParamError, differingSettings, sdkPassthrough, tableInfo, type ParamMap, type SdkSettings } from "../params/index.js";
 import { WRITE_TIMEOUT_MS } from "../sync/target.js";
+import { ToolError } from "./errors.js";
 import { eachInBudget, type Budget } from "./tools-files.js";
 import { needPlugin, run, sessionTools, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
@@ -16,11 +18,15 @@ import { needPlugin, run, sessionTools, type ToolContext, type ToolOutput } from
 export const DEVELOP_PLUGIN = "1.5.0";
 /** The plugin with the issue #217 mask commands (MaskClean.lua delete_empty_masks). */
 export const MASK_PARITY_PLUGIN = "1.6.0";
+/** The plugin with the commands of decisions D1-D3 (DevelopTools.lua set_develop_settings, undo_last_step; Remove.lua). */
+export const DECISIONS_PLUGIN = "1.7.0";
 
 export type ApplyAutoArgs = { uuids: string[]; tone?: boolean | undefined; white_balance?: boolean | undefined };
 export type ResetArgs = { uuids: string[]; confirm: true };
 export type DeleteEmptyMasksArgs = { uuids: string[] };
 export type ProcessVersionArgs = { uuids: string[]; version: number; confirm: true };
+export type SetDevelopSettingsArgs = { uuids: string[]; settings: Record<string, number | boolean | number[]> };
+export type UndoArgs = { confirm: true };
 
 export type Changes = { names: "canonical" | "sdk"; changed: Record<string, { before: unknown; after: unknown }>; masks?: { before: number; after: number } };
 
@@ -119,6 +125,49 @@ export function setProcessVersion(ctx: ToolContext, args: ProcessVersionArgs, bu
   return developTool(ctx, "lr_set_process_version", args, args.uuids, "pre-process-version", budget, (uuid, before, name) =>
     ctx.deps.client.request("set_process_version", { photo_uuid: uuid, version, masked: tableInfo(before).count > 0, confirm: true, snapshot_name: name }, timeout),
   );
+}
+
+/**
+ * Decision D1 of epic #207 (issue #214): Develop settings by Lightroom's SDK key, validated against the pinned dump
+ * (params\sdk-passthrough.ts), written as one named History step on the photo active in Develop (DevelopTools.lua
+ * setSettings), snapshot first. A key Lightroom did not take as written puts the photo back from that snapshot
+ * (`status` not_taken), as a session undoes a pass Lightroom took only in part (session\guardrail.ts undoRefused).
+ */
+export function setDevelopSettings(ctx: ToolContext, args: SetDevelopSettingsArgs, budget: Budget = realBudget()): Promise<ToolOutput> {
+  const { client, map } = ctx.deps;
+  const need = { plugin: DECISIONS_PLUGIN, why: "it has the set_develop_settings command" };
+  return developTool(ctx, "lr_set_develop_settings", args, args.uuids, "pre-set", budget, async (uuid, before, name) => {
+    const view = map.fromSdk(before); // a legacy or unknown process version is refused here, nothing sent
+    const { sdk, unranged } = sdkPassthrough(map, args.settings, { processVersion: view.process_version, pipeline: view.pipeline, hdr: view.hdr });
+    const history_name = `AVG set develop settings ${name.slice(-6)}`;
+    const r = await client.request("set_develop_settings", { photo_uuid: uuid, settings: sdk, history_name, snapshot_name: name }, timeout);
+    const extra = { history_name, ...(unranged.length > 0 ? { unranged } : {}) };
+    const not_taken = r.status === "set" ? map.verifyReadback(sdk, r.read_back) : [];
+    if (not_taken.length === 0 || !r.snapshot) return { ...r, ...extra };
+    const back = await client.request("apply_snapshot", { photo_uuid: uuid, snapshot_id: r.snapshot.id, restore_view: true }, timeout);
+    const reason = `Lightroom did not take ${not_taken.map((m) => m.sdk_key).join(", ")} as written, so the photo was put back from the snapshot`;
+    return { ...r, ...extra, status: "not_taken", not_taken, reason, read_back: back.read_back };
+  }, need);
+}
+
+/** Decision D2 of epic #207 (issue #214): Lightroom's Edit > Undo, once (DevelopTools.lua undoLastStep). Global: refused while any session is open or left open. */
+export function undoLastStep(ctx: ToolContext, args: UndoArgs): Promise<ToolOutput> {
+  return run(ctx, "lr_undo_last_step", args, async () => {
+    const sessions = sessionTools(ctx);
+    await ctx.deps.ensureBridge();
+    needPlugin(ctx, "lr_undo_last_step", DECISIONS_PLUGIN, "it has the undo_last_step command");
+    const [left] = sessions.leftOpen();
+    if (left) throw new ToolError("SESSION_LEFT_OPEN", `Nothing was undone: session ${left.log.session_id} was left open by an engine that stopped, and Lightroom's undo could reach its steps; end it with lr_end_session first.`, false, { session_id: left.log.session_id });
+    return sessions.whenIdle("lr_undo_last_step", async () => {
+      const r = await ctx.deps.client.request("undo_last_step", { confirm: true }, timeout);
+      // Edit > Redo bringing the step back is [inference] from LrUndo.redo, "Redoes the last undone history state"
+      // [handle: API Reference\modules\LrUndo.html]; what Lightroom undoes is [unverified] until develop-catalog:check.
+      const note = r.undone
+        ?"Lightroom undid its last step, whoever made it (Edit > Undo); Edit > Redo in Lightroom brings it back."
+        : "Lightroom had nothing to undo; nothing changed.";
+      return { json: { ...r, note }, log: r };
+    });
+  });
 }
 
 /** Issue #217 row 1: Lightroom's catalog:deleteAllEmptyMasks on each photo (MaskClean.lua); each photo's `masks` gives the count before and after. */

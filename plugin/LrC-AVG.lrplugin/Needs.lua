@@ -12,6 +12,7 @@
 --   photo:updateAISettings           13.3  Masks.updateAISettings [handle: API Reference\modules\LrPhoto.html:1308, SDK 15.2]
 --   getEnhancePanelState,
 --   changeDenoiseAmount              14.5  Denoise.apply [handle: API Reference\modules\LrDevelopController.html:730, 1131]
+--   LrSelection.removeFromCatalog    14.3  Remove.photos [handle: API Reference\modules\LrSelection.html:641-643]
 --   setEnhance                       none documented: not in the 15.2 reference at all [handle: grep -ri setEnhance
 --                                    "API Reference" finds nothing]; it worked on LrC 15.6 [handle: LR_SDK_NOTES
 --                                    "Recorded in Phase 9"], so its first release is [unverified] and the 14.5 above

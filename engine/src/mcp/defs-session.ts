@@ -196,7 +196,7 @@ export const SESSION_DEFS: ToolDef[] = [
     description:
       "Variants mode: continue the session on the copy the user picked (ask the user; do not pick for them). The copy is selected " +
       "in Lightroom, later lr_step calls go to it, and its pass count carries on from its own passes. The other copies stay in the " +
-      "catalog as they are; the user removes them in Lightroom when they want. Returns the pick, its passes left and its last preview. " +
+      "catalog as they are (after lr_end_session, lr_remove_photos can remove them if the user wants). Returns the pick, its passes left and its last preview. " +
       "Also accepted before every copy has had its refined pass. Does not render. If the user already picked in the HUD, calling " +
       "this with that letter confirms it (`picked_by: \"hud\"`); another letter is refused.",
     schema: selectArgs,

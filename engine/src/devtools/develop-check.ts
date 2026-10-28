@@ -1,6 +1,8 @@
 // `npm run develop:check` (issue #214): do the Develop parity tools work in Lightroom? The pure parts: what each step
 // expects, and the verdict. The CLI (develop-check-cli.ts) drives Lightroom through the tools themselves.
-// Report: docs\reports\phase11\DEVELOP-PARITY.md.
+// Report: docs\reports\phase11\DEVELOP-PARITY.md. `step` serves develop-catalog:check too (develop-catalog-check-cli.ts).
+
+import { describeError } from "./phase1-check.js";
 
 /** One tool call of the check: the statuses its photos answered, and those that count as working. */
 export type Step = { step: string; expect: string[]; statuses: string[]; error?: string };
@@ -16,6 +18,26 @@ export function statusesOf(json: Record<string, unknown>): string[] {
   const failed = Array.isArray(json["failed"]) ? (json["failed"] as unknown[]).map(() => "failed") : [];
   if (!Array.isArray(photos)) return ["ok", ...failed];
   return [...photos.map((p) => String((p as { status?: unknown }).status)), ...failed];
+}
+
+/** What a check's steps write into: its output, its result file's object (results under `results`) and its steps. */
+export type StepLog = { say: (l: string) => void; r: Record<string, unknown>; steps: Step[] };
+
+/** One tool call as a step of a check; its result is kept under its name. Returns the result's JSON, or null (develop:check, develop-catalog:check). */
+export async function step(c: StepLog, name: string, expect: string[], call: () => Promise<{ json: Record<string, unknown> }>, statuses = statusesOf): Promise<Record<string, unknown> | null> {
+  c.say(`${name} ...`);
+  try {
+    const { json } = await call();
+    const s: Step = { step: name, expect, statuses: statuses(json) };
+    c.steps.push(s);
+    (c.r["results"] as Record<string, unknown>)[name] = json;
+    c.say(`  ${s.statuses.join(", ")}`);
+    return json;
+  } catch (err) {
+    c.steps.push({ step: name, expect, statuses: [], error: describeError(err) });
+    c.say(`  failed: ${describeError(err)}`);
+    return null;
+  }
 }
 
 /** The verdict: every step as expected, the selection and the settings put back, the snapshots cleaned, and Jim's "y"s. */

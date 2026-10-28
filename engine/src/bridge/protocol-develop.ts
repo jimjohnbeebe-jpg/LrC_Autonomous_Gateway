@@ -42,6 +42,17 @@ export const DEVELOP_RESULTS = {
     snapshots: z.array(z.object({ id: z.string(), name: z.string(), id_global: z.string().optional() })),
   }),
   delete_snapshot: z.object({ uuid: z.string(), snapshot_id: z.string() }),
+  // Decisions D1-D3 of epic #207 (DevelopTools.lua setSettings, undoLastStep; Remove.lua).
+  set_develop_settings: z.object({ ...developAnswer, status: z.enum(["set", "skipped", "failed"]) }),
+  undo_last_step: z.object({ undone: z.boolean(), can_undo: z.boolean() }),
+  remove_photos: z.object({
+    status: z.enum(["removed", "failed"]),
+    reason: z.string().optional(),
+    removed: z.array(z.string()),
+    not_removed: z.array(z.string()),
+    /** uuids no photo in the catalog has. */
+    missing: z.array(z.string()),
+  }),
   copy_photo: z.object({
     uuid: z.string(),
     status: z.enum(["copied", "failed", "skipped"]),

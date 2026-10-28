@@ -120,8 +120,8 @@ export const FILE_DEFS: ToolDef[] = [
       "Import a photo file, or the photo files in a folder (raw, DNG, JPEG, TIFF, PNG, HEIC, PSD), into the Lightroom catalog: where they " +
       "are, or copied first into copy_to (do that for a memory card). A file the catalog already holds at that path is not imported again " +
       "(`already_in_catalog`, with its uuid); a photo imported earlier from another path is not recognised. Returns the uuids, each with its source file, its path in the catalog and capture_time, for " +
-      "lr_add_to_collection, lr_set_keywords and the other tools. No develop or metadata preset is passed to the import, and no tool can remove a photo from " +
-      `the catalog: the user does that in Lightroom (Library > Remove Photo). ${TIMED} Here \`resume_after\` comes with \`not_yet\`: pass it back to go on ` +
+      "lr_add_to_collection, lr_set_keywords and the other tools. No develop or metadata preset is passed to the import; lr_remove_photos removes photos from " +
+      `the catalog again. ${TIMED} Here \`resume_after\` comes with \`not_yet\`: pass it back to go on ` +
       `from the next file. ${META_WRITE}`,
     schema: importArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },

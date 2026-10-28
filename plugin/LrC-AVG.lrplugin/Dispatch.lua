@@ -31,6 +31,7 @@ local PluginMetadata = require 'PluginMetadata'
 local Prefs = require 'Prefs'
 local Presets = require 'Presets'
 local Preview = require 'Preview'
+local Remove = require 'Remove'
 local Snapshots = require 'Snapshots'
 local Transfer = require 'Transfer'
 
@@ -77,6 +78,9 @@ function Dispatch.handlers(hello)
         apply_auto = DevelopTools.applyAuto,
         reset_develop = DevelopTools.reset,
         set_process_version = DevelopTools.setProcessVersion,
+        set_develop_settings = DevelopTools.setSettings,
+        undo_last_step = DevelopTools.undoLastStep,
+        remove_photos = Remove.photos,
         list_snapshots = Snapshots.list,
         delete_snapshot = Snapshots.delete,
         copy_photo = Copies.copyPhoto,

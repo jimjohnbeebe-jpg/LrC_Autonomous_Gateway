@@ -88,8 +88,8 @@ export async function selectVariant(ctx: SessionContext, s: Session, args: Selec
     if (approveEachPass(s) && t.passes >= 1) recordApproval(ctx, s, t, t.passes, "pick");
   }
   const unrefined = s.variants.filter((v) => v.passes < 1).map((v) => v.id);
-  // Unpicked copies are kept; the SDK has no call that removes a photo [stated: Jim, 2026-09-27,
-  // PHASE4_PLAN decision 4; handle: docs\reports\phase4\S7.md Verdict 2].
+  // Unpicked copies are kept [stated: Jim, 2026-09-27, PHASE4_PLAN decision 4]; since decision D3 of epic #207,
+  // lr_remove_photos removes them after lr_end_session (end.ts copiesJson), when the user asks.
   const json = {
     ok: true,
     session_id: s.id,
@@ -103,7 +103,7 @@ export async function selectVariant(ctx: SessionContext, s: Session, args: Selec
     unpicked: s.variants.filter((v) => v !== t).map(brief),
     note:
       `Copy ${t.id} is selected in Lightroom, and lr_step works on it from now on (target may be left out). ` +
-      "The other copies stay in the catalog as they are; the user removes them in Lightroom when they want.",
+      "The other copies stay in the catalog as they are; after lr_end_session, lr_remove_photos can remove them if the user wants.",
     ...(t.last ? describe(t.last) : {}),
   };
   return {

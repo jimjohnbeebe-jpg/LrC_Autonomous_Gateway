@@ -13,7 +13,7 @@ LrC-AVG keeps the idea of connecting Claude to Lightroom, and adds an **editing 
 | Main idea | Claude controls Lightroom | Claude edits a photo the way a photographer does: adjust, look, refine |
 | Does Claude see the photo? | On request: `get_photo_preview` and `get_photo_stats` (at `1040453`; the 2026-09-22 snapshot had neither) | Yes. Claude looks at a fresh preview and its measurements after every round |
 | Protection against over-editing | None built in | Limits on how far each slider moves per round, and on blown highlights and crushed shadows |
-| Undo | Snapshot tools and a global "undo last step" (at `1040453`), used when Claude or you call them | A snapshot before every edit, a named History step per round, and an **Abort** button that puts the photo back |
+| Undo | Snapshot tools and a global "undo last step" (at `1040453`), used when Claude or you call them | A snapshot before every edit, a named History step per round, and an **Abort** button that puts the photo back; Lightroom's global undo too, between sessions (decision D2) |
 | Live view of what Claude is doing | None | A floating window (the HUD, and a separate "Deck" window) |
 | Ready-made looks | None | 11 editing styles (landscape, portrait, night sky, black and white, and more) |
 | Platforms | Mac and Windows | Windows only (so far) |
@@ -92,16 +92,13 @@ Each session writes a log of what was changed and why, and each accepted session
 
 ## What the original does that LrC-AVG does not (yet)
 
-*Updated 2026-10-27; the full list is [`PARITY.md`](PARITY.md).*
+*Updated 2026-10-28; the full list is [`PARITY.md`](PARITY.md).*
 
 | Original feature | In LrC-AVG |
 |---|---|
 | Mac support | Not supported. Windows only so far (Jim's open decision D4, epic #207) |
 | Other AI apps (Claude Code, Codex, Cursor, Windsurf, VS Code) | Claude Desktop and Claude Code tested; the others have set-ups in `docs/CLIENTS.md`, some not tested |
 | One-click Claude Desktop `.mcpb` installer and standalone binaries | A Windows setup with its own Node.js (release v1.1.0); `npm run package` also builds a `.mcpb`, not yet installed in Claude Desktop `[unverified]`; no standalone binaries |
-| Write any Develop setting by SDK key name | Replaced by named settings with limits, tone curves included since Phase 10. Free key writes wait for Jim's decision D1 |
-| Global undo of Lightroom's last step | Not included (decision D2); snapshots and Abort instead |
-| Remove photos from the catalog | Not included (decision D3) |
 | Mask tone curves, Point Color, one AI mask on many photos, deleting empty masks, brush feather and erase | Planned (issue #217) |
 | Rights usage terms, copyright info URL and creator website | Planned (issue #218) |
 
@@ -127,8 +124,8 @@ Paths are in this repository. "Original" means the copy under `vendor/automaat/`
 | Original (at `a160e7a`) has 18 tools; none returns images; no snapshots or virtual copies; apply/copy/set develop writes have no History name | `docs/AUTOMAAT_SURVEY.md` sections 4.5–4.6, 5, 7 |
 | Original runs on Mac and Windows with several AI apps, `.mcpb` bundle and binaries | `vendor/automaat/README.md` (top and "Install (other AI tools)"), `vendor/automaat/mcpb/manifest.json` |
 | Original copies its plugin into Lightroom's Modules folder on start | `docs/AUTOMAAT_SURVEY.md` section 5 "Auto-install side effect" |
-| Original at `1040453` has 68 tools; 54 have an LrC-AVG equivalent; the gaps and their decisions | `docs/parity/upstream-tools-1040453.txt`; `docs/PARITY.md` (45 have, 9 ours+), kept by `engine/tests/parity-map.test.ts`; decisions D1-D7 in GitHub issue #207 |
-| LrC-AVG exposes 61 tools (1.5.0) | `TOOL_DEFS` in `engine/src/mcp/server.ts`; `engine/tests/parity-map.test.ts` checks that `docs/PARITY.md` names each |
+| Original at `1040453` has 68 tools; 64 have an LrC-AVG equivalent; the gaps and their decisions | `docs/parity/upstream-tools-1040453.txt`; `docs/PARITY.md` (54 have, 10 ours+), kept by `engine/tests/parity-map.test.ts`; decisions D1-D7 in GitHub issue #207 |
+| LrC-AVG exposes 65 tools (branch `phase-11/develop-catalog-d1-d3`) | `TOOL_DEFS` in `engine/src/mcp/server.ts`; `engine/tests/parity-map.test.ts` checks that `docs/PARITY.md` names each |
 | Tone curves since Phase 10 | `engine/src/params/canonical.ts:21` (`CurveParam`); `docs/reports/phase10/S14.md` "Verdict" |
 | Release v1.1.0, 2026-10-24 | `gh release list`, 2026-10-27: "LrC-AVG v1.1.0, Latest, 2026-10-24T23:09:47Z" |
 | Claude Code tested with LrC-AVG | `docs/CLIENTS.md:30`, `docs/reports/phase8.5/clients.md` |

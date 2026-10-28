@@ -22,7 +22,7 @@ describe("lua: every plugin file", () => {
       "Gate.lua", "Hud.lua", "HudClick.lua", "HudSelection.lua", "HudState.lua", "HudText.lua", "HudView.lua", "Info.lua", "Json.lua", "KeywordEdit.lua", "KeywordTree.lua", "Library.lua",
       "Log.lua", "MaskClean.lua", "MaskControl.lua", "MaskProbe.lua", "MaskSwatches.lua", "Masks.lua", "MenuAbort.lua", "MenuAccept.lua", "MenuApprove.lua", "MenuHud.lua", "MenuPickA.lua", "MenuPickB.lua", "MenuPickC.lua", "MenuStatus.lua", "Metadata.lua",
       "MetadataDefinition.lua", "Needs.lua", "Pending.lua", "Photos.lua", "PluginDisable.lua", "PluginEnable.lua", "PluginInfoProvider.lua", "PluginInit.lua", "PluginMetadata.lua", "Prefs.lua", "Presets.lua", "Preview.lua",
-      "Snapshots.lua", "Sockets.lua", "Stall.lua", "Transfer.lua",
+      "Remove.lua", "Snapshots.lua", "Sockets.lua", "Stall.lua", "Transfer.lua",
     ]);
   });
 

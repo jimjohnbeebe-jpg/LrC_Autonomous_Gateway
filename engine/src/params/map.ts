@@ -17,7 +17,7 @@ import { tableInfo } from "./mask-table.js";
 import { ParamError } from "./param-error.js";
 import { PIPELINES, checkProcessVersion, describeSignals, pipelineOf, type Pipeline } from "./pipeline.js";
 import { COMPANION_KEYS, CUSTOM_WHITE_BALANCE, WHITE_BALANCE_KEY } from "./preset-keys.js";
-import type { SdkKeyMap } from "./sdk-keys.js";
+import type { SdkKeyEntry, SdkKeyMap } from "./sdk-keys.js";
 import { EXPECTED_SDK_TYPE, describe, validate } from "./validate.js";
 
 export { ParamError, type ParamErrorCode } from "./param-error.js";
@@ -183,6 +183,11 @@ export class ParamMap {
 
   cameraProfiles(): CameraProfiles {
     return this.profiles;
+  }
+
+  /** The pinned dump's entry for an SDK key on a pipeline (sdk-passthrough.ts); throws UnknownSdkKeyError for a key not in it. */
+  pinnedKey(key: string, pipeline: Pipeline): SdkKeyEntry {
+    return this.sdkKeys[pipeline].get(key);
   }
 
   /**

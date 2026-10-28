@@ -35,13 +35,14 @@ function DevelopSession.waitFor(done, seconds)
     return done()
 end
 
-local function captureView(catalog)
+-- The module, the sources and the selection, and their put-back (Remove.lua puts back only the surviving photos).
+function DevelopSession.captureView(catalog)
     local active = catalog:getTargetPhoto()
     local okSources, sources = LrTasks.pcall(function() return catalog:getActiveSources() end)
     return { module = LrApplicationView.getCurrentModuleName(), sources = okSources and sources or nil, active = active, selection = active and catalog:getTargetPhotos() or nil }
 end
 
-local function restoreView(catalog, view, switchedSource)
+function DevelopSession.restoreView(catalog, view, switchedSource)
     if switchedSource and view.sources then LrTasks.pcall(function() catalog:setActiveSources(view.sources) end) end
     if view.active then
         LrTasks.pcall(function() catalog:setSelectedPhotos(view.active, view.selection or { view.active }) end)
@@ -68,7 +69,7 @@ end
 -- Returns fn's result table, or nil plus the lock's busy error.
 function DevelopSession.withPhoto(name, catalog, photo, fn, develop)
     return Catalog.exclusive(name, function(owns)
-        local view = captureView(catalog)
+        local view = DevelopSession.captureView(catalog)
         local switched = false
         local ok, result = LrTasks.pcall(function()
             if develop ~= false then
@@ -80,7 +81,7 @@ function DevelopSession.withPhoto(name, catalog, photo, fn, develop)
             if not selected then return { status = "skipped", reason = "Lightroom did not select the photo" .. (develop ~= false and " in Develop" or "") } end
             return fn(owns)
         end)
-        restoreView(catalog, view, switched)
+        DevelopSession.restoreView(catalog, view, switched)
         if not ok then error(result, 0) end
         return result
     end)

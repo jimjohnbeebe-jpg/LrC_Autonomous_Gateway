@@ -45,6 +45,7 @@
     "presets:check": "npm run build && node engine/dist/devtools/presets-check-cli.js",
     "stats:check": "npm run build && node engine/dist/devtools/stats-check-cli.js",
     "catalog:check": "npm run build && node engine/dist/devtools/catalog-check-cli.js",
+    "catalog:throwaway": "npm run build && node engine/dist/devtools/throwaway-cli.js",
     "effects:probe": "npm run build && node engine/dist/devtools/effects-probe-cli.js",
     "stall:check": "npm run build && node engine/dist/devtools/stall-check-cli.js",
     "intents:check": "npm run build && node engine/dist/devtools/intents-check-cli.js",
@@ -64,7 +65,9 @@
     "sandbox:check": "npm run build && node engine/dist/devtools/sandbox-cli.js",
     "phase9:local": "npm run build && node engine/dist/devtools/phase9-local-cli.js",
     "arch:check": "depcruise engine/src --config .dependency-cruiser.cjs --ignore-known",
-    "arch:graph": "node tools/arch-graph.ts"
+    "arch:graph": "node tools/arch-graph.ts",
+    "lua:lint": "node tools/lua-tool.ts selene plugin/LrC-AVG.lrplugin",
+    "lua:test": "node tools/lua-tool.ts busted"
   },
   "devDependencies": {
     "@swc/core": "1.16.18",

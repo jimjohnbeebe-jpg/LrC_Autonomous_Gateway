@@ -1,0 +1,9 @@
+-- busted (Lua test runner, rule 01-stack; issue #213): the plugin's specs in plugin/spec, run from the repo root
+-- as `busted` or `npm run lua:test`. The plugin's own folder is on the path, as Lightroom's require sees it.
+return {
+    _all = {
+        ROOT = { "plugin/spec" },
+        pattern = "_spec",
+        lpath = "plugin/spec/?.lua;plugin/LrC-AVG.lrplugin/?.lua",
+    },
+}

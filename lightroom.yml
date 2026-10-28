@@ -1,0 +1,20 @@
+---
+# selene std for the LrC-AVG plugin: Lua 5.1 plus the globals Lightroom gives a plugin that this code uses
+# (grep of plugin\LrC-AVG.lrplugin, 2026-10-28). The layout follows Automaat's lightroom.yml (Automaat/lightroom-mcp
+# at 1040453, MIT); nothing else is taken: it lists every Lr* namespace as a global, while this code gets them through import.
+base: lua51
+
+globals:
+  # import 'LrTasks' returns an SDK namespace.
+  import:
+    args:
+      - type: string
+  # The running plugin, passed to the SDK calls that take one; the code reads these two fields.
+  _PLUGIN.enabled:
+    property: read-only
+  _PLUGIN.path:
+    property: read-only
+  # LOC "$$$/Key=Text": a localized string (MetadataDefinition.lua).
+  LOC:
+    args:
+      - type: string

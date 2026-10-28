@@ -92,6 +92,17 @@ No new npm package or crate: `tools\setup\*.ts` use `zod` 4.6.5 from the root `n
 
 `lgpl-3.0.txt` and `gpl-3.0.txt` are also kept in `tools\setup\licenses\` (verbatim, `-text` in `.gitattributes` so their bytes and hashes survive a Windows checkout), and the build copies them from there: gnu.org answers HTTP 403 to GitHub's Windows runner [handle: PR #173, Actions run 39072188283 attempt 2]. Same hashes as above (`sha256sum tools/setup/licenses/*.txt`, 2026-10-17).
 
+## Lua tooling (issue #213, 2026-10-28)
+
+Allowed by rule 01-stack for the plugin's Lua only [stated: Jim, 2026-10-28, "Go with recommendations", D5]. Neither is an npm package; neither is in the product.
+
+| Tool | Pinned | License | Used for | Where from |
+|---|---|---|---|---|
+| selene | 0.32.0 (released 2026-10-01) | MPL-2.0 | `npm run lua:lint`, CI job `selene` | https://github.com/Kampfkarren/selene/releases/tag/0.32.0 |
+| busted | 2.3.0-1 (released 2026-01-07) | MIT | `npm run lua:test`, CI job `busted` | https://luarocks.org/modules/lunarmodules/busted, https://github.com/lunarmodules/busted/releases/tag/v2.3.0 |
+
+selene 0.32.0 was the latest release [handle: `gh release list -R Kampfkarren/selene` → `0.32.0 Latest 2026-10-01`, 2026-10-28]. SHA-256 of its zips, taken with `sha256sum` after one download each (2026-10-28): `selene-0.32.0-windows.zip` `c8b693de81d0ddc11490d8e1170dd98d775c2b21431144bd8286f738ef416109`, `selene-0.32.0-linux.zip` `d3773393578580074386e69337d35b7acddfbaa9fc38964c07fa3e28436ade9b` (CI refuses any other). The Windows `selene.exe --version` printed `selene 0.32.0`. busted 2.3.0 was the latest release [handle: `gh release list -R lunarmodules/busted` → `v2.3.0 Latest 2026-01-07`; the rock `2.3.0-1` is listed at https://luarocks.org/modules/lunarmodules/busted, 2026-10-28]. CI installs Lua 5.1 and LuaRocks from Ubuntu's packages (`lua5.1`, `liblua5.1-0-dev`, `luarocks`) and then `luarocks --lua-version=5.1 install busted 2.3.0-1`. The licences [handle: `gh api repos/Kampfkarren/selene/license --jq .license.spdx_id` → `MPL-2.0`, `gh api repos/lunarmodules/busted/license --jq .license.spdx_id` → `MIT`, 2026-10-28].
+
 ## Notes
 
 - **zod 4 with the MCP SDK:** SDK 1.30.1 declares `zod: "^3.25 || ^4.0"` as dependency and peer (`npm view @modelcontextprotocol/sdk@1.30.1 dependencies peerDependencies`), so zod 4.6.5 is supported. SDK 1.32.0 declares the same (`npm view @modelcontextprotocol/sdk@1.32.0 dependencies peerDependencies`, 2026-10-03).

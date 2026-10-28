@@ -8,6 +8,7 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import type { BridgeClient } from "../bridge/index.js";
 import type { BridgeGate } from "../mcp/index.js";
+import { describeError } from "./phase1-check.js";
 
 export const MARKER = "lrc-avg-throwaway.json";
 export const I_KNOW = "--i-know";
@@ -46,15 +47,15 @@ export function requireThrowaway(client: BridgeClient): void {
 
 /**
  * For the phase checks, before they start: connects and returns the refusal, or null. A bridge that does not
- * connect returns null too, with the lock given back, so the check connects and reports that itself, as it did
- * before the guard (its own wait, not a second one on top of this one).
+ * connect is a refusal too, with the lock given back: the check would otherwise connect later on its own and
+ * write without the guard (Greptile, PR #247).
  */
 export async function throwawayPreflight(gate: BridgeGate, client: BridgeClient): Promise<string | null> {
   try {
     await gate.ready();
-  } catch {
+  } catch (err) {
     await gate.release();
-    return null;
+    return `Lightroom did not connect (${describeError(err)}), so the catalog could not be checked. Nothing was written.`;
   }
   const why = throwawayRefusal(client.hello()?.catalog_path);
   if (why) await gate.release();

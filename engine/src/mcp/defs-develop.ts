@@ -73,7 +73,7 @@ export const DEVELOP_DEFS: ToolDef[] = [
     run: (tools, args) => tools.resetDevelop(args as z.infer<typeof resetArgs>),
   },
   // "masks with no component tools" [upstream claim: Automaat/lightroom-mcp 1040453, server\src\tool-contracts.ts
-  // delete_empty_masks]; what Lightroom deletes is [unverified] until `npm run masks:parity` (docs\reports\phase11\MASK-PARITY.md).
+  // delete_empty_masks]; what Lightroom deletes is [unverified]: no current check makes an empty mask (docs\reports\phase11\MASK-PARITY.md).
   {
     name: "lr_delete_empty_masks",
     title: "Delete empty masks",

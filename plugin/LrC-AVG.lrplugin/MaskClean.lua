@@ -12,14 +12,17 @@
 --     supported in version 14.0"; given no photos "it will delete from all target photos", so the photo is always
 --     passed [handle: API Reference\modules\LrCatalog.html:861-870, SDK 15.2]. A catalog call, so the photo need not
 --     be active in Develop [inference: upstream calls it the same way, HandlerMaskDelete.lua:423-425];
---   * deletes the snapshot again when the settings read back exactly as before (nothing was empty);
---   * answers { uuid, status = "deleted" | "unchanged", snapshot?, read_back, ms }.
--- What Lightroom counts as an empty mask, and whether the read right after the gate already shows the deletion, are
--- [unverified] until Jim's `npm run masks:parity`.
+--   * waits up to CHANGE_SECONDS for the settings to change, since whether the read right after the gate already
+--     shows the deletion is [unverified]; when they still read back exactly as before (nothing was empty), deletes
+--     the snapshot again, or keeps it and says why in `reason` when that delete fails;
+--   * answers { uuid, status = "deleted" | "unchanged", snapshot?, reason?, read_back, ms }.
+-- What Lightroom counts as an empty mask, and how soon the read shows the deletion, are [unverified]: no current
+-- check settles them, as `npm run masks:parity` makes no empty mask (docs\reports\phase11\MASK-PARITY.md).
 
 local LrDate = import 'LrDate'
 
 local Develop = require 'Develop'
+local DevelopSession = require 'DevelopSession'
 local DevelopTools = require 'DevelopTools'
 local Gate = require 'Gate'
 local Log = require 'Log'
@@ -27,6 +30,9 @@ local Needs = require 'Needs'
 local Snapshots = require 'Snapshots'
 
 local MaskClean = {}
+
+-- How long a read may lag the gate before "unchanged" is decided [inference: the figure; DevelopTools SETTLE_SECONDS is 0.5].
+local CHANGE_SECONDS = 1
 
 local function fail(code, message, recoverable)
     return nil, { code = code, message = message, recoverable = recoverable == true }
@@ -46,11 +52,17 @@ function MaskClean.deleteEmptyMasks(payload)
     if not snap then return nil, snapErr end
     local gated, busy = Gate.write(catalog, "AVG delete empty masks", function() catalog:deleteAllEmptyMasks({ photo }) end)
     if not gated then return nil, busy end
-    local after = Develop.readSettings(catalog, photo)
+    local after
+    local changed = DevelopSession.waitFor(function()
+        after = Develop.readSettings(catalog, photo)
+        return not DevelopTools.same(before, after)
+    end, CHANGE_SECONDS)
     local result = { uuid = uuid, status = "deleted", snapshot = { id = snap.snapshot_id, name = name }, read_back = after }
-    if DevelopTools.same(before, after) then
-        result.status, result.snapshot = "unchanged", nil
-        Snapshots.delete({ photo_uuid = uuid, snapshot_id = snap.snapshot_id })
+    if not changed then
+        result.status = "unchanged"
+        local gone, delErr = Snapshots.delete({ photo_uuid = uuid, snapshot_id = snap.snapshot_id })
+        if gone then result.snapshot = nil
+        else result.reason = "unchanged; the snapshot could not be deleted: " .. tostring(delErr and delErr.message) end
     end
     result.ms = math.floor((LrDate.currentTime() - t0) * 1000)
     Log.info(string.format("delete_empty_masks: %s %s", uuid, result.status))

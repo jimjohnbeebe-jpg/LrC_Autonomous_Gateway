@@ -51,11 +51,13 @@ describe("an inverted copy of a mask, pure", () => {
     expect(part["MaskInverted"]).toBe(true);
   });
 
-  it("refuses a copy without inverted: true, with a reshape, and of a mask of several parts", () => {
+  it("refuses a copy without inverted: true, with a reshape, of a mask of several parts and of one person's mask", () => {
     expect(() => precheck({ op: "edit", mask_id: "X", copy: true })).toThrow(/inverted: true/);
     expect(() => precheck({ op: "edit", mask_id: "X", copy: true, inverted: true, geometry: { left: 0 } })).toThrow(/not geometry/);
     const add = named("Add");
     expect(() => applyOp([add], { op: "edit", mask_id: String(add["CorrectionID"]), inverted: true, copy: true })).toThrow(/one part only/);
+    const person = { What: "Correction", CorrectionID: "P", CorrectionMasks: [{ What: "Mask/Image", MaskID: "M", MaskSyncID: "S", MaskSubType: 0, MaskSubCategoryID: 20036, MaskVersion: 1 }] } as unknown as Correction;
+    expect(() => applyOp([person], { op: "edit", mask_id: "P", inverted: true, copy: true })).toThrow(/find the person first/);
   });
 });
 

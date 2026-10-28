@@ -163,7 +163,7 @@ const editArgs = z.object({
     .optional()
     .describe(
       "with inverted: true, keep the mask and add an inverted copy of it (\"everything but the subject\"), with its sliders, `name` (default \"<name> inverted\") and `sliders` " +
-        "set on the copy; one-part masks only. An AI copy is computed by Lightroom afresh, as an AI part is (when it finds nothing, the copy is taken out). The result's mask is the copy",
+        "set on the copy; one-part masks only, not one person's mask (person_*). An AI copy is computed by Lightroom afresh, as an AI part is (when it finds nothing, the copy is taken out). The result's mask is the copy",
     ),
   point_colors: pointColors.optional(),
 });

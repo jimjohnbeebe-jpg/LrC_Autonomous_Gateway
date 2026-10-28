@@ -8,9 +8,11 @@
 // Lightroom puts its own duplicate is not captured]. An AI part loses the fields Lightroom computes (RECOMPUTED:
 // the digests and the photo's own fields), so it is written in Adobe's own form as a new AI mask is and Lightroom
 // computes it afresh; nothing of the source's computed mask is copied [inference: a digest names the computed
-// pixels]. A mask of several parts is not copied, as it is not inverted whole (mask-ops.ts edit).
+// pixels]. A mask of several parts is not copied, as it is not inverted whole (mask-ops.ts edit). Nor is a one-person
+// AI mask: its copy would be computed with no person check (session/person-masks.ts), as mask-combine.ts refuses a
+// person part.
 
-import { BRUSH, C, M, MaskError, RADIAL, RECOMPUTED, WHAT, componentKind, components, isAiKind, newMaskId, newSyncId, type AiKind, type Component, type Correction } from "./mask-table.js";
+import { AI_KINDS, BRUSH, C, M, MaskError, RADIAL, RECOMPUTED, WHAT, componentKind, components, isAiKind, newMaskId, newSyncId, type AiKind, type Component, type Correction } from "./mask-table.js";
 
 /** A component with fresh MaskID / MaskSyncID, a brush's strokes too, and no computed AI fields. */
 function fresh(m: Component): Component {
@@ -27,12 +29,13 @@ export type CopyResult = { entry: Correction; ai: AiKind | null };
 export function invertedCopy(e: Correction, name: string | undefined, stored: Record<string, number>): CopyResult {
   const parts = components(e);
   if (parts.length !== 1) throw new MaskError("MASK_OP_NOT_CAPTURED", "This mask has several parts; an inverted copy is made of a mask of one part only.");
+  const kind = componentKind(parts[0] as Component);
+  if (isAiKind(kind) && AI_KINDS[kind].point) throw new MaskError("INVALID_ARGUMENTS", `An inverted copy of a ${kind} mask is not offered: one person's mask needs Lightroom to find the person first; make a new person mask with lr_create_mask instead.`);
   const part = fresh(parts[0] as Component);
   const inverted = part[M.inverted] !== true;
   // As lr_edit_mask `inverted` writes it: an inverted radial reads back Flipped false (issue #79, mask-ops.ts edit).
   Object.assign(part, { [M.inverted]: inverted }, part[M.what] === WHAT.radial ? { [RADIAL.flipped]: !inverted } : {});
   const copy = structuredClone(e) as Correction;
   Object.assign(copy, stored, { [C.id]: newMaskId(), [C.syncId]: newSyncId(), [C.name]: name ?? `${String(e[C.name] ?? "Mask")} inverted`, [C.masks]: [part] });
-  const kind = componentKind(part);
   return { entry: copy, ai: isAiKind(kind) ? kind : null };
 }

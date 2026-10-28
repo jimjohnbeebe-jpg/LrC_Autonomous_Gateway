@@ -31,7 +31,7 @@ describe("hands-on batch 1: guidance", () => {
     const res = await client.callTool({ name: "lr_help", arguments: {} });
     expect(res.isError).toBeFalsy();
     const text = (res.content as Array<{ type: string; text?: string }>).find((c) => c.type === "text")?.text;
-    expect(JSON.parse(String(text))).toEqual({ help: HELP_TEXT });
+    expect(JSON.parse(String(text))).toEqual({ help: HELP_TEXT, tool_profile: expect.objectContaining({ name: "full" }) });
     expect(HELP_TEXT).toMatch(/A rename alone .* uses no pass/);
     expect(HELP_TEXT).toMatch(/clip_baseline/);
     expect(HELP_TEXT).toMatch(/crop_metrics/);

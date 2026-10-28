@@ -39,6 +39,8 @@ The tests ran against the engine built from this repository, not the installed o
 
 Start the client again after you change its configuration [inference: the clients below read their MCP configuration when they start].
 
+**A smaller tool list.** For a model that struggles with LrC-AVG's 62 tools, set the environment variable `LRC_AVG_TOOLS` to `edit` in the entry (in JSON: `"env": { "LRC_AVG_TOOLS": "edit" }`; with `claude mcp add`: `-e LRC_AVG_TOOLS=edit`). The engine then lists only the 14 tools of an edit ([README "Tool profiles"](../README.md#tool-profiles)) [handle: `engine/src/mcp/profiles.ts`; `engine/tests/tool-profiles.test.ts`]. That each client below passes the variable on is [unverified]; `lr_help` names the profile in force (`tool_profile`).
+
 ## Claude Code
 
 For every project of this Windows account, in PowerShell:

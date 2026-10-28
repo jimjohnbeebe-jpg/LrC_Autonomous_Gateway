@@ -42,6 +42,7 @@ import { BridgeGate, SESSION_SILENCE_MS } from "./bridge-gate.js";
 import { clientIdentity } from "./client-info.js";
 import { devOverrides } from "./dev-overrides.js";
 import { acquireInstanceLock } from "./instance-lock.js";
+import { PROFILE_ENV, toolProfile } from "./profiles.js";
 import { createServer } from "./server.js";
 import { Tools } from "./tools.js";
 import { ENGINE_VERSION } from "./version.js";
@@ -134,4 +135,6 @@ process.stdin.once("close", shutdown("stdin closed (the client exited)"));
 process.once("SIGINT", shutdown("SIGINT"));
 process.once("SIGTERM", shutdown("SIGTERM"));
 
-say(`engine ${ENGINE_VERSION} ready on stdio (node ${process.version}); tool log: ${toolLog.file()}; previews: ${previews.directory()}`);
+const profile = toolProfile();
+if (profile.ignored !== undefined) say(`${PROFILE_ENV}="${profile.ignored}" is not a tool profile; serving "${profile.name}"`);
+say(`engine ${ENGINE_VERSION} ready on stdio (node ${process.version}); tool profile: ${profile.name}; tool log: ${toolLog.file()}; previews: ${previews.directory()}`);

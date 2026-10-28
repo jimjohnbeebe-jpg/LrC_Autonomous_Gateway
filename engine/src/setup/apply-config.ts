@@ -27,6 +27,8 @@ export class SetupError extends Error {
 export type ApplyOptions = {
   /** The engine entry to set; null removes it (`--remove`). */
   entry: ServerEntry | null;
+  /** Write `entry` as it is, without keeping the existing entry's tool profile: a restore of a saved entry (Greptile, PR #250). */
+  exact?: boolean;
   /** `--config <path>`: use this existing file instead of looking for one. */
   configPath?: string | undefined;
   dryRun?: boolean;
@@ -80,7 +82,7 @@ export function applyDesktopConfig(options: ApplyOptions): ApplyResult {
   const env = options.env ?? process.env;
   const { file, exists } = locate(options.configPath, env);
   const config: DesktopConfig = exists ? read(file) : {};
-  const plan = planConfig(config, options.entry);
+  const plan = planConfig(config, options.entry, options.exact === true);
   const before = Object.keys(config.mcpServers ?? {});
   const after = Object.keys(plan.updated.mcpServers ?? {});
   const changes = [

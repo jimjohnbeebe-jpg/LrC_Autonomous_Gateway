@@ -45,6 +45,8 @@ npm run typecheck    # engine src + tests, spikes
 
 All four pass before every commit (rule 04).
 
+**Tool profiles** (issue #165, `engine/src/mcp/profiles.ts`): the server lists the tools of the profile `LRC_AVG_TOOLS` names, `full` (default) or `edit`. `full` is `TOOL_DEFS` (`engine/src/mcp/server.ts`), so a new tool is in it with nothing else to change; to put a tool in `edit` as well, add its name to `EDIT_TOOLS` (`engine/tests/tool-profiles.test.ts` fails on a name that is not registered) and update the lists in the README "Tool profiles" and `docs/PARITY.md`. The setup keeps a copy of the variable and values (`TOOLS_ENV`, `TOOL_PROFILES` in `engine/src/setup/desktop-config.ts`, since `setup` imports no other module); the same test compares them.
+
 ## Development install
 
 Use this instead of the README's setup, not next to it: both write the same Claude Desktop entry, `lrc-avg`, and the last one run wins [handle: `engine/src/setup/desktop-config.ts:4-7, 22` `SERVER_NAME`]. The repo's plugin is **LrC-AVG (dev)**, `com.lrcavg.gateway.dev`; the setup stages it as `com.lrcavg.gateway` [handle: `plugin/LrC-AVG.lrplugin/Info.lua:28-29`, `tools/setup/plugin-id.ts`]. To test the setup on a development PC, use the clean room (`npm run cleanroom -- --park`, then `--restore`; see `CLAUDE.md` "Commands").

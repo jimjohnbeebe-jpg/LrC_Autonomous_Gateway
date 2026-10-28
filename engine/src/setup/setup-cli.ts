@@ -4,6 +4,8 @@
 //   lrc-avg-setup              add or update the entry
 //   lrc-avg-setup --remove     take it out again (uninstall)
 //   --config <path>            use that file (testing); --dry-run writes nothing
+//   --tools <full|edit>        the tool profile (issue #165, LRC_AVG_TOOLS in the entry); without it, a profile
+//                              already in the entry is kept
 //   --installer                for the Windows setup (PHASE9_PLAN row 2): no prompts, exit 0 whatever
 //                              happens, and the outcome in %LOCALAPPDATA%\LrC-AVG\setup-result.json/.txt
 // The work is in setup-run.ts, the file rules (backup, read-back, nothing changed the second time) in

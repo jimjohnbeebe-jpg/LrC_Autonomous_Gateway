@@ -6,6 +6,7 @@
 
 import { z } from "zod";
 import { TIMED, type ToolDef } from "./defs-shared.js";
+import { deleteEmptyMasks } from "./tools-develop.js";
 
 const distinct = (list: readonly unknown[]): boolean => new Set(list).size === list.length;
 const uuids = (max: number) =>
@@ -27,6 +28,7 @@ const autoArgs = z
   })
   .refine((a) => a.tone === true || a.white_balance === true, "set tone or white_balance (or both) to true");
 const resetArgs = z.object({ uuids: uuids(100), confirm });
+const emptyMasksArgs = z.object({ uuids: uuids(100) });
 const versionArgs = z.object({
   uuids: uuids(100),
   version: z.number().int().min(1).max(6).describe("Lightroom's process Version 1-6 (Settings > Process); 6 is the current one, and this engine edits photos at 6 and 5"),
@@ -69,6 +71,20 @@ export const DEVELOP_DEFS: ToolDef[] = [
     schema: resetArgs,
     annotations: DESTRUCTIVE,
     run: (tools, args) => tools.resetDevelop(args as z.infer<typeof resetArgs>),
+  },
+  // "masks with no component tools" [upstream claim: Automaat/lightroom-mcp 1040453, server\src\tool-contracts.ts
+  // delete_empty_masks]; what Lightroom deletes is [unverified]: no current check makes an empty mask (docs\reports\phase11\MASK-PARITY.md).
+  {
+    name: "lr_delete_empty_masks",
+    title: "Delete empty masks",
+    description:
+      "Lightroom's own clean-up of empty masks (masks left with no part, such as after every part was removed) on photos named by uuid " +
+      "(Lightroom Classic 14 or later, else FEATURE_UNAVAILABLE). Lightroom decides what is empty; masks with a part stay. Each photo's `status`: " +
+      "deleted (with `masks` before and after and the `snapshot` taken just before) or unchanged (nothing was empty, no snapshot kept). The photos are " +
+      `not opened in Develop. Not while a session is open, and a photo a stopped session left open is refused; \`undo\` says how to put a photo back. ${TIMED}`,
+    schema: emptyMasksArgs,
+    annotations: DESTRUCTIVE,
+    run: (tools, args) => tools.call(deleteEmptyMasks, args as z.infer<typeof emptyMasksArgs>),
   },
   {
     name: "lr_set_process_version",

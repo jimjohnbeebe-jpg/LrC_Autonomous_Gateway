@@ -93,7 +93,7 @@ export async function listMasks(ctx: SessionContext, s: Session, args: ListMasks
 export const createMask = (ctx: SessionContext, s: Session, a: CreateMaskArgs): Promise<SessionOutput> =>
   maskPass(ctx, s, a, { op: "create", kind: a.kind, name: a.name, geometry: a.geometry, point: a.point, sliders: a.sliders, copy_sample_from: a.copy_sample_from });
 export const editMask = (ctx: SessionContext, s: Session, a: EditMaskArgs): Promise<SessionOutput> =>
-  renameOnly(a) ? renameMask(ctx, s, a) : maskPass(ctx, s, a, { op: "edit", mask_id: a.mask_id, name: a.name, active: a.active, inverted: a.inverted, geometry: a.geometry, sliders: a.sliders, combine: a.combine, part: a.part, remove_part: a.remove_part });
+  renameOnly(a) ? renameMask(ctx, s, a) : maskPass(ctx, s, a, { op: "edit", mask_id: a.mask_id, name: a.name, active: a.active, inverted: a.inverted, geometry: a.geometry, sliders: a.sliders, combine: a.combine, part: a.part, remove_part: a.remove_part, copy: a.copy, point_colors: a.point_colors });
 export const deleteMask = (ctx: SessionContext, s: Session, a: DeleteMaskArgs): Promise<SessionOutput> => maskPass(ctx, s, a, { op: "delete", mask_id: a.mask_id });
 
 /** The photo a mask pass works on, once the plugin, the pick and the pass cap (unless `cap` is false: a rename) allow it. */
@@ -143,7 +143,7 @@ const sameTable = (a: readonly Correction[], b: readonly Correction[]): boolean 
 
 /** An lr_edit_mask that gives a new name and no other change (target, rationale and return_image aside). */
 const renameOnly = (a: EditMaskArgs): a is EditMaskArgs & { name: string } =>
-  a.name !== undefined && [a.active, a.inverted, a.geometry, a.sliders, a.combine, a.part, a.remove_part].every((f) => f === undefined);
+  a.name !== undefined && [a.active, a.inverted, a.geometry, a.sliders, a.combine, a.part, a.remove_part, a.copy, a.point_colors].every((f) => f === undefined);
 
 /**
  * A rename alone is not a pass (engine 0.35.0) [stated: Jim, 2026-10-16, handover "name-only lr_edit_mask does not consume a

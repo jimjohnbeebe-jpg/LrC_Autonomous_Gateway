@@ -39,12 +39,15 @@ const geometry = z
           points: z.array(point).min(1).max(BRUSH_LIMITS.points).describe("the stroke's path; the engine fills in dabs between the points"),
           radius: z.number().min(0.001).max(1).optional().describe(`the brush's radius as a fraction of the whole photo's long edge (before any crop), default ${BRUSH_RADIUS}`),
           flow: z.number().min(0.01).max(1).optional().describe("0.01-1, default 1"),
+          feather: z.number().min(0).max(100).optional().describe("0 hard to 100 soft (default 100), as the Brush panel's Feather"),
+          density: unit.optional().describe("0-1, default 1; 0 erases"),
+          erase: z.boolean().optional().describe("true: this stroke takes paint away where it goes (an erase stroke, density 0)"),
         }),
       )
       .min(1)
       .max(BRUSH_LIMITS.strokes)
       .optional()
-      .describe(`brush: 1-${BRUSH_LIMITS.strokes} strokes painted with the mask's sliders (no erase)`),
+      .describe(`brush: 1-${BRUSH_LIMITS.strokes} strokes painted with the mask's sliders; on lr_edit_mask of a brush, added after its strokes (erase strokes take paint away). Feather, density and erase in Lightroom are [unverified]: look at the result`),
   })
   .describe(
     `In ${FRAME}, as lr_get_preview \`region\` and lr_set_regions are; the engine maps it through the photo's crop (its angle included). ` +
@@ -54,6 +57,34 @@ const geometry = z
 const sliders = z
   .record(z.string(), z.number())
   .describe(`local slider -> the value to SET (not a change), in the Masking panel's units: ${[...LOCAL_PARAMS].map(([k, p]) => `${k} ${p.min}..${p.max}`).join(", ")}`);
+// Issue #217 row 4 (params\mask-point-colors.ts): the stored form is Lightroom's, its field order [upstream claim] and the
+// defaults [inference]; in Lightroom [unverified] until `npm run masks:parity`.
+const edges = z.array(unit).length(4).describe("[a, b, c, d] in 0-1, each at least the one before: fully selected from b to c, fading to nothing at a and d");
+const shift = z.number().min(-1).max(1);
+const swatch = z
+  .object({
+    src_hue: z.number().min(0).max(6).optional().describe("the source colour's hue, 0-6 (6 = all the way round)"),
+    src_sat: unit.optional(),
+    src_lum: unit.optional(),
+    hue_shift: shift.optional(),
+    sat_scale: shift.optional(),
+    lum_scale: shift.optional(),
+    range_amount: unit.optional().describe("how far the selection reaches around the source (new: 0.5)"),
+    hue_range: edges.optional(),
+    sat_range: edges.optional(),
+    lum_range: edges.optional(),
+  })
+  .describe("add: src_hue, src_sat and src_lum are needed, the rest default to no shift and ranges [0, 0.33, 0.67, 1]; update: only the fields to change");
+const pointColors = z
+  .object({
+    action: z.enum(["add", "update", "delete", "clear"]),
+    index: z.number().int().min(1).max(8).optional().describe("update, delete: the swatch, 1 = the first in lr_list_masks `point_colors`"),
+    swatch: swatch.optional(),
+  })
+  .describe(
+    "one change to the mask's Point Color swatches (up to 8): add, update or delete one, or clear them all. lr_list_masks shows them as `point_colors`. " +
+      "Written in the form Lightroom stores them; how Lightroom reads a written swatch is [unverified]: look at the result",
+  );
 const passFields = {
   session_id: sessionId,
   target: target.describe('Variants mode: masks go on the pick only (after lr_select_variant). Converge mode: "master" or left out'),
@@ -126,6 +157,15 @@ const editArgs = z.object({
     .describe("without part: add a part of kind (with its geometry; AI kinds take none) to the mask in mode add, subtract or intersect. With part: that part's new mode (mode only)"),
   part: z.number().int().min(1).optional().describe("edit one part of the mask (1 = the first, in the order of lr_list_masks `parts`): with exactly one of geometry (reshape), inverted, combine (its mode) or remove_part"),
   remove_part: z.literal(true).optional().describe("with part (2 or more): remove that part from the mask"),
+  // Issue #217 row 2 (params\mask-copy.ts); in Lightroom [unverified] until `npm run masks:parity`.
+  copy: z
+    .literal(true)
+    .optional()
+    .describe(
+      "with inverted: true, keep the mask and add an inverted copy of it (\"everything but the subject\"), with its sliders, `name` (default \"<name> inverted\") and `sliders` " +
+        "set on the copy; one-part masks only, not one person's mask (person_*). An AI copy is computed by Lightroom afresh, as an AI part is (when it finds nothing, the copy is taken out). The result's mask is the copy",
+    ),
+  point_colors: pointColors.optional(),
 });
 const deleteArgs = z.object({ ...passFields, mask_id: maskId });
 
@@ -157,8 +197,8 @@ const PASS_NOTE =
   "written; deleting it is allowed. A mirrored photo refuses geometry and points (CROP_FRAME_UNSUPPORTED); " +
   "`warnings` flags a mask 90 % or more outside the preview. " +
   "Returns the mask, every mask of the photo (`masks`, with fresh ids), " +
-  `metrics, delta_metrics and the image. Needs plugin ${MASKS_PLUGIN}. color_range, depth_range, brush: not reshaped, not parts. ` +
-  "Not offered: Select Objects, brush erase, mask pixels, mask presets.";
+  `metrics, delta_metrics and the image. Needs plugin ${MASKS_PLUGIN}. color_range, depth_range: not reshaped; brush: strokes added; none as parts. ` +
+  "Not offered: Select Objects, mask pixels, mask presets.";
 
 export const MASK_DEFS: ToolDef[] = [
   {
@@ -170,6 +210,7 @@ export const MASK_DEFS: ToolDef[] = [
       `Geometry, points and people's boxes are in ${FRAME}, as lr_create_mask takes them; a mask drawn past the crop in Lightroom reads outside 0-1. ` +
       "A colour range's geometry has `sample` (Lightroom's stored l, a, b, for lr_create_mask geometry.sample or copy_sample_from) and color_amount; a depth range's, depth_range. " +
       "On a mirrored photo geometry reads { unavailable: <why> } (a colour range's sample still shows). " +
+      "`point_colors`: the mask's Point Color swatches, if any (lr_edit_mask point_colors changes them). " +
       "A mask of several parts also lists `parts`, in order (lr_edit_mask `part` 1 is the first): each part's kind, mode (add, subtract, intersect; \"other\" for none of them), inverted and geometry. " +
       "Also lists the local sliders and their ranges. Does not use a pass and writes nothing.",
     schema: listArgs,
@@ -206,7 +247,7 @@ export const MASK_DEFS: ToolDef[] = [
     title: "Edit a mask",
     // Sliders merge into the stored ones [handle: engine\src\params\mask-ops.ts:236, Object.assign].
     description:
-      "Change one mask by its id: set local sliders (absolute values in panel units; sliders not given keep their values), its geometry (linear, radial, luminance), invert it, rename it, " +
+      "Change one mask by its id: set local sliders (absolute values in panel units; sliders not given keep their values), its geometry (linear, radial, luminance; a brush: strokes added), its Point Color swatches, invert it (or add an inverted copy), rename it, " +
       "or hide/show it (`active`). MASK_NOT_FOUND: call lr_list_masks for the current ids. " +
       "Parts: `combine` adds a part (kind, geometry) in mode add, subtract or intersect; `part` names one part to reshape (geometry), invert, set to a mode (combine.mode) " +
       "or remove (remove_part); a mask of several parts is inverted or reshaped only part by part. Only these forms, which were checked in Lightroom, are written: " +

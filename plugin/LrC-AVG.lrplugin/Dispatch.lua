@@ -22,6 +22,7 @@ local Json = require 'Json'
 local KeywordEdit = require 'KeywordEdit'
 local Library = require 'Library'
 local Log = require 'Log'
+local MaskClean = require 'MaskClean'
 local Masks = require 'Masks'
 local Metadata = require 'Metadata'
 local Pending = require 'Pending'
@@ -69,6 +70,7 @@ function Dispatch.handlers(hello)
         create_ai_mask_dc = Masks.createAiMaskDc,
         probe_write_gate = Masks.probeWriteGate,
         clear_pending_ai = Pending.clearPhoto,
+        delete_empty_masks = MaskClean.deleteEmptyMasks,
         apply_denoise = Denoise.apply,
         apply_auto = DevelopTools.applyAuto,
         reset_develop = DevelopTools.reset,

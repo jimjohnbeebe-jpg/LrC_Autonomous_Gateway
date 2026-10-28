@@ -31,6 +31,8 @@ export const DEVELOP_RESULTS = {
     previous: z.string().optional(),
     actual: z.string().optional(),
   }),
+  // Issue #217 row 1 (MaskClean.lua): "unchanged" when the settings read back as before; its snapshot is then deleted again.
+  delete_empty_masks: z.object({ ...developAnswer, status: z.enum(["deleted", "unchanged"]) }),
   list_snapshots: z.object({
     uuid: z.string(),
     snapshots: z.array(z.object({ id: z.string(), name: z.string(), id_global: z.string().optional() })),

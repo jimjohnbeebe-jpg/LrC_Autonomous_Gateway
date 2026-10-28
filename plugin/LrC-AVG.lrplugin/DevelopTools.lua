@@ -43,6 +43,8 @@ local function same(a, b)
     for k in pairs(b) do if a[k] == nil then return false end end
     return true
 end
+-- MaskClean.lua deleteEmptyMasks (issue #217) compares its before and after the same way.
+DevelopTools.same = same
 
 -- The snapshot before a change, or nil plus the failed answer.
 local function snapshot(uuid, name)

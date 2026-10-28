@@ -62,6 +62,17 @@ Rewritten, not copied; same MIT licence and copyright as below. Nothing of these
 | `plugin/LightroomMCP.lrplugin/ImageFrame.lua` at `1040453` (`e1ca0c6`, #331) | The four mirrored orientation codes' mapping between the displayed and the stored frame | `src/params/crop-frame.ts` |
 | `f58f22e` (#345, "accept omitted zero local adjustments") | A `Local` field written 0 and missing from the read-back counts as equal | `src/params/mask-table.ts` (`covers`) |
 
+### Issue #217, from upstream PRs after the snapshot
+
+Rewritten, not copied; same MIT licence and copyright as below. The plugin side is in `plugin\LrC-AVG.lrplugin\THIRD_PARTY_NOTICES.md`.
+
+| Upstream commit (PR) | What was taken | Files here |
+|---|---|---|
+| `6028491` (#320, "delete masks from photos") | `delete_empty_masks`: Lightroom's own clean-up of empty masks on photos named by id, outside Develop | `src/mcp/tools-develop.ts` (`deleteEmptyMasks`), `src/mcp/defs-develop.ts` |
+| `bccec44` (#318, "invert a mask in place or as copy") | The inverted copy beside the mask, its local adjustments kept; here built on the mask table, not through `duplicateAndInvertMask` | `src/params/mask-copy.ts`, `src/params/mask-ops.ts`, `src/session/mask-parts.ts` (`putBackPart`) |
+| `581ad7c` (#328, "set mask tone curve and point color") | Point Color swatch fields, their ranges and order, up to 8 swatches, a repeated source colour refused; here written to the mask table, not through the `*PointColorSwatch` calls | `src/params/mask-point-colors.ts`, `src/params/mask-summary.ts`, `src/mcp/defs-masks.ts` |
+| `e69320d` (#340, "brush feather, density and erase"), `BrushStrokes.lua` and `BrushFeather.lua` at `1040453` | The feather curve (radius scale and CenterWeight by feather), density as MaskValue, an erase stroke as MaskValue 0, the "h" dab token, strokes appended to a brush, Size not offered | `src/params/mask-brush.ts`, `src/params/mask-build.ts` |
+
 npm dependencies keep their own licences; they are listed with their versions in `docs\DEPENDENCIES.md`.
 
 ## Automaat/lightroom-mcp licence

@@ -34,15 +34,18 @@ const STOPS = ["BRIDGE_DISCONNECTED", "BRIDGE_TIMEOUT", "TARGET_CHANGED", "SESSI
 
 const GONE = "the mask is no longer in the table, so nothing was put back";
 
-/** The mask `job.id` as it was before the pass, written into the table as it is now; null when done, GONE when the mask is gone, else why it may not be. */
+/**
+ * The mask `job.id` as it was before the pass, written into the table as it is now, or taken out when the pass made
+ * it (an inverted copy of an AI mask, issue #217 row 2); null when done, GONE when the mask is gone, else why it may not be.
+ */
 export async function putBackPart(ctx: SessionContext, s: Session, job: AiJob): Promise<string | null> {
   try {
     const now = readTable((await readSdk(ctx, s, job.t)).sdk);
     const i = correctionIds(now).indexOf(job.id);
     const was = job.before[correctionIds(job.before).indexOf(job.id)];
     if (i < 0) return GONE;
-    if (!was) return null;
-    now[i] = was;
+    if (was) now[i] = was;
+    else now.splice(i, 1);
     const name = historyName(s, job.t, job.n, "mask ai revert");
     await writeTable(ctx, s, job.t, now, name, true);
     job.historyNames.push(name);

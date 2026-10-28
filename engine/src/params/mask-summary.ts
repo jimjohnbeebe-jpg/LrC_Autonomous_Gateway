@@ -8,6 +8,7 @@ import { IDENTITY, boxToView, isIdentity, radialToBox, toView, type CropFrame } 
 import { ellipseOf } from "./mask-build.js";
 import { modeOf } from "./mask-combine.js";
 import { boundsOf, instanceOf, type Box } from "./mask-person.js";
+import { pointColorsOf, type Swatch } from "./mask-point-colors.js";
 import { BRUSH, C, IMAGE, LINEAR, LOCAL_PARAMS, M, RADIAL, RANGE, WHAT, componentKind, components, computed, type Component, type Correction } from "./mask-table.js";
 
 export type MaskSummary = {
@@ -27,6 +28,8 @@ export type MaskSummary = {
   people?: Box[];
   /** A mask of several parts (issue #131): each part in order (lr_edit_mask `part` 1 is the first), its kind, mode after the first ("other": none of the three), inversion and geometry. */
   parts?: MaskPart[];
+  /** Point Color swatches (issue #217 row 4), in order (lr_edit_mask point_colors index 1 is the first); stored strings that do not read are shown as stored. */
+  point_colors?: Array<Swatch | string>;
 };
 export type MaskPart = { kind: string; mode?: string; inverted: boolean; geometry?: Record<string, unknown> };
 
@@ -110,6 +113,7 @@ export function summarize(e: Correction, frame: CropFrame = IDENTITY): MaskSumma
   const instance = instanceOf(single);
   const people = frame.refused ? [] : viewOf(frame).people(boundsOf(single));
   const ai = parts.filter((m) => m[M.what] === WHAT.image);
+  const swatches = pointColorsOf(e);
   return {
     id: String(e[C.id]),
     name: nameOf(e),
@@ -123,5 +127,6 @@ export function summarize(e: Correction, frame: CropFrame = IDENTITY): MaskSumma
     ...(instance !== null ? { instance } : {}),
     ...(people.length > 0 ? { people } : {}),
     ...(parts.length > 1 ? { parts: parts.map(partOf(frame)) } : {}),
+    ...(swatches ? { point_colors: swatches } : {}),
   };
 }

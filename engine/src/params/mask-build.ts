@@ -91,7 +91,9 @@ export function geometryFields(kind: string, g: Geometry, old: Component | null,
   if (kind === "luminance") {
     return { [RANGE.holder]: { ...((old?.[RANGE.holder] as object | undefined) ?? rangeTemplate()), [RANGE.lumRange]: trapezoid(g.lum_range, "lum_range") } };
   }
-  if (kind === "color_range" || kind === "depth_range" || kind === "brush") refuse(`A ${kind} mask is not reshaped: delete it and create it again.`);
+  // Strokes given for a brush are painted after its own (issue #217 row 5; mask-brush.ts brushFields).
+  if (kind === "brush" && old && g.strokes) return brushFields(g.strokes, frame, old);
+  if (kind === "color_range" || kind === "depth_range" || kind === "brush") refuse(`A ${kind} mask is not reshaped: delete it and create it again${kind === "brush" ? " (geometry.strokes adds strokes to it)" : ""}.`);
   return refuse(`A ${kind} mask has no geometry to set.`);
 }
 

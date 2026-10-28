@@ -3,7 +3,7 @@
 LrC-AVG started as a fork of [Automaat/lightroom-mcp](https://github.com/Automaat/lightroom-mcp) (MIT, Marcin Skalski) and is meant as a **complement** to it: the same reach into the Lightroom Classic catalog under `lr_*` names, plus a guarded, measured edit loop that upstream does not have (epic #207, decision D7 recommends keeping the `lr_*` names and publishing this table [stated: issue #207 "Decisions needed from Jim", D7 is still open]).
 
 - Upstream compared: `Automaat/lightroom-mcp@1040453` (2026-10-26), **68 tools** [handle: `docs/parity/upstream-tools-1040453.txt`, extracted from upstream `server/src/tool-contracts.ts`; `docs/reports/phase10/AUTOMAAT_COMPARE_2026-10-26.md` section 1].
-- LrC-AVG: branch `phase-11/parity-batch-1` (engine 1.5.0), **61 tools** [handle: `grep -ohE 'name: "lr_[a-z_]+"' engine/src/mcp/defs-*.ts | sort -u | wc -l` = 61; `TOOL_DEFS` in `engine/src/mcp/server.ts`].
+- LrC-AVG: branch `phase-11/masks-217` (engine 1.5.0, before its version bump), **62 tools** [handle: `grep -ohE 'name: "lr_[a-z_]+"' engine/src/mcp/defs-*.ts | sort -u | wc -l` = 62; `TOOL_DEFS` in `engine/src/mcp/server.ts`].
 - Kept current by `engine/tests/parity-map.test.ts`: it fails when a pinned upstream name has no row below, when a row names an `lr_` tool the server does not register, or when a registered tool is not named anywhere on this page. How to renew the pin: [`UPSTREAM_SYNC.md`](UPSTREAM_SYNC.md).
 
 Most rows marked `have` or `ours+` were added on this branch (#214-#218) and are tested against the simulated Lightroom only; whether each works in Lightroom is `[unverified]` until Jim's checks in [`reports/phase11/PARITY-BATCH1-CHECKS.md`](reports/phase11/PARITY-BATCH1-CHECKS.md) are observed.
@@ -74,25 +74,25 @@ Every `lr_*` write tool runs only when no edit session is open, and returns the 
 | `list_masks` | `lr_list_masks` | have | A colour range's stored `sample` {l, a, b} and a depth range's trapezoid (#210) |
 | `create_gradient_mask` | `lr_create_mask` | have | Linear and radial |
 | `update_gradient_mask` | `lr_edit_mask` | have | |
-| `create_brush_mask` | `lr_create_mask` | planned #217 | Brush from strokes exists; feather, density and erase do not |
-| `add_brush_strokes` | none | planned #217 | |
+| `create_brush_mask` | `lr_create_mask` | have | Strokes with radius (fraction of the long edge), flow, feather, density and erase (#217); Size, a screen size, is not offered |
+| `add_brush_strokes` | `lr_edit_mask` | have | `geometry.strokes` on a brush adds strokes after its own, erase strokes included (#217) |
 | `create_range_mask` | `lr_create_mask` | have | Luminance, colour and depth; the colour as `copy_sample_from` or `geometry.sample` {l, a, b} (#210); the engine's own point sample (the preview's RGB) stays until `npm run masks:verify`, flagged [unverified] in the tool text |
 | `delete_masks` | `lr_delete_mask` | have | One mask per call |
-| `delete_empty_masks` | none | planned #217 | |
+| `delete_empty_masks` | `lr_delete_empty_masks` | have | Lightroom's own `catalog:deleteAllEmptyMasks`, a snapshot first, the mask count before and after (#217) |
 | `set_mask_adjustments` | `lr_edit_mask` | have | |
 | `get_mask_adjustments` | `lr_list_masks` | have | |
-| `invert_mask` | `lr_edit_mask` | planned #217 | In place with `inverted`; inverting as a copy does not exist |
+| `invert_mask` | `lr_edit_mask` | have | In place with `inverted`; as a copy with `copy: true`, one-part masks, an AI copy computed afresh (#217) |
 | `create_mask` | `lr_create_mask` | have | Subject, sky, background |
 | `create_mask_batch` | none | planned #217 | One AI mask on many photos |
 | `create_people_mask` | `lr_create_mask` | have | People parts by kind; one-person kinds under check in #210 (`npm run masks:verify`); a mirrored photo refuses points and geometry until the same check |
 | `create_landscape_mask` | `lr_create_mask` | have | |
 | `set_mask_curves` | none | planned #217 | |
 | `get_mask_curves` | none | planned #217 | |
-| `edit_mask_point_colors` | none | planned #217 | |
-| `get_mask_point_colors` | none | planned #217 | |
+| `edit_mask_point_colors` | `lr_edit_mask` | have | `point_colors` add, update, delete or clear, on the mask table in the form Lightroom stores (#217) |
+| `get_mask_point_colors` | `lr_list_masks` | have | `point_colors` of each mask (#217) |
 | `combine_mask` | `lr_edit_mask` | have | `combine` add, subtract, intersect, in the forms checked in Lightroom |
 
-Count: 46 `have`, 9 `ours+`, 10 `planned` (#217: 9, #218: 1), 3 `decision` [handle: `engine/tests/parity-map.test.ts` pins these counts].
+Count: 52 `have`, 9 `ours+`, 4 `planned` (#217: 3, #218: 1), 3 `decision` [handle: `engine/tests/parity-map.test.ts` pins these counts].
 
 ## LrC-AVG tools with no upstream counterpart
 
@@ -124,6 +124,6 @@ So both can be added in File > Plug-in Manager at once without a clash of id or 
 |---|---|
 | Editing a photo with a look, measured passes, the HUD and Abort | LrC-AVG alone: turn the Automaat server off in the AI app for that chat (where each app keeps its server list: [`CLIENTS.md`](CLIENTS.md)) |
 | Search, keywords, collections, IPTC, ratings, import, export, presets, snapshots | Either; LrC-AVG returns the earlier values and an undo hint with each write |
-| Mask curves, Point Color, one AI mask on many photos, deleting empty masks, brush feather or erase | Automaat, outside an LrC-AVG session, until #217 lands |
+| Mask curves, one AI mask on many photos | Automaat, outside an LrC-AVG session, until the rest of #217 lands |
 | Raw SDK-key writes, global undo, removing photos from the catalog | Automaat, until Jim decides D1, D2 and D3 |
 | macOS | Automaat; LrC-AVG is Windows only (decision D4) |

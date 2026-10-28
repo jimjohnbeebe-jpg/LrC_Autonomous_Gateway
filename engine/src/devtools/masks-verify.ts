@@ -14,7 +14,7 @@ export const HISTORY = "AVG masks:verify";
 export const SNAPSHOT = "AVG masks:verify before";
 /** +2 EV on each test mask (the panel's Exposure), so its area shows plainly. */
 export const SLIDERS = { "local.exposure": 2 };
-export const PARTS = ["colour", "person", "mirror"] as const;
+export const PARTS = ["colour", "person", "mirror", "parity"] as const;
 export type Part = (typeof PARTS)[number];
 
 export type Photo = { uuid: string; filename: string };

@@ -104,7 +104,7 @@ function CollectionEdit.delete(payload)
         return fail("unknown_collection", "id " .. tostring(id) .. " is a " .. tostring(kind) .. ", not a collection")
     end
     local before = Transfer.describeCollection(catalog, collection)
-    if kind == "LrSmartCollection" then
+    if before.smart then -- isSmartCollection() (Transfer.describeCollection), not type()
         local ok, desc = LrTasks.pcall(function() return collection:getSearchDescription() end)
         -- Refused, not deleted, when `before` could not rebuild it (PR #231 review): nothing is lost.
         if not ok then return fail("read_failed", "the smart collection's rules could not be read, so it was not deleted: " .. tostring(desc), true) end

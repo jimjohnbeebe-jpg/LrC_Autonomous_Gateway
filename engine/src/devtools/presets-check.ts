@@ -20,11 +20,12 @@ export function pickLightroomPreset(list: readonly ListedPreset[]): ListedPreset
   return lightroom.find((p) => /adaptive/i.test(p.folder) && /sky/i.test(p.name)) ?? lightroom[0] ?? null;
 }
 
-/** User presets live in CameraRaw\Settings [handle: vault LR_SDK_NOTES "Recorded in Phase 4"]; built-in ones elsewhere or with no file [inference]. */
+/** User presets live in CameraRaw\Settings [handle: vault LR_SDK_NOTES "Recorded in Phase 4"], and imported ones in
+ *  CameraRaw\ImportedSettings [handle: docs\reports\phase11\PRESET-PARITY.md run 1]; built-in ones elsewhere or with no file [inference]. */
 export function countKinds(list: readonly ListedPreset[]): { lightroom: number; user: number; plugin: number } {
   return {
     lightroom: list.filter((p) => p.scope === "lightroom").length,
-    user: list.filter((p) => p.scope === "lightroom" && /[\\/]CameraRaw[\\/]Settings[\\/]/i.test(p.file ?? "")).length,
+    user: list.filter((p) => p.scope === "lightroom" && /[\\/]CameraRaw[\\/](Imported)?Settings[\\/]/i.test(p.file ?? "")).length,
     plugin: list.filter((p) => p.scope === "plugin").length,
   };
 }

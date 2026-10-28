@@ -88,7 +88,9 @@ function Transfer.describeCollection(catalog, collection)
     local d = { local_id = collection.localIdentifier }
     catalog:withReadAccessDo(function()
         d.name = collection:getName()
-        d.smart = collection:type() == "LrSmartCollection"
+        -- isSmartCollection(), not type(): on LrC 15.6 type() did not say "LrSmartCollection" for a smart
+        -- collection [handle: docs\reports\phase11\CATALOG-PARITY.md run 1, `smart: false`].
+        d.smart = collection:isSmartCollection() == true
         local names, parent = {}, collection:getParent()
         while parent do
             table.insert(names, 1, parent:getName())
@@ -178,10 +180,13 @@ function Transfer.collectionPhotos(payload)
     local catalog = LrApplication.activeCatalog()
     local collection = catalog:getCollectionByLocalIdentifier(id)
     if not collection then return fail("unknown_collection", "no collection has id " .. tostring(id)) end
-    local kind
-    catalog:withReadAccessDo(function() kind = collection:type() end)
-    if kind == "LrSmartCollection" then return fail("smart_collection", "collection " .. tostring(id) .. " is a smart collection: Lightroom fills it by its rules") end
-    if kind ~= "LrCollection" then return fail("unknown_collection", "id " .. tostring(id) .. " is a " .. tostring(kind) .. ", not a collection") end
+    local kind, smart
+    catalog:withReadAccessDo(function()
+        kind = collection:type()
+        if kind == "LrCollection" or kind == "LrSmartCollection" then smart = collection:isSmartCollection() == true end
+    end)
+    if kind ~= "LrCollection" and kind ~= "LrSmartCollection" then return fail("unknown_collection", "id " .. tostring(id) .. " is a " .. tostring(kind) .. ", not a collection") end
+    if smart then return fail("smart_collection", "collection " .. tostring(id) .. " is a smart collection: Lightroom fills it by its rules") end
     local found, notFound = {}, {}
     for i, uuid in ipairs(uuids) do
         if i > 1 then LrTasks.yield() end -- PRD NFR-1: yield between photos

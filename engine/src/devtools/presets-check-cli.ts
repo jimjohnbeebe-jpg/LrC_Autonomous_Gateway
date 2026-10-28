@@ -48,7 +48,7 @@ async function listAll(c: Ctx): Promise<ListedPreset[]> {
 async function checkpoints(c: Ctx, stem: string): Promise<string> {
   const kinds = countKinds(await listAll(c));
   c.r["kinds"] = kinds;
-  row(c, "lr_list_presets lists Lightroom presets", kinds.lightroom > 0, `${kinds.lightroom} Lightroom (${kinds.user} with a file in CameraRaw\\Settings), ${kinds.plugin} checkpoints`);
+  row(c, "lr_list_presets lists Lightroom presets", kinds.lightroom > 0, `${kinds.lightroom} Lightroom (${kinds.user} with a file in CameraRaw\\Settings or ImportedSettings), ${kinds.plugin} checkpoints`);
   const a = (await c.tools.createCheckpoint({ name: `${stem} v1`, photo_uuid: c.taken.uuid as string, settings: CHECKPOINT_A })).json["checkpoint"] as ListedPreset;
   const b = (await c.tools.createCheckpoint({ name: `${stem} v2`, photo_uuid: c.taken.uuid as string, settings: CHECKPOINT_B })).json["checkpoint"] as ListedPreset;
   c.r["checkpoints"] = [a, b];

@@ -15,6 +15,8 @@ describe("presets:check", () => {
     expect(pickLightroomPreset(list.slice(0, 1))?.uuid).toBe("1");
     expect(pickLightroomPreset([])).toBeNull();
     expect(countKinds(list)).toEqual({ lightroom: 2, user: 1, plugin: 1 });
+    const imported = { name: "Dreamy", folder: "User Presets", scope: "lightroom", uuid: "4", file: "C:/Users/a/AppData/Roaming/Adobe/CameraRaw/ImportedSettings/Dreamy.xmp" };
+    expect(countKinds([...list, imported]).user).toBe(2); // run 1: Jim's own presets are in ImportedSettings
   });
 
   it("works only with every row and both pass/fail answers y; findings never decide it", () => {

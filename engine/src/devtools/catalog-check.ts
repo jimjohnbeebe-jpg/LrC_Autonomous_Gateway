@@ -35,8 +35,9 @@ async function readBefore(c: CheckCtx) {
   c.taken.label = p["label"] as string;
   c.taken.text = Object.fromEntries(Object.keys(TEXT).map((k) => [k, String(p[k] ?? "")]));
   c.taken.keywords = p["keywords"] as string[];
-  const hasNew = ["label", "creator", "sublocation", "copy_name", "rating"].every((k) => k in p);
-  return { ok: hasNew, detail: { label: p["label"], text: c.taken.text, keywords: p["keywords"], copy_name: p["copy_name"], stack: p["stack"], alt_text: p["alt_text"] ?? "(not read: Lightroom before 13.2?)" } };
+  // copy_name only on a virtual copy; run 1's master photo had none, and the missing key went unrecorded.
+  const missing = ["label", "creator", "sublocation", "rating", ...(p["virtual_copy"] === true ? ["copy_name"] : [])].filter((k) => !(k in p));
+  return { ok: missing.length === 0, detail: { missing, label: p["label"], text: c.taken.text, keywords: p["keywords"], copy_name: p["copy_name"], stack: p["stack"], alt_text: p["alt_text"] ?? "(not read: Lightroom before 13.2?)" } };
 }
 
 async function label(c: CheckCtx) {

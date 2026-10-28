@@ -89,9 +89,9 @@ local function textOf(catalog, photo)
     end)
 end
 
--- The colour label's name ("none" for none; nil read as "none" [inference, as pickStatus nil is 0]).
+-- The colour label's name ("none" for none; nil and Lightroom's "gray" read as "none", Photos.labelName).
 local function labelOf(catalog, photo)
-    return readIn(catalog, function() return photo:getRawMetadata("colorNameForLabel") or "none" end)
+    return readIn(catalog, function() return Photos.labelName(photo:getRawMetadata("colorNameForLabel")) end)
 end
 
 function Metadata.setFlag(payload)

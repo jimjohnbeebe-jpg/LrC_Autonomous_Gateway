@@ -17,7 +17,7 @@ const previewArgs = z.object({
   quality: z
     .enum(["exact", "fast"])
     .optional()
-    .describe('"exact" (default): the export, about 3 s. "fast": Lightroom\'s cached preview, quicker but possibly stale (source "thumbnail", stale_possible true); for browsing, not for judging an edit; not with session_id, target or region'),
+    .describe('"exact" (default): the export, about 3 s. "fast": Lightroom\'s cached preview, quicker but possibly stale (source "thumbnail", stale_possible true); for browsing, not for judging an edit; right after an edit Lightroom sends no cached preview, so "fast" returns the export instead (fast_fallback says so); not with session_id, target or region'),
 });
 const metricsArgs = z.object({ session_id: sessionId.optional(), target: sessionTarget });
 const statsArgs = z.object({

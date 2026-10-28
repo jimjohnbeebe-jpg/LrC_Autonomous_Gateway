@@ -141,6 +141,7 @@ function Develop.getContext(payload)
         elseif type(info) == "table" then ctx.smart_preview = next(info) ~= nil end
     end)
     if #errors > 0 then ctx.metadata_errors = errors end
+    if ctx.label ~= nil then ctx.label = Photos.labelName(ctx.label) end
     -- Plugin 0.19.0 (Photos.available): `available` false for a missing original, absent when it could not
     -- be read. Plugin 0.19.1: its two signals as well, sdk_available and file_exists.
     local available, availabilityError, signals = Photos.available(catalog, photo)

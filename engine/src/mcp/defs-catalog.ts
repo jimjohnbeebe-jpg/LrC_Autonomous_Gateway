@@ -92,6 +92,7 @@ const keywordListArgs = z.object({
   query: z.string().trim().min(1).max(MAX_KEYWORD_PATH_LENGTH).optional().describe("only the paths that contain this text, case aside"),
   limit,
   offset,
+  refresh: z.boolean().optional().describe("true: read the keyword tree from Lightroom again, not the copy kept for 2 minutes (after keywords were changed by hand in Lightroom)"),
 });
 const ratingArgs = z.object({ uuids, rating: z.number().int().min(0).max(5).describe("stars, 0-5; 0 removes the rating") });
 const keywordArgs = z
@@ -168,7 +169,9 @@ export const CATALOG_DEFS: ToolDef[] = [
       "List the catalog's keyword tree as paths, the form lr_set_keywords takes: parent first with | between the levels " +
       '("Places|Europe|Paris"; a top-level keyword is its name), a parent before its children, siblings by name. `query` keeps the ' +
       "paths that contain it, case aside. Paged like lr_search_photos: `count` is how many matched, and when more follow, `has_more` is " +
-      "true and `truncated` says how to get the rest. Changes nothing.",
+      "true and `truncated` says how to get the rest. The plugin keeps the tree it read for 2 minutes, so paging through it is quick, and " +
+      "reads it again after every keyword change the tools make (`cached`: whether this answer used the kept copy); keywords changed by hand " +
+      "in Lightroom show after at most 2 minutes, or at once with refresh: true. Changes nothing.",
     schema: keywordListArgs,
     annotations: { readOnlyHint: true, openWorldHint: false },
     run: (tools, args) => tools.listKeywords(args as z.infer<typeof keywordListArgs>),

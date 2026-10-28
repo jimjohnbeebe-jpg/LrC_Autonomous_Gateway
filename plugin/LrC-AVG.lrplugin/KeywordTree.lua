@@ -35,6 +35,7 @@
 -- an Undo item, vault LR_SDK_NOTES "Recorded in Phase 6"]. It also finds an existing last level case
 -- aside, so createKeyword never meets a case variant of a keyword that already exists.
 
+local LrDate = import 'LrDate'
 local LrStringUtils = import 'LrStringUtils'
 local LrTasks = import 'LrTasks'
 
@@ -162,6 +163,28 @@ function KeywordTree.walk(catalog, parent, prefix, out)
         KeywordTree.walk(catalog, kid.keyword, path .. KeywordTree.SEPARATOR, out)
     end
     return out
+end
+
+-- The whole tree's paths (KeywordTree.walk), kept for CACHE_SECONDS on _G (rule 03: plugin state lives there)
+-- with the time it was walked, and walked again with `refresh` (list_keywords refresh = true). A walk of Jim's
+-- 16-17 thousand keywords takes 10-18 s [handle: docs\reports\phase11\PERF.md "Numbers", list_keywords;
+-- vault LR_SDK_NOTES "Recorded in Phase 6", keywords: 17555 ms], so lr_list_keywords pages through one walk.
+-- Every keyword write this plugin makes drops it (KeywordTree.forget: Library.lua set_keywords, KeywordEdit.lua
+-- rename); a keyword changed by hand in Lightroom shows once the walk is older than CACHE_SECONDS [inference:
+-- nothing here hears of that change]. Returns the paths and whether they came from the cache.
+KeywordTree.CACHE_SECONDS = 120 -- [stated: Jim, 2026-10-28, "Go with recommendation": 120 s]
+function KeywordTree.paths(catalog, refresh)
+    local kept, now = _G.LrCAVG_KeywordPaths, LrDate.currentTime()
+    if not refresh and kept and now - kept.at < KeywordTree.CACHE_SECONDS then return kept.paths, true end
+    local writes = _G.LrCAVG_KeywordWrites
+    local paths = KeywordTree.walk(catalog, nil, "", {}) -- yields: a write may run meanwhile
+    if writes == _G.LrCAVG_KeywordWrites then _G.LrCAVG_KeywordPaths = { paths = paths, at = now } end
+    return paths, false
+end
+
+function KeywordTree.forget()
+    _G.LrCAVG_KeywordPaths = nil
+    _G.LrCAVG_KeywordWrites = (_G.LrCAVG_KeywordWrites or 0) + 1
 end
 
 local function prefixKey(parts, depth)

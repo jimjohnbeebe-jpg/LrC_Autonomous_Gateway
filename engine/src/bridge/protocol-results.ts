@@ -164,8 +164,8 @@ export const COMMAND_RESULTS = {
   }),
   // Plugin 0.10.0 (Library.lua listKeywords): the keyword tree's paths ("Parent|Child"), a parent
   // before its children, siblings by name; `count` matched the query, `keywords` from offset + 1, at
-  // most `limit`.
-  list_keywords: z.object({ count: z.number(), keywords: z.array(z.string()) }),
+  // most `limit`. `cached` (Library.lua, KeywordTree.paths): whether the paths came from a walk under 120 s old.
+  list_keywords: z.object({ count: z.number(), keywords: z.array(z.string()), cached: z.boolean().optional() }),
   // One photo's keywords before and after; not written when nothing would change. As set_rating.
   // Plain names up to plugin 0.9.0; paths ("Parent|Child"; a top-level keyword is its name) from 0.10.0.
   set_keywords: z.object({

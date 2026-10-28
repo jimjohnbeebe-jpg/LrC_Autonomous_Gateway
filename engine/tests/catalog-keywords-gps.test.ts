@@ -191,6 +191,14 @@ describe("lr_list_keywords", () => {
     expect(found.json).toMatchObject({ count: 2, keywords: ["Animals|bird", "bird"], has_more: false });
     expect(found.json["truncated"]).toBeUndefined();
   });
+
+  it("asks the plugin to walk the tree again only with refresh: true (the plugin keeps its walk 120 s)", async () => {
+    expect(schema("lr_list_keywords").safeParse({ refresh: true }).success).toBe(true);
+    expect(schema("lr_list_keywords").safeParse({ refresh: "yes" }).success).toBe(false);
+    await tools.listKeywords({ refresh: true });
+    await tools.listKeywords({ refresh: false });
+    expect(sent("list_keywords")).toEqual([{ refresh: true, offset: 0, limit: 100 }, { offset: 0, limit: 100 }]);
+  });
 });
 
 describe("lr_set_gps", () => {

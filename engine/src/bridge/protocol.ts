@@ -102,8 +102,8 @@ export type CommandPayloads = {
   /** The criteria intersected; with `collection_id`, only that collection's photos; with `folder` (plugin 0.22.0, a full path), only that folder's. limit 1-500. */
   search_photos: { criteria: SearchCriterion[]; collection_id?: number; folder?: string; include_subfolders?: boolean; offset: number; limit: number };
   list_collections: Record<string, never>;
-  /** query: only paths that contain it, case aside. limit 1-500. */
-  list_keywords: { query?: string; offset: number; limit: number };
+  /** query: only paths that contain it, case aside. limit 1-500. refresh: walk the tree again, not the plugin's last walk (kept 120 s). */
+  list_keywords: { query?: string; offset: number; limit: number; refresh?: boolean };
   /** rating 0-5, 0 clears it. Refused with unknown_photo when no photo has the uuid. */
   set_rating: { photo_uuid: string; rating: number };
   /** Keyword names or paths (library\keywords.ts); at least one between add and remove. */

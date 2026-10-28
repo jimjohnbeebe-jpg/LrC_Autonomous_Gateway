@@ -150,15 +150,16 @@ function Library.listCollections()
     return { collections = list }
 end
 
--- The whole tree is walked (outside any gate, KeywordTree.lua says why) and then filtered: `query`
--- keeps the paths that contain it, case aside.
+-- The whole tree is walked (outside any gate, KeywordTree.lua says why), or taken from the last walk
+-- (KeywordTree.paths, 120 s; `refresh` = true walks again), and then filtered: `query` keeps the paths
+-- that contain it, case aside. `cached` says whether the walk was reused.
 function Library.listKeywords(payload)
     local offset, limit, query = payload.offset or 0, payload.limit or 100, payload.query
     if not wholeNumber(offset, 0) or not wholeNumber(limit, 1, Library.MAX_PAGE) then
         return fail("bad_request", "offset must be a whole number from 0, limit from 1 to " .. Library.MAX_PAGE)
     end
     if query ~= nil and (type(query) ~= "string" or query == "") then return fail("bad_request", "query must be a non-empty string") end
-    local ok, all = LrTasks.pcall(KeywordTree.walk, LrApplication.activeCatalog(), nil, "", {})
+    local ok, all, cached = LrTasks.pcall(KeywordTree.paths, LrApplication.activeCatalog(), payload.refresh == true)
     if not ok then return fail("read_failed", "keywords: " .. tostring(all), true) end
     local folded = query and KeywordTree.fold(query)
     local count, page = 0, {}
@@ -168,7 +169,7 @@ function Library.listKeywords(payload)
             if count > offset and #page < limit then page[#page + 1] = path end
         end
     end
-    return { count = count, keywords = page }
+    return { count = count, keywords = page, cached = cached }
 end
 
 -- Once a photo's earlier value is read, the command answers ok, so the engine always gets that value
@@ -252,6 +253,7 @@ function Library.setKeywords(payload)
     local writeErr
     if #toAdd + #toRemove > 0 then
         writeErr = written(function() writeKeywords(catalog, photo, toAdd, toRemove) end)
+        KeywordTree.forget() -- a created keyword: list_keywords walks the tree again
     end
     local after, afterErr = keywordsOf(catalog, photo)
     return { uuid = d.uuid, filename = d.filename, before = before.paths, after = after and after.paths,

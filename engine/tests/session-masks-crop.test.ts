@@ -64,7 +64,7 @@ describe("mask tools on a cropped photo (issue #179)", () => {
     clean();
     Object.assign(lr.settings, { ...DSC0031, orientation: "BA", [MASK_TABLE_KEY]: structuredClone(captureTable) });
     await begin();
-    expect(await listed()).toEqual({ unavailable: expect.stringMatching(/^not shown: the photo's orientation is "BA"/) });
+    expect(await listed()).toEqual({ unavailable: expect.stringMatching(/^not shown: the photo is mirrored \(orientation "BA"\)/) });
     const writes = lr.history.length;
     expect(await fails(manager.createMask({ ...pass, kind: "linear", geometry: FOREGROUND }))).toMatchObject({ code: "CROP_FRAME_UNSUPPORTED", message: expect.stringMatching(/Nothing was written/) });
     expect(lr.history.length).toBe(writes);

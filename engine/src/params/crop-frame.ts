@@ -16,8 +16,14 @@
 //     feature-requests-676/p-correct-copying-of-crops-and-local-adjustments-664795], observed here on an
 //     uncropped upright photo only [handle: docs\reports\phase6\masks-capture\check.json `8_geometry_plan`];
 //   - orientation AB, BC, CD, DA shows the stored photo turned 0, 90, 180, 270 degrees clockwise [community]
-//     [handle: the first URL; https://github.com/storytold/lightcraft/issues/483]; CD is [inference]. The
-//     mirrored codes are refused: no source gives their mapping.
+//     [handle: the first URL; https://github.com/storytold/lightcraft/issues/483]; CD is [inference]. Automaat's
+//     table of all eight codes agrees with UNTURN below on these four, from its own live check of every
+//     orientation on LrC 15.6 (#331) [upstream claim: plugin/LightroomMCP.lrplugin/ImageFrame.lua:7-16, `git show
+//     e1ca0c6`] (issue #210 cross-check, engine\tests\params-crop-frame-mirror.test.ts);
+//   - the mirrored codes BA, DC, CB, AD come from that table only [upstream claim: the same lines]: the mapping is
+//     here, but cropFrame refuses them (MIRROR_UNVERIFIED) until `npm run masks:verify` (issue #210); the check
+//     lifts the refusal for its own writes (withMirrorMapping). How a crop angle reads on a mirrored photo is
+//     [unverified].
 // On a cropped, angled or turned photo all of this is [unverified] in Lightroom until `npm run masks:crop`
 // (docs\reports\phase9\issue179.md). Key names from params\sdk-keys.lrc15.json (rule 03).
 
@@ -31,11 +37,24 @@ export type Ellipse = Box & { angle: number };
 
 export const CROP = { left: "CropLeft", top: "CropTop", right: "CropRight", bottom: "CropBottom", angle: "CropAngle", orientation: "orientation" } as const;
 
-const TURNS = ["AB", "BC", "CD", "DA"] as const;
+/** The mirrored orientation codes [upstream claim: Automaat ImageFrame.lua:9-15]. */
+export const MIRRORED = ["BA", "DC", "CB", "AD"] as const;
+const TURNS = ["AB", "BC", "CD", "DA", ...MIRRORED] as const;
 type Turn = (typeof TURNS)[number];
-/** The preview's (p, q) -> the crop's own axes (u, v), and back [community] [handle: the first URL above; https://github.com/storytold/lightcraft/issues/483]; CD is [inference]. */
-const UNTURN: Record<Turn, (p: number, q: number) => [number, number]> = { AB: (p, q) => [p, q], BC: (p, q) => [q, 1 - p], CD: (p, q) => [1 - p, 1 - q], DA: (p, q) => [1 - q, p] };
-const TURN: Record<Turn, (u: number, v: number) => [number, number]> = { AB: (u, v) => [u, v], BC: (u, v) => [1 - v, u], CD: (u, v) => [1 - u, 1 - v], DA: (u, v) => [v, 1 - u] };
+/**
+ * The preview's (p, q) -> the crop's own axes (u, v), and back [community] [handle: the first URL above;
+ * https://github.com/storytold/lightcraft/issues/483]; CD is [inference]; the mirrored four [upstream claim: Automaat
+ * ImageFrame.lua STORED_FROM_DISPLAYED], each its own inverse.
+ */
+const UNTURN: Record<Turn, (p: number, q: number) => [number, number]> = {
+  AB: (p, q) => [p, q], BC: (p, q) => [q, 1 - p], CD: (p, q) => [1 - p, 1 - q], DA: (p, q) => [1 - q, p],
+  BA: (p, q) => [1 - p, q], DC: (p, q) => [p, 1 - q], CB: (p, q) => [q, p], AD: (p, q) => [1 - q, 1 - p],
+};
+const TURN: Record<Turn, (u: number, v: number) => [number, number]> = {
+  AB: (u, v) => [u, v], BC: (u, v) => [1 - v, u], CD: (u, v) => [1 - u, 1 - v], DA: (u, v) => [v, 1 - u],
+  BA: (u, v) => [1 - u, v], DC: (u, v) => [u, 1 - v], CB: (u, v) => [v, u], AD: (u, v) => [1 - v, 1 - u],
+};
+const mirrorWhy = (o: string): string => `the photo is mirrored (orientation "${o}"), and where Lightroom puts mask geometry on a mirrored photo is not yet checked`;
 
 /** `aspect`: getRawMetadata width / height (only a crop angle needs it); `refused`: why no geometry can be mapped on this photo, else null. */
 export type CropFrame = Box & { angle: number; turn: Turn; aspect: number; refused: string | null };
@@ -65,7 +84,7 @@ export function cropFrame(sdk: SdkSettings, size: { width: number; height: numbe
   const base = { left: num(sdk, CROP.left, 0), top: num(sdk, CROP.top, 0), right: num(sdk, CROP.right, 1), bottom: num(sdk, CROP.bottom, 1), angle: num(sdk, CROP.angle, 0), aspect: 1 };
   const o = sdk[CROP.orientation] ?? "AB";
   const refuse = (why: string): CropFrame => ({ ...base, turn: "AB", refused: why });
-  if (!(TURNS as readonly unknown[]).includes(o)) return refuse(`the photo's orientation is "${String(o)}" (a mirrored or unknown one), and how mask geometry maps on a mirrored photo is not known`);
+  if (!(TURNS as readonly unknown[]).includes(o)) return refuse(`the photo's orientation is "${String(o)}", an unknown one`);
   const turn = o as Turn;
   let aspect = 1;
   if (base.angle !== 0) {
@@ -74,8 +93,12 @@ export function cropFrame(sdk: SdkSettings, size: { width: number; height: numbe
   }
   const f: CropFrame = { ...base, turn, aspect, refused: null };
   const b = basis(f);
-  return b.ws > 0 && b.hs > 0 ? f : refuse(`its crop (left ${f.left}, top ${f.top}, right ${f.right}, bottom ${f.bottom}, angle ${f.angle}) is empty`);
+  if (!(b.ws > 0 && b.hs > 0)) return refuse(`its crop (left ${f.left}, top ${f.top}, right ${f.right}, bottom ${f.bottom}, angle ${f.angle}) is empty`);
+  return (MIRRORED as readonly string[]).includes(turn) ? { ...f, refused: mirrorWhy(turn) } : f;
 }
+
+/** `f` with a mirrored photo's refusal lifted, for `npm run masks:verify` only (issue #210); any other frame as is. */
+export const withMirrorMapping = (f: CropFrame): CropFrame => (f.refused !== null && f.refused === mirrorWhy(f.turn) ? { ...f, refused: null } : f);
 
 /** The crop in stored pixels with width `k` = aspect and height 1: its top-left corner, its sides and its axes. */
 function basis(f: CropFrame): { x0: number; y0: number; ws: number; hs: number; c: number; s: number; k: number } {

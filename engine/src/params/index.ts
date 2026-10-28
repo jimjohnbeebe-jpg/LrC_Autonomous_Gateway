@@ -19,7 +19,7 @@ export type { AiKind, Correction, LocalParam, MaskKind } from "./mask-table.js";
 export { summarize } from "./mask-summary.js";
 export type { MaskSummary } from "./mask-summary.js";
 export { boundsOf, instanceOf, pickInstance, withInstance } from "./mask-person.js";
-export { CROP, IDENTITY, boxToView, cropFrame, isIdentity, needsSize, toPhoto, toView } from "./crop-frame.js";
+export { CROP, IDENTITY, MIRRORED, boxToView, cropFrame, isIdentity, needsSize, toPhoto, toView, withMirrorMapping } from "./crop-frame.js";
 export type { CropFrame } from "./crop-frame.js";
 export { OUTSIDE_WARN, outsideShare, outsideWarnings } from "./crop-share.js";
 export type { Box } from "./mask-person.js";

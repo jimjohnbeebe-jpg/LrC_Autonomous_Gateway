@@ -45,6 +45,13 @@ describe("intents:check --restore", () => {
     expect(JSON.parse(readFileSync(config, "utf8"))).toMatchObject({ theme: "dark" });
   });
 
+  it("puts the saved entry back exactly, without the tool profile the current entry has (Greptile, PR #250)", () => {
+    writeFileSync(config, json({ "lrc-avg": { ...WORKTREE, env: { LRC_AVG_TOOLS: "edit" } }, other: OTHER }));
+    backup("12-00-00-000", { "lrc-avg": USUAL, other: OTHER });
+    expect(putClaudeDesktopBack(mainJs, env).put_back).toBe("YES");
+    expect(now().mcpServers).toEqual({ "lrc-avg": USUAL, other: OTHER });
+  });
+
   it("takes the entry out when the backup that desktop:install made had none", () => {
     backup("12-00-00-000", { other: OTHER });
     expect(putClaudeDesktopBack(mainJs, env)).toMatchObject({ put_back: "YES", detail: expect.stringContaining("had none") });

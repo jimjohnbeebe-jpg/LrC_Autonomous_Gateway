@@ -55,7 +55,7 @@ export function putClaudeDesktopBack(mainJs: string, env: NodeJS.ProcessEnv = pr
       .map((name) => ({ name, text: readFileSync(path.join(dir, name), "utf8") }));
     const before = entryBefore(backups, mainJs);
     if (!before) return { put_back: "NO", detail: `no config backup in ${dir} holds a "${SERVER_NAME}" entry that runs another engine, or none at all` };
-    applyDesktopConfig({ entry: before.entry, configPath: file, env });
+    applyDesktopConfig({ entry: before.entry, configPath: file, env, exact: true });
     return { put_back: "YES", detail: `the "${SERVER_NAME}" entry in ${file} is ${before.entry ? `the one from ${before.backup}` : `removed, because ${before.backup} had none`}` };
   } catch (err) {
     return { put_back: "NO", detail: err instanceof Error ? err.message : String(err) };

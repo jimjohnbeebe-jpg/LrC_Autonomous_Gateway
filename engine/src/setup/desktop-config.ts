@@ -71,10 +71,10 @@ function keepProfile(existing: unknown, entry: ServerEntry): ServerEntry {
 }
 
 /** What the config becomes: the engine entry set (or, with `wanted` null, removed; an existing tool profile kept), the retired servers gone, the rest untouched. */
-export function planConfig(config: DesktopConfig, wanted: ServerEntry | null): ConfigPlan {
+export function planConfig(config: DesktopConfig, wanted: ServerEntry | null, exact = false): ConfigPlan {
   const servers: Record<string, unknown> = { ...(config.mcpServers ?? {}) };
   const existing = servers[SERVER_NAME];
-  const entry = wanted === null ? null : keepProfile(existing, wanted);
+  const entry = wanted === null ? null : exact ? wanted : keepProfile(existing, wanted);
   const same = entry !== null && JSON.stringify(existing) === JSON.stringify(entry);
   const names: string[] = entry === null ? [SERVER_NAME, ...RETIRED_SERVERS] : [...RETIRED_SERVERS];
   const removed = names.filter((name) => name in servers);

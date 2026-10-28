@@ -1,8 +1,8 @@
 ---
 report: DISTRIBUTION
 phase: "11"
-status: template
-authored_by: "Claude Code (purpose, build, tests, steps); Jim (the Claude Code run, Observed)"
+status: observed
+authored_by: "Claude Code (purpose, build, tests, steps; the bundle handle, 2026-10-27); Jim (the runs, Observed)"
 date: 2026-10-27
 ---
 
@@ -53,8 +53,28 @@ If something goes wrong:
 
 ## Observed
 
-(Blank. Jim's runs.)
+### Run 1, 2026-10-27
+
+Jim's report, verbatim [stated: Jim, 2026-10-27]: "DISTRIBUTION.md complted successfully. .mcpb installed successfully, all tools availabe and working. Testing success."
+
+- The bundle Jim installed: `releaselrc-avg-1.5.0.mcpb`, 13,139,687 bytes, sha256 `fff5764f6bb1f56e10a6ff45a01acf60eeca8f5b1d122b85e1a09e3736df2b16`, built 2026-10-27 19:41 local [handle: `ls -la release/*.mcpb` and `sha256sum` in the repo, 2026-10-27].
+- Jim did not report step by step: what `/mcp` showed, which of the two prompts and the skill appeared in Claude Code's `/` list, and the tool count in Claude Desktop were not written down separately. "All tools available and working" is Jim's summary.
 
 ## Numbers
 
-(Blank.)
+| Item | Value |
+|---|---|
+| Claude Code plugin (steps 1-6) | completed successfully [stated: Jim] |
+| `.mcpb` installs in Claude Desktop | yes [stated: Jim] |
+| Tools shown and working | "all tools available and working" [stated: Jim]; 61 expected |
+| Prompts and skill shown in Claude Code | not reported separately |
+
+## Verdict
+
+**Go** [stated: Jim, 2026-10-27, "Go with recommendations. 5. Agreed"].
+
+## Consequences / open questions
+
+- The inline `mcpServers` entry and the `.mcpb` install route are no longer `[unverified]` as far as Jim's run goes: both worked [stated: Jim, 2026-10-27]. The MCPB manifest version (0.3) stays unchecked against the spec, though Claude Desktop accepted the bundle.
+- Whether Claude Code lists the MCP prompts as slash commands was not reported on its own.
+- Nothing was published (no npm publish, registry entry, release or tag), as #207 requires.

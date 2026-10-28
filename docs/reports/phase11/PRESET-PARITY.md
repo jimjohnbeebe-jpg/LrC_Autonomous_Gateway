@@ -1,8 +1,8 @@
 ---
 report: PRESET-PARITY
 phase: "11"
-status: template
-authored_by: "Claude Code (purpose, harness, pre-run findings, steps for Jim); Jim (Observed, verdict)"
+status: observed
+authored_by: "Claude Code (purpose, harness, pre-run findings, steps for Jim; Observed and Numbers copied from the run files, 2026-10-27); Jim (the run, his four answers, verdict)"
 date: 2026-10-27
 ---
 
@@ -72,29 +72,57 @@ The two checkpoints stay in `%APPDATA%\Adobe\Lightroom\Plugin Develop Presets\` 
 
 ## Observed (Jim)
 
-<!-- Jim fills this in: the window's lines, the four answers. Claude Code collects %TEMP%\LrC-AVG\presets-check\presets_check_<time>.json. -->
+### Run 1, 2026-10-27: WORKED
+
+Jim ran `npm run presets:check` and said "done" [stated: Jim, 2026-10-27, "npm run presets:check done"]. The photo was `_OZ80738.NEF` (`2D31DD06`), one of the two virtual copies of the develop check. The results file ends `headline: WORKED` [handle: `docs\reports\phase11\PRESET-PARITY\run1\presets_check_2026-10-28T02-27-54-987Z.json`]:
+
+```text
+YES lr_list_presets lists Lightroom presets: 398 Lightroom (0 with a file in CameraRaw\Settings), 0 checkpoints
+YES both checkpoints listed with scope plugin: 2 listed
+YES lr_get_preset reads the checkpoint back: settings {"exposure":0.3,"contrast":10}
+YES lr_compare_presets finds exactly the known diff: changes exposure, vibrance; other []
+YES lr_export_preset copies once and refuses to replace: ...\presets-check\export_2026-10-28T02-27-54-987Z\AVG presets-check 2026-10-28T02-27-54 v1.lrtemplate; second call: PRESET_EXISTS
+YES lr_apply_preset applies the checkpoint, after a snapshot: [...]
+YES lr_apply_preset applies "User Presets / AI Dreamy Spring Sunrise": [...]
+YES the snapshot puts the photo back: settings and masks as before
+YES Jim's answer 1: y
+YES Jim's answer 2: y
+    finding, history_named_AVG: y
+    finding, checkpoint_hidden_from_panel: y
+```
+
+- **Jim's answers:** y to "Is Lightroom still in the module it was in before this check, with the same photo selected?" and y to "Does the photo look as it did before the check?". Findings: y to "does the History panel show steps named \"AVG preset ...\"", and y to "is there NO preset named \"AVG presets-check 2026-10-28T02-27-54 v1\"" in Develop's Presets panel [handle: `engine\src\devtools\presets-check-cli.ts:122-127`; `docs\reports\phase11\PRESET-PARITY\run1\presets_check_2026-10-28T02-27-54-987Z.json`, `passFail`, `findings`].
+- **`preset:getSetting()` keys and types:** the checkpoint read back as `Contrast2012` 10, `Exposure2012` 0.3 (numbers) and `ProcessVersion` "15.4" (a string), which are the same names and types as `getDevelopSettings()` [handle: `docs\reports\phase11\PRESET-PARITY\run1\presets_check_2026-10-28T02-27-54-987Z.json`, `checkpoint_read.raw_settings`]. The checkpoint files on disk hold exactly those keys (v2 adds `Vibrance` 15) [handle: the exported `.lrtemplate`, `docs\reports\phase11\PRESET-PARITY\run1\AVG presets-check 2026-10-28T02-27-54 v1.lrtemplate`].
+- **`getFile()` for a Lightroom preset:** Jim's "User Presets / AI Dreamy Spring Sunrise" returned `%USERPROFILE%/AppData/Roaming/Adobe/CameraRaw/ImportedSettings/Jim's DreamySpringSunrise.xmp`, in `CameraRaw\ImportedSettings`, not `CameraRaw\Settings`. That is why 0 presets counted as having "a file in CameraRaw\Settings" [handle: `docs\reports\phase11\PRESET-PARITY\run1\presets_check_2026-10-28T02-27-54-987Z.json`, `lightroom_preset_read.file`, `kinds`].
+- **Applying the Lightroom preset** changed 27 settings and the camera profile ("Adobe Color" -> "Adobe Standard"), plus `ToneCurveName2012`. It carried no masks (`masks: 0`, `ai_masks: false`), so no `ai_update` [handle: `docs\reports\phase11\PRESET-PARITY\run1\presets_check_2026-10-28T02-27-54-987Z.json`, `lightroom_apply`, `lightroom_preset_read`].
+- **New: Temperature and Tint read -999999 after the checkpoint preset.** The checkpoint (v2) holds only `Exposure2012`, `Contrast2012`, `Vibrance` and `ProcessVersion`. Before it, the photo read Temperature 5050 and Tint 21; after it, both read **-999999**, and they still did before the next preset. The Lightroom preset then set them to 5050 and 21 again [handle: `docs\reports\phase11\PRESET-PARITY\run1\presets_check_2026-10-28T02-27-54-987Z.json`, `lightroom_apply.applied[0].before` and the "applies the checkpoint" line]. No engine file contains -999999, so the value is Lightroom's [handle: a search of the repo outside `vendor`, `node_modules` and `docs` found only an unrelated float in `engine\tests\metrics.test.ts`]. The photo was put back with nothing differing, and Jim saw it look as before.
 
 ## Numbers
 
 | Field | Value |
 |---|---|
-| Lightroom version / plugin version | |
-| Presets listed: Lightroom / with a file in CameraRaw\Settings / checkpoints | |
-| Checkpoint read back (v1 settings) | |
-| Compare v1 → v2: changes / other changes | |
-| Export: path; second call | |
-| Apply v2: before → after | |
-| Lightroom preset applied; `ai_update` | |
-| Put back: differing settings / masks back | |
-| History step name (finding) | |
-| Checkpoint hidden from the Presets panel (finding) | |
+| Lightroom version / plugin version | LrC 15.6 [handle: `docs\reports\phase11\DEVELOP-PARITY\run1\develop_check_2026-10-28T02-24-27-615Z.json`, the same session 3 minutes earlier; this file does not record it] / plugin 1.5.0 |
+| Presets listed: Lightroom / with a file in CameraRaw\Settings / checkpoints | 398 / 0 / 0 (before the check made two) |
+| Checkpoint read back (v1 settings) | exposure 0.3, contrast 10 (`ProcessVersion` "15.4" as an other key) |
+| Compare v1 → v2: changes / other changes | exposure 0.3 → 0.5, vibrance (none) → 15 / none |
+| Export: path; second call | `%TEMP%\LrC-AVG\presets-check\export_2026-10-28T02-27-54-987Z\AVG presets-check 2026-10-28T02-27-54 v1.lrtemplate`; `PRESET_EXISTS` |
+| Apply v2: before → after | exposure 0 → 0.5, contrast 0 → 10, vibrance 0 → 15; **temperature 5050 → -999999, tint 21 → -999999** |
+| Lightroom preset applied; `ai_update` | "User Presets / AI Dreamy Spring Sunrise", 27 settings and the profile; no `ai_update` (no masks) |
+| Put back: differing settings / masks back | none / YES |
+| History step name (finding) | y: steps named "AVG preset …" |
+| Checkpoint hidden from the Presets panel (finding) | y: hidden |
+
+All from `docs\reports\phase11\PRESET-PARITY\run1\presets_check_2026-10-28T02-27-54-987Z.json`.
 
 ## Verdict
 
-<!-- Jim: go / conditional / no-go. The window's WORKED/FAILED is a suggestion. -->
+**Go** [stated: Jim, 2026-10-27, "Go with recommendations. 5. Agreed"]. The -999999 reading is handled in the fix PR that follows.
 
 ## Consequences / open questions
 
-- [unverified] until this run: the keys and value types `preset:getSetting()` returns (the reader in `engine\src\params\preset-read.ts` assumes `getDevelopSettings()`'s); the History name Lightroom shows for `applyDevelopPreset` inside a gate named "AVG preset …"; whether `addDevelopPresetForPlugin` replaces an existing checkpoint's file (the plugin refuses a name in use, so it is never tried); `getFile()` for built-in presets.
-- [upstream claim]: plugin presets are hidden from the Develop Presets panel (`docs\AUTOMAAT_SURVEY.md` §4.5); observed once on LrC 15.5.1 [handle: vault LR_SDK_NOTES "Recorded in Phase 4", `jim.saw_plugin` false], re-tested here.
+- Settled by run 1: `preset:getSetting()` returns `getDevelopSettings()`'s names and types; History shows "AVG preset …" for `applyDevelopPreset` inside the gate (Jim, y); plugin presets are hidden from the Develop Presets panel on LrC 15.6 too (Jim, y), as on 15.5.1 [handle: `docs\reports\phase11\PRESET-PARITY\run1\presets_check_2026-10-28T02-27-54-987Z.json`].
+- Still [unverified]: whether `addDevelopPresetForPlugin` replaces an existing checkpoint's file (never tried, the plugin refuses a name in use); `getFile()` for Adobe's built-in presets (only a user preset was read).
+- **Open: -999999 for Temperature and Tint** after a preset without white balance on a raw photo. What Lightroom means by it (perhaps "no value" while white balance is unset) is [unverified]. Whether an engine path misreads it is not yet checked: the guardrails' ranges, `lr_compare_presets` and `lr_step`'s `before` values would see a temperature far outside the 2000-50000 range [handle: `engine\src\params\canonical.ts:109`] [inference: what they do with it]. Worth a look before #207 closes; Jim's call.
+- **"user" presets:** Jim's own presets live in `CameraRaw\ImportedSettings` [handle: `docs\reports\phase11\PRESET-PARITY\run1\presets_check_2026-10-28T02-27-54-987Z.json`, `lightroom_preset_read.file`], and the "with a file in CameraRaw\Settings" count misses them (0 of 398). Whether `lr_list_presets` should count `ImportedSettings` as user presets is Jim's call.
+- The two checkpoints "AVG presets-check 2026-10-28T02-27-54 v1/v2" stay in Lightroom's plugin presets, hidden, as the steps say.
 - Out of scope: #113's recipe-to-intent loop.

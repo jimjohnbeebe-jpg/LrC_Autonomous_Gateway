@@ -1,8 +1,8 @@
 ---
 report: CATALOG-PARITY
 phase: "11"
-status: template
-authored_by: "Claude Code (purpose, harness, pre-run findings, steps); Jim (Observed, Numbers, verdict)"
+status: observed
+authored_by: "Claude Code (purpose, harness, pre-run findings, steps; Observed and Numbers copied from the run file, 2026-10-27); Jim (the run, his answers, verdict)"
 date: 2026-10-27
 ---
 
@@ -77,22 +77,62 @@ Four questions in the PowerShell window (the last two for row 9: no error dialog
 
 ## Observed (Jim)
 
+### Run 1, 2026-10-27: FAILED (3 of 10 steps and 2 of 4 put-back lines NO)
+
+Jim ran `npm run catalog:check` in a throwaway catalog (one folder, `G:\Media\Photos\Temp`, 70 photos) on the photo `20210114_0113.CR2` (`76F23BE2`), and said it completed [stated: Jim, 2026-10-27, "npm run catalog:check completed."]. The results file ends `headline: FAILED` [handle: `docs\reports\phase11\CATALOG-PARITY\run1\catalog_check_2026-10-28T02-32-41-166Z.json`]:
+
+```text
+NO  lr_get_metadata reads label, the new text fields, rating and copy name
+YES lr_list_folders lists the catalog's folders
+YES lr_set_color_label writes a label and lr_search_photos finds it
+YES lr_search_photos' new filters answer (no-such camera, lens, ISO 1, 1 mm find nothing; edited true/false split)
+YES lr_set_iptc writes creator, copyright and the location fields
+YES lr_rename_keyword (and a case-only rename), lr_remove_keyword_subtree
+NO  lr_create_smart_collection, its members by name, lr_delete_collection
+YES lr_delete_collection by name gives back its member uuids
+YES lr_export_metadata writes a JSON file
+YES lr_set_ai_metadata keeps a score and reason, lr_get_ai_metadata reads them
+NO  label put back
+YES AI score and reason put back
+YES text fields put back
+NO  the photo reads as before
+YES Jim's answer 1: y
+YES Jim's answer 2: y
+YES Jim's answer 3: y
+YES Jim's answer 4: y
+```
+
+What each NO shows (Claude Code's reading of the file and the code):
+
+- **Unlabelled photo reads "gray", and the label was not put back.** `lr_get_metadata` read the photo's label as **"gray"** before the check [handle: `docs\reports\phase11\CATALOG-PARITY\run1\catalog_check_2026-10-28T02-32-41-166Z.json`, first step, `detail.label`]. The develop check's photo read "gray" too [handle: `docs\reports\phase11\DEVELOP-PARITY\run1\develop_check_2026-10-28T02-24-27-615Z.json`, `lr_get_metadata raw`, `label`]. The plugin passes `getRawMetadata("colorNameForLabel")` through, using "none" only when it is nil [handle: `plugin\LrC-AVG.lrplugin\Metadata.lua:94`], so Lightroom 15.6 itself returned "gray" for a photo with no label [inference: that the photos had no label; Jim's answer 2 below]. `lr_set_color_label` accepts only red, yellow, green, blue, purple and none [handle: `engine\src\library\metadata.ts:78`], so putting "gray" back failed. **The photo was left with the red label the check wrote**, and "the photo reads as before" is NO for that reason [handle: `docs\reports\phase11\CATALOG-PARITY\run1\catalog_check_2026-10-28T02-32-41-166Z.json`, `put_back`; `engine\src\devtools\catalog-check.ts:157` and `:164-167`].
+- **The smart collection was reported as not smart.** `lr_create_smart_collection` made collection 3048 with the rule `labelColor == 1`; it found the photo. But both its own answer and the delete's `before` say `smart: false`, and the delete stored member uuids, not the rules [handle: `docs\reports\phase11\CATALOG-PARITY\run1\catalog_check_2026-10-28T02-32-41-166Z.json`, step 7]. The plugin decides "smart" by `collection:type() == "LrSmartCollection"` [handle: `plugin\LrC-AVG.lrplugin\Transfer.lua:91`, `plugin\LrC-AVG.lrplugin\CollectionEdit.lua:102-103`]. The SDK documents `collection:isSmartCollection()` for this question, and `type()` only as "Reports the type of this object" [handle: `D:\Developer\LightRoom Classic Dev Kit\API Reference\modules\LrCollection.html`]. So on 15.6, `type()` did not return "LrSmartCollection" for a smart collection [inference: what it did return was not recorded].
+- **The first step's NO** is the harness's own test: it requires the keys `label`, `creator`, `sublocation`, `copy_name` and `rating` in the answer [handle: `engine\src\devtools\catalog-check.ts:38`]. `copy_name` is missing from the step's detail; a master photo (not a virtual copy) likely has none [inference]. Which key was missing is not recorded.
+
+Everything else worked: the folder list, colour label write and search, the new search filters, IPTC and location, keyword rename (case-only too) and subtree removal, the regular collection's delete with member uuids, the metadata export, and the AI score and reason [handle: `docs\reports\phase11\CATALOG-PARITY\run1\catalog_check_2026-10-28T02-32-41-166Z.json`].
+
+**Jim's answers** (all y) [handle: `engine\src\devtools\catalog-check-cli.ts:76-80`]: 1, no collection starting "AVG catalog check" is left; 2, the colour label and IPTC Creator and Location read as before; 3, the plugin reloaded without an error dialog; 4, "AVG session", "AVG look" and "AVG edit date" are listed under "All Plug-in Metadata". **Answer 2 and the file disagree on the label:** the file says the label stayed red. Settled after the run: Jim looked again and the photo still has the red label [stated: Jim, 2026-10-27, "Yes, there is still a red label on the image."], so the file is right and answer 2 was given before the label was checked closely [inference].
 ## Numbers
 
 | Item | Value |
 |---|---|
-| Lightroom Classic version, plugin version | |
-| Steps YES / total | |
-| `edited` true / false: the photo in exactly one | |
-| Focal length 1 mm: count, or the error | |
-| Accessibility fields read (13.2+) | |
-| Put back | |
-| Jim's answers | |
+| Lightroom Classic version, plugin version | 15.6, plugin 1.5.0 |
+| Steps YES / total | 7 / 10 |
+| `edited` true / false: the photo in exactly one | yes: `edited` true 70 (the photo among them), false 0 |
+| Focal length 1 mm: count, or the error | 0, no error |
+| Accessibility fields read (13.2+) | yes: `alt_text` read ("") |
+| Put back | AI score and reason YES, text fields YES, label **NO** (left red), reads as before **NO** |
+| Jim's answers | y, y, y, y |
+
+All from `docs\reports\phase11\CATALOG-PARITY\run1\catalog_check_2026-10-28T02-32-41-166Z.json`.
 
 ## Verdict
 
+**Conditional** [stated: Jim, 2026-10-27, "Go with recommendations. 5. Agreed"]: on a rerun after the fix PR (unlabelled "gray" read as "none", `isSmartCollection()`, the first step's key test).
+
 ## Consequences / open questions
 
-- `[unverified]` until this run: every Lightroom-side behaviour above, in particular `focalLength` as a findPhotos criterion, `hasAdjustments` with `isTrue`/`isFalse`, `labelColor` with `"none"`, `getPhotos(true)` for a folder's subfolders (from issue #139), the case-only rename through a temporary name, `createSmartCollection` inside a collection set made in the same gate, and whether Edit > Undo takes a deleted collection back.
+- Settled by run 1 [handle: `docs\reports\phase11\CATALOG-PARITY\run1\catalog_check_2026-10-28T02-32-41-166Z.json`]: `focalLength` works as a findPhotos criterion (0 found, no error); `hasAdjustments` with true/false splits the photos (70 / 0); the case-only rename works; the plugin's metadata fields show under "All Plug-in Metadata" (Jim, answer 4).
+- **Open from run 1:** Lightroom's "gray" for an unlabelled photo and `lr_set_color_label`'s refusal of it; `isSmartCollection()` against `type()`; the first step's missing key; Jim's answer 2 against the file on the label (settled: the label is red).
+- Was `[unverified]` before this run: every Lightroom-side behaviour above, in particular `focalLength` as a findPhotos criterion, `hasAdjustments` with `isTrue`/`isFalse`, `labelColor` with `"none"`, `getPhotos(true)` for a folder's subfolders (from issue #139), the case-only rename through a temporary name, `createSmartCollection` inside a collection set made in the same gate, and whether Edit > Undo takes a deleted collection back.
 - Row 9 is its own commit, so it can be dropped alone: `Info.lua`'s new `LrMetadataProvider` (`MetadataDefinition.lua`) makes Lightroom update the plug-in metadata of the catalog when it loads the plugin `[unverified]`. Also `[unverified]`: whether a field without a title (`aiScore`, `aiReason`) stays hidden, whether "All Plug-in Metadata" is where the AVG fields show, whether the shipped plugin (`com.lrcavg.gateway`) and the development one (`com.lrcavg.gateway.dev`) keep separate values `[inference]`, and the accepted-session stamp in Lightroom (the check runs no session; `engine\tests\catalog-ai-metadata.test.ts` covers it against the simulator).
 - README's user guide still says "No tool deletes a collection" and lists only title, caption and headline; the documentation child of #207 updates it with the parity table.

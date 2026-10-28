@@ -1,0 +1,68 @@
+2026-10-27 19:24:27.670 INFO  bridge: receive: engine connected
+2026-10-27 19:24:28.189 INFO  bridge: send: engine connected
+2026-10-27 19:24:28.189 INFO  bridge: hello f0013d66-90f4-48b2-b5b9-2d58348d9c56
+2026-10-27 19:24:28.192 INFO  bridge: get_selection 29bd893e-c545-44c6-9b54-4834457b5ec2
+2026-10-27 19:24:28.192 INFO  bridge: get_settings 14f6ea5d-98a5-48f0-9a45-333918c10a34
+2026-10-27 19:24:28.338 INFO  bridge: list_snapshots aa4cbf78-fff7-4645-83d3-6f6fd7d809b9
+2026-10-27 19:24:28.346 INFO  bridge: get_settings 6a70231b-c06f-4c86-bc2d-475eda77e3af
+2026-10-27 19:24:28.353 INFO  bridge: list_snapshots 79480e20-2346-4072-b705-77ca183ba796
+2026-10-27 19:24:28.362 INFO  bridge: list_snapshots c83b7244-06b0-40e2-99d4-c2b94c27b21d
+2026-10-27 19:24:28.362 INFO  bridge: create_snapshot e64822dd-0958-4a3f-b6aa-d2246d57bee8
+2026-10-27 19:24:28.384 INFO  bridge: list_snapshots 37aec023-f1d7-47dc-987f-23b4debc392d
+2026-10-27 19:24:28.384 INFO  bridge: create_snapshot ae86eb46-7149-4627-b6eb-a0023b32373b
+2026-10-27 19:24:28.417 INFO  bridge: list_snapshots 0a53231f-5d2a-4b30-b116-339fc6fe6de8
+2026-10-27 19:24:28.425 INFO  bridge: get_settings ca91ebbf-2391-4835-bbb7-984b6183d716
+2026-10-27 19:24:28.440 INFO  bridge: apply_auto f0268fb3-3e11-4512-ae71-912281922271
+2026-10-27 19:24:28.595 INFO  develop: switched from library to develop in 0 ms
+2026-10-27 19:24:34.314 INFO  apply_auto: FCA2E337-FB90-47F7-8A50-CC4462AAA325 applied ()
+2026-10-27 19:24:34.325 INFO  bridge: get_settings 3c8b9d1d-c9c1-49d6-8015-589a5d613547
+2026-10-27 19:24:34.712 INFO  bridge: apply_auto 61454972-1b4f-4d94-a574-1123666bbf39
+2026-10-27 19:24:35.242 INFO  develop: switched from library to develop in 0 ms
+2026-10-27 19:24:36.559 WARN  stall-diag: stall 1474 ms after idle
+2026-10-27 19:24:47.365 INFO  apply_auto: 2D31DD06-3FCC-4E7C-9258-32B7C48DAD41 applied ()
+2026-10-27 19:24:47.372 INFO  bridge: get_settings e0772027-b18c-4547-acc1-48ccf142f616
+2026-10-27 19:24:47.645 WARN  stall-diag: stall 1723 ms after idle
+2026-10-27 19:24:47.665 INFO  bridge: reset_develop ad8395b9-4841-4e6d-8491-c300bd87baeb
+2026-10-27 19:24:47.873 INFO  develop: switched from library to develop in 0 ms
+2026-10-27 19:24:50.122 INFO  reset_develop: FCA2E337-FB90-47F7-8A50-CC4462AAA325 reset ()
+2026-10-27 19:24:50.134 INFO  bridge: get_settings cdf1bd79-505d-47ef-b031-55385f3dfcb2
+2026-10-27 19:24:50.167 INFO  bridge: reset_develop 146d3260-0ca3-4725-a0a6-11189137a208
+2026-10-27 19:24:50.613 INFO  develop: switched from library to develop in 0 ms
+2026-10-27 19:24:53.278 INFO  reset_develop: 2D31DD06-3FCC-4E7C-9258-32B7C48DAD41 reset ()
+2026-10-27 19:24:53.278 INFO  bridge: get_settings 2b0d14e2-9f04-427c-ab7d-b9fa1d796bb9
+2026-10-27 19:24:53.512 WARN  stall-diag: stall 1053 ms after idle
+2026-10-27 19:24:53.528 INFO  bridge: set_process_version 50ce1112-a2aa-4ebd-8bec-355e24a7bb2c
+2026-10-27 19:24:53.718 INFO  develop: switched from library to develop in 0 ms
+2026-10-27 19:24:55.134 INFO  set_process_version: FCA2E337-FB90-47F7-8A50-CC4462AAA325 changed ()
+2026-10-27 19:24:55.148 INFO  bridge: get_settings e0ed0b2d-1616-4eb6-ab73-b158ee2dad0e
+2026-10-27 19:24:55.200 INFO  bridge: set_process_version 7964665e-3f5d-4b9b-bea3-99ecc80f2ab1
+2026-10-27 19:24:55.487 INFO  develop: switched from library to develop in 0 ms
+2026-10-27 19:24:56.616 WARN  stall-diag: stall 1170 ms after idle
+2026-10-27 19:24:57.527 INFO  set_process_version: FCA2E337-FB90-47F7-8A50-CC4462AAA325 changed ()
+2026-10-27 19:24:57.539 INFO  bridge: get_metadata 1bf836d7-5ad2-4518-8a91-b1b30a844876
+2026-10-27 19:24:57.910 INFO  bridge: get_settings 9c155c09-890f-439d-a175-47968f518e8a
+2026-10-27 19:24:57.910 INFO  bridge: copy_photo 27c95bad-01cb-4798-9d53-80ca848c23b3
+2026-10-27 19:24:58.274 INFO  copy_photo: FCA2E337-FB90-47F7-8A50-CC4462AAA325 copied ()
+2026-10-27 19:24:58.300 INFO  bridge: get_selection ea7c1d6c-ab6d-4e2a-9619-18d9567a61df
+2026-10-27 19:24:58.355 INFO  bridge: list_snapshots 0b94b565-eae4-4692-b7e6-5d86d049849a
+2026-10-27 19:24:58.435 INFO  bridge: get_settings e52c48a3-b6d9-47a0-acd2-2abcfee4f43d
+2026-10-27 19:24:58.440 INFO  bridge: create_snapshot 68b7166b-8a3e-4b57-ad86-115af806f21e
+2026-10-27 19:24:58.563 INFO  bridge: apply_snapshot 28dd5bfa-7444-4467-b72f-0d7df6e36a34
+2026-10-27 19:24:58.733 INFO  develop: switched from library to develop in 0 ms
+2026-10-27 19:25:00.300 INFO  bridge: get_settings ba0358fa-d5d0-44cb-9a95-9e0608b0483d
+2026-10-27 19:25:14.939 INFO  bridge: list_snapshots 283eb764-c2d8-4a49-a2b7-5a4ad812439b
+2026-10-27 19:25:16.366 INFO  bridge: get_settings fb03256f-4e51-4017-85b1-6661c2d21249
+2026-10-27 19:25:16.383 INFO  bridge: create_snapshot e1905fa1-fd19-4e45-894b-88a0bb3a0a30
+2026-10-27 19:25:16.398 INFO  bridge: apply_snapshot ce3f4fa4-f4a8-4c46-8c95-da8291ef0d24
+2026-10-27 19:25:16.559 INFO  develop: switched from library to develop in 0 ms
+2026-10-27 19:25:18.045 INFO  bridge: get_settings 9516c60e-a504-4726-a0d5-6e9080a6e3dd
+2026-10-27 19:25:18.181 WARN  stall-diag: stall 1765 ms after idle
+2026-10-27 19:26:26.372 INFO  bridge: list_snapshots 4358aed1-c927-4c9d-9813-3fea57a97d54
+2026-10-27 19:26:26.388 INFO  bridge: get_settings 957f5071-26b0-4580-a2fd-8edc9712e3fb
+2026-10-27 19:26:26.398 INFO  bridge: create_snapshot 34b6a6f0-34b7-40f3-b825-8b1b714c7917
+2026-10-27 19:26:26.415 INFO  bridge: apply_snapshot 933f7184-cf20-4825-bf0a-325c221ef935
+2026-10-27 19:26:26.553 INFO  develop: switched from library to develop in 0 ms
+2026-10-27 19:26:28.317 INFO  bridge: get_settings ffc24a20-101f-47ef-abad-7a7f3cd990c5
+2026-10-27 19:26:28.378 WARN  stall-diag: stall 1942 ms after idle
+2026-10-27 19:26:29.457 INFO  bridge: receive: closed
+2026-10-27 19:26:29.458 INFO  stall-diag: rebind receive (closed, generation 1)

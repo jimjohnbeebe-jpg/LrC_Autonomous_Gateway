@@ -1,0 +1,47 @@
+2026-10-27 19:19:55.075 INFO  bridge: export_preview de9fbb63-27aa-46f0-84e4-e7341a66f218
+2026-10-27 19:19:56.316 INFO  bridge: export_preview b078d96f-d6f6-47bb-87f8-f742f4c2fda8
+2026-10-27 19:19:57.562 INFO  bridge: export_preview b286120e-986c-4dba-8a4d-e82d5302365f
+2026-10-27 19:19:58.804 INFO  bridge: export_preview 81fb6036-6e7a-4473-86f8-54c112ca24e4
+2026-10-27 19:20:00.034 INFO  bridge: export_preview c454eb62-1a41-43f7-8616-a76c6ecf4ac1
+2026-10-27 19:20:01.283 INFO  bridge: export_preview 372c3a2c-2b12-4b0c-9af6-1d59b16e61f0
+2026-10-27 19:20:02.533 INFO  bridge: thumbnail_preview 860134c9-59b3-49bd-a677-896b1765a293
+2026-10-27 19:20:02.797 INFO  bridge: export_preview 061f343e-faa2-4ce5-8b72-f1ae91e7f854
+2026-10-27 19:20:05.463 INFO  bridge: thumbnail_preview 1a7dace2-fdbc-4c52-8a3e-fdd925e214d1
+2026-10-27 19:20:05.723 INFO  bridge: export_preview 8de5f882-6244-4692-a863-1f7667ae2c06
+2026-10-27 19:20:08.338 INFO  bridge: thumbnail_preview 2ce74e6c-27f1-44b9-a45e-3b5602b8bcac
+2026-10-27 19:20:08.576 INFO  bridge: export_preview cc735224-3d48-497e-8d7e-4b3883a13cac
+2026-10-27 19:20:30.728 WARN  stall-diag: stall 1396 ms after idle
+2026-10-27 19:20:41.498 INFO  bridge: get_settings 808c24cd-80f0-42b7-beec-6ab08209752d
+2026-10-27 19:20:41.513 INFO  bridge: create_snapshot 3e9bbc3e-037e-4c33-b18a-50fce42d622c
+2026-10-27 19:20:41.577 INFO  bridge: thumbnail_preview 31793278-dc9c-4e6e-b70a-2d9cabcb3d3f
+2026-10-27 19:20:41.862 INFO  bridge: export_preview 298a2e11-bcfd-4f6f-9218-57b161838941
+2026-10-27 19:20:46.077 INFO  bridge: apply_settings 7c8788a5-0c89-4cd3-aaa9-5fc6b70f5bad
+2026-10-27 19:20:46.329 INFO  bridge: thumbnail_preview 66c8e69c-d2aa-4713-8f94-6ae74fc90e85
+2026-10-27 19:20:46.344 WARN  bridge: thumbnail_preview failed: thumbnail_failed Lightroom sent no thumbnail: error loading thumb
+2026-10-27 19:20:46.347 INFO  bridge: export_preview f4d518ac-412b-4074-932c-fbc1daa85796
+2026-10-27 19:20:49.089 INFO  bridge: thumbnail_preview 68c650cb-c393-4700-acd6-98b912c41ded
+2026-10-27 19:20:51.678 WARN  bridge: thumbnail_preview failed: thumbnail_failed Lightroom sent no thumbnail: error loading thumb
+2026-10-27 19:20:51.678 INFO  bridge: export_preview 7dd099c2-088a-47e0-aa1e-0a726bd8adc9
+2026-10-27 19:20:54.313 INFO  bridge: thumbnail_preview 1a8925dd-edd3-47ae-8d64-ba68e6b755a4
+2026-10-27 19:20:54.313 WARN  bridge: thumbnail_preview failed: thumbnail_failed Lightroom sent no thumbnail: error loading thumb
+2026-10-27 19:20:54.313 INFO  bridge: export_preview 4130a5dd-2804-4080-b489-d73850cfba35
+2026-10-27 19:20:56.979 INFO  bridge: thumbnail_preview 6c7d6f39-22ea-43b8-9e71-1c36ecb4fcc5
+2026-10-27 19:20:56.979 WARN  bridge: thumbnail_preview failed: thumbnail_failed Lightroom sent no thumbnail: error loading thumb
+2026-10-27 19:20:56.983 INFO  bridge: export_preview b9eeaa9e-90f4-4356-9565-f29aaf46366e
+2026-10-27 19:20:59.573 INFO  bridge: thumbnail_preview 8acc6c14-d5c1-435c-93df-df07550a16e2
+2026-10-27 19:20:59.581 WARN  bridge: thumbnail_preview failed: thumbnail_failed Lightroom sent no thumbnail: error loading thumb
+2026-10-27 19:20:59.581 INFO  bridge: export_preview 2b50b2bd-3f03-4e6d-9fea-c5345b25cd3e
+2026-10-27 19:21:02.182 INFO  bridge: thumbnail_preview a47e0514-327b-4440-94be-768934dee9d5
+2026-10-27 19:21:02.183 WARN  bridge: thumbnail_preview failed: thumbnail_failed Lightroom sent no thumbnail: error loading thumb
+2026-10-27 19:21:02.183 INFO  bridge: export_preview d9762432-6316-4194-b5e9-c0a4e2eceb5b
+2026-10-27 19:21:04.843 INFO  bridge: thumbnail_preview a71f4f73-0eb5-4461-8e06-f990d151aec3
+2026-10-27 19:21:04.843 WARN  bridge: thumbnail_preview failed: thumbnail_failed Lightroom sent no thumbnail: error loading thumb
+2026-10-27 19:21:04.843 INFO  bridge: export_preview c4f47aee-b6fa-4388-9507-c6909952f703
+2026-10-27 19:21:07.499 INFO  bridge: thumbnail_preview 447ff228-359e-4a2a-88ce-dbaf19ef6b0d
+2026-10-27 19:21:07.499 WARN  bridge: thumbnail_preview failed: thumbnail_failed Lightroom sent no thumbnail: error loading thumb
+2026-10-27 19:21:07.503 INFO  bridge: export_preview aa684d3f-be56-43d0-9cd5-99f9c9bf8f1c
+2026-10-27 19:21:10.139 INFO  bridge: export_preview 3ee6ddfb-d472-413e-8a52-e70739c9af8d
+2026-10-27 19:21:12.768 INFO  bridge: apply_snapshot 0f991502-3719-4339-9863-1fda023da6fb
+2026-10-27 19:21:12.997 INFO  bridge: get_settings 135b4ba5-1c06-46ba-ba7f-b1e9aec741b4
+2026-10-27 19:21:19.382 INFO  bridge: receive: closed
+2026-10-27 19:21:19.382 INFO  stall-diag: rebind receive (closed, generation 1)

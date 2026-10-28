@@ -1,0 +1,12 @@
+s = {
+	id = "406C84D9-C0B6-47C5-8A4A-68677ED03D6D",
+	internalName = "AVG presets-check 2026-10-28T02-27-54 v1",
+	title = "AVG presets-check 2026-10-28T02-27-54 v1",
+	type = "Develop",
+	value = {
+		Contrast2012 = 10,
+		Exposure2012 = 0.3,
+		ProcessVersion = "15.4",
+	},
+	version = 0,
+}

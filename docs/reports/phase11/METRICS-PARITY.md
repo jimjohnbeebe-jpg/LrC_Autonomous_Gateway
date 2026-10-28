@@ -1,8 +1,8 @@
 ---
 report: METRICS-PARITY
 phase: "11"
-status: template
-authored_by: "Claude Code (purpose, harness, pre-run findings, steps, 2026-10-27); Jim (Observed, verdict: blank)"
+status: observed
+authored_by: "Claude Code (purpose, harness, pre-run findings, steps, 2026-10-27; Observed and Numbers copied from the run files, 2026-10-27); Jim (the run, his y/n answer; verdict: blank)"
 date: 2026-10-27
 ---
 
@@ -66,30 +66,50 @@ What it does not test: the sharpness advisory inside a session (`engine\src\sess
 
 ## Observed (Jim)
 
-_Blank until Jim's run._
+### Run 1, 2026-10-27
+
+Jim ran `npm run stats:check` and said it completed [stated: Jim, 2026-10-27, "npm run stats:check complete."]. The results file ends `headline: WORKED` [handle: `docs\reports\phase11\METRICS-PARITY\run1\stats_check_2026-10-28T02-19-31-863Z.json`], with these lines:
+
+```text
+YES lr_get_photo_stats measured 20 of 20 photos
+YES the 20 photos took 29.9 s (budget 60 s, 3 s a photo)
+YES 3 of 3 fast previews came from Lightroom's cached preview
+YES the photo changed for the staleness test is back as it was
+YES Jim's answer: y
+```
+
+- **Photos:** 20 selected, 19 NEFs (`_OZ80738` to `_OZ80756`) and one DNG (`2025-01-10_LrcAVG.dng`). One `lr_get_photo_stats` call measured all 20 in 29,937 ms, with no `not_yet` left. Every photo is 800x533 and none failed. Per photo: median 1,265 ms, 706 ms to 2,716 ms (the first photo is the slowest) [handle: `docs\reports\phase11\METRICS-PARITY\run1\stats_check_2026-10-28T02-19-31-863Z.json`, `stats.photos[].ms`].
+- **Fast against exact**, on the first three photos: all three fast previews came from the cache (`source: thumbnail`), at 1600x1067 like the exact export. They took 238-262 ms against 2,618-2,666 ms for the exact export. Mean luma differs by 0.3 (129.2 against 129.5, 135.4 against 135.7, 120.3 against 120.6), and sharpness is 2-3 % lower on the thumbnail (969 against 990, 1016 against 1039, 1360 against 1399) [handle: `docs\reports\phase11\METRICS-PARITY\run1\stats_check_2026-10-28T02-19-31-863Z.json`, `fast_vs_exact`].
+- **Staleness:** the fast preview before the write worked (luma 129.2). Exposure then went 0.75 -> 1.75. **Every fast preview after the write fell back to the exact export**: 8 requests, from 2.8 s to 23.8 s after the write (each fallback export took about 2.6 s, so the 0-12 s schedule stretched to 24 s). Each one was refused by Lightroom with `thumbnail_failed`, "Lightroom sent no thumbnail: error loading thumb" [handle: `docs\reports\phase11\METRICS-PARITY\run1\bridge-log-excerpt.txt`, 19:20:46 to 19:21:07]. All eight exports show luma 167.0, the exact export after the write. So no thumbnail came back after the write, and no stale pixels were served: the harness's "no thumbnail caught up within 12 s" means none came back at all [handle: `docs\reports\phase11\METRICS-PARITY\run1\stats_check_2026-10-28T02-19-31-863Z.json`, `staleness`].
+- **Put back:** the photo was put back from the "AVG stats:check before" snapshot (`put_back: true`), and Jim answered **y** to "is Exposure back where it was".
 
 ## Numbers
 
 | Field | Value |
 |---|---|
-| Lightroom version, plugin version | |
-| Photos selected | |
-| `lr_get_photo_stats` calls, time per call | |
-| Total time for all photos (budget 3 s a photo) | |
-| Photos with an error | |
-| Sharpness range over the photos | |
-| Fast preview time, exact preview time (median of three) | |
-| Fast preview came from the cache (n of 3) | |
-| Fast preview caught up after the write (ms, or "not within 12 s") | |
-| Exposure read back as before | |
-| Jim's answer | |
+| Lightroom version, plugin version | LrC 15.6 [handle: `docs\reports\phase11\PERF\baseline\perf_baseline_2026-10-28T02-11-00-711Z.json`, the same session 8 minutes earlier; this check's file does not record it], plugin 1.5.0 |
+| Photos selected | 20 (19 NEF, 1 DNG) |
+| `lr_get_photo_stats` calls, time per call | 1 call, 29.9 s |
+| Total time for all photos (budget 3 s a photo) | 29.9 s for 20 (1.5 s a photo; budget 60 s) |
+| Photos with an error | 0 |
+| Sharpness range over the photos | 284.6 to 1258.6 |
+| Fast preview time, exact preview time (median of three) | 256.8 ms, 2,649.4 ms |
+| Fast preview came from the cache (n of 3) | 3 of 3 |
+| Fast preview caught up after the write (ms, or "not within 12 s") | Never: no thumbnail at all for 23.8 s after the write; all 8 requests fell back to the exact export ("error loading thumb") |
+| Exposure read back as before | YES |
+| Jim's answer | y |
+
+All from `docs\reports\phase11\METRICS-PARITY\run1\stats_check_2026-10-28T02-19-31-863Z.json` and `docs\reports\phase11\METRICS-PARITY\run1\bridge-log-excerpt.txt`.
 
 ## Verdict
 
-_Jim's: go / conditional / no-go._
+**Go** [stated: Jim, 2026-10-27, "Go with recommendations. 5. Agreed"].
 
 ## Consequences / open questions
 
-- The staleness number replaces the `[upstream claim]` in `STALE_NOTE` and in `lr_get_preview`'s description.
+- **Staleness:** on LrC 15.6 / Windows, Lightroom gave no thumbnail at all for at least 23.8 s after a develop write to the photo open in Develop. It did not give a stale one, and the engine fell back to the exact export each time. That matches spike S1 on 15.5.1 and not Automaat's "wait about 3.5 s" [upstream claim: `CLAUDE.md:100` at 1040453, macOS]. Whether `STALE_NOTE` and `lr_get_preview`'s description change to say so is Jim's decision. Neither says anything wrong: a fast preview is marked `stale_possible` and is for browsing only.
+- The harness keeps each sample's `source` but not its `fast_fallback` reason; the reason above comes from the plugin's bridge log. Recording it in the samples is a small harness change, to make only if this check runs again [inference].
+- **Sharpness depends on the export size:** the same photos measure 708, 748 and 1040 in the 800 px stats export, and 990, 1039 and 1399 in the 1600 px exact export (about 35-40 % higher) [handle: `docs\reports\phase11\METRICS-PARITY\run1\stats_check_2026-10-28T02-19-31-863Z.json`, `stats.photos` and `fast_vs_exact`]. The metric resamples to 512 px, and its test keeps two sizes of one image within 5 %. So the difference likely comes from Lightroom's export at each size (output sharpening, resampling), not from the formula [inference]. Sharpness values are therefore comparable only at one export size. The 15 % advisory compares the metrics before and after one pass [handle: `engine\src\session\sharpness-advice.ts:19-23`], and both are renders of that session [inference: at one size].
+- How long Lightroom keeps refusing the thumbnail after 24 s, and whether a photo that is not open in Develop behaves the same, stay [unverified].
 - The 15 % sharpness advisory threshold stays provisional until a session that changes sharpening or noise reduction shows how far sharpness moves.
 - Whether a thumbnail is stale for other reasons (a cleared preview cache, a photo never rendered) stays [unverified].

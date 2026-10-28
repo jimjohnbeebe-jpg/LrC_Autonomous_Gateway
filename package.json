@@ -39,6 +39,7 @@
     "masks:crop": "npm run build && node engine/dist/devtools/mask-crop-probe-cli.js",
     "masks:kinds": "npm run build && node engine/dist/devtools/mask-combine-probe-cli.js --kinds",
     "masks:verify": "npm run build && node engine/dist/devtools/masks-verify-cli.js",
+    "masks:parity": "npm run build && node engine/dist/devtools/masks-verify-cli.js --part parity",
     "denoise:check": "npm run build && node engine/dist/devtools/denoise-check-cli.js",
     "develop:check": "npm run build && node engine/dist/devtools/develop-check-cli.js",
     "presets:check": "npm run build && node engine/dist/devtools/presets-check-cli.js",

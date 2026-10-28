@@ -4,7 +4,7 @@
 // the check asks Jim to select its photos in the Filmstrip: two colourful photos (part 1), one photo of two or
 // more people (part 2), one photo not mirrored (part 3). Every photo is written behind a snapshot
 // "AVG masks:verify before" and put back from it; a run that stopped before a put-back puts it back first on the
-// next start. `-- --part colour|person|mirror` runs one part again.
+// next start. `-- --part colour|person|mirror|parity` runs one part again; `npm run masks:parity` is `--part parity` (issue #217).
 // Under %TEMP%\LrC-AVG\masks-verify\ (Claude Code collects them):
 //   state.json                          the snapshot to put back, until it is put back
 //   mask_verify_<time>.json             the results: each step, what was written and read back, Jim's answers
@@ -21,6 +21,7 @@ import { PARTS, SNAPSHOT, notPutBack, selected, verdict, type Ctx, type Part, ty
 import { colourPart } from "./masks-verify-colour.js";
 import { mirrorPart } from "./masks-verify-mirror.js";
 import { personPart } from "./masks-verify-person.js";
+import { parityPart } from "./masks-verify-parity.js";
 import { describeError } from "./phase1-check.js";
 import { redactHome } from "./phase2-check.js";
 
@@ -30,13 +31,15 @@ const PLUGIN_LOG = path.join(os.tmpdir(), "LrC-AVG", "bridge.log");
 const started = new Date().toISOString().replace(/[:.]/g, "-");
 const redact = (text: string): string => redactHome(text, os.homedir());
 const only = process.argv.includes("--part") ? process.argv[process.argv.indexOf("--part") + 1] : undefined;
-const RUN: readonly Part[] = PARTS.filter((p) => only === undefined || p === only);
+// The parity part (issue #217) runs only when named, so a plain masks:verify stays the issue #210 check of MASKS-VERIFY.md.
+const RUN: readonly Part[] = PARTS.filter((p) => (only === undefined ? p !== "parity" : p === only));
 
 /** What Jim selects for each part, and how many photos. */
 const SELECT: Record<Part, { count: number; what: string }> = {
   colour: { count: 2, what: "TWO colourful photos, each with a clearly red and a clearly green area (flowers, fruit, a colour chart); Ctrl+click the second" },
   person: { count: 1, what: "ONE photo with two or more people side by side" },
   mirror: { count: 1, what: "ONE photo that is not flipped (any photo you have not flipped in Lightroom)" },
+  parity: { count: 1, what: "ONE photo that is not flipped, best a virtual copy" },
 };
 
 function save(results: Record<string, unknown>): string {
@@ -106,6 +109,7 @@ async function runPart(c: Ctx, part: Part, steps: Step[]): Promise<void> {
   const photos = await selected(c.client, s.count);
   if (typeof photos === "string") return void steps.push({ part, photo: "-", id: "select", question: null, answer: photos, ok: false, notes: [`select ${s.what}`] });
   if (part === "colour") await colourPart(c, photos, steps);
+  else if (part === "parity") steps.push(...(await parityPart(c, photos[0] as Photo)));
   else if (part === "person") await personPart(c, photos[0] as Photo, steps);
   else await mirrorPart(c, photos[0] as Photo, steps);
 }

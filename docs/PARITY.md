@@ -3,7 +3,7 @@
 LrC-AVG started as a fork of [Automaat/lightroom-mcp](https://github.com/Automaat/lightroom-mcp) (MIT, Marcin Skalski) and is meant as a **complement** to it: the same reach into the Lightroom Classic catalog under `lr_*` names, plus a guarded, measured edit loop that upstream does not have (epic #207, decision D7 recommends keeping the `lr_*` names and publishing this table [stated: issue #207 "Decisions needed from Jim", D7 is still open]).
 
 - Upstream compared: `Automaat/lightroom-mcp@1040453` (2026-10-26), **68 tools** [handle: `docs/parity/upstream-tools-1040453.txt`, extracted from upstream `server/src/tool-contracts.ts`; `docs/reports/phase10/AUTOMAAT_COMPARE_2026-10-26.md` section 1].
-- LrC-AVG: branch `phase-11/parity-batch-1` (engine 1.5.0), **61 tools** [handle: `grep -ohE 'name: "lr_[a-z_]+"' engine/src/mcp/defs-*.ts | sort -u | wc -l` = 61; `TOOL_DEFS` in `engine/src/mcp/server.ts`].
+- LrC-AVG: branch `phase-11/masks-217` (engine 1.5.0, before its version bump), **62 tools** [handle: `grep -ohE 'name: "lr_[a-z_]+"' engine/src/mcp/defs-*.ts | sort -u | wc -l` = 62; `TOOL_DEFS` in `engine/src/mcp/server.ts`].
 - Kept current by `engine/tests/parity-map.test.ts`: it fails when a pinned upstream name has no row below, when a row names an `lr_` tool the server does not register, or when a registered tool is not named anywhere on this page. How to renew the pin: [`UPSTREAM_SYNC.md`](UPSTREAM_SYNC.md).
 
 Most rows marked `have` or `ours+` were added on this branch (#214-#218) and are tested against the simulated Lightroom only; whether each works in Lightroom is `[unverified]` until Jim's checks in [`reports/phase11/PARITY-BATCH1-CHECKS.md`](reports/phase11/PARITY-BATCH1-CHECKS.md) are observed.
@@ -124,6 +124,6 @@ So both can be added in File > Plug-in Manager at once without a clash of id or 
 |---|---|
 | Editing a photo with a look, measured passes, the HUD and Abort | LrC-AVG alone: turn the Automaat server off in the AI app for that chat (where each app keeps its server list: [`CLIENTS.md`](CLIENTS.md)) |
 | Search, keywords, collections, IPTC, ratings, import, export, presets, snapshots | Either; LrC-AVG returns the earlier values and an undo hint with each write |
-| Mask curves, Point Color, one AI mask on many photos, deleting empty masks, brush feather or erase | Automaat, outside an LrC-AVG session, until #217 lands |
+| Mask curves, one AI mask on many photos | Automaat, outside an LrC-AVG session, until the rest of #217 lands |
 | Raw SDK-key writes, global undo, removing photos from the catalog | Automaat, until Jim decides D1, D2 and D3 |
 | macOS | Automaat; LrC-AVG is Windows only (decision D4) |

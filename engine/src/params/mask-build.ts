@@ -7,7 +7,7 @@ import { IDENTITY, boxToRadial, photoPoint, radialToBox, type CropFrame, type Po
 import { AI_KINDS, IMAGE, LINEAR, M, MaskError, RADIAL, RANGE, WHAT, isAiKind, newMaskId, newSyncId, type Component, type MaskKind } from "./mask-table.js";
 import { brushFields, type Stroke } from "./mask-brush.js";
 import { personFields } from "./mask-person.js";
-import { colorFields, depthFields, trapezoid, type Rgb } from "./mask-range.js";
+import { colorFields, depthFields, trapezoid, type Lab } from "./mask-range.js";
 
 export type { Point } from "./crop-frame.js";
 /**
@@ -30,8 +30,12 @@ export type Geometry = {
   /** color_range: how far the selection reaches from the sampled colour, above 0 to 1 (Lightroom's Refine). */
   color_amount?: number | undefined;
   strokes?: Stroke[] | undefined;
-  /** color_range, set by the engine (session\masks.ts): the preview's colour at the point, 0-1. */
-  sample?: Rgb | undefined;
+  /**
+   * color_range: the l, a, b written verbatim (mask-range.ts Lab): given by the caller, copied from a colour range
+   * Lightroom made (copy_sample_from), or, when neither, the preview's sRGB at the point, set by the engine
+   * (session\masks.ts) and [unverified] (issue #210).
+   */
+  sample?: Lab | undefined;
 };
 
 export const unit = (v: unknown, what: string): number => {
@@ -121,7 +125,7 @@ export function newComponent(kind: MaskKind, name: string, g: Geometry, point: P
     return { ...base, [M.what]: WHAT.image, ...fields, [IMAGE.referencePoint]: `${at.x.toFixed(6)} ${at.y.toFixed(6)}`, [IMAGE.errorReason]: 0 };
   }
   if (kind === "brush") return { ...base, [M.what]: WHAT.aggregate, ...brushFields(g.strokes, frame) };
-  if (kind === "color_range") return { ...base, [M.what]: WHAT.range, ...colorFields(g.sample ?? [0, 0, 0], point ?? { x: 0.5, y: 0.5 }, g.color_amount) };
+  if (kind === "color_range") return { ...base, [M.what]: WHAT.range, ...colorFields(g.sample ?? { l: 0, a: 0, b: 0 }, point ?? { x: 0.5, y: 0.5 }, g.color_amount) };
   if (kind === "depth_range") return { ...base, [M.what]: WHAT.range, ...depthFields(g.depth_range) };
   const what = kind === "linear" ? WHAT.linear : kind === "radial" ? WHAT.radial : WHAT.range;
   const fixed = kind === "radial" ? { [RADIAL.angle]: 0, [RADIAL.feather]: 50, [RADIAL.midpoint]: 50, [RADIAL.roundness]: 0, [RADIAL.flipped]: true, [RADIAL.version]: 2 } : {};

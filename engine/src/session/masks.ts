@@ -42,8 +42,11 @@ import {
   summarize,
   tableInfo,
   uncaptured,
+  withCopiedSample,
   type Correction,
+  type CreateOp,
   type CropFrame,
+  type Lab,
   type MaskKind,
   type MaskOp,
   type OpResult,
@@ -88,7 +91,7 @@ export async function listMasks(ctx: SessionContext, s: Session, args: ListMasks
 }
 
 export const createMask = (ctx: SessionContext, s: Session, a: CreateMaskArgs): Promise<SessionOutput> =>
-  maskPass(ctx, s, a, { op: "create", kind: a.kind, name: a.name, geometry: a.geometry, point: a.point, sliders: a.sliders });
+  maskPass(ctx, s, a, { op: "create", kind: a.kind, name: a.name, geometry: a.geometry, point: a.point, sliders: a.sliders, copy_sample_from: a.copy_sample_from });
 export const editMask = (ctx: SessionContext, s: Session, a: EditMaskArgs): Promise<SessionOutput> =>
   renameOnly(a) ? renameMask(ctx, s, a) : maskPass(ctx, s, a, { op: "edit", mask_id: a.mask_id, name: a.name, active: a.active, inverted: a.inverted, geometry: a.geometry, sliders: a.sliders, combine: a.combine, part: a.part, remove_part: a.remove_part });
 export const deleteMask = (ctx: SessionContext, s: Session, a: DeleteMaskArgs): Promise<SessionOutput> => maskPass(ctx, s, a, { op: "delete", mask_id: a.mask_id });
@@ -192,6 +195,7 @@ async function maskPass(ctx: SessionContext, s: Session, args: PassArgs, op: Mas
   const before = readTable(first.sdk);
   refuseUncaptured(s, before, op);
   const frame = await frameOf(ctx, s, t, first.sdk);
+  if (op.op === "create" && op.copy_sample_from) op = await copySample(ctx, s, t, op, { entries: before, frame });
   let plan = applyOp(before, op, frame); // MaskError: nothing written
   if (plan.ai) checkAiPartPlugin(ctx); // issue #131: before the write
   if (sameTable(before, plan.entries)) throw new ToolError("NO_CHANGE", "Nothing was written: the mask already is as asked. The pass is not used.", false, { session_id: s.id });
@@ -202,8 +206,9 @@ async function maskPass(ctx: SessionContext, s: Session, args: PassArgs, op: Mas
     throw failed(ctx, s, `mask pass ${n} (render before the change)`, err);
   }
   if ((await readSdk(ctx, s, t)).view.masks.fingerprint !== first.view.masks.fingerprint) throw masksChanged(s);
-  // A colour range selects the colour the preview shows at its point (issue #190).
-  if (op.op === "create" && op.kind === "color_range" && op.point) plan = applyOp(before, { ...op, geometry: { ...op.geometry, sample: await sampleColor(baseline.jpeg, op.point) } }, frame);
+  // A colour range without a given or copied sample takes the preview's sRGB at its point (issue #190) where Lightroom
+  // stores its own l, a, b: [unverified] until `npm run masks:verify` (issue #210, params\mask-range.ts).
+  if (op.op === "create" && op.kind === "color_range" && op.point && !op.geometry?.sample) plan = applyOp(before, { ...op, geometry: { ...op.geometry, sample: asLab(await sampleColor(baseline.jpeg, op.point)) } }, frame);
   try {
     const done = await applyPlan(ctx, s, t, n, op, plan, before, baseline, frame);
     t.passes = n;
@@ -230,6 +235,17 @@ async function maskPass(ctx: SessionContext, s: Session, args: PassArgs, op: Mas
   } catch (err) {
     throw failed(ctx, s, `mask pass ${n} (${op.op})`, err);
   }
+}
+
+/** The preview's sRGB, written where Lightroom keeps its l, a, b [unverified] (issue #210). */
+const asLab = ([l, a, b]: [number, number, number]): Lab => ({ l, a, b });
+
+/** A create's copy_sample_from resolved from the colour range it names, on this photo (`here`) or on its `target`. */
+async function copySample(ctx: SessionContext, s: Session, t: Target, op: CreateOp, here: { entries: Correction[]; frame: CropFrame }): Promise<CreateOp> {
+  const src = op.copy_sample_from?.target === undefined ? t : resolveTarget(s, op.copy_sample_from.target as TargetId, "read");
+  if (src === t) return withCopiedSample(op, here);
+  const { sdk } = await readSdk(ctx, s, src);
+  return withCopiedSample(op, { entries: readTable(sdk), frame: await frameOf(ctx, s, src, sdk) });
 }
 
 /** Write the table, make an AI mask compute, render, and undo the pass when it breaches a limit. */

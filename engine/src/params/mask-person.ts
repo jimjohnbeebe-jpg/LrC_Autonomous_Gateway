@@ -9,7 +9,10 @@
 // (several: the nearest centre); then the wanted entry is written with that instance. That InstanceID n
 // is the n-th box of InstanceBounds held for both people of that photo [inference: one photo]; a part
 // (face skin, hair, ...) as MaskSubType 0 + the part's category + InstanceIDs is [unverified] until
-// capture 5. Pure: field names from mask-table.ts (rule 03).
+// capture 5. Upstream found the opposite on LrC 15.6: "Lightroom ignores `InstanceIDs` in a written mask and always
+// masks the first person" [upstream claim: Automaat CLAUDE.md, AiMaskParts.lua `refuseSinglePerson`]; so a one-person
+// mask written here may land on the first person [unverified] until `npm run masks:verify` (issue #210), and the tool
+// text says so. Pure: field names from mask-table.ts (rule 03).
 
 import { AI_KINDS, BOX, IMAGE, M, RECOMPUTED, newMaskId, newSyncId, type AiKind, type Component, type Correction } from "./mask-table.js";
 

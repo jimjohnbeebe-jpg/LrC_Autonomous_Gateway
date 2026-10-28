@@ -10,7 +10,7 @@ date: 2026-10-27
 
 ## Purpose
 
-Branch `phase-11/parity-batch-1` (engine and plugin 1.5.0) brings issues #214, #215, #216, #218 and #219 together, and the harness of #212. Every new tool is tested against the simulated Lightroom only; whether it works in Lightroom is `[unverified]` until these checks run [stated: CLAUDE.md, "Lightroom-side results are Jim's observations"]. This page is the one ordered list. Each check's own report holds its harness, its steps, and the blank Observed, Numbers and Verdict that Jim's run fills.
+PR #231 (merged to `main` as `437d3eb`; engine and plugin 1.5.0) brings issues #214, #215, #216, #218 and #219 together, and the harness of #212. Every new tool is tested against the simulated Lightroom only; whether it works in Lightroom is `[unverified]` until these checks run [stated: CLAUDE.md, "Lightroom-side results are Jim's observations"]. This page is the one ordered list. Each check's own report holds its harness, its steps, and the blank Observed, Numbers and Verdict that Jim's run fills.
 
 | # | Check | Report | Issue | Catalog | Takes about |
 |---|---|---|---|---|---|
@@ -25,12 +25,11 @@ The order puts the read-only timing first (it measures the catalog before anythi
 
 ## Steps for Jim
 
-1. In PowerShell, get the branch and install:
+1. In PowerShell, update `main` and install:
 
    ```powershell
    cd D:\Developer\LrC_Autonomous_Gateway
-   git fetch origin
-   git switch phase-11/parity-batch-1
+   git switch main
    git pull
    npm install
    ```
@@ -48,7 +47,6 @@ Each "done" lets Claude Code collect that check's results file and fill the repo
 
 ### If something goes wrong
 
-- If `git switch` says the branch is already checked out in another folder (a `.claude\worktrees\` path): tell Claude Code, which removes that working folder; then do step 1 again.
 - If a check says "reload the LrC-AVG plugin" or answers `unknown_command`: do step 3 again, then that check again.
 - If a check says another engine holds the lock: quit Claude Desktop from its tray icon, then that check again.
 - If a check ends with `put back: NO`: follow its report's "If something goes wrong" for that line, then go on with the next check.

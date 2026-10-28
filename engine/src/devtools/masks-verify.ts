@@ -9,6 +9,7 @@
 import sharp from "sharp";
 import type { BridgeClient } from "../bridge/index.js";
 import { tableSettings, verifyTable, type Correction, type SdkSettings } from "../params/index.js";
+import { diffEntries } from "./mask-carry-probe.js";
 
 export const HISTORY = "AVG masks:verify";
 export const SNAPSHOT = "AVG masks:verify before";
@@ -27,12 +28,25 @@ export type Ctx = {
   say: (line: string) => void;
   ask: (question: string) => Promise<string>;
   guard: <T>(photo: Photo, fn: (before: SdkSettings) => Promise<T>) => Promise<{ value: T | null; put_back: { ok: boolean; why: string }; error?: string }>;
+  /** Part 3: the orientation a photo must be put back to, kept on disk until it reads so again (null: none owed). */
+  owe?: (o: Owed | null) => void;
 };
+/** A photo part 3 flipped, and the orientation it had before. */
+export type Owed = { uuid: string; filename: string; start: string };
 
-/** Write `entries` as the photo's whole mask table; the read-back problems (verifyTable), [] when it took. */
+/** Write `entries` as the photo's whole mask table; the read-back problems (verifyTable), [] when it took. A mask that
+ *  reads back different names the paths that differ (mask-carry-probe.ts changedPaths): the 2026-10-28 parity run's "reads back different"
+ *  named none, so which field Lightroom changed was not kept. */
 export async function writeTable(client: BridgeClient, uuid: string, entries: readonly Correction[], label: string): Promise<{ read_back: SdkSettings; problems: string[] }> {
   const res = await client.request("apply_settings", { target_uuid: uuid, settings: tableSettings(entries, false), history_name: `${HISTORY} ${label}` });
-  return { read_back: res.read_back, problems: verifyTable(entries, res.read_back) };
+  const problems = verifyTable(entries, res.read_back);
+  if (problems.length === 0) return { read_back: res.read_back, problems };
+  const diffs = diffEntries(entries, res.read_back).entries;
+  const named = (p: string): string => {
+    const d = diffs.find((x) => p === `mask ${x.name} reads back different`);
+    return d ? `${p}: ${d.changed.slice(0, 8).join(", ") || "no field differs"}` : p;
+  };
+  return { read_back: res.read_back, problems: problems.map(named) };
 }
 
 const part = (v: number, words: [string, string, string]): string => (v < 1 / 3 ? words[0] : v < 2 / 3 ? words[1] : words[2]);
@@ -61,7 +75,8 @@ export async function colourPoints(jpeg: Buffer): Promise<{ red: { x: number; y:
 /** The run's lines and verdict: every part run, each step a yes or a skip, at least one yes per part, every photo put back. */
 export function verdict(steps: readonly Step[], parts: readonly Part[]): { worked: boolean; lines: string[] } {
   const lines = steps.map((s) => `${s.skipped ? "SKIP" : s.ok ? "YES " : "NO  "} ${s.part} ${s.photo} ${s.id}${s.ok && s.notes.length === 0 ? "" : ` (${[...s.notes.slice(0, 2), ...(s.question && s.answer !== "y" ? [`Jim: ${s.answer}`] : [])].join("; ") || s.answer})`}`);
-  const missing = parts.filter((p) => !steps.some((s) => s.part === p && s.ok && !s.skipped));
+  // A put-back is no yes for its part: run 1 counted orientation_put_back as the mirror part's only yes.
+  const missing = parts.filter((p) => !steps.some((s) => s.part === p && s.ok && !s.skipped && s.id !== "orientation_put_back"));
   for (const p of missing) lines.push(`---- ${p}: no step answered yes`);
   return { worked: missing.length === 0 && steps.every((s) => s.ok || s.skipped === true), lines };
 }

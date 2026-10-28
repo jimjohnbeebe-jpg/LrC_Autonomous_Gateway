@@ -7,6 +7,7 @@
 // next start. `-- --part colour|person|mirror|parity` runs one part again; `npm run masks:parity` is `--part parity` (issue #217).
 // Under %TEMP%\LrC-AVG\masks-verify\ (Claude Code collects them):
 //   state.json                          the snapshot to put back, until it is put back
+//   orientation.json                    part 3's photo and its orientation before the flip, until it reads so again
 //   mask_verify_<time>.json             the results: each step, what was written and read back, Jim's answers
 //   mask_verify_bridge_log_<time>.txt   a copy of the plugin's log, user folder redacted
 
@@ -17,9 +18,9 @@ import { BridgeClient, pluginVersionAtLeast } from "../bridge/index.js";
 import { acquireInstanceLock, BridgeGate, devOverrides, ENGINE_VERSION } from "../mcp/index.js";
 import { MASKS_PLUGIN } from "../session/index.js";
 import { ask, putBack, readPending, type Pending } from "./mask-carry-probe.js";
-import { PARTS, SNAPSHOT, notPutBack, selected, verdict, type Ctx, type Part, type Photo, type Step } from "./masks-verify.js";
+import { PARTS, SNAPSHOT, notPutBack, selected, verdict, type Ctx, type Owed, type Part, type Photo, type Step } from "./masks-verify.js";
 import { colourPart } from "./masks-verify-colour.js";
-import { mirrorPart } from "./masks-verify-mirror.js";
+import { isMirrored, mirrorPart, orientationBack, orientationOf } from "./masks-verify-mirror.js";
 import { personPart } from "./masks-verify-person.js";
 import { parityPart } from "./masks-verify-parity.js";
 import { describeError } from "./phase1-check.js";
@@ -27,6 +28,7 @@ import { redactHome } from "./phase2-check.js";
 
 const OUT_DIR = path.join(os.tmpdir(), "LrC-AVG", "masks-verify");
 const STATE = path.join(OUT_DIR, "state.json");
+const ORIENT = path.join(OUT_DIR, "orientation.json");
 const PLUGIN_LOG = path.join(os.tmpdir(), "LrC-AVG", "bridge.log");
 const started = new Date().toISOString().replace(/[:.]/g, "-");
 const redact = (text: string): string => redactHome(text, os.homedir());
@@ -72,10 +74,25 @@ async function back(client: BridgeClient, p: Pending): Promise<{ ok: boolean; wh
   return pb;
 }
 
+/** The orientation part 3 still owes a photo (Ctx.owe), on disk while the photo is flipped. */
+const readOwed = (): Owed | null => {
+  try {
+    return JSON.parse(readFileSync(ORIENT, "utf8")) as Owed;
+  } catch {
+    return null; // none owed, or unreadable: the next part 3 reads the start afresh
+  }
+};
+const owe = (o: Owed | null): void => {
+  mkdirSync(OUT_DIR, { recursive: true });
+  if (o) writeFileSync(ORIENT, JSON.stringify(o, null, 2) + "\n");
+  else rmSync(ORIENT, { force: true });
+};
+
 const ctxFor = (client: BridgeClient, say: (line: string) => void): Ctx => ({
   client,
   say,
   ask,
+  owe,
   guard: async (photo, fn) => {
     // A put-back still outstanding is tried again first; the run stops rather than snapshot over it (state.json
     // would lose its record, and the next snapshot would hold the test edits as the photo's start).
@@ -101,13 +118,20 @@ const ctxFor = (client: BridgeClient, say: (line: string) => void): Ctx => ({
   },
 });
 
-/** One part; its steps go into `steps` as they happen, so a run that stops keeps the answers already given. */
-async function runPart(c: Ctx, part: Part, steps: Step[]): Promise<void> {
+/** One part; its steps go into `steps` as they happen, so a run that stops keeps the answers already given. Each photo
+ *  selected goes into `seen` with its uuid and orientation as read before anything is written; a flipped photo stops
+ *  every part but part 3 (which refuses one itself) before its snapshot (run 2 wrote snapshots on a photo already BA). */
+async function runPart(c: Ctx, part: Part, steps: Step[], seen: Array<Photo & { part: Part; orientation: string }>): Promise<void> {
   const s = SELECT[part];
   c.say("");
   if ((await ask(`Part ${PARTS.indexOf(part) + 1} (${part}): in Lightroom's Develop Filmstrip select ${s.what}. Done?`)) !== "y") return void steps.push({ part, photo: "-", id: "select", question: null, answer: "Jim: n", ok: false, notes: [] });
   const photos = await selected(c.client, s.count);
   if (typeof photos === "string") return void steps.push({ part, photo: "-", id: "select", question: null, answer: photos, ok: false, notes: [`select ${s.what}`] });
+  for (const p of photos) seen.push({ part, ...p, orientation: await orientationOf(c, p) });
+  const flipped = seen.filter((p) => p.part === part && isMirrored(p.orientation));
+  if (part !== "mirror" && flipped.length > 0) {
+    return void steps.push({ part, photo: flipped.map((p) => p.filename).join(", "), id: "select", question: null, answer: `flipped (${flipped.map((p) => p.orientation).join(", ")}): nothing written`, ok: false, notes: ["select photos that are not flipped, or Photo > Flip Horizontal on them first"] });
+  }
   if (part === "colour") await colourPart(c, photos, steps);
   else if (part === "parity") steps.push(...(await parityPart(c, photos[0] as Photo)));
   else if (part === "person") await personPart(c, photos[0] as Photo, steps);
@@ -134,7 +158,17 @@ async function main(say: (line: string) => void): Promise<number> {
       if (!pb.ok) return finish(say, r, false, `${left.filename} could not be put back`);
     }
     const c = ctxFor(client, say);
-    for (const part of RUN) await runPart(c, part, steps);
+    const owed = readOwed();
+    if (owed) {
+      say(`${owed.filename} is still owed its orientation ${owed.start} from the last run's part 3.`);
+      await client.request("select_photo", { uuid: owed.uuid });
+      steps.push(await orientationBack(c, owed, owed.start, null));
+      if (!steps.at(-1)?.ok) return finish(say, r, false, `${owed.filename} is not back at orientation ${owed.start}`);
+      owe(null);
+    }
+    const seen: Array<Photo & { part: Part; orientation: string }> = [];
+    r["photos"] = seen;
+    for (const part of RUN) await runPart(c, part, steps, seen);
     const v = verdict(steps, RUN);
     r["lines"] = v.lines;
     say("");
@@ -156,7 +190,9 @@ function finish(say: (line: string) => void, r: Record<string, unknown>, worked:
   r["headline"] = worked ? "WORKED" : "FAILED";
   say("");
   say(`Mask verify: ${worked ? "WORKED" : `FAILED (${why})`}`);
-  say(`put back: ${left || damaged || notBack ? "NO" : "YES"}`);
+  const flipped = readOwed();
+  say(`put back: ${left || damaged || notBack || flipped ? "NO" : "YES"}`);
+  if (flipped) say(`  ${flipped.filename} is still flipped: run npm run masks:verify again, it asks for the flip-back first (orientation ${flipped.start}).`);
   if (left) say(`  To put it back by hand: Lightroom Develop, select ${left.filename}, Snapshots panel (left), click "${SNAPSHOT}". Or run npm run masks:verify again.`);
   if (damaged) {
     r["state_damaged"] = redact(damaged);

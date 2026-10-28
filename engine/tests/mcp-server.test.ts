@@ -114,6 +114,7 @@ describe("mcp server", () => {
       "lr_list_snapshots",
       "lr_probe",
       "lr_reset",
+      "lr_delete_empty_masks",
       "lr_save_intent",
       "lr_search_photos",
       "lr_select_variant",

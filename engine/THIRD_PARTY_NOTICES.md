@@ -62,6 +62,14 @@ Rewritten, not copied; same MIT licence and copyright as below. Nothing of these
 | `plugin/LightroomMCP.lrplugin/ImageFrame.lua` at `1040453` (`e1ca0c6`, #331) | The four mirrored orientation codes' mapping between the displayed and the stored frame | `src/params/crop-frame.ts` |
 | `f58f22e` (#345, "accept omitted zero local adjustments") | A `Local` field written 0 and missing from the read-back counts as equal | `src/params/mask-table.ts` (`covers`) |
 
+### Issue #217, from upstream PRs after the snapshot
+
+Rewritten, not copied; same MIT licence and copyright as below. The plugin side is in `plugin\LrC-AVG.lrplugin\THIRD_PARTY_NOTICES.md`.
+
+| Upstream commit (PR) | What was taken | Files here |
+|---|---|---|
+| `6028491` (#320, "delete masks from photos") | `delete_empty_masks`: Lightroom's own clean-up of empty masks on photos named by id, outside Develop | `src/mcp/tools-develop.ts` (`deleteEmptyMasks`), `src/mcp/defs-develop.ts` |
+
 npm dependencies keep their own licences; they are listed with their versions in `docs\DEPENDENCIES.md`.
 
 ## Automaat/lightroom-mcp licence

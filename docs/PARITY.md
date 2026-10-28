@@ -78,7 +78,7 @@ Every `lr_*` write tool runs only when no edit session is open, and returns the 
 | `add_brush_strokes` | none | planned #217 | |
 | `create_range_mask` | `lr_create_mask` | have | Luminance, colour and depth; the colour as `copy_sample_from` or `geometry.sample` {l, a, b} (#210); the engine's own point sample (the preview's RGB) stays until `npm run masks:verify`, flagged [unverified] in the tool text |
 | `delete_masks` | `lr_delete_mask` | have | One mask per call |
-| `delete_empty_masks` | none | planned #217 | |
+| `delete_empty_masks` | `lr_delete_empty_masks` | have | Lightroom's own `catalog:deleteAllEmptyMasks`, a snapshot first, the mask count before and after (#217) |
 | `set_mask_adjustments` | `lr_edit_mask` | have | |
 | `get_mask_adjustments` | `lr_list_masks` | have | |
 | `invert_mask` | `lr_edit_mask` | planned #217 | In place with `inverted`; inverting as a copy does not exist |
@@ -92,7 +92,7 @@ Every `lr_*` write tool runs only when no edit session is open, and returns the 
 | `get_mask_point_colors` | none | planned #217 | |
 | `combine_mask` | `lr_edit_mask` | have | `combine` add, subtract, intersect, in the forms checked in Lightroom |
 
-Count: 46 `have`, 9 `ours+`, 10 `planned` (#217: 9, #218: 1), 3 `decision` [handle: `engine/tests/parity-map.test.ts` pins these counts].
+Count: 47 `have`, 9 `ours+`, 9 `planned` (#217: 8, #218: 1), 3 `decision` [handle: `engine/tests/parity-map.test.ts` pins these counts].
 
 ## LrC-AVG tools with no upstream counterpart
 

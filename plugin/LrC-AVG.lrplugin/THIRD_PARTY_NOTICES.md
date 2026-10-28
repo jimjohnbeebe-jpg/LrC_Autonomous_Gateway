@@ -44,6 +44,12 @@ From upstream commit `1040453` (plugin 1.5.0, GitHub issue #218), rewritten, not
 | `MetadataDefinition.lua`, `PluginMetadata.lua` | `AiMetadataDefinition.lua`, `HandlerAiMetadata.lua` | The private fields `aiScore` and `aiReason` (schema version 1) and writing them with `setPropertyForPlugin`, nil to clear. |
 | `Metadata.lua` (`setIptc`, `setColorLabel`) | `HandlerMetadata.lua` (`setMetadata`, `setLocation`), `HandlerOrganization.lua` (`setColorLabel`) | The creator, copyright, location and accessibility keys, the 13.2 accessibility gate, `colorNameForLabel`. |
 
+From upstream at `1040453` (plugin 1.6.0, GitHub issue #217), rewritten, not copied; the commits are listed in `engine\THIRD_PARTY_NOTICES.md`:
+
+| File in this plugin | Derived from | What was taken |
+|---|---|---|
+| `MaskClean.lua` | `HandlerMaskDelete.lua` (`deleteEmptyMasks`) | `catalog:deleteAllEmptyMasks` with the photos always passed, in a write gate, checked to exist first. |
+
 The engine's derived files are listed in `engine\THIRD_PARTY_NOTICES.md`.
 
 ## Automaat/lightroom-mcp licence

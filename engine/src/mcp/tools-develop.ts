@@ -14,9 +14,12 @@ import { needPlugin, run, sessionTools, type ToolContext, type ToolOutput } from
 
 /** The plugin with the issue #214 commands (DevelopTools.lua, Snapshots.lua, Copies.lua). */
 export const DEVELOP_PLUGIN = "1.5.0";
+/** The plugin with the issue #217 mask commands (MaskClean.lua delete_empty_masks). */
+export const MASK_PARITY_PLUGIN = "1.6.0";
 
 export type ApplyAutoArgs = { uuids: string[]; tone?: boolean | undefined; white_balance?: boolean | undefined };
 export type ResetArgs = { uuids: string[]; confirm: true };
+export type DeleteEmptyMasksArgs = { uuids: string[] };
 export type ProcessVersionArgs = { uuids: string[]; version: number; confirm: true };
 
 export type Changes = { names: "canonical" | "sdk"; changed: Record<string, { before: unknown; after: unknown }>; masks?: { before: number; after: number } };
@@ -79,11 +82,14 @@ async function eachPhoto(ctx: ToolContext, uuids: string[], budget: Budget, send
 const undoHint = (name: string): string =>
   `Each photo changed has the snapshot "${name}" from just before (Develop, Snapshots panel; or lr_apply_snapshot with its id), which puts it back. Lightroom's History panel also has the step.`;
 
-async function developTool(ctx: ToolContext, tool: string, args: unknown, uuids: string[], prefix: string, budget: Budget, send: (uuid: string, before: SdkSettings, snapshotName: string) => Promise<Answer>): Promise<ToolOutput> {
+type Send = (uuid: string, before: SdkSettings, snapshotName: string) => Promise<Answer>;
+const DRIVES = { plugin: DEVELOP_PLUGIN, why: "it drives the Develop module photo by photo" };
+
+async function developTool(ctx: ToolContext, tool: string, args: unknown, uuids: string[], prefix: string, budget: Budget, send: Send, need = DRIVES): Promise<ToolOutput> {
   return run(ctx, tool, args, async () => {
     const sessions = sessionTools(ctx);
     await ctx.deps.ensureBridge();
-    needPlugin(ctx, tool, DEVELOP_PLUGIN, "it drives the Develop module photo by photo");
+    needPlugin(ctx, tool, need.plugin, need.why);
     const snapshotName = `AVG ${prefix} ${randomUUID().slice(0, 6)}`;
     return sessions.whenIdle(tool, async () => {
       const out = await eachPhoto(ctx, uuids, budget, (uuid, before) => send(uuid, before, snapshotName));
@@ -113,4 +119,11 @@ export function setProcessVersion(ctx: ToolContext, args: ProcessVersionArgs, bu
   return developTool(ctx, "lr_set_process_version", args, args.uuids, "pre-process-version", budget, (uuid, before, name) =>
     ctx.deps.client.request("set_process_version", { photo_uuid: uuid, version, masked: tableInfo(before).count > 0, confirm: true, snapshot_name: name }, timeout),
   );
+}
+
+/** Issue #217 row 1: Lightroom's catalog:deleteAllEmptyMasks on each photo (MaskClean.lua); each photo's `masks` gives the count before and after. */
+export function deleteEmptyMasks(ctx: ToolContext, args: DeleteEmptyMasksArgs, budget: Budget = realBudget()): Promise<ToolOutput> {
+  const need = { plugin: MASK_PARITY_PLUGIN, why: "it has the delete_empty_masks command" };
+  return developTool(ctx, "lr_delete_empty_masks", args, args.uuids, "pre-empty-masks", budget, (uuid, _before, name) =>
+    ctx.deps.client.request("delete_empty_masks", { photo_uuid: uuid, snapshot_name: name }, timeout), need);
 }

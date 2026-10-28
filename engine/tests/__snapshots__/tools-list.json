@@ -3032,6 +3032,35 @@
     }
   },
   {
+    "name": "lr_delete_empty_masks",
+    "title": "Delete empty masks",
+    "description": "Lightroom's own clean-up of empty masks (masks left with no part, such as after every part was removed) on photos named by uuid (Lightroom Classic 14 or later, else FEATURE_UNAVAILABLE). Lightroom decides what is empty; masks with a part stay. Each photo's `status`: deleted (with `masks` before and after and the `snapshot` taken just before) or unchanged (nothing was empty, no snapshot kept). The photos are not opened in Develop. Not while a session is open, and a photo a stopped session left open is refused; `undo` says how to put a photo back. A call works for about 30 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling until `not_yet` is gone, and tell the user how far along it is. A call still busy at 50 seconds returns `pending` with `next`.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-100 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        }
+      },
+      "required": [
+        "uuids"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
     "name": "lr_set_process_version",
     "title": "Set the process version",
     "description": "Set the process version (Version 1-6) of photos named by uuid, as Develop's Settings > Process does; updating an old photo to Version 6 lets the sessions edit it. A new version can change how the photo looks: ask the user first and pass confirm: true. A lower version on a photo with masks is refused (`status` skipped). Each photo's `status`: changed, unchanged, skipped or failed, with `previous` and `actual` (Lightroom's \"Version N\"). Each photo is made the active one in Develop in turn; Lightroom's module, folder or collection and selection are put back after each. Each photo's result names what `changed` (by setting name; by Lightroom's own key names, `names: \"sdk\"`, when the photo's process version is older than this engine reads), with the `snapshot` taken just before, which puts it back; `undo` says how. Not while a session is open, and a photo a stopped session left open is refused. A call works for about 30 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling until `not_yet` is gone, and tell the user how far along it is. A call still busy at 50 seconds returns `pending` with `next`.",

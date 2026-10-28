@@ -150,6 +150,8 @@ export type CommandPayloads = {
   reset_develop: { photo_uuid: string; confirm: true; snapshot_name: string };
   /** version "Version 1" .. "Version 6"; masked: the engine read masks on the photo, so a downgrade is skipped. */
   set_process_version: { photo_uuid: string; version: string; masked: boolean; confirm: true; snapshot_name: string };
+  /** Issue #217 row 1 (plugin 1.6.0, MaskClean.lua): catalog:deleteAllEmptyMasks on the photo with that uuid, after a snapshot named snapshot_name ("AVG …"). */
+  delete_empty_masks: { photo_uuid: string; snapshot_name: string };
   /** Issue #214 (Snapshots.lua). */
   list_snapshots: { photo_uuid: string };
   delete_snapshot: { photo_uuid: string; snapshot_id: string };

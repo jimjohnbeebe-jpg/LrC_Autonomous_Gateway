@@ -224,13 +224,10 @@ local function getSelection(payload)
     for _, photo in ipairs(selected) do
         if photo.localIdentifier ~= active.localIdentifier then ordered[#ordered + 1] = photo end
     end
-    local photos = {}
-    for i, photo in ipairs(ordered) do
-        if i > max then break end
-        if i > 1 then LrTasks.yield() end -- PRD NFR-1: yield between photos
-        photos[#photos + 1] = describe(catalog, photo, { where = true })
-    end
-    return { count = #ordered, photos = photos }
+    local page = {}
+    for i = 1, math.min(max, #ordered) do page[i] = ordered[i] end
+    -- In batches, outside any gate, yielding between batches (Photos.describePage, issue #212).
+    return { count = #ordered, photos = Photos.describePage(catalog, page, { where = true }) }
 end
 
 function Catalog.createVirtualCopies(payload)

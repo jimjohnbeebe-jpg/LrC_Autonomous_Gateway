@@ -8,11 +8,13 @@
 -- It runs outside any read gate, as rule 03 asks of yielding catalog
 -- queries; whether it yields is [unverified], and S7 ran it outside a gate too [handle:
 -- plugin\spikes\S7.lrplugin\S7Common.lua:122-131]. S7 found its photos and their identity check
--- passed [handle: docs\reports\phase4\S7.md "Numbers", item 4]. Metadata reads run inside a read
--- gate with LrTasks.pcall, as in Develop.lua getContext.
+-- passed [handle: docs\reports\phase4\S7.md "Numbers", item 4]. Single metadata reads run inside a read
+-- gate with LrTasks.pcall, as in Develop.lua getContext; descriptions are read in batches (describePage).
 
 local LrFileUtils = import 'LrFileUtils'
 local LrTasks = import 'LrTasks'
+
+local Log = require 'Log'
 
 local Photos = {}
 
@@ -34,25 +36,76 @@ end
 -- nil or number of stars", nil for none; getFormattedMetadata("dateTimeOriginal") is "the date and time
 -- of capture (for example, "09/15/2005 17:32:50")" [handle: https://lrc.mcor.dev/modules/LrPhoto.html].
 -- opts.where (plugin 0.21.0, issue #139; only the listings, Library.lua search_photos and Catalog.lua
--- get_selection, pass it): gps and path as well, in the same read gate. What reading them costs for a
--- page of 500 photos is [unverified].
-function Photos.describe(catalog, photo, opts)
-    local d = { local_id = photo.localIdentifier }
-    catalog:withReadAccessDo(function()
-        d.uuid = read(photo, photo.getRawMetadata, "uuid")
-        d.is_virtual_copy = read(photo, photo.getRawMetadata, "isVirtualCopy")
-        local master = read(photo, photo.getRawMetadata, "masterPhoto")
-        if type(master) ~= "string" and master ~= nil then d.master_local_id = master.localIdentifier end
-        d.copy_name = read(photo, photo.getFormattedMetadata, "copyName")
-        d.filename = read(photo, photo.getFormattedMetadata, "fileName")
-        d.rating = read(photo, photo.getRawMetadata, "rating")
-        d.capture_time = read(photo, photo.getFormattedMetadata, "dateTimeOriginal")
-        if opts and opts.where then
-            d.gps = Photos.position(read(photo, photo.getRawMetadata, "gps"))
-            d.path = read(photo, photo.getRawMetadata, "path")
-        end
-    end)
+-- get_selection, pass it): gps and path as well.
+--
+-- Issue #212 item 2: a page of photos is read with one catalog:batchGetRawMetadata and one
+-- batchGetFormattedMetadata call per BATCH photos, which take "array of LrPhoto" and the getRawMetadata /
+-- getFormattedMetadata keys and return { [photo] = { key = value } } [handle: D:\Developer\LightRoom Classic
+-- Dev Kit\API Reference\modules\LrCatalog.html, batchGetRawMetadata, batchGetFormattedMetadata]. Before, each
+-- photo took 7-9 getters, each in its own LrTasks.pcall, in a read gate of its own; upstream measured each
+-- getter at about 0.1-1 ms and each pcall at about 1 ms [upstream claim: Automaat/lightroom-mcp 37a8ad5, CLAUDE.md].
+-- The batch reads run outside any gate, as CollectionEdit.lua and KeywordEdit.lua run batchGetRawMetadata,
+-- which Jim's catalog:check exercised [handle: docs\reports\phase11\CATALOG-PARITY.md run 2, step 8], and as
+-- upstream does ("Batch reads are not catalog queries and need no read gate (verified live)" [upstream claim:
+-- 37a8ad5 message]). Whether they yield is [unverified]; outside the gate that cannot deadlock (rule 03).
+-- One LrTasks.pcall per batch; if a batch raises, its photos are read one by one as before (readOne), so
+-- the answer keeps its shape.
+
+-- Photos per batch call, with LrTasks.yield() between batches (PRD NFR-1) [inference: the figure].
+Photos.BATCH = 100
+
+local RAW_KEYS = { "uuid", "isVirtualCopy", "masterPhoto", "rating" }
+local WHERE_KEYS = { "gps", "path" }
+local FORMATTED_KEYS = { "copyName", "fileName", "dateTimeOriginal" }
+
+-- One description from the photo's raw and formatted values (tables keyed by SDK key).
+local function described(photo, raw, formatted, where)
+    local d = { local_id = photo.localIdentifier, uuid = raw.uuid, is_virtual_copy = raw.isVirtualCopy,
+        copy_name = formatted.copyName, filename = formatted.fileName, rating = raw.rating,
+        capture_time = formatted.dateTimeOriginal }
+    local master = raw.masterPhoto
+    if type(master) ~= "string" and master ~= nil then d.master_local_id = master.localIdentifier end
+    if where then
+        d.gps = Photos.position(raw.gps)
+        d.path = raw.path
+    end
     return d
+end
+
+-- The fallback: one photo, each getter on its own, in a read gate (the reads before issue #212).
+local function readOne(catalog, photo, where)
+    local raw, formatted = {}, {}
+    catalog:withReadAccessDo(function()
+        for _, key in ipairs(RAW_KEYS) do raw[key] = read(photo, photo.getRawMetadata, key) end
+        if where then for _, key in ipairs(WHERE_KEYS) do raw[key] = read(photo, photo.getRawMetadata, key) end end
+        for _, key in ipairs(FORMATTED_KEYS) do formatted[key] = read(photo, photo.getFormattedMetadata, key) end
+    end)
+    return described(photo, raw, formatted, where)
+end
+
+-- `photos` described, in order (a list of descriptions as Photos.describe gives).
+function Photos.describePage(catalog, photos, opts)
+    local where = opts ~= nil and opts.where == true
+    local rawKeys = { unpack(RAW_KEYS) }
+    if where then for _, key in ipairs(WHERE_KEYS) do rawKeys[#rawKeys + 1] = key end end
+    local out = {}
+    for first = 1, #photos, Photos.BATCH do
+        if first > 1 then LrTasks.yield() end -- PRD NFR-1
+        local slice = {}
+        for i = first, math.min(first + Photos.BATCH - 1, #photos) do slice[#slice + 1] = photos[i] end
+        local ok, raw, formatted = LrTasks.pcall(function()
+            return catalog:batchGetRawMetadata(slice, rawKeys) or {}, catalog:batchGetFormattedMetadata(slice, FORMATTED_KEYS) or {}
+        end)
+        if not ok then Log.warn("photos: a batch read of " .. #slice .. " failed, reading them one by one: " .. tostring(raw)) end
+        for _, photo in ipairs(slice) do
+            out[#out + 1] = ok and described(photo, raw[photo] or {}, formatted[photo] or {}, where) or readOne(catalog, photo, where)
+        end
+    end
+    return out
+end
+
+function Photos.describe(catalog, photo, opts)
+    return Photos.describePage(catalog, { photo }, opts)[1]
 end
 
 -- A GPS table as { latitude, longitude }, or nil for none. getRawMetadata("gps") is "(table) The

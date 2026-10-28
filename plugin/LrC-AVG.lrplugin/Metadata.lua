@@ -31,12 +31,15 @@
 --   back with getRawMetadata [handle: LrPhoto.html, setRawMetadata and getRawMetadata colorNameForLabel],
 --   written and read back as set_flag.
 -- get_metadata adds every text field, the label, rating, capture_time, path, copy_name and virtual_copy.
+-- Issue #212: get_metadata reads them with one batch call per kind (partsBatched), the part-by-part reads
+-- kept as its fallback; the set_* commands still read one value in a read gate.
 
 local LrApplication = import 'LrApplication'
 local LrTasks = import 'LrTasks'
 
 local Gate = require 'Gate'
 local KeywordTree = require 'KeywordTree'
+local Log = require 'Log'
 local Needs = require 'Needs'
 local Photos = require 'Photos'
 
@@ -186,31 +189,69 @@ local function stackOf(catalog, photo)
     end)
 end
 
--- Each part read on its own: a part that fails is left out and named in `errors`, and the rest is
--- still returned.
+-- get_metadata's parts, each read on its own (the reads before issue #212, now the fallback): `parts` holds
+-- path, text, flag, label, keywords, gps and stack; a part that fails is left out and named in `errors`.
+local function partsOneByOne(catalog, photo)
+    local parts, errors = {}, {}
+    local function take(name, label, value, err)
+        if value ~= nil then parts[name] = value else errors[#errors + 1] = label .. ": " .. tostring(err) end
+    end
+    parts.path = readIn(catalog, function() return photo:getRawMetadata("path") end)
+    take("text", "title, caption, headline", textOf(catalog, photo))
+    take("flag", "pickStatus", flagOf(catalog, photo))
+    take("label", "colorNameForLabel", labelOf(catalog, photo))
+    local keywords, keywordsErr = KeywordTree.ofPhoto(catalog, photo)
+    take("keywords", "keywords", keywords and keywords.paths, keywordsErr)
+    take("gps", "gps", Photos.gpsOf(catalog, photo))
+    take("stack", "stack", stackOf(catalog, photo))
+    return parts, errors
+end
+
+local STACK_KEYS = { "isInStackInFolder", "topOfStackInFolderContainingPhoto", "stackPositionInFolder",
+    "countStackInFolderMembers", "stackInFolderIsCollapsed" }
+
+-- The same parts from one batchGetRawMetadata and one batchGetFormattedMetadata call on the photo, outside any
+-- gate (issue #212; Photos.describePage says why, with its handles), instead of seven read gates and about 20
+-- getters each in an LrTasks.pcall. Returns parts, errors (only the keywords' paths can fail on their own), or
+-- nil plus the error when a batch call raises.
+local function partsBatched(catalog, photo)
+    local formattedKeys = { unpack(Metadata.TEXT_FIELDS) }
+    if accessible() then for _, key in ipairs(Metadata.ACCESSIBILITY) do formattedKeys[#formattedKeys + 1] = key end end
+    local rawKeys = { "path", "pickStatus", "colorNameForLabel", "keywords", "gps", unpack(STACK_KEYS) }
+    local ok, raw, formatted = LrTasks.pcall(function()
+        return (catalog:batchGetRawMetadata({ photo }, rawKeys) or {})[photo] or {},
+            (catalog:batchGetFormattedMetadata({ photo }, formattedKeys) or {})[photo] or {}
+    end)
+    if not ok then return nil, tostring(raw) end
+    local parts, errors = { path = raw.path, text = {}, flag = raw.pickStatus or 0, label = Photos.labelName(raw.colorNameForLabel),
+        gps = Photos.position(raw.gps) or false, stack = false }, {}
+    for _, key in ipairs(formattedKeys) do parts.text[key] = formatted[key] or "" end
+    local keywords, keywordsErr = KeywordTree.listed(raw.keywords)
+    if keywords then parts.keywords = keywords.paths else errors[#errors + 1] = "keywords: " .. keywordsErr end
+    if raw.isInStackInFolder == true then
+        local top = raw.topOfStackInFolderContainingPhoto
+        local okTop, topRaw = LrTasks.pcall(function() return top and (catalog:batchGetRawMetadata({ top }, { "uuid" }) or {})[top] end)
+        parts.stack = { position = raw.stackPositionInFolder, count = raw.countStackInFolderMembers,
+            collapsed = raw.stackInFolderIsCollapsed == true, top_uuid = okTop and topRaw and topRaw.uuid or nil }
+    end
+    return parts, errors
+end
+
+-- A part that fails is left out and named in `errors`, and the rest is still returned.
 function Metadata.getMetadata(payload)
     local catalog = LrApplication.activeCatalog()
     local photo, d = Photos.find(catalog, payload.photo_uuid)
     if not photo then return nil, d end
-    local out, errors = { uuid = d.uuid, filename = d.filename, rating = d.rating or 0, capture_time = d.capture_time,
-        copy_name = d.copy_name, virtual_copy = d.is_virtual_copy == true }, {}
-    out.path = readIn(catalog, function() return photo:getRawMetadata("path") end)
-    local text, textErr = textOf(catalog, photo)
-    if text then
-        for key, v in pairs(text) do out[key] = v end
-    else
-        errors[#errors + 1] = "title, caption, headline: " .. textErr
+    local out = { uuid = d.uuid, filename = d.filename, rating = d.rating or 0, capture_time = d.capture_time,
+        copy_name = d.copy_name, virtual_copy = d.is_virtual_copy == true }
+    local parts, errors = partsBatched(catalog, photo)
+    if not parts then
+        Log.warn("get_metadata: the batch read failed, reading part by part: " .. tostring(errors))
+        parts, errors = partsOneByOne(catalog, photo)
     end
-    local flag, flagErr = flagOf(catalog, photo)
-    if flag ~= nil then out.flag = flag else errors[#errors + 1] = "pickStatus: " .. flagErr end
-    local label, labelErr = labelOf(catalog, photo)
-    if label ~= nil then out.label = label else errors[#errors + 1] = "colorNameForLabel: " .. labelErr end
-    local keywords, keywordsErr = KeywordTree.ofPhoto(catalog, photo)
-    if keywords then out.keywords = keywords.paths else errors[#errors + 1] = "keywords: " .. keywordsErr end
-    local gps, gpsErr = Photos.gpsOf(catalog, photo)
-    if gps ~= nil then out.gps = gps else errors[#errors + 1] = "gps: " .. gpsErr end
-    local stack, stackErr = stackOf(catalog, photo)
-    if stack ~= nil then out.stack = stack else errors[#errors + 1] = "stack: " .. stackErr end
+    out.path = parts.path
+    for key, v in pairs(parts.text or {}) do out[key] = v end
+    out.flag, out.label, out.keywords, out.gps, out.stack = parts.flag, parts.label, parts.keywords, parts.gps, parts.stack
     if #errors > 0 then out.errors = errors end
     return out
 end

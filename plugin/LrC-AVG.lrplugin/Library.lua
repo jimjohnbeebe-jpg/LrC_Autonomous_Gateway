@@ -24,8 +24,8 @@
 -- getCollectionByLocalIdentifier "must be called from within" a task [handle: https://lrc.mcor.dev/modules/LrCatalog.html
 -- findPhotos, getAllPhotos, getCollectionByLocalIdentifier] and run outside any read gate, as
 -- Automaat runs findPhotos [upstream claim: HandlerSearch.lua:102-114]. The photos of a page are
--- described one by one (Photos.describe, one read gate each) with LrTasks.yield() between them (PRD
--- NFR-1). Collections are read inside one read gate, as Automaat does [upstream claim:
+-- described in batches, outside any gate (Photos.describePage, issue #212), with LrTasks.yield() between
+-- batches (PRD NFR-1). Collections are read inside one read gate, as Automaat does [upstream claim:
 -- vendor\automaat\plugin\LightroomMCP.lrplugin\HandlerCollections.lua:18-44].
 
 local LrApplication = import 'LrApplication'
@@ -121,12 +121,9 @@ function Library.searchPhotos(payload)
         matches = matches and intersect(matches, inFolder) or inFolder
     end
     if not matches then matches = catalog:getAllPhotos() or {} end
-    local photos = {}
-    for i = offset + 1, math.min(offset + limit, #matches) do
-        if i > offset + 1 then LrTasks.yield() end -- PRD NFR-1: yield between photos
-        photos[#photos + 1] = Photos.describe(catalog, matches[i], { where = true })
-    end
-    return { count = #matches, photos = photos }
+    local page = {}
+    for i = offset + 1, math.min(offset + limit, #matches) do page[#page + 1] = matches[i] end
+    return { count = #matches, photos = Photos.describePage(catalog, page, { where = true }) }
 end
 
 function Library.listCollections()

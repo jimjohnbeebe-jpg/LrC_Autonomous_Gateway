@@ -40,6 +40,7 @@ import {
 } from "./mask-table.js";
 import { summarize, type MaskSummary } from "./mask-summary.js";
 import { copiedSample, type CopySample } from "./mask-range.js";
+import { invertedCopy } from "./mask-copy.js";
 
 export type { Geometry, Point } from "./mask-build.js";
 /** An edit: one mask's name, visibility, sliders, inversion and geometry; `combine` adds a part, `part` (1 = the first) edits one part (mask-combine.ts). */
@@ -54,6 +55,8 @@ export type EditOp = {
   combine?: Combine | undefined;
   part?: number | undefined;
   remove_part?: true | undefined;
+  /** With inverted: true, a new inverted copy of the mask; the mask itself stays (mask-copy.ts, issue #217 row 2). */
+  copy?: true | undefined;
 };
 /** A new mask; a colour range's `copy_sample_from` is resolved to its sample and point (withCopiedSample) before applyOp. */
 export type CreateOp = { op: "create"; kind: string; name?: string | undefined; geometry?: Geometry | undefined; point?: Point | undefined; sliders?: Record<string, number> | undefined; copy_sample_from?: CopySample | undefined };
@@ -119,9 +122,17 @@ export function precheck(op: MaskOp): void {
   if (op.op === "create") applyOp([], op.copy_sample_from ? placeholderCopy(op) : op);
   if (op.op !== "edit") return;
   precheckParts(op);
+  if (op.copy) precheckCopy(op);
   const fields = [op.name, op.active, op.inverted, op.geometry, op.sliders, op.combine, op.remove_part];
   if (fields.every((f) => f === undefined)) throw new MaskError("INVALID_ARGUMENTS", "Name at least one change: name, active, inverted, geometry, sliders, combine or remove_part.");
   if (op.sliders) storedSliders(op.sliders);
+}
+
+/** A copy takes inverted: true, and name and sliders for the copy; nothing that reshapes or names a part. */
+function precheckCopy(op: EditOp): void {
+  if (op.inverted !== true) throw new MaskError("INVALID_ARGUMENTS", "copy: true makes an inverted copy: give inverted: true with it.");
+  const other = (["active", "geometry", "combine", "part", "remove_part"] as const).filter((k) => op[k] !== undefined);
+  if (other.length > 0) throw new MaskError("INVALID_ARGUMENTS", `copy: true takes only inverted, name and sliders (for the copy), not ${other.join(", ")}.`);
 }
 
 function edit(entries: Correction[], op: EditOp, frame: CropFrame): OpResult {
@@ -129,6 +140,11 @@ function edit(entries: Correction[], op: EditOp, frame: CropFrame): OpResult {
   const e = entries[i] as Correction;
   const before = summarize(e, frame);
   precheck(op);
+  if (op.copy) {
+    const c = invertedCopy(e, op.name, storedSliders(op.sliders ?? {}), frame);
+    entries.push(c.entry);
+    return { entries, id: String(c.entry[C.id]), kind: before.kind, before: null, after: c.after, ...(c.ai ? { ai: c.ai } : {}) };
+  }
   const parts = components(e);
   const only = parts.length === 1 ? (parts[0] as Component) : null;
   // `part` 1 of a one-part mask is the mask itself; any other `part`, and `combine`, go to mask-combine.ts.

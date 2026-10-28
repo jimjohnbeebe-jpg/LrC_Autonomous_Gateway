@@ -31,7 +31,7 @@ it("gives every pinned upstream name a row with a known status", () => {
     counts[s] = (counts[s] ?? 0) + 1;
   }
   // The "Count:" line in PARITY.md states these; change both together.
-  expect(counts).toEqual({ have: 47, "ours+": 9, planned: 9, decision: 3 });
+  expect(counts).toEqual({ have: 48, "ours+": 9, planned: 8, decision: 3 });
 });
 
 it("names only registered lr_ tools, and every registered tool", () => {

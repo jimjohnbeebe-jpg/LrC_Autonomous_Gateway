@@ -81,7 +81,7 @@ Every `lr_*` write tool runs only when no edit session is open, and returns the 
 | `delete_empty_masks` | `lr_delete_empty_masks` | have | Lightroom's own `catalog:deleteAllEmptyMasks`, a snapshot first, the mask count before and after (#217) |
 | `set_mask_adjustments` | `lr_edit_mask` | have | |
 | `get_mask_adjustments` | `lr_list_masks` | have | |
-| `invert_mask` | `lr_edit_mask` | planned #217 | In place with `inverted`; inverting as a copy does not exist |
+| `invert_mask` | `lr_edit_mask` | have | In place with `inverted`; as a copy with `copy: true`, one-part masks, an AI copy computed afresh (#217) |
 | `create_mask` | `lr_create_mask` | have | Subject, sky, background |
 | `create_mask_batch` | none | planned #217 | One AI mask on many photos |
 | `create_people_mask` | `lr_create_mask` | have | People parts by kind; one-person kinds under check in #210 (`npm run masks:verify`); a mirrored photo refuses points and geometry until the same check |
@@ -92,7 +92,7 @@ Every `lr_*` write tool runs only when no edit session is open, and returns the 
 | `get_mask_point_colors` | none | planned #217 | |
 | `combine_mask` | `lr_edit_mask` | have | `combine` add, subtract, intersect, in the forms checked in Lightroom |
 
-Count: 47 `have`, 9 `ours+`, 9 `planned` (#217: 8, #218: 1), 3 `decision` [handle: `engine/tests/parity-map.test.ts` pins these counts].
+Count: 48 `have`, 9 `ours+`, 8 `planned` (#217: 7, #218: 1), 3 `decision` [handle: `engine/tests/parity-map.test.ts` pins these counts].
 
 ## LrC-AVG tools with no upstream counterpart
 

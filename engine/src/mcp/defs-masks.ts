@@ -126,6 +126,14 @@ const editArgs = z.object({
     .describe("without part: add a part of kind (with its geometry; AI kinds take none) to the mask in mode add, subtract or intersect. With part: that part's new mode (mode only)"),
   part: z.number().int().min(1).optional().describe("edit one part of the mask (1 = the first, in the order of lr_list_masks `parts`): with exactly one of geometry (reshape), inverted, combine (its mode) or remove_part"),
   remove_part: z.literal(true).optional().describe("with part (2 or more): remove that part from the mask"),
+  // Issue #217 row 2 (params\mask-copy.ts); in Lightroom [unverified] until `npm run masks:parity`.
+  copy: z
+    .literal(true)
+    .optional()
+    .describe(
+      "with inverted: true, keep the mask and add an inverted copy of it (\"everything but the subject\"), with its sliders, `name` (default \"<name> inverted\") and `sliders` " +
+        "set on the copy; one-part masks only. An AI copy is computed by Lightroom afresh, as an AI part is (when it finds nothing, the copy is taken out). The result's mask is the copy",
+    ),
 });
 const deleteArgs = z.object({ ...passFields, mask_id: maskId });
 

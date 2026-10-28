@@ -1433,6 +1433,11 @@
           "description": "with part (2 or more): remove that part from the mask",
           "type": "boolean",
           "const": true
+        },
+        "copy": {
+          "description": "with inverted: true, keep the mask and add an inverted copy of it (\"everything but the subject\"), with its sliders, `name` (default \"<name> inverted\") and `sliders` set on the copy; one-part masks only. An AI copy is computed by Lightroom afresh, as an AI part is (when it finds nothing, the copy is taken out). The result's mask is the copy",
+          "type": "boolean",
+          "const": true
         }
       },
       "required": [

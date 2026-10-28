@@ -2,7 +2,7 @@
 // on a table (so a run does not stop on a refused argument), and the curve capture names what changed.
 
 import { describe, expect, it } from "vitest";
-import { BANDS, ERASE, SWATCH, changedFields } from "../src/devtools/masks-verify-parity.js";
+import { BANDS, ERASE, SWATCH, changedFields, testIds } from "../src/devtools/masks-verify-parity.js";
 import { applyOp, type Correction } from "../src/params/index.js";
 
 describe("masks:parity", () => {
@@ -20,5 +20,12 @@ describe("masks:parity", () => {
     const after = { ...before, LocalExposure2012: 0.5, MainCurve: ["0, 0", "128, 150", "255, 255"], CorrectionMasks: [{ What: "x" }] } as unknown as Correction;
     expect(changedFields(before, after)).toEqual({ MainCurve: ["0, 0", "128, 150", "255, 255"] });
     expect(changedFields(before, undefined)).toEqual({});
+  });
+
+  it("counts only the run's own masks as test masks (Greptile, PR #245)", () => {
+    const old = applyOp([], { op: "create", kind: "brush", name: "Jim's empty brush", geometry: { strokes: BANDS } });
+    const before = new Set(old.entries.map((e) => e.CorrectionID));
+    const run = applyOp(old.entries, { op: "create", kind: "brush", name: "AVG parity brush", geometry: { strokes: BANDS } });
+    expect(testIds(run.entries, before)).toEqual([run.id]);
   });
 });

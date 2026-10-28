@@ -35,7 +35,10 @@ export function changedFields(before: Correction | undefined, after: Correction 
   return Object.fromEntries(Object.keys(after).filter((k) => k !== C.masks && !same(k)).map((k) => [k, after[k]]));
 }
 
-type Here = { c: Ctx; photo: Photo; steps: Step[]; table: Correction[]; brush: string };
+/** The ids of the masks in `table` that were not there before the run (the run's test masks). */
+export const testIds = (table: Correction[], before: Set<string>): string[] => table.map((e) => e[C.id]).filter((id) => !before.has(id));
+
+type Here = { c: Ctx; photo: Photo; steps: Step[]; table: Correction[]; brush: string; before: Set<string> };
 const push = (h: Here, id: string, s: Omit<Step, "part" | "photo" | "id">): void => {
   h.steps.push({ part: "parity", photo: h.photo.filename, id, ...s });
 };
@@ -54,9 +57,11 @@ async function write(h: Here, id: string, op: MaskOp, question: string, frame: P
 async function emptyMasks(h: Here): Promise<void> {
   try {
     const r = await h.c.client.request("delete_empty_masks", { photo_uuid: h.photo.uuid, snapshot_name: "AVG masks:parity empty" });
-    const after = readTable(r.read_back).length;
-    const kept = after >= h.table.length;
-    push(h, "delete_empty_masks", { question: null, answer: `${r.status}, ${h.table.length} masks before, ${after} after`, ok: kept, notes: kept ? [] : ["a test mask was deleted"] });
+    const after = readTable(r.read_back);
+    // The run's own masks must survive; an empty mask the photo already had may rightly go.
+    const ids = new Set(after.map((e) => e[C.id]));
+    const kept = testIds(h.table, h.before).every((id) => ids.has(id));
+    push(h, "delete_empty_masks", { question: null, answer: `${r.status}, ${h.table.length} masks before, ${after.length} after`, ok: kept, notes: kept ? [] : ["a test mask was deleted"] });
   } catch (err) {
     push(h, "delete_empty_masks", { question: null, answer: err instanceof Error ? err.message : String(err), ok: false, notes: [] });
   }
@@ -72,10 +77,11 @@ async function curveCapture(h: Here): Promise<void> {
 
 /** The parity part on one photo, behind its snapshot. */
 export async function parityPart(c: Ctx, photo: Photo): Promise<Step[]> {
-  const h: Here = { c, photo, steps: [], table: [], brush: "" };
+  const h: Here = { c, photo, steps: [], table: [], brush: "", before: new Set() };
   c.say(`${photo.filename}: the issue #217 mask rows, one step at a time (+2 EV on the test masks).`);
   const r = await c.guard(photo, async (sdk) => {
     h.table = readTable(sdk);
+    h.before = new Set(h.table.map((e) => e[C.id]));
     const frame = await frameFor(sdk, () => c.client.request("get_context", { target_uuid: photo.uuid }));
     h.brush = await write(h, "brush_feather_density", { op: "create", kind: "brush", name: "AVG parity brush", geometry: { strokes: BANDS }, sliders: SLIDERS }, "  Three brighter bands across the photo: the TOP with a soft edge, the MIDDLE with a hard edge, the BOTTOM less bright than the other two?", frame);
     await write(h, "brush_erase_added", { op: "edit", mask_id: h.brush, geometry: { strokes: [ERASE] } }, "  Is there now a gap down the middle of all three bands (the erase stroke)?", frame);

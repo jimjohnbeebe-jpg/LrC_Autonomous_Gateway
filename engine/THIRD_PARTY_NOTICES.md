@@ -51,6 +51,17 @@ Rewritten, not copied; same MIT licence and copyright as below.
 | `d102ced` (#326, brush masks from strokes) | Brush components written from strokes, the radius as a fraction of the long edge | `src/params/mask-brush.ts`, `src/params/mask-table.ts` |
 | `server/src/skill-prompt.ts` at `1040453` (#219) | The shape of an MCP prompt that carries the usage text | `src/mcp/prompts.ts` |
 
+### Issue #210, from upstream PRs after the snapshot
+
+Rewritten, not copied; same MIT licence and copyright as below. Nothing of these was ported into the plugin.
+
+| Upstream commit (PR) | What was taken | Files here |
+|---|---|---|
+| `2acd90c` (#339, "take stored Lab in color ranges") | A colour range's sample as l, a, b written verbatim and read back; its 14 Lightroom-authored samples as test data | `src/params/mask-range.ts`, `src/params/mask-summary.ts`, `tests/params-mask-color.test.ts` |
+| `c695468` (#341, "copy a color range sample") | `copy_sample_from`: the stored sample, pin and amount of one colour range with exactly one sample point, refused for anything else | `src/params/mask-range.ts` (`colorRangeOf`, `copiedSample`), `src/params/mask-ops.ts` (`withCopiedSample`), `src/session/masks.ts` |
+| `plugin/LightroomMCP.lrplugin/ImageFrame.lua` at `1040453` (`e1ca0c6`, #331) | The four mirrored orientation codes' mapping between the displayed and the stored frame | `src/params/crop-frame.ts` |
+| `f58f22e` (#345, "accept omitted zero local adjustments") | A `Local` field written 0 and missing from the read-back counts as equal | `src/params/mask-table.ts` (`covers`) |
+
 npm dependencies keep their own licences; they are listed with their versions in `docs\DEPENDENCIES.md`.
 
 ## Automaat/lightroom-mcp licence

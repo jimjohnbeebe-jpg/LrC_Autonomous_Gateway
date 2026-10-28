@@ -66,7 +66,7 @@ export type FinishArgs = EndArgs & { outcome: "accept" | "revert" };
  */
 export type ApproveArgs = { session_id: string; confirmed: boolean };
 /** The mask tools (masks.ts, GitHub issue #59): each change is a pass of the session's photo [stated: Jim, 2026-10-03, "Own pass (Recommended)"]. */
-export type ListMasksArgs = { session_id: string; target?: TargetId | undefined };
+export type ListMasksArgs = { session_id: string; target?: TargetId | undefined; live_mask_id?: string | undefined };
 type MaskPassArgs = { session_id: string; target?: TargetId | undefined; rationale: string; return_image?: ReturnImage | undefined };
 export type CreateMaskArgs = MaskPassArgs & {
   kind: string;

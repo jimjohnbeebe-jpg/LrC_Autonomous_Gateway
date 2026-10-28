@@ -4,13 +4,13 @@
 // back, and asks Jim one y/n:
 //   1. brush: three strokes across the photo, soft (feather 100), hard (feather 0) and at density 0.4;
 //   2. erase: an erase stroke added down the middle of that brush (strokes added to a brush);
-//   3. Point Color: one swatch with distinct shifts on the brush, and whether the panel shows those numbers, which
-//      tells whether the stored order (params\mask-point-colors.ts, [upstream claim] + [inference]) is Lightroom's;
-//   4. inverted copy of the brush, at -2 EV so it reads apart from the brush (the weaker bottom band is left out of the question);
-//   5. lr_delete_empty_masks' command on the photo (asks nothing: whether the call runs and leaves the test masks);
-//   6. local curve capture (row 3, parked: no capture shows the stored field yet): Jim drags the brush mask's curve
-//      by hand and the step saves which correction fields changed, to pin their names (rule 03).
-// Panel numbers for the swatch (-100..100 for the stored -1..1) are [inference].
+//   3. inverted copy of the brush, at -2 EV so it reads apart from the brush (the weaker bottom band is left out of the question);
+//   4. lr_delete_empty_masks' command on the photo (asks nothing: whether the call runs and leaves the test masks);
+//   5. local curve capture: Jim drags the brush mask's curve by hand and the step saves which correction fields changed.
+// The Point Color step this part had (a swatch written to the table) is gone: Lightroom did not show that swatch
+// [handle: %TEMP%\LrC-AVG\masks-verify\mask_verify_2026-10-28T11-59-26-227Z.json step point_color, Jim: n], and the
+// curve capture found no curve field [same file, curve_capture]; both now go through LrDevelopController, checked by the
+// controller part (masks-verify-controller.ts, which reuses SWATCH below).
 
 import { applyOp, readTable, type Correction, type MaskOp } from "../params/index.js";
 import { C } from "../params/mask-table.js";
@@ -86,7 +86,6 @@ export async function parityPart(c: Ctx, photo: Photo): Promise<Step[]> {
     const frame = await frameFor(sdk, () => c.client.request("get_context", { target_uuid: photo.uuid }));
     h.brush = await write(h, "brush_feather_density", { op: "create", kind: "brush", name: "AVG parity brush", geometry: { strokes: BANDS }, sliders: SLIDERS }, "  Three brighter bands across the photo: the TOP with a soft edge, the MIDDLE with a hard edge, the BOTTOM less bright than the other two?", frame);
     await write(h, "brush_erase_added", { op: "edit", mask_id: h.brush, geometry: { strokes: [ERASE] } }, "  Is there now a gap down the middle of all three bands (the erase stroke)?", frame);
-    await write(h, "point_color", { op: "edit", mask_id: h.brush, point_colors: { action: "add", swatch: SWATCH } }, '  Select "AVG parity brush" in the Masking panel and open its Point Color: is there ONE swatch, and with it selected do the sliders read about Hue +50, Saturation -50, Luminance +25 and Range 80?', frame);
     // The copy at -2 EV: at the brush's +2 EV the two masks would brighten the whole photo alike, so the old question
     // ("brightens everything EXCEPT the bands") could only be answered y with the brush off [inference].
     await write(h, "inverted_copy", { op: "edit", mask_id: h.brush, inverted: true, copy: true, sliders: COPY_SLIDERS }, '  Is there a new mask "AVG parity brush inverted", with the TOP and MIDDLE bands still BRIGHTER and the rest of the photo (the gap down the middle too) DARKER than before the check?', frame);

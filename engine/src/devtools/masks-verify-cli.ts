@@ -4,7 +4,8 @@
 // the check asks Jim to select its photos in the Filmstrip: two colourful photos (part 1), one photo of two or
 // more people (part 2), one photo not mirrored (part 3). Every photo is written behind a snapshot
 // "AVG masks:verify before" and put back from it; a run that stopped before a put-back puts it back first on the
-// next start. `-- --part colour|person|mirror|parity` runs one part again; `npm run masks:parity` is `--part parity` (issue #217).
+// next start. `-- --part colour|person|mirror|parity|controller` runs one part again (the last --part counts; a
+// comma list runs several); `npm run masks:parity` is `--part parity,controller` (issue #217).
 // Under %TEMP%\LrC-AVG\masks-verify\ (Claude Code collects them):
 //   state.json                          the snapshot to put back, until it is put back
 //   orientation.json                    part 3's photo and its orientation before the flip, until it reads so again
@@ -16,13 +17,14 @@ import os from "node:os";
 import path from "node:path";
 import { BridgeClient, pluginVersionAtLeast } from "../bridge/index.js";
 import { acquireInstanceLock, BridgeGate, devOverrides, ENGINE_VERSION } from "../mcp/index.js";
-import { MASKS_PLUGIN } from "../session/index.js";
+import { CONTROLLER_PLUGIN, MASKS_PLUGIN } from "../session/index.js";
 import { ask, putBack, readPending, type Pending } from "./mask-carry-probe.js";
 import { PARTS, SNAPSHOT, notPutBack, readOwed as readOwedFile, selected, verdict, type Ctx, type Owed, type Part, type Photo, type Step } from "./masks-verify.js";
 import { colourPart } from "./masks-verify-colour.js";
 import { isMirrored, mirrorPart, orientationBack, orientationOf } from "./masks-verify-mirror.js";
 import { personPart } from "./masks-verify-person.js";
 import { parityPart } from "./masks-verify-parity.js";
+import { controllerPart } from "./masks-verify-controller.js";
 import { describeError } from "./phase1-check.js";
 import { redactHome } from "./phase2-check.js";
 import { throwawayRefusal } from "./throwaway.js";
@@ -33,9 +35,10 @@ const ORIENT = path.join(OUT_DIR, "orientation.json");
 const PLUGIN_LOG = path.join(os.tmpdir(), "LrC-AVG", "bridge.log");
 const started = new Date().toISOString().replace(/[:.]/g, "-");
 const redact = (text: string): string => redactHome(text, os.homedir());
-const only = process.argv.includes("--part") ? process.argv[process.argv.indexOf("--part") + 1] : undefined;
-// The parity part (issue #217) runs only when named, so a plain masks:verify stays the issue #210 check of MASKS-VERIFY.md.
-const RUN: readonly Part[] = PARTS.filter((p) => (only === undefined ? p !== "parity" : p === only));
+const only = process.argv.includes("--part") ? process.argv[process.argv.lastIndexOf("--part") + 1]?.split(",") : undefined;
+// The issue #217 parts run only when named, so a plain masks:verify stays the issue #210 check of MASKS-VERIFY.md.
+const ISSUE_217: readonly Part[] = ["parity", "controller"];
+const RUN: readonly Part[] = PARTS.filter((p) => (only === undefined ? !ISSUE_217.includes(p) : only.includes(p)));
 
 /** What Jim selects for each part, and how many photos. */
 const SELECT: Record<Part, { count: number; what: string }> = {
@@ -43,6 +46,7 @@ const SELECT: Record<Part, { count: number; what: string }> = {
   person: { count: 1, what: "ONE photo with two or more people side by side" },
   mirror: { count: 1, what: "ONE photo that is not flipped (any photo you have not flipped in Lightroom)" },
   parity: { count: 1, what: "ONE photo that is not flipped, best a virtual copy" },
+  controller: { count: 1, what: "ONE photo that is not flipped, best a virtual copy (it may be the same photo)" },
 };
 
 function save(results: Record<string, unknown>): string {
@@ -134,6 +138,7 @@ async function runPart(c: Ctx, part: Part, steps: Step[], seen: Array<Photo & { 
   }
   if (part === "colour") await colourPart(c, photos, steps);
   else if (part === "parity") steps.push(...(await parityPart(c, photos[0] as Photo)));
+  else if (part === "controller") steps.push(...(await controllerPart(c, photos[0] as Photo)));
   else if (part === "person") await personPart(c, photos[0] as Photo, steps);
   else await mirrorPart(c, photos[0] as Photo, steps);
 }
@@ -154,7 +159,8 @@ async function main(say: (line: string) => void): Promise<number> {
     if (refused) return finish(say, r, false, refused);
     const version = client.hello()?.plugin_version;
     Object.assign(r, { plugin_version: version ?? null, lrc_version: client.hello()?.lrc_version ?? null }); // the 2026-10-28 runs kept neither
-    if (!pluginVersionAtLeast(version, MASKS_PLUGIN)) return finish(say, r, false, `reload the LrC-AVG plugin ${MASKS_PLUGIN} or later (Lightroom runs ${String(version)}): File > Plug-in Manager, LrC-AVG, Reload Plug-in. Nothing was written.`);
+    const need = RUN.includes("controller") ? CONTROLLER_PLUGIN : MASKS_PLUGIN;
+    if (!pluginVersionAtLeast(version, need)) return finish(say, r, false, `reload the LrC-AVG plugin ${need} or later (Lightroom runs ${String(version)}): File > Plug-in Manager, LrC-AVG, Reload Plug-in. Nothing was written.`);
     const left = pending();
     if (damaged) return finish(say, r, false, "the last run's put-back record was damaged");
     if (left) {

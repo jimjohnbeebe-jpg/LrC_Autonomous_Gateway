@@ -36,6 +36,7 @@ export { KNOWN_CLIENTS, UNNAMED, cleanText, displayModel, displayName, sentenceN
 export { awaitingPick } from "./pick.js";
 export { MASKS_PLUGIN } from "./masks.js";
 export { AI_PART_PLUGIN } from "./mask-parts.js";
+export { CONTROLLER_PLUGIN } from "./mask-controller.js";
 export { DIALOG_NOTE, WORKING_NOTE } from "./ai-update.js";
 export { AI_TIMINGS } from "./ai-timings.js";
 export { abandonedNote } from "./abandon.js";

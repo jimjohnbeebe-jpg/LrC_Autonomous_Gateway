@@ -9,8 +9,8 @@ import type { Breach } from "./guardrail.js";
 import { describe, ms } from "./io.js";
 import type { Rendered, Session, Target } from "./types.js";
 
-/** What a mask pass wrote and measured. */
-export type Done = { sdk: SdkSettings; view: FromSdkResult; rendered: Rendered; actions: GuardrailAction[]; historyNames: string[]; id: string; ai: AiResult | null; undone: Breach | null };
+/** What a mask pass wrote and measured; `controller`: the mask's curves and swatches read back through LrDevelopController (mask-controller.ts). */
+export type Done = { sdk: SdkSettings; view: FromSdkResult; rendered: Rendered; actions: GuardrailAction[]; historyNames: string[]; id: string; ai: AiResult | null; undone: Breach | null; controller?: Record<string, unknown> };
 
 export const aiLog = (ai: AiResult): NonNullable<MaskPassEntry["ai"]> => {
   const { sdk: _sdk, id: _id, ...rest } = ai;
@@ -31,6 +31,7 @@ export function passJson(s: Session, t: Target, n: number, op: MaskOp, { mask, m
     masks,
     ...(warnings.length > 0 ? { warnings } : {}),
     history_names: done.historyNames,
+    ...(done.controller ? { controller: done.controller } : {}),
     guardrail_actions: done.actions,
     metrics: metricsOf(done.rendered.metrics),
     delta_metrics: delta,

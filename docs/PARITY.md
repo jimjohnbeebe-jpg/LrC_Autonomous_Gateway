@@ -86,13 +86,13 @@ Every `lr_*` write tool runs only when no edit session is open, and returns the 
 | `create_mask_batch` | none | planned #217 | One AI mask on many photos |
 | `create_people_mask` | `lr_create_mask` | have | People parts by kind; one-person kinds under check in #210 (`npm run masks:verify`); a mirrored photo refuses points and geometry until the same check |
 | `create_landscape_mask` | `lr_create_mask` | have | |
-| `set_mask_curves` | none | planned #217 | |
-| `get_mask_curves` | none | planned #217 | |
-| `edit_mask_point_colors` | `lr_edit_mask` | have | `point_colors` add, update, delete or clear, on the mask table in the form Lightroom stores (#217) |
-| `get_mask_point_colors` | `lr_list_masks` | have | `point_colors` of each mask (#217) |
+| `set_mask_curves` | `lr_edit_mask` | have | `curves` main, red, green, blue as [input, output] points, through `LrDevelopController` on the photo open in Develop, each read back (#217); in Lightroom [unverified] until `docs/reports/phase11/MASK-CONTROLLER.md` |
+| `get_mask_curves` | `lr_list_masks` | have | `live_mask_id`: one mask's curves and swatches read through `LrDevelopController` (#217) |
+| `edit_mask_point_colors` | `lr_edit_mask` | have | `point_colors` add, update, delete or clear, through `LrDevelopController` on the photo open in Develop (#217; the mask-table route did not show in Lightroom); in Lightroom [unverified] until `docs/reports/phase11/MASK-CONTROLLER.md` |
+| `get_mask_point_colors` | `lr_list_masks` | have | `point_colors` of each mask from the mask table; `live_mask_id` reads one mask's from Lightroom (#217) |
 | `combine_mask` | `lr_edit_mask` | have | `combine` add, subtract, intersect, in the forms checked in Lightroom |
 
-Count: 52 `have`, 9 `ours+`, 4 `planned` (#217: 3, #218: 1), 3 `decision` [handle: `engine/tests/parity-map.test.ts` pins these counts].
+Count: 54 `have`, 9 `ours+`, 2 `planned` (#217: 1, #218: 1), 3 `decision` [handle: `engine/tests/parity-map.test.ts` pins these counts].
 
 ## LrC-AVG tools with no upstream counterpart
 
@@ -124,6 +124,6 @@ So both can be added in File > Plug-in Manager at once without a clash of id or 
 |---|---|
 | Editing a photo with a look, measured passes, the HUD and Abort | LrC-AVG alone: turn the Automaat server off in the AI app for that chat (where each app keeps its server list: [`CLIENTS.md`](CLIENTS.md)) |
 | Search, keywords, collections, IPTC, ratings, import, export, presets, snapshots | Either; LrC-AVG returns the earlier values and an undo hint with each write |
-| Mask curves, one AI mask on many photos | Automaat, outside an LrC-AVG session, until the rest of #217 lands |
+| One AI mask on many photos | Automaat, outside an LrC-AVG session, until the rest of #217 lands |
 | Raw SDK-key writes, global undo, removing photos from the catalog | Automaat, until Jim decides D1, D2 and D3 |
 | macOS | Automaat; LrC-AVG is Windows only (decision D4) |

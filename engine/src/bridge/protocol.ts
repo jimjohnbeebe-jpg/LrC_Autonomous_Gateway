@@ -69,6 +69,9 @@ export type CommandResult<N extends CommandName> = z.infer<(typeof COMMANDS)[N]>
  */
 export type AiWatch = { ids: string[]; table: string; id: string; masks: string; digest: string; error: string };
 
+/** A Point Color change as MaskControl.lua makes it: "set" writes `list` back (an undo); `max` refuses an add over it. */
+export type SwatchOp = { param: string; action: "add" | "update" | "delete" | "clear" | "set"; index?: number; swatch?: Record<string, unknown>; list?: unknown[]; max?: number };
+
 /** What the plugin checks a photo found by uuid against (Photos.lua); each field optional. */
 export type PhotoExpect = { copy_name?: string; master_local_id?: number; is_virtual_copy?: boolean };
 
@@ -152,6 +155,8 @@ export type CommandPayloads = {
   set_process_version: { photo_uuid: string; version: string; masked: boolean; confirm: true; snapshot_name: string };
   /** Issue #217 row 1 (plugin 1.6.0, MaskClean.lua): catalog:deleteAllEmptyMasks on the photo with that uuid, after a snapshot named snapshot_name ("AVG …"). */
   delete_empty_masks: { photo_uuid: string; snapshot_name: string };
+  /** Issue #217 (MaskControl.lua): one mask's local_* values through LrDevelopController on the selected photo, open in Develop (params\mask-controller.ts builds them). */
+  mask_controller: { target_uuid: string; mask_id: string; curves?: Array<{ param: string; points: number[] }>; swatches?: SwatchOp; read?: readonly string[]; expect?: Record<string, unknown> };
   /** Issue #214 (Snapshots.lua). */
   list_snapshots: { photo_uuid: string };
   delete_snapshot: { photo_uuid: string; snapshot_id: string };

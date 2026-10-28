@@ -41,7 +41,8 @@ import {
 import { summarize, type MaskSummary } from "./mask-summary.js";
 import { copiedSample, type CopySample } from "./mask-range.js";
 import { invertedCopy } from "./mask-copy.js";
-import { applyPointColors, precheckPointColors, type PointColorsOp } from "./mask-point-colors.js";
+import { precheckPointColors, type PointColorsOp } from "./mask-point-colors.js";
+import { checkCurves, type Curves } from "./mask-controller.js";
 
 export type { Geometry, Point } from "./mask-build.js";
 /** An edit: one mask's name, visibility, sliders, inversion and geometry; `combine` adds a part, `part` (1 = the first) edits one part (mask-combine.ts). */
@@ -58,8 +59,10 @@ export type EditOp = {
   remove_part?: true | undefined;
   /** With inverted: true, a new inverted copy of the mask; the mask itself stays (mask-copy.ts, issue #217 row 2). */
   copy?: true | undefined;
-  /** One change to the mask's Point Color swatches (mask-point-colors.ts, issue #217 row 4). */
+  /** One change to the mask's Point Color swatches (mask-point-colors.ts, issue #217 row 4), through LrDevelopController (controllerEdit). */
   point_colors?: PointColorsOp | undefined;
+  /** The mask's local curves to set (mask-controller.ts, issue #217 row 3), through LrDevelopController (controllerEdit). */
+  curves?: Curves | undefined;
 };
 /** A new mask; a colour range's `copy_sample_from` is resolved to its sample and point (withCopiedSample) before applyOp. */
 export type CreateOp = { op: "create"; kind: string; name?: string | undefined; geometry?: Geometry | undefined; point?: Point | undefined; sliders?: Record<string, number> | undefined; copy_sample_from?: CopySample | undefined };
@@ -139,10 +142,16 @@ export function precheck(op: MaskOp): void {
   precheckParts(op);
   if (op.copy) precheckCopy(op);
   if (op.point_colors) precheckPointColors(op.point_colors);
-  const fields = [op.name, op.active, op.inverted, op.geometry, op.sliders, op.combine, op.remove_part, op.point_colors];
-  if (fields.every((f) => f === undefined)) throw new MaskError("INVALID_ARGUMENTS", "Name at least one change: name, active, inverted, geometry, sliders, point_colors, combine or remove_part.");
+  if (op.curves) checkCurves(op.curves);
+  const fields = [op.name, op.active, op.inverted, op.geometry, op.sliders, op.combine, op.remove_part, op.point_colors, op.curves];
+  if (fields.every((f) => f === undefined)) throw new MaskError("INVALID_ARGUMENTS", "Name at least one change: name, active, inverted, geometry, sliders, point_colors, curves, combine or remove_part.");
+  const table = (["name", "active", "inverted", "geometry", "sliders", "combine", "part", "remove_part", "copy"] as const).filter((k) => op[k] !== undefined);
+  if (controllerEdit(op) && table.length > 0) throw new MaskError("INVALID_ARGUMENTS", `curves and point_colors go through Lightroom's Develop module, not with ${table.join(", ")}: make that change in its own lr_edit_mask call.`);
   if (op.sliders) storedSliders(op.sliders);
 }
+
+/** An edit of curves or Point Color, written through LrDevelopController (session\mask-controller.ts), not to the table. */
+export const controllerEdit = (op: MaskOp): op is EditOp => op.op === "edit" && (op.curves !== undefined || op.point_colors !== undefined);
 
 /** A copy takes inverted: true, and name and sliders for the copy; nothing that reshapes or names a part. */
 function precheckCopy(op: EditOp): void {
@@ -174,7 +183,6 @@ function edit(entries: Correction[], op: EditOp, frame: CropFrame): OpResult {
   if (!byPart && only && op.inverted !== undefined) Object.assign(only, { [M.inverted]: op.inverted }, only[M.what] === WHAT.radial ? { [RADIAL.flipped]: !op.inverted } : {});
   if (!byPart && only && op.geometry) Object.assign(only, geometryFields(String(componentKind(only)), op.geometry, only, frame));
   if (op.sliders) Object.assign(e, storedSliders(op.sliders));
-  if (op.point_colors) applyPointColors(e, op.point_colors);
   return { entries, id: op.mask_id, kind: before.kind, before, after: summarize(e, frame), ...(ai ? { ai } : {}) };
 }
 

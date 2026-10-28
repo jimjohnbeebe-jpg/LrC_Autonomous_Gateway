@@ -1,12 +1,15 @@
 // The MCP definitions of the Develop parity tools (issue #214; tools-develop.ts, tools-snapshots.ts): lr_apply_auto,
 // lr_reset, lr_set_process_version, lr_list_snapshots, lr_create_snapshot, lr_apply_snapshot, lr_delete_snapshot and
-// lr_create_virtual_copies. Upstream's names, for users of both: apply_auto_adjustments, reset_develop_adjustments,
-// set_process_version, list/create/apply/delete_develop_snapshot, create_virtual_copies [upstream claim: Automaat/
+// lr_create_virtual_copies; lr_set_develop_settings, lr_undo_last_step and lr_remove_photos (decisions D1-D3 of epic
+// #207; tools-remove.ts). Upstream's names, for users of both: apply_auto_adjustments, reset_develop_adjustments,
+// set_process_version, list/create/apply/delete_develop_snapshot, create_virtual_copies, set_develop_settings,
+// undo_last_step, remove_photos_from_catalog [upstream claim: Automaat/
 // lightroom-mcp 1040453, server\src\tool-contracts.ts].
 
 import { z } from "zod";
 import { TIMED, type ToolDef } from "./defs-shared.js";
-import { deleteEmptyMasks } from "./tools-develop.js";
+import { deleteEmptyMasks, setDevelopSettings, undoLastStep } from "./tools-develop.js";
+import { removePhotos } from "./tools-remove.js";
 
 const distinct = (list: readonly unknown[]): boolean => new Set(list).size === list.length;
 const uuids = (max: number) =>
@@ -37,6 +40,15 @@ const versionArgs = z.object({
 const listArgs = z.object({ uuid });
 const createArgs = z.object({ uuid, name: z.string().trim().min(1).max(200).describe('the snapshot\'s name; "AVG " is put in front unless it starts with it') });
 const snapshotArgs = z.object({ uuid, snapshot_id: snapshotId, confirm });
+const sdkSettingsArgs = z.object({
+  uuids: uuids(100),
+  settings: z
+    .record(z.string().min(1), z.union([z.number(), z.boolean(), z.array(z.number())]))
+    .refine((s) => Object.keys(s).length > 0, "settings must name at least one key")
+    .describe('Lightroom SDK key -> the value to set, absolute (e.g. {"Exposure2012": 0.5, "LensManualDistortionAmount": 10}); a point curve as [x0, y0, x1, y1, ...]'),
+});
+const undoArgs = z.object({ confirm: z.literal(true).describe("must be true: the user agreed to undo whatever Lightroom's last step is") });
+const removeArgs = z.object({ uuids: uuids(100), confirm: z.literal(true).describe("must be true: the user agreed to remove these photos from the catalog") });
 const copiesArgs = z.object({
   uuids: uuids(25),
   copy_name: z.string().trim().min(1).max(200).optional().describe("the name of each new copy (Lightroom's Copy Name); omitted, Lightroom names it"),
@@ -149,5 +161,49 @@ export const DEVELOP_DEFS: ToolDef[] = [
     schema: copiesArgs,
     annotations: WRITE,
     run: (tools, args) => tools.createVirtualCopies(args as z.infer<typeof copiesArgs>),
+  },
+  // Decisions D1-D3 of epic #207 [stated: Jim, 2026-10-28, "Go with recommendations"]; upstream's set_develop_settings,
+  // undo_last_step and remove_photos_from_catalog [upstream claim: Automaat/lightroom-mcp 1040453, tool-contracts.ts].
+  {
+    name: "lr_set_develop_settings",
+    title: "Set Develop settings by Lightroom key",
+    description:
+      "Set Develop settings on photos named by uuid by Lightroom's own SDK key names, as absolute values (lr_get_metadata raw: true shows a photo's). " +
+      "Only keys Lightroom reports for the photo's kind (raw or rendered) are taken, case-sensitive. A key the canonical names cover is checked as lr_step " +
+      "checks it (type and range; Temperature/Tint also set white balance Custom; a point curve on an HDR photo goes to its HDR key). Other number and " +
+      "true/false keys are written as given and listed in `unranged`: no range is known, so Lightroom decides. Text and table keys (profile, " +
+      "ProcessVersion, masks) are refused, named with the tool that sets them. Prefer lr_step in a session: this has no per-pass limits or clipping " +
+      "guard. Each photo is written as one History step \"AVG set develop settings …\" and read back; `status` set, or not_taken when Lightroom did " +
+      `not take a key as written (\`not_taken\`), and the photo was then put back from the snapshot. ${PER_PHOTO} ${TIMED}`,
+    schema: sdkSettingsArgs,
+    annotations: WRITE,
+    run: (tools, args) => tools.call(setDevelopSettings, args as z.infer<typeof sdkSettingsArgs>),
+  },
+  {
+    name: "lr_undo_last_step",
+    title: "Undo Lightroom's last step",
+    description:
+      "Undo exactly one step of Lightroom's own history (Edit > Undo). The history is Lightroom's, shared with the user and other plug-ins: this " +
+      "undoes whatever is last, which may not be an LrC-AVG change, and does not say what it was. Ask the user first and pass confirm: true. " +
+      "Refused while an edit session is open or one was left open (end it with lr_end_session; to undo a pass, use the session's own revert). " +
+      "Returns `undone` and `can_undo` (whether Lightroom has another step to undo).",
+    schema: undoArgs,
+    annotations: DESTRUCTIVE,
+    run: (tools, args) => tools.call(undoLastStep, args as z.infer<typeof undoArgs>),
+  },
+  {
+    name: "lr_remove_photos",
+    title: "Remove photos from the catalog",
+    description:
+      "Remove photos named by uuid (1-100) from the Lightroom catalog (Lightroom Classic 14.3 or later, else FEATURE_UNAVAILABLE). Their catalog edits " +
+      "and metadata are lost; the files stay on disk. Ask the user first and pass confirm: true. A master is refused unless every one of its virtual " +
+      "copies is named too (COPIES_NOT_INCLUDED, nothing removed). Lightroom shows the Library grid on All Photographs meanwhile, then its module, " +
+      "folder or collection and the surviving selection are put back; if Lightroom has not removed them within 10 s (it may be asking the user to " +
+      "confirm), `status` is failed and the grid stays on exactly those photos. Returns `removed`, `not_removed` and `missing` (uuids no photo has). " +
+      "Not while a session is open, and a photo a stopped session left open is refused. Variants copies the user did not pick can be removed " +
+      "this way after lr_end_session.",
+    schema: removeArgs,
+    annotations: DESTRUCTIVE,
+    run: (tools, args) => tools.call(removePhotos, args as z.infer<typeof removeArgs>),
   },
 ];

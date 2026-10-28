@@ -16,10 +16,9 @@ import { IntentLibrary } from "../intents/index.js";
 import { acquireInstanceLock, BridgeGate, devOverrides, ENGINE_VERSION, Tools } from "../mcp/index.js";
 import { SESSION_SILENCE_MS } from "../mcp/bridge-gate.js";
 import { DEVELOP_PLUGIN, settingChanges } from "../mcp/tools-develop.js";
-import type { ToolOutput } from "../mcp/tools-shared.js";
 import { loadDefaultParamMap, type SdkSettings } from "../params/index.js";
 import { PreviewService } from "../preview/index.js";
-import { CHECK_SNAPSHOTS, statusesOf, verdict, type Step } from "./develop-check.js";
+import { CHECK_SNAPSHOTS, step, verdict, type Step } from "./develop-check.js";
 import { ask } from "./mask-carry-probe.js";
 import { describeError } from "./phase1-check.js";
 import { redactHome } from "./phase2-check.js";
@@ -35,23 +34,6 @@ const QUESTIONS = [
 ];
 
 type Check = { tools: Tools; client: BridgeClient; say: (l: string) => void; r: Record<string, unknown>; steps: Step[]; uuids: string[]; before: Map<string, SdkSettings>; start: Map<string, string>; existing: Map<string, Set<string>> };
-
-/** One tool call as a step of the check; its result is kept under its name. Returns the result's JSON, or null. */
-async function step(c: Check, name: string, expect: string[], call: () => Promise<ToolOutput>, statuses = statusesOf): Promise<Record<string, unknown> | null> {
-  c.say(`${name} ...`);
-  try {
-    const { json } = await call();
-    const s: Step = { step: name, expect, statuses: statuses(json) };
-    c.steps.push(s);
-    (c.r["results"] as Record<string, unknown>)[name] = json;
-    c.say(`  ${s.statuses.join(", ")}`);
-    return json;
-  } catch (err) {
-    c.steps.push({ step: name, expect, statuses: [], error: describeError(err) });
-    c.say(`  failed: ${describeError(err)}`);
-    return null;
-  }
-}
 
 const settings = async (c: Check, uuid: string): Promise<SdkSettings> => (await c.client.request("get_settings", { photo_uuid: uuid })).settings;
 

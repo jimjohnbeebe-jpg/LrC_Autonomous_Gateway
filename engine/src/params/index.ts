@@ -39,6 +39,7 @@ export { CUSTOM_WHITE_BALANCE_PARAMS, ParamError, ParamMap, READBACK_TOLERANCE, 
 export type { CanonicalSettings, CanonicalValue, FromSdkResult, ReadbackMismatch, SdkSettings, WriteContext } from "./map.js";
 export { companionsBack, type CompanionsBack } from "./put-back.js";
 export { SdkKeyMap, UnknownSdkKeyError } from "./sdk-keys.js";
+export { sdkPassthrough, type Passthrough } from "./sdk-passthrough.js";
 export {
   AS_SHOT_WHITE_BALANCE,
   CAMERA_PROFILE_KEY,

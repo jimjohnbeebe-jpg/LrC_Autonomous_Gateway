@@ -52,6 +52,13 @@ From upstream at `1040453` (plugin 1.6.0, GitHub issue #217), rewritten, not cop
 | `MaskControl.lua` | `MaskSelection.lua`, `HandlerMaskCurves.lua`, `MaskCurves.lua`, `MaskSettle.lua` (commit `581ad7c`, #328) | Selecting a mask by id in Develop (listed by `getAllMasks`, Masking opened, `selectMask` again each second until it reads selected, the mask before put back); a local curve set with `setValue` and confirmed by `getValue` within 1, tried twice, every curve put back on a failure, `stopTracking(true)`, the wait for the photo's settings to change. Here the names and values come from the engine. |
 | `MaskSwatches.lua` | `HandlerMaskPointColors.lua`, `MaskPointColors.lua` (commit `581ad7c`, #328) | Point Color add, update, delete and clear through the `*PointColorSwatch` calls with `isForMasking`, each confirmed by `getValue("local_PointColors")` within 0.01, a swatch Lightroom did not keep deleted again or put back. Here the field names come from the engine. |
 
+From upstream at `1040453` (decisions D1-D3 of GitHub epic #207; issues #214, #218), rewritten, not copied:
+
+| File in this plugin | Derived from | What was taken |
+|---|---|---|
+| `DevelopTools.lua` (`setSettings`, `undoLastStep`) | `HandlerDevelop.lua` (`setDevelopSettings`), `HandlerUndo.lua` (`undoLastStep`) | Writing Develop settings by SDK key; one `LrUndo.undo()` behind `confirm`, answering `undone` and `can_undo`. |
+| `Remove.lua` | `HandlerRemoveFromCatalog.lua` (`removePhotos`, PR #424) | `LrSelection.removeFromCatalog` behind `confirm` and the 14.3 check, 100 photos at most, a master refused without all its virtual copies, the Library grid on All Photographs, the selection read back as exactly the photos before and the removal waited for after, the surviving selection put back. |
+
 The engine's derived files are listed in `engine\THIRD_PARTY_NOTICES.md`.
 
 ## Automaat/lightroom-mcp licence

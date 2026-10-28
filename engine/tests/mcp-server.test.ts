@@ -137,6 +137,10 @@ describe("mcp server", () => {
       "lr_export_metadata",
       "lr_set_ai_metadata",
       "lr_get_ai_metadata",
+      // Decisions D1-D3 of epic #207 (plugin 1.7.0).
+      "lr_set_develop_settings",
+      "lr_undo_last_step",
+      "lr_remove_photos",
     ].sort());
     const sync = tools.find((t) => t.name === "lr_sync_series");
     expect(sync?.inputSchema.required).toEqual(["source", "targets", "adaptive_exposure"]);

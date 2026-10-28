@@ -455,7 +455,7 @@
   {
     "name": "lr_select_variant",
     "title": "Pick a variant",
-    "description": "Variants mode: continue the session on the copy the user picked (ask the user; do not pick for them). The copy is selected in Lightroom, later lr_step calls go to it, and its pass count carries on from its own passes. The other copies stay in the catalog as they are; the user removes them in Lightroom when they want. Returns the pick, its passes left and its last preview. Also accepted before every copy has had its refined pass. Does not render. If the user already picked in the HUD, calling this with that letter confirms it (`picked_by: \"hud\"`); another letter is refused.",
+    "description": "Variants mode: continue the session on the copy the user picked (ask the user; do not pick for them). The copy is selected in Lightroom, later lr_step calls go to it, and its pass count carries on from its own passes. The other copies stay in the catalog as they are (after lr_end_session, lr_remove_photos can remove them if the user wants). Returns the pick, its passes left and its last preview. Also accepted before every copy has had its refined pass. Does not render. If the user already picked in the HUD, calling this with that letter confirms it (`picked_by: \"hud\"`); another letter is refused.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -3120,7 +3120,7 @@
   {
     "name": "lr_import_photos",
     "title": "Import photos into the catalog",
-    "description": "Import a photo file, or the photo files in a folder (raw, DNG, JPEG, TIFF, PNG, HEIC, PSD), into the Lightroom catalog: where they are, or copied first into copy_to (do that for a memory card). A file the catalog already holds at that path is not imported again (`already_in_catalog`, with its uuid); a photo imported earlier from another path is not recognised. Returns the uuids, each with its source file, its path in the catalog and capture_time, for lr_add_to_collection, lr_set_keywords and the other tools. No develop or metadata preset is passed to the import, and no tool can remove a photo from the catalog: the user does that in Lightroom (Library > Remove Photo). A call works for about 30 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling until `not_yet` is gone, and tell the user how far along it is. A call still busy at 50 seconds returns `pending` with `next`. Here `resume_after` comes with `not_yet`: pass it back to go on from the next file. Tell the user what will change before calling. Runs only between editing sessions. If Lightroom stops answering, the call stops and the error lists what was done.",
+    "description": "Import a photo file, or the photo files in a folder (raw, DNG, JPEG, TIFF, PNG, HEIC, PSD), into the Lightroom catalog: where they are, or copied first into copy_to (do that for a memory card). A file the catalog already holds at that path is not imported again (`already_in_catalog`, with its uuid); a photo imported earlier from another path is not recognised. Returns the uuids, each with its source file, its path in the catalog and capture_time, for lr_add_to_collection, lr_set_keywords and the other tools. No develop or metadata preset is passed to the import; lr_remove_photos removes photos from the catalog again. A call works for about 30 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling until `not_yet` is gone, and tell the user how far along it is. A call still busy at 50 seconds returns `pending` with `next`. Here `resume_after` comes with `not_yet`: pass it back to go on from the next file. Tell the user what will change before calling. Runs only between editing sessions. If Lightroom stops answering, the call stops and the error lists what was done.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -3490,6 +3490,119 @@
     "annotations": {
       "readOnlyHint": false,
       "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_set_develop_settings",
+    "title": "Set Develop settings by Lightroom key",
+    "description": "Set Develop settings on photos named by uuid by Lightroom's own SDK key names, as absolute values (lr_get_metadata raw: true shows a photo's). Only keys Lightroom reports for the photo's kind (raw or rendered) are taken, case-sensitive. A key the canonical names cover is checked as lr_step checks it (type and range; Temperature/Tint also set white balance Custom; a point curve on an HDR photo goes to its HDR key). Other number and true/false keys are written as given and listed in `unranged`: no range is known, so Lightroom decides. Text and table keys (profile, ProcessVersion, masks) are refused, named with the tool that sets them. Prefer lr_step in a session: this has no per-pass limits or clipping guard. Each photo is written as one History step \"AVG set develop settings …\" and read back; `status` set, or not_taken when Lightroom did not take a key as written (`not_taken`), and the photo was then put back from the snapshot. Each photo is made the active one in Develop in turn; Lightroom's module, folder or collection and selection are put back after each. Each photo's result names what `changed` (by setting name; by Lightroom's own key names, `names: \"sdk\"`, when the photo's process version is older than this engine reads), with the `snapshot` taken just before, which puts it back; `undo` says how. Not while a session is open, and a photo a stopped session left open is refused. A call works for about 30 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling until `not_yet` is gone, and tell the user how far along it is. A call still busy at 50 seconds returns `pending` with `next`.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-100 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "settings": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              }
+            ]
+          },
+          "description": "Lightroom SDK key -> the value to set, absolute (e.g. {\"Exposure2012\": 0.5, \"LensManualDistortionAmount\": 10}); a point curve as [x0, y0, x1, y1, ...]"
+        }
+      },
+      "required": [
+        "uuids",
+        "settings"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_undo_last_step",
+    "title": "Undo Lightroom's last step",
+    "description": "Undo exactly one step of Lightroom's own history (Edit > Undo). The history is Lightroom's, shared with the user and other plug-ins: this undoes whatever is last, which may not be an LrC-AVG change, and does not say what it was. Ask the user first and pass confirm: true. Refused while an edit session is open or one was left open (end it with lr_end_session; to undo a pass, use the session's own revert). Returns `undone` and `can_undo` (whether Lightroom has another step to undo).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "confirm": {
+          "type": "boolean",
+          "const": true,
+          "description": "must be true: the user agreed to undo whatever Lightroom's last step is"
+        }
+      },
+      "required": [
+        "confirm"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_remove_photos",
+    "title": "Remove photos from the catalog",
+    "description": "Remove photos named by uuid (1-100) from the Lightroom catalog (Lightroom Classic 14.3 or later, else FEATURE_UNAVAILABLE). Their catalog edits and metadata are lost; the files stay on disk. Ask the user first and pass confirm: true. A master is refused unless every one of its virtual copies is named too (COPIES_NOT_INCLUDED, nothing removed). Lightroom shows the Library grid on All Photographs meanwhile, then its module, folder or collection and the surviving selection are put back; if Lightroom has not removed them within 10 s (it may be asking the user to confirm), `status` is failed and the grid stays on exactly those photos. Returns `removed`, `not_removed` and `missing` (uuids no photo has). Not while a session is open, and a photo a stopped session left open is refused. Variants copies the user did not pick can be removed this way after lr_end_session.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-100 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "confirm": {
+          "type": "boolean",
+          "const": true,
+          "description": "must be true: the user agreed to remove these photos from the catalog"
+        }
+      },
+      "required": [
+        "uuids",
+        "confirm"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
       "idempotentHint": false,
       "openWorldHint": false
     }

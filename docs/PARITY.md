@@ -3,10 +3,10 @@
 LrC-AVG started as a fork of [Automaat/lightroom-mcp](https://github.com/Automaat/lightroom-mcp) (MIT, Marcin Skalski) and is meant as a **complement** to it: the same reach into the Lightroom Classic catalog under `lr_*` names, plus a guarded, measured edit loop that upstream does not have (epic #207, decision D7 recommends keeping the `lr_*` names and publishing this table [stated: issue #207 "Decisions needed from Jim", D7 is still open]).
 
 - Upstream compared: `Automaat/lightroom-mcp@1040453` (2026-10-26), **68 tools** [handle: `docs/parity/upstream-tools-1040453.txt`, extracted from upstream `server/src/tool-contracts.ts`; `docs/reports/phase10/AUTOMAAT_COMPARE_2026-10-26.md` section 1].
-- LrC-AVG: branch `phase-11/masks-217` (engine 1.5.0, before its version bump), **62 tools** [handle: `grep -ohE 'name: "lr_[a-z_]+"' engine/src/mcp/defs-*.ts | sort -u | wc -l` = 62; `TOOL_DEFS` in `engine/src/mcp/server.ts`].
+- LrC-AVG: branch `phase-11/develop-catalog-d1-d3` (engine 1.6.0, before its version bump), **65 tools** [handle: `grep -ohE 'name: "lr_[a-z_]+"' engine/src/mcp/defs-*.ts | sort -u | wc -l` = 65; `TOOL_DEFS` in `engine/src/mcp/server.ts`].
 - Kept current by `engine/tests/parity-map.test.ts`: it fails when a pinned upstream name has no row below, when a row names an `lr_` tool the server does not register, or when a registered tool is not named anywhere on this page. How to renew the pin: [`UPSTREAM_SYNC.md`](UPSTREAM_SYNC.md).
 
-Most rows marked `have` or `ours+` were added on this branch (#214-#218) and are tested against the simulated Lightroom only; whether each works in Lightroom is `[unverified]` until Jim's checks in [`reports/phase11/PARITY-BATCH1-CHECKS.md`](reports/phase11/PARITY-BATCH1-CHECKS.md) are observed.
+Most rows marked `have` or `ours+` were added on this branch (#214-#218) and are tested against the simulated Lightroom only; whether each works in Lightroom is `[unverified]` until Jim's checks in [`reports/phase11/PARITY-BATCH1-CHECKS.md`](reports/phase11/PARITY-BATCH1-CHECKS.md) are observed. The rows of decisions D1-D3 (`lr_set_develop_settings`, `lr_undo_last_step`, `lr_remove_photos`) are `[unverified]` in Lightroom until `npm run develop-catalog:check` ([`reports/phase11/DEVELOP-CATALOG-D123.md`](reports/phase11/DEVELOP-CATALOG-D123.md)).
 
 ## Status legend
 
@@ -46,11 +46,11 @@ Every `lr_*` write tool runs only when no edit session is open, and returns the 
 | `remove_keyword_subtree` | `lr_remove_keyword_subtree` | have | |
 | `list_keywords` | `lr_list_keywords` | have | The plugin keeps the walked tree 2 minutes, dropped on its own keyword writes; `refresh: true` reads it again (2026-10-28, PERF.md) |
 | `rename_keyword` | `lr_rename_keyword` | have | |
-| `undo_last_step` | none | decision D2 | Global undo against the Abort guarantee |
+| `undo_last_step` | `lr_undo_last_step` | have | `confirm: true`; refused while a session is open or left open (D2) |
 | `set_rating` | `lr_set_rating` | have | |
 | `set_flag` | `lr_set_flag` | have | |
 | `set_color_label` | `lr_set_color_label` | have | |
-| `remove_photos_from_catalog` | none | decision D3 | #218 row 10 waits for it |
+| `remove_photos_from_catalog` | `lr_remove_photos` | have | `confirm: true`, Lightroom Classic 14.3 or later, a master refused without all its virtual copies; unpicked Variants copies after `lr_end_session` (D3, #218 row 10) |
 | `import_photos` | `lr_import_photos` | have | Upstream's list of file types (#218 row 11) |
 | `export_photos` | `lr_export_photos` | have | |
 | `export_photo_metadata` | `lr_export_metadata` | have | |
@@ -61,7 +61,7 @@ Every `lr_*` write tool runs only when no edit session is open, and returns the 
 | `export_develop_preset` | `lr_export_preset` | have | |
 | `apply_develop_preset` | `lr_apply_preset` | ours+ | Snapshot per photo first, before/after values (#215) |
 | `copy_develop_settings` | `lr_sync_series` | ours+ | Snapshot per photo, optional brightness matching; masks are not carried yet (planned #217) |
-| `set_develop_settings` | `lr_step` (canonical names) | decision D1 | `lr_step` writes the canonical map with limits and guardrails; free SDK-key writes wait for D1 |
+| `set_develop_settings` | `lr_set_develop_settings`, `lr_step` (canonical names) | ours+ | Keys of the pinned dump only, the canonical ones range-checked; snapshot first, written in Develop, read back, put back when a key is not taken (D1). `lr_step` keeps the per-pass limits and clipping guard |
 | `set_process_version` | `lr_set_process_version` | have | `confirm: true`; a masked downgrade is skipped |
 | `create_virtual_copies` | `lr_create_virtual_copies` | have | |
 | `list_develop_snapshots` | `lr_list_snapshots` | ours+ | Marks LrC-AVG's snapshots and the session that needs one |
@@ -92,7 +92,7 @@ Every `lr_*` write tool runs only when no edit session is open, and returns the 
 | `get_mask_point_colors` | `lr_list_masks` | have | `point_colors` of each mask from the mask table; `live_mask_id` reads one mask's from Lightroom (#217) |
 | `combine_mask` | `lr_edit_mask` | have | `combine` add, subtract, intersect, in the forms checked in Lightroom |
 
-Count: 54 `have`, 9 `ours+`, 2 `planned` (#217: 1, #218: 1), 3 `decision` [handle: `engine/tests/parity-map.test.ts` pins these counts].
+Count: 56 `have`, 10 `ours+`, 2 `planned` (#217: 1, #218: 1) [handle: `engine/tests/parity-map.test.ts` pins these counts].
 
 ## LrC-AVG tools with no upstream counterpart
 
@@ -113,7 +113,7 @@ So both can be added in File > Plug-in Manager at once without a clash of id or 
 
 **Cautions** (all `[inference]`, none observed):
 
-- **Tool count.** With both servers on, the AI sees about 129 tools (68 + 61). Long tool lists cost context and make a wrong pick likelier; see issue #165 and decision D6.
+- **Tool count.** With both servers on, the AI sees about 133 tools (68 + 65). Long tool lists cost context and make a wrong pick likelier; see issue #165 and decision D6.
 - **Guardrails can be bypassed.** During an LrC-AVG edit session the AI could call upstream's `set_develop_settings`, `apply_develop_preset`, `reset_develop_adjustments` or `undo_last_step` on the same photo. Those writes do not pass LrC-AVG's limits, clipping checks or named History steps, and LrC-AVG's pass measurements would then describe settings it did not make. **Abort** still applies the `AVG pre-session …` snapshot.
 - **Two plug-ins moving the view.** Both switch Lightroom to Develop and change the selection for some tools (Denoise, Auto, snapshots, virtual copies). Two such calls at the same moment, one per server, could interleave.
 - **Private metadata is per plug-in.** Upstream's `aiScore`/`aiReason` and ours are separate fields under separate toolkit ids, so a score written by one server is not read by the other.
@@ -125,5 +125,4 @@ So both can be added in File > Plug-in Manager at once without a clash of id or 
 | Editing a photo with a look, measured passes, the HUD and Abort | LrC-AVG alone: turn the Automaat server off in the AI app for that chat (where each app keeps its server list: [`CLIENTS.md`](CLIENTS.md)) |
 | Search, keywords, collections, IPTC, ratings, import, export, presets, snapshots | Either; LrC-AVG returns the earlier values and an undo hint with each write |
 | One AI mask on many photos | Automaat, outside an LrC-AVG session, until the rest of #217 lands |
-| Raw SDK-key writes, global undo, removing photos from the catalog | Automaat, until Jim decides D1, D2 and D3 |
 | macOS | Automaat; LrC-AVG is Windows only (decision D4) |

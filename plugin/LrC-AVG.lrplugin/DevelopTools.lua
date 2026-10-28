@@ -1,4 +1,5 @@
--- Bridge commands apply_auto, reset_develop and set_process_version (issue #214): ports of upstream's
+-- Bridge commands apply_auto, reset_develop and set_process_version (issue #214), and set_develop_settings and
+-- undo_last_step (decisions D1 and D2 of epic #207, at the end of this file): ports of upstream's
 -- apply_auto_adjustments, reset_develop_adjustments and set_process_version [upstream claim: Automaat/lightroom-mcp
 -- 1040453, plugin\LightroomMCP.lrplugin\HandlerDevelop.lua:1055-1325; PRs #407, #410, #411], rewritten. One photo per
 -- command, named by photo_uuid; the engine loops over the photos, keeps the time budget, reads the settings before
@@ -17,9 +18,11 @@
 local LrDate = import 'LrDate'
 local LrDevelopController = import 'LrDevelopController'
 local LrTasks = import 'LrTasks'
+local LrUndo = import 'LrUndo'
 
 local Develop = require 'Develop'
 local DevelopSession = require 'DevelopSession'
+local Gate = require 'Gate'
 local Log = require 'Log'
 local Needs = require 'Needs'
 local Photos = require 'Photos'
@@ -177,6 +180,43 @@ function DevelopTools.setProcessVersion(payload)
         if confirmed then return { status = "changed", previous = previous, actual = actual, snapshot = snap } end
         return { status = "failed", previous = previous, actual = actual, snapshot = snap, reason = ok and "Lightroom did not show the new version" or tostring(err) }
     end)
+end
+
+-- set_develop_settings { photo_uuid, settings, history_name, snapshot_name } (decision D1, issue #214; upstream's
+-- set_develop_settings [upstream claim: HandlerDevelop.lua setDevelopSettings]): `settings` is an SDK table the
+-- engine validated against the pinned dump (engine\src\params\sdk-passthrough.ts), written with applyDevelopSettings
+-- as one History step on the photo active in Develop, since Lightroom checks a write only there [handle: LR_SDK_NOTES
+-- "Recorded in Phase 8 — 2026-10-09"]. The engine compares read_back and puts the photo back when a key was not taken.
+function DevelopTools.setSettings(payload)
+    if type(payload.settings) ~= "table" or next(payload.settings) == nil then return fail("bad_request", "settings must be a non-empty object") end
+    local historyName = payload.history_name
+    if type(historyName) ~= "string" or historyName:sub(1, 4) ~= "AVG " then return fail("bad_request", "history_name must start with 'AVG ' (PRD FR-4.4)") end
+    return run("set_develop_settings", payload, function(catalog, photo, uuid, snapshotName)
+        local snap, failed = snapshot(uuid, snapshotName)
+        if not snap then return failed end
+        if moved(catalog, photo) then return { status = "failed", reason = "another photo became active in Develop before the write; nothing was changed", snapshot = snap } end
+        local gated, busy = Gate.write(catalog, historyName, function() photo:applyDevelopSettings(payload.settings, historyName) end)
+        if not gated then return { status = "failed", reason = tostring(busy and busy.message), snapshot = snap } end
+        return { status = "set", snapshot = snap }
+    end)
+end
+
+-- undo_last_step { confirm = true } (decision D2, issue #214; upstream's undo_last_step [upstream claim:
+-- HandlerUndo.lua]): Lightroom's Edit > Undo, once. LrUndo.canUndo and LrUndo.undo are from SDK 6.0 [handle:
+-- API Reference\modules\LrUndo.html:363, :393]. The history is Lightroom's own, shared with the user and other
+-- plug-ins, so the engine refuses it while a session is open. What it undoes in Lightroom is [unverified] until
+-- Jim's `npm run develop-catalog:check`.
+function DevelopTools.undoLastStep(payload)
+    if payload.confirm ~= true then return fail("bad_request", "confirm must be true: Lightroom's undo history is shared with the user and other plug-ins") end
+    local present, unavailable = Needs.check("Undo", "6.0", "LrUndo.", LrUndo, { "canUndo", "undo" })
+    if not present then return nil, unavailable end
+    local could = LrUndo.canUndo() == true
+    if could then
+        local ok, err = LrTasks.pcall(LrUndo.undo)
+        if not ok then return fail("undo_failed", "LrUndo.undo: " .. tostring(err)) end
+    end
+    Log.info("undo_last_step: " .. (could and "undone" or "nothing to undo"))
+    return { undone = could, can_undo = LrUndo.canUndo() == true }
 end
 
 return DevelopTools

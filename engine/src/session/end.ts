@@ -128,8 +128,8 @@ function copiesJson(s: Session, outcome: FinishArgs["outcome"]): Record<string, 
   const copies = s.variants.map((v) => ({ id: v.id, label: v.label, uuid: v.uuid, copy_name: v.copy_name, picked: v.id === s.picked }));
   const note =
     outcome === "accept"
-      ? `The edit is kept on copy ${s.picked ?? "?"}. The other copies stay in the catalog as they are; the user removes them in Lightroom when they want.`
-      : "The master is back as it was before the session. The copies stay in the catalog with their edits; the user removes them in Lightroom when they want.";
+      ? `The edit is kept on copy ${s.picked ?? "?"}. The other copies stay in the catalog as they are; if the user wants them gone, lr_remove_photos with their uuids and confirm: true removes them (Lightroom Classic 14.3 or later).`
+      : "The master is back as it was before the session. The copies stay in the catalog with their edits; if the user wants them gone, lr_remove_photos with their uuids and confirm: true removes them (Lightroom Classic 14.3 or later).";
   return { copies, copies_note: note };
 }
 

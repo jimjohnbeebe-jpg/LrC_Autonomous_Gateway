@@ -591,7 +591,7 @@
           ]
         },
         "live_mask_id": {
-          "description": "a mask's id: also read its local curves and Point Color swatches as Lightroom's Develop module holds them (`live`). Goes through Lightroom's Develop module: the session's photo must be selected and open in Develop (NOT_IN_DEVELOP otherwise: ask the user to press D in Lightroom).",
+          "description": "a mask's id: also read its local curves and Point Color swatches as Lightroom's Develop module holds them (`live`). Goes through Lightroom's Develop module: the session's photo must be selected and open in Develop (NOT_IN_DEVELOP otherwise: ask the user to press D in Lightroom). Not yet checked in Lightroom [unverified]: look at the result.",
           "type": "string",
           "minLength": 1
         }
@@ -1590,7 +1590,7 @@
           "required": [
             "action"
           ],
-          "description": "one change to the mask's Point Color swatches (up to 8): add, update or delete one, or clear them all. lr_list_masks shows them as `point_colors`. Goes through Lightroom's Develop module: the session's photo must be selected and open in Develop (NOT_IN_DEVELOP otherwise: ask the user to press D in Lightroom). The result's controller.point_colors is what Lightroom then holds"
+          "description": "one change to the mask's Point Color swatches (up to 8): add, update or delete one, or clear them all. lr_list_masks shows them as `point_colors`. Goes through Lightroom's Develop module: the session's photo must be selected and open in Develop (NOT_IN_DEVELOP otherwise: ask the user to press D in Lightroom). Not yet checked in Lightroom [unverified]: look at the result. The result's controller.point_colors is what Lightroom then holds"
         },
         "curves": {
           "type": "object",
@@ -1660,7 +1660,7 @@
               "description": "[input, output] points, 2-32, whole numbers 0-255, inputs rising from 0 to 255; [[0, 0], [255, 255]] is flat"
             }
           },
-          "description": "the mask's own tone curve (the Masking panel's Curve), each channel given SET to these points (the others keep theirs): main, red, green, blue. A midtone lift: main [[0, 0], [128, 150], [255, 255]]. Goes through Lightroom's Develop module: the session's photo must be selected and open in Develop (NOT_IN_DEVELOP otherwise: ask the user to press D in Lightroom). lr_list_masks live_mask_id reads the current curves; the result's controller.curves is what Lightroom then holds"
+          "description": "the mask's own tone curve (the Masking panel's Curve), each channel given SET to these points (the others keep theirs): main, red, green, blue. A midtone lift: main [[0, 0], [128, 150], [255, 255]]. Goes through Lightroom's Develop module: the session's photo must be selected and open in Develop (NOT_IN_DEVELOP otherwise: ask the user to press D in Lightroom). Not yet checked in Lightroom [unverified]: look at the result. lr_list_masks live_mask_id reads the current curves; the result's controller.curves is what Lightroom then holds"
         }
       },
       "required": [

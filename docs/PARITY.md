@@ -86,9 +86,9 @@ Every `lr_*` write tool runs only when no edit session is open, and returns the 
 | `create_mask_batch` | none | planned #217 | One AI mask on many photos |
 | `create_people_mask` | `lr_create_mask` | have | People parts by kind; one-person kinds under check in #210 (`npm run masks:verify`); a mirrored photo refuses points and geometry until the same check |
 | `create_landscape_mask` | `lr_create_mask` | have | |
-| `set_mask_curves` | `lr_edit_mask` | have | `curves` main, red, green, blue as [input, output] points, through `LrDevelopController` on the photo open in Develop, each read back (#217) |
+| `set_mask_curves` | `lr_edit_mask` | have | `curves` main, red, green, blue as [input, output] points, through `LrDevelopController` on the photo open in Develop, each read back (#217); in Lightroom [unverified] until `docs/reports/phase11/MASK-CONTROLLER.md` |
 | `get_mask_curves` | `lr_list_masks` | have | `live_mask_id`: one mask's curves and swatches read through `LrDevelopController` (#217) |
-| `edit_mask_point_colors` | `lr_edit_mask` | have | `point_colors` add, update, delete or clear, through `LrDevelopController` on the photo open in Develop (#217; the mask-table route did not show in Lightroom) |
+| `edit_mask_point_colors` | `lr_edit_mask` | have | `point_colors` add, update, delete or clear, through `LrDevelopController` on the photo open in Develop (#217; the mask-table route did not show in Lightroom); in Lightroom [unverified] until `docs/reports/phase11/MASK-CONTROLLER.md` |
 | `get_mask_point_colors` | `lr_list_masks` | have | `point_colors` of each mask from the mask table; `live_mask_id` reads one mask's from Lightroom (#217) |
 | `combine_mask` | `lr_edit_mask` | have | `combine` add, subtract, intersect, in the forms checked in Lightroom |
 

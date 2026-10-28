@@ -21,7 +21,8 @@
 --   getDevelopSettings() at all is [unverified]).
 -- Refused before anything is written: Lightroom not in Develop (not_in_develop), a selected photo that is not
 -- target_uuid's (target_mismatch, Develop.target) or whose AI mask still computes (Pending.lua), no such mask
--- (mask_not_found), and a Lightroom without the Point Color calls (Needs.check, SDK 13.2 [handle: D:\Developer\
+-- (mask_not_found), a curve whose value before does not read (feature_unavailable: it could not be put back), and a
+-- Lightroom without the Point Color calls (Needs.check, SDK 13.2 [handle: D:\Developer\
 -- LightRoom Classic Dev Kit\API Reference\modules\LrDevelopController.html, addPointColorSwatch and the four calls
 -- beside it, "First supported in version 13.2"]). The mask calls are SDK 11.0 and getValue/setValue 6.0 (same page),
 -- below LrSdkMinimumVersion 13.0 (Needs.lua). The reference documents setValue's value as a number; a curve as a flat
@@ -162,6 +163,13 @@ local function apply(payload, params, catalog, photo, uuid)
     local settingsBefore = Develop.readSettings(catalog, photo)
     local curves = type(payload.curves) == "table" and payload.curves or {}
     local written, swatched, index = {}, false, nil
+    -- A curve whose value before does not read could not be put back: refused before anything is written, as upstream
+    -- does [upstream claim: HandlerMaskCurves.lua applyToSelectedMask, "cannot be read ... nothing was written"].
+    for _, c in ipairs(curves) do
+        if type(before[c.param]) ~= "table" then
+            return fail("feature_unavailable", "Lightroom gives no " .. c.param .. " for mask " .. mask .. ", so it could not be put back; nothing was written", true)
+        end
+    end
     local ok, why = LrTasks.pcall(function()
         for _, c in ipairs(curves) do
             if not sameCurve(before[c.param], c.points) then
@@ -186,17 +194,19 @@ local function apply(payload, params, catalog, photo, uuid)
     end)
     if not ok then
         why = tostring(why)
-        for i = #written, 1, -1 do
+        -- setValue acts on the selected mask: with another one selected, putting back would write onto that mask.
+        local onMask = selectedMask() == mask
+        for i = onMask and #written or 0, 1, -1 do
             local p = written[i]
             if type(before[p]) == "table" and (not payload.swatches or p ~= payload.swatches.param) then LrTasks.pcall(LrDevelopController.setValue, p, copy(before[p])) end
         end
-        if swatched then
+        if swatched and onMask then
             local param = payload.swatches.param
             local list = type(before[param]) == "table" and before[param] or {}
             LrTasks.pcall(function() MaskSwatches.edit({ param = param, action = "set", list = list }, MaskSwatches.readList(param)) end)
         end
         Log.warn("mask_controller: " .. uuid .. " " .. mask .. ": " .. why)
-        local back = #written > 0 and "; what was written was put back" or "; nothing was written"
+        local back = #written == 0 and "; nothing was written" or onMask and "; what was written was put back" or "; another mask is selected, so what was written was NOT put back"
         if why:sub(1, #REFUSED) == REFUSED then return fail("invalid_arguments", why:sub(#REFUSED + 1) .. back) end
         return fail("write_not_taken", why .. back)
     end
@@ -221,9 +231,12 @@ function MaskControl.run(payload)
     if not (okModule and module == "develop") then
         return fail("not_in_develop", "Mask curves and Point Color work on the photo open in Lightroom's Develop module, and Lightroom shows " .. tostring(module) .. ": press D in Lightroom, then try again", true)
     end
-    local catalog, photo, uuid, err = Develop.writeTarget({ target_uuid = payload.target_uuid })
-    if err then return nil, err end
+    -- Under the selection lock, so no other command changes the selection between this check and the writes (a virtual
+    -- copy starts with its master's masks, ids included [inference: LR_SDK_NOTES "Recorded in Phase 4", each copy
+    -- started with the master's develop settings, 0 differing], so getAllMasks alone would not catch the switch).
     return Catalog.exclusive("mask_controller", function()
+        local catalog, photo, uuid, err = Develop.writeTarget({ target_uuid = payload.target_uuid })
+        if err then return nil, err end
         return withMask(payload.mask_id, function() return apply(payload, params, catalog, photo, uuid) end)
     end)
 end

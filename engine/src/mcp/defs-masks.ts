@@ -59,7 +59,7 @@ const sliders = z
   .describe(`local slider -> the value to SET (not a change), in the Masking panel's units: ${[...LOCAL_PARAMS].map(([k, p]) => `${k} ${p.min}..${p.max}`).join(", ")}`);
 // Issue #217 rows 3 and 4 (params\mask-controller.ts, session\mask-controller.ts): curves and Point Color go through
 // LrDevelopController on the photo open in Develop; in Lightroom [unverified] until `npm run masks:parity` (part controller).
-const DEVELOP_NOTE = "Goes through Lightroom's Develop module: the session's photo must be selected and open in Develop (NOT_IN_DEVELOP otherwise: ask the user to press D in Lightroom).";
+const DEVELOP_NOTE = "Goes through Lightroom's Develop module: the session's photo must be selected and open in Develop (NOT_IN_DEVELOP otherwise: ask the user to press D in Lightroom). Not yet checked in Lightroom [unverified]: look at the result.";
 const edges = z.array(unit).length(4).describe("[a, b, c, d] in 0-1, each at least the one before: fully selected from b to c, fading to nothing at a and d");
 const shift = z.number().min(-1).max(1);
 const swatch = z

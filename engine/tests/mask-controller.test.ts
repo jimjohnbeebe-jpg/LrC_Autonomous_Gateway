@@ -132,9 +132,15 @@ describe("plugin: mask_controller is a thin adapter", () => {
   it("refuses outside Develop and checks the photo and its AI masks before it selects the mask", () => {
     const code = codeOnly(lua("MaskControl.lua"));
     const run = code.slice(code.indexOf("function MaskControl.run("));
-    const order = ["Needs.check(", "getCurrentModuleName", "Develop.writeTarget(", "Catalog.exclusive(", "withMask("].map((s) => run.indexOf(s));
+    const order = ["Needs.check(", "getCurrentModuleName", "Catalog.exclusive(", "Develop.writeTarget(", "withMask("].map((s) => run.indexOf(s));
     expect(order.every((i, n) => i > 0 && (n === 0 || i > (order[n - 1] as number)))).toBe(true);
     expect(code).toMatch(/DevelopSession\.flush\(true\)/);
+    // A curve that does not read before is refused before the writes; a put-back happens only on the mask still selected.
+    const apply = code.slice(code.indexOf("local function apply("), code.indexOf("function MaskControl.run("));
+    const refuse = apply.indexOf('if type(before[c.param]) ~= "" then');
+    expect(refuse).toBeGreaterThan(0);
+    expect(refuse).toBeLessThan(apply.indexOf("LrTasks.pcall(function()"));
+    expect(apply).toMatch(/local onMask = selectedMask\(\) == mask/);
   });
 });
 

@@ -68,7 +68,8 @@ export async function applyController(ctx: SessionContext, s: Session, t: Target
       actions.push({ kind: "reverted", limit: breach.limit, reason: breach.reason, history_name: null, changes: {}, metrics_after: metricsOf(rendered.metrics) });
     } catch (err) {
       const e = toToolError(err);
-      if (!["WRITE_NOT_TAKEN", "INVALID_ARGUMENTS"].includes(e.code)) throw err;
+      // The plugin's refusals before it writes: the undo did not happen and the pass's change stays, so the pass is reported, not lost.
+      if (!["WRITE_NOT_TAKEN", "INVALID_ARGUMENTS", "FEATURE_UNAVAILABLE", "NOT_IN_DEVELOP", "TARGET_MISMATCH", "MASK_NOT_FOUND"].includes(e.code)) throw err;
       actions.push({ kind: "unmet", limit: breach.limit, reason: `${breach.reason}; the undo through Lightroom's Develop module did not take (${e.message}), so the mask change stays`, history_name: null, changes: {}, metrics_after: metricsOf(rendered.metrics) });
     }
   }

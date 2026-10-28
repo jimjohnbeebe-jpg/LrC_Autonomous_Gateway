@@ -1,8 +1,8 @@
 ---
 report: PERF
 phase: "11"
-status: template
-authored_by: "Claude Code (purpose, harness, steps); Jim (the runs, Observed)"
+status: observed
+authored_by: "Claude Code (purpose, harness, steps; Observed and Numbers copied from the results file, 2026-10-27); Jim (the runs)"
 date: 2026-10-27
 ---
 
@@ -39,7 +39,12 @@ Do these twice: once now (label `baseline`), and once after the PR that speeds u
 
 ## Observed
 
-(Blank. Jim's runs.)
+### Baseline, 2026-10-27
+
+Jim ran `npm run perf:check -- --label baseline` and said "done" [stated: Jim, 2026-10-27, "npm run perf:check -- --label baseline done."]. The results file says `headline: WORKED`, 20 timed runs per call after 2 warm-ups, no call failed [handle: `docs\reports\phase11\PERF\baseline\perf_baseline_2026-10-28T02-11-00-711Z.json`]. Claude Code copied that file into the repo; the figures below are from it.
+
+- Engine 1.5.0, plugin 1.5.0, Lightroom Classic 15.6, Node v24.11.1.
+- `search_photos` with no filter counted 18,621 photos (`catalog_matches`). 4,588 photos were selected, not 1,000; `get_selection` timed the 500 it returns.
 
 ## Numbers
 
@@ -47,15 +52,26 @@ Do these twice: once now (label `baseline`), and once after the PR that speeds u
 
 | Call | p50 ms | p95 ms | failed | note |
 |---|---|---|---|---|
-| ping | | | | |
-| search_photos (no filter) | | | | |
-| search_photos (filtered) | | | | |
-| get_metadata | | | | |
-| get_selection (max 500) | | | | |
-| list_keywords | | | | |
+| ping | 0.3 | 0.4 | 0 | bridge round trip |
+| search_photos (no filter) | 250.8 | 329.2 | 0 | limit 100 of 18,621 |
+| search_photos (filtered) | 255.6 | 351.2 | 0 | rating == 0, limit 100 |
+| get_metadata | 70.5 | 108.0 | 0 | first photo of the search |
+| get_selection (max 500) | 1255.4 | 1349.1 | 0 | 4,588 selected, 500 returned |
+| list_keywords | 10786.0 | 11035.1 | 0 | limit 100 |
 
-Plugin version, Lightroom version, catalog size, photos selected: (blank).
+Plugin 1.5.0, Lightroom Classic 15.6, 18,621 photos in the catalog (`search_photos` count), 4,588 selected [handle: `docs\reports\phase11\PERF\baseline\perf_baseline_2026-10-28T02-11-00-711Z.json`].
 
 ### After
 
 (Same table; blank until the speed-up PR is merged and the harness rerun with `--label after`.)
+
+## Verdict
+
+(Jim's, after the After run. The baseline alone has no verdict.)
+
+## Consequences / open questions
+
+- `list_keywords` is the slowest call by far: about 10.8 s for a page of 100. The handler walks the whole keyword tree (`KeywordTree.walk`) before it takes the page [handle: `plugin\LrC-AVG.lrplugin\Library.lua:164-173`], so its time likely grows with the size of the tree, not the page [inference]. The size of Jim's keyword tree was not recorded. #212 Work 2 already lists `KeywordTree.lua` among the reads to batch [handle: issue #212 body, "Work" item 2].
+- `get_selection` takes about 1.26 s for 500 photos (about 2.5 ms a photo) [handle: the results file above]. #212 puts the cost in per-photo SDK getter calls and their per-call overhead, and Work 2 converts `Library.lua` and `Photos.lua` to batch reads [handle: issue #212 body].
+- `search_photos` takes about 250 ms whether or not it filters, with a limit of 100 of 18,621 [handle: the results file above].
+- The After run (`--label after`) waits for the #212 speed-up PR.

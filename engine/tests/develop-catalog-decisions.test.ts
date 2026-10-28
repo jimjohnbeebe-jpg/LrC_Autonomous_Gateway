@@ -122,7 +122,8 @@ describe("lr_set_develop_settings (D1)", () => {
 
   it("refuses an unknown key for the photo before sending, and refuses during a session and with an older plugin", async () => {
     const out = await tools.call(setDevelopSettings, { uuids: [lr.uuid], settings: { NotAKey: 1 } });
-    expect(out.json["failed"]).toEqual([expect.objectContaining({ uuid: lr.uuid, code: "UNKNOWN_PARAMETER" })]);
+    expect(out.json["failed"]).toEqual([expect.objectContaining({ uuid: lr.uuid, code: "UNKNOWN_PARAMETER", message: expect.not.stringContaining("lr_get_active_photo_context") })]);
+    expect(JSON.stringify(out.json["failed"])).toContain("lr_get_metadata with raw: true");
     vi.spyOn(client, "hello").mockReturnValueOnce({ ...(client.hello() as HelloResult), plugin_version: "1.6.0" });
     expect((await fails(tools.call(setDevelopSettings, { uuids: [lr.uuid], settings: { Exposure2012: 0.5 } }))).code).toBe("PLUGIN_TOO_OLD");
     await tools.beginSession({ intent_id: "test_plain", return_image: "none" });

@@ -11,7 +11,10 @@
 --      Library grid on All Photographs and selects the photos [upstream claim: HandlerRemoveFromCatalog.lua];
 --   3. removes only when the selection reads back as exactly those photos, Library is still the module and the lock
 --      is still held, then waits until none of them is found;
---   4. puts back the module, the sources and the selection's surviving photos (DevelopSession.restoreView).
+--   4. puts back the module, the sources and the selection's surviving photos (DevelopSession.restoreView), except
+--      when removeFromCatalog ran and the photos are still there: the grid then stays on exactly those photos, so a
+--      confirm dialog Lightroom may be showing removes only them, never the user's own selection put back [inference:
+--      removeFromCatalog acts on the selection, LrSelection.html:641-643; whether Lightroom asks is unverified, below].
 -- Files stay on disk [upstream claim: tool-contracts.ts remove_photos_from_catalog]. Whether Lightroom asks the user
 -- first is [unverified] (LR_SDK_NOTES "Recorded in Phase 8.5 — 2026-10-12") until Jim's `npm run develop-catalog:check`.
 
@@ -101,7 +104,7 @@ local function copiesLeft(catalog, photos, uuidOf)
     return nil
 end
 
--- Steps 2-3 under the lock; returns { status, reason? } and the photos left.
+-- Steps 2-3 under the lock; returns { status, reason? }, the photos left, and true when the selection must stay (step 4).
 local function removeSelected(catalog, photos, owns)
     LrApplicationView.switchToModule("library")
     LrApplicationView.gridView()
@@ -116,7 +119,7 @@ local function removeSelected(catalog, photos, owns)
     LrSelection.removeFromCatalog()
     local gone = DevelopSession.waitFor(function() return #surviving(catalog, photos) == 0 end, GONE_SECONDS)
     if gone then return { status = "removed" }, {} end
-    return { status = "failed", reason = "Lightroom did not remove every photo within " .. GONE_SECONDS .. " s; check the catalog before trying again" }, surviving(catalog, photos)
+    return { status = "failed", reason = "Lightroom did not remove every photo within " .. GONE_SECONDS .. " s (it may be asking to confirm); the Library grid stays on these photos so that a confirm removes only them; check the catalog before trying again" }, surviving(catalog, photos), true
 end
 
 function Remove.photos(payload)
@@ -133,12 +136,14 @@ function Remove.photos(payload)
     if refused then return nil, refused end
     local result, busy = Catalog.exclusive("remove_photos", function(owns)
         local view = DevelopSession.captureView(catalog)
-        local ok, answer, left = LrTasks.pcall(removeSelected, catalog, photos, owns)
-        local kept = surviving(catalog, view.selection or {})
-        local keep = idSet(kept)
-        view.active = (view.active and keep[view.active.localIdentifier]) and view.active or kept[1]
-        view.selection = #kept > 0 and kept or nil
-        DevelopSession.restoreView(catalog, view, true)
+        local ok, answer, left, stay = LrTasks.pcall(removeSelected, catalog, photos, owns)
+        if not (ok and stay) then
+            local kept = surviving(catalog, view.selection or {})
+            local keep = idSet(kept)
+            view.active = (view.active and keep[view.active.localIdentifier]) and view.active or kept[1]
+            view.selection = #kept > 0 and kept or nil
+            DevelopSession.restoreView(catalog, view, true)
+        end
         if not ok then error(answer, 0) end
         local leftIds = idSet(left)
         answer.removed, answer.not_removed = {}, {}

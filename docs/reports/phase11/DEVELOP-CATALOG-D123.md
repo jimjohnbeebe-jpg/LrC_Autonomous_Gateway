@@ -70,7 +70,7 @@ If a step stops the run, the check still removes its own copies and says so ("pu
 
 - If it says "reload the LrC-AVG plugin": do step 3 again, then step 5.
 - If it says "select ONE raw photo": select exactly one photo in the Library grid, then step 5 again.
-- If Lightroom shows a dialog asking to confirm removing photos: click Remove (the check selects only its own three copies before it asks Lightroom to remove). Let the run finish, answer n to question 2, then tell Claude Code "done".
+- If Lightroom shows a dialog asking to confirm removing photos: click Remove (the check selects only its own three copies before it asks Lightroom to remove, and if the dialog is still open after 10 s the grid stays on those copies). Let the run finish, answer n to questions 1 and 2, then tell Claude Code "done".
 - If Lightroom shows any other dialog: close it, let the run finish, answer n to question 2, then tell Claude Code "done".
 - If it says "put back: NO": in the Library grid (All Photographs), select the copies named "AVG develop-catalog-check A", "B" and "C", choose Photo > Remove Photos..., then Remove. Then tell Claude Code "done".
 

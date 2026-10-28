@@ -127,6 +127,16 @@ export function setProcessVersion(ctx: ToolContext, args: ProcessVersionArgs, bu
   );
 }
 
+/** sdkPassthrough, with an unknown key's hint pointing at the SDK keys, not at the canonical names toToolError names. */
+function passthrough(...a: Parameters<typeof sdkPassthrough>): ReturnType<typeof sdkPassthrough> {
+  try {
+    return sdkPassthrough(...a);
+  } catch (err) {
+    if (!(err instanceof ParamError) || err.code !== "unknown_parameter") throw err;
+    throw new ToolError("UNKNOWN_PARAMETER", `${err.message}; nothing was written to the photo. lr_get_metadata with raw: true lists its keys.`, false, { parameter: err.parameter });
+  }
+}
+
 /**
  * Decision D1 of epic #207 (issue #214): Develop settings by Lightroom's SDK key, validated against the pinned dump
  * (params\sdk-passthrough.ts), written as one named History step on the photo active in Develop (DevelopTools.lua
@@ -138,7 +148,7 @@ export function setDevelopSettings(ctx: ToolContext, args: SetDevelopSettingsArg
   const need = { plugin: DECISIONS_PLUGIN, why: "it has the set_develop_settings command" };
   return developTool(ctx, "lr_set_develop_settings", args, args.uuids, "pre-set", budget, async (uuid, before, name) => {
     const view = map.fromSdk(before); // a legacy or unknown process version is refused here, nothing sent
-    const { sdk, unranged } = sdkPassthrough(map, args.settings, { processVersion: view.process_version, pipeline: view.pipeline, hdr: view.hdr });
+    const { sdk, unranged } = passthrough(map, args.settings, { processVersion: view.process_version, pipeline: view.pipeline, hdr: view.hdr });
     const history_name = `AVG set develop settings ${name.slice(-6)}`;
     const r = await client.request("set_develop_settings", { photo_uuid: uuid, settings: sdk, history_name, snapshot_name: name }, timeout);
     const extra = { history_name, ...(unranged.length > 0 ? { unranged } : {}) };

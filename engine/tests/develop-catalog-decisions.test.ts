@@ -76,7 +76,7 @@ const leftOpen = (uuid: string, variants: string[] = []): LeftOpen[] =>
 
 describe("params: sdkPassthrough (D1)", () => {
   it("checks a key the canonical map holds by its range and writes it as the map does", () => {
-    expect(sdkPassthrough(map, { Exposure2012: 0.5, Temperature: 5600 }, raw)).toEqual({ sdk: { Exposure2012: 0.5, Temperature: 5600, WhiteBalance: "Custom" }, unranged: [] });
+    expect(sdkPassthrough(map, { Exposure2012: 0.5, Temperature: 5600 }, raw)).toEqual({ sdk: { Exposure2012: 0.5, Temperature: 5600, WhiteBalance: "Custom" }, unranged: [], raw: [] });
     expect(paramCode(() => sdkPassthrough(map, { Exposure2012: 9 }, raw))).toMatch(/^out_of_range: exposure = 9 is outside -5\.\.5/);
     // On a photo in HDR edit mode a point curve goes to its extended key (canonical.ts "Point curves").
     expect(sdkPassthrough(map, { ToneCurvePV2012: [0, 0, 255, 255] }, { ...raw, hdr: true }).sdk).toEqual({ ExtendedToneCurvePV2012: [0, 0, 255, 255] });
@@ -87,6 +87,7 @@ describe("params: sdkPassthrough (D1)", () => {
     expect(sdkPassthrough(map, { LensManualDistortionAmount: 10, AutoLateralCA: 1, EnableGrayscaleMix: false }, raw)).toEqual({
       sdk: { LensManualDistortionAmount: 10, AutoLateralCA: 1, EnableGrayscaleMix: false },
       unranged: ["LensManualDistortionAmount"], // AutoLateralCA is lens.ca_remove, a canonical switch
+      raw: ["LensManualDistortionAmount", "EnableGrayscaleMix"],
     });
     expect(paramCode(() => sdkPassthrough(map, { LensManualDistortionAmount: true }, raw))).toMatch(/^wrong_type: LensManualDistortionAmount takes a finite number/);
     expect(paramCode(() => sdkPassthrough(map, { EnableGrayscaleMix: 1 }, raw))).toMatch(/^wrong_type: EnableGrayscaleMix takes a true or false/);
@@ -110,6 +111,13 @@ describe("lr_set_develop_settings (D1)", () => {
     expect(p).toMatchObject({ photo_uuid: lr.uuid, settings: { Exposure2012: 0.5, LensManualDistortionAmount: 10 }, snapshot_name: expect.stringMatching(/^AVG pre-set [0-9a-f]{6}$/) });
     expect(p?.["history_name"]).toBe(`AVG set develop settings ${String(p?.["snapshot_name"]).slice(-6)}`);
     expect(photo0(out)).toMatchObject({ status: "set", unranged: ["LensManualDistortionAmount"], changed: { exposure: { before: 0, after: 0.5 } } });
+  });
+
+  it("names a changed key that no canonical name reads by its SDK key (Greptile, PR #249)", async () => {
+    Object.assign(lr.settingsOf(lr.uuid), { LensManualDistortionAmount: 0 });
+    const out = await tools.call(setDevelopSettings, { uuids: [lr.uuid], settings: { LensManualDistortionAmount: 10 } });
+    expect(photo0(out)).toMatchObject({ status: "set", changed: { LensManualDistortionAmount: { before: 0, after: 10 } } });
+    expect(photo0(out)).not.toHaveProperty("compare");
   });
 
   it("puts the photo back from the snapshot when Lightroom did not take a key as written", async () => {

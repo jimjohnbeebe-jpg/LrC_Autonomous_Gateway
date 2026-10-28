@@ -33,11 +33,14 @@ export type Changes = { names: "canonical" | "sdk"; changed: Record<string, { be
 /**
  * What differs between two getDevelopSettings() tables: by canonical name (and the mask count), or by SDK key when
  * the map refuses to read one of them (a legacy process version, an unknown pipeline: params\map.ts fromSdk).
+ * `sdkKeys` are compared by SDK key too: keys no canonical name reads (lr_set_develop_settings's `raw`).
  */
-export function settingChanges(map: ParamMap, before: SdkSettings, after: SdkSettings): Changes {
+export function settingChanges(map: ParamMap, before: SdkSettings, after: SdkSettings, sdkKeys: readonly string[] = []): Changes {
   try {
     const [b, a] = [map.fromSdk(before), map.fromSdk(after)];
-    const changed = Object.fromEntries(differingSettings(b.settings, a.settings).map((k) => [k, { before: b.settings[k] ?? null, after: a.settings[k] ?? null }]));
+    const pick = (s: SdkSettings): SdkSettings => Object.fromEntries(sdkKeys.map((k) => [k, s[k]]));
+    const diff = (x: SdkSettings, y: SdkSettings) => differingSettings(x, y).map((k) => [k, { before: x[k] ?? null, after: y[k] ?? null }]);
+    const changed = Object.fromEntries([...diff(b.settings, a.settings), ...diff(pick(before), pick(after))]);
     const masks = b.masks.fingerprint === a.masks.fingerprint ? {} : { masks: { before: b.masks.count, after: a.masks.count } };
     return { names: "canonical", changed, ...masks };
   } catch (err) {
@@ -56,7 +59,8 @@ export function leftOpenOn(ctx: ToolContext, uuid: string): { session_id: string
 export const leftOpenReason = (sessionId: string): string =>
   `session ${sessionId} was left open on this photo by an engine that stopped; end it with lr_end_session first (lr_get_active_photo_context lists it)`;
 
-type Answer = { uuid: string; status: string; reason?: string | undefined; snapshot?: { id: string; name: string } | undefined; read_back: SdkSettings; ms: number } & Record<string, unknown>;
+/** `compare`: SDK keys `changed` names as well (settingChanges `sdkKeys`). */
+type Answer = { uuid: string; status: string; reason?: string | undefined; snapshot?: { id: string; name: string } | undefined; read_back: SdkSettings; ms: number; compare?: string[] | undefined } & Record<string, unknown>;
 type Outcome = Record<string, unknown> & { uuid: string; status: string };
 
 /** Each photo in the budget: refused when a session was left open on it, else its settings read, `send`, and what changed. */
@@ -68,8 +72,8 @@ async function eachPhoto(ctx: ToolContext, uuids: string[], budget: Budget, send
     const before = (await ctx.deps.client.request("get_settings", { photo_uuid: uuid })).settings;
     ctx.deps.allowQuiet?.();
     try {
-      const { read_back, ...answer } = await send(uuid, before);
-      photos.push({ ...answer, ...settingChanges(ctx.deps.map, before, read_back) });
+      const { read_back, compare, ...answer } = await send(uuid, before);
+      photos.push({ ...answer, ...settingChanges(ctx.deps.map, before, read_back, compare) });
     } finally {
       ctx.deps.allowQuiet?.();
     }
@@ -148,10 +152,10 @@ export function setDevelopSettings(ctx: ToolContext, args: SetDevelopSettingsArg
   const need = { plugin: DECISIONS_PLUGIN, why: "it has the set_develop_settings command" };
   return developTool(ctx, "lr_set_develop_settings", args, args.uuids, "pre-set", budget, async (uuid, before, name) => {
     const view = map.fromSdk(before); // a legacy or unknown process version is refused here, nothing sent
-    const { sdk, unranged } = passthrough(map, args.settings, { processVersion: view.process_version, pipeline: view.pipeline, hdr: view.hdr });
+    const { sdk, unranged, raw } = passthrough(map, args.settings, { processVersion: view.process_version, pipeline: view.pipeline, hdr: view.hdr });
     const history_name = `AVG set develop settings ${name.slice(-6)}`;
     const r = await client.request("set_develop_settings", { photo_uuid: uuid, settings: sdk, history_name, snapshot_name: name }, timeout);
-    const extra = { history_name, ...(unranged.length > 0 ? { unranged } : {}) };
+    const extra = { history_name, compare: raw, ...(unranged.length > 0 ? { unranged } : {}) };
     const not_taken = r.status === "set" ? map.verifyReadback(sdk, r.read_back) : [];
     if (not_taken.length === 0 || !r.snapshot) return { ...r, ...extra };
     const back = await client.request("apply_snapshot", { photo_uuid: uuid, snapshot_id: r.snapshot.id, restore_view: true }, timeout);

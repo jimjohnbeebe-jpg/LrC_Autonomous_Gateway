@@ -30,7 +30,8 @@ const ELSEWHERE: Readonly<Record<string, string>> = {
   [MASK_TABLE_KEY]: "the mask tools (lr_create_mask, lr_edit_mask)",
 };
 
-export type Passthrough = { sdk: SdkSettings; unranged: string[] };
+/** `raw`: the keys written as given, not through a canonical name (the map does not read them back: settingChanges). */
+export type Passthrough = { sdk: SdkSettings; unranged: string[]; raw: string[] };
 
 /** The canonical name whose SDK key `key` is on this photo's pipeline (either curve key), or undefined. */
 function canonicalOf(map: ParamMap, key: string, context: WriteContext): string | undefined {
@@ -42,6 +43,7 @@ export function sdkPassthrough(map: ParamMap, settings: Readonly<Record<string, 
   checkProcessVersion(context.processVersion);
   const out: SdkSettings = {};
   const unranged: string[] = [];
+  const raw: string[] = [];
   const named = new Map<string, string>();
   for (const [key, value] of Object.entries(settings)) {
     let type;
@@ -67,7 +69,8 @@ export function sdkPassthrough(map: ParamMap, settings: Readonly<Record<string, 
       throw new ParamError("wrong_type", `${key} takes a ${type === "number" ? "finite number" : "true or false"}, got ${JSON.stringify(value)}`, key);
     }
     out[key] = value;
+    raw.push(key);
     if (type === "number") unranged.push(key);
   }
-  return { sdk: out, unranged };
+  return { sdk: out, unranged, raw };
 }

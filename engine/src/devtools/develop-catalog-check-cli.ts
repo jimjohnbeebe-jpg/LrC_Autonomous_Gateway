@@ -46,10 +46,13 @@ const settings = async (c: Check, uuid: string): Promise<SdkSettings> => (await 
 const codes = (j: Record<string, unknown>): string[] => (j["failed"] as Array<{ code: string }>).map((f) => f.code);
 const photoStatus = (j: Record<string, unknown>): string[] => [...(j["photos"] as Array<{ status: string }>).map((p) => p.status), ...codes(j)];
 
-/** A comparison as a step: "back" when `uuid` reads as `before` (by canonical name and mask count), else what differs. */
+/** The unranged key the check writes on copy A: no canonical name reads it, so the comparisons name it (settingChanges sdkKeys). */
+const RAW_KEY = "LensManualDistortionAmount";
+
+/** A comparison as a step: "back" when `uuid` reads as `before` (by canonical name, mask count and RAW_KEY), else what differs. */
 async function compare(c: Check, name: string, uuid: string, before: SdkSettings): Promise<void> {
   try {
-    const d = settingChanges(map, before, await settings(c, uuid));
+    const d = settingChanges(map, before, await settings(c, uuid), [RAW_KEY]);
     const keys = [...Object.keys(d.changed), ...(d.masks ? ["masks"] : [])];
     (c.r["results"] as Record<string, unknown>)[name] = d;
     c.steps.push({ step: name, expect: ["back"], statuses: [keys.length === 0 ? "back" : `differs: ${keys.join(", ")}`] });
@@ -75,11 +78,16 @@ async function tryTools(c: Check): Promise<void> {
   await step(c, "refused: Exposure2012 out of range", ["OUT_OF_RANGE"], () => set({ Exposure2012: 9 }), codes);
   const beforeA = await settings(c, a);
   const ev = typeof beforeA["Exposure2012"] === "number" ? beforeA["Exposure2012"] : 0;
-  await step(c, "lr_set_develop_settings on copy A", ["set"], () => set({ Exposure2012: ev <= 4 ? ev + 0.5 : ev - 0.5, LensManualDistortionAmount: 10 }), photoStatus);
+  const w = await step(c, "lr_set_develop_settings on copy A", ["set"], () => set({ Exposure2012: ev <= 4 ? ev + 0.5 : ev - 0.5, [RAW_KEY]: 10 }), photoStatus);
+  if (w === null || photoStatus(w).join() !== "set") {
+    // Lightroom's undo takes its last step, whoever made it: without this write that is another one (tools-develop.ts undoLastStep).
+    c.steps.push({ step: "lr_undo_last_step", expect: ["undone"], statuses: [], error: "not called: the write on copy A did not answer set, so the undo would take another step" });
+    return;
+  }
   await step(c, "lr_undo_last_step", ["undone"], () => c.tools.call(undoLastStep, { confirm: true }), (j) => [j["undone"] === true ? "undone" : "nothing undone"]);
   await compare(c, "copy A after the undo, against before the write", a, beforeA);
   const beforeRefused = await settings(c, a);
-  await step(c, `lr_set_develop_settings LensManualDistortionAmount ${REFUSED}`, ["not_taken"], () => set({ LensManualDistortionAmount: REFUSED }), photoStatus);
+  await step(c, `lr_set_develop_settings ${RAW_KEY} ${REFUSED}`, ["not_taken"], () => set({ [RAW_KEY]: REFUSED }), photoStatus);
   await compare(c, "copy A after the put-back, against before that write", a, beforeRefused);
 }
 

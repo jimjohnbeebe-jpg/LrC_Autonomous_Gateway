@@ -2,7 +2,7 @@
 report: CATALOG-PARITY
 phase: "11"
 status: observed
-authored_by: "Claude Code (purpose, harness, pre-run findings, steps; Observed and Numbers copied from the run file, 2026-10-27); Jim (the run, his answers, verdict)"
+authored_by: "Claude Code (purpose, harness, pre-run findings, steps; Observed and Numbers copied from the run files, 2026-10-27, runs 1 and 2); Jim (the run, his answers, verdict)"
 date: 2026-10-27
 ---
 
@@ -111,19 +111,45 @@ What each NO shows (Claude Code's reading of the file and the code):
 Everything else worked: the folder list, colour label write and search, the new search filters, IPTC and location, keyword rename (case-only too) and subtree removal, the regular collection's delete with member uuids, the metadata export, and the AI score and reason [handle: `docs\reports\phase11\CATALOG-PARITY\run1\catalog_check_2026-10-28T02-32-41-166Z.json`].
 
 **Jim's answers** (all y) [handle: `engine\src\devtools\catalog-check-cli.ts:76-80`]: 1, no collection starting "AVG catalog check" is left; 2, the colour label and IPTC Creator and Location read as before; 3, the plugin reloaded without an error dialog; 4, "AVG session", "AVG look" and "AVG edit date" are listed under "All Plug-in Metadata". **Answer 2 and the file disagree on the label:** the file says the label stayed red. Settled after the run: Jim looked again and the photo still has the red label [stated: Jim, 2026-10-27, "Yes, there is still a red label on the image."], so the file is right and answer 2 was given before the label was checked closely [inference].
+
+### Run 2, 2026-10-27: FAILED (1 of 10 steps NO: a harness defect)
+
+After the fix PR #240 (`a6f9bb5`), Jim reloaded the plugin and ran `npm run catalog:check` again in the same throwaway catalog on the same photo (`76F23BE2`) [stated: Jim, 2026-10-27, "Done"]. LrC 15.6, plugin 1.5.0, engine 1.5.0. The results file ends `headline: FAILED` [handle: `docs\reports\phase11\CATALOG-PARITY\run2\catalog_check_2026-10-28T04-15-41-490Z.json`]:
+
+```text
+YES lr_get_metadata reads label, the new text fields, rating and copy name
+YES lr_list_folders lists the catalog's folders
+YES lr_set_color_label writes a label and lr_search_photos finds it
+YES lr_search_photos' new filters answer (no-such camera, lens, ISO 1, 1 mm find nothing; edited true/false split)
+YES lr_set_iptc writes creator, copyright and the location fields
+NO  lr_rename_keyword (and a case-only rename), lr_remove_keyword_subtree
+YES lr_create_smart_collection, its members by name, lr_delete_collection
+YES lr_delete_collection by name gives back its member uuids
+YES lr_export_metadata writes a JSON file
+YES lr_set_ai_metadata keeps a score and reason, lr_get_ai_metadata reads them
+YES label put back
+YES AI score and reason put back
+YES text fields put back
+YES test keywords taken off
+YES the photo reads as before
+YES Jim's answers 1-4: y, y, y, y
+```
+
+- **Run 1's three NOs are gone.** The first step read the label as "none" with no key missing; the smart collection (3610) reads `smart: true` in its own answer and in the delete's `before`, which now holds its rule (`labelColor == 1`); the label went back and the photo reads as before [handle: the run 2 file, `steps` 1 and 7, `put_back`]. The photo's label read "none" at the start, although run 1 left it red; how it was cleared between the runs is not recorded.
+- **The new NO is the harness, not the tool.** `lr_rename_keyword` refused "Child" -> "Child renamed" with "a keyword AVG catalog check kw|child renamed is already there: a rename cannot merge keywords" [handle: the run 2 file, step 6]. Run 1 left that keyword in the catalog (the check takes its test keywords off the photo but deletes no keyword, by design: "Steps for Jim", "If something goes wrong"), and the harness uses the same names every run [handle: `engine\src\devtools\catalog-check.ts:78-80`]. So the plugin's clash check worked as written [handle: `plugin\LrC-AVG.lrplugin\KeywordEdit.lua:76-81`], and the case-insensitive match is Lightroom's [inference: `KeywordTree.findChild` found "child renamed" for "Child renamed"]. The rename and subtree removal themselves worked in run 1. Because the step stopped at the refusal, `lr_remove_keyword_subtree` did not run this time; the put-back still took the test keyword off the photo.
 ## Numbers
 
 | Item | Value |
 |---|---|
 | Lightroom Classic version, plugin version | 15.6, plugin 1.5.0 |
-| Steps YES / total | 7 / 10 |
+| Steps YES / total | Run 1: 7 / 10. Run 2: 9 / 10 (the NO is the harness reusing run 1's keyword names) |
 | `edited` true / false: the photo in exactly one | yes: `edited` true 70 (the photo among them), false 0 |
 | Focal length 1 mm: count, or the error | 0, no error |
 | Accessibility fields read (13.2+) | yes: `alt_text` read ("") |
-| Put back | AI score and reason YES, text fields YES, label **NO** (left red), reads as before **NO** |
-| Jim's answers | y, y, y, y |
+| Put back | Run 1: AI score and reason YES, text fields YES, label **NO** (left red), reads as before **NO**. Run 2: all five YES |
+| Jim's answers | Run 1: y, y, y, y. Run 2: y, y, y, y |
 
-All from `docs\reports\phase11\CATALOG-PARITY\run1\catalog_check_2026-10-28T02-32-41-166Z.json`.
+Run 1 from `docs\reports\phase11\CATALOG-PARITY\run1\catalog_check_2026-10-28T02-32-41-166Z.json`; run 2 from `docs\reports\phase11\CATALOG-PARITY\run2\catalog_check_2026-10-28T04-15-41-490Z.json`.
 
 ## Verdict
 
@@ -132,7 +158,8 @@ All from `docs\reports\phase11\CATALOG-PARITY\run1\catalog_check_2026-10-28T02-3
 ## Consequences / open questions
 
 - Settled by run 1 [handle: `docs\reports\phase11\CATALOG-PARITY\run1\catalog_check_2026-10-28T02-32-41-166Z.json`]: `focalLength` works as a findPhotos criterion (0 found, no error); `hasAdjustments` with true/false splits the photos (70 / 0); the case-only rename works; the plugin's metadata fields show under "All Plug-in Metadata" (Jim, answer 4).
-- **Open from run 1:** Lightroom's "gray" for an unlabelled photo and `lr_set_color_label`'s refusal of it; `isSmartCollection()` against `type()`; the first step's missing key; Jim's answer 2 against the file on the label (settled: the label is red).
+- **Open from run 1, closed by run 2:** Lightroom's "gray" for an unlabelled photo (now read as "none"); `isSmartCollection()` against `type()` (now `smart: true`); the first step's missing key (none missing); Jim's answer 2 against the file on the label (settled: the label was red).
+- **Open from run 2:** the harness reuses fixed keyword names, so a second run in the same catalog meets run 1's "child renamed" and the rename is refused. Also learned: `lr_rename_keyword` refuses a rename onto an existing sibling, and that match ignores case [handle: the run 2 file, step 6; inference on the case].
 - Was `[unverified]` before this run: every Lightroom-side behaviour above, in particular `focalLength` as a findPhotos criterion, `hasAdjustments` with `isTrue`/`isFalse`, `labelColor` with `"none"`, `getPhotos(true)` for a folder's subfolders (from issue #139), the case-only rename through a temporary name, `createSmartCollection` inside a collection set made in the same gate, and whether Edit > Undo takes a deleted collection back.
 - Row 9 is its own commit, so it can be dropped alone: `Info.lua`'s new `LrMetadataProvider` (`MetadataDefinition.lua`) makes Lightroom update the plug-in metadata of the catalog when it loads the plugin `[unverified]`. Also `[unverified]`: whether a field without a title (`aiScore`, `aiReason`) stays hidden, whether "All Plug-in Metadata" is where the AVG fields show, whether the shipped plugin (`com.lrcavg.gateway`) and the development one (`com.lrcavg.gateway.dev`) keep separate values `[inference]`, and the accepted-session stamp in Lightroom (the check runs no session; `engine\tests\catalog-ai-metadata.test.ts` covers it against the simulator).
 - README's user guide still says "No tool deletes a collection" and lists only title, caption and headline; the documentation child of #207 updates it with the parity table.

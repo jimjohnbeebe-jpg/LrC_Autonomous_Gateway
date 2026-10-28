@@ -6,6 +6,8 @@ import { z } from "zod";
 
 /** A getDevelopSettings() table as the plugin sends it (protocol-results.ts sdkSettingsSchema). */
 const sdkSettingsSchema = z.record(z.string(), z.unknown());
+/** Lua sends an empty table as [] (Json.lua). */
+const values = z.preprocess((v) => (Array.isArray(v) && v.length === 0 ? {} : v), z.record(z.string(), z.unknown()));
 const snapshot = z.object({ id: z.string(), name: z.string() });
 /** One photo through DevelopTools.lua: its outcome, the snapshot taken before a change, and the settings after. */
 const developAnswer = {
@@ -33,6 +35,8 @@ export const DEVELOP_RESULTS = {
   }),
   // Issue #217 row 1 (MaskClean.lua): "unchanged" when the settings read back as before; its snapshot is then deleted again.
   delete_empty_masks: z.object({ ...developAnswer, status: z.enum(["deleted", "unchanged"]) }),
+  // Issue #217 (MaskControl.lua): getValue of every param named, before and after; `written`: the params it set; `index`: the swatch touched.
+  mask_controller: z.object({ uuid: z.string(), mask_id: z.string(), before: values, after: values, written: z.array(z.string()), index: z.number().optional(), settled: z.boolean(), ms: z.number() }),
   list_snapshots: z.object({
     uuid: z.string(),
     snapshots: z.array(z.object({ id: z.string(), name: z.string(), id_global: z.string().optional() })),

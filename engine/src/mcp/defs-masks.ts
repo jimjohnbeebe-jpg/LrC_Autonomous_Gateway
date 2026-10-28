@@ -11,8 +11,8 @@
 // `npm run masks:crop` (docs\reports\phase9\issue179.md).
 
 import { z } from "zod";
-import { AI_KINDS, BRUSH_LIMITS, BRUSH_RADIUS, LOCAL_PARAMS, MODE_NAMES, REFUSED_KINDS, VERIFIED_FORMS } from "../params/index.js";
-import { AI_PART_PLUGIN, MASKS_PLUGIN } from "../session/index.js";
+import { AI_KINDS, BRUSH_LIMITS, BRUSH_RADIUS, CURVE_CHANNELS, CURVE_LIMITS, LOCAL_PARAMS, MODE_NAMES, REFUSED_KINDS, VERIFIED_FORMS } from "../params/index.js";
+import { AI_PART_PLUGIN, CONTROLLER_PLUGIN, MASKS_PLUGIN } from "../session/index.js";
 import { FRAME, sessionId, target, type ToolDef } from "./defs-shared.js";
 
 const unit = z.number().min(0).max(1);
@@ -57,8 +57,9 @@ const geometry = z
 const sliders = z
   .record(z.string(), z.number())
   .describe(`local slider -> the value to SET (not a change), in the Masking panel's units: ${[...LOCAL_PARAMS].map(([k, p]) => `${k} ${p.min}..${p.max}`).join(", ")}`);
-// Issue #217 row 4 (params\mask-point-colors.ts): the stored form is Lightroom's, its field order [upstream claim] and the
-// defaults [inference]; in Lightroom [unverified] until `npm run masks:parity`.
+// Issue #217 rows 3 and 4 (params\mask-controller.ts, session\mask-controller.ts): curves and Point Color go through
+// LrDevelopController on the photo open in Develop; in Lightroom [unverified] until `npm run masks:parity` (part controller).
+const DEVELOP_NOTE = "Goes through Lightroom's Develop module: the session's photo must be selected and open in Develop (NOT_IN_DEVELOP otherwise: ask the user to press D in Lightroom).";
 const edges = z.array(unit).length(4).describe("[a, b, c, d] in 0-1, each at least the one before: fully selected from b to c, fading to nothing at a and d");
 const shift = z.number().min(-1).max(1);
 const swatch = z
@@ -74,7 +75,7 @@ const swatch = z
     sat_range: edges.optional(),
     lum_range: edges.optional(),
   })
-  .describe("add: src_hue, src_sat and src_lum are needed, the rest default to no shift and ranges [0, 0.33, 0.67, 1]; update: only the fields to change");
+  .describe("add: src_hue, src_sat and src_lum are needed, the rest take Lightroom's defaults; update: only the fields to change");
 const pointColors = z
   .object({
     action: z.enum(["add", "update", "delete", "clear"]),
@@ -83,7 +84,19 @@ const pointColors = z
   })
   .describe(
     "one change to the mask's Point Color swatches (up to 8): add, update or delete one, or clear them all. lr_list_masks shows them as `point_colors`. " +
-      "Written in the form Lightroom stores them; how Lightroom reads a written swatch is [unverified]: look at the result",
+      `${DEVELOP_NOTE} The result's controller.point_colors is what Lightroom then holds`,
+  );
+const level = z.number().int().min(0).max(CURVE_LIMITS.top);
+const curvePoints = z
+  .array(z.array(level).length(2))
+  .min(CURVE_LIMITS.pairs[0])
+  .max(CURVE_LIMITS.pairs[1])
+  .describe(`[input, output] points, ${CURVE_LIMITS.pairs[0]}-${CURVE_LIMITS.pairs[1]}, whole numbers 0-${CURVE_LIMITS.top}, inputs rising from 0 to ${CURVE_LIMITS.top}; [[0, 0], [255, 255]] is flat`);
+const curves = z
+  .object({ main: curvePoints.optional(), red: curvePoints.optional(), green: curvePoints.optional(), blue: curvePoints.optional() })
+  .describe(
+    `the mask's own tone curve (the Masking panel's Curve), each channel given SET to these points (the others keep theirs): ${CURVE_CHANNELS.join(", ")}. A midtone lift: main [[0, 0], [128, 150], [255, 255]]. ` +
+      `${DEVELOP_NOTE} lr_list_masks live_mask_id reads the current curves; the result's controller.curves is what Lightroom then holds`,
   );
 const passFields = {
   session_id: sessionId,
@@ -116,7 +129,11 @@ const COLOR_NOTE =
   "the mask is refused (INVALID_ARGUMENTS, nothing written): the preview's colour at point did not select the colour asked for in a Lightroom check. A sample copied " +
   "from another photo selects what ranks like it there, the same colours only on the same pixels (a virtual copy). ";
 
-const listArgs = z.object({ session_id: sessionId, target: target.describe('Variants mode: which photo ("master", "A", …); default the photo the last call worked on') });
+const listArgs = z.object({
+  session_id: sessionId,
+  target: target.describe('Variants mode: which photo ("master", "A", …); default the photo the last call worked on'),
+  live_mask_id: z.string().min(1).optional().describe(`a mask's id: also read its local curves and Point Color swatches as Lightroom's Develop module holds them (\`live\`). ${DEVELOP_NOTE}`),
+});
 const createArgs = z.object({
   ...passFields,
   kind: z
@@ -166,6 +183,7 @@ const editArgs = z.object({
         "set on the copy; one-part masks only, not one person's mask (person_*). An AI copy is computed by Lightroom afresh, as an AI part is (when it finds nothing, the copy is taken out). The result's mask is the copy",
     ),
   point_colors: pointColors.optional(),
+  curves: curves.optional(),
 });
 const deleteArgs = z.object({ ...passFields, mask_id: maskId });
 
@@ -210,7 +228,7 @@ export const MASK_DEFS: ToolDef[] = [
       `Geometry, points and people's boxes are in ${FRAME}, as lr_create_mask takes them; a mask drawn past the crop in Lightroom reads outside 0-1. ` +
       "A colour range's geometry has `sample` (Lightroom's stored l, a, b, for lr_create_mask geometry.sample or copy_sample_from) and color_amount; a depth range's, depth_range. " +
       "On a mirrored photo geometry reads { unavailable: <why> } (a colour range's sample still shows). " +
-      "`point_colors`: the mask's Point Color swatches, if any (lr_edit_mask point_colors changes them). " +
+      "`point_colors`: the mask's Point Color swatches as the mask table stores them (their order there is [unverified]; `live_mask_id` reads one mask's swatches and curves from Lightroom itself). " +
       "A mask of several parts also lists `parts`, in order (lr_edit_mask `part` 1 is the first): each part's kind, mode (add, subtract, intersect; \"other\" for none of them), inverted and geometry. " +
       "Also lists the local sliders and their ranges. Does not use a pass and writes nothing.",
     schema: listArgs,
@@ -247,13 +265,15 @@ export const MASK_DEFS: ToolDef[] = [
     title: "Edit a mask",
     // Sliders merge into the stored ones [handle: engine\src\params\mask-ops.ts:236, Object.assign].
     description:
-      "Change one mask by its id: set local sliders (absolute values in panel units; sliders not given keep their values), its geometry (linear, radial, luminance; a brush: strokes added), its Point Color swatches, invert it (or add an inverted copy), rename it, " +
+      "Change one mask by its id: set local sliders (absolute values in panel units; sliders not given keep their values), its geometry (linear, radial, luminance; a brush: strokes added), its tone curves or Point Color swatches, invert it (or add an inverted copy), rename it, " +
       "or hide/show it (`active`). MASK_NOT_FOUND: call lr_list_masks for the current ids. " +
       "Parts: `combine` adds a part (kind, geometry) in mode add, subtract or intersect; `part` names one part to reshape (geometry), invert, set to a mode (combine.mode) " +
       "or remove (remove_part); a mask of several parts is inverted or reshaped only part by part. Only these forms, which were checked in Lightroom, are written: " +
       `${[...VERIFIED_FORMS].map((f) => `"${f}"`).join(", ")} (a mask's parts in order, each after the first with its mode; a part edit as "<form>: <edit>"; sky stands for every AI kind, though only sky was checked). ` +
       "Any other form (other kinds or orders of parts, three parts, other part edits) is refused: MASK_OP_NOT_CAPTURED names the form, nothing is written and the pass is not used. " +
       `An AI part needs plugin ${AI_PART_PLUGIN} and is computed by Lightroom as an AI mask is (the same waits and errors); when Lightroom finds nothing, the mask is put back as it was. ` +
+      `curves and point_colors (plugin ${CONTROLLER_PLUGIN}) go in a call of their own (mask_id and them only) through Lightroom's Develop module, on the photo open there, each value read back; ` +
+      "Lightroom names their History steps itself (history_names is empty), and an undo writes back the values from before. " +
       PASS_NOTE,
     schema: editArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },

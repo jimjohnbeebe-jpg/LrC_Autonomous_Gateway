@@ -15,6 +15,8 @@
 //     goes over a limit the photo was within, or a preserved region drifts. No correction moves the
 //     global sliders for a mask. The undo is written only while the table is still what the pass
 //     left; otherwise the breach is reported `unmet`.
+// lr_edit_mask curves and point_colors are the same kind of pass but written through LrDevelopController, not the
+// table (mask-controller.ts, issue #217).
 // Geometry and points are given and shown in the preview's frame, mapped through the photo's crop as read in
 // the same call (crop.ts, params\crop-frame.ts; issue #179); a mask mostly outside the crop warns.
 // Variants mode: masks only on the pick (MASKS_AFTER_PICK before it). [handle: tests\session-masks.test.ts,
@@ -31,6 +33,7 @@ import {
   LOCAL_PARAMS,
   MASK_TABLE_KEY,
   applyOp,
+  controllerEdit,
   depthMapMissing,
   firstComponent,
   isAiKind,
@@ -53,6 +56,7 @@ import {
 } from "../params/index.js";
 import { makeAiMask, type AiResult } from "./ai-masks.js";
 import { checkAiPartPlugin, makeAiPart } from "./mask-parts.js";
+import { applyController, checkControllerPlugin, readLive } from "./mask-controller.js";
 import { awaitApproval } from "./approval.js";
 import { frameFor, frameOf } from "./crop.js";
 import { clipBreach, regionDrift, type Breach } from "./guardrail.js";
@@ -83,8 +87,9 @@ export async function listMasks(ctx: SessionContext, s: Session, args: ListMasks
   await focus(ctx, s, t);
   const { sdk } = await readSdk(ctx, s, t);
   const masks = summaries(sdk, await frameOf(ctx, s, t, sdk));
+  const live = args.live_mask_id === undefined ? null : await readLive(ctx, s, t, args.live_mask_id);
   return {
-    json: { ok: true, session_id: s.id, target: t.id, pass: `${t.passes}/${s.maxPasses}`, count: masks.length, masks, local_sliders: sliderRanges() },
+    json: { ok: true, session_id: s.id, target: t.id, pass: `${t.passes}/${s.maxPasses}`, count: masks.length, masks, ...(live ? { live } : {}), local_sliders: sliderRanges() },
     log: { session_id: s.id, target: t.id, count: masks.length },
   };
 }
@@ -92,7 +97,7 @@ export async function listMasks(ctx: SessionContext, s: Session, args: ListMasks
 export const createMask = (ctx: SessionContext, s: Session, a: CreateMaskArgs): Promise<SessionOutput> =>
   maskPass(ctx, s, a, { op: "create", kind: a.kind, name: a.name, geometry: a.geometry, point: a.point, sliders: a.sliders, copy_sample_from: a.copy_sample_from });
 export const editMask = (ctx: SessionContext, s: Session, a: EditMaskArgs): Promise<SessionOutput> =>
-  renameOnly(a) ? renameMask(ctx, s, a) : maskPass(ctx, s, a, { op: "edit", mask_id: a.mask_id, name: a.name, active: a.active, inverted: a.inverted, geometry: a.geometry, sliders: a.sliders, combine: a.combine, part: a.part, remove_part: a.remove_part, copy: a.copy, point_colors: a.point_colors });
+  renameOnly(a) ? renameMask(ctx, s, a) : maskPass(ctx, s, a, { op: "edit", mask_id: a.mask_id, name: a.name, active: a.active, inverted: a.inverted, geometry: a.geometry, sliders: a.sliders, combine: a.combine, part: a.part, remove_part: a.remove_part, copy: a.copy, point_colors: a.point_colors, curves: a.curves });
 export const deleteMask = (ctx: SessionContext, s: Session, a: DeleteMaskArgs): Promise<SessionOutput> => maskPass(ctx, s, a, { op: "delete", mask_id: a.mask_id });
 
 /** The photo a mask pass works on, once the plugin, the pick and the pass cap (unless `cap` is false: a rename) allow it. */
@@ -142,7 +147,7 @@ const sameTable = (a: readonly Correction[], b: readonly Correction[]): boolean 
 
 /** An lr_edit_mask that gives a new name and no other change (target, rationale and return_image aside). */
 const renameOnly = (a: EditMaskArgs): a is EditMaskArgs & { name: string } =>
-  a.name !== undefined && [a.active, a.inverted, a.geometry, a.sliders, a.combine, a.part, a.remove_part, a.copy, a.point_colors].every((f) => f === undefined);
+  a.name !== undefined && [a.active, a.inverted, a.geometry, a.sliders, a.combine, a.part, a.remove_part, a.copy, a.point_colors, a.curves].every((f) => f === undefined);
 
 /**
  * A rename alone is not a pass (engine 0.35.0) [stated: Jim, 2026-10-16, handover "name-only lr_edit_mask does not consume a
@@ -185,6 +190,7 @@ async function maskPass(ctx: SessionContext, s: Session, args: PassArgs, op: Mas
   const started = performance.now();
   const t = maskTarget(ctx, s, args.target);
   precheck(op); // MaskError: nothing written, before any wait
+  if (controllerEdit(op)) checkControllerPlugin(ctx); // issue #217: curves and Point Color, not on the table
   const n = t.passes + 1;
   const approval = await awaitApproval(ctx, s, t, TOOL[op.op]);
   const passStarted = ctx.now().toISOString();
@@ -197,7 +203,7 @@ async function maskPass(ctx: SessionContext, s: Session, args: PassArgs, op: Mas
   if (op.op === "create" && op.copy_sample_from) op = await copySample(ctx, s, t, op, { entries: before, frame });
   const plan = applyOp(before, op, frame); // MaskError: nothing written
   if (plan.ai) checkAiPartPlugin(ctx); // issue #131: before the write
-  if (sameTable(before, plan.entries)) throw new ToolError("NO_CHANGE", "Nothing was written: the mask already is as asked. The pass is not used.", false, { session_id: s.id });
+  if (!controllerEdit(op) && sameTable(before, plan.entries)) throw new ToolError("NO_CHANGE", "Nothing was written: the mask already is as asked. The pass is not used.", false, { session_id: s.id });
   let baseline: Rendered;
   try {
     baseline = (await fresh(ctx, s, t, first.view)).last;
@@ -206,7 +212,7 @@ async function maskPass(ctx: SessionContext, s: Session, args: PassArgs, op: Mas
   }
   if ((await readSdk(ctx, s, t)).view.masks.fingerprint !== first.view.masks.fingerprint) throw masksChanged(s);
   try {
-    const done = await applyPlan(ctx, s, t, n, op, plan, before, baseline, frame);
+    const done = controllerEdit(op) ? await applyController(ctx, s, t, op, baseline) : await applyPlan(ctx, s, t, n, op, plan, before, baseline, frame);
     t.passes = n;
     t.endReason = n >= s.maxPasses ? "cap_reached" : null; // never "converged": a mask pass may follow convergence
     const delta = deltaMetrics(baseline.metrics, done.rendered.metrics);

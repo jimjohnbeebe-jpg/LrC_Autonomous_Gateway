@@ -22,6 +22,8 @@ const GATES = [
   { feature: "AI Denoise", version: "14.5", prefix: "LrDevelopController.", object: "LrDevelopController", names: ["getEnhancePanelState", "setEnhance", "changeDenoiseAmount"], file: "Denoise.lua" },
   // Issue #217 row 1 [handle: API Reference\modules\LrCatalog.html:861-863, "First supported in version 14.0"].
   { feature: "Deleting empty masks", version: "14.0", prefix: "catalog:", object: "catalog", names: ["deleteAllEmptyMasks"], file: "MaskClean.lua" },
+  // Issue #217 Point Color through the controller [handle: API Reference\modules\LrDevelopController.html, addPointColorSwatch and the four beside it, "First supported in version 13.2"].
+  { feature: "Mask Point Color", version: "13.2", prefix: "LrDevelopController.", object: "LrDevelopController", names: ["getSelectedPointColorSwatchIndex", "selectPointColorSwatch", "addPointColorSwatch", "updateSelectedPointColorSwatch", "deletePointColorSwatch"], file: "MaskControl.lua" },
 ] as const;
 const [AI_MASK, DENOISE] = GATES;
 

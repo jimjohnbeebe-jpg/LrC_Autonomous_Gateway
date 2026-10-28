@@ -38,7 +38,7 @@ const readBack = (entries: Correction[]) => ({ [MASK_TABLE_KEY]: structuredClone
 
 describe("colour range", () => {
   it("is written in the form of Jim's hand-made Color Range, one sample, pinned at its point", () => {
-    const mine = made("color_range", { point: { x: 0.25, y: 0.75 }, geometry: { sample: [0.9, 0.4, 0.1], color_amount: 0.3 } });
+    const mine = made("color_range", { point: { x: 0.25, y: 0.75 }, geometry: { sample: { l: 0.9, a: 0.4, b: 0.1 }, color_amount: 0.3 } });
     const his = byName("Color Range 1");
     expect(keys(mine)).toEqual(keys(his));
     expect(keys(mine[RANGE.holder] as object)).toEqual(keys(his[RANGE.holder] as object));
@@ -50,9 +50,10 @@ describe("colour range", () => {
     expect(summarize(e).geometry).toMatchObject({ point: { x: 0.25, y: 0.75 }, color_amount: 0.5 });
   });
 
-  it("needs a point and refuses an amount outside (0, 1]", () => {
+  it("needs a point and refuses an amount outside [0, 1] (0 as Lightroom stores it on Jim's Reds; the tool schema asks more than 0)", () => {
     expect(codeOf(() => precheck({ op: "create", kind: "color_range" }))).toBe("INVALID_ARGUMENTS");
-    expect(codeOf(() => create("color_range", { point: { x: 0.5, y: 0.5 }, geometry: { color_amount: 0 } }))).toBe("INVALID_ARGUMENTS");
+    expect(codeOf(() => create("color_range", { point: { x: 0.5, y: 0.5 }, geometry: { color_amount: 1.5 } }))).toBe("INVALID_ARGUMENTS");
+    expect(codeOf(() => create("color_range", { point: { x: 0.5, y: 0.5 }, geometry: { color_amount: 0 } }))).toBe("no error");
   });
 });
 

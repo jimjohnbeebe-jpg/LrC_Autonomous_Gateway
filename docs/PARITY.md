@@ -71,12 +71,12 @@ Every `lr_*` write tool runs only when no edit session is open, and returns the 
 | `apply_auto_adjustments` | `lr_apply_auto` | have | Snapshot first |
 | `reset_develop_adjustments` | `lr_reset` | have | `confirm: true`, snapshot first |
 | `apply_denoise` | `lr_apply_denoise` | have | Ported in PR #191 |
-| `list_masks` | `lr_list_masks` | have | Colour range L, a, b and depth trapezoid detail planned #217 |
+| `list_masks` | `lr_list_masks` | have | A colour range's stored `sample` {l, a, b} and a depth range's trapezoid (#210) |
 | `create_gradient_mask` | `lr_create_mask` | have | Linear and radial |
 | `update_gradient_mask` | `lr_edit_mask` | have | |
 | `create_brush_mask` | `lr_create_mask` | planned #217 | Brush from strokes exists; feather, density and erase do not |
 | `add_brush_strokes` | none | planned #217 | |
-| `create_range_mask` | `lr_create_mask` | planned #217 | Luminance, colour and depth exist; `copy_sample_from` does not; the colour range is under check in #210 |
+| `create_range_mask` | `lr_create_mask` | have | Luminance, colour and depth; the colour as `copy_sample_from` or `geometry.sample` {l, a, b} (#210); the engine's own point sample (the preview's RGB) stays until `npm run masks:verify`, flagged [unverified] in the tool text |
 | `delete_masks` | `lr_delete_mask` | have | One mask per call |
 | `delete_empty_masks` | none | planned #217 | |
 | `set_mask_adjustments` | `lr_edit_mask` | have | |
@@ -84,7 +84,7 @@ Every `lr_*` write tool runs only when no edit session is open, and returns the 
 | `invert_mask` | `lr_edit_mask` | planned #217 | In place with `inverted`; inverting as a copy does not exist |
 | `create_mask` | `lr_create_mask` | have | Subject, sky, background |
 | `create_mask_batch` | none | planned #217 | One AI mask on many photos |
-| `create_people_mask` | `lr_create_mask` | have | People parts by kind; one-person kinds under check in #210 |
+| `create_people_mask` | `lr_create_mask` | have | People parts by kind; one-person kinds under check in #210 (`npm run masks:verify`); a mirrored photo refuses points and geometry until the same check |
 | `create_landscape_mask` | `lr_create_mask` | have | |
 | `set_mask_curves` | none | planned #217 | |
 | `get_mask_curves` | none | planned #217 | |
@@ -92,7 +92,7 @@ Every `lr_*` write tool runs only when no edit session is open, and returns the 
 | `get_mask_point_colors` | none | planned #217 | |
 | `combine_mask` | `lr_edit_mask` | have | `combine` add, subtract, intersect, in the forms checked in Lightroom |
 
-Count: 45 `have`, 9 `ours+`, 11 `planned` (#217: 10, #218: 1), 3 `decision` [handle: `engine/tests/parity-map.test.ts` pins these counts].
+Count: 46 `have`, 9 `ours+`, 10 `planned` (#217: 9, #218: 1), 3 `decision` [handle: `engine/tests/parity-map.test.ts` pins these counts].
 
 ## LrC-AVG tools with no upstream counterpart
 

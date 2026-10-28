@@ -39,6 +39,7 @@ import {
   type MaskKind,
 } from "./mask-table.js";
 import { summarize, type MaskSummary } from "./mask-summary.js";
+import { copiedSample, type CopySample } from "./mask-range.js";
 
 export type { Geometry, Point } from "./mask-build.js";
 /** An edit: one mask's name, visibility, sliders, inversion and geometry; `combine` adds a part, `part` (1 = the first) edits one part (mask-combine.ts). */
@@ -54,10 +55,9 @@ export type EditOp = {
   part?: number | undefined;
   remove_part?: true | undefined;
 };
-export type MaskOp =
-  | { op: "create"; kind: string; name?: string | undefined; geometry?: Geometry | undefined; point?: Point | undefined; sliders?: Record<string, number> | undefined }
-  | EditOp
-  | { op: "delete"; mask_id: string };
+/** A new mask; a colour range's `copy_sample_from` is resolved to its sample and point (withCopiedSample) before applyOp. */
+export type CreateOp = { op: "create"; kind: string; name?: string | undefined; geometry?: Geometry | undefined; point?: Point | undefined; sliders?: Record<string, number> | undefined; copy_sample_from?: CopySample | undefined };
+export type MaskOp = CreateOp | EditOp | { op: "delete"; mask_id: string };
 
 /** `ai`: an added part of an AI kind, which Lightroom must compute (session\mask-parts.ts). */
 export type OpResult = { entries: Correction[]; id: string; kind: string; before: MaskSummary | null; after: MaskSummary | null; ai?: AiKind };
@@ -116,7 +116,7 @@ function find(entries: readonly Correction[], id: string): number {
 
 /** Refuse what can be refused without the photo's table (before a pass waits for its approval): kinds, sliders, a part's arguments, an empty edit. */
 export function precheck(op: MaskOp): void {
-  if (op.op === "create") applyOp([], op);
+  if (op.op === "create") applyOp([], op.copy_sample_from ? placeholderCopy(op) : op);
   if (op.op !== "edit") return;
   precheckParts(op);
   const fields = [op.name, op.active, op.inverted, op.geometry, op.sliders, op.combine, op.remove_part];
@@ -160,10 +160,30 @@ export function applyOp(current: readonly Correction[], op: MaskOp, frame: CropF
   }
   if (op.op === "edit") return edit(entries, op, frame);
   const kind = checkKind(op.kind);
+  if (op.copy_sample_from) throw new MaskError("INTERNAL_ERROR", "copy_sample_from is resolved (withCopiedSample) before the mask is built.");
   if (isAiKind(kind) && op.geometry) throw new MaskError("INVALID_ARGUMENTS", `A ${kind} mask is found by Lightroom's AI; it takes no geometry.`);
   const entry = newCorrection(kind, op.name ?? `AVG ${KIND_LABELS[kind]}`, op.geometry ?? {}, pointFor(kind, op.point, frame), storedSliders(op.sliders ?? {}), entries, frame);
   entries.push(entry);
   return { entries, id: String(entry[C.id]), kind, before: null, after: summarize(entry, frame) };
+}
+
+/** The checks of a copy that need no photo; then the op with a stand-in sample, for precheck's dry build. */
+function placeholderCopy(op: CreateOp): CreateOp {
+  if (op.kind !== "color_range") throw new MaskError("INVALID_ARGUMENTS", `copy_sample_from only applies to a color_range mask, not ${op.kind}.`);
+  if (op.geometry?.sample) throw new MaskError("INVALID_ARGUMENTS", "geometry.sample and copy_sample_from both give the colour; use one of them.");
+  return { ...op, copy_sample_from: undefined, point: op.point ?? { x: 0.5, y: 0.5 }, geometry: { ...op.geometry, sample: { l: 0, a: 0, b: 0 } } };
+}
+
+/**
+ * `op` with its copy_sample_from resolved (Automaat PR #341): the l, a, b Lightroom stored in that colour range, its
+ * amount unless geometry.color_amount is given, and its pin unless `point` is given; `source` is the table and
+ * crop frame of the photo copied from (the same photo or another target). An op without a copy comes back as is.
+ */
+export function withCopiedSample(op: CreateOp, source: { entries: readonly Correction[]; frame: CropFrame }): CreateOp {
+  if (!op.copy_sample_from) return op;
+  placeholderCopy(op);
+  const got = copiedSample(source.entries, source.frame, op.copy_sample_from);
+  return { ...op, copy_sample_from: undefined, point: op.point ?? got.point, geometry: { ...op.geometry, sample: got.sample, color_amount: op.geometry?.color_amount ?? got.amount } };
 }
 
 /**

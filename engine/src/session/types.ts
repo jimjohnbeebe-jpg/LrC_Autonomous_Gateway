@@ -5,7 +5,7 @@ import type { BridgeClient, HudStage } from "../bridge/index.js";
 import type { IntentLibrary, LoadedIntent } from "../intents/index.js";
 import type { AiTrace, ClientIdentity, SessionLogData, SessionLogFiles } from "../log/index.js";
 import type { Metrics, Region, RegionBox } from "../metrics/index.js";
-import type { CanonicalSettings, EditOp, Geometry, ParamMap, Pipeline } from "../params/index.js";
+import type { CanonicalSettings, CopySample, EditOp, Geometry, ParamMap, Pipeline } from "../params/index.js";
 import type { RenderedPreview } from "../preview/index.js";
 import type { KnownLogFolders, PageRead } from "../settings/index.js";
 import type { AiJob } from "./ai-masks.js";
@@ -75,6 +75,8 @@ export type CreateMaskArgs = MaskPassArgs & {
   /** People kinds: a point on the person (0-1). */
   point?: { x: number; y: number } | undefined;
   sliders?: Record<string, number> | undefined;
+  /** color_range: take the sample of a colour range already on this photo or on `target` (issue #210, Automaat PR #341). */
+  copy_sample_from?: CopySample | undefined;
 };
 /** lr_edit_mask: the edit as params\mask-ops.ts takes it (issue #131: `combine` adds a part, `part` edits one). */
 export type EditMaskArgs = MaskPassArgs & Omit<EditOp, "op">;

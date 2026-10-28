@@ -181,6 +181,14 @@ export function tableInfo(sdk: Readonly<Record<string, unknown>>): { count: numb
 /** A brush stroke's dabs as places only: Lightroom may add or drop its "r", "f" and "h" tokens [upstream claim: Automaat PR #326]. */
 const dabsOf = (v: unknown): string | null => (Array.isArray(v) && v.every((t) => typeof t === "string") ? (v as string[]).filter((t) => t.startsWith("d ")).join("|") : null);
 
+/**
+ * A local adjustment written as 0 that Lightroom leaves out of the read-back: its inverted copy of a mask carries
+ * LocalGlow 0 and omits it again after a write [upstream claim: Automaat PR #345, `git show f58f22e`, LrC 15.6].
+ * The carried entries are written back as read (issue #121), so such a copy failed every mask pass here too
+ * [inference]. Only a zero, only a "Local" field; anything else missing still fails.
+ */
+const omittedZero = (k: string, x: unknown): boolean => x === 0 && k.startsWith("Local");
+
 /** `written`'s fields all in `got` with equal values (numbers within 1e-6); fields Lightroom adds or recomputes are its own. */
 function covers(written: unknown, got: unknown, key?: string): boolean {
   if (key === BRUSH.dabs) return dabsOf(written) !== null && dabsOf(written) === dabsOf(got);
@@ -188,7 +196,7 @@ function covers(written: unknown, got: unknown, key?: string): boolean {
   if (written && typeof written === "object" && got && typeof got === "object") {
     if (isEmpty(written) || isEmpty(got)) return isEmpty(written) && isEmpty(got);
     if (Array.isArray(written) && (!Array.isArray(got) || written.length !== got.length)) return false;
-    return Object.entries(written).every(([k, x]) => recomputed.has(k) || settling.has(k) || (k in got && covers(x, (got as Record<string, unknown>)[k], k)));
+    return Object.entries(written).every(([k, x]) => recomputed.has(k) || settling.has(k) || (k in got ? covers(x, (got as Record<string, unknown>)[k], k) : omittedZero(k, x)));
   }
   return written === got;
 }

@@ -40,10 +40,10 @@ async function place(run: Run, before: Correction[], frame: CropFrame, op: MaskO
   return { ok: sameGeometry(asked, shown?.geometry), shown: shown?.geometry };
 }
 
-/** One case on the photo whose settings are `sdk` (its masks `before`). */
-export async function oneCase(run: Run, which: "A" | "B", sdk: SdkSettings): Promise<CaseResult> {
+/** One case on the photo whose settings are `sdk` (its masks `before`); `lift`: masks:verify's lifting of a mirrored photo's refusal (issue #210). */
+export async function oneCase(run: Run, which: "A" | "B", sdk: SdkSettings, lift: (f: CropFrame) => CropFrame = (f) => f): Promise<CaseResult> {
   const before = readTable(sdk);
-  const frame = await frameFor(sdk, () => run.client.request("get_context", { target_uuid: run.uuid }));
+  const frame = lift(await frameFor(sdk, () => run.client.request("get_context", { target_uuid: run.uuid })));
   const out: CaseResult = { case: which, crop: cropOf(sdk), frame, points: [], linear: null, ok: false };
   run.say(`  Case ${which}: crop ${JSON.stringify(out.crop)}${isIdentity(frame) ? " (uncropped, upright)" : ""}`);
   try {

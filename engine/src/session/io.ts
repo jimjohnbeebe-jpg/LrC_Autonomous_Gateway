@@ -114,6 +114,11 @@ export async function write(ctx: SessionContext, s: Session, t: Target, values: 
  * Write the whole mask table as one History step and check it read back (params\mask-table.ts
  * verifyTable: every correction written there with its fields, matched by id). `emptyOk`: params\mask-ops.ts
  * tableSettings. Returns the read-back.
+ * Automaat's #343 (a slider moved through LrDevelopController.setValue is saved about 2 s later and overwrites a
+ * mask table written meanwhile, after its read-back passed [upstream claim: `git show 9085a71`, LrC 15.6]) does not
+ * reach this path through the engine: local sliders go into the table itself, never through setValue
+ * (plugin\LrC-AVG.lrplugin has no setValue call) [inference]. A slider the user drags in Lightroom just before a
+ * pass could still be saved over it; `npm run masks:verify` does not test that [unverified].
  */
 export async function writeTable(ctx: SessionContext, s: Session, t: Target, entries: readonly Correction[], historyName: string, emptyOk: boolean): Promise<SdkSettings> {
   const readBack = await writeSdk(ctx, s, t, tableSettings(entries, emptyOk), historyName);

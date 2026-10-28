@@ -145,6 +145,19 @@ describe("params: reading the mask table", () => {
     expect(tableInfo({ [MASK_TABLE_KEY]: changed }).fingerprint).not.toBe(tableInfo(dump).fingerprint);
   });
 
+  it("takes a Local field written 0 and left out of the read-back, nothing else missing (Automaat PR #345, issue #210)", () => {
+    const written = structuredClone(table);
+    Object.assign(written[0] as Correction, { LocalGlow: 0 });
+    expect(verifyTable(written, { [MASK_TABLE_KEY]: structuredClone(table) })).toEqual([]);
+    Object.assign(written[0] as Correction, { LocalGlow: 5 });
+    expect(verifyTable(written, { [MASK_TABLE_KEY]: structuredClone(table) })).not.toEqual([]);
+    const amount = structuredClone(table);
+    Object.assign(amount[0] as Correction, { [C.amount]: 0 });
+    const back = structuredClone(table);
+    delete (back[0] as Correction)[C.amount];
+    expect(verifyTable(amount, { [MASK_TABLE_KEY]: back })).not.toEqual([]);
+  });
+
   it("names the first mask the tools cannot write back: several components, a blend mode, an uncaptured kind", () => {
     expect(uncaptured(captured)).toBeNull();
     const two = structuredClone(table[0]) as Correction;

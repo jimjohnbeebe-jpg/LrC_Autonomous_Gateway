@@ -24,6 +24,19 @@ describe("new mask kinds in a session", () => {
     expect(lr.history.at(-1)).toBe(`AVG ${SHORT} pass 1/4 mask create`);
   });
 
+  it("writes a given sample verbatim, and copies a colour range's sample with copy_sample_from (issue #210)", async () => {
+    clean();
+    await begin();
+    const first = await create({ kind: "color_range", point: { x: 0.5, y: 0.25 }, geometry: { sample: { l: 0.522527, a: 0.888059, b: 0.758296 }, color_amount: 0.3 } });
+    const id = (first.json["mask"] as { id: string }).id;
+    expect(holder(masks()[0])["PointModels"]).toEqual(["0.522527 0.888059 0.758296 0.500000 0.250000 0"]);
+    expect((first.json["mask"] as { geometry: unknown }).geometry).toMatchObject({ sample: { l: 0.522527, a: 0.888059, b: 0.758296 } });
+    await create({ kind: "color_range", copy_sample_from: { mask_id: id }, sliders: { "local.exposure": 1 } });
+    expect(holder(masks()[1])).toMatchObject({ PointModels: ["0.522527 0.888059 0.758296 0.500000 0.250000 0"], ColorAmount: 0.3 });
+    const err = await fails(create({ kind: "color_range", copy_sample_from: { mask_id: "nope" } }));
+    expect(err.code).toBe("MASK_NOT_FOUND");
+  });
+
   it("takes a depth range out again on a photo without a depth map: DEPTH_MAP_MISSING, the pass not used", async () => {
     clean();
     await begin();

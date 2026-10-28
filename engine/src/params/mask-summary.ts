@@ -64,9 +64,11 @@ function geometryOf(m: Component, f: CropFrame): Record<string, unknown> | undef
   }
   if (kind === "color_range") {
     const model = (range?.[RANGE.pointModels] as unknown[] | undefined)?.[0];
-    const [r, g, b, x, y] = typeof model === "string" ? model.split(/\s+/).map(Number) : [];
-    if (f.refused) return { unavailable: `not shown: ${f.refused}` };
-    return { point: viewOf(f).point(x, y), color: [r, g, b], color_amount: range?.[RANGE.colorAmount] };
+    // sample: Lightroom's l, a, b as stored (mask-range.ts, issue #210), for geometry.sample or copy_sample_from.
+    const [l, a, b, x, y] = typeof model === "string" ? model.trim().split(/\s+/).map(Number) : [];
+    const lab = { sample: { l, a, b }, color_amount: range?.[RANGE.colorAmount] }; // not a place: shown on a refused frame too
+    if (f.refused) return { unavailable: `not shown: ${f.refused}`, ...lab };
+    return { point: viewOf(f).point(x, y), ...lab };
   }
   const at = m[IMAGE.referencePoint];
   const placed = kind === "linear" || kind === "radial" || typeof at === "string";

@@ -28,7 +28,11 @@ const geometry = z
     feather: z.number().min(0).max(100).optional().describe("radial: feather 0-100 (new radial: 50)"),
     lum_range: z.array(unit).length(4).optional().describe("luminance: [a, b, c, d] in 0-1, each at least the one before: luminance a..d is masked, fully from b to c (at least 0.01 wide)"),
     depth_range: z.array(unit).length(4).optional().describe("depth_range: as lum_range, in distances, 0 the nearest; only on photos with a depth map (DEPTH_MAP_MISSING otherwise)"),
-    color_amount: z.number().gt(0).max(1).optional().describe("color_range: how far the selection reaches from the colour at `point` (Lightroom's Refine), above 0 to 1, default 0.5"),
+    color_amount: z.number().gt(0).max(1).optional().describe("color_range: how far the selection reaches from the sampled colour (Lightroom's Refine), above 0 to 1, default 0.5 (with copy_sample_from: the source's)"),
+    sample: z
+      .object({ l: unit, a: unit, b: unit })
+      .optional()
+      .describe("color_range: the colour as Lightroom stores it, l (lightness), a (green to red), b (blue to yellow), each 0-1, written verbatim; take it from lr_list_masks `geometry.sample` of a colour range made in Lightroom"),
     strokes: z
       .array(
         z.object({
@@ -45,7 +49,7 @@ const geometry = z
   .describe(
     `In ${FRAME}, as lr_get_preview \`region\` and lr_set_regions are; the engine maps it through the photo's crop (its angle included). ` +
       "linear: zero and full points; radial: the ellipse's box left, top, right, bottom (the ellipse is square to the preview); luminance: lum_range (tones, not a place); " +
-        "depth_range: depth_range; color_range: color_amount (the colour is `point`'s); brush: strokes. AI kinds take none.",
+        "depth_range: depth_range; color_range: sample and color_amount; brush: strokes. AI kinds take none.",
   );
 const sliders = z
   .record(z.string(), z.number())
@@ -60,8 +64,26 @@ const name = z.string().min(1).max(60);
 const maskId = z.string().min(1).describe("the mask's id from lr_list_masks or a mask tool's result (`masks[].id`)");
 
 const AI_NAMES = Object.keys(AI_KINDS);
-const KINDS = ["linear", "radial", "luminance", ...AI_NAMES, ...Object.keys(REFUSED_KINDS)] as [string, ...string[]];
+// color_range, depth_range and brush are described from engine 1.1.0 (#191) but were left out of this list, so the
+// schema refused them before the engine saw them (found for issue #210) [handle: engine\tests\mcp-mask-defs.test.ts].
+const KINDS = ["linear", "radial", "luminance", "color_range", "depth_range", "brush", ...AI_NAMES, ...Object.keys(REFUSED_KINDS)] as [string, ...string[]];
 const group = (prefix: string): string => AI_NAMES.filter((k) => k.startsWith(prefix)).join(", ");
+
+// One person's mask on a photo of several people (issue #210) [upstream claim: Automaat CLAUDE.md, AiMaskParts.lua refuseSinglePerson].
+const PERSON_NOTE =
+  "person_*: on a photo of two or more people Lightroom may mask the first person whichever person the point names (another project found " +
+  "Lightroom ignores the person in a written mask; [upstream claim], not yet checked here): look at the result, and if the wrong person changed, " +
+  "tell the user and take the mask out (lr_delete_mask).";
+// The colour range's sample (issue #210): Lightroom's l, a, b, not sRGB [upstream claim: Automaat PR #339]; copy and
+// explicit sample [upstream claim: Automaat PR #341]; params\mask-range.ts has the handles. The menu path, Tools >
+// Create New Mask > Color Range [upstream claim: Automaat PR #339, create_range_mask's description].
+const COLOR_NOTE =
+  "color_range selects the colours near one sample. Lightroom stores the sample as its own l, a, b (lightness, green to red, blue to yellow, 0-1), " +
+  "ranked against this photo's pixels, not as RGB, and the selection follows those numbers, not the pin. Give the sample one of three ways: " +
+  "copy_sample_from takes the stored sample, amount and pin of a colour range made in Lightroom (lr_list_masks shows its geometry.sample; if there is none, " +
+  "ask the user to make one: Tools > Create New Mask > Color Range in Develop, click the colour); geometry.sample writes l, a, b verbatim; with neither, the engine " +
+  "writes the preview's RGB colour at point, which is [unverified] (Lightroom may select another colour): look at the result. A sample copied from another " +
+  "photo selects what ranks like it there, the same colours only on the same pixels (a virtual copy). ";
 
 const listArgs = z.object({ session_id: sessionId, target: target.describe('Variants mode: which photo ("master", "A", …); default the photo the last call worked on') });
 const createArgs = z.object({
@@ -69,7 +91,7 @@ const createArgs = z.object({
   kind: z
     .enum(KINDS)
     .describe(
-      "linear, radial, luminance, depth_range, brush (geometry); color_range (point, color_amount). Found by Lightroom's AI: subject, sky, background; landscape, one category per mask: " +
+      "linear, radial, luminance, depth_range, brush (geometry); color_range (point; copy_sample_from or geometry.sample; color_amount). Found by Lightroom's AI: subject, sky, background; landscape, one category per mask: " +
         `${group("landscape_")}; every person in the photo, one part per mask: ${group("people_")}; one person, with point on them: ` +
         `${group("person_")}. people, landscape (name the part or category) and objects are refused, with the reason`,
     ),
@@ -77,8 +99,18 @@ const createArgs = z.object({
     .optional()
     .describe('the name the Masks panel shows (default "AVG <kind>"); a suggested style is "N. Subject - Purpose", for example "4. Lone Juniper - Foliage Separation"; any clear name works'),
   geometry: geometry.optional(),
-  point: point.optional().describe(`${group("person_")}: a point on that person (on the face, for face skin); color_range: a point on the colour to select (sampled from the preview there); in ${FRAME}`),
+  point: point
+    .optional()
+    .describe(`${group("person_")}: a point on that person (on the face, for face skin); color_range: where the mask's pin goes (with copy_sample_from, default the source's pin); in ${FRAME}. ${PERSON_NOTE}`),
   sliders: sliders.optional(),
+  copy_sample_from: z
+    .object({
+      mask_id: maskId.describe("the mask holding a colour range, typically one the user clicked in Lightroom (Tools > Create New Mask > Color Range in Develop)"),
+      part: z.number().int().min(1).optional().describe("in a mask of several parts, which part is the colour range (1 = the first, as lr_list_masks `parts`)"),
+      target: target.describe("Variants mode: the photo to copy from; default the photo this mask goes on"),
+    })
+    .optional()
+    .describe(`color_range: take Lightroom's stored sample (l, a, b), its amount and its pin from that colour range instead of geometry.sample. ${COLOR_NOTE}`),
 });
 const editArgs = z.object({
   ...passFields,
@@ -136,7 +168,8 @@ export const MASK_DEFS: ToolDef[] = [
       "List the masks on the session's photo: id, name, kind (lr_create_mask's kinds; \"ai\", \"range\" or \"other\" for a kind Lightroom made that the tools do not know; \"mixed\" for components of several kinds), " +
       "on/off, inverted, components, the local sliders not at 0 (Masking panel units), geometry, and for AI masks whether they have computed. " +
       `Geometry, points and people's boxes are in ${FRAME}, as lr_create_mask takes them; a mask drawn past the crop in Lightroom reads outside 0-1. ` +
-      "On a mirrored photo geometry reads { unavailable: <why> }. " +
+      "A colour range's geometry has `sample` (Lightroom's stored l, a, b, for lr_create_mask geometry.sample or copy_sample_from) and color_amount; a depth range's, depth_range. " +
+      "On a mirrored photo geometry reads { unavailable: <why> } (a colour range's sample still shows). " +
       "A mask of several parts also lists `parts`, in order (lr_edit_mask `part` 1 is the first): each part's kind, mode (add, subtract, intersect; \"other\" for none of them), inverted and geometry. " +
       "Also lists the local sliders and their ranges. Does not use a pass and writes nothing.",
     schema: listArgs,
@@ -147,8 +180,8 @@ export const MASK_DEFS: ToolDef[] = [
     name: "lr_create_mask",
     title: "Create a mask",
     description:
-      "Create one mask on the session's photo, with its local sliders set in the same pass. linear and radial take geometry; luminance takes " +
-      "geometry.lum_range; Lightroom finds and computes the AI kinds (the call waits up to 5 minutes; the Deck's Abort ends the wait: SESSION_ENDED). " +
+      "Create one mask on the session's photo, with its local sliders set in the same pass (what each kind takes: `kind`). " +
+      "Lightroom finds and computes the AI kinds (the call waits up to 5 minutes; the Deck's Abort ends the wait: SESSION_ENDED). " +
       "If the photo has none of that kind, MASK_NOTHING_FOUND: " +
       "the mask is taken out again and the pass is not used. If Lightroom stays busy or shows a dialog, the HUD tells the user to click OK in it. " +
       "If the mask then computes the pass goes on; if Lightroom reports the update failed or dropped it, the engine puts the photo back as it was before the session and ENDS " +
@@ -161,8 +194,8 @@ export const MASK_DEFS: ToolDef[] = [
       "Lightroom's Develop module instead (Lightroom then switches to Develop; `ai.route` \"dc\", `switched_to_develop`); people and " +
       "landscape kinds have no such fallback. If nothing works, FEATURE_UNAVAILABLE (details.routes_tried): the masks are as before and " +
       "the pass is not used. One person's kinds (person_*) take the person whose box holds the point: `ai.people` lists every person's " +
-      "box Lightroom found (left, top, right, bottom, in geometry's frame) and `ai.instance` the one chosen (lr_list_masks shows both); " +
-      "no person at the point: MASK_NOTHING_FOUND with the boxes. " +
+      "box Lightroom found (in geometry's frame) and `ai.instance` the one chosen (lr_list_masks shows both); " +
+      "no person at the point: MASK_NOTHING_FOUND with the boxes. person_* and color_range: read point and copy_sample_from ([unverified]). " +
       PASS_NOTE,
     schema: createArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },

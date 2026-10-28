@@ -66,7 +66,7 @@ export const KIND_CANDIDATES: readonly Candidate[] = [
 ];
 
 /** `c` with its colour range's colour: `sample` is the render's colour at the point (metrics\pixel.ts sampleColor). */
-export const withSample = (c: Candidate, sample: [number, number, number]): Candidate => (c.first.kind === "color_range" ? { ...c, first: { ...c.first, geometry: { ...c.first.geometry, sample } } } : c);
+export const withSample = (c: Candidate, [l, a, b]: [number, number, number]): Candidate => (c.first.kind === "color_range" ? { ...c, first: { ...c.first, geometry: { ...c.first.geometry, sample: { l, a, b } } } } : c);
 
 /** A depth range Lightroom read back without its depth sample: the photo has no depth map, so Jim is not asked. */
 export const noDepthMap = (c: Candidate, readBack: SdkSettings, id: string): boolean => c.first.kind === "depth_range" && depthMapMissing(readTable(readBack), id);

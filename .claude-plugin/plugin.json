@@ -1,6 +1,6 @@
 {
   "name": "lrc-avg",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Edit the photo selected in Lightroom Classic with native Develop settings, one measured pass at a time.",
   "author": {
     "name": "Jim Beebe"

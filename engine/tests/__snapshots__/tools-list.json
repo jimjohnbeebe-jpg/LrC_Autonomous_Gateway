@@ -29,7 +29,7 @@
   {
     "name": "lr_get_preview",
     "title": "Preview of the active photo",
-    "description": "Render the photo selected in Lightroom with its current Develop settings (a JPEG export, quality 75, which takes about 3 seconds) and return it as an image, with its uuid, SHA-256 hash, size, metrics and timings. With `uuid`: that photo instead, without selecting it (to look through a shoot, for culling or keywording). With `session_id`: the session's photo (refused with TARGET_CHANGED if another photo is selected) and its region metrics; in Variants mode `target` names the copy, which is selected in Lightroom first. With `region` (a box in 0-1 of the preview you see (the photo as cropped in Lightroom, upright), from its top-left corner, as mask geometry and lr_set_regions are): a crop of that box for judging sharpness, noise or fringing; the photo is exported larger (up to 4096 px) so the crop fills `long_edge`, never enlarged; `effective_scale` = output pixels per photo pixel (1 = 100 %). With `region`, the result's `metrics` describe the whole export (`metrics_scope` \"frame\") and `crop_metrics` the requested box, both measured at export resolution. Changes nothing. Metrics are measured on the rendered preview (8-bit sRGB, as Lightroom exported it), not on the raw file: clipping here can often be recovered from the raw data with highlights/whites or shadows/blacks. clip_high_pct = % of pixels with any channel >= 253; clip_high_tone_pct = % with 2+ channels >= 253 (the high guard's); clip_low_pct = % of pixels with all channels <= 2; luma = Rec. 709 weights on the 8-bit values (0-255); luma_percentiles p1-p99 by nearest rank; dynamic_range = (p99 - p1) / 255; rb_ratio = mean red / mean blue (a white-balance proxy); saturation_mean = mean HSV saturation, 0-100; hue_histogram = 12 bins of 30 degrees (bin i centred on i*30: 0 red, 60 yellow, 120 green, 180 cyan, 240 blue, 300 magenta), % of the chromatic pixels (HSV saturation and value >= 0.1, chromatic_pct of all); hue_mean = their circular mean hue in degrees. Percentages are 0-100.",
+    "description": "Render the photo selected in Lightroom with its current Develop settings (a JPEG export, quality 75, which takes about 3 seconds) and return it as an image, with its uuid, SHA-256 hash, size, metrics and timings. With `uuid`: that photo instead, without selecting it (to look through a shoot, for culling or keywording). With `session_id`: the session's photo (refused with TARGET_CHANGED if another photo is selected) and its region metrics; in Variants mode `target` names the copy, which is selected in Lightroom first. With `region` (a box in 0-1 of the preview you see (the photo as cropped in Lightroom, upright), from its top-left corner, as mask geometry and lr_set_regions are): a crop of that box for judging sharpness, noise or fringing; the photo is exported larger (up to 4096 px) so the crop fills `long_edge`, never enlarged; `effective_scale` = output pixels per photo pixel (1 = 100 %). With `region`, the result's `metrics` describe the whole export (`metrics_scope` \"frame\") and `crop_metrics` the requested box, both measured at export resolution. Changes nothing. Metrics are measured on the rendered preview (8-bit sRGB, as Lightroom exported it), not on the raw file: clipping here can often be recovered with highlights/whites or shadows/blacks. clip_high_pct = % of pixels with any channel >= 253; clip_high_tone_pct = % with 2+ channels >= 253 (the high guard's); clip_low_pct = % with all channels <= 2; luma = Rec. 709 on the 8-bit values; luma_percentiles p1-p99 by nearest rank; dynamic_range = (p99 - p1) / 255; rb_ratio = mean red / mean blue; saturation_mean = mean HSV saturation, 0-100; hue_histogram = 12 bins of 30 degrees (bin i centred on i*30: 0 red, 60 yellow, 120 green, 180 cyan, 240 blue, 300 magenta), % of the chromatic pixels (HSV saturation and value >= 0.1, chromatic_pct of all); hue_mean = their circular mean hue in degrees; sharpness = Laplacian variance of luma at 512 px (more = detail or noise). Percentages are 0-100.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -82,6 +82,14 @@
           "description": "render this photo (a uuid from lr_search_photos, lr_get_selected_photos or lr_import_photos), selected or not; the selection is not touched; not with session_id",
           "type": "string",
           "minLength": 1
+        },
+        "quality": {
+          "description": "\"exact\" (default): the export, about 3 s. \"fast\": Lightroom's cached preview, quicker but possibly stale (source \"thumbnail\", stale_possible true); for browsing, not for judging an edit; not with session_id, target or region",
+          "type": "string",
+          "enum": [
+            "exact",
+            "fast"
+          ]
         }
       }
     },
@@ -93,7 +101,7 @@
   {
     "name": "lr_get_metrics",
     "title": "Metrics of the last preview",
-    "description": "Return the full metrics of the last preview (the open session's, of `target` in Variants mode, or else this engine's last render): the metrics lr_get_preview returns plus 256-bin luma, red, green and blue histograms, without rendering again. Metrics are measured on the rendered preview (8-bit sRGB, as Lightroom exported it), not on the raw file: clipping here can often be recovered from the raw data with highlights/whites or shadows/blacks. clip_high_pct = % of pixels with any channel >= 253; clip_high_tone_pct = % with 2+ channels >= 253 (the high guard's); clip_low_pct = % of pixels with all channels <= 2; luma = Rec. 709 weights on the 8-bit values (0-255); luma_percentiles p1-p99 by nearest rank; dynamic_range = (p99 - p1) / 255; rb_ratio = mean red / mean blue (a white-balance proxy); saturation_mean = mean HSV saturation, 0-100; hue_histogram = 12 bins of 30 degrees (bin i centred on i*30: 0 red, 60 yellow, 120 green, 180 cyan, 240 blue, 300 magenta), % of the chromatic pixels (HSV saturation and value >= 0.1, chromatic_pct of all); hue_mean = their circular mean hue in degrees. Percentages are 0-100.",
+    "description": "Return the full metrics of the last preview (the open session's, of `target` in Variants mode, or else this engine's last render): the metrics lr_get_preview returns plus 256-bin luma, red, green and blue histograms, without rendering again. Metrics are measured on the rendered preview (8-bit sRGB, as Lightroom exported it), not on the raw file: clipping here can often be recovered with highlights/whites or shadows/blacks. clip_high_pct = % of pixels with any channel >= 253; clip_high_tone_pct = % with 2+ channels >= 253 (the high guard's); clip_low_pct = % with all channels <= 2; luma = Rec. 709 on the 8-bit values; luma_percentiles p1-p99 by nearest rank; dynamic_range = (p99 - p1) / 255; rb_ratio = mean red / mean blue; saturation_mean = mean HSV saturation, 0-100; hue_histogram = 12 bins of 30 degrees (bin i centred on i*30: 0 red, 60 yellow, 120 green, 180 cyan, 240 blue, 300 magenta), % of the chromatic pixels (HSV saturation and value >= 0.1, chromatic_pct of all); hue_mean = their circular mean hue in degrees; sharpness = Laplacian variance of luma at 512 px (more = detail or noise). Percentages are 0-100.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -113,6 +121,33 @@
           ]
         }
       }
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_get_photo_stats",
+    "title": "Metrics of several photos",
+    "description": "Measure up to 20 photos named by uuid, without a session and without selecting them: each is exported at 800 px (about 1-3 s a photo) and measured. Returns `photos` in the order given, each with `metrics` (the summary lr_get_preview returns, sharpness included) or its own `error`. For culling: compare sharpness and exposure across frames of one scene. Returns no images. Not while a session is open. Changes nothing. A call works for about 30 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling until `not_yet` is gone, and tell the user how far along it is. A call still busy at 50 seconds returns `pending` with `next`. Metrics are measured on the rendered preview (8-bit sRGB, as Lightroom exported it), not on the raw file: clipping here can often be recovered with highlights/whites or shadows/blacks. clip_high_pct = % of pixels with any channel >= 253; clip_high_tone_pct = % with 2+ channels >= 253 (the high guard's); clip_low_pct = % with all channels <= 2; luma = Rec. 709 on the 8-bit values; luma_percentiles p1-p99 by nearest rank; dynamic_range = (p99 - p1) / 255; rb_ratio = mean red / mean blue; saturation_mean = mean HSV saturation, 0-100; hue_histogram = 12 bins of 30 degrees (bin i centred on i*30: 0 red, 60 yellow, 120 green, 180 cyan, 240 blue, 300 magenta), % of the chromatic pixels (HSV saturation and value >= 0.1, chromatic_pct of all); hue_mean = their circular mean hue in degrees; sharpness = Laplacian variance of luma at 512 px (more = detail or noise). Percentages are 0-100.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "1-20 photo uuids (from lr_search_photos or lr_get_selected_photos)"
+        }
+      },
+      "required": [
+        "uuids"
+      ]
     },
     "annotations": {
       "readOnlyHint": true,
@@ -212,7 +247,7 @@
   {
     "name": "lr_step",
     "title": "One editing pass",
-    "description": "Apply one pass to the session's photo. `settings` maps canonical names to a CHANGE for numeric sliders (e.g. {\"exposure\": 0.3, \"highlights\": -20} adds 0.3 EV and lowers highlights by 20) and to the value to set for camera_profile, switches, booleans and curves. Each change is capped at the slider's per-pass maximum × the pass's decay (by default 1.0, 0.6, 0.4, 0.25 for passes 1-4, and a later pass takes the last value again; begin's session_settings.decay has the session's. Per-pass maxima: exposure 1 EV, contrast/texture/clarity/dehaze 40, highlights/shadows/whites/blacks 60, vibrance/saturation 30, temperature 1500 K on raw photos and 30 on rendered ones, whose temperature is relative, tint 30, HSL 40, grading 30; a grading hue is an angle: it takes the shorter way round, wraps at 360 and is not capped) and at the slider's range (`clamped`). The clipping guard covers only an end within its limit before the pass (every end when the session's `clip_baseline` is on; an end already over is left alone and reported `unmet`). A change that would push further into a guarded limit already reached is refused (`refused`); the rest is written as one History step \"AVG <id> pass n/N\", read back, rendered and measured. If clipping then exceeds a guarded limit, the engine pulls back the sliders that caused it, else takes fixed steps, at most 3 (\"… guard k\", in `guardrail_actions`). The pass is undone (\"… clip revert\" / \"… region revert\", a `reverted` action and `undone` in the result; the pass still counts) when clipping is still over a limit the photo was within before the pass, or a preserved region drifts; `applied` then lists what was written before the undo. Returns the applied changes, full settings, metrics, delta_metrics against the previous pass, and the image. `converged_by_metrics` (the metrics stopped moving) or `cap_reached` end the passes: then call lr_end_session. Unknown names or wrong types are refused before anything is written. Errors are {code, message, recoverable}: `recoverable`: true means the same call may work later unchanged (e.g. once Lightroom is back); false means change the call first. Variants mode: name the copy with `target`; each copy takes ONE pass before the pick (a second is refused with AWAITING_PICK), and the step that gives the last copy its pass returns `awaiting_pick: true` and the contact sheet: then ask the user to pick (lr_select_variant). After the pick, steps go to the pick, whose pass count carries on. `hud_actions` lists what the user did in the HUD since your last call (a pick), and a `deck_fallback` note when the Deck did not start and the classic HUD window opened instead (tell the user). approve_each_pass mode (begin's session_settings.approval): pass 1 needs no approval; from pass 2 on, the call first waits up to 40 s for the user's Approve of the pass before (the HUD's button, or lr_approve_pass after the user approved in chat), else returns AWAITING_APPROVAL (recoverable; nothing written, the pass not used): tell the user the pass waits for their Approve, then call again. Unknown names are refused before the wait. `approval` in the result says which pass was approved, by whom, and how long the call waited. Metrics are measured on the rendered preview (8-bit sRGB, as Lightroom exported it), not on the raw file: clipping here can often be recovered from the raw data with highlights/whites or shadows/blacks. clip_high_pct = % of pixels with any channel >= 253; clip_high_tone_pct = % with 2+ channels >= 253 (the high guard's); clip_low_pct = % of pixels with all channels <= 2; luma = Rec. 709 weights on the 8-bit values (0-255); luma_percentiles p1-p99 by nearest rank; dynamic_range = (p99 - p1) / 255; rb_ratio = mean red / mean blue (a white-balance proxy); saturation_mean = mean HSV saturation, 0-100; hue_histogram = 12 bins of 30 degrees (bin i centred on i*30: 0 red, 60 yellow, 120 green, 180 cyan, 240 blue, 300 magenta), % of the chromatic pixels (HSV saturation and value >= 0.1, chromatic_pct of all); hue_mean = their circular mean hue in degrees. Percentages are 0-100.",
+    "description": "Apply one pass to the session's photo. `settings` maps canonical names to a CHANGE for numeric sliders (e.g. {\"exposure\": 0.3, \"highlights\": -20} adds 0.3 EV and lowers highlights by 20) and to the value to set for camera_profile, switches, booleans and curves. Each change is capped at the slider's per-pass maximum × the pass's decay (by default 1.0, 0.6, 0.4, 0.25 for passes 1-4, and a later pass takes the last value again; begin's session_settings.decay has the session's. Per-pass maxima: exposure 1 EV, contrast/texture/clarity/dehaze 40, highlights/shadows/whites/blacks 60, vibrance/saturation 30, temperature 1500 K on raw photos and 30 on rendered ones, whose temperature is relative, tint 30, HSL 40, grading 30; a grading hue is an angle: it takes the shorter way round, wraps at 360 and is not capped) and at the slider's range (`clamped`). The clipping guard covers only an end within its limit before the pass (every end when the session's `clip_baseline` is on; an end already over is left alone and reported `unmet`). A change that would push further into a guarded limit already reached is refused (`refused`); the rest is written as one History step \"AVG <id> pass n/N\", read back, rendered and measured. If clipping then exceeds a guarded limit, the engine pulls back the sliders that caused it, else takes fixed steps, at most 3 (\"… guard k\", in `guardrail_actions`). The pass is undone (\"… clip revert\" / \"… region revert\", a `reverted` action and `undone` in the result; the pass still counts) when clipping is still over a limit the photo was within before the pass, or a preserved region drifts; `applied` then lists what was written before the undo. Returns the applied changes, full settings, metrics, delta_metrics against the previous pass, and the image. `converged_by_metrics` (the metrics stopped moving) or `cap_reached` end the passes: then call lr_end_session. Unknown names or wrong types are refused before anything is written. Errors are {code, message, recoverable}: `recoverable`: true means the same call may work later unchanged (e.g. once Lightroom is back); false means change the call first. Variants mode: name the copy with `target`; each copy takes ONE pass before the pick (a second is refused with AWAITING_PICK), and the step that gives the last copy its pass returns `awaiting_pick: true` and the contact sheet: then ask the user to pick (lr_select_variant). After the pick, steps go to the pick, whose pass count carries on. `hud_actions` lists what the user did in the HUD since your last call (a pick), and a `deck_fallback` note when the Deck did not start and the classic HUD window opened instead (tell the user). approve_each_pass mode (begin's session_settings.approval): pass 1 needs no approval; from pass 2 on, the call first waits up to 40 s for the user's Approve of the pass before (the HUD's button, or lr_approve_pass after the user approved in chat), else returns AWAITING_APPROVAL (recoverable; nothing written, the pass not used): tell the user the pass waits for their Approve, then call again. Unknown names are refused before the wait. `approval` in the result says which pass was approved, by whom, and how long the call waited. Metrics are measured on the rendered preview (8-bit sRGB, as Lightroom exported it), not on the raw file: clipping here can often be recovered with highlights/whites or shadows/blacks. clip_high_pct = % of pixels with any channel >= 253; clip_high_tone_pct = % with 2+ channels >= 253 (the high guard's); clip_low_pct = % with all channels <= 2; luma = Rec. 709 on the 8-bit values; luma_percentiles p1-p99 by nearest rank; dynamic_range = (p99 - p1) / 255; rb_ratio = mean red / mean blue; saturation_mean = mean HSV saturation, 0-100; hue_histogram = 12 bins of 30 degrees (bin i centred on i*30: 0 red, 60 yellow, 120 green, 180 cyan, 240 blue, 300 magenta), % of the chromatic pixels (HSV saturation and value >= 0.1, chromatic_pct of all); hue_mean = their circular mean hue in degrees; sharpness = Laplacian variance of luma at 512 px (more = detail or noise). Percentages are 0-100.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -1666,9 +1701,356 @@
     }
   },
   {
+    "name": "lr_list_presets",
+    "title": "List Develop presets",
+    "description": "List the Develop presets Lightroom has (built-in and the user's, scope \"lightroom\") and LrC-AVG checkpoints (scope \"plugin\", which the Develop Presets panel does not show), grouped by folder, each with its uuid. Filter by folder, scope or a part of the name; page with offset and limit (`next_offset`). Changes nothing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "folder": {
+          "description": "only this folder (preset group)",
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "description": "\"lightroom\" or \"plugin\" (checkpoints)",
+          "type": "string",
+          "enum": [
+            "lightroom",
+            "plugin"
+          ]
+        },
+        "query": {
+          "description": "only presets whose name contains this, case aside",
+          "type": "string",
+          "minLength": 1
+        },
+        "offset": {
+          "description": "skip this many (default 0)",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "limit": {
+          "description": "at most this many (default 200)",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        }
+      }
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_get_preset",
+    "title": "Read a Develop preset",
+    "description": "Read one preset's settings in canonical names (the names lr_sync_series and lr_create_checkpoint take), its file (`file`, `exportable`), the SDK keys no canonical name holds (`other_keys`), its masks and whether any is an AI mask. raw: true adds the SDK keys and values. Name the preset by preset_uuid (from lr_list_presets) or preset_name. Changes nothing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "preset_uuid": {
+          "description": "the preset's uuid from lr_list_presets (exact; preferred)",
+          "type": "string",
+          "minLength": 1
+        },
+        "preset_name": {
+          "description": "the preset's name as Lightroom lists it; refused with the candidates when several presets have it",
+          "type": "string",
+          "minLength": 1
+        },
+        "preset_folder": {
+          "description": "the folder (preset group) to look in, to tell same-named presets apart",
+          "type": "string",
+          "minLength": 1
+        },
+        "preset_scope": {
+          "description": "\"lightroom\" (the Develop Presets panel) or \"plugin\" (LrC-AVG checkpoints)",
+          "type": "string",
+          "enum": [
+            "lightroom",
+            "plugin"
+          ]
+        },
+        "raw": {
+          "description": "true: also the SDK keys and values as Lightroom gives them",
+          "type": "boolean"
+        }
+      }
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_compare_presets",
+    "title": "Compare two Develop presets",
+    "description": "Diff two presets (e.g. an approved one as `base` and a new checkpoint as `candidate`): `changes` lists each canonical setting that differs with both values (null: that preset does not carry it); `other_changes` the other SDK keys that differ (with values when raw: true). Mask ids Lightroom renews on every read are not compared. Changes nothing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "base": {
+          "type": "object",
+          "properties": {
+            "preset_uuid": {
+              "description": "the preset's uuid from lr_list_presets (exact; preferred)",
+              "type": "string",
+              "minLength": 1
+            },
+            "preset_name": {
+              "description": "the preset's name as Lightroom lists it; refused with the candidates when several presets have it",
+              "type": "string",
+              "minLength": 1
+            },
+            "preset_folder": {
+              "description": "the folder (preset group) to look in, to tell same-named presets apart",
+              "type": "string",
+              "minLength": 1
+            },
+            "preset_scope": {
+              "description": "\"lightroom\" (the Develop Presets panel) or \"plugin\" (LrC-AVG checkpoints)",
+              "type": "string",
+              "enum": [
+                "lightroom",
+                "plugin"
+              ]
+            }
+          },
+          "description": "the preset compared from (e.g. the approved one)"
+        },
+        "candidate": {
+          "type": "object",
+          "properties": {
+            "preset_uuid": {
+              "description": "the preset's uuid from lr_list_presets (exact; preferred)",
+              "type": "string",
+              "minLength": 1
+            },
+            "preset_name": {
+              "description": "the preset's name as Lightroom lists it; refused with the candidates when several presets have it",
+              "type": "string",
+              "minLength": 1
+            },
+            "preset_folder": {
+              "description": "the folder (preset group) to look in, to tell same-named presets apart",
+              "type": "string",
+              "minLength": 1
+            },
+            "preset_scope": {
+              "description": "\"lightroom\" (the Develop Presets panel) or \"plugin\" (LrC-AVG checkpoints)",
+              "type": "string",
+              "enum": [
+                "lightroom",
+                "plugin"
+              ]
+            }
+          },
+          "description": "the preset compared to"
+        },
+        "raw": {
+          "description": "true: also the SDK keys and values as Lightroom gives them",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "base",
+        "candidate"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_export_preset",
+    "title": "Copy a preset's file to a folder",
+    "description": "Copy a user preset's or checkpoint's own file (.xmp or .lrtemplate) into `destination_dir`, to keep or share it. Never replaces a file: an existing one is refused (PRESET_EXISTS). Built-in presets may have no file (PRESET_NOT_EXPORTABLE). Nothing in Lightroom changes.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "preset_uuid": {
+          "description": "the preset's uuid from lr_list_presets (exact; preferred)",
+          "type": "string",
+          "minLength": 1
+        },
+        "preset_name": {
+          "description": "the preset's name as Lightroom lists it; refused with the candidates when several presets have it",
+          "type": "string",
+          "minLength": 1
+        },
+        "preset_folder": {
+          "description": "the folder (preset group) to look in, to tell same-named presets apart",
+          "type": "string",
+          "minLength": 1
+        },
+        "preset_scope": {
+          "description": "\"lightroom\" (the Develop Presets panel) or \"plugin\" (LrC-AVG checkpoints)",
+          "type": "string",
+          "enum": [
+            "lightroom",
+            "plugin"
+          ]
+        },
+        "destination_dir": {
+          "type": "string",
+          "minLength": 1,
+          "description": "a full folder path, made if missing, e.g. D:\\Presets"
+        },
+        "filename": {
+          "description": "the copy's file name (default: the preset file's own); its extension must be the preset file's",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "destination_dir"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_apply_preset",
+    "title": "Apply a Develop preset to photos",
+    "description": "Apply one exact preset (preset_uuid, or a preset_name only one preset has) to photos named by uuid; the selection and the module stay as they are. Each photo first gets a snapshot \"AVG pre-preset <id>\" (applying it puts the photo back), then the preset as the History step \"AVG preset <id>: <name>\". Each applied photo lists the canonical settings the preset changed, before and after. A preset with AI masks has them recomputed for each photo (Lightroom Classic 13.3 or later; `ai_update`). At most 100 photos. A call works for about 30 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling until `not_yet` is gone, and tell the user how far along it is. A call still busy at 50 seconds returns `pending` with `next`. Tell the user which photos will change before calling. A photo that fails is in `failed` and the others go on. Not while a session is open.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "preset_uuid": {
+          "description": "the preset's uuid from lr_list_presets (exact; preferred)",
+          "type": "string",
+          "minLength": 1
+        },
+        "preset_name": {
+          "description": "the preset's name as Lightroom lists it; refused with the candidates when several presets have it",
+          "type": "string",
+          "minLength": 1
+        },
+        "preset_folder": {
+          "description": "the folder (preset group) to look in, to tell same-named presets apart",
+          "type": "string",
+          "minLength": 1
+        },
+        "preset_scope": {
+          "description": "\"lightroom\" (the Develop Presets panel) or \"plugin\" (LrC-AVG checkpoints)",
+          "type": "string",
+          "enum": [
+            "lightroom",
+            "plugin"
+          ]
+        },
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids (lr_get_selected_photos, lr_search_photos)"
+        }
+      },
+      "required": [
+        "uuids"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_create_checkpoint",
+    "title": "Save a preset checkpoint",
+    "description": "Save a photo's current settings (the selected photo, or photo_uuid; `categories` limits the groups), or exactly the canonical `settings` given, as an LrC-AVG checkpoint: a versioned Develop preset kept by the plugin. Lightroom does not show checkpoints in the Develop Presets panel; lr_list_presets lists them (scope \"plugin\"), lr_apply_preset applies them, lr_compare_presets compares them, lr_export_preset copies their file. For a preset in the panel use lr_create_preset_from_active. A name in use is refused with a suggested next version. Nothing on the photo changes. Not while a session is open.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "a new name, versioned (e.g. \"Warm look v3\"); a name in use is refused; none of < > : \" / \\ | ? *"
+        },
+        "photo_uuid": {
+          "description": "the photo to capture (default: the selected photo)",
+          "type": "string",
+          "minLength": 1
+        },
+        "settings": {
+          "description": "canonical name -> ABSOLUTE value, e.g. {\"contrast\": 15}: the checkpoint holds exactly these (for the photo's pipeline) instead of the photo's settings",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              }
+            ]
+          }
+        },
+        "categories": {
+          "description": "without `settings`: the groups of the photo's settings to capture (default: all), as in lr_create_preset_from_active",
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "basic_tone",
+              "white_balance",
+              "tone_curve",
+              "hsl",
+              "grading",
+              "detail",
+              "lens",
+              "effects",
+              "bw",
+              "calibration",
+              "camera_profile"
+            ]
+          }
+        }
+      },
+      "required": [
+        "name"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
     "name": "lr_search_photos",
     "title": "Search the catalog",
-    "description": "Search the Lightroom catalog for photos: by part of the file name, keywords (all of them), an exact star rating, capture dates (YYYY-MM-DD, inclusive), a collection and a folder (its full path; UNKNOWN_FOLDER when the catalog has none there); the filters combine (all must match). With no filter it searches every photo and says so. Paged: `count` is how many matched, `photos` at most `limit` of them from `offset`, `has_more` whether more follow. Each photo: uuid (what lr_set_rating, lr_set_keywords, lr_set_gps and lr_sync_series take), filename, rating (0 = none), capture_time, virtual_copy, copy_name, gps ({latitude, longitude}, null for none) and path (the file); `notice` when the plugin is too old for gps and path. Changes nothing.",
+    "description": "Search the Lightroom catalog for photos: by part of the file name, keywords (all of them), an exact star rating, capture dates (YYYY-MM-DD, inclusive), a collection (regular or smart: its members) and a folder (its full path; UNKNOWN_FOLDER when the catalog has none there), camera and lens (exact indexed names), ISO, focal length, flag, colour label, edited or not, and file type; the filters combine (all must match) through Lightroom's own search. With no filter it searches every photo and says so. Paged: `count` is how many matched, `photos` at most `limit` of them from `offset`, `has_more` whether more follow. Each photo: uuid (what lr_set_rating, lr_set_keywords, lr_set_gps and lr_sync_series take), filename, rating (0 = none), capture_time, virtual_copy, copy_name, gps ({latitude, longitude}, null for none) and path (the file); `notice` when the plugin is too old for gps and path. Changes nothing.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -1701,11 +2083,80 @@
           "description": "captured on or before this day, YYYY-MM-DD",
           "type": "string"
         },
+        "camera": {
+          "description": "the camera model exactly as Lightroom indexes it (Library filter bar > Metadata > Camera): \"ILCE-7M3\" matches, \"Sony ILCE-7M3\" does not",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "lens": {
+          "description": "the lens exactly as Lightroom indexes it (Library filter bar > Metadata > Lens)",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "iso": {
+          "description": "this ISO speed",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "focal_length": {
+          "description": "this focal length in mm",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "flag": {
+          "description": "this pick flag",
+          "type": "string",
+          "enum": [
+            "pick",
+            "reject",
+            "none"
+          ]
+        },
+        "color_label": {
+          "description": "this colour label; \"none\" for no label",
+          "type": "string",
+          "enum": [
+            "red",
+            "yellow",
+            "green",
+            "blue",
+            "purple",
+            "none"
+          ]
+        },
+        "edited": {
+          "description": "true: only photos with Develop edits; false: only unedited ones",
+          "type": "boolean"
+        },
+        "file_type": {
+          "description": "this file type",
+          "type": "string",
+          "enum": [
+            "DNG",
+            "RAW",
+            "JPG",
+            "TIFF",
+            "PNG",
+            "PSD",
+            "VIDEO",
+            "PSB",
+            "AVIF",
+            "JXL"
+          ]
+        },
         "collection_id": {
           "description": "only photos in this collection (its id from lr_list_collections)",
           "type": "integer",
           "minimum": 0,
           "maximum": 9007199254740991
+        },
+        "collection": {
+          "description": "only photos in the collection of this name or path (its name, or \"Set / Name\" as lr_list_collections shows its set; a name that several collections share is refused with the candidates); not with collection_id",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
         },
         "folder": {
           "description": "only photos in the catalog folder at this full path, as a listing's `path` shows its folder (D:\\Photos\\2026\\2026-09-07)",
@@ -1816,7 +2267,7 @@
   {
     "name": "lr_set_rating",
     "title": "Set star ratings",
-    "description": "Set the star rating of photos named by uuid: 0-5 stars, 0 removes the rating. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags and title, caption and headline are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
+    "description": "Set the star rating of photos named by uuid: 0-5 stars, 0 removes the rating. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags, colour labels and text fields are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -1852,7 +2303,7 @@
   {
     "name": "lr_set_keywords",
     "title": "Add or remove keywords",
-    "description": "Add keywords to and/or remove keywords from photos named by uuid. A keyword is a plain name or a hierarchy path, parent first with | between the levels (\"Places|Europe|Paris\"); levels match case aside. A plain name always means the top-level keyword of that name, to add (created there if missing) and to remove alike, never a deeper keyword of the same name: to reach a nested keyword, give its path (lr_list_keywords lists them). `before` and `after` give each photo's keywords as paths. A removed keyword, and every level created, stays in the catalog's Keyword List: this tool deletes no keyword. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags and title, caption and headline are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
+    "description": "Add keywords to and/or remove keywords from photos named by uuid. A keyword is a plain name or a hierarchy path, parent first with | between the levels (\"Places|Europe|Paris\"); levels match case aside. A plain name always means the top-level keyword of that name, to add (created there if missing) and to remove alike, never a deeper keyword of the same name: to reach a nested keyword, give its path (lr_list_keywords lists them). `before` and `after` give each photo's keywords as paths. A removed keyword, and every level created, stays in the catalog's Keyword List: this tool deletes no keyword. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags, colour labels and text fields are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -1901,7 +2352,7 @@
   {
     "name": "lr_set_gps",
     "title": "Set or remove GPS positions",
-    "description": "Set the GPS position of photos named by uuid, in decimal degrees, replacing any position they have; `position` null removes it. This tool neither reads nor writes altitude. `before` and `after` give each photo's position ({latitude, longitude}, or null for none). Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags and title, caption and headline are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
+    "description": "Set the GPS position of photos named by uuid, in decimal degrees, replacing any position they have; `position` null removes it. This tool neither reads nor writes altitude. `before` and `after` give each photo's position ({latitude, longitude}, or null for none). Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags, colour labels and text fields are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -1960,7 +2411,7 @@
   {
     "name": "lr_set_flag",
     "title": "Set pick flags",
-    "description": "Set the pick flag of photos named by uuid: pick, reject or none. `before` and `after` give each photo's flag. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags and title, caption and headline are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
+    "description": "Set the pick flag of photos named by uuid: pick, reject or none. `before` and `after` give each photo's flag. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags, colour labels and text fields are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -1997,9 +2448,51 @@
     }
   },
   {
+    "name": "lr_set_color_label",
+    "title": "Set colour labels",
+    "description": "Set the colour label of photos named by uuid: red, yellow, green, blue, purple or none. `before` and `after` give each photo's label. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags, colour labels and text fields are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-100 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "label": {
+          "type": "string",
+          "enum": [
+            "red",
+            "yellow",
+            "green",
+            "blue",
+            "purple",
+            "none"
+          ],
+          "description": "the colour label; \"none\" removes it"
+        }
+      },
+      "required": [
+        "uuids",
+        "label"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
     "name": "lr_set_iptc",
-    "title": "Set title, caption and headline",
-    "description": "Set the IPTC title, caption and/or headline of photos named by uuid; a field left out is not touched, \"\" empties it. `before` and `after` give each photo's three fields. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags and title, caption and headline are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
+    "title": "Set IPTC text, location and alt text",
+    "description": "Set text metadata of photos named by uuid: title, caption, headline, creator, copyright, the IPTC location (sublocation, city, state, country, iso_country_code; GPS is lr_set_gps) and the accessibility alt_text and extended_description (Lightroom Classic 13.2 or later, else FEATURE_UNAVAILABLE). A field left out is not touched, \"\" empties it. `before` and `after` give each photo's text fields. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags, colour labels and text fields are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -2027,6 +2520,51 @@
           "description": "the photos' headline, at most 2000 characters; \"\" empties it; left out, it stays as it is",
           "type": "string",
           "maxLength": 2000
+        },
+        "creator": {
+          "description": "the photos' IPTC creator, at most 2000 characters; \"\" empties it; left out, it stays as it is",
+          "type": "string",
+          "maxLength": 2000
+        },
+        "copyright": {
+          "description": "the photos' copyright notice, at most 2000 characters; \"\" empties it; left out, it stays as it is",
+          "type": "string",
+          "maxLength": 2000
+        },
+        "sublocation": {
+          "description": "the photos' IPTC sublocation, at most 2000 characters; \"\" empties it; left out, it stays as it is",
+          "type": "string",
+          "maxLength": 2000
+        },
+        "city": {
+          "description": "the photos' IPTC city, at most 2000 characters; \"\" empties it; left out, it stays as it is",
+          "type": "string",
+          "maxLength": 2000
+        },
+        "state": {
+          "description": "the photos' IPTC state / province, at most 2000 characters; \"\" empties it; left out, it stays as it is",
+          "type": "string",
+          "maxLength": 2000
+        },
+        "country": {
+          "description": "the photos' IPTC country, at most 2000 characters; \"\" empties it; left out, it stays as it is",
+          "type": "string",
+          "maxLength": 2000
+        },
+        "iso_country_code": {
+          "description": "the photos' IPTC ISO country code (2 or 3 letters), at most 2000 characters; \"\" empties it; left out, it stays as it is",
+          "type": "string",
+          "maxLength": 2000
+        },
+        "alt_text": {
+          "description": "the photos' accessibility alt text (Lightroom Classic 13.2 or later), at most 2000 characters; \"\" empties it; left out, it stays as it is",
+          "type": "string",
+          "maxLength": 2000
+        },
+        "extended_description": {
+          "description": "the photos' accessibility extended description (Lightroom Classic 13.2 or later), at most 2000 characters; \"\" empties it; left out, it stays as it is",
+          "type": "string",
+          "maxLength": 2000
         }
       },
       "required": [
@@ -2043,7 +2581,7 @@
   {
     "name": "lr_get_metadata",
     "title": "Read photos' metadata",
-    "description": "Read the catalog metadata of photos named by uuid: title, caption, headline (\"\" for none), flag (pick, reject or none), keywords (as paths, the form lr_set_keywords takes), gps ({latitude, longitude}, null for none) and stack (null outside one, else position (1 = top), count, collapsed and top_uuid). Read these before a write so the user sees what will change. A photo Lightroom could not find is listed in `failed`; a part it could not read is left out and named in `errors`. Lightroom's plugin SDK cannot stack photos that are already in the catalog, so no tool makes or breaks a stack: use Photo > Stacking in Lightroom. Changes nothing.",
+    "description": "Read the catalog metadata of photos named by uuid: the text fields lr_set_iptc writes (\"\" for none; alt_text and extended_description from Lightroom Classic 13.2), flag (pick, reject or none), label (the colour label, none for none), rating, capture_time, path, copy_name and virtual_copy, keywords (as paths, the form lr_set_keywords takes), gps ({latitude, longitude}, null for none) and stack (null outside one, else position (1 = top), count, collapsed and top_uuid). Read these before a write so the user sees what will change. A photo Lightroom could not find is listed in `failed`; a part it could not read is left out and named in `errors`. With raw: true, also every Develop setting (`develop`). Lightroom's plugin SDK cannot stack photos that are already in the catalog, so no tool makes or breaks a stack: use Photo > Stacking in Lightroom. Changes nothing.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -2056,6 +2594,10 @@
             "minLength": 1
           },
           "description": "the photos' uuids, 1-100 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "raw": {
+          "description": "true: also each photo's Develop settings, `develop`: by setting name (`settings`, as lr_step takes them) and as Lightroom reports them (`sdk`, its own key names); default false",
+          "type": "boolean"
         }
       },
       "required": [
@@ -2070,7 +2612,7 @@
   {
     "name": "lr_create_collection",
     "title": "Create a collection",
-    "description": "Create a collection (not a smart collection), at the top level or inside collection sets, which are created when missing. If one of that name is already there (case aside), it is returned with `created` false and nothing is made. Returns its id, for lr_add_to_collection and lr_search_photos' collection_id. Set names containing \"/\" cannot be given. Collections are not deleted by any tool. Tell the user what will change before calling. Runs only between editing sessions. If Lightroom stops answering, the call stops and the error lists what was done.",
+    "description": "Create a collection (not a smart collection), at the top level or inside collection sets, which are created when missing. If one of that name is already there (case aside), it is returned with `created` false and nothing is made. Returns its id, for lr_add_to_collection and lr_search_photos' collection_id. Set names containing \"/\" cannot be given. lr_create_smart_collection makes a smart one, lr_delete_collection deletes one. Tell the user what will change before calling. Runs only between editing sessions. If Lightroom stops answering, the call stops and the error lists what was done.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -2300,6 +2842,650 @@
       "readOnlyHint": false,
       "destructiveHint": false,
       "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_apply_auto",
+    "title": "Apply Lightroom's Auto",
+    "description": "Apply Lightroom's own Auto Tone and/or Auto white balance to photos named by uuid, as its Basic panel buttons do. Each photo's `status`: applied, unchanged (Auto gave the settings it had) or failed (`reason`). Use it as a baseline to compare against. Each photo is made the active one in Develop in turn; Lightroom's module, folder or collection and selection are put back after each. Each photo's result names what `changed` (by setting name; by Lightroom's own key names, `names: \"sdk\"`, when the photo's process version is older than this engine reads), with the `snapshot` taken just before, which puts it back; `undo` says how. Not while a session is open, and a photo a stopped session left open is refused. A call works for about 30 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling until `not_yet` is gone, and tell the user how far along it is. A call still busy at 50 seconds returns `pending` with `next`.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-100 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "tone": {
+          "description": "Lightroom's Auto Tone (Basic panel Auto): exposure, contrast, highlights, shadows, whites, blacks, and more",
+          "type": "boolean"
+        },
+        "white_balance": {
+          "description": "Lightroom's Auto white balance",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "uuids"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_reset",
+    "title": "Reset Develop settings",
+    "description": "Lightroom's Reset on photos named by uuid: every Develop setting back to Lightroom's default, which also clears the crop and the masks. Ask the user first and pass confirm: true. Each photo's `status`: reset or failed. Each photo is made the active one in Develop in turn; Lightroom's module, folder or collection and selection are put back after each. Each photo's result names what `changed` (by setting name; by Lightroom's own key names, `names: \"sdk\"`, when the photo's process version is older than this engine reads), with the `snapshot` taken just before, which puts it back; `undo` says how. Not while a session is open, and a photo a stopped session left open is refused. A call works for about 30 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling until `not_yet` is gone, and tell the user how far along it is. A call still busy at 50 seconds returns `pending` with `next`.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-100 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "confirm": {
+          "type": "boolean",
+          "const": true,
+          "description": "must be true: the user agreed to this change"
+        }
+      },
+      "required": [
+        "uuids",
+        "confirm"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_set_process_version",
+    "title": "Set the process version",
+    "description": "Set the process version (Version 1-6) of photos named by uuid, as Develop's Settings > Process does; updating an old photo to Version 6 lets the sessions edit it. A new version can change how the photo looks: ask the user first and pass confirm: true. A lower version on a photo with masks is refused (`status` skipped). Each photo's `status`: changed, unchanged, skipped or failed, with `previous` and `actual` (Lightroom's \"Version N\"). Each photo is made the active one in Develop in turn; Lightroom's module, folder or collection and selection are put back after each. Each photo's result names what `changed` (by setting name; by Lightroom's own key names, `names: \"sdk\"`, when the photo's process version is older than this engine reads), with the `snapshot` taken just before, which puts it back; `undo` says how. Not while a session is open, and a photo a stopped session left open is refused. A call works for about 30 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling until `not_yet` is gone, and tell the user how far along it is. A call still busy at 50 seconds returns `pending` with `next`.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-100 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 6,
+          "description": "Lightroom's process Version 1-6 (Settings > Process); 6 is the current one, and this engine edits photos at 6 and 5"
+        },
+        "confirm": {
+          "type": "boolean",
+          "const": true,
+          "description": "must be true: the user agreed to this change"
+        }
+      },
+      "required": [
+        "uuids",
+        "version",
+        "confirm"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_list_snapshots",
+    "title": "List a photo's snapshots",
+    "description": "List the Develop snapshots of a photo named by uuid: id and name; `by_avg` true for those LrC-AVG made (\"AVG …\", e.g. a session's \"AVG pre-session …\"); `session` names the session that puts the photo back with it (open, or left open by an engine that stopped). Changes nothing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the photo's uuid (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        }
+      },
+      "required": [
+        "uuid"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_create_snapshot",
+    "title": "Create a snapshot",
+    "description": "Save a photo's current Develop settings as a snapshot (Develop, Snapshots panel), named \"AVG <name>\". A name the photo already has is refused, nothing changed. Returns its id, for lr_apply_snapshot. Not while a session is open.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the photo's uuid (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "the snapshot's name; \"AVG \" is put in front unless it starts with it"
+        }
+      },
+      "required": [
+        "uuid",
+        "name"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_apply_snapshot",
+    "title": "Apply a snapshot",
+    "description": "Put a photo's Develop settings back to one of its snapshots (ids from lr_list_snapshots), replacing what it has now: ask the user first and pass confirm: true. A snapshot of the settings just before (`snapshot`) is taken first, so this can be undone; `changed` names what moved. Lightroom shows the photo in Develop meanwhile, then its module and selection are put back. Not while a session is open.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the photo's uuid (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "snapshot_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the snapshot's id, from lr_list_snapshots"
+        },
+        "confirm": {
+          "type": "boolean",
+          "const": true,
+          "description": "must be true: the user agreed to this change"
+        }
+      },
+      "required": [
+        "uuid",
+        "snapshot_id",
+        "confirm"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_delete_snapshot",
+    "title": "Delete a snapshot",
+    "description": "Delete one snapshot of a photo (id from lr_list_snapshots); the photo's settings do not change, but the snapshot cannot be brought back by a tool: ask the user first and pass confirm: true. A snapshot a session puts the photo back with is refused (SNAPSHOT_IN_USE). Not while a session is open.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the photo's uuid (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "snapshot_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the snapshot's id, from lr_list_snapshots"
+        },
+        "confirm": {
+          "type": "boolean",
+          "const": true,
+          "description": "must be true: the user agreed to this change"
+        }
+      },
+      "required": [
+        "uuid",
+        "snapshot_id",
+        "confirm"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_create_virtual_copies",
+    "title": "Create virtual copies",
+    "description": "Make one virtual copy of each photo named by uuid (up to 25), named copy_name or by Lightroom. Each photo's `copy_uuid` is the new copy, for the other tools; `status` copied or failed (`reason`). The photo is selected for the copy, then Lightroom's folder or collection and selection are put back. The masters do not change. Not while a session is open. A call works for about 30 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling until `not_yet` is gone, and tell the user how far along it is. A call still busy at 50 seconds returns `pending` with `next`.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 25,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-25 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "copy_name": {
+          "description": "the name of each new copy (Lightroom's Copy Name); omitted, Lightroom names it",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      },
+      "required": [
+        "uuids"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_create_smart_collection",
+    "title": "Create a smart collection",
+    "description": "Create a smart collection whose rules are lr_search_photos' filters (all must match; at least one; no folder or collection rule), at the top level or inside collection sets, which are created when missing. A collection of that name already there is refused (ALREADY_EXISTS): nothing is replaced. Returns its id, photo_count and the rules; Lightroom keeps it filled. Tell the user what will change before calling. Runs only between editing sessions. If Lightroom stops answering, the call stops and the error lists what was done.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "description": "the collection's name"
+        },
+        "set": {
+          "description": "the collection sets to put it in, top level first, as lr_list_collections writes them (\"2026 / Trips\"); missing sets are created. Omit for the top level",
+          "type": "string",
+          "minLength": 1
+        },
+        "filename": {
+          "description": "part of the file name",
+          "type": "string",
+          "minLength": 1
+        },
+        "keywords": {
+          "description": "keywords the photo has, all of them",
+          "minItems": 1,
+          "maxItems": 50,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "rating": {
+          "description": "exactly this many stars, 0-5",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "start_date": {
+          "description": "captured on or after this day, YYYY-MM-DD",
+          "type": "string"
+        },
+        "end_date": {
+          "description": "captured on or before this day, YYYY-MM-DD",
+          "type": "string"
+        },
+        "camera": {
+          "description": "the camera model exactly as Lightroom indexes it (Library filter bar > Metadata > Camera): \"ILCE-7M3\" matches, \"Sony ILCE-7M3\" does not",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "lens": {
+          "description": "the lens exactly as Lightroom indexes it (Library filter bar > Metadata > Lens)",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "iso": {
+          "description": "this ISO speed",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "focal_length": {
+          "description": "this focal length in mm",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "flag": {
+          "description": "this pick flag",
+          "type": "string",
+          "enum": [
+            "pick",
+            "reject",
+            "none"
+          ]
+        },
+        "color_label": {
+          "description": "this colour label; \"none\" for no label",
+          "type": "string",
+          "enum": [
+            "red",
+            "yellow",
+            "green",
+            "blue",
+            "purple",
+            "none"
+          ]
+        },
+        "edited": {
+          "description": "true: only photos with Develop edits; false: only unedited ones",
+          "type": "boolean"
+        },
+        "file_type": {
+          "description": "this file type",
+          "type": "string",
+          "enum": [
+            "DNG",
+            "RAW",
+            "JPG",
+            "TIFF",
+            "PNG",
+            "PSD",
+            "VIDEO",
+            "PSB",
+            "AVIF",
+            "JXL"
+          ]
+        }
+      },
+      "required": [
+        "name"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_delete_collection",
+    "title": "Delete a collection",
+    "description": "Delete a collection or smart collection, named by id or by name; its photos stay in the catalog. Needs confirm: true: ask the user first. `before` gives what makes it again (member_uuids of a collection, search_description of a smart one) and `undo` how. Tell the user what will change before calling. Runs only between editing sessions. If Lightroom stops answering, the call stops and the error lists what was done.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "collection_id": {
+          "description": "the collection's id from lr_list_collections",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "collection": {
+          "description": "or the collection by its name, or \"Set / Name\" as lr_list_collections shows its set; a name that several collections share is refused with the candidates",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "confirm": {
+          "type": "boolean",
+          "description": "must be true: the user agreed to delete this collection"
+        }
+      },
+      "required": [
+        "confirm"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_list_folders",
+    "title": "The catalog's folders",
+    "description": "List the catalog's folders as a tree in order, a parent before its children: path (the full path lr_search_photos' folder takes), name, depth (0 for a root) and photo_count (the folder's own photos, not its subfolders'). Paged like lr_search_photos. For a folder's photos call lr_search_photos with folder (and include_subfolders). Changes nothing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "description": "how many to return, 1-500 (default 100)",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        },
+        "offset": {
+          "description": "how many to skip, for the next page (default 0)",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_rename_keyword",
+    "title": "Rename a keyword",
+    "description": "Rename one keyword in place: every photo that holds it shows the new name; its parent, children and synonyms stay. A sibling of the new name (case aside) is refused: a rename never merges keywords. A change of case only works too. `before` and `after` are its paths; `undo` says how to put it back. Tell the user what will change before calling. Runs only between editing sessions. If Lightroom stops answering, the call stops and the error lists what was done.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "description": "the keyword: a plain name is the top-level keyword, a path (\"Places|Europe|Paris\") the keyword at that place"
+        },
+        "new_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "its new name (one level)"
+        }
+      },
+      "required": [
+        "path",
+        "new_name"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_remove_keyword_subtree",
+    "title": "Take a keyword and its children off photos",
+    "description": "Take a keyword and every keyword under it off photos: those named by uuid, else those selected in Lightroom, or with catalog_wide and confirm: true every photo that holds one. The keywords stay in the Keyword List. At most 100 photos a call; `not_yet` or `remaining` with `next` say how to go on. `before` and `after` give each photo's keywords. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags, colour labels and text fields are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "description": "the keyword whose subtree comes off: it and every keyword under it (a plain name is the top-level keyword)"
+        },
+        "uuids": {
+          "description": "the photos to take them off, 1-100; left out (and no catalog_wide), the photos selected in Lightroom",
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "catalog_wide": {
+          "description": "true: every photo in the catalog that holds one of them; needs confirm: true",
+          "type": "boolean"
+        },
+        "confirm": {
+          "description": "true when the user agreed to a catalog_wide removal",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "path"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_export_metadata",
+    "title": "Export photos' metadata to a JSON file",
+    "description": "Write the catalog metadata of photos (named by uuid, else the selection; at most 500) to a new JSON file: per photo what lr_get_metadata reads, keyword paths included. The file is new each time (lrc-avg-metadata-<time>.json); no file is ever overwritten. Returns its path. Photos not reached in about 30 seconds are in `not_yet`. Changes nothing in the catalog.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "description": "the photos, 1-500; left out, the photos selected in Lightroom",
+          "minItems": 1,
+          "maxItems": 500,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "folder": {
+          "description": "an absolute folder for the file; left out, %TEMP%\\LrC-AVG\\metadata",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_set_ai_metadata",
+    "title": "Keep an AI score and reason on photos",
+    "description": "Keep an AI's score (0-100) and reason on photos named by uuid, in LrC-AVG's private plug-in metadata (not IPTC, not shown in Lightroom's panels). `before` and `after` give each photo's {score, reason}. Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags, colour labels and text fields are catalog metadata, not Develop settings: no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for keywords: remove exactly the names and paths that were added, or add back those removed). A photo that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the error names the photo that may still have been written (`maybe_written`). Not while a session is open.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-100 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        },
+        "score": {
+          "description": "an AI score, 0-100; null clears it; left out, it stays",
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "description": "why, at most 1024 characters; null clears it; left out, it stays",
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "uuids"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lr_get_ai_metadata",
+    "title": "Read photos' AI score and AVG edit stamp",
+    "description": "Read the AI score and reason lr_set_ai_metadata kept on photos named by uuid (null for none), and avg_edit: the session_id, look (the intent) and date an accepted LrC-AVG edit left on the photo (null when none did; Lightroom shows these as AVG session, AVG look and AVG edit date in the Metadata panel and can search them). A photo Lightroom could not find is listed in `failed`. Changes nothing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "the photos' uuids, 1-100 (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)"
+        }
+      },
+      "required": [
+        "uuids"
+      ]
+    },
+    "annotations": {
+      "readOnlyHint": true,
       "openWorldHint": false
     }
   }

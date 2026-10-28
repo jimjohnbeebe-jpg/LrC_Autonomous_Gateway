@@ -5,6 +5,8 @@
 import { z } from "zod";
 import {
   DEFAULT_PAGE,
+  FILE_TYPES,
+  LABEL_VALUES,
   MAX_KEYWORDS,
   MAX_KEYWORD_LENGTH,
   MAX_KEYWORD_PATH_LENGTH,
@@ -13,6 +15,7 @@ import {
   isCalendarDay,
   keywordKey,
   keywordLevels,
+  type LabelName,
 } from "../library/index.js";
 import type { ToolDef } from "./defs-shared.js";
 
@@ -20,16 +23,20 @@ const distinct = (list: readonly unknown[]): boolean => new Set(list).size === l
 /** The keywords trimmed and case-folded, so two spellings of one keyword compare equal. */
 const keys = (list: readonly string[] | undefined): string[] => (list ?? []).map(keywordKey);
 
-const limit = z.number().int().min(1).max(MAX_PAGE).optional().describe(`how many to return, 1-${MAX_PAGE} (default ${DEFAULT_PAGE})`);
-const offset = z.number().int().min(0).optional().describe("how many to skip, for the next page (default 0)");
+export const limit = z.number().int().min(1).max(MAX_PAGE).optional().describe(`how many to return, 1-${MAX_PAGE} (default ${DEFAULT_PAGE})`);
+export const offset = z.number().int().min(0).optional().describe("how many to skip, for the next page (default 0)");
 const day = z.string().refine(isCalendarDay, "must be a calendar day, YYYY-MM-DD");
+const exact = z.string().trim().min(1).max(200);
+/** A collection named as lr_list_collections shows it: its name, or "Set / Subset / Name" (issue #218 row 7). */
+export const collectionName = z.string().trim().min(1).max(1000);
+export const COLLECTION_NAMES = 'its name, or "Set / Name" as lr_list_collections shows its set; a name that several collections share is refused with the candidates';
 export const uuids = z
   .array(z.string().min(1))
   .min(1)
   .max(MAX_PHOTOS)
   .refine(distinct, "uuids must differ")
   .describe(`the photos' uuids, 1-${MAX_PHOTOS} (from lr_search_photos, lr_get_selected_photos or lr_get_active_photo_context)`);
-const keyword = z
+export const keyword = z
   .string()
   .trim()
   .min(1)
@@ -47,21 +54,37 @@ const LISTED = "Each photo: uuid (what lr_set_rating, lr_set_keywords, lr_set_gp
 /** How lr_set_keywords and lr_list_keywords write a keyword. */
 const PATHS = 'A keyword is a plain name or a hierarchy path, parent first with | between the levels ("Places|Europe|Paris"); levels match case aside.';
 
+/** The search descriptor's filters (library\search.ts searchCriteria): lr_search_photos and lr_create_smart_collection. */
+export const FILTERS = {
+  filename: z.string().min(1).optional().describe("part of the file name"),
+  keywords: z.array(z.string().min(1)).min(1).max(MAX_KEYWORDS).optional().describe("keywords the photo has, all of them"),
+  rating: z.number().int().min(0).max(5).optional().describe("exactly this many stars, 0-5"),
+  start_date: day.optional().describe("captured on or after this day, YYYY-MM-DD"),
+  end_date: day.optional().describe("captured on or before this day, YYYY-MM-DD"),
+  camera: exact.optional().describe('the camera model exactly as Lightroom indexes it (Library filter bar > Metadata > Camera): "ILCE-7M3" matches, "Sony ILCE-7M3" does not'),
+  lens: exact.optional().describe("the lens exactly as Lightroom indexes it (Library filter bar > Metadata > Lens)"),
+  iso: z.number().positive().finite().optional().describe("this ISO speed"),
+  focal_length: z.number().positive().finite().optional().describe("this focal length in mm"),
+  flag: z.enum(["pick", "reject", "none"]).optional().describe("this pick flag"),
+  color_label: z.enum(Object.keys(LABEL_VALUES) as [LabelName, ...LabelName[]]).optional().describe('this colour label; "none" for no label'),
+  edited: z.boolean().optional().describe("true: only photos with Develop edits; false: only unedited ones"),
+  file_type: z.enum(FILE_TYPES).optional().describe("this file type"),
+};
+export const datesInOrder = (a: { start_date?: string | undefined; end_date?: string | undefined }): boolean => !(a.start_date && a.end_date && a.start_date > a.end_date);
+
 const searchArgs = z
   .object({
-    filename: z.string().min(1).optional().describe("part of the file name"),
-    keywords: z.array(z.string().min(1)).min(1).max(MAX_KEYWORDS).optional().describe("keywords the photo has, all of them"),
-    rating: z.number().int().min(0).max(5).optional().describe("exactly this many stars, 0-5"),
-    start_date: day.optional().describe("captured on or after this day, YYYY-MM-DD"),
-    end_date: day.optional().describe("captured on or before this day, YYYY-MM-DD"),
+    ...FILTERS,
     collection_id: z.number().int().min(0).optional().describe("only photos in this collection (its id from lr_list_collections)"),
+    collection: collectionName.optional().describe(`only photos in the collection of this name or path (${COLLECTION_NAMES}); not with collection_id`),
     folder: z.string().trim().min(1).optional().describe("only photos in the catalog folder at this full path, as a listing's `path` shows its folder (D:\\Photos\\2026\\2026-09-07)"),
     include_subfolders: z.boolean().optional().describe("with folder: the photos of its subfolders too (default false)"),
     limit,
     offset,
   })
-  .refine((a) => !(a.start_date && a.end_date && a.start_date > a.end_date), "start_date must be on or before end_date")
-  .refine((a) => a.include_subfolders === undefined || a.folder !== undefined, "include_subfolders needs a folder");
+  .refine(datesInOrder, "start_date must be on or before end_date")
+  .refine((a) => a.include_subfolders === undefined || a.folder !== undefined, "include_subfolders needs a folder")
+  .refine((a) => a.collection === undefined || a.collection_id === undefined, "give collection or collection_id, not both");
 
 const selectedArgs = z.object({ limit });
 const collectionArgs = z.object({ limit, offset });
@@ -97,7 +120,7 @@ const gpsArgs = z.object({
 });
 
 export const WRITE_RULES =
-  "Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags and title, caption and headline are catalog metadata, not Develop settings: " +
+  "Tell the user which photos will change before calling. Ratings, keywords, GPS positions, pick flags, colour labels and text fields are catalog metadata, not Develop settings: " +
   "no History step or snapshot covers them, so the result gives each photo's value before and after, and another call puts it back (for " +
   "keywords: remove exactly the names and paths that were added, or add back those removed). A photo " +
   "that fails is listed in `failed` with the reason, and the others are still written; if Lightroom stops answering, the call stops and the " +
@@ -109,7 +132,9 @@ export const CATALOG_DEFS: ToolDef[] = [
     title: "Search the catalog",
     description:
       "Search the Lightroom catalog for photos: by part of the file name, keywords (all of them), an exact star rating, capture dates " +
-      "(YYYY-MM-DD, inclusive), a collection and a folder (its full path; UNKNOWN_FOLDER when the catalog has none there); the filters combine (all must match). With no filter it searches every photo and says so. " +
+      "(YYYY-MM-DD, inclusive), a collection (regular or smart: its members) and a folder (its full path; UNKNOWN_FOLDER when the catalog has none there), " +
+      "camera and lens (exact indexed names), ISO, focal length, flag, colour label, edited or not, and file type; the filters combine (all must match) " +
+      "through Lightroom's own search. With no filter it searches every photo and says so. " +
       `Paged: \`count\` is how many matched, \`photos\` at most \`limit\` of them from \`offset\`, \`has_more\` whether more follow. ${LISTED} Changes nothing.`,
     schema: searchArgs,
     annotations: { readOnlyHint: true, openWorldHint: false },

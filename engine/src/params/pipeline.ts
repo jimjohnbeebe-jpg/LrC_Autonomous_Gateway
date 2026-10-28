@@ -52,8 +52,8 @@ export function processVersionLabel(pv: string): string {
 }
 
 /**
- * Refuse a process version the map does not support: an older one must be updated in Lightroom
- * (the menu path in the message is [unverified]); a newer one comes with a Lightroom update.
+ * Refuse a process version the map does not support: an older one must be updated, with lr_set_process_version
+ * (issue #214) or in Lightroom (the menu path in the message is [unverified]); a newer one comes with a Lightroom update.
  */
 export function checkProcessVersion(pv: string): void {
   if (SUPPORTED_PROCESS_VERSIONS.includes(pv)) return;
@@ -65,9 +65,11 @@ export function checkProcessVersion(pv: string): void {
       `Process version ${pv} is newer than this engine knows ${supported}, so editing this photo is unavailable until the engine supports it; reading its context still works.`,
     );
   }
+  const newest = PROCESS_VERSION_LABELS[SUPPORTED_PROCESS_VERSIONS[0] as string] as string; // "Version 6"
   throw new ParamError(
     "unsupported_process_version",
-    `Process version ${pv} is not supported ${supported}: update the photo's process version in Lightroom first (Develop module, Settings > Process > ${PROCESS_VERSION_LABELS[SUPPORTED_PROCESS_VERSIONS[0] as string]}).`,
+    `Process version ${pv} is not supported ${supported}: update the photo's process version first, with lr_set_process_version ` +
+      `(version ${newest.replace("Version ", "")}, confirm: true, after asking the user) or in Lightroom (Develop module, Settings > Process > ${newest}).`,
   );
 }
 

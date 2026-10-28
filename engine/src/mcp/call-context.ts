@@ -8,7 +8,8 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { ClientIdentity } from "../log/index.js";
 
-export type CallContext = { progressToken: boolean; client?: ClientIdentity | null };
+/** `signal` (issue #216): aborted when the client cancels the call or the transport closes (server.ts, ctx.mcpReq.signal). */
+export type CallContext = { progressToken: boolean; client?: ClientIdentity | null; signal?: AbortSignal };
 
 const store = new AsyncLocalStorage<CallContext>();
 
@@ -23,6 +24,11 @@ export function callLogFields(): { progress_token?: boolean; client?: { name: st
   if (!context) return {};
   const client = context.client;
   return { progress_token: context.progressToken, ...(client ? { client: { name: client.name, version: client.version } } : {}) };
+}
+
+/** True once the current call was cancelled; a batch tool checks it between photos. False outside a call. */
+export function callCancelled(): boolean {
+  return store.getStore()?.signal?.aborted === true;
 }
 
 /** The client of the current call; null outside a call or when it sent no usable clientInfo. */

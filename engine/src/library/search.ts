@@ -22,13 +22,53 @@ export const DEFAULT_PAGE = 100;
  */
 export const CATALOG_READ_TIMEOUT_MS = 60000;
 
+// Issue #218 row 1 (below) adds camera, lens, ISO, focal length, flag, colour label, edited status and file type.
+
+/** The colour labels by name, as findPhotos' "labelColor" takes them [handle: D:\Developer\LightRoom Classic Dev Kit\API Reference\modules\LrCatalog.html, findPhotos "labelColor"]. */
+export const LABEL_VALUES = { red: 1, yellow: 2, green: 3, blue: 4, purple: 5, none: "none" } as const;
+export type LabelName = keyof typeof LABEL_VALUES;
+/** findPhotos' "fileFormat" values [handle: LrCatalog.html above, findPhotos "fileFormat"]. */
+export const FILE_TYPES = ["DNG", "RAW", "JPG", "TIFF", "PNG", "PSD", "VIDEO", "PSB", "AVIF", "JXL"] as const;
+export type FileType = (typeof FILE_TYPES)[number];
+
 export type SearchFilters = {
   filename?: string | undefined;
   keywords?: string[] | undefined;
   rating?: number | undefined;
   start_date?: string | undefined;
   end_date?: string | undefined;
+  camera?: string | undefined;
+  lens?: string | undefined;
+  iso?: number | undefined;
+  focal_length?: number | undefined;
+  flag?: "pick" | "reject" | "none" | undefined;
+  color_label?: LabelName | undefined;
+  edited?: boolean | undefined;
+  file_type?: FileType | undefined;
 };
+
+const PICK = { pick: 1, none: 0, reject: -1 } as const;
+
+/**
+ * Issue #218 row 1: the Library filters upstream added (Automaat PR #408), as its buildSearchDesc writes them
+ * [upstream claim: Automaat/lightroom-mcp@1040453 plugin/LightroomMCP.lrplugin/HandlerSearch.lua:87-121].
+ * "camera" and "lens" are "(string, with exact match)", "isoSpeedRating" a number, "pick" 1/0/-1,
+ * "hasAdjustments" a Boolean and "fileFormat" an enum on the SDK's page [handle: LrCatalog.html above, findPhotos];
+ * the operations "isTrue"/"isFalse" for a Boolean are on the same page. "focalLength" is not on it: it is
+ * [upstream claim] only, and what Lightroom matches for it is [unverified] until Jim's catalog:check.
+ */
+function libraryCriteria(f: SearchFilters): SearchCriterion[] {
+  const out: SearchCriterion[] = [];
+  if (f.camera !== undefined) out.push({ criteria: "camera", operation: "==", value: f.camera });
+  if (f.lens !== undefined) out.push({ criteria: "lens", operation: "==", value: f.lens });
+  if (f.iso !== undefined) out.push({ criteria: "isoSpeedRating", operation: "==", value: f.iso });
+  if (f.focal_length !== undefined) out.push({ criteria: "focalLength", operation: "==", value: f.focal_length });
+  if (f.flag !== undefined) out.push({ criteria: "pick", operation: "==", value: PICK[f.flag] });
+  if (f.color_label !== undefined) out.push({ criteria: "labelColor", operation: "==", value: LABEL_VALUES[f.color_label] });
+  if (f.edited !== undefined) out.push({ criteria: "hasAdjustments", operation: f.edited ? "isTrue" : "isFalse", value: f.edited });
+  if (f.file_type !== undefined) out.push({ criteria: "fileFormat", operation: "==", value: f.file_type });
+  return out;
+}
 
 /** True for a real "YYYY-MM-DD" calendar day. */
 export function isCalendarDay(day: string): boolean {
@@ -58,7 +98,7 @@ export function searchCriteria(f: SearchFilters): SearchCriterion[] {
   } else if (f.end_date !== undefined) {
     out.push({ criteria: "captureTime", operation: "<", value: shiftDay(f.end_date, 1) });
   }
-  return out;
+  return [...out, ...libraryCriteria(f)];
 }
 
 type ListedPhoto = CommandResult<"search_photos">["photos"][number];

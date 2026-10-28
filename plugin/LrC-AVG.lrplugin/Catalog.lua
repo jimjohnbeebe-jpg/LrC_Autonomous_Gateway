@@ -135,7 +135,9 @@ local LOCK_LOST = "another command took over the selection lock (the bridge rest
     Catalog.LOCK_MAX_HOLD_SECONDS .. " s)"
 
 -- One copy of the master named `name`. Returns the copy's description, or nil plus a failure.
--- `owns()` tells whether this command still holds the selection lock.
+-- `owns()` tells whether this command still holds the selection lock. `name` nil (copy_photo, Copies.lua):
+-- Lightroom names the copy itself [upstream claim: HandlerVirtualCopies.lua passes an optional copy_name], and any
+-- name is taken.
 local function copyOnce(catalog, master, masterInfo, name, owns)
     if not owns() then return nil, { code = "lock_lost", message = LOCK_LOST .. "; stopped before selecting the master" } end
     local selected, selectErr = selectOnly(catalog, master)
@@ -149,9 +151,10 @@ local function copyOnce(catalog, master, masterInfo, name, owns)
     end
     local copy = describe(catalog, returned[1])
     copy.identity_ok = copy.is_virtual_copy == true and copy.master_local_id == masterInfo.local_id
-        and copy.copy_name == name and type(copy.uuid) == "string"
+        and (name == nil or copy.copy_name == name) and type(copy.uuid) == "string"
     if not copy.identity_ok then
-        return copy, { code = "identity_mismatch", message = "the new photo is not a virtual copy of the master named " .. name }
+        return copy, { code = "identity_mismatch", message = "the new photo is not a virtual copy of the master" ..
+            (name and (" named " .. name) or "") }
     end
     return copy, nil
 end
@@ -242,8 +245,10 @@ function Catalog.getSelection(payload)
     return exclusive("get_selection", function() return getSelection(payload) end)
 end
 
--- Shared with Denoise.lua (issue #190): the selection lock, and selecting one photo alone.
+-- Shared with DevelopSession.lua (issue #190, #214): the selection lock, and selecting one photo alone; with
+-- Copies.lua: one virtual copy.
 Catalog.exclusive = exclusive
 Catalog.selectOnly = selectOnly
+Catalog.copyOnce = copyOnce
 
 return Catalog

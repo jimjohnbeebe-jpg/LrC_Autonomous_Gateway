@@ -16,6 +16,33 @@ From upstream commits after the snapshot (plugin 0.10.0, GitHub issue #60), rewr
 | `KeywordTree.lua`, `Library.lua` (`setKeywords`, `listKeywords`) | `KeywordTree.lua`, `HandlerKeywords.lua`, `HandlerOrganization.lua` at `11c0b93` | Keyword paths with `\|`, missing levels created one write gate per depth, case-aside matching, the sorted depth-first walk. |
 | `Library.lua` (`setGps`) | `HandlerMetadata.lua` at `9ba2ed6` | `setRawMetadata("gps", { latitude, longitude })` in a write gate, with range checks. |
 | `Sockets.lua` (`logBindFailure`) | `PluginInfoProvider.lua` at `923f27d` | The throttled log line for a socket that failed to open. |
+| `Presets.lua` | `HandlerDevelop.lua` at `1040453` (preset handlers from `92b0b55`, the AI-mask note from `efce08f`) | Listing `developPresetFolders` and `getDevelopPresetsForPlugin` presets, a plain copy of `getSetting()`, `applyDevelopPreset` with `_PLUGIN` for a checkpoint and without `updateAISettings`, `addDevelopPresetForPlugin` refused over an existing name. |
+| `Preview.lua` (`thumbnailPreview`, issue #216) | `HandlerPreview.lua` at `1040453` | `requestJpegThumbnail` held until its first callback, polled with `LrTasks.sleep`, within a 20 s wait. |
+
+From upstream commit `05b7a39` (PR #288; GitHub issue #190, plugin 1.1.0), rewritten, not copied:
+
+| File in this plugin | Derived from | What was taken |
+|---|---|---|
+| `Denoise.lua` | `HandlerDevelop.lua` at `05b7a39` (`apply_denoise`) | AI Denoise through `LrDevelopController` on the photo active in Develop, one photo per command, the amount read back. |
+
+From upstream at `1040453` (2026-10-26; GitHub issue #214), rewritten, not copied:
+
+| File in this plugin | Derived from | What was taken |
+|---|---|---|
+| `DevelopSession.lua` (used by `Denoise.lua`) | `DevelopSession.lua` | One photo at a time in Develop: select it alone, retried, through All Photographs when outside the source; the module, sources and selection put back. |
+| `DevelopTools.lua` | `HandlerDevelop.lua` (`applyAutoAdjustments`, `resetDevelopAdjustments`, `setProcessVersion`) | Auto Tone / Auto WB with the settle wait (2 s, 1 s still, 8 s), Reset, `getProcessVersion`/`setProcessVersion` with "Version N" and the masked-downgrade refusal. |
+| `Snapshots.lua` | `HandlerSnapshots.lua` | Listing, applying in Develop and deleting snapshots by id, with the deletion read back. |
+| `Copies.lua` | `HandlerVirtualCopies.lua` | One virtual copy per photo with an optional name, the selection and source put back. |
+
+From upstream commit `1040453` (plugin 1.5.0, GitHub issue #218), rewritten, not copied:
+
+| File in this plugin | Derived from | What was taken |
+|---|---|---|
+| `CollectionEdit.lua` | `HandlerCollections.lua` (`createSmartCollection`, `deleteCollection`, `getCollectionPhotos`) | A smart collection from a search descriptor; deleting a collection in a write gate; a smart collection's `getPhotos` outside the read gate (also in `Library.lua`, `Transfer.lua`). |
+| `Folders.lua` | `HandlerFolders.lua` (`listFolders`) | The depth-first folder walk from `getFolders` with each folder's own photo count. |
+| `KeywordEdit.lua` | `HandlerKeywords.lua` (`renameKeyword`), `HandlerOrganization.lua` (`removeKeywordSubtree`) | Rename by `setAttributes({ keywordName })`, the sibling clash check, the case-only rename through a temporary name; the subtree's photos for a catalog-wide removal. |
+| `MetadataDefinition.lua`, `PluginMetadata.lua` | `AiMetadataDefinition.lua`, `HandlerAiMetadata.lua` | The private fields `aiScore` and `aiReason` (schema version 1) and writing them with `setPropertyForPlugin`, nil to clear. |
+| `Metadata.lua` (`setIptc`, `setColorLabel`) | `HandlerMetadata.lua` (`setMetadata`, `setLocation`), `HandlerOrganization.lua` (`setColorLabel`) | The creator, copyright, location and accessibility keys, the 13.2 accessibility gate, `colorNameForLabel`. |
 
 The engine's derived files are listed in `engine\THIRD_PARTY_NOTICES.md`.
 

@@ -73,7 +73,7 @@ local function target(payload)
     end
     return catalog, photo, uuid, nil
 end
--- Preview.lua exports the same target photo.
+-- Preview.lua exports the same target photo; DevelopTools.lua (issue #214) writes with the same AI-mask guard.
 Develop.target = target
 
 local function readSettings(catalog, photo)
@@ -81,6 +81,8 @@ local function readSettings(catalog, photo)
     catalog:withReadAccessDo(function() settings = photo:getDevelopSettings() end)
     return settings
 end
+-- Presets.lua (issue #215) writes and reads back the same way; DevelopTools.lua (issue #214) reads settings.
+Develop.writeTarget, Develop.readSettings = writeTarget, readSettings
 
 local function findSnapshots(catalog, photo, field, value)
     local matches = {}

@@ -40,6 +40,8 @@ return {
     -- Load at Lightroom start, not on first use. Automaat notes this needs at least one menu item
     -- [upstream claim: vendor\automaat\plugin\LightroomMCP.lrplugin\Info.lua:14-17].
     LrForceInitPlugin = true,
+    -- The plugin's private metadata fields (plugin 1.5.0, issue #218 row 9; MetadataDefinition.lua says why).
+    LrMetadataProvider = 'MetadataDefinition.lua',
     -- Enable and Disable in Plug-in Manager start and stop the bridge (issue #174).
     LrEnablePlugin = 'PluginEnable.lua',
     LrDisablePlugin = 'PluginDisable.lua',
@@ -56,5 +58,5 @@ return {
         { title = "LrC-AVG - Accept Edit", file = "MenuAccept.lua" },
         { title = "LrC-AVG - Abort Edit", file = "MenuAbort.lua" },
     },
-    VERSION = { major = 1, minor = 4, revision = 0, build = 0 },
+    VERSION = { major = 1, minor = 5, revision = 0, build = 0 },
 }

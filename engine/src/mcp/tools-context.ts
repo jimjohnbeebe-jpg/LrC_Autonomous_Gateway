@@ -9,6 +9,7 @@ import { ParamError, WHITE_BALANCE_UNITS, processVersionLabel, type FromSdkResul
 import { cropRegion, type RenderedPreview } from "../preview/index.js";
 import { LEFT_OPEN_NOTE, leftOpenJson, type SessionManager, type SessionView, type TargetId } from "../session/index.js";
 import { ToolError, originalMissing, toToolError } from "./errors.js";
+import { fastPreview } from "./tools-preview-fast.js";
 import { DEFAULT_LONG_EDGE, PREVIEW_QUALITY, describe, openSession, readPageFolders, render, renderRequest, run, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
 /**
@@ -17,7 +18,7 @@ import { DEFAULT_LONG_EDGE, PREVIEW_QUALITY, describe, openSession, readPageFold
  */
 export const REGION_EXPORT_MAX = 4096;
 
-export type PreviewArgs = { long_edge?: number | undefined; session_id?: string | undefined; target?: TargetId | undefined; region?: RegionBox | undefined; uuid?: string | undefined };
+export type PreviewArgs = { long_edge?: number | undefined; session_id?: string | undefined; target?: TargetId | undefined; region?: RegionBox | undefined; uuid?: string | undefined; quality?: "exact" | "fast" | undefined };
 export type MetricsArgs = { session_id?: string | undefined; target?: TargetId | undefined };
 
 /** `target` names a photo of an open session; without session_id it has nothing to name. */
@@ -151,6 +152,7 @@ function openSessionJson(open: SessionView, selectedUuid: string): Record<string
  */
 export async function getPreview(ctx: ToolContext, args: PreviewArgs = {}): Promise<ToolOutput> {
   return run(ctx, "lr_get_preview", args, async () => {
+    if (args.quality === "fast") return fastPreview(ctx, args); // issue #216
     checkTarget(args);
     if (args.uuid !== undefined && args.session_id !== undefined) {
       throw new ToolError("INVALID_ARGUMENTS", "uuid names any photo outside a session: give uuid or session_id, not both.", false);

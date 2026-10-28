@@ -122,6 +122,18 @@ local function findChild(catalog, parent, name)
     end
     return nil
 end
+KeywordTree.findChild = findChild
+
+-- The keyword at `parts` (its levels, matched case aside), or nil; nothing is created (plugin 1.5.0,
+-- KeywordEdit.lua). Read outside any gate, as the walk below.
+function KeywordTree.find(catalog, parts)
+    local current = nil
+    for _, name in ipairs(parts) do
+        current = findChild(catalog, current, name)
+        if not current then return nil end
+    end
+    return current
+end
 
 -- Every keyword under `parent` (nil: the whole tree) appended to `out` as its path, depth first, a
 -- parent before its children, siblings in folded-name order, so that pages follow on stably.

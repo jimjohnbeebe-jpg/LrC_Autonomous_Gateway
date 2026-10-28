@@ -14,6 +14,7 @@ import { ToolError } from "../mcp/errors.js";
 import { differingSettings, type CanonicalSettings } from "../params/index.js";
 import type { EndedByEntry } from "../log/index.js";
 import { settlePending } from "./ai-update.js";
+import { stampAvg } from "./avg-stamp.js";
 import { bridge, checkAbort, failed, ms, read, saveLog } from "./io.js";
 import { focus, variant } from "./targets.js";
 import { WRITE_TIMEOUT_MS, type FinishArgs, type Session, type SessionContext, type SessionOutput, type Target, type UserEnd } from "./types.js";
@@ -43,6 +44,7 @@ export async function endSession(ctx: SessionContext, s: Session, args: FinishAr
   let recipePath: string | null = null;
   let revert: { ms: number; differing: string[] } | null = null;
   let masks = 0;
+  let avgStamp: string | null = null;
   try {
     await focus(ctx, s, kept);
     if (args.outcome === "accept") {
@@ -62,6 +64,7 @@ export async function endSession(ctx: SessionContext, s: Session, args: FinishAr
         ...(masks > 0 ? { masks } : {}),
       });
       recipePath = s.files.recipePath;
+      avgStamp = await stampAvg(client, { photoUuid: kept.uuid, sessionId: s.id, look: s.intent.intent.id, date: ctx.now(), timeoutMs: WRITE_TIMEOUT_MS });
     } else {
       // Not while Lightroom computes an AI mask on the photo (ai-update.ts, D16); the plugin refuses it too.
       await settlePending(ctx, s);
@@ -103,6 +106,7 @@ export async function endSession(ctx: SessionContext, s: Session, args: FinishAr
       final_settings: finalSettings,
       ...(revert ? { revert } : {}),
       ...(masks > 0 ? { masks_note: MASKS_NOTE(masks) } : {}),
+      ...(avgStamp !== null ? { avg_stamp: avgStamp } : {}),
       ...copies,
       timings: { total_ms: ms(started) },
     },

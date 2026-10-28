@@ -65,13 +65,25 @@ describe("plugin: every call newer than 13.0 goes through Needs.check", () => {
     const code = codeOnly(lua(DENOISE.file));
     const entry = code.indexOf("function Denoise.apply(");
     const check = code.indexOf("Needs.check(", entry);
-    const work = code.indexOf("Catalog.exclusive(", entry);
+    const work = code.indexOf("DevelopSession.withPhoto(", entry); // issue #214: the lock and the view, moved out of Denoise.lua
     expect([entry, check, work].every((i) => i >= 0) && check < work).toBe(true);
     expect([...code.matchAll(/^function Denoise\.(\w+)/gm)].map((m) => m[1])).toEqual(["apply"]);
     const used = new Set([...code.matchAll(/\b(getEnhancePanelState|setEnhance|toggleEnhance|changeDenoiseAmount)\b/g)].map((m) => m[1]));
     expect([...used].sort()).toEqual([...DENOISE.names].sort());
     const callers = own.filter((f) => /\b(getEnhancePanelState|setEnhance|toggleEnhance|changeDenoiseAmount)\b/.test(codeOnly(readFileSync(f, "utf8")))).map((f) => path.basename(f));
     expect(callers).toEqual([DENOISE.file]);
+  });
+
+  it("reads and writes the accessibility keys (13.2, issue #218) only after Needs.release, and names them in no other file", () => {
+    const code = codeOnly(lua("Metadata.lua"));
+    expect(lua("Metadata.lua")).toContain('Needs.release("Accessibility text", 13, 2)');
+    const set = code.slice(code.indexOf("function Metadata.setIptc("));
+    expect(set.indexOf("accessible()")).toBeGreaterThan(0);
+    expect(set.indexOf("accessible()")).toBeLessThan(set.indexOf("Gate.run("));
+    const text = code.slice(code.indexOf("local function textOf("));
+    expect(text).toMatch(/^local function textOf\(catalog, photo\)\s+local withAccessibility = accessible\(\)[\s\S]*?if withAccessibility then/);
+    const callers = own.filter((f) => /altTextAccessibility|extDescrAccessibility/.test(readFileSync(f, "utf8"))).map((f) => path.basename(f));
+    expect(callers).toEqual(["Metadata.lua"]);
   });
 
   it("keeps the mask calls (SDK 11.0, below the minimum) without a gate of their own, probed by MaskProbe.begin only to name a build that lacks one", () => {

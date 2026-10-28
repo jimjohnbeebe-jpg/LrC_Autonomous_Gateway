@@ -22,7 +22,7 @@ const folder = z
   .refine(isAbsoluteFolder, "must be an absolute path, such as C:\\Users\\<name>\\Pictures\\Exports; ~ is the user's home folder");
 const pixels = z.number().int().min(1).max(65000);
 
-const createArgs = z.object({
+export const createArgs = z.object({
   name: z.string().trim().min(1).max(255).describe("the collection's name"),
   set: z
     .string()
@@ -75,7 +75,7 @@ const denoiseArgs = z.object({
   amount: z.number().int().min(1).max(100).describe("Denoise amount, 1-100, as Lightroom's Detail panel shows it (50 is its default)"),
 });
 
-const META_WRITE =
+export const META_WRITE =
   "Tell the user what will change before calling. Runs only between editing sessions. If Lightroom stops answering, the call stops and the " +
   "error lists what was done.";
 
@@ -86,7 +86,7 @@ export const FILE_DEFS: ToolDef[] = [
     description:
       "Create a collection (not a smart collection), at the top level or inside collection sets, which are created when missing. If one of " +
       "that name is already there (case aside), it is returned with `created` false and nothing is made. Returns its id, for " +
-      `lr_add_to_collection and lr_search_photos' collection_id. Set names containing "/" cannot be given. Collections are not deleted by any tool. ${META_WRITE}`,
+      `lr_add_to_collection and lr_search_photos' collection_id. Set names containing "/" cannot be given. lr_create_smart_collection makes a smart one, lr_delete_collection deletes one. ${META_WRITE}`,
     schema: createArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     run: (tools, args) => tools.createCollection(args as z.infer<typeof createArgs>),

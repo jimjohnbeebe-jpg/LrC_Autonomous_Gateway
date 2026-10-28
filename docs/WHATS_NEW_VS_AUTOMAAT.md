@@ -1,6 +1,6 @@
 # LrC-AVG compared with the original Lightroom MCP
 
-*Release-note style comparison for users. Written 2026-10-09 against LrC-AVG engine 0.23.0 / plugin 0.19.0 (a prototype; there is no public release yet) and the original project's code as vendored in this repository.*
+*Release-note style comparison for users. Written 2026-10-09 against LrC-AVG engine 0.23.0 / plugin 0.19.0 and the original project as vendored in this repository (commit `a160e7a`). Stale rows corrected 2026-10-27 for LrC-AVG 1.5.0 (61 tools) against the original's live repository at commit `1040453` (68 tools); the sections that describe LrC-AVG's own features are otherwise as written on 2026-10-09. Tool by tool: [`PARITY.md`](PARITY.md). Analysis behind the update: [`reports/phase10/AUTOMAAT_COMPARE_2026-10-26.md`](reports/phase10/AUTOMAAT_COMPARE_2026-10-26.md).*
 
 ## The short version
 
@@ -11,19 +11,20 @@ LrC-AVG keeps the idea of connecting Claude to Lightroom, and adds an **editing 
 | | Original (Automaat) | LrC-AVG |
 |---|---|---|
 | Main idea | Claude controls Lightroom | Claude edits a photo the way a photographer does: adjust, look, refine |
-| Does Claude see the photo? | No. Claude works with text and numbers only | Yes. Claude looks at a fresh preview after every round |
+| Does Claude see the photo? | On request: `get_photo_preview` and `get_photo_stats` (at `1040453`; the 2026-09-22 snapshot had neither) | Yes. Claude looks at a fresh preview and its measurements after every round |
 | Protection against over-editing | None built in | Limits on how far each slider moves per round, and on blown highlights and crushed shadows |
-| Undo | Whatever you do in Lightroom yourself | A snapshot before every edit, a named History step per round, and an **Abort** button that puts the photo back |
+| Undo | Snapshot tools and a global "undo last step" (at `1040453`), used when Claude or you call them | A snapshot before every edit, a named History step per round, and an **Abort** button that puts the photo back |
 | Live view of what Claude is doing | None | A floating window (the HUD, and a separate "Deck" window) |
 | Ready-made looks | None | 11 editing styles (landscape, portrait, night sky, black and white, and more) |
 | Platforms | Mac and Windows | Windows only (so far) |
-| AI apps | Claude Desktop, Claude Code, Codex, Cursor, and others | Claude Desktop |
+| AI apps | Claude Desktop, Claude Code, Codex, Cursor, and others | Claude Desktop; Claude Code also tested; set-ups for others in `docs/CLIENTS.md` |
+| Tools | 68 (at `1040453`) | 61, under `lr_*` names; 54 of the original's 68 have an equivalent (see `PARITY.md`) |
 
 ## What is new in LrC-AVG
 
 ### 1. Claude edits in rounds and looks at the result
 
-The original has Claude set sliders directly, with no way to see the outcome. In LrC-AVG, Claude edits in short rounds (up to 8 by default, 1–16 in settings). Before each round it looks at a fresh preview of your photo and at measurements of it, then decides what to change next. The first round, "pass 0", sets the camera profile and lens corrections.
+The original has Claude set sliders directly; since the snapshot LrC-AVG forked from, it can also show Claude a preview on request, and its closed loop is a written skill without pass limits or guardrails (`docs/reports/phase10/AUTOMAAT_COMPARE_2026-10-26.md` section 6.1). In LrC-AVG, Claude edits in short rounds (up to 8 by default, 1–16 in settings). Before each round it looks at a fresh preview of your photo and at measurements of it, then decides what to change next. The first round, "pass 0", sets the camera profile and lens corrections.
 
 ### 2. Guardrails keep the edit in bounds
 
@@ -73,6 +74,8 @@ Both projects can search, rate and keyword photos, manage collections, and expor
 - A "before" value in every answer for ratings, keywords and GPS, so Claude can put them back on request.
 - Saving the current settings as a Lightroom preset.
 
+Since 2026-10-27 (version 1.5.0) LrC-AVG also has the original's newer catalog, preset and Develop tools: search by camera, lens, ISO, focal length, flag, colour label and file type; colour labels; smart collections and deleting collections; renaming keywords and removing a keyword tree; the folder list; IPTC creator, copyright and location; metadata export; Develop presets listed, read, compared, exported and applied; Auto Tone and Auto White Balance; Reset; process version; snapshots; virtual copies; sharpness and statistics for up to 20 photos; fast cached previews. Each write takes a snapshot first or returns the earlier values. These have been tested against a simulated Lightroom only, so far `[unverified]` in Lightroom (`reports/phase11/PARITY-BATCH1-CHECKS.md`).
+
 ### 10. Honest, readable errors
 
 Claude is told clearly why something was refused: an old process version, a missing original file, a setting your Lightroom does not offer, and so on. It no longer has to guess from a raw error string. A photo that cannot be edited safely is refused up front.
@@ -89,25 +92,27 @@ Each session writes a log of what was changed and why, and each accepted session
 
 ## What the original does that LrC-AVG does not (yet)
 
+*Updated 2026-10-27; the full list is [`PARITY.md`](PARITY.md).*
+
 | Original feature | In LrC-AVG |
 |---|---|
-| Mac support | Not supported. Windows only so far |
-| Other AI apps (Claude Code, Codex, Cursor, Windsurf, VS Code) | Built and tested for Claude Desktop only |
-| One-click Claude Desktop `.mcpb` installer and standalone binaries | Not provided. Install is a few PowerShell commands, and Node.js 22 or newer is needed |
-| Apply any saved Lightroom preset to photos directly | Not included. Presets can be saved, but edits go through the guarded rounds |
-| Copy Develop settings between photos, no limits | Replaced by the guarded series sync above |
-| Write any Develop setting by key name, including tone curves | Replaced by a fixed list of named settings with limits. Tone-curve writing is not included |
-| Compare, export and manage versioned preset checkpoints | Not included |
-| Full-detail photo metadata including raw setting keys | Replaced by a shorter "active photo" summary in plain names |
+| Mac support | Not supported. Windows only so far (Jim's open decision D4, epic #207) |
+| Other AI apps (Claude Code, Codex, Cursor, Windsurf, VS Code) | Claude Desktop and Claude Code tested; the others have set-ups in `docs/CLIENTS.md`, some not tested |
+| One-click Claude Desktop `.mcpb` installer and standalone binaries | A Windows setup with its own Node.js (release v1.1.0); `npm run package` also builds a `.mcpb`, not yet installed in Claude Desktop `[unverified]`; no standalone binaries |
+| Write any Develop setting by SDK key name | Replaced by named settings with limits, tone curves included since Phase 10. Free key writes wait for Jim's decision D1 |
+| Global undo of Lightroom's last step | Not included (decision D2); snapshots and Abort instead |
+| Remove photos from the catalog | Not included (decision D3) |
+| Mask tone curves, Point Color, one AI mask on many photos, deleting empty masks, brush feather and erase | Planned (issue #217) |
+| Rights usage terms, copyright info URL and creator website | Planned (issue #218) |
 
 ## Where LrC-AVG is limited today
 
 - Tested on **one Windows 11 PC** with Lightroom Classic 15.5.1 and 15.6. 15.0 is the supported baseline.
-- Global Develop settings and masks only. No crop, geometry or HDR.
+- Global Develop settings and masks only. No crop or geometry; HDR photos edit, with exposure limited to ±5.
 - One edit session at a time. Catalog tools (sync, ratings, keywords and so on) wait until the session ends.
-- Photos on older Lightroom process versions are refused until you update them in Develop.
-- Some features have been tested against a simulated Lightroom but not yet in Lightroom itself (for example keyword paths, GPS and the missing-original check). The sources table marks them.
-- There is no packaged release yet: it is built from source.
+- Photos on older Lightroom process versions are refused until you update them in Develop, or with `lr_set_process_version` (1.5.0).
+- Some features have been tested against a simulated Lightroom but not yet in Lightroom itself (for example keyword paths, GPS, the missing-original check and every tool new in 1.5.0). The sources table marks them.
+- Released as a Windows setup from v1.1.0 (2026-10-24); the 1.5.0 tools are not in a release yet.
 
 ## Credit
 
@@ -115,20 +120,27 @@ LrC-AVG is built on the original Lightroom MCP by Marcin Skalski, used under the
 
 ## Sources for the claims above
 
-Paths are in this repository. "Original" means the copy under `vendor/automaat/`, commit `a160e7a` (2026-09-22). The original project may have changed since; I did not compare against its live repository, which was outside this session's access. `[unverified]` means not yet observed in Lightroom.
+Paths are in this repository. "Original" means the copy under `vendor/automaat/`, commit `a160e7a` (2026-09-22). The 2026-10-27 corrections compare against the original's live repository at commit `1040453` (2026-10-26), as `docs/reports/phase10/AUTOMAAT_COMPARE_2026-10-26.md` did. `[unverified]` means not yet observed in Lightroom.
 
 | Claim | Handle |
 |---|---|
-| Original has 18 tools; none returns images; no snapshots or virtual copies; apply/copy/set develop writes have no History name | `docs/AUTOMAAT_SURVEY.md` sections 4.5–4.6, 5, 7 |
+| Original (at `a160e7a`) has 18 tools; none returns images; no snapshots or virtual copies; apply/copy/set develop writes have no History name | `docs/AUTOMAAT_SURVEY.md` sections 4.5–4.6, 5, 7 |
 | Original runs on Mac and Windows with several AI apps, `.mcpb` bundle and binaries | `vendor/automaat/README.md` (top and "Install (other AI tools)"), `vendor/automaat/mcpb/manifest.json` |
 | Original copies its plugin into Lightroom's Modules folder on start | `docs/AUTOMAAT_SURVEY.md` section 5 "Auto-install side effect" |
-| LrC-AVG exposes 31 tools | `grep -c 'name: "lr_' engine/src/mcp/defs-*.ts` (7+3+4+3+4+2+8) |
+| Original at `1040453` has 68 tools; 54 have an LrC-AVG equivalent; the gaps and their decisions | `docs/parity/upstream-tools-1040453.txt`; `docs/PARITY.md` (45 have, 9 ours+), kept by `engine/tests/parity-map.test.ts`; decisions D1-D7 in GitHub issue #207 |
+| LrC-AVG exposes 61 tools (1.5.0) | `TOOL_DEFS` in `engine/src/mcp/server.ts`; `engine/tests/parity-map.test.ts` checks that `docs/PARITY.md` names each |
+| Tone curves since Phase 10 | `engine/src/params/canonical.ts:21` (`CurveParam`); `docs/reports/phase10/S14.md` "Verdict" |
+| Release v1.1.0, 2026-10-24 | `gh release list`, 2026-10-27: "LrC-AVG v1.1.0, Latest, 2026-10-24T23:09:47Z" |
+| Claude Code tested with LrC-AVG | `docs/CLIENTS.md:30`, `docs/reports/phase8.5/clients.md` |
+| Original at `1040453`: previews, stats, snapshot tools, undo last step | upstream `server/src/tool-contracts.ts:508` (`get_photo_preview`), `:955` (`undo_last_step`); the snapshot tools in `docs/parity/upstream-tools-1040453.txt` |
+| HDR photos edit with exposure ±5 | `README.md` "Known limitations" |
+| The 1.5.0 tools are tested against a simulated Lightroom only | `docs/reports/phase11/PARITY-BATCH1-CHECKS.md`; in Lightroom `[unverified]` |
 | Rounds, guardrails, defaults, snapshot and History names | `README.md` "Your first session", "Settings"; `engine/src/mcp/defs-session.ts` |
 | Rounds, clipping limits and Abort worked on the Phase 5 check | `docs/reports/phase5/PHASE5.md` "Numbers" |
 | HUD and its buttons, menu items | `README.md` "The HUD", "Menu items"; `plugin/LrC-AVG.lrplugin/Info.lua` |
 | The Deck was accepted by Jim | `docs/reports/phase7/PHASE7.md` "Verdict" |
 | Eleven intents; per-pipeline profile and white balance | `engine/intents/*.json`; `README.md` "What else you can ask"; `docs/reports/phase8/S10.md`. Behaviour on rendered photos in Lightroom: `[unverified]` |
-| Mask tools and their stuck-Lightroom handling | `engine/src/mcp/defs-masks.ts`. The README's "no masks" limitation line is out of date against this file |
+| Mask tools and their stuck-Lightroom handling | `engine/src/mcp/defs-masks.ts` |
 | Series sync limit (500, 40 s per request) and per-photo snapshot | `README.md` "What else you can ask"; `engine/src/sync/types.ts:18`; `engine/src/library/files.ts:35` |
 | Keyword paths and GPS set/remove; the original only reads GPS | `engine/src/mcp/defs-catalog.ts`; `vendor/automaat/server/src/tool-contracts.ts:228-241`. Not yet tried in Lightroom: `[unverified]` |
 | Missing-original refusal | `engine/tests/offline-original.test.ts` (simulated Lightroom). In Lightroom: `[unverified]` until `docs/reports/phase8/offline.md` is observed |

@@ -1,6 +1,7 @@
 // The engine's tools (contracts in MCP_TOOLS), one module per group:
 //   context  (tools-context.ts): lr_get_active_photo_context, lr_get_preview, lr_get_metrics (Phase 2;
-//            Phase 3 added `session_id` and `region` to lr_get_preview, `session_id` to lr_get_metrics).
+//            Phase 3 added `session_id` and `region` to lr_get_preview, `session_id` to lr_get_metrics);
+//            lr_get_photo_stats (tools-stats.ts) and lr_get_preview `quality` "fast" (tools-preview-fast.ts), issue #216.
 //   session  (tools-session.ts): lr_begin_session, lr_step, lr_probe, lr_set_regions, lr_end_session,
 //            lr_get_session_log (Phase 3; the loop is session\manager.ts); lr_select_variant (Phase 4);
 //            lr_approve_pass (Phase 5); lr_list_masks, lr_create_mask, lr_edit_mask, lr_delete_mask
@@ -8,13 +9,17 @@
 //   intents  (tools-intents.ts): lr_list_intents, lr_get_intent, lr_save_intent (Phase 3).
 //   propagation (tools-propagation.ts): lr_sync_series (Phase 4; the sync is sync\sync.ts) and
 //            lr_create_preset_from_active (Phase 4; the preset is presets\create.ts).
-//   catalog  (tools-catalog.ts): lr_search_photos, lr_get_selected_photos, lr_list_collections,
+//   presets  (tools-presets.ts): lr_list_presets, lr_get_preset, lr_compare_presets, lr_export_preset,
+//            lr_apply_preset, lr_create_checkpoint (GitHub issue #215; presets\lightroom.ts and its neighbours).
+//   catalog (tools-catalog.ts): lr_search_photos, lr_get_selected_photos, lr_list_collections,
 //            lr_set_rating, lr_set_keywords (Phase 6, kept from Automaat; library\); lr_list_keywords
 //            and lr_set_gps (GitHub issue #60, from later Automaat commits).
 //   metadata (tools-metadata.ts): lr_set_flag, lr_set_iptc, lr_get_metadata (GitHub issues #111,
 //            #112, #139; library\metadata.ts).
 //   files    (tools-collections.ts, tools-files.ts): lr_create_collection, lr_add_to_collection,
 //            lr_export_photos, lr_import_photos (GitHub issue #55; library\files.ts).
+//   develop  (tools-develop.ts, tools-snapshots.ts): lr_apply_auto, lr_reset, lr_set_process_version, the snapshot
+//            tools and lr_create_virtual_copies (GitHub issue #214).
 //   write    (tools-write.ts): setSettings, Phase 2's lr_set_settings, for the Phase 2 check only.
 // What they share is in tools-shared.ts. The MCP definitions are the defs-*.ts modules, by the same
 // groups.
@@ -43,12 +48,26 @@ import {
 import { addToCollection, createCollection, type AddToCollectionArgs, type CreateCollectionArgs } from "./tools-collections.js";
 import { getActivePhotoContext, getMetrics, getPreview, type MetricsArgs, type PreviewArgs } from "./tools-context.js";
 import { applyDenoise, type ApplyDenoiseArgs } from "./tools-denoise.js";
+import { applyAuto, resetDevelop, setProcessVersion, type ApplyAutoArgs, type ProcessVersionArgs, type ResetArgs } from "./tools-develop.js";
+import {
+  applySnapshot,
+  createSnapshot,
+  createVirtualCopies,
+  deleteSnapshot,
+  listSnapshots,
+  type CreateSnapshotArgs,
+  type SnapshotArgs,
+  type SnapshotListArgs,
+  type VirtualCopiesArgs,
+} from "./tools-snapshots.js";
 import { exportPhotos, importPhotos, type Budget, type ExportPhotosArgs, type ImportPhotosArgs } from "./tools-files.js";
 import { deleteIntent, getIntent, listIntents, saveIntent, type DeleteIntentArgs, type SaveIntentArgs } from "./tools-intents.js";
 import { getMetadata, setFlag, setIptc, type GetMetadataArgs, type SetFlagArgs, type SetIptcArgs } from "./tools-metadata.js";
+import * as presets from "./tools-presets.js";
 import { createPresetFromActive, syncSeries, type CreatePresetArgs, type SyncSeriesArgs } from "./tools-propagation.js";
 import { approvePass, beginSession, createMask, deleteMask, editMask, endSession, getSessionLog, listMasks, probe, selectVariant, setRegions, step } from "./tools-session.js";
 import { createContext, type LastRender, type ToolContext, type ToolOutput, type ToolsDeps } from "./tools-shared.js";
+import { getPhotoStats, type PhotoStatsArgs } from "./tools-stats.js";
 import { setSettings, type SetSettingsArgs } from "./tools-write.js";
 
 export class Tools {
@@ -105,6 +124,10 @@ export class Tools {
 
   getMetrics(args: MetricsArgs = {}): Promise<ToolOutput> {
     return getMetrics(this.ctx, args);
+  }
+
+  getPhotoStats(args: PhotoStatsArgs, budget?: Budget): Promise<ToolOutput> {
+    return getPhotoStats(this.ctx, args, budget);
   }
 
   // --- Sessions.
@@ -187,6 +210,32 @@ export class Tools {
     return createPresetFromActive(this.ctx, args);
   }
 
+  // --- Develop presets and checkpoints (issue #215).
+
+  listPresets(args: presets.ListPresetsArgs = {}): Promise<ToolOutput> {
+    return presets.listPresetsTool(this.ctx, args);
+  }
+
+  getPreset(args: presets.GetPresetArgs): Promise<ToolOutput> {
+    return presets.getPresetTool(this.ctx, args);
+  }
+
+  comparePresets(args: presets.ComparePresetsArgs): Promise<ToolOutput> {
+    return presets.comparePresetsTool(this.ctx, args);
+  }
+
+  exportPreset(args: presets.ExportPresetArgs): Promise<ToolOutput> {
+    return presets.exportPresetTool(this.ctx, args);
+  }
+
+  applyPreset(args: presets.ApplyPresetArgs, budget?: Budget): Promise<ToolOutput> {
+    return presets.applyPresetTool(this.ctx, args, budget);
+  }
+
+  createCheckpoint(args: presets.CheckpointArgs): Promise<ToolOutput> {
+    return presets.createCheckpointTool(this.ctx, args);
+  }
+
   // --- Catalog.
 
   searchPhotos(args: SearchPhotosArgs = {}): Promise<ToolOutput> {
@@ -251,6 +300,45 @@ export class Tools {
 
   applyDenoise(args: ApplyDenoiseArgs, budget?: Budget): Promise<ToolOutput> {
     return applyDenoise(this.ctx, args, budget);
+  }
+
+  // --- Develop parity (GitHub issue #214; tools-develop.ts, tools-snapshots.ts).
+
+  applyAuto(args: ApplyAutoArgs, budget?: Budget): Promise<ToolOutput> {
+    return applyAuto(this.ctx, args, budget);
+  }
+
+  resetDevelop(args: ResetArgs, budget?: Budget): Promise<ToolOutput> {
+    return resetDevelop(this.ctx, args, budget);
+  }
+
+  setProcessVersion(args: ProcessVersionArgs, budget?: Budget): Promise<ToolOutput> {
+    return setProcessVersion(this.ctx, args, budget);
+  }
+
+  listSnapshots(args: SnapshotListArgs): Promise<ToolOutput> {
+    return listSnapshots(this.ctx, args);
+  }
+
+  createSnapshot(args: CreateSnapshotArgs): Promise<ToolOutput> {
+    return createSnapshot(this.ctx, args);
+  }
+
+  applySnapshot(args: SnapshotArgs): Promise<ToolOutput> {
+    return applySnapshot(this.ctx, args);
+  }
+
+  deleteSnapshot(args: SnapshotArgs): Promise<ToolOutput> {
+    return deleteSnapshot(this.ctx, args);
+  }
+
+  createVirtualCopies(args: VirtualCopiesArgs, budget?: Budget): Promise<ToolOutput> {
+    return createVirtualCopies(this.ctx, args, budget);
+  }
+
+  /** Any tool function by reference (issue #218's catalog tools: tools-metadata.ts, tools-collections.ts, tools-keywords.ts, ...). */
+  call<A>(fn: (ctx: ToolContext, args: A) => Promise<ToolOutput>, args: A): Promise<ToolOutput> {
+    return fn(this.ctx, args);
   }
 
   // --- Phase 2's write, for the Phase 2 check (not offered over MCP).

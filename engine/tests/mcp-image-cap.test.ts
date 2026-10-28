@@ -5,7 +5,7 @@
 import { randomBytes } from "node:crypto";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
-import { IMAGE_CAP_CHARS } from "../src/mcp/image-cap.js";
+import { IMAGE_CAP_CHARS, IMAGE_MAX_EDGE } from "../src/mcp/image-cap.js";
 import { respond } from "../src/mcp/server.js";
 
 /** A JPEG of random noise: JPEG cannot compress it, so a 1600 px one is well over the cap. */
@@ -35,6 +35,17 @@ describe("image cap on tool results", () => {
     // Review, 2026-10-11: the result's own size fields describe the render, so a smaller image says so.
     expect(json.image_reduced.from_long_edge).toBe(1600);
     expect(json.image_reduced.note).toContain(`multiply them by ${json.image_reduced.long_edge}/1600`);
+  });
+
+  it("makes an image longer than 2000 px smaller even when it is under the character cap (issue #216)", async () => {
+    const image = await sharp({ create: { width: 2400, height: 300, channels: 3, background: { r: 90, g: 120, b: 150 } } }).jpeg({ quality: 75 }).toBuffer();
+    expect(image.toString("base64").length).toBeLessThan(IMAGE_CAP_CHARS);
+    const res = await respond(async () => ({ json: { ok: true }, image }));
+    const [img, text] = res.content as Part[];
+    const meta = await sharp(Buffer.from(img!.data!, "base64")).metadata();
+    expect(Math.max(meta.width, meta.height)).toBe(IMAGE_MAX_EDGE);
+    const json = JSON.parse(text!.text!) as { image_reduced: { quality: number; long_edge: number; from_long_edge: number } };
+    expect(json.image_reduced).toMatchObject({ quality: 75, long_edge: IMAGE_MAX_EDGE, from_long_edge: 2400 });
   });
 
   it("passes a small image unchanged, with no flag", async () => {

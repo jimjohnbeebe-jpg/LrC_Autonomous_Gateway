@@ -21,7 +21,11 @@
 -- are read before sorting, never in a table.sort comparator. The walk yields every YIELD_EVERY
 -- keywords (PRD NFR-1). A photo's own keywords get their paths outside the gate too
 -- (KeywordTree.ofPhoto); plugin 0.8.0 read their names inside a read gate in Lightroom [handle: vault
--- LR_SDK_NOTES "Recorded in Phase 6", catalog search and metadata].
+-- LR_SDK_NOTES "Recorded in Phase 6", catalog search and metadata]. keyword:getAttributes(), whose table holds
+-- keywordName, synonyms and includeOnExport [handle: D:\Developer\LightRoom Classic Dev Kit\API Reference\
+-- modules\LrKeyword.html, getAttributes and setAttributes], is not used (issue #212): upstream reads it to save
+-- getName plus getSynonyms per keyword [upstream claim: Automaat/lightroom-mcp 37a8ad5, HandlerKeywords.lua],
+-- while this walk reads only getName, which it would replace one for one [inference].
 --
 -- Creating levels: a keyword made by createKeyword "is not available for access until that function
 -- returns" [handle: LrCatalog page, createKeyword], so a new level cannot be the parent of another new
@@ -43,7 +47,11 @@ KeywordTree.SEPARATOR = "|"
 -- Keywords walked between yields [inference: the figure].
 local YIELD_EVERY = 50
 
+-- A name of 7-bit ASCII only is folded with Lua's string.lower, which gives the same result for those
+-- characters [inference], so the walk makes one SDK call fewer per keyword (issue #212; that this saves time is
+-- [inference]: LrStringUtils.lower is not a catalog getter); any other name goes to LrStringUtils.lower.
 function KeywordTree.fold(s)
+    if not s:find("[\128-\255]") then return string.lower(s) end
     return LrStringUtils.lower(s)
 end
 
@@ -207,13 +215,21 @@ function KeywordTree.ofPhoto(catalog, photo)
     local ok, list
     catalog:withReadAccessDo(function() ok, list = LrTasks.pcall(photo.getRawMetadata, photo, "keywords") end)
     if not ok then return nil, tostring(list) end
+    return KeywordTree.listed(list)
+end
+
+-- { paths, objects } for a list of keyword objects (getRawMetadata's "keywords"), or nil plus the error.
+-- One LrTasks.pcall for the whole list, not one per keyword (issue #212: about 1 ms each [upstream claim:
+-- Automaat/lightroom-mcp 37a8ad5, CLAUDE.md]); a keyword whose path fails still fails the whole read.
+function KeywordTree.listed(list)
     local paths, objects = {}, {}
-    for _, keyword in ipairs(list or {}) do
-        local okPath, path = LrTasks.pcall(KeywordTree.pathOf, keyword)
-        if not okPath then return nil, tostring(path) end
-        paths[#paths + 1] = path
-        objects[#objects + 1] = keyword
-    end
+    local ok, err = LrTasks.pcall(function()
+        for _, keyword in ipairs(list or {}) do
+            paths[#paths + 1] = KeywordTree.pathOf(keyword)
+            objects[#objects + 1] = keyword
+        end
+    end)
+    if not ok then return nil, tostring(err) end
     return { paths = paths, objects = objects }
 end
 

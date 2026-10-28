@@ -20,6 +20,8 @@ function listen(server: net.Server, port = 0): Promise<number> {
 
 export class FakePlugin {
   readonly received: Array<{ name: string; payload: Record<string, unknown> }> = [];
+  /** Each command line as it arrived, without its newline (for framing tests). */
+  readonly lines: string[] = [];
   readonly handlers = new Map<string, FakeHandler>();
   commandPort = 0;
   eventPort = 0;
@@ -82,6 +84,7 @@ export class FakePlugin {
   }
 
   private async handle(line: string): Promise<void> {
+    this.lines.push(line);
     const msg = JSON.parse(line) as { id: string; name: string; token?: string; payload?: Record<string, unknown> };
     const payload = msg.payload ?? {};
     this.received.push({ name: msg.name, payload });

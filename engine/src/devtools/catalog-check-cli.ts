@@ -63,7 +63,7 @@ async function main(say: (l: string) => void): Promise<number> {
     await gate.ready();
     r["plugin_version"] = client.hello()?.plugin_version ?? null;
     r["lrc_version"] = client.hello()?.lrc_version ?? null;
-    c = { tools, uuid: await preflight(tools), dir: OUT_DIR, taken: { collections: new Set() } };
+    c = { tools, uuid: await preflight(tools), dir: OUT_DIR, run: stamp, taken: { collections: new Set() } };
     r["photo"] = c.uuid;
     steps = await runSteps(c, say);
   } catch (err) {

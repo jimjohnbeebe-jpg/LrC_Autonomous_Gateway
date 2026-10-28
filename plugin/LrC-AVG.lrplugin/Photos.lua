@@ -108,8 +108,12 @@ function Photos.describePage(catalog, photos, opts)
             if ok and (row == nil or type(row.uuid) ~= "string") then
                 Log.warn("photos: no batch row with a uuid for photo " .. tostring(photo.localIdentifier) .. ", reading it alone")
             end
-            out[#out + 1] = row ~= nil and type(row.uuid) == "string" and described(photo, row, formatted[photo] or {}, where)
-                or readOne(catalog, photo, where)
+            if row ~= nil and type(row.uuid) == "string" then
+                out[#out + 1] = described(photo, row, formatted[photo] or {}, where)
+            else
+                if #out > 0 then LrTasks.yield() end -- PRD NFR-1: the fallback reads photo by photo
+                out[#out + 1] = readOne(catalog, photo, where)
+            end
         end
     end
     return out

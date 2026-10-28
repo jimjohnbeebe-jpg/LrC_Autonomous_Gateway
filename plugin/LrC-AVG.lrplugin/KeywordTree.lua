@@ -47,7 +47,11 @@ KeywordTree.SEPARATOR = "|"
 -- Keywords walked between yields [inference: the figure].
 local YIELD_EVERY = 50
 
+-- A name of 7-bit ASCII only is folded with Lua's string.lower, which gives the same result for those
+-- characters [inference], so the walk makes one SDK call fewer per keyword (issue #212: per-call cost
+-- [upstream claim: Automaat/lightroom-mcp 37a8ad5, CLAUDE.md]); any other name goes to LrStringUtils.lower.
 function KeywordTree.fold(s)
+    if not s:find("[\128-\255]") then return string.lower(s) end
     return LrStringUtils.lower(s)
 end
 

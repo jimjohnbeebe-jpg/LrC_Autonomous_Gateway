@@ -49,7 +49,13 @@ end
 -- upstream does ("Batch reads are not catalog queries and need no read gate (verified live)" [upstream claim:
 -- 37a8ad5 message]). Whether they yield is [unverified]; outside the gate that cannot deadlock (rule 03).
 -- One LrTasks.pcall per batch; if a batch raises, its photos are read one by one as before (readOne), so
--- the answer keeps its shape.
+-- the answer keeps its shape. A photo whose batch row is missing or has no string uuid is read by readOne too,
+-- and logged: upstream keeps only photos whose batched uuid is non-nil, since the batch reads give nil for a
+-- dangling photo [upstream claim: Automaat/lightroom-mcp 37a8ad5, CLAUDE.md line 24]. Photos.describe (one
+-- photo: the P-18 identity check in Photos.find and Catalog.lua copyOnce) stays on readOne: masterPhoto,
+-- isVirtualCopy and copyName read through the batch calls, and a just-created virtual copy read that way, are
+-- [unverified] in Lightroom; upstream reads masterPhoto one at a time
+-- [upstream claim: Automaat/lightroom-mcp 1040453, plugin/LightroomMCP.lrplugin/HandlerMetadata.lua:125].
 
 -- Photos per batch call, with LrTasks.yield() between batches (PRD NFR-1) [inference: the figure].
 Photos.BATCH = 100
@@ -98,14 +104,20 @@ function Photos.describePage(catalog, photos, opts)
         end)
         if not ok then Log.warn("photos: a batch read of " .. #slice .. " failed, reading them one by one: " .. tostring(raw)) end
         for _, photo in ipairs(slice) do
-            out[#out + 1] = ok and described(photo, raw[photo] or {}, formatted[photo] or {}, where) or readOne(catalog, photo, where)
+            local row = ok and raw[photo] or nil
+            if ok and (row == nil or type(row.uuid) ~= "string") then
+                Log.warn("photos: no batch row with a uuid for photo " .. tostring(photo.localIdentifier) .. ", reading it alone")
+            end
+            out[#out + 1] = row ~= nil and type(row.uuid) == "string" and described(photo, row, formatted[photo] or {}, where)
+                or readOne(catalog, photo, where)
         end
     end
     return out
 end
 
+-- One photo, read getter by getter (readOne; the comment above describePage says why it is not batched).
 function Photos.describe(catalog, photo, opts)
-    return Photos.describePage(catalog, { photo }, opts)[1]
+    return readOne(catalog, photo, opts ~= nil and opts.where == true)
 end
 
 -- A GPS table as { latitude, longitude }, or nil for none. getRawMetadata("gps") is "(table) The

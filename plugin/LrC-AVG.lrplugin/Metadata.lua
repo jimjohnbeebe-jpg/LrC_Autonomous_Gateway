@@ -212,8 +212,9 @@ local STACK_KEYS = { "isInStackInFolder", "topOfStackInFolderContainingPhoto", "
 
 -- The same parts from one batchGetRawMetadata and one batchGetFormattedMetadata call on the photo, outside any
 -- gate (issue #212; Photos.describePage says why, with its handles), instead of seven read gates and about 20
--- getters each in an LrTasks.pcall. Returns parts, errors (only the keywords' paths can fail on their own), or
--- nil plus the error when a batch call raises.
+-- getters each in an LrTasks.pcall. Returns parts, errors (the keywords' paths and the stack's top uuid can fail
+-- on their own), or nil plus the error when a batch call raises or gives no row with a path, so that
+-- getMetadata reads part by part instead of returning made-up defaults.
 local function partsBatched(catalog, photo)
     local formattedKeys = { unpack(Metadata.TEXT_FIELDS) }
     if accessible() then for _, key in ipairs(Metadata.ACCESSIBILITY) do formattedKeys[#formattedKeys + 1] = key end end
@@ -223,6 +224,7 @@ local function partsBatched(catalog, photo)
             (catalog:batchGetFormattedMetadata({ photo }, formattedKeys) or {})[photo] or {}
     end)
     if not ok then return nil, tostring(raw) end
+    if raw.path == nil then return nil, "no batch row with a path" end
     local parts, errors = { path = raw.path, text = {}, flag = raw.pickStatus or 0, label = Photos.labelName(raw.colorNameForLabel),
         gps = Photos.position(raw.gps) or false, stack = false }, {}
     for _, key in ipairs(formattedKeys) do parts.text[key] = formatted[key] or "" end
@@ -233,6 +235,7 @@ local function partsBatched(catalog, photo)
         local okTop, topRaw = LrTasks.pcall(function() return top and (catalog:batchGetRawMetadata({ top }, { "uuid" }) or {})[top] end)
         parts.stack = { position = raw.stackPositionInFolder, count = raw.countStackInFolderMembers,
             collapsed = raw.stackInFolderIsCollapsed == true, top_uuid = okTop and topRaw and topRaw.uuid or nil }
+        if not okTop then errors[#errors + 1] = "stack top: " .. tostring(topRaw) end
     end
     return parts, errors
 end

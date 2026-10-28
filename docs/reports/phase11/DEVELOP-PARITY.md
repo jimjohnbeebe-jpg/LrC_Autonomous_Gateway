@@ -1,8 +1,8 @@
 ---
 report: DEVELOP-PARITY
 phase: "11"
-status: observed
-authored_by: "Claude Code (Opus 5.5): purpose, harness, pre-run findings, steps, 2026-10-27; Observed and Numbers copied from the run files, 2026-10-27. Jim: the run, his answers, Verdict (blank)."
+status: accepted
+authored_by: "Claude Code (Opus 5.5): purpose, harness, pre-run findings, steps, 2026-10-27; Observed and Numbers copied from the run files, 2026-10-27 (runs 1 and 2). Jim: the run, his answers, Verdict (blank)."
 date: 2026-10-27
 ---
 
@@ -102,6 +102,24 @@ YES Jim's answer 3: y
 - **Jim's answers:** 1 y (Lightroom back in the same module and source, same two photos selected); 2 y (History of the first photo shows this check's steps); 3 y (Jim removed the "AVG develop-check copy" virtual copy).
 - **Left behind:** since no snapshot was deleted, both photos keep this check's snapshots ("AVG develop-check start ...", "AVG pre-auto ...", "AVG pre-reset ...", "AVG pre-process-version ..." twice on the first photo, "AVG pre-apply ..."). Both photos are Jim's virtual copies made for this check.
 
+### Run 2, 2026-10-27: WORKED
+
+After the fix PR #240 (`a6f9bb5`; the harness keeps the first put-back's record), Jim reloaded the plugin and ran `npm run develop:check` on two other raw virtual copies (`E0675F16`, the first photo, and `DD6E06AA`) [stated: Jim, 2026-10-27, "Finished npm run develop:check"]. The results file ends `headline: WORKED`, `put_back_ok: true`; LrC 15.6, plugin 1.5.0, engine 1.5.0 [handle: `docs\reports\phase11\DEVELOP-PARITY\run2\develop_check_2026-10-28T04-13-10-877Z.json`]:
+
+```text
+YES every tool step (snapshots x2, list, auto, reset, process version 5 and 6, get_metadata raw, virtual copy)
+YES lr_apply_snapshot (put back) E0675F16-...: ok
+YES lr_apply_snapshot (put back) DD6E06AA-...: ok
+YES lr_delete_snapshot x10 (6 on the first photo, 4 on the second): ok
+YES the selection is as it was
+YES both photos' Develop settings are back as they were
+YES the check's snapshots are deleted again
+YES Jim's answers 1-3: y, y, y
+```
+
+- **Put back at the first comparison:** both photos compared equal (`put_back`: `changed: {}` for each), so run 1's NO did not repeat. Why run 1's first photo differed stays unknown: its differences were not kept, and this run had none to keep.
+- **Nothing left behind** but the "AVG develop-check copy" virtual copy, which Jim removed (answer 3).
+
 ## Numbers
 
 | Field | Value |
@@ -114,13 +132,15 @@ YES Jim's answer 3: y
 | `lr_get_metadata raw` | read: canonical settings, SDK table, metadata |
 | `lr_create_virtual_copies` status, copy name | copied, "AVG develop-check copy" |
 | Selection back | YES |
-| Settings back (put back) | **NO** for the first photo at the first comparison (what differed was not kept); YES for the second photo; YES for the first photo at the cleanup's second put-back, 88 s later |
-| Snapshots deleted | NO (skipped because a photo was not back) |
-| Jim's answers 1-3 | y, y, y |
+| Settings back (put back) | Run 1: **NO** for the first photo at the first comparison (what differed was not kept); YES for the second photo; YES for the first photo at the cleanup's second put-back, 88 s later. Run 2: YES for both at the first comparison |
+| Snapshots deleted | Run 1: NO (skipped because a photo was not back). Run 2: YES, 10 of 10 |
+| Jim's answers 1-3 | Run 1: y, y, y. Run 2: y, y, y |
 
-All from `docs\reports\phase11\DEVELOP-PARITY\run1\develop_check_2026-10-28T02-24-27-615Z.json` and `docs\reports\phase11\DEVELOP-PARITY\run1\bridge-log-excerpt.txt`.
+Run 1 from `docs\reports\phase11\DEVELOP-PARITY\run1\develop_check_2026-10-28T02-24-27-615Z.json` and `docs\reports\phase11\DEVELOP-PARITY\run1\bridge-log-excerpt.txt`; run 2 from `docs\reports\phase11\DEVELOP-PARITY\run2\develop_check_2026-10-28T04-13-10-877Z.json`.
 
 ## Verdict
+
+**Go** after run 2 [stated: Jim, 2026-10-27, "Go with recommendations"]. Run 1 was:
 
 **Conditional** [stated: Jim, 2026-10-27, "Go with recommendations. 5. Agreed"]: on a rerun after the harness keeps the first put-back's differences (fix PR after #239).
 

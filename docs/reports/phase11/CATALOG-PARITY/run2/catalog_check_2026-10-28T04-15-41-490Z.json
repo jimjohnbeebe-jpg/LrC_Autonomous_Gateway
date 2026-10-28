@@ -1,0 +1,358 @@
+{
+  "check": "catalog-check",
+  "started": "2026-10-28T04-15-41-490Z",
+  "node": "v24.11.1",
+  "engine_version": "1.5.0",
+  "plugin_version": "1.5.0",
+  "lrc_version": "15.6",
+  "photo": "76F23BE2-CB31-4388-9F82-48159CADFB31",
+  "steps": [
+    {
+      "step": "lr_get_metadata reads label, the new text fields, rating and copy name",
+      "ok": true,
+      "detail": {
+        "missing": [],
+        "label": "none",
+        "text": {
+          "creator": "JIM BEEBE, Jim Beebe",
+          "copyright": "",
+          "sublocation": "",
+          "city": "",
+          "state": "",
+          "country": "",
+          "iso_country_code": ""
+        },
+        "keywords": [],
+        "stack": null,
+        "alt_text": ""
+      }
+    },
+    {
+      "step": "lr_list_folders lists the catalog's folders",
+      "ok": true,
+      "detail": {
+        "count": 1,
+        "offset": 0,
+        "returned": 1,
+        "has_more": false,
+        "folders": [
+          {
+            "path": "G:\\Media\\Photos\\Temp",
+            "name": "Temp",
+            "depth": 0,
+            "photo_count": 73
+          }
+        ]
+      }
+    },
+    {
+      "step": "lr_set_color_label writes a label and lr_search_photos finds it",
+      "ok": true,
+      "detail": {
+        "written": {
+          "label": "red",
+          "undo": "To put a photo back, call lr_set_color_label on it with its `before` label.",
+          "changed": 1,
+          "photos": [
+            {
+              "uuid": "76F23BE2-CB31-4388-9F82-48159CADFB31",
+              "filename": "20210114_0113.CR2",
+              "before": "none",
+              "after": "red",
+              "changed": true
+            }
+          ],
+          "failed": []
+        },
+        "search_by_label": {
+          "count": 1,
+          "has": true
+        }
+      }
+    },
+    {
+      "step": "lr_search_photos' new filters answer (no-such camera, lens, ISO 1, 1 mm find nothing; edited true/false split)",
+      "ok": true,
+      "detail": {
+        "flag_none": {
+          "count": 73,
+          "has": true
+        },
+        "edited_true": {
+          "count": 73,
+          "has": true
+        },
+        "edited_false": {
+          "count": 0,
+          "has": false
+        },
+        "camera_none": {
+          "count": 0,
+          "has": false
+        },
+        "lens_none": {
+          "count": 0,
+          "has": false
+        },
+        "iso_1": {
+          "count": 0,
+          "has": false
+        },
+        "focal_length_1": {
+          "count": 0,
+          "has": false
+        },
+        "file_type_dng": {
+          "count": 21,
+          "has": false
+        },
+        "file_type_raw": {
+          "count": 11,
+          "has": true
+        }
+      }
+    },
+    {
+      "step": "lr_set_iptc writes creator, copyright and the location fields",
+      "ok": true,
+      "detail": {
+        "written": {
+          "creator": "AVG check creator",
+          "copyright": "AVG check copyright",
+          "sublocation": "AVG Pike Place",
+          "city": "Seattle",
+          "state": "WA",
+          "country": "United States",
+          "iso_country_code": "USA"
+        },
+        "undo": "To put a photo back, call lr_set_iptc on it with the `before` value of each field written.",
+        "changed": 1,
+        "photos": [
+          {
+            "uuid": "76F23BE2-CB31-4388-9F82-48159CADFB31",
+            "filename": "20210114_0113.CR2",
+            "before": {
+              "title": "",
+              "caption": "",
+              "headline": "",
+              "creator": "JIM BEEBE, Jim Beebe",
+              "copyright": "",
+              "sublocation": "",
+              "city": "",
+              "state": "",
+              "country": "",
+              "iso_country_code": "",
+              "alt_text": "",
+              "extended_description": ""
+            },
+            "after": {
+              "title": "",
+              "caption": "",
+              "headline": "",
+              "creator": "AVG check creator",
+              "copyright": "AVG check copyright",
+              "sublocation": "AVG Pike Place",
+              "city": "Seattle",
+              "state": "WA",
+              "country": "United States",
+              "iso_country_code": "USA",
+              "alt_text": "",
+              "extended_description": ""
+            },
+            "changed": true
+          }
+        ],
+        "failed": []
+      }
+    },
+    {
+      "step": "lr_rename_keyword (and a case-only rename), lr_remove_keyword_subtree",
+      "ok": false,
+      "detail": {
+        "error": "a keyword AVG catalog check kw|child renamed is already there: a rename cannot merge keywords"
+      }
+    },
+    {
+      "step": "lr_create_smart_collection, its members by name, lr_delete_collection",
+      "ok": true,
+      "detail": {
+        "made": {
+          "id": 3610,
+          "name": "AVG catalog check smart",
+          "set": null,
+          "smart": true,
+          "photo_count": 1,
+          "rules": [
+            {
+              "criteria": "labelColor",
+              "operation": "==",
+              "value": 1
+            }
+          ],
+          "undo": "To remove it, call lr_delete_collection with collection_id 3610 and confirm: true; no photo changes either way."
+        },
+        "members": {
+          "count": 1,
+          "has": true
+        },
+        "deleted": {
+          "deleted": true,
+          "before": {
+            "id": 3610,
+            "name": "AVG catalog check smart",
+            "set": null,
+            "smart": true,
+            "photo_count": 1,
+            "search_description": {
+              "1": {
+                "operation": "==",
+                "criteria": "labelColor",
+                "value": 1
+              },
+              "combine": "intersect"
+            }
+          },
+          "photos_note": "The photos stay in the catalog.",
+          "undo": "To make it again, call lr_create_smart_collection with the same name and the rules in `before.search_description`."
+        }
+      }
+    },
+    {
+      "step": "lr_delete_collection by name gives back its member uuids",
+      "ok": true,
+      "detail": {
+        "made": {
+          "id": 3614,
+          "name": "AVG catalog check",
+          "set": null,
+          "created": true,
+          "photo_count": 0
+        },
+        "deleted": {
+          "deleted": true,
+          "before": {
+            "id": 3614,
+            "name": "AVG catalog check",
+            "set": null,
+            "smart": false,
+            "photo_count": 1,
+            "member_uuids": [
+              "76F23BE2-CB31-4388-9F82-48159CADFB31"
+            ],
+            "members_truncated": false
+          },
+          "photos_note": "The photos stay in the catalog.",
+          "undo": "To make it again, call lr_create_collection with the same name and set, then lr_add_to_collection with `before.member_uuids`."
+        }
+      }
+    },
+    {
+      "step": "lr_export_metadata writes a JSON file",
+      "ok": true,
+      "detail": {
+        "file": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\catalog-check\\lrc-avg-metadata-2026-10-28T04-15-48-104Z.json",
+        "exported": 1,
+        "failed": []
+      }
+    },
+    {
+      "step": "lr_set_ai_metadata keeps a score and reason, lr_get_ai_metadata reads them",
+      "ok": true,
+      "detail": {
+        "before": {
+          "uuid": "76F23BE2-CB31-4388-9F82-48159CADFB31",
+          "filename": "20210114_0113.CR2",
+          "score": null,
+          "reason": null,
+          "avg_edit": null
+        },
+        "written": {
+          "written": {
+            "score": 42,
+            "reason": "AVG catalog check"
+          },
+          "undo": "To put a photo back, call lr_set_ai_metadata on it with its `before` score and reason (null clears).",
+          "changed": 1,
+          "photos": [
+            {
+              "uuid": "76F23BE2-CB31-4388-9F82-48159CADFB31",
+              "filename": "20210114_0113.CR2",
+              "before": {
+                "score": null,
+                "reason": null
+              },
+              "after": {
+                "score": 42,
+                "reason": "AVG catalog check"
+              },
+              "changed": true
+            }
+          ],
+          "failed": []
+        },
+        "after": {
+          "uuid": "76F23BE2-CB31-4388-9F82-48159CADFB31",
+          "filename": "20210114_0113.CR2",
+          "score": 42,
+          "reason": "AVG catalog check",
+          "avg_edit": null
+        }
+      }
+    }
+  ],
+  "put_back": [
+    {
+      "step": "label put back",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "step": "AI score and reason put back",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "step": "text fields put back",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "step": "test keywords taken off",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "step": "the photo reads as before",
+      "ok": true,
+      "detail": null
+    }
+  ],
+  "answers": [
+    "y",
+    "y",
+    "y",
+    "y"
+  ],
+  "lines": [
+    "YES lr_get_metadata reads label, the new text fields, rating and copy name",
+    "YES lr_list_folders lists the catalog's folders",
+    "YES lr_set_color_label writes a label and lr_search_photos finds it",
+    "YES lr_search_photos' new filters answer (no-such camera, lens, ISO 1, 1 mm find nothing; edited true/false split)",
+    "YES lr_set_iptc writes creator, copyright and the location fields",
+    "NO  lr_rename_keyword (and a case-only rename), lr_remove_keyword_subtree",
+    "YES lr_create_smart_collection, its members by name, lr_delete_collection",
+    "YES lr_delete_collection by name gives back its member uuids",
+    "YES lr_export_metadata writes a JSON file",
+    "YES lr_set_ai_metadata keeps a score and reason, lr_get_ai_metadata reads them",
+    "YES label put back",
+    "YES AI score and reason put back",
+    "YES text fields put back",
+    "YES test keywords taken off",
+    "YES the photo reads as before",
+    "YES Jim's answer 1: y",
+    "YES Jim's answer 2: y",
+    "YES Jim's answer 3: y",
+    "YES Jim's answer 4: y"
+  ],
+  "headline": "FAILED"
+}

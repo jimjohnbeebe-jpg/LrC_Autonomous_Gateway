@@ -1,0 +1,1050 @@
+{
+  "check": "develop-check",
+  "started": "2026-10-28T04-13-10-877Z",
+  "node": "v24.11.1",
+  "engine_version": "1.5.0",
+  "results": {
+    "lr_create_snapshot E0675F16-6A66-4416-96C2-F72B36CE085E": {
+      "uuid": "E0675F16-6A66-4416-96C2-F72B36CE085E",
+      "snapshot": {
+        "id": "E95AFCE8-7330-45DB-B3BD-EEF3ABA45D34",
+        "name": "AVG develop-check start 2026-10-28T04-13-10-877Z"
+      },
+      "undo": "lr_delete_snapshot with snapshot_id \"E95AFCE8-7330-45DB-B3BD-EEF3ABA45D34\" removes it."
+    },
+    "lr_create_snapshot DD6E06AA-639F-4553-83CE-D4D3340D8641": {
+      "uuid": "DD6E06AA-639F-4553-83CE-D4D3340D8641",
+      "snapshot": {
+        "id": "DAC2A35C-0732-4B86-9B4B-23DF6DFA1D8B",
+        "name": "AVG develop-check start 2026-10-28T04-13-10-877Z"
+      },
+      "undo": "lr_delete_snapshot with snapshot_id \"DAC2A35C-0732-4B86-9B4B-23DF6DFA1D8B\" removes it."
+    },
+    "lr_list_snapshots": {
+      "uuid": "E0675F16-6A66-4416-96C2-F72B36CE085E",
+      "snapshots": [
+        {
+          "id": "E95AFCE8-7330-45DB-B3BD-EEF3ABA45D34",
+          "name": "AVG develop-check start 2026-10-28T04-13-10-877Z",
+          "by_avg": true
+        }
+      ]
+    },
+    "lr_apply_auto tone + white balance": {
+      "photos": [
+        {
+          "uuid": "E0675F16-6A66-4416-96C2-F72B36CE085E",
+          "snapshot": {
+            "id": "F8DF61E8-900D-49C8-A4B4-E23921ADACCA",
+            "name": "AVG pre-auto 2dbee8"
+          },
+          "ms": 4740,
+          "status": "applied",
+          "parts": {
+            "white_balance": "applied",
+            "tone": "applied"
+          },
+          "names": "canonical",
+          "changed": {
+            "blacks": {
+              "before": -5,
+              "after": -24
+            },
+            "contrast": {
+              "before": 0,
+              "after": 5
+            },
+            "exposure": {
+              "before": 0,
+              "after": -0.48
+            },
+            "highlights": {
+              "before": 0,
+              "after": -55
+            },
+            "shadows": {
+              "before": 0,
+              "after": 32
+            },
+            "temperature": {
+              "before": 4650,
+              "after": 4500
+            },
+            "tint": {
+              "before": 12,
+              "after": 1
+            },
+            "vibrance": {
+              "before": 0,
+              "after": 15
+            },
+            "whites": {
+              "before": 15,
+              "after": 8
+            }
+          }
+        },
+        {
+          "uuid": "DD6E06AA-639F-4553-83CE-D4D3340D8641",
+          "snapshot": {
+            "id": "64AFD259-9821-4057-BC77-5CDAB101E197",
+            "name": "AVG pre-auto 2dbee8"
+          },
+          "ms": 5451,
+          "status": "applied",
+          "parts": {
+            "white_balance": "applied",
+            "tone": "applied"
+          },
+          "names": "canonical",
+          "changed": {
+            "blacks": {
+              "before": -5,
+              "after": -22
+            },
+            "contrast": {
+              "before": 0,
+              "after": 4
+            },
+            "exposure": {
+              "before": 0,
+              "after": -0.01
+            },
+            "highlights": {
+              "before": 0,
+              "after": -62
+            },
+            "saturation": {
+              "before": 0,
+              "after": 1
+            },
+            "shadows": {
+              "before": 0,
+              "after": 39
+            },
+            "temperature": {
+              "before": 4650,
+              "after": 4550
+            },
+            "tint": {
+              "before": 12,
+              "after": 5
+            },
+            "vibrance": {
+              "before": 0,
+              "after": 15
+            },
+            "whites": {
+              "before": 15,
+              "after": 12
+            }
+          }
+        }
+      ],
+      "counts": {
+        "applied": 2
+      },
+      "failed": [],
+      "undo": "Each photo changed has the snapshot \"AVG pre-auto 2dbee8\" from just before (Develop, Snapshots panel; or lr_apply_snapshot with its id), which puts it back. Lightroom's History panel also has the step."
+    },
+    "lr_reset": {
+      "photos": [
+        {
+          "uuid": "E0675F16-6A66-4416-96C2-F72B36CE085E",
+          "snapshot": {
+            "id": "5B5BECBB-AAF9-4033-A60A-095E4BE49545",
+            "name": "AVG pre-reset a1819c"
+          },
+          "ms": 1072,
+          "status": "reset",
+          "names": "canonical",
+          "changed": {
+            "blacks": {
+              "before": -24,
+              "after": -5
+            },
+            "camera_profile": {
+              "before": "Adobe Landscape",
+              "after": null
+            },
+            "contrast": {
+              "before": 5,
+              "after": 0
+            },
+            "exposure": {
+              "before": -0.48,
+              "after": 0
+            },
+            "highlights": {
+              "before": -55,
+              "after": 0
+            },
+            "lens.ca_remove": {
+              "before": 1,
+              "after": 0
+            },
+            "lens.profile_enable": {
+              "before": 1,
+              "after": 0
+            },
+            "shadows": {
+              "before": 32,
+              "after": 0
+            },
+            "temperature": {
+              "before": 4500,
+              "after": 4650
+            },
+            "tint": {
+              "before": 1,
+              "after": 12
+            },
+            "vibrance": {
+              "before": 15,
+              "after": 0
+            },
+            "whites": {
+              "before": 8,
+              "after": 15
+            }
+          }
+        },
+        {
+          "uuid": "DD6E06AA-639F-4553-83CE-D4D3340D8641",
+          "snapshot": {
+            "id": "5EBD5089-A5C1-4B26-8741-E957547973D8",
+            "name": "AVG pre-reset a1819c"
+          },
+          "ms": 1970,
+          "status": "reset",
+          "names": "canonical",
+          "changed": {
+            "blacks": {
+              "before": -22,
+              "after": -5
+            },
+            "camera_profile": {
+              "before": "Adobe Landscape",
+              "after": null
+            },
+            "contrast": {
+              "before": 4,
+              "after": 0
+            },
+            "exposure": {
+              "before": -0.01,
+              "after": 0
+            },
+            "highlights": {
+              "before": -62,
+              "after": 0
+            },
+            "lens.ca_remove": {
+              "before": 1,
+              "after": 0
+            },
+            "lens.profile_enable": {
+              "before": 1,
+              "after": 0
+            },
+            "saturation": {
+              "before": 1,
+              "after": 0
+            },
+            "shadows": {
+              "before": 39,
+              "after": 0
+            },
+            "temperature": {
+              "before": 4550,
+              "after": 4650
+            },
+            "tint": {
+              "before": 5,
+              "after": 12
+            },
+            "vibrance": {
+              "before": 15,
+              "after": 0
+            },
+            "whites": {
+              "before": 12,
+              "after": 15
+            }
+          }
+        }
+      ],
+      "counts": {
+        "reset": 2
+      },
+      "failed": [],
+      "undo": "Each photo changed has the snapshot \"AVG pre-reset a1819c\" from just before (Develop, Snapshots panel; or lr_apply_snapshot with its id), which puts it back. Lightroom's History panel also has the step."
+    },
+    "lr_set_process_version 5": {
+      "photos": [
+        {
+          "uuid": "E0675F16-6A66-4416-96C2-F72B36CE085E",
+          "snapshot": {
+            "id": "A84AD03A-0431-4567-A66B-0B2AC92EC5D0",
+            "name": "AVG pre-process-version c00cdd"
+          },
+          "ms": 702,
+          "status": "changed",
+          "previous": "Version 6",
+          "actual": "Version 5",
+          "names": "canonical",
+          "changed": {}
+        }
+      ],
+      "counts": {
+        "changed": 1
+      },
+      "failed": [],
+      "undo": "Each photo changed has the snapshot \"AVG pre-process-version c00cdd\" from just before (Develop, Snapshots panel; or lr_apply_snapshot with its id), which puts it back. Lightroom's History panel also has the step."
+    },
+    "lr_set_process_version 6": {
+      "photos": [
+        {
+          "uuid": "E0675F16-6A66-4416-96C2-F72B36CE085E",
+          "snapshot": {
+            "id": "30A2F128-599A-4EAD-A098-95661B6E4A64",
+            "name": "AVG pre-process-version 296bd7"
+          },
+          "ms": 667,
+          "status": "changed",
+          "previous": "Version 5",
+          "actual": "Version 6",
+          "names": "canonical",
+          "changed": {}
+        }
+      ],
+      "counts": {
+        "changed": 1
+      },
+      "failed": [],
+      "undo": "Each photo changed has the snapshot \"AVG pre-process-version 296bd7\" from just before (Develop, Snapshots panel; or lr_apply_snapshot with its id), which puts it back. Lightroom's History panel also has the step."
+    },
+    "lr_get_metadata raw": {
+      "photos": [
+        {
+          "label": "none",
+          "rating": 0,
+          "capture_time": "1/15/2021 12:38:20.000 PM",
+          "path": "G:\\Media\\Photos\\Temp\\LRM_20210115_123820.dng",
+          "copy_name": "Copy 1",
+          "virtual_copy": true,
+          "uuid": "E0675F16-6A66-4416-96C2-F72B36CE085E",
+          "filename": "LRM_20210115_123820.dng",
+          "keywords": [],
+          "title": "",
+          "caption": "",
+          "headline": "",
+          "creator": "",
+          "copyright": "",
+          "sublocation": "",
+          "city": "",
+          "state": "",
+          "country": "",
+          "iso_country_code": "",
+          "alt_text": "",
+          "extended_description": "",
+          "flag": "none",
+          "gps": {
+            "latitude": 45.491634,
+            "longitude": -122.795258
+          },
+          "stack": {
+            "position": 2,
+            "count": 2,
+            "collapsed": false,
+            "top_uuid": "76BCB691-AB37-40F1-A56F-F05836A61D0B"
+          },
+          "develop": {
+            "process_version": "15.4",
+            "pipeline": "raw",
+            "settings": {
+              "exposure": 0,
+              "contrast": 0,
+              "highlights": 0,
+              "shadows": 0,
+              "whites": 15,
+              "blacks": -5,
+              "texture": 0,
+              "clarity": 8,
+              "dehaze": 0,
+              "vibrance": 0,
+              "saturation": 0,
+              "temperature": 4650,
+              "tint": 12,
+              "grading.shadows.hue": 0,
+              "grading.shadows.sat": 0,
+              "grading.shadows.lum": 0,
+              "grading.midtones.hue": 0,
+              "grading.midtones.sat": 0,
+              "grading.midtones.lum": 0,
+              "grading.highlights.hue": 0,
+              "grading.highlights.sat": 0,
+              "grading.highlights.lum": 0,
+              "grading.global.hue": 0,
+              "grading.global.sat": 0,
+              "grading.global.lum": 0,
+              "grading.blending": 50,
+              "grading.balance": 0,
+              "calibration.shadow_tint": 0,
+              "calibration.red.hue": 0,
+              "calibration.red.sat": 0,
+              "calibration.green.hue": 0,
+              "calibration.green.sat": 0,
+              "calibration.blue.hue": 0,
+              "calibration.blue.sat": 0,
+              "sharpening.amount": 50,
+              "sharpening.radius": 1.4,
+              "sharpening.detail": 25,
+              "sharpening.masking": 40,
+              "noise.luminance": 10,
+              "noise.color": 25,
+              "lens.corrections_enable": true,
+              "lens.profile_enable": 0,
+              "lens.ca_remove": 0,
+              "vignette.amount": 0,
+              "vignette.midpoint": 50,
+              "vignette.roundness": 0,
+              "vignette.feather": 50,
+              "vignette.highlight_contrast": 0,
+              "vignette.style": 1,
+              "grain.amount": 0,
+              "grain.size": 25,
+              "grain.frequency": 50,
+              "tone_curve.master": [
+                0,
+                0,
+                255,
+                255
+              ],
+              "tone_curve.red": [
+                0,
+                0,
+                255,
+                255
+              ],
+              "tone_curve.green": [
+                0,
+                0,
+                255,
+                255
+              ],
+              "tone_curve.blue": [
+                0,
+                0,
+                255,
+                255
+              ],
+              "hsl.red.hue": 0,
+              "hsl.red.sat": 0,
+              "hsl.red.lum": 0,
+              "hsl.orange.hue": 0,
+              "hsl.orange.sat": 0,
+              "hsl.orange.lum": 0,
+              "hsl.yellow.hue": 0,
+              "hsl.yellow.sat": 0,
+              "hsl.yellow.lum": 0,
+              "hsl.green.hue": 0,
+              "hsl.green.sat": 0,
+              "hsl.green.lum": 0,
+              "hsl.aqua.hue": 0,
+              "hsl.aqua.sat": 0,
+              "hsl.aqua.lum": 0,
+              "hsl.blue.hue": 0,
+              "hsl.blue.sat": 0,
+              "hsl.blue.lum": 0,
+              "hsl.purple.hue": 0,
+              "hsl.purple.sat": 0,
+              "hsl.purple.lum": 0,
+              "hsl.magenta.hue": 0,
+              "hsl.magenta.sat": 0,
+              "hsl.magenta.lum": 0
+            },
+            "sdk": {
+              "HueAdjustmentAqua": 0,
+              "EnableLensCorrections": true,
+              "Sharpness": 50,
+              "EnableEffects": true,
+              "ColorGradeBlending": 50,
+              "HueAdjustmentGreen": 0,
+              "SDRWhites": 0,
+              "ParametricShadows": 0,
+              "ChromaticAberrationB": 0,
+              "SharpenEdgeMasking": 40,
+              "BlueHue": 0,
+              "LuminanceNoiseReductionContrast": 0,
+              "UprightFocalLength35mm": 35,
+              "HueAdjustmentOrange": 0,
+              "PerspectiveX": 0,
+              "ParametricMidtoneSplit": 50,
+              "HueAdjustmentPurple": 0,
+              "EnableColorAdjustments": true,
+              "WhiteBalance": "As Shot",
+              "FillLight": 0,
+              "EnableMaskGroupBasedCorrections": true,
+              "ColorGradeMidtoneLum": 0,
+              "LuminanceNoiseReductionDetail": 50,
+              "PostCropVignetteFeather": 50,
+              "ColorNoiseReductionSmoothness": 50,
+              "Contrast": 25,
+              "DefringeGreenAmount": 0,
+              "Dehaze": 0,
+              "Defringe": 0,
+              "Temperature": 4650,
+              "ToneCurvePV2012Red": [
+                0,
+                0,
+                255,
+                255
+              ],
+              "PointColors": [],
+              "UprightCenterNormX": 0.5,
+              "UprightFocalMode": 0,
+              "LuminanceAdjustmentPurple": 0,
+              "BlueSaturation": 0,
+              "HueAdjustmentBlue": 0,
+              "ProcessVersion": "15.4",
+              "EnableDistractionRemoval": true,
+              "LuminanceAdjustmentRed": 0,
+              "Texture": 0,
+              "ParametricHighlights": 0,
+              "SaturationAdjustmentAqua": 0,
+              "SDRShadows": 0,
+              "LensManualDistortionAmount": 0,
+              "ColorGradeHighlightLum": 0,
+              "PostCropVignetteMidpoint": 50,
+              "AutoLateralCA": 0,
+              "EnableSplitToning": true,
+              "UprightCenterNormY": 0.5,
+              "Contrast2012": 0,
+              "DefringeGreenHueHi": 60,
+              "Clarity2012": 8,
+              "SaturationAdjustmentRed": 0,
+              "FilterList": [],
+              "DefringeGreenHueLo": 40,
+              "HDREditMode": 0,
+              "RedHue": 0,
+              "Shadows": 5,
+              "ToneCurvePV2012": [
+                0,
+                0,
+                255,
+                255
+              ],
+              "Exposure": 0,
+              "ColorNoiseReduction": 25,
+              "ToneCurvePV2012Green": [
+                0,
+                0,
+                255,
+                255
+              ],
+              "orientation": "AB",
+              "EnableDetail": true,
+              "ColorGradeShadowLum": 0,
+              "Saturation": 0,
+              "PostCropVignetteAmount": 0,
+              "SplitToningHighlightHue": 0,
+              "Clarity": 0,
+              "SaturationAdjustmentBlue": 0,
+              "ParametricLights": 0,
+              "CropTop": 0,
+              "EnableRetouch": true,
+              "SDRBrightness": 0,
+              "UprightCenterMode": 0,
+              "ColorNoiseReductionDetail": 50,
+              "AutoContrast": false,
+              "GrainAmount": 0,
+              "SaturationAdjustmentYellow": 0,
+              "SDRClarity": 0,
+              "GrainFrequency": 50,
+              "UprightFourSegmentsCount": 0,
+              "PerspectiveAspect": 0,
+              "LuminanceAdjustmentOrange": 0,
+              "EnableTransform": true,
+              "EnableToneCurve": true,
+              "DefringePurpleHueLo": 30,
+              "AutoBrightness": false,
+              "GreenSaturation": 0,
+              "VignetteAmount": 0,
+              "ConvertToGrayscale": false,
+              "ColorGradeGlobalLum": 0,
+              "HighlightRecovery": 0,
+              "ColorGradeMidtoneHue": 0,
+              "RedSaturation": 0,
+              "HDRMaxValue": 2.3,
+              "Exposure2012": 0,
+              "DefringePurpleAmount": 0,
+              "HueAdjustmentYellow": 0,
+              "EnableGrayscaleMix": true,
+              "CropBottom": 1,
+              "LuminanceAdjustmentMagenta": 0,
+              "LuminanceAdjustmentGreen": 0,
+              "SplitToningShadowSaturation": 0,
+              "LensProfileEnable": 0,
+              "LensBlur": [],
+              "LuminanceSmoothing": 10,
+              "ColorGradeGlobalHue": 0,
+              "PostCropVignetteStyle": 1,
+              "ParametricShadowSplit": 25,
+              "GreenHue": 0,
+              "LensProfileSetup": "LensDefaults",
+              "UprightPreview": false,
+              "Brightness": 50,
+              "PerspectiveVertical": 0,
+              "CropConstrainToUnitSquare": 1,
+              "ToneCurvePV2012Blue": [
+                0,
+                0,
+                255,
+                255
+              ],
+              "SplitToningHighlightSaturation": 0,
+              "RedEyeInfo": [],
+              "PostCropVignetteHighlightContrast": 0,
+              "AILook": [],
+              "CropAngle": 0,
+              "EnableRedEye": true,
+              "Vibrance": 0,
+              "PostCropVignetteRoundness": 0,
+              "PerspectiveScale": 100,
+              "LuminanceAdjustmentYellow": 0,
+              "ColorGradeGlobalSat": 0,
+              "ParametricHighlightSplit": 75,
+              "SplitToningShadowHue": 0,
+              "GrainSize": 25,
+              "PerspectiveRotate": 0,
+              "UprightVersion": 151388160,
+              "SaturationAdjustmentMagenta": 0,
+              "PerspectiveHorizontal": 0,
+              "Tint": 12,
+              "DefringePurpleHueHi": 70,
+              "ToneCurveName2012": "Linear",
+              "HueAdjustmentRed": 0,
+              "SplitToningBalance": 0,
+              "CropConstrainToWarp": 0,
+              "LuminanceAdjustmentBlue": 0,
+              "HueAdjustmentMagenta": 0,
+              "LuminanceAdjustmentAqua": 0,
+              "Whites2012": 15,
+              "SharpenRadius": 1.4,
+              "ParametricDarks": 0,
+              "CurveRefineSaturation": 100,
+              "VignetteMidpoint": 50,
+              "SDRBlend": 0,
+              "AutoExposure": false,
+              "SDRHighlights": 0,
+              "Blacks2012": -5,
+              "CameraProfile": "Camera Default",
+              "CropLeft": 0,
+              "SaturationAdjustmentGreen": 0,
+              "SaturationAdjustmentOrange": 0,
+              "CropRight": 1,
+              "SDRContrast": 0,
+              "SharpenDetail": 25,
+              "Highlights2012": 0,
+              "ShadowTint": 0,
+              "SaturationAdjustmentPurple": 0,
+              "EnableCalibration": true,
+              "ColorGradeMidtoneSat": 0,
+              "PerspectiveUpright": 0,
+              "AutoShadows": false,
+              "UprightTransformCount": 6,
+              "Shadows2012": 0,
+              "ChromaticAberrationR": 0,
+              "PerspectiveY": 0
+            }
+          }
+        }
+      ],
+      "failed": []
+    },
+    "lr_create_virtual_copies": {
+      "photos": [
+        {
+          "uuid": "E0675F16-6A66-4416-96C2-F72B36CE085E",
+          "status": "copied",
+          "copy_uuid": "73869D17-532A-4046-8061-1F27A6F52D18",
+          "copy_name": "AVG develop-check copy"
+        }
+      ],
+      "failed": [],
+      "undo": "No tool removes photos: the user removes a copy in Lightroom (Library > Remove Photo), the master stays."
+    },
+    "lr_apply_snapshot (put back) E0675F16-6A66-4416-96C2-F72B36CE085E": {
+      "uuid": "E0675F16-6A66-4416-96C2-F72B36CE085E",
+      "applied": {
+        "id": "E95AFCE8-7330-45DB-B3BD-EEF3ABA45D34",
+        "name": "AVG develop-check start 2026-10-28T04-13-10-877Z",
+        "id_global": "BEAF782A-6866-4BD7-AABE-4F41E847E834"
+      },
+      "snapshot": {
+        "id": "D65A06FA-63A9-4A07-822E-57D4EF712C8A",
+        "name": "AVG pre-apply a52ad8"
+      },
+      "names": "canonical",
+      "changed": {
+        "camera_profile": {
+          "before": null,
+          "after": "Adobe Landscape"
+        },
+        "lens.ca_remove": {
+          "before": 0,
+          "after": 1
+        },
+        "lens.profile_enable": {
+          "before": 0,
+          "after": 1
+        }
+      },
+      "undo": "lr_apply_snapshot with snapshot_id \"D65A06FA-63A9-4A07-822E-57D4EF712C8A\" puts the photo back as it was."
+    },
+    "lr_apply_snapshot (put back) DD6E06AA-639F-4553-83CE-D4D3340D8641": {
+      "uuid": "DD6E06AA-639F-4553-83CE-D4D3340D8641",
+      "applied": {
+        "id": "DAC2A35C-0732-4B86-9B4B-23DF6DFA1D8B",
+        "name": "AVG develop-check start 2026-10-28T04-13-10-877Z",
+        "id_global": "BA6A105B-6F5C-40E2-9CBE-6F08AAA0F497"
+      },
+      "snapshot": {
+        "id": "24CBB8DF-A11B-4294-A9AE-39FB9699ABEC",
+        "name": "AVG pre-apply 1c81c3"
+      },
+      "names": "canonical",
+      "changed": {
+        "camera_profile": {
+          "before": null,
+          "after": "Adobe Landscape"
+        },
+        "lens.ca_remove": {
+          "before": 0,
+          "after": 1
+        },
+        "lens.profile_enable": {
+          "before": 0,
+          "after": 1
+        }
+      },
+      "undo": "lr_apply_snapshot with snapshot_id \"24CBB8DF-A11B-4294-A9AE-39FB9699ABEC\" puts the photo back as it was."
+    },
+    "lr_delete_snapshot \"AVG develop-check start 2026-10-28T04-13-10-877Z\"": {
+      "uuid": "DD6E06AA-639F-4553-83CE-D4D3340D8641",
+      "deleted": {
+        "id": "DAC2A35C-0732-4B86-9B4B-23DF6DFA1D8B",
+        "name": "AVG develop-check start 2026-10-28T04-13-10-877Z",
+        "id_global": "BA6A105B-6F5C-40E2-9CBE-6F08AAA0F497"
+      },
+      "note": "A deleted snapshot cannot be brought back by a tool."
+    },
+    "lr_delete_snapshot \"AVG pre-auto 2dbee8\"": {
+      "uuid": "DD6E06AA-639F-4553-83CE-D4D3340D8641",
+      "deleted": {
+        "id": "64AFD259-9821-4057-BC77-5CDAB101E197",
+        "name": "AVG pre-auto 2dbee8",
+        "id_global": "1B3EEC72-5E89-4AC3-8064-B670D4C5B746"
+      },
+      "note": "A deleted snapshot cannot be brought back by a tool."
+    },
+    "lr_delete_snapshot \"AVG pre-reset a1819c\"": {
+      "uuid": "DD6E06AA-639F-4553-83CE-D4D3340D8641",
+      "deleted": {
+        "id": "5EBD5089-A5C1-4B26-8741-E957547973D8",
+        "name": "AVG pre-reset a1819c",
+        "id_global": "B6F969DF-65D4-46D6-BBBB-3F4DB801B238"
+      },
+      "note": "A deleted snapshot cannot be brought back by a tool."
+    },
+    "lr_delete_snapshot \"AVG pre-process-version c00cdd\"": {
+      "uuid": "E0675F16-6A66-4416-96C2-F72B36CE085E",
+      "deleted": {
+        "id": "A84AD03A-0431-4567-A66B-0B2AC92EC5D0",
+        "name": "AVG pre-process-version c00cdd",
+        "id_global": "B1785AF6-7D1C-4915-B0DC-EF657E7851CC"
+      },
+      "note": "A deleted snapshot cannot be brought back by a tool."
+    },
+    "lr_delete_snapshot \"AVG pre-process-version 296bd7\"": {
+      "uuid": "E0675F16-6A66-4416-96C2-F72B36CE085E",
+      "deleted": {
+        "id": "30A2F128-599A-4EAD-A098-95661B6E4A64",
+        "name": "AVG pre-process-version 296bd7",
+        "id_global": "781205F9-956A-4F87-ADD3-4F09EAE1A7D1"
+      },
+      "note": "A deleted snapshot cannot be brought back by a tool."
+    },
+    "lr_delete_snapshot \"AVG pre-apply a52ad8\"": {
+      "uuid": "E0675F16-6A66-4416-96C2-F72B36CE085E",
+      "deleted": {
+        "id": "D65A06FA-63A9-4A07-822E-57D4EF712C8A",
+        "name": "AVG pre-apply a52ad8",
+        "id_global": "6363A6D1-1A2E-4A4A-A64C-3772BE201C8B"
+      },
+      "note": "A deleted snapshot cannot be brought back by a tool."
+    },
+    "lr_delete_snapshot \"AVG pre-apply 1c81c3\"": {
+      "uuid": "DD6E06AA-639F-4553-83CE-D4D3340D8641",
+      "deleted": {
+        "id": "24CBB8DF-A11B-4294-A9AE-39FB9699ABEC",
+        "name": "AVG pre-apply 1c81c3",
+        "id_global": "521252BE-6BDD-417E-8774-AD08060C5029"
+      },
+      "note": "A deleted snapshot cannot be brought back by a tool."
+    }
+  },
+  "plugin_version": "1.5.0",
+  "lrc_version": "15.6",
+  "photos": [
+    {
+      "uuid": "E0675F16-6A66-4416-96C2-F72B36CE085E",
+      "filename": "LRM_20210115_123820.dng"
+    },
+    {
+      "uuid": "DD6E06AA-639F-4553-83CE-D4D3340D8641",
+      "filename": "LRM_20210115_123829.dng"
+    }
+  ],
+  "put_back": {
+    "E0675F16-6A66-4416-96C2-F72B36CE085E": {
+      "names": "canonical",
+      "changed": {}
+    },
+    "DD6E06AA-639F-4553-83CE-D4D3340D8641": {
+      "names": "canonical",
+      "changed": {}
+    }
+  },
+  "answers": [
+    "y",
+    "y",
+    "y"
+  ],
+  "lines": [
+    "YES lr_create_snapshot E0675F16-6A66-4416-96C2-F72B36CE085E: ok (expected ok)",
+    "YES lr_create_snapshot DD6E06AA-639F-4553-83CE-D4D3340D8641: ok (expected ok)",
+    "YES lr_list_snapshots: listed (expected listed)",
+    "YES lr_apply_auto tone + white balance: applied, applied (expected applied or unchanged)",
+    "YES lr_reset: reset, reset (expected reset)",
+    "YES lr_set_process_version 5: changed (expected changed)",
+    "YES lr_set_process_version 6: changed (expected changed)",
+    "YES lr_get_metadata raw: read (expected read)",
+    "YES lr_create_virtual_copies: copied (expected copied)",
+    "YES lr_apply_snapshot (put back) E0675F16-6A66-4416-96C2-F72B36CE085E: ok (expected ok)",
+    "YES lr_apply_snapshot (put back) DD6E06AA-639F-4553-83CE-D4D3340D8641: ok (expected ok)",
+    "YES lr_delete_snapshot \"AVG develop-check start 2026-10-28T04-13-10-877Z\": ok (expected ok)",
+    "YES lr_delete_snapshot \"AVG pre-auto 2dbee8\": ok (expected ok)",
+    "YES lr_delete_snapshot \"AVG pre-reset a1819c\": ok (expected ok)",
+    "YES lr_delete_snapshot \"AVG pre-process-version c00cdd\": ok (expected ok)",
+    "YES lr_delete_snapshot \"AVG pre-process-version 296bd7\": ok (expected ok)",
+    "YES lr_delete_snapshot \"AVG pre-apply a52ad8\": ok (expected ok)",
+    "YES lr_delete_snapshot \"AVG develop-check start 2026-10-28T04-13-10-877Z\": ok (expected ok)",
+    "YES lr_delete_snapshot \"AVG pre-auto 2dbee8\": ok (expected ok)",
+    "YES lr_delete_snapshot \"AVG pre-reset a1819c\": ok (expected ok)",
+    "YES lr_delete_snapshot \"AVG pre-apply 1c81c3\": ok (expected ok)",
+    "YES the selection is as it was",
+    "YES both photos' Develop settings are back as they were",
+    "YES the check's snapshots are deleted again",
+    "YES Jim's answer 1: y",
+    "YES Jim's answer 2: y",
+    "YES Jim's answer 3: y"
+  ],
+  "put_back_ok": true,
+  "steps": [
+    {
+      "step": "lr_create_snapshot E0675F16-6A66-4416-96C2-F72B36CE085E",
+      "expect": [
+        "ok"
+      ],
+      "statuses": [
+        "ok"
+      ]
+    },
+    {
+      "step": "lr_create_snapshot DD6E06AA-639F-4553-83CE-D4D3340D8641",
+      "expect": [
+        "ok"
+      ],
+      "statuses": [
+        "ok"
+      ]
+    },
+    {
+      "step": "lr_list_snapshots",
+      "expect": [
+        "listed"
+      ],
+      "statuses": [
+        "listed"
+      ]
+    },
+    {
+      "step": "lr_apply_auto tone + white balance",
+      "expect": [
+        "applied",
+        "unchanged"
+      ],
+      "statuses": [
+        "applied",
+        "applied"
+      ]
+    },
+    {
+      "step": "lr_reset",
+      "expect": [
+        "reset"
+      ],
+      "statuses": [
+        "reset",
+        "reset"
+      ]
+    },
+    {
+      "step": "lr_set_process_version 5",
+      "expect": [
+        "changed"
+      ],
+      "statuses": [
+        "changed"
+      ]
+    },
+    {
+      "step": "lr_set_process_version 6",
+      "expect": [
+        "changed"
+      ],
+      "statuses": [
+        "changed"
+      ]
+    },
+    {
+      "step": "lr_get_metadata raw",
+      "expect": [
+        "read"
+      ],
+      "statuses": [
+        "read"
+      ]
+    },
+    {
+      "step": "lr_create_virtual_copies",
+      "expect": [
+        "copied"
+      ],
+      "statuses": [
+        "copied"
+      ]
+    },
+    {
+      "step": "lr_apply_snapshot (put back) E0675F16-6A66-4416-96C2-F72B36CE085E",
+      "expect": [
+        "ok"
+      ],
+      "statuses": [
+        "ok"
+      ]
+    },
+    {
+      "step": "lr_apply_snapshot (put back) DD6E06AA-639F-4553-83CE-D4D3340D8641",
+      "expect": [
+        "ok"
+      ],
+      "statuses": [
+        "ok"
+      ]
+    },
+    {
+      "step": "lr_delete_snapshot \"AVG develop-check start 2026-10-28T04-13-10-877Z\"",
+      "expect": [
+        "ok"
+      ],
+      "statuses": [
+        "ok"
+      ]
+    },
+    {
+      "step": "lr_delete_snapshot \"AVG pre-auto 2dbee8\"",
+      "expect": [
+        "ok"
+      ],
+      "statuses": [
+        "ok"
+      ]
+    },
+    {
+      "step": "lr_delete_snapshot \"AVG pre-reset a1819c\"",
+      "expect": [
+        "ok"
+      ],
+      "statuses": [
+        "ok"
+      ]
+    },
+    {
+      "step": "lr_delete_snapshot \"AVG pre-process-version c00cdd\"",
+      "expect": [
+        "ok"
+      ],
+      "statuses": [
+        "ok"
+      ]
+    },
+    {
+      "step": "lr_delete_snapshot \"AVG pre-process-version 296bd7\"",
+      "expect": [
+        "ok"
+      ],
+      "statuses": [
+        "ok"
+      ]
+    },
+    {
+      "step": "lr_delete_snapshot \"AVG pre-apply a52ad8\"",
+      "expect": [
+        "ok"
+      ],
+      "statuses": [
+        "ok"
+      ]
+    },
+    {
+      "step": "lr_delete_snapshot \"AVG develop-check start 2026-10-28T04-13-10-877Z\"",
+      "expect": [
+        "ok"
+      ],
+      "statuses": [
+        "ok"
+      ]
+    },
+    {
+      "step": "lr_delete_snapshot \"AVG pre-auto 2dbee8\"",
+      "expect": [
+        "ok"
+      ],
+      "statuses": [
+        "ok"
+      ]
+    },
+    {
+      "step": "lr_delete_snapshot \"AVG pre-reset a1819c\"",
+      "expect": [
+        "ok"
+      ],
+      "statuses": [
+        "ok"
+      ]
+    },
+    {
+      "step": "lr_delete_snapshot \"AVG pre-apply 1c81c3\"",
+      "expect": [
+        "ok"
+      ],
+      "statuses": [
+        "ok"
+      ]
+    }
+  ],
+  "headline": "WORKED"
+}

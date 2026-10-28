@@ -60,7 +60,9 @@ const name = z.string().min(1).max(60);
 const maskId = z.string().min(1).describe("the mask's id from lr_list_masks or a mask tool's result (`masks[].id`)");
 
 const AI_NAMES = Object.keys(AI_KINDS);
-const KINDS = ["linear", "radial", "luminance", ...AI_NAMES, ...Object.keys(REFUSED_KINDS)] as [string, ...string[]];
+// color_range, depth_range and brush are described from engine 1.1.0 (#191) but were left out of this list, so the
+// schema refused them before the engine saw them (found for issue #210) [handle: engine\tests\mcp-mask-defs.test.ts].
+const KINDS = ["linear", "radial", "luminance", "color_range", "depth_range", "brush", ...AI_NAMES, ...Object.keys(REFUSED_KINDS)] as [string, ...string[]];
 const group = (prefix: string): string => AI_NAMES.filter((k) => k.startsWith(prefix)).join(", ");
 
 const listArgs = z.object({ session_id: sessionId, target: target.describe('Variants mode: which photo ("master", "A", …); default the photo the last call worked on') });

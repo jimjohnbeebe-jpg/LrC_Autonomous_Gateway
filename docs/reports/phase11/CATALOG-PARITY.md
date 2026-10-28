@@ -1,7 +1,7 @@
 ---
 report: CATALOG-PARITY
 phase: "11"
-status: observed
+status: accepted
 authored_by: "Claude Code (purpose, harness, pre-run findings, steps; Observed and Numbers copied from the run files, 2026-10-27, runs 1 and 2); Jim (the run, his answers, verdict)"
 date: 2026-10-27
 ---
@@ -152,6 +152,8 @@ YES Jim's answers 1-4: y, y, y, y
 Run 1 from `docs\reports\phase11\CATALOG-PARITY\run1\catalog_check_2026-10-28T02-32-41-166Z.json`; run 2 from `docs\reports\phase11\CATALOG-PARITY\run2\catalog_check_2026-10-28T04-15-41-490Z.json`.
 
 ## Verdict
+
+**Go** after run 2, with no rerun: the one NO is the harness reusing run 1's keyword names, and the next code PR gives the test keywords a name per run [stated: Jim, 2026-10-27, "Go with recommendations"]. Run 1 was:
 
 **Conditional** [stated: Jim, 2026-10-27, "Go with recommendations. 5. Agreed"]: on a rerun after the fix PR (unlabelled "gray" read as "none", `isSmartCollection()`, the first step's key test).
 

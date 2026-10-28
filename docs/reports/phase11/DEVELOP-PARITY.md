@@ -1,7 +1,7 @@
 ---
 report: DEVELOP-PARITY
 phase: "11"
-status: observed
+status: accepted
 authored_by: "Claude Code (Opus 5.5): purpose, harness, pre-run findings, steps, 2026-10-27; Observed and Numbers copied from the run files, 2026-10-27 (runs 1 and 2). Jim: the run, his answers, Verdict (blank)."
 date: 2026-10-27
 ---
@@ -139,6 +139,8 @@ YES Jim's answers 1-3: y, y, y
 Run 1 from `docs\reports\phase11\DEVELOP-PARITY\run1\develop_check_2026-10-28T02-24-27-615Z.json` and `docs\reports\phase11\DEVELOP-PARITY\run1\bridge-log-excerpt.txt`; run 2 from `docs\reports\phase11\DEVELOP-PARITY\run2\develop_check_2026-10-28T04-13-10-877Z.json`.
 
 ## Verdict
+
+**Go** after run 2 [stated: Jim, 2026-10-27, "Go with recommendations"]. Run 1 was:
 
 **Conditional** [stated: Jim, 2026-10-27, "Go with recommendations. 5. Agreed"]: on a rerun after the harness keeps the first put-back's differences (fix PR after #239).
 

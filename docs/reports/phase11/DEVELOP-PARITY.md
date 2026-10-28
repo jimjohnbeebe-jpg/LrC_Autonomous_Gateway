@@ -122,7 +122,7 @@ All from `docs\reports\phase11\DEVELOP-PARITY\run1\develop_check_2026-10-28T02-2
 
 ## Verdict
 
-*(Jim's; the script's WORKED/FAILED is a suggestion)*
+**Conditional** [stated: Jim, 2026-10-27, "Go with recommendations. 5. Agreed"]: on a rerun after the harness keeps the first put-back's differences (fix PR after #239).
 
 ## Consequences / open questions
 

@@ -116,7 +116,7 @@ All from `docs\reports\phase11\PRESET-PARITY\run1\presets_check_2026-10-28T02-27
 
 ## Verdict
 
-<!-- Jim: go / conditional / no-go. The window's WORKED/FAILED is a suggestion. -->
+**Go** [stated: Jim, 2026-10-27, "Go with recommendations. 5. Agreed"]. The -999999 reading is handled in the fix PR that follows.
 
 ## Consequences / open questions
 

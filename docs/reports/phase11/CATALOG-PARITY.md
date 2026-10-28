@@ -110,7 +110,7 @@ What each NO shows (Claude Code's reading of the file and the code):
 
 Everything else worked: the folder list, colour label write and search, the new search filters, IPTC and location, keyword rename (case-only too) and subtree removal, the regular collection's delete with member uuids, the metadata export, and the AI score and reason [handle: `docs\reports\phase11\CATALOG-PARITY\run1\catalog_check_2026-10-28T02-32-41-166Z.json`].
 
-**Jim's answers** (all y) [handle: `engine\src\devtools\catalog-check-cli.ts:76-80`]: 1, no collection starting "AVG catalog check" is left; 2, the colour label and IPTC Creator and Location read as before; 3, the plugin reloaded without an error dialog; 4, "AVG session", "AVG look" and "AVG edit date" are listed under "All Plug-in Metadata". **Answer 2 and the file disagree on the label:** the file says the label stayed red. Which is right is open (rule 02: both reported).
+**Jim's answers** (all y) [handle: `engine\src\devtools\catalog-check-cli.ts:76-80`]: 1, no collection starting "AVG catalog check" is left; 2, the colour label and IPTC Creator and Location read as before; 3, the plugin reloaded without an error dialog; 4, "AVG session", "AVG look" and "AVG edit date" are listed under "All Plug-in Metadata". **Answer 2 and the file disagree on the label:** the file says the label stayed red. Settled after the run: Jim looked again and the photo still has the red label [stated: Jim, 2026-10-27, "Yes, there is still a red label on the image."], so the file is right and answer 2 was given before the label was checked closely [inference].
 ## Numbers
 
 | Item | Value |
@@ -127,10 +127,12 @@ All from `docs\reports\phase11\CATALOG-PARITY\run1\catalog_check_2026-10-28T02-3
 
 ## Verdict
 
+**Conditional** [stated: Jim, 2026-10-27, "Go with recommendations. 5. Agreed"]: on a rerun after the fix PR (unlabelled "gray" read as "none", `isSmartCollection()`, the first step's key test).
+
 ## Consequences / open questions
 
 - Settled by run 1 [handle: `docs\reports\phase11\CATALOG-PARITY\run1\catalog_check_2026-10-28T02-32-41-166Z.json`]: `focalLength` works as a findPhotos criterion (0 found, no error); `hasAdjustments` with true/false splits the photos (70 / 0); the case-only rename works; the plugin's metadata fields show under "All Plug-in Metadata" (Jim, answer 4).
-- **Open from run 1:** Lightroom's "gray" for an unlabelled photo and `lr_set_color_label`'s refusal of it; `isSmartCollection()` against `type()`; the first step's missing key; Jim's answer 2 against the file on the label.
+- **Open from run 1:** Lightroom's "gray" for an unlabelled photo and `lr_set_color_label`'s refusal of it; `isSmartCollection()` against `type()`; the first step's missing key; Jim's answer 2 against the file on the label (settled: the label is red).
 - Was `[unverified]` before this run: every Lightroom-side behaviour above, in particular `focalLength` as a findPhotos criterion, `hasAdjustments` with `isTrue`/`isFalse`, `labelColor` with `"none"`, `getPhotos(true)` for a folder's subfolders (from issue #139), the case-only rename through a temporary name, `createSmartCollection` inside a collection set made in the same gate, and whether Edit > Undo takes a deleted collection back.
 - Row 9 is its own commit, so it can be dropped alone: `Info.lua`'s new `LrMetadataProvider` (`MetadataDefinition.lua`) makes Lightroom update the plug-in metadata of the catalog when it loads the plugin `[unverified]`. Also `[unverified]`: whether a field without a title (`aiScore`, `aiReason`) stays hidden, whether "All Plug-in Metadata" is where the AVG fields show, whether the shipped plugin (`com.lrcavg.gateway`) and the development one (`com.lrcavg.gateway.dev`) keep separate values `[inference]`, and the accepted-session stamp in Lightroom (the check runs no session; `engine\tests\catalog-ai-metadata.test.ts` covers it against the simulator).
 - README's user guide still says "No tool deletes a collection" and lists only title, caption and headline; the documentation child of #207 updates it with the parity table.

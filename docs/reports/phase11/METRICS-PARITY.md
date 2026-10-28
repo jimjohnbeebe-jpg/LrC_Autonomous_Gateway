@@ -103,7 +103,7 @@ All from `docs\reports\phase11\METRICS-PARITY\run1\stats_check_2026-10-28T02-19-
 
 ## Verdict
 
-_Jim's: go / conditional / no-go._
+**Go** [stated: Jim, 2026-10-27, "Go with recommendations. 5. Agreed"].
 
 ## Consequences / open questions
 

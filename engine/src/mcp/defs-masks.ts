@@ -39,12 +39,15 @@ const geometry = z
           points: z.array(point).min(1).max(BRUSH_LIMITS.points).describe("the stroke's path; the engine fills in dabs between the points"),
           radius: z.number().min(0.001).max(1).optional().describe(`the brush's radius as a fraction of the whole photo's long edge (before any crop), default ${BRUSH_RADIUS}`),
           flow: z.number().min(0.01).max(1).optional().describe("0.01-1, default 1"),
+          feather: z.number().min(0).max(100).optional().describe("0 hard to 100 soft (default 100), as the Brush panel's Feather"),
+          density: unit.optional().describe("0-1, default 1; 0 erases"),
+          erase: z.boolean().optional().describe("true: this stroke takes paint away where it goes (an erase stroke, density 0)"),
         }),
       )
       .min(1)
       .max(BRUSH_LIMITS.strokes)
       .optional()
-      .describe(`brush: 1-${BRUSH_LIMITS.strokes} strokes painted with the mask's sliders (no erase)`),
+      .describe(`brush: 1-${BRUSH_LIMITS.strokes} strokes painted with the mask's sliders; on lr_edit_mask of a brush, added after its strokes (erase strokes take paint away). Feather, density and erase in Lightroom are [unverified]: look at the result`),
   })
   .describe(
     `In ${FRAME}, as lr_get_preview \`region\` and lr_set_regions are; the engine maps it through the photo's crop (its angle included). ` +
@@ -194,8 +197,8 @@ const PASS_NOTE =
   "written; deleting it is allowed. A mirrored photo refuses geometry and points (CROP_FRAME_UNSUPPORTED); " +
   "`warnings` flags a mask 90 % or more outside the preview. " +
   "Returns the mask, every mask of the photo (`masks`, with fresh ids), " +
-  `metrics, delta_metrics and the image. Needs plugin ${MASKS_PLUGIN}. color_range, depth_range, brush: not reshaped, not parts. ` +
-  "Not offered: Select Objects, brush erase, mask pixels, mask presets.";
+  `metrics, delta_metrics and the image. Needs plugin ${MASKS_PLUGIN}. color_range, depth_range: not reshaped; brush: strokes added; none as parts. ` +
+  "Not offered: Select Objects, mask pixels, mask presets.";
 
 export const MASK_DEFS: ToolDef[] = [
   {
@@ -244,7 +247,7 @@ export const MASK_DEFS: ToolDef[] = [
     title: "Edit a mask",
     // Sliders merge into the stored ones [handle: engine\src\params\mask-ops.ts:236, Object.assign].
     description:
-      "Change one mask by its id: set local sliders (absolute values in panel units; sliders not given keep their values), its geometry (linear, radial, luminance), invert it, rename it, " +
+      "Change one mask by its id: set local sliders (absolute values in panel units; sliders not given keep their values), its geometry (linear, radial, luminance; a brush: strokes added), its Point Color swatches, invert it (or add an inverted copy), rename it, " +
       "or hide/show it (`active`). MASK_NOT_FOUND: call lr_list_masks for the current ids. " +
       "Parts: `combine` adds a part (kind, geometry) in mode add, subtract or intersect; `part` names one part to reshape (geometry), invert, set to a mode (combine.mode) " +
       "or remove (remove_part); a mask of several parts is inverted or reshaped only part by part. Only these forms, which were checked in Lightroom, are written: " +

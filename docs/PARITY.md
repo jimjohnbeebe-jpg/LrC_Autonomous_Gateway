@@ -74,8 +74,8 @@ Every `lr_*` write tool runs only when no edit session is open, and returns the 
 | `list_masks` | `lr_list_masks` | have | A colour range's stored `sample` {l, a, b} and a depth range's trapezoid (#210) |
 | `create_gradient_mask` | `lr_create_mask` | have | Linear and radial |
 | `update_gradient_mask` | `lr_edit_mask` | have | |
-| `create_brush_mask` | `lr_create_mask` | planned #217 | Brush from strokes exists; feather, density and erase do not |
-| `add_brush_strokes` | none | planned #217 | |
+| `create_brush_mask` | `lr_create_mask` | have | Strokes with radius (fraction of the long edge), flow, feather, density and erase (#217); Size, a screen size, is not offered |
+| `add_brush_strokes` | `lr_edit_mask` | have | `geometry.strokes` on a brush adds strokes after its own, erase strokes included (#217) |
 | `create_range_mask` | `lr_create_mask` | have | Luminance, colour and depth; the colour as `copy_sample_from` or `geometry.sample` {l, a, b} (#210); the engine's own point sample (the preview's RGB) stays until `npm run masks:verify`, flagged [unverified] in the tool text |
 | `delete_masks` | `lr_delete_mask` | have | One mask per call |
 | `delete_empty_masks` | `lr_delete_empty_masks` | have | Lightroom's own `catalog:deleteAllEmptyMasks`, a snapshot first, the mask count before and after (#217) |
@@ -92,7 +92,7 @@ Every `lr_*` write tool runs only when no edit session is open, and returns the 
 | `get_mask_point_colors` | `lr_list_masks` | have | `point_colors` of each mask (#217) |
 | `combine_mask` | `lr_edit_mask` | have | `combine` add, subtract, intersect, in the forms checked in Lightroom |
 
-Count: 50 `have`, 9 `ours+`, 6 `planned` (#217: 5, #218: 1), 3 `decision` [handle: `engine/tests/parity-map.test.ts` pins these counts].
+Count: 52 `have`, 9 `ours+`, 4 `planned` (#217: 3, #218: 1), 3 `decision` [handle: `engine/tests/parity-map.test.ts` pins these counts].
 
 ## LrC-AVG tools with no upstream counterpart
 

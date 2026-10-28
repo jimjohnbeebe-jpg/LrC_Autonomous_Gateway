@@ -1,0 +1,1652 @@
+{
+  "check": "stats-check",
+  "started": "2026-10-28T02-19-31-863Z",
+  "node": "v24.11.1",
+  "engine_version": "1.5.0",
+  "plugin_version": "1.5.0",
+  "photos": [
+    {
+      "uuid": "041B107A-6822-45F6-8BF5-9EC1921C2252",
+      "filename": "_OZ80738.NEF"
+    },
+    {
+      "uuid": "14C30956-98A7-4EEC-91E7-7B9BFECC44EE",
+      "filename": "_OZ80739.NEF"
+    },
+    {
+      "uuid": "B3577FE3-A583-4AA7-967A-59E8E4AD348F",
+      "filename": "_OZ80740.NEF"
+    },
+    {
+      "uuid": "6BC72D93-3FF1-4E01-9B67-24D3FE90F080",
+      "filename": "_OZ80741.NEF"
+    },
+    {
+      "uuid": "0C1C1EEB-94A6-413C-82B0-3E38921E0DC4",
+      "filename": "_OZ80742.NEF"
+    },
+    {
+      "uuid": "D032AF0E-931A-4E0A-94EC-4AA6F10F150B",
+      "filename": "_OZ80743.NEF"
+    },
+    {
+      "uuid": "F7B0A9A8-53D6-4D8F-B217-A30DD8BB4E47",
+      "filename": "_OZ80744.NEF"
+    },
+    {
+      "uuid": "6A826C2A-8733-463A-B01F-4669865DB1C6",
+      "filename": "_OZ80745.NEF"
+    },
+    {
+      "uuid": "6D1646D4-B625-4CEF-95D6-4D7665E839FF",
+      "filename": "2025-01-10_LrcAVG.dng"
+    },
+    {
+      "uuid": "67E6733F-E492-4248-8DBD-A549C824582C",
+      "filename": "_OZ80746.NEF"
+    },
+    {
+      "uuid": "D38E5726-E9CE-4B4D-807E-4D324832B78A",
+      "filename": "_OZ80747.NEF"
+    },
+    {
+      "uuid": "70D32101-790D-4684-993C-08844E056FA8",
+      "filename": "_OZ80748.NEF"
+    },
+    {
+      "uuid": "0151CCAF-0A63-4914-A74F-B4F1FFDE7B1F",
+      "filename": "_OZ80749.NEF"
+    },
+    {
+      "uuid": "A9601BC1-E5BE-4E26-B882-8AA8C4E7F473",
+      "filename": "_OZ80750.NEF"
+    },
+    {
+      "uuid": "194C2BCC-6F71-4C17-AB3D-51C3F652B800",
+      "filename": "_OZ80751.NEF"
+    },
+    {
+      "uuid": "3524D3FB-0331-4651-B00A-F52D6FF2E84F",
+      "filename": "_OZ80752.NEF"
+    },
+    {
+      "uuid": "565B4B3B-3EB2-468E-AE1F-6C968F08E29C",
+      "filename": "_OZ80753.NEF"
+    },
+    {
+      "uuid": "A0244477-C752-452C-B738-9D0DCF9CAB0E",
+      "filename": "_OZ80754.NEF"
+    },
+    {
+      "uuid": "CE63A659-C825-4A16-9D0B-BEAE3CB6800A",
+      "filename": "_OZ80755.NEF"
+    },
+    {
+      "uuid": "6DFD02A6-1449-4656-BCC6-DD24896724F9",
+      "filename": "_OZ80756.NEF"
+    }
+  ],
+  "stats": {
+    "calls": [
+      {
+        "ms": 29937,
+        "measured": 20,
+        "not_yet": 0
+      }
+    ],
+    "photos": [
+      {
+        "uuid": "041B107A-6822-45F6-8BF5-9EC1921C2252",
+        "ok": true,
+        "width": 800,
+        "height": 533,
+        "metrics": {
+          "luma_mean": 129.585,
+          "luma_std": 73.149,
+          "luma_percentiles": {
+            "p1": 4,
+            "p5": 6,
+            "p50": 127,
+            "p95": 245,
+            "p99": 253
+          },
+          "dynamic_range": 0.9765,
+          "channel_mean": {
+            "r": 132.746,
+            "g": 128.609,
+            "b": 129.942
+          },
+          "rb_ratio": 1.0216,
+          "clip_high_pct": 4.0042,
+          "clip_high_tone_pct": 1.1947,
+          "clip_low_pct": 0.0026,
+          "clip_high_pct_by_channel": {
+            "r": 3.9991,
+            "g": 1.1907,
+            "b": 0.7216
+          },
+          "clip_low_pct_by_channel": {
+            "r": 0.2924,
+            "g": 0.1189,
+            "b": 0.0059
+          },
+          "saturation_mean": 14.282,
+          "chromatic_pct": 35.9306,
+          "hue_mean": 270.47,
+          "hue_histogram": [
+            1.7936,
+            37.0673,
+            0.0307,
+            0.0007,
+            0,
+            0.0007,
+            0.0104,
+            9.07,
+            48.502,
+            1.7675,
+            0.7095,
+            1.0476
+          ],
+          "sharpness": 708.013
+        },
+        "ms": 2715.8
+      },
+      {
+        "uuid": "14C30956-98A7-4EEC-91E7-7B9BFECC44EE",
+        "ok": true,
+        "width": 800,
+        "height": 533,
+        "metrics": {
+          "luma_mean": 135.765,
+          "luma_std": 73.64,
+          "luma_percentiles": {
+            "p1": 4,
+            "p5": 6,
+            "p50": 136,
+            "p95": 247,
+            "p99": 254
+          },
+          "dynamic_range": 0.9804,
+          "channel_mean": {
+            "r": 139.188,
+            "g": 134.763,
+            "b": 135.619
+          },
+          "rb_ratio": 1.0263,
+          "clip_high_pct": 4.6803,
+          "clip_high_tone_pct": 1.7078,
+          "clip_low_pct": 0.0021,
+          "clip_high_pct_by_channel": {
+            "r": 4.6726,
+            "g": 1.7085,
+            "b": 0.9128
+          },
+          "clip_low_pct_by_channel": {
+            "r": 0.2699,
+            "g": 0.1266,
+            "b": 0.007
+          },
+          "saturation_mean": 13.645,
+          "chromatic_pct": 34.0767,
+          "hue_mean": 281.61,
+          "hue_histogram": [
+            2.2856,
+            39.9448,
+            0.0234,
+            0.0007,
+            0,
+            0,
+            0.011,
+            8.2841,
+            45.7774,
+            1.916,
+            0.7075,
+            1.0495
+          ],
+          "sharpness": 747.816
+        },
+        "ms": 1730.9
+      },
+      {
+        "uuid": "B3577FE3-A583-4AA7-967A-59E8E4AD348F",
+        "ok": true,
+        "width": 800,
+        "height": 533,
+        "metrics": {
+          "luma_mean": 120.688,
+          "luma_std": 74.621,
+          "luma_percentiles": {
+            "p1": 6,
+            "p5": 9,
+            "p50": 118,
+            "p95": 237,
+            "p99": 251
+          },
+          "dynamic_range": 0.9608,
+          "channel_mean": {
+            "r": 124.483,
+            "g": 119.494,
+            "b": 121.332
+          },
+          "rb_ratio": 1.026,
+          "clip_high_pct": 1.2875,
+          "clip_high_tone_pct": 0.7774,
+          "clip_low_pct": 0,
+          "clip_high_pct_by_channel": {
+            "r": 1.2624,
+            "g": 0.7685,
+            "b": 0.5038
+          },
+          "clip_low_pct_by_channel": {
+            "r": 0.0924,
+            "g": 0.0209,
+            "b": 0.0023
+          },
+          "saturation_mean": 15.636,
+          "chromatic_pct": 34.5537,
+          "hue_mean": 277.4,
+          "hue_histogram": [
+            11.959,
+            22.5028,
+            0.0238,
+            0,
+            0,
+            0,
+            0.0054,
+            6.6833,
+            47.8651,
+            5.313,
+            1.9981,
+            3.6495
+          ],
+          "sharpness": 1040.238
+        },
+        "ms": 1742.7
+      },
+      {
+        "uuid": "6BC72D93-3FF1-4E01-9B67-24D3FE90F080",
+        "ok": true,
+        "width": 800,
+        "height": 533,
+        "metrics": {
+          "luma_mean": 120.827,
+          "luma_std": 74.52,
+          "luma_percentiles": {
+            "p1": 6,
+            "p5": 10,
+            "p50": 118,
+            "p95": 237,
+            "p99": 251
+          },
+          "dynamic_range": 0.9608,
+          "channel_mean": {
+            "r": 124.602,
+            "g": 119.637,
+            "b": 121.505
+          },
+          "rb_ratio": 1.0255,
+          "clip_high_pct": 1.3173,
+          "clip_high_tone_pct": 0.7763,
+          "clip_low_pct": 0,
+          "clip_high_pct_by_channel": {
+            "r": 1.2981,
+            "g": 0.7662,
+            "b": 0.4815
+          },
+          "clip_low_pct_by_channel": {
+            "r": 0.0945,
+            "g": 0.0237,
+            "b": 0.0019
+          },
+          "saturation_mean": 15.58,
+          "chromatic_pct": 34.6611,
+          "hue_mean": 277.56,
+          "hue_histogram": [
+            11.748,
+            23.1625,
+            0.0122,
+            0.0007,
+            0,
+            0.0007,
+            0.0054,
+            7.1241,
+            47.5314,
+            5.0766,
+            1.812,
+            3.5265
+          ],
+          "sharpness": 1040.172
+        },
+        "ms": 1801.7
+      },
+      {
+        "uuid": "0C1C1EEB-94A6-413C-82B0-3E38921E0DC4",
+        "ok": true,
+        "width": 800,
+        "height": 533,
+        "metrics": {
+          "luma_mean": 116.185,
+          "luma_std": 75.677,
+          "luma_percentiles": {
+            "p1": 5,
+            "p5": 7,
+            "p50": 112,
+            "p95": 240,
+            "p99": 251
+          },
+          "dynamic_range": 0.9647,
+          "channel_mean": {
+            "r": 118.861,
+            "g": 115.175,
+            "b": 118.312
+          },
+          "rb_ratio": 1.0046,
+          "clip_high_pct": 1.7727,
+          "clip_high_tone_pct": 0.4364,
+          "clip_low_pct": 0.0026,
+          "clip_high_pct_by_channel": {
+            "r": 1.7627,
+            "g": 0.4353,
+            "b": 0.2104
+          },
+          "clip_low_pct_by_channel": {
+            "r": 0.3591,
+            "g": 0.1663,
+            "b": 0.0195
+          },
+          "saturation_mean": 17.777,
+          "chromatic_pct": 30.3164,
+          "hue_mean": 251.93,
+          "hue_histogram": [
+            9.7084,
+            11.606,
+            0.0209,
+            0.0062,
+            0.007,
+            0.0503,
+            0.4649,
+            12.6542,
+            56.531,
+            4.3143,
+            1.7483,
+            2.8886
+          ],
+          "sharpness": 1167.91
+        },
+        "ms": 1762.1
+      },
+      {
+        "uuid": "D032AF0E-931A-4E0A-94EC-4AA6F10F150B",
+        "ok": true,
+        "width": 800,
+        "height": 533,
+        "metrics": {
+          "luma_mean": 115.271,
+          "luma_std": 75.256,
+          "luma_percentiles": {
+            "p1": 5,
+            "p5": 7,
+            "p50": 111,
+            "p95": 240,
+            "p99": 251
+          },
+          "dynamic_range": 0.9647,
+          "channel_mean": {
+            "r": 117.921,
+            "g": 114.272,
+            "b": 117.365
+          },
+          "rb_ratio": 1.0047,
+          "clip_high_pct": 1.5851,
+          "clip_high_tone_pct": 0.4322,
+          "clip_low_pct": 0.0035,
+          "clip_high_pct_by_channel": {
+            "r": 1.5743,
+            "g": 0.4294,
+            "b": 0.2315
+          },
+          "clip_low_pct_by_channel": {
+            "r": 0.363,
+            "g": 0.1693,
+            "b": 0.0223
+          },
+          "saturation_mean": 17.887,
+          "chromatic_pct": 30.6332,
+          "hue_mean": 251.85,
+          "hue_histogram": [
+            9.3202,
+            12.3174,
+            0.0352,
+            0.0061,
+            0.0138,
+            0.0314,
+            0.7847,
+            12.9896,
+            55.4747,
+            4.3163,
+            1.7876,
+            2.923
+          ],
+          "sharpness": 1161.355
+        },
+        "ms": 1738.6
+      },
+      {
+        "uuid": "F7B0A9A8-53D6-4D8F-B217-A30DD8BB4E47",
+        "ok": true,
+        "width": 800,
+        "height": 533,
+        "metrics": {
+          "luma_mean": 118.139,
+          "luma_std": 64.868,
+          "luma_percentiles": {
+            "p1": 7,
+            "p5": 12,
+            "p50": 128,
+            "p95": 224,
+            "p99": 252
+          },
+          "dynamic_range": 0.9608,
+          "channel_mean": {
+            "r": 121.964,
+            "g": 116.921,
+            "b": 118.939
+          },
+          "rb_ratio": 1.0254,
+          "clip_high_pct": 1.5042,
+          "clip_high_tone_pct": 0.9486,
+          "clip_low_pct": 0,
+          "clip_high_pct_by_channel": {
+            "r": 1.4803,
+            "g": 0.9275,
+            "b": 0.6679
+          },
+          "clip_low_pct_by_channel": {
+            "r": 0.068,
+            "g": 0.0075,
+            "b": 0.0012
+          },
+          "saturation_mean": 15.233,
+          "chromatic_pct": 31.492,
+          "hue_mean": 283.91,
+          "hue_histogram": [
+            16.8437,
+            21.7803,
+            0.0223,
+            0,
+            0,
+            0.0007,
+            0.0097,
+            8.5596,
+            43.9188,
+            3.5664,
+            1.5043,
+            3.7943
+          ],
+          "sharpness": 1181.284
+        },
+        "ms": 1745.6
+      },
+      {
+        "uuid": "6A826C2A-8733-463A-B01F-4669865DB1C6",
+        "ok": true,
+        "width": 800,
+        "height": 533,
+        "metrics": {
+          "luma_mean": 114.789,
+          "luma_std": 72.027,
+          "luma_percentiles": {
+            "p1": 5,
+            "p5": 9,
+            "p50": 111,
+            "p95": 235,
+            "p99": 250
+          },
+          "dynamic_range": 0.9608,
+          "channel_mean": {
+            "r": 117.82,
+            "g": 113.683,
+            "b": 116.818
+          },
+          "rb_ratio": 1.0086,
+          "clip_high_pct": 1.0872,
+          "clip_high_tone_pct": 0.4029,
+          "clip_low_pct": 0.0014,
+          "clip_high_pct_by_channel": {
+            "r": 1.0774,
+            "g": 0.3959,
+            "b": 0.2423
+          },
+          "clip_low_pct_by_channel": {
+            "r": 0.2444,
+            "g": 0.1112,
+            "b": 0.022
+          },
+          "saturation_mean": 17.533,
+          "chromatic_pct": 33.8863,
+          "hue_mean": 258.64,
+          "hue_histogram": [
+            11.0657,
+            15.4093,
+            0.045,
+            0.0007,
+            0.0028,
+            0.0256,
+            0.1647,
+            13.8182,
+            49.6349,
+            4.3401,
+            2.0278,
+            3.4653
+          ],
+          "sharpness": 1258.588
+        },
+        "ms": 1770
+      },
+      {
+        "uuid": "6D1646D4-B625-4CEF-95D6-4D7665E839FF",
+        "ok": true,
+        "width": 800,
+        "height": 533,
+        "metrics": {
+          "luma_mean": 112.304,
+          "luma_std": 58.86,
+          "luma_percentiles": {
+            "p1": 5,
+            "p5": 14,
+            "p50": 108,
+            "p95": 222,
+            "p99": 240
+          },
+          "dynamic_range": 0.9216,
+          "channel_mean": {
+            "r": 112.979,
+            "g": 112.041,
+            "b": 112.922
+          },
+          "rb_ratio": 1.0005,
+          "clip_high_pct": 0.3344,
+          "clip_high_tone_pct": 0.2943,
+          "clip_low_pct": 0.0685,
+          "clip_high_pct_by_channel": {
+            "r": 0.325,
+            "g": 0.2878,
+            "b": 0.262
+          },
+          "clip_low_pct_by_channel": {
+            "r": 0.4798,
+            "g": 0.1517,
+            "b": 0.3612
+          },
+          "saturation_mean": 12.62,
+          "chromatic_pct": 33.6968,
+          "hue_mean": 242.13,
+          "hue_histogram": [
+            2.7053,
+            37.1832,
+            1.4706,
+            0.5825,
+            1.378,
+            1.0648,
+            0.1274,
+            52.5817,
+            2.4519,
+            0.3382,
+            0.0487,
+            0.0675
+          ],
+          "sharpness": 1179.933
+        },
+        "ms": 1755.7
+      },
+      {
+        "uuid": "67E6733F-E492-4248-8DBD-A549C824582C",
+        "ok": true,
+        "width": 800,
+        "height": 533,
+        "metrics": {
+          "luma_mean": 90.277,
+          "luma_std": 66.16,
+          "luma_percentiles": {
+            "p1": 1,
+            "p5": 3,
+            "p50": 77,
+            "p95": 226,
+            "p99": 247
+          },
+          "dynamic_range": 0.9647,
+          "channel_mean": {
+            "r": 90.867,
+            "g": 90.041,
+            "b": 90.867
+          },
+          "rb_ratio": 1,
+          "clip_high_pct": 0.6166,
+          "clip_high_tone_pct": 0.5769,
+          "clip_low_pct": 3.0108,
+          "clip_high_pct_by_channel": {
+            "r": 0.6091,
+            "g": 0.5708,
+            "b": 0.5359
+          },
+          "clip_low_pct_by_channel": {
+            "r": 4.2068,
+            "g": 4.1492,
+            "b": 4.1489
+          },
+          "saturation_mean": 11.895,
+          "chromatic_pct": 24.3583,
+          "hue_mean": 247.23,
+          "hue_histogram": [
+            6.7665,
+            30.8018,
+            0.6056,
+            0.1146,
+            0.0732,
+            0.0144,
+            0.0144,
+            49.1075,
+            12.2795,
+            0.181,
+            0.0193,
+            0.0221
+          ],
+          "sharpness": 773.031
+        },
+        "ms": 706
+      },
+      {
+        "uuid": "D38E5726-E9CE-4B4D-807E-4D324832B78A",
+        "ok": true,
+        "width": 800,
+        "height": 533,
+        "metrics": {
+          "luma_mean": 124.918,
+          "luma_std": 49.018,
+          "luma_percentiles": {
+            "p1": 4,
+            "p5": 17,
+            "p50": 133,
+            "p95": 186,
+            "p99": 209
+          },
+          "dynamic_range": 0.8039,
+          "channel_mean": {
+            "r": 128.856,
+            "g": 124.133,
+            "b": 121.093
+          },
+          "rb_ratio": 1.0641,
+          "clip_high_pct": 0,
+          "clip_high_tone_pct": 0,
+          "clip_low_pct": 0.0462,
+          "clip_high_pct_by_channel": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          },
+          "clip_low_pct_by_channel": {
+            "r": 0.1278,
+            "g": 0.3145,
+            "b": 1.2617
+          },
+          "saturation_mean": 15.359,
+          "chromatic_pct": 34.1191,
+          "hue_mean": 29.17,
+          "hue_histogram": [
+            2.48,
+            88.5637,
+            0.3341,
+            0.0151,
+            0.0027,
+            0.0034,
+            0.0186,
+            7.8868,
+            0.6173,
+            0.0186,
+            0.0186,
+            0.0412
+          ],
+          "sharpness": 321.805
+        },
+        "ms": 1276.5
+      },
+      {
+        "uuid": "70D32101-790D-4684-993C-08844E056FA8",
+        "ok": true,
+        "width": 800,
+        "height": 533,
+        "metrics": {
+          "luma_mean": 132.365,
+          "luma_std": 49.123,
+          "luma_percentiles": {
+            "p1": 5,
+            "p5": 27,
+            "p50": 139,
+            "p95": 192,
+            "p99": 207
+          },
+          "dynamic_range": 0.7922,
+          "channel_mean": {
+            "r": 135.772,
+            "g": 131.67,
+            "b": 129.215
+          },
+          "rb_ratio": 1.0507,
+          "clip_high_pct": 0,
+          "clip_high_tone_pct": 0,
+          "clip_low_pct": 0.084,
+          "clip_high_pct_by_channel": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          },
+          "clip_low_pct_by_channel": {
+            "r": 0.2015,
+            "g": 0.3945,
+            "b": 1.4486
+          },
+          "saturation_mean": 16.14,
+          "chromatic_pct": 36.6449,
+          "hue_mean": 28.84,
+          "hue_histogram": [
+            1.1475,
+            82.4516,
+            0.2733,
+            0.0077,
+            0.0019,
+            0.0134,
+            0.1216,
+            15.8786,
+            0.0736,
+            0.0064,
+            0.0096,
+            0.0147
+          ],
+          "sharpness": 373.998
+        },
+        "ms": 1243.3
+      },
+      {
+        "uuid": "0151CCAF-0A63-4914-A74F-B4F1FFDE7B1F",
+        "ok": true,
+        "width": 800,
+        "height": 533,
+        "metrics": {
+          "luma_mean": 121.543,
+          "luma_std": 56.639,
+          "luma_percentiles": {
+            "p1": 4,
+            "p5": 9,
+            "p50": 136,
+            "p95": 189,
+            "p99": 204
+          },
+          "dynamic_range": 0.7843,
+          "channel_mean": {
+            "r": 125.354,
+            "g": 120.706,
+            "b": 118.612
+          },
+          "rb_ratio": 1.0568,
+          "clip_high_pct": 0.0005,
+          "clip_high_tone_pct": 0,
+          "clip_low_pct": 0.1346,
+          "clip_high_pct_by_channel": {
+            "r": 0.0005,
+            "g": 0,
+            "b": 0
+          },
+          "clip_low_pct_by_channel": {
+            "r": 0.2601,
+            "g": 0.4747,
+            "b": 1.3834
+          },
+          "saturation_mean": 17.264,
+          "chromatic_pct": 31.6055,
+          "hue_mean": 25.01,
+          "hue_histogram": [
+            3.3718,
+            83.2146,
+            0.1454,
+            0.0015,
+            0,
+            0.0022,
+            0.0764,
+            12.3288,
+            0.2204,
+            0.1922,
+            0.2256,
+            0.2211
+          ],
+          "sharpness": 349.294
+        },
+        "ms": 1248.2
+      },
+      {
+        "uuid": "A9601BC1-E5BE-4E26-B882-8AA8C4E7F473",
+        "ok": true,
+        "width": 800,
+        "height": 533,
+        "metrics": {
+          "luma_mean": 119.708,
+          "luma_std": 55.147,
+          "luma_percentiles": {
+            "p1": 4,
+            "p5": 9,
+            "p50": 132,
+            "p95": 186,
+            "p99": 202
+          },
+          "dynamic_range": 0.7765,
+          "channel_mean": {
+            "r": 123.273,
+            "g": 118.935,
+            "b": 116.871
+          },
+          "rb_ratio": 1.0548,
+          "clip_high_pct": 0,
+          "clip_high_tone_pct": 0,
+          "clip_low_pct": 0.1614,
+          "clip_high_pct_by_channel": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          },
+          "clip_low_pct_by_channel": {
+            "r": 0.3079,
+            "g": 0.5542,
+            "b": 1.4995
+          },
+          "saturation_mean": 16.755,
+          "chromatic_pct": 30.2892,
+          "hue_mean": 26.64,
+          "hue_histogram": [
+            2.9523,
+            86.5036,
+            0.1634,
+            0.0062,
+            0.0077,
+            0.0116,
+            0.0976,
+            10.0547,
+            0.0403,
+            0.0325,
+            0.0286,
+            0.1014
+          ],
+          "sharpness": 328.541
+        },
+        "ms": 1239.4
+      },
+      {
+        "uuid": "194C2BCC-6F71-4C17-AB3D-51C3F652B800",
+        "ok": true,
+        "width": 800,
+        "height": 533,
+        "metrics": {
+          "luma_mean": 125.055,
+          "luma_std": 52.076,
+          "luma_percentiles": {
+            "p1": 4,
+            "p5": 13,
+            "p50": 142,
+            "p95": 185,
+            "p99": 200
+          },
+          "dynamic_range": 0.7686,
+          "channel_mean": {
+            "r": 128.156,
+            "g": 124.36,
+            "b": 122.803
+          },
+          "rb_ratio": 1.0436,
+          "clip_high_pct": 0,
+          "clip_high_tone_pct": 0,
+          "clip_low_pct": 0.0654,
+          "clip_high_pct_by_channel": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          },
+          "clip_low_pct_by_channel": {
+            "r": 0.1752,
+            "g": 0.3591,
+            "b": 1.3042
+          },
+          "saturation_mean": 14.867,
+          "chromatic_pct": 26.2554,
+          "hue_mean": 27.48,
+          "hue_histogram": [
+            2.4314,
+            90.095,
+            0.1974,
+            0.0071,
+            0.0045,
+            0.0205,
+            0.0884,
+            7.0789,
+            0.0268,
+            0,
+            0.0161,
+            0.0339
+          ],
+          "sharpness": 284.634
+        },
+        "ms": 1244.7
+      },
+      {
+        "uuid": "3524D3FB-0331-4651-B00A-F52D6FF2E84F",
+        "ok": true,
+        "width": 800,
+        "height": 533,
+        "metrics": {
+          "luma_mean": 119.989,
+          "luma_std": 61.241,
+          "luma_percentiles": {
+            "p1": 6,
+            "p5": 21,
+            "p50": 140,
+            "p95": 201,
+            "p99": 234
+          },
+          "dynamic_range": 0.8941,
+          "channel_mean": {
+            "r": 122.886,
+            "g": 119.322,
+            "b": 118.059
+          },
+          "rb_ratio": 1.0409,
+          "clip_high_pct": 0.0195,
+          "clip_high_tone_pct": 0.0012,
+          "clip_low_pct": 0.0021,
+          "clip_high_pct_by_channel": {
+            "r": 0.019,
+            "g": 0.0016,
+            "b": 0.0002
+          },
+          "clip_low_pct_by_channel": {
+            "r": 0.0026,
+            "g": 0.0049,
+            "b": 0.034
+          },
+          "saturation_mean": 14.606,
+          "chromatic_pct": 29.2282,
+          "hue_mean": 22.43,
+          "hue_histogram": [
+            11.0761,
+            83.3377,
+            0.7029,
+            0.2038,
+            0.5272,
+            0.5472,
+            0.0465,
+            2.8934,
+            0.3956,
+            0.0666,
+            0.1003,
+            0.1027
+          ],
+          "sharpness": 478.315
+        },
+        "ms": 1243
+      },
+      {
+        "uuid": "565B4B3B-3EB2-468E-AE1F-6C968F08E29C",
+        "ok": true,
+        "width": 800,
+        "height": 533,
+        "metrics": {
+          "luma_mean": 119.624,
+          "luma_std": 61.367,
+          "luma_percentiles": {
+            "p1": 7,
+            "p5": 21,
+            "p50": 140,
+            "p95": 203,
+            "p99": 235
+          },
+          "dynamic_range": 0.8941,
+          "channel_mean": {
+            "r": 122.359,
+            "g": 118.978,
+            "b": 117.978
+          },
+          "rb_ratio": 1.0371,
+          "clip_high_pct": 0.0209,
+          "clip_high_tone_pct": 0.004,
+          "clip_low_pct": 0.0007,
+          "clip_high_pct_by_channel": {
+            "r": 0.0209,
+            "g": 0.004,
+            "b": 0
+          },
+          "clip_low_pct_by_channel": {
+            "r": 0.0012,
+            "g": 0.0028,
+            "b": 0.0443
+          },
+          "saturation_mean": 15.084,
+          "chromatic_pct": 29.9916,
+          "hue_mean": 22.1,
+          "hue_histogram": [
+            11.2297,
+            80.9366,
+            0.5372,
+            0.0743,
+            0.3761,
+            1.1581,
+            0.0461,
+            4.8661,
+            0.5145,
+            0.0805,
+            0.0563,
+            0.1243
+          ],
+          "sharpness": 479.884
+        },
+        "ms": 1241
+      },
+      {
+        "uuid": "A0244477-C752-452C-B738-9D0DCF9CAB0E",
+        "ok": true,
+        "width": 800,
+        "height": 533,
+        "metrics": {
+          "luma_mean": 116.941,
+          "luma_std": 60.344,
+          "luma_percentiles": {
+            "p1": 6,
+            "p5": 20,
+            "p50": 135,
+            "p95": 198,
+            "p99": 233
+          },
+          "dynamic_range": 0.8902,
+          "channel_mean": {
+            "r": 119.276,
+            "g": 116.353,
+            "b": 115.888
+          },
+          "rb_ratio": 1.0292,
+          "clip_high_pct": 0.0152,
+          "clip_high_tone_pct": 0.0019,
+          "clip_low_pct": 0.0049,
+          "clip_high_pct_by_channel": {
+            "r": 0.015,
+            "g": 0.0021,
+            "b": 0
+          },
+          "clip_low_pct_by_channel": {
+            "r": 0.0054,
+            "g": 0.011,
+            "b": 0.046
+          },
+          "saturation_mean": 14.492,
+          "chromatic_pct": 28.8518,
+          "hue_mean": 22.49,
+          "hue_histogram": [
+            10.88,
+            81.124,
+            0.7527,
+            0.0943,
+            0.43,
+            1.4501,
+            0.0658,
+            4.4203,
+            0.4845,
+            0.1089,
+            0.074,
+            0.1154
+          ],
+          "sharpness": 491.751
+        },
+        "ms": 1233.2
+      },
+      {
+        "uuid": "CE63A659-C825-4A16-9D0B-BEAE3CB6800A",
+        "ok": true,
+        "width": 800,
+        "height": 533,
+        "metrics": {
+          "luma_mean": 117.778,
+          "luma_std": 61.36,
+          "luma_percentiles": {
+            "p1": 7,
+            "p5": 22,
+            "p50": 136,
+            "p95": 202,
+            "p99": 232
+          },
+          "dynamic_range": 0.8824,
+          "channel_mean": {
+            "r": 120.723,
+            "g": 117.086,
+            "b": 115.96
+          },
+          "rb_ratio": 1.0411,
+          "clip_high_pct": 0.0115,
+          "clip_high_tone_pct": 0.0026,
+          "clip_low_pct": 0,
+          "clip_high_pct_by_channel": {
+            "r": 0.0115,
+            "g": 0.0026,
+            "b": 0.0002
+          },
+          "clip_low_pct_by_channel": {
+            "r": 0.0002,
+            "g": 0.0021,
+            "b": 0.0305
+          },
+          "saturation_mean": 15.796,
+          "chromatic_pct": 32.4784,
+          "hue_mean": 22.65,
+          "hue_histogram": [
+            10.0471,
+            82.4223,
+            0.8318,
+            0.0383,
+            0.3841,
+            1.0167,
+            0.1386,
+            4.5961,
+            0.3069,
+            0.078,
+            0.0686,
+            0.0715
+          ],
+          "sharpness": 490.434
+        },
+        "ms": 1245.2
+      },
+      {
+        "uuid": "6DFD02A6-1449-4656-BCC6-DD24896724F9",
+        "ok": true,
+        "width": 800,
+        "height": 533,
+        "metrics": {
+          "luma_mean": 121.349,
+          "luma_std": 63.616,
+          "luma_percentiles": {
+            "p1": 7,
+            "p5": 23,
+            "p50": 142,
+            "p95": 209,
+            "p99": 235
+          },
+          "dynamic_range": 0.8941,
+          "channel_mean": {
+            "r": 124.58,
+            "g": 120.59,
+            "b": 119.347
+          },
+          "rb_ratio": 1.0438,
+          "clip_high_pct": 0.0277,
+          "clip_high_tone_pct": 0.0028,
+          "clip_low_pct": 0,
+          "clip_high_pct_by_channel": {
+            "r": 0.027,
+            "g": 0.0028,
+            "b": 0.0007
+          },
+          "clip_low_pct_by_channel": {
+            "r": 0.0002,
+            "g": 0.0028,
+            "b": 0.0361
+          },
+          "saturation_mean": 16.358,
+          "chromatic_pct": 35.0556,
+          "hue_mean": 22.01,
+          "hue_histogram": [
+            9.1332,
+            83.1218,
+            0.7138,
+            0.0314,
+            0.1786,
+            0.1037,
+            0.178,
+            6.0886,
+            0.2515,
+            0.0629,
+            0.0562,
+            0.0803
+          ],
+          "sharpness": 491.015
+        },
+        "ms": 1252.7
+      }
+    ]
+  },
+  "fast_vs_exact": [
+    {
+      "uuid": "041B107A-6822-45F6-8BF5-9EC1921C2252",
+      "fast": {
+        "source": "thumbnail",
+        "width": 1600,
+        "height": 1067,
+        "ms": 262.4,
+        "metrics": {
+          "luma_mean": 129.223,
+          "luma_std": 73.708,
+          "luma_percentiles": {
+            "p1": 4,
+            "p5": 5,
+            "p50": 127,
+            "p95": 245,
+            "p99": 253
+          },
+          "dynamic_range": 0.9765,
+          "channel_mean": {
+            "r": 132.404,
+            "g": 128.237,
+            "b": 129.62
+          },
+          "rb_ratio": 1.0215,
+          "clip_high_pct": 4.0523,
+          "clip_high_tone_pct": 1.2474,
+          "clip_low_pct": 0.0043,
+          "clip_high_pct_by_channel": {
+            "r": 4.0477,
+            "g": 1.2503,
+            "b": 0.6866
+          },
+          "clip_low_pct_by_channel": {
+            "r": 0.3877,
+            "g": 0.1982,
+            "b": 0.0177
+          },
+          "saturation_mean": 14.258,
+          "chromatic_pct": 36.6149,
+          "hue_mean": 275.27,
+          "hue_histogram": [
+            1.8263,
+            37.9668,
+            0.024,
+            0.0005,
+            0.0013,
+            0.0006,
+            0.0134,
+            4.9655,
+            51.5096,
+            1.9856,
+            0.7474,
+            0.9589
+          ],
+          "sharpness": 969.303,
+          "regions": []
+        },
+        "fallback": null
+      },
+      "exact": {
+        "source": "export",
+        "width": 1600,
+        "height": 1067,
+        "ms": 2666.4,
+        "metrics": {
+          "luma_mean": 129.521,
+          "luma_std": 73.587,
+          "luma_percentiles": {
+            "p1": 4,
+            "p5": 6,
+            "p50": 127,
+            "p95": 245,
+            "p99": 253
+          },
+          "dynamic_range": 0.9765,
+          "channel_mean": {
+            "r": 132.697,
+            "g": 128.539,
+            "b": 129.898
+          },
+          "rb_ratio": 1.0215,
+          "clip_high_pct": 4.0941,
+          "clip_high_tone_pct": 1.2034,
+          "clip_low_pct": 0.0002,
+          "clip_high_pct_by_channel": {
+            "r": 4.0905,
+            "g": 1.2017,
+            "b": 0.7629
+          },
+          "clip_low_pct_by_channel": {
+            "r": 0.1014,
+            "g": 0.0203,
+            "b": 0.0014
+          },
+          "saturation_mean": 14.499,
+          "chromatic_pct": 36.5961,
+          "hue_mean": 271.11,
+          "hue_histogram": [
+            1.7999,
+            37.2892,
+            0.0427,
+            0.0013,
+            0.0003,
+            0.0005,
+            0.0126,
+            10.1066,
+            47.0224,
+            1.9386,
+            0.7614,
+            1.0244
+          ],
+          "sharpness": 989.813,
+          "regions": []
+        },
+        "fallback": null
+      }
+    },
+    {
+      "uuid": "14C30956-98A7-4EEC-91E7-7B9BFECC44EE",
+      "fast": {
+        "source": "thumbnail",
+        "width": 1600,
+        "height": 1067,
+        "ms": 256.8,
+        "metrics": {
+          "luma_mean": 135.383,
+          "luma_std": 74.253,
+          "luma_percentiles": {
+            "p1": 4,
+            "p5": 6,
+            "p50": 136,
+            "p95": 247,
+            "p99": 254
+          },
+          "dynamic_range": 0.9804,
+          "channel_mean": {
+            "r": 138.807,
+            "g": 134.375,
+            "b": 135.292
+          },
+          "rb_ratio": 1.026,
+          "clip_high_pct": 4.7043,
+          "clip_high_tone_pct": 1.8143,
+          "clip_low_pct": 0.0042,
+          "clip_high_pct_by_channel": {
+            "r": 4.6987,
+            "g": 1.8168,
+            "b": 0.891
+          },
+          "clip_low_pct_by_channel": {
+            "r": 0.3465,
+            "g": 0.2112,
+            "b": 0.0207
+          },
+          "saturation_mean": 13.749,
+          "chromatic_pct": 34.4835,
+          "hue_mean": 284.84,
+          "hue_histogram": [
+            2.2922,
+            40.4097,
+            0.0418,
+            0.0005,
+            0.0003,
+            0.0012,
+            0.018,
+            5.4382,
+            48.197,
+            1.8848,
+            0.7299,
+            0.9864
+          ],
+          "sharpness": 1015.593,
+          "regions": []
+        },
+        "fallback": null
+      },
+      "exact": {
+        "source": "export",
+        "width": 1600,
+        "height": 1067,
+        "ms": 2618.6,
+        "metrics": {
+          "luma_mean": 135.691,
+          "luma_std": 74.101,
+          "luma_percentiles": {
+            "p1": 5,
+            "p5": 6,
+            "p50": 137,
+            "p95": 247,
+            "p99": 254
+          },
+          "dynamic_range": 0.9765,
+          "channel_mean": {
+            "r": 139.138,
+            "g": 134.679,
+            "b": 135.569
+          },
+          "rb_ratio": 1.0263,
+          "clip_high_pct": 4.7535,
+          "clip_high_tone_pct": 1.7071,
+          "clip_low_pct": 0.0003,
+          "clip_high_pct_by_channel": {
+            "r": 4.7491,
+            "g": 1.706,
+            "b": 0.9714
+          },
+          "clip_low_pct_by_channel": {
+            "r": 0.0979,
+            "g": 0.0234,
+            "b": 0.0026
+          },
+          "saturation_mean": 13.847,
+          "chromatic_pct": 34.5903,
+          "hue_mean": 282.18,
+          "hue_histogram": [
+            2.113,
+            40.1715,
+            0.0489,
+            0.0014,
+            0.0002,
+            0.0002,
+            0.0141,
+            9.1386,
+            44.6043,
+            1.9869,
+            0.7576,
+            1.1634
+          ],
+          "sharpness": 1039.475,
+          "regions": []
+        },
+        "fallback": null
+      }
+    },
+    {
+      "uuid": "B3577FE3-A583-4AA7-967A-59E8E4AD348F",
+      "fast": {
+        "source": "thumbnail",
+        "width": 1600,
+        "height": 1067,
+        "ms": 237.9,
+        "metrics": {
+          "luma_mean": 120.293,
+          "luma_std": 75.097,
+          "luma_percentiles": {
+            "p1": 6,
+            "p5": 9,
+            "p50": 118,
+            "p95": 237,
+            "p99": 251
+          },
+          "dynamic_range": 0.9608,
+          "channel_mean": {
+            "r": 124.099,
+            "g": 119.089,
+            "b": 121.008
+          },
+          "rb_ratio": 1.0255,
+          "clip_high_pct": 1.3498,
+          "clip_high_tone_pct": 0.7743,
+          "clip_low_pct": 0.0004,
+          "clip_high_pct_by_channel": {
+            "r": 1.308,
+            "g": 0.7852,
+            "b": 0.4002
+          },
+          "clip_low_pct_by_channel": {
+            "r": 0.1698,
+            "g": 0.0742,
+            "b": 0.006
+          },
+          "saturation_mean": 16.174,
+          "chromatic_pct": 34.9297,
+          "hue_mean": 279.67,
+          "hue_histogram": [
+            11.6496,
+            23.553,
+            0.0161,
+            0.001,
+            0.0003,
+            0.0005,
+            0.0079,
+            6.1449,
+            47.9527,
+            5.0834,
+            1.9439,
+            3.6467
+          ],
+          "sharpness": 1360.356,
+          "regions": []
+        },
+        "fallback": null
+      },
+      "exact": {
+        "source": "export",
+        "width": 1600,
+        "height": 1067,
+        "ms": 2649.4,
+        "metrics": {
+          "luma_mean": 120.621,
+          "luma_std": 75.049,
+          "luma_percentiles": {
+            "p1": 6,
+            "p5": 9,
+            "p50": 118,
+            "p95": 237,
+            "p99": 251
+          },
+          "dynamic_range": 0.9608,
+          "channel_mean": {
+            "r": 124.436,
+            "g": 119.42,
+            "b": 121.278
+          },
+          "rb_ratio": 1.026,
+          "clip_high_pct": 1.2909,
+          "clip_high_tone_pct": 0.853,
+          "clip_low_pct": 0,
+          "clip_high_pct_by_channel": {
+            "r": 1.2785,
+            "g": 0.8439,
+            "b": 0.5968
+          },
+          "clip_low_pct_by_channel": {
+            "r": 0.0247,
+            "g": 0.0054,
+            "b": 0.0001
+          },
+          "saturation_mean": 15.848,
+          "chromatic_pct": 35.0647,
+          "hue_mean": 277.47,
+          "hue_histogram": [
+            11.4576,
+            23.0767,
+            0.0102,
+            0,
+            0,
+            0.0007,
+            0.0048,
+            7.7187,
+            46.4987,
+            5.364,
+            2.0413,
+            3.8273
+          ],
+          "sharpness": 1399.064,
+          "regions": []
+        },
+        "fallback": null
+      }
+    }
+  ],
+  "staleness": {
+    "key": "Exposure2012",
+    "before": 0.75,
+    "value": 1.75,
+    "thumb_before": 129.223,
+    "export_before": 129.521,
+    "export_after": 167.005,
+    "samples": [
+      {
+        "at_ms": 2768,
+        "source": "export",
+        "luma_mean": 167.005,
+        "ms": 2734
+      },
+      {
+        "at_ms": 7994,
+        "source": "export",
+        "luma_mean": 167.005,
+        "ms": 2622.4
+      },
+      {
+        "at_ms": 10660,
+        "source": "export",
+        "luma_mean": 167.005,
+        "ms": 2655.2
+      },
+      {
+        "at_ms": 13263,
+        "source": "export",
+        "luma_mean": 167.005,
+        "ms": 2592
+      },
+      {
+        "at_ms": 15866,
+        "source": "export",
+        "luma_mean": 167.005,
+        "ms": 2596.2
+      },
+      {
+        "at_ms": 18533,
+        "source": "export",
+        "luma_mean": 167.005,
+        "ms": 2658.7
+      },
+      {
+        "at_ms": 21180,
+        "source": "export",
+        "luma_mean": 167.005,
+        "ms": 2640.9
+      },
+      {
+        "at_ms": 23829,
+        "source": "export",
+        "luma_mean": 167.005,
+        "ms": 2638.5
+      }
+    ],
+    "caught_up": {
+      "at_ms": null,
+      "why": "no thumbnail caught up within 12 s"
+    }
+  },
+  "run": {
+    "photos": 20,
+    "measured": 20,
+    "total_ms": 29937,
+    "thumbnails": 3,
+    "fast_tries": 3,
+    "put_back": true,
+    "answer": "y"
+  },
+  "lines": [
+    "YES lr_get_photo_stats measured 20 of 20 photos",
+    "YES the 20 photos took 29.9 s (budget 60 s, 3 s a photo)",
+    "YES 3 of 3 fast previews came from Lightroom's cached preview",
+    "YES the photo changed for the staleness test is back as it was",
+    "YES Jim's answer: y"
+  ],
+  "headline": "WORKED"
+}

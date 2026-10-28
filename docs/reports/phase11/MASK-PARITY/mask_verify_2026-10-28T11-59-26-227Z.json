@@ -1,0 +1,210 @@
+{
+  "check": "masks-verify",
+  "started": "2026-10-28T11-59-26-227Z",
+  "parts": [
+    "parity"
+  ],
+  "steps": [
+    {
+      "part": "parity",
+      "photo": "_DSC0103.NEF",
+      "id": "brush_feather_density",
+      "question": "  Three brighter bands across the photo: the TOP with a soft edge, the MIDDLE with a hard edge, the BOTTOM less bright than the other two?",
+      "answer": "y",
+      "ok": true,
+      "notes": [],
+      "data": {
+        "mask": {
+          "id": "4872BBA1-761C-4A48-AF1F-7AA5C6A59749",
+          "name": "AVG parity brush",
+          "kind": "brush",
+          "active": true,
+          "inverted": false,
+          "components": 1,
+          "sliders": {
+            "local.exposure": 2
+          },
+          "geometry": {
+            "strokes": 3,
+            "dabs": 368
+          }
+        }
+      }
+    },
+    {
+      "part": "parity",
+      "photo": "_DSC0103.NEF",
+      "id": "brush_erase_added",
+      "question": "  Is there now a gap down the middle of all three bands (the erase stroke)?",
+      "answer": "y",
+      "ok": true,
+      "notes": [],
+      "data": {
+        "mask": {
+          "id": "4872BBA1-761C-4A48-AF1F-7AA5C6A59749",
+          "name": "AVG parity brush",
+          "kind": "brush",
+          "active": true,
+          "inverted": false,
+          "components": 1,
+          "sliders": {
+            "local.exposure": 2
+          },
+          "geometry": {
+            "strokes": 4,
+            "dabs": 463
+          }
+        }
+      }
+    },
+    {
+      "part": "parity",
+      "photo": "_DSC0103.NEF",
+      "id": "point_color",
+      "question": "  Select \"AVG parity brush\" in the Masking panel and open its Point Color: is there ONE swatch, and with it selected do the sliders read about Hue +50, Saturation -50, Luminance +25 and Range 80?",
+      "answer": "n",
+      "ok": false,
+      "notes": [],
+      "data": {
+        "mask": {
+          "id": "4872BBA1-761C-4A48-AF1F-7AA5C6A59749",
+          "name": "AVG parity brush",
+          "kind": "brush",
+          "active": true,
+          "inverted": false,
+          "components": 1,
+          "sliders": {
+            "local.exposure": 2
+          },
+          "geometry": {
+            "strokes": 4,
+            "dabs": 463
+          },
+          "point_colors": [
+            {
+              "src_hue": 0.2,
+              "src_sat": 0.6,
+              "src_lum": 0.5,
+              "hue_shift": 0.5,
+              "sat_scale": -0.5,
+              "lum_scale": 0.25,
+              "range_amount": 0.8,
+              "hue_range": [
+                0,
+                0.33,
+                0.67,
+                1
+              ],
+              "sat_range": [
+                0,
+                0.33,
+                0.67,
+                1
+              ],
+              "lum_range": [
+                0,
+                0.33,
+                0.67,
+                1
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "part": "parity",
+      "photo": "_DSC0103.NEF",
+      "id": "inverted_copy",
+      "question": "  Is there a new mask \"AVG parity brush inverted\" that brightens everything EXCEPT the bands (the first mask still there)?",
+      "answer": "y",
+      "ok": false,
+      "notes": [
+        "mask AVG parity brush reads back different",
+        "mask AVG parity brush inverted reads back different"
+      ],
+      "data": {
+        "mask": {
+          "id": "95EB526A-F397-407C-90C5-811B057A1C72",
+          "name": "AVG parity brush inverted",
+          "kind": "brush",
+          "active": true,
+          "inverted": true,
+          "components": 1,
+          "sliders": {
+            "local.exposure": 2
+          },
+          "geometry": {
+            "strokes": 4,
+            "dabs": 463
+          },
+          "point_colors": [
+            {
+              "src_hue": 0.2,
+              "src_sat": 0.6,
+              "src_lum": 0.5,
+              "hue_shift": 0.5,
+              "sat_scale": -0.5,
+              "lum_scale": 0.25,
+              "range_amount": 0.8,
+              "hue_range": [
+                0,
+                0.33,
+                0.67,
+                1
+              ],
+              "sat_range": [
+                0,
+                0.33,
+                0.67,
+                1
+              ],
+              "lum_range": [
+                0,
+                0.33,
+                0.67,
+                1
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "part": "parity",
+      "photo": "_DSC0103.NEF",
+      "id": "delete_empty_masks",
+      "question": null,
+      "answer": "unchanged, 2 masks before, 2 after",
+      "ok": true,
+      "notes": []
+    },
+    {
+      "part": "parity",
+      "photo": "_DSC0103.NEF",
+      "id": "curve_capture",
+      "question": null,
+      "answer": "1 field(s) changed",
+      "ok": true,
+      "skipped": false,
+      "notes": [],
+      "data": {
+        "changed": {
+          "CorrectionActive": true
+        }
+      }
+    }
+  ],
+  "lines": [
+    "YES  parity _DSC0103.NEF brush_feather_density",
+    "YES  parity _DSC0103.NEF brush_erase_added",
+    "NO   parity _DSC0103.NEF point_color (Jim: n)",
+    "NO   parity _DSC0103.NEF inverted_copy (mask AVG parity brush reads back different; mask AVG parity brush inverted reads back different)",
+    "YES  parity _DSC0103.NEF delete_empty_masks",
+    "YES  parity _DSC0103.NEF curve_capture"
+  ],
+  "headline": "FAILED",
+  "node": "v24.11.1",
+  "engine_version": "1.6.0",
+  "plugin_log_copied": "mask_verify_bridge_log_2026-10-28T11-59-26-227Z.txt"
+}

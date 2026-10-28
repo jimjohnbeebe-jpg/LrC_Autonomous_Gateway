@@ -44,7 +44,7 @@ Every `lr_*` write tool runs only when no edit session is open, and returns the 
 | `delete_collection` | `lr_delete_collection` | have | `confirm: true` |
 | `set_keywords` | `lr_set_keywords` | have | Keyword paths |
 | `remove_keyword_subtree` | `lr_remove_keyword_subtree` | have | |
-| `list_keywords` | `lr_list_keywords` | have | |
+| `list_keywords` | `lr_list_keywords` | have | The plugin keeps the walked tree 2 minutes, dropped on its own keyword writes; `refresh: true` reads it again (2026-10-28, PERF.md) |
 | `rename_keyword` | `lr_rename_keyword` | have | |
 | `undo_last_step` | none | decision D2 | Global undo against the Abort guarantee |
 | `set_rating` | `lr_set_rating` | have | |

@@ -1,0 +1,293 @@
+{
+  "check": "masks-verify",
+  "started": "2026-10-28T11-41-19-905Z",
+  "parts": [
+    "colour",
+    "person",
+    "mirror"
+  ],
+  "steps": [
+    {
+      "part": "colour",
+      "photo": "_DSC0028.NEF",
+      "id": "point_red",
+      "question": "  Is the RED area in the bottom centre (about 55 % across, 67 % down) brighter, and other red things too, while other colours stay as before?",
+      "answer": "y",
+      "ok": true,
+      "notes": [],
+      "data": {
+        "point": {
+          "x": 0.5520833333333334,
+          "y": 0.671875
+        },
+        "srgb_written": {
+          "l": 0.692392,
+          "a": 0.111059,
+          "b": 0.279529
+        }
+      }
+    },
+    {
+      "part": "colour",
+      "photo": "_DSC0028.NEF",
+      "id": "point_green",
+      "question": null,
+      "answer": "no clearly green area in the render",
+      "ok": false,
+      "notes": [
+        "select photos with a clearly green area"
+      ]
+    },
+    {
+      "part": "colour",
+      "photo": "_DSC0028.NEF",
+      "id": "copy_lightroom_sample",
+      "question": "  Are the red parts brighter now (the colour you clicked, there and elsewhere), and other colours as before?",
+      "answer": "y",
+      "ok": true,
+      "notes": [],
+      "data": {
+        "lightroom": {
+          "sample": {
+            "l": 0.793882,
+            "a": 0.842123,
+            "b": 0.664825
+          },
+          "pin": {
+            "x": 0.626324,
+            "y": 0.638573
+          },
+          "amount": 0.494949
+        },
+        "srgb_at_pin": [
+          0.459922,
+          0.000627,
+          0.112784
+        ]
+      }
+    },
+    {
+      "part": "colour",
+      "photo": "_OZ80660.JPG",
+      "id": "point_red",
+      "question": "  Is the RED area in the bottom right (about 93 % across, 83 % down) brighter, and other red things too, while other colours stay as before?",
+      "answer": "n",
+      "ok": false,
+      "notes": [],
+      "data": {
+        "point": {
+          "x": 0.9270833333333334,
+          "y": 0.828125
+        },
+        "srgb_written": {
+          "l": 0.796392,
+          "a": 0.136784,
+          "b": 0.099294
+        }
+      }
+    },
+    {
+      "part": "colour",
+      "photo": "_OZ80660.JPG",
+      "id": "point_green",
+      "question": null,
+      "answer": "no clearly green area in the render",
+      "ok": false,
+      "notes": [
+        "select photos with a clearly green area"
+      ]
+    },
+    {
+      "part": "person",
+      "photo": "_DSC0103.NEF",
+      "id": "probe",
+      "question": null,
+      "answer": "Lightroom found 0 person(s)",
+      "ok": false,
+      "notes": [
+        "select a photo with two or more people"
+      ],
+      "data": {
+        "boxes": []
+      }
+    },
+    {
+      "part": "mirror",
+      "photo": "_DSC0091.NEF",
+      "id": "orientation_BA",
+      "question": null,
+      "answer": "see cases",
+      "ok": false,
+      "notes": [],
+      "data": {
+        "cases": [
+          {
+            "case": "A",
+            "crop": {
+              "CropLeft": 0.080851,
+              "CropTop": 0.119154,
+              "CropRight": 0.92766,
+              "CropBottom": 0.965963,
+              "CropAngle": 0,
+              "orientation": "BA"
+            },
+            "frame": {
+              "left": 0.080851,
+              "top": 0.119154,
+              "right": 0.92766,
+              "bottom": 0.965963,
+              "angle": 0,
+              "aspect": 1,
+              "turn": "BA",
+              "refused": null
+            },
+            "points": [
+              {
+                "asked": {
+                  "x": 0.3,
+                  "y": 0.35
+                },
+                "blob": {
+                  "x": 0.2896346740635167,
+                  "y": 0.3469822118708752,
+                  "axis_deg": 1.2,
+                  "pixels": 1465,
+                  "peak": 87
+                },
+                "readback_ok": true,
+                "ok": true,
+                "why": "on the point, level, read back as written"
+              }
+            ],
+            "linear": null,
+            "ok": false,
+            "error": "export_failed: the export wrote no JPEG into %USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\previews\\E1DA69A5-02DE-447A-B2BD-47252927B130"
+          },
+          {
+            "case": "B",
+            "crop": {
+              "CropLeft": 0.191495,
+              "CropTop": 0.094266,
+              "CropRight": 0.817016,
+              "CropBottom": 0.990851,
+              "CropAngle": 10,
+              "orientation": "BA"
+            },
+            "frame": {
+              "left": 0.191495,
+              "top": 0.094266,
+              "right": 0.817016,
+              "bottom": 0.990851,
+              "angle": 10,
+              "aspect": 1.5056179775280898,
+              "turn": "BA",
+              "refused": null
+            },
+            "points": [],
+            "linear": null,
+            "ok": false,
+            "error": "export_failed: the export wrote no JPEG into %USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\previews\\32B47677-4223-4588-A475-36F0220A4C3B"
+          }
+        ]
+      }
+    },
+    {
+      "part": "mirror",
+      "photo": "_DSC0091.NEF",
+      "id": "orientation_AD",
+      "question": null,
+      "answer": "see cases",
+      "ok": false,
+      "notes": [],
+      "data": {
+        "cases": [
+          {
+            "case": "A",
+            "crop": {
+              "CropLeft": 0.080851,
+              "CropTop": 0.119154,
+              "CropRight": 0.92766,
+              "CropBottom": 0.965963,
+              "CropAngle": 0,
+              "orientation": "AD"
+            },
+            "frame": {
+              "left": 0.080851,
+              "top": 0.119154,
+              "right": 0.92766,
+              "bottom": 0.965963,
+              "angle": 0,
+              "aspect": 1,
+              "turn": "AD",
+              "refused": null
+            },
+            "points": [],
+            "linear": null,
+            "ok": false,
+            "error": "export_failed: the export wrote no JPEG into %USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\previews\\A20C91F3-DA2B-4E96-AAB8-E49C22E2400C"
+          },
+          {
+            "case": "B",
+            "crop": {
+              "CropLeft": 0.191495,
+              "CropTop": 0.094266,
+              "CropRight": 0.817016,
+              "CropBottom": 0.990851,
+              "CropAngle": 10,
+              "orientation": "AD"
+            },
+            "frame": {
+              "left": 0.191495,
+              "top": 0.094266,
+              "right": 0.817016,
+              "bottom": 0.990851,
+              "angle": 10,
+              "aspect": 1.5056179775280898,
+              "turn": "AD",
+              "refused": null
+            },
+            "points": [],
+            "linear": null,
+            "ok": false,
+            "error": "export_failed: the export wrote no JPEG into %USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\previews\\850C7E3E-ED1A-4FCC-A257-1C6525DF9D6D"
+          }
+        ]
+      }
+    },
+    {
+      "part": "mirror",
+      "photo": "_DSC0091.NEF",
+      "id": "turn_3",
+      "question": null,
+      "answer": "orientation AD: seen before",
+      "ok": false,
+      "notes": []
+    },
+    {
+      "part": "mirror",
+      "photo": "_DSC0091.NEF",
+      "id": "orientation_put_back",
+      "question": null,
+      "answer": "AB (was AB)",
+      "ok": true,
+      "notes": []
+    }
+  ],
+  "lines": [
+    "YES  colour _DSC0028.NEF point_red",
+    "NO   colour _DSC0028.NEF point_green (select photos with a clearly green area)",
+    "YES  colour _DSC0028.NEF copy_lightroom_sample",
+    "NO   colour _OZ80660.JPG point_red (Jim: n)",
+    "NO   colour _OZ80660.JPG point_green (select photos with a clearly green area)",
+    "NO   person _DSC0103.NEF probe (select a photo with two or more people)",
+    "NO   mirror _DSC0091.NEF orientation_BA (see cases)",
+    "NO   mirror _DSC0091.NEF orientation_AD (see cases)",
+    "NO   mirror _DSC0091.NEF turn_3 (orientation AD: seen before)",
+    "YES  mirror _DSC0091.NEF orientation_put_back",
+    "---- person: no step answered yes"
+  ],
+  "headline": "FAILED",
+  "node": "v24.11.1",
+  "engine_version": "1.6.0",
+  "plugin_log_copied": "mask_verify_bridge_log_2026-10-28T11-41-19-905Z.txt"
+}

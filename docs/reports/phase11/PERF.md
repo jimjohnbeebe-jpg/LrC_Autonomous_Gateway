@@ -2,8 +2,8 @@
 report: PERF
 phase: "11"
 status: observed
-authored_by: "Claude Code (purpose, harness, steps; Observed and Numbers copied from the results file, 2026-10-27); Jim (the runs)"
-date: 2026-10-27
+authored_by: "Claude Code (purpose, harness, steps; Observed and Numbers copied from the results files, 2026-10-27 and 2026-10-28; the suggested verdict); Jim (the runs, the list_keywords decision, the verdict)"
+date: 2026-10-28
 ---
 
 # PERF: how long the catalog reads take
@@ -18,7 +18,7 @@ The harness is read only: it selects nothing, writes nothing and asks nothing, s
 
 ## Steps for Jim
 
-The baseline run is done (see Observed). These steps are for the **after** run, once the #212 speed-up PR is merged and Claude Code has pulled `main` into `D:\Developer\LrC_Autonomous_Gateway`.
+The baseline and after runs are done (see Observed). These steps were for the **after** run, once the #212 speed-up PR is merged and Claude Code has pulled `main` into `D:\Developer\LrC_Autonomous_Gateway`.
 
 What changed, so you know what the after run measures [handle: the PR's commits on branch `phase-11/perf-212`]:
 
@@ -54,6 +54,14 @@ Jim ran `npm run perf:check -- --label baseline` and said "done" [stated: Jim, 2
 - Engine 1.5.0, plugin 1.5.0, Lightroom Classic 15.6, Node v24.11.1.
 - `search_photos` with no filter counted 18,621 photos (`catalog_matches`). 4,588 photos were selected, not 1,000; `get_selection` timed the 500 it returns.
 
+### After, 2026-10-28
+
+Jim ran `npm run perf:check -- --label after` on plugin 1.6.0 (main `de15f22`, with #212's batched reads) and reported the check batch done [stated: Jim, 2026-10-28, "Checks done."]. The results file says `headline: WORKED`, 20 timed runs per call after 2 warm-ups [handle: `docs\reports\phase11\PERF\after\perf_after_2026-10-28T11-34-08-350Z.json`, copied from `%TEMP%\LrC-AVG\perf\`].
+
+- Engine 1.6.0, plugin 1.6.0, Lightroom Classic 15.6, Node v24.11.1.
+- `search_photos` with no filter counted 18,641 photos; 4,608 were selected (baseline: 18,621 and 4,588, so nearly, not exactly, the same catalog and selection).
+- **One run of `search_photos` (filtered) failed**: `failed` 1, 19 timings kept. The results file keeps no error text for a failed run, so why it failed is not known [handle: the file, `timings[2]`]. Two of the 19 kept runs took over 600 ms (602.4 and 660.3 ms), against 43-75 ms for the other 17.
+
 ## Numbers
 
 ### Baseline
@@ -71,20 +79,30 @@ Plugin 1.5.0, Lightroom Classic 15.6, 18,621 photos in the catalog (`search_phot
 
 ### After
 
-(Same table; blank until the speed-up PR is merged and the harness rerun with `--label after`.)
+| Call | p50 ms | p95 ms | failed | note | p50 against the baseline |
+|---|---|---|---|---|---|
+| ping | 0.3 | 0.4 | 0 | bridge round trip | unchanged |
+| search_photos (no filter) | 41.3 | 53.6 | 0 | limit 100 of 18,641 | 6.1 times faster (-83.5 %) |
+| search_photos (filtered) | 47.5 | 660.3 | **1** | rating == 0, limit 100; two kept runs over 600 ms | 5.4 times faster (-81.4 %) |
+| get_metadata | 62.8 | 87.1 | 0 | first photo of the search | -10.9 % |
+| get_selection (max 500) | 154.3 | 172.1 | 0 | 4,608 selected, 500 returned | 8.1 times faster (-87.7 %) |
+| list_keywords | 10687.5 | 10862.8 | 0 | limit 100 | -0.9 %: no gain |
+
+Plugin 1.6.0, Lightroom Classic 15.6 [handle: `docs\reports\phase11\PERF\after\perf_after_2026-10-28T11-34-08-350Z.json`]. The last column is Claude Code's arithmetic on the two files' p50 values.
 
 ## Verdict
 
-(Jim's, after the After run. The baseline alone has no verdict.)
+(Jim's.) **Suggested by Claude Code, a suggestion only:** go for #212's batched photo reads (`search_photos` and `get_selection` 5-8 times faster at p50, `get_metadata` 11 % faster); no gain for `list_keywords`, which the keyword cache below answers; the failed filtered search and its two slow runs stay [unverified] until a rerun shows them again.
 
 ## Consequences / open questions
 
 - `list_keywords` is the slowest call by far: about 10.8 s for a page of 100. The handler walks the whole keyword tree (`KeywordTree.walk`) before it takes the page [handle: `plugin\LrC-AVG.lrplugin\Library.lua:164-173`], so its time likely grows with the size of the tree, not the page [inference]. The size of Jim's keyword tree was not recorded. #212 Work 2 already lists `KeywordTree.lua` among the reads to batch [handle: issue #212 body, "Work" item 2].
 - `get_selection` takes about 1.26 s for 500 photos (about 2.5 ms a photo) [handle: the results file above]. #212 puts the cost in per-photo SDK getter calls and their per-call overhead, and Work 2 converts `Library.lua` and `Photos.lua` to batch reads [handle: issue #212 body].
 - `search_photos` takes about 250 ms whether or not it filters, with a limit of 100 of 18,621 [handle: the results file above].
-- The After run (`--label after`) waits for the #212 speed-up PR.
+- The After run (`--label after`) is done, on 2026-10-28 (Observed above).
 - **What #212 changed, and what it left.** Work 2: page reads batched (`plugin\LrC-AVG.lrplugin\Photos.lua` `describePage`, used by `Library.lua` search_photos and `Catalog.lua` get_selection), `get_metadata` batched (`Metadata.lua` `partsBatched`), one `LrTasks.pcall` per keyword list (`KeywordTree.lua` `listed`), ASCII names folded in Lua (`KeywordTree.fold`). Left, each with its reason: `keyword:getAttributes()` (the walk reads only `getName`, which it would replace one for one [inference]); `findPhotoByPath` (no path is found by scanning `getAllPhotos`; the one `getAllPhotos` call is the unfiltered search, which needs every photo for its count, and `Transfer.lua` already uses `findPhotoByPath`) [handle: `grep getAllPhotos` over `plugin\LrC-AVG.lrplugin\`]; `getPhotoByLocalId` (no plugin path calls it; only spikes S6 and S7 do) [handle: same grep for `getPhotoByLocalId`]. Work 3: the bridge already framed lines in one pass and sent compact JSON since PR #14 [handle: `engine\src\bridge\lines.ts:1-4`, `engine\src\bridge\client.ts:175`, `engine\src\mcp\server.ts:77`]; tests now pin it.
-- **`list_keywords` stays a whole-tree walk.** Every call walks all keywords (sorted per level) to count them and take its page; #212 removed one SDK call per keyword, not the walk. If the after run still shows seconds, the next step is a cache of the walked paths, dropped on any keyword write [inference]; that is a behaviour change (a keyword added in Lightroom's own panel would not show until the cache drops) and Jim's call.
+- **`list_keywords` stayed a whole-tree walk, and the after run shows no gain** (10.8 s to 10.7 s at p50). Every call walked all keywords (sorted per level) to count them and take its page; #212 removed one SDK call per keyword, not the walk. Jim's decision before the after run: wait for it, then decide; with no gain, build the cache [stated: Jim, 2026-10-28, "Go with recommendation"].
+- **The keyword cache (branch `fix/phase11-check-followups`).** The plugin keeps the walked paths on `_G` with the time of the walk (`plugin\LrC-AVG.lrplugin\KeywordTree.lua`, `KeywordTree.paths`), reuses them for 120 s, and drops them on every keyword write it makes: `set_keywords` (`Library.lua`) and `rename_keyword` (`KeywordEdit.lua`); no other plugin file writes keywords [handle: `engine\tests\lua-keyword-cache.test.ts`]. A walk that a write overlaps is not kept. `lr_list_keywords` takes `refresh: true` to walk again and answers `cached` (whether the kept walk was used); its text says keywords changed by hand in Lightroom show after at most 2 minutes, or at once with refresh. The first call still takes the ~10.7 s walk; the calls after it within 2 minutes should take about what `search_photos` takes [inference: not measured]. A `perf:check` rerun on the new plugin would show it: of its 22 `list_keywords` calls only the first would walk.
 - **Preview and export path (#212 Work 4), read for avoidable time; analysis only, nothing measured here** [inference throughout, from the code]:
   - The export itself (`LrExportSession`, `doExportOnCurrentTask` in `plugin\LrC-AVG.lrplugin\Preview.lua:61-80`) is Lightroom's and dominates: ~2.6 s at 800, 1200 and 1600 px alike, so a smaller preview does not export faster [handle: `docs\reports\phase2\PHASE2.md` "Numbers", export time by long edge]. Nothing on our side shortens it.
   - Before the export the plug-in finds the photo (`Develop.target`, `plugin\LrC-AVG.lrplugin\Develop.lua:53-75`: by uuid, `findPhotoByUuid` plus `Photos.describe`, now two batch calls; else `getTargetPhoto` plus one uuid read in a read gate) and checks the original (`Photos.missing`: `checkPhotoAvailability`, one read gate for the path, `LrFileUtils.exists`). These are single-photo reads, small next to the export; reading the path in the same batch as the description would save `Photos.missing` its read gate, one per preview.

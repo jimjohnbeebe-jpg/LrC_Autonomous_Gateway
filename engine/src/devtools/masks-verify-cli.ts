@@ -149,6 +149,7 @@ async function main(say: (line: string) => void): Promise<number> {
     if (RUN.length === 0) return finish(say, r, false, `--part must be one of ${PARTS.join(", ")}`);
     await gate.ready();
     const version = client.hello()?.plugin_version;
+    Object.assign(r, { plugin_version: version ?? null, lrc_version: client.hello()?.lrc_version ?? null }); // the 2026-10-28 runs kept neither
     if (!pluginVersionAtLeast(version, MASKS_PLUGIN)) return finish(say, r, false, `reload the LrC-AVG plugin ${MASKS_PLUGIN} or later (Lightroom runs ${String(version)}): File > Plug-in Manager, LrC-AVG, Reload Plug-in. Nothing was written.`);
     const left = pending();
     if (damaged) return finish(say, r, false, "the last run's put-back record was damaged");

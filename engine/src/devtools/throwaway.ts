@@ -46,12 +46,14 @@ export function requireThrowaway(client: BridgeClient): void {
 
 /**
  * For the phase checks, before they start: connects and returns the refusal, or null. A bridge that does not
- * connect returns null too, so the check reports that itself, as it did before the guard.
+ * connect returns null too, with the lock given back, so the check connects and reports that itself, as it did
+ * before the guard (its own wait, not a second one on top of this one).
  */
 export async function throwawayPreflight(gate: BridgeGate, client: BridgeClient): Promise<string | null> {
   try {
     await gate.ready();
   } catch {
+    await gate.release();
     return null;
   }
   const why = throwawayRefusal(client.hello()?.catalog_path);

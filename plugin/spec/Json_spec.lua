@@ -45,8 +45,8 @@ describe("Json.decode", function()
     end)
 
     it("turns \\u escapes into UTF-8, pairing surrogates; a lone surrogate becomes U+FFFD", function()
-        assert.are.equal("x\195\169y", Json.decode([["xéy"]]))
-        assert.are.equal("\240\159\152\128", Json.decode([["😀"]]))
+        assert.are.equal("x\195\169y", Json.decode([["x\u00e9y"]]))
+        assert.are.equal("\240\159\152\128", Json.decode([["\ud83d\ude00"]]))
         assert.are.equal("\239\191\189x", Json.decode([["\ud800x"]]))
     end)
 

@@ -1,0 +1,369 @@
+{
+  "check": "presets-check",
+  "started": "2026-10-28T02-27-54-987Z",
+  "node": "v24.11.1",
+  "engine_version": "1.5.0",
+  "plugin_version": "1.5.0",
+  "photo": {
+    "uuid": "2D31DD06-3FCC-4E7C-9258-32B7C48DAD41",
+    "filename": "_OZ80738.NEF"
+  },
+  "kinds": {
+    "lightroom": 398,
+    "user": 0,
+    "plugin": 0
+  },
+  "checkpoints": [
+    {
+      "name": "AVG presets-check 2026-10-28T02-27-54 v1",
+      "folder": "Plugin Develop Presets",
+      "scope": "plugin",
+      "uuid": "406C84D9-C0B6-47C5-8A4A-68677ED03D6D",
+      "file": "%USERPROFILE%\\AppData\\Roaming\\Adobe\\Lightroom\\Plugin Develop Presets\\com.lrcavg.gateway.dev\\AVG presets-check 2026-10-28T02-27-54 v1.lrtemplate"
+    },
+    {
+      "name": "AVG presets-check 2026-10-28T02-27-54 v2",
+      "folder": "Plugin Develop Presets",
+      "scope": "plugin",
+      "uuid": "678006D0-AD39-4724-9D5E-31A1D4EACA29",
+      "file": "%USERPROFILE%\\AppData\\Roaming\\Adobe\\Lightroom\\Plugin Develop Presets\\com.lrcavg.gateway.dev\\AVG presets-check 2026-10-28T02-27-54 v2.lrtemplate"
+    }
+  ],
+  "checkpoint_read": {
+    "name": "AVG presets-check 2026-10-28T02-27-54 v1",
+    "folder": "Plugin Develop Presets",
+    "scope": "plugin",
+    "uuid": "406C84D9-C0B6-47C5-8A4A-68677ED03D6D",
+    "file": "%USERPROFILE%\\AppData\\Roaming\\Adobe\\Lightroom\\Plugin Develop Presets\\com.lrcavg.gateway.dev\\AVG presets-check 2026-10-28T02-27-54 v1.lrtemplate",
+    "exportable": true,
+    "settings": {
+      "exposure": 0.3,
+      "contrast": 10
+    },
+    "other_keys": [
+      "ProcessVersion"
+    ],
+    "masks": 0,
+    "ai_masks": false,
+    "raw_settings": {
+      "Contrast2012": 10,
+      "Exposure2012": 0.3,
+      "ProcessVersion": "15.4"
+    }
+  },
+  "compare": {
+    "base": {
+      "name": "AVG presets-check 2026-10-28T02-27-54 v1",
+      "folder": "Plugin Develop Presets",
+      "scope": "plugin",
+      "uuid": "406C84D9-C0B6-47C5-8A4A-68677ED03D6D"
+    },
+    "candidate": {
+      "name": "AVG presets-check 2026-10-28T02-27-54 v2",
+      "folder": "Plugin Develop Presets",
+      "scope": "plugin",
+      "uuid": "678006D0-AD39-4724-9D5E-31A1D4EACA29"
+    },
+    "changed_count": 2,
+    "changes": [
+      {
+        "name": "exposure",
+        "base": 0.3,
+        "candidate": 0.5
+      },
+      {
+        "name": "vibrance",
+        "base": null,
+        "candidate": 15
+      }
+    ],
+    "other_changes": []
+  },
+  "export": {
+    "first": {
+      "ok": true,
+      "preset": {
+        "name": "AVG presets-check 2026-10-28T02-27-54 v1",
+        "folder": "Plugin Develop Presets",
+        "scope": "plugin",
+        "uuid": "406C84D9-C0B6-47C5-8A4A-68677ED03D6D"
+      },
+      "source": "%USERPROFILE%\\AppData\\Roaming\\Adobe\\Lightroom\\Plugin Develop Presets\\com.lrcavg.gateway.dev\\AVG presets-check 2026-10-28T02-27-54 v1.lrtemplate",
+      "destination": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\presets-check\\export_2026-10-28T02-27-54-987Z\\AVG presets-check 2026-10-28T02-27-54 v1.lrtemplate",
+      "note": "This folder is under AppData: when Claude Desktop runs this engine, Windows may keep the new file in Claude's own private copy of AppData, where other programs do not see it (issue #182). Prefer a folder outside AppData."
+    },
+    "again": "PRESET_EXISTS"
+  },
+  "lightroom_preset_read": {
+    "name": "AI Dreamy Spring Sunrise",
+    "folder": "User Presets",
+    "scope": "lightroom",
+    "uuid": "355F5C6EB1957E2B1684B5B709CE4951",
+    "file": "%USERPROFILE%/AppData/Roaming/Adobe/CameraRaw/ImportedSettings/Jim's DreamySpringSunrise.xmp",
+    "exportable": true,
+    "settings": {
+      "exposure": 0.35,
+      "contrast": 10,
+      "highlights": -60,
+      "shadows": 50,
+      "whites": 10,
+      "blacks": 10,
+      "texture": 0,
+      "clarity": -8,
+      "dehaze": 0,
+      "vibrance": 25,
+      "saturation": 8,
+      "grading.shadows.hue": 210,
+      "grading.shadows.sat": 15,
+      "grading.shadows.lum": 0,
+      "grading.midtones.hue": 0,
+      "grading.midtones.sat": 0,
+      "grading.midtones.lum": 0,
+      "grading.highlights.hue": 40,
+      "grading.highlights.sat": 15,
+      "grading.highlights.lum": 0,
+      "grading.global.hue": 0,
+      "grading.global.sat": 0,
+      "grading.global.lum": 0,
+      "grading.blending": 100,
+      "grading.balance": -5,
+      "sharpening.radius": 1,
+      "sharpening.detail": 25,
+      "tone_curve.master": [
+        0,
+        5,
+        64,
+        70,
+        128,
+        135,
+        192,
+        192,
+        255,
+        255
+      ],
+      "tone_curve.red": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "tone_curve.green": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "tone_curve.blue": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "hsl.red.hue": 0,
+      "hsl.red.sat": 5,
+      "hsl.red.lum": 0,
+      "hsl.orange.hue": 0,
+      "hsl.orange.sat": 20,
+      "hsl.orange.lum": 10,
+      "hsl.yellow.hue": 0,
+      "hsl.yellow.sat": 20,
+      "hsl.yellow.lum": 15,
+      "hsl.green.hue": 0,
+      "hsl.green.sat": 0,
+      "hsl.green.lum": 0,
+      "hsl.aqua.hue": 5,
+      "hsl.aqua.sat": 25,
+      "hsl.aqua.lum": 15,
+      "hsl.blue.hue": 0,
+      "hsl.blue.sat": 20,
+      "hsl.blue.lum": 10,
+      "hsl.purple.hue": 0,
+      "hsl.purple.sat": 0,
+      "hsl.purple.lum": 0,
+      "hsl.magenta.hue": 0,
+      "hsl.magenta.sat": 0,
+      "hsl.magenta.lum": 0
+    },
+    "other_keys": [
+      "AILook",
+      "CameraProfile",
+      "ConvertToGrayscale",
+      "FilterList",
+      "Glow",
+      "ProcessVersion",
+      "ToneCurveName2012",
+      "Version",
+      "WhiteBalance"
+    ],
+    "masks": 0,
+    "ai_masks": false
+  },
+  "lightroom_apply": {
+    "preset": {
+      "name": "AI Dreamy Spring Sunrise",
+      "folder": "User Presets",
+      "scope": "lightroom",
+      "uuid": "355F5C6EB1957E2B1684B5B709CE4951"
+    },
+    "applied": [
+      {
+        "uuid": "2D31DD06-3FCC-4E7C-9258-32B7C48DAD41",
+        "snapshot": {
+          "id": "84199F2C-BB65-43E7-AA36-700313051418",
+          "name": "AVG pre-preset 9691f5"
+        },
+        "history_name": "AVG preset 9691f5: AI Dreamy Spring Sunrise",
+        "before": {
+          "exposure": 0.5,
+          "highlights": 0,
+          "shadows": 0,
+          "whites": 0,
+          "blacks": 0,
+          "clarity": 0,
+          "vibrance": 15,
+          "saturation": 0,
+          "temperature": -999999,
+          "tint": -999999,
+          "grading.shadows.hue": 0,
+          "grading.shadows.sat": 0,
+          "grading.highlights.hue": 0,
+          "grading.highlights.sat": 0,
+          "grading.blending": 50,
+          "grading.balance": 0,
+          "tone_curve.master": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "hsl.red.sat": 0,
+          "hsl.orange.sat": 0,
+          "hsl.orange.lum": 0,
+          "hsl.yellow.sat": 0,
+          "hsl.yellow.lum": 0,
+          "hsl.aqua.hue": 0,
+          "hsl.aqua.sat": 0,
+          "hsl.aqua.lum": 0,
+          "hsl.blue.sat": 0,
+          "hsl.blue.lum": 0,
+          "camera_profile": "Adobe Color"
+        },
+        "after": {
+          "exposure": 0.35,
+          "highlights": -60,
+          "shadows": 50,
+          "whites": 10,
+          "blacks": 10,
+          "clarity": -8,
+          "vibrance": 25,
+          "saturation": 8,
+          "temperature": 5050,
+          "tint": 21,
+          "grading.shadows.hue": 210,
+          "grading.shadows.sat": 15,
+          "grading.highlights.hue": 40,
+          "grading.highlights.sat": 15,
+          "grading.blending": 100,
+          "grading.balance": -5,
+          "tone_curve.master": [
+            0,
+            5,
+            64,
+            70,
+            128,
+            135,
+            192,
+            192,
+            255,
+            255
+          ],
+          "hsl.red.sat": 5,
+          "hsl.orange.sat": 20,
+          "hsl.orange.lum": 10,
+          "hsl.yellow.sat": 20,
+          "hsl.yellow.lum": 15,
+          "hsl.aqua.hue": 5,
+          "hsl.aqua.sat": 25,
+          "hsl.aqua.lum": 15,
+          "hsl.blue.sat": 20,
+          "hsl.blue.lum": 10,
+          "camera_profile": "Adobe Standard"
+        },
+        "other_changed": [
+          "ToneCurveName2012"
+        ]
+      }
+    ],
+    "failed": [],
+    "undo": "Each photo in `applied` has the snapshot \"AVG pre-preset 9691f5\" (Develop, Snapshots panel) from just before the preset; applying it puts the photo back. The preset is the History step \"AVG preset 9691f5: AI Dreamy Spring Sunrise\"."
+  },
+  "put_back": {
+    "differing": [],
+    "masks_back": true
+  },
+  "passFail": [
+    "y",
+    "y"
+  ],
+  "findings": {
+    "history_named_AVG": "y",
+    "checkpoint_hidden_from_panel": "y"
+  },
+  "rows": [
+    {
+      "step": "lr_list_presets lists Lightroom presets",
+      "ok": true,
+      "detail": "398 Lightroom (0 with a file in CameraRaw\\Settings), 0 checkpoints"
+    },
+    {
+      "step": "both checkpoints listed with scope plugin",
+      "ok": true,
+      "detail": "2 listed"
+    },
+    {
+      "step": "lr_get_preset reads the checkpoint back",
+      "ok": true,
+      "detail": "settings {\"exposure\":0.3,\"contrast\":10}"
+    },
+    {
+      "step": "lr_compare_presets finds exactly the known diff",
+      "ok": true,
+      "detail": "changes exposure, vibrance; other []"
+    },
+    {
+      "step": "lr_export_preset copies once and refuses to replace",
+      "ok": true,
+      "detail": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\presets-check\\export_2026-10-28T02-27-54-987Z\\AVG presets-check 2026-10-28T02-27-54 v1.lrtemplate; second call: PRESET_EXISTS"
+    },
+    {
+      "step": "lr_apply_preset applies the checkpoint, after a snapshot",
+      "ok": true,
+      "detail": "[{\"uuid\":\"2D31DD06-3FCC-4E7C-9258-32B7C48DAD41\",\"snapshot\":{\"id\":\"576C959B-74D1-4A99-9842-035544B59DB9\",\"name\":\"AVG pre-preset 555646\"},\"history_name\":\"AVG preset 555646: AVG presets-check 2026-10-28T02-27-54 v2\",\"before\":{\"exposure\":0,\"contrast\":0,\"vibrance\":0,\"temperature\":5050,\"tint\":21},\"after\":{\"exposure\":0.5,\"contrast\":10,\"vibrance\":15,\"temperature\":-999999,\"tint\":-999999},\"other_changed\":[]}]"
+    },
+    {
+      "step": "lr_apply_preset applies \"User Presets / AI Dreamy Spring Sunrise\"",
+      "ok": true,
+      "detail": "[{\"uuid\":\"2D31DD06-3FCC-4E7C-9258-32B7C48DAD41\",\"snapshot\":{\"id\":\"84199F2C-BB65-43E7-AA36-700313051418\",\"name\":\"AVG pre-preset 9691f5\"},\"history_name\":\"AVG preset 9691f5: AI Dreamy Spring Sunrise\",\"before\":{\"exposure\":0.5,\"highlights\":0,\"shadows\":0,\"whites\":0,\"blacks\":0,\"clarity\":0,\"vibrance\":15,\"saturation\":0,\"temperature\":-999999,\"tint\":-999999,\"grading.shadows.hue\":0,\"grading.shadows.sat\":0,\"grading.highlights.hue\":0,\"grading.highlights.sat\":0,\"grading.blending\":50,\"grading.balance\":0,\"tone_curve.master\":[0,0,255,255],\"hsl.red.sat\":0,\"hsl.orange.sat\":0,\"hsl.orange.lum\":0,\"hsl.yellow.sat\":0,\"hsl.yellow.lum\":0,\"hsl.aqua.hue\":0,\"hsl.aqua.sat\":0,\"hsl.aqua.lum\":0,\"hsl.blue.sat\":0,\"hsl.blue.lum\":0,\"camera_profile\":\"Adobe Color\"},\"after\":{\"exposure\":0.35,\"highlights\":-60,\"shadows\":50,\"whites\":10,\"blacks\":10,\"clarity\":-8,\"vibrance\":25,\"saturation\":8,\"temperature\":5050,\"tint\":21,\"grading.shadows.hue\":210,\"grading.shadows.sat\":15,\"grading.highlights.hue\":40,\"grading.highlights.sat\":15,\"grading.blending\":100,\"grading.balance\":-5,\"tone_curve.master\":[0,5,64,70,128,135,192,192,255,255],\"hsl.red.sat\":5,\"hsl.orange.sat\":20,\"hsl.orange.lum\":10,\"hsl.yellow.sat\":20,\"hsl.yellow.lum\":15,\"hsl.aqua.hue\":5,\"hsl.aqua.sat\":25,\"hsl.aqua.lum\":15,\"hsl.blue.sat\":20,\"hsl.blue.lum\":10,\"camera_profile\":\"Adobe Standard\"},\"other_changed\":[\"ToneCurveName2012\"]}]"
+    },
+    {
+      "step": "the snapshot puts the photo back",
+      "ok": true,
+      "detail": "settings and masks as before"
+    }
+  ],
+  "lines": [
+    "YES lr_list_presets lists Lightroom presets: 398 Lightroom (0 with a file in CameraRaw\\Settings), 0 checkpoints",
+    "YES both checkpoints listed with scope plugin: 2 listed",
+    "YES lr_get_preset reads the checkpoint back: settings {\"exposure\":0.3,\"contrast\":10}",
+    "YES lr_compare_presets finds exactly the known diff: changes exposure, vibrance; other []",
+    "YES lr_export_preset copies once and refuses to replace: %USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\presets-check\\export_2026-10-28T02-27-54-987Z\\AVG presets-check 2026-10-28T02-27-54 v1.lrtemplate; second call: PRESET_EXISTS",
+    "YES lr_apply_preset applies the checkpoint, after a snapshot: [{\"uuid\":\"2D31DD06-3FCC-4E7C-9258-32B7C48DAD41\",\"snapshot\":{\"id\":\"576C959B-74D1-4A99-9842-035544B59DB9\",\"name\":\"AVG pre-preset 555646\"},\"history_name\":\"AVG preset 555646: AVG presets-check 2026-10-28T02-27-54 v2\",\"before\":{\"exposure\":0,\"contrast\":0,\"vibrance\":0,\"temperature\":5050,\"tint\":21},\"after\":{\"exposure\":0.5,\"contrast\":10,\"vibrance\":15,\"temperature\":-999999,\"tint\":-999999},\"other_changed\":[]}]",
+    "YES lr_apply_preset applies \"User Presets / AI Dreamy Spring Sunrise\": [{\"uuid\":\"2D31DD06-3FCC-4E7C-9258-32B7C48DAD41\",\"snapshot\":{\"id\":\"84199F2C-BB65-43E7-AA36-700313051418\",\"name\":\"AVG pre-preset 9691f5\"},\"history_name\":\"AVG preset 9691f5: AI Dreamy Spring Sunrise\",\"before\":{\"exposure\":0.5,\"highlights\":0,\"shadows\":0,\"whites\":0,\"blacks\":0,\"clarity\":0,\"vibrance\":15,\"saturation\":0,\"temperature\":-999999,\"tint\":-999999,\"grading.shadows.hue\":0,\"grading.shadows.sat\":0,\"grading.highlights.hue\":0,\"grading.highlights.sat\":0,\"grading.blending\":50,\"grading.balance\":0,\"tone_curve.master\":[0,0,255,255],\"hsl.red.sat\":0,\"hsl.orange.sat\":0,\"hsl.orange.lum\":0,\"hsl.yellow.sat\":0,\"hsl.yellow.lum\":0,\"hsl.aqua.hue\":0,\"hsl.aqua.sat\":0,\"hsl.aqua.lum\":0,\"hsl.blue.sat\":0,\"hsl.blue.lum\":0,\"camera_profile\":\"Adobe Color\"},\"after\":{\"exposure\":0.35,\"highlights\":-60,\"shadows\":50,\"whites\":10,\"blacks\":10,\"clarity\":-8,\"vibrance\":25,\"saturation\":8,\"temperature\":5050,\"tint\":21,\"grading.shadows.hue\":210,\"grading.shadows.sat\":15,\"grading.highlights.hue\":40,\"grading.highlights.sat\":15,\"grading.blending\":100,\"grading.balance\":-5,\"tone_curve.master\":[0,5,64,70,128,135,192,192,255,255],\"hsl.red.sat\":5,\"hsl.orange.sat\":20,\"hsl.orange.lum\":10,\"hsl.yellow.sat\":20,\"hsl.yellow.lum\":15,\"hsl.aqua.hue\":5,\"hsl.aqua.sat\":25,\"hsl.aqua.lum\":15,\"hsl.blue.sat\":20,\"hsl.blue.lum\":10,\"camera_profile\":\"Adobe Standard\"},\"other_changed\":[\"ToneCurveName2012\"]}]",
+    "YES the snapshot puts the photo back: settings and masks as before",
+    "YES Jim's answer 1: y",
+    "YES Jim's answer 2: y",
+    "    finding, history_named_AVG: y",
+    "    finding, checkpoint_hidden_from_panel: y"
+  ],
+  "headline": "WORKED"
+}

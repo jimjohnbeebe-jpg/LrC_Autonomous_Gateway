@@ -1,5 +1,6 @@
 // `npm run masks:verify`, part 3 (issue #210 item 3): do masks land where asked on a mirrored photo? Jim flips one
-// photo (Photo > Flip Horizontal, a menu path [unverified] in Develop) and turns it a quarter turn three times, which shows all four mirrored codes
+// photo (Photo > Flip Horizontal, a menu path [unverified] in Develop) and turns it a quarter turn three times (Photo > Rotate Right,
+// Ctrl+], the menu path and shortcut [unverified]), which shows all four mirrored codes
 // (BA, DC, CB, AD) [inference: the mirrored codes are closed under a quarter turn]. In each, masks:crop's two
 // cases run with the mirrored refusal lifted for this check only (params withMirrorMapping): case A at the
 // photo's own crop, case B with its crop turned 10 degrees; radials at three preview points and a gradient,

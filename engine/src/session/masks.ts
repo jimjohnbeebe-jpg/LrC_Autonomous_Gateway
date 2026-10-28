@@ -55,7 +55,7 @@ import {
 import { makeAiMask, type AiResult } from "./ai-masks.js";
 import { checkAiPartPlugin, makeAiPart } from "./mask-parts.js";
 import { awaitApproval } from "./approval.js";
-import { frameOf } from "./crop.js";
+import { frameFor, frameOf } from "./crop.js";
 import { clipBreach, regionDrift, type Breach } from "./guardrail.js";
 import { brief, failed, fresh, historyName, image, ms, readSdk, recordPass, render, writeTable } from "./io.js";
 import { aiLog, passJson, type Done } from "./mask-result.js";
@@ -240,12 +240,18 @@ async function maskPass(ctx: SessionContext, s: Session, args: PassArgs, op: Mas
 /** The preview's sRGB, written where Lightroom keeps its l, a, b [unverified] (issue #210). */
 const asLab = ([l, a, b]: [number, number, number]): Lab => ({ l, a, b });
 
-/** A create's copy_sample_from resolved from the colour range it names, on this photo (`here`) or on its `target`. */
+/**
+ * A create's copy_sample_from resolved from the colour range it names, on this photo (`here`) or on its `target`.
+ * Another target is read by photo_uuid, which does not need it selected (Develop.lua target(): only target_uuid is
+ * checked against the selection, plugin\LrC-AVG.lrplugin\Develop.lua:55-73); maskPass has just selected `t`
+ * [handle: tests\session-masks-copy.test.ts].
+ */
 async function copySample(ctx: SessionContext, s: Session, t: Target, op: CreateOp, here: { entries: Correction[]; frame: CropFrame }): Promise<CreateOp> {
   const src = op.copy_sample_from?.target === undefined ? t : resolveTarget(s, op.copy_sample_from.target as TargetId, "read");
   if (src === t) return withCopiedSample(op, here);
-  const { sdk } = await readSdk(ctx, s, src);
-  return withCopiedSample(op, { entries: readTable(sdk), frame: await frameOf(ctx, s, src, sdk) });
+  const sdk = (await ctx.deps.client.request("get_settings", { photo_uuid: src.uuid })).settings;
+  const frame = await frameFor(sdk, () => ctx.deps.client.request("get_context", { photo_uuid: src.uuid }));
+  return withCopiedSample(op, { entries: readTable(sdk), frame });
 }
 
 /** Write the table, make an AI mask compute, render, and undo the pass when it breaches a limit. */

@@ -3,7 +3,8 @@
 // written where Lightroom keeps its l, a, b; session\masks.ts) and Jim's y/n. On the first photo Jim then
 // clicks a red area with Lightroom's own Color Range; the check reads Lightroom's stored sample, records the
 // render's sRGB at its pin beside it, and writes a copy of it (copy_sample_from, params withCopiedSample) for a
-// last y/n. Each write replaces the photo's table with its masks as they were plus one test mask; the CLI puts
+// last y/n (Jim's Color Range: Tools > Create New Mask > Color Range [upstream claim: Automaat PR #339,
+// create_range_mask's description]). Each write replaces the photo's table with its masks as they were plus one test mask; the CLI puts
 // the photo back from its snapshot, Jim's own Color Range included.
 
 import { applyOp, colorRangeOf, readTable, toView, withCopiedSample, type Correction, type CropFrame } from "../params/index.js";

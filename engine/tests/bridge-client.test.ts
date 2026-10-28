@@ -118,7 +118,7 @@ describe("bridge: client", () => {
     expect((await client.request("ping", { nonce: "still" })).nonce).toBe("still");
   });
 
-  it("reads a response split mid-character across writes, and two lines in one write", async () => {
+  it("reads a response split mid-character across writes, and two lines in one write, one ending in CRLF", async () => {
     let first = "";
     let second = "";
     plugin.handlers.set("get_settings", (_p, id) => {
@@ -132,13 +132,24 @@ describe("bridge: client", () => {
     await waitUntil(() => second !== "");
     const line = (id: string, v: string) =>
       JSON.stringify({ id, type: "res", name: "get_settings", ok: true, payload: { uuid: "u", settings: { CameraProfile: v } } }) + "\n";
-    const bytes = Buffer.from(line(first, "Camera Landscape 漢") + line(second, "Adobe Standard"), "utf8");
+    // The plugin ends lines with "\n"; a "\r" before it is tolerated (lines.ts), so a CRLF line reads the same.
+    const bytes = Buffer.from(line(first, "Camera Landscape 漢") + line(second, "Adobe Standard").replace(/\n$/, "\r\n"), "utf8");
     const cut = bytes.indexOf(0xe6) + 1;
     plugin.writeRaw(bytes.subarray(0, cut));
     await new Promise((r) => setTimeout(r, 10));
     plugin.writeRaw(bytes.subarray(cut));
     expect((await a).settings["CameraProfile"]).toBe("Camera Landscape 漢");
     expect((await b).settings["CameraProfile"]).toBe("Adobe Standard");
+  });
+
+  it("writes each command as one line of compact JSON (issue #212 item 3)", async () => {
+    await connected();
+    await client.request("ping", { nonce: "a b" });
+    expect(plugin.lines.length).toBeGreaterThanOrEqual(2);
+    for (const line of plugin.lines) {
+      expect(line).not.toMatch(/[\r\n]/);
+      expect(line).toBe(JSON.stringify(JSON.parse(line)));
+    }
   });
 
   it("delivers events", async () => {

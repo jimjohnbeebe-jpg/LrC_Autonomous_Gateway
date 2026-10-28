@@ -124,7 +124,8 @@ describe("masks:verify part 3 flip-back", () => {
 describe("masks:verify writeTable", () => {
   it("names the fields of a mask that reads back different", async () => {
     const plan = applyOp([], { op: "create", kind: "radial", name: "AVG r", geometry: { left: 0.2, top: 0.2, right: 0.4, bottom: 0.4 } });
-    const back = structuredClone(plan.entries).map((e) => ({ ...e, CorrectionActive: false }));
+    // Fields only the read-back has (Lightroom adds some) are not named, so they cannot crowd out the one that differs.
+    const back = structuredClone(plan.entries).map((e) => ({ A1: 1, A2: 2, A3: 3, A4: 4, A5: 5, A6: 6, A7: 7, A8: 8, A9: 9, ...e, CorrectionActive: false }));
     const client = { request: async () => ({ read_back: { [MASK_TABLE_KEY]: back } }) } as unknown as BridgeClient;
     expect((await writeTable(client, "u", plan.entries, "x")).problems).toEqual(["mask AVG r reads back different: CorrectionActive"]);
   });

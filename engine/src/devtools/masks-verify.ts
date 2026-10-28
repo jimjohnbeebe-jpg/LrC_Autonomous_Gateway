@@ -42,9 +42,13 @@ export async function writeTable(client: BridgeClient, uuid: string, entries: re
   const problems = verifyTable(entries, res.read_back);
   if (problems.length === 0) return { read_back: res.read_back, problems };
   const diffs = diffEntries(entries, res.read_back).entries;
+  // Only paths written and checked (verifyTable checks written fields only): fields Lightroom adds on read-back
+  // (mask-table.ts AI_KINDS note: ModelVersion, Origin, FullMaskSize, WholeImageArea) would fill the 8 named otherwise.
+  const written = (w: unknown, p: string): boolean => !p.endsWith(" (recomputed)") && p.split(".").reduce<unknown>((x, k) => (x && typeof x === "object" ? (x as Record<string, unknown>)[k] : undefined), w) !== undefined;
   const named = (p: string): string => {
-    const d = diffs.find((x) => p === `mask ${x.name} reads back different`);
-    return d ? `${p}: ${d.changed.slice(0, 8).join(", ") || "no field differs"}` : p;
+    const i = diffs.findIndex((x) => p === `mask ${x.name} reads back different`);
+    const d = diffs[i];
+    return d ? `${p}: ${d.changed.filter((q) => written(entries[i], q)).slice(0, 8).join(", ") || "no written field differs"}` : p;
   };
   return { read_back: res.read_back, problems: problems.map(named) };
 }

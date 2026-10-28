@@ -170,7 +170,7 @@ end
 -- 16-17 thousand keywords takes 10-18 s [handle: docs\reports\phase11\PERF.md "Numbers", list_keywords;
 -- vault LR_SDK_NOTES "Recorded in Phase 6", keywords: 17555 ms], so lr_list_keywords pages through one walk.
 -- Every keyword write this plugin makes drops it (KeywordTree.forget: Library.lua set_keywords, KeywordEdit.lua
--- rename); a keyword changed by hand in Lightroom shows once the walk is older than CACHE_SECONDS [inference:
+-- rename, Transfer.lua import); a keyword changed by hand in Lightroom shows once the walk is older than CACHE_SECONDS [inference:
 -- nothing here hears of that change]. Returns the paths and whether they came from the cache.
 KeywordTree.CACHE_SECONDS = 120 -- [stated: Jim, 2026-10-28, "Go with recommendation": 120 s]
 function KeywordTree.paths(catalog, refresh)

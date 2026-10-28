@@ -17,6 +17,8 @@ describe("lua: the kept keyword walk", () => {
     const writers = files.filter((f) => WRITES.test(f.code)).map((f) => f.name).sort();
     expect(writers).toEqual(["KeywordEdit.lua", "KeywordTree.lua", "Library.lua"]);
     for (const f of files.filter((x) => WRITES.test(x.code) && x.name !== "KeywordTree.lua")) expect(f.code, f.name).toMatch(/KeywordTree\.forget\(\)/);
+    // An import may bring the file's own keywords into the Keyword List [inference].
+    expect(files.find((f) => f.name === "Transfer.lua")?.code).toMatch(/catalog:addPhoto\(path\)[^\n]*\n\s*KeywordTree\.forget\(\)/);
   });
 
   it("is used by list_keywords, with refresh walking again", () => {

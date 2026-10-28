@@ -1,8 +1,8 @@
 ---
 report: DEVELOP-PARITY
 phase: "11"
-status: template
-authored_by: "Claude Code (Opus 5.5): purpose, harness, pre-run findings, steps, 2026-10-27. Jim: Observed, Numbers, Verdict (blank until his run)."
+status: observed
+authored_by: "Claude Code (Opus 5.5): purpose, harness, pre-run findings, steps, 2026-10-27; Observed and Numbers copied from the run files, 2026-10-27. Jim: the run, his answers, Verdict (blank)."
 date: 2026-10-27
 ---
 
@@ -72,23 +72,53 @@ What it does, in order:
 
 ## Observed (Jim)
 
-*(blank until Jim's run)*
+### Run 1, 2026-10-27: FAILED (one put-back comparison)
+
+Jim ran `npm run develop:check` on two virtual copies of raw photos, `_OZ80739.NEF` (`FCA2E337`, the "first photo") and `_OZ80738.NEF` (`2D31DD06`), and said "done" [stated: Jim, 2026-10-27, "npm run develop:check done."]. The results file ends `headline: FAILED` [handle: `docs\reports\phase11\DEVELOP-PARITY\run1\develop_check_2026-10-28T02-24-27-615Z.json`]:
+
+```text
+YES lr_create_snapshot FCA2E337-...: ok (expected ok)
+YES lr_create_snapshot 2D31DD06-...: ok (expected ok)
+YES lr_list_snapshots: listed (expected listed)
+YES lr_apply_auto tone + white balance: applied, applied (expected applied or unchanged)
+YES lr_reset: reset, reset (expected reset)
+YES lr_set_process_version 5: changed (expected changed)
+YES lr_set_process_version 6: changed (expected changed)
+YES lr_get_metadata raw: read (expected read)
+YES lr_create_virtual_copies: copied (expected copied)
+YES lr_apply_snapshot (put back) FCA2E337-...: ok (expected ok)
+YES lr_apply_snapshot (put back) 2D31DD06-...: ok (expected ok)
+YES the selection is as it was
+NO  both photos' Develop settings are back as they were
+NO  the check's snapshots are deleted again
+YES Jim's answer 1: y
+YES Jim's answer 2: y
+YES Jim's answer 3: y
+```
+
+- **Every tool step worked.** `lr_apply_auto` changed ten Basic settings on each photo, the same way on both: Exposure +0.14 and +0.25, Contrast +6, Highlights -74 and -73, Shadows +61, Whites +7, Blacks -16, Vibrance +15, Saturation +3, Temperature 5050 -> 5150, Tint 21 -> 18. It took 5.9 s and 12.5 s. `lr_reset` put all ten back to the photo's defaults (2.4 s and 2.8 s). `lr_set_process_version` went Version 6 -> 5 -> 6 on the first photo, with no setting changed. `lr_get_metadata raw` read the copy's metadata, its 81 canonical settings and its raw SDK table (`process_version` 15.4). `lr_create_virtual_copies` made "AVG develop-check copy" [handle: `docs\reports\phase11\DEVELOP-PARITY\run1\develop_check_2026-10-28T02-24-27-615Z.json`, `results`].
+- **The NO line:** both photos were put back from their start snapshot, and each was then read and compared with the settings read before the check. The second photo compared equal. The first photo did not: it kept its entry, so the check deleted no snapshot ("Not every photo came back"), which explains the second NO. **What differed was not kept.** After Jim's three answers, the harness's cleanup step put the first photo back a second time, and that comparison came out equal (`put_back`: `changed: {}`). The second record overwrote the first, both in `put_back` and under the same step name in `results` [handle: `docs\reports\phase11\DEVELOP-PARITY\run1\develop_check_2026-10-28T02-24-27-615Z.json`, `steps` lists "lr_apply_snapshot (put back) FCA2E337-..." twice; `put_back` holds only that photo]. The engine's tool log folder for the run is empty.
+- **Timing, from the plugin's log** [handle: `docs\reports\phase11\DEVELOP-PARITY\run1\bridge-log-excerpt.txt`]: the first photo's put-back ran at 19:24:58.563, and the harness's comparison read at 19:25:00.300, 1.7 s later. The second photo's put-back ran at 19:25:16.398, read at 19:25:18.045. The cleanup's put-back of the first photo ran at 19:26:26.415, read at 19:26:28.317. All three reads come after the apply returned. The first photo is the one that also had its process version changed twice and a virtual copy made from it (19:24:53-19:24:58), just before its put-back.
+- **Jim's answers:** 1 y (Lightroom back in the same module and source, same two photos selected); 2 y (History of the first photo shows this check's steps); 3 y (Jim removed the "AVG develop-check copy" virtual copy).
+- **Left behind:** since no snapshot was deleted, both photos keep this check's snapshots ("AVG develop-check start ...", "AVG pre-auto ...", "AVG pre-reset ...", "AVG pre-process-version ..." twice on the first photo, "AVG pre-apply ..."). Both photos are Jim's virtual copies made for this check.
 
 ## Numbers
 
 | Field | Value |
 |---|---|
-| Lightroom version, plugin version | |
-| `lr_apply_auto` statuses; settings changed | |
-| `lr_reset` statuses; masks before/after | |
-| `getProcessVersion` before (`previous`) for a 15.4 photo | |
-| `lr_set_process_version` 5 / 6 statuses | |
-| `lr_get_metadata raw` | |
-| `lr_create_virtual_copies` status, copy name | |
-| Selection back | |
-| Settings back (put back) | |
-| Snapshots deleted | |
-| Jim's answers 1-3 | |
+| Lightroom version, plugin version | LrC 15.6, plugin 1.5.0 |
+| `lr_apply_auto` statuses; settings changed | applied, applied (white balance and tone each applied); 10 Basic settings each, 5.9 s and 12.5 s |
+| `lr_reset` statuses; masks before/after | reset, reset; the 10 settings back to default; masks not reported (neither photo had a mask) [inference: no `masks` key in either result] |
+| `getProcessVersion` before (`previous`) for a 15.4 photo | "Version 6" (the photo's `ProcessVersion` is 15.4) |
+| `lr_set_process_version` 5 / 6 statuses | changed ("Version 6" -> "Version 5"), changed ("Version 5" -> "Version 6"); no setting changed |
+| `lr_get_metadata raw` | read: canonical settings, SDK table, metadata |
+| `lr_create_virtual_copies` status, copy name | copied, "AVG develop-check copy" |
+| Selection back | YES |
+| Settings back (put back) | **NO** for the first photo at the first comparison (what differed was not kept); YES for the second photo; YES for the first photo at the cleanup's second put-back, 88 s later |
+| Snapshots deleted | NO (skipped because a photo was not back) |
+| Jim's answers 1-3 | y, y, y |
+
+All from `docs\reports\phase11\DEVELOP-PARITY\run1\develop_check_2026-10-28T02-24-27-615Z.json` and `docs\reports\phase11\DEVELOP-PARITY\run1\bridge-log-excerpt.txt`.
 
 ## Verdict
 
@@ -96,6 +126,8 @@ What it does, in order:
 
 ## Consequences / open questions
 
-- The "Version N" to process-version number mapping (`engine\src\params\canonical.ts` `PROCESS_VERSION_LABELS`, "Version 6" for 15.4 is `[unverified]`) can be confirmed from step 6.
+- The "Version N" to process-version number mapping: **"Version 6" is 15.4** on this photo: `previous` "Version 6" and `ProcessVersion` "15.4" [handle: `docs\reports\phase11\DEVELOP-PARITY\run1\develop_check_2026-10-28T02-24-27-615Z.json`, `lr_set_process_version 5` and `lr_get_metadata raw`].
+- **Open: why the first photo's first put-back did not compare equal.** It may be timing (read 1.7 s after the apply, though the second photo compared equal at the same delay), or something the process-version round trip or the virtual copy left that one snapshot apply did not undo and a second did [inference: both unconfirmed]. A rerun with a harness that keeps the first comparison's differences would answer it; that is Jim's decision.
+- **Harness defect:** the cleanup's second put-back overwrites the first put-back's record (`put_back`, and the step's result under the same name), so a NO loses its evidence [handle: `engine\src\devtools\develop-check-cli.ts:85-95` and `:160`].
 - `lr_create_virtual_copies` leaves a copy that only Jim can remove: no tool removes photos until D3 is decided.
 - The parity map (`docs\reports\phase10\AUTOMAAT_COMPARE_2026-10-26.md` Appendix A) can mark these rows `have` once this run works.

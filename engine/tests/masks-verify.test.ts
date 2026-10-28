@@ -1,9 +1,11 @@
 // The pure parts of `npm run masks:verify` (src/devtools/masks-verify.ts, GitHub issue #210): where a render is
-// clearly red or green, how a place is told, and the verdict.
+// clearly red or green, how a place is told, the verdict and the put-back result; part 3's flip-back on a fake bridge.
 
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
-import { colourPoints, verdict, where, type Step } from "../src/devtools/masks-verify.js";
+import type { BridgeClient } from "../src/bridge/index.js";
+import { colourPoints, notPutBack, verdict, where, type Ctx, type Step } from "../src/devtools/masks-verify.js";
+import { mirrorPart } from "../src/devtools/masks-verify-mirror.js";
 
 /** A 300 x 200 grey JPEG with a red square at the top left and a green one at the bottom right (or none). */
 async function render(colours: boolean): Promise<Buffer> {
@@ -41,5 +43,41 @@ describe("masks:verify", () => {
     expect(no.worked).toBe(false);
     expect(no.lines.at(-1)).toMatch(/^NO {3}colour a\.jpg x \(Jim: n\)$/);
     expect(verdict(yes.slice(0, 1), ["colour", "person"]).lines.at(-1)).toBe("---- person: no step answered yes");
+  });
+
+  it("counts a failed put-back and an orientation not flipped back as not put back", () => {
+    expect(notPutBack([step({}), step({ part: "mirror", id: "orientation_put_back" })])).toBe(false);
+    expect(notPutBack([step({ part: "mirror", id: "orientation_put_back", answer: "BA (was AB)", ok: false })])).toBe(true);
+    expect(notPutBack([step({ id: "put_back", ok: false })])).toBe(true);
+    expect(notPutBack([step({ notes: ["case A put back: NO (x)"] })])).toBe(true);
+  });
+});
+
+/** A part-3 context: the photo's orientation read back from `orientations` in turn, Jim's answers from `answers`. */
+function fakeCtx(orientations: string[], answers: string[], guard: Ctx["guard"]): { c: Ctx; asked: string[] } {
+  const asked: string[] = [];
+  const client = { request: async () => ({ settings: { orientation: orientations.shift() } }) } as unknown as BridgeClient;
+  return { asked, c: { client, say: () => undefined, ask: async (q) => (asked.push(q), answers.shift() ?? "y"), guard } };
+}
+const photo = { uuid: "u", filename: "m.jpg" };
+
+describe("masks:verify part 3 flip-back", () => {
+  it("asks for the flip-back and reads it when Jim stops at a turn", async () => {
+    const { c, asked } = fakeCtx(["AB", "BA", "BA", "AB"], ["y", "n", "y"], async () => ({ value: null, put_back: { ok: true, why: "" } }));
+    const steps = await mirrorPart(c, photo);
+    expect(asked.at(-1)).toMatch(/Flip Horizontal, then Photo > Rotate Right/);
+    expect(steps.map((x) => x.id)).toEqual(["orientation_BA", "rotate", "orientation_put_back"]);
+    expect(steps.at(-1)?.ok).toBe(true);
+  });
+
+  it("flips back when the run stops in a case, and an orientation left mirrored counts as not put back", async () => {
+    const { c, asked } = fakeCtx(["AB", "BA", "BA"], ["y", "y"], async () => {
+      throw new Error("x.jpg could not be put back");
+    });
+    const steps: Step[] = [];
+    await expect(mirrorPart(c, photo, steps)).rejects.toThrow("could not be put back");
+    expect(asked).toHaveLength(2);
+    expect(steps.map((x) => [x.id, x.ok])).toEqual([["orientation_put_back", false]]);
+    expect(notPutBack(steps)).toBe(true);
   });
 });

@@ -5,7 +5,7 @@
 // cases run with the mirrored refusal lifted for this check only (params withMirrorMapping): case A at the
 // photo's own crop, case B with its crop turned 10 degrees; radials at three preview points and a gradient,
 // rendered and measured with sharp (mask-crop-run.ts), so Jim answers nothing about them. Each case is put
-// back from the snapshot taken in that orientation; at the end Jim undoes the flip and the check reads the
+// back from the snapshot taken in that orientation; at the end, or on any earlier stop, Jim undoes the flip and the check reads the
 // orientation back.
 
 import { MIRRORED, withMirrorMapping, type SdkSettings } from "../params/index.js";
@@ -33,27 +33,41 @@ async function bothCases(c: Ctx, photo: Photo, o: string): Promise<Step> {
   return { part: "mirror", photo: photo.filename, id: `orientation_${o}`, question: null, answer: ok ? "every radial and gradient where asked" : "see cases", ok, notes, data: { cases } };
 }
 
-/** Part 3 on one photo that is not mirrored yet. */
-export async function mirrorPart(c: Ctx, photo: Photo): Promise<Step[]> {
-  const steps: Step[] = [];
-  const fail = (id: string, answer: string): Step[] => [...steps, { part: "mirror", photo: photo.filename, id, question: null, answer, ok: false, notes: [] }];
+/** Jim undoes the flip and the check reads the orientation back; `all`: the four mirrored codes were run (three turns). */
+async function flipBack(c: Ctx, photo: Photo, start: string, all: boolean, steps: Step[]): Promise<void> {
+  await c.ask(all
+    ? "  In Lightroom: Photo > Rotate Right (Ctrl+]) once more, then Photo > Flip Horizontal, to put the photo back as it was. Done?"
+    // [inference: undoing the flip leaves a turn of the start, so Rotate Right reaches it]
+    : "  In Lightroom: Photo > Flip Horizontal, then Photo > Rotate Right (Ctrl+]) until the photo stands as it did before the check. Done?");
+  const end = await orientationOf(c, photo).catch((err: unknown) => `not read (${String(err)})`);
+  steps.push({ part: "mirror", photo: photo.filename, id: "orientation_put_back", question: null, answer: `${end} (was ${start})`, ok: end === start, notes: [] });
+}
+
+/** Part 3 on one photo that is not mirrored yet; steps go into `steps` as they happen. Once Jim has flipped it, every
+ *  way out (a "n", a stop, an error) goes through the flip-back. */
+export async function mirrorPart(c: Ctx, photo: Photo, steps: Step[] = []): Promise<Step[]> {
+  const fail = (id: string, answer: string): Step[] => {
+    steps.push({ part: "mirror", photo: photo.filename, id, question: null, answer, ok: false, notes: [] });
+    return steps;
+  };
   const start = await orientationOf(c, photo);
   if (isMirrored(start)) return fail("start", `the photo is already mirrored (${start}): select one that is not`);
   if ((await c.ask(`  In Lightroom, with ${photo.filename} selected: Photo > Flip Horizontal. Done?`)) !== "y") return fail("flip", "Jim: n");
   const seen = new Set<string>();
-  for (let i = 0; i < MIRRORED.length; i++) {
-    const o = await orientationOf(c, photo);
-    if (!isMirrored(o) || seen.has(o)) {
-      steps.push({ part: "mirror", photo: photo.filename, id: `turn_${i + 1}`, question: null, answer: `orientation ${o}: ${seen.has(o) ? "seen before" : "not mirrored"}`, ok: false, notes: [] });
-      break;
+  try {
+    for (let i = 0; i < MIRRORED.length; i++) {
+      const o = await orientationOf(c, photo);
+      if (!isMirrored(o) || seen.has(o)) {
+        steps.push({ part: "mirror", photo: photo.filename, id: `turn_${i + 1}`, question: null, answer: `orientation ${o}: ${seen.has(o) ? "seen before" : "not mirrored"}`, ok: false, notes: [] });
+        break;
+      }
+      seen.add(o);
+      c.say(`  orientation ${o}: case A (its own crop) and case B (crop turned 10 degrees), measured, nothing to answer.`);
+      steps.push(await bothCases(c, photo, o));
+      if (i < MIRRORED.length - 1 && (await c.ask("  In Lightroom: Photo > Rotate Right (Ctrl+]). Done?")) !== "y") return fail("rotate", "Jim: n");
     }
-    seen.add(o);
-    c.say(`  orientation ${o}: case A (its own crop) and case B (crop turned 10 degrees), measured, nothing to answer.`);
-    steps.push(await bothCases(c, photo, o));
-    if (i < MIRRORED.length - 1 && (await c.ask("  In Lightroom: Photo > Rotate Right (Ctrl+]). Done?")) !== "y") return fail("rotate", "Jim: n");
+  } finally {
+    await flipBack(c, photo, start, seen.size === MIRRORED.length, steps);
   }
-  await c.ask("  In Lightroom: Photo > Rotate Right (Ctrl+]) once more, then Photo > Flip Horizontal, to put the photo back as it was. Done?");
-  const end = await orientationOf(c, photo);
-  steps.push({ part: "mirror", photo: photo.filename, id: "orientation_put_back", question: null, answer: `${end} (was ${start})`, ok: end === start, notes: [] });
   return steps;
 }

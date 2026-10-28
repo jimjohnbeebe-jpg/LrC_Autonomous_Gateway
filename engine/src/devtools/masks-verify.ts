@@ -66,6 +66,10 @@ export function verdict(steps: readonly Step[], parts: readonly Part[]): { worke
   return { worked: missing.length === 0 && steps.every((s) => s.ok || s.skipped === true), lines };
 }
 
+/** Whether a step says a photo was left not as it was: a failed snapshot put-back, or an orientation not flipped back. */
+export const notPutBack = (steps: readonly Step[]): boolean =>
+  steps.some((s) => s.id === "put_back" || (s.id === "orientation_put_back" && !s.ok) || s.notes.some((n) => n.includes("put back: NO")));
+
 /** The one or two photos Jim has selected, or why not. */
 export async function selected(client: BridgeClient, count: number): Promise<Photo[] | string> {
   const sel = await client.request("get_selection", { max: count + 1 });

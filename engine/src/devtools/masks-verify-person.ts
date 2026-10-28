@@ -47,9 +47,9 @@ async function oneKind(h: Here, before: Correction[], probe: Correction, kind: A
   return true;
 }
 
-/** Part 2 on one photo of two or more people, behind its snapshot. */
-export async function personPart(c: Ctx, photo: Photo): Promise<Step[]> {
-  const h: Here = { c, photo, steps: [] };
+/** Part 2 on one photo of two or more people, behind its snapshot; steps go into `steps` as they happen. */
+export async function personPart(c: Ctx, photo: Photo, steps: Step[] = []): Promise<Step[]> {
+  const h: Here = { c, photo, steps };
   c.say(`${photo.filename}: one person's masks, for the second person Lightroom finds (+2 EV on each).`);
   const r = await c.guard(photo, async (sdk) => {
     const before = readTable(sdk);

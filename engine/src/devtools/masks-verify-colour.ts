@@ -63,9 +63,8 @@ async function copied(h: Here, jpeg: Buffer, red: { x: number; y: number }): Pro
   step(h, "copy_lightroom_sample", { question, answer, ok: answer === "y" && problems.length === 0, notes: problems, data: { lightroom: got, srgb_at_pin: srgbAtPin } });
 }
 
-/** Part 1 on `photos` (two): each photo behind its snapshot; the Lightroom click on the first only. */
-export async function colourPart(c: Ctx, photos: readonly Photo[]): Promise<Step[]> {
-  const steps: Step[] = [];
+/** Part 1 on `photos` (two): each photo behind its snapshot; the Lightroom click on the first only. Steps go into `steps` as they happen. */
+export async function colourPart(c: Ctx, photos: readonly Photo[], steps: Step[] = []): Promise<Step[]> {
   for (const [i, photo] of photos.entries()) {
     c.say(`${photo.filename}: colour ranges, one at a time (+2 EV on each).`);
     const r = await c.guard(photo, async (sdk) => {

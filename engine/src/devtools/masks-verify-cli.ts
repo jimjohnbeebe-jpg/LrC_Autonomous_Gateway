@@ -17,7 +17,7 @@ import { BridgeClient, pluginVersionAtLeast } from "../bridge/index.js";
 import { acquireInstanceLock, BridgeGate, devOverrides, ENGINE_VERSION } from "../mcp/index.js";
 import { MASKS_PLUGIN } from "../session/index.js";
 import { ask, putBack, readPending, type Pending } from "./mask-carry-probe.js";
-import { PARTS, SNAPSHOT, selected, verdict, type Ctx, type Part, type Photo, type Step } from "./masks-verify.js";
+import { PARTS, SNAPSHOT, notPutBack, selected, verdict, type Ctx, type Part, type Photo, type Step } from "./masks-verify.js";
 import { colourPart } from "./masks-verify-colour.js";
 import { mirrorPart } from "./masks-verify-mirror.js";
 import { personPart } from "./masks-verify-person.js";
@@ -74,6 +74,13 @@ const ctxFor = (client: BridgeClient, say: (line: string) => void): Ctx => ({
   say,
   ask,
   guard: async (photo, fn) => {
+    // A put-back still outstanding is tried again first; the run stops rather than snapshot over it (state.json
+    // would lose its record, and the next snapshot would hold the test edits as the photo's start).
+    const left = pending();
+    if (left) {
+      const pb = await back(client, left);
+      if (!pb.ok) throw new Error(`${left.filename} could not be put back (${pb.why}); nothing more was written`);
+    }
     await client.request("select_photo", { uuid: photo.uuid });
     const before_sdk = (await client.request("get_settings", { photo_uuid: photo.uuid })).settings;
     const snap = await client.request("create_snapshot", { target_uuid: photo.uuid, name: SNAPSHOT });
@@ -91,14 +98,16 @@ const ctxFor = (client: BridgeClient, say: (line: string) => void): Ctx => ({
   },
 });
 
-async function runPart(c: Ctx, part: Part): Promise<Step[]> {
+/** One part; its steps go into `steps` as they happen, so a run that stops keeps the answers already given. */
+async function runPart(c: Ctx, part: Part, steps: Step[]): Promise<void> {
   const s = SELECT[part];
   c.say("");
-  if ((await ask(`Part ${PARTS.indexOf(part) + 1} (${part}): in Lightroom's Develop Filmstrip select ${s.what}. Done?`)) !== "y") return [{ part, photo: "-", id: "select", question: null, answer: "Jim: n", ok: false, notes: [] }];
+  if ((await ask(`Part ${PARTS.indexOf(part) + 1} (${part}): in Lightroom's Develop Filmstrip select ${s.what}. Done?`)) !== "y") return void steps.push({ part, photo: "-", id: "select", question: null, answer: "Jim: n", ok: false, notes: [] });
   const photos = await selected(c.client, s.count);
-  if (typeof photos === "string") return [{ part, photo: "-", id: "select", question: null, answer: photos, ok: false, notes: [`select ${s.what}`] }];
-  if (part === "colour") return colourPart(c, photos);
-  return part === "person" ? personPart(c, photos[0] as Photo) : mirrorPart(c, photos[0] as Photo);
+  if (typeof photos === "string") return void steps.push({ part, photo: "-", id: "select", question: null, answer: photos, ok: false, notes: [`select ${s.what}`] });
+  if (part === "colour") await colourPart(c, photos, steps);
+  else if (part === "person") await personPart(c, photos[0] as Photo, steps);
+  else await mirrorPart(c, photos[0] as Photo, steps);
 }
 
 async function main(say: (line: string) => void): Promise<number> {
@@ -121,7 +130,7 @@ async function main(say: (line: string) => void): Promise<number> {
       if (!pb.ok) return finish(say, r, false, `${left.filename} could not be put back`);
     }
     const c = ctxFor(client, say);
-    for (const part of RUN) steps.push(...(await runPart(c, part)));
+    for (const part of RUN) await runPart(c, part, steps);
     const v = verdict(steps, RUN);
     r["lines"] = v.lines;
     say("");
@@ -139,7 +148,7 @@ async function main(say: (line: string) => void): Promise<number> {
 
 function finish(say: (line: string) => void, r: Record<string, unknown>, worked: boolean, why: string): number {
   const left = pending();
-  const notBack = ((r["steps"] as Step[] | undefined) ?? []).some((s) => s.id === "put_back" || s.notes.some((n) => n.includes("put back: NO")));
+  const notBack = notPutBack((r["steps"] as Step[] | undefined) ?? []);
   r["headline"] = worked ? "WORKED" : "FAILED";
   say("");
   say(`Mask verify: ${worked ? "WORKED" : `FAILED (${why})`}`);

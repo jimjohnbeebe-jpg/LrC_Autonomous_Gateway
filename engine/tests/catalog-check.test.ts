@@ -1,7 +1,7 @@
 // `npm run catalog:check` (issue #218): the verdict of devtools\catalog-check.ts. The steps run against Lightroom only.
 
 import { describe, expect, it } from "vitest";
-import { STEPS, verdict } from "../src/devtools/catalog-check.js";
+import { keywordNames, STEPS, verdict } from "../src/devtools/catalog-check.js";
 
 const step = (ok: boolean) => ({ step: "s", ok, detail: null });
 
@@ -12,6 +12,15 @@ describe("catalog:check verdict", () => {
     expect(verdict([step(false)], [step(true)], ["y", "y"])).toMatchObject({ worked: false, putBack: true });
     expect(verdict([step(true)], [], ["y", "y"])).toMatchObject({ worked: false, putBack: false });
     expect(verdict([step(true)], [step(true)], ["y"]).lines).toEqual(["YES s", "YES s", "YES Jim's answer 1: y"]);
+  });
+
+  it("names the test keywords per run, so a second run in the same catalog does not meet the first run's (run 2 of CATALOG-PARITY.md)", () => {
+    const a = keywordNames("2026-10-28T02-32-41-166Z");
+    const b = keywordNames("2026-10-28T04-15-41-490Z");
+    expect(new Set([...Object.values(a), ...Object.values(b)]).size).toBe(6);
+    expect(a.caseOnly).not.toBe(a.renamed);
+    expect(a.caseOnly.toLowerCase()).toBe(a.renamed.toLowerCase());
+    expect(Object.values(a).every((n) => !n.includes("|"))).toBe(true);
   });
 
   it("has a step for each tool group of rows 1-9", () => {

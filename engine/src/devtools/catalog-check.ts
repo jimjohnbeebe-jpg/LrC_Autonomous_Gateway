@@ -19,7 +19,9 @@ const ROOT = `${PREFIX} kw`;
 export const TEXT = { creator: "AVG check creator", copyright: "AVG check copyright", sublocation: "AVG Pike Place", city: "Seattle", state: "WA", country: "United States", iso_country_code: "USA" };
 
 export type Taken = { label?: string; text?: Record<string, string>; keywords?: string[]; collections: Set<number>; ai?: { score: number | null; reason: string | null } };
-export type CheckCtx = { tools: Tools; uuid: string; dir: string; taken: Taken };
+/** `run` names this run's test keywords (the CLI's start stamp). They stay in the catalog, so with fixed names run 2 met
+ * run 1's "child renamed" and the rename was refused [handle: docs\reports\phase11\CATALOG-PARITY.md, run 2]. */
+export type CheckCtx = { tools: Tools; uuid: string; dir: string; run: string; taken: Taken };
 export type Step = { step: string; ok: boolean; detail: unknown };
 type CheckStep = { step: string; run: (c: CheckCtx) => Promise<{ ok: boolean; detail: unknown }> };
 
@@ -74,13 +76,17 @@ async function text(c: CheckCtx) {
   return { ok: failed.length === 0, detail: json(out) };
 }
 
+/** This run's keyword names under ROOT: added, renamed, then renamed again in case only. */
+export const keywordNames = (run: string) => ({ child: `Child ${run}`, renamed: `Child renamed ${run}`, caseOnly: `child renamed ${run}` });
+
 async function keywords(c: CheckCtx) {
-  await c.tools.setKeywords({ uuids: [c.uuid], add: [`${ROOT}|Child`] });
-  const renamed = json(await c.tools.call(renameKeyword, { path: `${ROOT}|Child`, new_name: "Child renamed" }));
-  const caseOnly = json(await c.tools.call(renameKeyword, { path: `${ROOT}|Child renamed`, new_name: "child renamed" }));
+  const k = keywordNames(c.run);
+  await c.tools.setKeywords({ uuids: [c.uuid], add: [`${ROOT}|${k.child}`] });
+  const renamed = json(await c.tools.call(renameKeyword, { path: `${ROOT}|${k.child}`, new_name: k.renamed }));
+  const caseOnly = json(await c.tools.call(renameKeyword, { path: `${ROOT}|${k.renamed}`, new_name: k.caseOnly }));
   const removed = json(await c.tools.call(removeKeywordSubtree, { path: ROOT, uuids: [c.uuid] }));
   const after = first(await c.tools.getMetadata({ uuids: [c.uuid] }))["keywords"] as string[];
-  const ok = renamed["after"] === `${ROOT}|Child renamed` && caseOnly["after"] === `${ROOT}|child renamed` && !after.some((k) => k.startsWith(ROOT));
+  const ok = renamed["after"] === `${ROOT}|${k.renamed}` && caseOnly["after"] === `${ROOT}|${k.caseOnly}` && !after.some((kw) => kw.startsWith(ROOT));
   return { ok, detail: { renamed, case_only: caseOnly, removed, keywords_after: after } };
 }
 

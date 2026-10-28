@@ -32,12 +32,11 @@ On ONE photo, behind the snapshot "AVG masks:verify before", each step writing t
 
 1. `brush_feather_density`: a brush of three strokes across the photo, at 30 %, 50 % and 70 % down: feather 100 (soft), feather 0 (hard), density 0.4. One y/n.
 2. `brush_erase_added`: an erase stroke added down the middle of that brush. One y/n.
-3. `point_color`: one swatch on the brush (hue shift 0.5, saturation -0.5, luminance 0.25, range 0.8). Jim opens the mask's Point Color and reads the sliders. One y/n. The panel's -100..100 for the stored -1..1 is [inference].
-4. `inverted_copy`: an inverted copy of the brush beside it, at -2 EV (from 2026-10-28; before, +2 EV like the brush). One y/n: the top and middle bands brighter, the rest darker.
-5. `delete_empty_masks`: the plugin command on the photo; asks nothing; recorded: status and the mask count before and after (the test masks must stay). Whether Lightroom deletes a mask that really is empty stays [unverified]: no step makes one. A status `deleted` leaves a snapshot "AVG masks:parity empty" on the photo.
-6. `curve_capture`: Jim drags the middle of the brush mask's Curve up; the step saves every correction field that changed (no y/n).
+3. `inverted_copy`: an inverted copy of the brush beside it, at -2 EV (from 2026-10-28; before, +2 EV like the brush). One y/n: the top and middle bands brighter, the rest darker.
+4. `delete_empty_masks`: the plugin command on the photo; asks nothing; recorded: status and the mask count before and after (the test masks must stay). Whether Lightroom deletes a mask that really is empty stays [unverified]: no step makes one. A status `deleted` leaves a snapshot "AVG masks:parity empty" on the photo.
+5. `curve_capture`: Jim drags the middle of the brush mask's Curve up; the step saves every correction field that changed (no y/n).
 
-Then the photo is put back from its snapshot.
+Then the photo is put back from its snapshot. The 2026-10-28 run had a third step, `point_color` (one swatch written to the table); it is gone from branch `phase-11/mask-curves-point-color` on, because Point Color and local curves now go through LrDevelopController, checked by the controller part (`docs\reports\phase11\MASK-CONTROLLER.md`), which a plain `npm run masks:parity` runs after this part.
 
 ## Pre-run findings (Claude Code)
 
@@ -61,8 +60,8 @@ Have one photo ready that you have not flipped; a virtual copy is safest.
 
 4. When asked, click the photo in the Filmstrip, then type `y` and Enter.
 5. For each question, look at the photo in Lightroom, then type `y` or `n` and Enter.
-6. For the Point Color question: in the Masking panel click the mask "AVG parity brush", open its Point Color section, click the one swatch, read the Hue, Saturation, Luminance and Range sliders, then answer.
-7. For the curve step: with "AVG parity brush" still selected, open its Curve section, drag the middle of the curve up a little, then type `y`.
+6. For the curve step: with "AVG parity brush" still selected, open its Curve section, drag the middle of the curve up a little, then type `y`.
+7. The controller part follows on the same photo: its steps are in `docs\reports\phase11\MASK-CONTROLLER.md` (Steps for Jim, from its step 4).
 8. You see `Mask verify: WORKED` or `FAILED`, then `put back: YES` or `NO`. Tell Claude Code "done".
 
 ### If something goes wrong

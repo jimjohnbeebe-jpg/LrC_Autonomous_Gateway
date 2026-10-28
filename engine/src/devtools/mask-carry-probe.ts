@@ -140,10 +140,16 @@ export type Pending = z.infer<typeof PendingRecord>;
  * (Greptile, PR #137).
  */
 export function readPending(file: string, damagedFile: string): { pending: Pending | null; damaged: string | null } {
-  if (!existsSync(file)) return { pending: null, damaged: null };
+  const { record, damaged } = readRecord(file, damagedFile, PendingRecord);
+  return { pending: record, damaged };
+}
+
+/** A record `schema` checks, from `file`, or null; one that does not parse or check is moved to `damagedFile` (readPending). */
+export function readRecord<T>(file: string, damagedFile: string, schema: z.ZodType<T>): { record: T | null; damaged: string | null } {
+  if (!existsSync(file)) return { record: null, damaged: null };
   try {
-    const p = PendingRecord.safeParse(JSON.parse(readFileSync(file, "utf8")));
-    if (p.success) return { pending: p.data, damaged: null };
+    const p = schema.safeParse(JSON.parse(readFileSync(file, "utf8")));
+    if (p.success) return { record: p.data, damaged: null };
   } catch {
     // not JSON: reported as damaged below
   }
@@ -152,7 +158,7 @@ export function readPending(file: string, damagedFile: string): { pending: Pendi
   } catch {
     // left in place: the next run reports it again
   }
-  return { pending: null, damaged: damagedFile };
+  return { record: null, damaged: damagedFile };
 }
 
 /** Ask Jim in this window until he types y or n (masks:carry, masks:combine); "no answer" when the input ends. */

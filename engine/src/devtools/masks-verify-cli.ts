@@ -18,7 +18,7 @@ import { BridgeClient, pluginVersionAtLeast } from "../bridge/index.js";
 import { acquireInstanceLock, BridgeGate, devOverrides, ENGINE_VERSION } from "../mcp/index.js";
 import { MASKS_PLUGIN } from "../session/index.js";
 import { ask, putBack, readPending, type Pending } from "./mask-carry-probe.js";
-import { PARTS, SNAPSHOT, notPutBack, selected, verdict, type Ctx, type Owed, type Part, type Photo, type Step } from "./masks-verify.js";
+import { PARTS, SNAPSHOT, notPutBack, readOwed as readOwedFile, selected, verdict, type Ctx, type Owed, type Part, type Photo, type Step } from "./masks-verify.js";
 import { colourPart } from "./masks-verify-colour.js";
 import { isMirrored, mirrorPart, orientationBack, orientationOf } from "./masks-verify-mirror.js";
 import { personPart } from "./masks-verify-person.js";
@@ -74,13 +74,12 @@ async function back(client: BridgeClient, p: Pending): Promise<{ ok: boolean; wh
   return pb;
 }
 
-/** The orientation part 3 still owes a photo (Ctx.owe), on disk while the photo is flipped. */
+/** The orientation part 3 still owes a photo (Ctx.owe), on disk while the photo is flipped; a damaged record sets owedDamaged. */
+let owedDamaged: string | null = null;
 const readOwed = (): Owed | null => {
-  try {
-    return JSON.parse(readFileSync(ORIENT, "utf8")) as Owed;
-  } catch {
-    return null; // none owed, or unreadable: the next part 3 reads the start afresh
-  }
+  const read = readOwedFile(ORIENT, path.join(OUT_DIR, `orientation.damaged-${started}.json`));
+  owedDamaged ??= read.damaged;
+  return read.owed;
 };
 const owe = (o: Owed | null): void => {
   mkdirSync(OUT_DIR, { recursive: true });
@@ -160,6 +159,7 @@ async function main(say: (line: string) => void): Promise<number> {
     }
     const c = ctxFor(client, say);
     const owed = readOwed();
+    if (owedDamaged) return finish(say, r, false, "the last run's orientation record was damaged");
     if (owed) {
       say(`${owed.filename} is still owed its orientation ${owed.start} from the last run's part 3.`);
       await client.request("select_photo", { uuid: owed.uuid });
@@ -192,12 +192,16 @@ function finish(say: (line: string) => void, r: Record<string, unknown>, worked:
   say("");
   say(`Mask verify: ${worked ? "WORKED" : `FAILED (${why})`}`);
   const flipped = readOwed();
-  say(`put back: ${left || damaged || notBack || flipped ? "NO" : "YES"}`);
+  say(`put back: ${left || damaged || notBack || flipped || owedDamaged ? "NO" : "YES"}`);
   if (flipped) say(`  ${flipped.filename} is still flipped: run npm run masks:verify again, it asks for the flip-back first (orientation ${flipped.start}).`);
   if (left) say(`  To put it back by hand: Lightroom Develop, select ${left.filename}, Snapshots panel (left), click "${SNAPSHOT}". Or run npm run masks:verify again.`);
   if (damaged) {
     r["state_damaged"] = redact(damaged);
     say(`  The last run's put-back record was damaged (moved to ${redact(damaged)}). Put the photo back by hand: Lightroom Develop, select it, Snapshots panel (left), click "${SNAPSHOT}". Then run npm run masks:verify again.`);
+  }
+  if (owedDamaged) {
+    r["orientation_damaged"] = redact(owedDamaged);
+    say(`  The last run's orientation record was damaged (moved to ${redact(owedDamaged)}). Part 3's photo may still be flipped: undo the flip in Lightroom as part 3 asked, then run npm run masks:verify again.`);
   }
   say(`Results saved automatically: ${redact(save(r))}`);
   say('Nothing to copy. Tell Claude Code "done".');

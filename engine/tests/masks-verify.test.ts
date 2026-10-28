@@ -1,10 +1,13 @@
 // The pure parts of `npm run masks:verify` (src/devtools/masks-verify.ts, GitHub issue #210): where a render is
 // clearly red or green, how a place is told, the verdict and the put-back result; part 3's flip-back on a fake bridge.
 
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 import type { BridgeClient } from "../src/bridge/index.js";
-import { colourPoints, notPutBack, verdict, where, writeTable, type Ctx, type Step } from "../src/devtools/masks-verify.js";
+import { colourPoints, notPutBack, readOwed, verdict, where, writeTable, type Ctx, type Step } from "../src/devtools/masks-verify.js";
 import { mirrorPart, orientationBack } from "../src/devtools/masks-verify-mirror.js";
 import { MASK_TABLE_KEY, applyOp } from "../src/params/index.js";
 
@@ -128,5 +131,23 @@ describe("masks:verify writeTable", () => {
     const back = structuredClone(plan.entries).map((e) => ({ A1: 1, A2: 2, A3: 3, A4: 4, A5: 5, A6: 6, A7: 7, A8: 8, A9: 9, ...e, CorrectionActive: false }));
     const client = { request: async () => ({ read_back: { [MASK_TABLE_KEY]: back } }) } as unknown as BridgeClient;
     expect((await writeTable(client, "u", plan.entries, "x")).problems).toEqual(["mask AVG r reads back different: CorrectionActive"]);
+  });
+});
+
+// Greptile, PR #246: a cut-off orientation.json must be reported, not read as "no photo still flipped".
+describe("readOwed", () => {
+  const dir = mkdtempSync(path.join(os.tmpdir(), "avg-verify-"));
+  const file = path.join(dir, "orientation.json");
+  const moved = path.join(dir, "orientation.damaged.json");
+
+  it("reads none, a record, and moves a damaged one aside as damaged", () => {
+    expect(readOwed(file, moved)).toEqual({ owed: null, damaged: null });
+    const good = { uuid: "U", filename: "a.NEF", start: "AB" };
+    writeFileSync(file, JSON.stringify(good));
+    expect(readOwed(file, moved)).toEqual({ owed: good, damaged: null });
+    writeFileSync(file, '{"uuid": "U", "file');
+    expect(readOwed(file, moved)).toEqual({ owed: null, damaged: moved });
+    expect(existsSync(file)).toBe(false);
+    expect(readFileSync(moved, "utf8")).toBe('{"uuid": "U", "file');
   });
 });

@@ -9,7 +9,8 @@
 import sharp from "sharp";
 import type { BridgeClient } from "../bridge/index.js";
 import { tableSettings, verifyTable, type Correction, type SdkSettings } from "../params/index.js";
-import { diffEntries } from "./mask-carry-probe.js";
+import { z } from "zod";
+import { diffEntries, readRecord } from "./mask-carry-probe.js";
 
 export const HISTORY = "AVG masks:verify";
 export const SNAPSHOT = "AVG masks:verify before";
@@ -32,7 +33,14 @@ export type Ctx = {
   owe?: (o: Owed | null) => void;
 };
 /** A photo part 3 flipped, and the orientation it had before. */
-export type Owed = { uuid: string; filename: string; start: string };
+const OwedRecord = z.object({ uuid: z.string(), filename: z.string(), start: z.string() });
+export type Owed = z.infer<typeof OwedRecord>;
+/** The orientation a stopped run still owes (orientation.json), or null. A damaged record is moved to `damagedFile` and
+ *  reported, never read as none owed: the photo may still be flipped (Greptile, PR #246). */
+export function readOwed(file: string, damagedFile: string): { owed: Owed | null; damaged: string | null } {
+  const { record, damaged } = readRecord(file, damagedFile, OwedRecord);
+  return { owed: record, damaged };
+}
 
 /** Write `entries` as the photo's whole mask table; the read-back problems (verifyTable), [] when it took. A mask that
  *  reads back different names the paths that differ (mask-carry-probe.ts changedPaths): the 2026-10-28 parity run's "reads back different"

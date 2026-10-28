@@ -6,7 +6,7 @@
 //   2. erase: an erase stroke added down the middle of that brush (strokes added to a brush);
 //   3. Point Color: one swatch with distinct shifts on the brush, and whether the panel shows those numbers, which
 //      tells whether the stored order (params\mask-point-colors.ts, [upstream claim] + [inference]) is Lightroom's;
-//   4. inverted copy of the brush;
+//   4. inverted copy of the brush, at -2 EV so it reads apart from the brush (the weaker bottom band is left out of the question);
 //   5. lr_delete_empty_masks' command on the photo (asks nothing: whether the call runs and leaves the test masks);
 //   6. local curve capture (row 3, parked: no capture shows the stored field yet): Jim drags the brush mask's curve
 //      by hand and the step saves which correction fields changed, to pin their names (rule 03).
@@ -18,6 +18,7 @@ import { frameFor } from "../session/crop.js";
 import { writeTable, type Ctx, type Photo, type Step } from "./masks-verify.js";
 
 const SLIDERS = { "local.exposure": 2 };
+export const COPY_SLIDERS = { "local.exposure": -2 };
 const across = (y: number) => [{ x: 0.1, y }, { x: 0.9, y }];
 /** Step 1's strokes, top to bottom; radius 0.04 of the long edge. */
 export const BANDS = [
@@ -86,7 +87,9 @@ export async function parityPart(c: Ctx, photo: Photo): Promise<Step[]> {
     h.brush = await write(h, "brush_feather_density", { op: "create", kind: "brush", name: "AVG parity brush", geometry: { strokes: BANDS }, sliders: SLIDERS }, "  Three brighter bands across the photo: the TOP with a soft edge, the MIDDLE with a hard edge, the BOTTOM less bright than the other two?", frame);
     await write(h, "brush_erase_added", { op: "edit", mask_id: h.brush, geometry: { strokes: [ERASE] } }, "  Is there now a gap down the middle of all three bands (the erase stroke)?", frame);
     await write(h, "point_color", { op: "edit", mask_id: h.brush, point_colors: { action: "add", swatch: SWATCH } }, '  Select "AVG parity brush" in the Masking panel and open its Point Color: is there ONE swatch, and with it selected do the sliders read about Hue +50, Saturation -50, Luminance +25 and Range 80?', frame);
-    await write(h, "inverted_copy", { op: "edit", mask_id: h.brush, inverted: true, copy: true }, '  Is there a new mask "AVG parity brush inverted" that brightens everything EXCEPT the bands (the first mask still there)?', frame);
+    // The copy at -2 EV: at the brush's +2 EV the two masks would brighten the whole photo alike, so the old question
+    // ("brightens everything EXCEPT the bands") could only be answered y with the brush off [inference].
+    await write(h, "inverted_copy", { op: "edit", mask_id: h.brush, inverted: true, copy: true, sliders: COPY_SLIDERS }, '  Is there a new mask "AVG parity brush inverted", with the TOP and MIDDLE bands still BRIGHTER and the rest of the photo (the gap down the middle too) DARKER than before the check?', frame);
     await emptyMasks(h);
     await curveCapture(h);
   });

@@ -34,7 +34,7 @@ import { needPlugin, run, sessionTools, type ToolContext, type ToolOutput } from
 type Page = { limit?: number | undefined; offset?: number | undefined };
 export type SearchPhotosArgs = SearchFilters &
   Page & { collection_id?: number | undefined; collection?: string | undefined; folder?: string | undefined; include_subfolders?: boolean | undefined };
-export type ListKeywordsArgs = Page & { query?: string | undefined };
+export type ListKeywordsArgs = Page & { query?: string | undefined; refresh?: boolean | undefined };
 export type SetRatingArgs = { uuids: string[]; rating: number };
 export type SetKeywordsArgs = { uuids: string[]; add?: string[] | undefined; remove?: string[] | undefined };
 export type SetGpsArgs = { uuids: string[]; position: Gps };
@@ -114,12 +114,12 @@ export async function listKeywords(ctx: ToolContext, args: ListKeywordsArgs): Pr
     needKeywordPlugin(ctx, "lr_list_keywords", "it reads the keyword tree");
     const offset = args.offset ?? 0;
     const limit = args.limit ?? DEFAULT_PAGE;
-    const query = args.query !== undefined ? { query: args.query } : {};
+    const query = { ...(args.query !== undefined ? { query: args.query } : {}), ...(args.refresh ? { refresh: true } : {}) };
     const res = await ctx.deps.client.request("list_keywords", { ...query, offset, limit }, { timeoutMs: CATALOG_READ_TIMEOUT_MS });
     const returned = res.keywords.length;
     const more = offset + returned < res.count;
     const truncated = `${returned} of ${res.count} keywords from offset ${offset}: call again with offset ${offset + returned}, or narrow with query.`;
-    const json = { count: res.count, offset, returned, has_more: more, keywords: res.keywords, ...(more ? { truncated } : {}) };
+    const json = { count: res.count, offset, returned, has_more: more, keywords: res.keywords, ...(more ? { truncated } : {}), ...(res.cached !== undefined ? { cached: res.cached } : {}) };
     return { json, log: { count: res.count, returned } };
   });
 }

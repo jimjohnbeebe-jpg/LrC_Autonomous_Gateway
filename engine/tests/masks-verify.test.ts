@@ -1,11 +1,15 @@
 // The pure parts of `npm run masks:verify` (src/devtools/masks-verify.ts, GitHub issue #210): where a render is
 // clearly red or green, how a place is told, the verdict and the put-back result; part 3's flip-back on a fake bridge.
 
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 import type { BridgeClient } from "../src/bridge/index.js";
-import { colourPoints, notPutBack, verdict, where, type Ctx, type Step } from "../src/devtools/masks-verify.js";
-import { mirrorPart } from "../src/devtools/masks-verify-mirror.js";
+import { colourPoints, notPutBack, readOwed, verdict, where, writeTable, type Ctx, type Step } from "../src/devtools/masks-verify.js";
+import { mirrorPart, orientationBack } from "../src/devtools/masks-verify-mirror.js";
+import { MASK_TABLE_KEY, applyOp } from "../src/params/index.js";
 
 /** A 300 x 200 grey JPEG with a red square at the top left and a green one at the bottom right (or none). */
 async function render(colours: boolean): Promise<Buffer> {
@@ -53,31 +57,97 @@ describe("masks:verify", () => {
   });
 });
 
-/** A part-3 context: the photo's orientation read back from `orientations` in turn, Jim's answers from `answers`. */
-function fakeCtx(orientations: string[], answers: string[], guard: Ctx["guard"]): { c: Ctx; asked: string[] } {
+/** A part-3 context: the photo's orientation read back from `orientations` in turn (the last one repeats), Jim's answers from `answers`. */
+function fakeCtx(orientations: string[], answers: string[], guard: Ctx["guard"]): { c: Ctx; asked: string[]; owed: unknown[] } {
   const asked: string[] = [];
-  const client = { request: async () => ({ settings: { orientation: orientations.shift() } }) } as unknown as BridgeClient;
-  return { asked, c: { client, say: () => undefined, ask: async (q) => (asked.push(q), answers.shift() ?? "y"), guard } };
+  const owed: unknown[] = [];
+  const client = { request: async () => ({ settings: { orientation: orientations.length > 1 ? orientations.shift() : orientations[0] } }) } as unknown as BridgeClient;
+  return { asked, owed, c: { client, say: () => undefined, ask: async (q) => (asked.push(q), answers.shift() ?? "y"), guard, owe: (o) => owed.push(o) } };
 }
 const photo = { uuid: "u", filename: "m.jpg" };
+const noCase: Ctx["guard"] = async () => ({ value: null, put_back: { ok: true, why: "" } });
+
+/** A Lightroom photo that Jim's menu actions turn: Rotate Right steps each side's cycle (run 2: BA, AD, DC, CB), Flip pairs them. */
+function turningCtx(start: string): { c: Ctx; asked: string[] } {
+  const sides = [["AB", "BC", "CD", "DA"], ["BA", "AD", "DC", "CB"]];
+  let o = start;
+  const asked: string[] = [];
+  const client = { request: async () => ({ settings: { orientation: o } }) } as unknown as BridgeClient;
+  const ask = async (q: string) => {
+    asked.push(q);
+    const side = sides.findIndex((x) => x.includes(o));
+    const at = (sides[side] as string[]).indexOf(o);
+    if (q.includes("Flip Horizontal")) o = (sides[1 - side] as string[])[at] as string;
+    else if (q.includes("Rotate Right")) o = (sides[side] as string[])[(at + 1) % 4] as string;
+    return "y";
+  };
+  return { asked, c: { client, say: () => undefined, ask, guard: noCase } };
+}
 
 describe("masks:verify part 3 flip-back", () => {
-  it("asks for the flip-back and reads it when Jim stops at a turn", async () => {
-    const { c, asked } = fakeCtx(["AB", "BA", "BA", "AB"], ["y", "n", "y"], async () => ({ value: null, put_back: { ok: true, why: "" } }));
-    const steps = await mirrorPart(c, photo);
+  it("asks for the flip-back and reads it when Jim stops at a turn; the start is owed from before the flip until it reads so again", async () => {
+    const { c, asked, owed } = fakeCtx(["AB", "BA", "BA", "AB"], ["y", "n", "y"], noCase);
+    const steps = await mirrorPart(c, photo, [], 0);
     expect(asked.at(-1)).toMatch(/Flip Horizontal, then Photo > Rotate Right/);
     expect(steps.map((x) => x.id)).toEqual(["orientation_BA", "rotate", "orientation_put_back"]);
-    expect(steps.at(-1)?.ok).toBe(true);
+    expect(steps.at(-1)).toMatchObject({ ok: true, data: { uuid: "u" } });
+    expect(owed).toEqual([{ uuid: "u", filename: "m.jpg", start: "AB" }, null]);
   });
 
-  it("flips back when the run stops in a case, and an orientation left mirrored counts as not put back", async () => {
-    const { c, asked } = fakeCtx(["AB", "BA", "BA"], ["y", "y"], async () => {
+  it("flips back when the run stops in a case, asks one more action while it reads mirrored, and an orientation left mirrored counts as not put back and stays owed", async () => {
+    const { c, asked, owed } = fakeCtx(["AB", "BA"], ["y", "y", "n"], async () => {
       throw new Error("x.jpg could not be put back");
     });
     const steps: Step[] = [];
-    await expect(mirrorPart(c, photo, steps)).rejects.toThrow("could not be put back");
-    expect(asked).toHaveLength(2);
+    await expect(mirrorPart(c, photo, steps, 0)).rejects.toThrow("could not be put back");
+    expect(asked).toHaveLength(3);
+    expect(asked.at(-1)).toMatch(/m\.jpg reads BA, not AB as before the check\. .*Photo > Flip Horizontal\. Done\?$/);
     expect(steps.map((x) => [x.id, x.ok])).toEqual([["orientation_put_back", false]]);
     expect(notPutBack(steps)).toBe(true);
+    expect(owed.at(-1)).toEqual({ uuid: "u", filename: "m.jpg", start: "AB" });
+  });
+
+  it("reaches the start one menu action at a time, from any turn of either side", async () => {
+    for (const from of ["DC", "CB", "BC", "AD"]) {
+      const { c, asked } = turningCtx(from);
+      const back = await orientationBack(c, photo, "AB", null, 0);
+      expect(back.ok, from).toBe(true);
+      expect(asked.length, from).toBeLessThanOrEqual(4);
+    }
+    const { c, asked } = turningCtx("AB");
+    expect((await orientationBack(c, photo, "AB", null, 0)).ok).toBe(true);
+    expect(asked).toEqual([]); // nothing owed: nothing asked
+  });
+
+  it("does not count a put-back as the mirror part's yes", () => {
+    expect(verdict([step({ part: "mirror", id: "orientation_BA", ok: false, answer: "see cases" }), step({ part: "mirror", id: "orientation_put_back" })], ["mirror"]).lines.at(-1)).toBe("---- mirror: no step answered yes");
+  });
+});
+
+describe("masks:verify writeTable", () => {
+  it("names the fields of a mask that reads back different", async () => {
+    const plan = applyOp([], { op: "create", kind: "radial", name: "AVG r", geometry: { left: 0.2, top: 0.2, right: 0.4, bottom: 0.4 } });
+    // Fields only the read-back has (Lightroom adds some) are not named, so they cannot crowd out the one that differs.
+    const back = structuredClone(plan.entries).map((e) => ({ A1: 1, A2: 2, A3: 3, A4: 4, A5: 5, A6: 6, A7: 7, A8: 8, A9: 9, ...e, CorrectionActive: false }));
+    const client = { request: async () => ({ read_back: { [MASK_TABLE_KEY]: back } }) } as unknown as BridgeClient;
+    expect((await writeTable(client, "u", plan.entries, "x")).problems).toEqual(["mask AVG r reads back different: CorrectionActive"]);
+  });
+});
+
+// Greptile, PR #246: a cut-off orientation.json must be reported, not read as "no photo still flipped".
+describe("readOwed", () => {
+  const dir = mkdtempSync(path.join(os.tmpdir(), "avg-verify-"));
+  const file = path.join(dir, "orientation.json");
+  const moved = path.join(dir, "orientation.damaged.json");
+
+  it("reads none, a record, and moves a damaged one aside as damaged", () => {
+    expect(readOwed(file, moved)).toEqual({ owed: null, damaged: null });
+    const good = { uuid: "U", filename: "a.NEF", start: "AB" };
+    writeFileSync(file, JSON.stringify(good));
+    expect(readOwed(file, moved)).toEqual({ owed: good, damaged: null });
+    writeFileSync(file, '{"uuid": "U", "file');
+    expect(readOwed(file, moved)).toEqual({ owed: null, damaged: moved });
+    expect(existsSync(file)).toBe(false);
+    expect(readFileSync(moved, "utf8")).toBe('{"uuid": "U", "file');
   });
 });

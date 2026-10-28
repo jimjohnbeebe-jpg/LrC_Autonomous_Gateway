@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { cropFrame } from "../src/params/crop-frame.js";
-import { applyOp, precheck } from "../src/params/mask-ops.js";
+import { COLOR_SAMPLE_NEEDED, applyOp, precheck } from "../src/params/mask-ops.js";
 import { depthMapMissing } from "../src/params/mask-range.js";
 import { summarize } from "../src/params/mask-summary.js";
 import { BRUSH, C, M, MASK_TABLE_KEY, RANGE, WHAT, componentKind, untrusted, verifyTable, type Component, type Correction } from "../src/params/mask-table.js";
@@ -43,17 +43,20 @@ describe("colour range", () => {
     expect(keys(mine)).toEqual(keys(his));
     expect(keys(mine[RANGE.holder] as object)).toEqual(keys(his[RANGE.holder] as object));
     expect(mine[RANGE.holder]).toMatchObject({ [RANGE.type]: 1, [RANGE.pointModels]: ["0.900000 0.400000 0.100000 0.250000 0.750000 0"], [RANGE.colorAmount]: 0.3 });
-    const e = create("color_range", { point: { x: 0.25, y: 0.75 } }).entries[0] as Correction;
+    const e = create("color_range", { point: { x: 0.25, y: 0.75 }, geometry: { sample: { l: 0.5, a: 0.5, b: 0.5 } } }).entries[0] as Correction;
     expect([e[C.refX], e[C.refY]]).toEqual([0.25, 0.75]);
     expect(componentKind(mine)).toBe("color_range");
     expect(untrusted(mine)).toBeNull();
     expect(summarize(e).geometry).toMatchObject({ point: { x: 0.25, y: 0.75 }, color_amount: 0.5 });
   });
 
-  it("needs a point and refuses an amount outside [0, 1] (0 as Lightroom stores it on Jim's Reds; the tool schema asks more than 0)", () => {
-    expect(codeOf(() => precheck({ op: "create", kind: "color_range" }))).toBe("INVALID_ARGUMENTS");
-    expect(codeOf(() => create("color_range", { point: { x: 0.5, y: 0.5 }, geometry: { color_amount: 1.5 } }))).toBe("INVALID_ARGUMENTS");
-    expect(codeOf(() => create("color_range", { point: { x: 0.5, y: 0.5 }, geometry: { color_amount: 0 } }))).toBe("no error");
+  it("needs a point and a sample (none from the preview: COLOR_SAMPLE_NEEDED), and refuses an amount outside [0, 1] (0 as Lightroom stores it on Jim's Reds; the tool schema asks more than 0)", () => {
+    const sample = { l: 0.5, a: 0.5, b: 0.5 };
+    expect(codeOf(() => precheck({ op: "create", kind: "color_range", geometry: { sample } }))).toBe("INVALID_ARGUMENTS");
+    expect(() => precheck({ op: "create", kind: "color_range", point: { x: 0.5, y: 0.5 } })).toThrow(COLOR_SAMPLE_NEEDED);
+    expect(COLOR_SAMPLE_NEEDED).toMatch(/copy_sample_from.*geometry\.sample/);
+    expect(codeOf(() => create("color_range", { point: { x: 0.5, y: 0.5 }, geometry: { sample, color_amount: 1.5 } }))).toBe("INVALID_ARGUMENTS");
+    expect(codeOf(() => create("color_range", { point: { x: 0.5, y: 0.5 }, geometry: { sample, color_amount: 0 } }))).toBe("no error");
   });
 });
 

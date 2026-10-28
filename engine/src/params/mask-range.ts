@@ -13,9 +13,10 @@
 // triples in different photos, develop edits leave it unchanged, and selection follows the triple, not the pin
 // [upstream claim: Automaat PR #339, `git show 2acd90c`, 14 Lightroom-authored samples on LrC 15.6 macOS]. Jim's
 // own colour ranges fit that reading: "Reds" stores a 0.748875, "Yellows" b 0.938049 [handle:
-// docs\reports\phase8\probes\kinds.json " Reds", "Yellows" PointModels] [inference]. So the engine's point
-// sample (the preview's sRGB, session\masks.ts) is [unverified] until `npm run masks:verify`; a sample Lightroom
-// stored is taken over verbatim (copiedSample, Automaat PR #341, `git show c695468`) or given as {l, a, b}.
+// docs\reports\phase8\probes\kinds.json " Reds", "Yellows" PointModels] [inference]. A sample Lightroom stored
+// is taken over verbatim (copiedSample, Automaat PR #341, `git show c695468`) or given as {l, a, b}; the engine's own
+// point sample (the preview's sRGB) is refused since `npm run masks:verify` did not select the red asked for on one
+// photo of two (mask-ops.ts COLOR_SAMPLE_NEEDED) [handle: docs\reports\phase11\MASKS-VERIFY.md "Observed"].
 
 import { toView, type CropFrame, type Point } from "./crop-frame.js";
 import { C, M, MaskError, RANGE, WHAT, components, type Component, type Correction } from "./mask-table.js";

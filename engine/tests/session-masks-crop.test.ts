@@ -17,6 +17,8 @@ const part = (i = 0, j = 0): Record<string, number> => (table()[i]?.["Correction
 /** DSC_0031's recorded crop (tests\fixtures\s10-rendered-dsc0031.json). */
 const DSC0031 = { CropLeft: 0.008115, CropTop: 0.027339, CropRight: 0.942612, CropBottom: 0.961839, CropAngle: 0, orientation: "AB" };
 const FOREGROUND = { zero: { x: 0.5, y: 0.64 }, full: { x: 0.5, y: 1 } };
+/** Upstream's Lightroom-version check as a warning (bridge\lightroom.ts maskVersionWarnings): the simulator is 15.5.1. */
+const VERSION_WARNING = "Masks were checked in Lightroom Classic 15.6 only, and this is 15.5: look at the mask in Lightroom.";
 const geometryOf = (out: { json: Record<string, unknown> }): Record<string, unknown> => (out.json["mask"] as { geometry: Record<string, unknown> }).geometry;
 const listed = async (): Promise<Record<string, unknown> | undefined> => ((await manager.listMasks({ session_id: ID })).json["masks"] as Array<{ geometry?: Record<string, unknown> }>)[0]?.geometry;
 
@@ -32,7 +34,7 @@ describe("mask tools on a cropped photo (issue #179)", () => {
     expect(table()[0]?.["CorrectionReferenceY"]).toBeCloseTo(t + 0.82 * (b - t), 9); // the pin at the gradient's centre, in the photo
     expect(geometryOf(out)).toEqual(FOREGROUND);
     expect(await listed()).toEqual(FOREGROUND);
-    expect(out.json["warnings"]).toBeUndefined();
+    expect(out.json["warnings"]).toEqual([VERSION_WARNING]); // nothing outside the preview; the simulator says Lightroom 15.5.1
   });
 
   it("writes a radial on an angled crop turned with it, reads it back as the box given, and keeps the rest of the box on an edit", async () => {
@@ -56,8 +58,8 @@ describe("mask tools on a cropped photo (issue #179)", () => {
     Object.assign(lr.settings, { CropLeft: 0, CropTop: 0, CropRight: 1, CropBottom: 0.5, CropAngle: 0, orientation: "AB" });
     await begin();
     const out = await manager.createMask({ ...pass, kind: "linear", name: "AVG edge", geometry: { zero: { x: 0.5, y: 0.99 }, full: { x: 0.5, y: 1 } } });
-    expect(out.json["warnings"]).toEqual([expect.stringMatching(/^99 % of mask "AVG edge" lies outside the preview/)]);
-    expect(readLog().passes.at(-1)).toMatchObject({ kind: "mask", warnings: [expect.stringMatching(/AVG edge/)] });
+    expect(out.json["warnings"]).toEqual([VERSION_WARNING, expect.stringMatching(/^99 % of mask "AVG edge" lies outside the preview/)]);
+    expect(readLog().passes.at(-1)).toMatchObject({ kind: "mask", warnings: [VERSION_WARNING, expect.stringMatching(/AVG edge/)] });
   });
 
   it("refuses geometry on a mirrored photo before anything is written, and lists its masks without geometry", async () => {

@@ -1,0 +1,310 @@
+2026-10-28 04:41:19.913 INFO  bridge: receive: engine connected
+2026-10-28 04:41:20.434 INFO  bridge: send: engine connected
+2026-10-28 04:41:20.435 INFO  bridge: hello 488db714-2a76-41b8-8668-2be79e1f8eb5
+2026-10-28 04:42:05.523 INFO  bridge: get_selection 581ef1b5-b8b6-49c4-9ce0-bfd25a8248a3
+2026-10-28 04:42:05.523 INFO  bridge: select_photo 1db833cf-8674-41da-b0b8-592da66e910c
+2026-10-28 04:42:05.556 INFO  bridge: get_settings 33729f92-6cc6-4efa-8e85-21cc381b2b43
+2026-10-28 04:42:05.572 INFO  bridge: create_snapshot dc4d2a54-2e72-4124-971a-dec85d69ac02
+2026-10-28 04:42:05.587 INFO  bridge: export_preview c83672a8-6e56-4189-bd34-06341c438935
+2026-10-28 04:42:06.364 INFO  bridge: apply_settings efbed275-f10a-4bca-9c4f-ab1c35ab902b
+2026-10-28 04:42:34.283 WARN  stall-diag: stall 2529 ms after idle
+2026-10-28 04:44:02.587 WARN  stall-diag: stall 1227 ms after idle
+2026-10-28 04:44:33.786 WARN  stall-diag: stall 1091 ms after idle
+2026-10-28 04:45:18.349 INFO  bridge: get_settings 7a144b10-8e4a-4200-8b21-fb02e96413dc
+2026-10-28 04:45:18.366 INFO  bridge: apply_settings d30e669b-8c1e-495f-a5a2-44de197f8aab
+2026-10-28 04:45:25.996 INFO  bridge: select_photo 7f27848b-f124-41f1-9267-25afdbaaa938
+2026-10-28 04:45:26.003 INFO  bridge: apply_snapshot a8239b28-14cc-4297-91ff-5937984e3470
+2026-10-28 04:45:26.646 INFO  bridge: select_photo 18859246-ca82-41ac-958e-12a032af44e4
+2026-10-28 04:45:27.473 INFO  bridge: get_settings 9ef01ebe-9e51-4eb8-9f37-132b895818a6
+2026-10-28 04:45:27.736 INFO  bridge: create_snapshot 0043a218-2383-43ff-8e62-2c8580f2d9ad
+2026-10-28 04:45:27.832 INFO  bridge: export_preview 676fe944-49d3-4993-bca5-848a11a557f0
+2026-10-28 04:45:28.365 WARN  stall-diag: stall 2335 ms after idle
+2026-10-28 04:45:28.502 INFO  bridge: apply_settings 763ee777-ae93-4ffe-abc2-e644d2a6cecb
+2026-10-28 04:45:29.598 WARN  stall-diag: stall 1033 ms after idle
+2026-10-28 04:46:18.754 INFO  bridge: select_photo d5d1c988-c837-40b1-b42b-38ffd0072e5c
+2026-10-28 04:46:18.754 INFO  bridge: apply_snapshot 5465e8e6-b0cb-4cd8-b0c0-120a71a349ca
+2026-10-28 04:46:42.527 INFO  bridge: get_selection ef18191d-9111-4ef1-9c1d-3f8baeaf829a
+2026-10-28 04:46:42.530 INFO  bridge: select_photo a8062a43-6da8-4343-9d38-0ed1c6ac6158
+2026-10-28 04:46:42.536 INFO  bridge: get_settings afae5bd9-9480-4bbb-99c6-61f8ef9a0e69
+2026-10-28 04:46:42.548 INFO  bridge: create_snapshot e6ecbe98-0749-4d76-9d6f-e865b75744a0
+2026-10-28 04:46:42.588 INFO  bridge: apply_settings 350453f0-0386-4285-a3d3-21a52a27b881
+2026-10-28 04:46:42.787 INFO  bridge: update_ai_settings cfab0e80-4a39-47fa-b0ea-22ac4bae9ab4
+2026-10-28 04:46:42.897 INFO  bridge: get_settings f09a2658-8850-49f3-a1b6-76f89de52643
+2026-10-28 04:46:43.495 INFO  bridge: get_settings 367bfd40-b03e-4997-8d88-88a54dce1b8e
+2026-10-28 04:46:44.027 INFO  bridge: get_settings d32a71b6-f4f0-43b1-9109-69ac9b5283c4
+2026-10-28 04:46:44.545 INFO  bridge: get_settings 0a550fcf-b3d3-4ef4-8bc5-208cf02d14fb
+2026-10-28 04:46:45.063 INFO  bridge: get_settings 01455273-1c45-4f37-9238-9c0c77d2c66a
+2026-10-28 04:46:45.582 INFO  bridge: get_settings 6a966c47-f2ca-45e3-b33a-1e73f4782db7
+2026-10-28 04:46:46.110 INFO  bridge: get_settings 83d25a91-8092-4943-a066-ff3589bf31d3
+2026-10-28 04:46:46.633 INFO  bridge: get_settings 1526b530-bee5-4f24-9b99-b86cceefbd42
+2026-10-28 04:46:46.633 INFO  bridge: get_settings e9f810af-b5c0-4956-a9df-075c914dbff8
+2026-10-28 04:46:46.649 INFO  bridge: select_photo 21d68f2b-17bf-4628-8a70-a63bacec51e3
+2026-10-28 04:46:46.665 INFO  bridge: apply_snapshot 7d81f75c-be22-4a07-a006-2e994930a3e1
+2026-10-28 04:46:46.800 INFO  develop: switched from library to develop in 0 ms
+2026-10-28 04:46:48.535 WARN  stall-diag: stall 1764 ms after idle
+2026-10-28 04:47:34.783 INFO  bridge: get_selection ba6291b5-0bec-448b-8e7f-9e53765ead02
+2026-10-28 04:47:34.783 INFO  bridge: get_settings 0b9834ec-e7d8-4367-85ab-40f9c6998429
+2026-10-28 04:48:05.130 INFO  bridge: receive: closed
+2026-10-28 04:48:05.130 INFO  stall-diag: rebind receive (closed, generation 1)
+2026-10-28 04:48:29.045 WARN  stall-diag: stall 47049 ms after idle
+2026-10-28 04:48:30.088 INFO  bridge: receive: engine connected
+2026-10-28 04:48:30.600 INFO  bridge: send: engine connected
+2026-10-28 04:48:30.600 INFO  bridge: hello 1b6543e0-d53d-4690-90f2-af3ba77dcd21
+2026-10-28 04:48:37.978 INFO  bridge: get_settings 64380f00-da10-4a10-9ca3-b901a4cb52d3
+2026-10-28 04:48:38.000 INFO  bridge: select_photo 26208099-96b8-4ae6-b84d-210301072f44
+2026-10-28 04:48:38.007 INFO  bridge: get_settings cedeb16e-0c9f-478d-b2e3-514fd737087f
+2026-10-28 04:48:38.008 INFO  bridge: create_snapshot 2d70f8a9-281c-4359-8a75-9b91dbea0544
+2026-10-28 04:48:38.025 INFO  bridge: export_preview 2c827bdd-fdc1-4ab2-9539-71a01750990d
+2026-10-28 04:48:50.242 INFO  bridge: apply_settings 84b44dc3-f7a1-497e-8f27-fe59c4090e2b
+2026-10-28 04:48:50.282 INFO  bridge: export_preview 12feac76-44c9-4ec3-bbe1-17bcbf135902
+2026-10-28 04:48:57.244 INFO  bridge: apply_settings b2667d5e-2c53-4088-b5f9-76a0412a9ba1
+2026-10-28 04:48:57.282 INFO  bridge: export_preview 22cc1f81-5060-487d-8115-38d4cbe97400
+2026-10-28 04:49:02.350 WARN  bridge: export_preview failed: export_failed the export wrote no JPEG into %USERPROFILE%\AppData\Local\Temp\LrC-AVG\previews\E1DA69A5-02DE-447A-B2BD-47252927B130
+2026-10-28 04:49:02.378 INFO  bridge: select_photo 6f3755a2-5ac3-449a-bd2d-e6c0bfcaff9a
+2026-10-28 04:49:02.426 INFO  bridge: apply_snapshot fa3874b6-2ab9-445e-b247-cd704dcac6e5
+2026-10-28 04:49:02.526 INFO  develop: switched from library to develop in 0 ms
+2026-10-28 04:49:03.535 INFO  bridge: select_photo 2e8de959-7805-4e8f-9477-542a282fff71
+2026-10-28 04:49:03.593 INFO  bridge: get_settings 96c6de57-b9f5-432e-8217-130de38a8366
+2026-10-28 04:49:03.679 WARN  stall-diag: stall 1053 ms after idle
+2026-10-28 04:49:03.791 INFO  bridge: create_snapshot 901742a9-96b7-4724-93be-60a0cb3fcba2
+2026-10-28 04:49:03.886 INFO  bridge: get_context 993e1b98-9f64-4166-94ce-e6d3b3851170
+2026-10-28 04:49:03.934 INFO  bridge: apply_settings 1d6e9cea-e25f-47c4-a38e-86bf04226c1f
+2026-10-28 04:49:04.329 INFO  bridge: get_context a0887c38-2cde-438b-bde8-bf83141c6068
+2026-10-28 04:49:04.474 INFO  bridge: export_preview b1791cf3-749a-4124-98c9-022e45163a11
+2026-10-28 04:49:06.369 WARN  bridge: export_preview failed: export_failed the export wrote no JPEG into %USERPROFILE%\AppData\Local\Temp\LrC-AVG\previews\32B47677-4223-4588-A475-36F0220A4C3B
+2026-10-28 04:49:06.369 INFO  bridge: select_photo b18efa80-28f5-41f7-b44b-d6a0ac786c0b
+2026-10-28 04:49:06.410 INFO  bridge: apply_snapshot 09792167-addb-40fc-8880-be80de6d46b8
+2026-10-28 04:49:06.686 INFO  bridge: get_settings 2abc347a-445e-4584-92b4-299b4926b4ee
+2026-10-28 04:49:30.727 INFO  bridge: receive: closed
+2026-10-28 04:49:30.727 INFO  stall-diag: rebind receive (closed, generation 1)
+2026-10-28 04:49:30.734 WARN  stall-diag: stall 6897 ms after idle
+2026-10-28 04:49:32.866 INFO  bridge: receive: engine connected
+2026-10-28 04:49:33.375 INFO  bridge: send: engine connected
+2026-10-28 04:49:33.375 INFO  bridge: hello 74994540-8926-436d-a080-9b4ab460b0bb
+2026-10-28 04:49:48.164 WARN  stall-diag: stall 3292 ms after idle
+2026-10-28 04:49:52.005 INFO  bridge: get_settings 4bc6e51c-c50b-4fdd-96c5-de3b24c6536e
+2026-10-28 04:49:52.021 INFO  bridge: select_photo c0e9dda6-1aa4-44ec-8264-cd83d305e6f8
+2026-10-28 04:49:52.028 INFO  bridge: get_settings d5f084c1-9ea5-450b-9318-ee4cb3543643
+2026-10-28 04:49:52.030 INFO  bridge: create_snapshot dbfdbbbe-9703-4f27-b5e3-8f3c1f4d1278
+2026-10-28 04:49:52.053 INFO  bridge: export_preview 4d5c4681-395c-4c90-94a7-da17c19fef22
+2026-10-28 04:49:55.420 WARN  bridge: export_preview failed: export_failed the export wrote no JPEG into %USERPROFILE%\AppData\Local\Temp\LrC-AVG\previews\A20C91F3-DA2B-4E96-AAB8-E49C22E2400C
+2026-10-28 04:49:55.440 INFO  bridge: select_photo 10e3e163-df46-40dd-83dc-1499701138ca
+2026-10-28 04:49:55.499 INFO  bridge: apply_snapshot 17201704-08dd-48d3-934c-e6de20635525
+2026-10-28 04:49:55.596 INFO  develop: switched from library to develop in 0 ms
+2026-10-28 04:49:57.003 WARN  stall-diag: stall 1526 ms after idle
+2026-10-28 04:49:57.043 INFO  bridge: select_photo 09888c1f-8e21-45d2-a080-b02f4922a942
+2026-10-28 04:49:57.207 INFO  bridge: get_settings 904d488d-7866-4e8c-8692-78fee0d0faa6
+2026-10-28 04:49:57.235 INFO  bridge: create_snapshot 483da4e0-9dbc-45ce-bc64-6f357da16464
+2026-10-28 04:49:57.471 INFO  bridge: get_context 68825422-a61d-4671-9ca6-0ddd78de73a7
+2026-10-28 04:49:57.493 INFO  bridge: apply_settings c333a55d-fcf5-4f7d-9def-8de8a0b21c44
+2026-10-28 04:49:57.936 INFO  bridge: get_context 24cb6fdc-076a-4065-b454-76102681fe9e
+2026-10-28 04:49:58.047 INFO  bridge: export_preview 406bb8cb-07f5-404d-9dbc-2f6cf59a3372
+2026-10-28 04:50:00.123 WARN  bridge: export_preview failed: export_failed the export wrote no JPEG into %USERPROFILE%\AppData\Local\Temp\LrC-AVG\previews\850C7E3E-ED1A-4FCC-A257-1C6525DF9D6D
+2026-10-28 04:50:00.123 INFO  bridge: select_photo 4d959611-5efe-452c-ad3f-9178fca098f5
+2026-10-28 04:50:00.147 INFO  bridge: apply_snapshot db800b97-bdb6-4892-9788-0df50af38e1d
+2026-10-28 04:50:00.497 INFO  bridge: get_settings cdda8c98-b81a-41fa-a51b-7856a1d1e422
+2026-10-28 04:50:14.213 INFO  bridge: get_settings f974d6cc-f06d-4ea1-bd35-1f847127a005
+2026-10-28 04:50:32.190 INFO  bridge: receive: closed
+2026-10-28 04:50:32.190 INFO  stall-diag: rebind receive (closed, generation 1)
+2026-10-28 04:50:32.205 WARN  stall-diag: stall 7722 ms after idle
+2026-10-28 04:50:33.603 INFO  bridge: receive: engine connected
+2026-10-28 04:50:34.118 INFO  bridge: send: engine connected
+2026-10-28 04:50:34.118 INFO  bridge: hello d4ae9fe5-51e8-4cf9-948b-6b2f7da1e6b3
+2026-10-28 04:50:37.609 WARN  stall-diag: stall 3292 ms after idle
+2026-10-28 04:50:44.702 WARN  stall-diag: stall 2300 ms after idle
+2026-10-28 04:50:49.677 INFO  bridge: get_settings 07432c7a-526f-4be2-92a7-74b1cf39b330
+2026-10-28 04:50:49.734 INFO  bridge: receive: closed
+2026-10-28 04:51:22.464 WARN  stall-diag: stall 9219 ms after idle
+2026-10-28 04:53:02.494 INFO  bridge: receive: engine connected
+2026-10-28 04:53:02.999 INFO  bridge: send: engine connected
+2026-10-28 04:53:02.999 INFO  bridge: hello 41e57adc-d0df-4540-9e75-cdb9c3d29841
+2026-10-28 04:53:24.109 INFO  bridge: get_selection f7af85c3-f82b-452b-8eb6-bcde219f0e40
+2026-10-28 04:53:24.123 INFO  bridge: select_photo bd72c601-17a3-4db4-9310-663d83f48f9b
+2026-10-28 04:53:24.170 INFO  bridge: get_settings 16b10f2e-828b-4879-a784-991a64aa67a9
+2026-10-28 04:53:24.352 INFO  bridge: create_snapshot f276b874-7cf0-4ea5-bf6b-8820bdb1719c
+2026-10-28 04:53:24.384 INFO  bridge: export_preview 6029de1b-a9b6-4f05-bbc0-be59a3503330
+2026-10-28 04:53:25.003 INFO  bridge: select_photo f0721d45-1b13-4f47-9cc7-0030aea03ded
+2026-10-28 04:53:25.013 INFO  bridge: apply_snapshot 99e59ad8-0a04-46db-9496-646dbddd23f3
+2026-10-28 04:53:25.104 INFO  develop: switched from library to develop in 0 ms
+2026-10-28 04:53:25.884 INFO  bridge: select_photo 0e458cd5-965a-4188-a54f-4d8f81925802
+2026-10-28 04:53:26.252 INFO  bridge: get_settings c3d95f99-fe95-421c-b36c-6406cb97c84a
+2026-10-28 04:53:26.602 INFO  bridge: create_snapshot 94a2171e-7acd-4e5d-aa50-0a785f77af3e
+2026-10-28 04:53:26.778 INFO  bridge: export_preview c9d4636a-fa26-4cfb-8937-e24ea19f02aa
+2026-10-28 04:53:27.023 WARN  stall-diag: stall 1999 ms after idle
+2026-10-28 04:53:27.653 INFO  bridge: apply_settings 3741622b-51a8-413d-b1b3-b05e6a000f3f
+2026-10-28 04:53:37.562 INFO  bridge: select_photo 5e7c565c-d914-4d46-83a8-f3bafd7ee9f2
+2026-10-28 04:53:37.578 INFO  bridge: apply_snapshot 4927497a-7f72-479d-af56-981f313383b6
+2026-10-28 04:54:07.256 INFO  bridge: get_selection 0b4fb877-9439-4d32-a006-900bd7f05131
+2026-10-28 04:54:07.256 INFO  bridge: select_photo 31da16d7-56c4-470f-8a48-b0e0be279721
+2026-10-28 04:54:07.256 INFO  bridge: get_settings 6e156070-d861-422f-bd0b-56be7adb4a42
+2026-10-28 04:54:07.274 INFO  bridge: create_snapshot fd95ed60-2003-418e-a397-dc2685641a18
+2026-10-28 04:54:07.278 INFO  bridge: select_photo cabb3ca7-7280-48dc-9838-fc6c03ea29c1
+2026-10-28 04:54:07.278 INFO  bridge: apply_snapshot 986738a6-8b6d-4891-802a-595ff94a5fd7
+2026-10-28 04:54:07.387 INFO  develop: switched from library to develop in 0 ms
+2026-10-28 04:55:23.696 INFO  bridge: get_selection 5573a808-865a-4baf-80cc-0370907e0c64
+2026-10-28 04:55:23.696 INFO  bridge: get_settings 81793522-4c93-4499-a6fc-6807bea32394
+2026-10-28 04:55:32.761 WARN  stall-diag: stall 4349 ms after idle
+2026-10-28 04:55:37.134 INFO  bridge: get_settings 623ece9d-c21e-460f-907a-0205d26ec3a3
+2026-10-28 04:55:37.144 INFO  bridge: select_photo 29496331-2d45-4b11-846f-79893ce20cc4
+2026-10-28 04:55:37.150 INFO  bridge: get_settings 91875ede-ea4d-43cc-9000-37592d22351e
+2026-10-28 04:55:37.154 INFO  bridge: create_snapshot e02e2761-f1f5-4392-93ae-a5d434562fa2
+2026-10-28 04:55:37.168 INFO  bridge: export_preview 80373156-2aeb-4d4e-8a07-9fe7a5fbe80d
+2026-10-28 04:55:37.763 INFO  bridge: apply_settings 6e18f48b-7296-4e20-b017-a84ca92fedfd
+2026-10-28 04:55:37.783 INFO  bridge: export_preview 750ce51d-5c39-45ed-9f9e-f2c237b08cdb
+2026-10-28 04:55:38.543 INFO  bridge: apply_settings 1ce56714-70e9-464d-907b-d594a90383ad
+2026-10-28 04:55:38.574 INFO  bridge: export_preview 965396c7-91fb-4030-8fda-c62dedacdb64
+2026-10-28 04:55:39.303 INFO  bridge: apply_settings 933d571d-3130-4151-98ad-7e3f8a89995b
+2026-10-28 04:55:39.323 INFO  bridge: export_preview 060d3ecb-11a1-4631-8b14-8164d77c3f7a
+2026-10-28 04:55:40.043 INFO  bridge: apply_settings 8bac1a99-f689-4604-b811-30d0ad84f1ad
+2026-10-28 04:55:40.061 INFO  bridge: export_preview ba8ab8e4-9664-485e-90f2-bd7006a8226d
+2026-10-28 04:55:41.387 INFO  bridge: select_photo 19a57514-9fb0-4bd8-b57b-b68003da1d6b
+2026-10-28 04:55:41.393 INFO  bridge: apply_snapshot 63e12785-18ff-4c72-9282-7cf53bd70128
+2026-10-28 04:55:41.503 INFO  develop: switched from library to develop in 0 ms
+2026-10-28 04:55:42.607 INFO  bridge: select_photo dfcc4789-2d6c-46fa-bc87-b00ddef22d16
+2026-10-28 04:55:42.632 INFO  bridge: get_settings daf30034-4d2a-41b0-b004-7a74e3f729b8
+2026-10-28 04:55:42.783 WARN  stall-diag: stall 1358 ms after idle
+2026-10-28 04:55:42.853 INFO  bridge: create_snapshot 91b8b9b5-314c-48eb-a5d5-68a5134df73a
+2026-10-28 04:55:42.932 INFO  bridge: get_context 22b2e145-d6d6-43ff-a9ba-8ac66f8a7241
+2026-10-28 04:55:42.943 INFO  bridge: apply_settings 7c72748f-2a6c-4368-9215-6d75951ac4eb
+2026-10-28 04:55:43.153 INFO  bridge: get_context 899df82f-0774-44b2-aa1e-1fbe40a0230c
+2026-10-28 04:55:43.280 INFO  bridge: export_preview 3eeb4fcf-42af-4deb-8595-4c6b04263150
+2026-10-28 04:55:44.394 INFO  bridge: apply_settings 85e9b21b-f23d-44b6-ae9e-d8e1811b178f
+2026-10-28 04:55:44.628 INFO  bridge: export_preview 7ea0c052-e13a-42d1-a662-e6fb29c732d0
+2026-10-28 04:55:45.738 INFO  bridge: apply_settings 50302e14-6ff9-4a22-a326-761c47e12eab
+2026-10-28 04:55:45.923 INFO  bridge: export_preview 72c2c1bf-ed08-4242-831c-7b615b8dabe8
+2026-10-28 04:55:47.023 INFO  bridge: apply_settings c06595dc-8e31-459a-a465-cc04dcb099b4
+2026-10-28 04:55:47.223 INFO  bridge: export_preview 9a63297d-efef-426e-a907-26acd1ffb4db
+2026-10-28 04:55:48.373 INFO  bridge: apply_settings 3fe59e26-8333-49bc-9553-4bf132455339
+2026-10-28 04:55:48.629 INFO  bridge: export_preview 8aefe2f3-c676-4f63-ac7e-573bb6e93c75
+2026-10-28 04:55:49.723 INFO  bridge: select_photo a3bc61b2-860d-4927-86fe-683dc4aad0f5
+2026-10-28 04:55:49.736 INFO  bridge: apply_snapshot 2f26b373-2f54-4a8d-8804-a6ff82c76d95
+2026-10-28 04:55:49.953 INFO  bridge: get_settings c69d8b91-3d39-4fca-bd36-391b3a6388cf
+2026-10-28 04:56:11.569 INFO  bridge: receive: closed
+2026-10-28 04:56:11.569 INFO  stall-diag: rebind receive (closed, generation 1)
+2026-10-28 04:56:14.232 WARN  stall-diag: stall 15851 ms after idle
+2026-10-28 04:56:15.746 INFO  bridge: receive: engine connected
+2026-10-28 04:56:16.252 INFO  bridge: send: engine connected
+2026-10-28 04:56:16.252 INFO  bridge: hello 0cfc815a-a34d-434e-8690-1699c5745aa4
+2026-10-28 04:56:24.976 INFO  bridge: get_settings d7f3e825-d442-4055-a209-d068669bb323
+2026-10-28 04:56:25.042 INFO  bridge: select_photo d357c41c-3a0d-435b-aaf3-eded0eff235c
+2026-10-28 04:56:25.055 INFO  bridge: get_settings 9c18bae3-e67a-49c9-8684-3f535f80f32f
+2026-10-28 04:56:25.055 INFO  bridge: create_snapshot 54f503fc-9010-49a0-b180-f93127dac37c
+2026-10-28 04:56:25.134 INFO  bridge: export_preview 4a28c4bc-4afb-4f94-9ec0-51c512e293a2
+2026-10-28 04:56:25.738 INFO  bridge: apply_settings 96b21896-af93-444b-aa56-4e5a81e043be
+2026-10-28 04:56:25.958 INFO  bridge: export_preview 2bc79b14-0372-430e-96a7-b328debef797
+2026-10-28 04:56:26.585 INFO  bridge: apply_settings e710fa44-e622-44d2-9910-a3ff9bae8cf2
+2026-10-28 04:56:26.766 INFO  bridge: export_preview de664b7d-cfc5-4c0c-996b-6ab5a9063b9d
+2026-10-28 04:56:27.403 INFO  bridge: apply_settings bb2658d2-d88f-4a10-9937-fba66c893bcf
+2026-10-28 04:56:27.593 INFO  bridge: export_preview 9a33b1d6-d72e-4777-9676-496dcecb8fc3
+2026-10-28 04:56:28.183 INFO  bridge: apply_settings cdab78a3-15ef-489e-962d-1512d4da0504
+2026-10-28 04:56:28.383 INFO  bridge: export_preview 4e904e0e-a751-4c10-8085-6d6ff3f229e2
+2026-10-28 04:56:28.993 INFO  bridge: select_photo 36a3042a-60ca-4dfe-aa5d-1b0791900533
+2026-10-28 04:56:29.004 INFO  bridge: apply_snapshot e08dca55-a5f5-4d22-ae97-75481962a29d
+2026-10-28 04:56:29.199 INFO  bridge: select_photo 6c95c81b-9b3c-4b39-b141-6176c4f26e94
+2026-10-28 04:56:29.215 INFO  bridge: get_settings 4e67de42-4b10-4971-95dc-5670994049db
+2026-10-28 04:56:29.223 INFO  bridge: create_snapshot 98f5e1f3-bc1b-4c81-a6b6-691d9a7826e3
+2026-10-28 04:56:29.343 INFO  bridge: get_context 89c708e1-3998-42d3-8296-bde512d8d0cf
+2026-10-28 04:56:29.353 INFO  bridge: apply_settings 52a5c239-e5f6-43b0-b923-edd5bd42db9a
+2026-10-28 04:56:29.545 INFO  bridge: get_context 08656f32-ba07-40fa-8a46-2481e35997a5
+2026-10-28 04:56:29.573 INFO  bridge: export_preview 78c4bd4f-d480-47f4-8777-9e3228038c38
+2026-10-28 04:56:30.683 INFO  bridge: apply_settings 90f58cad-b61e-4c0c-b02a-75483d46dbff
+2026-10-28 04:56:30.898 INFO  bridge: export_preview 784aee2c-fbef-4a26-93ea-93363372238b
+2026-10-28 04:56:32.014 INFO  bridge: apply_settings 4b7d0e3d-be5c-4d4f-92d9-3846e1ee68ea
+2026-10-28 04:56:35.383 INFO  bridge: export_preview cedd6f42-a2b6-4b6b-a0db-a2babd7ae5f5
+2026-10-28 04:56:36.483 INFO  bridge: apply_settings bcd514f6-0f7c-40bf-8de1-a579ad32a4c6
+2026-10-28 04:56:36.674 INFO  bridge: export_preview 387f1cb4-ae25-47b2-943b-9e1edaa2c0dc
+2026-10-28 04:56:37.798 INFO  bridge: apply_settings eacbc8ea-f437-4e96-8e48-508947b72f9a
+2026-10-28 04:56:37.993 INFO  bridge: export_preview 1e854c33-a560-4095-bcea-ed1f285c2d35
+2026-10-28 04:56:39.073 INFO  bridge: select_photo 1bf69060-d5c1-432b-9e62-336dea555094
+2026-10-28 04:56:39.090 INFO  bridge: apply_snapshot 61652dc6-b242-47c7-b155-aa5e05c39b78
+2026-10-28 04:56:39.303 INFO  bridge: get_settings 1a755c3a-7072-4a20-9dd2-5d04b4cb732c
+2026-10-28 04:56:49.668 WARN  stall-diag: stall 2838 ms after idle
+2026-10-28 04:56:53.055 INFO  bridge: get_settings 7d52eff7-b374-4933-878f-c136a881150c
+2026-10-28 04:56:53.123 INFO  bridge: select_photo 5f199db3-883a-471f-b380-8bc19046d1bb
+2026-10-28 04:56:53.128 INFO  bridge: get_settings d0204f89-dd18-4187-b4b9-86de16b974a5
+2026-10-28 04:56:53.134 INFO  bridge: create_snapshot 5ad5ebef-3337-411c-85a5-491f135e1542
+2026-10-28 04:56:53.202 INFO  bridge: export_preview 06ae7c54-a348-413c-92e7-e3354c58266f
+2026-10-28 04:56:53.796 INFO  bridge: apply_settings 4a06ac9e-3f2a-4efe-a453-8fd49518ab2f
+2026-10-28 04:56:54.046 INFO  bridge: export_preview 7d9db093-9324-4b0f-a308-96b20eb11e26
+2026-10-28 04:56:54.695 INFO  bridge: apply_settings 4a4d1c79-cd82-4af5-90d6-a559ca6a399b
+2026-10-28 04:56:54.893 INFO  bridge: export_preview 572356da-1771-4bb7-9b0c-a4f819497464
+2026-10-28 04:56:55.493 INFO  bridge: apply_settings a97c6761-7529-4242-a340-3ae6ac3c2639
+2026-10-28 04:56:55.703 INFO  bridge: export_preview df5910cd-5bab-4281-83ef-15f2314d79df
+2026-10-28 04:56:56.303 INFO  bridge: apply_settings 74c030e9-855f-4712-b0e4-4ed4ac1e2c99
+2026-10-28 04:56:56.533 INFO  bridge: export_preview 7dce2393-615d-4390-8ad2-30f40a31e3ce
+2026-10-28 04:56:57.143 INFO  bridge: select_photo 44c90dfe-4f08-488c-aaa0-cfd7691095f1
+2026-10-28 04:56:57.156 INFO  bridge: apply_snapshot acd1f19d-d872-4f95-8549-d94cf6cd407d
+2026-10-28 04:56:57.423 INFO  bridge: select_photo 36216abc-bb5b-4410-b108-f6a153dc0b4f
+2026-10-28 04:56:57.453 INFO  bridge: get_settings dcad6266-7af3-4ad6-a90b-c17b2821f23a
+2026-10-28 04:56:57.503 INFO  bridge: create_snapshot e7604b36-15db-4fa8-b7aa-8b8d8670257a
+2026-10-28 04:56:57.591 INFO  bridge: get_context 953c59cf-d7e1-4ff6-b2d8-ed31084f6286
+2026-10-28 04:56:57.593 INFO  bridge: apply_settings 2e1d14f0-00ef-4174-9b86-fbcc91dccef1
+2026-10-28 04:56:57.793 INFO  bridge: get_context f5e74b44-990d-4260-85bc-87101ae59654
+2026-10-28 04:56:57.813 INFO  bridge: export_preview b128a946-7f56-414e-a5b2-71c6e1e628e0
+2026-10-28 04:56:58.993 INFO  bridge: apply_settings d0bfef69-ecfd-4772-a32b-202601cf8cbf
+2026-10-28 04:56:59.206 INFO  bridge: export_preview 7e4116b5-c2e3-4070-b7b7-a1b1d57e3c06
+2026-10-28 04:57:00.303 INFO  bridge: apply_settings 24dafe10-804b-475b-9138-be4df76cee04
+2026-10-28 04:57:00.536 INFO  bridge: export_preview 337c3b40-d7f6-45d7-8140-a87ce5a4552a
+2026-10-28 04:57:01.633 INFO  bridge: apply_settings e69eba72-2aba-43f2-a311-21b4dc4e2cd1
+2026-10-28 04:57:01.823 INFO  bridge: export_preview 4c07d2ed-f65c-41a2-8c94-a2dfd3c2cb45
+2026-10-28 04:57:02.924 INFO  bridge: apply_settings 14afd618-a300-4905-86f8-c9e9f5906fdd
+2026-10-28 04:57:03.463 INFO  bridge: export_preview f11a423f-7ee9-41d1-b651-712a03f48e55
+2026-10-28 04:57:04.563 INFO  bridge: select_photo aa9d747c-f6c6-462e-8892-c22e0f22024e
+2026-10-28 04:57:04.574 INFO  bridge: apply_snapshot 34a43b0d-1c64-4d27-affb-1a56b2f814a8
+2026-10-28 04:57:04.773 INFO  bridge: get_settings 1a744bf1-726c-46c1-a8ac-4c7a259b4098
+2026-10-28 04:57:11.973 WARN  stall-diag: stall 1768 ms after idle
+2026-10-28 04:57:15.267 INFO  bridge: get_settings 90c1e59e-7f0c-4bd1-968f-65b239ce8ac2
+2026-10-28 04:57:15.327 INFO  bridge: select_photo da482395-d983-481c-aa34-9390cd56b988
+2026-10-28 04:57:15.332 INFO  bridge: get_settings e8053499-7865-42c9-a00e-3f93d921083d
+2026-10-28 04:57:15.338 INFO  bridge: create_snapshot bd0c435c-10c6-4628-9860-56967167336d
+2026-10-28 04:57:15.404 INFO  bridge: export_preview 128f1589-ebba-41ff-9a82-1e0aba4d8428
+2026-10-28 04:57:15.993 INFO  bridge: apply_settings f77f1ea7-26a0-4307-b38a-a2f112287d75
+2026-10-28 04:57:16.207 INFO  bridge: export_preview cc3f37d5-7f35-46a3-b654-94d6acc4c0b6
+2026-10-28 04:57:16.823 INFO  bridge: apply_settings 233f0452-5796-407c-b375-a0e5fc3ee3a6
+2026-10-28 04:57:17.035 INFO  bridge: export_preview b8cd0034-f4aa-4bf7-a179-6c2999aa8a5d
+2026-10-28 04:57:17.633 INFO  bridge: apply_settings c83a19c3-60d7-4060-bbf5-b22e81a64cd2
+2026-10-28 04:57:17.823 INFO  bridge: export_preview fe3180dd-31d2-447a-b11f-c4af40899b48
+2026-10-28 04:57:18.421 INFO  bridge: apply_settings 1c1723ec-56f9-42f8-bb12-60c237bf96c6
+2026-10-28 04:57:18.623 INFO  bridge: export_preview fae57edd-0b93-4495-97d6-cb9aace3a609
+2026-10-28 04:57:19.220 INFO  bridge: select_photo 8e0945d5-b6ba-42bd-b1a0-202522be4fba
+2026-10-28 04:57:19.227 INFO  bridge: apply_snapshot ea1ea7e7-3e9a-4588-a485-6c5d02089775
+2026-10-28 04:57:19.453 INFO  bridge: select_photo 0994b831-4a80-49c0-b58d-84a083af98a3
+2026-10-28 04:57:19.473 INFO  bridge: get_settings 626032ff-78ee-4656-bc32-91c5e7705e41
+2026-10-28 04:57:19.483 INFO  bridge: create_snapshot 3171b693-8c4d-4764-970e-b2d4d92bf08e
+2026-10-28 04:57:19.602 INFO  bridge: get_context 62263071-6eb0-4d48-9968-892b8325a2b1
+2026-10-28 04:57:19.603 INFO  bridge: apply_settings 46bff344-bd93-4cc1-b8cf-4a588f039099
+2026-10-28 04:57:19.814 INFO  bridge: get_context 72b90158-1763-414a-aac5-c7b1788be47a
+2026-10-28 04:57:19.863 INFO  bridge: export_preview f4331f23-1e38-4485-bacd-94611dbde42f
+2026-10-28 04:57:20.974 INFO  bridge: apply_settings 612471be-74b4-48b9-96a9-fbeb976bb090
+2026-10-28 04:57:21.238 INFO  bridge: export_preview f3228055-b89a-4a65-ab1a-4b37eca2024d
+2026-10-28 04:57:22.359 INFO  bridge: apply_settings 24bf66ad-2db5-495b-a35d-12bab44627d1
+2026-10-28 04:57:22.605 INFO  bridge: export_preview 4b365e95-6d14-4124-b313-53a5dc27bc4d
+2026-10-28 04:57:23.706 INFO  bridge: apply_settings 149c5db0-c7ba-4c09-8d97-920ce267c1d9
+2026-10-28 04:57:23.893 INFO  bridge: export_preview f974ff2e-77be-4f31-9b8d-673717cbf80e
+2026-10-28 04:57:24.983 INFO  bridge: apply_settings f159ba19-3260-473e-8018-0be8b61aa45a
+2026-10-28 04:57:25.673 INFO  bridge: export_preview 6e7bfd57-ce61-40a6-81d8-0b4562c3749d
+2026-10-28 04:57:26.825 INFO  bridge: select_photo 50a8b65e-8725-4a70-a6b6-bf292c5199c3
+2026-10-28 04:57:26.833 INFO  bridge: apply_snapshot 7f23ce8c-7d2d-4d6b-b3f5-288ced7d2f09
+2026-10-28 04:57:27.024 INFO  bridge: get_settings 524d34eb-00eb-49f4-a2b9-94d0c205f865
+2026-10-28 04:57:36.351 WARN  stall-diag: stall 2656 ms after idle
+2026-10-28 04:57:40.617 INFO  bridge: get_settings 5c241312-57a5-46e6-a823-3e4b27f6693a
+2026-10-28 04:57:40.655 INFO  bridge: receive: closed
+2026-10-28 04:57:40.656 INFO  stall-diag: rebind receive (closed, generation 1)
+2026-10-28 04:58:20.999 WARN  stall-diag: stall 7309 ms after idle
+2026-10-28 04:59:26.243 INFO  bridge: receive: engine connected
+2026-10-28 04:59:26.745 INFO  bridge: send: engine connected
+2026-10-28 04:59:26.745 INFO  bridge: hello e55500d5-28ea-4bfe-950b-ebf9578cc9c4
+2026-10-28 04:59:44.075 INFO  bridge: get_selection e5c07417-6d3a-4662-baaa-03e67c6d2fc5
+2026-10-28 04:59:44.091 INFO  bridge: select_photo 24d92976-0c2b-4085-8831-fdc2b11c2c5d
+2026-10-28 04:59:44.101 INFO  bridge: get_settings fc6b510d-f7b8-4a5f-acbc-52b3f1b8b971
+2026-10-28 04:59:44.257 INFO  bridge: create_snapshot 788524bf-0072-4be8-b1fd-43f1b684a081
+2026-10-28 04:59:44.267 INFO  bridge: apply_settings 264dbe43-dfc5-4e35-ba38-d408aa65cd2d
+2026-10-28 05:00:07.303 INFO  bridge: apply_settings c66c32da-2542-4349-8ece-a8f6991f05de
+2026-10-28 05:00:11.733 INFO  bridge: apply_settings 90a41f82-1c10-4970-a7e0-dbf4f9a9d26a
+2026-10-28 05:01:38.924 INFO  bridge: apply_settings fcf01208-99e5-47f3-ba4a-bf49cc32301f
+2026-10-28 05:02:04.673 INFO  bridge: delete_empty_masks 61747224-ac06-4319-abdf-83b2525f0c76
+2026-10-28 05:02:05.824 INFO  delete_empty_masks: ACC4F9FE-367B-4ABD-A3E8-0BD9514F4A41 unchanged
+2026-10-28 05:02:05.841 INFO  bridge: get_settings 99ea5dae-d9bd-46e5-acd2-d880b84d4cb8
+2026-10-28 05:02:50.532 INFO  bridge: get_settings 1bdeedc4-1838-4d1f-8ff3-fb34f067f862
+2026-10-28 05:02:50.549 INFO  bridge: select_photo e89afaa1-9273-4979-bf24-c66bbf2073a3
+2026-10-28 05:02:50.590 INFO  bridge: apply_snapshot 044af238-8eb1-4e01-817d-3c4c99246279

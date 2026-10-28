@@ -44,7 +44,7 @@ Every `lr_*` write tool runs only when no edit session is open, and returns the 
 | `delete_collection` | `lr_delete_collection` | have | `confirm: true` |
 | `set_keywords` | `lr_set_keywords` | have | Keyword paths |
 | `remove_keyword_subtree` | `lr_remove_keyword_subtree` | have | |
-| `list_keywords` | `lr_list_keywords` | have | |
+| `list_keywords` | `lr_list_keywords` | have | The plugin keeps the walked tree 2 minutes, dropped on its own keyword writes; `refresh: true` reads it again (2026-10-28, PERF.md) |
 | `rename_keyword` | `lr_rename_keyword` | have | |
 | `undo_last_step` | none | decision D2 | Global undo against the Abort guarantee |
 | `set_rating` | `lr_set_rating` | have | |
@@ -76,7 +76,7 @@ Every `lr_*` write tool runs only when no edit session is open, and returns the 
 | `update_gradient_mask` | `lr_edit_mask` | have | |
 | `create_brush_mask` | `lr_create_mask` | have | Strokes with radius (fraction of the long edge), flow, feather, density and erase (#217); Size, a screen size, is not offered |
 | `add_brush_strokes` | `lr_edit_mask` | have | `geometry.strokes` on a brush adds strokes after its own, erase strokes included (#217) |
-| `create_range_mask` | `lr_create_mask` | have | Luminance, colour and depth; the colour as `copy_sample_from` or `geometry.sample` {l, a, b} (#210); the engine's own point sample (the preview's RGB) stays until `npm run masks:verify`, flagged [unverified] in the tool text |
+| `create_range_mask` | `lr_create_mask` | have | Luminance, colour and depth; the colour as `copy_sample_from` or `geometry.sample` {l, a, b} (#210); the engine's own point sample (the preview's RGB) is refused since `npm run masks:verify` (2026-10-28: it missed the red asked for on one photo of two) |
 | `delete_masks` | `lr_delete_mask` | have | One mask per call |
 | `delete_empty_masks` | `lr_delete_empty_masks` | have | Lightroom's own `catalog:deleteAllEmptyMasks`, a snapshot first, the mask count before and after (#217) |
 | `set_mask_adjustments` | `lr_edit_mask` | have | |

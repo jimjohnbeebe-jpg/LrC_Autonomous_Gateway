@@ -289,6 +289,7 @@ function Transfer.importPhoto(payload)
     end
     local photo
     local okAdd, status, err = LrTasks.pcall(Gate.write, catalog, "AVG import photo", function() photo = catalog:addPhoto(path) end)
+    KeywordTree.forget() -- a file's own keywords may join the Keyword List on import [inference]: list_keywords walks again
     if not okAdd then return fail("import_failed", "Lightroom did not import " .. path .. ": " .. tostring(status)) end
     if not status then return nil, err end
     if not photo then return fail("import_failed", "Lightroom added no photo for " .. path, true) end

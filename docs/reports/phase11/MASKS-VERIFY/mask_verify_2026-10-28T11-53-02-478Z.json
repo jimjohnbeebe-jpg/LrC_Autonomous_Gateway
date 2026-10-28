@@ -1,0 +1,750 @@
+{
+  "check": "masks-verify",
+  "started": "2026-10-28T11-53-02-478Z",
+  "parts": [
+    "colour",
+    "person",
+    "mirror"
+  ],
+  "steps": [
+    {
+      "part": "colour",
+      "photo": "_DSC0091.NEF",
+      "id": "error",
+      "question": null,
+      "answer": "Nothing was written: mask geometry and points cannot be placed on this photo because the photo is mirrored (orientation \"BA\"), and where Lightroom puts mask geometry on a mirrored photo is not yet checked. AI masks without a point still work.",
+      "ok": false,
+      "notes": []
+    },
+    {
+      "part": "colour",
+      "photo": "_DSC0028.NEF",
+      "id": "point_red",
+      "question": "  Is the RED area in the bottom centre (about 55 % across, 67 % down) brighter, and other red things too, while other colours stay as before?",
+      "answer": "y",
+      "ok": true,
+      "notes": [],
+      "data": {
+        "point": {
+          "x": 0.5520833333333334,
+          "y": 0.671875
+        },
+        "srgb_written": {
+          "l": 0.692392,
+          "a": 0.111059,
+          "b": 0.279529
+        }
+      }
+    },
+    {
+      "part": "colour",
+      "photo": "_DSC0028.NEF",
+      "id": "point_green",
+      "question": null,
+      "answer": "no clearly green area in the render",
+      "ok": false,
+      "notes": [
+        "select photos with a clearly green area"
+      ]
+    },
+    {
+      "part": "person",
+      "photo": "_DSC0091.NEF",
+      "id": "error",
+      "question": null,
+      "answer": "Nothing was written: mask geometry and points cannot be placed on this photo because the photo is mirrored (orientation \"BA\"), and where Lightroom puts mask geometry on a mirrored photo is not yet checked. AI masks without a point still work.",
+      "ok": false,
+      "notes": []
+    },
+    {
+      "part": "mirror",
+      "photo": "_DSC0091.NEF",
+      "id": "orientation_BA",
+      "question": null,
+      "answer": "see cases",
+      "ok": false,
+      "notes": [],
+      "data": {
+        "cases": [
+          {
+            "case": "A",
+            "crop": {
+              "CropLeft": 0,
+              "CropTop": 0,
+              "CropRight": 1,
+              "CropBottom": 1,
+              "CropAngle": 0,
+              "orientation": "BA"
+            },
+            "frame": {
+              "left": 0,
+              "top": 0,
+              "right": 1,
+              "bottom": 1,
+              "angle": 0,
+              "aspect": 1,
+              "turn": "BA",
+              "refused": null
+            },
+            "points": [
+              {
+                "asked": {
+                  "x": 0.3,
+                  "y": 0.35
+                },
+                "blob": {
+                  "x": 0.29565639342322136,
+                  "y": 0.350149710251739,
+                  "axis_deg": 0.8,
+                  "pixels": 1512,
+                  "peak": 109
+                },
+                "readback_ok": true,
+                "ok": true,
+                "why": "on the point, level, read back as written"
+              },
+              {
+                "asked": {
+                  "x": 0.65,
+                  "y": 0.5
+                },
+                "blob": {
+                  "x": 0.6587198120153561,
+                  "y": 0.5001518747459538,
+                  "axis_deg": -8.8,
+                  "pixels": 958,
+                  "peak": 109
+                },
+                "readback_ok": true,
+                "ok": false,
+                "why": "blob tilted -8.8 degrees"
+              },
+              {
+                "asked": {
+                  "x": 0.45,
+                  "y": 0.7
+                },
+                "blob": {
+                  "x": 0.4511634886026892,
+                  "y": 0.7002447521765631,
+                  "axis_deg": 0.1,
+                  "pixels": 1442,
+                  "peak": 92
+                },
+                "readback_ok": true,
+                "ok": true,
+                "why": "on the point, level, read back as written"
+              }
+            ],
+            "linear": {
+              "delta_luma": -1.6610000000000014,
+              "readback_ok": true,
+              "ok": true,
+              "why": "frame delta luma -1.661"
+            },
+            "ok": false
+          },
+          {
+            "case": "B",
+            "crop": {
+              "CropLeft": 0.158142,
+              "CropTop": 0.01,
+              "CropRight": 0.841858,
+              "CropBottom": 0.99,
+              "CropAngle": 10,
+              "orientation": "BA"
+            },
+            "frame": {
+              "left": 0.158142,
+              "top": 0.01,
+              "right": 0.841858,
+              "bottom": 0.99,
+              "angle": 10,
+              "aspect": 1.5056179775280898,
+              "turn": "BA",
+              "refused": null
+            },
+            "points": [
+              {
+                "asked": {
+                  "x": 0.3,
+                  "y": 0.35
+                },
+                "blob": {
+                  "x": 0.292721146142608,
+                  "y": 0.3507170321825889,
+                  "axis_deg": -5.4,
+                  "pixels": 606,
+                  "peak": 107
+                },
+                "readback_ok": true,
+                "ok": true,
+                "why": "on the point, level, read back as written"
+              },
+              {
+                "asked": {
+                  "x": 0.65,
+                  "y": 0.5
+                },
+                "blob": {
+                  "x": 0.6463979741478141,
+                  "y": 0.49995976226014716,
+                  "axis_deg": 1.2,
+                  "pixels": 556,
+                  "peak": 87
+                },
+                "readback_ok": true,
+                "ok": true,
+                "why": "on the point, level, read back as written"
+              },
+              {
+                "asked": {
+                  "x": 0.45,
+                  "y": 0.7
+                },
+                "blob": {
+                  "x": 0.45088106845771386,
+                  "y": 0.6995316238477791,
+                  "axis_deg": -1.8,
+                  "pixels": 1158,
+                  "peak": 110
+                },
+                "readback_ok": true,
+                "ok": true,
+                "why": "on the point, level, read back as written"
+              }
+            ],
+            "linear": {
+              "delta_luma": -1.6650000000000063,
+              "readback_ok": true,
+              "ok": true,
+              "why": "frame delta luma -1.665"
+            },
+            "ok": true
+          }
+        ]
+      }
+    },
+    {
+      "part": "mirror",
+      "photo": "_DSC0091.NEF",
+      "id": "orientation_AD",
+      "question": null,
+      "answer": "see cases",
+      "ok": false,
+      "notes": [],
+      "data": {
+        "cases": [
+          {
+            "case": "A",
+            "crop": {
+              "CropLeft": 0,
+              "CropTop": 0,
+              "CropRight": 1,
+              "CropBottom": 1,
+              "CropAngle": 0,
+              "orientation": "AD"
+            },
+            "frame": {
+              "left": 0,
+              "top": 0,
+              "right": 1,
+              "bottom": 1,
+              "angle": 0,
+              "aspect": 1,
+              "turn": "AD",
+              "refused": null
+            },
+            "points": [
+              {
+                "asked": {
+                  "x": 0.3,
+                  "y": 0.35
+                },
+                "blob": {
+                  "x": 0.29974624966101854,
+                  "y": 0.3537399374609538,
+                  "axis_deg": -3.7,
+                  "pixels": 982,
+                  "peak": 105
+                },
+                "readback_ok": true,
+                "ok": true,
+                "why": "on the point, level, read back as written"
+              },
+              {
+                "asked": {
+                  "x": 0.65,
+                  "y": 0.5
+                },
+                "blob": {
+                  "x": 0.6503920020096491,
+                  "y": 0.5005472231058169,
+                  "axis_deg": -9.5,
+                  "pixels": 1516,
+                  "peak": 111
+                },
+                "readback_ok": true,
+                "ok": false,
+                "why": "blob tilted -9.5 degrees"
+              },
+              {
+                "asked": {
+                  "x": 0.45,
+                  "y": 0.7
+                },
+                "blob": {
+                  "x": 0.45309936084106145,
+                  "y": 0.6969505168665905,
+                  "axis_deg": 11.7,
+                  "pixels": 796,
+                  "peak": 79
+                },
+                "readback_ok": true,
+                "ok": false,
+                "why": "blob tilted 11.7 degrees"
+              }
+            ],
+            "linear": {
+              "delta_luma": -1.5260000000000105,
+              "readback_ok": true,
+              "ok": true,
+              "why": "frame delta luma -1.526"
+            },
+            "ok": false
+          },
+          {
+            "case": "B",
+            "crop": {
+              "CropLeft": 0.158142,
+              "CropTop": 0.01,
+              "CropRight": 0.841858,
+              "CropBottom": 0.99,
+              "CropAngle": 10,
+              "orientation": "AD"
+            },
+            "frame": {
+              "left": 0.158142,
+              "top": 0.01,
+              "right": 0.841858,
+              "bottom": 0.99,
+              "angle": 10,
+              "aspect": 1.5056179775280898,
+              "turn": "AD",
+              "refused": null
+            },
+            "points": [
+              {
+                "asked": {
+                  "x": 0.3,
+                  "y": 0.35
+                },
+                "blob": {
+                  "x": 0.29978357230168295,
+                  "y": 0.35013091215631814,
+                  "axis_deg": 0.3,
+                  "pixels": 1355,
+                  "peak": 92
+                },
+                "readback_ok": true,
+                "ok": true,
+                "why": "on the point, level, read back as written"
+              },
+              {
+                "asked": {
+                  "x": 0.65,
+                  "y": 0.5
+                },
+                "blob": {
+                  "x": 0.6511836793418608,
+                  "y": 0.5000639421348249,
+                  "axis_deg": -1.1,
+                  "pixels": 1540,
+                  "peak": 108
+                },
+                "readback_ok": true,
+                "ok": true,
+                "why": "on the point, level, read back as written"
+              },
+              {
+                "asked": {
+                  "x": 0.45,
+                  "y": 0.7
+                },
+                "blob": {
+                  "x": 0.4528280118247357,
+                  "y": 0.7006604277732984,
+                  "axis_deg": 15.2,
+                  "pixels": 1346,
+                  "peak": 107
+                },
+                "readback_ok": true,
+                "ok": false,
+                "why": "blob tilted 15.2 degrees"
+              }
+            ],
+            "linear": {
+              "delta_luma": -1.7750000000000057,
+              "readback_ok": true,
+              "ok": true,
+              "why": "frame delta luma -1.775"
+            },
+            "ok": false
+          }
+        ]
+      }
+    },
+    {
+      "part": "mirror",
+      "photo": "_DSC0091.NEF",
+      "id": "orientation_DC",
+      "question": null,
+      "answer": "see cases",
+      "ok": false,
+      "notes": [],
+      "data": {
+        "cases": [
+          {
+            "case": "A",
+            "crop": {
+              "CropLeft": 0,
+              "CropTop": 0,
+              "CropRight": 1,
+              "CropBottom": 1,
+              "CropAngle": 0,
+              "orientation": "DC"
+            },
+            "frame": {
+              "left": 0,
+              "top": 0,
+              "right": 1,
+              "bottom": 1,
+              "angle": 0,
+              "aspect": 1,
+              "turn": "DC",
+              "refused": null
+            },
+            "points": [
+              {
+                "asked": {
+                  "x": 0.3,
+                  "y": 0.35
+                },
+                "blob": {
+                  "x": 0.2970176130411612,
+                  "y": 0.3504677676636884,
+                  "axis_deg": 1.4,
+                  "pixels": 1471,
+                  "peak": 108
+                },
+                "readback_ok": true,
+                "ok": true,
+                "why": "on the point, level, read back as written"
+              },
+              {
+                "asked": {
+                  "x": 0.65,
+                  "y": 0.5
+                },
+                "blob": null,
+                "readback_ok": true,
+                "ok": false,
+                "why": "no brightened blob in the render"
+              },
+              {
+                "asked": {
+                  "x": 0.45,
+                  "y": 0.7
+                },
+                "blob": null,
+                "readback_ok": true,
+                "ok": false,
+                "why": "no brightened blob in the render"
+              }
+            ],
+            "linear": {
+              "delta_luma": -1.7890000000000015,
+              "readback_ok": true,
+              "ok": true,
+              "why": "frame delta luma -1.789"
+            },
+            "ok": false
+          },
+          {
+            "case": "B",
+            "crop": {
+              "CropLeft": 0.158142,
+              "CropTop": 0.01,
+              "CropRight": 0.841858,
+              "CropBottom": 0.99,
+              "CropAngle": 10,
+              "orientation": "DC"
+            },
+            "frame": {
+              "left": 0.158142,
+              "top": 0.01,
+              "right": 0.841858,
+              "bottom": 0.99,
+              "angle": 10,
+              "aspect": 1.5056179775280898,
+              "turn": "DC",
+              "refused": null
+            },
+            "points": [
+              {
+                "asked": {
+                  "x": 0.3,
+                  "y": 0.35
+                },
+                "blob": {
+                  "x": 0.30406881286910376,
+                  "y": 0.35115585203913796,
+                  "axis_deg": 0.8,
+                  "pixels": 670,
+                  "peak": 98
+                },
+                "readback_ok": true,
+                "ok": true,
+                "why": "on the point, level, read back as written"
+              },
+              {
+                "asked": {
+                  "x": 0.65,
+                  "y": 0.5
+                },
+                "blob": {
+                  "x": 0.6531785414571568,
+                  "y": 0.5046309588314682,
+                  "axis_deg": -1.7,
+                  "pixels": 1082,
+                  "peak": 104
+                },
+                "readback_ok": true,
+                "ok": true,
+                "why": "on the point, level, read back as written"
+              },
+              {
+                "asked": {
+                  "x": 0.45,
+                  "y": 0.7
+                },
+                "blob": {
+                  "x": 0.4498628584704846,
+                  "y": 0.6996192474606763,
+                  "axis_deg": 0.2,
+                  "pixels": 1660,
+                  "peak": 110
+                },
+                "readback_ok": true,
+                "ok": true,
+                "why": "on the point, level, read back as written"
+              }
+            ],
+            "linear": {
+              "delta_luma": -1.8060000000000116,
+              "readback_ok": true,
+              "ok": true,
+              "why": "frame delta luma -1.806"
+            },
+            "ok": true
+          }
+        ]
+      }
+    },
+    {
+      "part": "mirror",
+      "photo": "_DSC0091.NEF",
+      "id": "orientation_CB",
+      "question": null,
+      "answer": "see cases",
+      "ok": false,
+      "notes": [],
+      "data": {
+        "cases": [
+          {
+            "case": "A",
+            "crop": {
+              "CropLeft": 0,
+              "CropTop": 0,
+              "CropRight": 1,
+              "CropBottom": 1,
+              "CropAngle": 0,
+              "orientation": "CB"
+            },
+            "frame": {
+              "left": 0,
+              "top": 0,
+              "right": 1,
+              "bottom": 1,
+              "angle": 0,
+              "aspect": 1,
+              "turn": "CB",
+              "refused": null
+            },
+            "points": [
+              {
+                "asked": {
+                  "x": 0.3,
+                  "y": 0.35
+                },
+                "blob": {
+                  "x": 0.3004252243196628,
+                  "y": 0.3499061394995905,
+                  "axis_deg": 9.5,
+                  "pixels": 1600,
+                  "peak": 111
+                },
+                "readback_ok": true,
+                "ok": false,
+                "why": "blob tilted 9.5 degrees"
+              },
+              {
+                "asked": {
+                  "x": 0.65,
+                  "y": 0.5
+                },
+                "blob": {
+                  "x": 0.6442356699453415,
+                  "y": 0.5030333465923369,
+                  "axis_deg": 24.3,
+                  "pixels": 863,
+                  "peak": 110
+                },
+                "readback_ok": true,
+                "ok": false,
+                "why": "blob tilted 24.3 degrees"
+              },
+              {
+                "asked": {
+                  "x": 0.45,
+                  "y": 0.7
+                },
+                "blob": {
+                  "x": 0.4516270319399368,
+                  "y": 0.7042339137362854,
+                  "axis_deg": -4.6,
+                  "pixels": 1251,
+                  "peak": 110
+                },
+                "readback_ok": true,
+                "ok": true,
+                "why": "on the point, level, read back as written"
+              }
+            ],
+            "linear": {
+              "delta_luma": -1.1460000000000008,
+              "readback_ok": true,
+              "ok": true,
+              "why": "frame delta luma -1.146"
+            },
+            "ok": false
+          },
+          {
+            "case": "B",
+            "crop": {
+              "CropLeft": 0.158142,
+              "CropTop": 0.01,
+              "CropRight": 0.841858,
+              "CropBottom": 0.99,
+              "CropAngle": 10,
+              "orientation": "CB"
+            },
+            "frame": {
+              "left": 0.158142,
+              "top": 0.01,
+              "right": 0.841858,
+              "bottom": 0.99,
+              "angle": 10,
+              "aspect": 1.5056179775280898,
+              "turn": "CB",
+              "refused": null
+            },
+            "points": [
+              {
+                "asked": {
+                  "x": 0.3,
+                  "y": 0.35
+                },
+                "blob": {
+                  "x": 0.2949657454102605,
+                  "y": 0.35146097990755537,
+                  "axis_deg": 40,
+                  "pixels": 1263,
+                  "peak": 110
+                },
+                "readback_ok": true,
+                "ok": false,
+                "why": "blob tilted 40 degrees"
+              },
+              {
+                "asked": {
+                  "x": 0.65,
+                  "y": 0.5
+                },
+                "blob": {
+                  "x": 0.6485558604830723,
+                  "y": 0.503885867042336,
+                  "axis_deg": 14.8,
+                  "pixels": 870,
+                  "peak": 109
+                },
+                "readback_ok": true,
+                "ok": false,
+                "why": "blob tilted 14.8 degrees"
+              },
+              {
+                "asked": {
+                  "x": 0.45,
+                  "y": 0.7
+                },
+                "blob": {
+                  "x": 0.4526638805250092,
+                  "y": 0.7003822917793593,
+                  "axis_deg": -6.7,
+                  "pixels": 1505,
+                  "peak": 98
+                },
+                "readback_ok": true,
+                "ok": true,
+                "why": "on the point, level, read back as written"
+              }
+            ],
+            "linear": {
+              "delta_luma": -1.2310000000000088,
+              "readback_ok": true,
+              "ok": true,
+              "why": "frame delta luma -1.231"
+            },
+            "ok": false
+          }
+        ]
+      }
+    },
+    {
+      "part": "mirror",
+      "photo": "_DSC0091.NEF",
+      "id": "orientation_put_back",
+      "question": null,
+      "answer": "BA (was AB)",
+      "ok": false,
+      "notes": []
+    }
+  ],
+  "lines": [
+    "NO   colour _DSC0091.NEF error (Nothing was written: mask geometry and points cannot be placed on this photo because the photo is mirrored (orientation \"BA\"), and where Lightroom puts mask geometry on a mirrored photo is not yet checked. AI masks without a point still work.)",
+    "YES  colour _DSC0028.NEF point_red",
+    "NO   colour _DSC0028.NEF point_green (select photos with a clearly green area)",
+    "NO   person _DSC0091.NEF error (Nothing was written: mask geometry and points cannot be placed on this photo because the photo is mirrored (orientation \"BA\"), and where Lightroom puts mask geometry on a mirrored photo is not yet checked. AI masks without a point still work.)",
+    "NO   mirror _DSC0091.NEF orientation_BA (see cases)",
+    "NO   mirror _DSC0091.NEF orientation_AD (see cases)",
+    "NO   mirror _DSC0091.NEF orientation_DC (see cases)",
+    "NO   mirror _DSC0091.NEF orientation_CB (see cases)",
+    "NO   mirror _DSC0091.NEF orientation_put_back (BA (was AB))",
+    "---- person: no step answered yes",
+    "---- mirror: no step answered yes"
+  ],
+  "headline": "FAILED",
+  "node": "v24.11.1",
+  "engine_version": "1.6.0",
+  "plugin_log_copied": "mask_verify_bridge_log_2026-10-28T11-53-02-478Z.txt"
+}

@@ -2,7 +2,7 @@
 // on a table (so a run does not stop on a refused argument), and the curve capture names what changed.
 
 import { describe, expect, it } from "vitest";
-import { BANDS, ERASE, SWATCH, changedFields, testIds } from "../src/devtools/masks-verify-parity.js";
+import { BANDS, COPY_SLIDERS, ERASE, SWATCH, changedFields, testIds } from "../src/devtools/masks-verify-parity.js";
 import { applyOp, type Correction } from "../src/params/index.js";
 
 describe("masks:parity", () => {
@@ -10,9 +10,9 @@ describe("masks:parity", () => {
     const brush = applyOp([], { op: "create", kind: "brush", name: "AVG parity brush", geometry: { strokes: BANDS } });
     const erased = applyOp(brush.entries, { op: "edit", mask_id: brush.id, geometry: { strokes: [ERASE] } });
     const coloured = applyOp(erased.entries, { op: "edit", mask_id: brush.id, point_colors: { action: "add", swatch: SWATCH } });
-    const copied = applyOp(coloured.entries, { op: "edit", mask_id: brush.id, inverted: true, copy: true });
+    const copied = applyOp(coloured.entries, { op: "edit", mask_id: brush.id, inverted: true, copy: true, sliders: COPY_SLIDERS });
     expect(copied.entries).toHaveLength(2);
-    expect(copied.after).toMatchObject({ name: "AVG parity brush inverted", inverted: true, point_colors: [expect.objectContaining({ hue_shift: 0.5 })] });
+    expect(copied.after).toMatchObject({ name: "AVG parity brush inverted", inverted: true, sliders: { "local.exposure": -2 }, point_colors: [expect.objectContaining({ hue_shift: 0.5 })] });
   });
 
   it("names the new and changed fields of a correction, not its parts", () => {

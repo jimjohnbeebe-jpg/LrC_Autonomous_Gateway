@@ -49,6 +49,7 @@ local function setName(catalog, keyword, name)
     local ok, err = LrTasks.pcall(Gate.run, catalog, "AVG rename keyword", function()
         if not keyword:setAttributes({ keywordName = name }) then error("Lightroom refused the name " .. name, 0) end
     end)
+    KeywordTree.forget() -- list_keywords walks the tree again
     if not ok then return tostring(err) end
     return nil
 end

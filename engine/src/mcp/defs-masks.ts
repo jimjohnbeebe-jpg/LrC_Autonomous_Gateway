@@ -110,11 +110,11 @@ const PERSON_NOTE =
 // Create New Mask > Color Range [upstream claim: Automaat PR #339, create_range_mask's description].
 const COLOR_NOTE =
   "color_range selects the colours near one sample. Lightroom stores the sample as its own l, a, b (lightness, green to red, blue to yellow, 0-1), " +
-  "ranked against this photo's pixels, not as RGB, and the selection follows those numbers, not the pin. Give the sample one of three ways: " +
+  "ranked against this photo's pixels, not as RGB, and the selection follows those numbers, not the pin. Give the sample one of two ways: " +
   "copy_sample_from takes the stored sample, amount and pin of a colour range made in Lightroom (lr_list_masks shows its geometry.sample; if there is none, " +
-  "ask the user to make one: Tools > Create New Mask > Color Range in Develop, click the colour); geometry.sample writes l, a, b verbatim; with neither, the engine " +
-  "writes the preview's RGB colour at point, which is [unverified] (Lightroom may select another colour): look at the result. A sample copied from another " +
-  "photo selects what ranks like it there, the same colours only on the same pixels (a virtual copy). ";
+  "ask the user to make one: Tools > Create New Mask > Color Range in Develop, click the colour); geometry.sample writes l, a, b verbatim. With neither, " +
+  "the mask is refused (INVALID_ARGUMENTS, nothing written): the preview's colour at point did not select the colour asked for in a Lightroom check. A sample copied " +
+  "from another photo selects what ranks like it there, the same colours only on the same pixels (a virtual copy). ";
 
 const listArgs = z.object({ session_id: sessionId, target: target.describe('Variants mode: which photo ("master", "A", …); default the photo the last call worked on') });
 const createArgs = z.object({

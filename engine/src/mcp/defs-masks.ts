@@ -75,12 +75,13 @@ const PERSON_NOTE =
   "Lightroom ignores the person in a written mask; [upstream claim], not yet checked here): look at the result, and if the wrong person changed, " +
   "tell the user and take the mask out (lr_delete_mask).";
 // The colour range's sample (issue #210): Lightroom's l, a, b, not sRGB [upstream claim: Automaat PR #339]; copy and
-// explicit sample [upstream claim: Automaat PR #341]; params\mask-range.ts has the handles.
+// explicit sample [upstream claim: Automaat PR #341]; params\mask-range.ts has the handles. The menu path, Tools >
+// Create New Mask > Color Range [upstream claim: Automaat PR #339, create_range_mask's description].
 const COLOR_NOTE =
   "color_range selects the colours near one sample. Lightroom stores the sample as its own l, a, b (lightness, green to red, blue to yellow, 0-1), " +
   "ranked against this photo's pixels, not as RGB, and the selection follows those numbers, not the pin. Give the sample one of three ways: " +
   "copy_sample_from takes the stored sample, amount and pin of a colour range made in Lightroom (lr_list_masks shows its geometry.sample; if there is none, " +
-  "ask the user to make one: Masking > Create New Mask > Color Range, click the colour); geometry.sample writes l, a, b verbatim; with neither, the engine " +
+  "ask the user to make one: Tools > Create New Mask > Color Range in Develop, click the colour); geometry.sample writes l, a, b verbatim; with neither, the engine " +
   "writes the preview's RGB colour at point, which is [unverified] (Lightroom may select another colour): look at the result. A sample copied from another " +
   "photo selects what ranks like it there, the same colours only on the same pixels (a virtual copy). ";
 
@@ -104,7 +105,7 @@ const createArgs = z.object({
   sliders: sliders.optional(),
   copy_sample_from: z
     .object({
-      mask_id: maskId.describe("the mask holding a colour range, typically one the user clicked in Lightroom (Masking > Create New Mask > Color Range)"),
+      mask_id: maskId.describe("the mask holding a colour range, typically one the user clicked in Lightroom (Tools > Create New Mask > Color Range in Develop)"),
       part: z.number().int().min(1).optional().describe("in a mask of several parts, which part is the colour range (1 = the first, as lr_list_masks `parts`)"),
       target: target.describe("Variants mode: the photo to copy from; default the photo this mask goes on"),
     })

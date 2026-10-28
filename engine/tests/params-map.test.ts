@@ -191,6 +191,13 @@ describe("params: canonical map", () => {
       expect("dehaze" in map.fromSdk(rest).settings).toBe(false);
     });
 
+    it("treats Lightroom's -999999 as no value (Temperature and Tint after a preset without white balance)", () => {
+      const r = map.fromSdk({ ...nefDump.settings, Temperature: -999999, Tint: -999999 });
+      expect("temperature" in r.settings).toBe(false);
+      expect("tint" in r.settings).toBe(false);
+      expect(r.settings["exposure"]).toBe(0.33);
+    });
+
     it("leaves camera_profile out when the pair is not pinned, and says why", () => {
       const r = map.fromSdk({ ...nefDump.settings, CameraProfile: "Camera Landscape", Look: profiles.toSdk("Adobe Color").Look });
       expect("camera_profile" in r.settings).toBe(false);

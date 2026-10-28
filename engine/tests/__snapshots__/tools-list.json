@@ -84,7 +84,7 @@
           "minLength": 1
         },
         "quality": {
-          "description": "\"exact\" (default): the export, about 3 s. \"fast\": Lightroom's cached preview, quicker but possibly stale (source \"thumbnail\", stale_possible true); for browsing, not for judging an edit; not with session_id, target or region",
+          "description": "\"exact\" (default): the export, about 3 s. \"fast\": Lightroom's cached preview, quicker but possibly stale (source \"thumbnail\", stale_possible true); for browsing, not for judging an edit; right after an edit Lightroom sends no cached preview, so \"fast\" returns the export instead (fast_fallback says so); not with session_id, target or region",
           "type": "string",
           "enum": [
             "exact",

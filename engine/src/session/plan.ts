@@ -5,7 +5,7 @@
 
 import { isColourParam } from "../intents/index.js";
 import type { MetricsDelta, MetricsSummary } from "../metrics/index.js";
-import { CAMERA_PROFILE_PARAM, ParamError, SUPPORTED_PROCESS_VERSIONS, type CanonicalSettings, type CanonicalValue, type ParamMap, type Pipeline } from "../params/index.js";
+import { CAMERA_PROFILE_PARAM, CUSTOM_WHITE_BALANCE_PARAMS, ParamError, SUPPORTED_PROCESS_VERSIONS, type CanonicalSettings, type CanonicalValue, type ParamMap, type Pipeline } from "../params/index.js";
 import { CONVERGENCE, CRUSHES_SHADOWS, RAISES_HIGHLIGHTS, baseMaxStep, decayFor, isChoice, isCircularHue, minStep, roundForSlider } from "./rules.js";
 
 /** One setting a step changes. `delta` is set for numeric sliders (after - before), null otherwise. */
@@ -63,7 +63,11 @@ export function planStep(requested: Readonly<Record<string, unknown>>, current: 
     const before = current[name];
     if (typeof before !== "number") {
       // The B&W mixer keys exist only while the photo is black and white [handle: docs\reports\phase10\S14.md "d. B&W mixer"].
-      const why = name.startsWith("bw.") ? "the B&W mixer is there only on a black-and-white photo: set a monochrome camera_profile in an earlier step" : "e.g. a monochrome profile drops the colour sliders";
+      const why = name.startsWith("bw.")
+        ? "the B&W mixer is there only on a black-and-white photo: set a monochrome camera_profile in an earlier step"
+        : CUSTOM_WHITE_BALANCE_PARAMS.includes(name)
+          ? "Lightroom reports no white balance value after a preset without one: set an absolute temperature and tint with lr_set_settings first"
+          : "e.g. a monochrome profile drops the colour sliders";
       plan.refused.push({ name, by: "slider", reason: `${name} is not available on this photo now (${why})` });
       continue;
     }

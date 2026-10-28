@@ -77,13 +77,14 @@ async function tryTools(c: Check): Promise<void> {
 }
 
 /** Each photo back to its start snapshot, compared with the settings read first. True when both are as before.
- *  A photo that did not come back keeps its entry in c.start, so its start snapshot is never deleted. */
-async function putBack(c: Check): Promise<boolean> {
+ *  A photo that did not come back keeps its entry in c.start, so its start snapshot is never deleted.
+ *  `again` (the cleanup's retry) records under its own names, so a first NO keeps its differences (run 1). */
+async function putBack(c: Check, again = false): Promise<boolean> {
   c.say("Putting both photos back from their start snapshot ...");
   await c.client.waitConnected(SESSION_SILENCE_MS).catch(() => undefined);
   const back: Record<string, unknown> = {};
   for (const [uuid, id] of c.start) {
-    await step(c, `lr_apply_snapshot (put back) ${uuid}`, ["ok"], () => c.tools.applySnapshot({ uuid, snapshot_id: id, confirm: true }));
+    await step(c, `lr_apply_snapshot (put back${again ? " again" : ""}) ${uuid}`, ["ok"], () => c.tools.applySnapshot({ uuid, snapshot_id: id, confirm: true }));
     try {
       back[uuid] = settingChanges(map, c.before.get(uuid) as SdkSettings, await settings(c, uuid));
     } catch (err) {
@@ -92,7 +93,7 @@ async function putBack(c: Check): Promise<boolean> {
     const x = back[uuid] as { changed?: object; masks?: object };
     if (x.changed !== undefined && Object.keys(x.changed).length === 0 && x.masks === undefined) c.start.delete(uuid);
   }
-  c.r["put_back"] = back;
+  c.r[again ? "put_back_again" : "put_back"] = back;
   return c.start.size === 0;
 }
 
@@ -157,7 +158,7 @@ async function main(say: (l: string) => void): Promise<number> {
     r["errors"] = [describeError(err)];
     say(`Stopped: ${describeError(err)}`);
   } finally {
-    if (c.start.size > 0) r["put_back_ok"] = await putBack(c).catch(() => false); // a run that stopped halfway
+    if (c.start.size > 0) r["put_back_ok"] = await putBack(c, true).catch(() => false); // a run that stopped halfway, or a photo not back
     r["steps"] = c.steps;
     await gate.release();
   }

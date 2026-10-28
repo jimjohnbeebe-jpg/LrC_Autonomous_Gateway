@@ -36,6 +36,7 @@ export type WriteContext = { processVersion: string; pipeline: Pipeline; hdr?: b
  * the four with the extended keys [handle: grep of docs\reports\phase8\S10\census\*.json, 2026-10-25].
  */
 const HDR_EDIT_MODE_KEY = "HDREditMode";
+const LR_UNSET = -999999;
 
 /** The SDK key a spec writes and reads: a point curve's extended key on a photo in HDR edit mode. */
 function keyOf(spec: ParamSpec, hdr: boolean): string {
@@ -237,6 +238,10 @@ export class ParamMap {
     for (const [name, spec] of SPECS[pipeline]) {
       const key = keyOf(spec, hdr);
       if (!(key in sdk)) continue; // e.g. monochrome profiles drop 18 keys (S5.md "Numbers")
+      // Lightroom's "no value": Temperature and Tint read -999999 after a preset without white balance
+      // [handle: docs\reports\phase11\PRESET-PARITY.md run 1]. Treated as absent, so no step, revert,
+      // recipe or preset is built from it.
+      if (sdk[key] === LR_UNSET) continue;
       let value = sdk[key];
       if (spec.kind === "curve" && isEmptyLook(value)) value = []; // Lua's empty table may arrive as {}
       if (describe(value) !== EXPECTED_SDK_TYPE[spec.kind]) {

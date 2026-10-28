@@ -63,6 +63,14 @@ function Photos.position(value)
     return { latitude = value.latitude, longitude = value.longitude }
 end
 
+-- A colour label's name as the tools use it, "none" for no label. The SDK lists only 'red' ... 'purple' and 'none'
+-- [handle: LrPhoto.html, getRawMetadata colorNameForLabel], but LrC 15.6 read "gray" for unlabelled photos in two
+-- catalogs, which lr_set_color_label could not write back [handle: docs\reports\phase11\CATALOG-PARITY.md run 1].
+function Photos.labelName(raw)
+    if raw == nil or string.lower(tostring(raw)) == "gray" then return "none" end
+    return raw
+end
+
 -- A photo's GPS position { latitude, longitude }, false for none, or nil plus the error (set_gps,
 -- Library.lua; it lived there until plugin 0.21.0).
 function Photos.gpsOf(catalog, photo)

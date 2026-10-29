@@ -233,11 +233,11 @@ describe("lr_import_photos", () => {
     const copyTo = path.join(tmp, "Photos2");
     mkdirSync(path.join(copyTo, "100NIKON"), { recursive: true });
     writeFileSync(path.join(copyTo, "100NIKON", "_DSC0001.NEF"), "another photo, longer");
-    await expect(copyForImport(path.join(source, "100NIKON", "_DSC0001.NEF"), source, copyTo)).rejects.toThrow(/different file/);
+    await expect(copyForImport(path.join(source, "100NIKON", "_DSC0001.NEF"), path.join(copyTo, "100NIKON", "_DSC0001.NEF"))).rejects.toThrow(/different file/);
     expect(readFileSync(path.join(copyTo, "100NIKON", "_DSC0001.NEF"), "utf8")).toBe("another photo, longer");
     // Same size, other contents: not the copy either (CodeRabbit, PR #73).
     writeFileSync(path.join(copyTo, "100NIKON", "_DSC0002.NEF"), "raw TWO");
-    await expect(copyForImport(path.join(source, "100NIKON", "_DSC0002.NEF"), source, copyTo)).rejects.toThrow(/different file/);
+    await expect(copyForImport(path.join(source, "100NIKON", "_DSC0002.NEF"), path.join(copyTo, "100NIKON", "_DSC0002.NEF"))).rejects.toThrow(/different file/);
     expect(await importFiles(path.join(source, "100NIKON"), false)).toHaveLength(2);
   });
 });

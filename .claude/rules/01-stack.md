@@ -32,6 +32,7 @@ Source: `C:\Users\jimbe\Documents\Obsidian Vault\Projects\LrC_Autonomous_Gateway
 
 - **`sharp` for all image work:** decode, resize, crop, composite, histograms/metrics, JPEG encode. No other image library, no native decoder, no shelling out to ImageMagick/ExifTool/dcraw.
 - sharp cannot read Z8 NEFs (`node spikes\S3\probe-decoders.ts`). Raw decoding is Lightroom's job: the engine only ever measures JPEGs that Lightroom rendered.
+- **Reading EXIF tags is not image work.** `engine\src\library\capture-date.ts` reads DateTimeOriginal from a photo file's TIFF or JPEG header with Node `fs`, no pixels decoded, for lr_import_photos' templates (GitHub issue #139, decision D1 = A) [stated: Jim, 2026-10-29, "Go on all."].
 
 ## Runtime
 

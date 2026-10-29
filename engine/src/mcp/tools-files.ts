@@ -7,6 +7,7 @@
 //
 // A command with no answer stops the call, as lr_set_rating's loop does (library\write.ts): the error
 // lists what was done, and the photo that may still be exported or imported (`maybe_done`).
+// lr_import_photos' folder_template, name_template and dry_run: issue #139 gap 1 (library\capture-date.ts).
 
 import path from "node:path";
 import type { CommandPayloads } from "../bridge/index.js";
@@ -14,11 +15,15 @@ import {
   CALL_BUDGET_MS,
   EXPORT_PHOTO_TIMEOUT_MS,
   IMPORT_PHOTO_TIMEOUT_MS,
+  captureDate,
   copyForImport,
   defaultExportDir,
   expandHome,
+  importDestination,
   importFiles,
   placeExport,
+  type CaptureDate,
+  type ImportTemplates,
   type OnExisting,
   type Placed,
 } from "../library/index.js";
@@ -39,7 +44,15 @@ export type ExportPhotosArgs = {
   height?: number | undefined;
   on_existing?: OnExisting | undefined;
 };
-export type ImportPhotosArgs = { source: string; copy_to?: string | undefined; recursive?: boolean | undefined; resume_after?: string | undefined };
+export type ImportPhotosArgs = {
+  source: string;
+  copy_to?: string | undefined;
+  recursive?: boolean | undefined;
+  resume_after?: string | undefined;
+  folder_template?: string | undefined;
+  name_template?: string | undefined;
+  dry_run?: boolean | undefined;
+};
 
 type Failure = { item: string; code: string; message: string };
 
@@ -138,13 +151,48 @@ function afterCursor(listed: string[], cursor: string): string[] {
   return listed.slice(i + 1);
 }
 
+/**
+ * The file Lightroom imports for `file`: the file itself, or its copy's path in copy_to, which with a
+ * template needs the capture date (library\capture-date.ts, issue #139): a file with none fails alone.
+ */
+async function importTarget(file: string, source: string, copyTo: string | null, templates: ImportTemplates): Promise<{ path: string; date: CaptureDate | null }> {
+  if (copyTo === null) return { path: file, date: null };
+  const templated = templates.folder !== undefined || templates.name !== undefined;
+  const date = templated ? await captureDate(file) : null;
+  if (templated && date === null) {
+    const why = "folder_template and name_template need the capture date, which the engine reads from NEF, DNG and the other TIFF-based raws, TIFF and JPEG only";
+    throw new ToolError("NO_CAPTURE_DATE", `No capture date could be read from ${path.basename(file)}: ${why}. It was not copied or imported.`, false);
+  }
+  return { path: importDestination(file, source, copyTo, templates, date), date };
+}
+
+/** dry_run: where each file would go, read from the disk only: no copy and no bridge call. */
+async function plan(files: readonly string[], source: string, copyTo: string | null, templates: ImportTemplates) {
+  const planned: Array<{ source: string; path: string; capture_date: string | null }> = [];
+  const failed: Array<{ file: string; code: string; message: string }> = [];
+  for (const file of files) {
+    try {
+      const t = await importTarget(file, source, copyTo, templates);
+      planned.push({ source: file, path: t.path, capture_date: t.date !== null ? `${t.date.yyyy}-${t.date.mm}-${t.date.dd} ${t.date.time}` : null });
+    } catch (err) {
+      const e = toToolError(err);
+      failed.push({ file, code: e.code, message: e.message });
+    }
+  }
+  return { planned, failed };
+}
+
 export async function importPhotos(ctx: ToolContext, args: ImportPhotosArgs, budget: Budget = realBudget()): Promise<ToolOutput> {
   return run(ctx, "lr_import_photos", args, async () => {
     const source = expandHome(args.source);
     const copyTo = args.copy_to !== undefined ? expandHome(args.copy_to) : null;
+    const templates: ImportTemplates = { folder: args.folder_template, name: args.name_template };
     const rel = copyTo !== null ? path.relative(source, copyTo) : "..";
     if (rel === "" || (!rel.startsWith("..") && !path.isAbsolute(rel))) {
       throw new ToolError("BAD_ARGUMENTS", "copy_to must not be the source folder or inside it.", false);
+    }
+    if (copyTo === null && (templates.folder !== undefined || templates.name !== undefined)) {
+      throw new ToolError("BAD_ARGUMENTS", "folder_template and name_template need copy_to: the files are renamed only as they are copied.", false);
     }
     // The scan counts against the call's time (issue #75): a slow card reader or share spends it too.
     const start = budget.now();
@@ -155,6 +203,11 @@ export async function importPhotos(ctx: ToolContext, args: ImportPhotosArgs, bud
       throw new ToolError("NOT_FOUND", `Cannot read ${source}: ${(err as Error).message}`, false);
     }
     const files = args.resume_after !== undefined ? afterCursor(listed, args.resume_after) : listed;
+    if (args.dry_run === true) {
+      const { planned, failed } = await plan(files, source, copyTo, templates);
+      const json = { source, ...(copyTo !== null ? { copied_to: copyTo } : {}), found: listed.length, dry_run: true, planned, failed };
+      return { json, log: { found: listed.length, planned: planned.length, failed: failed.length, dry_run: true } };
+    }
     const sessions = sessionTools(ctx);
     await ctx.deps.ensureBridge();
     needPlugin(ctx, "lr_import_photos", TRANSFER_PLUGIN, "it imports photos");
@@ -165,10 +218,10 @@ export async function importPhotos(ctx: ToolContext, args: ImportPhotosArgs, bud
       const already: Imported[] = [];
       const done = () => ({ imported, already_in_catalog: already });
       const { failed, left } = await eachInBudget(files, budget, done, async (file) => {
-        let target = file;
+        const target = (await importTarget(file, source, copyTo, templates)).path;
         if (copyTo !== null) {
           try {
-            target = (await copyForImport(file, source, copyTo)).path;
+            await copyForImport(file, target);
           } catch (err) {
             throw new ToolError("COPY_FAILED", (err as Error).message, false);
           }

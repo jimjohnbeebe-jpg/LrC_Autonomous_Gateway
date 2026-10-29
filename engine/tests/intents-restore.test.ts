@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { entryBefore, putClaudeDesktopBack } from "../src/devtools/intents-restore.js";
+import { entryBefore, missingPaths, putClaudeDesktopBack } from "../src/devtools/intents-restore.js";
 
 let tmp: string;
 let env: NodeJS.ProcessEnv;
@@ -30,6 +30,10 @@ beforeEach(() => {
   config = path.join(dir, "claude_desktop_config.json");
   mainJs = path.join(tmp, "worktree", "engine", "dist", "mcp", "main.js");
   WORKTREE.args = [mainJs];
+  USUAL.command = path.join(tmp, "repo", "node.exe");
+  USUAL.args = [path.join(tmp, "repo", "main.js")];
+  mkdirSync(path.join(tmp, "repo"));
+  for (const file of [USUAL.command, ...USUAL.args]) writeFileSync(file, "");
   writeFileSync(config, json({ "lrc-avg": WORKTREE, other: OTHER }));
 });
 afterEach(() => rmSync(tmp, { recursive: true, force: true }));
@@ -74,6 +78,18 @@ describe("intents:check --restore", () => {
     expect(putClaudeDesktopBack(mainJs, env).put_back).toBe("NO");
     expect(readFileSync(config, "utf8")).toBe(before);
     expect(putClaudeDesktopBack(mainJs, {})).toMatchObject({ put_back: "NO", detail: expect.stringContaining("0 Claude Desktop config files") });
+  });
+
+  it("refuses, and writes nothing, when the backup's entry names files that no longer exist (issue #184)", () => {
+    const gone = { command: path.join(tmp, "resources", "node", "node.exe"), args: [path.join(tmp, "resources", "engine", "dist", "mcp", "main.js")] };
+    backup("12-00-00-000", { "lrc-avg": gone, other: OTHER });
+    const before = readFileSync(config, "utf8");
+    const result = putClaudeDesktopBack(mainJs, env);
+    expect(result).toMatchObject({ put_back: "NO", detail: expect.stringContaining("no longer exist") });
+    expect(result.detail).toContain(gone.command);
+    expect(result.detail).toContain(gone.args[0]);
+    expect(readFileSync(config, "utf8")).toBe(before);
+    expect(missingPaths({ command: "node", args: [USUAL.args[0] as string] })).toEqual([]);
   });
 
   it("picks the first backup, newest first, whose entry runs another engine, whatever the case of the path", () => {

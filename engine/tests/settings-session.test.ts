@@ -66,6 +66,13 @@ describe("lr_begin_session: the settings page", () => {
     expect(readLog().settings).toMatchObject({ measure_long_edge: 2400, from: { measure_long_edge: "argument" } });
   });
 
+  it("measures lr_set_regions on the measure_long_edge export too (Greptile, PR #264)", async () => {
+    clean();
+    const begun = await manager.begin({ intent_id: "test_plain", measure_long_edge: 2400, return_image: "none" });
+    const out = await manager.setRegions({ session_id: begun.json["session_id"] as string, regions: [{ kind: "sky", label: "sky", box: { x: 0, y: 0, w: 0.5, h: 0.5 } }] });
+    expect((out.json["regions"] as Array<{ pixels: number }>)[0]?.pixels).toBe(1200 * 800); // a quarter of 2400 x 1600, not of 1600 x 1067
+  });
+
   it("leaves measure_long_edge off by default", async () => {
     clean();
     const off = await manager.begin({ intent_id: "test_plain", return_image: "none" });

@@ -8,7 +8,7 @@ import sharp from "sharp";
 import { afterEach, beforeEach, expect, it } from "vitest";
 import type { BridgeClient } from "../src/bridge/index.js";
 import { measureImage } from "../src/metrics/index.js";
-import { PreviewService } from "../src/preview/index.js";
+import { PreviewService, measureAgain } from "../src/preview/index.js";
 
 let tmp: string;
 let sent: Array<{ name: string; payload: Record<string, unknown> }>;
@@ -53,6 +53,8 @@ it("exports at measureEdge, measures the whole export and sends the JPEG at the 
   expect(out.metrics.clip_high_tone_pct).toBeGreaterThan(0);
   const sentImage = await measureImage(out.jpeg);
   expect(sentImage.clip_high_tone_pct).toBeLessThan(out.metrics.clip_high_tone_pct / 10);
+  // Measured again (lr_set_regions), it is the same export, not the JPEG sent.
+  expect(await measureAgain(out, [])).toEqual(out.metrics);
 });
 
 it("changes nothing without measureEdge, or with one no larger than the long edge", async () => {

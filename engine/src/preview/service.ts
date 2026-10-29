@@ -74,6 +74,8 @@ export type RenderedPreview = {
   metrics: Metrics;
   /** The long edge of the image the metrics were measured on: the export's with measureEdge, else the JPEG's. */
   measured_long_edge: number;
+  /** With measureEdge: the export the metrics came from, kept so measureAgain measures the same pixels (Greptile, PR #264). */
+  measured_from?: Buffer;
   rendered_at: string;
   timings: {
     /** The export inside the plugin (LrExportSession); for a thumbnail, the wait for Lightroom's callback. */
@@ -97,6 +99,11 @@ export function isInside(dir: string, file: string): boolean {
 async function measureUpright(file: Buffer, regions: readonly Region[]): Promise<Metrics> {
   const { data, info } = await sharp(file).rotate().removeAlpha().raw().toBuffer({ resolveWithObject: true });
   return computeMetrics(data, info.width, info.height, info.channels, regions);
+}
+
+/** Measure a render again with other regions (lr_set_regions), on the pixels its metrics came from. */
+export function measureAgain(preview: Pick<RenderedPreview, "jpeg" | "measured_from">, regions: readonly Region[]): Promise<Metrics> {
+  return preview.measured_from ? measureUpright(preview.measured_from, regions) : measureImage(preview.jpeg, regions);
 }
 
 const ms = (since: number): number => Math.round((performance.now() - since) * 10) / 10;
@@ -187,6 +194,7 @@ export class PreviewService {
       source: request.fast ? "thumbnail" : PREVIEW_SOURCE,
       metrics,
       measured_long_edge: Math.max(metrics.width, metrics.height),
+      ...(measureEdge === null ? {} : { measured_from: file }),
       rendered_at: new Date().toISOString(),
       timings: { export_ms: Math.round(res.export_ms * 10) / 10, command_ms: commandMs, file_ms: fileMs, metrics_ms: metricsMs, total_ms: ms(started) },
     };

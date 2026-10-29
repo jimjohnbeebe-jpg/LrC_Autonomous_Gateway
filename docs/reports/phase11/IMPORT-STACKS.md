@@ -27,7 +27,7 @@ What it does, in order:
 4. The same call without `dry_run`, again with `resume_after` until no `not_yet` is left. Expects 4 imported, nothing failed, nothing in `not_stacked`.
 5. Checks the paths: `photos-<time>\2026-09-06\20260906-_OZ8000{5,6,7}.NEF`, the sidecar `20260906-_OZ80005.xmp`, and `photos-<time>\2026-01-10\20260110-_Z8A0138.dng`; and the stack read back: the second NEF count 2, the third count 3, both with the first NEF's uuid as top; no stack on the first NEF's own result or on the DNG.
 6. Asks Jim one y/n: does the folder 2026-09-06 show one stack of 3?
-7. Puts back: `lr_remove_photos` on the four photos, then deletes both temp folders. Prints `Import check: WORKED/FAILED` and `put back: YES/NO`.
+7. Puts back: `lr_remove_photos` on the four photos, then deletes both temp folders. The copy_to folder is kept when a photo may still be in the catalog (the removal failed, or an import call stopped), so that no catalog photo loses its file (Greptile, PR #270). Prints `Import check: WORKED/FAILED` and `put back: YES/NO`.
 
 ## Pre-run findings (Claude Code)
 

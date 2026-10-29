@@ -77,12 +77,16 @@ export async function cropPass(ctx: SessionContext, s: Session, args: CropArgs):
   }
   try {
     const name = historyName(s, t, n, "crop");
+    // The canonical settings leave the crop out, so io.ts fresh would take the last render as current: drop it before the
+    // write (one that times out may have been taken), and the probe slopes once the crop is taken (Greptile, PR #269).
+    t.last = null;
     const readBack = await writeSdk(ctx, s, t, keys, name);
     if (cropDiffers(readBack, keys)) {
       const back = historyName(s, t, n, "crop revert");
       await writeSdk(ctx, s, t, cropKeys(first.sdk), back, true);
       throw new ToolError("WRITE_NOT_TAKEN", `Lightroom did not take the crop as written in "${name}" (written: ${fmt(keys)}; read back: ${fmt(readBack)}). The crop from before was written back ("${back}"), and the pass is not used.`, false, { history_name: name, revert_name: back });
     }
+    t.slopes.clear();
     const cleared = s.regions.map((r) => r.label);
     s.regions = [];
     const view = ctx.deps.map.fromSdk(readBack);

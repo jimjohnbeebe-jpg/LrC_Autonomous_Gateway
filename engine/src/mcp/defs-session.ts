@@ -217,7 +217,7 @@ export const SESSION_DEFS: ToolDef[] = [
       "`crop.before` in the result is the crop the photo had, in the same frame, to keep parts of it. ONE pass (it counts against max_passes, approve_each_pass gates it): " +
       "one History step \"AVG <id> pass n/N crop\", read back (not taken: written back, WRITE_NOT_TAKEN, no pass used), rendered and measured; no clipping guard. " +
       "NO_CHANGE when the photo already has that crop. The preview, mask geometry and regions then follow the new crop: the session's regions are cleared " +
-      "(`regions_cleared`), so call lr_set_regions again. The recipe and lr_sync_series carry no crop. Variants mode: on the pick only (CROP_AFTER_PICK). " +
+      "(`regions_cleared`), so call lr_set_regions again, and lr_probe's slopes are dropped. The recipe and lr_sync_series carry no crop. Variants mode: on the pick only (CROP_AFTER_PICK). " +
       "Mirrored photos are refused (CROP_FRAME_UNSUPPORTED). Quarter-turned photos, photos whose crop is not constrained to the image, and rendered photos are [unverified].",
     schema: cropArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },

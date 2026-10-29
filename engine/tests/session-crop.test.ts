@@ -53,6 +53,21 @@ describe("lr_crop (issue #115)", () => {
     expect((await crop({ angle: 5 })).json).toMatchObject({ pass: "1/3" });
   });
 
+  it("renders again after a crop whose render failed, and drops the probe slopes (Greptile, PR #269)", async () => {
+    clean();
+    await begin();
+    const slopes = (manager as unknown as { session: { master: { slopes: Map<string, unknown> } } }).session.master.slopes;
+    slopes.set("exposure", { luma_mean: 1, clip_high_pct: 1, clip_low_pct: 0 });
+    lr.exportError = "render failed";
+    await fails(crop({ angle: 3 }));
+    lr.exportError = null;
+    expect(lr.settings[CROP.angle]).toBe(3); // taken, its render failed
+    expect(slopes.size).toBe(0);
+    const exports = lr.exports;
+    await manager.step({ session_id: ID, settings: { exposure: 0.1 }, rationale: "test", return_image: "none" });
+    expect(lr.exports).toBe(exports + 2); // the cropped photo rendered first, then the step
+  });
+
   it("Variants mode: refuses a crop before the pick", async () => {
     clean();
     await manager.begin({ max_passes: 4, intent_id: "test_variants", mode: "variants", variant_count: 2, return_image: "none" });

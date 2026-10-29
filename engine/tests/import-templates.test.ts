@@ -90,6 +90,28 @@ describe("lr_import_photos templates (issue #139)", () => {
     expect(rest.json["failed"]).toEqual([expect.objectContaining({ code: "NO_CAPTURE_DATE" })]);
   });
 
+  it("keeps a dry run inside the call's time and goes on with resume_after (Greptile, PR #263)", async () => {
+    const source = card();
+    const copyTo = path.join(tmp, "Photos");
+    let t = 0;
+    const first = await tools.importPhotos({ source, copy_to: copyTo, ...JIM, dry_run: true }, { now: () => (t += 10), ms: 5 });
+    expect(first.json).toMatchObject({ not_yet: 2, resume_after: path.join(source, "100NCZ_8", "_OZ80005.NEF") });
+    expect((first.json["planned"] as unknown[]).length).toBe(1);
+    const rest = await tools.importPhotos({ source, copy_to: copyTo, ...JIM, dry_run: true, resume_after: first.json["resume_after"] as string }, { now: () => 0, ms: 1e9 });
+    expect((rest.json["planned"] as Array<{ source: string }>).map((p) => path.basename(p.source))).toEqual(["_OZ80006.NEF"]);
+  });
+
+  it("refuses a source name that would lift the copy out of copy_to, copying nothing (Greptile, PR #263)", async () => {
+    const source = path.join(tmp, "Odd");
+    mkdirSync(source, { recursive: true });
+    writeFileSync(path.join(source, "...NEF"), tiff(true, "2026:09:06 11:12:07"));
+    const copyTo = path.join(tmp, "Photos", "Inner");
+    const out = await tools.importPhotos({ source, copy_to: copyTo, folder_template: "{name}" });
+    expect(out.json["failed"]).toEqual([expect.objectContaining({ code: "BAD_DESTINATION" })]);
+    expect(existsSync(path.join(tmp, "Photos", "...NEF"))).toBe(false);
+    expect(imports()).toEqual([]);
+  });
+
   it("refuses templates without copy_to", async () => {
     expect((await fails(tools.importPhotos({ source: card(), ...JIM }))).code).toBe("BAD_ARGUMENTS");
     expect(plugin.received.filter((r) => r.name !== "hello")).toEqual([]);

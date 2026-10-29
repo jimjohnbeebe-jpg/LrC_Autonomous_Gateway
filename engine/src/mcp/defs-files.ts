@@ -86,7 +86,7 @@ const importArgs = z
       .min(1)
       .optional()
       .describe("to go on after a call that ran out of time: that call's `resume_after` (a source file's path); the call starts with the file after it. Omit to start from the first file"),
-    dry_run: z.boolean().optional().describe("true: return `planned` (each file's source, the path it would have and its capture_date) and copy, import and change nothing; default false"),
+    dry_run: z.boolean().optional().describe("true: return `planned` (each file's source, the path it would have and its capture_date) and copy, import and change nothing; it goes on with resume_after as an import does; default false"),
   })
   .refine((a) => a.copy_to !== undefined || (a.folder_template === undefined && a.name_template === undefined), "folder_template and name_template need copy_to");
 

@@ -3152,7 +3152,7 @@
           "minLength": 1
         },
         "dry_run": {
-          "description": "true: return `planned` (each file's source, the path it would have and its capture_date) and copy, import and change nothing; default false",
+          "description": "true: return `planned` (each file's source, the path it would have and its capture_date) and copy, import and change nothing; it goes on with resume_after as an import does; default false",
           "type": "boolean"
         }
       },

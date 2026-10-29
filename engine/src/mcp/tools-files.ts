@@ -163,23 +163,30 @@ async function importTarget(file: string, source: string, copyTo: string | null,
     const why = "folder_template and name_template need the capture date, which the engine reads from NEF, DNG and the other TIFF-based raws, TIFF and JPEG only";
     throw new ToolError("NO_CAPTURE_DATE", `No capture date could be read from ${path.basename(file)}: ${why}. It was not copied or imported.`, false);
   }
-  return { path: importDestination(file, source, copyTo, templates, date), date };
+  try {
+    return { path: importDestination(file, source, copyTo, templates, date), date };
+  } catch (err) {
+    throw new ToolError("BAD_DESTINATION", `${(err as Error).message}. It was not copied or imported.`, false);
+  }
 }
 
-/** dry_run: where each file would go, read from the disk only: no copy and no bridge call. */
-async function plan(files: readonly string[], source: string, copyTo: string | null, templates: ImportTemplates) {
+/** The failures as the import lists them, and `resume_after` with `not_yet` when the time ran out. */
+function importTail(files: readonly string[], failed: readonly Failure[], left: readonly string[]) {
+  const next = `Time is up for this call: call again with resume_after = this resume_after and the same other arguments (${left.length} files left).`;
+  return {
+    failed: failed.map((f) => ({ file: f.item, code: f.code, message: f.message })),
+    ...(left.length > 0 ? { not_yet: left.length, resume_after: files[files.length - left.length - 1], next } : {}),
+  };
+}
+
+/** dry_run: where each file would go, read from the disk only (no copy, no bridge call), within the same budget (Greptile, PR #263). */
+async function plan(files: readonly string[], source: string, copyTo: string | null, templates: ImportTemplates, budget: Budget, start: number) {
   const planned: Array<{ source: string; path: string; capture_date: string | null }> = [];
-  const failed: Array<{ file: string; code: string; message: string }> = [];
-  for (const file of files) {
-    try {
-      const t = await importTarget(file, source, copyTo, templates);
-      planned.push({ source: file, path: t.path, capture_date: t.date !== null ? `${t.date.yyyy}-${t.date.mm}-${t.date.dd} ${t.date.time}` : null });
-    } catch (err) {
-      const e = toToolError(err);
-      failed.push({ file, code: e.code, message: e.message });
-    }
-  }
-  return { planned, failed };
+  const { failed, left } = await eachInBudget(files, budget, () => ({ planned }), async (file) => {
+    const t = await importTarget(file, source, copyTo, templates);
+    planned.push({ source: file, path: t.path, capture_date: t.date !== null ? `${t.date.yyyy}-${t.date.mm}-${t.date.dd} ${t.date.time}` : null });
+  }, start);
+  return { planned, failed, left };
 }
 
 export async function importPhotos(ctx: ToolContext, args: ImportPhotosArgs, budget: Budget = realBudget()): Promise<ToolOutput> {
@@ -204,9 +211,9 @@ export async function importPhotos(ctx: ToolContext, args: ImportPhotosArgs, bud
     }
     const files = args.resume_after !== undefined ? afterCursor(listed, args.resume_after) : listed;
     if (args.dry_run === true) {
-      const { planned, failed } = await plan(files, source, copyTo, templates);
-      const json = { source, ...(copyTo !== null ? { copied_to: copyTo } : {}), found: listed.length, dry_run: true, planned, failed };
-      return { json, log: { found: listed.length, planned: planned.length, failed: failed.length, dry_run: true } };
+      const { planned, failed, left } = await plan(files, source, copyTo, templates, budget, start);
+      const json = { source, ...(copyTo !== null ? { copied_to: copyTo } : {}), found: listed.length, dry_run: true, planned, ...importTail(files, failed, left) };
+      return { json, log: { found: listed.length, planned: planned.length, failed: failed.length, not_yet: left.length, dry_run: true } };
     }
     const sessions = sessionTools(ctx);
     await ctx.deps.ensureBridge();
@@ -229,16 +236,7 @@ export async function importPhotos(ctx: ToolContext, args: ImportPhotosArgs, bud
         const r = await ctx.deps.client.request("import_photo", { path: target }, { timeoutMs: IMPORT_PHOTO_TIMEOUT_MS });
         (r.status === "imported" ? imported : already).push({ uuid: r.uuid, filename: r.filename ?? null, path: target, source: file, capture_time: r.capture_time ?? null });
       }, start);
-      const next = `Time is up for this call: call again with resume_after = this resume_after and the same other arguments (${left.length} files left).`;
-      const json = {
-        source,
-        ...(copyTo !== null ? { copied_to: copyTo } : {}),
-        found: listed.length,
-        imported,
-        already_in_catalog: already,
-        failed: failed.map((f) => ({ file: f.item, code: f.code, message: f.message })),
-        ...(left.length > 0 ? { not_yet: left.length, resume_after: files[files.length - left.length - 1], next } : {}),
-      };
+      const json = { source, ...(copyTo !== null ? { copied_to: copyTo } : {}), found: listed.length, imported, already_in_catalog: already, ...importTail(files, failed, left) };
       return { json, log: { found: listed.length, imported: imported.length, already: already.length, failed: failed.length, not_yet: left.length } };
     });
   });

@@ -125,7 +125,8 @@ export type ImportTemplates = { folder?: string | undefined; name?: string | und
 /**
  * Where `file` (found under `sourceRoot`) is copied in `copyTo`. Without templates its path below the
  * source is kept (a single-file source lands directly in `copyTo`); folder_template replaces that folder,
- * name_template the name. The extension is always kept.
+ * name_template the name. The extension is always kept. Throws when the filled-in folder has an empty,
+ * "." or ".." level.
  */
 export function importDestination(file: string, sourceRoot: string, copyTo: string, templates: ImportTemplates = {}, date: CaptureDate | null = null): string {
   const rel = file === sourceRoot ? path.basename(file) : path.relative(sourceRoot, file);
@@ -133,6 +134,10 @@ export function importDestination(file: string, sourceRoot: string, copyTo: stri
   const ext = path.extname(file);
   const stem = path.basename(file, ext);
   const folder = templates.folder !== undefined ? expandTemplate(templates.folder, date, stem) : path.dirname(rel);
+  // {name} is checked only once filled in: a source named "...NEF" (stem "..") must not lift the copy out of copy_to (Greptile, PR #263).
+  if (templates.folder !== undefined && folder.split(/[\\/]/).some((level) => level.trim() === "" || level === "." || level === "..")) {
+    throw new Error(`folder_template gives "${folder}" for ${path.basename(file)}, which has an empty, "." or ".." folder level`);
+  }
   const name = templates.name !== undefined ? expandTemplate(templates.name, date, stem) + ext : path.basename(file);
   return path.join(copyTo, folder, name);
 }

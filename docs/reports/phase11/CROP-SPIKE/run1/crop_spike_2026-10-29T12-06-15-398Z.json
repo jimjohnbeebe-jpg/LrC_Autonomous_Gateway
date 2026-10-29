@@ -1,0 +1,278 @@
+{
+  "check": "crop-spike",
+  "started": "2026-10-29T12-06-15-398Z",
+  "node": "v24.11.1",
+  "engine_version": "1.7.2",
+  "written": {
+    "crop": {
+      "CropLeft": 0.1,
+      "CropRight": 0.9,
+      "CropTop": 0.2,
+      "CropBottom": 0.8
+    },
+    "angle": 5
+  },
+  "results": {
+    "lr_create_virtual_copies": {
+      "photos": [
+        {
+          "uuid": "23B201BF-A39A-44C6-839B-E13D4C0EA70D",
+          "status": "copied",
+          "copy_uuid": "0D10B838-EF29-4506-8BEB-A6FB1BFF9300",
+          "copy_name": "AVG crop-spike"
+        }
+      ],
+      "failed": [],
+      "undo": "lr_remove_photos with a copy_uuid and confirm: true removes that copy from the catalog; the master stays."
+    },
+    "crop": {
+      "photos": [
+        {
+          "uuid": "0D10B838-EF29-4506-8BEB-A6FB1BFF9300",
+          "snapshot": {
+            "id": "032AFFDB-A02F-4E01-B551-32A24E1AFECF",
+            "name": "AVG pre-set 873d1d"
+          },
+          "ms": 3018,
+          "status": "set",
+          "history_name": "AVG set develop settings 873d1d",
+          "unranged": [
+            "CropLeft",
+            "CropRight",
+            "CropTop",
+            "CropBottom"
+          ],
+          "names": "canonical",
+          "changed": {
+            "CropBottom": {
+              "before": 1,
+              "after": 0.8
+            },
+            "CropLeft": {
+              "before": 0,
+              "after": 0.1
+            },
+            "CropRight": {
+              "before": 1,
+              "after": 0.9
+            },
+            "CropTop": {
+              "before": 0,
+              "after": 0.2
+            }
+          }
+        }
+      ],
+      "counts": {
+        "set": 1
+      },
+      "failed": [],
+      "undo": "Each photo changed has the snapshot \"AVG pre-set 873d1d\" from just before (Develop, Snapshots panel; or lr_apply_snapshot with its id), which puts it back. Lightroom's History panel also has the step."
+    },
+    "straighten": {
+      "photos": [
+        {
+          "uuid": "0D10B838-EF29-4506-8BEB-A6FB1BFF9300",
+          "snapshot": {
+            "id": "57824E7E-10A8-480F-8FF1-AA4F51E68D4D",
+            "name": "AVG pre-set 40ae5c"
+          },
+          "ms": 2811,
+          "status": "set",
+          "history_name": "AVG set develop settings 40ae5c",
+          "unranged": [
+            "CropAngle"
+          ],
+          "names": "canonical",
+          "changed": {
+            "CropAngle": {
+              "before": 0,
+              "after": 5
+            }
+          }
+        }
+      ],
+      "counts": {
+        "set": 1
+      },
+      "failed": [],
+      "undo": "Each photo changed has the snapshot \"AVG pre-set 40ae5c\" from just before (Develop, Snapshots panel; or lr_apply_snapshot with its id), which puts it back. Lightroom's History panel also has the step."
+    },
+    "lr_remove_photos (the copy)": {
+      "status": "removed",
+      "removed": [
+        "0D10B838-EF29-4506-8BEB-A6FB1BFF9300"
+      ],
+      "not_removed": [],
+      "missing": [],
+      "note": "Removed from the catalog only: the files stay on disk, and lr_import_photos imports them again, but what only the catalog held (Develop settings, keywords, collections and other metadata not saved to the files) does not come back."
+    }
+  },
+  "plugin_version": "1.7.2",
+  "lrc_version": "15.6",
+  "photo": {
+    "uuid": "23B201BF-A39A-44C6-839B-E13D4C0EA70D",
+    "filename": "20250413-_OZ81430.NEF"
+  },
+  "crop_before": {
+    "CropConstrainToWarp": 0,
+    "CropTop": 0,
+    "CropBottom": 1,
+    "CropConstrainToUnitSquare": 1,
+    "CropAngle": 0,
+    "CropRight": 1,
+    "CropLeft": 0
+  },
+  "read_back": {
+    "crop": {
+      "CropConstrainToWarp": 0,
+      "CropTop": 0.2,
+      "CropBottom": 0.8,
+      "CropConstrainToUnitSquare": 1,
+      "CropAngle": 0,
+      "CropRight": 0.9,
+      "CropLeft": 0.1
+    },
+    "straighten": {
+      "CropConstrainToWarp": 0,
+      "CropTop": 0.2,
+      "CropBottom": 0.8,
+      "CropConstrainToUnitSquare": 1,
+      "CropAngle": 5,
+      "CropRight": 0.9,
+      "CropLeft": 0.1
+    }
+  },
+  "renders": {
+    "1-before": {
+      "width": 1024,
+      "height": 683,
+      "aspect": 1.499267935578331,
+      "file": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\crop-spike\\crop_spike_2026-10-29T12-06-15-398Z_1-before.jpg"
+    },
+    "2-crop": {
+      "width": 1024,
+      "height": 512,
+      "aspect": 2,
+      "file": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\crop-spike\\crop_spike_2026-10-29T12-06-15-398Z_2-crop.jpg"
+    },
+    "3-straighten": {
+      "width": 1024,
+      "height": 405,
+      "aspect": 2.528395061728395,
+      "file": "%USERPROFILE%\\AppData\\Local\\Temp\\LrC-AVG\\crop-spike\\crop_spike_2026-10-29T12-06-15-398Z_3-straighten.jpg"
+    }
+  },
+  "answers": [
+    "y",
+    "y"
+  ],
+  "lines": [
+    "YES lr_create_virtual_copies: copied (expected copied)",
+    "YES crop: set (expected set)",
+    "YES crop: read back as written: yes (expected yes)",
+    "YES the crop render's aspect changed as the crop says: yes (expected yes)",
+    "YES straighten: set (expected set)",
+    "YES straighten: read back as written: yes (expected yes)",
+    "YES lr_remove_photos (the copy): removed (expected removed)",
+    "YES the copy is no longer in the catalog: gone (expected gone)",
+    "YES your photo is selected again: yes (expected yes)",
+    "YES your photo's settings against the start: back (expected back)",
+    "YES Jim's answer 1: y",
+    "YES Jim's answer 2: y"
+  ],
+  "steps": [
+    {
+      "step": "lr_create_virtual_copies",
+      "expect": [
+        "copied"
+      ],
+      "statuses": [
+        "copied"
+      ]
+    },
+    {
+      "step": "crop",
+      "expect": [
+        "set"
+      ],
+      "statuses": [
+        "set"
+      ]
+    },
+    {
+      "step": "crop: read back as written",
+      "expect": [
+        "yes"
+      ],
+      "statuses": [
+        "yes"
+      ]
+    },
+    {
+      "step": "the crop render's aspect changed as the crop says",
+      "expect": [
+        "yes"
+      ],
+      "statuses": [
+        "yes"
+      ]
+    },
+    {
+      "step": "straighten",
+      "expect": [
+        "set"
+      ],
+      "statuses": [
+        "set"
+      ]
+    },
+    {
+      "step": "straighten: read back as written",
+      "expect": [
+        "yes"
+      ],
+      "statuses": [
+        "yes"
+      ]
+    },
+    {
+      "step": "lr_remove_photos (the copy)",
+      "expect": [
+        "removed"
+      ],
+      "statuses": [
+        "removed"
+      ]
+    },
+    {
+      "step": "the copy is no longer in the catalog",
+      "expect": [
+        "gone"
+      ],
+      "statuses": [
+        "gone"
+      ]
+    },
+    {
+      "step": "your photo is selected again",
+      "expect": [
+        "yes"
+      ],
+      "statuses": [
+        "yes"
+      ]
+    },
+    {
+      "step": "your photo's settings against the start",
+      "expect": [
+        "back"
+      ],
+      "statuses": [
+        "back"
+      ]
+    }
+  ],
+  "copy_left": null,
+  "headline": "WORKED"
+}

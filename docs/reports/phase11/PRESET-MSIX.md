@@ -1,8 +1,8 @@
 ---
 report: Issue #182 — does a preset saved from Claude Desktop (MSIX) reach Lightroom?
 phase: 11 (check/preset-msix-182)
-status: template
-authored_by: "Template and harness: Claude Code (Opus 5.5), 2026-10-29. Observed: blank until Jim runs the check."
+status: observed
+authored_by: "Template and harness: Claude Code (Opus 5.5), 2026-10-29. Observed: Claude Code from the results files, 2026-10-29; the run, the Claude Desktop chat and the y/n answers are Jim's. Verdict: from the session brief, for Jim to confirm."
 date: 2026-10-29
 ---
 
@@ -30,17 +30,22 @@ date: 2026-10-29
 
 ## Observed
 
-- **Verdict word (REDIRECTED / NOT REDIRECTED / IN BOTH / NOT FOUND):**
-- **Folder the file was in:**
-- **Claude Desktop's reply (file path from the result):**
-- **Jim: the Presets panel lists the preset after a Lightroom restart (y/n):**
-- **Deleted (y/n, files):**
-- **Results file:**
+Filled by Claude Code from the results files, 2026-10-29; the y/n answers in them are Jim's. Times are UTC (Jim's local time is UTC-7).
+
+- **First try, 11:28:16: FAILED, nothing written.** Claude Desktop's `lrc-avg` entry ran another folder's engine (a `.claude\worktrees\...` checkout), so the check stopped before printing a prompt; "put back: NOT NEEDED" [handle: `docs\reports\phase11\PRESET-MSIX\run1\presets_msix_2026-10-29T11-28-16-677Z.json`, `desktop_entry_runs_this_engine` "no", `put_back`]. The second run found the entry running this folder's engine [handle: the 11:51 file, `desktop_entry_runs_this_engine` "yes"]; how the entry was changed between is not in the files (the check never changes it).
+- **Verdict word (REDIRECTED / NOT REDIRECTED / IN BOTH / NOT FOUND):** **NOT REDIRECTED** (11:51:41 run) [handle: `docs\reports\phase11\PRESET-MSIX\run1\presets_msix_2026-10-29T11-51-41-938Z.json`, `where`].
+- **Folder the file was in:** `%USERPROFILE%\AppData\Roaming\Adobe\CameraRaw\Settings\AVG msix check b8fcac.xmp`, Lightroom's own preset folder. The package folder `%USERPROFILE%\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\Adobe\CameraRaw\Settings` did not exist [handle: the same file, `places`, `detail`].
+- **Claude Desktop's reply (file path from the result):** not recorded; the check records Jim's y that the preset was saved (`saved_answer` "y"), not the chat's text [handle: the same file].
+- **Jim: the Presets panel lists the preset after a Lightroom restart (y/n):** **y** [handle: the same file, `listed_in_lightroom`].
+- **Deleted (y/n, files):** **y**, the one file above [handle: the same file, `delete_answer`, `deleted`].
+- **Results file:** `docs\reports\phase11\PRESET-MSIX\run1\presets_msix_2026-10-29T11-51-41-938Z.json`, headline **WORKED**.
 
 ## Verdict
 
-- **Go / no-go / conditional (Jim):**
+- **Go / no-go / conditional (Jim):** **go, no fix needed**, on this report's go rule (WORKED, NOT REDIRECTED, panel y). A preset that Claude Desktop's engine saves lands in `%APPDATA%\Adobe\CameraRaw\Settings`, not in the Claude package, and Lightroom lists it after a restart: issue #182's suspected bug does not happen on this machine [handle: `PRESET-MSIX\run1\presets_msix_2026-10-29T11-51-41-938Z.json`]. [The verdict as given in the session brief of 2026-10-29; Jim confirms it on review of the PR.]
+- Why the preset file was not redirected while the intents folder was (issue #180) is [unverified], and so is whether it matters that Lightroom's own folder already existed. One machine, one Claude Desktop version (not recorded in the file).
 
 ## Decisions for Jim
 
-- If REDIRECTED: the fix branch — the plugin writes the preset file through a new bridge command, or an SDK preset API (issue #182 "Plan" step 2).
+- If REDIRECTED: the fix branch — the plugin writes the preset file through a new bridge command, or an SDK preset API (issue #182 "Plan" step 2). **Not needed: the run said NOT REDIRECTED.**
+- Whether to close issue #182 with this report as its evidence. It stays open until Jim says so.

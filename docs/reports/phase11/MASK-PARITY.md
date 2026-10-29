@@ -2,7 +2,7 @@
 report: MASK-PARITY
 phase: "11"
 status: observed
-authored_by: "Claude Code (purpose, harness, pre-run findings, steps for Jim; 2026-10-27, night run on branch phase-11/masks-217; Observed and Numbers from the results file, the suggested verdict, findings, 2026-10-28; run 2, 2026-10-29); Jim (the runs and their y/n answers, the decisions, the verdict)"
+authored_by: "Claude Code (purpose, harness, pre-run findings, steps for Jim; 2026-10-27, night run on branch phase-11/masks-217; Observed and Numbers from the results file, the suggested verdict, findings, 2026-10-28; runs 2 and 3, 2026-10-29); Jim (the runs and their y/n answers, the decisions, the verdict)"
 date: 2026-10-29
 ---
 
@@ -103,6 +103,18 @@ The file has no `put_back` step and no put-back line in `lines`; headline FAILED
 
 Against run 1 (2026-10-28, `_DSC0103.NEF`, 1.6.0): the two brush steps read back as written then and do not now; the inverted copy read back different in both runs, and this run names the field (`CorrectionMasks.0.Masks`, both masks); the curve field changed was `CorrectionActive` then and `MainCurve` now [handle: both files].
 
+### Run 3 (brush part, version 1.7.2), 2026-10-29
+
+Jim ran `npm run masks:verify -- --part parity --i-know` as step 4 of "Reruns after 1.7.2" (`BATCH-1.7.0-CHECKS.md`); the parity part only, no controller part. The rerun on 1.7.1 between run 2 and this one is in that file ("Results of the 1.7.1 reruns": the brush read back compressed, which the comparator did not accept); its results file was not copied into the repo. Since 1.7.2 the read-back check takes a brush stored compressed, and every other field must still match [handle: `BATCH-1.7.0-CHECKS.md`, "Fixed in version 1.7.2"]. Engine and plugin 1.7.2, Lightroom Classic 15.6, one run, 11:35:53 UTC, on `_DSC0091.NEF` (uuid `D838903C-EDE1-4C59-A3A2-02AD371F458C`, the master, orientation AB) [handle: `docs\reports\phase11\MASK-PARITY\run3\mask_verify_2026-10-29T11-35-53-017Z.json`, `engine_version`, `plugin_version`, `lrc_version`, `photos`].
+
+1. `brush_feather_density`: "AVG parity brush", 3 strokes, 368 dabs, +2 EV: **Jim y**, the step **YES**, no notes [handle: the file, `steps[0]`].
+2. `brush_erase_added`: 4 strokes, 463 dabs: **Jim y**, YES, no notes [handle: the file, `steps[1]`].
+3. `inverted_copy`: "AVG parity brush inverted", inverted, -2 EV, 4 strokes, 463 dabs, active: **Jim y** (the top and middle bands brighter, the rest darker), YES, no notes [handle: the file, `steps[2]`].
+4. `delete_empty_masks`: "unchanged, 2 masks before, 2 after": YES (no question) [handle: the file, `steps[3]`].
+5. `curve_capture`: "1 field(s) changed": `MainCurve` `["0,0", "120,158", "255,255"]`: YES (no question) [handle: the file, `steps[4].data.changed`].
+
+Headline **WORKED**, all five steps YES [handle: the file, `lines`, `headline`]. Put back: the file has no put-back line; the plugin log has the snapshot taken at 04:36:14.539 local and applied again at 04:37:28.926 [handle: `run3\bridge_log_excerpt_2026-10-29T04-35.txt`]. That the apply put the photo back whole is [inference]: the file records no comparison.
+
 ## Numbers
 
 | Field | Value |
@@ -131,6 +143,21 @@ Against run 1 (2026-10-28, `_DSC0103.NEF`, 1.6.0): the two brush steps read back
 
 [handle: `docs\reports\phase11\MASK-PARITY\run2\mask_verify_2026-10-29T00-48-00-676Z.json`, `mask_verify_2026-10-29T00-49-50-394Z.json`]
 
+### Run 3 (2026-10-29, `_DSC0091.NEF`, 1.7.2, brush part only)
+
+| Field | Value |
+|---|---|
+| Lightroom version / plugin version | 15.6 / 1.7.2 |
+| `_DSC0091.NEF` orientation | AB |
+| `brush_feather_density` YES/NO; read-back problems | YES (Jim y); none |
+| `brush_erase_added` YES/NO | YES (Jim y) |
+| `inverted_copy` YES/NO | YES (Jim y); none |
+| `delete_empty_masks`: status; masks before / after | unchanged; 2 / 2 |
+| `curve_capture`: fields changed and their values | `MainCurve`: `0,0`, `120,158`, `255,255` |
+| Put back: YES/NO | not in the file; snapshot applied again (log) |
+
+[handle: `docs\reports\phase11\MASK-PARITY\run3\mask_verify_2026-10-29T11-35-53-017Z.json`]
+
 ## Verdict
 
 (blank: Jim's.) **Suggested by Claude Code, a suggestion only:** row 5 (brush feather, density, erase, strokes added) go; row 1 (`lr_delete_empty_masks`) go for "runs and keeps the test masks", what it deletes still [unverified]; row 4 (Point Color) no-go as written; row 2 (inverted copy) open: rerun with the fixed step below; row 3 (curves) no field found by the table route.
@@ -145,3 +172,4 @@ Against run 1 (2026-10-28, `_DSC0103.NEF`, 1.6.0): the two brush steps read back
 - **Run 2 (2026-10-29): every brush step NO on the read-back, though Jim saw each as asked.** All three name `CorrectionMasks.0.Masks`, the brush component's dab list [inference: the path into the correction entry], so Lightroom gave the dabs back different from what the engine wrote; the file does not keep the two lists, so how they differ is not known [handle: run 2 file, `steps[0-2].notes`]. Run 1's brush steps read back as written, on another photo and 1.6.0. The `CorrectionActive` reading of run 1's inverted-copy NO does not show here: both masks read back active [handle: run 2 file, `data.mask.active`].
 - **Row 3: a mask's curve is in the table after all.** Jim's drag of the brush mask's curve changed `MainCurve` to `0,0 / 128,155 / 255,255` in the mask table [handle: run 2 file, `curve_capture`]; run 1 saw only `CorrectionActive` change. Why run 1 saw no curve field is [unverified]. The controller part of the same run read its curve writes back through `getValue` (`MASK-CONTROLLER.md`).
 - **Put back of run 2** is not in its results file, and its plugin log copy was not collected into the repo; asked.
+- **Run 3 (2026-10-29, 1.7.2): the brush steps and the inverted copy all YES** with Jim's y, on the photo of run 2 [handle: run 3 file, `lines`]. So run 2's `CorrectionMasks.0.Masks` NO was the comparator not taking Lightroom's compressed brush, which 1.7.2 accepts [inference: the 1.7.1 rerun finding in `BATCH-1.7.0-CHECKS.md` and the 1.7.2 fix]. Row 2 (inverted copy) now has a YES read-back and a y; the curve drag changed `MainCurve` again, as in run 2. A suggestion only (Verdict is Jim's): rows 2 and 5 go.

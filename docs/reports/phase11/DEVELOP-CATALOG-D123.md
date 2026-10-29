@@ -2,7 +2,7 @@
 report: DEVELOP-CATALOG-D123
 phase: "11"
 status: observed
-authored_by: "Claude Code (Opus 5.5): purpose, harness, pre-run findings, steps, 2026-10-28; Observed and Numbers from the results file and the plugin log, 2026-10-29. Jim: the run, his answers, Verdict (blank)."
+authored_by: "Claude Code (Opus 5.5): purpose, harness, pre-run findings, steps, 2026-10-28; Observed and Numbers from the results files and the plugin log, 2026-10-29 (run 1 on 1.7.0, run 2 on 1.7.2). Jim: the runs, his answers. Verdict: from the session brief, for Jim to confirm."
 date: 2026-10-29
 ---
 
@@ -93,6 +93,29 @@ Photo: `20250413-_OZ81430.NEF` (uuid `23B201BF-A39A-44C6-839B-E13D4C0EA70D`) [ha
 
 Headline **FAILED**; put back **NO**: the three copies were left in the catalog [handle: the file, `headline`, `copies_left`; the console's put back line is YES only when no copy is left, `develop-catalog-check-cli.ts:166` at `1768ad6`]. Jim removes the three leftover copies by hand.
 
+### Run 2 (version 1.7.2), 2026-10-29
+
+Jim ran `npm run develop-catalog:check` again as step 5 of "Reruns after 1.7.2" (`BATCH-1.7.0-CHECKS.md`), twice. Engine and plugin 1.7.2, Lightroom Classic 15.6 in both [handle: `docs\reports\phase11\DEVELOP-CATALOG-D123\run2\`, both `develop_catalog_check_*.json`, `engine_version`, `plugin_version`, `lrc_version`]. The rerun on 1.7.1 between run 1 and run 2 is in `BATCH-1.7.0-CHECKS.md` ("Results of the 1.7.1 reruns"); its file was not copied into the repo.
+
+**11:37:51 UTC: FAILED, a Lightroom call with no answer; put back YES.** On `_DSC0091.NEF` (uuid `D838903C-EDE1-4C59-A3A2-02AD371F458C`), not `20250413-_OZ81430.NEF` as the rerun steps say [handle: the 11:37 file, `photo`]; it is the photo the parity rerun just before ran on (MASK-PARITY.md run 3), so it was likely still selected [inference].
+
+1. Copies A, B, C `copied`; the two refusals `UNKNOWN_PARAMETER` and `OUT_OF_RANGE`: YES.
+2. `lr_set_develop_settings` on copy A: **"Lightroom did not answer in time: get_settings: no response within 15000 ms"**, NO; `lr_undo_last_step` was not called [handle: the 11:37 file, `lines`, `steps`]. The 15 s is the bridge client's request timeout [handle: `engine\src\bridge\client.ts:56` `requestTimeoutMs: 15000`].
+3. In the plugin log the last `get_settings` was received at 04:37:54.862 local, and the next line is `remove_photos` at 04:38:09.882, 15.0 s later; no `set_develop_settings` line, so nothing was written to copy A; no `stall-diag` line in that gap either [handle: `run2\bridge_log_excerpt_2026-10-29T04-37.txt`]. Why Lightroom did not answer is [unverified]; a Lightroom stall is the likely reason [inference: the same gap with no answer, and the 21.9 s stall of run 1].
+4. `lr_remove_photos`: `removed` 3, `missing` 1 (the made-up uuid); the copies gone; the selection as it was; the photo's settings back: YES. Jim's answers **y, y, y, y**. `copies_left` []. Headline FAILED (step 2).
+
+**11:48:34 UTC: WORKED; put back YES.** On `20250413-_OZ81430.NEF` (uuid `2E4A9191-A6D0-4293-BC9B-AD3CFC68D6F0`; run 1's photo of that name was `23B201BF-...`, so another photo of the same file name) [handle: the 11:48 file, `photo`]. In order [handle: the 11:48 file, `results`, `lines`]:
+
+1. Copies A (`39281A66-...`), B (`B73CACA7-...`), C (`5E826341-...`): `copied`. The two refusals sent nothing: `UNKNOWN_PARAMETER`, `OUT_OF_RANGE`.
+2. `lr_set_develop_settings` on copy A: `set`, exposure 0 to 0.5, `LensManualDistortionAmount` 0 to 10 (`unranged`), snapshot "AVG pre-set c69be4", **15,685 ms**. In the log the plugin's write ran from 04:48:37.549 to 04:48:53.235 (15.7 s), with one 1.1 s `stall-diag` in it [handle: `run2\bridge_log_excerpt_2026-10-29T04-48.txt`].
+3. `lr_undo_last_step`: `undone` true, **`via` "snapshot"**, `last_write.reverted` true; copy A against before the write: back (no change): YES. The log has `apply_snapshot` at 04:48:53.590.
+4. `LensManualDistortionAmount` 1000: `not_taken` (written 1000, read back 0), put back from "AVG pre-set 75bd0d"; copy A back: YES.
+5. `lr_remove_photos`: `removed` 3 (the three copies), `missing` 1 (the made-up uuid), in 0.6 s (04:49:10.376 to 04:49:10.969); each copy looked up again: `unknown_photo`, gone: YES.
+6. The selection as it was: yes; the photo's settings against the start: back.
+7. Jim's answers **y, y, y, y**: the module, folder or collection and the photo selected as before; no dialog to click; the three copies gone and his photo still there; no "AVG set develop settings" step in his photo's History [handle: the file, `answers`; questions in `develop-catalog-check-cli.ts:36-41` at `1768ad6`].
+
+Headline **WORKED**, `copies_left` [] [handle: the 11:48 file, `headline`].
+
 ## Numbers
 
 | Field | Value |
@@ -109,9 +132,25 @@ Headline **FAILED**; put back **NO**: the three copies were left in the catalog 
 
 [handle: `docs\reports\phase11\DEVELOP-CATALOG-D123\run1\develop_catalog_check_2026-10-29T00-54-43-202Z.json`]
 
+### Run 2 (2026-10-29, 1.7.2, the 11:48 run that worked)
+
+| Field | Value |
+|---|---|
+| Lightroom version, plugin, engine | 15.6, 1.7.2, 1.7.2 |
+| Headline, put back | WORKED; YES (no copy left). The 11:37 run before it: FAILED (`get_settings` no answer in 15 s), put back YES |
+| Refusals (unknown key, out of range) | `UNKNOWN_PARAMETER`, `OUT_OF_RANGE`; nothing sent |
+| `lr_set_develop_settings` on copy A: status, `changed`, `unranged`, time | `set`; exposure 0 to 0.5, `LensManualDistortionAmount` 0 to 10; `LensManualDistortionAmount`; 15,685 ms |
+| `lr_undo_last_step`: `undone`, `via`; copy A against before the write | true, `snapshot`; back |
+| `LensManualDistortionAmount` 1000: status, `not_taken`; copy A after the put-back | `not_taken`; written 1000, read back 0; back |
+| `lr_remove_photos`: status, removed, missing; copies gone | `removed`; 3; 1 (the made-up uuid); gone |
+| Selection and the photo's settings back | yes; back |
+| Jim's answers 1-4 | y, y, y, y |
+
+[handle: `docs\reports\phase11\DEVELOP-CATALOG-D123\run2\develop_catalog_check_2026-10-29T11-48-34-886Z.json`]
+
 ## Verdict
 
-_Jim's: go / conditional / no-go._
+**Go on 1.7.2:** D1 (`lr_set_develop_settings`), D2 (`lr_undo_last_step`, through the last write's snapshot) and D3 (`lr_remove_photos`) did in Lightroom Classic 15.6 on Windows what they say, and Lightroom's module, source and selection came back, in the 11:48 run of run 2 [handle: `run2\develop_catalog_check_2026-10-29T11-48-34-886Z.json`, `headline` WORKED, four y]. The 11:37 run's failure was a Lightroom call with no answer before anything was written, not a tool fault [inference: Observed, run 2]. [The verdict as given in the session brief of 2026-10-29; Jim confirms it on review of the PR.]
 
 ## Consequences / open questions
 
@@ -121,4 +160,6 @@ _Jim's: go / conditional / no-go._
 - **The selection after the run.** The check read 1 photo selected but not Jim's by uuid, while Jim answered y to "with your photo selected" (answer 1). A copy of his photo left selected would look the same in the grid [inference]; which photo it was is not in the file.
 - **Fixed in the fix PR for this batch (version 1.7.1), to be checked by Jim's rerun:** the undo runs with the written photo active in Develop, and the engine reads the photo back (`last_write.reverted`); `remove_photos` makes its selection again every 5 s for up to 60 s.
 - **Jim removes the three leftover copies by hand** ("AVG develop-catalog-check A", "B" and "C", Steps for Jim, "If something goes wrong", last item).
+- **Run 2 (1.7.2) checks both fixes:** the removal (fixed in 1.7.1, reselect every 5 s) removed the three copies in 0.6 s in both 1.7.2 runs; the undo (1.7.2, through the last write's "AVG pre-set" snapshot) put copy A back [handle: `run2\develop_catalog_check_2026-10-29T11-48-34-886Z.json`, `lr_undo_last_step` `via` "snapshot"]. Edit > Undo itself (the path when no write is known) is still [unverified] in Lightroom: it left the write in place on 1.7.0 and 1.7.1.
+- **Timeouts.** The read before the write (`get_settings`) has the bridge client's 15 s [handle: `engine\src\bridge\client.ts:56`] and timed out once with no answer (11:37 run); the write itself has 90 s [handle: `engine\src\sync\target.ts:22` `WRITE_TIMEOUT_MS`, used by `engine\src\mcp\tools-develop.ts:113`] and took 15.7 s in the 11:48 run, against 3.0 s in run 1. Whether such slow calls come from Lightroom's own stalls, as run 1's 21.9 s `stall-diag` did, is [unverified]: neither 1.7.2 gap has a long `stall-diag` line [handle: both `run2\bridge_log_excerpt_*.txt`].
 - Still `[unverified]` after this run: whether `removeFromCatalog` asks the user first (no removal ran; Jim saw no dialog, answer 2); the undo of this tool's write; the view put back after a removal. Also still `[unverified]`: `lr_set_develop_settings` on a rendered photo and on a photo in HDR edit mode (the extended curve keys), the removal of a master together with its copies, removal of more than three photos, undo after anything other than this tool's write.

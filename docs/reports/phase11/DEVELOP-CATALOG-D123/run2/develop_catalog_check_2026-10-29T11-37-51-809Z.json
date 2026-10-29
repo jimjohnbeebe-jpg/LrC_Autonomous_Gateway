@@ -1,0 +1,219 @@
+{
+  "check": "develop-catalog-check",
+  "started": "2026-10-29T11-37-51-809Z",
+  "node": "v24.11.1",
+  "engine_version": "1.7.2",
+  "results": {
+    "lr_create_virtual_copies A": {
+      "photos": [
+        {
+          "uuid": "D838903C-EDE1-4C59-A3A2-02AD371F458C",
+          "status": "copied",
+          "copy_uuid": "8828D535-F13D-4304-8F6C-EA541F7A0FDE",
+          "copy_name": "AVG develop-catalog-check A"
+        }
+      ],
+      "failed": [],
+      "undo": "lr_remove_photos with a copy_uuid and confirm: true removes that copy from the catalog; the master stays."
+    },
+    "lr_create_virtual_copies B": {
+      "photos": [
+        {
+          "uuid": "D838903C-EDE1-4C59-A3A2-02AD371F458C",
+          "status": "copied",
+          "copy_uuid": "BA3B254F-1DA8-4548-8D92-8477A22662F7",
+          "copy_name": "AVG develop-catalog-check B"
+        }
+      ],
+      "failed": [],
+      "undo": "lr_remove_photos with a copy_uuid and confirm: true removes that copy from the catalog; the master stays."
+    },
+    "lr_create_virtual_copies C": {
+      "photos": [
+        {
+          "uuid": "D838903C-EDE1-4C59-A3A2-02AD371F458C",
+          "status": "copied",
+          "copy_uuid": "8682F405-C181-4D73-911B-D8AE26342B46",
+          "copy_name": "AVG develop-catalog-check C"
+        }
+      ],
+      "failed": [],
+      "undo": "lr_remove_photos with a copy_uuid and confirm: true removes that copy from the catalog; the master stays."
+    },
+    "refused: unknown key": {
+      "photos": [],
+      "counts": {
+        "failed": 1
+      },
+      "failed": [
+        {
+          "uuid": "8828D535-F13D-4304-8F6C-EA541F7A0FDE",
+          "code": "UNKNOWN_PARAMETER",
+          "message": "\"NotALightroomKey\" is not a Lightroom key of raw photos (the pinned getDevelopSettings() dump); key names are case-sensitive; nothing was written to the photo. lr_get_metadata with raw: true lists its keys."
+        }
+      ],
+      "undo": "Each photo changed has the snapshot \"AVG pre-set 2f1534\" from just before (Develop, Snapshots panel; or lr_apply_snapshot with its id), which puts it back. Lightroom's History panel also has the step."
+    },
+    "refused: Exposure2012 out of range": {
+      "photos": [],
+      "counts": {
+        "failed": 1
+      },
+      "failed": [
+        {
+          "uuid": "8828D535-F13D-4304-8F6C-EA541F7A0FDE",
+          "code": "OUT_OF_RANGE",
+          "message": "exposure = 9 is outside -5..5"
+        }
+      ],
+      "undo": "Each photo changed has the snapshot \"AVG pre-set 03478a\" from just before (Develop, Snapshots panel; or lr_apply_snapshot with its id), which puts it back. Lightroom's History panel also has the step."
+    },
+    "lr_remove_photos (the three copies and a made-up uuid)": {
+      "status": "removed",
+      "removed": [
+        "8828D535-F13D-4304-8F6C-EA541F7A0FDE",
+        "BA3B254F-1DA8-4548-8D92-8477A22662F7",
+        "8682F405-C181-4D73-911B-D8AE26342B46"
+      ],
+      "not_removed": [],
+      "missing": [
+        "00000000-0000-0000-0000-00000000d123"
+      ],
+      "note": "Removed from the catalog only: the files stay on disk, and lr_import_photos imports them again, but what only the catalog held (Develop settings, keywords, collections and other metadata not saved to the files) does not come back."
+    },
+    "your photo's settings against the start": {
+      "names": "canonical",
+      "changed": {}
+    }
+  },
+  "plugin_version": "1.7.2",
+  "lrc_version": "15.6",
+  "photo": {
+    "uuid": "D838903C-EDE1-4C59-A3A2-02AD371F458C",
+    "filename": "_DSC0091.NEF"
+  },
+  "answers": [
+    "y",
+    "y",
+    "y",
+    "y"
+  ],
+  "lines": [
+    "YES lr_create_virtual_copies A: copied (expected copied)",
+    "YES lr_create_virtual_copies B: copied (expected copied)",
+    "YES lr_create_virtual_copies C: copied (expected copied)",
+    "YES refused: unknown key: UNKNOWN_PARAMETER (expected UNKNOWN_PARAMETER)",
+    "YES refused: Exposure2012 out of range: OUT_OF_RANGE (expected OUT_OF_RANGE)",
+    "NO  lr_set_develop_settings on copy A: Lightroom did not answer in time: get_settings: no response within 15000 ms The call stopped at 8828D535-F13D-4304-8F6C-EA541F7A0FDE, which Lightroom may still carry out. (expected set)",
+    "NO  lr_undo_last_step: not called: the write on copy A did not answer set, so the undo would take another step (expected undone)",
+    "YES lr_remove_photos (the three copies and a made-up uuid): removed (expected removed)",
+    "YES the copies are no longer in the catalog: gone (expected gone)",
+    "YES the selection is as it was: yes (expected yes)",
+    "YES your photo's settings against the start: back (expected back)",
+    "YES Jim's answer 1: y",
+    "YES Jim's answer 2: y",
+    "YES Jim's answer 3: y",
+    "YES Jim's answer 4: y"
+  ],
+  "steps": [
+    {
+      "step": "lr_create_virtual_copies A",
+      "expect": [
+        "copied"
+      ],
+      "statuses": [
+        "copied"
+      ]
+    },
+    {
+      "step": "lr_create_virtual_copies B",
+      "expect": [
+        "copied"
+      ],
+      "statuses": [
+        "copied"
+      ]
+    },
+    {
+      "step": "lr_create_virtual_copies C",
+      "expect": [
+        "copied"
+      ],
+      "statuses": [
+        "copied"
+      ]
+    },
+    {
+      "step": "refused: unknown key",
+      "expect": [
+        "UNKNOWN_PARAMETER"
+      ],
+      "statuses": [
+        "UNKNOWN_PARAMETER"
+      ]
+    },
+    {
+      "step": "refused: Exposure2012 out of range",
+      "expect": [
+        "OUT_OF_RANGE"
+      ],
+      "statuses": [
+        "OUT_OF_RANGE"
+      ]
+    },
+    {
+      "step": "lr_set_develop_settings on copy A",
+      "expect": [
+        "set"
+      ],
+      "statuses": [],
+      "error": "Lightroom did not answer in time: get_settings: no response within 15000 ms The call stopped at 8828D535-F13D-4304-8F6C-EA541F7A0FDE, which Lightroom may still carry out."
+    },
+    {
+      "step": "lr_undo_last_step",
+      "expect": [
+        "undone"
+      ],
+      "statuses": [],
+      "error": "not called: the write on copy A did not answer set, so the undo would take another step"
+    },
+    {
+      "step": "lr_remove_photos (the three copies and a made-up uuid)",
+      "expect": [
+        "removed"
+      ],
+      "statuses": [
+        "removed"
+      ]
+    },
+    {
+      "step": "the copies are no longer in the catalog",
+      "expect": [
+        "gone"
+      ],
+      "statuses": [
+        "gone"
+      ]
+    },
+    {
+      "step": "the selection is as it was",
+      "expect": [
+        "yes"
+      ],
+      "statuses": [
+        "yes"
+      ]
+    },
+    {
+      "step": "your photo's settings against the start",
+      "expect": [
+        "back"
+      ],
+      "statuses": [
+        "back"
+      ]
+    }
+  ],
+  "copies_left": [],
+  "headline": "FAILED"
+}

@@ -2,7 +2,7 @@
 report: MASKS-VERIFY
 phase: "11"
 status: observed
-authored_by: "Claude Code (purpose, harness, pre-run findings, steps for Jim; 2026-10-27, night run on branch phase-11/masks-210; Observed and Numbers from the results files, the suggested verdict, harness findings, 2026-10-28; run 4, 2026-10-29); Jim (the runs and their y/n answers, the decisions, the verdict)"
+authored_by: "Claude Code (purpose, harness, pre-run findings, steps for Jim; 2026-10-27, night run on branch phase-11/masks-210; Observed and Numbers from the results files, the suggested verdict, harness findings, 2026-10-28; runs 4 and 5, 2026-10-29); Jim (the runs and their y/n answers, the decisions, the verdict)"
 date: 2026-10-29
 ---
 
@@ -128,6 +128,15 @@ Jim ran `npm run masks:verify -- --part person --i-know` as check 3 of the 1.7.0
 - The bridge log of that run (17:41:56-17:42:06 local): `create_snapshot`, `apply_settings` (the probe) at 17:42:00.833, `update_ai_settings` at 17:42:01.223, then 10 `get_settings` polls about 0.5 s apart from 17:42:01.392 to 17:42:06.227 (about 5 s), one more `get_settings`, `select_photo` and `apply_snapshot` (the snapshot put back) at 17:42:06.310 [handle: `run4\bridge_log_excerpt_2026-10-28T17-41.txt`]. The results file keeps no put-back line for this run; the `apply_snapshot` in the log is the put-back [inference].
 - With run 1 (`_DSC0103.NEF`, 0 people), that is **2 of 2 probes with no `InstanceBounds`**. The masks Jim made by hand in Phase 6 on a photo of people had `InstanceBounds` [handle: `docs\reports\phase6\masks-capture\capture4-row6_people_by_hand.json`, lines 53 and 132].
 
+### Run 5 (part 2, person, version 1.7.2), 2026-10-29
+
+Jim ran `npm run masks:verify -- --part person --i-know` as step 3 of "Reruns after 1.7.2" (`BATCH-1.7.0-CHECKS.md`). The rerun on 1.7.1 between run 4 and this one is in that file ("Results of the 1.7.1 reruns"); its results file was not copied into the repo. Since 1.7.2 the part passes on a computed Entire Person mask plus Jim's y; it no longer counts people [handle: `BATCH-1.7.0-CHECKS.md`, "Fixed in version 1.7.2"]. Engine and plugin 1.7.2, Lightroom Classic 15.6, one run, 11:30:23 UTC [handle: `docs\reports\phase11\MASKS-VERIFY\run5\mask_verify_2026-10-29T11-30-23-704Z.json`, `engine_version`, `plugin_version`, `lrc_version`, `started`].
+
+- Photo `PICT0019.DNG`, uuid `D9333041-14D1-4817-A4BC-62E466A0358F`, orientation AB [handle: the file, `photos`]. Run 4's `PICT0019.DNG` was `B8891F0F-...`, so this is another photo of that file name, likely the virtual copy the rerun steps name [inference].
+- `person_entire`: the probe "AVG verify person" (Entire Person, `MaskSubType` 0, `MaskSubCategoryID` 20036, instance 0, `LocalExposure2012` 0.5) was written; Lightroom computed it in 29,588 ms (`outcome` "computed") and read it back with `MaskSubType` 3, `MaskSubCategoryID` 13, a `MaskDigest`, `ErrorReason` absent, and no `InstanceBounds` [handle: the file, `steps[0].data.ai`, `written`, `read_back`]. The same rewrite of 0 / 20036 to 3 / 13 as on 1.7.1 [handle: `BATCH-1.7.0-CHECKS.md`, 1.7.1 rerun row 3].
+- Question "Is a person in the photo brighter (and the background not)?": **Jim y**; the step YES. Headline **WORKED** [handle: the file, `steps[0].answer`, `lines`, `headline`].
+- Put back: the file has no put-back line; the plugin log has the snapshot taken at 04:30:46.957 local and applied again at 04:31:25.712 (`apply_snapshot`) [handle: `run5\bridge_log_excerpt_2026-10-29T04-30.txt`]. That the apply put the photo back whole is [inference]: the file records no comparison.
+
 ## Numbers
 
 | Field | Value |
@@ -137,13 +146,13 @@ Jim ran `npm run masks:verify -- --part person --i-know` as check 3 of the 1.7.0
 | Part 1, photo 2 (`_OZ80660.JPG`): red point; green point | **NO** (Jim n); none found |
 | Part 1: the engine's sRGB at each point / Lightroom's l, a, b at Jim's red click / the render's sRGB at that pin | 0.692, 0.111, 0.280 (`_DSC0028`) and 0.796, 0.137, 0.099 (`_OZ80660`) / 0.794, 0.842, 0.665 / 0.460, 0.001, 0.113 |
 | Part 1: copy of Lightroom's sample | YES |
-| Part 2: people found; instance read back; `person_entire`; other kinds | not tested: 0 people found (run 1); a mirrored photo (run 2); run 4: 2 runs stopped at "2 photo(s) selected, not 1", then 0 people found on `PICT0019.DNG` (two people, Jim) |
+| Part 2: people found; instance read back; `person_entire`; other kinds | not tested: 0 people found (run 1); a mirrored photo (run 2); run 4: 2 runs stopped at "2 photo(s) selected, not 1", then 0 people found on `PICT0019.DNG` (two people, Jim); **run 5 (1.7.2): `person_entire` computed (29.6 s), read back as `MaskSubType` 3 / `MaskSubCategoryID` 13 with no `InstanceBounds`, Jim y: YES**; one person's mask by instance not tested |
 | Part 3: orientations seen; cases per orientation; orientation put back | run 2: BA, AD, DC, CB; 2 of 8 cases PASS (BA B, DC B); put back NO (BA, was AB). Run 1: 4 cases, all export failures; put back YES |
-| Put back: YES/NO | run 1 YES; run 2 NO (orientation) |
+| Put back: YES/NO | run 1 YES; run 2 NO (orientation); run 5: snapshot applied again (log), not compared |
 
 ## Verdict
 
-(blank: Jim's.) **Suggested by Claude Code, a suggestion only:** part 1 no-go for the engine's point sample (one NO of three answers) and go for a copy of Lightroom's sample; part 2 not tested; part 3 no-go: mirrored photos stay refused.
+(blank: Jim's.) **Suggested by Claude Code, a suggestion only:** part 1 no-go for the engine's point sample (one NO of three answers) and go for a copy of Lightroom's sample; part 2 (run 5, 1.7.2) go for the Entire Person mask, one person's mask by instance not tested; part 3 no-go: mirrored photos stay refused.
 
 ## Consequences / open questions
 
@@ -160,5 +169,6 @@ Jim ran `npm run masks:verify -- --part person --i-know` as check 3 of the 1.7.0
 - **Fixed:** the harness now reads every selected photo's uuid and orientation before any part writes, saves them (`photos` in the results file), and stops colour, person and parity on a flipped photo before its snapshot. Part 3 saves the photo's start orientation to `%TEMP%\LrC-AVG\masks-verify\orientation.json` before Jim flips it, reads the flip-back up to five times a second apart, and while it reads otherwise asks one menu action at a time (Flip Horizontal or Rotate Right once) until it reads the start; a run that stops leaves the file, and the next run puts the photo back first. A put-back no longer counts as part 3's yes (run 1 counted it). The results now record the Lightroom and plugin versions [handle: `engine\tests\masks-verify.test.ts`].
 - **Run 1's export failures were not caused by the harness** [inference]: each export goes to a fresh folder the plugin makes (`plugin\LrC-AVG.lrplugin\Preview.lua:58-59`), and run 2 made the same calls about 40 times (`export_preview`) without a failure [handle: the log excerpt, 04:55:37-04:57:25]. Run 1's exports were slow before they failed (12.2 s and 7.0 s, against under 1 s in run 2) [handle: the log excerpt, 04:48:38.025-04:48:57.282]. Why Lightroom wrote no JPEG is [unverified].
 - **Run 4 (2026-10-29): part 2 is still not tested.** The engine's Entire Person probe found 0 people on a photo Jim says has two (Observed, run 4), as on `_DSC0103.NEF` in run 1. Lightroom's own person masks had `InstanceBounds` in Phase 6 [handle: `docs\reports\phase6\masks-capture\capture4-row6_people_by_hand.json`]. Lightroom computed both probes (Observed, run 4) and gave no boxes, so the probe as the engine writes it likely differs from what Lightroom writes when it finds people [inference; unverified]. The results file keeps only the boxes, not the probe written or read back, so where it differs cannot be read from this run. The fix PR for this batch (version 1.7.1) saves the probe as written and as read back, to be checked by Jim's rerun.
+- **Run 5 (2026-10-29, 1.7.2): part 2 passes as now defined** (a computed Entire Person mask and Jim's y). What Lightroom gives back is still not what the engine wrote (kind 0 / 20036 read back as 3 / 13, no `InstanceBounds`), as on 1.7.1 [handle: `run5\mask_verify_2026-10-29T11-30-23-704Z.json`, `read_back`], so masking one person of several by instance stays [unverified].
 - **The "2 photo(s) selected" stops:** the batch steps now say to Select None and click the copy after Create Virtual Copy (`BATCH-1.7.0-CHECKS.md` step 12).
 - Still [unverified]: one person's masks on a photo of two or more people; why radials tilt on a mirrored photo; a copy of Lightroom's sample on a second photo, or between two photos (Automaat found it selects what ranks like the sample there [upstream claim: PR #341]); a slider dragged in Lightroom just before a mask pass (#343).

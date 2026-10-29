@@ -1,0 +1,136 @@
+{
+  "check": "masks-verify",
+  "started": "2026-10-29T11-35-53-017Z",
+  "parts": [
+    "parity"
+  ],
+  "steps": [
+    {
+      "part": "parity",
+      "photo": "_DSC0091.NEF",
+      "id": "brush_feather_density",
+      "question": "  Three brighter bands across the photo: the TOP with a soft edge, the MIDDLE with a hard edge, the BOTTOM less bright than the other two?",
+      "answer": "y",
+      "ok": true,
+      "notes": [],
+      "data": {
+        "mask": {
+          "id": "DFFB1167-7A35-401C-9A4C-F41F96601D43",
+          "name": "AVG parity brush",
+          "kind": "brush",
+          "active": true,
+          "inverted": false,
+          "components": 1,
+          "sliders": {
+            "local.exposure": 2
+          },
+          "geometry": {
+            "strokes": 3,
+            "dabs": 368
+          }
+        }
+      }
+    },
+    {
+      "part": "parity",
+      "photo": "_DSC0091.NEF",
+      "id": "brush_erase_added",
+      "question": "  Is there now a gap down the middle of all three bands (the erase stroke)?",
+      "answer": "y",
+      "ok": true,
+      "notes": [],
+      "data": {
+        "mask": {
+          "id": "DFFB1167-7A35-401C-9A4C-F41F96601D43",
+          "name": "AVG parity brush",
+          "kind": "brush",
+          "active": true,
+          "inverted": false,
+          "components": 1,
+          "sliders": {
+            "local.exposure": 2
+          },
+          "geometry": {
+            "strokes": 4,
+            "dabs": 463
+          }
+        }
+      }
+    },
+    {
+      "part": "parity",
+      "photo": "_DSC0091.NEF",
+      "id": "inverted_copy",
+      "question": "  Is there a new mask \"AVG parity brush inverted\", with the TOP and MIDDLE bands still BRIGHTER and the rest of the photo (the gap down the middle too) DARKER than before the check?",
+      "answer": "y",
+      "ok": true,
+      "notes": [],
+      "data": {
+        "mask": {
+          "id": "105CBA21-0528-4289-81AF-E045934ED6E8",
+          "name": "AVG parity brush inverted",
+          "kind": "brush",
+          "active": true,
+          "inverted": true,
+          "components": 1,
+          "sliders": {
+            "local.exposure": -2
+          },
+          "geometry": {
+            "strokes": 4,
+            "dabs": 463
+          }
+        }
+      }
+    },
+    {
+      "part": "parity",
+      "photo": "_DSC0091.NEF",
+      "id": "delete_empty_masks",
+      "question": null,
+      "answer": "unchanged, 2 masks before, 2 after",
+      "ok": true,
+      "notes": []
+    },
+    {
+      "part": "parity",
+      "photo": "_DSC0091.NEF",
+      "id": "curve_capture",
+      "question": null,
+      "answer": "1 field(s) changed",
+      "ok": true,
+      "skipped": false,
+      "notes": [],
+      "data": {
+        "changed": {
+          "MainCurve": [
+            "0,0",
+            "120,158",
+            "255,255"
+          ]
+        }
+      }
+    }
+  ],
+  "plugin_version": "1.7.2",
+  "lrc_version": "15.6",
+  "photos": [
+    {
+      "part": "parity",
+      "uuid": "D838903C-EDE1-4C59-A3A2-02AD371F458C",
+      "filename": "_DSC0091.NEF",
+      "orientation": "AB"
+    }
+  ],
+  "lines": [
+    "YES  parity _DSC0091.NEF brush_feather_density",
+    "YES  parity _DSC0091.NEF brush_erase_added",
+    "YES  parity _DSC0091.NEF inverted_copy",
+    "YES  parity _DSC0091.NEF delete_empty_masks",
+    "YES  parity _DSC0091.NEF curve_capture"
+  ],
+  "headline": "WORKED",
+  "node": "v24.11.1",
+  "engine_version": "1.7.2",
+  "plugin_log_copied": "mask_verify_bridge_log_2026-10-29T11-35-53-017Z.txt"
+}

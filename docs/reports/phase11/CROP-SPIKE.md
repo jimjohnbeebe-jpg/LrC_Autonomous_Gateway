@@ -1,8 +1,8 @@
 ---
 report: CROP-SPIKE
 phase: "11"
-status: template
-authored_by: "Claude Code (Opus 5.5): purpose, harness, pre-run findings, steps, 2026-10-29. Jim: the run, his answers, Verdict (blank)."
+status: observed
+authored_by: "Claude Code (Opus 5.5): purpose, harness, pre-run findings, steps, 2026-10-29; Observed and Numbers from the results files, 2026-10-29. Jim: the runs, his answers, the removal of run 1's copy. Verdict: from the session brief, for Jim to confirm."
 date: 2026-10-29
 ---
 
@@ -60,26 +60,55 @@ The plugin needs no change: `set_develop_settings` is in plugin 1.7.0 (`plugin\L
 
 ## Observed (Jim)
 
-*(blank: filled from the results file and Jim's answers after the run)*
+Filled by Claude Code from the results files, 2026-10-29; the y/n answers in them are Jim's. Jim ran `npm run crop:spike` twice after the 1.7.2 reruns (`BATCH-1.7.0-CHECKS.md`). Engine and plugin 1.7.2, Lightroom Classic 15.6, both runs [handle: `docs\reports\phase11\CROP-SPIKE\run1\`, both `crop_spike_*.json`, `engine_version`, `plugin_version`, `lrc_version`]. Times are UTC from the file names (Jim's local time is UTC-7).
+
+**Run 1, 11:49:53: FAILED from a harness bug, before any write.** On `20250413-_OZ81430.NEF` (uuid `2E4A9191-A6D0-4293-BC9B-AD3CFC68D6F0`), `lr_create_virtual_copies` answered `copied`; recording that step then threw "Cannot set properties of undefined (setting 'lr_create_virtual_copies')", because the harness never set `results` [handle: `run1\crop_spike_2026-10-29T11-49-53-414Z.json`, `steps`, no `results` key]. The run then said "no virtual copy was made" and `copy_left` null, though the copy existed [handle: the same file, `errors`, `copy_left`; the plugin log has `copy_photo: 2E4A9191-... copied ()` at 04:49:54.385 local, `%TEMP%\LrC-AVG\bridge.log` line 58240, not copied into the repo]. Nothing was written to the copy (no `set_develop_settings` line follows in the log). Jim removed the copy by hand [stated: Jim, 2026-10-29, through the session brief]. Fixed in `fe94322` (the harness sets `results` before the first step).
+
+**Run 2, 12:06:15: WORKED**, on `20250413-_OZ81430.NEF` (uuid `23B201BF-A39A-44C6-839B-E13D4C0EA70D`, another photo of that file name than run 1's) [handle: `run1\crop_spike_2026-10-29T12-06-15-398Z.json`, `photo`, `headline`]. In order [handle: the same file, `results`, `read_back`, `renders`, `lines`, `answers`]:
+
+1. `lr_create_virtual_copies`: copy "AVG crop-spike" (`0D10B838-EF29-4506-8BEB-A6FB1BFF9300`), `copied`. The start crop: `CropLeft` 0, `CropRight` 1, `CropTop` 0, `CropBottom` 1, `CropAngle` 0, `CropConstrainToUnitSquare` 1, `CropConstrainToWarp` 0 (`crop_before`).
+2. Render before: 1024 × 683, aspect 1.499.
+3. `lr_set_develop_settings` crop (`CropLeft` 0.1, `CropRight` 0.9, `CropTop` 0.2, `CropBottom` 0.8): `set`, the four keys `unranged`, snapshot "AVG pre-set 873d1d", History name "AVG set develop settings 873d1d", 3,018 ms. Read back as written: YES (0.1, 0.9, 0.2, 0.8; `CropAngle` 0).
+4. Render after the crop: 1024 × 512, aspect **2.0**; the spike's expected ratio 1.499 × 0.8 / 0.6 = 1.999 [inference: arithmetic], within 3 %: YES.
+5. `lr_set_develop_settings` `CropAngle` 5: `set`, `unranged`, snapshot "AVG pre-set 40ae5c", 2,811 ms. Read back as written: YES. **The four corners read back unchanged** (0.1, 0.9, 0.2, 0.8) with `CropAngle` 5.
+6. Render after the straighten: 1024 × 405, aspect **2.528**.
+7. Jim's answers: **y, y** (the tighter crop shown; the photo turned about 5 degrees) [handle: the file, `answers`].
+8. `lr_remove_photos` on the copy: `removed`, the copy gone; Jim's photo selected again; its settings against the start: back. `copy_left` null.
+
+The three renders stay on Jim's disk, not in this public repo [inference: `.gitignore`, "renders of Jim's photos: on disk only, never in the public repo" (Phase 3 decision 3, written for the golden JPEGs)]; their SHA-256 and sizes, from `sha256sum` and sharp's `metadata()` run by Claude Code on 2026-10-29 in `%TEMP%\LrC-AVG\crop-spike\`:
+
+| Render | Size | SHA-256 |
+|---|---|---|
+| `crop_spike_2026-10-29T12-06-15-398Z_1-before.jpg` | 1024 × 683 | `0ca19764dd514fbcaaf1635407d887e24b24f6f6175dfeca064d9633cf342303` |
+| `crop_spike_2026-10-29T12-06-15-398Z_2-crop.jpg` | 1024 × 512 | `2f88adf2885e685d7d1570b85048e937d9ec0cf800e26727e1a279e2bdfe824d` |
+| `crop_spike_2026-10-29T12-06-15-398Z_3-straighten.jpg` | 1024 × 405 | `3de988f6b8c8e10b995517ae2aa9325dabe03e0703e4e1916b056c56da78cddb` |
+
+The vault copy of this report keeps the three files in `Reports\Phase11\CROP-SPIKE\run1\`.
 
 ## Numbers
 
 | Field | Value |
 |---|---|
-| Crop write status / read back as written | |
-| Crop keys read back after the crop | |
-| Render aspect before / after the crop (ratio) | |
-| Straighten write status / read back as written | |
-| Crop keys read back after the straighten | |
-| Jim: tighter crop shown (y/n) | |
-| Jim: turned about 5 degrees (y/n) | |
-| Copy removed / selection back / photo unchanged | |
+| Lightroom version, plugin, engine | 15.6, 1.7.2, 1.7.2 |
+| Headline, put back | run 1 FAILED (harness bug; copy left, removed by Jim); run 2 WORKED, copy removed |
+| Crop write status / read back as written | `set` / YES |
+| Crop keys read back after the crop | `CropLeft` 0.1, `CropRight` 0.9, `CropTop` 0.2, `CropBottom` 0.8, `CropAngle` 0 |
+| Render aspect before / after the crop (ratio) | 1.499 / 2.0 (ratio 1.334; 0.8 / 0.6 = 1.333) |
+| Straighten write status / read back as written | `set` / YES |
+| Crop keys read back after the straighten | `CropLeft` 0.1, `CropRight` 0.9, `CropTop` 0.2, `CropBottom` 0.8, `CropAngle` 5 (corners not refit); render 1024 × 405, aspect 2.528 |
+| Jim: tighter crop shown (y/n) | y |
+| Jim: turned about 5 degrees (y/n) | y |
+| Copy removed / selection back / photo unchanged | yes / yes / back |
+
+[handle: `docs\reports\phase11\CROP-SPIKE\run1\crop_spike_2026-10-29T12-06-15-398Z.json`]
 
 ## Verdict
 
-*(blank: Jim)*
+**Go** on this report's go rule: both writes `set`, read back as written, the crop render's aspect changed as the crop says, and Jim answered y to both questions. Crop (`CropLeft`/`Right`/`Top`/`Bottom`) and straighten (`CropAngle`) are writable through `lr_set_develop_settings` as it is, with no plugin change. Whether to build an `lr_crop` tool, and its session contract, is Jim's next decision; issue #115 stays open. [The verdict as given in the session brief of 2026-10-29; Jim confirms it on review of the PR.]
 
 ## Consequences / open questions
 
-- On go: an `lr_crop` tool (issue #115 "Proposal") is a later decision for Jim; its session contract has to say how a crop changes regions, metrics and mask coordinates (issue #115 "Design note"; `engine\src\params\crop-frame.ts` already maps masks through a crop).
-- Whether Lightroom refits the corners when only `CropAngle` is written stays [unverified] until the read-back of step 6.
+- An `lr_crop` tool (issue #115 "Proposal") is Jim's next decision; its session contract has to say how a crop changes regions, metrics and mask coordinates (issue #115 "Design note"; `engine\src\params\crop-frame.ts` already maps masks through a crop).
+- **Lightroom does not refit the stored corners when only `CropAngle` is written:** they read back 0.1 / 0.9 / 0.2 / 0.8 at angle 5 [handle: run 2 file, `read_back.straighten`], while the render grew narrower, aspect 2.0 to 2.528 [handle: run 2 file, `renders`]. So Lightroom fits the turned crop inside the photo when it renders (`CropConstrainToUnitSquare` 1), not in the stored keys [inference]. An `lr_crop` that reports the crop's frame, or maps masks through it, cannot take the stored corners as the rendered frame after a straighten [inference; `engine\src\devtools\mask-crop-run.ts` `turnCrop` shrinks the corners itself for that reason].
+- Still [unverified]: a crop on a rendered (non-raw) photo, on a photo Lightroom turns a quarter or mirrors, a crop with `CropConstrainToUnitSquare` 0, and whether `CropAngle` written this way matches the Develop crop tool's straighten ([community] note in Pre-run findings).
+- Run 1's harness bug left a copy behind while saying none was made. `fe94322` sets `results` before the first step, so the copy step no longer throws [handle: `git show fe94322`, `crop-spike-cli.ts:132`]; run 2 recorded its copy and removed it. Whether the "no virtual copy was made" message can still show when a later step throws with a copy made is [unverified].

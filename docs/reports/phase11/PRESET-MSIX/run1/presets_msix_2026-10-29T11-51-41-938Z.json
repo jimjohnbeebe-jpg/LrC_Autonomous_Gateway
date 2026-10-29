@@ -1,0 +1,34 @@
+{
+  "check": "presets-msix",
+  "issue": 182,
+  "started_at": "2026-10-29T11:51:41.938Z",
+  "node": "v24.11.1",
+  "preset_name": "AVG msix check b8fcac",
+  "desktop_entry_runs_this_engine": "yes",
+  "saved_answer": "y",
+  "places": [
+    {
+      "kind": "real",
+      "dir": "%USERPROFILE%\\AppData\\Roaming\\Adobe\\CameraRaw\\Settings",
+      "exists": true,
+      "files": [
+        "AVG msix check b8fcac.xmp"
+      ]
+    },
+    {
+      "kind": "package",
+      "dir": "%USERPROFILE%\\AppData\\Local\\Packages\\Claude_pzs8sxrjxfjjc\\LocalCache\\Roaming\\Adobe\\CameraRaw\\Settings",
+      "exists": false,
+      "files": []
+    }
+  ],
+  "where": "NOT REDIRECTED",
+  "found": true,
+  "detail": "\"AVG msix check b8fcac\" is in Lightroom's own preset folder: %USERPROFILE%\\AppData\\Roaming\\Adobe\\CameraRaw\\Settings\\AVG msix check b8fcac.xmp",
+  "listed_in_lightroom": "y",
+  "delete_answer": "y",
+  "deleted": [
+    "%USERPROFILE%\\AppData\\Roaming\\Adobe\\CameraRaw\\Settings\\AVG msix check b8fcac.xmp"
+  ],
+  "headline": "WORKED"
+}

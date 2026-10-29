@@ -1,0 +1,27 @@
+2026-10-29 04:37:52.376 INFO  bridge: send: engine connected
+2026-10-29 04:37:52.376 INFO  bridge: hello f47cf597-8ba4-4f9f-9aaa-31e2e84b23f2
+2026-10-29 04:37:52.382 INFO  bridge: get_selection 7d1e3b2f-c954-416d-94bc-e74598f35f6f
+2026-10-29 04:37:52.382 INFO  bridge: get_settings d04ccd93-8770-461a-9e5d-f8580b55bc37
+2026-10-29 04:37:52.656 INFO  bridge: copy_photo 6f96d8a6-d009-4d0b-9bc9-5711ce3a3bd9
+2026-10-29 04:37:53.199 INFO  copy_photo: D838903C-EDE1-4C59-A3A2-02AD371F458C copied ()
+2026-10-29 04:37:53.218 INFO  bridge: copy_photo c4f032c3-b53a-4719-9171-dfa499b61ac4
+2026-10-29 04:37:53.831 INFO  copy_photo: D838903C-EDE1-4C59-A3A2-02AD371F458C copied ()
+2026-10-29 04:37:53.868 INFO  bridge: copy_photo a52ae334-f149-4d94-9fd0-f98d0c854f8e
+2026-10-29 04:37:54.418 INFO  copy_photo: D838903C-EDE1-4C59-A3A2-02AD371F458C copied ()
+2026-10-29 04:37:54.448 INFO  bridge: get_settings 49c38102-3e20-47d2-ade0-f55fa6aab63c
+2026-10-29 04:37:54.607 INFO  bridge: get_settings 66c5cd43-804b-43b1-809d-18ae3046f2a7
+2026-10-29 04:37:54.827 INFO  bridge: get_settings 7f884469-3952-44af-aaab-2341c4443201
+2026-10-29 04:37:54.862 INFO  bridge: get_settings b4a25716-47ba-40c1-bcbc-c8ea6532482c
+2026-10-29 04:38:09.882 INFO  bridge: remove_photos 6c7b415b-a18f-4a5b-a11e-79d5f9d6e1ee
+2026-10-29 04:38:29.113 INFO  remove_photos: removed, 3 removed, 0 not, 1 missing ()
+2026-10-29 04:38:29.214 INFO  bridge: get_settings 2f02ede4-aab0-4e85-b5aa-bc690e9916e1
+2026-10-29 04:38:29.216 WARN  bridge: get_settings failed: unknown_photo no photo in the catalog has uuid 8828D535-F13D-4304-8F6C-EA541F7A0FDE
+2026-10-29 04:38:29.274 INFO  bridge: get_settings c2f9a75f-848c-4848-849e-1b55c816362e
+2026-10-29 04:38:29.305 WARN  bridge: get_settings failed: unknown_photo no photo in the catalog has uuid BA3B254F-1DA8-4548-8D92-8477A22662F7
+2026-10-29 04:38:29.309 INFO  bridge: get_settings 52978a65-8a4a-49da-8840-2429f7063b11
+2026-10-29 04:38:29.348 WARN  bridge: get_settings failed: unknown_photo no photo in the catalog has uuid 8682F405-C181-4D73-911B-D8AE26342B46
+2026-10-29 04:38:29.443 INFO  bridge: get_selection 2a259168-d325-42e6-8d1f-f15806bd695d
+2026-10-29 04:38:29.552 INFO  bridge: get_settings 757779da-5446-4bda-96cd-3948d6a0cb16
+2026-10-29 04:38:31.163 WARN  stall-diag: stall 1014 ms after idle
+2026-10-29 04:39:29.504 INFO  bridge: receive: closed
+2026-10-29 04:39:29.505 INFO  stall-diag: rebind receive (closed, generation 1)

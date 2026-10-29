@@ -1,0 +1,22 @@
+2026-10-29 04:35:53.235 INFO  bridge: receive: engine connected
+2026-10-29 04:35:53.791 INFO  bridge: send: engine connected
+2026-10-29 04:35:53.814 INFO  bridge: hello 6c4159cb-0b31-4349-936d-2026d1279685
+2026-10-29 04:36:14.497 INFO  bridge: get_selection 4343bba7-595c-40a9-826f-0bb62c0805e8
+2026-10-29 04:36:14.503 INFO  bridge: get_settings d5952788-c423-4559-a891-7b008a2bab8e
+2026-10-29 04:36:14.520 INFO  bridge: select_photo 0a186467-1074-4bf8-8d39-0fbc9b69524c
+2026-10-29 04:36:14.526 INFO  bridge: get_settings 439e6589-6525-41eb-b177-cd9d40fefe6a
+2026-10-29 04:36:14.539 INFO  bridge: create_snapshot cce47729-9c39-43a8-8d63-87e2900e2d6f
+2026-10-29 04:36:14.560 INFO  bridge: apply_settings 8c9b02bb-036f-4166-ba2e-8274c02f5373
+2026-10-29 04:36:27.260 INFO  bridge: apply_settings 77a62bd6-9a6a-492c-bd45-07f8d947a5b6
+2026-10-29 04:36:31.601 INFO  bridge: apply_settings df9e7f8e-135a-40b0-89c7-74da4c911d1e
+2026-10-29 04:36:40.648 INFO  bridge: delete_empty_masks 67e30389-97e9-4f52-818e-635dac1b2f52
+2026-10-29 04:36:46.796 INFO  delete_empty_masks: D838903C-EDE1-4C59-A3A2-02AD371F458C unchanged
+2026-10-29 04:36:46.800 INFO  bridge: get_settings b0233e3c-ac1c-41a2-a466-4d1d05b7501c
+2026-10-29 04:36:56.707 WARN  stall-diag: stall 2537 ms after idle
+2026-10-29 04:36:59.503 WARN  stall-diag: stall 1144 ms after idle
+2026-10-29 04:37:09.672 WARN  stall-diag: stall 1231 ms after idle
+2026-10-29 04:37:28.854 INFO  bridge: get_settings d2e47c9d-a49e-45e4-a89a-9566d84a0ec7
+2026-10-29 04:37:28.863 INFO  bridge: select_photo 6965d657-ced2-4cbe-83bc-733a8a47621e
+2026-10-29 04:37:28.926 INFO  bridge: apply_snapshot d1414a6c-edda-4d6d-a33b-2f8ef9b36e5c
+2026-10-29 04:37:29.769 INFO  bridge: receive: closed
+2026-10-29 04:37:29.769 INFO  stall-diag: rebind receive (closed, generation 1)

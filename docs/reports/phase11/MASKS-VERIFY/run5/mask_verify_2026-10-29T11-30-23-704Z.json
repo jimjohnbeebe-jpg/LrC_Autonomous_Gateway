@@ -1,0 +1,122 @@
+{
+  "check": "masks-verify",
+  "started": "2026-10-29T11-30-23-704Z",
+  "parts": [
+    "person"
+  ],
+  "steps": [
+    {
+      "part": "person",
+      "photo": "PICT0019.DNG",
+      "id": "person_entire",
+      "question": "  Is a person in the photo brighter (and the background not)?",
+      "answer": "y",
+      "ok": true,
+      "notes": [],
+      "data": {
+        "ai": {
+          "outcome": "computed",
+          "ok": true,
+          "ms": 29588
+        },
+        "written": {
+          "What": "Correction",
+          "CorrectionID": "14B35B7D-8ED8-4BC4-9899-B5CEDFBD34A5",
+          "CorrectionSyncID": "20B13E01F36249228EDA8CDDE1997560",
+          "CorrectionName": "AVG verify person",
+          "CorrectionActive": true,
+          "CorrectionAmount": 1,
+          "CorrectionReferenceX": 0.46833,
+          "CorrectionReferenceY": 0.4736335,
+          "LocalCurveRefineSaturation": 100,
+          "LocalExposure": 0,
+          "LocalContrast": 0,
+          "LocalClarity": 0,
+          "LocalBrightness": 0,
+          "LocalTemperature": 0,
+          "LocalTint": 0,
+          "LocalExposure2012": 0.5,
+          "LocalContrast2012": 0,
+          "LocalHighlights2012": 0,
+          "LocalShadows2012": 0,
+          "LocalWhites2012": 0,
+          "LocalBlacks2012": 0,
+          "LocalTexture": 0,
+          "LocalClarity2012": 0,
+          "LocalDehaze": 0,
+          "LocalHue": 0,
+          "LocalSaturation": 0,
+          "LocalSharpness": 0,
+          "LocalLuminanceNoise": 0,
+          "LocalMoire": 0,
+          "LocalDefringe": 0,
+          "LocalToningHue": 0,
+          "LocalToningSaturation": 0,
+          "LocalGrain": 0,
+          "CorrectionMasks": [
+            {
+              "MaskID": "E54B67AA-9B91-4F10-99C6-0CD6F6105A33",
+              "MaskSyncID": "013FE08B0AAC40EC936DE735D3BB923F",
+              "MaskName": "Person 1",
+              "MaskActive": true,
+              "MaskInverted": false,
+              "MaskBlendMode": 0,
+              "MaskValue": 1,
+              "What": "Mask/Image",
+              "MaskSubType": 0,
+              "MaskSubCategoryID": 20036,
+              "MaskVersion": 1,
+              "InstanceIDs": [
+                {
+                  "InstanceID": 0
+                }
+              ],
+              "ReferencePoint": "0.468330 0.473633",
+              "ErrorReason": 0
+            }
+          ]
+        },
+        "read_back": {
+          "What": "Mask/Image",
+          "ModelVersion": 234881976,
+          "MaskValue": 1,
+          "Origin": "77,409",
+          "LocalInputDigestVersion": 1,
+          "MaskInverted": false,
+          "MaskSyncID": "013FE08B0AAC40EC936DE735D3BB923F",
+          "MaskBlendMode": 0,
+          "MaskSubType": 3,
+          "MaskID": "E54B67AA-9B91-4F10-99C6-0CD6F6105A33",
+          "ReferencePoint": "0.219487 0.551881",
+          "WholeImageArea": "130664/32768,130664/32768,62849432/32768,83755416/32768",
+          "FullMaskSize": "2560,1922",
+          "MaskActive": true,
+          "MaskVersion": 1,
+          "MaskSubCategoryID": 13,
+          "MaskDigest": "CDE8C1C9B1117E7D50E6676A7ED7C868",
+          "InputDigest": "6B8A6291F66501B462C32386B1B0DEA0",
+          "MaskName": "Person 1",
+          "LocalInputDigest": "2A4D293E8EBF7DBD23A6E90435C9FA6E",
+          "InputDigestVersion": 2
+        }
+      }
+    }
+  ],
+  "plugin_version": "1.7.2",
+  "lrc_version": "15.6",
+  "photos": [
+    {
+      "part": "person",
+      "uuid": "D9333041-14D1-4817-A4BC-62E466A0358F",
+      "filename": "PICT0019.DNG",
+      "orientation": "AB"
+    }
+  ],
+  "lines": [
+    "YES  person PICT0019.DNG person_entire"
+  ],
+  "headline": "WORKED",
+  "node": "v24.11.1",
+  "engine_version": "1.7.2",
+  "plugin_log_copied": "mask_verify_bridge_log_2026-10-29T11-30-23-704Z.txt"
+}

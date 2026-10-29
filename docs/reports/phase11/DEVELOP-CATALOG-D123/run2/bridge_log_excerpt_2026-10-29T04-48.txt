@@ -1,0 +1,49 @@
+2026-10-29 04:48:34.936 INFO  bridge: receive: engine connected
+2026-10-29 04:48:35.460 INFO  bridge: send: engine connected
+2026-10-29 04:48:35.460 INFO  bridge: hello a2dc4d9a-b4b7-4e00-82df-e33858f49e89
+2026-10-29 04:48:35.460 INFO  bridge: get_selection 60b3e3a6-3e43-4d25-9b59-d595d9a65162
+2026-10-29 04:48:35.460 INFO  bridge: get_settings ba6ebb22-1acd-4e81-b971-70ec09e61407
+2026-10-29 04:48:35.483 INFO  bridge: copy_photo 9ba1f8c7-769b-42fb-9b7b-b3c7eda844d2
+2026-10-29 04:48:35.821 INFO  copy_photo: 2E4A9191-A6D0-4293-BC9B-AD3CFC68D6F0 copied ()
+2026-10-29 04:48:35.837 INFO  bridge: copy_photo d3249d8f-4cb7-41c3-89d0-52d8220de6cb
+2026-10-29 04:48:36.383 INFO  copy_photo: 2E4A9191-A6D0-4293-BC9B-AD3CFC68D6F0 copied ()
+2026-10-29 04:48:36.401 INFO  bridge: copy_photo dcfa66ef-6663-4989-bf7b-e38d47099182
+2026-10-29 04:48:36.915 INFO  copy_photo: 2E4A9191-A6D0-4293-BC9B-AD3CFC68D6F0 copied ()
+2026-10-29 04:48:36.938 INFO  bridge: get_settings fabeb8ba-e362-422c-8fd1-f2f097348d2f
+2026-10-29 04:48:37.135 INFO  bridge: get_settings 10d701aa-01ac-4514-8e38-def89243b136
+2026-10-29 04:48:37.336 INFO  bridge: get_settings 5c25dc2b-59ba-4126-9b2e-7d51c8cdb724
+2026-10-29 04:48:37.410 INFO  bridge: get_settings 7768190d-88b7-48ef-bb33-315814c3d77e
+2026-10-29 04:48:37.549 INFO  bridge: set_develop_settings a0d9c73b-6986-4b27-8c07-5da1656dc8da
+2026-10-29 04:48:37.661 INFO  develop: switched from library to develop in 0 ms
+2026-10-29 04:48:38.852 WARN  stall-diag: stall 1103 ms after idle
+2026-10-29 04:48:53.235 INFO  set_develop_settings: 39281A66-FACB-455D-9505-773A64E0677E set ()
+2026-10-29 04:48:53.259 INFO  bridge: get_settings 655b6a04-2fd6-4161-bd47-8390f6a32939
+2026-10-29 04:48:53.369 WARN  stall-diag: stall 1037 ms after idle
+2026-10-29 04:48:53.590 INFO  bridge: get_settings 2f0690f7-6ed9-44d6-8e72-74e5aeb6193d
+2026-10-29 04:48:53.590 INFO  bridge: apply_snapshot 5c82f380-89d9-4393-80a3-aa25181d84fd
+2026-10-29 04:48:53.702 INFO  develop: switched from library to develop in 0 ms
+2026-10-29 04:48:55.092 INFO  bridge: get_settings 685f79ff-bbfd-4b4f-9d49-05f41d258ba5
+2026-10-29 04:48:55.232 INFO  bridge: get_settings fdc0bb22-b8ee-4d46-aa8e-b70fd3ce0605
+2026-10-29 04:48:55.701 WARN  stall-diag: stall 1134 ms after idle
+2026-10-29 04:48:55.733 INFO  bridge: get_settings 43165fd6-8762-453c-8a6c-03f334790317
+2026-10-29 04:49:05.999 INFO  bridge: get_settings ed258dab-061d-4a75-9a2e-3ea2bffa1926
+2026-10-29 04:49:05.999 INFO  bridge: set_develop_settings dbe02064-fce8-47bf-811c-c613fe3d4d4e
+2026-10-29 04:49:06.141 INFO  develop: switched from library to develop in 0 ms
+2026-10-29 04:49:07.671 WARN  stall-diag: stall 1488 ms after idle
+2026-10-29 04:49:08.665 INFO  set_develop_settings: 39281A66-FACB-455D-9505-773A64E0677E set ()
+2026-10-29 04:49:08.665 INFO  bridge: apply_snapshot b814a44d-d41b-4fd6-b374-10db33fa0630
+2026-10-29 04:49:08.776 INFO  develop: switched from library to develop in 0 ms
+2026-10-29 04:49:10.250 INFO  bridge: get_settings 89b49b1f-dba9-49f3-9d1a-c43efd736c1f
+2026-10-29 04:49:10.376 INFO  bridge: remove_photos c21a1d56-b349-4b6a-aebe-aaa133ffbbe1
+2026-10-29 04:49:10.413 WARN  stall-diag: stall 2537 ms after idle
+2026-10-29 04:49:10.969 INFO  remove_photos: removed, 3 removed, 0 not, 1 missing ()
+2026-10-29 04:49:10.987 INFO  bridge: get_settings 2c89ac8d-9331-4969-aec2-b55a35f1531c
+2026-10-29 04:49:10.989 WARN  bridge: get_settings failed: unknown_photo no photo in the catalog has uuid 39281A66-FACB-455D-9505-773A64E0677E
+2026-10-29 04:49:10.992 INFO  bridge: get_settings 7bb6c539-a4b7-456b-80e8-c8617b704c54
+2026-10-29 04:49:10.993 WARN  bridge: get_settings failed: unknown_photo no photo in the catalog has uuid B73CACA7-5704-4768-938D-FCB7F3F2138C
+2026-10-29 04:49:11.013 INFO  bridge: get_settings 53035e71-36ea-4a81-9fcc-ba4a04c5e9bc
+2026-10-29 04:49:11.015 WARN  bridge: get_settings failed: unknown_photo no photo in the catalog has uuid 5E826341-6D9E-4BC1-A5D8-69EDFCC1103A
+2026-10-29 04:49:11.027 INFO  bridge: get_selection 21298c4c-9dde-440c-ac9c-248a1ca0cccf
+2026-10-29 04:49:11.046 INFO  bridge: get_settings 2b63fcb7-55aa-4fcb-b6d3-7301d3056aa4
+2026-10-29 04:49:26.364 INFO  bridge: receive: closed
+2026-10-29 04:49:26.364 INFO  stall-diag: rebind receive (closed, generation 1)

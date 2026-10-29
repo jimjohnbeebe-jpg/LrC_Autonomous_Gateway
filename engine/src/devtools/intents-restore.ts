@@ -21,7 +21,7 @@ const withArgs = z.looseObject({ args: z.array(z.string()) });
 const same = (a: string, b: string): boolean => path.resolve(a).toLowerCase() === path.resolve(b).toLowerCase();
 
 /** Whether a config entry runs the engine `mainJs`. */
-const runs = (entry: unknown, mainJs: string): boolean => (withArgs.safeParse(entry).data?.args ?? []).some((arg) => same(arg, mainJs));
+export const runs = (entry: unknown, mainJs: string): boolean => (withArgs.safeParse(entry).data?.args ?? []).some((arg) => same(arg, mainJs));
 
 /** The absolute paths in an entry's `command` and `args` that do not exist; a bare name such as "node" is not checked. */
 export function missingPaths(entry: ServerEntry): string[] {
@@ -29,7 +29,7 @@ export function missingPaths(entry: ServerEntry): string[] {
 }
 
 /** The servers of a config text, or null when it is not a Claude Desktop config. */
-function serversOf(text: string): Record<string, unknown> | null {
+export function serversOf(text: string): Record<string, unknown> | null {
   try {
     const parsed = desktopConfigSchema.safeParse(JSON.parse(text));
     return parsed.success ? (parsed.data.mcpServers ?? {}) : null;

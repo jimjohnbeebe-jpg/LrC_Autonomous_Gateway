@@ -179,6 +179,17 @@ describe("lr_undo_last_step (D2)", () => {
     expect(String(stays.json["warning"])).toMatch(/did not revert this engine's last lr_set_develop_settings write/);
   });
 
+  it("refuses the snapshot when the photo was edited in Lightroom after the write (Greptile, PR #253)", async () => {
+    const uuid = lr.uuid;
+    await tools.call(setDevelopSettings, { uuids: [uuid], settings: { Exposure2012: 1.25 } });
+    lr.settingsOf(uuid)["Contrast2012"] = 30;
+    const out = await tools.call(undoLastStep, { confirm: true });
+    expect(out.json).toMatchObject({ undone: false, via: "snapshot", changed_since: ["contrast"] });
+    expect(sent("apply_snapshot")).toEqual([]);
+    expect(sent("undo_last_step")).toEqual([]);
+    expect(lr.settingsOf(uuid)["Exposure2012"]).toBe(1.25);
+  });
+
   it("is the plain undo after another write, or when the photo written is no longer in the catalog (Greptile, PR #251)", async () => {
     await tools.call(setDevelopSettings, { uuids: [lr.uuid], settings: { Exposure2012: 1.25 } });
     await tools.call(removePhotos, { uuids: ["COPY-A", "COPY-B", "NOPE"], confirm: true });

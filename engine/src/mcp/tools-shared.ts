@@ -112,7 +112,8 @@ export type ToolContext = {
   lastWrite: LastWrite | null;
 };
 
-export type LastWrite = { uuid: string; before: SdkSettings; compare: string[]; snapshot?: { id: string; name: string } | undefined };
+/** `after`: the write's read-back, so the undo can tell a later edit made in Lightroom (Greptile, PR #253). */
+export type LastWrite = { uuid: string; before: SdkSettings; after: SdkSettings; compare: string[]; snapshot?: { id: string; name: string } | undefined };
 
 /**
  * The calls that keep `lastWrite`: reads a client makes between a write and its undo, and the undo itself. Any other

@@ -188,7 +188,7 @@ export const DEVELOP_DEFS: ToolDef[] = [
       "Refused while an edit session is open or one was left open (end it with lr_end_session; to undo a pass, use the session's own revert). " +
       "Right after this engine's lr_set_develop_settings call, it instead puts that photo back from the write's \"AVG pre-set\" snapshot " +
       "(`via`: \"snapshot\") and reads it back: `last_write` says whether that write is undone (`reverted`), and when it is not, which " +
-      "settings still differ. Returns `undone` and, for Edit > Undo, `can_undo` (whether Lightroom has another step to undo).",
+      "settings still differ. If the photo was edited after that write, nothing is undone (`changed_since` names the edits). Returns `undone` and, for Edit > Undo, `can_undo` (whether Lightroom has another step to undo).",
     schema: undoArgs,
     annotations: DESTRUCTIVE,
     run: (tools, args) => tools.call(undoLastStep, args as z.infer<typeof undoArgs>),

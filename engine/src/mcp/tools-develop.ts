@@ -158,7 +158,7 @@ export function setDevelopSettings(ctx: ToolContext, args: SetDevelopSettingsArg
     const r = await client.request("set_develop_settings", { photo_uuid: uuid, settings: sdk, history_name, snapshot_name: name }, timeout);
     const extra = { history_name, compare: raw, ...(unranged.length > 0 ? { unranged } : {}) };
     const not_taken = r.status === "set" ? map.verifyReadback(sdk, r.read_back) : [];
-    ctx.lastWrite = not_taken.length === 0 && r.status === "set" ? { uuid, before, compare: raw, snapshot: r.snapshot } : null;
+    ctx.lastWrite = not_taken.length === 0 && r.status === "set" ? { uuid, before, after: r.read_back, compare: raw, snapshot: r.snapshot } : null;
     if (not_taken.length === 0 || !r.snapshot) return { ...r, ...extra };
     const back = await client.request("apply_snapshot", { photo_uuid: uuid, snapshot_id: r.snapshot.id, restore_view: true }, timeout);
     const reason = `Lightroom did not take ${not_taken.map((m) => m.sdk_key).join(", ")} as written, so the photo was put back from the snapshot`;
@@ -210,6 +210,13 @@ export function undoLastStep(ctx: ToolContext, args: UndoArgs): Promise<ToolOutp
       const last = await stillThere(ctx, ctx.lastWrite);
       ctx.lastWrite = null;
       if (last?.snapshot) {
+        // The snapshot puts back the whole photo: refused when it changed since the write, so a later edit is not lost.
+        const now = (await ctx.deps.client.request("get_settings", { photo_uuid: last.uuid })).settings;
+        const since = Object.keys(settingChanges(ctx.deps.map, last.after, now, last.compare).changed);
+        if (since.length > 0) {
+          const reason = `Nothing was undone: ${last.uuid} changed after this engine's last lr_set_develop_settings write (${since.join(", ")}), and its snapshot "${last.snapshot.name}" would undo those edits too. lr_apply_snapshot with id ${last.snapshot.id} puts it back anyway; Lightroom's History panel has each step.`;
+          return { json: { undone: false, via: "snapshot", changed_since: since, reason }, log: { undone: false, via: "snapshot", changed_since: since } };
+        }
         await ctx.deps.client.request("apply_snapshot", { photo_uuid: last.uuid, snapshot_id: last.snapshot.id, restore_view: true }, timeout);
         const checked = await checkUndone(ctx, last);
         const note = `The photo was put back from the snapshot "${last.snapshot.name}" taken just before this engine's last lr_set_develop_settings write; Lightroom's History panel has the step.`;

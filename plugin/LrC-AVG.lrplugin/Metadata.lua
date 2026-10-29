@@ -188,6 +188,7 @@ local function stackOf(catalog, photo)
         }
     end)
 end
+Metadata.stackOf = stackOf -- Transfer.importPhoto reads a photo it stacked (plugin 1.9.0, issue #139)
 
 -- get_metadata's parts, each read on its own (the reads before issue #212, now the fallback): `parts` holds
 -- path, text, flag, label, keywords, gps and stack; a part that fails is left out and named in `errors`.

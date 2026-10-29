@@ -7,7 +7,8 @@
 //
 // A command with no answer stops the call, as lr_set_rating's loop does (library\write.ts): the error
 // lists what was done, and the photo that may still be exported or imported (`maybe_done`).
-// lr_import_photos' folder_template, name_template and dry_run: issue #139 gap 1 (library\capture-date.ts).
+// lr_import_photos' folder_template, name_template and dry_run: issue #139 gap 1 (library\capture-date.ts);
+// stack_gap_seconds: issue #139, the groups in library\stack-groups.ts, the stack made by the plugin's addPhoto.
 
 import path from "node:path";
 import type { CommandPayloads } from "../bridge/index.js";
@@ -15,21 +16,23 @@ import {
   CALL_BUDGET_MS,
   EXPORT_PHOTO_TIMEOUT_MS,
   IMPORT_PHOTO_TIMEOUT_MS,
-  captureDate,
   copyForImport,
+  datesOnce,
   defaultExportDir,
   expandHome,
   importDestination,
   importFiles,
+  joinsPrevious,
   placeExport,
   type CaptureDate,
+  type DateOf,
   type ImportTemplates,
   type OnExisting,
   type Placed,
 } from "../library/index.js";
 import { UNANSWERED, mayHaveLanded } from "../sync/target.js";
 import { ToolError, toToolError } from "./errors.js";
-import { TRANSFER_PLUGIN } from "./tools-collections.js";
+import { IMPORT_STACK_PLUGIN, TRANSFER_PLUGIN } from "./tools-collections.js";
 import { needPlugin, run, sessionTools, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
 export type ExportFormat = "jpeg" | "png" | "tiff" | "original";
@@ -52,6 +55,7 @@ export type ImportPhotosArgs = {
   folder_template?: string | undefined;
   name_template?: string | undefined;
   dry_run?: boolean | undefined;
+  stack_gap_seconds?: number | undefined;
 };
 
 type Failure = { item: string; code: string; message: string };
@@ -63,20 +67,22 @@ const realBudget = (): Budget => ({ now: () => performance.now(), ms: CALL_BUDGE
 /**
  * Run `each` on the items in turn until the budget is spent (the first item always runs). A refusal
  * Lightroom answered becomes a failure and the next item runs; a command with no answer stops the call.
- * Returns the failures and the items not started. `start` is when the budget's clock started.
+ * Returns the failures and the items not started. `start` is when the budget's clock started. With
+ * `mayStop`, the time is up only before an item it allows: lr_import_photos never splits a stack group.
  */
 export async function eachInBudget(
   items: readonly string[],
   budget: Budget,
   done: () => unknown,
-  each: (item: string) => Promise<void>,
+  each: (item: string, i: number) => Promise<void>,
   start = budget.now(),
+  mayStop: (i: number) => Promise<boolean> = async () => true,
 ): Promise<{ failed: Failure[]; left: string[] }> {
   const failed: Failure[] = [];
   for (const [i, item] of items.entries()) {
-    if (i > 0 && budget.now() - start > budget.ms) return { failed, left: items.slice(i) };
+    if (i > 0 && budget.now() - start > budget.ms && (await mayStop(i))) return { failed, left: items.slice(i) };
     try {
-      await each(item);
+      await each(item, i);
     } catch (err) {
       const e = toToolError(err);
       if (UNANSWERED.has(e.code)) {
@@ -155,10 +161,10 @@ function afterCursor(listed: string[], cursor: string): string[] {
  * The file Lightroom imports for `file`: the file itself, or its copy's path in copy_to, which with a
  * template needs the capture date (library\capture-date.ts, issue #139): a file with none fails alone.
  */
-async function importTarget(file: string, source: string, copyTo: string | null, templates: ImportTemplates): Promise<{ path: string; date: CaptureDate | null }> {
+async function importTarget(file: string, source: string, copyTo: string | null, templates: ImportTemplates, dateOf: DateOf): Promise<{ path: string; date: CaptureDate | null }> {
   if (copyTo === null) return { path: file, date: null };
   const templated = templates.folder !== undefined || templates.name !== undefined;
-  const date = templated ? await captureDate(file) : null;
+  const date = templated ? await dateOf(file) : null;
   if (templated && date === null) {
     const why = "folder_template and name_template need the capture date, which the engine reads from NEF, DNG and the other TIFF-based raws, TIFF and JPEG only";
     throw new ToolError("NO_CAPTURE_DATE", `No capture date could be read from ${path.basename(file)}: ${why}. It was not copied or imported.`, false);
@@ -179,14 +185,56 @@ function importTail(files: readonly string[], failed: readonly Failure[], left: 
   };
 }
 
-/** dry_run: where each file would go, read from the disk only (no copy, no bridge call), within the same budget (Greptile, PR #263). */
-async function plan(files: readonly string[], source: string, copyTo: string | null, templates: ImportTemplates, budget: Budget, start: number) {
+/** What one call imports with: the arguments read, and the stack groups (null without stack_gap_seconds). */
+type Run = { files: readonly string[]; source: string; copyTo: string | null; templates: ImportTemplates; dateOf: DateOf; joins: ((i: number) => Promise<boolean>) | null };
+const mayStop = (r: Run) => async (i: number) => r.joins === null || !(await r.joins(i));
+
+/**
+ * dry_run: where each file would go, read from the disk only (no copy, no bridge call), within the same budget
+ * (Greptile, PR #263); with stack_gap_seconds, the `groups` of two or more files that would be stacked.
+ */
+async function plan(r: Run, budget: Budget, start: number) {
   const planned: Array<{ source: string; path: string; capture_date: string | null }> = [];
-  const { failed, left } = await eachInBudget(files, budget, () => ({ planned }), async (file) => {
-    const t = await importTarget(file, source, copyTo, templates);
+  const groups: string[][] = [];
+  let group: string[] = [];
+  const { failed, left } = await eachInBudget(r.files, budget, () => ({ planned, groups }), async (file, i) => {
+    if (r.joins === null || !(await r.joins(i))) group = [];
+    const t = await importTarget(file, r.source, r.copyTo, r.templates, r.dateOf);
     planned.push({ source: file, path: t.path, capture_date: t.date !== null ? `${t.date.yyyy}-${t.date.mm}-${t.date.dd} ${t.date.time}` : null });
-  }, start);
-  return { planned, failed, left };
+    if (group.push(file) === 2) groups.push(group);
+  }, start, mayStop(r));
+  return { planned, failed, left, ...(r.joins !== null ? { groups } : {}) };
+}
+
+type StackRead = { position: number; count: number; top_uuid?: string | undefined } | false | undefined;
+type Answer = { status: "imported" | "already"; uuid: string; stack?: StackRead };
+const ALREADY = "it was in the catalog already, and Lightroom has no call that stacks photos already in the catalog: Photo > Stacking > Group into Stack in Lightroom does it";
+
+/**
+ * The stack groups of one import call (issue #139, decision D3 = A): the first photo of a group imported is its
+ * top, and each later one goes below it (stack_with). One the catalog held already is not stacked (S11); a top
+ * the catalog held already stays the top, which is [unverified].
+ */
+function stacker(joins: Run["joins"]) {
+  let top: string | null = null;
+  const notStacked: Array<{ source: string; uuid: string; reason: string }> = [];
+  return {
+    notStacked,
+    /** The uuid files[i] is stacked with, or undefined when it starts a group (or its group's top did not import). */
+    async before(i: number): Promise<string | undefined> {
+      if (joins !== null && !(await joins(i))) top = null;
+      return top ?? undefined;
+    },
+    /** The photo's stack for its result; a member that did not join the stack goes to notStacked. */
+    after(file: string, r: Answer, stackWith: string | undefined): { top_uuid: string | null; position: number; count: number } | undefined {
+      if (joins === null) return undefined;
+      if (stackWith === undefined) top = r.uuid;
+      else if (r.status === "already") notStacked.push({ source: file, uuid: r.uuid, reason: ALREADY });
+      else if (r.stack) return { top_uuid: r.stack.top_uuid ?? null, position: r.stack.position, count: r.stack.count };
+      else notStacked.push({ source: file, uuid: r.uuid, reason: `Lightroom imported it but read it back in no stack (stack_with ${stackWith})` });
+      return undefined;
+    },
+  };
 }
 
 export async function importPhotos(ctx: ToolContext, args: ImportPhotosArgs, budget: Budget = realBudget()): Promise<ToolOutput> {
@@ -210,22 +258,28 @@ export async function importPhotos(ctx: ToolContext, args: ImportPhotosArgs, bud
       throw new ToolError("NOT_FOUND", `Cannot read ${source}: ${(err as Error).message}`, false);
     }
     const files = args.resume_after !== undefined ? afterCursor(listed, args.resume_after) : listed;
+    const dateOf = datesOnce();
+    const r: Run = { files, source, copyTo, templates, dateOf, joins: args.stack_gap_seconds !== undefined ? joinsPrevious(files, args.stack_gap_seconds, dateOf) : null };
+    const head = { source, ...(copyTo !== null ? { copied_to: copyTo } : {}), found: listed.length };
     if (args.dry_run === true) {
-      const { planned, failed, left } = await plan(files, source, copyTo, templates, budget, start);
-      const json = { source, ...(copyTo !== null ? { copied_to: copyTo } : {}), found: listed.length, dry_run: true, planned, ...importTail(files, failed, left) };
+      const { planned, failed, left, ...groups } = await plan(r, budget, start);
+      const json = { ...head, dry_run: true, planned, ...groups, ...importTail(files, failed, left) };
       return { json, log: { found: listed.length, planned: planned.length, failed: failed.length, not_yet: left.length, dry_run: true } };
     }
     const sessions = sessionTools(ctx);
     await ctx.deps.ensureBridge();
     needPlugin(ctx, "lr_import_photos", TRANSFER_PLUGIN, "it imports photos");
+    if (r.joins !== null) needPlugin(ctx, "lr_import_photos", IMPORT_STACK_PLUGIN, "stack_gap_seconds stacks photos as they are imported");
     return sessions.whenIdle("lr_import_photos", async () => {
       // source: the file found under `source`; path: the file the catalog holds (the copy, with copy_to) (issue #139).
-      type Imported = { uuid: string; filename: string | null; path: string; source: string; capture_time: string | null };
+      type Imported = { uuid: string; filename: string | null; path: string; source: string; capture_time: string | null; stack?: unknown };
       const imported: Imported[] = [];
       const already: Imported[] = [];
+      const stacks = stacker(r.joins);
       const done = () => ({ imported, already_in_catalog: already });
-      const { failed, left } = await eachInBudget(files, budget, done, async (file) => {
-        const target = (await importTarget(file, source, copyTo, templates)).path;
+      const { failed, left } = await eachInBudget(files, budget, done, async (file, i) => {
+        const stackWith = await stacks.before(i);
+        const target = (await importTarget(file, source, copyTo, templates, dateOf)).path;
         if (copyTo !== null) {
           try {
             await copyForImport(file, target);
@@ -233,11 +287,13 @@ export async function importPhotos(ctx: ToolContext, args: ImportPhotosArgs, bud
             throw new ToolError("COPY_FAILED", (err as Error).message, false);
           }
         }
-        const r = await ctx.deps.client.request("import_photo", { path: target }, { timeoutMs: IMPORT_PHOTO_TIMEOUT_MS });
-        (r.status === "imported" ? imported : already).push({ uuid: r.uuid, filename: r.filename ?? null, path: target, source: file, capture_time: r.capture_time ?? null });
-      }, start);
-      const json = { source, ...(copyTo !== null ? { copied_to: copyTo } : {}), found: listed.length, imported, already_in_catalog: already, ...importTail(files, failed, left) };
-      return { json, log: { found: listed.length, imported: imported.length, already: already.length, failed: failed.length, not_yet: left.length } };
+        const a = await ctx.deps.client.request("import_photo", { path: target, ...(stackWith !== undefined ? { stack_with: stackWith } : {}) }, { timeoutMs: IMPORT_PHOTO_TIMEOUT_MS });
+        const stack = stacks.after(file, a, stackWith);
+        (a.status === "imported" ? imported : already).push({ uuid: a.uuid, filename: a.filename ?? null, path: target, source: file, capture_time: a.capture_time ?? null, ...(stack ? { stack } : {}) });
+      }, start, mayStop(r));
+      const stacked = r.joins !== null ? { not_stacked: stacks.notStacked } : {};
+      const json = { ...head, imported, already_in_catalog: already, ...stacked, ...importTail(files, failed, left) };
+      return { json, log: { found: listed.length, imported: imported.length, already: already.length, failed: failed.length, not_yet: left.length, not_stacked: stacks.notStacked.length } };
     });
   });
 }

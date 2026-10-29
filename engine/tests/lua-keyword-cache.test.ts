@@ -18,7 +18,8 @@ describe("lua: the kept keyword walk", () => {
     expect(writers).toEqual(["KeywordEdit.lua", "KeywordTree.lua", "Library.lua"]);
     for (const f of files.filter((x) => WRITES.test(x.code) && x.name !== "KeywordTree.lua")) expect(f.code, f.name).toMatch(/KeywordTree\.forget\(\)/);
     // An import may bring the file's own keywords into the Keyword List [inference].
-    expect(files.find((f) => f.name === "Transfer.lua")?.code).toMatch(/catalog:addPhoto\(path\)[^\n]*\n\s*KeywordTree\.forget\(\)/);
+    // From plugin 1.9.0 (issue #139) the addPhoto calls sit in a function `add` that the import's write gate runs.
+    expect(files.find((f) => f.name === "Transfer.lua")?.code).toMatch(/catalog:addPhoto\(path\)[\s\S]*Gate\.write, catalog, [^\n]*, add\)[^\n]*\n\s*KeywordTree\.forget\(\)/);
   });
 
   it("is used by list_keywords, with refresh walking again", () => {

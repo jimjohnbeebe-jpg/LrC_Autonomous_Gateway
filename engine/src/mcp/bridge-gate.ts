@@ -130,10 +130,16 @@ export class BridgeGate {
   async ready(waitMs: number = this.waitMs): Promise<void> {
     if (!(await this.start())) {
       const busy = this.lastBusy;
+      // A Claude Desktop chat and a Cowork task run separate engines; the second got this answer
+      // within 60 s of the first's call [handle: docs\reports\phase11\SHARED-CONNECTION-DESIGN.md
+      // section 6 "Observed"]. The holder lets go after main.ts IDLE_RELEASE_MS without a call,
+      // or never while its edit is open (keepWhile), so the text names both ways out (issue #211, option B).
       throw new ToolError(
         "ENGINE_BUSY",
-        `Another LrC-AVG engine (process ${busy?.pid ?? "unknown"}) is using the Lightroom bridge. ` +
-          "Close the other one (another AI client using LrC-AVG, or a dev check), then try again.",
+        `Another LrC-AVG engine (process ${busy?.pid ?? "unknown"}) is using the Lightroom bridge: ` +
+          "another Claude chat, Cowork or Code task, another AI app using LrC-AVG, or a dev check. " +
+          "Use LrC-AVG from one of them at a time. To go on here, wait a minute after the other one's " +
+          "last LrC-AVG call (end its edit first if it has one open), or quit the other AI app, then try again.",
         true,
         busy ?? undefined,
       );

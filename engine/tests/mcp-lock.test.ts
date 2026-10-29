@@ -57,6 +57,7 @@ describe("mcp: bridge gate", () => {
       );
       expect(busy).toBeInstanceOf(ToolError);
       expect((busy as ToolError).body()).toMatchObject({ code: "ENGINE_BUSY", recoverable: true, details: { pid: 424242 } });
+      expect((busy as ToolError).message).toMatch(/one of them at a time.*wait a minute.*end its edit/);
       expect(client.getState()).toBe("stopped");
       expect(acquired).toBe(0); // no purge of the shared previews folder without the lock
 

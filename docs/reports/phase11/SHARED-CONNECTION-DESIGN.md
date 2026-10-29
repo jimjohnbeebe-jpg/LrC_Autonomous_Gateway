@@ -14,6 +14,7 @@ date: 2026-10-29
 - **Upstream's fix** (Automaat, PR #243 and follow-ups): one engine leads and owns the plugin; the others forward each tool call to it over a named pipe [upstream claim].
 - **Ours needs more than upstream's.** The edit session, the Deck channel and the session's HUD buttons live in the engine that holds the lock. Forwarding keeps all of them in the leader, so a follower has to forward only tool calls, progress and cancel. What is new for us is a leader that exits with an edit open (section 3).
 - **Recommendation:** first run the reproduce checklist (section 6: one Lightroom session, about 10 minutes). If it shows `ENGINE_BUSY` or a failed start with chat plus Cowork/Code, choose **Option A** (port forwarding, 3 engine PRs and 1 check PR). If Desktop sends both surfaces to one engine, choose **Option B** (document it, 1 small PR).
+- **Decided, 2026-10-29: Option B; Option A is parked** (section 8, "Decision") [stated: Jim, 2026-10-29, "Go with recommendations", on the batch lead's recommendation of B].
 - **Plugin side:** nothing to port. Upstream's #296 and #237 are already in our plugin, and #297 has not been seen on Windows (section 7).
 - **Decisions for Jim:** section 8, D1-D8.
 
@@ -260,6 +261,14 @@ Filled by Claude Code from the three log excerpts, 2026-10-29. Jim ran the steps
 So **work step 4 of #211 needs no plugin change** [inference: from the table]. Whether to mark it done is Jim's call (D8).
 
 ## 8. Decisions for Jim
+
+### Decision (2026-10-29)
+
+- **D1: Option B, use LrC-AVG from one Claude surface at a time.** Option A (section 5) is **parked**, not dropped: its plan stays here for when it is wanted [stated: Jim, 2026-10-29, "Go with recommendations", on the batch lead's recommendation of B for issue #211].
+- This differs from the recommendation above, which was A once section 6 showed `ENGINE_BUSY`, as it did [handle: section 6 "Observed"]. The choice of B is Jim's, made with that result in hand [stated: the same].
+- What B shipped (PR on branch `docs/one-surface-211`): README "Known limitations" ("One Claude surface at a time") and "If something goes wrong", `docs/CLIENTS.md`, and an `ENGINE_BUSY` text that names the fix: end the other surface's edit, wait a minute, or quit the other AI app [handle: `engine/src/mcp/bridge-gate.ts` `ready`; `engine/tests/mcp-lock.test.ts` "answers ENGINE_BUSY while another engine holds the lock"].
+- **Left unmet:** the issue's third acceptance line ("No `ENGINE_BUSY` in normal multi-process use"), and epic #207's parity line for issue #211 with it (section 4, B "Risk"). Whether issue #211 stays open for A is Jim's call.
+- D2-D7 apply to A only and wait with it. D8 is still open.
 
 | # | Question | Options | Recommendation |
 |---|---|---|---|

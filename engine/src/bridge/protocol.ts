@@ -164,8 +164,8 @@ export type CommandPayloads = {
   copy_photo: { photo_uuid: string; copy_name?: string };
   /** Decision D1 of epic #207 (DevelopTools.lua): `settings` validated by params\sdk-passthrough.ts, written as history_name ("AVG …") on the photo made active in Develop. */
   set_develop_settings: { photo_uuid: string; settings: Record<string, unknown>; history_name: string; snapshot_name: string };
-  /** Decision D2 (DevelopTools.lua): LrUndo.undo() once, when LrUndo.canUndo(). */
-  undo_last_step: { confirm: true };
+  /** Decision D2 (DevelopTools.lua): LrUndo.undo() once, when LrUndo.canUndo(); with photo_uuid, while that photo is active in Develop. */
+  undo_last_step: { confirm: true; photo_uuid?: string };
   /** Decision D3 (Remove.lua): LrSelection.removeFromCatalog on exactly these photos (LrC 14.3+). */
   remove_photos: { photo_uuids: string[]; confirm: true };
   /** Issue #215 (Presets.lua): every preset Lightroom lists, and this plugin's checkpoints. */

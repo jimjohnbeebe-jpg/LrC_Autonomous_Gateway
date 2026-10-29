@@ -60,7 +60,10 @@ export async function personPart(c: Ctx, photo: Photo, steps: Step[] = []): Prom
     const table = readTable((await c.client.request("get_settings", { photo_uuid: photo.uuid })).settings);
     const boxes = boundsOf(firstComponent(table, plan.id));
     if (!ai.ok || boxes.length < 2) {
-      push(h, "probe", { question: null, answer: ai.ok ? `Lightroom found ${boxes.length} person(s)` : `probe: ${ai.outcome}`, ok: false, notes: ["select a photo with two or more people"], data: { boxes } });
+      // The probe as written and as Lightroom gave it back: two runs (2026-10-28 `_DSC0103.NEF`, 2026-10-29
+      // `PICT0019.DNG`, two people) computed (MaskDigest) with no InstanceBounds [handle: docs\reports\phase11\MASKS-VERIFY\run4\].
+      const probe = { written: plan.entries.find((e) => e[C.id] === plan.id) ?? null, read_back: table.find((e) => e[C.id] === plan.id) ?? null };
+      push(h, "probe", { question: null, answer: ai.ok ? `Lightroom found ${boxes.length} person(s)` : `probe: ${ai.outcome}`, ok: false, notes: ["select a photo with two or more people"], data: { boxes, ai, probe } });
       return;
     }
     const probe = table.find((e) => e[C.id] === plan.id) as Correction;

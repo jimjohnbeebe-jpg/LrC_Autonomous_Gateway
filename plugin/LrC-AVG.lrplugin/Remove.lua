@@ -20,6 +20,7 @@
 
 local LrApplication = import 'LrApplication'
 local LrApplicationView = import 'LrApplicationView'
+local LrDate = import 'LrDate'
 local LrSelection = import 'LrSelection'
 local LrTasks = import 'LrTasks'
 
@@ -33,7 +34,8 @@ local Remove = {}
 
 Remove.MAX = 100
 -- Upstream's waits for the selection and for the removal [upstream claim: HandlerRemoveFromCatalog.lua, 10 s each].
-local SELECT_SECONDS, GONE_SECONDS = 10, 10
+-- 60 + 10 s stays inside the engine's 90 s for the call (engine\src\sync\target.ts WRITE_TIMEOUT_MS).
+local SELECT_SECONDS, RESELECT_SECONDS, GONE_SECONDS = 60, 5, 10
 
 local function fail(code, message, recoverable)
     return nil, { code = code, message = message, recoverable = recoverable == true }
@@ -104,13 +106,25 @@ local function copiesLeft(catalog, photos, uuidOf)
     return nil
 end
 
+-- Selects exactly `photos`, again every RESELECT_SECONDS until it holds or SELECT_SECONDS pass: on Jim's catalog
+-- (18,641 photos) Lightroom stalled 21.9 s after the switch to All Photographs and one selection made at once did not
+-- hold within 10 s [handle: docs\reports\phase11\DEVELOP-CATALOG-D123\run1\, bridge log 17:54:54-17:55:22 local,
+-- "stall-diag: stall 21891 ms"]; that a selection made during the stall is dropped is [inference].
+local function selectExactly(catalog, photos)
+    local t0 = LrDate.currentTime()
+    repeat
+        catalog:setSelectedPhotos(photos[1], photos)
+        if DevelopSession.waitFor(function() return exactly(catalog, photos) end, RESELECT_SECONDS) then return true end
+    until LrDate.currentTime() - t0 >= SELECT_SECONDS
+    return false
+end
+
 -- Steps 2-3 under the lock; returns { status, reason? }, the photos left, and true when the selection must stay (step 4).
 local function removeSelected(catalog, photos, owns)
     LrApplicationView.switchToModule("library")
     LrApplicationView.gridView()
     catalog:setActiveSources({ catalog.kAllPhotos })
-    catalog:setSelectedPhotos(photos[1], photos)
-    if not DevelopSession.waitFor(function() return exactly(catalog, photos) end, SELECT_SECONDS) then
+    if not selectExactly(catalog, photos) then
         return { status = "failed", reason = "Lightroom did not select exactly these photos; nothing was removed" }, photos
     end
     if LrApplicationView.getCurrentModuleName() ~= "library" or not exactly(catalog, photos) or not owns() then

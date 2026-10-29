@@ -204,18 +204,41 @@ end
 -- undo_last_step { confirm = true } (decision D2, issue #214; upstream's undo_last_step [upstream claim:
 -- HandlerUndo.lua]): Lightroom's Edit > Undo, once. LrUndo.canUndo and LrUndo.undo are from SDK 6.0 [handle:
 -- API Reference\modules\LrUndo.html:363, :393]. The history is Lightroom's own, shared with the user and other
--- plug-ins, so the engine refuses it while a session is open. What it undoes in Lightroom is [unverified] until
--- Jim's `npm run develop-catalog:check`.
+-- plug-ins, so the engine refuses it while a session is open. With photo_uuid (the photo of the engine's last
+-- set_develop_settings), the undo runs with that photo alone active in Develop, as the write ran (run(), withPhoto):
+-- run right after the write in the view it put back, the undo left the write in place [handle:
+-- docs\reports\phase11\DEVELOP-CATALOG-D123\run1\, "copy A after the undo": differs]. Whether it reaches the write
+-- this way is [unverified]; the engine reads the photo back and says.
+local function undoOnce()
+    local could = LrUndo.canUndo() == true
+    if could then
+        local ok, err = LrTasks.pcall(LrUndo.undo)
+        if not ok then return nil, "LrUndo.undo: " .. tostring(err) end
+    end
+    return could
+end
+
 function DevelopTools.undoLastStep(payload)
     if payload.confirm ~= true then return fail("bad_request", "confirm must be true: Lightroom's undo history is shared with the user and other plug-ins") end
     local present, unavailable = Needs.check("Undo", "6.0", "LrUndo.", LrUndo, { "canUndo", "undo" })
     if not present then return nil, unavailable end
-    local could = LrUndo.canUndo() == true
-    if could then
-        local ok, err = LrTasks.pcall(LrUndo.undo)
-        if not ok then return fail("undo_failed", "LrUndo.undo: " .. tostring(err)) end
+    local could, err
+    if payload.photo_uuid ~= nil then
+        local catalog, photo, _, bad = Develop.writeTarget(payload)
+        if bad then return nil, bad end
+        local result, busy = DevelopSession.withPhoto("undo_last_step", catalog, photo, function()
+            LrTasks.sleep(SETTLE_SECONDS)
+            if catalog:getTargetPhoto() ~= photo then return { status = "failed", reason = "another photo became active in Develop; nothing was undone" } end
+            could, err = undoOnce()
+            return { status = "done" }
+        end)
+        if not result then return nil, busy end
+        if result.status ~= "done" then return fail("undo_failed", tostring(result.reason)) end
+    else
+        could, err = undoOnce()
     end
-    Log.info("undo_last_step: " .. (could and "undone" or "nothing to undo"))
+    if err then return fail("undo_failed", err) end
+    Log.info("undo_last_step: " .. (could and "undone" or "nothing to undo") .. (payload.photo_uuid and (" on " .. tostring(payload.photo_uuid)) or ""))
     return { undone = could, can_undo = LrUndo.canUndo() == true }
 end
 

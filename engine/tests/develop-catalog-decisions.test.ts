@@ -155,6 +155,28 @@ describe("lr_undo_last_step (D2)", () => {
     expect(out.json).toMatchObject({ undone: true, can_undo: false });
   });
 
+  it("after lr_set_develop_settings: sends that photo, reads it back, and says whether the write was undone", async () => {
+    const uuid = lr.uuid;
+    await tools.call(setDevelopSettings, { uuids: [uuid], settings: { Exposure2012: 1.25 } });
+    const stays = await tools.call(undoLastStep, { confirm: true });
+    expect(sent("undo_last_step")).toEqual([{ confirm: true, photo_uuid: uuid }]);
+    expect(stays.json["last_write"]).toMatchObject({ uuid, reverted: false, snapshot: { name: expect.stringMatching(/^AVG pre-set /) } });
+    expect(String(stays.json["warning"])).toMatch(/not this engine's last lr_set_develop_settings write/);
+
+    const before = { ...lr.settingsOf(uuid) };
+    await tools.call(setDevelopSettings, { uuids: [uuid], settings: { Exposure2012: 1.5 } });
+    plugin.handlers.set("undo_last_step", () => {
+      Object.assign(lr.settingsOf(uuid), before);
+      return { ok: true, payload: { undone: true, can_undo: true } };
+    });
+    const undone = await tools.call(undoLastStep, { confirm: true });
+    expect(undone.json["last_write"]).toEqual({ uuid, reverted: true });
+    expect(undone.json["warning"]).toBeUndefined();
+
+    await tools.call(undoLastStep, { confirm: true });
+    expect(sent("undo_last_step").at(-1)).toEqual({ confirm: true });
+  });
+
   it("is refused while a session is open or left open, and without confirm: true", async () => {
     const def = DEVELOP_DEFS.find((d) => d.name === "lr_undo_last_step");
     expect(def?.annotations).toMatchObject({ destructiveHint: true, readOnlyHint: false });

@@ -1,17 +1,13 @@
 # The plugin's Lua quality gate (issue #213; selene and busted under rule 01-stack): selene lints
 # plugin/LrC-AVG.lrplugin (selene.toml, lightroom.yml) and busted runs plugin/spec on Lua 5.1 (.busted),
-# the Lua that Lightroom embeds. Not a required check: whether it becomes one is Jim's call.
+# the Lua that Lightroom embeds. Both jobs are required checks on main [stated: Jim, 2026-10-29, "go with your
+# recommendation"], so they run on every PR: a path filter would leave a PR without plugin changes waiting for
+# a check that never reports [handle: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/troubleshooting-required-status-checks].
 name: lua
 
 on:
   pull_request:
     branches: [main]
-    paths:
-      - plugin/**
-      - selene.toml
-      - lightroom.yml
-      - .busted
-      - .github/workflows/lua.yml
 
 permissions:
   contents: read

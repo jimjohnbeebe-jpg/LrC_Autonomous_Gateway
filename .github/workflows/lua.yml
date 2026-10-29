@@ -32,10 +32,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
-      - name: Install Lua 5.1, LuaRocks and busted 2.3.0-1
+      - name: Install Lua 5.1, LuaRocks, busted 2.3.0-1 and luacov 0.17.0-1
         run: |
           sudo apt-get update
           sudo apt-get install -y lua5.1 liblua5.1-0-dev luarocks
           sudo luarocks --lua-version=5.1 install busted 2.3.0-1
+          sudo luarocks --lua-version=5.1 install luacov 0.17.0-1
       - run: busted --version
-      - run: busted
+      # --coverage runs the specs under luacov (.luacov); coverage is reported in the log and the run summary, not gated.
+      - run: busted --coverage
+      - name: Coverage report (luacov)
+        run: |
+          luacov
+          sed -n '/^Summary$/,$p' luacov.report.out
+          { echo '## Plugin Lua coverage (luacov)'; echo '```'; sed -n '/^Summary$/,$p' luacov.report.out; echo '```'; } >> "$GITHUB_STEP_SUMMARY"

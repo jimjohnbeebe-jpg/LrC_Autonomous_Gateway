@@ -1,0 +1,9 @@
+-- luacov (Lua coverage, rule 01-stack; issue #213): what `busted --coverage` measures, read from the repo root.
+-- Only the plugin's own files are reported, and every one of them: a file no spec loads shows as 0 %, so the
+-- summary is the whole plugin, not the tested part. Patterns match the path without ".lua", with "/" between
+-- folders [handle: https://github.com/lunarmodules/luacov/blob/v0.17.0/src/luacov/defaults.lua, include and
+-- includeuntestedfiles].
+return {
+    include = { "plugin/LrC%-AVG%.lrplugin/[^/]+$" },
+    includeuntestedfiles = { "plugin/LrC-AVG.lrplugin" },
+}

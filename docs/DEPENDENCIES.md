@@ -94,14 +94,17 @@ No new npm package or crate: `tools\setup\*.ts` use `zod` 4.6.5 from the root `n
 
 ## Lua tooling (issue #213, 2026-10-28)
 
-Allowed by rule 01-stack for the plugin's Lua only [stated: Jim, 2026-10-28, "Go with recommendations", D5]. Neither is an npm package; neither is in the product.
+Allowed by rule 01-stack for the plugin's Lua only [stated: Jim, 2026-10-28, "Go with recommendations", D5]. None is an npm package; none is in the product. luacov is the coverage the issue #213 acceptance asks for ("coverage reported").
 
 | Tool | Pinned | License | Used for | Where from |
 |---|---|---|---|---|
 | selene | 0.32.0 (released 2026-10-01) | MPL-2.0 | `npm run lua:lint`, CI job `selene` | https://github.com/Kampfkarren/selene/releases/tag/0.32.0 |
 | busted | 2.3.0-1 (released 2026-01-07) | MIT | `npm run lua:test`, CI job `busted` | https://luarocks.org/modules/lunarmodules/busted, https://github.com/lunarmodules/busted/releases/tag/v2.3.0 |
+| luacov | 0.17.0-1 (tagged 2026-02-06) | MIT | coverage of the specs, CI job `busted` (`busted --coverage`, `.luacov`) | https://luarocks.org/modules/lunarmodules/luacov, https://github.com/lunarmodules/luacov/releases/tag/v0.17.0 |
 
 selene 0.32.0 was the latest release [handle: `gh release list -R Kampfkarren/selene` → `0.32.0 Latest 2026-10-01`, 2026-10-28]. SHA-256 of its zips, taken with `sha256sum` after one download each (2026-10-28): `selene-0.32.0-windows.zip` `c8b693de81d0ddc11490d8e1170dd98d775c2b21431144bd8286f738ef416109`, `selene-0.32.0-linux.zip` `d3773393578580074386e69337d35b7acddfbaa9fc38964c07fa3e28436ade9b` (CI refuses any other). The Windows `selene.exe --version` printed `selene 0.32.0`. busted 2.3.0 was the latest release [handle: `gh release list -R lunarmodules/busted` → `v2.3.0 Latest 2026-01-07`; the rock `2.3.0-1` is listed at https://luarocks.org/modules/lunarmodules/busted, 2026-10-28]. CI installs Lua 5.1 and LuaRocks from Ubuntu's packages (`lua5.1`, `liblua5.1-0-dev`, `luarocks`) and then `luarocks --lua-version=5.1 install busted 2.3.0-1`. The licences [handle: `gh api repos/Kampfkarren/selene/license --jq .license.spdx_id` → `MPL-2.0`, `gh api repos/lunarmodules/busted/license --jq .license.spdx_id` → `MIT`, 2026-10-28].
+
+luacov 0.17.0 was the latest release [handle: `gh api repos/lunarmodules/luacov/tags` → `v0.17.0` first, its commit dated `2026-02-06T23:34:30Z`; the rock `0.17.0-1` is listed first at https://luarocks.org/modules/lunarmodules/luacov, 2026-10-29]; licence [handle: `gh api repos/lunarmodules/luacov/license --jq .license.spdx_id` → `MIT`, 2026-10-29]. CI installs it with `luarocks --lua-version=5.1 install luacov 0.17.0-1`, beside busted; busted's `--coverage` loads `luacov.runner` [handle: https://github.com/lunarmodules/busted/blob/v2.3.0/busted/modules/luacov.lua]. Its walk for `includeuntestedfiles` needs `lfs` (LuaFileSystem) [handle: https://github.com/lunarmodules/luacov/blob/v0.17.0/src/luacov/reporter.lua, `pcall(require, "lfs")`], which busted brings through Penlight [handle: `rockspecs/busted-2.3.0-1.rockspec` lists `penlight >= 1.15.0`; `rockspecs/penlight-1.15.0-1.rockspec` lists `luafilesystem`, both read with `gh api`, 2026-10-29].
 
 ## Notes
 

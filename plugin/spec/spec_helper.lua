@@ -24,6 +24,37 @@ function M.load(name, stubs)
     return require(name)
 end
 
+-- The catalog calls rule 03 (.claude\rules\03-lightroom.md) keeps outside withReadAccessDo: the yielding queries,
+-- which deadlock inside it on Windows [upstream claim: HandlerSelection.lua:30-38], and the batch reads issue #212
+-- put outside it. The same list as OUTSIDE in engine\tests\lua-read-gate.test.ts, the static check of this rule.
+M.OUTSIDE_GATE = { "findPhotos", "findPhotoByUuid", "findPhotoByPath", "getTargetPhoto", "getTargetPhotos",
+    "setSelectedPhotos", "getAllPhotos", "getFolderByPath", "getCollectionByLocalIdentifier", "batchGetRawMetadata",
+    "batchGetFormattedMetadata" }
+
+-- A catalog that spies on its read gate: `insideGate` lists each OUTSIDE_GATE call made while a withReadAccessDo
+-- runs, `reads` counts the gates. `methods` (name -> function(self, ...)) gives the answers; an OUTSIDE_GATE call
+-- with none answers nil. Unlike the static check, this sees a call reached through another function. Upstream's
+-- spec_helper keeps the same spy [upstream claim: vendor\automaat\plugin\spec\spec_helper.lua:139, 219,
+-- getQueriedInsideReadAccess]; written here, not copied.
+function M.catalog(methods)
+    methods = methods or {}
+    local cat, depth = { insideGate = {}, reads = 0 }, 0
+    for name, fn in pairs(methods) do cat[name] = fn end
+    for _, name in ipairs(M.OUTSIDE_GATE) do
+        cat[name] = function(self, ...)
+            if depth > 0 then cat.insideGate[#cat.insideGate + 1] = name end
+            if methods[name] then return methods[name](self, ...) end
+        end
+    end
+    function cat.withReadAccessDo(_, fn)
+        depth, cat.reads = depth + 1, cat.reads + 1
+        local ok, err = pcall(fn)
+        depth = depth - 1
+        if not ok then error(err, 0) end
+    end
+    return cat
+end
+
 -- A Log.lua stand-in that keeps its lines instead of writing a file.
 function M.log()
     local lines = {}

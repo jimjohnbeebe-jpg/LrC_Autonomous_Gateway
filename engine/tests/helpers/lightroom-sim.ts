@@ -84,6 +84,8 @@ export class LightroomSim {
   readonly snapshots = new Map<string, Record<string, unknown>>();
   /** The photo each snapshot was taken of. */
   private readonly snapshotOf = new Map<string, string>();
+  /** The snapshots delete_snapshot removed (session\end.ts after a full revert, issue #162); kept in `snapshots` so the ids stay unique. */
+  readonly deletedSnapshots: string[] = [];
   /** The plugin version hello reports (plugin\LrC-AVG.lrplugin\Bridge.lua PLUGIN_VERSION). */
   pluginVersion = PLUGIN_VERSION;
   /** hello's process_started_at (plugin 0.16.0); restartLightroom (lightroom-sim-masks.ts) gives a new one. */
@@ -257,6 +259,10 @@ export class LightroomSim {
         return ok({ uuid: u, read_back: luaize(this.settingsOf(u)) });
       }),
     );
+    plugin.handlers.set("delete_snapshot", (p) => {
+      this.deletedSnapshots.push(String(p["snapshot_id"]));
+      return ok({ uuid: String(p["photo_uuid"]), snapshot_id: String(p["snapshot_id"]) });
+    });
     plugin.handlers.set("export_preview", (p, id) => on(p, (u) => this.missingReply(u) ?? this.exportPreview(u, p, id)));
     installMasks(this, plugin); // last: it holds the writes and exports above while the AI update holds the gate
   }

@@ -65,7 +65,7 @@ import { deleteIntent, getIntent, listIntents, saveIntent, type DeleteIntentArgs
 import { getMetadata, setFlag, setIptc, type GetMetadataArgs, type SetFlagArgs, type SetIptcArgs } from "./tools-metadata.js";
 import * as presets from "./tools-presets.js";
 import { createPresetFromActive, syncSeries, type CreatePresetArgs, type SyncSeriesArgs } from "./tools-propagation.js";
-import { approvePass, beginSession, createMask, deleteMask, editMask, endSession, getSessionLog, listMasks, probe, selectVariant, setRegions, step } from "./tools-session.js";
+import { approvePass, beginSession, createMask, deleteMask, editMask, endSession, getSessionLog, listMasks, probe, selectVariant, setRegions, step, type OpenArgs } from "./tools-session.js";
 import { createContext, type LastRender, type ToolContext, type ToolOutput, type ToolsDeps } from "./tools-shared.js";
 import { getPhotoStats, type PhotoStatsArgs } from "./tools-stats.js";
 import { setSettings, type SetSettingsArgs } from "./tools-write.js";
@@ -136,27 +136,27 @@ export class Tools {
     return beginSession(this.ctx, args);
   }
 
-  step(args: StepArgs): Promise<ToolOutput> {
+  step(args: OpenArgs<StepArgs>): Promise<ToolOutput> {
     return step(this.ctx, args);
   }
 
-  selectVariant(args: SelectArgs): Promise<ToolOutput> {
+  selectVariant(args: OpenArgs<SelectArgs>): Promise<ToolOutput> {
     return selectVariant(this.ctx, args);
   }
 
-  approvePass(args: ApproveArgs): Promise<ToolOutput> {
+  approvePass(args: OpenArgs<ApproveArgs>): Promise<ToolOutput> {
     return approvePass(this.ctx, args);
   }
 
-  probe(args: ProbeArgs): Promise<ToolOutput> {
+  probe(args: OpenArgs<ProbeArgs>): Promise<ToolOutput> {
     return probe(this.ctx, args);
   }
 
-  setRegions(args: RegionArgs): Promise<ToolOutput> {
+  setRegions(args: OpenArgs<RegionArgs>): Promise<ToolOutput> {
     return setRegions(this.ctx, args);
   }
 
-  endSession(args: EndArgs): Promise<ToolOutput> {
+  endSession(args: OpenArgs<EndArgs>): Promise<ToolOutput> {
     return endSession(this.ctx, args);
   }
 
@@ -166,19 +166,19 @@ export class Tools {
 
   // --- Masks, inside a session.
 
-  listMasks(args: ListMasksArgs): Promise<ToolOutput> {
+  listMasks(args: OpenArgs<ListMasksArgs>): Promise<ToolOutput> {
     return listMasks(this.ctx, args);
   }
 
-  createMask(args: CreateMaskArgs): Promise<ToolOutput> {
+  createMask(args: OpenArgs<CreateMaskArgs>): Promise<ToolOutput> {
     return createMask(this.ctx, args);
   }
 
-  editMask(args: EditMaskArgs): Promise<ToolOutput> {
+  editMask(args: OpenArgs<EditMaskArgs>): Promise<ToolOutput> {
     return editMask(this.ctx, args);
   }
 
-  deleteMask(args: DeleteMaskArgs): Promise<ToolOutput> {
+  deleteMask(args: OpenArgs<DeleteMaskArgs>): Promise<ToolOutput> {
     return deleteMask(this.ctx, args);
   }
 

@@ -12,7 +12,7 @@ export const HELP_TEXT = [
   "LrC-AVG: how it works. The mechanics are below; how to edit the photo (the craft) is left to the AI.",
   "",
   "1. Sessions. lr_begin_session starts a session on the photo selected in Lightroom and returns its session_id; every " +
-    "session tool takes that session_id. One session at a time: it stays open until lr_end_session (accept, revert or " +
+    "session tool takes that session_id, which may be left out while the session is open. One session at a time: it stays open until lr_end_session (accept, revert or " +
     "abandon). The session has a pass cap, max_passes (after pass 0); `cap_reached` in an lr_step result means no pass is left.",
   "",
   "2. What uses a pass. Each lr_step, and each mask create, edit or delete (lr_create_mask, lr_edit_mask, lr_delete_mask), " +

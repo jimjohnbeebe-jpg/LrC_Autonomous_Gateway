@@ -37,11 +37,13 @@ import { abandonedNote, abandonSession } from "./abandon.js";
 import { engineEndedNote } from "./ai-revert.js";
 import { pendingError } from "./ai-update.js";
 import { approvePass } from "./approval.js";
-import { openSession, runPass0 } from "./begin.js";
+import { checkBegin, openSession, runPass0 } from "./begin.js";
+import { dryRun } from "./dry-run.js";
 import { endSession, readSessionLog } from "./end.js";
 import { abortedNote, userAction, userEnded, type ActionHost, type UserAction, type UserEnded } from "./hud-actions.js";
 import { closeNote, endedAlike, endedError, idleStage, withHudActions } from "./hud-notes.js";
 import { abortError, checkAbort, read, render } from "./io.js";
+import { PhotoHistory, activeError } from "./history.js";
 import { endLeftOpen, findLeftOpen, type LeftOpen } from "./left-open.js";
 import { createMask, deleteMask, editMask, listMasks } from "./masks.js";
 import { selectVariant } from "./pick.js";
@@ -72,6 +74,8 @@ export class SessionManager {
   /** Operations of the queue running now (0 or 1). */
   private running = 0;
   private readonly restartHost: RestartHost;
+  /** The sessions that ended on each photo in this engine run (history.ts, issues #163 and #167). */
+  private readonly history = new PhotoHistory();
 
   constructor(deps: SessionDeps) {
     this.ctx = { deps, now: deps.now ?? (() => new Date()), newId: deps.newId ?? (() => randomUUID()) };
@@ -141,16 +145,13 @@ export class SessionManager {
     });
   }
 
-  /** lr_begin_session. The session is open once the snapshot exists, so a failed pass 0 can be reverted. */
+  /** lr_begin_session. The session is open once the snapshot exists, so a failed pass 0 can be reverted. dry_run: the checks and pass 0's plan only (dry-run.ts). */
   begin(args: BeginArgs): Promise<SessionOutput> {
     return this.exclusive(async () => {
-      if (this.session) {
-        throw new ToolError(
-          "SESSION_ALREADY_ACTIVE",
-          `A session is already open on "${this.session.master.filename ?? this.session.master.uuid}" (${this.session.id}). End it with lr_end_session (accept or revert) first.`,
-          false,
-          { session_id: this.session.id },
-        );
+      if (this.session) throw activeError(this.session, "End it with lr_end_session (accept or revert) first.");
+      if (args.dry_run) {
+        const checked = await checkBegin(this.ctx, args);
+        return dryRun(this.ctx, checked, this.history.advisory(checked.photo.uuid));
       }
       const opened = await openSession(this.ctx, args);
       this.session = opened.s;
@@ -158,7 +159,7 @@ export class SessionManager {
       this.ctx.deps.hud?.stage(opened.s, "begin", { open: true });
       const out = await (opened.s.mode === "variants" ? runVariants(this.ctx, opened, args) : runPass0(this.ctx, opened, args));
       // A Deck fallback queued while pass 0 ran (sinks.ts, a pass 0 longer than the Deck's wait) reaches Claude now (Greptile, PR #122).
-      return withHudActions(opened.s, out);
+      return withHudActions(opened.s, await this.history.onBegin(opened.s, args.keep_regions === true, out));
     });
   }
 
@@ -266,6 +267,7 @@ export class SessionManager {
 
   private close(s: Session, byUser: UserEnded | null): void {
     this.ended.set(s.id, s.files.logPath);
+    if (this.session === s) this.history.ended(s);
     if (byUser) this.endedByUser.set(s.id, byUser);
     if (this.session === s) this.session = null;
   }
@@ -321,15 +323,7 @@ export class SessionManager {
    */
   whenIdle<T>(tool: string, fn: () => Promise<T>): Promise<T> {
     return this.exclusive(async () => {
-      const s = this.session;
-      if (s) {
-        throw new ToolError(
-          "SESSION_ALREADY_ACTIVE",
-          `A session is open on "${s.master.filename ?? s.master.uuid}" (${s.id}); ${tool} runs only between sessions. End it with lr_end_session first.`,
-          false,
-          { session_id: s.id },
-        );
-      }
+      if (this.session) throw activeError(this.session, `${tool} runs only between sessions. End it with lr_end_session first.`);
       return fn();
     });
   }

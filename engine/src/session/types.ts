@@ -40,6 +40,10 @@ export type BeginArgs = {
   return_image?: ReturnImage | undefined;
   /** Issue #155 R1: the AI's own model name; logged and shown, never used for decisions. */
   model?: string | undefined;
+  /** Issue #161: check the call and return pass 0's plan, with no snapshot, no write and no session (dry-run.ts). */
+  dry_run?: boolean | undefined;
+  /** Issue #163: set the regions the last session on this photo ended with again (history.ts). */
+  keep_regions?: boolean | undefined;
   /** The MCP client (mcp\client-info.ts); set by the mcp layer, never by the tool schema. */
   client?: ClientIdentity | null | undefined;
 };

@@ -151,3 +151,15 @@ describe("readOwed", () => {
     expect(readFileSync(moved, "utf8")).toBe('{"uuid": "U", "file');
   });
 });
+
+describe("person part: a computed person mask (2026-10-29 rerun)", () => {
+  it("takes Lightroom's rewritten People form and the written Person form, only with a digest", async () => {
+    const { isPersonMask } = await import("../src/devtools/masks-verify-person.js");
+    const back = { What: "Mask/Image", MaskSubType: 3, MaskSubCategoryID: 13, MaskDigest: "039A85E2" };
+    expect(isPersonMask(back)).toBe(true);
+    expect(isPersonMask({ ...back, MaskSubType: 0, MaskSubCategoryID: 20036 })).toBe(true);
+    expect(isPersonMask({ ...back, MaskDigest: undefined })).toBe(false);
+    expect(isPersonMask({ ...back, MaskSubType: 1 })).toBe(false);
+    expect(isPersonMask(null)).toBe(false);
+  });
+});

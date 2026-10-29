@@ -187,16 +187,17 @@ async function checkUndone(ctx: ToolContext, last: LastWrite): Promise<Record<st
   const put = last.snapshot ? ` The snapshot "${last.snapshot.name}" (lr_apply_snapshot with id ${last.snapshot.id}) puts it back.` : "";
   return {
     last_write: { uuid: last.uuid, reverted: false, still_changed: changed, ...(last.snapshot ? { snapshot: last.snapshot } : {}) },
-    warning: `Lightroom undid a step, but not this engine's last lr_set_develop_settings write on ${last.uuid}: ${still.join(", ")} still differ.${put}`,
+    warning: `The undo did not revert this engine's last lr_set_develop_settings write on ${last.uuid}: ${still.join(", ")} still differ.${put}`,
   };
 }
 
 /**
- * Decision D2 of epic #207 (issue #214): Lightroom's Edit > Undo, once (DevelopTools.lua undoLastStep). Global: refused
- * while any session is open or left open. After an lr_set_develop_settings write the undo runs with that photo active
- * in Develop, as the write ran, and the photo is read back (`last_write`): Jim's check undid right after the write, in
- * the view it had put back, and the write stayed [handle: docs\reports\phase11\DEVELOP-CATALOG-D123\run1\, step "copy A
- * after the undo": differs exposure, LensManualDistortionAmount]. Whether the undo then reaches the write is [unverified].
+ * Decision D2 of epic #207 (issue #214). Refused while any session is open or left open. After this engine's
+ * lr_set_develop_settings write the photo is put back from that write's "AVG pre-set" snapshot and read back
+ * (`last_write`, `via` "snapshot"): Edit > Undo left the write in place twice, in the view the write had put back and
+ * with the photo active [handle: docs\reports\phase11\DEVELOP-CATALOG-D123\run1\ step "copy A after the undo";
+ * %TEMP%\LrC-AVG\develop-catalog-check\develop_catalog_check_2026-10-29T02-49-24-274Z.json] [stated: Jim, 2026-10-29,
+ * "Go with recommendations"]. Otherwise Lightroom's Edit > Undo, once (DevelopTools.lua undoLastStep), whoever made the step.
  */
 export function undoLastStep(ctx: ToolContext, args: UndoArgs): Promise<ToolOutput> {
   return run(ctx, "lr_undo_last_step", args, async () => {
@@ -208,6 +209,12 @@ export function undoLastStep(ctx: ToolContext, args: UndoArgs): Promise<ToolOutp
     return sessions.whenIdle("lr_undo_last_step", async () => {
       const last = await stillThere(ctx, ctx.lastWrite);
       ctx.lastWrite = null;
+      if (last?.snapshot) {
+        await ctx.deps.client.request("apply_snapshot", { photo_uuid: last.uuid, snapshot_id: last.snapshot.id, restore_view: true }, timeout);
+        const checked = await checkUndone(ctx, last);
+        const note = `The photo was put back from the snapshot "${last.snapshot.name}" taken just before this engine's last lr_set_develop_settings write; Lightroom's History panel has the step.`;
+        return { json: { undone: true, via: "snapshot", note, ...checked }, log: { undone: true, via: "snapshot", ...checked } };
+      }
       const r = await ctx.deps.client.request("undo_last_step", { confirm: true, ...(last ? { photo_uuid: last.uuid } : {}) }, timeout);
       // Edit > Redo bringing the step back is [inference] from LrUndo.redo, "Redoes the last undone history state"
       // [handle: API Reference\modules\LrUndo.html].

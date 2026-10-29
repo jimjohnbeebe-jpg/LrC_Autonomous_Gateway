@@ -43,7 +43,7 @@ const RUN: readonly Part[] = PARTS.filter((p) => (only === undefined ? !ISSUE_21
 /** What Jim selects for each part, and how many photos. */
 const SELECT: Record<Part, { count: number; what: string }> = {
   colour: { count: 2, what: "TWO colourful photos, each with a clearly red and a clearly green area (flowers, fruit, a colour chart); Ctrl+click the second" },
-  person: { count: 1, what: "ONE photo with two or more people side by side" },
+  person: { count: 1, what: "ONE photo with a person in it" },
   mirror: { count: 1, what: "ONE photo that is not flipped (any photo you have not flipped in Lightroom)" },
   parity: { count: 1, what: "ONE photo that is not flipped, best a virtual copy" },
   controller: { count: 1, what: "ONE photo that is not flipped, best a virtual copy (it may be the same photo)" },

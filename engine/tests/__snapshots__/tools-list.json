@@ -3551,7 +3551,7 @@
   {
     "name": "lr_undo_last_step",
     "title": "Undo Lightroom's last step",
-    "description": "Undo exactly one step of Lightroom's own history (Edit > Undo). The history is Lightroom's, shared with the user and other plug-ins: this undoes whatever is last, which may not be an LrC-AVG change, and does not say what it was. Ask the user first and pass confirm: true. Refused while an edit session is open or one was left open (end it with lr_end_session; to undo a pass, use the session's own revert). After an lr_set_develop_settings call, the undo runs with that photo active in Develop and the photo is read back: `last_write` says whether that write is undone (`reverted`), and when it is not, which settings still differ and the snapshot that puts the photo back. Returns `undone` and `can_undo` (whether Lightroom has another step to undo).",
+    "description": "Undo exactly one step of Lightroom's own history (Edit > Undo). The history is Lightroom's, shared with the user and other plug-ins: this undoes whatever is last, which may not be an LrC-AVG change, and does not say what it was. Ask the user first and pass confirm: true. Refused while an edit session is open or one was left open (end it with lr_end_session; to undo a pass, use the session's own revert). Right after this engine's lr_set_develop_settings call, it instead puts that photo back from the write's \"AVG pre-set\" snapshot (`via`: \"snapshot\") and reads it back: `last_write` says whether that write is undone (`reverted`), and when it is not, which settings still differ. Returns `undone` and, for Edit > Undo, `can_undo` (whether Lightroom has another step to undo).",
     "inputSchema": {
       "type": "object",
       "properties": {

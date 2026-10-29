@@ -2,7 +2,7 @@
 // checked in Lightroom. The shared and pure parts: where a render is clearly red or green (sharp), how a
 // place is told to Jim, one step's result, and the verdict. The parts are masks-verify-colour.ts (colour
 // range: the engine's point sample on two photos, then a copy of Lightroom's own sample), masks-verify-person.ts
-// (one person's mask on a photo of two or more people) and masks-verify-mirror.ts (masks on a mirrored photo,
+// (the engine's person mask on a photo of a person) and masks-verify-mirror.ts (masks on a mirrored photo,
 // all four mirrored codes); the CLI (masks-verify-cli.ts) asks Jim, puts each photo back and saves the
 // results. Report: docs\reports\phase11\MASKS-VERIFY.md.
 

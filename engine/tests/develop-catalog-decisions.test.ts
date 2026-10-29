@@ -155,26 +155,28 @@ describe("lr_undo_last_step (D2)", () => {
     expect(out.json).toMatchObject({ undone: true, can_undo: false });
   });
 
-  it("after lr_set_develop_settings: sends that photo, reads it back, and says whether the write was undone", async () => {
+  it("after lr_set_develop_settings: applies that write's snapshot instead of Edit > Undo, reads it back and says it was undone", async () => {
     const uuid = lr.uuid;
-    await tools.call(setDevelopSettings, { uuids: [uuid], settings: { Exposure2012: 1.25 } });
-    const stays = await tools.call(undoLastStep, { confirm: true });
-    expect(sent("undo_last_step")).toEqual([{ confirm: true, photo_uuid: uuid }]);
-    expect(stays.json["last_write"]).toMatchObject({ uuid, reverted: false, snapshot: { name: expect.stringMatching(/^AVG pre-set /) } });
-    expect(String(stays.json["warning"])).toMatch(/not this engine's last lr_set_develop_settings write/);
-
     const before = { ...lr.settingsOf(uuid) };
-    await tools.call(setDevelopSettings, { uuids: [uuid], settings: { Exposure2012: 1.5 } });
-    plugin.handlers.set("undo_last_step", () => {
-      Object.assign(lr.settingsOf(uuid), before);
-      return { ok: true, payload: { undone: true, can_undo: true } };
-    });
+    await tools.call(setDevelopSettings, { uuids: [uuid], settings: { Exposure2012: 1.25 } });
     const undone = await tools.call(undoLastStep, { confirm: true });
-    expect(undone.json["last_write"]).toEqual({ uuid, reverted: true });
+    expect(sent("undo_last_step")).toEqual([]);
+    expect(sent("apply_snapshot")).toEqual([expect.objectContaining({ photo_uuid: uuid, restore_view: true })]);
+    expect(undone.json).toMatchObject({ undone: true, via: "snapshot", last_write: { uuid, reverted: true } });
     expect(undone.json["warning"]).toBeUndefined();
+    expect(lr.settingsOf(uuid)["Exposure2012"]).toBe(before["Exposure2012"]);
 
     await tools.call(undoLastStep, { confirm: true });
     expect(sent("undo_last_step").at(-1)).toEqual({ confirm: true });
+  });
+
+  it("warns when the snapshot did not put the write back", async () => {
+    const uuid = lr.uuid;
+    await tools.call(setDevelopSettings, { uuids: [uuid], settings: { Exposure2012: 1.25 } });
+    plugin.handlers.set("apply_snapshot", () => ({ ok: true, payload: { uuid, ms: 1, read_back: luaize(lr.settingsOf(uuid)) } }));
+    const stays = await tools.call(undoLastStep, { confirm: true });
+    expect(stays.json["last_write"]).toMatchObject({ uuid, reverted: false, snapshot: { name: expect.stringMatching(/^AVG pre-set /) } });
+    expect(String(stays.json["warning"])).toMatch(/did not revert this engine's last lr_set_develop_settings write/);
   });
 
   it("is the plain undo after another write, or when the photo written is no longer in the catalog (Greptile, PR #251)", async () => {

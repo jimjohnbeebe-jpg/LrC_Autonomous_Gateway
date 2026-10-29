@@ -42,18 +42,7 @@ export async function pass0(ctx: SessionContext, s: Session, t: Target, view: Fr
   ctx.deps.hud?.stage(s, "pass0");
   if (original) t.last = original;
   const before = original ?? (await render(ctx, s, t, view));
-  const intent = s.intent.intent;
-  const profile = s.profile ?? intent.profile?.[t.pipeline];
-  // A monochrome profile drops the colour sliders: their priors are left out, also when `profile`
-  // replaces a colour one (Greptile, PR #120; the loader checks only an intent's own profile).
-  const mono = profile !== undefined && ctx.deps.map.cameraProfiles().monochrome(profile);
-  const combined = combinedPriors(priorsFor(intent, t.pipeline), variant ? priorsFor(variant, t.pipeline) : {}, ctx.deps.map);
-  const dropMono = (values: Priors): Record<string, unknown> => Object.fromEntries(Object.entries(values).filter(([name]) => !(mono && isColourParam(name))));
-  const priors = dropMono(combined);
-  const set = dropMono(setFor(intent, t.pipeline));
-  // A prior (a variant's, on a look) is added on top of the set value, not the photo's old one.
-  const fromSet = setChanges(set, view.settings, ctx.deps.map, t.pipeline);
-  const changes = { ...fromSet, ...pass0Changes(profile, priors, { ...view.settings, ...fromSet }, ctx.deps.map, t.pipeline) };
+  const { changes, requested } = planPass0(ctx.deps.map, s, t.pipeline, view.settings, variant);
   const historyNames: string[] = [];
   let current = view;
   let rendered = before;
@@ -68,9 +57,29 @@ export async function pass0(ctx: SessionContext, s: Session, t: Target, view: Fr
     const was = view.settings[name] ?? null;
     return { name, before: was, requested: after, after, delta: typeof was === "number" && typeof after === "number" ? roundForSlider(name, after - was) : null };
   });
-  const requested = { ...(profile ? { camera_profile: profile } : {}), ...set, ...priors };
   const delta = deltaMetrics(before.metrics, corrected.rendered.metrics);
   return { passStarted, original: before, requested, applied, historyNames, view: corrected.view, rendered: corrected.rendered, actions: corrected.actions, delta };
+}
+
+/** What pass 0 writes on a photo of `pipeline` with these settings (pass0; session\dry-run.ts shows it, issue #161). */
+export type Pass0Plan = { requested: Record<string, unknown>; changes: Record<string, CanonicalValue>; dropped_for_monochrome: string[] };
+
+export function planPass0(map: ParamMap, s: Pick<Session, "intent" | "profile">, pipeline: Pipeline, settings: CanonicalSettings, variant: PriorSet | null): Pass0Plan {
+  const intent = s.intent.intent;
+  const profile = s.profile ?? intent.profile?.[pipeline];
+  // A monochrome profile drops the colour sliders: their priors are left out, also when `profile`
+  // replaces a colour one (Greptile, PR #120; the loader checks only an intent's own profile).
+  const mono = profile !== undefined && map.cameraProfiles().monochrome(profile);
+  const combined = combinedPriors(priorsFor(intent, pipeline), variant ? priorsFor(variant, pipeline) : {}, map);
+  const allSet = setFor(intent, pipeline);
+  const dropMono = (values: Priors): Record<string, unknown> => Object.fromEntries(Object.entries(values).filter(([name]) => !(mono && isColourParam(name))));
+  const priors = dropMono(combined);
+  const set = dropMono(allSet);
+  // A prior (a variant's, on a look) is added on top of the set value, not the photo's old one.
+  const fromSet = setChanges(set, settings, map, pipeline);
+  const changes = { ...fromSet, ...pass0Changes(profile, priors, { ...settings, ...fromSet }, map, pipeline) };
+  const dropped = [...Object.keys(combined), ...Object.keys(allSet)].filter((name) => !(name in priors) && !(name in set));
+  return { requested: { ...(profile ? { camera_profile: profile } : {}), ...set, ...priors }, changes, dropped_for_monochrome: dropped };
 }
 
 /** Pass 0's log entry for photo `t`. */

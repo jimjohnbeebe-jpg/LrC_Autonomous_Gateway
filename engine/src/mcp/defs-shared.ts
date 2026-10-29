@@ -44,6 +44,8 @@ export const noArgs = z.object({});
 /** A session photo: the master, or a copy of a Variants session. */
 export const target = z.enum(["master", "A", "B", "C"]).optional();
 export const sessionId = z.string().min(1).describe("the session_id from lr_begin_session");
+/** The session tools' session_id (issue #164): it may be left out while a session is open (tools-session.ts withOpen). */
+export const openSessionId = sessionId.optional().describe("the session_id from lr_begin_session; may be left out while a session is open (it then names that one)");
 /**
  * The one frame of every point and box the tools take or give (GitHub issue #179): the preview, which follows
  * a Lightroom crop [handle: src\mcp\tools-context.ts regionPreview, "The export follows a Lightroom crop"];

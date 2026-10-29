@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { APPROVAL_WAIT_MS, SESSION_DEFAULTS } from "../session/index.js";
-import { FRAME, MEASURED, box, longEdge, sessionId, target, type ToolDef } from "./defs-shared.js";
+import { FRAME, MEASURED, box, longEdge, openSessionId, sessionId, target, type ToolDef } from "./defs-shared.js";
 import { DEFAULT_LONG_EDGE, MAX_LONG_EDGE, MIN_LONG_EDGE } from "./tools-shared.js";
 
 const returnImage = z
@@ -47,9 +47,11 @@ const beginArgs = z.object({
   model: z.string().max(80).optional().describe("Your own model name or id, shown to the user and logged; never used for decisions."),
   long_edge: longEdge.describe(`Preview long edge in pixels, ${MIN_LONG_EDGE}-${MAX_LONG_EDGE}, for the whole session (default: the settings page's, else ${DEFAULT_LONG_EDGE}).`),
   return_image: returnImage,
+  dry_run: z.boolean().optional().describe("true: check the call and return what pass 0 would write (`pass0.changes`), with no snapshot, no write and no session"),
+  keep_regions: z.boolean().optional().describe("true: set again the regions (lr_set_regions) the last session on this photo in this engine run ended with, measured on pass 0's preview (`regions_kept`)"),
 });
 const stepArgs = z.object({
-  session_id: sessionId,
+  session_id: openSessionId,
   target: target.describe('Variants mode: the copy, "A", "B" or "C" (after lr_select_variant, the pick; it may be left out). Converge mode: "master" or left out'),
   settings: z
     .record(z.string(), z.union([z.number(), z.boolean(), z.string(), z.array(z.number())]))
@@ -59,13 +61,13 @@ const stepArgs = z.object({
   return_image: returnImage,
 });
 const probeArgs = z.object({
-  session_id: sessionId,
+  session_id: openSessionId,
   target: target.describe('Variants mode: the copy to probe, as for lr_step. Converge mode: "master" or left out'),
   sliders: z.array(z.string().min(1)).min(1).max(3).refine((s) => new Set(s).size === s.length, "sliders must differ").describe("1-3 numeric sliders, e.g. [\"exposure\", \"whites\"]"),
   magnitude: z.number().min(0.1).max(1).optional().describe("the probe's size as a fraction of the slider's per-pass maximum (default 0.5)"),
 });
 const regionsArgs = z.object({
-  session_id: sessionId,
+  session_id: openSessionId,
   regions: z
     .array(
       z.object({
@@ -79,18 +81,18 @@ const regionsArgs = z.object({
     .describe("the whole set of regions (it replaces any earlier set); [] removes them"),
 });
 const endArgs = z.object({
-  session_id: sessionId,
+  session_id: openSessionId,
   outcome: z
     .enum(["accept", "revert", "abandon"])
     .describe('"accept" keeps the edit and writes the recipe; "revert" applies the pre-session snapshot; "abandon" ends a stuck session without touching the photo'),
 });
 const selectArgs = z.object({
-  session_id: sessionId,
+  session_id: openSessionId,
   variant: z.enum(["A", "B", "C"]).describe("the copy the user picked"),
 });
 const sessionLogArgs = z.object({ session_id: sessionId });
 const approveArgs = z.object({
-  session_id: sessionId,
+  session_id: openSessionId,
   confirmed: z.boolean().describe("true only after the user approved the pass in this chat"),
 });
 
@@ -114,6 +116,8 @@ export const SESSION_DEFS: ToolDef[] = [
       "\"AVG <id> pass 0/N\". Returns session_id, the intent's brief, guardrails, pass0_applied, the full settings, metrics, the " +
       "preview, `log_path`, and `start_off_zero` (settings found on the photo, which may be import defaults or earlier edits). " +
       "Then call lr_step once per pass, up to max_passes. " +
+      "To look at a photo without a session, use lr_get_preview with uuid and lr_get_photo_stats; to see what pass 0 would write, " +
+      "`dry_run: true` (nothing written, no snapshot, no session). `advisory`, when present, is a warning, not a refusal: tell the user. " +
       "One session at a time; it stays open until lr_end_session. A photo with a session an engine that stopped left open " +
       "(lr_get_active_photo_context `left_open`) is refused with SESSION_LEFT_OPEN, nothing written, until that session is ended. " +
       "lr_help explains passes, variants mode, clipping guardrails, metrics and previews. " +
@@ -222,7 +226,7 @@ export const SESSION_DEFS: ToolDef[] = [
     description:
       "End the session. \"accept\": keep the edit; the log is finalised and a recipe (the final settings under canonical names) " +
       "is written next to it. \"revert\": apply the pre-session snapshot, putting every setting back as it was before " +
-      "lr_begin_session (the result lists any setting that still differs). Returns the log and recipe paths and the final settings. " +
+      "lr_begin_session (the result lists any setting that still differs); when none differs the snapshot is deleted (`snapshot_removed`). Returns the log and recipe paths and the final settings. " +
       "Variants mode: \"accept\" needs a pick and keeps the pick's edit (the recipe is the pick's); \"revert\" puts the master back. " +
       "Either way the copies stay in the catalog, listed in `copies`. After the user clicked Abort in the HUD, only \"revert\" is taken. " +
       "Once the user ended the session on the Deck, the outcome matching theirs (\"accept\" after Accept; \"revert\" after Abort or " +

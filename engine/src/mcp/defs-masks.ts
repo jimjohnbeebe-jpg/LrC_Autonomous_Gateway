@@ -13,7 +13,7 @@
 import { z } from "zod";
 import { AI_KINDS, BRUSH_LIMITS, BRUSH_RADIUS, CURVE_CHANNELS, CURVE_LIMITS, LOCAL_PARAMS, MODE_NAMES, REFUSED_KINDS, VERIFIED_FORMS } from "../params/index.js";
 import { AI_PART_PLUGIN, CONTROLLER_PLUGIN, MASKS_PLUGIN } from "../session/index.js";
-import { FRAME, sessionId, target, type ToolDef } from "./defs-shared.js";
+import { FRAME, openSessionId, target, type ToolDef } from "./defs-shared.js";
 
 const unit = z.number().min(0).max(1);
 const point = z.object({ x: unit, y: unit });
@@ -99,7 +99,7 @@ const curves = z
       `${DEVELOP_NOTE} lr_list_masks live_mask_id reads the current curves; the result's controller.curves is what Lightroom then holds`,
   );
 const passFields = {
-  session_id: sessionId,
+  session_id: openSessionId,
   target: target.describe('Variants mode: masks go on the pick only (after lr_select_variant). Converge mode: "master" or left out'),
   rationale: z.string().min(1).max(500).describe("one line: what you saw and why this mask change"),
   return_image: z.enum(["after", "before_after", "none"]).optional().describe('"after" (default), "before_after" or "none"'),
@@ -130,7 +130,7 @@ const COLOR_NOTE =
   "from another photo selects what ranks like it there, the same colours only on the same pixels (a virtual copy). ";
 
 const listArgs = z.object({
-  session_id: sessionId,
+  session_id: openSessionId,
   target: target.describe('Variants mode: which photo ("master", "A", …); default the photo the last call worked on'),
   live_mask_id: z.string().min(1).optional().describe(`a mask's id: also read its local curves and Point Color swatches as Lightroom's Develop module holds them (\`live\`). ${DEVELOP_NOTE}`),
 });

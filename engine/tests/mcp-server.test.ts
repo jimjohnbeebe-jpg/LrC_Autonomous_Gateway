@@ -150,7 +150,7 @@ describe("mcp server", () => {
     const save = tools.find((t) => t.name === "lr_save_intent");
     expect(save?.inputSchema.required).toEqual(["intent", "confirmed"]);
     const approve = tools.find((t) => t.name === "lr_approve_pass");
-    expect(approve?.inputSchema.required).toEqual(["session_id", "confirmed"]);
+    expect(approve?.inputSchema.required).toEqual(["confirmed"]); // session_id may be left out (issue #164)
     expect(approve?.description).toMatch(/ONLY after the user approved/);
     expect(save?.description).toMatch(/ONLY call this after the user has explicitly approved/);
     // Issue #108: an intent is optional and the user's request comes first; user intents can be deleted.
@@ -161,7 +161,7 @@ describe("mcp server", () => {
     expect(del?.inputSchema.required).toEqual(["id", "confirmed"]);
     expect(del?.description).toMatch(/ONLY call this after the user has explicitly approved/);
     const step = tools.find((t) => t.name === "lr_step");
-    expect(step?.inputSchema.required).toEqual(["session_id", "settings", "rationale"]);
+    expect(step?.inputSchema.required).toEqual(["settings", "rationale"]);
     expect(step?.description).toMatch(/CHANGE for numeric sliders/);
     const gps = tools.find((t) => t.name === "lr_set_gps");
     expect(gps?.inputSchema.required).toEqual(["uuids", "position"]);

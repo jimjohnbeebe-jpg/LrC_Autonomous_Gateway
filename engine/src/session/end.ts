@@ -6,6 +6,7 @@
 // decision 4: the SDK has no call that removes a photo; handle: tests\session-variants.test.ts
 // "refuses accept before a pick; revert puts the master back and keeps the copies with their edits",
 // against the Lightroom sim; in Lightroom [unverified] until PHASE4_PLAN row 10].
+// A revert that put every setting back deletes the pre-session snapshot (issue #162, removeSnapshot).
 
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
@@ -15,6 +16,7 @@ import { differingSettings, type CanonicalSettings } from "../params/index.js";
 import type { EndedByEntry } from "../log/index.js";
 import { settlePending } from "./ai-update.js";
 import { stampAvg } from "./avg-stamp.js";
+import type { BridgeClient } from "../bridge/index.js";
 import { bridge, checkAbort, failed, ms, read, saveLog } from "./io.js";
 import { focus, variant } from "./targets.js";
 import { WRITE_TIMEOUT_MS, type FinishArgs, type Session, type SessionContext, type SessionOutput, type Target, type UserEnd } from "./types.js";
@@ -92,6 +94,8 @@ export async function endSession(ctx: SessionContext, s: Session, args: FinishAr
   s.log.revert = revert;
   s.log.ended_by = endedBy(user);
   saveLog(s);
+  // Only once the end is saved: a failed save leaves the session open, and its retried revert needs the snapshot (Greptile, PR #257).
+  const snapshot = !revert ? {} : revert.differing.length === 0 ? await removeSnapshot(client, s) : { snapshot_removed: false, snapshot_note: KEPT_NOTE(s) };
   const copies = s.mode === "variants" ? copiesJson(s, args.outcome) : {};
   return {
     json: {
@@ -104,7 +108,7 @@ export async function endSession(ctx: SessionContext, s: Session, args: FinishAr
       log_path: s.files.logPath,
       recipe_path: recipePath,
       final_settings: finalSettings,
-      ...(revert ? { revert } : {}),
+      ...(revert ? { revert, ...snapshot } : {}),
       ...(masks > 0 ? { masks_note: MASKS_NOTE(masks) } : {}),
       ...(avgStamp !== null ? { avg_stamp: avgStamp } : {}),
       ...copies,
@@ -112,6 +116,24 @@ export async function endSession(ctx: SessionContext, s: Session, args: FinishAr
     },
     log: { session_id: s.id, outcome, ended_by: s.log.ended_by, log_path: s.files.logPath, recipe_path: recipePath, ...(revert ? { revert } : {}), ...(s.mode === "variants" ? { photo: kept.id } : {}) },
   };
+}
+
+const KEPT_NOTE = (s: Session): string => `The snapshot "${s.snapshot.name}" is kept: a setting still differs from it, and it puts the photo back by hand.`;
+
+/**
+ * Issue #162: once a revert put every setting back, the pre-session snapshot holds nothing the photo lacks, so it is deleted
+ * (delete_snapshot, plugin\LrC-AVG.lrplugin\Snapshots.lua; plugin 1.5.0 [handle: engine\src\mcp\tools-develop.ts DEVELOP_PLUGIN]), so sessions
+ * that only tried pass 0 leave no "AVG pre-session …" snapshot behind [handle: tests\session-ergonomics.test.ts, against the
+ * Lightroom sim; in Lightroom [unverified]].
+ * A failed delete (an older plugin, Lightroom busy) only says so: the revert itself is done.
+ */
+async function removeSnapshot(client: BridgeClient, s: Session): Promise<Record<string, unknown>> {
+  try {
+    await client.request("delete_snapshot", { photo_uuid: s.master.uuid, snapshot_id: s.snapshot.id }, { timeoutMs: WRITE_TIMEOUT_MS });
+    return { snapshot_removed: true };
+  } catch (err) {
+    return { snapshot_removed: false, snapshot_note: `The snapshot "${s.snapshot.name}" could not be deleted (${err instanceof Error ? err.message : String(err)}); lr_delete_snapshot removes it.` };
+  }
 }
 
 const MASKS_NOTE = (n: number): string =>

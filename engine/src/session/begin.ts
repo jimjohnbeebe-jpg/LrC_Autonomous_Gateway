@@ -39,9 +39,11 @@ const NO_INTENT: LoadedIntent = {
 /** A session just opened: its pre-session settings and the photo's context, for pass 0. */
 export type Opened = { s: Session; view: FromSdkResult; photo: CommandResult<"get_context">; started: number };
 
-/** Check the call, read the photo, take the pre-session snapshot and build the session (not yet logged). */
-export async function openSession(ctx: SessionContext, given: BeginArgs): Promise<Opened> {
-  const started = performance.now();
+/** What lr_begin_session checked and read before it writes anything (checkBegin): a dry run ends here (dry-run.ts, issue #161). */
+export type Checked = { args: BeginArgs; mode: Session["mode"]; page: PageRead; loaded: LoadedIntent; settings: SessionSettings; photo: CommandResult<"get_context">; variantCount: number | null; view: FromSdkResult };
+
+/** Check the call and read the photo and its settings, with nothing written. */
+export async function checkBegin(ctx: SessionContext, given: BeginArgs): Promise<Checked> {
   const mode = given.mode ?? "converge";
   // An argument that does not apply is ignored, not refused: a model that fills every optional field sent
   // variant_count in Converge mode and intent_id "none", and never got a session [handle:
@@ -70,6 +72,14 @@ export async function openSession(ctx: SessionContext, given: BeginArgs): Promis
   const view = map.fromSdk((await client.request("get_settings", { target_uuid: photo.uuid })).settings); // LEGACY_PROCESS_VERSION
   // Before the snapshot: an unknown profile or one of the other pipeline is refused with nothing written.
   if (args.profile !== undefined) map.toSdk({ camera_profile: args.profile }, { processVersion: view.process_version, pipeline: view.pipeline });
+  return { args, mode, page, loaded, settings, photo, variantCount, view };
+}
+
+/** Check the call, read the photo, take the pre-session snapshot and build the session (not yet logged). */
+export async function openSession(ctx: SessionContext, given: BeginArgs): Promise<Opened> {
+  const started = performance.now();
+  const { args, mode, page, loaded, settings, photo, variantCount, view } = await checkBegin(ctx, given);
+  const { client } = ctx.deps;
 
   const now = ctx.now();
   const { id, short, files } = pickLogFiles(ctx, now);

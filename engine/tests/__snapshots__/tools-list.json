@@ -157,7 +157,7 @@
   {
     "name": "lr_begin_session",
     "title": "Begin an editing session",
-    "description": "Start an editing session on the photo selected in Lightroom. THE USER'S REQUEST COMES FIRST: put it in `notes` in their own words. An intent (lr_list_intents) is an optional starting point: leave intent_id out when none fits; pass `profile` or `guardrails` when the request needs them (e.g. high key or crushed blacks). The engine makes a Develop snapshot \"AVG pre-session …\" (lr_end_session revert returns to it), renders the photo, and runs pass 0 as one History step \"AVG <id> pass 0/N\". Returns session_id, the intent's brief, guardrails, pass0_applied, the full settings, metrics, the preview, `log_path`, and `start_off_zero` (settings found on the photo, which may be import defaults or earlier edits). Then call lr_step once per pass, up to max_passes. One session at a time; it stays open until lr_end_session. A photo with a session an engine that stopped left open (lr_get_active_photo_context `left_open`) is refused with SESSION_LEFT_OPEN, nothing written, until that session is ended. lr_help explains passes, variants mode, clipping guardrails, metrics and previews. The LrC-AVG HUD in Lightroom opens and follows the session; there the user can Abort (the photo goes back to the pre-session snapshot, and a running call stops before its next write), Accept (after the running call), Pick a copy, or Approve a pass (approve_each_pass mode). A session the user ended answers every later call with SESSION_ENDED (details: outcome, source); tell the user, and start a new session only if they ask. ",
+    "description": "Start an editing session on the photo selected in Lightroom. THE USER'S REQUEST COMES FIRST: put it in `notes` in their own words. An intent (lr_list_intents) is an optional starting point: leave intent_id out when none fits; pass `profile` or `guardrails` when the request needs them (e.g. high key or crushed blacks). The engine makes a Develop snapshot \"AVG pre-session …\" (lr_end_session revert returns to it), renders the photo, and runs pass 0 as one History step \"AVG <id> pass 0/N\". Returns session_id, the intent's brief, guardrails, pass0_applied, the full settings, metrics, the preview, `log_path`, and `start_off_zero` (settings found on the photo, which may be import defaults or earlier edits). Then call lr_step once per pass, up to max_passes. To look at a photo without a session, use lr_get_preview with uuid and lr_get_photo_stats; to see what pass 0 would write, `dry_run: true` (nothing written, no snapshot, no session). `advisory`, when present, is a warning, not a refusal: tell the user. One session at a time; it stays open until lr_end_session. A photo with a session an engine that stopped left open (lr_get_active_photo_context `left_open`) is refused with SESSION_LEFT_OPEN, nothing written, until that session is ended. lr_help explains passes, variants mode, clipping guardrails, metrics and previews. The LrC-AVG HUD in Lightroom opens and follows the session; there the user can Abort (the photo goes back to the pre-session snapshot, and a running call stops before its next write), Accept (after the running call), Pick a copy, or Approve a pass (approve_each_pass mode). A session the user ended answers every later call with SESSION_ENDED (details: outcome, source); tell the user, and start a new session only if they ask. ",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -235,6 +235,14 @@
             "before_after",
             "none"
           ]
+        },
+        "dry_run": {
+          "description": "true: check the call and return what pass 0 would write (`pass0.changes`), with no snapshot, no write and no session",
+          "type": "boolean"
+        },
+        "keep_regions": {
+          "description": "true: set again the regions (lr_set_regions) the last session on this photo in this engine run ended with, measured on pass 0's preview (`regions_kept`)",
+          "type": "boolean"
         }
       }
     },
@@ -252,9 +260,9 @@
       "type": "object",
       "properties": {
         "session_id": {
+          "description": "the session_id from lr_begin_session; may be left out while a session is open (it then names that one)",
           "type": "string",
-          "minLength": 1,
-          "description": "the session_id from lr_begin_session"
+          "minLength": 1
         },
         "target": {
           "description": "Variants mode: the copy, \"A\", \"B\" or \"C\" (after lr_select_variant, the pick; it may be left out). Converge mode: \"master\" or left out",
@@ -309,7 +317,6 @@
         }
       },
       "required": [
-        "session_id",
         "settings",
         "rationale"
       ]
@@ -328,9 +335,9 @@
       "type": "object",
       "properties": {
         "session_id": {
+          "description": "the session_id from lr_begin_session; may be left out while a session is open (it then names that one)",
           "type": "string",
-          "minLength": 1,
-          "description": "the session_id from lr_begin_session"
+          "minLength": 1
         },
         "target": {
           "description": "Variants mode: the copy to probe, as for lr_step. Converge mode: \"master\" or left out",
@@ -360,7 +367,6 @@
         }
       },
       "required": [
-        "session_id",
         "sliders"
       ]
     },
@@ -378,9 +384,9 @@
       "type": "object",
       "properties": {
         "session_id": {
+          "description": "the session_id from lr_begin_session; may be left out while a session is open (it then names that one)",
           "type": "string",
-          "minLength": 1,
-          "description": "the session_id from lr_begin_session"
+          "minLength": 1
         },
         "regions": {
           "maxItems": 8,
@@ -442,7 +448,6 @@
         }
       },
       "required": [
-        "session_id",
         "regions"
       ]
     },
@@ -460,9 +465,9 @@
       "type": "object",
       "properties": {
         "session_id": {
+          "description": "the session_id from lr_begin_session; may be left out while a session is open (it then names that one)",
           "type": "string",
-          "minLength": 1,
-          "description": "the session_id from lr_begin_session"
+          "minLength": 1
         },
         "variant": {
           "type": "string",
@@ -475,7 +480,6 @@
         }
       },
       "required": [
-        "session_id",
         "variant"
       ]
     },
@@ -493,9 +497,9 @@
       "type": "object",
       "properties": {
         "session_id": {
+          "description": "the session_id from lr_begin_session; may be left out while a session is open (it then names that one)",
           "type": "string",
-          "minLength": 1,
-          "description": "the session_id from lr_begin_session"
+          "minLength": 1
         },
         "confirmed": {
           "type": "boolean",
@@ -503,7 +507,6 @@
         }
       },
       "required": [
-        "session_id",
         "confirmed"
       ]
     },
@@ -516,14 +519,14 @@
   {
     "name": "lr_end_session",
     "title": "End the editing session",
-    "description": "End the session. \"accept\": keep the edit; the log is finalised and a recipe (the final settings under canonical names) is written next to it. \"revert\": apply the pre-session snapshot, putting every setting back as it was before lr_begin_session (the result lists any setting that still differs). Returns the log and recipe paths and the final settings. Variants mode: \"accept\" needs a pick and keeps the pick's edit (the recipe is the pick's); \"revert\" puts the master back. Either way the copies stay in the catalog, listed in `copies`. After the user clicked Abort in the HUD, only \"revert\" is taken. Once the user ended the session on the Deck, the outcome matching theirs (\"accept\" after Accept; \"revert\" after Abort or Put back) returns ok with `already_ended_by_user` {outcome, source, at, log_path}; any other outcome gets SESSION_ENDED. \"abandon\": only when the session cannot end otherwise and the user agrees: Lightroom is gone or hung, or an AI mask failed or seems stuck (AI_MASK_FAILED, LIGHTROOM_STUCK, AI_UPDATE_PENDING refuse revert). It reads and writes nothing (it does not wait for Lightroom): the photo keeps what the session did and is NOT put back (`photo_put_back` false), the log's outcome is \"abandoned\", and a new session can begin. LIGHTROOM_STUCK and AI_UPDATE_PENDING lift once Lightroom's result shows, so try \"revert\" again first if the user can wait. The result's `note` says how the user puts the photo back by hand (the pre-session snapshot, `snapshot`) and whether Lightroom still holds writes to the photo (`lightroom_guard`: \"none\" when no AI mask was pending, so nothing is held; \"cleared\"; \"not_cleared\" or \"plugin_too_old\": held until Lightroom restarts; \"kept\": held until the mask's shape shows, so the user waits for it first); tell the user both. A session an engine that stopped left open (lr_get_active_photo_context `left_open`) is ended the same three ways, with `left_open: true` and the log's `ended_by` \"recovery\": revert applies its snapshot and says what it `checked`; accept reads the photo as it is now.",
+    "description": "End the session. \"accept\": keep the edit; the log is finalised and a recipe (the final settings under canonical names) is written next to it. \"revert\": apply the pre-session snapshot, putting every setting back as it was before lr_begin_session (the result lists any setting that still differs); when none differs the snapshot is deleted (`snapshot_removed`). Returns the log and recipe paths and the final settings. Variants mode: \"accept\" needs a pick and keeps the pick's edit (the recipe is the pick's); \"revert\" puts the master back. Either way the copies stay in the catalog, listed in `copies`. After the user clicked Abort in the HUD, only \"revert\" is taken. Once the user ended the session on the Deck, the outcome matching theirs (\"accept\" after Accept; \"revert\" after Abort or Put back) returns ok with `already_ended_by_user` {outcome, source, at, log_path}; any other outcome gets SESSION_ENDED. \"abandon\": only when the session cannot end otherwise and the user agrees: Lightroom is gone or hung, or an AI mask failed or seems stuck (AI_MASK_FAILED, LIGHTROOM_STUCK, AI_UPDATE_PENDING refuse revert). It reads and writes nothing (it does not wait for Lightroom): the photo keeps what the session did and is NOT put back (`photo_put_back` false), the log's outcome is \"abandoned\", and a new session can begin. LIGHTROOM_STUCK and AI_UPDATE_PENDING lift once Lightroom's result shows, so try \"revert\" again first if the user can wait. The result's `note` says how the user puts the photo back by hand (the pre-session snapshot, `snapshot`) and whether Lightroom still holds writes to the photo (`lightroom_guard`: \"none\" when no AI mask was pending, so nothing is held; \"cleared\"; \"not_cleared\" or \"plugin_too_old\": held until Lightroom restarts; \"kept\": held until the mask's shape shows, so the user waits for it first); tell the user both. A session an engine that stopped left open (lr_get_active_photo_context `left_open`) is ended the same three ways, with `left_open: true` and the log's `ended_by` \"recovery\": revert applies its snapshot and says what it `checked`; accept reads the photo as it is now.",
     "inputSchema": {
       "type": "object",
       "properties": {
         "session_id": {
+          "description": "the session_id from lr_begin_session; may be left out while a session is open (it then names that one)",
           "type": "string",
-          "minLength": 1,
-          "description": "the session_id from lr_begin_session"
+          "minLength": 1
         },
         "outcome": {
           "type": "string",
@@ -536,7 +539,6 @@
         }
       },
       "required": [
-        "session_id",
         "outcome"
       ]
     },
@@ -576,9 +578,9 @@
       "type": "object",
       "properties": {
         "session_id": {
+          "description": "the session_id from lr_begin_session; may be left out while a session is open (it then names that one)",
           "type": "string",
-          "minLength": 1,
-          "description": "the session_id from lr_begin_session"
+          "minLength": 1
         },
         "target": {
           "description": "Variants mode: which photo (\"master\", \"A\", …); default the photo the last call worked on",
@@ -595,10 +597,7 @@
           "type": "string",
           "minLength": 1
         }
-      },
-      "required": [
-        "session_id"
-      ]
+      }
     },
     "annotations": {
       "readOnlyHint": true,
@@ -613,9 +612,9 @@
       "type": "object",
       "properties": {
         "session_id": {
+          "description": "the session_id from lr_begin_session; may be left out while a session is open (it then names that one)",
           "type": "string",
-          "minLength": 1,
-          "description": "the session_id from lr_begin_session"
+          "minLength": 1
         },
         "target": {
           "description": "Variants mode: masks go on the pick only (after lr_select_variant). Converge mode: \"master\" or left out",
@@ -950,7 +949,6 @@
         }
       },
       "required": [
-        "session_id",
         "rationale",
         "kind"
       ]
@@ -969,9 +967,9 @@
       "type": "object",
       "properties": {
         "session_id": {
+          "description": "the session_id from lr_begin_session; may be left out while a session is open (it then names that one)",
           "type": "string",
-          "minLength": 1,
-          "description": "the session_id from lr_begin_session"
+          "minLength": 1
         },
         "target": {
           "description": "Variants mode: masks go on the pick only (after lr_select_variant). Converge mode: \"master\" or left out",
@@ -1664,7 +1662,6 @@
         }
       },
       "required": [
-        "session_id",
         "rationale",
         "mask_id"
       ]
@@ -1683,9 +1680,9 @@
       "type": "object",
       "properties": {
         "session_id": {
+          "description": "the session_id from lr_begin_session; may be left out while a session is open (it then names that one)",
           "type": "string",
-          "minLength": 1,
-          "description": "the session_id from lr_begin_session"
+          "minLength": 1
         },
         "target": {
           "description": "Variants mode: masks go on the pick only (after lr_select_variant). Converge mode: \"master\" or left out",
@@ -1719,7 +1716,6 @@
         }
       },
       "required": [
-        "session_id",
         "rationale",
         "mask_id"
       ]

@@ -10,7 +10,7 @@ import { Deck, DeckMenu, HudEvents, HudFanOut, HudLauncher, HudPublisher, type D
 import type { IntentLibrary } from "../intents/index.js";
 import type { ToolLog } from "../log/index.js";
 import type { Metrics, Region } from "../metrics/index.js";
-import type { ParamMap, PresetFormat } from "../params/index.js";
+import type { ParamMap, PresetFormat, SdkSettings } from "../params/index.js";
 import type { PreviewRequest, PreviewService, RenderedPreview } from "../preview/index.js";
 import { SessionManager, endedError } from "../session/index.js";
 import type { KnownLogFolders, PageSettings } from "../settings/index.js";
@@ -108,14 +108,25 @@ export type ToolContext = {
   hud: HudPublisher | null;
   /** The Deck and its channel (null without `deck` or without the HUD). */
   deck: Deck | null;
+  /** This engine's last lr_set_develop_settings write, for lr_undo_last_step (tools-develop.ts); `run` drops it on any other call but KEEPS_LAST_WRITE. */
+  lastWrite: LastWrite | null;
 };
+
+export type LastWrite = { uuid: string; before: SdkSettings; compare: string[]; snapshot?: { id: string; name: string } | undefined };
+
+/**
+ * The calls that keep `lastWrite`: reads a client makes between a write and its undo, and the undo itself. Any other
+ * call drops it, so the undo never names a photo a later write changed or removed (Greptile, PR #251); a read not
+ * listed only makes the next undo the plain one.
+ */
+const KEEPS_LAST_WRITE = new Set(["lr_undo_last_step", "lr_get_preview", "lr_get_metadata", "lr_get_metrics", "lr_get_selected_photos", "lr_get_active_photo_context", "lr_list_snapshots", "lr_get_photo_stats", "lr_help"]);
 
 export const ms = (since: number): number => Math.round((performance.now() - since) * 10) / 10;
 
 export function createContext(deps: ToolsDeps): ToolContext {
   const historyPrefix = deps.historyPrefix ?? `AVG ${randomUUID().slice(0, 4)}`;
   if (!historyPrefix.startsWith("AVG ")) throw new Error(`history prefix must start with "AVG ": ${historyPrefix}`);
-  const ctx: ToolContext = { deps, historyPrefix, now: deps.now ?? (() => new Date()), sessions: null, writes: 0, last: null, hud: null, deck: null };
+  const ctx: ToolContext = { deps, historyPrefix, now: deps.now ?? (() => new Date()), sessions: null, writes: 0, last: null, hud: null, deck: null, lastWrite: null };
   const settings = deps.settings;
   const withSessions = deps.intents !== undefined && deps.sessionLogDir !== undefined;
   const hud = withSessions && deps.hud !== false ? new HudPublisher(deps.client, { record: (r) => logHud(ctx, "hud_update", r) }) : null;
@@ -294,6 +305,7 @@ export async function run(
   const fn = typeof optionsOrFn === "function" ? optionsOrFn : (maybeFn as () => Promise<ToolOutput>);
   const usesBridge = typeof optionsOrFn === "function" ? true : optionsOrFn.usesBridge;
   const [ts, started] = [ctx.now().toISOString(), performance.now()];
+  if (!KEEPS_LAST_WRITE.has(tool)) ctx.lastWrite = null;
   if (usesBridge) ctx.deps.onCallStart?.();
   try {
     const out = await fn();

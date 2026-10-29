@@ -1,0 +1,25 @@
+2026-10-28 17:41:56.224 INFO  bridge: receive: engine connected
+2026-10-28 17:41:56.728 INFO  bridge: send: engine connected
+2026-10-28 17:41:56.728 INFO  bridge: hello 16276ca0-fea4-4724-9d95-1821495cfdb9
+2026-10-28 17:42:00.725 INFO  bridge: get_selection dfc4f02c-f3ab-4701-99c0-f09b1dd6b26b
+2026-10-28 17:42:00.725 INFO  bridge: get_settings 475a836b-8f3f-4a7d-8c73-4b31f19666b6
+2026-10-28 17:42:00.747 INFO  bridge: select_photo 15a78235-740b-4a71-b7b8-95fc5ad7b3c7
+2026-10-28 17:42:00.751 INFO  bridge: get_settings 49af23ca-5e36-4ab3-955b-296261cfccd4
+2026-10-28 17:42:00.776 INFO  bridge: create_snapshot 302a4be0-02eb-488d-84f6-787cf672ac2d
+2026-10-28 17:42:00.833 INFO  bridge: apply_settings 307a9690-5775-4fa5-b743-387c3453208a
+2026-10-28 17:42:01.223 INFO  bridge: update_ai_settings e802f310-1912-4348-8761-e1cbb17c3090
+2026-10-28 17:42:01.392 INFO  bridge: get_settings 07b75697-80b8-4b2b-91b1-efc2596d9657
+2026-10-28 17:42:01.946 INFO  bridge: get_settings ee47d843-6aee-46c0-8206-baf08096cedd
+2026-10-28 17:42:02.464 INFO  bridge: get_settings 010fedde-bfd1-47ba-8913-b44b46100d3f
+2026-10-28 17:42:02.998 INFO  bridge: get_settings 933d2ad3-a195-4016-8889-c06ba0d0bd55
+2026-10-28 17:42:03.530 INFO  bridge: get_settings a19e8e14-c707-4cac-b178-94bcede93074
+2026-10-28 17:42:04.050 INFO  bridge: get_settings 9eef44bb-4152-4b2f-a18f-fd98d228ce53
+2026-10-28 17:42:04.566 INFO  bridge: get_settings a6154603-1b39-4b9b-91f6-66d036d3b663
+2026-10-28 17:42:05.098 INFO  bridge: get_settings e510c046-e033-47e6-8423-b3c0c16fcf60
+2026-10-28 17:42:05.617 INFO  bridge: get_settings ebd982fc-071f-4c17-8215-ad4882cd7da7
+2026-10-28 17:42:06.227 INFO  bridge: get_settings 94c9cb19-7b83-46e3-8f42-a3eac23bbbe3
+2026-10-28 17:42:06.270 INFO  bridge: get_settings c966eb4c-883a-4a3d-8ed9-98c068e39791
+2026-10-28 17:42:06.297 INFO  bridge: select_photo e272432c-439f-46cf-800d-008ab3a2428b
+2026-10-28 17:42:06.310 INFO  bridge: apply_snapshot 2e073fbe-6912-4ed9-a74f-a004820e43be
+2026-10-28 17:42:06.612 INFO  bridge: receive: closed
+2026-10-28 17:42:06.612 INFO  stall-diag: rebind receive (closed, generation 1)

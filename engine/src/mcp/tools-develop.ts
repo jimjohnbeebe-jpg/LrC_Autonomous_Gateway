@@ -7,12 +7,13 @@
 
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
+import { BridgeError } from "../bridge/index.js";
 import { CALL_BUDGET_MS } from "../library/index.js";
 import { ParamError, differingSettings, sdkPassthrough, tableInfo, type ParamMap, type SdkSettings } from "../params/index.js";
 import { WRITE_TIMEOUT_MS } from "../sync/target.js";
 import { ToolError } from "./errors.js";
 import { eachInBudget, type Budget } from "./tools-files.js";
-import { needPlugin, run, sessionTools, type ToolContext, type ToolOutput } from "./tools-shared.js";
+import { needPlugin, run, sessionTools, type LastWrite, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
 /** The plugin with the issue #214 commands (DevelopTools.lua, Snapshots.lua, Copies.lua). */
 export const DEVELOP_PLUGIN = "1.5.0";
@@ -157,6 +158,7 @@ export function setDevelopSettings(ctx: ToolContext, args: SetDevelopSettingsArg
     const r = await client.request("set_develop_settings", { photo_uuid: uuid, settings: sdk, history_name, snapshot_name: name }, timeout);
     const extra = { history_name, compare: raw, ...(unranged.length > 0 ? { unranged } : {}) };
     const not_taken = r.status === "set" ? map.verifyReadback(sdk, r.read_back) : [];
+    ctx.lastWrite = not_taken.length === 0 && r.status === "set" ? { uuid, before, compare: raw, snapshot: r.snapshot } : null;
     if (not_taken.length === 0 || !r.snapshot) return { ...r, ...extra };
     const back = await client.request("apply_snapshot", { photo_uuid: uuid, snapshot_id: r.snapshot.id, restore_view: true }, timeout);
     const reason = `Lightroom did not take ${not_taken.map((m) => m.sdk_key).join(", ")} as written, so the photo was put back from the snapshot`;
@@ -164,7 +166,38 @@ export function setDevelopSettings(ctx: ToolContext, args: SetDevelopSettingsArg
   }, need);
 }
 
-/** Decision D2 of epic #207 (issue #214): Lightroom's Edit > Undo, once (DevelopTools.lua undoLastStep). Global: refused while any session is open or left open. */
+/** `last` while its photo is still in the catalog, else null, so the undo is the plain one (a photo removed by hand since the write). */
+async function stillThere(ctx: ToolContext, last: LastWrite | null): Promise<LastWrite | null> {
+  if (!last) return null;
+  try {
+    await ctx.deps.client.request("get_settings", { photo_uuid: last.uuid });
+    return last;
+  } catch (err) {
+    if (err instanceof BridgeError && err.code === "unknown_photo") return null;
+    throw err;
+  }
+}
+
+/** Whether `last` is undone: the photo read again and compared with its settings before the write (settingChanges). */
+async function checkUndone(ctx: ToolContext, last: LastWrite): Promise<Record<string, unknown>> {
+  const now = (await ctx.deps.client.request("get_settings", { photo_uuid: last.uuid })).settings;
+  const { changed } = settingChanges(ctx.deps.map, last.before, now, last.compare);
+  const still = Object.keys(changed);
+  if (still.length === 0) return { last_write: { uuid: last.uuid, reverted: true } };
+  const put = last.snapshot ? ` The snapshot "${last.snapshot.name}" (lr_apply_snapshot with id ${last.snapshot.id}) puts it back.` : "";
+  return {
+    last_write: { uuid: last.uuid, reverted: false, still_changed: changed, ...(last.snapshot ? { snapshot: last.snapshot } : {}) },
+    warning: `Lightroom undid a step, but not this engine's last lr_set_develop_settings write on ${last.uuid}: ${still.join(", ")} still differ.${put}`,
+  };
+}
+
+/**
+ * Decision D2 of epic #207 (issue #214): Lightroom's Edit > Undo, once (DevelopTools.lua undoLastStep). Global: refused
+ * while any session is open or left open. After an lr_set_develop_settings write the undo runs with that photo active
+ * in Develop, as the write ran, and the photo is read back (`last_write`): Jim's check undid right after the write, in
+ * the view it had put back, and the write stayed [handle: docs\reports\phase11\DEVELOP-CATALOG-D123\run1\, step "copy A
+ * after the undo": differs exposure, LensManualDistortionAmount]. Whether the undo then reaches the write is [unverified].
+ */
 export function undoLastStep(ctx: ToolContext, args: UndoArgs): Promise<ToolOutput> {
   return run(ctx, "lr_undo_last_step", args, async () => {
     const sessions = sessionTools(ctx);
@@ -173,13 +206,16 @@ export function undoLastStep(ctx: ToolContext, args: UndoArgs): Promise<ToolOutp
     const [left] = sessions.leftOpen();
     if (left) throw new ToolError("SESSION_LEFT_OPEN", `Nothing was undone: session ${left.log.session_id} was left open by an engine that stopped, and Lightroom's undo could reach its steps; end it with lr_end_session first.`, false, { session_id: left.log.session_id });
     return sessions.whenIdle("lr_undo_last_step", async () => {
-      const r = await ctx.deps.client.request("undo_last_step", { confirm: true }, timeout);
+      const last = await stillThere(ctx, ctx.lastWrite);
+      ctx.lastWrite = null;
+      const r = await ctx.deps.client.request("undo_last_step", { confirm: true, ...(last ? { photo_uuid: last.uuid } : {}) }, timeout);
       // Edit > Redo bringing the step back is [inference] from LrUndo.redo, "Redoes the last undone history state"
-      // [handle: API Reference\modules\LrUndo.html]; what Lightroom undoes is [unverified] until develop-catalog:check.
+      // [handle: API Reference\modules\LrUndo.html].
       const note = r.undone
-        ?"Lightroom undid its last step, whoever made it (Edit > Undo); Edit > Redo in Lightroom brings it back."
+        ? "Lightroom undid its last step, whoever made it (Edit > Undo); Edit > Redo in Lightroom brings it back."
         : "Lightroom had nothing to undo; nothing changed.";
-      return { json: { ...r, note }, log: r };
+      const checked = r.undone && last ? await checkUndone(ctx, last) : {};
+      return { json: { ...r, note, ...checked }, log: { ...r, ...checked } };
     });
   });
 }

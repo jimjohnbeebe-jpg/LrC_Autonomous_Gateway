@@ -1,0 +1,11 @@
+{
+  "check": "catalog-throwaway",
+  "started": "2026-10-29T00-26-25-903Z",
+  "node": "v24.11.1",
+  "engine_version": "1.7.0",
+  "plugin_version": "1.7.0",
+  "catalog_path": "%USERPROFILE%\\LightRoom Catalog\\Lightroom Catalog-v13-4.lrcat",
+  "refused_before": true,
+  "answer": "n",
+  "headline": "FAILED"
+}

@@ -1,0 +1,31 @@
+{
+  "check": "masks-verify",
+  "started": "2026-10-29T00-31-50-237Z",
+  "parts": [
+    "person"
+  ],
+  "steps": [
+    {
+      "part": "person",
+      "photo": "-",
+      "id": "select",
+      "question": null,
+      "answer": "2 photo(s) selected, not 1",
+      "ok": false,
+      "notes": [
+        "select ONE photo with two or more people side by side"
+      ]
+    }
+  ],
+  "plugin_version": "1.7.0",
+  "lrc_version": "15.6",
+  "photos": [],
+  "lines": [
+    "NO   person - select (select ONE photo with two or more people side by side)",
+    "---- person: no step answered yes"
+  ],
+  "headline": "FAILED",
+  "node": "v24.11.1",
+  "engine_version": "1.7.0",
+  "plugin_log_copied": "mask_verify_bridge_log_2026-10-29T00-31-50-237Z.txt"
+}

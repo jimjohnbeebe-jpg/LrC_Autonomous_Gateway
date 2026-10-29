@@ -12,7 +12,7 @@
 // curve capture found no curve field [same file, curve_capture]; both now go through LrDevelopController, checked by the
 // controller part (masks-verify-controller.ts, which reuses SWATCH below).
 
-import { applyOp, readTable, type Correction, type MaskOp } from "../params/index.js";
+import { applyOp, readTable, type Correction, type MaskOp, type SdkSettings } from "../params/index.js";
 import { C } from "../params/mask-table.js";
 import { frameFor } from "../session/crop.js";
 import { writeTable, type Ctx, type Photo, type Step } from "./masks-verify.js";
@@ -44,14 +44,25 @@ const push = (h: Here, id: string, s: Omit<Step, "part" | "photo" | "id">): void
   h.steps.push({ part: "parity", photo: h.photo.filename, id, ...s });
 };
 const read = async (h: Here): Promise<Correction[]> => readTable((await h.c.client.request("get_settings", { photo_uuid: h.photo.uuid })).settings);
+/** The read-back mask table, or why it is unreadable. */
+const entriesOf = (sdk: SdkSettings): Correction[] | string => {
+  try {
+    return readTable(sdk);
+  } catch (err) {
+    return String(err);
+  }
+};
 
 /** Apply `op` to the table, write it, ask `question`; the table written becomes the next step's. */
 async function write(h: Here, id: string, op: MaskOp, question: string, frame: Parameters<typeof applyOp>[2]): Promise<string> {
   const plan = applyOp(h.table, op, frame);
-  const { problems } = await writeTable(h.c.client, h.photo.uuid, plan.entries, id);
+  const { problems, read_back } = await writeTable(h.c.client, h.photo.uuid, plan.entries, id);
   h.table = plan.entries;
   const answer = await h.c.ask(question);
-  push(h, id, { question, answer, ok: answer === "y" && problems.length === 0, notes: problems, data: { mask: plan.after } });
+  // On a "reads back different", both entries whole: the 2026-10-29 run named only CorrectionMasks.0.Masks, which
+  // changedPaths reports as a leaf only when one side is not an array [handle: docs\reports\phase11\MASK-PARITY\run2\].
+  const both = problems.length === 0 ? {} : { written: plan.entries, read_back: entriesOf(read_back) };
+  push(h, id, { question, answer, ok: answer === "y" && problems.length === 0, notes: problems, data: { mask: plan.after, ...both } });
   return plan.id;
 }
 

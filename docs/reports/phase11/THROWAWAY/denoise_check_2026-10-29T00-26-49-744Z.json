@@ -1,0 +1,10 @@
+{
+  "check": "denoise-check",
+  "started": "2026-10-29T00-26-49-744Z",
+  "node": "v24.11.1",
+  "engine_version": "1.7.0",
+  "errors": [
+    "the open catalog Lightroom Catalog-v13-4.lrcat is not marked as a throwaway catalog, so this check wrote nothing. Open a throwaway catalog (File > New Catalog, then import a few photos) and run npm run catalog:throwaway once; or, to run on this catalog anyway, add -- --i-know to the command."
+  ],
+  "headline": "FAILED"
+}

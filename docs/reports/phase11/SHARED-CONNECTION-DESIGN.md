@@ -1,9 +1,9 @@
 ---
 report: SHARED-CONNECTION-DESIGN (issue #211, step 2)
 phase: 11
-status: template
-authored_by: "Design note, pre-run findings and the reproduce checklist: Claude Code (Opus 5.5, night run on epic #207), 2026-10-27. Observed: Jim (blank). Decisions: Jim."
-date: 2026-10-27
+status: observed
+authored_by: "Design note, pre-run findings and the reproduce checklist: Claude Code (Opus 5.5, night run on epic #207), 2026-10-27. Observed: filled by Claude Code from the logs of Jim's run, 2026-10-29. Decisions: Jim."
+date: 2026-10-29
 ---
 
 # Sharing one Lightroom connection across Claude Desktop's engine processes (issue #211)
@@ -229,7 +229,23 @@ Claude Code collects all of it and a process list after each "done". Jim types i
 
 ### Observed (Jim)
 
-_Blank: filled from Jim's run only._
+Filled by Claude Code from the three log excerpts, 2026-10-29. Jim ran the steps as check 6 of the 1.7.0 batch (`BATCH-1.7.0-CHECKS.md`), engine and plugin 1.7.0 [stated: Jim, 2026-10-29, "check 6 failed, the second instance was unable to connect because the bridge was open."]. The files [all in `docs\reports\phase11\SHARED-CONNECTION-DESIGN\reproduce\`]: the engine's tool log `engine-20261028_excerpt.jsonl` (UTC), Claude Desktop's MCP log `mcp-server-lrc-avg_excerpt.log` (UTC), and the plugin log `bridge_log_excerpt.txt` (Jim's local time, UTC-7).
+
+| Step | Client (tool log `client.name`) | Time (UTC) | Call | Result |
+|---|---|---|---|---|
+| 1 | `claude-ai` (the chat) | 00:57:55.483 | `lr_get_selected_photos` | ok, 1 photo, 542.5 ms |
+| 2 | `local-agent-mode-lrc-avg` (Cowork) | 00:58:26.936 | `lr_get_selected_photos` | **`ENGINE_BUSY`**: "Another LrC-AVG engine (process 16092) is using the Lightroom bridge", port 8767 |
+| 3 | `claude-ai` | 00:59:04.917 | `lr_get_selected_photos` | ok, 1 photo, 521.7 ms |
+| 4 | `local-agent-mode-lrc-avg` | 00:59:43.734 | `lr_begin_session` | **`ENGINE_BUSY`**, the same process 16092 |
+
+[handle: `engine-20261028_excerpt.jsonl`, `ts`, `tool`, `ok`, `client`, `error`]
+
+- **Step 4: no session began**, so there is nothing to put back [handle: the same file, `lr_begin_session` `ok` false]. `lr_end_session` does not appear in the excerpt.
+- **Both Cowork calls came within 60 s of the chat's last call**: 31 s after step 1's answer and 38 s after step 3's [handle: the same file, `ts` and `duration_ms`]. The engine keeps the bridge for 60 s after a call [handle: `engine\src\mcp\main.ts:56` `IDLE_RELEASE_MS = 60000`].
+- The plugin log matches: the chat's engine connected at 17:57:55.517 local and its connection closed at 17:58:56.045, 60 s after its `get_selection` (17:57:56.026); it connected again at 17:59:04.921 and closed at 17:59:59.616 [handle: `bridge_log_excerpt.txt`]. No second engine connected in the excerpt.
+- Claude Desktop's MCP log shows one lrc-avg server answering: started at 00:57:26.935 (after a first start shut down at 00:57:26.147), `tools/call` id 3 at 00:57:55.485 and id 4 at 00:59:04.916, the times of the chat's two calls, and "Shutting down server" at 00:59:59.590 [handle: `mcp-server-lrc-avg_excerpt.log`]. That shutdown is likely step 5 (Claude Desktop quit), and it closed the bridge before the 60 s ran out [inference: the plugin's close at 17:59:59.616 local is 26 ms later]. The Cowork calls are not in this log, so Cowork's engine logs somewhere this excerpt does not cover [inference].
+- That process 16092 is the chat's engine is [inference]: the tool log does not record its own process id, and **no process list was taken during the run**, so the engine PIDs with their parent (What Claude Code records, first item) are not recorded.
+- **The issue's problem is reproduced:** a Cowork task cannot use LrC-AVG while the chat's engine holds the bridge, and gets `ENGINE_BUSY` instead [handle: the table above].
 
 ## 7. Plugin-side items upstream fixed (#296, #297, #237), compared with ours (analysis only)
 

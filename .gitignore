@@ -57,3 +57,7 @@ spikes/S9/tauri/ui-dist/
 hud/src-tauri/target/
 hud/src-tauri/gen/
 hud/ui-dist/
+
+# luacov output (`busted --coverage`, then `luacov`; issue #213)
+luacov.stats.out
+luacov.report.out

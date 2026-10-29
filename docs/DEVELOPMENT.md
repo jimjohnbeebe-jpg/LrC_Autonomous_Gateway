@@ -59,7 +59,7 @@ Development overrides are read from `LRC_AVG_*` environment variables: the ports
 
 ## Lua lint and specs
 
-The plugin's Lua has its own gate (issue #213): selene lints `plugin/LrC-AVG.lrplugin/` with `selene.toml` and the Lightroom globals in `lightroom.yml`, and busted runs the specs in `plugin/spec/` (`.busted`). The CI workflow `.github/workflows/lua.yml` runs both on Ubuntu, Lua 5.1, on every pull request that touches `plugin/`. Pinned versions: [`DEPENDENCIES.md`](DEPENDENCIES.md) "Lua tooling".
+The plugin's Lua has its own gate (issue #213): selene lints `plugin/LrC-AVG.lrplugin/` with `selene.toml` and the Lightroom globals in `lightroom.yml`, and busted runs the specs in `plugin/spec/` (`.busted`). The CI workflow `.github/workflows/lua.yml` runs both on Ubuntu, Lua 5.1, on every pull request to `main`. Pinned versions: [`DEPENDENCIES.md`](DEPENDENCIES.md) "Lua tooling".
 
 ```powershell
 npm run lua:lint     # selene; says where to get it when selene.exe is not on PATH
@@ -68,7 +68,9 @@ npm run lua:test     # busted; says so when it is not on PATH (CI runs it)
 
 - **selene on Windows** is one file: download `selene-0.32.0-windows.zip` from https://github.com/Kampfkarren/selene/releases/tag/0.32.0, unzip `selene.exe` into a folder on your `PATH` (for example `$env:USERPROFILE\bin`), and check with `selene --version` (it prints `selene 0.32.0`). With it on PATH, `npm run lua:lint` printed `0 errors`, `0 warnings` [handle: `npm run lua:lint` on branch `phase-11/lua-quality-gate`, 2026-10-28].
 - **busted on Windows** needs Lua 5.1 and LuaRocks, and LuaRocks builds busted's C module (luasystem) with a C compiler. That set-up was not tried on a Windows PC [unverified], so the specs run in CI for now. Where Lua 5.1 and LuaRocks are installed: `luarocks --lua-version=5.1 install busted 2.3.0-1`, then `npm run lua:test` from the repo root.
-- A spec loads a plugin module outside Lightroom: `plugin/spec/spec_helper.lua` stubs `import` (each SDK namespace is an empty table the spec fills) and `LrTasks.pcall`, and `helper.load(name, stubs)` loads a module with stand-ins for the modules it requires. The specs cover `Json.lua`, the path helpers of `KeywordTree.lua`, `Pending.lua` and `Dispatch.handleLine`.
+- A spec loads a plugin module outside Lightroom: `plugin/spec/spec_helper.lua` stubs `import` (each SDK namespace is an empty table the spec fills) and `LrTasks.pcall`, and `helper.load(name, stubs)` loads a module with stand-ins for the modules it requires. The specs cover `Json.lua`, the path helpers of `KeywordTree.lua`, `Pending.lua`, `Dispatch.handleLine`, `Sockets.lua` (the flags its callbacks set, the generations, rebind or re-arm) and `Denoise.apply` (its refusals and the branches of its steps 3-5).
+- **The read-gate spy** (rule 03): `helper.catalog(methods)` is a catalog whose `insideGate` lists each yielding query or batch read (`helper.OUTSIDE_GATE`, the list of `engine/tests/lua-read-gate.test.ts`) made while its `withReadAccessDo` runs, and `reads` counts the gates. A spec that drives a module through it asserts `insideGate` is empty; unlike the static test, the spy also sees a call made through another function. `ReadGate_spec.lua` checks `Photos.lua` and `Pending.lua` this way; `Denoise_spec.lua` uses it too.
+- **Coverage:** CI runs `busted --coverage` and then `luacov` (`.luacov`: only `plugin/LrC-AVG.lrplugin/`, files no spec loads at 0 %), and prints luacov's summary in the job log and the run's summary page. It is reported, not a gate. Locally, with luacov installed (`luarocks --lua-version=5.1 install luacov 0.17.0-1`): `busted --coverage`, then `luacov`; the report is `luacov.report.out` (gitignored).
 
 ## Live checks on a throwaway catalog
 

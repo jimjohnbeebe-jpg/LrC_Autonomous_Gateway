@@ -50,6 +50,31 @@ const field = (v: unknown, f: string): unknown => (v && typeof v === "object" ? 
 
 type Track = { kind: WriteKind; uuid: string; first: unknown; last: unknown; known: boolean; fields: Set<string> };
 
+/** The photos an lr_get_metadata call read: its uuids less the logged `failed_uuids`; none when it failed some and names none. */
+function metadataRead(r: Rec): string[] {
+  const failed = Array.isArray(r["failed_uuids"]) ? new Set(r["failed_uuids"] as unknown[]) : null;
+  if (!failed) return countOf(r["failed"]) > 0 ? [] : uuidsOf(r);
+  return uuidsOf(r).filter((u) => !failed.has(u));
+}
+
+/**
+ * A write call's per-photo entries. A finished call logs `writes`. A call stopped because Lightroom no longer answered
+ * (library\write.ts stopped) logs, in its error's details, the photos written before (`written`), the failures, and
+ * the photo Lightroom may still have written (`maybe_written`): that one has a `before` of unknown value and no `after`,
+ * so it never counts as put back by this call (Greptile, PR #268).
+ */
+function writesOf(r: Rec): Rec[] {
+  if (r["ok"] === true) return Array.isArray(r["writes"]) ? (r["writes"] as Rec[]) : [];
+  const d = field(r["error"], "details");
+  const list = (k: string): Rec[] => (Array.isArray(field(d, k)) ? (field(d, k) as Rec[]) : []);
+  const maybe = field(d, "maybe_written");
+  return [
+    ...list("written").map((p) => ({ uuid: p["uuid"], before: p["before"], after: p["after"] })),
+    ...list("failed").filter((f) => "before" in f).map((f) => ({ uuid: f["uuid"], before: f["before"], ...("after" in f ? { after: f["after"] } : {}) })),
+    ...(typeof maybe === "string" ? [{ uuid: maybe }] : []),
+  ];
+}
+
 function sheets(records: readonly Rec[]): ShootChat["sheets"] {
   const calls = records.filter((r) => isOk(r, SHEET_TOOL));
   const fallbacksOf = (r: Rec): number | null =>
@@ -74,18 +99,15 @@ export function evaluateShootChat(records: readonly Rec[]): ShootChat {
   let snapshots_applied = 0;
   for (const [i, r] of records.entries()) {
     if (isOk(r, SHEET_TOOL)) for (const u of uuidsOf(r)) seen.sheet.add(u);
-    if (isOk(r, "lr_get_metadata")) for (const u of uuidsOf(r)) seen.metadata.add(u);
+    if (isOk(r, "lr_get_metadata")) for (const u of metadataRead(r)) seen.metadata.add(u);
     if (isOk(r, "lr_sync_series") && syncAt < 0) syncAt = i;
     if (isOk(r, "lr_apply_snapshot") && syncAt >= 0) snapshots_applied++;
     const kind = WRITE_KINDS[r["tool"] as keyof typeof WRITE_KINDS] as WriteKind | undefined;
-    if (!kind) continue;
-    if (r["ok"] !== true) {
-      if (r["ok"] === false) failed_writes.push({ tool: String(r["tool"]), code: String(field(r["error"], "code") ?? "unknown") });
-      continue;
-    }
-    writes[kind].calls++;
+    if (!kind || (r["ok"] !== true && r["ok"] !== false)) continue;
+    if (r["ok"] === true) writes[kind].calls++;
+    else failed_writes.push({ tool: String(r["tool"]), code: String(field(r["error"], "code") ?? "unknown") });
     const named = FIELDED.has(kind) ? Object.keys(args(r)).filter((k) => k !== "uuids") : [];
-    for (const w of Array.isArray(r["writes"]) ? (r["writes"] as Rec[]) : []) {
+    for (const w of writesOf(r)) {
       const uuid = String(w["uuid"]);
       const key = `${kind}:${uuid}`;
       const t = tracks.get(key);

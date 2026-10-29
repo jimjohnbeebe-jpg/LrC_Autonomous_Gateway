@@ -37,8 +37,8 @@ How the answer reads (an inference, not a PHASES.md rule; the verdict is Jim's):
 From the records it counts:
 
 - `lr_get_contact_sheet` calls and cells (each call's `args.uuids`, less its `not_yet` when the log has one) and the fast-preview fallbacks when the log names them;
-- the writes `lr_set_flag`, `lr_set_ai_metadata`, `lr_set_keywords` and `lr_set_iptc`, photo by photo, from each call's logged `writes` (before and after). A photo is **put back** when its last `after` equals its first `before`: the whole flag and keyword list (in any order), and for IPTC and AI metadata the fields the calls named ("" and none count the same). A photo whose last read-back failed counts as not put back;
-- any photo whose first write came with no `lr_get_contact_sheet` or no `lr_get_metadata` naming it before;
+- the writes `lr_set_flag`, `lr_set_ai_metadata`, `lr_set_keywords` and `lr_set_iptc`, photo by photo, from each call's logged `writes` (before and after). A photo is **put back** when its last `after` equals its first `before`: the whole flag and keyword list (in any order), and for IPTC and AI metadata the fields the calls named ("" and none count the same). A photo whose last read-back failed counts as not put back. So does the photo a call stopped at when Lightroom stopped answering (`maybe_written`). The photos written before that stop come from the error's `details.written`;
+- any photo whose first write came with no `lr_get_contact_sheet` naming it before, or no `lr_get_metadata` that read it (the call's uuids less its logged `failed_uuids`);
 - `lr_sync_series` calls, and `lr_apply_snapshot` calls after the first of them (at least 2: the undo of two photos).
 
 Then it asks seven y/n questions (the first is recorded, not judged: whether Claude Desktop's + menu lists MCP prompts is [unverified], `engine\src\mcp\prompts.ts:4`), prints one OK / NO line per condition, `Shoot check: WORKED` or `FAILED`, and `put back: YES` / `NO`. Results: `%TEMP%\LrC-AVG\shoot-check\shoot_check_<time>.json`, with `shoot_chat_tool_log_<time>.jsonl` and `shoot_desktop_mcp_log_<time>.txt`, user folder shown as `%USERPROFILE%`.

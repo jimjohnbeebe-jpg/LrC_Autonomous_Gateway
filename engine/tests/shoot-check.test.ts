@@ -70,6 +70,21 @@ describe("shoot:check evaluation", () => {
     expect(verdict(evaluateShootChat(chain()), { ...yes, proposal_first: "n" }).worked).toBe(false);
   });
 
+  it("a write stopped mid-call keeps its written photos and the maybe-written one unresolved", () => {
+    const stopped = { ...rec("lr_set_flag", { uuids: [A, B], flag: "reject" }), ok: false, error: { code: "TIMEOUT", details: { written: [{ uuid: A, before: "none", after: "reject", changed: true }], failed: [], maybe_written: B, not_sent: [] } } };
+    const e = evaluateShootChat([...chain(), stopped]);
+    expect(e.failed_writes).toEqual([{ tool: "lr_set_flag", code: "TIMEOUT" }]);
+    expect(e.put_back.filter((p) => p.kind === "flag" && !p.put_back).map((p) => p.uuid)).toEqual([A, B]);
+    expect(verdict(e, yes).put_back).toBe(false);
+  });
+
+  it("a photo lr_get_metadata failed to read is not counted as read", () => {
+    const records = chain().map((r) => (r["tool"] === "lr_get_metadata" ? { ...r, failed: 1, failed_uuids: [B] } : r));
+    expect(evaluateShootChat(records).unread_writes).toEqual(["lr_set_flag wrote uuid-b with no lr_get_metadata of it before"]);
+    const unnamed = chain().map((r) => (r["tool"] === "lr_get_metadata" ? { ...r, failed: 1 } : r));
+    expect(evaluateShootChat(unnamed).unread_writes).toHaveLength(5); // flag of A and B, then A's AI, keywords and caption
+  });
+
   it("no batch undo is FAILED", () => {
     const e = evaluateShootChat(chain().filter((r) => r["tool"] !== "lr_apply_snapshot"));
     expect(verdict(e, yes).worked).toBe(false);

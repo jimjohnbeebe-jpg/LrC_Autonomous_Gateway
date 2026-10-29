@@ -4,5 +4,7 @@ export { PREVIEW_SOURCE, PreviewError, PreviewService, defaultPreviewDir, isInsi
 export type { PreviewRequest, RenderedPreview } from "./service.js";
 export { COMPOSITE_GUTTER, COMPOSITE_LABEL_STRIP, composite, planLayout } from "./composite.js";
 export type { Composite, Panel, PlacedPanel } from "./composite.js";
+export { MAX_SHEET_CELLS, contactSheet } from "./sheet.js";
+export type { ContactSheet } from "./sheet.js";
 export { cropRegion } from "./crop.js";
 export type { Crop } from "./crop.js";

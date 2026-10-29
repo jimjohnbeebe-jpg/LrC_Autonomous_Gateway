@@ -1,7 +1,7 @@
 // Issue #208: the engine's server is MCP SDK v2, but clients in the field (Claude Desktop, Claude Code,
 // OpenCode, Codex...) may still be built on v1 [inference]. This drives the v2 server with the v1 SDK's own Client
 // (@modelcontextprotocol/sdk 1.32.2, an engine devDependency) over v1's InMemoryTransport: initialize,
-// tools/list (the 65 tools of __snapshots__/tools-list.json) and tools/call (a result, and an isError
+// tools/list (the 66 tools of __snapshots__/tools-list.json) and tools/call (a result, and an isError
 // result with our ToolError shape). In memory, not stdio: a v1 transport's serverSide has the message
 // interface a v2 server connects to, so no child process is needed and the test needs no Lightroom.
 
@@ -29,7 +29,7 @@ it("lets an MCP SDK v1 client initialize, list the 62 tools and call tools on th
 
     const pinned = JSON.parse(readFileSync(fileURLToPath(new URL("./__snapshots__/tools-list.json", import.meta.url)), "utf8")) as Array<{ name: string }>;
     const { tools: listed } = await client.listTools();
-    expect(pinned).toHaveLength(65); // 37, issue #214's eight, issue #215's six, issue #216's one, issue #218's nine, issue #217's lr_delete_empty_masks and the three of decisions D1-D3
+    expect(pinned).toHaveLength(66); // 37, issue #214's eight, issue #215's six, issue #216's one, issue #218's nine, issue #217's lr_delete_empty_masks, the three of decisions D1-D3 and lr_get_contact_sheet (issues #111, #112)
     expect(listed.map((t) => t.name)).toEqual(pinned.map((t) => t.name));
     expect(listed.every((t) => t.inputSchema.type === "object")).toBe(true);
 

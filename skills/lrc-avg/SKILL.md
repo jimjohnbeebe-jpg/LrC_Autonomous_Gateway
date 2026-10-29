@@ -23,3 +23,5 @@ The user's words come first. Intents and suggestions are starting points, not ru
 5. Tell the user what changed and why.
 
 The same template is the MCP prompt `lrc-avg-edit` (argument `request`).
+
+For a whole shoot, the MCP prompts `lrc-avg-cull`, `lrc-avg-keyword` and `lrc-avg-batch` (argument `request`) look through the selected photos with `lr_get_contact_sheet`, 16 at a time, and write flags, keywords or a copied edit only after the user's yes to a proposal table.

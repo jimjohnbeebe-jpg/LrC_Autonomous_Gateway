@@ -20,6 +20,19 @@ export const STALE_NOTE =
   "From Lightroom's preview cache: quick, but it can lag behind the photo's current settings (right after an edit or after the photo enters Develop). " +
   "For judging an edit, call lr_get_preview without quality.";
 
+/**
+ * Lightroom's cached preview for `request`, or the exact export when the plugin sends none; `fallback` is
+ * then the plugin's code and message. lr_get_preview "fast" and lr_get_contact_sheet (tools-sheet.ts) use it.
+ */
+export async function renderFast(ctx: ToolContext, request: PreviewRequest): Promise<{ preview: RenderedPreview; fallback: string | null }> {
+  try {
+    return { preview: await ctx.deps.previews.render({ ...request, fast: true }), fallback: null };
+  } catch (err) {
+    if (!(err instanceof BridgeError) || !FALL_BACK.has(err.code)) throw err;
+    return { preview: await ctx.deps.previews.render({ ...request, fast: false }), fallback: `${err.code}: ${err.message}` };
+  }
+}
+
 export type FastPreviewArgs = { long_edge?: number | undefined; uuid?: string | undefined; session_id?: string | undefined; target?: unknown; region?: unknown };
 
 export async function fastPreview(ctx: ToolContext, args: FastPreviewArgs): Promise<ToolOutput> {
@@ -27,16 +40,8 @@ export async function fastPreview(ctx: ToolContext, args: FastPreviewArgs): Prom
     throw new ToolError("INVALID_ARGUMENTS", 'quality "fast" is for browsing photos: not with session_id, target or region, which use the exact export.', false);
   }
   await ctx.deps.ensureBridge();
-  const request: PreviewRequest = { longEdge: args.long_edge ?? DEFAULT_LONG_EDGE, quality: PREVIEW_QUALITY, fast: true, ...(args.uuid !== undefined ? { photoUuid: args.uuid } : {}) };
-  let preview: RenderedPreview;
-  let fallback: string | null = null;
-  try {
-    preview = await ctx.deps.previews.render(request);
-  } catch (err) {
-    if (!(err instanceof BridgeError) || !FALL_BACK.has(err.code)) throw err;
-    fallback = `${err.code}: ${err.message}`;
-    preview = await ctx.deps.previews.render({ ...request, fast: false });
-  }
+  const request: PreviewRequest = { longEdge: args.long_edge ?? DEFAULT_LONG_EDGE, quality: PREVIEW_QUALITY, ...(args.uuid !== undefined ? { photoUuid: args.uuid } : {}) };
+  const { preview, fallback } = await renderFast(ctx, request);
   const thumbnail = preview.source === "thumbnail";
   const json = {
     ok: true,

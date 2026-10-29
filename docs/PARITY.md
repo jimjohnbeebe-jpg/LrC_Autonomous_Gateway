@@ -99,6 +99,8 @@ Count: 56 `have`, 10 `ours+`, 2 `planned` (#217: 1, #218: 1) [handle: `engine/te
 
 The edit loop and its records: `lr_help`, `lr_begin_session`, `lr_step`, `lr_probe`, `lr_set_regions`, `lr_select_variant`, `lr_approve_pass`, `lr_end_session`, `lr_get_session_log`. The look library: `lr_list_intents`, `lr_get_intent`, `lr_save_intent`, `lr_delete_intent`. Upstream's nearest is a prompt-level skill with no pass cap, guardrails or session state [handle: `docs/reports/phase10/AUTOMAAT_COMPARE_2026-10-26.md` section 6.1].
 
+Looking through a shoot: `lr_get_contact_sheet`, up to 16 photos by uuid in one numbered grid image with each cell's metrics (issues #111, #112), which the MCP prompts `lrc-avg-cull`, `lrc-avg-keyword` and `lrc-avg-batch` chain with the catalog tools [handle: `engine/src/mcp/tools-sheet.ts`, `engine/src/mcp/prompts-shoot.ts`].
+
 ## Using both servers
 
 The two Lightroom plug-ins have different identities and ports:

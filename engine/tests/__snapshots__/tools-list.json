@@ -101,7 +101,7 @@
   {
     "name": "lr_get_metrics",
     "title": "Metrics of the last preview",
-    "description": "Return the full metrics of the last preview (the open session's, of `target` in Variants mode, or else this engine's last render): the metrics lr_get_preview returns plus 256-bin luma, red, green and blue histograms, without rendering again. Metrics are measured on the rendered preview (8-bit sRGB, as Lightroom exported it), not on the raw file: clipping here can often be recovered with highlights/whites or shadows/blacks. clip_high_pct = % of pixels with any channel >= 253; clip_high_tone_pct = % with 2+ channels >= 253 (the high guard's); clip_low_pct = % with all channels <= 2; luma = Rec. 709 on the 8-bit values; luma_percentiles p1-p99 by nearest rank; dynamic_range = (p99 - p1) / 255; rb_ratio = mean red / mean blue; saturation_mean = mean HSV saturation, 0-100; hue_histogram = 12 bins of 30 degrees (bin i centred on i*30: 0 red, 60 yellow, 120 green, 180 cyan, 240 blue, 300 magenta), % of the chromatic pixels (HSV saturation and value >= 0.1, chromatic_pct of all); hue_mean = their circular mean hue in degrees; sharpness = Laplacian variance of luma at 512 px (more = detail or noise). Percentages are 0-100.",
+    "description": "Return the full metrics of the last preview (the open session's, of `target` in Variants mode, or else this engine's last render): the metrics lr_get_preview returns plus 256-bin luma, red, green and blue histograms, without rendering again. The histograms count pixels at the measured size (`measured_long_edge` in a session with measure_long_edge, else the preview's). Metrics are measured on the rendered preview (8-bit sRGB, as Lightroom exported it), not on the raw file: clipping here can often be recovered with highlights/whites or shadows/blacks. clip_high_pct = % of pixels with any channel >= 253; clip_high_tone_pct = % with 2+ channels >= 253 (the high guard's); clip_low_pct = % with all channels <= 2; luma = Rec. 709 on the 8-bit values; luma_percentiles p1-p99 by nearest rank; dynamic_range = (p99 - p1) / 255; rb_ratio = mean red / mean blue; saturation_mean = mean HSV saturation, 0-100; hue_histogram = 12 bins of 30 degrees (bin i centred on i*30: 0 red, 60 yellow, 120 green, 180 cyan, 240 blue, 300 magenta), % of the chromatic pixels (HSV saturation and value >= 0.1, chromatic_pct of all); hue_mean = their circular mean hue in degrees; sharpness = Laplacian variance of luma at 512 px (more = detail or noise). Percentages are 0-100.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -226,6 +226,12 @@
           "type": "integer",
           "minimum": 800,
           "maximum": 1920
+        },
+        "measure_long_edge": {
+          "description": "800-4096: export and measure each render of the session at this long edge (clipping at print size); you still see long_edge. Each render takes longer [unverified: by how much]. Default: off (measured at long_edge)",
+          "type": "integer",
+          "minimum": 800,
+          "maximum": 4096
         },
         "return_image": {
           "description": "\"after\" (default): the new preview; \"before_after\": the previous and the new preview in one labelled image; \"none\": no image",

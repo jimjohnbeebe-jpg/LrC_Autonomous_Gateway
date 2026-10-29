@@ -111,6 +111,7 @@ export async function openSession(ctx: SessionContext, given: BeginArgs): Promis
     limits: { clipHighPct: settings.clipHighPct, clipLowPct: settings.clipLowPct },
     decay: settings.decay,
     longEdge: settings.longEdge,
+    measureEdge: settings.measureLongEdge,
     quality: settings.quality,
     master,
     variants: [],
@@ -168,6 +169,7 @@ function settingsEntry(settings: SessionSettings, page: PageRead): NonNullable<S
   return {
     approval: settings.approval,
     long_edge: settings.longEdge,
+    measure_long_edge: settings.measureLongEdge,
     quality: settings.quality,
     from: settings.from,
     page: { read: page.read, note: page.note, problems: page.problems },

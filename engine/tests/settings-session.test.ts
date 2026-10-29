@@ -55,6 +55,31 @@ describe("lr_begin_session: the settings page", () => {
     expect(sentOf("export_preview").at(-1)).toMatchObject({ long_edge: 800 });
   });
 
+  it("measures every render at measure_long_edge, guardrail re-renders included, and logs it (issue #168)", async () => {
+    clean();
+    const begun = await manager.begin({ intent_id: "test_plain", measure_long_edge: 2400, return_image: "none" });
+    expect(begun.json["session_settings"]).toMatchObject({ long_edge: 1600, measure_long_edge: 2400, from: { long_edge: "page", measure_long_edge: "argument" } });
+    const out = await manager.step({ session_id: begun.json["session_id"] as string, settings: { exposure: 1 }, rationale: "much brighter", return_image: "none" });
+    expect((out.json["guardrail_actions"] as unknown[]).length).toBeGreaterThan(0); // the guardrail rendered again
+    expect(sentOf("export_preview").map((p) => p["long_edge"])).toEqual(sentOf("export_preview").map(() => 2400));
+    expect(out.json).toMatchObject({ width: 1600, measured_long_edge: 2400 });
+    expect(readLog().settings).toMatchObject({ measure_long_edge: 2400, from: { measure_long_edge: "argument" } });
+  });
+
+  it("leaves measure_long_edge off by default", async () => {
+    clean();
+    const off = await manager.begin({ intent_id: "test_plain", return_image: "none" });
+    expect(off.json["session_settings"]).toMatchObject({ measure_long_edge: null, from: { measure_long_edge: "default" } });
+    expect(off.json).not.toHaveProperty("measured_long_edge");
+  });
+
+  it("raises a measure_long_edge below long_edge to it", async () => {
+    clean();
+    const low = await manager.begin({ intent_id: "test_plain", long_edge: 1200, measure_long_edge: 1000, return_image: "none" });
+    expect(low.json["session_settings"]).toMatchObject({ long_edge: 1200, measure_long_edge: 1200 });
+    expect(sentOf("export_preview").at(-1)).toMatchObject({ long_edge: 1200 });
+  });
+
   it("takes an intent's clip limit over the page's (decision 1A)", async () => {
     clean();
     intent("test_guard", { guardrail_overrides: { clip_low_pct: 5 } });

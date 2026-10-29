@@ -171,12 +171,15 @@ const settingFrom = z.enum(["argument", "intent", "page", "default"]);
 const sessionSettingsSchema = z.strictObject({
   approval: z.enum(["autonomous", "approve_each_pass"]),
   long_edge: z.number().int(),
+  // Issue #168: the long edge renders were exported and measured at (null: long_edge). Optional, so older logs still read.
+  measure_long_edge: z.number().int().nullable().optional(),
   quality: z.number().int(),
   from: z.strictObject({
     approval: settingFrom,
     max_passes: settingFrom,
     variant_count: settingFrom,
     long_edge: settingFrom,
+    measure_long_edge: settingFrom.optional(),
     quality: settingFrom,
     clip_high_pct: settingFrom,
     clip_low_pct: settingFrom,

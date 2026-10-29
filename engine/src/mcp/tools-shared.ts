@@ -25,6 +25,11 @@ export const DEFAULT_LONG_EDGE = 1600;
 export const MIN_LONG_EDGE = 800;
 export const MAX_LONG_EDGE = 1920;
 export const PREVIEW_QUALITY = 75;
+/**
+ * The largest export the engine asks for (a region crop, a session's measure_long_edge): the plugin
+ * refuses a long edge above 4096 [handle: plugin\LrC-AVG.lrplugin\Preview.lua:31, Preview.MAX_LONG_EDGE].
+ */
+export const EXPORT_MAX_LONG_EDGE = 4096;
 
 export type ToolOutput = {
   json: Record<string, unknown>;
@@ -152,7 +157,7 @@ export function createContext(deps: ToolsDeps): ToolContext {
           client: deps.client,
           map: deps.map,
           intents: deps.intents,
-          render: (r) => render(ctx, r.longEdge, r.targetUuid, r.regions, r.quality),
+          render: (r) => renderRequest(ctx, { longEdge: r.longEdge, quality: r.quality, targetUuid: r.targetUuid, regions: r.regions, measureEdge: r.measureEdge }),
           logDir: deps.sessionLogDir,
           ...(settings ? { readPage: () => settings.read() } : {}),
           ...(deps.logFolders ? { logFolders: deps.logFolders } : {}),
@@ -284,6 +289,8 @@ export function describe(preview: RenderedPreview): Record<string, unknown> {
     height: preview.height,
     bytes: preview.bytes,
     reencoded: preview.reencoded,
+    // A session's measure_long_edge (issue #168): the metrics are of a larger export than this image.
+    ...(preview.measured_long_edge > Math.max(preview.width, preview.height) ? { measured_long_edge: preview.measured_long_edge } : {}),
   };
 }
 

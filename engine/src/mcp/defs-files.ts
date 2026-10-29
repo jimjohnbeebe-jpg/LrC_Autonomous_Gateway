@@ -87,6 +87,12 @@ const importArgs = z
       .optional()
       .describe("to go on after a call that ran out of time: that call's `resume_after` (a source file's path); the call starts with the file after it. Omit to start from the first file"),
     dry_run: z.boolean().optional().describe("true: return `planned` (each file's source, the path it would have and its capture_date) and copy, import and change nothing; it goes on with resume_after as an import does; default false"),
+    stack_gap_seconds: z
+      .number()
+      .min(0.5)
+      .max(60)
+      .optional()
+      .describe("stack brackets and bursts as they are imported: files next to each other (in path order) whose capture dates lie within this many seconds of the one before form one stack, the first on top; 0.5-60; with dry_run, `groups` lists them. Omit to stack nothing"),
   })
   .refine((a) => a.copy_to !== undefined || (a.folder_template === undefined && a.name_template === undefined), "folder_template and name_template need copy_to");
 
@@ -142,7 +148,9 @@ export const FILE_DEFS: ToolDef[] = [
       "(`already_in_catalog`, with its uuid); a photo imported earlier from another path is not recognised. Returns the uuids, each with its source file, its path in the catalog and capture_time, for " +
       "lr_add_to_collection, lr_set_keywords and the other tools. With copy_to, folder_template and name_template sort and rename the copies by capture " +
       "date, which the engine reads from NEF, DNG and the other TIFF-based raws, TIFF and JPEG; a file it cannot read (CR3, RAF, HEIC, PNG, PSD) fails " +
-      "alone with NO_CAPTURE_DATE. dry_run: true shows where each file would go and changes nothing. No develop or metadata preset is passed to the import; lr_remove_photos removes photos from " +
+      "alone with NO_CAPTURE_DATE. stack_gap_seconds stacks each group of frames shot close together (a file with no " +
+      "date it can read joins none); a photo the catalog held already is not stacked (`not_stacked`): stacking photos already in the catalog, and " +
+      "unstacking, have no plugin call (Photo > Stacking in Lightroom). dry_run: true shows where each file would go and changes nothing. No develop or metadata preset is passed to the import; lr_remove_photos removes photos from " +
       `the catalog again. ${TIMED} Here \`resume_after\` comes with \`not_yet\`: pass it back to go on ` +
       `from the next file. ${META_WRITE}`,
     schema: importArgs,

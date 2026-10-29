@@ -12,6 +12,8 @@ import { needPlugin, run, sessionTools, type ToolContext, type ToolOutput } from
 
 /** Transfer.lua came with this plugin. */
 export const TRANSFER_PLUGIN = "0.17.0";
+/** import_photo's stack_with came with this plugin (issue #139); an older one imports the file unstacked. */
+export const IMPORT_STACK_PLUGIN = "1.9.0";
 /** How lr_list_collections writes a set path, and lr_create_collection reads it. */
 export const SET_SEPARATOR = " / ";
 

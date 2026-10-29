@@ -35,6 +35,7 @@ describe("prompts", () => {
     expect(named).toContain("lr_get_contact_sheet");
     expect(text).toContain("My request: my words");
     expect(text).toContain("full tool profile");
+    expect(text).not.toMatch(/cells\[n-1\]|targets "selected"/); // Greptile, PR #262: label gaps; the approved uuids, not the selection again
   });
 
   it("puts the user's request into the template", async () => {

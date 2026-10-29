@@ -39,7 +39,7 @@ const PROFILE_NOTE =
   "These steps need LrC-AVG's full tool profile. If a tool named here is missing, the server runs with LRC_AVG_TOOLS=edit: ask me to remove that setting from the client's lrc-avg entry and restart the client.";
 const SHEETS =
   "Look through the photos with lr_get_contact_sheet, 16 uuids at a time in capture order; when a result has `not_yet`, call again with those uuids before the next 16. " +
-  "Cell n on the sheet is cells[n-1]'s photo. For a doubtful frame, call lr_get_preview with its uuid and a region.";
+  "The number on a cell is the `n` of its entry in `cells` (a photo that failed is in `failed` and leaves a gap in the numbers); take the uuid from that entry. For a doubtful frame, call lr_get_preview with its uuid and a region.";
 const WAIT = "Write nothing until I answer yes to the table. Group the writes by value, at most 100 uuids a call.";
 
 const wish = (request: string | undefined, placeholder: string): string => `My request: ${request?.trim() || placeholder}`;
@@ -81,8 +81,8 @@ export function shootPromptText(name: string, request: string | undefined): stri
       wish(request, "(copy my last accepted session)"),
       PROFILE_NOTE,
       "1. The edit to copy is a session that ended with accept (lr_end_session gives its session_id); if I named none, ask me which.",
-      "2. lr_get_selected_photos with limit 500; tell me which photos will change and wait for my yes.",
-      '3. lr_sync_series with source {session_id}, targets "selected" and adaptive_exposure true; while a result has `not_yet`, follow its `next`.',
+      "2. lr_get_selected_photos with limit 500; keep the returned uuids, tell me which photos will change and wait for my yes.",
+      "3. lr_sync_series with source {session_id}, targets {uuids: the uuids I approved in step 2} (not the selection, which may have changed since) and adaptive_exposure true; while a result has `not_yet`, follow its `next`.",
       `4. ${SHEETS} Right after the sync, Lightroom often has no cached preview yet, so cells come back as the exact export (fast_fallback).`,
       "5. Show a table per photo: exposure offset, not_transferable, snapshot, and anything that looks wrong on the sheet.",
       '6. To undo a photo: lr_list_snapshots with its uuid, then lr_apply_snapshot with the "AVG pre-sync <id>" snapshot and confirm true, after my yes.',

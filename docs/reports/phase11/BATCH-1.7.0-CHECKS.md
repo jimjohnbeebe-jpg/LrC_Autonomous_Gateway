@@ -176,3 +176,37 @@ These run once the fix PR for this batch is merged. Claude Code pulls `main` int
    npm run develop-catalog:check
    ```
    Do steps 29 and 30 above. Say **done**.
+
+### Results of the 1.7.1 reruns, 2026-10-29
+
+| # | Result | File in `%TEMP%\LrC-AVG\` |
+|---|---|---|
+| 3 | computed, but Lightroom rewrote the probe (MaskSubType 0 / MaskSubCategoryID 20036 read back 3 / 13, no InstanceBounds), so no people could be counted | `masks-verify\mask_verify_2026-10-29T02-45-05-667Z.json` |
+| 4 | brush writes took (y); Lightroom read the strokes back compressed (`MaskBrushTable`, `BrushTable_<hash>`, no `Masks` list), which the comparator did not accept | `masks-verify\mask_verify_2026-10-29T02-47-46-629Z.json` |
+| 5 | removal FIXED (3 removed, gone, selection back); undo still left the write in place | `develop-catalog-check\develop_catalog_check_2026-10-29T02-49-24-274Z.json` |
+
+Fixed in version 1.7.2 [stated: Jim, 2026-10-29, "1. Go with recommendations. 2. Go with recommendation."]:
+- `lr_undo_last_step` puts the photo back from the last write's "AVG pre-set" snapshot (`via: "snapshot"`); Edit > Undo only when no write is known.
+- The mask read-back check takes a brush stored compressed; every other field must still match.
+- The person part passes on a computed person mask plus your y; it no longer counts people or masks a second person.
+
+## Reruns after 1.7.2
+
+1. In Lightroom: **File > Plug-in Manager**, click **LrC-AVG (dev)**, click **Reload Plug-in**, check that it shows version **1.7.2**, then click **Done**.
+2. Do not use LrC-AVG in any Claude Desktop chat while these run.
+3. Check 3: press **G**, **Edit > Select None**, click the virtual copy of `PICT0019.DNG` once, press **D**. Run:
+   ```powershell
+   cd D:\Developer\LrC_Autonomous_Gateway
+   npm run masks:verify -- --part person --i-know
+   ```
+   Answer the question. Say **done**.
+4. Check 4's brush part: in Develop, click `_DSC0091.NEF` in the Filmstrip. Run:
+   ```powershell
+   npm run masks:verify -- --part parity --i-know
+   ```
+   Do steps 19, 21 and 22 above. Say **done**.
+5. Check 5: press **G**, click `20250413-_OZ81430.NEF` once (only it), then run:
+   ```powershell
+   npm run develop-catalog:check
+   ```
+   Do steps 29 and 30 above. Say **done**.

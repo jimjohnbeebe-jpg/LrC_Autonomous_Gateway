@@ -2,7 +2,7 @@
 // that also run on an older plugin, and the notice for a plugin that is not this engine's version.
 
 /** plugin\LrC-AVG.lrplugin\Bridge.lua PLUGIN_VERSION (engine\tests\lua-plugin.test.ts keeps them equal). */
-export const PLUGIN_VERSION = "1.7.1";
+export const PLUGIN_VERSION = "1.7.2";
 
 function parts(version: string): number[] | null {
   return /^\d+\.\d+\.\d+$/.test(version) ? version.split(".").map(Number) : null;

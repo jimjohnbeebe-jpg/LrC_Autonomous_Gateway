@@ -75,6 +75,20 @@ describe("strokes added to a brush", () => {
     expect(() => applyOp([b], { op: "edit", mask_id: String(b["CorrectionID"]), geometry: { strokes: [line] } })).toThrow(/compressed/);
   });
 
+  it("takes strokes Lightroom read back compressed, the other fields still compared (masks:parity run 2026-10-29)", () => {
+    const plan = applyOp([], { op: "create", kind: "brush", name: "B", geometry: { strokes: [line] }, sliders: { "local.exposure": 2 } }, IDENTITY);
+    const back = structuredClone(plan.entries);
+    const part = (back[0]?.["CorrectionMasks"] as Array<Record<string, unknown>>)[0] as Record<string, unknown>;
+    delete part["Masks"];
+    Object.assign(part, { MaskBrushTable: "B9FC", BrushTable_B9FC: "4000010000}", MaskBrushUncompressedBytes: 3638 });
+    expect(verifyTable(plan.entries, { [MASK_TABLE_KEY]: back })).toEqual([]);
+    part["MaskInverted"] = true;
+    expect(verifyTable(plan.entries, { [MASK_TABLE_KEY]: back })).toHaveLength(1);
+    delete part["BrushTable_B9FC"];
+    part["MaskInverted"] = false;
+    expect(verifyTable(plan.entries, { [MASK_TABLE_KEY]: back })).toHaveLength(1);
+  });
+
   it("is one session pass on the sim", async () => {
     clean();
     const b = brush();

@@ -193,6 +193,15 @@ const dabsOf = (v: unknown): string | null => (Array.isArray(v) && v.every((t) =
  */
 const omittedZero = (k: string, x: unknown): boolean => (x === 0 || (Array.isArray(x) && x.length === 0)) && k.startsWith("Local");
 
+/**
+ * A brush's strokes stored compressed: Lightroom read three written strokes back as `MaskBrushTable` (a hash), a
+ * `BrushTable_<hash>` string and `MaskBrushUncompressedBytes`, with no `Masks` list, every other field as written, and
+ * Jim saw the strokes [handle: %TEMP%\LrC-AVG\masks-verify\mask_verify_2026-10-29T02-47-46-629Z.json step
+ * brush_feather_density, answer y]. The strokes themselves cannot be compared then.
+ */
+const compressedBrush = (k: string, got: Record<string, unknown>): boolean =>
+  k === BRUSH.masks && typeof got["MaskBrushTable"] === "string" && typeof got[`BrushTable_${got["MaskBrushTable"]}`] === "string";
+
 /** `written`'s fields all in `got` with equal values (numbers within 1e-6); fields Lightroom adds or recomputes are its own. */
 function covers(written: unknown, got: unknown, key?: string): boolean {
   if (key === BRUSH.dabs) return dabsOf(written) !== null && dabsOf(written) === dabsOf(got);
@@ -200,7 +209,7 @@ function covers(written: unknown, got: unknown, key?: string): boolean {
   if (written && typeof written === "object" && got && typeof got === "object") {
     if (isEmpty(written) || isEmpty(got)) return isEmpty(written) && isEmpty(got);
     if (Array.isArray(written) && (!Array.isArray(got) || written.length !== got.length)) return false;
-    return Object.entries(written).every(([k, x]) => recomputed.has(k) || settling.has(k) || (k in got ? covers(x, (got as Record<string, unknown>)[k], k) : omittedZero(k, x)));
+    return Object.entries(written).every(([k, x]) => recomputed.has(k) || settling.has(k) || (k in got ? covers(x, (got as Record<string, unknown>)[k], k) : omittedZero(k, x) || compressedBrush(k, got as Record<string, unknown>)));
   }
   return written === got;
 }

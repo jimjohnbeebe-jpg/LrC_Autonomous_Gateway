@@ -7,12 +7,13 @@
 
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
+import { BridgeError } from "../bridge/index.js";
 import { CALL_BUDGET_MS } from "../library/index.js";
 import { ParamError, differingSettings, sdkPassthrough, tableInfo, type ParamMap, type SdkSettings } from "../params/index.js";
 import { WRITE_TIMEOUT_MS } from "../sync/target.js";
 import { ToolError } from "./errors.js";
 import { eachInBudget, type Budget } from "./tools-files.js";
-import { needPlugin, run, sessionTools, type ToolContext, type ToolOutput } from "./tools-shared.js";
+import { needPlugin, run, sessionTools, type LastWrite, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
 /** The plugin with the issue #214 commands (DevelopTools.lua, Snapshots.lua, Copies.lua). */
 export const DEVELOP_PLUGIN = "1.5.0";
@@ -157,8 +158,7 @@ export function setDevelopSettings(ctx: ToolContext, args: SetDevelopSettingsArg
     const r = await client.request("set_develop_settings", { photo_uuid: uuid, settings: sdk, history_name, snapshot_name: name }, timeout);
     const extra = { history_name, compare: raw, ...(unranged.length > 0 ? { unranged } : {}) };
     const not_taken = r.status === "set" ? map.verifyReadback(sdk, r.read_back) : [];
-    lastWrites.delete(ctx);
-    if (not_taken.length === 0 && r.status === "set") lastWrites.set(ctx, { uuid, before, compare: raw, snapshot: r.snapshot });
+    ctx.lastWrite = not_taken.length === 0 && r.status === "set" ? { uuid, before, compare: raw, snapshot: r.snapshot } : null;
     if (not_taken.length === 0 || !r.snapshot) return { ...r, ...extra };
     const back = await client.request("apply_snapshot", { photo_uuid: uuid, snapshot_id: r.snapshot.id, restore_view: true }, timeout);
     const reason = `Lightroom did not take ${not_taken.map((m) => m.sdk_key).join(", ")} as written, so the photo was put back from the snapshot`;
@@ -166,9 +166,17 @@ export function setDevelopSettings(ctx: ToolContext, args: SetDevelopSettingsArg
   }, need);
 }
 
-/** This engine's last lr_set_develop_settings write Lightroom took, for lr_undo_last_step to undo and check. */
-type LastWrite = { uuid: string; before: SdkSettings; compare: string[]; snapshot?: { id: string; name: string } | undefined };
-const lastWrites = new WeakMap<ToolContext, LastWrite>();
+/** `last` while its photo is still in the catalog, else null, so the undo is the plain one (a photo removed by hand since the write). */
+async function stillThere(ctx: ToolContext, last: LastWrite | null): Promise<LastWrite | null> {
+  if (!last) return null;
+  try {
+    await ctx.deps.client.request("get_settings", { photo_uuid: last.uuid });
+    return last;
+  } catch (err) {
+    if (err instanceof BridgeError && err.code === "unknown_photo") return null;
+    throw err;
+  }
+}
 
 /** Whether `last` is undone: the photo read again and compared with its settings before the write (settingChanges). */
 async function checkUndone(ctx: ToolContext, last: LastWrite): Promise<Record<string, unknown>> {
@@ -198,8 +206,8 @@ export function undoLastStep(ctx: ToolContext, args: UndoArgs): Promise<ToolOutp
     const [left] = sessions.leftOpen();
     if (left) throw new ToolError("SESSION_LEFT_OPEN", `Nothing was undone: session ${left.log.session_id} was left open by an engine that stopped, and Lightroom's undo could reach its steps; end it with lr_end_session first.`, false, { session_id: left.log.session_id });
     return sessions.whenIdle("lr_undo_last_step", async () => {
-      const last = lastWrites.get(ctx);
-      lastWrites.delete(ctx);
+      const last = await stillThere(ctx, ctx.lastWrite);
+      ctx.lastWrite = null;
       const r = await ctx.deps.client.request("undo_last_step", { confirm: true, ...(last ? { photo_uuid: last.uuid } : {}) }, timeout);
       // Edit > Redo bringing the step back is [inference] from LrUndo.redo, "Redoes the last undone history state"
       // [handle: API Reference\modules\LrUndo.html].

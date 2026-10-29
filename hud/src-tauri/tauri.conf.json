@@ -2,7 +2,7 @@
   "$schema": "../../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "LrC-AVG",
   "mainBinaryName": "LrC-AVG Deck",
-  "version": "1.7.2",
+  "version": "1.8.0",
   "identifier": "com.lrcavg.desktop",
   "build": {
     "frontendDist": "../ui-dist"

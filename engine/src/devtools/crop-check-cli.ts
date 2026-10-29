@@ -123,6 +123,8 @@ async function run(c: Check): Promise<string[]> {
   await cropPass(c, "reset", { reset: true }, (k) => [0, 0, 1, 1, 0].every((v, i) => near(k[KEYS[i] as string] as number, v)));
   await cropPass(c, "16:9", { aspect: "16:9" }, boxAt(0), 16 / 9);
   const e = await step(c, "lr_end_session revert", ["ok"], () => c.tools.endSession({ session_id: sid, outcome: "revert" }), ok);
+  // A failed end leaves the session open (and the copy in it): main()'s cleanup ends it again, then removes the copy (Greptile, PR #266).
+  if (e === null) throw new Error("lr_end_session revert failed, so the check ends the session again and removes its copy");
   c.session = null;
   const differing = ((e?.["revert"] as { differing?: string[] } | undefined)?.differing ?? null) as string[] | null;
   expectThat(c, "the revert reports nothing differing", differing !== null && differing.length === 0, JSON.stringify(differing));

@@ -1,6 +1,6 @@
 // Issue #208: the engine's server is MCP SDK v2, but clients in the field (Claude Desktop, Claude Code,
 // OpenCode, Codex...) may still be built on v1 [inference]. This drives the v2 server with the v1 SDK's own Client
-// (@modelcontextprotocol/sdk 1.32.0, an engine devDependency) over v1's InMemoryTransport: initialize,
+// (@modelcontextprotocol/sdk 1.32.2, an engine devDependency) over v1's InMemoryTransport: initialize,
 // tools/list (the 65 tools of __snapshots__/tools-list.json) and tools/call (a result, and an isError
 // result with our ToolError shape). In memory, not stdio: a v1 transport's serverSide has the message
 // interface a v2 server connects to, so no child process is needed and the test needs no Lightroom.

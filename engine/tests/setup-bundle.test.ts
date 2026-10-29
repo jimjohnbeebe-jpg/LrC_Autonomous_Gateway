@@ -20,7 +20,7 @@ const BUNDLED = [
   "semver@7.8.5",
   "sharp@0.35.5",
   "ws@8.22.0",
-  "zod@4.6.5",
+  "zod@4.6.6",
 ];
 
 describe("setup: the bundled engine packages", () => {

@@ -1,0 +1,13 @@
+{
+  "check": "catalog-throwaway",
+  "started": "2026-10-29T00-28-36-936Z",
+  "node": "v24.11.1",
+  "engine_version": "1.7.0",
+  "plugin_version": "1.7.0",
+  "catalog_path": "D:\\`LrC-AVG-throwaway\\Checks\\Checks.lrcat",
+  "refused_before": true,
+  "answer": "y",
+  "marker": "D:\\`LrC-AVG-throwaway\\Checks\\lrc-avg-throwaway.json",
+  "refused_after": null,
+  "headline": "WORKED"
+}

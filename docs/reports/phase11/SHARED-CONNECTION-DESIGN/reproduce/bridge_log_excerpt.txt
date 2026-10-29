@@ -1,0 +1,17 @@
+2026-10-28 17:57:36.385 INFO  stall-diag: tend 481 ms
+2026-10-28 17:57:55.517 INFO  bridge: receive: engine connected
+2026-10-28 17:57:56.021 INFO  bridge: send: engine connected
+2026-10-28 17:57:56.022 INFO  bridge: hello 29a7161d-81e4-485e-b42f-a2240ebfafe7
+2026-10-28 17:57:56.025 INFO  bridge: hud_deck 33830797-3880-4ddc-8025-bdb9cddb04bf
+2026-10-28 17:57:56.026 INFO  hud: Deck not connected
+2026-10-28 17:57:56.026 INFO  bridge: get_selection b04cfda7-b216-40b4-809d-5244707aa73e
+2026-10-28 17:58:56.045 INFO  bridge: receive: closed
+2026-10-28 17:58:56.045 INFO  stall-diag: rebind receive (closed, generation 1)
+2026-10-28 17:59:04.921 INFO  bridge: receive: engine connected
+2026-10-28 17:59:05.433 INFO  bridge: send: engine connected
+2026-10-28 17:59:05.433 INFO  bridge: hello 65866965-a6a9-410c-9b9d-af4caa409c4d
+2026-10-28 17:59:05.433 INFO  bridge: hud_deck c570203b-22f0-459b-acda-5da9af94a724
+2026-10-28 17:59:05.433 INFO  hud: Deck not connected
+2026-10-28 17:59:05.433 INFO  bridge: get_selection b7515f7c-b829-48bd-b32f-951dfab46b7a
+2026-10-28 17:59:59.616 INFO  bridge: receive: closed
+2026-10-28 17:59:59.617 INFO  stall-diag: rebind receive (closed, generation 1)

@@ -2,8 +2,8 @@
 report: MASKS-VERIFY
 phase: "11"
 status: observed
-authored_by: "Claude Code (purpose, harness, pre-run findings, steps for Jim; 2026-10-27, night run on branch phase-11/masks-210; Observed and Numbers from the results files, the suggested verdict, harness findings, 2026-10-28); Jim (the runs and their y/n answers, the decisions, the verdict)"
-date: 2026-10-28
+authored_by: "Claude Code (purpose, harness, pre-run findings, steps for Jim; 2026-10-27, night run on branch phase-11/masks-210; Observed and Numbers from the results files, the suggested verdict, harness findings, 2026-10-28; run 4, 2026-10-29); Jim (the runs and their y/n answers, the decisions, the verdict)"
+date: 2026-10-29
 ---
 
 # MASKS-VERIFY: do colour ranges, one person's masks and masks on mirrored photos do what the engine means?
@@ -119,6 +119,15 @@ Filled by Claude Code from the three results files and Jim's y/n answers in them
 
 - Run 2's flip-back ("Rotate Right once more, then Flip Horizontal") read **BA, not AB**: put back NO.
 
+### Run 4 (part 2, person), 2026-10-29
+
+Jim ran `npm run masks:verify -- --part person --i-know` as check 3 of the 1.7.0 batch (`BATCH-1.7.0-CHECKS.md`) on his usual catalog [stated: Jim, 2026-10-29, "Still fails. I selected a different version, this one rendered as .dng and copied, and verified it was the only selection"]. Engine and plugin 1.7.0, Lightroom Classic 15.6, three runs [handle: `docs\reports\phase11\MASKS-VERIFY\run4\`, the three `mask_verify_*.json` files, `engine_version`, `plugin_version`, `lrc_version`]. Times are UTC from the file names; the bridge-log excerpt is in Jim's local time (UTC-7).
+
+- 00:31:50 and 00:32:30: both stopped at the selection with "2 photo(s) selected, not 1"; nothing was written (`photos` empty) [handle: `run4\mask_verify_2026-10-29T00-31-50-237Z.json` and `run4\mask_verify_2026-10-29T00-32-30-557Z.json`, `steps[0].answer`, `photos`]. Most likely the original and its new virtual copy were both selected after Photo > Create Virtual Copy [inference].
+- 00:41:56, on `PICT0019.DNG` (uuid `B8891F0F-C2B8-4EF2-AC4E-B83DF6AFF461`, orientation AB): the engine wrote its probe (Entire Person, instance 0), Lightroom computed it, and found **0 person(s)**, `boxes` []. The harness gives the answer "Lightroom found n person(s)" only when the probe reads as computed (a digest, no ErrorReason) [handle: `engine\src\devtools\masks-verify-person.ts:62-63` and `mask-combine-probe.ts:105-117`, at `1768ad6`] [handle: `run4\mask_verify_2026-10-29T00-41-56-208Z.json`, `photos[0]`, `steps[0]`]. The photo shows two people [stated: Jim, 2026-10-29, "I have selected a .dng photo with two people"]. The part stopped there; no `person_*` kind was asked. Headline FAILED.
+- The bridge log of that run (17:41:56-17:42:06 local): `create_snapshot`, `apply_settings` (the probe) at 17:42:00.833, `update_ai_settings` at 17:42:01.223, then 10 `get_settings` polls about 0.5 s apart from 17:42:01.392 to 17:42:06.227 (about 5 s), one more `get_settings`, `select_photo` and `apply_snapshot` (the snapshot put back) at 17:42:06.310 [handle: `run4\bridge_log_excerpt_2026-10-28T17-41.txt`]. The results file keeps no put-back line for this run; the `apply_snapshot` in the log is the put-back [inference].
+- With run 1 (`_DSC0103.NEF`, 0 people), that is **2 of 2 probes with no `InstanceBounds`**. The masks Jim made by hand in Phase 6 on a photo of people had `InstanceBounds` [handle: `docs\reports\phase6\masks-capture\capture4-row6_people_by_hand.json`, lines 53 and 132].
+
 ## Numbers
 
 | Field | Value |
@@ -128,7 +137,7 @@ Filled by Claude Code from the three results files and Jim's y/n answers in them
 | Part 1, photo 2 (`_OZ80660.JPG`): red point; green point | **NO** (Jim n); none found |
 | Part 1: the engine's sRGB at each point / Lightroom's l, a, b at Jim's red click / the render's sRGB at that pin | 0.692, 0.111, 0.280 (`_DSC0028`) and 0.796, 0.137, 0.099 (`_OZ80660`) / 0.794, 0.842, 0.665 / 0.460, 0.001, 0.113 |
 | Part 1: copy of Lightroom's sample | YES |
-| Part 2: people found; instance read back; `person_entire`; other kinds | not tested: 0 people found (run 1); a mirrored photo (run 2) |
+| Part 2: people found; instance read back; `person_entire`; other kinds | not tested: 0 people found (run 1); a mirrored photo (run 2); run 4: 2 runs stopped at "2 photo(s) selected, not 1", then 0 people found on `PICT0019.DNG` (two people, Jim) |
 | Part 3: orientations seen; cases per orientation; orientation put back | run 2: BA, AD, DC, CB; 2 of 8 cases PASS (BA B, DC B); put back NO (BA, was AB). Run 1: 4 cases, all export failures; put back YES |
 | Put back: YES/NO | run 1 YES; run 2 NO (orientation) |
 
@@ -150,4 +159,6 @@ Filled by Claude Code from the three results files and Jim's y/n answers in them
 - **Why run 2's put-back read BA.** The flip-back was read once, 13 s after the read before it (04:57:27.024 and 04:57:40.617 [handle: the log excerpt]); BA is what the photo reads after the Rotate Right and before the Flip Horizontal [inference: the order BA, AD, DC, CB, then BA]. So either the flip was not done yet when Jim answered, or the read came before Lightroom had it [inference]; the harness neither read again nor asked again. Run 1's third turn read AD again 14 s after the ask, the same kind of miss [handle: run 1 `turn_3`; the log excerpt 04:50:00.497 and 04:50:14.213].
 - **Fixed:** the harness now reads every selected photo's uuid and orientation before any part writes, saves them (`photos` in the results file), and stops colour, person and parity on a flipped photo before its snapshot. Part 3 saves the photo's start orientation to `%TEMP%\LrC-AVG\masks-verify\orientation.json` before Jim flips it, reads the flip-back up to five times a second apart, and while it reads otherwise asks one menu action at a time (Flip Horizontal or Rotate Right once) until it reads the start; a run that stops leaves the file, and the next run puts the photo back first. A put-back no longer counts as part 3's yes (run 1 counted it). The results now record the Lightroom and plugin versions [handle: `engine\tests\masks-verify.test.ts`].
 - **Run 1's export failures were not caused by the harness** [inference]: each export goes to a fresh folder the plugin makes (`plugin\LrC-AVG.lrplugin\Preview.lua:58-59`), and run 2 made the same calls about 40 times (`export_preview`) without a failure [handle: the log excerpt, 04:55:37-04:57:25]. Run 1's exports were slow before they failed (12.2 s and 7.0 s, against under 1 s in run 2) [handle: the log excerpt, 04:48:38.025-04:48:57.282]. Why Lightroom wrote no JPEG is [unverified].
+- **Run 4 (2026-10-29): part 2 is still not tested.** The engine's Entire Person probe found 0 people on a photo Jim says has two (Observed, run 4), as on `_DSC0103.NEF` in run 1. Lightroom's own person masks had `InstanceBounds` in Phase 6 [handle: `docs\reports\phase6\masks-capture\capture4-row6_people_by_hand.json`]. Lightroom computed both probes (Observed, run 4) and gave no boxes, so the probe as the engine writes it likely differs from what Lightroom writes when it finds people [inference; unverified]. The results file keeps only the boxes, not the probe written or read back, so where it differs cannot be read from this run. The fix PR for this batch (version 1.7.1) saves the probe as written and as read back, to be checked by Jim's rerun.
+- **The "2 photo(s) selected" stops:** the batch steps now say to Select None and click the copy after Create Virtual Copy (`BATCH-1.7.0-CHECKS.md` step 12).
 - Still [unverified]: one person's masks on a photo of two or more people; why radials tilt on a mirrored photo; a copy of Lightroom's sample on a second photo, or between two photos (Automaat found it selects what ranks like the sample there [upstream claim: PR #341]); a slider dragged in Lightroom just before a mask pass (#343).

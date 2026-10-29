@@ -1,9 +1,9 @@
 ---
 report: MASK-CONTROLLER
 phase: "11"
-status: template
-authored_by: "Claude Code (purpose, harness, pre-run findings, steps for Jim; 2026-10-28, branch phase-11/mask-curves-point-color); Jim (Observed, verdict)"
-date: 2026-10-28
+status: observed
+authored_by: "Claude Code (purpose, harness, pre-run findings, steps for Jim; 2026-10-28, branch phase-11/mask-curves-point-color; Observed and Numbers from the results files, 2026-10-29); Jim (the run and its y/n answers, verdict)"
+date: 2026-10-29
 ---
 
 # MASK-CONTROLLER: do mask curves and Point Color written through LrDevelopController show in Lightroom?
@@ -69,20 +69,34 @@ Have one photo ready that you have not flipped; a virtual copy is safest. This n
 
 ## Observed (Jim)
 
-(blank: filled from the run's results file and Jim's answers)
+Filled by Claude Code from the results files and Jim's y/n answers in them, 2026-10-29; the answers are Jim's observations. Jim ran `npm run masks:parity -- --i-know` (the parity part, then this one) as check 4 of the 1.7.0 batch (`BATCH-1.7.0-CHECKS.md`) on his usual catalog [stated: Jim, 2026-10-29, "Check 4, 5 and 6 done."]. Engine and plugin 1.7.0, Lightroom Classic 15.6 [handle: `docs\reports\phase11\MASK-PARITY\run2\mask_verify_2026-10-29T00-49-50-394Z.json`, `engine_version`, `plugin_version`, `lrc_version`]. Times are UTC from the file names.
+
+- 00:48:00: this part stopped before writing, with the parity part: `_DSC0091.NEF` read BA, "flipped (BA): nothing written" [handle: `run2\mask_verify_2026-10-29T00-48-00-676Z.json`, `steps[1]`]. MASK-PARITY.md, run 2, has the rest.
+- 00:49:50: this part ran on **`_DSC0091-Rendered.dng`** (uuid `265547B3-3C01-47AE-96B4-835D449A8AEC`, orientation AB), not on the parity part's `_DSC0091.NEF` [handle: the 00:49:50 file, `photos[1]`]. Its steps [handle: the same file, `steps[5-9]`]:
+
+1. `radial`: "AVG controller radial" written: YES (no question).
+2. `main_curve`: `local_Maincurve` set to (0, 0), (128, 180), (255, 255): **Jim y**. `getValue` before `[0, 0, 255, 255]`, after `[0, 0, 128, 180, 255, 255]`; the other three curves stayed `[0, 0, 255, 255]`; `settled` true; 534 ms.
+3. `red_curve`: `local_Redcurve` set to the same lift: **Jim y**. `getValue` after `[0, 0, 128, 180, 255, 255]`, the main curve still lifted, green and blue flat; `settled` true; 523 ms.
+4. `point_color`: one swatch through `addPointColorSwatch` (`local_PointColors`): **Jim y** (one swatch, sliders about Hue +50, Saturation -50, Luminance +25, Range 80). `getValue` after: one swatch, `SrcHue` 0.2, `SrcSat` 0.6, `SrcLum` 0.5, `HueShift` 0.5, `SatScale` -0.5, `LumScale` 0.25, `RangeAmount` 0.8, `Variance` 0, `HueRange` 0 / 0.333333 / 0.666667 / 1, `SatRange` 0 / 0.42 / 0.78 / 1, `LumRange` 0.005357 / 0.555357 / 0.915357 / 1 (LowerNone / LowerFull / UpperFull / UpperNone); `settled` true; 592 ms.
+5. `read_back`: no write; before and after the same: main and red curves lifted, green and blue flat, the one swatch as in step 4: YES. `settled` false (nothing was written to settle).
+
+The file has no `put_back` step and no put-back line in `lines`; the run's headline FAILED comes from the parity part's three NO steps [handle: the file, `lines`, `headline`]. The test radial goes with the snapshot put-back (Harness): the controller part's snapshot was taken at 17:51:54 and applied at 17:52:58 local time [handle: `docs\reports\phase11\MASK-PARITY\run2\bridge_log_excerpt_2026-10-28T17-48.txt`]; that it put the photo back whole is [inference].
 
 ## Numbers
 
 | Field | Value |
 |---|---|
-| Lightroom version / plugin version | |
-| `radial` written | |
-| `main_curve` YES/NO; `getValue` after | |
-| `red_curve` YES/NO; `getValue` after | |
-| `point_color` YES/NO; slider readings if NO; `getValue` after | |
-| `read_back`: curves and swatches as read | |
-| `settled` after each write (did the photo's settings change) | |
-| Put back: YES/NO | |
+| Lightroom version / plugin version | 15.6 / 1.7.0 |
+| Photo | `_DSC0091-Rendered.dng` (uuid `265547B3-...`), orientation AB |
+| `radial` written | YES |
+| `main_curve` YES/NO; `getValue` after | YES (Jim y); `[0, 0, 128, 180, 255, 255]` |
+| `red_curve` YES/NO; `getValue` after | YES (Jim y); `[0, 0, 128, 180, 255, 255]` |
+| `point_color` YES/NO; slider readings if NO; `getValue` after | YES (Jim y); one swatch, SrcHue 0.2, SrcSat 0.6, SrcLum 0.5, HueShift 0.5, SatScale -0.5, LumScale 0.25, RangeAmount 0.8 |
+| `read_back`: curves and swatches as read | main and red lifted, green and blue flat, one swatch as written: YES |
+| `settled` after each write (did the photo's settings change) | true, true, true (`read_back`, no write: false) |
+| Put back: YES/NO | not in the file |
+
+[handle: `docs\reports\phase11\MASK-PARITY\run2\mask_verify_2026-10-29T00-49-50-394Z.json`, `steps[5-9]`]
 
 ## Verdict
 
@@ -92,4 +106,7 @@ Have one photo ready that you have not flipped; a virtual copy is safest. This n
 
 - YES on all: the names in `engine\src\params\mask-controller.ts` count as round-tripped (rule 03); the `[unverified]` notes in `defs-masks.ts`, `mask-controller.ts` and `docs\PARITY.md` go.
 - `settled` false after a write: Lightroom keeps the local curve outside `getDevelopSettings()`, so a session's revert through History or a snapshot may not undo it; that would need its own check [unverified].
+- **The 2026-10-29 run answered YES on all five steps**, on one photo (`_DSC0091-Rendered.dng`), with `getValue` reading back what was written and `settled` true after each write (Observed). Under the first line above, that is the round trip rule 03 asks for; whether it is enough on one photo is Jim's call (Verdict).
+- `settled` true after every write: the photo's settings changed after each controller write, so the curves and swatch reached the settings the snapshot and History hold [inference: what `settled` measures, `plugin\LrC-AVG.lrplugin\MaskControl.lua:22`]. The parity part of the same run found a hand-dragged mask curve in the mask table as `MainCurve` (`MASK-PARITY.md`, run 2). That a snapshot put-back removes a controller-written curve is not shown: the file records no put-back [unverified].
+- The swatch's `HueRange`, `SatRange`, `LumRange` and `Variance` read back as listed in Observed; whether the engine sent them or Lightroom filled them is not in the file.
 - Still [unverified] after this check: `update`, `delete` and `clear` of swatches (only `add` is asked), the green and blue curves, the guardrail undo through the controller, and Lightroom's own History step names for these writes.

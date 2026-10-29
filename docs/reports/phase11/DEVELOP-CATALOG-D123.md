@@ -1,9 +1,9 @@
 ---
 report: DEVELOP-CATALOG-D123
 phase: "11"
-status: template
-authored_by: "Claude Code (Opus 5.5): purpose, harness, pre-run findings, steps, 2026-10-28. Jim: the run, his answers, Observed, Verdict (blank)."
-date: 2026-10-28
+status: observed
+authored_by: "Claude Code (Opus 5.5): purpose, harness, pre-run findings, steps, 2026-10-28; Observed and Numbers from the results file and the plugin log, 2026-10-29. Jim: the run, his answers, Verdict (blank)."
+date: 2026-10-29
 ---
 
 # Settings by Lightroom key, global undo, removal from the catalog (#207 D1-D3)
@@ -76,21 +76,38 @@ If a step stops the run, the check still removes its own copies and says so ("pu
 
 ## Observed (Jim)
 
-_Blank until Jim's run._
+Filled by Claude Code from the results file and the plugin log, 2026-10-29; the y/n answers in the file are Jim's. Jim ran `npm run develop-catalog:check` as check 5 of the 1.7.0 batch (`BATCH-1.7.0-CHECKS.md`) and said it was done [stated: Jim, 2026-10-29, "Check 4, 5 and 6 done."]. One run, started 00:54:43 UTC, engine and plugin 1.7.0, Lightroom Classic 15.6 [handle: `docs\reports\phase11\DEVELOP-CATALOG-D123\run1\develop_catalog_check_2026-10-29T00-54-43-202Z.json`, `started`, `engine_version`, `plugin_version`, `lrc_version`]. The log excerpt is in Jim's local time (UTC-7), 17:54:43-17:55:25 [handle: `run1\bridge_log_excerpt_2026-10-28T17-54.txt`].
+
+Photo: `20250413-_OZ81430.NEF` (uuid `23B201BF-A39A-44C6-839B-E13D4C0EA70D`) [handle: the file, `photo`]. In the order the check ran [handle: the file, `results` and `lines`]:
+
+1. `lr_create_virtual_copies` three times: copies A (`7FB45B2E-...`), B (`6DCC38D8-...`), C (`472DB733-...`), each `copied`: YES.
+2. The two refusals sent nothing to Lightroom: `NotALightroomKey` gave `UNKNOWN_PARAMETER` ("nothing was written to the photo"), `Exposure2012` 9 gave `OUT_OF_RANGE` ("exposure = 9 is outside -5..5"): YES. The log has no `set_develop_settings` line between the copies and step 3's write [handle: the log excerpt, 17:54:47.605-17:54:48.245].
+3. `lr_set_develop_settings` on copy A: `set`, exposure 0.33 to 0.83, `LensManualDistortionAmount` 0 to 10 (`unranged`), snapshot "AVG pre-set 970e25", History name "AVG set develop settings 970e25", 2,997 ms: YES.
+4. `lr_undo_last_step`: `undone` true, `can_undo` true: YES. **But copy A after the undo still differs from before the write in exposure and `LensManualDistortionAmount`** (0.83 and 10): NO. In the log the undo came 16 ms after the write returned (`set_develop_settings: ... set` at 17:54:51.281, `undo_last_step` at 17:54:51.297) and answered `undone` 22 ms later (17:54:51.319).
+5. `LensManualDistortionAmount` 1000 on copy A: `not_taken` (written 1000, read back 0), "the photo was put back from the snapshot", and copy A read back as before that write: YES. In the log the plugin answered `set` (17:54:53.535) and the engine's `apply_snapshot` followed (17:54:53.572).
+6. `lr_remove_photos` with the three copies and a made-up uuid: **`failed`, "Lightroom did not select exactly these photos; nothing was removed"**: 0 removed, 3 not removed (the three copies), 1 missing (`00000000-0000-0000-0000-00000000d123`, the made-up uuid): NO. In the log `remove_photos` ran from 17:54:54.191 to 17:55:22.077 (about 28 s), with `stall-diag: stall 21891 ms after idle` at 17:55:19.993 in between.
+7. The three copies are still in the catalog (`copies_left`): NO.
+8. The selection is not as it was: "no (1 selected)": one photo was selected, not the start photo by uuid [handle: `engine\src\devtools\develop-catalog-check-cli.ts:126-127` at `1768ad6`, the comparison]: NO.
+9. Jim's photo's settings against the start: back: YES.
+10. Jim's answers: **y, y, n, y** [handle: the file, `answers`]. In order of the questions [handle: `develop-catalog-check-cli.ts:36-41` at `1768ad6`]: (1) the module, folder or collection and his photo selected as before: y; (2) no dialog to click: y; (3) the three copies gone and his photo still there: **n**; (4) no "AVG set develop settings" step in his photo's History: y.
+
+Headline **FAILED**; put back **NO**: the three copies were left in the catalog [handle: the file, `headline`, `copies_left`; the console's put back line is YES only when no copy is left, `develop-catalog-check-cli.ts:166` at `1768ad6`]. Jim removes the three leftover copies by hand.
 
 ## Numbers
 
 | Field | Value |
 |---|---|
-| Lightroom version, plugin, engine | |
-| Headline, put back | |
-| Refusals (unknown key, out of range) | |
-| `lr_set_develop_settings` on copy A: status, `changed`, `unranged` | |
-| `lr_undo_last_step`: `undone`, `can_undo`; copy A against before the write | |
-| `LensManualDistortionAmount` 1000: status, `not_taken`; copy A after the put-back | |
-| `lr_remove_photos`: status, removed, missing; copies gone | |
-| Selection and the photo's settings back | |
-| Jim's answers 1-4 | |
+| Lightroom version, plugin, engine | 15.6, 1.7.0, 1.7.0 |
+| Headline, put back | FAILED; NO (the three copies left) |
+| Refusals (unknown key, out of range) | `UNKNOWN_PARAMETER`, `OUT_OF_RANGE`; nothing sent |
+| `lr_set_develop_settings` on copy A: status, `changed`, `unranged` | `set`; exposure 0.33 to 0.83, `LensManualDistortionAmount` 0 to 10; `LensManualDistortionAmount` |
+| `lr_undo_last_step`: `undone`, `can_undo`; copy A against before the write | true, true; **differs**: exposure, `LensManualDistortionAmount` |
+| `LensManualDistortionAmount` 1000: status, `not_taken`; copy A after the put-back | `not_taken`; written 1000, read back 0; back |
+| `lr_remove_photos`: status, removed, missing; copies gone | **`failed`** ("Lightroom did not select exactly these photos"); 0 removed, 3 not removed; 1 missing (the made-up uuid); copies **still there** |
+| Selection and the photo's settings back | selection **no** (1 selected, not the start photo); settings back |
+| Jim's answers 1-4 | y, y, **n**, y |
+
+[handle: `docs\reports\phase11\DEVELOP-CATALOG-D123\run1\develop_catalog_check_2026-10-29T00-54-43-202Z.json`]
 
 ## Verdict
 
@@ -99,4 +116,9 @@ _Jim's: go / conditional / no-go._
 ## Consequences / open questions
 
 - On a go: PARITY.md's three rows lose their `[unverified]`, and LR_SDK_NOTES gets what `removeFromCatalog` and `LrUndo.undo` did on Windows.
-- Still `[unverified]` after this run: `lr_set_develop_settings` on a rendered photo and on a photo in HDR edit mode (the extended curve keys), the removal of a master together with its copies, removal of more than three photos, undo after anything other than this tool's write.
+- **Why the undo left the write in place** [inference]: `set_develop_settings` makes the photo active in Develop and puts the user's view back after the write (`DevelopSession.withPhoto`) [handle: `plugin\LrC-AVG.lrplugin\DevelopTools.lua:10` at `1768ad6`], so the undo, 16 ms later, ran in another view than the write. What it undid instead is not recorded.
+- **Why the removal found the wrong selection** [inference]: `remove_photos` opens the Library grid on All Photographs before it selects [handle: `plugin\LrC-AVG.lrplugin\Remove.lua:10-11` at `1768ad6`] and waits 10 s for the selection to read as the photos named (`SELECT_SECONDS` 10, `Remove.lua:36` at `1768ad6`). With about 18,600 photos in All Photographs (18,642 in `search_photos` half an hour earlier [handle: `docs\reports\phase11\PERF\after-cache\perf_after-cache_2026-10-29T00-25-25-283Z.json`, `catalog_matches`]), Lightroom stalled for 21.9 s (the log's `stall-diag`), past that wait.
+- **The selection after the run.** The check read 1 photo selected but not Jim's by uuid, while Jim answered y to "with your photo selected" (answer 1). A copy of his photo left selected would look the same in the grid [inference]; which photo it was is not in the file.
+- **Fixed in the fix PR for this batch (version 1.7.1), to be checked by Jim's rerun:** the undo runs with the written photo active in Develop, and the engine reads the photo back (`last_write.reverted`); `remove_photos` makes its selection again every 5 s for up to 60 s.
+- **Jim removes the three leftover copies by hand** ("AVG develop-catalog-check A", "B" and "C", Steps for Jim, "If something goes wrong", last item).
+- Still `[unverified]` after this run: whether `removeFromCatalog` asks the user first (no removal ran; Jim saw no dialog, answer 2); the undo of this tool's write; the view put back after a removal. Also still `[unverified]`: `lr_set_develop_settings` on a rendered photo and on a photo in HDR edit mode (the extended curve keys), the removal of a master together with its copies, removal of more than three photos, undo after anything other than this tool's write.

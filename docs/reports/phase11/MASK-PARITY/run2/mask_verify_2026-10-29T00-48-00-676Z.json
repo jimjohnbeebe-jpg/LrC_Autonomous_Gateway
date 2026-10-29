@@ -1,0 +1,58 @@
+{
+  "check": "masks-verify",
+  "started": "2026-10-29T00-48-00-676Z",
+  "parts": [
+    "parity",
+    "controller"
+  ],
+  "steps": [
+    {
+      "part": "parity",
+      "photo": "_DSC0091.NEF",
+      "id": "select",
+      "question": null,
+      "answer": "flipped (BA): nothing written",
+      "ok": false,
+      "notes": [
+        "select photos that are not flipped, or Photo > Flip Horizontal on them first"
+      ]
+    },
+    {
+      "part": "controller",
+      "photo": "_DSC0091.NEF",
+      "id": "select",
+      "question": null,
+      "answer": "flipped (BA): nothing written",
+      "ok": false,
+      "notes": [
+        "select photos that are not flipped, or Photo > Flip Horizontal on them first"
+      ]
+    }
+  ],
+  "plugin_version": "1.7.0",
+  "lrc_version": "15.6",
+  "photos": [
+    {
+      "part": "parity",
+      "uuid": "D838903C-EDE1-4C59-A3A2-02AD371F458C",
+      "filename": "_DSC0091.NEF",
+      "orientation": "BA"
+    },
+    {
+      "part": "controller",
+      "uuid": "D838903C-EDE1-4C59-A3A2-02AD371F458C",
+      "filename": "_DSC0091.NEF",
+      "orientation": "BA"
+    }
+  ],
+  "lines": [
+    "NO   parity _DSC0091.NEF select (select photos that are not flipped, or Photo > Flip Horizontal on them first)",
+    "NO   controller _DSC0091.NEF select (select photos that are not flipped, or Photo > Flip Horizontal on them first)",
+    "---- parity: no step answered yes",
+    "---- controller: no step answered yes"
+  ],
+  "headline": "FAILED",
+  "node": "v24.11.1",
+  "engine_version": "1.7.0",
+  "plugin_log_copied": "mask_verify_bridge_log_2026-10-29T00-48-00-676Z.txt"
+}

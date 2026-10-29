@@ -1,0 +1,812 @@
+{
+  "check": "masks-verify",
+  "started": "2026-10-29T00-49-50-394Z",
+  "parts": [
+    "parity",
+    "controller"
+  ],
+  "steps": [
+    {
+      "part": "parity",
+      "photo": "_DSC0091.NEF",
+      "id": "brush_feather_density",
+      "question": "  Three brighter bands across the photo: the TOP with a soft edge, the MIDDLE with a hard edge, the BOTTOM less bright than the other two?",
+      "answer": "y",
+      "ok": false,
+      "notes": [
+        "mask AVG parity brush reads back different: CorrectionMasks.0.Masks"
+      ],
+      "data": {
+        "mask": {
+          "id": "D85B7A39-7933-43B8-BD9C-B69AADF1498B",
+          "name": "AVG parity brush",
+          "kind": "brush",
+          "active": true,
+          "inverted": false,
+          "components": 1,
+          "sliders": {
+            "local.exposure": 2
+          },
+          "geometry": {
+            "strokes": 3,
+            "dabs": 368
+          }
+        }
+      }
+    },
+    {
+      "part": "parity",
+      "photo": "_DSC0091.NEF",
+      "id": "brush_erase_added",
+      "question": "  Is there now a gap down the middle of all three bands (the erase stroke)?",
+      "answer": "y",
+      "ok": false,
+      "notes": [
+        "mask AVG parity brush reads back different: CorrectionMasks.0.Masks"
+      ],
+      "data": {
+        "mask": {
+          "id": "D85B7A39-7933-43B8-BD9C-B69AADF1498B",
+          "name": "AVG parity brush",
+          "kind": "brush",
+          "active": true,
+          "inverted": false,
+          "components": 1,
+          "sliders": {
+            "local.exposure": 2
+          },
+          "geometry": {
+            "strokes": 4,
+            "dabs": 463
+          }
+        }
+      }
+    },
+    {
+      "part": "parity",
+      "photo": "_DSC0091.NEF",
+      "id": "inverted_copy",
+      "question": "  Is there a new mask \"AVG parity brush inverted\", with the TOP and MIDDLE bands still BRIGHTER and the rest of the photo (the gap down the middle too) DARKER than before the check?",
+      "answer": "y",
+      "ok": false,
+      "notes": [
+        "mask AVG parity brush reads back different: CorrectionMasks.0.Masks",
+        "mask AVG parity brush inverted reads back different: CorrectionMasks.0.Masks"
+      ],
+      "data": {
+        "mask": {
+          "id": "AA2982EE-7ACC-44C0-969D-E361BFA540D8",
+          "name": "AVG parity brush inverted",
+          "kind": "brush",
+          "active": true,
+          "inverted": true,
+          "components": 1,
+          "sliders": {
+            "local.exposure": -2
+          },
+          "geometry": {
+            "strokes": 4,
+            "dabs": 463
+          }
+        }
+      }
+    },
+    {
+      "part": "parity",
+      "photo": "_DSC0091.NEF",
+      "id": "delete_empty_masks",
+      "question": null,
+      "answer": "unchanged, 2 masks before, 2 after",
+      "ok": true,
+      "notes": []
+    },
+    {
+      "part": "parity",
+      "photo": "_DSC0091.NEF",
+      "id": "curve_capture",
+      "question": null,
+      "answer": "1 field(s) changed",
+      "ok": true,
+      "skipped": false,
+      "notes": [],
+      "data": {
+        "changed": {
+          "MainCurve": [
+            "0,0",
+            "128,155",
+            "255,255"
+          ]
+        }
+      }
+    },
+    {
+      "part": "controller",
+      "photo": "_DSC0091-Rendered.dng",
+      "id": "radial",
+      "question": null,
+      "answer": "written",
+      "ok": true,
+      "notes": []
+    },
+    {
+      "part": "controller",
+      "photo": "_DSC0091-Rendered.dng",
+      "id": "main_curve",
+      "question": "  In the Masking panel select \"AVG controller radial\" (a circle in the middle of the photo) and open its Curve section: are the midtones inside the circle brighter than outside it, and does the curve show a lift in the middle?",
+      "answer": "y",
+      "ok": true,
+      "notes": [],
+      "data": {
+        "written": [
+          "local_Maincurve"
+        ],
+        "settled": true,
+        "before": {
+          "local_Maincurve": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "local_Greencurve": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "local_Bluecurve": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "local_Redcurve": [
+            0,
+            0,
+            255,
+            255
+          ]
+        },
+        "after": {
+          "local_Maincurve": [
+            0,
+            0,
+            128,
+            180,
+            255,
+            255
+          ],
+          "local_Greencurve": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "local_Bluecurve": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "local_Redcurve": [
+            0,
+            0,
+            255,
+            255
+          ]
+        },
+        "live": {
+          "curves": {
+            "main": [
+              [
+                0,
+                0
+              ],
+              [
+                128,
+                180
+              ],
+              [
+                255,
+                255
+              ]
+            ],
+            "red": [
+              [
+                0,
+                0
+              ],
+              [
+                255,
+                255
+              ]
+            ],
+            "green": [
+              [
+                0,
+                0
+              ],
+              [
+                255,
+                255
+              ]
+            ],
+            "blue": [
+              [
+                0,
+                0
+              ],
+              [
+                255,
+                255
+              ]
+            ]
+          },
+          "point_colors": []
+        },
+        "ms": 534
+      }
+    },
+    {
+      "part": "controller",
+      "photo": "_DSC0091-Rendered.dng",
+      "id": "red_curve",
+      "question": "  In the Masking panel select \"AVG controller radial\" (a circle in the middle of the photo) and open its Curve section and pick its Red channel: is the inside of the circle now redder, and does the red curve show a lift in the middle?",
+      "answer": "y",
+      "ok": true,
+      "notes": [],
+      "data": {
+        "written": [
+          "local_Redcurve"
+        ],
+        "settled": true,
+        "before": {
+          "local_Redcurve": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "local_Greencurve": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "local_Bluecurve": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "local_Maincurve": [
+            0,
+            0,
+            128,
+            180,
+            255,
+            255
+          ]
+        },
+        "after": {
+          "local_Redcurve": [
+            0,
+            0,
+            128,
+            180,
+            255,
+            255
+          ],
+          "local_Greencurve": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "local_Bluecurve": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "local_Maincurve": [
+            0,
+            0,
+            128,
+            180,
+            255,
+            255
+          ]
+        },
+        "live": {
+          "curves": {
+            "main": [
+              [
+                0,
+                0
+              ],
+              [
+                128,
+                180
+              ],
+              [
+                255,
+                255
+              ]
+            ],
+            "red": [
+              [
+                0,
+                0
+              ],
+              [
+                128,
+                180
+              ],
+              [
+                255,
+                255
+              ]
+            ],
+            "green": [
+              [
+                0,
+                0
+              ],
+              [
+                255,
+                255
+              ]
+            ],
+            "blue": [
+              [
+                0,
+                0
+              ],
+              [
+                255,
+                255
+              ]
+            ]
+          },
+          "point_colors": []
+        },
+        "ms": 523
+      }
+    },
+    {
+      "part": "controller",
+      "photo": "_DSC0091-Rendered.dng",
+      "id": "point_color",
+      "question": "  Select \"AVG controller radial\" in the Masking panel and open its Point Color: is there ONE swatch, and with it selected do the sliders read about Hue +50, Saturation -50, Luminance +25 and Range 80?",
+      "answer": "y",
+      "ok": true,
+      "notes": [],
+      "data": {
+        "written": [
+          "local_PointColors"
+        ],
+        "settled": true,
+        "before": {
+          "local_Redcurve": [
+            0,
+            0,
+            128,
+            180,
+            255,
+            255
+          ],
+          "local_Greencurve": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "local_Bluecurve": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "local_Maincurve": [
+            0,
+            0,
+            128,
+            180,
+            255,
+            255
+          ]
+        },
+        "after": {
+          "local_Redcurve": [
+            0,
+            0,
+            128,
+            180,
+            255,
+            255
+          ],
+          "local_Greencurve": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "local_Bluecurve": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "local_PointColors": [
+            {
+              "LumRange": {
+                "LowerNone": 0.005357,
+                "LowerFull": 0.555357,
+                "UpperNone": 1,
+                "UpperFull": 0.915357
+              },
+              "SatScale": -0.5,
+              "RangeAmount": 0.8,
+              "SrcSat": 0.6,
+              "HueRange": {
+                "LowerNone": 0,
+                "LowerFull": 0.333333,
+                "UpperNone": 1,
+                "UpperFull": 0.666667
+              },
+              "SrcLum": 0.5,
+              "LumScale": 0.25,
+              "HueShift": 0.5,
+              "SatRange": {
+                "LowerNone": 0,
+                "LowerFull": 0.42,
+                "UpperNone": 1,
+                "UpperFull": 0.78
+              },
+              "SrcHue": 0.2,
+              "Variance": 0
+            }
+          ],
+          "local_Maincurve": [
+            0,
+            0,
+            128,
+            180,
+            255,
+            255
+          ]
+        },
+        "live": {
+          "curves": {
+            "main": [
+              [
+                0,
+                0
+              ],
+              [
+                128,
+                180
+              ],
+              [
+                255,
+                255
+              ]
+            ],
+            "red": [
+              [
+                0,
+                0
+              ],
+              [
+                128,
+                180
+              ],
+              [
+                255,
+                255
+              ]
+            ],
+            "green": [
+              [
+                0,
+                0
+              ],
+              [
+                255,
+                255
+              ]
+            ],
+            "blue": [
+              [
+                0,
+                0
+              ],
+              [
+                255,
+                255
+              ]
+            ]
+          },
+          "point_colors": [
+            {
+              "src_hue": 0.2,
+              "src_sat": 0.6,
+              "src_lum": 0.5,
+              "hue_shift": 0.5,
+              "sat_scale": -0.5,
+              "lum_scale": 0.25,
+              "range_amount": 0.8,
+              "hue_range": [
+                0,
+                0.333333,
+                0.666667,
+                1
+              ],
+              "sat_range": [
+                0,
+                0.42,
+                0.78,
+                1
+              ],
+              "lum_range": [
+                0.005357,
+                0.555357,
+                0.915357,
+                1
+              ]
+            }
+          ]
+        },
+        "ms": 592
+      }
+    },
+    {
+      "part": "controller",
+      "photo": "_DSC0091-Rendered.dng",
+      "id": "read_back",
+      "question": null,
+      "answer": "read back",
+      "ok": true,
+      "notes": [],
+      "data": {
+        "written": [],
+        "settled": false,
+        "before": {
+          "local_Maincurve": [
+            0,
+            0,
+            128,
+            180,
+            255,
+            255
+          ],
+          "local_Greencurve": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "local_Bluecurve": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "local_PointColors": [
+            {
+              "LumRange": {
+                "LowerNone": 0.005357,
+                "LowerFull": 0.555357,
+                "UpperNone": 1,
+                "UpperFull": 0.915357
+              },
+              "SatScale": -0.5,
+              "RangeAmount": 0.8,
+              "SrcSat": 0.6,
+              "HueRange": {
+                "LowerNone": 0,
+                "LowerFull": 0.333333,
+                "UpperNone": 1,
+                "UpperFull": 0.666667
+              },
+              "SrcLum": 0.5,
+              "LumScale": 0.25,
+              "HueShift": 0.5,
+              "SatRange": {
+                "LowerNone": 0,
+                "LowerFull": 0.42,
+                "UpperNone": 1,
+                "UpperFull": 0.78
+              },
+              "SrcHue": 0.2,
+              "Variance": 0
+            }
+          ],
+          "local_Redcurve": [
+            0,
+            0,
+            128,
+            180,
+            255,
+            255
+          ]
+        },
+        "after": {
+          "local_Maincurve": [
+            0,
+            0,
+            128,
+            180,
+            255,
+            255
+          ],
+          "local_Greencurve": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "local_Bluecurve": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "local_PointColors": [
+            {
+              "LumRange": {
+                "LowerNone": 0.005357,
+                "LowerFull": 0.555357,
+                "UpperNone": 1,
+                "UpperFull": 0.915357
+              },
+              "SatScale": -0.5,
+              "RangeAmount": 0.8,
+              "SrcSat": 0.6,
+              "HueRange": {
+                "LowerNone": 0,
+                "LowerFull": 0.333333,
+                "UpperNone": 1,
+                "UpperFull": 0.666667
+              },
+              "SrcLum": 0.5,
+              "LumScale": 0.25,
+              "HueShift": 0.5,
+              "SatRange": {
+                "LowerNone": 0,
+                "LowerFull": 0.42,
+                "UpperNone": 1,
+                "UpperFull": 0.78
+              },
+              "SrcHue": 0.2,
+              "Variance": 0
+            }
+          ],
+          "local_Redcurve": [
+            0,
+            0,
+            128,
+            180,
+            255,
+            255
+          ]
+        },
+        "live": {
+          "curves": {
+            "main": [
+              [
+                0,
+                0
+              ],
+              [
+                128,
+                180
+              ],
+              [
+                255,
+                255
+              ]
+            ],
+            "red": [
+              [
+                0,
+                0
+              ],
+              [
+                128,
+                180
+              ],
+              [
+                255,
+                255
+              ]
+            ],
+            "green": [
+              [
+                0,
+                0
+              ],
+              [
+                255,
+                255
+              ]
+            ],
+            "blue": [
+              [
+                0,
+                0
+              ],
+              [
+                255,
+                255
+              ]
+            ]
+          },
+          "point_colors": [
+            {
+              "src_hue": 0.2,
+              "src_sat": 0.6,
+              "src_lum": 0.5,
+              "hue_shift": 0.5,
+              "sat_scale": -0.5,
+              "lum_scale": 0.25,
+              "range_amount": 0.8,
+              "hue_range": [
+                0,
+                0.333333,
+                0.666667,
+                1
+              ],
+              "sat_range": [
+                0,
+                0.42,
+                0.78,
+                1
+              ],
+              "lum_range": [
+                0.005357,
+                0.555357,
+                0.915357,
+                1
+              ]
+            }
+          ]
+        },
+        "ms": 0
+      }
+    }
+  ],
+  "plugin_version": "1.7.0",
+  "lrc_version": "15.6",
+  "photos": [
+    {
+      "part": "parity",
+      "uuid": "D838903C-EDE1-4C59-A3A2-02AD371F458C",
+      "filename": "_DSC0091.NEF",
+      "orientation": "AB"
+    },
+    {
+      "part": "controller",
+      "uuid": "265547B3-3C01-47AE-96B4-835D449A8AEC",
+      "filename": "_DSC0091-Rendered.dng",
+      "orientation": "AB"
+    }
+  ],
+  "lines": [
+    "NO   parity _DSC0091.NEF brush_feather_density (mask AVG parity brush reads back different: CorrectionMasks.0.Masks)",
+    "NO   parity _DSC0091.NEF brush_erase_added (mask AVG parity brush reads back different: CorrectionMasks.0.Masks)",
+    "NO   parity _DSC0091.NEF inverted_copy (mask AVG parity brush reads back different: CorrectionMasks.0.Masks; mask AVG parity brush inverted reads back different: CorrectionMasks.0.Masks)",
+    "YES  parity _DSC0091.NEF delete_empty_masks",
+    "YES  parity _DSC0091.NEF curve_capture",
+    "YES  controller _DSC0091-Rendered.dng radial",
+    "YES  controller _DSC0091-Rendered.dng main_curve",
+    "YES  controller _DSC0091-Rendered.dng red_curve",
+    "YES  controller _DSC0091-Rendered.dng point_color",
+    "YES  controller _DSC0091-Rendered.dng read_back"
+  ],
+  "headline": "FAILED",
+  "node": "v24.11.1",
+  "engine_version": "1.7.0",
+  "plugin_log_copied": "mask_verify_bridge_log_2026-10-29T00-49-50-394Z.txt"
+}

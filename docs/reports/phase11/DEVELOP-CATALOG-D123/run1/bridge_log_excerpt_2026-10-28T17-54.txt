@@ -1,0 +1,42 @@
+2026-10-28 17:54:43.248 INFO  bridge: receive: engine connected
+2026-10-28 17:54:43.774 INFO  bridge: send: engine connected
+2026-10-28 17:54:43.774 INFO  bridge: hello 6422eb72-1b35-4295-a91c-1a03b763730e
+2026-10-28 17:54:43.778 INFO  bridge: get_selection bbd324d1-7a8f-4370-aabd-edf58b6d38a4
+2026-10-28 17:54:43.778 INFO  bridge: get_settings a90364a1-b58c-4bf1-aef7-ec9782276ec9
+2026-10-28 17:54:43.825 INFO  bridge: copy_photo d5ba070c-4b96-41f4-9c33-029bf9737c43
+2026-10-28 17:54:44.480 INFO  copy_photo: 23B201BF-A39A-44C6-839B-E13D4C0EA70D copied ()
+2026-10-28 17:54:44.930 INFO  bridge: copy_photo 2d19d5c2-b29f-4e6f-a272-1ed08c2c2c1b
+2026-10-28 17:54:45.169 WARN  stall-diag: stall 1106 ms after idle
+2026-10-28 17:54:46.171 INFO  copy_photo: 23B201BF-A39A-44C6-839B-E13D4C0EA70D copied ()
+2026-10-28 17:54:46.497 INFO  bridge: copy_photo 80cf2aa5-83ef-4359-8a90-2f3def4bb9be
+2026-10-28 17:54:46.673 WARN  stall-diag: stall 1299 ms after idle
+2026-10-28 17:54:47.605 INFO  copy_photo: 23B201BF-A39A-44C6-839B-E13D4C0EA70D copied ()
+2026-10-28 17:54:47.810 INFO  bridge: get_settings 7075cccc-db62-455e-8d45-964f277e793c
+2026-10-28 17:54:48.146 WARN  stall-diag: stall 1273 ms after idle
+2026-10-28 17:54:48.164 INFO  bridge: get_settings 62409e18-e260-4872-bef7-2b5532db6b09
+2026-10-28 17:54:48.177 INFO  bridge: get_settings f64e5929-ed8d-4902-88be-a9cb405ef567
+2026-10-28 17:54:48.227 INFO  bridge: get_settings e1c85c6e-101b-40ad-9061-1d38933b68b0
+2026-10-28 17:54:48.245 INFO  bridge: set_develop_settings 7faa4876-ecf0-4d20-b3ea-c7259c981146
+2026-10-28 17:54:49.473 WARN  stall-diag: stall 1128 ms after idle
+2026-10-28 17:54:51.281 INFO  set_develop_settings: 7FB45B2E-7E2D-4631-9B3F-74B857B1AFF1 set ()
+2026-10-28 17:54:51.297 INFO  bridge: undo_last_step 2b8acc5a-c35c-451c-aa79-3cfa6bb992a4
+2026-10-28 17:54:51.319 INFO  undo_last_step: undone
+2026-10-28 17:54:51.766 INFO  bridge: get_settings 86a54efd-85b4-4bb0-ad1e-eb5fea0ef282
+2026-10-28 17:54:52.051 WARN  stall-diag: stall 2378 ms after idle
+2026-10-28 17:54:52.347 INFO  bridge: get_settings 4a356cb3-ff82-423f-8a9a-641dad5d8f8e
+2026-10-28 17:54:52.403 INFO  bridge: get_settings 06f0ad27-d203-407a-90f4-f6f63b472ba7
+2026-10-28 17:54:52.420 INFO  bridge: set_develop_settings 979d4530-c12c-4e33-bbb7-22e9747a0e1f
+2026-10-28 17:54:53.535 INFO  set_develop_settings: 7FB45B2E-7E2D-4631-9B3F-74B857B1AFF1 set ()
+2026-10-28 17:54:53.572 INFO  bridge: apply_snapshot 19f3784d-ad63-4882-9c19-bfce3955bb37
+2026-10-28 17:54:53.994 INFO  bridge: get_settings 824277c3-0e1a-456d-9b42-4563d7c6c1e2
+2026-10-28 17:54:54.191 INFO  bridge: remove_photos 32b759c3-ffe2-4f84-94e9-c08524b7d0b3
+2026-10-28 17:54:57.901 WARN  stall-diag: stall 3558 ms after idle
+2026-10-28 17:55:19.993 WARN  stall-diag: stall 21891 ms after idle
+2026-10-28 17:55:21.490 WARN  stall-diag: stall 1296 ms after idle
+2026-10-28 17:55:22.077 INFO  remove_photos: failed, 0 removed, 3 not, 1 missing (Lightroom did not select exactly these photos; nothing was removed)
+2026-10-28 17:55:24.221 INFO  bridge: get_settings bc10fe2e-eea1-497f-8646-c6443de77e82
+2026-10-28 17:55:24.492 INFO  bridge: get_settings ddb94738-cfb6-4146-ad59-652c9da458bf
+2026-10-28 17:55:24.782 WARN  stall-diag: stall 3090 ms after idle
+2026-10-28 17:55:24.914 INFO  bridge: get_settings 301304fc-e984-446d-a3fd-f58f3086bfa9
+2026-10-28 17:55:24.983 INFO  bridge: get_selection 4cefb2fe-23d7-4432-bcfb-7dbf8459fea1
+2026-10-28 17:55:25.005 INFO  bridge: get_settings f158e781-ab7f-48fc-909d-ce8eebf43173

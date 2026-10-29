@@ -2,8 +2,8 @@
 report: MASK-PARITY
 phase: "11"
 status: observed
-authored_by: "Claude Code (purpose, harness, pre-run findings, steps for Jim; 2026-10-27, night run on branch phase-11/masks-217; Observed and Numbers from the results file, the suggested verdict, findings, 2026-10-28); Jim (the run and its y/n answers, the decisions, the verdict)"
-date: 2026-10-28
+authored_by: "Claude Code (purpose, harness, pre-run findings, steps for Jim; 2026-10-27, night run on branch phase-11/masks-217; Observed and Numbers from the results file, the suggested verdict, findings, 2026-10-28; run 2, 2026-10-29); Jim (the runs and their y/n answers, the decisions, the verdict)"
+date: 2026-10-29
 ---
 
 # MASK-PARITY: do the issue #217 mask rows do in Lightroom what the engine writes?
@@ -85,11 +85,29 @@ Filled by Claude Code from the results file and Jim's y/n answers in it, 2026-10
 
 Put back from the snapshot: YES (no `put_back` step; `apply_snapshot` at 05:02:50.590 in the log excerpt).
 
+### Run 2, 2026-10-29
+
+Jim ran `npm run masks:parity -- --i-know` as check 4 of the 1.7.0 batch (`BATCH-1.7.0-CHECKS.md`) on his usual catalog and said it was done [stated: Jim, 2026-10-29, "Check 4, 5 and 6 done."]. Two results files; engine and plugin 1.7.0, Lightroom Classic 15.6 in both [handle: `docs\reports\phase11\MASK-PARITY\run2\`, both `mask_verify_*.json`, `engine_version`, `plugin_version`, `lrc_version`]. Times are UTC from the file names. Each file runs the parity part, then the controller part (`MASK-CONTROLLER.md`).
+
+- **00:48:00: stopped before writing.** `_DSC0091.NEF` (uuid `D838903C-EDE1-4C59-A3A2-02AD371F458C`) read orientation **BA** (flipped), and both parts answered "flipped (BA): nothing written" [handle: `run2\mask_verify_2026-10-29T00-48-00-676Z.json`, `photos`, `steps`]. That uuid is the master `_DSC0091.NEF`, not its virtual copy [handle: `docs\reports\phase11\SDKVER\run2\dumps\2026-10-27T04-21-17-106Z\s10__DSC0091.NEF__D838903C.json`, the uuid in the file name]. This fits the master being the photo that masks:verify run 2 left mirrored (MASKS-VERIFY.md, run 2, put back NO); that run kept file names only, so it stays [inference].
+- Jim then flipped it (Photo > Flip Horizontal) [inference: the next run read it AB; Jim's words for the check do not name the flip].
+- **00:49:50: ran.** The same uuid read **AB** [handle: `run2\mask_verify_2026-10-29T00-49-50-394Z.json`, `photos[0]`], so the master is put back to its start orientation. The parity part on `_DSC0091.NEF`:
+
+1. `brush_feather_density`: a brush of 3 strokes, 368 dabs, +2 EV: **Jim y**, but the step **NO**: "mask AVG parity brush reads back different: CorrectionMasks.0.Masks" [handle: the file, `steps[0]`].
+2. `brush_erase_added`: 4 strokes, 463 dabs: **Jim y**, the step **NO**, the same note [handle: the file, `steps[1]`].
+3. `inverted_copy`: "AVG parity brush inverted", inverted, -2 EV, 4 strokes, 463 dabs: **Jim y**, the step **NO**: both the brush and the inverted copy read back different in `CorrectionMasks.0.Masks` [handle: the file, `steps[2]`]. Both masks read back `active` true [handle: the same steps, `data.mask.active`].
+4. `delete_empty_masks`: "unchanged, 2 masks before, 2 after": YES (no question) [handle: the file, `steps[3]`].
+5. `curve_capture`: "1 field(s) changed": **`MainCurve`**, read back as `["0,0", "128,155", "255,255"]`: YES (no question) [handle: the file, `steps[4].data.changed`].
+
+The file has no `put_back` step and no put-back line in `lines`; headline FAILED (the three NO steps) [handle: the file, `lines`, `headline`]. The bridge log shows each part's snapshot taken and applied again: parity 17:49:55 / 17:50:45, controller 17:51:54 / 17:52:58 local time [handle: `run2\bridge_log_excerpt_2026-10-28T17-48.txt`, `create_snapshot` and `apply_snapshot` lines]. That the apply put each photo back whole is [inference]: the file records no comparison.
+
+Against run 1 (2026-10-28, `_DSC0103.NEF`, 1.6.0): the two brush steps read back as written then and do not now; the inverted copy read back different in both runs, and this run names the field (`CorrectionMasks.0.Masks`, both masks); the curve field changed was `CorrectionActive` then and `MainCurve` now [handle: both files].
+
 ## Numbers
 
 | Field | Value |
 |---|---|
-| Lightroom version / plugin version | not in the file; 15.6 / 1.6.0 in `perf:check` that morning |
+| Lightroom version / plugin version | 15.6 / 1.7.0 [handle: `run2\mask_verify_2026-10-29T00-49-50-394Z.json`, `lrc_version`, `plugin_version`] |
 | `brush_feather_density` YES/NO; read-back problems | YES; none |
 | `brush_erase_added` YES/NO | YES |
 | `point_color` YES/NO; slider readings if NO | **NO** (Jim n); not recorded |
@@ -97,6 +115,21 @@ Put back from the snapshot: YES (no `put_back` step; `apply_snapshot` at 05:02:5
 | `delete_empty_masks`: status; masks before / after | unchanged; 2 / 2 |
 | `curve_capture`: fields changed and their values | `CorrectionActive`: true; no curve field |
 | Put back: YES/NO | YES |
+
+### Run 2 (2026-10-29, `_DSC0091.NEF`, 1.7.0)
+
+| Field | Value |
+|---|---|
+| Lightroom version / plugin version | 15.6 / 1.7.0 |
+| `_DSC0091.NEF` orientation | BA at 00:48:00 (both parts stopped, nothing written); AB at 00:49:50 |
+| `brush_feather_density` YES/NO; read-back problems | NO (Jim y); `CorrectionMasks.0.Masks` |
+| `brush_erase_added` YES/NO | NO (Jim y); `CorrectionMasks.0.Masks` |
+| `inverted_copy` YES/NO | NO (Jim y); both masks `CorrectionMasks.0.Masks` |
+| `delete_empty_masks`: status; masks before / after | unchanged; 2 / 2 |
+| `curve_capture`: fields changed and their values | `MainCurve`: `0,0`, `128,155`, `255,255` |
+| Put back: YES/NO | not in the file |
+
+[handle: `docs\reports\phase11\MASK-PARITY\run2\mask_verify_2026-10-29T00-48-00-676Z.json`, `mask_verify_2026-10-29T00-49-50-394Z.json`]
 
 ## Verdict
 
@@ -109,3 +142,6 @@ Put back from the snapshot: YES (no `put_back` step; `apply_snapshot` at 05:02:5
 - **Fixed on branch `fix/phase11-check-followups`:** the copy is written at -2 EV and the question asks for the top and middle bands brighter and the rest darker; a mask that reads back different now names the differing fields in the step's notes [handle: `engine\tests\masks-verify.test.ts` "names the fields of a mask that reads back different", `engine\tests\masks-verify-parity.test.ts`]. Whether `lr_edit_mask` `copy: true` reads back as written in a session, with no panel open, is [unverified] until a rerun of `npm run masks:parity`.
 - **Mask guard: Jim's decision** [stated: Jim, 2026-10-28, "Go with recommendation"]: keep ours (named History step, read-back, MASKS_CHANGED, revert) and add upstream's Lightroom-version check as a warning only. Upstream writes mask geometry only on Lightroom Classic 15.6 and refuses any other [upstream claim: Automaat/lightroom-mcp 1040453, `plugin\LightroomMCP.lrplugin\GuardedMaskWrite.lua:8`, `:385-392`]; every kept mask pass now carries the warning "Masks were checked in Lightroom Classic 15.6 only, and this is <version>: look at the mask in Lightroom" on any other version [handle: `engine\src\bridge\lightroom.ts` `maskVersionWarnings`; `engine\tests\lrc-baseline.test.ts`, `engine\tests\session-masks-crop.test.ts`]. Upstream's process-version check (15.4 only) was not ported: ours refuses legacy process versions already (ARCHITECTURE section 5) [inference: a newer process version is not refused here].
 - Still [unverified] after this check: what Lightroom counts as an empty mask; an inverted copy of an AI mask; feather values between 0 and 100.
+- **Run 2 (2026-10-29): every brush step NO on the read-back, though Jim saw each as asked.** All three name `CorrectionMasks.0.Masks`, the brush component's dab list [inference: the path into the correction entry], so Lightroom gave the dabs back different from what the engine wrote; the file does not keep the two lists, so how they differ is not known [handle: run 2 file, `steps[0-2].notes`]. Run 1's brush steps read back as written, on another photo and 1.6.0. The `CorrectionActive` reading of run 1's inverted-copy NO does not show here: both masks read back active [handle: run 2 file, `data.mask.active`].
+- **Row 3: a mask's curve is in the table after all.** Jim's drag of the brush mask's curve changed `MainCurve` to `0,0 / 128,155 / 255,255` in the mask table [handle: run 2 file, `curve_capture`]; run 1 saw only `CorrectionActive` change. Why run 1 saw no curve field is [unverified]. The controller part of the same run read its curve writes back through `getValue` (`MASK-CONTROLLER.md`).
+- **Put back of run 2** is not in its results file, and its plugin log copy was not collected into the repo; asked.

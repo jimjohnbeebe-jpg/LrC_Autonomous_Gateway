@@ -1,0 +1,41 @@
+{
+  "check": "masks-verify",
+  "started": "2026-10-29T00-41-56-208Z",
+  "parts": [
+    "person"
+  ],
+  "steps": [
+    {
+      "part": "person",
+      "photo": "PICT0019.DNG",
+      "id": "probe",
+      "question": null,
+      "answer": "Lightroom found 0 person(s)",
+      "ok": false,
+      "notes": [
+        "select a photo with two or more people"
+      ],
+      "data": {
+        "boxes": []
+      }
+    }
+  ],
+  "plugin_version": "1.7.0",
+  "lrc_version": "15.6",
+  "photos": [
+    {
+      "part": "person",
+      "uuid": "B8891F0F-C2B8-4EF2-AC4E-B83DF6AFF461",
+      "filename": "PICT0019.DNG",
+      "orientation": "AB"
+    }
+  ],
+  "lines": [
+    "NO   person PICT0019.DNG probe (select a photo with two or more people)",
+    "---- person: no step answered yes"
+  ],
+  "headline": "FAILED",
+  "node": "v24.11.1",
+  "engine_version": "1.7.0",
+  "plugin_log_copied": "mask_verify_bridge_log_2026-10-29T00-41-56-208Z.txt"
+}

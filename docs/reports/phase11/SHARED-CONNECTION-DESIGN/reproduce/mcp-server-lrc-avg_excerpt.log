@@ -1,0 +1,30 @@
+2026-10-29T00:57:25.574Z [lrc-avg] [info] Initializing server... { metadata: undefined }
+2026-10-29T00:57:25.575Z [lrc-avg] [info] Era probe verdict: legacy (exec lane pinned — no sibling probe) { metadata: undefined }
+2026-10-29T00:57:25.823Z [lrc-avg] [info] Using MCP server command: C:\Program Files\nodejs\node.exe with path: {
+2026-10-29T00:57:25.898Z [lrc-avg] [info] Server started and connected successfully { metadata: undefined }
+2026-10-29T00:57:26.147Z [lrc-avg] [info] Shutting down server... { metadata: undefined }
+2026-10-29T00:57:26.147Z [lrc-avg] [info] Client transport closed { metadata: undefined }
+2026-10-29T00:57:26.147Z [lrc-avg] [info] Server transport closed (intentional shutdown) { metadata: undefined }
+2026-10-29T00:57:26.147Z [lrc-avg] [info] Client transport closed { metadata: undefined }
+2026-10-29T00:57:26.935Z [lrc-avg] [info] Server transport closed { metadata: undefined }
+2026-10-29T00:57:26.935Z [lrc-avg] [info] Client transport closed { metadata: undefined }
+2026-10-29T00:57:26.935Z [lrc-avg] [info] Initializing server... { metadata: undefined }
+2026-10-29T00:57:27.537Z [lrc-avg] [info] Era probe verdict: legacy (exec lane pinned — no sibling probe) { metadata: undefined }
+2026-10-29T00:57:27.568Z [lrc-avg] [info] Using MCP server command: C:\Program Files\nodejs\node.exe with path: {
+2026-10-29T00:57:27.575Z [lrc-avg] [info] Server started and connected successfully { metadata: undefined }
+2026-10-29T00:57:27.655Z [lrc-avg] [info] Message from client: method="initialize" id=0 params { metadata: undefined }
+2026-10-29T00:57:28.471Z [lrc-avg] [info] Message from server: id=0 result { metadata: undefined }
+2026-10-29T00:57:28.472Z [lrc-avg] [info] Message from client: method="notifications/initialized" { metadata: undefined }
+2026-10-29T00:57:28.479Z [lrc-avg] [info] Message from client: method="prompts/list" id=2 params { metadata: undefined }
+2026-10-29T00:57:28.501Z [lrc-avg] [info] Message from server: id=1 result { metadata: undefined }
+2026-10-29T00:57:28.502Z [lrc-avg] [info] Message from server: id=2 result { metadata: undefined }
+2026-10-29T00:57:55.485Z [lrc-avg] [info] Message from client: method="tools/call" id=3 params { metadata: undefined }
+2026-10-29T00:57:56.033Z [lrc-avg] [info] Message from server: id=3 result(1 blocks) { metadata: undefined }
+2026-10-29T00:59:04.916Z [lrc-avg] [info] Message from client: method="tools/call" id=4 params { metadata: undefined }
+2026-10-29T00:59:05.440Z [lrc-avg] [info] Message from server: id=4 result(1 blocks) { metadata: undefined }
+2026-10-29T00:59:59.590Z [lrc-avg] [info] Shutting down server... { metadata: undefined }
+2026-10-29T00:59:59.590Z [lrc-avg] [info] Client transport closed { metadata: undefined }
+2026-10-29T00:59:59.590Z [lrc-avg] [info] Server transport closed (intentional shutdown) { metadata: undefined }
+2026-10-29T00:59:59.590Z [lrc-avg] [info] Client transport closed { metadata: undefined }
+2026-10-29T00:59:59.669Z [lrc-avg] [info] Server transport closed { metadata: undefined }
+2026-10-29T00:59:59.669Z [lrc-avg] [info] Client transport closed { metadata: undefined }

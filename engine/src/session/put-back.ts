@@ -7,7 +7,7 @@
 // writes nothing here: it only reads the photo to log how it is. [handle: tests\hud-put-back.test.ts,
 // against the Lightroom sim; in Lightroom [unverified] until Jim's next HUD check.]
 
-import { differingSettings } from "../params/index.js";
+import { cropDiffers, differingSettings } from "../params/index.js";
 import type { ActionHost, UserAction } from "./hud-actions.js";
 import { userEnded } from "./hud-actions.js";
 import { wakeApproval } from "./approval.js";
@@ -31,8 +31,11 @@ async function finish(host: ActionHost, s: Session, by: UserEnd): Promise<void> 
   if (host.session() !== s) return;
   const { ctx } = host;
   let view = null;
+  let crop = false;
   try {
-    view = ctx.deps.map.fromSdk((await ctx.deps.client.request("get_settings", { photo_uuid: s.master.uuid })).settings);
+    const sdk = (await ctx.deps.client.request("get_settings", { photo_uuid: s.master.uuid })).settings;
+    view = ctx.deps.map.fromSdk(sdk);
+    crop = cropDiffers(sdk, s.startCrop); // issue #115: the canonical settings leave the crop out
   } catch {
     // the log then holds no final settings; the photo was put back by the plugin all the same
   }
@@ -40,7 +43,7 @@ async function finish(host: ActionHost, s: Session, by: UserEnd): Promise<void> 
   s.log.outcome = "revert";
   s.log.ended = ctx.now().toISOString();
   s.log.final_settings = view?.settings ?? null;
-  s.log.revert = view ? { ms: 0, differing: [...differingSettings(view.settings, s.startSettings), ...(view.masks.fingerprint !== s.startMasks ? ["masks"] : [])] } : null;
+  s.log.revert = view ? { ms: 0, differing: [...differingSettings(view.settings, s.startSettings), ...(view.masks.fingerprint !== s.startMasks ? ["masks"] : []), ...(crop ? ["crop"] : [])] } : null;
   s.log.ended_by = { source: by.source, click_id: by.click_id, received: by.received.toISOString(), interrupted, done_ms: ms(by.t0) };
   saveLog(s);
   host.close(s, userEnded(ctx, s, "put_back", by));

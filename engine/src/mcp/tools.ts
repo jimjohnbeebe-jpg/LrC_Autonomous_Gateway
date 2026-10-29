@@ -5,7 +5,7 @@
 //   session  (tools-session.ts): lr_begin_session, lr_step, lr_probe, lr_set_regions, lr_end_session,
 //            lr_get_session_log (Phase 3; the loop is session\manager.ts); lr_select_variant (Phase 4);
 //            lr_approve_pass (Phase 5); lr_list_masks, lr_create_mask, lr_edit_mask, lr_delete_mask
-//            (engine 0.16.0, GitHub issue #59; their definitions are defs-masks.ts).
+//            (engine 0.16.0, GitHub issue #59; their definitions are defs-masks.ts); lr_crop (issue #115).
 //   intents  (tools-intents.ts): lr_list_intents, lr_get_intent, lr_save_intent (Phase 3).
 //   propagation (tools-propagation.ts): lr_sync_series (Phase 4; the sync is sync\sync.ts) and
 //            lr_create_preset_from_active (Phase 4; the preset is presets\create.ts).
@@ -27,7 +27,7 @@
 // both go through the same code. Every call is written to the tool log.
 
 import type { Deck, HudPublisher } from "../hud/index.js";
-import type { ApproveArgs, BeginArgs, CreateMaskArgs, DeleteMaskArgs, EditMaskArgs, EndArgs, ListMasksArgs, ProbeArgs, RegionArgs, SelectArgs, SessionManager, StepArgs } from "../session/index.js";
+import type { ApproveArgs, BeginArgs, CreateMaskArgs, CropArgs, DeleteMaskArgs, EditMaskArgs, EndArgs, ListMasksArgs, ProbeArgs, RegionArgs, SelectArgs, SessionManager, StepArgs } from "../session/index.js";
 import type { ToolLogPendingRecord } from "../log/index.js";
 import { callLogFields } from "./call-context.js";
 import type { ToolError } from "./errors.js";
@@ -65,7 +65,7 @@ import { deleteIntent, getIntent, listIntents, saveIntent, type DeleteIntentArgs
 import { getMetadata, setFlag, setIptc, type GetMetadataArgs, type SetFlagArgs, type SetIptcArgs } from "./tools-metadata.js";
 import * as presets from "./tools-presets.js";
 import { createPresetFromActive, syncSeries, type CreatePresetArgs, type SyncSeriesArgs } from "./tools-propagation.js";
-import { approvePass, beginSession, createMask, deleteMask, editMask, endSession, getSessionLog, listMasks, probe, selectVariant, setRegions, step, type OpenArgs } from "./tools-session.js";
+import { approvePass, beginSession, createMask, crop, deleteMask, editMask, endSession, getSessionLog, listMasks, probe, selectVariant, setRegions, step, type OpenArgs } from "./tools-session.js";
 import { createContext, type LastRender, type ToolContext, type ToolOutput, type ToolsDeps } from "./tools-shared.js";
 import { getPhotoStats, type PhotoStatsArgs } from "./tools-stats.js";
 import { setSettings, type SetSettingsArgs } from "./tools-write.js";
@@ -180,6 +180,10 @@ export class Tools {
 
   deleteMask(args: OpenArgs<DeleteMaskArgs>): Promise<ToolOutput> {
     return deleteMask(this.ctx, args);
+  }
+
+  crop(args: OpenArgs<CropArgs>): Promise<ToolOutput> {
+    return crop(this.ctx, args);
   }
 
   // --- Intents.

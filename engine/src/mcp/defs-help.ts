@@ -15,7 +15,7 @@ export const HELP_TEXT = [
     "session tool takes that session_id, which may be left out while the session is open. One session at a time: it stays open until lr_end_session (accept, revert or " +
     "abandon). The session has a pass cap, max_passes (after pass 0); `cap_reached` in an lr_step result means no pass is left.",
   "",
-  "2. What uses a pass. Each lr_step, and each mask create, edit or delete (lr_create_mask, lr_edit_mask, lr_delete_mask), " +
+  "2. What uses a pass. Each lr_step, each mask create, edit or delete (lr_create_mask, lr_edit_mask, lr_delete_mask), and each lr_crop " +
     "uses one pass, an undone one included. A rename alone (lr_edit_mask with only mask_id and name) uses no pass. " +
     "lr_probe, lr_set_regions, lr_list_masks, lr_get_preview and lr_get_metrics use none. An lr_step that Lightroom takes only " +
     "in part (WRITE_NOT_TAKEN, FEATURE_UNAVAILABLE) is undone whole and uses no pass (`details.undone`). The B&W mixer " +

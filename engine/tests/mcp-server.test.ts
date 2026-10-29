@@ -88,6 +88,7 @@ describe("mcp server", () => {
       "lr_create_preset_from_active",
       "lr_create_snapshot",
       "lr_create_virtual_copies",
+      "lr_crop",
       "lr_delete_intent",
       "lr_delete_mask",
       "lr_delete_snapshot",

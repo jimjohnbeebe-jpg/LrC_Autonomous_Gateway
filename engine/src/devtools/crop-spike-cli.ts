@@ -12,7 +12,7 @@
 import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { BridgeClient, pluginVersionAtLeast } from "../bridge/index.js";
+import { BridgeClient, BridgeError, pluginVersionAtLeast } from "../bridge/index.js";
 import { IntentLibrary } from "../intents/index.js";
 import { acquireInstanceLock, BridgeGate, devOverrides, ENGINE_VERSION, Tools } from "../mcp/index.js";
 import { SESSION_SILENCE_MS } from "../mcp/bridge-gate.js";
@@ -29,8 +29,17 @@ const OUT_DIR = path.join(os.tmpdir(), "LrC-AVG", "crop-spike");
 const COPY = "AVG crop-spike";
 const BOX = { [CROP.left]: 0.1, [CROP.right]: 0.9, [CROP.top]: 0.2, [CROP.bottom]: 0.8 };
 const ANGLE = 5;
-/** The aspect the crop should give, over the uncropped one: 0.8 / 0.6, or its inverse on a photo Lightroom turns a quarter [inference: crop-frame.ts, the keys are fractions of the stored photo]. */
-const RATIOS = [0.8 / 0.6, 0.6 / 0.8];
+/**
+ * The aspect the crop should give over the start render's: the BOX's width / height over the start crop's (the copy
+ * keeps the photo's crop), or its inverse on a photo Lightroom turns a quarter [inference: crop-frame.ts, the keys
+ * are fractions of the stored photo]. Only for a start CropAngle of 0, which run() requires.
+ */
+function ratios(start: SdkSettings): number[] {
+  const side = (s: SdkSettings, a: string, b: string, whole: number): number => (typeof s[b] === "number" ? (s[b] as number) : whole) - (typeof s[a] === "number" ? (s[a] as number) : 0);
+  const shape = (s: SdkSettings): number => side(s, CROP.left, CROP.right, 1) / side(s, CROP.top, CROP.bottom, 1);
+  const k = shape(BOX) / shape(start);
+  return [k, 1 / k];
+}
 const started = new Date().toISOString().replace(/[:.]/g, "-");
 const map = loadDefaultParamMap();
 const QUESTIONS = [
@@ -79,7 +88,8 @@ async function removeCopy(c: Check): Promise<void> {
   const uuids = [c.copy as string];
   await step(c, "lr_remove_photos (the copy)", ["removed"], () => c.tools.call(removePhotos, { uuids, confirm: true }), (j) => [String(j["status"])]);
   await c.client.waitConnected(SESSION_SILENCE_MS).catch(() => undefined); // a Lightroom dialog can silence the plugin (LR_SDK_NOTES "Recorded in Phase 5")
-  const gone = await c.client.request("get_settings", { photo_uuid: c.copy as string }).then(() => false, () => true);
+  // Only unknown_photo means gone; another error (no answer, a disconnect) keeps the copy listed as left.
+  const gone = await c.client.request("get_settings", { photo_uuid: c.copy as string }).then(() => false, (err: unknown) => err instanceof BridgeError && err.code === "unknown_photo");
   c.steps.push({ step: "the copy is no longer in the catalog", expect: ["gone"], statuses: [gone ? "gone" : "still there"] });
   if (gone) c.copy = null;
 }
@@ -93,6 +103,7 @@ async function run(c: Check): Promise<boolean> {
   c.master = uuid;
   const before = await settings(c, uuid);
   Object.assign(c.r, { photo: { uuid, filename: sel.photos[0]?.filename ?? null }, crop_before: cropKeys(before), read_back: {} });
+  if (Number(before[CROP.angle] ?? 0) !== 0) throw new Error(`select a photo that is not straightened (its CropAngle is ${String(before[CROP.angle])}), then run this again. Nothing was written.`);
   c.say("Lightroom switches between Develop and the Library grid; do not click in Lightroom until the questions.");
   const j = await step(c, "lr_create_virtual_copies", ["copied"], () => c.tools.createVirtualCopies({ uuids: [uuid], copy_name: COPY }));
   const copy = (j?.["photos"] as Array<{ copy_uuid?: string | null }> | undefined)?.[0]?.copy_uuid;
@@ -102,10 +113,11 @@ async function run(c: Check): Promise<boolean> {
   await write(c, "crop", BOX);
   const a1 = await render(c, "2-crop");
   const ratio = a0 !== null && a1 !== null ? a1 / a0 : null;
-  const near = ratio !== null && RATIOS.some((r) => Math.abs(ratio / r - 1) < 0.03);
-  c.steps.push({ step: "the crop render's aspect changed as the crop says", expect: ["yes"], statuses: [ratio === null ? "no render" : near ? "yes" : `no: ${ratio.toFixed(3)} of the uncropped aspect`] });
+  const near = ratio !== null && ratios(before).some((r) => Math.abs(ratio / r - 1) < 0.03);
+  c.steps.push({ step: "the crop render's aspect changed as the crop says", expect: ["yes"], statuses: [ratio === null ? "no render" : near ? "yes" : `no: ${ratio.toFixed(3)} of the start aspect`] });
   await write(c, "straighten", { [CROP.angle]: ANGLE });
-  await render(c, "3-straighten");
+  const a2 = await render(c, "3-straighten");
+  c.steps.push({ step: "straighten render saved", expect: ["yes"], statuses: [a2 !== null ? "yes" : "no render"] });
   await c.client.request("select_photo", { uuid: copy });
   const answers: string[] = [];
   for (const q of QUESTIONS) answers.push(await ask(q));

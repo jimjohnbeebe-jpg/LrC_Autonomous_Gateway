@@ -56,6 +56,7 @@ The plugin needs no change: `set_develop_settings` is in plugin 1.7.0 (`plugin\L
 
 - If it says "reload the LrC-AVG plugin": File > Plug-in Manager, LrC-AVG, Reload Plug-in, then run step 3 again.
 - If it says "select ONE raw photo": do step 1 again, then step 3.
+- If it says "select a photo that is not straightened": select another raw photo (its Crop tool Angle at 0) in step 1, then step 3. (Added after the run, for Greptile's review of PR #258: a start angle other than 0 would make the aspect check unreliable [inference]; a photo already cropped is now allowed, and the expected aspect is taken from its crop.)
 - If it says "put back: NO": select the copy "AVG crop-spike" in the Library grid, Photo > Remove Photos..., Remove.
 
 ## Observed (Jim)

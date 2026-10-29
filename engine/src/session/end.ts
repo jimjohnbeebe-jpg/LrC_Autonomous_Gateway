@@ -47,7 +47,6 @@ export async function endSession(ctx: SessionContext, s: Session, args: FinishAr
   let revert: { ms: number; differing: string[] } | null = null;
   let masks = 0;
   let avgStamp: string | null = null;
-  let snapshot: Record<string, unknown> = {};
   try {
     await focus(ctx, s, kept);
     if (args.outcome === "accept") {
@@ -79,7 +78,6 @@ export async function endSession(ctx: SessionContext, s: Session, args: FinishAr
       // The snapshot puts the mask table back too [handle: docs\reports\phase6\masks-capture\check.json `11_snapshot`, 0 differing paths].
       const differing = [...differingSettings(finalSettings, s.startSettings), ...(view.masks.fingerprint !== s.startMasks ? ["masks"] : [])];
       revert = { ms: revertMs, differing };
-      snapshot = differing.length === 0 ? await removeSnapshot(client, s) : { snapshot_removed: false, snapshot_note: KEPT_NOTE(s) };
     }
   } catch (err) {
     throw failed(ctx, s, `end (${args.outcome})`, err);
@@ -96,6 +94,8 @@ export async function endSession(ctx: SessionContext, s: Session, args: FinishAr
   s.log.revert = revert;
   s.log.ended_by = endedBy(user);
   saveLog(s);
+  // Only once the end is saved: a failed save leaves the session open, and its retried revert needs the snapshot (Greptile, PR #257).
+  const snapshot = !revert ? {} : revert.differing.length === 0 ? await removeSnapshot(client, s) : { snapshot_removed: false, snapshot_note: KEPT_NOTE(s) };
   const copies = s.mode === "variants" ? copiesJson(s, args.outcome) : {};
   return {
     json: {

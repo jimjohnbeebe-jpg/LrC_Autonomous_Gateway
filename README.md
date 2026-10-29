@@ -64,6 +64,28 @@ To check the download, compare its SHA-256 with the `SHA256SUMS.txt` file on the
 
 **Updating:** download the new setup and run it the same way. It replaces the old version and keeps your settings, intents and logs.
 
+### Other ways to install
+
+The setup is the way for most people. These are the others, each with the date it was last tested:
+
+| Way | For | Tested |
+|---|---|---|
+| The setup (above) | Claude Desktop, with the Deck | 2026-10-17, install, update and uninstall on one PC |
+| Claude Desktop extension (`.mcpb`) and the plugin zip | Claude Desktop without the setup and without the Deck | 2026-10-27, on one PC that has Node.js 24 installed |
+| Claude Code plugin, from a copy of this repository | Developers | 2026-10-27 |
+| An entry in another AI app's settings | The apps in [Other AI apps](#other-ai-apps) | Per app, in [`docs/CLIENTS.md`](docs/CLIENTS.md) |
+
+**Claude Desktop extension.** From the release after v1.1.0 on (v1.1.0 has only the setup):
+
+1. From the [latest release](https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway/releases/latest), download `lrc-avg-<version>.mcpb` and `LrC-AVG.lrplugin-<version>.zip`.
+2. Unzip the zip into a folder you keep, for example `%USERPROFILE%\LrC-AVG`. Lightroom loads the plugin from that folder, so do not delete it.
+3. In Lightroom, choose **File > Plug-in Manager**, click **Add**, and choose the `LrC-AVG.lrplugin` folder from step 2. Lightroom lists it as **LrC-AVG (Autonomous Vision Gateway)**.
+4. In Claude Desktop, open **Settings > Extensions** and drag the `.mcpb` file onto it. Leave the **Tool profile** setting at `full` ([Tool profiles](#tool-profiles)).
+
+Use the extension or the setup, not both: with both, Claude Desktop runs two LrC-AVG engines and Lightroom has two copies of the plugin under the same id. If the setup is installed, do not add the zip.
+
+**Claude Code plugin.** In PowerShell, in a copy of this repository: `npm install`, `npm run build`, then `claude --plugin-dir <the repository folder>`. Add the plugin from `plugin\LrC-AVG.lrplugin` in the Plug-in Manager, as [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) describes.
+
 ### Check that it works
 
 In Lightroom, choose **File > Plug-in Extras > LrC-AVG - Status**. Outside a chat, it reads **LrC-AVG status: ENGINE NOT CONNECTED (normal outside a chat)**. That is normal: the engine connects at Claude's first LrC-AVG tool call and lets go after a minute without one. During a chat it reads **LrC-AVG status: READY**.
@@ -95,18 +117,18 @@ What that means for you:
 
 ## Other AI apps
 
-LrC-AVG is a standard MCP server, so other MCP clients can start it as well: Claude Code, OpenCode, Hermes Agent and Antigravity CLI were tested. The setup writes only Claude Desktop's entry. The entries for the others, with the paths the setup installs to, are in [`docs/CLIENTS.md`](docs/CLIENTS.md).
+LrC-AVG is a standard MCP server, so other MCP clients can start it as well: Claude Code, OpenCode, Hermes Agent and Antigravity CLI were tested on 2026-10-16. Entries for Codex CLI, Cursor, VS Code (GitHub Copilot) and Windsurf are written from those apps' documentation and have not been tested. The setup writes only Claude Desktop's entry. The entries for the others, with the paths the setup installs to, are in [`docs/CLIENTS.md`](docs/CLIENTS.md).
 
 ## Tool profiles
 
-LrC-AVG has 62 tools. A long tool list costs the AI context and makes a wrong pick likelier, above all for smaller models (issue #165). So the engine offers two profiles:
+LrC-AVG has 65 tools. A long tool list costs the AI context and makes a wrong pick likelier, above all for smaller models (issue #165). So the engine offers two profiles:
 
 | Profile | Tools the AI sees |
 |---|---|
 | `full` (the default) | Every tool |
 | `edit` | The 14 tools a chat needs to edit the selected photo: `lr_help`, `lr_get_active_photo_context`, `lr_get_preview`, `lr_list_intents`, `lr_begin_session`, `lr_step`, `lr_set_regions`, `lr_approve_pass`, `lr_select_variant`, `lr_end_session`, `lr_list_masks`, `lr_create_mask`, `lr_edit_mask`, `lr_delete_mask` |
 
-The `edit` list is less than half the size of the full one: 56,984 characters of tool list against 133,038 [handle: `tools/list` of the built engine under each profile, over the MCP SDK's in-memory transport, 2026-10-28]; how many tokens that is depends on the model [inference]. Under `edit`, a call to another tool is refused with a message saying that the `full` profile has it. `lr_help` names the profile in force (`tool_profile`).
+The `edit` list is less than half the size of the full one: 56,984 characters of tool list against 133,038, measured when the engine had 62 tools [handle: `tools/list` of the built engine under each profile, over the MCP SDK's in-memory transport, 2026-10-28]; how many tokens that is depends on the model [inference]. Under `edit`, a call to another tool is refused with a message saying that the `full` profile has it. `lr_help` names the profile in force (`tool_profile`).
 
 To use the `edit` profile with Claude Desktop, quit Claude Desktop, then run in PowerShell:
 
@@ -293,7 +315,9 @@ Your edits stay in the Lightroom catalog: History steps, snapshots, virtual copi
 
 ## Known limitations
 
-- **One PC tested:** Windows 11, Lightroom Classic 15.5.1 and 15.6. Windows only.
+- **One PC tested:** Windows 11, Lightroom Classic 15.5.1 and 15.6.
+- **Windows only.** macOS is deferred as future development and is not being worked on (decision D4, 2026-10-28, [issue #207](https://github.com/jimjohnbeebe-jpg/LrC_Autonomous_Gateway/issues/207)).
+- **The `.mcpb` extension without Node.js:** it was tested on a PC that has Node.js 24 installed. Whether it runs on a PC without Node.js has not been tested.
 - **Process version:** a photo on a Lightroom process version older than version 5 is refused. Update the photo to the current process version in Develop first, or ask Claude to (version 1.5.0).
 - **Missing originals:** a photo whose original file Lightroom cannot find is refused, even when it has a smart preview. Claude tells you the file name and its last known folder. Reconnect the file in Lightroom (Library > Find All Missing Photos), then ask again. A sync skips such a photo and syncs the rest. If the file goes missing during an edit, the HUD says so, and **Abort** still puts the photo back.
 - **Masks:** linear, radial, luminance, colour range, depth range, brush and AI masks. Colour range, depth range and brush masks are made whole: Claude can change their sliders, name, visibility and inversion, not their shape, and does not combine them with other parts; depth ranges are not yet checked in Lightroom. A mask of two parts is made only in the forms checked in Lightroom: a linear with a radial added, subtracted or intersected; a radial with an AI part (sky, subject, …) added, subtracted or intersected; an AI mask with a radial added; a linear minus a linear; a radial minus a radial; a radial intersected with a luminance part. Only sky was checked among the AI kinds. Claude names any other form it was asked for and leaves the mask as it was. Brush and Color Range masks you made yourself are kept, and take the same edits.
@@ -335,6 +359,15 @@ The evidence behind the behaviour this page describes. Paths are in this reposit
 | Install | An update replaces the old version and keeps the data | [handle: `hooks.nsh:133-178`, no removal when a new setup runs the old uninstaller]; the upgrade over a running install [handle: `docs/reports/phase9/local-install.md` "Numbers", run 1, before the last fixes] |
 | Install | `SHA256SUMS.txt` beside the setup; `Get-FileHash` gives SHA-256 | [handle: `tools/setup/build.ts` `main`; `.github/workflows/release.yml`]; `(Get-FileHash README.md).Algorithm` printed `SHA256` (PowerShell 7, 2026-10-17) |
 | Install | Lightroom loads the plugin at its start | [handle: `plugin/LrC-AVG.lrplugin/Info.lua` `LrForceInitPlugin`] |
+| Other ways to install | The setup tested 2026-10-17: install, update and uninstall | [handle: `docs/reports/phase9/local-install.md` (status accepted)] |
+| Other ways to install | The `.mcpb` installed in Claude Desktop with every tool working, and the Claude Code plugin loaded with `claude --plugin-dir`, on 2026-10-27, on a PC with Node.js 24 | [stated: Jim, 2026-10-27, `docs/reports/phase11/DISTRIBUTION.md` "Run 1"]; the PC's Node.js [handle: `docs/reports/phase11/DISTRIBUTION.md` "Smoke test", Node 24.11.1] |
+| Other ways to install | v1.1.0 has only the setup and `SHA256SUMS.txt`; the `.mcpb` and the plugin zip come with the next release | [handle: `gh release view v1.1.0 --json assets`, 2026-10-29, printed `LrC-AVG-Setup-1.1.0.exe`, `SHA256SUMS.txt`]; the next release's assets [stated: Jim, 2026-10-29, "Go on all.", the plan's decision 4 (a)] |
+| Other ways to install | `npm run package` writes the `.mcpb` and `LrC-AVG.lrplugin-<version>.zip`, whose root holds the `LrC-AVG.lrplugin` folder | [handle: `engine/src/devtools/package-cli.ts:68-70`; `engine/src/devtools/mcpb-manifest.ts`] |
+| Other ways to install | The zip's plugin shows as **LrC-AVG (Autonomous Vision Gateway)** | [handle: `engine/src/setup/plugin-id.ts` `productInfoLua` (moved from `tools/setup/`), applied to the zip by `engine/src/devtools/package-cli.ts`, both from the branch `fix/distribution-artefacts`]; [unverified] in Lightroom from the zip |
+| Other ways to install | Two engines and two plugins under one id when both the setup and the extension are installed | Two engines: [inference: the setup's `lrc-avg` entry and the extension each start one]; what Lightroom does with two plugins of one id [unverified] |
+| Other ways to install | The drag onto **Settings > Extensions** | [unverified: Jim's run installed the `.mcpb`, the click path was not written down (`docs/reports/phase11/DISTRIBUTION.md` "Run 1")] |
+| Other ways to install | The Claude Code plugin: `.claude-plugin/plugin.json` starts `engine/dist/mcp/main.js`, so it needs `npm run build` | [handle: `.claude-plugin/plugin.json` `mcpServers`; `docs/reports/phase11/DISTRIBUTION.md` "Purpose" item 2] |
+| Other AI apps | Four apps tested 2026-10-16; Codex CLI, Cursor, VS Code and Windsurf from their documentation, not tested | [handle: `docs/CLIENTS.md` status table and the doc URLs there]; Codex not run through on 2026-10-29: it could not refresh its sign-in [handle: `npm run clients:probe` with `LRC_AVG_PROBE_CLIENTS=codex`, 2026-10-29, Codex answered "Your access token could not be refreshed"] |
 | If something goes wrong | The Status headlines and the "has not started LrC-AVG yet" line; `status.txt` | [handle: `plugin/LrC-AVG.lrplugin/MenuStatus.lua:114-156, 132`]; Plug-in Manager's **Enable** button [unverified] |
 | Why the setup is not signed | Not signed for cost; SignPath Foundation once people use it | [stated: Jim, 2026-10-17, "it is just a waste of money, I might as well wait to see if it is downloaded by anyone and then do the SignPath signing if so"]; issue #171; SignPath's conditions [handle: https://signpath.org/terms] |
 | Why the setup is not signed | Smart App Control blocks unsigned programs with no override | [handle: https://support.microsoft.com/en-us/topic/what-is-smart-app-control-285ea03d-fa88-4d56-882e-6698afdb7003, read 2026-10-17: "There is currently no way to bypass Smart App Control protection for individual apps"]; the Windows Security path [unverified]; each new version unknown to SmartScreen again [inference: unsigned reputation goes by the file] |
@@ -387,6 +420,8 @@ The evidence behind the behaviour this page describes. Paths are in this reposit
 | Known limitations, Supported formats | Process versions 5 and 6 edited, older ones refused | [handle: `engine/src/params/canonical.ts:37, 43` (`SUPPORTED_PROCESS_VERSIONS` "15.4", "11.0"; labels "Version 6", "Version 5"); `engine/src/params/pipeline.ts` `checkProcessVersion`]; four version 5 photos edited in Lightroom [handle: `docs/reports/phase8/PHASE8.md` "Observed", Part 1] |
 | Known limitations | Missing originals refused, sync skips them, the HUD line, Abort still puts back | [handle: `engine/tests/offline-original.test.ts`, against the simulated plugin]; in Lightroom [handle: `docs/reports/phase8/offline.md` "Observed", the re-run; `docs/reports/phase8/PHASE8.md` Part 1, `ORIGINAL_MISSING`]; the menu item [stated: Jim, 2026-10-09, "a menu item under Library that says 'Find all missing photos'"], its capitals [inference] |
 | Known limitations | No crop | [handle: vault `PRD.md` §3] |
+| Known limitations | Windows only; macOS deferred as future development (D4) | [stated: Jim, 2026-10-28, issue #207 body, "Decided by Jim 2026-10-28", D4: "not likely to happen, defer as future development, not going to be worked on"] |
+| Known limitations | The `.mcpb` tested only with Node.js installed | [handle: `docs/reports/phase11/DISTRIBUTION.md` "Smoke test" (Node 24.11.1) and "Run 1"]; on a PC without Node.js [unverified] |
 | Your first session | Blown out = two or more channels at 253 or above; one channel alone is reported, not corrected (engine 1.1.0, issue #186) | [handle: `engine/src/metrics/compute.ts` `clip_high_tone_pct`; `engine/src/session/guardrail.ts` `advisory`; `engine/tests/session-step.test.ts` "leaves one-channel clipping alone"]; on the six golden fixtures any-channel clipping is 0-19.3 % and two-channel 0-0.71 % [handle: `tests/golden/golden.json`]; on the #186 photo in Lightroom [unverified] until Jim's chat |
 | What else you can ask | A photo seen by id without selecting it (engine 1.1.0) | [handle: `engine/src/mcp/tools-context.ts` `renderPhoto`; `engine/tests/preview-by-uuid.test.ts`, against the simulated plugin]; on an original in Lightroom [unverified] until `npm run denoise:check` (S7 showed virtual copies only, `Develop.lua` `target`) |
 | What else you can ask | AI Denoise: LrC 15, Develop and the selection put back, a snapshot per changed photo, about 10 s a photo (engine and plugin 1.1.0) | [handle: `plugin/LrC-AVG.lrplugin/Denoise.lua`; `engine/src/mcp/tools-denoise.ts`; `engine/tests/catalog-denoise.test.ts`, against a fake plugin]; the calls and the time [upstream claim: Automaat PR #288]; in Lightroom [unverified] until `npm run denoise:check` (`docs/reports/phase9/upstream-ports.md`) |
@@ -403,6 +438,7 @@ The evidence behind the behaviour this page describes. Paths are in this reposit
 | Known limitations | Plug-in Manager pauses; the 60 s allowance untested; Desktop's hold untested | [handle: `PHASE5.md` "Consequences" item 2]; both [unverified] |
 | Known limitations | A call still working at 50 s answers `pending` and hands the result to the same call made again | [handle: `engine/src/mcp/deadline.ts` `CALL_DEADLINE_MS`, `createDeadline`; `engine/tests/mcp-deadline.test.ts`, against the simulated plugin]; that every client's model calls again [unverified] until `npm run clients:check` |
 | Known limitations | Undo line after a disconnect; Tab, Space and Enter; a long note cut with "..." | [handle: `HudText.lua:72-73`; `HudView.lua:76-81`]; all three in Lightroom 15.6 [handle: `docs/reports/phase6/hud-p1-check/check.txt` section 3] |
+| Tool profiles | 65 tools, 14 under `edit` | [handle: `node -e` on `engine/dist/mcp/index.js` and `profiles.js` at `40a6800`, 2026-10-29, printed `TOOL_DEFS.length 65`, `EDIT_TOOLS 14`; the probe self-check printed `"tools":65` the same day] |
 | Tool profiles | `full` by default, `edit` the 14 named tools, LRC_AVG_TOOLS, the setup's `--tools` kept on a rerun, the .mcpb setting | [handle: `engine/src/mcp/profiles.ts`, `engine/src/mcp/server.ts` `createServer`, `engine/src/setup/desktop-config.ts` `keepProfile`, `engine/src/devtools/mcpb-manifest.ts`; `engine/tests/tool-profiles.test.ts`; the setup-cli.js path: `hud/src-tauri/windows/hooks.nsh:26`]; in Claude Desktop [unverified] |
 | LrC-AVG and Automaat/lightroom-mcp | 68 upstream tools at `1040453`, 54 with an equivalent; plug-in ids and ports | [handle: `docs/parity/upstream-tools-1040453.txt`; `docs/PARITY.md` "Count" and "Using both servers", checked by `engine/tests/parity-map.test.ts`]; both plug-ins installed together [unverified] |
 | What else you can ask | Smart collections refused by `lr_add_to_collection`; the 1.5.0 tools | [handle: `engine/src/mcp/defs-files.ts:98`; `engine/src/mcp/defs-organize.ts`, `defs-develop.ts`, `defs-presets.ts`]; in Lightroom [unverified] until `docs/reports/phase11/PARITY-BATCH1-CHECKS.md` is run |

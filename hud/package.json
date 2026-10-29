@@ -13,7 +13,7 @@
     "test": "vitest run ui probe && cd src-tauri && cargo test --quiet"
   },
   "dependencies": {
-    "zod": "4.6.5"
+    "zod": "4.6.6"
   },
   "devDependencies": {
     "@tauri-apps/api": "2.12.1",

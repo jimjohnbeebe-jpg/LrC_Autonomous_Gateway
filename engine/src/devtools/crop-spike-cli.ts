@@ -129,7 +129,7 @@ async function main(say: (l: string) => void): Promise<number> {
   const gate = new BridgeGate(client, () => acquireInstanceLock(dev.lockPort));
   const previews = new PreviewService(client);
   const tools = new Tools({ client, map, previews, intents: new IntentLibrary({ map }), sessionLogDir: mkdtempSync(path.join(os.tmpdir(), "lrc-avg-crop-spike-")), engineVersion: ENGINE_VERSION, ensureBridge: (waitMs) => gate.ready(waitMs), hud: false });
-  const r: Record<string, unknown> = { check: "crop-spike", started, node: process.version, engine_version: ENGINE_VERSION, written: { crop: BOX, angle: ANGLE } };
+  const r: Record<string, unknown> = { check: "crop-spike", started, node: process.version, engine_version: ENGINE_VERSION, written: { crop: BOX, angle: ANGLE }, results: {} };
   const c: Check = { tools, client, previews, say, r, steps: [], master: "", copy: null };
   mkdirSync(OUT_DIR, { recursive: true });
   let worked = false;

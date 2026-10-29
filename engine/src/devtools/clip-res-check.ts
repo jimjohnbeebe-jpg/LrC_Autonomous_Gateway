@@ -12,8 +12,11 @@ import { percentile } from "./perf-check.js";
 export const EDGES = [1600, 2560, 4096] as const;
 export const WARMUPS = 1;
 export const RUNS = 3;
-/** Worst case for one lr_step: its render plus MAX_CORRECTIONS guardrail re-renders (engine\src\session\rules.ts). */
-export const RENDERS_PER_STEP = 1 + MAX_CORRECTIONS;
+/**
+ * Worst case for one lr_step: its render, MAX_CORRECTIONS guardrail re-renders (engine\src\session\rules.ts) and the
+ * render after the pass is undone (engine\src\session\guardrail.ts undo; Greptile, PR #267).
+ */
+export const RENDERS_PER_STEP = 2 + MAX_CORRECTIONS;
 
 export type Times = { export_ms: number; command_ms: number; file_ms: number; metrics_ms: number; total_ms: number };
 export type Clip = { clip_high_pct: number; clip_high_tone_pct: number; clip_low_pct: number };

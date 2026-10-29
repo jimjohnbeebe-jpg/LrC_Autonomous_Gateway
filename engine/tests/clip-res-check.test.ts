@@ -37,8 +37,8 @@ describe("clip:res", () => {
     expect(top?.measured_long_edge).toBe(4096);
   });
 
-  it("estimates the worst-case step as its render plus every guardrail re-render", () => {
-    expect(RENDERS_PER_STEP).toBe(1 + MAX_CORRECTIONS);
+  it("estimates the worst-case step as its render, every guardrail re-render and the undo render", () => {
+    expect(RENDERS_PER_STEP).toBe(2 + MAX_CORRECTIONS);
     expect(summarize(full())[2]?.worst_step_ms).toBe(RENDERS_PER_STEP * 4000);
   });
 

@@ -3,8 +3,11 @@
 // put back his usual entry by hand. "As it was" is the entry in the newest config backup that does not run
 // this folder's engine: apply-config.ts writes a backup next to the config before each change, so the one
 // desktop:install made holds the old entry (setup\apply-config.ts, the `backup` lines).
+// That backup can be stale: desktop:install writes none when the entry is already this folder's engine, so the
+// newest other backup may name an engine that is gone (issue #184: a removed %LOCALAPPDATA%\LrC-AVG\resources
+// folder [handle: issue #184 body]). So an entry whose absolute `command` or `args` paths are missing is refused.
 
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { z } from "zod";
 import { applyDesktopConfig } from "../setup/apply-config.js";
@@ -19,6 +22,11 @@ const same = (a: string, b: string): boolean => path.resolve(a).toLowerCase() ==
 
 /** Whether a config entry runs the engine `mainJs`. */
 const runs = (entry: unknown, mainJs: string): boolean => (withArgs.safeParse(entry).data?.args ?? []).some((arg) => same(arg, mainJs));
+
+/** The absolute paths in an entry's `command` and `args` that do not exist; a bare name such as "node" is not checked. */
+export function missingPaths(entry: ServerEntry): string[] {
+  return [entry.command, ...entry.args].filter((p) => path.isAbsolute(p) && !existsSync(p));
+}
 
 /** The servers of a config text, or null when it is not a Claude Desktop config. */
 function serversOf(text: string): Record<string, unknown> | null {
@@ -55,6 +63,8 @@ export function putClaudeDesktopBack(mainJs: string, env: NodeJS.ProcessEnv = pr
       .map((name) => ({ name, text: readFileSync(path.join(dir, name), "utf8") }));
     const before = entryBefore(backups, mainJs);
     if (!before) return { put_back: "NO", detail: `no config backup in ${dir} holds a "${SERVER_NAME}" entry that runs another engine, or none at all` };
+    const missing = before.entry ? missingPaths(before.entry) : [];
+    if (missing.length > 0) return { put_back: "NO", detail: `the "${SERVER_NAME}" entry in ${before.backup}, the newest backup that runs another engine, names files that no longer exist (${missing.join(", ")}), so it is stale and nothing was written; run npm run desktop:install or set the entry by hand` };
     applyDesktopConfig({ entry: before.entry, configPath: file, env, exact: true });
     return { put_back: "YES", detail: `the "${SERVER_NAME}" entry in ${file} is ${before.entry ? `the one from ${before.backup}` : `removed, because ${before.backup} had none`}` };
   } catch (err) {

@@ -105,8 +105,8 @@ The two Lightroom plug-ins have different identities and ports:
 
 | | Automaat/lightroom-mcp | LrC-AVG |
 |---|---|---|
-| Toolkit id | `com.lightroom.mcp` [handle: upstream `plugin/LightroomMCP.lrplugin/Info.lua:5` at `1040453`] | `com.lrcavg.gateway` from the setup, `com.lrcavg.gateway.dev` from this repo [handle: `tools/setup/plugin-id.ts:8-11`; `plugin/LrC-AVG.lrplugin/Info.lua:35`] |
-| Plug-in name | "Lightroom MCP" [handle: upstream `Info.lua:6`] | "LrC-AVG (Autonomous Vision Gateway)", or "LrC-AVG (dev)" [handle: `tools/setup/plugin-id.ts:10-11`; `plugin/LrC-AVG.lrplugin/Info.lua:36`] |
+| Toolkit id | `com.lightroom.mcp` [handle: upstream `plugin/LightroomMCP.lrplugin/Info.lua:5` at `1040453`] | `com.lrcavg.gateway` from the setup, `com.lrcavg.gateway.dev` from this repo [handle: `engine/src/setup/plugin-id.ts:8-11`; `plugin/LrC-AVG.lrplugin/Info.lua:35`] |
+| Plug-in name | "Lightroom MCP" [handle: upstream `Info.lua:6`] | "LrC-AVG (Autonomous Vision Gateway)", or "LrC-AVG (dev)" [handle: `engine/src/setup/plugin-id.ts:10-11`; `plugin/LrC-AVG.lrplugin/Info.lua:36`] |
 | Ports (127.0.0.1) | 58763 request, 58764 response [handle: upstream `plugin/LightroomMCP.lrplugin/PluginInfoProvider.lua:44-45`, `server/src/ports.ts:1`] | 8765 commands, 8766 responses, changeable in Plug-in Manager [handle: `plugin/LrC-AVG.lrplugin/Bridge.lua:2-3`, `Prefs.lua:44`; `engine/src/bridge/endpoint.ts:19-20`] |
 | Platforms | macOS and Windows | Windows |
 

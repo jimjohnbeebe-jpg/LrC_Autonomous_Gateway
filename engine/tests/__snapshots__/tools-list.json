@@ -3116,7 +3116,7 @@
   {
     "name": "lr_import_photos",
     "title": "Import photos into the catalog",
-    "description": "Import a photo file, or the photo files in a folder (raw, DNG, JPEG, TIFF, PNG, HEIC, PSD), into the Lightroom catalog: where they are, or copied first into copy_to (do that for a memory card). A file the catalog already holds at that path is not imported again (`already_in_catalog`, with its uuid); a photo imported earlier from another path is not recognised. Returns the uuids, each with its source file, its path in the catalog and capture_time, for lr_add_to_collection, lr_set_keywords and the other tools. No develop or metadata preset is passed to the import; lr_remove_photos removes photos from the catalog again. A call works for about 30 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling until `not_yet` is gone, and tell the user how far along it is. A call still busy at 50 seconds returns `pending` with `next`. Here `resume_after` comes with `not_yet`: pass it back to go on from the next file. Tell the user what will change before calling. Runs only between editing sessions. If Lightroom stops answering, the call stops and the error lists what was done.",
+    "description": "Import a photo file, or the photo files in a folder (raw, DNG, JPEG, TIFF, PNG, HEIC, PSD), into the Lightroom catalog: where they are, or copied first into copy_to (do that for a memory card). A file the catalog already holds at that path is not imported again (`already_in_catalog`, with its uuid); a photo imported earlier from another path is not recognised. Returns the uuids, each with its source file, its path in the catalog and capture_time, for lr_add_to_collection, lr_set_keywords and the other tools. With copy_to, folder_template and name_template sort and rename the copies by capture date, which the engine reads from NEF, DNG and the other TIFF-based raws, TIFF and JPEG; a file it cannot read (CR3, RAF, HEIC, PNG, PSD) fails alone with NO_CAPTURE_DATE. dry_run: true shows where each file would go and changes nothing. No develop or metadata preset is passed to the import; lr_remove_photos removes photos from the catalog again. A call works for about 30 seconds, then stops starting new photos and returns `not_yet` and `next`, saying how to go on: keep calling until `not_yet` is gone, and tell the user how far along it is. A call still busy at 50 seconds returns `pending` with `next`. Here `resume_after` comes with `not_yet`: pass it back to go on from the next file. Tell the user what will change before calling. Runs only between editing sessions. If Lightroom stops answering, the call stops and the error lists what was done.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -3130,6 +3130,18 @@
           "type": "string",
           "minLength": 1
         },
+        "folder_template": {
+          "description": "with copy_to: the folder below copy_to for each file, from its capture date instead of its folder below the source, e.g. \"{yyyy}-{mm}-{dd}\" or \"{yyyy}/{yyyy}-{mm}-{dd}\" (a level per / or \\). Tokens {yyyy} {mm} {dd} {name} (the source file's name without extension)",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "name_template": {
+          "description": "with copy_to: the copy's name without extension (the extension and the XMP sidecar follow it), e.g. \"{yyyy}{mm}{dd}-{name}\"; must hold {name}; no \\ or /",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
         "recursive": {
           "description": "look in the source's subfolders too (default true)",
           "type": "boolean"
@@ -3138,6 +3150,10 @@
           "description": "to go on after a call that ran out of time: that call's `resume_after` (a source file's path); the call starts with the file after it. Omit to start from the first file",
           "type": "string",
           "minLength": 1
+        },
+        "dry_run": {
+          "description": "true: return `planned` (each file's source, the path it would have and its capture_date) and copy, import and change nothing; default false",
+          "type": "boolean"
         }
       },
       "required": [

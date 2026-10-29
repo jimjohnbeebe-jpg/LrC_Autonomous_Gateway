@@ -75,7 +75,7 @@ const importArgs = z
       .describe("copy the files here first, keeping their folders below the source, and import the copies (never overwrites; a same-size file already there counts as the copy). Omit to import the files where they are"),
     folder_template: template(true)
       .optional()
-      .describe("with copy_to: the folder below copy_to for each file, from its capture date instead of its folder below the source, e.g. \"{yyyy}-{mm}-{dd}\" or \"{yyyy}\\\\{yyyy}-{mm}-{dd}\". Tokens {yyyy} {mm} {dd} {name} (the source file's name without extension)"),
+      .describe("with copy_to: the folder below copy_to for each file, from its capture date instead of its folder below the source, e.g. \"{yyyy}-{mm}-{dd}\" or \"{yyyy}/{yyyy}-{mm}-{dd}\" (a level per / or \\). Tokens {yyyy} {mm} {dd} {name} (the source file's name without extension)"),
     name_template: template(false)
       .optional()
       .describe("with copy_to: the copy's name without extension (the extension and the XMP sidecar follow it), e.g. \"{yyyy}{mm}{dd}-{name}\"; must hold {name}; no \\ or /"),

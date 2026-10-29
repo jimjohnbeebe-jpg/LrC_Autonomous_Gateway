@@ -1,0 +1,13 @@
+{
+  "check": "presets-msix",
+  "issue": 182,
+  "started_at": "2026-10-29T11:28:16.677Z",
+  "node": "v24.11.1",
+  "preset_name": "AVG msix check caf6b2",
+  "desktop_entry_runs_this_engine": "no",
+  "put_back": {
+    "put_back": "NOT NEEDED",
+    "detail": "the \"lrc-avg\" entry in %USERPROFILE%\\AppData\\Local\\Claude-Data\\claude_pzs8sxrjxfjjc\\claude_desktop_config.json does not run D:\\Developer\\LrC_Autonomous_Gateway\\.claude\\worktrees\\wf_a3c10ae6-b78-2\\engine\\dist\\mcp\\main.js"
+  },
+  "headline": "FAILED"
+}

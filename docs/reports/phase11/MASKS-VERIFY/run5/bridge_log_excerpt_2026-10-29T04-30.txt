@@ -1,0 +1,73 @@
+2026-10-29 04:30:25.852 INFO  bridge: receive: engine connected
+2026-10-29 04:30:26.369 INFO  bridge: send: engine connected
+2026-10-29 04:30:26.375 INFO  bridge: hello 0ea270ad-fe70-43a7-a795-400b6fbc40b7
+2026-10-29 04:30:46.906 INFO  bridge: get_selection ca843838-4fcb-4076-a080-4e2f46eba2f9
+2026-10-29 04:30:46.912 INFO  bridge: get_settings d63b7949-23ac-41f3-8182-09d1a569b683
+2026-10-29 04:30:46.933 INFO  bridge: select_photo b2d102d8-ddea-4cd7-9d02-1dee651d45d9
+2026-10-29 04:30:46.941 INFO  bridge: get_settings e8e16c69-e48f-4981-aba1-5c727ab9b51d
+2026-10-29 04:30:46.957 INFO  bridge: create_snapshot 49dac918-c75e-4c9f-9914-70e2ab888ae6
+2026-10-29 04:30:47.019 INFO  bridge: apply_settings 3ef95ce0-08fd-407c-b923-da0609fd8a2b
+2026-10-29 04:30:47.375 INFO  bridge: update_ai_settings 74397ebd-19eb-4483-ae78-3fb0913b7133
+2026-10-29 04:30:47.447 INFO  bridge: get_settings 1276d363-1c04-45d6-ace9-afd86a161d5e
+2026-10-29 04:30:48.047 INFO  bridge: get_settings 7c135b74-69dd-44c0-a097-ac44717788bd
+2026-10-29 04:30:48.600 INFO  bridge: get_settings 5a83da08-ac9c-4ff2-b7d8-89e20bc3fabb
+2026-10-29 04:30:49.143 INFO  bridge: get_settings ad8815bf-21e0-458e-8c22-261f43e255e4
+2026-10-29 04:30:49.901 INFO  bridge: get_settings 6b332b46-463a-4d92-ad8c-13b1411963a8
+2026-10-29 04:30:50.522 INFO  bridge: get_settings 9eed142b-fbc5-4e56-a1e3-a41112d52371
+2026-10-29 04:30:51.051 INFO  bridge: get_settings 1cd43336-8a84-4978-8cce-02481b47c410
+2026-10-29 04:30:51.593 INFO  bridge: get_settings 16ce5813-1441-45e9-aa78-e9cbfea94241
+2026-10-29 04:30:52.117 INFO  bridge: get_settings 22ba9f2c-e4ed-48ee-85bd-9e7bd6bb9d55
+2026-10-29 04:30:52.641 INFO  bridge: get_settings 3bfd331a-86c1-4a94-ac04-8bb50a5b57f1
+2026-10-29 04:30:53.178 INFO  bridge: get_settings 61506682-3848-4c79-9d49-ac9d9ce1fc36
+2026-10-29 04:30:53.721 INFO  bridge: get_settings 58e28e97-241c-42fd-a668-6d595a9a333c
+2026-10-29 04:30:54.252 INFO  bridge: get_settings 5bf62059-47e6-487e-baef-745d1bf69d57
+2026-10-29 04:30:54.771 INFO  bridge: get_settings 772768e9-b509-4250-821c-f3430d727545
+2026-10-29 04:30:55.297 INFO  bridge: get_settings e1983bbc-ef3d-41f9-b261-c691317ce2ce
+2026-10-29 04:30:55.825 INFO  bridge: get_settings 0ffbfda6-7ab8-42d3-9da3-33bf1746e06b
+2026-10-29 04:30:56.358 INFO  bridge: get_settings 98c23f33-5fd8-41a9-9548-9745d176c760
+2026-10-29 04:30:56.875 INFO  bridge: get_settings 5eacc1aa-835d-446a-a542-6a5ca101f2bf
+2026-10-29 04:30:57.408 INFO  bridge: get_settings fe433b7a-26db-4b78-9996-63fdb583784b
+2026-10-29 04:30:57.938 INFO  bridge: get_settings f610a4e7-c222-4d4a-b84f-c9067804c40a
+2026-10-29 04:30:58.457 INFO  bridge: get_settings 500abc45-f578-4a2b-81d4-4830cee87cbe
+2026-10-29 04:30:58.976 INFO  bridge: get_settings 7be0e7e2-6fe2-4e20-8e77-de3c0dff67c0
+2026-10-29 04:30:59.508 INFO  bridge: get_settings 28f2349a-d360-4e47-8223-6aa44ad570bf
+2026-10-29 04:31:00.026 INFO  bridge: get_settings 7ae7ece5-2525-4760-9c12-e145fd9a9386
+2026-10-29 04:31:00.557 INFO  bridge: get_settings dd80d6e7-5e01-408e-9405-effe140a5c99
+2026-10-29 04:31:01.086 INFO  bridge: get_settings 94ac78c3-347d-4c46-acc1-e746a2c76fed
+2026-10-29 04:31:01.629 INFO  bridge: get_settings 95a11a85-2a1d-42a7-8f8e-f8e8dc6e062f
+2026-10-29 04:31:02.163 INFO  bridge: get_settings a9d37b78-9c94-4dca-8d55-4920e7863579
+2026-10-29 04:31:02.702 INFO  bridge: get_settings 7a43b957-5d68-4cc4-a2f7-ade57d10958d
+2026-10-29 04:31:03.236 INFO  bridge: get_settings c73994fc-c224-4de1-849b-93fb88cae4a3
+2026-10-29 04:31:03.764 INFO  bridge: get_settings 5ac3f4bf-8350-4b40-8811-a8135c11cd9d
+2026-10-29 04:31:04.292 INFO  bridge: get_settings babe7dce-dab4-4d75-9ca1-d86dc377cd36
+2026-10-29 04:31:04.813 INFO  bridge: get_settings faeb42c7-1763-49a8-b955-8bb4a9280271
+2026-10-29 04:31:05.364 INFO  bridge: get_settings 54483d63-914c-4cbe-9b7f-74997b17a650
+2026-10-29 04:31:05.891 INFO  bridge: get_settings b4f9a424-3d24-4bcb-99ca-e5f27702d5cb
+2026-10-29 04:31:06.415 INFO  bridge: get_settings af4e880a-f129-42f9-b828-5af77f951fcb
+2026-10-29 04:31:06.944 INFO  bridge: get_settings f0bc40d1-192d-4726-95dd-bc860f24e20b
+2026-10-29 04:31:07.480 INFO  bridge: get_settings 8ceba408-7438-4c15-bc56-dc765761d44c
+2026-10-29 04:31:08.008 INFO  bridge: get_settings 63b0f45d-9443-4d35-875d-9cbca2f714f7
+2026-10-29 04:31:08.543 INFO  bridge: get_settings 90311e5a-5dee-442c-b502-22bc712cec54
+2026-10-29 04:31:09.069 INFO  bridge: get_settings 85c7b23b-5616-4b91-9069-3080ba4cc4e0
+2026-10-29 04:31:09.593 INFO  bridge: get_settings c1f891a0-05e8-44f6-889e-183de3808407
+2026-10-29 04:31:10.134 INFO  bridge: get_settings 642cd07e-6ec3-4b5b-ad81-dee46de75a6b
+2026-10-29 04:31:10.670 INFO  bridge: get_settings b13c2ef8-b4b8-4be7-bb6f-bcfbf4652790
+2026-10-29 04:31:11.213 INFO  bridge: get_settings 674dafb7-7d79-48e6-991b-a4de9de928e8
+2026-10-29 04:31:11.741 INFO  bridge: get_settings 4af01c3b-c9bf-4c1e-9f7c-c6c311f7e8ed
+2026-10-29 04:31:12.281 INFO  bridge: get_settings dfee9551-de64-4a18-bb77-5845a1fde09e
+2026-10-29 04:31:12.852 INFO  bridge: get_settings a1b5b4f0-ebf8-49e2-878b-4ece3774d9a1
+2026-10-29 04:31:13.382 INFO  bridge: get_settings bd19075f-378c-4b7b-9ada-45613e84ef89
+2026-10-29 04:31:13.899 INFO  bridge: get_settings be74ec6a-8bda-4c3e-89f0-59572cefff35
+2026-10-29 04:31:14.418 INFO  bridge: get_settings de0e9036-828f-4c00-b22e-a96ace49c4a2
+2026-10-29 04:31:14.968 INFO  bridge: get_settings 1ef91aa4-09bf-4afb-9843-9c6e170453b9
+2026-10-29 04:31:15.484 INFO  bridge: get_settings d8fef8bf-e7c0-4977-b43f-41cd7fddf646
+2026-10-29 04:31:16.008 INFO  bridge: get_settings 58ac4673-8c4b-4232-ac2d-71c9c89c06f1
+2026-10-29 04:31:16.532 INFO  bridge: get_settings 746ee7aa-9d02-4495-9e55-b5f74877ddbb
+2026-10-29 04:31:16.963 INFO  bridge: get_settings 44438afa-be90-43f7-826e-4a47fd95bc96
+2026-10-29 04:31:25.706 INFO  bridge: select_photo dc7fb435-426b-4b98-910e-a4b84554c6cb
+2026-10-29 04:31:25.712 INFO  bridge: apply_snapshot 57d43aa5-cde5-4445-b049-8b9bec840a2a
+2026-10-29 04:31:26.222 INFO  develop: switched from library to develop in 0 ms
+2026-10-29 04:31:27.246 WARN  stall-diag: stall 1446 ms after idle
+2026-10-29 04:31:30.784 WARN  stall-diag: stall 2911 ms after idle
+2026-10-29 04:31:30.999 INFO  bridge: receive: closed
+2026-10-29 04:31:31.000 INFO  stall-diag: rebind receive (closed, generation 1)

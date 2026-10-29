@@ -210,3 +210,15 @@ Fixed in version 1.7.2 [stated: Jim, 2026-10-29, "1. Go with recommendations. 2.
    npm run develop-catalog:check
    ```
    Do steps 29 and 30 above. Say **done**.
+
+### Results of the 1.7.2 reruns, 2026-10-29
+
+Engine and plugin 1.7.2, Lightroom Classic 15.6 in every file; the y/n answers are Jim's.
+
+| # | Result | Files (`docs\reports\phase11\`) |
+|---|---|---|
+| 3 | WORKED: the Entire Person mask computed on `PICT0019.DNG` (29.6 s), Jim y | `MASKS-VERIFY\run5\mask_verify_2026-10-29T11-30-23-704Z.json` (`MASKS-VERIFY.md` run 5) |
+| 4 | WORKED: the brush, the erase stroke and the inverted copy read back as written, all five steps YES, Jim y to each question | `MASK-PARITY\run3\mask_verify_2026-10-29T11-35-53-017Z.json` (`MASK-PARITY.md` run 3) |
+| 5 | first try FAILED: a `get_settings` before the write had no answer in 15 s (nothing written; the copies removed, put back YES); the rerun WORKED: undo `via` "snapshot" and copy A back, `not_taken` put back, 3 removed, selection back, answers y, y, y, y | `DEVELOP-CATALOG-D123\run2\develop_catalog_check_2026-10-29T11-37-51-809Z.json`, `...T11-48-34-886Z.json` (`DEVELOP-CATALOG-D123.md` run 2) |
+
+Run after these, on the same Lightroom: `npm run crop:spike` (`CROP-SPIKE.md`: WORKED on the second run, after the harness fix `fe94322`) and `npm run presets:msix` (`PRESET-MSIX.md`: WORKED, NOT REDIRECTED).

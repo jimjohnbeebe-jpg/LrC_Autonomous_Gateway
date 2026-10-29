@@ -1,0 +1,55 @@
+{
+  "check": "crop-spike",
+  "started": "2026-10-29T11-49-53-414Z",
+  "node": "v24.11.1",
+  "engine_version": "1.7.2",
+  "written": {
+    "crop": {
+      "CropLeft": 0.1,
+      "CropRight": 0.9,
+      "CropTop": 0.2,
+      "CropBottom": 0.8
+    },
+    "angle": 5
+  },
+  "plugin_version": "1.7.2",
+  "lrc_version": "15.6",
+  "photo": {
+    "uuid": "2E4A9191-A6D0-4293-BC9B-AD3CFC68D6F0",
+    "filename": "20250413-_OZ81430.NEF"
+  },
+  "crop_before": {
+    "CropConstrainToWarp": 0,
+    "CropTop": 0,
+    "CropBottom": 1,
+    "CropConstrainToUnitSquare": 1,
+    "CropAngle": 0,
+    "CropLeft": 0,
+    "CropRight": 1
+  },
+  "read_back": {},
+  "errors": [
+    "no virtual copy was made, so nothing else was tried"
+  ],
+  "steps": [
+    {
+      "step": "lr_create_virtual_copies",
+      "expect": [
+        "copied"
+      ],
+      "statuses": [
+        "copied"
+      ]
+    },
+    {
+      "step": "lr_create_virtual_copies",
+      "expect": [
+        "copied"
+      ],
+      "statuses": [],
+      "error": "Cannot set properties of undefined (setting 'lr_create_virtual_copies')"
+    }
+  ],
+  "copy_left": null,
+  "headline": "FAILED"
+}

@@ -1,0 +1,333 @@
+{
+  "check": "develop-catalog-check",
+  "started": "2026-10-29T11-48-34-886Z",
+  "node": "v24.11.1",
+  "engine_version": "1.7.2",
+  "results": {
+    "lr_create_virtual_copies A": {
+      "photos": [
+        {
+          "uuid": "2E4A9191-A6D0-4293-BC9B-AD3CFC68D6F0",
+          "status": "copied",
+          "copy_uuid": "39281A66-FACB-455D-9505-773A64E0677E",
+          "copy_name": "AVG develop-catalog-check A"
+        }
+      ],
+      "failed": [],
+      "undo": "lr_remove_photos with a copy_uuid and confirm: true removes that copy from the catalog; the master stays."
+    },
+    "lr_create_virtual_copies B": {
+      "photos": [
+        {
+          "uuid": "2E4A9191-A6D0-4293-BC9B-AD3CFC68D6F0",
+          "status": "copied",
+          "copy_uuid": "B73CACA7-5704-4768-938D-FCB7F3F2138C",
+          "copy_name": "AVG develop-catalog-check B"
+        }
+      ],
+      "failed": [],
+      "undo": "lr_remove_photos with a copy_uuid and confirm: true removes that copy from the catalog; the master stays."
+    },
+    "lr_create_virtual_copies C": {
+      "photos": [
+        {
+          "uuid": "2E4A9191-A6D0-4293-BC9B-AD3CFC68D6F0",
+          "status": "copied",
+          "copy_uuid": "5E826341-6D9E-4BC1-A5D8-69EDFCC1103A",
+          "copy_name": "AVG develop-catalog-check C"
+        }
+      ],
+      "failed": [],
+      "undo": "lr_remove_photos with a copy_uuid and confirm: true removes that copy from the catalog; the master stays."
+    },
+    "refused: unknown key": {
+      "photos": [],
+      "counts": {
+        "failed": 1
+      },
+      "failed": [
+        {
+          "uuid": "39281A66-FACB-455D-9505-773A64E0677E",
+          "code": "UNKNOWN_PARAMETER",
+          "message": "\"NotALightroomKey\" is not a Lightroom key of raw photos (the pinned getDevelopSettings() dump); key names are case-sensitive; nothing was written to the photo. lr_get_metadata with raw: true lists its keys."
+        }
+      ],
+      "undo": "Each photo changed has the snapshot \"AVG pre-set f1a3a2\" from just before (Develop, Snapshots panel; or lr_apply_snapshot with its id), which puts it back. Lightroom's History panel also has the step."
+    },
+    "refused: Exposure2012 out of range": {
+      "photos": [],
+      "counts": {
+        "failed": 1
+      },
+      "failed": [
+        {
+          "uuid": "39281A66-FACB-455D-9505-773A64E0677E",
+          "code": "OUT_OF_RANGE",
+          "message": "exposure = 9 is outside -5..5"
+        }
+      ],
+      "undo": "Each photo changed has the snapshot \"AVG pre-set b52f3d\" from just before (Develop, Snapshots panel; or lr_apply_snapshot with its id), which puts it back. Lightroom's History panel also has the step."
+    },
+    "lr_set_develop_settings on copy A": {
+      "photos": [
+        {
+          "uuid": "39281A66-FACB-455D-9505-773A64E0677E",
+          "snapshot": {
+            "id": "5FA0E0B4-D5C4-4ABF-9E7D-62CE662EE9E0",
+            "name": "AVG pre-set c69be4"
+          },
+          "ms": 15685,
+          "status": "set",
+          "history_name": "AVG set develop settings c69be4",
+          "unranged": [
+            "LensManualDistortionAmount"
+          ],
+          "names": "canonical",
+          "changed": {
+            "exposure": {
+              "before": 0,
+              "after": 0.5
+            },
+            "LensManualDistortionAmount": {
+              "before": 0,
+              "after": 10
+            }
+          }
+        }
+      ],
+      "counts": {
+        "set": 1
+      },
+      "failed": [],
+      "undo": "Each photo changed has the snapshot \"AVG pre-set c69be4\" from just before (Develop, Snapshots panel; or lr_apply_snapshot with its id), which puts it back. Lightroom's History panel also has the step."
+    },
+    "lr_undo_last_step": {
+      "undone": true,
+      "via": "snapshot",
+      "note": "The photo was put back from the snapshot \"AVG pre-set c69be4\" taken just before this engine's last lr_set_develop_settings write; Lightroom's History panel has the step.",
+      "last_write": {
+        "uuid": "39281A66-FACB-455D-9505-773A64E0677E",
+        "reverted": true
+      }
+    },
+    "copy A after the undo, against before the write": {
+      "names": "canonical",
+      "changed": {}
+    },
+    "lr_set_develop_settings LensManualDistortionAmount 1000": {
+      "photos": [
+        {
+          "uuid": "39281A66-FACB-455D-9505-773A64E0677E",
+          "snapshot": {
+            "id": "D42C7FD7-31D8-4941-94E3-43F97348A480",
+            "name": "AVG pre-set 75bd0d"
+          },
+          "ms": 2644,
+          "status": "not_taken",
+          "history_name": "AVG set develop settings 75bd0d",
+          "unranged": [
+            "LensManualDistortionAmount"
+          ],
+          "not_taken": [
+            {
+              "sdk_key": "LensManualDistortionAmount",
+              "written": 1000,
+              "read_back": 0
+            }
+          ],
+          "reason": "Lightroom did not take LensManualDistortionAmount as written, so the photo was put back from the snapshot",
+          "names": "canonical",
+          "changed": {}
+        }
+      ],
+      "counts": {
+        "not_taken": 1
+      },
+      "failed": [],
+      "undo": "Each photo changed has the snapshot \"AVG pre-set 75bd0d\" from just before (Develop, Snapshots panel; or lr_apply_snapshot with its id), which puts it back. Lightroom's History panel also has the step."
+    },
+    "copy A after the put-back, against before that write": {
+      "names": "canonical",
+      "changed": {}
+    },
+    "lr_remove_photos (the three copies and a made-up uuid)": {
+      "status": "removed",
+      "removed": [
+        "39281A66-FACB-455D-9505-773A64E0677E",
+        "B73CACA7-5704-4768-938D-FCB7F3F2138C",
+        "5E826341-6D9E-4BC1-A5D8-69EDFCC1103A"
+      ],
+      "not_removed": [],
+      "missing": [
+        "00000000-0000-0000-0000-00000000d123"
+      ],
+      "note": "Removed from the catalog only: the files stay on disk, and lr_import_photos imports them again, but what only the catalog held (Develop settings, keywords, collections and other metadata not saved to the files) does not come back."
+    },
+    "your photo's settings against the start": {
+      "names": "canonical",
+      "changed": {}
+    }
+  },
+  "plugin_version": "1.7.2",
+  "lrc_version": "15.6",
+  "photo": {
+    "uuid": "2E4A9191-A6D0-4293-BC9B-AD3CFC68D6F0",
+    "filename": "20250413-_OZ81430.NEF"
+  },
+  "answers": [
+    "y",
+    "y",
+    "y",
+    "y"
+  ],
+  "lines": [
+    "YES lr_create_virtual_copies A: copied (expected copied)",
+    "YES lr_create_virtual_copies B: copied (expected copied)",
+    "YES lr_create_virtual_copies C: copied (expected copied)",
+    "YES refused: unknown key: UNKNOWN_PARAMETER (expected UNKNOWN_PARAMETER)",
+    "YES refused: Exposure2012 out of range: OUT_OF_RANGE (expected OUT_OF_RANGE)",
+    "YES lr_set_develop_settings on copy A: set (expected set)",
+    "YES lr_undo_last_step: undone (expected undone)",
+    "YES copy A after the undo, against before the write: back (expected back)",
+    "YES lr_set_develop_settings LensManualDistortionAmount 1000: not_taken (expected not_taken)",
+    "YES copy A after the put-back, against before that write: back (expected back)",
+    "YES lr_remove_photos (the three copies and a made-up uuid): removed (expected removed)",
+    "YES the copies are no longer in the catalog: gone (expected gone)",
+    "YES the selection is as it was: yes (expected yes)",
+    "YES your photo's settings against the start: back (expected back)",
+    "YES Jim's answer 1: y",
+    "YES Jim's answer 2: y",
+    "YES Jim's answer 3: y",
+    "YES Jim's answer 4: y"
+  ],
+  "steps": [
+    {
+      "step": "lr_create_virtual_copies A",
+      "expect": [
+        "copied"
+      ],
+      "statuses": [
+        "copied"
+      ]
+    },
+    {
+      "step": "lr_create_virtual_copies B",
+      "expect": [
+        "copied"
+      ],
+      "statuses": [
+        "copied"
+      ]
+    },
+    {
+      "step": "lr_create_virtual_copies C",
+      "expect": [
+        "copied"
+      ],
+      "statuses": [
+        "copied"
+      ]
+    },
+    {
+      "step": "refused: unknown key",
+      "expect": [
+        "UNKNOWN_PARAMETER"
+      ],
+      "statuses": [
+        "UNKNOWN_PARAMETER"
+      ]
+    },
+    {
+      "step": "refused: Exposure2012 out of range",
+      "expect": [
+        "OUT_OF_RANGE"
+      ],
+      "statuses": [
+        "OUT_OF_RANGE"
+      ]
+    },
+    {
+      "step": "lr_set_develop_settings on copy A",
+      "expect": [
+        "set"
+      ],
+      "statuses": [
+        "set"
+      ]
+    },
+    {
+      "step": "lr_undo_last_step",
+      "expect": [
+        "undone"
+      ],
+      "statuses": [
+        "undone"
+      ]
+    },
+    {
+      "step": "copy A after the undo, against before the write",
+      "expect": [
+        "back"
+      ],
+      "statuses": [
+        "back"
+      ]
+    },
+    {
+      "step": "lr_set_develop_settings LensManualDistortionAmount 1000",
+      "expect": [
+        "not_taken"
+      ],
+      "statuses": [
+        "not_taken"
+      ]
+    },
+    {
+      "step": "copy A after the put-back, against before that write",
+      "expect": [
+        "back"
+      ],
+      "statuses": [
+        "back"
+      ]
+    },
+    {
+      "step": "lr_remove_photos (the three copies and a made-up uuid)",
+      "expect": [
+        "removed"
+      ],
+      "statuses": [
+        "removed"
+      ]
+    },
+    {
+      "step": "the copies are no longer in the catalog",
+      "expect": [
+        "gone"
+      ],
+      "statuses": [
+        "gone"
+      ]
+    },
+    {
+      "step": "the selection is as it was",
+      "expect": [
+        "yes"
+      ],
+      "statuses": [
+        "yes"
+      ]
+    },
+    {
+      "step": "your photo's settings against the start",
+      "expect": [
+        "back"
+      ],
+      "statuses": [
+        "back"
+      ]
+    }
+  ],
+  "copies_left": [],
+  "headline": "WORKED"
+}

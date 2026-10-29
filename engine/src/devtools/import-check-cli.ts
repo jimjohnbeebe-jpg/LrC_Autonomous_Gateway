@@ -36,7 +36,8 @@ const ARGS = { folder_template: "{yyyy}-{mm}-{dd}", name_template: "{yyyy}{mm}{d
 const map = loadDefaultParamMap();
 
 type Photo = { uuid: string; path: string; source: string; stack?: { top_uuid: string | null; position: number; count: number } };
-type Check = StepLog & { tools: Tools; card: string; copyTo: string; uuids: string[] };
+/** `unsure`: an import call stopped, so a photo may be in the catalog with no uuid known. */
+type Check = StepLog & { tools: Tools; card: string; copyTo: string; uuids: string[]; unsure: boolean };
 
 /** Where each copy should land: the NEFs under the NEF's capture date (2026-09-06), the DNG under 2026-01-10 [handle: scratchpad exifprobe.mjs, PR #263]. */
 const expected = (copyTo: string): string[] => [
@@ -57,7 +58,14 @@ async function importAll(c: Check): Promise<{ json: Record<string, unknown> }> {
   const all = { imported: [] as Photo[], already_in_catalog: [] as unknown[], failed: [] as unknown[], not_stacked: [] as unknown[], calls: 0 };
   let resume: string | undefined;
   do {
-    const { json } = await c.tools.importPhotos({ source: c.card, copy_to: c.copyTo, ...ARGS, ...(resume !== undefined ? { resume_after: resume } : {}) });
+    const { json } = await c.tools.importPhotos({ source: c.card, copy_to: c.copyTo, ...ARGS, ...(resume !== undefined ? { resume_after: resume } : {}) }).catch((err: unknown) => {
+      // A call that stopped (tools-files.ts eachInBudget) lists what it imported; a photo it may still have imported
+      // has no uuid here, so the copies are kept for the put-back by hand (Greptile, PR #270).
+      const details = (err as { details?: { done?: { imported?: Photo[] } } }).details;
+      c.uuids.push(...(details?.done?.imported ?? []).map((p) => p.uuid));
+      c.unsure = true;
+      throw err;
+    });
     for (const key of ["imported", "already_in_catalog", "failed", "not_stacked"] as const) (all[key] as unknown[]).push(...((json[key] as unknown[] | undefined) ?? []));
     c.uuids.push(...(json["imported"] as Photo[]).map((p) => p.uuid));
     resume = json["resume_after"] as string | undefined;
@@ -94,7 +102,10 @@ async function run(c: Check, client: BridgeClient): Promise<string[]> {
   return [await ask(`In Lightroom's Library, Folders panel (left), click the folder 2026-09-06 inside ${path.basename(c.copyTo)}. Does the grid show one stack of 3 photos (a badge with 3 on the first thumbnail)?`)];
 }
 
-/** The photos removed from the catalog and both folders deleted; true when all of it is done. */
+/**
+ * The photos removed from the catalog and both folders deleted; true when all of it is done. The copies are deleted
+ * only once every photo the check imported is removed: a photo left in the catalog keeps its file (Greptile, PR #270).
+ */
 async function putBack(c: Check, client: BridgeClient): Promise<boolean> {
   let removed = c.uuids.length === 0;
   if (!removed) {
@@ -102,10 +113,11 @@ async function putBack(c: Check, client: BridgeClient): Promise<boolean> {
     removed = (await step(c, "lr_remove_photos", ["removed"], () => c.tools.call(removePhotos, { uuids: c.uuids, confirm: true }), (r) => [String(r["status"])]))?.["status"] === "removed";
     await client.waitConnected(SESSION_SILENCE_MS).catch(() => undefined); // a Lightroom dialog can silence the plugin (LR_SDK_NOTES "Recorded in Phase 5")
   }
-  for (const dir of [c.card, c.copyTo]) rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 500 });
+  const clear = removed && !c.unsure;
+  for (const dir of clear ? [c.card, c.copyTo] : [c.card]) rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 500 });
   const gone = !existsSync(c.card) && !existsSync(c.copyTo);
-  c.steps.push({ step: "the card and copy_to folders deleted", expect: ["yes"], statuses: [gone ? "yes" : "no"] });
-  return removed && gone;
+  c.steps.push({ step: "the card and copy_to folders deleted", expect: ["yes"], statuses: [gone ? "yes" : clear ? "no" : "copy_to kept: photos may be left in the catalog"] });
+  return clear && gone;
 }
 
 async function main(say: (l: string) => void): Promise<number> {
@@ -115,7 +127,7 @@ async function main(say: (l: string) => void): Promise<number> {
   const tools = new Tools({ client, map, previews: new PreviewService(client), intents: new IntentLibrary({ map }), sessionLogDir: mkdtempSync(path.join(os.tmpdir(), "lrc-avg-import-check-")), engineVersion: ENGINE_VERSION, ensureBridge: (waitMs) => gate.ready(waitMs), hud: false });
   mkdirSync(OUT_DIR, { recursive: true });
   const r: Record<string, unknown> = { check: "import-check", started, node: process.version, engine_version: ENGINE_VERSION, args: ARGS, results: {} };
-  const c: Check = { tools, say, r, steps: [], card: path.join(OUT_DIR, `card-${started}`), copyTo: path.join(OUT_DIR, `photos-${started}`), uuids: [] };
+  const c: Check = { tools, say, r, steps: [], card: path.join(OUT_DIR, `card-${started}`), copyTo: path.join(OUT_DIR, `photos-${started}`), uuids: [], unsure: false };
   let answers: string[] = [];
   let back = false;
   try {
@@ -141,7 +153,7 @@ async function main(say: (l: string) => void): Promise<number> {
   say("");
   say(`Import check: ${worked ? "WORKED" : "FAILED"}`);
   say(`put back: ${back ? "YES" : "NO"}`);
-  if (!back && c.uuids.length > 0) say(`  The check's photos may still be in the catalog: Folders panel, ${path.basename(c.copyTo)}, select them all, Photo > Remove Photos..., Remove.`);
+  if (!back && existsSync(c.copyTo)) say(`  The check's photos may still be in the catalog: Folders panel, ${path.basename(c.copyTo)}, select them all, Photo > Remove Photos..., Remove. Their files stay in ${redactHome(c.copyTo, os.homedir())} so that none goes missing.`);
   // No LrCatalog or LrFolder call that removes a folder is known here [unverified], so the entry stays.
   say(`The folder entry ${path.basename(c.copyTo)} may stay in the Folders panel, shown as missing; this is a throwaway catalog.`);
   say(`Results saved automatically: ${redactHome(file, os.homedir())}`);

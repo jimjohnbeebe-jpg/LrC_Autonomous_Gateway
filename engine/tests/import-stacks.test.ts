@@ -59,6 +59,12 @@ describe("stack groups (library\\stack-groups.ts)", () => {
     expect(await Promise.all([0, 1, 2, 3, 4].map(joins))).toEqual([false, true, false, false, false]);
   });
 
+  it("joins frames exactly the gap apart despite float rounding (Greptile, PR #271)", async () => {
+    const dates: Record<string, CaptureDate> = { a: date("11:12:07", "1"), b: date("11:12:07", "7"), c: date("11:12:08", "4") };
+    const joins = joinsPrevious(["a", "b", "c"], 0.6, async (f) => dates[f] ?? null);
+    expect(await Promise.all([1, 2].map(joins))).toEqual([true, false]);
+  });
+
   it("reads each file once", async () => {
     const read = vi.fn(async () => null);
     const dateOf = datesOnce(read);

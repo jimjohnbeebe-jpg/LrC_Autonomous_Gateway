@@ -32,6 +32,6 @@ export function joinsPrevious(files: readonly string[], gapSeconds: number, date
   return async (i) => {
     if (i <= 0 || i >= files.length) return false;
     const [a, b] = await Promise.all([dateOf(files[i - 1] as string), dateOf(files[i] as string)]);
-    return a !== null && b !== null && Math.abs(captureSeconds(b) - captureSeconds(a)) <= gapSeconds;
+    return a !== null && b !== null && Math.abs(captureSeconds(b) - captureSeconds(a)) <= gapSeconds + 1e-6; // 1e-6: fractions on large timestamps round (Greptile, PR #271)
   };
 }

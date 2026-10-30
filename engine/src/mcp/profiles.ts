@@ -13,7 +13,8 @@ export const DEFAULT_PROFILE: ProfileName = "full";
 
 /**
  * The edit profile: what a chat needs to edit the selected photo. lr_help (the server's instructions point to it),
- * the photo's context and a preview, the intents list for lr_begin_session, the session loop (begin, step, end),
+ * the photo's context and a preview, the intents list for lr_begin_session and lr_save_intent ("save this edit as a look",
+ * PHASE10_PLAN "Third re-plan", rows 9+10), the session loop (begin, step, end),
  * lr_approve_pass and lr_select_variant (an approve_each_pass or Variants session answered in chat needs them) and
  * the four mask tools with lr_set_regions, which names the areas a mask pass is measured on (the mask tools tell the
  * AI to call it first; issue #219 item 4: "the AVG loop + context + masks").
@@ -23,6 +24,7 @@ export const EDIT_TOOLS = [
   "lr_get_active_photo_context",
   "lr_get_preview",
   "lr_list_intents",
+  "lr_save_intent",
   "lr_begin_session",
   "lr_step",
   "lr_set_regions",

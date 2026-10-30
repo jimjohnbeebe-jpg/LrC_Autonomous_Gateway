@@ -10,7 +10,7 @@ const saveIntentArgs = z.object({
     .record(z.string(), z.unknown())
     .describe(
       "the intent object (schema v3, `schema_version: 3`; see lr_get_intent for an example). Required fields: schema_version, id, label, category, brief, priors " +
-        "(may be {}). With from_photo, give id, label, category, brief (and priors {}); the engine fills profile, set, set_by_pipeline and references (the photo's uuid)",
+        "(may be {}). With from_photo, give id, label, category, brief (and priors {}); the engine fills profile, set, set_by_pipeline, references (the photo's uuid), tone_mode and masks (with from_preset: profile, set, set_by_pipeline)",
     ),
   // A boolean rather than literal(true), so that false reaches the tool and gets NOT_CONFIRMED
   // rather than a generic INVALID_ARGUMENTS (Greptile, PR #22).
@@ -19,7 +19,16 @@ const saveIntentArgs = z.object({
   from_photo: z
     .boolean()
     .optional()
-    .describe("true: take the look of the photo selected in Lightroom (profile, tone, presence, white balance, curves, HSL, grading, effects, B&W mixer, calibration) into `set`; only with dry_run (save the returned intent)"),
+    .describe(
+      "true: take the look of the photo selected in Lightroom (profile, tone, presence, white balance, curves, HSL, grading, effects, B&W mixer, calibration) into `set`, " +
+        'its AI masks that need no point into `masks` (kind, name, sliders; no geometry), tone_mode "adapt"; only with dry_run (save the returned intent)',
+    ),
+  from_preset: z
+    .string()
+    .min(1)
+    .max(200)
+    .optional()
+    .describe("a Develop preset's uuid or name (lr_list_presets): its settings, by canonical name, into `set`; keys no canonical name reads are dropped and listed; only with dry_run, as from_photo"),
   dry_run: z.boolean().optional().describe("true: validate and return the intent as it would be saved; nothing is written"),
 });
 const deleteIntentArgs = z.object({
@@ -51,7 +60,8 @@ export const INTENT_DEFS: ToolDef[] = [
       "each with `priors` and optionally `priors_by_pipeline`), " +
       "`guardrail_overrides` (clipping limits replacing the defaults of 0.5 % high and 1.0 % low), `regions_expected`, " +
       "`convergence_hints`, `allow_probe`, `clip_baseline` (true: pass 0 pulls clipping in to the guardrails; off by default) and `references` " +
-      "(v3: reference photos by `uuids` and/or `collection`, measured at lr_begin_session; each pass reports where the photo lies against them, never a target). " +
+      "(v3: reference photos by `uuids` and/or `collection`, measured at lr_begin_session; each pass reports where the photo lies against them, never a target), `tone_mode` (v3: \"set\", \"adapt\" or \"auto\"; lr_begin_session's tone_mode) and `masks` " +
+      "(v3: AI masks with no geometry, returned in the session's brief for you to create with lr_create_mask and adjust). " +
       "Changes nothing; does not need Lightroom.",
     schema: getIntentArgs,
     annotations: { readOnlyHint: true, openWorldHint: false },

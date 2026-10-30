@@ -83,7 +83,8 @@ export const HELP_TEXT = [
 export const INSTRUCTIONS =
   "LrC-AVG edits the photo selected in Lightroom Classic with native Develop settings, one measured pass at a time.\n" +
   "Call lr_help once for how sessions, passes, previews and metrics work.\n" +
-  "The user's request comes first; intents and suggestions are starting points.";
+  "The user's request comes first; intents and suggestions are starting points.\n" +
+  "When the user asks for an edit without naming an intent, you may offer 2-3 fitting looks from lr_list_intents, or none.";
 
 export const HELP_DEFS: ToolDef[] = [
   {

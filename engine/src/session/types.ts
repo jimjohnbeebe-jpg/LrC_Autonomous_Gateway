@@ -13,7 +13,8 @@ import type { AiTimings } from "./ai-update.js";
 import type { Limits, Slope } from "./plan.js";
 
 export type SessionOutput = { json: Record<string, unknown>; image?: Buffer; log?: Record<string, unknown> };
-export type RenderRequest = { longEdge: number; quality: number; targetUuid: string; regions: readonly Region[] };
+/** `measureEdge`: the session's measure_long_edge (preview\service.ts PreviewRequest), null when off. */
+export type RenderRequest = { longEdge: number; quality: number; targetUuid: string; regions: readonly Region[]; measureEdge: number | null };
 export type ReturnImage = "after" | "before_after" | "none";
 export type RegionKind = "skin" | "fur" | "sky" | "custom";
 
@@ -37,6 +38,8 @@ export type BeginArgs = {
   guardrails?: { clip_high_pct?: number | undefined; clip_low_pct?: number | undefined } | undefined;
   notes?: string | undefined;
   long_edge?: number | undefined;
+  /** Issue #168: export and measure each render at this long edge; Claude still sees long_edge. */
+  measure_long_edge?: number | undefined;
   return_image?: ReturnImage | undefined;
   /** Issue #155 R1: the AI's own model name; logged and shown, never used for decisions. */
   model?: string | undefined;
@@ -215,6 +218,8 @@ export type Session = {
   limits: Limits;
   decay: readonly number[];
   longEdge: number;
+  /** BeginArgs.measure_long_edge (issue #168): every render is exported and measured at it; null, at longEdge. */
+  measureEdge: number | null;
   quality: number;
   /** The photo selected at lr_begin_session. Converge mode edits it; Variants mode copies it and leaves it alone. */
   master: Target;

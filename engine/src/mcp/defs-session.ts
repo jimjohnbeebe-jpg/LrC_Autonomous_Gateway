@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { APPROVAL_WAIT_MS, SESSION_DEFAULTS } from "../session/index.js";
 import { FRAME, MEASURED, box, longEdge, openSessionId, sessionId, target, type ToolDef } from "./defs-shared.js";
-import { DEFAULT_LONG_EDGE, MAX_LONG_EDGE, MIN_LONG_EDGE } from "./tools-shared.js";
+import { DEFAULT_LONG_EDGE, EXPORT_MAX_LONG_EDGE, MAX_LONG_EDGE, MIN_LONG_EDGE } from "./tools-shared.js";
 
 const returnImage = z
   .enum(["after", "before_after", "none"])
@@ -46,6 +46,16 @@ const beginArgs = z.object({
   notes: z.string().max(2000).optional().describe("the user's request in their own words, kept in the log; suggested on every session; it takes precedence over the intent's brief"),
   model: z.string().max(80).optional().describe("Your own model name or id, shown to the user and logged; never used for decisions."),
   long_edge: longEdge.describe(`Preview long edge in pixels, ${MIN_LONG_EDGE}-${MAX_LONG_EDGE}, for the whole session (default: the settings page's, else ${DEFAULT_LONG_EDGE}).`),
+  measure_long_edge: z
+    .number()
+    .int()
+    .min(MIN_LONG_EDGE)
+    .max(EXPORT_MAX_LONG_EDGE)
+    .optional()
+    .describe(
+      `${MIN_LONG_EDGE}-${EXPORT_MAX_LONG_EDGE}: export and measure each render of the session at this long edge (clipping at print size); you still see long_edge. ` +
+        "Each render takes longer [unverified: by how much]. Default: off (measured at long_edge)",
+    ),
   return_image: returnImage,
   dry_run: z.boolean().optional().describe("true: check the call and return what pass 0 would write (`pass0.changes`), with no snapshot, no write and no session"),
   keep_regions: z.boolean().optional().describe("true: set again the regions (lr_set_regions) the last session on this photo in this engine run ended with, measured on pass 0's preview (`regions_kept`)"),

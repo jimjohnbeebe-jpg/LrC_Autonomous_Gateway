@@ -3300,6 +3300,18 @@
           "minimum": -9007199254740991,
           "maximum": 9007199254740991
         },
+        "measure_long_edge": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "quality": {
           "type": "integer",
           "minimum": -9007199254740991,
@@ -3336,6 +3348,15 @@
               ]
             },
             "long_edge": {
+              "type": "string",
+              "enum": [
+                "argument",
+                "intent",
+                "page",
+                "default"
+              ]
+            },
+            "measure_long_edge": {
               "type": "string",
               "enum": [
                 "argument",

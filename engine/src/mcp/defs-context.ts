@@ -64,7 +64,8 @@ export const CONTEXT_DEFS: ToolDef[] = [
     title: "Metrics of the last preview",
     description:
       "Return the full metrics of the last preview (the open session's, of `target` in Variants mode, or else this engine's last render): the metrics " +
-      "lr_get_preview returns plus 256-bin luma, red, green and blue histograms, without rendering again. " +
+      "lr_get_preview returns plus 256-bin luma, red, green and blue histograms, without rendering again. The histograms count " +
+      "pixels at the measured size (`measured_long_edge` in a session with measure_long_edge, else the preview's). " +
       MEASURED,
     schema: metricsArgs,
     annotations: { readOnlyHint: true, openWorldHint: false },

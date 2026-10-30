@@ -155,6 +155,7 @@ export async function render(ctx: SessionContext, s: Session, t: Target, view: P
       quality: s.quality,
       targetUuid: t.uuid,
       regions: s.regions.map((r) => ({ label: r.label, box: r.box })),
+      measureEdge: s.measureEdge,
     }),
   );
   // The export's metrics are measured with it (preview\service.ts); this stage covers the checks on them.
@@ -213,7 +214,9 @@ export async function image(s: Session, mode: ReturnImage, before: Rendered, aft
 }
 
 export function describe(r: Rendered): Record<string, unknown> {
-  return { preview_source: "export", preview_hash: r.hash, width: r.width, height: r.height };
+  // measure_long_edge (issue #168): the metrics count the pixels of a larger export than the image sent.
+  const measured = r.preview.measured_long_edge > Math.max(r.width, r.height) ? { measured_long_edge: r.preview.measured_long_edge } : {};
+  return { preview_source: "export", preview_hash: r.hash, width: r.width, height: r.height, ...measured };
 }
 
 export function brief(m: Metrics): Record<string, number> {

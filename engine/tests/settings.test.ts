@@ -100,7 +100,10 @@ describe("settings: a session's values in order", () => {
   it("takes the page over the defaults", () => {
     const s = resolveSessionSettings({}, {}, { mode: "approve_each_pass", max_passes: 6, variant_count: 2, long_edge: 1200, quality: 60, clip_high_pct: 2, clip_low_pct: 3, decay: [0.5] });
     expect(s).toMatchObject({ approval: "approve_each_pass", maxPasses: 6, variantCount: 2, longEdge: 1200, quality: 60, clipHighPct: 2, clipLowPct: 3, decay: [0.5] });
-    expect(new Set(Object.values(s.from))).toEqual(new Set(["page"]));
+    // measure_long_edge has no page value (issue #168): argument or default only.
+    const { measure_long_edge, ...fromPage } = s.from;
+    expect(new Set(Object.values(fromPage))).toEqual(new Set(["page"]));
+    expect([measure_long_edge, s.measureLongEdge]).toEqual(["default", null]);
   });
 
   it("takes the arguments over the page", () => {

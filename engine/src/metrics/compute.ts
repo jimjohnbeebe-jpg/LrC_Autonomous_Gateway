@@ -3,7 +3,8 @@
 //
 // Everything is measured on the preview as it is sent to Claude: 8-bit sRGB pixels as Lightroom
 // exported them, not the raw file's headroom (ARCHITECTURE section 6; the preview is the export's
-// JPEG, preview\service.ts). Definitions:
+// JPEG, preview\service.ts). A session with measure_long_edge (issue #168) is measured on its larger
+// export instead, so its pixel counts are at that size. Definitions:
 //   luma              Rec. 709 weights on the 8-bit sRGB values [inference: the choice of weights is
 //                     ours; PRD 6.7 names luma without a formula]; its histogram bins the rounded value
 //   luma_percentiles  p1, p5, p50, p95, p99 by nearest rank on the 256-bin luma histogram: the lowest

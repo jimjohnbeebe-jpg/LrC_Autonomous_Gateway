@@ -37,7 +37,7 @@ type Size = { width: number; height: number };
  * tests\preview-composite.test.ts: a 200 x 100 JPEG tagged 6 crops as 100 x 200, and composites as a
  * portrait panel].
  */
-async function displayedSize(image: Buffer): Promise<Size> {
+export async function displayedSize(image: Buffer): Promise<Size> {
   const meta = await sharp(image).metadata();
   const turned = meta.orientation !== undefined && meta.orientation >= 5;
   return turned ? { width: meta.height, height: meta.width } : { width: meta.width, height: meta.height };
@@ -58,6 +58,25 @@ export function planLayout(sizes: readonly Size[], layout: "row" | "column", lon
   const width = Math.floor(Math.min((longEdge - n * strip - gutter * (n - 1)) / sumInverse, longEdge, ...sizes.map((s) => s.width)));
   if (width < 1) return null;
   return aspects.map((a) => ({ width, height: Math.max(1, Math.floor(width / a)) }));
+}
+
+/**
+ * An interleaved RGB canvas of the background colour, with each label drawn in the strip above its panel
+ * (composites and contact sheets, sheet.ts).
+ */
+export function labelledCanvas(width: number, height: number, placed: readonly PlacedPanel[], strip = COMPOSITE_LABEL_STRIP): Uint8Array {
+  const canvas = new Uint8Array(width * height * 3);
+  for (let i = 0; i < canvas.length; i += 3) {
+    canvas[i] = BACKGROUND.r;
+    canvas[i + 1] = BACKGROUND.g;
+    canvas[i + 2] = BACKGROUND.b;
+  }
+  const scale = Math.max(1, Math.floor((strip - 4) / GLYPH_HEIGHT));
+  const textTop = Math.floor((strip - GLYPH_HEIGHT * scale) / 2);
+  for (const p of placed) {
+    drawText(canvas, width, p.label, p.left + LABEL_PADDING, p.top - strip + textTop, scale, LABEL_COLOR, p.left + p.width - LABEL_PADDING);
+  }
+  return canvas;
 }
 
 const area = (sizes: readonly Size[] | null): number => (sizes ? sizes.reduce((sum, s) => sum + s.width * s.height, 0) : 0);
@@ -94,18 +113,7 @@ export async function composite(panels: readonly Panel[], options: { longEdge: n
     height = y - gutter;
   }
 
-  // The canvas: background, then each label in the strip above its panel.
-  const canvas = new Uint8Array(width * height * 3);
-  for (let i = 0; i < canvas.length; i += 3) {
-    canvas[i] = BACKGROUND.r;
-    canvas[i + 1] = BACKGROUND.g;
-    canvas[i + 2] = BACKGROUND.b;
-  }
-  const scale = Math.max(1, Math.floor((strip - 4) / GLYPH_HEIGHT));
-  const textTop = Math.floor((strip - GLYPH_HEIGHT * scale) / 2);
-  for (const p of placed) {
-    drawText(canvas, width, p.label, p.left + LABEL_PADDING, p.top - strip + textTop, scale, LABEL_COLOR, p.left + p.width - LABEL_PADDING);
-  }
+  const canvas = labelledCanvas(width, height, placed);
 
   const layers = await Promise.all(
     placed.map(async (p, i) => {

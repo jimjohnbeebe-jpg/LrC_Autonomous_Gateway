@@ -125,7 +125,7 @@ export type LastWrite = { uuid: string; before: SdkSettings; after: SdkSettings;
  * call drops it, so the undo never names a photo a later write changed or removed (Greptile, PR #251); a read not
  * listed only makes the next undo the plain one.
  */
-const KEEPS_LAST_WRITE = new Set(["lr_undo_last_step", "lr_get_preview", "lr_get_metadata", "lr_get_metrics", "lr_get_selected_photos", "lr_get_active_photo_context", "lr_list_snapshots", "lr_get_photo_stats", "lr_help"]);
+const KEEPS_LAST_WRITE = new Set(["lr_undo_last_step", "lr_get_preview", "lr_get_metadata", "lr_get_metrics", "lr_get_selected_photos", "lr_get_active_photo_context", "lr_list_snapshots", "lr_get_photo_stats", "lr_get_contact_sheet", "lr_help"]);
 
 export const ms = (since: number): number => Math.round((performance.now() - since) * 10) / 10;
 

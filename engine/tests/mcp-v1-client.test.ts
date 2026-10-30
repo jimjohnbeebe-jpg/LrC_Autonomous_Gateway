@@ -29,7 +29,7 @@ it("lets an MCP SDK v1 client initialize, list the 62 tools and call tools on th
 
     const pinned = JSON.parse(readFileSync(fileURLToPath(new URL("./__snapshots__/tools-list.json", import.meta.url)), "utf8")) as Array<{ name: string }>;
     const { tools: listed } = await client.listTools();
-    expect(pinned).toHaveLength(66); // 37, issue #214's eight, issue #215's six, issue #216's one, issue #218's nine, issue #217's lr_delete_empty_masks and the three of decisions D1-D3, issue #115's lr_crop
+    expect(pinned).toHaveLength(67); // 37, issue #214's eight, issue #215's six, issue #216's one, issue #218's nine, issue #217's lr_delete_empty_masks and the three of decisions D1-D3, issue #115's lr_crop, lr_get_contact_sheet
     expect(listed.map((t) => t.name)).toEqual(pinned.map((t) => t.name));
     expect(listed.every((t) => t.inputSchema.type === "object")).toBe(true);
 

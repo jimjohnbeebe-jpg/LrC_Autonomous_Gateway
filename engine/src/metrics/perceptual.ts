@@ -9,7 +9,7 @@
 //   cast    shadows (sh, L* 5-35), midtones (mid, 35-70) and highlights (hi, 70-95): mean a* and b*, the
 //           chroma C and Lab hue h of that mean, and `wheel`, the hue to set on Lightroom's Color Grading
 //           wheel of that range for a tint of that hue (wheel-fit.ts); h and wheel are null under CAST_MIN_CHROMA
-//   bands   the % of the chromatic pixels (compute.ts CHROMATIC_MIN) whose HSV hue falls in each of
+//   bands   the % of the chromatic pixels (types.ts CHROMATIC_MIN) whose HSV hue falls in each of
 //           Lightroom's 8 HSL bands (bands.ts)
 //   cf      colourfulness M = sigma_rgyb + 0.3 mu_rgyb on the 8-bit values, rg = R - G, yb = (R + G) / 2 - B
 //           [handle: Hasler and Suesstrunk 2003, https://www.researchgate.net/publication/243135534_Measuring_colorfulness_in_natural_images]
@@ -30,7 +30,6 @@ const PERCENTILES = [2, 5, 20, 50, 80, 95, 98] as const;
 const WHEELS: Record<ToneRange, Wheel> = { sh: "shadows", mid: "midtones", hi: "highlights" };
 /** D65 white, Y = 1. */
 const WHITE = { x: 0.95047, z: 1.08883 } as const;
-
 
 /** sRGB 8-bit -> linear 0-1. */
 const LINEAR = Float64Array.from({ length: 256 }, (_, v) => {
@@ -65,7 +64,7 @@ export function labToRgb(L: number, a: number, b: number): [number, number, numb
 
 type Sums = { n: number; a: number; b: number; L: number };
 
-/** The perceptual set of interleaved 8-bit pixels; `hue` is compute.ts's 360-bin HSV hue histogram of the chromatic pixels. */
+/** The perceptual set of interleaved 8-bit pixels; `hue` is the 360-bin HSV hue histogram of the chromatic pixels (stats.ts accumulate). */
 export function measurePerceptual(data: Uint8Array, channels: number, hue: Float64Array, chromatic: number): Perceptual {
   const histogram = new Float64Array(1001);
   const [LOW, SH_TOP] = TONE_RANGES.sh;

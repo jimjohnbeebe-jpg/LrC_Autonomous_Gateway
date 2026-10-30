@@ -4811,12 +4811,6 @@
               "uuid": {
                 "type": "string"
               },
-              "filename": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
               "perceptual": {
                 "type": "object",
                 "properties": {
@@ -5058,7 +5052,6 @@
             },
             "required": [
               "uuid",
-              "filename",
               "perceptual"
             ],
             "additionalProperties": false

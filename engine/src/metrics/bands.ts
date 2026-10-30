@@ -37,7 +37,7 @@ const BAND_OF = Array.from({ length: 360 }, (_, degree) => {
   });
 });
 
-/** The % of the chromatic pixels in each band, from a 360-bin hue histogram of them (compute.ts); all 0 when there are none. */
+/** The % of the chromatic pixels in each band, from a 360-bin hue histogram of them (stats.ts accumulate); all 0 when there are none. */
 export function bandShares(hue: Float64Array, chromatic: number): BandShares {
   const counts = new Array<number>(HSL_BANDS.length).fill(0);
   for (let degree = 0; degree < 360; degree++) counts[BAND_OF[degree] as number]! += hue[degree] as number;

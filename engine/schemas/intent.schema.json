@@ -14,7 +14,7 @@
           "const": 3
         }
       ],
-      "description": "3 (2 still loads, without set)"
+      "description": "3 (2 still loads, without set and references)"
     },
     "id": {
       "type": "string",
@@ -597,6 +597,29 @@
     "allow_probe": {
       "description": "lr_probe is off in autonomous mode unless this is true",
       "type": "boolean"
+    },
+    "references": {
+      "type": "object",
+      "properties": {
+        "uuids": {
+          "description": "1-8 catalog photo uuids",
+          "minItems": 1,
+          "maxItems": 8,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "collection": {
+          "description": "a catalog collection by name, or \"Set / Name\"; its first 8 photos are used",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      },
+      "additionalProperties": false,
+      "description": "photos the session measures at begin; every pass then reports where the photo lies against their range (reported only, never a target)"
     }
   },
   "required": [

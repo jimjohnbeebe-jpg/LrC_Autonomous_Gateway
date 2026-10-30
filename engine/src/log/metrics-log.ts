@@ -60,7 +60,7 @@ export const referencesLogSchema = z.strictObject({
   source: z.enum(["begin", "intent"]),
   collection: z.string().nullable(),
   uuids: z.array(z.string()),
-  measured: z.array(z.strictObject({ uuid: z.string(), filename: z.string().nullable(), perceptual: perceptualSchema })),
+  measured: z.array(z.strictObject({ uuid: z.string(), perceptual: perceptualSchema })),
   warnings: z.array(z.string()),
   aggregate: z.record(z.string(), refRange),
 });

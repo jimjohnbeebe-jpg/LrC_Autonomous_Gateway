@@ -10,18 +10,20 @@
 
 import { existsSync } from "node:fs";
 import path from "node:path";
-import { UPDATE_HUD_NOTE, lightroomNotices, updateNotices, type CommandResult } from "../bridge/index.js";
+import { UPDATE_HUD_NOTE, updateNotices, type CommandResult } from "../bridge/index.js";
 import type { LoadedIntent } from "../intents/index.js";
-import { SESSION_LOG_SCHEMA_ID, SessionLogFiles, type SessionLogData } from "../log/index.js";
+import { SessionLogFiles, type SessionLogData } from "../log/index.js";
 import { ToolError, originalMissing } from "../mcp/errors.js";
 import { summarize } from "../metrics/index.js";
 import { WHITE_BALANCE_UNITS, cropKeys, type CanonicalSettings, type FromSdkResult } from "../params/index.js";
 import { readPage, resolveSessionSettings, type PageRead, type SessionSettings } from "../settings/index.js";
+import { newLog, settingsEntry } from "./begin-log.js";
 import { APPROVAL_WAIT_MS } from "./approval.js";
 import { checkVariants } from "./copies.js";
 import { brief, describe, failed, image, ms, recordPass, saveLog, text } from "./io.js";
 import { refuseLeftOpen } from "./left-open.js";
 import { pass0, pass0Entry, type Pass0 } from "./pass0.js";
+import { gapJson, loadReferences, referencesJson } from "./references.js";
 import { WRITE_TIMEOUT_MS, folderOf, newTarget, type BeginArgs, type Session, type SessionContext, type SessionOutput } from "./types.js";
 
 /**
@@ -81,6 +83,9 @@ export async function openSession(ctx: SessionContext, given: BeginArgs): Promis
   const started = performance.now();
   const { args, mode, page, loaded, settings, photo, variantCount, view, crop } = await checkBegin(ctx, given);
   const { client } = ctx.deps;
+  // Before the snapshot: a reference render is a read (references.ts). The begin argument replaces the intent's.
+  const refSize = { longEdge: settings.longEdge, quality: settings.quality, measureEdge: settings.measureLongEdge };
+  const references = await loadReferences(ctx, args.references ?? loaded.intent.references, args.references ? "begin" : "intent", refSize);
 
   const now = ctx.now();
   const { id, short, files } = pickLogFiles(ctx, now);
@@ -128,6 +133,7 @@ export async function openSession(ctx: SessionContext, given: BeginArgs): Promis
     aiTrace: null,
     endedByEngine: null,
     regions: [],
+    references,
     files,
     log: {} as SessionLogData,
     exif: { iso: photo["iso"], shutter: photo["shutter"], aperture: photo["aperture"], lens: photo["lens"] },
@@ -145,6 +151,7 @@ export async function openSession(ctx: SessionContext, given: BeginArgs): Promis
   };
   s.log = newLog(ctx, s, variantCount, args.notes ?? null);
   s.log.settings = settingsEntry(settings, page);
+  if (references) s.log.references = references;
   // A plugin that is not the engine's version (restart Lightroom), else a Lightroom outside the supported
   // and tested versions: the HUD says so once, after lr_begin_session. The update first: it can be acted on.
   s.idleNote = updateNotices(client.hello()?.plugin_version, ctx.deps.engineVersion).length > 0 ? UPDATE_HUD_NOTE : (s.log.lightroom?.notices?.[0] ?? null);
@@ -166,18 +173,6 @@ function pickLogFiles(ctx: SessionContext, now: Date): { id: string; short: stri
   throw new ToolError("INTERNAL_ERROR", `No free session log name in ${folderOf(ctx.deps.logDir)} after 5 tries.`, false);
 }
 
-/** The log's record of the session's settings: the page's values used and where each came from. */
-function settingsEntry(settings: SessionSettings, page: PageRead): NonNullable<SessionLogData["settings"]> {
-  return {
-    approval: settings.approval,
-    long_edge: settings.longEdge,
-    measure_long_edge: settings.measureLongEdge,
-    quality: settings.quality,
-    from: settings.from,
-    page: { read: page.read, note: page.note, problems: page.problems },
-  };
-}
-
 /** The begin result's `session_settings` (its `settings` are the photo's); approve_each_pass says how it works (approval.ts). */
 function settingsJson(s: Session): Record<string, unknown> {
   const recorded = s.log.settings;
@@ -190,59 +185,6 @@ const APPROVAL_NOTE =
   "approve_each_pass: the user approves each pass they have seen. Pass 1 needs no approval; from pass 2 on, lr_step first waits " +
   `up to ${APPROVAL_WAIT_MS / 1000} s for the user's Approve of the pass before (the LrC-AVG HUD's Approve button, or lr_approve_pass ` +
   "after the user approved in chat), else returns AWAITING_APPROVAL. Show the user each pass. Variants mode: the pick approves the pass it was picked at.";
-
-function newLog(ctx: SessionContext, s: Session, variantCount: number | null, notes: string | null): SessionLogData {
-  const { intent, master } = s;
-  const hello = ctx.deps.client.hello();
-  return {
-    schema: SESSION_LOG_SCHEMA_ID,
-    session_id: s.id,
-    short_id: s.short,
-    engine_version: ctx.deps.engineVersion,
-    ...(s.client ? { client: s.client } : {}),
-    ...(s.model ? { model: s.model } : {}),
-    ...(hello
-      ? {
-          lightroom: {
-            lrc_version: hello.lrc_version,
-            sdk_declared: hello.sdk_declared,
-            notices: [...lightroomNotices(hello.lrc_version), ...updateNotices(hello.plugin_version, ctx.deps.engineVersion)],
-          },
-        }
-      : {}),
-    started: s.startedAt.toISOString(),
-    ended: null,
-    outcome: null,
-    intent: { id: intent.intent.id, label: intent.intent.label, source: intent.source },
-    mode: s.mode,
-    variant_count: variantCount,
-    max_passes: s.maxPasses,
-    guardrails: { clip_high_pct: s.limits.clipHighPct, clip_low_pct: s.limits.clipLowPct },
-    clip_baseline: s.clipBaseline,
-    decay: [...s.decay],
-    notes,
-    target: {
-      uuid: master.uuid,
-      local_id: master.local_id,
-      filename: master.filename,
-      copy_name: master.copy_name,
-      process_version: master.process_version,
-      pipeline: master.pipeline,
-      camera_profile: master.camera_profile,
-    },
-    snapshot: s.snapshot,
-    start: { settings: s.startSettings, masks: s.startMasks },
-    variants: [],
-    picked: null,
-    regions: [],
-    passes: [],
-    probes: [],
-    failures: [],
-    final_settings: null,
-    recipe_path: null,
-    revert: null,
-  };
-}
 
 /** Converge mode: log the open session, then run pass 0. A failure leaves the session open, so Claude can end it with revert. */
 export async function runPass0(ctx: SessionContext, opened: Opened, args: BeginArgs): Promise<SessionOutput> {
@@ -287,6 +229,7 @@ export function sessionHeader(opened: Opened): Record<string, unknown> {
     snapshot: s.snapshot,
     log_path: s.files.logPath,
     start_off_zero: startOffZero(s.startSettings),
+    ...referencesJson(s),
   };
 }
 
@@ -321,6 +264,7 @@ function beginJson(opened: Opened, p: Pass0): Record<string, unknown> {
     settings: p.view.settings,
     metrics: summarize(p.rendered.metrics),
     delta_metrics: p.delta,
+    ...gapJson(s, p.rendered.metrics),
     ...describe(p.rendered),
     timings: { total_ms: ms(opened.started) },
   };

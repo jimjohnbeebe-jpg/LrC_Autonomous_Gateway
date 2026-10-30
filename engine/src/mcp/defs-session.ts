@@ -1,8 +1,9 @@
 // The MCP definitions of the session tools (tools-session.ts).
 
 import { z } from "zod";
+import { referencesShape } from "../intents/index.js";
 import { APPROVAL_WAIT_MS, SESSION_DEFAULTS } from "../session/index.js";
-import { FRAME, MEASURED, box, longEdge, openSessionId, sessionId, target, type ToolDef } from "./defs-shared.js";
+import { FRAME, MEASURED_CORE, box, longEdge, openSessionId, sessionId, target, type ToolDef } from "./defs-shared.js";
 import { DEFAULT_LONG_EDGE, EXPORT_MAX_LONG_EDGE, MAX_LONG_EDGE, MIN_LONG_EDGE } from "./tools-shared.js";
 
 const returnImage = z
@@ -59,6 +60,7 @@ const beginArgs = z.object({
   return_image: returnImage,
   dry_run: z.boolean().optional().describe("true: check the call and return what pass 0 would write (`pass0.changes`), with no snapshot, no write and no session"),
   keep_regions: z.boolean().optional().describe("true: set again the regions (lr_set_regions) the last session on this photo in this engine run ended with, measured on pass 0's preview (`regions_kept`)"),
+  references: z.object(referencesShape).optional().describe("reference photos the user names (uuids, a collection, or both; at most 8 used), replacing the intent's: each is rendered and measured once at begin"),
 });
 const stepArgs = z.object({
   session_id: openSessionId,
@@ -140,7 +142,8 @@ export const SESSION_DEFS: ToolDef[] = [
       "\"AVG pre-session …\" (lr_end_session revert returns to it), renders the photo, and runs pass 0 as one History step " +
       "\"AVG <id> pass 0/N\". Returns session_id, the intent's brief, guardrails, pass0_applied, the full settings, metrics, the " +
       "preview, `log_path`, and `start_off_zero` (settings found on the photo, which may be import defaults or earlier edits). " +
-      "Then call lr_step once per pass, up to max_passes. " +
+      "Then call lr_step once per pass, up to max_passes. Metrics include `perceptual` (lr_help item 4); with `references` (or an intent's) each pass adds " +
+      "`reference_gap`, the photo against the reference photos' range. Both are reported, never targets. " +
       "To look at a photo without a session, use lr_get_preview with uuid and lr_get_photo_stats; to see what pass 0 would write, " +
       "`dry_run: true` (nothing written, no snapshot, no session). `advisory`, when present, is a warning, not a refusal: tell the user. " +
       "One session at a time; it stays open until lr_end_session. A photo with a session an engine that stopped left open " +
@@ -188,7 +191,7 @@ export const SESSION_DEFS: ToolDef[] = [
       "else returns AWAITING_APPROVAL (recoverable; nothing written, the pass not used): tell the user the pass waits for their " +
       "Approve, then call again. Unknown names are refused before the wait. `approval` in the result says which pass was approved, " +
       "by whom, and how long the call waited. " +
-      MEASURED,
+      MEASURED_CORE,
     schema: stepArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     run: (tools, args) => tools.step(args as z.infer<typeof stepArgs>),

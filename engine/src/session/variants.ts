@@ -12,6 +12,7 @@ import { sessionHeader, type Opened } from "./begin.js";
 import { DEFAULT_VARIANT_COUNT, makeCopies } from "./copies.js";
 import { brief, describe, failed, ms, read, recordPass, render, saveLog } from "./io.js";
 import { pass0, pass0Entry, type Pass0 } from "./pass0.js";
+import { gapJson } from "./references.js";
 import { focus } from "./targets.js";
 import type { BeginArgs, Rendered, ReturnImage, Session, SessionContext, SessionOutput, Target } from "./types.js";
 
@@ -97,6 +98,7 @@ function variantJson(s: Session, t: Target, p: Pass0): Record<string, unknown> {
     settings: p.view.settings,
     metrics: summarize(p.rendered.metrics),
     delta_metrics: p.delta,
+    ...gapJson(s, p.rendered.metrics),
     ...describe(p.rendered),
   };
 }

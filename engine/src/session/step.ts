@@ -16,6 +16,7 @@ import { clipBreach, correct, regionDrift, undo, undoRefused } from "./guardrail
 import { brief, describe, failed, fresh, historyName, image, ms, read, recordPass, render, write } from "./io.js";
 import { awaitingPick, checkVariantStep, pickRound } from "./pick.js";
 import { applyProjectedGuardrail, convergedByMetrics, planStep, type StepPlan } from "./plan.js";
+import { gapJson } from "./references.js";
 import { sharpnessAdvisory } from "./sharpness-advice.js";
 import { focus, resolveTarget } from "./targets.js";
 import type { Rendered, Session, SessionContext, SessionOutput, StepArgs, Target } from "./types.js";
@@ -185,6 +186,7 @@ function stepJson(s: Session, t: Target, n: number, plan: StepPlan, done: Applie
     settings: done.view.settings,
     metrics: summarize(done.rendered.metrics),
     delta_metrics: delta,
+    ...gapJson(s, done.rendered.metrics),
     converged_by_metrics: converged,
     cap_reached: t.endReason === "cap_reached",
     passes_left: t.endReason ? 0 : s.maxPasses - n,

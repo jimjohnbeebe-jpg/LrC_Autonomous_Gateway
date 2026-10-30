@@ -15,7 +15,11 @@ export type ToolDef = {
   run: (tools: Tools, args: Record<string, unknown>) => Promise<ToolOutput>;
 };
 
-export const MEASURED =
+/**
+ * The metrics without `perceptual`, for lr_step's description: it had 1 character left of the 4,096 that
+ * tests\mcp-portable.test.ts allows, so lr_begin_session's description points to lr_help for `perceptual`.
+ */
+export const MEASURED_CORE =
   "Metrics are measured on the rendered preview (8-bit sRGB, as Lightroom exported it), not on the raw file: " +
   "clipping here can often be recovered with highlights/whites or shadows/blacks. " +
   "clip_high_pct = % of pixels with any channel >= 253; clip_high_tone_pct = % with 2+ channels >= 253 (the high guard's); " +
@@ -25,8 +29,11 @@ export const MEASURED =
   "saturation_mean = mean HSV saturation, 0-100; hue_histogram = 12 bins of 30 degrees (bin i centred on i*30: " +
   "0 red, 60 yellow, 120 green, 180 cyan, 240 blue, 300 magenta), % of the chromatic pixels (HSV saturation and value " +
   ">= 0.1, chromatic_pct of all); hue_mean = their circular mean hue in degrees; " +
-  "sharpness = Laplacian variance of luma at 512 px (more = detail or noise). Percentages are 0-100. " +
-  "`perceptual` (whole photo) is a set of reported measurements, not targets: L = CIE L* percentiles (0-100); zones = % of pixels in 11 L* zones " +
+  "sharpness = Laplacian variance of luma at 512 px (more = detail or noise). Percentages are 0-100.";
+/** MEASURED_CORE and the perceptual measurements (metrics\perceptual.ts, Phase 10 row 7). */
+export const MEASURED =
+  MEASURED_CORE +
+  " `perceptual` (whole photo) is a set of reported measurements, not targets: L = CIE L* percentiles (0-100); zones = % of pixels in 11 L* zones " +
   "(edges 3, 12, 22, 33, 44, 56, 68, 79, 90, 97); cast.sh / mid / hi (L* 5-35, 35-70, 70-95) = mean a* and b*, their chroma C and Lab hue h, and " +
   "wheel, the Color Grading wheel hue whose tint has that hue (a measured fit, within about 20 degrees), null without pixels; bands = % of the chromatic " +
   "pixels in each HSL band; cf = colourfulness (Hasler and Suesstrunk); rms = RMS contrast (std of L* / 100).";

@@ -11,6 +11,7 @@ import type { KnownLogFolders, PageRead } from "../settings/index.js";
 import type { AiJob } from "./ai-masks.js";
 import type { AiTimings } from "./ai-update.js";
 import type { Limits, Slope } from "./plan.js";
+import type { ReferenceSet, ReferenceSize, ReferenceSpec } from "./reference-types.js";
 
 export type SessionOutput = { json: Record<string, unknown>; image?: Buffer; log?: Record<string, unknown> };
 /** `measureEdge`: the session's measure_long_edge (preview\service.ts PreviewRequest), null when off. */
@@ -47,6 +48,8 @@ export type BeginArgs = {
   dry_run?: boolean | undefined;
   /** Issue #163: set the regions the last session on this photo ended with again (history.ts). */
   keep_regions?: boolean | undefined;
+  /** Phase 10 row 8 (references.ts): photos each pass is compared with; replaces the intent's. */
+  references?: ReferenceSpec | undefined;
   /** The MCP client (mcp\client-info.ts); set by the mcp layer, never by the tool schema. */
   client?: ClientIdentity | null | undefined;
 };
@@ -111,6 +114,10 @@ export type SessionDeps = {
   approvalWaitMs?: number;
   /** The AI mask waits (tests shorten them); ai-update.ts AI_TIMINGS by default. */
   aiTimings?: Partial<AiTimings>;
+  /** Phase 10 row 8 (references.ts): render a reference photo by uuid, selected or not, read only; no references without it. */
+  renderReference?: (r: { uuid: string } & ReferenceSize) => Promise<RenderedPreview>;
+  /** Phase 10 row 8: the uuids of the first `limit` photos of a collection named as lr_list_collections shows it, and how many it holds. */
+  collectionPhotos?: (name: string, limit: number) => Promise<{ uuids: string[]; count: number }>;
   /** The HUD (hud\publisher.ts, PHASE5_PLAN row 5); no HUD updates without it. */
   hud?: HudSink;
 };
@@ -248,6 +255,8 @@ export type Session = {
   /** Why the engine itself ended the session (ai-revert.ts autoRevert: a dialog, or a Lightroom restart); the manager then closes it. */
   endedByEngine: string | null;
   regions: RegionState[];
+  /** Phase 10 row 8: the reference photos measured at begin (references.ts), or null. */
+  references: ReferenceSet | null;
   files: SessionLogFiles;
   log: SessionLogData;
   /** The photo's EXIF from get_context at lr_begin_session, for the HUD (a copy shares its master's file). */

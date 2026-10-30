@@ -28,7 +28,7 @@ import {
 } from "../library/index.js";
 import { WRITE_TIMEOUT_MS } from "../sync/target.js";
 
-import { findCollection } from "./tools-collections.js";
+import { findCollection } from "./collection-find.js";
 import { needPlugin, run, sessionTools, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
 type Page = { limit?: number | undefined; offset?: number | undefined };
@@ -67,7 +67,7 @@ export async function searchPhotos(ctx: ToolContext, args: SearchPhotosArgs): Pr
     const criteria = searchCriteria(args);
     const offset = args.offset ?? 0;
     const limit = args.limit ?? DEFAULT_PAGE;
-    const collectionId = args.collection !== undefined ? (await findCollection(ctx, args.collection)).local_id : args.collection_id;
+    const collectionId = args.collection !== undefined ? (await findCollection(ctx.deps.client, args.collection)).local_id : args.collection_id;
     const inCollection = collectionId !== undefined ? { collection_id: collectionId } : {};
     const inFolder = args.folder !== undefined ? { folder: folderPath(args.folder), include_subfolders: args.include_subfolders === true } : {};
     const res = await ctx.deps.client.request("search_photos", { criteria, ...inCollection, ...inFolder, offset, limit }, { timeoutMs: CATALOG_READ_TIMEOUT_MS });

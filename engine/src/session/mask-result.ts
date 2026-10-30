@@ -7,6 +7,7 @@ import type { FromSdkResult, MaskOp, MaskSummary, SdkSettings } from "../params/
 import type { AiResult } from "./ai-masks.js";
 import type { Breach } from "./guardrail.js";
 import { describe, ms } from "./io.js";
+import { gapJson } from "./references.js";
 import type { Rendered, Session, Target } from "./types.js";
 
 /** What a mask pass wrote and measured; `controller`: the mask's curves and swatches read back through LrDevelopController (mask-controller.ts). */
@@ -35,6 +36,7 @@ export function passJson(s: Session, t: Target, n: number, op: MaskOp, { mask, m
     guardrail_actions: done.actions,
     metrics: metricsOf(done.rendered.metrics),
     delta_metrics: delta,
+    ...gapJson(s, done.rendered.metrics),
     converged_by_metrics: converged,
     cap_reached: t.endReason === "cap_reached",
     passes_left: s.maxPasses - n,

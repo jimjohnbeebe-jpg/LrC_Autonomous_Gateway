@@ -3,7 +3,7 @@
 // sharp (preview\composite.ts, labelled L and R; which copy goes left is drawn per pair, independently of the arms),
 // saved as pair-NN.jpg in the run folder and opened in Windows' default viewer; Jim answers L, R or T (tie) in this
 // window. Each answer is saved at once, so a stopped judging continues with the next pair. Only after the last pair
-// are the arms named and counted (looks-eval.ts tally, headlines).
+// are the arms named and counted (looks-eval.ts tally, headlines, mayReveal); after the reveal no pair is judged.
 
 import { writeFileSync } from "node:fs";
 import path from "node:path";
@@ -32,6 +32,10 @@ async function pairImage(ctx: EvalCtx, p: EvalPhoto, left: Slot): Promise<{ file
 /** Every edited, unjudged pair; false when the input ended (the answers so far are saved). */
 export async function judgeAll(ctx: EvalCtx): Promise<boolean> {
   const { deps, ev } = ctx;
+  if (ev.revealed_at !== null) {
+    deps.say(`The arms were revealed at ${ev.revealed_at}: no pair is judged after that, since it would not be blind.`);
+    return true;
+  }
   const todo = ev.photos.filter((p) => pairEdited(p) && p.judged === null);
   const skipped = ev.photos.filter((p) => !pairEdited(p));
   deps.say("");
@@ -52,6 +56,10 @@ export async function judgeAll(ctx: EvalCtx): Promise<boolean> {
 /** The reveal: the headline lines, then each pair with its arms. */
 export function reveal(ctx: EvalCtx): { lines: string[]; tally: Tally } {
   const { ev } = ctx;
+  if (ev.revealed_at === null) {
+    ev.revealed_at = new Date().toISOString();
+    ctx.save();
+  }
   const t = tally(ev);
   const lines = [
     ...headlines(ev, t),

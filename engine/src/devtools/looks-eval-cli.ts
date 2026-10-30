@@ -27,7 +27,7 @@ import type { Run } from "./clients-run.js";
 import { newState } from "./clients-state.js";
 import { ensureMode } from "./clients-t6t7.js";
 import { lookFrom } from "./looks-eval-look.js";
-import { headlines, LAST_RUN, lastRun, newRun, parseCli, runId, runSchema, type Choice, type Cli, type EvalRun } from "./looks-eval.js";
+import { headlines, LAST_RUN, lastRun, mayReveal, newRun, parseCli, runId, runSchema, type Choice, type Cli, type EvalRun } from "./looks-eval.js";
 import { judgeAll, reveal } from "./looks-eval-judge.js";
 import { cleanup, editAll, makeCopies, readMasters, selectedMasters, type EvalCtx, type EvalDeps } from "./looks-eval-run.js";
 import { describeError, type Answer } from "./phase1-check.js";
@@ -116,6 +116,7 @@ async function evaluate(ctx: EvalCtx, cli: Cli): Promise<number> {
     say(lines[0] ?? "");
     return finish(ctx, lines, untouched && ctx.clients.errors.length === 0 ? 0 : 1);
   }
+  if (cli.mode === "resume" && ctx.ev.revealed_at !== null) return stop(ctx, `the arms of run ${ctx.ev.run} were revealed at ${ctx.ev.revealed_at}, so its other pairs cannot be judged blind. Start a new run.`);
   if (cli.mode !== "judge") {
     const exe = findClient("claude-code");
     if (!exe) return stop(ctx, "Claude Code (claude.exe) is not installed for this user; the edits need it.");
@@ -129,6 +130,10 @@ async function evaluate(ctx: EvalCtx, cli: Cli): Promise<number> {
   if (!judged) {
     say("Judging not finished. Run npm run looks:eval -- --judge last to continue.");
     return finish(ctx, ["Judging not finished."], 2);
+  }
+  if (!mayReveal(ctx.ev, cli.mode)) {
+    say("Arms not revealed: some edits were not accepted. Run npm run looks:eval -- --resume last to try them again (the arms stay hidden), or npm run looks:eval -- --judge last to reveal without those pairs.");
+    return finish(ctx, [headlines(ctx.ev)[0] ?? "", "Arms not revealed: edits not accepted."], 2);
   }
   say("");
   return finish(ctx, reveal(ctx).lines);

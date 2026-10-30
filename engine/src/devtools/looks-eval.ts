@@ -72,6 +72,8 @@ export const runSchema = z.object({
   masters: z.object({ at: z.string(), differing: z.record(z.string(), z.array(z.string())) }).nullable(),
   /** Copies removed by --cleanup. */
   removed: z.array(z.string()),
+  /** When the arms were first shown; no pair is judged after it, since it would not be blind. */
+  revealed_at: z.string().nullable(),
 });
 export type EvalRun = z.infer<typeof runSchema>;
 
@@ -106,6 +108,7 @@ export function newRun(o: { run: string; createdAt: string; arms: { A: Arm; B: A
     photos: o.photos.map((p, i) => ({ nn: nnOf(i), ...p, p_arm: arms[i] ?? "A", copies: { P: null, Q: null }, edits: { P: null, Q: null }, judged: null })),
     masters: null,
     removed: [],
+    revealed_at: null,
   };
 }
 
@@ -154,6 +157,11 @@ export function streamResult(text: string): { is_error: boolean | null; turns: n
 /** An edit counts when its session began and ended "accept" before the timeout. */
 export const editOk = (e: Edit | null): boolean => e !== null && !e.timed_out && e.begun && e.ended === "accept";
 export const pairEdited = (p: EvalPhoto): boolean => editOk(p.edits.P) && editOk(p.edits.Q);
+/**
+ * The arms are shown once every pair was edited, on --judge (Jim ends the run without the failed pairs), or again
+ * after a reveal. Never earlier: a pair edited on a later --resume would be judged knowing the arms.
+ */
+export const mayReveal = (r: EvalRun, mode: Cli["mode"]): boolean => r.revealed_at !== null || mode === "judge" || r.photos.every(pairEdited);
 
 /** The arm Jim preferred in a judged pair, or "tie". */
 export function winner(p: EvalPhoto): ArmId | "tie" | null {

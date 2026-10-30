@@ -9,6 +9,7 @@ import {
   editPrompt,
   headlines,
   lastRun,
+  mayReveal,
   newRun,
   parseCli,
   pickLeft,
@@ -104,6 +105,14 @@ describe("tally and headlines", () => {
     const h = headlines(r);
     expect(h[0]).toBe("Looks eval: FAILED (edits not accepted: 02 Q; pairs not judged: 03; masters untouched: NO)");
     expect(h[3]).toBe("masters untouched: NO");
+  });
+  it("keeps the arms hidden while an edit is not accepted, unless --judge or already revealed", () => {
+    const r = judgedRun(["B", "A"]);
+    expect(mayReveal(r, "resume")).toBe(true);
+    r.photos[1]!.edits.P = { ...ok, timed_out: true };
+    expect([mayReveal(r, "new"), mayReveal(r, "resume"), mayReveal(r, "judge")]).toEqual([false, false, true]);
+    r.revealed_at = "t";
+    expect(mayReveal(r, "resume")).toBe(true);
   });
 });
 

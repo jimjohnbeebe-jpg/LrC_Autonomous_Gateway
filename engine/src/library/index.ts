@@ -37,3 +37,5 @@ export {
   placeExport,
 } from "./files.js";
 export type { OnExisting, Placed } from "./files.js";
+export { TEMPLATE_TOKENS, captureDate, expandTemplate, importDestination, readCaptureDate, templateProblem } from "./capture-date.js";
+export type { CaptureDate, ImportTemplates } from "./capture-date.js";

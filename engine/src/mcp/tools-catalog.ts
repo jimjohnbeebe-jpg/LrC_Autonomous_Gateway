@@ -135,10 +135,18 @@ export async function listFolders(ctx: ToolContext, args: Page): Promise<ToolOut
   });
 }
 
-/** A write tool's answer: how many photos changed, each photo's before and after, and the failures. */
+/**
+ * A write tool's answer: how many photos changed, each photo's before and after, and the failures. The tool log
+ * also keeps each photo's before and after (`writes`; a failure that read a `before` too, with `after` when there
+ * was one), so `npm run shoot:check` can tell from the log whether a chat put every photo back (issues #111, #112).
+ */
 export function written<T>(out: WriteResult<T>, extra: Record<string, unknown>): ToolOutput {
   const changed = out.photos.filter((p) => p.changed).length;
-  return { json: { ...extra, changed, photos: out.photos, failed: out.failed }, log: { changed, failed: out.failed.length } };
+  const writes = [
+    ...out.photos.map((p) => ({ uuid: p.uuid, before: p.before, after: p.after })),
+    ...out.failed.filter((f) => "before" in f).map((f) => ({ uuid: f.uuid, before: f.before, ...("after" in f ? { after: f.after } : {}) })),
+  ];
+  return { json: { ...extra, changed, photos: out.photos, failed: out.failed }, log: { changed, failed: out.failed.length, writes } };
 }
 
 export async function setRating(ctx: ToolContext, args: SetRatingArgs): Promise<ToolOutput> {

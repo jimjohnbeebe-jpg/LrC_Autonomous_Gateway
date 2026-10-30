@@ -149,6 +149,7 @@ export async function getMetadata(ctx: ToolContext, args: GetMetadataArgs): Prom
     await ctx.deps.ensureBridge();
     needPlugin(ctx, "lr_get_metadata", METADATA_PLUGIN, "it reads title, caption, headline, flags and stacks");
     const { photos, failed } = await readMetadata(ctx, args.uuids, Infinity, args.raw === true);
-    return { json: { photos, failed }, log: { returned: photos.length, failed: failed.length } };
+    // failed_uuids: so npm run shoot:check can tell which photos a chat read before writing them (Greptile, PR #268).
+    return { json: { photos, failed }, log: { returned: photos.length, failed: failed.length, failed_uuids: failed.map((f) => f.uuid) } };
   });
 }

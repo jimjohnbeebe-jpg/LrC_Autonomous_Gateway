@@ -13,6 +13,7 @@ import {
   CAMERA_PROFILE_PARAM,
   CUSTOM_WHITE_BALANCE_PARAMS,
   MaskError,
+  amountOf,
   readPreset,
   readTable,
   summarize,
@@ -60,7 +61,7 @@ export function captureLook(view: Pick<FromSdkResult, "settings" | "pipeline">, 
 
 export type LookMask = { kind: string; name: string; purpose: string; sliders: Record<string, number> };
 
-/** The photo's masks a look can carry (an AI kind with no point, one part, shown, not inverted), without geometry; `skipped` says why each other one is not. */
+/** The photo's masks a look can carry (an AI kind with no point, one part, shown, not inverted, at Amount 1), without geometry; `skipped` says why each other one is not. */
 export function captureMasks(sdk: SdkSettings): { masks: LookMask[]; skipped: string[] } {
   let table;
   try {
@@ -71,9 +72,12 @@ export function captureMasks(sdk: SdkSettings): { masks: LookMask[]; skipped: st
   }
   const masks: LookMask[] = [];
   const skipped: string[] = [];
-  for (const m of table.map((e) => summarize(e))) {
+  for (const e of table) {
+    const m = summarize(e);
     const fits = m.components === 1 && m.active && !m.inverted && (LOOK_MASK_KINDS as readonly string[]).includes(m.kind);
     if (!fits) skipped.push(`"${m.name}" (${m.kind}): a look carries only shown, one-part, not inverted AI masks Lightroom finds without a point`);
+    // lr_create_mask makes a mask at Amount 1 (params mask-ops.ts newCorrection), so a lower Amount would come back stronger.
+    else if (amountOf(e) !== 1) skipped.push(`"${m.name}": its Amount is ${amountOf(e)}, and a look's mask is made at Amount 1`);
     else if (masks.length >= MAX_LOOK_MASKS) skipped.push(`"${m.name}": a look carries at most ${MAX_LOOK_MASKS} masks`);
     else masks.push({ kind: m.kind, name: m.name.slice(0, 60), purpose: `From the source photo's "${m.name}" mask; adjust it to each photo.`.slice(0, 300), sliders: m.sliders });
   }

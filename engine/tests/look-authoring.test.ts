@@ -36,6 +36,7 @@ describe("lr_save_intent from_photo and from_preset", () => {
       correction("C-1", "1. Sky - Deepen", { MaskSubType: 2 }, { LocalExposure2012: -0.25, LocalDehaze: 0.2 }),
       correction("C-2", "2. Person", { MaskSubType: 0, MaskSubCategoryID: 20036 }), // one person: needs a point
       correction("C-3", "3. Vignette", { What: "Mask/CircularGradient" }),
+      correction("C-4", "4. Sky - Faint", { MaskSubType: 2 }, { LocalExposure2012: -0.25, CorrectionAmount: 0.66 }), // made at Amount 1, it would be stronger
     ];
     const out = await tools.saveIntent({ intent: candidate, confirmed: false, from_photo: true, dry_run: true });
     const intent = out.json["intent"] as { tone_mode: string; masks: unknown[] };
@@ -43,7 +44,8 @@ describe("lr_save_intent from_photo and from_preset", () => {
     expect(intent.masks).toEqual([{ kind: "sky", name: "1. Sky - Deepen", purpose: expect.stringContaining("1. Sky - Deepen"), sliders: { "local.exposure": -1, "local.dehaze": 20 } }]);
     const info = out.json["from_photo"] as { masks_captured: number; masks_skipped: string[] };
     expect(info.masks_captured).toBe(1);
-    expect(info.masks_skipped).toHaveLength(2);
+    expect(info.masks_skipped).toHaveLength(3);
+    expect(info.masks_skipped[2]).toContain("Amount is 0.66");
   });
 
   it("from_photo keeps the candidate's own tone_mode and masks", async () => {

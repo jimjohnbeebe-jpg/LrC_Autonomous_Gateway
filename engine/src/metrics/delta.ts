@@ -1,9 +1,12 @@
 // after - before of two measurements (split out of compute.ts, Phase 10 row 7).
 
-import { round, type Metrics, type MetricsDelta, type MetricsSummary, type PerChannel, type Stats, type StatsDelta } from "./types.js";
+import { round, type Metrics, type MetricsDelta, type MetricsSummary, type PerChannel, type Perceptual, type PerceptualDelta, type Stats, type StatsDelta } from "./types.js";
+
+/** The perceptual keys that hold a hue in degrees (perceptual.ts cast). */
+const HUE_KEYS = new Set(["h", "wheel"]);
 
 /** The signed shortest turn from `before` to `after`, in degrees, -180 < d <= 180. */
-function hueTurn(before: number, after: number): number {
+export function hueTurn(before: number, after: number): number {
   let d = (after - before) % 360;
   if (d <= -180) d += 360;
   if (d > 180) d -= 360;
@@ -45,5 +48,16 @@ export function deltaMetrics(before: Metrics | MetricsSummary, after: Metrics | 
     const match = earlier.get(region.label);
     if (match) regions.push({ label: region.label, ...deltaStats(match, region) });
   }
-  return { ...deltaStats(before, after), regions };
+  return { ...deltaStats(before, after), regions, perceptual: deltaPerceptual(before.perceptual, after.perceptual) };
+}
+
+/** after - before of every number of a perceptual set, hues as the shortest turn; null where either side is null. */
+export function deltaPerceptual(before: Perceptual, after: Perceptual): PerceptualDelta {
+  const diff = (b: unknown, a: unknown, key: string): unknown => {
+    if (typeof b === "number" && typeof a === "number") return HUE_KEYS.has(key) ? round(hueTurn(b, a), 1) : round(a - b, 3);
+    if (b === null || a === null || typeof b !== "object" || typeof a !== "object") return null;
+    if (Array.isArray(a)) return a.map((v, i) => diff((b as unknown[])[i], v, key));
+    return Object.fromEntries(Object.entries(a).map(([k, v]) => [k, diff((b as Record<string, unknown>)[k], v, k)]));
+  };
+  return diff(before, after, "") as PerceptualDelta;
 }

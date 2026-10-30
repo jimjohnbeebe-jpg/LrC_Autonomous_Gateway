@@ -92,7 +92,7 @@ export function accumulate(data: Uint8Array, width: number, channels: number, re
 }
 
 /** Nearest rank: the lowest bin with at least p % of `total` at or below it. */
-function percentile(histogram: Float64Array, total: number, p: number): number {
+export function percentile(histogram: Float64Array, total: number, p: number): number {
   const target = Math.max(1, Math.ceil((p / 100) * total));
   let cumulative = 0;
   for (let i = 0; i < histogram.length; i++) {

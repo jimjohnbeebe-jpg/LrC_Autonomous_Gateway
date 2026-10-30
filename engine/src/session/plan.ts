@@ -203,7 +203,7 @@ export function hueDistance(a: number, b: number): number {
  * Converged by metrics (PRD 6.5, AVG-009): mean luma moved less than 1/255 of the range, both
  * clipping figures less than 0.1 point, and no slider more than its minimum step.
  */
-export function convergedByMetrics(delta: MetricsDelta | null, changes: readonly Change[], pipeline: Pipeline = "raw"): boolean {
+export function convergedByMetrics(delta: Pick<MetricsDelta, "luma_mean" | "clip_high_pct" | "clip_low_pct"> | null, changes: readonly Change[], pipeline: Pipeline = "raw"): boolean {
   if (!delta) return false;
   if (Math.abs(delta.luma_mean) >= CONVERGENCE.lumaMean) return false;
   if (Math.abs(delta.clip_high_pct) >= CONVERGENCE.clipPct || Math.abs(delta.clip_low_pct) >= CONVERGENCE.clipPct) return false;
@@ -215,4 +215,4 @@ export function convergedByMetrics(delta: MetricsDelta | null, changes: readonly
  * thresholds; false without regions. A signal only: it ends nothing (session\masks.ts).
  */
 export const convergedByRegions = (delta: MetricsDelta): boolean =>
-  delta.regions.length > 0 && delta.regions.every((r) => convergedByMetrics({ ...r, regions: [] }, []));
+  delta.regions.length > 0 && delta.regions.every((r) => convergedByMetrics(r, []));

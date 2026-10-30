@@ -1,5 +1,6 @@
 // The metrics' constants and types (split out of compute.ts, Phase 10 row 7; compute.ts has the definitions).
 
+import type { BandShares } from "./bands.js";
 import type { PixelRect, RegionBox } from "./regions.js";
 
 export const CLIP_HIGH = 253;
@@ -41,6 +42,8 @@ export type Metrics = {
   /** 256 bins each, pixel counts; luma bin i holds the pixels whose rounded luma is i. */
   histograms: { luma: number[]; r: number[]; g: number[]; b: number[] };
   regions: RegionStats[];
+  /** The whole image only, not each region (perceptual.ts). */
+  perceptual: Perceptual;
 } & Stats;
 
 /** Everything but the histograms and the size: what a tool result shows each pass. */
@@ -48,10 +51,24 @@ export type MetricsSummary = Omit<Metrics, "width" | "height" | "pixels" | "hist
 
 /** after - before for every scalar of Stats; null where either side is null. */
 export type StatsDelta = Omit<Stats, "hue_histogram">;
-export type MetricsDelta = StatsDelta & { regions: Array<{ label: string } & StatsDelta> };
+export type MetricsDelta = StatsDelta & { regions: Array<{ label: string } & StatsDelta>; perceptual: PerceptualDelta };
+
+/** perceptual.ts's tone ranges: shadows, midtones, highlights. */
+export type ToneRange = "sh" | "mid" | "hi";
+export type Cast = { a: number; b: number; C: number; h: number | null; wheel: number | null };
+export type Perceptual = {
+  L: { p2: number; p5: number; p20: number; p50: number; p80: number; p95: number; p98: number };
+  zones: number[];
+  cast: Record<ToneRange, Cast | null>;
+  bands: BandShares;
+  cf: number;
+  rms: number;
+};
+/** after - before of each number; hues (h, wheel) as the shortest turn; null where either side is null (a cast with no pixels: null). */
+export type PerceptualDelta = Perceptual;
 
 /** Round to `digits` decimals. */
 export const round = (value: number, digits = 4): number => {
   const f = 10 ** digits;
-  return Math.round(value * f) / f;
+  return Math.round(value * f) / f + 0; // + 0: -0 reads as 0
 };

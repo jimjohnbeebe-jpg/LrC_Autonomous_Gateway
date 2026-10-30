@@ -34,6 +34,7 @@
 // Regions (lr_set_regions) get the same set, measured inside their box.
 
 import sharp from "sharp";
+import { measurePerceptual } from "./perceptual.js";
 import { boxToRect, type Region } from "./regions.js";
 import { laplacianVariance, resampleLuma } from "./sharpness.js";
 import { accumulate, finish } from "./stats.js";
@@ -64,6 +65,7 @@ export function computeMetrics(data: Uint8Array, width: number, height: number, 
     ...finish(whole),
     sharpness: laplacianVariance(grid),
     regions: regionStats,
+    perceptual: measurePerceptual(data, channels, whole.hue, whole.chromatic),
   };
 }
 

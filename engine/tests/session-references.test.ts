@@ -73,6 +73,19 @@ describe("references in a session", () => {
     expect(() => lib.check({ ...look, schema_version: 3, references: {} })).toThrow();
   });
 
+  it("reads the photo's settings again after the reference exports, so pass 0 starts from what the user left (Greptile, PR #276)", async () => {
+    const previews = new PreviewService(client, { previewDir: path.join(tmp, "previews") });
+    const editing = newManager({
+      renderReference: async (r) => {
+        lr.settings = { ...lr.settings, Exposure2012: 1 }; // the user moves Exposure while the references export
+        return previews.render({ longEdge: r.longEdge, quality: r.quality, photoUuid: r.uuid, measureEdge: r.measureEdge });
+      },
+    });
+    const out = await editing.begin({ references: { uuids: ["SIM-LIB-2"] }, return_image: "none" });
+    expect(out.json["start_off_zero"]).toMatchObject({ exposure: 1 });
+    expect((out.json["settings"] as Record<string, unknown>)["exposure"]).toBe(1);
+  });
+
   it("has no references and no gap without the argument or an intent's", async () => {
     const out = await manager.begin({ return_image: "none" });
     expect(out.json["references"]).toBeUndefined();
@@ -106,6 +119,15 @@ describe("the reference gap", () => {
     expect(referenceGap(perceptual({ wheel: 5 }), refs)["sh.wheel"]?.at).toBe("within");
     expect(referenceGap(perceptual({ wheel: 30 }), refs)["sh.wheel"]?.at).toBe("above");
     expect(referenceGap(perceptual({ wheel: 330 }), refs)["sh.wheel"]?.at).toBe("below");
+  });
+
+  it("keeps a hue set spread more than 180 degrees below its median in order (Greptile, PR #276)", () => {
+    const refs = aggregate([190, 20, 20, 20, 20, 320, 320].map((wheel) => perceptual({ wheel })));
+    expect(refs["sh.wheel"]).toEqual({ min: 190, med: 20, max: 20, n: 7 });
+    expect(referenceGap(perceptual({ wheel: 20 }), refs)["sh.wheel"]?.at).toBe("within");
+    expect(referenceGap(perceptual({ wheel: 200 }), refs)["sh.wheel"]?.at).toBe("within");
+    expect(referenceGap(perceptual({ wheel: 30 }), refs)["sh.wheel"]?.at).toBe("above");
+    expect(referenceGap(perceptual({ wheel: 180 }), refs)["sh.wheel"]?.at).toBe("below");
   });
 
   it("leaves out a measure no reference has (a cast without a hue, or a tone range without pixels)", () => {

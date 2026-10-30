@@ -2,8 +2,9 @@
 // R4): for the key perceptual measures, the references' range (min, median, max) and where the photo's
 // value lies against it. Reported to Claude, never a target and never a refusal.
 // Hues (a cast's wheel hue) are circular: the set is unwrapped around its circular mean before the
-// min, median and max are taken, and the photo is placed by its shortest turn from the median
-// [inference: correct while the set spreads less than 180 degrees either side].
+// min, median and max are taken. The photo is within when it lies on the arc from the min through the
+// median to the max (min <= median <= max as unwrapped, so that arc is the counter-clockwise turn from min
+// to max, under 360 degrees), else below or above by the nearer end [inference] (Greptile, PR #276).
 
 import { hueTurn } from "./delta.js";
 import { round, type Perceptual } from "./types.js";
@@ -70,9 +71,15 @@ export function referenceGap(photo: Perceptual, refs: ReferenceAggregate): Recor
     const v = read(photo);
     const r = refs[name];
     if (v === null || !r) continue;
-    // A hue is placed by its turn from the median, against the turns of the min and max.
-    const [lo, at, hi] = isHue(name) ? [hueTurn(r.med, r.min), hueTurn(r.med, v), hueTurn(r.med, r.max)] : [r.min, v, r.max];
-    out[name] = { v, ref: [r.min, r.med, r.max], at: at < lo ? "below" : at > hi ? "above" : "within" };
+    out[name] = { v, ref: [r.min, r.med, r.max], at: isHue(name) ? hueAt(v, r) : v < r.min ? "below" : v > r.max ? "above" : "within" };
   }
   return out;
+}
+
+const ccw = (from: number, to: number): number => (((to - from) % 360) + 360) % 360;
+
+/** A hue against the references' arc min -> median -> max (aggregate's unwrapped order); outside it, by the nearer end. */
+function hueAt(v: number, r: RefRange): GapEntry["at"] {
+  if (ccw(r.min, v) <= ccw(r.min, r.med) + ccw(r.med, r.max)) return "within";
+  return Math.abs(hueTurn(r.min, v)) < Math.abs(hueTurn(r.max, v)) ? "below" : "above";
 }

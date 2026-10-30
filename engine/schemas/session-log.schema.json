@@ -423,7 +423,8 @@
             "enum": [
               "pass0",
               "step",
-              "mask"
+              "mask",
+              "crop"
             ]
           },
           "target": {
@@ -2574,6 +2575,98 @@
               "id",
               "name",
               "kind",
+              "before",
+              "after"
+            ],
+            "additionalProperties": false
+          },
+          "crop": {
+            "type": "object",
+            "properties": {
+              "before": {
+                "type": "object",
+                "properties": {
+                  "box": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number"
+                      },
+                      "y": {
+                        "type": "number"
+                      },
+                      "w": {
+                        "type": "number"
+                      },
+                      "h": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "w",
+                      "h"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "angle": {
+                    "type": "number"
+                  },
+                  "aspect": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "box",
+                  "angle",
+                  "aspect"
+                ],
+                "additionalProperties": false
+              },
+              "after": {
+                "type": "object",
+                "properties": {
+                  "box": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number"
+                      },
+                      "y": {
+                        "type": "number"
+                      },
+                      "w": {
+                        "type": "number"
+                      },
+                      "h": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "w",
+                      "h"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "angle": {
+                    "type": "number"
+                  },
+                  "aspect": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "box",
+                  "angle",
+                  "aspect"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
               "before",
               "after"
             ],

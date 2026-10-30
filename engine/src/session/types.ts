@@ -5,7 +5,7 @@ import type { BridgeClient, HudStage } from "../bridge/index.js";
 import type { IntentLibrary, LoadedIntent } from "../intents/index.js";
 import type { AiTrace, ClientIdentity, SessionLogData, SessionLogFiles } from "../log/index.js";
 import type { Metrics, Region, RegionBox } from "../metrics/index.js";
-import type { CanonicalSettings, CopySample, EditOp, Geometry, ParamMap, Pipeline } from "../params/index.js";
+import type { CanonicalSettings, CopySample, CropRequest, EditOp, Geometry, ParamMap, Pipeline } from "../params/index.js";
 import type { RenderedPreview } from "../preview/index.js";
 import type { KnownLogFolders, PageRead } from "../settings/index.js";
 import type { AiJob } from "./ai-masks.js";
@@ -85,6 +85,8 @@ export type CreateMaskArgs = MaskPassArgs & {
 /** lr_edit_mask: the edit as params\mask-ops.ts takes it (issue #131: `combine` adds a part, `part` edits one). */
 export type EditMaskArgs = MaskPassArgs & Omit<EditOp, "op">;
 export type DeleteMaskArgs = MaskPassArgs & { mask_id: string };
+/** lr_crop (crop.ts, issue #115): one pass, the crop in 0-1 of the photo upright and uncropped. */
+export type CropArgs = MaskPassArgs & CropRequest;
 
 export type SessionDeps = {
   client: BridgeClient;
@@ -230,6 +232,8 @@ export type Session = {
   startSettings: CanonicalSettings;
   /** The mask table before the session (its fingerprint): a revert must bring it back too. */
   startMasks: string;
+  /** The five crop keys before the session (params cropKeys, issue #115): a revert must bring the crop back too. */
+  startCrop: Record<string, number>;
   /** How AI masks were last made (ai-masks.ts): the table route, or LrDevelopController after it failed. */
   aiRoute: "table" | "dc" | null;
   /** An update_ai_settings whose result Lightroom has not shown yet (ai-update.ts, D16): while set, the session writes, exports, renders and reverts nothing (io.ts). */

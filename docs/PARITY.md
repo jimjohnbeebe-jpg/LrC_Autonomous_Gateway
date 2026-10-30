@@ -97,7 +97,7 @@ Count: 56 `have`, 10 `ours+`, 2 `planned` (#217: 1, #218: 1) [handle: `engine/te
 
 ## LrC-AVG tools with no upstream counterpart
 
-The edit loop and its records: `lr_help`, `lr_begin_session`, `lr_step`, `lr_probe`, `lr_set_regions`, `lr_select_variant`, `lr_approve_pass`, `lr_end_session`, `lr_get_session_log`. The look library: `lr_list_intents`, `lr_get_intent`, `lr_save_intent`, `lr_delete_intent`. Upstream's nearest is a prompt-level skill with no pass cap, guardrails or session state [handle: `docs/reports/phase10/AUTOMAAT_COMPARE_2026-10-26.md` section 6.1].
+The edit loop and its records: `lr_help`, `lr_begin_session`, `lr_step`, `lr_probe`, `lr_set_regions`, `lr_crop` (issue #115), `lr_select_variant`, `lr_approve_pass`, `lr_end_session`, `lr_get_session_log`. The look library: `lr_list_intents`, `lr_get_intent`, `lr_save_intent`, `lr_delete_intent`. Upstream's nearest is a prompt-level skill with no pass cap, guardrails or session state [handle: `docs/reports/phase10/AUTOMAAT_COMPARE_2026-10-26.md` section 6.1].
 
 ## Using both servers
 

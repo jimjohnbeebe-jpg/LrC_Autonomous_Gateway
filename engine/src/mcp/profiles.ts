@@ -33,6 +33,7 @@ export const EDIT_TOOLS = [
   "lr_create_mask",
   "lr_edit_mask",
   "lr_delete_mask",
+  "lr_crop",
 ] as const;
 
 /** The profile LRC_AVG_TOOLS names (any letter case); an unknown value gives the default and is returned as `ignored`. */

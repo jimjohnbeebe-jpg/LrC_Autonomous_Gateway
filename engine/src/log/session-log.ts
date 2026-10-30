@@ -28,6 +28,7 @@ export const RECIPE_SCHEMA_ID = "lrc-avg/recipe/1";
 const perChannel = z.strictObject({ r: z.number(), g: z.number(), b: z.number() });
 const percentiles = z.strictObject({ p1: z.number(), p5: z.number(), p50: z.number(), p95: z.number(), p99: z.number() });
 const box = z.strictObject({ x: z.number(), y: z.number(), w: z.number(), h: z.number() });
+const cropViewSchema = z.strictObject({ box, angle: z.number(), aspect: z.number() });
 const rect = z.strictObject({ left: z.number(), top: z.number(), width: z.number(), height: z.number() });
 
 const deltaShape = {
@@ -95,7 +96,7 @@ const pipelineSchema = z.enum(["raw", "rendered"]);
 export const passSchema = z.strictObject({
   /** The pass number of its photo: each copy counts its own passes (MCP_TOOLS lr_select_variant). */
   n: z.number().int().min(0),
-  kind: z.enum(["pass0", "step", "mask"]),
+  kind: z.enum(["pass0", "step", "mask", "crop"]),
   target: targetIdSchema,
   started: z.string(),
   duration_ms: z.number(),
@@ -119,6 +120,8 @@ export const passSchema = z.strictObject({
   approval: z.strictObject({ pass: z.number().int(), by: approvalBySchema, waited_ms: z.number() }).optional(),
   /** Engine 0.16.0: a mask pass's change (kind "mask"; its `changes` are empty, its settings unchanged). */
   mask: maskPassSchema.optional(),
+  /** Issue #115: a crop pass's crop (kind "crop"; its `changes` are empty), before and after, in the upright, uncropped frame (params\crop-frame.ts cropView). */
+  crop: z.strictObject({ before: cropViewSchema, after: cropViewSchema }).optional(),
   /**
    * Engine 0.21.0 only, kept to read its logs: what pass 0 changed of a schema v1 intent for the photo's pipeline (intents v2 from 0.22.0 need no change).
    * Issue #179: a mask pass's warnings, a mask mostly outside the preview (params\crop-share.ts).

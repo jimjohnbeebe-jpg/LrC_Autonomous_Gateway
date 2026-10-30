@@ -31,7 +31,12 @@ When an edit starts, the AI can name its own model; Lightroom's HUD and the Deck
 | OpenCode | Tested 2026-10-16 (same report) |
 | Hermes Agent | Tested 2026-10-16 (same report) |
 | Antigravity CLI | Tested 2026-10-16 (same report) |
-| Codex CLI | Inferred, not tested |
+| Codex CLI | Inferred, not tested (the probe of 2026-10-29 did not get past Codex's sign-in, which it could not refresh) |
+| Cursor | Inferred, not tested |
+| VS Code (GitHub Copilot) | Inferred, not tested |
+| Windsurf | Inferred, not tested |
+
+"Inferred" means the entry is written from the app's documentation, read on the date given with it, and has not been run [inference: the shape matches the other entries, but no run confirms it]. Codex: `npm run clients:probe` with `LRC_AVG_PROBE_CLIENTS=codex` on 2026-10-29 stopped at Codex's first turn with "Your access token could not be refreshed. Please log out and sign in again." [handle: run by Claude Code from the branch `fix/distribution-docs`, codex-cli 0.154.0; its JSON events ended in `turn.failed` with that message, 3.3 s after the start; the probe's rewritten `docs/reports/phase8.5/clients-probe.*` were not committed]. `codex login status` had printed "Logged in using ChatGPT" just before [handle: the same session], so that check does not show an expired token.
 
 The tests ran against the engine built from this repository, not the installed one [handle: `docs/reports/phase8.5/clients.md:37`, `npm run deck:build` then `engine\dist\devtools\clients-check-cli.js`]. That the installed paths work the same is [inference]: it is the same `main.js` started by another `node.exe`.
 
@@ -41,7 +46,7 @@ The tests ran against the engine built from this repository, not the installed o
 
 Start the client again after you change its configuration [inference: the clients below read their MCP configuration when they start].
 
-**A smaller tool list.** For a model that struggles with LrC-AVG's 62 tools, set the environment variable `LRC_AVG_TOOLS` to `edit` in the entry (in JSON: `"env": { "LRC_AVG_TOOLS": "edit" }`; with `claude mcp add`: `-e LRC_AVG_TOOLS=edit`). The engine then lists only the 14 tools of an edit ([README "Tool profiles"](../README.md#tool-profiles)) [handle: `engine/src/mcp/profiles.ts`; `engine/tests/tool-profiles.test.ts`]. That each client below passes the variable on is [unverified]; `lr_help` names the profile in force (`tool_profile`).
+**A smaller tool list.** For a model that struggles with LrC-AVG's 65 tools, set the environment variable `LRC_AVG_TOOLS` to `edit` in the entry (in JSON: `"env": { "LRC_AVG_TOOLS": "edit" }`; with `claude mcp add`: `-e LRC_AVG_TOOLS=edit`). The engine then lists only the 14 tools of an edit ([README "Tool profiles"](../README.md#tool-profiles)) [handle: `engine/src/mcp/profiles.ts`; `engine/tests/tool-profiles.test.ts`]. That each client below passes the variable on is [unverified]; `lr_help` names the profile in force (`tool_profile`).
 
 ## Claude Code
 
@@ -105,6 +110,34 @@ command = '<node>'
 args = ['<main.js>']
 tool_timeout_sec = 120
 ```
+
+## Cursor
+
+Inferred, not tested. For every project, in `%USERPROFILE%\.cursor\mcp.json`; for one project, in `.cursor\mcp.json` in its folder [handle: https://cursor.com/docs/context/mcp, read 2026-10-29, "`~/.cursor/mcp.json` in your home directory"; that `~` is `%USERPROFILE%` on Windows is [inference]]. The page's table lists `type` as required for a stdio server, though its examples leave it out:
+
+```json
+{ "mcpServers": { "lrc-avg": { "type": "stdio", "command": "<node>", "args": ["<main.js>"] } } }
+```
+
+## VS Code (GitHub Copilot)
+
+Inferred, not tested. VS Code keeps MCP servers in a `mcp.json` under the key `servers`, not `mcpServers`. Open the one of your user profile with the command **MCP: Open User Configuration** (or a project's `.vscode\mcp.json` with **MCP: Open Workspace Folder MCP Configuration**); **MCP: List Servers** starts and stops them [handle: https://code.visualstudio.com/docs/copilot/reference/mcp-configuration, read 2026-10-29]:
+
+```json
+{ "servers": { "lrc-avg": { "type": "stdio", "command": "<node>", "args": ["<main.js>"] } } }
+```
+
+The `edit` profile goes in `"env": { "LRC_AVG_TOOLS": "edit" }` in the same entry [handle: the same page, `env` in the stdio field table].
+
+## Windsurf
+
+Inferred, not tested. The Windsurf MCP page (https://docs.windsurf.com/windsurf/cascade/mcp) now redirects to https://docs.devin.ai/desktop/cascade/mcp, which names the app Devin Desktop and gives the file `%APPDATA%\devin\mcp_config.json` on Windows [handle: both URLs, read 2026-10-29; the redirect is a 307]. Which file an older Windsurf build reads is [unverified]:
+
+```json
+{ "mcpServers": { "lrc-avg": { "command": "<node>", "args": ["<main.js>"] } } }
+```
+
+Cascade sees at most 100 tools at a time, from all its servers together [handle: https://docs.devin.ai/desktop/cascade/mcp, read 2026-10-29]. LrC-AVG alone has 65, so with other servers set up use the `edit` profile (`"env": { "LRC_AVG_TOOLS": "edit" }`) [inference].
 
 ## Uninstalling
 

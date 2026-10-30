@@ -47,6 +47,7 @@
     "crop:check": "npm run build && node engine/dist/devtools/crop-check-cli.js",
     "presets:check": "npm run build && node engine/dist/devtools/presets-check-cli.js",
     "stats:check": "npm run build && node engine/dist/devtools/stats-check-cli.js",
+    "shoot:check": "npm run build && node engine/dist/devtools/shoot-check-cli.js",
     "clip:res": "npm run build && node engine/dist/devtools/clip-res-check-cli.js",
     "catalog:check": "npm run build && node engine/dist/devtools/catalog-check-cli.js",
     "catalog:throwaway": "npm run build && node engine/dist/devtools/throwaway-cli.js",

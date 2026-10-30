@@ -15,7 +15,11 @@
 --   (engine\src\library\files.ts), so a name already there is handled by engine code, not by
 --   Lightroom's collision setting.
 -- import_photo { path }: one file added in place with addPhoto, unless the catalog already holds a
---   photo at that path (status "already").
+--   photo at that path (status "already"). With stack_with (plugin 1.9.0, issue #139), a photo's uuid, the
+--   file goes below that photo in its stack, addPhoto(path, top, "below"), and its stack is read back. Which
+--   files to stack is the engine's choice (engine\src\library\stack-groups.ts). Each import is its own write
+--   gate, which S11 needed: the photo stacked with was committed in an earlier gate [handle:
+--   docs\reports\phase8.5\S11.md "Pre-run findings", withWriteAccessDo; the S11 results, `import_stack`].
 --
 -- SDK facts: createCollection(name, parent, canReturnPrior), createCollectionSet(name, parent,
 -- canReturnPrior) and addPhoto(path, ...) need write access; findPhotoByPath(path, caseSensitivity)
@@ -41,6 +45,7 @@ local LrUUID = import 'LrUUID'
 
 local Gate = require 'Gate'
 local KeywordTree = require 'KeywordTree'
+local Metadata = require 'Metadata'
 local Photos = require 'Photos'
 
 local Transfer = {}
@@ -277,8 +282,9 @@ end
 -- --- Import.
 
 function Transfer.importPhoto(payload)
-    local path = payload.path
+    local path, stackWith = payload.path, payload.stack_with
     if not nonEmpty(path) then return fail("bad_request", "path must be a non-empty string") end
+    if stackWith ~= nil and not nonEmpty(stackWith) then return fail("bad_request", "stack_with must be a photo's uuid") end
     if LrFileUtils.exists(path) ~= "file" then return fail("not_found", "no file at " .. path) end
     local catalog = LrApplication.activeCatalog()
     local okFind, existing = LrTasks.pcall(function() return catalog:findPhotoByPath(path) end)
@@ -287,8 +293,18 @@ function Transfer.importPhoto(payload)
         local d = Photos.describe(catalog, existing)
         return { status = "already", uuid = d.uuid, filename = d.filename, capture_time = d.capture_time }
     end
+    local top -- found outside the gate (rule 03: yielding queries stay outside it)
+    if stackWith then
+        local okTop, found = LrTasks.pcall(function() return catalog:findPhotoByUuid(stackWith) end)
+        if not okTop then return fail("lookup_failed", "findPhotoByUuid: " .. tostring(found), true) end
+        if not found then return fail("unknown_photo", "no photo in the catalog has uuid " .. stackWith .. " to stack with; nothing was imported") end
+        top = found
+    end
     local photo
-    local okAdd, status, err = LrTasks.pcall(Gate.write, catalog, "AVG import photo", function() photo = catalog:addPhoto(path) end)
+    local function add()
+        if top then photo = catalog:addPhoto(path, top, "below") else photo = catalog:addPhoto(path) end
+    end
+    local okAdd, status, err = LrTasks.pcall(Gate.write, catalog, "AVG import photo", add)
     KeywordTree.forget() -- a file's own keywords may join the Keyword List on import [inference]: list_keywords walks again
     if not okAdd then return fail("import_failed", "Lightroom did not import " .. path .. ": " .. tostring(status)) end
     if not status then return nil, err end
@@ -296,7 +312,10 @@ function Transfer.importPhoto(payload)
     -- capture_time (plugin 0.21.0, issue #139): whether Lightroom has read dateTimeOriginal this soon
     -- after addPhoto is [unverified]; nil leaves it out, and the engine says null.
     local d = Photos.describe(catalog, photo)
-    return { status = "imported", uuid = d.uuid, filename = d.filename, capture_time = d.capture_time }
+    -- The stack read in a read gate of its own, after the write gate committed: false outside one, nil when the read fails.
+    local stack = nil
+    if top then stack = Metadata.stackOf(catalog, photo) end
+    return { status = "imported", uuid = d.uuid, filename = d.filename, capture_time = d.capture_time, stack = stack }
 end
 
 return Transfer

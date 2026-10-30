@@ -133,8 +133,8 @@ export type CommandPayloads = {
     width?: number;
     height?: number;
   };
-  /** An absolute file path; added in place. */
-  import_photo: { path: string };
+  /** An absolute file path; added in place. stack_with (plugin 1.9.0, issue #139): a photo's uuid; the file joins its stack, below it. */
+  import_photo: { path: string; stack_with?: string };
   get_prefs: Record<string, never>;
   /** Refused with bad_request when a field is unknown or of the wrong type (hud-protocol.ts). */
   hud_update: HudUpdatePayload;

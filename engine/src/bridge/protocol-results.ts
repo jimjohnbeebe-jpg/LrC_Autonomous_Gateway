@@ -219,8 +219,15 @@ export const COMMAND_RESULTS = {
     export_ms: z.number(),
   }),
   // import_photo: the photo at that path, added now or already in the catalog. capture_time (plugin
-  // 0.21.0): as photoIdentity's; absent from an older plugin, or when Lightroom has not read it yet.
-  import_photo: z.object({ status: z.enum(["imported", "already"]), uuid: z.string(), filename: z.string().optional(), capture_time: z.string().optional() }),
+  // 0.21.0): as photoIdentity's; absent from an older plugin, or when Lightroom has not read it yet. stack (plugin
+  // 1.9.0, issue #139): with stack_with, the new photo's stack as read back (Metadata.stackOf), false outside one.
+  import_photo: z.object({
+    status: z.enum(["imported", "already"]),
+    uuid: z.string(),
+    filename: z.string().optional(),
+    capture_time: z.string().optional(),
+    stack: z.union([z.literal(false), z.object({ position: z.number(), count: z.number(), collapsed: z.boolean(), top_uuid: z.string().optional() })]).optional(),
+  }),
   // Plugin 0.5.0 (Prefs.lua getPrefs): the settings page's values, each already checked by the
   // plugin, under their wire names. The engine checks each field again on its own
   // (settings\page.ts parsePage), so one bad field costs only that field; `invalid` lists what the

@@ -20,6 +20,8 @@ export class SimFiles {
   delayMs = 0;
   /** Catalog photos by path (import_photo). */
   readonly byPath = new Map<string, string>();
+  /** The stacks import_photo's stack_with made: the top's uuid -> its members, top first (issue #139). */
+  readonly stacks = new Map<string, string[]>();
   /** The export_photo payloads, in order. */
   readonly exports: Array<Record<string, unknown>> = [];
   /** collection_photos takes nothing (reads back the old membership). */
@@ -90,9 +92,17 @@ export class SimFiles {
     if (file.endsWith(".bad.jpg")) return fail("import_failed", `Lightroom did not import ${file}: unsupported`);
     const known = this.byPath.get(file);
     if (known) return ok({ status: "already", uuid: known, filename: path.basename(file), capture_time: this.library.meta(known)["capture_time"] });
+    const top = p["stack_with"] === undefined ? null : String(p["stack_with"]);
+    if (top !== null && !this.library.find(top)) return fail("unknown_photo", `no photo in the catalog has uuid ${top} to stack with; nothing was imported`);
     const uuid = `SIM-IMP-${this.byPath.size + 1}`;
     this.byPath.set(file, uuid);
     this.library.photos.push({ uuid, local_id: 2000 + this.byPath.size, filename: path.basename(file), rating: 0, keywords: [], day: "2026-10-04", gps: null });
-    return ok({ status: "imported", uuid, filename: path.basename(file), capture_time: "2026-10-04 12:00:00" });
+    const reply = { status: "imported", uuid, filename: path.basename(file), capture_time: "2026-10-04 12:00:00" };
+    if (top === null) return ok(reply);
+    // issue #139: the sim keeps the stack in import order (Lightroom's own order below the top is [unverified]).
+    const members = this.stacks.get(top) ?? [top];
+    members.push(uuid);
+    this.stacks.set(top, members);
+    return ok({ ...reply, stack: { position: members.length, count: members.length, collapsed: false, top_uuid: top } });
   }
 }

@@ -39,3 +39,5 @@ export {
 export type { OnExisting, Placed } from "./files.js";
 export { TEMPLATE_TOKENS, captureDate, expandTemplate, importDestination, readCaptureDate, templateProblem } from "./capture-date.js";
 export type { CaptureDate, ImportTemplates } from "./capture-date.js";
+export { captureSeconds, datesOnce, joinsPrevious } from "./stack-groups.js";
+export type { DateOf } from "./stack-groups.js";

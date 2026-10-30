@@ -12,7 +12,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { RECIPE_SCHEMA_ID } from "../log/index.js";
 import { ToolError } from "../mcp/errors.js";
-import { differingSettings, type CanonicalSettings } from "../params/index.js";
+import { cropDiffers, differingSettings, type CanonicalSettings } from "../params/index.js";
 import type { EndedByEntry } from "../log/index.js";
 import { settlePending } from "./ai-update.js";
 import { stampAvg } from "./avg-stamp.js";
@@ -76,7 +76,8 @@ export async function endSession(ctx: SessionContext, s: Session, args: FinishAr
       const view = map.fromSdk(res.read_back);
       finalSettings = view.settings;
       // The snapshot puts the mask table back too [handle: docs\reports\phase6\masks-capture\check.json `11_snapshot`, 0 differing paths].
-      const differing = [...differingSettings(finalSettings, s.startSettings), ...(view.masks.fingerprint !== s.startMasks ? ["masks"] : [])];
+      // The crop on its own (issue #115): the canonical settings leave it out, so a crop not put back keeps the snapshot.
+      const differing = [...differingSettings(finalSettings, s.startSettings), ...(view.masks.fingerprint !== s.startMasks ? ["masks"] : []), ...(cropDiffers(res.read_back, s.startCrop) ? ["crop"] : [])];
       revert = { ms: revertMs, differing };
     }
   } catch (err) {

@@ -6,6 +6,8 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { clientSpecs, findEntry } from "./cleanroom-entries.js";
 import { pathsOf, type Paths, type Sys } from "./cleanroom-sys.js";
+// DEV_ID: the repo plugin's ID (plugin\LrC-AVG.lrplugin\Info.lua).
+import { DEV_ID } from "../setup/plugin-id.js";
 
 export type Check = { check: string; ok: boolean; detail: string };
 
@@ -13,8 +15,6 @@ export type Check = { check: string; ok: boolean; detail: string };
 export const KEPT_DATA = ["logs", "intents", "last-start.json", "setup-result.json", "setup-result.txt", "status.txt"];
 
 export const PLUGIN_STEP = 'in Lightroom choose File > Plug-in Manager, select "LrC-AVG (dev)", click Disable, quit Lightroom, then run "npm run cleanroom -- --status"';
-/** The repo plugin's ID (plugin\LrC-AVG.lrplugin\Info.lua; tools\setup\plugin-id.ts DEV_ID). */
-const DEV_ID = "com.lrcavg.gateway.dev";
 
 const list = (dir: string): string[] => {
   try {

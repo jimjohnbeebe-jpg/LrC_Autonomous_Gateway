@@ -1,9 +1,9 @@
 // The session tools (Phase 3; the loop itself is session\manager.ts): lr_begin_session, lr_step,
 // lr_probe, lr_set_regions, lr_end_session, lr_get_session_log; Variants mode's lr_select_variant
 // (Phase 4); approve_each_pass mode's lr_approve_pass (Phase 5); the mask tools lr_list_masks,
-// lr_create_mask, lr_edit_mask and lr_delete_mask (engine 0.16.0, GitHub issue #59).
+// lr_create_mask, lr_edit_mask and lr_delete_mask (engine 0.16.0, GitHub issue #59); lr_crop (issue #115).
 
-import { endedAlike, endedError, type SessionManager, type ApproveArgs, type BeginArgs, type CreateMaskArgs, type DeleteMaskArgs, type EditMaskArgs, type EndArgs, type ListMasksArgs, type ProbeArgs, type RegionArgs, type SelectArgs, type StepArgs } from "../session/index.js";
+import { endedAlike, endedError, type SessionManager, type ApproveArgs, type BeginArgs, type CreateMaskArgs, type CropArgs, type DeleteMaskArgs, type EditMaskArgs, type EndArgs, type ListMasksArgs, type ProbeArgs, type RegionArgs, type SelectArgs, type StepArgs } from "../session/index.js";
 import { callClient } from "./call-context.js";
 import { ToolError } from "./errors.js";
 import { pageBridgeUse, readPageFolders, run, sessionTools, type ToolContext, type ToolOutput } from "./tools-shared.js";
@@ -139,5 +139,13 @@ export async function deleteMask(ctx: ToolContext, args: OpenArgs<DeleteMaskArgs
     const sessions = sessionTools(ctx);
     await ctx.deps.ensureBridge();
     return sessions.deleteMask(withOpen(sessions, args));
+  });
+}
+
+export async function crop(ctx: ToolContext, args: OpenArgs<CropArgs>): Promise<ToolOutput> {
+  return run(ctx, "lr_crop", args, async () => {
+    const sessions = sessionTools(ctx);
+    await ctx.deps.ensureBridge();
+    return sessions.crop(withOpen(sessions, args));
   });
 }

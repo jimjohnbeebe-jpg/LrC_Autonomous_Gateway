@@ -423,7 +423,8 @@
             "enum": [
               "pass0",
               "step",
-              "mask"
+              "mask",
+              "crop"
             ]
           },
           "target": {
@@ -2579,6 +2580,98 @@
             ],
             "additionalProperties": false
           },
+          "crop": {
+            "type": "object",
+            "properties": {
+              "before": {
+                "type": "object",
+                "properties": {
+                  "box": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number"
+                      },
+                      "y": {
+                        "type": "number"
+                      },
+                      "w": {
+                        "type": "number"
+                      },
+                      "h": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "w",
+                      "h"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "angle": {
+                    "type": "number"
+                  },
+                  "aspect": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "box",
+                  "angle",
+                  "aspect"
+                ],
+                "additionalProperties": false
+              },
+              "after": {
+                "type": "object",
+                "properties": {
+                  "box": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number"
+                      },
+                      "y": {
+                        "type": "number"
+                      },
+                      "w": {
+                        "type": "number"
+                      },
+                      "h": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "w",
+                      "h"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "angle": {
+                    "type": "number"
+                  },
+                  "aspect": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "box",
+                  "angle",
+                  "aspect"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "before",
+              "after"
+            ],
+            "additionalProperties": false
+          },
           "warnings": {
             "type": "array",
             "items": {
@@ -3207,6 +3300,18 @@
           "minimum": -9007199254740991,
           "maximum": 9007199254740991
         },
+        "measure_long_edge": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "quality": {
           "type": "integer",
           "minimum": -9007199254740991,
@@ -3243,6 +3348,15 @@
               ]
             },
             "long_edge": {
+              "type": "string",
+              "enum": [
+                "argument",
+                "intent",
+                "page",
+                "default"
+              ]
+            },
+            "measure_long_edge": {
               "type": "string",
               "enum": [
                 "argument",

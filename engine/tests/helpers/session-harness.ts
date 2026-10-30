@@ -66,7 +66,7 @@ export const newManager = (extra: Partial<SessionDeps> = {}): SessionManager => 
     client,
     map,
     intents: new IntentLibrary({ map, userDir }),
-    render: (r) => previews.render({ longEdge: r.longEdge, quality: r.quality, targetUuid: r.targetUuid, regions: r.regions }),
+    render: (r) => previews.render({ longEdge: r.longEdge, quality: r.quality, targetUuid: r.targetUuid, regions: r.regions, measureEdge: r.measureEdge }),
     logDir,
     engineVersion: "test",
     newId: () => ID,

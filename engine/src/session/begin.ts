@@ -15,7 +15,7 @@ import type { LoadedIntent } from "../intents/index.js";
 import { SESSION_LOG_SCHEMA_ID, SessionLogFiles, type SessionLogData } from "../log/index.js";
 import { ToolError, originalMissing } from "../mcp/errors.js";
 import { summarize } from "../metrics/index.js";
-import { WHITE_BALANCE_UNITS, type CanonicalSettings, type FromSdkResult } from "../params/index.js";
+import { WHITE_BALANCE_UNITS, cropKeys, type CanonicalSettings, type FromSdkResult } from "../params/index.js";
 import { readPage, resolveSessionSettings, type PageRead, type SessionSettings } from "../settings/index.js";
 import { APPROVAL_WAIT_MS } from "./approval.js";
 import { checkVariants } from "./copies.js";
@@ -40,7 +40,7 @@ const NO_INTENT: LoadedIntent = {
 export type Opened = { s: Session; view: FromSdkResult; photo: CommandResult<"get_context">; started: number };
 
 /** What lr_begin_session checked and read before it writes anything (checkBegin): a dry run ends here (dry-run.ts, issue #161). */
-export type Checked = { args: BeginArgs; mode: Session["mode"]; page: PageRead; loaded: LoadedIntent; settings: SessionSettings; photo: CommandResult<"get_context">; variantCount: number | null; view: FromSdkResult };
+export type Checked = { args: BeginArgs; mode: Session["mode"]; page: PageRead; loaded: LoadedIntent; settings: SessionSettings; photo: CommandResult<"get_context">; variantCount: number | null; view: FromSdkResult; crop: Record<string, number> };
 
 /** Check the call and read the photo and its settings, with nothing written. */
 export async function checkBegin(ctx: SessionContext, given: BeginArgs): Promise<Checked> {
@@ -69,16 +69,17 @@ export async function checkBegin(ctx: SessionContext, given: BeginArgs): Promise
   if (missing) throw missing;
   refuseLeftOpen(folderOf(ctx.deps.logDir), null, photo.uuid); // SESSION_LEFT_OPEN, before the snapshot (left-open.ts)
   const variantCount = mode === "variants" ? checkVariants(ctx, loaded, photo, settings.variantCount) : null;
-  const view = map.fromSdk((await client.request("get_settings", { target_uuid: photo.uuid })).settings); // LEGACY_PROCESS_VERSION
+  const sdk = (await client.request("get_settings", { target_uuid: photo.uuid })).settings;
+  const view = map.fromSdk(sdk); // LEGACY_PROCESS_VERSION
   // Before the snapshot: an unknown profile or one of the other pipeline is refused with nothing written.
   if (args.profile !== undefined) map.toSdk({ camera_profile: args.profile }, { processVersion: view.process_version, pipeline: view.pipeline });
-  return { args, mode, page, loaded, settings, photo, variantCount, view };
+  return { args, mode, page, loaded, settings, photo, variantCount, view, crop: cropKeys(sdk) };
 }
 
 /** Check the call, read the photo, take the pre-session snapshot and build the session (not yet logged). */
 export async function openSession(ctx: SessionContext, given: BeginArgs): Promise<Opened> {
   const started = performance.now();
-  const { args, mode, page, loaded, settings, photo, variantCount, view } = await checkBegin(ctx, given);
+  const { args, mode, page, loaded, settings, photo, variantCount, view, crop } = await checkBegin(ctx, given);
   const { client } = ctx.deps;
 
   const now = ctx.now();
@@ -111,6 +112,7 @@ export async function openSession(ctx: SessionContext, given: BeginArgs): Promis
     limits: { clipHighPct: settings.clipHighPct, clipLowPct: settings.clipLowPct },
     decay: settings.decay,
     longEdge: settings.longEdge,
+    measureEdge: settings.measureLongEdge,
     quality: settings.quality,
     master,
     variants: [],
@@ -120,6 +122,7 @@ export async function openSession(ctx: SessionContext, given: BeginArgs): Promis
     snapshot: { name: snapshotName, id: snap.snapshot_id },
     startSettings: view.settings,
     startMasks: view.masks.fingerprint,
+    startCrop: crop,
     aiRoute: null,
     aiPending: null,
     aiTrace: null,
@@ -168,6 +171,7 @@ function settingsEntry(settings: SessionSettings, page: PageRead): NonNullable<S
   return {
     approval: settings.approval,
     long_edge: settings.longEdge,
+    measure_long_edge: settings.measureLongEdge,
     quality: settings.quality,
     from: settings.from,
     page: { read: page.read, note: page.note, problems: page.problems },

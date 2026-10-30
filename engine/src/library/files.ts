@@ -8,8 +8,8 @@
 // folder at engine start and exit. It moves only files inside the exports folder, as the preview service reads
 // only inside its own (preview\service.ts isInside); the two temp folders are the same
 // (preview\service.ts header, Phase 1 handle).
-// Import: importFiles() lists the photo files under a folder; copyForImport() copies one into
-// `copy_to`, keeping its path below the source folder, and never overwrites: a file already there with
+// Import: importFiles() lists the photo files under a folder; copyForImport() copies one to the path
+// importDestination() gives in `copy_to` (capture-date.ts), and never overwrites: a file already there with
 // the same contents (size, then SHA-256) is taken as the earlier copy, so calling again after a partial
 // run goes on where it stopped.
 //
@@ -248,17 +248,15 @@ async function copyOnce(from: string, to: string): Promise<"copied" | "already">
 }
 
 /**
- * Copy `file` (found under `sourceRoot`) into `copyTo` at the same path below it, with its XMP
- * sidecar; returns the copy's path. A single-file source lands directly in `copyTo`.
+ * Copy `file` to `to` (capture-date.ts importDestination), with its XMP sidecar, which takes the
+ * copy's name and keeps its own extension; returns the copy's path.
  */
-export async function copyForImport(file: string, sourceRoot: string, copyTo: string): Promise<{ path: string; copied: boolean }> {
-  const rel = file === sourceRoot ? path.basename(file) : path.relative(sourceRoot, file);
-  const to = path.join(copyTo, rel);
+export async function copyForImport(file: string, to: string): Promise<{ path: string; copied: boolean }> {
   await fs.mkdir(path.dirname(to), { recursive: true });
   const done = await copyOnce(file, to);
   const xmp = await sidecar(file);
   if (xmp) {
-    const xmpTo = path.join(path.dirname(to), path.basename(xmp));
+    const xmpTo = to.slice(0, to.length - path.extname(to).length) + path.extname(xmp);
     if (done === "copied") await copyOnce(xmp, xmpTo);
     // An earlier copy's sidecar is left alone: Lightroom may have written to it since [inference: its
     // "Automatically write changes into XMP" catalog setting]. One missing there, as when an earlier

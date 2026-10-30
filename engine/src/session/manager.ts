@@ -45,6 +45,7 @@ import { closeNote, endedAlike, endedError, idleStage, withHudActions } from "./
 import { abortError, checkAbort, read, render } from "./io.js";
 import { PhotoHistory, activeError } from "./history.js";
 import { endLeftOpen, findLeftOpen, type LeftOpen } from "./left-open.js";
+import { cropPass } from "./crop.js";
 import { createMask, deleteMask, editMask, listMasks } from "./masks.js";
 import { selectVariant } from "./pick.js";
 import { probe } from "./probe.js";
@@ -53,7 +54,7 @@ import { showCopy, type ShowRecord } from "./show-copy.js";
 import { revertIfRestarted, watchRestarts, type RestartHost } from "./restart.js";
 import { step } from "./step.js";
 import { focus, resolveTarget } from "./targets.js";
-import { folderOf, type ApproveArgs, type BeginArgs, type CreateMaskArgs, type DeleteMaskArgs, type EditMaskArgs, type EndArgs, type ListMasksArgs, type ProbeArgs, type RegionArgs, type SelectArgs, type Session, type SessionContext, type SessionDeps, type SessionOutput, type StepArgs, type TargetId, type VariantId } from "./types.js";
+import { folderOf, type ApproveArgs, type BeginArgs, type CreateMaskArgs, type CropArgs, type DeleteMaskArgs, type EditMaskArgs, type EndArgs, type ListMasksArgs, type ProbeArgs, type RegionArgs, type SelectArgs, type Session, type SessionContext, type SessionDeps, type SessionOutput, type StepArgs, type TargetId, type VariantId } from "./types.js";
 import { runVariants } from "./variants.js";
 import { sessionView, type SessionView } from "./view.js";
 
@@ -194,6 +195,11 @@ export class SessionManager {
 
   deleteMask(args: DeleteMaskArgs): Promise<SessionOutput> {
     return this.exclusive(() => this.withNotices(args.session_id, (s) => deleteMask(this.ctx, s, args)));
+  }
+
+  /** lr_crop (crop.ts, issue #115): one pass. */
+  crop(args: CropArgs): Promise<SessionOutput> {
+    return this.exclusive(() => this.withNotices(args.session_id, (s) => cropPass(this.ctx, s, args)));
   }
 
   /**

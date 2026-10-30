@@ -88,6 +88,7 @@ describe("mcp server", () => {
       "lr_create_preset_from_active",
       "lr_create_snapshot",
       "lr_create_virtual_copies",
+      "lr_crop",
       "lr_delete_intent",
       "lr_delete_mask",
       "lr_delete_snapshot",
@@ -141,6 +142,8 @@ describe("mcp server", () => {
       "lr_set_develop_settings",
       "lr_undo_last_step",
       "lr_remove_photos",
+      // Issues #111, #112.
+      "lr_get_contact_sheet",
     ].sort());
     const sync = tools.find((t) => t.name === "lr_sync_series");
     expect(sync?.inputSchema.required).toEqual(["source", "targets", "adaptive_exposure"]);

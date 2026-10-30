@@ -1,8 +1,10 @@
 // Entry point of the preview module (ARCHITECTURE section 6).
 
-export { PREVIEW_SOURCE, PreviewError, PreviewService, defaultPreviewDir, isInside } from "./service.js";
+export { PREVIEW_SOURCE, PreviewError, PreviewService, defaultPreviewDir, isInside, measureAgain } from "./service.js";
 export type { PreviewRequest, RenderedPreview } from "./service.js";
 export { COMPOSITE_GUTTER, COMPOSITE_LABEL_STRIP, composite, planLayout } from "./composite.js";
 export type { Composite, Panel, PlacedPanel } from "./composite.js";
+export { MAX_SHEET_CELLS, contactSheet } from "./sheet.js";
+export type { ContactSheet } from "./sheet.js";
 export { cropRegion } from "./crop.js";
 export type { Crop } from "./crop.js";

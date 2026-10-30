@@ -7,7 +7,9 @@
 //      so a bad path in a response cannot make the engine touch anything else,
 //   3. keeps the JPEG as exported when it already fits the long edge and has no rotation tag, so it
 //      is not compressed twice; otherwise shrinks and rotates it with sharp at the same quality,
-//   4. hashes the JPEG that is sent on (SHA-256; the freshness record, ARCHITECTURE 6.3) and measures it.
+//   4. hashes the JPEG that is sent on (SHA-256; the freshness record, ARCHITECTURE 6.3) and measures it,
+//      or, with `measureEdge` (a session's measure_long_edge, issue #168), exports at that larger edge,
+//      measures the whole export upright and sends on the JPEG shrunk to the long edge.
 // Leftover files are purged when the engine starts and when it exits (PRD NFR-6).
 //
 // The previews folder is <os.tmpdir()>\LrC-AVG\previews, the folder the plugin writes into
@@ -23,7 +25,7 @@ import os from "node:os";
 import path from "node:path";
 import sharp from "sharp";
 import type { BridgeClient, CommandPayloads } from "../bridge/index.js";
-import { measureImage, type Metrics, type Region } from "../metrics/index.js";
+import { computeMetrics, measureImage, type Metrics, type Region } from "../metrics/index.js";
 
 export const PREVIEW_SOURCE = "export";
 /** An export took ~2.6 s at 1600 px in S1 [handle: docs\reports\phase0\S1.md]; allow for a slow first one. */
@@ -54,8 +56,10 @@ export class PreviewError extends Error {
  * `regions` are measured too (metrics.regions), for a session's lr_set_regions. `targetUuid` guards
  * the selected photo; `photoUuid` (plugin 0.4.0, lr_sync_series) exports the photo with that uuid,
  * selected or not, and leaves the selection alone (engine\src\bridge\protocol.ts Target). Not both.
+ * `measureEdge` (issue #168): when larger than longEdge, the export is made at it and measured whole,
+ * so the metrics count pixels at that size; the JPEG sent is still at longEdge. Ignored with `fast`.
  */
-export type PreviewRequest = { longEdge: number; quality: number; targetUuid?: string; photoUuid?: string; regions?: readonly Region[]; fast?: boolean };
+export type PreviewRequest = { longEdge: number; quality: number; targetUuid?: string; photoUuid?: string; regions?: readonly Region[]; fast?: boolean; measureEdge?: number | null };
 
 export type RenderedPreview = {
   uuid: string;
@@ -68,6 +72,10 @@ export type RenderedPreview = {
   reencoded: boolean;
   source: PreviewSource;
   metrics: Metrics;
+  /** The long edge of the image the metrics were measured on: the export's with measureEdge, else the JPEG's. */
+  measured_long_edge: number;
+  /** With measureEdge: the export the metrics came from, kept so measureAgain measures the same pixels (Greptile, PR #264). */
+  measured_from?: Buffer;
   rendered_at: string;
   timings: {
     /** The export inside the plugin (LrExportSession); for a thumbnail, the wait for Lightroom's callback. */
@@ -85,6 +93,17 @@ export type RenderedPreview = {
 export function isInside(dir: string, file: string): boolean {
   const rel = path.relative(path.resolve(dir), path.resolve(file));
   return rel !== "" && !rel.startsWith("..") && !path.isAbsolute(rel);
+}
+
+/** The whole export, upright (as the JPEG sent on is), measured from one decode. */
+async function measureUpright(file: Buffer, regions: readonly Region[]): Promise<Metrics> {
+  const { data, info } = await sharp(file).rotate().removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  return computeMetrics(data, info.width, info.height, info.channels, regions);
+}
+
+/** Measure a render again with other regions (lr_set_regions), on the pixels its metrics came from. */
+export function measureAgain(preview: Pick<RenderedPreview, "jpeg" | "measured_from">, regions: readonly Region[]): Promise<Metrics> {
+  return preview.measured_from ? measureUpright(preview.measured_from, regions) : measureImage(preview.jpeg, regions);
 }
 
 const ms = (since: number): number => Math.round((performance.now() - since) * 10) / 10;
@@ -124,7 +143,8 @@ export class PreviewService {
   async render(request: PreviewRequest): Promise<RenderedPreview> {
     const started = performance.now();
     if (request.photoUuid !== undefined && request.targetUuid !== undefined) throw new RangeError("a preview names its photo with photoUuid or targetUuid, not both");
-    const size = { long_edge: request.longEdge, quality: request.quality };
+    const measureEdge = !request.fast && request.measureEdge != null && request.measureEdge > request.longEdge ? request.measureEdge : null;
+    const size = { long_edge: measureEdge ?? request.longEdge, quality: request.quality };
     const payload: CommandPayloads["export_preview"] =
       request.photoUuid !== undefined
         ? { ...size, photo_uuid: request.photoUuid }
@@ -160,7 +180,7 @@ export class PreviewService {
     const fileMs = ms(fileStarted);
 
     const metricsStarted = performance.now();
-    const metrics = await measureImage(jpeg, request.regions ?? []);
+    const metrics = measureEdge === null ? await measureImage(jpeg, request.regions ?? []) : await measureUpright(file, request.regions ?? []);
     const metricsMs = ms(metricsStarted);
 
     return {
@@ -173,6 +193,8 @@ export class PreviewService {
       reencoded,
       source: request.fast ? "thumbnail" : PREVIEW_SOURCE,
       metrics,
+      measured_long_edge: Math.max(metrics.width, metrics.height),
+      ...(measureEdge === null ? {} : { measured_from: file }),
       rendered_at: new Date().toISOString(),
       timings: { export_ms: Math.round(res.export_ms * 10) / 10, command_ms: commandMs, file_ms: fileMs, metrics_ms: metricsMs, total_ms: ms(started) },
     };

@@ -11,6 +11,7 @@ export type {
   ApproveArgs,
   BeginArgs,
   CreateMaskArgs,
+  CropArgs,
   DeleteMaskArgs,
   EditMaskArgs,
   ListMasksArgs,

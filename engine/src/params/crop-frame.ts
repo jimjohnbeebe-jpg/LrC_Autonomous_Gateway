@@ -200,3 +200,101 @@ export function boxToView(f: CropFrame, box: Box): Box {
   const ys = ps.map((p) => p.y);
   return { left: Math.min(...xs), top: Math.min(...ys), right: Math.max(...xs), bottom: Math.max(...ys) };
 }
+
+// lr_crop (GitHub issue #115): a crop asked for in 0-1 of the photo shown upright and uncropped, as the five keys,
+// and the photo's crop described in that frame. The inverse of cropFrame's model above (the keys are the turned
+// rectangle's top-left and bottom-right corners), which predicts the straightened render of crop:spike run 2
+// (k 1024/683, corners 0.1/0.9/0.2/0.8, angle 5: 2.5288 against the render's 1024/405 = 2.5284) [handle:
+// docs\reports\phase11\CROP-SPIKE.md "Observed", run 2; tests\params-crop-settings.test.ts]. On a quarter-turned
+// photo it is [unverified] in Lightroom (crop:check uses one landscape raw).
+
+export type UprightBox = { x: number; y: number; w: number; h: number };
+/** `aspect`: "original" or "W:H" (the largest such box centred in `box`); `angle`: degrees, clockwise positive. */
+export type CropRequest = { box?: UprightBox | undefined; aspect?: string | undefined; angle?: number | undefined; reset?: boolean | undefined };
+/** A crop in the upright, uncropped frame: its box before the turn, the turn, and its width / height in pixels. */
+export type CropView = { box: UprightBox; angle: number; aspect: number };
+type Size = { width: number; height: number };
+
+export const NO_CROP: Readonly<Record<string, number>> = { [CROP.left]: 0, [CROP.top]: 0, [CROP.right]: 1, [CROP.bottom]: 1, [CROP.angle]: 0 };
+/** The five crop keys of `sdk`, a missing one read as uncropped. */
+export const cropKeys = (sdk: SdkSettings): Record<string, number> => Object.fromEntries(Object.entries(NO_CROP).map(([k, v]) => [k, num(sdk, k, v)]));
+/** Whether two photos' crops differ by more than `eps` on any of the five keys. */
+export const cropDiffers = (a: SdkSettings, b: SdkSettings, eps = 1e-4): boolean => {
+  const [x, y] = [cropKeys(a), cropKeys(b)];
+  return Object.keys(NO_CROP).some((k) => Math.abs((x[k] ?? 0) - (y[k] ?? 0)) > eps);
+};
+
+/** The upright photo's width and height, its stored height being 1 (a quarter turn swaps them). */
+const uprightSize = (f: CropFrame, size: Size): [number, number] => {
+  const k = size.width / size.height;
+  return f.turn === "BC" || f.turn === "DA" ? [1, k] : [k, 1];
+};
+
+function cropUsable(f: CropFrame): void {
+  if (f.refused) throw new MaskError("CROP_FRAME_UNSUPPORTED", `Nothing was written: lr_crop cannot place a crop on this photo because ${f.refused}.`, { why: f.refused });
+}
+
+const bad = (why: string): MaskError => new MaskError("INVALID_ARGUMENTS", `Nothing was written: ${why}.`, { why });
+function ratioOf(aspect: string, original: number): number {
+  if (aspect === "original") return original;
+  const m = /^(\d+(?:\.\d+)?):(\d+(?:\.\d+)?)$/.exec(aspect);
+  const r = m ? Number(m[1]) / Number(m[2]) : NaN;
+  if (!(r > 0 && Number.isFinite(r))) throw bad(`aspect "${aspect}" is not "original" or "W:H" with W and H above 0`);
+  return r;
+}
+
+/**
+ * The crop keys for `req` on a photo of frame `f` (its orientation) and pixel size `size` (get_context: the stored
+ * size, not swapped for a quarter turn, as cropFrame takes it). With an angle the box shrinks about its centre
+ * until the turned box lies inside the photo, with 0.1 % to spare [inference: for Lightroom's rounding].
+ */
+export function cropSettings(req: CropRequest, f: CropFrame, size: Size): SdkSettings {
+  cropUsable(f);
+  if (req.reset) {
+    if (req.box !== undefined || req.aspect !== undefined || req.angle !== undefined) throw bad("reset takes no box, aspect or angle");
+    return { ...NO_CROP };
+  }
+  const [W, H] = uprightSize(f, size);
+  const b = req.box ?? { x: 0, y: 0, w: 1, h: 1 };
+  if (!(b.w > 0 && b.h > 0 && b.x >= 0 && b.y >= 0 && b.x + b.w <= 1 + EPS && b.y + b.h <= 1 + EPS)) throw bad("the box must lie within 0-1 of the photo, w and h above 0");
+  const angle = req.angle ?? 0;
+  if (!(Math.abs(angle) <= 45)) throw bad("the angle must be -45 to 45 degrees");
+  let [cw, ch] = [b.w * W, b.h * H];
+  const [cx, cy] = [(b.x + b.w / 2) * W, (b.y + b.h / 2) * H];
+  if (req.aspect !== undefined) {
+    const r = ratioOf(req.aspect, W / H);
+    if (cw / ch > r) cw = ch * r;
+    else ch = cw / r;
+  }
+  const th = (angle * Math.PI) / 180;
+  const [c, s] = [Math.cos(th), Math.sin(th)];
+  const [ex, ey] = [(cw * Math.abs(c) + ch * Math.abs(s)) / 2, (cw * Math.abs(s) + ch * Math.abs(c)) / 2];
+  const m = Math.min(cx / ex, (W - cx) / ex, cy / ey, (H - cy) / ey);
+  const fit = m >= 1 - 1e-12 ? 1 : 0.999 * m;
+  [cw, ch] = [cw * fit, ch * fit];
+  // A point (u, v) of the crop's own axes -> the preview -> the upright photo -> 0-1 of the stored photo.
+  const at = (u: number, v: number): [number, number] => {
+    const [p, q] = TURN[f.turn](u, v);
+    const [X, Y] = [(p - 0.5) * cw, (q - 0.5) * ch];
+    return UNTURN[f.turn]((cx + X * c - Y * s) / W, (cy + X * s + Y * c) / H);
+  };
+  const [tl, br] = [at(0, 0), at(1, 1)];
+  return { [CROP.left]: tl[0], [CROP.top]: tl[1], [CROP.right]: br[0], [CROP.bottom]: br[1], [CROP.angle]: angle };
+}
+
+const r6 = (v: number): number => Math.round(v * 1e6) / 1e6;
+
+/** The crop of frame `f` in the upright, uncropped frame, to 6 decimals (cropSettings' inverse, an aspect's fit aside). */
+export function cropView(f: CropFrame, size: Size): CropView {
+  cropUsable(f);
+  const [W, H] = uprightSize(f, size);
+  const up = (p: Point): Point => {
+    const q = toPhoto(f, p);
+    const [P, Q] = TURN[f.turn](q.x, q.y);
+    return { x: P * W, y: Q * H };
+  };
+  const [a, b, c] = [up({ x: 0, y: 0 }), up({ x: 1, y: 0 }), up({ x: 0, y: 1 })];
+  const [w, h] = [Math.hypot(b.x - a.x, b.y - a.y), Math.hypot(c.x - a.x, c.y - a.y)];
+  const [cx, cy] = [(b.x + c.x) / 2, (b.y + c.y) / 2];
+  return { box: { x: r6((cx - w / 2) / W), y: r6((cy - h / 2) / H), w: r6(w / W), h: r6(h / H) }, angle: f.angle, aspect: r6(w / h) };
+}

@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { FRAME, MEASURED, TIMED, box, longEdge, noArgs, sessionId, target, type ToolDef } from "./defs-shared.js";
 import { PREVIEW_QUALITY } from "./tools-shared.js";
+import { MAX_SHEET_PHOTOS, SHARPNESS_NOTE, SHEET_CELL_LONG_EDGE, getContactSheet } from "./tools-sheet.js";
 import { MAX_STATS_PHOTOS, STATS_LONG_EDGE } from "./tools-stats.js";
 
 const sessionTarget = target.describe(
@@ -22,6 +23,15 @@ const previewArgs = z.object({
 const metricsArgs = z.object({ session_id: sessionId.optional(), target: sessionTarget });
 const statsArgs = z.object({
   uuids: z.array(z.string().min(1)).min(1).max(MAX_STATS_PHOTOS).describe(`1-${MAX_STATS_PHOTOS} photo uuids (from lr_search_photos or lr_get_selected_photos)`),
+});
+const sheetArgs = z.object({
+  uuids: z
+    .array(z.string().min(1))
+    .min(1)
+    .max(MAX_SHEET_PHOTOS)
+    .refine((u) => new Set(u).size === u.length, "uuids must be distinct")
+    .describe(`1-${MAX_SHEET_PHOTOS} distinct photo uuids (from lr_search_photos or lr_get_selected_photos), in the order the cells are numbered`),
+  quality: z.enum(["fast", "exact"]).optional().describe('"fast" (default): Lightroom\'s cached previews; "exact": the exact export of each photo'),
 });
 
 export const CONTEXT_DEFS: ToolDef[] = [
@@ -82,5 +92,20 @@ export const CONTEXT_DEFS: ToolDef[] = [
     schema: statsArgs,
     annotations: { readOnlyHint: true, openWorldHint: false },
     run: (tools, args) => tools.getPhotoStats(args as z.infer<typeof statsArgs>),
+  },
+  {
+    name: "lr_get_contact_sheet",
+    title: "Contact sheet of several photos",
+    description:
+      `Show up to ${MAX_SHEET_PHOTOS} photos named by uuid in one image: a grid with cells numbered 1-${MAX_SHEET_PHOTOS} in the order given, ` +
+      `each rendered at ${SHEET_CELL_LONG_EDGE} px and fitted into its cell (the sheet is at most 2000 px), without a session and without selecting them. ` +
+      "For culling and keywording a shoot one sheet at a time. Returns `cells` in the order given, each with `n` (its number on the sheet), `uuid`, `source`, " +
+      "`stale_possible` and `metrics` (the summary lr_get_preview returns, sharpness included); a photo that fails is left off the sheet and listed in `failed` " +
+      'with its `n` and error. quality "fast" (default): Lightroom\'s cached previews, quick but possibly stale; a photo with no cached preview (right after an edit) ' +
+      'is the exact export, and its cell says so in `fast_fallback`. quality "exact": every cell is the exact export (about 1-3 s a photo). ' +
+      `${SHARPNESS_NOTE} Not while a session is open. Changes nothing. ${TIMED} ${MEASURED}`,
+    schema: sheetArgs,
+    annotations: { readOnlyHint: true, openWorldHint: false },
+    run: (tools, args) => tools.call(getContactSheet, args as z.infer<typeof sheetArgs>),
   },
 ];

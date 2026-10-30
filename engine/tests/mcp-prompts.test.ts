@@ -21,9 +21,21 @@ beforeEach(async () => {
 afterEach(() => mcp.close());
 
 describe("prompts", () => {
-  it("lists the request template and the help prompt", async () => {
+  it("lists the request template, the help prompt and the shoot prompts", async () => {
     const { prompts } = await mcp.listPrompts();
-    expect(prompts.map((p) => p.name)).toEqual(["lrc-avg-edit", "lrc-avg-help"]);
+    expect(prompts.map((p) => p.name)).toEqual(["lrc-avg-edit", "lrc-avg-help", "lrc-avg-cull", "lrc-avg-keyword", "lrc-avg-batch"]);
+  });
+
+  it.each(["lrc-avg-cull", "lrc-avg-keyword", "lrc-avg-batch"])("%s names only registered tools, the contact sheet among them, and puts the request in", async (name) => {
+    const got = await mcp.getPrompt({ name, arguments: { request: "my words" } });
+    const text = (got.messages[0]?.content as { text: string }).text;
+    const named = [...new Set(text.match(/\blr_[a-z_]+\b/g))];
+    const registered = new Set(TOOL_DEFS.map((d) => d.name));
+    expect(named.filter((n) => !registered.has(n))).toEqual([]);
+    expect(named).toContain("lr_get_contact_sheet");
+    expect(text).toContain("My request: my words");
+    expect(text).toContain("full tool profile");
+    expect(text).not.toMatch(/cells\[n-1\]|targets "selected"/); // Greptile, PR #262: label gaps; the approved uuids, not the selection again
   });
 
   it("puts the user's request into the template", async () => {

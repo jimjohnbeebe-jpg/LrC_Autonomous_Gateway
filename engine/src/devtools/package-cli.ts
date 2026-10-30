@@ -3,7 +3,8 @@
 //   - lrc-avg-<version>.tgz: `npm pack` of engine\, kept only when its file list is exactly what
 //     package-check.ts expects (the root script empties engine\dist and builds first, so no stale
 //     module can ride along);
-//   - LrC-AVG.lrplugin-<plugin version>.zip: the plugin folder plus the repo's LICENSE, written by
+//   - LrC-AVG.lrplugin-<plugin version>.zip: the plugin folder, with the product's ID and name in
+//     Info.lua as the setup installs it, plus the repo's LICENSE, written by
 //     Windows' own tar.exe (bsdtar; `-a` picks the format from the .zip suffix [handle: the
 //     zip_check below and docs\reports\phase6\package-smoke\smoke.txt]). Git Bash's `tar` comes
 //     first on its PATH and is GNU tar 1.35 [handle: `tar --version` in Git Bash, 2026-10-01], which
@@ -14,12 +15,14 @@
 
 import { execFileSync, execSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdirSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
+import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { PLUGIN_VERSION } from "../bridge/version.js";
 import { ENGINE_VERSION } from "../mcp/index.js";
+import { PRODUCT_ID, productInfoLua } from "../setup/plugin-id.js";
 import { buildMcpb } from "./mcpb-build.js";
 import { expectedPackFiles, packProblems } from "./package-check.js";
 
@@ -64,17 +67,29 @@ if (problems.length > 0) {
 }
 console.log(`engine package: ${pack.files.length} files, list as expected`);
 
-// 2. The plugin zip, then its entry list against the folder's files.
+// 2. The plugin zip, then its entry list against the staged folder's files. The folder is staged
+// under the product's ID and name, as the setup installs it (setup\plugin-id.ts, tools\setup\stage.ts;
+// issue #172), so the zip is the product, not the repo's dev copy.
 const zip = path.join(releaseDir, `${PLUGIN_FOLDER}-${PLUGIN_VERSION}.zip`);
 rmSync(zip, { force: true });
-execFileSync(tar, ["-a", "-cf", zip, "-C", pluginParent, PLUGIN_FOLDER, "-C", repoRoot, "LICENSE"]);
-const entries = execFileSync(tar, ["-tf", zip], { encoding: "utf8" }).split(/\r?\n/).filter((e) => e !== "" && !e.endsWith("/"));
-const zipProblems = packProblems(entries, [...filesUnder(pluginParent, PLUGIN_FOLDER), "LICENSE"]);
+const staged = mkdtempSync(path.join(os.tmpdir(), "lrc-avg-package-"));
+let entries: string[];
+let zipProblems: string[];
+try {
+  cpSync(path.join(pluginParent, PLUGIN_FOLDER), path.join(staged, PLUGIN_FOLDER), { recursive: true });
+  const info = path.join(staged, PLUGIN_FOLDER, "Info.lua");
+  writeFileSync(info, productInfoLua(readFileSync(info, "utf8")));
+  execFileSync(tar, ["-a", "-cf", zip, "-C", staged, PLUGIN_FOLDER, "-C", repoRoot, "LICENSE"]);
+  entries = execFileSync(tar, ["-tf", zip], { encoding: "utf8" }).split(/\r?\n/).filter((e) => e !== "" && !e.endsWith("/"));
+  zipProblems = packProblems(entries, [...filesUnder(staged, PLUGIN_FOLDER), "LICENSE"]);
+} finally {
+  rmSync(staged, { recursive: true, force: true });
+}
 if (zipProblems.length > 0) {
   rmSync(zip, { force: true });
   fail(`the plugin zip does not hold the plugin folder; ${path.basename(zip)} was deleted:\n  ${zipProblems.join("\n  ")}`);
 }
-console.log(`plugin zip: ${entries.length} files, list as expected (zip_check)`);
+console.log(`plugin zip: ${entries.length} files, list as expected (zip_check), Info.lua as ${PRODUCT_ID}`);
 
 // 3. The Claude Desktop extension bundle (issue #219).
 const mcpb = buildMcpb(engineDir, releaseDir, tar, ENGINE_VERSION);

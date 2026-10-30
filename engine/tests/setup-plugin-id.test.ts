@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { DEV_ID, PRODUCT_ID, PRODUCT_NAME, productInfoLua } from "../../tools/setup/plugin-id.ts";
+import { DEV_ID, PRODUCT_ID, PRODUCT_NAME, productInfoLua } from "../src/setup/plugin-id.js";
 
 const repoInfo = readFileSync(fileURLToPath(new URL("../../plugin/LrC-AVG.lrplugin/Info.lua", import.meta.url)), "utf8");
 

@@ -1,5 +1,6 @@
 // Pass 0 on one photo (PRD 6.5): the intent's camera profile, set values (schema v3) and priors, plus a variant's priors on
-// a copy (Variants mode, PRD 6.6 step 2), written as one History step; then, when the session's
+// a copy (Variants mode, PRD 6.6 step 2), written as one History step (with tone_mode "auto", after Lightroom's Auto Tone:
+// auto-tone.ts); then, when the session's
 // clip_baseline is on (issue #130), the clipping baseline "until under" (guardrail.ts correct, n = 0)
 // [handle: tests\session-begin.test.ts, tests\session-clip-baseline.test.ts (the master),
 // tests\session-variants.test.ts "makes the copies, runs pass 0 on each …" (the copies), both
@@ -7,8 +8,9 @@
 
 import type { GuardrailAction, PassEntry } from "../log/index.js";
 import { deltaMetrics, summarize, type MetricsDelta } from "../metrics/index.js";
-import { isColourParam, priorsFor, setFor, type PriorSet } from "../intents/index.js";
+import { AUTO_TONE_PARAMS, isColourParam, priorsFor, setFor, type PriorSet } from "../intents/index.js";
 import { canonicalValuesEqual, type CanonicalSettings, type CanonicalValue, type FromSdkResult, type ParamMap, type Pipeline } from "../params/index.js";
+import { autoOwnsTones, autoTone, type AutoTone } from "./auto-tone.js";
 import { correct } from "./guardrail.js";
 import { historyName, render, write } from "./io.js";
 import type { Change } from "./plan.js";
@@ -28,13 +30,16 @@ export type Pass0 = {
   rendered: Rendered;
   actions: GuardrailAction[];
   delta: MetricsDelta;
+  /** tone_mode "auto": what Lightroom's Auto Tone did before the write (auto-tone.ts); null otherwise. */
+  auto: AutoTone | null;
 };
 
 /**
  * Pass 0 on photo `t`, whose settings are `view`: render it as it is (or take `original`, a render
- * of the same settings), write the changes as one History step, then the clipping baseline (with clip_baseline). The
- * intent's profile, set values and priors are those of the photo's pipeline (intent schema v2, v3), with `variant`'s
- * priors on top on a copy; the session's `profile` (lr_begin_session's) replaces the intent's.
+ * of the same settings), with tone_mode "auto" run Lightroom's Auto Tone, write the changes as one History step, then
+ * the clipping baseline (with clip_baseline). The intent's profile, set values and priors are those of the photo's
+ * pipeline (intent schema v2, v3), with `variant`'s priors on top on a copy; the session's `profile` (lr_begin_session's)
+ * replaces the intent's.
  */
 export async function pass0(ctx: SessionContext, s: Session, t: Target, view: FromSdkResult, variant: PriorSet | null, original: Rendered | null): Promise<Pass0> {
   const passStarted = ctx.now().toISOString();
@@ -42,29 +47,34 @@ export async function pass0(ctx: SessionContext, s: Session, t: Target, view: Fr
   ctx.deps.hud?.stage(s, "pass0");
   if (original) t.last = original;
   const before = original ?? (await render(ctx, s, t, view));
-  const { changes, requested } = planPass0(ctx.deps.map, s, t.pipeline, view.settings, variant);
+  const tuned = s.toneMode === "auto" ? await autoTone(ctx, s, t, view) : null;
+  const start = tuned && Object.keys(tuned.auto.changed).length > 0 ? tuned.view : view; // unchanged: no new render
+  const { changes, requested } = planPass0(ctx.deps.map, s, t.pipeline, start.settings, variant, tuned !== null && autoOwnsTones(tuned.auto));
   const historyNames: string[] = [];
-  let current = view;
-  let rendered = before;
+  let current = start;
   if (Object.keys(changes).length > 0) {
     const name = historyName(s, t, 0);
     current = await write(ctx, s, t, changes, name);
     historyNames.push(name);
-    rendered = await render(ctx, s, t, current);
   }
+  const rendered = current === view ? before : await render(ctx, s, t, current);
   const corrected = await correct(ctx, s, t, 0, null, before.metrics, current, rendered, historyNames); // writes only with clip_baseline
   const applied = Object.entries(changes).map(([name, after]): Change => {
-    const was = view.settings[name] ?? null;
+    const was = start.settings[name] ?? null;
     return { name, before: was, requested: after, after, delta: typeof was === "number" && typeof after === "number" ? roundForSlider(name, after - was) : null };
   });
   const delta = deltaMetrics(before.metrics, corrected.rendered.metrics);
-  return { passStarted, original: before, requested, applied, historyNames, view: corrected.view, rendered: corrected.rendered, actions: corrected.actions, delta };
+  return { passStarted, original: before, requested, applied, historyNames, view: corrected.view, rendered: corrected.rendered, actions: corrected.actions, delta, auto: tuned?.auto ?? null };
 }
 
-/** What pass 0 writes on a photo of `pipeline` with these settings (pass0; session\dry-run.ts shows it, issue #161). */
-export type Pass0Plan = { requested: Record<string, unknown>; changes: Record<string, CanonicalValue>; dropped_for_monochrome: string[] };
+/**
+ * What pass 0 writes on a photo of `pipeline` with these settings (pass0; session\dry-run.ts shows it, issue #161).
+ * `skipped_for_auto`: the look's values Lightroom's Auto Tone took over (tone_mode "auto").
+ */
+export type Pass0Plan = { requested: Record<string, unknown>; changes: Record<string, CanonicalValue>; dropped_for_monochrome: string[]; skipped_for_auto?: string[] };
 
-export function planPass0(map: ParamMap, s: Pick<Session, "intent" | "profile">, pipeline: Pipeline, settings: CanonicalSettings, variant: PriorSet | null): Pass0Plan {
+/** `autoTones`: Auto Tone set the tones, so the look's set values and priors for AUTO_TONE_PARAMS are left out. */
+export function planPass0(map: ParamMap, s: Pick<Session, "intent" | "profile">, pipeline: Pipeline, settings: CanonicalSettings, variant: PriorSet | null, autoTones = false): Pass0Plan {
   const intent = s.intent.intent;
   const profile = s.profile ?? intent.profile?.[pipeline];
   // A monochrome profile drops the colour sliders: their priors are left out, also when `profile`
@@ -75,16 +85,23 @@ export function planPass0(map: ParamMap, s: Pick<Session, "intent" | "profile">,
   const dropMono = (values: Priors): Record<string, unknown> => Object.fromEntries(Object.entries(values).filter(([name]) => !(mono && isColourParam(name))));
   const priors = dropMono(combined);
   const set = dropMono(allSet);
+  const skipped = autoTones ? [...new Set([...Object.keys(priors), ...Object.keys(set)])].filter((name) => AUTO_TONE_PARAMS.includes(name)) : [];
+  for (const name of skipped) {
+    delete priors[name];
+    delete set[name];
+  }
   // A prior (a variant's, on a look) is added on top of the set value, not the photo's old one.
   const fromSet = setChanges(set, settings, map, pipeline);
   const changes = { ...fromSet, ...pass0Changes(profile, priors, { ...settings, ...fromSet }, map, pipeline) };
-  const dropped = [...Object.keys(combined), ...Object.keys(allSet)].filter((name) => !(name in priors) && !(name in set));
-  return { requested: { ...(profile ? { camera_profile: profile } : {}), ...set, ...priors }, changes, dropped_for_monochrome: dropped };
+  const dropped = [...Object.keys(combined), ...Object.keys(allSet)].filter((name) => !(name in priors) && !(name in set) && !skipped.includes(name));
+  const requested = { ...(profile ? { camera_profile: profile } : {}), ...set, ...priors };
+  return { requested, changes, dropped_for_monochrome: dropped, ...(autoTones ? { skipped_for_auto: skipped } : {}) };
 }
 
 /** Pass 0's log entry for photo `t`. */
 export function pass0Entry(s: Session, t: Target, beforeView: FromSdkResult, p: Pass0, durationMs: number): PassEntry {
   const variant = t.id === "master" ? "" : ` + variant ${t.id} (${t.label ?? "?"}) priors`;
+  const auto = p.auto ? `Lightroom Auto Tone first (tone_mode auto: ${p.auto.status}, its own History step), then ` : "";
   return {
     n: 0,
     kind: "pass0",
@@ -92,7 +109,7 @@ export function pass0Entry(s: Session, t: Target, beforeView: FromSdkResult, p: 
     started: p.passStarted,
     duration_ms: durationMs,
     history_names: p.historyNames,
-    rationale: `engine: camera profile, lens corrections and intent priors${variant}${s.clipBaseline ? ", then the clipping baseline (PRD 6.5)" : "; no clipping baseline (clip_baseline off, issue #130)"}`,
+    rationale: `engine: ${auto}camera profile, lens corrections and intent priors${variant}${s.clipBaseline ? ", then the clipping baseline (PRD 6.5)" : "; no clipping baseline (clip_baseline off, issue #130)"}`,
     requested: p.requested,
     changes: p.applied,
     clamped: [],

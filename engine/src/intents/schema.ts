@@ -14,13 +14,13 @@
 // pipeline) and each profile against the pinned profiles of its pipeline (loader.ts).
 
 import { z } from "zod";
-import type { Pipeline } from "../params/index.js";
+import { AI_KINDS, type AiKind, type Pipeline } from "../params/index.js";
 
 /** File-name safe: the file is <id>.json. */
 export const INTENT_ID_PATTERN = /^[a-z0-9][a-z0-9_]{0,63}$/;
 /** The region kinds of lr_set_regions (MCP_TOOLS). */
 export const REGION_KINDS = ["skin", "fur", "sky", "custom"] as const;
-/** The version lr_save_intent writes; v3 is v2 plus `set` and `set_by_pipeline` (PHASE10_PLAN "Second re-plan", row 5) and `references` (row 8). */
+/** The version lr_save_intent writes; v3 is v2 plus `set` and `set_by_pipeline` (PHASE10_PLAN "Second re-plan", row 5), `references` (row 8), `tone_mode` and `masks` (rows 9+10). */
 export const INTENT_SCHEMA_VERSION = 3;
 /** The versions the loader reads: v2 files keep loading. */
 export const SUPPORTED_INTENT_SCHEMA_VERSIONS: readonly number[] = [2, 3];
@@ -60,6 +60,28 @@ const variant = z.strictObject({
 
 const percent = z.number().min(0).max(100);
 
+/**
+ * How pass 0 treats a look's tones (PHASE10_PLAN "Third re-plan", R3 [stated: Jim, 2026-10-29, "Go with recommendations"]):
+ * "set" writes them as given (the default, as before); "adapt" writes them too, and the brief calls them a start to adapt toward
+ * the references for this photo (T3); "auto" runs Lightroom's Auto Tone first and skips the look's tonal values (T2).
+ */
+export const TONE_MODES = ["set", "auto", "adapt"] as const;
+export type ToneMode = (typeof TONE_MODES)[number];
+/** The sliders Lightroom's Auto Tone owns in tone_mode "auto": pass 0 skips a look's values (set and priors) for them. */
+export const AUTO_TONE_PARAMS: readonly string[] = ["exposure", "contrast", "highlights", "shadows", "whites", "blacks"];
+/** A look's tonal and presence values, which tone_mode "adapt" calls starting points. */
+export const TONAL_PARAMS: readonly string[] = [...AUTO_TONE_PARAMS, "texture", "clarity", "dehaze"];
+
+/** The AI mask kinds a look may carry: those that need no point on the photo (params\mask-ai-kinds.ts `point`). */
+export const LOOK_MASK_KINDS = (Object.keys(AI_KINDS) as AiKind[]).filter((k) => !AI_KINDS[k].point) as [AiKind, ...AiKind[]];
+export const MAX_LOOK_MASKS = 6;
+const lookMask = z.strictObject({
+  kind: z.enum(LOOK_MASK_KINDS).describe("an AI kind Lightroom finds with no point: subject, sky, background, landscape_*, people_* (every person)"),
+  name: z.string().min(1).max(60).describe('the name the Masks panel shows, e.g. "1. Sky - Deepen"'),
+  purpose: z.string().min(1).max(300).describe("what the mask is for, in a sentence or two"),
+  sliders: z.record(z.string().min(1), z.number()).describe("local slider -> starting value in the Masking panel's units (lr_create_mask's sliders: local.exposure, local.clarity, ...)"),
+});
+
 /** The fields of `references` (schema v3, Phase 10 row 8; session\references.ts); lr_begin_session takes them in a loose object, where an empty one is ignored. */
 export const referencesShape = {
   uuids: z.array(z.string().min(1)).min(1).max(8).optional().describe("1-8 catalog photo uuids"),
@@ -73,7 +95,7 @@ export const referencesSchema = z
 
 export const intentSchema = z
   .strictObject({
-    schema_version: z.union([z.literal(2), z.literal(3)]).describe("3 (2 still loads, without set and references)"),
+    schema_version: z.union([z.literal(2), z.literal(3)]).describe("3 (2 still loads, without set, references, tone_mode and masks)"),
     id: z.string().regex(INTENT_ID_PATTERN).describe("lower case letters, digits and _; the file is <id>.json"),
     label: z.string().min(1).max(80),
     category: z.string().min(1).max(40),
@@ -102,6 +124,12 @@ export const intentSchema = z
     convergence_hints: z.array(z.string().min(1).max(300)).optional(),
     allow_probe: z.boolean().optional().describe("lr_probe is off in autonomous mode unless this is true"),
     references: referencesSchema.optional(),
+    tone_mode: z.enum(TONE_MODES).optional().describe('v3: "set" (default) writes the tonal values as given; "adapt" writes them as a start to adapt toward the references; "auto" runs Lightroom Auto Tone first and skips them'),
+    masks: z
+      .array(lookMask)
+      .max(MAX_LOOK_MASKS)
+      .optional()
+      .describe(`v3: up to ${MAX_LOOK_MASKS} AI masks with no geometry; the session returns them in its brief, and the AI creates and adjusts them for each photo`),
   })
   .describe("LrC-AVG intent, schema v3 (v2 still loads)");
 

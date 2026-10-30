@@ -1,7 +1,7 @@
 // The MCP definitions of the session tools (tools-session.ts).
 
 import { z } from "zod";
-import { referencesShape } from "../intents/index.js";
+import { TONE_MODES, referencesShape } from "../intents/index.js";
 import { APPROVAL_WAIT_MS, SESSION_DEFAULTS } from "../session/index.js";
 import { FRAME, MEASURED_CORE, box, longEdge, openSessionId, sessionId, target, type ToolDef } from "./defs-shared.js";
 import { DEFAULT_LONG_EDGE, EXPORT_MAX_LONG_EDGE, MAX_LONG_EDGE, MIN_LONG_EDGE } from "./tools-shared.js";
@@ -61,6 +61,13 @@ const beginArgs = z.object({
   dry_run: z.boolean().optional().describe("true: check the call and return what pass 0 would write (`pass0.changes`), with no snapshot, no write and no session"),
   keep_regions: z.boolean().optional().describe("true: set again the regions (lr_set_regions) the last session on this photo in this engine run ended with, measured on pass 0's preview (`regions_kept`)"),
   references: z.object(referencesShape).optional().describe("reference photos the user names (uuids, a collection, or both; at most 8 used), replacing the intent's: each is rendered and measured once at begin"),
+  tone_mode: z
+    .enum(TONE_MODES)
+    .optional()
+    .describe(
+      'how pass 0 treats the look\'s tones, replacing the intent\'s (default "set"): "set" writes them as given; "adapt" writes them as a start to adapt toward the references; ' +
+        '"auto" runs Lightroom\'s Auto Tone first and skips them (its History step has Lightroom\'s own name)',
+    ),
 });
 const stepArgs = z.object({
   session_id: openSessionId,

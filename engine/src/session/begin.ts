@@ -19,9 +19,11 @@ import { WHITE_BALANCE_UNITS, cropKeys, type CanonicalSettings, type FromSdkResu
 import { readPage, resolveSessionSettings, type PageRead, type SessionSettings } from "../settings/index.js";
 import { newLog, settingsEntry } from "./begin-log.js";
 import { APPROVAL_WAIT_MS } from "./approval.js";
+import { checkAutoPlugin } from "./auto-tone.js";
 import { checkVariants } from "./copies.js";
 import { brief, describe, failed, image, ms, recordPass, saveLog, text } from "./io.js";
 import { refuseLeftOpen } from "./left-open.js";
+import { lookBrief } from "./look-brief.js";
 import { pass0, pass0Entry, type Pass0 } from "./pass0.js";
 import { gapJson, loadReferences, referencesJson } from "./references.js";
 import { WRITE_TIMEOUT_MS, folderOf, newTarget, type BeginArgs, type Session, type SessionContext, type SessionOutput } from "./types.js";
@@ -42,7 +44,7 @@ const NO_INTENT: LoadedIntent = {
 export type Opened = { s: Session; view: FromSdkResult; photo: CommandResult<"get_context">; started: number };
 
 /** What lr_begin_session checked and read before it writes anything (checkBegin): a dry run ends here (dry-run.ts, issue #161). */
-export type Checked = { args: BeginArgs; mode: Session["mode"]; page: PageRead; loaded: LoadedIntent; settings: SessionSettings; photo: CommandResult<"get_context">; variantCount: number | null; view: FromSdkResult; crop: Record<string, number> };
+export type Checked = { args: BeginArgs; mode: Session["mode"]; toneMode: Session["toneMode"]; page: PageRead; loaded: LoadedIntent; settings: SessionSettings; photo: CommandResult<"get_context">; variantCount: number | null; view: FromSdkResult; crop: Record<string, number> };
 
 /** Check the call and read the photo and its settings, with nothing written. */
 export async function checkBegin(ctx: SessionContext, given: BeginArgs): Promise<Checked> {
@@ -70,18 +72,20 @@ export async function checkBegin(ctx: SessionContext, given: BeginArgs): Promise
   const missing = originalMissing(photo); // before the snapshot: nothing is written
   if (missing) throw missing;
   refuseLeftOpen(folderOf(ctx.deps.logDir), null, photo.uuid); // SESSION_LEFT_OPEN, before the snapshot (left-open.ts)
+  const toneMode = args.tone_mode ?? loaded.intent.tone_mode ?? "set"; // the request first, then the intent (Phase 10 R3)
+  checkAutoPlugin(ctx, toneMode); // PLUGIN_TOO_OLD, before the snapshot
   const variantCount = mode === "variants" ? checkVariants(ctx, loaded, photo, settings.variantCount) : null;
   const sdk = (await client.request("get_settings", { target_uuid: photo.uuid })).settings;
   const view = map.fromSdk(sdk); // LEGACY_PROCESS_VERSION
   // Before the snapshot: an unknown profile or one of the other pipeline is refused with nothing written.
   if (args.profile !== undefined) map.toSdk({ camera_profile: args.profile }, { processVersion: view.process_version, pipeline: view.pipeline });
-  return { args, mode, page, loaded, settings, photo, variantCount, view, crop: cropKeys(sdk) };
+  return { args, mode, toneMode, page, loaded, settings, photo, variantCount, view, crop: cropKeys(sdk) };
 }
 
 /** Check the call, read the photo, take the pre-session snapshot and build the session (not yet logged). */
 export async function openSession(ctx: SessionContext, given: BeginArgs): Promise<Opened> {
   const started = performance.now();
-  const { args, mode, page, loaded, settings, photo, variantCount, view, crop } = await checkBegin(ctx, given);
+  const { args, mode, toneMode, page, loaded, settings, photo, variantCount, view, crop } = await checkBegin(ctx, given);
   const { client } = ctx.deps;
   // Before the snapshot: a reference render is a read (references.ts). The begin argument replaces the intent's.
   const refSize = { longEdge: settings.longEdge, quality: settings.quality, measureEdge: settings.measureLongEdge };
@@ -112,6 +116,7 @@ export async function openSession(ctx: SessionContext, given: BeginArgs): Promis
     profile: args.profile ?? null,
     // The request first, then the intent [stated: Jim, 2026-10-11, issue #130, "Intent or request"].
     clipBaseline: args.clip_baseline ?? loaded.intent.clip_baseline ?? false,
+    toneMode,
     mode,
     maxPasses: settings.maxPasses,
     limits: { clipHighPct: settings.clipHighPct, clipLowPct: settings.clipLowPct },
@@ -221,6 +226,7 @@ export function sessionHeader(opened: Opened): Record<string, unknown> {
       convergence_hints: intent.convergence_hints ?? [],
       regions_expected: intent.regions_expected ?? [],
       allow_probe: intent.allow_probe ?? false,
+      ...lookBrief(s),
     },
     guardrails: s.log.guardrails,
     clip_baseline: s.clipBaseline,
@@ -259,6 +265,7 @@ function beginJson(opened: Opened, p: Pass0): Record<string, unknown> {
     ...sessionHeader(opened),
     pass: `0/${s.maxPasses}`,
     history_names: p.historyNames,
+    ...(p.auto ? { auto_tone: p.auto } : {}),
     pass0_applied: p.applied,
     guardrail_actions: p.actions,
     settings: p.view.settings,

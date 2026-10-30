@@ -153,6 +153,14 @@
     "clip_baseline": {
       "type": "boolean"
     },
+    "tone_mode": {
+      "type": "string",
+      "enum": [
+        "set",
+        "auto",
+        "adapt"
+      ]
+    },
     "decay": {
       "type": "array",
       "items": {

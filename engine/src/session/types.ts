@@ -2,7 +2,7 @@
 // the open session (manager.ts has the overview).
 
 import type { BridgeClient, HudStage } from "../bridge/index.js";
-import type { IntentLibrary, LoadedIntent } from "../intents/index.js";
+import type { IntentLibrary, LoadedIntent, ToneMode } from "../intents/index.js";
 import type { AiTrace, ClientIdentity, SessionLogData, SessionLogFiles } from "../log/index.js";
 import type { Metrics, Region, RegionBox } from "../metrics/index.js";
 import type { CanonicalSettings, CopySample, CropRequest, EditOp, Geometry, ParamMap, Pipeline } from "../params/index.js";
@@ -50,6 +50,8 @@ export type BeginArgs = {
   keep_regions?: boolean | undefined;
   /** Phase 10 row 8 (references.ts): photos each pass is compared with; replaces the intent's. */
   references?: ReferenceSpec | undefined;
+  /** Phase 10 R3: replaces the intent's tone_mode. */
+  tone_mode?: ToneMode | undefined;
   /** The MCP client (mcp\client-info.ts); set by the mcp layer, never by the tool schema. */
   client?: ClientIdentity | null | undefined;
 };
@@ -220,6 +222,8 @@ export type Session = {
   profile: string | null;
   /** BeginArgs.clip_baseline ?? the intent's ?? false (issue #130): off, the guardrail corrects only an end the pass pushed over (guardrail.ts correct). */
   clipBaseline: boolean;
+  /** BeginArgs.tone_mode ?? the intent's ?? "set" (Phase 10 R3; pass0.ts, look-brief.ts). */
+  toneMode: ToneMode;
   mode: "converge" | "variants";
   maxPasses: number;
   limits: Limits;

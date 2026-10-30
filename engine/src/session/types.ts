@@ -5,7 +5,7 @@ import type { BridgeClient, HudStage } from "../bridge/index.js";
 import type { IntentLibrary, LoadedIntent } from "../intents/index.js";
 import type { AiTrace, ClientIdentity, SessionLogData, SessionLogFiles } from "../log/index.js";
 import type { Metrics, Region, RegionBox } from "../metrics/index.js";
-import type { CanonicalSettings, CopySample, EditOp, Geometry, ParamMap, Pipeline } from "../params/index.js";
+import type { CanonicalSettings, CopySample, CropRequest, EditOp, Geometry, ParamMap, Pipeline } from "../params/index.js";
 import type { RenderedPreview } from "../preview/index.js";
 import type { KnownLogFolders, PageRead } from "../settings/index.js";
 import type { AiJob } from "./ai-masks.js";
@@ -13,7 +13,8 @@ import type { AiTimings } from "./ai-update.js";
 import type { Limits, Slope } from "./plan.js";
 
 export type SessionOutput = { json: Record<string, unknown>; image?: Buffer; log?: Record<string, unknown> };
-export type RenderRequest = { longEdge: number; quality: number; targetUuid: string; regions: readonly Region[] };
+/** `measureEdge`: the session's measure_long_edge (preview\service.ts PreviewRequest), null when off. */
+export type RenderRequest = { longEdge: number; quality: number; targetUuid: string; regions: readonly Region[]; measureEdge: number | null };
 export type ReturnImage = "after" | "before_after" | "none";
 export type RegionKind = "skin" | "fur" | "sky" | "custom";
 
@@ -37,6 +38,8 @@ export type BeginArgs = {
   guardrails?: { clip_high_pct?: number | undefined; clip_low_pct?: number | undefined } | undefined;
   notes?: string | undefined;
   long_edge?: number | undefined;
+  /** Issue #168: export and measure each render at this long edge; Claude still sees long_edge. */
+  measure_long_edge?: number | undefined;
   return_image?: ReturnImage | undefined;
   /** Issue #155 R1: the AI's own model name; logged and shown, never used for decisions. */
   model?: string | undefined;
@@ -85,6 +88,8 @@ export type CreateMaskArgs = MaskPassArgs & {
 /** lr_edit_mask: the edit as params\mask-ops.ts takes it (issue #131: `combine` adds a part, `part` edits one). */
 export type EditMaskArgs = MaskPassArgs & Omit<EditOp, "op">;
 export type DeleteMaskArgs = MaskPassArgs & { mask_id: string };
+/** lr_crop (crop.ts, issue #115): one pass, the crop in 0-1 of the photo upright and uncropped. */
+export type CropArgs = MaskPassArgs & CropRequest;
 
 export type SessionDeps = {
   client: BridgeClient;
@@ -213,6 +218,8 @@ export type Session = {
   limits: Limits;
   decay: readonly number[];
   longEdge: number;
+  /** BeginArgs.measure_long_edge (issue #168): every render is exported and measured at it; null, at longEdge. */
+  measureEdge: number | null;
   quality: number;
   /** The photo selected at lr_begin_session. Converge mode edits it; Variants mode copies it and leaves it alone. */
   master: Target;
@@ -230,6 +237,8 @@ export type Session = {
   startSettings: CanonicalSettings;
   /** The mask table before the session (its fingerprint): a revert must bring it back too. */
   startMasks: string;
+  /** The five crop keys before the session (params cropKeys, issue #115): a revert must bring the crop back too. */
+  startCrop: Record<string, number>;
   /** How AI masks were last made (ai-masks.ts): the table route, or LrDevelopController after it failed. */
   aiRoute: "table" | "dc" | null;
   /** An update_ai_settings whose result Lightroom has not shown yet (ai-update.ts, D16): while set, the session writes, exports, renders and reverts nothing (io.ts). */

@@ -27,8 +27,9 @@
 -- N or later") through Needs.lua. The guide documents no hiding of calls or develop keys by the declared
 -- version; whether 15.2 changes the keys getDevelopSettings() returns is answered by `npm run sdkver:check`
 -- (docs\reports\phase11\SDKVER.md) and is [unverified] until Jim runs it.
--- This repo copy is the development plugin, with its own ID and name; the setup build ships it as
--- com.lrcavg.gateway, "LrC-AVG (Autonomous Vision Gateway)" (tools\setup\plugin-id.ts says why).
+-- This repo copy is the development plugin, with its own ID and name; the setup build and the release
+-- zip (npm run package) ship it as com.lrcavg.gateway, "LrC-AVG (Autonomous Vision Gateway)"
+-- (engine\src\setup\plugin-id.ts says why).
 return {
     LrSdkVersion = 15.2,
     LrSdkMinimumVersion = 13.0,

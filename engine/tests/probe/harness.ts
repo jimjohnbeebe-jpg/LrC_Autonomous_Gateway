@@ -14,13 +14,14 @@ import { Client } from "@modelcontextprotocol/client";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import sharp from "sharp";
 import { baseEnv, clientEntry, type McpEntry } from "../../src/devtools/clients-launch.js";
+import { TOOL_DEFS } from "../../src/mcp/index.js";
 import { FakePlugin } from "../helpers/fake-plugin.js";
 import { LightroomSim } from "../helpers/lightroom-sim.js";
 import { overlayWord, wordBox, type Img } from "../helpers/lightroom-sim-word.js";
 
 /** Fixed ports nothing else of the project uses; the lock is the event port + 1 (mcp\dev-overrides.ts). */
 export const PROBE_PORTS = { command: 47651, event: 47652, lock: 47653 } as const;
-export const TOOL_COUNT = 37;
+export const TOOL_COUNT = TOOL_DEFS.length;
 
 export type Harness = {
   scratch: string;

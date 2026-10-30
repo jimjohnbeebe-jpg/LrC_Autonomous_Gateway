@@ -6,7 +6,7 @@
 
 import { FRAME, MEASURED, noArgs, type ToolDef } from "./defs-shared.js";
 import { describeProfile } from "./profiles.js";
-import { DEFAULT_LONG_EDGE } from "./tools-shared.js";
+import { DEFAULT_LONG_EDGE, EXPORT_MAX_LONG_EDGE } from "./tools-shared.js";
 
 export const HELP_TEXT = [
   "LrC-AVG: how it works. The mechanics are below; how to edit the photo (the craft) is left to the AI.",
@@ -15,14 +15,16 @@ export const HELP_TEXT = [
     "session tool takes that session_id, which may be left out while the session is open. One session at a time: it stays open until lr_end_session (accept, revert or " +
     "abandon). The session has a pass cap, max_passes (after pass 0); `cap_reached` in an lr_step result means no pass is left.",
   "",
-  "2. What uses a pass. Each lr_step, and each mask create, edit or delete (lr_create_mask, lr_edit_mask, lr_delete_mask), " +
+  "2. What uses a pass. Each lr_step, each mask create, edit or delete (lr_create_mask, lr_edit_mask, lr_delete_mask), and each lr_crop " +
     "uses one pass, an undone one included. A rename alone (lr_edit_mask with only mask_id and name) uses no pass. " +
     "lr_probe, lr_set_regions, lr_list_masks, lr_get_preview and lr_get_metrics use none. An lr_step that Lightroom takes only " +
     "in part (WRITE_NOT_TAKEN, FEATURE_UNAVAILABLE) is undone whole and uses no pass (`details.undone`). The B&W mixer " +
     "(bw.red … bw.magenta) is there only on a black-and-white photo: set a monochrome camera_profile in an earlier step.",
   "",
   `3. Previews. Session previews are ${DEFAULT_LONG_EDGE} px on the long edge by default: downscaling averages pixels, so ` +
-    "they understate clipping and fine detail at print size. lr_get_preview with `region` exports the photo " +
+    `they understate clipping and fine detail at print size. lr_begin_session with \`measure_long_edge\` (up to ${EXPORT_MAX_LONG_EDGE}) measures ` +
+    "every render of the session at that size, clipping and guardrails included, while you still see long_edge. " +
+    "lr_get_preview with `region` exports the photo " +
     "larger and returns a crop of that box, for finer detail (sharpness, noise, fringing). Its `metrics` describe the whole " +
     "export (`metrics_scope` \"frame\") and `crop_metrics` the requested box, measured at export resolution. " +
     "For browsing, lr_get_preview with `quality` \"fast\" returns Lightroom's cached preview (quick, possibly stale), and " +

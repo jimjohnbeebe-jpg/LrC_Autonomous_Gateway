@@ -7,7 +7,7 @@
 // after get_metadata reads it back as a virtual copy); each step timed. Then, with the bridge given back: each photo's
 // 3 nearest neighbours on standardised as-shot features, the edit test (s15-check.ts), one composite per photo (its
 // final beside its neighbours' finals) and one y/n per composite in this window. The masters are only read.
-// Results and images: %TEMP%\LrC-AVG\S15\<run>\. Report: docs\reports\phase10\S15.md.
+// Results and images: %TEMP%\LrC-AVG\S15\<run>\, the composites alone in its composites\ folder. Report: docs\reports\phase10\S15.md.
 
 import { spawn } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
@@ -31,6 +31,8 @@ import { requireThrowaway } from "./throwaway.js";
 
 const started = new Date().toISOString().replace(/[:.]/g, "-");
 const RUN_DIR = path.join(os.tmpdir(), "LrC-AVG", "S15", started);
+// The composites alone in one folder, so a viewer's next file is the next composite, not a final (PR #277 review).
+const COMPOSITES = path.join(RUN_DIR, "composites");
 const COPY = "AVG S15 as-shot";
 const map = loadDefaultParamMap();
 const QUESTION = "Are these sensible style references for this photo?";
@@ -131,7 +133,7 @@ async function analyse(r: Record<string, unknown>, done: Measured[], say: (l: st
   for (const [i, p] of done.entries()) {
     const panels = [{ image: p.final_file, label: "PHOTO" }, ...(nbrs[i] ?? []).map((n, j) => ({ image: (done[n.index] as Measured).final_file, label: `REF ${j + 1}  D=${n.distance.toFixed(2)}` }))];
     const out = await composite(panels.map((x) => ({ image: readFileSync(x.image), label: x.label })), { longEdge: 2400, quality: 85 });
-    const file = path.join(RUN_DIR, `${String(i + 1).padStart(2, "0")}_composite.jpg`);
+    const file = path.join(COMPOSITES, `${String(i + 1).padStart(2, "0")}_composite.jpg`);
     writeFileSync(file, out.jpeg);
     files.push(file);
   }
@@ -173,7 +175,7 @@ async function main(say: (l: string) => void): Promise<number> {
   const tools = new Tools({ client, map, previews, intents: new IntentLibrary({ map }), sessionLogDir: mkdtempSync(path.join(os.tmpdir(), "lrc-avg-s15-")), engineVersion: ENGINE_VERSION, ensureBridge: (waitMs) => gate.ready(waitMs), hud: false });
   const c: Check = { client, tools, previews, say, photos: [], before: new Map() };
   const r: Record<string, unknown> = { check: "s15", started, node: process.version, engine_version: ENGINE_VERSION, long_edge: DEFAULT_LONG_EDGE, quality: PREVIEW_QUALITY, k: K };
-  mkdirSync(RUN_DIR, { recursive: true });
+  mkdirSync(COMPOSITES, { recursive: true });
   let start: string[] = [];
   let changed: string[] = [];
   let selectionBack = false;

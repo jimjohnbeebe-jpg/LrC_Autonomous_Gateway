@@ -10,13 +10,7 @@ import { cropRegion, type RenderedPreview } from "../preview/index.js";
 import { LEFT_OPEN_NOTE, leftOpenJson, type SessionManager, type SessionView, type TargetId } from "../session/index.js";
 import { ToolError, originalMissing, toToolError } from "./errors.js";
 import { fastPreview } from "./tools-preview-fast.js";
-import { DEFAULT_LONG_EDGE, PREVIEW_QUALITY, describe, openSession, readPageFolders, render, renderRequest, run, type ToolContext, type ToolOutput } from "./tools-shared.js";
-
-/**
- * The largest export a region crop asks for: the plugin refuses a long edge above 4096
- * [handle: plugin\LrC-AVG.lrplugin\Preview.lua:29, Preview.MAX_LONG_EDGE].
- */
-export const REGION_EXPORT_MAX = 4096;
+import { DEFAULT_LONG_EDGE, EXPORT_MAX_LONG_EDGE as REGION_EXPORT_MAX, PREVIEW_QUALITY, describe, openSession, readPageFolders, render, renderRequest, run, type ToolContext, type ToolOutput } from "./tools-shared.js";
 
 export type PreviewArgs = { long_edge?: number | undefined; session_id?: string | undefined; target?: TargetId | undefined; region?: RegionBox | undefined; uuid?: string | undefined; quality?: "exact" | "fast" | undefined };
 export type MetricsArgs = { session_id?: string | undefined; target?: TargetId | undefined };

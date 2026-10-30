@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { APPROVAL_WAIT_MS, SESSION_DEFAULTS } from "../session/index.js";
 import { FRAME, MEASURED, box, longEdge, openSessionId, sessionId, target, type ToolDef } from "./defs-shared.js";
-import { DEFAULT_LONG_EDGE, MAX_LONG_EDGE, MIN_LONG_EDGE } from "./tools-shared.js";
+import { DEFAULT_LONG_EDGE, EXPORT_MAX_LONG_EDGE, MAX_LONG_EDGE, MIN_LONG_EDGE } from "./tools-shared.js";
 
 const returnImage = z
   .enum(["after", "before_after", "none"])
@@ -46,6 +46,16 @@ const beginArgs = z.object({
   notes: z.string().max(2000).optional().describe("the user's request in their own words, kept in the log; suggested on every session; it takes precedence over the intent's brief"),
   model: z.string().max(80).optional().describe("Your own model name or id, shown to the user and logged; never used for decisions."),
   long_edge: longEdge.describe(`Preview long edge in pixels, ${MIN_LONG_EDGE}-${MAX_LONG_EDGE}, for the whole session (default: the settings page's, else ${DEFAULT_LONG_EDGE}).`),
+  measure_long_edge: z
+    .number()
+    .int()
+    .min(MIN_LONG_EDGE)
+    .max(EXPORT_MAX_LONG_EDGE)
+    .optional()
+    .describe(
+      `${MIN_LONG_EDGE}-${EXPORT_MAX_LONG_EDGE}: export and measure each render of the session at this long edge (clipping at print size); you still see long_edge. ` +
+        "Each render takes longer [unverified: by how much]. Default: off (measured at long_edge)",
+    ),
   return_image: returnImage,
   dry_run: z.boolean().optional().describe("true: check the call and return what pass 0 would write (`pass0.changes`), with no snapshot, no write and no session"),
   keep_regions: z.boolean().optional().describe("true: set again the regions (lr_set_regions) the last session on this photo in this engine run ended with, measured on pass 0's preview (`regions_kept`)"),
@@ -91,6 +101,21 @@ const selectArgs = z.object({
   variant: z.enum(["A", "B", "C"]).describe("the copy the user picked"),
 });
 const sessionLogArgs = z.object({ session_id: sessionId });
+// lr_crop (issue #115, session\crop.ts): its own frame, the photo upright and UNcropped, so any crop is reachable
+// [stated: Jim, 2026-10-29, "Go on all.", plan D1 (a)]. No crop in the recipe or a sync: the canonical map has no
+// Crop key, and both carry canonical settings [inference: grep of engine\src\params\*.json, 2026-10-29].
+const unit = z.number().min(0).max(1);
+const UPRIGHT = "0-1 of the WHOLE photo shown upright and uncropped (not the preview, which is already cropped), from its top-left corner";
+const cropArgs = z.object({
+  session_id: openSessionId,
+  target: target.describe('Variants mode: the pick only (after lr_select_variant). Converge mode: "master" or left out'),
+  rationale: z.string().min(1).max(500).describe("one line: what you saw and why this crop"),
+  box: z.object({ x: unit, y: unit, w: unit, h: unit }).optional().describe(`the area to keep, {x, y, w, h} in ${UPRIGHT}; default the whole photo`),
+  aspect: z.string().regex(/^(original|\d+(\.\d+)?:\d+(\.\d+)?)$/).optional().describe('"original" or "W:H" such as "4:5" (portrait) or "16:9": the largest box of that shape centred in `box`'),
+  angle: z.number().min(-45).max(45).optional().describe("straighten, degrees, clockwise positive (Lightroom's Angle); default 0. The box then shrinks about its centre until the turned box fits in the photo"),
+  reset: z.boolean().optional().describe("true: no crop and no angle (alone, without box, aspect or angle)"),
+  return_image: returnImage,
+});
 const approveArgs = z.object({
   session_id: openSessionId,
   confirmed: z.boolean().describe("true only after the user approved the pass in this chat"),
@@ -193,6 +218,20 @@ export const SESSION_DEFS: ToolDef[] = [
     schema: regionsArgs,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     run: (tools, args) => tools.setRegions(args as z.infer<typeof regionsArgs>),
+  },
+  {
+    name: "lr_crop",
+    title: "Crop and straighten",
+    description:
+      `Crop and straighten the session's photo: \`box\` in ${UPRIGHT}, an \`aspect\`, an \`angle\`, or \`reset\`. Each call sets the whole crop (left out: the whole photo, angle 0); ` +
+      "`crop.before` in the result is the crop the photo had, in the same frame, to keep parts of it. ONE pass (it counts against max_passes, approve_each_pass gates it): " +
+      "one History step \"AVG <id> pass n/N crop\", read back (not taken: written back, WRITE_NOT_TAKEN, no pass used), rendered and measured; no clipping guard. " +
+      "NO_CHANGE when the photo already has that crop. The preview, mask geometry and regions then follow the new crop: the session's regions are cleared " +
+      "(`regions_cleared`), so call lr_set_regions again, and lr_probe's slopes are dropped. The recipe and lr_sync_series carry no crop. Variants mode: on the pick only (CROP_AFTER_PICK). " +
+      "Mirrored photos are refused (CROP_FRAME_UNSUPPORTED). Quarter-turned photos, photos whose crop is not constrained to the image, and rendered photos are [unverified].",
+    schema: cropArgs,
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    run: (tools, args) => tools.crop(args as z.infer<typeof cropArgs>),
   },
   {
     name: "lr_select_variant",

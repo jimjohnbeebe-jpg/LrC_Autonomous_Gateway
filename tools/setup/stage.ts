@@ -7,7 +7,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } fr
 import path from "node:path";
 import { z } from "zod";
 import { lockSchema, productionPackages, type Staged } from "./lock.ts";
-import { productInfoLua } from "./plugin-id.ts";
+import { productInfoLua } from "../../engine/src/setup/plugin-id.ts";
 
 export const REPO = path.resolve(import.meta.dirname, "..", "..");
 export const CACHE = path.join(REPO, "build", "cache");

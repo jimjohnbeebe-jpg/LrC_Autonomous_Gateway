@@ -5,7 +5,8 @@
 // tests\session-variants-faults.test.ts "measures regions on every copy and keeps a baseline per copy"].
 
 import { ToolError } from "../mcp/errors.js";
-import { boxProblem, measureImage, type Metrics } from "../metrics/index.js";
+import { boxProblem, type Metrics } from "../metrics/index.js";
+import { measureAgain } from "../preview/index.js";
 import { saveLog } from "./io.js";
 import { REGION_PRESERVE } from "./rules.js";
 import { MAX_REGIONS, type RegionArgs, type RegionBaseline, type RegionState, type Rendered, type Session, type SessionOutput, type Target, type TargetId } from "./types.js";
@@ -24,7 +25,8 @@ export async function setRegions(s: Session, args: RegionArgs): Promise<SessionO
   const regions = args.regions.map((r) => ({ label: r.label, box: r.box }));
   const measured = new Map<TargetId, Metrics>();
   for (const t of photos) {
-    const metrics = await measureImage(t.last.jpeg, regions);
+    // On the export the render was measured on (measure_long_edge, issue #168), so the step after compares like with like.
+    const metrics = await measureAgain(t.last.preview, regions);
     t.last = { ...t.last, metrics };
     measured.set(t.id, metrics);
   }

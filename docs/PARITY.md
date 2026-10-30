@@ -97,7 +97,7 @@ Count: 56 `have`, 10 `ours+`, 2 `planned` (#217: 1, #218: 1) [handle: `engine/te
 
 ## LrC-AVG tools with no upstream counterpart
 
-The edit loop and its records: `lr_help`, `lr_begin_session`, `lr_step`, `lr_probe`, `lr_set_regions`, `lr_select_variant`, `lr_approve_pass`, `lr_end_session`, `lr_get_session_log`. The look library: `lr_list_intents`, `lr_get_intent`, `lr_save_intent`, `lr_delete_intent`. Upstream's nearest is a prompt-level skill with no pass cap, guardrails or session state [handle: `docs/reports/phase10/AUTOMAAT_COMPARE_2026-10-26.md` section 6.1].
+The edit loop and its records: `lr_help`, `lr_begin_session`, `lr_step`, `lr_probe`, `lr_set_regions`, `lr_crop` (issue #115), `lr_select_variant`, `lr_approve_pass`, `lr_end_session`, `lr_get_session_log`. The look library: `lr_list_intents`, `lr_get_intent`, `lr_save_intent`, `lr_delete_intent`. Upstream's nearest is a prompt-level skill with no pass cap, guardrails or session state [handle: `docs/reports/phase10/AUTOMAAT_COMPARE_2026-10-26.md` section 6.1].
 
 ## Using both servers
 
@@ -105,8 +105,8 @@ The two Lightroom plug-ins have different identities and ports:
 
 | | Automaat/lightroom-mcp | LrC-AVG |
 |---|---|---|
-| Toolkit id | `com.lightroom.mcp` [handle: upstream `plugin/LightroomMCP.lrplugin/Info.lua:5` at `1040453`] | `com.lrcavg.gateway` from the setup, `com.lrcavg.gateway.dev` from this repo [handle: `tools/setup/plugin-id.ts:8-11`; `plugin/LrC-AVG.lrplugin/Info.lua:35`] |
-| Plug-in name | "Lightroom MCP" [handle: upstream `Info.lua:6`] | "LrC-AVG (Autonomous Vision Gateway)", or "LrC-AVG (dev)" [handle: `tools/setup/plugin-id.ts:10-11`; `plugin/LrC-AVG.lrplugin/Info.lua:36`] |
+| Toolkit id | `com.lightroom.mcp` [handle: upstream `plugin/LightroomMCP.lrplugin/Info.lua:5` at `1040453`] | `com.lrcavg.gateway` from the setup and the release zip, `com.lrcavg.gateway.dev` from this repo [handle: `engine/src/setup/plugin-id.ts:8-11`; `plugin/LrC-AVG.lrplugin/Info.lua:36`] |
+| Plug-in name | "Lightroom MCP" [handle: upstream `Info.lua:6`] | "LrC-AVG (Autonomous Vision Gateway)", or "LrC-AVG (dev)" [handle: `engine/src/setup/plugin-id.ts:10-11`; `plugin/LrC-AVG.lrplugin/Info.lua:37`] |
 | Ports (127.0.0.1) | 58763 request, 58764 response [handle: upstream `plugin/LightroomMCP.lrplugin/PluginInfoProvider.lua:44-45`, `server/src/ports.ts:1`] | 8765 commands, 8766 responses, changeable in Plug-in Manager [handle: `plugin/LrC-AVG.lrplugin/Bridge.lua:2-3`, `Prefs.lua:44`; `engine/src/bridge/endpoint.ts:19-20`] |
 | Platforms | macOS and Windows | Windows |
 

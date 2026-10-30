@@ -3,7 +3,7 @@
 // lr_apply_denoise (tools-denoise.ts, issue #190), which works through photos the same way.
 
 import { z } from "zod";
-import { MAX_COLLECTION_PHOTOS, MAX_EXPORT_PHOTOS, isAbsoluteFolder } from "../library/index.js";
+import { MAX_COLLECTION_PHOTOS, MAX_EXPORT_PHOTOS, isAbsoluteFolder, templateProblem } from "../library/index.js";
 import { setLevels } from "./tools-collections.js";
 import { TIMED, type ToolDef } from "./defs-shared.js";
 
@@ -56,19 +56,39 @@ const exportArgs = z
     (a) => a.format === "original" || a.long_edge !== undefined || (a.width === undefined) === (a.height === undefined),
     "give width and height together",
   );
-const importArgs = z.object({
-  source: folder.describe("a photo file, or a folder of them (an absolute path; ~ is the user's home folder)"),
-  copy_to: folder
-    .optional()
-    .describe("copy the files here first, keeping their folders below the source, and import the copies (never overwrites; a same-size file already there counts as the copy). Omit to import the files where they are"),
-  recursive: z.boolean().optional().describe("look in the source's subfolders too (default true)"),
-  resume_after: z
+// Issue #139 gap 1: the tokens and refusals are library\capture-date.ts templateProblem.
+const template = (isFolder: boolean) =>
+  z
     .string()
     .trim()
     .min(1)
-    .optional()
-    .describe("to go on after a call that ran out of time: that call's `resume_after` (a source file's path); the call starts with the file after it. Omit to start from the first file"),
-});
+    .max(200)
+    .superRefine((t, ctx) => {
+      const problem = templateProblem(t, isFolder);
+      if (problem !== null) ctx.addIssue({ code: "custom", message: problem });
+    });
+const importArgs = z
+  .object({
+    source: folder.describe("a photo file, or a folder of them (an absolute path; ~ is the user's home folder)"),
+    copy_to: folder
+      .optional()
+      .describe("copy the files here first, keeping their folders below the source, and import the copies (never overwrites; a same-size file already there counts as the copy). Omit to import the files where they are"),
+    folder_template: template(true)
+      .optional()
+      .describe("with copy_to: the folder below copy_to for each file, from its capture date instead of its folder below the source, e.g. \"{yyyy}-{mm}-{dd}\" or \"{yyyy}/{yyyy}-{mm}-{dd}\" (a level per / or \\). Tokens {yyyy} {mm} {dd} {name} (the source file's name without extension)"),
+    name_template: template(false)
+      .optional()
+      .describe("with copy_to: the copy's name without extension (the extension and the XMP sidecar follow it), e.g. \"{yyyy}{mm}{dd}-{name}\"; must hold {name}; no \\ or /"),
+    recursive: z.boolean().optional().describe("look in the source's subfolders too (default true)"),
+    resume_after: z
+      .string()
+      .trim()
+      .min(1)
+      .optional()
+      .describe("to go on after a call that ran out of time: that call's `resume_after` (a source file's path); the call starts with the file after it. Omit to start from the first file"),
+    dry_run: z.boolean().optional().describe("true: return `planned` (each file's source, the path it would have and its capture_date) and copy, import and change nothing; it goes on with resume_after as an import does; default false"),
+  })
+  .refine((a) => a.copy_to !== undefined || (a.folder_template === undefined && a.name_template === undefined), "folder_template and name_template need copy_to");
 
 const denoiseArgs = z.object({
   uuids: uuids(100),
@@ -120,7 +140,9 @@ export const FILE_DEFS: ToolDef[] = [
       "Import a photo file, or the photo files in a folder (raw, DNG, JPEG, TIFF, PNG, HEIC, PSD), into the Lightroom catalog: where they " +
       "are, or copied first into copy_to (do that for a memory card). A file the catalog already holds at that path is not imported again " +
       "(`already_in_catalog`, with its uuid); a photo imported earlier from another path is not recognised. Returns the uuids, each with its source file, its path in the catalog and capture_time, for " +
-      "lr_add_to_collection, lr_set_keywords and the other tools. No develop or metadata preset is passed to the import; lr_remove_photos removes photos from " +
+      "lr_add_to_collection, lr_set_keywords and the other tools. With copy_to, folder_template and name_template sort and rename the copies by capture " +
+      "date, which the engine reads from NEF, DNG and the other TIFF-based raws, TIFF and JPEG; a file it cannot read (CR3, RAF, HEIC, PNG, PSD) fails " +
+      "alone with NO_CAPTURE_DATE. dry_run: true shows where each file would go and changes nothing. No develop or metadata preset is passed to the import; lr_remove_photos removes photos from " +
       `the catalog again. ${TIMED} Here \`resume_after\` comes with \`not_yet\`: pass it back to go on ` +
       `from the next file. ${META_WRITE}`,
     schema: importArgs,

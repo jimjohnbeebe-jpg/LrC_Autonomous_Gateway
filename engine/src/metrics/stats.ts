@@ -45,6 +45,8 @@ export function accumulate(data: Uint8Array, width: number, channels: number, re
   };
   const minSat = CHROMATIC_MIN.saturation;
   const minMax = CHROMATIC_MIN.value * 255;
+  // Locals, not the imported bindings: under vitest an imported name is a property read on every pixel [handle: hud-actions "refuses a second pick", --maxWorkers=1: 2326 ms on main, 4340 ms on 0fdfce6, 2143 ms with these locals].
+  const high = CLIP_HIGH, low = CLIP_LOW, wr = LUMA_WEIGHTS.r, wg = LUMA_WEIGHTS.g, wb = LUMA_WEIGHTS.b;
   for (let row = rect.top; row < rect.top + rect.height; row++) {
     const start = (row * width + rect.left) * channels;
     const end = start + rect.width * channels;
@@ -52,7 +54,7 @@ export function accumulate(data: Uint8Array, width: number, channels: number, re
       const r = data[i] as number;
       const g = data[i + 1] as number;
       const b = data[i + 2] as number;
-      const y = LUMA_WEIGHTS.r * r + LUMA_WEIGHTS.g * g + LUMA_WEIGHTS.b * b;
+      const y = wr * r + wg * g + wb * b;
       acc.lumaSum += y;
       acc.lumaSquares += y * y;
       acc.luma[Math.min(255, Math.round(y))]! += 1;
@@ -62,16 +64,16 @@ export function accumulate(data: Uint8Array, width: number, channels: number, re
       acc.sum.r += r;
       acc.sum.g += g;
       acc.sum.b += b;
-      if (r >= CLIP_HIGH) acc.highBy.r++;
-      if (g >= CLIP_HIGH) acc.highBy.g++;
-      if (b >= CLIP_HIGH) acc.highBy.b++;
-      if (r <= CLIP_LOW) acc.lowBy.r++;
-      if (g <= CLIP_LOW) acc.lowBy.g++;
-      if (b <= CLIP_LOW) acc.lowBy.b++;
-      const clipped = (r >= CLIP_HIGH ? 1 : 0) + (g >= CLIP_HIGH ? 1 : 0) + (b >= CLIP_HIGH ? 1 : 0);
+      if (r >= high) acc.highBy.r++;
+      if (g >= high) acc.highBy.g++;
+      if (b >= high) acc.highBy.b++;
+      if (r <= low) acc.lowBy.r++;
+      if (g <= low) acc.lowBy.g++;
+      if (b <= low) acc.lowBy.b++;
+      const clipped = (r >= high ? 1 : 0) + (g >= high ? 1 : 0) + (b >= high ? 1 : 0);
       if (clipped > 0) acc.high++;
       if (clipped >= 2) acc.highTone++;
-      if (r <= CLIP_LOW && g <= CLIP_LOW && b <= CLIP_LOW) acc.low++;
+      if (r <= low && g <= low && b <= low) acc.low++;
 
       const max = r > g ? (r > b ? r : b) : g > b ? g : b;
       const min = r < g ? (r < b ? r : b) : g < b ? g : b;

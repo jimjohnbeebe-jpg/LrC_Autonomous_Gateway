@@ -65,9 +65,7 @@ export async function checkBegin(ctx: SessionContext, given: BeginArgs): Promise
   }
   const loaded = args.intent_id === undefined ? NO_INTENT : ctx.deps.intents.get(args.intent_id); // IntentError -> INTENT_NOT_FOUND
   const settings = resolveSessionSettings(args, loaded.intent.guardrail_overrides ?? {}, page.values);
-  const { client, map } = ctx.deps;
-
-  const photo = await client.request("get_context", {});
+  const photo = await ctx.deps.client.request("get_context", {});
   if (photo["file_format"] === "VIDEO") throw new ToolError("VIDEO_NOT_SUPPORTED", "The selected item is a video; select a photo.", false);
   const missing = originalMissing(photo); // before the snapshot: nothing is written
   if (missing) throw missing;
@@ -75,21 +73,30 @@ export async function checkBegin(ctx: SessionContext, given: BeginArgs): Promise
   const toneMode = args.tone_mode ?? loaded.intent.tone_mode ?? "set"; // the request first, then the intent (Phase 10 R3)
   checkAutoPlugin(ctx, toneMode); // PLUGIN_TOO_OLD, before the snapshot
   const variantCount = mode === "variants" ? checkVariants(ctx, loaded, photo, settings.variantCount) : null;
-  const sdk = (await client.request("get_settings", { target_uuid: photo.uuid })).settings;
+  return { args, mode, toneMode, page, loaded, settings, photo, variantCount, ...(await readView(ctx, photo.uuid, args.profile)) };
+}
+
+/** The photo's settings and crop keys. Before the snapshot: an unknown profile or one of the other pipeline is refused with nothing written. */
+async function readView(ctx: SessionContext, uuid: string, profile: string | undefined): Promise<Pick<Checked, "view" | "crop">> {
+  const { client, map } = ctx.deps;
+  const sdk = (await client.request("get_settings", { target_uuid: uuid })).settings;
   const view = map.fromSdk(sdk); // LEGACY_PROCESS_VERSION
-  // Before the snapshot: an unknown profile or one of the other pipeline is refused with nothing written.
-  if (args.profile !== undefined) map.toSdk({ camera_profile: args.profile }, { processVersion: view.process_version, pipeline: view.pipeline });
-  return { args, mode, toneMode, page, loaded, settings, photo, variantCount, view, crop: cropKeys(sdk) };
+  if (profile !== undefined) map.toSdk({ camera_profile: profile }, { processVersion: view.process_version, pipeline: view.pipeline });
+  return { view, crop: cropKeys(sdk) };
 }
 
 /** Check the call, read the photo, take the pre-session snapshot and build the session (not yet logged). */
 export async function openSession(ctx: SessionContext, given: BeginArgs): Promise<Opened> {
   const started = performance.now();
-  const { args, mode, toneMode, page, loaded, settings, photo, variantCount, view, crop } = await checkBegin(ctx, given);
+  const checked = await checkBegin(ctx, given);
+  const { args, mode, toneMode, page, loaded, settings, photo, variantCount } = checked;
   const { client } = ctx.deps;
   // Before the snapshot: a reference render is a read (references.ts). The begin argument replaces the intent's.
   const refSize = { longEdge: settings.longEdge, quality: settings.quality, measureEdge: settings.measureLongEdge };
   const references = await loadReferences(ctx, args.references ?? loaded.intent.references, args.references ? "begin" : "intent", refSize);
+  // Each reference export takes seconds [handle: docs\reports\phase0\S1.md]: the settings are read again after
+  // them, so startSettings and pass 0 start from what the snapshot holds, not from before (Greptile, PR #276).
+  const { view, crop } = references ? await readView(ctx, photo.uuid, args.profile) : checked;
 
   const now = ctx.now();
   const { id, short, files } = pickLogFiles(ctx, now);

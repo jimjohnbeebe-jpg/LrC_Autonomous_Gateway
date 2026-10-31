@@ -20,7 +20,7 @@ import { AI_KINDS, type AiKind, type Pipeline } from "../params/index.js";
 export const INTENT_ID_PATTERN = /^[a-z0-9][a-z0-9_]{0,63}$/;
 /** The region kinds of lr_set_regions (MCP_TOOLS). */
 export const REGION_KINDS = ["skin", "fur", "sky", "custom"] as const;
-/** The version lr_save_intent writes; v3 is v2 plus `set` and `set_by_pipeline` (PHASE10_PLAN "Second re-plan", row 5), `references` (row 8), `tone_mode` and `masks` (rows 9+10). */
+/** The version lr_save_intent writes; v3 is v2 plus `set` and `set_by_pipeline` (PHASE10_PLAN "Second re-plan", row 5), `references` (row 8), `tone_mode` and `masks` (rows 9+10), `checks` (row 12). */
 export const INTENT_SCHEMA_VERSION = 3;
 /** The versions the loader reads: v2 files keep loading. */
 export const SUPPORTED_INTENT_SCHEMA_VERSIONS: readonly number[] = [2, 3];
@@ -82,6 +82,23 @@ const lookMask = z.strictObject({
   sliders: z.record(z.string().min(1), z.number()).describe("local slider -> starting value in the Masking panel's units (lr_create_mask's sliders: local.exposure, local.clarity, ...)"),
 });
 
+/**
+ * The measures a look's checks may name: metrics\reference-gap.ts GAP_MEASURES, the reference gap's (intents may not
+ * import metrics; tests\look-checks.test.ts keeps the two lists equal). A check is reported each pass, never enforced
+ * (PHASE10_PLAN "Third re-plan", R5).
+ */
+export const CHECK_MEASURES = ["L.p5", "L.p50", "L.p95", "rms", "cf", "sh.C", "sh.wheel", "mid.C", "mid.wheel", "hi.C", "hi.wheel", "dark", "light"] as const;
+export const MAX_LOOK_CHECKS = 8;
+const lookCheck = z
+  .strictObject({
+    measure: z.enum(CHECK_MEASURES).describe("L.p5/L.p50/L.p95 L* percentiles, rms contrast, cf colourfulness, sh/mid/hi cast chroma C or wheel hue, dark (zones 0-II %), light (zones VIII-X %)"),
+    min: z.number().optional(),
+    max: z.number().optional(),
+    why: z.string().min(1).max(200).describe("the method's reason for the range, in a sentence"),
+  })
+  .refine((c) => c.min !== undefined || c.max !== undefined, "give min, max or both")
+  .describe("a range the look's method expects; a wheel hue range runs counter-clockwise from min to max");
+
 /** The fields of `references` (schema v3, Phase 10 row 8; session\references.ts); lr_begin_session takes them in a loose object, where an empty one is ignored. */
 export const referencesShape = {
   uuids: z.array(z.string().min(1)).min(1).max(8).optional().describe("1-8 catalog photo uuids"),
@@ -95,7 +112,7 @@ export const referencesSchema = z
 
 export const intentSchema = z
   .strictObject({
-    schema_version: z.union([z.literal(2), z.literal(3)]).describe("3 (2 still loads, without set, references, tone_mode and masks)"),
+    schema_version: z.union([z.literal(2), z.literal(3)]).describe("3 (2 still loads, without set, references, tone_mode, masks and checks)"),
     id: z.string().regex(INTENT_ID_PATTERN).describe("lower case letters, digits and _; the file is <id>.json"),
     label: z.string().min(1).max(80),
     category: z.string().min(1).max(40),
@@ -130,6 +147,11 @@ export const intentSchema = z
       .max(MAX_LOOK_MASKS)
       .optional()
       .describe(`v3: up to ${MAX_LOOK_MASKS} AI masks with no geometry; the session returns them in its brief, and the AI creates and adjusts them for each photo`),
+    checks: z
+      .array(lookCheck)
+      .max(MAX_LOOK_CHECKS)
+      .optional()
+      .describe(`v3: up to ${MAX_LOOK_CHECKS} measured ranges of the look's method (a classic method's, for example); every pass reports each as met or not in look_checks, and nothing is refused for them`),
   })
   .describe("LrC-AVG intent, schema v3 (v2 still loads)");
 

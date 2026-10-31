@@ -106,6 +106,13 @@ describe("tally and headlines", () => {
     expect(h[0]).toBe("Looks eval: FAILED (edits not accepted: 02 Q; pairs not judged: 03; masters untouched: NO)");
     expect(h[3]).toBe("masters untouched: NO");
   });
+  it("says NOT CHECKED, not NO, when a master's read failed and none changed (run 20261030-055012)", () => {
+    const r = judgedRun(["B", "B"]);
+    r.masters!.differing["u1"] = ["not read: TIMEOUT"];
+    expect(headlines(r)[3]).toBe("masters untouched: NOT CHECKED");
+    r.masters!.differing["u2"] = ["exposure"];
+    expect(headlines(r)[3]).toBe("masters untouched: NO");
+  });
   it("keeps the arms hidden while an edit is not accepted, unless --judge or already revealed", () => {
     const r = judgedRun(["B", "A"]);
     expect(mayReveal(r, "resume")).toBe(true);

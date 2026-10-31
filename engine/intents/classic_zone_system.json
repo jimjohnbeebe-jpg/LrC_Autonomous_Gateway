@@ -1,0 +1,17 @@
+{
+  "schema_version": 3,
+  "id": "classic_zone_system",
+  "label": "Classic — Zone System (full tonal scale)",
+  "category": "classic",
+  "brief": "Ansel Adams' Zone System, adapted to a digital edit (Adams, The Negative, 1981; https://en.wikipedia.org/wiki/Zone_System). Tone first, colour as shot. 1. Decide which shadow must keep detail and place it in Zone III (L* about 22-33); place the important textured highlight (snow, white stone, bright cloud, skin highlight) in Zone VII-VIII (L* about 68-90); middle grey is Zone V (L* about 44-56). perceptual.zones in each pass is the share of the frame in each of the 11 zones, 0 to X. 2. Expand or contract the scale with contrast, whites, blacks and the tone curve, so the photo runs from a true black (Zone 0-I, a small area) to a near white (Zone IX) with texture, unless the subject is deliberately low or high key. 3. Then dodge and burn locally with lr_create_mask (subject, sky, background): burn a bright sky down about one zone, lift the subject about half a zone, so the eye goes where the photo needs it. Do not trade highlight detail for brightness: the clipping limits still hold.",
+  "priors": {},
+  "convergence_hints": [
+    "stop when the important shadow holds detail in Zone III and the textured highlight sits in Zone VII-VIII",
+    "stop when the scale runs from a small true black to a near white and local dodging and burning lead the eye"
+  ],
+  "allow_probe": false,
+  "checks": [
+    { "measure": "L.p5", "max": 22, "why": "full scale: the darkest 5% of the frame reach Zone II or below" },
+    { "measure": "L.p95", "min": 79, "why": "full scale: the brightest 5% of the frame reach Zone VIII or above" }
+  ]
+}

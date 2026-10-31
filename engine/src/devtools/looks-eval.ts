@@ -200,9 +200,15 @@ export function tally(r: EvalRun): Tally {
   return { photos: r.photos.length, judged: w.filter((x) => x !== null).length, b_wins: b, a_wins: a, ties: w.filter((x) => x === "tie").length, n, p, conclusive: n >= CONCLUSIVE_PAIRS && p < ALPHA, failed_edits: failed, unjudged: r.photos.filter((ph) => !ph.judged).map((ph) => ph.nn) };
 }
 
-/** True when every master read the same as at the start; null when not read yet. */
+/** A master whose read failed (readMasters): not a change, so the run says NOT CHECKED rather than NO (run 20261030-055012: one read timed out). */
+export const NOT_READ = "not read: ";
+
+/** True when every master read the same as at the start; false when one differs; null when not read yet, or a read failed and none differs. */
 export function mastersUntouched(r: EvalRun): boolean | null {
-  return r.masters === null ? null : Object.values(r.masters.differing).every((d) => d.length === 0) && Object.keys(r.masters.differing).length === r.photos.length;
+  if (r.masters === null) return null;
+  const lists = Object.values(r.masters.differing);
+  if (lists.some((d) => d.some((x) => !x.startsWith(NOT_READ)))) return false;
+  return lists.some((d) => d.length > 0) || lists.length !== r.photos.length ? null : true;
 }
 
 const yesNo = (b: boolean | null): string => (b === null ? "NOT CHECKED" : b ? "YES" : "NO");

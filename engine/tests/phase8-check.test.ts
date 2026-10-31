@@ -39,7 +39,7 @@ describe("npm run phase8:check", () => {
     ]);
     // The missing original was refused before anything was written.
     expect(s.photos[5]?.summary["missing"]).toEqual({ refused: true, code: "ORIGINAL_MISSING" });
-    expect(s.intents).toHaveLength(11);
+    expect(s.intents).toHaveLength(14);
     expect(s.intents.every((i) => i.ok)).toBe(true);
     expect((s.cross?.summary["not_transferable"] as J[]).map((g) => [g["group"], g["names"]]).sort()).toEqual([["camera_profile", ["camera_profile"]], ["white_balance", ["temperature", "tint"]]]);
     expect(h.clicked).toBe(true);
@@ -111,7 +111,7 @@ describe("npm run phase8:check, Greptile PR #106", () => {
     copyFileSync(new URL("../intents/portrait_natural_light.json", import.meta.url), path.join(userIntentsDir(), "portrait_natural_light.json"));
     const { accepted } = await runCheck(YES);
     expect(accepted).toBe(false);
-    expect(saved().intents).toHaveLength(11);
+    expect(saved().intents).toHaveLength(14);
     expect(saved().intents.find((i) => i.intent === "portrait_natural_light")).toMatchObject({ ok: false, summary: { error: expect.objectContaining({ message: expect.stringContaining("a user intent overrides") }) } });
   });
 

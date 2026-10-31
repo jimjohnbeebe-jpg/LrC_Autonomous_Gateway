@@ -85,3 +85,22 @@ function hueAt(v: number, r: RefRange): GapEntry["at"] {
   if (toMin === toMax) return hueTurn(r.min, v) < 0 ? "below" : "above";
   return toMin < toMax ? "below" : "above";
 }
+
+/** A range a look's method expects of one measure (intents schema `checks`). */
+export type LookCheck = { measure: string; min?: number | undefined; max?: number | undefined; why: string };
+export type CheckResult = { measure: string; v: number | null; min: number | null; max: number | null; met: boolean | null; why: string };
+
+/** Each check against the photo: met, not met, or null when the photo has no value (a cast without a hue). A wheel range runs counter-clockwise from min to max. */
+export function lookChecks(photo: Perceptual, checks: readonly LookCheck[]): CheckResult[] {
+  return checks.map((c) => {
+    const read = GAP_MEASURES[c.measure];
+    const v = read ? read(photo) : null;
+    const min = c.min ?? null, max = c.max ?? null;
+    let met: boolean | null = null;
+    if (v !== null) {
+      if (isHue(c.measure) && min !== null && max !== null) met = ccw(min, v) <= ccw(min, max);
+      else met = (min === null || v >= min) && (max === null || v <= max);
+    }
+    return { measure: c.measure, v, min, max, met, why: c.why };
+  });
+}

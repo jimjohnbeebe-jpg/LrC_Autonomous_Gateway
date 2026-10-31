@@ -40,6 +40,8 @@ export type ClientsDeps = {
   outDir: string;
   stamp: string;
   redact: (text: string) => string;
+  /** A client run not exited after this long is ended (default RUN_TIMEOUT_MS; looks:eval --timeout-min). */
+  timeoutMs?: number;
 };
 export type Run = { results: Json; errors: string[]; fail: (message: string) => void; state: ClientsState; save: () => void };
 /** An installed client: its id, executable and name in this window. */
@@ -191,8 +193,8 @@ function killTree(pid: number | undefined): void {
   }
 }
 
-/** Starts the launch, its output to files; resolves at its exit, ending it after RUN_TIMEOUT_MS. */
-function spawnAndWait(l: Launch, stdout: string, stderr: string, onStart: (s: Started) => void): Promise<{ exit: number | null; timed_out: boolean; error: string | null }> {
+/** Starts the launch, its output to files; resolves at its exit, ending it after timeoutMs. */
+function spawnAndWait(l: Launch, stdout: string, stderr: string, onStart: (s: Started) => void, timeoutMs = RUN_TIMEOUT_MS): Promise<{ exit: number | null; timed_out: boolean; error: string | null }> {
   const fds = [openSync(stdout, "w"), openSync(stderr, "w")] as const;
   return new Promise((resolve) => {
     let settled = false;
@@ -208,7 +210,7 @@ function spawnAndWait(l: Launch, stdout: string, stderr: string, onStart: (s: St
     const timer = setTimeout(() => {
       timedOut = true;
       killTree(child.pid);
-    }, RUN_TIMEOUT_MS);
+    }, timeoutMs);
     child.on("error", (err) => finish(null, err.message));
     child.on("exit", (code) => finish(code, null));
     if (l.stdin !== undefined) child.stdin?.end(l.stdin);
@@ -238,7 +240,7 @@ export async function runClient(deps: ClientsDeps, run: Run, c: Installed, promp
     let beside: Promise<void> = Promise.resolve();
     outcome = await spawnAndWait(l, `${base}_stdout.txt`, `${base}_stderr.txt`, (s) => {
       beside = during ? during(s, since).catch((err: unknown) => run.fail(`${c.name} (${tag}): ${describeError(err)}`)) : beside;
-    });
+    }, deps.timeoutMs);
     await beside;
   } catch (err) {
     outcome = { ...outcome, error: describeError(err) };

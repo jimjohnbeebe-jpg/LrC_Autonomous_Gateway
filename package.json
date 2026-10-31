@@ -53,6 +53,7 @@
     "catalog:check": "npm run build && node engine/dist/devtools/catalog-check-cli.js",
     "catalog:throwaway": "npm run build && node engine/dist/devtools/throwaway-cli.js",
     "import:check": "npm run build && node engine/dist/devtools/import-check-cli.js",
+    "looks:eval": "npm run build && node engine/dist/devtools/looks-eval-cli.js",
     "effects:probe": "npm run build && node engine/dist/devtools/effects-probe-cli.js",
     "stall:check": "npm run build && node engine/dist/devtools/stall-check-cli.js",
     "intents:check": "npm run build && node engine/dist/devtools/intents-check-cli.js",

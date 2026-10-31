@@ -206,7 +206,7 @@ A look is an intent that carries a style: your own edit, a preset, or one you de
   - **auto**: Lightroom's own Auto Tone sets the tones first, then the look's colour and character go on top. The Auto step shows in History under Lightroom's own name; Abort and revert put the photo back as for any other session.
 - **Classic methods.** Three bundled looks follow a classic method: `classic_zone_system` (Ansel Adams' Zone System: a full tonal scale, then dodging and burning), `classic_high_key` and `classic_low_key` (chiaroscuro). Each names the measured ranges its method expects, for example "the darkest 5% reach Zone II". Every pass reports whether the photo is inside each range (`look_checks`); nothing is refused for them. You can add such `checks` to your own looks.
 - **Masks in a session.** When a look has masks, Claude makes them on each photo and adjusts them to it; each mask uses one pass.
-- **Looks in the prompt menu.** Each look is also a prompt, `look-<name>`, in the AI app's menu of prompts, in apps that show MCP prompts [unverified: not yet tried in Claude Desktop]. Pick one with a photo selected in Lightroom to edit it with that look.
+- **Looks in the prompt menu.** Each look is also a prompt, `look-<name>`, in the AI app's menu of prompts, in apps that show MCP prompts. Claude Desktop shows none in its **+** menu [stated: Jim, 2026-10-31, `docs/reports/phase10/PHASE10.md` "Observed"], so there you ask for the look by name in the chat. Pick one with a photo selected in Lightroom to edit it with that look.
 - **Not sure which look?** Ask for an edit without naming one, and Claude may suggest two or three looks that fit, or none.
 
 ## The HUD

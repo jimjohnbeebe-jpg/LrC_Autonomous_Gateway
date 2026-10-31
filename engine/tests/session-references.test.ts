@@ -130,6 +130,15 @@ describe("the reference gap", () => {
     expect(referenceGap(perceptual({ wheel: 180 }), refs)["sh.wheel"]?.at).toBe("below");
   });
 
+  it("places a hue against one reference hue by the turn's sign (Greptile re-review, PR #276)", () => {
+    const refs = aggregate([perceptual({ wheel: 50 })]);
+    expect(referenceGap(perceptual({ wheel: 40 }), refs)["sh.wheel"]?.at).toBe("below");
+    expect(referenceGap(perceptual({ wheel: 60 }), refs)["sh.wheel"]?.at).toBe("above");
+    expect(referenceGap(perceptual({ wheel: 50 }), refs)["sh.wheel"]?.at).toBe("within");
+    const wrapped = aggregate([perceptual({ wheel: 5 }), perceptual({ wheel: 5 })]);
+    expect(referenceGap(perceptual({ wheel: 355 }), wrapped)["sh.wheel"]?.at).toBe("below");
+  });
+
   it("leaves out a measure no reference has (a cast without a hue, or a tone range without pixels)", () => {
     const refs = aggregate([perceptual({ wheel: null })]);
     expect(refs["sh.wheel"]).toBeNull();

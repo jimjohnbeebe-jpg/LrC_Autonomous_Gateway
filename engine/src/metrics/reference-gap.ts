@@ -78,8 +78,10 @@ export function referenceGap(photo: Perceptual, refs: ReferenceAggregate): Recor
 
 const ccw = (from: number, to: number): number => (((to - from) % 360) + 360) % 360;
 
-/** A hue against the references' arc min -> median -> max (aggregate's unwrapped order); outside it, by the nearer end. */
+/** A hue against the references' arc min -> median -> max (aggregate's unwrapped order); outside it, by the nearer end, and when both ends are as near (one reference hue), by the turn's sign. */
 function hueAt(v: number, r: RefRange): GapEntry["at"] {
   if (ccw(r.min, v) <= ccw(r.min, r.med) + ccw(r.med, r.max)) return "within";
-  return Math.abs(hueTurn(r.min, v)) < Math.abs(hueTurn(r.max, v)) ? "below" : "above";
+  const toMin = Math.abs(hueTurn(r.min, v)), toMax = Math.abs(hueTurn(r.max, v));
+  if (toMin === toMax) return hueTurn(r.min, v) < 0 ? "below" : "above";
+  return toMin < toMax ? "below" : "above";
 }

@@ -46,6 +46,7 @@
     "develop-catalog:check": "npm run build && node engine/dist/devtools/develop-catalog-check-cli.js",
     "crop:spike": "npm run build && node engine/dist/devtools/crop-spike-cli.js",
     "crop:check": "npm run build && node engine/dist/devtools/crop-check-cli.js",
+    "phase10:check": "npm run build && node engine/dist/devtools/phase10-check-cli.js",
     "presets:check": "npm run build && node engine/dist/devtools/presets-check-cli.js",
     "stats:check": "npm run build && node engine/dist/devtools/stats-check-cli.js",
     "shoot:check": "npm run build && node engine/dist/devtools/shoot-check-cli.js",

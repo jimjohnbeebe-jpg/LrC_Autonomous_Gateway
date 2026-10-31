@@ -234,7 +234,7 @@ describe("mcp server", () => {
   it("lists and returns the bundled intents without Lightroom, and refuses an unconfirmed save", async () => {
     const list = await mcp.callTool({ name: "lr_list_intents", arguments: {} });
     const listed = textOf(list.content as Content) as { intents: Array<{ id: string; source: string }> };
-    expect(listed.intents).toHaveLength(11);
+    expect(listed.intents).toHaveLength(14);
     expect(listed.intents.every((i) => i.source === "bundled")).toBe(true);
     const got = await mcp.callTool({ name: "lr_get_intent", arguments: { id: "landscape_golden_hour" } });
     expect(textOf(got.content as Content)).toMatchObject({ ok: true, source: "bundled", intent: { profile: { raw: "Adobe Landscape", rendered: "Color" } } });

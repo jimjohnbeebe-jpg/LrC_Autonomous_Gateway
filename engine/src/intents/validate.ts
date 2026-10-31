@@ -66,10 +66,15 @@ export function checkIntent(candidate: unknown, map: ParamMap): Intent {
   checkSet("", intent);
   if (intent.variants) for (const key of ["A", "B", "C"] as const) checkSet(`variants.${key}.`, intent.variants[key]);
   problems.push(...setProblems(intent, checkValues));
-  for (const field of ["references", "tone_mode", "masks"] as const) {
+  for (const field of ["references", "tone_mode", "masks", "checks"] as const) {
     if (intent[field] !== undefined && intent.schema_version < 3) problems.push(`schema_version: ${field} ${field === "tone_mode" ? "needs" : "need"} schema_version 3`);
   }
   problems.push(...maskProblems(intent.masks ?? []));
+  for (const [i, c] of (intent.checks ?? []).entries()) {
+    if (c.measure.endsWith(".wheel")) {
+      if (c.min === undefined || c.max === undefined) problems.push(`checks.${i}: a wheel hue range needs both min and max (counter-clockwise from min to max)`);
+    } else if (c.min !== undefined && c.max !== undefined && c.min > c.max) problems.push(`checks.${i}: min ${c.min} is above max ${c.max}`);
+  }
   if (intent.profile !== undefined) problems.push(...profileProblems(map, intent.profile));
   if (problems.length > 0) throw new IntentError("invalid_intent", `the intent has invalid values: ${problems.join("; ")}`, problems);
   return intent;

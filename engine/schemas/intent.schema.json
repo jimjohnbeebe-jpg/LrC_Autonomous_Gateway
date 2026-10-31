@@ -14,7 +14,7 @@
           "const": 3
         }
       ],
-      "description": "3 (2 still loads, without set, references, tone_mode and masks)"
+      "description": "3 (2 still loads, without set, references, tone_mode, masks and checks)"
     },
     "id": {
       "type": "string",
@@ -695,6 +695,53 @@
           "sliders"
         ],
         "additionalProperties": false
+      }
+    },
+    "checks": {
+      "description": "v3: up to 8 measured ranges of the look's method (a classic method's, for example); every pass reports each as met or not in look_checks, and nothing is refused for them",
+      "maxItems": 8,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "measure": {
+            "type": "string",
+            "enum": [
+              "L.p5",
+              "L.p50",
+              "L.p95",
+              "rms",
+              "cf",
+              "sh.C",
+              "sh.wheel",
+              "mid.C",
+              "mid.wheel",
+              "hi.C",
+              "hi.wheel",
+              "dark",
+              "light"
+            ],
+            "description": "L.p5/L.p50/L.p95 L* percentiles, rms contrast, cf colourfulness, sh/mid/hi cast chroma C or wheel hue, dark (zones 0-II %), light (zones VIII-X %)"
+          },
+          "min": {
+            "type": "number"
+          },
+          "max": {
+            "type": "number"
+          },
+          "why": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "the method's reason for the range, in a sentence"
+          }
+        },
+        "required": [
+          "measure",
+          "why"
+        ],
+        "additionalProperties": false,
+        "description": "a range the look's method expects; a wheel hue range runs counter-clockwise from min to max"
       }
     }
   },

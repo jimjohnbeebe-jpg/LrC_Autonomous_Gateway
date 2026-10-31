@@ -27,6 +27,8 @@ const STARTERS = [
   "portrait_natural_light",
   "portrait_skin_priority",
 ];
+/** The classic-method looks of Phase 10 row 12 (schema v3, with checks). */
+const CLASSIC = ["classic_high_key", "classic_low_key", "classic_zone_system"];
 
 const minimal = (id: string, extra: Record<string, unknown> = {}): Record<string, unknown> => ({
   schema_version: 2,
@@ -58,10 +60,10 @@ const writeUser = (file: string, content: unknown): void => {
 };
 
 describe("intents: the bundled starter set", () => {
-  it("loads the eleven starters of PRD 6.9 from engine\\intents, all valid", () => {
+  it("loads the eleven starters of PRD 6.9 and the classic-method looks from engine\\intents, all valid", () => {
     const { intents, warnings } = library.list();
     expect(warnings).toEqual([]);
-    expect(intents.map((i) => i.id).sort()).toEqual(STARTERS);
+    expect(intents.map((i) => i.id).sort()).toEqual([...CLASSIC, ...STARTERS].sort());
     expect(intents.every((i) => i.source === "bundled")).toBe(true);
     expect(bundledIntentsDir()).toBe(path.resolve(import.meta.dirname, "..", "intents"));
   });
@@ -87,7 +89,7 @@ describe("intents: the user folder", () => {
     writeUser("landscape_golden_hour.json", minimal("landscape_golden_hour", { label: "Mine" }));
     const found = library.get("landscape_golden_hour");
     expect(found).toMatchObject({ source: "user", overrides_bundled: true, intent: { label: "Mine" } });
-    expect(library.list().intents).toHaveLength(11);
+    expect(library.list().intents).toHaveLength(STARTERS.length + CLASSIC.length);
   });
 
   it("adds a user intent with a new id", () => {
@@ -269,7 +271,7 @@ describe("intents: tools", () => {
   it("lists, gets and saves through the tools", async () => {
     const t = tools();
     const listed = (await t.listIntents()).json as { intents: unknown[]; folders: { user: string } };
-    expect(listed.intents).toHaveLength(11);
+    expect(listed.intents).toHaveLength(STARTERS.length + CLASSIC.length);
     expect(listed.folders.user).toBe(userDir);
     expect((await t.getIntent({ id: "night_astro" })).json).toMatchObject({ source: "bundled", intent: { guardrail_overrides: { clip_low_pct: 5 } } });
     expect((await t.saveIntent({ intent: minimal("from_chat"), confirmed: true })).json).toMatchObject({ ok: true, id: "from_chat", replaced: false });

@@ -1,0 +1,17 @@
+{
+  "schema_version": 3,
+  "id": "classic_high_key",
+  "label": "Classic — High key",
+  "category": "classic",
+  "brief": "High key (https://en.wikipedia.org/wiki/High-key_lighting): a bright, light-toned image with few deep shadows and gentle contrast. Most tones sit above middle grey; whites come close to white but keep texture in skin, fabric and cloud. Raise exposure and shadows, lower contrast, and lift the blacks a little rather than crushing them; keep the highlights from clipping (the clipping limits still hold). Keep colour clean and light: lower saturation slightly if bright colours turn loud. If the scene is dark by nature (night, a dark interior, a black subject), say so and suggest another look instead of forcing it.",
+  "priors": {},
+  "convergence_hints": [
+    "stop when the photo reads light and airy and the brightest areas still hold texture",
+    "stop when no deep shadow pulls the eye"
+  ],
+  "allow_probe": false,
+  "checks": [
+    { "measure": "L.p50", "min": 56, "why": "high key: the median tone sits above middle grey, in Zone VI or higher" },
+    { "measure": "dark", "max": 5, "why": "high key: few deep shadows, Zones 0-II under 5% of the frame" }
+  ]
+}

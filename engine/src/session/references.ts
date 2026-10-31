@@ -8,7 +8,7 @@
 // engine\src\bridge\protocol.ts:78-81], the export lr_get_photo_stats makes (mcp\tools-stats.ts:65). That
 // it changes nothing in Lightroom here is [unverified] until Jim's run of this row.
 
-import { aggregate, referenceGap, type Metrics } from "../metrics/index.js";
+import { aggregate, lookChecks, referenceGap, type Metrics } from "../metrics/index.js";
 import type { ReferenceSet, ReferenceSize, ReferenceSpec } from "./reference-types.js";
 import type { Session, SessionContext } from "./types.js";
 
@@ -68,9 +68,12 @@ export function referencesJson(s: Session): Record<string, unknown> {
 
 const GAP_NOTE = "reference_gap in each pass: the photo's value of each key measure, the references' [min, median, max], and below / within / above. Reported only, not a target.";
 
-/** A pass result's `reference_gap`, when the session has measured references. */
+/** A pass result's `reference_gap`, when the session has measured references, and `look_checks`, when its intent has checks (row 12, R5: reported only). */
 export function gapJson(s: Session, metrics: Pick<Metrics, "perceptual">): Record<string, unknown> {
   const r = s.references;
-  if (!r || r.measured.length === 0) return {};
-  return { reference_gap: { n: r.measured.length, ...referenceGap(metrics.perceptual, r.aggregate) } };
+  const checks = s.intent.intent.checks ?? [];
+  return {
+    ...(r && r.measured.length > 0 ? { reference_gap: { n: r.measured.length, ...referenceGap(metrics.perceptual, r.aggregate) } } : {}),
+    ...(checks.length > 0 ? { look_checks: lookChecks(metrics.perceptual, checks) } : {}),
+  };
 }

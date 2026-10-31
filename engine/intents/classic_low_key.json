@@ -1,0 +1,22 @@
+{
+  "schema_version": 3,
+  "id": "classic_low_key",
+  "label": "Classic — Low key (chiaroscuro)",
+  "category": "classic",
+  "brief": "Low key, chiaroscuro (https://en.wikipedia.org/wiki/Low-key_lighting, https://en.wikipedia.org/wiki/Chiaroscuro): mostly dark tones and a strong contrast between a lit subject and a dark surround. The subject's highlights keep their detail; the background falls toward black. Lower exposure for the surround, then keep or lift the subject and deepen the background with the look's two masks, adjusted to this photo; a vignette may help. Deep shadows may clip a little: this look allows more black clipping than the default. If the photo has no clear lit subject, say so and suggest another look.",
+  "priors": {},
+  "guardrail_overrides": { "clip_low_pct": 3 },
+  "convergence_hints": [
+    "stop when the lit subject holds the eye against a dark surround",
+    "stop when the subject's highlights keep their detail"
+  ],
+  "allow_probe": false,
+  "masks": [
+    { "kind": "subject", "name": "1. Subject - Lift", "purpose": "keep the lit subject bright against the dark surround", "sliders": { "local.exposure": 0.2 } },
+    { "kind": "background", "name": "2. Background - Deepen", "purpose": "let the surround fall toward black", "sliders": { "local.exposure": -0.6 } }
+  ],
+  "checks": [
+    { "measure": "L.p50", "max": 33, "why": "low key: the median tone sits below middle grey, in Zone III or lower" },
+    { "measure": "L.p95", "min": 68, "why": "low key: the lit subject still reaches Zone VII" }
+  ]
+}

@@ -11,7 +11,7 @@ import { removePhotos } from "../mcp/tools-remove.js";
 import { differingSettings } from "../params/index.js";
 import type { PreviewService } from "../preview/index.js";
 import { runClient, type ClientsDeps, type Installed, type Run } from "./clients-run.js";
-import { armOf, copyName, editOk, editPrompt, MAX_PHOTOS, MIN_PHOTOS, SLOTS, streamResult, type Choice, type EvalPhoto, type EvalRun, type Slot } from "./looks-eval.js";
+import { armOf, copyName, editOk, editPrompt, MAX_PHOTOS, MIN_PHOTOS, NOT_READ, SLOTS, streamResult, type Choice, type EvalPhoto, type EvalRun, type Slot } from "./looks-eval.js";
 import { describeError } from "./phase1-check.js";
 import { sleep } from "./phase5-config.js";
 import { SELECT_SETTLE_MS } from "./phase8-config.js";
@@ -117,18 +117,25 @@ export async function readMasters(ctx: EvalCtx): Promise<boolean> {
   const { deps, ev } = ctx;
   const differing: Record<string, string[]> = {};
   for (const p of ev.photos) {
-    try {
-      const now = deps.map.fromSdk((await deps.client.request("get_settings", { photo_uuid: p.uuid })).settings).settings;
-      differing[p.uuid] = differingSettings(now, p.start);
-    } catch (err) {
-      differing[p.uuid] = [`not read: ${describeError(err)}`];
+    // Two tries: a read that timed out once is not a changed master (run 20261030-055012).
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        const now = deps.map.fromSdk((await deps.client.request("get_settings", { photo_uuid: p.uuid })).settings).settings;
+        differing[p.uuid] = differingSettings(now, p.start);
+        break;
+      } catch (err) {
+        differing[p.uuid] = [`${NOT_READ}${describeError(err)}`];
+      }
     }
   }
   ev.masters = { at: new Date().toISOString(), differing };
   ctx.save();
-  const changed = ev.photos.filter((p) => (differing[p.uuid] ?? []).length > 0);
-  for (const p of changed) deps.say(`  master ${p.nn} ${p.filename} changed: ${(differing[p.uuid] ?? []).join(", ")}`);
-  return changed.length === 0;
+  const listed = ev.photos.filter((p) => (differing[p.uuid] ?? []).length > 0);
+  for (const p of listed) {
+    const d = differing[p.uuid] ?? [];
+    deps.say(d[0]?.startsWith(NOT_READ) ? `  master ${p.nn} ${p.filename} could not be read (${d[0].slice(NOT_READ.length)}): not checked, not changed` : `  master ${p.nn} ${p.filename} changed: ${d.join(", ")}`);
+  }
+  return listed.length === 0;
 }
 
 /**

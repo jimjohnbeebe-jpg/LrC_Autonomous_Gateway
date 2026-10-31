@@ -1,7 +1,7 @@
 ---
 report: PHASE10
 phase: "10"
-status: observed
+status: accepted
 authored_by: "Claude Code (Opus 5.5): purpose, acceptance, harness, pre-run findings, 2026-10-30. Observed: Jim's run of npm run phase10:check, 2026-10-31, collected by Claude Code from its results file. Verdict: Jim's."
 date: 2026-10-30
 ---
@@ -109,7 +109,7 @@ Jim ran `npm run phase10:check` on `phase-10/check` at `8e674f8` on 2026-10-31: 
 
 ## Verdict
 
-*(Jim decides: Phase 10 done / not done; release or not.)*
+**Phase 10 done; release v1.10.0** [stated: Jim, 2026-10-31, "Phase 10 complete, please wrap up and complete the release - I am the only user, we might as well get it out there."].
 
 ## Consequences / open questions
 

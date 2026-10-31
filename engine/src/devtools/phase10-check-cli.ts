@@ -47,11 +47,12 @@ const settings = async (c: Check, uuid: string): Promise<SdkSettings> => (await 
 const ok = (j: Record<string, unknown>): string[] => [j["ok"] === true ? "ok" : `not ok: ${JSON.stringify(j).slice(0, 200)}`];
 const yes = (c: Check, name: string, good: boolean, why: string): void => void c.steps.push({ step: name, expect: ["yes"], statuses: [good ? "yes" : `no: ${why}`] });
 
-/** Begin a session on the selected copy; null (recorded) when it did not start. */
+/** Begin a session on the selected copy; null (recorded) when it did not start. A begin that throws after the session
+ *  opened (a pass-0 preview timeout) still leaves c.session set, so the revert and the copy's removal happen. */
 async function begin(c: Check, label: string, args: Record<string, unknown>): Promise<Record<string, unknown> | null> {
   const b = await step(c, `lr_begin_session (${label})`, ["ok"], () => c.tools.beginSession({ max_passes: 4, return_image: "none", ...args }), ok);
-  c.session = typeof b?.["session_id"] === "string" ? b["session_id"] : null;
-  return c.session === null ? null : b;
+  c.session = c.tools.sessionManager()?.current()?.id ?? null;
+  return b;
 }
 
 /** Revert and end the session; a failed end throws, so main()'s cleanup ends it again and removes the copy. */
@@ -70,7 +71,9 @@ async function looks(c: Check, filename: string): Promise<Intent> {
   const intent = dry?.["intent"] as Intent | undefined;
   if (!intent) throw new Error("from_photo returned no look, so nothing else was tried");
   yes(c, "the look holds settings, tone_mode adapt, and your photo as its reference", Object.keys(intent.set ?? {}).length > 0 && intent.tone_mode === "adapt" && intent.references?.uuids?.[0] === c.master, JSON.stringify({ set: Object.keys(intent.set ?? {}).length, tone_mode: intent.tone_mode, references: intent.references }));
-  await step(c, `lr_save_intent ${LOOK}`, ["ok"], () => c.tools.saveIntent({ intent, confirmed: true, replace: true }), ok);
+  // No replace: a user intent already named avg_phase10_check is refused, never overwritten (and never deleted by the cleanup).
+  const saved = await step(c, `lr_save_intent ${LOOK}`, ["ok"], () => c.tools.saveIntent({ intent, confirmed: true }), ok);
+  if (saved === null) throw new Error(`the look was not saved as ${LOOK} (an intent of that name may already exist), so nothing else was tried`);
   c.saved = true;
   const tried: Array<{ name: string; set: number | string }> = [];
   const list = await c.tools.listPresets({}).then((o) => o.json, (err: unknown) => (tried.push({ name: "lr_list_presets", set: describeError(err) }), {} as Record<string, unknown>));
@@ -129,8 +132,8 @@ async function removeCopy(c: Check): Promise<void> {
 }
 
 async function deleteLook(c: Check): Promise<void> {
-  await step(c, `lr_delete_intent ${LOOK}`, ["ok"], () => c.tools.deleteIntent({ id: LOOK, confirmed: true }), ok);
-  c.saved = false;
+  const d = await step(c, `lr_delete_intent ${LOOK}`, ["ok"], () => c.tools.deleteIntent({ id: LOOK, confirmed: true }), ok);
+  if (d !== null) c.saved = false;
 }
 
 async function run(c: Check): Promise<string[]> {
